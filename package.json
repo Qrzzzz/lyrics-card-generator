@@ -2,6 +2,7 @@
   "name": "lyric-card-generator",
   "version": "0.1.0",
   "private": true,
+  "main": "electron/main.js",
   "scripts": {
     "dev": "next dev",
     "clean:next": "node scripts/clean-next-cache.mjs",
@@ -9,7 +10,11 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "parse:test": "tsx scripts/test-parse-song.ts"
+    "parse:test": "tsx scripts/test-parse-song.ts",
+    "desktop:dev": "node scripts/start-electron-dev.mjs",
+    "desktop:prepare": "node scripts/prepare-electron-dist.mjs",
+    "desktop:pack": "npm run typecheck && npm run build && npm run desktop:prepare && electron-builder --dir",
+    "desktop:build": "npm run typecheck && npm run build && npm run desktop:prepare && electron-builder"
   },
   "dependencies": {
     "cheerio": "^1.0.0",
@@ -28,9 +33,59 @@
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "autoprefixer": "^10.4.20",
+    "cross-env": "^10.1.0",
+    "electron": "^42.4.0",
+    "electron-builder": "^26.15.2",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.17",
     "tsx": "^4.22.3",
-    "typescript": "^5.7.0"
+    "typescript": "^5.7.0",
+    "wait-on": "^9.0.10"
+  },
+    "build": {
+    "appId": "com.lyriccard.generator",
+    "productName": "Lyrics Card Generator",
+    "asar": true,
+    "disableDefaultIgnoredFiles": true,
+    "icon": "build/icon.ico",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "electron/main.js",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "dist-desktop/server",
+        "to": "server",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    },
+    "portable": {
+      "artifactName": "${productName}-${version}-portable.${ext}"
+    }
   }
 }

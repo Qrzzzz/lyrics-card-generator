@@ -1,0 +1,10 @@
+node_modules/
+.next/
+dist/
+dist-desktop/
+release/
+backups/
+output/playwright/
+.playwright-cli/
+*.log
+*.tsbuildinfo
