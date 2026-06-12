@@ -11,7 +11,6 @@ import type {
   CardRatio,
   CardStyle,
   ContentMode,
-  FrameVariant,
   TextColorMode,
   TextColorPreset
 } from "@/lib/types";
@@ -59,26 +58,20 @@ export function StylePanel({
       return;
     }
 
-    onStyleChange({ ...style, layoutMode });
+    onStyleChange({
+      ...style,
+      layoutMode,
+      frameVariant: style.frameStyleEnabled && style.frameVariant !== "fullBleed" ? "auto" : style.frameVariant
+    });
   }
 
   function updateFrameVisibility(enabled: boolean) {
     onStyleChange({
       ...style,
       frameStyleEnabled: enabled,
-      frameVariant: enabled ? (style.frameVariant === "fullBleed" ? "auto" : style.frameVariant ?? "auto") : "fullBleed",
+      frameVariant: enabled ? "auto" : "fullBleed",
       showFrame: enabled,
       showShadow: enabled
-    });
-  }
-
-  function updateFrameVariant(frameVariant: Exclude<FrameVariant, "fullBleed">) {
-    onStyleChange({
-      ...style,
-      frameStyleEnabled: true,
-      frameVariant,
-      showFrame: true,
-      showShadow: true
     });
   }
 
@@ -306,8 +299,8 @@ export function StylePanel({
       </div>
 
       <div className="grid gap-3 rounded-lg border border-[rgb(var(--panel-border))] bg-[rgb(var(--panel-bg))] p-3">
-        <div className="app-text-primary text-sm font-medium">{t("frameAndShadow")}</div>
-        <div className="grid grid-cols-2 gap-2" role="group" aria-label={t("frameAndShadow")}>
+        <div className="app-text-primary text-sm font-medium">{t("showFrame")}</div>
+        <div className="grid grid-cols-2 gap-2" role="group" aria-label={t("showFrame")}>
           <SegmentButton
             active={frameVisible}
             label={t("frameAndShadow")}
@@ -321,32 +314,6 @@ export function StylePanel({
             dataAttribute="fullBleed"
           />
         </div>
-
-        {frameVisible ? (
-          <div className="grid gap-2">
-            <div className="app-text-primary text-sm font-medium">{t("layoutCompatibility")}</div>
-            <div className="grid gap-2 sm:grid-cols-3" role="group" aria-label={t("layoutCompatibility")}>
-              <SegmentButton
-                active={(style.frameVariant ?? "auto") === "auto"}
-                label={t("frameStyleAuto")}
-                onClick={() => updateFrameVariant("auto")}
-                dataAttribute="auto"
-              />
-              <SegmentButton
-                active={style.frameVariant === "portraitGlass"}
-                label={t("frameStylePortrait")}
-                onClick={() => updateFrameVariant("portraitGlass")}
-                dataAttribute="portraitGlass"
-              />
-              <SegmentButton
-                active={style.frameVariant === "landscapeClean"}
-                label={t("frameStyleLandscape")}
-                onClick={() => updateFrameVariant("landscapeClean")}
-                dataAttribute="landscapeClean"
-              />
-            </div>
-          </div>
-        ) : null}
       </div>
 
       {style.showSharedBy ? (
