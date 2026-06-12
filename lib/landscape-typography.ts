@@ -50,7 +50,7 @@ export function getLandscapeTypography({
     lyricFontSize *= maxHeight / estimatedHeight;
   }
 
-  lyricFontSize = clamp(Math.round(lyricFontSize * canvasScale), 34, hasTranslation ? 58 : 68);
+  lyricFontSize = clamp(Math.round(lyricFontSize * canvasScale), 24, hasTranslation ? 58 : 68);
   const translationFontSize = hasTranslation ? clamp(Math.round(lyricFontSize * 0.5), 17, 32) : 0;
 
   return {

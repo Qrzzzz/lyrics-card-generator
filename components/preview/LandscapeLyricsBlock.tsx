@@ -39,16 +39,17 @@ export function LandscapeLyricsBlock({
   const translationLines = splitUsefulLines(translationText ?? "");
   const lines = lyricLines.length > 0 ? lyricLines : ["Type your lyrics here..."];
   const hasTranslation = translationEnabled && translationLines.length > 0;
+  const visualLineCount = estimateVisualLineCount(lines, width, lyricFontSize);
   const typography = getLandscapeTypography({
     width: cardWidth,
     height: cardHeight,
-    lineCount: lines.length,
+    lineCount: visualLineCount,
     hasTranslation,
     contentMode: "lyrics",
     maxHeight,
     lineHeight
   });
-  const activeLyricSize = Math.max(34, Math.min(lyricFontSize, typography.lyricFontSize));
+  const activeLyricSize = Math.max(24, Math.min(lyricFontSize, typography.lyricFontSize));
   const activeTranslationSize = Math.round(
     Math.min(typography.translationFontSize, activeLyricSize * Math.min(0.52, Math.max(0.45, translationScale)))
   );
@@ -61,6 +62,7 @@ export function LandscapeLyricsBlock({
         left,
         top,
         width,
+        height: maxHeight,
         maxHeight,
         color: textColor,
         textShadow: isDarkText ? "none" : "0 10px 32px rgba(0,0,0,0.34)"
@@ -105,4 +107,11 @@ function splitUsefulLines(text: string) {
     .split(/\r?\n/)
     .map((line) => line.trimEnd())
     .filter((line, index, lines) => line.trim().length > 0 || (index > 0 && index < lines.length - 1));
+}
+
+function estimateVisualLineCount(lines: string[], width: number, fontSize: number) {
+  const averageCharWidth = Math.max(12, fontSize * 0.54);
+  const charsPerLine = Math.max(8, Math.floor(width / averageCharWidth));
+
+  return lines.reduce((count, line) => count + Math.max(1, Math.ceil(line.trim().length / charsPerLine)), 0);
 }

@@ -19,7 +19,12 @@ export function getLandscapeSlots(
   const lyricTopOffset = options.allowTwoLineTitle ? 36 * scaleY : 0;
   const hiddenSongInfoOffset = options.showSongInfo === false ? -54 * scaleY : 0;
   const lyricsTop = config.lyrics.y * scaleY + lyricTopOffset + hiddenSongInfoOffset;
-  const lyricMaxHeight = Math.max(260 * scaleY, config.lyrics.maxHeight * scaleY - Math.max(0, lyricTopOffset));
+  const footerReserved = 150 * scaleY;
+  const dynamicLyricHeight = height - lyricsTop - footerReserved;
+  const lyricMaxHeight = Math.max(
+    260 * scaleY,
+    Math.min(dynamicLyricHeight, height - lyricsTop - 72 * scaleY)
+  );
 
   return {
     safe: {
