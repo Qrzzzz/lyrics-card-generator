@@ -16,6 +16,7 @@ import type {
   TextColorPreset
 } from "@/lib/types";
 import { Input, Label, Section, Select, SwitchRow } from "@/components/ui/controls";
+import { cn } from "@/lib/utils";
 
 const TEXT_PRESET_LABEL_KEYS: Record<TextColorPreset, MessageKey> = {
   white: "pureWhite",
@@ -36,6 +37,9 @@ export function StylePanel({
   onStyleChange: (style: CardStyle) => void;
   t: ReturnType<typeof createT>;
 }) {
+  const layoutMode = style.layoutMode ?? "portrait";
+  const frameVisible = style.frameStyleEnabled && style.frameVariant !== "fullBleed";
+
   function update<K extends keyof CardStyle>(key: K, value: CardStyle[K]) {
     onStyleChange({ ...style, [key]: value });
   }
@@ -58,8 +62,24 @@ export function StylePanel({
     onStyleChange({ ...style, layoutMode });
   }
 
-  function updateFrameStyle(enabled: boolean) {
-    onStyleChange({ ...style, frameStyleEnabled: enabled, showFrame: enabled, showShadow: enabled });
+  function updateFrameVisibility(enabled: boolean) {
+    onStyleChange({
+      ...style,
+      frameStyleEnabled: enabled,
+      frameVariant: enabled ? (style.frameVariant === "fullBleed" ? "auto" : style.frameVariant ?? "auto") : "fullBleed",
+      showFrame: enabled,
+      showShadow: enabled
+    });
+  }
+
+  function updateFrameVariant(frameVariant: Exclude<FrameVariant, "fullBleed">) {
+    onStyleChange({
+      ...style,
+      frameStyleEnabled: true,
+      frameVariant,
+      showFrame: true,
+      showShadow: true
+    });
   }
 
   function updateGeneratedWatermark(enabled: boolean) {
@@ -68,17 +88,28 @@ export function StylePanel({
 
   return (
     <Section title={t("style")} eyebrow={t("layout")}>
-      <Label label={t("layoutMode")}>
-        <Select value={style.layoutMode ?? "portrait"} onChange={(event) => updateLayoutMode(event.target.value as CardLayoutMode)}>
-          <option value="portrait">{t("portraitLayout")}</option>
-          <option value="landscape">{t("landscapeLayout")}</option>
-        </Select>
-      </Label>
+      <div className="grid gap-2">
+        <div className="app-text-primary text-sm font-medium">{t("layoutMode")}</div>
+        <div className="grid grid-cols-2 gap-2" role="group" aria-label={t("layoutMode")}>
+          <SegmentButton
+            active={layoutMode === "portrait"}
+            label={t("portraitLayout")}
+            onClick={() => updateLayoutMode("portrait")}
+            dataAttribute="portrait"
+          />
+          <SegmentButton
+            active={layoutMode === "landscape"}
+            label={t("landscapeLayout")}
+            onClick={() => updateLayoutMode("landscape")}
+            dataAttribute="landscape"
+          />
+        </div>
+      </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Label label={t("sizeMode")}>
           <Select value={style.ratio} onChange={(event) => updateRatio(event.target.value as CardRatio)}>
-            {(style.layoutMode ?? "portrait") === "landscape" ? (
+            {layoutMode === "landscape" ? (
               <>
                 <option value="16:9">{t("sixteenNine")}</option>
                 <option value="21:9">{t("twentyOneNine")}</option>
@@ -117,8 +148,8 @@ export function StylePanel({
             <Label label={t("width")} hint={`${style.width}px`}>
               <Input
                 type="range"
-                min={(style.layoutMode ?? "portrait") === "landscape" ? 1080 : 720}
-                max={(style.layoutMode ?? "portrait") === "landscape" ? 3000 : 1440}
+                min={layoutMode === "landscape" ? 1080 : 720}
+                max={layoutMode === "landscape" ? 3000 : 1440}
                 step={20}
                 value={style.width}
                 onChange={(event) => update("width", Number(event.target.value))}
@@ -128,7 +159,7 @@ export function StylePanel({
               <Input
                 type="range"
                 min={720}
-                max={(style.layoutMode ?? "portrait") === "landscape" ? 1600 : 2400}
+                max={layoutMode === "landscape" ? 1600 : 2400}
                 step={20}
                 value={style.height}
                 disabled={style.autoHeight}
@@ -201,7 +232,7 @@ export function StylePanel({
       <Label label={t("coverCrop")} hint={style.coverCropScale.toFixed(2)}>
         <Input
           type="range"
-          min={1.35}
+          min={1}
           max={2}
           step={0.01}
           value={style.coverCropScale}
@@ -209,7 +240,7 @@ export function StylePanel({
         />
       </Label>
 
-      {(style.layoutMode ?? "portrait") === "landscape" ? (
+      {layoutMode === "landscape" ? (
         <div className="grid gap-3 rounded-lg border border-[rgb(var(--panel-border))] bg-[rgb(var(--panel-bg))] p-3">
           <p className="app-text-primary text-sm font-semibold">{t("landscapeLayoutSettings")}</p>
           <div className="grid gap-4 sm:grid-cols-2">
@@ -272,22 +303,51 @@ export function StylePanel({
           onChange={(checked) => update("showPlatformBadge", checked)}
         />
         <SwitchRow label={t("showSharedBy")} checked={style.showSharedBy} onChange={(checked) => update("showSharedBy", checked)} />
-        <SwitchRow label={t("frameAndShadow")} checked={style.frameStyleEnabled} onChange={updateFrameStyle} />
       </div>
 
-      {style.frameStyleEnabled ? (
-        <Label label={t("layoutCompatibility")}>
-          <Select
-            value={style.frameVariant ?? "auto"}
-            onChange={(event) => update("frameVariant", event.target.value as FrameVariant)}
-          >
-            <option value="auto">{t("frameStyleAuto")}</option>
-            <option value="portraitGlass">{t("frameStylePortrait")}</option>
-            <option value="landscapeClean">{t("frameStyleLandscape")}</option>
-            <option value="fullBleed">{t("fullBleed")}</option>
-          </Select>
-        </Label>
-      ) : null}
+      <div className="grid gap-3 rounded-lg border border-[rgb(var(--panel-border))] bg-[rgb(var(--panel-bg))] p-3">
+        <div className="app-text-primary text-sm font-medium">{t("frameAndShadow")}</div>
+        <div className="grid grid-cols-2 gap-2" role="group" aria-label={t("frameAndShadow")}>
+          <SegmentButton
+            active={frameVisible}
+            label={t("frameAndShadow")}
+            onClick={() => updateFrameVisibility(true)}
+            dataAttribute="frame"
+          />
+          <SegmentButton
+            active={!frameVisible}
+            label={t("fullBleed")}
+            onClick={() => updateFrameVisibility(false)}
+            dataAttribute="fullBleed"
+          />
+        </div>
+
+        {frameVisible ? (
+          <div className="grid gap-2">
+            <div className="app-text-primary text-sm font-medium">{t("layoutCompatibility")}</div>
+            <div className="grid gap-2 sm:grid-cols-3" role="group" aria-label={t("layoutCompatibility")}>
+              <SegmentButton
+                active={(style.frameVariant ?? "auto") === "auto"}
+                label={t("frameStyleAuto")}
+                onClick={() => updateFrameVariant("auto")}
+                dataAttribute="auto"
+              />
+              <SegmentButton
+                active={style.frameVariant === "portraitGlass"}
+                label={t("frameStylePortrait")}
+                onClick={() => updateFrameVariant("portraitGlass")}
+                dataAttribute="portraitGlass"
+              />
+              <SegmentButton
+                active={style.frameVariant === "landscapeClean"}
+                label={t("frameStyleLandscape")}
+                onClick={() => updateFrameVariant("landscapeClean")}
+                dataAttribute="landscapeClean"
+              />
+            </div>
+          </div>
+        ) : null}
+      </div>
 
       {style.showSharedBy ? (
         <Label label={t("sharedBy")}>
@@ -299,5 +359,32 @@ export function StylePanel({
         </Label>
       ) : null}
     </Section>
+  );
+}
+
+function SegmentButton({
+  active,
+  label,
+  onClick,
+  dataAttribute
+}: {
+  active: boolean;
+  label: string;
+  onClick: () => void;
+  dataAttribute: string;
+}) {
+  return (
+    <button
+      type="button"
+      aria-pressed={active}
+      data-segment-value={dataAttribute}
+      onClick={onClick}
+      className={cn(
+        "app-button h-11 rounded-lg px-3 text-sm font-semibold transition",
+        active ? "bg-[rgb(var(--button-bg-hover))] text-[rgb(var(--app-fg))]" : "app-text-subtle"
+      )}
+    >
+      {label}
+    </button>
   );
 }

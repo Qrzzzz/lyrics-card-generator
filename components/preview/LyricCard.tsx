@@ -40,7 +40,7 @@ export function LyricCard({
   const isDarkText = isColorDark(textColor);
   const contentMode = style.contentMode ?? "lyrics";
   const showGeneratedWatermark = style.showGeneratedWatermark ?? style.showWatermark;
-  const frameEnabled = style.frameStyleEnabled;
+  const frameEnabled = style.frameStyleEnabled && style.frameVariant !== "fullBleed";
   const glassBackground = frameEnabled
     ? isDarkText
       ? "rgba(255,255,255,0.32)"

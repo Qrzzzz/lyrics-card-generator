@@ -37,6 +37,7 @@ export function LandscapeLyricCard({
   const isDarkText = isColorDark(textColor);
   const showGeneratedWatermark = style.showGeneratedWatermark ?? style.showWatermark;
   const contentMode = style.contentMode ?? "lyrics";
+  const frameEnabled = style.frameStyleEnabled && style.frameVariant !== "fullBleed";
 
   useEffect(() => {
     setCoverFailed(false);
@@ -52,7 +53,7 @@ export function LandscapeLyricCard({
       <div className="absolute inset-0 bg-black/12" />
       <div className="absolute inset-0 bg-[linear-gradient(115deg,rgba(255,255,255,0.13),transparent_38%,rgba(0,0,0,0.24))]" />
 
-      <CardFrame layoutMode="landscape" enabled={style.frameStyleEnabled} variant={style.frameVariant}>
+      <CardFrame layoutMode="landscape" enabled={frameEnabled} variant={style.frameVariant}>
         {style.showCover ? (
           <LandscapeAlbumCover
             song={song}
