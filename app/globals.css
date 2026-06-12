@@ -1,0 +1,160 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+.app-shell {
+  --app-fg: 255 255 255;
+  --app-muted: 255 255 255 / 0.68;
+  --app-subtle: 255 255 255 / 0.48;
+  --app-soft: 255 255 255 / 0.16;
+  --panel-bg: 255 255 255 / 0.08;
+  --panel-border: 255 255 255 / 0.16;
+  --input-bg: 5 8 14 / 0.44;
+  --input-border: 255 255 255 / 0.13;
+  --button-bg: 255 255 255 / 0.1;
+  --button-bg-hover: 255 255 255 / 0.16;
+}
+
+.app-text-primary {
+  color: rgb(var(--app-fg));
+}
+
+.app-text-muted {
+  color: rgb(var(--app-muted));
+}
+
+.app-text-subtle {
+  color: rgb(var(--app-subtle));
+}
+
+.app-border {
+  border-color: rgb(var(--panel-border));
+}
+
+.app-button {
+  border: 1px solid rgb(var(--panel-border));
+  background: rgb(var(--button-bg));
+  color: rgb(var(--app-fg));
+}
+
+.app-button:hover {
+  background: rgb(var(--button-bg-hover));
+}
+
+body {
+  margin: 0;
+  overflow-x: hidden;
+  background: #080910;
+  color: rgba(255, 255, 255, 0.9);
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -2;
+  background:
+    linear-gradient(110deg, rgba(255,255,255,0.08), transparent 25%, rgba(255,255,255,0.04) 48%, transparent 72%),
+    radial-gradient(circle at 48% 42%, rgba(255,255,255,0.08), transparent 44%);
+  filter: blur(38px);
+  opacity: 0.8;
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  opacity: 0.13;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.7) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.35) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(circle at center, black, transparent 78%);
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button {
+  touch-action: manipulation;
+}
+
+::selection {
+  background: rgba(255, 138, 156, 0.38);
+}
+
+.glass-panel {
+  border: 1px solid rgb(var(--panel-border));
+  background: rgb(var(--panel-bg));
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(24px);
+}
+
+.field-shell {
+  border: 1px solid rgb(var(--input-border));
+  background: rgb(var(--input-bg));
+  color: rgb(var(--app-fg));
+  outline: none;
+  transition: border-color 150ms ease, box-shadow 150ms ease, background 150ms ease;
+}
+
+.field-shell:focus {
+  border-color: rgba(125, 225, 255, 0.58);
+  box-shadow: 0 0 0 4px rgba(125, 225, 255, 0.12);
+}
+
+.field-shell::placeholder {
+  color: rgb(var(--app-subtle));
+}
+
+.card-font-sans-heavy {
+  font-family: var(--font-source-han-sans-heavy), ui-sans-serif, system-ui, sans-serif;
+}
+
+.card-font-serif-heavy {
+  font-family: var(--font-source-han-serif-heavy), ui-serif, Georgia, serif;
+}
+
+.card-font-system-sans {
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.card-font-system-serif {
+  font-family: ui-serif, Georgia, "Times New Roman", serif;
+}
+
+.noise-layer {
+  background-image:
+    linear-gradient(rgba(255,255,255,0.65) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.24) 1px, transparent 1px);
+  background-size: 46px 46px;
+  mask-image: radial-gradient(circle at center, black, transparent 82%);
+}
+
+.two-line-title {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}

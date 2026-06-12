@@ -1,0 +1,36 @@
+{
+  "name": "lyric-card-generator",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "clean:next": "node scripts/clean-next-cache.mjs",
+    "dev:clean": "npm run clean:next && next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "parse:test": "tsx scripts/test-parse-song.ts"
+  },
+  "dependencies": {
+    "cheerio": "^1.0.0",
+    "clsx": "^2.1.1",
+    "framer-motion": "^12.0.0",
+    "html-to-image": "^1.11.11",
+    "lucide-react": "^0.468.0",
+    "next": "^15.3.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "tailwind-merge": "^2.5.5",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.17",
+    "tsx": "^4.22.3",
+    "typescript": "^5.7.0"
+  }
+}
