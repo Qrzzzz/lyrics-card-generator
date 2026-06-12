@@ -1,7 +1,8 @@
 "use client";
 
 import { Upload } from "lucide-react";
-import { Input, Label, Section } from "@/components/ui/controls";
+import { useState } from "react";
+import { Input, Label, Section, SwitchRow } from "@/components/ui/controls";
 import { getHighResolutionCoverUrl } from "@/lib/cover-url";
 import { proxiedImageUrl } from "@/lib/image-utils";
 import type { createT } from "@/lib/i18n";
@@ -16,6 +17,8 @@ export function SongInfoForm({
   onSongChange: (song: SongInfo) => void;
   t: ReturnType<typeof createT>;
 }) {
+  const [enabled, setEnabled] = useState(false);
+
   function update<K extends keyof SongInfo>(key: K, value: SongInfo[K]) {
     onSongChange({ ...song, [key]: value });
   }
@@ -34,6 +37,9 @@ export function SongInfoForm({
 
   return (
     <Section title={t("songInfo")} eyebrow={t("manualOverride")}>
+      <SwitchRow label={t("manualOverride")} checked={enabled} onChange={setEnabled} />
+      {enabled ? (
+        <>
       <div className="grid gap-4 sm:grid-cols-2">
         <Label label={t("title")}>
           <Input value={song.title} onChange={(event) => update("title", event.target.value)} />
@@ -80,6 +86,8 @@ export function SongInfoForm({
           <p className="app-text-subtle text-sm">{t("coverExportHint")}</p>
         </div>
       </div>
+        </>
+      ) : null}
     </Section>
   );
 }

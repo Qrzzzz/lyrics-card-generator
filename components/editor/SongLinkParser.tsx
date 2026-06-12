@@ -1,7 +1,7 @@
 "use client";
 
 import { Link2, WandSparkles } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Input, Label, Section } from "@/components/ui/controls";
 import type { createT } from "@/lib/i18n";
 import type { ParsedSongData } from "@/lib/types";
@@ -26,21 +26,33 @@ export function SongLinkParser({
   url,
   onUrlChange,
   onParsed,
-  t
+  t,
+  autoParseOnMount = false
 }: {
   url: string;
   onUrlChange: (url: string) => void;
   onParsed: (song: ParsedSongData) => void;
   t: ReturnType<typeof createT>;
+  autoParseOnMount?: boolean;
 }) {
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [message, setMessage] = useState<string>(t("parseIdle"));
+  const autoParsed = useRef(false);
 
   useEffect(() => {
     if (status === "idle") {
       setMessage(t("parseIdle"));
     }
   }, [status, t]);
+
+  useEffect(() => {
+    if (!autoParseOnMount || autoParsed.current || !url.trim()) {
+      return;
+    }
+
+    autoParsed.current = true;
+    void parseUrl();
+  }, [autoParseOnMount]);
 
   async function parseUrl() {
     if (!url.trim()) {

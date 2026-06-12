@@ -20,23 +20,36 @@ import { extractPaletteFromImage } from "@/lib/palette-extraction";
 import { DEFAULT_PALETTE, resolveAutoTextColor } from "@/lib/palette-background";
 import type { AppState, CardRatio, CardStyle, Locale } from "@/lib/types";
 
+const DEFAULT_SONG_URL = "https://music.apple.com/cn/song/opposite/1677892095";
+const DEFAULT_LYRICS = [
+  "And I know now",
+  "Even if I tried to change",
+  "That somehow",
+  "You'd end up with her anyway"
+].join("\n");
+const DEFAULT_TRANSLATION = [
+  "我如今才明白",
+  "纵使我拼尽全力改写结局",
+  "命运兜兜转转",
+  "你终究还是会走向她"
+].join("\n");
+
 const defaultState: AppState = {
   locale: "zh",
-  url: "",
+  url: DEFAULT_SONG_URL,
   song: {
-    source: "unknown",
-    title: "Cruel Summer",
-    artist: "Taylor Swift",
+    source: "apple",
+    title: "opposite",
+    artist: "Sabrina Carpenter",
     album: "",
     originalCoverUrl: "",
     coverUrl: "",
     proxiedCoverUrl: "",
-    originalUrl: ""
+    originalUrl: DEFAULT_SONG_URL
   },
-  lyrics:
-    "I don't wanna keep secrets just to keep you\nAnd I snuck in through the garden gate\nEvery night that summer just to seal my fate",
-  translationText: "",
-  translationEnabled: false,
+  lyrics: DEFAULT_LYRICS,
+  translationText: DEFAULT_TRANSLATION,
+  translationEnabled: true,
   style: {
     backgroundMode: "palette",
     extractedPalette: DEFAULT_PALETTE,
@@ -53,8 +66,8 @@ const defaultState: AppState = {
     textColorPreset: "white",
     customTextColor: "#FFFFFF",
     resolvedTextColor: "#FFFFFF",
-    translationEnabled: false,
-    translationText: "",
+    translationEnabled: true,
+    translationText: DEFAULT_TRANSLATION,
     translationScale: 0.48,
     allowTwoLineTitle: false,
     contentMode: "lyrics",
@@ -70,7 +83,7 @@ const defaultState: AppState = {
     frameVariant: "auto",
     showFrame: true,
     showShadow: true,
-    coverCropScale: 1.5,
+    coverCropScale: 1,
     watermark: messages.zh.madeWith
   },
   lastPortraitSize: {
@@ -381,6 +394,7 @@ export function LyricEditor() {
                 })
               }
               t={t}
+              autoParseOnMount
             />
             <LyricsFetchPanel
               song={state.song}

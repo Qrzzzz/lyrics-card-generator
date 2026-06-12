@@ -80,7 +80,7 @@ export function LyricCard({
           {frameEnabled ? <div className="absolute inset-x-0 top-0 h-px bg-white/35" /> : null}
 
           {style.showSongInfo && contentMode !== "instrumental" ? (
-            <header className="flex shrink-0 items-center gap-6">
+            <header className="flex shrink-0 items-center gap-7">
               {style.showCover ? (
                 <AlbumCover
                   coverUrl={activeCover}
@@ -91,10 +91,10 @@ export function LyricCard({
                   onError={() => setCoverFailed(true)}
                 />
               ) : null}
-              <div className="min-w-0 py-1">
+              <div className="min-w-0 py-2">
                 <h1
                   className={cn(
-                    "text-[36px] font-black leading-[1.28] tracking-normal",
+                    "text-[34px] font-black leading-[1.36] tracking-normal",
                     style.allowTwoLineTitle ? "two-line-title" : "truncate"
                   )}
                   style={{ color: textColor }}
@@ -102,7 +102,7 @@ export function LyricCard({
                   {song.title || "Untitled"}
                 </h1>
                 <p
-                  className="mt-3 truncate text-[26px] font-semibold leading-[1.28]"
+                  className="mt-2 truncate text-[23px] font-semibold leading-[1.36]"
                   style={{ color: withAlpha(textColor, 0.64) }}
                 >
                   {song.artist || "Unknown artist"}
@@ -171,7 +171,7 @@ function AlbumCover({
   cropScale: number;
   onError: () => void;
 }) {
-  const className = "relative h-[124px] w-[124px] shrink-0 overflow-hidden rounded-[28px] bg-black/10";
+  const className = "relative h-[116px] w-[116px] shrink-0 overflow-hidden rounded-[26px] bg-black/10";
 
   function onLoad(event: SyntheticEvent<HTMLImageElement>) {
     if (process.env.NODE_ENV !== "development") {
