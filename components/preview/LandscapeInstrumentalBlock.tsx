@@ -23,7 +23,6 @@ export function LandscapeInstrumentalBlock({
   return (
     <section
       className="absolute z-10 text-left"
-      data-landscape-instrumental="true"
       style={{
         left,
         top,

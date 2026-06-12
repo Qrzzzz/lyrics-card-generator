@@ -24,7 +24,6 @@ export function LandscapeSongInfo({
   return (
     <header
       className="absolute z-10"
-      data-landscape-song-info="true"
       style={{
         left,
         top,

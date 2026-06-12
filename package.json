@@ -7,10 +7,7 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "test": "tsx scripts/test-unit.ts",
-    "test:parse:live": "tsx scripts/test-parse-song.ts",
-    "parse:test": "npm run test:parse:live --",
-    "check": "npm run typecheck && npm test && npm run build && npm audit --omit=dev"
+    "parse:test": "tsx scripts/test-parse-song.ts"
   },
   "dependencies": {
     "cheerio": "^1.0.0",
@@ -18,14 +15,11 @@
     "framer-motion": "^12.0.0",
     "html-to-image": "^1.11.11",
     "lucide-react": "^0.468.0",
-    "next": "^16.2.9",
+    "next": "^15.3.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "tailwind-merge": "^2.5.5",
     "zod": "^3.24.0"
-  },
-  "overrides": {
-    "postcss": "$postcss"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

@@ -42,7 +42,6 @@ export function LandscapeFooter({
       {hasTopRow ? (
         <div
           className="absolute z-20 flex items-end justify-between"
-          data-landscape-footer="top-row"
           style={{
             left: slots.footerTop.left,
             right: slots.footerTop.right,
@@ -57,7 +56,6 @@ export function LandscapeFooter({
       {hasGenerated ? (
         <div
           className="absolute left-1/2 z-20 -translate-x-1/2"
-          data-landscape-footer="generated"
           style={{
             bottom: slots.generatedWatermark.bottom,
             width: slots.generatedWatermark.width

@@ -18,8 +18,7 @@ export function LandscapeLyricsBlock({
   maxHeight,
   cardWidth,
   cardHeight,
-  isDarkText,
-  align
+  isDarkText
 }: {
   lyrics: string;
   translationText?: string;
@@ -35,7 +34,6 @@ export function LandscapeLyricsBlock({
   cardWidth: number;
   cardHeight: number;
   isDarkText: boolean;
-  align: "left" | "center";
 }) {
   const lyricLines = splitUsefulLines(lyrics);
   const translationLines = splitUsefulLines(translationText ?? "");
@@ -50,7 +48,7 @@ export function LandscapeLyricsBlock({
     maxHeight,
     lineHeight
   });
-  const activeLyricSize = Math.max(20, Math.min(lyricFontSize, typography.lyricFontSize));
+  const activeLyricSize = Math.max(34, Math.min(lyricFontSize, typography.lyricFontSize));
   const activeTranslationSize = Math.round(
     Math.min(typography.translationFontSize, activeLyricSize * Math.min(0.52, Math.max(0.45, translationScale)))
   );
@@ -58,11 +56,7 @@ export function LandscapeLyricsBlock({
 
   return (
     <div
-      className={cn(
-        "absolute z-10 overflow-hidden whitespace-pre-wrap break-words",
-        align === "center" ? "text-center" : "text-left"
-      )}
-      data-landscape-lyrics="true"
+      className="absolute z-10 overflow-hidden text-left whitespace-pre-wrap break-words"
       style={{
         left,
         top,

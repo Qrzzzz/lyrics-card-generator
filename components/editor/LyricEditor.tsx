@@ -11,13 +11,11 @@ import { SongLinkParser } from "@/components/editor/SongLinkParser";
 import { StylePanel } from "@/components/editor/StylePanel";
 import { DynamicAppBackground } from "@/components/layout/DynamicAppBackground";
 import { LyricCardPreview } from "@/components/preview/LyricCardPreview";
-import { estimateCardHeight, getCardSize, PRESET_CARD_SIZES } from "@/lib/card-size";
+import { estimateCardHeight, PRESET_CARD_SIZES } from "@/lib/card-size";
 import { TEXT_COLOR_PRESETS } from "@/lib/color-analysis";
 import { getHighResolutionCoverUrl } from "@/lib/cover-url";
 import { createT, messages } from "@/lib/i18n";
 import { proxiedImageUrl } from "@/lib/image-utils";
-import { getLandscapeSlots } from "@/lib/landscape-layout";
-import { estimateLandscapeLyricsHeight, getLandscapeTypography } from "@/lib/landscape-typography";
 import { extractPaletteFromImage } from "@/lib/palette-extraction";
 import { DEFAULT_PALETTE, resolveAutoTextColor } from "@/lib/palette-background";
 import type { AppState, CardRatio, CardStyle, Locale } from "@/lib/types";
@@ -106,59 +104,6 @@ export function LyricEditor() {
   );
   const coverForPalette = state.song.proxiedCoverUrl || proxiedImageUrl(state.song.coverUrl);
   const canFetchLyrics = Boolean(state.song.originalUrl && state.song.title.trim());
-  const landscapeOverflowWarning = useMemo(() => {
-    const style = state.style;
-    if ((style.layoutMode ?? "portrait") !== "landscape" || style.contentMode !== "lyrics") {
-      return false;
-    }
-
-    const size = getCardSize(style);
-    const slots = getLandscapeSlots(size.width, size.height, {
-      showCover: style.showCover,
-      allowTwoLineTitle: style.allowTwoLineTitle,
-      showSongInfo: style.showSongInfo
-    });
-    const lyricLineCount = Math.max(1, splitUsefulLines(state.lyrics).length);
-    const translationLineCount = style.translationEnabled ? splitUsefulLines(style.translationText).length : 0;
-    const hasTranslation = style.translationEnabled && translationLineCount > 0;
-    const typography = getLandscapeTypography({
-      width: size.width,
-      height: size.height,
-      lineCount: lyricLineCount,
-      hasTranslation,
-      contentMode: "lyrics",
-      maxHeight: slots.lyrics.maxHeight,
-      lineHeight: style.lineHeight
-    });
-    const activeLyricSize = Math.max(20, Math.min(style.lyricFontSize, typography.lyricFontSize));
-    const activeTranslationSize = hasTranslation
-      ? Math.round(Math.min(typography.translationFontSize, activeLyricSize * Math.min(0.52, Math.max(0.45, style.translationScale))))
-      : 0;
-    const estimatedHeight = estimateLandscapeLyricsHeight({
-      lineCount: lyricLineCount,
-      hasTranslation,
-      lyricFontSize: activeLyricSize,
-      translationFontSize: activeTranslationSize,
-      lineHeight: style.lineHeight
-    });
-
-    return estimatedHeight > slots.lyrics.maxHeight + 1;
-  }, [
-    state.lyrics,
-    state.style.allowTwoLineTitle,
-    state.style.contentMode,
-    state.style.height,
-    state.style.layoutMode,
-    state.style.lineHeight,
-    state.style.lyricFontSize,
-    state.style.ratio,
-    state.style.showCover,
-    state.style.showSongInfo,
-    state.style.translationEnabled,
-    state.style.translationScale,
-    state.style.translationText,
-    state.style.width
-  ]);
 
   function handleStyleChange(nextStyle: CardStyle) {
     setState((current) => {
@@ -475,14 +420,6 @@ export function LyricEditor() {
               onStyleChange={handleStyleChange}
               t={t}
             />
-            {landscapeOverflowWarning ? (
-              <div
-                className="rounded-lg border border-amber-200/24 bg-amber-300/10 px-3 py-2 text-sm font-medium text-amber-100/90"
-                data-landscape-overflow-warning="true"
-              >
-                {t("landscapeOverflowWarning")}
-              </div>
-            ) : null}
             <ExportPanel state={parsedState} cardRef={cardRef} t={t} />
           </motion.div>
 
@@ -514,11 +451,4 @@ function sizeSnapshot(style: CardStyle) {
     width: style.width,
     height: style.height
   };
-}
-
-function splitUsefulLines(text: string) {
-  return text
-    .split(/\r?\n/)
-    .map((line) => line.trimEnd())
-    .filter((line, index, lines) => line.trim().length > 0 || (index > 0 && index < lines.length - 1));
 }

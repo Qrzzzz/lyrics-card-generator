@@ -46,7 +46,6 @@ export function LandscapeLyricCard({
     <article
       className={cn("relative isolate overflow-hidden bg-[#111216] text-white", fontClassName(style.font))}
       style={{ width: size.width, height: size.height }}
-      data-card-layout="landscape"
       data-export-card="true"
     >
       <PaletteBackground palette={style.extractedPalette} />
@@ -104,7 +103,6 @@ export function LandscapeLyricCard({
               cardWidth={size.width}
               cardHeight={size.height}
               isDarkText={isDarkText}
-              align={style.align}
             />
           </>
         )}

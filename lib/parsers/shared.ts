@@ -1,6 +1,5 @@
 import * as cheerio from "cheerio";
 import { getHighResolutionCoverUrl } from "@/lib/cover-url";
-import { fetchPublicUrl, readTextWithLimit } from "@/lib/safe-fetch";
 import type { SongInfo, SongSource } from "@/lib/types";
 
 export type ExtractedMeta = {
@@ -35,9 +34,10 @@ const PLATFORM_TAILS = [
 ];
 
 export async function fetchHtml(url: string): Promise<{ html: string; finalUrl: string }> {
-  const { response: res, finalUrl } = await fetchPublicUrl(url, {
+  const res = await fetch(url, {
     headers: REQUEST_HEADERS,
-    timeoutMs: 10000
+    signal: AbortSignal.timeout(10000),
+    redirect: "follow"
   });
 
   if (!res.ok) {
@@ -45,27 +45,28 @@ export async function fetchHtml(url: string): Promise<{ html: string; finalUrl: 
   }
 
   return {
-    html: await readTextWithLimit(res, HTML_LIMIT),
-    finalUrl
+    html: await limitedRead(res, HTML_LIMIT),
+    finalUrl: res.url || url
   };
 }
 
 export async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
-  const { response: res } = await fetchPublicUrl(url, {
+  const res = await fetch(url, {
     ...init,
     headers: {
       ...REQUEST_HEADERS,
       accept: "application/json,text/plain,*/*",
       ...(init?.headers ?? {})
     },
-    timeoutMs: 10000
+    signal: init?.signal ?? AbortSignal.timeout(10000),
+    redirect: "follow"
   });
 
   if (!res.ok) {
     throw new Error(`The JSON endpoint returned HTTP ${res.status}.`);
   }
 
-  return JSON.parse(await readTextWithLimit(res, HTML_LIMIT)) as T;
+  return (await res.json()) as T;
 }
 
 export function extractMeta(html: string, baseUrl: string): ExtractedMeta {
@@ -192,7 +193,7 @@ export function cleanArtistName(artist: string) {
   return artist
     .replace(/\s+on\s+Apple Music\s*$/i, "")
     .replace(/\s+on\s*$/i, "")
-    .replace(/\s*(-|\||–|—)\s*$/g, "")
+    .replace(/\s*(-|\||“|”)\s*$/g, "")
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -234,7 +235,7 @@ function stripPlatformTail(value: string, source: SongSource) {
   for (const tail of tails) {
     result = result
       .replace(new RegExp(`\\s+on\\s+${escapeRegExp(tail)}\\s*$`, "i"), "")
-      .replace(new RegExp(`\\s*(-|_|/|\\||–|—)\\s*${escapeRegExp(tail)}\\s*$`, "i"), "")
+      .replace(new RegExp(`\\s*(-|_|/|\\||“|”)\\s*${escapeRegExp(tail)}\\s*$`, "i"), "")
       .replace(new RegExp(`\\s*${escapeRegExp(tail)}\\s*$`, "i"), "");
   }
 
@@ -247,11 +248,50 @@ function removePlatformSuffix(raw: string) {
   for (const tail of PLATFORM_TAILS) {
     result = result
       .replace(new RegExp(`\\s+on\\s+${escapeRegExp(tail)}\\s*$`, "i"), "")
-      .replace(new RegExp(`\\s*(-|_|/|\\||–|—)\\s*${escapeRegExp(tail)}\\s*$`, "i"), "")
+      .replace(new RegExp(`\\s*(-|_|/|\\||“|”)\\s*${escapeRegExp(tail)}\\s*$`, "i"), "")
       .replace(new RegExp(`\\s*${escapeRegExp(tail)}\\s*$`, "i"), "");
   }
 
   return result.replace(/\s+/g, " ").trim();
+}
+
+async function limitedRead(res: Response, limit: number) {
+  if (!res.body) {
+    return "";
+  }
+
+  const reader = res.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let received = 0;
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) {
+      break;
+    }
+
+    received += value.byteLength;
+    if (received > limit) {
+      reader.cancel().catch(() => undefined);
+      throw new Error("The HTML response is too large to parse.");
+    }
+
+    chunks.push(value);
+  }
+
+  return new TextDecoder("utf-8").decode(concatChunks(chunks, received));
+}
+
+function concatChunks(chunks: Uint8Array[], length: number) {
+  const merged = new Uint8Array(length);
+  let offset = 0;
+
+  for (const chunk of chunks) {
+    merged.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+
+  return merged;
 }
 
 function escapeRegExp(value: string) {

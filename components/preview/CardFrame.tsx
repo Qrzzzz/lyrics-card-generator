@@ -26,17 +26,17 @@ export function CardFrame({
         className={cn(
           "pointer-events-none absolute border",
           resolvedVariant === "landscapeClean"
-            ? "inset-[64px] rounded-[48px] border-white/18 shadow-[0_30px_94px_rgba(0,0,0,0.34)] backdrop-blur-[28px]"
+            ? "inset-[64px] rounded-[48px] border-white/16 shadow-[0_24px_78px_rgba(0,0,0,0.22)]"
             : "inset-[72px] rounded-[48px] border-white/18 shadow-[0_36px_120px_rgba(0,0,0,0.42)] backdrop-blur-[34px]"
         )}
         style={{
           background:
             resolvedVariant === "landscapeClean"
-              ? "linear-gradient(140deg, rgba(255,255,255,0.12), rgba(255,255,255,0.055) 42%, rgba(0,0,0,0.06))"
+              ? "linear-gradient(140deg, rgba(255,255,255,0.07), rgba(255,255,255,0.02) 42%, rgba(0,0,0,0.05))"
               : "rgba(255,255,255,0.105)",
           boxShadow:
             resolvedVariant === "landscapeClean"
-              ? "inset 0 1px 0 rgba(255,255,255,0.22), 0 30px 94px rgba(0,0,0,0.34)"
+              ? "inset 0 1px 0 rgba(255,255,255,0.18), 0 24px 78px rgba(0,0,0,0.22)"
               : "inset 0 1px 0 rgba(255,255,255,0.22), 0 36px 120px rgba(0,0,0,0.42)"
         }}
       />

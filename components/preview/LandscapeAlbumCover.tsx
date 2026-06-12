@@ -39,7 +39,6 @@ export function LandscapeAlbumCover({
   return (
     <div
       className="absolute z-10 overflow-hidden rounded-[28px] bg-black/10 shadow-[0_34px_90px_rgba(0,0,0,0.30)]"
-      data-landscape-cover="true"
       style={{
         left,
         top,

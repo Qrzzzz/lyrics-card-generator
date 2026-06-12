@@ -65,6 +65,6 @@ async function parseAppleLookup(id: string, country: string, finalUrl: string, o
     coverUrl: song.artworkUrl600 || song.artworkUrl100 || "",
     originalUrl,
     finalUrl,
-    parseMethod: "apple-lookup"
+    parseMethod: "apple-og"
   });
 }

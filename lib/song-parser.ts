@@ -2,7 +2,6 @@ import { parseAppleMusic } from "@/lib/parsers/apple";
 import { parseNetease } from "@/lib/parsers/netease";
 import { parseQQMusic } from "@/lib/parsers/qq";
 import { fetchHtml, REQUEST_HEADERS, songInfoFromMeta } from "@/lib/parsers/shared";
-import { fetchPublicUrl } from "@/lib/safe-fetch";
 import type { SongInfo, SongSource } from "@/lib/types";
 import { extractFirstUrl } from "@/lib/url-normalize";
 import { validatePublicHttpUrl } from "@/lib/url-safety";
@@ -109,9 +108,11 @@ export function detectSource(inputUrl: string): SongSource {
 
   if (
     hostname === "y.qq.com" ||
+    hostname === "c.y.qq.com" ||
+    hostname === "i.y.qq.com" ||
+    hostname === "u.y.qq.com" ||
     hostname.endsWith(".y.qq.com") ||
-    hostname === "music.qq.com" ||
-    hostname.endsWith(".music.qq.com")
+    hostname.endsWith(".qq.com")
   ) {
     return "qq";
   }
@@ -120,14 +121,14 @@ export function detectSource(inputUrl: string): SongSource {
 }
 
 export async function resolveRedirect(url: string) {
-  const { response, finalUrl } = await fetchPublicUrl(url, {
+  const response = await fetch(url, {
     headers: REQUEST_HEADERS,
     method: "GET",
-    timeoutMs: 10000
+    redirect: "follow"
   });
 
   response.body?.cancel().catch(() => undefined);
-  return finalUrl;
+  return response.url || url;
 }
 
 export async function parseGenericOpenGraph(finalUrl: string, originalUrl = finalUrl) {

@@ -130,7 +130,7 @@ export const landscapeLayoutConfig: CardLayoutConfig = {
   },
   header: {
     x: 820,
-    y: 132,
+    y: 150,
     width: 920,
     height: 150
   },
@@ -146,9 +146,9 @@ export const landscapeLayoutConfig: CardLayoutConfig = {
   },
   lyrics: {
     x: 820,
-    y: 300,
+    y: 330,
     width: 920,
-    maxHeight: 600
+    maxHeight: 480
   },
   footer: {
     topRowBottom: 118,

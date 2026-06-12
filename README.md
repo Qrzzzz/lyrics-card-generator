@@ -1,39 +1,41 @@
 # Lyric Glass Card
 
-A local-first lyric share image generator for polished portrait and landscape cards.
+First MVP of a high-polish lyric share image generator.
 
-The app accepts manual lyrics and song metadata, can parse basic metadata from music links, extracts colors from cover art, previews the card in the browser, and exports the card as PNG.
+## 快速启动
 
-## Status and license
+Windows 用户：
 
-This repository is prepared for public source viewing, not npm package publishing. `package.json` intentionally keeps `"private": true`.
+双击运行：
 
-No open-source license has been selected yet. Unless a license is added later, the code and bundled assets are not licensed for reuse, redistribution, or commercial use.
+```bat
+scripts/start-dev.bat
+```
 
-## Requirements
-
-- Node.js LTS, Node 20 or newer recommended.
-- npm, installed with Node.js.
-- Network access is optional for the editor, but required for music-link parsing, remote cover images, dependency installation, and audit checks.
-
-## Quick start
-
-Windows:
+或在项目根目录执行：
 
 ```bat
 scripts\start-dev.bat
 ```
 
-You can also double-click `start.bat` from the project root.
+也可以直接双击根目录的 `start.bat`。
 
-macOS / Linux:
+macOS / Linux 用户：
 
 ```bash
 chmod +x scripts/start-dev.sh
 ./scripts/start-dev.sh
 ```
 
-Manual commands:
+启动成功后访问：
+
+```text
+http://localhost:3000
+```
+
+一键启动脚本只用于本地开发环境，不负责生产部署。
+
+## Run
 
 ```bash
 npm install
@@ -42,51 +44,50 @@ npm run dev
 
 Open `http://localhost:3000`.
 
-## Useful commands
+## Fonts
+
+The project loads these local fonts through `next/font/local`:
+
+- `public/fonts/SourceHanSansSC-Heavy.otf`
+- `public/fonts/SourceHanSerifSC-Heavy.otf`
+
+The original root-level font files were left in place.
+
+## Platform icons
+
+Platform badges use local SVG files so PNG export does not depend on remote logo
+URLs:
+
+- `public/platform-icons/apple-music.svg`
+- `public/platform-icons/qq-music.svg`
+- `public/platform-icons/netease-music.svg`
+
+Replace these files with official artwork if you need exact brand assets.
+
+## Styling controls
+
+The editor supports preset ratios plus custom canvas width/height, optional
+auto-height estimation, automatic/preset/custom text colors, platform badge
+visibility, and independent frame/shadow toggles.
+
+## Link parsing
+
+`POST /api/parse-song` accepts a direct URL or platform share text, extracts the
+first http/https URL, follows redirects, detects Apple Music, NetEase Cloud
+Music, or QQ Music, then tries the platform-specific parser before falling back
+to Open Graph / Twitter Card metadata. It does not fetch or store full lyrics.
+
+Command-line parser check:
 
 ```bash
-npm run typecheck
-npm test
-npm run build
-npm audit --omit=dev
-npm run check
+npm run parse:test -- "https://music.163.com/song?id=1827600686"
+npm run parse:test -- "https://y.qq.com/n/ryqq/songDetail/0039MnYb0qxYhV"
 ```
 
-`npm run check` runs type checking, deterministic tests, production build, and production-dependency audit.
+The command prints JSON with `ok`, `data.source`, `data.title`, `data.artist`,
+`data.coverUrl`, `data.finalUrl`, and `data.parseMethod`. On failure it prints
+the extracted URL, final URL, detected source, attempted methods, and error.
 
-Live parser checks are intentionally separate because they depend on third-party music sites:
-
-```bash
-npm run test:parse:live -- "https://music.163.com/song?id=1827600686"
-npm run test:parse:live -- "https://y.qq.com/n/ryqq/songDetail/0039MnYb0qxYhV"
-```
-
-## Supported link parsing
-
-`POST /api/parse-song` accepts a direct URL or share text, extracts the first http/https URL, follows public-network redirects with validation at every hop, detects Apple Music, NetEase Cloud Music, or QQ Music, then tries a platform parser before falling back to Open Graph / Twitter Card metadata.
-
-Supported examples include:
-
-- NetEase Cloud Music: `music.163.com/song?id=...`, `music.163.com/#/song?id=...`, `y.music.163.com/...`
-- QQ Music: `y.qq.com/n/ryqq/songDetail/...`, `i.y.qq.com/...songmid=...`, `i.y.qq.com/...songid=...`
-- Apple Music: `music.apple.com/...`
-
-Parsing does not fetch or store full lyrics.
-
-## Lyrics and copyright
-
-Automatic lyric fetching is experimental and uses public metadata search. Results may be incomplete or inaccurate. Users are responsible for confirming they have permission to use any lyrics, cover art, and generated image.
-
-## Assets
-
-The app bundles Source Han font files from the Source Han / Noto CJK family.
-
-The existing SVG files under `public/platform-icons/` are kept for local customization, but the default UI uses neutral text/color platform badges instead of official-looking logo artwork. Confirm brand and trademark usage before enabling those SVGs in a public build.
-
-See `THIRD_PARTY_NOTICES.md` before making this repository public.
-
-## Known limits
-
-- Music platforms can change page markup or API behavior without notice; live parser checks should be run before important demos.
-- Remote cover URLs may block browser canvas export; uploading a local cover is the most reliable fallback.
-- Landscape cards are optimized for curated lyric excerpts. If the text exceeds the safe export area, the editor shows a warning instead of silently implying the whole text will fit.
+`GET /api/image-proxy?url=...` proxies image resources for safer PNG export,
+with http/https-only validation, private-network blocking, content-type checks,
+timeouts, and response size limits.

@@ -1,5 +1,4 @@
 import { rankLyricsCandidate } from "@/lib/lyrics";
-import { fetchPublicUrl, readTextWithLimit } from "@/lib/safe-fetch";
 import { z } from "zod";
 
 export const runtime = "nodejs";
@@ -39,18 +38,18 @@ export async function POST(req: Request) {
     if (parsed.data.artist.trim()) {
       params.set("artist_name", parsed.data.artist);
     }
-    const { response: res } = await fetchPublicUrl(`https://lrclib.net/api/search?${params.toString()}`, {
+    const res = await fetch(`https://lrclib.net/api/search?${params.toString()}`, {
       headers: {
         "user-agent": "LyricGlassCard/0.1.0 (local desktop app)"
       },
-      timeoutMs: 8000
+      signal: AbortSignal.timeout(8000)
     });
 
     if (!res.ok) {
       return Response.json({ ok: false, error: "Could not fetch lyrics automatically." }, { status: 502 });
     }
 
-    const records = JSON.parse(await readTextWithLimit(res, 1024 * 1024)) as LrclibRecord[];
+    const records = (await res.json()) as LrclibRecord[];
     const candidates = records
       .map((record) => rankLyricsCandidate(record, parsed.data.title, parsed.data.artist))
       .filter((candidate) => candidate !== null)
