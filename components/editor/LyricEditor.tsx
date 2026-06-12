@@ -1,24 +1,29 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { RotateCcw, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { ExportCelebration } from "@/components/effects/ExportCelebration";
 import { ExportPanel } from "@/components/editor/ExportPanel";
 import { LyricsFetchPanel } from "@/components/editor/LyricsFetchPanel";
 import { LyricInput } from "@/components/editor/LyricInput";
+import { SettingsStepper, type SettingsStep } from "@/components/editor/SettingsStepper";
 import { SongInfoForm } from "@/components/editor/SongInfoForm";
 import { SongLinkParser } from "@/components/editor/SongLinkParser";
-import { StylePanel } from "@/components/editor/StylePanel";
+import { LayoutSettingsPanel, VisualSettingsPanel } from "@/components/editor/StylePanel";
+import { ClickSpark } from "@/components/layout/ClickSpark";
 import { DynamicAppBackground } from "@/components/layout/DynamicAppBackground";
 import { LyricCardPreview } from "@/components/preview/LyricCardPreview";
-import { estimateCardHeight, PRESET_CARD_SIZES } from "@/lib/card-size";
+import { estimateCardHeight, getCardSize, PRESET_CARD_SIZES } from "@/lib/card-size";
 import { TEXT_COLOR_PRESETS } from "@/lib/color-analysis";
 import { getHighResolutionCoverUrl } from "@/lib/cover-url";
+import { exportNodeAsPng } from "@/lib/export-image";
 import { createT, messages } from "@/lib/i18n";
 import { proxiedImageUrl } from "@/lib/image-utils";
 import { extractPaletteFromImage } from "@/lib/palette-extraction";
 import { DEFAULT_PALETTE, resolveAutoTextColor } from "@/lib/palette-background";
 import type { AppState, CardRatio, CardStyle, Locale } from "@/lib/types";
+import { sanitizeFilePart } from "@/lib/utils";
 
 const DEFAULT_SONG_URL = "https://music.apple.com/cn/song/opposite/1677892095";
 const DEFAULT_LYRICS = [
@@ -73,7 +78,7 @@ const defaultState: AppState = {
     contentMode: "lyrics",
     instrumentalText: "纯音乐",
     showCover: true,
-    showSongInfo: false,
+    showSongInfo: true,
     showGeneratedWatermark: false,
     showSharedBy: false,
     sharedByText: "",
@@ -102,6 +107,10 @@ const defaultState: AppState = {
 
 export function LyricEditor() {
   const [state, setState] = useState<AppState>(defaultState);
+  const [currentStep, setCurrentStep] = useState(0);
+  const [isPreviewVisible, setIsPreviewVisible] = useState(true);
+  const [celebrationKey, setCelebrationKey] = useState(0);
+  const [isCompleteExporting, setIsCompleteExporting] = useState(false);
   const cardRef = useRef<HTMLElement | null>(null);
   const t = useMemo(() => createT(state.locale), [state.locale]);
 
@@ -202,8 +211,28 @@ export function LyricEditor() {
     });
   }
 
+  async function completeAndExport() {
+    setCelebrationKey((key) => key + 1);
+
+    if (!cardRef.current || isCompleteExporting) {
+      return;
+    }
+
+    setIsCompleteExporting(true);
+
+    try {
+      const size = getCardSize(parsedState.style);
+      const fileName = `lyric-card-${sanitizeFilePart(parsedState.song.title)}.png`;
+      await exportNodeAsPng(cardRef.current, fileName, size.width, size.height, 2);
+    } catch (error) {
+      console.error("[Lyric Card Generator] complete export failed", error);
+    } finally {
+      setIsCompleteExporting(false);
+    }
+  }
+
   useEffect(() => {
-    const storedLocale = window.localStorage.getItem("lyric-glass-card-locale");
+    const storedLocale = window.localStorage.getItem("lyric-card-generator-locale");
     if (storedLocale === "zh" || storedLocale === "en") {
       setLocale(storedLocale);
     }
@@ -227,7 +256,7 @@ export function LyricEditor() {
         }
       };
     });
-    window.localStorage.setItem("lyric-glass-card-locale", locale);
+    window.localStorage.setItem("lyric-card-generator-locale", locale);
   }
 
   useEffect(() => {
@@ -348,9 +377,128 @@ export function LyricEditor() {
     state.style.width
   ]);
 
+  const settingsSteps: SettingsStep[] = [
+    {
+      id: "link",
+      title: t("step.songLink"),
+      description: t("parseIdle"),
+      isComplete: Boolean(state.url.trim()),
+      content: (
+        <SongLinkParser
+          url={state.url}
+          onUrlChange={(url) => setState((current) => ({ ...current, url }))}
+          onParsed={(song) =>
+            setState((current) => {
+              const originalCoverUrl = song.coverUrl ?? "";
+              const coverUrl = getHighResolutionCoverUrl(originalCoverUrl, song.source);
+
+              return {
+                ...current,
+                song: {
+                  ...current.song,
+                  ...song,
+                  originalCoverUrl,
+                  coverUrl,
+                  proxiedCoverUrl: proxiedImageUrl(coverUrl)
+                }
+              };
+            })
+          }
+          t={t}
+          autoParseOnMount
+        />
+      )
+    },
+    {
+      id: "song",
+      title: t("step.songInfo"),
+      description: t("manualOverride"),
+      isComplete: Boolean(state.song.title.trim() || state.song.artist.trim() || state.song.coverUrl?.trim()),
+      content: (
+        <SongInfoForm
+          song={state.song}
+          onSongChange={(song) => setState((current) => ({ ...current, song }))}
+          t={t}
+        />
+      )
+    },
+    {
+      id: "lyrics",
+      title: t("step.lyrics"),
+      description: t("manualText"),
+      isComplete: state.style.contentMode === "instrumental" || Boolean(state.lyrics.trim()),
+      content: (
+        <div className="grid gap-4">
+          <LyricsFetchPanel
+            song={state.song}
+            visible={canFetchLyrics}
+            onUseLyrics={(lyrics) => setState((current) => ({ ...current, lyrics }))}
+            t={t}
+          />
+          <LyricInput
+            lyrics={state.lyrics}
+            onLyricsChange={(lyrics) => setState((current) => ({ ...current, lyrics }))}
+            translationEnabled={state.style.translationEnabled}
+            translationText={state.style.translationText}
+            onTranslationEnabledChange={(translationEnabled) =>
+              setState((current) => ({
+                ...current,
+                translationEnabled,
+                style: { ...current.style, translationEnabled }
+              }))
+            }
+            onTranslationTextChange={(translationText) =>
+              setState((current) => ({
+                ...current,
+                translationText,
+                style: { ...current.style, translationText }
+              }))
+            }
+            contentMode={state.style.contentMode}
+            t={t}
+          />
+        </div>
+      )
+    },
+    {
+      id: "layout",
+      title: t("step.layout"),
+      description: t("layoutCompatibility"),
+      isComplete: true,
+      content: (
+        <LayoutSettingsPanel
+          style={state.style}
+          onStyleChange={handleStyleChange}
+          t={t}
+        />
+      )
+    },
+    {
+      id: "visual",
+      title: t("step.visual"),
+      description: t("background"),
+      isComplete: true,
+      content: (
+        <VisualSettingsPanel
+          style={state.style}
+          onStyleChange={handleStyleChange}
+          t={t}
+        />
+      )
+    },
+    {
+      id: "export",
+      title: t("step.export"),
+      description: t("exportHint"),
+      isComplete: true,
+      content: <ExportPanel state={parsedState} cardRef={cardRef} t={t} />
+    }
+  ];
+
   return (
     <div className="app-shell min-h-screen" data-theme="dark">
       <DynamicAppBackground palette={state.palette} />
+      <ClickSpark themeColor={state.palette?.primary ?? DEFAULT_PALETTE.primary}>
     <main className="relative z-10 min-h-screen px-4 py-5 sm:px-6 lg:px-8">
       <div className="mx-auto grid w-[calc(100vw-2rem)] max-w-[1520px] min-w-0 gap-5 sm:w-full">
         <header className="glass-panel min-w-0 max-w-full flex flex-col gap-4 rounded-lg px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
@@ -392,24 +540,6 @@ export function LyricEditor() {
                 </button>
               ))}
             </div>
-            <button
-              type="button"
-              onClick={() =>
-                setState({
-                  ...defaultState,
-                  locale: state.locale,
-                  style: {
-                    ...defaultState.style,
-                    instrumentalText: state.locale === "zh" ? "纯音乐" : "Instrumental Track",
-                    watermark: messages[state.locale].madeWith
-                  }
-                })
-              }
-              className="app-button inline-flex h-10 items-center justify-center gap-2 rounded-lg px-3 text-sm font-semibold transition"
-            >
-              <RotateCcw className="h-4 w-4" />
-              {t("reset")}
-            </button>
           </div>
         </header>
 
@@ -420,68 +550,17 @@ export function LyricEditor() {
             transition={{ duration: 0.35 }}
             className="order-2 grid min-w-0 gap-4 lg:order-1"
           >
-            <SongLinkParser
-              url={state.url}
-              onUrlChange={(url) => setState((current) => ({ ...current, url }))}
-              onParsed={(song) =>
-                setState((current) => {
-                  const originalCoverUrl = song.coverUrl ?? "";
-                  const coverUrl = getHighResolutionCoverUrl(originalCoverUrl, song.source);
-
-                  return {
-                    ...current,
-                    song: {
-                      ...current.song,
-                      ...song,
-                      originalCoverUrl,
-                      coverUrl,
-                      proxiedCoverUrl: proxiedImageUrl(coverUrl)
-                    }
-                  };
-                })
-              }
-              t={t}
-              autoParseOnMount
+            <SettingsStepper
+              steps={settingsSteps}
+              currentStep={currentStep}
+              onStepChange={setCurrentStep}
+              backText={t("step.back")}
+              nextText={t("step.next")}
+              completeText={t("step.complete")}
+              completeDisabled={isCompleteExporting}
+              onComplete={completeAndExport}
+              themeColor={state.palette?.primary ?? DEFAULT_PALETTE.primary}
             />
-            <LyricsFetchPanel
-              song={state.song}
-              visible={canFetchLyrics}
-              onUseLyrics={(lyrics) => setState((current) => ({ ...current, lyrics }))}
-              t={t}
-            />
-            <SongInfoForm
-              song={state.song}
-              onSongChange={(song) => setState((current) => ({ ...current, song }))}
-              t={t}
-            />
-            <LyricInput
-              lyrics={state.lyrics}
-              onLyricsChange={(lyrics) => setState((current) => ({ ...current, lyrics }))}
-              translationEnabled={state.style.translationEnabled}
-              translationText={state.style.translationText}
-              onTranslationEnabledChange={(translationEnabled) =>
-                setState((current) => ({
-                  ...current,
-                  translationEnabled,
-                  style: { ...current.style, translationEnabled }
-                }))
-              }
-              onTranslationTextChange={(translationText) =>
-                setState((current) => ({
-                  ...current,
-                  translationText,
-                  style: { ...current.style, translationText }
-                }))
-              }
-              contentMode={state.style.contentMode}
-              t={t}
-            />
-            <StylePanel
-              style={state.style}
-              onStyleChange={handleStyleChange}
-              t={t}
-            />
-            <ExportPanel state={parsedState} cardRef={cardRef} t={t} />
           </motion.div>
 
           <motion.div
@@ -490,18 +569,29 @@ export function LyricEditor() {
             transition={{ duration: 0.35, delay: 0.05 }}
             className="order-1 min-w-0 lg:order-2"
           >
-            <LyricCardPreview
-              song={parsedState.song}
-              lyrics={parsedState.lyrics}
-              style={parsedState.style}
-              cardRef={cardRef}
-              locale={state.locale}
-              t={t}
-            />
+            <button
+              type="button"
+              onClick={() => setIsPreviewVisible((visible) => !visible)}
+              className="app-button mb-3 inline-flex h-10 w-full items-center justify-center rounded-lg px-3 text-sm font-semibold transition lg:hidden"
+            >
+              {isPreviewVisible ? t("step.hidePreview") : t("step.showPreview")}
+            </button>
+            <div className={`min-w-0 overflow-hidden transition-all duration-300 lg:max-h-none lg:overflow-visible ${isPreviewVisible ? "max-h-[1800px]" : "max-h-0"}`}>
+              <LyricCardPreview
+                song={parsedState.song}
+                lyrics={parsedState.lyrics}
+                style={parsedState.style}
+                cardRef={cardRef}
+                locale={state.locale}
+                t={t}
+              />
+            </div>
           </motion.div>
         </div>
       </div>
     </main>
+      </ClickSpark>
+      <ExportCelebration burstKey={celebrationKey} accentColor={state.palette?.primary ?? DEFAULT_PALETTE.primary} />
     </div>
   );
 }

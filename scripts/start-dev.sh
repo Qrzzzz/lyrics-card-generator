@@ -2,7 +2,7 @@
 set -e
 
 echo "================================"
-echo "  Lyric Glass Card Dev Server"
+echo "  Lyric Card Generator Dev Server"
 echo "================================"
 echo
 

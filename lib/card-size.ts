@@ -60,7 +60,7 @@ export function estimateCardHeight(params: {
     params.lyricLineCount,
     Math.ceil(params.lyricCharacterCount / averageCharsPerLine)
   );
-  const topArea = params.showSongInfo ? 180 : 80;
+  const topArea = params.showSongInfo ? 280 : 80;
   const bottomArea = params.showWatermark || params.showPlatformBadge || params.showSharedBy ? 120 : 40;
   const lyricArea = wrappedLines * params.lyricFontSize * params.lineHeight;
   const padding = 150;

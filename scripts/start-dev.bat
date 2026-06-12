@@ -2,11 +2,11 @@
 setlocal
 chcp 65001 >nul
 
-title Lyric Glass Card Dev Server
+title Lyric Card Generator Dev Server
 cd /d "%~dp0.."
 
 echo ==================================================
-echo   Lyric Glass Card Dev Server
+echo   Lyric Card Generator Dev Server
 echo ==================================================
 echo.
 

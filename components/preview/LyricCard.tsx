@@ -80,7 +80,7 @@ export function LyricCard({
           {frameEnabled ? <div className="absolute inset-x-0 top-0 h-px bg-white/35" /> : null}
 
           {(style.showCover || style.showSongInfo) && contentMode !== "instrumental" ? (
-            <header className="flex shrink-0 items-center gap-7">
+            <header className="flex shrink-0 items-center gap-10">
               {style.showCover ? (
                 <AlbumCover
                   coverUrl={activeCover}
@@ -92,10 +92,10 @@ export function LyricCard({
                 />
               ) : null}
               {style.showSongInfo ? (
-                <div className="min-w-0 py-2">
+                <div className="min-w-0 py-3">
                   <h1
                     className={cn(
-                      "text-[34px] font-black leading-[1.36] tracking-normal",
+                      "text-[51px] font-black leading-[1.48] tracking-normal",
                       style.allowTwoLineTitle ? "two-line-title" : "truncate"
                     )}
                     style={{ color: textColor }}
@@ -103,7 +103,7 @@ export function LyricCard({
                     {song.title || "Untitled"}
                   </h1>
                   <p
-                    className="mt-2 truncate text-[23px] font-semibold leading-[1.36]"
+                    className="mt-4 truncate text-[35px] font-semibold leading-[1.5]"
                     style={{ color: withAlpha(textColor, 0.64) }}
                   >
                     {song.artist || "Unknown artist"}
@@ -173,7 +173,7 @@ function AlbumCover({
   cropScale: number;
   onError: () => void;
 }) {
-  const className = "relative h-[116px] w-[116px] shrink-0 overflow-hidden rounded-[26px] bg-black/10";
+  const className = "relative h-[174px] w-[174px] shrink-0 overflow-hidden rounded-[39px] bg-black/10";
 
   function onLoad(event: SyntheticEvent<HTMLImageElement>) {
     if (process.env.NODE_ENV !== "development") {
@@ -181,7 +181,7 @@ function AlbumCover({
     }
 
     const image = event.currentTarget;
-    console.debug("[Lyric Glass Card] AlbumCover debug", {
+    console.debug("[Lyric Card Generator] AlbumCover debug", {
       originalCoverUrl,
       normalizedCoverUrl,
       proxiedCoverUrl,

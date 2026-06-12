@@ -26,7 +26,7 @@ export function LandscapeAlbumCover({
     }
 
     const image = event.currentTarget;
-    console.debug("[Lyric Glass Card] LandscapeAlbumCover debug", {
+    console.debug("[Lyric Card Generator] LandscapeAlbumCover debug", {
       originalCoverUrl: song.originalCoverUrl,
       normalizedCoverUrl: song.coverUrl,
       proxiedCoverUrl: song.proxiedCoverUrl,

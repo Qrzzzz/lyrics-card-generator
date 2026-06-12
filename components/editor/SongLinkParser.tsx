@@ -74,7 +74,7 @@ export function SongLinkParser({
 
       if (!payload.ok) {
         if (process.env.NODE_ENV === "development") {
-          console.debug("[Lyric Glass Card] parse-song failed", {
+          console.debug("[Lyric Card Generator] parse-song failed", {
             input: url,
             extractedUrl: payload.details?.extractedUrl,
             finalUrl: payload.details?.finalUrl,
@@ -92,7 +92,7 @@ export function SongLinkParser({
     } catch (error) {
       setStatus("error");
       if (process.env.NODE_ENV === "development" && error instanceof Error) {
-        console.debug("[Lyric Glass Card] parse-song error", {
+        console.debug("[Lyric Card Generator] parse-song error", {
           input: url,
           error: error.message
         });

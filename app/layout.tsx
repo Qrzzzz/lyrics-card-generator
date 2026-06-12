@@ -15,8 +15,8 @@ const sourceHanSerifHeavy = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Lyric Glass Card",
-  description: "Create premium lyric share cards from manual lyrics and song metadata."
+  title: "Lyric Card Generator",
+  description: "Generate premium Apple Music-style lyric share images from manual lyrics and song metadata."
 };
 
 export default function RootLayout({

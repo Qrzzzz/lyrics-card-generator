@@ -27,17 +27,23 @@ const TEXT_PRESET_LABEL_KEYS: Record<TextColorPreset, MessageKey> = {
   softGold: "softGold"
 };
 
-export function StylePanel({
-  style,
-  onStyleChange,
-  t
-}: {
+type StylePanelProps = {
   style: CardStyle;
   onStyleChange: (style: CardStyle) => void;
   t: ReturnType<typeof createT>;
-}) {
+};
+
+export function StylePanel(props: StylePanelProps) {
+  return (
+    <div className="grid gap-4">
+      <LayoutSettingsPanel {...props} />
+      <VisualSettingsPanel {...props} />
+    </div>
+  );
+}
+
+export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps) {
   const layoutMode = style.layoutMode ?? "portrait";
-  const frameVisible = style.frameStyleEnabled && style.frameVariant !== "fullBleed";
 
   function update<K extends keyof CardStyle>(key: K, value: CardStyle[K]) {
     onStyleChange({ ...style, [key]: value });
@@ -65,22 +71,8 @@ export function StylePanel({
     });
   }
 
-  function updateFrameVisibility(enabled: boolean) {
-    onStyleChange({
-      ...style,
-      frameStyleEnabled: enabled,
-      frameVariant: enabled ? "auto" : "fullBleed",
-      showFrame: enabled,
-      showShadow: enabled
-    });
-  }
-
-  function updateGeneratedWatermark(enabled: boolean) {
-    onStyleChange({ ...style, showGeneratedWatermark: enabled, showWatermark: enabled });
-  }
-
   return (
-    <Section title={t("style")} eyebrow={t("layout")}>
+    <Section title={t("layout")} eyebrow={t("style")}>
       <div className="grid gap-2">
         <div className="app-text-primary text-sm font-medium">{t("layoutMode")}</div>
         <div className="grid grid-cols-2 gap-2" role="group" aria-label={t("layoutMode")}>
@@ -222,17 +214,6 @@ export function StylePanel({
         </Label>
       ) : null}
 
-      <Label label={t("coverCrop")} hint={style.coverCropScale.toFixed(2)}>
-        <Input
-          type="range"
-          min={1}
-          max={2}
-          step={0.01}
-          value={style.coverCropScale}
-          onChange={(event) => update("coverCropScale", Number(event.target.value))}
-        />
-      </Label>
-
       {layoutMode === "landscape" ? (
         <div className="grid gap-3 rounded-lg border border-[rgb(var(--panel-border))] bg-[rgb(var(--panel-bg))] p-3">
           <p className="app-text-primary text-sm font-semibold">{t("landscapeLayoutSettings")}</p>
@@ -246,6 +227,43 @@ export function StylePanel({
           </div>
         </div>
       ) : null}
+    </Section>
+  );
+}
+
+export function VisualSettingsPanel({ style, onStyleChange, t }: StylePanelProps) {
+  const frameVisible = style.frameStyleEnabled && style.frameVariant !== "fullBleed";
+
+  function update<K extends keyof CardStyle>(key: K, value: CardStyle[K]) {
+    onStyleChange({ ...style, [key]: value });
+  }
+
+  function updateFrameVisibility(enabled: boolean) {
+    onStyleChange({
+      ...style,
+      frameStyleEnabled: enabled,
+      frameVariant: enabled ? "auto" : "fullBleed",
+      showFrame: enabled,
+      showShadow: enabled
+    });
+  }
+
+  function updateGeneratedWatermark(enabled: boolean) {
+    onStyleChange({ ...style, showGeneratedWatermark: enabled, showWatermark: enabled });
+  }
+
+  return (
+    <Section title={t("step.visual")} eyebrow={t("background")}>
+      <Label label={t("coverCrop")} hint={style.coverCropScale.toFixed(2)}>
+        <Input
+          type="range"
+          min={1}
+          max={2}
+          step={0.01}
+          value={style.coverCropScale}
+          onChange={(event) => update("coverCropScale", Number(event.target.value))}
+        />
+      </Label>
 
       <div className="grid gap-4 rounded-lg border border-[rgb(var(--panel-border))] bg-[rgb(var(--panel-bg))] p-3">
         <div className="grid gap-4 sm:grid-cols-3">

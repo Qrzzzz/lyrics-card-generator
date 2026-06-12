@@ -1,9 +1,11 @@
 {
-  "name": "lyric-glass-card",
+  "name": "lyric-card-generator",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "clean:next": "node scripts/clean-next-cache.mjs",
+    "dev:clean": "npm run clean:next && next dev",
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",

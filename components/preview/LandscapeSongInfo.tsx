@@ -34,17 +34,17 @@ export function LandscapeSongInfo({
     >
       <h1
         className={cn(
-          "text-[42px] font-black leading-[1.18] tracking-normal",
+          "text-[63px] font-black leading-[1.42] tracking-normal",
           allowTwoLineTitle ? "two-line-title" : "truncate"
         )}
       >
         {song.title || "Untitled"}
       </h1>
-      <p className="mt-4 truncate text-[26px] font-semibold leading-[1.22]" style={{ color: withAlpha(textColor, 0.72) }}>
+      <p className="mt-6 truncate text-[39px] font-semibold leading-[1.45]" style={{ color: withAlpha(textColor, 0.72) }}>
         {song.artist || "Unknown artist"}
       </p>
       {song.album ? (
-        <p className="mt-3 truncate text-[20px] font-medium leading-[1.2]" style={{ color: withAlpha(textColor, 0.5) }}>
+        <p className="mt-5 truncate text-[30px] font-medium leading-[1.42]" style={{ color: withAlpha(textColor, 0.5) }}>
           {song.album}
         </p>
       ) : null}

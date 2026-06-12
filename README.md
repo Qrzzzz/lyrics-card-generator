@@ -1,4 +1,4 @@
-# Lyric Glass Card
+# Lyric Card Generator
 
 First MVP of a high-polish lyric share image generator.
 

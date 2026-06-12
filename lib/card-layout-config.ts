@@ -135,19 +135,19 @@ export const landscapeLayoutConfig: CardLayoutConfig = {
     height: 150
   },
   cover: {
-    x: 160,
-    y: 230,
-    size: 520
+    x: 120,
+    y: 150,
+    size: 780
   },
   songInfo: {
-    x: 820,
+    x: 1030,
     y: 150,
-    width: 920
+    width: 740
   },
   lyrics: {
-    x: 820,
-    y: 330,
-    width: 920,
+    x: 1030,
+    y: 420,
+    width: 740,
     maxHeight: 480
   },
   footer: {
