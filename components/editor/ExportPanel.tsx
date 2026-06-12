@@ -3,11 +3,19 @@
 import { Download } from "lucide-react";
 import { useState } from "react";
 import { getCardSize } from "@/components/preview/LyricCard";
-import { Section } from "@/components/ui/controls";
+import { Label, Section, Select } from "@/components/ui/controls";
 import { exportNodeAsPng } from "@/lib/export-image";
 import type { createT } from "@/lib/i18n";
 import type { AppState } from "@/lib/types";
 import { sanitizeFilePart } from "@/lib/utils";
+
+type ExportQuality = "high" | "medium" | "low";
+
+const EXPORT_PIXEL_RATIO: Record<ExportQuality, number> = {
+  high: 2,
+  medium: 1.4,
+  low: 1
+};
 
 export function ExportPanel({
   state,
@@ -20,6 +28,7 @@ export function ExportPanel({
 }) {
   const [status, setStatus] = useState("");
   const [isExporting, setIsExporting] = useState(false);
+  const [quality, setQuality] = useState<ExportQuality>("high");
 
   async function exportPng() {
     if (!cardRef.current) {
@@ -33,7 +42,7 @@ export function ExportPanel({
     try {
       const size = getCardSize(state.style);
       const fileName = `lyric-card-${sanitizeFilePart(state.song.title)}.png`;
-      await exportNodeAsPng(cardRef.current, fileName, size.width, size.height);
+      await exportNodeAsPng(cardRef.current, fileName, size.width, size.height, EXPORT_PIXEL_RATIO[quality]);
       setStatus(t("pngExported"));
     } catch (error) {
       const detail = error instanceof Error ? error.message : "Unknown export error.";
@@ -45,6 +54,13 @@ export function ExportPanel({
 
   return (
     <Section title={t("export")} eyebrow="PNG">
+      <Label label={t("exportQuality")}>
+        <Select value={quality} onChange={(event) => setQuality(event.target.value as ExportQuality)}>
+          <option value="high">{t("qualityHigh")}</option>
+          <option value="medium">{t("qualityMedium")}</option>
+          <option value="low">{t("qualityLow")}</option>
+        </Select>
+      </Label>
       <button
         type="button"
         onClick={exportPng}

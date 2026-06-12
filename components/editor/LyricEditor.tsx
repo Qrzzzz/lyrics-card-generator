@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { RotateCcw } from "lucide-react";
+import { RotateCcw, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ExportPanel } from "@/components/editor/ExportPanel";
 import { LyricsFetchPanel } from "@/components/editor/LyricsFetchPanel";
@@ -54,13 +54,13 @@ const defaultState: AppState = {
     backgroundMode: "palette",
     extractedPalette: DEFAULT_PALETTE,
     layoutMode: "portrait",
-    ratio: "4:5",
-    width: PRESET_CARD_SIZES["4:5"].width,
-    height: PRESET_CARD_SIZES["4:5"].height,
+    ratio: "custom",
+    width: 1040,
+    height: 1080,
     autoHeight: false,
     font: "sans-heavy",
-    lyricFontSize: 54,
-    lineHeight: 1.32,
+    lyricFontSize: 60,
+    lineHeight: 1.4,
     align: "left",
     textColorMode: "auto",
     textColorPreset: "white",
@@ -68,28 +68,28 @@ const defaultState: AppState = {
     resolvedTextColor: "#FFFFFF",
     translationEnabled: true,
     translationText: DEFAULT_TRANSLATION,
-    translationScale: 0.48,
+    translationScale: 0.75,
     allowTwoLineTitle: false,
     contentMode: "lyrics",
     instrumentalText: "纯音乐",
     showCover: true,
-    showSongInfo: true,
-    showGeneratedWatermark: true,
+    showSongInfo: false,
+    showGeneratedWatermark: false,
     showSharedBy: false,
     sharedByText: "",
-    showWatermark: true,
-    showPlatformBadge: true,
-    frameStyleEnabled: true,
-    frameVariant: "auto",
-    showFrame: true,
-    showShadow: true,
+    showWatermark: false,
+    showPlatformBadge: false,
+    frameStyleEnabled: false,
+    frameVariant: "fullBleed",
+    showFrame: false,
+    showShadow: false,
     coverCropScale: 1,
     watermark: messages.zh.madeWith
   },
   lastPortraitSize: {
-    ratio: "4:5",
-    width: PRESET_CARD_SIZES["4:5"].width,
-    height: PRESET_CARD_SIZES["4:5"].height
+    ratio: "custom",
+    width: 1040,
+    height: 1080
   },
   lastLandscapeSize: {
     ratio: "16:9",
@@ -117,6 +117,34 @@ export function LyricEditor() {
   );
   const coverForPalette = state.song.proxiedCoverUrl || proxiedImageUrl(state.song.coverUrl);
   const canFetchLyrics = Boolean(state.song.originalUrl && state.song.title.trim());
+
+  function clearAllContent() {
+    setState((current) => ({
+      ...current,
+      url: "",
+      song: {
+        source: "unknown",
+        title: "",
+        artist: "",
+        album: "",
+        originalCoverUrl: "",
+        coverUrl: "",
+        proxiedCoverUrl: "",
+        originalUrl: ""
+      },
+      lyrics: "",
+      translationText: "",
+      translationEnabled: false,
+      palette: DEFAULT_PALETTE,
+      paletteWarning: "",
+      style: {
+        ...current.style,
+        extractedPalette: DEFAULT_PALETTE,
+        translationEnabled: false,
+        translationText: ""
+      }
+    }));
+  }
 
   function handleStyleChange(nextStyle: CardStyle) {
     setState((current) => {
@@ -331,6 +359,25 @@ export function LyricEditor() {
             <p className="app-text-subtle mt-1 text-sm">{t("appSubtitle")}</p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
+            <a
+              href="https://github.com/Qrzzzz"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="GitHub"
+              className="app-button inline-flex h-10 w-10 items-center justify-center rounded-lg transition"
+            >
+              <svg viewBox="0 0 16 16" aria-hidden="true" className="h-5 w-5 fill-current">
+                <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.03 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8Z" />
+              </svg>
+            </a>
+            <button
+              type="button"
+              onClick={clearAllContent}
+              className="app-button inline-flex h-10 items-center justify-center gap-2 rounded-lg px-3 text-sm font-semibold transition"
+            >
+              <Trash2 className="h-4 w-4" />
+              {t("clearAll")}
+            </button>
             <div className="inline-flex h-10 overflow-hidden rounded-lg border border-[rgb(var(--panel-border))] bg-[rgb(var(--button-bg))] p-1">
               {(["zh", "en"] as Locale[]).map((locale) => (
                 <button

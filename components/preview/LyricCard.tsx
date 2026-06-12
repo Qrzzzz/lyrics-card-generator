@@ -79,7 +79,7 @@ export function LyricCard({
         >
           {frameEnabled ? <div className="absolute inset-x-0 top-0 h-px bg-white/35" /> : null}
 
-          {style.showSongInfo && contentMode !== "instrumental" ? (
+          {(style.showCover || style.showSongInfo) && contentMode !== "instrumental" ? (
             <header className="flex shrink-0 items-center gap-7">
               {style.showCover ? (
                 <AlbumCover
@@ -91,23 +91,25 @@ export function LyricCard({
                   onError={() => setCoverFailed(true)}
                 />
               ) : null}
-              <div className="min-w-0 py-2">
-                <h1
-                  className={cn(
-                    "text-[34px] font-black leading-[1.36] tracking-normal",
-                    style.allowTwoLineTitle ? "two-line-title" : "truncate"
-                  )}
-                  style={{ color: textColor }}
-                >
-                  {song.title || "Untitled"}
-                </h1>
-                <p
-                  className="mt-2 truncate text-[23px] font-semibold leading-[1.36]"
-                  style={{ color: withAlpha(textColor, 0.64) }}
-                >
-                  {song.artist || "Unknown artist"}
-                </p>
-              </div>
+              {style.showSongInfo ? (
+                <div className="min-w-0 py-2">
+                  <h1
+                    className={cn(
+                      "text-[34px] font-black leading-[1.36] tracking-normal",
+                      style.allowTwoLineTitle ? "two-line-title" : "truncate"
+                    )}
+                    style={{ color: textColor }}
+                  >
+                    {song.title || "Untitled"}
+                  </h1>
+                  <p
+                    className="mt-2 truncate text-[23px] font-semibold leading-[1.36]"
+                    style={{ color: withAlpha(textColor, 0.64) }}
+                  >
+                    {song.artist || "Unknown artist"}
+                  </p>
+                </div>
+              ) : null}
             </header>
           ) : null}
 

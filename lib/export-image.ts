@@ -6,7 +6,8 @@ export async function exportNodeAsPng(
   node: HTMLElement,
   fileName: string,
   width: number,
-  height: number
+  height: number,
+  pixelRatio = 2
 ) {
   if ("fonts" in document) {
     await document.fonts.ready;
@@ -14,7 +15,7 @@ export async function exportNodeAsPng(
 
   const dataUrl = await toPng(node, {
     cacheBust: true,
-    pixelRatio: 2,
+    pixelRatio,
     width,
     height,
     style: {
