@@ -4,7 +4,6 @@ import { motion } from "framer-motion";
 import { Trash2 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ExportCelebration } from "@/components/effects/ExportCelebration";
-import { ExportPanel } from "@/components/editor/ExportPanel";
 import { LyricsFetchPanel } from "@/components/editor/LyricsFetchPanel";
 import { LyricInput } from "@/components/editor/LyricInput";
 import { SettingsStepper, type SettingsStep } from "@/components/editor/SettingsStepper";
@@ -491,7 +490,11 @@ export function LyricEditor() {
       title: t("step.export"),
       description: t("exportHint"),
       isComplete: true,
-      content: <ExportPanel state={parsedState} cardRef={cardRef} t={t} />
+      content: (
+        <div className="glass-panel rounded-lg p-4">
+          <p className="app-text-subtle text-sm">{t("exportHint")}</p>
+        </div>
+      )
     }
   ];
 
@@ -502,9 +505,17 @@ export function LyricEditor() {
     <main className="relative z-10 min-h-screen px-4 py-5 sm:px-6 lg:px-8">
       <div className="mx-auto grid w-[calc(100vw-2rem)] max-w-[1520px] min-w-0 gap-5 sm:w-full">
         <header className="glass-panel min-w-0 max-w-full flex flex-col gap-4 rounded-lg px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="app-text-primary text-2xl font-black tracking-normal sm:text-3xl">{t("appTitle")}</h1>
-            <p className="app-text-subtle mt-1 text-sm">{t("appSubtitle")}</p>
+          <div className="flex min-w-0 items-center gap-3">
+            <img
+              src="/app-icon.png"
+              alt=""
+              className="h-12 w-12 shrink-0 rounded-2xl object-contain"
+              aria-hidden="true"
+            />
+            <div className="min-w-0">
+              <h1 className="app-text-primary text-2xl font-black tracking-normal sm:text-3xl">{t("appTitle")}</h1>
+              <p className="app-text-subtle mt-1 text-sm">{t("appSubtitle")}</p>
+            </div>
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <a

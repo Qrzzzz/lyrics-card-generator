@@ -66,7 +66,7 @@ This checklist is the acceptance boundary for the Electron desktop build. The de
 - `release/win-unpacked/Lyrics Card Generator.exe` started a bundled `resources/server/server.js` process on `127.0.0.1` and closed with zero residual app processes.
 - `release/Lyrics Card Generator-0.1.0-portable.exe` started a bundled `resources/server/server.js` process from its temp extraction directory and closed with zero residual app processes.
 - Playwright opened the standalone UI, verified default Chinese UI, default lyrics and translation, all main steps, English language switch, and locale persistence after reload.
-- Playwright clicked the existing `导出 PNG` button and downloaded `lyric-card-opposite.png` at `2080x2160`, matching the default `1040x1080` card at 2x quality.
+- Playwright clicked the final `完成并导出` action and downloaded `lyric-card-opposite.png` at `2080x2160`, matching the default `1040x1080` card at 2x quality.
 - `npm run parse:test` passed for Apple Music, NetEase Cloud Music, and QQ Music sample links.
 - Local `GET /api/image-proxy` returned a remote cover image through the standalone server.
 - Local `POST /api/fetch-lyrics` returned an LRCLIB candidate for `Never Gonna Give You Up / Rick Astley`.

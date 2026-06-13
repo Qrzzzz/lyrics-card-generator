@@ -18,7 +18,7 @@ All existing API routes continue to run locally. Apple Music, NetEase Cloud Musi
 - `electron/main.js`: Electron main process, local port selection, bundled Next server startup, external-link handling, and child-process cleanup.
 - `scripts/prepare-electron-dist.mjs`: Copies Next standalone output, static files, public assets, fonts, and platform icons into `dist-desktop/server`.
 - `scripts/start-electron-dev.mjs`: Starts Next dev and Electron together for local desktop development.
-- `build/icon.ico`: Windows application icon generated from the existing music-note visual identity.
+- `build/icon.ico`: Windows application icon generated from the supplied transparent rounded icon image.
 - `docs/desktop-migration-checklist.md`: Acceptance checklist and verification evidence.
 - `docs/desktop-runbook.md`: Build, run, and rollback instructions.
 - `docs/desktop-known-issues.md`: Known issues and validation notes.
@@ -30,7 +30,6 @@ The core WebUI and business logic are not rewritten. These areas remain intact:
 - `components/editor/LyricEditor.tsx`
 - `components/editor/SongLinkParser.tsx`
 - `components/editor/LyricsFetchPanel.tsx`
-- `components/editor/ExportPanel.tsx`
 - `app/api/parse-song/route.ts`
 - `app/api/image-proxy/route.ts`
 - `app/api/fetch-lyrics/route.ts`
@@ -57,7 +56,7 @@ The core WebUI and business logic are not rewritten. These areas remain intact:
 - `npm run parse:test` passed for Apple Music, NetEase Cloud Music, and QQ Music sample links.
 - Local `GET /api/image-proxy` returned a proxied remote cover image.
 - Local `POST /api/fetch-lyrics` returned an LRCLIB candidate for a known track.
-- Playwright verified the default UI, step navigation, language switch, reload persistence, and existing PNG export.
+- Playwright verified the default UI, step navigation, language switch, reload persistence, and final PNG export.
 - Exported PNG was `2080x2160`, matching the default `1040x1080` card at 2x quality.
 
 ## Known Issues
@@ -65,4 +64,3 @@ The core WebUI and business logic are not rewritten. These areas remain intact:
 No desktop-specific runtime issues are currently confirmed.
 
 The installer EXE was built but not installed on this machine to avoid modifying installed applications. The portable EXE and unpacked EXE were runtime-tested.
-

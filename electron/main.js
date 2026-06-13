@@ -5,6 +5,7 @@ const net = require("node:net");
 const path = require("node:path");
 
 const HOST = "127.0.0.1";
+const APP_ID = "com.lyriccard.generator";
 const START_TIMEOUT_MS = 45000;
 
 let mainWindow = null;
@@ -66,6 +67,14 @@ function getPackagedServerDirectory() {
   return path.join(app.getAppPath(), "dist-desktop", "server");
 }
 
+function getAppIconPath() {
+  if (app.isPackaged) {
+    return path.join(process.resourcesPath, "icon.ico");
+  }
+
+  return path.join(app.getAppPath(), "build", "icon.ico");
+}
+
 async function startPackagedNextServer() {
   const serverDirectory = getPackagedServerDirectory();
   const serverEntry = path.join(serverDirectory, "server.js");
@@ -123,12 +132,14 @@ function isAllowedLocalNavigation(targetUrl) {
 
 function createWindow() {
   mainWindow = new BrowserWindow({
+    title: "Lyrics Card Generator",
     width: 1280,
     height: 900,
     minWidth: 1000,
     minHeight: 700,
     show: false,
     backgroundColor: "#111216",
+    icon: getAppIconPath(),
     webPreferences: {
       contextIsolation: true,
       nodeIntegration: false,
@@ -137,6 +148,7 @@ function createWindow() {
   });
 
   mainWindow.once("ready-to-show", () => {
+    mainWindow?.maximize();
     mainWindow?.show();
   });
 
@@ -202,6 +214,7 @@ async function boot() {
   }
 }
 
+app.setAppUserModelId(APP_ID);
 app.whenReady().then(boot);
 
 app.on("before-quit", stopNextServer);
