@@ -1,166 +1,179 @@
-# Lyric Card Generator
+# Lyrics Card Generator
 
-First MVP of a high-polish lyric share image generator.
+一个用于生成歌词分享卡片的 Windows 桌面应用。
+输入歌曲链接或手动填写歌曲信息，编辑歌词、翻译、封面和视觉样式，然后导出适合分享的高清 PNG 图片。
 
-## 快速启动
+当前重点是 Windows 桌面版：下载 EXE 后即可运行，无需手动安装 Node.js，也无需部署到服务器。
 
-Windows 用户：
+## 下载与安装
 
-双击运行：
+请前往 GitHub Releases 下载最新版：
 
-```bat
-scripts/start-dev.bat
-```
+* 推荐普通用户下载安装版：`Lyrics-Card-Generator-Setup-v1.0.0-win-x64.exe`
+* 不想安装时可下载便携版：`Lyrics-Card-Generator-Portable-v1.0.0-win-x64.exe`
 
-或在项目根目录执行：
+安装版适合长期使用；便携版适合临时运行、测试或放在移动硬盘中使用。
 
-```bat
-scripts\start-dev.bat
-```
+> 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-也可以直接双击根目录的 `start.bat`。
+## 主要功能
 
-macOS / Linux 用户：
+* 生成高质感歌词分享图片
+* 支持竖版、横版和自定义画布尺寸
+* 支持自动卡片高度，长歌词、翻译和底部信息开启时会自动延展
+* 支持歌词原文与翻译并排排版
+* 支持 Apple Music、网易云音乐、QQ 音乐链接解析
+* 支持手动填写歌曲名、艺人、封面和歌词
+* 支持本地封面上传
+* 支持从封面提取色彩并生成渐变背景
+* 支持平台 Logo、分享人、生成水印
+* 支持边框、阴影、字体、字号、行距、文字颜色等视觉设置
+* 支持中文 / English 界面切换
+* 支持导出高清 PNG 图片
+* 支持从 GitHub Releases 检查新版本
 
-```bash
-chmod +x scripts/start-dev.sh
-./scripts/start-dev.sh
-```
+## Windows 桌面版说明
 
-启动成功后访问：
+桌面版保留了原本的 Next.js Web 界面和 API 路由，并通过 Electron 包装为本地应用。
 
-```text
-http://localhost:3000
-```
+运行 EXE 后，应用会在本机启动一个本地 Next 服务，并在桌面窗口中打开它。普通用户只需要双击 EXE 使用，不需要了解 Node.js、npm 或本地开发环境。
 
-一键启动脚本只用于本地开发环境，不负责生产部署。
+桌面版可以离线启动。以下功能在离线状态下仍可使用：
 
-## Run
+* 手动编辑歌曲信息
+* 手动编辑歌词和翻译
+* 上传本地封面
+* 调整样式
+* 生成和导出 PNG 图片
+
+以下功能需要联网：
+
+* 音乐平台链接解析
+* 远程封面加载
+* 自动歌词获取
+* GitHub 检查更新
+
+## 使用方式
+
+1. 启动应用。
+2. 粘贴 Apple Music、网易云音乐或 QQ 音乐链接，或手动填写歌曲信息。
+3. 编辑歌词和翻译。
+4. 调整画布比例、字体、字号、颜色、边框、水印等样式。
+5. 在右侧预览卡片。
+6. 点击导出，保存 PNG 图片。
+
+## 检查更新
+
+应用内提供“检查更新”按钮。
+它会请求本项目的 GitHub Releases，比较当前版本和最新发布版本。
+
+该功能只负责检查更新并打开下载页面，不会静默下载安装包，也不会自动替换当前程序。
+
+## 本地开发
+
+需要 Node.js 和 npm。
 
 ```bash
 npm install
 npm run dev
 ```
 
-Open `http://localhost:3000`.
+启动后访问：
 
-## Windows desktop app
+```text
+http://localhost:3000
+```
 
-The desktop build keeps the same Next.js WebUI and API routes, then wraps them
-with Electron. The EXE starts an embedded local Next standalone service on
-`127.0.0.1` and opens it in a desktop window. Users do not need to install
-Node.js or deploy the app to Vercel.
+## 桌面版开发与打包
 
-Desktop user flow:
-
-1. Download either the installer EXE or the portable EXE from `release/`.
-2. Double-click the EXE.
-3. Create and export lyric cards with the same workflow as the WebUI.
-
-Offline behavior:
-
-- The app can start offline.
-- Manual song info editing, lyric editing, local cover upload, style changes,
-  and PNG export remain available offline.
-- Apple Music, NetEase Cloud Music, QQ Music parsing, remote cover loading, and
-  LRCLIB lyric fetching require internet access because those platforms are
-  data sources.
-
-Unsigned local builds may show a Windows SmartScreen warning.
-
-## Developer desktop build
-
-Run desktop development mode:
+开发桌面版：
 
 ```bash
 npm run desktop:dev
 ```
 
-Build an unpacked desktop directory for inspection:
+构建可检查的 unpacked 桌面目录：
 
 ```bash
 npm run desktop:pack
 ```
 
-Build both Windows installer and portable EXE:
+构建 Windows 安装版和便携版：
 
 ```bash
 npm run desktop:build
 ```
 
-Desktop artifacts are written to `release/`. The bundled Next standalone server
-is prepared in `dist-desktop/server`.
+构建产物会输出到：
 
-## Rollback
-
-The original WebUI baseline was frozen before desktop changes:
-
-- Branch: `backup/original-webui-20260612`
-- Tag: `backup-webui-before-exe-20260612`
-- Source archive: `backups/lyrics-card-generator-webui-backup-20260612.zip`
-
-To inspect the original WebUI:
-
-```bash
-git switch backup/original-webui-20260612
+```text
+release/
 ```
 
-To return to this desktop work branch:
+桌面版所需的 Next standalone 服务会被整理到：
 
-```bash
-git switch feature/desktop-exe
+```text
+dist-desktop/server
 ```
 
-To create a new recovery branch from the backup tag:
+## 常用脚本
 
 ```bash
-git switch -c restore/original-webui backup-webui-before-exe-20260612
+npm run dev             # 启动 Web 开发服务器
+npm run build           # 构建 Next.js 应用
+npm run typecheck       # TypeScript 类型检查
+npm run desktop:dev     # 启动 Electron 开发模式
+npm run desktop:pack    # 构建 unpacked 桌面目录
+npm run desktop:build   # 构建 Windows 安装版和便携版
+npm run parse:test      # 测试歌曲链接解析
 ```
 
-## Fonts
+## 技术栈
 
-The project loads these local fonts through `next/font/local`:
+* Next.js
+* React
+* TypeScript
+* Tailwind CSS
+* Electron
+* electron-builder
+* html-to-image
+* Framer Motion
+* Lucide React
+* Cheerio
+* Zod
+* ReactBits 风格 UI 灵感
 
-- `public/fonts/SourceHanSansSC-Heavy.otf`
-- `public/fonts/SourceHanSerifSC-Heavy.otf`
+## 字体
 
-The original root-level font files were left in place.
+项目使用：
 
-## Platform icons
+* 思源黑体
+* 思源宋体
 
-Platform badges use local SVG files so PNG export does not depend on remote logo
-URLs:
+它们为卡片提供了厚重、清晰、适合中文歌词排版的字体基础。
 
-- `public/platform-icons/apple-music.svg`
-- `public/platform-icons/qq-music.svg`
-- `public/platform-icons/netease-music.svg`
+## 致谢
 
-Replace these files with official artwork if you need exact brand assets.
+感谢 Apple Music。这个项目的彩色渐变、流光背景审美，以及早期歌词卡片排版方向，受到 Apple Music 视觉体验的启发。本项目与 Apple Music 没有关联，也不代表 Apple Music 官方立场。
 
-## Styling controls
+感谢思源黑体和思源宋体。它们为中文歌词卡片提供了稳定、清晰、有分量的字体基础。
 
-The editor supports preset ratios plus custom canvas width/height, optional
-auto-height estimation, automatic/preset/custom text colors, platform badge
-visibility, and independent frame/shadow toggles.
+感谢 Sabrina Carpenter 的《opposite》。它作为应用启动时的默认样例，帮助确定了初版排版、英文歌词和中文翻译的视觉节奏。相关音乐作品权利归原权利人所有，本项目不分发音频内容。
 
-## Link parsing
+感谢 OpenAI Codex。它把许多零散想法转化为可运行的代码、桌面版构建流程和实际功能。
 
-`POST /api/parse-song` accepts a direct URL or platform share text, extracts the
-first http/https URL, follows redirects, detects Apple Music, NetEase Cloud
-Music, or QQ Music, then tries the platform-specific parser before falling back
-to Open Graph / Twitter Card metadata. It does not fetch or store full lyrics.
+感谢 ChatGPT 5.5 在开发过程中进行问题定位、方案设计、修复复核和验收检查。
 
-Command-line parser check:
+感谢 ReactBits 提供的多种 UI 创意，包括 Spark Cursor 等动效灵感。
 
-```bash
-npm run parse:test -- "https://music.163.com/song?id=1827600686"
-npm run parse:test -- "https://y.qq.com/n/ryqq/songDetail/0039MnYb0qxYhV"
-```
+感谢 Rangerov 对此项目的关注和提出意见。
 
-The command prints JSON with `ok`, `data.source`, `data.title`, `data.artist`,
-`data.coverUrl`, `data.finalUrl`, and `data.parseMethod`. On failure it prints
-the extracted URL, final URL, detected source, attempted methods, and error.
+也感谢这些开源项目及其维护者：Next.js、React、TypeScript、Tailwind CSS、Electron、electron-builder、html-to-image、Framer Motion、Lucide React、Cheerio、Zod，以及构成现代前端生态的众多工具链。没有这些基础设施，这个项目不会以现在的形态出现。
 
-`GET /api/image-proxy?url=...` proxies image resources for safer PNG export,
-with http/https-only validation, private-network blocking, content-type checks,
-timeouts, and response size limits.
+## 版权与声明
+
+本项目用于生成歌词分享卡片。用户应确保自己有权使用所输入的歌词、封面、平台标识和其他素材。
+
+项目中的平台名称、音乐作品名称、艺人名称和商标归各自权利人所有。本项目与 Apple Music、网易云音乐、QQ 音乐或相关音乐平台没有官方关联。
+
+当前仓库尚未单独声明开源许可证。若计划进行更广泛的分发或二次开发，建议补充明确的 `LICENSE` 文件。
