@@ -1,6 +1,7 @@
 "use client";
 
 import { Trash2 } from "lucide-react";
+import { UpdateButton } from "@/components/editor/UpdateButton";
 import type { createT } from "@/lib/i18n";
 import type { Locale } from "@/lib/types";
 
@@ -19,6 +20,7 @@ export function EditorHeader({ locale, t, onLocaleChange, onClearAll }: EditorHe
         <p className="app-text-subtle mt-1 text-sm">{t("appSubtitle")}</p>
       </div>
       <div className="flex flex-wrap items-center gap-3">
+        <UpdateButton t={t} />
         <a
           href="https://github.com/Qrzzzz"
           target="_blank"

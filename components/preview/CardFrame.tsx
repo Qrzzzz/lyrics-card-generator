@@ -1,5 +1,6 @@
 "use client";
 
+import { LANDSCAPE_FRAME_INSET, PORTRAIT_FRAME_INSET } from "@/lib/frame-layout";
 import type { CardLayoutMode, FrameVariant } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -26,10 +27,11 @@ export function CardFrame({
         className={cn(
           "pointer-events-none absolute border",
           resolvedVariant === "landscapeClean"
-            ? "inset-[64px] rounded-[48px] border-white/16 shadow-[0_24px_78px_rgba(0,0,0,0.22)]"
-            : "inset-[72px] rounded-[48px] border-white/18 shadow-[0_36px_120px_rgba(0,0,0,0.42)] backdrop-blur-[34px]"
+            ? "rounded-[48px] border-white/16 shadow-[0_24px_78px_rgba(0,0,0,0.22)]"
+            : "rounded-[48px] border-white/18 shadow-[0_36px_120px_rgba(0,0,0,0.42)] backdrop-blur-[34px]"
         )}
         style={{
+          inset: resolvedVariant === "landscapeClean" ? LANDSCAPE_FRAME_INSET : PORTRAIT_FRAME_INSET,
           background:
             resolvedVariant === "landscapeClean"
               ? "linear-gradient(140deg, rgba(255,255,255,0.07), rgba(255,255,255,0.02) 42%, rgba(0,0,0,0.05))"
