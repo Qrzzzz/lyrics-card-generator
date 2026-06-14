@@ -4,13 +4,13 @@ import { motion } from "framer-motion";
 import { Trash2 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ExportCelebration } from "@/components/effects/ExportCelebration";
-import { ExportPanel } from "@/components/editor/ExportPanel";
 import { LyricsFetchPanel } from "@/components/editor/LyricsFetchPanel";
 import { LyricInput } from "@/components/editor/LyricInput";
 import { SettingsStepper, type SettingsStep } from "@/components/editor/SettingsStepper";
 import { SongInfoForm } from "@/components/editor/SongInfoForm";
 import { SongLinkParser } from "@/components/editor/SongLinkParser";
 import { LayoutSettingsPanel, VisualSettingsPanel } from "@/components/editor/StylePanel";
+import { UpdateButton } from "@/components/editor/UpdateButton";
 import { ClickSpark } from "@/components/layout/ClickSpark";
 import { DynamicAppBackground } from "@/components/layout/DynamicAppBackground";
 import { LyricCardPreview } from "@/components/preview/LyricCardPreview";
@@ -62,7 +62,7 @@ const defaultState: AppState = {
     ratio: "custom",
     width: 1040,
     height: 1080,
-    autoHeight: false,
+    autoHeight: true,
     font: "sans-heavy",
     lyricFontSize: 60,
     lineHeight: 1.4,
@@ -112,6 +112,7 @@ export function LyricEditor() {
   const [celebrationKey, setCelebrationKey] = useState(0);
   const [isCompleteExporting, setIsCompleteExporting] = useState(false);
   const cardRef = useRef<HTMLElement | null>(null);
+  const clearVersionRef = useRef(0);
   const t = useMemo(() => createT(state.locale), [state.locale]);
 
   const parsedState = useMemo(
@@ -128,6 +129,8 @@ export function LyricEditor() {
   const canFetchLyrics = Boolean(state.song.originalUrl && state.song.title.trim());
 
   function clearAllContent() {
+    clearVersionRef.current += 1;
+    setCelebrationKey(0);
     setState((current) => ({
       ...current,
       url: "",
@@ -212,18 +215,20 @@ export function LyricEditor() {
   }
 
   async function completeAndExport() {
-    setCelebrationKey((key) => key + 1);
-
     if (!cardRef.current || isCompleteExporting) {
       return;
     }
 
+    const clearVersion = clearVersionRef.current;
     setIsCompleteExporting(true);
 
     try {
       const size = getCardSize(parsedState.style);
       const fileName = `lyric-card-${sanitizeFilePart(parsedState.song.title)}.png`;
       await exportNodeAsPng(cardRef.current, fileName, size.width, size.height, 2);
+      if (clearVersion === clearVersionRef.current) {
+        setCelebrationKey((key) => key + 1);
+      }
     } catch (error) {
       console.error("[Lyric Card Generator] complete export failed", error);
     } finally {
@@ -331,20 +336,24 @@ export function LyricEditor() {
       return;
     }
 
-    const lines = state.lyrics.trim() ? state.lyrics.split(/\r?\n/).length : 1;
-    const translationLines = state.style.translationEnabled && state.style.contentMode === "lyrics"
-      ? state.style.translationText.split(/\r?\n/).filter(Boolean).length
-      : 0;
     const nextHeight = estimateCardHeight({
       width: state.style.width,
-      lyricLineCount: lines + translationLines,
-      lyricCharacterCount: state.lyrics.length + (state.style.translationEnabled ? state.style.translationText.length : 0),
+      lyrics: state.lyrics,
+      translationText: state.style.translationText,
+      translationEnabled: state.style.translationEnabled && state.style.contentMode === "lyrics",
+      translationScale: state.style.translationScale,
       lyricFontSize: state.style.lyricFontSize,
       lineHeight: state.style.lineHeight,
+      contentMode: state.style.contentMode,
+      showCover: state.style.showCover,
       showSongInfo: state.style.showSongInfo,
-      showWatermark: state.style.showGeneratedWatermark,
-      showPlatformBadge: state.style.showPlatformBadge,
-      showSharedBy: state.style.showSharedBy && state.style.sharedByText.trim().length > 0
+      allowTwoLineTitle: state.style.allowTwoLineTitle,
+      showGeneratedWatermark: state.style.showGeneratedWatermark,
+      showPlatformBadge: state.style.showPlatformBadge && state.song.source !== "unknown",
+      showSharedBy: state.style.showSharedBy && state.style.sharedByText.trim().length > 0,
+      sharedByText: state.style.sharedByText,
+      frameStyleEnabled: state.style.frameStyleEnabled,
+      frameVariant: state.style.frameVariant
     });
 
     if (nextHeight === state.style.height) {
@@ -360,7 +369,11 @@ export function LyricEditor() {
     }));
   }, [
     state.lyrics,
+    state.song.source,
+    state.style.allowTwoLineTitle,
     state.style.autoHeight,
+    state.style.frameStyleEnabled,
+    state.style.frameVariant,
     state.style.height,
     state.style.layoutMode,
     state.style.lineHeight,
@@ -368,11 +381,13 @@ export function LyricEditor() {
     state.style.ratio,
     state.style.contentMode,
     state.style.sharedByText,
+    state.style.showCover,
     state.style.showGeneratedWatermark,
     state.style.showPlatformBadge,
     state.style.showSharedBy,
     state.style.showSongInfo,
     state.style.translationEnabled,
+    state.style.translationScale,
     state.style.translationText,
     state.style.width
   ]);
@@ -491,7 +506,11 @@ export function LyricEditor() {
       title: t("step.export"),
       description: t("exportHint"),
       isComplete: true,
-      content: <ExportPanel state={parsedState} cardRef={cardRef} t={t} />
+      content: (
+        <div className="glass-panel rounded-lg p-4">
+          <p className="app-text-subtle text-sm">{t("exportHint")}</p>
+        </div>
+      )
     }
   ];
 
@@ -502,11 +521,20 @@ export function LyricEditor() {
     <main className="relative z-10 min-h-screen px-4 py-5 sm:px-6 lg:px-8">
       <div className="mx-auto grid w-[calc(100vw-2rem)] max-w-[1520px] min-w-0 gap-5 sm:w-full">
         <header className="glass-panel min-w-0 max-w-full flex flex-col gap-4 rounded-lg px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="app-text-primary text-2xl font-black tracking-normal sm:text-3xl">{t("appTitle")}</h1>
-            <p className="app-text-subtle mt-1 text-sm">{t("appSubtitle")}</p>
+          <div className="flex min-w-0 items-center gap-3">
+            <img
+              src="/app-icon.png"
+              alt=""
+              className="h-12 w-12 shrink-0 rounded-2xl object-contain"
+              aria-hidden="true"
+            />
+            <div className="min-w-0">
+              <h1 className="app-text-primary text-2xl font-black tracking-normal sm:text-3xl">{t("appTitle")}</h1>
+              <p className="app-text-subtle mt-1 text-sm">{t("appSubtitle")}</p>
+            </div>
           </div>
           <div className="flex flex-wrap items-center gap-3">
+            <UpdateButton t={t} />
             <a
               href="https://github.com/Qrzzzz"
               target="_blank"

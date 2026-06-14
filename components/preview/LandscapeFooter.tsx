@@ -3,12 +3,11 @@
 import { GeneratedWatermark } from "@/components/preview/GeneratedWatermark";
 import { PlatformBadge } from "@/components/preview/PlatformBadge";
 import { SharedBy } from "@/components/preview/SharedBy";
-import { getLandscapeSlots } from "@/lib/landscape-layout";
+import type { LandscapeSlots } from "@/lib/landscape-layout";
 import type { SongSource } from "@/lib/types";
 
 export function LandscapeFooter({
-  width,
-  height,
+  slots,
   showPlatformLogo,
   platformSource,
   showGeneratedWatermark,
@@ -16,8 +15,7 @@ export function LandscapeFooter({
   sharedByText,
   textColor
 }: {
-  width: number;
-  height: number;
+  slots: LandscapeSlots;
   showPlatformLogo: boolean;
   platformSource: SongSource;
   showGeneratedWatermark: boolean;
@@ -25,7 +23,6 @@ export function LandscapeFooter({
   sharedByText: string;
   textColor: string;
 }) {
-  const slots = getLandscapeSlots(width, height);
   const hasPlatform = showPlatformLogo && platformSource !== "unknown";
   const trimmedSharedBy = sharedByText.trim();
   const hasSharedBy = showSharedBy && trimmedSharedBy.length > 0;

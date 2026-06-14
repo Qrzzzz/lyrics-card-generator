@@ -144,7 +144,7 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
               <Input
                 type="range"
                 min={720}
-                max={layoutMode === "landscape" ? 1600 : 2400}
+                max={layoutMode === "landscape" ? 1600 : 3200}
                 step={20}
                 value={style.height}
                 disabled={style.autoHeight}

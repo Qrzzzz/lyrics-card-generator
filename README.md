@@ -44,6 +44,79 @@ npm run dev
 
 Open `http://localhost:3000`.
 
+## Windows desktop app
+
+The desktop build keeps the same Next.js WebUI and API routes, then wraps them
+with Electron. The EXE starts an embedded local Next standalone service on
+`127.0.0.1` and opens it in a desktop window. Users do not need to install
+Node.js or deploy the app to Vercel.
+
+Desktop user flow:
+
+1. Download either the installer EXE or the portable EXE from `release/`.
+2. Double-click the EXE.
+3. Create and export lyric cards with the same workflow as the WebUI.
+
+Offline behavior:
+
+- The app can start offline.
+- Manual song info editing, lyric editing, local cover upload, style changes,
+  and PNG export remain available offline.
+- Apple Music, NetEase Cloud Music, QQ Music parsing, remote cover loading, and
+  LRCLIB lyric fetching require internet access because those platforms are
+  data sources.
+
+Unsigned local builds may show a Windows SmartScreen warning.
+
+## Developer desktop build
+
+Run desktop development mode:
+
+```bash
+npm run desktop:dev
+```
+
+Build an unpacked desktop directory for inspection:
+
+```bash
+npm run desktop:pack
+```
+
+Build both Windows installer and portable EXE:
+
+```bash
+npm run desktop:build
+```
+
+Desktop artifacts are written to `release/`. The bundled Next standalone server
+is prepared in `dist-desktop/server`.
+
+## Rollback
+
+The original WebUI baseline was frozen before desktop changes:
+
+- Branch: `backup/original-webui-20260612`
+- Tag: `backup-webui-before-exe-20260612`
+- Source archive: `backups/lyrics-card-generator-webui-backup-20260612.zip`
+
+To inspect the original WebUI:
+
+```bash
+git switch backup/original-webui-20260612
+```
+
+To return to this desktop work branch:
+
+```bash
+git switch feature/desktop-exe
+```
+
+To create a new recovery branch from the backup tag:
+
+```bash
+git switch -c restore/original-webui backup-webui-before-exe-20260612
+```
+
 ## Fonts
 
 The project loads these local fonts through `next/font/local`:
