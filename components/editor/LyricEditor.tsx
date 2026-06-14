@@ -1,27 +1,31 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Trash2 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { EditorHeader } from "@/components/editor/EditorHeader";
+import { ExportPanel } from "@/components/editor/ExportPanel";
 import { ExportCelebration } from "@/components/effects/ExportCelebration";
 import { LyricsFetchPanel } from "@/components/editor/LyricsFetchPanel";
 import { LyricInput } from "@/components/editor/LyricInput";
+import { PreviewPane } from "@/components/editor/PreviewPane";
 import { SettingsStepper, type SettingsStep } from "@/components/editor/SettingsStepper";
 import { SongInfoForm } from "@/components/editor/SongInfoForm";
 import { SongLinkParser } from "@/components/editor/SongLinkParser";
 import { LayoutSettingsPanel, VisualSettingsPanel } from "@/components/editor/StylePanel";
-import { UpdateButton } from "@/components/editor/UpdateButton";
+import {
+  useAutoCanvasHeight,
+  useCoverPalette,
+  useResolvedTextColor,
+  useSyncedCoverProxy
+} from "@/components/editor/hooks/useLyricEditorEffects";
 import { ClickSpark } from "@/components/layout/ClickSpark";
 import { DynamicAppBackground } from "@/components/layout/DynamicAppBackground";
-import { LyricCardPreview } from "@/components/preview/LyricCardPreview";
-import { estimateCardHeight, getCardSize, PRESET_CARD_SIZES } from "@/lib/card-size";
-import { TEXT_COLOR_PRESETS } from "@/lib/color-analysis";
+import { getCardSize, PRESET_CARD_SIZES } from "@/lib/card-size";
 import { getHighResolutionCoverUrl } from "@/lib/cover-url";
 import { exportNodeAsPng } from "@/lib/export-image";
 import { createT, messages } from "@/lib/i18n";
 import { proxiedImageUrl } from "@/lib/image-utils";
-import { extractPaletteFromImage } from "@/lib/palette-extraction";
-import { DEFAULT_PALETTE, resolveAutoTextColor } from "@/lib/palette-background";
+import { DEFAULT_PALETTE } from "@/lib/palette-background";
 import type { AppState, CardRatio, CardStyle, Locale } from "@/lib/types";
 import { sanitizeFilePart } from "@/lib/utils";
 
@@ -127,6 +131,11 @@ export function LyricEditor() {
   );
   const coverForPalette = state.song.proxiedCoverUrl || proxiedImageUrl(state.song.coverUrl);
   const canFetchLyrics = Boolean(state.song.originalUrl && state.song.title.trim());
+
+  useSyncedCoverProxy(state, setState);
+  useCoverPalette(coverForPalette, setState);
+  useResolvedTextColor(state, setState);
+  useAutoCanvasHeight(state, setState);
 
   function clearAllContent() {
     clearVersionRef.current += 1;
@@ -264,134 +273,6 @@ export function LyricEditor() {
     window.localStorage.setItem("lyric-card-generator-locale", locale);
   }
 
-  useEffect(() => {
-    const nextProxiedCoverUrl = proxiedImageUrl(state.song.coverUrl);
-    if (nextProxiedCoverUrl === state.song.proxiedCoverUrl) {
-      return;
-    }
-
-    setState((current) => ({
-      ...current,
-      song: {
-        ...current.song,
-        proxiedCoverUrl: nextProxiedCoverUrl
-      }
-    }));
-  }, [state.song.coverUrl, state.song.proxiedCoverUrl]);
-
-  useEffect(() => {
-    let active = true;
-
-    extractPaletteFromImage(coverForPalette).then((palette) => {
-      if (!active) {
-        return;
-      }
-
-      setState((current) => ({
-        ...current,
-        palette,
-        paletteWarning: "",
-        style: {
-          ...current.style,
-          extractedPalette: palette
-        }
-      }));
-    });
-
-    return () => {
-      active = false;
-    };
-  }, [coverForPalette]);
-
-  useEffect(() => {
-    const style = state.style;
-    const nextColor =
-      style.textColorMode === "auto"
-        ? resolveAutoTextColor()
-        : style.textColorMode === "preset"
-          ? TEXT_COLOR_PRESETS[style.textColorPreset].value
-          : style.customTextColor;
-
-    if (nextColor.toLowerCase() === style.resolvedTextColor.toLowerCase()) {
-      return;
-    }
-
-    setState((current) => ({
-      ...current,
-      style: {
-        ...current.style,
-        resolvedTextColor: nextColor
-      }
-    }));
-  }, [
-    state.palette,
-    state.style.customTextColor,
-    state.style.resolvedTextColor,
-    state.style.textColorMode,
-    state.style.textColorPreset
-  ]);
-
-  useEffect(() => {
-    if ((state.style.layoutMode ?? "portrait") === "landscape" || state.style.ratio !== "custom" || !state.style.autoHeight) {
-      return;
-    }
-
-    const nextHeight = estimateCardHeight({
-      width: state.style.width,
-      lyrics: state.lyrics,
-      translationText: state.style.translationText,
-      translationEnabled: state.style.translationEnabled && state.style.contentMode === "lyrics",
-      translationScale: state.style.translationScale,
-      lyricFontSize: state.style.lyricFontSize,
-      lineHeight: state.style.lineHeight,
-      contentMode: state.style.contentMode,
-      showCover: state.style.showCover,
-      showSongInfo: state.style.showSongInfo,
-      allowTwoLineTitle: state.style.allowTwoLineTitle,
-      showGeneratedWatermark: state.style.showGeneratedWatermark,
-      showPlatformBadge: state.style.showPlatformBadge && state.song.source !== "unknown",
-      showSharedBy: state.style.showSharedBy && state.style.sharedByText.trim().length > 0,
-      sharedByText: state.style.sharedByText,
-      frameStyleEnabled: state.style.frameStyleEnabled,
-      frameVariant: state.style.frameVariant
-    });
-
-    if (nextHeight === state.style.height) {
-      return;
-    }
-
-    setState((current) => ({
-      ...current,
-      style: {
-        ...current.style,
-        height: nextHeight
-      }
-    }));
-  }, [
-    state.lyrics,
-    state.song.source,
-    state.style.allowTwoLineTitle,
-    state.style.autoHeight,
-    state.style.frameStyleEnabled,
-    state.style.frameVariant,
-    state.style.height,
-    state.style.layoutMode,
-    state.style.lineHeight,
-    state.style.lyricFontSize,
-    state.style.ratio,
-    state.style.contentMode,
-    state.style.sharedByText,
-    state.style.showCover,
-    state.style.showGeneratedWatermark,
-    state.style.showPlatformBadge,
-    state.style.showSharedBy,
-    state.style.showSongInfo,
-    state.style.translationEnabled,
-    state.style.translationScale,
-    state.style.translationText,
-    state.style.width
-  ]);
-
   const settingsSteps: SettingsStep[] = [
     {
       id: "link",
@@ -506,11 +387,7 @@ export function LyricEditor() {
       title: t("step.export"),
       description: t("exportHint"),
       isComplete: true,
-      content: (
-        <div className="glass-panel rounded-lg p-4">
-          <p className="app-text-subtle text-sm">{t("exportHint")}</p>
-        </div>
-      )
+      content: <ExportPanel state={parsedState} cardRef={cardRef} t={t} />
     }
   ];
 
@@ -520,56 +397,7 @@ export function LyricEditor() {
       <ClickSpark themeColor={state.palette?.primary ?? DEFAULT_PALETTE.primary}>
     <main className="relative z-10 min-h-screen px-4 py-5 sm:px-6 lg:px-8">
       <div className="mx-auto grid w-[calc(100vw-2rem)] max-w-[1520px] min-w-0 gap-5 sm:w-full">
-        <header className="glass-panel min-w-0 max-w-full flex flex-col gap-4 rounded-lg px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex min-w-0 items-center gap-3">
-            <img
-              src="/app-icon.png"
-              alt=""
-              className="h-12 w-12 shrink-0 rounded-2xl object-contain"
-              aria-hidden="true"
-            />
-            <div className="min-w-0">
-              <h1 className="app-text-primary text-2xl font-black tracking-normal sm:text-3xl">{t("appTitle")}</h1>
-              <p className="app-text-subtle mt-1 text-sm">{t("appSubtitle")}</p>
-            </div>
-          </div>
-          <div className="flex flex-wrap items-center gap-3">
-            <UpdateButton t={t} />
-            <a
-              href="https://github.com/Qrzzzz"
-              target="_blank"
-              rel="noreferrer"
-              aria-label="GitHub"
-              className="app-button inline-flex h-10 w-10 items-center justify-center rounded-lg transition"
-            >
-              <svg viewBox="0 0 16 16" aria-hidden="true" className="h-5 w-5 fill-current">
-                <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.03 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8Z" />
-              </svg>
-            </a>
-            <button
-              type="button"
-              onClick={clearAllContent}
-              className="app-button inline-flex h-10 items-center justify-center gap-2 rounded-lg px-3 text-sm font-semibold transition"
-            >
-              <Trash2 className="h-4 w-4" />
-              {t("clearAll")}
-            </button>
-            <div className="inline-flex h-10 overflow-hidden rounded-lg border border-[rgb(var(--panel-border))] bg-[rgb(var(--button-bg))] p-1">
-              {(["zh", "en"] as Locale[]).map((locale) => (
-                <button
-                  key={locale}
-                  type="button"
-                  onClick={() => setLocale(locale)}
-                  className={`h-8 rounded-md px-3 text-sm font-semibold transition ${
-                    state.locale === locale ? "bg-[rgb(var(--button-bg-hover))] app-text-primary" : "app-text-subtle hover:text-[rgb(var(--app-fg))]"
-                  }`}
-                >
-                  {locale === "zh" ? t("chinese") : t("english")}
-                </button>
-              ))}
-            </div>
-          </div>
-        </header>
+        <EditorHeader locale={state.locale} t={t} onLocaleChange={setLocale} onClearAll={clearAllContent} />
 
         <div className="grid min-w-0 max-w-full gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(420px,600px)]">
           <motion.div
@@ -591,30 +419,16 @@ export function LyricEditor() {
             />
           </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.35, delay: 0.05 }}
-            className="order-1 min-w-0 lg:order-2"
-          >
-            <button
-              type="button"
-              onClick={() => setIsPreviewVisible((visible) => !visible)}
-              className="app-button mb-3 inline-flex h-10 w-full items-center justify-center rounded-lg px-3 text-sm font-semibold transition lg:hidden"
-            >
-              {isPreviewVisible ? t("step.hidePreview") : t("step.showPreview")}
-            </button>
-            <div className={`min-w-0 overflow-hidden transition-all duration-300 lg:max-h-none lg:overflow-visible ${isPreviewVisible ? "max-h-[1800px]" : "max-h-0"}`}>
-              <LyricCardPreview
-                song={parsedState.song}
-                lyrics={parsedState.lyrics}
-                style={parsedState.style}
-                cardRef={cardRef}
-                locale={state.locale}
-                t={t}
-              />
-            </div>
-          </motion.div>
+          <PreviewPane
+            isPreviewVisible={isPreviewVisible}
+            onPreviewVisibleChange={setIsPreviewVisible}
+            song={parsedState.song}
+            lyrics={parsedState.lyrics}
+            style={parsedState.style}
+            cardRef={cardRef}
+            locale={state.locale}
+            t={t}
+          />
         </div>
       </div>
     </main>

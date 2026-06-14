@@ -9,8 +9,8 @@ The current focus is the Windows desktop version: download the EXE and run it di
 
 Download the latest version from GitHub Releases:
 
-* Recommended installer: `Lyrics-Card-Generator-Setup-v1.0.0-win-x64.exe`
-* Portable version: `Lyrics-Card-Generator-Portable-v1.0.0-win-x64.exe`
+* Recommended installer: `Lyrics Card Generator Setup 1.1.0.exe`
+* Portable version: `Lyrics Card Generator-1.1.0-portable.exe`
 
 The installer is recommended for regular use. The portable version is useful for temporary use, testing, or running from a removable drive.
 

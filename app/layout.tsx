@@ -1,18 +1,5 @@
 import type { Metadata } from "next";
-import localFont from "next/font/local";
 import "./globals.css";
-
-const sourceHanSansHeavy = localFont({
-  src: "../public/fonts/SourceHanSansSC-Heavy.otf",
-  variable: "--font-source-han-sans-heavy",
-  display: "swap"
-});
-
-const sourceHanSerifHeavy = localFont({
-  src: "../public/fonts/SourceHanSerifSC-Heavy.otf",
-  variable: "--font-source-han-serif-heavy",
-  display: "swap"
-});
 
 export const metadata: Metadata = {
   title: "Lyric Card Generator",
@@ -25,10 +12,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={`${sourceHanSansHeavy.variable} ${sourceHanSerifHeavy.variable}`}
-    >
+    <html lang="en">
       <body>{children}</body>
     </html>
   );

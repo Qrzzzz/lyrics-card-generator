@@ -9,8 +9,8 @@
 
 请前往 GitHub Releases 下载最新版：
 
-* 推荐普通用户下载安装版：`Lyrics-Card-Generator-Setup-v1.0.0-win-x64.exe`
-* 不想安装时可下载便携版：`Lyrics-Card-Generator-Portable-v1.0.0-win-x64.exe`
+* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 1.1.0.exe`
+* 不想安装时可下载便携版：`Lyrics Card Generator-1.1.0-portable.exe`
 
 安装版适合长期使用；便携版适合临时运行、测试或放在移动硬盘中使用。
 
