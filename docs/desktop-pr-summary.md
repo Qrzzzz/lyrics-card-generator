@@ -16,7 +16,7 @@ All existing API routes continue to run locally. Apple Music, NetEase Cloud Musi
 ## Main Additions
 
 - `electron/main.js`: Electron main process, local port selection, bundled Next server startup, external-link handling, and child-process cleanup.
-- `scripts/prepare-electron-dist.mjs`: Copies Next standalone output, static files, public assets, fonts, and platform icons into `dist-desktop/server`.
+- `scripts/prepare-electron-dist.mjs`: Copies Next standalone output, static files, public runtime assets, fonts, and platform icons into `dist-desktop/server`, then removes cache/docs/tests/source-map/declaration files that are not needed at runtime.
 - `scripts/start-electron-dev.mjs`: Starts Next dev and Electron together for local desktop development.
 - `build/icon.ico`: Windows application icon generated from the supplied transparent rounded icon image.
 - `docs/desktop-migration-checklist.md`: Acceptance checklist and verification evidence.
@@ -39,8 +39,8 @@ The core WebUI and business logic are not rewritten. These areas remain intact:
 
 ## Build Outputs
 
-- Installer: `release/Lyrics Card Generator Setup 0.1.0.exe`
-- Portable: `release/Lyrics Card Generator-0.1.0-portable.exe`
+- Installer: `release/Lyrics Card Generator Setup 1.1.0.exe`
+- Portable: `release/Lyrics Card Generator-1.1.0-portable.exe`
 - Unpacked app: `release/win-unpacked/Lyrics Card Generator.exe`
 
 ## Verification
