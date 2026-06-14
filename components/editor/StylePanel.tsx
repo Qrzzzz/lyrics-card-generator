@@ -1,31 +1,19 @@
 "use client";
 
+import { ColorControls } from "@/components/editor/style-panel/ColorControls";
+import { SegmentButton } from "@/components/editor/style-panel/SegmentButton";
+import { Input, Label, Section, Select, SwitchRow } from "@/components/ui/controls";
 import { PRESET_CARD_SIZES } from "@/lib/card-size";
-import { TEXT_COLOR_PRESETS } from "@/lib/color-analysis";
 import { FONT_OPTIONS } from "@/lib/fonts";
-import type { createT, MessageKey } from "@/lib/i18n";
+import type { createT } from "@/lib/i18n";
 import type {
   CardAlign,
   CardFont,
   CardLayoutMode,
   CardRatio,
   CardStyle,
-  ContentMode,
-  TextColorMode,
-  TextColorPreset
+  ContentMode
 } from "@/lib/types";
-import { Input, Label, Section, Select, SwitchRow } from "@/components/ui/controls";
-import { cn } from "@/lib/utils";
-
-const TEXT_PRESET_LABEL_KEYS: Record<TextColorPreset, MessageKey> = {
-  white: "pureWhite",
-  black: "pureBlack",
-  warmWhite: "warmWhite",
-  cream: "cream",
-  charcoal: "charcoal",
-  softBlue: "softBlue",
-  softGold: "softGold"
-};
 
 type StylePanelProps = {
   style: CardStyle;
@@ -265,43 +253,7 @@ export function VisualSettingsPanel({ style, onStyleChange, t }: StylePanelProps
         />
       </Label>
 
-      <div className="grid gap-4 rounded-lg border border-[rgb(var(--panel-border))] bg-[rgb(var(--panel-bg))] p-3">
-        <div className="grid gap-4 sm:grid-cols-3">
-          <Label label={t("textColor")}>
-            <Select
-              value={style.textColorMode}
-              onChange={(event) => update("textColorMode", event.target.value as TextColorMode)}
-            >
-              <option value="auto">{t("auto")}</option>
-              <option value="preset">{t("preset")}</option>
-              <option value="custom">{t("custom")}</option>
-            </Select>
-          </Label>
-          <Label label={t("preset")}>
-            <Select
-              value={style.textColorPreset}
-              disabled={style.textColorMode !== "preset"}
-              onChange={(event) => update("textColorPreset", event.target.value as TextColorPreset)}
-            >
-              {Object.keys(TEXT_COLOR_PRESETS).map((value) => (
-                <option key={value} value={value}>
-                  {t(TEXT_PRESET_LABEL_KEYS[value as TextColorPreset])}
-                </option>
-              ))}
-            </Select>
-          </Label>
-          <Label label={t("custom")} hint={style.resolvedTextColor}>
-            <Input
-              type="color"
-              value={style.customTextColor}
-              disabled={style.textColorMode !== "custom"}
-              onInput={(event) => update("customTextColor", event.currentTarget.value)}
-              onChange={(event) => update("customTextColor", event.target.value)}
-              className="h-11 p-1"
-            />
-          </Label>
-        </div>
-      </div>
+      <ColorControls style={style} onStyleChange={onStyleChange} t={t} />
 
       <div className="grid gap-3 sm:grid-cols-3">
         <SwitchRow label={t("cover")} checked={style.showCover} onChange={(checked) => update("showCover", checked)} />
@@ -347,29 +299,3 @@ export function VisualSettingsPanel({ style, onStyleChange, t }: StylePanelProps
   );
 }
 
-function SegmentButton({
-  active,
-  label,
-  onClick,
-  dataAttribute
-}: {
-  active: boolean;
-  label: string;
-  onClick: () => void;
-  dataAttribute: string;
-}) {
-  return (
-    <button
-      type="button"
-      aria-pressed={active}
-      data-segment-value={dataAttribute}
-      onClick={onClick}
-      className={cn(
-        "app-button h-11 rounded-lg px-3 text-sm font-semibold transition",
-        active ? "bg-[rgb(var(--button-bg-hover))] text-[rgb(var(--app-fg))]" : "app-text-subtle"
-      )}
-    >
-      {label}
-    </button>
-  );
-}
