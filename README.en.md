@@ -170,10 +170,10 @@ Thanks to Rangerov for attention to this project and for providing feedback.
 
 Thanks also to the maintainers of Next.js, React, TypeScript, Tailwind CSS, Electron, electron-builder, html-to-image, Framer Motion, Lucide React, Cheerio, Zod, and the broader modern frontend ecosystem. Without these open-source foundations, this project would not exist in its current form.
 
-## Copyright and Notice
+## License
 
-This project is designed to generate lyric sharing cards. Users should make sure they have the right to use the lyrics, cover art, platform logos, and other materials they provide.
+This project is released under a custom Source Available License, not a traditional open-source license.
 
-Platform names, musical works, artist names, and trademarks belong to their respective owners. This project is not officially affiliated with Apple Music, NetEase Cloud Music, QQ Music, or related music platforms.
+You may view, download, run, and privately modify the source code for personal, non-commercial, educational, and evaluation purposes. Commercial use, redistribution, repackaging, public modified releases, and competing products based on this project require prior written permission from the copyright holder.
 
-This repository does not currently include a dedicated open-source license. If the project is intended for broader redistribution or derivative development, a clear `LICENSE` file should be added.
+Third-party open-source dependencies remain governed by their respective licenses. See [LICENSE](./LICENSE) for details.
