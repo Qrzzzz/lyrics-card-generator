@@ -1,7 +1,6 @@
 "use client";
 
 import { Trash2 } from "lucide-react";
-import { UpdateButton } from "@/components/editor/UpdateButton";
 import type { createT } from "@/lib/i18n";
 import type { Locale } from "@/lib/types";
 
@@ -15,20 +14,11 @@ type EditorHeaderProps = {
 export function EditorHeader({ locale, t, onLocaleChange, onClearAll }: EditorHeaderProps) {
   return (
     <header className="glass-panel min-w-0 max-w-full flex flex-col gap-4 rounded-lg px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex min-w-0 items-center gap-3">
-        <img
-          src="/app-icon.png"
-          alt=""
-          className="h-12 w-12 shrink-0 rounded-2xl object-contain"
-          aria-hidden="true"
-        />
-        <div className="min-w-0">
-          <h1 className="app-text-primary text-2xl font-black tracking-normal sm:text-3xl">{t("appTitle")}</h1>
-          <p className="app-text-subtle mt-1 text-sm">{t("appSubtitle")}</p>
-        </div>
+      <div>
+        <h1 className="app-text-primary text-2xl font-black tracking-normal sm:text-3xl">{t("appTitle")}</h1>
+        <p className="app-text-subtle mt-1 text-sm">{t("appSubtitle")}</p>
       </div>
       <div className="flex flex-wrap items-center gap-3">
-        <UpdateButton t={t} />
         <a
           href="https://github.com/Qrzzzz"
           target="_blank"
