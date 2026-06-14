@@ -32,7 +32,7 @@ export function CardFooter({
   }
 
   return (
-    <footer className="mt-auto flex flex-col gap-5">
+    <footer className="mt-auto flex shrink-0 flex-col gap-5">
       {hasTopFooterRow ? (
         <div className="grid grid-cols-2 items-end">
           <div className="justify-self-start">

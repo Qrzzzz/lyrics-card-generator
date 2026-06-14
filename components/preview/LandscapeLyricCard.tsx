@@ -25,10 +25,12 @@ export function LandscapeLyricCard({
   style: CardStyle;
 }) {
   const size = getCardSize(style);
+  const frameEnabled = style.frameStyleEnabled && style.frameVariant !== "fullBleed";
   const slots = getLandscapeSlots(size.width, size.height, {
     showCover: style.showCover,
     allowTwoLineTitle: style.allowTwoLineTitle,
-    showSongInfo: style.showSongInfo
+    showSongInfo: style.showSongInfo,
+    frameEnabled
   });
   const cover = song.proxiedCoverUrl || proxiedImageUrl(song.coverUrl);
   const [coverFailed, setCoverFailed] = useState(false);
@@ -37,7 +39,6 @@ export function LandscapeLyricCard({
   const isDarkText = isColorDark(textColor);
   const showGeneratedWatermark = style.showGeneratedWatermark ?? style.showWatermark;
   const contentMode = style.contentMode ?? "lyrics";
-  const frameEnabled = style.frameStyleEnabled && style.frameVariant !== "fullBleed";
 
   useEffect(() => {
     setCoverFailed(false);
@@ -109,8 +110,7 @@ export function LandscapeLyricCard({
         )}
 
         <LandscapeFooter
-          width={size.width}
-          height={size.height}
+          slots={slots}
           showPlatformLogo={style.showPlatformBadge}
           platformSource={song.source}
           showGeneratedWatermark={showGeneratedWatermark}

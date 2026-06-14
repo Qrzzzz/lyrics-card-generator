@@ -61,7 +61,7 @@ export const portraitLayoutConfig: CardLayoutConfig = {
     minWidth: 720,
     maxWidth: 1440,
     minHeight: 720,
-    maxHeight: 2400
+    maxHeight: 3200
   },
   padding: {
     outerX: 72,
