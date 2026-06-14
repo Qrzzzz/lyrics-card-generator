@@ -4,7 +4,21 @@
 
 :root {
   color-scheme: dark;
+  --font-source-han-sans-heavy: "Source Han Sans Heavy Local";
+  --font-source-han-serif-heavy: "Source Han Serif Heavy Local";
 }
+@font-face {
+  font-family: "Source Han Sans Heavy Local";
+  src: url("/fonts/SourceHanSansSC-Heavy.otf") format("opentype");
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Source Han Serif Heavy Local";
+  src: url("/fonts/SourceHanSerifSC-Heavy.otf") format("opentype");
+  font-display: swap;
+}
+
 
 * {
   box-sizing: border-box;

@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { EditorHeader } from "@/components/editor/EditorHeader";
+import { ExportPanel } from "@/components/editor/ExportPanel";
 import { ExportCelebration } from "@/components/effects/ExportCelebration";
 import { LyricsFetchPanel } from "@/components/editor/LyricsFetchPanel";
 import { LyricInput } from "@/components/editor/LyricInput";
@@ -386,11 +387,7 @@ export function LyricEditor() {
       title: t("step.export"),
       description: t("exportHint"),
       isComplete: true,
-      content: (
-        <div className="glass-panel rounded-lg p-4">
-          <p className="app-text-subtle text-sm">{t("exportHint")}</p>
-        </div>
-      )
+      content: <ExportPanel state={parsedState} cardRef={cardRef} t={t} />
     }
   ];
 
