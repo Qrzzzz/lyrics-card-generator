@@ -3,7 +3,7 @@
 import { Download } from "lucide-react";
 import { useState } from "react";
 import type { RefObject } from "react";
-import { getCardSize } from "@/components/preview/LyricCard";
+import { getCardSize } from "@/lib/card-size";
 import { Label, Section, Select } from "@/components/ui/controls";
 import { exportNodeAsPng } from "@/lib/export-image";
 import type { createT } from "@/lib/i18n";

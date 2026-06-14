@@ -119,12 +119,12 @@ git switch -c restore/original-webui backup-webui-before-exe-20260612
 
 ## Fonts
 
-The project loads these local fonts through `next/font/local`:
+The project keeps the required local font files under `public/fonts` and loads them with CSS `@font-face` rules from `/fonts/...`:
 
 - `public/fonts/SourceHanSansSC-Heavy.otf`
 - `public/fonts/SourceHanSerifSC-Heavy.otf`
 
-The original root-level font files were left in place.
+Do not remove these files. They are runtime assets for preview rendering and PNG export, and keeping them in `public/fonts` avoids duplicating the large OTF files through `next/font/local` in the desktop bundle.
 
 ## Platform icons
 
