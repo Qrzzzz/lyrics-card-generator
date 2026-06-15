@@ -24,7 +24,7 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 The current focus is the Windows desktop version: download the EXE and run it directly. No manual Node.js setup or server deployment is required for normal users.
 
-## Download and Installation
+## 📦 Download and Installation
 
 Download the latest version from GitHub Releases:
 
@@ -35,7 +35,9 @@ The installer is recommended for regular use. The portable version is useful for
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-## Features
+<a id="features"></a>
+
+## ✨ Features
 
 * Generate high-polish lyric sharing images
 * Portrait, landscape, and custom canvas sizes
@@ -51,7 +53,7 @@ The installer is recommended for regular use. The portable version is useful for
 * High-resolution PNG export
 * GitHub Releases update checking
 
-## Windows Desktop Version
+## 🪟 Windows Desktop Version
 
 The desktop version keeps the original Next.js Web UI and API routes, then wraps them with Electron.
 
@@ -72,7 +74,7 @@ These features require internet access:
 * Automatic lyric fetching
 * GitHub update checking
 
-## How to Use
+## 🚀 How to Use
 
 1. Start the app.
 2. Paste an Apple Music, NetEase Cloud Music, or QQ Music link, or enter song information manually.
@@ -81,14 +83,16 @@ These features require internet access:
 5. Preview the card on the right.
 6. Export the PNG image.
 
-## Update Checking
+## 🔄 Update Checking
 
 The app provides a “Check for updates” button.
 It requests this project’s GitHub Releases and compares the current version with the latest published release.
 
 This feature only checks for updates and opens the download page. It does not silently download installers or replace the current app automatically.
 
-## Local Development
+<a id="local-development"></a>
+
+## 🛠️ Local Development
 
 Node.js and npm are required.
 
@@ -103,7 +107,7 @@ Then open:
 http://localhost:3000
 ```
 
-## Desktop Development and Packaging
+## 🖥️ Desktop Development and Packaging
 
 Run the desktop app in development mode:
 
@@ -135,7 +139,7 @@ The bundled Next standalone service is prepared in:
 dist-desktop/server
 ```
 
-## Scripts
+## 📜 Scripts
 
 ```bash
 npm run dev             # Start the Web development server
@@ -147,7 +151,7 @@ npm run desktop:build   # Build the Windows installer and portable EXE
 npm run parse:test      # Test song link parsing
 ```
 
-## Tech Stack
+## 🧩 Tech Stack
 
 * Next.js
 * React
@@ -162,7 +166,7 @@ npm run parse:test      # Test song link parsing
 * Zod
 * UI inspiration from ReactBits
 
-## Fonts
+## 🔤 Fonts
 
 The project uses:
 
@@ -171,7 +175,7 @@ The project uses:
 
 They provide a strong, clear, and reliable typographic foundation for Chinese lyric cards.
 
-## Acknowledgements
+## 🙏 Acknowledgements
 
 Thanks to Apple Music. The colorful gradient background, flowing visual atmosphere, and early lyric card layout direction were inspired by the Apple Music visual experience. This project is not affiliated with Apple Music and does not represent Apple Music’s official position.
 
@@ -189,7 +193,7 @@ Thanks to Rangerov for attention to this project and for providing feedback.
 
 Thanks also to the maintainers of Next.js, React, TypeScript, Tailwind CSS, Electron, electron-builder, html-to-image, Framer Motion, Lucide React, Cheerio, Zod, and the broader modern frontend ecosystem. Without these open-source foundations, this project would not exist in its current form.
 
-## License
+## 📄 License
 
 This project is released under a custom Source Available License, not a traditional open-source license.
 
