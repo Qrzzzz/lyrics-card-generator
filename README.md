@@ -2,7 +2,7 @@
 
 # 🎧 Lyrics Card Generator
 
-### 从音乐链接或手动输入生成高质感歌词分享卡片
+### 生成用于可分享的高质感歌词分享卡片
 
 **Apple Music / 网易云音乐 / QQ 音乐 · Windows 桌面应用 · 高清 PNG 导出 · 中文文档**
 
@@ -11,7 +11,7 @@
 ![Platform](https://img.shields.io/badge/Platform-Windows%20Desktop-111827)
 ![Stack](https://img.shields.io/badge/Stack-Next.js%20%2B%20React%20%2B%20TypeScript-0F766E)
 ![Desktop](https://img.shields.io/badge/Desktop-Electron-1D4ED8)
-![Output](https://img.shields.io/badge/Output-High--resolution%20PNG-FF5722)
+![Output](https://img.shields.io/badge/Output-PNG-FF5722)
 ![Docs](https://img.shields.io/badge/Docs-ZH%20%2F%20EN-7C3AED)
 ![Release](https://img.shields.io/github/v/release/Qrzzzz/lyrics-card-generator?include_prereleases)
 
