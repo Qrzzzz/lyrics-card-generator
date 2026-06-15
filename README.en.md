@@ -2,7 +2,7 @@
 
 # 🎧 Lyrics Card Generator
 
-### Create polished lyric sharing cards from music links or manual input
+### Create polished lyric sharing cards
 
 **Apple Music / NetEase Cloud Music / QQ Music · Windows Desktop · High-resolution PNG export · English Docs**
 
@@ -11,7 +11,7 @@
 ![Platform](https://img.shields.io/badge/Platform-Windows%20Desktop-111827)
 ![Stack](https://img.shields.io/badge/Stack-Next.js%20%2B%20React%20%2B%20TypeScript-0F766E)
 ![Desktop](https://img.shields.io/badge/Desktop-Electron-1D4ED8)
-![Output](https://img.shields.io/badge/Output-High--resolution%20PNG-FF5722)
+![Output](https://img.shields.io/badge/Output-PNG-FF5722)
 ![Docs](https://img.shields.io/badge/Docs-ZH%20%2F%20EN-7C3AED)
 ![Release](https://img.shields.io/github/v/release/Qrzzzz/lyrics-card-generator?include_prereleases)
 
