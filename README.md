@@ -21,7 +21,7 @@
 
 当前重点是 Windows 桌面版：下载 EXE 后即可运行，无需手动安装 Node.js，也无需部署到服务器。
 
-## 下载与安装
+## 📦 下载与安装
 
 请前往 GitHub Releases 下载最新版：
 
@@ -32,7 +32,9 @@
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-## 主要功能
+<a id="主要功能"></a>
+
+## ✨ 主要功能
 
 * 生成高质感歌词分享图片
 * 支持竖版、横版和自定义画布尺寸
@@ -48,7 +50,7 @@
 * 支持导出高清 PNG 图片
 * 支持从 GitHub Releases 检查新版本
 
-## Windows 桌面版说明
+## 🪟 Windows 桌面版说明
 
 桌面版保留了原本的 Next.js Web 界面和 API 路由，并通过 Electron 包装为本地应用。
 
@@ -69,7 +71,7 @@
 * 自动歌词获取
 * GitHub 检查更新
 
-## 使用方式
+## 🚀 使用方式
 
 1. 启动应用。
 2. 粘贴 Apple Music、网易云音乐或 QQ 音乐链接，或手动填写歌曲信息。
@@ -78,14 +80,16 @@
 5. 在右侧预览卡片。
 6. 点击导出，保存 PNG 图片。
 
-## 检查更新
+## 🔄 检查更新
 
 应用内提供“检查更新”按钮。
 它会请求本项目的 GitHub Releases，比较当前版本和最新发布版本。
 
 该功能只负责检查更新并打开下载页面，不会静默下载安装包，也不会自动替换当前程序。
 
-## 本地开发
+<a id="本地开发"></a>
+
+## 🛠️ 本地开发
 
 需要 Node.js 和 npm。
 
@@ -100,7 +104,7 @@ npm run dev
 http://localhost:3000
 ```
 
-## 桌面版开发与打包
+## 🖥️ 桌面版开发与打包
 
 开发桌面版：
 
@@ -132,7 +136,7 @@ release/
 dist-desktop/server
 ```
 
-## 常用脚本
+## 📜 常用脚本
 
 ```bash
 npm run dev             # 启动 Web 开发服务器
@@ -144,7 +148,7 @@ npm run desktop:build   # 构建 Windows 安装版和便携版
 npm run parse:test      # 测试歌曲链接解析
 ```
 
-## 技术栈
+## 🧩 技术栈
 
 * Next.js
 * React
@@ -159,7 +163,7 @@ npm run parse:test      # 测试歌曲链接解析
 * Zod
 * ReactBits 风格 UI 灵感
 
-## 字体
+## 🔤 字体
 
 项目使用：
 
@@ -168,7 +172,7 @@ npm run parse:test      # 测试歌曲链接解析
 
 它们为卡片提供了厚重、清晰、适合中文歌词排版的字体基础。
 
-## 致谢
+## 🙏 致谢
 
 感谢 Apple Music。这个项目的彩色渐变、流光背景审美，以及早期歌词卡片排版方向，受到 Apple Music 视觉体验的启发。本项目与 Apple Music 没有关联，也不代表 Apple Music 官方立场。
 
@@ -186,7 +190,7 @@ npm run parse:test      # 测试歌曲链接解析
 
 也感谢这些开源项目及其维护者：Next.js、React、TypeScript、Tailwind CSS、Electron、electron-builder、html-to-image、Framer Motion、Lucide React、Cheerio、Zod，以及构成现代前端生态的众多工具链。没有这些基础设施，这个项目不会以现在的形态出现。
 
-## 许可证
+## 📄 许可证
 
 本项目采用自定义 Source Available License，而不是传统开源许可证。
 
