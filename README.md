@@ -2,53 +2,72 @@
 
 # 🎧 Lyrics Card Generator
 
-### 从音乐链接或手动输入生成高质感歌词分享卡片
+### 生成高质感歌词分享卡片的 Windows 桌面应用
 
-**Apple Music / 网易云音乐 / QQ 音乐 · Windows 桌面应用 · 高清 PNG 导出 · 中文文档**
+**Apple Music / 网易云音乐 / QQ 音乐 · 手动编辑 · 高清 PNG 导出 · 桌面版打包**
 
-[English](./README.en.md) · [下载最新版](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) · [主要功能](#主要功能) · [本地开发](#本地开发) · [许可证](./LICENSE)
+[English](./README.en.md) · [下载最新版](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) · [v1.1.0 更新](#v110-更新重点) · [主要功能](#主要功能) · [本地开发](#本地开发) · [许可证](./LICENSE)
 
 ![Platform](https://img.shields.io/badge/Platform-Windows%20Desktop-111827)
+![Version](https://img.shields.io/badge/Release-v1.1.0-2563EB)
 ![Stack](https://img.shields.io/badge/Stack-Next.js%20%2B%20React%20%2B%20TypeScript-0F766E)
 ![Desktop](https://img.shields.io/badge/Desktop-Electron-1D4ED8)
 ![Output](https://img.shields.io/badge/Output-High--resolution%20PNG-FF5722)
 ![Docs](https://img.shields.io/badge/Docs-ZH%20%2F%20EN-7C3AED)
-![Release](https://img.shields.io/github/v/release/Qrzzzz/lyrics-card-generator?include_prereleases)
 
 </div>
 
 ---
 
-当前重点是 Windows 桌面版：下载 EXE 后即可运行，无需手动安装 Node.js，也无需部署到服务器。
+Lyrics Card Generator 用来把歌曲信息、歌词、翻译和封面整理成适合分享的歌词卡片。你可以粘贴音乐平台链接自动解析，也可以完全手动填写内容，然后调整画布、字体、颜色、边框、水印等样式，最后导出 PNG 图片。
+
+当前主线是 Windows 桌面版：普通用户下载 EXE 后即可运行，不需要手动安装 Node.js，也不需要部署服务器。
+
+<a id="v110-更新重点"></a>
+
+## 🧹 v1.1.0 更新重点
+
+v1.1.0 是一次以“瘦身”和“整理”为主的维护更新。核心功能基本保持不变，重点放在清理历史遗留代码、拆分编辑器结构、稳定桌面版导出与打包流程。
+
+主要变化：
+
+* 清理未使用代码和冗余逻辑，减少项目负担。
+* 重构编辑器结构，将原本集中的界面与副作用逻辑拆分为独立组件和 hooks。
+* 保留原有卡片布局算法，避免整理代码影响歌词卡片渲染效果。
+* 修复桌面版导出面板和 PNG 导出控制项。
+* 修复桌面版字体打包问题，确保内置字体能够正常加载。
+* 整理 Windows 桌面版构建流程，明确安装版与便携版产物。
+* 更新版本号、下载文件名和相关版本信息至 `1.1.0`。
+
+这不是一个“大量新增功能”的版本。它更像是把项目从“能跑”整理到“更容易继续维护”。
 
 ## 📦 下载与安装
 
 请前往 GitHub Releases 下载最新版：
 
-* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 1.1.0.exe`
-* 不想安装时可下载便携版：`Lyrics Card Generator-1.1.0-portable.exe`
+* 安装版：`Lyrics Card Generator Setup 1.1.0.exe`
+* 便携版：`Lyrics Card Generator-1.1.0-portable.exe`
 
 安装版适合长期使用；便携版适合临时运行、测试或放在移动硬盘中使用。
 
-> 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
+> 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是个人未签名应用的常见现象。
 
 <a id="主要功能"></a>
 
 ## ✨ 主要功能
 
-* 生成高质感歌词分享图片
-* 支持竖版、横版和自定义画布尺寸
-* 支持自动卡片高度，长歌词、翻译和底部信息开启时会自动延展
-* 支持歌词原文与翻译并排排版
-* 支持 Apple Music、网易云音乐、QQ 音乐链接解析
-* 支持手动填写歌曲名、艺人、封面和歌词
-* 支持本地封面上传
-* 支持从封面提取色彩并生成渐变背景
-* 支持平台 Logo、分享人、生成水印
-* 支持边框、阴影、字体、字号、行距、文字颜色等视觉设置
-* 支持中文 / English 界面切换
-* 支持导出高清 PNG 图片
-* 支持从 GitHub Releases 检查新版本
+* 生成歌词分享图片，并导出高清 PNG。
+* 支持竖版、横版和自定义画布尺寸。
+* 支持自动卡片高度，长歌词、翻译和底部信息开启时会自动延展。
+* 支持歌词原文与翻译排版。
+* 支持 Apple Music、网易云音乐、QQ 音乐链接解析。
+* 支持手动填写歌曲名、艺人、封面和歌词。
+* 支持本地封面上传。
+* 支持从封面提取色彩并生成渐变背景。
+* 支持平台 Logo、分享人、生成水印。
+* 支持边框、阴影、字体、字号、行距、文字颜色等视觉设置。
+* 支持中文 / English 界面切换。
+* 支持从 GitHub Releases 检查新版本。
 
 ## 🪟 Windows 桌面版说明
 
@@ -82,8 +101,7 @@
 
 ## 🔄 检查更新
 
-应用内提供“检查更新”按钮。
-它会请求本项目的 GitHub Releases，比较当前版本和最新发布版本。
+应用内提供“检查更新”按钮。它会请求本项目的 GitHub Releases，比较当前版本和最新发布版本。
 
 该功能只负责检查更新并打开下载页面，不会静默下载安装包，也不会自动替换当前程序。
 
@@ -150,25 +168,25 @@ npm run parse:test      # 测试歌曲链接解析
 
 ## 🧩 技术栈
 
-* Next.js
-* React
-* TypeScript
-* Tailwind CSS
-* Electron
-* electron-builder
-* html-to-image
-* Framer Motion
-* Lucide React
-* Cheerio
-* Zod
-* ReactBits 风格 UI 灵感
+* [Next.js](https://nextjs.org/)
+* [React](https://react.dev/)
+* [TypeScript](https://www.typescriptlang.org/)
+* [Tailwind CSS](https://tailwindcss.com/)
+* [Electron](https://www.electronjs.org/)
+* [electron-builder](https://www.electron.build/)
+* [html-to-image](https://github.com/bubkoo/html-to-image)
+* [Framer Motion](https://motion.dev/)
+* [Lucide React](https://lucide.dev/)
+* [Cheerio](https://cheerio.js.org/)
+* [Zod](https://zod.dev/)
+* [ReactBits](https://www.reactbits.dev/) 风格 UI 灵感
 
 ## 🔤 字体
 
 项目使用：
 
-* 思源黑体
-* 思源宋体
+* [思源黑体](https://github.com/adobe-fonts/source-han-sans)
+* [思源宋体](https://github.com/adobe-fonts/source-han-serif)
 
 它们为卡片提供了厚重、清晰、适合中文歌词排版的字体基础。
 
@@ -188,9 +206,9 @@ npm run parse:test      # 测试歌曲链接解析
 
 感谢 Rangerov 对此项目的关注和提出意见。
 
-感谢 [Sakuramble](https://github.com/Sakuramble) 对 [v1.1.0](https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v1.1.0) 的 README 展示结构提出建议，尤其是中英文 README 的居中标题区、导航链接和徽章排版。
+感谢 [Sakuramble](https://github.com/Sakuramble) 对 [v1.1.0](https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v1.1.0) 文档呈现提出建议，尤其是更准确地区分维护更新与功能更新，并补充中英文说明和链接。
 
-也感谢这些开源项目及其维护者：[Next.js](https://nextjs.org/)、[React](https://react.dev/)、[TypeScript](https://www.typescriptlang.org/)、[Tailwind CSS](https://tailwindcss.com/)、[Electron](https://www.electronjs.org/)、[electron-builder](https://www.electron.build/)、[html-to-image](https://github.com/bubkoo/html-to-image)、[Framer Motion](https://motion.dev/)、[Lucide React](https://lucide.dev/)、[Cheerio](https://cheerio.js.org/)、[Zod](https://zod.dev/)，以及构成现代前端生态的众多工具链。没有这些基础设施，这个项目不会以现在的形态出现。
+也感谢现代前端与桌面应用生态中的开源项目及其维护者。没有这些基础设施，这个项目不会以现在的形态出现。
 
 ## 📄 许可证
 
