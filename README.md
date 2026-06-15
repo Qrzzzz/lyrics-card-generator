@@ -174,21 +174,21 @@ npm run parse:test      # 测试歌曲链接解析
 
 ## 🙏 致谢
 
-感谢 Apple Music。这个项目的彩色渐变、流光背景审美，以及早期歌词卡片排版方向，受到 Apple Music 视觉体验的启发。本项目与 Apple Music 没有关联，也不代表 Apple Music 官方立场。
+感谢 [Apple Music](https://music.apple.com/)。这个项目的彩色渐变、流光背景审美，以及早期歌词卡片排版方向，受到 Apple Music 视觉体验的启发。本项目与 Apple Music 没有关联，也不代表 Apple Music 官方立场。
 
-感谢思源黑体和思源宋体。它们为中文歌词卡片提供了稳定、清晰、有分量的字体基础。
+感谢 [思源黑体](https://github.com/adobe-fonts/source-han-sans) 和 [思源宋体](https://github.com/adobe-fonts/source-han-serif)。它们为中文歌词卡片提供了稳定、清晰、有分量的字体基础。
 
-感谢 Sabrina Carpenter 的《opposite》。它作为应用启动时的默认样例，帮助确定了初版排版、英文歌词和中文翻译的视觉节奏。相关音乐作品权利归原权利人所有，本项目不分发音频内容。
+感谢 [Sabrina Carpenter](https://www.sabrinacarpenter.com/) 的《opposite》。它作为应用启动时的默认样例，帮助确定了初版排版、英文歌词和中文翻译的视觉节奏。相关音乐作品权利归原权利人所有，本项目不分发音频内容。
 
-感谢 OpenAI Codex。它把许多零散想法转化为可运行的代码、桌面版构建流程和实际功能。
+感谢 [OpenAI Codex](https://openai.com/codex/)。它把许多零散想法转化为可运行的代码、桌面版构建流程和实际功能。
 
-感谢 ChatGPT 5.5 在开发过程中进行问题定位、方案设计、修复复核和验收检查。
+感谢 [ChatGPT 5.5](https://chatgpt.com/) 在开发过程中进行问题定位、方案设计、修复复核和验收检查。
 
-感谢 ReactBits 提供的多种 UI 创意，包括 Spark Cursor 等动效灵感。
+感谢 [ReactBits](https://www.reactbits.dev/) 提供的多种 UI 创意，包括 Spark Cursor 等动效灵感。
 
-感谢 Rangerov 对此项目的关注和提出意见。
+感谢 rangerov 对此项目的关注和提出意见。
 
-也感谢这些开源项目及其维护者：Next.js、React、TypeScript、Tailwind CSS、Electron、electron-builder、html-to-image、Framer Motion、Lucide React、Cheerio、Zod，以及构成现代前端生态的众多工具链。没有这些基础设施，这个项目不会以现在的形态出现。
+也感谢这些开源项目及其维护者：[Next.js](https://nextjs.org/)、[React](https://react.dev/)、[TypeScript](https://www.typescriptlang.org/)、[Tailwind CSS](https://tailwindcss.com/)、[Electron](https://www.electronjs.org/)、[electron-builder](https://www.electron.build/)、[html-to-image](https://github.com/bubkoo/html-to-image)、[Framer Motion](https://motion.dev/)、[Lucide React](https://lucide.dev/)、[Cheerio](https://cheerio.js.org/)、[Zod](https://zod.dev/)，以及构成现代前端生态的众多工具链。没有这些基础设施，这个项目不会以现在的形态出现。
 
 ## 📄 许可证
 
