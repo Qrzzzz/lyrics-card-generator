@@ -1,19 +1,18 @@
 <div align="center">
 
-# 🎧 Lyrics Card Generator｜歌词卡片生成器
+# 🎧 Lyrics Card Generator
 
-### Create polished lyric sharing cards from music links or manual input
 ### 从音乐链接或手动输入生成高质感歌词分享卡片
 
-**Apple Music / 网易云音乐 / QQ 音乐 · 中文 / English UI · Windows Desktop · High-resolution PNG export**
+**Apple Music / 网易云音乐 / QQ 音乐 · Windows 桌面应用 · 高清 PNG 导出 · 中文文档**
 
-[下载最新版 / Latest Release](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) · [主要功能 / Features](#主要功能) · [本地开发 / Development](#本地开发) · [许可证 / License](./LICENSE)
+[English](./README.en.md) · [下载最新版](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) · [主要功能](#主要功能) · [本地开发](#本地开发) · [许可证](./LICENSE)
 
 ![Platform](https://img.shields.io/badge/Platform-Windows%20Desktop-111827)
 ![Stack](https://img.shields.io/badge/Stack-Next.js%20%2B%20React%20%2B%20TypeScript-0F766E)
 ![Desktop](https://img.shields.io/badge/Desktop-Electron-1D4ED8)
 ![Output](https://img.shields.io/badge/Output-High--resolution%20PNG-FF5722)
-![UI](https://img.shields.io/badge/UI-ZH%20%2F%20EN-7C3AED)
+![Docs](https://img.shields.io/badge/Docs-ZH%20%2F%20EN-7C3AED)
 ![Release](https://img.shields.io/github/v/release/Qrzzzz/lyrics-card-generator?include_prereleases)
 
 </div>
