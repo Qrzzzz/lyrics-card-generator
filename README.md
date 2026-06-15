@@ -1,7 +1,24 @@
-# Lyrics Card Generator
+<div align="center">
 
-一个用于生成歌词分享卡片的 Windows 桌面应用。
-输入歌曲链接或手动填写歌曲信息，编辑歌词、翻译、封面和视觉样式，然后导出适合分享的高清 PNG 图片。
+# 🎧 Lyrics Card Generator｜歌词卡片生成器
+
+### Create polished lyric sharing cards from music links or manual input
+### 从音乐链接或手动输入生成高质感歌词分享卡片
+
+**Apple Music / 网易云音乐 / QQ 音乐 · 中文 / English UI · Windows Desktop · High-resolution PNG export**
+
+[下载最新版 / Latest Release](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) · [主要功能 / Features](#主要功能) · [本地开发 / Development](#本地开发) · [许可证 / License](./LICENSE)
+
+![Platform](https://img.shields.io/badge/Platform-Windows%20Desktop-111827)
+![Stack](https://img.shields.io/badge/Stack-Next.js%20%2B%20React%20%2B%20TypeScript-0F766E)
+![Desktop](https://img.shields.io/badge/Desktop-Electron-1D4ED8)
+![Output](https://img.shields.io/badge/Output-High--resolution%20PNG-FF5722)
+![UI](https://img.shields.io/badge/UI-ZH%20%2F%20EN-7C3AED)
+![Release](https://img.shields.io/github/v/release/Qrzzzz/lyrics-card-generator?include_prereleases)
+
+</div>
+
+---
 
 当前重点是 Windows 桌面版：下载 EXE 后即可运行，无需手动安装 Node.js，也无需部署到服务器。
 
