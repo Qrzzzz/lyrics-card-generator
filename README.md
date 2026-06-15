@@ -2,7 +2,7 @@
 
 # 🎧 Lyrics Card Generator
 
-### 生成用于可分享的高质感歌词分享卡片
+### 生成可用于分享的高质感歌词分享卡片
 
 **Apple Music / 网易云音乐 / QQ 音乐 · Windows 桌面应用 · 高清 PNG 导出 · 中文文档**
 
