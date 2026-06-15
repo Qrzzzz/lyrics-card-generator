@@ -191,6 +191,8 @@ Thanks to [ReactBits](https://www.reactbits.dev/) for multiple UI ideas, includi
 
 Thanks to Rangerov for attention to this project and for providing feedback.
 
+Thanks to [Sakuramble](https://github.com/Sakuramble) for suggestions on the [v1.1.0](https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v1.1.0) README presentation, especially the centered hero sections, bilingual navigation links, and badge layout.
+
 Thanks also to the maintainers of [Next.js](https://nextjs.org/), [React](https://react.dev/), [TypeScript](https://www.typescriptlang.org/), [Tailwind CSS](https://tailwindcss.com/), [Electron](https://www.electronjs.org/), [electron-builder](https://www.electron.build/), [html-to-image](https://github.com/bubkoo/html-to-image), [Framer Motion](https://motion.dev/), [Lucide React](https://lucide.dev/), [Cheerio](https://cheerio.js.org/), [Zod](https://zod.dev/), and the broader modern frontend ecosystem. Without these open-source foundations, this project would not exist in its current form.
 
 ## 📄 License
