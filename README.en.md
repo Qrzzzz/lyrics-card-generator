@@ -1,4 +1,23 @@
-# Lyrics Card Generator
+<div align="center">
+
+# 🎧 Lyrics Card Generator
+
+### Create polished lyric sharing cards from music links or manual input
+
+**Apple Music / NetEase Cloud Music / QQ Music · Windows Desktop · High-resolution PNG export · English Docs**
+
+[简体中文](./README.md) · [Latest Release](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) · [Features](#features) · [Development](#local-development) · [License](./LICENSE)
+
+![Platform](https://img.shields.io/badge/Platform-Windows%20Desktop-111827)
+![Stack](https://img.shields.io/badge/Stack-Next.js%20%2B%20React%20%2B%20TypeScript-0F766E)
+![Desktop](https://img.shields.io/badge/Desktop-Electron-1D4ED8)
+![Output](https://img.shields.io/badge/Output-High--resolution%20PNG-FF5722)
+![Docs](https://img.shields.io/badge/Docs-ZH%20%2F%20EN-7C3AED)
+![Release](https://img.shields.io/github/v/release/Qrzzzz/lyrics-card-generator?include_prereleases)
+
+</div>
+
+---
 
 A Windows desktop app for generating polished lyric sharing cards.
 Paste a song link or enter song information manually, edit lyrics, translations, cover art, and visual styles, then export a high-resolution PNG image for sharing.
