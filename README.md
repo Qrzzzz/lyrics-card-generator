@@ -186,7 +186,7 @@ npm run parse:test      # 测试歌曲链接解析
 
 感谢 [ReactBits](https://www.reactbits.dev/) 提供的多种 UI 创意，包括 Spark Cursor 等动效灵感。
 
-感谢 rangerov 对此项目的关注和提出意见。
+感谢 Rangerov 对此项目的关注和提出意见。
 
 也感谢这些开源项目及其维护者：[Next.js](https://nextjs.org/)、[React](https://react.dev/)、[TypeScript](https://www.typescriptlang.org/)、[Tailwind CSS](https://tailwindcss.com/)、[Electron](https://www.electronjs.org/)、[electron-builder](https://www.electron.build/)、[html-to-image](https://github.com/bubkoo/html-to-image)、[Framer Motion](https://motion.dev/)、[Lucide React](https://lucide.dev/)、[Cheerio](https://cheerio.js.org/)、[Zod](https://zod.dev/)，以及构成现代前端生态的众多工具链。没有这些基础设施，这个项目不会以现在的形态出现。
 
