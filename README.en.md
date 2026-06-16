@@ -22,8 +22,6 @@
 A Windows desktop app for generating polished lyric sharing cards.
 Paste a song link or enter song information manually, edit lyrics, translations, cover art, and visual styles, then export a high-resolution PNG image for sharing.
 
-The current focus is the Windows desktop version: download the EXE and run it directly. No manual Node.js setup or server deployment is required for normal users.
-
 ## 📦 Download and Installation
 
 Download the latest version from GitHub Releases:
