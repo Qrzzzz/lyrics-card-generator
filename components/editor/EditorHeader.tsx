@@ -1,6 +1,7 @@
 "use client";
 
-import { Trash2 } from "lucide-react";
+import { Check, ChevronDown, Languages, Trash2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { UpdateButton } from "@/components/editor/UpdateButton";
 import type { createT } from "@/lib/i18n";
 import type { Locale } from "@/lib/types";
@@ -12,9 +13,54 @@ type EditorHeaderProps = {
   onClearAll: () => void;
 };
 
+type LanguageOption = {
+  locale: Locale;
+  nativeName: string;
+  displayName: string;
+};
+
+const languageOptions: LanguageOption[] = [
+  { locale: "zh", nativeName: "中文", displayName: "Simplified Chinese" },
+  { locale: "zh-TW", nativeName: "繁體中文", displayName: "Traditional Chinese" },
+  { locale: "en", nativeName: "English", displayName: "English" },
+  { locale: "fr", nativeName: "Français", displayName: "French" },
+  { locale: "ja", nativeName: "日本語", displayName: "Japanese" },
+  { locale: "es", nativeName: "Español", displayName: "Spanish" }
+];
+
 export function EditorHeader({ locale, t, onLocaleChange, onClearAll }: EditorHeaderProps) {
+  const [isLanguageMenuOpen, setIsLanguageMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const activeLanguage = languageOptions.find((option) => option.locale === locale) ?? languageOptions[0];
+
+  useEffect(() => {
+    if (!isLanguageMenuOpen) {
+      return;
+    }
+
+    function closeOnOutsideInteraction(event: MouseEvent) {
+      if (!menuRef.current?.contains(event.target as Node)) {
+        setIsLanguageMenuOpen(false);
+      }
+    }
+
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setIsLanguageMenuOpen(false);
+      }
+    }
+
+    document.addEventListener("click", closeOnOutsideInteraction);
+    document.addEventListener("keydown", closeOnEscape);
+
+    return () => {
+      document.removeEventListener("click", closeOnOutsideInteraction);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [isLanguageMenuOpen]);
+
   return (
-    <header className="glass-panel min-w-0 max-w-full flex flex-col gap-4 rounded-lg px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+    <header className="glass-panel relative z-40 min-w-0 max-w-full flex flex-col gap-4 rounded-lg px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
       <div>
         <h1 className="app-text-primary text-2xl font-black tracking-normal sm:text-3xl">{t("appTitle")}</h1>
         <p className="app-text-subtle mt-1 text-sm">{t("appSubtitle")}</p>
@@ -40,19 +86,57 @@ export function EditorHeader({ locale, t, onLocaleChange, onClearAll }: EditorHe
           <Trash2 className="h-4 w-4" />
           {t("clearAll")}
         </button>
-        <div className="inline-flex h-10 overflow-hidden rounded-lg border border-[rgb(var(--panel-border))] bg-[rgb(var(--button-bg))] p-1">
-          {(["zh", "en"] as Locale[]).map((nextLocale) => (
-            <button
-              key={nextLocale}
-              type="button"
-              onClick={() => onLocaleChange(nextLocale)}
-              className={`h-8 rounded-md px-3 text-sm font-semibold transition ${
-                locale === nextLocale ? "bg-[rgb(var(--button-bg-hover))] app-text-primary" : "app-text-subtle hover:text-[rgb(var(--app-fg))]"
-              }`}
+        <div ref={menuRef} className="relative">
+          <button
+            type="button"
+            data-testid="language-menu-button"
+            aria-haspopup="menu"
+            aria-expanded={isLanguageMenuOpen}
+            aria-label={t("language")}
+            onClick={() => setIsLanguageMenuOpen((open) => !open)}
+            className="app-button inline-flex h-10 items-center justify-center gap-2 rounded-lg px-3 text-sm font-semibold transition"
+          >
+            <Languages className="h-4 w-4" />
+            <span className="max-w-[7.5rem] truncate">{activeLanguage.nativeName}</span>
+            <ChevronDown className={`h-4 w-4 transition-transform ${isLanguageMenuOpen ? "rotate-180" : ""}`} />
+          </button>
+
+          {isLanguageMenuOpen ? (
+            <div
+              role="menu"
+              aria-label={t("language")}
+              className="absolute right-0 z-50 mt-2 w-56 overflow-hidden rounded-lg border border-[rgb(var(--panel-border))] bg-[rgba(12,18,28,0.94)] p-1.5 shadow-[0_22px_70px_rgba(0,0,0,0.46)] backdrop-blur-2xl"
             >
-              {nextLocale === "zh" ? t("chinese") : t("english")}
-            </button>
-          ))}
+              {languageOptions.map((option) => {
+                const selected = option.locale === locale;
+
+                return (
+                  <button
+                    key={option.locale}
+                    type="button"
+                    data-locale={option.locale}
+                    role="menuitemradio"
+                    aria-checked={selected}
+                    onClick={() => {
+                      onLocaleChange(option.locale);
+                      setIsLanguageMenuOpen(false);
+                    }}
+                    className={`flex h-11 w-full items-center justify-between gap-3 rounded-md px-3 text-left text-sm transition ${
+                      selected
+                        ? "bg-[rgb(var(--button-bg-hover))] app-text-primary"
+                        : "app-text-subtle hover:bg-[rgb(var(--button-bg))] hover:text-[rgb(var(--app-fg))]"
+                    }`}
+                  >
+                    <span className="min-w-0">
+                      <span className="block truncate font-semibold">{option.nativeName}</span>
+                      <span className="app-text-subtle block truncate text-[11px]">{option.displayName}</span>
+                    </span>
+                    {selected ? <Check className="h-4 w-4 shrink-0" /> : null}
+                  </button>
+                );
+              })}
+            </div>
+          ) : null}
         </div>
       </div>
     </header>

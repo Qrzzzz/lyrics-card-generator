@@ -4,15 +4,15 @@
 
 ### Create polished lyric sharing cards
 
-**Apple Music / NetEase Cloud Music / QQ Music · Windows Desktop · High-resolution PNG export · English Docs**
+**Apple Music / NetEase Cloud Music / QQ Music · Windows Desktop · High-resolution PNG export · Multilingual Docs**
 
-[简体中文](./README.md) · [Latest Release](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) · [Features](#features) · [Development](#local-development) · [License](./LICENSE)
+[简体中文](./README.md) · [繁體中文](./README.zh-TW.md) · [Français](./README.fr.md) · [日本語](./README.ja.md) · [Español](./README.es.md) · [Latest Release](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) · [Features](#features) · [Development](#local-development) · [License](./LICENSE)
 
 ![Platform](https://img.shields.io/badge/Platform-Windows%20Desktop-111827)
 ![Stack](https://img.shields.io/badge/Stack-Next.js%20%2B%20React%20%2B%20TypeScript-0F766E)
 ![Desktop](https://img.shields.io/badge/Desktop-Electron-1D4ED8)
 ![Output](https://img.shields.io/badge/Output-PNG-FF5722)
-![Docs](https://img.shields.io/badge/Docs-ZH%20%2F%20EN-7C3AED)
+![Docs](https://img.shields.io/badge/Docs-6%20Languages-7C3AED)
 ![Release](https://img.shields.io/github/v/release/Qrzzzz/lyrics-card-generator?include_prereleases)
 
 </div>
@@ -26,8 +26,8 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 Download the latest version from GitHub Releases:
 
-* Recommended installer: `Lyrics Card Generator Setup 2.0.0.exe`
-* Portable version: `Lyrics Card Generator-2.0.0-portable.exe`
+* Recommended installer: `Lyrics Card Generator Setup 2.1.0.exe`
+* Portable version: `Lyrics Card Generator-2.1.0-portable.exe`
 
 The installer is recommended for regular use. The portable version is useful for temporary use, testing, or running from a removable drive.
 
@@ -42,7 +42,7 @@ The installer is recommended for regular use. The portable version is useful for
 * Rebuilt landscape layout based on safe areas, cover column, content column, and footer regions
 * Measured auto height for portrait custom canvases
 * Original lyric and translation layout
-* Split alternating original / translated lyrics and format Chinese translations
+* Split alternating original / translated lyrics with Simplified Chinese, Traditional Chinese, English, French, Japanese, and Spanish target-language detection
 * Apple Music, NetEase Cloud Music, and QQ Music link parsing
 * Local MP3 / FLAC metadata parsing for title, artist, album, cover art, and embedded lyrics
 * Manual song title, artist, cover, and lyric editing
@@ -50,7 +50,7 @@ The installer is recommended for regular use. The portable version is useful for
 * Palette extraction from cover art for gradient backgrounds
 * Platform logo, shared-by text, and generated watermark
 * Frame, shadow, font, Windows system font, font size, line height, and text color controls
-* Chinese / English interface
+* Simplified Chinese / Traditional Chinese / English / French / Japanese / Spanish interface
 * High-resolution PNG export
 * GitHub Releases update checking
 
@@ -81,7 +81,7 @@ These features require internet access:
 1. Start the app.
 2. Paste an Apple Music, NetEase Cloud Music, or QQ Music link, or enter song information manually.
 3. Optionally upload a local MP3 / FLAC file to read metadata, cover art, and embedded lyrics.
-4. Edit lyrics and translations; alternating original / translated text can be split automatically.
+4. Edit lyrics and translations; alternating original / translated text can be split automatically according to the selected interface language.
 5. Adjust canvas ratio, fonts, Windows system fonts, colors, frames, watermarks, and other styles.
 6. Preview the card on the right.
 7. Use “Complete & Export” to save the PNG image.
@@ -179,7 +179,7 @@ The project uses:
 
 They provide a strong, clear, and reliable typographic foundation for Chinese lyric cards.
 
-The 2.0.0 desktop app can also enumerate Windows system fonts for custom card typography. Web builds cannot enumerate system fonts, but the existing font presets remain available.
+The 2.1.0 desktop app can also enumerate Windows system fonts for custom card typography. Web builds cannot enumerate system fonts, but the existing font presets remain available.
 
 ## 🙏 Acknowledgements
 

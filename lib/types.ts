@@ -1,5 +1,5 @@
 export type SongSource = "qq" | "netease" | "apple" | "unknown";
-export type Locale = "zh" | "en";
+export type Locale = "zh" | "zh-TW" | "en" | "fr" | "ja" | "es";
 
 export type SongInfo = {
   source: SongSource;

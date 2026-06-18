@@ -4,15 +4,15 @@
 
 ### 生成可用于分享的高质感歌词分享卡片
 
-**Apple Music / 网易云音乐 / QQ 音乐 · Windows 桌面应用 · 高清 PNG 导出 · 中文文档**
+**Apple Music / 网易云音乐 / QQ 音乐 · Windows 桌面应用 · 高清 PNG 导出 · 多语言文档**
 
-[English](./README.en.md) · [下载最新版](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) · [主要功能](#主要功能) · [本地开发](#本地开发) · [许可证](./LICENSE)
+[繁體中文](./README.zh-TW.md) · [English](./README.en.md) · [Français](./README.fr.md) · [日本語](./README.ja.md) · [Español](./README.es.md) · [下载最新版](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) · [主要功能](#主要功能) · [本地开发](#本地开发) · [许可证](./LICENSE)
 
 ![Platform](https://img.shields.io/badge/Platform-Windows%20Desktop-111827)
 ![Stack](https://img.shields.io/badge/Stack-Next.js%20%2B%20React%20%2B%20TypeScript-0F766E)
 ![Desktop](https://img.shields.io/badge/Desktop-Electron-1D4ED8)
 ![Output](https://img.shields.io/badge/Output-PNG-FF5722)
-![Docs](https://img.shields.io/badge/Docs-ZH%20%2F%20EN-7C3AED)
+![Docs](https://img.shields.io/badge/Docs-6%20Languages-7C3AED)
 ![Release](https://img.shields.io/github/v/release/Qrzzzz/lyrics-card-generator?include_prereleases)
 
 </div>
@@ -23,8 +23,8 @@
 
 请前往 GitHub Releases 下载最新版：
 
-* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 2.0.0.exe`
-* 不想安装时可下载便携版：`Lyrics Card Generator-2.0.0-portable.exe`
+* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 2.1.0.exe`
+* 不想安装时可下载便携版：`Lyrics Card Generator-2.1.0-portable.exe`
 
 安装版适合长期使用；便携版适合临时运行、测试或放在移动硬盘中使用。
 
@@ -39,7 +39,7 @@
 * 横版布局基于安全区域重构，封面列、内容列和底部信息更稳定
 * 竖版自定义尺寸支持基于真实 DOM 测量的自动高度
 * 支持歌词原文与翻译并排排版
-* 支持拆分中英交替歌词、格式化中文翻译
+* 支持按当前界面语言拆分原文 / 译文，包括简体中文、繁体中文、英文、法语、日语、西班牙语目标译文
 * 支持 Apple Music、网易云音乐、QQ 音乐链接解析
 * 支持本地 MP3 / FLAC 元数据解析，尝试读取标题、艺人、专辑、封面和内嵌歌词
 * 支持手动填写歌曲名、艺人、封面和歌词
@@ -47,7 +47,7 @@
 * 支持从封面提取色彩并生成渐变背景
 * 支持平台 Logo、分享人、生成水印
 * 支持边框、阴影、字体、Windows 系统字体、字号、行距、文字颜色等视觉设置
-* 支持中文 / English 界面切换
+* 支持简体中文 / 繁體中文 / English / Français / 日本語 / Español 界面切换
 * 支持导出高清 PNG 图片
 * 支持从 GitHub Releases 检查新版本
 
@@ -78,7 +78,7 @@
 1. 启动应用。
 2. 粘贴 Apple Music、网易云音乐或 QQ 音乐链接，或手动填写歌曲信息。
 3. 也可以上传本地 MP3 / FLAC，自动读取文件内的歌曲信息、封面和内嵌歌词。
-4. 编辑歌词和翻译；如文本为英文 / 中文交替行，可使用“拆分中英交替歌词”。
+4. 编辑歌词和翻译；如文本为原文 / 译文交替行，可按当前界面语言自动拆分。
 5. 调整画布比例、字体、Windows 系统字体、字号、颜色、边框、水印等样式。
 6. 在右侧预览卡片。
 7. 点击“完成并导出”，保存 PNG 图片。
@@ -176,7 +176,7 @@ npm run core:test       # 测试 2.0 核心纯函数
 
 它们为卡片提供了厚重、清晰、适合中文歌词排版的字体基础。
 
-桌面版 2.0.0 还支持从 Windows 系统字体列表中选择自定义字体。Web 环境无法枚举系统字体，但仍可使用原有字体预设。
+桌面版 2.1.0 还支持从 Windows 系统字体列表中选择自定义字体。Web 环境无法枚举系统字体，但仍可使用原有字体预设。
 
 ## 🙏 致谢
 
