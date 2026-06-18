@@ -16,7 +16,7 @@ export async function GET(req: Request) {
   try {
     const res = await fetch(safety.url.toString(), {
       headers: {
-        "user-agent": "Mozilla/5.0 LyricGlassCard/1.0"
+        "user-agent": "Mozilla/5.0 LyricsCardGenerator/2.0.0"
       },
       signal: AbortSignal.timeout(8000),
       redirect: "follow"

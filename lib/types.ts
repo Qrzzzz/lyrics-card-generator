@@ -56,6 +56,8 @@ export type CardStyle = {
   height: number;
   autoHeight: boolean;
   font: CardFont;
+  customFontEnabled?: boolean;
+  customFontFamily?: string;
   lyricFontSize: number;
   lineHeight: number;
   align: CardAlign;
@@ -107,6 +109,7 @@ export type AppState = {
 
 export type ParsedSongData = SongInfo & {
   originalUrl: string;
+  lyrics?: string;
 };
 
 export type LyricsCandidate = {

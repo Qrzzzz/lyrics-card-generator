@@ -172,3 +172,98 @@ button {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+.star-border-container {
+  position: relative;
+  display: inline-flex;
+  width: max-content;
+  max-width: 100%;
+  overflow: hidden;
+  border: 0;
+  min-height: 60px;
+  border-radius: 17px;
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--star-border-color) 96%, #ffffff) 0%, color-mix(in srgb, var(--star-border-color) 78%, #fff4e8) 42%, color-mix(in srgb, var(--star-border-color) 58%, #141116) 100%);
+  color: inherit;
+  isolation: isolate;
+  box-shadow:
+    0 18px 46px color-mix(in srgb, var(--star-border-color) 32%, transparent),
+    inset 0 1px 0 rgba(255,255,255,0.48),
+    inset 0 -16px 28px rgba(0,0,0,0.14);
+  transform: translateZ(0);
+}
+
+.star-border-container::before {
+  content: "";
+  position: absolute;
+  inset: -58% -22%;
+  z-index: 0;
+  background:
+    radial-gradient(circle at 20% 35%, rgba(255,255,255,0.62), transparent 18%),
+    radial-gradient(circle at 76% 68%, color-mix(in srgb, var(--star-border-color) 72%, #ffffff), transparent 22%),
+    conic-gradient(from 0deg, transparent, rgba(255,255,255,0.28), transparent, color-mix(in srgb, var(--star-border-color) 52%, #ffffff), transparent);
+  mix-blend-mode: screen;
+  opacity: 0.52;
+  pointer-events: none;
+  animation: star-fill-drift var(--star-border-speed) linear infinite;
+}
+
+.star-border-container::after {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  z-index: 1;
+  border-radius: inherit;
+  background:
+    linear-gradient(112deg, transparent 0%, transparent 32%, rgba(255,255,255,0.58) 45%, rgba(255,255,255,0.14) 52%, transparent 66%, transparent 100%),
+    linear-gradient(180deg, rgba(255,255,255,0.24), transparent 44%);
+  background-size: 250% 100%, 100% 100%;
+  background-position: -150% 0, 0 0;
+  mix-blend-mode: screen;
+  opacity: 0.7;
+  pointer-events: none;
+  animation: star-fill-sheen var(--star-border-speed) cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.star-fill-content {
+  position: relative;
+  z-index: 2;
+  width: auto;
+  border-radius: inherit;
+  background: transparent;
+  text-shadow: 0 1px 12px rgba(0,0,0,0.18);
+}
+
+@keyframes star-fill-drift {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+
+  100% {
+    transform: rotate(360deg) scale(1);
+  }
+}
+
+@keyframes star-fill-sheen {
+  0% {
+    background-position: -150% 0, 0 0;
+    opacity: 0;
+  }
+
+  18% {
+    opacity: 0.72;
+  }
+
+  46%,
+  100% {
+    background-position: 150% 0, 0 0;
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .star-border-container::before,
+  .star-border-container::after {
+    animation: none;
+  }
+}

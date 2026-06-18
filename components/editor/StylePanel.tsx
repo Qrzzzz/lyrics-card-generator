@@ -1,9 +1,11 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
 import { ColorControls } from "@/components/editor/style-panel/ColorControls";
 import { SegmentButton } from "@/components/editor/style-panel/SegmentButton";
 import { Input, Label, Section, Select, SwitchRow } from "@/components/ui/controls";
 import { PRESET_CARD_SIZES } from "@/lib/card-size";
+import { getLyricsCardDesktopApi } from "@/lib/desktop-api";
 import { FONT_OPTIONS } from "@/lib/fonts";
 import type { createT } from "@/lib/i18n";
 import type {
@@ -32,6 +34,7 @@ export function StylePanel(props: StylePanelProps) {
 
 export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps) {
   const layoutMode = style.layoutMode ?? "portrait";
+  const [fontPanelOpen, setFontPanelOpen] = useState(false);
 
   function update<K extends keyof CardStyle>(key: K, value: CardStyle[K]) {
     onStyleChange({ ...style, [key]: value });
@@ -98,16 +101,33 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
             <option value="custom">{t("custom")}</option>
           </Select>
         </Label>
-        <Label label={t("font")}>
-          <Select value={style.font} onChange={(event) => update("font", event.target.value as CardFont)}>
-            {FONT_OPTIONS.map((font) => (
-              <option key={font.value} value={font.value}>
-                {font.label}
-              </option>
-            ))}
-          </Select>
-        </Label>
+        <div className="grid gap-2">
+          <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+            <div className="min-w-0 flex-1">
+              <Label label={t("font")}>
+                <Select value={style.font} onChange={(event) => update("font", event.target.value as CardFont)}>
+                  {FONT_OPTIONS.map((font) => (
+                    <option key={font.value} value={font.value}>
+                      {font.label}
+                    </option>
+                  ))}
+                </Select>
+              </Label>
+            </div>
+            <button
+              type="button"
+              title={t("customFont")}
+              aria-label={t("customFont")}
+              onClick={() => setFontPanelOpen((open) => !open)}
+              className="app-button inline-flex h-11 shrink-0 items-center justify-center whitespace-nowrap rounded-lg px-4 text-sm font-semibold transition"
+            >
+              {t("customFont")}
+            </button>
+          </div>
+        </div>
       </div>
+
+      {fontPanelOpen ? <CustomFontPanel style={style} onStyleChange={onStyleChange} t={t} /> : null}
 
       {style.ratio === "custom" ? (
         <div className="grid gap-4 rounded-lg border border-[rgb(var(--panel-border))] bg-[rgb(var(--panel-bg))] p-3">
@@ -216,6 +236,113 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
         </div>
       ) : null}
     </Section>
+  );
+}
+
+function CustomFontPanel({ style, onStyleChange, t }: StylePanelProps) {
+  const desktopApi = getLyricsCardDesktopApi();
+  const [fonts, setFonts] = useState<string[]>([]);
+  const [search, setSearch] = useState("");
+  const [status, setStatus] = useState("");
+  const filteredFonts = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    if (!query) {
+      return fonts.slice(0, 80);
+    }
+
+    return fonts.filter((font) => font.toLowerCase().includes(query)).slice(0, 80);
+  }, [fonts, search]);
+
+  function update<K extends keyof CardStyle>(key: K, value: CardStyle[K]) {
+    onStyleChange({ ...style, [key]: value });
+  }
+
+  useEffect(() => {
+    let active = true;
+
+    if (!desktopApi) {
+      setStatus(t("systemFontDesktopOnly"));
+      return;
+    }
+
+    setStatus(t("systemFontLoading"));
+    desktopApi
+      .listSystemFonts()
+      .then((nextFonts) => {
+        if (!active) {
+          return;
+        }
+
+        setFonts(nextFonts);
+        setStatus(nextFonts.length > 0 ? "" : t("systemFontEmpty"));
+      })
+      .catch((error) => {
+        if (!active) {
+          return;
+        }
+
+        setStatus(error instanceof Error ? error.message : t("systemFontFailed"));
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [desktopApi, t]);
+
+  return (
+    <div className="grid gap-3 rounded-lg border border-[rgb(var(--panel-border))] bg-[rgb(var(--panel-bg))] p-3">
+      <div className="flex items-center justify-between gap-3">
+        <p className="app-text-primary text-sm font-semibold">{t("customFont")}</p>
+        <SwitchRow
+          label={t("enableCustomFont")}
+          checked={Boolean(style.customFontEnabled)}
+          onChange={(checked) => update("customFontEnabled", checked)}
+        />
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Label label={t("fontSearch")}>
+          <Input
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder={t("fontSearchPlaceholder")}
+            disabled={!desktopApi || fonts.length === 0}
+          />
+        </Label>
+        <Label label={t("manualFontFamily")}>
+          <Input
+            value={style.customFontFamily ?? ""}
+            onChange={(event) => update("customFontFamily", event.target.value)}
+            placeholder="Microsoft YaHei"
+          />
+        </Label>
+      </div>
+
+      {desktopApi && fonts.length > 0 ? (
+        <Label label={t("systemFonts")}>
+          <Select
+            value={style.customFontFamily ?? ""}
+            onChange={(event) => {
+              const customFontFamily = event.target.value;
+              onStyleChange({
+                ...style,
+                customFontFamily,
+                customFontEnabled: customFontFamily ? true : style.customFontEnabled
+              });
+            }}
+          >
+            <option value="">{t("chooseFont")}</option>
+            {filteredFonts.map((font) => (
+              <option key={font} value={font}>
+                {font}
+              </option>
+            ))}
+          </Select>
+        </Label>
+      ) : null}
+
+      {status ? <p className="app-text-subtle text-sm">{status}</p> : null}
+    </div>
   );
 }
 

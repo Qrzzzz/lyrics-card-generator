@@ -2,7 +2,8 @@
 
 import { ExternalLink, RefreshCw } from "lucide-react";
 import { useState } from "react";
-import { checkGitHubUpdate, type UpdateCheckResult } from "@/lib/github-update";
+import { getLyricsCardDesktopApi } from "@/lib/desktop-api";
+import type { UpdateResult } from "@/lib/github-update";
 import type { createT } from "@/lib/i18n";
 
 type UpdateButtonProps = {
@@ -10,7 +11,7 @@ type UpdateButtonProps = {
 };
 
 export function UpdateButton({ t }: UpdateButtonProps) {
-  const [result, setResult] = useState<UpdateCheckResult | null>(null);
+  const [result, setResult] = useState<UpdateResult | null>(null);
   const [isChecking, setIsChecking] = useState(false);
 
   async function checkForUpdates() {
@@ -22,14 +23,33 @@ export function UpdateButton({ t }: UpdateButtonProps) {
     setResult(null);
 
     try {
-      setResult(await checkGitHubUpdate());
+      const response = await fetch("/api/check-update", { method: "GET" });
+      const payload = (await response.json()) as UpdateResult;
+      setResult(payload);
+    } catch (error) {
+      setResult({
+        status: "error",
+        currentVersion: "unknown",
+        message: t("updateFailed"),
+        details: error instanceof Error ? error.message : String(error)
+      });
     } finally {
       setIsChecking(false);
     }
   }
 
   const message = result ? getUpdateMessage(result, t) : "";
-  const link = result && "downloadUrl" in result ? result.downloadUrl : "";
+  const link = result ? getUpdateLink(result) : "";
+
+  async function openLink(url: string) {
+    const desktopApi = getLyricsCardDesktopApi();
+    if (desktopApi) {
+      await desktopApi.openExternal(url);
+      return;
+    }
+
+    window.open(url, "_blank", "noopener,noreferrer");
+  }
 
   return (
     <div className="flex max-w-full flex-wrap items-center gap-2">
@@ -47,15 +67,14 @@ export function UpdateButton({ t }: UpdateButtonProps) {
         <div className="app-text-subtle flex max-w-full flex-wrap items-center gap-2 text-sm" aria-live="polite">
           <span>{message}</span>
           {link ? (
-            <a
-              href={link}
-              target="_blank"
-              rel="noreferrer"
+            <button
+              type="button"
+              onClick={() => void openLink(link)}
               className="app-button inline-flex h-8 items-center justify-center gap-1 rounded-md px-2 text-xs font-semibold transition"
             >
               {t("openReleasePage")}
               <ExternalLink className="h-3.5 w-3.5" />
-            </a>
+            </button>
           ) : null}
         </div>
       ) : null}
@@ -63,22 +82,30 @@ export function UpdateButton({ t }: UpdateButtonProps) {
   );
 }
 
-function getUpdateMessage(result: UpdateCheckResult, t: ReturnType<typeof createT>) {
+function getUpdateMessage(result: UpdateResult, t: ReturnType<typeof createT>) {
   if (result.status === "latest") {
-    return t("updateLatest");
+    return t("updateLatestWithVersions", { current: result.currentVersion, latest: result.latestVersion });
   }
 
   if (result.status === "update-available") {
-    return t("updateAvailable", { version: result.tagName });
-  }
-
-  if (result.status === "unknown-version") {
-    return t("updateUnknownVersion", { version: result.tagName });
+    return t("updateAvailableWithVersions", { current: result.currentVersion, latest: result.latestVersion });
   }
 
   if (result.status === "no-release") {
-    return t("updateNoRelease");
+    return `${t("updateNoRelease")} ${result.message}`;
   }
 
-  return t("updateFailed");
+  return `${t("updateFailed")} ${result.message}${result.details ? ` (${result.details})` : ""}`;
+}
+
+function getUpdateLink(result: UpdateResult) {
+  if (result.status === "latest") {
+    return result.releaseUrl;
+  }
+
+  if (result.status === "update-available") {
+    return result.installerUrl || result.portableUrl || result.releaseUrl;
+  }
+
+  return "";
 }

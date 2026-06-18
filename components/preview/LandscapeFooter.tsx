@@ -3,11 +3,11 @@
 import { GeneratedWatermark } from "@/components/preview/GeneratedWatermark";
 import { PlatformBadge } from "@/components/preview/PlatformBadge";
 import { SharedBy } from "@/components/preview/SharedBy";
-import type { LandscapeSlots } from "@/lib/landscape-layout";
+import type { Rect } from "@/lib/card-layout-engine";
 import type { SongSource } from "@/lib/types";
 
 export function LandscapeFooter({
-  slots,
+  rect,
   showPlatformLogo,
   platformSource,
   showGeneratedWatermark,
@@ -15,7 +15,7 @@ export function LandscapeFooter({
   sharedByText,
   textColor
 }: {
-  slots: LandscapeSlots;
+  rect?: Rect;
   showPlatformLogo: boolean;
   platformSource: SongSource;
   showGeneratedWatermark: boolean;
@@ -34,17 +34,24 @@ export function LandscapeFooter({
     return null;
   }
 
+  if (!rect) {
+    return null;
+  }
+
   return (
-    <>
+    <footer
+      data-card-footer
+      className="absolute z-20"
+      style={{
+        left: rect.x,
+        top: rect.y,
+        width: rect.width,
+        height: rect.height,
+        color: textColor
+      }}
+    >
       {hasTopRow ? (
-        <div
-          className="absolute z-20 flex items-end justify-between"
-          style={{
-            left: slots.footerTop.left,
-            right: slots.footerTop.right,
-            bottom: slots.footerTop.bottom
-          }}
-        >
+        <div className="absolute inset-x-0 top-0 flex items-end justify-between">
           <div>{hasPlatform ? <PlatformBadge source={platformSource} size="large" /> : null}</div>
           <div>{hasSharedBy ? <SharedBy text={trimmedSharedBy} color={textColor} variant="landscape" /> : null}</div>
         </div>
@@ -52,15 +59,14 @@ export function LandscapeFooter({
 
       {hasGenerated ? (
         <div
-          className="absolute left-1/2 z-20 -translate-x-1/2"
+          className="absolute bottom-0 left-1/2 z-20 -translate-x-1/2"
           style={{
-            bottom: slots.generatedWatermark.bottom,
-            width: slots.generatedWatermark.width
+            width: Math.min(760, rect.width * 0.62)
           }}
         >
           <GeneratedWatermark color={textColor} variant="landscape" />
         </div>
       ) : null}
-    </>
+    </footer>
   );
 }

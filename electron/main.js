@@ -1,4 +1,4 @@
-const { app, BrowserWindow, dialog, shell } = require("electron");
+const { app, BrowserWindow, dialog, ipcMain, shell } = require("electron");
 const { spawn } = require("node:child_process");
 const http = require("node:http");
 const net = require("node:net");
@@ -143,7 +143,8 @@ function createWindow() {
     webPreferences: {
       contextIsolation: true,
       nodeIntegration: false,
-      sandbox: true
+      sandbox: true,
+      preload: path.join(__dirname, "preload.js")
     }
   });
 
@@ -215,6 +216,7 @@ async function boot() {
 }
 
 app.setAppUserModelId(APP_ID);
+registerDesktopIpc();
 app.whenReady().then(boot);
 
 app.on("before-quit", stopNextServer);
@@ -231,3 +233,104 @@ app.on("activate", () => {
     createWindow();
   }
 });
+
+function registerDesktopIpc() {
+  ipcMain.handle("lyrics-card:list-system-fonts", async () => {
+    if (process.platform !== "win32") {
+      return [];
+    }
+
+    return listWindowsFontFamilies();
+  });
+
+  ipcMain.handle("lyrics-card:pick-font", async () => {
+    const fonts = process.platform === "win32" ? await listWindowsFontFamilies() : [];
+    return fonts[0] || null;
+  });
+
+  ipcMain.handle("lyrics-card:open-external", async (_event, targetUrl) => {
+    if (typeof targetUrl !== "string") {
+      return false;
+    }
+
+    try {
+      const parsed = new URL(targetUrl);
+      if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
+        return false;
+      }
+
+      await shell.openExternal(parsed.toString());
+      return true;
+    } catch {
+      return false;
+    }
+  });
+}
+
+async function listWindowsFontFamilies() {
+  const script = [
+    "$paths = @(",
+    "  'HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Fonts',",
+    "  'HKCU:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Fonts'",
+    ");",
+    "$families = foreach ($path in $paths) {",
+    "  if (Test-Path $path) {",
+    "    $item = Get-ItemProperty -Path $path;",
+    "    $item.PSObject.Properties | Where-Object { $_.Name -notlike 'PS*' } | ForEach-Object {",
+    "      $_.Name -replace '\\s*\\((TrueType|OpenType|Type 1|Raster|All res)\\)\\s*$', '' -replace '\\s*&\\s*', ', '",
+    "    }",
+    "  }",
+    "};",
+    "$families | Where-Object { $_ -and $_.Trim().Length -gt 0 } | Sort-Object -Unique | ConvertTo-Json -Compress"
+  ].join(" ");
+
+  try {
+    const output = await runProcess("powershell.exe", [
+      "-NoProfile",
+      "-ExecutionPolicy",
+      "Bypass",
+      "-Command",
+      script
+    ]);
+    const parsed = JSON.parse(output || "[]");
+    return normalizeFontFamilies(Array.isArray(parsed) ? parsed : [parsed]);
+  } catch (error) {
+    console.error("[fonts] unable to list Windows fonts", error);
+    return ["Arial", "Calibri", "Microsoft YaHei", "Microsoft JhengHei", "Segoe UI", "SimSun", "SimHei"];
+  }
+}
+
+function normalizeFontFamilies(values) {
+  const ignored = new Set(["", "desktop.ini"]);
+  return [...new Set(values.map((value) => String(value).trim()).filter((value) => !ignored.has(value.toLowerCase())))]
+    .sort((left, right) => left.localeCompare(right));
+}
+
+function runProcess(command, args) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(command, args, {
+      stdio: ["ignore", "pipe", "pipe"],
+      windowsHide: true
+    });
+    let stdout = "";
+    let stderr = "";
+
+    child.stdout?.on("data", (chunk) => {
+      stdout += chunk.toString();
+    });
+
+    child.stderr?.on("data", (chunk) => {
+      stderr += chunk.toString();
+    });
+
+    child.once("error", reject);
+    child.once("exit", (code) => {
+      if (code === 0) {
+        resolve(stdout.trim());
+        return;
+      }
+
+      reject(new Error(stderr.trim() || `${command} exited with code ${code}`));
+    });
+  });
+}

@@ -1,7 +1,7 @@
 "use client";
 
+import { useEffect, useMemo, useRef, useState } from "react";
 import { withAlpha } from "@/lib/palette-background";
-import { getLandscapeTypography } from "@/lib/landscape-typography";
 import { cn } from "@/lib/utils";
 
 export function LandscapeLyricsBlock({
@@ -18,6 +18,7 @@ export function LandscapeLyricsBlock({
   maxHeight,
   cardWidth,
   cardHeight,
+  align,
   isDarkText
 }: {
   lyrics: string;
@@ -33,31 +34,69 @@ export function LandscapeLyricsBlock({
   maxHeight: number;
   cardWidth: number;
   cardHeight: number;
+  align: "left" | "center";
   isDarkText: boolean;
 }) {
+  const rootRef = useRef<HTMLDivElement>(null);
   const lyricLines = splitUsefulLines(lyrics);
   const translationLines = splitUsefulLines(translationText ?? "");
   const lines = lyricLines.length > 0 ? lyricLines : ["Type your lyrics here..."];
   const hasTranslation = translationEnabled && translationLines.length > 0;
-  const visualLineCount = estimateVisualLineCount(lines, width, lyricFontSize);
-  const typography = getLandscapeTypography({
-    width: cardWidth,
-    height: cardHeight,
-    lineCount: visualLineCount,
-    hasTranslation,
-    contentMode: "lyrics",
-    maxHeight,
-    lineHeight
-  });
-  const activeLyricSize = Math.max(24, Math.min(lyricFontSize, typography.lyricFontSize));
+  const targetLyricSize = useMemo(() => Math.max(24, lyricFontSize), [lyricFontSize]);
+  const [activeLyricSize, setActiveLyricSize] = useState(targetLyricSize);
   const activeTranslationSize = Math.round(
-    Math.min(typography.translationFontSize, activeLyricSize * Math.min(0.52, Math.max(0.45, translationScale)))
+    activeLyricSize * Math.min(0.56, Math.max(0.45, translationScale))
   );
-  const pairMargin = typography.pairGap;
+  const pairMargin = Math.round(activeLyricSize * (hasTranslation ? 0.28 : 0.18));
+  const lyricLineGap = Math.round(activeLyricSize * (hasTranslation ? 0.16 : 0.2));
+
+  useEffect(() => {
+    setActiveLyricSize(targetLyricSize);
+  }, [targetLyricSize, lyrics, translationText, translationEnabled, lineHeight, width, maxHeight]);
+
+  useEffect(() => {
+    const node = rootRef.current;
+    if (!node) {
+      return;
+    }
+
+    let cancelled = false;
+    const fit = () => {
+      if (cancelled) {
+        return;
+      }
+
+      const overflow = node.scrollHeight - maxHeight;
+      if (overflow <= 1) {
+        return;
+      }
+
+      setActiveLyricSize((current) => {
+        if (current <= 24) {
+          return current;
+        }
+
+        const lineCount = Math.max(1, lines.length + (hasTranslation ? translationLines.length : 0));
+        const step = Math.max(1, Math.ceil(overflow / Math.max(1, lineCount * lineHeight)));
+        return Math.max(24, current - step);
+      });
+    };
+
+    const frame = requestAnimationFrame(fit);
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(frame);
+    };
+  }, [activeLyricSize, hasTranslation, lineHeight, lines.length, maxHeight, translationLines.length]);
 
   return (
     <div
-      className="absolute z-10 overflow-hidden text-left whitespace-pre-wrap break-words"
+      ref={rootRef}
+      data-card-lyrics
+      className={cn(
+        "absolute z-10 overflow-hidden whitespace-pre-wrap break-words",
+        align === "center" ? "text-center" : "text-left"
+      )}
       style={{
         left,
         top,
@@ -86,7 +125,7 @@ export function LandscapeLyricsBlock({
               <p
                 className="font-semibold"
                 style={{
-                  marginTop: typography.lyricLineGap,
+                  marginTop: lyricLineGap,
                   color: withAlpha(textColor, 0.68),
                   fontSize: activeTranslationSize,
                   lineHeight: 1.28
@@ -107,11 +146,4 @@ function splitUsefulLines(text: string) {
     .split(/\r?\n/)
     .map((line) => line.trimEnd())
     .filter((line, index, lines) => line.trim().length > 0 || (index > 0 && index < lines.length - 1));
-}
-
-function estimateVisualLineCount(lines: string[], width: number, fontSize: number) {
-  const averageCharWidth = Math.max(12, fontSize * 0.54);
-  const charsPerLine = Math.max(8, Math.floor(width / averageCharWidth));
-
-  return lines.reduce((count, line) => count + Math.max(1, Math.ceil(line.trim().length / charsPerLine)), 0);
 }

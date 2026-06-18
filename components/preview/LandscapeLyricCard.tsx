@@ -9,9 +9,9 @@ import { LandscapeLyricsBlock } from "@/components/preview/LandscapeLyricsBlock"
 import { LandscapeSongInfo } from "@/components/preview/LandscapeSongInfo";
 import { PaletteBackground } from "@/components/preview/PaletteBackground";
 import { getCardSize } from "@/lib/card-size";
-import { fontClassName } from "@/lib/fonts";
+import { getLandscapeLayout } from "@/lib/card-layout-engine";
+import { cardFontStyle, fontClassName } from "@/lib/fonts";
 import { proxiedImageUrl } from "@/lib/image-utils";
-import { getLandscapeSlots } from "@/lib/landscape-layout";
 import type { CardStyle, SongInfo } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -26,12 +26,7 @@ export function LandscapeLyricCard({
 }) {
   const size = getCardSize(style);
   const frameEnabled = style.frameStyleEnabled && style.frameVariant !== "fullBleed";
-  const slots = getLandscapeSlots(size.width, size.height, {
-    showCover: style.showCover,
-    allowTwoLineTitle: style.allowTwoLineTitle,
-    showSongInfo: style.showSongInfo,
-    frameEnabled
-  });
+  const layout = getLandscapeLayout(size, style, song.source);
   const cover = song.proxiedCoverUrl || proxiedImageUrl(song.coverUrl);
   const [coverFailed, setCoverFailed] = useState(false);
   const activeCover = coverFailed ? "" : cover;
@@ -47,7 +42,7 @@ export function LandscapeLyricCard({
   return (
     <article
       className={cn("relative isolate overflow-hidden bg-[#111216] text-white", fontClassName(style.font))}
-      style={{ width: size.width, height: size.height }}
+      style={{ width: size.width, height: size.height, ...cardFontStyle(style) }}
       data-export-card="true"
     >
       <PaletteBackground palette={style.extractedPalette} />
@@ -55,14 +50,25 @@ export function LandscapeLyricCard({
       <div className="absolute inset-0 bg-[linear-gradient(115deg,rgba(255,255,255,0.13),transparent_38%,rgba(0,0,0,0.24))]" />
 
       <CardFrame layoutMode="landscape" enabled={frameEnabled} variant="auto">
-        {style.showCover ? (
+        <div
+          data-card-safe
+          className="absolute"
+          style={{
+            left: layout.safeRect.x,
+            top: layout.safeRect.y,
+            width: layout.safeRect.width,
+            height: layout.safeRect.height
+          }}
+        />
+        <div data-card-content>
+        {style.showCover && layout.coverRect ? (
           <LandscapeAlbumCover
             song={song}
             coverUrl={activeCover}
             cropScale={style.coverCropScale}
-            left={slots.cover.left}
-            top={slots.cover.top}
-            size={slots.cover.size}
+            left={layout.coverRect.x}
+            top={layout.coverRect.y}
+            size={layout.coverRect.width}
             onError={() => setCoverFailed(true)}
           />
         ) : null}
@@ -70,22 +76,22 @@ export function LandscapeLyricCard({
         {contentMode === "instrumental" ? (
           <LandscapeInstrumentalBlock
             song={song}
-            instrumentalText={style.instrumentalText}
-            textColor={textColor}
-            left={slots.instrumental.left}
-            top={slots.instrumental.top}
-            width={slots.instrumental.width}
+              instrumentalText={style.instrumentalText}
+              textColor={textColor}
+            left={layout.contentRect.x}
+            top={layout.contentRect.y + layout.contentRect.height * 0.22}
+            width={layout.contentRect.width}
             isDarkText={isDarkText}
           />
         ) : (
           <>
-            {style.showSongInfo ? (
+            {style.showSongInfo && layout.songInfoRect ? (
               <LandscapeSongInfo
                 song={song}
                 textColor={textColor}
-                left={slots.songInfo.left}
-                top={slots.songInfo.top}
-                width={slots.songInfo.width}
+                left={layout.songInfoRect.x}
+                top={layout.songInfoRect.y}
+                width={layout.songInfoRect.width}
                 allowTwoLineTitle={style.allowTwoLineTitle}
                 isDarkText={isDarkText}
               />
@@ -98,19 +104,20 @@ export function LandscapeLyricCard({
               translationScale={style.translationScale}
               lineHeight={style.lineHeight}
               textColor={textColor}
-              left={slots.lyrics.left}
-              top={slots.lyrics.top}
-              width={slots.lyrics.width}
-              maxHeight={slots.lyrics.maxHeight}
+              left={layout.lyricsRect.x}
+              top={layout.lyricsRect.y}
+              width={layout.lyricsRect.width}
+              maxHeight={layout.lyricsRect.height}
               cardWidth={size.width}
               cardHeight={size.height}
+              align={style.align}
               isDarkText={isDarkText}
             />
           </>
         )}
 
         <LandscapeFooter
-          slots={slots}
+          rect={layout.footerRect}
           showPlatformLogo={style.showPlatformBadge}
           platformSource={song.source}
           showGeneratedWatermark={showGeneratedWatermark}
@@ -118,6 +125,7 @@ export function LandscapeLyricCard({
           sharedByText={style.sharedByText}
           textColor={textColor}
         />
+        </div>
       </CardFrame>
     </article>
   );
