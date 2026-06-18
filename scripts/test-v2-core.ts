@@ -65,6 +65,21 @@ function testLyricFormat() {
   );
   assertEqual(split.lyrics, "English 1\n\u541B\u306E\u540D\u306F\n\uC0AC\uB791\uD574\nEnglish 2", "split lyrics");
   assertEqual(split.translationText, "\u4E2D\u6587 1\n\u4E2D\u6587 2", "split translation");
+  const traditionalChineseSplit = splitAlternatingLyrics("English line\n\u7E41\u9AD4\u4E2D\u6587 1", "zh-TW");
+  assertEqual(traditionalChineseSplit.lyrics, "English line", "split Traditional Chinese target lyrics");
+  assertEqual(traditionalChineseSplit.translationText, "\u7E41\u9AD4\u4E2D\u6587 1", "split Traditional Chinese target translation");
+  const englishSplit = splitAlternatingLyrics("君の名は\nI remember your name", "en");
+  assertEqual(englishSplit.lyrics, "君の名は", "split English target lyrics");
+  assertEqual(englishSplit.translationText, "I remember your name", "split English target translation");
+  const frenchSplit = splitAlternatingLyrics("I miss you tonight\nTu me manques ce soir", "fr");
+  assertEqual(frenchSplit.lyrics, "I miss you tonight", "split French target lyrics");
+  assertEqual(frenchSplit.translationText, "Tu me manques ce soir", "split French target translation");
+  const japaneseSplit = splitAlternatingLyrics("I remember your name\n君の名前を覚えている", "ja");
+  assertEqual(japaneseSplit.lyrics, "I remember your name", "split Japanese target lyrics");
+  assertEqual(japaneseSplit.translationText, "君の名前を覚えている", "split Japanese target translation");
+  const spanishSplit = splitAlternatingLyrics("I miss you tonight\nTe echo de menos esta noche", "es");
+  assertEqual(spanishSplit.lyrics, "I miss you tonight", "split Spanish target lyrics");
+  assertEqual(spanishSplit.translationText, "Te echo de menos esta noche", "split Spanish target translation");
   assertEqual(
     formatChineseTranslation("\u4F60\u6765,\u6211\u8D70\u3002\u518D\u89C1\uFF0C\u4E0D\u9001."),
     "\u4F60\u6765 \u6211\u8D70\n\u518D\u89C1 \u4E0D\u9001\n",

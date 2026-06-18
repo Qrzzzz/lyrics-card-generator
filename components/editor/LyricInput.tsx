@@ -4,7 +4,7 @@ import { Languages, SplitSquareVertical } from "lucide-react";
 import { Textarea, Label, Section, SwitchRow } from "@/components/ui/controls";
 import type { createT } from "@/lib/i18n";
 import { formatChineseTranslation, splitAlternatingLyrics } from "@/lib/lyric-format";
-import type { ContentMode } from "@/lib/types";
+import type { ContentMode, Locale } from "@/lib/types";
 
 export function LyricInput({
   lyrics,
@@ -15,6 +15,7 @@ export function LyricInput({
   onTranslationTextChange,
   onSplitAlternatingLyrics,
   contentMode,
+  locale,
   t
 }: {
   lyrics: string;
@@ -25,6 +26,7 @@ export function LyricInput({
   onTranslationTextChange: (translation: string) => void;
   onSplitAlternatingLyrics: (lyrics: string, translationText: string) => void;
   contentMode: ContentMode;
+  locale: Locale;
   t: ReturnType<typeof createT>;
 }) {
   const lines = lyrics ? lyrics.split(/\r?\n/).length : 0;
@@ -46,7 +48,7 @@ export function LyricInput({
             <button
               type="button"
               onClick={() => {
-                const result = splitAlternatingLyrics(lyrics);
+                const result = splitAlternatingLyrics(lyrics, locale);
                 onSplitAlternatingLyrics(result.lyrics, result.translationText);
               }}
               className="app-button inline-flex h-10 items-center justify-center gap-2 rounded-lg px-3 text-sm font-semibold transition"
@@ -64,14 +66,16 @@ export function LyricInput({
                 placeholder={t("translationPlaceholder")}
                 className="min-h-40 leading-relaxed"
               />
-              <button
-                type="button"
-                onClick={() => onTranslationTextChange(formatChineseTranslation(translationText))}
-                className="app-button mt-2 inline-flex h-10 w-fit items-center justify-center gap-2 rounded-lg px-3 text-sm font-semibold transition"
-              >
-                <Languages className="h-4 w-4" />
-                {t("formatChineseTranslation")}
-              </button>
+              {locale === "zh" ? (
+                <button
+                  type="button"
+                  onClick={() => onTranslationTextChange(formatChineseTranslation(translationText))}
+                  className="app-button mt-2 inline-flex h-10 w-fit items-center justify-center gap-2 rounded-lg px-3 text-sm font-semibold transition"
+                >
+                  <Languages className="h-4 w-4" />
+                  {t("formatChineseTranslation")}
+                </button>
+              ) : null}
             </Label>
           ) : null}
         </>

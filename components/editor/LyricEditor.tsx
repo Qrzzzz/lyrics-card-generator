@@ -43,6 +43,15 @@ const DEFAULT_TRANSLATION = [
   "命运兜兜转转",
   "你终究还是会走向她"
 ].join("\n");
+const SUPPORTED_LOCALES: Locale[] = ["zh", "zh-TW", "en", "fr", "ja", "es"];
+const DEFAULT_INSTRUMENTAL_TEXT: Record<Locale, string> = {
+  zh: "纯音乐",
+  "zh-TW": "純音樂",
+  en: "Instrumental Track",
+  fr: "Morceau instrumental",
+  ja: "インストゥルメンタル",
+  es: "Pista instrumental"
+};
 
 const defaultState: AppState = {
   locale: "zh",
@@ -250,14 +259,14 @@ export function LyricEditor() {
 
   useEffect(() => {
     const storedLocale = window.localStorage.getItem("lyric-card-generator-locale");
-    if (storedLocale === "zh" || storedLocale === "en") {
+    if (isSupportedLocale(storedLocale)) {
       setLocale(storedLocale);
     }
   }, []);
 
   function setLocale(locale: Locale) {
     setState((current) => {
-      const previousDefaultInstrumentalTexts: string[] = ["纯音乐", "Instrumental Track"];
+      const previousDefaultInstrumentalTexts = Object.values(DEFAULT_INSTRUMENTAL_TEXT);
       const shouldUpdateInstrumentalText = previousDefaultInstrumentalTexts.includes(current.style.instrumentalText);
 
       return {
@@ -265,11 +274,7 @@ export function LyricEditor() {
         locale,
         style: {
           ...current.style,
-          instrumentalText: shouldUpdateInstrumentalText
-            ? locale === "zh"
-              ? "纯音乐"
-              : "Instrumental Track"
-            : current.style.instrumentalText
+          instrumentalText: shouldUpdateInstrumentalText ? DEFAULT_INSTRUMENTAL_TEXT[locale] : current.style.instrumentalText
         }
       };
     });
@@ -388,6 +393,7 @@ export function LyricEditor() {
               }))
             }
             contentMode={state.style.contentMode}
+            locale={state.locale}
             t={t}
           />
         </div>
@@ -489,4 +495,8 @@ function sizeSnapshot(style: CardStyle) {
     width: style.width,
     height: style.height
   };
+}
+
+function isSupportedLocale(locale: string | null): locale is Locale {
+  return Boolean(locale && SUPPORTED_LOCALES.includes(locale as Locale));
 }
