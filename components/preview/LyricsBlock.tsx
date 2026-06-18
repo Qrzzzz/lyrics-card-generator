@@ -33,8 +33,9 @@ export function LyricsBlock({
 
   return (
     <div
+      data-card-lyrics
       className={cn(
-        "max-h-full overflow-hidden whitespace-pre-wrap break-words",
+        "w-full max-h-full overflow-hidden whitespace-pre-wrap break-words",
         align === "center" ? "text-center" : "text-left"
       )}
       style={{

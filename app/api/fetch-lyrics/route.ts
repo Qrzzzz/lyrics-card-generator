@@ -40,7 +40,7 @@ export async function POST(req: Request) {
     }
     const res = await fetch(`https://lrclib.net/api/search?${params.toString()}`, {
       headers: {
-        "user-agent": "LyricGlassCard/1.1.0 (local desktop app)"
+        "user-agent": "LyricsCardGenerator/2.0.0 (local desktop app)"
       },
       signal: AbortSignal.timeout(8000)
     });

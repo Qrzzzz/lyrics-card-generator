@@ -79,6 +79,7 @@ async function prepareMinimalElectronApp() {
       },
       files: [
         "electron/main.js",
+        "electron/preload.js",
         "package.json"
       ],
       extraResources: [
@@ -118,6 +119,7 @@ async function prepareMinimalElectronApp() {
   };
 
   await cp(path.join(projectRoot, "electron", "main.js"), path.join(electronOutputDir, "main.js"));
+  await cp(path.join(projectRoot, "electron", "preload.js"), path.join(electronOutputDir, "preload.js"));
   await writeFile(path.join(appOutputDir, "package.json"), `${JSON.stringify(desktopPackage, null, 2)}\n`);
 }
 

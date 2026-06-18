@@ -1,8 +1,9 @@
 "use client";
 
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { Check } from "lucide-react";
+import { Check, Download } from "lucide-react";
 import type { ReactNode } from "react";
+import { StarBorder } from "@/components/ui/StarBorder";
 import { cn } from "@/lib/utils";
 
 export type SettingsStep = {
@@ -21,7 +22,7 @@ export type SettingsStepperProps = {
   backText?: string;
   completeText?: string;
   completeDisabled?: boolean;
-  onComplete?: () => void;
+  onComplete?: () => void | Promise<void>;
   themeColor?: string;
 };
 
@@ -139,22 +140,34 @@ export function SettingsStepper({
         >
           {backText}
         </button>
-        <button
-          type="button"
-          onClick={() => {
-            if (isLastStep) {
-              onComplete?.();
-              return;
-            }
-
-            goToStep(currentStep + 1);
-          }}
-          disabled={isLastStep ? completeDisabled : false}
-          className="app-button h-11 rounded-lg px-5 text-sm font-semibold transition disabled:cursor-default disabled:opacity-70"
-          style={{ borderColor: themeColor, boxShadow: `0 16px 44px ${themeColor}30` }}
-        >
-          {isLastStep ? completeText : nextText}
-        </button>
+        {isLastStep ? (
+          <StarBorder
+            type="button"
+            color={themeColor}
+            speed="7.2s"
+            onClick={() => void onComplete?.()}
+            disabled={completeDisabled}
+            className="complete-export-button transition hover:scale-[1.012] disabled:cursor-default disabled:opacity-70"
+            style={{
+              color: markerForegroundColor,
+              filter: `drop-shadow(0 18px 38px ${themeColor}55)`
+            }}
+          >
+            <span className="inline-flex h-[60px] items-center justify-center gap-3.5 px-6 text-xl font-black tracking-normal">
+              <Download className="h-6 w-6 shrink-0" />
+              <span className="whitespace-nowrap">{completeText}</span>
+            </span>
+          </StarBorder>
+        ) : (
+          <button
+            type="button"
+            onClick={() => goToStep(currentStep + 1)}
+            className="app-button h-11 rounded-lg border px-5 text-sm font-semibold transition"
+            style={{ borderColor: themeColor, boxShadow: `0 16px 44px ${themeColor}30` }}
+          >
+            {nextText}
+          </button>
+        )}
       </div>
     </section>
   );

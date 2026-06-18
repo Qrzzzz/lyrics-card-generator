@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { EditorHeader } from "@/components/editor/EditorHeader";
 import { ExportPanel } from "@/components/editor/ExportPanel";
 import { ExportCelebration } from "@/components/effects/ExportCelebration";
+import { LocalAudioParser } from "@/components/editor/LocalAudioParser";
 import { LyricsFetchPanel } from "@/components/editor/LyricsFetchPanel";
 import { LyricInput } from "@/components/editor/LyricInput";
 import { PreviewPane } from "@/components/editor/PreviewPane";
@@ -13,11 +14,11 @@ import { SongInfoForm } from "@/components/editor/SongInfoForm";
 import { SongLinkParser } from "@/components/editor/SongLinkParser";
 import { LayoutSettingsPanel, VisualSettingsPanel } from "@/components/editor/StylePanel";
 import {
-  useAutoCanvasHeight,
   useCoverPalette,
   useResolvedTextColor,
   useSyncedCoverProxy
 } from "@/components/editor/hooks/useLyricEditorEffects";
+import { useMeasuredAutoCanvasHeight } from "@/components/editor/hooks/useMeasuredAutoCanvasHeight";
 import { ClickSpark } from "@/components/layout/ClickSpark";
 import { DynamicAppBackground } from "@/components/layout/DynamicAppBackground";
 import { getCardSize, PRESET_CARD_SIZES } from "@/lib/card-size";
@@ -68,6 +69,8 @@ const defaultState: AppState = {
     height: 1080,
     autoHeight: true,
     font: "sans-heavy",
+    customFontEnabled: false,
+    customFontFamily: "",
     lyricFontSize: 60,
     lineHeight: 1.4,
     align: "left",
@@ -135,7 +138,7 @@ export function LyricEditor() {
   useSyncedCoverProxy(state, setState);
   useCoverPalette(coverForPalette, setState);
   useResolvedTextColor(state, setState);
-  useAutoCanvasHeight(state, setState);
+  useMeasuredAutoCanvasHeight(state, setState, cardRef);
 
   function clearAllContent() {
     clearVersionRef.current += 1;
@@ -280,29 +283,50 @@ export function LyricEditor() {
       description: t("parseIdle"),
       isComplete: Boolean(state.url.trim()),
       content: (
-        <SongLinkParser
-          url={state.url}
-          onUrlChange={(url) => setState((current) => ({ ...current, url }))}
-          onParsed={(song) =>
-            setState((current) => {
-              const originalCoverUrl = song.coverUrl ?? "";
-              const coverUrl = getHighResolutionCoverUrl(originalCoverUrl, song.source);
+        <div className="grid gap-4">
+          <SongLinkParser
+            url={state.url}
+            onUrlChange={(url) => setState((current) => ({ ...current, url }))}
+            onParsed={(song) =>
+              setState((current) => {
+                const originalCoverUrl = song.coverUrl ?? "";
+                const coverUrl = getHighResolutionCoverUrl(originalCoverUrl, song.source);
 
-              return {
-                ...current,
-                song: {
-                  ...current.song,
-                  ...song,
-                  originalCoverUrl,
-                  coverUrl,
-                  proxiedCoverUrl: proxiedImageUrl(coverUrl)
-                }
-              };
-            })
-          }
-          t={t}
-          autoParseOnMount
-        />
+                return {
+                  ...current,
+                  song: {
+                    ...current.song,
+                    ...song,
+                    originalCoverUrl,
+                    coverUrl,
+                    proxiedCoverUrl: proxiedImageUrl(coverUrl)
+                  }
+                };
+              })
+            }
+            t={t}
+            autoParseOnMount
+          />
+          <LocalAudioParser
+            t={t}
+            onParsed={(song, embeddedLyrics) =>
+              setState((current) => {
+                const { lyrics: _lyrics, ...songInfo } = song;
+
+                return {
+                  ...current,
+                  url: song.originalUrl,
+                  song: {
+                    ...current.song,
+                    ...songInfo,
+                    proxiedCoverUrl: song.coverUrl ? proxiedImageUrl(song.coverUrl) : ""
+                  },
+                  lyrics: embeddedLyrics ? embeddedLyrics : current.lyrics
+                };
+              })
+            }
+          />
+        </div>
       )
     },
     {
@@ -350,6 +374,19 @@ export function LyricEditor() {
                 style: { ...current.style, translationText }
               }))
             }
+            onSplitAlternatingLyrics={(lyrics, translationText) =>
+              setState((current) => ({
+                ...current,
+                lyrics,
+                translationText,
+                translationEnabled: true,
+                style: {
+                  ...current.style,
+                  translationText,
+                  translationEnabled: true
+                }
+              }))
+            }
             contentMode={state.style.contentMode}
             t={t}
           />
@@ -387,7 +424,15 @@ export function LyricEditor() {
       title: t("step.export"),
       description: t("exportHint"),
       isComplete: true,
-      content: <ExportPanel state={parsedState} cardRef={cardRef} t={t} />
+      content: (
+        <ExportPanel
+          state={parsedState}
+          cardRef={cardRef}
+          t={t}
+          isExporting={isCompleteExporting}
+          onExport={completeAndExport}
+        />
+      )
     }
   ];
 

@@ -8,7 +8,8 @@ import { LyricsBlock } from "@/components/preview/LyricsBlock";
 import { PaletteBackground } from "@/components/preview/PaletteBackground";
 import { PortraitFooter } from "@/components/preview/PortraitFooter";
 import { getCardSize as resolveCardSize } from "@/lib/card-size";
-import { fontClassName } from "@/lib/fonts";
+import { getPortraitLayout } from "@/lib/card-layout-engine";
+import { cardFontStyle, fontClassName } from "@/lib/fonts";
 import { proxiedImageUrl } from "@/lib/image-utils";
 import type { CardStyle, Locale, SongInfo } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -41,6 +42,7 @@ export function LyricCard({
   const contentMode = style.contentMode ?? "lyrics";
   const showGeneratedWatermark = style.showGeneratedWatermark ?? style.showWatermark;
   const frameEnabled = style.frameStyleEnabled && style.frameVariant !== "fullBleed";
+  const layout = getPortraitLayout(size, style, song.source);
   const glassBackground = frameEnabled
     ? isDarkText
       ? "rgba(255,255,255,0.32)"
@@ -57,19 +59,29 @@ export function LyricCard({
   return (
     <article
       className={cn("relative isolate overflow-hidden bg-[#111216] text-white", fontClassName(style.font))}
-      style={{ width: size.width, height: size.height }}
+      style={{ width: size.width, height: size.height, ...cardFontStyle(style) }}
       data-export-card="true"
     >
       <PaletteBackground palette={style.extractedPalette} />
       <div className="absolute inset-0 bg-black/14" />
       <div className="absolute inset-0 bg-[linear-gradient(145deg,rgba(255,255,255,0.14),transparent_42%,rgba(0,0,0,0.22))]" />
 
-      <div className={cn("relative flex h-full items-center justify-center", frameEnabled ? "p-[72px]" : "p-[44px]")}>
+      <div
+        data-card-safe
+        className="absolute"
+        style={{
+          left: layout.safeRect.x,
+          top: layout.safeRect.y,
+          width: layout.safeRect.width,
+          height: layout.safeRect.height
+        }}
+      >
         <div
+          data-card-content
           className={cn(
             "relative flex h-full w-full flex-col overflow-hidden",
             frameEnabled
-              ? "rounded-[48px] border border-white/18 p-[54px] backdrop-blur-[34px]"
+              ? "rounded-[48px] border border-white/18 p-[42px] backdrop-blur-[34px]"
               : "rounded-none border border-transparent bg-transparent p-[18px] backdrop-blur-0"
           )}
           style={{
@@ -79,8 +91,12 @@ export function LyricCard({
         >
           {frameEnabled ? <div className="absolute inset-x-0 top-0 h-px bg-white/35" /> : null}
 
-          {(style.showCover || style.showSongInfo) && contentMode !== "instrumental" ? (
-            <header className="flex shrink-0 items-center gap-10">
+          {(style.showCover || style.showSongInfo) && contentMode !== "instrumental" && layout.headerRect ? (
+            <header
+              data-card-header
+              className="flex shrink-0 items-center gap-10"
+              style={{ minHeight: layout.headerRect.height }}
+            >
               {style.showCover ? (
                 <AlbumCover
                   coverUrl={activeCover}
@@ -114,11 +130,17 @@ export function LyricCard({
           ) : null}
 
           <main
+            data-card-lyrics-viewport
             className={cn(
               "flex min-h-0 flex-1 items-center",
               contentMode === "instrumental" ? "justify-center py-0" : "py-10",
               contentMode === "lyrics" ? "overflow-hidden" : "justify-center"
             )}
+            style={{
+              width: layout.lyricsRect.width,
+              marginLeft: style.align === "center" ? "auto" : 0,
+              marginRight: style.align === "center" ? "auto" : undefined
+            }}
           >
             {contentMode === "instrumental" ? (
               <InstrumentalBlock
@@ -144,14 +166,16 @@ export function LyricCard({
             )}
           </main>
 
-          <PortraitFooter
-            showPlatformLogo={style.showPlatformBadge}
-            platformSource={song.source}
-            showGeneratedWatermark={showGeneratedWatermark}
-            showSharedBy={style.showSharedBy}
-            sharedByText={style.sharedByText}
-            textColor={textColor}
-          />
+          <div data-card-footer>
+            <PortraitFooter
+              showPlatformLogo={style.showPlatformBadge}
+              platformSource={song.source}
+              showGeneratedWatermark={showGeneratedWatermark}
+              showSharedBy={style.showSharedBy}
+              sharedByText={style.sharedByText}
+              textColor={textColor}
+            />
+          </div>
         </div>
       </div>
     </article>
