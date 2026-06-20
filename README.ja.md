@@ -24,7 +24,7 @@
 
 ## 📦 ダウンロードとインストール
 
-最新版は GitHub Releases からダウンロードできます。
+最新版は [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) からダウンロードできます。
 
 * 推奨インストーラー：`Lyrics Card Generator Setup 3.0.0.exe`
 * ポータブル版：`Lyrics Card Generator-3.0.0-portable.exe`
