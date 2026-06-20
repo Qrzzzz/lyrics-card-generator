@@ -1,6 +1,6 @@
 # 多语言发布说明规范
 
-Lyrics Card Generator 面向国内用户，GitHub Release 页面默认使用简体中文。其他语言不直接堆在 Release 正文里，而是放在 `docs/releases/` 目录下，用链接跳转。
+Lyrics Card Generator 面向国内用户，GitHub Release 页面默认使用简体中文。其他语言不直接堆在 Release 正文里，而是放在 `docs/releases/` 目录下维护，再从 Release 正文跳转过去。
 
 这样做的目的很简单：Release 页面保持短、清楚、适合下载；完整说明保留 6 种语言，方便不同用户阅读。
 
@@ -28,23 +28,16 @@ docs/releases/vX.Y.Z.es.md
 
 ## GitHub Release 正文写法
 
-Release 正文只写简体中文短版，推荐结构如下：
+Release 正文只写简体中文短版。注意：Release 页面不在仓库目录中，不能使用 `./vX.Y.Z.en.md` 这类相对链接。建议使用指向 `main` 的完整链接；如果对应 tag 中已经包含这些文档，也可以改为指向 tag。
+
+推荐结构如下：
 
 ```md
 # Lyrics Card Generator vX.Y.Z
 
-## 语言 / Languages
+语言：简体中文 · [繁體中文](https://github.com/Qrzzzz/lyrics-card-generator/blob/main/docs/releases/vX.Y.Z.zh-TW.md) · [English](https://github.com/Qrzzzz/lyrics-card-generator/blob/main/docs/releases/vX.Y.Z.en.md) · [Français](https://github.com/Qrzzzz/lyrics-card-generator/blob/main/docs/releases/vX.Y.Z.fr.md) · [日本語](https://github.com/Qrzzzz/lyrics-card-generator/blob/main/docs/releases/vX.Y.Z.ja.md) · [Español](https://github.com/Qrzzzz/lyrics-card-generator/blob/main/docs/releases/vX.Y.Z.es.md)
 
-完整发布说明：
-
-- [简体中文](./docs/releases/vX.Y.Z.zh-CN.md)
-- [繁體中文](./docs/releases/vX.Y.Z.zh-TW.md)
-- [English](./docs/releases/vX.Y.Z.en.md)
-- [Français](./docs/releases/vX.Y.Z.fr.md)
-- [日本語](./docs/releases/vX.Y.Z.ja.md)
-- [Español](./docs/releases/vX.Y.Z.es.md)
-
-## 推荐下载
+## 下载与安装
 
 - 安装版：`Lyrics Card Generator Setup X.Y.Z.exe`
 - 便携版：`Lyrics Card Generator-X.Y.Z-portable.exe`
@@ -72,7 +65,7 @@ Release 正文只写简体中文短版，推荐结构如下：
 4. 已知限制
 5. 完整变更记录
 
-不要让英文版比中文版多信息，也不要让其他语言只剩一句“见中文版”。
+不要让英文版比中文版多信息，也不要让其他语言只剩一句“见中文版”。发布说明面向用户，不要写“给发布者的备注”“Maintainer Note”这类内部说明。
 
 ## 自动生成 Release Notes
 
