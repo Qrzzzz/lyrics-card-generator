@@ -26,8 +26,8 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 Download the latest version from GitHub Releases:
 
-* Recommended installer: `Lyrics Card Generator Setup 2.1.0.exe`
-* Portable version: `Lyrics Card Generator-2.1.0-portable.exe`
+* Recommended installer: `Lyrics Card Generator Setup 3.0.0.exe`
+* Portable version: `Lyrics Card Generator-3.0.0-portable.exe`
 
 The installer is recommended for regular use. The portable version is useful for temporary use, testing, or running from a removable drive.
 
@@ -43,6 +43,7 @@ The installer is recommended for regular use. The portable version is useful for
 * Measured auto height for portrait custom canvases
 * Original lyric and translation layout
 * Split alternating original / translated lyrics with Simplified Chinese, Traditional Chinese, English, French, Japanese, and Spanish target-language detection
+* AI lyric translation through OpenAI-compatible Chat Completions APIs, with configurable provider URL, model, API key, six translation styles, reasoning, and streaming output
 * Apple Music, NetEase Cloud Music, and QQ Music link parsing
 * Local MP3 / FLAC metadata parsing for title, artist, album, cover art, and embedded lyrics
 * Manual song title, artist, cover, and lyric editing
@@ -74,6 +75,7 @@ These features require internet access:
 * Music platform link parsing
 * Remote cover loading
 * Automatic lyric fetching
+* AI lyric translation
 * GitHub update checking
 
 ## 🚀 How to Use
@@ -81,7 +83,7 @@ These features require internet access:
 1. Start the app.
 2. Paste an Apple Music, NetEase Cloud Music, or QQ Music link, or enter song information manually.
 3. Optionally upload a local MP3 / FLAC file to read metadata, cover art, and embedded lyrics.
-4. Edit lyrics and translations; alternating original / translated text can be split automatically according to the selected interface language.
+4. Edit lyrics and translations; use AI translation or split alternating original / translated text according to the selected interface language.
 5. Adjust canvas ratio, fonts, Windows system fonts, colors, frames, watermarks, and other styles.
 6. Preview the card on the right.
 7. Use “Complete & Export” to save the PNG image.
@@ -152,7 +154,7 @@ npm run desktop:dev     # Start Electron development mode
 npm run desktop:pack    # Build an unpacked desktop directory
 npm run desktop:build   # Build the Windows installer and portable EXE
 npm run parse:test      # Test song link parsing
-npm run core:test       # Test 2.0 core pure functions
+npm run core:test       # Test 3.0 core pure functions
 ```
 
 ## 🧩 Tech Stack
@@ -179,7 +181,7 @@ The project uses:
 
 They provide a strong, clear, and reliable typographic foundation for Chinese lyric cards.
 
-The 2.1.0 desktop app can also enumerate Windows system fonts for custom card typography. Web builds cannot enumerate system fonts, but the existing font presets remain available.
+The 3.0.0 desktop app can also enumerate Windows system fonts for custom card typography. Web builds cannot enumerate system fonts, but the existing font presets remain available.
 
 ## 🙏 Acknowledgements
 

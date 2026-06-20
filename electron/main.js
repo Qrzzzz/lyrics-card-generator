@@ -1,5 +1,6 @@
-const { app, BrowserWindow, dialog, ipcMain, shell } = require("electron");
+const { app, BrowserWindow, dialog, ipcMain, safeStorage, shell } = require("electron");
 const { spawn } = require("node:child_process");
+const fs = require("node:fs/promises");
 const http = require("node:http");
 const net = require("node:net");
 const path = require("node:path");
@@ -11,6 +12,16 @@ const START_TIMEOUT_MS = 45000;
 let mainWindow = null;
 let nextServerProcess = null;
 let localAppUrl = null;
+const aiTranslationRequests = new Map();
+
+const DEFAULT_AI_SETTINGS = {
+  baseUrl: "https://api.openai.com/v1",
+  model: "",
+  temperature: 0.7,
+  defaultStyle: "recommended",
+  reasoningEnabled: false
+};
+const TRANSLATION_STYLES = new Set(["lyrical", "faithful", "spoken", "imagistic", "restrained", "recommended"]);
 
 function getAvailablePort() {
   return new Promise((resolve, reject) => {
@@ -265,6 +276,314 @@ function registerDesktopIpc() {
       return false;
     }
   });
+
+  ipcMain.handle("lyrics-card:ai-settings-load", async () => {
+    const settings = await readAISettings();
+    return toAISettingsSummary(settings);
+  });
+
+  ipcMain.handle("lyrics-card:ai-settings-save", async (_event, input) => {
+    const current = await readAISettings();
+    const normalized = normalizeAISettings(input);
+    let encryptedApiKey = current.encryptedApiKey || "";
+    const nextApiKey = typeof input?.apiKey === "string" ? input.apiKey.trim() : "";
+
+    if (nextApiKey) {
+      ensureSecureStorageAvailable();
+      encryptedApiKey = safeStorage.encryptString(nextApiKey).toString("base64");
+    }
+
+    const stored = { ...normalized, encryptedApiKey };
+    await writeAISettings(stored);
+    return toAISettingsSummary(stored);
+  });
+
+  ipcMain.handle("lyrics-card:ai-settings-api-key-clear", async () => {
+    const current = await readAISettings();
+    const stored = { ...normalizeAISettings(current), encryptedApiKey: "" };
+    await writeAISettings(stored);
+    return toAISettingsSummary(stored);
+  });
+
+  ipcMain.handle("lyrics-card:ai-translate", async (event, requestId, request) => {
+    if (!isValidAIRequestId(requestId) || typeof request?.prompt !== "string" || !request.prompt.trim()) {
+      throw new Error("AI 翻译请求无效。");
+    }
+
+    const settings = await readAISettings();
+    const apiKey = decryptStoredApiKey(settings.encryptedApiKey);
+    validateAISettings(settings, apiKey);
+    const controller = new AbortController();
+    aiTranslationRequests.set(requestId, controller);
+
+    try {
+      return await streamAITranslationInMain({
+        settings,
+        apiKey,
+        prompt: request.prompt,
+        reasoning: Boolean(request.reasoning),
+        signal: controller.signal,
+        onStatus: (phase) => {
+          if (!event.sender.isDestroyed()) {
+            event.sender.send("lyrics-card:ai-translate-chunk", { requestId, kind: "status", phase });
+          }
+        },
+        onReasoningDelta: (delta) => {
+          if (!event.sender.isDestroyed()) {
+            event.sender.send("lyrics-card:ai-translate-chunk", { requestId, kind: "reasoning", delta });
+          }
+        },
+        onDelta: (delta) => {
+          if (!event.sender.isDestroyed()) {
+            event.sender.send("lyrics-card:ai-translate-chunk", { requestId, kind: "content", delta });
+          }
+        }
+      });
+    } finally {
+      aiTranslationRequests.delete(requestId);
+    }
+  });
+
+  ipcMain.on("lyrics-card:ai-translate-cancel", (_event, requestId) => {
+    if (isValidAIRequestId(requestId)) {
+      aiTranslationRequests.get(requestId)?.abort();
+    }
+  });
+}
+
+function getAISettingsPath() {
+  return path.join(app.getPath("userData"), "ai-settings.json");
+}
+
+async function writeAISettings(settings) {
+  const stored = {
+    ...normalizeAISettings(settings),
+    encryptedApiKey: typeof settings?.encryptedApiKey === "string" ? settings.encryptedApiKey : ""
+  };
+  const settingsPath = getAISettingsPath();
+  await fs.mkdir(app.getPath("userData"), { recursive: true });
+  await fs.writeFile(settingsPath, JSON.stringify(stored, null, 2), { encoding: "utf8", mode: 0o600 });
+  await fs.chmod(settingsPath, 0o600).catch(() => undefined);
+}
+
+async function readAISettings() {
+  try {
+    const raw = await fs.readFile(getAISettingsPath(), "utf8");
+    const parsed = JSON.parse(raw);
+    return {
+      ...normalizeAISettings(parsed),
+      encryptedApiKey: typeof parsed.encryptedApiKey === "string" ? parsed.encryptedApiKey : ""
+    };
+  } catch (error) {
+    if (error?.code !== "ENOENT") {
+      console.error("[ai-settings] unable to read settings", error instanceof Error ? error.message : "unknown error");
+    }
+    return { ...DEFAULT_AI_SETTINGS, encryptedApiKey: "" };
+  }
+}
+
+function normalizeAISettings(input) {
+  const temperature = Number(input?.temperature);
+  return {
+    baseUrl: typeof input?.baseUrl === "string" && input.baseUrl.trim()
+      ? input.baseUrl.trim()
+      : DEFAULT_AI_SETTINGS.baseUrl,
+    model: typeof input?.model === "string" ? input.model.trim() : "",
+    temperature: Number.isFinite(temperature) ? Math.min(2, Math.max(0, temperature)) : DEFAULT_AI_SETTINGS.temperature,
+    defaultStyle: TRANSLATION_STYLES.has(input?.defaultStyle) ? input.defaultStyle : DEFAULT_AI_SETTINGS.defaultStyle,
+    reasoningEnabled: Boolean(input?.reasoningEnabled)
+  };
+}
+
+function toAISettingsSummary(settings) {
+  return {
+    baseUrl: settings.baseUrl,
+    model: settings.model,
+    temperature: settings.temperature,
+    defaultStyle: settings.defaultStyle,
+    reasoningEnabled: settings.reasoningEnabled,
+    hasApiKey: Boolean(settings.encryptedApiKey)
+  };
+}
+
+function decryptStoredApiKey(encryptedApiKey) {
+  if (!encryptedApiKey) {
+    return "";
+  }
+  ensureSecureStorageAvailable();
+  try {
+    return safeStorage.decryptString(Buffer.from(encryptedApiKey, "base64"));
+  } catch {
+    throw new Error("无法读取已保存的 API Key，请在设置中重新输入。");
+  }
+}
+
+function ensureSecureStorageAvailable() {
+  if (!safeStorage.isEncryptionAvailable()) {
+    throw new Error("系统安全存储暂不可用，无法安全处理 API Key。");
+  }
+  if (
+    process.platform === "linux"
+    && typeof safeStorage.getSelectedStorageBackend === "function"
+    && safeStorage.getSelectedStorageBackend() === "basic_text"
+  ) {
+    throw new Error("系统未提供安全的密钥存储后端，已拒绝保存 API Key。");
+  }
+}
+
+function validateAISettings(settings, apiKey) {
+  if (!apiKey.trim()) {
+    throw new Error("未配置 API Key，请先前往设置页配置。");
+  }
+  if (!settings.model.trim()) {
+    throw new Error("未配置模型，请先前往设置页填写模型名称。");
+  }
+  getChatCompletionsUrl(settings.baseUrl);
+}
+
+async function streamAITranslationInMain({ settings, apiKey, prompt, reasoning, signal, onStatus, onReasoningDelta, onDelta }) {
+  const requestBody = {
+    model: settings.model,
+    messages: [{ role: "user", content: prompt }],
+    stream: true
+  };
+  if (usesDeepSeekThinking(settings.baseUrl, settings.model)) {
+    requestBody.thinking = { type: reasoning ? "enabled" : "disabled" };
+  } else if (reasoning) {
+    requestBody.reasoning_effort = "medium";
+  }
+  if (!reasoning) {
+    requestBody.temperature = settings.temperature;
+  }
+
+  let response;
+  try {
+    response = await fetch(getChatCompletionsUrl(settings.baseUrl), {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${apiKey}`,
+        "content-type": "application/json"
+      },
+      body: JSON.stringify(requestBody),
+      signal
+    });
+  } catch (error) {
+    if (error?.name === "AbortError") {
+      throw new Error("AI 翻译已取消。");
+    }
+    throw new Error("网络请求失败，请检查 Base URL、网络连接和接口可用性。");
+  }
+
+  if (!response.ok) {
+    throw new Error(await readProviderError(response));
+  }
+  onStatus("connected");
+
+  const contentType = response.headers.get("content-type") || "";
+  if (!contentType.includes("text/event-stream")) {
+    const data = await response.json();
+    const content = data?.choices?.[0]?.message?.content;
+    const reasoningContent = data?.choices?.[0]?.message?.reasoning_content;
+    if (reasoningContent) {
+      onStatus("reasoning");
+      onReasoningDelta(reasoningContent);
+    }
+    if (!content) {
+      throw new Error("AI 返回为空，请重试或更换模型。");
+    }
+    onStatus("translating");
+    onDelta(content);
+    return content;
+  }
+
+  if (!response.body) {
+    throw new Error("AI 返回为空，请重试或更换模型。");
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let receivedContent = "";
+
+  while (true) {
+    const { done, value } = await reader.read();
+    buffer += decoder.decode(value, { stream: !done });
+    const events = buffer.split(/\r?\n\r?\n/);
+    buffer = events.pop() || "";
+
+    for (const event of events) {
+      for (const line of event.split(/\r?\n/)) {
+        if (!line.startsWith("data:")) {
+          continue;
+        }
+        const payload = line.slice(5).trim();
+        if (!payload || payload === "[DONE]") {
+          continue;
+        }
+        try {
+          const data = JSON.parse(payload);
+          const reasoningDelta = data?.choices?.[0]?.delta?.reasoning_content;
+          if (reasoningDelta) {
+            onStatus("reasoning");
+            onReasoningDelta(reasoningDelta);
+          }
+          const delta = data?.choices?.[0]?.delta?.content;
+          if (delta) {
+            receivedContent += delta;
+            onStatus("translating");
+            onDelta(delta);
+          }
+        } catch {
+          // Ignore malformed or provider-specific SSE metadata lines.
+        }
+      }
+    }
+
+    if (done) {
+      break;
+    }
+  }
+
+  if (!receivedContent.trim()) {
+    throw new Error("AI 返回为空，请重试或更换模型。");
+  }
+  return receivedContent;
+}
+
+function getChatCompletionsUrl(baseUrl) {
+  const normalized = String(baseUrl || "").trim().replace(/\/+$/, "");
+  let parsed;
+  try {
+    parsed = new URL(normalized);
+  } catch {
+    throw new Error("Base URL 无效，请检查设置。");
+  }
+  if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
+    throw new Error("Base URL 无效，请检查设置。");
+  }
+  return normalized.endsWith("/chat/completions") ? normalized : `${normalized}/chat/completions`;
+}
+
+function usesDeepSeekThinking(baseUrl, model) {
+  try {
+    return new URL(baseUrl).hostname.endsWith("deepseek.com") || String(model).toLowerCase().startsWith("deepseek-");
+  } catch {
+    return String(model).toLowerCase().startsWith("deepseek-");
+  }
+}
+
+async function readProviderError(response) {
+  try {
+    const data = await response.json();
+    const message = typeof data?.error === "string" ? data.error : data?.error?.message || data?.message;
+    return message ? `AI 接口请求失败：${message}` : `AI 接口请求失败（HTTP ${response.status}）。`;
+  } catch {
+    return `AI 接口请求失败（HTTP ${response.status}）。`;
+  }
+}
+
+function isValidAIRequestId(value) {
+  return typeof value === "string" && /^[a-zA-Z0-9-]{8,80}$/.test(value);
 }
 
 async function listWindowsFontFamilies() {

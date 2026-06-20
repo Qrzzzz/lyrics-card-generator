@@ -1,7 +1,11 @@
 "use client";
 
 import { Languages, SplitSquareVertical } from "lucide-react";
+import type { ReactNode } from "react";
+import { AiTranslateButton } from "@/components/lyrics/AiTranslateButton";
+import { TranslationFieldBorder } from "@/components/lyrics/TranslationFieldBorder";
 import { Textarea, Label, Section, SwitchRow } from "@/components/ui/controls";
+import { getAIUiCopy } from "@/lib/ai/ui-copy";
 import type { createT } from "@/lib/i18n";
 import { formatChineseTranslation, splitAlternatingLyrics } from "@/lib/lyric-format";
 import type { ContentMode, Locale } from "@/lib/types";
@@ -14,6 +18,10 @@ export function LyricInput({
   onTranslationEnabledChange,
   onTranslationTextChange,
   onSplitAlternatingLyrics,
+  onAITranslate,
+  isAITranslating,
+  aiTranslatePanel,
+  themeColor,
   contentMode,
   locale,
   t
@@ -25,12 +33,17 @@ export function LyricInput({
   onTranslationEnabledChange: (enabled: boolean) => void;
   onTranslationTextChange: (translation: string) => void;
   onSplitAlternatingLyrics: (lyrics: string, translationText: string) => void;
+  onAITranslate: () => void;
+  isAITranslating: boolean;
+  aiTranslatePanel?: ReactNode;
+  themeColor: string;
   contentMode: ContentMode;
   locale: Locale;
   t: ReturnType<typeof createT>;
 }) {
   const lines = lyrics ? lyrics.split(/\r?\n/).length : 0;
   const showTranslation = contentMode === "lyrics" && translationEnabled;
+  const aiCopy = getAIUiCopy(locale);
 
   return (
     <Section title={t("lyrics")} eyebrow={t("manualText")}>
@@ -45,6 +58,12 @@ export function LyricInput({
             />
           </Label>
           <div className="flex flex-wrap gap-2">
+            <AiTranslateButton
+              label={isAITranslating ? aiCopy.translating : aiCopy.aiTranslate}
+              loading={isAITranslating}
+              themeColor={themeColor}
+              onClick={onAITranslate}
+            />
             <button
               type="button"
               onClick={() => {
@@ -57,15 +76,18 @@ export function LyricInput({
               {t("splitAlternatingLyrics")}
             </button>
           </div>
+          {aiTranslatePanel}
           <SwitchRow label={t("enableTranslation")} checked={translationEnabled} onChange={onTranslationEnabledChange} />
           {showTranslation ? (
             <Label label={t("translation")}>
-              <Textarea
-                value={translationText}
-                onChange={(event) => onTranslationTextChange(event.target.value)}
-                placeholder={t("translationPlaceholder")}
-                className="min-h-40 leading-relaxed"
-              />
+              <TranslationFieldBorder color={themeColor}>
+                <Textarea
+                  value={translationText}
+                  onChange={(event) => onTranslationTextChange(event.target.value)}
+                  placeholder={t("translationPlaceholder")}
+                  className="min-h-40 leading-relaxed"
+                />
+              </TranslationFieldBorder>
               {locale === "zh" ? (
                 <button
                   type="button"

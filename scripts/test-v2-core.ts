@@ -1,4 +1,9 @@
 import { getLandscapeLayout, getPortraitLayout } from "../lib/card-layout-engine";
+import { cleanAITranslation } from "../lib/ai/clean";
+import { validateConfiguredSettings } from "../lib/ai/client";
+import { buildLyricsTranslationPrompt, PROMPT_OUTPUT_RULES } from "../lib/ai/prompt";
+import { getTranslationStyles } from "../lib/ai/styles";
+import { getAIUiCopy } from "../lib/ai/ui-copy";
 import { buildUpdateResult } from "../lib/github-update";
 import { proxiedImageUrl } from "../lib/image-utils";
 import { formatChineseTranslation, splitAlternatingLyrics } from "../lib/lyric-format";
@@ -49,7 +54,8 @@ function main() {
   testUpdateResult();
   testLayoutEngine();
   testImageProxy();
-  console.log(JSON.stringify({ ok: true, tests: 5 }, null, 2));
+  testAITranslationPrompt();
+  console.log(JSON.stringify({ ok: true, tests: 6 }, null, 2));
 }
 
 function testLyricFormat() {
@@ -140,6 +146,72 @@ function testImageProxy() {
   assertEqual(proxiedImageUrl("https://example.com/cover.jpg"), "/api/image-proxy?url=https%3A%2F%2Fexample.com%2Fcover.jpg", "http proxied");
 }
 
+function testAITranslationPrompt() {
+  const prompt = buildLyricsTranslationPrompt({
+    lyrics: "I miss you\nTonight",
+    style: "recommended",
+    targetLocale: "zh"
+  });
+  assert(prompt.includes("输出规则是最高优先级，必须严格遵守"), "strong output rules retained");
+  assert(prompt.includes(PROMPT_OUTPUT_RULES), "output rule block included");
+  assert(prompt.includes("采用“推荐版”风格：这是一个独立版本"), "recommended is its own style");
+  assert(!prompt.includes("采用“抒情译版”风格"), "only selected style included");
+  const frenchPrompt = buildLyricsTranslationPrompt({
+    lyrics: "I miss you",
+    style: "faithful",
+    targetLocale: "fr"
+  });
+  assert(frenchPrompt.includes("traduction française"), "French UI requests French output");
+  assert(frenchPrompt.includes("Fidèle et soignée"), "French style prompt is localized");
+  assert(!frenchPrompt.includes("简体中文译文"), "French prompt does not request Chinese output");
+  const localeTargets = {
+    zh: "简体中文译文本身",
+    "zh-TW": "繁體中文譯文本身",
+    en: "English translation itself",
+    fr: "traduction française elle-même",
+    ja: "日本語の翻訳本文だけ",
+    es: "traducción al español"
+  } as const;
+  for (const [targetLocale, marker] of Object.entries(localeTargets)) {
+    const localizedPrompt = buildLyricsTranslationPrompt({
+      lyrics: "I miss you",
+      style: "recommended",
+      targetLocale: targetLocale as keyof typeof localeTargets
+    });
+    assert(localizedPrompt.includes(marker), `${targetLocale} prompt targets its UI language`);
+    assertEqual(getTranslationStyles(targetLocale as keyof typeof localeTargets).length, 6, `${targetLocale} has six localized styles`);
+  }
+  assertEqual(getAIUiCopy("zh-TW").settingsTitle, "應用程式設定", "Traditional Chinese AI UI copy");
+  assertEqual(getAIUiCopy("fr").aiSection, "Traduction des paroles par IA", "French AI UI copy");
+  assertEqual(getAIUiCopy("ja").settingsSaveFailed, "AI 設定を保存できませんでした。", "Japanese AI UI copy");
+  assertEqual(getAIUiCopy("es").defaultStyle, "Estilo de traducción predeterminado", "Spanish AI UI copy");
+  assertEqual(cleanAITranslation("```text\n译文如下：\n想念你\n```"), "想念你", "clean AI wrapper text");
+  assertThrows(
+    () => validateConfiguredSettings({
+      baseUrl: "https://api.example.com/v1",
+      model: "model",
+      temperature: 0.7,
+      defaultStyle: "recommended",
+      reasoningEnabled: false,
+      hasApiKey: false
+    }),
+    "未配置 API Key",
+    "missing API key validation"
+  );
+  assertThrows(
+    () => validateConfiguredSettings({
+      baseUrl: "https://api.example.com/v1",
+      model: "",
+      temperature: 0.7,
+      defaultStyle: "recommended",
+      reasoningEnabled: false,
+      hasApiKey: true
+    }),
+    "未配置模型",
+    "missing model validation"
+  );
+}
+
 function centerX(rect: { x: number; width: number }) {
   return rect.x + rect.width / 2;
 }
@@ -154,6 +226,16 @@ function assertEqual<T>(actual: T, expected: T, message: string) {
   if (actual !== expected) {
     throw new Error(`Assertion failed: ${message}. Expected ${String(expected)}, got ${String(actual)}`);
   }
+}
+
+function assertThrows(action: () => void, expectedMessage: string, message: string) {
+  try {
+    action();
+  } catch (error) {
+    assert(error instanceof Error && error.message.includes(expectedMessage), message);
+    return;
+  }
+  throw new Error(`Assertion failed: ${message}. Expected function to throw.`);
 }
 
 main();
