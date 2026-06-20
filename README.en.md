@@ -24,7 +24,7 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 ## 📦 Download and Installation
 
-Download the latest version from GitHub Releases:
+Download the latest version from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
 * Recommended installer: `Lyrics Card Generator Setup 3.0.0.exe`
 * Portable version: `Lyrics Card Generator-3.0.0-portable.exe`
