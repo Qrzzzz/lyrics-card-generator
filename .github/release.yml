@@ -1,0 +1,42 @@
+changelog:
+  exclude:
+    labels:
+      - ignore-for-release
+      - no-release-note
+    authors:
+      - dependabot
+      - dependabot[bot]
+  categories:
+    - title: "🚨 破坏性变更"
+      labels:
+        - breaking-change
+        - breaking
+        - semver-major
+    - title: "✨ 新增功能"
+      labels:
+        - feature
+        - enhancement
+    - title: "🐛 修复"
+      labels:
+        - bug
+        - fix
+    - title: "🎨 界面与体验"
+      labels:
+        - ui
+        - ux
+        - design
+    - title: "🌐 多语言与文档"
+      labels:
+        - i18n
+        - localization
+        - docs
+        - documentation
+    - title: "⚙️ 构建与维护"
+      labels:
+        - build
+        - ci
+        - chore
+        - refactor
+    - title: "其他变更"
+      labels:
+        - "*"
