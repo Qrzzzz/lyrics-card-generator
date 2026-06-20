@@ -2,11 +2,11 @@
 
 Lyrics Card Generator 面向国内用户，GitHub Release 页面默认使用简体中文。其他语言不直接堆在 Release 正文里，而是放在 `docs/releases/` 目录下维护，再从 Release 正文跳转过去。
 
-这样做的目的很简单：Release 页面保持短、清楚、适合下载；完整说明保留 6 种语言，方便不同用户阅读。
+Release 页面保持短、清楚、适合下载；完整说明保留 6 种语言，方便不同用户阅读。
 
 ## 语言文件命名
 
-每个正式版本使用同一个版本号，分别维护 6 个 Markdown 文件：
+每个正式版本分别维护 6 个 Markdown 文件：
 
 ```text
 docs/releases/vX.Y.Z.zh-CN.md
@@ -17,69 +17,33 @@ docs/releases/vX.Y.Z.ja.md
 docs/releases/vX.Y.Z.es.md
 ```
 
-当前项目界面支持的语言是：
+当前项目界面支持：简体中文、繁體中文、English、Français、日本語、Español。
 
-- 简体中文
-- 繁體中文
-- English
-- Français
-- 日本語
-- Español
+## 已整理版本
+
+- `v0.1.0`：Windows 桌面版初版发布。
+- `v2.1.0`：多语言界面与文档更新。
+- `v3.0.0`：歌词翻译、设置中心与导出流程优化。
+
+旧的 `docs/release-notes-v*.md` 单文件发布说明已迁移到本目录，避免同一版本存在多套入口。
 
 ## GitHub Release 正文写法
 
-Release 正文只写简体中文短版。注意：Release 页面不在仓库目录中，不能使用 `./vX.Y.Z.en.md` 这类相对链接。建议使用指向 `main` 的完整链接；如果对应 tag 中已经包含这些文档，也可以改为指向 tag。
-
-推荐结构如下：
+Release 正文只写简体中文短版。Release 页面不在仓库目录中，不能使用 `./vX.Y.Z.en.md` 这类相对链接。建议使用完整 GitHub 链接。
 
 ```md
 # Lyrics Card Generator vX.Y.Z
 
 语言：简体中文 · [繁體中文](https://github.com/Qrzzzz/lyrics-card-generator/blob/main/docs/releases/vX.Y.Z.zh-TW.md) · [English](https://github.com/Qrzzzz/lyrics-card-generator/blob/main/docs/releases/vX.Y.Z.en.md) · [Français](https://github.com/Qrzzzz/lyrics-card-generator/blob/main/docs/releases/vX.Y.Z.fr.md) · [日本語](https://github.com/Qrzzzz/lyrics-card-generator/blob/main/docs/releases/vX.Y.Z.ja.md) · [Español](https://github.com/Qrzzzz/lyrics-card-generator/blob/main/docs/releases/vX.Y.Z.es.md)
-
-## 下载与安装
-
-- 安装版：`Lyrics Card Generator Setup X.Y.Z.exe`
-- 便携版：`Lyrics Card Generator-X.Y.Z-portable.exe`
-
-## 本次更新
-
-- 新增：...
-- 改进：...
-- 修复：...
-
-## 升级注意事项
-
-...
 ```
-
-如果某次更新很小，也可以只在 Release 正文里写 3 到 5 条重点，把完整内容放进语言文件。
 
 ## 内容同步原则
 
-6 个语言版本应保持同一结构和同一信息量。推荐顺序：
+6 个语言版本应保持同一结构和同一信息量。不要让英文版比中文版多信息，也不要让其他语言只剩一句“见中文版”。发布说明面向用户，不要写“给发布者的备注”“Maintainer Note”这类内部说明。
 
-1. 下载与安装
-2. 本次更新
-3. 升级注意事项
-4. 已知限制
-5. 完整变更记录
+涉及目标语言的功能描述必须本地化。例如 v3.0.0 的歌词翻译功能：中文用户看到的是中文歌词翻译，英文用户看到的是 English lyric translations，法语用户看到的是 traduction française，日本语用户看到的是日本語の歌詞翻訳，西语用户看到的是 traducción al español。
 
-不要让英文版比中文版多信息，也不要让其他语言只剩一句“见中文版”。发布说明面向用户，不要写“给发布者的备注”“Maintainer Note”这类内部说明。
-
-## 自动生成 Release Notes
-
-仓库已提供 `.github/release.yml`。在 GitHub 创建 Release 时，可以使用自动生成 Release Notes，再把生成内容整理进中文短版和各语言文件。
-
-标签建议：
-
-- `feature` / `enhancement`：新增功能
-- `bug` / `fix`：修复
-- `ui` / `ux` / `design`：界面体验
-- `i18n` / `localization` / `docs`：多语言和文档
-- `build` / `ci` / `chore` / `refactor`：构建与维护
-- `breaking-change`：破坏性变更
-- `ignore-for-release` / `no-release-note`：不进入发布说明
+也就是说，目标译文语言应跟随当前界面语言，不能所有语言版本都写成“生成中文翻译”。
 
 ## 工作流程
 
