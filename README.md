@@ -6,7 +6,24 @@
 
 **Apple Music / 网易云音乐 / QQ 音乐 · Windows 桌面应用 · 高清 PNG 导出 · 多语言文档**
 
-[繁體中文](./README.zh-TW.md) · [English](./README.en.md) · [Français](./README.fr.md) · [日本語](./README.ja.md) · [Español](./README.es.md) · [下载最新版](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) · [主要功能](#主要功能) · [本地开发](#本地开发) · [许可证](./LICENSE)
+<p>
+  <strong>语言</strong><br/>
+  <strong>简体中文</strong> ·
+  <a href="./README.zh-TW.md">繁體中文</a> ·
+  <a href="./README.en.md">English</a> ·
+  <a href="./README.fr.md">Français</a> ·
+  <a href="./README.ja.md">日本語</a> ·
+  <a href="./README.es.md">Español</a>
+</p>
+
+<p>
+  <strong>导航</strong><br/>
+  <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
+  <a href="./docs/releases/v3.0.0.zh-CN.md">发布说明</a> ·
+  <a href="#主要功能">主要功能</a> ·
+  <a href="#本地开发">本地开发</a> ·
+  <a href="./LICENSE">许可证</a>
+</p>
 
 ![Platform](https://img.shields.io/badge/Platform-Windows%20Desktop-111827)
 ![Stack](https://img.shields.io/badge/Stack-Next.js%20%2B%20React%20%2B%20TypeScript-0F766E)
@@ -21,7 +38,7 @@
 
 ## 📦 下载与安装
 
-请前往 GitHub Releases 下载最新版：
+请前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下载最新版：
 
 * 推荐普通用户下载安装版：`Lyrics Card Generator Setup 3.0.0.exe`
 * 不想安装时可下载便携版：`Lyrics Card Generator-3.0.0-portable.exe`
@@ -29,6 +46,19 @@
 安装版适合长期使用；便携版适合临时运行、测试或放在移动硬盘中使用。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
+
+## 🌐 多语言发布说明
+
+GitHub Release 页面默认使用简体中文短版，完整发布说明维护在 `docs/releases/`：
+
+* [简体中文](./docs/releases/v2.1.0.zh-CN.md)
+* [繁體中文](./docs/releases/v2.1.0.zh-TW.md)
+* [English](./docs/releases/v2.1.0.en.md)
+* [Français](./docs/releases/v2.1.0.fr.md)
+* [日本語](./docs/releases/v2.1.0.ja.md)
+* [Español](./docs/releases/v2.1.0.es.md)
+
+后续发版时参考 [多语言发布说明规范](./docs/releases/README.md)，避免在 Release 正文里堆叠多国语言全文。
 
 <a id="主要功能"></a>
 

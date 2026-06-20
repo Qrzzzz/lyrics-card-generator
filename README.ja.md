@@ -2,11 +2,28 @@
 
 # 🎧 Lyrics Card Generator
 
-### 共有しやすい上質な歌詞カードを作成
+### 共有に使える高品質な歌詞カードを生成
 
-**Apple Music / NetEase Cloud Music / QQ Music · Windows デスクトップ · 高解像度 PNG 書き出し · 日本語ドキュメント**
+**Apple Music / NetEase Cloud Music / QQ Music · Windows デスクトップアプリ · 高解像度 PNG 書き出し · 多言語ドキュメント**
 
-[简体中文](./README.md) · [繁體中文](./README.zh-TW.md) · [English](./README.en.md) · [Français](./README.fr.md) · [Español](./README.es.md) · [最新リリース](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) · [機能](#機能) · [開発](#ローカル開発) · [ライセンス](./LICENSE)
+<p>
+  <strong>言語</strong><br/>
+  <a href="./README.md">简体中文</a> ·
+  <a href="./README.zh-TW.md">繁體中文</a> ·
+  <a href="./README.en.md">English</a> ·
+  <a href="./README.fr.md">Français</a> ·
+  <strong>日本語</strong> ·
+  <a href="./README.es.md">Español</a>
+</p>
+
+<p>
+  <strong>ナビゲーション</strong><br/>
+  <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
+  <a href="./docs/releases/v3.0.0.ja.md">リリースノート</a> ·
+  <a href="#主な機能">主な機能</a> ·
+  <a href="#ローカル開発">ローカル開発</a> ·
+  <a href="./LICENSE">ライセンス</a>
+</p>
 
 ![Platform](https://img.shields.io/badge/Platform-Windows%20Desktop-111827)
 ![Stack](https://img.shields.io/badge/Stack-Next.js%20%2B%20React%20%2B%20TypeScript-0F766E)
@@ -24,7 +41,7 @@
 
 ## 📦 ダウンロードとインストール
 
-最新版は GitHub Releases からダウンロードできます。
+最新版は [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) からダウンロードできます。
 
 * 推奨インストーラー：`Lyrics Card Generator Setup 3.0.0.exe`
 * ポータブル版：`Lyrics Card Generator-3.0.0-portable.exe`
@@ -33,9 +50,9 @@
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-<a id="機能"></a>
+<a id="主な機能"></a>
 
-## ✨ 機能
+## ✨ 主な機能
 
 * 高品質な歌詞共有画像を生成
 * 縦向き、横向き、カスタムキャンバスサイズに対応
@@ -76,24 +93,24 @@ EXE を起動すると、ユーザーのマシン上でローカル Next サー�
 * リモートカバーの読み込み
 * 歌詞の自動取得
 * AI 歌詞翻訳
-* GitHub アップデート確認
+* GitHub Releases によるアップデート確認
 
 ## 🚀 使い方
 
 1. アプリを起動します。
 2. Apple Music、NetEase Cloud Music、QQ Music のリンクを貼り付けるか、曲情報を手入力します。
-3. 必要に応じてローカル MP3 / FLAC をアップロードし、メタデータ、カバー、埋め込み歌詞を読み取ります。
-4. 歌詞と翻訳を編集します。AI 翻訳を使うか、原文 / 翻訳が交互に並んだテキストを選択中のインターフェース言語に合わせて自動分割できます。
-5. キャンバス比率、フォント、Windows システムフォント、色、フレーム、ウォーターマークなどを調整します。
+3. 必要に応じてローカル MP3 / FLAC ファイルをアップロードし、メタデータ、カバー、埋め込み歌詞を読み取ります。
+4. 歌詞と翻訳を編集します。AI 翻訳を使うか、選択中の UI 言語に応じて原文 / 翻訳の交互行を自動分割できます。
+5. キャンバス比率、フォント、Windows システムフォント、色、フレーム、ウォーターマークなどのスタイルを調整します。
 6. 右側でカードをプレビューします。
-7. 「完了して書き出し」で PNG 画像を保存します。
+7. 「完了して書き出し」を使って PNG 画像を保存します。
 
 ## 🔄 アップデート確認
 
 アプリには「アップデートを確認」ボタンがあります。
-ローカル Next API ルート経由で GitHub Releases を取得し、現在のバージョンと最新リリースを比較します。利用可能な場合はインストーラー版とポータブル版を優先して認識します。
+ローカル Next API ルート経由でこのプロジェクトの GitHub Releases を取得し、現在のバージョンと最新リリースを比較して、利用可能な場合はインストーラー / ポータブル版のアセットを優先します。
 
-この機能はアップデート確認とダウンロードページの表示のみを行います。インストーラーを自動でダウンロードしたり、現在のアプリを自動置換したりしません。
+この機能はアップデートを確認してダウンロードページを開くだけです。インストーラーを自動でダウンロードしたり、現在のアプリを自動で置き換えたりはしません。
 
 <a id="ローカル開発"></a>
 
@@ -106,7 +123,7 @@ npm install
 npm run dev
 ```
 
-起動後、以下を開きます。
+その後、以下を開きます。
 
 ```text
 http://localhost:3000
@@ -114,19 +131,19 @@ http://localhost:3000
 
 ## 🖥️ デスクトップ開発とパッケージング
 
-デスクトップアプリを開発モードで起動します。
+デスクトップアプリを開発モードで実行します。
 
 ```bash
 npm run desktop:dev
 ```
 
-確認用の unpacked デスクトップディレクトリを作成します。
+確認用の unpacked デスクトップディレクトリをビルドします。
 
 ```bash
 npm run desktop:pack
 ```
 
-Windows インストーラーとポータブル EXE をビルドします。
+Windows インストーラーとポータブル EXE の両方をビルドします。
 
 ```bash
 npm run desktop:build
@@ -144,12 +161,12 @@ release/
 dist-desktop/server
 ```
 
-## 📜 スクリプト
+## 📜 Scripts
 
 ```bash
 npm run dev             # Web 開発サーバーを起動
 npm run build           # Next.js アプリをビルド
-npm run typecheck       # TypeScript 型チェック
+npm run typecheck       # TypeScript 型チェックを実行
 npm run desktop:dev     # Electron 開発モードを起動
 npm run desktop:pack    # unpacked デスクトップディレクトリをビルド
 npm run desktop:build   # Windows インストーラーとポータブル EXE をビルド
@@ -179,34 +196,34 @@ npm run core:test       # 3.0 コア純粋関数をテスト
 * Source Han Sans
 * Source Han Serif
 
-これらは中国語歌詞カードに強く読みやすいタイポグラフィ基盤を提供します。
+中国語歌詞カードに適した、強く明瞭で信頼性の高いタイポグラフィ基盤を提供します。
 
-3.0.0 デスクトップ版では、カスタムカードタイポグラフィ用に Windows システムフォントを列挙できます。Web ビルドではシステムフォントを列挙できませんが、既存のフォントプリセットは利用できます。
+3.0.0 デスクトップアプリでは、カード用カスタムタイポグラフィのために Windows システムフォントを列挙することもできます。Web ビルドではシステムフォントを列挙できませんが、既存のフォントプリセットは引き続き利用できます。
 
 ## 🙏 謝辞
 
-[Apple Music](https://music.apple.com/) に感謝します。カラフルなグラデーション背景、流れるような雰囲気、初期の歌詞カードレイアウトの方向性は Apple Music の視覚体験から着想を得ています。本プロジェクトは Apple Music と提携しておらず、Apple Music の公式見解を表すものではありません。
+[Apple Music](https://music.apple.com/) に感謝します。カラフルなグラデーション背景、流れるような視覚的雰囲気、初期の歌詞カードレイアウトの方向性は、Apple Music の視覚体験から着想を得ました。このプロジェクトは Apple Music と提携しておらず、Apple Music の公式見解を表すものではありません。
 
-[Source Han Sans](https://github.com/adobe-fonts/source-han-sans) と [Source Han Serif](https://github.com/adobe-fonts/source-han-serif) に感謝します。歌詞カードの堅実で読みやすい文字組みを支えています。
+[Source Han Sans](https://github.com/adobe-fonts/source-han-sans) と [Source Han Serif](https://github.com/adobe-fonts/source-han-serif) に感謝します。これらは歌詞カードで使われる堅実で読みやすいタイポグラフィ基盤を提供しています。
 
-[Sabrina Carpenter](https://www.sabrinacarpenter.com/) の「opposite」に感謝します。起動時サンプルとして使われ、英語歌詞と中国語翻訳の初期レイアウトリズムを形作る助けになりました。楽曲の権利は各権利者に帰属します。本プロジェクトは音声コンテンツを配布しません。
+[Sabrina Carpenter](https://www.sabrinacarpenter.com/) の “opposite” に感謝します。起動時のサンプルとして使われ、英語歌詞と中国語翻訳の最初のレイアウトリズムを形作る助けになりました。楽曲のすべての権利は各権利者に帰属します。このプロジェクトは音声コンテンツを配布しません。
 
-[OpenAI Codex](https://openai.com/codex/) に感謝します。多くのアイデアを動作するコード、デスクトップパッケージングのワークフロー、実際の機能へ変換しました。
+[OpenAI Codex](https://openai.com/codex/) に感謝します。多くのアイデアを動作するコード、デスクトップパッケージングフロー、実際のプロダクト機能へ変換しました。
 
-[ChatGPT 5.5](https://chatgpt.com/) に感謝します。問題診断、設計、修正レビュー、受け入れ確認を支援しました。
+[ChatGPT 5.5](https://chatgpt.com/) に感謝します。開発全体を通じて、問題診断、解決策設計、修正レビュー、受け入れ確認を支援しました。
 
-[ReactBits](https://www.reactbits.dev/) に感謝します。Spark Cursor など、複数の UI とモーションのアイデアを提供しました。
+[ReactBits](https://www.reactbits.dev/) に感謝します。Spark Cursor を含む複数の UI アイデアとモーションの着想を提供しました。
 
-Rangerov の関心とフィードバックに感謝します。
+Rangerov に、このプロジェクトへの関心とフィードバックを感謝します。
 
-[Sakuramble](https://github.com/Sakuramble) のコード軽量化の提案に感謝します。関連する最適化は [`v1.1.0`](https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v1.1.0) に実装済みです。
+[Sakuramble](https://github.com/Sakuramble) にコード削減改善の提案を感謝します。関連する最適化は [`v1.1.0`](https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v1.1.0) で実装されています。
 
-また、[Next.js](https://nextjs.org/)、[React](https://react.dev/)、[TypeScript](https://www.typescriptlang.org/)、[Tailwind CSS](https://tailwindcss.com/)、[Electron](https://www.electronjs.org/)、[electron-builder](https://www.electron.build/)、[html-to-image](https://github.com/bubkoo/html-to-image)、[Framer Motion](https://motion.dev/)、[Lucide React](https://lucide.dev/)、[Cheerio](https://cheerio.js.org/)、[Zod](https://zod.dev/) と現代フロントエンドエコシステムの維持者に感謝します。
+また、[Next.js](https://nextjs.org/)、[React](https://react.dev/)、[TypeScript](https://www.typescriptlang.org/)、[Tailwind CSS](https://tailwindcss.com/)、[Electron](https://www.electronjs.org/)、[electron-builder](https://www.electron.build/)、[html-to-image](https://github.com/bubkoo/html-to-image)、[Framer Motion](https://motion.dev/)、[Lucide React](https://lucide.dev/)、[Cheerio](https://cheerio.js.org/)、[Zod](https://zod.dev/) および広範な現代フロントエンドエコシステムのメンテナーにも感謝します。これらのオープンソース基盤がなければ、このプロジェクトは現在の形では存在しません。
 
 ## 📄 ライセンス
 
-本プロジェクトは一般的なオープンソースライセンスではなく、独自の Source Available License の下で公開されています。
+このプロジェクトは、従来のオープンソースライセンスではなく、独自の Source Available License の下で公開されています。
 
-個人、非商用、教育、評価目的で、ソースコードを閲覧、ダウンロード、実行、私的に変更できます。商用利用、再配布、再パッケージ、改変版の公開、本プロジェクトを基にした競合製品には、権利者の事前の書面許可が必要です。
+個人、非商用、教育、評価目的でソースコードを閲覧、ダウンロード、実行し、個人的に改変できます。商用利用、再配布、再パッケージング、公開された改変版、または本プロジェクトを基にした競合製品には、権利者からの事前の書面許可が必要です。
 
 サードパーティのオープンソース依存関係は、それぞれのライセンスに従います。詳細は [LICENSE](./LICENSE) を参照してください。
