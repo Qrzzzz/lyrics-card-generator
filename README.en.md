@@ -50,6 +50,17 @@ The installer is recommended for regular use. The portable version is useful for
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
+## 🌐 Multilingual Release Notes
+
+The GitHub Release page uses a short English version by default. The full release notes are maintained in `docs/releases/`:
+
+* [简体中文](./docs/releases/v3.0.0.zh-CN.md)
+* [繁體中文](./docs/releases/v3.0.0.zh-TW.md)
+* [English](./docs/releases/v3.0.0.en.md)
+* [Français](./docs/releases/v3.0.0.fr.md)
+* [日本語](./docs/releases/v3.0.0.ja.md)
+* [Español](./docs/releases/v3.0.0.es.md)
+
 <a id="features"></a>
 
 ## ✨ Features
