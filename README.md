@@ -6,7 +6,7 @@
 
 **Apple Music / 网易云音乐 / QQ 音乐 · Windows 桌面应用 · 高清 PNG 导出 · 多语言文档**
 
-[繁體中文](./README.zh-TW.md) · [English](./README.en.md) · [Français](./README.fr.md) · [日本語](./README.ja.md) · [Español](./README.es.md) · [下载最新版](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) · [发布说明](./docs/releases/v2.1.0.zh-CN.md) · [主要功能](#主要功能) · [本地开发](#本地开发) · [许可证](./LICENSE)
+[繁體中文](./README.zh-TW.md) · [English](./README.en.md) · [Français](./README.fr.md) · [日本語](./README.ja.md) · [Español](./README.es.md) · [下载最新版](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) · [发布说明](.docs/releases/v3.0.0.zh-CN.md) · [主要功能](#主要功能) · [本地开发](#本地开发) · [许可证](./LICENSE)
 
 ![Platform](https://img.shields.io/badge/Platform-Windows%20Desktop-111827)
 ![Stack](https://img.shields.io/badge/Stack-Next.js%20%2B%20React%20%2B%20TypeScript-0F766E)
