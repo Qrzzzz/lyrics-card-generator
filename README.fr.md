@@ -24,7 +24,7 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 ## 📦 Téléchargement et installation
 
-Téléchargez la dernière version depuis GitHub Releases :
+Téléchargez la dernière version depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
 
 * Installateur recommandé : `Lyrics Card Generator Setup 3.0.0.exe`
 * Version portable : `Lyrics Card Generator-3.0.0-portable.exe`
