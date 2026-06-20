@@ -93,7 +93,7 @@ Estas funciones requieren internet:
 * Carga de portadas remotas
 * Obtención automática de letras
 * Traducción de letras con IA
-* Búsqueda de actualizaciones en GitHub
+* Búsqueda de actualizaciones en GitHub Releases
 
 ## 🚀 Uso
 
