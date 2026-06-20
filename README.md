@@ -23,8 +23,8 @@
 
 请前往 GitHub Releases 下载最新版：
 
-* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 2.1.0.exe`
-* 不想安装时可下载便携版：`Lyrics Card Generator-2.1.0-portable.exe`
+* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 3.0.0.exe`
+* 不想安装时可下载便携版：`Lyrics Card Generator-3.0.0-portable.exe`
 
 安装版适合长期使用；便携版适合临时运行、测试或放在移动硬盘中使用。
 
@@ -40,6 +40,7 @@
 * 竖版自定义尺寸支持基于真实 DOM 测量的自动高度
 * 支持歌词原文与翻译并排排版
 * 支持按当前界面语言拆分原文 / 译文，包括简体中文、繁体中文、英文、法语、日语、西班牙语目标译文
+* 支持兼容 OpenAI Chat Completions 的 AI 歌词翻译，可配置厂商 Base URL、模型、API Key、六种翻译风格、Reasoning 和流式输出
 * 支持 Apple Music、网易云音乐、QQ 音乐链接解析
 * 支持本地 MP3 / FLAC 元数据解析，尝试读取标题、艺人、专辑、封面和内嵌歌词
 * 支持手动填写歌曲名、艺人、封面和歌词
@@ -71,6 +72,7 @@
 * 音乐平台链接解析
 * 远程封面加载
 * 自动歌词获取
+* AI 歌词翻译
 * GitHub 检查更新
 
 ## 🚀 使用方式
@@ -78,7 +80,7 @@
 1. 启动应用。
 2. 粘贴 Apple Music、网易云音乐或 QQ 音乐链接，或手动填写歌曲信息。
 3. 也可以上传本地 MP3 / FLAC，自动读取文件内的歌曲信息、封面和内嵌歌词。
-4. 编辑歌词和翻译；如文本为原文 / 译文交替行，可按当前界面语言自动拆分。
+4. 编辑歌词和翻译；可使用 AI 翻译，也可将原文 / 译文交替行按当前界面语言自动拆分。
 5. 调整画布比例、字体、Windows 系统字体、字号、颜色、边框、水印等样式。
 6. 在右侧预览卡片。
 7. 点击“完成并导出”，保存 PNG 图片。
@@ -149,7 +151,7 @@ npm run desktop:dev     # 启动 Electron 开发模式
 npm run desktop:pack    # 构建 unpacked 桌面目录
 npm run desktop:build   # 构建 Windows 安装版和便携版
 npm run parse:test      # 测试歌曲链接解析
-npm run core:test       # 测试 2.0 核心纯函数
+npm run core:test       # 测试 3.0 核心纯函数
 ```
 
 ## 🧩 技术栈
@@ -176,7 +178,7 @@ npm run core:test       # 测试 2.0 核心纯函数
 
 它们为卡片提供了厚重、清晰、适合中文歌词排版的字体基础。
 
-桌面版 2.1.0 还支持从 Windows 系统字体列表中选择自定义字体。Web 环境无法枚举系统字体，但仍可使用原有字体预设。
+桌面版 3.0.0 还支持从 Windows 系统字体列表中选择自定义字体。Web 环境无法枚举系统字体，但仍可使用原有字体预设。
 
 ## 🙏 致谢
 

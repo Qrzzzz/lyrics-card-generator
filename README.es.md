@@ -26,8 +26,8 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 Descarga la versión más reciente desde GitHub Releases:
 
-* Instalador recomendado: `Lyrics Card Generator Setup 2.1.0.exe`
-* Versión portable: `Lyrics Card Generator-2.1.0-portable.exe`
+* Instalador recomendado: `Lyrics Card Generator Setup 3.0.0.exe`
+* Versión portable: `Lyrics Card Generator-3.0.0-portable.exe`
 
 El instalador se recomienda para uso habitual. La versión portable es útil para pruebas, uso temporal o ejecución desde una unidad extraíble.
 
@@ -43,6 +43,7 @@ El instalador se recomienda para uso habitual. La versión portable es útil par
 * Altura automática medida para lienzos verticales personalizados
 * Diseño de letra original y traducción
 * Separación automática de líneas original / traducción con detección de chino simplificado, chino tradicional, inglés, francés, japonés y español
+* Traducción de letras con IA mediante API Chat Completions compatibles con OpenAI, con URL del proveedor, modelo, clave API, seis estilos, Reasoning y salida en streaming configurables
 * Análisis de enlaces de Apple Music, NetEase Cloud Music y QQ Music
 * Análisis de metadatos MP3 / FLAC locales para título, artista, álbum, portada y letras incrustadas
 * Edición manual de título, artista, portada y letra
@@ -74,6 +75,7 @@ Estas funciones requieren internet:
 * Análisis de enlaces de plataformas musicales
 * Carga de portadas remotas
 * Obtención automática de letras
+* Traducción de letras con IA
 * Búsqueda de actualizaciones en GitHub
 
 ## 🚀 Cómo usar
@@ -81,7 +83,7 @@ Estas funciones requieren internet:
 1. Inicia la aplicación.
 2. Pega un enlace de Apple Music, NetEase Cloud Music o QQ Music, o introduce la información manualmente.
 3. Opcionalmente sube un MP3 / FLAC local para leer metadatos, portada y letras incrustadas.
-4. Edita letras y traducciones; el texto alternado original / traducción puede separarse automáticamente según el idioma de interfaz seleccionado.
+4. Edita letras y traducciones; usa la traducción con IA o separa automáticamente el texto alternado original / traducción según el idioma de interfaz seleccionado.
 5. Ajusta el ratio del lienzo, fuentes, fuentes del sistema Windows, colores, marcos, marcas de agua y otros estilos.
 6. Previsualiza la tarjeta a la derecha.
 7. Usa “Completar y exportar” para guardar la imagen PNG.
@@ -152,7 +154,7 @@ npm run desktop:dev     # Iniciar Electron en modo desarrollo
 npm run desktop:pack    # Construir un directorio desktop sin empaquetar
 npm run desktop:build   # Construir instalador Windows y EXE portable
 npm run parse:test      # Probar análisis de enlaces de canciones
-npm run core:test       # Probar funciones puras del núcleo 2.0
+npm run core:test       # Probar funciones puras del núcleo 3.0
 ```
 
 ## 🧩 Stack técnico
@@ -179,7 +181,7 @@ El proyecto usa:
 
 Proporcionan una base tipográfica sólida, clara y fiable para tarjetas de letras en chino.
 
-La aplicación de escritorio 2.1.0 también puede enumerar fuentes del sistema Windows para tipografía personalizada. Las builds Web no pueden enumerar fuentes del sistema, pero los ajustes de fuente existentes siguen disponibles.
+La aplicación de escritorio 3.0.0 también puede enumerar fuentes del sistema Windows para tipografía personalizada. Las builds Web no pueden enumerar fuentes del sistema, pero los ajustes de fuente existentes siguen disponibles.
 
 ## 🙏 Agradecimientos
 

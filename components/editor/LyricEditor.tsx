@@ -8,11 +8,13 @@ import { ExportCelebration } from "@/components/effects/ExportCelebration";
 import { LocalAudioParser } from "@/components/editor/LocalAudioParser";
 import { LyricsFetchPanel } from "@/components/editor/LyricsFetchPanel";
 import { LyricInput } from "@/components/editor/LyricInput";
+import { AiTranslatePanel } from "@/components/lyrics/AiTranslatePanel";
 import { PreviewPane } from "@/components/editor/PreviewPane";
 import { SettingsStepper, type SettingsStep } from "@/components/editor/SettingsStepper";
 import { SongInfoForm } from "@/components/editor/SongInfoForm";
 import { SongLinkParser } from "@/components/editor/SongLinkParser";
 import { LayoutSettingsPanel, VisualSettingsPanel } from "@/components/editor/StylePanel";
+import { SettingsDialog } from "@/components/settings/SettingsDialog";
 import {
   useCoverPalette,
   useResolvedTextColor,
@@ -22,6 +24,21 @@ import { useMeasuredAutoCanvasHeight } from "@/components/editor/hooks/useMeasur
 import { ClickSpark } from "@/components/layout/ClickSpark";
 import { DynamicAppBackground } from "@/components/layout/DynamicAppBackground";
 import { getCardSize, PRESET_CARD_SIZES } from "@/lib/card-size";
+import { cleanAITranslation } from "@/lib/ai/clean";
+import {
+  AITranslationError,
+  loadAISettings,
+  streamAITranslation,
+  validateConfiguredSettings
+} from "@/lib/ai/client";
+import { buildLyricsTranslationPrompt } from "@/lib/ai/prompt";
+import {
+  DEFAULT_AI_SETTINGS,
+  type AITranslationPhase,
+  type AISettingsSummary,
+  type TranslationStyle
+} from "@/lib/ai/types";
+import { getAIUiCopy } from "@/lib/ai/ui-copy";
 import { getHighResolutionCoverUrl } from "@/lib/cover-url";
 import { exportNodeAsPng } from "@/lib/export-image";
 import { createT, messages } from "@/lib/i18n";
@@ -127,9 +144,20 @@ export function LyricEditor() {
   const [isPreviewVisible, setIsPreviewVisible] = useState(true);
   const [celebrationKey, setCelebrationKey] = useState(0);
   const [isCompleteExporting, setIsCompleteExporting] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isAITranslateOpen, setIsAITranslateOpen] = useState(false);
+  const [isAITranslating, setIsAITranslating] = useState(false);
+  const [aiStreamingText, setAIStreamingText] = useState("");
+  const [aiReasoningText, setAIReasoningText] = useState("");
+  const [aiTranslationPhase, setAITranslationPhase] = useState<AITranslationPhase>("idle");
+  const [aiError, setAIError] = useState("");
+  const [toast, setToast] = useState("");
+  const [aiSettings, setAISettings] = useState<AISettingsSummary>({ ...DEFAULT_AI_SETTINGS, hasApiKey: false });
   const cardRef = useRef<HTMLElement | null>(null);
   const clearVersionRef = useRef(0);
+  const aiAbortControllerRef = useRef<AbortController | null>(null);
   const t = useMemo(() => createT(state.locale), [state.locale]);
+  const aiCopy = useMemo(() => getAIUiCopy(state.locale), [state.locale]);
 
   const parsedState = useMemo(
     () => ({
@@ -264,6 +292,114 @@ export function LyricEditor() {
     }
   }, []);
 
+  useEffect(() => {
+    loadAISettings().then(setAISettings).catch(() => undefined);
+  }, []);
+
+  useEffect(() => {
+    if (!toast) {
+      return;
+    }
+    const timeout = window.setTimeout(() => setToast(""), 3600);
+    return () => window.clearTimeout(timeout);
+  }, [toast]);
+
+  function updateTranslationText(translationText: string, enabled = true) {
+    setState((current) => ({
+      ...current,
+      translationText,
+      translationEnabled: enabled,
+      style: { ...current.style, translationText, translationEnabled: enabled }
+    }));
+  }
+
+  function openAITranslate() {
+    if (isAITranslateOpen) {
+      setIsAITranslateOpen(false);
+      return;
+    }
+
+    if (!state.lyrics.trim()) {
+      setToast(aiCopy.lyricsEmpty);
+      return;
+    }
+
+    try {
+      validateConfiguredSettings(aiSettings);
+    } catch (error) {
+      setToast(error instanceof Error ? error.message : aiCopy.configureFirst);
+      setIsSettingsOpen(true);
+      return;
+    }
+
+    setAIError("");
+    setAIStreamingText("");
+    setAIReasoningText("");
+    setAITranslationPhase("idle");
+    setIsAITranslateOpen(true);
+  }
+
+  async function translateWithAI(style: TranslationStyle, reasoning: boolean) {
+    const previousTranslation = state.style.translationText;
+    const previousEnabled = state.style.translationEnabled;
+    if (previousTranslation.trim() && !window.confirm(aiCopy.overwriteConfirm)) {
+      return;
+    }
+
+    const controller = new AbortController();
+    aiAbortControllerRef.current = controller;
+    setIsAITranslating(true);
+    setAIError("");
+    setAIStreamingText("");
+    setAIReasoningText("");
+    setAITranslationPhase("connecting");
+    let wrotePartial = false;
+
+    try {
+      const prompt = buildLyricsTranslationPrompt({
+        lyrics: state.lyrics,
+        style,
+        targetLocale: state.locale
+      });
+      const raw = await streamAITranslation({
+        prompt,
+        reasoning,
+        signal: controller.signal,
+        onStatus: setAITranslationPhase,
+        onReasoningDelta: (_delta, accumulated) => setAIReasoningText(accumulated.slice(-12000)),
+        onDelta: (_delta, accumulated) => {
+          const cleaned = cleanAITranslation(accumulated);
+          setAIStreamingText(cleaned || accumulated.trim());
+          if (cleaned) {
+            wrotePartial = true;
+            updateTranslationText(cleaned);
+          }
+        }
+      });
+      const cleaned = cleanAITranslation(raw);
+      if (!cleaned) {
+        throw new AITranslationError(aiCopy.emptyResponse, "empty_response");
+      }
+      updateTranslationText(cleaned);
+      setAISettings((current) => ({ ...current, defaultStyle: style, reasoningEnabled: reasoning }));
+      setToast(aiCopy.translated);
+    } catch (error) {
+      if (wrotePartial) {
+        updateTranslationText(previousTranslation, previousEnabled);
+      }
+      const aborted = controller.signal.aborted;
+      setAIError(aborted ? aiCopy.cancelled : normalizeAIErrorMessage(error));
+    } finally {
+      aiAbortControllerRef.current = null;
+      setIsAITranslating(false);
+      setAITranslationPhase("idle");
+    }
+  }
+
+  function cancelAITranslation() {
+    aiAbortControllerRef.current?.abort();
+  }
+
   function setLocale(locale: Locale) {
     setState((current) => {
       const previousDefaultInstrumentalTexts = Object.values(DEFAULT_INSTRUMENTAL_TEXT);
@@ -392,6 +528,25 @@ export function LyricEditor() {
                 }
               }))
             }
+            onAITranslate={openAITranslate}
+            isAITranslating={isAITranslating}
+            aiTranslatePanel={isAITranslateOpen ? (
+              <AiTranslatePanel
+                locale={state.locale}
+                initialStyle={aiSettings.defaultStyle}
+                initialReasoning={aiSettings.reasoningEnabled}
+                loading={isAITranslating}
+                streamingText={aiStreamingText}
+                reasoningText={aiReasoningText}
+                phase={aiTranslationPhase}
+                themeColor={state.palette?.primary ?? DEFAULT_PALETTE.primary}
+                error={aiError}
+                onClose={() => setIsAITranslateOpen(false)}
+                onCancel={cancelAITranslation}
+                onConfirm={translateWithAI}
+              />
+            ) : null}
+            themeColor={state.palette?.primary ?? DEFAULT_PALETTE.primary}
             contentMode={state.style.contentMode}
             locale={state.locale}
             t={t}
@@ -448,7 +603,7 @@ export function LyricEditor() {
       <ClickSpark themeColor={state.palette?.primary ?? DEFAULT_PALETTE.primary}>
     <main className="relative z-10 min-h-screen px-4 py-5 sm:px-6 lg:px-8">
       <div className="mx-auto grid w-[calc(100vw-2rem)] max-w-[1520px] min-w-0 gap-5 sm:w-full">
-        <EditorHeader locale={state.locale} t={t} onLocaleChange={setLocale} onClearAll={clearAllContent} />
+        <EditorHeader locale={state.locale} t={t} onOpenSettings={() => setIsSettingsOpen(true)} onClearAll={clearAllContent} />
 
         <div className="grid min-w-0 max-w-full gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(420px,600px)]">
           <motion.div
@@ -463,9 +618,6 @@ export function LyricEditor() {
               onStepChange={setCurrentStep}
               backText={t("step.back")}
               nextText={t("step.next")}
-              completeText={t("step.complete")}
-              completeDisabled={isCompleteExporting}
-              onComplete={completeAndExport}
               themeColor={state.palette?.primary ?? DEFAULT_PALETTE.primary}
             />
           </motion.div>
@@ -484,6 +636,21 @@ export function LyricEditor() {
       </div>
     </main>
       </ClickSpark>
+      <SettingsDialog
+        open={isSettingsOpen}
+        locale={state.locale}
+        onLocaleChange={setLocale}
+        onClose={() => setIsSettingsOpen(false)}
+        onSaved={(settings, message) => {
+          setAISettings(settings);
+          setToast(message || aiCopy.settingsSaved);
+        }}
+      />
+      {toast ? (
+        <div role="status" className="fixed bottom-5 left-1/2 z-[130] max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-lg border border-white/15 bg-slate-950/95 px-4 py-3 text-sm text-white shadow-2xl backdrop-blur-xl">
+          {toast}
+        </div>
+      ) : null}
       <ExportCelebration burstKey={celebrationKey} accentColor={state.palette?.primary ?? DEFAULT_PALETTE.primary} />
     </div>
   );
@@ -499,4 +666,11 @@ function sizeSnapshot(style: CardStyle) {
 
 function isSupportedLocale(locale: string | null): locale is Locale {
   return Boolean(locale && SUPPORTED_LOCALES.includes(locale as Locale));
+}
+
+function normalizeAIErrorMessage(error: unknown) {
+  if (error instanceof Error) {
+    return error.message.replace(/^Error invoking remote method '[^']+':\s*/i, "").replace(/^Error:\s*/i, "");
+  }
+  return "AI 翻译请求失败，请检查网络和接口设置。";
 }

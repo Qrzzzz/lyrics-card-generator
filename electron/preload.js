@@ -3,5 +3,15 @@ const { contextBridge, ipcRenderer } = require("electron");
 contextBridge.exposeInMainWorld("lyricsCardDesktop", {
   listSystemFonts: () => ipcRenderer.invoke("lyrics-card:list-system-fonts"),
   pickFont: () => ipcRenderer.invoke("lyrics-card:pick-font"),
-  openExternal: (url) => ipcRenderer.invoke("lyrics-card:open-external", url)
+  openExternal: (url) => ipcRenderer.invoke("lyrics-card:open-external", url),
+  loadAISettings: () => ipcRenderer.invoke("lyrics-card:ai-settings-load"),
+  saveAISettings: (settings) => ipcRenderer.invoke("lyrics-card:ai-settings-save", settings),
+  clearAISettingsApiKey: () => ipcRenderer.invoke("lyrics-card:ai-settings-api-key-clear"),
+  startAITranslation: (requestId, request) => ipcRenderer.invoke("lyrics-card:ai-translate", requestId, request),
+  cancelAITranslation: (requestId) => ipcRenderer.send("lyrics-card:ai-translate-cancel", requestId),
+  onAITranslationChunk: (callback) => {
+    const listener = (_event, payload) => callback(payload);
+    ipcRenderer.on("lyrics-card:ai-translate-chunk", listener);
+    return () => ipcRenderer.removeListener("lyrics-card:ai-translate-chunk", listener);
+  }
 });

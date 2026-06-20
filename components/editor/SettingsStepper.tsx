@@ -1,9 +1,9 @@
 "use client";
 
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { Check, Download } from "lucide-react";
+import { Check } from "lucide-react";
 import type { ReactNode } from "react";
-import { StarBorder } from "@/components/ui/StarBorder";
+import { getReadableForegroundColor } from "@/lib/contrast-color";
 import { cn } from "@/lib/utils";
 
 export type SettingsStep = {
@@ -20,9 +20,6 @@ export type SettingsStepperProps = {
   onStepChange: (step: number) => void;
   nextText?: string;
   backText?: string;
-  completeText?: string;
-  completeDisabled?: boolean;
-  onComplete?: () => void | Promise<void>;
   themeColor?: string;
 };
 
@@ -32,23 +29,20 @@ export function SettingsStepper({
   onStepChange,
   nextText = "Next",
   backText = "Back",
-  completeText = "Complete & Export",
-  completeDisabled = false,
-  onComplete,
   themeColor = "#7C3AED"
 }: SettingsStepperProps) {
   const reduceMotion = useReducedMotion();
   const activeStep = steps[currentStep] ?? steps[0];
   const isFirstStep = currentStep <= 0;
   const isLastStep = currentStep >= steps.length - 1;
-  const markerForegroundColor = getReadableMarkerColor(themeColor);
+  const markerForegroundColor = getReadableForegroundColor(themeColor);
 
   function goToStep(step: number) {
     onStepChange(Math.min(Math.max(step, 0), steps.length - 1));
   }
 
   return (
-    <section className="grid min-w-0 gap-4">
+    <section className={cn("grid min-w-0 gap-4", isLastStep && "content-start")}>
       <div className="glass-panel rounded-lg p-4">
         <div className="mb-4 flex items-start justify-between gap-4">
           <AnimatePresence mode="wait" initial={false}>
@@ -131,7 +125,12 @@ export function SettingsStepper({
         })}
       </div>
 
-      <div className="glass-panel flex items-center justify-between gap-3 rounded-lg p-4">
+      <div
+        className={cn(
+          "flex items-center gap-3",
+          isLastStep ? "justify-start" : "glass-panel justify-between rounded-lg p-4"
+        )}
+      >
         <button
           type="button"
           onClick={() => goToStep(currentStep - 1)}
@@ -140,25 +139,7 @@ export function SettingsStepper({
         >
           {backText}
         </button>
-        {isLastStep ? (
-          <StarBorder
-            type="button"
-            color={themeColor}
-            speed="7.2s"
-            onClick={() => void onComplete?.()}
-            disabled={completeDisabled}
-            className="complete-export-button transition hover:scale-[1.012] disabled:cursor-default disabled:opacity-70"
-            style={{
-              color: markerForegroundColor,
-              filter: `drop-shadow(0 18px 38px ${themeColor}55)`
-            }}
-          >
-            <span className="inline-flex h-[60px] items-center justify-center gap-3.5 px-6 text-xl font-black tracking-normal">
-              <Download className="h-6 w-6 shrink-0" />
-              <span className="whitespace-nowrap">{completeText}</span>
-            </span>
-          </StarBorder>
-        ) : (
+        {!isLastStep ? (
           <button
             type="button"
             onClick={() => goToStep(currentStep + 1)}
@@ -167,70 +148,8 @@ export function SettingsStepper({
           >
             {nextText}
           </button>
-        )}
+        ) : null}
       </div>
     </section>
   );
-}
-
-function getReadableMarkerColor(backgroundColor: string) {
-  const rgb = parseColor(backgroundColor);
-
-  if (!rgb) {
-    return "#FFFFFF";
-  }
-
-  const whiteContrast = contrastRatio(rgb, [255, 255, 255]);
-  const darkContrast = contrastRatio(rgb, [25, 22, 18]);
-
-  return darkContrast >= whiteContrast ? "#191612" : "#FFFFFF";
-}
-
-function parseColor(color: string): [number, number, number] | null {
-  const trimmed = color.trim();
-  const hexMatch = trimmed.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
-
-  if (hexMatch) {
-    const hex = hexMatch[1].length === 3
-      ? hexMatch[1].split("").map((char) => `${char}${char}`).join("")
-      : hexMatch[1];
-
-    return [
-      Number.parseInt(hex.slice(0, 2), 16),
-      Number.parseInt(hex.slice(2, 4), 16),
-      Number.parseInt(hex.slice(4, 6), 16)
-    ];
-  }
-
-  const rgbMatch = trimmed.match(/^rgba?\(([^)]+)\)$/i);
-
-  if (!rgbMatch) {
-    return null;
-  }
-
-  const channels = rgbMatch[1].split(",").slice(0, 3).map((part) => Number.parseFloat(part.trim()));
-
-  if (channels.some((channel) => Number.isNaN(channel))) {
-    return null;
-  }
-
-  return channels.map((channel) => Math.min(255, Math.max(0, Math.round(channel)))) as [number, number, number];
-}
-
-function contrastRatio(first: [number, number, number], second: [number, number, number]) {
-  const firstLuminance = relativeLuminance(first);
-  const secondLuminance = relativeLuminance(second);
-  const lighter = Math.max(firstLuminance, secondLuminance);
-  const darker = Math.min(firstLuminance, secondLuminance);
-
-  return (lighter + 0.05) / (darker + 0.05);
-}
-
-function relativeLuminance([red, green, blue]: [number, number, number]) {
-  const [r, g, b] = [red, green, blue].map((channel) => {
-    const normalized = channel / 255;
-    return normalized <= 0.03928 ? normalized / 12.92 : ((normalized + 0.055) / 1.055) ** 2.4;
-  });
-
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 }

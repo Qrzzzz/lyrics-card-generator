@@ -26,8 +26,8 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 Téléchargez la dernière version depuis GitHub Releases :
 
-* Installateur recommandé : `Lyrics Card Generator Setup 2.1.0.exe`
-* Version portable : `Lyrics Card Generator-2.1.0-portable.exe`
+* Installateur recommandé : `Lyrics Card Generator Setup 3.0.0.exe`
+* Version portable : `Lyrics Card Generator-3.0.0-portable.exe`
 
 L'installateur est recommandé pour une utilisation régulière. La version portable convient aux essais, à une utilisation temporaire ou à un disque amovible.
 
@@ -43,6 +43,7 @@ L'installateur est recommandé pour une utilisation régulière. La version port
 * Hauteur automatique mesurée pour les toiles portrait personnalisées
 * Mise en page originale des paroles et des traductions
 * Séparation automatique des lignes original / traduction avec détection du chinois simplifié, chinois traditionnel, anglais, français, japonais et espagnol
+* Traduction de paroles par IA via les API Chat Completions compatibles OpenAI, avec URL du fournisseur, modèle, clé API, six styles, Reasoning et sortie en streaming configurables
 * Analyse de liens Apple Music, NetEase Cloud Music et QQ Music
 * Analyse de métadonnées MP3 / FLAC locales : titre, artiste, album, pochette et paroles intégrées
 * Édition manuelle du titre, de l'artiste, de la pochette et des paroles
@@ -74,6 +75,7 @@ Ces fonctions nécessitent Internet :
 * Analyse de liens de plateformes musicales
 * Chargement de pochettes distantes
 * Récupération automatique des paroles
+* Traduction de paroles par IA
 * Vérification des mises à jour GitHub
 
 ## 🚀 Utilisation
@@ -81,7 +83,7 @@ Ces fonctions nécessitent Internet :
 1. Lancez l'application.
 2. Collez un lien Apple Music, NetEase Cloud Music ou QQ Music, ou saisissez les informations manuellement.
 3. Vous pouvez aussi importer un MP3 / FLAC local pour lire les métadonnées, la pochette et les paroles intégrées.
-4. Modifiez les paroles et traductions ; les textes alternant original / traduction peuvent être séparés automatiquement selon la langue d'interface.
+4. Modifiez les paroles et traductions ; utilisez la traduction par IA ou séparez automatiquement les textes alternant original / traduction selon la langue d'interface.
 5. Ajustez le ratio, les polices, les polices système Windows, les couleurs, cadres, filigranes et autres styles.
 6. Prévisualisez la carte à droite.
 7. Utilisez « Terminer et exporter » pour enregistrer l'image PNG.
@@ -152,7 +154,7 @@ npm run desktop:dev     # Démarrer Electron en mode développement
 npm run desktop:pack    # Construire un dossier desktop non empaqueté
 npm run desktop:build   # Construire l'installateur Windows et l'EXE portable
 npm run parse:test      # Tester l'analyse des liens de morceaux
-npm run core:test       # Tester les fonctions pures du noyau 2.0
+npm run core:test       # Tester les fonctions pures du noyau 3.0
 ```
 
 ## 🧩 Stack technique
@@ -179,7 +181,7 @@ Le projet utilise :
 
 Elles apportent une base typographique solide et lisible pour les cartes de paroles en chinois.
 
-La version 2.1.0 peut aussi énumérer les polices système Windows pour la typographie personnalisée. Les builds Web ne peuvent pas énumérer les polices système, mais les préréglages existants restent disponibles.
+La version 3.0.0 peut aussi énumérer les polices système Windows pour la typographie personnalisée. Les builds Web ne peuvent pas énumérer les polices système, mais les préréglages existants restent disponibles.
 
 ## 🙏 Remerciements
 

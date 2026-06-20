@@ -3,6 +3,8 @@
 import type { RefObject } from "react";
 import { Download } from "lucide-react";
 import { Section } from "@/components/ui/controls";
+import { StarBorder } from "@/components/ui/StarBorder";
+import { getReadableForegroundColor } from "@/lib/contrast-color";
 import type { createT } from "@/lib/i18n";
 import type { AppState } from "@/lib/types";
 
@@ -19,25 +21,34 @@ export function ExportPanel({
   isExporting: boolean;
   onExport: () => void | Promise<void>;
 }) {
+  const themeColor = state.palette?.primary ?? state.style.extractedPalette?.primary ?? "#FFFFFF";
+  const foregroundColor = getReadableForegroundColor(themeColor);
+
   return (
     <Section title={t("export")} eyebrow="PNG">
       <p className="app-text-subtle text-sm">{cardRef.current ? t("exportHint") : t("previewNotReady")}</p>
-      <div className="rounded-lg border border-white/10 bg-white/[0.045] px-3 py-2 text-sm text-white/66">
-        {t("completeExportHint")}
+      <div className="flex justify-end">
+        <StarBorder
+          type="button"
+          data-testid="complete-export-button"
+          color={themeColor}
+          speed="7.2s"
+          onClick={() => void onExport()}
+          disabled={isExporting}
+          className="complete-export-button transition hover:scale-[1.006] disabled:cursor-default disabled:opacity-70"
+          style={{
+            minHeight: 44,
+            borderRadius: 8,
+            color: foregroundColor,
+            filter: `drop-shadow(0 12px 28px ${themeColor}44)`
+          }}
+        >
+          <span className="inline-flex h-11 items-center justify-center gap-2 px-8 text-lg font-black tracking-normal">
+            <Download className="h-5 w-5 shrink-0" />
+            <span className="whitespace-nowrap">{t("step.complete")}</span>
+          </span>
+        </StarBorder>
       </div>
-      <button
-        type="button"
-        onClick={() => void onExport()}
-        disabled={isExporting}
-        className="app-button inline-flex h-11 items-center justify-center gap-2 rounded-lg border px-4 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60"
-        style={{
-          borderColor: state.palette?.primary ?? state.style.extractedPalette?.primary ?? "rgba(255,255,255,0.22)",
-          boxShadow: `0 14px 36px ${(state.palette?.primary ?? state.style.extractedPalette?.primary ?? "#ffffff")}28`
-        }}
-      >
-        <Download className="h-4 w-4" />
-        {t("exportPng")}
-      </button>
     </Section>
   );
 }
