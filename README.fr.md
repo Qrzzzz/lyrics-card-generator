@@ -50,6 +50,17 @@ L'installateur est recommandé pour une utilisation régulière. La version port
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
+## 🌐 Notes de publication multilingues
+
+La page GitHub Release utilise par défaut une version courte en français. Les notes de publication complètes sont maintenues dans `docs/releases/` :
+
+* [简体中文](./docs/releases/v3.0.0.zh-CN.md)
+* [繁體中文](./docs/releases/v3.0.0.zh-TW.md)
+* [English](./docs/releases/v3.0.0.en.md)
+* [Français](./docs/releases/v3.0.0.fr.md)
+* [日本語](./docs/releases/v3.0.0.ja.md)
+* [Español](./docs/releases/v3.0.0.es.md)
+
 <a id="fonctionnalités-principales"></a>
 
 ## ✨ Fonctionnalités principales
