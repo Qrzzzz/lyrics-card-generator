@@ -51,14 +51,12 @@
 
 GitHub Release 页面默认使用简体中文短版，完整发布说明维护在 `docs/releases/`：
 
-* [简体中文](./docs/releases/v2.1.0.zh-CN.md)
-* [繁體中文](./docs/releases/v2.1.0.zh-TW.md)
-* [English](./docs/releases/v2.1.0.en.md)
-* [Français](./docs/releases/v2.1.0.fr.md)
-* [日本語](./docs/releases/v2.1.0.ja.md)
-* [Español](./docs/releases/v2.1.0.es.md)
-
-后续发版时参考 [多语言发布说明规范](./docs/releases/README.md)，避免在 Release 正文里堆叠多国语言全文。
+* [简体中文](./docs/releases/v3.0.0.zh-CN.md)
+* [繁體中文](./docs/releases/v3.0.0.zh-TW.md)
+* [English](./docs/releases/v3.0.0.en.md)
+* [Français](./docs/releases/v3.0.0.fr.md)
+* [日本語](./docs/releases/v3.0.0.ja.md)
+* [Español](./docs/releases/v3.0.0.es.md)
 
 <a id="主要功能"></a>
 
