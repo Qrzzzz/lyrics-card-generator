@@ -2,11 +2,28 @@
 
 # 🎧 Lyrics Card Generator
 
-### Create polished lyric sharing cards
+### Generate polished lyric sharing cards for social sharing
 
-**Apple Music / NetEase Cloud Music / QQ Music · Windows Desktop · High-resolution PNG export · Multilingual Docs**
+**Apple Music / NetEase Cloud Music / QQ Music · Windows desktop app · HD PNG export · multilingual documentation**
 
-[简体中文](./README.md) · [繁體中文](./README.zh-TW.md) · [Français](./README.fr.md) · [日本語](./README.ja.md) · [Español](./README.es.md) · [Latest Release](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) · [Features](#features) · [Development](#local-development) · [License](./LICENSE)
+<p>
+  <strong>Language</strong><br/>
+  <a href="./README.md">简体中文</a> ·
+  <a href="./README.zh-TW.md">繁體中文</a> ·
+  <strong>English</strong> ·
+  <a href="./README.fr.md">Français</a> ·
+  <a href="./README.ja.md">日本語</a> ·
+  <a href="./README.es.md">Español</a>
+</p>
+
+<p>
+  <strong>Navigation</strong><br/>
+  <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
+  <a href="./docs/releases/v3.0.0.en.md">Release Notes</a> ·
+  <a href="#features">Features</a> ·
+  <a href="#local-development">Local Development</a> ·
+  <a href="./LICENSE">License</a>
+</p>
 
 ![Platform](https://img.shields.io/badge/Platform-Windows%20Desktop-111827)
 ![Stack](https://img.shields.io/badge/Stack-Next.js%20%2B%20React%20%2B%20TypeScript-0F766E)
