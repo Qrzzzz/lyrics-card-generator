@@ -21,7 +21,7 @@
 
 ## 📦 下载与安装
 
-请前往 GitHub Releases 下载最新版：
+请前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下载最新版：
 
 * 推荐普通用户下载安装版：`Lyrics Card Generator Setup 3.0.0.exe`
 * 不想安装时可下载便携版：`Lyrics Card Generator-3.0.0-portable.exe`
