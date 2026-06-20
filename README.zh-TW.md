@@ -4,9 +4,26 @@
 
 ### 生成可用於分享的高質感歌詞分享卡片
 
-**Apple Music / 網易雲音樂 / QQ 音樂 · Windows 桌面應用 · 高解析 PNG 匯出 · 繁體中文文件**
+**Apple Music / 網易雲音樂 / QQ 音樂 · Windows 桌面應用程式 · 高清 PNG 匯出 · 多語言文件**
 
-[简体中文](./README.md) · [English](./README.en.md) · [Français](./README.fr.md) · [日本語](./README.ja.md) · [Español](./README.es.md) · [下載最新版](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) · [主要功能](#主要功能) · [本機開發](#本機開發) · [授權條款](./LICENSE)
+<p>
+  <strong>語言</strong><br/>
+  <a href="./README.md">简体中文</a> ·
+  <strong>繁體中文</strong> ·
+  <a href="./README.en.md">English</a> ·
+  <a href="./README.fr.md">Français</a> ·
+  <a href="./README.ja.md">日本語</a> ·
+  <a href="./README.es.md">Español</a>
+</p>
+
+<p>
+  <strong>導覽</strong><br/>
+  <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
+  <a href="./docs/releases/v3.0.0.zh-TW.md">發布說明</a> ·
+  <a href="#主要功能">主要功能</a> ·
+  <a href="#本機開發">本機開發</a> ·
+  <a href="./LICENSE">授權條款</a>
+</p>
 
 ![Platform](https://img.shields.io/badge/Platform-Windows%20Desktop-111827)
 ![Stack](https://img.shields.io/badge/Stack-Next.js%20%2B%20React%20%2B%20TypeScript-0F766E)
