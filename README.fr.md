@@ -93,7 +93,7 @@ Ces fonctions nécessitent Internet :
 * Chargement de pochettes distantes
 * Récupération automatique des paroles
 * Traduction de paroles par IA
-* Vérification des mises à jour GitHub
+* Vérification des mises à jour via GitHub Releases
 
 ## 🚀 Utilisation
 
