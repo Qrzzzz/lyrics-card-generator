@@ -213,23 +213,25 @@ Version 3.1.0 provides Source Han Sans and Source Han Serif schemes and lets CJK
 
 ## 🙏 Acknowledgements
 
-Thanks to [Apple Music](https://music.apple.com/). The colorful gradient background, flowing visual atmosphere, and early lyric card layout direction were inspired by the Apple Music visual experience. This project is not affiliated with Apple Music and does not represent Apple Music’s official position.
+Thanks to [Apple Music](https://music.apple.com/). The colorful gradients, flowing-light background aesthetics, and early lyric card layout direction in this project were inspired by the Apple Music visual experience. This project is not affiliated with Apple Music and does not represent Apple Music’s official position.
 
-Thanks to [Source Han Sans](https://github.com/adobe-fonts/source-han-sans) and [Source Han Serif](https://github.com/adobe-fonts/source-han-serif). They provide the solid and legible typographic foundation used by the lyric cards.
+Thanks to [Source Han Sans](https://github.com/adobe-fonts/source-han-sans) and [Source Han Serif](https://github.com/adobe-fonts/source-han-serif). They provide a stable, clear, and substantial typographic foundation for Chinese lyric cards.
 
-Thanks to [Sabrina Carpenter](https://www.sabrinacarpenter.com/)’s “opposite”. It is used as the startup sample and helped shape the first layout rhythm for English lyrics and Chinese translations. All rights to the musical work belong to their respective owners. This project does not distribute audio content.
+Thanks to [Sabrina Carpenter](https://www.sabrinacarpenter.com/)’s “opposite”. As the default sample shown when the app starts, it helped define the visual rhythm of the first layout, English lyrics, and Chinese translation.
 
-Thanks to [OpenAI Codex](https://openai.com/codex/) for turning many ideas into working code, desktop packaging workflows, and real product features.
+Thanks to [YOASOBI](https://www.yoasobi-music.jp/)’s “勇者”. It is used as example text in lyric sample displays and helped verify the layout effects of different fonts inside the cards.
 
-Thanks to [ChatGPT 5.5](https://chatgpt.com/) for issue diagnosis, solution design, fix review, and acceptance checks throughout the development process.
+Thanks to [OpenAI Codex](https://openai.com/codex/). It turned many scattered ideas into runnable code, desktop build workflows, and real features.
 
-Thanks to [ReactBits](https://www.reactbits.dev/) for multiple UI ideas, including Spark Cursor and other motion inspirations.
+Thanks to [ChatGPT 5.5](https://chatgpt.com/) for issue diagnosis, solution design, fix review, and acceptance checks throughout development.
+
+Thanks to [ReactBits](https://www.reactbits.dev/) for multiple UI ideas, including motion inspiration such as Spark Cursor.
 
 Thanks to Rangerov for attention to this project and for providing feedback.
 
-Thanks to [Sakuramble](https://github.com/Sakuramble) for suggesting code slimming improvements. Relevant optimizations have been implemented accordingly in [`v1.1.0`](https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v1.1.0).
+Thanks to [Sakuramble](https://github.com/Sakuramble) for suggesting code slimming improvements. [`v1.1.0`](https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v1.1.0) has already made related optimizations accordingly.
 
-Thanks also to the maintainers of [Next.js](https://nextjs.org/), [React](https://react.dev/), [TypeScript](https://www.typescriptlang.org/), [Tailwind CSS](https://tailwindcss.com/), [Electron](https://www.electronjs.org/), [electron-builder](https://www.electron.build/), [html-to-image](https://github.com/bubkoo/html-to-image), [Framer Motion](https://motion.dev/), [Lucide React](https://lucide.dev/), [Cheerio](https://cheerio.js.org/), [Zod](https://zod.dev/), and the broader modern frontend ecosystem. Without these open-source foundations, this project would not exist in its current form.
+Thanks also to these open-source projects and their maintainers: [Next.js](https://nextjs.org/), [React](https://react.dev/), [TypeScript](https://www.typescriptlang.org/), [Tailwind CSS](https://tailwindcss.com/), [Electron](https://www.electronjs.org/), [electron-builder](https://www.electron.build/), [html-to-image](https://github.com/bubkoo/html-to-image), [Framer Motion](https://motion.dev/), [Lucide React](https://lucide.dev/), [Cheerio](https://cheerio.js.org/), [Zod](https://zod.dev/), and the many toolchains that make up the modern frontend ecosystem. Without this infrastructure, this project would not exist in its current form.
 
 ## 📄 License
 

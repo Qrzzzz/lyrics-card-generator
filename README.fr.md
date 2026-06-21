@@ -213,23 +213,25 @@ La version 3.1.0 propose les jeux Source Han Sans et Source Han Serif et permet 
 
 ## 🙏 Remerciements
 
-Merci à [Apple Music](https://music.apple.com/). L'arrière-plan en dégradé coloré, l'atmosphère visuelle fluide et les premières orientations de mise en page des cartes de paroles ont été inspirés par l'expérience visuelle d'Apple Music. Ce projet n'est pas affilié à Apple Music et ne représente pas sa position officielle.
+Merci à [Apple Music](https://music.apple.com/). Les dégradés colorés, l’esthétique des arrière-plans lumineux et fluides, ainsi que les premières orientations de mise en page des cartes de paroles de ce projet ont été inspirés par l’expérience visuelle d’Apple Music. Ce projet n’est pas affilié à Apple Music et ne représente pas la position officielle d’Apple Music.
 
-Merci à [Source Han Sans](https://github.com/adobe-fonts/source-han-sans) et [Source Han Serif](https://github.com/adobe-fonts/source-han-serif). Elles fournissent la base typographique solide et lisible utilisée par les cartes de paroles.
+Merci à [Source Han Sans](https://github.com/adobe-fonts/source-han-sans) et [Source Han Serif](https://github.com/adobe-fonts/source-han-serif). Elles fournissent une base typographique stable, claire et solide pour les cartes de paroles en chinois.
 
-Merci à « opposite » de [Sabrina Carpenter](https://www.sabrinacarpenter.com/). Le morceau sert d'exemple au démarrage et a aidé à façonner le premier rythme de mise en page pour les paroles anglaises et les traductions chinoises. Tous les droits de l'œuvre musicale appartiennent à leurs détenteurs respectifs. Ce projet ne distribue aucun contenu audio.
+Merci à [Sabrina Carpenter](https://www.sabrinacarpenter.com/) et à « opposite ». Utilisé comme exemple par défaut au démarrage de l’application, ce morceau a aidé à définir le rythme visuel de la première mise en page, des paroles anglaises et de leur traduction chinoise.
 
-Merci à [OpenAI Codex](https://openai.com/codex/) pour avoir transformé de nombreuses idées en code fonctionnel, workflows de packaging desktop et fonctionnalités produit réelles.
+Merci à [YOASOBI](https://www.yoasobi-music.jp/) et à « 勇者 ». Ce titre est utilisé comme texte d’exemple dans l’affichage des paroles et a aidé à vérifier les effets de mise en page des différentes polices dans les cartes.
 
-Merci à [ChatGPT 5.5](https://chatgpt.com/) pour le diagnostic des problèmes, la conception de solutions, la revue des correctifs et les vérifications d'acceptation tout au long du développement.
+Merci à [OpenAI Codex](https://openai.com/codex/). Il a transformé de nombreuses idées éparses en code exécutable, en workflows de build desktop et en fonctionnalités réelles.
 
-Merci à [ReactBits](https://www.reactbits.dev/) pour plusieurs idées d'interface, dont Spark Cursor et d'autres inspirations de motion design.
+Merci à [ChatGPT 5.5](https://chatgpt.com/) pour le diagnostic des problèmes, la conception de solutions, la relecture des correctifs et les vérifications d’acceptation pendant le développement.
 
-Merci à Rangerov pour l'attention portée à ce projet et pour ses retours.
+Merci à [ReactBits](https://www.reactbits.dev/) pour ses nombreuses idées d’interface, notamment des inspirations d’animation comme Spark Cursor.
 
-Merci à [Sakuramble](https://github.com/Sakuramble) pour ses suggestions de réduction de code. Les optimisations correspondantes ont été mises en œuvre dans [`v1.1.0`](https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v1.1.0).
+Merci à Rangerov pour l’attention portée à ce projet et pour ses retours.
 
-Merci également aux mainteneurs de [Next.js](https://nextjs.org/), [React](https://react.dev/), [TypeScript](https://www.typescriptlang.org/), [Tailwind CSS](https://tailwindcss.com/), [Electron](https://www.electronjs.org/), [electron-builder](https://www.electron.build/), [html-to-image](https://github.com/bubkoo/html-to-image), [Framer Motion](https://motion.dev/), [Lucide React](https://lucide.dev/), [Cheerio](https://cheerio.js.org/), [Zod](https://zod.dev/) et l'écosystème frontend moderne au sens large. Sans ces fondations open-source, ce projet n'existerait pas sous sa forme actuelle.
+Merci à [Sakuramble](https://github.com/Sakuramble) pour ses suggestions d’allègement du code. [`v1.1.0`](https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v1.1.0) a déjà été optimisée en conséquence.
+
+Merci également à ces projets open source et à leurs mainteneurs : [Next.js](https://nextjs.org/), [React](https://react.dev/), [TypeScript](https://www.typescriptlang.org/), [Tailwind CSS](https://tailwindcss.com/), [Electron](https://www.electronjs.org/), [electron-builder](https://www.electron.build/), [html-to-image](https://github.com/bubkoo/html-to-image), [Framer Motion](https://motion.dev/), [Lucide React](https://lucide.dev/), [Cheerio](https://cheerio.js.org/), [Zod](https://zod.dev/), ainsi qu’aux nombreuses chaînes d’outils qui composent l’écosystème frontend moderne. Sans ces infrastructures, ce projet n’aurait pas sa forme actuelle.
 
 ## 📄 Licence
 

@@ -210,11 +210,13 @@ npm run core:test       # 測試 3.0 核心純函式
 
 ## 🙏 致謝
 
-感謝 [Apple Music](https://music.apple.com/)。這個專案的彩色漸層、流光背景審美，以及早期歌詞卡片排版方向，受到 Apple Music 視覺體驗的啟發。本專案與 Apple Music 沒有關聯，也不代表 Apple Music 官方立場。
+感謝 [Apple Music](https://music.apple.com/)。這個專案的彩色漸層、流光背景美學，以及早期歌詞卡片排版方向，受到 Apple Music 視覺體驗的啟發。本專案與 Apple Music 沒有關聯，也不代表 Apple Music 官方立場。
 
 感謝 [思源黑體](https://github.com/adobe-fonts/source-han-sans) 和 [思源宋體](https://github.com/adobe-fonts/source-han-serif)。它們為中文歌詞卡片提供穩定、清晰、有分量的字型基礎。
 
-感謝 [Sabrina Carpenter](https://www.sabrinacarpenter.com/) 的《opposite》。它作為應用啟動時的預設範例，幫助確定初版排版、英文歌詞和中文翻譯的視覺節奏。相關音樂作品權利歸原權利人所有，本專案不分發音訊內容。
+感謝 [Sabrina Carpenter](https://www.sabrinacarpenter.com/) 的《opposite》。它作為應用啟動時的預設範例，幫助確定初版排版、英文歌詞和中文翻譯的視覺節奏。
+
+感謝 [YOASOBI](https://www.yoasobi-music.jp/) 的《勇者》。它在歌詞樣例展示中用作示例文字，幫助驗證不同字型在卡片中的排版效果。
 
 感謝 [OpenAI Codex](https://openai.com/codex/)。它把許多零散想法轉化為可執行的程式碼、桌面版建構流程和實際功能。
 
@@ -226,7 +228,7 @@ npm run core:test       # 測試 3.0 核心純函式
 
 感謝 [Sakuramble](https://github.com/Sakuramble) 提出的程式碼瘦身建議，[`v1.1.0`](https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v1.1.0) 已據此進行相關最佳化。
 
-也感謝這些開源專案及其維護者：[Next.js](https://nextjs.org/)、[React](https://react.dev/)、[TypeScript](https://www.typescriptlang.org/)、[Tailwind CSS](https://tailwindcss.com/)、[Electron](https://www.electronjs.org/)、[electron-builder](https://www.electron.build/)、[html-to-image](https://github.com/bubkoo/html-to-image)、[Framer Motion](https://motion.dev/)、[Lucide React](https://lucide.dev/)、[Cheerio](https://cheerio.js.org/)、[Zod](https://zod.dev/)，以及構成現代前端生態的眾多工具鏈。沒有這些基礎設施，本專案不會以現在的形態存在。
+也感謝這些開源專案及其維護者：[Next.js](https://nextjs.org/)、[React](https://react.dev/)、[TypeScript](https://www.typescriptlang.org/)、[Tailwind CSS](https://tailwindcss.com/)、[Electron](https://www.electronjs.org/)、[electron-builder](https://www.electron.build/)、[html-to-image](https://github.com/bubkoo/html-to-image)、[Framer Motion](https://motion.dev/)、[Lucide React](https://lucide.dev/)、[Cheerio](https://cheerio.js.org/)、[Zod](https://zod.dev/)，以及構成現代前端生態的眾多工具鏈。沒有這些基礎設施，這個專案不會以現在的形態出現。
 
 ## 📄 授權條款
 

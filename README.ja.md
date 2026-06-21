@@ -213,23 +213,25 @@ npm run core:test       # 3.0 コア純粋関数をテスト
 
 ## 🙏 謝辞
 
-[Apple Music](https://music.apple.com/) に感謝します。カラフルなグラデーション背景、流れるような視覚的雰囲気、初期の歌詞カードレイアウトの方向性は、Apple Music の視覚体験から着想を得ました。このプロジェクトは Apple Music と提携しておらず、Apple Music の公式見解を表すものではありません。
+[Apple Music](https://music.apple.com/) に感謝します。このプロジェクトの色鮮やかなグラデーション、流れる光の背景美学、そして初期の歌詞カードレイアウトの方向性は、Apple Music のビジュアル体験から着想を得ています。本プロジェクトは Apple Music と関係がなく、Apple Music の公式見解を代表するものでもありません。
 
-[Source Han Sans](https://github.com/adobe-fonts/source-han-sans) と [Source Han Serif](https://github.com/adobe-fonts/source-han-serif) に感謝します。これらは歌詞カードで使われる堅実で読みやすいタイポグラフィ基盤を提供しています。
+[Source Han Sans](https://github.com/adobe-fonts/source-han-sans) と [Source Han Serif](https://github.com/adobe-fonts/source-han-serif) に感謝します。これらは中国語歌詞カードに、安定していて明瞭で、存在感のある書体基盤を提供しています。
 
-[Sabrina Carpenter](https://www.sabrinacarpenter.com/) の “opposite” に感謝します。起動時のサンプルとして使われ、英語歌詞と中国語翻訳の最初のレイアウトリズムを形作る助けになりました。楽曲のすべての権利は各権利者に帰属します。このプロジェクトは音声コンテンツを配布しません。
+[Sabrina Carpenter](https://www.sabrinacarpenter.com/) の「opposite」に感謝します。アプリ起動時のデフォルトサンプルとして、初期レイアウト、英語歌詞、中国語訳の視覚的リズムを決める助けになりました。
 
-[OpenAI Codex](https://openai.com/codex/) に感謝します。多くのアイデアを動作するコード、デスクトップパッケージングフロー、実際のプロダクト機能へ変換しました。
+[YOASOBI](https://www.yoasobi-music.jp/) の「勇者」に感謝します。歌詞サンプル表示の例文として使われ、カード内で異なるフォントがどのように組まれるかを検証する助けになりました。
 
-[ChatGPT 5.5](https://chatgpt.com/) に感謝します。開発全体を通じて、問題診断、解決策設計、修正レビュー、受け入れ確認を支援しました。
+[OpenAI Codex](https://openai.com/codex/) に感謝します。多くの断片的なアイデアを、実行可能なコード、デスクトップ版のビルドフロー、実際の機能へと変換してくれました。
 
-[ReactBits](https://www.reactbits.dev/) に感謝します。Spark Cursor を含む複数の UI アイデアとモーションの着想を提供しました。
+[ChatGPT 5.5](https://chatgpt.com/) に感謝します。開発過程での問題特定、方案設計、修正レビュー、受け入れ確認を支援しました。
 
-Rangerov に、このプロジェクトへの関心とフィードバックを感謝します。
+[ReactBits](https://www.reactbits.dev/) に感謝します。Spark Cursor などのモーションを含む、さまざまな UI アイデアの着想を提供してくれました。
 
-[Sakuramble](https://github.com/Sakuramble) にコード削減改善の提案を感謝します。関連する最適化は [`v1.1.0`](https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v1.1.0) で実装されています。
+Rangerov に感謝します。このプロジェクトへの関心と意見に感謝します。
 
-また、[Next.js](https://nextjs.org/)、[React](https://react.dev/)、[TypeScript](https://www.typescriptlang.org/)、[Tailwind CSS](https://tailwindcss.com/)、[Electron](https://www.electronjs.org/)、[electron-builder](https://www.electron.build/)、[html-to-image](https://github.com/bubkoo/html-to-image)、[Framer Motion](https://motion.dev/)、[Lucide React](https://lucide.dev/)、[Cheerio](https://cheerio.js.org/)、[Zod](https://zod.dev/) および広範な現代フロントエンドエコシステムのメンテナーにも感謝します。これらのオープンソース基盤がなければ、このプロジェクトは現在の形では存在しません。
+[Sakuramble](https://github.com/Sakuramble) によるコード軽量化の提案に感謝します。[`v1.1.0`](https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v1.1.0) では、それに基づく関連最適化を実施済みです。
+
+また、これらのオープンソースプロジェクトとそのメンテナーにも感謝します：[Next.js](https://nextjs.org/)、[React](https://react.dev/)、[TypeScript](https://www.typescriptlang.org/)、[Tailwind CSS](https://tailwindcss.com/)、[Electron](https://www.electronjs.org/)、[electron-builder](https://www.electron.build/)、[html-to-image](https://github.com/bubkoo/html-to-image)、[Framer Motion](https://motion.dev/)、[Lucide React](https://lucide.dev/)、[Cheerio](https://cheerio.js.org/)、[Zod](https://zod.dev/)、そして現代的なフロントエンドエコシステムを構成する多くのツールチェーン。これらの基盤がなければ、このプロジェクトは現在の形では存在していません。
 
 ## 📄 ライセンス
 

@@ -213,23 +213,25 @@ La versión 3.1.0 ofrece combinaciones Source Han Sans y Source Han Serif y perm
 
 ## 🙏 Agradecimientos
 
-Gracias a [Apple Music](https://music.apple.com/). El fondo degradado colorido, la atmósfera visual fluida y la primera dirección de diseño de las tarjetas de letras se inspiraron en la experiencia visual de Apple Music. Este proyecto no está afiliado a Apple Music ni representa su postura oficial.
+Gracias a [Apple Music](https://music.apple.com/). Los degradados de color, la estética de fondo con luz fluida y la orientación inicial del diseño de las tarjetas de letras de este proyecto se inspiraron en la experiencia visual de Apple Music. Este proyecto no está afiliado a Apple Music ni representa la postura oficial de Apple Music.
 
-Gracias a [Source Han Sans](https://github.com/adobe-fonts/source-han-sans) y [Source Han Serif](https://github.com/adobe-fonts/source-han-serif). Proporcionan la base tipográfica sólida y legible utilizada por las tarjetas de letras.
+Gracias a [Source Han Sans](https://github.com/adobe-fonts/source-han-sans) y [Source Han Serif](https://github.com/adobe-fonts/source-han-serif). Proporcionan una base tipográfica estable, clara y con peso para las tarjetas de letras en chino.
 
-Gracias a “opposite” de [Sabrina Carpenter](https://www.sabrinacarpenter.com/). Se usa como ejemplo inicial y ayudó a definir el primer ritmo de diseño para letras en inglés y traducciones al chino. Todos los derechos de la obra musical pertenecen a sus respectivos titulares. Este proyecto no distribuye contenido de audio.
+Gracias a [Sabrina Carpenter](https://www.sabrinacarpenter.com/) y a “opposite”. Como ejemplo predeterminado al iniciar la aplicación, ayudó a definir el ritmo visual del diseño inicial, de las letras en inglés y de la traducción al chino.
 
-Gracias a [OpenAI Codex](https://openai.com/codex/) por convertir muchas ideas en código funcional, flujos de empaquetado de escritorio y funciones reales de producto.
+Gracias a [YOASOBI](https://www.yoasobi-music.jp/) y a “勇者”. Se usa como texto de ejemplo en la visualización de muestras de letras y ayudó a comprobar el efecto de distintas fuentes dentro de las tarjetas.
 
-Gracias a [ChatGPT 5.5](https://chatgpt.com/) por el diagnóstico de problemas, el diseño de soluciones, la revisión de correcciones y las comprobaciones de aceptación durante todo el desarrollo.
+Gracias a [OpenAI Codex](https://openai.com/codex/). Convirtió muchas ideas dispersas en código ejecutable, flujos de build para la versión de escritorio y funciones reales.
 
-Gracias a [ReactBits](https://www.reactbits.dev/) por varias ideas de UI, incluyendo Spark Cursor y otras inspiraciones de movimiento.
+Gracias a [ChatGPT 5.5](https://chatgpt.com/) por ayudar durante el desarrollo con la localización de problemas, el diseño de soluciones, la revisión de correcciones y las comprobaciones de aceptación.
 
-Gracias a Rangerov por prestar atención a este proyecto y aportar comentarios.
+Gracias a [ReactBits](https://www.reactbits.dev/) por varias ideas de UI, incluidas inspiraciones de animación como Spark Cursor.
 
-Gracias a [Sakuramble](https://github.com/Sakuramble) por sugerir mejoras de reducción de código. Las optimizaciones correspondientes se implementaron en [`v1.1.0`](https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v1.1.0).
+Gracias a Rangerov por prestar atención a este proyecto y aportar sugerencias.
 
-Gracias también a los mantenedores de [Next.js](https://nextjs.org/), [React](https://react.dev/), [TypeScript](https://www.typescriptlang.org/), [Tailwind CSS](https://tailwindcss.com/), [Electron](https://www.electronjs.org/), [electron-builder](https://www.electron.build/), [html-to-image](https://github.com/bubkoo/html-to-image), [Framer Motion](https://motion.dev/), [Lucide React](https://lucide.dev/), [Cheerio](https://cheerio.js.org/), [Zod](https://zod.dev/) y el ecosistema frontend moderno en general. Sin estas bases open-source, este proyecto no existiría en su forma actual.
+Gracias a [Sakuramble](https://github.com/Sakuramble) por proponer mejoras para aligerar el código. [`v1.1.0`](https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v1.1.0) ya incorporó optimizaciones relacionadas.
+
+Gracias también a estos proyectos open source y a sus mantenedores: [Next.js](https://nextjs.org/), [React](https://react.dev/), [TypeScript](https://www.typescriptlang.org/), [Tailwind CSS](https://tailwindcss.com/), [Electron](https://www.electronjs.org/), [electron-builder](https://www.electron.build/), [html-to-image](https://github.com/bubkoo/html-to-image), [Framer Motion](https://motion.dev/), [Lucide React](https://lucide.dev/), [Cheerio](https://cheerio.js.org/), [Zod](https://zod.dev/) y las numerosas cadenas de herramientas que forman el ecosistema frontend moderno. Sin esta infraestructura, este proyecto no existiría en su forma actual.
 
 ## 📄 Licencia
 
