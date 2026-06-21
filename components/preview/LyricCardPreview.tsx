@@ -11,6 +11,7 @@ export function LyricCardPreview({
   style,
   cardRef,
   t,
+  sticky = true,
   locale = "en"
 }: {
   song: SongInfo;
@@ -18,6 +19,7 @@ export function LyricCardPreview({
   style: CardStyle;
   cardRef: React.RefObject<HTMLElement | null>;
   t: ReturnType<typeof createT>;
+  sticky?: boolean;
   locale?: Locale;
 }) {
   const shellRef = useRef<HTMLDivElement>(null);
@@ -39,7 +41,7 @@ export function LyricCardPreview({
   }, []);
 
   return (
-    <section className="glass-panel sticky top-6 min-w-0 rounded-lg p-4 lg:min-h-[calc(100vh-48px)]">
+    <section className={`glass-panel min-w-0 rounded-lg p-4 ${sticky ? "sticky top-6 lg:min-h-[calc(100vh-48px)]" : ""}`}>
       <div className="mb-4 flex items-center justify-between gap-3">
         <div>
           <p className="app-text-subtle text-[11px] uppercase tracking-[0.16em]">{t("livePreview")}</p>

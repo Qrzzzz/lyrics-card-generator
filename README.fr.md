@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v3.0.0.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v3.1.0.fr.md">Notes de version</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="#développement-local">Développement local</a> ·
   <a href="./LICENSE">Licence</a>
@@ -43,8 +43,8 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 Téléchargez la dernière version depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
 
-* Installateur recommandé : `Lyrics Card Generator Setup 3.0.0.exe`
-* Version portable : `Lyrics Card Generator-3.0.0-portable.exe`
+* Installateur recommandé : `Lyrics Card Generator Setup 3.1.0.exe`
+* Version portable : `Lyrics Card Generator-3.1.0-portable.exe`
 
 L'installateur est recommandé pour une utilisation régulière. La version portable convient aux essais, à une utilisation temporaire ou à un disque amovible.
 
@@ -67,7 +67,7 @@ L'installateur est recommandé pour une utilisation régulière. La version port
 * Import de pochette locale
 * Extraction de palette depuis la pochette pour créer des fonds en dégradé
 * Logo de plateforme, texte de partage et filigrane généré
-* Réglages de cadre, ombre, police, polices système Windows, taille, interligne et couleur du texte
+* Jeux Source Han Sans / Serif, polices CJK et latines indépendantes, sélecteur de polices système et aperçu avec de vraies paroles
 * Interface en chinois simplifié, chinois traditionnel, anglais, français, japonais et espagnol
 * Export PNG haute résolution
 * Vérification des mises à jour via GitHub Releases
@@ -101,7 +101,7 @@ Ces fonctions nécessitent Internet :
 2. Collez un lien Apple Music, NetEase Cloud Music ou QQ Music, ou saisissez les informations du morceau manuellement.
 3. Vous pouvez aussi importer un fichier local MP3 / FLAC pour lire les métadonnées, la pochette et les paroles intégrées.
 4. Modifiez les paroles et traductions ; utilisez la traduction IA ou séparez automatiquement les lignes original / traduction selon la langue de l'interface.
-5. Ajustez le ratio de toile, les polices, les polices système Windows, les couleurs, cadres, filigranes et autres styles.
+5. Ajustez le ratio de toile, les jeux de polices CJK / latines, les couleurs, cadres, filigranes et autres styles.
 6. Prévisualisez la carte à droite.
 7. Utilisez « Terminer et exporter » pour enregistrer l'image PNG.
 
@@ -198,7 +198,7 @@ Le projet utilise :
 
 Elles fournissent une base typographique solide, claire et fiable pour les cartes de paroles en chinois.
 
-L'application de bureau 3.0.0 peut aussi énumérer les polices système Windows pour une typographie personnalisée. Les builds Web ne peuvent pas énumérer les polices système, mais les préréglages existants restent disponibles.
+La version 3.1.0 propose les jeux Source Han Sans et Source Han Serif et permet de choisir séparément les polices CJK et latines. Les polices disposent désormais d’une étape dédiée, au même niveau que les paroles, la mise en page et les détails visuels. L'application de bureau peut énumérer les polices système Windows ; les builds Web conservent les polices recommandées et les préréglages intégrés. L'aperçu complet se trouve sous la vraie carte dans la colonne de droite et utilise le même algorithme de fond avec les couleurs fixes Bleu abyssal, Cobalt, Indigo et Bleu nocturne ; il ne modifie pas le fond réel de la carte et n'entre pas dans le PNG exporté.
 
 ## 🙏 Remerciements
 

@@ -13,6 +13,9 @@ export async function exportNodeAsPng(
     await document.fonts.ready;
   }
 
+  await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+  await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+
   const dataUrl = await toPng(node, {
     cacheBust: true,
     pixelRatio,

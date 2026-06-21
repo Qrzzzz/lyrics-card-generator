@@ -2,9 +2,11 @@
 
 import { motion } from "framer-motion";
 import type { RefObject } from "react";
+import { FontSchemePreviewPanel } from "@/components/editor/font-scheme/FontSchemePreviewPanel";
 import { LyricCardPreview } from "@/components/preview/LyricCardPreview";
+import { getEffectiveFontScheme } from "@/lib/fonts";
 import type { createT } from "@/lib/i18n";
-import type { CardStyle, Locale, SongInfo } from "@/lib/types";
+import type { CardStyle, FontScheme, Locale, SongInfo } from "@/lib/types";
 
 type PreviewPaneProps = {
   isPreviewVisible: boolean;
@@ -13,6 +15,8 @@ type PreviewPaneProps = {
   lyrics: string;
   style: CardStyle;
   cardRef: RefObject<HTMLElement | null>;
+  fontSchemePreview: FontScheme | null;
+  showFontSchemePreview: boolean;
   locale: Locale;
   t: ReturnType<typeof createT>;
 };
@@ -24,6 +28,8 @@ export function PreviewPane({
   lyrics,
   style,
   cardRef,
+  fontSchemePreview,
+  showFontSchemePreview,
   locale,
   t
 }: PreviewPaneProps) {
@@ -41,15 +47,21 @@ export function PreviewPane({
       >
         {isPreviewVisible ? t("step.hidePreview") : t("step.showPreview")}
       </button>
-      <div className={`min-w-0 overflow-hidden transition-all duration-300 lg:max-h-none lg:overflow-visible ${isPreviewVisible ? "max-h-[1800px]" : "max-h-0"}`}>
-        <LyricCardPreview
-          song={song}
-          lyrics={lyrics}
-          style={style}
-          cardRef={cardRef}
-          locale={locale}
-          t={t}
-        />
+      <div className={`min-w-0 overflow-hidden transition-all duration-300 lg:max-h-none lg:overflow-visible ${isPreviewVisible ? "max-h-[3000px]" : "max-h-0"}`}>
+        <div className="grid gap-5">
+          <LyricCardPreview
+            song={song}
+            lyrics={lyrics}
+            style={style}
+            cardRef={cardRef}
+            locale={locale}
+            sticky={!showFontSchemePreview}
+            t={t}
+          />
+          {showFontSchemePreview ? (
+            <FontSchemePreviewPanel scheme={fontSchemePreview ?? getEffectiveFontScheme(style)} t={t} />
+          ) : null}
+        </div>
       </div>
     </motion.div>
   );

@@ -65,7 +65,7 @@ export function SettingsStepper({
           </AnimatePresence>
         </div>
 
-        <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+        <div className="flex flex-wrap gap-2">
           {steps.map((step, index) => {
             const isActive = index === currentStep;
             const isComplete = Boolean(step.isComplete) || index < currentStep;
@@ -77,7 +77,7 @@ export function SettingsStepper({
                 onClick={() => goToStep(index)}
                 aria-current={isActive ? "step" : undefined}
                 className={cn(
-                  "group flex min-w-0 items-center gap-2 rounded-lg border px-2.5 py-2 text-left transition",
+                  "group flex flex-[1_1_auto] items-center gap-2 whitespace-nowrap rounded-lg border px-2.5 py-2 text-left transition",
                   isActive
                     ? "border-white/24 bg-white/14 text-white shadow-[0_16px_42px_rgba(0,0,0,0.22)]"
                     : "border-white/10 bg-white/[0.045] text-white/58 hover:bg-white/[0.075] hover:text-white/82"
@@ -92,7 +92,7 @@ export function SettingsStepper({
                 >
                   {isComplete ? <Check className="h-3.5 w-3.5" /> : index + 1}
                 </span>
-                <span className="truncate text-xs font-semibold">{step.title}</span>
+                <span className="text-xs font-semibold">{step.title}</span>
               </button>
             );
           })}

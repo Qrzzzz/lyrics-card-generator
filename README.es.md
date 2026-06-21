@@ -19,7 +19,7 @@
 <p>
   <strong>Navegación</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Descargar la última versión</a> ·
-  <a href="./docs/releases/v3.0.0.es.md">Notas de la versión</a> ·
+  <a href="./docs/releases/v3.1.0.es.md">Notas de la versión</a> ·
   <a href="#funciones-principales">Funciones principales</a> ·
   <a href="#desarrollo-local">Desarrollo local</a> ·
   <a href="./LICENSE">Licencia</a>
@@ -43,8 +43,8 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 Descarga la versión más reciente desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Instalador recomendado: `Lyrics Card Generator Setup 3.0.0.exe`
-* Versión portable: `Lyrics Card Generator-3.0.0-portable.exe`
+* Instalador recomendado: `Lyrics Card Generator Setup 3.1.0.exe`
+* Versión portable: `Lyrics Card Generator-3.1.0-portable.exe`
 
 El instalador se recomienda para uso habitual. La versión portable es útil para pruebas, uso temporal o ejecución desde una unidad extraíble.
 
@@ -67,7 +67,7 @@ El instalador se recomienda para uso habitual. La versión portable es útil par
 * Subida de portada local
 * Extracción de paleta desde la portada para fondos degradados
 * Logo de plataforma, texto de compartido por y marca de agua generada
-* Controles de marco, sombra, fuente, fuentes del sistema Windows, tamaño, interlineado y color de texto
+* Combinaciones Source Han Sans / Serif, fuentes CJK y latinas independientes, selector de fuentes del sistema y vista previa con letras reales
 * Interfaz en chino simplificado, chino tradicional, inglés, francés, japonés y español
 * Exportación PNG de alta resolución
 * Búsqueda de actualizaciones en GitHub Releases
@@ -101,7 +101,7 @@ Estas funciones requieren internet:
 2. Pega un enlace de Apple Music, NetEase Cloud Music o QQ Music, o introduce la información manualmente.
 3. Opcionalmente sube un archivo MP3 / FLAC local para leer metadatos, portada y letras incrustadas.
 4. Edita letras y traducciones; usa traducción con IA o separa texto original / traducido alternado según el idioma de interfaz seleccionado.
-5. Ajusta proporción del lienzo, fuentes, fuentes del sistema Windows, colores, marcos, marcas de agua y otros estilos.
+5. Ajusta proporción del lienzo, combinaciones CJK / latinas, colores, marcos, marcas de agua y otros estilos.
 6. Previsualiza la tarjeta a la derecha.
 7. Usa “Completar y exportar” para guardar la imagen PNG.
 
@@ -198,7 +198,7 @@ El proyecto usa:
 
 Aportan una base tipográfica sólida, clara y fiable para tarjetas de letras en chino.
 
-La aplicación de escritorio 3.0.0 también puede enumerar fuentes del sistema Windows para tipografía personalizada de tarjetas. Las versiones Web no pueden enumerar fuentes del sistema, pero los presets de fuente existentes siguen disponibles.
+La versión 3.1.0 ofrece combinaciones Source Han Sans y Source Han Serif y permite elegir por separado las fuentes CJK y latinas. Fuentes ahora es un paso independiente junto a Letras, Diseño y Detalles visuales. La aplicación de escritorio puede enumerar fuentes del sistema Windows; las versiones Web conservan las fuentes recomendadas y los presets integrados. La vista previa completa aparece debajo de la tarjeta real en la columna derecha y usa su mismo algoritmo de fondo con Azul abisal, Cobalto, Índigo y Azul nocturno como entradas fijas; no modifica el fondo real de la tarjeta ni se incluye en el PNG exportado.
 
 ## 🙏 Agradecimientos
 

@@ -13,7 +13,11 @@ import { PreviewPane } from "@/components/editor/PreviewPane";
 import { SettingsStepper, type SettingsStep } from "@/components/editor/SettingsStepper";
 import { SongInfoForm } from "@/components/editor/SongInfoForm";
 import { SongLinkParser } from "@/components/editor/SongLinkParser";
-import { LayoutSettingsPanel, VisualSettingsPanel } from "@/components/editor/StylePanel";
+import {
+  FontSchemeSettingsPanel,
+  LayoutSettingsPanel,
+  VisualSettingsPanel
+} from "@/components/editor/StylePanel";
 import { SettingsDialog } from "@/components/settings/SettingsDialog";
 import {
   useCoverPalette,
@@ -41,10 +45,11 @@ import {
 import { getAIUiCopy } from "@/lib/ai/ui-copy";
 import { getHighResolutionCoverUrl } from "@/lib/cover-url";
 import { exportNodeAsPng } from "@/lib/export-image";
+import { DEFAULT_FONT_SCHEME } from "@/lib/font-schemes";
 import { createT, messages } from "@/lib/i18n";
 import { proxiedImageUrl } from "@/lib/image-utils";
 import { DEFAULT_PALETTE } from "@/lib/palette-background";
-import type { AppState, CardRatio, CardStyle, Locale } from "@/lib/types";
+import type { AppState, CardRatio, CardStyle, FontScheme, Locale } from "@/lib/types";
 import { sanitizeFilePart } from "@/lib/utils";
 
 const DEFAULT_SONG_URL = "https://music.apple.com/cn/song/opposite/1677892095";
@@ -95,8 +100,12 @@ const defaultState: AppState = {
     height: 1080,
     autoHeight: true,
     font: "sans-heavy",
+    fontScheme: { ...DEFAULT_FONT_SCHEME },
     customFontEnabled: false,
     customFontFamily: "",
+    customFontLabel: "",
+    customFontWeight: 400,
+    customFontStyle: "normal",
     lyricFontSize: 60,
     lineHeight: 1.4,
     align: "left",
@@ -141,6 +150,7 @@ const defaultState: AppState = {
 export function LyricEditor() {
   const [state, setState] = useState<AppState>(defaultState);
   const [currentStep, setCurrentStep] = useState(0);
+  const [fontSchemePreview, setFontSchemePreview] = useState<FontScheme | null>(null);
   const [isPreviewVisible, setIsPreviewVisible] = useState(true);
   const [celebrationKey, setCelebrationKey] = useState(0);
   const [isCompleteExporting, setIsCompleteExporting] = useState(false);
@@ -180,6 +190,7 @@ export function LyricEditor() {
   function clearAllContent() {
     clearVersionRef.current += 1;
     setCelebrationKey(0);
+    setFontSchemePreview(null);
     setState((current) => ({
       ...current,
       url: "",
@@ -568,6 +579,20 @@ export function LyricEditor() {
       )
     },
     {
+      id: "font",
+      title: t("step.fontScheme"),
+      description: t("fontSchemeDescription"),
+      isComplete: true,
+      content: (
+        <FontSchemeSettingsPanel
+          style={state.style}
+          onStyleChange={handleStyleChange}
+          onFontSchemePreviewChange={setFontSchemePreview}
+          t={t}
+        />
+      )
+    },
+    {
       id: "visual",
       title: t("step.visual"),
       description: t("background"),
@@ -629,6 +654,8 @@ export function LyricEditor() {
             lyrics={parsedState.lyrics}
             style={parsedState.style}
             cardRef={cardRef}
+            fontSchemePreview={fontSchemePreview}
+            showFontSchemePreview={settingsSteps[currentStep]?.id === "font"}
             locale={state.locale}
             t={t}
           />
