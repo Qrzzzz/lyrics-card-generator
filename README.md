@@ -214,7 +214,9 @@ npm run core:test       # 测试 3.0 核心纯函数
 
 感谢 [思源黑体](https://github.com/adobe-fonts/source-han-sans) 和 [思源宋体](https://github.com/adobe-fonts/source-han-serif)。它们为中文歌词卡片提供了稳定、清晰、有分量的字体基础。
 
-感谢 [Sabrina Carpenter](https://www.sabrinacarpenter.com/) 的《opposite》。它作为应用启动时的默认样例，帮助确定了初版排版、英文歌词和中文翻译的视觉节奏。相关音乐作品权利归原权利人所有，本项目不分发音频内容。
+感谢 [Sabrina Carpenter](https://www.sabrinacarpenter.com/) 的《opposite》。它作为应用启动时的默认样例，帮助确定了初版排版、英文歌词和中文翻译的视觉节奏。
+
+感谢 [YOASOBI](https://www.yoasobi-music.jp/) 的《勇者》。它在歌词样例展示中用作示例文本，帮助验证不同字体在卡片中的排版效果。
 
 感谢 [OpenAI Codex](https://openai.com/codex/)。它把许多零散想法转化为可运行的代码、桌面版构建流程和实际功能。
 
