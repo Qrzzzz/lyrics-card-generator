@@ -58,8 +58,6 @@ GitHub Release 页面默认使用简体中文短版，完整发布说明维护�
 * [日本語](./docs/releases/v3.1.0.ja.md)
 * [Español](./docs/releases/v3.1.0.es.md)
 
-后续发版时参考 [多语言发布说明规范](./docs/releases/README.md)，避免在 Release 正文里堆叠多国语言全文。
-
 <a id="主要功能"></a>
 
 ## ✨ 主要功能

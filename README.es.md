@@ -50,6 +50,17 @@ El instalador se recomienda para uso habitual. La versión portable es útil par
 
 > La compilación actual no está firmada. Windows puede mostrar una advertencia de SmartScreen, algo habitual en aplicaciones personales sin firma.
 
+## 🌐 Notas de la versión multilingües
+
+La página de GitHub Release usa de forma predeterminada una versión breve en español. Las notas completas de la versión se mantienen en `docs/releases/`:
+
+* [简体中文](./docs/releases/v3.0.0.zh-CN.md)
+* [繁體中文](./docs/releases/v3.0.0.zh-TW.md)
+* [English](./docs/releases/v3.0.0.en.md)
+* [Français](./docs/releases/v3.0.0.fr.md)
+* [日本語](./docs/releases/v3.0.0.ja.md)
+* [Español](./docs/releases/v3.0.0.es.md)
+
 <a id="funciones-principales"></a>
 
 ## ✨ Funciones principales
