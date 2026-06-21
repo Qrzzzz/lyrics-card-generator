@@ -49,7 +49,7 @@ export const FONT_PANEL_PREVIEW_LYRIC = {
     {
       original: "きっと見つけられる",
       romanized: "kitto mitsukerareru",
-      translation: "我也一定能寻见你曾留下的痕迹。"
+      translation: "我也一定能寻见你曾留下的痕迹"
     }
   ]
 } as const;
