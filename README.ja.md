@@ -52,14 +52,14 @@
 
 ## 🌐 多言語リリースノート
 
-GitHub Release ページでは、デフォルトで日本語の短縮版を使用します。完全なリリースノートは `docs/releases/` で管理されています：
+GitHub Release ページではデフォルトで簡体字中国語の短縮版が使用され、完全なリリースノートは `docs/releases/` にて管理されています：
 
-* [简体中文](./docs/releases/v3.0.0.zh-CN.md)
-* [繁體中文](./docs/releases/v3.0.0.zh-TW.md)
-* [English](./docs/releases/v3.0.0.en.md)
-* [Français](./docs/releases/v3.0.0.fr.md)
-* [日本語](./docs/releases/v3.0.0.ja.md)
-* [Español](./docs/releases/v3.0.0.es.md)
+* [简体中文](./docs/releases/v3.1.0.zh-CN.md)
+* [繁體中文](./docs/releases/v3.1.0.zh-TW.md)
+* [English](./docs/releases/v3.1.0.en.md)
+* [Français](./docs/releases/v3.1.0.fr.md)
+* [日本語](./docs/releases/v3.1.0.ja.md)
+* [Español](./docs/releases/v3.1.0.es.md)
 
 <a id="主な機能"></a>
 
