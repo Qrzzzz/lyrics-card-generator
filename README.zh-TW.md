@@ -49,16 +49,16 @@
 
 <a id="主要功能"></a>
 
-## 🌐 多語言發布說明
+## 🌐 多語言發佈說明
 
-GitHub Release 頁面預設使用繁體中文短版，完整發布說明維護在 `docs/releases/`：
+GitHub Release 頁面預設使用簡體中文短版，完整發佈說明維護在 `docs/releases/`：
 
-* [简体中文](./docs/releases/v3.0.0.zh-CN.md)
-* [繁體中文](./docs/releases/v3.0.0.zh-TW.md)
-* [English](./docs/releases/v3.0.0.en.md)
-* [Français](./docs/releases/v3.0.0.fr.md)
-* [日本語](./docs/releases/v3.0.0.ja.md)
-* [Español](./docs/releases/v3.0.0.es.md)
+* [简体中文](./docs/releases/v3.1.0.zh-CN.md)
+* [繁體中文](./docs/releases/v3.1.0.zh-TW.md)
+* [English](./docs/releases/v3.1.0.en.md)
+* [Français](./docs/releases/v3.1.0.fr.md)
+* [日本語](./docs/releases/v3.1.0.ja.md)
+* [Español](./docs/releases/v3.1.0.es.md)
 
 ## ✨ 主要功能
 
