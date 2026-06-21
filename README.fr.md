@@ -52,14 +52,14 @@ L'installateur est recommandé pour une utilisation régulière. La version port
 
 ## 🌐 Notes de publication multilingues
 
-La page GitHub Release utilise par défaut une version courte en français. Les notes de publication complètes sont maintenues dans `docs/releases/` :
+La page GitHub Release utilise par défaut la version courte en chinois simplifié, les notes de publication complètes sont conservées dans `docs/releases/` :
 
-* [简体中文](./docs/releases/v3.0.0.zh-CN.md)
-* [繁體中文](./docs/releases/v3.0.0.zh-TW.md)
-* [English](./docs/releases/v3.0.0.en.md)
-* [Français](./docs/releases/v3.0.0.fr.md)
-* [日本語](./docs/releases/v3.0.0.ja.md)
-* [Español](./docs/releases/v3.0.0.es.md)
+* [简体中文](./docs/releases/v3.1.0.zh-CN.md)
+* [繁體中文](./docs/releases/v3.1.0.zh-TW.md)
+* [English](./docs/releases/v3.1.0.en.md)
+* [Français](./docs/releases/v3.1.0.fr.md)
+* [日本語](./docs/releases/v3.1.0.ja.md)
+* [Español](./docs/releases/v3.1.0.es.md)
 
 <a id="fonctionnalités-principales"></a>
 
