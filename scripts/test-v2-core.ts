@@ -6,6 +6,20 @@ import { getTranslationStyles } from "../lib/ai/styles";
 import { getAIUiCopy } from "../lib/ai/ui-copy";
 import { buildUpdateResult } from "../lib/github-update";
 import { proxiedImageUrl } from "../lib/image-utils";
+import {
+  FONT_PREVIEW_COLORS,
+  FONT_PREVIEW_PALETTE,
+  FONT_SCHEME_PRESETS,
+  identifyFontPreset,
+  normalizeFontScheme
+} from "../lib/font-schemes";
+import { messages } from "../lib/i18n";
+import {
+  getActiveFontMode,
+  getResolvedFontStyle,
+  quoteSingleFontFamily,
+  sanitizeCssFontFamilyName
+} from "../lib/fonts";
 import { formatChineseTranslation, splitAlternatingLyrics } from "../lib/lyric-format";
 import type { CardStyle } from "../lib/types";
 import { compareVersionStrings } from "../lib/version-compare";
@@ -54,8 +68,10 @@ function main() {
   testUpdateResult();
   testLayoutEngine();
   testImageProxy();
+  testFontResolution();
+  testFontSchemeTranslations();
   testAITranslationPrompt();
-  console.log(JSON.stringify({ ok: true, tests: 6 }, null, 2));
+  console.log(JSON.stringify({ ok: true, tests: 8 }, null, 2));
 }
 
 function testLyricFormat() {
@@ -144,6 +160,93 @@ function testImageProxy() {
   assertEqual(proxiedImageUrl("data:image/png;base64,abc"), "data:image/png;base64,abc", "data not proxied");
   assertEqual(proxiedImageUrl("file:///C:/cover.png"), "file:///C:/cover.png", "file not proxied");
   assertEqual(proxiedImageUrl("https://example.com/cover.jpg"), "/api/image-proxy?url=https%3A%2F%2Fexample.com%2Fcover.jpg", "http proxied");
+}
+
+function testFontResolution() {
+  assertEqual(sanitizeCssFontFamilyName(' "Microsoft YaHei" (TrueType) '), "Microsoft YaHei", "sanitize registry family");
+  assertEqual(sanitizeCssFontFamilyName("Arial, sans-serif"), "Arial", "drop fallback list");
+  assertEqual(sanitizeCssFontFamilyName("Arial & Arial Unicode MS"), "Arial", "select one combined registry family");
+  assertEqual(quoteSingleFontFamily("sans-serif"), "sans-serif", "generic family is unquoted");
+  assertEqual(quoteSingleFontFamily('Test "Font"'), '"Test \\"Font\\""', "custom family is escaped");
+  assertEqual(getActiveFontMode(baseStyle), "preset", "disabled custom font stays in preset mode");
+  assert(
+    getResolvedFontStyle(baseStyle)?.fontFamily?.startsWith('"Source Han Sans SC", var(--font-source-han-sans-heavy)'),
+    "legacy default resolves to the Source Han Sans scheme"
+  );
+
+  const customStyle = {
+    ...baseStyle,
+    customFontEnabled: true,
+    customFontFamily: "Microsoft YaHei",
+    customFontLabel: "微软雅黑",
+    customFontWeight: 700,
+    customFontStyle: "italic" as const
+  };
+  assertEqual(getActiveFontMode(customStyle), "custom", "valid custom font activates custom mode");
+  assert(
+    getResolvedFontStyle(customStyle)?.fontFamily?.startsWith('"Microsoft YaHei", var(--font-source-han-sans-heavy)'),
+    "resolved custom font keeps the shared export fallback stack"
+  );
+  assertEqual(getResolvedFontStyle(customStyle)?.fontWeight, 700, "resolved custom font keeps its face weight");
+  assertEqual(getResolvedFontStyle(customStyle)?.fontStyle, "italic", "resolved custom font keeps its face style");
+
+  const splitFontStyle = {
+    ...baseStyle,
+    fontScheme: {
+      mode: "custom" as const,
+      cjkFontFamily: "Source Han Sans SC",
+      latinFontFamily: "Georgia"
+    }
+  };
+  assertEqual(getActiveFontMode(splitFontStyle), "custom", "split CJK and Latin families activate custom mode");
+  assert(
+    getResolvedFontStyle(splitFontStyle)?.fontFamily?.startsWith('"Georgia", "Source Han Sans SC"'),
+    "Latin family precedes the CJK fallback so each script resolves to its selected family"
+  );
+  assertEqual(
+    identifyFontPreset(FONT_SCHEME_PRESETS["source-han-serif"]),
+    "source-han-serif",
+    "Source Han Serif fields are recognized as the serif preset"
+  );
+  assertEqual(
+    normalizeFontScheme({
+      mode: "custom",
+      cjkFontFamily: "Source Han Sans SC",
+      latinFontFamily: "Source Han Sans SC"
+    }).presetId,
+    "source-han-sans",
+    "custom fields that exactly match a preset normalize to that preset"
+  );
+}
+
+function testFontSchemeTranslations() {
+  const expectedTitles = {
+    zh: "字体方案",
+    "zh-TW": "字體方案",
+    en: "Font Schemes",
+    fr: "Jeux de polices",
+    ja: "フォント構成",
+    es: "Combinaciones tipográficas"
+  } as const;
+
+  for (const [locale, expectedTitle] of Object.entries(expectedTitles)) {
+    assertEqual(messages[locale as keyof typeof messages].fontSchemeTitle, expectedTitle, `${locale} font scheme title`);
+  }
+
+  assertEqual(messages["zh-TW"].fontSchemeCurrentTitle, "目前方案", "Traditional Chinese current scheme wording");
+  assertEqual(messages["zh-TW"].fontSchemeCustomTitle, "自訂方案", "Traditional Chinese custom scheme wording");
+  assertEqual(messages["zh-TW"].fontSchemeCjkFont, "中日韓文字體", "Traditional Chinese CJK label");
+  assertEqual(messages["zh-TW"].fontSchemeSaveCurrent, "儲存為目前方案", "Traditional Chinese save action");
+  assertEqual(
+    messages["zh-TW"].fontSchemePreviewBackgroundDescription,
+    "使用與真實歌詞卡片相同的背景演算法，並固定以深海藍、鈷藍、靛藍與夜幕藍取色。",
+    "Traditional Chinese generated preview background description"
+  );
+  assertEqual(FONT_PREVIEW_COLORS.length, 4, "font preview uses four fixed palette inputs");
+  assertEqual(FONT_PREVIEW_PALETTE.primary, "#123A64", "font preview deep-sea primary");
+  assertEqual(FONT_PREVIEW_PALETTE.secondary, "#184A8B", "font preview cobalt secondary");
+  assertEqual(FONT_PREVIEW_PALETTE.accent, "#243A73", "font preview indigo accent");
+  assertEqual(FONT_PREVIEW_PALETTE.dark, "#102847", "font preview nightfall dark color");
 }
 
 function testAITranslationPrompt() {

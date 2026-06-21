@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v3.0.0.zh-TW.md">發布說明</a> ·
+  <a href="./docs/releases/v3.1.0.zh-TW.md">發布說明</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="#本機開發">本機開發</a> ·
   <a href="./LICENSE">授權條款</a>
@@ -40,8 +40,8 @@
 
 請前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載最新版：
 
-* 建議一般使用者下載安裝版：`Lyrics Card Generator Setup 3.0.0.exe`
-* 不想安裝時可下載可攜版：`Lyrics Card Generator-3.0.0-portable.exe`
+* 建議一般使用者下載安裝版：`Lyrics Card Generator Setup 3.1.0.exe`
+* 不想安裝時可下載可攜版：`Lyrics Card Generator-3.1.0-portable.exe`
 
 安裝版適合長期使用；可攜版適合臨時執行、測試或放在隨身碟中使用。
 
@@ -75,7 +75,7 @@ GitHub Release 頁面預設使用繁體中文短版，完整發布說明維護�
 * 支援本機封面上傳
 * 支援從封面擷取色彩並生成漸層背景
 * 支援平台 Logo、分享人、生成浮水印
-* 支援邊框、陰影、字型、Windows 系統字型、字號、行距、文字顏色等視覺設定
+* 支援思源黑體 / 思源宋體兩套字型方案、自訂中日韓 / 西文字型、系統字型選擇視窗與真實歌詞字型預覽
 * 支援簡體中文 / 繁體中文 / English / Français / 日本語 / Español 介面切換
 * 支援匯出高解析 PNG 圖片
 * 支援從 GitHub Releases 檢查新版本
@@ -109,7 +109,7 @@ GitHub Release 頁面預設使用繁體中文短版，完整發布說明維護�
 2. 貼上 Apple Music、網易雲音樂或 QQ 音樂連結，或手動填寫歌曲資訊。
 3. 也可以上傳本機 MP3 / FLAC，自動讀取檔案內的歌曲資訊、封面和內嵌歌詞。
 4. 編輯歌詞和翻譯；可使用 AI 翻譯，也可將原文 / 譯文交替行依目前介面語言自動拆分。
-5. 調整畫布比例、字型、Windows 系統字型、字號、顏色、邊框、浮水印等樣式。
+5. 調整畫布比例、字型方案（中日韓 / 西文）、字號、顏色、邊框、浮水印等樣式。
 6. 在右側預覽卡片。
 7. 點擊「完成並匯出」，儲存 PNG 圖片。
 
@@ -206,7 +206,7 @@ npm run core:test       # 測試 3.0 核心純函式
 
 它們為卡片提供厚重、清晰、適合中文歌詞排版的字型基礎。
 
-桌面版 3.0.0 還支援從 Windows 系統字型清單中選擇自訂字型。Web 環境無法列舉系統字型，但仍可使用原有字型預設。
+3.1.0 提供思源黑體與思源宋體兩套預設方案，並可分別設定中日韓字型與西文字型。「字型方案」成為與歌詞、版面配置和視覺細節並列的獨立步驟；桌面版可從 Windows 系統字型清單中選擇，Web 版仍可使用推薦字型與內建預設。完整字型預覽位於右側真實卡片下方，使用與真實卡片相同的背景演算法，並固定以深海藍、鈷藍、靛藍、夜幕藍取色；它不會修改實際卡片背景，也不會進入最終 PNG。
 
 ## 🙏 致謝
 

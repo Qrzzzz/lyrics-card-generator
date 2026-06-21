@@ -5,8 +5,15 @@ import type {
   SaveAISettingsInput
 } from "@/lib/ai/types";
 
+export type SystemFontOption = {
+  label: string;
+  family: string;
+  fontWeight: number;
+  fontStyle: "normal" | "italic";
+};
+
 export type LyricsCardDesktopApi = {
-  listSystemFonts: () => Promise<string[]>;
+  listSystemFonts: () => Promise<SystemFontOption[]>;
   pickFont: () => Promise<string | null>;
   openExternal: (url: string) => Promise<boolean>;
   loadAISettings: () => Promise<AISettingsSummary>;

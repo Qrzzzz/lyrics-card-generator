@@ -32,6 +32,16 @@ export type TextColorPreset =
 export type PaletteKind = "colorful" | "monochrome" | "neutral" | "low-variance";
 export type ContentMode = "lyrics" | "instrumental";
 
+export type FontPresetId = "source-han-sans" | "source-han-serif";
+export type FontSchemeMode = "preset" | "custom";
+
+export type FontScheme = {
+  mode: FontSchemeMode;
+  presetId?: FontPresetId;
+  cjkFontFamily: string;
+  latinFontFamily: string;
+};
+
 export type ExtractedPalette = {
   colors: string[];
   primary: string;
@@ -56,8 +66,12 @@ export type CardStyle = {
   height: number;
   autoHeight: boolean;
   font: CardFont;
+  fontScheme?: FontScheme;
   customFontEnabled?: boolean;
   customFontFamily?: string;
+  customFontLabel?: string;
+  customFontWeight?: number;
+  customFontStyle?: "normal" | "italic";
   lyricFontSize: number;
   lineHeight: number;
   align: CardAlign;

@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v3.0.0.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v3.1.0.en.md">Release Notes</a> ·
   <a href="#features">Features</a> ·
   <a href="#local-development">Local Development</a> ·
   <a href="./LICENSE">License</a>
@@ -43,8 +43,8 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 Download the latest version from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Recommended installer: `Lyrics Card Generator Setup 3.0.0.exe`
-* Portable version: `Lyrics Card Generator-3.0.0-portable.exe`
+* Recommended installer: `Lyrics Card Generator Setup 3.1.0.exe`
+* Portable version: `Lyrics Card Generator-3.1.0-portable.exe`
 
 The installer is recommended for regular use. The portable version is useful for temporary use, testing, or running from a removable drive.
 
@@ -78,7 +78,7 @@ The GitHub Release page uses a short English version by default. The full releas
 * Local cover upload
 * Palette extraction from cover art for gradient backgrounds
 * Platform logo, shared-by text, and generated watermark
-* Frame, shadow, font, Windows system font, font size, line height, and text color controls
+* Source Han Sans / Serif schemes, independent CJK and Latin fonts, a system-font picker, and lyric-based typography previews
 * Simplified Chinese / Traditional Chinese / English / French / Japanese / Spanish interface
 * High-resolution PNG export
 * GitHub Releases update checking
@@ -112,7 +112,7 @@ These features require internet access:
 2. Paste an Apple Music, NetEase Cloud Music, or QQ Music link, or enter song information manually.
 3. Optionally upload a local MP3 / FLAC file to read metadata, cover art, and embedded lyrics.
 4. Edit lyrics and translations; use AI translation or split alternating original / translated text according to the selected interface language.
-5. Adjust canvas ratio, fonts, Windows system fonts, colors, frames, watermarks, and other styles.
+5. Adjust canvas ratio, CJK / Latin font schemes, colors, frames, watermarks, and other styles.
 6. Preview the card on the right.
 7. Use “Complete & Export” to save the PNG image.
 
@@ -209,7 +209,7 @@ The project uses:
 
 They provide a strong, clear, and reliable typographic foundation for Chinese lyric cards.
 
-The 3.0.0 desktop app can also enumerate Windows system fonts for custom card typography. Web builds cannot enumerate system fonts, but the existing font presets remain available.
+Version 3.1.0 provides Source Han Sans and Source Han Serif schemes and lets CJK and Latin fonts be selected independently. Font Schemes is now a dedicated workflow step alongside Lyrics, Layout, and Visual Details. The desktop app can enumerate Windows system fonts, while Web builds retain recommended fonts and bundled presets. The full font preview sits below the real card in the right column and uses the real card background algorithm with fixed Deep Sea, Cobalt, Indigo, and Nightfall color inputs; it does not change the actual card background or enter the exported PNG.
 
 ## 🙏 Acknowledgements
 

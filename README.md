@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v3.0.0.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v3.1.0.zh-CN.md">发布说明</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="#本地开发">本地开发</a> ·
   <a href="./LICENSE">许可证</a>
@@ -40,8 +40,8 @@
 
 请前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下载最新版：
 
-* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 3.0.0.exe`
-* 不想安装时可下载便携版：`Lyrics Card Generator-3.0.0-portable.exe`
+* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 3.1.0.exe`
+* 不想安装时可下载便携版：`Lyrics Card Generator-3.1.0-portable.exe`
 
 安装版适合长期使用；便携版适合临时运行、测试或放在移动硬盘中使用。
 
@@ -51,12 +51,12 @@
 
 GitHub Release 页面默认使用简体中文短版，完整发布说明维护在 `docs/releases/`：
 
-* [简体中文](./docs/releases/v3.0.0.zh-CN.md)
-* [繁體中文](./docs/releases/v3.0.0.zh-TW.md)
-* [English](./docs/releases/v3.0.0.en.md)
-* [Français](./docs/releases/v3.0.0.fr.md)
-* [日本語](./docs/releases/v3.0.0.ja.md)
-* [Español](./docs/releases/v3.0.0.es.md)
+* [简体中文](./docs/releases/v3.1.0.zh-CN.md)
+* [繁體中文](./docs/releases/v3.1.0.zh-TW.md)
+* [English](./docs/releases/v3.1.0.en.md)
+* [Français](./docs/releases/v3.1.0.fr.md)
+* [日本語](./docs/releases/v3.1.0.ja.md)
+* [Español](./docs/releases/v3.1.0.es.md)
 
 <a id="主要功能"></a>
 
@@ -75,7 +75,7 @@ GitHub Release 页面默认使用简体中文短版，完整发布说明维护�
 * 支持本地封面上传
 * 支持从封面提取色彩并生成渐变背景
 * 支持平台 Logo、分享人、生成水印
-* 支持边框、阴影、字体、Windows 系统字体、字号、行距、文字颜色等视觉设置
+* 支持思源黑体 / 思源宋体两套字体方案、自定义中日韩 / 西文字体、系统字体选择弹窗与真实歌词字体预览
 * 支持简体中文 / 繁體中文 / English / Français / 日本語 / Español 界面切换
 * 支持导出高清 PNG 图片
 * 支持从 GitHub Releases 检查新版本
@@ -109,7 +109,7 @@ GitHub Release 页面默认使用简体中文短版，完整发布说明维护�
 2. 粘贴 Apple Music、网易云音乐或 QQ 音乐链接，或手动填写歌曲信息。
 3. 也可以上传本地 MP3 / FLAC，自动读取文件内的歌曲信息、封面和内嵌歌词。
 4. 编辑歌词和翻译；可使用 AI 翻译，也可将原文 / 译文交替行按当前界面语言自动拆分。
-5. 调整画布比例、字体、Windows 系统字体、字号、颜色、边框、水印等样式。
+5. 调整画布比例、字体方案（中日韩 / 西文）、字号、颜色、边框、水印等样式。
 6. 在右侧预览卡片。
 7. 点击“完成并导出”，保存 PNG 图片。
 
@@ -206,7 +206,7 @@ npm run core:test       # 测试 3.0 核心纯函数
 
 它们为卡片提供了厚重、清晰、适合中文歌词排版的字体基础。
 
-桌面版 3.0.0 还支持从 Windows 系统字体列表中选择自定义字体。Web 环境无法枚举系统字体，但仍可使用原有字体预设。
+3.1.0 提供思源黑体和思源宋体两套预设方案，并允许分别设置中日韩文字体与西文字体。“字体方案”作为与歌词、布局和视觉细节并列的独立步骤，桌面版可从 Windows 系统字体列表中选择，Web 版仍可使用推荐字体和内置预设。完整字体预览位于右侧真实卡片下方，使用与真实卡片相同的背景算法，并固定以深海蓝、钴蓝、靛蓝、夜幕蓝取色；它不会修改实际卡片背景，也不会进入最终 PNG。
 
 ## 🙏 致谢
 

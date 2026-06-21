@@ -4,6 +4,7 @@ const fs = require("node:fs/promises");
 const http = require("node:http");
 const net = require("node:net");
 const path = require("node:path");
+const { normalizeFontOptions } = require("./font-options");
 
 const HOST = "127.0.0.1";
 const APP_ID = "com.lyriccard.generator";
@@ -251,12 +252,12 @@ function registerDesktopIpc() {
       return [];
     }
 
-    return listWindowsFontFamilies();
+    return listWindowsFontOptions();
   });
 
   ipcMain.handle("lyrics-card:pick-font", async () => {
-    const fonts = process.platform === "win32" ? await listWindowsFontFamilies() : [];
-    return fonts[0] || null;
+    const fonts = process.platform === "win32" ? await listWindowsFontOptions() : [];
+    return fonts[0]?.family || null;
   });
 
   ipcMain.handle("lyrics-card:open-external", async (_event, targetUrl) => {
@@ -586,21 +587,45 @@ function isValidAIRequestId(value) {
   return typeof value === "string" && /^[a-zA-Z0-9-]{8,80}$/.test(value);
 }
 
-async function listWindowsFontFamilies() {
+async function listWindowsFontOptions() {
   const script = [
+    "$ErrorActionPreference = 'Stop';",
+    "[Console]::OutputEncoding = [Text.UTF8Encoding]::new();",
+    "Add-Type -AssemblyName System.Drawing;",
     "$paths = @(",
     "  'HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Fonts',",
     "  'HKCU:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Fonts'",
     ");",
-    "$families = foreach ($path in $paths) {",
+    "$fontOptions = [Collections.Generic.List[object]]::new();",
+    "foreach ($path in $paths) {",
     "  if (Test-Path $path) {",
     "    $item = Get-ItemProperty -Path $path;",
-    "    $item.PSObject.Properties | Where-Object { $_.Name -notlike 'PS*' } | ForEach-Object {",
-    "      $_.Name -replace '\\s*\\((TrueType|OpenType|Type 1|Raster|All res)\\)\\s*$', '' -replace '\\s*&\\s*', ', '",
+    "    foreach ($property in ($item.PSObject.Properties | Where-Object { $_.Name -notlike 'PS*' })) {",
+    "      $label = $property.Name -replace '\\s*\\((TrueType|OpenType|Type 1|Raster|All res)\\)\\s*$', '';",
+    "      foreach ($fileValue in @($property.Value)) {",
+    "        try {",
+    "          $fontPath = if ([IO.Path]::IsPathRooted([string]$fileValue)) { [string]$fileValue } else { Join-Path $env:WINDIR ('Fonts\\' + $fileValue) };",
+    "          if (-not (Test-Path -LiteralPath $fontPath)) { continue };",
+    "          $privateFonts = [Drawing.Text.PrivateFontCollection]::new();",
+    "          try {",
+    "            $privateFonts.AddFontFile($fontPath);",
+    "            $weight = if ($label -match '(?i)(Extra|Ultra)[ -]*Light|特细|超细') { 200 } elseif ($label -match '(?i)(Extra|Ultra)[ -]*Bold|特粗|超粗') { 800 } elseif ($label -match '(?i)(Semi|Demi)[ -]*Bold|中粗') { 600 } elseif ($label -match '(?i)\\b(Heavy|Black)\\b') { 900 } elseif ($label -match '(?i)\\bBold\\b|粗体') { 700 } elseif ($label -match '(?i)\\bMedium\\b|中等') { 500 } elseif ($label -match '(?i)\\bLight\\b|细体') { 300 } else { 400 };",
+    "            $fontStyle = if ($label -match '(?i)\\b(Italic|Oblique)\\b|斜体|倾斜') { 'italic' } else { 'normal' };",
+    "            foreach ($family in $privateFonts.Families) {",
+    "              $fontOptions.Add([pscustomobject]@{ label = $label.Trim(); family = $family.GetName(0x0409).Trim(); fontWeight = $weight; fontStyle = $fontStyle });",
+    "            }",
+    "          } finally { $privateFonts.Dispose() }",
+    "        } catch { continue }",
+    "      }",
     "    }",
     "  }",
-    "};",
-    "$families | Where-Object { $_ -and $_.Trim().Length -gt 0 } | Sort-Object -Unique | ConvertTo-Json -Compress"
+    "}",
+    "$installedFonts = [Drawing.Text.InstalledFontCollection]::new();",
+    "foreach ($family in $installedFonts.Families) {",
+    "  $englishFamily = $family.GetName(0x0409).Trim();",
+    "  $fontOptions.Add([pscustomobject]@{ label = $englishFamily; family = $englishFamily; fontWeight = 400; fontStyle = 'normal' });",
+    "}",
+    "$fontOptions | ConvertTo-Json -Compress -Depth 3"
   ].join(" ");
 
   try {
@@ -612,17 +637,19 @@ async function listWindowsFontFamilies() {
       script
     ]);
     const parsed = JSON.parse(output || "[]");
-    return normalizeFontFamilies(Array.isArray(parsed) ? parsed : [parsed]);
+    return normalizeFontOptions(Array.isArray(parsed) ? parsed : [parsed]);
   } catch (error) {
     console.error("[fonts] unable to list Windows fonts", error);
-    return ["Arial", "Calibri", "Microsoft YaHei", "Microsoft JhengHei", "Segoe UI", "SimSun", "SimHei"];
+    return normalizeFontOptions([
+      "Arial",
+      "Calibri",
+      "Microsoft YaHei",
+      "Microsoft JhengHei",
+      "Segoe UI",
+      "SimSun",
+      "SimHei"
+    ]);
   }
-}
-
-function normalizeFontFamilies(values) {
-  const ignored = new Set(["", "desktop.ini"]);
-  return [...new Set(values.map((value) => String(value).trim()).filter((value) => !ignored.has(value.toLowerCase())))]
-    .sort((left, right) => left.localeCompare(right));
 }
 
 function runProcess(command, args) {

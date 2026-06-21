@@ -14,7 +14,19 @@
 }
 
 @font-face {
+  font-family: "Source Han Sans SC";
+  src: url("/fonts/SourceHanSansSC-Heavy.otf") format("opentype");
+  font-display: swap;
+}
+
+@font-face {
   font-family: "Source Han Serif Heavy Local";
+  src: url("/fonts/SourceHanSerifSC-Heavy.otf") format("opentype");
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Source Han Serif SC";
   src: url("/fonts/SourceHanSerifSC-Heavy.otf") format("opentype");
   font-display: swap;
 }
