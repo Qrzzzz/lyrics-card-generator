@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { EditorHeader } from "@/components/editor/EditorHeader";
+import { ExamplesDialog } from "@/components/editor/ExamplesDialog";
 import { ExportPanel } from "@/components/editor/ExportPanel";
 import { ExportCelebration } from "@/components/effects/ExportCelebration";
 import { LocalAudioParser } from "@/components/editor/LocalAudioParser";
@@ -19,6 +20,7 @@ import {
   VisualSettingsPanel
 } from "@/components/editor/StylePanel";
 import { SettingsDialog } from "@/components/settings/SettingsDialog";
+import { FirstLaunchLanguageDialog } from "@/components/settings/FirstLaunchLanguageDialog";
 import {
   useCoverPalette,
   useResolvedTextColor,
@@ -49,6 +51,12 @@ import { DEFAULT_FONT_SCHEME } from "@/lib/font-schemes";
 import { createT, messages } from "@/lib/i18n";
 import { proxiedImageUrl } from "@/lib/image-utils";
 import { DEFAULT_PALETTE } from "@/lib/palette-background";
+import { loadBackgroundImage } from "@/lib/settings/background-storage";
+import { settingsCopy } from "@/lib/settings/copy";
+import { DEFAULT_USER_SETTINGS, type UserSettings } from "@/lib/settings/types";
+import { loadUserSettings, saveUserSettings } from "@/lib/settings/user-settings";
+import { resolveReadableTextColor } from "@/lib/color/contrast";
+import type { ExampleSong } from "@/lib/examples";
 import type { AppState, CardRatio, CardStyle, FontScheme, Locale } from "@/lib/types";
 import { sanitizeFilePart } from "@/lib/utils";
 
@@ -77,20 +85,20 @@ const DEFAULT_INSTRUMENTAL_TEXT: Record<Locale, string> = {
 
 const defaultState: AppState = {
   locale: "zh",
-  url: DEFAULT_SONG_URL,
+  url: "",
   song: {
-    source: "apple",
-    title: "opposite",
-    artist: "Sabrina Carpenter",
+    source: "unknown",
+    title: "",
+    artist: "",
     album: "",
     originalCoverUrl: "",
     coverUrl: "",
     proxiedCoverUrl: "",
-    originalUrl: DEFAULT_SONG_URL
+    originalUrl: ""
   },
-  lyrics: DEFAULT_LYRICS,
-  translationText: DEFAULT_TRANSLATION,
-  translationEnabled: true,
+  lyrics: "",
+  translationText: "",
+  translationEnabled: false,
   style: {
     backgroundMode: "palette",
     extractedPalette: DEFAULT_PALETTE,
@@ -113,8 +121,8 @@ const defaultState: AppState = {
     textColorPreset: "white",
     customTextColor: "#FFFFFF",
     resolvedTextColor: "#FFFFFF",
-    translationEnabled: true,
-    translationText: DEFAULT_TRANSLATION,
+    translationEnabled: false,
+    translationText: "",
     translationScale: 0.75,
     allowTwoLineTitle: false,
     contentMode: "lyrics",
@@ -155,6 +163,10 @@ export function LyricEditor() {
   const [celebrationKey, setCelebrationKey] = useState(0);
   const [isCompleteExporting, setIsCompleteExporting] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isExamplesOpen, setIsExamplesOpen] = useState(false);
+  const [isFirstLaunchOpen, setIsFirstLaunchOpen] = useState(false);
+  const [userSettings, setUserSettings] = useState<UserSettings>(DEFAULT_USER_SETTINGS);
+  const [backgroundImageUrl, setBackgroundImageUrl] = useState<string>();
   const [isAITranslateOpen, setIsAITranslateOpen] = useState(false);
   const [isAITranslating, setIsAITranslating] = useState(false);
   const [aiStreamingText, setAIStreamingText] = useState("");
@@ -285,7 +297,7 @@ export function LyricEditor() {
     try {
       const size = getCardSize(parsedState.style);
       const fileName = `lyric-card-${sanitizeFilePart(parsedState.song.title)}.png`;
-      await exportNodeAsPng(cardRef.current, fileName, size.width, size.height, 2);
+      await exportNodeAsPng(cardRef.current, fileName, size.width, size.height, userSettings.defaultExportPixelRatio);
       if (clearVersion === clearVersionRef.current) {
         setCelebrationKey((key) => key + 1);
       }
@@ -298,10 +310,21 @@ export function LyricEditor() {
 
   useEffect(() => {
     const storedLocale = window.localStorage.getItem("lyric-card-generator-locale");
+    const loadedSettings = loadUserSettings();
+    setUserSettings(loadedSettings);
     if (isSupportedLocale(storedLocale)) {
       setLocale(storedLocale);
     }
+    setIsFirstLaunchOpen(!isSupportedLocale(storedLocale) || !loadedSettings.firstLaunchLanguageSelected);
   }, []);
+
+  useEffect(() => {
+    let active = true;
+    loadBackgroundImage(userSettings.appBackground.imageId, userSettings.appBackground.imageUrl)
+      .then((url) => { if (active) setBackgroundImageUrl(url); })
+      .catch(() => { if (active) setBackgroundImageUrl(undefined); });
+    return () => { active = false; };
+  }, [userSettings.appBackground.imageId, userSettings.appBackground.imageUrl]);
 
   useEffect(() => {
     loadAISettings().then(setAISettings).catch(() => undefined);
@@ -426,6 +449,50 @@ export function LyricEditor() {
       };
     });
     window.localStorage.setItem("lyric-card-generator-locale", locale);
+  }
+
+  function updateUserSettings(next: UserSettings) {
+    const saved = saveUserSettings(next);
+    setUserSettings(saved);
+  }
+
+  function chooseFirstLaunchLanguage(locale: Locale) {
+    setLocale(locale);
+    updateUserSettings({ ...userSettings, firstLaunchLanguageSelected: true });
+    setIsFirstLaunchOpen(false);
+  }
+
+  async function loadExample(example: ExampleSong) {
+    clearVersionRef.current += 1;
+    setState((current) => ({
+      ...current,
+      url: example.url,
+      song: { ...current.song, source: example.source, title: example.title, artist: example.artist, originalUrl: example.url },
+      lyrics: example.lyrics,
+      translationText: example.translationText,
+      translationEnabled: example.translationEnabled,
+      style: { ...current.style, translationText: example.translationText, translationEnabled: example.translationEnabled }
+    }));
+    setIsExamplesOpen(false);
+    setToast(settingsCopy[state.locale].exampleLoaded);
+    try {
+      const response = await fetch("/api/parse-song", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ url: example.url })
+      });
+      const payload = await response.json() as { ok: boolean; data?: AppState["song"] };
+      if (payload.ok && payload.data) {
+        const originalCoverUrl = payload.data.coverUrl ?? "";
+        const coverUrl = getHighResolutionCoverUrl(originalCoverUrl, payload.data.source);
+        setState((current) => ({
+          ...current,
+          song: { ...current.song, ...payload.data, originalCoverUrl, coverUrl, proxiedCoverUrl: proxiedImageUrl(coverUrl) }
+        }));
+      }
+    } catch {
+      // The example remains useful offline; cover/palette enrichment is best effort.
+    }
   }
 
   const settingsSteps: SettingsStep[] = [
@@ -622,13 +689,36 @@ export function LyricEditor() {
     }
   ];
 
+  const themeAccent = userSettings.uiTheme === "album-dynamic"
+    ? state.palette?.primary ?? DEFAULT_PALETTE.primary
+    : userSettings.uiTheme === "light-blue" ? "#2563EB"
+    : userSettings.uiTheme === "dark-pink" ? "#EC4899"
+    : userSettings.uiAccentColor;
+  const uiBackgroundColor = userSettings.appBackground.mode === "solid"
+    ? userSettings.appBackground.solidColor
+    : userSettings.uiTheme === "light-blue" ? "#EAF6FF"
+    : userSettings.uiTheme === "dark-pink" ? "#08040A"
+    : userSettings.appBackground.mode === "image-palette" ? userSettings.appBackground.extractedColor ?? "#080910"
+    : state.palette?.dark ?? "#080910";
+  const uiTextColor = userSettings.uiTextColorMode === "light" ? "#FFFFFF"
+    : userSettings.uiTextColorMode === "dark" ? "#191612"
+    : resolveReadableTextColor(uiBackgroundColor, userSettings.uiTextColorMode === "custom" ? userSettings.uiCustomTextColor : undefined);
+
   return (
-    <div className="app-shell min-h-screen" data-theme="dark">
-      <DynamicAppBackground palette={state.palette} />
-      <ClickSpark themeColor={state.palette?.primary ?? DEFAULT_PALETTE.primary}>
+    <div
+      className="app-shell min-h-screen"
+      data-ui-theme={userSettings.uiTheme}
+      style={{
+        "--app-font-family": userSettings.uiFontFamily || undefined,
+        "--app-accent": themeAccent,
+        "--app-text-primary": uiTextColor
+      } as React.CSSProperties}
+    >
+      <DynamicAppBackground palette={state.palette} settings={userSettings} imageUrl={backgroundImageUrl} />
+      <ClickSpark enabled={userSettings.sparkCursorEnabled} themeColor={themeAccent}>
     <main className="relative z-10 min-h-screen px-4 py-5 sm:px-6 lg:px-8">
       <div className="mx-auto grid w-[calc(100vw-2rem)] max-w-[1520px] min-w-0 gap-5 sm:w-full">
-        <EditorHeader locale={state.locale} t={t} onOpenSettings={() => setIsSettingsOpen(true)} onClearAll={clearAllContent} />
+        <EditorHeader locale={state.locale} t={t} onOpenExamples={() => setIsExamplesOpen(true)} onOpenSettings={() => setIsSettingsOpen(true)} />
 
         <div className="grid min-w-0 max-w-full gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(420px,600px)]">
           <motion.div
@@ -666,13 +756,18 @@ export function LyricEditor() {
       <SettingsDialog
         open={isSettingsOpen}
         locale={state.locale}
+        userSettings={userSettings}
         onLocaleChange={setLocale}
+        onUserSettingsPreview={setUserSettings}
+        onUserSettingsChange={updateUserSettings}
         onClose={() => setIsSettingsOpen(false)}
         onSaved={(settings, message) => {
           setAISettings(settings);
           setToast(message || aiCopy.settingsSaved);
         }}
       />
+      <ExamplesDialog open={isExamplesOpen} locale={state.locale} onClose={() => setIsExamplesOpen(false)} onLoad={loadExample} />
+      <FirstLaunchLanguageDialog open={isFirstLaunchOpen} locale={state.locale} onChoose={chooseFirstLaunchLanguage} />
       {toast ? (
         <div role="status" className="fixed bottom-5 left-1/2 z-[130] max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-lg border border-white/15 bg-slate-950/95 px-4 py-3 text-sm text-white shadow-2xl backdrop-blur-xl">
           {toast}

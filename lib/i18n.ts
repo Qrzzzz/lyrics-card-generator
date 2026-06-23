@@ -1,4 +1,5 @@
 import type { Locale } from "@/lib/types";
+export { settingsCopy } from "@/lib/settings/copy";
 
 const baseMessages = {
   zh: {

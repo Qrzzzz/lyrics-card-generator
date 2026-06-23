@@ -1,28 +1,34 @@
 "use client";
 
-import { Loader2, Settings, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Bot, Download, Info, Loader2, Palette, Settings, SlidersHorizontal, Wallpaper, X } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AiSettingsSection } from "@/components/settings/AiSettingsSection";
-import { LanguageSettingsSection } from "@/components/settings/LanguageSettingsSection";
+import { AboutSettingsSection } from "@/components/settings/AboutSettingsSection";
+import { AppearanceSettingsSection } from "@/components/settings/AppearanceSettingsSection";
+import { BackgroundSettingsSection } from "@/components/settings/BackgroundSettingsSection";
+import { ExportSettingsSection } from "@/components/settings/ExportSettingsSection";
+import { GeneralSettingsSection } from "@/components/settings/GeneralSettingsSection";
+import { SettingsTabs } from "@/components/settings/SettingsTabs";
 import { clearAISettingsApiKey, loadAISettings, saveAISettings } from "@/lib/ai/client";
 import { DEFAULT_AI_SETTINGS, type AISettings, type AISettingsSummary } from "@/lib/ai/types";
 import { getAIUiCopy } from "@/lib/ai/ui-copy";
+import { createT } from "@/lib/i18n";
+import { settingsCopy } from "@/lib/settings/copy";
+import type { UserSettings } from "@/lib/settings/types";
 import type { Locale } from "@/lib/types";
 
-export function SettingsDialog({
-  open,
-  locale,
-  onLocaleChange,
-  onClose,
-  onSaved
-}: {
-  open: boolean;
-  locale: Locale;
-  onLocaleChange: (locale: Locale) => void;
-  onClose: () => void;
+export function SettingsDialog({ open, locale, userSettings, onLocaleChange, onUserSettingsPreview, onUserSettingsChange, onClose, onSaved }: {
+  open: boolean; locale: Locale; userSettings: UserSettings; onLocaleChange: (locale: Locale) => void;
+  onUserSettingsPreview: (settings: UserSettings) => void; onUserSettingsChange: (settings: UserSettings) => void; onClose: () => void;
   onSaved: (settings: AISettingsSummary, message?: string) => void;
 }) {
-  const copy = getAIUiCopy(locale);
+  const copy = settingsCopy[locale];
+  const aiCopy = getAIUiCopy(locale);
+  const t = useMemo(() => createT(locale), [locale]);
+  const [activeTab, setActiveTab] = useState("general");
+  const originalSettingsRef = useRef(userSettings);
+  const [draft, setDraft] = useState(userSettings);
   const [settings, setSettings] = useState<AISettings>(DEFAULT_AI_SETTINGS);
   const [apiKey, setApiKey] = useState("");
   const [hasApiKey, setHasApiKey] = useState(false);
@@ -30,138 +36,69 @@ export function SettingsDialog({
   const [isSaving, setIsSaving] = useState(false);
   const [isClearingApiKey, setIsClearingApiKey] = useState(false);
   const [error, setError] = useState("");
+  const tabs = [
+    { id: "general", label: copy.general, icon: SlidersHorizontal }, { id: "appearance", label: copy.appearance, icon: Palette },
+    { id: "background", label: copy.background, icon: Wallpaper }, { id: "export", label: copy.export, icon: Download },
+    { id: "ai", label: copy.ai, icon: Bot }, { id: "about", label: copy.about, icon: Info }
+  ];
 
   useEffect(() => {
-    if (!open) {
-      return;
-    }
-    setApiKey("");
-    setError("");
-    setIsLoading(true);
-    loadAISettings()
-      .then((loaded) => {
-        const { hasApiKey: configured, ...nextSettings } = loaded;
-        setSettings(nextSettings);
-        setHasApiKey(configured);
-      })
-      .catch(() => setError(copy.settingsLoadFailed))
-      .finally(() => setIsLoading(false));
+    if (!open) return;
+    originalSettingsRef.current = userSettings; setDraft(userSettings); setApiKey(""); setError(""); setIsLoading(true);
+    loadAISettings().then(({ hasApiKey: configured, ...next }) => { setSettings(next); setHasApiKey(configured); }).catch(() => setError(aiCopy.settingsLoadFailed)).finally(() => setIsLoading(false));
   }, [open]);
 
   useEffect(() => {
-    if (!open) {
-      return;
-    }
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && !isSaving && !isClearingApiKey) {
-        onClose();
-      }
-    };
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
+    if (!open) return;
+    const onKeyDown = (event: KeyboardEvent) => { if (event.key === "Escape" && !isSaving && !isClearingApiKey) handleCancel(); };
+    document.addEventListener("keydown", onKeyDown); return () => document.removeEventListener("keydown", onKeyDown);
   }, [isClearingApiKey, isSaving, onClose, open]);
 
-  if (!open) {
-    return null;
+  if (!open) return null;
+
+  function updateDraft(next: UserSettings) {
+    setDraft(next);
+    onUserSettingsPreview(next);
+  }
+
+  function handleCancel() {
+    onUserSettingsPreview(originalSettingsRef.current);
+    onClose();
   }
 
   async function handleSave() {
-    setError("");
-    setIsSaving(true);
+    setError(""); setIsSaving(true);
     try {
+      onUserSettingsChange(draft);
       const saved = await saveAISettings({ ...settings, apiKey: apiKey || undefined });
-      setHasApiKey(saved.hasApiKey);
-      setApiKey("");
-      onSaved(saved);
-      onClose();
-    } catch (saveError) {
-      setError(saveError instanceof Error ? saveError.message : copy.settingsSaveFailed);
-    } finally {
-      setIsSaving(false);
-    }
+      setHasApiKey(saved.hasApiKey); setApiKey(""); onSaved(saved); onClose();
+    } catch (saveError) { setError(saveError instanceof Error ? saveError.message : aiCopy.settingsSaveFailed); }
+    finally { setIsSaving(false); }
   }
 
   async function handleClearApiKey() {
-    if (!hasApiKey) {
-      setApiKey("");
-      return;
-    }
-    if (!window.confirm(copy.clearApiKeyConfirm)) {
-      return;
-    }
-
-    setError("");
+    if (!hasApiKey) { setApiKey(""); return; }
+    if (!window.confirm(aiCopy.clearApiKeyConfirm)) return;
     setIsClearingApiKey(true);
-    try {
-      const cleared = await clearAISettingsApiKey();
-      setHasApiKey(false);
-      setApiKey("");
-      onSaved(cleared, copy.apiKeyCleared);
-    } catch (clearError) {
-      setError(clearError instanceof Error ? clearError.message : copy.apiKeyClearFailed);
-    } finally {
-      setIsClearingApiKey(false);
-    }
+    try { const cleared = await clearAISettingsApiKey(); setHasApiKey(false); setApiKey(""); onSaved(cleared, aiCopy.apiKeyCleared); }
+    catch (clearError) { setError(clearError instanceof Error ? clearError.message : aiCopy.apiKeyClearFailed); }
+    finally { setIsClearingApiKey(false); }
   }
 
-  return (
-    <div
-      className="fixed inset-0 z-[100] grid place-items-center bg-black/35 p-4 backdrop-blur-sm"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget && !isSaving && !isClearingApiKey) {
-          onClose();
-        }
-      }}
-    >
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="settings-dialog-title"
-        data-testid="settings-dialog"
-        className="settings-surface glass-panel max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl p-5 sm:p-6"
-      >
-        <div className="mb-5 flex items-start justify-between gap-4">
-          <div>
-            <div className="mb-2 flex items-center gap-2">
-              <Settings className="h-5 w-5" />
-              <h2 id="settings-dialog-title" className="app-text-primary text-xl font-bold">{copy.settingsTitle}</h2>
-            </div>
-            <p className="app-text-subtle text-sm">{copy.settingsDescription}</p>
-          </div>
-          <button type="button" onClick={onClose} disabled={isSaving || isClearingApiKey} aria-label={copy.cancel} className="app-button grid h-9 w-9 place-items-center rounded-lg">
-            <X className="h-4 w-4" />
-          </button>
-        </div>
+  const panel = activeTab === "general" ? <GeneralSettingsSection locale={locale} settings={draft} copy={copy} onLocaleChange={onLocaleChange} onChange={updateDraft} />
+    : activeTab === "appearance" ? <AppearanceSettingsSection settings={draft} copy={copy} onChange={updateDraft} />
+    : activeTab === "background" ? <BackgroundSettingsSection settings={draft} copy={copy} onChange={updateDraft} />
+    : activeTab === "export" ? <ExportSettingsSection settings={draft} copy={copy} onChange={updateDraft} />
+    : activeTab === "about" ? <AboutSettingsSection copy={copy} t={t} />
+    : isLoading ? <div className="app-text-subtle flex items-center gap-2 p-5"><Loader2 className="h-4 w-4 animate-spin" />{copy.ai}</div>
+    : <AiSettingsSection settings={settings} apiKey={apiKey} hasApiKey={hasApiKey} locale={locale} copy={aiCopy} isClearingApiKey={isClearingApiKey} onSettingsChange={setSettings} onApiKeyChange={setApiKey} onClearApiKey={handleClearApiKey} />;
 
-        <div className="grid gap-5">
-          <LanguageSettingsSection locale={locale} title={copy.languageSection} onLocaleChange={onLocaleChange} />
-          {isLoading ? (
-            <div className="app-text-subtle flex items-center gap-2 border-t border-white/10 pt-5 text-sm">
-              <Loader2 className="h-4 w-4 animate-spin" /> {copy.aiSection}
-            </div>
-          ) : (
-            <AiSettingsSection
-              settings={settings}
-              apiKey={apiKey}
-              hasApiKey={hasApiKey}
-              locale={locale}
-              copy={copy}
-              isClearingApiKey={isClearingApiKey}
-              onSettingsChange={setSettings}
-              onApiKeyChange={setApiKey}
-              onClearApiKey={handleClearApiKey}
-            />
-          )}
-        </div>
-
-        {error ? <p role="alert" className="mt-4 rounded-lg border border-red-300/25 bg-red-400/10 px-3 py-2 text-sm text-red-100">{error}</p> : null}
-        <div className="mt-6 flex justify-end gap-3">
-          <button type="button" onClick={onClose} disabled={isSaving || isClearingApiKey} className="app-button h-10 rounded-lg px-4 text-sm font-semibold">{copy.cancel}</button>
-          <button type="button" data-testid="save-settings" onClick={handleSave} disabled={isSaving || isLoading || isClearingApiKey} className="h-10 rounded-lg bg-cyan-200 px-4 text-sm font-bold text-slate-950 transition hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-60">
-            {isSaving ? copy.saving : copy.save}
-          </button>
-        </div>
-      </div>
+  return <div className="fixed inset-0 z-[100] grid place-items-center bg-black/40 p-3 backdrop-blur-sm" onMouseDown={(event) => { if (event.target === event.currentTarget && !isSaving) handleCancel(); }}>
+    <div role="dialog" aria-modal="true" aria-labelledby="settings-dialog-title" data-testid="settings-dialog" className="settings-surface glass-panel flex max-h-[92vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl">
+      <div className="flex items-start justify-between gap-4 border-b border-white/10 p-4 sm:p-5"><div><div className="flex items-center gap-2"><Settings className="h-5 w-5" /><h2 id="settings-dialog-title" className="text-xl font-bold">{copy.settings}</h2></div><p className="app-text-subtle mt-1 text-sm">{copy.description}</p></div><button type="button" onClick={handleCancel} className="app-button grid h-9 w-9 place-items-center rounded-lg" aria-label={copy.cancel}><X className="h-4 w-4" /></button></div>
+      <div className="flex min-h-0 flex-1 flex-col md:flex-row"><SettingsTabs tabs={tabs} active={activeTab} onChange={setActiveTab} /><div className="min-h-[420px] flex-1 overflow-y-auto p-4 sm:p-5"><AnimatePresence mode="wait"><motion.div key={activeTab} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8 }} transition={{ duration: 0.18 }}>{panel}</motion.div></AnimatePresence></div></div>
+      {error ? <p role="alert" className="mx-5 mb-2 rounded-lg bg-red-400/10 px-3 py-2 text-sm text-red-100">{error}</p> : null}
+      <div className="flex justify-end gap-3 border-t border-white/10 p-4"><button type="button" onClick={handleCancel} className="app-button h-10 rounded-lg px-4 text-sm font-semibold">{copy.cancel}</button><button type="button" data-testid="save-settings" onClick={() => void handleSave()} disabled={isSaving || isLoading || isClearingApiKey} className="h-10 rounded-lg px-4 text-sm font-bold text-white disabled:opacity-60" style={{ background: draft.uiAccentColor }}>{isSaving ? aiCopy.saving : copy.save}</button></div>
     </div>
-  );
+  </div>;
 }

@@ -1,58 +1,13 @@
 "use client";
 
-import { Settings, Trash2 } from "lucide-react";
-import { UpdateButton } from "@/components/editor/UpdateButton";
+import { Music2, Settings } from "lucide-react";
 import { getAIUiCopy } from "@/lib/ai/ui-copy";
 import type { createT } from "@/lib/i18n";
+import { settingsCopy } from "@/lib/settings/copy";
 import type { Locale } from "@/lib/types";
 
-type EditorHeaderProps = {
-  locale: Locale;
-  t: ReturnType<typeof createT>;
-  onOpenSettings: () => void;
-  onClearAll: () => void;
-};
-
-export function EditorHeader({ locale, t, onOpenSettings, onClearAll }: EditorHeaderProps) {
-  const copy = getAIUiCopy(locale);
-
-  return (
-    <header className="glass-panel relative z-40 flex min-w-0 max-w-full flex-col gap-4 rounded-lg px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
-      <div>
-        <h1 className="app-text-primary text-2xl font-black tracking-normal sm:text-3xl">{t("appTitle")}</h1>
-        <p className="app-text-subtle mt-1 text-sm">{t("appSubtitle")}</p>
-      </div>
-      <div className="flex flex-wrap items-center gap-3">
-        <UpdateButton t={t} />
-        <a
-          href="https://github.com/Qrzzzz"
-          target="_blank"
-          rel="noreferrer"
-          aria-label="GitHub"
-          className="app-button inline-flex h-10 w-10 items-center justify-center rounded-lg transition"
-        >
-          <svg viewBox="0 0 16 16" aria-hidden="true" className="h-5 w-5 fill-current">
-            <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.03 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8Z" />
-          </svg>
-        </a>
-        <button
-          type="button"
-          onClick={onClearAll}
-          className="app-button inline-flex h-10 items-center justify-center gap-2 rounded-lg px-3 text-sm font-semibold transition"
-        >
-          <Trash2 className="h-4 w-4" />
-          {t("clearAll")}
-        </button>
-        <button
-          type="button"
-          data-testid="settings-button"
-          onClick={onOpenSettings}
-          className="app-button inline-flex h-10 items-center justify-center gap-2 rounded-lg px-3 text-sm font-semibold transition"
-        >
-          <Settings className="h-4 w-4" />
-          {copy.settings}
-        </button>
-      </div>
-    </header>
-  );
+export function EditorHeader({ locale, t, onOpenExamples, onOpenSettings }: { locale: Locale; t: ReturnType<typeof createT>; onOpenExamples: () => void; onOpenSettings: () => void }) {
+  const aiCopy = getAIUiCopy(locale);
+  const copy = settingsCopy[locale];
+  return <header className="glass-panel relative z-40 flex min-w-0 max-w-full flex-col gap-4 rounded-lg px-4 py-4 sm:flex-row sm:items-center sm:justify-between"><div className="flex min-w-0 items-center gap-3"><img src="/app-icon.png" alt="Lyrics Card" className="h-9 w-9 shrink-0 rounded-[9px] border border-white/15 shadow-lg" /><div className="min-w-0"><h1 className="app-text-primary truncate text-2xl font-black tracking-normal sm:text-3xl">{t("appTitle")}</h1><p className="app-text-subtle mt-1 truncate text-sm">{t("appSubtitle")}</p></div></div><div className="flex items-center gap-3"><button type="button" data-testid="examples-button" onClick={onOpenExamples} className="app-button inline-flex h-10 items-center justify-center gap-2 rounded-lg px-3 text-sm font-semibold"><Music2 className="h-4 w-4" />{copy.example}</button><button type="button" data-testid="settings-button" onClick={onOpenSettings} className="app-button inline-flex h-10 items-center justify-center gap-2 rounded-lg px-3 text-sm font-semibold"><Settings className="h-4 w-4" />{aiCopy.settings}</button></div></header>;
 }
