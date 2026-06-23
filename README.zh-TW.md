@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v3.1.0.zh-TW.md">發布說明</a> ·
+  <a href="./docs/releases/v3.2.0.zh-TW.md">發布說明</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="#本機開發">本機開發</a> ·
   <a href="./LICENSE">授權條款</a>
@@ -40,8 +40,8 @@
 
 請前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載最新版：
 
-* 建議一般使用者下載安裝版：`Lyrics Card Generator Setup 3.1.0.exe`
-* 不想安裝時可下載可攜版：`Lyrics Card Generator-3.1.0-portable.exe`
+* 建議一般使用者下載安裝版：`Lyrics Card Generator Setup 3.2.0.exe`
+* 不想安裝時可下載可攜版：`Lyrics Card Generator-3.2.0-portable.exe`
 
 安裝版適合長期使用；可攜版適合臨時執行、測試或放在隨身碟中使用。
 
@@ -53,12 +53,12 @@
 
 GitHub Release 頁面預設使用簡體中文短版，完整發佈說明維護在 `docs/releases/`：
 
-* [简体中文](./docs/releases/v3.1.0.zh-CN.md)
-* [繁體中文](./docs/releases/v3.1.0.zh-TW.md)
-* [English](./docs/releases/v3.1.0.en.md)
-* [Français](./docs/releases/v3.1.0.fr.md)
-* [日本語](./docs/releases/v3.1.0.ja.md)
-* [Español](./docs/releases/v3.1.0.es.md)
+* [简体中文](./docs/releases/v3.2.0.zh-CN.md)
+* [繁體中文](./docs/releases/v3.2.0.zh-TW.md)
+* [English](./docs/releases/v3.2.0.en.md)
+* [Français](./docs/releases/v3.2.0.fr.md)
+* [日本語](./docs/releases/v3.2.0.ja.md)
+* [Español](./docs/releases/v3.2.0.es.md)
 
 ## ✨ 主要功能
 

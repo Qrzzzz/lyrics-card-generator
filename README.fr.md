@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v3.1.0.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v3.2.0.fr.md">Notes de version</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="#développement-local">Développement local</a> ·
   <a href="./LICENSE">Licence</a>
@@ -43,8 +43,8 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 Téléchargez la dernière version depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
 
-* Installateur recommandé : `Lyrics Card Generator Setup 3.1.0.exe`
-* Version portable : `Lyrics Card Generator-3.1.0-portable.exe`
+* Installateur recommandé : `Lyrics Card Generator Setup 3.2.0.exe`
+* Version portable : `Lyrics Card Generator-3.2.0-portable.exe`
 
 L'installateur est recommandé pour une utilisation régulière. La version portable convient aux essais, à une utilisation temporaire ou à un disque amovible.
 
@@ -54,12 +54,12 @@ L'installateur est recommandé pour une utilisation régulière. La version port
 
 La page GitHub Release utilise par défaut la version courte en chinois simplifié, les notes de publication complètes sont conservées dans `docs/releases/` :
 
-* [简体中文](./docs/releases/v3.1.0.zh-CN.md)
-* [繁體中文](./docs/releases/v3.1.0.zh-TW.md)
-* [English](./docs/releases/v3.1.0.en.md)
-* [Français](./docs/releases/v3.1.0.fr.md)
-* [日本語](./docs/releases/v3.1.0.ja.md)
-* [Español](./docs/releases/v3.1.0.es.md)
+* [简体中文](./docs/releases/v3.2.0.zh-CN.md)
+* [繁體中文](./docs/releases/v3.2.0.zh-TW.md)
+* [English](./docs/releases/v3.2.0.en.md)
+* [Français](./docs/releases/v3.2.0.fr.md)
+* [日本語](./docs/releases/v3.2.0.ja.md)
+* [Español](./docs/releases/v3.2.0.es.md)
 
 <a id="fonctionnalités-principales"></a>
 

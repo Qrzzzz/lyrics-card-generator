@@ -42,6 +42,11 @@ body {
 }
 
 .app-shell {
+  --app-bg: #080910;
+  --app-text-primary: #ffffff;
+  --app-text-secondary: rgba(255, 255, 255, 0.68);
+  --app-accent: #7c3aed;
+  --app-font-family: inherit;
   --app-fg: 255 255 255;
   --app-muted: 255 255 255 / 0.68;
   --app-subtle: 255 255 255 / 0.48;
@@ -52,10 +57,44 @@ body {
   --input-border: 255 255 255 / 0.13;
   --button-bg: 255 255 255 / 0.1;
   --button-bg-hover: 255 255 255 / 0.16;
+  font-family: var(--app-font-family);
+}
+
+.app-shell[data-ui-theme="light-blue"] {
+  color-scheme: light;
+  --app-bg: #eaf6ff;
+  --app-text-primary: #0f172a;
+  --app-text-secondary: #475569;
+  --app-accent: #2563eb;
+  --app-fg: 15 23 42;
+  --app-muted: 71 85 105;
+  --app-subtle: 71 85 105 / 0.78;
+  --panel-bg: 255 255 255 / 0.78;
+  --panel-border: 37 99 235 / 0.18;
+  --input-bg: 255 255 255 / 0.88;
+  --input-border: 37 99 235 / 0.2;
+  --button-bg: 255 255 255 / 0.72;
+  --button-bg-hover: 219 234 254 / 0.92;
+}
+
+.app-shell[data-ui-theme="dark-pink"] {
+  --app-bg: #08040a;
+  --app-text-primary: #fce7f3;
+  --app-text-secondary: #f9a8d4;
+  --app-accent: #ec4899;
+  --app-fg: 252 231 243;
+  --app-muted: 249 168 212 / 0.82;
+  --app-subtle: 249 168 212 / 0.62;
+  --panel-bg: 24 8 20 / 0.78;
+  --panel-border: 236 72 153 / 0.24;
+  --input-bg: 22 7 20 / 0.86;
+  --input-border: 236 72 153 / 0.25;
+  --button-bg: 236 72 153 / 0.1;
+  --button-bg-hover: 236 72 153 / 0.18;
 }
 
 .app-text-primary {
-  color: rgb(var(--app-fg));
+  color: var(--app-text-primary, rgb(var(--app-fg)));
 }
 
 .app-text-muted {

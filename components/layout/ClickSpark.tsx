@@ -13,9 +13,11 @@ type Spark = {
 };
 
 export function ClickSpark({
+  enabled = true,
   themeColor = "#7C3AED",
   children
 }: {
+  enabled?: boolean;
   themeColor?: string;
   children: ReactNode;
 }) {
@@ -119,7 +121,7 @@ export function ClickSpark({
   function handlePointerDown(event: PointerEvent<HTMLDivElement>) {
     const canvas = canvasRef.current;
 
-    if (!canvas || reducedMotionRef.current) {
+    if (!enabled || !canvas || reducedMotionRef.current) {
       return;
     }
 
@@ -145,7 +147,7 @@ export function ClickSpark({
       {children}
       <canvas
         ref={canvasRef}
-        className="pointer-events-none absolute inset-0 z-50 block"
+        className={`pointer-events-none absolute inset-0 z-50 ${enabled ? "block" : "hidden"}`}
         style={{ pointerEvents: "none" }}
         aria-hidden="true"
       />

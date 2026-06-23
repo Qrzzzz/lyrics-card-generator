@@ -278,6 +278,29 @@ function registerDesktopIpc() {
     }
   });
 
+  ipcMain.handle("lyrics-card:background-save", async () => {
+    const result = await dialog.showOpenDialog(mainWindow, {
+      properties: ["openFile"],
+      filters: [{ name: "Images", extensions: ["png", "jpg", "jpeg", "webp", "gif"] }]
+    });
+    if (result.canceled || !result.filePaths[0]) return null;
+    const source = result.filePaths[0];
+    const extension = path.extname(source).toLowerCase();
+    const imageId = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}${extension}`;
+    const directory = path.join(app.getPath("userData"), "backgrounds");
+    await fs.mkdir(directory, { recursive: true });
+    await fs.copyFile(source, path.join(directory, imageId));
+    return { imageId, imageUrl: await readBackgroundDataUrl(imageId) };
+  });
+
+  ipcMain.handle("lyrics-card:background-read", (_event, imageId) => readBackgroundDataUrl(imageId));
+  ipcMain.handle("lyrics-card:background-remove", async (_event, imageId) => {
+    const target = safeBackgroundPath(imageId);
+    if (!target) return false;
+    await fs.rm(target, { force: true });
+    return true;
+  });
+
   ipcMain.handle("lyrics-card:ai-settings-load", async () => {
     const settings = await readAISettings();
     return toAISettingsSummary(settings);
@@ -350,6 +373,24 @@ function registerDesktopIpc() {
       aiTranslationRequests.get(requestId)?.abort();
     }
   });
+}
+
+function safeBackgroundPath(imageId) {
+  if (typeof imageId !== "string" || !/^[a-zA-Z0-9._-]+$/.test(imageId)) return null;
+  return path.join(app.getPath("userData"), "backgrounds", imageId);
+}
+
+async function readBackgroundDataUrl(imageId) {
+  const target = safeBackgroundPath(imageId);
+  if (!target) return undefined;
+  try {
+    const data = await fs.readFile(target);
+    const extension = path.extname(target).slice(1).toLowerCase();
+    const mime = extension === "jpg" || extension === "jpeg" ? "image/jpeg" : extension === "svg" ? "image/svg+xml" : `image/${extension || "png"}`;
+    return `data:${mime};base64,${data.toString("base64")}`;
+  } catch {
+    return undefined;
+  }
 }
 
 function getAISettingsPath() {
