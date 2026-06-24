@@ -57,6 +57,18 @@ body {
   --input-border: 255 255 255 / 0.13;
   --button-bg: 255 255 255 / 0.1;
   --button-bg-hover: 255 255 255 / 0.16;
+  --status-success-fg: 187 247 208;
+  --status-success-bg: 74 222 128 / 0.1;
+  --status-success-border: 187 247 208 / 0.22;
+  --status-warning-fg: 254 240 138;
+  --status-warning-bg: 250 204 21 / 0.1;
+  --status-warning-border: 254 240 138 / 0.22;
+  --status-danger-fg: 254 226 226;
+  --status-danger-bg: 244 63 94 / 0.1;
+  --status-danger-border: 254 202 202 / 0.22;
+  --status-info-fg: 207 250 254;
+  --status-info-bg: 34 211 238 / 0.1;
+  --status-info-border: 165 243 252 / 0.22;
   font-family: var(--app-font-family);
 }
 
@@ -75,6 +87,18 @@ body {
   --input-border: 37 99 235 / 0.2;
   --button-bg: 255 255 255 / 0.72;
   --button-bg-hover: 219 234 254 / 0.92;
+  --status-success-fg: 22 101 52;
+  --status-success-bg: 220 252 231 / 0.85;
+  --status-success-border: 34 197 94 / 0.35;
+  --status-warning-fg: 133 77 14;
+  --status-warning-bg: 254 249 195 / 0.9;
+  --status-warning-border: 234 179 8 / 0.42;
+  --status-danger-fg: 159 18 57;
+  --status-danger-bg: 255 228 230 / 0.9;
+  --status-danger-border: 244 63 94 / 0.38;
+  --status-info-fg: 14 116 144;
+  --status-info-bg: 207 250 254 / 0.9;
+  --status-info-border: 6 182 212 / 0.38;
 }
 
 .app-shell[data-ui-theme="dark-pink"] {
@@ -91,6 +115,11 @@ body {
   --input-border: 236 72 153 / 0.25;
   --button-bg: 236 72 153 / 0.1;
   --button-bg-hover: 236 72 153 / 0.18;
+}
+
+.app-shell[data-ui-theme="custom"] {
+  --app-bg: var(--custom-app-bg, #080910);
+  --app-accent: var(--custom-app-accent, #7c3aed);
 }
 
 .app-text-primary {
@@ -117,6 +146,36 @@ body {
 
 .app-button:hover {
   background: rgb(var(--button-bg-hover));
+}
+
+.status-success {
+  border-color: rgb(var(--status-success-border));
+  background: rgb(var(--status-success-bg));
+  color: rgb(var(--status-success-fg));
+}
+
+.status-warning {
+  border-color: rgb(var(--status-warning-border));
+  background: rgb(var(--status-warning-bg));
+  color: rgb(var(--status-warning-fg));
+}
+
+.status-danger {
+  border-color: rgb(var(--status-danger-border));
+  background: rgb(var(--status-danger-bg));
+  color: rgb(var(--status-danger-fg));
+}
+
+.status-info {
+  border-color: rgb(var(--status-info-border));
+  background: rgb(var(--status-info-bg));
+  color: rgb(var(--status-info-fg));
+}
+
+.status-idle {
+  border-color: rgb(var(--panel-border));
+  background: rgb(var(--panel-bg));
+  color: rgb(var(--app-muted));
 }
 
 body {
@@ -194,25 +253,17 @@ button {
 }
 
 .settings-surface {
-  --app-fg: 255 255 255;
-  --app-muted: 255 255 255 / 0.76;
-  --app-subtle: 255 255 255 / 0.56;
-  --panel-border: 255 255 255 / 0.18;
-  --button-bg: 255 255 255 / 0.09;
-  --button-bg-hover: 255 255 255 / 0.14;
-  color: #ffffff;
-  border-color: rgba(255, 255, 255, 0.2);
-  background:
-    linear-gradient(rgba(0, 0, 0, 0.18), rgba(0, 0, 0, 0.18)),
-    linear-gradient(145deg, rgba(35, 41, 56, 0.9), rgba(25, 30, 43, 0.88));
+  color: rgb(var(--app-fg));
+  border-color: rgb(var(--panel-border));
+  background: rgb(var(--panel-bg));
   box-shadow: 0 34px 100px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(26px) saturate(105%);
 }
 
 .settings-surface .field-shell {
-  border-color: rgba(255, 255, 255, 0.16);
-  background: rgba(27, 33, 46, 0.82);
-  color: #ffffff;
+  border-color: rgb(var(--input-border));
+  background: rgb(var(--input-bg));
+  color: rgb(var(--app-fg));
 }
 
 .settings-surface .field-shell:focus {
@@ -222,19 +273,17 @@ button {
 }
 
 .settings-panel-card {
-  border: 1px solid rgba(255, 255, 255, 0.13);
+  border: 1px solid rgb(var(--panel-border));
   border-radius: 14px;
-  background:
-    linear-gradient(rgba(0, 0, 0, 0.14), rgba(0, 0, 0, 0.14)),
-    linear-gradient(145deg, rgba(48, 55, 72, 0.62), rgba(35, 41, 55, 0.66));
+  background: rgb(var(--panel-bg));
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.055);
 }
 
 .settings-tip {
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgb(var(--panel-border));
   border-radius: 9px;
-  background: rgba(18, 24, 36, 0.52);
-  color: rgba(255, 255, 255, 0.67);
+  background: rgb(var(--button-bg));
+  color: rgb(var(--app-muted));
 }
 
 .card-font-sans-heavy {
@@ -376,10 +425,8 @@ button {
 }
 
 .ai-inline-panel {
-  color: #fff;
-  background:
-    linear-gradient(rgba(0,0,0,0.16), rgba(0,0,0,0.16)),
-    linear-gradient(145deg, rgba(35,41,56,0.76), rgba(25,30,43,0.72));
+  color: rgb(var(--app-fg));
+  background: rgb(var(--panel-bg));
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.075), 0 18px 45px rgba(0,0,0,0.18);
   backdrop-filter: blur(20px) saturate(105%);
 }

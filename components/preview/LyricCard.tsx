@@ -62,7 +62,7 @@ export function LyricCard({
       style={{ width: size.width, height: size.height, ...cardFontStyle(style) }}
       data-export-card="true"
     >
-      <PaletteBackground palette={style.extractedPalette} />
+      <PaletteBackground palette={style.extractedPalette} showFineGrid={style.showFineGrid !== false} />
       <div className="absolute inset-0 bg-black/14" />
       <div className="absolute inset-0 bg-[linear-gradient(145deg,rgba(255,255,255,0.14),transparent_42%,rgba(0,0,0,0.22))]" />
 

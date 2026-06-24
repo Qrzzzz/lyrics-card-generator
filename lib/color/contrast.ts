@@ -20,3 +20,22 @@ export function resolveReadableTextColor(background: string, preferred?: string)
   if (preferred && getContrastRatio(background, preferred) >= 4.5) return preferred;
   return getContrastRatio(background, dark) >= getContrastRatio(background, light) ? dark : light;
 }
+
+export function resolveReadableTextTokens(background: string, preferred?: string) {
+  const primary = resolveReadableTextColor(background, preferred);
+  const isDarkText = getContrastRatio(primary, "#FFFFFF") >= getContrastRatio(primary, "#191612");
+
+  return isDarkText
+    ? {
+        primary,
+        fg: "25 22 18",
+        muted: "71 85 105",
+        subtle: "71 85 105 / 0.76"
+      }
+    : {
+        primary,
+        fg: "255 255 255",
+        muted: "255 255 255 / 0.72",
+        subtle: "255 255 255 / 0.52"
+      };
+}

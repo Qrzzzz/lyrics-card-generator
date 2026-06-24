@@ -54,6 +54,7 @@ const baseStyle: CardStyle = {
   sharedByText: "Shared by Test",
   showWatermark: true,
   showPlatformBadge: true,
+  showFineGrid: true,
   frameStyleEnabled: false,
   frameVariant: "fullBleed",
   showFrame: false,

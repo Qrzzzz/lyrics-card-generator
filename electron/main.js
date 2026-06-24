@@ -5,6 +5,7 @@ const http = require("node:http");
 const net = require("node:net");
 const path = require("node:path");
 const { normalizeFontOptions } = require("./font-options");
+const { normalizeStoredPreferences } = require("./user-preferences");
 
 const HOST = "127.0.0.1";
 const APP_ID = "com.lyriccard.generator";
@@ -247,6 +248,14 @@ app.on("activate", () => {
 });
 
 function registerDesktopIpc() {
+  ipcMain.handle("lyrics-card:app-preferences-load", () => readAppPreferences());
+  ipcMain.handle("lyrics-card:app-preferences-save", async (_event, input) => {
+    const preferences = normalizeStoredPreferences(input);
+    if (!preferences) return false;
+    await writeAppPreferences(preferences);
+    return true;
+  });
+
   ipcMain.handle("lyrics-card:list-system-fonts", async () => {
     if (process.platform !== "win32") {
       return [];
@@ -395,6 +404,28 @@ async function readBackgroundDataUrl(imageId) {
 
 function getAISettingsPath() {
   return path.join(app.getPath("userData"), "ai-settings.json");
+}
+
+function getAppPreferencesPath() {
+  return path.join(app.getPath("userData"), "app-preferences.json");
+}
+
+async function writeAppPreferences(preferences) {
+  await fs.mkdir(app.getPath("userData"), { recursive: true });
+  await fs.writeFile(getAppPreferencesPath(), JSON.stringify(preferences, null, 2), { encoding: "utf8", mode: 0o600 });
+  await fs.chmod(getAppPreferencesPath(), 0o600).catch(() => undefined);
+}
+
+async function readAppPreferences() {
+  try {
+    const parsed = JSON.parse(await fs.readFile(getAppPreferencesPath(), "utf8"));
+    return normalizeStoredPreferences(parsed);
+  } catch (error) {
+    if (error?.code !== "ENOENT") {
+      console.error("[app-preferences] unable to read preferences", error instanceof Error ? error.message : "unknown error");
+    }
+    return null;
+  }
 }
 
 async function writeAISettings(settings) {

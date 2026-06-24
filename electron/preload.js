@@ -1,6 +1,8 @@
 const { contextBridge, ipcRenderer } = require("electron");
 
 contextBridge.exposeInMainWorld("lyricsCardDesktop", {
+  loadAppPreferences: () => ipcRenderer.invoke("lyrics-card:app-preferences-load"),
+  saveAppPreferences: (preferences) => ipcRenderer.invoke("lyrics-card:app-preferences-save", preferences),
   listSystemFonts: () => ipcRenderer.invoke("lyrics-card:list-system-fonts"),
   pickFont: () => ipcRenderer.invoke("lyrics-card:pick-font"),
   openExternal: (url) => ipcRenderer.invoke("lyrics-card:open-external", url),

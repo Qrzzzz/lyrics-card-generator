@@ -8,9 +8,11 @@ import {
 } from "@/lib/palette-background";
 
 export function PaletteBackground({
-  palette
+  palette,
+  showFineGrid = true
 }: {
   palette?: ExtractedPalette;
+  showFineGrid?: boolean;
 }) {
   const activePalette = palette ?? DEFAULT_PALETTE;
   const isColorful = activePalette.kind === "colorful";
@@ -67,6 +69,16 @@ export function PaletteBackground({
           background: "linear-gradient(180deg, rgba(0,0,0,0.12), rgba(0,0,0,0.3) 48%, rgba(0,0,0,0.54))"
         }}
       />
+      {showFineGrid ? (
+        <div
+          data-card-fine-grid="true"
+          className="absolute inset-0 opacity-[0.1]"
+          style={{
+            backgroundImage: "linear-gradient(rgba(255,255,255,0.34) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.34) 1px, transparent 1px)",
+            backgroundSize: "32px 32px"
+          }}
+        />
+      ) : null}
       <div className="noise-layer absolute inset-0 opacity-[0.11]" />
     </div>
   );

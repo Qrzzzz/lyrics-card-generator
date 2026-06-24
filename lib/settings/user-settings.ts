@@ -85,3 +85,16 @@ export function mergeUserSettings(partial: Partial<UserSettings>): UserSettings 
 export function resetUserSettings(): UserSettings {
   return saveUserSettings(structuredClone(DEFAULT_USER_SETTINGS));
 }
+
+export function resolveEffectiveAppBackgroundColor(settings: UserSettings, albumColor: string) {
+  const background = settings.appBackground;
+
+  if (background.mode === "solid") return background.solidColor;
+  if (background.mode === "image-palette") return background.extractedColor ?? settings.uiAccentColor;
+  if (background.mode.startsWith("image-")) return background.extractedColor ?? albumColor;
+
+  if (settings.uiTheme === "light-blue") return "#EAF6FF";
+  if (settings.uiTheme === "dark-pink") return "#08040A";
+
+  return albumColor;
+}

@@ -482,6 +482,7 @@ export function VisualSettingsPanel({ style, onStyleChange, t }: StylePanelProps
         <SwitchRow label={t("cover")} checked={style.showCover} onChange={(checked) => update("showCover", checked)} />
         <SwitchRow label={t("showSongInfo")} checked={style.showSongInfo} onChange={(checked) => update("showSongInfo", checked)} />
         <SwitchRow label={t("allowTwoLineTitle")} checked={style.allowTwoLineTitle} onChange={(checked) => update("allowTwoLineTitle", checked)} />
+        <SwitchRow label={t("fineGrid")} checked={style.showFineGrid !== false} onChange={(checked) => update("showFineGrid", checked)} />
         <SwitchRow label={t("showGeneratedWatermark")} checked={style.showGeneratedWatermark} onChange={updateGeneratedWatermark} />
         <SwitchRow
           label={t("showPlatformLogo")}
