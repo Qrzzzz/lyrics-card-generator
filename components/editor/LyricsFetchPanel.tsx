@@ -79,9 +79,9 @@ export function LyricsFetchPanel({
         <p
           className={cn(
             "rounded-lg border px-3 py-2 text-sm",
-            status === "success" && "border-emerald-200/22 bg-emerald-300/10 text-emerald-100/82",
-            status === "error" && "border-rose-200/22 bg-rose-300/10 text-rose-100/86",
-            status === "loading" && "border-cyan-200/22 bg-cyan-300/10 text-cyan-100/82"
+            status === "success" && "status-success",
+            status === "error" && "status-danger",
+            status === "loading" && "status-info"
           )}
         >
           {message}

@@ -4,6 +4,8 @@ import type {
   DesktopAIStreamEvent,
   SaveAISettingsInput
 } from "@/lib/ai/types";
+import type { Locale } from "@/lib/types";
+import type { UserSettings } from "@/lib/settings/types";
 
 export type SystemFontOption = {
   label: string;
@@ -13,6 +15,8 @@ export type SystemFontOption = {
 };
 
 export type LyricsCardDesktopApi = {
+  loadAppPreferences: () => Promise<{ locale: Locale; userSettings: UserSettings } | null>;
+  saveAppPreferences: (preferences: { locale: Locale; userSettings: UserSettings }) => Promise<boolean>;
   listSystemFonts: () => Promise<SystemFontOption[]>;
   pickFont: () => Promise<string | null>;
   openExternal: (url: string) => Promise<boolean>;

@@ -92,6 +92,7 @@ export type CardStyle = {
   sharedByText: string;
   showWatermark: boolean;
   showPlatformBadge: boolean;
+  showFineGrid: boolean;
   frameStyleEnabled: boolean;
   frameVariant?: FrameVariant;
   showFrame: boolean;

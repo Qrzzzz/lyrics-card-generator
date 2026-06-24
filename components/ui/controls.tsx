@@ -71,7 +71,9 @@ export function SwitchRow({
     <button
       type="button"
       onClick={() => onChange(!checked)}
-      className="app-button flex h-11 items-center justify-between rounded-lg px-3 text-left text-sm"
+      role="switch"
+      aria-checked={checked}
+      className="app-button flex h-11 w-full items-center justify-between rounded-lg px-3 text-left text-sm"
     >
       <span>{label}</span>
       <span

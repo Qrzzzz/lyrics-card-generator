@@ -15,8 +15,15 @@ import { DEFAULT_AI_SETTINGS, type AISettings, type AISettingsSummary } from "@/
 import { getAIUiCopy } from "@/lib/ai/ui-copy";
 import { createT } from "@/lib/i18n";
 import { settingsCopy } from "@/lib/settings/copy";
+import { removeBackgroundImage } from "@/lib/settings/background-storage";
 import type { UserSettings } from "@/lib/settings/types";
 import type { Locale } from "@/lib/types";
+
+type PendingBackgroundAsset = {
+  imageId: string;
+  imageUrl: string;
+  previousImageId?: string;
+};
 
 export function SettingsDialog({ open, locale, userSettings, onLocaleChange, onUserSettingsPreview, onUserSettingsChange, onClose, onSaved }: {
   open: boolean; locale: Locale; userSettings: UserSettings; onLocaleChange: (locale: Locale) => void;
@@ -28,6 +35,8 @@ export function SettingsDialog({ open, locale, userSettings, onLocaleChange, onU
   const t = useMemo(() => createT(locale), [locale]);
   const [activeTab, setActiveTab] = useState("general");
   const originalSettingsRef = useRef(userSettings);
+  const isOpenRef = useRef(open);
+  const pendingBackgroundRef = useRef<PendingBackgroundAsset | undefined>(undefined);
   const [draft, setDraft] = useState(userSettings);
   const [settings, setSettings] = useState<AISettings>(DEFAULT_AI_SETTINGS);
   const [apiKey, setApiKey] = useState("");
@@ -43,8 +52,9 @@ export function SettingsDialog({ open, locale, userSettings, onLocaleChange, onU
   ];
 
   useEffect(() => {
+    isOpenRef.current = open;
     if (!open) return;
-    originalSettingsRef.current = userSettings; setDraft(userSettings); setApiKey(""); setError(""); setIsLoading(true);
+    originalSettingsRef.current = userSettings; pendingBackgroundRef.current = undefined; setDraft(userSettings); setApiKey(""); setError(""); setIsLoading(true);
     loadAISettings().then(({ hasApiKey: configured, ...next }) => { setSettings(next); setHasApiKey(configured); }).catch(() => setError(aiCopy.settingsLoadFailed)).finally(() => setIsLoading(false));
   }, [open]);
 
@@ -61,17 +71,49 @@ export function SettingsDialog({ open, locale, userSettings, onLocaleChange, onU
     onUserSettingsPreview(next);
   }
 
+  async function cleanupPendingBackground() {
+    const pending = pendingBackgroundRef.current;
+    pendingBackgroundRef.current = undefined;
+    if (pending?.imageId) await removeBackgroundImage(pending.imageId).catch(() => undefined);
+  }
+
+  async function handleBackgroundStored(asset: { imageId: string; imageUrl: string }) {
+    if (!isOpenRef.current) {
+      await removeBackgroundImage(asset.imageId).catch(() => undefined);
+      return false;
+    }
+    const previousPending = pendingBackgroundRef.current;
+    if (previousPending?.imageId && previousPending.imageId !== asset.imageId) {
+      await removeBackgroundImage(previousPending.imageId).catch(() => undefined);
+    }
+    pendingBackgroundRef.current = { ...asset, previousImageId: originalSettingsRef.current.appBackground.imageId };
+    return true;
+  }
+
   function handleCancel() {
+    isOpenRef.current = false;
     onUserSettingsPreview(originalSettingsRef.current);
+    void cleanupPendingBackground();
     onClose();
   }
 
   async function handleSave() {
     setError(""); setIsSaving(true);
     try {
-      onUserSettingsChange(draft);
       const saved = await saveAISettings({ ...settings, apiKey: apiKey || undefined });
-      setHasApiKey(saved.hasApiKey); setApiKey(""); onSaved(saved); onClose();
+      onUserSettingsChange(draft);
+      const originalImageId = originalSettingsRef.current.appBackground.imageId;
+      const nextImageId = draft.appBackground.imageId;
+      const pending = pendingBackgroundRef.current;
+      pendingBackgroundRef.current = undefined;
+      const obsoleteIds = new Set([
+        originalImageId && originalImageId !== nextImageId ? originalImageId : undefined,
+        pending?.imageId && pending.imageId !== nextImageId ? pending.imageId : undefined
+      ].filter((value): value is string => Boolean(value)));
+      const cleanupResults = await Promise.allSettled([...obsoleteIds].map((imageId) => removeBackgroundImage(imageId)));
+      const cleanupFailed = cleanupResults.some((result) => result.status === "rejected");
+      isOpenRef.current = false;
+      setHasApiKey(saved.hasApiKey); setApiKey(""); onSaved(saved, cleanupFailed ? copy.backgroundSaveFailed : undefined); onClose();
     } catch (saveError) { setError(saveError instanceof Error ? saveError.message : aiCopy.settingsSaveFailed); }
     finally { setIsSaving(false); }
   }
@@ -87,7 +129,7 @@ export function SettingsDialog({ open, locale, userSettings, onLocaleChange, onU
 
   const panel = activeTab === "general" ? <GeneralSettingsSection locale={locale} settings={draft} copy={copy} onLocaleChange={onLocaleChange} onChange={updateDraft} />
     : activeTab === "appearance" ? <AppearanceSettingsSection settings={draft} copy={copy} onChange={updateDraft} />
-    : activeTab === "background" ? <BackgroundSettingsSection settings={draft} copy={copy} onChange={updateDraft} />
+    : activeTab === "background" ? <BackgroundSettingsSection settings={draft} copy={copy} onChange={updateDraft} onImageStored={handleBackgroundStored} />
     : activeTab === "export" ? <ExportSettingsSection settings={draft} copy={copy} onChange={updateDraft} />
     : activeTab === "about" ? <AboutSettingsSection copy={copy} t={t} />
     : isLoading ? <div className="app-text-subtle flex items-center gap-2 p-5"><Loader2 className="h-4 w-4 animate-spin" />{copy.ai}</div>
@@ -95,10 +137,10 @@ export function SettingsDialog({ open, locale, userSettings, onLocaleChange, onU
 
   return <div className="fixed inset-0 z-[100] grid place-items-center bg-black/40 p-3 backdrop-blur-sm" onMouseDown={(event) => { if (event.target === event.currentTarget && !isSaving) handleCancel(); }}>
     <div role="dialog" aria-modal="true" aria-labelledby="settings-dialog-title" data-testid="settings-dialog" className="settings-surface glass-panel flex max-h-[92vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl">
-      <div className="flex items-start justify-between gap-4 border-b border-white/10 p-4 sm:p-5"><div><div className="flex items-center gap-2"><Settings className="h-5 w-5" /><h2 id="settings-dialog-title" className="text-xl font-bold">{copy.settings}</h2></div><p className="app-text-subtle mt-1 text-sm">{copy.description}</p></div><button type="button" onClick={handleCancel} className="app-button grid h-9 w-9 place-items-center rounded-lg" aria-label={copy.cancel}><X className="h-4 w-4" /></button></div>
+      <div className="flex items-start justify-between gap-4 border-b border-[rgb(var(--panel-border))] p-4 sm:p-5"><div><div className="flex items-center gap-2"><Settings className="h-5 w-5" /><h2 id="settings-dialog-title" className="text-xl font-bold">{copy.settings}</h2></div><p className="app-text-subtle mt-1 text-sm">{copy.description}</p></div><button type="button" onClick={handleCancel} className="app-button grid h-9 w-9 place-items-center rounded-lg" aria-label={copy.cancel}><X className="h-4 w-4" /></button></div>
       <div className="flex min-h-0 flex-1 flex-col md:flex-row"><SettingsTabs tabs={tabs} active={activeTab} onChange={setActiveTab} /><div className="min-h-[420px] flex-1 overflow-y-auto p-4 sm:p-5"><AnimatePresence mode="wait"><motion.div key={activeTab} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8 }} transition={{ duration: 0.18 }}>{panel}</motion.div></AnimatePresence></div></div>
-      {error ? <p role="alert" className="mx-5 mb-2 rounded-lg bg-red-400/10 px-3 py-2 text-sm text-red-100">{error}</p> : null}
-      <div className="flex justify-end gap-3 border-t border-white/10 p-4"><button type="button" onClick={handleCancel} className="app-button h-10 rounded-lg px-4 text-sm font-semibold">{copy.cancel}</button><button type="button" data-testid="save-settings" onClick={() => void handleSave()} disabled={isSaving || isLoading || isClearingApiKey} className="h-10 rounded-lg px-4 text-sm font-bold text-white disabled:opacity-60" style={{ background: draft.uiAccentColor }}>{isSaving ? aiCopy.saving : copy.save}</button></div>
+      {error ? <p role="alert" className="status-danger mx-5 mb-2 rounded-lg border px-3 py-2 text-sm">{error}</p> : null}
+      <div className="flex justify-end gap-3 border-t border-[rgb(var(--panel-border))] p-4"><button type="button" onClick={handleCancel} className="app-button h-10 rounded-lg px-4 text-sm font-semibold">{copy.cancel}</button><button type="button" data-testid="save-settings" onClick={() => void handleSave()} disabled={isSaving || isLoading || isClearingApiKey} className="h-10 rounded-lg px-4 text-sm font-bold text-white disabled:opacity-60" style={{ background: draft.uiAccentColor }}>{isSaving ? aiCopy.saving : copy.save}</button></div>
     </div>
   </div>;
 }

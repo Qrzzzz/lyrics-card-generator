@@ -338,12 +338,12 @@ function FontPickerDialog({
         data-testid={`font-picker-${category}`}
         className="settings-surface flex max-h-[86vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border"
       >
-        <header className="flex items-start justify-between gap-4 border-b border-white/12 p-5">
+        <header className="flex items-start justify-between gap-4 border-b border-[rgb(var(--panel-border))] p-5">
           <div>
-            <h2 id="font-picker-title" className="text-lg font-bold text-white">
+            <h2 id="font-picker-title" className="app-text-primary text-lg font-bold">
               {category === "cjk" ? t("fontSchemeChooseCjk") : t("fontSchemeChooseLatin")}
             </h2>
-            <p className="mt-1 text-sm text-white/55">{t(category === "cjk" ? "fontSchemeCjkUsage" : "fontSchemeLatinUsage")}</p>
+            <p className="app-text-subtle mt-1 text-sm">{t(category === "cjk" ? "fontSchemeCjkUsage" : "fontSchemeLatinUsage")}</p>
           </div>
           <button type="button" className="app-button h-10 rounded-lg px-3 text-sm" onClick={onClose} aria-label={t("fontSchemeClose")}>
             {t("fontSchemeClose")}
@@ -363,8 +363,8 @@ function FontPickerDialog({
           {allFonts.length > 0 ? (
             <FontOptionGroup title={t("fontSchemeAllFonts")} fonts={allFonts} selectedFamily={selectedFamily} onSelect={onSelect} />
           ) : null}
-          {filtered.length === 0 ? <p className="rounded-lg border border-white/12 p-4 text-sm text-white/60">{t("customFontNoResults")}</p> : null}
-          {status ? <p className="text-sm text-white/55">{status}</p> : null}
+          {filtered.length === 0 ? <p className="app-text-muted rounded-lg border border-[rgb(var(--panel-border))] p-4 text-sm">{t("customFontNoResults")}</p> : null}
+          {status ? <p className="app-text-subtle text-sm">{status}</p> : null}
         </div>
       </section>
     </div>,
@@ -385,7 +385,7 @@ function FontOptionGroup({
 }) {
   return (
     <div className="grid gap-2">
-      <h3 className="text-sm font-semibold text-white/80">{title}</h3>
+      <h3 className="app-text-primary text-sm font-semibold">{title}</h3>
       <div className="grid gap-2" role="listbox">
         {fonts.map((font) => {
           const selected = selectedFamily === font.family;
@@ -398,14 +398,14 @@ function FontOptionGroup({
               onClick={() => onSelect(font)}
               className={cn(
                 "grid gap-2 rounded-xl border p-3 text-left transition sm:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] sm:items-center",
-                selected ? "border-cyan-200/60 bg-cyan-200/10" : "border-white/12 bg-black/10 hover:bg-white/5"
+                selected ? "border-[var(--app-accent)] bg-[rgb(var(--button-bg-hover))]" : "border-[rgb(var(--panel-border))] bg-[rgb(var(--button-bg))] hover:bg-[rgb(var(--button-bg-hover))]"
               )}
             >
               <span>
-                <span className="block text-sm font-semibold text-white">{font.label}</span>
-                <span className="mt-1 block text-xs text-white/45">{font.category === "cjk" ? "CJK" : "Latin"}</span>
+                <span className="app-text-primary block text-sm font-semibold">{font.label}</span>
+                <span className="app-text-subtle mt-1 block text-xs">{font.category === "cjk" ? "CJK" : "Latin"}</span>
               </span>
-              <span className="block truncate text-sm text-white/80" style={{ fontFamily: `${quoteSingleFontFamily(font.family)}, sans-serif` }}>
+              <span className="app-text-muted block truncate text-sm" style={{ fontFamily: `${quoteSingleFontFamily(font.family)}, sans-serif` }}>
                 {font.preview}
               </span>
             </button>

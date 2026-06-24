@@ -35,8 +35,8 @@ export function LanguageSettingsSection({
               onClick={() => onLocaleChange(option.locale)}
               className={`flex min-h-12 items-center justify-between gap-3 rounded-lg border px-3 py-2 text-left transition ${
                 selected
-                  ? "border-white/38 bg-white/[0.13] app-text-primary"
-                  : "border-white/12 bg-black/20 app-text-subtle hover:bg-white/[0.08] hover:text-white"
+                  ? "border-[var(--app-accent)] bg-[rgb(var(--button-bg-hover))] app-text-primary"
+                  : "border-[rgb(var(--panel-border))] bg-[rgb(var(--button-bg))] app-text-subtle hover:bg-[rgb(var(--button-bg-hover))] hover:text-[rgb(var(--app-fg))]"
               }`}
             >
               <span>

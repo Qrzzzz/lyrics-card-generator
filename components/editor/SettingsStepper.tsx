@@ -79,14 +79,14 @@ export function SettingsStepper({
                 className={cn(
                   "group flex flex-[1_1_auto] items-center gap-2 whitespace-nowrap rounded-lg border px-2.5 py-2 text-left transition",
                   isActive
-                    ? "border-white/24 bg-white/14 text-white shadow-[0_16px_42px_rgba(0,0,0,0.22)]"
-                    : "border-white/10 bg-white/[0.045] text-white/58 hover:bg-white/[0.075] hover:text-white/82"
+                    ? "border-[rgb(var(--panel-border))] bg-[rgb(var(--button-bg-hover))] app-text-primary shadow-[0_16px_42px_rgba(0,0,0,0.22)]"
+                    : "border-[rgb(var(--panel-border))] bg-[rgb(var(--button-bg))] app-text-muted hover:bg-[rgb(var(--button-bg-hover))] hover:text-[rgb(var(--app-fg))]"
                 )}
               >
                 <span
                   className={cn(
                     "flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-[11px] font-black transition",
-                    isActive || isComplete ? "border-transparent text-white" : "border-white/14 text-white/56"
+                    isActive || isComplete ? "border-transparent text-white" : "border-[rgb(var(--panel-border))] app-text-muted"
                   )}
                   style={isActive || isComplete ? { backgroundColor: themeColor, color: markerForegroundColor } : undefined}
                 >

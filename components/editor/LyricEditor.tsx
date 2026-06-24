@@ -46,16 +46,18 @@ import {
 } from "@/lib/ai/types";
 import { getAIUiCopy } from "@/lib/ai/ui-copy";
 import { getHighResolutionCoverUrl } from "@/lib/cover-url";
+import { clearLyricContent } from "@/lib/clear-content";
 import { exportNodeAsPng } from "@/lib/export-image";
 import { DEFAULT_FONT_SCHEME } from "@/lib/font-schemes";
 import { createT, messages } from "@/lib/i18n";
 import { proxiedImageUrl } from "@/lib/image-utils";
 import { DEFAULT_PALETTE } from "@/lib/palette-background";
 import { loadBackgroundImage } from "@/lib/settings/background-storage";
+import { isSupportedLocale, loadAppPreferences, saveAppPreferences, shouldShowFirstLaunchLanguage } from "@/lib/settings/app-preferences";
 import { settingsCopy } from "@/lib/settings/copy";
 import { DEFAULT_USER_SETTINGS, type UserSettings } from "@/lib/settings/types";
-import { loadUserSettings, saveUserSettings } from "@/lib/settings/user-settings";
-import { resolveReadableTextColor } from "@/lib/color/contrast";
+import { resolveEffectiveAppBackgroundColor, saveUserSettings } from "@/lib/settings/user-settings";
+import { resolveReadableTextTokens } from "@/lib/color/contrast";
 import type { ExampleSong } from "@/lib/examples";
 import type { AppState, CardRatio, CardStyle, FontScheme, Locale } from "@/lib/types";
 import { sanitizeFilePart } from "@/lib/utils";
@@ -73,7 +75,6 @@ const DEFAULT_TRANSLATION = [
   "命运兜兜转转",
   "你终究还是会走向她"
 ].join("\n");
-const SUPPORTED_LOCALES: Locale[] = ["zh", "zh-TW", "en", "fr", "ja", "es"];
 const DEFAULT_INSTRUMENTAL_TEXT: Record<Locale, string> = {
   zh: "纯音乐",
   "zh-TW": "純音樂",
@@ -134,6 +135,7 @@ const defaultState: AppState = {
     sharedByText: "",
     showWatermark: false,
     showPlatformBadge: false,
+    showFineGrid: true,
     frameStyleEnabled: false,
     frameVariant: "fullBleed",
     showFrame: false,
@@ -203,31 +205,7 @@ export function LyricEditor() {
     clearVersionRef.current += 1;
     setCelebrationKey(0);
     setFontSchemePreview(null);
-    setState((current) => ({
-      ...current,
-      url: "",
-      song: {
-        source: "unknown",
-        title: "",
-        artist: "",
-        album: "",
-        originalCoverUrl: "",
-        coverUrl: "",
-        proxiedCoverUrl: "",
-        originalUrl: ""
-      },
-      lyrics: "",
-      translationText: "",
-      translationEnabled: false,
-      palette: DEFAULT_PALETTE,
-      paletteWarning: "",
-      style: {
-        ...current.style,
-        extractedPalette: DEFAULT_PALETTE,
-        translationEnabled: false,
-        translationText: ""
-      }
-    }));
+    setState(clearLyricContent);
   }
 
   function handleStyleChange(nextStyle: CardStyle) {
@@ -309,21 +287,35 @@ export function LyricEditor() {
   }
 
   useEffect(() => {
-    const storedLocale = window.localStorage.getItem("lyric-card-generator-locale");
-    const loadedSettings = loadUserSettings();
-    setUserSettings(loadedSettings);
-    if (isSupportedLocale(storedLocale)) {
-      setLocale(storedLocale);
-    }
-    setIsFirstLaunchOpen(!isSupportedLocale(storedLocale) || !loadedSettings.firstLaunchLanguageSelected);
+    let active = true;
+    void loadAppPreferences().then(({ locale: storedLocale, userSettings: loadedSettings }) => {
+      if (!active) return;
+      setUserSettings(loadedSettings);
+      if (isSupportedLocale(storedLocale)) {
+        applyLocale(storedLocale);
+      }
+      setIsFirstLaunchOpen(shouldShowFirstLaunchLanguage(storedLocale, loadedSettings));
+    });
+    return () => { active = false; };
   }, []);
 
   useEffect(() => {
     let active = true;
+    let objectUrl: string | undefined;
     loadBackgroundImage(userSettings.appBackground.imageId, userSettings.appBackground.imageUrl)
-      .then((url) => { if (active) setBackgroundImageUrl(url); })
+      .then((url) => {
+        if (!active) {
+          if (url?.startsWith("blob:")) URL.revokeObjectURL(url);
+          return;
+        }
+        objectUrl = url?.startsWith("blob:") ? url : undefined;
+        setBackgroundImageUrl(url);
+      })
       .catch(() => { if (active) setBackgroundImageUrl(undefined); });
-    return () => { active = false; };
+    return () => {
+      active = false;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
   }, [userSettings.appBackground.imageId, userSettings.appBackground.imageUrl]);
 
   useEffect(() => {
@@ -434,7 +426,7 @@ export function LyricEditor() {
     aiAbortControllerRef.current?.abort();
   }
 
-  function setLocale(locale: Locale) {
+  function applyLocale(locale: Locale) {
     setState((current) => {
       const previousDefaultInstrumentalTexts = Object.values(DEFAULT_INSTRUMENTAL_TEXT);
       const shouldUpdateInstrumentalText = previousDefaultInstrumentalTexts.includes(current.style.instrumentalText);
@@ -448,17 +440,24 @@ export function LyricEditor() {
         }
       };
     });
-    window.localStorage.setItem("lyric-card-generator-locale", locale);
+  }
+
+  function setLocale(locale: Locale) {
+    applyLocale(locale);
+    void saveAppPreferences(locale, userSettings).catch(() => undefined);
   }
 
   function updateUserSettings(next: UserSettings) {
     const saved = saveUserSettings(next);
     setUserSettings(saved);
+    void saveAppPreferences(state.locale, saved).catch(() => undefined);
   }
 
-  function chooseFirstLaunchLanguage(locale: Locale) {
-    setLocale(locale);
-    updateUserSettings({ ...userSettings, firstLaunchLanguageSelected: true });
+  async function chooseFirstLaunchLanguage(locale: Locale) {
+    const saved = saveUserSettings({ ...userSettings, firstLaunchLanguageSelected: true });
+    applyLocale(locale);
+    setUserSettings(saved);
+    await saveAppPreferences(locale, saved).catch(() => undefined);
     setIsFirstLaunchOpen(false);
   }
 
@@ -694,15 +693,22 @@ export function LyricEditor() {
     : userSettings.uiTheme === "light-blue" ? "#2563EB"
     : userSettings.uiTheme === "dark-pink" ? "#EC4899"
     : userSettings.uiAccentColor;
-  const uiBackgroundColor = userSettings.appBackground.mode === "solid"
-    ? userSettings.appBackground.solidColor
-    : userSettings.uiTheme === "light-blue" ? "#EAF6FF"
-    : userSettings.uiTheme === "dark-pink" ? "#08040A"
-    : userSettings.appBackground.mode === "image-palette" ? userSettings.appBackground.extractedColor ?? "#080910"
-    : state.palette?.dark ?? "#080910";
-  const uiTextColor = userSettings.uiTextColorMode === "light" ? "#FFFFFF"
+  const uiBackgroundColor = resolveEffectiveAppBackgroundColor(userSettings, state.palette?.dark ?? "#080910");
+  const preferredTextColor = userSettings.uiTextColorMode === "light" ? "#FFFFFF"
     : userSettings.uiTextColorMode === "dark" ? "#191612"
-    : resolveReadableTextColor(uiBackgroundColor, userSettings.uiTextColorMode === "custom" ? userSettings.uiCustomTextColor : undefined);
+    : userSettings.uiTextColorMode === "custom" ? userSettings.uiCustomTextColor : undefined;
+  const uiTextTokens = resolveReadableTextTokens(uiBackgroundColor, preferredTextColor);
+  const customThemeTokens = userSettings.uiTheme === "custom"
+    ? uiTextTokens.fg === "25 22 18"
+      ? {
+          "--app-bg": uiBackgroundColor, "--panel-bg": "255 255 255 / 0.78", "--panel-border": "15 23 42 / 0.18",
+          "--input-bg": "255 255 255 / 0.88", "--input-border": "15 23 42 / 0.2", "--button-bg": "255 255 255 / 0.72", "--button-bg-hover": "241 245 249 / 0.94"
+        }
+      : {
+          "--app-bg": uiBackgroundColor, "--panel-bg": "5 8 14 / 0.68", "--panel-border": "255 255 255 / 0.16",
+          "--input-bg": "5 8 14 / 0.72", "--input-border": "255 255 255 / 0.16", "--button-bg": "255 255 255 / 0.1", "--button-bg-hover": "255 255 255 / 0.16"
+        }
+    : {};
 
   return (
     <div
@@ -711,14 +717,18 @@ export function LyricEditor() {
       style={{
         "--app-font-family": userSettings.uiFontFamily || undefined,
         "--app-accent": themeAccent,
-        "--app-text-primary": uiTextColor
-      } as React.CSSProperties}
+        "--app-text-primary": uiTextTokens.primary,
+        "--app-fg": uiTextTokens.fg,
+        "--app-muted": uiTextTokens.muted,
+        "--app-subtle": uiTextTokens.subtle,
+        ...customThemeTokens
+      } as unknown as React.CSSProperties}
     >
       <DynamicAppBackground palette={state.palette} settings={userSettings} imageUrl={backgroundImageUrl} />
       <ClickSpark enabled={userSettings.sparkCursorEnabled} themeColor={themeAccent}>
     <main className="relative z-10 min-h-screen px-4 py-5 sm:px-6 lg:px-8">
       <div className="mx-auto grid w-[calc(100vw-2rem)] max-w-[1520px] min-w-0 gap-5 sm:w-full">
-        <EditorHeader locale={state.locale} t={t} onOpenExamples={() => setIsExamplesOpen(true)} onOpenSettings={() => setIsSettingsOpen(true)} />
+        <EditorHeader locale={state.locale} t={t} onOpenExamples={() => setIsExamplesOpen(true)} onClearAll={clearAllContent} onOpenSettings={() => setIsSettingsOpen(true)} />
 
         <div className="grid min-w-0 max-w-full gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(420px,600px)]">
           <motion.div
@@ -786,9 +796,6 @@ function sizeSnapshot(style: CardStyle) {
   };
 }
 
-function isSupportedLocale(locale: string | null): locale is Locale {
-  return Boolean(locale && SUPPORTED_LOCALES.includes(locale as Locale));
-}
 
 function normalizeAIErrorMessage(error: unknown) {
   if (error instanceof Error) {
