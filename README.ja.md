@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v3.2.0.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v3.2.1.ja.md">リリースノート</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="#ローカル開発">ローカル開発</a> ·
   <a href="./LICENSE">ライセンス</a>
@@ -43,23 +43,30 @@
 
 最新版は [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) からダウンロードできます。
 
-* 推奨インストーラー：`Lyrics Card Generator Setup 3.2.0.exe`
-* ポータブル版：`Lyrics Card Generator-3.2.0-portable.exe`
+* 推奨インストーラー：`Lyrics Card Generator Setup 3.2.1.exe`
+* ポータブル版：`Lyrics Card Generator-3.2.1-portable.exe`
 
 通常利用にはインストーラーを推奨します。ポータブル版は一時利用、検証、リムーバブルドライブでの利用に向いています。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
+### v3.2.1 の主な変更
+
+* v3.2.1 は引き続き v3.2.0 のバグ修正版で、UI の可読性、背景設定のトランザクション処理、安定性を中心に改善しています。
+* デスクトップ版を再起動するたびに言語選択が表示される問題を修正しました。初回の選択を永続化し、次回以降は空のエディターを直接開きます。
+* Spark Cursor スイッチを設定行の横幅いっぱいに表示し、プレビューと書き出し PNG の両方に反映される「細かいグリッド背景」スイッチを既定で有効にしました。
+* 設定を保持する「すべて消去」を復元し、ライト／カスタムテーマ、背景プレビュー、オブジェクト URL の解放を改善しました。
+
 ## 🌐 多言語リリースノート
 
 GitHub Release ページではデフォルトで簡体字中国語の短縮版が使用され、完全なリリースノートは `docs/releases/` にて管理されています：
 
-* [简体中文](./docs/releases/v3.2.0.zh-CN.md)
-* [繁體中文](./docs/releases/v3.2.0.zh-TW.md)
-* [English](./docs/releases/v3.2.0.en.md)
-* [Français](./docs/releases/v3.2.0.fr.md)
-* [日本語](./docs/releases/v3.2.0.ja.md)
-* [Español](./docs/releases/v3.2.0.es.md)
+* [简体中文](./docs/releases/v3.2.1.zh-CN.md)
+* [繁體中文](./docs/releases/v3.2.1.zh-TW.md)
+* [English](./docs/releases/v3.2.1.en.md)
+* [Français](./docs/releases/v3.2.1.fr.md)
+* [日本語](./docs/releases/v3.2.1.ja.md)
+* [Español](./docs/releases/v3.2.1.es.md)
 
 <a id="主な機能"></a>
 

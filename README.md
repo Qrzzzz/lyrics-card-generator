@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v3.2.0.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v3.2.1.zh-CN.md">发布说明</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="#本地开发">本地开发</a> ·
   <a href="./LICENSE">许可证</a>
@@ -40,23 +40,30 @@
 
 请前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下载最新版：
 
-* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 3.2.0.exe`
-* 不想安装时可下载便携版：`Lyrics Card Generator-3.2.0-portable.exe`
+* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 3.2.1.exe`
+* 不想安装时可下载便携版：`Lyrics Card Generator-3.2.1-portable.exe`
 
 安装版适合长期使用；便携版适合临时运行、测试或放在移动硬盘中使用。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
+### v3.2.1 更新重点
+
+* v3.2.1 继续作为 v3.2.0 的 bugfix 版本，集中修复界面可读性、背景设置事务和稳定性问题。
+* 修复桌面版重启后反复要求选择语言的问题；首次选择会持久保存，后续直接进入空白编辑器。
+* Spark Cursor 开关改为横向填满；“视觉细节”新增默认开启、同时影响预览和导出 PNG 的细网格背景开关。
+* 恢复“一键清空”并保留软件设置，同时完善浅色／自定义主题、背景图片预览和对象 URL 清理。
+
 ## 🌐 多语言发布说明
 
 GitHub Release 页面默认使用简体中文短版，完整发布说明维护在 `docs/releases/`：
 
-* [简体中文](./docs/releases/v3.2.0.zh-CN.md)
-* [繁體中文](./docs/releases/v3.2.0.zh-TW.md)
-* [English](./docs/releases/v3.2.0.en.md)
-* [Français](./docs/releases/v3.2.0.fr.md)
-* [日本語](./docs/releases/v3.2.0.ja.md)
-* [Español](./docs/releases/v3.2.0.es.md)
+* [简体中文](./docs/releases/v3.2.1.zh-CN.md)
+* [繁體中文](./docs/releases/v3.2.1.zh-TW.md)
+* [English](./docs/releases/v3.2.1.en.md)
+* [Français](./docs/releases/v3.2.1.fr.md)
+* [日本語](./docs/releases/v3.2.1.ja.md)
+* [Español](./docs/releases/v3.2.1.es.md)
 
 <a id="主要功能"></a>
 

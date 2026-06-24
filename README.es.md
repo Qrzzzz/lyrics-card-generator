@@ -19,7 +19,7 @@
 <p>
   <strong>Navegación</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Descargar la última versión</a> ·
-  <a href="./docs/releases/v3.2.0.es.md">Notas de la versión</a> ·
+  <a href="./docs/releases/v3.2.1.es.md">Notas de la versión</a> ·
   <a href="#funciones-principales">Funciones principales</a> ·
   <a href="#desarrollo-local">Desarrollo local</a> ·
   <a href="./LICENSE">Licencia</a>
@@ -43,23 +43,30 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 Descarga la versión más reciente desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Instalador recomendado: `Lyrics Card Generator Setup 3.2.0.exe`
-* Versión portable: `Lyrics Card Generator-3.2.0-portable.exe`
+* Instalador recomendado: `Lyrics Card Generator Setup 3.2.1.exe`
+* Versión portable: `Lyrics Card Generator-3.2.1-portable.exe`
 
 El instalador se recomienda para uso habitual. La versión portable es útil para pruebas, uso temporal o ejecución desde una unidad extraíble.
 
 > La compilación actual no está firmada. Windows puede mostrar una advertencia de SmartScreen, algo habitual en aplicaciones personales sin firma.
 
+### Aspectos destacados de la versión 3.2.1
+
+* La versión 3.2.1 sigue siendo una corrección de errores de la 3.2.0, centrada en la legibilidad de la interfaz, los ajustes de fondo transaccionales y la estabilidad.
+* Se corrigió la solicitud repetida de idioma tras cada reinicio de la aplicación de escritorio; la primera elección se conserva y los siguientes inicios abren directamente el editor vacío.
+* El control Spark Cursor ahora ocupa todo el ancho de su fila y se añadió Fondo de cuadrícula fina, activado de forma predeterminada para la vista previa y el PNG exportado.
+* Se restauró Borrar todo conservando los ajustes y se mejoraron los temas claro/personalizado, la vista previa del fondo y la limpieza de las URL de objeto.
+
 ## 🌐 Notas de publicación multilingüe
 
 La página de GitHub Release utiliza por defecto la versión corta en chino simplificado, las notas de publicación completas se mantienen en `docs/releases/`:
 
-* [简体中文](./docs/releases/v3.2.0.zh-CN.md)
-* [繁體中文](./docs/releases/v3.2.0.zh-TW.md)
-* [English](./docs/releases/v3.2.0.en.md)
-* [Français](./docs/releases/v3.2.0.fr.md)
-* [日本語](./docs/releases/v3.2.0.ja.md)
-* [Español](./docs/releases/v3.2.0.es.md)
+* [简体中文](./docs/releases/v3.2.1.zh-CN.md)
+* [繁體中文](./docs/releases/v3.2.1.zh-TW.md)
+* [English](./docs/releases/v3.2.1.en.md)
+* [Français](./docs/releases/v3.2.1.fr.md)
+* [日本語](./docs/releases/v3.2.1.ja.md)
+* [Español](./docs/releases/v3.2.1.es.md)
 
 <a id="funciones-principales"></a>
 
