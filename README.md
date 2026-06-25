@@ -36,6 +36,13 @@
 
 ---
 
+<img
+  align="right"
+  src="./public/app-icon.png"
+  alt="Lyrics Card Generator icon"
+  width="200"
+/>
+
 ## 📦 下载与安装
 
 请前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下载最新版：
@@ -53,6 +60,8 @@
 * 支持 `open.spotify.com/track/...`、地区化 track 页面、embed track 页面以及常见 Spotify 短链接。
 * Spotify 歌曲可显示平台 Logo，并继续使用现有封面取色、歌词卡片编辑和 PNG 导出流程。
 * 自动歌词获取仍沿用现有实验性歌词搜索，不从 Spotify 获取歌词，也不需要 Spotify API 密钥。
+
+<br clear="right" />
 
 ## 🌐 多语言发布说明
 
