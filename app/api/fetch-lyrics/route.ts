@@ -4,7 +4,7 @@ import { z } from "zod";
 export const runtime = "nodejs";
 
 const schema = z.object({
-  source: z.enum(["qq", "netease", "apple", "unknown"]),
+  source: z.enum(["qq", "netease", "apple", "spotify", "unknown"]),
   url: z.string().max(2048).optional(),
   title: z.string().min(1).max(240),
   artist: z.string().max(240).optional().default("")

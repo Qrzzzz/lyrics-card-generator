@@ -4,7 +4,7 @@
 
 ### Générez des cartes de paroles soignées prêtes à partager
 
-**Apple Music / NetEase Cloud Music / QQ Music · application de bureau Windows · export PNG haute résolution · documentation multilingue**
+**Spotify / Apple Music / NetEase Cloud Music / QQ Music · application de bureau Windows · export PNG haute résolution · documentation multilingue**
 
 <p>
   <strong>Langue</strong><br/>
@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v3.2.1.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v3.3.0.fr.md">Notes de version</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="#développement-local">Développement local</a> ·
   <a href="./LICENSE">Licence</a>
@@ -43,30 +43,30 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 Téléchargez la dernière version depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
 
-* Installateur recommandé : `Lyrics Card Generator Setup 3.2.1.exe`
-* Version portable : `Lyrics Card Generator-3.2.1-portable.exe`
+* Installateur recommandé : `Lyrics Card Generator Setup 3.3.0.exe`
+* Version portable : `Lyrics Card Generator-3.3.0-portable.exe`
 
 L'installateur est recommandé pour une utilisation régulière. La version portable convient aux essais, à une utilisation temporaire ou à un disque amovible.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### Points clés de la v3.2.1
+### Points clés de la v3.3.0
 
-* La v3.2.1 reste une version corrective de la v3.2.0, centrée sur la lisibilité de l’interface, les réglages d’arrière-plan transactionnels et la stabilité.
-* Correction de la demande répétée de langue après chaque redémarrage de l’application de bureau ; le premier choix est conservé et les lancements suivants ouvrent directement l’éditeur vide.
-* Le contrôle Spark Cursor occupe désormais toute la largeur de sa ligne et un contrôle Arrière-plan quadrillé fin, activé par défaut, agit sur l’aperçu comme sur le PNG exporté.
-* Restauration de Tout effacer sans supprimer les réglages, avec des améliorations pour les thèmes clair/personnalisé, l’aperçu des arrière-plans et le nettoyage des URL d’objet.
+* Ajout de l’analyse des liens de morceaux Spotify pour remplir automatiquement le titre, l’artiste et la pochette.
+* Prise en charge de `open.spotify.com/track/...`, des pages track régionalisées, des pages embed track et des liens courts Spotify courants.
+* Les morceaux Spotify peuvent afficher le logo de la plateforme et continuer à utiliser l’extraction de palette, l’édition de cartes de paroles et l’export PNG existants.
+* La récupération automatique des paroles utilise toujours la recherche expérimentale existante. Elle ne récupère pas les paroles depuis Spotify et ne nécessite pas de clé API Spotify.
 
 ## 🌐 Notes de publication multilingues
 
 La page GitHub Release utilise par défaut la version courte en chinois simplifié, les notes de publication complètes sont conservées dans `docs/releases/` :
 
-* [简体中文](./docs/releases/v3.2.1.zh-CN.md)
-* [繁體中文](./docs/releases/v3.2.1.zh-TW.md)
-* [English](./docs/releases/v3.2.1.en.md)
-* [Français](./docs/releases/v3.2.1.fr.md)
-* [日本語](./docs/releases/v3.2.1.ja.md)
-* [Español](./docs/releases/v3.2.1.es.md)
+* [简体中文](./docs/releases/v3.3.0.zh-CN.md)
+* [繁體中文](./docs/releases/v3.3.0.zh-TW.md)
+* [English](./docs/releases/v3.3.0.en.md)
+* [Français](./docs/releases/v3.3.0.fr.md)
+* [日本語](./docs/releases/v3.3.0.ja.md)
+* [Español](./docs/releases/v3.3.0.es.md)
 
 <a id="fonctionnalités-principales"></a>
 
@@ -79,7 +79,7 @@ La page GitHub Release utilise par défaut la version courte en chinois simplifi
 * Mise en page originale des paroles et des traductions
 * Séparation automatique des lignes original / traduction avec détection du chinois simplifié, chinois traditionnel, anglais, français, japonais et espagnol
 * Traduction de paroles par IA via les API Chat Completions compatibles OpenAI, avec URL du fournisseur, modèle, clé API, six styles, Reasoning et sortie en streaming configurables
-* Analyse de liens Apple Music, NetEase Cloud Music et QQ Music
+* Analyse de liens Spotify, Apple Music, NetEase Cloud Music et QQ Music
 * Analyse de métadonnées MP3 / FLAC locales : titre, artiste, album, pochette et paroles intégrées
 * Édition manuelle du titre, de l'artiste, de la pochette et des paroles
 * Import de pochette locale
@@ -116,7 +116,7 @@ Ces fonctions nécessitent Internet :
 ## 🚀 Utilisation
 
 1. Lancez l'application.
-2. Collez un lien Apple Music, NetEase Cloud Music ou QQ Music, ou saisissez les informations du morceau manuellement.
+2. Collez un lien Spotify, Apple Music, NetEase Cloud Music ou QQ Music, ou saisissez les informations du morceau manuellement.
 3. Vous pouvez aussi importer un fichier local MP3 / FLAC pour lire les métadonnées, la pochette et les paroles intégrées.
 4. Modifiez les paroles et traductions ; utilisez la traduction IA ou séparez automatiquement les lignes original / traduction selon la langue de l'interface.
 5. Ajustez le ratio de toile, les jeux de polices CJK / latines, les couleurs, cadres, filigranes et autres styles.

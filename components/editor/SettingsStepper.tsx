@@ -68,7 +68,7 @@ export function SettingsStepper({
         <div className="flex flex-wrap gap-2">
           {steps.map((step, index) => {
             const isActive = index === currentStep;
-            const isComplete = Boolean(step.isComplete) || index < currentStep;
+            const isComplete = index < currentStep;
 
             return (
               <button

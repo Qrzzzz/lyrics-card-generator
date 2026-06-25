@@ -4,7 +4,7 @@
 
 ### Generate polished lyric sharing cards for social sharing
 
-**Apple Music / NetEase Cloud Music / QQ Music · Windows desktop app · HD PNG export · multilingual documentation**
+**Spotify / Apple Music / NetEase Cloud Music / QQ Music · Windows desktop app · HD PNG export · multilingual documentation**
 
 <p>
   <strong>Language</strong><br/>
@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v3.2.1.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v3.3.0.en.md">Release Notes</a> ·
   <a href="#features">Features</a> ·
   <a href="#local-development">Local Development</a> ·
   <a href="./LICENSE">License</a>
@@ -43,30 +43,30 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 Download the latest version from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Recommended installer: `Lyrics Card Generator Setup 3.2.1.exe`
-* Portable version: `Lyrics Card Generator-3.2.1-portable.exe`
+* Recommended installer: `Lyrics Card Generator Setup 3.3.0.exe`
+* Portable version: `Lyrics Card Generator-3.3.0-portable.exe`
 
 The installer is recommended for regular use. The portable version is useful for temporary use, testing, or running from a removable drive.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v3.2.1 Highlights
+### v3.3.0 Highlights
 
-* v3.2.1 remains a bugfix release for v3.2.0, focused on interface readability, transactional background settings, and stability.
-* Fixed the desktop app repeatedly asking for a language after restart; the first selection is persisted and later launches open the blank editor directly.
-* Expanded the Spark Cursor control across its settings row and added a default-on Fine Grid Background switch for both preview and exported PNGs.
-* Restored Clear All while preserving app settings, and improved light/custom themes, background previews, and object URL cleanup.
+* Added Spotify track link parsing for automatic title, artist, and cover artwork filling.
+* Supports `open.spotify.com/track/...`, regional track pages, embed track pages, and common Spotify short links.
+* Spotify songs can show the platform logo and keep using the existing cover palette, lyric card editing, and PNG export flow.
+* Automatic lyric fetching still uses the existing experimental lyric search. It does not fetch lyrics from Spotify and does not require a Spotify API key.
 
 ## 🌐 Multilingual Release Notes
 
 The GitHub Release page defaults to a simplified Chinese short version, while the full release notes are maintained in `docs/releases/`:
 
-* [简体中文](./docs/releases/v3.2.1.zh-CN.md)
-* [繁體中文](./docs/releases/v3.2.1.zh-TW.md)
-* [English](./docs/releases/v3.2.1.en.md)
-* [Français](./docs/releases/v3.2.1.fr.md)
-* [日本語](./docs/releases/v3.2.1.ja.md)
-* [Español](./docs/releases/v3.2.1.es.md)
+* [简体中文](./docs/releases/v3.3.0.zh-CN.md)
+* [繁體中文](./docs/releases/v3.3.0.zh-TW.md)
+* [English](./docs/releases/v3.3.0.en.md)
+* [Français](./docs/releases/v3.3.0.fr.md)
+* [日本語](./docs/releases/v3.3.0.ja.md)
+* [Español](./docs/releases/v3.3.0.es.md)
 
 <a id="features"></a>
 
@@ -79,7 +79,7 @@ The GitHub Release page defaults to a simplified Chinese short version, while th
 * Original lyric and translation layout
 * Split alternating original / translated lyrics with Simplified Chinese, Traditional Chinese, English, French, Japanese, and Spanish target-language detection
 * AI lyric translation through OpenAI-compatible Chat Completions APIs, with configurable provider URL, model, API key, six translation styles, reasoning, and streaming output
-* Apple Music, NetEase Cloud Music, and QQ Music link parsing
+* Spotify, Apple Music, NetEase Cloud Music, and QQ Music link parsing
 * Local MP3 / FLAC metadata parsing for title, artist, album, cover art, and embedded lyrics
 * Manual song title, artist, cover, and lyric editing
 * Local cover upload
@@ -116,7 +116,7 @@ These features require internet access:
 ## 🚀 How to Use
 
 1. Start the app.
-2. Paste an Apple Music, NetEase Cloud Music, or QQ Music link, or enter song information manually.
+2. Paste a Spotify, Apple Music, NetEase Cloud Music, or QQ Music link, or enter song information manually.
 3. Optionally upload a local MP3 / FLAC file to read metadata, cover art, and embedded lyrics.
 4. Edit lyrics and translations; use AI translation or split alternating original / translated text according to the selected interface language.
 5. Adjust canvas ratio, CJK / Latin font schemes, colors, frames, watermarks, and other styles.

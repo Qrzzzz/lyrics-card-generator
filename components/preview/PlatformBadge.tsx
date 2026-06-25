@@ -4,7 +4,8 @@ import type { SongSource } from "@/lib/types";
 const PLATFORM_ICONS: Partial<Record<SongSource, string>> = {
   apple: "/platform-icons/apple-music.svg",
   qq: "/platform-icons/qq-music.svg",
-  netease: "/platform-icons/netease-music.svg"
+  netease: "/platform-icons/netease-music.svg",
+  spotify: "/platform-icons/spotify.svg"
 };
 
 export function PlatformBadge({

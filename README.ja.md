@@ -4,7 +4,7 @@
 
 ### 共有に使える高品質な歌詞カードを生成
 
-**Apple Music / NetEase Cloud Music / QQ Music · Windows デスクトップアプリ · 高解像度 PNG 書き出し · 多言語ドキュメント**
+**Spotify / Apple Music / NetEase Cloud Music / QQ Music · Windows デスクトップアプリ · 高解像度 PNG 書き出し · 多言語ドキュメント**
 
 <p>
   <strong>言語</strong><br/>
@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v3.2.1.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v3.3.0.ja.md">リリースノート</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="#ローカル開発">ローカル開発</a> ·
   <a href="./LICENSE">ライセンス</a>
@@ -43,30 +43,30 @@
 
 最新版は [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) からダウンロードできます。
 
-* 推奨インストーラー：`Lyrics Card Generator Setup 3.2.1.exe`
-* ポータブル版：`Lyrics Card Generator-3.2.1-portable.exe`
+* 推奨インストーラー：`Lyrics Card Generator Setup 3.3.0.exe`
+* ポータブル版：`Lyrics Card Generator-3.3.0-portable.exe`
 
 通常利用にはインストーラーを推奨します。ポータブル版は一時利用、検証、リムーバブルドライブでの利用に向いています。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v3.2.1 の主な変更
+### v3.3.0 の主な変更
 
-* v3.2.1 は引き続き v3.2.0 のバグ修正版で、UI の可読性、背景設定のトランザクション処理、安定性を中心に改善しています。
-* デスクトップ版を再起動するたびに言語選択が表示される問題を修正しました。初回の選択を永続化し、次回以降は空のエディターを直接開きます。
-* Spark Cursor スイッチを設定行の横幅いっぱいに表示し、プレビューと書き出し PNG の両方に反映される「細かいグリッド背景」スイッチを既定で有効にしました。
-* 設定を保持する「すべて消去」を復元し、ライト／カスタムテーマ、背景プレビュー、オブジェクト URL の解放を改善しました。
+* Spotify の楽曲リンク解析を追加し、曲名、アーティスト、カバー画像を自動入力できるようにしました。
+* `open.spotify.com/track/...`、地域別 track ページ、embed track ページ、一般的な Spotify 短縮リンクに対応しました。
+* Spotify の楽曲でもプラットフォームロゴを表示でき、既存のカバーパレット抽出、歌詞カード編集、PNG 書き出しフローをそのまま利用できます。
+* 自動歌詞取得は引き続き既存の実験的な歌詞検索を使用します。Spotify から歌詞を取得せず、Spotify API キーも不要です。
 
 ## 🌐 多言語リリースノート
 
 GitHub Release ページではデフォルトで簡体字中国語の短縮版が使用され、完全なリリースノートは `docs/releases/` にて管理されています：
 
-* [简体中文](./docs/releases/v3.2.1.zh-CN.md)
-* [繁體中文](./docs/releases/v3.2.1.zh-TW.md)
-* [English](./docs/releases/v3.2.1.en.md)
-* [Français](./docs/releases/v3.2.1.fr.md)
-* [日本語](./docs/releases/v3.2.1.ja.md)
-* [Español](./docs/releases/v3.2.1.es.md)
+* [简体中文](./docs/releases/v3.3.0.zh-CN.md)
+* [繁體中文](./docs/releases/v3.3.0.zh-TW.md)
+* [English](./docs/releases/v3.3.0.en.md)
+* [Français](./docs/releases/v3.3.0.fr.md)
+* [日本語](./docs/releases/v3.3.0.ja.md)
+* [Español](./docs/releases/v3.3.0.es.md)
 
 <a id="主な機能"></a>
 
@@ -79,7 +79,7 @@ GitHub Release ページではデフォルトで簡体字中国語の短縮版�
 * 原文歌詞と翻訳のレイアウト
 * 簡体字中国語、繁体字中国語、英語、フランス語、日本語、スペイン語の目標言語検出による原文 / 翻訳の自動分割
 * OpenAI 互換 Chat Completions API を使う AI 歌詞翻訳。プロバイダー URL、モデル、API キー、6 種類の翻訳スタイル、Reasoning、ストリーミング出力を設定可能
-* Apple Music、NetEase Cloud Music、QQ Music のリンク解析
+* Spotify、Apple Music、NetEase Cloud Music、QQ Music のリンク解析
 * ローカル MP3 / FLAC からタイトル、アーティスト、アルバム、カバー、埋め込み歌詞を解析
 * 曲名、アーティスト、カバー、歌詞の手動編集
 * ローカルカバーのアップロード
@@ -116,7 +116,7 @@ EXE を起動すると、ユーザーのマシン上でローカル Next サー�
 ## 🚀 使い方
 
 1. アプリを起動します。
-2. Apple Music、NetEase Cloud Music、QQ Music のリンクを貼り付けるか、曲情報を手入力します。
+2. Spotify、Apple Music、NetEase Cloud Music、QQ Music のリンクを貼り付けるか、曲情報を手入力します。
 3. 必要に応じてローカル MP3 / FLAC ファイルをアップロードし、メタデータ、カバー、埋め込み歌詞を読み取ります。
 4. 歌詞と翻訳を編集します。AI 翻訳を使うか、選択中の UI 言語に応じて原文 / 翻訳の交互行を自動分割できます。
 5. キャンバス比率、CJK / 欧文フォント構成、色、フレーム、ウォーターマークなどのスタイルを調整します。

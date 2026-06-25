@@ -1,4 +1,4 @@
-export type SongSource = "qq" | "netease" | "apple" | "unknown";
+export type SongSource = "qq" | "netease" | "apple" | "spotify" | "unknown";
 export type Locale = "zh" | "zh-TW" | "en" | "fr" | "ja" | "es";
 
 export type SongInfo = {

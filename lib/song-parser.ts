@@ -2,6 +2,7 @@ import { parseAppleMusic } from "@/lib/parsers/apple";
 import { parseNetease } from "@/lib/parsers/netease";
 import { parseQQMusic } from "@/lib/parsers/qq";
 import { fetchHtml, REQUEST_HEADERS, songInfoFromMeta } from "@/lib/parsers/shared";
+import { extractSpotifyTrackId, parseSpotify } from "@/lib/parsers/spotify";
 import type { SongInfo, SongSource } from "@/lib/types";
 import { extractFirstUrl } from "@/lib/url-normalize";
 import { validatePublicHttpUrl } from "@/lib/url-safety";
@@ -76,6 +77,11 @@ export async function parseSong(input: string): Promise<SongInfo> {
       triedMethods.push("apple-adapter");
       return await parseAppleMusic(finalUrl, rawUrl);
     }
+
+    if (source === "spotify") {
+      triedMethods.push("spotify-adapter");
+      return await parseSpotify(finalUrl, rawUrl);
+    }
   } catch (error) {
     details.error = error instanceof Error ? error.message : "Platform parser failed.";
   }
@@ -94,6 +100,19 @@ export function detectSource(inputUrl: string): SongSource {
 
   if (hostname === "music.apple.com" || hostname.endsWith(".music.apple.com")) {
     return "apple";
+  }
+
+  if ((hostname === "open.spotify.com" || hostname === "play.spotify.com") && extractSpotifyTrackId(inputUrl)) {
+    return "spotify";
+  }
+
+  if (
+    hostname === "spotify.link" ||
+    hostname.endsWith(".spotify.link") ||
+    hostname === "spotify.app.link" ||
+    hostname.endsWith(".spotify.app.link")
+  ) {
+    return "spotify";
   }
 
   if (

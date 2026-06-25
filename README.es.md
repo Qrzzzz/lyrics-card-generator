@@ -4,7 +4,7 @@
 
 ### Genera tarjetas de letras de alta calidad listas para compartir
 
-**Apple Music / NetEase Cloud Music / QQ Music · aplicación de escritorio para Windows · exportación PNG en alta resolución · documentación multilingüe**
+**Spotify / Apple Music / NetEase Cloud Music / QQ Music · aplicación de escritorio para Windows · exportación PNG en alta resolución · documentación multilingüe**
 
 <p>
   <strong>Idioma</strong><br/>
@@ -19,7 +19,7 @@
 <p>
   <strong>Navegación</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Descargar la última versión</a> ·
-  <a href="./docs/releases/v3.2.1.es.md">Notas de la versión</a> ·
+  <a href="./docs/releases/v3.3.0.es.md">Notas de la versión</a> ·
   <a href="#funciones-principales">Funciones principales</a> ·
   <a href="#desarrollo-local">Desarrollo local</a> ·
   <a href="./LICENSE">Licencia</a>
@@ -43,30 +43,30 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 Descarga la versión más reciente desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Instalador recomendado: `Lyrics Card Generator Setup 3.2.1.exe`
-* Versión portable: `Lyrics Card Generator-3.2.1-portable.exe`
+* Instalador recomendado: `Lyrics Card Generator Setup 3.3.0.exe`
+* Versión portable: `Lyrics Card Generator-3.3.0-portable.exe`
 
 El instalador se recomienda para uso habitual. La versión portable es útil para pruebas, uso temporal o ejecución desde una unidad extraíble.
 
 > La compilación actual no está firmada. Windows puede mostrar una advertencia de SmartScreen, algo habitual en aplicaciones personales sin firma.
 
-### Aspectos destacados de la versión 3.2.1
+### Aspectos destacados de la versión 3.3.0
 
-* La versión 3.2.1 sigue siendo una corrección de errores de la 3.2.0, centrada en la legibilidad de la interfaz, los ajustes de fondo transaccionales y la estabilidad.
-* Se corrigió la solicitud repetida de idioma tras cada reinicio de la aplicación de escritorio; la primera elección se conserva y los siguientes inicios abren directamente el editor vacío.
-* El control Spark Cursor ahora ocupa todo el ancho de su fila y se añadió Fondo de cuadrícula fina, activado de forma predeterminada para la vista previa y el PNG exportado.
-* Se restauró Borrar todo conservando los ajustes y se mejoraron los temas claro/personalizado, la vista previa del fondo y la limpieza de las URL de objeto.
+* Se añadió el análisis de enlaces de canciones de Spotify para completar automáticamente título, artista y portada.
+* Compatible con `open.spotify.com/track/...`, páginas track regionales, páginas embed track y enlaces cortos comunes de Spotify.
+* Las canciones de Spotify pueden mostrar el logo de la plataforma y seguir usando la extracción de paleta, la edición de tarjetas de letras y la exportación PNG existentes.
+* La obtención automática de letras sigue usando la búsqueda experimental existente. No obtiene letras desde Spotify ni requiere una clave API de Spotify.
 
 ## 🌐 Notas de publicación multilingüe
 
 La página de GitHub Release utiliza por defecto la versión corta en chino simplificado, las notas de publicación completas se mantienen en `docs/releases/`:
 
-* [简体中文](./docs/releases/v3.2.1.zh-CN.md)
-* [繁體中文](./docs/releases/v3.2.1.zh-TW.md)
-* [English](./docs/releases/v3.2.1.en.md)
-* [Français](./docs/releases/v3.2.1.fr.md)
-* [日本語](./docs/releases/v3.2.1.ja.md)
-* [Español](./docs/releases/v3.2.1.es.md)
+* [简体中文](./docs/releases/v3.3.0.zh-CN.md)
+* [繁體中文](./docs/releases/v3.3.0.zh-TW.md)
+* [English](./docs/releases/v3.3.0.en.md)
+* [Français](./docs/releases/v3.3.0.fr.md)
+* [日本語](./docs/releases/v3.3.0.ja.md)
+* [Español](./docs/releases/v3.3.0.es.md)
 
 <a id="funciones-principales"></a>
 
@@ -79,7 +79,7 @@ La página de GitHub Release utiliza por defecto la versión corta en chino simp
 * Diseño de letra original y traducción
 * Separación automática de líneas original / traducción con detección de chino simplificado, chino tradicional, inglés, francés, japonés y español
 * Traducción de letras con IA mediante API Chat Completions compatibles con OpenAI, con URL del proveedor, modelo, clave API, seis estilos, Reasoning y salida en streaming configurables
-* Análisis de enlaces de Apple Music, NetEase Cloud Music y QQ Music
+* Análisis de enlaces de Spotify, Apple Music, NetEase Cloud Music y QQ Music
 * Análisis de metadatos MP3 / FLAC locales para título, artista, álbum, portada y letras incrustadas
 * Edición manual de título, artista, portada y letra
 * Subida de portada local
@@ -116,7 +116,7 @@ Estas funciones requieren internet:
 ## 🚀 Uso
 
 1. Inicia la aplicación.
-2. Pega un enlace de Apple Music, NetEase Cloud Music o QQ Music, o introduce la información manualmente.
+2. Pega un enlace de Spotify, Apple Music, NetEase Cloud Music o QQ Music, o introduce la información manualmente.
 3. Opcionalmente sube un archivo MP3 / FLAC local para leer metadatos, portada y letras incrustadas.
 4. Edita letras y traducciones; usa traducción con IA o separa texto original / traducido alternado según el idioma de interfaz seleccionado.
 5. Ajusta proporción del lienzo, combinaciones CJK / latinas, colores, marcos, marcas de agua y otros estilos.

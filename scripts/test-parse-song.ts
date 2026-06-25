@@ -3,7 +3,8 @@ import { parseSong, SongParseError } from "../lib/song-parser";
 const DEFAULT_TEST_INPUTS = [
   "https://music.apple.com/cn/song/opposite/1677892095",
   "https://music.163.com/song?id=1827600686",
-  "https://y.qq.com/n/ryqq/songDetail/0039MnYb0qxYhV"
+  "https://y.qq.com/n/ryqq/songDetail/0039MnYb0qxYhV",
+  "https://open.spotify.com/track/11dFghVXANMlKmJXsNCbNl"
 ];
 
 async function main() {

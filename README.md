@@ -4,7 +4,7 @@
 
 ### 生成可用于分享的高质感歌词分享卡片
 
-**Apple Music / 网易云音乐 / QQ 音乐 · Windows 桌面应用 · 高清 PNG 导出 · 多语言文档**
+**Spotify / Apple Music / 网易云音乐 / QQ 音乐 · Windows 桌面应用 · 高清 PNG 导出 · 多语言文档**
 
 <p>
   <strong>语言</strong><br/>
@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v3.2.1.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v3.3.0.zh-CN.md">发布说明</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="#本地开发">本地开发</a> ·
   <a href="./LICENSE">许可证</a>
@@ -40,30 +40,30 @@
 
 请前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下载最新版：
 
-* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 3.2.1.exe`
-* 不想安装时可下载便携版：`Lyrics Card Generator-3.2.1-portable.exe`
+* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 3.3.0.exe`
+* 不想安装时可下载便携版：`Lyrics Card Generator-3.3.0-portable.exe`
 
 安装版适合长期使用；便携版适合临时运行、测试或放在移动硬盘中使用。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v3.2.1 更新重点
+### v3.3.0 更新重点
 
-* v3.2.1 继续作为 v3.2.0 的 bugfix 版本，集中修复界面可读性、背景设置事务和稳定性问题。
-* 修复桌面版重启后反复要求选择语言的问题；首次选择会持久保存，后续直接进入空白编辑器。
-* Spark Cursor 开关改为横向填满；“视觉细节”新增默认开启、同时影响预览和导出 PNG 的细网格背景开关。
-* 恢复“一键清空”并保留软件设置，同时完善浅色／自定义主题、背景图片预览和对象 URL 清理。
+* 新增 Spotify 单曲链接解析，可自动填入歌曲标题、歌手和封面。
+* 支持 `open.spotify.com/track/...`、地区化 track 页面、embed track 页面以及常见 Spotify 短链接。
+* Spotify 歌曲可显示平台 Logo，并继续使用现有封面取色、歌词卡片编辑和 PNG 导出流程。
+* 自动歌词获取仍沿用现有实验性歌词搜索，不从 Spotify 获取歌词，也不需要 Spotify API 密钥。
 
 ## 🌐 多语言发布说明
 
 GitHub Release 页面默认使用简体中文短版，完整发布说明维护在 `docs/releases/`：
 
-* [简体中文](./docs/releases/v3.2.1.zh-CN.md)
-* [繁體中文](./docs/releases/v3.2.1.zh-TW.md)
-* [English](./docs/releases/v3.2.1.en.md)
-* [Français](./docs/releases/v3.2.1.fr.md)
-* [日本語](./docs/releases/v3.2.1.ja.md)
-* [Español](./docs/releases/v3.2.1.es.md)
+* [简体中文](./docs/releases/v3.3.0.zh-CN.md)
+* [繁體中文](./docs/releases/v3.3.0.zh-TW.md)
+* [English](./docs/releases/v3.3.0.en.md)
+* [Français](./docs/releases/v3.3.0.fr.md)
+* [日本語](./docs/releases/v3.3.0.ja.md)
+* [Español](./docs/releases/v3.3.0.es.md)
 
 <a id="主要功能"></a>
 
@@ -76,7 +76,7 @@ GitHub Release 页面默认使用简体中文短版，完整发布说明维护�
 * 支持歌词原文与翻译并排排版
 * 支持按当前界面语言拆分原文 / 译文，包括简体中文、繁体中文、英文、法语、日语、西班牙语目标译文
 * 支持兼容 OpenAI Chat Completions 的 AI 歌词翻译，可配置厂商 Base URL、模型、API Key、六种翻译风格、Reasoning 和流式输出
-* 支持 Apple Music、网易云音乐、QQ 音乐链接解析
+* 支持 Spotify、Apple Music、网易云音乐、QQ 音乐链接解析
 * 支持本地 MP3 / FLAC 元数据解析，尝试读取标题、艺人、专辑、封面和内嵌歌词
 * 支持手动填写歌曲名、艺人、封面和歌词
 * 支持本地封面上传
@@ -113,7 +113,7 @@ GitHub Release 页面默认使用简体中文短版，完整发布说明维护�
 ## 🚀 使用方式
 
 1. 启动应用。
-2. 粘贴 Apple Music、网易云音乐或 QQ 音乐链接，或手动填写歌曲信息。
+2. 粘贴 Spotify、Apple Music、网易云音乐或 QQ 音乐链接，或手动填写歌曲信息。
 3. 也可以上传本地 MP3 / FLAC，自动读取文件内的歌曲信息、封面和内嵌歌词。
 4. 编辑歌词和翻译；可使用 AI 翻译，也可将原文 / 译文交替行按当前界面语言自动拆分。
 5. 调整画布比例、字体方案（中日韩 / 西文）、字号、颜色、边框、水印等样式。

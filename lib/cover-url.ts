@@ -17,6 +17,10 @@ export function getHighResolutionCoverUrl(url: string | undefined, source: SongS
     return url.replace(/T002R\d+x\d+M000/i, "T002R1000x1000M000").replace(/R\d+x\d+/i, "R1000x1000");
   }
 
+  if (source === "spotify") {
+    return url;
+  }
+
   return url;
 }
 
