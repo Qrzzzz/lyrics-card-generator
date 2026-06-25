@@ -36,6 +36,13 @@
 
 ---
 
+<img
+  align="right"
+  src="./public/app-icon.png"
+  alt="Lyrics Card Generator icon"
+  width="200"
+/>
+
 ## 📦 下載與安裝
 
 請前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載最新版：
@@ -55,6 +62,8 @@
 * 自動歌詞取得仍沿用現有實驗性歌詞搜尋，不從 Spotify 取得歌詞，也不需要 Spotify API 金鑰。
 
 <a id="主要功能"></a>
+
+<br clear="right" />
 
 ## 🌐 多語言發佈說明
 

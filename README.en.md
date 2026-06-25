@@ -36,6 +36,13 @@
 
 ---
 
+<img
+  align="right"
+  src="./public/app-icon.png"
+  alt="Lyrics Card Generator icon"
+  width="200"
+/>
+
 A Windows desktop app for generating polished lyric sharing cards.
 Paste a song link or enter song information manually, edit lyrics, translations, cover art, and visual styles, then export a high-resolution PNG image for sharing.
 
@@ -56,6 +63,8 @@ The installer is recommended for regular use. The portable version is useful for
 * Supports `open.spotify.com/track/...`, regional track pages, embed track pages, and common Spotify short links.
 * Spotify songs can show the platform logo and keep using the existing cover palette, lyric card editing, and PNG export flow.
 * Automatic lyric fetching still uses the existing experimental lyric search. It does not fetch lyrics from Spotify and does not require a Spotify API key.
+
+<br clear="right" />
 
 ## 🌐 Multilingual Release Notes
 

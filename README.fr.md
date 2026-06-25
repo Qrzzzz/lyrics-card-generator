@@ -36,6 +36,13 @@
 
 ---
 
+<img
+  align="right"
+  src="./public/app-icon.png"
+  alt="Lyrics Card Generator icon"
+  width="200"
+/>
+
 Une application Windows pour générer des cartes de paroles élégantes.
 Collez un lien de morceau ou saisissez les informations manuellement, modifiez les paroles, traductions, pochettes et styles visuels, puis exportez une image PNG haute résolution.
 
@@ -56,6 +63,8 @@ L'installateur est recommandé pour une utilisation régulière. La version port
 * Prise en charge de `open.spotify.com/track/...`, des pages track régionalisées, des pages embed track et des liens courts Spotify courants.
 * Les morceaux Spotify peuvent afficher le logo de la plateforme et continuer à utiliser l’extraction de palette, l’édition de cartes de paroles et l’export PNG existants.
 * La récupération automatique des paroles utilise toujours la recherche expérimentale existante. Elle ne récupère pas les paroles depuis Spotify et ne nécessite pas de clé API Spotify.
+
+<br clear="right" />
 
 ## 🌐 Notes de publication multilingues
 

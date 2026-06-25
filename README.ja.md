@@ -36,6 +36,13 @@
 
 ---
 
+<img
+  align="right"
+  src="./public/app-icon.png"
+  alt="Lyrics Card Generator icon"
+  width="200"
+/>
+
 歌詞共有カードを作成する Windows デスクトップアプリです。
 曲リンクを貼り付けるか情報を手入力し、歌詞、翻訳、カバー、見た目を編集して、高解像度 PNG として書き出せます。
 
@@ -56,6 +63,8 @@
 * `open.spotify.com/track/...`、地域別 track ページ、embed track ページ、一般的な Spotify 短縮リンクに対応しました。
 * Spotify の楽曲でもプラットフォームロゴを表示でき、既存のカバーパレット抽出、歌詞カード編集、PNG 書き出しフローをそのまま利用できます。
 * 自動歌詞取得は引き続き既存の実験的な歌詞検索を使用します。Spotify から歌詞を取得せず、Spotify API キーも不要です。
+
+<br clear="right" />
 
 ## 🌐 多言語リリースノート
 
