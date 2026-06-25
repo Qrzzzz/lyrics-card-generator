@@ -36,6 +36,13 @@
 
 ---
 
+<img
+  align="right"
+  src="./public/app-icon.png"
+  alt="Lyrics Card Generator icon"
+  width="200"
+/>
+
 Una aplicación de escritorio para Windows que genera tarjetas de letras pulidas.
 Pega un enlace de canción o introduce la información manualmente, edita letras, traducciones, portada y estilos visuales, y exporta una imagen PNG de alta resolución para compartir.
 
@@ -56,6 +63,8 @@ El instalador se recomienda para uso habitual. La versión portable es útil par
 * Compatible con `open.spotify.com/track/...`, páginas track regionales, páginas embed track y enlaces cortos comunes de Spotify.
 * Las canciones de Spotify pueden mostrar el logo de la plataforma y seguir usando la extracción de paleta, la edición de tarjetas de letras y la exportación PNG existentes.
 * La obtención automática de letras sigue usando la búsqueda experimental existente. No obtiene letras desde Spotify ni requiere una clave API de Spotify.
+
+<br clear="right" />
 
 ## 🌐 Notas de publicación multilingüe
 
