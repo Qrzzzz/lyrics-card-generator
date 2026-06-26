@@ -245,7 +245,7 @@ npm run core:test       # 3.0 コア純粋関数をテスト
 
 Rangerov に感謝します。このプロジェクトへの関心と意見に感謝します。
 
-[Sakuramble](https://github.com/Sakuramble) によるコード軽量化の提案に感謝します。[`v1.1.0`](https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v1.1.0) では、それに基づく関連最適化を実施済みです。
+[V0idream](https://github.com/V0idream) によるコード軽量化の提案に感謝します。[`v1.1.0`](https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v1.1.0) では、それに基づく関連最適化を実施済みです。
 
 また、これらのオープンソースプロジェクトとそのメンテナーにも感謝します：[Next.js](https://nextjs.org/)、[React](https://react.dev/)、[TypeScript](https://www.typescriptlang.org/)、[Tailwind CSS](https://tailwindcss.com/)、[Electron](https://www.electronjs.org/)、[electron-builder](https://www.electron.build/)、[html-to-image](https://github.com/bubkoo/html-to-image)、[Framer Motion](https://motion.dev/)、[Lucide React](https://lucide.dev/)、[Cheerio](https://cheerio.js.org/)、[Zod](https://zod.dev/)、そして現代的なフロントエンドエコシステムを構成する多くのツールチェーン。これらの基盤がなければ、このプロジェクトは現在の形では存在していません。
 

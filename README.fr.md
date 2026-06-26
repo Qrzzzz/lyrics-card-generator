@@ -245,7 +245,7 @@ Merci à [ReactBits](https://www.reactbits.dev/) pour ses nombreuses idées d’
 
 Merci à Rangerov pour l’attention portée à ce projet et pour ses retours.
 
-Merci à [Sakuramble](https://github.com/Sakuramble) pour ses suggestions d’allègement du code. [`v1.1.0`](https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v1.1.0) a déjà été optimisée en conséquence.
+Merci à [V0idream](https://github.com/V0idream) pour ses suggestions d’allègement du code. [`v1.1.0`](https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v1.1.0) a déjà été optimisée en conséquence.
 
 Merci également à ces projets open source et à leurs mainteneurs : [Next.js](https://nextjs.org/), [React](https://react.dev/), [TypeScript](https://www.typescriptlang.org/), [Tailwind CSS](https://tailwindcss.com/), [Electron](https://www.electronjs.org/), [electron-builder](https://www.electron.build/), [html-to-image](https://github.com/bubkoo/html-to-image), [Framer Motion](https://motion.dev/), [Lucide React](https://lucide.dev/), [Cheerio](https://cheerio.js.org/), [Zod](https://zod.dev/), ainsi qu’aux nombreuses chaînes d’outils qui composent l’écosystème frontend moderne. Sans ces infrastructures, ce projet n’aurait pas sa forme actuelle.
 
