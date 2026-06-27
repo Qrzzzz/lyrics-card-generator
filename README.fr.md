@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v3.3.0.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v3.3.1.fr.md">Notes de version</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="#développement-local">Développement local</a> ·
   <a href="./LICENSE">Licence</a>
@@ -50,19 +50,19 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 Téléchargez la dernière version depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
 
-* Installateur recommandé : `Lyrics Card Generator Setup 3.3.0.exe`
-* Version portable : `Lyrics Card Generator-3.3.0-portable.exe`
+* Installateur recommandé : `Lyrics Card Generator Setup 3.3.1.exe`
+* Version portable : `Lyrics Card Generator-3.3.1-portable.exe`
 
 L'installateur est recommandé pour une utilisation régulière. La version portable convient aux essais, à une utilisation temporaire ou à un disque amovible.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### Points clés de la v3.3.0
+### Points clés de la v3.3.1
 
-* Ajout de l’analyse des liens de morceaux Spotify pour remplir automatiquement le titre, l’artiste et la pochette.
-* Prise en charge de `open.spotify.com/track/...`, des pages track régionalisées, des pages embed track et des liens courts Spotify courants.
-* Les morceaux Spotify peuvent afficher le logo de la plateforme et continuer à utiliser l’extraction de palette, l’édition de cartes de paroles et l’export PNG existants.
-* La récupération automatique des paroles utilise toujours la recherche expérimentale existante. Elle ne récupère pas les paroles depuis Spotify et ne nécessite pas de clé API Spotify.
+* Correction du fond de carte qui affichait deux grilles superposées lorsque « Fond à grille fine » était activé.
+* Correction de la grille qui restait visible sur le fond de carte après la désactivation de « Fond à grille fine ».
+* Le réglage « Fond à grille fine » contrôle désormais correctement la grille interne de la carte dans l’aperçu et les images exportées.
+* La texture de fond de l’interface principale de l’application reste inchangée.
 
 <br clear="right" />
 
@@ -70,12 +70,12 @@ L'installateur est recommandé pour une utilisation régulière. La version port
 
 La page GitHub Release utilise par défaut la version courte en chinois simplifié, les notes de publication complètes sont conservées dans `docs/releases/` :
 
-* [简体中文](./docs/releases/v3.3.0.zh-CN.md)
-* [繁體中文](./docs/releases/v3.3.0.zh-TW.md)
-* [English](./docs/releases/v3.3.0.en.md)
-* [Français](./docs/releases/v3.3.0.fr.md)
-* [日本語](./docs/releases/v3.3.0.ja.md)
-* [Español](./docs/releases/v3.3.0.es.md)
+* [简体中文](./docs/releases/v3.3.1.zh-CN.md)
+* [繁體中文](./docs/releases/v3.3.1.zh-TW.md)
+* [English](./docs/releases/v3.3.1.en.md)
+* [Français](./docs/releases/v3.3.1.fr.md)
+* [日本語](./docs/releases/v3.3.1.ja.md)
+* [Español](./docs/releases/v3.3.1.es.md)
 
 <a id="fonctionnalités-principales"></a>
 

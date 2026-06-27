@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v3.3.0.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v3.3.1.en.md">Release Notes</a> ·
   <a href="#features">Features</a> ·
   <a href="#local-development">Local Development</a> ·
   <a href="./LICENSE">License</a>
@@ -50,19 +50,19 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 Download the latest version from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Recommended installer: `Lyrics Card Generator Setup 3.3.0.exe`
-* Portable version: `Lyrics Card Generator-3.3.0-portable.exe`
+* Recommended installer: `Lyrics Card Generator Setup 3.3.1.exe`
+* Portable version: `Lyrics Card Generator-3.3.1-portable.exe`
 
 The installer is recommended for regular use. The portable version is useful for temporary use, testing, or running from a removable drive.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v3.3.0 Highlights
+### v3.3.1 Highlights
 
-* Added Spotify track link parsing for automatic title, artist, and cover artwork filling.
-* Supports `open.spotify.com/track/...`, regional track pages, embed track pages, and common Spotify short links.
-* Spotify songs can show the platform logo and keep using the existing cover palette, lyric card editing, and PNG export flow.
-* Automatic lyric fetching still uses the existing experimental lyric search. It does not fetch lyrics from Spotify and does not require a Spotify API key.
+* Fixed the card background showing two overlapping grid layers when "Fine grid background" is enabled.
+* Fixed one grid layer remaining on the card background after "Fine grid background" is disabled.
+* The "Fine grid background" toggle now accurately controls the internal card grid in both preview and exported images.
+* The main application background texture is unchanged.
 
 <br clear="right" />
 
@@ -70,12 +70,12 @@ The installer is recommended for regular use. The portable version is useful for
 
 The GitHub Release page defaults to a simplified Chinese short version, while the full release notes are maintained in `docs/releases/`:
 
-* [简体中文](./docs/releases/v3.3.0.zh-CN.md)
-* [繁體中文](./docs/releases/v3.3.0.zh-TW.md)
-* [English](./docs/releases/v3.3.0.en.md)
-* [Français](./docs/releases/v3.3.0.fr.md)
-* [日本語](./docs/releases/v3.3.0.ja.md)
-* [Español](./docs/releases/v3.3.0.es.md)
+* [简体中文](./docs/releases/v3.3.1.zh-CN.md)
+* [繁體中文](./docs/releases/v3.3.1.zh-TW.md)
+* [English](./docs/releases/v3.3.1.en.md)
+* [Français](./docs/releases/v3.3.1.fr.md)
+* [日本語](./docs/releases/v3.3.1.ja.md)
+* [Español](./docs/releases/v3.3.1.es.md)
 
 <a id="features"></a>
 

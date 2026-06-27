@@ -79,7 +79,6 @@ export function PaletteBackground({
           }}
         />
       ) : null}
-      <div className="noise-layer absolute inset-0 opacity-[0.11]" />
     </div>
   );
 }

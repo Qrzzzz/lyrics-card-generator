@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v3.3.0.zh-TW.md">發布說明</a> ·
+  <a href="./docs/releases/v3.3.1.zh-TW.md">發布說明</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="#本機開發">本機開發</a> ·
   <a href="./LICENSE">授權條款</a>
@@ -47,19 +47,19 @@
 
 請前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載最新版：
 
-* 建議一般使用者下載安裝版：`Lyrics Card Generator Setup 3.3.0.exe`
-* 不想安裝時可下載可攜版：`Lyrics Card Generator-3.3.0-portable.exe`
+* 建議一般使用者下載安裝版：`Lyrics Card Generator Setup 3.3.1.exe`
+* 不想安裝時可下載可攜版：`Lyrics Card Generator-3.3.1-portable.exe`
 
 安裝版適合長期使用；可攜版適合臨時執行、測試或放在隨身碟中使用。
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v3.3.0 更新重點
+### v3.3.1 更新重點
 
-* 新增 Spotify 單曲連結解析，可自動填入歌曲標題、歌手與封面。
-* 支援 `open.spotify.com/track/...`、地區化 track 頁面、embed track 頁面以及常見 Spotify 短連結。
-* Spotify 歌曲可顯示平台 Logo，並繼續使用現有封面取色、歌詞卡片編輯與 PNG 匯出流程。
-* 自動歌詞取得仍沿用現有實驗性歌詞搜尋，不從 Spotify 取得歌詞，也不需要 Spotify API 金鑰。
+* 修復開啟「細網格背景」後，卡片背景出現兩層網格疊加的問題。
+* 修復關閉「細網格背景」後，卡片背景仍殘留一層網格的問題。
+* 現在「細網格背景」開關會準確控制預覽和匯出圖片中的卡片內部網格。
+* 應用程式主介面的背景紋理不受影響。
 
 <a id="主要功能"></a>
 
@@ -69,12 +69,12 @@
 
 GitHub Release 頁面預設使用簡體中文短版，完整發佈說明維護在 `docs/releases/`：
 
-* [简体中文](./docs/releases/v3.3.0.zh-CN.md)
-* [繁體中文](./docs/releases/v3.3.0.zh-TW.md)
-* [English](./docs/releases/v3.3.0.en.md)
-* [Français](./docs/releases/v3.3.0.fr.md)
-* [日本語](./docs/releases/v3.3.0.ja.md)
-* [Español](./docs/releases/v3.3.0.es.md)
+* [简体中文](./docs/releases/v3.3.1.zh-CN.md)
+* [繁體中文](./docs/releases/v3.3.1.zh-TW.md)
+* [English](./docs/releases/v3.3.1.en.md)
+* [Français](./docs/releases/v3.3.1.fr.md)
+* [日本語](./docs/releases/v3.3.1.ja.md)
+* [Español](./docs/releases/v3.3.1.es.md)
 
 ## ✨ 主要功能
 
