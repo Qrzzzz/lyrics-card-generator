@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v3.3.0.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v3.3.1.ja.md">リリースノート</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="#ローカル開発">ローカル開発</a> ·
   <a href="./LICENSE">ライセンス</a>
@@ -50,19 +50,19 @@
 
 最新版は [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) からダウンロードできます。
 
-* 推奨インストーラー：`Lyrics Card Generator Setup 3.3.0.exe`
-* ポータブル版：`Lyrics Card Generator-3.3.0-portable.exe`
+* 推奨インストーラー：`Lyrics Card Generator Setup 3.3.1.exe`
+* ポータブル版：`Lyrics Card Generator-3.3.1-portable.exe`
 
 通常利用にはインストーラーを推奨します。ポータブル版は一時利用、検証、リムーバブルドライブでの利用に向いています。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v3.3.0 の主な変更
+### v3.3.1 の主な変更
 
-* Spotify の楽曲リンク解析を追加し、曲名、アーティスト、カバー画像を自動入力できるようにしました。
-* `open.spotify.com/track/...`、地域別 track ページ、embed track ページ、一般的な Spotify 短縮リンクに対応しました。
-* Spotify の楽曲でもプラットフォームロゴを表示でき、既存のカバーパレット抽出、歌詞カード編集、PNG 書き出しフローをそのまま利用できます。
-* 自動歌詞取得は引き続き既存の実験的な歌詞検索を使用します。Spotify から歌詞を取得せず、Spotify API キーも不要です。
+* 「細かいグリッド背景」を有効にしたとき、カード背景に 2 層のグリッドが重なって表示される問題を修正しました。
+* 「細かいグリッド背景」を無効にしたあとも、カード背景に 1 層のグリッドが残る問題を修正しました。
+* 「細かいグリッド背景」スイッチが、プレビューと書き出し画像のカード内部グリッドを正確に制御するようになりました。
+* アプリ本体の背景テクスチャには影響ありません。
 
 <br clear="right" />
 
@@ -70,12 +70,12 @@
 
 GitHub Release ページではデフォルトで簡体字中国語の短縮版が使用され、完全なリリースノートは `docs/releases/` にて管理されています：
 
-* [简体中文](./docs/releases/v3.3.0.zh-CN.md)
-* [繁體中文](./docs/releases/v3.3.0.zh-TW.md)
-* [English](./docs/releases/v3.3.0.en.md)
-* [Français](./docs/releases/v3.3.0.fr.md)
-* [日本語](./docs/releases/v3.3.0.ja.md)
-* [Español](./docs/releases/v3.3.0.es.md)
+* [简体中文](./docs/releases/v3.3.1.zh-CN.md)
+* [繁體中文](./docs/releases/v3.3.1.zh-TW.md)
+* [English](./docs/releases/v3.3.1.en.md)
+* [Français](./docs/releases/v3.3.1.fr.md)
+* [日本語](./docs/releases/v3.3.1.ja.md)
+* [Español](./docs/releases/v3.3.1.es.md)
 
 <a id="主な機能"></a>
 
