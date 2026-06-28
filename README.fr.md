@@ -1,4 +1,4 @@
-<div align="center">
+﻿<div align="center">
 
 # 🎧 Lyrics Card Generator
 
@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v3.3.1.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v3.4.0.fr.md">Notes de version</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="#développement-local">Développement local</a> ·
   <a href="./LICENSE">Licence</a>
@@ -50,19 +50,19 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 Téléchargez la dernière version depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
 
-* Installateur recommandé : `Lyrics Card Generator Setup 3.3.1.exe`
-* Version portable : `Lyrics Card Generator-3.3.1-portable.exe`
+* Installateur recommandé : `Lyrics Card Generator Setup 3.4.0.exe`
+* Version portable : `Lyrics Card Generator-3.4.0-portable.exe`
 
 L'installateur est recommandé pour une utilisation régulière. La version portable convient aux essais, à une utilisation temporaire ou à un disque amovible.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### Points clés de la v3.3.1
+### Points clés de la v3.4.0
 
-* Correction du fond de carte qui affichait deux grilles superposées lorsque « Fond à grille fine » était activé.
-* Correction de la grille qui restait visible sur le fond de carte après la désactivation de « Fond à grille fine ».
-* Le réglage « Fond à grille fine » contrôle désormais correctement la grille interne de la carte dans l’aperçu et les images exportées.
-* La texture de fond de l’interface principale de l’application reste inchangée.
+* L'étape de Mise en page demande désormais le type de contenu avant d'afficher les options de disposition, taille et typographie.
+* Les cartes instrumentales / sans paroles sont verrouillées en orientation portrait 1:1.
+* La grille d'arrière-plan est désactivée par défaut, avec des options de densité Éparse / Moyenne / Dense dans Détails visuels.
+* Correction du mode instrumental / sans paroles qui permettait incorrectement les cartes en paysage et les tailles incompatibles.
 
 <br clear="right" />
 
@@ -70,12 +70,12 @@ L'installateur est recommandé pour une utilisation régulière. La version port
 
 La page GitHub Release utilise par défaut la version courte en chinois simplifié, les notes de publication complètes sont conservées dans `docs/releases/` :
 
-* [简体中文](./docs/releases/v3.3.1.zh-CN.md)
-* [繁體中文](./docs/releases/v3.3.1.zh-TW.md)
-* [English](./docs/releases/v3.3.1.en.md)
-* [Français](./docs/releases/v3.3.1.fr.md)
-* [日本語](./docs/releases/v3.3.1.ja.md)
-* [Español](./docs/releases/v3.3.1.es.md)
+* [简体中文](./docs/releases/v3.4.0.zh-CN.md)
+* [繁體中文](./docs/releases/v3.4.0.zh-TW.md)
+* [English](./docs/releases/v3.4.0.en.md)
+* [Français](./docs/releases/v3.4.0.fr.md)
+* [日本語](./docs/releases/v3.4.0.ja.md)
+* [Español](./docs/releases/v3.4.0.es.md)
 
 <a id="fonctionnalités-principales"></a>
 

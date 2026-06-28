@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v3.3.1.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v3.4.0.ja.md">リリースノート</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="#ローカル開発">ローカル開発</a> ·
   <a href="./LICENSE">ライセンス</a>
@@ -50,19 +50,19 @@
 
 最新版は [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) からダウンロードできます。
 
-* 推奨インストーラー：`Lyrics Card Generator Setup 3.3.1.exe`
-* ポータブル版：`Lyrics Card Generator-3.3.1-portable.exe`
+* 推奨インストーラー：`Lyrics Card Generator Setup 3.4.0.exe`
+* ポータブル版：`Lyrics Card Generator-3.4.0-portable.exe`
 
 通常利用にはインストーラーを推奨します。ポータブル版は一時利用、検証、リムーバブルドライブでの利用に向いています。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v3.3.1 の主な変更
+### v3.4.0 の主な変更
 
-* 「細かいグリッド背景」を有効にしたとき、カード背景に 2 層のグリッドが重なって表示される問題を修正しました。
-* 「細かいグリッド背景」を無効にしたあとも、カード背景に 1 層のグリッドが残る問題を修正しました。
-* 「細かいグリッド背景」スイッチが、プレビューと書き出し画像のカード内部グリッドを正確に制御するようになりました。
-* アプリ本体の背景テクスチャには影響ありません。
+* 「レイアウト」ステップで最初にコンテンツタイプを選択し、その後にレイアウト、サイズ、文字体裁オプションを表示するようになりました。
+* インストゥルメンタル／歌詞なしカードは縦向き 1:1 出力に固定されます。
+* 背景グリッドはデフォルトでオフになり、「視覚的詳細」で「スパース／ミディアム／デンス」の密度オプションを提供します。
+* インストゥルメンタル／歌詞なしモードで横向きカードや非互換サイズが誤って選択可能だった問題を修正しました。
 
 <br clear="right" />
 
@@ -70,12 +70,12 @@
 
 GitHub Release ページではデフォルトで簡体字中国語の短縮版が使用され、完全なリリースノートは `docs/releases/` にて管理されています：
 
-* [简体中文](./docs/releases/v3.3.1.zh-CN.md)
-* [繁體中文](./docs/releases/v3.3.1.zh-TW.md)
-* [English](./docs/releases/v3.3.1.en.md)
-* [Français](./docs/releases/v3.3.1.fr.md)
-* [日本語](./docs/releases/v3.3.1.ja.md)
-* [Español](./docs/releases/v3.3.1.es.md)
+* [简体中文](./docs/releases/v3.4.0.zh-CN.md)
+* [繁體中文](./docs/releases/v3.4.0.zh-TW.md)
+* [English](./docs/releases/v3.4.0.en.md)
+* [Français](./docs/releases/v3.4.0.fr.md)
+* [日本語](./docs/releases/v3.4.0.ja.md)
+* [Español](./docs/releases/v3.4.0.es.md)
 
 <a id="主な機能"></a>
 

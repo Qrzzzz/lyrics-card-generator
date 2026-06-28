@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v3.3.1.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v3.4.0.zh-CN.md">发布说明</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="#本地开发">本地开发</a> ·
   <a href="./LICENSE">许可证</a>
@@ -47,19 +47,19 @@
 
 请前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下载最新版：
 
-* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 3.3.1.exe`
-* 不想安装时可下载便携版：`Lyrics Card Generator-3.3.1-portable.exe`
+* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 3.4.0.exe`
+* 不想安装时可下载便携版：`Lyrics Card Generator-3.4.0-portable.exe`
 
 安装版适合长期使用；便携版适合临时运行、测试或放在移动硬盘中使用。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v3.3.1 更新重点
+### v3.4.0 更新重点
 
-* 修复开启“细网格背景”后卡片背景出现两层网格叠加的问题。
-* 修复关闭“细网格背景”后卡片背景仍残留一层网格的问题。
-* 现在“细网格背景”开关会准确控制预览和导出图片中的卡片内部网格。
-* 应用主界面的背景纹理不受影响。
+* "布局"步骤现在先选择内容类型，再显示可用的布局、尺寸和文字排版选项。
+* "纯音乐 / 无歌词"卡片锁定为竖向 1:1 输出。
+* 背景网格默认关闭，在"视觉细节"中提供"稀疏 / 中等 / 密"三档密度。
+* 修复"纯音乐 / 无歌词"模式仍可选择横向卡片和不兼容尺寸的问题。
 
 <br clear="right" />
 
@@ -67,12 +67,12 @@
 
 GitHub Release 页面默认使用简体中文短版，完整发布说明维护在 `docs/releases/`：
 
-* [简体中文](./docs/releases/v3.3.1.zh-CN.md)
-* [繁體中文](./docs/releases/v3.3.1.zh-TW.md)
-* [English](./docs/releases/v3.3.1.en.md)
-* [Français](./docs/releases/v3.3.1.fr.md)
-* [日本語](./docs/releases/v3.3.1.ja.md)
-* [Español](./docs/releases/v3.3.1.es.md)
+* [简体中文](./docs/releases/v3.4.0.zh-CN.md)
+* [繁體中文](./docs/releases/v3.4.0.zh-TW.md)
+* [English](./docs/releases/v3.4.0.en.md)
+* [Français](./docs/releases/v3.4.0.fr.md)
+* [日本語](./docs/releases/v3.4.0.ja.md)
+* [Español](./docs/releases/v3.4.0.es.md)
 
 <a id="主要功能"></a>
 
