@@ -45,7 +45,11 @@ export function LandscapeLyricCard({
       style={{ width: size.width, height: size.height, ...cardFontStyle(style) }}
       data-export-card="true"
     >
-      <PaletteBackground palette={style.extractedPalette} showFineGrid={style.showFineGrid !== false} />
+      <PaletteBackground
+        palette={style.extractedPalette}
+        showFineGrid={style.showFineGrid === true}
+        fineGridDensity={style.fineGridDensity ?? "medium"}
+      />
       <div className="absolute inset-0 bg-black/12" />
       <div className="absolute inset-0 bg-[linear-gradient(115deg,rgba(255,255,255,0.13),transparent_38%,rgba(0,0,0,0.24))]" />
 

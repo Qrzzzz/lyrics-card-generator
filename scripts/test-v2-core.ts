@@ -55,6 +55,7 @@ const baseStyle: CardStyle = {
   showWatermark: true,
   showPlatformBadge: true,
   showFineGrid: true,
+  fineGridDensity: "medium",
   frameStyleEnabled: false,
   frameVariant: "fullBleed",
   showFrame: false,

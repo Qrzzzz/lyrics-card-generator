@@ -49,6 +49,7 @@ import { getHighResolutionCoverUrl } from "@/lib/cover-url";
 import { clearLyricContent } from "@/lib/clear-content";
 import { exportNodeAsPng } from "@/lib/export-image";
 import { DEFAULT_FONT_SCHEME } from "@/lib/font-schemes";
+import { normalizeInstrumentalLayout } from "@/lib/card-style-normalize";
 import { createT, messages } from "@/lib/i18n";
 import { proxiedImageUrl } from "@/lib/image-utils";
 import { DEFAULT_PALETTE } from "@/lib/palette-background";
@@ -135,7 +136,8 @@ const defaultState: AppState = {
     sharedByText: "",
     showWatermark: false,
     showPlatformBadge: false,
-    showFineGrid: true,
+    showFineGrid: false,
+    fineGridDensity: "medium",
     frameStyleEnabled: false,
     frameVariant: "fullBleed",
     showFrame: false,
@@ -210,8 +212,18 @@ export function LyricEditor() {
 
   function handleStyleChange(nextStyle: CardStyle) {
     setState((current) => {
+      const normalizedNextStyle = normalizeInstrumentalLayout(nextStyle);
       const currentMode = current.style.layoutMode ?? "portrait";
-      const nextMode = nextStyle.layoutMode ?? "portrait";
+      const nextMode = normalizedNextStyle.layoutMode ?? "portrait";
+
+      if (normalizedNextStyle.contentMode === "instrumental") {
+        return {
+          ...current,
+          lastLandscapeSize: currentMode === "landscape" ? sizeSnapshot(current.style) : current.lastLandscapeSize,
+          lastPortraitSize: sizeSnapshot(normalizedNextStyle),
+          style: normalizedNextStyle
+        };
+      }
 
       if (currentMode !== nextMode) {
         if (nextMode === "landscape") {
@@ -225,7 +237,7 @@ export function LyricEditor() {
             ...current,
             lastPortraitSize: sizeSnapshot(current.style),
             style: {
-              ...nextStyle,
+              ...normalizedNextStyle,
               layoutMode: "landscape",
               ratio: restored.ratio,
               width: restored.width,
@@ -245,7 +257,7 @@ export function LyricEditor() {
           ...current,
           lastLandscapeSize: sizeSnapshot(current.style),
           style: {
-            ...nextStyle,
+            ...normalizedNextStyle,
             layoutMode: "portrait",
             ratio: restored.ratio,
             width: restored.width,
@@ -257,9 +269,9 @@ export function LyricEditor() {
 
       return {
         ...current,
-        style: nextStyle,
-        lastPortraitSize: nextMode === "portrait" ? sizeSnapshot(nextStyle) : current.lastPortraitSize,
-        lastLandscapeSize: nextMode === "landscape" ? sizeSnapshot(nextStyle) : current.lastLandscapeSize
+        style: normalizedNextStyle,
+        lastPortraitSize: nextMode === "portrait" ? sizeSnapshot(normalizedNextStyle) : current.lastPortraitSize,
+        lastLandscapeSize: nextMode === "landscape" ? sizeSnapshot(normalizedNextStyle) : current.lastLandscapeSize
       };
     });
   }

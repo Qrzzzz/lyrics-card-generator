@@ -9,6 +9,7 @@ import { PaletteBackground } from "@/components/preview/PaletteBackground";
 import { PortraitFooter } from "@/components/preview/PortraitFooter";
 import { getCardSize as resolveCardSize } from "@/lib/card-size";
 import { getPortraitLayout } from "@/lib/card-layout-engine";
+import { normalizeInstrumentalLayout } from "@/lib/card-style-normalize";
 import { cardFontStyle, fontClassName } from "@/lib/fonts";
 import { proxiedImageUrl } from "@/lib/image-utils";
 import type { CardStyle, Locale, SongInfo } from "@/lib/types";
@@ -21,7 +22,7 @@ export function getCardSize(style: CardStyle) {
 export function LyricCard({
   song,
   lyrics,
-  style,
+  style: rawStyle,
   locale = "en"
 }: {
   song: SongInfo;
@@ -29,6 +30,8 @@ export function LyricCard({
   style: CardStyle;
   locale?: Locale;
 }) {
+  const style = normalizeInstrumentalLayout(rawStyle);
+
   if ((style.layoutMode ?? "portrait") === "landscape") {
     return <LandscapeLyricCard song={song} lyrics={lyrics} style={style} />;
   }
@@ -62,7 +65,11 @@ export function LyricCard({
       style={{ width: size.width, height: size.height, ...cardFontStyle(style) }}
       data-export-card="true"
     >
-      <PaletteBackground palette={style.extractedPalette} showFineGrid={style.showFineGrid !== false} />
+      <PaletteBackground
+        palette={style.extractedPalette}
+        showFineGrid={style.showFineGrid === true}
+        fineGridDensity={style.fineGridDensity ?? "medium"}
+      />
       <div className="absolute inset-0 bg-black/14" />
       <div className="absolute inset-0 bg-[linear-gradient(145deg,rgba(255,255,255,0.14),transparent_42%,rgba(0,0,0,0.22))]" />
 

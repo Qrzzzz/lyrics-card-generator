@@ -1,20 +1,24 @@
 "use client";
 
-import type { ExtractedPalette } from "@/lib/types";
+import { BACKGROUND_GRID_SIZE_BY_DENSITY, resolveBackgroundGridDensity } from "@/lib/background-grid";
 import {
   DEFAULT_PALETTE,
   mixColors,
   withAlpha
 } from "@/lib/palette-background";
+import type { BackgroundGridDensity, ExtractedPalette } from "@/lib/types";
 
 export function PaletteBackground({
   palette,
-  showFineGrid = true
+  showFineGrid = false,
+  fineGridDensity
 }: {
   palette?: ExtractedPalette;
   showFineGrid?: boolean;
+  fineGridDensity?: BackgroundGridDensity;
 }) {
   const activePalette = palette ?? DEFAULT_PALETTE;
+  const gridSize = BACKGROUND_GRID_SIZE_BY_DENSITY[resolveBackgroundGridDensity(fineGridDensity)];
   const isColorful = activePalette.kind === "colorful";
   const rawPrimary = activePalette.primary;
   const rawSecondary = activePalette.secondary ?? activePalette.muted ?? rawPrimary;
@@ -75,7 +79,7 @@ export function PaletteBackground({
           className="absolute inset-0 opacity-[0.1]"
           style={{
             backgroundImage: "linear-gradient(rgba(255,255,255,0.34) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.34) 1px, transparent 1px)",
-            backgroundSize: "32px 32px"
+            backgroundSize: `${gridSize}px ${gridSize}px`
           }}
         />
       ) : null}
