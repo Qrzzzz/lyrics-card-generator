@@ -52,13 +52,52 @@ export function FontSchemeSettingsPanel({ style, onStyleChange, onFontSchemePrev
 }
 
 export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps) {
-  const layoutMode = style.layoutMode ?? "portrait";
+  const isInstrumental = style.contentMode === "instrumental";
+  const layoutMode = isInstrumental ? "portrait" : style.layoutMode ?? "portrait";
+  const instrumentalLayoutLockedHint = t("instrumentalLayoutLockedHint");
 
   function update<K extends keyof CardStyle>(key: K, value: CardStyle[K]) {
     onStyleChange({ ...style, [key]: value });
   }
 
+  function updateContentMode(contentMode: ContentMode) {
+    if (contentMode === "instrumental") {
+      const squareSize = PRESET_CARD_SIZES["1:1"];
+      onStyleChange({
+        ...style,
+        contentMode: "instrumental",
+        layoutMode: "portrait",
+        ratio: "1:1",
+        width: squareSize.width,
+        height: squareSize.height,
+        autoHeight: false,
+        translationEnabled: false,
+        translationText: "",
+        frameVariant: style.frameStyleEnabled && style.frameVariant !== "fullBleed" ? "auto" : style.frameVariant
+      });
+      return;
+    }
+
+    onStyleChange({
+      ...style,
+      contentMode: "lyrics"
+    });
+  }
+
   function updateRatio(ratio: CardRatio) {
+    if (style.contentMode === "instrumental") {
+      const squareSize = PRESET_CARD_SIZES["1:1"];
+      onStyleChange({
+        ...style,
+        layoutMode: "portrait",
+        ratio: "1:1",
+        width: squareSize.width,
+        height: squareSize.height,
+        autoHeight: false
+      });
+      return;
+    }
+
     if (ratio === "custom") {
       onStyleChange({ ...style, ratio, width: style.width || 1080, height: style.height || 1480 });
       return;
@@ -69,6 +108,10 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
   }
 
   function updateLayoutMode(layoutMode: CardLayoutMode) {
+    if (style.contentMode === "instrumental" && layoutMode === "landscape") {
+      return;
+    }
+
     if (layoutMode === (style.layoutMode ?? "portrait")) {
       return;
     }
@@ -82,6 +125,13 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
 
   return (
     <Section title={t("layout")} eyebrow={t("style")}>
+      <Label label={t("contentType")}>
+        <Select value={style.contentMode} onChange={(event) => updateContentMode(event.target.value as ContentMode)}>
+          <option value="lyrics">{t("lyricsMode")}</option>
+          <option value="instrumental">{t("instrumentalMode")}</option>
+        </Select>
+      </Label>
+
       <div className="grid gap-2">
         <div className="app-text-primary text-sm font-medium">{t("layoutMode")}</div>
         <div className="grid grid-cols-2 gap-2" role="group" aria-label={t("layoutMode")}>
@@ -96,13 +146,19 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
             label={t("landscapeLayout")}
             onClick={() => updateLayoutMode("landscape")}
             dataAttribute="landscape"
+            disabled={isInstrumental}
+            title={isInstrumental ? instrumentalLayoutLockedHint : undefined}
           />
         </div>
       </div>
 
       <div>
         <Label label={t("sizeMode")}>
-          <Select value={style.ratio} onChange={(event) => updateRatio(event.target.value as CardRatio)}>
+          <Select
+            value={isInstrumental ? "1:1" : style.ratio}
+            disabled={isInstrumental}
+            onChange={(event) => updateRatio(event.target.value as CardRatio)}
+          >
             {layoutMode === "landscape" ? (
               <>
                 <option value="16:9">{t("sixteenNine")}</option>
@@ -119,9 +175,10 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
             <option value="custom">{t("custom")}</option>
           </Select>
         </Label>
+        {isInstrumental ? <p className="app-text-subtle mt-2 text-xs">{t("instrumentalSizeLockedHint")}</p> : null}
       </div>
 
-      {style.ratio === "custom" ? (
+      {!isInstrumental && style.ratio === "custom" ? (
         <div className="grid gap-4 rounded-lg border border-[rgb(var(--panel-border))] bg-[rgb(var(--panel-bg))] p-3">
           <div className="app-text-subtle flex items-center justify-between gap-3 text-sm">
             <span>{t("customCanvas")}</span>
@@ -156,49 +213,37 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
         </div>
       ) : null}
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Label label={t("contentType")}>
-          <Select value={style.contentMode} onChange={(event) => update("contentMode", event.target.value as ContentMode)}>
-            <option value="lyrics">{t("lyricsMode")}</option>
-            <option value="instrumental">{t("instrumentalMode")}</option>
-          </Select>
-        </Label>
-        <Label label={t("fontSize")} hint={`${style.lyricFontSize}px`}>
-          <Input
-            type="range"
-            min={36}
-            max={72}
-            value={style.lyricFontSize}
-            onChange={(event) => update("lyricFontSize", Number(event.target.value))}
-          />
-        </Label>
-        <Label label={t("lineHeight")} hint={style.lineHeight.toFixed(2)}>
-          <Input
-            type="range"
-            min={1.1}
-            max={1.75}
-            step={0.05}
-            value={style.lineHeight}
-            onChange={(event) => update("lineHeight", Number(event.target.value))}
-          />
-        </Label>
-      </div>
+      {style.contentMode === "lyrics" ? (
+        <div className="grid gap-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Label label={t("fontSize")} hint={`${style.lyricFontSize}px`}>
+              <Input
+                type="range"
+                min={36}
+                max={72}
+                value={style.lyricFontSize}
+                onChange={(event) => update("lyricFontSize", Number(event.target.value))}
+              />
+            </Label>
+            <Label label={t("lineHeight")} hint={style.lineHeight.toFixed(2)}>
+              <Input
+                type="range"
+                min={1.1}
+                max={1.75}
+                step={0.05}
+                value={style.lineHeight}
+                onChange={(event) => update("lineHeight", Number(event.target.value))}
+              />
+            </Label>
+          </div>
 
-      <Label label={t("alignment")}>
-        <Select value={style.align} onChange={(event) => update("align", event.target.value as CardAlign)}>
-          <option value="left">{t("left")}</option>
-          <option value="center">{t("center")}</option>
-        </Select>
-      </Label>
-
-      {style.contentMode === "instrumental" ? (
-        <Label label={t("instrumentalText")}>
-          <Input
-            value={style.instrumentalText}
-            onChange={(event) => update("instrumentalText", event.target.value)}
-            placeholder={t("instrumentalTextPlaceholder")}
-          />
-        </Label>
+          <Label label={t("alignment")}>
+            <Select value={style.align} onChange={(event) => update("align", event.target.value as CardAlign)}>
+              <option value="left">{t("left")}</option>
+              <option value="center">{t("center")}</option>
+            </Select>
+          </Label>
+        </div>
       ) : null}
 
       {style.contentMode === "lyrics" && style.translationEnabled ? (
@@ -214,7 +259,7 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
         </Label>
       ) : null}
 
-      {layoutMode === "landscape" ? (
+      {style.contentMode === "lyrics" && layoutMode === "landscape" ? (
         <div className="grid gap-3 rounded-lg border border-[rgb(var(--panel-border))] bg-[rgb(var(--panel-bg))] p-3">
           <p className="app-text-primary text-sm font-semibold">{t("landscapeLayoutSettings")}</p>
           <div className="grid gap-4 sm:grid-cols-2">
@@ -482,7 +527,6 @@ export function VisualSettingsPanel({ style, onStyleChange, t }: StylePanelProps
         <SwitchRow label={t("cover")} checked={style.showCover} onChange={(checked) => update("showCover", checked)} />
         <SwitchRow label={t("showSongInfo")} checked={style.showSongInfo} onChange={(checked) => update("showSongInfo", checked)} />
         <SwitchRow label={t("allowTwoLineTitle")} checked={style.allowTwoLineTitle} onChange={(checked) => update("allowTwoLineTitle", checked)} />
-        <SwitchRow label={t("fineGrid")} checked={style.showFineGrid !== false} onChange={(checked) => update("showFineGrid", checked)} />
         <SwitchRow label={t("showGeneratedWatermark")} checked={style.showGeneratedWatermark} onChange={updateGeneratedWatermark} />
         <SwitchRow
           label={t("showPlatformLogo")}
@@ -490,6 +534,36 @@ export function VisualSettingsPanel({ style, onStyleChange, t }: StylePanelProps
           onChange={(checked) => update("showPlatformBadge", checked)}
         />
         <SwitchRow label={t("showSharedBy")} checked={style.showSharedBy} onChange={(checked) => update("showSharedBy", checked)} />
+      </div>
+
+      <div className="grid gap-3 rounded-lg border border-[rgb(var(--panel-border))] bg-[rgb(var(--panel-bg))] p-3">
+        <SwitchRow
+          label={t("backgroundGrid")}
+          checked={style.showFineGrid === true}
+          onChange={(checked) => update("showFineGrid", checked)}
+        />
+        {style.showFineGrid === true ? (
+          <div className="grid grid-cols-3 gap-2" role="group" aria-label={t("backgroundGridDensity")}>
+            <SegmentButton
+              active={(style.fineGridDensity ?? "medium") === "sparse"}
+              label={t("gridSparse")}
+              onClick={() => update("fineGridDensity", "sparse")}
+              dataAttribute="grid-sparse"
+            />
+            <SegmentButton
+              active={(style.fineGridDensity ?? "medium") === "medium"}
+              label={t("gridMedium")}
+              onClick={() => update("fineGridDensity", "medium")}
+              dataAttribute="grid-medium"
+            />
+            <SegmentButton
+              active={(style.fineGridDensity ?? "medium") === "dense"}
+              label={t("gridDense")}
+              onClick={() => update("fineGridDensity", "dense")}
+              dataAttribute="grid-dense"
+            />
+          </div>
+        ) : null}
       </div>
 
       <div className="grid gap-3 rounded-lg border border-[rgb(var(--panel-border))] bg-[rgb(var(--panel-bg))] p-3">

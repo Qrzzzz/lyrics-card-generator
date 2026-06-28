@@ -31,6 +31,7 @@ export type TextColorPreset =
 
 export type PaletteKind = "colorful" | "monochrome" | "neutral" | "low-variance";
 export type ContentMode = "lyrics" | "instrumental";
+export type BackgroundGridDensity = "sparse" | "medium" | "dense";
 
 export type FontPresetId = "source-han-sans" | "source-han-serif";
 export type FontSchemeMode = "preset" | "custom";
@@ -93,6 +94,7 @@ export type CardStyle = {
   showWatermark: boolean;
   showPlatformBadge: boolean;
   showFineGrid: boolean;
+  fineGridDensity: BackgroundGridDensity;
   frameStyleEnabled: boolean;
   frameVariant?: FrameVariant;
   showFrame: boolean;

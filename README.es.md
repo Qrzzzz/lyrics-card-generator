@@ -19,7 +19,7 @@
 <p>
   <strong>Navegación</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Descargar la última versión</a> ·
-  <a href="./docs/releases/v3.3.1.es.md">Notas de la versión</a> ·
+  <a href="./docs/releases/v3.4.0.es.md">Notas de la versión</a> ·
   <a href="#funciones-principales">Funciones principales</a> ·
   <a href="#desarrollo-local">Desarrollo local</a> ·
   <a href="./LICENSE">Licencia</a>
@@ -50,19 +50,19 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 Descarga la versión más reciente desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Instalador recomendado: `Lyrics Card Generator Setup 3.3.1.exe`
-* Versión portable: `Lyrics Card Generator-3.3.1-portable.exe`
+* Instalador recomendado: `Lyrics Card Generator Setup 3.4.0.exe`
+* Versión portable: `Lyrics Card Generator-3.4.0-portable.exe`
 
 El instalador se recomienda para uso habitual. La versión portable es útil para pruebas, uso temporal o ejecución desde una unidad extraíble.
 
 > La compilación actual no está firmada. Windows puede mostrar una advertencia de SmartScreen, algo habitual en aplicaciones personales sin firma.
 
-### Aspectos destacados de la versión 3.3.1
+### Aspectos destacados de la versión 3.4.0
 
-* Se corrigió el fondo de la tarjeta que mostraba dos capas de cuadrícula superpuestas al activar "Fondo de cuadrícula fina".
-* Se corrigió la cuadrícula que seguía visible en el fondo de la tarjeta después de desactivar "Fondo de cuadrícula fina".
-* El interruptor "Fondo de cuadrícula fina" ahora controla correctamente la cuadrícula interna de la tarjeta en la vista previa y en las imágenes exportadas.
-* La textura de fondo de la interfaz principal de la aplicación no cambia.
+* El paso de Diseño ahora pregunta el tipo de contenido antes de mostrar las opciones de diseño, tamaño y tipografía.
+* Las tarjetas instrumentales / sin letra se bloquean en orientación vertical 1:1.
+* La cuadrícula de fondo está desactivada por defecto, con opciones de densidad Dispersa / Media / Densa en Detalles visuales.
+* Se corrigió el modo instrumental / sin letra que permitía incorrectamente tarjetas horizontales y tamaños incompatibles.
 
 <br clear="right" />
 
@@ -70,12 +70,12 @@ El instalador se recomienda para uso habitual. La versión portable es útil par
 
 La página de GitHub Release utiliza por defecto la versión corta en chino simplificado, las notas de publicación completas se mantienen en `docs/releases/`:
 
-* [简体中文](./docs/releases/v3.3.1.zh-CN.md)
-* [繁體中文](./docs/releases/v3.3.1.zh-TW.md)
-* [English](./docs/releases/v3.3.1.en.md)
-* [Français](./docs/releases/v3.3.1.fr.md)
-* [日本語](./docs/releases/v3.3.1.ja.md)
-* [Español](./docs/releases/v3.3.1.es.md)
+* [简体中文](./docs/releases/v3.4.0.zh-CN.md)
+* [繁體中文](./docs/releases/v3.4.0.zh-TW.md)
+* [English](./docs/releases/v3.4.0.en.md)
+* [Français](./docs/releases/v3.4.0.fr.md)
+* [日本語](./docs/releases/v3.4.0.ja.md)
+* [Español](./docs/releases/v3.4.0.es.md)
 
 <a id="funciones-principales"></a>
 
