@@ -777,7 +777,7 @@ export function LyricEditor() {
         ...customThemeTokens
       } as unknown as React.CSSProperties}
     >
-      <DesktopTitleBar />
+      <DesktopTitleBar locale={state.locale} />
       <DynamicAppBackground palette={state.palette} settings={userSettings} imageUrl={backgroundImageUrl} />
       <ClickSpark enabled={userSettings.sparkCursorEnabled} themeColor={themeAccent}>
     <main className="app-main-content relative z-10 min-h-screen px-4 py-5 sm:px-6 lg:px-8">

@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v3.6.0.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v3.6.1.fr.md">Notes de version</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="#développement-local">Développement local</a> ·
   <a href="./LICENSE">Licence</a>
@@ -50,19 +50,19 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 Téléchargez la dernière version depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
 
-* Installateur recommandé : `Lyrics Card Generator Setup 3.6.0.exe`
-* Version portable : `Lyrics Card Generator-3.6.0-portable.exe`
+* Installateur recommandé : `Lyrics Card Generator Setup 3.6.1.exe`
+* Version portable : `Lyrics Card Generator-3.6.1-portable.exe`
 
 L'installateur est recommandé pour une utilisation régulière. La version portable convient aux essais, à une utilisation temporaire ou à un disque amovible.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### Points clés de la v3.6.0
+### Points clés de la v3.6.1
 
-* L'étape de Mise en page demande désormais le type de contenu avant d'afficher les options de disposition, taille et typographie.
-* Les cartes instrumentales / sans paroles sont verrouillées en orientation portrait 1:1.
-* La grille d'arrière-plan est désactivée par défaut, avec des options de densité Éparse / Moyenne / Dense dans Détails visuels.
-* Correction du mode instrumental / sans paroles qui permettait incorrectement les cartes en paysage et les tailles incompatibles.
+* Corrige la synchronisation maximiser / restaurer de la barre de titre personnalisée du bureau.
+* Améliore la barre de titre Acrylic avec un flou de verre dégradé, une pile plus sûre et un hover fiable du bouton de fermeture.
+* Ajoute des libellés localisés et accessibles pour les contrôles de fenêtre de la barre de titre.
+* Corrige les liens de téléchargement et de notes de version du README sans modifier l'export PNG des cartes de paroles.
 
 <br clear="right" />
 
@@ -70,12 +70,12 @@ L'installateur est recommandé pour une utilisation régulière. La version port
 
 La page GitHub Release utilise par défaut la version courte en chinois simplifié, les notes de publication complètes sont conservées dans `docs/releases/` :
 
-* [简体中文](./docs/releases/v3.6.0.zh-CN.md)
-* [繁體中文](./docs/releases/v3.6.0.zh-TW.md)
-* [English](./docs/releases/v3.6.0.en.md)
-* [Français](./docs/releases/v3.6.0.fr.md)
-* [日本語](./docs/releases/v3.6.0.ja.md)
-* [Español](./docs/releases/v3.6.0.es.md)
+* [简体中文](./docs/releases/v3.6.1.zh-CN.md)
+* [繁體中文](./docs/releases/v3.6.1.zh-TW.md)
+* [English](./docs/releases/v3.6.1.en.md)
+* [Français](./docs/releases/v3.6.1.fr.md)
+* [日本語](./docs/releases/v3.6.1.ja.md)
+* [Español](./docs/releases/v3.6.1.es.md)
 
 <a id="fonctionnalités-principales"></a>
 

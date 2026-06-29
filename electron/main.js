@@ -182,14 +182,27 @@ function createWindow() {
     windowMaximized = false;
   };
 
-  mainWindow.on("move", rememberNormalBounds);
-  mainWindow.on("resize", rememberNormalBounds);
+  const rememberAndEmitWindowState = () => {
+    rememberNormalBounds();
+    emitWindowState();
+  };
+
+  mainWindow.on("move", rememberAndEmitWindowState);
+  mainWindow.on("resize", rememberAndEmitWindowState);
   mainWindow.on("maximize", () => {
     windowMaximized = true;
+    emitWindowState();
   });
   mainWindow.on("unmaximize", () => {
     windowMaximized = false;
+    emitWindowState();
   });
+  mainWindow.on("restore", () => {
+    windowMaximized = mainWindow?.isMaximized() ?? false;
+    emitWindowState();
+  });
+  mainWindow.on("enter-full-screen", emitWindowState);
+  mainWindow.on("leave-full-screen", emitWindowState);
 
   void readAppPreferences()
     .then((preferences) => {
@@ -222,6 +235,22 @@ function createWindow() {
   });
 
   mainWindow.loadURL(localAppUrl);
+}
+
+function getWindowState() {
+  if (!mainWindow || mainWindow.isDestroyed()) {
+    return { maximized: false };
+  }
+
+  return { maximized: windowMaximized || mainWindow.isMaximized() };
+}
+
+function emitWindowState() {
+  if (!mainWindow || mainWindow.isDestroyed()) {
+    return;
+  }
+
+  mainWindow.webContents.send("lyrics-card:window-state-changed", getWindowState());
 }
 
 function isAcrylicTheme(theme) {
@@ -343,13 +372,16 @@ function registerDesktopIpc() {
         if (!mainWindow.isMaximized() && !mainWindow.isMinimized() && !mainWindow.isFullScreen()) {
           normalWindowBounds = mainWindow.getBounds();
         }
+        emitWindowState();
       }, 0);
-      return { maximized: false };
+      emitWindowState();
+      return getWindowState();
     } else {
       normalWindowBounds = mainWindow.getBounds();
       windowMaximized = true;
       mainWindow.maximize();
-      return { maximized: true };
+      emitWindowState();
+      return getWindowState();
     }
   });
   ipcMain.handle("lyrics-card:window-close", () => {
@@ -358,8 +390,7 @@ function registerDesktopIpc() {
     return true;
   });
   ipcMain.handle("lyrics-card:window-state", () => {
-    if (!mainWindow || mainWindow.isDestroyed()) return { maximized: false };
-    return { maximized: windowMaximized || mainWindow.isMaximized() };
+    return getWindowState();
   });
 
   ipcMain.handle("lyrics-card:app-preferences-load", () => readAppPreferences());

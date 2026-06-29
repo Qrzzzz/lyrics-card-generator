@@ -1,4 +1,4 @@
-<div align="center">
+﻿<div align="center">
 
 # 🎧 Lyrics Card Generator
 
@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v3.6.0.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v3.6.1.zh-CN.md">发布说明</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="#本地开发">本地开发</a> ·
   <a href="./LICENSE">许可证</a>
@@ -47,19 +47,19 @@
 
 请前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下载最新版：
 
-* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 3.6.0.exe`
-* 不想安装时可下载便携版：`Lyrics Card Generator-3.6.0-portable.exe`
+* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 3.6.1.exe`
+* 不想安装时可下载便携版：`Lyrics Card Generator-3.6.1-portable.exe`
 
 安装版适合长期使用；便携版适合临时运行、测试或放在移动硬盘中使用。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v3.6.0 更新重点
+### v3.6.1 更新重点
 
-* "布局"步骤现在先选择内容类型，再显示可用的布局、尺寸和文字排版选项。
-* "纯音乐 / 无歌词"卡片锁定为竖向 1:1 输出。
-* 背景网格默认关闭，在"视觉细节"中提供"稀疏 / 中等 / 密"三档密度。
-* 修复"纯音乐 / 无歌词"模式仍可选择横向卡片和不兼容尺寸的问题。
+* 修复桌面自绘标题栏最大化 / 还原状态不同步的问题。
+* 优化 Acrylic 桌面标题栏的渐变玻璃模糊、层级和关闭按钮 hover 状态。
+* 补齐标题栏窗口控制按钮的多语言与无障碍文案。
+* 修正 README 当前下载入口与发布说明链接，歌词卡片导出结果不变。
 
 <br clear="right" />
 
@@ -67,12 +67,12 @@
 
 GitHub Release 页面默认使用简体中文短版，完整发布说明维护在 `docs/releases/`：
 
-* [简体中文](./docs/releases/v3.6.0.zh-CN.md)
-* [繁體中文](./docs/releases/v3.6.0.zh-TW.md)
-* [English](./docs/releases/v3.6.0.en.md)
-* [Français](./docs/releases/v3.6.0.fr.md)
-* [日本語](./docs/releases/v3.6.0.ja.md)
-* [Español](./docs/releases/v3.6.0.es.md)
+* [简体中文](./docs/releases/v3.6.1.zh-CN.md)
+* [繁體中文](./docs/releases/v3.6.1.zh-TW.md)
+* [English](./docs/releases/v3.6.1.en.md)
+* [Français](./docs/releases/v3.6.1.fr.md)
+* [日本語](./docs/releases/v3.6.1.ja.md)
+* [Español](./docs/releases/v3.6.1.es.md)
 
 <a id="主要功能"></a>
 

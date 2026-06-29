@@ -6,6 +6,11 @@ contextBridge.exposeInMainWorld("lyricsCardDesktop", {
   toggleMaximizeWindow: () => ipcRenderer.invoke("lyrics-card:window-toggle-maximize"),
   closeWindow: () => ipcRenderer.invoke("lyrics-card:window-close"),
   getWindowState: () => ipcRenderer.invoke("lyrics-card:window-state"),
+  onWindowStateChanged: (callback) => {
+    const listener = (_event, payload) => callback(payload);
+    ipcRenderer.on("lyrics-card:window-state-changed", listener);
+    return () => ipcRenderer.removeListener("lyrics-card:window-state-changed", listener);
+  },
   loadAppPreferences: () => ipcRenderer.invoke("lyrics-card:app-preferences-load"),
   saveAppPreferences: (preferences) => ipcRenderer.invoke("lyrics-card:app-preferences-save", preferences),
   listSystemFonts: () => ipcRenderer.invoke("lyrics-card:list-system-fonts"),
