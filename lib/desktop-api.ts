@@ -30,6 +30,7 @@ export type LyricsCardDesktopApi = {
   toggleMaximizeWindow: () => Promise<DesktopWindowState>;
   closeWindow: () => Promise<boolean>;
   getWindowState: () => Promise<DesktopWindowState>;
+  onWindowStateChanged: (callback: (state: DesktopWindowState) => void) => () => void;
   loadAppPreferences: () => Promise<{ locale: Locale; userSettings: UserSettings } | null>;
   saveAppPreferences: (preferences: { locale: Locale; userSettings: UserSettings }) => Promise<boolean>;
   listSystemFonts: () => Promise<SystemFontOption[]>;

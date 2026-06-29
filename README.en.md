@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v3.6.0.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v3.6.1.en.md">Release Notes</a> ·
   <a href="#features">Features</a> ·
   <a href="#local-development">Local Development</a> ·
   <a href="./LICENSE">License</a>
@@ -50,19 +50,19 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 Download the latest version from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Recommended installer: `Lyrics Card Generator Setup 3.6.0.exe`
-* Portable version: `Lyrics Card Generator-3.6.0-portable.exe`
+* Recommended installer: `Lyrics Card Generator Setup 3.6.1.exe`
+* Portable version: `Lyrics Card Generator-3.6.1-portable.exe`
 
 The installer is recommended for regular use. The portable version is useful for temporary use, testing, or running from a removable drive.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v3.6.0 Highlights
+### v3.6.1 Highlights
 
-* The Layout step now asks for content type before showing layout, size, and typography options.
-* Instrumental / no-lyrics cards are locked to portrait 1:1 output.
-* Background grid is disabled by default, with Sparse / Medium / Dense density options in Visual Details.
-* Fixed instrumental / no-lyrics mode incorrectly allowing landscape cards and incompatible sizes.
+* Fixes desktop custom titlebar maximize / restore state synchronization.
+* Polishes the Acrylic desktop titlebar with a fading glass blur layer, safer stacking, and reliable close-button hover.
+* Adds localized and accessible copy for the titlebar window controls.
+* Corrects README download and release-note links while leaving lyric card PNG output unchanged.
 
 <br clear="right" />
 
@@ -70,12 +70,12 @@ The installer is recommended for regular use. The portable version is useful for
 
 The GitHub Release page defaults to a simplified Chinese short version, while the full release notes are maintained in `docs/releases/`:
 
-* [简体中文](./docs/releases/v3.6.0.zh-CN.md)
-* [繁體中文](./docs/releases/v3.6.0.zh-TW.md)
-* [English](./docs/releases/v3.6.0.en.md)
-* [Français](./docs/releases/v3.6.0.fr.md)
-* [日本語](./docs/releases/v3.6.0.ja.md)
-* [Español](./docs/releases/v3.6.0.es.md)
+* [简体中文](./docs/releases/v3.6.1.zh-CN.md)
+* [繁體中文](./docs/releases/v3.6.1.zh-TW.md)
+* [English](./docs/releases/v3.6.1.en.md)
+* [Français](./docs/releases/v3.6.1.fr.md)
+* [日本語](./docs/releases/v3.6.1.ja.md)
+* [Español](./docs/releases/v3.6.1.es.md)
 
 <a id="features"></a>
 

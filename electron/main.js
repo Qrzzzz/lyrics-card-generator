@@ -22,6 +22,7 @@ let localAppUrl = null;
 let normalWindowBounds = null;
 let windowMaximized = false;
 let windowRestoring = false;
+let lastEmittedWindowState = null;
 const aiTranslationRequests = new Map();
 
 const DEFAULT_AI_SETTINGS = {
@@ -172,6 +173,7 @@ function createWindow() {
   });
   normalWindowBounds = mainWindow.getBounds();
   windowMaximized = false;
+  lastEmittedWindowState = null;
 
   const rememberNormalBounds = () => {
     if (!mainWindow || mainWindow.isDestroyed()) return;
@@ -182,14 +184,27 @@ function createWindow() {
     windowMaximized = false;
   };
 
-  mainWindow.on("move", rememberNormalBounds);
-  mainWindow.on("resize", rememberNormalBounds);
+  const rememberAndMaybeEmitWindowState = () => {
+    rememberNormalBounds();
+    emitWindowState();
+  };
+
+  mainWindow.on("move", rememberAndMaybeEmitWindowState);
+  mainWindow.on("resize", rememberAndMaybeEmitWindowState);
   mainWindow.on("maximize", () => {
     windowMaximized = true;
+    emitWindowState();
   });
   mainWindow.on("unmaximize", () => {
     windowMaximized = false;
+    emitWindowState();
   });
+  mainWindow.on("restore", () => {
+    windowMaximized = mainWindow?.isMaximized() ?? false;
+    emitWindowState();
+  });
+  mainWindow.on("enter-full-screen", emitWindowState);
+  mainWindow.on("leave-full-screen", emitWindowState);
 
   void readAppPreferences()
     .then((preferences) => {
@@ -222,6 +237,28 @@ function createWindow() {
   });
 
   mainWindow.loadURL(localAppUrl);
+}
+
+function getWindowState() {
+  if (!mainWindow || mainWindow.isDestroyed()) {
+    return { maximized: false };
+  }
+
+  return { maximized: windowMaximized || mainWindow.isMaximized() };
+}
+
+function emitWindowState() {
+  if (!mainWindow || mainWindow.isDestroyed()) {
+    return;
+  }
+
+  const nextState = getWindowState();
+  if (lastEmittedWindowState?.maximized === nextState.maximized) {
+    return;
+  }
+
+  lastEmittedWindowState = nextState;
+  mainWindow.webContents.send("lyrics-card:window-state-changed", nextState);
 }
 
 function isAcrylicTheme(theme) {
@@ -343,13 +380,16 @@ function registerDesktopIpc() {
         if (!mainWindow.isMaximized() && !mainWindow.isMinimized() && !mainWindow.isFullScreen()) {
           normalWindowBounds = mainWindow.getBounds();
         }
+        emitWindowState();
       }, 0);
-      return { maximized: false };
+      emitWindowState();
+      return getWindowState();
     } else {
       normalWindowBounds = mainWindow.getBounds();
       windowMaximized = true;
       mainWindow.maximize();
-      return { maximized: true };
+      emitWindowState();
+      return getWindowState();
     }
   });
   ipcMain.handle("lyrics-card:window-close", () => {
@@ -358,8 +398,7 @@ function registerDesktopIpc() {
     return true;
   });
   ipcMain.handle("lyrics-card:window-state", () => {
-    if (!mainWindow || mainWindow.isDestroyed()) return { maximized: false };
-    return { maximized: windowMaximized || mainWindow.isMaximized() };
+    return getWindowState();
   });
 
   ipcMain.handle("lyrics-card:app-preferences-load", () => readAppPreferences());
