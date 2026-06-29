@@ -22,6 +22,7 @@ let localAppUrl = null;
 let normalWindowBounds = null;
 let windowMaximized = false;
 let windowRestoring = false;
+let lastEmittedWindowState = null;
 const aiTranslationRequests = new Map();
 
 const DEFAULT_AI_SETTINGS = {
@@ -172,6 +173,7 @@ function createWindow() {
   });
   normalWindowBounds = mainWindow.getBounds();
   windowMaximized = false;
+  lastEmittedWindowState = null;
 
   const rememberNormalBounds = () => {
     if (!mainWindow || mainWindow.isDestroyed()) return;
@@ -182,13 +184,13 @@ function createWindow() {
     windowMaximized = false;
   };
 
-  const rememberAndEmitWindowState = () => {
+  const rememberAndMaybeEmitWindowState = () => {
     rememberNormalBounds();
     emitWindowState();
   };
 
-  mainWindow.on("move", rememberAndEmitWindowState);
-  mainWindow.on("resize", rememberAndEmitWindowState);
+  mainWindow.on("move", rememberAndMaybeEmitWindowState);
+  mainWindow.on("resize", rememberAndMaybeEmitWindowState);
   mainWindow.on("maximize", () => {
     windowMaximized = true;
     emitWindowState();
@@ -250,7 +252,13 @@ function emitWindowState() {
     return;
   }
 
-  mainWindow.webContents.send("lyrics-card:window-state-changed", getWindowState());
+  const nextState = getWindowState();
+  if (lastEmittedWindowState?.maximized === nextState.maximized) {
+    return;
+  }
+
+  lastEmittedWindowState = nextState;
+  mainWindow.webContents.send("lyrics-card:window-state-changed", nextState);
 }
 
 function isAcrylicTheme(theme) {
