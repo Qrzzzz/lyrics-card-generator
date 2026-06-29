@@ -2,6 +2,7 @@
 
 import { Music2, X } from "lucide-react";
 import { useEffect } from "react";
+import { ActionButton } from "@/components/ui/controls";
 import { EXAMPLE_SONGS, type ExampleSong } from "@/lib/examples";
 import { settingsCopy } from "@/lib/settings/copy";
 import type { Locale } from "@/lib/types";
@@ -46,14 +47,13 @@ export function ExamplesDialog({ open, locale, onClose, onLoad }: { open: boolea
             <Music2 className="h-5 w-5" />
             {copy.examples}
           </h2>
-          <button
-            type="button"
+          <ActionButton
+            variant="icon"
+            size="sm"
+            icon={<X className="h-4 w-4" />}
             onClick={onClose}
-            className="app-button grid h-9 w-9 place-items-center rounded-lg"
             aria-label={copy.cancel}
-          >
-            <X className="h-4 w-4" />
-          </button>
+          />
         </div>
         {EXAMPLE_SONGS.map((song) => (
           <div key={song.id} className="settings-panel-card flex items-center justify-between gap-4 p-4">
@@ -61,14 +61,13 @@ export function ExamplesDialog({ open, locale, onClose, onLoad }: { open: boolea
               <div className="font-bold">{song.title}</div>
               <div className="app-text-subtle text-sm">{song.artist}</div>
             </div>
-            <button
-              type="button"
+            <ActionButton
+              size="sm"
               data-testid={`load-example-${song.id}`}
               onClick={() => onLoad(song)}
-              className="app-button h-10 rounded-lg px-4 text-sm font-semibold"
             >
               {copy.loadExample}
-            </button>
+            </ActionButton>
           </div>
         ))}
       </div>

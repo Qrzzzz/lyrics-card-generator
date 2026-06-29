@@ -1,5 +1,6 @@
 import type {
   ButtonHTMLAttributes,
+  ReactElement,
   HTMLAttributes,
   InputHTMLAttributes,
   KeyboardEvent,
@@ -7,7 +8,7 @@ import type {
   SelectHTMLAttributes,
   TextareaHTMLAttributes
 } from "react";
-import { useId, useRef } from "react";
+import { Children, cloneElement, isValidElement, useId, useRef } from "react";
 import { cn } from "@/lib/utils";
 
 type FieldLabelProps = {
@@ -24,6 +25,25 @@ type FieldLabelProps = {
 const fieldShellClass =
   "field-shell control-focus control-disabled w-full rounded-lg text-sm disabled:cursor-not-allowed disabled:opacity-55 read-only:opacity-80";
 
+type LabelableFieldProps = {
+  id?: string;
+  "aria-describedby"?: string;
+};
+
+function isLabelableField(child: ReactNode): child is ReactElement<LabelableFieldProps> {
+  return (
+    isValidElement<LabelableFieldProps>(child) &&
+    [TextInput, Input, TextareaField, Textarea, SelectField, Select].includes(
+      child.type as typeof TextInput | typeof Input | typeof TextareaField | typeof Textarea | typeof SelectField | typeof Select
+    )
+  );
+}
+
+function mergeAriaIds(...ids: Array<string | undefined>) {
+  const resolvedIds = ids.filter(Boolean);
+  return resolvedIds.length > 0 ? Array.from(new Set(resolvedIds)).join(" ") : undefined;
+}
+
 export function FieldLabel({
   label,
   hint,
@@ -35,8 +55,30 @@ export function FieldLabel({
   htmlFor
 }: FieldLabelProps) {
   const helperText = error ?? description;
-  const labelContent = htmlFor ? (
-    <label htmlFor={htmlFor} className="app-text-primary font-medium">
+  const generatedFieldId = useId();
+  const helperTextId = useId();
+  const childArray = Children.toArray(children);
+  const labelableIndex = childArray.findIndex((child) => isLabelableField(child));
+  const labelableChild =
+    labelableIndex >= 0 && isLabelableField(childArray[labelableIndex]) ? childArray[labelableIndex] : null;
+  const resolvedFieldId = labelableChild
+    ? labelableChild.props.id ?? htmlFor ?? generatedFieldId
+    : htmlFor;
+  const resolvedChildren = labelableChild
+    ? childArray.map((child, index) => {
+        if (index !== labelableIndex || !isLabelableField(child)) {
+          return child;
+        }
+
+        return cloneElement(child, {
+          id: resolvedFieldId,
+          "aria-describedby": mergeAriaIds(child.props["aria-describedby"], helperText ? helperTextId : undefined)
+        });
+      })
+    : children;
+
+  const labelContent = resolvedFieldId ? (
+    <label htmlFor={resolvedFieldId} className="app-text-primary font-medium">
       {label}
     </label>
   ) : (
@@ -49,9 +91,14 @@ export function FieldLabel({
         {labelContent}
         {hint ? <span className="app-text-subtle text-xs">{hint}</span> : null}
       </div>
-      {children}
+      {resolvedChildren}
       {helperText ? (
-        <span className={cn("text-xs leading-relaxed", error ? "text-amber-200" : "app-text-subtle")}>{helperText}</span>
+        <div
+          id={helperText ? helperTextId : undefined}
+          className={cn("text-xs leading-relaxed", error ? "text-amber-200" : "app-text-subtle")}
+        >
+          {helperText}
+        </div>
       ) : null}
     </div>
   );
@@ -246,6 +293,7 @@ export function ActionButton({
 }
 
 type OptionCardProps = ButtonHTMLAttributes<HTMLButtonElement> & {
+  "data-testid"?: string;
   selected?: boolean;
   label: ReactNode;
   description?: ReactNode;
@@ -276,6 +324,8 @@ export function OptionCard({
 }: OptionCardProps) {
   const resolvedTrailing = trailing ?? indicator;
   const resolvedShowIndicator = showIndicator ?? role === "radio";
+  const resolvedTestId = testId ?? props["data-testid"];
+  const resolvedTabIndex = props.tabIndex ?? (role === "radio" ? (selected ? 0 : -1) : undefined);
 
   return (
     <button
@@ -285,8 +335,9 @@ export function OptionCard({
       role={role}
       aria-checked={role === "radio" ? selected : undefined}
       disabled={disabled}
-      data-testid={testId}
+      data-testid={resolvedTestId}
       data-selected={selected ? "true" : "false"}
+      tabIndex={resolvedTabIndex}
       className={cn(
         "option-card control-focus control-disabled flex w-full items-start justify-between gap-3 rounded-xl px-4 py-3 text-left",
         className
@@ -347,28 +398,50 @@ export function OptionCardGroup({
   const resolvedColumns = columns ?? (options && options.length >= 2 ? 2 : 1);
 
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    if (!options?.length || !resolvedOnChange) {
-      return;
-    }
-
     const isForward = event.key === "ArrowRight" || event.key === "ArrowDown";
     const isBackward = event.key === "ArrowLeft" || event.key === "ArrowUp";
     if (!isForward && !isBackward) {
       return;
     }
 
-    event.preventDefault();
-    const enabledOptions = options.filter((option) => !option.disabled);
-    if (enabledOptions.length === 0) {
+    if (options?.length && resolvedOnChange) {
+      event.preventDefault();
+      const enabledOptions = options.filter((option) => !option.disabled);
+      if (enabledOptions.length === 0) {
+        return;
+      }
+
+      const currentIndex = Math.max(0, enabledOptions.findIndex((option) => option.value === value));
+      const nextIndex =
+        (currentIndex + (isForward ? 1 : -1) + enabledOptions.length) % enabledOptions.length;
+      const nextOption = enabledOptions[nextIndex];
+      resolvedOnChange(nextOption.value);
+      refs.current[nextOption.value]?.focus();
       return;
     }
 
-    const currentIndex = Math.max(0, enabledOptions.findIndex((option) => option.value === value));
-    const nextIndex =
-      (currentIndex + (isForward ? 1 : -1) + enabledOptions.length) % enabledOptions.length;
-    const nextOption = enabledOptions[nextIndex];
-    resolvedOnChange(nextOption.value);
-    refs.current[nextOption.value]?.focus();
+    if (resolvedRole !== "radiogroup") {
+      return;
+    }
+
+    const radioButtons = Array.from(
+      event.currentTarget.querySelectorAll<HTMLButtonElement>('[role="radio"]:not(:disabled)')
+    );
+    if (radioButtons.length === 0) {
+      return;
+    }
+
+    event.preventDefault();
+    const currentIndex = Math.max(
+      0,
+      radioButtons.findIndex(
+        (button) => button === document.activeElement || button.getAttribute("aria-checked") === "true"
+      )
+    );
+    const nextIndex = (currentIndex + (isForward ? 1 : -1) + radioButtons.length) % radioButtons.length;
+    const nextButton = radioButtons[nextIndex];
+    nextButton.click();
+    nextButton.focus();
   };
 
   return (
@@ -477,6 +550,7 @@ export function SegmentedControl<T extends string = string>({
           type="button"
           role="radio"
           aria-checked={value === option.value}
+          tabIndex={value === option.value ? 0 : -1}
           disabled={option.disabled}
           title={option.title}
           data-segment-value={option.value}

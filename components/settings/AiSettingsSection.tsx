@@ -1,4 +1,5 @@
 import { Info, Trash2 } from "lucide-react";
+import { useId } from "react";
 import {
   ActionButton,
   FieldLabel,
@@ -33,13 +34,19 @@ export function AiSettingsSection({
   onClearApiKey: () => void;
 }) {
   const translationStyles = getTranslationStyles(locale);
+  const baseUrlId = useId();
+  const apiKeyId = useId();
+  const modelId = useId();
+  const temperatureId = useId();
+  const defaultStyleId = useId();
 
   return (
     <section className="settings-panel-card grid gap-4 p-4 sm:p-5">
       <h3 className="app-text-primary text-sm font-semibold">{copy.aiSection}</h3>
 
-      <FieldLabel label={copy.baseUrl}>
+      <FieldLabel label={copy.baseUrl} htmlFor={baseUrlId}>
         <TextInput
+          id={baseUrlId}
           type="url"
           value={settings.baseUrl}
           onChange={(event) => onSettingsChange({ ...settings, baseUrl: event.target.value })}
@@ -49,9 +56,10 @@ export function AiSettingsSection({
         <SettingTip>{copy.baseUrlTip}</SettingTip>
       </FieldLabel>
 
-      <FieldLabel label={copy.apiKey} hint={hasApiKey ? copy.apiKeyConfigured : undefined}>
+      <FieldLabel label={copy.apiKey} hint={hasApiKey ? copy.apiKeyConfigured : undefined} htmlFor={apiKeyId}>
         <div className="flex flex-col gap-2 sm:flex-row">
           <TextInput
+            id={apiKeyId}
             type="password"
             value={apiKey}
             onChange={(event) => onApiKeyChange(event.target.value)}
@@ -75,8 +83,9 @@ export function AiSettingsSection({
         <SettingTip>{copy.apiKeyTip}</SettingTip>
       </FieldLabel>
 
-      <FieldLabel label={copy.model}>
+      <FieldLabel label={copy.model} htmlFor={modelId}>
         <TextInput
+          id={modelId}
           value={settings.model}
           onChange={(event) => onSettingsChange({ ...settings, model: event.target.value })}
           placeholder={copy.modelPlaceholder}
@@ -86,8 +95,9 @@ export function AiSettingsSection({
       </FieldLabel>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <FieldLabel label={copy.temperature} hint={settings.reasoningEnabled ? copy.reasoningHint : undefined}>
+        <FieldLabel label={copy.temperature} hint={settings.reasoningEnabled ? copy.reasoningHint : undefined} htmlFor={temperatureId}>
           <TextInput
+            id={temperatureId}
             type="number"
             min={0}
             max={2}
@@ -98,8 +108,9 @@ export function AiSettingsSection({
           <SettingTip>{copy.temperatureTip}</SettingTip>
         </FieldLabel>
 
-        <FieldLabel label={copy.defaultStyle}>
+        <FieldLabel label={copy.defaultStyle} htmlFor={defaultStyleId}>
           <SelectField
+            id={defaultStyleId}
             value={settings.defaultStyle}
             onChange={(event) =>
               onSettingsChange({ ...settings, defaultStyle: event.target.value as AISettings["defaultStyle"] })

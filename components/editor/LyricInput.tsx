@@ -1,7 +1,7 @@
 "use client";
 
 import { Languages, SplitSquareVertical } from "lucide-react";
-import type { ReactNode } from "react";
+import { type ReactNode, useId } from "react";
 import { AiTranslateButton } from "@/components/lyrics/AiTranslateButton";
 import { TranslationFieldBorder } from "@/components/lyrics/TranslationFieldBorder";
 import { ActionButton, FieldLabel, Section, TextareaField, ToggleRow } from "@/components/ui/controls";
@@ -44,6 +44,7 @@ export function LyricInput({
   const lines = lyrics ? lyrics.split(/\r?\n/).length : 0;
   const showTranslation = contentMode === "lyrics" && translationEnabled;
   const aiCopy = getAIUiCopy(locale);
+  const translationFieldId = useId();
 
   return (
     <Section title={t("lyrics")} eyebrow={t("manualText")}>
@@ -78,9 +79,10 @@ export function LyricInput({
           {aiTranslatePanel}
           <ToggleRow label={t("enableTranslation")} checked={translationEnabled} onChange={onTranslationEnabledChange} />
           {showTranslation ? (
-            <FieldLabel label={t("translation")}>
+            <FieldLabel label={t("translation")} htmlFor={translationFieldId}>
               <TranslationFieldBorder color={themeColor}>
                 <TextareaField
+                  id={translationFieldId}
                   value={translationText}
                   onChange={(event) => onTranslationTextChange(event.target.value)}
                   placeholder={t("translationPlaceholder")}
