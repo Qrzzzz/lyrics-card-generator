@@ -81,23 +81,42 @@ La page GitHub Release utilise par défaut la version courte en chinois simplifi
 
 ## ✨ Fonctionnalités principales
 
-* Génération d'images de paroles très soignées
-* Formats portrait, paysage et dimensions de toile personnalisées
-* Mise en page paysage reconstruite autour des zones sûres, de la colonne de pochette, de la colonne de contenu et du pied de page
-* Hauteur automatique mesurée pour les toiles portrait personnalisées
-* Mise en page originale des paroles et des traductions
-* Séparation automatique des lignes original / traduction avec détection du chinois simplifié, chinois traditionnel, anglais, français, japonais et espagnol
-* Traduction de paroles par IA via les API Chat Completions compatibles OpenAI, avec URL du fournisseur, modèle, clé API, six styles, Reasoning et sortie en streaming configurables
-* Analyse de liens Spotify, Apple Music, NetEase Cloud Music et QQ Music
-* Analyse de métadonnées MP3 / FLAC locales : titre, artiste, album, pochette et paroles intégrées
-* Édition manuelle du titre, de l'artiste, de la pochette et des paroles
-* Import de pochette locale
-* Extraction de palette depuis la pochette pour créer des fonds en dégradé
-* Logo de plateforme, texte de partage et filigrane généré
-* Jeux Source Han Sans / Serif, polices CJK et latines indépendantes, sélecteur de polices système et aperçu avec de vraies paroles
-* Interface en chinois simplifié, chinois traditionnel, anglais, français, japonais et espagnol
-* Export PNG haute résolution
-* Vérification des mises à jour via GitHub Releases
+### 🎨 Génération d’images de paroles
+
+- Générer des images de partage de paroles avec un rendu soigné
+- Prendre en charge les formats portrait, paysage et les tailles de canevas personnalisées
+- Mise en page paysage reconstruite autour d’une zone sûre, avec des colonnes de pochette, de contenu et des informations de bas de page plus stables
+- Hauteur automatique pour les tailles portrait personnalisées, basée sur une mesure réelle du DOM
+- Exporter des images PNG en haute résolution
+
+### 📝 Mise en page et traduction des paroles
+
+- Afficher les paroles originales et leur traduction côte à côte
+- Séparer automatiquement les paroles originales et traduites selon la langue actuelle de l’interface
+- Prendre en charge les traductions cibles en chinois simplifié, chinois traditionnel, anglais, français, japonais et espagnol
+- Prendre en charge la traduction IA des paroles compatible avec OpenAI Chat Completions
+- Configurer le Base URL du fournisseur, le modèle, l’API Key, le style de traduction, le Reasoning et la sortie en streaming
+
+### 🎵 Importation des informations musicales
+
+- Analyser les liens Spotify, Apple Music, NetEase Cloud Music et QQ Music
+- Analyser les métadonnées locales des fichiers MP3 / FLAC
+- Tenter de lire le titre, l’artiste, l’album, la pochette et les paroles intégrées
+- Saisir manuellement le titre, l’artiste, la pochette et les paroles
+- Importer une pochette locale
+
+### 🌈 Visuels et personnalisation
+
+- Extraire les couleurs depuis la pochette et générer un arrière-plan en dégradé
+- Prendre en charge les logos de plateformes, le nom de la personne qui partage et les filigranes générés
+- Inclure deux jeux de polices : Source Han Sans / Source Han Serif
+- Prendre en charge les polices CJK personnalisées, les polices occidentales et la sélection des polices système
+- Prévisualiser les paroles avec la police réellement sélectionnée
+
+### 🌍 Langues et mises à jour
+
+- Basculer l’interface entre chinois simplifié / chinois traditionnel / anglais / français / japonais / espagnol
+- Vérifier les nouvelles versions depuis GitHub Releases
 
 ## 🪟 Version Windows
 
