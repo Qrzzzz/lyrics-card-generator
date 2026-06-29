@@ -368,6 +368,12 @@ type OptionCardChoice = {
   description?: ReactNode;
   icon?: ReactNode;
   disabled?: boolean;
+  testId?: string;
+  dataLocale?: string;
+  ariaLabel?: string;
+  trailing?: ReactNode;
+  indicator?: ReactNode;
+  showIndicator?: boolean;
 };
 
 type OptionCardGroupProps = Omit<HTMLAttributes<HTMLDivElement>, "onChange"> & {
@@ -395,7 +401,7 @@ export function OptionCardGroup({
   const refs = useRef<Record<string, HTMLButtonElement | null>>({});
   const resolvedRole = role ?? (options || onChange || onValueChange ? "radiogroup" : "group");
   const resolvedOnChange = onChange ?? onValueChange;
-  const resolvedColumns = columns ?? (options && options.length >= 2 ? 2 : 1);
+  const resolvedColumns = columns;
 
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     const isForward = event.key === "ArrowRight" || event.key === "ArrowDown";
@@ -452,7 +458,7 @@ export function OptionCardGroup({
       onKeyDown={handleKeyDown}
       className={cn("option-card-group grid gap-3", className)}
       style={
-        resolvedColumns > 1
+        resolvedColumns !== undefined
           ? { ...style, gridTemplateColumns: `repeat(${resolvedColumns}, minmax(0, 1fr))` }
           : style
       }
@@ -464,8 +470,14 @@ export function OptionCardGroup({
               label={option.label}
               description={option.description}
               icon={option.icon}
+              trailing={option.trailing}
+              indicator={option.indicator}
+              showIndicator={option.showIndicator}
               selected={value === option.value}
               disabled={option.disabled}
+              data-testid={option.testId}
+              data-locale={option.dataLocale}
+              aria-label={option.ariaLabel}
               onClick={() => resolvedOnChange?.(option.value)}
               buttonRef={(node) => {
                 refs.current[option.value] = node;

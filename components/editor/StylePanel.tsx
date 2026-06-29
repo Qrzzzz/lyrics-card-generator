@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
 import { FontSchemePanel } from "@/components/editor/font-scheme/FontSchemePanel";
 import { ColorControls } from "@/components/editor/style-panel/ColorControls";
 import {
@@ -11,6 +12,8 @@ import {
   ToggleRow
 } from "@/components/ui/controls";
 import { PRESET_CARD_SIZES } from "@/lib/card-size";
+import { getLyricsCardDesktopApi, type SystemFontOption } from "@/lib/desktop-api";
+import { canBrowserUseFont, quoteSingleFontFamily, sanitizeCssFontFamilyName } from "@/lib/fonts";
 import type { createT } from "@/lib/i18n";
 import type {
   CardAlign,
@@ -40,12 +43,250 @@ export function StylePanel(props: StylePanelProps) {
 
 export function FontSchemeSettingsPanel({ style, onStyleChange, onFontSchemePreviewChange, t }: StylePanelProps) {
   return (
-    <FontSchemePanel
-      style={style}
-      onStyleChange={onStyleChange}
-      onPreviewSchemeChange={onFontSchemePreviewChange}
-      t={t}
-    />
+    <div className="grid gap-4">
+      <FontSchemePanel
+        style={style}
+        onStyleChange={onStyleChange}
+        onPreviewSchemeChange={onFontSchemePreviewChange}
+        t={t}
+      />
+      <CustomFontPanel style={style} onStyleChange={onStyleChange} t={t} />
+    </div>
+  );
+}
+
+function CustomFontPanel({ style, onStyleChange, t }: StylePanelProps) {
+  const desktopApi = getLyricsCardDesktopApi();
+  const [fonts, setFonts] = useState<SystemFontOption[]>([]);
+  const [search, setSearch] = useState("");
+  const [status, setStatus] = useState("");
+  const [fontMayFallback, setFontMayFallback] = useState(false);
+  const selectedFont = sanitizeCssFontFamilyName(style.customFontFamily);
+  const selectedWeight = style.customFontWeight ?? 400;
+  const selectedStyle = style.customFontStyle ?? "normal";
+  const customFontActive = !style.fontScheme && Boolean(style.customFontEnabled && selectedFont);
+  const selectedOption = fonts.find(
+    (font) => font.family === selectedFont && font.fontWeight === selectedWeight && font.fontStyle === selectedStyle
+  );
+  const selectedLabel = style.customFontLabel || selectedOption?.label || selectedFont;
+  const filteredFonts = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    if (!query) {
+      return fonts;
+    }
+
+    return fonts.filter((font) => `${font.label} ${font.family}`.toLowerCase().includes(query));
+  }, [fonts, search]);
+
+  function setCustomFontEnabled(enabled: boolean) {
+    if (!enabled) {
+      onStyleChange({
+        ...style,
+        fontScheme: undefined,
+        customFontEnabled: false
+      });
+      setFontMayFallback(false);
+      return;
+    }
+
+    const nextFont = selectedFont
+      ? {
+          label: selectedLabel || selectedFont,
+          family: selectedFont,
+          fontWeight: selectedWeight,
+          fontStyle: selectedStyle
+        }
+      : fonts[0];
+    if (!nextFont?.family) {
+      setStatus(t("customFontChooseFirst"));
+      return;
+    }
+
+    onStyleChange({
+      ...style,
+      fontScheme: undefined,
+      customFontFamily: nextFont.family,
+      customFontLabel: nextFont.label,
+      customFontWeight: nextFont.fontWeight,
+      customFontStyle: nextFont.fontStyle,
+      customFontEnabled: true
+    });
+    setStatus("");
+  }
+
+  function selectCustomFont(font: SystemFontOption) {
+    const nextFamily = sanitizeCssFontFamilyName(font.family);
+    if (!nextFamily) {
+      return;
+    }
+
+    onStyleChange({
+      ...style,
+      fontScheme: undefined,
+      customFontFamily: nextFamily,
+      customFontLabel: font.label,
+      customFontWeight: font.fontWeight,
+      customFontStyle: font.fontStyle,
+      customFontEnabled: true
+    });
+    setStatus("");
+  }
+
+  useEffect(() => {
+    let active = true;
+
+    if (!desktopApi) {
+      setFonts([]);
+      setStatus(t("systemFontDesktopOnly"));
+      return;
+    }
+
+    setStatus(t("systemFontLoading"));
+    desktopApi
+      .listSystemFonts()
+      .then((nextFonts) => {
+        if (!active) {
+          return;
+        }
+
+        setFonts(nextFonts);
+        setStatus(nextFonts.length > 0 ? "" : t("systemFontEmpty"));
+      })
+      .catch((error) => {
+        if (!active) {
+          return;
+        }
+
+        setStatus(error instanceof Error ? error.message : t("systemFontFailed"));
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [desktopApi, t]);
+
+  useEffect(() => {
+    if (!customFontActive) {
+      setFontMayFallback(false);
+      return;
+    }
+
+    setFontMayFallback(!canBrowserUseFont(selectedFont, selectedWeight, selectedStyle));
+  }, [customFontActive, selectedFont, selectedStyle, selectedWeight]);
+
+  useEffect(() => {
+    if (!style.customFontEnabled || style.fontScheme || !selectedFont || fonts.length === 0) {
+      return;
+    }
+
+    const matchingFont =
+      fonts.find(
+        (font) =>
+          font.family === selectedFont && font.fontWeight === selectedWeight && font.fontStyle === selectedStyle
+      ) ?? fonts.find((font) => font.label === selectedFont || font.family === selectedFont);
+
+    if (
+      !matchingFont ||
+      (style.customFontFamily === matchingFont.family &&
+        style.customFontLabel === matchingFont.label &&
+        selectedWeight === matchingFont.fontWeight &&
+        selectedStyle === matchingFont.fontStyle)
+    ) {
+      return;
+    }
+
+    onStyleChange({
+      ...style,
+      fontScheme: undefined,
+      customFontFamily: matchingFont.family,
+      customFontLabel: matchingFont.label,
+      customFontWeight: matchingFont.fontWeight,
+      customFontStyle: matchingFont.fontStyle
+    });
+  }, [fonts, onStyleChange, selectedFont, selectedStyle, selectedWeight, style]);
+
+  return (
+    <div className="grid gap-4 rounded-xl border border-[rgb(var(--panel-border))] bg-[rgb(var(--panel-bg))] p-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="grid gap-1">
+          <p className="app-text-primary text-sm font-semibold">{t("customFont")}</p>
+          {customFontActive ? (
+            <p className="app-text-subtle text-xs">
+              {t("customFontActive")}: {selectedLabel}
+            </p>
+          ) : null}
+        </div>
+        <div className="w-full sm:max-w-xs">
+          <ToggleRow label={t("enableCustomFont")} checked={customFontActive} onChange={setCustomFontEnabled} size="sm" />
+        </div>
+      </div>
+
+      <FieldLabel label={t("fontSearch")} disabled={!desktopApi || fonts.length === 0}>
+        <TextInput
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+          placeholder={t("fontSearchPlaceholder")}
+          disabled={!desktopApi || fonts.length === 0}
+        />
+      </FieldLabel>
+
+      {desktopApi && fonts.length > 0 ? (
+        <div className="grid gap-2">
+          <div className="flex items-center justify-between gap-3 text-sm">
+            <span className="app-text-primary font-medium">{t("systemFonts")}</span>
+            <span className="app-text-subtle text-xs">
+              {t("customFontResultCount", { shown: filteredFonts.length, total: fonts.length })}
+            </span>
+          </div>
+          {filteredFonts.length > 0 ? (
+            <div className="max-h-64 overflow-y-auto rounded-lg border border-[rgb(var(--panel-border))] p-1" role="listbox">
+              {filteredFonts.map((font) => {
+                const active =
+                  customFontActive &&
+                  selectedFont === font.family &&
+                  selectedWeight === font.fontWeight &&
+                  selectedStyle === font.fontStyle;
+                return (
+                  <button
+                    key={`${font.label}-${font.family}-${font.fontWeight}-${font.fontStyle}`}
+                    type="button"
+                    role="option"
+                    aria-selected={active}
+                    onClick={() => selectCustomFont(font)}
+                    className={`w-full rounded-lg border px-3 py-2 text-left text-sm transition ${
+                      active
+                        ? "border-[var(--app-accent)] bg-[rgb(var(--button-bg-hover))] app-text-primary"
+                        : "border-transparent app-text-muted hover:border-[rgb(var(--panel-border))] hover:bg-[rgb(var(--button-bg-hover))]"
+                    }`}
+                    style={{
+                      fontFamily: `${quoteSingleFontFamily(font.family)}, system-ui, sans-serif`,
+                      fontWeight: font.fontWeight,
+                      fontStyle: font.fontStyle
+                    }}
+                  >
+                    <span className="block">{font.label}</span>
+                    {font.label !== font.family ? (
+                      <span className="app-text-subtle block text-xs">{font.family}</span>
+                    ) : null}
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="app-text-subtle rounded-lg border border-[rgb(var(--panel-border))] p-3 text-sm">
+              {t("customFontNoResults")}
+            </p>
+          )}
+        </div>
+      ) : null}
+
+      {status ? <p className="app-text-subtle text-sm">{status}</p> : null}
+      {fontMayFallback && customFontActive ? (
+        <p className="text-sm text-amber-300" role="status">
+          {t("customFontMayFallback")}
+        </p>
+      ) : null}
+    </div>
   );
 }
 
