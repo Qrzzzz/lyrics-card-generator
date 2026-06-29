@@ -43,8 +43,8 @@ export function SettingsStepper({
 
   return (
     <section className={cn("grid min-w-0 gap-4", isLastStep && "content-start")}>
-      <div className="glass-panel rounded-lg p-4">
-        <div className="mb-4 flex items-start justify-between gap-4">
+      <div className="glass-panel flex h-[14.25rem] flex-col rounded-lg p-4">
+        <div className="mb-4 flex min-h-[5.25rem] items-start justify-between gap-4">
           <AnimatePresence mode="wait" initial={false}>
             <motion.div
               key={activeStep.id}
@@ -59,7 +59,7 @@ export function SettingsStepper({
               </p>
               <h2 className="app-text-primary mt-1 text-lg font-black">{activeStep.title}</h2>
               {activeStep.description ? (
-                <p className="app-text-subtle mt-1 text-sm">{activeStep.description}</p>
+                <p className="app-text-subtle mt-1 line-clamp-2 text-sm leading-5">{activeStep.description}</p>
               ) : null}
             </motion.div>
           </AnimatePresence>

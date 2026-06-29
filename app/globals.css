@@ -226,8 +226,8 @@ body[data-desktop-shell="true"] {
     rgba(17, 18, 22, 0.22) 58%,
     rgba(17, 18, 22, 0)
   );
-  backdrop-filter: blur(18px) saturate(1.25);
-  -webkit-backdrop-filter: blur(18px) saturate(1.25);
+  backdrop-filter: blur(30px) saturate(1.35);
+  -webkit-backdrop-filter: blur(30px) saturate(1.35);
   mask-image: linear-gradient(to bottom, #000 0%, #000 54%, transparent 100%);
   -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 54%, transparent 100%);
 }
