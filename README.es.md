@@ -81,23 +81,42 @@ La página de GitHub Release utiliza por defecto la versión corta en chino simp
 
 ## ✨ Funciones principales
 
-* Genera imágenes de letras con acabado pulido
-* Tamaños verticales, horizontales y de lienzo personalizado
-* Diseño horizontal reconstruido con áreas seguras, columna de portada, columna de contenido y regiones de pie
-* Altura automática medida para lienzos verticales personalizados
-* Diseño de letra original y traducción
-* Separación automática de líneas original / traducción con detección de chino simplificado, chino tradicional, inglés, francés, japonés y español
-* Traducción de letras con IA mediante API Chat Completions compatibles con OpenAI, con URL del proveedor, modelo, clave API, seis estilos, Reasoning y salida en streaming configurables
-* Análisis de enlaces de Spotify, Apple Music, NetEase Cloud Music y QQ Music
-* Análisis de metadatos MP3 / FLAC locales para título, artista, álbum, portada y letras incrustadas
-* Edición manual de título, artista, portada y letra
-* Subida de portada local
-* Extracción de paleta desde la portada para fondos degradados
-* Logo de plataforma, texto de compartido por y marca de agua generada
-* Combinaciones Source Han Sans / Serif, fuentes CJK y latinas independientes, selector de fuentes del sistema y vista previa con letras reales
-* Interfaz en chino simplificado, chino tradicional, inglés, francés, japonés y español
-* Exportación PNG de alta resolución
-* Búsqueda de actualizaciones en GitHub Releases
+### 🎨 Generación de imágenes con letras
+
+- Genera imágenes de letras para compartir con un acabado de alta calidad
+- Compatible con formatos verticales, horizontales y tamaños de lienzo personalizados
+- Diseño horizontal reconstruido con zonas seguras, para columnas de portada, contenido e información inferior más estables
+- Altura automática para tamaños verticales personalizados basada en mediciones reales del DOM
+- Exportación de imágenes PNG en alta resolución
+
+### 📝 Maquetación y traducción de letras
+
+- Muestra la letra original y la traducción en paralelo
+- Separa automáticamente la letra original y la traducción según el idioma actual de la interfaz
+- Compatible con traducciones a chino simplificado, chino tradicional, inglés, francés, japonés y español
+- Compatible con traducción de letras mediante IA basada en OpenAI Chat Completions
+- Permite configurar el Base URL del proveedor, el modelo, la API Key, el estilo de traducción, Reasoning y la salida en streaming
+
+### 🎵 Importación de información musical
+
+- Analiza enlaces de Spotify, Apple Music, NetEase Cloud Music y QQ Music
+- Analiza metadatos locales de archivos MP3 / FLAC
+- Intenta leer título, artista, álbum, portada y letras incrustadas
+- Permite introducir manualmente el título, artista, portada y letra
+- Compatible con la subida de portadas locales
+
+### 🌈 Visuales y personalización
+
+- Extrae colores de la portada y genera fondos degradados
+- Compatible con logos de plataformas, nombre de quien comparte y marcas de agua generadas
+- Incluye dos esquemas tipográficos: Source Han Sans / Source Han Serif
+- Compatible con fuentes CJK personalizadas, fuentes occidentales y selección de fuentes del sistema
+- Vista previa real de la letra con la fuente seleccionada
+
+### 🌍 Idiomas y actualizaciones
+
+- Permite cambiar la interfaz entre chino simplificado / chino tradicional / inglés / francés / japonés / español
+- Permite comprobar nuevas versiones desde GitHub Releases
 
 ## 🪟 Versión de escritorio para Windows
 
