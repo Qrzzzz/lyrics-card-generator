@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v3.6.1.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v3.7.0.zh-CN.md">发布说明</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="#本地开发">本地开发</a> ·
   <a href="./LICENSE">许可证</a>
@@ -47,19 +47,20 @@
 
 请前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下载最新版：
 
-* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 3.6.1.exe`
-* 不想安装时可下载便携版：`Lyrics Card Generator-3.6.1-portable.exe`
+* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 3.7.0.exe`
+* 不想安装时可下载便携版：`Lyrics Card Generator-3.7.0-portable.exe`
 
 安装版适合长期使用；便携版适合临时运行、测试或放在移动硬盘中使用。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v3.6.1 更新重点
+### v3.7.0 更新重点
 
-* 修复桌面自绘标题栏最大化 / 还原状态不同步的问题。
-* 优化 Acrylic 桌面标题栏的渐变玻璃模糊、层级和关闭按钮 hover 状态。
-* 补齐标题栏窗口控制按钮的多语言与无障碍文案。
-* 修正 README 当前下载入口与发布说明链接，歌词卡片导出结果不变。
+* 强化桌面背景图片路径校验，仅接受应用生成的安全文件名并拒绝异常 `imageId`。
+* 改进 AI 翻译对非标准响应、纯文本错误、损坏 JSON 和空响应的兜底处理。
+* 统一“检查更新”入口，始终打开对应的 GitHub Release 页面。
+* 清理废弃的旧版字体面板代码与已移除纯音乐输入框的残留文案。
+* 将发布校验改为随当前版本自动变化的通用一致性测试。
 
 <br clear="right" />
 
@@ -67,12 +68,12 @@
 
 GitHub Release 页面默认使用简体中文短版，完整发布说明维护在 `docs/releases/`：
 
-* [简体中文](./docs/releases/v3.6.1.zh-CN.md)
-* [繁體中文](./docs/releases/v3.6.1.zh-TW.md)
-* [English](./docs/releases/v3.6.1.en.md)
-* [Français](./docs/releases/v3.6.1.fr.md)
-* [日本語](./docs/releases/v3.6.1.ja.md)
-* [Español](./docs/releases/v3.6.1.es.md)
+* [简体中文](./docs/releases/v3.7.0.zh-CN.md)
+* [繁體中文](./docs/releases/v3.7.0.zh-TW.md)
+* [English](./docs/releases/v3.7.0.en.md)
+* [Français](./docs/releases/v3.7.0.fr.md)
+* [日本語](./docs/releases/v3.7.0.ja.md)
+* [Español](./docs/releases/v3.7.0.es.md)
 
 <a id="主要功能"></a>
 
@@ -113,7 +114,8 @@ GitHub Release 页面默认使用简体中文短版，完整发布说明维护�
 ### 🌍 多语言与更新
 
 * 支持简体中文 / 繁體中文 / English / Français / 日本語 / Español 界面切换
-* 支持从 GitHub Releases 检查新版本
+* 支持导出高清 PNG 图片
+* 支持从 GitHub Releases 检查新版本，并打开对应 Release 页面
 
 
 ## 🪟 Windows 桌面版说明
@@ -152,7 +154,7 @@ GitHub Release 页面默认使用简体中文短版，完整发布说明维护�
 ## 🔄 检查更新
 
 应用内提供“检查更新”按钮。
-它会通过本地 Next API 路由请求本项目的 GitHub Releases，比较当前版本和最新发布版本，并优先识别安装版和便携版下载资产。
+它会通过本地 Next API 路由请求本项目的 GitHub Releases，比较当前版本和最新发布版本，并打开对应的 Release 页面供用户选择下载资产。
 
 该功能只负责检查更新并打开下载页面，不会静默下载安装包，也不会自动替换当前程序。
 

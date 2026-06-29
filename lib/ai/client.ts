@@ -1,4 +1,5 @@
 import { getLyricsCardDesktopApi } from "@/lib/desktop-api";
+import { getChatCompletionMessage, getProviderErrorMessage, readProviderResponseBody } from "@/lib/ai/provider-response";
 import { DEFAULT_AI_SETTINGS } from "@/lib/ai/types";
 import { isTranslationStyle } from "@/lib/ai/styles";
 import type {
@@ -148,11 +149,8 @@ async function consumeOpenAIStream(
   params: Pick<AITranslationStreamParams, "onDelta" | "onReasoningDelta" | "onStatus">
 ) {
   if (!(response.headers.get("content-type") || "").includes("text/event-stream")) {
-    const data = (await response.json()) as {
-      choices?: Array<{ message?: { content?: string; reasoning_content?: string } }>;
-    };
-    const content = data.choices?.[0]?.message?.content ?? "";
-    const reasoningContent = data.choices?.[0]?.message?.reasoning_content ?? "";
+    const body = await readProviderResponseBody(response);
+    const { content, reasoningContent } = getChatCompletionMessage(body);
     if (reasoningContent) {
       params.onStatus?.("reasoning");
       params.onReasoningDelta?.(reasoningContent, reasoningContent);
@@ -160,6 +158,9 @@ async function consumeOpenAIStream(
     if (content) {
       params.onStatus?.("translating");
       params.onDelta?.(content, content);
+    }
+    if (!content && body.kind !== "json") {
+      throw new AITranslationError("AI 接口返回了无法解析的响应。", "request_failed");
     }
     return content;
   }
@@ -260,10 +261,5 @@ function normalizeError(error: unknown) {
 }
 
 async function readErrorMessage(response: Response) {
-  try {
-    const data = (await response.json()) as { error?: string };
-    return data.error || `AI 请求失败（HTTP ${response.status}）。`;
-  } catch {
-    return `AI 请求失败（HTTP ${response.status}）。`;
-  }
+  return getProviderErrorMessage(await readProviderResponseBody(response), response.status);
 }

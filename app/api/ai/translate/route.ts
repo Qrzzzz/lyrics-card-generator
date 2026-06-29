@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getProviderErrorMessage, readProviderResponseBody } from "@/lib/ai/provider-response";
 import type { SaveAISettingsInput } from "@/lib/ai/types";
 
 export const runtime = "nodejs";
@@ -70,14 +71,24 @@ export async function POST(request: Request) {
         { status: response.status }
       );
     }
+    const contentType = response.headers.get("content-type") || "";
     if (!response.body) {
       return NextResponse.json({ error: "接口返回为空，请重试或更换模型。" }, { status: 502 });
+    }
+
+    if (!contentType.includes("text/event-stream")) {
+      const body = await readProviderResponseBody(response);
+      if (body.kind === "json") {
+        return NextResponse.json(body.data, { status: 200 });
+      }
+
+      return NextResponse.json({ error: getProviderErrorMessage(body, 502) }, { status: 502 });
     }
 
     return new Response(response.body, {
       status: 200,
       headers: {
-        "content-type": response.headers.get("content-type") || "text/event-stream; charset=utf-8",
+        "content-type": contentType || "text/event-stream; charset=utf-8",
         "cache-control": "no-cache, no-transform"
       }
     });
@@ -110,13 +121,5 @@ function usesDeepSeekThinking(baseUrl: string, model: string) {
 }
 
 async function readProviderError(response: Response) {
-  try {
-    const data = (await response.json()) as { error?: { message?: string } | string; message?: string };
-    const providerMessage = typeof data.error === "string" ? data.error : data.error?.message || data.message;
-    return providerMessage
-      ? `AI 接口请求失败：${providerMessage}`
-      : `AI 接口请求失败（HTTP ${response.status}）。`;
-  } catch {
-    return `AI 接口请求失败（HTTP ${response.status}）。`;
-  }
+  return getProviderErrorMessage(await readProviderResponseBody(response), response.status);
 }

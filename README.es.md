@@ -19,7 +19,7 @@
 <p>
   <strong>Navegación</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Descargar la última versión</a> ·
-  <a href="./docs/releases/v3.6.1.es.md">Notas de la versión</a> ·
+  <a href="./docs/releases/v3.7.0.es.md">Notas de la versión</a> ·
   <a href="#funciones-principales">Funciones principales</a> ·
   <a href="#desarrollo-local">Desarrollo local</a> ·
   <a href="./LICENSE">Licencia</a>
@@ -50,19 +50,20 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 Descarga la versión más reciente desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Instalador recomendado: `Lyrics Card Generator Setup 3.6.1.exe`
-* Versión portable: `Lyrics Card Generator-3.6.1-portable.exe`
+* Instalador recomendado: `Lyrics Card Generator Setup 3.7.0.exe`
+* Versión portable: `Lyrics Card Generator-3.7.0-portable.exe`
 
 El instalador se recomienda para uso habitual. La versión portable es útil para pruebas, uso temporal o ejecución desde una unidad extraíble.
 
 > La compilación actual no está firmada. Windows puede mostrar una advertencia de SmartScreen, algo habitual en aplicaciones personales sin firma.
 
-### Aspectos destacados de la versión 3.6.1
+### Aspectos destacados de la versión 3.7.0
 
-* Corrige la sincronización de maximizar / restaurar en la barra de título personalizada de escritorio.
-* Mejora la barra de título Acrylic con desenfoque de cristal degradado, capas más seguras y hover fiable en el botón de cerrar.
-* Añade textos localizados y accesibles para los controles de ventana de la barra de título.
-* Corrige los enlaces de descarga y notas de versión del README sin cambiar la exportación PNG de las tarjetas de letras.
+* Refuerza la validación de rutas para las imágenes de fondo del escritorio y solo acepta nombres seguros generados por la app.
+* Mejora el fallback de traducción IA ante respuestas no estándar, errores en texto plano, JSON malformado y cuerpos vacíos.
+* Hace coherente la entrada de actualización al abrir siempre la página correspondiente de GitHub Release.
+* Elimina el código heredado del panel de fuentes y las copias residuales del antiguo campo instrumental.
+* Sustituye las comprobaciones de release ligadas a una versión por pruebas genéricas de coherencia de lanzamiento.
 
 <br clear="right" />
 
@@ -70,53 +71,53 @@ El instalador se recomienda para uso habitual. La versión portable es útil par
 
 La página de GitHub Release utiliza por defecto la versión corta en chino simplificado, las notas de publicación completas se mantienen en `docs/releases/`:
 
-* [简体中文](./docs/releases/v3.6.1.zh-CN.md)
-* [繁體中文](./docs/releases/v3.6.1.zh-TW.md)
-* [English](./docs/releases/v3.6.1.en.md)
-* [Français](./docs/releases/v3.6.1.fr.md)
-* [日本語](./docs/releases/v3.6.1.ja.md)
-* [Español](./docs/releases/v3.6.1.es.md)
+* [简体中文](./docs/releases/v3.7.0.zh-CN.md)
+* [繁體中文](./docs/releases/v3.7.0.zh-TW.md)
+* [English](./docs/releases/v3.7.0.en.md)
+* [Français](./docs/releases/v3.7.0.fr.md)
+* [日本語](./docs/releases/v3.7.0.ja.md)
+* [Español](./docs/releases/v3.7.0.es.md)
 
 <a id="funciones-principales"></a>
 
 ## ✨ Funciones principales
 
-### 🎨 Generación de imágenes con letras
+### 🎨 Generación de imágenes de letras
 
-- Genera imágenes de letras para compartir con un acabado de alta calidad
-- Compatible con formatos verticales, horizontales y tamaños de lienzo personalizados
-- Diseño horizontal reconstruido con zonas seguras, para columnas de portada, contenido e información inferior más estables
-- Altura automática para tamaños verticales personalizados basada en mediciones reales del DOM
-- Exportación de imágenes PNG en alta resolución
+* Genera imágenes de letras con acabado pulido
+* Tamaños verticales, horizontales y de lienzo personalizado
+* Diseño horizontal reconstruido con áreas seguras, columna de portada, columna de contenido y regiones de pie
+* Altura automática medida para lienzos verticales personalizados
+* Exportación PNG de alta resolución
 
 ### 📝 Maquetación y traducción de letras
 
-- Muestra la letra original y la traducción en paralelo
-- Separa automáticamente la letra original y la traducción según el idioma actual de la interfaz
-- Compatible con traducciones a chino simplificado, chino tradicional, inglés, francés, japonés y español
-- Compatible con traducción de letras mediante IA basada en OpenAI Chat Completions
-- Permite configurar el Base URL del proveedor, el modelo, la API Key, el estilo de traducción, Reasoning y la salida en streaming
+* Diseño lado a lado de letra original y traducción
+* Separación automática de original / traducción según el idioma actual de la interfaz
+* Compatibilidad con chino simplificado, chino tradicional, inglés, francés, japonés y español como idiomas de destino
+* Traducción de letras con IA mediante API Chat Completions compatibles con OpenAI
+* URL base del proveedor, modelo, clave API, estilo de traducción, Reasoning y salida en streaming configurables
 
-### 🎵 Importación de información musical
+### 🎵 Importación de información de la canción
 
-- Analiza enlaces de Spotify, Apple Music, NetEase Cloud Music y QQ Music
-- Analiza metadatos locales de archivos MP3 / FLAC
-- Intenta leer título, artista, álbum, portada y letras incrustadas
-- Permite introducir manualmente el título, artista, portada y letra
-- Compatible con la subida de portadas locales
+* Análisis de enlaces de Spotify, Apple Music, NetEase Cloud Music y QQ Music
+* Análisis de metadatos MP3 / FLAC locales
+* Puede leer título, artista, álbum, portada y letras incrustadas
+* Edición manual de título, artista, portada y letra
+* Subida de portada local
 
 ### 🌈 Visuales y personalización
 
-- Extrae colores de la portada y genera fondos degradados
-- Compatible con logos de plataformas, nombre de quien comparte y marcas de agua generadas
-- Incluye dos esquemas tipográficos: Source Han Sans / Source Han Serif
-- Compatible con fuentes CJK personalizadas, fuentes occidentales y selección de fuentes del sistema
-- Vista previa real de la letra con la fuente seleccionada
+* Extracción de paleta desde la portada para fondos degradados
+* Logo de plataforma, texto de compartido por y marca de agua generada
+* Esquemas tipográficos Source Han Sans / Serif
+* Selección personalizada de fuentes CJK, fuentes latinas y fuentes del sistema
+* Vista previa tipográfica con letras reales
 
 ### 🌍 Idiomas y actualizaciones
 
-- Permite cambiar la interfaz entre chino simplificado / chino tradicional / inglés / francés / japonés / español
-- Permite comprobar nuevas versiones desde GitHub Releases
+* Interfaz en chino simplificado / chino tradicional / inglés / francés / japonés / español
+* Búsqueda de actualizaciones en GitHub Releases que abre la página Release correspondiente
 
 ## 🪟 Versión de escritorio para Windows
 
@@ -154,7 +155,7 @@ Estas funciones requieren internet:
 ## 🔄 Búsqueda de actualizaciones
 
 La aplicación incluye un botón “Buscar actualizaciones”.
-Solicita las GitHub Releases de este proyecto a través de una ruta API local de Next, compara la versión actual con la última publicada y prioriza los recursos de instalador / portable cuando están disponibles.
+Solicita las GitHub Releases de este proyecto a través de una ruta API local de Next, compara la versión actual con la última publicada y abre la página de Release correspondiente para que el usuario elija el recurso de descarga.
 
 Esta función solo busca actualizaciones y abre la página de descarga. No descarga instaladores en silencio ni sustituye automáticamente la aplicación actual.
 

@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v3.6.1.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v3.7.0.en.md">Release Notes</a> ·
   <a href="#features">Features</a> ·
   <a href="#local-development">Local Development</a> ·
   <a href="./LICENSE">License</a>
@@ -50,19 +50,20 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 Download the latest version from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Recommended installer: `Lyrics Card Generator Setup 3.6.1.exe`
-* Portable version: `Lyrics Card Generator-3.6.1-portable.exe`
+* Recommended installer: `Lyrics Card Generator Setup 3.7.0.exe`
+* Portable version: `Lyrics Card Generator-3.7.0-portable.exe`
 
 The installer is recommended for regular use. The portable version is useful for temporary use, testing, or running from a removable drive.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v3.6.1 Highlights
+### v3.7.0 Highlights
 
-* Fixes desktop custom titlebar maximize / restore state synchronization.
-* Polishes the Acrylic desktop titlebar with a fading glass blur layer, safer stacking, and reliable close-button hover.
-* Adds localized and accessible copy for the titlebar window controls.
-* Corrects README download and release-note links while leaving lyric card PNG output unchanged.
+* Hardens desktop background image path validation so only app-generated safe filenames are accepted.
+* Improves AI translation fallback for non-standard responses, plain-text errors, malformed JSON, and empty bodies.
+* Makes the update entry consistently open the matching GitHub Release page.
+* Removes stale legacy font-panel code and leftover copy for the removed instrumental input.
+* Replaces version-specific release checks with version-agnostic release consistency tests.
 
 <br clear="right" />
 
@@ -70,53 +71,53 @@ The installer is recommended for regular use. The portable version is useful for
 
 The GitHub Release page defaults to a simplified Chinese short version, while the full release notes are maintained in `docs/releases/`:
 
-* [简体中文](./docs/releases/v3.6.1.zh-CN.md)
-* [繁體中文](./docs/releases/v3.6.1.zh-TW.md)
-* [English](./docs/releases/v3.6.1.en.md)
-* [Français](./docs/releases/v3.6.1.fr.md)
-* [日本語](./docs/releases/v3.6.1.ja.md)
-* [Español](./docs/releases/v3.6.1.es.md)
+* [简体中文](./docs/releases/v3.7.0.zh-CN.md)
+* [繁體中文](./docs/releases/v3.7.0.zh-TW.md)
+* [English](./docs/releases/v3.7.0.en.md)
+* [Français](./docs/releases/v3.7.0.fr.md)
+* [日本語](./docs/releases/v3.7.0.ja.md)
+* [Español](./docs/releases/v3.7.0.es.md)
 
 <a id="features"></a>
 
-## ✨ Key Features
+## ✨ Features
 
-### 🎨 Lyric Image Generation
+### 🎨 Lyric Card Generation
 
-- Generate polished lyric-sharing images
-- Support portrait, landscape, and custom canvas sizes
-- Rebuilt landscape layout with safe-area awareness for more stable cover, content, and footer sections
-- Support automatic height calculation for custom portrait sizes based on real DOM measurement
-- Export high-resolution PNG images
+* Generate high-polish lyric sharing images
+* Portrait, landscape, and custom canvas sizes
+* Rebuilt landscape layout based on safe areas, cover column, content column, and footer regions
+* Measured auto height for portrait custom canvases
+* High-resolution PNG export
 
-### 📝 Lyric Layout and Translation
+### 📝 Lyrics Layout and Translation
 
-- Display original lyrics and translations side by side
-- Automatically split original lyrics and translations based on the current interface language
-- Support target translations in Simplified Chinese, Traditional Chinese, English, French, Japanese, and Spanish
-- Support AI lyric translation compatible with OpenAI Chat Completions
-- Configure provider Base URL, model, API Key, translation style, Reasoning, and streaming output
+* Original lyric and translation layout
+* Split original / translated lyrics automatically based on the current interface language
+* Simplified Chinese, Traditional Chinese, English, French, Japanese, and Spanish target-language support
+* AI lyric translation through OpenAI-compatible Chat Completions APIs
+* Configurable provider base URL, model, API key, translation style, reasoning, and streaming output
 
-### 🎵 Song Information Import
+### 🎵 Song Info Import
 
-- Parse links from Spotify, Apple Music, NetEase Cloud Music, and QQ Music
-- Parse local MP3 / FLAC metadata
-- Attempt to read title, artist, album, cover art, and embedded lyrics
-- Manually enter song title, artist, cover, and lyrics
-- Upload local cover images
+* Spotify, Apple Music, NetEase Cloud Music, and QQ Music link parsing
+* Local MP3 / FLAC metadata parsing
+* Try reading title, artist, album, cover art, and embedded lyrics
+* Manual song title, artist, cover, and lyric editing
+* Local cover upload
 
 ### 🌈 Visuals and Personalization
 
-- Extract colors from cover art and generate gradient backgrounds
-- Support platform logos, sharer name, and generated watermarks
-- Include Source Han Sans / Source Han Serif font presets
-- Support custom CJK fonts, Western fonts, and system font selection
-- Preview lyrics with the actual selected font
+* Palette extraction from cover art for gradient backgrounds
+* Platform logo, shared-by text, and generated watermark
+* Source Han Sans / Serif font schemes
+* Custom CJK fonts, Latin fonts, and system font selection
+* Lyric-based typography previews
 
 ### 🌍 Languages and Updates
 
-- Switch the interface between Simplified Chinese / Traditional Chinese / English / French / Japanese / Spanish
-- Check for new versions from GitHub Releases
+* Simplified Chinese / Traditional Chinese / English / French / Japanese / Spanish interface
+* GitHub Releases update checking that opens the matching Release page
 
 ## 🪟 Windows Desktop Version
 
@@ -154,7 +155,7 @@ These features require internet access:
 ## 🔄 Update Checking
 
 The app provides a “Check for updates” button.
-It requests this project’s GitHub Releases through a local Next API route, compares the current version with the latest published release, and prefers installer / portable assets when available.
+It requests this project’s GitHub Releases through a local Next API route, compares the current version with the latest published release, and opens the matching Release page so users can choose a download asset.
 
 This feature only checks for updates and opens the download page. It does not silently download installers or replace the current app automatically.
 

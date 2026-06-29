@@ -5,6 +5,7 @@ import { useState } from "react";
 import { getLyricsCardDesktopApi } from "@/lib/desktop-api";
 import type { UpdateResult } from "@/lib/github-update";
 import type { createT } from "@/lib/i18n";
+import { getUpdateLink } from "@/lib/update-link";
 
 type UpdateButtonProps = {
   t: ReturnType<typeof createT>;
@@ -98,14 +99,3 @@ function getUpdateMessage(result: UpdateResult, t: ReturnType<typeof createT>) {
   return `${t("updateFailed")} ${result.message}${result.details ? ` (${result.details})` : ""}`;
 }
 
-function getUpdateLink(result: UpdateResult) {
-  if (result.status === "latest") {
-    return result.releaseUrl;
-  }
-
-  if (result.status === "update-available") {
-    return result.installerUrl || result.portableUrl || result.releaseUrl;
-  }
-
-  return "";
-}
