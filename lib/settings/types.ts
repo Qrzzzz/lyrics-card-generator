@@ -1,4 +1,10 @@
-export type UiThemeId = "album-dynamic" | "light-blue" | "dark-pink" | "custom";
+export type UiThemeId =
+  | "album-dynamic"
+  | "light-blue"
+  | "dark-pink"
+  | "custom"
+  | "dark-acrylic"
+  | "light-acrylic";
 
 export type AppBackgroundMode =
   | "album-dynamic"

@@ -9,7 +9,14 @@ import {
 
 export const USER_SETTINGS_STORAGE_KEY = "lyric-card-generator-user-settings";
 
-const THEMES = new Set<UiThemeId>(["album-dynamic", "light-blue", "dark-pink", "custom"]);
+const THEMES = new Set<UiThemeId>([
+  "album-dynamic",
+  "light-blue",
+  "dark-pink",
+  "custom",
+  "dark-acrylic",
+  "light-acrylic"
+]);
 const BACKGROUNDS = new Set<AppBackgroundMode>([
   "album-dynamic", "solid", "image-stretch", "image-contain", "image-cover", "image-blur", "image-palette"
 ]);
@@ -95,6 +102,8 @@ export function resolveEffectiveAppBackgroundColor(settings: UserSettings, album
 
   if (settings.uiTheme === "light-blue") return "#EAF6FF";
   if (settings.uiTheme === "dark-pink") return "#08040A";
+  if (settings.uiTheme === "dark-acrylic") return "#141821";
+  if (settings.uiTheme === "light-acrylic") return "#F3F6FA";
 
   return albumColor;
 }

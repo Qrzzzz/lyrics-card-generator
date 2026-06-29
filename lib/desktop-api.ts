@@ -14,7 +14,22 @@ export type SystemFontOption = {
   fontStyle: "normal" | "italic";
 };
 
+export type WindowMaterialResult = {
+  ok: boolean;
+  applied: "acrylic" | "none" | "transparent-fallback";
+  reason: string;
+};
+
+export type DesktopWindowState = {
+  maximized: boolean;
+};
+
 export type LyricsCardDesktopApi = {
+  setWindowMaterial: (theme: UserSettings["uiTheme"]) => Promise<WindowMaterialResult>;
+  minimizeWindow: () => Promise<boolean>;
+  toggleMaximizeWindow: () => Promise<DesktopWindowState>;
+  closeWindow: () => Promise<boolean>;
+  getWindowState: () => Promise<DesktopWindowState>;
   loadAppPreferences: () => Promise<{ locale: Locale; userSettings: UserSettings } | null>;
   saveAppPreferences: (preferences: { locale: Locale; userSettings: UserSettings }) => Promise<boolean>;
   listSystemFonts: () => Promise<SystemFontOption[]>;

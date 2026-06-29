@@ -39,6 +39,7 @@
 html,
 body {
   min-height: 100%;
+  background: transparent;
 }
 
 .app-shell {
@@ -117,9 +118,140 @@ body {
   --button-bg-hover: 236 72 153 / 0.18;
 }
 
+.app-shell[data-ui-theme="dark-acrylic"] {
+  color-scheme: dark;
+  --app-bg: transparent;
+  --app-text-primary: #f8fafc;
+  --app-text-secondary: rgba(248, 250, 252, 0.72);
+  --app-accent: #93c5fd;
+  --app-fg: 248 250 252;
+  --app-muted: 226 232 240 / 0.74;
+  --app-subtle: 203 213 225 / 0.58;
+  --panel-bg: 15 23 42 / 0.34;
+  --panel-border: 255 255 255 / 0.16;
+  --input-bg: 15 23 42 / 0.30;
+  --input-border: 255 255 255 / 0.18;
+  --button-bg: 255 255 255 / 0.10;
+  --button-bg-hover: 255 255 255 / 0.16;
+  --status-success-fg: 220 252 231;
+  --status-success-bg: 22 101 52 / 0.26;
+  --status-success-border: 187 247 208 / 0.32;
+  --status-warning-fg: 254 249 195;
+  --status-warning-bg: 133 77 14 / 0.28;
+  --status-warning-border: 254 240 138 / 0.34;
+  --status-danger-fg: 255 228 230;
+  --status-danger-bg: 159 18 57 / 0.28;
+  --status-danger-border: 254 202 202 / 0.32;
+  --status-info-fg: 219 234 254;
+  --status-info-bg: 37 99 235 / 0.22;
+  --status-info-border: 191 219 254 / 0.30;
+}
+
+.app-shell[data-ui-theme="light-acrylic"] {
+  color-scheme: light;
+  --app-bg: transparent;
+  --app-text-primary: #111827;
+  --app-text-secondary: rgba(17, 24, 39, 0.72);
+  --app-accent: #2563eb;
+  --app-fg: 17 24 39;
+  --app-muted: 55 65 81 / 0.74;
+  --app-subtle: 75 85 99 / 0.58;
+  --panel-bg: 255 255 255 / 0.38;
+  --panel-border: 15 23 42 / 0.14;
+  --input-bg: 255 255 255 / 0.34;
+  --input-border: 15 23 42 / 0.16;
+  --button-bg: 255 255 255 / 0.30;
+  --button-bg-hover: 255 255 255 / 0.46;
+  --status-success-fg: 21 128 61;
+  --status-success-bg: 220 252 231 / 0.62;
+  --status-success-border: 22 163 74 / 0.36;
+  --status-warning-fg: 146 64 14;
+  --status-warning-bg: 254 249 195 / 0.68;
+  --status-warning-border: 202 138 4 / 0.36;
+  --status-danger-fg: 190 18 60;
+  --status-danger-bg: 255 228 230 / 0.70;
+  --status-danger-border: 225 29 72 / 0.34;
+  --status-info-fg: 30 64 175;
+  --status-info-bg: 219 234 254 / 0.66;
+  --status-info-border: 37 99 235 / 0.34;
+}
+
 .app-shell[data-ui-theme="custom"] {
   --app-bg: var(--custom-app-bg, #080910);
   --app-accent: var(--custom-app-accent, #7c3aed);
+}
+
+body[data-desktop-shell="true"] {
+  overflow: hidden;
+}
+
+.app-shell[data-desktop-shell="true"] {
+  height: 100vh;
+  overflow: hidden;
+}
+
+.app-shell[data-desktop-shell="true"] .app-main-content {
+  height: 100vh;
+  min-height: 0;
+  margin-top: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-top: calc(48px + 0.875rem);
+  scroll-padding-top: calc(48px + 0.875rem);
+  scrollbar-gutter: stable;
+  overscroll-behavior: contain;
+}
+
+.desktop-titlebar {
+  -webkit-app-region: drag;
+  user-select: none;
+  color: rgb(var(--app-fg));
+  isolation: auto;
+  overflow: visible;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.desktop-titlebar__brand {
+  min-width: 0;
+  text-shadow: 0 1px 14px rgba(0, 0, 0, 0.24);
+}
+
+.app-shell[data-ui-theme="light-acrylic"] .desktop-titlebar__brand {
+  text-shadow: 0 1px 14px rgba(255, 255, 255, 0.32);
+}
+
+.desktop-titlebar__controls,
+.desktop-titlebar__button {
+  -webkit-app-region: no-drag;
+}
+
+.desktop-titlebar__button {
+  display: inline-grid;
+  width: 52px;
+  place-items: center;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  opacity: 0.9;
+  transition: background 140ms ease, opacity 140ms ease;
+}
+
+.desktop-titlebar__button:hover {
+  background: rgba(255, 255, 255, 0.095);
+  opacity: 1;
+}
+
+.app-shell[data-ui-theme="light-acrylic"] .desktop-titlebar__button:hover {
+  background: rgba(15, 23, 42, 0.08);
+}
+
+.desktop-titlebar__button--close:hover {
+  background: #e81123;
+  color: #ffffff;
 }
 
 .app-text-primary {
@@ -181,9 +313,21 @@ body {
 body {
   margin: 0;
   overflow-x: hidden;
-  background: #080910;
+  background: transparent;
   color: rgba(255, 255, 255, 0.9);
   font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+body[data-ui-theme="dark-acrylic"],
+body[data-ui-theme="light-acrylic"] {
+  background: transparent;
+}
+
+body[data-ui-theme="dark-acrylic"]::before,
+body[data-ui-theme="dark-acrylic"]::after,
+body[data-ui-theme="light-acrylic"]::before,
+body[data-ui-theme="light-acrylic"]::after {
+  display: none;
 }
 
 body::before {
@@ -228,11 +372,75 @@ button {
   background: rgba(255, 138, 156, 0.38);
 }
 
+.app-shell,
+.app-shell * {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(226, 232, 240, 0.36) transparent;
+}
+
+.app-shell[data-ui-theme="light-blue"],
+.app-shell[data-ui-theme="light-blue"] *,
+.app-shell[data-ui-theme="light-acrylic"],
+.app-shell[data-ui-theme="light-acrylic"] * {
+  scrollbar-color: rgba(15, 23, 42, 0.28) transparent;
+}
+
+.app-shell ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.app-shell ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.app-shell ::-webkit-scrollbar-thumb {
+  min-height: 44px;
+  border: 3px solid transparent;
+  border-radius: 999px;
+  background: rgba(226, 232, 240, 0.34);
+  background-clip: content-box;
+}
+
+.app-shell ::-webkit-scrollbar-thumb:hover {
+  background: rgba(248, 250, 252, 0.48);
+  background-clip: content-box;
+}
+
+.app-shell[data-ui-theme="light-blue"] ::-webkit-scrollbar-thumb,
+.app-shell[data-ui-theme="light-acrylic"] ::-webkit-scrollbar-thumb {
+  background: rgba(15, 23, 42, 0.24);
+  background-clip: content-box;
+}
+
+.app-shell[data-ui-theme="light-blue"] ::-webkit-scrollbar-thumb:hover,
+.app-shell[data-ui-theme="light-acrylic"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(15, 23, 42, 0.36);
+  background-clip: content-box;
+}
+
+.app-shell ::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
 .glass-panel {
   border: 1px solid rgb(var(--panel-border));
   background: rgb(var(--panel-bg));
   box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
   backdrop-filter: blur(24px);
+}
+
+.app-shell[data-ui-theme="dark-acrylic"] .glass-panel,
+.app-shell[data-ui-theme="dark-acrylic"] .settings-panel-card,
+.app-shell[data-ui-theme="light-acrylic"] .glass-panel,
+.app-shell[data-ui-theme="light-acrylic"] .settings-panel-card {
+  border-color: rgb(var(--panel-border));
+  background: rgb(var(--panel-bg));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 18px 48px rgba(0, 0, 0, 0.18);
+  backdrop-filter: blur(24px) saturate(1.35);
+  -webkit-backdrop-filter: blur(24px) saturate(1.35);
 }
 
 .field-shell {
@@ -246,6 +454,11 @@ button {
 .field-shell:focus {
   border-color: rgba(125, 225, 255, 0.58);
   box-shadow: 0 0 0 4px rgba(125, 225, 255, 0.12);
+}
+
+.app-shell[data-ui-theme="light-acrylic"] .field-shell:focus {
+  border-color: rgba(37, 99, 235, 0.52);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
 }
 
 .field-shell::placeholder {
@@ -268,8 +481,28 @@ button {
 
 .settings-surface .field-shell:focus {
   border-color: color-mix(in srgb, var(--ai-accent, #7de1ff) 64%, #ffffff);
-  background: rgba(25, 31, 43, 0.9);
+  background: rgb(var(--input-bg));
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--ai-accent, #7de1ff) 16%, transparent);
+}
+
+.app-shell[data-ui-theme="dark-acrylic"] .settings-surface,
+.app-shell[data-ui-theme="light-acrylic"] .settings-surface {
+  background: rgb(var(--panel-bg));
+  box-shadow:
+    0 34px 100px rgba(0, 0, 0, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(28px) saturate(1.35);
+  -webkit-backdrop-filter: blur(28px) saturate(1.35);
+}
+
+.app-shell[data-ui-theme="light-acrylic"] [role="switch"][aria-checked="false"] > span:last-child {
+  border-color: rgba(15, 23, 42, 0.18);
+  background: rgba(255, 255, 255, 0.42);
+}
+
+.app-shell[data-ui-theme="dark-acrylic"] [role="switch"][aria-checked="false"] > span:last-child {
+  border-color: rgba(255, 255, 255, 0.18);
+  background: rgba(15, 23, 42, 0.36);
 }
 
 .settings-panel-card {

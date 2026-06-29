@@ -28,6 +28,7 @@ import {
 } from "@/components/editor/hooks/useLyricEditorEffects";
 import { useMeasuredAutoCanvasHeight } from "@/components/editor/hooks/useMeasuredAutoCanvasHeight";
 import { ClickSpark } from "@/components/layout/ClickSpark";
+import { DesktopTitleBar } from "@/components/layout/DesktopTitleBar";
 import { DynamicAppBackground } from "@/components/layout/DynamicAppBackground";
 import { getCardSize, PRESET_CARD_SIZES } from "@/lib/card-size";
 import { cleanAITranslation } from "@/lib/ai/clean";
@@ -59,6 +60,7 @@ import { settingsCopy } from "@/lib/settings/copy";
 import { DEFAULT_USER_SETTINGS, type UserSettings } from "@/lib/settings/types";
 import { resolveEffectiveAppBackgroundColor, saveUserSettings } from "@/lib/settings/user-settings";
 import { resolveReadableTextTokens } from "@/lib/color/contrast";
+import { getLyricsCardDesktopApi } from "@/lib/desktop-api";
 import type { ExampleSong } from "@/lib/examples";
 import type { AppState, CardRatio, CardStyle, FontScheme, Locale } from "@/lib/types";
 import { sanitizeFilePart } from "@/lib/utils";
@@ -179,6 +181,7 @@ export function LyricEditor() {
   const [aiError, setAIError] = useState("");
   const [toast, setToast] = useState("");
   const [aiSettings, setAISettings] = useState<AISettingsSummary>({ ...DEFAULT_AI_SETTINGS, hasApiKey: false });
+  const [isDesktopShell, setIsDesktopShell] = useState(false);
   const cardRef = useRef<HTMLElement | null>(null);
   const clearVersionRef = useRef(0);
   const aiAbortControllerRef = useRef<AbortController | null>(null);
@@ -202,6 +205,13 @@ export function LyricEditor() {
   useCoverPalette(coverForPalette, setState);
   useResolvedTextColor(state, setState);
   useMeasuredAutoCanvasHeight(state, setState, cardRef);
+
+  function syncWindowMaterial(settings: UserSettings) {
+    const desktop = getLyricsCardDesktopApi();
+    if (desktop) {
+      void desktop.setWindowMaterial(settings.uiTheme).catch(() => undefined);
+    }
+  }
 
   function clearAllContent() {
     clearVersionRef.current += 1;
@@ -299,17 +309,31 @@ export function LyricEditor() {
   }
 
   useEffect(() => {
+    const desktopShell = Boolean(getLyricsCardDesktopApi());
+    setIsDesktopShell(desktopShell);
+    document.body.dataset.desktopShell = desktopShell ? "true" : "false";
     let active = true;
     void loadAppPreferences().then(({ locale: storedLocale, userSettings: loadedSettings }) => {
       if (!active) return;
       setUserSettings(loadedSettings);
+      syncWindowMaterial(loadedSettings);
       if (isSupportedLocale(storedLocale)) {
         applyLocale(storedLocale);
       }
       setIsFirstLaunchOpen(shouldShowFirstLaunchLanguage(storedLocale, loadedSettings));
     });
-    return () => { active = false; };
+    return () => {
+      active = false;
+      delete document.body.dataset.desktopShell;
+    };
   }, []);
+
+  useEffect(() => {
+    document.body.dataset.uiTheme = userSettings.uiTheme;
+    return () => {
+      delete document.body.dataset.uiTheme;
+    };
+  }, [userSettings.uiTheme]);
 
   useEffect(() => {
     let active = true;
@@ -462,7 +486,13 @@ export function LyricEditor() {
   function updateUserSettings(next: UserSettings) {
     const saved = saveUserSettings(next);
     setUserSettings(saved);
+    syncWindowMaterial(saved);
     void saveAppPreferences(state.locale, saved).catch(() => undefined);
+  }
+
+  function previewUserSettings(next: UserSettings) {
+    setUserSettings(next);
+    syncWindowMaterial(next);
   }
 
   async function chooseFirstLaunchLanguage(locale: Locale) {
@@ -704,12 +734,25 @@ export function LyricEditor() {
     ? state.palette?.primary ?? DEFAULT_PALETTE.primary
     : userSettings.uiTheme === "light-blue" ? "#2563EB"
     : userSettings.uiTheme === "dark-pink" ? "#EC4899"
+    : userSettings.uiTheme === "light-acrylic" ? "#2563EB"
+    : userSettings.uiTheme === "dark-acrylic" ? "#60A5FA"
     : userSettings.uiAccentColor;
   const uiBackgroundColor = resolveEffectiveAppBackgroundColor(userSettings, state.palette?.dark ?? "#080910");
-  const preferredTextColor = userSettings.uiTextColorMode === "light" ? "#FFFFFF"
-    : userSettings.uiTextColorMode === "dark" ? "#191612"
-    : userSettings.uiTextColorMode === "custom" ? userSettings.uiCustomTextColor : undefined;
+  const effectiveTextColorMode = userSettings.uiTheme === "dark-acrylic" ? "light"
+    : userSettings.uiTheme === "light-acrylic" ? "dark"
+    : userSettings.uiTextColorMode;
+  const preferredTextColor = effectiveTextColorMode === "light" ? "#FFFFFF"
+    : effectiveTextColorMode === "dark" ? "#191612"
+    : effectiveTextColorMode === "custom" ? userSettings.uiCustomTextColor : undefined;
   const uiTextTokens = resolveReadableTextTokens(uiBackgroundColor, preferredTextColor);
+  const resolvedThemeTokens = userSettings.uiTheme === "dark-acrylic" || userSettings.uiTheme === "light-acrylic"
+    ? {}
+    : {
+        "--app-text-primary": uiTextTokens.primary,
+        "--app-fg": uiTextTokens.fg,
+        "--app-muted": uiTextTokens.muted,
+        "--app-subtle": uiTextTokens.subtle
+      };
   const customThemeTokens = userSettings.uiTheme === "custom"
     ? uiTextTokens.fg === "25 22 18"
       ? {
@@ -726,19 +769,18 @@ export function LyricEditor() {
     <div
       className="app-shell min-h-screen"
       data-ui-theme={userSettings.uiTheme}
+      data-desktop-shell={isDesktopShell ? "true" : "false"}
       style={{
         "--app-font-family": userSettings.uiFontFamily || undefined,
         "--app-accent": themeAccent,
-        "--app-text-primary": uiTextTokens.primary,
-        "--app-fg": uiTextTokens.fg,
-        "--app-muted": uiTextTokens.muted,
-        "--app-subtle": uiTextTokens.subtle,
+        ...resolvedThemeTokens,
         ...customThemeTokens
       } as unknown as React.CSSProperties}
     >
+      <DesktopTitleBar />
       <DynamicAppBackground palette={state.palette} settings={userSettings} imageUrl={backgroundImageUrl} />
       <ClickSpark enabled={userSettings.sparkCursorEnabled} themeColor={themeAccent}>
-    <main className="relative z-10 min-h-screen px-4 py-5 sm:px-6 lg:px-8">
+    <main className="app-main-content relative z-10 min-h-screen px-4 py-5 sm:px-6 lg:px-8">
       <div className="mx-auto grid w-[calc(100vw-2rem)] max-w-[1520px] min-w-0 gap-5 sm:w-full">
         <EditorHeader locale={state.locale} t={t} onOpenExamples={() => setIsExamplesOpen(true)} onClearAll={clearAllContent} onOpenSettings={() => setIsSettingsOpen(true)} />
 
@@ -780,7 +822,7 @@ export function LyricEditor() {
         locale={state.locale}
         userSettings={userSettings}
         onLocaleChange={setLocale}
-        onUserSettingsPreview={setUserSettings}
+        onUserSettingsPreview={previewUserSettings}
         onUserSettingsChange={updateUserSettings}
         onClose={() => setIsSettingsOpen(false)}
         onSaved={(settings, message) => {
@@ -791,7 +833,7 @@ export function LyricEditor() {
       <ExamplesDialog open={isExamplesOpen} locale={state.locale} onClose={() => setIsExamplesOpen(false)} onLoad={loadExample} />
       <FirstLaunchLanguageDialog open={isFirstLaunchOpen} locale={state.locale} onChoose={chooseFirstLaunchLanguage} />
       {toast ? (
-        <div role="status" className="fixed bottom-5 left-1/2 z-[130] max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-lg border border-white/15 bg-slate-950/95 px-4 py-3 text-sm text-white shadow-2xl backdrop-blur-xl">
+        <div role="status" className="status-info fixed bottom-5 left-1/2 z-[130] max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-lg border px-4 py-3 text-sm shadow-2xl backdrop-blur-xl">
           {toast}
         </div>
       ) : null}

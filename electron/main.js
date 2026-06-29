@@ -1,4 +1,4 @@
-const { app, BrowserWindow, dialog, ipcMain, safeStorage, shell } = require("electron");
+const { app, BrowserWindow, Menu, dialog, ipcMain, safeStorage, shell } = require("electron");
 const { spawn } = require("node:child_process");
 const fs = require("node:fs/promises");
 const http = require("node:http");
@@ -11,9 +11,17 @@ const HOST = "127.0.0.1";
 const APP_ID = "com.lyriccard.generator";
 const START_TIMEOUT_MS = 45000;
 
+app.commandLine.appendSwitch(
+  "enable-features",
+  "OverlayScrollbar,OverlayScrollbarFlashAfterAnyScrollUpdate,OverlayScrollbarFlashWhenMouseEnter"
+);
+
 let mainWindow = null;
 let nextServerProcess = null;
 let localAppUrl = null;
+let normalWindowBounds = null;
+let windowMaximized = false;
+let windowRestoring = false;
 const aiTranslationRequests = new Map();
 
 const DEFAULT_AI_SETTINGS = {
@@ -151,7 +159,9 @@ function createWindow() {
     minWidth: 1000,
     minHeight: 700,
     show: false,
-    backgroundColor: "#111216",
+    frame: false,
+    backgroundColor: "#00000000",
+    transparent: true,
     icon: getAppIconPath(),
     webPreferences: {
       contextIsolation: true,
@@ -160,9 +170,36 @@ function createWindow() {
       preload: path.join(__dirname, "preload.js")
     }
   });
+  normalWindowBounds = mainWindow.getBounds();
+  windowMaximized = false;
+
+  const rememberNormalBounds = () => {
+    if (!mainWindow || mainWindow.isDestroyed()) return;
+    if (windowRestoring) return;
+    if (windowMaximized) return;
+    if (mainWindow.isMaximized() || mainWindow.isMinimized() || mainWindow.isFullScreen()) return;
+    normalWindowBounds = mainWindow.getBounds();
+    windowMaximized = false;
+  };
+
+  mainWindow.on("move", rememberNormalBounds);
+  mainWindow.on("resize", rememberNormalBounds);
+  mainWindow.on("maximize", () => {
+    windowMaximized = true;
+  });
+  mainWindow.on("unmaximize", () => {
+    windowMaximized = false;
+  });
+
+  void readAppPreferences()
+    .then((preferences) => {
+      applyWindowMaterial(preferences?.userSettings?.uiTheme);
+    })
+    .catch(() => {
+      applyWindowMaterial(undefined);
+    });
 
   mainWindow.once("ready-to-show", () => {
-    mainWindow?.maximize();
     mainWindow?.show();
   });
 
@@ -185,6 +222,37 @@ function createWindow() {
   });
 
   mainWindow.loadURL(localAppUrl);
+}
+
+function isAcrylicTheme(theme) {
+  return theme === "dark-acrylic" || theme === "light-acrylic";
+}
+
+function applyWindowMaterial(theme) {
+  if (!mainWindow || mainWindow.isDestroyed()) {
+    return { ok: false, applied: "none", reason: "window-unavailable" };
+  }
+
+  const acrylic = isAcrylicTheme(theme);
+  const backgroundColor = acrylic ? "#00000000" : "#111216";
+
+  try {
+    if (process.platform === "win32" && typeof mainWindow.setBackgroundMaterial === "function") {
+      mainWindow.setBackgroundMaterial(acrylic ? "acrylic" : "none");
+      mainWindow.setBackgroundColor(backgroundColor);
+      return { ok: true, applied: acrylic ? "acrylic" : "none", reason: "" };
+    }
+
+    mainWindow.setBackgroundColor(backgroundColor);
+    return { ok: false, applied: "transparent-fallback", reason: "unsupported-platform-or-api" };
+  } catch (error) {
+    mainWindow.setBackgroundColor(backgroundColor);
+    return {
+      ok: false,
+      applied: "transparent-fallback",
+      reason: error instanceof Error ? error.message : String(error)
+    };
+  }
 }
 
 function stopNextServer() {
@@ -229,6 +297,7 @@ async function boot() {
 }
 
 app.setAppUserModelId(APP_ID);
+Menu.setApplicationMenu(null);
 registerDesktopIpc();
 app.whenReady().then(boot);
 
@@ -248,6 +317,51 @@ app.on("activate", () => {
 });
 
 function registerDesktopIpc() {
+  ipcMain.handle("lyrics-card:set-window-material", (_event, theme) => applyWindowMaterial(theme));
+  ipcMain.handle("lyrics-card:window-minimize", () => {
+    if (!mainWindow || mainWindow.isDestroyed()) return false;
+    mainWindow.minimize();
+    return true;
+  });
+  ipcMain.handle("lyrics-card:window-toggle-maximize", () => {
+    if (!mainWindow || mainWindow.isDestroyed()) return { maximized: false };
+    const isCurrentlyMaximized = windowMaximized || mainWindow.isMaximized();
+
+    if (isCurrentlyMaximized) {
+      const restoreBounds = normalWindowBounds;
+      windowRestoring = true;
+      windowMaximized = false;
+      mainWindow.restore();
+      mainWindow.unmaximize();
+      if (restoreBounds) {
+        mainWindow.setBounds(restoreBounds, true);
+      }
+      mainWindow.focus();
+      setTimeout(() => {
+        windowRestoring = false;
+        if (!mainWindow || mainWindow.isDestroyed()) return;
+        if (!mainWindow.isMaximized() && !mainWindow.isMinimized() && !mainWindow.isFullScreen()) {
+          normalWindowBounds = mainWindow.getBounds();
+        }
+      }, 0);
+      return { maximized: false };
+    } else {
+      normalWindowBounds = mainWindow.getBounds();
+      windowMaximized = true;
+      mainWindow.maximize();
+      return { maximized: true };
+    }
+  });
+  ipcMain.handle("lyrics-card:window-close", () => {
+    if (!mainWindow || mainWindow.isDestroyed()) return false;
+    mainWindow.close();
+    return true;
+  });
+  ipcMain.handle("lyrics-card:window-state", () => {
+    if (!mainWindow || mainWindow.isDestroyed()) return { maximized: false };
+    return { maximized: windowMaximized || mainWindow.isMaximized() };
+  });
+
   ipcMain.handle("lyrics-card:app-preferences-load", () => readAppPreferences());
   ipcMain.handle("lyrics-card:app-preferences-save", async (_event, input) => {
     const preferences = normalizeStoredPreferences(input);
