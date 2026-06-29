@@ -4,7 +4,7 @@ import { Languages, SplitSquareVertical } from "lucide-react";
 import type { ReactNode } from "react";
 import { AiTranslateButton } from "@/components/lyrics/AiTranslateButton";
 import { TranslationFieldBorder } from "@/components/lyrics/TranslationFieldBorder";
-import { Textarea, Label, Section, SwitchRow } from "@/components/ui/controls";
+import { ActionButton, FieldLabel, Section, TextareaField, ToggleRow } from "@/components/ui/controls";
 import { getAIUiCopy } from "@/lib/ai/ui-copy";
 import type { createT } from "@/lib/i18n";
 import { formatChineseTranslation, splitAlternatingLyrics } from "@/lib/lyric-format";
@@ -49,14 +49,14 @@ export function LyricInput({
     <Section title={t("lyrics")} eyebrow={t("manualText")}>
       {contentMode === "lyrics" ? (
         <>
-          <Label label={t("lyricText")} hint={t("lineCount", { lines, chars: lyrics.length })}>
-            <Textarea
+          <FieldLabel label={t("lyricText")} hint={t("lineCount", { lines, chars: lyrics.length })}>
+            <TextareaField
               value={lyrics}
               onChange={(event) => onLyricsChange(event.target.value)}
               placeholder={t("lyricPlaceholder")}
               className="min-h-52 leading-relaxed"
             />
-          </Label>
+          </FieldLabel>
           <div className="flex flex-wrap gap-2">
             <AiTranslateButton
               label={isAITranslating ? aiCopy.translating : aiCopy.aiTranslate}
@@ -64,24 +64,23 @@ export function LyricInput({
               themeColor={themeColor}
               onClick={onAITranslate}
             />
-            <button
-              type="button"
+            <ActionButton
+              size="sm"
+              icon={<SplitSquareVertical className="h-4 w-4" />}
               onClick={() => {
                 const result = splitAlternatingLyrics(lyrics, locale);
                 onSplitAlternatingLyrics(result.lyrics, result.translationText);
               }}
-              className="app-button inline-flex h-10 items-center justify-center gap-2 rounded-lg px-3 text-sm font-semibold transition"
             >
-              <SplitSquareVertical className="h-4 w-4" />
               {t("splitAlternatingLyrics")}
-            </button>
+            </ActionButton>
           </div>
           {aiTranslatePanel}
-          <SwitchRow label={t("enableTranslation")} checked={translationEnabled} onChange={onTranslationEnabledChange} />
+          <ToggleRow label={t("enableTranslation")} checked={translationEnabled} onChange={onTranslationEnabledChange} />
           {showTranslation ? (
-            <Label label={t("translation")}>
+            <FieldLabel label={t("translation")}>
               <TranslationFieldBorder color={themeColor}>
-                <Textarea
+                <TextareaField
                   value={translationText}
                   onChange={(event) => onTranslationTextChange(event.target.value)}
                   placeholder={t("translationPlaceholder")}
@@ -89,16 +88,16 @@ export function LyricInput({
                 />
               </TranslationFieldBorder>
               {locale === "zh" ? (
-                <button
-                  type="button"
+                <ActionButton
+                  size="sm"
+                  icon={<Languages className="h-4 w-4" />}
                   onClick={() => onTranslationTextChange(formatChineseTranslation(translationText))}
-                  className="app-button mt-2 inline-flex h-10 w-fit items-center justify-center gap-2 rounded-lg px-3 text-sm font-semibold transition"
+                  className="mt-2"
                 >
-                  <Languages className="h-4 w-4" />
                   {t("formatChineseTranslation")}
-                </button>
+                </ActionButton>
               ) : null}
-            </Label>
+            </FieldLabel>
           ) : null}
         </>
       ) : (

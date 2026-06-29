@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v3.7.0.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v3.7.1.en.md">Release Notes</a> ·
   <a href="#features">Features</a> ·
   <a href="#local-development">Local Development</a> ·
   <a href="./LICENSE">License</a>
@@ -50,20 +50,20 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 Download the latest version from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Recommended installer: `Lyrics Card Generator Setup 3.7.0.exe`
-* Portable version: `Lyrics Card Generator-3.7.0-portable.exe`
+* Recommended installer: `Lyrics Card Generator Setup 3.7.1.exe`
+* Portable version: `Lyrics Card Generator-3.7.1-portable.exe`
 
 The installer is recommended for regular use. The portable version is useful for temporary use, testing, or running from a removable drive.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v3.7.0 Highlights
+### v3.7.1 Highlights
 
-* Hardens desktop background image path validation so only app-generated safe filenames are accepted.
-* Improves AI translation fallback for non-standard responses, plain-text errors, malformed JSON, and empty bodies.
-* Makes the update entry consistently open the matching GitHub Release page.
-* Removes stale legacy font-panel code and leftover copy for the removed instrumental input.
-* Replaces version-specific release checks with version-agnostic release consistency tests.
+* Standardizes toggle controls across the style panel, lyric input, song info, and settings so state changes and disabled feedback are more consistent.
+* Moves single-choice patterns such as language selection onto shared option cards and aligns layout mode, grid density, and frame/full-bleed choices with a common segmented-control pattern.
+* Unifies the look and interaction feedback of common settings-panel inputs, textareas, selects, and action buttons.
+* Improves keyboard usability, focus visibility, label presentation, and disabled-state behavior for common controls.
+* Prepares the UI control layer for the later v3.8.0 animation upgrade without shipping that animation system yet.
 
 <br clear="right" />
 
@@ -71,53 +71,34 @@ The installer is recommended for regular use. The portable version is useful for
 
 The GitHub Release page defaults to a simplified Chinese short version, while the full release notes are maintained in `docs/releases/`:
 
-* [简体中文](./docs/releases/v3.7.0.zh-CN.md)
-* [繁體中文](./docs/releases/v3.7.0.zh-TW.md)
-* [English](./docs/releases/v3.7.0.en.md)
-* [Français](./docs/releases/v3.7.0.fr.md)
-* [日本語](./docs/releases/v3.7.0.ja.md)
-* [Español](./docs/releases/v3.7.0.es.md)
+* [简体中文](./docs/releases/v3.7.1.zh-CN.md)
+* [繁體中文](./docs/releases/v3.7.1.zh-TW.md)
+* [English](./docs/releases/v3.7.1.en.md)
+* [Français](./docs/releases/v3.7.1.fr.md)
+* [日本語](./docs/releases/v3.7.1.ja.md)
+* [Español](./docs/releases/v3.7.1.es.md)
 
 <a id="features"></a>
 
 ## ✨ Features
 
-### 🎨 Lyric Card Generation
-
 * Generate high-polish lyric sharing images
 * Portrait, landscape, and custom canvas sizes
 * Rebuilt landscape layout based on safe areas, cover column, content column, and footer regions
 * Measured auto height for portrait custom canvases
-* High-resolution PNG export
-
-### 📝 Lyrics Layout and Translation
-
 * Original lyric and translation layout
-* Split original / translated lyrics automatically based on the current interface language
-* Simplified Chinese, Traditional Chinese, English, French, Japanese, and Spanish target-language support
-* AI lyric translation through OpenAI-compatible Chat Completions APIs
-* Configurable provider base URL, model, API key, translation style, reasoning, and streaming output
-
-### 🎵 Song Info Import
-
+* Split alternating original / translated lyrics with Simplified Chinese, Traditional Chinese, English, French, Japanese, and Spanish target-language detection
+* AI lyric translation through OpenAI-compatible Chat Completions APIs, with configurable provider URL, model, API key, six translation styles, reasoning, and streaming output
 * Spotify, Apple Music, NetEase Cloud Music, and QQ Music link parsing
-* Local MP3 / FLAC metadata parsing
-* Try reading title, artist, album, cover art, and embedded lyrics
+* Local MP3 / FLAC metadata parsing for title, artist, album, cover art, and embedded lyrics
 * Manual song title, artist, cover, and lyric editing
 * Local cover upload
-
-### 🌈 Visuals and Personalization
-
 * Palette extraction from cover art for gradient backgrounds
 * Platform logo, shared-by text, and generated watermark
-* Source Han Sans / Serif font schemes
-* Custom CJK fonts, Latin fonts, and system font selection
-* Lyric-based typography previews
-
-### 🌍 Languages and Updates
-
+* Source Han Sans / Serif schemes, independent CJK and Latin fonts, a system-font picker, and lyric-based typography previews
 * Simplified Chinese / Traditional Chinese / English / French / Japanese / Spanish interface
-* GitHub Releases update checking that opens the matching Release page
+* High-resolution PNG export
+* GitHub Releases update checking
 
 ## 🪟 Windows Desktop Version
 
@@ -155,7 +136,7 @@ These features require internet access:
 ## 🔄 Update Checking
 
 The app provides a “Check for updates” button.
-It requests this project’s GitHub Releases through a local Next API route, compares the current version with the latest published release, and opens the matching Release page so users can choose a download asset.
+It requests this project’s GitHub Releases through a local Next API route, compares the current version with the latest published release, and prioritizes installer / portable assets when available.
 
 This feature only checks for updates and opens the download page. It does not silently download installers or replace the current app automatically.
 

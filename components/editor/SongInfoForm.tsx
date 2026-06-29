@@ -1,8 +1,14 @@
 "use client";
 
 import { Upload } from "lucide-react";
-import { useState } from "react";
-import { Input, Label, Section, SwitchRow } from "@/components/ui/controls";
+import { useRef, useState } from "react";
+import {
+  ActionButton,
+  FieldLabel,
+  Section,
+  TextInput,
+  ToggleRow
+} from "@/components/ui/controls";
 import { getHighResolutionCoverUrl } from "@/lib/cover-url";
 import { proxiedImageUrl } from "@/lib/image-utils";
 import type { createT } from "@/lib/i18n";
@@ -18,6 +24,7 @@ export function SongInfoForm({
   t: ReturnType<typeof createT>;
 }) {
   const [enabled, setEnabled] = useState(false);
+  const coverInputRef = useRef<HTMLInputElement>(null);
 
   function update<K extends keyof SongInfo>(key: K, value: SongInfo[K]) {
     onSongChange({ ...song, [key]: value });
@@ -37,55 +44,58 @@ export function SongInfoForm({
 
   return (
     <Section title={t("songInfo")} eyebrow={t("manualOverride")}>
-      <SwitchRow label={t("manualOverride")} checked={enabled} onChange={setEnabled} />
+      <ToggleRow label={t("manualOverride")} checked={enabled} onChange={setEnabled} />
       {enabled ? (
         <>
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Label label={t("title")}>
-          <Input value={song.title} onChange={(event) => update("title", event.target.value)} />
-        </Label>
-        <Label label={t("artist")}>
-          <Input value={song.artist} onChange={(event) => update("artist", event.target.value)} />
-        </Label>
-      </div>
-      <Label label={t("album")}>
-        <Input value={song.album ?? ""} onChange={(event) => update("album", event.target.value)} />
-      </Label>
-      <Label label={t("coverUrl")}>
-        <Input
-          value={song.coverUrl?.startsWith("blob:") ? "" : song.coverUrl ?? ""}
-          onChange={(event) => updateCoverUrl(event.target.value)}
-          placeholder="https://..."
-        />
-      </Label>
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-        <label className="app-button inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-lg px-4 text-sm font-semibold transition">
-          <Upload className="h-4 w-4" />
-          {t("uploadCover")}
-          <input
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={(event) => onUpload(event.target.files?.[0])}
-          />
-        </label>
-        <div className="flex items-center gap-3">
-          {song.coverUrl ? (
-            <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-white/10">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={proxiedImageUrl(song.coverUrl)}
-                alt=""
-                className="absolute inset-0 h-full w-full object-cover"
-                crossOrigin="anonymous"
-              />
+          <div className="grid gap-4 sm:grid-cols-2">
+            <FieldLabel label={t("title")}>
+              <TextInput value={song.title} onChange={(event) => update("title", event.target.value)} />
+            </FieldLabel>
+            <FieldLabel label={t("artist")}>
+              <TextInput value={song.artist} onChange={(event) => update("artist", event.target.value)} />
+            </FieldLabel>
+          </div>
+          <FieldLabel label={t("album")}>
+            <TextInput value={song.album ?? ""} onChange={(event) => update("album", event.target.value)} />
+          </FieldLabel>
+          <FieldLabel label={t("coverUrl")}>
+            <TextInput
+              value={song.coverUrl?.startsWith("blob:") ? "" : song.coverUrl ?? ""}
+              onChange={(event) => updateCoverUrl(event.target.value)}
+              placeholder="https://..."
+            />
+          </FieldLabel>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <ActionButton
+              icon={<Upload className="h-4 w-4" />}
+              onClick={() => coverInputRef.current?.click()}
+            >
+              {t("uploadCover")}
+            </ActionButton>
+            <input
+              ref={coverInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(event) => onUpload(event.target.files?.[0])}
+            />
+            <div className="flex items-center gap-3">
+              {song.coverUrl ? (
+                <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-white/10">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={proxiedImageUrl(song.coverUrl)}
+                    alt=""
+                    className="absolute inset-0 h-full w-full object-cover"
+                    crossOrigin="anonymous"
+                  />
+                </div>
+              ) : (
+                <div className="h-14 w-14 rounded-lg border border-white/14 bg-white/10" />
+              )}
+              <p className="app-text-subtle text-sm">{t("coverExportHint")}</p>
             </div>
-          ) : (
-            <div className="h-14 w-14 rounded-lg border border-white/14 bg-white/10" />
-          )}
-          <p className="app-text-subtle text-sm">{t("coverExportHint")}</p>
-        </div>
-      </div>
+          </div>
         </>
       ) : null}
     </Section>

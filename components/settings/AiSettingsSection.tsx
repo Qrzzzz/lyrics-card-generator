@@ -1,5 +1,11 @@
-import { Info, Loader2, Trash2 } from "lucide-react";
-import { Input, Label, Select, SwitchRow } from "@/components/ui/controls";
+import { Info, Trash2 } from "lucide-react";
+import {
+  ActionButton,
+  FieldLabel,
+  SelectField,
+  TextInput,
+  ToggleRow
+} from "@/components/ui/controls";
 import { getTranslationStyles } from "@/lib/ai/styles";
 import type { AISettings } from "@/lib/ai/types";
 import type { getAIUiCopy } from "@/lib/ai/ui-copy";
@@ -31,8 +37,9 @@ export function AiSettingsSection({
   return (
     <section className="settings-panel-card grid gap-4 p-4 sm:p-5">
       <h3 className="app-text-primary text-sm font-semibold">{copy.aiSection}</h3>
-      <Label label={copy.baseUrl}>
-        <Input
+
+      <FieldLabel label={copy.baseUrl}>
+        <TextInput
           type="url"
           value={settings.baseUrl}
           onChange={(event) => onSettingsChange({ ...settings, baseUrl: event.target.value })}
@@ -40,43 +47,47 @@ export function AiSettingsSection({
           autoComplete="url"
         />
         <SettingTip>{copy.baseUrlTip}</SettingTip>
-      </Label>
-      <Label label={copy.apiKey} hint={hasApiKey ? copy.apiKeyConfigured : undefined}>
+      </FieldLabel>
+
+      <FieldLabel label={copy.apiKey} hint={hasApiKey ? copy.apiKeyConfigured : undefined}>
         <div className="flex flex-col gap-2 sm:flex-row">
-          <Input
+          <TextInput
             type="password"
             value={apiKey}
             onChange={(event) => onApiKeyChange(event.target.value)}
-            placeholder={hasApiKey ? "••••••••••••••••" : copy.apiKeyPlaceholder}
+            placeholder={hasApiKey ? "****************" : copy.apiKeyPlaceholder}
             autoComplete="new-password"
             spellCheck={false}
             className="min-w-0 flex-1"
           />
-          <button
-            type="button"
+          <ActionButton
             data-testid="clear-api-key"
             onClick={onClearApiKey}
-            disabled={isClearingApiKey || (!hasApiKey && !apiKey)}
-            className="app-button inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-lg px-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-45"
+            disabled={!hasApiKey && !apiKey}
+            loading={isClearingApiKey}
+            variant="danger"
+            icon={<Trash2 className="h-4 w-4" />}
+            className="shrink-0"
           >
-            {isClearingApiKey ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
             {isClearingApiKey ? copy.clearingApiKey : copy.clearApiKey}
-          </button>
+          </ActionButton>
         </div>
         <SettingTip>{copy.apiKeyTip}</SettingTip>
-      </Label>
-      <Label label={copy.model}>
-        <Input
+      </FieldLabel>
+
+      <FieldLabel label={copy.model}>
+        <TextInput
           value={settings.model}
           onChange={(event) => onSettingsChange({ ...settings, model: event.target.value })}
           placeholder={copy.modelPlaceholder}
           spellCheck={false}
         />
         <SettingTip>{copy.modelTip}</SettingTip>
-      </Label>
+      </FieldLabel>
+
       <div className="grid gap-4 sm:grid-cols-2">
-        <Label label={copy.temperature} hint={settings.reasoningEnabled ? copy.reasoningHint : undefined}>
-          <Input
+        <FieldLabel label={copy.temperature} hint={settings.reasoningEnabled ? copy.reasoningHint : undefined}>
+          <TextInput
             type="number"
             min={0}
             max={2}
@@ -85,22 +96,26 @@ export function AiSettingsSection({
             onChange={(event) => onSettingsChange({ ...settings, temperature: Number(event.target.value) })}
           />
           <SettingTip>{copy.temperatureTip}</SettingTip>
-        </Label>
-        <Label label={copy.defaultStyle}>
-          <Select
+        </FieldLabel>
+
+        <FieldLabel label={copy.defaultStyle}>
+          <SelectField
             value={settings.defaultStyle}
             onChange={(event) =>
               onSettingsChange({ ...settings, defaultStyle: event.target.value as AISettings["defaultStyle"] })
             }
           >
             {translationStyles.map((style) => (
-              <option key={style.id} value={style.id}>{style.name}</option>
+              <option key={style.id} value={style.id}>
+                {style.name}
+              </option>
             ))}
-          </Select>
+          </SelectField>
           <SettingTip>{copy.defaultStyleTip}</SettingTip>
-        </Label>
+        </FieldLabel>
       </div>
-      <SwitchRow
+
+      <ToggleRow
         label={copy.defaultReasoning}
         checked={settings.reasoningEnabled}
         onChange={(reasoningEnabled) => onSettingsChange({ ...settings, reasoningEnabled })}
