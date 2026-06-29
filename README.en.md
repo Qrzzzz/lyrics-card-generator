@@ -136,7 +136,7 @@ These features require internet access:
 ## 🔄 Update Checking
 
 The app provides a “Check for updates” button.
-It requests this project’s GitHub Releases through a local Next API route, compares the current version with the latest published release, and prioritizes installer / portable assets when available.
+It requests this project’s GitHub Releases through a local Next API route, compares the current version with the latest published release, and prefers installer / portable assets when available.
 
 This feature only checks for updates and opens the download page. It does not silently download installers or replace the current app automatically.
 

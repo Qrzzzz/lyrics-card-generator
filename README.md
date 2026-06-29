@@ -97,7 +97,6 @@ GitHub Release 页面默认使用简体中文短版，完整发布说明维护�
 * 支持导出高清 PNG 图片
 * 支持从 GitHub Releases 检查新版本
 
-
 ## 🪟 Windows 桌面版说明
 
 桌面版保留了原本的 Next.js Web 界面和 API 路由，并通过 Electron 包装为本地应用。
