@@ -37,16 +37,16 @@ function getProviderErrorMessage(body, status) {
               ? data.message
               : "";
       if (message.trim()) {
-        return `AI request failed: ${message.trim()}`;
+        return `AI 接口请求失败：${message.trim()}`;
       }
     }
   }
 
   if (body.kind === "text") {
-    return `AI request failed: ${body.text.slice(0, 500)}`;
+    return `AI 接口请求失败：${body.text.slice(0, 500)}`;
   }
 
-  return `AI request failed (HTTP ${status}).`;
+  return `AI 接口请求失败（HTTP ${status}）。`;
 }
 
 module.exports = {

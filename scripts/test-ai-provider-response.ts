@@ -22,24 +22,24 @@ async function main() {
     status: 401,
     headers: { "content-type": "application/json" }
   });
-  assert.equal(getProviderErrorMessage(jsonError, 401), "AI request failed: bad key");
+  assert.equal(getProviderErrorMessage(jsonError, 401), "AI 接口请求失败：bad key");
 
   const textError = await read("provider overloaded", {
     status: 503,
     headers: { "content-type": "text/plain" }
   });
-  assert.equal(getProviderErrorMessage(textError, 503), "AI request failed: provider overloaded");
+  assert.equal(getProviderErrorMessage(textError, 503), "AI 接口请求失败：provider overloaded");
 
   const malformedJson = await read("<html>nope</html>", {
     status: 502,
     headers: { "content-type": "application/json" }
   });
   assert.equal(malformedJson.kind, "text");
-  assert.equal(getProviderErrorMessage(malformedJson, 502), "AI request failed: <html>nope</html>");
+  assert.equal(getProviderErrorMessage(malformedJson, 502), "AI 接口请求失败：<html>nope</html>");
 
   const empty = await read("", { status: 500 });
   assert.equal(empty.kind, "empty");
-  assert.equal(getProviderErrorMessage(empty, 500), "AI request failed (HTTP 500).");
+  assert.equal(getProviderErrorMessage(empty, 500), "AI 接口请求失败（HTTP 500）。");
 
   console.log(JSON.stringify({ ok: true, aiProviderResponseTests: 5 }, null, 2));
 }

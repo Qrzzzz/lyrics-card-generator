@@ -56,10 +56,11 @@
 
 ### v3.7.0 更新重点
 
-* 修复桌面自绘标题栏最大化 / 还原状态不同步的问题。
-* 优化 Acrylic 桌面标题栏的渐变玻璃模糊、层级和关闭按钮 hover 状态。
-* 补齐标题栏窗口控制按钮的多语言与无障碍文案。
-* 修正 README 当前下载入口与发布说明链接，歌词卡片导出结果不变。
+* 强化桌面背景图片路径校验，仅接受应用生成的安全文件名并拒绝异常 `imageId`。
+* 改进 AI 翻译对非标准响应、纯文本错误、损坏 JSON 和空响应的兜底处理。
+* 统一“检查更新”入口，始终打开对应的 GitHub Release 页面。
+* 清理废弃的旧版字体面板代码与已移除纯音乐输入框的残留文案。
+* 将发布校验改为随当前版本自动变化的通用一致性测试。
 
 <br clear="right" />
 
@@ -94,7 +95,7 @@ GitHub Release 页面默认使用简体中文短版，完整发布说明维护�
 * 支持思源黑体 / 思源宋体两套字体方案、自定义中日韩 / 西文字体、系统字体选择弹窗与真实歌词字体预览
 * 支持简体中文 / 繁體中文 / English / Français / 日本語 / Español 界面切换
 * 支持导出高清 PNG 图片
-?????? Next API ???????? GitHub Releases????????????????????? Release ????????????
+* 支持从 GitHub Releases 检查新版本，并打开对应 Release 页面
 
 ## 🪟 Windows 桌面版说明
 
@@ -132,7 +133,7 @@ GitHub Release 页面默认使用简体中文短版，完整发布说明维护�
 ## 🔄 检查更新
 
 应用内提供“检查更新”按钮。
-它会通过本地 Next API 路由请求本项目的 GitHub Releases，比较当前版本和最新发布版本，并优先识别安装版和便携版下载资产。
+它会通过本地 Next API 路由请求本项目的 GitHub Releases，比较当前版本和最新发布版本，并打开对应的 Release 页面供用户选择下载资产。
 
 该功能只负责检查更新并打开下载页面，不会静默下载安装包，也不会自动替换当前程序。
 
@@ -263,4 +264,3 @@ npm run core:test       # 测试 3.0 核心纯函数
    <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=Qrzzzz/lyrics-card-generator&type=date&legend=top-left" />
  </picture>
 </a>
-

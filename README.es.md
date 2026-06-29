@@ -59,10 +59,11 @@ El instalador se recomienda para uso habitual. La versión portable es útil par
 
 ### Aspectos destacados de la versión 3.7.0
 
-* Corrige la sincronización de maximizar / restaurar en la barra de título personalizada de escritorio.
-* Mejora la barra de título Acrylic con desenfoque de cristal degradado, capas más seguras y hover fiable en el botón de cerrar.
-* Añade textos localizados y accesibles para los controles de ventana de la barra de título.
-* Corrige los enlaces de descarga y notas de versión del README sin cambiar la exportación PNG de las tarjetas de letras.
+* Refuerza la validación de rutas para las imágenes de fondo del escritorio y solo acepta nombres seguros generados por la app.
+* Mejora el fallback de traducción IA ante respuestas no estándar, errores en texto plano, JSON malformado y cuerpos vacíos.
+* Hace coherente la entrada de actualización al abrir siempre la página correspondiente de GitHub Release.
+* Elimina el código heredado del panel de fuentes y las copias residuales del antiguo campo instrumental.
+* Sustituye las comprobaciones de release ligadas a una versión por pruebas genéricas de coherencia de lanzamiento.
 
 <br clear="right" />
 
@@ -97,7 +98,7 @@ La página de GitHub Release utiliza por defecto la versión corta en chino simp
 * Combinaciones Source Han Sans / Serif, fuentes CJK y latinas independientes, selector de fuentes del sistema y vista previa con letras reales
 * Interfaz en chino simplificado, chino tradicional, inglés, francés, japonés y español
 * Exportación PNG de alta resolución
-Solicita las GitHub Releases de este proyecto a trav?s de una ruta API local de Next, compara la versi?n actual con la ?ltima publicada y abre la p?gina de Release correspondiente para que el usuario elija el recurso de descarga.
+* Búsqueda de actualizaciones en GitHub Releases que abre la página Release correspondiente
 
 ## 🪟 Versión de escritorio para Windows
 
@@ -135,7 +136,7 @@ Estas funciones requieren internet:
 ## 🔄 Búsqueda de actualizaciones
 
 La aplicación incluye un botón “Buscar actualizaciones”.
-Solicita las GitHub Releases de este proyecto a través de una ruta API local de Next, compara la versión actual con la última publicada y prioriza los recursos de instalador / portable cuando están disponibles.
+Solicita las GitHub Releases de este proyecto a través de una ruta API local de Next, compara la versión actual con la última publicada y abre la página de Release correspondiente para que el usuario elija el recurso de descarga.
 
 Esta función solo busca actualizaciones y abre la página de descarga. No descarga instaladores en silencio ni sustituye automáticamente la aplicación actual.
 
@@ -266,4 +267,3 @@ Las dependencias open-source de terceros siguen rigiéndose por sus respectivas 
    <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=Qrzzzz/lyrics-card-generator&type=date&legend=top-left" />
  </picture>
 </a>
-

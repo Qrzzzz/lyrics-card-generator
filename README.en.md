@@ -59,10 +59,11 @@ The installer is recommended for regular use. The portable version is useful for
 
 ### v3.7.0 Highlights
 
-* Fixes desktop custom titlebar maximize / restore state synchronization.
-* Polishes the Acrylic desktop titlebar with a fading glass blur layer, safer stacking, and reliable close-button hover.
-* Adds localized and accessible copy for the titlebar window controls.
-* Corrects README download and release-note links while leaving lyric card PNG output unchanged.
+* Hardens desktop background image path validation so only app-generated safe filenames are accepted.
+* Improves AI translation fallback for non-standard responses, plain-text errors, malformed JSON, and empty bodies.
+* Makes the update entry consistently open the matching GitHub Release page.
+* Removes stale legacy font-panel code and leftover copy for the removed instrumental input.
+* Replaces version-specific release checks with version-agnostic release consistency tests.
 
 <br clear="right" />
 
@@ -97,7 +98,7 @@ The GitHub Release page defaults to a simplified Chinese short version, while th
 * Source Han Sans / Serif schemes, independent CJK and Latin fonts, a system-font picker, and lyric-based typography previews
 * Simplified Chinese / Traditional Chinese / English / French / Japanese / Spanish interface
 * High-resolution PNG export
-It requests this project?s GitHub Releases through a local Next API route, compares the current version with the latest published release, and opens the matching Release page so users can choose a download asset.
+* GitHub Releases update checking that opens the matching Release page
 
 ## 🪟 Windows Desktop Version
 
@@ -135,7 +136,7 @@ These features require internet access:
 ## 🔄 Update Checking
 
 The app provides a “Check for updates” button.
-It requests this project’s GitHub Releases through a local Next API route, compares the current version with the latest published release, and prefers installer / portable assets when available.
+It requests this project’s GitHub Releases through a local Next API route, compares the current version with the latest published release, and opens the matching Release page so users can choose a download asset.
 
 This feature only checks for updates and opens the download page. It does not silently download installers or replace the current app automatically.
 
@@ -266,4 +267,3 @@ Third-party open-source dependencies remain governed by their respective license
    <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=Qrzzzz/lyrics-card-generator&type=date&legend=top-left" />
  </picture>
 </a>
-

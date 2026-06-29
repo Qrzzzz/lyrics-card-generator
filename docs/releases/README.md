@@ -32,8 +32,8 @@ docs/releases/vX.Y.Z.es.md
 - `v3.3.1`：v3.3.0 的 bugfix 版本，修复卡片背景细网格叠加和关闭后仍残留网格的问题。
 - `v3.4.0`：重构布局步骤的内容类型逻辑，将背景网格升级为可配置的视觉细节选项，锁定纯音乐卡片为 1:1。
 - `v3.6.0`：新增深色亚克力与浅色亚克力应用主题，Windows 桌面端支持真正的 Acrylic 半透明窗口材质，并升级为融合式自绘标题栏与内部滚动条。
-- `v3.7.0`: maintenance and stabilization release for desktop background image path safety, AI translation error fallback, update-link consistency, stale-code cleanup, and version-agnostic release checks.
 - `v3.6.1`：修复 Acrylic 桌面标题栏最大化/还原状态同步、hover、层级和多语言文案，并修正当前下载入口。
+- `v3.7.0`：维护与稳定性版本，修复桌面背景图片路径校验、AI 错误响应兜底、更新入口一致性，并清理旧代码与发布一致性测试。
 
 旧的 `docs/release-notes-v*.md` 单文件发布说明已迁移到本目录，避免同一版本存在多套入口。
 

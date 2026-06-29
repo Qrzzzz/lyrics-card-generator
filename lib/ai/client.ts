@@ -160,7 +160,7 @@ async function consumeOpenAIStream(
       params.onDelta?.(content, content);
     }
     if (!content && body.kind !== "json") {
-      throw new AITranslationError("AI provider returned an unreadable response.", "request_failed");
+      throw new AITranslationError("AI 接口返回了无法解析的响应。", "request_failed");
     }
     return content;
   }

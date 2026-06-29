@@ -59,10 +59,11 @@ L'installateur est recommandé pour une utilisation régulière. La version port
 
 ### Points clés de la v3.7.0
 
-* Corrige la synchronisation maximiser / restaurer de la barre de titre personnalisée du bureau.
-* Améliore la barre de titre Acrylic avec un flou de verre dégradé, une pile plus sûre et un hover fiable du bouton de fermeture.
-* Ajoute des libellés localisés et accessibles pour les contrôles de fenêtre de la barre de titre.
-* Corrige les liens de téléchargement et de notes de version du README sans modifier l'export PNG des cartes de paroles.
+* Renforce la validation des chemins d’image de fond du bureau afin d’accepter uniquement les noms sûrs générés par l’application.
+* Améliore le repli de traduction IA face aux réponses non standard, aux erreurs en texte brut, au JSON malformé et aux corps vides.
+* Rend l’entrée de mise à jour cohérente en ouvrant toujours la page GitHub Release correspondante.
+* Supprime l’ancien code du panneau de polices et les textes résiduels de l’ancien champ instrumental.
+* Remplace les vérifications de publication spécifiques à une version par des tests génériques de cohérence de release.
 
 <br clear="right" />
 
@@ -97,7 +98,7 @@ La page GitHub Release utilise par défaut la version courte en chinois simplifi
 * Jeux Source Han Sans / Serif, polices CJK et latines indépendantes, sélecteur de polices système et aperçu avec de vraies paroles
 * Interface en chinois simplifié, chinois traditionnel, anglais, français, japonais et espagnol
 * Export PNG haute résolution
-Il interroge les GitHub Releases du projet via une route API locale Next, compare la version actuelle avec la derni?re version publi?e et ouvre la page Release correspondante afin que l'utilisateur choisisse l'asset ? t?l?charger.
+* Vérification des mises à jour via GitHub Releases avec ouverture de la page Release correspondante
 
 ## 🪟 Version Windows
 
@@ -135,7 +136,7 @@ Ces fonctions nécessitent Internet :
 ## 🔄 Vérification des mises à jour
 
 L'application propose un bouton « Vérifier les mises à jour ».
-Il interroge les GitHub Releases du projet via une route API locale Next, compare la version actuelle avec la dernière version publiée et privilégie les assets installateur / portable lorsqu'ils sont disponibles.
+Il interroge les GitHub Releases du projet via une route API locale Next, compare la version actuelle avec la dernière version publiée et ouvre la page Release correspondante afin que l’utilisateur choisisse l’asset à télécharger.
 
 Cette fonction vérifie seulement les mises à jour et ouvre la page de téléchargement. Elle ne télécharge pas silencieusement d'installateur et ne remplace pas automatiquement l'application actuelle.
 
@@ -266,4 +267,3 @@ Les dépendances open-source tierces restent régies par leurs licences respecti
    <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=Qrzzzz/lyrics-card-generator&type=date&legend=top-left" />
  </picture>
 </a>
-
