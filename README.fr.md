@@ -82,22 +82,41 @@ La page GitHub Release utilise par défaut la version courte en chinois simplifi
 
 ## ✨ Fonctionnalités principales
 
+### 🎨 Génération d'images de paroles
+
 * Génération d'images de paroles très soignées
 * Formats portrait, paysage et dimensions de toile personnalisées
 * Mise en page paysage reconstruite autour des zones sûres, de la colonne de pochette, de la colonne de contenu et du pied de page
 * Hauteur automatique mesurée pour les toiles portrait personnalisées
-* Mise en page originale des paroles et des traductions
-* Séparation automatique des lignes original / traduction avec détection du chinois simplifié, chinois traditionnel, anglais, français, japonais et espagnol
-* Traduction de paroles par IA via les API Chat Completions compatibles OpenAI, avec URL du fournisseur, modèle, clé API, six styles, Reasoning et sortie en streaming configurables
+* Export PNG haute résolution
+
+### 📝 Mise en page et traduction des paroles
+
+* Mise en page côte à côte des paroles originales et des traductions
+* Séparation automatique des lignes original / traduction selon la langue actuelle de l'interface
+* Prise en charge des langues cibles : chinois simplifié, chinois traditionnel, anglais, français, japonais et espagnol
+* Traduction de paroles par IA via les API Chat Completions compatibles OpenAI
+* URL de base du fournisseur, modèle, clé API, style de traduction, Reasoning et sortie en streaming configurables
+
+### 🎵 Import des informations du morceau
+
 * Analyse de liens Spotify, Apple Music, NetEase Cloud Music et QQ Music
-* Analyse de métadonnées MP3 / FLAC locales : titre, artiste, album, pochette et paroles intégrées
+* Analyse de métadonnées MP3 / FLAC locales
+* Lecture possible du titre, de l'artiste, de l'album, de la pochette et des paroles intégrées
 * Édition manuelle du titre, de l'artiste, de la pochette et des paroles
 * Import de pochette locale
+
+### 🌈 Visuel et personnalisation
+
 * Extraction de palette depuis la pochette pour créer des fonds en dégradé
 * Logo de plateforme, texte de partage et filigrane généré
-* Jeux Source Han Sans / Serif, polices CJK et latines indépendantes, sélecteur de polices système et aperçu avec de vraies paroles
-* Interface en chinois simplifié, chinois traditionnel, anglais, français, japonais et espagnol
-* Export PNG haute résolution
+* Jeux de polices Source Han Sans / Serif
+* Polices CJK, polices latines et polices système personnalisables
+* Aperçu typographique sur de vraies paroles
+
+### 🌍 Langues et mises à jour
+
+* Interface en chinois simplifié / chinois traditionnel / anglais / français / japonais / espagnol
 * Vérification des mises à jour via GitHub Releases avec ouverture de la page Release correspondante
 
 ## 🪟 Version Windows

@@ -82,22 +82,41 @@ The GitHub Release page defaults to a simplified Chinese short version, while th
 
 ## ✨ Features
 
+### 🎨 Lyric Card Generation
+
 * Generate high-polish lyric sharing images
 * Portrait, landscape, and custom canvas sizes
 * Rebuilt landscape layout based on safe areas, cover column, content column, and footer regions
 * Measured auto height for portrait custom canvases
+* High-resolution PNG export
+
+### 📝 Lyrics Layout and Translation
+
 * Original lyric and translation layout
-* Split alternating original / translated lyrics with Simplified Chinese, Traditional Chinese, English, French, Japanese, and Spanish target-language detection
-* AI lyric translation through OpenAI-compatible Chat Completions APIs, with configurable provider URL, model, API key, six translation styles, reasoning, and streaming output
+* Split original / translated lyrics automatically based on the current interface language
+* Simplified Chinese, Traditional Chinese, English, French, Japanese, and Spanish target-language support
+* AI lyric translation through OpenAI-compatible Chat Completions APIs
+* Configurable provider base URL, model, API key, translation style, reasoning, and streaming output
+
+### 🎵 Song Info Import
+
 * Spotify, Apple Music, NetEase Cloud Music, and QQ Music link parsing
-* Local MP3 / FLAC metadata parsing for title, artist, album, cover art, and embedded lyrics
+* Local MP3 / FLAC metadata parsing
+* Try reading title, artist, album, cover art, and embedded lyrics
 * Manual song title, artist, cover, and lyric editing
 * Local cover upload
+
+### 🌈 Visuals and Personalization
+
 * Palette extraction from cover art for gradient backgrounds
 * Platform logo, shared-by text, and generated watermark
-* Source Han Sans / Serif schemes, independent CJK and Latin fonts, a system-font picker, and lyric-based typography previews
+* Source Han Sans / Serif font schemes
+* Custom CJK fonts, Latin fonts, and system font selection
+* Lyric-based typography previews
+
+### 🌍 Languages and Updates
+
 * Simplified Chinese / Traditional Chinese / English / French / Japanese / Spanish interface
-* High-resolution PNG export
 * GitHub Releases update checking that opens the matching Release page
 
 ## 🪟 Windows Desktop Version
