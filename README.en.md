@@ -82,22 +82,42 @@ The GitHub Release page defaults to a simplified Chinese short version, while th
 
 ## ✨ Features
 
+### 🎨 Image Generation & Canvas Layout
+
 * Generate high-polish lyric sharing images
 * Portrait, landscape, and custom canvas sizes
 * Rebuilt landscape layout based on safe areas, cover column, content column, and footer regions
 * Measured auto height for portrait custom canvases
+* High-resolution PNG export
+
+### 📝 Lyrics Layout & Translation
+
 * Original lyric and translation layout
 * Split alternating original / translated lyrics with Simplified Chinese, Traditional Chinese, English, French, Japanese, and Spanish target-language detection
 * AI lyric translation through OpenAI-compatible Chat Completions APIs, with configurable provider URL, model, API key, six translation styles, reasoning, and streaming output
+
+### 🎵 Music Links & Local File Parsing
+
 * Spotify, Apple Music, NetEase Cloud Music, and QQ Music link parsing
 * Local MP3 / FLAC metadata parsing for title, artist, album, cover art, and embedded lyrics
+
+### ✍️ Manual Editing & Material Upload
+
 * Manual song title, artist, cover, and lyric editing
 * Local cover upload
+
+### 🌈 Visual Style & Brand Info
+
 * Palette extraction from cover art for gradient backgrounds
 * Platform logo, shared-by text, and generated watermark
+
+### 🔤 Fonts & Multilingual Interface
+
 * Source Han Sans / Serif schemes, independent CJK and Latin fonts, a system-font picker, and lyric-based typography previews
 * Simplified Chinese / Traditional Chinese / English / French / Japanese / Spanish interface
-* High-resolution PNG export
+
+### 🚀 Version Updates
+
 * GitHub Releases update checking
 
 ## 🪟 Windows Desktop Version

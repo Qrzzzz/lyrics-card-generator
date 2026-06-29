@@ -82,22 +82,42 @@ La página de GitHub Release utiliza por defecto la versión corta en chino simp
 
 ## ✨ Funciones principales
 
+### 🎨 Generación de imágenes y diseño del lienzo
+
 * Genera imágenes de letras con acabado pulido
 * Tamaños verticales, horizontales y de lienzo personalizado
 * Diseño horizontal reconstruido con áreas seguras, columna de portada, columna de contenido y regiones de pie
 * Altura automática medida para lienzos verticales personalizados
+* Exportación PNG de alta resolución
+
+### 📝 Diseño y traducción de letras
+
 * Diseño de letra original y traducción
 * Separación automática de líneas original / traducción con detección de chino simplificado, chino tradicional, inglés, francés, japonés y español
 * Traducción de letras con IA mediante API Chat Completions compatibles con OpenAI, con URL del proveedor, modelo, clave API, seis estilos, Reasoning y salida en streaming configurables
+
+### 🎵 Enlaces musicales y análisis de archivos locales
+
 * Análisis de enlaces de Spotify, Apple Music, NetEase Cloud Music y QQ Music
 * Análisis de metadatos MP3 / FLAC locales para título, artista, álbum, portada y letras incrustadas
+
+### ✍️ Edición manual y subida de material
+
 * Edición manual de título, artista, portada y letra
 * Subida de portada local
+
+### 🌈 Estilo visual e información de marca
+
 * Extracción de paleta desde la portada para fondos degradados
 * Logo de plataforma, texto de compartido por y marca de agua generada
+
+### 🔤 Fuentes e interfaz multilingüe
+
 * Combinaciones Source Han Sans / Serif, fuentes CJK y latinas independientes, selector de fuentes del sistema y vista previa con letras reales
 * Interfaz en chino simplificado, chino tradicional, inglés, francés, japonés y español
-* Exportación PNG de alta resolución
+
+### 🚀 Actualizaciones
+
 * Búsqueda de actualizaciones en GitHub Releases
 
 ## 🪟 Versión de escritorio para Windows
