@@ -58,6 +58,11 @@ body {
   --input-border: 255 255 255 / 0.13;
   --button-bg: 255 255 255 / 0.1;
   --button-bg-hover: 255 255 255 / 0.16;
+  --control-focus-border: rgba(125, 225, 255, 0.58);
+  --control-focus-ring: rgba(125, 225, 255, 0.12);
+  --control-selected-border: color-mix(in srgb, var(--app-accent) 34%, rgb(var(--panel-border)));
+  --control-selected-bg: color-mix(in srgb, var(--app-accent) 16%, rgb(var(--button-bg-hover)));
+  --control-selected-bg-strong: color-mix(in srgb, var(--app-accent) 24%, rgb(var(--button-bg-hover)));
   --status-success-fg: 187 247 208;
   --status-success-bg: 74 222 128 / 0.1;
   --status-success-border: 187 247 208 / 0.22;
@@ -162,6 +167,8 @@ body {
   --input-border: 15 23 42 / 0.16;
   --button-bg: 255 255 255 / 0.30;
   --button-bg-hover: 255 255 255 / 0.46;
+  --control-focus-border: rgba(37, 99, 235, 0.52);
+  --control-focus-ring: rgba(37, 99, 235, 0.12);
   --status-success-fg: 21 128 61;
   --status-success-bg: 220 252 231 / 0.62;
   --status-success-border: 22 163 74 / 0.36;
@@ -326,10 +333,208 @@ body[data-desktop-shell="true"] {
   border: 1px solid rgb(var(--panel-border));
   background: rgb(var(--button-bg));
   color: rgb(var(--app-fg));
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease,
+    background 150ms ease,
+    color 150ms ease,
+    opacity 150ms ease,
+    transform 150ms ease;
 }
 
 .app-button:hover {
   background: rgb(var(--button-bg-hover));
+}
+
+.app-button:focus-visible {
+  outline: none;
+  border-color: var(--control-focus-border);
+  box-shadow: 0 0 0 4px var(--control-focus-ring);
+}
+
+.app-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.control-surface {
+  border: 1px solid rgb(var(--panel-border));
+  background: rgb(var(--button-bg));
+  color: rgb(var(--app-fg));
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease,
+    background 150ms ease,
+    color 150ms ease,
+    opacity 150ms ease,
+    transform 150ms ease;
+}
+
+.control-surface:hover:not(:disabled):not([aria-disabled="true"]) {
+  background: rgb(var(--button-bg-hover));
+}
+
+.control-focus {
+  outline: none;
+}
+
+.control-focus:focus-visible {
+  border-color: var(--control-focus-border);
+  box-shadow: 0 0 0 4px var(--control-focus-ring);
+}
+
+.control-disabled:disabled,
+.control-disabled[aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.control-variant-primary,
+.control-variant-danger,
+.control-variant-ghost,
+.control-variant-icon,
+.option-card,
+.segmented-control__item {
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease,
+    background 150ms ease,
+    color 150ms ease,
+    opacity 150ms ease,
+    transform 150ms ease;
+}
+
+.control-variant-primary {
+  border: 1px solid var(--control-selected-border);
+  background: var(--control-selected-bg-strong);
+  color: rgb(var(--app-fg));
+}
+
+.control-variant-primary:hover:not(:disabled):not([aria-disabled="true"]) {
+  background: color-mix(in srgb, var(--app-accent) 30%, rgb(var(--button-bg-hover)));
+}
+
+.control-variant-danger {
+  border: 1px solid rgb(var(--status-danger-border));
+  background: rgb(var(--status-danger-bg));
+  color: rgb(var(--status-danger-fg));
+}
+
+.control-variant-danger:hover:not(:disabled):not([aria-disabled="true"]) {
+  background: color-mix(in srgb, rgb(var(--status-danger-bg)) 76%, rgb(var(--button-bg-hover)));
+}
+
+.control-variant-ghost {
+  border: 1px solid transparent;
+  background: transparent;
+  color: rgb(var(--app-fg));
+}
+
+.control-variant-ghost:hover:not(:disabled):not([aria-disabled="true"]) {
+  background: rgb(var(--button-bg));
+}
+
+.control-variant-icon {
+  border: 1px solid rgb(var(--panel-border));
+  background: transparent;
+  color: rgb(var(--app-fg));
+}
+
+.control-variant-icon:hover:not(:disabled):not([aria-disabled="true"]) {
+  background: rgb(var(--button-bg));
+}
+
+.toggle-track {
+  position: relative;
+  display: inline-flex;
+  height: 1.5rem;
+  width: 2.75rem;
+  flex-shrink: 0;
+  border: 1px solid rgb(var(--panel-border));
+  border-radius: 999px;
+  background: rgb(var(--button-bg));
+  transition: border-color 150ms ease, background 150ms ease, opacity 150ms ease;
+}
+
+.toggle-knob {
+  position: absolute;
+  top: 0.1875rem;
+  left: 0.1875rem;
+  height: 1rem;
+  width: 1rem;
+  border-radius: 999px;
+  background: rgb(var(--app-fg));
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.22);
+  transform: translateX(0);
+  transition: transform 150ms ease, background 150ms ease, opacity 150ms ease;
+}
+
+[role="switch"][aria-checked="true"] .toggle-track {
+  border-color: var(--control-selected-border);
+  background: var(--control-selected-bg-strong);
+}
+
+[role="switch"][aria-checked="true"] .toggle-knob {
+  transform: translateX(1.25rem);
+}
+
+.option-card {
+  border: 1px solid rgb(var(--panel-border));
+  background: rgb(var(--button-bg));
+  color: rgb(var(--app-fg));
+}
+
+.option-card:hover:not(:disabled):not([aria-disabled="true"]) {
+  background: rgb(var(--button-bg-hover));
+}
+
+.option-card[data-selected="true"],
+.option-card[aria-checked="true"] {
+  border-color: var(--control-selected-border);
+  background: var(--control-selected-bg);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.option-card__indicator {
+  display: inline-flex;
+  height: 1.125rem;
+  width: 1.125rem;
+  border: 1px solid rgb(var(--panel-border));
+  border-radius: 999px;
+  background: transparent;
+  box-shadow: inset 0 0 0 0 transparent;
+  transition: border-color 150ms ease, background 150ms ease, box-shadow 150ms ease;
+}
+
+.option-card[data-selected="true"] .option-card__indicator,
+.option-card[aria-checked="true"] .option-card__indicator {
+  border-color: var(--control-selected-border);
+  background: color-mix(in srgb, var(--app-accent) 28%, transparent);
+  box-shadow: inset 0 0 0 3px rgb(var(--app-fg));
+}
+
+.segmented-control {
+  border: 1px solid rgb(var(--panel-border));
+  background: rgb(var(--panel-bg));
+}
+
+.segmented-control__item {
+  border: 1px solid transparent;
+  background: transparent;
+  color: rgb(var(--app-subtle));
+}
+
+.segmented-control__item:hover:not(:disabled):not([aria-disabled="true"]):not([aria-checked="true"]):not([data-selected="true"]) {
+  background: rgb(var(--button-bg));
+  color: rgb(var(--app-fg));
+}
+
+.segmented-control__item[aria-checked="true"],
+.segmented-control__item[data-selected="true"] {
+  border-color: var(--control-selected-border);
+  background: var(--control-selected-bg);
+  color: rgb(var(--app-fg));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 .status-success {
@@ -503,21 +708,28 @@ button {
   transition: border-color 150ms ease, box-shadow 150ms ease, background 150ms ease;
 }
 
-.field-shell:focus {
-  border-color: rgba(125, 225, 255, 0.58);
-  box-shadow: 0 0 0 4px rgba(125, 225, 255, 0.12);
-}
-
-.app-shell[data-ui-theme="light-acrylic"] .field-shell:focus {
-  border-color: rgba(37, 99, 235, 0.52);
-  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+.field-shell:focus,
+.field-shell:focus-visible {
+  border-color: var(--control-focus-border);
+  box-shadow: 0 0 0 4px var(--control-focus-ring);
 }
 
 .field-shell::placeholder {
   color: rgb(var(--app-subtle));
 }
 
+.field-shell:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.field-shell:read-only {
+  opacity: 0.82;
+}
+
 .settings-surface {
+  --control-focus-border: color-mix(in srgb, var(--ai-accent, #7de1ff) 64%, #ffffff);
+  --control-focus-ring: color-mix(in srgb, var(--ai-accent, #7de1ff) 16%, transparent);
   color: rgb(var(--app-fg));
   border-color: rgb(var(--panel-border));
   background: rgb(var(--panel-bg));
@@ -531,10 +743,9 @@ button {
   color: rgb(var(--app-fg));
 }
 
-.settings-surface .field-shell:focus {
-  border-color: color-mix(in srgb, var(--ai-accent, #7de1ff) 64%, #ffffff);
+.settings-surface .field-shell:focus,
+.settings-surface .field-shell:focus-visible {
   background: rgb(var(--input-bg));
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--ai-accent, #7de1ff) 16%, transparent);
 }
 
 .app-shell[data-ui-theme="dark-acrylic"] .settings-surface,
@@ -547,14 +758,30 @@ button {
   -webkit-backdrop-filter: blur(28px) saturate(1.35);
 }
 
-.app-shell[data-ui-theme="light-acrylic"] [role="switch"][aria-checked="false"] > span:last-child {
+.app-shell[data-ui-theme="light-acrylic"] [role="switch"][aria-checked="false"] .toggle-track {
   border-color: rgba(15, 23, 42, 0.18);
   background: rgba(255, 255, 255, 0.42);
 }
 
-.app-shell[data-ui-theme="dark-acrylic"] [role="switch"][aria-checked="false"] > span:last-child {
+.app-shell[data-ui-theme="dark-acrylic"] [role="switch"][aria-checked="false"] .toggle-track {
   border-color: rgba(255, 255, 255, 0.18);
   background: rgba(15, 23, 42, 0.36);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .control-surface,
+  .control-variant-primary,
+  .control-variant-danger,
+  .control-variant-ghost,
+  .control-variant-icon,
+  .field-shell,
+  .toggle-track,
+  .toggle-knob,
+  .option-card,
+  .option-card__indicator,
+  .segmented-control__item {
+    transition-duration: 0ms;
+  }
 }
 
 .settings-panel-card {

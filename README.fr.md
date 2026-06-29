@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v3.7.0.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v3.7.1.fr.md">Notes de version</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="#développement-local">Développement local</a> ·
   <a href="./LICENSE">Licence</a>
@@ -50,20 +50,20 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 Téléchargez la dernière version depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
 
-* Installateur recommandé : `Lyrics Card Generator Setup 3.7.0.exe`
-* Version portable : `Lyrics Card Generator-3.7.0-portable.exe`
+* Installateur recommandé : `Lyrics Card Generator Setup 3.7.1.exe`
+* Version portable : `Lyrics Card Generator-3.7.1-portable.exe`
 
 L'installateur est recommandé pour une utilisation régulière. La version portable convient aux essais, à une utilisation temporaire ou à un disque amovible.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### Points clés de la v3.7.0
+### Points clés de la v3.7.1
 
-* Renforce la validation des chemins d’image de fond du bureau afin d’accepter uniquement les noms sûrs générés par l’application.
-* Améliore le repli de traduction IA face aux réponses non standard, aux erreurs en texte brut, au JSON malformé et aux corps vides.
-* Rend l’entrée de mise à jour cohérente en ouvrant toujours la page GitHub Release correspondante.
-* Supprime l’ancien code du panneau de polices et les textes résiduels de l’ancien champ instrumental.
-* Remplace les vérifications de publication spécifiques à une version par des tests génériques de cohérence de release.
+* Standardise les interrupteurs du panneau de style, de la saisie des paroles, des informations du morceau et des réglages pour un comportement plus cohérent.
+* Regroupe les choix uniques comme la langue dans des cartes d’option partagées et aligne le mode de mise en page, la densité de grille et cadre / plein cadre sur un même modèle de contrôle segmenté.
+* Uniformise l’apparence et le retour d’interaction des champs de saisie, zones de texte, listes déroulantes et boutons d’action courants dans les réglages.
+* Améliore l’usage au clavier, la visibilité du focus, la présentation des libellés et le retour des états désactivés pour les contrôles courants.
+* Prépare la couche de contrôles de l’interface pour la future mise à niveau d’animations de la v3.8.0 sans ajouter ce système dans cette version.
 
 <br clear="right" />
 
@@ -71,53 +71,34 @@ L'installateur est recommandé pour une utilisation régulière. La version port
 
 La page GitHub Release utilise par défaut la version courte en chinois simplifié, les notes de publication complètes sont conservées dans `docs/releases/` :
 
-* [简体中文](./docs/releases/v3.7.0.zh-CN.md)
-* [繁體中文](./docs/releases/v3.7.0.zh-TW.md)
-* [English](./docs/releases/v3.7.0.en.md)
-* [Français](./docs/releases/v3.7.0.fr.md)
-* [日本語](./docs/releases/v3.7.0.ja.md)
-* [Español](./docs/releases/v3.7.0.es.md)
+* [简体中文](./docs/releases/v3.7.1.zh-CN.md)
+* [繁體中文](./docs/releases/v3.7.1.zh-TW.md)
+* [English](./docs/releases/v3.7.1.en.md)
+* [Français](./docs/releases/v3.7.1.fr.md)
+* [日本語](./docs/releases/v3.7.1.ja.md)
+* [Español](./docs/releases/v3.7.1.es.md)
 
 <a id="fonctionnalités-principales"></a>
 
 ## ✨ Fonctionnalités principales
 
-### 🎨 Génération d'images de paroles
-
 * Génération d'images de paroles très soignées
 * Formats portrait, paysage et dimensions de toile personnalisées
 * Mise en page paysage reconstruite autour des zones sûres, de la colonne de pochette, de la colonne de contenu et du pied de page
 * Hauteur automatique mesurée pour les toiles portrait personnalisées
-* Export PNG haute résolution
-
-### 📝 Mise en page et traduction des paroles
-
-* Mise en page côte à côte des paroles originales et des traductions
-* Séparation automatique des lignes original / traduction selon la langue actuelle de l'interface
-* Prise en charge des langues cibles : chinois simplifié, chinois traditionnel, anglais, français, japonais et espagnol
-* Traduction de paroles par IA via les API Chat Completions compatibles OpenAI
-* URL de base du fournisseur, modèle, clé API, style de traduction, Reasoning et sortie en streaming configurables
-
-### 🎵 Import des informations du morceau
-
+* Mise en page originale des paroles et des traductions
+* Séparation automatique des lignes original / traduction avec détection du chinois simplifié, chinois traditionnel, anglais, français, japonais et espagnol
+* Traduction de paroles par IA via les API Chat Completions compatibles OpenAI, avec URL du fournisseur, modèle, clé API, six styles, Reasoning et sortie en streaming configurables
 * Analyse de liens Spotify, Apple Music, NetEase Cloud Music et QQ Music
-* Analyse de métadonnées MP3 / FLAC locales
-* Lecture possible du titre, de l'artiste, de l'album, de la pochette et des paroles intégrées
+* Analyse de métadonnées MP3 / FLAC locales : titre, artiste, album, pochette et paroles intégrées
 * Édition manuelle du titre, de l'artiste, de la pochette et des paroles
 * Import de pochette locale
-
-### 🌈 Visuel et personnalisation
-
 * Extraction de palette depuis la pochette pour créer des fonds en dégradé
 * Logo de plateforme, texte de partage et filigrane généré
-* Jeux de polices Source Han Sans / Serif
-* Polices CJK, polices latines et polices système personnalisables
-* Aperçu typographique sur de vraies paroles
-
-### 🌍 Langues et mises à jour
-
-* Interface en chinois simplifié / chinois traditionnel / anglais / français / japonais / espagnol
-* Vérification des mises à jour via GitHub Releases avec ouverture de la page Release correspondante
+* Jeux Source Han Sans / Serif, polices CJK et latines indépendantes, sélecteur de polices système et aperçu avec de vraies paroles
+* Interface en chinois simplifié, chinois traditionnel, anglais, français, japonais et espagnol
+* Export PNG haute résolution
+* Vérification des mises à jour via GitHub Releases
 
 ## 🪟 Version Windows
 
@@ -155,7 +136,7 @@ Ces fonctions nécessitent Internet :
 ## 🔄 Vérification des mises à jour
 
 L'application propose un bouton « Vérifier les mises à jour ».
-Il interroge les GitHub Releases du projet via une route API locale Next, compare la version actuelle avec la dernière version publiée et ouvre la page Release correspondante afin que l’utilisateur choisisse l’asset à télécharger.
+Il interroge les GitHub Releases du projet via une route API locale Next, compare la version actuelle avec la dernière version publiée et privilégie les assets installateur / portable lorsqu'ils sont disponibles.
 
 Cette fonction vérifie seulement les mises à jour et ouvre la page de téléchargement. Elle ne télécharge pas silencieusement d'installateur et ne remplace pas automatiquement l'application actuelle.
 

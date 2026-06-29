@@ -1,10 +1,19 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
 import { FontSchemePanel } from "@/components/editor/font-scheme/FontSchemePanel";
 import { ColorControls } from "@/components/editor/style-panel/ColorControls";
-import { SegmentButton } from "@/components/editor/style-panel/SegmentButton";
-import { Input, Label, Section, Select, SwitchRow } from "@/components/ui/controls";
+import {
+  FieldLabel,
+  Section,
+  SegmentedControl,
+  SelectField,
+  TextInput,
+  ToggleRow
+} from "@/components/ui/controls";
 import { PRESET_CARD_SIZES } from "@/lib/card-size";
+import { getLyricsCardDesktopApi, type SystemFontOption } from "@/lib/desktop-api";
+import { canBrowserUseFont, quoteSingleFontFamily, sanitizeCssFontFamilyName } from "@/lib/fonts";
 import type { createT } from "@/lib/i18n";
 import type {
   CardAlign,
@@ -34,12 +43,250 @@ export function StylePanel(props: StylePanelProps) {
 
 export function FontSchemeSettingsPanel({ style, onStyleChange, onFontSchemePreviewChange, t }: StylePanelProps) {
   return (
-    <FontSchemePanel
-      style={style}
-      onStyleChange={onStyleChange}
-      onPreviewSchemeChange={onFontSchemePreviewChange}
-      t={t}
-    />
+    <div className="grid gap-4">
+      <FontSchemePanel
+        style={style}
+        onStyleChange={onStyleChange}
+        onPreviewSchemeChange={onFontSchemePreviewChange}
+        t={t}
+      />
+      <CustomFontPanel style={style} onStyleChange={onStyleChange} t={t} />
+    </div>
+  );
+}
+
+function CustomFontPanel({ style, onStyleChange, t }: StylePanelProps) {
+  const desktopApi = getLyricsCardDesktopApi();
+  const [fonts, setFonts] = useState<SystemFontOption[]>([]);
+  const [search, setSearch] = useState("");
+  const [status, setStatus] = useState("");
+  const [fontMayFallback, setFontMayFallback] = useState(false);
+  const selectedFont = sanitizeCssFontFamilyName(style.customFontFamily);
+  const selectedWeight = style.customFontWeight ?? 400;
+  const selectedStyle = style.customFontStyle ?? "normal";
+  const customFontActive = !style.fontScheme && Boolean(style.customFontEnabled && selectedFont);
+  const selectedOption = fonts.find(
+    (font) => font.family === selectedFont && font.fontWeight === selectedWeight && font.fontStyle === selectedStyle
+  );
+  const selectedLabel = style.customFontLabel || selectedOption?.label || selectedFont;
+  const filteredFonts = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    if (!query) {
+      return fonts;
+    }
+
+    return fonts.filter((font) => `${font.label} ${font.family}`.toLowerCase().includes(query));
+  }, [fonts, search]);
+
+  function setCustomFontEnabled(enabled: boolean) {
+    if (!enabled) {
+      onStyleChange({
+        ...style,
+        fontScheme: undefined,
+        customFontEnabled: false
+      });
+      setFontMayFallback(false);
+      return;
+    }
+
+    const nextFont = selectedFont
+      ? {
+          label: selectedLabel || selectedFont,
+          family: selectedFont,
+          fontWeight: selectedWeight,
+          fontStyle: selectedStyle
+        }
+      : fonts[0];
+    if (!nextFont?.family) {
+      setStatus(t("customFontChooseFirst"));
+      return;
+    }
+
+    onStyleChange({
+      ...style,
+      fontScheme: undefined,
+      customFontFamily: nextFont.family,
+      customFontLabel: nextFont.label,
+      customFontWeight: nextFont.fontWeight,
+      customFontStyle: nextFont.fontStyle,
+      customFontEnabled: true
+    });
+    setStatus("");
+  }
+
+  function selectCustomFont(font: SystemFontOption) {
+    const nextFamily = sanitizeCssFontFamilyName(font.family);
+    if (!nextFamily) {
+      return;
+    }
+
+    onStyleChange({
+      ...style,
+      fontScheme: undefined,
+      customFontFamily: nextFamily,
+      customFontLabel: font.label,
+      customFontWeight: font.fontWeight,
+      customFontStyle: font.fontStyle,
+      customFontEnabled: true
+    });
+    setStatus("");
+  }
+
+  useEffect(() => {
+    let active = true;
+
+    if (!desktopApi) {
+      setFonts([]);
+      setStatus(t("systemFontDesktopOnly"));
+      return;
+    }
+
+    setStatus(t("systemFontLoading"));
+    desktopApi
+      .listSystemFonts()
+      .then((nextFonts) => {
+        if (!active) {
+          return;
+        }
+
+        setFonts(nextFonts);
+        setStatus(nextFonts.length > 0 ? "" : t("systemFontEmpty"));
+      })
+      .catch((error) => {
+        if (!active) {
+          return;
+        }
+
+        setStatus(error instanceof Error ? error.message : t("systemFontFailed"));
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [desktopApi, t]);
+
+  useEffect(() => {
+    if (!customFontActive) {
+      setFontMayFallback(false);
+      return;
+    }
+
+    setFontMayFallback(!canBrowserUseFont(selectedFont, selectedWeight, selectedStyle));
+  }, [customFontActive, selectedFont, selectedStyle, selectedWeight]);
+
+  useEffect(() => {
+    if (!style.customFontEnabled || style.fontScheme || !selectedFont || fonts.length === 0) {
+      return;
+    }
+
+    const matchingFont =
+      fonts.find(
+        (font) =>
+          font.family === selectedFont && font.fontWeight === selectedWeight && font.fontStyle === selectedStyle
+      ) ?? fonts.find((font) => font.label === selectedFont || font.family === selectedFont);
+
+    if (
+      !matchingFont ||
+      (style.customFontFamily === matchingFont.family &&
+        style.customFontLabel === matchingFont.label &&
+        selectedWeight === matchingFont.fontWeight &&
+        selectedStyle === matchingFont.fontStyle)
+    ) {
+      return;
+    }
+
+    onStyleChange({
+      ...style,
+      fontScheme: undefined,
+      customFontFamily: matchingFont.family,
+      customFontLabel: matchingFont.label,
+      customFontWeight: matchingFont.fontWeight,
+      customFontStyle: matchingFont.fontStyle
+    });
+  }, [fonts, onStyleChange, selectedFont, selectedStyle, selectedWeight, style]);
+
+  return (
+    <div className="grid gap-4 rounded-xl border border-[rgb(var(--panel-border))] bg-[rgb(var(--panel-bg))] p-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="grid gap-1">
+          <p className="app-text-primary text-sm font-semibold">{t("customFont")}</p>
+          {customFontActive ? (
+            <p className="app-text-subtle text-xs">
+              {t("customFontActive")}: {selectedLabel}
+            </p>
+          ) : null}
+        </div>
+        <div className="w-full sm:max-w-xs">
+          <ToggleRow label={t("enableCustomFont")} checked={customFontActive} onChange={setCustomFontEnabled} size="sm" />
+        </div>
+      </div>
+
+      <FieldLabel label={t("fontSearch")} disabled={!desktopApi || fonts.length === 0}>
+        <TextInput
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+          placeholder={t("fontSearchPlaceholder")}
+          disabled={!desktopApi || fonts.length === 0}
+        />
+      </FieldLabel>
+
+      {desktopApi && fonts.length > 0 ? (
+        <div className="grid gap-2">
+          <div className="flex items-center justify-between gap-3 text-sm">
+            <span className="app-text-primary font-medium">{t("systemFonts")}</span>
+            <span className="app-text-subtle text-xs">
+              {t("customFontResultCount", { shown: filteredFonts.length, total: fonts.length })}
+            </span>
+          </div>
+          {filteredFonts.length > 0 ? (
+            <div className="max-h-64 overflow-y-auto rounded-lg border border-[rgb(var(--panel-border))] p-1" role="listbox">
+              {filteredFonts.map((font) => {
+                const active =
+                  customFontActive &&
+                  selectedFont === font.family &&
+                  selectedWeight === font.fontWeight &&
+                  selectedStyle === font.fontStyle;
+                return (
+                  <button
+                    key={`${font.label}-${font.family}-${font.fontWeight}-${font.fontStyle}`}
+                    type="button"
+                    role="option"
+                    aria-selected={active}
+                    onClick={() => selectCustomFont(font)}
+                    className={`w-full rounded-lg border px-3 py-2 text-left text-sm transition ${
+                      active
+                        ? "border-[var(--app-accent)] bg-[rgb(var(--button-bg-hover))] app-text-primary"
+                        : "border-transparent app-text-muted hover:border-[rgb(var(--panel-border))] hover:bg-[rgb(var(--button-bg-hover))]"
+                    }`}
+                    style={{
+                      fontFamily: `${quoteSingleFontFamily(font.family)}, system-ui, sans-serif`,
+                      fontWeight: font.fontWeight,
+                      fontStyle: font.fontStyle
+                    }}
+                  >
+                    <span className="block">{font.label}</span>
+                    {font.label !== font.family ? (
+                      <span className="app-text-subtle block text-xs">{font.family}</span>
+                    ) : null}
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="app-text-subtle rounded-lg border border-[rgb(var(--panel-border))] p-3 text-sm">
+              {t("customFontNoResults")}
+            </p>
+          )}
+        </div>
+      ) : null}
+
+      {status ? <p className="app-text-subtle text-sm">{status}</p> : null}
+      {fontMayFallback && customFontActive ? (
+        <p className="text-sm text-amber-300" role="status">
+          {t("customFontMayFallback")}
+        </p>
+      ) : null}
+    </div>
   );
 }
 
@@ -117,36 +364,34 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
 
   return (
     <Section title={t("layout")} eyebrow={t("style")}>
-      <Label label={t("contentType")}>
-        <Select value={style.contentMode} onChange={(event) => updateContentMode(event.target.value as ContentMode)}>
+      <FieldLabel label={t("contentType")}>
+        <SelectField value={style.contentMode} onChange={(event) => updateContentMode(event.target.value as ContentMode)}>
           <option value="lyrics">{t("lyricsMode")}</option>
           <option value="instrumental">{t("instrumentalMode")}</option>
-        </Select>
-      </Label>
+        </SelectField>
+      </FieldLabel>
 
       <div className="grid gap-2">
         <div className="app-text-primary text-sm font-medium">{t("layoutMode")}</div>
-        <div className="grid grid-cols-2 gap-2" role="group" aria-label={t("layoutMode")}>
-          <SegmentButton
-            active={layoutMode === "portrait"}
-            label={t("portraitLayout")}
-            onClick={() => updateLayoutMode("portrait")}
-            dataAttribute="portrait"
-          />
-          <SegmentButton
-            active={layoutMode === "landscape"}
-            label={t("landscapeLayout")}
-            onClick={() => updateLayoutMode("landscape")}
-            dataAttribute="landscape"
-            disabled={isInstrumental}
-            title={isInstrumental ? instrumentalLayoutLockedHint : undefined}
-          />
-        </div>
+        <SegmentedControl
+          value={layoutMode}
+          onValueChange={(value) => updateLayoutMode(value as CardLayoutMode)}
+          options={[
+            { value: "portrait", label: t("portraitLayout") },
+            {
+              value: "landscape",
+              label: t("landscapeLayout"),
+              disabled: isInstrumental,
+              title: isInstrumental ? instrumentalLayoutLockedHint : undefined
+            }
+          ]}
+          aria-label={t("layoutMode")}
+        />
       </div>
 
       <div>
-        <Label label={t("sizeMode")}>
-          <Select
+        <FieldLabel label={t("sizeMode")}>
+          <SelectField
             value={isInstrumental ? "1:1" : style.ratio}
             disabled={isInstrumental}
             onChange={(event) => updateRatio(event.target.value as CardRatio)}
@@ -165,8 +410,8 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
               </>
             )}
             <option value="custom">{t("custom")}</option>
-          </Select>
-        </Label>
+          </SelectField>
+        </FieldLabel>
         {isInstrumental ? <p className="app-text-subtle mt-2 text-xs">{t("instrumentalSizeLockedHint")}</p> : null}
       </div>
 
@@ -179,8 +424,8 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
             </span>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Label label={t("width")} hint={`${style.width}px`}>
-              <Input
+            <FieldLabel label={t("width")} hint={`${style.width}px`}>
+              <TextInput
                 type="range"
                 min={layoutMode === "landscape" ? 1080 : 720}
                 max={layoutMode === "landscape" ? 3000 : 1440}
@@ -188,9 +433,9 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
                 value={style.width}
                 onChange={(event) => update("width", Number(event.target.value))}
               />
-            </Label>
-            <Label label={t("height")} hint={style.autoHeight ? t("auto") : `${style.height}px`}>
-              <Input
+            </FieldLabel>
+            <FieldLabel label={t("height")} hint={style.autoHeight ? t("auto") : `${style.height}px`}>
+              <TextInput
                 type="range"
                 min={720}
                 max={layoutMode === "landscape" ? 1600 : 3200}
@@ -199,26 +444,26 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
                 disabled={style.autoHeight}
                 onChange={(event) => update("height", Number(event.target.value))}
               />
-            </Label>
+            </FieldLabel>
           </div>
-          <SwitchRow label={t("autoHeight")} checked={style.autoHeight} onChange={(checked) => update("autoHeight", checked)} />
+          <ToggleRow label={t("autoHeight")} checked={style.autoHeight} onChange={(checked) => update("autoHeight", checked)} />
         </div>
       ) : null}
 
       {style.contentMode === "lyrics" ? (
         <div className="grid gap-4">
           <div className="grid gap-4 sm:grid-cols-2">
-            <Label label={t("fontSize")} hint={`${style.lyricFontSize}px`}>
-              <Input
+            <FieldLabel label={t("fontSize")} hint={`${style.lyricFontSize}px`}>
+              <TextInput
                 type="range"
                 min={36}
                 max={72}
                 value={style.lyricFontSize}
                 onChange={(event) => update("lyricFontSize", Number(event.target.value))}
               />
-            </Label>
-            <Label label={t("lineHeight")} hint={style.lineHeight.toFixed(2)}>
-              <Input
+            </FieldLabel>
+            <FieldLabel label={t("lineHeight")} hint={style.lineHeight.toFixed(2)}>
+              <TextInput
                 type="range"
                 min={1.1}
                 max={1.75}
@@ -226,21 +471,21 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
                 value={style.lineHeight}
                 onChange={(event) => update("lineHeight", Number(event.target.value))}
               />
-            </Label>
+            </FieldLabel>
           </div>
 
-          <Label label={t("alignment")}>
-            <Select value={style.align} onChange={(event) => update("align", event.target.value as CardAlign)}>
+          <FieldLabel label={t("alignment")}>
+            <SelectField value={style.align} onChange={(event) => update("align", event.target.value as CardAlign)}>
               <option value="left">{t("left")}</option>
               <option value="center">{t("center")}</option>
-            </Select>
-          </Label>
+            </SelectField>
+          </FieldLabel>
         </div>
       ) : null}
 
       {style.contentMode === "lyrics" && style.translationEnabled ? (
-        <Label label={t("translationScale")} hint={style.translationScale.toFixed(2)}>
-          <Input
+        <FieldLabel label={t("translationScale")} hint={style.translationScale.toFixed(2)}>
+          <TextInput
             type="range"
             min={0.6}
             max={0.9}
@@ -248,19 +493,19 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
             value={style.translationScale}
             onChange={(event) => update("translationScale", Number(event.target.value))}
           />
-        </Label>
+        </FieldLabel>
       ) : null}
 
       {style.contentMode === "lyrics" && layoutMode === "landscape" ? (
         <div className="grid gap-3 rounded-lg border border-[rgb(var(--panel-border))] bg-[rgb(var(--panel-bg))] p-3">
           <p className="app-text-primary text-sm font-semibold">{t("landscapeLayoutSettings")}</p>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Label label={t("landscapeCoverSize")} hint="auto">
-              <Input value="520px base" readOnly />
-            </Label>
-            <Label label={t("landscapeContentWidth")} hint="auto">
-              <Input value="920px base" readOnly />
-            </Label>
+            <FieldLabel label={t("landscapeCoverSize")} hint="auto">
+              <TextInput value="520px base" readOnly />
+            </FieldLabel>
+            <FieldLabel label={t("landscapeContentWidth")} hint="auto">
+              <TextInput value="920px base" readOnly />
+            </FieldLabel>
           </div>
         </div>
       ) : null}
@@ -291,8 +536,8 @@ export function VisualSettingsPanel({ style, onStyleChange, t }: StylePanelProps
 
   return (
     <Section title={t("step.visual")} eyebrow={t("background")}>
-      <Label label={t("coverCrop")} hint={style.coverCropScale.toFixed(2)}>
-        <Input
+      <FieldLabel label={t("coverCrop")} hint={style.coverCropScale.toFixed(2)}>
+        <TextInput
           type="range"
           min={1}
           max={2}
@@ -300,79 +545,64 @@ export function VisualSettingsPanel({ style, onStyleChange, t }: StylePanelProps
           value={style.coverCropScale}
           onChange={(event) => update("coverCropScale", Number(event.target.value))}
         />
-      </Label>
+      </FieldLabel>
 
       <ColorControls style={style} onStyleChange={onStyleChange} t={t} />
 
       <div className="grid gap-3 sm:grid-cols-3">
-        <SwitchRow label={t("cover")} checked={style.showCover} onChange={(checked) => update("showCover", checked)} />
-        <SwitchRow label={t("showSongInfo")} checked={style.showSongInfo} onChange={(checked) => update("showSongInfo", checked)} />
-        <SwitchRow label={t("allowTwoLineTitle")} checked={style.allowTwoLineTitle} onChange={(checked) => update("allowTwoLineTitle", checked)} />
-        <SwitchRow label={t("showGeneratedWatermark")} checked={style.showGeneratedWatermark} onChange={updateGeneratedWatermark} />
-        <SwitchRow
+        <ToggleRow label={t("cover")} checked={style.showCover} onChange={(checked) => update("showCover", checked)} />
+        <ToggleRow label={t("showSongInfo")} checked={style.showSongInfo} onChange={(checked) => update("showSongInfo", checked)} />
+        <ToggleRow label={t("allowTwoLineTitle")} checked={style.allowTwoLineTitle} onChange={(checked) => update("allowTwoLineTitle", checked)} />
+        <ToggleRow label={t("showGeneratedWatermark")} checked={style.showGeneratedWatermark} onChange={updateGeneratedWatermark} />
+        <ToggleRow
           label={t("showPlatformLogo")}
           checked={style.showPlatformBadge}
           onChange={(checked) => update("showPlatformBadge", checked)}
         />
-        <SwitchRow label={t("showSharedBy")} checked={style.showSharedBy} onChange={(checked) => update("showSharedBy", checked)} />
+        <ToggleRow label={t("showSharedBy")} checked={style.showSharedBy} onChange={(checked) => update("showSharedBy", checked)} />
       </div>
 
       <div className="grid gap-3 rounded-lg border border-[rgb(var(--panel-border))] bg-[rgb(var(--panel-bg))] p-3">
-        <SwitchRow
+        <ToggleRow
           label={t("backgroundGrid")}
           checked={style.showFineGrid === true}
           onChange={(checked) => update("showFineGrid", checked)}
         />
         {style.showFineGrid === true ? (
-          <div className="grid grid-cols-3 gap-2" role="group" aria-label={t("backgroundGridDensity")}>
-            <SegmentButton
-              active={(style.fineGridDensity ?? "medium") === "sparse"}
-              label={t("gridSparse")}
-              onClick={() => update("fineGridDensity", "sparse")}
-              dataAttribute="grid-sparse"
-            />
-            <SegmentButton
-              active={(style.fineGridDensity ?? "medium") === "medium"}
-              label={t("gridMedium")}
-              onClick={() => update("fineGridDensity", "medium")}
-              dataAttribute="grid-medium"
-            />
-            <SegmentButton
-              active={(style.fineGridDensity ?? "medium") === "dense"}
-              label={t("gridDense")}
-              onClick={() => update("fineGridDensity", "dense")}
-              dataAttribute="grid-dense"
-            />
-          </div>
+          <SegmentedControl
+            value={(style.fineGridDensity ?? "medium") as "sparse" | "medium" | "dense"}
+            onValueChange={(value) => update("fineGridDensity", value)}
+            options={[
+              { value: "sparse", label: t("gridSparse") },
+              { value: "medium", label: t("gridMedium") },
+              { value: "dense", label: t("gridDense") }
+            ]}
+            aria-label={t("backgroundGridDensity")}
+          />
         ) : null}
       </div>
 
       <div className="grid gap-3 rounded-lg border border-[rgb(var(--panel-border))] bg-[rgb(var(--panel-bg))] p-3">
         <div className="app-text-primary text-sm font-medium">{t("showFrame")}</div>
-        <div className="grid grid-cols-2 gap-2" role="group" aria-label={t("showFrame")}>
-          <SegmentButton
-            active={frameVisible}
-            label={t("frameAndShadow")}
-            onClick={() => updateFrameVisibility(true)}
-            dataAttribute="frame"
-          />
-          <SegmentButton
-            active={!frameVisible}
-            label={t("fullBleed")}
-            onClick={() => updateFrameVisibility(false)}
-            dataAttribute="fullBleed"
-          />
-        </div>
+        <SegmentedControl
+          value={frameVisible ? "frame" : "fullBleed"}
+          onValueChange={(value) => updateFrameVisibility(value === "frame")}
+          options={[
+            { value: "frame", label: t("frameAndShadow") },
+            { value: "fullBleed", label: t("fullBleed") }
+          ]}
+          aria-label={t("showFrame")}
+        />
       </div>
 
       {style.showSharedBy ? (
-        <Label label={t("sharedBy")}>
-          <Input
+        <FieldLabel label={t("sharedBy")}>
+          <TextInput
             value={style.sharedByText}
             onChange={(event) => update("sharedByText", event.target.value)}
             placeholder={t("sharedByPlaceholder")}
           />
-        </Label>
+        </FieldLabel>
       ) : null}
     </Section>
   );

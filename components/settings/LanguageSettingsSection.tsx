@@ -1,4 +1,5 @@
 import { Check } from "lucide-react";
+import { OptionCardGroup } from "@/components/ui/controls";
 import type { Locale } from "@/lib/types";
 
 export const LANGUAGE_OPTIONS: Array<{ locale: Locale; nativeName: string; displayName: string }> = [
@@ -22,32 +23,21 @@ export function LanguageSettingsSection({
   return (
     <section className="settings-panel-card grid gap-3 p-4 sm:p-5">
       <h3 className="app-text-primary text-sm font-semibold">{title}</h3>
-      <div className="grid gap-2 sm:grid-cols-2">
-        {LANGUAGE_OPTIONS.map((option) => {
-          const selected = locale === option.locale;
-          return (
-            <button
-              key={option.locale}
-              type="button"
-              data-testid="language-option"
-              data-locale={option.locale}
-              aria-pressed={selected}
-              onClick={() => onLocaleChange(option.locale)}
-              className={`flex min-h-12 items-center justify-between gap-3 rounded-lg border px-3 py-2 text-left transition ${
-                selected
-                  ? "border-[var(--app-accent)] bg-[rgb(var(--button-bg-hover))] app-text-primary"
-                  : "border-[rgb(var(--panel-border))] bg-[rgb(var(--button-bg))] app-text-subtle hover:bg-[rgb(var(--button-bg-hover))] hover:text-[rgb(var(--app-fg))]"
-              }`}
-            >
-              <span>
-                <span className="block text-sm font-semibold">{option.nativeName}</span>
-                <span className="block text-[11px] opacity-70">{option.displayName}</span>
-              </span>
-              {selected ? <Check className="h-4 w-4" /> : null}
-            </button>
-          );
-        })}
-      </div>
+      <OptionCardGroup
+        className="grid gap-2 sm:grid-cols-2"
+        value={locale}
+        onValueChange={(value) => onLocaleChange(value as Locale)}
+        aria-label={title}
+        options={LANGUAGE_OPTIONS.map((option) => ({
+          value: option.locale,
+          label: option.nativeName,
+          description: option.displayName,
+          testId: "language-option",
+          dataLocale: option.locale,
+          ariaLabel: `${option.nativeName} - ${option.displayName}`,
+          indicator: locale === option.locale ? <Check className="h-4 w-4" /> : undefined
+        }))}
+      />
     </section>
   );
 }

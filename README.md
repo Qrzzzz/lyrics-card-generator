@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v3.7.0.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v3.7.1.zh-CN.md">发布说明</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="#本地开发">本地开发</a> ·
   <a href="./LICENSE">许可证</a>
@@ -47,20 +47,20 @@
 
 请前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下载最新版：
 
-* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 3.7.0.exe`
-* 不想安装时可下载便携版：`Lyrics Card Generator-3.7.0-portable.exe`
+* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 3.7.1.exe`
+* 不想安装时可下载便携版：`Lyrics Card Generator-3.7.1-portable.exe`
 
 安装版适合长期使用；便携版适合临时运行、测试或放在移动硬盘中使用。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v3.7.0 更新重点
+### v3.7.1 更新重点
 
-* 强化桌面背景图片路径校验，仅接受应用生成的安全文件名并拒绝异常 `imageId`。
-* 改进 AI 翻译对非标准响应、纯文本错误、损坏 JSON 和空响应的兜底处理。
-* 统一“检查更新”入口，始终打开对应的 GitHub Release 页面。
-* 清理废弃的旧版字体面板代码与已移除纯音乐输入框的残留文案。
-* 将发布校验改为随当前版本自动变化的通用一致性测试。
+* 统一样式面板、歌词输入、歌曲信息和设置中的开关控件，让切换状态、禁用状态和视觉反馈更一致。
+* 将语言选择等单选项整理为统一的选项卡片，并将布局模式、网格密度、边框 / 满幅等紧凑选择整理为一致的分段控件。
+* 统一设置面板中常用输入框、文本域、下拉选择与操作按钮的外观和交互反馈。
+* 改善常见控件的键盘可用性、焦点可见性、标签呈现和禁用态反馈。
+* 为后续 v3.8.0 的动效升级打基础，但本次不引入新的动效系统。
 
 <br clear="right" />
 
@@ -68,55 +68,34 @@
 
 GitHub Release 页面默认使用简体中文短版，完整发布说明维护在 `docs/releases/`：
 
-* [简体中文](./docs/releases/v3.7.0.zh-CN.md)
-* [繁體中文](./docs/releases/v3.7.0.zh-TW.md)
-* [English](./docs/releases/v3.7.0.en.md)
-* [Français](./docs/releases/v3.7.0.fr.md)
-* [日本語](./docs/releases/v3.7.0.ja.md)
-* [Español](./docs/releases/v3.7.0.es.md)
+* [简体中文](./docs/releases/v3.7.1.zh-CN.md)
+* [繁體中文](./docs/releases/v3.7.1.zh-TW.md)
+* [English](./docs/releases/v3.7.1.en.md)
+* [Français](./docs/releases/v3.7.1.fr.md)
+* [日本語](./docs/releases/v3.7.1.ja.md)
+* [Español](./docs/releases/v3.7.1.es.md)
 
 <a id="主要功能"></a>
 
 ## ✨ 主要功能
 
-### 🎨 歌词图片生成
-
 * 生成高质感歌词分享图片
 * 支持竖版、横版和自定义画布尺寸
-* 横版布局基于安全区域重构，封面列、内容列与底部信息更稳定
+* 横版布局基于安全区域重构，封面列、内容列和底部信息更稳定
 * 竖版自定义尺寸支持基于真实 DOM 测量的自动高度
-* 支持导出高清 PNG 图片
-
-### 📝 歌词排版与翻译
-
-* 支持歌词原文与译文并排排版
-* 支持按当前界面语言自动拆分原文 / 译文
-* 支持简体中文、繁體中文、English、Français、日本語、Español 等目标译文
-* 支持兼容 OpenAI Chat Completions 的 AI 歌词翻译
-* 可配置厂商 Base URL、模型、API Key、翻译风格、Reasoning 与流式输出
-
-### 🎵 歌曲信息导入
-
+* 支持歌词原文与翻译并排排版
+* 支持按当前界面语言拆分原文 / 译文，包括简体中文、繁体中文、英文、法语、日语、西班牙语目标译文
+* 支持兼容 OpenAI Chat Completions 的 AI 歌词翻译，可配置厂商 Base URL、模型、API Key、六种翻译风格、Reasoning 和流式输出
 * 支持 Spotify、Apple Music、网易云音乐、QQ 音乐链接解析
-* 支持本地 MP3 / FLAC 元数据解析
-* 可尝试读取标题、艺人、专辑、封面和内嵌歌词
+* 支持本地 MP3 / FLAC 元数据解析，尝试读取标题、艺人、专辑、封面和内嵌歌词
 * 支持手动填写歌曲名、艺人、封面和歌词
 * 支持本地封面上传
-
-### 🌈 视觉与个性化
-
 * 支持从封面提取色彩并生成渐变背景
-* 支持平台 Logo、分享人和生成水印
-* 支持思源黑体 / 思源宋体两套字体方案
-* 支持自定义中日韩字体、西文字体与系统字体选择
-* 支持真实歌词字体预览
-
-### 🌍 多语言与更新
-
+* 支持平台 Logo、分享人、生成水印
+* 支持思源黑体 / 思源宋体两套字体方案、自定义中日韩 / 西文字体、系统字体选择弹窗与真实歌词字体预览
 * 支持简体中文 / 繁體中文 / English / Français / 日本語 / Español 界面切换
 * 支持导出高清 PNG 图片
-* 支持从 GitHub Releases 检查新版本，并打开对应 Release 页面
-
+* 支持从 GitHub Releases 检查新版本
 
 ## 🪟 Windows 桌面版说明
 
@@ -154,7 +133,7 @@ GitHub Release 页面默认使用简体中文短版，完整发布说明维护�
 ## 🔄 检查更新
 
 应用内提供“检查更新”按钮。
-它会通过本地 Next API 路由请求本项目的 GitHub Releases，比较当前版本和最新发布版本，并打开对应的 Release 页面供用户选择下载资产。
+它会通过本地 Next API 路由请求本项目的 GitHub Releases，比较当前版本和最新发布版本，并优先识别安装版和便携版下载资产。
 
 该功能只负责检查更新并打开下载页面，不会静默下载安装包，也不会自动替换当前程序。
 

@@ -16,14 +16,14 @@ export function SegmentButton({ active, label, onClick, dataAttribute, disabled 
     <button
       type="button"
       aria-pressed={active}
+      data-selected={active ? "true" : "false"}
       disabled={disabled}
       title={title}
       data-segment-value={dataAttribute}
       onClick={onClick}
       className={cn(
-        "app-button h-11 rounded-lg px-3 text-sm font-semibold transition",
-        active ? "bg-[rgb(var(--button-bg-hover))] text-[rgb(var(--app-fg))]" : "app-text-subtle",
-        disabled ? "cursor-not-allowed opacity-45" : ""
+        "segmented-control__item control-focus control-disabled h-11 rounded-lg px-3 text-sm font-semibold",
+        active ? "text-[rgb(var(--app-fg))]" : "app-text-subtle"
       )}
     >
       {label}
