@@ -27,11 +27,42 @@ export function DynamicAppBackground({
   const accent = mixColors(accentSource, "#080910", isColorful ? 0.48 : 0.66);
   const shapeOpacity = isColorful ? 1 : activePalette.kind === "neutral" ? 0.58 : 0.74;
   const background = settings.appBackground;
+  const isAcrylicTheme = settings.uiTheme === "dark-acrylic" || settings.uiTheme === "light-acrylic";
   const isAlbumDynamic = background.mode === "album-dynamic" && settings.uiTheme === "album-dynamic";
   const presetThemeBackground = settings.uiTheme === "light-blue" ? "#EAF6FF" : settings.uiTheme === "dark-pink" ? "#08040A" : "#080910";
   const isImage = background.mode.startsWith("image-") && background.mode !== "image-palette" && Boolean(imageUrl);
   const objectFit = background.mode === "image-stretch" ? "fill" : background.mode === "image-contain" ? "contain" : "cover";
   const paletteColor = background.extractedColor ?? settings.uiAccentColor;
+
+  if (isAcrylicTheme) {
+    const isLight = settings.uiTheme === "light-acrylic";
+
+    return (
+      <div
+        className="fixed inset-0 z-0 overflow-hidden"
+        aria-hidden="true"
+        style={{ background: "transparent" }}
+      >
+        <div
+          className="absolute inset-0"
+          style={{
+          background: isLight
+            ? "rgba(245, 248, 252, 0.055)"
+            : "rgba(8, 12, 18, 0.105)"
+          }}
+        />
+        <div
+          className="absolute inset-0"
+          style={{
+          background: isLight
+            ? "linear-gradient(135deg, rgba(255,255,255,0.065), rgba(255,255,255,0.012))"
+            : "linear-gradient(135deg, rgba(255,255,255,0.038), rgba(255,255,255,0.008))"
+          }}
+        />
+        <div className="noise-layer absolute inset-0 opacity-[0.06]" />
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-0 overflow-hidden transition-colors duration-700" style={{ background: background.mode === "solid" ? background.solidColor : presetThemeBackground }} aria-hidden="true">

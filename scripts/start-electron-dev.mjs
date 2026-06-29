@@ -1,8 +1,11 @@
 import { spawn } from "node:child_process";
 import net from "node:net";
+import path from "node:path";
 import process from "node:process";
+import { fileURLToPath } from "node:url";
 
 const host = "127.0.0.1";
+const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 function getAvailablePort() {
   return new Promise((resolve, reject) => {
@@ -24,6 +27,7 @@ function getAvailablePort() {
 
 function spawnChild(command, args, env = {}) {
   const child = spawn(command, args, {
+    cwd: projectRoot,
     env: { ...process.env, ...env },
     shell: false,
     stdio: "inherit",
@@ -40,10 +44,13 @@ function spawnChild(command, args, env = {}) {
 
 const port = await getAvailablePort();
 const url = `http://${host}:${port}`;
-const npmCommand = process.platform === "win32" ? "npm.cmd" : "npm";
-const electronCommand = process.platform === "win32" ? "electron.cmd" : "electron";
+const nextCommand = process.execPath;
+const nextBin = path.join(projectRoot, "node_modules", "next", "dist", "bin", "next");
+const electronCommand = process.platform === "win32"
+  ? path.join(projectRoot, "node_modules", "electron", "dist", "electron.exe")
+  : path.join(projectRoot, "node_modules", "electron", "dist", "electron");
 
-const nextDev = spawnChild(npmCommand, ["run", "dev", "--", "-H", host, "-p", String(port)]);
+const nextDev = spawnChild(nextCommand, [nextBin, "dev", "-H", host, "-p", String(port)]);
 
 const electron = spawnChild(electronCommand, ["."], {
   ELECTRON_DEV_SERVER_URL: url

@@ -1,6 +1,11 @@
 const { contextBridge, ipcRenderer } = require("electron");
 
 contextBridge.exposeInMainWorld("lyricsCardDesktop", {
+  setWindowMaterial: (theme) => ipcRenderer.invoke("lyrics-card:set-window-material", theme),
+  minimizeWindow: () => ipcRenderer.invoke("lyrics-card:window-minimize"),
+  toggleMaximizeWindow: () => ipcRenderer.invoke("lyrics-card:window-toggle-maximize"),
+  closeWindow: () => ipcRenderer.invoke("lyrics-card:window-close"),
+  getWindowState: () => ipcRenderer.invoke("lyrics-card:window-state"),
   loadAppPreferences: () => ipcRenderer.invoke("lyrics-card:app-preferences-load"),
   saveAppPreferences: (preferences) => ipcRenderer.invoke("lyrics-card:app-preferences-save", preferences),
   listSystemFonts: () => ipcRenderer.invoke("lyrics-card:list-system-fonts"),

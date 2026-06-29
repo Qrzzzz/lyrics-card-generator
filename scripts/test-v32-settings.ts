@@ -34,6 +34,10 @@ assert.equal(resolveReadableTextTokens("#08040A").primary, "#FFFFFF");
 
 const custom = normalizeUserSettings({ uiTheme: "custom" });
 assert.equal(custom.uiTheme, "custom");
+assert.equal(normalizeUserSettings({ uiTheme: "dark-acrylic" }).uiTheme, "dark-acrylic");
+assert.equal(normalizeUserSettings({ uiTheme: "light-acrylic" }).uiTheme, "light-acrylic");
+assert.equal(resolveEffectiveAppBackgroundColor(normalizeUserSettings({ uiTheme: "dark-acrylic" }), "#080910"), "#141821");
+assert.equal(resolveEffectiveAppBackgroundColor(normalizeUserSettings({ uiTheme: "light-acrylic" }), "#080910"), "#F3F6FA");
 const imageBackground = normalizeUserSettings({ appBackground: { mode: "image-cover", extractedColor: "#336699" } });
 assert.equal(imageBackground.appBackground.extractedColor, "#336699");
 assert.equal(resolveEffectiveAppBackgroundColor(imageBackground, "#080910"), "#336699");
@@ -57,4 +61,4 @@ assert.equal(cleared.lyrics, "");
 assert.equal(cleared.translationText, "");
 assert.deepEqual(custom, settingsBeforeClear);
 
-console.log(JSON.stringify({ ok: true, settingsTests: 24 }, null, 2));
+console.log(JSON.stringify({ ok: true, settingsTests: 28 }, null, 2));
