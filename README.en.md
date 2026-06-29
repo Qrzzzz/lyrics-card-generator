@@ -79,25 +79,44 @@ The GitHub Release page defaults to a simplified Chinese short version, while th
 
 <a id="features"></a>
 
-## ✨ Features
+## ✨ Key Features
 
-* Generate high-polish lyric sharing images
-* Portrait, landscape, and custom canvas sizes
-* Rebuilt landscape layout based on safe areas, cover column, content column, and footer regions
-* Measured auto height for portrait custom canvases
-* Original lyric and translation layout
-* Split alternating original / translated lyrics with Simplified Chinese, Traditional Chinese, English, French, Japanese, and Spanish target-language detection
-* AI lyric translation through OpenAI-compatible Chat Completions APIs, with configurable provider URL, model, API key, six translation styles, reasoning, and streaming output
-* Spotify, Apple Music, NetEase Cloud Music, and QQ Music link parsing
-* Local MP3 / FLAC metadata parsing for title, artist, album, cover art, and embedded lyrics
-* Manual song title, artist, cover, and lyric editing
-* Local cover upload
-* Palette extraction from cover art for gradient backgrounds
-* Platform logo, shared-by text, and generated watermark
-* Source Han Sans / Serif schemes, independent CJK and Latin fonts, a system-font picker, and lyric-based typography previews
-* Simplified Chinese / Traditional Chinese / English / French / Japanese / Spanish interface
-* High-resolution PNG export
-* GitHub Releases update checking
+### 🎨 Lyric Image Generation
+
+- Generate polished lyric-sharing images
+- Support portrait, landscape, and custom canvas sizes
+- Rebuilt landscape layout with safe-area awareness for more stable cover, content, and footer sections
+- Support automatic height calculation for custom portrait sizes based on real DOM measurement
+- Export high-resolution PNG images
+
+### 📝 Lyric Layout and Translation
+
+- Display original lyrics and translations side by side
+- Automatically split original lyrics and translations based on the current interface language
+- Support target translations in Simplified Chinese, Traditional Chinese, English, French, Japanese, and Spanish
+- Support AI lyric translation compatible with OpenAI Chat Completions
+- Configure provider Base URL, model, API Key, translation style, Reasoning, and streaming output
+
+### 🎵 Song Information Import
+
+- Parse links from Spotify, Apple Music, NetEase Cloud Music, and QQ Music
+- Parse local MP3 / FLAC metadata
+- Attempt to read title, artist, album, cover art, and embedded lyrics
+- Manually enter song title, artist, cover, and lyrics
+- Upload local cover images
+
+### 🌈 Visuals and Personalization
+
+- Extract colors from cover art and generate gradient backgrounds
+- Support platform logos, sharer name, and generated watermarks
+- Include Source Han Sans / Source Han Serif font presets
+- Support custom CJK fonts, Western fonts, and system font selection
+- Preview lyrics with the actual selected font
+
+### 🌍 Languages and Updates
+
+- Switch the interface between Simplified Chinese / Traditional Chinese / English / French / Japanese / Spanish
+- Check for new versions from GitHub Releases
 
 ## 🪟 Windows Desktop Version
 
