@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v3.6.1.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v3.7.0.zh-CN.md">发布说明</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="#本地开发">本地开发</a> ·
   <a href="./LICENSE">许可证</a>
@@ -47,14 +47,14 @@
 
 请前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下载最新版：
 
-* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 3.6.1.exe`
-* 不想安装时可下载便携版：`Lyrics Card Generator-3.6.1-portable.exe`
+* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 3.7.0.exe`
+* 不想安装时可下载便携版：`Lyrics Card Generator-3.7.0-portable.exe`
 
 安装版适合长期使用；便携版适合临时运行、测试或放在移动硬盘中使用。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v3.6.1 更新重点
+### v3.7.0 更新重点
 
 * 修复桌面自绘标题栏最大化 / 还原状态不同步的问题。
 * 优化 Acrylic 桌面标题栏的渐变玻璃模糊、层级和关闭按钮 hover 状态。
@@ -67,12 +67,12 @@
 
 GitHub Release 页面默认使用简体中文短版，完整发布说明维护在 `docs/releases/`：
 
-* [简体中文](./docs/releases/v3.6.1.zh-CN.md)
-* [繁體中文](./docs/releases/v3.6.1.zh-TW.md)
-* [English](./docs/releases/v3.6.1.en.md)
-* [Français](./docs/releases/v3.6.1.fr.md)
-* [日本語](./docs/releases/v3.6.1.ja.md)
-* [Español](./docs/releases/v3.6.1.es.md)
+* [简体中文](./docs/releases/v3.7.0.zh-CN.md)
+* [繁體中文](./docs/releases/v3.7.0.zh-TW.md)
+* [English](./docs/releases/v3.7.0.en.md)
+* [Français](./docs/releases/v3.7.0.fr.md)
+* [日本語](./docs/releases/v3.7.0.ja.md)
+* [Español](./docs/releases/v3.7.0.es.md)
 
 <a id="主要功能"></a>
 
@@ -94,7 +94,7 @@ GitHub Release 页面默认使用简体中文短版，完整发布说明维护�
 * 支持思源黑体 / 思源宋体两套字体方案、自定义中日韩 / 西文字体、系统字体选择弹窗与真实歌词字体预览
 * 支持简体中文 / 繁體中文 / English / Français / 日本語 / Español 界面切换
 * 支持导出高清 PNG 图片
-* 支持从 GitHub Releases 检查新版本
+?????? Next API ???????? GitHub Releases????????????????????? Release ????????????
 
 ## 🪟 Windows 桌面版说明
 
@@ -263,3 +263,4 @@ npm run core:test       # 测试 3.0 核心纯函数
    <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=Qrzzzz/lyrics-card-generator&type=date&legend=top-left" />
  </picture>
 </a>
+

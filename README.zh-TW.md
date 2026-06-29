@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v3.6.1.zh-TW.md">發布說明</a> ·
+  <a href="./docs/releases/v3.7.0.zh-TW.md">發布說明</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="#本機開發">本機開發</a> ·
   <a href="./LICENSE">授權條款</a>
@@ -47,14 +47,14 @@
 
 請前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載最新版：
 
-* 建議一般使用者下載安裝版：`Lyrics Card Generator Setup 3.6.1.exe`
-* 不想安裝時可下載可攜版：`Lyrics Card Generator-3.6.1-portable.exe`
+* 建議一般使用者下載安裝版：`Lyrics Card Generator Setup 3.7.0.exe`
+* 不想安裝時可下載可攜版：`Lyrics Card Generator-3.7.0-portable.exe`
 
 安裝版適合長期使用；可攜版適合臨時執行、測試或放在隨身碟中使用。
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v3.6.1 更新重點
+### v3.7.0 更新重點
 
 * 修復桌面自繪標題列最大化 / 還原狀態不同步的問題。
 * 優化 Acrylic 桌面標題列的漸層玻璃模糊、層級和關閉按鈕 hover 狀態。
@@ -69,12 +69,12 @@
 
 GitHub Release 頁面預設使用簡體中文短版，完整發佈說明維護在 `docs/releases/`：
 
-* [简体中文](./docs/releases/v3.6.1.zh-CN.md)
-* [繁體中文](./docs/releases/v3.6.1.zh-TW.md)
-* [English](./docs/releases/v3.6.1.en.md)
-* [Français](./docs/releases/v3.6.1.fr.md)
-* [日本語](./docs/releases/v3.6.1.ja.md)
-* [Español](./docs/releases/v3.6.1.es.md)
+* [简体中文](./docs/releases/v3.7.0.zh-CN.md)
+* [繁體中文](./docs/releases/v3.7.0.zh-TW.md)
+* [English](./docs/releases/v3.7.0.en.md)
+* [Français](./docs/releases/v3.7.0.fr.md)
+* [日本語](./docs/releases/v3.7.0.ja.md)
+* [Español](./docs/releases/v3.7.0.es.md)
 
 ## ✨ 主要功能
 
@@ -94,7 +94,7 @@ GitHub Release 頁面預設使用簡體中文短版，完整發佈說明維護�
 * 支援思源黑體 / 思源宋體兩套字型方案、自訂中日韓 / 西文字型、系統字型選擇視窗與真實歌詞字型預覽
 * 支援簡體中文 / 繁體中文 / English / Français / 日本語 / Español 介面切換
 * 支援匯出高解析 PNG 圖片
-* 支援從 GitHub Releases 檢查新版本
+?????? Next API ???????? GitHub Releases????????????????????? Release ?????????????
 
 ## 🪟 Windows 桌面版說明
 
@@ -263,3 +263,4 @@ npm run core:test       # 測試 3.0 核心純函式
    <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=Qrzzzz/lyrics-card-generator&type=date&legend=top-left" />
  </picture>
 </a>
+

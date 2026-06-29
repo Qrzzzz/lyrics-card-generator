@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v3.6.1.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v3.7.0.ja.md">リリースノート</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="#ローカル開発">ローカル開発</a> ·
   <a href="./LICENSE">ライセンス</a>
@@ -50,14 +50,14 @@
 
 最新版は [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) からダウンロードできます。
 
-* 推奨インストーラー：`Lyrics Card Generator Setup 3.6.1.exe`
-* ポータブル版：`Lyrics Card Generator-3.6.1-portable.exe`
+* 推奨インストーラー：`Lyrics Card Generator Setup 3.7.0.exe`
+* ポータブル版：`Lyrics Card Generator-3.7.0-portable.exe`
 
 通常利用にはインストーラーを推奨します。ポータブル版は一時利用、検証、リムーバブルドライブでの利用に向いています。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v3.6.1 の主な変更
+### v3.7.0 の主な変更
 
 * デスクトップのカスタムタイトルバーで最大化 / 復元状態が同期しない問題を修正しました。
 * Acrylic デスクトップタイトルバーに自然に消えるガラスぼかし、適切な重なり順、安定した閉じるボタン hover を追加しました。
@@ -70,12 +70,12 @@
 
 GitHub Release ページではデフォルトで簡体字中国語の短縮版が使用され、完全なリリースノートは `docs/releases/` にて管理されています：
 
-* [简体中文](./docs/releases/v3.6.1.zh-CN.md)
-* [繁體中文](./docs/releases/v3.6.1.zh-TW.md)
-* [English](./docs/releases/v3.6.1.en.md)
-* [Français](./docs/releases/v3.6.1.fr.md)
-* [日本語](./docs/releases/v3.6.1.ja.md)
-* [Español](./docs/releases/v3.6.1.es.md)
+* [简体中文](./docs/releases/v3.7.0.zh-CN.md)
+* [繁體中文](./docs/releases/v3.7.0.zh-TW.md)
+* [English](./docs/releases/v3.7.0.en.md)
+* [Français](./docs/releases/v3.7.0.fr.md)
+* [日本語](./docs/releases/v3.7.0.ja.md)
+* [Español](./docs/releases/v3.7.0.es.md)
 
 <a id="主な機能"></a>
 
@@ -97,7 +97,7 @@ GitHub Release ページではデフォルトで簡体字中国語の短縮版�
 * 源ノ角ゴシック / 源ノ明朝の構成、CJK / 欧文フォントの個別選択、システムフォント選択画面、実際の歌詞によるプレビュー
 * 簡体字中国語、繁体字中国語、英語、フランス語、日本語、スペイン語インターフェース
 * 高解像度 PNG 書き出し
-* GitHub Releases によるアップデート確認
+???? Next API ??????????????? GitHub Releases ?????????????????????????????? Release ?????????????????????????????????
 
 ## 🪟 Windows デスクトップ版
 
@@ -266,3 +266,4 @@ Rangerov に感謝します。このプロジェクトへの関心と意見に�
    <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=Qrzzzz/lyrics-card-generator&type=date&legend=top-left" />
  </picture>
 </a>
+

@@ -5,6 +5,7 @@ import { buildLyricsTranslationPrompt, PROMPT_OUTPUT_RULES } from "../lib/ai/pro
 import { getTranslationStyles } from "../lib/ai/styles";
 import { getAIUiCopy } from "../lib/ai/ui-copy";
 import { buildUpdateResult } from "../lib/github-update";
+import { getUpdateLink } from "../lib/update-link";
 import { proxiedImageUrl } from "../lib/image-utils";
 import {
   FONT_PREVIEW_COLORS,
@@ -139,6 +140,7 @@ function testUpdateResult() {
   if (result.status === "update-available") {
     assertEqual(result.installerUrl, "https://example.com/setup.exe", "installer URL");
     assertEqual(result.portableUrl, "https://example.com/portable.exe", "portable URL");
+    assertEqual(getUpdateLink(result), "https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v2.0.0", "update link opens release page");
   }
 }
 

@@ -1,6 +1,6 @@
 {
   "name": "lyric-card-generator",
-  "version": "3.6.1",
+  "version": "3.7.0",
   "private": true,
   "main": "electron/main.js",
   "scripts": {
@@ -11,7 +11,7 @@
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "parse:test": "tsx scripts/test-parse-song.ts",
-    "core:test": "tsx scripts/test-v2-core.ts && tsx scripts/test-v32-settings.ts && tsx scripts/test-v321-theme-tokens.ts && tsx scripts/test-v34-layout-grid.ts && tsx scripts/test-v361-titlebar-release.ts && node scripts/test-electron-font-options.cjs && node scripts/test-electron-user-preferences.cjs",
+    "core:test": "tsx scripts/test-v2-core.ts && tsx scripts/test-v32-settings.ts && tsx scripts/test-v321-theme-tokens.ts && tsx scripts/test-v34-layout-grid.ts && tsx scripts/test-titlebar-regression.ts && tsx scripts/test-release-consistency.ts && tsx scripts/test-ai-provider-response.ts && node scripts/test-electron-font-options.cjs && node scripts/test-electron-user-preferences.cjs && node scripts/test-electron-background-images.cjs",
     "desktop:dev": "node scripts/start-electron-dev.mjs",
     "desktop:prepare": "node scripts/prepare-electron-dist.mjs",
     "desktop:size": "node scripts/audit-desktop-size.mjs",

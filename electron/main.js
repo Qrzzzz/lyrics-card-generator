@@ -4,7 +4,9 @@ const fs = require("node:fs/promises");
 const http = require("node:http");
 const net = require("node:net");
 const path = require("node:path");
+const { getBackgroundImageMime, safeBackgroundPathForUserData } = require("./background-images");
 const { normalizeFontOptions } = require("./font-options");
+const { getChatCompletionMessage, getProviderErrorMessage, readProviderResponseBody } = require("./provider-response");
 const { normalizeStoredPreferences } = require("./user-preferences");
 
 const HOST = "127.0.0.1";
@@ -538,8 +540,7 @@ function registerDesktopIpc() {
 }
 
 function safeBackgroundPath(imageId) {
-  if (typeof imageId !== "string" || !/^[a-zA-Z0-9._-]+$/.test(imageId)) return null;
-  return path.join(app.getPath("userData"), "backgrounds", imageId);
+  return safeBackgroundPathForUserData(app.getPath("userData"), imageId);
 }
 
 async function readBackgroundDataUrl(imageId) {
@@ -547,8 +548,8 @@ async function readBackgroundDataUrl(imageId) {
   if (!target) return undefined;
   try {
     const data = await fs.readFile(target);
-    const extension = path.extname(target).slice(1).toLowerCase();
-    const mime = extension === "jpg" || extension === "jpeg" ? "image/jpeg" : extension === "svg" ? "image/svg+xml" : `image/${extension || "png"}`;
+    const mime = getBackgroundImageMime(target);
+    if (!mime) return undefined;
     return `data:${mime};base64,${data.toString("base64")}`;
   } catch {
     return undefined;
@@ -707,9 +708,8 @@ async function streamAITranslationInMain({ settings, apiKey, prompt, reasoning, 
 
   const contentType = response.headers.get("content-type") || "";
   if (!contentType.includes("text/event-stream")) {
-    const data = await response.json();
-    const content = data?.choices?.[0]?.message?.content;
-    const reasoningContent = data?.choices?.[0]?.message?.reasoning_content;
+    const body = await readProviderResponseBody(response);
+    const { content, reasoningContent } = getChatCompletionMessage(body);
     if (reasoningContent) {
       onStatus("reasoning");
       onReasoningDelta(reasoningContent);
@@ -799,13 +799,7 @@ function usesDeepSeekThinking(baseUrl, model) {
 }
 
 async function readProviderError(response) {
-  try {
-    const data = await response.json();
-    const message = typeof data?.error === "string" ? data.error : data?.error?.message || data?.message;
-    return message ? `AI 接口请求失败：${message}` : `AI 接口请求失败（HTTP ${response.status}）。`;
-  } catch {
-    return `AI 接口请求失败（HTTP ${response.status}）。`;
-  }
+  return getProviderErrorMessage(await readProviderResponseBody(response), response.status);
 }
 
 function isValidAIRequestId(value) {

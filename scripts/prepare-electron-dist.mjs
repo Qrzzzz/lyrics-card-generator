@@ -79,7 +79,9 @@ async function prepareMinimalElectronApp() {
       },
       files: [
         "electron/main.js",
+        "electron/background-images.js",
         "electron/font-options.js",
+        "electron/provider-response.js",
         "electron/preload.js",
         "electron/user-preferences.js",
         "package.json"
@@ -121,7 +123,9 @@ async function prepareMinimalElectronApp() {
   };
 
   await cp(path.join(projectRoot, "electron", "main.js"), path.join(electronOutputDir, "main.js"));
+  await cp(path.join(projectRoot, "electron", "background-images.js"), path.join(electronOutputDir, "background-images.js"));
   await cp(path.join(projectRoot, "electron", "font-options.js"), path.join(electronOutputDir, "font-options.js"));
+  await cp(path.join(projectRoot, "electron", "provider-response.js"), path.join(electronOutputDir, "provider-response.js"));
   await cp(path.join(projectRoot, "electron", "preload.js"), path.join(electronOutputDir, "preload.js"));
   await cp(path.join(projectRoot, "electron", "user-preferences.js"), path.join(electronOutputDir, "user-preferences.js"));
   await writeFile(path.join(appOutputDir, "package.json"), `${JSON.stringify(desktopPackage, null, 2)}\n`);

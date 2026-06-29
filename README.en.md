@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v3.6.1.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v3.7.0.en.md">Release Notes</a> ·
   <a href="#features">Features</a> ·
   <a href="#local-development">Local Development</a> ·
   <a href="./LICENSE">License</a>
@@ -50,14 +50,14 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 Download the latest version from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Recommended installer: `Lyrics Card Generator Setup 3.6.1.exe`
-* Portable version: `Lyrics Card Generator-3.6.1-portable.exe`
+* Recommended installer: `Lyrics Card Generator Setup 3.7.0.exe`
+* Portable version: `Lyrics Card Generator-3.7.0-portable.exe`
 
 The installer is recommended for regular use. The portable version is useful for temporary use, testing, or running from a removable drive.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v3.6.1 Highlights
+### v3.7.0 Highlights
 
 * Fixes desktop custom titlebar maximize / restore state synchronization.
 * Polishes the Acrylic desktop titlebar with a fading glass blur layer, safer stacking, and reliable close-button hover.
@@ -70,12 +70,12 @@ The installer is recommended for regular use. The portable version is useful for
 
 The GitHub Release page defaults to a simplified Chinese short version, while the full release notes are maintained in `docs/releases/`:
 
-* [简体中文](./docs/releases/v3.6.1.zh-CN.md)
-* [繁體中文](./docs/releases/v3.6.1.zh-TW.md)
-* [English](./docs/releases/v3.6.1.en.md)
-* [Français](./docs/releases/v3.6.1.fr.md)
-* [日本語](./docs/releases/v3.6.1.ja.md)
-* [Español](./docs/releases/v3.6.1.es.md)
+* [简体中文](./docs/releases/v3.7.0.zh-CN.md)
+* [繁體中文](./docs/releases/v3.7.0.zh-TW.md)
+* [English](./docs/releases/v3.7.0.en.md)
+* [Français](./docs/releases/v3.7.0.fr.md)
+* [日本語](./docs/releases/v3.7.0.ja.md)
+* [Español](./docs/releases/v3.7.0.es.md)
 
 <a id="features"></a>
 
@@ -97,7 +97,7 @@ The GitHub Release page defaults to a simplified Chinese short version, while th
 * Source Han Sans / Serif schemes, independent CJK and Latin fonts, a system-font picker, and lyric-based typography previews
 * Simplified Chinese / Traditional Chinese / English / French / Japanese / Spanish interface
 * High-resolution PNG export
-* GitHub Releases update checking
+It requests this project?s GitHub Releases through a local Next API route, compares the current version with the latest published release, and opens the matching Release page so users can choose a download asset.
 
 ## 🪟 Windows Desktop Version
 
@@ -266,3 +266,4 @@ Third-party open-source dependencies remain governed by their respective license
    <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=Qrzzzz/lyrics-card-generator&type=date&legend=top-left" />
  </picture>
 </a>
+
