@@ -4,262 +4,993 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Lyrics Card Generator Web Lite</title>
-  <script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.min.js"></script>
+  <link rel="icon" href="public/app-icon.png" />
   <style>
+    :root {
+      color-scheme: dark;
+      --bg-1: #070a11;
+      --bg-2: #101827;
+      --bg-3: #1f2d46;
+      --accent: #8cc8ff;
+      --panel: rgba(15, 23, 42, 0.42);
+      --panel-border: rgba(255, 255, 255, 0.16);
+      --field: rgba(15, 23, 42, 0.38);
+      --field-border: rgba(255, 255, 255, 0.18);
+      --text: #f8fafc;
+      --muted: rgba(226, 232, 240, 0.72);
+      --subtle: rgba(203, 213, 225, 0.58);
+      --shadow: rgba(0, 0, 0, 0.38);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+    }
+
     * {
       box-sizing: border-box;
+    }
+
+    html {
+      min-height: 100%;
+      background: #070a11;
     }
 
     body {
       margin: 0;
       min-height: 100vh;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
-      background: #111827;
-      color: #f9fafb;
+      color: var(--text);
+      background:
+        linear-gradient(118deg, rgba(255, 255, 255, 0.08), transparent 24%, rgba(255, 255, 255, 0.04) 52%, transparent 78%),
+        linear-gradient(135deg, var(--bg-1), var(--bg-2) 46%, var(--bg-3));
+      transition: background 260ms ease;
     }
 
-    .app {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 32px 20px;
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) 420px;
-      gap: 24px;
-    }
-
-    @media (max-width: 900px) {
-      .app {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    .panel {
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 18px;
-      padding: 18px;
-      backdrop-filter: blur(16px);
-    }
-
-    h1 {
-      margin: 0 0 8px;
-      font-size: 26px;
-    }
-
-    .hint {
-      margin: 0 0 20px;
-      color: #cbd5e1;
-      font-size: 14px;
-    }
-
-    label {
-      display: block;
-      margin: 14px 0 6px;
-      color: #d1d5db;
-      font-size: 14px;
-      font-weight: 600;
-    }
-
+    button,
     input,
-    textarea,
-    select {
-      width: 100%;
-      border: 1px solid rgba(255, 255, 255, 0.16);
-      border-radius: 12px;
-      padding: 11px 12px;
-      background: rgba(15, 23, 42, 0.72);
-      color: #fff;
-      outline: none;
+    textarea {
       font: inherit;
     }
 
-    textarea {
-      min-height: 130px;
-      resize: vertical;
-      line-height: 1.6;
-    }
-
     button {
-      width: 100%;
-      margin-top: 16px;
-      border: 0;
-      border-radius: 12px;
-      padding: 12px 14px;
-      background: #3b82f6;
-      color: white;
-      font-weight: 700;
-      cursor: pointer;
+      touch-action: manipulation;
     }
 
-    button:hover {
-      background: #2563eb;
+    .app {
+      width: min(1440px, 100%);
+      margin: 0 auto;
+      padding: 24px;
+      display: grid;
+      grid-template-columns: minmax(340px, 500px) minmax(0, 1fr);
+      gap: 18px;
     }
 
-    .card-wrap {
+    .panel {
+      border: 1px solid var(--panel-border);
+      border-radius: 10px;
+      background: var(--panel);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.11), 0 22px 58px var(--shadow);
+      backdrop-filter: blur(24px) saturate(1.28);
+      -webkit-backdrop-filter: blur(24px) saturate(1.28);
+    }
+
+    .editor {
+      min-height: calc(100vh - 48px);
+      padding: 18px;
+      overflow: hidden;
+    }
+
+    .preview-panel {
+      min-height: calc(100vh - 48px);
+      padding: 18px;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      gap: 14px;
+    }
+
+    .brand {
       display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      overflow: auto;
+      align-items: center;
+      gap: 12px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.12);
     }
 
-    #card {
-      width: 360px;
-      min-height: 560px;
-      padding: 28px;
-      border-radius: 28px;
-      background:
-        linear-gradient(145deg, rgba(15, 23, 42, 0.72), rgba(2, 6, 23, 0.92)),
-        var(--cover-bg, linear-gradient(135deg, #334155, #020617));
-      background-size: cover;
-      color: white;
-      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45);
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-    }
-
-    .cover {
-      width: 100%;
-      aspect-ratio: 1 / 1;
-      border-radius: 22px;
+    .brand-mark {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
       object-fit: cover;
-      background: rgba(255, 255, 255, 0.12);
-      display: none;
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28);
     }
 
-    .song-title {
+    h1 {
       margin: 0;
-      font-size: 24px;
-      line-height: 1.15;
-      font-weight: 800;
+      font-size: 21px;
+      line-height: 1.16;
+      letter-spacing: 0;
     }
 
-    .artist {
-      margin-top: 6px;
-      color: rgba(255, 255, 255, 0.72);
-      font-size: 14px;
+    .kicker,
+    .hint,
+    .status {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
     }
 
-    .lyrics {
-      white-space: pre-wrap;
-      font-size: 24px;
-      line-height: 1.42;
-      font-weight: 750;
-      letter-spacing: -0.02em;
+    .kicker {
+      margin-top: 4px;
     }
 
-    .translation {
-      white-space: pre-wrap;
-      color: rgba(255, 255, 255, 0.72);
-      font-size: 16px;
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .field,
+    .field-wide,
+    .control-group {
+      display: grid;
+      gap: 7px;
+    }
+
+    .field-wide,
+    .control-group {
+      grid-column: 1 / -1;
+    }
+
+    fieldset.control-group {
+      min-width: 0;
+      margin: 0;
+      padding: 0;
+      border: 0;
+    }
+
+    label,
+    legend {
+      color: rgba(248, 250, 252, 0.88);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    input[type="text"],
+    input[type="file"],
+    textarea {
+      width: 100%;
+      border: 1px solid var(--field-border);
+      border-radius: 8px;
+      background: var(--field);
+      color: var(--text);
+      outline: none;
+      transition: border-color 140ms ease, box-shadow 140ms ease, background 140ms ease;
+    }
+
+    input[type="text"],
+    input[type="file"] {
+      min-height: 42px;
+      padding: 10px 11px;
+    }
+
+    textarea {
+      min-height: 148px;
+      resize: vertical;
+      padding: 11px;
       line-height: 1.55;
     }
 
-    .watermark {
-      margin-top: auto;
-      color: rgba(255, 255, 255, 0.52);
-      font-size: 12px;
+    input:focus,
+    textarea:focus,
+    button:focus-visible {
+      border-color: color-mix(in srgb, var(--accent) 70%, #ffffff);
+      box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent);
+    }
+
+    .segmented,
+    .switches {
+      display: grid;
+      gap: 8px;
+    }
+
+    .segmented {
+      grid-template-columns: repeat(3, 1fr);
+      border: 1px solid rgba(255, 255, 255, 0.13);
+      border-radius: 8px;
+      padding: 4px;
+      background: rgba(2, 6, 23, 0.22);
+    }
+
+    .segmented.two {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .segmented button,
+    .action-row button,
+    .switch {
+      border: 1px solid transparent;
+      border-radius: 7px;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      min-height: 36px;
+      padding: 8px 10px;
+      transition: background 140ms ease, color 140ms ease, border-color 140ms ease, transform 140ms ease;
+    }
+
+    .segmented button:hover,
+    .action-row button:hover,
+    .switch:hover {
+      background: rgba(255, 255, 255, 0.09);
+      color: var(--text);
+    }
+
+    .segmented button[aria-pressed="true"],
+    .switch[aria-pressed="true"] {
+      border-color: color-mix(in srgb, var(--accent) 45%, rgba(255, 255, 255, 0.22));
+      background: color-mix(in srgb, var(--accent) 20%, rgba(255, 255, 255, 0.08));
+      color: #ffffff;
+    }
+
+    .range-row {
+      display: grid;
+      grid-template-columns: 1fr 64px;
+      gap: 10px;
+      align-items: center;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+    }
+
+    output {
+      min-height: 32px;
+      border: 1px solid rgba(255, 255, 255, 0.13);
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      background: rgba(2, 6, 23, 0.18);
+      font-size: 13px;
+    }
+
+    .switches {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .switch {
+      text-align: left;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .switch::after {
+      content: "";
+      width: 34px;
+      height: 18px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.18);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.13);
+    }
+
+    .switch[aria-pressed="true"]::after {
+      background: color-mix(in srgb, var(--accent) 62%, #ffffff 4%);
+    }
+
+    .action-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      margin-top: 4px;
+    }
+
+    .primary {
+      border-color: color-mix(in srgb, var(--accent) 52%, rgba(255, 255, 255, 0.18)) !important;
+      background: color-mix(in srgb, var(--accent) 28%, rgba(255, 255, 255, 0.08)) !important;
+      color: #ffffff !important;
+      font-weight: 800;
+    }
+
+    .preview-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .preview-header h2 {
+      margin: 0;
+      font-size: 16px;
+      letter-spacing: 0;
+    }
+
+    .preview-frame {
+      min-height: 0;
+      display: grid;
+      place-items: center;
+      overflow: auto;
+      border-radius: 8px;
+      background: rgba(2, 6, 23, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 16px;
+    }
+
+    #previewCanvas {
+      display: block;
+      max-width: 100%;
+      max-height: calc(100vh - 142px);
+      width: auto;
+      height: auto;
+      border-radius: 16px;
+      box-shadow: 0 28px 70px rgba(0, 0, 0, 0.44);
+      background: #0f172a;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    @media (max-width: 980px) {
+      .app {
+        grid-template-columns: 1fr;
+        padding: 14px;
+      }
+
+      .editor,
+      .preview-panel {
+        min-height: auto;
+      }
+
+      .preview-panel {
+        min-height: 70vh;
+      }
+
+      #previewCanvas {
+        max-height: 72vh;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .form-grid,
+      .switches,
+      .action-row {
+        grid-template-columns: 1fr;
+      }
+
+      .segmented {
+        grid-template-columns: 1fr;
+      }
+
+      .segmented.two {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .brand {
+        align-items: flex-start;
+      }
     }
   </style>
 </head>
 <body>
   <main class="app">
-    <section class="panel">
-      <h1>Lyrics Card Generator Web Lite</h1>
-      <p class="hint">静态网页版：手动输入内容，上传封面，导出 PNG。</p>
+    <section class="panel editor" aria-label="歌词卡编辑器">
+      <header class="brand">
+        <img class="brand-mark" src="public/app-icon.png" alt="" />
+        <div>
+          <h1>Lyrics Card Generator</h1>
+          <div class="kicker">Web Lite 静态版 · 手动输入 · 本地封面 · Canvas PNG</div>
+        </div>
+      </header>
 
-      <label>歌曲标题</label>
-      <input id="title" value="Opposite" />
-
-      <label>歌手</label>
-      <input id="artist" value="Sabrina Carpenter" />
-
-      <label>封面图片</label>
-      <input id="coverInput" type="file" accept="image/*" />
-
-      <label>歌词</label>
-      <textarea id="lyrics">And I know now
+      <form class="form-grid" id="editorForm">
+        <div class="field">
+          <label for="songTitle">歌曲标题</label>
+          <input id="songTitle" type="text" value="Opposite" autocomplete="off" />
+        </div>
+        <div class="field">
+          <label for="artist">歌手</label>
+          <input id="artist" type="text" value="Sabrina Carpenter" autocomplete="off" />
+        </div>
+        <div class="field-wide">
+          <label for="album">专辑名</label>
+          <input id="album" type="text" value="emails i can't send fwd:" autocomplete="off" />
+        </div>
+        <div class="field-wide">
+          <label for="coverInput">专辑封面</label>
+          <input id="coverInput" type="file" accept="image/*" />
+          <div class="status" id="coverStatus">未上传封面时使用默认深色渐变；上传后会从本地图片取色。</div>
+        </div>
+        <div class="field-wide">
+          <label for="lyrics">歌词</label>
+          <textarea id="lyrics" spellcheck="false">And I know now
 Even if I tried to change
 That somehow
 You'd end up with her anyway</textarea>
-
-      <label>译文</label>
-      <textarea id="translation">我如今才明白
-纵使我拼尽全力改写结局
+        </div>
+        <div class="field-wide">
+          <label for="translation">译文</label>
+          <textarea id="translation" spellcheck="false">我如今才明白
+纵使我试着改变
 命运兜兜转转
 你终究还是会走向她</textarea>
+        </div>
 
-      <label>字号</label>
-      <select id="fontSize">
-        <option value="20">小</option>
-        <option value="24" selected>中</option>
-        <option value="30">大</option>
-      </select>
+        <fieldset class="control-group">
+          <legend>画布比例</legend>
+          <div class="segmented" data-control="ratio">
+            <button type="button" data-value="portrait" aria-pressed="true">竖版 4:5</button>
+            <button type="button" data-value="square" aria-pressed="false">方形 1:1</button>
+            <button type="button" data-value="landscape" aria-pressed="false">横版 16:9</button>
+          </div>
+        </fieldset>
 
-      <button id="exportBtn">导出 PNG</button>
+        <div class="field">
+          <label for="fontSize">字号</label>
+          <div class="range-row">
+            <input id="fontSize" type="range" min="28" max="72" step="1" value="46" />
+            <output id="fontSizeOut" for="fontSize">46</output>
+          </div>
+        </div>
+        <div class="field">
+          <label for="lineHeight">行高</label>
+          <div class="range-row">
+            <input id="lineHeight" type="range" min="1.1" max="1.8" step="0.05" value="1.35" />
+            <output id="lineHeightOut" for="lineHeight">1.35</output>
+          </div>
+        </div>
+
+        <fieldset class="control-group">
+          <legend>文字对齐</legend>
+          <div class="segmented two" data-control="align">
+            <button type="button" data-value="left" aria-pressed="true">左对齐</button>
+            <button type="button" data-value="center" aria-pressed="false">居中</button>
+          </div>
+        </fieldset>
+
+        <fieldset class="control-group">
+          <legend>显示内容</legend>
+          <div class="switches">
+            <button class="switch" type="button" id="toggleCover" aria-pressed="true">显示封面</button>
+            <button class="switch" type="button" id="toggleInfo" aria-pressed="true">显示歌曲信息</button>
+          </div>
+        </fieldset>
+
+        <div class="field-wide action-row">
+          <button class="primary" id="exportBtn" type="button">导出 PNG</button>
+          <button id="clearCoverBtn" type="button">移除封面</button>
+        </div>
+      </form>
     </section>
 
-    <section class="panel card-wrap">
-      <article id="card">
-        <img id="cover" class="cover" alt="cover" />
+    <section class="panel preview-panel" aria-label="实时预览">
+      <div class="preview-header">
         <div>
-          <h2 id="cardTitle" class="song-title"></h2>
-          <div id="cardArtist" class="artist"></div>
+          <h2>Live Preview</h2>
+          <div class="hint" id="canvasInfo">1200 × 1500 PNG</div>
         </div>
-        <div id="cardLyrics" class="lyrics"></div>
-        <div id="cardTranslation" class="translation"></div>
-        <div class="watermark">Made with Lyrics Card Generator Web Lite</div>
-      </article>
+        <div class="hint">本地渲染，无远程请求</div>
+      </div>
+      <div class="preview-frame">
+        <canvas id="previewCanvas" aria-label="歌词卡实时预览"></canvas>
+      </div>
     </section>
   </main>
 
   <script>
     const $ = (id) => document.getElementById(id);
+    const canvas = $("previewCanvas");
+    const ctx = canvas.getContext("2d");
+    const defaultPalette = {
+      deep: "#070a11",
+      base: "#111827",
+      glow: "#2f4769",
+      accent: "#8cc8ff",
+      text: "#f8fafc"
+    };
+    const state = {
+      ratio: "portrait",
+      align: "left",
+      showCover: true,
+      showInfo: true,
+      coverImage: null,
+      coverDataUrl: "",
+      palette: { ...defaultPalette }
+    };
+    const sizes = {
+      portrait: { width: 1200, height: 1500, label: "1200 × 1500 PNG" },
+      square: { width: 1400, height: 1400, label: "1400 × 1400 PNG" },
+      landscape: { width: 1600, height: 900, label: "1600 × 900 PNG" }
+    };
 
-    const inputs = ["title", "artist", "lyrics", "translation", "fontSize"];
+    function readForm() {
+      return {
+        title: $("songTitle").value.trim() || "Untitled",
+        artist: $("artist").value.trim() || "Unknown Artist",
+        album: $("album").value.trim(),
+        lyrics: $("lyrics").value,
+        translation: $("translation").value,
+        fontSize: Number($("fontSize").value),
+        lineHeight: Number($("lineHeight").value)
+      };
+    }
+
+    function setPressed(group, value) {
+      document.querySelectorAll(`[data-control="${group}"] button`).forEach((button) => {
+        button.setAttribute("aria-pressed", String(button.dataset.value === value));
+      });
+    }
+
+    function updateCssPalette() {
+      const root = document.documentElement;
+      root.style.setProperty("--bg-1", state.palette.deep);
+      root.style.setProperty("--bg-2", state.palette.base);
+      root.style.setProperty("--bg-3", state.palette.glow);
+      root.style.setProperty("--accent", state.palette.accent);
+    }
 
     function render() {
-      $("cardTitle").textContent = $("title").value || "Untitled";
-      $("cardArtist").textContent = $("artist").value || "Unknown Artist";
-      $("cardLyrics").textContent = $("lyrics").value;
-      $("cardTranslation").textContent = $("translation").value;
-      $("cardLyrics").style.fontSize = $("fontSize").value + "px";
+      const form = readForm();
+      const size = sizes[state.ratio];
+      canvas.width = size.width;
+      canvas.height = size.height;
+      $("canvasInfo").textContent = size.label;
+      $("fontSizeOut").textContent = String(form.fontSize);
+      $("lineHeightOut").textContent = form.lineHeight.toFixed(2);
+      updateCssPalette();
+      drawCard(ctx, size.width, size.height, form);
     }
 
-    for (const id of inputs) {
-      $(id).addEventListener("input", render);
+    function drawCard(context, width, height, form) {
+      context.clearRect(0, 0, width, height);
+      drawDynamicBackground(context, width, height);
+      drawSurface(context, width, height);
+
+      if (state.ratio === "landscape") {
+        drawLandscape(context, width, height, form);
+      } else {
+        drawPortrait(context, width, height, form);
+      }
     }
 
-    $("coverInput").addEventListener("change", () => {
-      const file = $("coverInput").files[0];
-      if (!file) return;
+    function drawDynamicBackground(context, width, height) {
+      context.save();
+      context.fillStyle = state.palette.deep;
+      context.fillRect(0, 0, width, height);
 
-      const url = URL.createObjectURL(file);
-      const cover = $("cover");
-      cover.src = url;
-      cover.style.display = "block";
+      if (state.coverImage) {
+        const scale = Math.max(width / state.coverImage.width, height / state.coverImage.height) * 1.18;
+        const drawW = state.coverImage.width * scale;
+        const drawH = state.coverImage.height * scale;
+        context.globalAlpha = 0.52;
+        context.filter = "blur(42px) saturate(1.25)";
+        context.drawImage(state.coverImage, (width - drawW) / 2, (height - drawH) / 2, drawW, drawH);
+        context.filter = "none";
+        context.globalAlpha = 1;
+      }
 
-      $("card").style.setProperty(
-        "--cover-bg",
-        `linear-gradient(rgba(0,0,0,.55), rgba(0,0,0,.72)), url("${url}")`
-      );
+      const base = context.createLinearGradient(0, 0, width, height);
+      base.addColorStop(0, hexToRgba(state.palette.glow, 0.74));
+      base.addColorStop(0.48, hexToRgba(state.palette.base, 0.88));
+      base.addColorStop(1, hexToRgba(state.palette.deep, 0.94));
+      context.fillStyle = base;
+      context.fillRect(0, 0, width, height);
+
+      const sheen = context.createLinearGradient(0, 0, width, 0);
+      sheen.addColorStop(0, "rgba(255,255,255,0.16)");
+      sheen.addColorStop(0.24, "rgba(255,255,255,0.03)");
+      sheen.addColorStop(0.62, "rgba(255,255,255,0.08)");
+      sheen.addColorStop(1, "rgba(255,255,255,0.02)");
+      context.fillStyle = sheen;
+      context.fillRect(0, 0, width, height);
+      context.restore();
+    }
+
+    function drawSurface(context, width, height) {
+      context.save();
+      context.fillStyle = "rgba(3, 7, 18, 0.28)";
+      context.fillRect(0, 0, width, height);
+      context.strokeStyle = "rgba(255, 255, 255, 0.18)";
+      context.lineWidth = Math.max(2, width * 0.002);
+      context.strokeRect(context.lineWidth / 2, context.lineWidth / 2, width - context.lineWidth, height - context.lineWidth);
+      context.restore();
+    }
+
+    function drawPortrait(context, width, height, form) {
+      const padding = Math.round(width * 0.075);
+      const maxWidth = width - padding * 2;
+      let y = padding;
+      const headerNeeded = state.showCover || state.showInfo;
+      const coverSize = state.ratio === "square" ? Math.round(width * 0.2) : Math.round(width * 0.18);
+
+      if (headerNeeded) {
+        if (state.showCover) {
+          drawCoverBox(context, padding, y, coverSize);
+        }
+        if (state.showInfo) {
+          const infoX = state.showCover ? padding + coverSize + Math.round(width * 0.04) : padding;
+          const infoW = state.showCover ? width - padding - infoX : maxWidth;
+          drawSongInfo(context, form, infoX, y + Math.round(coverSize * 0.08), infoW, state.align);
+        }
+        y += coverSize + Math.round(height * 0.055);
+      }
+
+      const lyricHeight = height - y - padding;
+      drawLyrics(context, form, padding, y, maxWidth, lyricHeight);
+    }
+
+    function drawLandscape(context, width, height, form) {
+      const paddingX = Math.round(width * 0.06);
+      const paddingY = Math.round(height * 0.09);
+      const gap = Math.round(width * 0.045);
+      let contentX = paddingX;
+      let contentW = width - paddingX * 2;
+
+      if (state.showCover) {
+        const coverSize = Math.min(Math.round(height * 0.66), Math.round(width * 0.33));
+        const coverY = Math.round((height - coverSize) / 2);
+        drawCoverBox(context, paddingX, coverY, coverSize);
+        contentX = paddingX + coverSize + gap;
+        contentW = width - contentX - paddingX;
+      }
+
+      let y = paddingY;
+      if (state.showInfo) {
+        y += drawSongInfo(context, form, contentX, y, contentW, state.align) + Math.round(height * 0.045);
+      }
+      drawLyrics(context, form, contentX, y, contentW, height - y - paddingY);
+    }
+
+    function drawCoverBox(context, x, y, size) {
+      context.save();
+      roundRect(context, x, y, size, size, Math.max(18, size * 0.11));
+      context.clip();
+      if (state.coverImage) {
+        const scale = Math.max(size / state.coverImage.width, size / state.coverImage.height);
+        const drawW = state.coverImage.width * scale;
+        const drawH = state.coverImage.height * scale;
+        context.drawImage(state.coverImage, x + (size - drawW) / 2, y + (size - drawH) / 2, drawW, drawH);
+      } else {
+        const gradient = context.createLinearGradient(x, y, x + size, y + size);
+        gradient.addColorStop(0, hexToRgba(state.palette.glow, 0.95));
+        gradient.addColorStop(1, hexToRgba(state.palette.deep, 0.95));
+        context.fillStyle = gradient;
+        context.fillRect(x, y, size, size);
+        context.fillStyle = "rgba(255,255,255,0.18)";
+        context.font = `${Math.round(size * 0.13)}px ${fontStack()}`;
+        context.textAlign = "center";
+        context.textBaseline = "middle";
+        context.fillText("Cover", x + size / 2, y + size / 2);
+      }
+      context.restore();
+      context.save();
+      roundRect(context, x, y, size, size, Math.max(18, size * 0.11));
+      context.strokeStyle = "rgba(255,255,255,0.22)";
+      context.lineWidth = Math.max(2, size * 0.012);
+      context.stroke();
+      context.restore();
+    }
+
+    function drawSongInfo(context, form, x, y, maxWidth, align) {
+      context.save();
+      context.textAlign = align;
+      context.textBaseline = "top";
+      const tx = align === "center" ? x + maxWidth / 2 : x;
+      const titleSize = state.ratio === "landscape" ? 52 : 46;
+      const metaSize = state.ratio === "landscape" ? 25 : 23;
+      context.fillStyle = "rgba(255,255,255,0.96)";
+      context.font = `800 ${titleSize}px ${fontStack()}`;
+      const titleHeight = drawWrappedText(context, form.title, tx, y, maxWidth, titleSize * 1.12, 2, align);
+      context.fillStyle = "rgba(226,232,240,0.74)";
+      context.font = `600 ${metaSize}px ${fontStack()}`;
+      const meta = form.album ? `${form.artist} · ${form.album}` : form.artist;
+      const metaY = y + titleHeight + Math.round(metaSize * 0.45);
+      const metaHeight = drawWrappedText(context, meta, tx, metaY, maxWidth, metaSize * 1.25, 2, align);
+      context.restore();
+      return titleHeight + Math.round(metaSize * 0.45) + metaHeight;
+    }
+
+    function drawLyrics(context, form, x, y, maxWidth, maxHeight) {
+      const lyrics = splitLines(form.lyrics || "在这里输入歌词");
+      const translations = splitLines(form.translation);
+      const lyricSize = form.fontSize;
+      const translationSize = Math.max(18, Math.round(lyricSize * 0.48));
+      const lyricLineHeight = lyricSize * form.lineHeight;
+      const translationLineHeight = translationSize * 1.34;
+      const paragraphGap = Math.round(lyricSize * 0.46);
+      const align = state.align;
+      const tx = align === "center" ? x + maxWidth / 2 : x;
+      let cursorY = y;
+
+      context.save();
+      context.beginPath();
+      context.rect(x, y, maxWidth, maxHeight);
+      context.clip();
+      context.textAlign = align;
+      context.textBaseline = "top";
+
+      const total = Math.max(lyrics.length, translations.length);
+      for (let i = 0; i < total; i += 1) {
+        const lyric = lyrics[i] || "";
+        const translation = translations[i] || "";
+        if (lyric) {
+          context.fillStyle = "rgba(255,255,255,0.96)";
+          context.font = `800 ${lyricSize}px ${fontStack()}`;
+          cursorY += drawWrappedText(context, lyric, tx, cursorY, maxWidth, lyricLineHeight, 4, align);
+        }
+        if (translation) {
+          cursorY += Math.round(translationSize * 0.34);
+          context.fillStyle = "rgba(226,232,240,0.70)";
+          context.font = `600 ${translationSize}px ${fontStack()}`;
+          cursorY += drawWrappedText(context, translation, tx, cursorY, maxWidth, translationLineHeight, 3, align);
+        }
+        cursorY += paragraphGap;
+        if (cursorY > y + maxHeight + lyricLineHeight) break;
+      }
+      context.restore();
+    }
+
+    function drawWrappedText(context, text, x, y, maxWidth, lineHeight, maxLines, align) {
+      const lines = wrapText(context, text, maxWidth);
+      const visible = lines.slice(0, maxLines);
+      visible.forEach((line, index) => {
+        let rendered = line;
+        if (index === maxLines - 1 && lines.length > maxLines) {
+          rendered = fitWithEllipsis(context, line, maxWidth);
+        }
+        context.fillText(rendered, x, y + index * lineHeight);
+      });
+      return visible.length * lineHeight;
+    }
+
+    function wrapText(context, text, maxWidth) {
+      const source = String(text || "").trim();
+      if (!source) return [""];
+      const hasSpaces = /\s/.test(source);
+      const tokens = hasSpaces ? source.split(/(\s+)/).filter(Boolean) : Array.from(source);
+      const lines = [];
+      let line = "";
+      for (const token of tokens) {
+        const next = hasSpaces ? line + token : line + token;
+        if (line && context.measureText(next).width > maxWidth) {
+          lines.push(line.trimEnd());
+          line = token.trimStart();
+        } else {
+          line = next;
+        }
+      }
+      if (line) lines.push(line.trimEnd());
+      return lines.length ? lines : [source];
+    }
+
+    function fitWithEllipsis(context, text, maxWidth) {
+      let output = text;
+      while (output.length > 1 && context.measureText(`${output}...`).width > maxWidth) {
+        output = output.slice(0, -1);
+      }
+      return `${output}...`;
+    }
+
+    function splitLines(value) {
+      return String(value || "")
+        .replace(/\r\n/g, "\n")
+        .split("\n")
+        .map((line) => line.trim())
+        .filter(Boolean);
+    }
+
+    function extractPalette(image) {
+      const sample = document.createElement("canvas");
+      const width = 72;
+      const height = 72;
+      sample.width = width;
+      sample.height = height;
+      const sampleCtx = sample.getContext("2d", { willReadFrequently: true });
+      sampleCtx.drawImage(image, 0, 0, width, height);
+      const pixels = sampleCtx.getImageData(0, 0, width, height).data;
+      const bins = new Map();
+
+      for (let i = 0; i < pixels.length; i += 16) {
+        const r = pixels[i];
+        const g = pixels[i + 1];
+        const b = pixels[i + 2];
+        const a = pixels[i + 3];
+        if (a < 180) continue;
+        const hsl = rgbToHsl(r, g, b);
+        if (hsl.l < 0.06 || hsl.l > 0.94) continue;
+        const key = `${r >> 4}-${g >> 4}-${b >> 4}`;
+        const current = bins.get(key) || { r: 0, g: 0, b: 0, count: 0, score: 0, hue: hsl.h };
+        const score = (0.2 + hsl.s) * (1 - Math.abs(hsl.l - 0.52)) * 100;
+        current.r += r;
+        current.g += g;
+        current.b += b;
+        current.count += 1;
+        current.score += score;
+        current.hue = hsl.h;
+        bins.set(key, current);
+      }
+
+      const colors = Array.from(bins.values())
+        .map((bin) => ({
+          r: Math.round(bin.r / bin.count),
+          g: Math.round(bin.g / bin.count),
+          b: Math.round(bin.b / bin.count),
+          score: bin.score * Math.log2(bin.count + 1),
+          hue: bin.hue
+        }))
+        .sort((a, b) => b.score - a.score);
+
+      if (!colors.length) return { ...defaultPalette };
+      const primary = colors[0];
+      const secondary = colors.find((color) => hueDistance(color.hue, primary.hue) > 0.12) || colors[1] || primary;
+      const primaryHex = rgbToHex(primary.r, primary.g, primary.b);
+      const secondaryHex = rgbToHex(secondary.r, secondary.g, secondary.b);
+      return {
+        deep: mixHex(primaryHex, "#020617", 0.78),
+        base: mixHex(primaryHex, "#0f172a", 0.52),
+        glow: mixHex(secondaryHex, "#ffffff", 0.16),
+        accent: mixHex(secondaryHex, "#dbeafe", 0.28),
+        text: "#f8fafc"
+      };
+    }
+
+    function rgbToHsl(r, g, b) {
+      r /= 255;
+      g /= 255;
+      b /= 255;
+      const max = Math.max(r, g, b);
+      const min = Math.min(r, g, b);
+      let h = 0;
+      let s = 0;
+      const l = (max + min) / 2;
+      if (max !== min) {
+        const delta = max - min;
+        s = l > 0.5 ? delta / (2 - max - min) : delta / (max + min);
+        if (max === r) h = (g - b) / delta + (g < b ? 6 : 0);
+        if (max === g) h = (b - r) / delta + 2;
+        if (max === b) h = (r - g) / delta + 4;
+        h /= 6;
+      }
+      return { h, s, l };
+    }
+
+    function hueDistance(a, b) {
+      const distance = Math.abs(a - b);
+      return Math.min(distance, 1 - distance);
+    }
+
+    function rgbToHex(r, g, b) {
+      return `#${[r, g, b].map((value) => value.toString(16).padStart(2, "0")).join("")}`;
+    }
+
+    function hexToRgb(hex) {
+      const value = hex.replace("#", "");
+      return {
+        r: parseInt(value.slice(0, 2), 16),
+        g: parseInt(value.slice(2, 4), 16),
+        b: parseInt(value.slice(4, 6), 16)
+      };
+    }
+
+    function hexToRgba(hex, alpha) {
+      const rgb = hexToRgb(hex);
+      return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})`;
+    }
+
+    function mixHex(left, right, amount) {
+      const a = hexToRgb(left);
+      const b = hexToRgb(right);
+      const mix = (x, y) => Math.round(x * (1 - amount) + y * amount);
+      return rgbToHex(mix(a.r, b.r), mix(a.g, b.g), mix(a.b, b.b));
+    }
+
+    function roundRect(context, x, y, width, height, radius) {
+      const r = Math.min(radius, width / 2, height / 2);
+      context.beginPath();
+      context.moveTo(x + r, y);
+      context.lineTo(x + width - r, y);
+      context.quadraticCurveTo(x + width, y, x + width, y + r);
+      context.lineTo(x + width, y + height - r);
+      context.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
+      context.lineTo(x + r, y + height);
+      context.quadraticCurveTo(x, y + height, x, y + height - r);
+      context.lineTo(x, y + r);
+      context.quadraticCurveTo(x, y, x + r, y);
+      context.closePath();
+    }
+
+    function fontStack() {
+      return 'Inter, "Segoe UI", "Microsoft YaHei", system-ui, sans-serif';
+    }
+
+    function sanitizeFileName(value) {
+      return (value || "lyric-card").replace(/[\\/:*?"<>|]/g, "").trim() || "lyric-card";
+    }
+
+    document.querySelectorAll("[data-control='ratio'] button").forEach((button) => {
+      button.addEventListener("click", () => {
+        state.ratio = button.dataset.value;
+        setPressed("ratio", state.ratio);
+        render();
+      });
     });
 
-    $("exportBtn").addEventListener("click", async () => {
-      const node = $("card");
-      const title = ($("title").value || "lyric-card")
-        .replace(/[\\/:*?"<>|]/g, "")
-        .trim();
-
-      const dataUrl = await htmlToImage.toPng(node, {
-        pixelRatio: 3,
-        cacheBust: true
+    document.querySelectorAll("[data-control='align'] button").forEach((button) => {
+      button.addEventListener("click", () => {
+        state.align = button.dataset.value;
+        setPressed("align", state.align);
+        render();
       });
+    });
 
-      const link = document.createElement("a");
-      link.download = `${title || "lyric-card"}.png`;
-      link.href = dataUrl;
-      link.click();
+    ["songTitle", "artist", "album", "lyrics", "translation", "fontSize", "lineHeight"].forEach((id) => {
+      $(id).addEventListener("input", render);
+    });
+
+    $("toggleCover").addEventListener("click", () => {
+      state.showCover = !state.showCover;
+      $("toggleCover").setAttribute("aria-pressed", String(state.showCover));
+      render();
+    });
+
+    $("toggleInfo").addEventListener("click", () => {
+      state.showInfo = !state.showInfo;
+      $("toggleInfo").setAttribute("aria-pressed", String(state.showInfo));
+      render();
+    });
+
+    $("coverInput").addEventListener("change", () => {
+      const file = $("coverInput").files && $("coverInput").files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        const image = new Image();
+        image.onload = () => {
+          state.coverImage = image;
+          state.coverDataUrl = String(reader.result || "");
+          state.palette = extractPalette(image);
+          $("coverStatus").textContent = `${file.name} · 已从本地封面提取动态背景色`;
+          render();
+        };
+        image.src = String(reader.result || "");
+      };
+      reader.readAsDataURL(file);
+    });
+
+    $("clearCoverBtn").addEventListener("click", () => {
+      state.coverImage = null;
+      state.coverDataUrl = "";
+      state.palette = { ...defaultPalette };
+      $("coverInput").value = "";
+      $("coverStatus").textContent = "未上传封面时使用默认深色渐变；上传后会从本地图片取色。";
+      render();
+    });
+
+    $("exportBtn").addEventListener("click", () => {
+      render();
+      canvas.toBlob((blob) => {
+        if (!blob) return;
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        link.href = url;
+        link.download = `${sanitizeFileName($("songTitle").value)}.png`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }, "image/png");
+    });
+
+    $("editorForm").addEventListener("submit", (event) => {
+      event.preventDefault();
     });
 
     render();
