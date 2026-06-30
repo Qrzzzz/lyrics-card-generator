@@ -1,6 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { defaultState } from "../components/editor/editor-defaults";
 import { BACKGROUND_GRID_SIZE_BY_DENSITY, resolveBackgroundGridDensity } from "../lib/background-grid";
 import { normalizeInstrumentalLayout } from "../lib/card-style-normalize";
 import type { CardStyle } from "../lib/types";
@@ -79,9 +78,8 @@ assert.equal(lyricsLandscape.ratio, "16:9");
 assert.equal(lyricsLandscape.width, 1920);
 assert.equal(lyricsLandscape.height, 1080);
 
-const editorSource = readFileSync(resolve("components/editor/LyricEditor.tsx"), "utf8");
-assert.match(editorSource, /showFineGrid:\s*false/);
-assert.match(editorSource, /fineGridDensity:\s*"medium"/);
+assert.equal(defaultState.style.showFineGrid, false);
+assert.equal(defaultState.style.fineGridDensity, "medium");
 
 assert.deepEqual(BACKGROUND_GRID_SIZE_BY_DENSITY, {
   sparse: 72,
