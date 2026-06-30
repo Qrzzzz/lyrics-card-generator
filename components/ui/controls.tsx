@@ -1,3 +1,6 @@
+"use client";
+
+import { motion, useReducedMotion } from "framer-motion";
 import type {
   ButtonHTMLAttributes,
   ReactElement,
@@ -9,7 +12,22 @@ import type {
   TextareaHTMLAttributes
 } from "react";
 import { Children, cloneElement, isValidElement, useId, useRef } from "react";
+import { motionSprings, reducedMotionTransition } from "@/lib/motion/tokens";
 import { cn } from "@/lib/utils";
+
+type MotionSafeButtonAttributes = Omit<
+  ButtonHTMLAttributes<HTMLButtonElement>,
+  | "onAnimationStart"
+  | "onAnimationEnd"
+  | "onDrag"
+  | "onDragEnd"
+  | "onDragEnter"
+  | "onDragExit"
+  | "onDragLeave"
+  | "onDragOver"
+  | "onDragStart"
+  | "onDrop"
+>;
 
 type FieldLabelProps = {
   label: ReactNode;
@@ -174,9 +192,11 @@ export function ToggleRow({
   className
 }: ToggleRowProps) {
   const descriptionId = useId();
+  const reduceMotion = useReducedMotion();
+  const pressMotion = disabled || reduceMotion ? undefined : { scale: 0.992 };
 
   return (
-    <button
+    <motion.button
       type="button"
       role="switch"
       aria-checked={checked}
@@ -184,6 +204,8 @@ export function ToggleRow({
       disabled={disabled}
       data-testid={testId}
       onClick={() => onChange(!checked)}
+      whileTap={pressMotion}
+      transition={reduceMotion ? reducedMotionTransition : motionSprings.control}
       className={cn(
         "control-surface control-focus control-disabled flex w-full items-center justify-between gap-3 rounded-lg px-3 text-left",
         description ? "min-h-14 py-2.5" : size === "sm" ? "h-10 py-2" : "h-11 py-2.5",
@@ -201,7 +223,7 @@ export function ToggleRow({
       <span className="toggle-track shrink-0" aria-hidden="true">
         <span className="toggle-knob" />
       </span>
-    </button>
+    </motion.button>
   );
 }
 
@@ -212,7 +234,7 @@ export function SwitchRow(props: ToggleRowProps) {
 type ActionButtonVariant = "default" | "primary" | "danger" | "ghost" | "icon";
 type ActionButtonSize = "sm" | "md";
 
-type ActionButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
+type ActionButtonProps = MotionSafeButtonAttributes & {
   variant?: ActionButtonVariant;
   size?: ActionButtonSize;
   loading?: boolean;
@@ -255,16 +277,20 @@ export function ActionButton({
   ...props
 }: ActionButtonProps) {
   const isDisabled = disabled || loading;
+  const reduceMotion = useReducedMotion();
+  const pressMotion = isDisabled || reduceMotion ? undefined : { scale: 0.985 };
   const resolvedLeftIcon = leftIcon ?? icon;
   const resolvedRightIcon = rightIcon ?? trailingIcon;
   const iconOnly = variant === "icon";
 
   return (
-    <button
+    <motion.button
       {...props}
       type={type}
       disabled={isDisabled}
       aria-busy={loading || undefined}
+      whileTap={pressMotion}
+      transition={reduceMotion ? reducedMotionTransition : motionSprings.control}
       className={cn(
         "control-focus control-disabled inline-flex shrink-0 items-center justify-center rounded-lg font-medium transition",
         actionButtonVariantClass[variant],
@@ -288,11 +314,11 @@ export function ActionButton({
           {resolvedRightIcon}
         </span>
       ) : null}
-    </button>
+    </motion.button>
   );
 }
 
-type OptionCardProps = ButtonHTMLAttributes<HTMLButtonElement> & {
+type OptionCardProps = MotionSafeButtonAttributes & {
   "data-testid"?: string;
   selected?: boolean;
   label: ReactNode;
@@ -326,9 +352,11 @@ export function OptionCard({
   const resolvedShowIndicator = showIndicator ?? role === "radio";
   const resolvedTestId = testId ?? props["data-testid"];
   const resolvedTabIndex = props.tabIndex ?? (role === "radio" ? (selected ? 0 : -1) : undefined);
+  const reduceMotion = useReducedMotion();
+  const pressMotion = disabled || reduceMotion ? undefined : { scale: 0.992 };
 
   return (
-    <button
+    <motion.button
       {...props}
       ref={buttonRef}
       type={type}
@@ -338,6 +366,8 @@ export function OptionCard({
       data-testid={resolvedTestId}
       data-selected={selected ? "true" : "false"}
       tabIndex={resolvedTabIndex}
+      whileTap={pressMotion}
+      transition={reduceMotion ? reducedMotionTransition : motionSprings.control}
       className={cn(
         "option-card control-focus control-disabled flex w-full items-start justify-between gap-3 rounded-xl px-4 py-3 text-left",
         className
@@ -358,7 +388,7 @@ export function OptionCard({
       ) : resolvedShowIndicator ? (
         <span className="option-card__indicator shrink-0" aria-hidden="true" />
       ) : null}
-    </button>
+    </motion.button>
   );
 }
 
@@ -369,6 +399,7 @@ type OptionCardChoice = {
   icon?: ReactNode;
   disabled?: boolean;
   testId?: string;
+  dataStyle?: string;
   dataLocale?: string;
   ariaLabel?: string;
   trailing?: ReactNode;
@@ -476,6 +507,7 @@ export function OptionCardGroup({
               selected={value === option.value}
               disabled={option.disabled}
               data-testid={option.testId}
+              data-style={option.dataStyle}
               data-locale={option.dataLocale}
               aria-label={option.ariaLabel}
               onClick={() => resolvedOnChange?.(option.value)}
@@ -520,6 +552,8 @@ export function SegmentedControl<T extends string = string>({
   ...props
 }: SegmentedControlProps<T>) {
   const refs = useRef<Record<string, HTMLButtonElement | null>>({});
+  const activeIndicatorId = useId();
+  const reduceMotion = useReducedMotion();
   const resolvedOnChange = onChange ?? onValueChange;
   const resolvedColumns = columns ?? Math.min(Math.max(options.length, 2), 4);
 
@@ -568,11 +602,19 @@ export function SegmentedControl<T extends string = string>({
           data-segment-value={option.value}
           onClick={() => resolvedOnChange?.(option.value)}
           className={cn(
-            "segmented-control__item control-focus control-disabled rounded-lg px-3 font-semibold transition",
+            "segmented-control__item control-focus control-disabled relative isolate overflow-hidden rounded-lg px-3 font-semibold transition",
             size === "sm" ? "h-9 text-sm" : "h-11 text-sm"
           )}
         >
-          {option.label}
+          {value === option.value ? (
+            <motion.span
+              layoutId={`${activeIndicatorId}-selected`}
+              aria-hidden="true"
+              className="segmented-control__active-indicator"
+              transition={reduceMotion ? reducedMotionTransition : motionSprings.control}
+            />
+          ) : null}
+          <span className="relative z-10">{option.label}</span>
         </button>
       ))}
     </div>

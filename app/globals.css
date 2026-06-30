@@ -63,6 +63,11 @@ body {
   --control-selected-border: color-mix(in srgb, var(--app-accent) 34%, rgb(var(--panel-border)));
   --control-selected-bg: color-mix(in srgb, var(--app-accent) 16%, rgb(var(--button-bg-hover)));
   --control-selected-bg-strong: color-mix(in srgb, var(--app-accent) 24%, rgb(var(--button-bg-hover)));
+  --motion-duration-fast: 140ms;
+  --motion-duration-normal: 200ms;
+  --motion-duration-slow: 320ms;
+  --motion-ease-standard: cubic-bezier(0.22, 1, 0.36, 1);
+  --motion-ease-emphasized: cubic-bezier(0.16, 1, 0.3, 1);
   --status-success-fg: 187 247 208;
   --status-success-bg: 74 222 128 / 0.1;
   --status-success-border: 187 247 208 / 0.22;
@@ -262,6 +267,20 @@ body[data-desktop-shell="true"] {
   z-index: 1;
 }
 
+.dynamic-app-background__image {
+  opacity: 1;
+  transform: scale(1);
+  transition:
+    opacity 520ms var(--motion-ease-standard),
+    filter 520ms var(--motion-ease-standard),
+    transform 700ms var(--motion-ease-emphasized);
+}
+
+.dynamic-app-background__image--previous {
+  opacity: 0;
+  transform: scale(1.012);
+}
+
 .desktop-titlebar__brand {
   min-width: 0;
   text-shadow: 0 1px 14px rgba(0, 0, 0, 0.24);
@@ -334,16 +353,20 @@ body[data-desktop-shell="true"] {
   background: rgb(var(--button-bg));
   color: rgb(var(--app-fg));
   transition:
-    border-color 150ms ease,
-    box-shadow 150ms ease,
-    background 150ms ease,
-    color 150ms ease,
-    opacity 150ms ease,
-    transform 150ms ease;
+    border-color var(--motion-duration-fast) var(--motion-ease-standard),
+    box-shadow var(--motion-duration-fast) var(--motion-ease-standard),
+    background var(--motion-duration-fast) var(--motion-ease-standard),
+    color var(--motion-duration-fast) var(--motion-ease-standard),
+    opacity var(--motion-duration-fast) var(--motion-ease-standard),
+    transform var(--motion-duration-fast) var(--motion-ease-standard);
 }
 
 .app-button:hover {
   background: rgb(var(--button-bg-hover));
+}
+
+.app-button:active:not(:disabled) {
+  transform: scale(0.985);
 }
 
 .app-button:focus-visible {
@@ -362,16 +385,17 @@ body[data-desktop-shell="true"] {
   background: rgb(var(--button-bg));
   color: rgb(var(--app-fg));
   transition:
-    border-color 150ms ease,
-    box-shadow 150ms ease,
-    background 150ms ease,
-    color 150ms ease,
-    opacity 150ms ease,
-    transform 150ms ease;
+    border-color var(--motion-duration-fast) var(--motion-ease-standard),
+    box-shadow var(--motion-duration-fast) var(--motion-ease-standard),
+    background var(--motion-duration-fast) var(--motion-ease-standard),
+    color var(--motion-duration-fast) var(--motion-ease-standard),
+    opacity var(--motion-duration-fast) var(--motion-ease-standard),
+    transform var(--motion-duration-fast) var(--motion-ease-standard);
 }
 
 .control-surface:hover:not(:disabled):not([aria-disabled="true"]) {
   background: rgb(var(--button-bg-hover));
+  transform: translateY(-1px);
 }
 
 .control-focus {
@@ -396,12 +420,12 @@ body[data-desktop-shell="true"] {
 .option-card,
 .segmented-control__item {
   transition:
-    border-color 150ms ease,
-    box-shadow 150ms ease,
-    background 150ms ease,
-    color 150ms ease,
-    opacity 150ms ease,
-    transform 150ms ease;
+    border-color var(--motion-duration-fast) var(--motion-ease-standard),
+    box-shadow var(--motion-duration-fast) var(--motion-ease-standard),
+    background var(--motion-duration-fast) var(--motion-ease-standard),
+    color var(--motion-duration-fast) var(--motion-ease-standard),
+    opacity var(--motion-duration-fast) var(--motion-ease-standard),
+    transform var(--motion-duration-fast) var(--motion-ease-standard);
 }
 
 .control-variant-primary {
@@ -412,6 +436,7 @@ body[data-desktop-shell="true"] {
 
 .control-variant-primary:hover:not(:disabled):not([aria-disabled="true"]) {
   background: color-mix(in srgb, var(--app-accent) 30%, rgb(var(--button-bg-hover)));
+  transform: translateY(-1px);
 }
 
 .control-variant-danger {
@@ -422,6 +447,7 @@ body[data-desktop-shell="true"] {
 
 .control-variant-danger:hover:not(:disabled):not([aria-disabled="true"]) {
   background: color-mix(in srgb, rgb(var(--status-danger-bg)) 76%, rgb(var(--button-bg-hover)));
+  transform: translateY(-1px);
 }
 
 .control-variant-ghost {
@@ -432,6 +458,7 @@ body[data-desktop-shell="true"] {
 
 .control-variant-ghost:hover:not(:disabled):not([aria-disabled="true"]) {
   background: rgb(var(--button-bg));
+  transform: translateY(-1px);
 }
 
 .control-variant-icon {
@@ -442,6 +469,7 @@ body[data-desktop-shell="true"] {
 
 .control-variant-icon:hover:not(:disabled):not([aria-disabled="true"]) {
   background: rgb(var(--button-bg));
+  transform: translateY(-1px);
 }
 
 .toggle-track {
@@ -453,7 +481,10 @@ body[data-desktop-shell="true"] {
   border: 1px solid rgb(var(--panel-border));
   border-radius: 999px;
   background: rgb(var(--button-bg));
-  transition: border-color 150ms ease, background 150ms ease, opacity 150ms ease;
+  transition:
+    border-color var(--motion-duration-normal) var(--motion-ease-standard),
+    background var(--motion-duration-normal) var(--motion-ease-standard),
+    opacity var(--motion-duration-fast) var(--motion-ease-standard);
 }
 
 .toggle-knob {
@@ -466,7 +497,10 @@ body[data-desktop-shell="true"] {
   background: rgb(var(--app-fg));
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.22);
   transform: translateX(0);
-  transition: transform 150ms ease, background 150ms ease, opacity 150ms ease;
+  transition:
+    transform var(--motion-duration-normal) var(--motion-ease-emphasized),
+    background var(--motion-duration-fast) var(--motion-ease-standard),
+    opacity var(--motion-duration-fast) var(--motion-ease-standard);
 }
 
 [role="switch"][aria-checked="true"] .toggle-track {
@@ -486,6 +520,7 @@ body[data-desktop-shell="true"] {
 
 .option-card:hover:not(:disabled):not([aria-disabled="true"]) {
   background: rgb(var(--button-bg-hover));
+  transform: translateY(-1px);
 }
 
 .option-card[data-selected="true"],
@@ -503,7 +538,10 @@ body[data-desktop-shell="true"] {
   border-radius: 999px;
   background: transparent;
   box-shadow: inset 0 0 0 0 transparent;
-  transition: border-color 150ms ease, background 150ms ease, box-shadow 150ms ease;
+  transition:
+    border-color var(--motion-duration-fast) var(--motion-ease-standard),
+    background var(--motion-duration-fast) var(--motion-ease-standard),
+    box-shadow var(--motion-duration-fast) var(--motion-ease-standard);
 }
 
 .option-card[data-selected="true"] .option-card__indicator,
@@ -527,13 +565,23 @@ body[data-desktop-shell="true"] {
 .segmented-control__item:hover:not(:disabled):not([aria-disabled="true"]):not([aria-checked="true"]):not([data-selected="true"]) {
   background: rgb(var(--button-bg));
   color: rgb(var(--app-fg));
+  transform: translateY(-1px);
 }
 
 .segmented-control__item[aria-checked="true"],
 .segmented-control__item[data-selected="true"] {
   border-color: var(--control-selected-border);
-  background: var(--control-selected-bg);
+  background: transparent;
   color: rgb(var(--app-fg));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.segmented-control__active-indicator {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  background: var(--control-selected-bg);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
@@ -779,8 +827,21 @@ button {
   .toggle-knob,
   .option-card,
   .option-card__indicator,
-  .segmented-control__item {
+  .segmented-control__active-indicator,
+  .segmented-control__item,
+  .dynamic-app-background__image {
     transition-duration: 0ms;
+  }
+
+  .app-button:active:not(:disabled),
+  .control-surface:hover:not(:disabled):not([aria-disabled="true"]),
+  .control-variant-primary:hover:not(:disabled):not([aria-disabled="true"]),
+  .control-variant-danger:hover:not(:disabled):not([aria-disabled="true"]),
+  .control-variant-ghost:hover:not(:disabled):not([aria-disabled="true"]),
+  .control-variant-icon:hover:not(:disabled):not([aria-disabled="true"]),
+  .option-card:hover:not(:disabled):not([aria-disabled="true"]),
+  .segmented-control__item:hover:not(:disabled):not([aria-disabled="true"]) {
+    transform: none;
   }
 }
 
@@ -1091,5 +1152,13 @@ button {
   .ai-stream-progress,
   .translation-border-gradient {
     animation: none;
+  }
+
+  .star-border-container[data-variant="ai"] {
+    transition-duration: 0ms;
+  }
+
+  .star-border-container[data-variant="ai"]:hover:not(:disabled) {
+    transform: none;
   }
 }

@@ -42,6 +42,12 @@ export function ExportCelebration({ burstKey, accentColor = "#7C3AED" }: { burst
       return;
     }
 
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      particlesRef.current = [];
+      setVisible(false);
+      return;
+    }
+
     const canvasElement = canvasRef.current;
     const maybeContext = canvasElement?.getContext("2d");
     if (!canvasElement || !maybeContext) {

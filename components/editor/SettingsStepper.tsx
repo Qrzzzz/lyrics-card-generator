@@ -1,9 +1,18 @@
 "use client";
 
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { Check } from "lucide-react";
 import type { ReactNode } from "react";
+import { useRef } from "react";
+import { MotionPresence } from "@/components/motion/MotionPresence";
 import { getReadableForegroundColor } from "@/lib/contrast-color";
+import {
+  motionDurations,
+  motionEasings,
+  reducedMotionTransition,
+  stepPanelVariants,
+  type StepDirection
+} from "@/lib/motion/tokens";
 import { cn } from "@/lib/utils";
 
 export type SettingsStep = {
@@ -32,10 +41,18 @@ export function SettingsStepper({
   themeColor = "#7C3AED"
 }: SettingsStepperProps) {
   const reduceMotion = useReducedMotion();
+  const previousStepRef = useRef(currentStep);
+  const stepDirection: StepDirection = currentStep >= previousStepRef.current ? 1 : -1;
   const activeStep = steps[currentStep] ?? steps[0];
   const isFirstStep = currentStep <= 0;
   const isLastStep = currentStep >= steps.length - 1;
   const markerForegroundColor = getReadableForegroundColor(themeColor);
+  const variants = stepPanelVariants(reduceMotion ?? false);
+  const transition = reduceMotion
+    ? reducedMotionTransition
+    : { duration: motionDurations.normal, ease: motionEasings.standard };
+
+  previousStepRef.current = currentStep;
 
   function goToStep(step: number) {
     onStepChange(Math.min(Math.max(step, 0), steps.length - 1));
@@ -45,13 +62,15 @@ export function SettingsStepper({
     <section className={cn("grid min-w-0 gap-4", isLastStep && "content-start")}>
       <div className="glass-panel flex h-[14.25rem] flex-col rounded-lg p-4">
         <div className="mb-4 flex min-h-[5.25rem] items-start justify-between gap-4">
-          <AnimatePresence mode="wait" initial={false}>
+          <MotionPresence>
             <motion.div
               key={activeStep.id}
-              initial={reduceMotion ? false : { opacity: 0, x: 12 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={reduceMotion ? undefined : { opacity: 0, x: -12 }}
-              transition={{ duration: 0.18 }}
+              custom={stepDirection}
+              variants={variants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={transition}
               className="min-w-0"
             >
               <p className="app-text-subtle text-[11px] uppercase tracking-[0.16em]">
@@ -62,7 +81,7 @@ export function SettingsStepper({
                 <p className="app-text-subtle mt-1 line-clamp-2 text-sm leading-5">{activeStep.description}</p>
               ) : null}
             </motion.div>
-          </AnimatePresence>
+          </MotionPresence>
         </div>
 
         <div className="flex flex-wrap gap-2">
@@ -76,6 +95,7 @@ export function SettingsStepper({
                 type="button"
                 onClick={() => goToStep(index)}
                 aria-current={isActive ? "step" : undefined}
+                data-active={isActive ? "true" : "false"}
                 className={cn(
                   "group flex flex-[1_1_auto] items-center gap-2 whitespace-nowrap rounded-lg border px-2.5 py-2 text-left transition",
                   isActive
@@ -100,29 +120,21 @@ export function SettingsStepper({
       </div>
 
       <div className="relative min-w-0">
-        {steps.map((step, index) => {
-          const isActive = index === currentStep;
-
-          return (
+        <MotionPresence>
+          {activeStep ? (
             <motion.div
-              key={step.id}
-              aria-hidden={!isActive}
-              className={cn(!isActive && "hidden")}
-              initial={false}
-              animate={
-                reduceMotion
-                  ? { opacity: 1, x: 0 }
-                  : {
-                      opacity: isActive ? 1 : 0,
-                      x: isActive ? 0 : index < currentStep ? -18 : 18
-                    }
-              }
-              transition={{ duration: 0.22, ease: "easeOut" }}
+              key={activeStep.id}
+              custom={stepDirection}
+              variants={variants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={transition}
             >
-              {step.content}
+              {activeStep.content}
             </motion.div>
-          );
-        })}
+          ) : null}
+        </MotionPresence>
       </div>
 
       <div

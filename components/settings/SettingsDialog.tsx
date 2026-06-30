@@ -1,8 +1,10 @@
 "use client";
 
 import { Bot, Download, Info, Loader2, Palette, Settings, SlidersHorizontal, Wallpaper, X } from "lucide-react";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { MotionDialogOverlay, MotionDialogPanel } from "@/components/motion/MotionDialog";
+import { MotionPresence } from "@/components/motion/MotionPresence";
 import { AiSettingsSection } from "@/components/settings/AiSettingsSection";
 import { AboutSettingsSection } from "@/components/settings/AboutSettingsSection";
 import { AppearanceSettingsSection } from "@/components/settings/AppearanceSettingsSection";
@@ -14,6 +16,7 @@ import { clearAISettingsApiKey, loadAISettings, saveAISettings } from "@/lib/ai/
 import { DEFAULT_AI_SETTINGS, type AISettings, type AISettingsSummary } from "@/lib/ai/types";
 import { getAIUiCopy } from "@/lib/ai/ui-copy";
 import { createT } from "@/lib/i18n";
+import { motionDurations, motionEasings, reducedMotionTransition, tabPanelVariants } from "@/lib/motion/tokens";
 import { settingsCopy } from "@/lib/settings/copy";
 import { removeBackgroundImage } from "@/lib/settings/background-storage";
 import type { UserSettings } from "@/lib/settings/types";
@@ -33,6 +36,7 @@ export function SettingsDialog({ open, locale, userSettings, onLocaleChange, onU
   const copy = settingsCopy[locale];
   const aiCopy = getAIUiCopy(locale);
   const t = useMemo(() => createT(locale), [locale]);
+  const reduceMotion = useReducedMotion();
   const [activeTab, setActiveTab] = useState("general");
   const originalSettingsRef = useRef(userSettings);
   const isOpenRef = useRef(open);
@@ -63,8 +67,6 @@ export function SettingsDialog({ open, locale, userSettings, onLocaleChange, onU
     const onKeyDown = (event: KeyboardEvent) => { if (event.key === "Escape" && !isSaving && !isClearingApiKey) handleCancel(); };
     document.addEventListener("keydown", onKeyDown); return () => document.removeEventListener("keydown", onKeyDown);
   }, [isClearingApiKey, isSaving, onClose, open]);
-
-  if (!open) return null;
 
   function updateDraft(next: UserSettings) {
     setDraft(next);
@@ -138,12 +140,72 @@ export function SettingsDialog({ open, locale, userSettings, onLocaleChange, onU
     : draft.uiTheme === "dark-acrylic" ? "#60A5FA"
     : draft.uiAccentColor;
 
-  return <div className="fixed inset-0 z-[100] grid place-items-center bg-black/40 p-3 backdrop-blur-sm" onMouseDown={(event) => { if (event.target === event.currentTarget && !isSaving) handleCancel(); }}>
-    <div role="dialog" aria-modal="true" aria-labelledby="settings-dialog-title" data-testid="settings-dialog" className="settings-surface glass-panel flex max-h-[92vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl">
-      <div className="flex items-start justify-between gap-4 border-b border-[rgb(var(--panel-border))] p-4 sm:p-5"><div><div className="flex items-center gap-2"><Settings className="h-5 w-5" /><h2 id="settings-dialog-title" className="text-xl font-bold">{copy.settings}</h2></div><p className="app-text-subtle mt-1 text-sm">{copy.description}</p></div><button type="button" onClick={handleCancel} className="app-button grid h-9 w-9 place-items-center rounded-lg" aria-label={copy.cancel}><X className="h-4 w-4" /></button></div>
-      <div className="flex min-h-0 flex-1 flex-col md:flex-row"><SettingsTabs tabs={tabs} active={activeTab} onChange={setActiveTab} /><div className="min-h-[420px] flex-1 overflow-y-auto p-4 sm:p-5"><AnimatePresence mode="wait"><motion.div key={activeTab} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8 }} transition={{ duration: 0.18 }}>{panel}</motion.div></AnimatePresence></div></div>
-      {error ? <p role="alert" className="status-danger mx-5 mb-2 rounded-lg border px-3 py-2 text-sm">{error}</p> : null}
-      <div className="flex justify-end gap-3 border-t border-[rgb(var(--panel-border))] p-4"><button type="button" onClick={handleCancel} className="app-button h-10 rounded-lg px-4 text-sm font-semibold">{copy.cancel}</button><button type="button" data-testid="save-settings" onClick={() => void handleSave()} disabled={isSaving || isLoading || isClearingApiKey} className="h-10 rounded-lg px-4 text-sm font-bold text-white disabled:opacity-60" style={{ background: saveButtonColor }}>{isSaving ? aiCopy.saving : copy.save}</button></div>
-    </div>
-  </div>;
+  return (
+    <MotionPresence>
+      {open ? (
+        <MotionDialogOverlay
+          className="fixed inset-0 z-[100] grid place-items-center bg-black/40 p-3 backdrop-blur-sm"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget && !isSaving) handleCancel();
+          }}
+        >
+          <MotionDialogPanel
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="settings-dialog-title"
+            data-testid="settings-dialog"
+            className="settings-surface glass-panel flex max-h-[92vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl"
+          >
+            <div className="flex items-start justify-between gap-4 border-b border-[rgb(var(--panel-border))] p-4 sm:p-5">
+              <div>
+                <div className="flex items-center gap-2">
+                  <Settings className="h-5 w-5" />
+                  <h2 id="settings-dialog-title" className="text-xl font-bold">{copy.settings}</h2>
+                </div>
+                <p className="app-text-subtle mt-1 text-sm">{copy.description}</p>
+              </div>
+              <button type="button" onClick={handleCancel} className="app-button grid h-9 w-9 place-items-center rounded-lg" aria-label={copy.cancel}>
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="flex min-h-0 flex-1 flex-col md:flex-row">
+              <SettingsTabs tabs={tabs} active={activeTab} onChange={setActiveTab} />
+              <div className="min-h-[420px] flex-1 overflow-y-auto p-4 sm:p-5">
+                <MotionPresence>
+                  <motion.div
+                    key={activeTab}
+                    variants={tabPanelVariants(reduceMotion ?? false)}
+                    initial="initial"
+                    animate="animate"
+                    exit="exit"
+                    transition={
+                      reduceMotion
+                        ? reducedMotionTransition
+                        : { duration: motionDurations.normal, ease: motionEasings.standard }
+                    }
+                  >
+                    {panel}
+                  </motion.div>
+                </MotionPresence>
+              </div>
+            </div>
+            {error ? <p role="alert" className="status-danger mx-5 mb-2 rounded-lg border px-3 py-2 text-sm">{error}</p> : null}
+            <div className="flex justify-end gap-3 border-t border-[rgb(var(--panel-border))] p-4">
+              <button type="button" onClick={handleCancel} className="app-button h-10 rounded-lg px-4 text-sm font-semibold">{copy.cancel}</button>
+              <button
+                type="button"
+                data-testid="save-settings"
+                onClick={() => void handleSave()}
+                disabled={isSaving || isLoading || isClearingApiKey}
+                className="h-10 rounded-lg px-4 text-sm font-bold text-white disabled:opacity-60"
+                style={{ background: saveButtonColor }}
+              >
+                {isSaving ? aiCopy.saving : copy.save}
+              </button>
+            </div>
+          </MotionDialogPanel>
+        </MotionDialogOverlay>
+      ) : null}
+    </MotionPresence>
+  );
 }

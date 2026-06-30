@@ -1,6 +1,5 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { EditorHeader } from "@/components/editor/EditorHeader";
 import { ExamplesDialog } from "@/components/editor/ExamplesDialog";
@@ -10,6 +9,7 @@ import { LocalAudioParser } from "@/components/editor/LocalAudioParser";
 import { LyricsFetchPanel } from "@/components/editor/LyricsFetchPanel";
 import { LyricInput } from "@/components/editor/LyricInput";
 import { AiTranslatePanel } from "@/components/lyrics/AiTranslatePanel";
+import { MotionPanel } from "@/components/motion/MotionPanel";
 import { PreviewPane } from "@/components/editor/PreviewPane";
 import { SettingsStepper, type SettingsStep } from "@/components/editor/SettingsStepper";
 import { SongInfoForm } from "@/components/editor/SongInfoForm";
@@ -785,12 +785,7 @@ export function LyricEditor() {
         <EditorHeader locale={state.locale} t={t} onOpenExamples={() => setIsExamplesOpen(true)} onClearAll={clearAllContent} onOpenSettings={() => setIsSettingsOpen(true)} />
 
         <div className="grid min-w-0 max-w-full gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(420px,600px)]">
-          <motion.div
-            initial={{ opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.35 }}
-            className="order-2 grid min-w-0 gap-4 lg:order-1"
-          >
+          <MotionPanel className="order-2 grid min-w-0 gap-4 lg:order-1">
             <SettingsStepper
               steps={settingsSteps}
               currentStep={currentStep}
@@ -799,7 +794,7 @@ export function LyricEditor() {
               nextText={t("step.next")}
               themeColor={state.palette?.primary ?? DEFAULT_PALETTE.primary}
             />
-          </motion.div>
+          </MotionPanel>
 
           <PreviewPane
             isPreviewVisible={isPreviewVisible}

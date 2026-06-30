@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v3.7.1.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v3.8.0.ja.md">リリースノート</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="#ローカル開発">ローカル開発</a> ·
   <a href="./LICENSE">ライセンス</a>
@@ -50,20 +50,20 @@
 
 最新版は [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) からダウンロードできます。
 
-* 推奨インストーラー：`Lyrics Card Generator Setup 3.7.1.exe`
-* ポータブル版：`Lyrics Card Generator-3.7.1-portable.exe`
+* 推奨インストーラー：`Lyrics Card Generator Setup 3.8.0.exe`
+* ポータブル版：`Lyrics Card Generator-3.8.0-portable.exe`
 
 通常利用にはインストーラーを推奨します。ポータブル版は一時利用、検証、リムーバブルドライブでの利用に向いています。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v3.7.1 の更新ポイント
+### v3.8.0 の更新ポイント
 
-* スタイルパネル、歌詞入力、曲情報、設定内のトグルを標準化し、オン / オフ状態、無効状態、視覚フィードバックの挙動をそろえました。
-* 言語選択のような単一選択を共通のオプションカードへ整理し、レイアウトモード、グリッド密度、フレーム / フルブリードのようなコンパクトな選択肢を一貫したセグメントコントロールへ統一しました。
-* 設定パネルで使う入力欄、テキストエリア、セレクト、アクションボタンの見た目と操作時のフィードバックを統一しました。
-* 共通コントロールのキーボード操作性、フォーカスの見え方、ラベル表示、無効状態のフィードバックを改善しました。
-* 後続の v3.8.0 アニメーション更新に向けた土台を整えますが、このリリースで新しいアニメーションシステムは追加していません。
+* エディター外枠、設定ダイアログ、ステップ遷移、プレビュー外枠に集中管理されたモーションシステムを導入しました。
+* 共有ボタン、トグル、オプションカード、セグメントコントロールに控えめなマイクロインタラクションを追加しつつ、キーボード、フォーカス、テストフックの挙動を維持しました。
+* AI 翻訳パネルを共有コントロールへ整理し、ステータス、推論、翻訳出力に一貫したモーションフィードバックを追加しました。
+* `prefers-reduced-motion` を尊重し、動きの大きい効果は透明度のみの挙動へ縮小するか無効化します。
+* エクスポートされる歌詞カード PNG 出力は安定したままで、アニメーション付きカード書き出しは追加していません。
 
 <br clear="right" />
 
@@ -71,12 +71,12 @@
 
 GitHub Release ページではデフォルトで簡体字中国語の短縮版が使用され、完全なリリースノートは `docs/releases/` にて管理されています：
 
-* [简体中文](./docs/releases/v3.7.1.zh-CN.md)
-* [繁體中文](./docs/releases/v3.7.1.zh-TW.md)
-* [English](./docs/releases/v3.7.1.en.md)
-* [Français](./docs/releases/v3.7.1.fr.md)
-* [日本語](./docs/releases/v3.7.1.ja.md)
-* [Español](./docs/releases/v3.7.1.es.md)
+* [简体中文](./docs/releases/v3.8.0.zh-CN.md)
+* [繁體中文](./docs/releases/v3.8.0.zh-TW.md)
+* [English](./docs/releases/v3.8.0.en.md)
+* [Français](./docs/releases/v3.8.0.fr.md)
+* [日本語](./docs/releases/v3.8.0.ja.md)
+* [Español](./docs/releases/v3.8.0.es.md)
 
 <a id="主な機能"></a>
 
