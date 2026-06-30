@@ -5,7 +5,7 @@ import {
   DEFAULT_TRANSLATION,
   defaultState
 } from "../components/editor/editor-defaults";
-import { useEditorThemeTokens } from "../components/editor/hooks/useEditorThemeTokens";
+import { resolveEditorThemeTokens } from "../components/editor/resolveEditorThemeTokens";
 import { normalizeAIErrorMessage } from "../components/editor/utils/normalizeAIErrorMessage";
 import { sizeSnapshot } from "../components/editor/utils/sizeSnapshot";
 import { DEFAULT_FONT_SCHEME } from "../lib/font-schemes";
@@ -35,7 +35,7 @@ assert.equal(
 );
 assert.equal(normalizeAIErrorMessage("unexpected"), "AI 翻译请求失败，请检查网络和接口设置。");
 
-const albumTokens = useEditorThemeTokens({
+const albumTokens = resolveEditorThemeTokens({
   userSettings: normalizeUserSettings({ uiTheme: "album-dynamic" }),
   palette: {
     ...DEFAULT_PALETTE,
@@ -47,7 +47,7 @@ assert.equal(albumTokens.themeAccent, "#2255AA");
 assert.equal(albumTokens.uiBackgroundColor, "#111827");
 assert.equal(albumTokens.resolvedThemeTokens["--app-text-primary"], albumTokens.uiTextTokens.primary);
 
-const customTokens = useEditorThemeTokens({
+const customTokens = resolveEditorThemeTokens({
   userSettings: normalizeUserSettings({
     uiTheme: "custom",
     appBackground: { mode: "solid", solidColor: "#F5F5F5" }

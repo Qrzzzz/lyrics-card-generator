@@ -4,12 +4,12 @@ import { resolveEffectiveAppBackgroundColor } from "@/lib/settings/user-settings
 import { DEFAULT_PALETTE } from "@/lib/palette-background";
 import type { AppState } from "@/lib/types";
 
-type UseEditorThemeTokensInput = {
+type ResolveEditorThemeTokensInput = {
   userSettings: UserSettings;
   palette?: AppState["palette"];
 };
 
-export function useEditorThemeTokens({ userSettings, palette }: UseEditorThemeTokensInput) {
+export function resolveEditorThemeTokens({ userSettings, palette }: ResolveEditorThemeTokensInput) {
   const themeAccent = userSettings.uiTheme === "album-dynamic"
     ? palette?.primary ?? DEFAULT_PALETTE.primary
     : userSettings.uiTheme === "light-blue" ? "#2563EB"

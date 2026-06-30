@@ -24,7 +24,7 @@ import {
   useResolvedTextColor,
   useSyncedCoverProxy
 } from "@/components/editor/hooks/useLyricEditorEffects";
-import { useEditorThemeTokens } from "@/components/editor/hooks/useEditorThemeTokens";
+import { resolveEditorThemeTokens } from "@/components/editor/resolveEditorThemeTokens";
 import { useMeasuredAutoCanvasHeight } from "@/components/editor/hooks/useMeasuredAutoCanvasHeight";
 import { ClickSpark } from "@/components/layout/ClickSpark";
 import { DesktopTitleBar } from "@/components/layout/DesktopTitleBar";
@@ -193,7 +193,7 @@ export function LyricEditor() {
       onExport: completeAndExport
     }
   });
-  const { themeAccent, resolvedThemeTokens, customThemeTokens } = useEditorThemeTokens({
+  const { themeAccent, resolvedThemeTokens, customThemeTokens } = resolveEditorThemeTokens({
     userSettings,
     palette: state.palette
   });
