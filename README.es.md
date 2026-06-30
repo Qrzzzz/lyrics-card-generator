@@ -19,7 +19,7 @@
 <p>
   <strong>Navegación</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Descargar la última versión</a> ·
-  <a href="./docs/releases/v3.8.0.es.md">Notas de la versión</a> ·
+  <a href="./docs/releases/v3.8.1.es.md">Notas de la versión</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en línea</a> ·
   <a href="#funciones-principales">Funciones principales</a> ·
   <a href="#desarrollo-local">Desarrollo local</a> ·
@@ -51,20 +51,19 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 Descarga la versión más reciente desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Instalador recomendado: `Lyrics Card Generator Setup 3.8.0.exe`
-* Versión portable: `Lyrics Card Generator-3.8.0-portable.exe`
+* Instalador recomendado: `Lyrics Card Generator Setup 3.8.1.exe`
+* Versión portable: `Lyrics Card Generator-3.8.1-portable.exe`
 
 El instalador se recomienda para uso habitual. La versión portable es útil para pruebas, uso temporal o ejecución desde una unidad extraíble.
 
 > La compilación actual no está firmada. Windows puede mostrar una advertencia de SmartScreen, algo habitual en aplicaciones personales sin firma.
 
-### Aspectos destacados de la versión 3.8.0
+### Aspectos destacados de la versión 3.8.1
 
-* Introduce un sistema de movimiento centralizado para el contenedor del editor, el diálogo de ajustes, las transiciones de pasos y el contenedor de vista previa.
-* Añade microinteracciones contenidas a botones, interruptores, tarjetas de opción y controles segmentados compartidos, conservando teclado, foco y hooks de prueba.
-* El panel de traducción IA usa controles compartidos y añade respuesta de movimiento coherente para estado, razonamiento y salida de traducción.
-* Respeta `prefers-reduced-motion`, reduciendo los efectos con mucho movimiento a opacidad o desactivándolos.
-* Mantiene estable la salida PNG de las tarjetas de letras exportadas y no introduce exportaciones de tarjetas animadas.
+* Reduce `LyricEditor.tsx` a una capa de orquestación al extraer valores por defecto, ensamblado de pasos, acciones de negocio, traducción IA, preferencias y módulos de tokens de tema.
+* Deduplica los helpers repetidos de solicitudes IA entre Web y Electron sin cambiar la ruta `/api/ai/translate` ni la ruta de Electron IPC / `safeStorage`.
+* Conserva todas las entradas existentes para enlaces de canciones, audio local, obtención de letras, traducción IA, extracción de paleta, temas, Acrylic, exportación, ejemplos, idiomas, fuentes y diseño.
+* La regresión quedó validada con `npm run typecheck`, `npm run core:test`, `npm run build` y `npm run desktop:build`.
 
 <br clear="right" />
 
@@ -72,12 +71,12 @@ El instalador se recomienda para uso habitual. La versión portable es útil par
 
 La página de GitHub Release utiliza por defecto la versión corta en chino simplificado, las notas de publicación completas se mantienen en `docs/releases/`:
 
-* [简体中文](./docs/releases/v3.8.0.zh-CN.md)
-* [繁體中文](./docs/releases/v3.8.0.zh-TW.md)
-* [English](./docs/releases/v3.8.0.en.md)
-* [Français](./docs/releases/v3.8.0.fr.md)
-* [日本語](./docs/releases/v3.8.0.ja.md)
-* [Español](./docs/releases/v3.8.0.es.md)
+* [简体中文](./docs/releases/v3.8.1.zh-CN.md)
+* [繁體中文](./docs/releases/v3.8.1.zh-TW.md)
+* [English](./docs/releases/v3.8.1.en.md)
+* [Français](./docs/releases/v3.8.1.fr.md)
+* [日本語](./docs/releases/v3.8.1.ja.md)
+* [Español](./docs/releases/v3.8.1.es.md)
 
 <a id="funciones-principales"></a>
 
