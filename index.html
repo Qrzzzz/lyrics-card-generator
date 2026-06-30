@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -18,9 +18,8 @@
       --field-border: rgba(255, 255, 255, 0.18);
       --text: #f8fafc;
       --muted: rgba(226, 232, 240, 0.72);
-      --subtle: rgba(203, 213, 225, 0.58);
       --shadow: rgba(0, 0, 0, 0.38);
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
 
     * {
@@ -50,6 +49,10 @@
 
     button {
       touch-action: manipulation;
+    }
+
+    a {
+      color: #bfdbfe;
     }
 
     .app {
@@ -117,6 +120,28 @@
 
     .kicker {
       margin-top: 4px;
+    }
+
+    .notice {
+      margin-top: 14px;
+      padding: 12px 13px;
+      border: 1px solid rgba(140, 200, 255, 0.35);
+      border-radius: 10px;
+      background: rgba(14, 165, 233, 0.09);
+      color: rgba(248, 250, 252, 0.9);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .notice strong {
+      display: block;
+      margin-bottom: 4px;
+      color: #ffffff;
+      font-size: 13px;
+    }
+
+    .notice a {
+      font-weight: 800;
     }
 
     .form-grid {
@@ -204,7 +229,8 @@
 
     .segmented button,
     .action-row button,
-    .switch {
+    .switch,
+    .modal-actions a {
       border: 1px solid transparent;
       border-radius: 7px;
       background: transparent;
@@ -217,7 +243,8 @@
 
     .segmented button:hover,
     .action-row button:hover,
-    .switch:hover {
+    .switch:hover,
+    .modal-actions a:hover {
       background: rgba(255, 255, 255, 0.09);
       color: var(--text);
     }
@@ -327,16 +354,65 @@
       background: #0f172a;
     }
 
-    .sr-only {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      padding: 0;
-      margin: -1px;
-      overflow: hidden;
-      clip: rect(0, 0, 0, 0);
-      white-space: nowrap;
-      border: 0;
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      display: grid;
+      place-items: center;
+      padding: 18px;
+      background: rgba(2, 6, 23, 0.72);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+    }
+
+    .modal-backdrop[hidden] {
+      display: none;
+    }
+
+    .modal {
+      width: min(520px, 100%);
+      padding: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 14px;
+      background: rgba(15, 23, 42, 0.92);
+      box-shadow: 0 30px 90px rgba(0, 0, 0, 0.52);
+    }
+
+    .modal h2 {
+      margin: 0 0 10px;
+      font-size: 20px;
+    }
+
+    .modal p {
+      margin: 0;
+      color: rgba(226, 232, 240, 0.82);
+      line-height: 1.6;
+    }
+
+    .modal-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .modal-actions a {
+      display: inline-grid;
+      place-items: center;
+      text-decoration: none;
+      min-height: 40px;
+    }
+
+    .modal-actions button {
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 7px;
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text);
+      cursor: pointer;
+      min-height: 40px;
+      padding: 8px 12px;
+      font-weight: 700;
     }
 
     @media (max-width: 980px) {
@@ -381,67 +457,86 @@
   </style>
 </head>
 <body>
+  <div class="modal-backdrop" id="liteNotice" role="dialog" aria-modal="true" aria-labelledby="liteNoticeTitle">
+    <section class="modal">
+      <h2 id="liteNoticeTitle">Web Lite notice</h2>
+      <p>
+        This Lite web version is far from equivalent to the desktop app. For the complete feature set and the intended experience, please use the desktop version.
+      </p>
+      <div class="modal-actions">
+        <a class="primary" href="https://github.com/qrzzzz/lyrics-card-generator/releases/latest" target="_blank" rel="noopener noreferrer">Open latest desktop release</a>
+        <button type="button" id="continueLiteBtn">Continue with Web Lite</button>
+      </div>
+    </section>
+  </div>
+
   <main class="app">
-    <section class="panel editor" aria-label="歌词卡编辑器">
+    <section class="panel editor" aria-label="Lyrics card editor">
       <header class="brand">
         <img class="brand-mark" src="public/app-icon.png" alt="" />
         <div>
           <h1>Lyrics Card Generator</h1>
-          <div class="kicker">Web Lite 静态版 · 手动输入 · 本地封面 · Canvas PNG</div>
+          <div class="kicker">Web Lite static edition · Manual input · Local cover · Canvas PNG</div>
         </div>
       </header>
 
+      <div class="notice">
+        <strong>Use the desktop app for the full experience.</strong>
+        Web Lite is a simplified browser-only version and is not equivalent to the desktop app.
+        <a href="https://github.com/qrzzzz/lyrics-card-generator/releases/latest" target="_blank" rel="noopener noreferrer">Get the latest desktop release</a>.
+      </div>
+
       <form class="form-grid" id="editorForm">
         <div class="field">
-          <label for="songTitle">歌曲标题</label>
+          <label for="songTitle">Song title</label>
           <input id="songTitle" type="text" value="Opposite" autocomplete="off" />
         </div>
         <div class="field">
-          <label for="artist">歌手</label>
+          <label for="artist">Artist</label>
           <input id="artist" type="text" value="Sabrina Carpenter" autocomplete="off" />
         </div>
         <div class="field-wide">
-          <label for="album">专辑名</label>
+          <label for="album">Album</label>
           <input id="album" type="text" value="emails i can't send fwd:" autocomplete="off" />
         </div>
         <div class="field-wide">
-          <label for="coverInput">专辑封面</label>
+          <label for="coverInput">Album cover</label>
           <input id="coverInput" type="file" accept="image/*" />
-          <div class="status" id="coverStatus">未上传封面时使用默认深色渐变；上传后会从本地图片取色。</div>
+          <div class="status" id="coverStatus">A default dark gradient is used until a cover is uploaded. Uploaded images stay local.</div>
         </div>
         <div class="field-wide">
-          <label for="lyrics">歌词</label>
+          <label for="lyrics">Lyrics</label>
           <textarea id="lyrics" spellcheck="false">And I know now
 Even if I tried to change
 That somehow
 You'd end up with her anyway</textarea>
         </div>
         <div class="field-wide">
-          <label for="translation">译文</label>
-          <textarea id="translation" spellcheck="false">我如今才明白
-纵使我试着改变
-命运兜兜转转
-你终究还是会走向她</textarea>
+          <label for="translation">Translation or secondary text</label>
+          <textarea id="translation" spellcheck="false">I understand it now
+Even if I tried to rewrite it
+Fate would still turn back around
+You would still end up with her</textarea>
         </div>
 
         <fieldset class="control-group">
-          <legend>画布比例</legend>
+          <legend>Canvas ratio</legend>
           <div class="segmented" data-control="ratio">
-            <button type="button" data-value="portrait" aria-pressed="true">竖版 4:5</button>
-            <button type="button" data-value="square" aria-pressed="false">方形 1:1</button>
-            <button type="button" data-value="landscape" aria-pressed="false">横版 16:9</button>
+            <button type="button" data-value="portrait" aria-pressed="true">Portrait 4:5</button>
+            <button type="button" data-value="square" aria-pressed="false">Square 1:1</button>
+            <button type="button" data-value="landscape" aria-pressed="false">Landscape 16:9</button>
           </div>
         </fieldset>
 
         <div class="field">
-          <label for="fontSize">字号</label>
+          <label for="fontSize">Font size</label>
           <div class="range-row">
             <input id="fontSize" type="range" min="28" max="72" step="1" value="46" />
             <output id="fontSizeOut" for="fontSize">46</output>
           </div>
         </div>
         <div class="field">
-          <label for="lineHeight">行高</label>
+          <label for="lineHeight">Line height</label>
           <div class="range-row">
             <input id="lineHeight" type="range" min="1.1" max="1.8" step="0.05" value="1.35" />
             <output id="lineHeightOut" for="lineHeight">1.35</output>
@@ -449,43 +544,44 @@ You'd end up with her anyway</textarea>
         </div>
 
         <fieldset class="control-group">
-          <legend>文字对齐</legend>
+          <legend>Text alignment</legend>
           <div class="segmented two" data-control="align">
-            <button type="button" data-value="left" aria-pressed="true">左对齐</button>
-            <button type="button" data-value="center" aria-pressed="false">居中</button>
+            <button type="button" data-value="left" aria-pressed="true">Left</button>
+            <button type="button" data-value="center" aria-pressed="false">Center</button>
           </div>
         </fieldset>
 
         <fieldset class="control-group">
-          <legend>显示内容</legend>
+          <legend>Visible elements</legend>
           <div class="switches">
-            <button class="switch" type="button" id="toggleCover" aria-pressed="true">显示封面</button>
-            <button class="switch" type="button" id="toggleInfo" aria-pressed="true">显示歌曲信息</button>
+            <button class="switch" type="button" id="toggleCover" aria-pressed="true">Show cover</button>
+            <button class="switch" type="button" id="toggleInfo" aria-pressed="true">Show song info</button>
           </div>
         </fieldset>
 
         <div class="field-wide action-row">
-          <button class="primary" id="exportBtn" type="button">导出 PNG</button>
-          <button id="clearCoverBtn" type="button">移除封面</button>
+          <button class="primary" id="exportBtn" type="button">Export PNG</button>
+          <button id="clearCoverBtn" type="button">Remove cover</button>
         </div>
       </form>
     </section>
 
-    <section class="panel preview-panel" aria-label="实时预览">
+    <section class="panel preview-panel" aria-label="Live preview">
       <div class="preview-header">
         <div>
           <h2>Live Preview</h2>
-          <div class="hint" id="canvasInfo">1200 × 1500 PNG</div>
+          <div class="hint" id="canvasInfo">1200 x 1500 PNG</div>
         </div>
-        <div class="hint">本地渲染，无远程请求</div>
+        <div class="hint">Rendered locally. No remote upload.</div>
       </div>
       <div class="preview-frame">
-        <canvas id="previewCanvas" aria-label="歌词卡实时预览"></canvas>
+        <canvas id="previewCanvas" aria-label="Live lyrics card preview"></canvas>
       </div>
     </section>
   </main>
 
   <script>
+    const latestReleaseUrl = "https://github.com/qrzzzz/lyrics-card-generator/releases/latest";
     const $ = (id) => document.getElementById(id);
     const canvas = $("previewCanvas");
     const ctx = canvas.getContext("2d");
@@ -506,9 +602,9 @@ You'd end up with her anyway</textarea>
       palette: { ...defaultPalette }
     };
     const sizes = {
-      portrait: { width: 1200, height: 1500, label: "1200 × 1500 PNG" },
-      square: { width: 1400, height: 1400, label: "1400 × 1400 PNG" },
-      landscape: { width: 1600, height: 900, label: "1600 × 900 PNG" }
+      portrait: { width: 1200, height: 1500, label: "1200 x 1500 PNG" },
+      square: { width: 1400, height: 1400, label: "1400 x 1400 PNG" },
+      landscape: { width: 1600, height: 900, label: "1600 x 900 PNG" }
     };
 
     function readForm() {
@@ -699,7 +795,7 @@ You'd end up with her anyway</textarea>
     }
 
     function drawLyrics(context, form, x, y, maxWidth, maxHeight) {
-      const lyrics = splitLines(form.lyrics || "在这里输入歌词");
+      const lyrics = splitLines(form.lyrics || "Enter lyrics here");
       const translations = splitLines(form.translation);
       const lyricSize = form.fontSize;
       const translationSize = Math.max(18, Math.round(lyricSize * 0.48));
@@ -759,7 +855,7 @@ You'd end up with her anyway</textarea>
       const lines = [];
       let line = "";
       for (const token of tokens) {
-        const next = hasSpaces ? line + token : line + token;
+        const next = line + token;
         if (line && context.measureText(next).width > maxWidth) {
           lines.push(line.trimEnd());
           line = token.trimStart();
@@ -908,11 +1004,11 @@ You'd end up with her anyway</textarea>
     }
 
     function fontStack() {
-      return 'Inter, "Segoe UI", "Microsoft YaHei", system-ui, sans-serif';
+      return 'Inter, "Segoe UI", system-ui, sans-serif';
     }
 
     function sanitizeFileName(value) {
-      return (value || "lyric-card").replace(/[\\/:*?"<>|]/g, "").trim() || "lyric-card";
+      return (value || "lyrics-card").replace(/[\\/:*?"<>|]/g, "").trim() || "lyrics-card";
     }
 
     document.querySelectorAll("[data-control='ratio'] button").forEach((button) => {
@@ -957,7 +1053,7 @@ You'd end up with her anyway</textarea>
           state.coverImage = image;
           state.coverDataUrl = String(reader.result || "");
           state.palette = extractPalette(image);
-          $("coverStatus").textContent = `${file.name} · 已从本地封面提取动态背景色`;
+          $("coverStatus").textContent = `${file.name} · Dynamic background colors extracted locally`;
           render();
         };
         image.src = String(reader.result || "");
@@ -970,7 +1066,7 @@ You'd end up with her anyway</textarea>
       state.coverDataUrl = "";
       state.palette = { ...defaultPalette };
       $("coverInput").value = "";
-      $("coverStatus").textContent = "未上传封面时使用默认深色渐变；上传后会从本地图片取色。";
+      $("coverStatus").textContent = "A default dark gradient is used until a cover is uploaded. Uploaded images stay local.";
       render();
     });
 
@@ -987,6 +1083,10 @@ You'd end up with her anyway</textarea>
         link.remove();
         setTimeout(() => URL.revokeObjectURL(url), 1000);
       }, "image/png");
+    });
+
+    $("continueLiteBtn").addEventListener("click", () => {
+      $("liteNotice").hidden = true;
     });
 
     $("editorForm").addEventListener("submit", (event) => {
