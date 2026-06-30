@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import type { ExtractedPalette } from "@/lib/types";
 import type { UserSettings } from "@/lib/settings/types";
 import {
@@ -17,6 +18,8 @@ export function DynamicAppBackground({
   settings: UserSettings;
   imageUrl?: string;
 }) {
+  const [renderedImageUrl, setRenderedImageUrl] = useState(imageUrl);
+  const [previousImageUrl, setPreviousImageUrl] = useState<string>();
   const activePalette = palette ?? DEFAULT_PALETTE;
   const isColorful = activePalette.kind === "colorful";
   const primarySource = isColorful ? activePalette.primary : activePalette.averageLuminance > 0.5 ? activePalette.light : activePalette.dark;
@@ -33,6 +36,18 @@ export function DynamicAppBackground({
   const isImage = background.mode.startsWith("image-") && background.mode !== "image-palette" && Boolean(imageUrl);
   const objectFit = background.mode === "image-stretch" ? "fill" : background.mode === "image-contain" ? "contain" : "cover";
   const paletteColor = background.extractedColor ?? settings.uiAccentColor;
+
+  useEffect(() => {
+    if (imageUrl === renderedImageUrl) {
+      return;
+    }
+
+    setPreviousImageUrl(renderedImageUrl);
+    setRenderedImageUrl(imageUrl);
+
+    const timeout = window.setTimeout(() => setPreviousImageUrl(undefined), 560);
+    return () => window.clearTimeout(timeout);
+  }, [imageUrl, renderedImageUrl]);
 
   if (isAcrylicTheme) {
     const isLight = settings.uiTheme === "light-acrylic";
@@ -65,12 +80,20 @@ export function DynamicAppBackground({
   }
 
   return (
-    <div className="fixed inset-0 z-0 overflow-hidden transition-colors duration-700" style={{ background: background.mode === "solid" ? background.solidColor : presetThemeBackground }} aria-hidden="true">
-      {isImage ? (
+    <div className="dynamic-app-background fixed inset-0 z-0 overflow-hidden transition-colors duration-700" style={{ background: background.mode === "solid" ? background.solidColor : presetThemeBackground }} aria-hidden="true">
+      {previousImageUrl ? (
         <img
-          src={imageUrl}
+          src={previousImageUrl}
           alt=""
-          className="absolute inset-0 h-full w-full transition duration-500"
+          className="dynamic-app-background__image dynamic-app-background__image--previous absolute inset-0 h-full w-full"
+          style={{ objectFit, filter: background.mode === "image-blur" ? `blur(${background.blurAmount}px) scale(1.08)` : undefined }}
+        />
+      ) : null}
+      {isImage && renderedImageUrl ? (
+        <img
+          src={renderedImageUrl}
+          alt=""
+          className="dynamic-app-background__image absolute inset-0 h-full w-full"
           style={{ objectFit, filter: background.mode === "image-blur" ? `blur(${background.blurAmount}px) scale(1.08)` : undefined }}
         />
       ) : null}

@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v3.7.1.zh-TW.md">發布說明</a> ·
+  <a href="./docs/releases/v3.8.0.zh-TW.md">發布說明</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="#本機開發">本機開發</a> ·
   <a href="./LICENSE">授權條款</a>
@@ -47,20 +47,20 @@
 
 請前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載最新版：
 
-* 建議一般使用者下載安裝版：`Lyrics Card Generator Setup 3.7.1.exe`
-* 不想安裝時可下載可攜版：`Lyrics Card Generator-3.7.1-portable.exe`
+* 建議一般使用者下載安裝版：`Lyrics Card Generator Setup 3.8.0.exe`
+* 不想安裝時可下載可攜版：`Lyrics Card Generator-3.8.0-portable.exe`
 
 安裝版適合長期使用；可攜版適合臨時執行、測試或放在隨身碟中使用。
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v3.7.1 更新重點
+### v3.8.0 更新重點
 
-* 統一樣式面板、歌詞輸入、歌曲資訊與設定中的開關控制元件，讓切換狀態、停用狀態與視覺回饋更一致。
-* 將語言選擇等單選項整理為統一的選項卡片，並將版面模式、網格密度、邊框 / 滿幅等緊湊選擇整理為一致的分段控制。
-* 統一設定面板中常用輸入框、文字區域、下拉選擇與操作按鈕的外觀與互動回饋。
-* 改善常見控制元件的鍵盤可用性、焦點可見性、標籤呈現與停用態回饋。
-* 為後續 v3.8.0 的動效升級打基礎，但本次不引入新的動效系統。
+* 引入集中化動效系統，統一編輯器外殼、設定對話框、步驟切換與預覽外殼的過渡體驗。
+* 為共享按鈕、開關、選項卡片與分段控制加入克制的微互動，同時保留鍵盤、焦點與測試鉤子行為。
+* AI 翻譯面板改用共享控制元件，並為狀態、思考流與譯文流加入一致的動效回饋。
+* 尊重 `prefers-reduced-motion`，移動類動效會降級為透明度變化或直接停用。
+* 匯出的歌詞卡片 PNG 輸出保持穩定，本版本不引入動畫化卡片匯出。
 
 <br clear="right" />
 
@@ -68,12 +68,12 @@
 
 GitHub Release 頁面預設使用簡體中文短版，完整發佈說明維護在 `docs/releases/`：
 
-* [简体中文](./docs/releases/v3.7.1.zh-CN.md)
-* [繁體中文](./docs/releases/v3.7.1.zh-TW.md)
-* [English](./docs/releases/v3.7.1.en.md)
-* [Français](./docs/releases/v3.7.1.fr.md)
-* [日本語](./docs/releases/v3.7.1.ja.md)
-* [Español](./docs/releases/v3.7.1.es.md)
+* [简体中文](./docs/releases/v3.8.0.zh-CN.md)
+* [繁體中文](./docs/releases/v3.8.0.zh-TW.md)
+* [English](./docs/releases/v3.8.0.en.md)
+* [Français](./docs/releases/v3.8.0.fr.md)
+* [日本語](./docs/releases/v3.8.0.ja.md)
+* [Español](./docs/releases/v3.8.0.es.md)
 
 ## ✨ 主要功能
 

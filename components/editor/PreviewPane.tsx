@@ -1,11 +1,14 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import type { RefObject } from "react";
+import { useEffect, useState } from "react";
 import { FontSchemePreviewPanel } from "@/components/editor/font-scheme/FontSchemePreviewPanel";
+import { MotionPanel } from "@/components/motion/MotionPanel";
 import { LyricCardPreview } from "@/components/preview/LyricCardPreview";
 import { getEffectiveFontScheme } from "@/lib/fonts";
 import type { createT } from "@/lib/i18n";
+import { motionDurations, motionEasings, reducedMotionTransition } from "@/lib/motion/tokens";
 import type { CardStyle, FontScheme, Locale, SongInfo } from "@/lib/types";
 
 type PreviewPaneProps = {
@@ -33,11 +36,27 @@ export function PreviewPane({
   locale,
   t
 }: PreviewPaneProps) {
+  const reduceMotion = useReducedMotion();
+  const [isDesktopPreview, setIsDesktopPreview] = useState(false);
+  const previewExpanded = isPreviewVisible || isDesktopPreview;
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(min-width: 1024px)");
+    const updateDesktopPreview = () => setIsDesktopPreview(mediaQuery.matches);
+
+    updateDesktopPreview();
+    mediaQuery.addEventListener("change", updateDesktopPreview);
+
+    return () => mediaQuery.removeEventListener("change", updateDesktopPreview);
+  }, []);
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 14 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35, delay: 0.05 }}
+    <MotionPanel
+      transition={
+        reduceMotion
+          ? reducedMotionTransition
+          : { duration: motionDurations.slow, delay: 0.05, ease: motionEasings.emphasized }
+      }
       className="order-1 min-w-0 lg:order-2"
     >
       <button
@@ -47,7 +66,17 @@ export function PreviewPane({
       >
         {isPreviewVisible ? t("step.hidePreview") : t("step.showPreview")}
       </button>
-      <div className={`min-w-0 overflow-hidden transition-all duration-300 lg:max-h-none lg:overflow-visible ${isPreviewVisible ? "max-h-[3000px]" : "max-h-0"}`}>
+      <motion.div
+        className="min-w-0 overflow-hidden lg:overflow-visible"
+        initial={false}
+        animate={{ height: previewExpanded ? "auto" : 0, opacity: previewExpanded ? 1 : 0 }}
+        transition={
+          reduceMotion
+            ? reducedMotionTransition
+            : { duration: motionDurations.normal, ease: motionEasings.standard }
+        }
+        aria-hidden={!previewExpanded}
+      >
         <div className="grid gap-5">
           <LyricCardPreview
             song={song}
@@ -62,7 +91,7 @@ export function PreviewPane({
             <FontSchemePreviewPanel scheme={fontSchemePreview ?? getEffectiveFontScheme(style)} t={t} />
           ) : null}
         </div>
-      </div>
-    </motion.div>
+      </motion.div>
+    </MotionPanel>
   );
 }

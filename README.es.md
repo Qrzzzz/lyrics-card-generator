@@ -19,7 +19,7 @@
 <p>
   <strong>Navegación</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Descargar la última versión</a> ·
-  <a href="./docs/releases/v3.7.1.es.md">Notas de la versión</a> ·
+  <a href="./docs/releases/v3.8.0.es.md">Notas de la versión</a> ·
   <a href="#funciones-principales">Funciones principales</a> ·
   <a href="#desarrollo-local">Desarrollo local</a> ·
   <a href="./LICENSE">Licencia</a>
@@ -50,20 +50,20 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 Descarga la versión más reciente desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Instalador recomendado: `Lyrics Card Generator Setup 3.7.1.exe`
-* Versión portable: `Lyrics Card Generator-3.7.1-portable.exe`
+* Instalador recomendado: `Lyrics Card Generator Setup 3.8.0.exe`
+* Versión portable: `Lyrics Card Generator-3.8.0-portable.exe`
 
 El instalador se recomienda para uso habitual. La versión portable es útil para pruebas, uso temporal o ejecución desde una unidad extraíble.
 
 > La compilación actual no está firmada. Windows puede mostrar una advertencia de SmartScreen, algo habitual en aplicaciones personales sin firma.
 
-### Aspectos destacados de la versión 3.7.1
+### Aspectos destacados de la versión 3.8.0
 
-* Estandariza los interruptores del panel de estilo, la entrada de letras, la información de la canción y los ajustes para que el comportamiento sea más coherente.
-* Reordena elecciones únicas como la selección de idioma en tarjetas de opción compartidas y alinea el modo de diseño, la densidad de la cuadrícula y marco / sangrado completo dentro de un mismo patrón de control segmentado.
-* Unifica el aspecto y la respuesta interactiva de inputs, áreas de texto, selectores y botones de acción habituales del panel de ajustes.
-* Mejora la usabilidad con teclado, la visibilidad del foco, la presentación de etiquetas y la respuesta de estados deshabilitados para los controles comunes.
-* Prepara la capa de controles de interfaz para la futura actualización de animaciones de la v3.8.0 sin incorporar todavía ese sistema.
+* Introduce un sistema de movimiento centralizado para el contenedor del editor, el diálogo de ajustes, las transiciones de pasos y el contenedor de vista previa.
+* Añade microinteracciones contenidas a botones, interruptores, tarjetas de opción y controles segmentados compartidos, conservando teclado, foco y hooks de prueba.
+* El panel de traducción IA usa controles compartidos y añade respuesta de movimiento coherente para estado, razonamiento y salida de traducción.
+* Respeta `prefers-reduced-motion`, reduciendo los efectos con mucho movimiento a opacidad o desactivándolos.
+* Mantiene estable la salida PNG de las tarjetas de letras exportadas y no introduce exportaciones de tarjetas animadas.
 
 <br clear="right" />
 
@@ -71,12 +71,12 @@ El instalador se recomienda para uso habitual. La versión portable es útil par
 
 La página de GitHub Release utiliza por defecto la versión corta en chino simplificado, las notas de publicación completas se mantienen en `docs/releases/`:
 
-* [简体中文](./docs/releases/v3.7.1.zh-CN.md)
-* [繁體中文](./docs/releases/v3.7.1.zh-TW.md)
-* [English](./docs/releases/v3.7.1.en.md)
-* [Français](./docs/releases/v3.7.1.fr.md)
-* [日本語](./docs/releases/v3.7.1.ja.md)
-* [Español](./docs/releases/v3.7.1.es.md)
+* [简体中文](./docs/releases/v3.8.0.zh-CN.md)
+* [繁體中文](./docs/releases/v3.8.0.zh-TW.md)
+* [English](./docs/releases/v3.8.0.en.md)
+* [Français](./docs/releases/v3.8.0.fr.md)
+* [日本語](./docs/releases/v3.8.0.ja.md)
+* [Español](./docs/releases/v3.8.0.es.md)
 
 <a id="funciones-principales"></a>
 

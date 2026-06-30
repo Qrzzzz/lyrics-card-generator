@@ -28,7 +28,18 @@ export function ClickSpark({
   const reducedMotionRef = useRef(false);
 
   useEffect(() => {
-    reducedMotionRef.current = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const updatePreference = () => {
+      reducedMotionRef.current = motionPreference.matches;
+      if (motionPreference.matches) {
+        sparksRef.current = [];
+      }
+    };
+
+    updatePreference();
+    motionPreference.addEventListener("change", updatePreference);
+
+    return () => motionPreference.removeEventListener("change", updatePreference);
   }, []);
 
   useEffect(() => {

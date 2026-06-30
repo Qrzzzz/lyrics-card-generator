@@ -2,6 +2,9 @@
 
 import { Brain, CircleDot, Loader2, Sparkles, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { MotionPanel } from "@/components/motion/MotionPanel";
+import { MotionPresence } from "@/components/motion/MotionPresence";
+import { ActionButton, OptionCardGroup, ToggleRow } from "@/components/ui/controls";
 import { getTranslationStyles } from "@/lib/ai/styles";
 import type { AITranslationPhase, TranslationStyle } from "@/lib/ai/types";
 import { getAIUiCopy } from "@/lib/ai/ui-copy";
@@ -64,117 +67,117 @@ export function AiTranslatePanel({
 
   const phaseLabel = getPhaseLabel(phase, copy);
   const phaseTip = phase === "connecting" ? copy.connectingTip : copy.connectedTip;
+  const styleOptions = styles.map((option) => ({
+    value: option.id,
+    label: option.name,
+    description: option.description,
+    disabled: loading,
+    dataStyle: option.id
+  }));
 
   return (
-    <section
-      aria-labelledby="ai-translate-title"
-      data-testid="ai-translate-panel"
-      className="ai-inline-panel mt-3 overflow-hidden rounded-xl border border-[rgb(var(--panel-border))] p-4 sm:p-5"
-      style={{ ["--ai-accent" as string]: themeColor }}
-    >
-      <div className="mb-4 flex items-start justify-between gap-4">
-        <div>
-          <div className="mb-1.5 flex items-center gap-2">
-            <Sparkles className="h-4 w-4 app-text-primary" style={{ filter: `drop-shadow(0 0 7px ${themeColor})` }} />
-            <h3 id="ai-translate-title" className="app-text-primary text-base font-bold">{copy.aiTranslateTitle}</h3>
-          </div>
-          <p className="app-text-muted text-xs leading-relaxed">{copy.aiTranslateDescription}</p>
-        </div>
-        <button type="button" onClick={loading ? onCancel : onClose} aria-label={copy.cancel} className="app-button grid h-8 w-8 shrink-0 place-items-center rounded-lg">
-          <X className="h-4 w-4" />
-        </button>
-      </div>
-
-      <div className="grid gap-2 sm:grid-cols-2">
-        {styles.map((option) => {
-          const selected = style === option.id;
-          return (
-            <button
-              key={option.id}
-              type="button"
-              data-style={option.id}
-              aria-pressed={selected}
-              disabled={loading}
-              onClick={() => setStyle(option.id)}
-              className={`relative z-10 rounded-lg border p-3 text-left transition disabled:cursor-not-allowed disabled:opacity-55 ${
-                selected
-                  ? "border-[var(--app-accent)] bg-[rgb(var(--button-bg-hover))] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]"
-                  : "border-[rgb(var(--panel-border))] bg-[rgb(var(--button-bg))] hover:bg-[rgb(var(--button-bg-hover))]"
-              }`}
-            >
-              <span className="app-text-primary block text-sm font-semibold">{option.name}</span>
-              <span className="app-text-muted mt-1 block text-xs leading-relaxed">{option.description}</span>
-            </button>
-          );
-        })}
-      </div>
-
-      <button
-        type="button"
-        disabled={loading}
-        aria-pressed={reasoning}
-        onClick={() => setReasoning((value) => !value)}
-        className="app-button mt-4 flex w-full items-center justify-between gap-4 rounded-lg p-3 text-left disabled:opacity-60"
+    <MotionPanel className="mt-3">
+      <section
+        aria-labelledby="ai-translate-title"
+        data-testid="ai-translate-panel"
+        className="ai-inline-panel overflow-hidden rounded-xl border border-[rgb(var(--panel-border))] p-4 sm:p-5"
+        style={{ ["--ai-accent" as string]: themeColor }}
       >
-        <span className="flex items-start gap-3">
-          <Brain className="mt-0.5 h-4 w-4 shrink-0" />
-          <span>
-            <span className="app-text-primary block text-sm font-semibold">{copy.reasoning}</span>
-            <span className="app-text-muted mt-1 block text-xs leading-relaxed">{copy.reasoningDescription}</span>
-          </span>
-        </span>
-        <span className={`relative h-6 w-11 shrink-0 rounded-full border transition ${reasoning ? "border-[var(--app-accent)] bg-[rgb(var(--button-bg-hover))]" : "border-[rgb(var(--panel-border))] bg-[rgb(var(--button-bg))]"}`}>
-          <span className={`absolute top-1 h-4 w-4 rounded-full bg-white shadow transition ${reasoning ? "left-6" : "left-1"}`} />
-        </span>
-      </button>
-
-      {loading ? (
-        <section role="status" aria-live="polite" className="settings-panel-card mt-4 overflow-hidden p-4">
-          <div className="flex items-center justify-between gap-4">
-            <span className="app-text-primary flex items-center gap-2 text-sm font-semibold">
-              <CircleDot className="h-4 w-4 animate-pulse" style={{ color: themeColor }} />
-              {phaseLabel}
-            </span>
-            <span className="app-text-muted rounded-full bg-[rgb(var(--button-bg))] px-2.5 py-1 font-mono text-[11px]">{elapsedSeconds}s</span>
+        <div className="mb-4 flex items-start justify-between gap-4">
+          <div>
+            <div className="mb-1.5 flex items-center gap-2">
+              <Sparkles className="h-4 w-4 app-text-primary" style={{ filter: `drop-shadow(0 0 7px ${themeColor})` }} />
+              <h3 id="ai-translate-title" className="app-text-primary text-base font-bold">{copy.aiTranslateTitle}</h3>
+            </div>
+            <p className="app-text-muted text-xs leading-relaxed">{copy.aiTranslateDescription}</p>
           </div>
-          <div className="mt-3 h-1 overflow-hidden rounded-full bg-black/35">
-            <span className="ai-stream-progress block h-full w-1/3 rounded-full" style={{ background: `linear-gradient(90deg, transparent, ${themeColor}, white, transparent)` }} />
-          </div>
-          <p className="app-text-muted mt-3 text-xs leading-relaxed">{phaseTip}</p>
-        </section>
-      ) : null}
+          <ActionButton
+            variant="icon"
+            size="sm"
+            onClick={loading ? onCancel : onClose}
+            aria-label={copy.cancel}
+            icon={<X className="h-4 w-4" />}
+            className="shrink-0"
+          />
+        </div>
 
-      {(loading && reasoning) || reasoningText ? (
-        <section className="settings-panel-card mt-4 p-4">
-          <div className="mb-2 flex items-center justify-between gap-3">
-            <p className="app-text-primary text-xs font-semibold uppercase tracking-[0.14em]">{copy.reasoningStream}</p>
-            {phase === "reasoning" ? <span className="app-text-subtle text-[11px]">LIVE</span> : null}
-          </div>
-          <pre ref={reasoningRef} data-testid="ai-reasoning-stream" className="app-text-muted max-h-48 min-h-20 overflow-auto whitespace-pre-wrap rounded-lg border border-[rgb(var(--input-border))] bg-[rgb(var(--input-bg))] p-3 text-xs leading-relaxed">
-            {reasoningText || copy.reasoningWaiting}
-          </pre>
-        </section>
-      ) : null}
+        <OptionCardGroup
+          value={style}
+          onChange={(nextStyle) => setStyle(nextStyle as TranslationStyle)}
+          options={styleOptions}
+          aria-label={copy.aiTranslateTitle}
+          className="sm:grid-cols-2"
+        />
 
-      {loading || streamingText ? (
-        <section className="settings-panel-card mt-4 p-4">
-          <p className="app-text-primary mb-2 text-xs font-semibold uppercase tracking-[0.14em]">{copy.streamPreview}</p>
-          <pre ref={translationRef} data-testid="ai-translation-stream" className="app-text-primary max-h-52 min-h-20 overflow-auto whitespace-pre-wrap rounded-lg border border-[rgb(var(--input-border))] bg-[rgb(var(--input-bg))] p-3 text-sm leading-relaxed">
-            {streamingText || copy.translationWaiting}
-          </pre>
-        </section>
-      ) : null}
+        <ToggleRow
+          label={<span className="flex items-center gap-2"><Brain className="h-4 w-4 shrink-0" />{copy.reasoning}</span>}
+          description={copy.reasoningDescription}
+          checked={reasoning}
+          onChange={setReasoning}
+          disabled={loading}
+          className="mt-4"
+        />
 
-      {error ? <p role="alert" className="status-danger mt-4 rounded-lg border px-3 py-2 text-sm">{error}</p> : null}
+        <MotionPresence>
+          {loading ? (
+            <MotionPanel key="status" role="status" aria-live="polite" className="settings-panel-card mt-4 overflow-hidden p-4">
+              <div className="flex items-center justify-between gap-4">
+                <span className="app-text-primary flex items-center gap-2 text-sm font-semibold">
+                  <CircleDot className="h-4 w-4 animate-pulse" style={{ color: themeColor }} />
+                  {phaseLabel}
+                </span>
+                <span className="app-text-muted rounded-full bg-[rgb(var(--button-bg))] px-2.5 py-1 font-mono text-[11px]">{elapsedSeconds}s</span>
+              </div>
+              <div className="mt-3 h-1 overflow-hidden rounded-full bg-black/35">
+                <span className="ai-stream-progress block h-full w-1/3 rounded-full" style={{ background: `linear-gradient(90deg, transparent, ${themeColor}, white, transparent)` }} />
+              </div>
+              <p className="app-text-muted mt-3 text-xs leading-relaxed">{phaseTip}</p>
+            </MotionPanel>
+          ) : null}
+        </MotionPresence>
 
-      <div className="mt-5 flex justify-end gap-3">
-        <button type="button" onClick={loading ? onCancel : onClose} className="app-button h-10 rounded-lg px-4 text-sm font-semibold">{loading ? copy.stop : copy.cancel}</button>
-        <button type="button" data-testid="confirm-ai-translate" onClick={() => onConfirm(style, reasoning)} disabled={loading} className="inline-flex h-10 items-center gap-2 rounded-lg bg-white px-4 text-sm font-bold text-slate-900 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60">
-          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-          {loading ? phaseLabel : copy.translate}
-        </button>
-      </div>
-    </section>
+        <MotionPresence>
+          {(loading && reasoning) || reasoningText ? (
+            <MotionPanel key="reasoning" className="settings-panel-card mt-4 p-4">
+              <div className="mb-2 flex items-center justify-between gap-3">
+                <p className="app-text-primary text-xs font-semibold uppercase tracking-[0.14em]">{copy.reasoningStream}</p>
+                {phase === "reasoning" ? <span className="app-text-subtle text-[11px]">LIVE</span> : null}
+              </div>
+              <pre ref={reasoningRef} data-testid="ai-reasoning-stream" className="app-text-muted max-h-48 min-h-20 overflow-auto whitespace-pre-wrap rounded-lg border border-[rgb(var(--input-border))] bg-[rgb(var(--input-bg))] p-3 text-xs leading-relaxed">
+                {reasoningText || copy.reasoningWaiting}
+              </pre>
+            </MotionPanel>
+          ) : null}
+        </MotionPresence>
+
+        <MotionPresence>
+          {loading || streamingText ? (
+            <MotionPanel key="translation" className="settings-panel-card mt-4 p-4">
+              <p className="app-text-primary mb-2 text-xs font-semibold uppercase tracking-[0.14em]">{copy.streamPreview}</p>
+              <pre ref={translationRef} data-testid="ai-translation-stream" className="app-text-primary max-h-52 min-h-20 overflow-auto whitespace-pre-wrap rounded-lg border border-[rgb(var(--input-border))] bg-[rgb(var(--input-bg))] p-3 text-sm leading-relaxed">
+                {streamingText || copy.translationWaiting}
+              </pre>
+            </MotionPanel>
+          ) : null}
+        </MotionPresence>
+
+        {error ? <p role="alert" className="status-danger mt-4 rounded-lg border px-3 py-2 text-sm">{error}</p> : null}
+
+        <div className="mt-5 flex justify-end gap-3">
+          <ActionButton onClick={loading ? onCancel : onClose}>{loading ? copy.stop : copy.cancel}</ActionButton>
+          <ActionButton
+            data-testid="confirm-ai-translate"
+            variant="primary"
+            onClick={() => onConfirm(style, reasoning)}
+            disabled={loading}
+            leftIcon={loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+            style={{ borderColor: themeColor, boxShadow: `0 12px 30px ${themeColor}30` }}
+          >
+            {loading ? phaseLabel : copy.translate}
+          </ActionButton>
+        </div>
+      </section>
+    </MotionPanel>
   );
 }
 
