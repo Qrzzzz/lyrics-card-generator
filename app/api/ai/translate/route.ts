@@ -1,4 +1,9 @@
 import { NextResponse } from "next/server";
+import {
+  buildChatCompletionsRequestBody,
+  getChatCompletionsUrl,
+  readProviderError
+} from "@/lib/ai/provider-request";
 import { getProviderErrorMessage, readProviderResponseBody } from "@/lib/ai/provider-response";
 import type { SaveAISettingsInput } from "@/lib/ai/types";
 
@@ -39,19 +44,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Base URL 无效，请检查设置。" }, { status: 400 });
   }
 
-  const requestBody: Record<string, unknown> = {
+  const requestBody = buildChatCompletionsRequestBody({
+    baseUrl: settings.baseUrl,
     model: settings.model.trim(),
-    messages: [{ role: "user", content: prompt }],
-    stream: true
-  };
-  if (usesDeepSeekThinking(settings.baseUrl, settings.model)) {
-    requestBody.thinking = { type: body.reasoning ? "enabled" : "disabled" };
-  } else if (body.reasoning) {
-    requestBody.reasoning_effort = "medium";
-  }
-  if (!body.reasoning) {
-    requestBody.temperature = settings.temperature;
-  }
+    prompt,
+    reasoning: body.reasoning,
+    temperature: settings.temperature
+  });
 
   try {
     const response = await fetch(endpoint, {
@@ -101,25 +100,4 @@ export async function POST(request: Request) {
       { status: 502 }
     );
   }
-}
-
-function getChatCompletionsUrl(baseUrl: string) {
-  const normalized = baseUrl.trim().replace(/\/+$/, "");
-  const parsed = new URL(normalized);
-  if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
-    throw new Error("Unsupported protocol");
-  }
-  return normalized.endsWith("/chat/completions") ? normalized : `${normalized}/chat/completions`;
-}
-
-function usesDeepSeekThinking(baseUrl: string, model: string) {
-  try {
-    return new URL(baseUrl).hostname.endsWith("deepseek.com") || model.toLowerCase().startsWith("deepseek-");
-  } catch {
-    return model.toLowerCase().startsWith("deepseek-");
-  }
-}
-
-async function readProviderError(response: Response) {
-  return getProviderErrorMessage(await readProviderResponseBody(response), response.status);
 }

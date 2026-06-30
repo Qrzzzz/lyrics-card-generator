@@ -11,6 +11,49 @@ async function readProviderResponseBody(response) {
   }
 }
 
+function getChatCompletionsUrl(baseUrl) {
+  const normalized = String(baseUrl || "").trim().replace(/\/+$/, "");
+  let parsed;
+  try {
+    parsed = new URL(normalized);
+  } catch {
+    throw new Error("Base URL 无效，请检查设置。");
+  }
+  if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
+    throw new Error("Base URL 无效，请检查设置。");
+  }
+  return normalized.endsWith("/chat/completions") ? normalized : `${normalized}/chat/completions`;
+}
+
+function usesDeepSeekThinking(baseUrl, model) {
+  const normalizedModel = String(model).toLowerCase();
+  try {
+    return new URL(baseUrl).hostname.endsWith("deepseek.com") || normalizedModel.startsWith("deepseek-");
+  } catch {
+    return normalizedModel.startsWith("deepseek-");
+  }
+}
+
+function buildChatCompletionsRequestBody({ baseUrl, model, prompt, reasoning = false, temperature }) {
+  const requestBody = {
+    model,
+    messages: [{ role: "user", content: prompt }],
+    stream: true
+  };
+
+  if (usesDeepSeekThinking(baseUrl, model)) {
+    requestBody.thinking = { type: reasoning ? "enabled" : "disabled" };
+  } else if (reasoning) {
+    requestBody.reasoning_effort = "medium";
+  }
+
+  if (!reasoning) {
+    requestBody.temperature = temperature;
+  }
+
+  return requestBody;
+}
+
 function getChatCompletionMessage(body) {
   if (body.kind !== "json" || !body.data || typeof body.data !== "object") {
     return { content: "", reasoningContent: "" };
@@ -49,8 +92,16 @@ function getProviderErrorMessage(body, status) {
   return `AI 接口请求失败（HTTP ${status}）。`;
 }
 
+async function readProviderError(response) {
+  return getProviderErrorMessage(await readProviderResponseBody(response), response.status);
+}
+
 module.exports = {
+  buildChatCompletionsRequestBody,
   getChatCompletionMessage,
+  getChatCompletionsUrl,
   getProviderErrorMessage,
-  readProviderResponseBody
+  readProviderError,
+  readProviderResponseBody,
+  usesDeepSeekThinking
 };
