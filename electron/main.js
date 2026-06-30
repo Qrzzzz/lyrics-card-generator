@@ -6,7 +6,13 @@ const net = require("node:net");
 const path = require("node:path");
 const { getBackgroundImageMime, safeBackgroundPathForUserData } = require("./background-images");
 const { normalizeFontOptions } = require("./font-options");
-const { getChatCompletionMessage, getProviderErrorMessage, readProviderResponseBody } = require("./provider-response");
+const {
+  buildChatCompletionsRequestBody: buildProviderChatCompletionsRequestBody,
+  getChatCompletionMessage,
+  getChatCompletionsUrl: resolveProviderChatCompletionsUrl,
+  readProviderError: readNormalizedProviderError,
+  readProviderResponseBody
+} = require("./provider-response");
 const { normalizeStoredPreferences } = require("./user-preferences");
 
 const HOST = "127.0.0.1";
@@ -665,27 +671,22 @@ function validateAISettings(settings, apiKey) {
   if (!settings.model.trim()) {
     throw new Error("未配置模型，请先前往设置页填写模型名称。");
   }
-  getChatCompletionsUrl(settings.baseUrl);
+  resolveProviderChatCompletionsUrl(settings.baseUrl);
 }
 
 async function streamAITranslationInMain({ settings, apiKey, prompt, reasoning, signal, onStatus, onReasoningDelta, onDelta }) {
-  const requestBody = {
+  const endpoint = resolveProviderChatCompletionsUrl(settings.baseUrl);
+  const requestBody = buildProviderChatCompletionsRequestBody({
+    baseUrl: settings.baseUrl,
     model: settings.model,
-    messages: [{ role: "user", content: prompt }],
-    stream: true
-  };
-  if (usesDeepSeekThinking(settings.baseUrl, settings.model)) {
-    requestBody.thinking = { type: reasoning ? "enabled" : "disabled" };
-  } else if (reasoning) {
-    requestBody.reasoning_effort = "medium";
-  }
-  if (!reasoning) {
-    requestBody.temperature = settings.temperature;
-  }
+    prompt,
+    reasoning,
+    temperature: settings.temperature
+  });
 
   let response;
   try {
-    response = await fetch(getChatCompletionsUrl(settings.baseUrl), {
+    response = await fetch(endpoint, {
       method: "POST",
       headers: {
         authorization: `Bearer ${apiKey}`,
@@ -702,7 +703,7 @@ async function streamAITranslationInMain({ settings, apiKey, prompt, reasoning, 
   }
 
   if (!response.ok) {
-    throw new Error(await readProviderError(response));
+    throw new Error(await readNormalizedProviderError(response));
   }
   onStatus("connected");
 
@@ -774,32 +775,6 @@ async function streamAITranslationInMain({ settings, apiKey, prompt, reasoning, 
     throw new Error("AI 返回为空，请重试或更换模型。");
   }
   return receivedContent;
-}
-
-function getChatCompletionsUrl(baseUrl) {
-  const normalized = String(baseUrl || "").trim().replace(/\/+$/, "");
-  let parsed;
-  try {
-    parsed = new URL(normalized);
-  } catch {
-    throw new Error("Base URL 无效，请检查设置。");
-  }
-  if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
-    throw new Error("Base URL 无效，请检查设置。");
-  }
-  return normalized.endsWith("/chat/completions") ? normalized : `${normalized}/chat/completions`;
-}
-
-function usesDeepSeekThinking(baseUrl, model) {
-  try {
-    return new URL(baseUrl).hostname.endsWith("deepseek.com") || String(model).toLowerCase().startsWith("deepseek-");
-  } catch {
-    return String(model).toLowerCase().startsWith("deepseek-");
-  }
-}
-
-async function readProviderError(response) {
-  return getProviderErrorMessage(await readProviderResponseBody(response), response.status);
 }
 
 function isValidAIRequestId(value) {

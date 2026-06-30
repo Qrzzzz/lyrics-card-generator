@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v3.8.0.zh-TW.md">發布說明</a> ·
+  <a href="./docs/releases/v3.8.1.zh-TW.md">發布說明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">線上 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="#本機開發">本機開發</a> ·
@@ -48,20 +48,19 @@
 
 請前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載最新版：
 
-* 建議一般使用者下載安裝版：`Lyrics Card Generator Setup 3.8.0.exe`
-* 不想安裝時可下載可攜版：`Lyrics Card Generator-3.8.0-portable.exe`
+* 建議一般使用者下載安裝版：`Lyrics Card Generator Setup 3.8.1.exe`
+* 不想安裝時可下載可攜版：`Lyrics Card Generator-3.8.1-portable.exe`
 
 安裝版適合長期使用；可攜版適合臨時執行、測試或放在隨身碟中使用。
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v3.8.0 更新重點
+### v3.8.1 更新重點
 
-* 引入集中化動效系統，統一編輯器外殼、設定對話框、步驟切換與預覽外殼的過渡體驗。
-* 為共享按鈕、開關、選項卡片與分段控制加入克制的微互動，同時保留鍵盤、焦點與測試鉤子行為。
-* AI 翻譯面板改用共享控制元件，並為狀態、思考流與譯文流加入一致的動效回饋。
-* 尊重 `prefers-reduced-motion`，移動類動效會降級為透明度變化或直接停用。
-* 匯出的歌詞卡片 PNG 輸出保持穩定，本版本不引入動畫化卡片匯出。
+* 將 `LyricEditor.tsx` 收斂為頁面編排層，拆分預設值、步驟組裝、業務動作、AI 翻譯、偏好設定與主題令牌模組。
+* 整理 Web 與 Electron 雙路徑下重複的 AI provider 請求輔助邏輯，同時維持 `/api/ai/translate` 與 Electron IPC / `safeStorage` 邊界不變。
+* 保留歌曲連結解析、本機音訊、歌詞擷取、AI 翻譯、封面取色、主題、Acrylic、匯出、範例載入、多語言、字型與版面等所有既有入口。
+* 已通過 `npm run typecheck`、`npm run core:test`、`npm run build`、`npm run desktop:build` 完成回歸驗證。
 
 <br clear="right" />
 
@@ -69,12 +68,12 @@
 
 GitHub Release 頁面預設使用簡體中文短版，完整發佈說明維護在 `docs/releases/`：
 
-* [简体中文](./docs/releases/v3.8.0.zh-CN.md)
-* [繁體中文](./docs/releases/v3.8.0.zh-TW.md)
-* [English](./docs/releases/v3.8.0.en.md)
-* [Français](./docs/releases/v3.8.0.fr.md)
-* [日本語](./docs/releases/v3.8.0.ja.md)
-* [Español](./docs/releases/v3.8.0.es.md)
+* [简体中文](./docs/releases/v3.8.1.zh-CN.md)
+* [繁體中文](./docs/releases/v3.8.1.zh-TW.md)
+* [English](./docs/releases/v3.8.1.en.md)
+* [Français](./docs/releases/v3.8.1.fr.md)
+* [日本語](./docs/releases/v3.8.1.ja.md)
+* [Español](./docs/releases/v3.8.1.es.md)
 
 ## ✨ 主要功能
 

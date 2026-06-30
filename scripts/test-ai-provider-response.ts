@@ -1,9 +1,34 @@
 import assert from "node:assert/strict";
+import { createRequire } from "node:module";
+import {
+  buildChatCompletionsRequestBody,
+  getChatCompletionsUrl,
+  readProviderError,
+  usesDeepSeekThinking
+} from "../lib/ai/provider-request";
 import {
   getChatCompletionMessage,
   getProviderErrorMessage,
   readProviderResponseBody
 } from "../lib/ai/provider-response";
+
+type ProviderRequestOptions = {
+  baseUrl: string;
+  model: string;
+  prompt: string;
+  reasoning?: boolean;
+  temperature: number;
+};
+
+type ElectronProviderModule = {
+  buildChatCompletionsRequestBody: (options: ProviderRequestOptions) => unknown;
+  getChatCompletionsUrl: (baseUrl: string) => string;
+  readProviderError: (response: Response) => Promise<string>;
+  usesDeepSeekThinking: (baseUrl: string, model: string) => boolean;
+};
+
+const require = createRequire(import.meta.url);
+const electronProvider = require("../electron/provider-response.js") as ElectronProviderModule;
 
 async function read(body: BodyInit | null, init?: ResponseInit) {
   return readProviderResponseBody(new Response(body, init));
@@ -41,7 +66,65 @@ async function main() {
   assert.equal(empty.kind, "empty");
   assert.equal(getProviderErrorMessage(empty, 500), "AI 接口请求失败（HTTP 500）。");
 
-  console.log(JSON.stringify({ ok: true, aiProviderResponseTests: 5 }, null, 2));
+  const openAiEndpoint = "https://api.openai.com/v1";
+  assert.equal(getChatCompletionsUrl(openAiEndpoint), "https://api.openai.com/v1/chat/completions");
+  assert.equal(getChatCompletionsUrl(openAiEndpoint), electronProvider.getChatCompletionsUrl(openAiEndpoint));
+
+  const openAiReasoningRequest = {
+    baseUrl: openAiEndpoint,
+    model: "gpt-4.1-mini",
+    prompt: "hello",
+    reasoning: true,
+    temperature: 0.7
+  } satisfies ProviderRequestOptions;
+  assert.deepEqual(
+    buildChatCompletionsRequestBody(openAiReasoningRequest),
+    electronProvider.buildChatCompletionsRequestBody(openAiReasoningRequest)
+  );
+
+  const deepSeekRequest = {
+    baseUrl: "https://api.deepseek.com/v1",
+    model: "deepseek-chat",
+    prompt: "hello",
+    reasoning: false,
+    temperature: 0.3
+  } satisfies ProviderRequestOptions;
+  assert.deepEqual(
+    buildChatCompletionsRequestBody(deepSeekRequest),
+    electronProvider.buildChatCompletionsRequestBody(deepSeekRequest)
+  );
+
+  assert.equal(usesDeepSeekThinking(openAiEndpoint, "deepseek-reasoner"), true);
+  assert.equal(
+    usesDeepSeekThinking("https://api.deepseek.com/v1", "gpt-4.1-mini"),
+    electronProvider.usesDeepSeekThinking("https://api.deepseek.com/v1", "gpt-4.1-mini")
+  );
+
+  const webProviderError = await readProviderError(new Response("provider overloaded", {
+    status: 503,
+    headers: { "content-type": "text/plain" }
+  }));
+  const electronProviderError = await electronProvider.readProviderError(new Response("provider overloaded", {
+    status: 503,
+    headers: { "content-type": "text/plain" }
+  }));
+  assert.equal(webProviderError, electronProviderError);
+
+  assert.equal(
+    captureThrownMessage(() => getChatCompletionsUrl("mailto:test")),
+    captureThrownMessage(() => electronProvider.getChatCompletionsUrl("mailto:test"))
+  );
+
+  console.log(JSON.stringify({ ok: true, aiProviderResponseTests: 11 }, null, 2));
 }
 
 void main();
+
+function captureThrownMessage(fn: () => unknown) {
+  try {
+    fn();
+    return "";
+  } catch (error) {
+    return error instanceof Error ? error.message : String(error);
+  }
+}

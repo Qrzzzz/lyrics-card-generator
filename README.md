@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v3.8.0.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v3.8.1.zh-CN.md">发布说明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">在线 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="#本地开发">本地开发</a> ·
@@ -48,20 +48,19 @@
 
 请前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下载最新版：
 
-* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 3.8.0.exe`
-* 不想安装时可下载便携版：`Lyrics Card Generator-3.8.0-portable.exe`
+* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 3.8.1.exe`
+* 不想安装时可下载便携版：`Lyrics Card Generator-3.8.1-portable.exe`
 
 安装版适合长期使用；便携版适合临时运行、测试或放在移动硬盘中使用。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v3.8.0 更新重点
+### v3.8.1 更新重点
 
-* 引入集中化动效系统，统一编辑器外壳、设置对话框、步骤切换和预览外壳的过渡体验。
-* 为共享按钮、开关、选项卡片和分段控件加入克制的微交互，同时保留键盘、焦点和测试钩子行为。
-* AI 翻译面板改用共享控件，并为状态、思考流和译文流加入一致的动效反馈。
-* 尊重 `prefers-reduced-motion`，移动类动效会降级为透明度变化或直接禁用。
-* 导出的歌词卡片 PNG 输出保持稳定，本版本不引入动画化卡片导出。
+* 将 `LyricEditor.tsx` 收敛为页面编排层，拆分默认值、步骤装配、业务动作、AI 翻译、偏好设置和主题令牌模块。
+* 整理 Web 与 Electron 双路径下重复的 AI provider 请求辅助逻辑，同时保持 `/api/ai/translate` 与 Electron IPC / `safeStorage` 边界不变。
+* 保留歌曲链接解析、本地音频、歌词获取、AI 翻译、封面取色、主题、Acrylic、导出、示例加载、多语言、字体和布局等全部现有入口。
+* 已通过 `npm run typecheck`、`npm run core:test`、`npm run build`、`npm run desktop:build` 完成回归验证。
 
 <br clear="right" />
 
@@ -69,12 +68,12 @@
 
 GitHub Release 页面默认使用简体中文短版，完整发布说明维护在 `docs/releases/`：
 
-* [简体中文](./docs/releases/v3.8.0.zh-CN.md)
-* [繁體中文](./docs/releases/v3.8.0.zh-TW.md)
-* [English](./docs/releases/v3.8.0.en.md)
-* [Français](./docs/releases/v3.8.0.fr.md)
-* [日本語](./docs/releases/v3.8.0.ja.md)
-* [Español](./docs/releases/v3.8.0.es.md)
+* [简体中文](./docs/releases/v3.8.1.zh-CN.md)
+* [繁體中文](./docs/releases/v3.8.1.zh-TW.md)
+* [English](./docs/releases/v3.8.1.en.md)
+* [Français](./docs/releases/v3.8.1.fr.md)
+* [日本語](./docs/releases/v3.8.1.ja.md)
+* [Español](./docs/releases/v3.8.1.es.md)
 
 <a id="主要功能"></a>
 
