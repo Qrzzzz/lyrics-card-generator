@@ -18,9 +18,9 @@
 
 <p>
   <strong>导航</strong><br/>
-  <a href="https://qrzzzz.github.io/lyrics-card-generator/">在线 Web Lite 版</a> ·
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
   <a href="./docs/releases/v3.8.0.zh-CN.md">发布说明</a> ·
+  <a href="https://qrzzzz.github.io/lyrics-card-generator/">在线 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="#本地开发">本地开发</a> ·
   <a href="./LICENSE">许可证</a>
@@ -36,12 +36,6 @@
 </div>
 
 ---
-
-## 🌐 在线 Web Lite 版
-
-Web Lite 版可通过 [GitHub Pages](https://qrzzzz.github.io/lyrics-card-generator/) 直接打开。它是独立的单文件静态页面，只支持手动填写歌曲信息、歌词、译文、本地上传封面、从封面取色生成背景、实时预览和 PNG 导出。
-
-Web Lite 不是 Windows 桌面完整版，不包含音乐平台解析、自动歌词获取、AI 翻译、桌面 API、检查更新、多语言界面切换或高级视觉设置。需要完整功能请下载 Windows 桌面完整版。
 
 <img
   align="right"

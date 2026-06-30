@@ -20,6 +20,7 @@
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
   <a href="./docs/releases/v3.8.0.zh-TW.md">發布說明</a> ·
+  <a href="https://qrzzzz.github.io/lyrics-card-generator/">線上 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="#本機開發">本機開發</a> ·
   <a href="./LICENSE">授權條款</a>

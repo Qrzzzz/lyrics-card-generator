@@ -20,6 +20,7 @@
   <strong>Navegación</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Descargar la última versión</a> ·
   <a href="./docs/releases/v3.8.0.es.md">Notas de la versión</a> ·
+  <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en línea</a> ·
   <a href="#funciones-principales">Funciones principales</a> ·
   <a href="#desarrollo-local">Desarrollo local</a> ·
   <a href="./LICENSE">Licencia</a>
