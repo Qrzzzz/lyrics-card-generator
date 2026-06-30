@@ -18,8 +18,9 @@
       --field-border: rgba(255, 255, 255, 0.18);
       --text: #f8fafc;
       --muted: rgba(226, 232, 240, 0.72);
+      --subtle: rgba(203, 213, 225, 0.58);
       --shadow: rgba(0, 0, 0, 0.38);
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
     }
 
     * {
@@ -49,10 +50,6 @@
 
     button {
       touch-action: manipulation;
-    }
-
-    a {
-      color: #bfdbfe;
     }
 
     .app {
@@ -120,28 +117,6 @@
 
     .kicker {
       margin-top: 4px;
-    }
-
-    .notice {
-      margin-top: 14px;
-      padding: 12px 13px;
-      border: 1px solid rgba(140, 200, 255, 0.35);
-      border-radius: 10px;
-      background: rgba(14, 165, 233, 0.09);
-      color: rgba(248, 250, 252, 0.9);
-      font-size: 13px;
-      line-height: 1.55;
-    }
-
-    .notice strong {
-      display: block;
-      margin-bottom: 4px;
-      color: #ffffff;
-      font-size: 13px;
-    }
-
-    .notice a {
-      font-weight: 800;
     }
 
     .form-grid {
@@ -229,8 +204,7 @@
 
     .segmented button,
     .action-row button,
-    .switch,
-    .modal-actions a {
+    .switch {
       border: 1px solid transparent;
       border-radius: 7px;
       background: transparent;
@@ -243,8 +217,7 @@
 
     .segmented button:hover,
     .action-row button:hover,
-    .switch:hover,
-    .modal-actions a:hover {
+    .switch:hover {
       background: rgba(255, 255, 255, 0.09);
       color: var(--text);
     }
@@ -354,65 +327,157 @@
       background: #0f172a;
     }
 
-    .modal-backdrop {
-      position: fixed;
-      inset: 0;
-      z-index: 20;
-      display: grid;
-      place-items: center;
-      padding: 18px;
-      background: rgba(2, 6, 23, 0.72);
-      backdrop-filter: blur(18px);
-      -webkit-backdrop-filter: blur(18px);
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
     }
 
-    .modal-backdrop[hidden] {
+    /* ---- entry notice overlay ---- */
+
+    .notice-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: rgba(2, 6, 23, 0.88);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      animation: noticeFadeIn 320ms ease both;
+    }
+
+    .notice-overlay.is-hidden {
       display: none;
     }
 
-    .modal {
+    @keyframes noticeFadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+
+    .notice-modal {
       width: min(520px, 100%);
-      padding: 20px;
-      border: 1px solid rgba(255, 255, 255, 0.16);
-      border-radius: 14px;
-      background: rgba(15, 23, 42, 0.92);
-      box-shadow: 0 30px 90px rgba(0, 0, 0, 0.52);
-    }
-
-    .modal h2 {
-      margin: 0 0 10px;
-      font-size: 20px;
-    }
-
-    .modal p {
-      margin: 0;
-      color: rgba(226, 232, 240, 0.82);
-      line-height: 1.6;
-    }
-
-    .modal-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 18px;
-    }
-
-    .modal-actions a {
-      display: inline-grid;
-      place-items: center;
-      text-decoration: none;
-      min-height: 40px;
-    }
-
-    .modal-actions button {
       border: 1px solid rgba(255, 255, 255, 0.18);
-      border-radius: 7px;
-      background: rgba(255, 255, 255, 0.06);
-      color: var(--text);
+      border-radius: 14px;
+      background: linear-gradient(164deg, #101827, #070a11);
+      box-shadow: 0 30px 68px rgba(0, 0, 0, 0.48);
+      padding: 28px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .notice-modal h2 {
+      margin: 0;
+      font-size: 19px;
+      line-height: 1.3;
+      color: #f8fafc;
+    }
+
+    .notice-modal p {
+      margin: 0;
+      font-size: 14px;
+      line-height: 1.62;
+      color: rgba(226, 232, 240, 0.78);
+    }
+
+    .notice-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .notice-actions a,
+    .notice-actions button {
+      border: 1px solid transparent;
+      border-radius: 8px;
       cursor: pointer;
-      min-height: 40px;
-      padding: 8px 12px;
+      font-size: 14px;
       font-weight: 700;
+      min-height: 42px;
+      padding: 10px 14px;
+      text-align: center;
+      text-decoration: none;
+      transition: background 140ms ease, border-color 140ms ease;
+    }
+
+    .notice-actions a.primary {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .notice-actions button {
+      background: rgba(255, 255, 255, 0.08);
+      color: rgba(248, 250, 252, 0.9);
+    }
+
+    .notice-actions button:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    /* ---- persistent lite banner ---- */
+
+    .lite-banner {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      padding: 10px 20px;
+      background: rgba(15, 23, 42, 0.78);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+      font-size: 13px;
+      color: rgba(226, 232, 240, 0.72);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    .lite-banner a {
+      color: var(--accent);
+      font-weight: 700;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .lite-banner a:hover {
+      text-decoration: underline;
+    }
+
+    /* ---- custom cover file label ---- */
+
+    label[for="coverInput"] {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--field-border);
+      border-radius: 8px;
+      background: var(--field);
+      color: var(--muted);
+      cursor: pointer;
+      min-height: 42px;
+      padding: 10px 14px;
+      font-size: 14px;
+      font-weight: 700;
+      transition: border-color 140ms ease, color 140ms ease, background 140ms ease;
+    }
+
+    label[for="coverInput"]:hover {
+      border-color: color-mix(in srgb, var(--accent) 45%, rgba(255, 255, 255, 0.18));
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.06);
     }
 
     @media (max-width: 980px) {
@@ -453,21 +518,30 @@
       .brand {
         align-items: flex-start;
       }
+
+      .notice-actions {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="modal-backdrop" id="liteNotice" role="dialog" aria-modal="true" aria-labelledby="liteNoticeTitle">
-    <section class="modal">
-      <h2 id="liteNoticeTitle">Web Lite notice</h2>
-      <p>
-        This Lite web version is far from equivalent to the desktop app. For the complete feature set and the intended experience, please use the desktop version.
-      </p>
-      <div class="modal-actions">
-        <a class="primary" href="https://github.com/qrzzzz/lyrics-card-generator/releases/latest" target="_blank" rel="noopener noreferrer">Open latest desktop release</a>
-        <button type="button" id="continueLiteBtn">Continue with Web Lite</button>
+  <!-- Entry notice -->
+  <div id="noticeOverlay" class="notice-overlay">
+    <div class="notice-modal">
+      <h2>This Lite version is only a limited static preview.</h2>
+      <p>It does not represent the polish, feature depth, visual refinement, or overall experience of the desktop app. For the complete Lyrics Card Generator experience, use the latest desktop release.</p>
+      <div class="notice-actions">
+        <a class="primary" href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest" target="_blank" rel="noopener">Download latest desktop version</a>
+        <button id="dismissNotice">Continue to Web Lite</button>
       </div>
-    </section>
+    </div>
+  </div>
+
+  <!-- Persistent lite warning banner -->
+  <div class="lite-banner">
+    <span>This Lite version is only a limited static preview. It does not represent the polish or experience of the desktop app.</span>
+    <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest" target="_blank" rel="noopener">Download latest desktop version</a>
   </div>
 
   <main class="app">
@@ -480,43 +554,36 @@
         </div>
       </header>
 
-      <div class="notice">
-        <strong>Use the desktop app for the full experience.</strong>
-        Web Lite is a simplified browser-only version and is not equivalent to the desktop app.
-        <a href="https://github.com/qrzzzz/lyrics-card-generator/releases/latest" target="_blank" rel="noopener noreferrer">Get the latest desktop release</a>.
-      </div>
-
       <form class="form-grid" id="editorForm">
         <div class="field">
           <label for="songTitle">Song title</label>
-          <input id="songTitle" type="text" value="Opposite" autocomplete="off" />
+          <input id="songTitle" type="text" value="Example Song" autocomplete="off" />
         </div>
         <div class="field">
           <label for="artist">Artist</label>
-          <input id="artist" type="text" value="Sabrina Carpenter" autocomplete="off" />
+          <input id="artist" type="text" value="Example Artist" autocomplete="off" />
         </div>
         <div class="field-wide">
           <label for="album">Album</label>
-          <input id="album" type="text" value="emails i can't send fwd:" autocomplete="off" />
+          <input id="album" type="text" value="Example Album" autocomplete="off" />
         </div>
         <div class="field-wide">
-          <label for="coverInput">Album cover</label>
-          <input id="coverInput" type="file" accept="image/*" />
-          <div class="status" id="coverStatus">A default dark gradient is used until a cover is uploaded. Uploaded images stay local.</div>
+          <input id="coverInput" type="file" accept="image/*" class="sr-only" />
+          <label for="coverInput">Choose cover image</label>
+          <div class="status" id="coverStatus">A default dark gradient is used until you upload a local cover. After upload, Web Lite extracts colors from the image locally.</div>
         </div>
         <div class="field-wide">
           <label for="lyrics">Lyrics</label>
-          <textarea id="lyrics" spellcheck="false">And I know now
-Even if I tried to change
-That somehow
-You'd end up with her anyway</textarea>
+          <textarea id="lyrics" spellcheck="false">Soft lights over midnight streets
+I keep the last note in my hands
+Every echo turns to color
+When the silence starts to dance</textarea>
         </div>
         <div class="field-wide">
-          <label for="translation">Translation or secondary text</label>
-          <textarea id="translation" spellcheck="false">I understand it now
-Even if I tried to rewrite it
-Fate would still turn back around
-You would still end up with her</textarea>
+          <label for="translation">Translation or secondary lines</label>
+          <textarea id="translation" spellcheck="false">Optional secondary lines
+Use this area for translated lyrics
+Or leave it empty</textarea>
         </div>
 
         <fieldset class="control-group">
@@ -552,7 +619,7 @@ You would still end up with her</textarea>
         </fieldset>
 
         <fieldset class="control-group">
-          <legend>Visible elements</legend>
+          <legend>Visible content</legend>
           <div class="switches">
             <button class="switch" type="button" id="toggleCover" aria-pressed="true">Show cover</button>
             <button class="switch" type="button" id="toggleInfo" aria-pressed="true">Show song info</button>
@@ -570,9 +637,9 @@ You would still end up with her</textarea>
       <div class="preview-header">
         <div>
           <h2>Live Preview</h2>
-          <div class="hint" id="canvasInfo">1200 x 1500 PNG</div>
+          <div class="hint" id="canvasInfo">1200 × 1500 PNG</div>
         </div>
-        <div class="hint">Rendered locally. No remote upload.</div>
+        <div class="hint">Local rendering · No remote requests</div>
       </div>
       <div class="preview-frame">
         <canvas id="previewCanvas" aria-label="Live lyrics card preview"></canvas>
@@ -581,7 +648,6 @@ You would still end up with her</textarea>
   </main>
 
   <script>
-    const latestReleaseUrl = "https://github.com/qrzzzz/lyrics-card-generator/releases/latest";
     const $ = (id) => document.getElementById(id);
     const canvas = $("previewCanvas");
     const ctx = canvas.getContext("2d");
@@ -602,10 +668,11 @@ You would still end up with her</textarea>
       palette: { ...defaultPalette }
     };
     const sizes = {
-      portrait: { width: 1200, height: 1500, label: "1200 x 1500 PNG" },
-      square: { width: 1400, height: 1400, label: "1400 x 1400 PNG" },
-      landscape: { width: 1600, height: 900, label: "1600 x 900 PNG" }
+      portrait: { width: 1200, height: 1500, label: "1200 × 1500 PNG" },
+      square: { width: 1400, height: 1400, label: "1400 × 1400 PNG" },
+      landscape: { width: 1600, height: 900, label: "1600 × 900 PNG" }
     };
+    const defaultCoverStatus = "A default dark gradient is used until you upload a local cover. After upload, Web Lite extracts colors from the image locally.";
 
     function readForm() {
       return {
@@ -855,7 +922,7 @@ You would still end up with her</textarea>
       const lines = [];
       let line = "";
       for (const token of tokens) {
-        const next = line + token;
+        const next = hasSpaces ? line + token : line + token;
         if (line && context.measureText(next).width > maxWidth) {
           lines.push(line.trimEnd());
           line = token.trimStart();
@@ -1004,11 +1071,11 @@ You would still end up with her</textarea>
     }
 
     function fontStack() {
-      return 'Inter, "Segoe UI", system-ui, sans-serif';
+      return 'Inter, "Segoe UI", "Microsoft YaHei", system-ui, sans-serif';
     }
 
     function sanitizeFileName(value) {
-      return (value || "lyrics-card").replace(/[\\/:*?"<>|]/g, "").trim() || "lyrics-card";
+      return (value || "lyric-card").replace(/[\\/:*?"<>|]/g, "").trim() || "lyric-card";
     }
 
     document.querySelectorAll("[data-control='ratio'] button").forEach((button) => {
@@ -1053,7 +1120,7 @@ You would still end up with her</textarea>
           state.coverImage = image;
           state.coverDataUrl = String(reader.result || "");
           state.palette = extractPalette(image);
-          $("coverStatus").textContent = `${file.name} · Dynamic background colors extracted locally`;
+          $("coverStatus").textContent = `${file.name} · Local palette extracted from cover`;
           render();
         };
         image.src = String(reader.result || "");
@@ -1066,7 +1133,7 @@ You would still end up with her</textarea>
       state.coverDataUrl = "";
       state.palette = { ...defaultPalette };
       $("coverInput").value = "";
-      $("coverStatus").textContent = "A default dark gradient is used until a cover is uploaded. Uploaded images stay local.";
+      $("coverStatus").textContent = defaultCoverStatus;
       render();
     });
 
@@ -1085,12 +1152,12 @@ You would still end up with her</textarea>
       }, "image/png");
     });
 
-    $("continueLiteBtn").addEventListener("click", () => {
-      $("liteNotice").hidden = true;
-    });
-
     $("editorForm").addEventListener("submit", (event) => {
       event.preventDefault();
+    });
+
+    $("dismissNotice").addEventListener("click", () => {
+      $("noticeOverlay").classList.add("is-hidden");
     });
 
     render();
