@@ -169,6 +169,7 @@ function createWindow() {
     minHeight: 700,
     show: false,
     frame: false,
+    roundedCorners: true,
     backgroundColor: "#00000000",
     transparent: true,
     icon: getAppIconPath(),
