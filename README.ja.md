@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v3.9.1.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v4.0.0.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="#ローカル開発">ローカル開発</a> ·
@@ -51,20 +51,20 @@
 
 最新版は [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) からダウンロードできます。
 
-* 推奨インストーラー：`Lyrics Card Generator Setup 3.9.1.exe`
-* ポータブル版：`Lyrics Card Generator-3.9.1-portable.exe`
+* 推奨インストーラー：`Lyrics Card Generator Setup 4.0.0.exe`
+* ポータブル版：`Lyrics Card Generator-4.0.0-portable.exe`
 
 通常利用にはインストーラーを推奨します。ポータブル版は一時利用、検証、リムーバブルドライブでの利用に向いています。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v3.9.1 の更新ポイント
+### v4.0.0 の更新ポイント
 
-* デスクトップウィンドウの角丸部分に不透明な矩形背景が残る問題を修正しました。
-* 非 Acrylic テーマでは、透明な CSS 外枠だけに頼らず Windows ネイティブの角丸クリップを使います。
-* デスクトップ背景レイヤーとタイトルバーは引き続きアプリ外枠の内側で描画します。
-* カスタムタイトルバーを左側の赤・黄・緑のウィンドウ操作ボタンに更新し、右側の小さなアプリアイコンを削除しました。
-* 書き出した歌詞カード PNG にはデスクトップタイトルバー、ウィンドウ枠、外枠背景が含まれません。
+* 最初の曲選択入口を NetEase Cloud Music の曲名検索にアップグレードしました。
+* 曲名、アーティスト、アルバムを入力すると候補曲をリアルタイムに表示します。
+* 矢印キー、Enter、マウスクリックで候補を選択して取り込めます。
+* 選択後は曲名、アーティスト、アルバム、カバー、取得可能な NetEase 歌詞を自動入力します。
+* 既存のリンク解析、ローカル音声解析、手動入力入口はすべて残しています。
 
 <br clear="right" />
 
@@ -72,12 +72,12 @@
 
 GitHub Release ページではデフォルトで簡体字中国語の短縮版が使用され、完全なリリースノートは `docs/releases/` にて管理されています：
 
-* [简体中文](./docs/releases/v3.9.1.zh-CN.md)
-* [繁體中文](./docs/releases/v3.9.1.zh-TW.md)
-* [English](./docs/releases/v3.9.1.en.md)
-* [Français](./docs/releases/v3.9.1.fr.md)
-* [日本語](./docs/releases/v3.9.1.ja.md)
-* [Español](./docs/releases/v3.9.1.es.md)
+* [简体中文](./docs/releases/v4.0.0.zh-CN.md)
+* [繁體中文](./docs/releases/v4.0.0.zh-TW.md)
+* [English](./docs/releases/v4.0.0.en.md)
+* [Français](./docs/releases/v4.0.0.fr.md)
+* [日本語](./docs/releases/v4.0.0.ja.md)
+* [Español](./docs/releases/v4.0.0.es.md)
 
 <a id="主な機能"></a>
 
@@ -97,8 +97,9 @@ GitHub Release ページではデフォルトで簡体字中国語の短縮版�
 * 簡体字中国語、繁体字中国語、英語、フランス語、日本語、スペイン語の目標言語検出による原文 / 翻訳の自動分割
 * OpenAI 互換 Chat Completions API を使う AI 歌詞翻訳。プロバイダー URL、モデル、API キー、6 種類の翻訳スタイル、Reasoning、ストリーミング出力を設定可能
 
-### 🎵 音楽リンクとローカルファイル解析
+### 🎵 曲検索、音楽リンクとローカルファイル解析
 
+* NetEase Cloud Music で曲名、アーティスト、アルバムを検索し、選択した結果から楽曲情報と歌詞を取り込めます
 * Spotify、Apple Music、NetEase Cloud Music、QQ Music のリンク解析
 * ローカル MP3 / FLAC からタイトル、アーティスト、アルバム、カバー、埋め込み歌詞を解析
 
@@ -139,6 +140,7 @@ EXE を起動すると、ユーザーのマシン上でローカル Next サー�
 以下の機能にはインターネット接続が必要です。
 
 * 音楽プラットフォームリンクの解析
+* NetEase Cloud Music 検索と歌詞取得
 * リモートカバーの読み込み
 * 歌詞の自動取得
 * AI 歌詞翻訳
@@ -147,8 +149,8 @@ EXE を起動すると、ユーザーのマシン上でローカル Next サー�
 ## 🚀 使い方
 
 1. アプリを起動します。
-2. Spotify、Apple Music、NetEase Cloud Music、QQ Music のリンクを貼り付けるか、曲情報を手入力します。
-3. 必要に応じてローカル MP3 / FLAC ファイルをアップロードし、メタデータ、カバー、埋め込み歌詞を読み取ります。
+2. NetEase Cloud Music で曲名、アーティスト、アルバムを検索し、候補を選択して楽曲情報、カバー、歌詞を取り込みます。
+3. Spotify、Apple Music、NetEase Cloud Music、QQ Music のリンク貼り付けや、ローカル MP3 / FLAC のアップロードも利用できます。
 4. 歌詞と翻訳を編集します。AI 翻訳を使うか、選択中の UI 言語に応じて原文 / 翻訳の交互行を自動分割できます。
 5. キャンバス比率、CJK / 欧文フォント構成、色、フレーム、ウォーターマークなどのスタイルを調整します。
 6. 右側でカードをプレビューします。

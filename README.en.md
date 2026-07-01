@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v3.9.1.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v4.0.0.en.md">Release Notes</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
   <a href="#features">Features</a> ·
   <a href="#local-development">Local Development</a> ·
@@ -51,20 +51,20 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 Download the latest version from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Recommended installer: `Lyrics Card Generator Setup 3.9.1.exe`
-* Portable version: `Lyrics Card Generator-3.9.1-portable.exe`
+* Recommended installer: `Lyrics Card Generator Setup 4.0.0.exe`
+* Portable version: `Lyrics Card Generator-4.0.0-portable.exe`
 
 The installer is recommended for regular use. The portable version is useful for temporary use, testing, or running from a removable drive.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v3.9.1 Highlights
+### v4.0.0 Highlights
 
-* Fixes desktop rounded corners still showing an opaque rectangular backing.
-* Uses native Windows rounded-corner clipping for non-Acrylic themes instead of relying on transparent CSS-only corners.
-* Keeps the desktop background layer and title bar drawn inside the app shell.
-* Refreshes the custom title bar with left-side traffic-light controls and removes the right-side app icon.
-* Keeps exported lyric card PNG files free of the desktop title bar, window frame, and shell background.
+* Upgrades the first song-picking entry to NetEase Cloud Music song-name search.
+* Shows live candidate songs as you type a title, artist, or album keyword.
+* Supports arrow-key navigation, Enter import, and mouse-click import.
+* Imports title, artist, album, cover art, and NetEase lyrics when available.
+* Keeps existing link parsing, local audio parsing, and manual editing entries.
 
 <br clear="right" />
 
@@ -72,12 +72,12 @@ The installer is recommended for regular use. The portable version is useful for
 
 The GitHub Release page defaults to a simplified Chinese short version, while the full release notes are maintained in `docs/releases/`:
 
-* [简体中文](./docs/releases/v3.9.1.zh-CN.md)
-* [繁體中文](./docs/releases/v3.9.1.zh-TW.md)
-* [English](./docs/releases/v3.9.1.en.md)
-* [Français](./docs/releases/v3.9.1.fr.md)
-* [日本語](./docs/releases/v3.9.1.ja.md)
-* [Español](./docs/releases/v3.9.1.es.md)
+* [简体中文](./docs/releases/v4.0.0.zh-CN.md)
+* [繁體中文](./docs/releases/v4.0.0.zh-TW.md)
+* [English](./docs/releases/v4.0.0.en.md)
+* [Français](./docs/releases/v4.0.0.fr.md)
+* [日本語](./docs/releases/v4.0.0.ja.md)
+* [Español](./docs/releases/v4.0.0.es.md)
 
 <a id="features"></a>
 
@@ -97,8 +97,9 @@ The GitHub Release page defaults to a simplified Chinese short version, while th
 * Split alternating original / translated lyrics with Simplified Chinese, Traditional Chinese, English, French, Japanese, and Spanish target-language detection
 * AI lyric translation through OpenAI-compatible Chat Completions APIs, with configurable provider URL, model, API key, six translation styles, reasoning, and streaming output
 
-### 🎵 Music Links & Local File Parsing
+### 🎵 Song Search, Music Links & Local File Parsing
 
+* Search NetEase Cloud Music by title, artist, or album, then import metadata and lyrics from a selected result
 * Spotify, Apple Music, NetEase Cloud Music, and QQ Music link parsing
 * Local MP3 / FLAC metadata parsing for title, artist, album, cover art, and embedded lyrics
 
@@ -139,6 +140,7 @@ The desktop app can start offline. These features remain available without inter
 These features require internet access:
 
 * Music platform link parsing
+* NetEase Cloud Music search and lyric fetching
 * Remote cover loading
 * Automatic lyric fetching
 * AI lyric translation
@@ -147,8 +149,8 @@ These features require internet access:
 ## 🚀 How to Use
 
 1. Start the app.
-2. Paste a Spotify, Apple Music, NetEase Cloud Music, or QQ Music link, or enter song information manually.
-3. Optionally upload a local MP3 / FLAC file to read metadata, cover art, and embedded lyrics.
+2. Search NetEase Cloud Music by title, artist, or album, then choose a candidate to import metadata, cover art, and lyrics.
+3. You can also paste a Spotify, Apple Music, NetEase Cloud Music, or QQ Music link, or upload a local MP3 / FLAC file.
 4. Edit lyrics and translations; use AI translation or split alternating original / translated text according to the selected interface language.
 5. Adjust canvas ratio, CJK / Latin font schemes, colors, frames, watermarks, and other styles.
 6. Preview the card on the right.

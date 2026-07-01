@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v3.9.1.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v4.0.0.zh-CN.md">发布说明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">在线 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="#本地开发">本地开发</a> ·
@@ -48,20 +48,20 @@
 
 请前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下载最新版：
 
-* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 3.9.1.exe`
-* 不想安装时可下载便携版：`Lyrics Card Generator-3.9.1-portable.exe`
+* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 4.0.0.exe`
+* 不想安装时可下载便携版：`Lyrics Card Generator-4.0.0-portable.exe`
 
 安装版适合长期使用；便携版适合临时运行、测试或放在移动硬盘中使用。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v3.9.1 更新重点
+### v4.0.0 更新重点
 
-* 修复桌面窗口圆角后仍露出不透明矩形底色的问题。
-* 非 Acrylic 主题改用 Windows 原生圆角裁剪，不再依赖透明 CSS 外壳伪装圆角。
-* 桌面背景层和标题栏仍限制在应用外壳内部绘制。
-* 自绘标题栏改为左侧红黄绿窗口控制按钮，并移除右侧小图标。
-* 导出的歌词卡片 PNG 不包含桌面标题栏、窗口边框或外壳背景。
+* 第一选歌入口升级为网易云音乐歌名搜索。
+* 输入歌名、歌手或专辑关键词时，会实时显示候选歌曲。
+* 支持方向键选择、Enter 导入和鼠标点击导入。
+* 选中歌曲后自动填入标题、歌手、专辑、封面，并尽量获取网易云歌词。
+* 原有链接解析、本地音频解析和手动填写入口全部保留。
 
 <br clear="right" />
 
@@ -69,12 +69,12 @@
 
 GitHub Release 页面默认使用简体中文短版，完整发布说明维护在 `docs/releases/`：
 
-* [简体中文](./docs/releases/v3.9.1.zh-CN.md)
-* [繁體中文](./docs/releases/v3.9.1.zh-TW.md)
-* [English](./docs/releases/v3.9.1.en.md)
-* [Français](./docs/releases/v3.9.1.fr.md)
-* [日本語](./docs/releases/v3.9.1.ja.md)
-* [Español](./docs/releases/v3.9.1.es.md)
+* [简体中文](./docs/releases/v4.0.0.zh-CN.md)
+* [繁體中文](./docs/releases/v4.0.0.zh-TW.md)
+* [English](./docs/releases/v4.0.0.en.md)
+* [Français](./docs/releases/v4.0.0.fr.md)
+* [日本語](./docs/releases/v4.0.0.ja.md)
+* [Español](./docs/releases/v4.0.0.es.md)
 
 <a id="主要功能"></a>
 
@@ -94,8 +94,9 @@ GitHub Release 页面默认使用简体中文短版，完整发布说明维护�
 * 支持按当前界面语言拆分原文 / 译文，包括简体中文、繁体中文、英文、法语、日语、西班牙语目标译文
 * 支持兼容 OpenAI Chat Completions 的 AI 歌词翻译，可配置厂商 Base URL、模型、API Key、六种翻译风格、Reasoning 和流式输出
 
-### 🎵 音乐链接与本地文件解析
+### 🎵 歌曲搜索、音乐链接与本地文件解析
 
+* 支持通过网易云音乐搜索歌名、歌手或专辑，并从候选结果导入歌曲信息与歌词
 * 支持 Spotify、Apple Music、网易云音乐、QQ 音乐链接解析
 * 支持本地 MP3 / FLAC 元数据解析，尝试读取标题、艺人、专辑、封面和内嵌歌词
 
@@ -136,6 +137,7 @@ GitHub Release 页面默认使用简体中文短版，完整发布说明维护�
 以下功能需要联网：
 
 * 音乐平台链接解析
+* 网易云音乐搜索与歌词获取
 * 远程封面加载
 * 自动歌词获取
 * AI 歌词翻译
@@ -144,8 +146,8 @@ GitHub Release 页面默认使用简体中文短版，完整发布说明维护�
 ## 🚀 使用方式
 
 1. 启动应用。
-2. 粘贴 Spotify、Apple Music、网易云音乐或 QQ 音乐链接，或手动填写歌曲信息。
-3. 也可以上传本地 MP3 / FLAC，自动读取文件内的歌曲信息、封面和内嵌歌词。
+2. 在“搜索网易云音乐”中输入歌名、歌手或专辑关键词，选择候选歌曲后自动填入歌曲信息、封面和歌词。
+3. 也可以粘贴 Spotify、Apple Music、网易云音乐或 QQ 音乐链接，或上传本地 MP3 / FLAC 读取元数据。
 4. 编辑歌词和翻译；可使用 AI 翻译，也可将原文 / 译文交替行按当前界面语言自动拆分。
 5. 调整画布比例、字体方案（中日韩 / 西文）、字号、颜色、边框、水印等样式。
 6. 在右侧预览卡片。

@@ -87,6 +87,7 @@ export function LyricEditor() {
     setUrl,
     applyParsedSong,
     applyLocalAudio,
+    applySearchedSong,
     setSong,
     setLyrics,
     setTranslationEnabled,
@@ -176,6 +177,7 @@ export function LyricEditor() {
     },
     handlers: {
       onUrlChange: setUrl,
+      onSearchedSongResolved: applySearchedSong,
       onSongParsed: applyParsedSong,
       onLocalAudioParsed: applyLocalAudio,
       onSongChange: setSong,

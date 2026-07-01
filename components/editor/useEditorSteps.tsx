@@ -9,6 +9,7 @@ import { LyricInput } from "@/components/editor/LyricInput";
 import { SettingsStep } from "@/components/editor/SettingsStepper";
 import { SongInfoForm } from "@/components/editor/SongInfoForm";
 import { SongLinkParser } from "@/components/editor/SongLinkParser";
+import { SongSearchParser } from "@/components/editor/SongSearchParser";
 import {
   FontSchemeSettingsPanel,
   LayoutSettingsPanel,
@@ -39,6 +40,7 @@ export type EditorStepsAiState = {
 
 export type EditorStepHandlers = {
   onUrlChange: (url: string) => void;
+  onSearchedSongResolved: (song: ParsedSongData, lyrics?: string) => void;
   onSongParsed: (song: ParsedSongData) => void;
   onLocalAudioParsed: (song: ParsedSongData, embeddedLyrics?: string) => void;
   onSongChange: (song: SongInfo) => void;
@@ -84,8 +86,8 @@ export function useEditorSteps({
   return [
     {
       id: "link",
-      title: t("step.songLink"),
-      description: t("parseIdle"),
+      title: t("step.chooseSong"),
+      description: t("songSearchDescription"),
       isComplete: Boolean(state.url.trim() || state.song.title.trim() || state.song.artist.trim() || state.song.coverUrl?.trim()),
       secondaryAction: {
         label: t("manualOverride"),
@@ -95,6 +97,13 @@ export function useEditorSteps({
       },
       content: (
         <div className="grid gap-4">
+          <SongSearchParser
+            t={t}
+            onResolved={handlers.onSearchedSongResolved}
+          />
+          <div className="app-text-subtle text-xs font-medium uppercase tracking-[0.16em]">
+            {t("songSearchOtherMethods")}
+          </div>
           <SongLinkParser
             url={state.url}
             onUrlChange={handlers.onUrlChange}
