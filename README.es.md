@@ -19,7 +19,7 @@
 <p>
   <strong>Navegación</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Descargar la última versión</a> ·
-  <a href="./docs/releases/v3.9.0.es.md">Notas de la versión</a> ·
+  <a href="./docs/releases/v3.9.1.es.md">Notas de la versión</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en línea</a> ·
   <a href="#funciones-principales">Funciones principales</a> ·
   <a href="#desarrollo-local">Desarrollo local</a> ·
@@ -51,19 +51,20 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 Descarga la versión más reciente desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Instalador recomendado: `Lyrics Card Generator Setup 3.9.0.exe`
-* Versión portable: `Lyrics Card Generator-3.9.0-portable.exe`
+* Instalador recomendado: `Lyrics Card Generator Setup 3.9.1.exe`
+* Versión portable: `Lyrics Card Generator-3.9.1-portable.exe`
 
 El instalador se recomienda para uso habitual. La versión portable es útil para pruebas, uso temporal o ejecución desde una unidad extraíble.
 
 > La compilación actual no está firmada. Windows puede mostrar una advertencia de SmartScreen, algo habitual en aplicaciones personales sin firma.
 
-### Aspectos destacados de la versión 3.9.0
+### Aspectos destacados de la versión 3.9.1
 
-* Ajustes ahora guarda de inmediato, por lo que imágenes de fondo, IA, apariencia y preferencias generales se escriben directamente en las preferencias locales.
-* El alcance de idiomas se mantiene en los seis existentes: chino simplificado, chino tradicional, inglés, francés, japonés y español, sin añadir ni quitar idiomas.
-* Mueve la información manual de la canción a una acción desplegable dentro del paso de enlace; las tarjetas de letras añaden el interruptor «Mostrar nombre del álbum» para diseños verticales, horizontales e instrumentales.
-* Sincroniza metadatos de versión `3.9.0`, notas de publicación, entradas de descarga en los README y artefactos Windows; la regresión quedó validada con `npm run typecheck`, `npm run core:test`, `npm run build` y `npm run desktop:build`.
+* Corrige las esquinas redondeadas de la ventana de escritorio que todavía mostraban un fondo rectangular opaco.
+* Usa el recorte de esquinas redondeadas nativo de Windows en temas no Acrylic, en lugar de depender solo de esquinas transparentes por CSS.
+* Mantiene la capa de fondo de escritorio y la barra de título dibujadas dentro del contenedor de la app.
+* Actualiza la barra de título personalizada con controles rojo, amarillo y verde a la izquierda y elimina el icono pequeño de la derecha.
+* Mantiene los PNG exportados sin barra de título de escritorio, marco de ventana ni fondo del contenedor.
 
 <br clear="right" />
 
@@ -71,12 +72,12 @@ El instalador se recomienda para uso habitual. La versión portable es útil par
 
 La página de GitHub Release utiliza por defecto la versión corta en chino simplificado, las notas de publicación completas se mantienen en `docs/releases/`:
 
-* [简体中文](./docs/releases/v3.9.0.zh-CN.md)
-* [繁體中文](./docs/releases/v3.9.0.zh-TW.md)
-* [English](./docs/releases/v3.9.0.en.md)
-* [Français](./docs/releases/v3.9.0.fr.md)
-* [日本語](./docs/releases/v3.9.0.ja.md)
-* [Español](./docs/releases/v3.9.0.es.md)
+* [简体中文](./docs/releases/v3.9.1.zh-CN.md)
+* [繁體中文](./docs/releases/v3.9.1.zh-TW.md)
+* [English](./docs/releases/v3.9.1.en.md)
+* [Français](./docs/releases/v3.9.1.fr.md)
+* [日本語](./docs/releases/v3.9.1.ja.md)
+* [Español](./docs/releases/v3.9.1.es.md)
 
 <a id="funciones-principales"></a>
 

@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v3.9.0.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v3.9.1.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="#ローカル開発">ローカル開発</a> ·
@@ -51,19 +51,20 @@
 
 最新版は [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) からダウンロードできます。
 
-* 推奨インストーラー：`Lyrics Card Generator Setup 3.9.0.exe`
-* ポータブル版：`Lyrics Card Generator-3.9.0-portable.exe`
+* 推奨インストーラー：`Lyrics Card Generator Setup 3.9.1.exe`
+* ポータブル版：`Lyrics Card Generator-3.9.1-portable.exe`
 
 通常利用にはインストーラーを推奨します。ポータブル版は一時利用、検証、リムーバブルドライブでの利用に向いています。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v3.9.0 の更新ポイント
+### v3.9.1 の更新ポイント
 
-* 設定画面は即時保存になり、背景画像、AI 設定、外観、一般設定の変更がローカル設定へ直接保存されます。
-* 言語範囲は既存の 6 言語、簡体字中国語、繁体字中国語、英語、フランス語、日本語、スペイン語のままで、新しい言語の追加や削除はありません。
-* 手動の曲情報入力を曲リンクステップ内の展開アクションへ移動しました。歌詞カードには「アルバム名を表示」スイッチを追加し、縦版、横版、インストゥルメンタル表示に対応しています。
-* `3.9.0` のバージョンメタデータ、リリースノート、README のダウンロード入口、Windows ビルド成果物を同期しました。回帰確認として `npm run typecheck`、`npm run core:test`、`npm run build`、`npm run desktop:build` を通過しています。
+* デスクトップウィンドウの角丸部分に不透明な矩形背景が残る問題を修正しました。
+* 非 Acrylic テーマでは、透明な CSS 外枠だけに頼らず Windows ネイティブの角丸クリップを使います。
+* デスクトップ背景レイヤーとタイトルバーは引き続きアプリ外枠の内側で描画します。
+* カスタムタイトルバーを左側の赤・黄・緑のウィンドウ操作ボタンに更新し、右側の小さなアプリアイコンを削除しました。
+* 書き出した歌詞カード PNG にはデスクトップタイトルバー、ウィンドウ枠、外枠背景が含まれません。
 
 <br clear="right" />
 
@@ -71,12 +72,12 @@
 
 GitHub Release ページではデフォルトで簡体字中国語の短縮版が使用され、完全なリリースノートは `docs/releases/` にて管理されています：
 
-* [简体中文](./docs/releases/v3.9.0.zh-CN.md)
-* [繁體中文](./docs/releases/v3.9.0.zh-TW.md)
-* [English](./docs/releases/v3.9.0.en.md)
-* [Français](./docs/releases/v3.9.0.fr.md)
-* [日本語](./docs/releases/v3.9.0.ja.md)
-* [Español](./docs/releases/v3.9.0.es.md)
+* [简体中文](./docs/releases/v3.9.1.zh-CN.md)
+* [繁體中文](./docs/releases/v3.9.1.zh-TW.md)
+* [English](./docs/releases/v3.9.1.en.md)
+* [Français](./docs/releases/v3.9.1.fr.md)
+* [日本語](./docs/releases/v3.9.1.ja.md)
+* [Español](./docs/releases/v3.9.1.es.md)
 
 <a id="主な機能"></a>
 

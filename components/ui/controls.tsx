@@ -3,6 +3,7 @@
 import { motion, useReducedMotion } from "framer-motion";
 import type {
   ButtonHTMLAttributes,
+  CSSProperties,
   ReactElement,
   HTMLAttributes,
   InputHTMLAttributes,
@@ -552,10 +553,9 @@ export function SegmentedControl<T extends string = string>({
   ...props
 }: SegmentedControlProps<T>) {
   const refs = useRef<Record<string, HTMLButtonElement | null>>({});
-  const activeIndicatorId = useId();
-  const reduceMotion = useReducedMotion();
   const resolvedOnChange = onChange ?? onValueChange;
   const resolvedColumns = columns ?? Math.min(Math.max(options.length, 2), 4);
+  const activeIndex = Math.max(0, options.findIndex((option) => option.value === value));
 
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     const isForward = event.key === "ArrowRight" || event.key === "ArrowDown";
@@ -587,9 +587,12 @@ export function SegmentedControl<T extends string = string>({
       className={cn("segmented-control relative isolate grid gap-2 rounded-xl p-1", className)}
       style={{
         ...style,
+        "--segmented-count": resolvedColumns,
+        "--segmented-active-translate": `${activeIndex * 100}%`,
         gridTemplateColumns: `repeat(${resolvedColumns}, minmax(0, 1fr))`
-      }}
+      } as CSSProperties}
     >
+      <span className="segmented-control__active-indicator" aria-hidden="true" />
       {options.map((option) => (
         <button
           key={option.value}
@@ -609,14 +612,6 @@ export function SegmentedControl<T extends string = string>({
             size === "sm" ? "h-9 text-sm" : "h-11 text-sm"
           )}
         >
-          {value === option.value ? (
-            <motion.span
-              layoutId={`${activeIndicatorId}-selected`}
-              aria-hidden="true"
-              className="segmented-control__active-indicator"
-              transition={reduceMotion ? reducedMotionTransition : motionSprings.control}
-            />
-          ) : null}
           <span className="relative z-10">{option.label}</span>
         </button>
       ))}

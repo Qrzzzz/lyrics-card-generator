@@ -18,6 +18,7 @@ const { normalizeStoredPreferences } = require("./user-preferences");
 const HOST = "127.0.0.1";
 const APP_ID = "com.lyriccard.generator";
 const START_TIMEOUT_MS = 45000;
+const WINDOW_BACKGROUND_COLOR = "#20242D";
 
 app.commandLine.appendSwitch(
   "enable-features",
@@ -170,8 +171,9 @@ function createWindow() {
     show: false,
     frame: false,
     roundedCorners: true,
-    backgroundColor: "#00000000",
-    transparent: true,
+    thickFrame: true,
+    backgroundColor: WINDOW_BACKGROUND_COLOR,
+    transparent: false,
     icon: getAppIconPath(),
     webPreferences: {
       contextIsolation: true,
@@ -280,7 +282,7 @@ function applyWindowMaterial(theme) {
   }
 
   const acrylic = isAcrylicTheme(theme);
-  const backgroundColor = acrylic ? "#00000000" : "#111216";
+  const backgroundColor = acrylic ? "#00000000" : WINDOW_BACKGROUND_COLOR;
 
   try {
     if (process.platform === "win32" && typeof mainWindow.setBackgroundMaterial === "function") {

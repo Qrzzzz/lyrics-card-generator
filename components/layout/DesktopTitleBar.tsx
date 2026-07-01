@@ -1,6 +1,5 @@
 "use client";
 
-import { Copy, Minus, Square, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { APP_VERSION } from "@/lib/app-version";
 import { getLyricsCardDesktopApi, type LyricsCardDesktopApi } from "@/lib/desktop-api";
@@ -45,6 +44,17 @@ export function DesktopTitleBar({ locale }: DesktopTitleBarProps) {
     };
   }, [desktop]);
 
+  useEffect(() => {
+    if (!desktop) {
+      return undefined;
+    }
+
+    document.body.dataset.windowMaximized = maximized ? "true" : "false";
+    return () => {
+      delete document.body.dataset.windowMaximized;
+    };
+  }, [desktop, maximized]);
+
   if (!desktop) {
     return null;
   }
@@ -59,48 +69,35 @@ export function DesktopTitleBar({ locale }: DesktopTitleBarProps) {
   }
 
   return (
-    <header className="desktop-titlebar fixed inset-x-0 top-0 z-[90] flex h-12 items-center justify-between">
-      <div className="desktop-titlebar__brand flex min-w-0 items-center gap-3 px-4">
-        <img
-          src="/app-icon.png"
-          alt=""
-          aria-hidden="true"
-          className="h-6 w-6 shrink-0 rounded-md shadow-sm"
-        />
-        <div className="flex min-w-0 items-baseline gap-2">
-          <span className="truncate text-sm font-bold">{t("appTitle")}</span>
-          <span className="shrink-0 text-[11px] font-semibold uppercase tracking-normal opacity-70">v{APP_VERSION}</span>
-        </div>
-      </div>
-      <div className="desktop-titlebar__controls flex h-full items-stretch">
+    <header className="desktop-titlebar absolute inset-x-0 top-0 z-[90] flex h-12 items-center">
+      <div className="desktop-titlebar__traffic-lights flex shrink-0 items-center gap-2 px-4">
         <button
           type="button"
-          className="desktop-titlebar__button"
-          aria-label={t("titleBar.minimize")}
-          title={t("titleBar.minimize")}
-          onClick={() => void desktop.minimizeWindow()}
-        >
-          <Minus className="h-4 w-4" />
-        </button>
-        <button
-          type="button"
-          className="desktop-titlebar__button"
-          aria-label={maximizeLabel}
-          title={maximizeLabel}
-          onClick={() => void toggleMaximize()}
-        >
-          {maximized ? <Copy className="h-3.5 w-3.5" /> : <Square className="h-3.5 w-3.5" />}
-        </button>
-        <button
-          type="button"
-          className="desktop-titlebar__button desktop-titlebar__button--close"
+          className="traffic-light traffic-light--close"
           aria-label={t("titleBar.close")}
           title={t("titleBar.close")}
           onClick={() => void desktop.closeWindow()}
-        >
-          <X className="h-4 w-4" />
-        </button>
+        />
+        <button
+          type="button"
+          className="traffic-light traffic-light--minimize"
+          aria-label={t("titleBar.minimize")}
+          title={t("titleBar.minimize")}
+          onClick={() => void desktop.minimizeWindow()}
+        />
+        <button
+          type="button"
+          className="traffic-light traffic-light--maximize"
+          aria-label={maximizeLabel}
+          title={maximizeLabel}
+          onClick={() => void toggleMaximize()}
+        />
       </div>
+      <div className="desktop-titlebar__brand flex min-w-0 items-baseline gap-2">
+        <span className="truncate text-sm font-bold">{t("appTitle")}</span>
+        <span className="shrink-0 text-[11px] font-semibold uppercase opacity-70">v{APP_VERSION}</span>
+      </div>
+      <div className="min-w-4 flex-1" />
     </header>
   );
 }
