@@ -29,6 +29,7 @@ const baseStyle: CardStyle = {
   instrumentalText: "Instrumental Track",
   showCover: true,
   showSongInfo: true,
+  showAlbumName: true,
   showGeneratedWatermark: true,
   showSharedBy: true,
   sharedByText: "Shared by Test",
@@ -80,6 +81,7 @@ assert.equal(lyricsLandscape.height, 1080);
 
 assert.equal(defaultState.style.showFineGrid, false);
 assert.equal(defaultState.style.fineGridDensity, "medium");
+assert.equal(defaultState.style.showAlbumName, true);
 
 assert.deepEqual(BACKGROUND_GRID_SIZE_BY_DENSITY, {
   sparse: 72,
@@ -89,4 +91,4 @@ assert.deepEqual(BACKGROUND_GRID_SIZE_BY_DENSITY, {
 assert.equal(resolveBackgroundGridDensity(undefined), "medium");
 assert.equal(resolveBackgroundGridDensity("sparse"), "sparse");
 
-console.log(JSON.stringify({ ok: true, v34LayoutGridTests: 16 }, null, 2));
+console.log(JSON.stringify({ ok: true, v34LayoutGridTests: 17 }, null, 2));

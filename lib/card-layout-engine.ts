@@ -46,7 +46,8 @@ export function getPortraitLayout(size: CardSize, style: CardStyle, source: Song
   const contentMode = style.contentMode ?? "lyrics";
   const hasHeader = contentMode === "lyrics" && (style.showCover || style.showSongInfo);
   const hasFooter = hasVisibleFooter(style, source);
-  const headerHeight = hasHeader ? clamp(Math.round(size.width * 0.16), 130, 214) : 0;
+  const headerScale = style.showSongInfo && style.showAlbumName ? 0.205 : 0.16;
+  const headerHeight = hasHeader ? clamp(Math.round(size.width * headerScale), 130, style.showAlbumName ? 284 : 214) : 0;
   const footerHeight = hasFooter ? clamp(Math.round(size.width * 0.08), 74, 126) : 0;
   const headerGap = hasHeader ? clamp(Math.round(size.height * 0.03), 26, 52) : 0;
   const footerGap = hasFooter ? clamp(Math.round(size.height * 0.018), 18, 34) : 0;
@@ -118,7 +119,8 @@ export function getLandscapeLayout(size: CardSize, style: CardStyle, source: Son
   const contentWidth = Math.min(rawContentWidth, maxContentWidth);
   const contentX = coverRect ? rawContentX : safeRect.x + (safeRect.width - contentWidth) / 2;
   const showSongInfo = style.showSongInfo && contentMode === "lyrics";
-  const songInfoHeight = showSongInfo ? clamp(Math.round(safeRect.height * (style.allowTwoLineTitle ? 0.25 : 0.2)), 130, 252) : 0;
+  const songInfoScale = style.allowTwoLineTitle || style.showAlbumName ? 0.25 : 0.2;
+  const songInfoHeight = showSongInfo ? clamp(Math.round(safeRect.height * songInfoScale), 130, style.showAlbumName ? 290 : 252) : 0;
   const songInfoGap = showSongInfo ? clamp(Math.round(safeRect.height * 0.035), 24, 50) : 0;
   const lyricsY = safeRect.y + songInfoHeight + songInfoGap;
   const lyricsHeight = Math.max(170, usableBottom - lyricsY);

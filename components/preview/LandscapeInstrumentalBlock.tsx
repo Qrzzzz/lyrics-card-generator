@@ -7,6 +7,7 @@ export function LandscapeInstrumentalBlock({
   song,
   instrumentalText,
   textColor,
+  showAlbumName,
   left,
   top,
   width,
@@ -15,6 +16,7 @@ export function LandscapeInstrumentalBlock({
   song: SongInfo;
   instrumentalText: string;
   textColor: string;
+  showAlbumName: boolean;
   left: number;
   top: number;
   width: number;
@@ -35,7 +37,7 @@ export function LandscapeInstrumentalBlock({
       <p className="mt-6 text-[34px] font-semibold leading-[1.2]" style={{ color: withAlpha(textColor, 0.72) }}>
         {song.artist || "Unknown artist"}
       </p>
-      {song.album ? (
+      {showAlbumName && song.album ? (
         <p className="mt-4 text-[24px] font-medium leading-[1.2]" style={{ color: withAlpha(textColor, 0.52) }}>
           {song.album}
         </p>

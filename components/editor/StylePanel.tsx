@@ -50,7 +50,6 @@ export function FontSchemeSettingsPanel({ style, onStyleChange, onFontSchemePrev
         onPreviewSchemeChange={onFontSchemePreviewChange}
         t={t}
       />
-      <CustomFontPanel style={style} onStyleChange={onStyleChange} t={t} />
     </div>
   );
 }
@@ -552,6 +551,7 @@ export function VisualSettingsPanel({ style, onStyleChange, t }: StylePanelProps
       <div className="grid gap-3 sm:grid-cols-3">
         <ToggleRow label={t("cover")} checked={style.showCover} onChange={(checked) => update("showCover", checked)} />
         <ToggleRow label={t("showSongInfo")} checked={style.showSongInfo} onChange={(checked) => update("showSongInfo", checked)} />
+        <ToggleRow label={t("showAlbumName")} checked={style.showAlbumName} onChange={(checked) => update("showAlbumName", checked)} />
         <ToggleRow label={t("allowTwoLineTitle")} checked={style.allowTwoLineTitle} onChange={(checked) => update("allowTwoLineTitle", checked)} />
         <ToggleRow label={t("showGeneratedWatermark")} checked={style.showGeneratedWatermark} onChange={updateGeneratedWatermark} />
         <ToggleRow

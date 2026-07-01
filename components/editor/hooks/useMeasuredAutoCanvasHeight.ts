@@ -111,6 +111,7 @@ export function useMeasuredAutoCanvasHeight(
     state.style.sharedByText,
     state.style.showCover,
     state.style.showGeneratedWatermark,
+    state.style.showAlbumName,
     state.style.showPlatformBadge,
     state.style.showSharedBy,
     state.style.showSongInfo,

@@ -11,7 +11,8 @@ export function LandscapeSongInfo({
   top,
   width,
   allowTwoLineTitle,
-  isDarkText
+  isDarkText,
+  showAlbumName
 }: {
   song: SongInfo;
   textColor: string;
@@ -20,6 +21,7 @@ export function LandscapeSongInfo({
   width: number;
   allowTwoLineTitle: boolean;
   isDarkText: boolean;
+  showAlbumName: boolean;
 }) {
   return (
     <header
@@ -43,7 +45,7 @@ export function LandscapeSongInfo({
       <p className="mt-6 truncate text-[39px] font-semibold leading-[1.45]" style={{ color: withAlpha(textColor, 0.72) }}>
         {song.artist || "Unknown artist"}
       </p>
-      {song.album ? (
+      {showAlbumName && song.album ? (
         <p className="mt-5 truncate text-[30px] font-medium leading-[1.42]" style={{ color: withAlpha(textColor, 0.5) }}>
           {song.album}
         </p>

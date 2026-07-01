@@ -584,8 +584,11 @@ export function SegmentedControl<T extends string = string>({
       role={role ?? "radiogroup"}
       aria-label={props["aria-label"] ?? ariaLabel}
       onKeyDown={handleKeyDown}
-      className={cn("segmented-control grid gap-2 rounded-xl p-1", className)}
-      style={{ ...style, gridTemplateColumns: `repeat(${resolvedColumns}, minmax(0, 1fr))` }}
+      className={cn("segmented-control relative isolate grid gap-2 rounded-xl p-1", className)}
+      style={{
+        ...style,
+        gridTemplateColumns: `repeat(${resolvedColumns}, minmax(0, 1fr))`
+      }}
     >
       {options.map((option) => (
         <button

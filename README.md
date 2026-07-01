@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v3.8.1.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v3.9.0.zh-CN.md">发布说明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">在线 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="#本地开发">本地开发</a> ·
@@ -48,19 +48,19 @@
 
 请前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下载最新版：
 
-* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 3.8.1.exe`
-* 不想安装时可下载便携版：`Lyrics Card Generator-3.8.1-portable.exe`
+* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 3.9.0.exe`
+* 不想安装时可下载便携版：`Lyrics Card Generator-3.9.0-portable.exe`
 
 安装版适合长期使用；便携版适合临时运行、测试或放在移动硬盘中使用。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v3.8.1 更新重点
+### v3.9.0 更新重点
 
-* 将 `LyricEditor.tsx` 收敛为页面编排层，拆分默认值、步骤装配、业务动作、AI 翻译、偏好设置和主题令牌模块。
-* 整理 Web 与 Electron 双路径下重复的 AI provider 请求辅助逻辑，同时保持 `/api/ai/translate` 与 Electron IPC / `safeStorage` 边界不变。
-* 保留歌曲链接解析、本地音频、歌词获取、AI 翻译、封面取色、主题、Acrylic、导出、示例加载、多语言、字体和布局等全部现有入口。
-* 已通过 `npm run typecheck`、`npm run core:test`、`npm run build`、`npm run desktop:build` 完成回归验证。
+* 设置中心改为即时保存，背景图片、AI 设置、外观和通用设置调整后直接写入本地偏好。
+* 语言范围保持原有六语言：简体中文、繁體中文、English、Français、日本語、Español，不新增或移除语言。
+* 歌曲信息表单合并到歌曲链接步骤，可按需展开手动填写；歌词卡片新增“显示专辑名”开关，并同步适配竖版、横版和纯音乐卡片布局。
+* 已同步 `3.9.0` 版本元数据、发布说明、README 下载入口和 Windows 构建产物，并通过 `npm run typecheck`、`npm run core:test`、`npm run build`、`npm run desktop:build` 完成回归验证。
 
 <br clear="right" />
 
@@ -68,12 +68,12 @@
 
 GitHub Release 页面默认使用简体中文短版，完整发布说明维护在 `docs/releases/`：
 
-* [简体中文](./docs/releases/v3.8.1.zh-CN.md)
-* [繁體中文](./docs/releases/v3.8.1.zh-TW.md)
-* [English](./docs/releases/v3.8.1.en.md)
-* [Français](./docs/releases/v3.8.1.fr.md)
-* [日本語](./docs/releases/v3.8.1.ja.md)
-* [Español](./docs/releases/v3.8.1.es.md)
+* [简体中文](./docs/releases/v3.9.0.zh-CN.md)
+* [繁體中文](./docs/releases/v3.9.0.zh-TW.md)
+* [English](./docs/releases/v3.9.0.en.md)
+* [Français](./docs/releases/v3.9.0.fr.md)
+* [日本語](./docs/releases/v3.9.0.ja.md)
+* [Español](./docs/releases/v3.9.0.es.md)
 
 <a id="主要功能"></a>
 

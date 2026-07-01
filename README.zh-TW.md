@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v3.8.1.zh-TW.md">發布說明</a> ·
+  <a href="./docs/releases/v3.9.0.zh-TW.md">發布說明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">線上 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="#本機開發">本機開發</a> ·
@@ -48,19 +48,19 @@
 
 請前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載最新版：
 
-* 建議一般使用者下載安裝版：`Lyrics Card Generator Setup 3.8.1.exe`
-* 不想安裝時可下載可攜版：`Lyrics Card Generator-3.8.1-portable.exe`
+* 建議一般使用者下載安裝版：`Lyrics Card Generator Setup 3.9.0.exe`
+* 不想安裝時可下載可攜版：`Lyrics Card Generator-3.9.0-portable.exe`
 
 安裝版適合長期使用；可攜版適合臨時執行、測試或放在隨身碟中使用。
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v3.8.1 更新重點
+### v3.9.0 更新重點
 
-* 將 `LyricEditor.tsx` 收斂為頁面編排層，拆分預設值、步驟組裝、業務動作、AI 翻譯、偏好設定與主題令牌模組。
-* 整理 Web 與 Electron 雙路徑下重複的 AI provider 請求輔助邏輯，同時維持 `/api/ai/translate` 與 Electron IPC / `safeStorage` 邊界不變。
-* 保留歌曲連結解析、本機音訊、歌詞擷取、AI 翻譯、封面取色、主題、Acrylic、匯出、範例載入、多語言、字型與版面等所有既有入口。
-* 已通過 `npm run typecheck`、`npm run core:test`、`npm run build`、`npm run desktop:build` 完成回歸驗證。
+* 設定中心改為即時儲存，背景圖片、AI 設定、外觀和一般設定調整後會直接寫入本機偏好。
+* 語言範圍保持原有六語言：簡體中文、繁體中文、English、Français、日本語、Español，不新增或移除語言。
+* 歌曲資訊表單合併到歌曲連結步驟，可按需展開手動填寫；歌詞卡片新增「顯示專輯名」開關，並同步適配直式、橫式與純音樂卡片版面。
+* 已同步 `3.9.0` 版本元資料、發布說明、README 下載入口和 Windows 建置產物，並通過 `npm run typecheck`、`npm run core:test`、`npm run build`、`npm run desktop:build` 完成回歸驗證。
 
 <br clear="right" />
 
@@ -68,12 +68,12 @@
 
 GitHub Release 頁面預設使用簡體中文短版，完整發佈說明維護在 `docs/releases/`：
 
-* [简体中文](./docs/releases/v3.8.1.zh-CN.md)
-* [繁體中文](./docs/releases/v3.8.1.zh-TW.md)
-* [English](./docs/releases/v3.8.1.en.md)
-* [Français](./docs/releases/v3.8.1.fr.md)
-* [日本語](./docs/releases/v3.8.1.ja.md)
-* [Español](./docs/releases/v3.8.1.es.md)
+* [简体中文](./docs/releases/v3.9.0.zh-CN.md)
+* [繁體中文](./docs/releases/v3.9.0.zh-TW.md)
+* [English](./docs/releases/v3.9.0.en.md)
+* [Français](./docs/releases/v3.9.0.fr.md)
+* [日本語](./docs/releases/v3.9.0.ja.md)
+* [Español](./docs/releases/v3.9.0.es.md)
 
 ## ✨ 主要功能
 

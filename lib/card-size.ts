@@ -55,6 +55,7 @@ export function estimateCardHeight(params: {
   contentMode: ContentMode;
   showCover: boolean;
   showSongInfo: boolean;
+  showAlbumName: boolean;
   allowTwoLineTitle: boolean;
   showGeneratedWatermark: boolean;
   showPlatformBadge: boolean;
@@ -77,7 +78,7 @@ export function estimateCardHeight(params: {
     lyricLineCount,
     Math.ceil(lyricCharacterCount / averageCharsPerLine)
   );
-  const topArea = params.showSongInfo || params.showCover ? 280 : 80;
+  const topArea = params.showSongInfo || params.showCover ? (params.showAlbumName ? 340 : 280) : 80;
   const hasFooter = params.showGeneratedWatermark || params.showPlatformBadge || params.showSharedBy;
   const bottomArea = hasFooter ? 120 : 40;
   const lyricArea = wrappedLines * params.lyricFontSize * params.lineHeight;

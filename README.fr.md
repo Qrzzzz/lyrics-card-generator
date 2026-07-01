@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v3.8.1.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v3.9.0.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="#développement-local">Développement local</a> ·
@@ -51,19 +51,19 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 Téléchargez la dernière version depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
 
-* Installateur recommandé : `Lyrics Card Generator Setup 3.8.1.exe`
-* Version portable : `Lyrics Card Generator-3.8.1-portable.exe`
+* Installateur recommandé : `Lyrics Card Generator Setup 3.9.0.exe`
+* Version portable : `Lyrics Card Generator-3.9.0-portable.exe`
 
 L'installateur est recommandé pour une utilisation régulière. La version portable convient aux essais, à une utilisation temporaire ou à un disque amovible.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### Points clés de la v3.8.1
+### Points clés de la v3.9.0
 
-* Réduit `LyricEditor.tsx` à une couche d’orchestration en extrayant les valeurs par défaut, l’assemblage des étapes, les actions métier, la traduction IA, les préférences et les jetons de thème.
-* Déduplique les helpers de requête IA répétés entre Web et Electron tout en préservant la route `/api/ai/translate` et le chemin Electron IPC / `safeStorage`.
-* Conserve toutes les entrées existantes pour l’analyse de liens, l’audio local, la récupération des paroles, la traduction IA, l’extraction de palette, les thèmes, Acrylic, l’export, les exemples, les langues, les polices et la mise en page.
-* La validation de régression a passé `npm run typecheck`, `npm run core:test`, `npm run build` et `npm run desktop:build`.
+* Les paramètres sont désormais enregistrés immédiatement : images d’arrière-plan, réglages IA, apparence et préférences générales sont écrits directement dans les préférences locales.
+* Le périmètre linguistique reste celui des six langues existantes : chinois simplifié, chinois traditionnel, anglais, français, japonais et espagnol, sans ajout ni suppression de langue.
+* Déplace les informations manuelles du morceau dans une action dépliable de l’étape de lien ; les cartes de paroles ajoutent une option « Afficher le nom de l’album » pour les mises en page portrait, paysage et instrumentale.
+* Synchronise les métadonnées `3.9.0`, les notes de version, les entrées de téléchargement des README et les artefacts Windows ; la validation de régression a passé `npm run typecheck`, `npm run core:test`, `npm run build` et `npm run desktop:build`.
 
 <br clear="right" />
 
@@ -71,12 +71,12 @@ L'installateur est recommandé pour une utilisation régulière. La version port
 
 La page GitHub Release utilise par défaut la version courte en chinois simplifié, les notes de publication complètes sont conservées dans `docs/releases/` :
 
-* [简体中文](./docs/releases/v3.8.1.zh-CN.md)
-* [繁體中文](./docs/releases/v3.8.1.zh-TW.md)
-* [English](./docs/releases/v3.8.1.en.md)
-* [Français](./docs/releases/v3.8.1.fr.md)
-* [日本語](./docs/releases/v3.8.1.ja.md)
-* [Español](./docs/releases/v3.8.1.es.md)
+* [简体中文](./docs/releases/v3.9.0.zh-CN.md)
+* [繁體中文](./docs/releases/v3.9.0.zh-TW.md)
+* [English](./docs/releases/v3.9.0.en.md)
+* [Français](./docs/releases/v3.9.0.fr.md)
+* [日本語](./docs/releases/v3.9.0.ja.md)
+* [Español](./docs/releases/v3.9.0.es.md)
 
 <a id="fonctionnalités-principales"></a>
 

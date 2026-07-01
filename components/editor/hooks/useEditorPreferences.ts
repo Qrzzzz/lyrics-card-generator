@@ -58,7 +58,7 @@ export function useEditorPreferences({ currentLocale, applyLocale }: UseEditorPr
 
   function setLocale(locale: Locale) {
     applyLocale(locale);
-    // Locale changes should not silently persist preview-only dialog changes before the user clicks Save.
+    // Locale changes persist immediately, matching the rest of the settings dialog.
     void saveAppPreferences(locale, committedUserSettingsRef.current).catch(() => undefined);
   }
 

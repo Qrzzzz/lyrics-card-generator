@@ -1,6 +1,7 @@
 "use client";
 
 import type { RefObject } from "react";
+import { useState } from "react";
 import { ExportPanel } from "@/components/editor/ExportPanel";
 import { LocalAudioParser } from "@/components/editor/LocalAudioParser";
 import { LyricsFetchPanel } from "@/components/editor/LyricsFetchPanel";
@@ -78,12 +79,20 @@ export function useEditorSteps({
   ai,
   handlers
 }: UseEditorStepsInput): SettingsStep[] {
+  const [songInfoExpanded, setSongInfoExpanded] = useState(false);
+
   return [
     {
       id: "link",
       title: t("step.songLink"),
       description: t("parseIdle"),
-      isComplete: Boolean(state.url.trim()),
+      isComplete: Boolean(state.url.trim() || state.song.title.trim() || state.song.artist.trim() || state.song.coverUrl?.trim()),
+      secondaryAction: {
+        label: t("manualOverride"),
+        onClick: () => setSongInfoExpanded((expanded) => !expanded),
+        pressed: songInfoExpanded,
+        expanded: songInfoExpanded
+      },
       content: (
         <div className="grid gap-4">
           <SongLinkParser
@@ -97,20 +106,16 @@ export function useEditorSteps({
             t={t}
             onParsed={handlers.onLocalAudioParsed}
           />
+          {songInfoExpanded ? (
+            <SongInfoForm
+              song={state.song}
+              onSongChange={handlers.onSongChange}
+              t={t}
+              showToggle={false}
+              forceEnabled
+            />
+          ) : null}
         </div>
-      )
-    },
-    {
-      id: "song",
-      title: t("step.songInfo"),
-      description: t("manualOverride"),
-      isComplete: Boolean(state.song.title.trim() || state.song.artist.trim() || state.song.coverUrl?.trim()),
-      content: (
-        <SongInfoForm
-          song={state.song}
-          onSongChange={handlers.onSongChange}
-          t={t}
-        />
       )
     },
     {

@@ -88,6 +88,7 @@ export type CardStyle = {
   instrumentalText: string;
   showCover: boolean;
   showSongInfo: boolean;
+  showAlbumName: boolean;
   showGeneratedWatermark: boolean;
   showSharedBy: boolean;
   sharedByText: string;
