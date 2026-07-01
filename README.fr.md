@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v3.9.1.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v4.0.0.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="#développement-local">Développement local</a> ·
@@ -51,20 +51,20 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 Téléchargez la dernière version depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
 
-* Installateur recommandé : `Lyrics Card Generator Setup 3.9.1.exe`
-* Version portable : `Lyrics Card Generator-3.9.1-portable.exe`
+* Installateur recommandé : `Lyrics Card Generator Setup 4.0.0.exe`
+* Version portable : `Lyrics Card Generator-4.0.0-portable.exe`
 
 L'installateur est recommandé pour une utilisation régulière. La version portable convient aux essais, à une utilisation temporaire ou à un disque amovible.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### Points clés de la v3.9.1
+### Points clés de la v4.0.0
 
-* Corrige les coins arrondis de la fenêtre de bureau qui laissaient encore voir un fond rectangulaire opaque.
-* Utilise le découpage arrondi natif de Windows pour les thèmes non Acrylic au lieu de dépendre de coins transparents uniquement en CSS.
-* Garde le fond de bureau et la barre de titre dessinés dans l’enveloppe de l’application.
-* Actualise la barre de titre personnalisée avec des contrôles rouge, jaune et vert à gauche, et supprime la petite icône de droite.
-* Garde les PNG exportés sans barre de titre de bureau, bordure de fenêtre ni fond d’enveloppe.
+* L’entrée principale de choix de morceau devient une recherche NetEase Cloud Music.
+* Les résultats apparaissent en direct pendant la saisie d’un titre, d’un artiste ou d’un album.
+* Les flèches, Entrée et le clic souris permettent de choisir puis d’importer un résultat.
+* Le titre, l’artiste, l’album, la pochette et les paroles NetEase disponibles sont importés automatiquement.
+* Les anciennes entrées par lien, audio local et saisie manuelle restent disponibles.
 
 <br clear="right" />
 
@@ -72,12 +72,12 @@ L'installateur est recommandé pour une utilisation régulière. La version port
 
 La page GitHub Release utilise par défaut la version courte en chinois simplifié, les notes de publication complètes sont conservées dans `docs/releases/` :
 
-* [简体中文](./docs/releases/v3.9.1.zh-CN.md)
-* [繁體中文](./docs/releases/v3.9.1.zh-TW.md)
-* [English](./docs/releases/v3.9.1.en.md)
-* [Français](./docs/releases/v3.9.1.fr.md)
-* [日本語](./docs/releases/v3.9.1.ja.md)
-* [Español](./docs/releases/v3.9.1.es.md)
+* [简体中文](./docs/releases/v4.0.0.zh-CN.md)
+* [繁體中文](./docs/releases/v4.0.0.zh-TW.md)
+* [English](./docs/releases/v4.0.0.en.md)
+* [Français](./docs/releases/v4.0.0.fr.md)
+* [日本語](./docs/releases/v4.0.0.ja.md)
+* [Español](./docs/releases/v4.0.0.es.md)
 
 <a id="fonctionnalités-principales"></a>
 
@@ -97,8 +97,9 @@ La page GitHub Release utilise par défaut la version courte en chinois simplifi
 * Séparation automatique des lignes original / traduction avec détection du chinois simplifié, chinois traditionnel, anglais, français, japonais et espagnol
 * Traduction de paroles par IA via les API Chat Completions compatibles OpenAI, avec URL du fournisseur, modèle, clé API, six styles, Reasoning et sortie en streaming configurables
 
-### 🎵 Liens musicaux et analyse de fichiers locaux
+### 🎵 Recherche de morceau, liens musicaux et analyse de fichiers locaux
 
+* Recherche NetEase Cloud Music par titre, artiste ou album, puis import des métadonnées et paroles du résultat choisi
 * Analyse de liens Spotify, Apple Music, NetEase Cloud Music et QQ Music
 * Analyse de métadonnées MP3 / FLAC locales : titre, artiste, album, pochette et paroles intégrées
 
@@ -139,6 +140,7 @@ L'application peut démarrer hors ligne. Les fonctions suivantes restent disponi
 Ces fonctions nécessitent Internet :
 
 * Analyse de liens de plateformes musicales
+* Recherche NetEase Cloud Music et récupération de paroles
 * Chargement de pochettes distantes
 * Récupération automatique des paroles
 * Traduction de paroles par IA
@@ -147,8 +149,8 @@ Ces fonctions nécessitent Internet :
 ## 🚀 Utilisation
 
 1. Lancez l'application.
-2. Collez un lien Spotify, Apple Music, NetEase Cloud Music ou QQ Music, ou saisissez les informations du morceau manuellement.
-3. Vous pouvez aussi importer un fichier local MP3 / FLAC pour lire les métadonnées, la pochette et les paroles intégrées.
+2. Recherchez NetEase Cloud Music par titre, artiste ou album, puis choisissez un résultat pour importer les métadonnées, la pochette et les paroles.
+3. Vous pouvez aussi coller un lien Spotify, Apple Music, NetEase Cloud Music ou QQ Music, ou importer un fichier local MP3 / FLAC.
 4. Modifiez les paroles et traductions ; utilisez la traduction IA ou séparez automatiquement les lignes original / traduction selon la langue de l'interface.
 5. Ajustez le ratio de toile, les jeux de polices CJK / latines, les couleurs, cadres, filigranes et autres styles.
 6. Prévisualisez la carte à droite.

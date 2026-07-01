@@ -19,7 +19,7 @@
 <p>
   <strong>Navegación</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Descargar la última versión</a> ·
-  <a href="./docs/releases/v3.9.1.es.md">Notas de la versión</a> ·
+  <a href="./docs/releases/v4.0.0.es.md">Notas de la versión</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en línea</a> ·
   <a href="#funciones-principales">Funciones principales</a> ·
   <a href="#desarrollo-local">Desarrollo local</a> ·
@@ -51,20 +51,20 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 Descarga la versión más reciente desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Instalador recomendado: `Lyrics Card Generator Setup 3.9.1.exe`
-* Versión portable: `Lyrics Card Generator-3.9.1-portable.exe`
+* Instalador recomendado: `Lyrics Card Generator Setup 4.0.0.exe`
+* Versión portable: `Lyrics Card Generator-4.0.0-portable.exe`
 
 El instalador se recomienda para uso habitual. La versión portable es útil para pruebas, uso temporal o ejecución desde una unidad extraíble.
 
 > La compilación actual no está firmada. Windows puede mostrar una advertencia de SmartScreen, algo habitual en aplicaciones personales sin firma.
 
-### Aspectos destacados de la versión 3.9.1
+### Aspectos destacados de la versión 4.0.0
 
-* Corrige las esquinas redondeadas de la ventana de escritorio que todavía mostraban un fondo rectangular opaco.
-* Usa el recorte de esquinas redondeadas nativo de Windows en temas no Acrylic, en lugar de depender solo de esquinas transparentes por CSS.
-* Mantiene la capa de fondo de escritorio y la barra de título dibujadas dentro del contenedor de la app.
-* Actualiza la barra de título personalizada con controles rojo, amarillo y verde a la izquierda y elimina el icono pequeño de la derecha.
-* Mantiene los PNG exportados sin barra de título de escritorio, marco de ventana ni fondo del contenedor.
+* La primera entrada para elegir canción ahora es una búsqueda de NetEase Cloud Music.
+* Muestra candidatos en tiempo real al escribir título, artista o álbum.
+* Permite elegir con flechas, importar con Enter o hacer clic con el ratón.
+* Importa título, artista, álbum, portada y letras de NetEase cuando están disponibles.
+* Conserva las entradas existentes de enlaces, audio local y edición manual.
 
 <br clear="right" />
 
@@ -72,12 +72,12 @@ El instalador se recomienda para uso habitual. La versión portable es útil par
 
 La página de GitHub Release utiliza por defecto la versión corta en chino simplificado, las notas de publicación completas se mantienen en `docs/releases/`:
 
-* [简体中文](./docs/releases/v3.9.1.zh-CN.md)
-* [繁體中文](./docs/releases/v3.9.1.zh-TW.md)
-* [English](./docs/releases/v3.9.1.en.md)
-* [Français](./docs/releases/v3.9.1.fr.md)
-* [日本語](./docs/releases/v3.9.1.ja.md)
-* [Español](./docs/releases/v3.9.1.es.md)
+* [简体中文](./docs/releases/v4.0.0.zh-CN.md)
+* [繁體中文](./docs/releases/v4.0.0.zh-TW.md)
+* [English](./docs/releases/v4.0.0.en.md)
+* [Français](./docs/releases/v4.0.0.fr.md)
+* [日本語](./docs/releases/v4.0.0.ja.md)
+* [Español](./docs/releases/v4.0.0.es.md)
 
 <a id="funciones-principales"></a>
 
@@ -97,8 +97,9 @@ La página de GitHub Release utiliza por defecto la versión corta en chino simp
 * Separación automática de líneas original / traducción con detección de chino simplificado, chino tradicional, inglés, francés, japonés y español
 * Traducción de letras con IA mediante API Chat Completions compatibles con OpenAI, con URL del proveedor, modelo, clave API, seis estilos, Reasoning y salida en streaming configurables
 
-### 🎵 Enlaces musicales y análisis de archivos locales
+### 🎵 Búsqueda de canciones, enlaces musicales y archivos locales
 
+* Busca en NetEase Cloud Music por título, artista o álbum e importa metadatos y letras desde el resultado elegido
 * Análisis de enlaces de Spotify, Apple Music, NetEase Cloud Music y QQ Music
 * Análisis de metadatos MP3 / FLAC locales para título, artista, álbum, portada y letras incrustadas
 
@@ -139,6 +140,7 @@ La aplicación de escritorio puede iniciarse sin conexión. Estas funciones sigu
 Estas funciones requieren internet:
 
 * Análisis de enlaces de plataformas musicales
+* Búsqueda en NetEase Cloud Music y obtención de letras
 * Carga de portadas remotas
 * Obtención automática de letras
 * Traducción de letras con IA
@@ -147,8 +149,8 @@ Estas funciones requieren internet:
 ## 🚀 Uso
 
 1. Inicia la aplicación.
-2. Pega un enlace de Spotify, Apple Music, NetEase Cloud Music o QQ Music, o introduce la información manualmente.
-3. Opcionalmente sube un archivo MP3 / FLAC local para leer metadatos, portada y letras incrustadas.
+2. Busca en NetEase Cloud Music por título, artista o álbum y elige un candidato para importar metadatos, portada y letras.
+3. También puedes pegar un enlace de Spotify, Apple Music, NetEase Cloud Music o QQ Music, o subir un MP3 / FLAC local.
 4. Edita letras y traducciones; usa traducción con IA o separa texto original / traducido alternado según el idioma de interfaz seleccionado.
 5. Ajusta proporción del lienzo, combinaciones CJK / latinas, colores, marcos, marcas de agua y otros estilos.
 6. Previsualiza la tarjeta a la derecha.

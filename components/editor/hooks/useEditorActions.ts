@@ -173,6 +173,27 @@ export function useEditorActions({
     });
   }
 
+  function applySearchedSong(song: ParsedSongData, lyrics?: string) {
+    setState((current) => {
+      const { lyrics: _lyrics, ...songInfo } = song;
+      const originalCoverUrl = song.coverUrl ?? "";
+      const coverUrl = getHighResolutionCoverUrl(originalCoverUrl, song.source);
+
+      return {
+        ...current,
+        url: song.originalUrl,
+        song: {
+          ...current.song,
+          ...songInfo,
+          originalCoverUrl,
+          coverUrl,
+          proxiedCoverUrl: coverUrl ? proxiedImageUrl(coverUrl) : ""
+        },
+        lyrics: lyrics?.trim() ? lyrics : current.lyrics
+      };
+    });
+  }
+
   function setSong(song: SongInfo) {
     setState((current) => ({ ...current, song }));
   }
@@ -292,6 +313,7 @@ export function useEditorActions({
     setUrl,
     applyParsedSong,
     applyLocalAudio,
+    applySearchedSong,
     setSong,
     setLyrics,
     setTranslationEnabled,

@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v3.9.1.zh-TW.md">發布說明</a> ·
+  <a href="./docs/releases/v4.0.0.zh-TW.md">發布說明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">線上 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="#本機開發">本機開發</a> ·
@@ -48,20 +48,20 @@
 
 請前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載最新版：
 
-* 建議一般使用者下載安裝版：`Lyrics Card Generator Setup 3.9.1.exe`
-* 不想安裝時可下載可攜版：`Lyrics Card Generator-3.9.1-portable.exe`
+* 建議一般使用者下載安裝版：`Lyrics Card Generator Setup 4.0.0.exe`
+* 不想安裝時可下載可攜版：`Lyrics Card Generator-4.0.0-portable.exe`
 
 安裝版適合長期使用；可攜版適合臨時執行、測試或放在隨身碟中使用。
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v3.9.1 更新重點
+### v4.0.0 更新重點
 
-* 修復桌面視窗圓角後仍露出不透明矩形底色的問題。
-* 非 Acrylic 主題改用 Windows 原生圓角裁切，不再依賴透明 CSS 外殼偽裝圓角。
-* 桌面背景層與標題列仍限制在應用外殼內部繪製。
-* 自繪標題列改為左側紅黃綠視窗控制按鈕，並移除右側小圖示。
-* 匯出的歌詞卡片 PNG 不包含桌面標題列、視窗邊框或外殼背景。
+* 第一選歌入口升級為網易雲音樂歌名搜尋。
+* 輸入歌名、歌手或專輯關鍵字時，會即時顯示候選歌曲。
+* 支援方向鍵選擇、Enter 匯入和滑鼠點擊匯入。
+* 選中歌曲後自動填入標題、歌手、專輯、封面，並盡量取得網易雲歌詞。
+* 原有連結解析、本機音訊解析和手動填寫入口全部保留。
 
 <br clear="right" />
 
@@ -69,12 +69,12 @@
 
 GitHub Release 頁面預設使用簡體中文短版，完整發佈說明維護在 `docs/releases/`：
 
-* [简体中文](./docs/releases/v3.9.1.zh-CN.md)
-* [繁體中文](./docs/releases/v3.9.1.zh-TW.md)
-* [English](./docs/releases/v3.9.1.en.md)
-* [Français](./docs/releases/v3.9.1.fr.md)
-* [日本語](./docs/releases/v3.9.1.ja.md)
-* [Español](./docs/releases/v3.9.1.es.md)
+* [简体中文](./docs/releases/v4.0.0.zh-CN.md)
+* [繁體中文](./docs/releases/v4.0.0.zh-TW.md)
+* [English](./docs/releases/v4.0.0.en.md)
+* [Français](./docs/releases/v4.0.0.fr.md)
+* [日本語](./docs/releases/v4.0.0.ja.md)
+* [Español](./docs/releases/v4.0.0.es.md)
 
 ## ✨ 主要功能
 
@@ -92,8 +92,9 @@ GitHub Release 頁面預設使用簡體中文短版，完整發佈說明維護�
 * 支援按目前介面語言拆分原文 / 譯文，包括簡體中文、繁體中文、英文、法文、日文、西班牙文目標譯文
 * 支援相容 OpenAI Chat Completions 的 AI 歌詞翻譯，可設定服務商 Base URL、模型、API Key、六種翻譯風格、Reasoning 與串流輸出
 
-### 🎵 音樂連結與本機檔案解析
+### 🎵 歌曲搜尋、音樂連結與本機檔案解析
 
+* 支援透過網易雲音樂搜尋歌名、歌手或專輯，並從候選結果匯入歌曲資訊與歌詞
 * 支援 Spotify、Apple Music、網易雲音樂、QQ 音樂連結解析
 * 支援本機 MP3 / FLAC 中繼資料解析，嘗試讀取標題、藝人、專輯、封面和內嵌歌詞
 
@@ -134,6 +135,7 @@ GitHub Release 頁面預設使用簡體中文短版，完整發佈說明維護�
 以下功能需要連線：
 
 * 音樂平台連結解析
+* 網易雲音樂搜尋與歌詞取得
 * 遠端封面載入
 * 自動歌詞擷取
 * AI 歌詞翻譯
@@ -142,8 +144,8 @@ GitHub Release 頁面預設使用簡體中文短版，完整發佈說明維護�
 ## 🚀 使用方式
 
 1. 啟動應用。
-2. 貼上 Spotify、Apple Music、網易雲音樂或 QQ 音樂連結，或手動填寫歌曲資訊。
-3. 也可以上傳本機 MP3 / FLAC，自動讀取檔案內的歌曲資訊、封面和內嵌歌詞。
+2. 在「搜尋網易雲音樂」中輸入歌名、歌手或專輯關鍵字，選擇候選歌曲後自動填入歌曲資訊、封面和歌詞。
+3. 也可以貼上 Spotify、Apple Music、網易雲音樂或 QQ 音樂連結，或上傳本機 MP3 / FLAC 讀取中繼資料。
 4. 編輯歌詞和翻譯；可使用 AI 翻譯，也可將原文 / 譯文交替行依目前介面語言自動拆分。
 5. 調整畫布比例、字型方案（中日韓 / 西文）、字號、顏色、邊框、浮水印等樣式。
 6. 在右側預覽卡片。
