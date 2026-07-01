@@ -18,9 +18,9 @@ export function GeneralSettingsSection({
   onChange: (settings: UserSettings) => void;
 }) {
   return (
-    <div className="grid gap-4">
+    <div className="grid gap-6">
       <LanguageSettingsSection locale={locale} title={copy.language} onLocaleChange={onLocaleChange} />
-      <section className="settings-panel-card p-4 sm:p-5">
+      <section className="grid gap-3">
         <ToggleRow
           label={copy.spark}
           description={copy.sparkDescription}

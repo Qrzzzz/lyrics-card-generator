@@ -146,18 +146,34 @@ function testUpdateResult() {
 }
 
 function testLayoutEngine() {
-  const portrait = getPortraitLayout({ width: 1040, height: 1400 }, baseStyle, "apple");
+  const portrait = getPortraitLayout({ width: 1040, height: 1400 }, baseStyle, { source: "apple", album: "Album" });
+  const portraitWithoutAlbum = getPortraitLayout({ width: 1040, height: 1400 }, baseStyle, { source: "apple", album: "" });
   assert(Math.abs(centerX(portrait.safeRect) - centerX(portrait.lyricsRect)) < 1, "portrait center lyrics");
   assert(portrait.lyricsRect.width <= portrait.safeRect.width, "portrait lyrics inside safe area");
+  assert(
+    portrait.headerRect && portraitWithoutAlbum.headerRect && portrait.headerRect.height > portraitWithoutAlbum.headerRect.height,
+    "portrait reserves album height only when album text exists"
+  );
 
   const landscape = getLandscapeLayout(
     { width: 2520, height: 1080 },
     { ...baseStyle, layoutMode: "landscape", ratio: "21:9", autoHeight: false },
-    "apple"
+    { source: "apple", album: "Album" }
+  );
+  const landscapeWithoutAlbum = getLandscapeLayout(
+    { width: 2520, height: 1080 },
+    { ...baseStyle, layoutMode: "landscape", ratio: "21:9", autoHeight: false },
+    { source: "apple", album: "" }
   );
   assert(landscape.coverRect && landscape.coverRect.width <= landscape.safeRect.height * 0.74 + 1, "landscape cover height bound");
   assert(landscape.contentRect.width <= 1180, "landscape content max width");
   assert(landscape.lyricsRect.height > 170, "landscape lyrics has usable height");
+  assert(
+    landscape.songInfoRect &&
+      landscapeWithoutAlbum.songInfoRect &&
+      landscape.songInfoRect.height > landscapeWithoutAlbum.songInfoRect.height,
+    "landscape reserves album height only when album text exists"
+  );
 }
 
 function testImageProxy() {

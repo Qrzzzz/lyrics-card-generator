@@ -91,6 +91,7 @@ export function useMeasuredAutoCanvasHeight(
     cardRef,
     setState,
     state.lyrics,
+    state.song.album,
     state.song.source,
     state.style.align,
     state.style.allowTwoLineTitle,
@@ -130,7 +131,7 @@ export function useMeasuredAutoCanvasHeight(
     }
 
     const size = getCardSize(currentState.style);
-    const layout = getPortraitLayout(size, currentState.style, currentState.song.source);
+    const layout = getPortraitLayout(size, currentState.style, currentState.song);
     const contentStyle = window.getComputedStyle(content);
     const viewport = root.querySelector<HTMLElement>("[data-card-lyrics-viewport]");
     const viewportStyle = viewport ? window.getComputedStyle(viewport) : null;

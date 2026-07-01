@@ -168,6 +168,12 @@ export function SettingsDialog({ open, locale, userSettings, onLocaleChange, onU
     : activeTab === "about" ? <AboutSettingsSection copy={copy} t={t} />
     : isLoading ? <div className="app-text-subtle flex items-center gap-2 p-5"><Loader2 className="h-4 w-4 animate-spin" />{copy.ai}</div>
     : <AiSettingsSection settings={settings} apiKey={apiKey} hasApiKey={hasApiKey} locale={locale} copy={aiCopy} isClearingApiKey={isClearingApiKey} onSettingsChange={setSettings} onApiKeyChange={setApiKey} onClearApiKey={handleClearApiKey} />;
+  const localeTransition = reduceMotion
+    ? reducedMotionTransition
+    : { duration: motionDurations.fast, ease: motionEasings.standard };
+  const localeVariants = reduceMotion
+    ? { initial: { opacity: 0 }, animate: { opacity: 1 }, exit: { opacity: 0 } }
+    : { initial: { opacity: 0, y: 4 }, animate: { opacity: 1, y: 0 }, exit: { opacity: 0, y: -4 } };
 
   return (
     <MotionPresence>
@@ -186,23 +192,29 @@ export function SettingsDialog({ open, locale, userSettings, onLocaleChange, onU
             className="settings-surface glass-panel flex max-h-[92vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl"
           >
             <div className="flex items-start justify-between gap-4 border-b border-[rgb(var(--panel-border))] p-4 sm:p-5">
-              <div>
-                <div className="flex items-center gap-2">
-                  <Settings className="h-5 w-5" />
-                  <h2 id="settings-dialog-title" className="text-xl font-bold">{copy.settings}</h2>
-                </div>
-                <p className="app-text-subtle mt-1 text-sm">{copy.description}</p>
-              </div>
+              <MotionPresence mode="wait" initial={false}>
+                <motion.div key={`settings-title-${locale}`} variants={localeVariants} initial="initial" animate="animate" exit="exit" transition={localeTransition}>
+                  <div className="flex items-center gap-2">
+                    <Settings className="h-5 w-5" />
+                    <h2 id="settings-dialog-title" className="text-xl font-bold">{copy.settings}</h2>
+                  </div>
+                  <p className="app-text-subtle mt-1 text-sm">{copy.description}</p>
+                </motion.div>
+              </MotionPresence>
               <button type="button" onClick={handleClose} className="app-button grid h-9 w-9 place-items-center rounded-lg" aria-label={copy.cancel}>
                 <X className="h-4 w-4" />
               </button>
             </div>
             <div className="flex min-h-0 flex-1 flex-col md:flex-row">
-              <SettingsTabs tabs={tabs} active={activeTab} onChange={setActiveTab} />
+              <MotionPresence mode="wait" initial={false}>
+                <motion.div key={`settings-tabs-${locale}`} variants={localeVariants} initial="initial" animate="animate" exit="exit" transition={localeTransition} className="w-full md:w-48 md:shrink-0">
+                  <SettingsTabs tabs={tabs} active={activeTab} onChange={setActiveTab} />
+                </motion.div>
+              </MotionPresence>
               <div className="min-h-[420px] flex-1 overflow-y-auto p-4 sm:p-5">
                 <MotionPresence>
                   <motion.div
-                    key={activeTab}
+                    key={`${activeTab}-${locale}`}
                     variants={tabPanelVariants(reduceMotion ?? false)}
                     initial="initial"
                     animate="animate"

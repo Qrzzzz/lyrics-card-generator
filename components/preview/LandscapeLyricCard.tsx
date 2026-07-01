@@ -26,7 +26,7 @@ export function LandscapeLyricCard({
 }) {
   const size = getCardSize(style);
   const frameEnabled = style.frameStyleEnabled && style.frameVariant !== "fullBleed";
-  const layout = getLandscapeLayout(size, style, song.source);
+  const layout = getLandscapeLayout(size, style, song);
   const cover = song.proxiedCoverUrl || proxiedImageUrl(song.coverUrl);
   const [coverFailed, setCoverFailed] = useState(false);
   const activeCover = coverFailed ? "" : cover;

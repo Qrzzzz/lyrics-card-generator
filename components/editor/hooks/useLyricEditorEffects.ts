@@ -102,7 +102,7 @@ export function useAutoCanvasHeight(state: AppState, setState: AppStateSetter) {
       contentMode: state.style.contentMode,
       showCover: state.style.showCover,
       showSongInfo: state.style.showSongInfo,
-      showAlbumName: state.style.showAlbumName,
+      hasAlbumName: state.style.showAlbumName && Boolean(state.song.album?.trim()),
       allowTwoLineTitle: state.style.allowTwoLineTitle,
       showGeneratedWatermark: state.style.showGeneratedWatermark,
       showPlatformBadge: state.style.showPlatformBadge && state.song.source !== "unknown",
@@ -126,6 +126,7 @@ export function useAutoCanvasHeight(state: AppState, setState: AppStateSetter) {
   }, [
     setState,
     state.lyrics,
+    state.song.album,
     state.song.source,
     state.style.allowTwoLineTitle,
     state.style.autoHeight,
