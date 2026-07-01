@@ -26,7 +26,7 @@ export function LandscapeLyricCard({
 }) {
   const size = getCardSize(style);
   const frameEnabled = style.frameStyleEnabled && style.frameVariant !== "fullBleed";
-  const layout = getLandscapeLayout(size, style, song.source);
+  const layout = getLandscapeLayout(size, style, song);
   const cover = song.proxiedCoverUrl || proxiedImageUrl(song.coverUrl);
   const [coverFailed, setCoverFailed] = useState(false);
   const activeCover = coverFailed ? "" : cover;
@@ -65,70 +65,72 @@ export function LandscapeLyricCard({
           }}
         />
         <div data-card-content>
-        {style.showCover && layout.coverRect ? (
-          <LandscapeAlbumCover
-            song={song}
-            coverUrl={activeCover}
-            cropScale={style.coverCropScale}
-            left={layout.coverRect.x}
-            top={layout.coverRect.y}
-            size={layout.coverRect.width}
-            onError={() => setCoverFailed(true)}
-          />
-        ) : null}
+          {style.showCover && layout.coverRect ? (
+            <LandscapeAlbumCover
+              song={song}
+              coverUrl={activeCover}
+              cropScale={style.coverCropScale}
+              left={layout.coverRect.x}
+              top={layout.coverRect.y}
+              size={layout.coverRect.width}
+              onError={() => setCoverFailed(true)}
+            />
+          ) : null}
 
-        {contentMode === "instrumental" ? (
-          <LandscapeInstrumentalBlock
-            song={song}
+          {contentMode === "instrumental" ? (
+            <LandscapeInstrumentalBlock
+              song={song}
               instrumentalText={style.instrumentalText}
               textColor={textColor}
-            left={layout.contentRect.x}
-            top={layout.contentRect.y + layout.contentRect.height * 0.22}
-            width={layout.contentRect.width}
-            isDarkText={isDarkText}
-          />
-        ) : (
-          <>
-            {style.showSongInfo && layout.songInfoRect ? (
-              <LandscapeSongInfo
-                song={song}
-                textColor={textColor}
-                left={layout.songInfoRect.x}
-                top={layout.songInfoRect.y}
-                width={layout.songInfoRect.width}
-                allowTwoLineTitle={style.allowTwoLineTitle}
-                isDarkText={isDarkText}
-              />
-            ) : null}
-            <LandscapeLyricsBlock
-              lyrics={lyrics}
-              translationText={style.translationText}
-              translationEnabled={style.translationEnabled}
-              lyricFontSize={style.lyricFontSize}
-              translationScale={style.translationScale}
-              lineHeight={style.lineHeight}
-              textColor={textColor}
-              left={layout.lyricsRect.x}
-              top={layout.lyricsRect.y}
-              width={layout.lyricsRect.width}
-              maxHeight={layout.lyricsRect.height}
-              cardWidth={size.width}
-              cardHeight={size.height}
-              align={style.align}
+              showAlbumName={style.showAlbumName}
+              left={layout.contentRect.x}
+              top={layout.contentRect.y + layout.contentRect.height * 0.22}
+              width={layout.contentRect.width}
               isDarkText={isDarkText}
             />
-          </>
-        )}
+          ) : (
+            <>
+              {style.showSongInfo && layout.songInfoRect ? (
+                <LandscapeSongInfo
+                  song={song}
+                  textColor={textColor}
+                  left={layout.songInfoRect.x}
+                  top={layout.songInfoRect.y}
+                  width={layout.songInfoRect.width}
+                  allowTwoLineTitle={style.allowTwoLineTitle}
+                  isDarkText={isDarkText}
+                  showAlbumName={style.showAlbumName}
+                />
+              ) : null}
+              <LandscapeLyricsBlock
+                lyrics={lyrics}
+                translationText={style.translationText}
+                translationEnabled={style.translationEnabled}
+                lyricFontSize={style.lyricFontSize}
+                translationScale={style.translationScale}
+                lineHeight={style.lineHeight}
+                textColor={textColor}
+                left={layout.lyricsRect.x}
+                top={layout.lyricsRect.y}
+                width={layout.lyricsRect.width}
+                maxHeight={layout.lyricsRect.height}
+                cardWidth={size.width}
+                cardHeight={size.height}
+                align={style.align}
+                isDarkText={isDarkText}
+              />
+            </>
+          )}
 
-        <LandscapeFooter
-          rect={layout.footerRect}
-          showPlatformLogo={style.showPlatformBadge}
-          platformSource={song.source}
-          showGeneratedWatermark={showGeneratedWatermark}
-          showSharedBy={style.showSharedBy}
-          sharedByText={style.sharedByText}
-          textColor={textColor}
-        />
+          <LandscapeFooter
+            rect={layout.footerRect}
+            showPlatformLogo={style.showPlatformBadge}
+            platformSource={song.source}
+            showGeneratedWatermark={showGeneratedWatermark}
+            showSharedBy={style.showSharedBy}
+            sharedByText={style.sharedByText}
+            textColor={textColor}
+          />
         </div>
       </CardFrame>
     </article>

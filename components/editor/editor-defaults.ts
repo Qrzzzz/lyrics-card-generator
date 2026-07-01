@@ -73,6 +73,7 @@ export const defaultState: AppState = {
     instrumentalText: DEFAULT_INSTRUMENTAL_TEXT.zh,
     showCover: true,
     showSongInfo: true,
+    showAlbumName: true,
     showGeneratedWatermark: false,
     showSharedBy: false,
     sharedByText: "",

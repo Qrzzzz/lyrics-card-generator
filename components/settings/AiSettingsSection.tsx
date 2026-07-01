@@ -41,7 +41,7 @@ export function AiSettingsSection({
   const defaultStyleId = useId();
 
   return (
-    <section className="settings-panel-card grid gap-4 p-4 sm:p-5">
+    <section className="grid gap-4">
       <h3 className="app-text-primary text-sm font-semibold">{copy.aiSection}</h3>
 
       <FieldLabel label={copy.baseUrl} htmlFor={baseUrlId}>
@@ -95,7 +95,7 @@ export function AiSettingsSection({
       </FieldLabel>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <FieldLabel label={copy.temperature} hint={settings.reasoningEnabled ? copy.reasoningHint : undefined} htmlFor={temperatureId}>
+        <FieldLabel label={copy.temperature} htmlFor={temperatureId}>
           <TextInput
             id={temperatureId}
             type="number"

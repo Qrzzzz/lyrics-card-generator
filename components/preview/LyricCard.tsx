@@ -45,7 +45,7 @@ export function LyricCard({
   const contentMode = style.contentMode ?? "lyrics";
   const showGeneratedWatermark = style.showGeneratedWatermark ?? style.showWatermark;
   const frameEnabled = style.frameStyleEnabled && style.frameVariant !== "fullBleed";
-  const layout = getPortraitLayout(size, style, song.source);
+  const layout = getPortraitLayout(size, style, song);
   const glassBackground = frameEnabled
     ? isDarkText
       ? "rgba(255,255,255,0.32)"
@@ -131,6 +131,14 @@ export function LyricCard({
                   >
                     {song.artist || "Unknown artist"}
                   </p>
+                  {style.showAlbumName && song.album ? (
+                    <p
+                      className="mt-3 truncate text-[27px] font-medium leading-[1.42]"
+                      style={{ color: withAlpha(textColor, 0.48) }}
+                    >
+                      {song.album}
+                    </p>
+                  ) : null}
                 </div>
               ) : null}
             </header>
@@ -157,6 +165,7 @@ export function LyricCard({
                 onCoverError={() => setCoverFailed(true)}
                 textColor={textColor}
                 isDarkText={isDarkText}
+                showAlbumName={style.showAlbumName}
               />
             ) : (
               <LyricsBlock

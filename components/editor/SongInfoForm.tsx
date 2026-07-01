@@ -17,13 +17,18 @@ import type { SongInfo } from "@/lib/types";
 export function SongInfoForm({
   song,
   onSongChange,
-  t
+  t,
+  showToggle = true,
+  forceEnabled
 }: {
   song: SongInfo;
   onSongChange: (song: SongInfo) => void;
   t: ReturnType<typeof createT>;
+  showToggle?: boolean;
+  forceEnabled?: boolean;
 }) {
   const [enabled, setEnabled] = useState(false);
+  const fieldsEnabled = forceEnabled ?? enabled;
   const coverInputRef = useRef<HTMLInputElement>(null);
 
   function update<K extends keyof SongInfo>(key: K, value: SongInfo[K]) {
@@ -44,8 +49,8 @@ export function SongInfoForm({
 
   return (
     <Section title={t("songInfo")} eyebrow={t("manualOverride")}>
-      <ToggleRow label={t("manualOverride")} checked={enabled} onChange={setEnabled} />
-      {enabled ? (
+      {showToggle ? <ToggleRow label={t("manualOverride")} checked={enabled} onChange={setEnabled} /> : null}
+      {fieldsEnabled ? (
         <>
           <div className="grid gap-4 sm:grid-cols-2">
             <FieldLabel label={t("title")}>

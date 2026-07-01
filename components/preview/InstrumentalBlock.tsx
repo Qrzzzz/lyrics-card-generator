@@ -8,7 +8,8 @@ export function InstrumentalBlock({
   cropScale,
   onCoverError,
   textColor,
-  isDarkText
+  isDarkText,
+  showAlbumName
 }: {
   song: SongInfo;
   coverUrl?: string;
@@ -16,6 +17,7 @@ export function InstrumentalBlock({
   onCoverError: () => void;
   textColor: string;
   isDarkText: boolean;
+  showAlbumName: boolean;
 }) {
   return (
     <div
@@ -48,6 +50,11 @@ export function InstrumentalBlock({
       <p className="mt-5 max-w-full text-[32px] font-semibold leading-[1.2] opacity-[0.72]">
         {song.artist || "Unknown artist"}
       </p>
+      {showAlbumName && song.album ? (
+        <p className="mt-4 max-w-full text-[24px] font-medium leading-[1.2] opacity-[0.54]">
+          {song.album}
+        </p>
+      ) : null}
     </div>
   );
 }

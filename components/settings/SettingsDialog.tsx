@@ -22,25 +22,22 @@ import { removeBackgroundImage } from "@/lib/settings/background-storage";
 import type { UserSettings } from "@/lib/settings/types";
 import type { Locale } from "@/lib/types";
 
-type PendingBackgroundAsset = {
-  imageId: string;
-  imageUrl: string;
-  previousImageId?: string;
-};
-
-export function SettingsDialog({ open, locale, userSettings, onLocaleChange, onUserSettingsPreview, onUserSettingsChange, onClose, onSaved }: {
+export function SettingsDialog({ open, locale, userSettings, onLocaleChange, onUserSettingsPreview, onUserSettingsChange, onClose, onSaved, onNotify }: {
   open: boolean; locale: Locale; userSettings: UserSettings; onLocaleChange: (locale: Locale) => void;
   onUserSettingsPreview: (settings: UserSettings) => void; onUserSettingsChange: (settings: UserSettings) => void; onClose: () => void;
   onSaved: (settings: AISettingsSummary, message?: string) => void;
+  onNotify: (message: string) => void;
 }) {
   const copy = settingsCopy[locale];
   const aiCopy = getAIUiCopy(locale);
   const t = useMemo(() => createT(locale), [locale]);
   const reduceMotion = useReducedMotion();
   const [activeTab, setActiveTab] = useState("general");
-  const originalSettingsRef = useRef(userSettings);
   const isOpenRef = useRef(open);
-  const pendingBackgroundRef = useRef<PendingBackgroundAsset | undefined>(undefined);
+  const notifyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const aiSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const aiSettingsLoadedRef = useRef(false);
+  const lastSavedAISettingsRef = useRef("");
   const [draft, setDraft] = useState(userSettings);
   const [settings, setSettings] = useState<AISettings>(DEFAULT_AI_SETTINGS);
   const [apiKey, setApiKey] = useState("");
@@ -58,25 +55,51 @@ export function SettingsDialog({ open, locale, userSettings, onLocaleChange, onU
   useEffect(() => {
     isOpenRef.current = open;
     if (!open) return;
-    originalSettingsRef.current = userSettings; pendingBackgroundRef.current = undefined; setDraft(userSettings); setApiKey(""); setError(""); setIsLoading(true);
-    loadAISettings().then(({ hasApiKey: configured, ...next }) => { setSettings(next); setHasApiKey(configured); }).catch(() => setError(aiCopy.settingsLoadFailed)).finally(() => setIsLoading(false));
+    setDraft(userSettings); setApiKey(""); setError(""); setIsLoading(true); aiSettingsLoadedRef.current = false;
+    loadAISettings().then(({ hasApiKey: configured, ...next }) => {
+      setSettings(next);
+      setHasApiKey(configured);
+      lastSavedAISettingsRef.current = serializeAISettings(next, "");
+      aiSettingsLoadedRef.current = true;
+    }).catch(() => setError(aiCopy.settingsLoadFailed)).finally(() => setIsLoading(false));
   }, [open]);
 
   useEffect(() => {
     if (!open) return;
-    const onKeyDown = (event: KeyboardEvent) => { if (event.key === "Escape" && !isSaving && !isClearingApiKey) handleCancel(); };
+    const onKeyDown = (event: KeyboardEvent) => { if (event.key === "Escape" && !isClearingApiKey) handleClose(); };
     document.addEventListener("keydown", onKeyDown); return () => document.removeEventListener("keydown", onKeyDown);
-  }, [isClearingApiKey, isSaving, onClose, open]);
+  }, [isClearingApiKey, onClose, open]);
+
+  useEffect(() => {
+    if (!open || isLoading || !aiSettingsLoadedRef.current) return;
+    const signature = serializeAISettings(settings, apiKey);
+    if (signature === lastSavedAISettingsRef.current) return;
+
+    if (aiSaveTimerRef.current) clearTimeout(aiSaveTimerRef.current);
+    aiSaveTimerRef.current = setTimeout(() => {
+      void saveCurrentAISettings(signature);
+    }, 700);
+
+    return () => {
+      if (aiSaveTimerRef.current) clearTimeout(aiSaveTimerRef.current);
+    };
+  }, [apiKey, isLoading, open, settings]);
+
+  useEffect(() => {
+    if (open) return;
+    if (aiSaveTimerRef.current) clearTimeout(aiSaveTimerRef.current);
+  }, [open]);
 
   function updateDraft(next: UserSettings) {
+    const previousImageId = draft.appBackground.imageId;
+    const nextImageId = next.appBackground.imageId;
     setDraft(next);
     onUserSettingsPreview(next);
-  }
-
-  async function cleanupPendingBackground() {
-    const pending = pendingBackgroundRef.current;
-    pendingBackgroundRef.current = undefined;
-    if (pending?.imageId) await removeBackgroundImage(pending.imageId).catch(() => undefined);
+    onUserSettingsChange(next);
+    if (previousImageId && previousImageId !== nextImageId) {
+      void removeBackgroundImage(previousImageId).catch(() => undefined);
+    }
+    queueSavedNotification();
   }
 
   async function handleBackgroundStored(asset: { imageId: string; imageUrl: string }) {
@@ -84,38 +107,39 @@ export function SettingsDialog({ open, locale, userSettings, onLocaleChange, onU
       await removeBackgroundImage(asset.imageId).catch(() => undefined);
       return false;
     }
-    const previousPending = pendingBackgroundRef.current;
-    if (previousPending?.imageId && previousPending.imageId !== asset.imageId) {
-      await removeBackgroundImage(previousPending.imageId).catch(() => undefined);
-    }
-    pendingBackgroundRef.current = { ...asset, previousImageId: originalSettingsRef.current.appBackground.imageId };
     return true;
   }
 
-  function handleCancel() {
+  function handleClose() {
+    const signature = serializeAISettings(settings, apiKey);
+    if (aiSettingsLoadedRef.current && signature !== lastSavedAISettingsRef.current) {
+      void saveCurrentAISettings(signature);
+    }
     isOpenRef.current = false;
-    onUserSettingsPreview(originalSettingsRef.current);
-    void cleanupPendingBackground();
     onClose();
   }
 
-  async function handleSave() {
+  function handleLocaleChange(nextLocale: Locale) {
+    onLocaleChange(nextLocale);
+    queueSavedNotification();
+  }
+
+  function queueSavedNotification(message = aiCopy.settingsSaved) {
+    if (notifyTimerRef.current) clearTimeout(notifyTimerRef.current);
+    notifyTimerRef.current = setTimeout(() => {
+      onNotify(message);
+    }, 420);
+  }
+
+  async function saveCurrentAISettings(signature: string) {
     setError(""); setIsSaving(true);
     try {
-      const saved = await saveAISettings({ ...settings, apiKey: apiKey || undefined });
-      onUserSettingsChange(draft);
-      const originalImageId = originalSettingsRef.current.appBackground.imageId;
-      const nextImageId = draft.appBackground.imageId;
-      const pending = pendingBackgroundRef.current;
-      pendingBackgroundRef.current = undefined;
-      const obsoleteIds = new Set([
-        originalImageId && originalImageId !== nextImageId ? originalImageId : undefined,
-        pending?.imageId && pending.imageId !== nextImageId ? pending.imageId : undefined
-      ].filter((value): value is string => Boolean(value)));
-      const cleanupResults = await Promise.allSettled([...obsoleteIds].map((imageId) => removeBackgroundImage(imageId)));
-      const cleanupFailed = cleanupResults.some((result) => result.status === "rejected");
-      isOpenRef.current = false;
-      setHasApiKey(saved.hasApiKey); setApiKey(""); onSaved(saved, cleanupFailed ? copy.backgroundSaveFailed : undefined); onClose();
+      const saved = await saveAISettings({ ...settings, apiKey: apiKey.trim() || undefined });
+      lastSavedAISettingsRef.current = signature;
+      const { hasApiKey: configured, ...nextSettings } = saved;
+      setSettings(nextSettings);
+      setHasApiKey(configured);
+      onSaved(saved);
     } catch (saveError) { setError(saveError instanceof Error ? saveError.message : aiCopy.settingsSaveFailed); }
     finally { setIsSaving(false); }
   }
@@ -124,21 +148,32 @@ export function SettingsDialog({ open, locale, userSettings, onLocaleChange, onU
     if (!hasApiKey) { setApiKey(""); return; }
     if (!window.confirm(aiCopy.clearApiKeyConfirm)) return;
     setIsClearingApiKey(true);
-    try { const cleared = await clearAISettingsApiKey(); setHasApiKey(false); setApiKey(""); onSaved(cleared, aiCopy.apiKeyCleared); }
+    try {
+      const cleared = await clearAISettingsApiKey();
+      const { hasApiKey: configured, ...nextSettings } = cleared;
+      setSettings(nextSettings);
+      setHasApiKey(configured);
+      setApiKey("");
+      lastSavedAISettingsRef.current = serializeAISettings(nextSettings, "");
+      onSaved(cleared, aiCopy.apiKeyCleared);
+    }
     catch (clearError) { setError(clearError instanceof Error ? clearError.message : aiCopy.apiKeyClearFailed); }
     finally { setIsClearingApiKey(false); }
   }
 
-  const panel = activeTab === "general" ? <GeneralSettingsSection locale={locale} settings={draft} copy={copy} onLocaleChange={onLocaleChange} onChange={updateDraft} />
+  const panel = activeTab === "general" ? <GeneralSettingsSection locale={locale} settings={draft} copy={copy} onLocaleChange={handleLocaleChange} onChange={updateDraft} />
     : activeTab === "appearance" ? <AppearanceSettingsSection settings={draft} copy={copy} onChange={updateDraft} />
     : activeTab === "background" ? <BackgroundSettingsSection settings={draft} copy={copy} onChange={updateDraft} onImageStored={handleBackgroundStored} />
     : activeTab === "export" ? <ExportSettingsSection settings={draft} copy={copy} onChange={updateDraft} />
     : activeTab === "about" ? <AboutSettingsSection copy={copy} t={t} />
     : isLoading ? <div className="app-text-subtle flex items-center gap-2 p-5"><Loader2 className="h-4 w-4 animate-spin" />{copy.ai}</div>
     : <AiSettingsSection settings={settings} apiKey={apiKey} hasApiKey={hasApiKey} locale={locale} copy={aiCopy} isClearingApiKey={isClearingApiKey} onSettingsChange={setSettings} onApiKeyChange={setApiKey} onClearApiKey={handleClearApiKey} />;
-  const saveButtonColor = draft.uiTheme === "light-acrylic" ? "#2563EB"
-    : draft.uiTheme === "dark-acrylic" ? "#60A5FA"
-    : draft.uiAccentColor;
+  const localeTransition = reduceMotion
+    ? reducedMotionTransition
+    : { duration: motionDurations.fast, ease: motionEasings.standard };
+  const localeVariants = reduceMotion
+    ? { initial: { opacity: 0 }, animate: { opacity: 1 }, exit: { opacity: 0 } }
+    : { initial: { opacity: 0, y: 4 }, animate: { opacity: 1, y: 0 }, exit: { opacity: 0, y: -4 } };
 
   return (
     <MotionPresence>
@@ -146,7 +181,7 @@ export function SettingsDialog({ open, locale, userSettings, onLocaleChange, onU
         <MotionDialogOverlay
           className="fixed inset-0 z-[100] grid place-items-center bg-black/40 p-3 backdrop-blur-sm"
           onMouseDown={(event) => {
-            if (event.target === event.currentTarget && !isSaving) handleCancel();
+            if (event.target === event.currentTarget) handleClose();
           }}
         >
           <MotionDialogPanel
@@ -157,23 +192,29 @@ export function SettingsDialog({ open, locale, userSettings, onLocaleChange, onU
             className="settings-surface glass-panel flex max-h-[92vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl"
           >
             <div className="flex items-start justify-between gap-4 border-b border-[rgb(var(--panel-border))] p-4 sm:p-5">
-              <div>
-                <div className="flex items-center gap-2">
-                  <Settings className="h-5 w-5" />
-                  <h2 id="settings-dialog-title" className="text-xl font-bold">{copy.settings}</h2>
-                </div>
-                <p className="app-text-subtle mt-1 text-sm">{copy.description}</p>
-              </div>
-              <button type="button" onClick={handleCancel} className="app-button grid h-9 w-9 place-items-center rounded-lg" aria-label={copy.cancel}>
+              <MotionPresence mode="wait" initial={false}>
+                <motion.div key={`settings-title-${locale}`} variants={localeVariants} initial="initial" animate="animate" exit="exit" transition={localeTransition}>
+                  <div className="flex items-center gap-2">
+                    <Settings className="h-5 w-5" />
+                    <h2 id="settings-dialog-title" className="text-xl font-bold">{copy.settings}</h2>
+                  </div>
+                  <p className="app-text-subtle mt-1 text-sm">{copy.description}</p>
+                </motion.div>
+              </MotionPresence>
+              <button type="button" onClick={handleClose} className="app-button grid h-9 w-9 place-items-center rounded-lg" aria-label={copy.cancel}>
                 <X className="h-4 w-4" />
               </button>
             </div>
             <div className="flex min-h-0 flex-1 flex-col md:flex-row">
-              <SettingsTabs tabs={tabs} active={activeTab} onChange={setActiveTab} />
+              <MotionPresence mode="wait" initial={false}>
+                <motion.div key={`settings-tabs-${locale}`} variants={localeVariants} initial="initial" animate="animate" exit="exit" transition={localeTransition} className="w-full md:w-48 md:shrink-0">
+                  <SettingsTabs tabs={tabs} active={activeTab} onChange={setActiveTab} />
+                </motion.div>
+              </MotionPresence>
               <div className="min-h-[420px] flex-1 overflow-y-auto p-4 sm:p-5">
                 <MotionPresence>
                   <motion.div
-                    key={activeTab}
+                    key={`${activeTab}-${locale}`}
                     variants={tabPanelVariants(reduceMotion ?? false)}
                     initial="initial"
                     animate="animate"
@@ -190,22 +231,17 @@ export function SettingsDialog({ open, locale, userSettings, onLocaleChange, onU
               </div>
             </div>
             {error ? <p role="alert" className="status-danger mx-5 mb-2 rounded-lg border px-3 py-2 text-sm">{error}</p> : null}
-            <div className="flex justify-end gap-3 border-t border-[rgb(var(--panel-border))] p-4">
-              <button type="button" onClick={handleCancel} className="app-button h-10 rounded-lg px-4 text-sm font-semibold">{copy.cancel}</button>
-              <button
-                type="button"
-                data-testid="save-settings"
-                onClick={() => void handleSave()}
-                disabled={isSaving || isLoading || isClearingApiKey}
-                className="h-10 rounded-lg px-4 text-sm font-bold text-white disabled:opacity-60"
-                style={{ background: saveButtonColor }}
-              >
-                {isSaving ? aiCopy.saving : copy.save}
-              </button>
-            </div>
+            {isSaving ? <p role="status" className="app-text-subtle px-5 pb-4 text-xs">{aiCopy.saving}</p> : null}
           </MotionDialogPanel>
         </MotionDialogOverlay>
       ) : null}
     </MotionPresence>
   );
+}
+
+function serializeAISettings(settings: AISettings, apiKey: string) {
+  return JSON.stringify({
+    ...settings,
+    apiKey: apiKey.trim()
+  });
 }

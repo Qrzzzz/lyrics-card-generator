@@ -21,7 +21,7 @@ export function LanguageSettingsSection({
   onLocaleChange: (locale: Locale) => void;
 }) {
   return (
-    <section className="settings-panel-card grid gap-3 p-4 sm:p-5">
+    <section className="grid gap-3">
       <h3 className="app-text-primary text-sm font-semibold">{title}</h3>
       <OptionCardGroup
         className="grid gap-2 sm:grid-cols-2"

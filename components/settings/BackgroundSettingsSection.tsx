@@ -56,7 +56,7 @@ export function BackgroundSettingsSection({
   }
 
   return (
-    <section className="settings-panel-card grid gap-4 p-4 sm:p-5">
+    <section className="grid gap-4">
       <FieldLabel label={copy.source}>
         <SelectField
           value={settings.appBackground.mode}

@@ -21,6 +21,13 @@ export type SettingsStep = {
   description?: string;
   isComplete?: boolean;
   content: ReactNode;
+  secondaryAction?: {
+    label: ReactNode;
+    onClick: () => void;
+    pressed?: boolean;
+    expanded?: boolean;
+    disabled?: boolean;
+  };
 };
 
 export type SettingsStepperProps = {
@@ -46,6 +53,7 @@ export function SettingsStepper({
   const activeStep = steps[currentStep] ?? steps[0];
   const isFirstStep = currentStep <= 0;
   const isLastStep = currentStep >= steps.length - 1;
+  const secondaryAction = activeStep?.secondaryAction;
   const markerForegroundColor = getReadableForegroundColor(themeColor);
   const variants = stepPanelVariants(reduceMotion ?? false);
   const transition = reduceMotion
@@ -151,16 +159,30 @@ export function SettingsStepper({
         >
           {backText}
         </button>
-        {!isLastStep ? (
-          <button
-            type="button"
-            onClick={() => goToStep(currentStep + 1)}
-            className="app-button h-11 rounded-lg border px-5 text-sm font-semibold transition"
-            style={{ borderColor: themeColor, boxShadow: `0 16px 44px ${themeColor}30` }}
-          >
-            {nextText}
-          </button>
-        ) : null}
+        <div className="flex items-center gap-3">
+          {secondaryAction ? (
+            <button
+              type="button"
+              onClick={secondaryAction.onClick}
+              disabled={secondaryAction.disabled}
+              aria-pressed={secondaryAction.pressed}
+              aria-expanded={secondaryAction.expanded}
+              className="app-button h-11 rounded-lg px-4 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-45"
+            >
+              {secondaryAction.label}
+            </button>
+          ) : null}
+          {!isLastStep ? (
+            <button
+              type="button"
+              onClick={() => goToStep(currentStep + 1)}
+              className="app-button h-11 rounded-lg border px-5 text-sm font-semibold transition"
+              style={{ borderColor: themeColor, boxShadow: `0 16px 44px ${themeColor}30` }}
+            >
+              {nextText}
+            </button>
+          ) : null}
+        </div>
       </div>
     </section>
   );

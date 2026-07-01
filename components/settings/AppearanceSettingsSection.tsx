@@ -24,7 +24,7 @@ export function AppearanceSettingsSection({
   const customContrast = getContrastRatio(settings.uiCustomTextColor, themeBackground);
 
   return (
-    <section className="settings-panel-card grid gap-4 p-4 sm:p-5">
+    <section className="grid gap-4">
       <FieldLabel label={copy.theme}>
         <SelectField
           value={settings.uiTheme}

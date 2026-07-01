@@ -17,7 +17,7 @@ export const FONT_SCHEME_PRESETS: Record<FontPresetId, FontScheme> = {
   }
 };
 
-export const FONT_PREVIEW_COLORS = ["#123A64", "#184A8B", "#243A73", "#102847"] as const;
+export const FONT_PREVIEW_COLORS = ["#0F2D58", "#1E66B0", "#53A1DB", "#9FCFEE"] as const;
 
 export const FONT_PREVIEW_PALETTE: ExtractedPalette = {
   colors: [...FONT_PREVIEW_COLORS],
@@ -27,9 +27,9 @@ export const FONT_PREVIEW_PALETTE: ExtractedPalette = {
   dark: FONT_PREVIEW_COLORS[3],
   light: FONT_PREVIEW_COLORS[1],
   muted: FONT_PREVIEW_COLORS[2],
-  averageLuminance: 0.22,
-  averageSaturation: 0.56,
-  hueVariance: 0.012,
+  averageLuminance: 0.46,
+  averageSaturation: 0.59,
+  hueVariance: 0.008,
   isLightCover: false,
   kind: "colorful"
 };

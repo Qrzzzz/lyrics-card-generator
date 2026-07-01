@@ -15,7 +15,7 @@ export function ExportSettingsSection({
   const labels = { low: copy.low, medium: copy.medium, high: copy.high, ultra: copy.ultra };
 
   return (
-    <section className="settings-panel-card p-4 sm:p-5">
+    <section className="grid gap-4">
       <FieldLabel label={copy.exportQuality}>
         <SelectField
           value={settings.defaultExportQuality}

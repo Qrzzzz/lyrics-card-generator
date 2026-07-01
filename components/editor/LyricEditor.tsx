@@ -257,6 +257,7 @@ export function LyricEditor() {
           setAISettings(settings);
           setToast(message || aiCopy.settingsSaved);
         }}
+        onNotify={setToast}
       />
       <ExamplesDialog open={isExamplesOpen} locale={state.locale} onClose={() => setIsExamplesOpen(false)} onLoad={loadExample} />
       <FirstLaunchLanguageDialog open={isFirstLaunchOpen} locale={state.locale} onChoose={chooseFirstLaunchLanguage} />
