@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v3.9.0.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v3.9.1.en.md">Release Notes</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
   <a href="#features">Features</a> ·
   <a href="#local-development">Local Development</a> ·
@@ -51,19 +51,20 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 Download the latest version from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Recommended installer: `Lyrics Card Generator Setup 3.9.0.exe`
-* Portable version: `Lyrics Card Generator-3.9.0-portable.exe`
+* Recommended installer: `Lyrics Card Generator Setup 3.9.1.exe`
+* Portable version: `Lyrics Card Generator-3.9.1-portable.exe`
 
 The installer is recommended for regular use. The portable version is useful for temporary use, testing, or running from a removable drive.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v3.9.0 Highlights
+### v3.9.1 Highlights
 
-* Settings now save immediately, so background images, AI settings, appearance, and general preferences are written directly to local preferences.
-* The language scope stays at the existing six languages: Simplified Chinese, Traditional Chinese, English, French, Japanese, and Spanish, with no added or removed locales.
-* Moves manual song information into an expandable action on the song-link step; lyric cards now include a “Show Album Name” toggle for portrait, landscape, and instrumental layouts.
-* Synchronizes `3.9.0` version metadata, release notes, README download entries, and Windows build artifacts; regression checks passed with `npm run typecheck`, `npm run core:test`, `npm run build`, and `npm run desktop:build`.
+* Fixes desktop rounded corners still showing an opaque rectangular backing.
+* Uses native Windows rounded-corner clipping for non-Acrylic themes instead of relying on transparent CSS-only corners.
+* Keeps the desktop background layer and title bar drawn inside the app shell.
+* Refreshes the custom title bar with left-side traffic-light controls and removes the right-side app icon.
+* Keeps exported lyric card PNG files free of the desktop title bar, window frame, and shell background.
 
 <br clear="right" />
 
@@ -71,12 +72,12 @@ The installer is recommended for regular use. The portable version is useful for
 
 The GitHub Release page defaults to a simplified Chinese short version, while the full release notes are maintained in `docs/releases/`:
 
-* [简体中文](./docs/releases/v3.9.0.zh-CN.md)
-* [繁體中文](./docs/releases/v3.9.0.zh-TW.md)
-* [English](./docs/releases/v3.9.0.en.md)
-* [Français](./docs/releases/v3.9.0.fr.md)
-* [日本語](./docs/releases/v3.9.0.ja.md)
-* [Español](./docs/releases/v3.9.0.es.md)
+* [简体中文](./docs/releases/v3.9.1.zh-CN.md)
+* [繁體中文](./docs/releases/v3.9.1.zh-TW.md)
+* [English](./docs/releases/v3.9.1.en.md)
+* [Français](./docs/releases/v3.9.1.fr.md)
+* [日本語](./docs/releases/v3.9.1.ja.md)
+* [Español](./docs/releases/v3.9.1.es.md)
 
 <a id="features"></a>
 

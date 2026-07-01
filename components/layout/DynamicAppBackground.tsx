@@ -54,7 +54,7 @@ export function DynamicAppBackground({
 
     return (
       <div
-        className="fixed inset-0 z-0 overflow-hidden"
+        className="absolute inset-0 z-0 overflow-hidden"
         aria-hidden="true"
         style={{ background: "transparent" }}
       >
@@ -80,7 +80,7 @@ export function DynamicAppBackground({
   }
 
   return (
-    <div className="dynamic-app-background fixed inset-0 z-0 overflow-hidden transition-colors duration-700" style={{ background: background.mode === "solid" ? background.solidColor : presetThemeBackground }} aria-hidden="true">
+    <div className="dynamic-app-background absolute inset-0 z-0 overflow-hidden transition-colors duration-700" style={{ background: background.mode === "solid" ? background.solidColor : presetThemeBackground }} aria-hidden="true">
       {previousImageUrl ? (
         <img
           src={previousImageUrl}

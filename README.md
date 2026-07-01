@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v3.9.0.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v3.9.1.zh-CN.md">发布说明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">在线 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="#本地开发">本地开发</a> ·
@@ -48,19 +48,20 @@
 
 请前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下载最新版：
 
-* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 3.9.0.exe`
-* 不想安装时可下载便携版：`Lyrics Card Generator-3.9.0-portable.exe`
+* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 3.9.1.exe`
+* 不想安装时可下载便携版：`Lyrics Card Generator-3.9.1-portable.exe`
 
 安装版适合长期使用；便携版适合临时运行、测试或放在移动硬盘中使用。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v3.9.0 更新重点
+### v3.9.1 更新重点
 
-* 设置中心改为即时保存，背景图片、AI 设置、外观和通用设置调整后直接写入本地偏好。
-* 语言范围保持原有六语言：简体中文、繁體中文、English、Français、日本語、Español，不新增或移除语言。
-* 歌曲信息表单合并到歌曲链接步骤，可按需展开手动填写；歌词卡片新增“显示专辑名”开关，并同步适配竖版、横版和纯音乐卡片布局。
-* 已同步 `3.9.0` 版本元数据、发布说明、README 下载入口和 Windows 构建产物，并通过 `npm run typecheck`、`npm run core:test`、`npm run build`、`npm run desktop:build` 完成回归验证。
+* 修复桌面窗口圆角后仍露出不透明矩形底色的问题。
+* 非 Acrylic 主题改用 Windows 原生圆角裁剪，不再依赖透明 CSS 外壳伪装圆角。
+* 桌面背景层和标题栏仍限制在应用外壳内部绘制。
+* 自绘标题栏改为左侧红黄绿窗口控制按钮，并移除右侧小图标。
+* 导出的歌词卡片 PNG 不包含桌面标题栏、窗口边框或外壳背景。
 
 <br clear="right" />
 
@@ -68,12 +69,12 @@
 
 GitHub Release 页面默认使用简体中文短版，完整发布说明维护在 `docs/releases/`：
 
-* [简体中文](./docs/releases/v3.9.0.zh-CN.md)
-* [繁體中文](./docs/releases/v3.9.0.zh-TW.md)
-* [English](./docs/releases/v3.9.0.en.md)
-* [Français](./docs/releases/v3.9.0.fr.md)
-* [日本語](./docs/releases/v3.9.0.ja.md)
-* [Español](./docs/releases/v3.9.0.es.md)
+* [简体中文](./docs/releases/v3.9.1.zh-CN.md)
+* [繁體中文](./docs/releases/v3.9.1.zh-TW.md)
+* [English](./docs/releases/v3.9.1.en.md)
+* [Français](./docs/releases/v3.9.1.fr.md)
+* [日本語](./docs/releases/v3.9.1.ja.md)
+* [Español](./docs/releases/v3.9.1.es.md)
 
 <a id="主要功能"></a>
 
