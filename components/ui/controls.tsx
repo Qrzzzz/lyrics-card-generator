@@ -151,23 +151,73 @@ export function Select(props: SelectHTMLAttributes<HTMLSelectElement>) {
   return <SelectField {...props} />;
 }
 
-export function Section({
-  title,
-  eyebrow,
-  children
-}: {
+type SectionVariant = "plain" | "card" | "subtle";
+
+type SectionProps = {
   title: string;
   eyebrow?: string;
+  description?: ReactNode;
+  variant?: SectionVariant;
   children: ReactNode;
-}) {
+  className?: string;
+  contentClassName?: string;
+};
+
+const sectionVariantClass: Record<SectionVariant, string> = {
+  plain: "border-t border-[rgb(var(--panel-border))] pt-4",
+  card: "glass-panel rounded-lg p-4",
+  subtle: "rounded-md border border-[rgb(var(--panel-border))] bg-[rgb(var(--panel-bg))] p-3"
+};
+
+export function Section({
+  title,
+  description,
+  variant = "plain",
+  children,
+  className,
+  contentClassName
+}: SectionProps) {
   return (
-    <section className="glass-panel rounded-lg p-4">
+    <section className={cn(sectionVariantClass[variant], className)}>
       <div className="mb-4">
-        {eyebrow ? <p className="app-text-subtle mb-1 text-[11px] uppercase tracking-[0.16em]">{eyebrow}</p> : null}
         <h2 className="app-text-primary text-base font-semibold">{title}</h2>
+        {description ? <p className="app-text-subtle mt-1 text-sm leading-6">{description}</p> : null}
       </div>
-      <div className="grid gap-4">{children}</div>
+      <div className={cn("grid gap-4", contentClassName)}>{children}</div>
     </section>
+  );
+}
+
+type SettingRowProps = {
+  label: ReactNode;
+  description?: ReactNode;
+  children: ReactNode;
+  align?: "center" | "start";
+  className?: string;
+};
+
+export function SettingRow({
+  label,
+  description,
+  children,
+  align = "center",
+  className
+}: SettingRowProps) {
+  return (
+    <div
+      className={cn(
+        "grid gap-3 border-b border-[rgb(var(--panel-border))] py-3 last:border-b-0",
+        "sm:grid-cols-[minmax(0,1fr)_minmax(160px,220px)]",
+        align === "center" ? "items-center" : "items-start",
+        className
+      )}
+    >
+      <div className="min-w-0">
+        <div className="app-text-primary text-sm font-medium">{label}</div>
+        {description ? <div className="app-text-subtle mt-1 text-xs leading-5">{description}</div> : null}
+      </div>
+      <div className="min-w-0">{children}</div>
+    </div>
   );
 }
 
@@ -208,7 +258,7 @@ export function ToggleRow({
       whileTap={pressMotion}
       transition={reduceMotion ? reducedMotionTransition : motionSprings.control}
       className={cn(
-        "control-surface control-focus control-disabled flex w-full items-center justify-between gap-3 rounded-lg px-3 text-left",
+        "control-focus control-disabled group flex w-full items-center justify-between gap-3 rounded-md border border-transparent border-b-[rgb(var(--panel-border))] px-2 text-left transition hover:bg-[rgb(var(--button-bg-hover))] last:border-b-transparent",
         description ? "min-h-14 py-2.5" : size === "sm" ? "h-10 py-2" : "h-11 py-2.5",
         className
       )}
@@ -319,6 +369,10 @@ export function ActionButton({
   );
 }
 
+/**
+ * Use OptionCard only for visual preset / scheme selection.
+ * Do not use it for ordinary scalar settings such as spacing, size, alignment, or toggles.
+ */
 type OptionCardProps = MotionSafeButtonAttributes & {
   "data-testid"?: string;
   selected?: boolean;

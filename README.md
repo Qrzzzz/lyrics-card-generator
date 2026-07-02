@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v4.0.0.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v4.1.0.zh-CN.md">发布说明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">在线 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="#本地开发">本地开发</a> ·
@@ -48,33 +48,33 @@
 
 请前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下载最新版：
 
-* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 4.0.0.exe`
-* 不想安装时可下载便携版：`Lyrics Card Generator-4.0.0-portable.exe`
+* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 4.1.0.exe`
+* 不想安装时可下载便携版：`Lyrics Card Generator-4.1.0-portable.exe`
 
 安装版适合长期使用；便携版适合临时运行、测试或放在移动硬盘中使用。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v4.0.0 更新重点
+### v4.1.0 更新重点
 
-* 第一选歌入口升级为网易云音乐歌名搜索。
-* 输入歌名、歌手或专辑关键词时，会实时显示候选歌曲。
-* 支持方向键选择、Enter 导入和鼠标点击导入。
-* 选中歌曲后自动填入标题、歌手、专辑、封面，并尽量获取网易云歌词。
-* 原有链接解析、本地音频解析和手动填写入口全部保留。
-
+* 重构样式面板的容器层级，Section 默认变为普通设置分区。
+* 字体方案继续保留卡片质感，用于比较完整排版方案。
+* 字号、行高、尺寸、裁剪、颜色和细节项改为连续设置行。
+* 开关行不再像独立卡片，仍保留整行点击和无障碍 switch 状态。
+* 布局模式等横向选择控件恢复原有呈现，避免削弱可读性。
+* 同步优化字体预设卡点击、搜索提示、Stepper 高度、语言保存提示和自定义尺寸自动高度。
 <br clear="right" />
 
 ## 🌐 多语言发布说明
 
 GitHub Release 页面默认使用简体中文短版，完整发布说明维护在 `docs/releases/`：
 
-* [简体中文](./docs/releases/v4.0.0.zh-CN.md)
-* [繁體中文](./docs/releases/v4.0.0.zh-TW.md)
-* [English](./docs/releases/v4.0.0.en.md)
-* [Français](./docs/releases/v4.0.0.fr.md)
-* [日本語](./docs/releases/v4.0.0.ja.md)
-* [Español](./docs/releases/v4.0.0.es.md)
+* [简体中文](./docs/releases/v4.1.0.zh-CN.md)
+* [繁體中文](./docs/releases/v4.1.0.zh-TW.md)
+* [English](./docs/releases/v4.1.0.en.md)
+* [Français](./docs/releases/v4.1.0.fr.md)
+* [日本語](./docs/releases/v4.1.0.ja.md)
+* [Español](./docs/releases/v4.1.0.es.md)
 
 <a id="主要功能"></a>
 

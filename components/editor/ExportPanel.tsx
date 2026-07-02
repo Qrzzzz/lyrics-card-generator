@@ -25,7 +25,7 @@ export function ExportPanel({
   const foregroundColor = getReadableForegroundColor(themeColor);
 
   return (
-    <Section title={t("export")} eyebrow="PNG">
+    <Section title={t("export")} variant="plain" className="border-t-0 pt-0">
       <p className="app-text-subtle text-sm">{cardRef.current ? t("exportHint") : t("previewNotReady")}</p>
       <div className="flex justify-end">
         <StarBorder

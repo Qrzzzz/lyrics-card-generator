@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v4.0.0.zh-TW.md">發布說明</a> ·
+  <a href="./docs/releases/v4.1.0.zh-TW.md">發布說明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">線上 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="#本機開發">本機開發</a> ·
@@ -48,33 +48,33 @@
 
 請前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載最新版：
 
-* 建議一般使用者下載安裝版：`Lyrics Card Generator Setup 4.0.0.exe`
-* 不想安裝時可下載可攜版：`Lyrics Card Generator-4.0.0-portable.exe`
+* 建議一般使用者下載安裝版：`Lyrics Card Generator Setup 4.1.0.exe`
+* 不想安裝時可下載可攜版：`Lyrics Card Generator-4.1.0-portable.exe`
 
 安裝版適合長期使用；可攜版適合臨時執行、測試或放在隨身碟中使用。
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v4.0.0 更新重點
+### v4.1.0 更新重點
 
-* 第一選歌入口升級為網易雲音樂歌名搜尋。
-* 輸入歌名、歌手或專輯關鍵字時，會即時顯示候選歌曲。
-* 支援方向鍵選擇、Enter 匯入和滑鼠點擊匯入。
-* 選中歌曲後自動填入標題、歌手、專輯、封面，並盡量取得網易雲歌詞。
-* 原有連結解析、本機音訊解析和手動填寫入口全部保留。
-
+* 重構樣式面板的容器層級，Section 預設變為普通設定分區。
+* 字體方案繼續保留卡片質感，用於比較完整排版方案。
+* 字號、行高、尺寸、裁切、顏色和細節項改為連續設定列。
+* 開關列不再像獨立卡片，仍保留整列點擊和無障礙 switch 狀態。
+* 版面模式等橫向選擇控制恢復原有呈現，避免削弱可讀性。
+* 同步最佳化字體預設卡點擊、搜尋提示、Stepper 高度、語言儲存提示和自訂尺寸自動高度。
 <br clear="right" />
 
 ## 🌐 多語言發佈說明
 
 GitHub Release 頁面預設使用簡體中文短版，完整發佈說明維護在 `docs/releases/`：
 
-* [简体中文](./docs/releases/v4.0.0.zh-CN.md)
-* [繁體中文](./docs/releases/v4.0.0.zh-TW.md)
-* [English](./docs/releases/v4.0.0.en.md)
-* [Français](./docs/releases/v4.0.0.fr.md)
-* [日本語](./docs/releases/v4.0.0.ja.md)
-* [Español](./docs/releases/v4.0.0.es.md)
+* [简体中文](./docs/releases/v4.1.0.zh-CN.md)
+* [繁體中文](./docs/releases/v4.1.0.zh-TW.md)
+* [English](./docs/releases/v4.1.0.en.md)
+* [Français](./docs/releases/v4.1.0.fr.md)
+* [日本語](./docs/releases/v4.1.0.ja.md)
+* [Español](./docs/releases/v4.1.0.es.md)
 
 ## ✨ 主要功能
 

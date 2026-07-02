@@ -100,7 +100,7 @@ export function useEditorActions({
               ratio: restored.ratio,
               width: restored.width,
               height: restored.height,
-              autoHeight: false
+              autoHeight: restored.ratio === "custom"
             }
           };
         }
@@ -120,7 +120,7 @@ export function useEditorActions({
             ratio: restored.ratio,
             width: restored.width,
             height: restored.height,
-            autoHeight: current.lastPortraitSize?.ratio === "custom" ? current.style.autoHeight : false
+            autoHeight: restored.ratio === "custom"
           }
         };
       }

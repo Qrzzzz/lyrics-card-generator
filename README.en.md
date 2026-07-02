@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v4.0.0.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v4.1.0.en.md">Release Notes</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
   <a href="#features">Features</a> ·
   <a href="#local-development">Local Development</a> ·
@@ -51,33 +51,33 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 Download the latest version from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Recommended installer: `Lyrics Card Generator Setup 4.0.0.exe`
-* Portable version: `Lyrics Card Generator-4.0.0-portable.exe`
+* Recommended installer: `Lyrics Card Generator Setup 4.1.0.exe`
+* Portable version: `Lyrics Card Generator-4.1.0-portable.exe`
 
 The installer is recommended for regular use. The portable version is useful for temporary use, testing, or running from a removable drive.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v4.0.0 Highlights
+### v4.1.0 Highlights
 
-* Upgrades the first song-picking entry to NetEase Cloud Music song-name search.
-* Shows live candidate songs as you type a title, artist, or album keyword.
-* Supports arrow-key navigation, Enter import, and mouse-click import.
-* Imports title, artist, album, cover art, and NetEase lyrics when available.
-* Keeps existing link parsing, local audio parsing, and manual editing entries.
-
+* Refactors style-panel container hierarchy so Section defaults to a plain settings section.
+* Keeps font schemes card-forward for comparing complete typography schemes.
+* Moves font size, line height, size, crop, color, and detail controls into continuous setting rows.
+* Makes toggle rows stop looking like standalone cards while preserving full-row click and accessible switch state.
+* Restores the original horizontal selector treatment for layout mode and similar controls.
+* Refines font preset card clicks, localized search placeholders, stepper height, language-save notifications, and custom-size auto height.
 <br clear="right" />
 
 ## 🌐 Multilingual Release Notes
 
 The GitHub Release page defaults to a simplified Chinese short version, while the full release notes are maintained in `docs/releases/`:
 
-* [简体中文](./docs/releases/v4.0.0.zh-CN.md)
-* [繁體中文](./docs/releases/v4.0.0.zh-TW.md)
-* [English](./docs/releases/v4.0.0.en.md)
-* [Français](./docs/releases/v4.0.0.fr.md)
-* [日本語](./docs/releases/v4.0.0.ja.md)
-* [Español](./docs/releases/v4.0.0.es.md)
+* [简体中文](./docs/releases/v4.1.0.zh-CN.md)
+* [繁體中文](./docs/releases/v4.1.0.zh-TW.md)
+* [English](./docs/releases/v4.1.0.en.md)
+* [Français](./docs/releases/v4.1.0.fr.md)
+* [日本語](./docs/releases/v4.1.0.ja.md)
+* [Español](./docs/releases/v4.1.0.es.md)
 
 <a id="features"></a>
 
