@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v4.1.0.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v4.1.5.zh-CN.md">发布说明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">在线 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="#本地开发">本地开发</a> ·
@@ -48,33 +48,33 @@
 
 请前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下载最新版：
 
-* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 4.1.0.exe`
-* 不想安装时可下载便携版：`Lyrics Card Generator-4.1.0-portable.exe`
+* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 4.1.5.exe`
+* 不想安装时可下载便携版：`Lyrics Card Generator-4.1.5-portable.exe`
 
 安装版适合长期使用；便携版适合临时运行、测试或放在移动硬盘中使用。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v4.1.0 更新重点
+### v4.1.5 更新重点
 
-* 重构样式面板的容器层级，Section 默认变为普通设置分区。
-* 字体方案继续保留卡片质感，用于比较完整排版方案。
-* 字号、行高、尺寸、裁剪、颜色和细节项改为连续设置行。
-* 开关行不再像独立卡片，仍保留整行点击和无障碍 switch 状态。
-* 布局模式等横向选择控件恢复原有呈现，避免削弱可读性。
-* 同步优化字体预设卡点击、搜索提示、Stepper 高度、语言保存提示和自定义尺寸自动高度。
+* Stepper 步骤区改为基于真实容器宽度的均衡 Grid 布局。
+* 6 个步骤只会在 `6`、`3 + 3`、`2 + 2 + 2` 三种结构中切换，避免 `5 + 1` 排版。
+* Stepper 外框改为根据标题区和步骤区真实高度计算 `min-height`。
+* 一行步骤时自动收紧面板高度，两行和三行时保留稳定的视觉下限。
+* 极窄窗口或长翻译文本下使用单行截断兜底，避免横向溢出。
+* 右侧 Preview、导出 DOM、歌词卡渲染逻辑和设置状态结构保持不变。
 <br clear="right" />
 
 ## 🌐 多语言发布说明
 
 GitHub Release 页面默认使用简体中文短版，完整发布说明维护在 `docs/releases/`：
 
-* [简体中文](./docs/releases/v4.1.0.zh-CN.md)
-* [繁體中文](./docs/releases/v4.1.0.zh-TW.md)
-* [English](./docs/releases/v4.1.0.en.md)
-* [Français](./docs/releases/v4.1.0.fr.md)
-* [日本語](./docs/releases/v4.1.0.ja.md)
-* [Español](./docs/releases/v4.1.0.es.md)
+* [简体中文](./docs/releases/v4.1.5.zh-CN.md)
+* [繁體中文](./docs/releases/v4.1.5.zh-TW.md)
+* [English](./docs/releases/v4.1.5.en.md)
+* [Français](./docs/releases/v4.1.5.fr.md)
+* [日本語](./docs/releases/v4.1.5.ja.md)
+* [Español](./docs/releases/v4.1.5.es.md)
 
 <a id="主要功能"></a>
 

@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v4.1.0.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v4.1.5.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="#ローカル開発">ローカル開発</a> ·
@@ -51,33 +51,33 @@
 
 最新版は [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) からダウンロードできます。
 
-* 推奨インストーラー：`Lyrics Card Generator Setup 4.1.0.exe`
-* ポータブル版：`Lyrics Card Generator-4.1.0-portable.exe`
+* 推奨インストーラー：`Lyrics Card Generator Setup 4.1.5.exe`
+* ポータブル版：`Lyrics Card Generator-4.1.5-portable.exe`
 
 通常利用にはインストーラーを推奨します。ポータブル版は一時利用、検証、リムーバブルドライブでの利用に向いています。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v4.1.0 の更新ポイント
+### v4.1.5 の更新ポイント
 
-* スタイルパネルのコンテナ階層を整理し、Section の既定表示を通常の設定セクションに変更しました。
-* フォント方案は、完全な組版方案を比較できるカード表現のまま維持しました。
-* フォントサイズ、行間、サイズ、クロップ、色、詳細項目を連続した設定行に移しました。
-* スイッチ行は独立カードのような見た目を抑えつつ、行全体のクリックとアクセシブルな switch 状態を維持します。
-* レイアウトモードなどの横方向セレクターは、読みやすさを保つため従来の表示に戻しました。
-* フォントプリセットカードのクリック、検索例、Stepper 高さ、言語保存通知、カスタムサイズ自動高さも調整しました。
+* Stepper のステップ領域を、実際のコンテナ幅に基づく均衡 Grid レイアウトに変更しました。
+* 6 つのステップは `6`、`3 + 3`、`2 + 2 + 2` の 3 パターンだけで切り替わり、`5 + 1` 配置を避けます。
+* Stepper パネルの `min-height` は、タイトル領域とステップグリッドの実測高さから計算します。
+* 1 行に収まる場合はパネルの高さを引き締め、2 行・3 行では安定した視覚下限を維持します。
+* 狭いウィンドウや長い翻訳ラベルでは 1 行省略表示で横方向のはみ出しを防ぎます。
+* 右側 Preview、エクスポート DOM、歌詞カードのレンダリング、設定状態の構造は変更していません。
 <br clear="right" />
 
 ## 🌐 多言語リリースノート
 
 GitHub Release ページではデフォルトで簡体字中国語の短縮版が使用され、完全なリリースノートは `docs/releases/` にて管理されています：
 
-* [简体中文](./docs/releases/v4.1.0.zh-CN.md)
-* [繁體中文](./docs/releases/v4.1.0.zh-TW.md)
-* [English](./docs/releases/v4.1.0.en.md)
-* [Français](./docs/releases/v4.1.0.fr.md)
-* [日本語](./docs/releases/v4.1.0.ja.md)
-* [Español](./docs/releases/v4.1.0.es.md)
+* [简体中文](./docs/releases/v4.1.5.zh-CN.md)
+* [繁體中文](./docs/releases/v4.1.5.zh-TW.md)
+* [English](./docs/releases/v4.1.5.en.md)
+* [Français](./docs/releases/v4.1.5.fr.md)
+* [日本語](./docs/releases/v4.1.5.ja.md)
+* [Español](./docs/releases/v4.1.5.es.md)
 
 <a id="主な機能"></a>
 

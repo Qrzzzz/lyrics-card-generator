@@ -4,6 +4,8 @@ import { motion, useReducedMotion } from "framer-motion";
 import { Check } from "lucide-react";
 import type { ReactNode } from "react";
 import { useRef } from "react";
+import { useBalancedStepperLayout } from "@/components/editor/hooks/useBalancedStepperLayout";
+import { useMeasuredStepperPanelHeight } from "@/components/editor/hooks/useMeasuredStepperPanelHeight";
 import { MotionPresence } from "@/components/motion/MotionPresence";
 import { getReadableForegroundColor } from "@/lib/contrast-color";
 import {
@@ -49,6 +51,9 @@ export function SettingsStepper({
 }: SettingsStepperProps) {
   const reduceMotion = useReducedMotion();
   const previousStepRef = useRef(currentStep);
+  const stepperTitleRef = useRef<HTMLDivElement | null>(null);
+  const stepsGridRef = useRef<HTMLDivElement | null>(null);
+  const stepsMeasureRef = useRef<HTMLDivElement | null>(null);
   const stepDirection: StepDirection = currentStep >= previousStepRef.current ? 1 : -1;
   const activeStep = steps[currentStep] ?? steps[0];
   const isFirstStep = currentStep <= 0;
@@ -59,6 +64,19 @@ export function SettingsStepper({
   const transition = reduceMotion
     ? reducedMotionTransition
     : { duration: motionDurations.normal, ease: motionEasings.standard };
+  const stepMeasurementKey = steps.map((step) => step.title).join("\u0000");
+  const stepLayout = useBalancedStepperLayout({
+    containerRef: stepsGridRef,
+    measureRef: stepsMeasureRef,
+    stepCount: steps.length,
+    measurementKey: stepMeasurementKey
+  });
+  const isSingleRowStepLayout = stepLayout.columns >= steps.length;
+  const measuredPanelHeight = useMeasuredStepperPanelHeight({
+    titleRef: stepperTitleRef,
+    stepsRef: stepsGridRef,
+    minimumHeightPx: isSingleRowStepLayout ? 136 : 180
+  });
 
   previousStepRef.current = currentStep;
 
@@ -68,8 +86,11 @@ export function SettingsStepper({
 
   return (
     <section className={cn("grid min-w-0 gap-4", isLastStep && "content-start")}>
-      <div className="glass-panel flex min-h-[14.25rem] flex-col rounded-lg p-4">
-        <div className="mb-4 flex items-start justify-between gap-4">
+      <div
+        className="glass-panel flex flex-col rounded-lg p-4 transition-[min-height]"
+        style={measuredPanelHeight ? { minHeight: `${measuredPanelHeight}px` } : undefined}
+      >
+        <div ref={stepperTitleRef} className="mb-4 flex items-start justify-between gap-4">
           <MotionPresence>
             <motion.div
               key={activeStep.id}
@@ -89,7 +110,14 @@ export function SettingsStepper({
           </MotionPresence>
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div
+          ref={stepsGridRef}
+          className="grid gap-2"
+          data-compact={stepLayout.compact ? "true" : "false"}
+          style={{
+            gridTemplateColumns: `repeat(${stepLayout.columns}, minmax(0, 1fr))`
+          }}
+        >
           {steps.map((step, index) => {
             const isActive = index === currentStep;
             const isComplete = index < currentStep;
@@ -102,7 +130,8 @@ export function SettingsStepper({
                 aria-current={isActive ? "step" : undefined}
                 data-active={isActive ? "true" : "false"}
                 className={cn(
-                  "group flex flex-[1_1_auto] items-center gap-2 whitespace-nowrap rounded-lg border px-2.5 py-2 text-left transition",
+                  "group flex min-h-10 min-w-0 items-center gap-2 rounded-lg border text-left transition",
+                  stepLayout.compact ? "px-2 py-2" : "px-2.5 py-2",
                   isActive
                     ? "border-[rgb(var(--panel-border))] bg-[rgb(var(--button-bg-hover))] app-text-primary shadow-[0_16px_42px_rgba(0,0,0,0.22)]"
                     : "border-[rgb(var(--panel-border))] bg-[rgb(var(--button-bg))] app-text-muted hover:bg-[rgb(var(--button-bg-hover))] hover:text-[rgb(var(--app-fg))]"
@@ -117,10 +146,38 @@ export function SettingsStepper({
                 >
                   {isComplete ? <Check className="h-3.5 w-3.5" /> : index + 1}
                 </span>
-                <span className="text-xs font-semibold">{step.title}</span>
+                <span
+                  className={cn(
+                    "min-w-0 truncate font-semibold",
+                    stepLayout.compact ? "text-[11px]" : "text-xs"
+                  )}
+                  title={step.title}
+                >
+                  {step.title}
+                </span>
               </button>
             );
           })}
+        </div>
+
+        <div
+          ref={stepsMeasureRef}
+          aria-hidden="true"
+          className="pointer-events-none invisible fixed left-0 top-0 -z-10 flex h-0 w-0 gap-2 overflow-hidden"
+        >
+          {steps.map((step, index) => (
+            <button
+              key={step.id}
+              type="button"
+              tabIndex={-1}
+              className="flex min-h-10 shrink-0 items-center gap-2 whitespace-nowrap rounded-lg border px-2.5 py-2 text-left text-xs font-semibold"
+            >
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-[11px] font-black">
+                {index + 1}
+              </span>
+              <span>{step.title}</span>
+            </button>
+          ))}
         </div>
       </div>
 

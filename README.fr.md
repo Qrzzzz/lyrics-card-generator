@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v4.1.0.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v4.1.5.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="#développement-local">Développement local</a> ·
@@ -51,33 +51,33 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 Téléchargez la dernière version depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
 
-* Installateur recommandé : `Lyrics Card Generator Setup 4.1.0.exe`
-* Version portable : `Lyrics Card Generator-4.1.0-portable.exe`
+* Installateur recommandé : `Lyrics Card Generator Setup 4.1.5.exe`
+* Version portable : `Lyrics Card Generator-4.1.5-portable.exe`
 
 L'installateur est recommandé pour une utilisation régulière. La version portable convient aux essais, à une utilisation temporaire ou à un disque amovible.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### Points clés de la v4.1.0
+### Points clés de la v4.1.5
 
-* Réorganise la hiérarchie des conteneurs du panneau de style : Section devient une section simple par défaut.
-* Conserve les schémas de police sous forme de cartes pour comparer des choix typographiques complets.
-* Place taille de police, interligne, dimensions, recadrage, couleurs et détails dans des lignes de réglage continues.
-* Rend les interrupteurs moins proches de cartes autonomes tout en gardant le clic sur toute la ligne et l'état switch accessible.
-* Restaure le traitement horizontal d’origine pour le mode de mise en page et les contrôles similaires.
-* Améliore aussi le clic sur les presets de police, les exemples de recherche, la hauteur du stepper, les notifications de langue et la hauteur auto personnalisée.
+* La zone des étapes du Stepper passe à une grille équilibrée basée sur la largeur réelle du conteneur.
+* Les six étapes restent limitées à `6`, `3 + 3` ou `2 + 2 + 2`, sans retour à la ligne de type `5 + 1`.
+* Le `min-height` du panneau Stepper est calculé à partir des hauteurs réelles du titre et de la grille.
+* Le panneau se resserre quand les étapes tiennent sur une ligne, tout en gardant une limite stable sur deux ou trois lignes.
+* Les libellés très longs ou les fenêtres étroites utilisent une troncature sur une seule ligne pour éviter le débordement horizontal.
+* Le Preview de droite, le DOM d’export, le rendu de la carte de paroles et la structure d’état restent inchangés.
 <br clear="right" />
 
 ## 🌐 Notes de publication multilingues
 
 La page GitHub Release utilise par défaut la version courte en chinois simplifié, les notes de publication complètes sont conservées dans `docs/releases/` :
 
-* [简体中文](./docs/releases/v4.1.0.zh-CN.md)
-* [繁體中文](./docs/releases/v4.1.0.zh-TW.md)
-* [English](./docs/releases/v4.1.0.en.md)
-* [Français](./docs/releases/v4.1.0.fr.md)
-* [日本語](./docs/releases/v4.1.0.ja.md)
-* [Español](./docs/releases/v4.1.0.es.md)
+* [简体中文](./docs/releases/v4.1.5.zh-CN.md)
+* [繁體中文](./docs/releases/v4.1.5.zh-TW.md)
+* [English](./docs/releases/v4.1.5.en.md)
+* [Français](./docs/releases/v4.1.5.fr.md)
+* [日本語](./docs/releases/v4.1.5.ja.md)
+* [Español](./docs/releases/v4.1.5.es.md)
 
 <a id="fonctionnalités-principales"></a>
 
