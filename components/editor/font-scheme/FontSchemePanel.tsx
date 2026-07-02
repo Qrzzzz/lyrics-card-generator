@@ -33,6 +33,7 @@ type FontSchemePanelProps = {
   style: CardStyle;
   onStyleChange: (style: CardStyle) => void;
   onPreviewSchemeChange?: (scheme: FontScheme | null) => void;
+  showHeader?: boolean;
   t: ReturnType<typeof createT>;
 };
 
@@ -51,7 +52,7 @@ const RECOMMENDED_FONTS: FontFamilyOption[] = [
   latinFont("maple-mono", "Maple Mono")
 ];
 
-export function FontSchemePanel({ style, onStyleChange, onPreviewSchemeChange, t }: FontSchemePanelProps) {
+export function FontSchemePanel({ style, onStyleChange, onPreviewSchemeChange, showHeader = true, t }: FontSchemePanelProps) {
   const desktopApi = getLyricsCardDesktopApi();
   const currentScheme = getEffectiveFontScheme(style);
   const currentPresetId = identifyFontPreset(currentScheme);
@@ -134,10 +135,12 @@ export function FontSchemePanel({ style, onStyleChange, onPreviewSchemeChange, t
 
   return (
     <section className="grid gap-5" data-testid="font-scheme-panel">
-      <div>
-        <h3 className="app-text-primary text-base font-semibold">{t("fontSchemeTitle")}</h3>
-        <p className="app-text-subtle mt-1 text-sm">{t("fontSchemeDescription")}</p>
-      </div>
+      {showHeader ? (
+        <div>
+          <h3 className="app-text-primary text-base font-semibold">{t("fontSchemeTitle")}</h3>
+          <p className="app-text-subtle mt-1 text-sm">{t("fontSchemeDescription")}</p>
+        </div>
+      ) : null}
 
       <PanelBlock title={t("fontSchemeCurrentTitle")}>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -156,16 +159,20 @@ export function FontSchemePanel({ style, onStyleChange, onPreviewSchemeChange, t
         </div>
       </PanelBlock>
 
-      <PanelBlock title={t("fontSchemePresetsTitle")}>
+      <PanelBlock title={t("fontSchemePresetsTitle")} tone="plain">
         <div className="grid gap-3 md:grid-cols-2">
           {(["source-han-sans", "source-han-serif"] as FontPresetId[]).map((presetId) => {
             const preset = FONT_SCHEME_PRESETS[presetId];
             const active = currentPresetId === presetId;
             return (
-              <article
+              <button
+                type="button"
                 key={presetId}
+                data-testid={`apply-font-preset-${presetId}`}
+                aria-pressed={active}
+                onClick={() => applyScheme(preset)}
                 className={cn(
-                  "rounded-xl border p-4 transition",
+                  "control-focus rounded-xl border p-4 text-left transition",
                   active ? "border-cyan-200/55 bg-cyan-300/10" : "app-border bg-black/10"
                 )}
               >
@@ -182,15 +189,7 @@ export function FontSchemePanel({ style, onStyleChange, onPreviewSchemeChange, t
                 </div>
                 <p className="app-text-muted mt-3 min-h-10 text-sm">{presetDescription(presetId, t)}</p>
                 <MiniFontPreview scheme={preset} />
-                <button
-                  type="button"
-                  data-testid={`apply-font-preset-${presetId}`}
-                  className="app-button mt-4 h-10 w-full rounded-lg px-4 text-sm font-semibold"
-                  onClick={() => applyScheme(preset)}
-                >
-                  {t("fontSchemeApply")}
-                </button>
-              </article>
+              </button>
             );
           })}
         </div>
@@ -239,14 +238,24 @@ export function FontSchemePanel({ style, onStyleChange, onPreviewSchemeChange, t
 function PanelBlock({
   title,
   children,
-  blockRef
+  blockRef,
+  tone = "subtle"
 }: {
   title: string;
   children: React.ReactNode;
   blockRef?: React.RefObject<HTMLDivElement | null>;
+  tone?: "plain" | "subtle";
 }) {
   return (
-    <div ref={blockRef} className="grid gap-4 rounded-xl border border-[rgb(var(--panel-border))] bg-[rgb(var(--panel-bg))] p-4">
+    <div
+      ref={blockRef}
+      className={cn(
+        "grid gap-4",
+        tone === "subtle"
+          ? "rounded-md border border-[rgb(var(--panel-border))] bg-[rgb(var(--panel-bg))] p-3"
+          : ""
+      )}
+    >
       <h4 className="app-text-primary text-sm font-semibold">{title}</h4>
       {children}
     </div>

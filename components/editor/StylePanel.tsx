@@ -8,6 +8,7 @@ import {
   Section,
   SegmentedControl,
   SelectField,
+  SettingRow,
   TextInput,
   ToggleRow
 } from "@/components/ui/controls";
@@ -34,8 +35,8 @@ type StylePanelProps = {
 export function StylePanel(props: StylePanelProps) {
   return (
     <div className="grid gap-4">
-      <LayoutSettingsPanel {...props} />
       <FontSchemeSettingsPanel {...props} />
+      <LayoutSettingsPanel {...props} />
       <VisualSettingsPanel {...props} />
     </div>
   );
@@ -43,14 +44,20 @@ export function StylePanel(props: StylePanelProps) {
 
 export function FontSchemeSettingsPanel({ style, onStyleChange, onFontSchemePreviewChange, t }: StylePanelProps) {
   return (
-    <div className="grid gap-4">
+    <Section
+      title={t("step.fontScheme")}
+      description={t("fontSchemeDescription")}
+      variant="plain"
+      className="border-t-0 pt-0"
+    >
       <FontSchemePanel
         style={style}
         onStyleChange={onStyleChange}
         onPreviewSchemeChange={onFontSchemePreviewChange}
+        showHeader={false}
         t={t}
       />
-    </div>
+    </Section>
   );
 }
 
@@ -308,7 +315,7 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
         ratio: "1:1",
         width: squareSize.width,
         height: squareSize.height,
-        autoHeight: false,
+        autoHeight: true,
         translationEnabled: false,
         translationText: "",
         frameVariant: style.frameStyleEnabled && style.frameVariant !== "fullBleed" ? "auto" : style.frameVariant
@@ -337,7 +344,7 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
     }
 
     if (ratio === "custom") {
-      onStyleChange({ ...style, ratio, width: style.width || 1080, height: style.height || 1480 });
+      onStyleChange({ ...style, ratio, width: style.width || 1080, height: style.height || 1480, autoHeight: true });
       return;
     }
 
@@ -362,16 +369,15 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
   }
 
   return (
-    <Section title={t("layout")} eyebrow={t("style")}>
-      <FieldLabel label={t("contentType")}>
+    <Section title={t("layout")} eyebrow={t("style")} variant="plain" contentClassName="gap-0">
+      <SettingRow label={t("contentType")}>
         <SelectField value={style.contentMode} onChange={(event) => updateContentMode(event.target.value as ContentMode)}>
           <option value="lyrics">{t("lyricsMode")}</option>
           <option value="instrumental">{t("instrumentalMode")}</option>
         </SelectField>
-      </FieldLabel>
+      </SettingRow>
 
-      <div className="grid gap-2">
-        <div className="app-text-primary text-sm font-medium">{t("layoutMode")}</div>
+      <SettingRow label={t("layoutMode")} description={isInstrumental ? instrumentalLayoutLockedHint : undefined}>
         <SegmentedControl
           value={layoutMode}
           onValueChange={(value) => updateLayoutMode(value as CardLayoutMode)}
@@ -386,36 +392,33 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
           ]}
           aria-label={t("layoutMode")}
         />
-      </div>
+      </SettingRow>
 
-      <div>
-        <FieldLabel label={t("sizeMode")}>
-          <SelectField
-            value={isInstrumental ? "1:1" : style.ratio}
-            disabled={isInstrumental}
-            onChange={(event) => updateRatio(event.target.value as CardRatio)}
-          >
-            {layoutMode === "landscape" ? (
-              <>
-                <option value="16:9">{t("sixteenNine")}</option>
-                <option value="21:9">{t("twentyOneNine")}</option>
-                <option value="3:2">{t("threeTwo")}</option>
-              </>
-            ) : (
-              <>
-                <option value="1:1">{t("square")}</option>
-                <option value="4:5">{t("social")}</option>
-                <option value="9:16">{t("story")}</option>
-              </>
-            )}
-            <option value="custom">{t("custom")}</option>
-          </SelectField>
-        </FieldLabel>
-        {isInstrumental ? <p className="app-text-subtle mt-2 text-xs">{t("instrumentalSizeLockedHint")}</p> : null}
-      </div>
+      <SettingRow label={t("sizeMode")} description={isInstrumental ? t("instrumentalSizeLockedHint") : undefined}>
+        <SelectField
+          value={isInstrumental ? "1:1" : style.ratio}
+          disabled={isInstrumental}
+          onChange={(event) => updateRatio(event.target.value as CardRatio)}
+        >
+          {layoutMode === "landscape" ? (
+            <>
+              <option value="16:9">{t("sixteenNine")}</option>
+              <option value="21:9">{t("twentyOneNine")}</option>
+              <option value="3:2">{t("threeTwo")}</option>
+            </>
+          ) : (
+            <>
+              <option value="1:1">{t("square")}</option>
+              <option value="4:5">{t("social")}</option>
+              <option value="9:16">{t("story")}</option>
+            </>
+          )}
+          <option value="custom">{t("custom")}</option>
+        </SelectField>
+      </SettingRow>
 
       {!isInstrumental && style.ratio === "custom" ? (
-        <div className="grid gap-4 rounded-lg border border-[rgb(var(--panel-border))] bg-[rgb(var(--panel-bg))] p-3">
+        <div className="my-3 grid gap-4 rounded-md border border-[rgb(var(--panel-border))] bg-[rgb(var(--panel-bg))] p-3">
           <div className="app-text-subtle flex items-center justify-between gap-3 text-sm">
             <span>{t("customCanvas")}</span>
             <span className="app-text-primary font-semibold">
@@ -450,40 +453,37 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
       ) : null}
 
       {style.contentMode === "lyrics" ? (
-        <div className="grid gap-4">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <FieldLabel label={t("fontSize")} hint={`${style.lyricFontSize}px`}>
-              <TextInput
-                type="range"
-                min={36}
-                max={72}
-                value={style.lyricFontSize}
-                onChange={(event) => update("lyricFontSize", Number(event.target.value))}
-              />
-            </FieldLabel>
-            <FieldLabel label={t("lineHeight")} hint={style.lineHeight.toFixed(2)}>
-              <TextInput
-                type="range"
-                min={1.1}
-                max={1.75}
-                step={0.05}
-                value={style.lineHeight}
-                onChange={(event) => update("lineHeight", Number(event.target.value))}
-              />
-            </FieldLabel>
-          </div>
-
-          <FieldLabel label={t("alignment")}>
+        <>
+          <SettingRow label={t("fontSize")} description={`${style.lyricFontSize}px`}>
+            <TextInput
+              type="range"
+              min={36}
+              max={72}
+              value={style.lyricFontSize}
+              onChange={(event) => update("lyricFontSize", Number(event.target.value))}
+            />
+          </SettingRow>
+          <SettingRow label={t("lineHeight")} description={style.lineHeight.toFixed(2)}>
+            <TextInput
+              type="range"
+              min={1.1}
+              max={1.75}
+              step={0.05}
+              value={style.lineHeight}
+              onChange={(event) => update("lineHeight", Number(event.target.value))}
+            />
+          </SettingRow>
+          <SettingRow label={t("alignment")}>
             <SelectField value={style.align} onChange={(event) => update("align", event.target.value as CardAlign)}>
               <option value="left">{t("left")}</option>
               <option value="center">{t("center")}</option>
             </SelectField>
-          </FieldLabel>
-        </div>
+          </SettingRow>
+        </>
       ) : null}
 
       {style.contentMode === "lyrics" && style.translationEnabled ? (
-        <FieldLabel label={t("translationScale")} hint={style.translationScale.toFixed(2)}>
+        <SettingRow label={t("translationScale")} description={style.translationScale.toFixed(2)}>
           <TextInput
             type="range"
             min={0.6}
@@ -492,11 +492,11 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
             value={style.translationScale}
             onChange={(event) => update("translationScale", Number(event.target.value))}
           />
-        </FieldLabel>
+        </SettingRow>
       ) : null}
 
       {style.contentMode === "lyrics" && layoutMode === "landscape" ? (
-        <div className="grid gap-3 rounded-lg border border-[rgb(var(--panel-border))] bg-[rgb(var(--panel-bg))] p-3">
+        <div className="my-3 grid gap-3 rounded-md border border-[rgb(var(--panel-border))] bg-[rgb(var(--panel-bg))] p-3">
           <p className="app-text-primary text-sm font-semibold">{t("landscapeLayoutSettings")}</p>
           <div className="grid gap-4 sm:grid-cols-2">
             <FieldLabel label={t("landscapeCoverSize")} hint="auto">
@@ -534,21 +534,45 @@ export function VisualSettingsPanel({ style, onStyleChange, t }: StylePanelProps
   }
 
   return (
-    <Section title={t("step.visual")} eyebrow={t("background")}>
-      <FieldLabel label={t("coverCrop")} hint={style.coverCropScale.toFixed(2)}>
-        <TextInput
-          type="range"
-          min={1}
-          max={2}
-          step={0.01}
-          value={style.coverCropScale}
-          onChange={(event) => update("coverCropScale", Number(event.target.value))}
+    <div className="grid gap-5">
+      <Section title={t("textColor")} variant="plain" contentClassName="gap-0">
+        <ColorControls style={style} onStyleChange={onStyleChange} t={t} />
+      </Section>
+
+      <Section title={t("background")} variant="plain" contentClassName="gap-0">
+        <SettingRow label={t("coverCrop")} description={style.coverCropScale.toFixed(2)}>
+          <TextInput
+            type="range"
+            min={1}
+            max={2}
+            step={0.01}
+            value={style.coverCropScale}
+            onChange={(event) => update("coverCropScale", Number(event.target.value))}
+          />
+        </SettingRow>
+
+        <ToggleRow
+          label={t("backgroundGrid")}
+          checked={style.showFineGrid === true}
+          onChange={(checked) => update("showFineGrid", checked)}
         />
-      </FieldLabel>
+        {style.showFineGrid === true ? (
+          <SettingRow label={t("backgroundGridDensity")}>
+            <SegmentedControl
+              value={(style.fineGridDensity ?? "medium") as "sparse" | "medium" | "dense"}
+              onValueChange={(value) => update("fineGridDensity", value)}
+              options={[
+                { value: "sparse", label: t("gridSparse") },
+                { value: "medium", label: t("gridMedium") },
+                { value: "dense", label: t("gridDense") }
+              ]}
+              aria-label={t("backgroundGridDensity")}
+            />
+          </SettingRow>
+        ) : null}
+      </Section>
 
-      <ColorControls style={style} onStyleChange={onStyleChange} t={t} />
-
-      <div className="grid gap-3 sm:grid-cols-3">
+      <Section title={t("step.visual")} variant="plain" contentClassName="gap-0">
         <ToggleRow label={t("cover")} checked={style.showCover} onChange={(checked) => update("showCover", checked)} />
         <ToggleRow label={t("showSongInfo")} checked={style.showSongInfo} onChange={(checked) => update("showSongInfo", checked)} />
         <ToggleRow label={t("showAlbumName")} checked={style.showAlbumName} onChange={(checked) => update("showAlbumName", checked)} />
@@ -560,51 +584,30 @@ export function VisualSettingsPanel({ style, onStyleChange, t }: StylePanelProps
           onChange={(checked) => update("showPlatformBadge", checked)}
         />
         <ToggleRow label={t("showSharedBy")} checked={style.showSharedBy} onChange={(checked) => update("showSharedBy", checked)} />
-      </div>
 
-      <div className="grid gap-3 rounded-lg border border-[rgb(var(--panel-border))] bg-[rgb(var(--panel-bg))] p-3">
-        <ToggleRow
-          label={t("backgroundGrid")}
-          checked={style.showFineGrid === true}
-          onChange={(checked) => update("showFineGrid", checked)}
-        />
-        {style.showFineGrid === true ? (
+        <SettingRow label={t("showFrame")}>
           <SegmentedControl
-            value={(style.fineGridDensity ?? "medium") as "sparse" | "medium" | "dense"}
-            onValueChange={(value) => update("fineGridDensity", value)}
+            value={frameVisible ? "frame" : "fullBleed"}
+            onValueChange={(value) => updateFrameVisibility(value === "frame")}
             options={[
-              { value: "sparse", label: t("gridSparse") },
-              { value: "medium", label: t("gridMedium") },
-              { value: "dense", label: t("gridDense") }
+              { value: "frame", label: t("frameAndShadow") },
+              { value: "fullBleed", label: t("fullBleed") }
             ]}
-            aria-label={t("backgroundGridDensity")}
+            aria-label={t("showFrame")}
           />
+        </SettingRow>
+
+        {style.showSharedBy ? (
+          <SettingRow label={t("sharedBy")}>
+            <TextInput
+              value={style.sharedByText}
+              onChange={(event) => update("sharedByText", event.target.value)}
+              placeholder={t("sharedByPlaceholder")}
+            />
+          </SettingRow>
         ) : null}
-      </div>
-
-      <div className="grid gap-3 rounded-lg border border-[rgb(var(--panel-border))] bg-[rgb(var(--panel-bg))] p-3">
-        <div className="app-text-primary text-sm font-medium">{t("showFrame")}</div>
-        <SegmentedControl
-          value={frameVisible ? "frame" : "fullBleed"}
-          onValueChange={(value) => updateFrameVisibility(value === "frame")}
-          options={[
-            { value: "frame", label: t("frameAndShadow") },
-            { value: "fullBleed", label: t("fullBleed") }
-          ]}
-          aria-label={t("showFrame")}
-        />
-      </div>
-
-      {style.showSharedBy ? (
-        <FieldLabel label={t("sharedBy")}>
-          <TextInput
-            value={style.sharedByText}
-            onChange={(event) => update("sharedByText", event.target.value)}
-            placeholder={t("sharedByPlaceholder")}
-          />
-        </FieldLabel>
-      ) : null}
-    </Section>
+      </Section>
+    </div>
   );
 }
 

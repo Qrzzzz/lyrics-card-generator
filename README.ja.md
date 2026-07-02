@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v4.0.0.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v4.1.0.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="#ローカル開発">ローカル開発</a> ·
@@ -51,33 +51,33 @@
 
 最新版は [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) からダウンロードできます。
 
-* 推奨インストーラー：`Lyrics Card Generator Setup 4.0.0.exe`
-* ポータブル版：`Lyrics Card Generator-4.0.0-portable.exe`
+* 推奨インストーラー：`Lyrics Card Generator Setup 4.1.0.exe`
+* ポータブル版：`Lyrics Card Generator-4.1.0-portable.exe`
 
 通常利用にはインストーラーを推奨します。ポータブル版は一時利用、検証、リムーバブルドライブでの利用に向いています。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v4.0.0 の更新ポイント
+### v4.1.0 の更新ポイント
 
-* 最初の曲選択入口を NetEase Cloud Music の曲名検索にアップグレードしました。
-* 曲名、アーティスト、アルバムを入力すると候補曲をリアルタイムに表示します。
-* 矢印キー、Enter、マウスクリックで候補を選択して取り込めます。
-* 選択後は曲名、アーティスト、アルバム、カバー、取得可能な NetEase 歌詞を自動入力します。
-* 既存のリンク解析、ローカル音声解析、手動入力入口はすべて残しています。
-
+* スタイルパネルのコンテナ階層を整理し、Section の既定表示を通常の設定セクションに変更しました。
+* フォント方案は、完全な組版方案を比較できるカード表現のまま維持しました。
+* フォントサイズ、行間、サイズ、クロップ、色、詳細項目を連続した設定行に移しました。
+* スイッチ行は独立カードのような見た目を抑えつつ、行全体のクリックとアクセシブルな switch 状態を維持します。
+* レイアウトモードなどの横方向セレクターは、読みやすさを保つため従来の表示に戻しました。
+* フォントプリセットカードのクリック、検索例、Stepper 高さ、言語保存通知、カスタムサイズ自動高さも調整しました。
 <br clear="right" />
 
 ## 🌐 多言語リリースノート
 
 GitHub Release ページではデフォルトで簡体字中国語の短縮版が使用され、完全なリリースノートは `docs/releases/` にて管理されています：
 
-* [简体中文](./docs/releases/v4.0.0.zh-CN.md)
-* [繁體中文](./docs/releases/v4.0.0.zh-TW.md)
-* [English](./docs/releases/v4.0.0.en.md)
-* [Français](./docs/releases/v4.0.0.fr.md)
-* [日本語](./docs/releases/v4.0.0.ja.md)
-* [Español](./docs/releases/v4.0.0.es.md)
+* [简体中文](./docs/releases/v4.1.0.zh-CN.md)
+* [繁體中文](./docs/releases/v4.1.0.zh-TW.md)
+* [English](./docs/releases/v4.1.0.en.md)
+* [Français](./docs/releases/v4.1.0.fr.md)
+* [日本語](./docs/releases/v4.1.0.ja.md)
+* [Español](./docs/releases/v4.1.0.es.md)
 
 <a id="主な機能"></a>
 

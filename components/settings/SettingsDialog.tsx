@@ -121,7 +121,7 @@ export function SettingsDialog({ open, locale, userSettings, onLocaleChange, onU
 
   function handleLocaleChange(nextLocale: Locale) {
     onLocaleChange(nextLocale);
-    queueSavedNotification();
+    queueSavedNotification(getAIUiCopy(nextLocale).settingsSaved);
   }
 
   function queueSavedNotification(message = aiCopy.settingsSaved) {
