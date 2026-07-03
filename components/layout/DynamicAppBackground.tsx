@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import type { ExtractedPalette } from "@/lib/types";
 import type { UserSettings } from "@/lib/settings/types";
 import {
@@ -11,15 +10,12 @@ import {
 
 export function DynamicAppBackground({
   palette,
-  settings,
-  imageUrl
+  settings
 }: {
   palette?: ExtractedPalette;
   settings: UserSettings;
   imageUrl?: string;
 }) {
-  const [renderedImageUrl, setRenderedImageUrl] = useState(imageUrl);
-  const [previousImageUrl, setPreviousImageUrl] = useState<string>();
   const activePalette = palette ?? DEFAULT_PALETTE;
   const isColorful = activePalette.kind === "colorful";
   const primarySource = isColorful ? activePalette.primary : activePalette.averageLuminance > 0.5 ? activePalette.light : activePalette.dark;
@@ -29,25 +25,10 @@ export function DynamicAppBackground({
   const secondary = mixColors(secondarySource, "#080910", 0.58);
   const accent = mixColors(accentSource, "#080910", isColorful ? 0.48 : 0.66);
   const shapeOpacity = isColorful ? 1 : activePalette.kind === "neutral" ? 0.58 : 0.74;
-  const background = settings.appBackground;
   const isAcrylicTheme = settings.uiTheme === "dark-acrylic" || settings.uiTheme === "light-acrylic";
-  const isAlbumDynamic = background.mode === "album-dynamic" && settings.uiTheme === "album-dynamic";
-  const presetThemeBackground = settings.uiTheme === "light-blue" ? "#EAF6FF" : settings.uiTheme === "dark-pink" ? "#08040A" : "#080910";
-  const isImage = background.mode.startsWith("image-") && background.mode !== "image-palette" && Boolean(imageUrl);
-  const objectFit = background.mode === "image-stretch" ? "fill" : background.mode === "image-contain" ? "contain" : "cover";
-  const paletteColor = background.extractedColor ?? settings.uiAccentColor;
-
-  useEffect(() => {
-    if (imageUrl === renderedImageUrl) {
-      return;
-    }
-
-    setPreviousImageUrl(renderedImageUrl);
-    setRenderedImageUrl(imageUrl);
-
-    const timeout = window.setTimeout(() => setPreviousImageUrl(undefined), 560);
-    return () => window.clearTimeout(timeout);
-  }, [imageUrl, renderedImageUrl]);
+  const isAlbumDynamic = settings.uiTheme === "album-dynamic";
+  const isDark = settings.uiTheme === "dark";
+  const isLight = settings.uiTheme === "light";
 
   if (isAcrylicTheme) {
     const isLight = settings.uiTheme === "light-acrylic";
@@ -79,31 +60,23 @@ export function DynamicAppBackground({
     );
   }
 
+  if (isDark || isLight) {
+    return (
+      <div
+        className="dynamic-app-background absolute inset-0 z-0 overflow-hidden transition-colors duration-700"
+        style={{ background: isLight ? "#FFFFFF" : "#08090C" }}
+        aria-hidden="true"
+      />
+    );
+  }
+
   return (
-    <div className="dynamic-app-background absolute inset-0 z-0 overflow-hidden transition-colors duration-700" style={{ background: background.mode === "solid" ? background.solidColor : presetThemeBackground }} aria-hidden="true">
-      {previousImageUrl ? (
-        <img
-          src={previousImageUrl}
-          alt=""
-          className="dynamic-app-background__image dynamic-app-background__image--previous absolute inset-0 h-full w-full"
-          style={{ objectFit, filter: background.mode === "image-blur" ? `blur(${background.blurAmount}px) scale(1.08)` : undefined }}
-        />
-      ) : null}
-      {isImage && renderedImageUrl ? (
-        <img
-          src={renderedImageUrl}
-          alt=""
-          className="dynamic-app-background__image absolute inset-0 h-full w-full"
-          style={{ objectFit, filter: background.mode === "image-blur" ? `blur(${background.blurAmount}px) scale(1.08)` : undefined }}
-        />
-      ) : null}
+    <div className="dynamic-app-background absolute inset-0 z-0 overflow-hidden bg-[#080910] transition-colors duration-700" aria-hidden="true">
       <div
         className="absolute inset-0 transition-colors duration-700"
         style={{
-          opacity: isAlbumDynamic || background.mode === "image-palette" ? 1 : 0,
-          background: background.mode === "image-palette"
-            ? `linear-gradient(135deg, ${mixColors(paletteColor, "#05060A", 0.58)}, ${paletteColor} 52%, #07080E)`
-            : `linear-gradient(135deg, ${mixColors(activePalette.dark, "#05060A", 0.58)}, ${mixColors(primary, "#05060A", 0.54)} 52%, #07080E)`
+          opacity: isAlbumDynamic ? 1 : 0,
+          background: `linear-gradient(135deg, ${mixColors(activePalette.dark, "#05060A", 0.58)}, ${mixColors(primary, "#05060A", 0.54)} 52%, #07080E)`
         }}
       />
       <div
@@ -120,7 +93,7 @@ export function DynamicAppBackground({
       />
       <div
         className="absolute inset-0 transition-colors duration-700"
-        style={{ background: `rgba(0,0,0,${background.mode === "album-dynamic" && settings.uiTheme !== "album-dynamic" ? 0 : background.overlayOpacity})` }}
+        style={{ background: `rgba(0,0,0,${settings.appBackground.overlayOpacity})` }}
       />
       <div className="absolute inset-0 bg-[linear-gradient(110deg,rgba(255,255,255,0.08),transparent_25%,rgba(255,255,255,0.04)_48%,transparent_72%)]" />
       <div className="noise-layer absolute inset-0 opacity-[0.12]" />

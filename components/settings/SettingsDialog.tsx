@@ -1,6 +1,6 @@
 "use client";
 
-import { Bot, Download, Info, Loader2, Palette, Settings, SlidersHorizontal, Wallpaper, X } from "lucide-react";
+import { Bot, Download, Info, Loader2, Palette, Settings, SlidersHorizontal, X } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { MotionDialogOverlay, MotionDialogPanel } from "@/components/motion/MotionDialog";
@@ -8,7 +8,6 @@ import { MotionPresence } from "@/components/motion/MotionPresence";
 import { AiSettingsSection } from "@/components/settings/AiSettingsSection";
 import { AboutSettingsSection } from "@/components/settings/AboutSettingsSection";
 import { AppearanceSettingsSection } from "@/components/settings/AppearanceSettingsSection";
-import { BackgroundSettingsSection } from "@/components/settings/BackgroundSettingsSection";
 import { ExportSettingsSection } from "@/components/settings/ExportSettingsSection";
 import { GeneralSettingsSection } from "@/components/settings/GeneralSettingsSection";
 import { SettingsTabs } from "@/components/settings/SettingsTabs";
@@ -33,7 +32,6 @@ export function SettingsDialog({ open, locale, userSettings, onLocaleChange, onU
   const t = useMemo(() => createT(locale), [locale]);
   const reduceMotion = useReducedMotion();
   const [activeTab, setActiveTab] = useState("general");
-  const isOpenRef = useRef(open);
   const notifyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const aiSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const aiSettingsLoadedRef = useRef(false);
@@ -48,12 +46,11 @@ export function SettingsDialog({ open, locale, userSettings, onLocaleChange, onU
   const [error, setError] = useState("");
   const tabs = [
     { id: "general", label: copy.general, icon: SlidersHorizontal }, { id: "appearance", label: copy.appearance, icon: Palette },
-    { id: "background", label: copy.background, icon: Wallpaper }, { id: "export", label: copy.export, icon: Download },
+    { id: "export", label: copy.export, icon: Download },
     { id: "ai", label: copy.ai, icon: Bot }, { id: "about", label: copy.about, icon: Info }
   ];
 
   useEffect(() => {
-    isOpenRef.current = open;
     if (!open) return;
     setDraft(userSettings); setApiKey(""); setError(""); setIsLoading(true); aiSettingsLoadedRef.current = false;
     loadAISettings().then(({ hasApiKey: configured, ...next }) => {
@@ -102,20 +99,11 @@ export function SettingsDialog({ open, locale, userSettings, onLocaleChange, onU
     queueSavedNotification();
   }
 
-  async function handleBackgroundStored(asset: { imageId: string; imageUrl: string }) {
-    if (!isOpenRef.current) {
-      await removeBackgroundImage(asset.imageId).catch(() => undefined);
-      return false;
-    }
-    return true;
-  }
-
   function handleClose() {
     const signature = serializeAISettings(settings, apiKey);
     if (aiSettingsLoadedRef.current && signature !== lastSavedAISettingsRef.current) {
       void saveCurrentAISettings(signature);
     }
-    isOpenRef.current = false;
     onClose();
   }
 
@@ -163,7 +151,6 @@ export function SettingsDialog({ open, locale, userSettings, onLocaleChange, onU
 
   const panel = activeTab === "general" ? <GeneralSettingsSection locale={locale} settings={draft} copy={copy} onLocaleChange={handleLocaleChange} onChange={updateDraft} />
     : activeTab === "appearance" ? <AppearanceSettingsSection settings={draft} copy={copy} onChange={updateDraft} />
-    : activeTab === "background" ? <BackgroundSettingsSection settings={draft} copy={copy} onChange={updateDraft} onImageStored={handleBackgroundStored} />
     : activeTab === "export" ? <ExportSettingsSection settings={draft} copy={copy} onChange={updateDraft} />
     : activeTab === "about" ? <AboutSettingsSection copy={copy} t={t} />
     : isLoading ? <div className="app-text-subtle flex items-center gap-2 p-5"><Loader2 className="h-4 w-4 animate-spin" />{copy.ai}</div>

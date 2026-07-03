@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v4.2.0.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v4.2.3.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="#ローカル開発">ローカル開発</a> ·
@@ -51,33 +51,33 @@
 
 最新版は [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) からダウンロードできます。
 
-* 推奨インストーラー：`Lyrics Card Generator Setup 4.2.0.exe`
-* ポータブル版：`Lyrics Card Generator-4.2.0-portable.exe`
+* 推奨インストーラー：`Lyrics Card Generator Setup 4.2.3.exe`
+* ポータブル版：`Lyrics Card Generator-4.2.3-portable.exe`
 
 通常利用にはインストーラーを推奨します。ポータブル版は一時利用、検証、リムーバブルドライブでの利用に向いています。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v4.2.0 の更新ポイント
+### v4.2.3 の更新ポイント
 
-* サンプル歌詞を「原文言語の歌詞 + 5 つの対象言語の翻訳サンプル」という再利用可能な構造に更新しました。
-* サンプルダイアログで 5 つの翻訳を選択でき、現在の UI 言語がある場合はそれを既定で選びます。
-* サンプル設定はカードのサイズ、高さ、比率、AutoHeight 状態を持たなくなりました。
-* サンプル読み込みは曲情報、歌詞、翻訳だけを入力し、プレビューの高さは既存の AutoHeight に任せます。
-* Web Lite / GitHub Pages のアイコンパスと Pages artifact の準備方法を修正しました。
-* Web Lite は独立した簡易的なオンラインデモのままです。完全な体験にはデスクトップ版を使用してください。
+* 独立した「背景」設定ページを外し、アプリの外観をひとつの「外観モード」に整理しました。
+* 「外観」ページは外観モードと UI フォントだけに集中しました。
+* 外観モードを、アルバム動的カラー、ダークモード、ライトモード、ダークアクリル、ライトアクリルの 5 種類に限定しました。
+* アルバム動的カラーを既定モードのままにし、カバー画像の palette で雰囲気とアクセント色を決め続けます。
+* 従来の青白、黒ピンク、カスタムテーマは新しい外観モデルへ移行されます。
+* 歌詞カードのプレビューと PNG 書き出しの見た目は変わりません。
 <br clear="right" />
 
 ## 🌐 多言語リリースノート
 
 GitHub Release ページではデフォルトで簡体字中国語の短縮版が使用され、完全なリリースノートは `docs/releases/` にて管理されています：
 
-* [简体中文](./docs/releases/v4.2.0.zh-CN.md)
-* [繁體中文](./docs/releases/v4.2.0.zh-TW.md)
-* [English](./docs/releases/v4.2.0.en.md)
-* [Français](./docs/releases/v4.2.0.fr.md)
-* [日本語](./docs/releases/v4.2.0.ja.md)
-* [Español](./docs/releases/v4.2.0.es.md)
+* [简体中文](./docs/releases/v4.2.3.zh-CN.md)
+* [繁體中文](./docs/releases/v4.2.3.zh-TW.md)
+* [English](./docs/releases/v4.2.3.en.md)
+* [Français](./docs/releases/v4.2.3.fr.md)
+* [日本語](./docs/releases/v4.2.3.ja.md)
+* [Español](./docs/releases/v4.2.3.es.md)
 
 <a id="主な機能"></a>
 
@@ -111,6 +111,7 @@ GitHub Release ページではデフォルトで簡体字中国語の短縮版�
 ### 🌈 ビジュアルスタイルとブランド情報
 
 * カバーから色を抽出してグラデーション背景を生成
+* アプリ画面はアルバム動的カラー、ダーク、ライト、ダークアクリル、ライトアクリルの 5 つの外観モードに対応
 * プラットフォームロゴ、共有者テキスト、生成ウォーターマーク
 
 ### 🔤 フォントと多言語インターフェース

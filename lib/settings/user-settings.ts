@@ -1,7 +1,6 @@
 import {
   DEFAULT_USER_SETTINGS,
   EXPORT_QUALITY_OPTIONS,
-  type AppBackgroundMode,
   type ExportQualityId,
   type UiThemeId,
   type UserSettings
@@ -11,14 +10,10 @@ export const USER_SETTINGS_STORAGE_KEY = "lyric-card-generator-user-settings";
 
 const THEMES = new Set<UiThemeId>([
   "album-dynamic",
-  "light-blue",
-  "dark-pink",
-  "custom",
+  "dark",
+  "light",
   "dark-acrylic",
   "light-acrylic"
-]);
-const BACKGROUNDS = new Set<AppBackgroundMode>([
-  "album-dynamic", "solid", "image-stretch", "image-contain", "image-cover", "image-blur", "image-palette"
 ]);
 const QUALITIES = new Set<ExportQualityId>(["low", "medium", "high", "ultra"]);
 const TEXT_MODES = new Set<UserSettings["uiTextColorMode"]>(["auto", "light", "dark", "custom"]);
@@ -27,13 +22,18 @@ function color(value: unknown, fallback: string) {
   return typeof value === "string" && /^#[0-9a-f]{6}$/i.test(value) ? value : fallback;
 }
 
-function finite(value: unknown, fallback: number, min: number, max: number) {
-  return typeof value === "number" && Number.isFinite(value) ? Math.min(max, Math.max(min, value)) : fallback;
+function normalizeTheme(value: unknown): UiThemeId {
+  if (THEMES.has(value as UiThemeId)) return value as UiThemeId;
+
+  if (value === "light-blue") return "light";
+  if (value === "dark-pink") return "dark";
+  if (value === "custom") return "album-dynamic";
+
+  return DEFAULT_USER_SETTINGS.uiTheme;
 }
 
 export function normalizeUserSettings(input: unknown): UserSettings {
   const source = input && typeof input === "object" ? input as Partial<UserSettings> : {};
-  const background: Partial<UserSettings["appBackground"]> = source.appBackground && typeof source.appBackground === "object" ? source.appBackground : {};
   const quality = QUALITIES.has(source.defaultExportQuality as ExportQualityId)
     ? source.defaultExportQuality as ExportQualityId
     : DEFAULT_USER_SETTINGS.defaultExportQuality;
@@ -42,21 +42,13 @@ export function normalizeUserSettings(input: unknown): UserSettings {
   return {
     version: 1,
     sparkCursorEnabled: typeof source.sparkCursorEnabled === "boolean" ? source.sparkCursorEnabled : true,
-    uiTheme: THEMES.has(source.uiTheme as UiThemeId) ? source.uiTheme as UiThemeId : "album-dynamic",
+    uiTheme: normalizeTheme(source.uiTheme),
     uiFontFamily: typeof source.uiFontFamily === "string" ? source.uiFontFamily.slice(0, 160) : "",
     uiAccentColor: color(source.uiAccentColor, DEFAULT_USER_SETTINGS.uiAccentColor),
     uiTextColorMode: TEXT_MODES.has(source.uiTextColorMode as UserSettings["uiTextColorMode"])
       ? source.uiTextColorMode as UserSettings["uiTextColorMode"] : "auto",
     uiCustomTextColor: color(source.uiCustomTextColor, DEFAULT_USER_SETTINGS.uiCustomTextColor),
-    appBackground: {
-      mode: BACKGROUNDS.has(background.mode as AppBackgroundMode) ? background.mode as AppBackgroundMode : "album-dynamic",
-      imageId: typeof background.imageId === "string" ? background.imageId : undefined,
-      imageUrl: typeof background.imageUrl === "string" ? background.imageUrl : undefined,
-      solidColor: color(background.solidColor, DEFAULT_USER_SETTINGS.appBackground.solidColor),
-      extractedColor: background.extractedColor ? color(background.extractedColor, "#7C3AED") : undefined,
-      overlayOpacity: finite(background.overlayOpacity, DEFAULT_USER_SETTINGS.appBackground.overlayOpacity, 0, 0.9),
-      blurAmount: finite(background.blurAmount, DEFAULT_USER_SETTINGS.appBackground.blurAmount, 0, 80)
-    },
+    appBackground: { ...DEFAULT_USER_SETTINGS.appBackground, mode: "album-dynamic" },
     defaultExportQuality: quality,
     defaultExportPixelRatio: option.pixelRatio,
     firstLaunchLanguageSelected: source.firstLaunchLanguageSelected === true
@@ -94,14 +86,8 @@ export function resetUserSettings(): UserSettings {
 }
 
 export function resolveEffectiveAppBackgroundColor(settings: UserSettings, albumColor: string) {
-  const background = settings.appBackground;
-
-  if (background.mode === "solid") return background.solidColor;
-  if (background.mode === "image-palette") return background.extractedColor ?? settings.uiAccentColor;
-  if (background.mode.startsWith("image-")) return background.extractedColor ?? albumColor;
-
-  if (settings.uiTheme === "light-blue") return "#EAF6FF";
-  if (settings.uiTheme === "dark-pink") return "#08040A";
+  if (settings.uiTheme === "dark") return "#08090C";
+  if (settings.uiTheme === "light") return "#FFFFFF";
   if (settings.uiTheme === "dark-acrylic") return "#141821";
   if (settings.uiTheme === "light-acrylic") return "#F3F6FA";
 

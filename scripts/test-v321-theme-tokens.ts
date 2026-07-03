@@ -32,4 +32,35 @@ for (const file of files) {
 }
 
 assert.deepEqual(violations, []);
-console.log(JSON.stringify({ ok: true, scannedFiles: files.length }, null, 2));
+
+const appearanceFiles = [
+  "components/settings/SettingsDialog.tsx",
+  "components/settings/AppearanceSettingsSection.tsx",
+  "app/globals.css"
+];
+const forbiddenAppearanceStrings = [
+  "light-blue",
+  "dark-pink",
+  "蓝白浅色",
+  "黑粉深色",
+  "自定义主题",
+  "BackgroundSettingsSection",
+  "copy.background",
+  'id: "background"',
+  'data-ui-theme="custom"',
+  '--custom-app-bg'
+];
+const appearanceViolations: string[] = [];
+for (const file of appearanceFiles) {
+  const source = readFileSync(resolve(file), "utf8");
+  for (const token of forbiddenAppearanceStrings) {
+    if (source.includes(token)) appearanceViolations.push(`${file}:${token}`);
+  }
+}
+
+const appearanceSource = readFileSync(resolve("components/settings/AppearanceSettingsSection.tsx"), "utf8");
+const themeOptions = [...appearanceSource.matchAll(/<option value="([^"]+)">/g)].map((match) => match[1]);
+assert.deepEqual(themeOptions, ["album-dynamic", "dark", "light", "dark-acrylic", "light-acrylic"]);
+assert.deepEqual(appearanceViolations, []);
+
+console.log(JSON.stringify({ ok: true, scannedFiles: files.length + appearanceFiles.length }, null, 2));

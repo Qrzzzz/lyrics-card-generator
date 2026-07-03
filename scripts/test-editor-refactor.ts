@@ -47,14 +47,30 @@ assert.equal(albumTokens.themeAccent, "#2255AA");
 assert.equal(albumTokens.uiBackgroundColor, "#111827");
 assert.equal(albumTokens.resolvedThemeTokens["--app-text-primary"], albumTokens.uiTextTokens.primary);
 
-const customTokens = resolveEditorThemeTokens({
+const lightTokens = resolveEditorThemeTokens({
   userSettings: normalizeUserSettings({
-    uiTheme: "custom",
-    appBackground: { mode: "solid", solidColor: "#F5F5F5" }
+    uiTheme: "light",
+    uiAccentColor: "#111111",
+    uiTextColorMode: "custom",
+    uiCustomTextColor: "#000000"
   }),
-  palette: DEFAULT_PALETTE
+  palette: {
+    ...DEFAULT_PALETTE,
+    primary: "#2255AA",
+    dark: "#111827"
+  }
 });
-assert.equal(customTokens.customThemeTokens["--app-bg"], "#F5F5F5");
-assert.equal(customTokens.customThemeTokens["--panel-bg"], "255 255 255 / 0.78");
+assert.equal(lightTokens.themeAccent, "#2255AA");
+assert.equal(lightTokens.uiBackgroundColor, "#FFFFFF");
+assert.equal(lightTokens.uiTextTokens.primary, "#191612");
+assert.deepEqual(lightTokens.customThemeTokens, {});
 
-console.log(JSON.stringify({ ok: true, editorRefactorTests: 16 }, null, 2));
+const darkTokens = resolveEditorThemeTokens({
+  userSettings: normalizeUserSettings({ uiTheme: "dark" }),
+  palette: undefined
+});
+assert.equal(darkTokens.themeAccent, DEFAULT_PALETTE.primary);
+assert.equal(darkTokens.uiBackgroundColor, "#08090C");
+assert.equal(darkTokens.uiTextTokens.primary, "#FFFFFF");
+
+console.log(JSON.stringify({ ok: true, editorRefactorTests: 20 }, null, 2));
