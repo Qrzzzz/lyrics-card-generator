@@ -165,15 +165,15 @@ export const EXAMPLE_SONGS: ExampleSong[] = [{
       ].join("\n")
     },
     {
-      language: "zh-TW",
-      label: EXAMPLE_LANGUAGE_LABELS["zh-TW"],
+      language: "en",
+      label: EXAMPLE_LANGUAGE_LABELS.en,
       text: [
-        "今天只有殘留的軀殼",
-        "迎接光輝歲月",
-        "風雨中抱緊自由",
-        "一生經過彷徨的掙扎",
-        "自信可改變未來",
-        "問誰又能做到"
+        "Only a hollow shell remains today",
+        "To greet the years of glory",
+        "Holding freedom tight through stormy winds and rain",
+        "A lifetime spent in struggle and doubt",
+        "Believe you can change the future",
+        "But who can truly make it happen?"
       ].join("\n")
     },
     {
