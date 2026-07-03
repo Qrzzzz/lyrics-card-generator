@@ -6,7 +6,7 @@ on:
       - main
     paths:
       - index.html
-      - public/**
+      - public/app-icon.png
       - .github/workflows/pages.yml
   workflow_dispatch:
 
@@ -31,9 +31,14 @@ jobs:
 
       - name: Prepare static site
         run: |
-          mkdir _site
+          rm -rf _site
+          mkdir -p _site/public
           cp index.html _site/index.html
-          cp -R public _site/public
+          cp public/app-icon.png _site/public/app-icon.png
+          touch _site/.nojekyll
+          test -f _site/index.html
+          test -f _site/public/app-icon.png
+          test -f _site/.nojekyll
 
       - name: Configure Pages
         uses: actions/configure-pages@v5

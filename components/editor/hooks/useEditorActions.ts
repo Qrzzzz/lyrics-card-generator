@@ -8,7 +8,7 @@ import { clearLyricContent } from "@/lib/clear-content";
 import { getHighResolutionCoverUrl } from "@/lib/cover-url";
 import { exportNodeAsPng } from "@/lib/export-image";
 import { proxiedImageUrl } from "@/lib/image-utils";
-import type { ExampleSong } from "@/lib/examples";
+import type { ExampleLoadPayload } from "@/lib/examples";
 import type {
   AppState,
   CardRatio,
@@ -254,7 +254,8 @@ export function useEditorActions({
     }
   }
 
-  async function loadExample(example: ExampleSong) {
+  async function loadExample(payload: ExampleLoadPayload) {
+    const { example, translation } = payload;
     clearVersionRef.current += 1;
     setState((current) => ({
       ...current,
@@ -267,11 +268,11 @@ export function useEditorActions({
         originalUrl: example.url
       },
       lyrics: example.lyrics,
-      translationText: example.translationText,
+      translationText: translation.text,
       translationEnabled: example.translationEnabled,
       style: {
         ...current.style,
-        translationText: example.translationText,
+        translationText: translation.text,
         translationEnabled: example.translationEnabled
       }
     }));
