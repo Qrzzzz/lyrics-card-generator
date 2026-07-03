@@ -1,13 +1,21 @@
 "use client";
 
 import { Music2, X } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { ActionButton } from "@/components/ui/controls";
-import { EXAMPLE_SONGS, type ExampleSong } from "@/lib/examples";
+import {
+  EXAMPLE_LANGUAGE_LABELS,
+  EXAMPLE_SONGS,
+  resolveExampleTranslation,
+  type ExampleLoadPayload,
+  type ExampleSong,
+  type ExampleTranslationLanguage
+} from "@/lib/examples";
 import { settingsCopy } from "@/lib/settings/copy";
 import type { Locale } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
-export function ExamplesDialog({ open, locale, onClose, onLoad }: { open: boolean; locale: Locale; onClose: () => void; onLoad: (song: ExampleSong) => void }) {
+export function ExamplesDialog({ open, locale, onClose, onLoad }: { open: boolean; locale: Locale; onClose: () => void; onLoad: (payload: ExampleLoadPayload) => void }) {
   const copy = settingsCopy[locale];
 
   useEffect(() => {
@@ -55,21 +63,78 @@ export function ExamplesDialog({ open, locale, onClose, onLoad }: { open: boolea
             aria-label={copy.cancel}
           />
         </div>
-        {EXAMPLE_SONGS.map((song) => (
-          <div key={song.id} className="settings-panel-card flex items-center justify-between gap-4 p-4">
-            <div>
-              <div className="font-bold">{song.title}</div>
-              <div className="app-text-subtle text-sm">{song.artist}</div>
-            </div>
-            <ActionButton
-              size="sm"
-              data-testid={`load-example-${song.id}`}
-              onClick={() => onLoad(song)}
-            >
-              {copy.loadExample}
-            </ActionButton>
+        <div className="grid gap-3">
+          {EXAMPLE_SONGS.map((song) => (
+            <ExampleSongCard key={song.id} song={song} locale={locale} onLoad={onLoad} />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ExampleSongCard({
+  song,
+  locale,
+  onLoad
+}: {
+  song: ExampleSong;
+  locale: Locale;
+  onLoad: (payload: ExampleLoadPayload) => void;
+}) {
+  const copy = settingsCopy[locale];
+  const defaultTranslation = resolveExampleTranslation(song, locale);
+  const [selectedLanguage, setSelectedLanguage] = useState<ExampleTranslationLanguage>(defaultTranslation.language);
+  const selectedTranslation =
+    song.translations.find((translation) => translation.language === selectedLanguage) ?? defaultTranslation;
+
+  useEffect(() => {
+    setSelectedLanguage(defaultTranslation.language);
+  }, [defaultTranslation.language, song.id]);
+
+  return (
+    <div className="settings-panel-card grid gap-4 p-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <div className="truncate font-bold">{song.title}</div>
+          <div className="app-text-subtle text-sm">{song.artist}</div>
+          <div className="app-text-subtle mt-1 text-xs">
+            {copy.originalLanguage}: {EXAMPLE_LANGUAGE_LABELS[song.originalLanguage]}
           </div>
-        ))}
+        </div>
+        <ActionButton
+          size="sm"
+          data-testid={`load-example-${song.id}`}
+          onClick={() => onLoad({ example: song, translation: selectedTranslation })}
+        >
+          {copy.loadExample}
+        </ActionButton>
+      </div>
+
+      <div>
+        <div className="app-text-subtle mb-2 text-xs font-medium">{copy.translationLanguage}</div>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-5" role="radiogroup" aria-label={copy.translationLanguage}>
+          {song.translations.map((translation) => {
+            const selected = translation.language === selectedTranslation.language;
+            return (
+              <button
+                key={translation.language}
+                type="button"
+                role="radio"
+                aria-checked={selected}
+                className={cn(
+                  "control-focus h-9 rounded-lg border px-2 text-xs font-semibold transition",
+                  selected
+                    ? "control-variant-primary"
+                    : "control-surface hover:bg-[rgb(var(--button-bg-hover))]"
+                )}
+                onClick={() => setSelectedLanguage(translation.language)}
+              >
+                <span className="block truncate">{translation.label}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

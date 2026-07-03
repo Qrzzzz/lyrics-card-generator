@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v4.1.5.zh-TW.md">發布說明</a> ·
+  <a href="./docs/releases/v4.2.0.zh-TW.md">發布說明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">線上 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="#本機開發">本機開發</a> ·
@@ -48,33 +48,33 @@
 
 請前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載最新版：
 
-* 建議一般使用者下載安裝版：`Lyrics Card Generator Setup 4.1.5.exe`
-* 不想安裝時可下載可攜版：`Lyrics Card Generator-4.1.5-portable.exe`
+* 建議一般使用者下載安裝版：`Lyrics Card Generator Setup 4.2.0.exe`
+* 不想安裝時可下載可攜版：`Lyrics Card Generator-4.2.0-portable.exe`
 
 安裝版適合長期使用；可攜版適合臨時執行、測試或放在隨身碟中使用。
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v4.1.5 更新重點
+### v4.2.0 更新重點
 
-* Stepper 步驟區改為基於真實容器寬度的均衡 Grid 版面。
-* 6 個步驟只會在 `6`、`3 + 3`、`2 + 2 + 2` 三種結構中切換，避免 `5 + 1` 排版。
-* Stepper 外框改為根據標題區和步驟區真實高度計算 `min-height`。
-* 一行步驟時自動收緊面板高度，兩行和三行時保留穩定的視覺下限。
-* 極窄視窗或長翻譯文字下使用單行截斷兜底，避免橫向溢出。
-* 右側 Preview、匯出 DOM、歌詞卡渲染邏輯和設定狀態結構保持不變。
+* 範例歌詞系統升級為「原語言歌詞 + 五種目標語言翻譯樣例」。
+* 範例彈窗可選擇五種譯文，並會依照目前介面語言預設選中對應譯文。
+* 範例設定不再承擔卡片尺寸、高度、比例或 AutoHeight 狀態職責。
+* 載入範例只填入歌曲資訊、歌詞和譯文，預覽繼續依賴既有 AutoHeight。
+* 修復 Web Lite / GitHub Pages 的圖示路徑與 Pages artifact 準備方式。
+* Web Lite 仍是獨立、簡化、粗略的線上演示，完整體驗請使用桌面版。
 <br clear="right" />
 
 ## 🌐 多語言發佈說明
 
 GitHub Release 頁面預設使用簡體中文短版，完整發佈說明維護在 `docs/releases/`：
 
-* [简体中文](./docs/releases/v4.1.5.zh-CN.md)
-* [繁體中文](./docs/releases/v4.1.5.zh-TW.md)
-* [English](./docs/releases/v4.1.5.en.md)
-* [Français](./docs/releases/v4.1.5.fr.md)
-* [日本語](./docs/releases/v4.1.5.ja.md)
-* [Español](./docs/releases/v4.1.5.es.md)
+* [简体中文](./docs/releases/v4.2.0.zh-CN.md)
+* [繁體中文](./docs/releases/v4.2.0.zh-TW.md)
+* [English](./docs/releases/v4.2.0.en.md)
+* [Français](./docs/releases/v4.2.0.fr.md)
+* [日本語](./docs/releases/v4.2.0.ja.md)
+* [Español](./docs/releases/v4.2.0.es.md)
 
 ## ✨ 主要功能
 

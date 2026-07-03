@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v4.1.5.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v4.2.0.en.md">Release Notes</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
   <a href="#features">Features</a> ·
   <a href="#local-development">Local Development</a> ·
@@ -51,33 +51,33 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 Download the latest version from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Recommended installer: `Lyrics Card Generator Setup 4.1.5.exe`
-* Portable version: `Lyrics Card Generator-4.1.5-portable.exe`
+* Recommended installer: `Lyrics Card Generator Setup 4.2.0.exe`
+* Portable version: `Lyrics Card Generator-4.2.0-portable.exe`
 
 The installer is recommended for regular use. The portable version is useful for temporary use, testing, or running from a removable drive.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v4.1.5 Highlights
+### v4.2.0 Highlights
 
-* Moves the Stepper step area to a balanced Grid layout based on the real container width.
-* Keeps the six steps constrained to `6`, `3 + 3`, or `2 + 2 + 2`, avoiding `5 + 1` wrapping.
-* Calculates the Stepper panel `min-height` from the real title and step-grid heights.
-* Tightens the panel when the steps fit on one row while preserving stable limits for two and three rows.
-* Uses single-line truncation as a fallback for narrow windows or long translated labels.
-* Leaves the right-side Preview, export DOM, lyric-card rendering, and settings state shape unchanged.
+* Upgrades example lyrics to a reusable “original-language lyrics + five target-language translation samples” structure.
+* Lets the examples dialog choose among five translations and defaults to the current UI language when available.
+* Keeps example configuration away from card size, height, ratio, and AutoHeight state.
+* Loading an example only fills song info, lyrics, and translation text; preview sizing still relies on AutoHeight.
+* Fixes Web Lite / GitHub Pages icon paths and Pages artifact preparation.
+* Web Lite remains a separate, simplified, rough online demo; use the desktop app for the complete experience.
 <br clear="right" />
 
 ## 🌐 Multilingual Release Notes
 
 The GitHub Release page defaults to a simplified Chinese short version, while the full release notes are maintained in `docs/releases/`:
 
-* [简体中文](./docs/releases/v4.1.5.zh-CN.md)
-* [繁體中文](./docs/releases/v4.1.5.zh-TW.md)
-* [English](./docs/releases/v4.1.5.en.md)
-* [Français](./docs/releases/v4.1.5.fr.md)
-* [日本語](./docs/releases/v4.1.5.ja.md)
-* [Español](./docs/releases/v4.1.5.es.md)
+* [简体中文](./docs/releases/v4.2.0.zh-CN.md)
+* [繁體中文](./docs/releases/v4.2.0.zh-TW.md)
+* [English](./docs/releases/v4.2.0.en.md)
+* [Français](./docs/releases/v4.2.0.fr.md)
+* [日本語](./docs/releases/v4.2.0.ja.md)
+* [Español](./docs/releases/v4.2.0.es.md)
 
 <a id="features"></a>
 
