@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v4.2.3.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v4.2.6.zh-CN.md">发布说明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">在线 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="#本地开发">本地开发</a> ·
@@ -48,33 +48,33 @@
 
 请前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下载最新版：
 
-* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 4.2.3.exe`
-* 不想安装时可下载便携版：`Lyrics Card Generator-4.2.3-portable.exe`
+* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 4.2.6.exe`
+* 不想安装时可下载便携版：`Lyrics Card Generator-4.2.6-portable.exe`
 
 安装版适合长期使用；便携版适合临时运行、测试或放在移动硬盘中使用。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v4.2.3 更新重点
+### v4.2.6 更新重点
 
-* 设置面板移除独立“背景”页，外观入口收敛为一个“界面外观”概念。
-* 外观页只保留“界面外观”和“界面字体”两个用户可见设置。
-* 界面外观固定为专辑封面动态取色、深色模式、浅色模式、深色亚克力、浅色亚克力五种模式。
-* 专辑封面动态取色继续作为默认模式，并继续使用封面 palette 驱动界面氛围与强调色。
-* 旧的蓝白浅色、黑粉深色和自定义主题会平滑迁移到新的外观模式。
-* 歌词卡预览和导出 PNG 的视觉样式不变。
+* 新增统一主题色设置，支持跟随专辑封面、预设颜色和自定义色号。
+* 预设主题色支持红、橙、黄、绿、蓝、紫，并统一驱动 AI 翻译、Stepper、Spark Cursor、导出按钮和控件焦点态。
+* 外观设置拆分为界面模式和亚克力效果开关，专辑封面动态取色模式下会禁用亚克力。
+* 最终导出步骤新增低、标准、高清三档质量选择。
+* 移除超清 3x 导出质量，旧设置中的超清会自动降级为高清。
+* 示例歌曲新增 Taylor Swift《Opalite》的多语言翻译样例。
 <br clear="right" />
 
 ## 🌐 多语言发布说明
 
 GitHub Release 页面默认使用简体中文短版，完整发布说明维护在 `docs/releases/`：
 
-* [简体中文](./docs/releases/v4.2.3.zh-CN.md)
-* [繁體中文](./docs/releases/v4.2.3.zh-TW.md)
-* [English](./docs/releases/v4.2.3.en.md)
-* [Français](./docs/releases/v4.2.3.fr.md)
-* [日本語](./docs/releases/v4.2.3.ja.md)
-* [Español](./docs/releases/v4.2.3.es.md)
+* [简体中文](./docs/releases/v4.2.6.zh-CN.md)
+* [繁體中文](./docs/releases/v4.2.6.zh-TW.md)
+* [English](./docs/releases/v4.2.6.en.md)
+* [Français](./docs/releases/v4.2.6.fr.md)
+* [日本語](./docs/releases/v4.2.6.ja.md)
+* [Español](./docs/releases/v4.2.6.es.md)
 
 <a id="主要功能"></a>
 

@@ -5,7 +5,7 @@ import type {
   SaveAISettingsInput
 } from "@/lib/ai/types";
 import type { Locale } from "@/lib/types";
-import type { UserSettings } from "@/lib/settings/types";
+import type { EffectiveUiThemeId, UserSettings } from "@/lib/settings/types";
 
 export type SystemFontOption = {
   label: string;
@@ -25,7 +25,7 @@ export type DesktopWindowState = {
 };
 
 export type LyricsCardDesktopApi = {
-  setWindowMaterial: (theme: UserSettings["uiTheme"]) => Promise<WindowMaterialResult>;
+  setWindowMaterial: (theme: EffectiveUiThemeId) => Promise<WindowMaterialResult>;
   minimizeWindow: () => Promise<boolean>;
   toggleMaximizeWindow: () => Promise<DesktopWindowState>;
   closeWindow: () => Promise<boolean>;

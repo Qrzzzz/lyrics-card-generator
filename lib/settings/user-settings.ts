@@ -1,56 +1,102 @@
 import {
   DEFAULT_USER_SETTINGS,
-  EXPORT_QUALITY_OPTIONS,
+  getExportPixelRatio,
   type ExportQualityId,
-  type UiThemeId,
+  type EffectiveUiThemeId,
+  type UiAccentMode,
+  type UiAccentPresetId,
+  type UiThemeMode,
   type UserSettings
 } from "@/lib/settings/types";
+import { normalizeHexColor, UI_ACCENT_PRESETS } from "@/lib/settings/accent";
 
 export const USER_SETTINGS_STORAGE_KEY = "lyric-card-generator-user-settings";
 
-const THEMES = new Set<UiThemeId>([
-  "album-dynamic",
-  "dark",
-  "light",
-  "dark-acrylic",
-  "light-acrylic"
-]);
-const QUALITIES = new Set<ExportQualityId>(["low", "medium", "high", "ultra"]);
-const TEXT_MODES = new Set<UserSettings["uiTextColorMode"]>(["auto", "light", "dark", "custom"]);
+const THEME_MODES = new Set<UiThemeMode>(["album-dynamic", "dark", "light"]);
+const ACCENT_MODES = new Set<UiAccentMode>(["album-dynamic", "preset", "custom"]);
+const ACCENT_PRESETS = new Set<UiAccentPresetId>(["red", "orange", "yellow", "green", "blue", "purple"]);
+const QUALITIES = new Set<ExportQualityId>(["low", "medium", "high"]);
 
-function color(value: unknown, fallback: string) {
-  return typeof value === "string" && /^#[0-9a-f]{6}$/i.test(value) ? value : fallback;
+type UserSettingsInput = Partial<UserSettings> & Record<string, unknown>;
+
+function normalizeThemeMode(source: UserSettingsInput): UiThemeMode {
+  if (THEME_MODES.has(source.uiThemeMode as UiThemeMode)) {
+    return source.uiThemeMode as UiThemeMode;
+  }
+
+  if (source.uiTheme === "dark" || source.uiTheme === "dark-acrylic" || source.uiTheme === "dark-pink") {
+    return "dark";
+  }
+
+  if (source.uiTheme === "light" || source.uiTheme === "light-acrylic" || source.uiTheme === "light-blue") {
+    return "light";
+  }
+
+  return DEFAULT_USER_SETTINGS.uiThemeMode;
 }
 
-function normalizeTheme(value: unknown): UiThemeId {
-  if (THEMES.has(value as UiThemeId)) return value as UiThemeId;
+function normalizeAcrylicEnabled(source: UserSettingsInput, uiThemeMode: UiThemeMode): boolean {
+  if (uiThemeMode === "album-dynamic") {
+    return false;
+  }
 
-  if (value === "light-blue") return "light";
-  if (value === "dark-pink") return "dark";
-  if (value === "custom") return "album-dynamic";
+  if (typeof source.uiAcrylicEnabled === "boolean") {
+    return source.uiAcrylicEnabled;
+  }
 
-  return DEFAULT_USER_SETTINGS.uiTheme;
+  return source.uiTheme === "dark-acrylic" || source.uiTheme === "light-acrylic";
+}
+
+function normalizeAccentMode(source: UserSettingsInput, customAccentColor: string): UiAccentMode {
+  if (ACCENT_MODES.has(source.uiAccentMode as UiAccentMode)) {
+    return source.uiAccentMode as UiAccentMode;
+  }
+
+  const legacyAccentColor = normalizeHexColor(source.uiAccentColor, UI_ACCENT_PRESETS.purple);
+  if (legacyAccentColor !== UI_ACCENT_PRESETS.purple && customAccentColor === legacyAccentColor) {
+    return "custom";
+  }
+
+  return DEFAULT_USER_SETTINGS.uiAccentMode;
+}
+
+function normalizeAccentPreset(value: unknown): UiAccentPresetId {
+  return ACCENT_PRESETS.has(value as UiAccentPresetId)
+    ? value as UiAccentPresetId
+    : DEFAULT_USER_SETTINGS.uiAccentPreset;
+}
+
+function normalizeExportQuality(value: unknown): ExportQualityId {
+  if (value === "ultra") {
+    return "high";
+  }
+
+  return QUALITIES.has(value as ExportQualityId)
+    ? value as ExportQualityId
+    : DEFAULT_USER_SETTINGS.defaultExportQuality;
 }
 
 export function normalizeUserSettings(input: unknown): UserSettings {
-  const source = input && typeof input === "object" ? input as Partial<UserSettings> : {};
-  const quality = QUALITIES.has(source.defaultExportQuality as ExportQualityId)
-    ? source.defaultExportQuality as ExportQualityId
-    : DEFAULT_USER_SETTINGS.defaultExportQuality;
-  const option = EXPORT_QUALITY_OPTIONS.find((item) => item.id === quality)!;
+  const source = input && typeof input === "object" ? input as UserSettingsInput : {};
+  const uiThemeMode = normalizeThemeMode(source);
+  const customAccentColor = normalizeHexColor(
+    source.uiCustomAccentColor ?? source.uiAccentColor,
+    DEFAULT_USER_SETTINGS.uiCustomAccentColor
+  );
+  const quality = normalizeExportQuality(source.defaultExportQuality);
 
   return {
     version: 1,
     sparkCursorEnabled: typeof source.sparkCursorEnabled === "boolean" ? source.sparkCursorEnabled : true,
-    uiTheme: normalizeTheme(source.uiTheme),
+    uiThemeMode,
+    uiAcrylicEnabled: normalizeAcrylicEnabled(source, uiThemeMode),
     uiFontFamily: typeof source.uiFontFamily === "string" ? source.uiFontFamily.slice(0, 160) : "",
-    uiAccentColor: color(source.uiAccentColor, DEFAULT_USER_SETTINGS.uiAccentColor),
-    uiTextColorMode: TEXT_MODES.has(source.uiTextColorMode as UserSettings["uiTextColorMode"])
-      ? source.uiTextColorMode as UserSettings["uiTextColorMode"] : "auto",
-    uiCustomTextColor: color(source.uiCustomTextColor, DEFAULT_USER_SETTINGS.uiCustomTextColor),
+    uiAccentMode: normalizeAccentMode(source, customAccentColor),
+    uiAccentPreset: normalizeAccentPreset(source.uiAccentPreset),
+    uiCustomAccentColor: customAccentColor,
     appBackground: { ...DEFAULT_USER_SETTINGS.appBackground, mode: "album-dynamic" },
     defaultExportQuality: quality,
-    defaultExportPixelRatio: option.pixelRatio,
+    defaultExportPixelRatio: getExportPixelRatio(quality),
     firstLaunchLanguageSelected: source.firstLaunchLanguageSelected === true
   };
 }
@@ -85,11 +131,18 @@ export function resetUserSettings(): UserSettings {
   return saveUserSettings(structuredClone(DEFAULT_USER_SETTINGS));
 }
 
+export function resolveEffectiveUiThemeId(settings: UserSettings): EffectiveUiThemeId {
+  if (settings.uiThemeMode === "dark" && settings.uiAcrylicEnabled) return "dark-acrylic";
+  if (settings.uiThemeMode === "light" && settings.uiAcrylicEnabled) return "light-acrylic";
+  return settings.uiThemeMode;
+}
+
 export function resolveEffectiveAppBackgroundColor(settings: UserSettings, albumColor: string) {
-  if (settings.uiTheme === "dark") return "#08090C";
-  if (settings.uiTheme === "light") return "#FFFFFF";
-  if (settings.uiTheme === "dark-acrylic") return "#141821";
-  if (settings.uiTheme === "light-acrylic") return "#F3F6FA";
+  const effectiveTheme = resolveEffectiveUiThemeId(settings);
+  if (effectiveTheme === "dark") return "#08090C";
+  if (effectiveTheme === "light") return "#FFFFFF";
+  if (effectiveTheme === "dark-acrylic") return "#141821";
+  if (effectiveTheme === "light-acrylic") return "#F3F6FA";
 
   return albumColor;
 }

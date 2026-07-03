@@ -36,7 +36,7 @@ assert.equal(
 assert.equal(normalizeAIErrorMessage("unexpected"), "AI 翻译请求失败，请检查网络和接口设置。");
 
 const albumTokens = resolveEditorThemeTokens({
-  userSettings: normalizeUserSettings({ uiTheme: "album-dynamic" }),
+  userSettings: normalizeUserSettings({ uiThemeMode: "album-dynamic" }),
   palette: {
     ...DEFAULT_PALETTE,
     primary: "#2255AA",
@@ -49,10 +49,9 @@ assert.equal(albumTokens.resolvedThemeTokens["--app-text-primary"], albumTokens.
 
 const lightTokens = resolveEditorThemeTokens({
   userSettings: normalizeUserSettings({
-    uiTheme: "light",
-    uiAccentColor: "#111111",
-    uiTextColorMode: "custom",
-    uiCustomTextColor: "#000000"
+    uiThemeMode: "light",
+    uiAccentMode: "custom",
+    uiCustomAccentColor: "#111111"
   }),
   palette: {
     ...DEFAULT_PALETTE,
@@ -60,13 +59,13 @@ const lightTokens = resolveEditorThemeTokens({
     dark: "#111827"
   }
 });
-assert.equal(lightTokens.themeAccent, "#2255AA");
+assert.equal(lightTokens.themeAccent, "#111111");
 assert.equal(lightTokens.uiBackgroundColor, "#FFFFFF");
 assert.equal(lightTokens.uiTextTokens.primary, "#191612");
 assert.deepEqual(lightTokens.customThemeTokens, {});
 
 const darkTokens = resolveEditorThemeTokens({
-  userSettings: normalizeUserSettings({ uiTheme: "dark" }),
+  userSettings: normalizeUserSettings({ uiThemeMode: "dark" }),
   palette: undefined
 });
 assert.equal(darkTokens.themeAccent, DEFAULT_PALETTE.primary);

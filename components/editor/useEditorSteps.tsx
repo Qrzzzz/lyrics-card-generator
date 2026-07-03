@@ -16,7 +16,7 @@ import {
   VisualSettingsPanel
 } from "@/components/editor/StylePanel";
 import { AiTranslatePanel } from "@/components/lyrics/AiTranslatePanel";
-import { DEFAULT_PALETTE } from "@/lib/palette-background";
+import type { ExportQualityId } from "@/lib/settings/types";
 import type { AISettingsSummary, AITranslationPhase, TranslationStyle } from "@/lib/ai/types";
 import type { createT } from "@/lib/i18n";
 import type {
@@ -55,29 +55,30 @@ export type EditorStepHandlers = {
   onConfirmAiTranslate: (style: TranslationStyle, reasoning: boolean) => void | Promise<void>;
   onStyleChange: (style: CardStyle) => void;
   onFontSchemePreviewChange: (scheme: FontScheme | null) => void;
+  onExportQualityChange: (quality: ExportQualityId) => void;
   onExport: () => void | Promise<void>;
 };
 
 type UseEditorStepsInput = {
   state: AppState;
-  parsedState: AppState;
   t: ReturnType<typeof createT>;
   canFetchLyrics: boolean;
   themeColor: string;
   cardRef: RefObject<HTMLElement | null>;
   isExporting: boolean;
+  exportQuality: ExportQualityId;
   ai: EditorStepsAiState;
   handlers: EditorStepHandlers;
 };
 
 export function useEditorSteps({
   state,
-  parsedState,
   t,
   canFetchLyrics,
   themeColor,
   cardRef,
   isExporting,
+  exportQuality,
   ai,
   handlers
 }: UseEditorStepsInput): SettingsStep[] {
@@ -221,9 +222,11 @@ export function useEditorSteps({
       isComplete: true,
       content: (
         <ExportPanel
-          state={parsedState}
           cardRef={cardRef}
           t={t}
+          accentColor={themeColor}
+          exportQuality={exportQuality}
+          onExportQualityChange={handlers.onExportQualityChange}
           isExporting={isExporting}
           onExport={handlers.onExport}
         />

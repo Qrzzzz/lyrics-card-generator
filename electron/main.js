@@ -219,7 +219,7 @@ function createWindow() {
 
   void readAppPreferences()
     .then((preferences) => {
-      applyWindowMaterial(preferences?.userSettings?.uiTheme);
+      applyWindowMaterial(resolveEffectiveUiThemeId(preferences?.userSettings));
     })
     .catch(() => {
       applyWindowMaterial(undefined);
@@ -274,6 +274,33 @@ function emitWindowState() {
 
 function isAcrylicTheme(theme) {
   return theme === "dark-acrylic" || theme === "light-acrylic";
+}
+
+function resolveEffectiveUiThemeId(settings) {
+  if (!settings || typeof settings !== "object") {
+    return undefined;
+  }
+
+  let mode = "album-dynamic";
+  if (settings.uiThemeMode === "dark" || settings.uiThemeMode === "light" || settings.uiThemeMode === "album-dynamic") {
+    mode = settings.uiThemeMode;
+  } else if (settings.uiTheme === "dark" || settings.uiTheme === "dark-acrylic" || settings.uiTheme === "dark-pink") {
+    mode = "dark";
+  } else if (settings.uiTheme === "light" || settings.uiTheme === "light-acrylic" || settings.uiTheme === "light-blue") {
+    mode = "light";
+  }
+
+  if (mode === "album-dynamic") {
+    return "album-dynamic";
+  }
+
+  const acrylic = typeof settings.uiAcrylicEnabled === "boolean"
+    ? settings.uiAcrylicEnabled
+    : isAcrylicTheme(settings.uiTheme);
+
+  if (mode === "dark" && acrylic) return "dark-acrylic";
+  if (mode === "light" && acrylic) return "light-acrylic";
+  return mode;
 }
 
 function applyWindowMaterial(theme) {

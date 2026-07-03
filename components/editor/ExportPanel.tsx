@@ -2,36 +2,51 @@
 
 import type { RefObject } from "react";
 import { Download } from "lucide-react";
-import { Section } from "@/components/ui/controls";
+import { FieldLabel, Section, SegmentedControl } from "@/components/ui/controls";
 import { StarBorder } from "@/components/ui/StarBorder";
 import { getReadableForegroundColor } from "@/lib/contrast-color";
+import type { ExportQualityId } from "@/lib/settings/types";
 import type { createT } from "@/lib/i18n";
-import type { AppState } from "@/lib/types";
 
 export function ExportPanel({
-  state,
   cardRef,
   t,
+  accentColor,
+  exportQuality,
+  onExportQualityChange,
   isExporting,
   onExport
 }: {
-  state: AppState;
   cardRef: RefObject<HTMLElement | null>;
   t: ReturnType<typeof createT>;
+  accentColor: string;
+  exportQuality: ExportQualityId;
+  onExportQualityChange: (quality: ExportQualityId) => void;
   isExporting: boolean;
   onExport: () => void | Promise<void>;
 }) {
-  const themeColor = state.palette?.primary ?? state.style.extractedPalette?.primary ?? "#FFFFFF";
-  const foregroundColor = getReadableForegroundColor(themeColor);
+  const foregroundColor = getReadableForegroundColor(accentColor);
 
   return (
     <Section title={t("export")} variant="plain" className="border-t-0 pt-0">
       <p className="app-text-subtle text-sm">{cardRef.current ? t("exportHint") : t("previewNotReady")}</p>
+      <FieldLabel label={t("exportQuality")}>
+        <SegmentedControl<ExportQualityId>
+          value={exportQuality}
+          onChange={onExportQualityChange}
+          columns={3}
+          options={[
+            { value: "low", label: t("qualityLow") },
+            { value: "medium", label: t("qualityMedium") },
+            { value: "high", label: t("qualityHigh") }
+          ]}
+        />
+      </FieldLabel>
       <div className="flex justify-end">
         <StarBorder
           type="button"
           data-testid="complete-export-button"
-          color={themeColor}
+          color={accentColor}
           speed="7.2s"
           onClick={() => void onExport()}
           disabled={isExporting}
@@ -40,7 +55,7 @@ export function ExportPanel({
             minHeight: 44,
             borderRadius: 8,
             color: foregroundColor,
-            filter: `drop-shadow(0 12px 28px ${themeColor}44)`
+            filter: `drop-shadow(0 12px 28px ${accentColor}44)`
           }}
         >
           <span className="inline-flex h-11 items-center justify-center gap-2 px-8 text-lg font-black tracking-normal">

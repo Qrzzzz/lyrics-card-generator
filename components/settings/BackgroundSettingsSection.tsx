@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { ImagePlus, RotateCcw } from "lucide-react";
 import { ActionButton, FieldLabel, SelectField, TextInput } from "@/components/ui/controls";
 import { getLyricsCardDesktopApi } from "@/lib/desktop-api";
+import { UI_ACCENT_PRESETS } from "@/lib/settings/accent";
 import { extractAverageColor, storeBackgroundImage } from "@/lib/settings/background-storage";
 import { DEFAULT_USER_SETTINGS, type AppBackgroundMode, type UserSettings } from "@/lib/settings/types";
 import type { Locale } from "@/lib/types";
@@ -31,7 +32,7 @@ export function BackgroundSettingsSection({
       const result = await storeBackgroundImage(file ?? new File([], "desktop-image"));
       if (!result) return;
       const source = file?.size ? file : await fetch(result.imageUrl).then((response) => response.blob());
-      const extractedColor = await extractAverageColor(source).catch(() => settings.uiAccentColor);
+      const extractedColor = await extractAverageColor(source).catch(() => UI_ACCENT_PRESETS.purple);
       if (!await onImageStored(result)) return;
       update({
         imageId: result.imageId,

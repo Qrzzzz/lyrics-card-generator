@@ -2,6 +2,7 @@
 
 import type { ExtractedPalette } from "@/lib/types";
 import type { UserSettings } from "@/lib/settings/types";
+import { resolveEffectiveUiThemeId } from "@/lib/settings/user-settings";
 import {
   DEFAULT_PALETTE,
   mixColors,
@@ -25,13 +26,14 @@ export function DynamicAppBackground({
   const secondary = mixColors(secondarySource, "#080910", 0.58);
   const accent = mixColors(accentSource, "#080910", isColorful ? 0.48 : 0.66);
   const shapeOpacity = isColorful ? 1 : activePalette.kind === "neutral" ? 0.58 : 0.74;
-  const isAcrylicTheme = settings.uiTheme === "dark-acrylic" || settings.uiTheme === "light-acrylic";
-  const isAlbumDynamic = settings.uiTheme === "album-dynamic";
-  const isDark = settings.uiTheme === "dark";
-  const isLight = settings.uiTheme === "light";
+  const effectiveTheme = resolveEffectiveUiThemeId(settings);
+  const isAcrylicTheme = effectiveTheme === "dark-acrylic" || effectiveTheme === "light-acrylic";
+  const isAlbumDynamic = effectiveTheme === "album-dynamic";
+  const isDark = effectiveTheme === "dark";
+  const isLight = effectiveTheme === "light";
 
   if (isAcrylicTheme) {
-    const isLight = settings.uiTheme === "light-acrylic";
+    const isLight = effectiveTheme === "light-acrylic";
 
     return (
       <div
