@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v4.2.0.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v4.2.3.zh-CN.md">发布说明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">在线 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="#本地开发">本地开发</a> ·
@@ -48,33 +48,33 @@
 
 请前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下载最新版：
 
-* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 4.2.0.exe`
-* 不想安装时可下载便携版：`Lyrics Card Generator-4.2.0-portable.exe`
+* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 4.2.3.exe`
+* 不想安装时可下载便携版：`Lyrics Card Generator-4.2.3-portable.exe`
 
 安装版适合长期使用；便携版适合临时运行、测试或放在移动硬盘中使用。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v4.2.0 更新重点
+### v4.2.3 更新重点
 
-* 示例歌词系统升级为“原语言歌词 + 五种目标语言翻译样例”。
-* 示例弹窗可选择五种译文，并会根据当前界面语言默认选择对应译文。
-* 示例配置不再承担卡片尺寸、高度、比例或 AutoHeight 状态职责。
-* 加载示例只填入歌曲信息、歌词和译文，预览继续依赖现有 AutoHeight。
-* 修复 Web Lite / GitHub Pages 的图标路径和 Pages artifact 准备方式。
-* Web Lite 仍是独立、简化、粗略的在线演示，完整体验请使用桌面版。
+* 设置面板移除独立“背景”页，外观入口收敛为一个“界面外观”概念。
+* 外观页只保留“界面外观”和“界面字体”两个用户可见设置。
+* 界面外观固定为专辑封面动态取色、深色模式、浅色模式、深色亚克力、浅色亚克力五种模式。
+* 专辑封面动态取色继续作为默认模式，并继续使用封面 palette 驱动界面氛围与强调色。
+* 旧的蓝白浅色、黑粉深色和自定义主题会平滑迁移到新的外观模式。
+* 歌词卡预览和导出 PNG 的视觉样式不变。
 <br clear="right" />
 
 ## 🌐 多语言发布说明
 
 GitHub Release 页面默认使用简体中文短版，完整发布说明维护在 `docs/releases/`：
 
-* [简体中文](./docs/releases/v4.2.0.zh-CN.md)
-* [繁體中文](./docs/releases/v4.2.0.zh-TW.md)
-* [English](./docs/releases/v4.2.0.en.md)
-* [Français](./docs/releases/v4.2.0.fr.md)
-* [日本語](./docs/releases/v4.2.0.ja.md)
-* [Español](./docs/releases/v4.2.0.es.md)
+* [简体中文](./docs/releases/v4.2.3.zh-CN.md)
+* [繁體中文](./docs/releases/v4.2.3.zh-TW.md)
+* [English](./docs/releases/v4.2.3.en.md)
+* [Français](./docs/releases/v4.2.3.fr.md)
+* [日本語](./docs/releases/v4.2.3.ja.md)
+* [Español](./docs/releases/v4.2.3.es.md)
 
 <a id="主要功能"></a>
 
@@ -108,6 +108,7 @@ GitHub Release 页面默认使用简体中文短版，完整发布说明维护�
 ### 🌈 视觉样式与品牌信息
 
 * 支持从封面提取色彩并生成渐变背景
+* 软件界面支持专辑封面动态取色、深色、浅色、深色亚克力和浅色亚克力五种外观模式
 * 支持平台 Logo、分享人、生成水印
 
 ### 🔤 字体与多语言界面

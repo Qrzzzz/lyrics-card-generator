@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v4.2.0.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v4.2.3.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="#développement-local">Développement local</a> ·
@@ -51,33 +51,33 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 Téléchargez la dernière version depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
 
-* Installateur recommandé : `Lyrics Card Generator Setup 4.2.0.exe`
-* Version portable : `Lyrics Card Generator-4.2.0-portable.exe`
+* Installateur recommandé : `Lyrics Card Generator Setup 4.2.3.exe`
+* Version portable : `Lyrics Card Generator-4.2.3-portable.exe`
 
 L'installateur est recommandé pour une utilisation régulière. La version portable convient aux essais, à une utilisation temporaire ou à un disque amovible.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### Points clés de la v4.2.0
+### Points clés de la v4.2.3
 
-* Les exemples de paroles utilisent désormais une structure réutilisable : paroles en langue originale + cinq exemples de traductions cibles.
-* La fenêtre d’exemples permet de choisir parmi cinq traductions et sélectionne par défaut la langue de l’interface lorsqu’elle existe.
-* La configuration des exemples ne porte plus de taille, hauteur, ratio ni état AutoHeight de la carte.
-* Charger un exemple renseigne seulement la chanson, les paroles et la traduction ; l’aperçu continue d’utiliser AutoHeight.
-* Les chemins d’icône et la préparation de l’artifact Pages pour Web Lite / GitHub Pages sont corrigés.
-* Web Lite reste une démonstration en ligne séparée, simplifiée et approximative ; utilisez l’application desktop pour l’expérience complète.
+* Retire la page Arrière-plan indépendante et regroupe l’apparence de l’application dans un seul concept de mode d’apparence.
+* Garde la page Apparence centrée sur le mode d’apparence et la police de l’interface.
+* Limite l’apparence à Dynamique de l’album, Mode sombre, Mode clair, Acrylique sombre et Acrylique clair.
+* Conserve Dynamique de l’album comme mode par défaut et continue d’utiliser la palette de la pochette pour l’ambiance et la couleur d’accent.
+* Migre les anciens thèmes bleu-blanc, noir-rose et personnalisé vers le nouveau modèle d’apparence.
+* Le rendu des cartes et le style PNG exporté ne changent pas.
 <br clear="right" />
 
 ## 🌐 Notes de publication multilingues
 
 La page GitHub Release utilise par défaut la version courte en chinois simplifié, les notes de publication complètes sont conservées dans `docs/releases/` :
 
-* [简体中文](./docs/releases/v4.2.0.zh-CN.md)
-* [繁體中文](./docs/releases/v4.2.0.zh-TW.md)
-* [English](./docs/releases/v4.2.0.en.md)
-* [Français](./docs/releases/v4.2.0.fr.md)
-* [日本語](./docs/releases/v4.2.0.ja.md)
-* [Español](./docs/releases/v4.2.0.es.md)
+* [简体中文](./docs/releases/v4.2.3.zh-CN.md)
+* [繁體中文](./docs/releases/v4.2.3.zh-TW.md)
+* [English](./docs/releases/v4.2.3.en.md)
+* [Français](./docs/releases/v4.2.3.fr.md)
+* [日本語](./docs/releases/v4.2.3.ja.md)
+* [Español](./docs/releases/v4.2.3.es.md)
 
 <a id="fonctionnalités-principales"></a>
 
@@ -111,6 +111,7 @@ La page GitHub Release utilise par défaut la version courte en chinois simplifi
 ### 🌈 Style visuel et informations de marque
 
 * Extraction de palette depuis la pochette pour créer des fonds en dégradé
+* Modes d’apparence de l’interface : Dynamique de l’album, sombre, clair, Acrylique sombre et Acrylique clair
 * Logo de plateforme, texte de partage et filigrane généré
 
 ### 🔤 Polices et interface multilingue

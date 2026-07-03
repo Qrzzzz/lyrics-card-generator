@@ -1,8 +1,7 @@
 export type UiThemeId =
   | "album-dynamic"
-  | "light-blue"
-  | "dark-pink"
-  | "custom"
+  | "dark"
+  | "light"
   | "dark-acrylic"
   | "light-acrylic";
 

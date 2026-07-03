@@ -22,29 +22,37 @@ const migrated = normalizeUserSettings({
   appBackground: { mode: "image-cover", solidColor: "invalid", overlayOpacity: 2, blurAmount: -4 }
 });
 assert.equal(migrated.sparkCursorEnabled, false);
+assert.equal(migrated.uiTheme, "light");
 assert.equal(migrated.defaultExportPixelRatio, 3);
+assert.equal(migrated.appBackground.mode, "album-dynamic");
 assert.equal(migrated.appBackground.solidColor, DEFAULT_USER_SETTINGS.appBackground.solidColor);
-assert.equal(migrated.appBackground.overlayOpacity, 0.9);
-assert.equal(migrated.appBackground.blurAmount, 0);
+assert.equal(migrated.appBackground.overlayOpacity, DEFAULT_USER_SETTINGS.appBackground.overlayOpacity);
+assert.equal(migrated.appBackground.blurAmount, DEFAULT_USER_SETTINGS.appBackground.blurAmount);
 assert.deepEqual(EXPORT_QUALITY_OPTIONS.map((item) => item.pixelRatio), [1, 1.4, 2, 3]);
 assert.ok(getContrastRatio("#FFFFFF", "#191612") > 15);
 assert.equal(resolveReadableTextColor("#FFFFFF"), "#191612");
-assert.equal(resolveReadableTextTokens("#EAF6FF").primary, "#191612");
-assert.equal(resolveReadableTextTokens("#08040A").primary, "#FFFFFF");
+assert.equal(resolveReadableTextTokens("#FFFFFF").primary, "#191612");
+assert.equal(resolveReadableTextTokens("#08090C").primary, "#FFFFFF");
 
-const custom = normalizeUserSettings({ uiTheme: "custom" });
-assert.equal(custom.uiTheme, "custom");
+const legacyCustom = normalizeUserSettings({ uiTheme: "custom" });
+assert.equal(legacyCustom.uiTheme, "album-dynamic");
+assert.equal(normalizeUserSettings({ uiTheme: "dark-pink" }).uiTheme, "dark");
+assert.equal(normalizeUserSettings({ uiTheme: "dark" }).uiTheme, "dark");
+assert.equal(normalizeUserSettings({ uiTheme: "light" }).uiTheme, "light");
 assert.equal(normalizeUserSettings({ uiTheme: "dark-acrylic" }).uiTheme, "dark-acrylic");
 assert.equal(normalizeUserSettings({ uiTheme: "light-acrylic" }).uiTheme, "light-acrylic");
+assert.equal(resolveEffectiveAppBackgroundColor(normalizeUserSettings({ uiTheme: "dark" }), "#123456"), "#08090C");
+assert.equal(resolveEffectiveAppBackgroundColor(normalizeUserSettings({ uiTheme: "light" }), "#123456"), "#FFFFFF");
 assert.equal(resolveEffectiveAppBackgroundColor(normalizeUserSettings({ uiTheme: "dark-acrylic" }), "#080910"), "#141821");
 assert.equal(resolveEffectiveAppBackgroundColor(normalizeUserSettings({ uiTheme: "light-acrylic" }), "#080910"), "#F3F6FA");
 const imageBackground = normalizeUserSettings({ appBackground: { mode: "image-cover", extractedColor: "#336699" } });
-assert.equal(imageBackground.appBackground.extractedColor, "#336699");
-assert.equal(resolveEffectiveAppBackgroundColor(imageBackground, "#080910"), "#336699");
+assert.equal(imageBackground.appBackground.mode, "album-dynamic");
+assert.equal(imageBackground.appBackground.extractedColor, undefined);
+assert.equal(resolveEffectiveAppBackgroundColor(imageBackground, "#080910"), "#080910");
 assert.equal(defaults.appBackground.mode, "album-dynamic");
 assert.equal(defaults.defaultExportPixelRatio, 2);
 
-const settingsBeforeClear = structuredClone(custom);
+const settingsBeforeClear = structuredClone(legacyCustom);
 const cleared = clearLyricContent({
   url: "https://example.com/song",
   song: { source: "apple", title: "Song", artist: "Artist", album: "Album", originalCoverUrl: "cover", coverUrl: "cover", proxiedCoverUrl: "cover", originalUrl: "url" },
@@ -59,6 +67,6 @@ assert.equal(cleared.url, "");
 assert.equal(cleared.song.title, "");
 assert.equal(cleared.lyrics, "");
 assert.equal(cleared.translationText, "");
-assert.deepEqual(custom, settingsBeforeClear);
+assert.deepEqual(legacyCustom, settingsBeforeClear);
 
-console.log(JSON.stringify({ ok: true, settingsTests: 28 }, null, 2));
+console.log(JSON.stringify({ ok: true, settingsTests: 34 }, null, 2));
