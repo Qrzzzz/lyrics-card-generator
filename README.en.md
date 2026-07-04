@@ -1,4 +1,4 @@
-<div align="center">
+﻿<div align="center">
 
 # 🎧 Lyrics Card Generator
 
@@ -258,10 +258,19 @@ Thanks to [Apple Music](https://music.apple.com/). The colorful gradients, flowi
 
 Thanks to [Source Han Sans](https://github.com/adobe-fonts/source-han-sans) and [Source Han Serif](https://github.com/adobe-fonts/source-han-serif). They provide a stable, clear, and substantial typographic foundation for Chinese lyric cards.
 
-Thanks to [Sabrina Carpenter](https://www.sabrinacarpenter.com/)’s “opposite”. As the default sample shown when the app starts, it helped define the visual rhythm of the first layout, English lyrics, and Chinese translation.
+Thanks to the following songs and their creators. They serve as project samples, helping verify how lyric cards appear across different languages, fonts, translation lengths, and layout rhythms.
 
-Thanks to [YOASOBI](https://www.yoasobi-music.jp/)’s “勇者”. It is used as example text in lyric sample displays and helped verify the layout effects of different fonts inside the cards.
+<details>
+<summary>Expand to see song samples</summary>
 
+| Song | Album | Artist |
+| --- | --- | --- |
+| 《opposite》 | *emails i can't send fwd:* | [Sabrina Carpenter](https://www.sabrinacarpenter.com/) |
+| 《勇者》 | *THE BOOK 3* | [YOASOBI](https://www.yoasobi-music.jp/) |
+| 《光辉岁月》 | *命运派对* | [Beyond](https://music.apple.com/cn/artist/beyond/79668659) |
+| 《Opalite》 | *The Life of a Showgirl* | [Taylor Swift](https://www.taylorswift.com/) |
+
+</details>
 Thanks to [OpenAI Codex](https://openai.com/codex/). It turned many scattered ideas into runnable code, desktop build workflows, and real features.
 
 Thanks to [ChatGPT 5.5](https://chatgpt.com/) for issue diagnosis, solution design, fix review, and acceptance checks throughout development.
