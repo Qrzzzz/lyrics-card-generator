@@ -258,6 +258,16 @@ npm run core:test       # 3.0 コア純粋関数をテスト
 
 [Source Han Sans](https://github.com/adobe-fonts/source-han-sans) と [Source Han Serif](https://github.com/adobe-fonts/source-han-serif) に感謝します。これらは中国語歌詞カードに、安定していて明瞭で、存在感のある書体基盤を提供しています。
 
+[OpenAI Codex](https://openai.com/codex/) に感謝します。多くの断片的なアイデアを、実行可能なコード、デスクトップ版のビルドフロー、実際の機能へと変換してくれました。
+
+[ChatGPT 5.5](https://chatgpt.com/) に感謝します。開発過程での問題特定、方案設計、修正レビュー、受け入れ確認を支援しました。
+
+[ReactBits](https://www.reactbits.dev/) に感謝します。Spark Cursor などのモーションを含む、さまざまな UI アイデアの着想を提供してくれました。
+
+Rangerov に感謝します。このプロジェクトへの関心と意見に感謝します。
+
+[V0idream](https://github.com/V0idream) によるコード軽量化の提案に感謝します。[`v1.1.0`](https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v1.1.0) では、それに基づく関連最適化を実施済みです。
+
 以下の楽曲とそのクリエイターに感謝します。これらはプロジェクトのサンプルとして、異なる言語、フォント、翻訳の長さ、レイアウトのリズムにおける歌詞カードの表示効果の検証に役立ちました。
 
 <details>
@@ -271,16 +281,6 @@ npm run core:test       # 3.0 コア純粋関数をテスト
 | 《Opalite》 | *The Life of a Showgirl* | [Taylor Swift](https://www.taylorswift.com/) |
 
 </details>
-
-[OpenAI Codex](https://openai.com/codex/) に感謝します。多くの断片的なアイデアを、実行可能なコード、デスクトップ版のビルドフロー、実際の機能へと変換してくれました。
-
-[ChatGPT 5.5](https://chatgpt.com/) に感謝します。開発過程での問題特定、方案設計、修正レビュー、受け入れ確認を支援しました。
-
-[ReactBits](https://www.reactbits.dev/) に感謝します。Spark Cursor などのモーションを含む、さまざまな UI アイデアの着想を提供してくれました。
-
-Rangerov に感謝します。このプロジェクトへの関心と意見に感謝します。
-
-[V0idream](https://github.com/V0idream) によるコード軽量化の提案に感謝します。[`v1.1.0`](https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v1.1.0) では、それに基づく関連最適化を実施済みです。
 
 また、これらのオープンソースプロジェクトとそのメンテナーにも感謝します：[Next.js](https://nextjs.org/)、[React](https://react.dev/)、[TypeScript](https://www.typescriptlang.org/)、[Tailwind CSS](https://tailwindcss.com/)、[Electron](https://www.electronjs.org/)、[electron-builder](https://www.electron.build/)、[html-to-image](https://github.com/bubkoo/html-to-image)、[Framer Motion](https://motion.dev/)、[Lucide React](https://lucide.dev/)、[Cheerio](https://cheerio.js.org/)、[Zod](https://zod.dev/)、そして現代的なフロントエンドエコシステムを構成する多くのツールチェーン。これらの基盤がなければ、このプロジェクトは現在の形では存在していません。
 

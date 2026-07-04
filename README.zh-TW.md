@@ -253,6 +253,16 @@ npm run core:test       # 測試 3.0 核心純函式
 
 感謝 [思源黑體](https://github.com/adobe-fonts/source-han-sans) 和 [思源宋體](https://github.com/adobe-fonts/source-han-serif)。它們為中文歌詞卡片提供穩定、清晰、有分量的字型基礎。
 
+感謝 [OpenAI Codex](https://openai.com/codex/)。它把許多零散想法轉化為可執行的程式碼、桌面版建構流程和實際功能。
+
+感謝 [ChatGPT 5.5](https://chatgpt.com/) 在開發過程中進行問題定位、方案設計、修復複核和驗收檢查。
+
+感謝 [ReactBits](https://www.reactbits.dev/) 提供的多種 UI 創意，包括 Spark Cursor 等動效靈感。
+
+感謝 Rangerov 對此專案的關注和提出意見。
+
+感謝 [V0idream](https://github.com/V0idream) 提出的程式碼瘦身建議，[`v1.1.0`](https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v1.1.0) 已據此進行相關最佳化。
+
 感謝以下歌曲及其創作者。它們作為專案範例，幫助驗證歌詞卡片在不同語言、字型、翻譯長度和排版節奏下的顯示效果。
 
 <details>
@@ -266,16 +276,6 @@ npm run core:test       # 測試 3.0 核心純函式
 | 《Opalite》 | *The Life of a Showgirl* | [Taylor Swift](https://www.taylorswift.com/) |
 
 </details>
-
-感謝 [OpenAI Codex](https://openai.com/codex/)。它把許多零散想法轉化為可執行的程式碼、桌面版建構流程和實際功能。
-
-感謝 [ChatGPT 5.5](https://chatgpt.com/) 在開發過程中進行問題定位、方案設計、修復複核和驗收檢查。
-
-感謝 [ReactBits](https://www.reactbits.dev/) 提供的多種 UI 創意，包括 Spark Cursor 等動效靈感。
-
-感謝 Rangerov 對此專案的關注和提出意見。
-
-感謝 [V0idream](https://github.com/V0idream) 提出的程式碼瘦身建議，[`v1.1.0`](https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v1.1.0) 已據此進行相關最佳化。
 
 也感謝這些開源專案及其維護者：[Next.js](https://nextjs.org/)、[React](https://react.dev/)、[TypeScript](https://www.typescriptlang.org/)、[Tailwind CSS](https://tailwindcss.com/)、[Electron](https://www.electronjs.org/)、[electron-builder](https://www.electron.build/)、[html-to-image](https://github.com/bubkoo/html-to-image)、[Framer Motion](https://motion.dev/)、[Lucide React](https://lucide.dev/)、[Cheerio](https://cheerio.js.org/)、[Zod](https://zod.dev/)，以及構成現代前端生態的眾多工具鏈。沒有這些基礎設施，這個專案不會以現在的形態出現。
 

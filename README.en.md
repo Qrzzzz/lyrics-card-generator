@@ -258,6 +258,16 @@ Thanks to [Apple Music](https://music.apple.com/). The colorful gradients, flowi
 
 Thanks to [Source Han Sans](https://github.com/adobe-fonts/source-han-sans) and [Source Han Serif](https://github.com/adobe-fonts/source-han-serif). They provide a stable, clear, and substantial typographic foundation for Chinese lyric cards.
 
+Thanks to [OpenAI Codex](https://openai.com/codex/). It turned many scattered ideas into runnable code, desktop build workflows, and real features.
+
+Thanks to [ChatGPT 5.5](https://chatgpt.com/) for issue diagnosis, solution design, fix review, and acceptance checks throughout development.
+
+Thanks to [ReactBits](https://www.reactbits.dev/) for multiple UI ideas, including motion inspiration such as Spark Cursor.
+
+Thanks to Rangerov for attention to this project and for providing feedback.
+
+Thanks to [V0idream](https://github.com/V0idream) for suggesting code slimming improvements. [`v1.1.0`](https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v1.1.0) has already made related optimizations accordingly.
+
 Thanks to the following songs and their creators. They serve as project samples, helping verify how lyric cards appear across different languages, fonts, translation lengths, and layout rhythms.
 
 <details>
@@ -271,15 +281,6 @@ Thanks to the following songs and their creators. They serve as project samples,
 | 《Opalite》 | *The Life of a Showgirl* | [Taylor Swift](https://www.taylorswift.com/) |
 
 </details>
-Thanks to [OpenAI Codex](https://openai.com/codex/). It turned many scattered ideas into runnable code, desktop build workflows, and real features.
-
-Thanks to [ChatGPT 5.5](https://chatgpt.com/) for issue diagnosis, solution design, fix review, and acceptance checks throughout development.
-
-Thanks to [ReactBits](https://www.reactbits.dev/) for multiple UI ideas, including motion inspiration such as Spark Cursor.
-
-Thanks to Rangerov for attention to this project and for providing feedback.
-
-Thanks to [V0idream](https://github.com/V0idream) for suggesting code slimming improvements. [`v1.1.0`](https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v1.1.0) has already made related optimizations accordingly.
 
 Thanks also to these open-source projects and their maintainers: [Next.js](https://nextjs.org/), [React](https://react.dev/), [TypeScript](https://www.typescriptlang.org/), [Tailwind CSS](https://tailwindcss.com/), [Electron](https://www.electronjs.org/), [electron-builder](https://www.electron.build/), [html-to-image](https://github.com/bubkoo/html-to-image), [Framer Motion](https://motion.dev/), [Lucide React](https://lucide.dev/), [Cheerio](https://cheerio.js.org/), [Zod](https://zod.dev/), and the many toolchains that make up the modern frontend ecosystem. Without this infrastructure, this project would not exist in its current form.
 
