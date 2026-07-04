@@ -59,8 +59,12 @@ for (const file of appearanceFiles) {
 }
 
 const appearanceSource = readFileSync(resolve("components/settings/AppearanceSettingsSection.tsx"), "utf8");
-const themeOptions = [...appearanceSource.matchAll(/<option value="([^"]+)">/g)].map((match) => match[1]);
-assert.deepEqual(themeOptions, ["album-dynamic", "dark", "light", "dark-acrylic", "light-acrylic"]);
+assert.match(appearanceSource, /SegmentedControl<UiThemeMode>/);
+assert.match(appearanceSource, /ToggleRow/);
+for (const token of ['value: "album-dynamic"', 'value: "dark"', 'value: "light"']) {
+  assert.ok(appearanceSource.includes(token), `missing theme option ${token}`);
+}
+assert.doesNotMatch(appearanceSource, /<option value=/);
 assert.deepEqual(appearanceViolations, []);
 
 console.log(JSON.stringify({ ok: true, scannedFiles: files.length + appearanceFiles.length }, null, 2));

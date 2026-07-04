@@ -12,7 +12,7 @@ export function ExportSettingsSection({
   copy: typeof settingsCopy[Locale];
   onChange: (settings: UserSettings) => void;
 }) {
-  const labels = { low: copy.low, medium: copy.medium, high: copy.high, ultra: copy.ultra };
+  const labels = { low: copy.low, medium: copy.medium, high: copy.high };
 
   return (
     <section className="grid gap-4">

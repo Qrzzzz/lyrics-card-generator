@@ -1,7 +1,7 @@
 import { resolveReadableTextTokens } from "@/lib/color/contrast";
 import type { UserSettings } from "@/lib/settings/types";
-import { resolveEffectiveAppBackgroundColor } from "@/lib/settings/user-settings";
-import { DEFAULT_PALETTE } from "@/lib/palette-background";
+import { resolveUiAccentColor } from "@/lib/settings/accent";
+import { resolveEffectiveAppBackgroundColor, resolveEffectiveUiThemeId } from "@/lib/settings/user-settings";
 import type { AppState } from "@/lib/types";
 
 type ResolveEditorThemeTokensInput = {
@@ -10,12 +10,13 @@ type ResolveEditorThemeTokensInput = {
 };
 
 export function resolveEditorThemeTokens({ userSettings, palette }: ResolveEditorThemeTokensInput) {
-  const themeAccent = palette?.primary ?? DEFAULT_PALETTE.primary;
+  const themeAccent = resolveUiAccentColor({ settings: userSettings, palette });
+  const effectiveTheme = resolveEffectiveUiThemeId(userSettings);
   const uiBackgroundColor = resolveEffectiveAppBackgroundColor(userSettings, palette?.dark ?? "#080910");
   const preferredTextColor =
-    userSettings.uiTheme === "light" || userSettings.uiTheme === "light-acrylic"
+    effectiveTheme === "light" || effectiveTheme === "light-acrylic"
       ? "#191612"
-      : userSettings.uiTheme === "dark" || userSettings.uiTheme === "dark-acrylic"
+      : effectiveTheme === "dark" || effectiveTheme === "dark-acrylic"
         ? "#FFFFFF"
         : undefined;
   const uiTextTokens = resolveReadableTextTokens(uiBackgroundColor, preferredTextColor);

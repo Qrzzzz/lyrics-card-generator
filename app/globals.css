@@ -59,8 +59,8 @@ body {
   --input-border: 255 255 255 / 0.13;
   --button-bg: 255 255 255 / 0.1;
   --button-bg-hover: 255 255 255 / 0.16;
-  --control-focus-border: rgba(125, 225, 255, 0.58);
-  --control-focus-ring: rgba(125, 225, 255, 0.12);
+  --control-focus-border: color-mix(in srgb, var(--app-accent) 62%, #ffffff);
+  --control-focus-ring: color-mix(in srgb, var(--app-accent) 18%, transparent);
   --control-selected-border: color-mix(in srgb, var(--app-accent) 34%, rgb(var(--panel-border)));
   --control-selected-bg: color-mix(in srgb, var(--app-accent) 16%, rgb(var(--button-bg-hover)));
   --control-selected-bg-strong: color-mix(in srgb, var(--app-accent) 24%, rgb(var(--button-bg-hover)));
@@ -172,8 +172,8 @@ body {
   --input-border: 15 23 42 / 0.16;
   --button-bg: 255 255 255 / 0.30;
   --button-bg-hover: 255 255 255 / 0.46;
-  --control-focus-border: rgba(37, 99, 235, 0.52);
-  --control-focus-ring: rgba(37, 99, 235, 0.12);
+  --control-focus-border: color-mix(in srgb, var(--app-accent) 58%, #ffffff);
+  --control-focus-ring: color-mix(in srgb, var(--app-accent) 16%, transparent);
   --status-success-fg: 21 128 61;
   --status-success-bg: 220 252 231 / 0.62;
   --status-success-border: 22 163 74 / 0.36;
@@ -715,7 +715,7 @@ button {
 }
 
 ::selection {
-  background: rgba(255, 138, 156, 0.38);
+  background: color-mix(in srgb, var(--app-accent, #7c3aed) 30%, transparent);
 }
 
 .app-shell,

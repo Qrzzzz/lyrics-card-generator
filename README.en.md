@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v4.2.3.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v4.2.6.en.md">Release Notes</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
   <a href="#features">Features</a> ·
   <a href="#local-development">Local Development</a> ·
@@ -51,33 +51,33 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 Download the latest version from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Recommended installer: `Lyrics Card Generator Setup 4.2.3.exe`
-* Portable version: `Lyrics Card Generator-4.2.3-portable.exe`
+* Recommended installer: `Lyrics Card Generator Setup 4.2.6.exe`
+* Portable version: `Lyrics Card Generator-4.2.6-portable.exe`
 
 The installer is recommended for regular use. The portable version is useful for temporary use, testing, or running from a removable drive.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v4.2.3 Highlights
+### v4.2.6 Highlights
 
-* Removes the separate Background settings page and consolidates app appearance into one Appearance mode concept.
-* Keeps the Appearance page focused on only Appearance mode and UI font family.
-* Limits app appearance to Album dynamic, Dark mode, Light mode, Dark Acrylic, and Light Acrylic.
-* Keeps Album dynamic as the default and continues using the cover palette for app mood and accent color.
-* Migrates the old light-blue, dark-pink, and custom themes smoothly into the new appearance model.
-* Lyric-card preview and exported PNG styling are unchanged.
+* Adds unified accent color settings with album-cover dynamic color, presets, and custom hex colors.
+* Preset accents now support red, orange, yellow, green, blue, and purple, shared by AI translation, Stepper, Spark Cursor, export buttons, and focus states.
+* Splits Appearance into interface mode and an Acrylic effect toggle; Album dynamic mode disables Acrylic.
+* Adds Low, Standard, and High quality selection to the final export step.
+* Removes Ultra 3x export quality and automatically migrates old Ultra settings to High.
+* Adds a multilingual Taylor Swift “Opalite” example song.
 <br clear="right" />
 
 ## 🌐 Multilingual Release Notes
 
 The GitHub Release page defaults to a simplified Chinese short version, while the full release notes are maintained in `docs/releases/`:
 
-* [简体中文](./docs/releases/v4.2.3.zh-CN.md)
-* [繁體中文](./docs/releases/v4.2.3.zh-TW.md)
-* [English](./docs/releases/v4.2.3.en.md)
-* [Français](./docs/releases/v4.2.3.fr.md)
-* [日本語](./docs/releases/v4.2.3.ja.md)
-* [Español](./docs/releases/v4.2.3.es.md)
+* [简体中文](./docs/releases/v4.2.6.zh-CN.md)
+* [繁體中文](./docs/releases/v4.2.6.zh-TW.md)
+* [English](./docs/releases/v4.2.6.en.md)
+* [Français](./docs/releases/v4.2.6.fr.md)
+* [日本語](./docs/releases/v4.2.6.ja.md)
+* [Español](./docs/releases/v4.2.6.es.md)
 
 <a id="features"></a>
 

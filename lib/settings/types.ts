@@ -1,9 +1,15 @@
-export type UiThemeId =
+export type UiThemeMode = "album-dynamic" | "dark" | "light";
+
+export type EffectiveUiThemeId =
   | "album-dynamic"
   | "dark"
   | "light"
   | "dark-acrylic"
   | "light-acrylic";
+
+export type UiAccentMode = "album-dynamic" | "preset" | "custom";
+
+export type UiAccentPresetId = "red" | "orange" | "yellow" | "green" | "blue" | "purple";
 
 export type AppBackgroundMode =
   | "album-dynamic"
@@ -14,16 +20,17 @@ export type AppBackgroundMode =
   | "image-blur"
   | "image-palette";
 
-export type ExportQualityId = "low" | "medium" | "high" | "ultra";
+export type ExportQualityId = "low" | "medium" | "high";
 
 export type UserSettings = {
   version: 1;
   sparkCursorEnabled: boolean;
-  uiTheme: UiThemeId;
+  uiThemeMode: UiThemeMode;
+  uiAcrylicEnabled: boolean;
   uiFontFamily: string;
-  uiAccentColor: string;
-  uiTextColorMode: "auto" | "light" | "dark" | "custom";
-  uiCustomTextColor: string;
+  uiAccentMode: UiAccentMode;
+  uiAccentPreset: UiAccentPresetId;
+  uiCustomAccentColor: string;
   appBackground: {
     mode: AppBackgroundMode;
     imageId?: string;
@@ -41,18 +48,22 @@ export type UserSettings = {
 export const EXPORT_QUALITY_OPTIONS = [
   { id: "low", pixelRatio: 1 },
   { id: "medium", pixelRatio: 1.4 },
-  { id: "high", pixelRatio: 2 },
-  { id: "ultra", pixelRatio: 3 }
+  { id: "high", pixelRatio: 2 }
 ] as const;
+
+export function getExportPixelRatio(quality: ExportQualityId): number {
+  return EXPORT_QUALITY_OPTIONS.find((option) => option.id === quality)?.pixelRatio ?? 2;
+}
 
 export const DEFAULT_USER_SETTINGS: UserSettings = {
   version: 1,
   sparkCursorEnabled: true,
-  uiTheme: "album-dynamic",
+  uiThemeMode: "album-dynamic",
+  uiAcrylicEnabled: false,
   uiFontFamily: "",
-  uiAccentColor: "#7C3AED",
-  uiTextColorMode: "auto",
-  uiCustomTextColor: "#FFFFFF",
+  uiAccentMode: "album-dynamic",
+  uiAccentPreset: "purple",
+  uiCustomAccentColor: "#7C3AED",
   appBackground: {
     mode: "album-dynamic",
     solidColor: "#080910",

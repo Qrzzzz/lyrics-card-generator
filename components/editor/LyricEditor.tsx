@@ -33,6 +33,9 @@ import { createT } from "@/lib/i18n";
 import { proxiedImageUrl } from "@/lib/image-utils";
 import { DEFAULT_PALETTE } from "@/lib/palette-background";
 import { settingsCopy } from "@/lib/settings/copy";
+import { resolveUiAccentColor } from "@/lib/settings/accent";
+import { DEFAULT_USER_SETTINGS, getExportPixelRatio, type ExportQualityId } from "@/lib/settings/types";
+import { resolveEffectiveUiThemeId } from "@/lib/settings/user-settings";
 import type { AppState, FontScheme, Locale } from "@/lib/types";
 
 export function LyricEditor() {
@@ -41,6 +44,7 @@ export function LyricEditor() {
   const [fontSchemePreview, setFontSchemePreview] = useState<FontScheme | null>(null);
   const [isPreviewVisible, setIsPreviewVisible] = useState(true);
   const [isExamplesOpen, setIsExamplesOpen] = useState(false);
+  const [exportQuality, setExportQuality] = useState<ExportQualityId>(DEFAULT_USER_SETTINGS.defaultExportQuality);
   const [toast, setToast] = useState("");
   const cardRef = useRef<HTMLElement | null>(null);
   const t = useMemo(() => createT(state.locale), [state.locale]);
@@ -78,6 +82,12 @@ export function LyricEditor() {
     currentLocale: state.locale,
     applyLocale
   });
+  const resolvedAccentColor = resolveUiAccentColor({
+    settings: userSettings,
+    palette: state.palette
+  });
+  const effectiveUiThemeId = resolveEffectiveUiThemeId(userSettings);
+  const exportPixelRatio = getExportPixelRatio(exportQuality);
   const {
     celebrationKey,
     isCompleteExporting,
@@ -99,7 +109,7 @@ export function LyricEditor() {
     parsedState,
     setState,
     cardRef,
-    exportPixelRatio: userSettings.defaultExportPixelRatio,
+    exportPixelRatio,
     exampleLoadedMessage: settingsCopy[state.locale].exampleLoaded,
     onNotify: setToast,
     onCloseExamples: () => setIsExamplesOpen(false),
@@ -113,6 +123,10 @@ export function LyricEditor() {
     const timeout = window.setTimeout(() => setToast(""), 3600);
     return () => window.clearTimeout(timeout);
   }, [toast]);
+
+  useEffect(() => {
+    setExportQuality(userSettings.defaultExportQuality);
+  }, [userSettings.defaultExportQuality]);
 
   const {
     aiCopy,
@@ -156,15 +170,14 @@ export function LyricEditor() {
     });
   }
 
-  const editorThemeColor = state.palette?.primary ?? DEFAULT_PALETTE.primary;
   const settingsSteps: SettingsStep[] = useEditorSteps({
     state,
-    parsedState,
     t,
     canFetchLyrics,
-    themeColor: editorThemeColor,
+    themeColor: resolvedAccentColor,
     cardRef,
     isExporting: isCompleteExporting,
+    exportQuality,
     ai: {
       isOpen: isAITranslateOpen,
       isTranslating: isAITranslating,
@@ -192,10 +205,11 @@ export function LyricEditor() {
       onConfirmAiTranslate: translateWithAI,
       onStyleChange: handleStyleChange,
       onFontSchemePreviewChange: setFontSchemePreview,
+      onExportQualityChange: setExportQuality,
       onExport: completeAndExport
     }
   });
-  const { themeAccent, resolvedThemeTokens, customThemeTokens } = resolveEditorThemeTokens({
+  const { resolvedThemeTokens, customThemeTokens } = resolveEditorThemeTokens({
     userSettings,
     palette: state.palette
   });
@@ -203,18 +217,18 @@ export function LyricEditor() {
   return (
     <div
       className="app-shell min-h-screen"
-      data-ui-theme={userSettings.uiTheme}
+      data-ui-theme={effectiveUiThemeId}
       data-desktop-shell={isDesktopShell ? "true" : "false"}
       style={{
         "--app-font-family": userSettings.uiFontFamily || undefined,
-        "--app-accent": themeAccent,
+        "--app-accent": resolvedAccentColor,
         ...resolvedThemeTokens,
         ...customThemeTokens
       } as unknown as React.CSSProperties}
     >
       <DesktopTitleBar locale={state.locale} />
       <DynamicAppBackground palette={state.palette} settings={userSettings} imageUrl={backgroundImageUrl} />
-      <ClickSpark enabled={userSettings.sparkCursorEnabled} themeColor={themeAccent}>
+      <ClickSpark enabled={userSettings.sparkCursorEnabled} themeColor={resolvedAccentColor}>
     <main className="app-main-content relative z-10 min-h-screen px-4 py-5 sm:px-6 lg:px-8">
       <div className="mx-auto grid w-[calc(100vw-2rem)] max-w-[1520px] min-w-0 gap-5 sm:w-full">
         <EditorHeader locale={state.locale} t={t} onOpenExamples={() => setIsExamplesOpen(true)} onClearAll={clearAllContent} onOpenSettings={openSettings} />
@@ -227,7 +241,7 @@ export function LyricEditor() {
               onStepChange={setCurrentStep}
               backText={t("step.back")}
               nextText={t("step.next")}
-              themeColor={editorThemeColor}
+              themeColor={resolvedAccentColor}
             />
           </MotionPanel>
 
@@ -268,7 +282,7 @@ export function LyricEditor() {
           {toast}
         </div>
       ) : null}
-      <ExportCelebration burstKey={celebrationKey} accentColor={editorThemeColor} />
+      <ExportCelebration burstKey={celebrationKey} accentColor={resolvedAccentColor} />
     </div>
   );
 }

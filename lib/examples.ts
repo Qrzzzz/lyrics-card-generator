@@ -1,6 +1,6 @@
 import type { Locale, SongSource } from "@/lib/types";
 
-export type ExampleSongId = "opposite" | "yuusha" | "glorious-years";
+export type ExampleSongId = "opposite" | "yuusha" | "glorious-years" | "opalite";
 
 export const EXAMPLE_TRANSLATION_LANGUAGES = [
   "zh",
@@ -41,6 +41,72 @@ export type ExampleSong = {
 };
 
 export const EXAMPLE_SONGS: ExampleSong[] = [{
+  id: "opalite",
+  title: "Opalite",
+  artist: "Taylor Swift",
+  url: "https://music.apple.com/tr/album/opalite/1833328839?i=1833328845",
+  source: "apple",
+  originalLanguage: "en",
+  lyrics: [
+    "It's alright",
+    "You were dancing through the lightning strikes",
+    "Sleepless in the onyx night",
+    "But now the sky is opalite"
+  ].join("\n"),
+  translations: [
+    {
+      language: "zh",
+      label: EXAMPLE_LANGUAGE_LABELS.zh,
+      text: [
+        "没关系",
+        "你曾在雷霆交加中翩然起舞",
+        "在缟玛瑙般的长夜里彻夜难眠",
+        "可如今，天空已泛起蛋白石的光"
+      ].join("\n")
+    },
+    {
+      language: "zh-TW",
+      label: EXAMPLE_LANGUAGE_LABELS["zh-TW"],
+      text: [
+        "沒關係",
+        "你曾在雷霆交加中翩然起舞",
+        "在縞瑪瑙般的長夜裡徹夜難眠",
+        "可如今，天空已泛起蛋白石的光"
+      ].join("\n")
+    },
+    {
+      language: "fr",
+      label: EXAMPLE_LANGUAGE_LABELS.fr,
+      text: [
+        "Tout va bien",
+        "Tu dansais au milieu des éclairs",
+        "Sans sommeil dans la nuit d’onyx",
+        "Mais à présent, le ciel luit comme une opalite"
+      ].join("\n")
+    },
+    {
+      language: "ja",
+      label: EXAMPLE_LANGUAGE_LABELS.ja,
+      text: [
+        "大丈夫",
+        "君は稲妻の中を踊り抜けていた",
+        "オニキスの夜に眠れずにいて",
+        "でも今、空はオパライトの光を帯びている"
+      ].join("\n")
+    },
+    {
+      language: "es",
+      label: EXAMPLE_LANGUAGE_LABELS.es,
+      text: [
+        "Está bien",
+        "Bailabas entre los relámpagos",
+        "Sin dormir en la noche de ónix",
+        "Pero ahora el cielo resplandece como opalita"
+      ].join("\n")
+    }
+  ],
+  translationEnabled: true
+}, {
   id: "opposite",
   title: "opposite",
   artist: "Sabrina Carpenter",

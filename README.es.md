@@ -19,7 +19,7 @@
 <p>
   <strong>Navegación</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Descargar la última versión</a> ·
-  <a href="./docs/releases/v4.2.3.es.md">Notas de la versión</a> ·
+  <a href="./docs/releases/v4.2.6.es.md">Notas de la versión</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en línea</a> ·
   <a href="#funciones-principales">Funciones principales</a> ·
   <a href="#desarrollo-local">Desarrollo local</a> ·
@@ -51,33 +51,33 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 Descarga la versión más reciente desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Instalador recomendado: `Lyrics Card Generator Setup 4.2.3.exe`
-* Versión portable: `Lyrics Card Generator-4.2.3-portable.exe`
+* Instalador recomendado: `Lyrics Card Generator Setup 4.2.6.exe`
+* Versión portable: `Lyrics Card Generator-4.2.6-portable.exe`
 
 El instalador se recomienda para uso habitual. La versión portable es útil para pruebas, uso temporal o ejecución desde una unidad extraíble.
 
 > La compilación actual no está firmada. Windows puede mostrar una advertencia de SmartScreen, algo habitual en aplicaciones personales sin firma.
 
-### Aspectos destacados de la versión 4.2.3
+### Aspectos destacados de la versión 4.2.6
 
-* Elimina la página Fondo independiente y consolida la apariencia de la aplicación en un único concepto de modo de apariencia.
-* Mantiene la página Apariencia centrada solo en el modo de apariencia y la familia de fuente de la interfaz.
-* Limita la apariencia a Dinámico del álbum, Modo oscuro, Modo claro, Acrílico oscuro y Acrílico claro.
-* Mantiene Dinámico del álbum como modo predeterminado y sigue usando la paleta de la portada para la atmósfera y el color de acento.
-* Migra los antiguos temas azul-blanco, negro-rosa y personalizado al nuevo modelo de apariencia.
-* La vista previa de la tarjeta y el estilo PNG exportado no cambian.
+* Añade ajustes unificados de color de acento: dinámico desde la portada, preajustes y color hexadecimal personalizado.
+* Los preajustes rojo, naranja, amarillo, verde, azul y morado se aplican a la traducción IA, Stepper, Spark Cursor, botón de exportación y estados de foco.
+* Separa Apariencia en modo de interfaz e interruptor Acrylic; el modo dinámico del álbum desactiva Acrylic.
+* Añade selección de calidad Baja, Estándar y Alta al paso final de exportación.
+* Elimina la calidad Ultra 3x y migra automáticamente los ajustes Ultra antiguos a Alta.
+* Añade un ejemplo multilingüe de Taylor Swift, “Opalite”.
 <br clear="right" />
 
 ## 🌐 Notas de publicación multilingüe
 
 La página de GitHub Release utiliza por defecto la versión corta en chino simplificado, las notas de publicación completas se mantienen en `docs/releases/`:
 
-* [简体中文](./docs/releases/v4.2.3.zh-CN.md)
-* [繁體中文](./docs/releases/v4.2.3.zh-TW.md)
-* [English](./docs/releases/v4.2.3.en.md)
-* [Français](./docs/releases/v4.2.3.fr.md)
-* [日本語](./docs/releases/v4.2.3.ja.md)
-* [Español](./docs/releases/v4.2.3.es.md)
+* [简体中文](./docs/releases/v4.2.6.zh-CN.md)
+* [繁體中文](./docs/releases/v4.2.6.zh-TW.md)
+* [English](./docs/releases/v4.2.6.en.md)
+* [Français](./docs/releases/v4.2.6.fr.md)
+* [日本語](./docs/releases/v4.2.6.ja.md)
+* [Español](./docs/releases/v4.2.6.es.md)
 
 <a id="funciones-principales"></a>
 

@@ -10,7 +10,7 @@ import {
   shouldShowFirstLaunchLanguage
 } from "@/lib/settings/app-preferences";
 import { DEFAULT_USER_SETTINGS, type UserSettings } from "@/lib/settings/types";
-import { saveUserSettings } from "@/lib/settings/user-settings";
+import { resolveEffectiveUiThemeId, saveUserSettings } from "@/lib/settings/user-settings";
 import type { Locale } from "@/lib/types";
 
 type UseEditorPreferencesInput = {
@@ -31,7 +31,7 @@ export function useEditorPreferences({ currentLocale, applyLocale }: UseEditorPr
   function syncWindowMaterial(settings: UserSettings) {
     const desktop = getLyricsCardDesktopApi();
     if (desktop) {
-      void desktop.setWindowMaterial(settings.uiTheme).catch(() => undefined);
+      void desktop.setWindowMaterial(resolveEffectiveUiThemeId(settings)).catch(() => undefined);
     }
   }
 
@@ -101,11 +101,12 @@ export function useEditorPreferences({ currentLocale, applyLocale }: UseEditorPr
   }, []);
 
   useEffect(() => {
-    document.body.dataset.uiTheme = userSettings.uiTheme;
+    const effectiveTheme = resolveEffectiveUiThemeId(userSettings);
+    document.body.dataset.uiTheme = effectiveTheme;
     return () => {
       delete document.body.dataset.uiTheme;
     };
-  }, [userSettings.uiTheme]);
+  }, [userSettings.uiThemeMode, userSettings.uiAcrylicEnabled]);
 
   useEffect(() => {
     let active = true;
