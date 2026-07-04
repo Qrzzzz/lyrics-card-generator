@@ -1,4 +1,4 @@
-<div align="center">
+﻿<div align="center">
 
 # 🎧 Lyrics Card Generator
 
@@ -258,10 +258,28 @@ Merci à [Apple Music](https://music.apple.com/). Les dégradés colorés, l’e
 
 Merci à [Source Han Sans](https://github.com/adobe-fonts/source-han-sans) et [Source Han Serif](https://github.com/adobe-fonts/source-han-serif). Elles fournissent une base typographique stable, claire et solide pour les cartes de paroles en chinois.
 
-Merci à [Sabrina Carpenter](https://www.sabrinacarpenter.com/) et à « opposite ». Utilisé comme exemple par défaut au démarrage de l’application, ce morceau a aidé à définir le rythme visuel de la première mise en page, des paroles anglaises et de leur traduction chinoise.
+Merci aux chansons suivantes et à leurs créateurs. Elles servent d’exemples pour le projet, aidant à vérifier l’affichage des cartes de paroles dans différentes langues, polices, longueurs de traduction et rythmes de mise en page.
 
-Merci à [YOASOBI](https://www.yoasobi-music.jp/) et à « 勇者 ». Ce titre est utilisé comme texte d’exemple dans l’affichage des paroles et a aidé à vérifier les effets de mise en page des différentes polices dans les cartes.
+<details>
+<summary>Déplier pour voir les exemples de chansons</summary>
 
+| Chanson | Album | Artiste |
+| --- | --- | --- |
+| 《opposite》 | *emails i can't send fwd:* | [Sabrina Carpenter](https://www.sabrinacarpenter.com/) |
+| 《勇者》 | *THE BOOK 3* | [YOASOBI](https://www.yoasobi-music.jp/) |
+| 《光辉岁月》 | *命运派对* | [Beyond](https://music.apple.com/cn/artist/beyond/79668659) |
+| 《Opalite》 | *The Life of a Showgirl* | [Taylor Swift](https://www.taylorswift.com/) |
+
+</details>
+
+| Chanson | Album | Artiste |
+| --- | --- | --- |
+| 《opposite》 | *emails i can't send fwd:* | [Sabrina Carpenter](https://www.sabrinacarpenter.com/) |
+| 《勇者》 | *THE BOOK 3* | [YOASOBI](https://www.yoasobi-music.jp/) |
+| 《光辉岁月》 | *命运派对* | [Beyond](https://music.apple.com/cn/artist/beyond/79668659) |
+| 《Opalite》 | *The Life of a Showgirl* | [Taylor Swift](https://www.taylorswift.com/) |
+
+</details>
 Merci à [OpenAI Codex](https://openai.com/codex/). Il a transformé de nombreuses idées éparses en code exécutable, en workflows de build desktop et en fonctionnalités réelles.
 
 Merci à [ChatGPT 5.5](https://chatgpt.com/) pour le diagnostic des problèmes, la conception de solutions, la relecture des correctifs et les vérifications d’acceptation pendant le développement.
