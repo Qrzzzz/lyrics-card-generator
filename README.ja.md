@@ -258,9 +258,19 @@ npm run core:test       # 3.0 コア純粋関数をテスト
 
 [Source Han Sans](https://github.com/adobe-fonts/source-han-sans) と [Source Han Serif](https://github.com/adobe-fonts/source-han-serif) に感謝します。これらは中国語歌詞カードに、安定していて明瞭で、存在感のある書体基盤を提供しています。
 
-[Sabrina Carpenter](https://www.sabrinacarpenter.com/) の「opposite」に感謝します。アプリ起動時のデフォルトサンプルとして、初期レイアウト、英語歌詞、中国語訳の視覚的リズムを決める助けになりました。
+以下の楽曲とそのクリエイターに感謝します。これらはプロジェクトのサンプルとして、異なる言語、フォント、翻訳の長さ、レイアウトのリズムにおける歌詞カードの表示効果の検証に役立ちました。
 
-[YOASOBI](https://www.yoasobi-music.jp/) の「勇者」に感謝します。歌詞サンプル表示の例文として使われ、カード内で異なるフォントがどのように組まれるかを検証する助けになりました。
+<details>
+<summary>サンプル楽曲を展開</summary>
+
+| 楽曲 | アルバム | アーティスト |
+| --- | --- | --- |
+| 《opposite》 | *emails i can't send fwd:* | [Sabrina Carpenter](https://www.sabrinacarpenter.com/) |
+| 《勇者》 | *THE BOOK 3* | [YOASOBI](https://www.yoasobi-music.jp/) |
+| 《光辉岁月》 | *命运派对* | [Beyond](https://music.apple.com/cn/artist/beyond/79668659) |
+| 《Opalite》 | *The Life of a Showgirl* | [Taylor Swift](https://www.taylorswift.com/) |
+
+</details>
 
 [OpenAI Codex](https://openai.com/codex/) に感謝します。多くの断片的なアイデアを、実行可能なコード、デスクトップ版のビルドフロー、実際の機能へと変換してくれました。
 
