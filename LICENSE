@@ -2,7 +2,9 @@ Lyrics Card Generator Source Available License
 
 Copyright (c) 2026 Qrzzzz. All rights reserved.
 
-This software, including its source code, desktop application, user interface, assets, documentation, and related materials, is made publicly visible for transparency, personal use, education, evaluation, and reference. It is not released under an open-source license.
+This software, including its source code, desktop application, web interface, user interface, visual design, project-specific assets, documentation, examples, build scripts, release configuration, and related materials, is made publicly visible for transparency, personal use, education, evaluation, and reference.
+
+This project is source-available. It is not released under an open-source license.
 
 1. Permission
 
@@ -13,54 +15,87 @@ b. run the software for personal, non-commercial use;
 c. study the source code for educational or evaluation purposes;
 d. make private modifications for your own personal, non-commercial use.
 
+No other rights are granted unless expressly stated in this license or separately agreed in writing by the copyright holder.
+
 2. Restrictions
 
 You may not, without prior written permission from the copyright holder:
 
 a. sell, rent, lease, sublicense, or otherwise commercially exploit this software or any derivative work;
-b. redistribute, publish, upload, share, repackage, or mirror modified or unmodified copies of this software;
-c. distribute compiled binaries, installers, portable builds, forks, or modified versions of this software;
-d. use this software or its source code to create, operate, or provide a competing product, hosted service, desktop application, commercial tool, or paid service;
+b. redistribute, publish, upload, share, repackage, mirror, or publicly host modified or unmodified copies of this software;
+c. distribute compiled binaries, installers, portable builds, forks, modified versions, or repackaged versions of this software;
+d. use this software, its source code, its user interface, its visual design, or any substantial part of it to create, operate, or provide a competing product, hosted service, desktop application, commercial tool, paid service, or software-as-a-service offering;
 e. remove, alter, or obscure copyright notices, attribution notices, acknowledgements, license text, project names, icons, logos, branding, or other proprietary notices;
-f. imply endorsement, sponsorship, partnership, or official association with the project owner or any third-party platform mentioned by this project;
-g. use the project name, icons, visual identity, screenshots, or branding in a way that may confuse users about the origin of the software.
+f. imply endorsement, sponsorship, partnership, approval, authorization, or official association with the project owner or with any third-party platform, artist, music label, rights holder, software project, service, or brand mentioned by this project;
+g. use the project name, icons, visual identity, screenshots, generated promotional materials, or branding in a way that may confuse users about the origin, ownership, sponsorship, or authorization of the software;
+h. use this project or any part of it for unlawful, infringing, deceptive, misleading, abusive, or privacy-invasive purposes.
 
 3. Contributions
 
-By submitting code, documentation, issues, suggestions, designs, translations, or other contributions to this repository, you grant the project owner a perpetual, worldwide, royalty-free, sublicensable, transferable, and irrevocable license to use, reproduce, modify, publish, distribute, display, and incorporate your contributions into this project and related works.
+By submitting code, documentation, issues, suggestions, designs, translations, examples, bug reports, pull requests, or other contributions to this repository, you grant the project owner a perpetual, worldwide, royalty-free, sublicensable, transferable, and irrevocable license to use, reproduce, modify, publish, distribute, display, perform, incorporate, and create derivative works from those contributions as part of this project and related works.
 
-Unless otherwise agreed in writing, submitting a contribution does not give you ownership of the project, control over licensing decisions, or any right to commercialize or redistribute the project.
+Unless otherwise agreed in writing, submitting a contribution does not give you ownership of the project, control over licensing decisions, or any right to commercialize, redistribute, repackage, or publicly release the project or derivative works.
 
 4. Third-Party Components
 
-This project may depend on third-party open-source packages, frameworks, fonts, icons, tools, or other materials. Those components remain governed by their own respective licenses.
+This project may depend on or interoperate with third-party open-source packages, frameworks, fonts, icons, libraries, APIs, tools, services, or other materials.
 
-This license applies only to the original code, design, documentation, assets, and materials created for Lyrics Card Generator, except where otherwise stated.
+Those third-party components remain governed by their own respective licenses, terms, notices, and policies. This license applies only to the original code, design, documentation, project-specific assets, and materials created for Lyrics Card Generator, except where otherwise stated.
 
-5. User-Provided Content
+Nothing in this license modifies, replaces, limits, or grants additional rights under the licenses or terms of any third-party component.
 
-Users are responsible for ensuring that they have the rights to use any lyrics, cover art, platform logos, images, text, or other materials they input into or export from the software.
+5. Music, Lyrics, Artwork, Metadata, and Platform Content
 
-This project is not affiliated with Apple Music, NetEase Cloud Music, QQ Music, Sabrina Carpenter, YOASOBI or any other music platform, artist, label, or rights holder mentioned in the application, sample data, documentation, or acknowledgements.
+This project may include, reference, parse, display, fetch, transform, or export music-related information, including but not limited to song titles, artist names, album names, lyrics, lyric translations, timestamps, cover artwork, platform names, platform logos, URLs, metadata, and sample content.
 
-6. No Warranty
+All music, lyrics, translations of lyrics, cover artwork, album artwork, platform logos, artist names, album names, song names, trademarks, service marks, and related metadata remain the property of their respective authors, artists, composers, publishers, labels, platforms, licensors, trademark owners, and other rights holders.
 
-This software is provided “as is” and “as available”, without warranties of any kind, express or implied, including but not limited to warranties of merchantability, fitness for a particular purpose, non-infringement, availability, accuracy, or reliability.
+Unless explicitly stated otherwise, such third-party music-related content is not owned by the project owner and is not licensed to you under this license.
 
-7. Limitation of Liability
+Any sample songs, lyrics, translations, artwork, platform references, or metadata included in the application, repository, documentation, screenshots, release notes, acknowledgements, or examples are provided only for demonstration, testing, layout verification, typography validation, localization testing, and user-interface evaluation.
 
-To the maximum extent permitted by law, the copyright holder shall not be liable for any direct, indirect, incidental, special, consequential, exemplary, or punitive damages, including but not limited to loss of data, loss of profits, business interruption, device damage, or claims arising from the use of or inability to use the software.
+This project does not grant you any right to copy, redistribute, publish, perform, display, modify, translate, synchronize, commercialize, or otherwise use third-party music-related content outside the scope permitted by the relevant rights holders or applicable law.
 
-8. Termination
+6. User-Provided Content
 
-Any violation of this license automatically terminates the permissions granted to you. Upon termination, you must stop using the software and delete any copies, modifications, builds, or redistributed materials in your possession or control.
+Users are solely responsible for ensuring that they have the necessary rights, permissions, licenses, or legal basis to input, paste, upload, fetch, edit, translate, display, export, save, share, or otherwise use any lyrics, translations, cover art, album art, platform logos, images, text, metadata, URLs, or other materials through this software.
 
-9. Additional Permissions
+The project owner is not responsible for content provided, imported, fetched, generated, edited, exported, or shared by users.
 
-For commercial use, redistribution, repackaging, public forks, modified releases, integration into another product, or any use not expressly allowed by this license, you must obtain prior written permission from the copyright holder.
+Generated images, exported files, lyric cards, screenshots, or other outputs may contain third-party content. Users are solely responsible for how they use, publish, distribute, or share such outputs.
+
+7. No Affiliation or Endorsement
+
+This project is an independent personal project.
+
+This project is not affiliated with, endorsed by, sponsored by, approved by, authorized by, or officially connected with any music platform, streaming service, artist, band, songwriter, composer, publisher, record label, rights holder, trademark owner, software project, company, or brand mentioned, referenced, parsed, displayed, linked, acknowledged, or visually inspired by this project.
+
+References to third-party names, songs, albums, artists, platforms, brands, logos, APIs, tools, or services are used only for identification, compatibility, attribution, acknowledgement, documentation, testing, or descriptive purposes.
+
+8. No Warranty
+
+This software is provided “as is” and “as available”, without warranties of any kind, express or implied, including but not limited to warranties of merchantability, fitness for a particular purpose, non-infringement, title, availability, accuracy, reliability, compatibility, security, or uninterrupted operation.
+
+The project owner does not warrant that the software will correctly parse links, retrieve metadata, fetch lyrics, identify songs, generate accurate translations, preserve formatting, produce legally usable outputs, or remain compatible with any third-party platform, API, website, service, file format, or operating system.
+
+9. Limitation of Liability
+
+To the maximum extent permitted by law, the copyright holder shall not be liable for any direct, indirect, incidental, special, consequential, exemplary, or punitive damages, including but not limited to loss of data, loss of profits, business interruption, device damage, account issues, copyright claims, trademark claims, platform restrictions, service unavailability, inaccurate metadata, incorrect lyrics, incorrect translations, or claims arising from the use of or inability to use the software.
+
+10. Termination
+
+Any violation of this license automatically terminates the permissions granted to you.
+
+Upon termination, you must stop using the software and delete any copies, modifications, builds, redistributed materials, or derivative works in your possession or control.
+
+11. Additional Permissions
+
+For commercial use, redistribution, repackaging, public forks, modified releases, hosted services, integration into another product, publication of derivative works, use in a competing product, or any use not expressly allowed by this license, you must obtain prior written permission from the copyright holder.
 
 Contact the project owner through the repository or other official contact channels for permission requests.
 
-10. No Open-Source Grant
+12. No Open-Source Grant
 
-For clarity, this software is source-available but not open source. No rights are granted except those expressly stated in this license.
+For clarity, this software is source-available but not open source.
+
+No rights are granted except those expressly stated in this license.
