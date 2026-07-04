@@ -253,9 +253,19 @@ npm run core:test       # 測試 3.0 核心純函式
 
 感謝 [思源黑體](https://github.com/adobe-fonts/source-han-sans) 和 [思源宋體](https://github.com/adobe-fonts/source-han-serif)。它們為中文歌詞卡片提供穩定、清晰、有分量的字型基礎。
 
-感謝 [Sabrina Carpenter](https://www.sabrinacarpenter.com/) 的《opposite》。它作為應用啟動時的預設範例，幫助確定初版排版、英文歌詞和中文翻譯的視覺節奏。
+感謝以下歌曲及其創作者。它們作為專案範例，幫助驗證歌詞卡片在不同語言、字型、翻譯長度和排版節奏下的顯示效果。
 
-感謝 [YOASOBI](https://www.yoasobi-music.jp/) 的《勇者》。它在歌詞樣例展示中用作示例文字，幫助驗證不同字型在卡片中的排版效果。
+<details>
+<summary>展開查看歌曲範例</summary>
+
+| 歌曲 | 專輯 | 藝術家 |
+| --- | --- | --- |
+| 《opposite》 | *emails i can't send fwd:* | [Sabrina Carpenter](https://www.sabrinacarpenter.com/) |
+| 《勇者》 | *THE BOOK 3* | [YOASOBI](https://www.yoasobi-music.jp/) |
+| 《光辉岁月》 | *命運派對* | [Beyond](https://music.apple.com/cn/artist/beyond/79668659) |
+| 《Opalite》 | *The Life of a Showgirl* | [Taylor Swift](https://www.taylorswift.com/) |
+
+</details>
 
 感謝 [OpenAI Codex](https://openai.com/codex/)。它把許多零散想法轉化為可執行的程式碼、桌面版建構流程和實際功能。
 
