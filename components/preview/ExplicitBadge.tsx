@@ -25,12 +25,11 @@ export function ExplicitBadge({
       style={{
         width: "0.86em",
         height: "0.86em",
-        fontSize: "0.82em",
         backgroundColor,
         color: getReadableForegroundColor(textColor)
       }}
     >
-      E
+      <span className="text-[0.7em] leading-none">E</span>
     </span>
   );
 }
