@@ -85,7 +85,6 @@ export type CardStyle = {
   translationText: string;
   translationScale: number;
   allowTwoLineTitle: boolean;
-  showExplicitBadge?: boolean;
   contentMode: ContentMode;
   instrumentalText: string;
   showCover: boolean;

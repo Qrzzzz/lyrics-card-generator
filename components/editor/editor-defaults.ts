@@ -70,7 +70,6 @@ export const defaultState: AppState = {
     translationText: "",
     translationScale: 0.75,
     allowTwoLineTitle: false,
-    showExplicitBadge: false,
     contentMode: "lyrics",
     instrumentalText: DEFAULT_INSTRUMENTAL_TEXT.zh,
     showCover: true,

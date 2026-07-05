@@ -100,7 +100,6 @@ export function LandscapeLyricCard({
                   allowTwoLineTitle={style.allowTwoLineTitle}
                   isDarkText={isDarkText}
                   showAlbumName={style.showAlbumName}
-                  showExplicitBadge={style.showExplicitBadge === true}
                 />
               ) : null}
               <LandscapeLyricsBlock

@@ -13,8 +13,7 @@ export function LandscapeSongInfo({
   width,
   allowTwoLineTitle,
   isDarkText,
-  showAlbumName,
-  showExplicitBadge
+  showAlbumName
 }: {
   song: SongInfo;
   textColor: string;
@@ -24,7 +23,6 @@ export function LandscapeSongInfo({
   allowTwoLineTitle: boolean;
   isDarkText: boolean;
   showAlbumName: boolean;
-  showExplicitBadge: boolean;
 }) {
   return (
     <header
@@ -45,7 +43,7 @@ export function LandscapeSongInfo({
       >
         <span className="inline-flex max-w-full min-w-0 items-baseline gap-[0.24em] align-baseline">
           <span className={allowTwoLineTitle ? "min-w-0" : "min-w-0 truncate"}>{song.title || "Untitled"}</span>
-          <ExplicitBadge show={song.explicit && showExplicitBadge} textColor={textColor} />
+          <ExplicitBadge show={song.explicit} textColor={textColor} />
         </span>
       </h1>
       <p className="mt-6 truncate text-[39px] font-semibold leading-[1.45]" style={{ color: withAlpha(textColor, 0.72) }}>
