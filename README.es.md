@@ -60,12 +60,9 @@ El instalador se recomienda para uso habitual. La versión portable es útil par
 
 ### Aspectos destacados de la versión 4.3.0
 
-* Añade ajustes unificados de color de acento: dinámico desde la portada, preajustes y color hexadecimal personalizado.
-* Los preajustes rojo, naranja, amarillo, verde, azul y morado se aplican a la traducción IA, Stepper, Spark Cursor, botón de exportación y estados de foco.
-* Separa Apariencia en modo de interfaz e interruptor Acrylic; el modo dinámico del álbum desactiva Acrylic.
-* Añade selección de calidad Baja, Estándar y Alta al paso final de exportación.
-* Elimina la calidad Ultra 3x y migra automáticamente los ajustes Ultra antiguos a Alta.
-* Añade un ejemplo multilingüe de Taylor Swift, “Opalite”.
+* Las canciones de ejemplo ahora utilizan un diálogo responsive de dos o tres columnas y cargan automáticamente la traducción en el idioma de la interfaz.
+* El distintivo Explícito añade un marcador E en línea junto al título, tanto en la vista previa como en el PNG exportado.
+* El tipo de contenido, el color de texto, los detalles visuales y el paso final de exportación ahora utilizan controles más compactos y consistentes.
 <br clear="right" />
 
 ## 🌐 Notas de publicación multilingüe

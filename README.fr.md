@@ -60,12 +60,9 @@ L'installateur est recommandé pour une utilisation régulière. La version port
 
 ### Points clés de la v4.3.0
 
-* Ajoute un réglage unifié de couleur d’accent : dynamique depuis la pochette, préréglages et couleur hex personnalisée.
-* Les préréglages rouge, orange, jaune, vert, bleu et violet pilotent désormais l’IA de traduction, le Stepper, Spark Cursor, le bouton d’export et les états de focus.
-* Sépare l’apparence en mode d’interface et interrupteur Acrylic ; le mode dynamique de l’album désactive Acrylic.
-* Ajoute le choix Faible, Standard et Haute qualité à l’étape finale d’exportation.
-* Supprime la qualité Ultra 3x et migre automatiquement les anciens réglages Ultra vers Haute.
-* Ajoute un exemple multilingue Taylor Swift « Opalite ».
+* Les chansons d'exemple s'affichent désormais dans une grille responsive à deux ou trois colonnes et chargent automatiquement la traduction correspondant à la langue de l'interface.
+* Le badge Explicite ajoute un marqueur E en ligne à côté du titre, à la fois dans l'aperçu et dans le PNG exporté.
+* Le type de contenu, la couleur du texte, les détails visuels et l'étape d'exportation finale utilisent désormais des contrôles plus compacts et cohérents.
 <br clear="right" />
 
 ## 🌐 Notes de publication multilingues

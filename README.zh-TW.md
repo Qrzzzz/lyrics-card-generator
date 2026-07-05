@@ -57,9 +57,9 @@
 
 ### v4.3.0 更新重點
 
-* Example songs now use a responsive two/three-column dialog and automatically match the current UI language.
-* Explicit Badge adds an inline E marker beside the song title in both preview and PNG export.
-* Content Type, Text Color, visual details, and the final export step now use tighter, more consistent controls.
+* 範例歌曲對話框重構為響應式兩/三欄網格，翻譯自動跟隨介面語言匹配。
+* 顯式標誌在預覽和匯出 PNG 中，標題旁添加內聯 E 標記。
+* 內容類型、文字顏色、視覺細節與最終匯出步驟現已使用更緊湊、更一致的控制項。
 
 ## 🌐 多語言發佈說明
 
