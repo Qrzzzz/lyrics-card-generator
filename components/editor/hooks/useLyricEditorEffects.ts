@@ -107,9 +107,7 @@ export function useAutoCanvasHeight(state: AppState, setState: AppStateSetter) {
       showGeneratedWatermark: state.style.showGeneratedWatermark,
       showPlatformBadge: state.style.showPlatformBadge && state.song.source !== "unknown",
       showSharedBy: state.style.showSharedBy && state.style.sharedByText.trim().length > 0,
-      sharedByText: state.style.sharedByText,
-      frameStyleEnabled: state.style.frameStyleEnabled,
-      frameVariant: state.style.frameVariant
+      sharedByText: state.style.sharedByText
     });
 
     if (nextHeight === state.style.height) {
@@ -130,8 +128,6 @@ export function useAutoCanvasHeight(state: AppState, setState: AppStateSetter) {
     state.song.source,
     state.style.allowTwoLineTitle,
     state.style.autoHeight,
-    state.style.frameStyleEnabled,
-    state.style.frameVariant,
     state.style.height,
     state.style.layoutMode,
     state.style.lineHeight,

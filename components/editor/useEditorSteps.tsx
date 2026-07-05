@@ -211,6 +211,8 @@ export function useEditorSteps({
         <VisualSettingsPanel
           style={state.style}
           onStyleChange={handlers.onStyleChange}
+          song={state.song}
+          onSongChange={handlers.onSongChange}
           t={t}
         />
       )

@@ -1,4 +1,4 @@
-import type { CardRatio, CardStyle, ContentMode, FrameVariant } from "@/lib/types";
+import type { CardRatio, CardStyle, ContentMode } from "@/lib/types";
 import { landscapeLayoutConfig, portraitLayoutConfig } from "@/lib/card-layout-config";
 
 export const PRESET_CARD_SIZES: Record<Exclude<CardRatio, "custom">, { width: number; height: number }> = {
@@ -61,8 +61,6 @@ export function estimateCardHeight(params: {
   showPlatformBadge: boolean;
   showSharedBy: boolean;
   sharedByText?: string;
-  frameStyleEnabled: boolean;
-  frameVariant?: FrameVariant;
 }) {
   const lyricLines = params.lyrics.split(/\r?\n/).filter((line) => line.trim().length > 0);
   const translationLines = params.translationEnabled
