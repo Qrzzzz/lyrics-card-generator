@@ -211,6 +211,8 @@ export function useEditorSteps({
         <VisualSettingsPanel
           style={state.style}
           onStyleChange={handlers.onStyleChange}
+          song={state.song}
+          onSongChange={handlers.onSongChange}
           t={t}
         />
       )
@@ -220,6 +222,11 @@ export function useEditorSteps({
       title: t("step.export"),
       description: t("exportHint"),
       isComplete: true,
+      primaryAction: {
+        label: t("step.complete"),
+        onClick: handlers.onExport,
+        disabled: isExporting
+      },
       content: (
         <ExportPanel
           cardRef={cardRef}

@@ -7,6 +7,7 @@ import { LandscapeLyricCard } from "@/components/preview/LandscapeLyricCard";
 import { LyricsBlock } from "@/components/preview/LyricsBlock";
 import { PaletteBackground } from "@/components/preview/PaletteBackground";
 import { PortraitFooter } from "@/components/preview/PortraitFooter";
+import { ExplicitBadge } from "@/components/preview/ExplicitBadge";
 import { getCardSize as resolveCardSize } from "@/lib/card-size";
 import { getPortraitLayout } from "@/lib/card-layout-engine";
 import { normalizeInstrumentalLayout } from "@/lib/card-style-normalize";
@@ -44,16 +45,7 @@ export function LyricCard({
   const isDarkText = isColorDark(textColor);
   const contentMode = style.contentMode ?? "lyrics";
   const showGeneratedWatermark = style.showGeneratedWatermark ?? style.showWatermark;
-  const frameEnabled = style.frameStyleEnabled && style.frameVariant !== "fullBleed";
   const layout = getPortraitLayout(size, style, song);
-  const glassBackground = frameEnabled
-    ? isDarkText
-      ? "rgba(255,255,255,0.32)"
-      : "rgba(255,255,255,0.105)"
-    : "transparent";
-  const frameShadow = frameEnabled
-    ? "inset 0 1px 0 rgba(255,255,255,0.22), 0 36px 120px rgba(0,0,0,0.42)"
-    : "none";
 
   useEffect(() => {
     setCoverFailed(false);
@@ -85,19 +77,8 @@ export function LyricCard({
       >
         <div
           data-card-content
-          className={cn(
-            "relative flex h-full w-full flex-col overflow-hidden",
-            frameEnabled
-              ? "rounded-[48px] border border-white/18 p-[42px] backdrop-blur-[34px]"
-              : "rounded-none border border-transparent bg-transparent p-[18px] backdrop-blur-0"
-          )}
-          style={{
-            background: frameEnabled ? glassBackground : "transparent",
-            boxShadow: frameEnabled ? frameShadow : "none"
-          }}
+          className="relative flex h-full w-full flex-col overflow-hidden rounded-none border border-transparent bg-transparent p-[18px] backdrop-blur-0"
         >
-          {frameEnabled ? <div className="absolute inset-x-0 top-0 h-px bg-white/35" /> : null}
-
           {(style.showCover || style.showSongInfo) && contentMode !== "instrumental" && layout.headerRect ? (
             <header
               data-card-header
@@ -123,7 +104,10 @@ export function LyricCard({
                     )}
                     style={{ color: textColor }}
                   >
-                    {song.title || "Untitled"}
+                    <span className="inline-flex max-w-full min-w-0 items-center gap-[0.18em] align-middle">
+                      <span className={style.allowTwoLineTitle ? "min-w-0" : "min-w-0 truncate"}>{song.title || "Untitled"}</span>
+                      <ExplicitBadge show={song.explicit} textColor={textColor} />
+                    </span>
                   </h1>
                   <p
                     className="mt-4 truncate text-[35px] font-semibold leading-[1.5]"

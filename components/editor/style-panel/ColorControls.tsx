@@ -1,6 +1,6 @@
 "use client";
 
-import { Input, Select, SettingRow } from "@/components/ui/controls";
+import { Input, Select, SegmentedControl, SettingRow } from "@/components/ui/controls";
 import { TEXT_COLOR_PRESETS } from "@/lib/color-analysis";
 import type { createT, MessageKey } from "@/lib/i18n";
 import type { CardStyle, TextColorMode, TextColorPreset } from "@/lib/types";
@@ -29,38 +29,42 @@ export function ColorControls({ style, onStyleChange, t }: ColorControlsProps) {
   return (
     <div className="grid gap-0">
       <SettingRow label={t("textColor")}>
-        <Select
+        <SegmentedControl<TextColorMode>
           value={style.textColorMode}
-          onChange={(event) => update("textColorMode", event.target.value as TextColorMode)}
-        >
-          <option value="auto">{t("auto")}</option>
-          <option value="preset">{t("preset")}</option>
-          <option value="custom">{t("custom")}</option>
-        </Select>
+          onChange={(value) => update("textColorMode", value)}
+          options={[
+            { value: "auto", label: t("auto") },
+            { value: "preset", label: t("preset") },
+            { value: "custom", label: t("custom") }
+          ]}
+          aria-label={t("textColor")}
+        />
       </SettingRow>
-      <SettingRow label={t("preset")}>
-        <Select
-          value={style.textColorPreset}
-          disabled={style.textColorMode !== "preset"}
-          onChange={(event) => update("textColorPreset", event.target.value as TextColorPreset)}
-        >
-          {Object.keys(TEXT_COLOR_PRESETS).map((value) => (
-            <option key={value} value={value}>
-              {t(TEXT_PRESET_LABEL_KEYS[value as TextColorPreset])}
-            </option>
-          ))}
-        </Select>
-      </SettingRow>
-      <SettingRow label={t("custom")} description={style.resolvedTextColor}>
+      {style.textColorMode === "preset" ? (
+        <SettingRow label={t("preset")}>
+          <Select
+            value={style.textColorPreset}
+            onChange={(event) => update("textColorPreset", event.target.value as TextColorPreset)}
+          >
+            {Object.keys(TEXT_COLOR_PRESETS).map((value) => (
+              <option key={value} value={value}>
+                {t(TEXT_PRESET_LABEL_KEYS[value as TextColorPreset])}
+              </option>
+            ))}
+          </Select>
+        </SettingRow>
+      ) : null}
+      {style.textColorMode === "custom" ? (
+        <SettingRow label={t("custom")} description={style.resolvedTextColor}>
         <Input
           type="color"
           value={style.customTextColor}
-          disabled={style.textColorMode !== "custom"}
           onInput={(event) => update("customTextColor", event.currentTarget.value)}
           onChange={(event) => update("customTextColor", event.target.value)}
           className="h-11 p-1"
         />
-      </SettingRow>
+        </SettingRow>
+      ) : null}
     </div>
   );
 }

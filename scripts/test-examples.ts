@@ -53,11 +53,16 @@ for (const example of EXAMPLE_SONGS) {
 
   for (const locale of locales) {
     const resolved = resolveExampleTranslation(example, locale);
-    assert.ok(resolved.text.trim(), `${example.id} resolves ${locale}`);
-    assert.ok(
-      example.translations.some((translation) => translation.language === resolved.language),
-      `${example.id} resolved ${locale} is configured`
-    );
+    if (locale === example.originalLanguage) {
+      assert.equal(resolved.text, "", `${example.id} keeps original-language translation empty`);
+      assert.equal(resolved.language, locale, `${example.id} resolves original locale`);
+    } else {
+      assert.ok(resolved.text.trim(), `${example.id} resolves ${locale}`);
+      assert.ok(
+        example.translations.some((translation) => translation.language === resolved.language),
+        `${example.id} resolved ${locale} is configured`
+      );
+    }
   }
 }
 

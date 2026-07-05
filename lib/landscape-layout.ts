@@ -1,5 +1,4 @@
 import { landscapeLayoutConfig } from "@/lib/card-layout-config";
-import { LANDSCAPE_FRAME_INSET } from "@/lib/frame-layout";
 
 export type LandscapeSlots = {
   safe: {
@@ -47,19 +46,9 @@ export function getLandscapeSlots(
     showCover?: boolean;
     allowTwoLineTitle?: boolean;
     showSongInfo?: boolean;
-    frameEnabled?: boolean;
-    frameInset?: number;
   } = {}
 ): LandscapeSlots {
-  const scaleX = width / 1920;
-  const scaleY = height / 1080;
-  const frameInset = options.frameInset ?? LANDSCAPE_FRAME_INSET;
-  const frameInsetX = options.frameEnabled ? frameInset * scaleX : 0;
-  const frameInsetY = options.frameEnabled ? frameInset * scaleY : 0;
-  const layoutWidth = Math.max(1, width - frameInsetX * 2);
-  const layoutHeight = Math.max(1, height - frameInsetY * 2);
-
-  return getLandscapeSlotsForBounds(layoutWidth, layoutHeight, frameInsetX, frameInsetY, {
+  return getLandscapeSlotsForBounds(width, height, 0, 0, {
     showCover: options.showCover,
     allowTwoLineTitle: options.allowTwoLineTitle,
     showSongInfo: options.showSongInfo

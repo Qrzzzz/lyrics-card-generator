@@ -35,6 +35,7 @@ export const defaultState: AppState = {
     title: "",
     artist: "",
     album: "",
+    explicit: false,
     originalCoverUrl: "",
     coverUrl: "",
     proxiedCoverUrl: "",
@@ -81,10 +82,6 @@ export const defaultState: AppState = {
     showPlatformBadge: false,
     showFineGrid: false,
     fineGridDensity: "medium",
-    frameStyleEnabled: false,
-    frameVariant: "fullBleed",
-    showFrame: false,
-    showShadow: false,
     coverCropScale: 1,
     watermark: messages.zh.madeWith
   },

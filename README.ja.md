@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v4.2.6.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v4.3.0.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="#ローカル開発">ローカル開発</a> ·
@@ -51,33 +51,29 @@
 
 最新版は [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) からダウンロードできます。
 
-* 推奨インストーラー：`Lyrics Card Generator Setup 4.2.6.exe`
-* ポータブル版：`Lyrics Card Generator-4.2.6-portable.exe`
+* 推奨インストーラー：`Lyrics Card Generator Setup 4.3.0.exe`
+* ポータブル版：`Lyrics Card Generator-4.3.0-portable.exe`
 
 通常利用にはインストーラーを推奨します。ポータブル版は一時利用、検証、リムーバブルドライブでの利用に向いています。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v4.2.6 の更新ポイント
+### v4.3.0 の更新ポイント
 
-* アルバムカバー連動、プリセット、カスタム HEX に対応した統一アクセントカラー設定を追加しました。
-* 赤、オレンジ、黄、緑、青、紫のプリセットを AI 翻訳、Stepper、Spark Cursor、書き出しボタン、フォーカス状態で共有します。
-* 外観設定をインターフェイスモードと Acrylic 効果スイッチに分離し、アルバム動的カラーでは Acrylic を無効化します。
-* 最終書き出しステップに低、標準、高画質の品質選択を追加しました。
-* Ultra 3x 書き出し品質を削除し、旧 Ultra 設定は自動的に高画質へ移行します。
-* Taylor Swift「Opalite」の多言語サンプル曲を追加しました。
-<br clear="right" />
+* Example songs now use a responsive two/three-column dialog and automatically match the current UI language.
+* Explicit Badge adds an inline E marker beside the song title in both preview and PNG export.
+* Content Type, Text Color, visual details, and the final export step now use tighter, more consistent controls.
 
 ## 🌐 多言語リリースノート
 
 GitHub Release ページではデフォルトで簡体字中国語の短縮版が使用され、完全なリリースノートは `docs/releases/` にて管理されています：
 
-* [简体中文](./docs/releases/v4.2.6.zh-CN.md)
-* [繁體中文](./docs/releases/v4.2.6.zh-TW.md)
-* [English](./docs/releases/v4.2.6.en.md)
-* [Français](./docs/releases/v4.2.6.fr.md)
-* [日本語](./docs/releases/v4.2.6.ja.md)
-* [Español](./docs/releases/v4.2.6.es.md)
+* [简体中文](./docs/releases/v4.3.0.zh-CN.md)
+* [繁體中文](./docs/releases/v4.3.0.zh-TW.md)
+* [English](./docs/releases/v4.3.0.en.md)
+* [Français](./docs/releases/v4.3.0.fr.md)
+* [日本語](./docs/releases/v4.3.0.ja.md)
+* [Español](./docs/releases/v4.3.0.es.md)
 
 <a id="主な機能"></a>
 

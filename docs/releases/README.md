@@ -44,6 +44,7 @@ docs/releases/vX.Y.Z.es.md
 - `v4.2.0`：升级示例歌词系统为原语言歌词加五种目标语言翻译样例，并修复 Web Lite / GitHub Pages 的图标路径与 artifact 准备方式。
 - `v4.2.3`：收敛软件界面外观系统，移除独立背景设置页，将界面外观固定为专辑封面动态取色、深色、浅色、深色亚克力和浅色亚克力五种模式。
 - `v4.2.6`：建立统一 App Accent 系统，新增预设/自定义主题色，拆分界面模式与亚克力效果，并将导出质量收敛为低、标准、高清三档。
+- `v4.3.0`: responsive example song grid, locale-matched example translations, Explicit badge support, and tighter content type, text color, visual detail, and final export controls.
 
 旧的 `docs/release-notes-v*.md` 单文件发布说明已迁移到本目录，避免同一版本存在多套入口。
 

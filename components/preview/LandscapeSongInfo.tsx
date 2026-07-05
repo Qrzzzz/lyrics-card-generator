@@ -3,6 +3,7 @@
 import type { SongInfo } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { withAlpha } from "@/lib/palette-background";
+import { ExplicitBadge } from "@/components/preview/ExplicitBadge";
 
 export function LandscapeSongInfo({
   song,
@@ -40,7 +41,10 @@ export function LandscapeSongInfo({
           allowTwoLineTitle ? "two-line-title" : "truncate"
         )}
       >
-        {song.title || "Untitled"}
+        <span className="inline-flex max-w-full min-w-0 items-center gap-[0.18em] align-middle">
+          <span className={allowTwoLineTitle ? "min-w-0" : "min-w-0 truncate"}>{song.title || "Untitled"}</span>
+          <ExplicitBadge show={song.explicit} textColor={textColor} />
+        </span>
       </h1>
       <p className="mt-6 truncate text-[39px] font-semibold leading-[1.45]" style={{ color: withAlpha(textColor, 0.72) }}>
         {song.artist || "Unknown artist"}

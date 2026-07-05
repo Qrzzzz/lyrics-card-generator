@@ -1,5 +1,4 @@
 import { getCardSize } from "@/lib/card-size";
-import { LANDSCAPE_FRAME_INSET, PORTRAIT_FRAME_INSET } from "@/lib/frame-layout";
 import type { CardStyle, SongInfo, SongSource } from "@/lib/types";
 
 export type Rect = {
@@ -35,9 +34,8 @@ type LayoutSongContext = SongSource | Pick<SongInfo, "source" | "album">;
 export function getPortraitLayout(size: CardSize, style: CardStyle, songContext: LayoutSongContext = "unknown"): PortraitLayout {
   const source = getLayoutSource(songContext);
   const hasAlbumName = hasVisibleAlbumName(style, songContext);
-  const frameEnabled = isFrameEnabled(style);
-  const outerPadding = frameEnabled ? PORTRAIT_FRAME_INSET : clamp(Math.round(size.width * 0.042), 28, 54);
-  const innerPadding = frameEnabled ? clamp(Math.round(size.width * 0.052), 36, 62) : clamp(Math.round(size.width * 0.02), 14, 26);
+  const outerPadding = clamp(Math.round(size.width * 0.042), 28, 54);
+  const innerPadding = clamp(Math.round(size.width * 0.02), 14, 26);
   const safeRect = insetRect(
     {
       x: 0,
@@ -90,11 +88,9 @@ export function getPortraitLayout(size: CardSize, style: CardStyle, songContext:
 export function getLandscapeLayout(size: CardSize, style: CardStyle, songContext: LayoutSongContext = "unknown"): LandscapeLayout {
   const source = getLayoutSource(songContext);
   const hasAlbumName = hasVisibleAlbumName(style, songContext);
-  const frameEnabled = isFrameEnabled(style);
-  const frameInset = frameEnabled ? LANDSCAPE_FRAME_INSET : 0;
   const shortSide = Math.min(size.width, size.height);
-  const horizontalPadding = clamp(Math.round(size.width * 0.055), 72, 168) + frameInset;
-  const verticalPadding = clamp(Math.round(shortSide * 0.07), 48, 108) + frameInset;
+  const horizontalPadding = clamp(Math.round(size.width * 0.055), 72, 168);
+  const verticalPadding = clamp(Math.round(shortSide * 0.07), 48, 108);
   const safeRect = {
     x: horizontalPadding,
     y: verticalPadding,
@@ -186,10 +182,6 @@ function getLayoutSource(songContext: LayoutSongContext) {
 
 function hasVisibleAlbumName(style: CardStyle, songContext: LayoutSongContext) {
   return typeof songContext !== "string" && Boolean(style.showAlbumName && songContext.album?.trim());
-}
-
-function isFrameEnabled(style: CardStyle) {
-  return Boolean(style.frameStyleEnabled && style.frameVariant !== "fullBleed");
 }
 
 function insetRect(rect: Rect, inset: number): Rect {

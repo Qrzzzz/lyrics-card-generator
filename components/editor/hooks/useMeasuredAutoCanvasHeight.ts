@@ -102,8 +102,6 @@ export function useMeasuredAutoCanvasHeight(
     state.style.customFontWeight,
     state.style.customFontStyle,
     state.style.font,
-    state.style.frameStyleEnabled,
-    state.style.frameVariant,
     state.style.height,
     state.style.layoutMode,
     state.style.lineHeight,

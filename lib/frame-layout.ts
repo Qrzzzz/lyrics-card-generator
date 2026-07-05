@@ -1,2 +1,0 @@
-export const LANDSCAPE_FRAME_INSET = 64;
-export const PORTRAIT_FRAME_INSET = 72;

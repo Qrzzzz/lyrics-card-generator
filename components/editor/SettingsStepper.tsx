@@ -1,13 +1,14 @@
 "use client";
 
 import { motion, useReducedMotion } from "framer-motion";
-import { Check } from "lucide-react";
+import { Check, Download } from "lucide-react";
 import type { ReactNode } from "react";
 import { useRef } from "react";
 import { useBalancedStepperLayout } from "@/components/editor/hooks/useBalancedStepperLayout";
 import { useMeasuredStepperPanelHeight } from "@/components/editor/hooks/useMeasuredStepperPanelHeight";
 import { MotionPresence } from "@/components/motion/MotionPresence";
 import { getReadableForegroundColor } from "@/lib/contrast-color";
+import { StarBorder } from "@/components/ui/StarBorder";
 import {
   motionDurations,
   motionEasings,
@@ -28,6 +29,11 @@ export type SettingsStep = {
     onClick: () => void;
     pressed?: boolean;
     expanded?: boolean;
+    disabled?: boolean;
+  };
+  primaryAction?: {
+    label: ReactNode;
+    onClick: () => void | Promise<void>;
     disabled?: boolean;
   };
 };
@@ -59,6 +65,7 @@ export function SettingsStepper({
   const isFirstStep = currentStep <= 0;
   const isLastStep = currentStep >= steps.length - 1;
   const secondaryAction = activeStep?.secondaryAction;
+  const primaryAction = activeStep?.primaryAction;
   const markerForegroundColor = getReadableForegroundColor(themeColor);
   const variants = stepPanelVariants(reduceMotion ?? false);
   const transition = reduceMotion
@@ -202,7 +209,7 @@ export function SettingsStepper({
       <div
         className={cn(
           "flex items-center gap-3",
-          isLastStep ? "justify-start" : "glass-panel justify-between rounded-lg p-4"
+          isLastStep ? "justify-between" : "glass-panel justify-between rounded-lg p-4"
         )}
       >
         <button
@@ -226,7 +233,28 @@ export function SettingsStepper({
               {secondaryAction.label}
             </button>
           ) : null}
-          {!isLastStep ? (
+          {isLastStep && primaryAction ? (
+            <StarBorder
+              type="button"
+              data-testid="complete-export-button"
+              color={themeColor}
+              speed="7.2s"
+              onClick={() => void primaryAction.onClick()}
+              disabled={primaryAction.disabled}
+              className="complete-export-button transition hover:scale-[1.006] disabled:cursor-default disabled:opacity-70"
+              style={{
+                minHeight: 44,
+                borderRadius: 8,
+                color: markerForegroundColor,
+                filter: `drop-shadow(0 12px 28px ${themeColor}44)`
+              }}
+            >
+              <span className="inline-flex h-11 items-center justify-center gap-2 px-6 text-sm font-black tracking-normal sm:px-8">
+                <Download className="h-5 w-5 shrink-0" />
+                <span className="whitespace-nowrap">{primaryAction.label}</span>
+              </span>
+            </StarBorder>
+          ) : !isLastStep ? (
             <button
               type="button"
               onClick={() => goToStep(currentStep + 1)}

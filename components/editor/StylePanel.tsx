@@ -22,12 +22,15 @@ import type {
   CardRatio,
   CardStyle,
   ContentMode,
-  FontScheme
+  FontScheme,
+  SongInfo
 } from "@/lib/types";
 
 type StylePanelProps = {
   style: CardStyle;
   onStyleChange: (style: CardStyle) => void;
+  song?: SongInfo;
+  onSongChange?: (song: SongInfo) => void;
   onFontSchemePreviewChange?: (scheme: FontScheme | null) => void;
   t: ReturnType<typeof createT>;
 };
@@ -317,8 +320,7 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
         height: squareSize.height,
         autoHeight: true,
         translationEnabled: false,
-        translationText: "",
-        frameVariant: style.frameStyleEnabled && style.frameVariant !== "fullBleed" ? "auto" : style.frameVariant
+        translationText: ""
       });
       return;
     }
@@ -363,18 +365,22 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
 
     onStyleChange({
       ...style,
-      layoutMode,
-      frameVariant: style.frameStyleEnabled && style.frameVariant !== "fullBleed" ? "auto" : style.frameVariant
+      layoutMode
     });
   }
 
   return (
     <Section title={t("layout")} eyebrow={t("style")} variant="plain" contentClassName="gap-0">
       <SettingRow label={t("contentType")}>
-        <SelectField value={style.contentMode} onChange={(event) => updateContentMode(event.target.value as ContentMode)}>
-          <option value="lyrics">{t("lyricsMode")}</option>
-          <option value="instrumental">{t("instrumentalMode")}</option>
-        </SelectField>
+        <SegmentedControl<ContentMode>
+          value={style.contentMode}
+          onChange={updateContentMode}
+          options={[
+            { value: "lyrics", label: t("lyricsMode") },
+            { value: "instrumental", label: t("instrumentalMode") }
+          ]}
+          aria-label={t("contentType")}
+        />
       </SettingRow>
 
       <SettingRow label={t("layoutMode")} description={isInstrumental ? instrumentalLayoutLockedHint : undefined}>
@@ -512,25 +518,21 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
   );
 }
 
-export function VisualSettingsPanel({ style, onStyleChange, t }: StylePanelProps) {
-  const frameVisible = style.frameStyleEnabled && style.frameVariant !== "fullBleed";
-
+export function VisualSettingsPanel({ style, onStyleChange, song, onSongChange, t }: StylePanelProps) {
   function update<K extends keyof CardStyle>(key: K, value: CardStyle[K]) {
     onStyleChange({ ...style, [key]: value });
   }
 
-  function updateFrameVisibility(enabled: boolean) {
-    onStyleChange({
-      ...style,
-      frameStyleEnabled: enabled,
-      frameVariant: enabled ? "auto" : "fullBleed",
-      showFrame: enabled,
-      showShadow: enabled
-    });
-  }
-
   function updateGeneratedWatermark(enabled: boolean) {
     onStyleChange({ ...style, showGeneratedWatermark: enabled, showWatermark: enabled });
+  }
+
+  function updateExplicitBadge(enabled: boolean) {
+    if (!song || !onSongChange) {
+      return;
+    }
+
+    onSongChange({ ...song, explicit: enabled });
   }
 
   return (
@@ -572,9 +574,10 @@ export function VisualSettingsPanel({ style, onStyleChange, t }: StylePanelProps
         ) : null}
       </Section>
 
-      <Section title={t("step.visual")} variant="plain" contentClassName="gap-0">
+      <Section title={t("step.visual")} variant="plain" contentClassName="grid gap-3 sm:grid-cols-2">
         <ToggleRow label={t("cover")} checked={style.showCover} onChange={(checked) => update("showCover", checked)} />
         <ToggleRow label={t("showSongInfo")} checked={style.showSongInfo} onChange={(checked) => update("showSongInfo", checked)} />
+        <ToggleRow label={t("explicitBadge")} checked={song?.explicit === true} onChange={updateExplicitBadge} />
         <ToggleRow label={t("showAlbumName")} checked={style.showAlbumName} onChange={(checked) => update("showAlbumName", checked)} />
         <ToggleRow label={t("allowTwoLineTitle")} checked={style.allowTwoLineTitle} onChange={(checked) => update("allowTwoLineTitle", checked)} />
         <ToggleRow label={t("showGeneratedWatermark")} checked={style.showGeneratedWatermark} onChange={updateGeneratedWatermark} />
@@ -584,18 +587,6 @@ export function VisualSettingsPanel({ style, onStyleChange, t }: StylePanelProps
           onChange={(checked) => update("showPlatformBadge", checked)}
         />
         <ToggleRow label={t("showSharedBy")} checked={style.showSharedBy} onChange={(checked) => update("showSharedBy", checked)} />
-
-        <SettingRow label={t("showFrame")}>
-          <SegmentedControl
-            value={frameVisible ? "frame" : "fullBleed"}
-            onValueChange={(value) => updateFrameVisibility(value === "frame")}
-            options={[
-              { value: "frame", label: t("frameAndShadow") },
-              { value: "fullBleed", label: t("fullBleed") }
-            ]}
-            aria-label={t("showFrame")}
-          />
-        </SettingRow>
 
         {style.showSharedBy ? (
           <SettingRow label={t("sharedBy")}>

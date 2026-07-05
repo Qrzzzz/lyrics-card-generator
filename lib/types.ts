@@ -6,6 +6,7 @@ export type SongInfo = {
   title: string;
   artist: string;
   album?: string;
+  explicit?: boolean;
   originalCoverUrl?: string;
   coverUrl?: string;
   proxiedCoverUrl?: string;
@@ -16,7 +17,6 @@ export type SongInfo = {
 
 export type CardLayoutMode = "portrait" | "landscape";
 export type CardRatio = "1:1" | "4:5" | "9:16" | "16:9" | "21:9" | "3:2" | "custom";
-export type FrameVariant = "auto" | "portraitGlass" | "landscapeClean" | "fullBleed";
 export type CardFont = "sans-heavy" | "serif-heavy" | "system-sans" | "system-serif";
 export type CardAlign = "left" | "center";
 export type TextColorMode = "auto" | "preset" | "custom";
@@ -96,10 +96,6 @@ export type CardStyle = {
   showPlatformBadge: boolean;
   showFineGrid: boolean;
   fineGridDensity: BackgroundGridDensity;
-  frameStyleEnabled: boolean;
-  frameVariant?: FrameVariant;
-  showFrame: boolean;
-  showShadow: boolean;
   coverCropScale: number;
   watermark: string;
 };
