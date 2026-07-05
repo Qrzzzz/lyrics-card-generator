@@ -21,15 +21,16 @@ export function ExplicitBadge({
   return (
     <span
       aria-label="Explicit"
-      className={`inline-flex shrink-0 select-none items-center justify-center rounded-[0.18em] align-middle font-mono font-black leading-none ${className}`}
+      className={`inline-flex shrink-0 select-none items-center justify-center rounded-[0.2em] align-middle font-mono font-black leading-none ${className}`}
       style={{
-        width: "0.86em",
-        height: "0.86em",
+        width: "0.68em",
+        height: "0.68em",
         backgroundColor,
-        color: getReadableForegroundColor(textColor)
+        color: getReadableForegroundColor(textColor),
+        boxShadow: "inset 0 0 0 0.055em rgba(255,255,255,0.16)"
       }}
     >
-      <span className="text-[0.7em] leading-none">E</span>
+      <span className="text-[0.48em] leading-none">E</span>
     </span>
   );
 }

@@ -104,7 +104,7 @@ export function LyricCard({
                     )}
                     style={{ color: textColor }}
                   >
-                    <span className="inline-flex max-w-full min-w-0 items-baseline gap-[0.24em] align-baseline">
+                    <span className="inline-flex max-w-full min-w-0 items-center gap-[0.18em] align-middle">
                       <span className={style.allowTwoLineTitle ? "min-w-0" : "min-w-0 truncate"}>{song.title || "Untitled"}</span>
                       <ExplicitBadge show={song.explicit} textColor={textColor} />
                     </span>
