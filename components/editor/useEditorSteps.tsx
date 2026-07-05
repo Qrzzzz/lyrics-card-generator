@@ -180,11 +180,6 @@ export function useEditorSteps({
       title: t("step.layout"),
       description: t("layoutCompatibility"),
       isComplete: true,
-      primaryAction: {
-        label: t("step.complete"),
-        onClick: handlers.onExport,
-        disabled: isExporting
-      },
       content: (
         <LayoutSettingsPanel
           style={state.style}
@@ -225,6 +220,11 @@ export function useEditorSteps({
       title: t("step.export"),
       description: t("exportHint"),
       isComplete: true,
+      primaryAction: {
+        label: t("step.complete"),
+        onClick: handlers.onExport,
+        disabled: isExporting
+      },
       content: (
         <ExportPanel
           cardRef={cardRef}

@@ -1,6 +1,6 @@
 "use client";
 
-import { Input, SegmentedControl, SettingRow } from "@/components/ui/controls";
+import { Input, Select, SegmentedControl, SettingRow } from "@/components/ui/controls";
 import { TEXT_COLOR_PRESETS } from "@/lib/color-analysis";
 import type { createT, MessageKey } from "@/lib/i18n";
 import type { CardStyle, TextColorMode, TextColorPreset } from "@/lib/types";
@@ -42,16 +42,16 @@ export function ColorControls({ style, onStyleChange, t }: ColorControlsProps) {
       </SettingRow>
       {style.textColorMode === "preset" ? (
         <SettingRow label={t("preset")}>
-          <SegmentedControl<TextColorPreset>
+          <Select
             value={style.textColorPreset}
-            onChange={(value) => update("textColorPreset", value)}
-            columns={2}
-            options={Object.keys(TEXT_COLOR_PRESETS).map((value) => ({
-              value: value as TextColorPreset,
-              label: t(TEXT_PRESET_LABEL_KEYS[value as TextColorPreset])
-            }))}
-            aria-label={t("preset")}
-          />
+            onChange={(event) => update("textColorPreset", event.target.value as TextColorPreset)}
+          >
+            {Object.keys(TEXT_COLOR_PRESETS).map((value) => (
+              <option key={value} value={value}>
+                {t(TEXT_PRESET_LABEL_KEYS[value as TextColorPreset])}
+              </option>
+            ))}
+          </Select>
         </SettingRow>
       ) : null}
       {style.textColorMode === "custom" ? (

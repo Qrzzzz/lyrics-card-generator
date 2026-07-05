@@ -1,6 +1,7 @@
 "use client";
 
 import { withAlpha } from "@/lib/palette-background";
+import { getReadableForegroundColor } from "@/lib/contrast-color";
 
 export function ExplicitBadge({
   show,
@@ -15,6 +16,8 @@ export function ExplicitBadge({
     return null;
   }
 
+  const backgroundColor = withAlpha(textColor, 0.6);
+
   return (
     <span
       aria-label="Explicit"
@@ -23,8 +26,8 @@ export function ExplicitBadge({
         width: "0.86em",
         height: "0.86em",
         fontSize: "0.82em",
-        backgroundColor: withAlpha(textColor, 0.6),
-        color: "#FFFFFF"
+        backgroundColor,
+        color: getReadableForegroundColor(textColor)
       }}
     >
       E
