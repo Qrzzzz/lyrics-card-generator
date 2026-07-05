@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v4.2.6.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v4.3.0.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="#développement-local">Développement local</a> ·
@@ -51,14 +51,14 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 Téléchargez la dernière version depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
 
-* Installateur recommandé : `Lyrics Card Generator Setup 4.2.6.exe`
-* Version portable : `Lyrics Card Generator-4.2.6-portable.exe`
+* Installateur recommandé : `Lyrics Card Generator Setup 4.3.0.exe`
+* Version portable : `Lyrics Card Generator-4.3.0-portable.exe`
 
 L'installateur est recommandé pour une utilisation régulière. La version portable convient aux essais, à une utilisation temporaire ou à un disque amovible.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### Points clés de la v4.2.6
+### Points clés de la v4.3.0
 
 * Ajoute un réglage unifié de couleur d’accent : dynamique depuis la pochette, préréglages et couleur hex personnalisée.
 * Les préréglages rouge, orange, jaune, vert, bleu et violet pilotent désormais l’IA de traduction, le Stepper, Spark Cursor, le bouton d’export et les états de focus.
@@ -72,12 +72,12 @@ L'installateur est recommandé pour une utilisation régulière. La version port
 
 La page GitHub Release utilise par défaut la version courte en chinois simplifié, les notes de publication complètes sont conservées dans `docs/releases/` :
 
-* [简体中文](./docs/releases/v4.2.6.zh-CN.md)
-* [繁體中文](./docs/releases/v4.2.6.zh-TW.md)
-* [English](./docs/releases/v4.2.6.en.md)
-* [Français](./docs/releases/v4.2.6.fr.md)
-* [日本語](./docs/releases/v4.2.6.ja.md)
-* [Español](./docs/releases/v4.2.6.es.md)
+* [简体中文](./docs/releases/v4.3.0.zh-CN.md)
+* [繁體中文](./docs/releases/v4.3.0.zh-TW.md)
+* [English](./docs/releases/v4.3.0.en.md)
+* [Français](./docs/releases/v4.3.0.fr.md)
+* [日本語](./docs/releases/v4.3.0.ja.md)
+* [Español](./docs/releases/v4.3.0.es.md)
 
 <a id="fonctionnalités-principales"></a>
 

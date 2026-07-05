@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v4.2.6.zh-TW.md">發布說明</a> ·
+  <a href="./docs/releases/v4.3.0.zh-TW.md">發布說明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">線上 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="#本機開發">本機開發</a> ·
@@ -48,33 +48,29 @@
 
 請前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載最新版：
 
-* 建議一般使用者下載安裝版：`Lyrics Card Generator Setup 4.2.6.exe`
-* 不想安裝時可下載可攜版：`Lyrics Card Generator-4.2.6-portable.exe`
+* 建議一般使用者下載安裝版：`Lyrics Card Generator Setup 4.3.0.exe`
+* 不想安裝時可下載可攜版：`Lyrics Card Generator-4.3.0-portable.exe`
 
 安裝版適合長期使用；可攜版適合臨時執行、測試或放在隨身碟中使用。
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v4.2.6 更新重點
+### v4.3.0 更新重點
 
-* 新增統一主題色設定，支援跟隨專輯封面、預設顏色和自訂色號。
-* 預設主題色支援紅、橙、黃、綠、藍、紫，並統一驅動 AI 翻譯、Stepper、Spark Cursor、匯出按鈕和控制項焦點態。
-* 外觀設定拆分為介面模式和壓克力效果開關，專輯封面動態取色模式下會停用壓克力。
-* 最終匯出步驟新增低、標準、高清三檔品質選擇。
-* 移除超清 3x 匯出品質，舊設定中的超清會自動降級為高清。
-* 範例歌曲新增 Taylor Swift《Opalite》的多語言翻譯樣例。
-<br clear="right" />
+* Example songs now use a responsive two/three-column dialog and automatically match the current UI language.
+* Explicit Badge adds an inline E marker beside the song title in both preview and PNG export.
+* Content Type, Text Color, visual details, and the final export step now use tighter, more consistent controls.
 
 ## 🌐 多語言發佈說明
 
 GitHub Release 頁面預設使用簡體中文短版，完整發佈說明維護在 `docs/releases/`：
 
-* [简体中文](./docs/releases/v4.2.6.zh-CN.md)
-* [繁體中文](./docs/releases/v4.2.6.zh-TW.md)
-* [English](./docs/releases/v4.2.6.en.md)
-* [Français](./docs/releases/v4.2.6.fr.md)
-* [日本語](./docs/releases/v4.2.6.ja.md)
-* [Español](./docs/releases/v4.2.6.es.md)
+* [简体中文](./docs/releases/v4.3.0.zh-CN.md)
+* [繁體中文](./docs/releases/v4.3.0.zh-TW.md)
+* [English](./docs/releases/v4.3.0.en.md)
+* [Français](./docs/releases/v4.3.0.fr.md)
+* [日本語](./docs/releases/v4.3.0.ja.md)
+* [Español](./docs/releases/v4.3.0.es.md)
 
 ## ✨ 主要功能
 

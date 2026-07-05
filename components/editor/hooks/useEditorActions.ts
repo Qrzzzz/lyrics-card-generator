@@ -269,11 +269,11 @@ export function useEditorActions({
       },
       lyrics: example.lyrics,
       translationText: translation.text,
-      translationEnabled: example.translationEnabled,
+      translationEnabled: Boolean(translation.text.trim()) && example.translationEnabled,
       style: {
         ...current.style,
         translationText: translation.text,
-        translationEnabled: example.translationEnabled
+        translationEnabled: Boolean(translation.text.trim()) && example.translationEnabled
       }
     }));
     onCloseExamples();

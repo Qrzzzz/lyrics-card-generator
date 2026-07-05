@@ -371,10 +371,15 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
   return (
     <Section title={t("layout")} eyebrow={t("style")} variant="plain" contentClassName="gap-0">
       <SettingRow label={t("contentType")}>
-        <SelectField value={style.contentMode} onChange={(event) => updateContentMode(event.target.value as ContentMode)}>
-          <option value="lyrics">{t("lyricsMode")}</option>
-          <option value="instrumental">{t("instrumentalMode")}</option>
-        </SelectField>
+        <SegmentedControl<ContentMode>
+          value={style.contentMode}
+          onChange={updateContentMode}
+          options={[
+            { value: "lyrics", label: t("lyricsMode") },
+            { value: "instrumental", label: t("instrumentalMode") }
+          ]}
+          aria-label={t("contentType")}
+        />
       </SettingRow>
 
       <SettingRow label={t("layoutMode")} description={isInstrumental ? instrumentalLayoutLockedHint : undefined}>
@@ -572,9 +577,10 @@ export function VisualSettingsPanel({ style, onStyleChange, t }: StylePanelProps
         ) : null}
       </Section>
 
-      <Section title={t("step.visual")} variant="plain" contentClassName="gap-0">
+      <Section title={t("step.visual")} variant="plain" contentClassName="grid gap-3 sm:grid-cols-2">
         <ToggleRow label={t("cover")} checked={style.showCover} onChange={(checked) => update("showCover", checked)} />
         <ToggleRow label={t("showSongInfo")} checked={style.showSongInfo} onChange={(checked) => update("showSongInfo", checked)} />
+        <ToggleRow label={t("explicitBadge")} checked={style.showExplicitBadge === true} onChange={(checked) => update("showExplicitBadge", checked)} />
         <ToggleRow label={t("showAlbumName")} checked={style.showAlbumName} onChange={(checked) => update("showAlbumName", checked)} />
         <ToggleRow label={t("allowTwoLineTitle")} checked={style.allowTwoLineTitle} onChange={(checked) => update("allowTwoLineTitle", checked)} />
         <ToggleRow label={t("showGeneratedWatermark")} checked={style.showGeneratedWatermark} onChange={updateGeneratedWatermark} />

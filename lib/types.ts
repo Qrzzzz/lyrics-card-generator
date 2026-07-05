@@ -6,6 +6,7 @@ export type SongInfo = {
   title: string;
   artist: string;
   album?: string;
+  explicit?: boolean;
   originalCoverUrl?: string;
   coverUrl?: string;
   proxiedCoverUrl?: string;
@@ -84,6 +85,7 @@ export type CardStyle = {
   translationText: string;
   translationScale: number;
   allowTwoLineTitle: boolean;
+  showExplicitBadge?: boolean;
   contentMode: ContentMode;
   instrumentalText: string;
   showCover: boolean;

@@ -7,6 +7,7 @@ import { LandscapeLyricCard } from "@/components/preview/LandscapeLyricCard";
 import { LyricsBlock } from "@/components/preview/LyricsBlock";
 import { PaletteBackground } from "@/components/preview/PaletteBackground";
 import { PortraitFooter } from "@/components/preview/PortraitFooter";
+import { ExplicitBadge } from "@/components/preview/ExplicitBadge";
 import { getCardSize as resolveCardSize } from "@/lib/card-size";
 import { getPortraitLayout } from "@/lib/card-layout-engine";
 import { normalizeInstrumentalLayout } from "@/lib/card-style-normalize";
@@ -123,7 +124,10 @@ export function LyricCard({
                     )}
                     style={{ color: textColor }}
                   >
-                    {song.title || "Untitled"}
+                    <span className="inline-flex max-w-full min-w-0 items-baseline gap-[0.24em] align-baseline">
+                      <span className={style.allowTwoLineTitle ? "min-w-0" : "min-w-0 truncate"}>{song.title || "Untitled"}</span>
+                      <ExplicitBadge show={song.explicit && style.showExplicitBadge} textColor={textColor} />
+                    </span>
                   </h1>
                   <p
                     className="mt-4 truncate text-[35px] font-semibold leading-[1.5]"

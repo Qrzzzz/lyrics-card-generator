@@ -291,6 +291,14 @@ export function resolveExampleTranslation(
   example: ExampleSong,
   locale: Locale
 ): ExampleTranslationSample {
+  if (example.originalLanguage === locale) {
+    return {
+      language: locale,
+      label: EXAMPLE_LANGUAGE_LABELS[locale],
+      text: ""
+    };
+  }
+
   return (
     example.translations.find((item) => item.language === locale) ??
     example.translations[0]

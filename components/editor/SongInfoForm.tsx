@@ -63,6 +63,7 @@ export function SongInfoForm({
           <FieldLabel label={t("album")}>
             <TextInput value={song.album ?? ""} onChange={(event) => update("album", event.target.value)} />
           </FieldLabel>
+          <ToggleRow label={t("explicitBadge")} checked={song.explicit === true} onChange={(checked) => update("explicit", checked)} />
           <FieldLabel label={t("coverUrl")}>
             <TextInput
               value={song.coverUrl?.startsWith("blob:") ? "" : song.coverUrl ?? ""}
