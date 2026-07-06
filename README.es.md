@@ -1,4 +1,4 @@
-﻿<div align="center">
+<div align="center">
 
 # 🎧 Lyrics Card Generator
 
@@ -19,7 +19,7 @@
 <p>
   <strong>Navegación</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Descargar la última versión</a> ·
-  <a href="./docs/releases/v4.3.0.es.md">Notas de la versión</a> ·
+  <a href="./docs/releases/v4.3.2.es.md">Notas de la versión</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en línea</a> ·
   <a href="#funciones-principales">Funciones principales</a> ·
   <a href="#desarrollo-local">Desarrollo local</a> ·
@@ -51,30 +51,30 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 Descarga la versión más reciente desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Instalador recomendado: `Lyrics Card Generator Setup 4.3.0.exe`
-* Versión portable: `Lyrics Card Generator-4.3.0-portable.exe`
+* Instalador recomendado: `Lyrics Card Generator Setup 4.3.2.exe`
+* Versión portable: `Lyrics Card Generator-4.3.2-portable.exe`
 
 El instalador se recomienda para uso habitual. La versión portable es útil para pruebas, uso temporal o ejecución desde una unidad extraíble.
 
 > La compilación actual no está firmada. Windows puede mostrar una advertencia de SmartScreen, algo habitual en aplicaciones personales sin firma.
 
-### Aspectos destacados de la versión 4.3.0
+### Aspectos destacados de la versión 4.3.2
 
-* Las canciones de ejemplo ahora utilizan un diálogo responsive de dos o tres columnas y cargan automáticamente la traducción en el idioma de la interfaz.
-* El distintivo Explícito añade un marcador E en línea junto al título, tanto en la vista previa como en el PNG exportado.
-* El tipo de contenido, el color de texto, los detalles visuales y el paso final de exportación ahora utilizan controles más compactos y consistentes.
+* El distintivo Explicit ahora usa un recorte SVG con `currentColor` en lugar de un glifo E renderizado, manteniendo el mismo aspecto en vista previa y exportación PNG.
+* Los headers verticales aumentan la portada y centran verticalmente la información de la canción para que portada, título, artista y álbum formen un centro visual más estable.
+* Se ajustaron la separación entre título y distintivo y la alineación vertical para acercar el marcador al distintivo geométrico translúcido de Apple Music.
 <br clear="right" />
 
 ## 🌐 Notas de publicación multilingüe
 
 La página de GitHub Release utiliza por defecto la versión corta en chino simplificado, las notas de publicación completas se mantienen en `docs/releases/`:
 
-* [简体中文](./docs/releases/v4.3.0.zh-CN.md)
-* [繁體中文](./docs/releases/v4.3.0.zh-TW.md)
-* [English](./docs/releases/v4.3.0.en.md)
-* [Français](./docs/releases/v4.3.0.fr.md)
-* [日本語](./docs/releases/v4.3.0.ja.md)
-* [Español](./docs/releases/v4.3.0.es.md)
+* [简体中文](./docs/releases/v4.3.2.zh-CN.md)
+* [繁體中文](./docs/releases/v4.3.2.zh-TW.md)
+* [English](./docs/releases/v4.3.2.en.md)
+* [Français](./docs/releases/v4.3.2.fr.md)
+* [日本語](./docs/releases/v4.3.2.ja.md)
+* [Español](./docs/releases/v4.3.2.es.md)
 
 <a id="funciones-principales"></a>
 

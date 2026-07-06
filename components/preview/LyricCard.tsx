@@ -96,7 +96,7 @@ export function LyricCard({
                 />
               ) : null}
               {style.showSongInfo ? (
-                <div className="min-w-0 py-3">
+                <div className="flex min-h-[196px] min-w-0 flex-col justify-center py-0">
                   <h1
                     className={cn(
                       "text-[51px] font-black leading-[1.48] tracking-normal",
@@ -104,7 +104,7 @@ export function LyricCard({
                     )}
                     style={{ color: textColor }}
                   >
-                    <span className="inline-flex max-w-full min-w-0 items-center gap-[0.18em] align-middle">
+                    <span className="inline-flex max-w-full min-w-0 items-center gap-[0.22em] align-middle">
                       <span className={style.allowTwoLineTitle ? "min-w-0" : "min-w-0 truncate"}>{song.title || "Untitled"}</span>
                       <ExplicitBadge show={song.explicit} textColor={textColor} />
                     </span>
@@ -197,7 +197,7 @@ function AlbumCover({
   cropScale: number;
   onError: () => void;
 }) {
-  const className = "relative h-[174px] w-[174px] shrink-0 overflow-hidden rounded-[39px] bg-black/10";
+  const className = "relative h-[196px] w-[196px] shrink-0 overflow-hidden rounded-[44px] bg-black/10";
 
   function onLoad(event: SyntheticEvent<HTMLImageElement>) {
     if (process.env.NODE_ENV !== "development") {

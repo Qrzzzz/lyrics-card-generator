@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v4.3.0.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v4.3.2.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="#ローカル開発">ローカル開発</a> ·
@@ -51,29 +51,29 @@
 
 最新版は [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) からダウンロードできます。
 
-* 推奨インストーラー：`Lyrics Card Generator Setup 4.3.0.exe`
-* ポータブル版：`Lyrics Card Generator-4.3.0-portable.exe`
+* 推奨インストーラー：`Lyrics Card Generator Setup 4.3.2.exe`
+* ポータブル版：`Lyrics Card Generator-4.3.2-portable.exe`
 
 通常利用にはインストーラーを推奨します。ポータブル版は一時利用、検証、リムーバブルドライブでの利用に向いています。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v4.3.0 の更新ポイント
+### v4.3.2 の更新ポイント
 
-* サンプル曲ダイアログをレスポンシブな 2～3 列グリッドに再構築し、UI 言語に応じて自動翻訳を表示します。
-* Explicit バッジにより、プレビューと PNG 書き出しの両方で曲タイトルの横にインライン E マーカーを追加しました。
-* コンテンツタイプ、テキストカラー、ビジュアル詳細、最終書き出しステップの操作をより簡潔で一貫性のあるものに改善しました。
+* Explicit バッジは、描画された E グリフではなく `currentColor` の SVG くり抜き図形になり、プレビューと PNG 書き出しで一致します。
+* 縦向き header ではカバーを大きくし、曲情報を垂直方向に中央揃えして、カバー、タイトル、アーティスト、アルバムの視覚的な中心を安定させました。
+* タイトルと Explicit バッジの間隔と垂直位置を調整し、Apple Music の半透明な幾何学バッジに近い見え方にしました。
 
 ## 🌐 多言語リリースノート
 
 GitHub Release ページではデフォルトで簡体字中国語の短縮版が使用され、完全なリリースノートは `docs/releases/` にて管理されています：
 
-* [简体中文](./docs/releases/v4.3.0.zh-CN.md)
-* [繁體中文](./docs/releases/v4.3.0.zh-TW.md)
-* [English](./docs/releases/v4.3.0.en.md)
-* [Français](./docs/releases/v4.3.0.fr.md)
-* [日本語](./docs/releases/v4.3.0.ja.md)
-* [Español](./docs/releases/v4.3.0.es.md)
+* [简体中文](./docs/releases/v4.3.2.zh-CN.md)
+* [繁體中文](./docs/releases/v4.3.2.zh-TW.md)
+* [English](./docs/releases/v4.3.2.en.md)
+* [Français](./docs/releases/v4.3.2.fr.md)
+* [日本語](./docs/releases/v4.3.2.ja.md)
+* [Español](./docs/releases/v4.3.2.es.md)
 
 <a id="主な機能"></a>
 
