@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v4.3.0.zh-TW.md">發布說明</a> ·
+  <a href="./docs/releases/v4.3.2.zh-TW.md">發布說明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">線上 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="#本機開發">本機開發</a> ·
@@ -48,29 +48,29 @@
 
 請前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載最新版：
 
-* 建議一般使用者下載安裝版：`Lyrics Card Generator Setup 4.3.0.exe`
-* 不想安裝時可下載可攜版：`Lyrics Card Generator-4.3.0-portable.exe`
+* 建議一般使用者下載安裝版：`Lyrics Card Generator Setup 4.3.2.exe`
+* 不想安裝時可下載可攜版：`Lyrics Card Generator-4.3.2-portable.exe`
 
 安裝版適合長期使用；可攜版適合臨時執行、測試或放在隨身碟中使用。
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v4.3.0 更新重點
+### v4.3.2 更新重點
 
-* 範例歌曲對話框重構為響應式兩/三欄網格，翻譯自動跟隨介面語言匹配。
-* 顯式標誌在預覽和匯出 PNG 中，標題旁添加內聯 E 標記。
-* 內容類型、文字顏色、視覺細節與最終匯出步驟現已使用更緊湊、更一致的控制項。
+* Explicit 標誌改為 `currentColor` SVG 鏤空圖形，不再依賴字體字母 E，預覽與 PNG 匯出保持一致。
+* 直式 header 放大封面並垂直置中歌曲資訊，讓封面與標題、藝人、專輯三行形成更穩定的視覺中心。
+* 微調標題與 Explicit 標誌的間距和垂直對齊，使標誌更接近 Apple Music 的半透明幾何標記。
 
 ## 🌐 多語言發佈說明
 
 GitHub Release 頁面預設使用簡體中文短版，完整發佈說明維護在 `docs/releases/`：
 
-* [简体中文](./docs/releases/v4.3.0.zh-CN.md)
-* [繁體中文](./docs/releases/v4.3.0.zh-TW.md)
-* [English](./docs/releases/v4.3.0.en.md)
-* [Français](./docs/releases/v4.3.0.fr.md)
-* [日本語](./docs/releases/v4.3.0.ja.md)
-* [Español](./docs/releases/v4.3.0.es.md)
+* [简体中文](./docs/releases/v4.3.2.zh-CN.md)
+* [繁體中文](./docs/releases/v4.3.2.zh-TW.md)
+* [English](./docs/releases/v4.3.2.en.md)
+* [Français](./docs/releases/v4.3.2.fr.md)
+* [日本語](./docs/releases/v4.3.2.ja.md)
+* [Español](./docs/releases/v4.3.2.es.md)
 
 ## ✨ 主要功能
 

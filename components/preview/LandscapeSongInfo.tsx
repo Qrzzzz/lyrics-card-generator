@@ -41,7 +41,7 @@ export function LandscapeSongInfo({
           allowTwoLineTitle ? "two-line-title" : "truncate"
         )}
       >
-        <span className="inline-flex max-w-full min-w-0 items-center gap-[0.18em] align-middle">
+        <span className="inline-flex max-w-full min-w-0 items-center gap-[0.22em] align-middle">
           <span className={allowTwoLineTitle ? "min-w-0" : "min-w-0 truncate"}>{song.title || "Untitled"}</span>
           <ExplicitBadge show={song.explicit} textColor={textColor} />
         </span>
