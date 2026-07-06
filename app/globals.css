@@ -225,6 +225,29 @@ body[data-window-maximized="true"] .app-shell[data-desktop-shell="true"] {
   overscroll-behavior: contain;
 }
 
+.lyric-editor-stage {
+  --app-header-height: 8.75rem;
+  --app-header-gap: 1.25rem;
+  height: calc(100dvh - 2.5rem);
+  min-height: 34rem;
+}
+
+@media (min-width: 640px) {
+  .lyric-editor-stage {
+    --app-header-height: 7rem;
+  }
+}
+
+.app-shell[data-desktop-shell="true"] .lyric-editor-stage {
+  height: 100%;
+  min-height: 0;
+}
+
+.lyric-editor-main,
+.app-shell[data-desktop-shell="true"] .lyric-editor-main {
+  overflow: hidden;
+}
+
 .desktop-titlebar {
   -webkit-app-region: drag;
   user-select: none;

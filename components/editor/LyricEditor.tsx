@@ -1,8 +1,9 @@
 "use client";
 
+import { motion, useReducedMotion, type Transition } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { EditorHeader } from "@/components/editor/EditorHeader";
-import { ExamplesDialog } from "@/components/editor/ExamplesDialog";
+import { ExamplesFloor } from "@/components/editor/ExamplesFloor";
 import { ExportCelebration } from "@/components/effects/ExportCelebration";
 import {
   DEFAULT_INSTRUMENTAL_TEXT,
@@ -38,16 +39,36 @@ import { DEFAULT_USER_SETTINGS, getExportPixelRatio, type ExportQualityId } from
 import { resolveEffectiveUiThemeId } from "@/lib/settings/user-settings";
 import type { AppState, FontScheme, Locale } from "@/lib/types";
 
+type ActiveSurface = "editor" | "examples";
+
+const surfaceTransition: Transition = {
+  type: "spring",
+  stiffness: 165,
+  damping: 28,
+  mass: 1.05,
+  restDelta: 0.001
+};
+
+const reducedSurfaceTransition: Transition = {
+  duration: 0.01
+};
+
 export function LyricEditor() {
   const [state, setState] = useState<AppState>(defaultState);
   const [currentStep, setCurrentStep] = useState(0);
   const [fontSchemePreview, setFontSchemePreview] = useState<FontScheme | null>(null);
   const [isPreviewVisible, setIsPreviewVisible] = useState(true);
-  const [isExamplesOpen, setIsExamplesOpen] = useState(false);
+  const [activeSurface, setActiveSurface] = useState<ActiveSurface>("editor");
   const [exportQuality, setExportQuality] = useState<ExportQualityId>(DEFAULT_USER_SETTINGS.defaultExportQuality);
   const [toast, setToast] = useState("");
   const cardRef = useRef<HTMLElement | null>(null);
+  const stageRef = useRef<HTMLDivElement | null>(null);
+  const headerRailRef = useRef<HTMLDivElement | null>(null);
+  const [headerDockY, setHeaderDockY] = useState(0);
   const t = useMemo(() => createT(state.locale), [state.locale]);
+  const shouldReduceMotion = useReducedMotion() ?? false;
+  const isExamplesSurfaceOpen = activeSurface === "examples";
+  const activeSurfaceTransition = shouldReduceMotion ? reducedSurfaceTransition : surfaceTransition;
 
   const parsedState = useMemo(
     () => ({
@@ -112,7 +133,7 @@ export function LyricEditor() {
     exportPixelRatio,
     exampleLoadedMessage: settingsCopy[state.locale].exampleLoaded,
     onNotify: setToast,
-    onCloseExamples: () => setIsExamplesOpen(false),
+    onCloseExamples: () => setActiveSurface("editor"),
     onClearTransientState: () => setFontSchemePreview(null)
   });
 
@@ -127,6 +148,55 @@ export function LyricEditor() {
   useEffect(() => {
     setExportQuality(userSettings.defaultExportQuality);
   }, [userSettings.defaultExportQuality]);
+
+  useEffect(() => {
+    const measureDockY = () => {
+      const stage = stageRef.current;
+      const headerRail = headerRailRef.current;
+
+      if (!stage || !headerRail) {
+        return;
+      }
+
+      setHeaderDockY(Math.max(0, stage.clientHeight - headerRail.offsetHeight));
+    };
+
+    measureDockY();
+
+    if (typeof ResizeObserver === "undefined") {
+      window.addEventListener("resize", measureDockY);
+      return () => window.removeEventListener("resize", measureDockY);
+    }
+
+    const observer = new ResizeObserver(measureDockY);
+    if (stageRef.current) {
+      observer.observe(stageRef.current);
+    }
+    if (headerRailRef.current) {
+      observer.observe(headerRailRef.current);
+    }
+    window.addEventListener("resize", measureDockY);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", measureDockY);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (activeSurface !== "examples") {
+      return;
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setActiveSurface("editor");
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [activeSurface]);
 
   const {
     aiCopy,
@@ -229,37 +299,79 @@ export function LyricEditor() {
       <DesktopTitleBar locale={state.locale} />
       <DynamicAppBackground palette={state.palette} settings={userSettings} imageUrl={backgroundImageUrl} />
       <ClickSpark enabled={userSettings.sparkCursorEnabled} themeColor={resolvedAccentColor}>
-    <main className="app-main-content relative z-10 min-h-screen px-4 py-5 sm:px-6 lg:px-8">
-      <div className="mx-auto grid w-[calc(100vw-2rem)] max-w-[1520px] min-w-0 gap-5 sm:w-full">
-        <EditorHeader locale={state.locale} t={t} onOpenExamples={() => setIsExamplesOpen(true)} onClearAll={clearAllContent} onOpenSettings={openSettings} />
-
-        <div className="grid min-w-0 max-w-full gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(420px,600px)]">
-          <MotionPanel className="order-2 grid min-w-0 gap-4 lg:order-1">
-            <SettingsStepper
-              steps={settingsSteps}
-              currentStep={currentStep}
-              onStepChange={setCurrentStep}
-              backText={t("step.back")}
-              nextText={t("step.next")}
-              themeColor={resolvedAccentColor}
+        <main className="app-main-content lyric-editor-main relative z-10 min-h-screen px-4 py-5 sm:px-6 lg:px-8">
+          <div ref={stageRef} className="lyric-editor-stage relative mx-auto min-w-0 max-w-[1520px] overflow-hidden">
+            <ExamplesFloor
+              isActive={isExamplesSurfaceOpen}
+              locale={state.locale}
+              onLoad={loadExample}
+              transition={activeSurfaceTransition}
             />
-          </MotionPanel>
 
-          <PreviewPane
-            isPreviewVisible={isPreviewVisible}
-            onPreviewVisibleChange={setIsPreviewVisible}
-            song={parsedState.song}
-            lyrics={parsedState.lyrics}
-            style={parsedState.style}
-            cardRef={cardRef}
-            fontSchemePreview={fontSchemePreview}
-            showFontSchemePreview={settingsSteps[currentStep]?.id === "font"}
-            locale={state.locale}
-            t={t}
-          />
-        </div>
-      </div>
-    </main>
+            <motion.div
+              aria-hidden={isExamplesSurfaceOpen}
+              className={[
+                "relative z-10 h-full min-h-0 overflow-y-auto pt-[calc(var(--app-header-height)+var(--app-header-gap))]",
+                isExamplesSurfaceOpen ? "pointer-events-none" : "pointer-events-auto"
+              ].join(" ")}
+              animate={{
+                y: isExamplesSurfaceOpen ? "100%" : "0%",
+                opacity: isExamplesSurfaceOpen ? (shouldReduceMotion ? 0 : 0.35) : 1,
+                scale: isExamplesSurfaceOpen ? (shouldReduceMotion ? 1 : 0.985) : 1
+              }}
+              initial={false}
+              inert={isExamplesSurfaceOpen ? true : undefined}
+              transition={activeSurfaceTransition}
+            >
+              <div className="grid min-w-0 max-w-full gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(420px,600px)]">
+                <MotionPanel className="order-2 grid min-w-0 gap-4 lg:order-1">
+                  <SettingsStepper
+                    steps={settingsSteps}
+                    currentStep={currentStep}
+                    onStepChange={setCurrentStep}
+                    backText={t("step.back")}
+                    nextText={t("step.next")}
+                    themeColor={resolvedAccentColor}
+                  />
+                </MotionPanel>
+
+                <PreviewPane
+                  isPreviewVisible={isPreviewVisible}
+                  onPreviewVisibleChange={setIsPreviewVisible}
+                  song={parsedState.song}
+                  lyrics={parsedState.lyrics}
+                  style={parsedState.style}
+                  cardRef={cardRef}
+                  fontSchemePreview={fontSchemePreview}
+                  showFontSchemePreview={settingsSteps[currentStep]?.id === "font"}
+                  locale={state.locale}
+                  t={t}
+                />
+              </div>
+            </motion.div>
+
+            <motion.div
+              ref={headerRailRef}
+              className="pointer-events-auto absolute left-0 right-0 z-30"
+              style={{ top: 0 }}
+              animate={{
+                y: isExamplesSurfaceOpen ? headerDockY : 0
+              }}
+              initial={false}
+              transition={activeSurfaceTransition}
+            >
+              <EditorHeader
+                locale={state.locale}
+                t={t}
+                mode={isExamplesSurfaceOpen ? "examplesDocked" : "normal"}
+                onOpenExamples={() => setActiveSurface("examples")}
+                onClearAll={clearAllContent}
+                onOpenSettings={openSettings}
+                onCloseSurface={() => setActiveSurface("editor")}
+              />
+            </motion.div>
+          </div>
+        </main>
       </ClickSpark>
       <SettingsDialog
         open={isSettingsOpen}
@@ -275,7 +387,6 @@ export function LyricEditor() {
         }}
         onNotify={setToast}
       />
-      <ExamplesDialog open={isExamplesOpen} locale={state.locale} onClose={() => setIsExamplesOpen(false)} onLoad={loadExample} />
       <FirstLaunchLanguageDialog open={isFirstLaunchOpen} locale={state.locale} onChoose={chooseFirstLaunchLanguage} />
       {toast ? (
         <div role="status" className="status-info fixed bottom-5 left-1/2 z-[130] max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-lg border px-4 py-3 text-sm shadow-2xl backdrop-blur-xl">
