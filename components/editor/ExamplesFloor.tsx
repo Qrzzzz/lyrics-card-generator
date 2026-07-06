@@ -70,8 +70,10 @@ function getExamplesIntro(locale: Locale) {
       return "\u9078\u64c7\u4e00\u500b\u7bc4\u4f8b\uff0c\u5feb\u901f\u586b\u5165\u6b4c\u66f2\u8cc7\u8a0a\u3001\u6b4c\u8a5e\u548c\u8b6f\u6587\u3002";
     case "fr":
       return "Choisissez un exemple pour remplir rapidement les informations, les paroles et la traduction.";
+    case "ja":
+      return "サンプルを選ぶと、曲情報、歌詞、翻訳をすばやく入力できます。";
     case "es":
-      return "Elige un ejemplo para completar rapidamente la cancion, la letra y la traduccion.";
+      return "Elige un ejemplo para completar rápidamente la canción, la letra y la traducción.";
     default:
       return "Choose an example to quickly fill in song details, lyrics, and translation.";
   }
