@@ -27,7 +27,14 @@ for (const example of EXAMPLE_SONGS) {
   assert.ok(example.url.trim(), `${example.id} url`);
   assert.ok(example.lyrics.trim(), `${example.id} lyrics`);
   assert.ok(allowedLanguages.has(example.originalLanguage), `${example.id} original language is supported`);
-  assert.equal(example.translations.length, 5, `${example.id} translations length`);
+  const expectedTranslations = locales.filter((locale) => {
+    if (locale === example.originalLanguage) {
+      return false;
+    }
+    return !(locale === "zh" && example.originalLanguage === "zh-TW") &&
+      !(locale === "zh-TW" && example.originalLanguage === "zh");
+  });
+  assert.equal(example.translations.length, expectedTranslations.length, `${example.id} translations length`);
 
   const rawExample = example as unknown as Record<string, unknown>;
   for (const key of forbiddenSizeKeys) {
@@ -53,9 +60,13 @@ for (const example of EXAMPLE_SONGS) {
 
   for (const locale of locales) {
     const resolved = resolveExampleTranslation(example, locale);
-    if (locale === example.originalLanguage) {
-      assert.equal(resolved.text, "", `${example.id} keeps original-language translation empty`);
-      assert.equal(resolved.language, locale, `${example.id} resolves original locale`);
+    const isChineseCrossLocale =
+      (locale === "zh" && example.originalLanguage === "zh-TW") ||
+      (locale === "zh-TW" && example.originalLanguage === "zh");
+
+    if (locale === example.originalLanguage || isChineseCrossLocale) {
+      assert.equal(resolved.text, "", `${example.id} keeps ${locale} translation empty`);
+      assert.equal(resolved.language, locale, `${example.id} resolves ${locale}`);
     } else {
       assert.ok(resolved.text.trim(), `${example.id} resolves ${locale}`);
       assert.ok(

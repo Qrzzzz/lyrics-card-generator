@@ -52,7 +52,10 @@ export function EditorHeader({
           data-testid={isDocked ? "examples-close-button" : "examples-button"}
           aria-label={isDocked ? copy.cancel : undefined}
           onClick={isDocked ? onCloseSurface : onOpenExamples}
-          className="app-button inline-flex h-10 items-center justify-center gap-2 rounded-lg px-3 text-sm font-semibold"
+          className={[
+            "app-button inline-flex h-10 items-center justify-center gap-2 rounded-lg px-3 text-sm font-semibold",
+            isDocked ? "examples-close-button" : ""
+          ].join(" ")}
         >
           {isDocked ? (
             <X className="h-5 w-5" />

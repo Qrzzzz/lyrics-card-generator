@@ -255,27 +255,32 @@ export function useEditorActions({
   }
 
   async function loadExample(payload: ExampleLoadPayload) {
-    const { example, translation } = payload;
+    const { example, translation, importTranslation = true } = payload;
     clearVersionRef.current += 1;
-    setState((current) => ({
-      ...current,
-      url: example.url,
-      song: {
-        ...current.song,
-        source: example.source,
-        title: example.title,
-        artist: example.artist,
-        originalUrl: example.url
-      },
-      lyrics: example.lyrics,
-      translationText: translation.text,
-      translationEnabled: Boolean(translation.text.trim()) && example.translationEnabled,
-      style: {
-        ...current.style,
-        translationText: translation.text,
-        translationEnabled: Boolean(translation.text.trim()) && example.translationEnabled
-      }
-    }));
+    setState((current) => {
+      const translationText = importTranslation ? translation.text : "";
+      const translationEnabled = importTranslation && Boolean(translationText.trim()) && example.translationEnabled;
+
+      return {
+        ...current,
+        url: example.url,
+        song: {
+          ...current.song,
+          source: example.source,
+          title: example.title,
+          artist: example.artist,
+          originalUrl: example.url
+        },
+        lyrics: example.lyrics,
+        translationText,
+        translationEnabled,
+        style: {
+          ...current.style,
+          translationText,
+          translationEnabled
+        }
+      };
+    });
     onCloseExamples();
     onNotify(exampleLoadedMessage);
 

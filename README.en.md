@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v4.3.4.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v4.3.6.en.md">Release Notes</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
   <a href="#features">Features</a> ·
   <a href="#local-development">Local Development</a> ·
@@ -51,29 +51,31 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 Download the latest version from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Recommended installer: `Lyrics Card Generator Setup 4.3.4.exe`
-* Portable version: `Lyrics Card Generator-4.3.4-portable.exe`
+* Recommended installer: `Lyrics Card Generator Setup 4.3.6.exe`
+* Portable version: `Lyrics Card Generator-4.3.6-portable.exe`
 
 The installer is recommended for regular use. The portable version is useful for temporary use, testing, or running from a removable drive.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v4.3.4 Highlights
+### v4.3.6 Highlights
 
-* Examples now open as an upper surface above the main interface instead of a modal; the editor recedes downward and the in-app header docks at the bottom as the return anchor.
-* The bottom header reuses the normal header structure and only replaces the original Examples button with an X return button, keeping Clear and Settings out of the examples state.
-* Example cards adapt to one, two, or three columns based on the main window width, reserve space for the docked header, and avoid horizontal scrolling on narrow windows.
-* The examples surface supports Escape to return, automatically returns after loading an example, and uses a softer spring animation with reduced-motion fallback.
+* The main header now belongs to the editor content flow instead of floating above the stepper and preview areas; the examples surface still reuses the same header docked at the bottom as the return entry.
+* The examples surface removes the outer framed-shell feeling, shows the translation language once beside the title, and adds an Import translation toggle enabled by default.
+* When Import translation is enabled, loading an example writes the translation and turns on the main editor translation switch; when disabled, only song details and lyrics are imported.
+* Simplified Chinese and Traditional Chinese cross-locale imports no longer enable translation by default, the bottom X return button now has orange-red hover feedback, and the header transition ghosting is fixed.
+* Export quality labels are now Standard / High / Ultra while the actual export ratios remain 1x / 1.4x / 2x.
+
 ## 🌐 Multilingual Release Notes
 
 The GitHub Release page defaults to a simplified Chinese short version, while the full release notes are maintained in `docs/releases/`:
 
-* [简体中文](./docs/releases/v4.3.4.zh-CN.md)
-* [繁體中文](./docs/releases/v4.3.4.zh-TW.md)
-* [English](./docs/releases/v4.3.4.en.md)
-* [Français](./docs/releases/v4.3.4.fr.md)
-* [日本語](./docs/releases/v4.3.4.ja.md)
-* [Español](./docs/releases/v4.3.4.es.md)
+* [简体中文](./docs/releases/v4.3.6.zh-CN.md)
+* [繁體中文](./docs/releases/v4.3.6.zh-TW.md)
+* [English](./docs/releases/v4.3.6.en.md)
+* [Français](./docs/releases/v4.3.6.fr.md)
+* [日本語](./docs/releases/v4.3.6.ja.md)
+* [Español](./docs/releases/v4.3.6.es.md)
 
 <a id="features"></a>
 

@@ -2,6 +2,7 @@
 
 import { motion, type Transition } from "framer-motion";
 import { Music2 } from "lucide-react";
+import { useState } from "react";
 import { ActionButton } from "@/components/ui/controls";
 import {
   EXAMPLE_LANGUAGE_LABELS,
@@ -23,6 +24,8 @@ type ExamplesFloorProps = {
 export function ExamplesFloor({ isActive, locale, onLoad, transition }: ExamplesFloorProps) {
   const copy = settingsCopy[locale];
   const intro = getExamplesIntro(locale);
+  const [importTranslation, setImportTranslation] = useState(true);
+  const translationLanguageLabel = EXAMPLE_LANGUAGE_LABELS[locale];
 
   return (
     <motion.section
@@ -30,7 +33,6 @@ export function ExamplesFloor({ isActive, locale, onLoad, transition }: Examples
       aria-labelledby="examples-floor-title"
       className={[
         "absolute inset-0 z-20 min-w-0 overflow-y-auto",
-        "bg-[linear-gradient(145deg,rgba(15,23,42,0.32),rgba(30,41,59,0.16))] backdrop-blur-sm",
         isActive ? "pointer-events-auto" : "pointer-events-none"
       ].join(" ")}
       animate={{
@@ -42,24 +44,66 @@ export function ExamplesFloor({ isActive, locale, onLoad, transition }: Examples
       transition={transition}
     >
       <div className="mx-auto w-full max-w-[1280px] px-4 pb-[calc(var(--app-header-height)+1.5rem)] pt-6 sm:px-6 sm:pt-8">
-        <header className="mb-5 min-w-0">
-          <h2 id="examples-floor-title" className="app-text-primary flex min-w-0 items-center gap-2 text-2xl font-black tracking-normal sm:text-3xl">
-            <Music2 className="h-6 w-6 shrink-0" />
-            <span className="truncate">{copy.examples}</span>
-          </h2>
-          <p className="app-text-subtle mt-2 max-w-2xl text-sm">
-            {intro}
-          </p>
+        <header className="mb-5 flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0">
+            <h2 id="examples-floor-title" className="app-text-primary flex min-w-0 items-center gap-2 text-2xl font-black tracking-normal sm:text-3xl">
+              <Music2 className="h-6 w-6 shrink-0" />
+              <span className="truncate">{copy.examples}</span>
+            </h2>
+            <p className="app-text-subtle mt-2 max-w-2xl text-sm">
+              {intro}
+            </p>
+          </div>
+          <div className="flex shrink-0 flex-wrap items-center gap-3 sm:justify-end">
+            <div className="app-text-subtle min-w-0 text-right text-xs font-medium sm:max-w-56">
+              {copy.translationLanguage}: <span className="app-text-primary">{translationLanguageLabel}</span>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={importTranslation}
+              className="app-button inline-flex h-10 items-center gap-2 rounded-lg px-3 text-xs font-semibold"
+              onClick={() => setImportTranslation((current) => !current)}
+            >
+              <span>{getImportTranslationLabel(locale)}</span>
+              <span className="toggle-track" aria-hidden="true">
+                <span className="toggle-knob" />
+              </span>
+            </button>
+          </div>
         </header>
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
           {EXAMPLE_SONGS.map((song) => (
-            <ExampleSongCard key={song.id} song={song} locale={locale} onLoad={onLoad} />
+            <ExampleSongCard
+              key={song.id}
+              song={song}
+              locale={locale}
+              importTranslation={importTranslation}
+              onLoad={onLoad}
+            />
           ))}
         </div>
       </div>
     </motion.section>
   );
+}
+
+function getImportTranslationLabel(locale: Locale) {
+  switch (locale) {
+    case "zh":
+      return "\u5bfc\u5165\u7ffb\u8bd1";
+    case "zh-TW":
+      return "\u532f\u5165\u8b6f\u6587";
+    case "fr":
+      return "Importer la traduction";
+    case "ja":
+      return "\u7ffb\u8a33\u3092\u8aad\u307f\u8fbc\u3080";
+    case "es":
+      return "Importar traducción";
+    default:
+      return "Import translation";
+  }
 }
 
 function getExamplesIntro(locale: Locale) {
@@ -82,16 +126,16 @@ function getExamplesIntro(locale: Locale) {
 function ExampleSongCard({
   song,
   locale,
+  importTranslation,
   onLoad
 }: {
   song: ExampleSong;
   locale: Locale;
+  importTranslation: boolean;
   onLoad: (payload: ExampleLoadPayload) => void;
 }) {
   const copy = settingsCopy[locale];
   const defaultTranslation = resolveExampleTranslation(song, locale);
-  const translationLabel =
-    defaultTranslation.text.trim().length > 0 ? defaultTranslation.label : EXAMPLE_LANGUAGE_LABELS[locale];
 
   return (
     <div className="settings-panel-card grid min-h-[184px] content-between gap-4 p-4">
@@ -106,15 +150,10 @@ function ExampleSongCard({
         <ActionButton
           size="sm"
           data-testid={`load-example-${song.id}`}
-          onClick={() => onLoad({ example: song, translation: defaultTranslation })}
+          onClick={() => onLoad({ example: song, translation: defaultTranslation, importTranslation })}
         >
           {copy.loadExample}
         </ActionButton>
-      </div>
-
-      <div className="rounded-lg border border-[rgb(var(--panel-border))] bg-[rgb(var(--panel-bg))] px-3 py-2">
-        <div className="app-text-subtle text-xs font-medium">{copy.translationLanguage}</div>
-        <div className="app-text-primary mt-1 truncate text-sm font-semibold">{translationLabel}</div>
       </div>
     </div>
   );
