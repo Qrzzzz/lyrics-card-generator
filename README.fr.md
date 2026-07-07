@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v4.3.2.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v4.3.4.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="#développement-local">Développement local</a> ·
@@ -51,30 +51,33 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 Téléchargez la dernière version depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
 
-* Installateur recommandé : `Lyrics Card Generator Setup 4.3.2.exe`
-* Version portable : `Lyrics Card Generator-4.3.2-portable.exe`
+* Installateur recommandé : `Lyrics Card Generator Setup 4.3.4.exe`
+* Version portable : `Lyrics Card Generator-4.3.4-portable.exe`
 
 L'installateur est recommandé pour une utilisation régulière. La version portable convient aux essais, à une utilisation temporaire ou à un disque amovible.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### Points clés de la v4.3.2
+### Points clés de la v4.3.4
 
-* Le badge Explicit utilise désormais un SVG `currentColor` découpé au lieu d'un glyphe E rendu, avec un rendu cohérent entre aperçu et export PNG.
-* Les headers verticaux agrandissent la pochette et centrent les informations du morceau afin que la pochette, le titre, l'artiste et l'album forment un centre visuel plus stable.
-* L'espacement entre le titre et le badge ainsi que l'alignement vertical ont été ajustés pour rapprocher le marqueur du badge géométrique translucide d'Apple Music.
+* Les exemples s'ouvrent désormais dans une couche supérieure au-dessus de l'interface principale au lieu d'une modale ; l'éditeur descend et l'en-tête interne se place en bas comme point de retour.
+* L'en-tête du bas réutilise la structure normale et remplace seulement le bouton Exemples par un bouton X de retour, sans afficher Effacer ni Paramètres dans l'état des exemples.
+* Les cartes d'exemple s'adaptent en une, deux ou trois colonnes selon la largeur de la fenêtre principale, réservent l'espace de l'en-tête du bas et évitent le défilement horizontal sur les fenêtres étroites.
+* La couche d'exemples prend en charge Escape pour revenir, revient automatiquement après le chargement d'un exemple et utilise une animation spring plus douce avec repli reduced motion.
+<br clear="right" />
+
 <br clear="right" />
 
 ## 🌐 Notes de publication multilingues
 
 La page GitHub Release utilise par défaut la version courte en chinois simplifié, les notes de publication complètes sont conservées dans `docs/releases/` :
 
-* [简体中文](./docs/releases/v4.3.2.zh-CN.md)
-* [繁體中文](./docs/releases/v4.3.2.zh-TW.md)
-* [English](./docs/releases/v4.3.2.en.md)
-* [Français](./docs/releases/v4.3.2.fr.md)
-* [日本語](./docs/releases/v4.3.2.ja.md)
-* [Español](./docs/releases/v4.3.2.es.md)
+* [简体中文](./docs/releases/v4.3.4.zh-CN.md)
+* [繁體中文](./docs/releases/v4.3.4.zh-TW.md)
+* [English](./docs/releases/v4.3.4.en.md)
+* [Français](./docs/releases/v4.3.4.fr.md)
+* [日本語](./docs/releases/v4.3.4.ja.md)
+* [Español](./docs/releases/v4.3.4.es.md)
 
 <a id="fonctionnalités-principales"></a>
 

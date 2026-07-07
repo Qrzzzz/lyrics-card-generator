@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v4.3.2.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v4.3.4.zh-CN.md">发布说明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">在线 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="#本地开发">本地开发</a> ·
@@ -48,29 +48,29 @@
 
 请前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下载最新版：
 
-* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 4.3.2.exe`
-* 不想安装时可下载便携版：`Lyrics Card Generator-4.3.2-portable.exe`
+* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 4.3.4.exe`
+* 不想安装时可下载便携版：`Lyrics Card Generator-4.3.4-portable.exe`
 
 安装版适合长期使用；便携版适合临时运行、测试或放在移动硬盘中使用。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v4.3.2 更新重点
+### v4.3.4 更新重点
 
-* Explicit 标识改为 `currentColor` SVG 镂空图形，不再依赖字体字母 E，预览与 PNG 导出保持一致。
-* 竖版 header 放大封面并垂直居中歌曲信息，让封面与标题、艺人、专辑三行形成更稳定的视觉中心。
-* 微调标题与 Explicit 标识的间距和垂直对齐，使标识更接近 Apple Music 的半透明几何标记。
-
+* “歌词示例”从弹窗改为主界面上方空间层，打开时编辑器退到下方，应用内标题栏滑到底部作为返回锚点。
+* 底部标题栏复用正常标题栏结构，只把原“示例”按钮替换为 X 返回按钮，清空和设置入口不会出现在示例层状态。
+* 示例卡片按主窗口宽度自适应为一栏、两栏或三栏，底部预留标题栏高度，窄窗口下不横向滚动。
+* 示例层支持 Escape 返回，载入任一示例后自动回到编辑器，并使用更柔和的 spring 动画与 reduced motion 降级。
 ## 🌐 多语言发布说明
 
 GitHub Release 页面默认使用简体中文短版，完整发布说明维护在 `docs/releases/`：
 
-* [简体中文](./docs/releases/v4.3.2.zh-CN.md)
-* [繁體中文](./docs/releases/v4.3.2.zh-TW.md)
-* [English](./docs/releases/v4.3.2.en.md)
-* [Français](./docs/releases/v4.3.2.fr.md)
-* [日本語](./docs/releases/v4.3.2.ja.md)
-* [Español](./docs/releases/v4.3.2.es.md)
+* [简体中文](./docs/releases/v4.3.4.zh-CN.md)
+* [繁體中文](./docs/releases/v4.3.4.zh-TW.md)
+* [English](./docs/releases/v4.3.4.en.md)
+* [Français](./docs/releases/v4.3.4.fr.md)
+* [日本語](./docs/releases/v4.3.4.ja.md)
+* [Español](./docs/releases/v4.3.4.es.md)
 
 <a id="主要功能"></a>
 

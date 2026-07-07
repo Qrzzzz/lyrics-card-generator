@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v4.3.2.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v4.3.4.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="#ローカル開発">ローカル開発</a> ·
@@ -51,29 +51,29 @@
 
 最新版は [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) からダウンロードできます。
 
-* 推奨インストーラー：`Lyrics Card Generator Setup 4.3.2.exe`
-* ポータブル版：`Lyrics Card Generator-4.3.2-portable.exe`
+* 推奨インストーラー：`Lyrics Card Generator Setup 4.3.4.exe`
+* ポータブル版：`Lyrics Card Generator-4.3.4-portable.exe`
 
 通常利用にはインストーラーを推奨します。ポータブル版は一時利用、検証、リムーバブルドライブでの利用に向いています。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v4.3.2 の更新ポイント
+### v4.3.4 の更新ポイント
 
-* Explicit バッジは、描画された E グリフではなく `currentColor` の SVG くり抜き図形になり、プレビューと PNG 書き出しで一致します。
-* 縦向き header ではカバーを大きくし、曲情報を垂直方向に中央揃えして、カバー、タイトル、アーティスト、アルバムの視覚的な中心を安定させました。
-* タイトルと Explicit バッジの間隔と垂直位置を調整し、Apple Music の半透明な幾何学バッジに近い見え方にしました。
-
+* サンプルはモーダルではなくメイン画面の上にある上部レイヤーとして開くようになり、編集画面が下へ退き、アプリ内ヘッダーが下部にドッキングして戻るためのアンカーになります。
+* 下部ヘッダーは通常のヘッダー構造を再利用し、元の「サンプル」ボタンだけを X 戻るボタンに置き換えます。サンプル表示中はクリアと設定は表示されません。
+* サンプルカードはメインウィンドウ幅に応じて 1 列、2 列、3 列に切り替わり、下部ヘッダー分の余白を確保し、狭いウィンドウでも横スクロールを避けます。
+* サンプルレイヤーは Escape で戻る操作に対応し、サンプル読み込み後は自動的に編集画面へ戻ります。より柔らかい spring アニメーションと reduced motion のフォールバックも追加しました。
 ## 🌐 多言語リリースノート
 
 GitHub Release ページではデフォルトで簡体字中国語の短縮版が使用され、完全なリリースノートは `docs/releases/` にて管理されています：
 
-* [简体中文](./docs/releases/v4.3.2.zh-CN.md)
-* [繁體中文](./docs/releases/v4.3.2.zh-TW.md)
-* [English](./docs/releases/v4.3.2.en.md)
-* [Français](./docs/releases/v4.3.2.fr.md)
-* [日本語](./docs/releases/v4.3.2.ja.md)
-* [Español](./docs/releases/v4.3.2.es.md)
+* [简体中文](./docs/releases/v4.3.4.zh-CN.md)
+* [繁體中文](./docs/releases/v4.3.4.zh-TW.md)
+* [English](./docs/releases/v4.3.4.en.md)
+* [Français](./docs/releases/v4.3.4.fr.md)
+* [日本語](./docs/releases/v4.3.4.ja.md)
+* [Español](./docs/releases/v4.3.4.es.md)
 
 <a id="主な機能"></a>
 
