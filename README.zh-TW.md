@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v4.3.4.zh-TW.md">發布說明</a> ·
+  <a href="./docs/releases/v4.3.6.zh-TW.md">發布說明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">線上 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="#本機開發">本機開發</a> ·
@@ -48,29 +48,31 @@
 
 請前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載最新版：
 
-* 建議一般使用者下載安裝版：`Lyrics Card Generator Setup 4.3.4.exe`
-* 不想安裝時可下載可攜版：`Lyrics Card Generator-4.3.4-portable.exe`
+* 建議一般使用者下載安裝版：`Lyrics Card Generator Setup 4.3.6.exe`
+* 不想安裝時可下載可攜版：`Lyrics Card Generator-4.3.6-portable.exe`
 
 安裝版適合長期使用；可攜版適合臨時執行、測試或放在隨身碟中使用。
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v4.3.4 更新重點
+### v4.3.6 更新重點
 
-* 「歌詞範例」從彈窗改為主介面上方空間層，開啟時編輯器退到下方，應用程式內標題列滑到底部作為返回錨點。
-* 底部標題列復用正常標題列結構，只把原「範例」按鈕替換為 X 返回按鈕，清空和設定入口不會出現在範例層狀態。
-* 範例卡片依主視窗寬度自適應為一欄、兩欄或三欄，底部預留標題列高度，窄視窗下不橫向捲動。
-* 範例層支援 Escape 返回，載入任一範例後自動回到編輯器，並使用更柔和的 spring 動畫與 reduced motion 降級。
+* 主介面標題列現在作為編輯內容的一部分排列，不再浮在步驟區和預覽區上方；範例歌曲介面仍複用同一標題列停靠在底部作為返回入口。
+* 範例歌曲介面去掉外層邊框感，譯文語言統一顯示在標題右側，並新增預設開啟的「匯入譯文」開關。
+* 開啟「匯入譯文」載入範例時，會同步寫入譯文並打開主介面的「啟用翻譯」；關閉時只匯入歌曲資訊和歌詞。
+* 簡體中文與繁體中文交錯匯入時不再預設匯入譯文，底部 X 返回按鈕增加橙紅色懸停回饋，並修復標題列動畫殘影。
+* 匯出品質文案調整為「標準 / 高清 / 超清」，實際匯出倍率仍保持 1x / 1.4x / 2x。
+
 ## 🌐 多語言發佈說明
 
 GitHub Release 頁面預設使用簡體中文短版，完整發佈說明維護在 `docs/releases/`：
 
-* [简体中文](./docs/releases/v4.3.4.zh-CN.md)
-* [繁體中文](./docs/releases/v4.3.4.zh-TW.md)
-* [English](./docs/releases/v4.3.4.en.md)
-* [Français](./docs/releases/v4.3.4.fr.md)
-* [日本語](./docs/releases/v4.3.4.ja.md)
-* [Español](./docs/releases/v4.3.4.es.md)
+* [简体中文](./docs/releases/v4.3.6.zh-CN.md)
+* [繁體中文](./docs/releases/v4.3.6.zh-TW.md)
+* [English](./docs/releases/v4.3.6.en.md)
+* [Français](./docs/releases/v4.3.6.fr.md)
+* [日本語](./docs/releases/v4.3.6.ja.md)
+* [Español](./docs/releases/v4.3.6.es.md)
 
 ## ✨ 主要功能
 

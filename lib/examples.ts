@@ -219,18 +219,6 @@ export const EXAMPLE_SONGS: ExampleSong[] = [{
   ].join("\n"),
   translations: [
     {
-      language: "zh",
-      label: EXAMPLE_LANGUAGE_LABELS.zh,
-      text: [
-        "今天只剩残留的躯壳",
-        "迎接光辉岁月",
-        "在风雨中抱紧自由",
-        "一生走过彷徨的挣扎",
-        "相信自己能够改变未来",
-        "试问谁又能做到"
-      ].join("\n")
-    },
-    {
       language: "en",
       label: EXAMPLE_LANGUAGE_LABELS.en,
       text: [
@@ -285,6 +273,7 @@ export const EXAMPLE_SONGS: ExampleSong[] = [{
 export type ExampleLoadPayload = {
   example: ExampleSong;
   translation: ExampleTranslationSample;
+  importTranslation?: boolean;
 };
 
 export function resolveExampleTranslation(
@@ -299,8 +288,23 @@ export function resolveExampleTranslation(
     };
   }
 
-  return (
-    example.translations.find((item) => item.language === locale) ??
-    example.translations[0]
-  );
+  const exactTranslation = example.translations.find((item) => item.language === locale);
+
+  if (exactTranslation) {
+    return exactTranslation;
+  }
+
+  if (isChineseLocale(example.originalLanguage) && isChineseLocale(locale)) {
+    return {
+      language: locale,
+      label: EXAMPLE_LANGUAGE_LABELS[locale],
+      text: ""
+    };
+  }
+
+  return example.translations[0];
+}
+
+function isChineseLocale(language: ExampleTranslationLanguage) {
+  return language === "zh" || language === "zh-TW";
 }

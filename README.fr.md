@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v4.3.4.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v4.3.6.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="#développement-local">Développement local</a> ·
@@ -51,20 +51,20 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 Téléchargez la dernière version depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
 
-* Installateur recommandé : `Lyrics Card Generator Setup 4.3.4.exe`
-* Version portable : `Lyrics Card Generator-4.3.4-portable.exe`
+* Installateur recommandé : `Lyrics Card Generator Setup 4.3.6.exe`
+* Version portable : `Lyrics Card Generator-4.3.6-portable.exe`
 
 L'installateur est recommandé pour une utilisation régulière. La version portable convient aux essais, à une utilisation temporaire ou à un disque amovible.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### Points clés de la v4.3.4
+### Points clés de la v4.3.6
 
-* Les exemples s'ouvrent désormais dans une couche supérieure au-dessus de l'interface principale au lieu d'une modale ; l'éditeur descend et l'en-tête interne se place en bas comme point de retour.
-* L'en-tête du bas réutilise la structure normale et remplace seulement le bouton Exemples par un bouton X de retour, sans afficher Effacer ni Paramètres dans l'état des exemples.
-* Les cartes d'exemple s'adaptent en une, deux ou trois colonnes selon la largeur de la fenêtre principale, réservent l'espace de l'en-tête du bas et évitent le défilement horizontal sur les fenêtres étroites.
-* La couche d'exemples prend en charge Escape pour revenir, revient automatiquement après le chargement d'un exemple et utilise une animation spring plus douce avec repli reduced motion.
-<br clear="right" />
+* L’en-tête principal fait désormais partie du flux de contenu de l’éditeur au lieu de flotter au-dessus des étapes et de l’aperçu ; la surface des exemples réutilise toujours le même en-tête en bas comme entrée de retour.
+* La surface des exemples supprime l’effet de cadre extérieur, affiche la langue de traduction une seule fois à côté du titre et ajoute un interrupteur Importer la traduction activé par défaut.
+* Quand Importer la traduction est activé, charger un exemple écrit la traduction et active l’interrupteur de traduction de l’éditeur principal ; quand il est désactivé, seules les informations de chanson et les paroles sont importées.
+* Les imports croisés chinois simplifié / chinois traditionnel n’activent plus la traduction par défaut, le bouton X inférieur reçoit un retour orange-rouge au survol, et le fantôme de transition de l’en-tête est corrigé.
+* Les libellés de qualité d’export deviennent Standard / Haute / Ultra, tandis que les ratios réels restent 1x / 1,4x / 2x.
 
 <br clear="right" />
 
@@ -72,12 +72,12 @@ L'installateur est recommandé pour une utilisation régulière. La version port
 
 La page GitHub Release utilise par défaut la version courte en chinois simplifié, les notes de publication complètes sont conservées dans `docs/releases/` :
 
-* [简体中文](./docs/releases/v4.3.4.zh-CN.md)
-* [繁體中文](./docs/releases/v4.3.4.zh-TW.md)
-* [English](./docs/releases/v4.3.4.en.md)
-* [Français](./docs/releases/v4.3.4.fr.md)
-* [日本語](./docs/releases/v4.3.4.ja.md)
-* [Español](./docs/releases/v4.3.4.es.md)
+* [简体中文](./docs/releases/v4.3.6.zh-CN.md)
+* [繁體中文](./docs/releases/v4.3.6.zh-TW.md)
+* [English](./docs/releases/v4.3.6.en.md)
+* [Français](./docs/releases/v4.3.6.fr.md)
+* [日本語](./docs/releases/v4.3.6.ja.md)
+* [Español](./docs/releases/v4.3.6.es.md)
 
 <a id="fonctionnalités-principales"></a>
 

@@ -311,7 +311,7 @@ export function LyricEditor() {
             <motion.div
               aria-hidden={isExamplesSurfaceOpen}
               className={[
-                "relative z-10 h-full min-h-0 overflow-y-auto pt-[calc(var(--app-header-height)+var(--app-header-gap))]",
+                "relative z-10 h-full min-h-0 overflow-y-auto",
                 isExamplesSurfaceOpen ? "pointer-events-none" : "pointer-events-auto"
               ].join(" ")}
               animate={{
@@ -323,41 +323,60 @@ export function LyricEditor() {
               inert={isExamplesSurfaceOpen ? true : undefined}
               transition={activeSurfaceTransition}
             >
-              <div className="grid min-w-0 max-w-full gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(420px,600px)]">
-                <MotionPanel className="order-2 grid min-w-0 gap-4 lg:order-1">
-                  <SettingsStepper
-                    steps={settingsSteps}
-                    currentStep={currentStep}
-                    onStepChange={setCurrentStep}
-                    backText={t("step.back")}
-                    nextText={t("step.next")}
-                    themeColor={resolvedAccentColor}
+              <div className="grid min-w-0 max-w-full gap-5">
+                <div className={isExamplesSurfaceOpen ? "invisible" : ""}>
+                  <EditorHeader
+                    locale={state.locale}
+                    t={t}
+                    mode="normal"
+                    onOpenExamples={() => setActiveSurface("examples")}
+                    onClearAll={clearAllContent}
+                    onOpenSettings={openSettings}
                   />
-                </MotionPanel>
+                </div>
 
-                <PreviewPane
-                  isPreviewVisible={isPreviewVisible}
-                  onPreviewVisibleChange={setIsPreviewVisible}
-                  song={parsedState.song}
-                  lyrics={parsedState.lyrics}
-                  style={parsedState.style}
-                  cardRef={cardRef}
-                  fontSchemePreview={fontSchemePreview}
-                  showFontSchemePreview={settingsSteps[currentStep]?.id === "font"}
-                  locale={state.locale}
-                  t={t}
-                />
+                <div className="grid min-w-0 max-w-full gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(420px,600px)]">
+                  <MotionPanel className="order-2 grid min-w-0 gap-4 lg:order-1">
+                    <SettingsStepper
+                      steps={settingsSteps}
+                      currentStep={currentStep}
+                      onStepChange={setCurrentStep}
+                      backText={t("step.back")}
+                      nextText={t("step.next")}
+                      themeColor={resolvedAccentColor}
+                    />
+                  </MotionPanel>
+
+                  <PreviewPane
+                    isPreviewVisible={isPreviewVisible}
+                    onPreviewVisibleChange={setIsPreviewVisible}
+                    song={parsedState.song}
+                    lyrics={parsedState.lyrics}
+                    style={parsedState.style}
+                    cardRef={cardRef}
+                    fontSchemePreview={fontSchemePreview}
+                    showFontSchemePreview={settingsSteps[currentStep]?.id === "font"}
+                    locale={state.locale}
+                    t={t}
+                  />
+                </div>
               </div>
             </motion.div>
 
             <motion.div
+              aria-hidden={!isExamplesSurfaceOpen}
               ref={headerRailRef}
-              className="pointer-events-auto absolute left-0 right-0 z-30"
+              className={[
+                "absolute left-0 right-0 z-30",
+                isExamplesSurfaceOpen ? "pointer-events-auto" : "pointer-events-none"
+              ].join(" ")}
               style={{ top: 0 }}
               animate={{
-                y: isExamplesSurfaceOpen ? headerDockY : 0
+                y: isExamplesSurfaceOpen ? headerDockY : 0,
+                opacity: isExamplesSurfaceOpen ? 1 : 0
               }}
               initial={false}
+              inert={!isExamplesSurfaceOpen ? true : undefined}
               transition={activeSurfaceTransition}
             >
               <EditorHeader

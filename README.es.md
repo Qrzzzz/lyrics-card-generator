@@ -19,7 +19,7 @@
 <p>
   <strong>Navegación</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Descargar la última versión</a> ·
-  <a href="./docs/releases/v4.3.4.es.md">Notas de la versión</a> ·
+  <a href="./docs/releases/v4.3.6.es.md">Notas de la versión</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en línea</a> ·
   <a href="#funciones-principales">Funciones principales</a> ·
   <a href="#desarrollo-local">Desarrollo local</a> ·
@@ -51,20 +51,20 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 Descarga la versión más reciente desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Instalador recomendado: `Lyrics Card Generator Setup 4.3.4.exe`
-* Versión portable: `Lyrics Card Generator-4.3.4-portable.exe`
+* Instalador recomendado: `Lyrics Card Generator Setup 4.3.6.exe`
+* Versión portable: `Lyrics Card Generator-4.3.6-portable.exe`
 
 El instalador se recomienda para uso habitual. La versión portable es útil para pruebas, uso temporal o ejecución desde una unidad extraíble.
 
 > La compilación actual no está firmada. Windows puede mostrar una advertencia de SmartScreen, algo habitual en aplicaciones personales sin firma.
 
-### Aspectos destacados de la versión 4.3.4
+### Aspectos destacados de la versión 4.3.6
 
-* Los ejemplos ahora se abren como una capa superior sobre la interfaz principal en lugar de un modal; el editor baja y la cabecera interna se acopla abajo como punto de regreso.
-* La cabecera inferior reutiliza la estructura normal y solo reemplaza el botón Ejemplo original por un botón X para volver, sin mostrar Borrar todo ni Ajustes en el estado de ejemplos.
-* Las tarjetas de ejemplo se adaptan a una, dos o tres columnas según el ancho de la ventana principal, reservan espacio para la cabecera inferior y evitan el desplazamiento horizontal en ventanas estrechas.
-* La capa de ejemplos permite volver con Escape, regresa automáticamente tras cargar un ejemplo y usa una animación spring más suave con alternativa para reduced motion.
-<br clear="right" />
+* La cabecera principal ahora forma parte del flujo de contenido del editor en lugar de flotar sobre los pasos y la vista previa; la superficie de ejemplos sigue reutilizando la misma cabecera acoplada abajo como entrada de regreso.
+* La superficie de ejemplos elimina la sensación de marco exterior, muestra el idioma de traducción una sola vez junto al título y añade un interruptor Importar traducción activado por defecto.
+* Cuando Importar traducción está activado, cargar un ejemplo escribe la traducción y activa el interruptor de traducción del editor principal; cuando está desactivado, solo se importan los datos de la canción y la letra.
+* Las importaciones cruzadas entre chino simplificado y chino tradicional ya no activan la traducción por defecto, el botón X inferior tiene respuesta naranja-roja al pasar el cursor y se corrige la copia fantasma de la cabecera durante la transición.
+* Los textos de calidad de exportación pasan a Estándar / Alta / Ultra, mientras los ratios reales se mantienen en 1x / 1,4x / 2x.
 
 <br clear="right" />
 
@@ -72,12 +72,12 @@ El instalador se recomienda para uso habitual. La versión portable es útil par
 
 La página de GitHub Release utiliza por defecto la versión corta en chino simplificado, las notas de publicación completas se mantienen en `docs/releases/`:
 
-* [简体中文](./docs/releases/v4.3.4.zh-CN.md)
-* [繁體中文](./docs/releases/v4.3.4.zh-TW.md)
-* [English](./docs/releases/v4.3.4.en.md)
-* [Français](./docs/releases/v4.3.4.fr.md)
-* [日本語](./docs/releases/v4.3.4.ja.md)
-* [Español](./docs/releases/v4.3.4.es.md)
+* [简体中文](./docs/releases/v4.3.6.zh-CN.md)
+* [繁體中文](./docs/releases/v4.3.6.zh-TW.md)
+* [English](./docs/releases/v4.3.6.en.md)
+* [Français](./docs/releases/v4.3.6.fr.md)
+* [日本語](./docs/releases/v4.3.6.ja.md)
+* [Español](./docs/releases/v4.3.6.es.md)
 
 <a id="funciones-principales"></a>
 

@@ -410,6 +410,12 @@ body[data-window-maximized="true"] .app-shell[data-desktop-shell="true"] {
   background: rgb(var(--button-bg-hover));
 }
 
+.examples-close-button:hover {
+  border-color: rgb(var(--status-danger-border));
+  background: color-mix(in srgb, #f97316 34%, rgb(var(--button-bg-hover)));
+  color: rgb(var(--status-danger-fg));
+}
+
 .app-button:active:not(:disabled) {
   transform: scale(0.985);
 }

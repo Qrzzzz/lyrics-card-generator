@@ -48,18 +48,23 @@ export function ExamplesDialog({ open, locale, onClose, onLoad }: { open: boolea
         aria-labelledby="examples-dialog-title"
         className="settings-surface glass-panel w-full max-w-6xl rounded-2xl p-5"
       >
-        <div className="mb-4 flex items-center justify-between">
+        <div className="mb-4 flex items-center justify-between gap-3">
           <h2 id="examples-dialog-title" className="flex items-center gap-2 text-xl font-bold">
             <Music2 className="h-5 w-5" />
             {copy.examples}
           </h2>
-          <ActionButton
-            variant="icon"
-            size="sm"
-            icon={<X className="h-4 w-4" />}
-            onClick={onClose}
-            aria-label={copy.cancel}
-          />
+          <div className="flex shrink-0 items-center gap-3">
+            <div className="app-text-subtle text-right text-xs font-medium">
+              {copy.translationLanguage}: <span className="app-text-primary">{EXAMPLE_LANGUAGE_LABELS[locale]}</span>
+            </div>
+            <ActionButton
+              variant="icon"
+              size="sm"
+              icon={<X className="h-4 w-4" />}
+              onClick={onClose}
+              aria-label={copy.cancel}
+            />
+          </div>
         </div>
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {EXAMPLE_SONGS.map((song) => (
@@ -82,8 +87,6 @@ function ExampleSongCard({
 }) {
   const copy = settingsCopy[locale];
   const defaultTranslation = resolveExampleTranslation(song, locale);
-  const translationLabel =
-    defaultTranslation.text.trim().length > 0 ? defaultTranslation.label : EXAMPLE_LANGUAGE_LABELS[locale];
 
   return (
     <div className="settings-panel-card grid min-h-[184px] content-between gap-4 p-4">
@@ -102,11 +105,6 @@ function ExampleSongCard({
         >
           {copy.loadExample}
         </ActionButton>
-      </div>
-
-      <div className="rounded-lg border border-[rgb(var(--panel-border))] bg-[rgb(var(--panel-bg))] px-3 py-2">
-        <div className="app-text-subtle text-xs font-medium">{copy.translationLanguage}</div>
-        <div className="app-text-primary mt-1 truncate text-sm font-semibold">{translationLabel}</div>
       </div>
     </div>
   );
