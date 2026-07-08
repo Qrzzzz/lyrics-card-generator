@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v4.3.6.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v4.3.8.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="#développement-local">Développement local</a> ·
@@ -51,33 +51,30 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 Téléchargez la dernière version depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
 
-* Installateur recommandé : `Lyrics Card Generator Setup 4.3.6.exe`
-* Version portable : `Lyrics Card Generator-4.3.6-portable.exe`
+* Installateur recommandé : `Lyrics Card Generator Setup 4.3.8.exe`
+* Version portable : `Lyrics Card Generator-4.3.8-portable.exe`
 
 L'installateur est recommandé pour une utilisation régulière. La version portable convient aux essais, à une utilisation temporaire ou à un disque amovible.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### Points clés de la v4.3.6
+### Points clés de la v4.3.8
 
-* L’en-tête principal fait désormais partie du flux de contenu de l’éditeur au lieu de flotter au-dessus des étapes et de l’aperçu ; la surface des exemples réutilise toujours le même en-tête en bas comme entrée de retour.
-* La surface des exemples supprime l’effet de cadre extérieur, affiche la langue de traduction une seule fois à côté du titre et ajoute un interrupteur Importer la traduction activé par défaut.
-* Quand Importer la traduction est activé, charger un exemple écrit la traduction et active l’interrupteur de traduction de l’éditeur principal ; quand il est désactivé, seules les informations de chanson et les paroles sont importées.
-* Les imports croisés chinois simplifié / chinois traditionnel n’activent plus la traduction par défaut, le bouton X inférieur reçoit un retour orange-rouge au survol, et le fantôme de transition de l’en-tête est corrigé.
-* Les libellés de qualité d’export deviennent Standard / Haute / Ultra, tandis que les ratios réels restent 1x / 1,4x / 2x.
-
-<br clear="right" />
+* L'interface des chansons d'exemple utilise désormais des cartes locales plus compactes avec un masque de palette.
+* Les images de pr?visualisation des exemples sont g?n?r?es via le flux principal de rendu des cartes de paroles.
+* Les vraies pochettes d'album ne servent que d'entr?es temporaires pour l'extraction de couleurs et ne sont pas distribu?es avec le logiciel.
+* Ajout de `docs/examples.md` pour documenter le processus de maintenance des chansons d'exemple.
 
 ## 🌐 Notes de publication multilingues
 
 La page GitHub Release utilise par défaut la version courte en chinois simplifié, les notes de publication complètes sont conservées dans `docs/releases/` :
 
-* [简体中文](./docs/releases/v4.3.6.zh-CN.md)
-* [繁體中文](./docs/releases/v4.3.6.zh-TW.md)
-* [English](./docs/releases/v4.3.6.en.md)
-* [Français](./docs/releases/v4.3.6.fr.md)
-* [日本語](./docs/releases/v4.3.6.ja.md)
-* [Español](./docs/releases/v4.3.6.es.md)
+* [简体中文](./docs/releases/v4.3.8.zh-CN.md)
+* [繁體中文](./docs/releases/v4.3.8.zh-TW.md)
+* [English](./docs/releases/v4.3.8.en.md)
+* [Français](./docs/releases/v4.3.8.fr.md)
+* [日本語](./docs/releases/v4.3.8.ja.md)
+* [Español](./docs/releases/v4.3.8.es.md)
 
 <a id="fonctionnalités-principales"></a>
 

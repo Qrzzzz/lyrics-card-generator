@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v4.3.6.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v4.3.8.zh-CN.md">发布说明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">在线 Web Lite 版</a> ·
   <a href="./docs/desktop.md">桌面维护文档</a> ·
   <a href="#主要功能">主要功能</a> ·
@@ -49,31 +49,30 @@
 
 请前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下载最新版：
 
-* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 4.3.6.exe`
-* 不想安装时可下载便携版：`Lyrics Card Generator-4.3.6-portable.exe`
+* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 4.3.8.exe`
+* 不想安装时可下载便携版：`Lyrics Card Generator-4.3.8-portable.exe`
 
 安装版适合长期使用；便携版适合临时运行、测试或放在移动硬盘中使用。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v4.3.6 更新重点
+### v4.3.8 更新重点
 
-* 主界面标题栏现在作为编辑内容的一部分排列，不再浮在步骤区和预览区上方；示例歌曲界面仍复用同一标题栏停靠在底部作为返回入口。
-* 示例歌曲界面去掉外层边框感，译文语言统一显示在标题右侧，并新增默认开启的“导入翻译”开关。
-* 开启“导入翻译”载入示例时，会同步写入译文并打开主界面的“启用翻译”；关闭时只导入歌曲信息和歌词。
-* 简体中文与繁体中文交错导入时不再默认导入译文，底部 X 返回按钮增加橙红色悬停反馈，并修复标题栏动画虚影。
-* 导出质量文案调整为“标准 / 高清 / 超清”，实际导出倍率仍保持 1x / 1.4x / 2x。
+* 示例歌曲界面改为更紧凑的本地取色遮罩卡片。
+* 示例预览图复用主歌词卡片渲染链路生成。
+* 真实专辑封面只作为临时取色输入，不随软件分发。
+* 新增 `docs/examples.md` 记录示例歌曲维护流程。
 
 ## 🌐 多语言发布说明
 
 GitHub Release 页面默认使用简体中文短版，完整发布说明维护在 `docs/releases/`：
 
-* [简体中文](./docs/releases/v4.3.6.zh-CN.md)
-* [繁體中文](./docs/releases/v4.3.6.zh-TW.md)
-* [English](./docs/releases/v4.3.6.en.md)
-* [Français](./docs/releases/v4.3.6.fr.md)
-* [日本語](./docs/releases/v4.3.6.ja.md)
-* [Español](./docs/releases/v4.3.6.es.md)
+* [简体中文](./docs/releases/v4.3.8.zh-CN.md)
+* [繁體中文](./docs/releases/v4.3.8.zh-TW.md)
+* [English](./docs/releases/v4.3.8.en.md)
+* [Français](./docs/releases/v4.3.8.fr.md)
+* [日本語](./docs/releases/v4.3.8.ja.md)
+* [Español](./docs/releases/v4.3.8.es.md)
 
 <a id="主要功能"></a>
 

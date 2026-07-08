@@ -6,5 +6,7 @@ release/
 backups/
 output/playwright/
 .playwright-cli/
+tmp/example-covers/
+tmp/example-previews/
 *.log
 *.tsbuildinfo

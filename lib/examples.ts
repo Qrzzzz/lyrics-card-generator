@@ -1,5 +1,13 @@
 import type { Locale, SongSource } from "@/lib/types";
 
+// Maintenance note:
+// - Real album covers are only allowed as temporary development-time palette inputs.
+// - Do not commit real album covers.
+// - Do not place real album covers in public/.
+// - Do not bundle real album covers into the desktop app.
+// - Only commit local preview images rendered by the existing LyricCard.
+// - Generated previews must set showCover=false and only use cover palette results.
+
 export type ExampleSongId = "opposite" | "yuusha" | "glorious-years" | "opalite";
 
 export const EXAMPLE_TRANSLATION_LANGUAGES = [
@@ -34,6 +42,11 @@ export type ExampleSong = {
   artist: string;
   url: string;
   source: SongSource;
+  preview: {
+    image: string;
+    colors: [string, string, string?];
+    generatedFrom: "album-cover-palette";
+  };
   originalLanguage: ExampleTranslationLanguage;
   lyrics: string;
   translations: ExampleTranslationSample[];
@@ -46,6 +59,11 @@ export const EXAMPLE_SONGS: ExampleSong[] = [{
   artist: "Taylor Swift",
   url: "https://music.apple.com/tr/album/opalite/1833328839?i=1833328845",
   source: "apple",
+  preview: {
+    image: "/examples/generated/opalite.png",
+    colors: ["#6A723D", "#5A9E7D", "#BC6339"],
+    generatedFrom: "album-cover-palette"
+  },
   originalLanguage: "en",
   lyrics: [
     "It's alright",
@@ -112,6 +130,11 @@ export const EXAMPLE_SONGS: ExampleSong[] = [{
   artist: "Sabrina Carpenter",
   url: "https://music.apple.com/cn/song/opposite/1677892095",
   source: "apple",
+  preview: {
+    image: "/examples/generated/opposite.png",
+    colors: ["#FBE6D2", "#E6C29E", "#C99C6F"],
+    generatedFrom: "album-cover-palette"
+  },
   originalLanguage: "en",
   lyrics: ["And I know now", "Even if I tried to change", "That somehow", "You'd end up with her anyway"].join("\n"),
   translations: [
@@ -148,6 +171,11 @@ export const EXAMPLE_SONGS: ExampleSong[] = [{
   artist: "YOASOBI",
   url: "https://music.apple.com/tr/album/yuusha/1707001460?i=1707001466",
   source: "apple",
+  preview: {
+    image: "/examples/generated/yuusha.png",
+    colors: ["#F6F4F8", "#CED0EC"],
+    generatedFrom: "album-cover-palette"
+  },
   originalLanguage: "ja",
   lyrics: [
     "共に歩んだ旅路を辿れば",
@@ -208,6 +236,11 @@ export const EXAMPLE_SONGS: ExampleSong[] = [{
   artist: "Beyond",
   url: "https://music.apple.com/tr/album/%E5%85%89%E8%BC%9D%E6%AD%B2%E6%9C%88/1464503952?i=1464504134",
   source: "apple",
+  preview: {
+    image: "/examples/generated/glorious-years.png",
+    colors: ["#7A7A7A", "#171718", "#A7A7A6"],
+    generatedFrom: "album-cover-palette"
+  },
   originalLanguage: "zh-TW",
   lyrics: [
     "今天只有殘留的軀殼",
