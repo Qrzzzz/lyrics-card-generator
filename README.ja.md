@@ -289,13 +289,3 @@ Rangerov に感謝します。このプロジェクトへの関心と意見に�
 個人、非商用、教育、評価目的でソースコードを閲覧、ダウンロード、実行し、個人的に改変できます。商用利用、再配布、再パッケージング、公開された改変版、または本プロジェクトを基にした競合製品には、権利者からの事前の書面許可が必要です。
 
 サードパーティのオープンソース依存関係は、それぞれのライセンスに従います。詳細は [LICENSE](./LICENSE) を参照してください。
-
-## Star History
-
-<a href="https://www.star-history.com/?repos=Qrzzzz%2Flyrics-card-generator&type=date&legend=top-left">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=Qrzzzz/lyrics-card-generator&type=date&theme=dark&legend=top-left" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=Qrzzzz/lyrics-card-generator&type=date&legend=top-left" />
-   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=Qrzzzz/lyrics-card-generator&type=date&legend=top-left" />
- </picture>
-</a>
