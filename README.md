@@ -21,6 +21,7 @@
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
   <a href="./docs/releases/v4.3.6.zh-CN.md">发布说明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">在线 Web Lite 版</a> ·
+  <a href="./docs/desktop.md">桌面维护文档</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="#本地开发">本地开发</a> ·
   <a href="./LICENSE">许可证</a>
@@ -207,6 +208,8 @@ release/
 dist-desktop/server
 ```
 
+维护者可参考 [桌面维护文档](./docs/desktop.md) 查看架构、运行边界和发布前检查项。
+
 ## 📜 常用脚本
 
 ```bash
@@ -219,79 +222,3 @@ npm run desktop:build   # 构建 Windows 安装版和便携版
 npm run parse:test      # 测试歌曲链接解析
 npm run core:test       # 测试 3.0 核心纯函数
 ```
-
-## 🧩 技术栈
-
-* Next.js
-* React
-* TypeScript
-* Tailwind CSS
-* Electron
-* electron-builder
-* html-to-image
-* Framer Motion
-* Lucide React
-* Cheerio
-* Zod
-* ReactBits 风格 UI 灵感
-
-## 🔤 字体
-
-项目使用：
-
-* 思源黑体
-* 思源宋体
-
-它们为卡片提供了厚重、清晰、适合中文歌词排版的字体基础。
-
-3.1.0 提供思源黑体和思源宋体两套预设方案，并允许分别设置中日韩文字体与西文字体。“字体方案”作为与歌词、布局和视觉细节并列的独立步骤，桌面版可从 Windows 系统字体列表中选择，Web 版仍可使用推荐字体和内置预设。完整字体预览位于右侧真实卡片下方，使用与真实卡片相同的背景算法，并固定以深海蓝、钴蓝、靛蓝、夜幕蓝取色；它不会修改实际卡片背景，也不会进入最终 PNG。
-
-## 🙏 致谢
-
-感谢 [Apple Music](https://music.apple.com/)。这个项目的彩色渐变、流光背景审美，以及早期歌词卡片排版方向，受到 Apple Music 视觉体验的启发。本项目与 Apple Music 没有关联，也不代表 Apple Music 官方立场。
-
-感谢 [思源黑体](https://github.com/adobe-fonts/source-han-sans) 和 [思源宋体](https://github.com/adobe-fonts/source-han-serif)。它们为中文歌词卡片提供了稳定、清晰、有分量的字体基础。
-
-感谢 [OpenAI Codex](https://openai.com/codex/)。它把许多零散想法转化为可运行的代码、桌面版构建流程和实际功能。
-
-感谢 [ChatGPT 5.5](https://chatgpt.com/) 在开发过程中进行问题定位、方案设计、修复复核和验收检查。
-
-感谢 [ReactBits](https://www.reactbits.dev/) 提供的多种 UI 创意，包括 Spark Cursor 等动效灵感。
-
-感谢 Rangerov 对此项目的关注和提出意见。
-
-感谢 [V0idream](https://github.com/V0idream) 提出的代码瘦身建议，[`v1.1.0`](https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v1.1.0) 已据此进行了相关优化。
-
-感谢以下歌曲及其创作者。它们作为项目样例，帮助验证歌词卡片在不同语言、字体、翻译长度和排版节奏下的显示效果。
-
-<details>
-<summary>展开查看歌曲样例</summary>
-
-| 歌曲         | 专辑                         | 艺术家                                                    |
-| ---------- | -------------------------- | ------------------------------------------------------ |
-| 《opposite》 | *emails i can't send fwd:* | [Sabrina Carpenter](https://www.sabrinacarpenter.com/) |
-| 《勇者》       | *THE BOOK 3*               | [YOASOBI](https://www.yoasobi-music.jp/)               |
-| 《光辉岁月》    | *命运派对*                   | [Beyond](https://music.apple.com/cn/artist/beyond/79668659) |
-| 《Opalite》 | *The Life of a Showgirl* | [Taylor Swift](https://www.taylorswift.com/)                |
-
-</details>
-
-也感谢这些开源项目及其维护者：[Next.js](https://nextjs.org/)、[React](https://react.dev/)、[TypeScript](https://www.typescriptlang.org/)、[Tailwind CSS](https://tailwindcss.com/)、[Electron](https://www.electronjs.org/)、[electron-builder](https://www.electron.build/)、[html-to-image](https://github.com/bubkoo/html-to-image)、[Framer Motion](https://motion.dev/)、[Lucide React](https://lucide.dev/)、[Cheerio](https://cheerio.js.org/)、[Zod](https://zod.dev/)，以及构成现代前端生态的众多工具链。没有这些基础设施，这个项目不会以现在的形态出现。
-
-## 📄 许可证
-
-本项目采用自定义 Source Available License，而不是传统开源许可证。
-
-你可以为了个人、非商业、学习、评估目的查看、下载、运行源码，并进行仅限个人使用的私下修改。未经作者书面许可，不得商用、再分发、重新打包、公开发布修改版，或基于本项目制作竞争性产品。
-
-本项目依赖的第三方开源组件仍遵循它们各自的许可证。详见 [LICENSE](./LICENSE)。
-
-## Star History
-
-<a href="https://www.star-history.com/?repos=Qrzzzz%2Flyrics-card-generator&type=date&legend=top-left">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=Qrzzzz/lyrics-card-generator&type=date&theme=dark&legend=top-left" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=Qrzzzz/lyrics-card-generator&type=date&legend=top-left" />
-   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=Qrzzzz/lyrics-card-generator&type=date&legend=top-left" />
- </picture>
-</a>
