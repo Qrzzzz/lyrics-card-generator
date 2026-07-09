@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v4.3.6.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v4.3.8.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="#ローカル開発">ローカル開発</a> ·
@@ -51,31 +51,30 @@
 
 最新版は [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) からダウンロードできます。
 
-* 推奨インストーラー：`Lyrics Card Generator Setup 4.3.6.exe`
-* ポータブル版：`Lyrics Card Generator-4.3.6-portable.exe`
+* 推奨インストーラー：`Lyrics Card Generator Setup 4.3.8.exe`
+* ポータブル版：`Lyrics Card Generator-4.3.8-portable.exe`
 
 通常利用にはインストーラーを推奨します。ポータブル版は一時利用、検証、リムーバブルドライブでの利用に向いています。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v4.3.6 の更新ポイント
+### v4.3.8 の更新ポイント
 
-* メインヘッダーはステップ領域やプレビュー領域の上に浮かず、編集内容の一部として配置されるようになりました。サンプル画面では同じヘッダーを下部の戻り入口として引き続き再利用します。
-* サンプル画面の外側の枠感を取り除き、翻訳言語はタイトル横に一度だけ表示されます。また、既定でオンの「翻訳を読み込む」スイッチを追加しました。
-* 「翻訳を読み込む」がオンのときは、サンプル読み込み時に翻訳を書き込み、メイン編集画面の翻訳スイッチもオンにします。オフの場合は曲情報と歌詞だけを読み込みます。
-* 簡体字中国語と繁体字中国語をまたぐ読み込みでは既定で翻訳を有効にせず、下部の X 戻るボタンにはオレンジから赤系のホバー反応を追加し、ヘッダー遷移中の残像も修正しました。
-* 書き出し品質の表記を 標準 / 高画質 / 超高画質 に変更しました。実際の倍率は引き続き 1x / 1.4x / 2x です。
+* サンプル曲の画面を、よりコンパクトなローカルのパレットマスクカードに変更しました。
+* サンプルのプレビュー画像は、メインの歌詞カード描画フローを再利用して生成します。
+* 実際のアルバムカバーは一時的な色抽出入力としてのみ扱い、ソフトウェアには配布しません。
+* サンプル曲のメンテナンス手順を記録する `docs/examples.md` を追加しました。
 
 ## 🌐 多言語リリースノート
 
 GitHub Release ページではデフォルトで簡体字中国語の短縮版が使用され、完全なリリースノートは `docs/releases/` にて管理されています：
 
-* [简体中文](./docs/releases/v4.3.6.zh-CN.md)
-* [繁體中文](./docs/releases/v4.3.6.zh-TW.md)
-* [English](./docs/releases/v4.3.6.en.md)
-* [Français](./docs/releases/v4.3.6.fr.md)
-* [日本語](./docs/releases/v4.3.6.ja.md)
-* [Español](./docs/releases/v4.3.6.es.md)
+* [简体中文](./docs/releases/v4.3.8.zh-CN.md)
+* [繁體中文](./docs/releases/v4.3.8.zh-TW.md)
+* [English](./docs/releases/v4.3.8.en.md)
+* [Français](./docs/releases/v4.3.8.fr.md)
+* [日本語](./docs/releases/v4.3.8.ja.md)
+* [Español](./docs/releases/v4.3.8.es.md)
 
 <a id="主な機能"></a>
 

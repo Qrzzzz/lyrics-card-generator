@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v4.3.6.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v4.3.8.en.md">Release Notes</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
   <a href="#features">Features</a> ·
   <a href="#local-development">Local Development</a> ·
@@ -51,31 +51,30 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 Download the latest version from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Recommended installer: `Lyrics Card Generator Setup 4.3.6.exe`
-* Portable version: `Lyrics Card Generator-4.3.6-portable.exe`
+* Recommended installer: `Lyrics Card Generator Setup 4.3.8.exe`
+* Portable version: `Lyrics Card Generator-4.3.8-portable.exe`
 
 The installer is recommended for regular use. The portable version is useful for temporary use, testing, or running from a removable drive.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v4.3.6 Highlights
+### v4.3.8 Highlights
 
-* The main header now belongs to the editor content flow instead of floating above the stepper and preview areas; the examples surface still reuses the same header docked at the bottom as the return entry.
-* The examples surface removes the outer framed-shell feeling, shows the translation language once beside the title, and adds an Import translation toggle enabled by default.
-* When Import translation is enabled, loading an example writes the translation and turns on the main editor translation switch; when disabled, only song details and lyrics are imported.
-* Simplified Chinese and Traditional Chinese cross-locale imports no longer enable translation by default, the bottom X return button now has orange-red hover feedback, and the header transition ghosting is fixed.
-* Export quality labels are now Standard / High / Ultra while the actual export ratios remain 1x / 1.4x / 2x.
+* The example-song interface now uses more compact local palette-masked cards.
+* Example preview images are generated through the main lyric-card rendering path.
+* Real album covers are only temporary palette inputs and are not distributed with the software.
+* Added `docs/examples.md` to document the example-song maintenance workflow.
 
 ## 🌐 Multilingual Release Notes
 
 The GitHub Release page defaults to a simplified Chinese short version, while the full release notes are maintained in `docs/releases/`:
 
-* [简体中文](./docs/releases/v4.3.6.zh-CN.md)
-* [繁體中文](./docs/releases/v4.3.6.zh-TW.md)
-* [English](./docs/releases/v4.3.6.en.md)
-* [Français](./docs/releases/v4.3.6.fr.md)
-* [日本語](./docs/releases/v4.3.6.ja.md)
-* [Español](./docs/releases/v4.3.6.es.md)
+* [简体中文](./docs/releases/v4.3.8.zh-CN.md)
+* [繁體中文](./docs/releases/v4.3.8.zh-TW.md)
+* [English](./docs/releases/v4.3.8.en.md)
+* [Français](./docs/releases/v4.3.8.fr.md)
+* [日本語](./docs/releases/v4.3.8.ja.md)
+* [Español](./docs/releases/v4.3.8.es.md)
 
 <a id="features"></a>
 

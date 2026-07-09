@@ -136,20 +136,24 @@ function ExampleSongCard({
 }) {
   const copy = settingsCopy[locale];
   const defaultTranslation = resolveExampleTranslation(song, locale);
+  const cardStyle = getExampleCardStyle(song);
 
   return (
-    <div className="settings-panel-card grid min-h-[184px] content-between gap-4 p-4">
-      <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+    <div className="settings-panel-card relative isolate flex h-[124px] min-w-0 items-center overflow-hidden p-4" style={cardStyle}>
+      <div className="absolute inset-0 bg-black/22" aria-hidden="true" />
+      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(255,255,255,0.13),rgba(255,255,255,0.04)_34%,rgba(0,0,0,0.22))]" aria-hidden="true" />
+      <div className="relative z-10 flex min-w-0 flex-1 items-center justify-between gap-3">
         <div className="min-w-0">
-          <div className="app-text-primary truncate font-bold">{song.title}</div>
-          <div className="app-text-subtle truncate text-sm">{song.artist}</div>
-          <div className="app-text-subtle mt-1 text-xs">
-            {copy.originalLanguage}: {EXAMPLE_LANGUAGE_LABELS[song.originalLanguage]}
+          <div className="app-text-primary truncate text-sm font-bold sm:text-base">{song.title}</div>
+          <div className="app-text-subtle mt-0.5 truncate text-xs sm:text-sm">{song.artist}</div>
+          <div className="mt-2 inline-flex max-w-full items-center rounded-md border border-white/14 bg-black/20 px-2 py-1 text-[11px] font-semibold text-white/78 backdrop-blur">
+            <span className="truncate">{copy.originalLanguage}: {EXAMPLE_LANGUAGE_LABELS[song.originalLanguage]}</span>
           </div>
         </div>
         <ActionButton
           size="sm"
           data-testid={`load-example-${song.id}`}
+          className="shrink-0"
           onClick={() => onLoad({ example: song, translation: defaultTranslation, importTranslation })}
         >
           {copy.loadExample}
@@ -157,4 +161,15 @@ function ExampleSongCard({
       </div>
     </div>
   );
+}
+
+function getExampleCardStyle(song: ExampleSong) {
+  const [primary, secondary, accent = secondary] = song.preview.colors;
+
+  return {
+    background:
+      `radial-gradient(circle at 16% 18%, ${accent} 0, transparent 34%), ` +
+      `radial-gradient(circle at 82% 26%, ${secondary} 0, transparent 38%), ` +
+      `linear-gradient(135deg, ${primary}, ${secondary} 56%, ${accent})`
+  };
 }
