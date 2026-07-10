@@ -1,6 +1,7 @@
 "use client";
 
 import { Music2, Settings, Trash2, X } from "lucide-react";
+import type { RefObject } from "react";
 import { getAIUiCopy } from "@/lib/ai/ui-copy";
 import type { createT } from "@/lib/i18n";
 import { settingsCopy } from "@/lib/settings/copy";
@@ -16,6 +17,7 @@ type EditorHeaderProps = {
   onClearAll: () => void;
   onOpenSettings: () => void;
   onCloseSurface?: () => void;
+  settingsButtonRef?: RefObject<HTMLButtonElement | null>;
 };
 
 export function EditorHeader({
@@ -25,7 +27,8 @@ export function EditorHeader({
   onOpenExamples,
   onClearAll,
   onOpenSettings,
-  onCloseSurface
+  onCloseSurface,
+  settingsButtonRef
 }: EditorHeaderProps) {
   const aiCopy = getAIUiCopy(locale);
   const copy = settingsCopy[locale];
@@ -81,9 +84,10 @@ export function EditorHeader({
           {copy.clearAll}
         </button>
         <button
+          ref={settingsButtonRef}
           type="button"
           data-testid="settings-button"
-          onClick={onOpenSettings}
+          onClick={() => onOpenSettings()}
           aria-hidden={isDocked}
           tabIndex={isDocked ? -1 : undefined}
           className={[

@@ -10,7 +10,7 @@ const files = [
   "components/editor/LyricsFetchPanel.tsx",
   "components/lyrics/AiTranslatePanel.tsx",
   "components/editor/font-scheme/FontSchemePanel.tsx",
-  "components/settings/SettingsTabs.tsx"
+  "components/settings/SettingsNavigation.tsx"
 ];
 const forbidden = [/\btext-white(?:\/[^\s"']+)?/g, /\bbg-black\/20\b/g, /\bborder-white\/(?:10|12)\b/g];
 const allowed = new Set([
@@ -34,7 +34,7 @@ for (const file of files) {
 assert.deepEqual(violations, []);
 
 const appearanceFiles = [
-  "components/settings/SettingsDialog.tsx",
+  "components/settings/SettingsSurface.tsx",
   "components/settings/AppearanceSettingsSection.tsx",
   "app/globals.css"
 ];

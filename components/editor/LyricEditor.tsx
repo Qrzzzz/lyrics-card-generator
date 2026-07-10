@@ -18,7 +18,8 @@ import { useEditorPreferences } from "@/components/editor/hooks/useEditorPrefere
 import { MotionPanel } from "@/components/motion/MotionPanel";
 import { PreviewPane } from "@/components/editor/PreviewPane";
 import { SettingsStepper, type SettingsStep } from "@/components/editor/SettingsStepper";
-import { SettingsDialog } from "@/components/settings/SettingsDialog";
+import { SettingsSurface } from "@/components/settings/SettingsSurface";
+import type { SettingsTabId } from "@/components/settings/settings-model";
 import { FirstLaunchLanguageDialog } from "@/components/settings/FirstLaunchLanguageDialog";
 import {
   useCoverPalette,
@@ -39,7 +40,7 @@ import { DEFAULT_USER_SETTINGS, getExportPixelRatio, type ExportQualityId } from
 import { resolveEffectiveUiThemeId } from "@/lib/settings/user-settings";
 import type { AppState, FontScheme, Locale } from "@/lib/types";
 
-type ActiveSurface = "editor" | "examples";
+type ActiveSurface = "editor" | "examples" | "settings";
 
 const surfaceTransition: Transition = {
   type: "spring",
@@ -59,15 +60,20 @@ export function LyricEditor() {
   const [fontSchemePreview, setFontSchemePreview] = useState<FontScheme | null>(null);
   const [isPreviewVisible, setIsPreviewVisible] = useState(true);
   const [activeSurface, setActiveSurface] = useState<ActiveSurface>("editor");
+  const [requestedSettingsTab, setRequestedSettingsTab] = useState<SettingsTabId>();
   const [exportQuality, setExportQuality] = useState<ExportQualityId>(DEFAULT_USER_SETTINGS.defaultExportQuality);
   const [toast, setToast] = useState("");
   const cardRef = useRef<HTMLElement | null>(null);
   const stageRef = useRef<HTMLDivElement | null>(null);
   const headerRailRef = useRef<HTMLDivElement | null>(null);
+  const settingsButtonRef = useRef<HTMLButtonElement | null>(null);
+  const restoreSettingsFocusRef = useRef(false);
   const [headerDockY, setHeaderDockY] = useState(0);
   const t = useMemo(() => createT(state.locale), [state.locale]);
   const shouldReduceMotion = useReducedMotion() ?? false;
   const isExamplesSurfaceOpen = activeSurface === "examples";
+  const isSettingsSurfaceOpen = activeSurface === "settings";
+  const isEditorSurfaceActive = activeSurface === "editor";
   const activeSurfaceTransition = shouldReduceMotion ? reducedSurfaceTransition : surfaceTransition;
 
   const parsedState = useMemo(
@@ -91,10 +97,7 @@ export function LyricEditor() {
     userSettings,
     backgroundImageUrl,
     isDesktopShell,
-    isSettingsOpen,
     isFirstLaunchOpen,
-    openSettings,
-    closeSettings,
     previewUserSettings,
     commitUserSettings: updateUserSettings,
     setLocale,
@@ -184,7 +187,7 @@ export function LyricEditor() {
   }, []);
 
   useEffect(() => {
-    if (activeSurface !== "examples") {
+    if (!isExamplesSurfaceOpen) {
       return;
     }
 
@@ -196,7 +199,15 @@ export function LyricEditor() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [activeSurface]);
+  }, [isExamplesSurfaceOpen]);
+
+  useEffect(() => {
+    if (!isEditorSurfaceActive || !restoreSettingsFocusRef.current) return;
+    restoreSettingsFocusRef.current = false;
+    setRequestedSettingsTab(undefined);
+    const frame = window.requestAnimationFrame(() => settingsButtonRef.current?.focus());
+    return () => window.cancelAnimationFrame(frame);
+  }, [isEditorSurfaceActive]);
 
   const {
     aiCopy,
@@ -221,8 +232,19 @@ export function LyricEditor() {
     },
     setTranslation,
     onNotify: setToast,
-    onRequireSettings: openSettings
+    onRequireSettings: () => openSettings("ai")
   });
+
+  function openSettings(tab?: SettingsTabId) {
+    if (!isEditorSurfaceActive) return;
+    setRequestedSettingsTab(tab);
+    setActiveSurface("settings");
+  }
+
+  function closeSettings() {
+    restoreSettingsFocusRef.current = true;
+    setActiveSurface("editor");
+  }
 
   function applyLocale(locale: Locale) {
     setState((current) => {
@@ -309,18 +331,20 @@ export function LyricEditor() {
             />
 
             <motion.div
-              aria-hidden={isExamplesSurfaceOpen}
+              data-testid="editor-surface"
+              aria-hidden={!isEditorSurfaceActive}
               className={[
                 "relative z-10 h-full min-h-0 overflow-y-auto",
-                isExamplesSurfaceOpen ? "pointer-events-none" : "pointer-events-auto"
+                isEditorSurfaceActive ? "pointer-events-auto" : "pointer-events-none"
               ].join(" ")}
               animate={{
+                x: isSettingsSurfaceOpen ? "-100%" : "0%",
                 y: isExamplesSurfaceOpen ? "100%" : "0%",
-                opacity: isExamplesSurfaceOpen ? (shouldReduceMotion ? 0 : 0.35) : 1,
-                scale: isExamplesSurfaceOpen ? (shouldReduceMotion ? 1 : 0.985) : 1
+                opacity: isEditorSurfaceActive ? 1 : shouldReduceMotion ? 0 : 0.35,
+                scale: isEditorSurfaceActive ? 1 : shouldReduceMotion ? 1 : 0.985
               }}
               initial={false}
-              inert={isExamplesSurfaceOpen ? true : undefined}
+              inert={!isEditorSurfaceActive ? true : undefined}
               transition={activeSurfaceTransition}
             >
               <div className="grid min-w-0 max-w-full gap-5">
@@ -332,6 +356,7 @@ export function LyricEditor() {
                     onOpenExamples={() => setActiveSurface("examples")}
                     onClearAll={clearAllContent}
                     onOpenSettings={openSettings}
+                    settingsButtonRef={settingsButtonRef}
                   />
                 </div>
 
@@ -363,6 +388,23 @@ export function LyricEditor() {
               </div>
             </motion.div>
 
+            <SettingsSurface
+              isActive={isSettingsSurfaceOpen}
+              requestedTab={requestedSettingsTab}
+              locale={state.locale}
+              userSettings={userSettings}
+              transition={activeSurfaceTransition}
+              onLocaleChange={setLocale}
+              onUserSettingsPreview={previewUserSettings}
+              onUserSettingsChange={updateUserSettings}
+              onClose={closeSettings}
+              onSaved={(settings, message) => {
+                setAISettings(settings);
+                setToast(message || aiCopy.settingsSaved);
+              }}
+              onNotify={setToast}
+            />
+
             <motion.div
               aria-hidden={!isExamplesSurfaceOpen}
               ref={headerRailRef}
@@ -392,20 +434,6 @@ export function LyricEditor() {
           </div>
         </main>
       </ClickSpark>
-      <SettingsDialog
-        open={isSettingsOpen}
-        locale={state.locale}
-        userSettings={userSettings}
-        onLocaleChange={setLocale}
-        onUserSettingsPreview={previewUserSettings}
-        onUserSettingsChange={updateUserSettings}
-        onClose={closeSettings}
-        onSaved={(settings, message) => {
-          setAISettings(settings);
-          setToast(message || aiCopy.settingsSaved);
-        }}
-        onNotify={setToast}
-      />
       <FirstLaunchLanguageDialog open={isFirstLaunchOpen} locale={state.locale} onChoose={chooseFirstLaunchLanguage} />
       {toast ? (
         <div role="status" className="status-info fixed bottom-5 left-1/2 z-[130] max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-lg border px-4 py-3 text-sm shadow-2xl backdrop-blur-xl">

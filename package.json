@@ -1,6 +1,6 @@
 {
   "name": "lyric-card-generator",
-  "version": "4.3.9",
+  "version": "4.4.0",
   "private": true,
   "main": "electron/main.js",
   "scripts": {
@@ -14,7 +14,7 @@
     "music-search:normalize-test": "tsx scripts/test-netease-search-normalize.ts",
     "music-search:test": "tsx scripts/test-netease-search-live.ts",
     "examples:generate-palettes": "tsx scripts/generate-example-palettes.ts",
-    "core:test": "tsx scripts/test-v2-core.ts && tsx scripts/test-v32-settings.ts && tsx scripts/test-v321-theme-tokens.ts && tsx scripts/test-v34-layout-grid.ts && tsx scripts/test-stepper-layout.ts && tsx scripts/test-titlebar-regression.ts && tsx scripts/test-examples.ts && tsx scripts/test-release-consistency.ts && tsx scripts/test-motion-system.ts && tsx scripts/test-ai-provider-response.ts && tsx scripts/test-netease-search-normalize.ts && node scripts/test-electron-font-options.cjs && node scripts/test-electron-user-preferences.cjs && node scripts/test-electron-background-images.cjs",
+    "core:test": "tsx scripts/test-v2-core.ts && tsx scripts/test-v32-settings.ts && tsx scripts/test-v321-theme-tokens.ts && tsx scripts/test-v34-layout-grid.ts && tsx scripts/test-stepper-layout.ts && tsx scripts/test-titlebar-regression.ts && tsx scripts/test-examples.ts && tsx scripts/test-settings-wing.ts && tsx scripts/test-release-consistency.ts && tsx scripts/test-motion-system.ts && tsx scripts/test-ai-provider-response.ts && tsx scripts/test-netease-search-normalize.ts && node scripts/test-electron-font-options.cjs && node scripts/test-electron-user-preferences.cjs && node scripts/test-electron-background-images.cjs",
     "desktop:dev": "node scripts/start-electron-dev.mjs",
     "desktop:prepare": "node scripts/prepare-electron-dist.mjs",
     "desktop:size": "node scripts/audit-desktop-size.mjs",
