@@ -13,7 +13,13 @@ import type {
   TextareaHTMLAttributes
 } from "react";
 import { Children, cloneElement, isValidElement, useId, useRef } from "react";
-import { motionSprings, reducedMotionTransition } from "@/lib/motion/tokens";
+import {
+  controlHoverTarget,
+  controlTapTarget,
+  motionSprings,
+  reducedMotionTransition,
+  subtleControlTapTarget
+} from "@/lib/motion/tokens";
 import { cn } from "@/lib/utils";
 
 type MotionSafeButtonAttributes = Omit<
@@ -244,7 +250,8 @@ export function ToggleRow({
 }: ToggleRowProps) {
   const descriptionId = useId();
   const reduceMotion = useReducedMotion();
-  const pressMotion = disabled || reduceMotion ? undefined : { scale: 0.992 };
+  const hoverMotion = disabled || reduceMotion ? undefined : controlHoverTarget;
+  const pressMotion = disabled || reduceMotion ? undefined : subtleControlTapTarget;
 
   return (
     <motion.button
@@ -255,6 +262,7 @@ export function ToggleRow({
       disabled={disabled}
       data-testid={testId}
       onClick={() => onChange(!checked)}
+      whileHover={hoverMotion}
       whileTap={pressMotion}
       transition={reduceMotion ? reducedMotionTransition : motionSprings.control}
       className={cn(
@@ -329,7 +337,8 @@ export function ActionButton({
 }: ActionButtonProps) {
   const isDisabled = disabled || loading;
   const reduceMotion = useReducedMotion();
-  const pressMotion = isDisabled || reduceMotion ? undefined : { scale: 0.985 };
+  const hoverMotion = isDisabled || reduceMotion ? undefined : controlHoverTarget;
+  const pressMotion = isDisabled || reduceMotion ? undefined : controlTapTarget;
   const resolvedLeftIcon = leftIcon ?? icon;
   const resolvedRightIcon = rightIcon ?? trailingIcon;
   const iconOnly = variant === "icon";
@@ -340,6 +349,7 @@ export function ActionButton({
       type={type}
       disabled={isDisabled}
       aria-busy={loading || undefined}
+      whileHover={hoverMotion}
       whileTap={pressMotion}
       transition={reduceMotion ? reducedMotionTransition : motionSprings.control}
       className={cn(
@@ -408,7 +418,8 @@ export function OptionCard({
   const resolvedTestId = testId ?? props["data-testid"];
   const resolvedTabIndex = props.tabIndex ?? (role === "radio" ? (selected ? 0 : -1) : undefined);
   const reduceMotion = useReducedMotion();
-  const pressMotion = disabled || reduceMotion ? undefined : { scale: 0.992 };
+  const hoverMotion = disabled || reduceMotion ? undefined : controlHoverTarget;
+  const pressMotion = disabled || reduceMotion ? undefined : subtleControlTapTarget;
 
   return (
     <motion.button
@@ -421,6 +432,7 @@ export function OptionCard({
       data-testid={resolvedTestId}
       data-selected={selected ? "true" : "false"}
       tabIndex={resolvedTabIndex}
+      whileHover={hoverMotion}
       whileTap={pressMotion}
       transition={reduceMotion ? reducedMotionTransition : motionSprings.control}
       className={cn(

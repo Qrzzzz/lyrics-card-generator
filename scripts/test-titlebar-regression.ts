@@ -43,6 +43,8 @@ const globalsSource = readFileSync(resolve("app/globals.css"), "utf8");
 assert.match(globalsSource, /\.traffic-light\b/);
 assert.match(globalsSource, /body\[data-window-maximized="true"\]\s+\.app-shell\[data-desktop-shell="true"\]/);
 assert.match(globalsSource, /--segmented-active-translate/);
+assert.match(globalsSource, /--window-corner-radius: 8px/);
+assert.match(globalsSource, /clip-path: inset\(0 round var\(--window-corner-radius\)\)/);
 
 const dynamicBackgroundSource = readFileSync(resolve("components/layout/DynamicAppBackground.tsx"), "utf8");
 assert.doesNotMatch(dynamicBackgroundSource, /className="[^"]*\bfixed\s+inset-0[^"]*"/);

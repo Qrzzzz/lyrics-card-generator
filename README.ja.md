@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v4.4.0.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v4.4.3.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="#ローカル開発">ローカル開発</a> ·
@@ -51,30 +51,30 @@
 
 最新版は [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) からダウンロードできます。
 
-* 推奨インストーラー：`Lyrics Card Generator Setup 4.4.0.exe`
-* ポータブル版：`Lyrics Card Generator-4.4.0-portable.exe`
+* 推奨インストーラー：`Lyrics Card Generator Setup 4.4.3.exe`
+* ポータブル版：`Lyrics Card Generator-4.4.3-portable.exe`
 
 通常利用にはインストーラーを推奨します。ポータブル版は一時利用、検証、リムーバブルドライブでの利用に向いています。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v4.4.0 の更新ポイント
+### v4.4.3 の更新ポイント
 
-* 設定をモーダルからエディター右側の完全なウィングへ移し、横方向の空間遷移で切り替えます。
-* 幅広い画面、中幅、小画面では、それぞれ完全なサイドバー、アイコンレール、上部カテゴリーメニューを使用します。
-* 通常設定の即時保存と、AI 設定の遅延保存・終了時保存を維持します。
-* Escape、X、フォーカス復元、`inert` による隔離、動きを減らす設定を共通の空間動作へ統合しました。
+* 既存の spring と動きを減らす設定を再利用し、多くのボタンに控えめなホバー浮上効果を統一しました。
+* 小画面の設定カテゴリーを独立した disclosure とし、最初の Escape はリストだけを閉じてフォーカスを戻し、設定を閉じると展開状態もリセットします。
+* AI 設定の保存表示を「保存待ち／保存中／保存済み／保存失敗」の四状態にし、待機中や失敗後に成功と表示される問題を解消しました。
+* サンプル画面の後に設定を開く際の遷移を修正し、外枠のない設定面、三段階の書き出し品質、ウィンドウ角丸、サンプルの閉じるボタンを改善しました。
 
 ## 🌐 多言語リリースノート
 
 GitHub Release ページではデフォルトで簡体字中国語の短縮版が使用され、完全なリリースノートは `docs/releases/` にて管理されています：
 
-* [简体中文](./docs/releases/v4.4.0.zh-CN.md)
-* [繁體中文](./docs/releases/v4.4.0.zh-TW.md)
-* [English](./docs/releases/v4.4.0.en.md)
-* [Français](./docs/releases/v4.4.0.fr.md)
-* [日本語](./docs/releases/v4.4.0.ja.md)
-* [Español](./docs/releases/v4.4.0.es.md)
+* [简体中文](./docs/releases/v4.4.3.zh-CN.md)
+* [繁體中文](./docs/releases/v4.4.3.zh-TW.md)
+* [English](./docs/releases/v4.4.3.en.md)
+* [Français](./docs/releases/v4.4.3.fr.md)
+* [日本語](./docs/releases/v4.4.3.ja.md)
+* [Español](./docs/releases/v4.4.3.es.md)
 
 <a id="主な機能"></a>
 

@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Bot, ChevronDown, Download, Info, Palette, SlidersHorizontal } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { SettingsTabDefinition, SettingsTabId } from "@/components/settings/settings-model";
 import { motionSprings, reducedMotionTransition } from "@/lib/motion/tokens";
 import type { settingsCopy } from "@/lib/settings/copy";
@@ -21,18 +21,42 @@ export function getSettingsTabs(copy: typeof settingsCopy[Locale]): SettingsTabD
 export function SettingsNavigation({
   tabs,
   active,
+  isActive,
   onChange,
   ariaLabel
 }: {
   tabs: SettingsTabDefinition[];
   active: SettingsTabId;
+  isActive: boolean;
   onChange: (id: SettingsTabId) => void;
   ariaLabel: string;
 }) {
   const reduceMotion = useReducedMotion() ?? false;
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const mobileTriggerRef = useRef<HTMLButtonElement | null>(null);
   const activeTab = tabs.find((tab) => tab.id === active) ?? tabs[0];
   const ActiveIcon = activeTab.icon;
+
+  useEffect(() => {
+    if (!isActive) {
+      setMobileMenuOpen(false);
+    }
+  }, [isActive]);
+
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+
+    const closeMobileMenu = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      event.stopPropagation();
+      setMobileMenuOpen(false);
+      mobileTriggerRef.current?.focus();
+    };
+
+    document.addEventListener("keydown", closeMobileMenu, true);
+    return () => document.removeEventListener("keydown", closeMobileMenu, true);
+  }, [mobileMenuOpen]);
 
   function selectTab(id: SettingsTabId) {
     onChange(id);
@@ -83,6 +107,7 @@ export function SettingsNavigation({
 
       <div className="settings-navigation-mobile">
         <button
+          ref={mobileTriggerRef}
           type="button"
           className="app-button control-focus flex h-12 w-full items-center justify-between gap-3 rounded-xl px-4 text-left"
           aria-expanded={mobileMenuOpen}
@@ -99,7 +124,6 @@ export function SettingsNavigation({
           {mobileMenuOpen ? (
             <motion.div
               id="settings-category-menu"
-              role="menu"
               aria-label={ariaLabel}
               className="settings-navigation-mobile__menu"
               initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -6 }}
@@ -111,7 +135,6 @@ export function SettingsNavigation({
                 <button
                   key={id}
                   type="button"
-                  role="menuitem"
                   className="app-button flex h-11 w-full items-center gap-3 rounded-lg px-3 text-left text-sm font-semibold"
                   aria-current={active === id ? "page" : undefined}
                   onClick={() => selectTab(id)}

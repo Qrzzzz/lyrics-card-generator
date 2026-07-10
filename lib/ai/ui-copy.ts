@@ -28,6 +28,8 @@ type AIUiCopy = {
   reasoningHint: string;
   save: string;
   saving: string;
+  changesPending: string;
+  saveFailed: string;
   cancel: string;
   settingsSaved: string;
   settingsLoadFailed: string;
@@ -87,6 +89,8 @@ const AI_UI_COPY: Record<Locale, AIUiCopy> = {
     reasoningHint: "启用后会请求模型的推理模式，并在翻译面板实时展示厂商返回的 reasoning_content。厂商不支持时可能不显示推理过程。",
     save: "保存设置",
     saving: "保存中...",
+    changesPending: "等待保存",
+    saveFailed: "保存失败",
     cancel: "取消",
     settingsSaved: "设置已保存",
     settingsLoadFailed: "无法读取 AI 设置。",
@@ -144,6 +148,8 @@ const AI_UI_COPY: Record<Locale, AIUiCopy> = {
     reasoningHint: "啟用後會要求模型使用推理模式，並在翻譯面板即時顯示服務商回傳的 reasoning_content。服務商不支援時可能不會顯示推理過程。",
     save: "儲存設定",
     saving: "儲存中...",
+    changesPending: "等待儲存",
+    saveFailed: "儲存失敗",
     cancel: "取消",
     settingsSaved: "設定已儲存",
     settingsLoadFailed: "無法讀取 AI 設定。",
@@ -201,6 +207,8 @@ const AI_UI_COPY: Record<Locale, AIUiCopy> = {
     reasoningHint: "Requests reasoning mode and displays reasoning_content as it streams. Providers that do not support it may return no reasoning process.",
     save: "Save Settings",
     saving: "Saving...",
+    changesPending: "Waiting to save",
+    saveFailed: "Save failed",
     cancel: "Cancel",
     settingsSaved: "Settings saved",
     settingsLoadFailed: "Unable to load AI settings.",
@@ -258,6 +266,8 @@ const AI_UI_COPY: Record<Locale, AIUiCopy> = {
     reasoningHint: "Demande le mode de raisonnement et affiche reasoning_content au fil de sa réception. Si le prestataire ne le prend pas en charge, aucun raisonnement ne sera affiché.",
     save: "Enregistrer les paramètres",
     saving: "Enregistrement...",
+    changesPending: "En attente d’enregistrement",
+    saveFailed: "Échec de l’enregistrement",
     cancel: "Annuler",
     settingsSaved: "Paramètres enregistrés",
     settingsLoadFailed: "Impossible de charger les paramètres de l’IA.",
@@ -315,6 +325,8 @@ const AI_UI_COPY: Record<Locale, AIUiCopy> = {
     reasoningHint: "推論モードを要求し、受信した reasoning_content をリアルタイムで表示します。プロバイダーが未対応の場合、推論過程は表示されません。",
     save: "設定を保存",
     saving: "保存中...",
+    changesPending: "保存待ち",
+    saveFailed: "保存に失敗しました",
     cancel: "キャンセル",
     settingsSaved: "設定を保存しました",
     settingsLoadFailed: "AI 設定を読み込めませんでした。",
@@ -372,6 +384,8 @@ const AI_UI_COPY: Record<Locale, AIUiCopy> = {
     reasoningHint: "Solicita el modo de razonamiento y muestra reasoning_content a medida que llega. Si el proveedor no lo admite, puede que no aparezca ningún proceso de razonamiento.",
     save: "Guardar configuración",
     saving: "Guardando...",
+    changesPending: "Pendiente de guardar",
+    saveFailed: "Error al guardar",
     cancel: "Cancelar",
     settingsSaved: "Configuración guardada",
     settingsLoadFailed: "No se pudo cargar la configuración de IA.",

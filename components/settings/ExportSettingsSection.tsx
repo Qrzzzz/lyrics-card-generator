@@ -1,4 +1,4 @@
-import { FieldLabel, SelectField } from "@/components/ui/controls";
+import { FieldLabel, SegmentedControl } from "@/components/ui/controls";
 import { EXPORT_QUALITY_OPTIONS, type UserSettings } from "@/lib/settings/types";
 import type { Locale } from "@/lib/types";
 import type { settingsCopy } from "@/lib/settings/copy";
@@ -17,23 +17,22 @@ export function ExportSettingsSection({
   return (
     <section className="grid gap-4">
       <FieldLabel label={copy.exportQuality}>
-        <SelectField
+        <SegmentedControl
           value={settings.defaultExportQuality}
-          onChange={(event) => {
-            const option = EXPORT_QUALITY_OPTIONS.find((item) => item.id === event.target.value)!;
+          onChange={(quality) => {
+            const option = EXPORT_QUALITY_OPTIONS.find((item) => item.id === quality)!;
             onChange({
               ...settings,
               defaultExportQuality: option.id,
               defaultExportPixelRatio: option.pixelRatio
             });
           }}
-        >
-          {EXPORT_QUALITY_OPTIONS.map((option) => (
-            <option key={option.id} value={option.id}>
-              {labels[option.id]}
-            </option>
-          ))}
-        </SelectField>
+          columns={3}
+          options={EXPORT_QUALITY_OPTIONS.map((option) => ({
+            value: option.id,
+            label: labels[option.id]
+          }))}
+        />
       </FieldLabel>
     </section>
   );
