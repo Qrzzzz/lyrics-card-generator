@@ -518,7 +518,14 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
   );
 }
 
-export function VisualSettingsPanel({ style, onStyleChange, song, onSongChange, t }: StylePanelProps) {
+export function VisualSettingsPanel({
+  style,
+  onStyleChange,
+  song,
+  onSongChange,
+  t,
+  showPlatformBadgeControl = true
+}: StylePanelProps & { showPlatformBadgeControl?: boolean }) {
   function update<K extends keyof CardStyle>(key: K, value: CardStyle[K]) {
     onStyleChange({ ...style, [key]: value });
   }
@@ -581,11 +588,13 @@ export function VisualSettingsPanel({ style, onStyleChange, song, onSongChange, 
         <ToggleRow label={t("showAlbumName")} checked={style.showAlbumName} onChange={(checked) => update("showAlbumName", checked)} />
         <ToggleRow label={t("allowTwoLineTitle")} checked={style.allowTwoLineTitle} onChange={(checked) => update("allowTwoLineTitle", checked)} />
         <ToggleRow label={t("showGeneratedWatermark")} checked={style.showGeneratedWatermark} onChange={updateGeneratedWatermark} />
-        <ToggleRow
-          label={t("showPlatformLogo")}
-          checked={style.showPlatformBadge}
-          onChange={(checked) => update("showPlatformBadge", checked)}
-        />
+        {showPlatformBadgeControl ? (
+          <ToggleRow
+            label={t("showPlatformLogo")}
+            checked={style.showPlatformBadge}
+            onChange={(checked) => update("showPlatformBadge", checked)}
+          />
+        ) : null}
         <ToggleRow label={t("showSharedBy")} checked={style.showSharedBy} onChange={(checked) => update("showSharedBy", checked)} />
 
         {style.showSharedBy ? (

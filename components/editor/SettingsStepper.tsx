@@ -133,6 +133,7 @@ export function SettingsStepper({
               <button
                 key={step.id}
                 type="button"
+                data-step-id={step.id}
                 onClick={() => goToStep(index)}
                 aria-current={isActive ? "step" : undefined}
                 data-active={isActive ? "true" : "false"}

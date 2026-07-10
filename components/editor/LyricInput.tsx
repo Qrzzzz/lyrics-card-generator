@@ -24,7 +24,8 @@ export function LyricInput({
   themeColor,
   contentMode,
   locale,
-  t
+  t,
+  showAiTranslate = true
 }: {
   lyrics: string;
   onLyricsChange: (lyrics: string) => void;
@@ -40,6 +41,7 @@ export function LyricInput({
   contentMode: ContentMode;
   locale: Locale;
   t: ReturnType<typeof createT>;
+  showAiTranslate?: boolean;
 }) {
   const lines = lyrics ? lyrics.split(/\r?\n/).length : 0;
   const showTranslation = contentMode === "lyrics" && translationEnabled;
@@ -59,12 +61,14 @@ export function LyricInput({
             />
           </FieldLabel>
           <div className="flex flex-wrap gap-2">
-            <AiTranslateButton
-              label={isAITranslating ? aiCopy.translating : aiCopy.aiTranslate}
-              loading={isAITranslating}
-              themeColor={themeColor}
-              onClick={onAITranslate}
-            />
+            {showAiTranslate ? (
+              <AiTranslateButton
+                label={isAITranslating ? aiCopy.translating : aiCopy.aiTranslate}
+                loading={isAITranslating}
+                themeColor={themeColor}
+                onClick={onAITranslate}
+              />
+            ) : null}
             <ActionButton
               size="md"
               icon={<SplitSquareVertical className="h-4 w-4" />}

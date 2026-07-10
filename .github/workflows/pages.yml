@@ -6,7 +6,18 @@ on:
       - main
     paths:
       - index.html
+      - web-lite/**
+      - components/**
+      - lib/**
+      - app/globals.css
+      - scripts/build-web-lite.mjs
+      - scripts/check-web-lite.mjs
+      - tailwind.config.ts
+      - package.json
+      - package-lock.json
       - public/app-icon.png
+      - public/fonts/SourceHanSansSC-Heavy.otf
+      - public/fonts/SourceHanSerifSC-Heavy.otf
       - .github/workflows/pages.yml
   workflow_dispatch:
 
@@ -29,15 +40,33 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify and rebuild Web Lite
+        run: |
+          npm run web-lite:check
+          npm run web-lite:build
+
       - name: Prepare static site
         run: |
           rm -rf _site
-          mkdir -p _site/public
+          mkdir -p _site/public/fonts
           cp index.html _site/index.html
           cp public/app-icon.png _site/public/app-icon.png
+          cp public/fonts/SourceHanSansSC-Heavy.otf _site/public/fonts/SourceHanSansSC-Heavy.otf
+          cp public/fonts/SourceHanSerifSC-Heavy.otf _site/public/fonts/SourceHanSerifSC-Heavy.otf
           touch _site/.nojekyll
           test -f _site/index.html
           test -f _site/public/app-icon.png
+          test -f _site/public/fonts/SourceHanSansSC-Heavy.otf
+          test -f _site/public/fonts/SourceHanSerifSC-Heavy.otf
           test -f _site/.nojekyll
 
       - name: Configure Pages
