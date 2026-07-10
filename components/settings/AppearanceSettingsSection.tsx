@@ -181,6 +181,13 @@ export function AppearanceSettingsSection({
           placeholder="Segoe UI, sans-serif"
         />
       </FieldLabel>
+
+      <ToggleRow
+        label={copy.spark}
+        description={copy.sparkDescription}
+        checked={settings.sparkCursorEnabled}
+        onChange={(sparkCursorEnabled) => onChange({ ...settings, sparkCursorEnabled })}
+      />
     </section>
   );
 }

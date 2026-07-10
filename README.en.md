@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v4.3.9.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v4.4.0.en.md">Release Notes</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
   <a href="#features">Features</a> ·
   <a href="#local-development">Local Development</a> ·
@@ -51,30 +51,30 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 Download the latest version from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Recommended installer: `Lyrics Card Generator Setup 4.3.9.exe`
-* Portable version: `Lyrics Card Generator-4.3.9-portable.exe`
+* Recommended installer: `Lyrics Card Generator Setup 4.4.0.exe`
+* Portable version: `Lyrics Card Generator-4.4.0-portable.exe`
 
 The installer is recommended for regular use. The portable version is useful for temporary use, testing, or running from a removable drive.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v4.3.9 Highlights
+### v4.4.0 Highlights
 
-* Example songs now use full-card, clickable album-palette surfaces without swatches, simulated covers, or a separate load button.
-* Cards show the real album, song, artist, and source language, and can be imported by clicking anywhere or using the keyboard.
-* Existing contrast logic automatically selects readable text colors, while the import-translation toggle uses a simpler treatment.
-* Example maintenance now stores palette metadata extracted directly from album covers instead of committed local preview images.
+* Settings moves from a modal into a complete wing to the right of the editor, with horizontal spatial transitions.
+* Wide, medium, and small windows use a full sidebar, compact icon rail, and top category menu respectively.
+* Regular preferences still save immediately, while AI settings retain deferred saving and a close-time flush.
+* Escape, X, focus restoration, `inert` isolation, and reduced motion now share the spatial-surface behavior.
 
 ## 🌐 Multilingual Release Notes
 
 The GitHub Release page defaults to a simplified Chinese short version, while the full release notes are maintained in `docs/releases/`:
 
-* [简体中文](./docs/releases/v4.3.9.zh-CN.md)
-* [繁體中文](./docs/releases/v4.3.9.zh-TW.md)
-* [English](./docs/releases/v4.3.9.en.md)
-* [Français](./docs/releases/v4.3.9.fr.md)
-* [日本語](./docs/releases/v4.3.9.ja.md)
-* [Español](./docs/releases/v4.3.9.es.md)
+* [简体中文](./docs/releases/v4.4.0.zh-CN.md)
+* [繁體中文](./docs/releases/v4.4.0.zh-TW.md)
+* [English](./docs/releases/v4.4.0.en.md)
+* [Français](./docs/releases/v4.4.0.fr.md)
+* [日本語](./docs/releases/v4.4.0.ja.md)
+* [Español](./docs/releases/v4.4.0.es.md)
 
 <a id="features"></a>
 
@@ -257,7 +257,7 @@ Thanks to [Source Han Sans](https://github.com/adobe-fonts/source-han-sans) and 
 
 Thanks to [OpenAI Codex](https://openai.com/codex/). It turned many scattered ideas into runnable code, desktop build workflows, and real features.
 
-Thanks to [ChatGPT 5.5](https://chatgpt.com/) for issue diagnosis, solution design, fix review, and acceptance checks throughout development.
+Thanks to [ChatGPT 5.6 Sol](https://chatgpt.com/) for issue diagnosis, solution design, fix review, and acceptance checks throughout development.
 
 Thanks to [ReactBits](https://www.reactbits.dev/) for multiple UI ideas, including motion inspiration such as Spark Cursor.
 

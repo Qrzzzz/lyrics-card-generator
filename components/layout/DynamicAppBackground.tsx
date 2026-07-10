@@ -57,7 +57,6 @@ export function DynamicAppBackground({
             : "linear-gradient(135deg, rgba(255,255,255,0.038), rgba(255,255,255,0.008))"
           }}
         />
-        <div className="noise-layer absolute inset-0 opacity-[0.06]" />
       </div>
     );
   }
@@ -98,7 +97,6 @@ export function DynamicAppBackground({
         style={{ background: `rgba(0,0,0,${settings.appBackground.overlayOpacity})` }}
       />
       <div className="absolute inset-0 bg-[linear-gradient(110deg,rgba(255,255,255,0.08),transparent_25%,rgba(255,255,255,0.04)_48%,transparent_72%)]" />
-      <div className="noise-layer absolute inset-0 opacity-[0.12]" />
     </div>
   );
 }

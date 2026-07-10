@@ -19,7 +19,7 @@
 <p>
   <strong>Navegación</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Descargar la última versión</a> ·
-  <a href="./docs/releases/v4.3.9.es.md">Notas de la versión</a> ·
+  <a href="./docs/releases/v4.4.0.es.md">Notas de la versión</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en línea</a> ·
   <a href="#funciones-principales">Funciones principales</a> ·
   <a href="#desarrollo-local">Desarrollo local</a> ·
@@ -51,30 +51,30 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 Descarga la versión más reciente desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Instalador recomendado: `Lyrics Card Generator Setup 4.3.9.exe`
-* Versión portable: `Lyrics Card Generator-4.3.9-portable.exe`
+* Instalador recomendado: `Lyrics Card Generator Setup 4.4.0.exe`
+* Versión portable: `Lyrics Card Generator-4.4.0-portable.exe`
 
 El instalador se recomienda para uso habitual. La versión portable es útil para pruebas, uso temporal o ejecución desde una unidad extraíble.
 
 > La compilación actual no está firmada. Windows puede mostrar una advertencia de SmartScreen, algo habitual en aplicaciones personales sin firma.
 
-### Aspectos destacados de la versión 4.3.9
+### Aspectos destacados de la versión 4.4.0
 
-* Las canciones de ejemplo usan ahora tarjetas completamente clicables con una paleta de álbum continua, sin muestras, portadas simuladas ni un botón independiente.
-* Cada tarjeta muestra el álbum, la canción, el artista y el idioma original reales, y se puede importar haciendo clic en cualquier parte o usando el teclado.
-* El cálculo de contraste existente selecciona automáticamente un color de texto legible y el interruptor de importación de la traducción adopta un diseño más simple.
-* El mantenimiento conserva ahora los colores extraídos directamente de las portadas, en lugar de imágenes locales de vista previa versionadas.
+* Los ajustes pasan del modal a un ala completa situada a la derecha del editor, con transiciones espaciales horizontales.
+* Las ventanas amplias, medias y pequeñas usan respectivamente una barra lateral completa, una barra de iconos y un menú superior de categorías.
+* Las preferencias normales siguen guardándose al instante y los ajustes de IA mantienen el guardado diferido y el guardado pendiente al cerrar.
+* Escape, X, restauración del foco, aislamiento `inert` y movimiento reducido comparten ahora el mismo comportamiento espacial.
 
 ## 🌐 Notas de publicación multilingüe
 
 La página de GitHub Release utiliza por defecto la versión corta en chino simplificado, las notas de publicación completas se mantienen en `docs/releases/`:
 
-* [简体中文](./docs/releases/v4.3.9.zh-CN.md)
-* [繁體中文](./docs/releases/v4.3.9.zh-TW.md)
-* [English](./docs/releases/v4.3.9.en.md)
-* [Français](./docs/releases/v4.3.9.fr.md)
-* [日本語](./docs/releases/v4.3.9.ja.md)
-* [Español](./docs/releases/v4.3.9.es.md)
+* [简体中文](./docs/releases/v4.4.0.zh-CN.md)
+* [繁體中文](./docs/releases/v4.4.0.zh-TW.md)
+* [English](./docs/releases/v4.4.0.en.md)
+* [Français](./docs/releases/v4.4.0.fr.md)
+* [日本語](./docs/releases/v4.4.0.ja.md)
+* [Español](./docs/releases/v4.4.0.es.md)
 
 <a id="funciones-principales"></a>
 
@@ -257,7 +257,7 @@ Gracias a [Source Han Sans](https://github.com/adobe-fonts/source-han-sans) y [S
 
 Gracias a [OpenAI Codex](https://openai.com/codex/). Convirtió muchas ideas dispersas en código ejecutable, flujos de build para la versión de escritorio y funciones reales.
 
-Gracias a [ChatGPT 5.5](https://chatgpt.com/) por ayudar durante el desarrollo con la localización de problemas, el diseño de soluciones, la revisión de correcciones y las comprobaciones de aceptación.
+Gracias a [ChatGPT 5.6 Sol](https://chatgpt.com/) por ayudar durante el desarrollo con la localización de problemas, el diseño de soluciones, la revisión de correcciones y las comprobaciones de aceptación.
 
 Gracias a [ReactBits](https://www.reactbits.dev/) por varias ideas de UI, incluidas inspiraciones de animación como Spark Cursor.
 

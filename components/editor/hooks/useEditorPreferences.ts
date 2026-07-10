@@ -22,7 +22,6 @@ export function useEditorPreferences({ currentLocale, applyLocale }: UseEditorPr
   const [userSettings, setUserSettings] = useState<UserSettings>(DEFAULT_USER_SETTINGS);
   const [backgroundImageUrl, setBackgroundImageUrl] = useState<string>();
   const [isDesktopShell, setIsDesktopShell] = useState(false);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isFirstLaunchOpen, setIsFirstLaunchOpen] = useState(false);
   const committedUserSettingsRef = useRef<UserSettings>(DEFAULT_USER_SETTINGS);
   const applyLocaleRef = useRef(applyLocale);
@@ -33,14 +32,6 @@ export function useEditorPreferences({ currentLocale, applyLocale }: UseEditorPr
     if (desktop) {
       void desktop.setWindowMaterial(resolveEffectiveUiThemeId(settings)).catch(() => undefined);
     }
-  }
-
-  function openSettings() {
-    setIsSettingsOpen(true);
-  }
-
-  function closeSettings() {
-    setIsSettingsOpen(false);
   }
 
   function previewUserSettings(next: UserSettings) {
@@ -142,10 +133,7 @@ export function useEditorPreferences({ currentLocale, applyLocale }: UseEditorPr
     userSettings,
     backgroundImageUrl,
     isDesktopShell,
-    isSettingsOpen,
     isFirstLaunchOpen,
-    openSettings,
-    closeSettings,
     previewUserSettings,
     commitUserSettings,
     setLocale,

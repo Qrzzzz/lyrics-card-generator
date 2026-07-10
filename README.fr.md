@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v4.3.9.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v4.4.0.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="#développement-local">Développement local</a> ·
@@ -51,30 +51,30 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 Téléchargez la dernière version depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
 
-* Installateur recommandé : `Lyrics Card Generator Setup 4.3.9.exe`
-* Version portable : `Lyrics Card Generator-4.3.9-portable.exe`
+* Installateur recommandé : `Lyrics Card Generator Setup 4.4.0.exe`
+* Version portable : `Lyrics Card Generator-4.4.0-portable.exe`
 
 L'installateur est recommandé pour une utilisation régulière. La version portable convient aux essais, à une utilisation temporaire ou à un disque amovible.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### Points clés de la v4.3.9
+### Points clés de la v4.4.0
 
-* Les chansons d’exemple utilisent désormais des cartes entièrement cliquables avec une palette d’album continue, sans nuancier, pochette simulée ni bouton séparé.
-* Chaque carte affiche le véritable album, le titre, l’artiste et la langue source, et peut être importée par un clic n’importe où ou au clavier.
-* Le calcul de contraste existant choisit automatiquement une couleur de texte lisible, tandis que l’interrupteur d’importation de la traduction est simplifié.
-* La maintenance conserve désormais les palettes extraites directement des pochettes d’album au lieu d’images de prévisualisation locales versionnées.
+* Les paramètres quittent la fenêtre modale pour une aile complète à droite de l’éditeur, avec des transitions spatiales horizontales.
+* Les fenêtres larges, moyennes et petites utilisent respectivement une barre latérale complète, un rail d’icônes et un menu de catégorie supérieur.
+* Les préférences ordinaires restent enregistrées immédiatement et les paramètres d’IA conservent la sauvegarde différée avec finalisation à la fermeture.
+* Échap, X, restauration du focus, isolation `inert` et mouvement réduit partagent désormais le même comportement spatial.
 
 ## 🌐 Notes de publication multilingues
 
 La page GitHub Release utilise par défaut la version courte en chinois simplifié, les notes de publication complètes sont conservées dans `docs/releases/` :
 
-* [简体中文](./docs/releases/v4.3.9.zh-CN.md)
-* [繁體中文](./docs/releases/v4.3.9.zh-TW.md)
-* [English](./docs/releases/v4.3.9.en.md)
-* [Français](./docs/releases/v4.3.9.fr.md)
-* [日本語](./docs/releases/v4.3.9.ja.md)
-* [Español](./docs/releases/v4.3.9.es.md)
+* [简体中文](./docs/releases/v4.4.0.zh-CN.md)
+* [繁體中文](./docs/releases/v4.4.0.zh-TW.md)
+* [English](./docs/releases/v4.4.0.en.md)
+* [Français](./docs/releases/v4.4.0.fr.md)
+* [日本語](./docs/releases/v4.4.0.ja.md)
+* [Español](./docs/releases/v4.4.0.es.md)
 
 <a id="fonctionnalités-principales"></a>
 
@@ -257,7 +257,7 @@ Merci à [Source Han Sans](https://github.com/adobe-fonts/source-han-sans) et [S
 
 Merci à [OpenAI Codex](https://openai.com/codex/). Il a transformé de nombreuses idées éparses en code exécutable, en workflows de build desktop et en fonctionnalités réelles.
 
-Merci à [ChatGPT 5.5](https://chatgpt.com/) pour le diagnostic des problèmes, la conception de solutions, la relecture des correctifs et les vérifications d’acceptation pendant le développement.
+Merci à [ChatGPT 5.6 Sol](https://chatgpt.com/) pour le diagnostic des problèmes, la conception de solutions, la relecture des correctifs et les vérifications d’acceptation pendant le développement.
 
 Merci à [ReactBits](https://www.reactbits.dev/) pour ses nombreuses idées d’interface, notamment des inspirations d’animation comme Spark Cursor.
 

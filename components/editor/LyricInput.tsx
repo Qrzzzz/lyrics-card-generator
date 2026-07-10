@@ -66,7 +66,7 @@ export function LyricInput({
               onClick={onAITranslate}
             />
             <ActionButton
-              size="sm"
+              size="md"
               icon={<SplitSquareVertical className="h-4 w-4" />}
               onClick={() => {
                 const result = splitAlternatingLyrics(lyrics, locale);

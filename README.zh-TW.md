@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v4.3.9.zh-TW.md">發布說明</a> ·
+  <a href="./docs/releases/v4.4.0.zh-TW.md">發布說明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">線上 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="#本機開發">本機開發</a> ·
@@ -48,30 +48,30 @@
 
 請前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載最新版：
 
-* 建議一般使用者下載安裝版：`Lyrics Card Generator Setup 4.3.9.exe`
-* 不想安裝時可下載可攜版：`Lyrics Card Generator-4.3.9-portable.exe`
+* 建議一般使用者下載安裝版：`Lyrics Card Generator Setup 4.4.0.exe`
+* 不想安裝時可下載可攜版：`Lyrics Card Generator-4.4.0-portable.exe`
 
 安裝版適合長期使用；可攜版適合臨時執行、測試或放在隨身碟中使用。
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v4.3.9 更新重點
+### v4.4.0 更新重點
 
-* 範例歌曲改為整張可點擊的連續專輯配色卡片，移除色條、模擬封面與獨立載入按鈕。
-* 卡片顯示真實專輯、歌曲、歌手與原語言資訊，並支援點擊任意位置或使用鍵盤匯入。
-* 復用明暗對比度演算法自動選擇文字顏色，同時簡化右上角的匯入翻譯開關。
-* 範例維護改為直接從專輯封面擷取調色盤中繼資料，不再提交產生的本地預覽圖。
+* 設定從模態彈窗遷移為編輯器右側的完整設定側翼，透過橫向滑動與編輯器切換。
+* 寬螢幕、中等寬度與小視窗分別使用完整側欄、圖示列與頂部分類選單。
+* 保留一般設定即時儲存與 AI 延遲儲存，並在關閉時補儲存待處理的 AI 設定。
+* Escape、X、焦點還原、`inert` 隔離與 reduced motion 統一納入空間切換行為。
 
 ## 🌐 多語言發佈說明
 
 GitHub Release 頁面預設使用簡體中文短版，完整發佈說明維護在 `docs/releases/`：
 
-* [简体中文](./docs/releases/v4.3.9.zh-CN.md)
-* [繁體中文](./docs/releases/v4.3.9.zh-TW.md)
-* [English](./docs/releases/v4.3.9.en.md)
-* [Français](./docs/releases/v4.3.9.fr.md)
-* [日本語](./docs/releases/v4.3.9.ja.md)
-* [Español](./docs/releases/v4.3.9.es.md)
+* [简体中文](./docs/releases/v4.4.0.zh-CN.md)
+* [繁體中文](./docs/releases/v4.4.0.zh-TW.md)
+* [English](./docs/releases/v4.4.0.en.md)
+* [Français](./docs/releases/v4.4.0.fr.md)
+* [日本語](./docs/releases/v4.4.0.ja.md)
+* [Español](./docs/releases/v4.4.0.es.md)
 
 ## ✨ 主要功能
 
@@ -252,7 +252,7 @@ npm run core:test       # 測試 3.0 核心純函式
 
 感謝 [OpenAI Codex](https://openai.com/codex/)。它把許多零散想法轉化為可執行的程式碼、桌面版建構流程和實際功能。
 
-感謝 [ChatGPT 5.5](https://chatgpt.com/) 在開發過程中進行問題定位、方案設計、修復複核和驗收檢查。
+感謝 [ChatGPT 5.6 Sol](https://chatgpt.com/) 在開發過程中進行問題定位、方案設計、修復複核和驗收檢查。
 
 感謝 [ReactBits](https://www.reactbits.dev/) 提供的多種 UI 創意，包括 Spark Cursor 等動效靈感。
 
