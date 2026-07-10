@@ -402,6 +402,7 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
 
       <SettingRow label={t("sizeMode")} description={isInstrumental ? t("instrumentalSizeLockedHint") : undefined}>
         <SelectField
+          aria-label={t("sizeMode")}
           value={isInstrumental ? "1:1" : style.ratio}
           disabled={isInstrumental}
           onChange={(event) => updateRatio(event.target.value as CardRatio)}
@@ -434,6 +435,7 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
           <div className="grid gap-4 sm:grid-cols-2">
             <FieldLabel label={t("width")} hint={`${style.width}px`}>
               <TextInput
+                aria-label={t("width")}
                 type="range"
                 min={layoutMode === "landscape" ? 1080 : 720}
                 max={layoutMode === "landscape" ? 3000 : 1440}
@@ -444,6 +446,7 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
             </FieldLabel>
             <FieldLabel label={t("height")} hint={style.autoHeight ? t("auto") : `${style.height}px`}>
               <TextInput
+                aria-label={t("height")}
                 type="range"
                 min={720}
                 max={layoutMode === "landscape" ? 1600 : 3200}
@@ -462,6 +465,7 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
         <>
           <SettingRow label={t("fontSize")} description={`${style.lyricFontSize}px`}>
             <TextInput
+              aria-label={t("fontSize")}
               type="range"
               min={36}
               max={72}
@@ -471,6 +475,7 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
           </SettingRow>
           <SettingRow label={t("lineHeight")} description={style.lineHeight.toFixed(2)}>
             <TextInput
+              aria-label={t("lineHeight")}
               type="range"
               min={1.1}
               max={1.75}
@@ -480,7 +485,11 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
             />
           </SettingRow>
           <SettingRow label={t("alignment")}>
-            <SelectField value={style.align} onChange={(event) => update("align", event.target.value as CardAlign)}>
+            <SelectField
+              aria-label={t("alignment")}
+              value={style.align}
+              onChange={(event) => update("align", event.target.value as CardAlign)}
+            >
               <option value="left">{t("left")}</option>
               <option value="center">{t("center")}</option>
             </SelectField>
@@ -491,6 +500,7 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
       {style.contentMode === "lyrics" && style.translationEnabled ? (
         <SettingRow label={t("translationScale")} description={style.translationScale.toFixed(2)}>
           <TextInput
+            aria-label={t("translationScale")}
             type="range"
             min={0.6}
             max={0.9}

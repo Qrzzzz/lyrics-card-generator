@@ -84,6 +84,7 @@ export function WebLiteFontPanel({
             <button
               key={option.id}
               type="button"
+              data-font-id={option.id}
               aria-pressed={active}
               onClick={() => applyFont(option.id, option.scheme)}
               onMouseEnter={() => onPreviewSchemeChange(option.scheme)}

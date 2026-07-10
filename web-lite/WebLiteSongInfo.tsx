@@ -1,6 +1,7 @@
 "use client";
 
 import { Download, ExternalLink, Upload } from "lucide-react";
+import type { MutableRefObject } from "react";
 import { useEffect, useRef, useState } from "react";
 import {
   ActionButton,
@@ -20,20 +21,25 @@ export function WebLiteSongInfo({
   copy,
   onSongChange,
   onLocalCover,
-  onRemoteCover
+  onRemoteCover,
+  coverResetGeneration,
+  validationGenerationRef
 }: {
   song: SongInfo;
   t: ReturnType<typeof createT>;
   copy: WebLiteCopy;
   onSongChange: (song: SongInfo) => void;
   onLocalCover: (file: File) => void;
-  onRemoteCover: (url: string) => void;
+  onRemoteCover: (url: string, requestId: number) => boolean;
+  coverResetGeneration: number;
+  validationGenerationRef: MutableRefObject<number>;
 }) {
   const coverInputRef = useRef<HTMLInputElement>(null);
   const [remoteCoverInput, setRemoteCoverInput] = useState("");
   const [status, setStatus] = useState("");
   const [statusTone, setStatusTone] = useState<"info" | "success" | "danger">("info");
   const [isChecking, setIsChecking] = useState(false);
+  const previousCoverResetGenerationRef = useRef(coverResetGeneration);
   const activeCover = song.proxiedCoverUrl || song.coverUrl || "";
 
   useEffect(() => {
@@ -41,6 +47,26 @@ export function WebLiteSongInfo({
       setRemoteCoverInput(song.coverUrl);
     }
   }, [song.coverUrl]);
+
+  useEffect(() => {
+    if (previousCoverResetGenerationRef.current === coverResetGeneration) {
+      return;
+    }
+
+    previousCoverResetGenerationRef.current = coverResetGeneration;
+    validationGenerationRef.current += 1;
+    setRemoteCoverInput("");
+    setStatus("");
+    setStatusTone("info");
+    setIsChecking(false);
+  }, [coverResetGeneration, validationGenerationRef]);
+
+  useEffect(
+    () => () => {
+      validationGenerationRef.current += 1;
+    },
+    [validationGenerationRef]
+  );
 
   function update<K extends keyof SongInfo>(key: K, value: SongInfo[K]) {
     onSongChange({ ...song, [key]: value });
@@ -51,13 +77,18 @@ export function WebLiteSongInfo({
       return;
     }
 
+    validationGenerationRef.current += 1;
+    setRemoteCoverInput("");
+    setStatus("");
+    setStatusTone("info");
+    setIsChecking(false);
     onLocalCover(file);
-    setStatus(copy.localCoverReady);
-    setStatusTone("success");
   }
 
   async function applyRemoteCover() {
     const candidate = remoteCoverInput.trim();
+    const requestId = validationGenerationRef.current + 1;
+    validationGenerationRef.current = requestId;
     let parsed: URL;
 
     try {
@@ -80,15 +111,25 @@ export function WebLiteSongInfo({
 
     try {
       await validateExportSafeImage(parsed.toString());
-      onRemoteCover(parsed.toString());
+      if (validationGenerationRef.current !== requestId) {
+        return;
+      }
+      if (!onRemoteCover(parsed.toString(), requestId)) {
+        return;
+      }
       setRemoteCoverInput(parsed.toString());
       setStatus(copy.remoteCoverReady);
       setStatusTone("success");
     } catch {
+      if (validationGenerationRef.current !== requestId) {
+        return;
+      }
       setStatus(copy.remoteCoverFailed);
       setStatusTone("danger");
     } finally {
-      setIsChecking(false);
+      if (validationGenerationRef.current === requestId) {
+        setIsChecking(false);
+      }
     }
   }
 
@@ -111,10 +152,17 @@ export function WebLiteSongInfo({
         <FieldLabel label={copy.remoteCover} hint="HTTPS + CORS">
           <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
             <TextInput
+              data-testid="web-lite-remote-cover-input"
               type="url"
               inputMode="url"
               value={remoteCoverInput}
-              onChange={(event) => setRemoteCoverInput(event.target.value)}
+              onChange={(event) => {
+                validationGenerationRef.current += 1;
+                setRemoteCoverInput(event.target.value);
+                setStatus("");
+                setStatusTone("info");
+                setIsChecking(false);
+              }}
               placeholder={copy.remoteCoverPlaceholder}
               onKeyDown={(event) => {
                 if (event.key === "Enter") {
@@ -123,7 +171,11 @@ export function WebLiteSongInfo({
                 }
               }}
             />
-            <ActionButton onClick={() => void applyRemoteCover()} disabled={isChecking || !remoteCoverInput.trim()}>
+            <ActionButton
+              data-testid="web-lite-apply-remote-cover"
+              onClick={() => void applyRemoteCover()}
+              disabled={isChecking || !remoteCoverInput.trim()}
+            >
               {isChecking ? copy.checkingRemoteCover : copy.applyRemoteCover}
             </ActionButton>
           </div>
@@ -135,6 +187,7 @@ export function WebLiteSongInfo({
           </ActionButton>
           <input
             ref={coverInputRef}
+            data-testid="web-lite-local-cover-input"
             type="file"
             accept="image/*"
             className="hidden"
@@ -146,7 +199,13 @@ export function WebLiteSongInfo({
           <div className="flex min-w-0 items-center gap-3">
             <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-[rgb(var(--panel-border))] bg-black/10">
               {activeCover ? (
-                <img src={activeCover} alt="" crossOrigin="anonymous" className="absolute inset-0 h-full w-full object-cover" />
+                <img
+                  data-testid="web-lite-active-cover"
+                  src={activeCover}
+                  alt=""
+                  crossOrigin="anonymous"
+                  className="absolute inset-0 h-full w-full object-cover"
+                />
               ) : null}
             </div>
             <p className="app-text-subtle min-w-0 text-sm">{copy.coverHint}</p>
@@ -155,6 +214,7 @@ export function WebLiteSongInfo({
 
         {status ? (
           <p
+            data-testid="web-lite-cover-status"
             role="status"
             className={`rounded-lg border px-3 py-2 text-sm ${
               statusTone === "success"

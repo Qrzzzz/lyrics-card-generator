@@ -36,3 +36,71 @@ jobs:
 
       - name: Build
         run: npm run build
+
+  web-lite-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Verify Web Lite artifact
+        run: npm run web-lite:check
+
+      - name: Run Web Lite browser smoke tests
+        run: npm run web-lite:smoke
+
+      - name: Upload Web Lite browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-lite-playwright-report-${{ github.run_attempt }}
+          path: playwright-report/web-lite
+          if-no-files-found: ignore
+
+  desktop-build:
+    if: github.event_name == 'pull_request'
+    runs-on: windows-latest
+    timeout-minutes: 60
+    env:
+      CI: "true"
+      CSC_IDENTITY_AUTO_DISCOVERY: "false"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Windows desktop artifacts
+        run: npm run desktop:build
+
+      - name: Verify Windows desktop artifacts
+        shell: pwsh
+        run: |
+          $setup = @(Get-ChildItem release -File -Filter "Lyrics Card Generator Setup *.exe")
+          $portable = @(Get-ChildItem release -File -Filter "Lyrics Card Generator-*-portable.exe")
+          if ($setup.Count -lt 1 -or $portable.Count -lt 1) {
+            throw "Expected both NSIS and portable Windows artifacts."
+          }
+          @($setup + $portable) | Select-Object Name, Length

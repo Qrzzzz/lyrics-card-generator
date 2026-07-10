@@ -84,8 +84,10 @@ export function WebLiteEditor() {
   );
   const [isExporting, setIsExporting] = useState(false);
   const [toast, setToast] = useState("");
+  const [coverResetGeneration, setCoverResetGeneration] = useState(0);
   const cardRef = useRef<HTMLElement | null>(null);
   const localCoverObjectUrlRef = useRef<string | undefined>(undefined);
+  const coverValidationGenerationRef = useRef(0);
   const locale: WebLiteLocale = state.locale === "en" ? "en" : "zh";
   const copy = webLiteCopy[locale];
   const t = useMemo(() => createT(locale), [locale]);
@@ -182,6 +184,7 @@ export function WebLiteEditor() {
   }
 
   function clearAllContent() {
+    invalidateCoverValidationAndResetSongInfo();
     revokeLocalCoverObjectUrl();
     setFontSchemePreview(null);
     setState((current) => {
@@ -201,8 +204,9 @@ export function WebLiteEditor() {
   }
 
   function applyLocalCover(file: File) {
-    revokeLocalCoverObjectUrl();
+    invalidateCoverValidationAndResetSongInfo();
     const objectUrl = URL.createObjectURL(file);
+    revokeLocalCoverObjectUrl();
     localCoverObjectUrlRef.current = objectUrl;
     setState((current) => ({
       ...current,
@@ -215,7 +219,11 @@ export function WebLiteEditor() {
     }));
   }
 
-  function applyRemoteCover(url: string) {
+  function applyRemoteCover(url: string, requestId: number) {
+    if (coverValidationGenerationRef.current !== requestId) {
+      return false;
+    }
+
     revokeLocalCoverObjectUrl();
     setState((current) => ({
       ...current,
@@ -226,6 +234,12 @@ export function WebLiteEditor() {
         proxiedCoverUrl: url
       }
     }));
+    return true;
+  }
+
+  function invalidateCoverValidationAndResetSongInfo() {
+    coverValidationGenerationRef.current += 1;
+    setCoverResetGeneration((generation) => generation + 1);
   }
 
   function handleStyleChange(nextStyle: CardStyle) {
@@ -310,6 +324,8 @@ export function WebLiteEditor() {
           onSongChange={setSong}
           onLocalCover={applyLocalCover}
           onRemoteCover={applyRemoteCover}
+          coverResetGeneration={coverResetGeneration}
+          validationGenerationRef={coverValidationGenerationRef}
         />
       )
     },

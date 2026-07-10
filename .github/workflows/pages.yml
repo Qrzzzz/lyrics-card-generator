@@ -15,6 +15,7 @@ on:
       - tailwind.config.ts
       - package.json
       - package-lock.json
+      - tsconfig.json
       - public/app-icon.png
       - public/fonts/SourceHanSansSC-Heavy.otf
       - public/fonts/SourceHanSerifSC-Heavy.otf

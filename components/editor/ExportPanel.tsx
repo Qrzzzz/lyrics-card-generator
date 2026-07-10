@@ -38,6 +38,7 @@ export function ExportPanel({
           value={exportQuality}
           onChange={onExportQualityChange}
           columns={qualityOptions.length === 2 ? 2 : 3}
+          ariaLabel={t("exportQuality")}
           options={qualityOptions.map((quality) => ({ value: quality, label: resolvedQualityLabels[quality] }))}
         />
       </FieldLabel>
