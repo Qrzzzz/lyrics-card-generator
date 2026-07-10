@@ -10,7 +10,9 @@ export function ExportPanel({
   t,
   exportQuality,
   onExportQualityChange,
-  isExporting
+  isExporting,
+  qualityOptions = ["low", "medium", "high"],
+  qualityLabels
 }: {
   cardRef: RefObject<HTMLElement | null>;
   t: ReturnType<typeof createT>;
@@ -19,7 +21,15 @@ export function ExportPanel({
   onExportQualityChange: (quality: ExportQualityId) => void;
   isExporting: boolean;
   onExport: () => void | Promise<void>;
+  qualityOptions?: readonly ExportQualityId[];
+  qualityLabels?: Partial<Record<ExportQualityId, string>>;
 }) {
+  const resolvedQualityLabels: Record<ExportQualityId, string> = {
+    low: qualityLabels?.low ?? t("qualityLow"),
+    medium: qualityLabels?.medium ?? t("qualityMedium"),
+    high: qualityLabels?.high ?? t("qualityHigh")
+  };
+
   return (
     <Section title={t("export")} variant="plain" className="border-t-0 pt-0">
       <p className="app-text-subtle text-sm">{cardRef.current ? t("exportHint") : t("previewNotReady")}</p>
@@ -27,12 +37,9 @@ export function ExportPanel({
         <SegmentedControl<ExportQualityId>
           value={exportQuality}
           onChange={onExportQualityChange}
-          columns={3}
-          options={[
-            { value: "low", label: t("qualityLow") },
-            { value: "medium", label: t("qualityMedium") },
-            { value: "high", label: t("qualityHigh") }
-          ]}
+          columns={qualityOptions.length === 2 ? 2 : 3}
+          ariaLabel={t("exportQuality")}
+          options={qualityOptions.map((quality) => ({ value: quality, label: resolvedQualityLabels[quality] }))}
         />
       </FieldLabel>
       {isExporting ? <p className="app-text-subtle text-sm">{t("preparingPng")}</p> : null}

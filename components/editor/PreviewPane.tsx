@@ -62,11 +62,16 @@ export function PreviewPane({
       <button
         type="button"
         onClick={() => onPreviewVisibleChange((visible) => !visible)}
+        aria-controls="lyric-card-preview-content"
+        aria-expanded={previewExpanded}
+        data-testid="preview-pane-toggle"
         className="app-button mb-3 inline-flex h-10 w-full items-center justify-center rounded-lg px-3 text-sm font-semibold transition lg:hidden"
       >
         {isPreviewVisible ? t("step.hidePreview") : t("step.showPreview")}
       </button>
       <motion.div
+        id="lyric-card-preview-content"
+        data-testid="preview-pane-content"
         className="min-w-0 overflow-hidden lg:overflow-visible"
         initial={false}
         animate={{ height: previewExpanded ? "auto" : 0, opacity: previewExpanded ? 1 : 0 }}

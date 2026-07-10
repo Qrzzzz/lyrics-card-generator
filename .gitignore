@@ -6,6 +6,8 @@ release/
 backups/
 output/playwright/
 .playwright-cli/
+playwright-report/
+test-results/
 tmp/example-covers/
 tmp/example-previews/
 tmp/example-palette-generator/

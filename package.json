@@ -14,6 +14,9 @@
     "music-search:normalize-test": "tsx scripts/test-netease-search-normalize.ts",
     "music-search:test": "tsx scripts/test-netease-search-live.ts",
     "examples:generate-palettes": "tsx scripts/generate-example-palettes.ts",
+    "web-lite:build": "node scripts/build-web-lite.mjs",
+    "web-lite:check": "node scripts/check-web-lite.mjs",
+    "web-lite:smoke": "playwright test --config=playwright.web-lite.config.ts",
     "core:test": "tsx scripts/test-v2-core.ts && tsx scripts/test-v32-settings.ts && tsx scripts/test-v321-theme-tokens.ts && tsx scripts/test-v34-layout-grid.ts && tsx scripts/test-stepper-layout.ts && tsx scripts/test-titlebar-regression.ts && tsx scripts/test-examples.ts && tsx scripts/test-settings-wing.ts && tsx scripts/test-ai-settings-save-controller.ts && tsx scripts/test-release-consistency.ts && tsx scripts/test-motion-system.ts && tsx scripts/test-ai-provider-response.ts && tsx scripts/test-netease-search-normalize.ts && node scripts/test-electron-font-options.cjs && node scripts/test-electron-user-preferences.cjs && node scripts/test-electron-background-images.cjs",
     "desktop:dev": "node scripts/start-electron-dev.mjs",
     "desktop:prepare": "node scripts/prepare-electron-dist.mjs",
@@ -35,6 +38,7 @@
     "zod": "^3.24.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.61.1",
     "@types/node": "^22.10.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
@@ -42,6 +46,7 @@
     "cross-env": "^10.1.0",
     "electron": "^42.4.0",
     "electron-builder": "^26.15.2",
+    "esbuild": "^0.28.1",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.17",
     "tsx": "^4.22.3",
