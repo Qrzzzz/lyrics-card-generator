@@ -62,7 +62,7 @@ export const defaultState: AppState = {
     lyricFontSize: 60,
     lineHeight: 1.4,
     align: "left",
-    textColorMode: "auto",
+    textColorMode: "preset",
     textColorPreset: "white",
     customTextColor: "#FFFFFF",
     resolvedTextColor: "#FFFFFF",

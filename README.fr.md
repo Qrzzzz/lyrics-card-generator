@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v4.4.3.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v4.4.6.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="#développement-local">Développement local</a> ·
@@ -51,30 +51,30 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 Téléchargez la dernière version depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
 
-* Installateur recommandé : `Lyrics Card Generator Setup 4.4.3.exe`
-* Version portable : `Lyrics Card Generator-4.4.3-portable.exe`
+* Installateur recommandé : `Lyrics Card Generator Setup 4.4.6.exe`
+* Version portable : `Lyrics Card Generator-4.4.6-portable.exe`
 
 L'installateur est recommandé pour une utilisation régulière. La version portable convient aux essais, à une utilisation temporaire ou à un disque amovible.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### Points clés de la v4.4.3
+### Points clés de la v4.4.6
 
-* La plupart des boutons partagent désormais un léger effet de survol fondé sur le système spring et reduced-motion existant.
-* Sur petit écran, les catégories des paramètres ont leur propre cycle disclosure : le premier Échap ferme uniquement la liste et restitue le focus, tandis que la fermeture des paramètres réinitialise son état.
-* Les paramètres d’IA affichent quatre états fiables — en attente, enregistrement, enregistré et échec — au lieu d’annoncer un succès pendant le délai ou après une erreur.
-* Correction de la transition vers les paramètres après les exemples, avec amélioration de la surface sans cadre, du sélecteur de qualité à trois positions, des angles de fenêtre et du bouton de fermeture des exemples.
+* Espacement équilibré dans le Stepper en six étapes et la navigation inférieure, suppression du grand cadre de navigation et restauration de la transition horizontale de l’aile des paramètres.
+* Harmonisation visuelle des paramètres avec l’éditeur, effet du X unifié et libellé permanent de sauvegarde supprimé ; les contrôles colorés de la barre de titre sont plus vivants et accessibles, et l’icône n’a plus de bordure.
+* Réorganisation des étapes trois à cinq : Design du texte regroupe la couleur blanche ou personnalisée, le recadrage disparaît et les contrôles Instrumental, format vertical et alignement sont clarifiés.
+* Hiérarchie de la sixième étape affinée et animation ajoutée pendant la génération PNG, sans modifier le sélecteur de qualité ni le comportement du bouton Finaliser et exporter.
 
 ## 🌐 Notes de publication multilingues
 
 La page GitHub Release utilise par défaut la version courte en chinois simplifié, les notes de publication complètes sont conservées dans `docs/releases/` :
 
-* [简体中文](./docs/releases/v4.4.3.zh-CN.md)
-* [繁體中文](./docs/releases/v4.4.3.zh-TW.md)
-* [English](./docs/releases/v4.4.3.en.md)
-* [Français](./docs/releases/v4.4.3.fr.md)
-* [日本語](./docs/releases/v4.4.3.ja.md)
-* [Español](./docs/releases/v4.4.3.es.md)
+* [简体中文](./docs/releases/v4.4.6.zh-CN.md)
+* [繁體中文](./docs/releases/v4.4.6.zh-TW.md)
+* [English](./docs/releases/v4.4.6.en.md)
+* [Français](./docs/releases/v4.4.6.fr.md)
+* [日本語](./docs/releases/v4.4.6.ja.md)
+* [Español](./docs/releases/v4.4.6.es.md)
 
 <a id="fonctionnalités-principales"></a>
 

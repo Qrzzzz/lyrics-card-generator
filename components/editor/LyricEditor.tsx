@@ -205,7 +205,7 @@ export function LyricEditor() {
     if (!isEditorSurfaceActive || !restoreSettingsFocusRef.current) return;
     restoreSettingsFocusRef.current = false;
     setRequestedSettingsTab(undefined);
-    const frame = window.requestAnimationFrame(() => settingsButtonRef.current?.focus());
+    const frame = window.requestAnimationFrame(() => settingsButtonRef.current?.focus({ preventScroll: true }));
     return () => window.cancelAnimationFrame(frame);
   }, [isEditorSurfaceActive]);
 

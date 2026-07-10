@@ -65,16 +65,16 @@ export function SettingsSurface({
     onNotify
   });
   const activeTab = tabs.find((tab) => tab.id === workspace.activeTab) ?? tabs[0];
-  const saveStatus = workspace.saveState === "pending"
-    ? { label: aiCopy.changesPending, dotClass: "bg-amber-300" }
-    : workspace.saveState === "saving"
-      ? { label: aiCopy.saving, dotClass: "animate-pulse bg-amber-300" }
-      : workspace.saveState === "error"
-        ? {
+  const saveStatus = workspace.saveState === "saved"
+    ? null
+    : workspace.saveState === "pending"
+      ? { label: aiCopy.changesPending, dotClass: "bg-amber-300" }
+      : workspace.saveState === "saving"
+        ? { label: aiCopy.saving, dotClass: "animate-pulse bg-amber-300" }
+        : {
             label: workspace.syncErrorKind === "load" ? aiCopy.loadFailed : aiCopy.saveFailed,
             dotClass: "bg-rose-300"
-          }
-        : { label: aiCopy.settingsSaved, dotClass: "bg-emerald-300" };
+          };
 
   useEffect(() => {
     if (!isActive) return;
@@ -89,7 +89,8 @@ export function SettingsSurface({
 
   useEffect(() => {
     if (!isActive) return;
-    const frame = window.requestAnimationFrame(() => closeButtonRef.current?.focus());
+    // Do not let focus scroll the transformed wing into place before its slide completes.
+    const frame = window.requestAnimationFrame(() => closeButtonRef.current?.focus({ preventScroll: true }));
     return () => window.cancelAnimationFrame(frame);
   }, [isActive]);
 
@@ -102,9 +103,10 @@ export function SettingsSurface({
         isActive ? "pointer-events-auto" : "pointer-events-none"
       ].join(" ")}
       data-testid="settings-surface"
+      data-surface-state={isActive ? "open" : "closed"}
       animate={{
         x: reduceMotion ? "0%" : isActive ? "0%" : "100%",
-        opacity: isActive ? 1 : 0
+        opacity: reduceMotion ? (isActive ? 1 : 0) : 1
       }}
       initial={false}
       inert={!isActive ? true : undefined}
@@ -117,27 +119,29 @@ export function SettingsSurface({
           </span>
           <div className="min-w-0">
             <div className="flex min-w-0 items-baseline gap-2">
-              <h1 id="settings-surface-title" className="app-text-primary truncate text-xl font-black sm:text-2xl">{copy.settings}</h1>
+              <h1 id="settings-surface-title" className="app-text-primary truncate text-xl font-black tracking-normal sm:text-3xl">{copy.settings}</h1>
               <span className="app-text-subtle hidden truncate text-sm font-medium sm:inline">/ {activeTab.label}</span>
             </div>
-            <p className="app-text-subtle mt-0.5 hidden truncate text-xs md:block">{activeTab.description}</p>
+            <p className="app-text-subtle mt-1 hidden truncate text-sm md:block">{activeTab.description}</p>
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-2 sm:gap-3">
-          <span className="app-text-subtle hidden items-center gap-2 text-xs sm:flex" role="status" aria-live="polite">
-            <span className={["h-1.5 w-1.5 rounded-full", saveStatus.dotClass].join(" ")} />
-            {saveStatus.label}
-          </span>
+          {saveStatus ? (
+            <span className="app-text-subtle hidden items-center gap-2 text-xs sm:flex" role="status" aria-live="polite">
+              <span className={["h-1.5 w-1.5 rounded-full", saveStatus.dotClass].join(" ")} />
+              {saveStatus.label}
+            </span>
+          ) : null}
           <button
             ref={closeButtonRef}
             type="button"
             onClick={workspace.closeWorkspace}
             disabled={workspace.isClearingApiKey}
-            className="app-button control-focus grid h-10 w-10 place-items-center rounded-xl"
+            className="app-button control-focus examples-close-button inline-flex h-10 items-center justify-center gap-2 rounded-lg px-3 text-sm font-semibold"
             aria-label={copy.cancel}
             data-testid="settings-close-button"
           >
-            <X className="h-5 w-5" />
+            <X className="examples-close-button__icon h-5 w-5" />
           </button>
         </div>
       </header>

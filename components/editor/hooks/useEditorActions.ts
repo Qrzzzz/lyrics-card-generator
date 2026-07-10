@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { sizeSnapshot } from "@/components/editor/utils/sizeSnapshot";
 import { getCardSize, PRESET_CARD_SIZES } from "@/lib/card-size";
-import { normalizeInstrumentalLayout } from "@/lib/card-style-normalize";
+import { normalizeCardStyle } from "@/lib/card-style-normalize";
 import { clearLyricContent } from "@/lib/clear-content";
 import { getHighResolutionCoverUrl } from "@/lib/cover-url";
 import { exportNodeAsPng } from "@/lib/export-image";
@@ -70,7 +70,7 @@ export function useEditorActions({
 
   function handleStyleChange(nextStyle: CardStyle) {
     setState((current) => {
-      const normalizedNextStyle = normalizeInstrumentalLayout(nextStyle);
+      const normalizedNextStyle = normalizeCardStyle(nextStyle);
       const currentMode = current.style.layoutMode ?? "portrait";
       const nextMode = normalizedNextStyle.layoutMode ?? "portrait";
 
@@ -105,11 +105,15 @@ export function useEditorActions({
           };
         }
 
-        const restored = current.lastPortraitSize ?? {
-          ratio: "4:5" as CardRatio,
-          width: PRESET_CARD_SIZES["4:5"].width,
-          height: PRESET_CARD_SIZES["4:5"].height
-        };
+        const savedPortraitSize = current.lastPortraitSize;
+        const restored =
+          savedPortraitSize && (savedPortraitSize.ratio === "1:1" || savedPortraitSize.ratio === "custom")
+            ? savedPortraitSize
+            : {
+                ratio: "custom" as CardRatio,
+                width: savedPortraitSize?.width ?? 1040,
+                height: savedPortraitSize?.height ?? 1080
+              };
 
         return {
           ...current,
@@ -276,7 +280,7 @@ export function useEditorActions({
         translationText,
         translationEnabled,
         style: {
-          ...current.style,
+          ...normalizeCardStyle(current.style),
           translationText,
           translationEnabled
         }

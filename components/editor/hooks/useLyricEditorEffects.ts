@@ -3,10 +3,9 @@
 import { useEffect } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import { estimateCardHeight } from "@/lib/card-size";
-import { TEXT_COLOR_PRESETS } from "@/lib/color-analysis";
+import { FIXED_WHITE_TEXT_COLOR } from "@/lib/card-style-normalize";
 import { proxiedImageUrl } from "@/lib/image-utils";
 import { extractPaletteFromImage } from "@/lib/palette-extraction";
-import { resolveAutoTextColor } from "@/lib/palette-background";
 import type { AppState } from "@/lib/types";
 
 type AppStateSetter = Dispatch<SetStateAction<AppState>>;
@@ -58,11 +57,7 @@ export function useResolvedTextColor(state: AppState, setState: AppStateSetter) 
   useEffect(() => {
     const style = state.style;
     const nextColor =
-      style.textColorMode === "auto"
-        ? resolveAutoTextColor()
-        : style.textColorMode === "preset"
-          ? TEXT_COLOR_PRESETS[style.textColorPreset].value
-          : style.customTextColor;
+      style.textColorMode === "custom" ? style.customTextColor : FIXED_WHITE_TEXT_COLOR;
 
     if (nextColor.toLowerCase() === style.resolvedTextColor.toLowerCase()) {
       return;
@@ -77,11 +72,9 @@ export function useResolvedTextColor(state: AppState, setState: AppStateSetter) 
     }));
   }, [
     setState,
-    state.palette,
     state.style.customTextColor,
     state.style.resolvedTextColor,
-    state.style.textColorMode,
-    state.style.textColorPreset
+    state.style.textColorMode
   ]);
 }
 

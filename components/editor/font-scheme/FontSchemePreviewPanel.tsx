@@ -4,13 +4,16 @@ import { PaletteBackground } from "@/components/preview/PaletteBackground";
 import { FONT_PANEL_PREVIEW_LYRIC, FONT_PREVIEW_COLORS, FONT_PREVIEW_PALETTE } from "@/lib/font-schemes";
 import { quoteSingleFontFamily } from "@/lib/fonts";
 import type { createT } from "@/lib/i18n";
+import { withAlpha } from "@/lib/palette-background";
 import type { FontScheme } from "@/lib/types";
 
 export function FontSchemePreviewPanel({
   scheme,
+  textColor,
   t
 }: {
   scheme: FontScheme;
+  textColor: string;
   t: ReturnType<typeof createT>;
 }) {
   return (
@@ -28,7 +31,8 @@ export function FontSchemePreviewPanel({
 
       <div className="mx-auto w-full max-w-[390px]">
         <div
-          className="relative isolate overflow-hidden rounded-2xl border border-white/15 px-7 py-10 text-left text-white shadow-2xl sm:px-8 sm:py-11"
+          className="relative isolate overflow-hidden rounded-2xl border border-white/15 px-7 py-10 text-left shadow-2xl sm:px-8 sm:py-11"
+          style={{ color: textColor }}
           data-testid="font-lyric-preview"
         >
           <FontPreviewBackground />
@@ -42,14 +46,14 @@ export function FontSchemePreviewPanel({
                   {line.original}
                 </p>
                 <p
-                  className="text-[clamp(0.76rem,1.65vw,0.9rem)] leading-[1.7] text-white/66"
-                  style={familyStyle(scheme.latinFontFamily)}
+                  className="text-[clamp(0.76rem,1.65vw,0.9rem)] leading-[1.7]"
+                  style={{ ...familyStyle(scheme.latinFontFamily), color: withAlpha(textColor, 0.66) }}
                 >
                   {line.romanized}
                 </p>
                 <p
-                  className="text-[clamp(0.9rem,1.9vw,1.08rem)] font-medium leading-[1.7] text-white/86"
-                  style={familyStyle(scheme.cjkFontFamily)}
+                  className="text-[clamp(0.9rem,1.9vw,1.08rem)] font-medium leading-[1.7]"
+                  style={{ ...familyStyle(scheme.cjkFontFamily), color: withAlpha(textColor, 0.86) }}
                 >
                   {line.translation}
                 </p>

@@ -5,7 +5,6 @@ import { Check, Download } from "lucide-react";
 import type { ReactNode } from "react";
 import { useRef } from "react";
 import { useBalancedStepperLayout } from "@/components/editor/hooks/useBalancedStepperLayout";
-import { useMeasuredStepperPanelHeight } from "@/components/editor/hooks/useMeasuredStepperPanelHeight";
 import { MotionPresence } from "@/components/motion/MotionPresence";
 import { getReadableForegroundColor } from "@/lib/contrast-color";
 import { StarBorder } from "@/components/ui/StarBorder";
@@ -57,7 +56,6 @@ export function SettingsStepper({
 }: SettingsStepperProps) {
   const reduceMotion = useReducedMotion();
   const previousStepRef = useRef(currentStep);
-  const stepperTitleRef = useRef<HTMLDivElement | null>(null);
   const stepsGridRef = useRef<HTMLDivElement | null>(null);
   const stepsMeasureRef = useRef<HTMLDivElement | null>(null);
   const stepDirection: StepDirection = currentStep >= previousStepRef.current ? 1 : -1;
@@ -78,13 +76,6 @@ export function SettingsStepper({
     stepCount: steps.length,
     measurementKey: stepMeasurementKey
   });
-  const isSingleRowStepLayout = stepLayout.columns >= steps.length;
-  const measuredPanelHeight = useMeasuredStepperPanelHeight({
-    titleRef: stepperTitleRef,
-    stepsRef: stepsGridRef,
-    minimumHeightPx: isSingleRowStepLayout ? 136 : 180
-  });
-
   previousStepRef.current = currentStep;
 
   function goToStep(step: number) {
@@ -92,13 +83,10 @@ export function SettingsStepper({
   }
 
   return (
-    <section className={cn("grid min-w-0 gap-4", isLastStep && "content-start")}>
-      <div
-        className="glass-panel flex flex-col rounded-lg p-4 transition-[min-height]"
-        style={measuredPanelHeight ? { minHeight: `${measuredPanelHeight}px` } : undefined}
-      >
-        <div ref={stepperTitleRef} className="mb-4 flex items-start justify-between gap-4">
-          <MotionPresence>
+    <section className="grid min-w-0 content-start self-start gap-4">
+      <div className="glass-panel flex flex-col rounded-lg p-4">
+        <div className="mb-4 flex items-start justify-between gap-4">
+          <MotionPresence mode="popLayout">
             <motion.div
               key={activeStep.id}
               custom={stepDirection}
@@ -207,12 +195,7 @@ export function SettingsStepper({
         </MotionPresence>
       </div>
 
-      <div
-        className={cn(
-          "flex items-center gap-3",
-          isLastStep ? "justify-between" : "glass-panel justify-between rounded-lg p-4"
-        )}
-      >
+      <div className="flex items-center justify-between gap-3">
         <button
           type="button"
           onClick={() => goToStep(currentStep - 1)}

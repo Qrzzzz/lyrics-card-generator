@@ -42,7 +42,7 @@ export function EditorHeader({
         <img
           src="/app-icon.png"
           alt="Lyrics Card"
-          className="h-12 w-12 shrink-0 rounded-2xl border border-[rgb(var(--panel-border))] shadow-lg sm:h-16 sm:w-16"
+          className="h-12 w-12 shrink-0 rounded-2xl shadow-lg sm:h-16 sm:w-16"
         />
         <div className="min-w-0">
           <h1 className="app-text-primary truncate text-xl font-black tracking-normal sm:text-3xl">{t("appTitle")}</h1>

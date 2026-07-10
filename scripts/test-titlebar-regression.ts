@@ -41,6 +41,13 @@ assert.doesNotMatch(exportSource, /desktop-titlebar|lyricsCardDesktop|setWindowM
 
 const globalsSource = readFileSync(resolve("app/globals.css"), "utf8");
 assert.match(globalsSource, /\.traffic-light\b/);
+assert.match(globalsSource, /\.desktop-titlebar__traffic-lights,[\s\S]*?\.traffic-light\s*\{[\s\S]*?-webkit-app-region: no-drag/);
+assert.match(globalsSource, /\.traffic-light\s*\{[\s\S]*?width: 24px;[\s\S]*?height: 24px;/);
+assert.match(globalsSource, /\.traffic-light\s*\{[\s\S]*?padding: 5px;[\s\S]*?background-clip: content-box;/);
+assert.match(globalsSource, /\.traffic-light::before/);
+assert.match(globalsSource, /\.traffic-light:hover[\s\S]*?translateY\(-1px\) scale\(1\.11\)/);
+assert.match(globalsSource, /\.traffic-light:active[\s\S]*?scale\(0\.9\)/);
+assert.match(globalsSource, /\.traffic-light:focus-visible[\s\S]*?outline: 2px solid var\(--app-accent\)/);
 assert.match(globalsSource, /body\[data-window-maximized="true"\]\s+\.app-shell\[data-desktop-shell="true"\]/);
 assert.match(globalsSource, /--segmented-active-translate/);
 assert.match(globalsSource, /--window-corner-radius: 8px/);
@@ -49,4 +56,4 @@ assert.match(globalsSource, /clip-path: inset\(0 round var\(--window-corner-radi
 const dynamicBackgroundSource = readFileSync(resolve("components/layout/DynamicAppBackground.tsx"), "utf8");
 assert.doesNotMatch(dynamicBackgroundSource, /className="[^"]*\bfixed\s+inset-0[^"]*"/);
 
-console.log(JSON.stringify({ ok: true, titlebarRegressionTests: 30 }, null, 2));
+console.log(JSON.stringify({ ok: true, titlebarRegressionTests: 37 }, null, 2));

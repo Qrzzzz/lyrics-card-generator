@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v4.4.3.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v4.4.6.en.md">Release Notes</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
   <a href="#features">Features</a> ·
   <a href="#local-development">Local Development</a> ·
@@ -51,30 +51,30 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 Download the latest version from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Recommended installer: `Lyrics Card Generator Setup 4.4.3.exe`
-* Portable version: `Lyrics Card Generator-4.4.3-portable.exe`
+* Recommended installer: `Lyrics Card Generator Setup 4.4.6.exe`
+* Portable version: `Lyrics Card Generator-4.4.6-portable.exe`
 
 The installer is recommended for regular use. The portable version is useful for temporary use, testing, or running from a removable drive.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v4.4.3 Highlights
+### v4.4.6 Highlights
 
-* Most buttons now share a subtle hover lift through the existing spring and reduced-motion system.
-* Small-screen settings categories now have an independent disclosure lifecycle: the first Escape closes the category list and restores focus, while closing Settings clears its open state.
-* AI settings report four honest save states—pending, saving, saved, and failed—instead of claiming success during the debounce window or after an error.
-* Fixed Settings transitions after visiting Examples and refined the frameless Settings surface, three-way export-quality slider, window corners, and Examples close button.
+* Balanced spacing across the six-step Stepper and bottom navigation, removed the navigation’s large outer frame, and restored the Settings Wing’s missing horizontal transition.
+* Matched Settings to the editor’s visual language, unified its X feedback, and removed the persistent saved label; title-bar traffic lights are livelier and easier to click, and the app icon is borderless.
+* Reorganized controls in steps three through five: Text Design now owns White or custom text color, Cover Crop is removed, and Instrumental, portrait size, and alignment controls are clearer.
+* Refined the step-six export hierarchy and added an animated PNG-generation state without changing the quality slider or Complete & Export button behavior.
 
 ## 🌐 Multilingual Release Notes
 
 The GitHub Release page defaults to a simplified Chinese short version, while the full release notes are maintained in `docs/releases/`:
 
-* [简体中文](./docs/releases/v4.4.3.zh-CN.md)
-* [繁體中文](./docs/releases/v4.4.3.zh-TW.md)
-* [English](./docs/releases/v4.4.3.en.md)
-* [Français](./docs/releases/v4.4.3.fr.md)
-* [日本語](./docs/releases/v4.4.3.ja.md)
-* [Español](./docs/releases/v4.4.3.es.md)
+* [简体中文](./docs/releases/v4.4.6.zh-CN.md)
+* [繁體中文](./docs/releases/v4.4.6.zh-TW.md)
+* [English](./docs/releases/v4.4.6.en.md)
+* [Français](./docs/releases/v4.4.6.fr.md)
+* [日本語](./docs/releases/v4.4.6.ja.md)
+* [Español](./docs/releases/v4.4.6.es.md)
 
 <a id="features"></a>
 
