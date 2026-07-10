@@ -5,6 +5,8 @@ export type WebLiteLocale = Extract<Locale, "zh" | "en">;
 export const webLiteCopy = {
   zh: {
     badge: "Web Lite",
+    headerDesktop: "下载桌面版",
+    headerRepository: "GitHub 仓库",
     clearAll: "一键清空",
     language: "界面语言",
     songStep: "歌曲信息",
@@ -39,6 +41,8 @@ export const webLiteCopy = {
   },
   en: {
     badge: "Web Lite",
+    headerDesktop: "Desktop App",
+    headerRepository: "GitHub Repository",
     clearAll: "Clear all",
     language: "Interface language",
     songStep: "Song Info",

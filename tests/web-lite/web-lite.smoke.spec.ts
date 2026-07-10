@@ -78,6 +78,21 @@ test("stays responsive at 360px, 768px, and 1440px", async ({ page }) => {
     await test.step(`${viewport.width}px viewport`, async () => {
       await openWebLite(page, viewport);
 
+      const desktopLink = page.getByTestId("web-lite-desktop-link");
+      const repositoryLink = page.getByTestId("web-lite-repository-link");
+      await expect(desktopLink).toBeVisible();
+      await expect(desktopLink).toHaveAttribute(
+        "href",
+        "https://github.com/Qrzzzz/lyrics-card-generator/releases/latest"
+      );
+      await expect(desktopLink).toHaveAttribute("target", "_blank");
+      await expect(repositoryLink).toBeVisible();
+      await expect(repositoryLink).toHaveAttribute(
+        "href",
+        "https://github.com/Qrzzzz/lyrics-card-generator"
+      );
+      await expect(repositoryLink).toHaveAttribute("target", "_blank");
+
       for (const stepId of stepIds) {
         const step = page.locator(`[data-step-id="${stepId}"]`);
         await expect(step).toBeVisible();

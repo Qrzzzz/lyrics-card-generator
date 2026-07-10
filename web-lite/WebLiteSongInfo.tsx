@@ -12,8 +12,7 @@ import {
 import type { createT } from "@/lib/i18n";
 import type { SongInfo } from "@/lib/types";
 import type { WebLiteCopy } from "@/web-lite/copy";
-
-const DESKTOP_RELEASE_URL = "https://github.com/Qrzzzz/lyrics-card-generator/releases/latest";
+import { WEB_LITE_DESKTOP_URL } from "@/web-lite/links";
 
 export function WebLiteSongInfo({
   song,
@@ -237,7 +236,7 @@ export function WebLiteSongInfo({
             <p className="mt-1 text-sm leading-relaxed opacity-85">{copy.noticeBody}</p>
             <a
               className="control-focus mt-3 inline-flex items-center gap-2 rounded-lg border border-current/25 px-3 py-2 text-sm font-bold transition hover:bg-white/10"
-              href={DESKTOP_RELEASE_URL}
+              href={WEB_LITE_DESKTOP_URL}
               target="_blank"
               rel="noopener noreferrer"
             >
