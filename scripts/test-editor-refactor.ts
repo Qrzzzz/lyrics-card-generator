@@ -26,7 +26,8 @@ assert.equal(DEFAULT_INSTRUMENTAL_TEXT.ja, "インストゥルメンタル");
 assert.deepEqual(sizeSnapshot(defaultState.style), {
   ratio: "custom",
   width: 1040,
-  height: 1080
+  height: 1080,
+  autoHeight: true
 });
 
 assert.equal(

@@ -100,6 +100,10 @@ export type CardStyle = {
   watermark: string;
 };
 
+export type CardSizeSnapshot = Pick<CardStyle, "ratio" | "width" | "height"> & {
+  autoHeight?: boolean;
+};
+
 export type BackgroundAnalysis = {
   luminance: number;
   isLight: boolean;
@@ -115,8 +119,8 @@ export type AppState = {
   translationText: string;
   translationEnabled: boolean;
   style: CardStyle;
-  lastPortraitSize?: { width: number; height: number; ratio: CardRatio };
-  lastLandscapeSize?: { width: number; height: number; ratio: CardRatio };
+  lastPortraitSize?: CardSizeSnapshot;
+  lastLandscapeSize?: CardSizeSnapshot;
   palette?: ExtractedPalette;
   paletteWarning?: string;
 };

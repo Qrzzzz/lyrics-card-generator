@@ -88,12 +88,14 @@ export const defaultState: AppState = {
   lastPortraitSize: {
     ratio: "custom",
     width: 1040,
-    height: 1080
+    height: 1080,
+    autoHeight: true
   },
   lastLandscapeSize: {
     ratio: "16:9",
     width: PRESET_CARD_SIZES["16:9"].width,
-    height: PRESET_CARD_SIZES["16:9"].height
+    height: PRESET_CARD_SIZES["16:9"].height,
+    autoHeight: false
   },
   palette: DEFAULT_PALETTE,
   paletteWarning: ""

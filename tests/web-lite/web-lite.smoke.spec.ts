@@ -194,6 +194,53 @@ test("supports bilingual splitting, layout modes, instrumental mode, and visual 
   await expect(page.getByRole("switch", { name: "Show Platform Logo", exact: true })).toHaveCount(0);
 });
 
+test("restores portrait custom size and auto height after landscape round trips", async ({ page }) => {
+  await openWebLite(page);
+  await page.locator('[data-step-id="layout"]').click();
+
+  const portrait = page.locator('[data-segment-value="portrait"]');
+  const landscape = page.locator('[data-segment-value="landscape"]');
+  const sizeMode = page.getByLabel("Size Mode", { exact: true });
+  const autoHeight = page.getByRole("switch", { name: "Auto Height", exact: true });
+  const width = page.getByLabel("Width", { exact: true });
+  const previewSection = page
+    .getByRole("heading", { name: "Export Card Only", exact: true })
+    .locator("xpath=ancestor::section[1]");
+  const previewSize = previewSection.locator("span").filter({ hasText: /^\d+x\d+$/ }).first();
+  const exportCard = page.locator('[data-export-card="true"]');
+
+  await expect(portrait).toHaveAttribute("aria-checked", "true");
+  await expect(sizeMode).toHaveValue("custom");
+  await expect(autoHeight).toHaveAttribute("aria-checked", "true");
+  await expect(width).toHaveValue("1040");
+  await width.focus();
+  for (let step = 0; step < 8; step += 1) {
+    await width.press("ArrowRight");
+  }
+  await expect(width).toHaveValue("1200");
+
+  for (const landscapeRatio of ["16:9", "21:9"]) {
+    await landscape.click();
+    await expect(landscape).toHaveAttribute("aria-checked", "true");
+    await sizeMode.selectOption(landscapeRatio);
+    await expect(sizeMode).toHaveValue(landscapeRatio);
+
+    await portrait.click();
+    await expect(portrait).toHaveAttribute("aria-checked", "true");
+    await expect(sizeMode).toHaveValue("custom");
+    await expect(autoHeight).toHaveAttribute("aria-checked", "true");
+    await expect(width).toHaveValue("1200");
+    await expect(previewSize).toHaveText(/^1200x\d+$/);
+    await expect(previewSize).not.toHaveText("1080x1350");
+
+    const [previewWidth, previewHeight] = (await previewSize.innerText()).split("x").map(Number);
+    expect(previewWidth).toBe(1200);
+    await expect(exportCard).toHaveCSS("width", `${previewWidth}px`);
+    await expect(exportCard).toHaveCSS("height", `${previewHeight}px`);
+    await expect(page.getByText(`${previewWidth} x ${previewHeight}`, { exact: true })).toBeVisible();
+  }
+});
+
 test("clears remote input and status after a successful remote cover", async ({ page }) => {
   await installRemoteCoverRoute(page);
   await openWebLite(page);

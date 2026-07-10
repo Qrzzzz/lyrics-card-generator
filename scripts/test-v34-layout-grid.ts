@@ -3,14 +3,16 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { defaultState } from "../components/editor/editor-defaults";
 import { BACKGROUND_GRID_SIZE_BY_DENSITY, resolveBackgroundGridDensity } from "../lib/background-grid";
+import { getCardSize, PRESET_CARD_SIZES } from "../lib/card-size";
 import {
   FIXED_COVER_CROP_SCALE,
   FIXED_WHITE_TEXT_COLOR,
   normalizeCardStyle,
   normalizeInstrumentalLayout
 } from "../lib/card-style-normalize";
+import { applyEditorStyleChange } from "../lib/editor/apply-style-change";
 import { messages } from "../lib/i18n";
-import type { CardStyle, Locale } from "../lib/types";
+import type { AppState, CardStyle, Locale } from "../lib/types";
 
 const baseStyle: CardStyle = {
   backgroundMode: "palette",
@@ -94,6 +96,170 @@ assert.equal(defaultState.style.textColorPreset, "white");
 assert.equal(defaultState.style.resolvedTextColor, FIXED_WHITE_TEXT_COLOR);
 assert.equal(defaultState.style.coverCropScale, FIXED_COVER_CROP_SCALE);
 
+const portraitStart: AppState = {
+  ...defaultState,
+  style: {
+    ...defaultState.style,
+    layoutMode: "portrait",
+    ratio: "custom",
+    width: 1040,
+    height: 1080,
+    autoHeight: true
+  },
+  lastPortraitSize: {
+    ratio: "custom",
+    width: 1040,
+    height: 1080,
+    autoHeight: true
+  },
+  lastLandscapeSize: undefined
+};
+const landscapeDefault = applyEditorStyleChange(portraitStart, {
+  ...portraitStart.style,
+  layoutMode: "landscape"
+});
+assert.deepEqual(
+  {
+    layoutMode: landscapeDefault.style.layoutMode,
+    ratio: landscapeDefault.style.ratio,
+    width: landscapeDefault.style.width,
+    height: landscapeDefault.style.height,
+    autoHeight: landscapeDefault.style.autoHeight
+  },
+  {
+    layoutMode: "landscape",
+    ratio: "16:9",
+    width: PRESET_CARD_SIZES["16:9"].width,
+    height: PRESET_CARD_SIZES["16:9"].height,
+    autoHeight: false
+  }
+);
+
+const portraitRestored = applyEditorStyleChange(landscapeDefault, {
+  ...landscapeDefault.style,
+  layoutMode: "portrait"
+});
+assert.deepEqual(
+  {
+    layoutMode: portraitRestored.style.layoutMode,
+    ratio: portraitRestored.style.ratio,
+    width: portraitRestored.style.width,
+    height: portraitRestored.style.height,
+    autoHeight: portraitRestored.style.autoHeight
+  },
+  {
+    layoutMode: "portrait",
+    ratio: "custom",
+    width: 1040,
+    height: 1080,
+    autoHeight: true
+  }
+);
+assert.deepEqual(getCardSize(portraitRestored.style), { width: 1040, height: 1080 });
+assert.notDeepEqual(getCardSize(portraitRestored.style), PRESET_CARD_SIZES["4:5"]);
+
+const landscapeRestored = applyEditorStyleChange(portraitRestored, {
+  ...portraitRestored.style,
+  layoutMode: "landscape"
+});
+assert.equal(landscapeRestored.style.ratio, "16:9");
+assert.deepEqual(getCardSize(landscapeRestored.style), PRESET_CARD_SIZES["16:9"]);
+
+const landscapeWide = applyEditorStyleChange(landscapeRestored, {
+  ...landscapeRestored.style,
+  ratio: "21:9",
+  width: PRESET_CARD_SIZES["21:9"].width,
+  height: PRESET_CARD_SIZES["21:9"].height,
+  autoHeight: false
+});
+const portraitAfterWide = applyEditorStyleChange(landscapeWide, {
+  ...landscapeWide.style,
+  layoutMode: "portrait"
+});
+const landscapeWideRestored = applyEditorStyleChange(portraitAfterWide, {
+  ...portraitAfterWide.style,
+  layoutMode: "landscape"
+});
+assert.deepEqual(
+  {
+    layoutMode: landscapeWideRestored.style.layoutMode,
+    ratio: landscapeWideRestored.style.ratio,
+    width: landscapeWideRestored.style.width,
+    height: landscapeWideRestored.style.height,
+    autoHeight: landscapeWideRestored.style.autoHeight
+  },
+  {
+    layoutMode: "landscape",
+    ratio: "21:9",
+    width: PRESET_CARD_SIZES["21:9"].width,
+    height: PRESET_CARD_SIZES["21:9"].height,
+    autoHeight: false
+  }
+);
+
+const portraitWithoutHistory = applyEditorStyleChange(
+  { ...landscapeWide, lastPortraitSize: undefined },
+  { ...landscapeWide.style, layoutMode: "portrait" }
+);
+assert.deepEqual(
+  {
+    layoutMode: portraitWithoutHistory.style.layoutMode,
+    ratio: portraitWithoutHistory.style.ratio,
+    width: portraitWithoutHistory.style.width,
+    height: portraitWithoutHistory.style.height,
+    autoHeight: portraitWithoutHistory.style.autoHeight
+  },
+  {
+    layoutMode: "portrait",
+    ratio: "custom",
+    width: 1040,
+    height: 1080,
+    autoHeight: true
+  }
+);
+
+const invalidPortraitRatioSize = getCardSize({
+  ...portraitRestored.style,
+  ratio: "16:9",
+  width: 1000,
+  height: 1200
+});
+assert.deepEqual(invalidPortraitRatioSize, { width: 1000, height: 1200 });
+assert.notDeepEqual(invalidPortraitRatioSize, PRESET_CARD_SIZES["4:5"]);
+
+const legacyInvalidPortraitState: AppState = {
+  ...portraitRestored,
+  style: {
+    ...portraitRestored.style,
+    ratio: "16:9",
+    width: PRESET_CARD_SIZES["16:9"].width,
+    height: PRESET_CARD_SIZES["16:9"].height,
+    autoHeight: false
+  }
+};
+const canonicalPortraitState = applyEditorStyleChange(legacyInvalidPortraitState, {
+  ...legacyInvalidPortraitState.style,
+  lyricFontSize: legacyInvalidPortraitState.style.lyricFontSize + 1
+});
+assert.deepEqual(
+  {
+    layoutMode: canonicalPortraitState.style.layoutMode,
+    ratio: canonicalPortraitState.style.ratio,
+    width: canonicalPortraitState.style.width,
+    height: canonicalPortraitState.style.height,
+    autoHeight: canonicalPortraitState.style.autoHeight
+  },
+  {
+    layoutMode: "portrait",
+    ratio: "custom",
+    width: 1040,
+    height: 1080,
+    autoHeight: true
+  }
+);
+assert.deepEqual(getCardSize(canonicalPortraitState.style), { width: 1040, height: 1080 });
+assert.notDeepEqual(getCardSize(canonicalPortraitState.style), PRESET_CARD_SIZES["4:5"]);
+
 const normalizedLegacyAuto = normalizeCardStyle({
   ...baseStyle,
   textColorMode: "auto",
@@ -156,6 +322,7 @@ assert.ok(fontPanelSource.includes("<ColorControls"), "text color is part of the
 assert.ok(!visualPanelSource.includes("<ColorControls"), "visual step no longer duplicates text color");
 assert.ok(!stylePanelSource.includes('option value="4:5"'), "portrait presets omit 4:5");
 assert.ok(!stylePanelSource.includes('option value="9:16"'), "portrait presets omit 9:16");
+assert.ok(!stylePanelSource.includes("const portraitRatio"), "portrait ratio is never masked only at render time");
 assert.ok(stylePanelSource.includes("<SegmentedControl<CardAlign>"), "alignment uses the keyboard-accessible segmented slider");
 assert.ok(!stylePanelSource.includes('label={t("coverCrop")}'), "cover crop control is removed");
 assert.ok(colorControlsSource.includes('{ value: "white", label: t("pureWhite") }'), "white mode is exposed");
@@ -177,4 +344,4 @@ assert.deepEqual(BACKGROUND_GRID_SIZE_BY_DENSITY, {
 assert.equal(resolveBackgroundGridDensity(undefined), "medium");
 assert.equal(resolveBackgroundGridDensity("sparse"), "sparse");
 
-console.log(JSON.stringify({ ok: true, v34LayoutGridTests: 60 }, null, 2));
+console.log(JSON.stringify({ ok: true, v34LayoutGridTests: 80 }, null, 2));

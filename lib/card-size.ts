@@ -32,7 +32,10 @@ export function getCardSize(style: CardStyle) {
 
   if (style.ratio !== "custom") {
     if (style.ratio === "16:9" || style.ratio === "21:9" || style.ratio === "3:2") {
-      return PRESET_CARD_SIZES["4:5"];
+      return {
+        width: clamp(Math.round(style.width), portraitLayoutConfig.canvas.minWidth, portraitLayoutConfig.canvas.maxWidth),
+        height: clamp(Math.round(style.height), portraitLayoutConfig.canvas.minHeight, portraitLayoutConfig.canvas.maxHeight)
+      };
     }
 
     return PRESET_CARD_SIZES[style.ratio];

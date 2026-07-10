@@ -1,17 +1,16 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { sizeSnapshot } from "@/components/editor/utils/sizeSnapshot";
-import { getCardSize, PRESET_CARD_SIZES } from "@/lib/card-size";
+import { getCardSize } from "@/lib/card-size";
 import { normalizeCardStyle } from "@/lib/card-style-normalize";
 import { clearLyricContent } from "@/lib/clear-content";
+import { applyEditorStyleChange } from "@/lib/editor/apply-style-change";
 import { getHighResolutionCoverUrl } from "@/lib/cover-url";
 import { exportNodeAsPng } from "@/lib/export-image";
 import { proxiedImageUrl } from "@/lib/image-utils";
 import type { ExampleLoadPayload } from "@/lib/examples";
 import type {
   AppState,
-  CardRatio,
   CardStyle,
   ParsedSongData,
   SongInfo
@@ -69,73 +68,7 @@ export function useEditorActions({
   }
 
   function handleStyleChange(nextStyle: CardStyle) {
-    setState((current) => {
-      const normalizedNextStyle = normalizeCardStyle(nextStyle);
-      const currentMode = current.style.layoutMode ?? "portrait";
-      const nextMode = normalizedNextStyle.layoutMode ?? "portrait";
-
-      if (normalizedNextStyle.contentMode === "instrumental") {
-        return {
-          ...current,
-          lastLandscapeSize: currentMode === "landscape" ? sizeSnapshot(current.style) : current.lastLandscapeSize,
-          lastPortraitSize: sizeSnapshot(normalizedNextStyle),
-          style: normalizedNextStyle
-        };
-      }
-
-      if (currentMode !== nextMode) {
-        if (nextMode === "landscape") {
-          const restored = current.lastLandscapeSize ?? {
-            ratio: "16:9" as CardRatio,
-            width: PRESET_CARD_SIZES["16:9"].width,
-            height: PRESET_CARD_SIZES["16:9"].height
-          };
-
-          return {
-            ...current,
-            lastPortraitSize: sizeSnapshot(current.style),
-            style: {
-              ...normalizedNextStyle,
-              layoutMode: "landscape",
-              ratio: restored.ratio,
-              width: restored.width,
-              height: restored.height,
-              autoHeight: restored.ratio === "custom"
-            }
-          };
-        }
-
-        const savedPortraitSize = current.lastPortraitSize;
-        const restored =
-          savedPortraitSize && (savedPortraitSize.ratio === "1:1" || savedPortraitSize.ratio === "custom")
-            ? savedPortraitSize
-            : {
-                ratio: "custom" as CardRatio,
-                width: savedPortraitSize?.width ?? 1040,
-                height: savedPortraitSize?.height ?? 1080
-              };
-
-        return {
-          ...current,
-          lastLandscapeSize: sizeSnapshot(current.style),
-          style: {
-            ...normalizedNextStyle,
-            layoutMode: "portrait",
-            ratio: restored.ratio,
-            width: restored.width,
-            height: restored.height,
-            autoHeight: restored.ratio === "custom"
-          }
-        };
-      }
-
-      return {
-        ...current,
-        style: normalizedNextStyle,
-        lastPortraitSize: nextMode === "portrait" ? sizeSnapshot(normalizedNextStyle) : current.lastPortraitSize,
-        lastLandscapeSize: nextMode === "landscape" ? sizeSnapshot(normalizedNextStyle) : current.lastLandscapeSize
-      };
-    });
+    setState((current) => applyEditorStyleChange(current, nextStyle));
   }
 
   function setUrl(url: string) {

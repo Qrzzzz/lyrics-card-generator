@@ -308,8 +308,6 @@ function CustomFontPanel({ style, onStyleChange, t }: StylePanelProps) {
 export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps) {
   const isInstrumental = style.contentMode === "instrumental";
   const layoutMode = isInstrumental ? "portrait" : style.layoutMode ?? "portrait";
-  const portraitRatio = style.ratio === "1:1" || style.ratio === "custom" ? style.ratio : "custom";
-  const selectedRatio = layoutMode === "portrait" ? portraitRatio : style.ratio;
   const instrumentalLayoutLockedHint = t("instrumentalLayoutLockedHint");
   const [instrumentalModeTitle, instrumentalModeQualifier] = t("instrumentalMode").split(/\s*\/\s*/, 2);
 
@@ -429,7 +427,7 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
       <SettingRow label={t("sizeMode")} description={isInstrumental ? t("instrumentalSizeLockedHint") : undefined}>
         <SelectField
           aria-label={t("sizeMode")}
-          value={isInstrumental ? "1:1" : selectedRatio}
+          value={isInstrumental ? "1:1" : style.ratio}
           disabled={isInstrumental}
           onChange={(event) => updateRatio(event.target.value as CardRatio)}
         >
@@ -448,7 +446,7 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
         </SelectField>
       </SettingRow>
 
-      {!isInstrumental && selectedRatio === "custom" ? (
+      {!isInstrumental && style.ratio === "custom" ? (
         <div className="my-3 grid gap-4 rounded-md border border-[rgb(var(--panel-border))] bg-[rgb(var(--panel-bg))] p-3">
           <div className="app-text-subtle flex items-center justify-between gap-3 text-sm">
             <span>{t("customCanvas")}</span>

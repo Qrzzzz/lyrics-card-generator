@@ -19,10 +19,9 @@ import {
   useCoverPalette,
   useResolvedTextColor
 } from "@/components/editor/hooks/useLyricEditorEffects";
-import { sizeSnapshot } from "@/components/editor/utils/sizeSnapshot";
-import { PRESET_CARD_SIZES, getCardSize } from "@/lib/card-size";
-import { normalizeInstrumentalLayout } from "@/lib/card-style-normalize";
+import { getCardSize } from "@/lib/card-size";
 import { clearLyricContent } from "@/lib/clear-content";
+import { applyEditorStyleChange } from "@/lib/editor/apply-style-change";
 import { exportNodeAsPng } from "@/lib/export-image";
 import { createT } from "@/lib/i18n";
 import { DEFAULT_PALETTE } from "@/lib/palette-background";
@@ -35,7 +34,6 @@ import {
 } from "@/lib/settings/types";
 import type {
   AppState,
-  CardRatio,
   CardStyle,
   FontScheme,
   SongInfo
@@ -243,7 +241,12 @@ export function WebLiteEditor() {
   }
 
   function handleStyleChange(nextStyle: CardStyle) {
-    setState((current) => transitionStyle(current, nextStyle));
+    setState((current) =>
+      applyEditorStyleChange(current, {
+        ...nextStyle,
+        showPlatformBadge: false
+      })
+    );
   }
 
   function setLyrics(lyrics: string) {
@@ -528,71 +531,4 @@ function readPreferences(): WebLitePreferences {
   } catch {
     return fallback;
   }
-}
-
-function transitionStyle(current: AppState, nextStyle: CardStyle): AppState {
-  const normalizedNextStyle = normalizeInstrumentalLayout({
-    ...nextStyle,
-    showPlatformBadge: false
-  });
-  const currentMode = current.style.layoutMode ?? "portrait";
-  const nextMode = normalizedNextStyle.layoutMode ?? "portrait";
-
-  if (normalizedNextStyle.contentMode === "instrumental") {
-    return {
-      ...current,
-      lastLandscapeSize: currentMode === "landscape" ? sizeSnapshot(current.style) : current.lastLandscapeSize,
-      lastPortraitSize: sizeSnapshot(normalizedNextStyle),
-      style: normalizedNextStyle
-    };
-  }
-
-  if (currentMode !== nextMode) {
-    if (nextMode === "landscape") {
-      const restored = current.lastLandscapeSize ?? {
-        ratio: "16:9" as CardRatio,
-        width: PRESET_CARD_SIZES["16:9"].width,
-        height: PRESET_CARD_SIZES["16:9"].height
-      };
-
-      return {
-        ...current,
-        lastPortraitSize: sizeSnapshot(current.style),
-        style: {
-          ...normalizedNextStyle,
-          layoutMode: "landscape",
-          ratio: restored.ratio,
-          width: restored.width,
-          height: restored.height,
-          autoHeight: restored.ratio === "custom"
-        }
-      };
-    }
-
-    const restored = current.lastPortraitSize ?? {
-      ratio: "4:5" as CardRatio,
-      width: PRESET_CARD_SIZES["4:5"].width,
-      height: PRESET_CARD_SIZES["4:5"].height
-    };
-
-    return {
-      ...current,
-      lastLandscapeSize: sizeSnapshot(current.style),
-      style: {
-        ...normalizedNextStyle,
-        layoutMode: "portrait",
-        ratio: restored.ratio,
-        width: restored.width,
-        height: restored.height,
-        autoHeight: restored.ratio === "custom"
-      }
-    };
-  }
-
-  return {
-    ...current,
-    style: normalizedNextStyle,
-    lastPortraitSize: nextMode === "portrait" ? sizeSnapshot(normalizedNextStyle) : current.lastPortraitSize,
-    lastLandscapeSize: nextMode === "landscape" ? sizeSnapshot(normalizedNextStyle) : current.lastLandscapeSize
-  };
 }
