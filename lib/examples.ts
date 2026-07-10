@@ -1,12 +1,12 @@
 import type { Locale, SongSource } from "@/lib/types";
 
 // Maintenance note:
-// - Real album covers are only allowed as temporary development-time palette inputs.
+// - Real album covers are only temporary development-time palette inputs.
 // - Do not commit real album covers.
 // - Do not place real album covers in public/.
 // - Do not bundle real album covers into the desktop app.
-// - Only commit local preview images rendered by the existing LyricCard.
-// - Generated previews must set showCover=false and only use cover palette results.
+// - Commit only the extracted color metadata used by the examples gallery.
+// - Gallery palettes must be extracted directly from album covers, never from rendered lyric cards.
 
 export type ExampleSongId = "opposite" | "yuusha" | "glorious-years" | "opalite";
 
@@ -40,14 +40,15 @@ export type ExampleSong = {
   id: ExampleSongId;
   title: string;
   artist: string;
+  album: string;
   url: string;
   source: SongSource;
-  preview: {
-    image: string;
-    colors: [string, string, string?];
-    generatedFrom: "album-cover-palette";
+  palette: {
+    colors: [string, string, ...string[]];
+    extractedFrom: "album-cover";
   };
   originalLanguage: ExampleTranslationLanguage;
+  originalLanguageLabel?: string;
   lyrics: string;
   translations: ExampleTranslationSample[];
   translationEnabled: boolean;
@@ -57,12 +58,12 @@ export const EXAMPLE_SONGS: ExampleSong[] = [{
   id: "opalite",
   title: "Opalite",
   artist: "Taylor Swift",
+  album: "The Life of a Showgirl",
   url: "https://music.apple.com/tr/album/opalite/1833328839?i=1833328845",
   source: "apple",
-  preview: {
-    image: "/examples/generated/opalite.png",
-    colors: ["#6A723D", "#5A9E7D", "#BC6339"],
-    generatedFrom: "album-cover-palette"
+  palette: {
+    colors: ["#6A723D", "#5A9E7D", "#BC6339", "#BEB383", "#4A502B", "#D2D7B7"],
+    extractedFrom: "album-cover"
   },
   originalLanguage: "en",
   lyrics: [
@@ -128,12 +129,12 @@ export const EXAMPLE_SONGS: ExampleSong[] = [{
   id: "opposite",
   title: "opposite",
   artist: "Sabrina Carpenter",
+  album: "emails i can't send fwd:",
   url: "https://music.apple.com/cn/song/opposite/1677892095",
   source: "apple",
-  preview: {
-    image: "/examples/generated/opposite.png",
-    colors: ["#FBE6D2", "#E6C29E", "#C99C6F"],
-    generatedFrom: "album-cover-palette"
+  palette: {
+    colors: ["#FBE6D2", "#E6C29E", "#C99C6F", "#8F5F3F", "#623121", "#231212"],
+    extractedFrom: "album-cover"
   },
   originalLanguage: "en",
   lyrics: ["And I know now", "Even if I tried to change", "That somehow", "You'd end up with her anyway"].join("\n"),
@@ -167,14 +168,14 @@ export const EXAMPLE_SONGS: ExampleSong[] = [{
   translationEnabled: true
 }, {
   id: "yuusha",
-  title: "Yuusha",
+  title: "勇者",
   artist: "YOASOBI",
+  album: "THE BOOK 3",
   url: "https://music.apple.com/tr/album/yuusha/1707001460?i=1707001466",
   source: "apple",
-  preview: {
-    image: "/examples/generated/yuusha.png",
-    colors: ["#F6F4F8", "#CED0EC"],
-    generatedFrom: "album-cover-palette"
+  palette: {
+    colors: ["#F6F4F8", "#CED0EC", "#9E8EAE", "#3D3249", "#F6F5F7"],
+    extractedFrom: "album-cover"
   },
   originalLanguage: "ja",
   lyrics: [
@@ -234,14 +235,15 @@ export const EXAMPLE_SONGS: ExampleSong[] = [{
   id: "glorious-years",
   title: "光輝歲月",
   artist: "Beyond",
+  album: "命運派對",
   url: "https://music.apple.com/tr/album/%E5%85%89%E8%BC%9D%E6%AD%B2%E6%9C%88/1464503952?i=1464504134",
   source: "apple",
-  preview: {
-    image: "/examples/generated/glorious-years.png",
-    colors: ["#7A7A7A", "#171718", "#A7A7A6"],
-    generatedFrom: "album-cover-palette"
+  palette: {
+    colors: ["#7A7A7A", "#171718", "#A7A7A6", "#E0E0E0", "#4D4D4D", "#0E0E0F"],
+    extractedFrom: "album-cover"
   },
   originalLanguage: "zh-TW",
+  originalLanguageLabel: "粵語",
   lyrics: [
     "今天只有殘留的軀殼",
     "迎接光輝歲月",

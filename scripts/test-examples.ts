@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import {
   EXAMPLE_SONGS,
@@ -28,25 +28,16 @@ for (const example of EXAMPLE_SONGS) {
 
   assert.ok(example.title.trim(), `${example.id} title`);
   assert.ok(example.artist.trim(), `${example.id} artist`);
+  assert.ok(example.album.trim(), `${example.id} album`);
   assert.ok(example.url.trim(), `${example.id} url`);
   assert.ok(example.lyrics.trim(), `${example.id} lyrics`);
   assert.ok(allowedLanguages.has(example.originalLanguage), `${example.id} original language is supported`);
-  assert.ok(example.preview, `${example.id} preview`);
-  assert.match(example.preview.image, /^\/examples\/generated\/[^/]+\.(png|webp)$/, `${example.id} preview image is local`);
-  assert.ok(!/^https?:\/\//i.test(example.preview.image), `${example.id} preview image is not remote`);
-  assert.ok(example.preview.colors.length >= 2 && example.preview.colors.length <= 3, `${example.id} preview color count`);
-  for (const color of example.preview.colors.filter((item): item is string => Boolean(item))) {
-    assert.match(color, hexColorPattern, `${example.id} preview color ${color}`);
+  assert.ok(example.palette, `${example.id} palette`);
+  assert.ok(example.palette.colors.length >= 2 && example.palette.colors.length <= 6, `${example.id} palette color count`);
+  for (const color of example.palette.colors) {
+    assert.match(color, hexColorPattern, `${example.id} palette color ${color}`);
   }
-  assert.equal(example.preview.generatedFrom, "album-cover-palette", `${example.id} preview source`);
-
-  const previewPath = resolve("public", example.preview.image.replace(/^\//, ""));
-  assert.ok(existsSync(previewPath), `${example.id} generated preview file exists`);
-  const previewBytes = readFileSync(previewPath);
-  const previewText = previewBytes.toString("latin1");
-  assert.ok(!previewText.includes("music.apple.com"), `${example.id} generated preview does not embed Apple Music URL`);
-  assert.ok(!previewText.includes("mzstatic.com"), `${example.id} generated preview does not embed cover CDN URL`);
-  assert.ok(!previewText.includes("http://") && !previewText.includes("https://"), `${example.id} generated preview does not embed remote URL`);
+  assert.equal(example.palette.extractedFrom, "album-cover", `${example.id} palette source`);
 
   const expectedTranslations = locales.filter((locale) => {
     if (locale === example.originalLanguage) {
@@ -100,13 +91,35 @@ for (const example of EXAMPLE_SONGS) {
 
 const examplesSource = readFileSync(resolve("lib/examples.ts"), "utf8");
 const examplesFloorSource = readFileSync(resolve("components/editor/ExamplesFloor.tsx"), "utf8");
-assert.ok(!/preview:\s*{[\s\S]*?image:\s*["']https?:\/\//i.test(examplesSource), "preview.image cannot be remote");
-assert.ok(!examplesFloorSource.includes("src={song.preview.image}"), "examples floor must not render preview images directly");
-assert.ok(examplesFloorSource.includes("getExampleCardStyle"), "examples floor must apply palette colors to the full card");
+const exampleSongCardStart = examplesFloorSource.indexOf("function ExampleSongCard");
+const exampleSongCardEnd = examplesFloorSource.indexOf("function getExampleCardStyle");
+assert.ok(exampleSongCardStart >= 0 && exampleSongCardEnd > exampleSongCardStart, "example song card source bounds");
+const exampleSongCardSource = examplesFloorSource.slice(exampleSongCardStart, exampleSongCardEnd);
+const paletteGeneratorClientSource = readFileSync(resolve("app/example-palette-generator/ExamplePaletteGeneratorClient.tsx"), "utf8");
+const paletteGeneratorScriptSource = readFileSync(resolve("scripts/generate-example-palettes.ts"), "utf8");
+assert.ok(!examplesSource.includes("preview:"), "examples must not retain generated lyric-card previews");
+assert.ok(!examplesFloorSource.includes("song.palette.colors.map"), "examples floor does not render palette swatches");
+assert.ok(examplesFloorSource.includes("resolveReadableTextTokens(primary)"), "examples floor reuses readable text tokens");
+assert.ok(examplesFloorSource.includes("{song.album}"), "examples floor displays real album metadata");
+assert.equal(exampleSongCardSource.match(/<button\b/g)?.length, 1, "example song card has one interactive control");
+assert.ok(!exampleSongCardSource.includes("<article"), "example song card root is not a passive article");
+assert.ok(!exampleSongCardSource.includes("<ActionButton"), "example song card has no nested load button");
+assert.ok(exampleSongCardSource.includes("type=\"button\""), "example song card uses a native button");
+assert.ok(exampleSongCardSource.includes("data-testid={`load-example-${song.id}`}"), "example song card keeps its load test id");
+assert.ok(exampleSongCardSource.includes("onClick={() => onLoad"), "the whole example card triggers loading");
+assert.ok(examplesFloorSource.includes("examples-grid"), "examples floor uses the responsive gallery grid");
+assert.ok(examplesFloorSource.includes("examples-toggle-track"), "examples floor uses its compact translation toggle");
+assert.ok(examplesFloorSource.includes("examples-translation-switch"), "examples floor keeps the translation switch borderless");
+assert.ok(paletteGeneratorClientSource.includes("extractPaletteFromImage(item.coverDataUrl)"), "palette generator extracts directly from album covers");
+assert.ok(paletteGeneratorClientSource.includes("palette === DEFAULT_PALETTE"), "palette generator rejects extraction fallback colors");
+assert.ok(!paletteGeneratorClientSource.includes("LyricCard"), "palette generator does not render lyric cards");
+assert.ok(!paletteGeneratorClientSource.includes("toPng"), "palette generator does not render preview PNG files");
+assert.ok(paletteGeneratorScriptSource.includes("validatePaletteResults(results)"), "palette generator validates result ids");
+assert.ok(paletteGeneratorScriptSource.includes("findExampleBlock(source, result.id)"), "palette sync is scoped to one example block");
 assert.equal(
-  execFileSync("git", ["ls-files", "tmp/example-covers"], { encoding: "utf8" }).trim(),
+  execFileSync("git", ["ls-files", "tmp"], { encoding: "utf8" }).trim(),
   "",
-  "tmp/example-covers must not be tracked"
+  "temporary example-generation files must not be tracked"
 );
 
-console.log(JSON.stringify({ ok: true, exampleSongTests: 19 + EXAMPLE_SONGS.length * 21 }, null, 2));
+console.log(JSON.stringify({ ok: true, exampleSongTests: 36 + EXAMPLE_SONGS.length * 18 }, null, 2));

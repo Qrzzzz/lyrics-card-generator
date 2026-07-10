@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v4.3.8.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v4.3.9.zh-CN.md">发布说明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">在线 Web Lite 版</a> ·
   <a href="./docs/desktop.md">桌面维护文档</a> ·
   <a href="#主要功能">主要功能</a> ·
@@ -49,30 +49,30 @@
 
 请前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下载最新版：
 
-* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 4.3.8.exe`
-* 不想安装时可下载便携版：`Lyrics Card Generator-4.3.8-portable.exe`
+* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 4.3.9.exe`
+* 不想安装时可下载便携版：`Lyrics Card Generator-4.3.9-portable.exe`
 
 安装版适合长期使用；便携版适合临时运行、测试或放在移动硬盘中使用。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v4.3.8 更新重点
+### v4.3.9 更新重点
 
-* 示例歌曲界面改为更紧凑的本地取色遮罩卡片。
-* 示例预览图复用主歌词卡片渲染链路生成。
-* 真实专辑封面只作为临时取色输入，不随软件分发。
-* 新增 `docs/examples.md` 记录示例歌曲维护流程。
+* 示例歌曲改为整张可点击的连续专辑配色卡片，移除色条、模拟封面和独立载入按钮。
+* 卡片展示真实专辑、歌曲、歌手与原语言信息，并支持点击任意位置或使用键盘导入。
+* 复用明暗对比度算法自动选择文字颜色，同时简化右上角的导入翻译开关。
+* 示例维护改为直接从专辑封面提取调色板元数据，不再提交生成的本地预览图。
 
 ## 🌐 多语言发布说明
 
 GitHub Release 页面默认使用简体中文短版，完整发布说明维护在 `docs/releases/`：
 
-* [简体中文](./docs/releases/v4.3.8.zh-CN.md)
-* [繁體中文](./docs/releases/v4.3.8.zh-TW.md)
-* [English](./docs/releases/v4.3.8.en.md)
-* [Français](./docs/releases/v4.3.8.fr.md)
-* [日本語](./docs/releases/v4.3.8.ja.md)
-* [Español](./docs/releases/v4.3.8.es.md)
+* [简体中文](./docs/releases/v4.3.9.zh-CN.md)
+* [繁體中文](./docs/releases/v4.3.9.zh-TW.md)
+* [English](./docs/releases/v4.3.9.en.md)
+* [Français](./docs/releases/v4.3.9.fr.md)
+* [日本語](./docs/releases/v4.3.9.ja.md)
+* [Español](./docs/releases/v4.3.9.es.md)
 
 <a id="主要功能"></a>
 

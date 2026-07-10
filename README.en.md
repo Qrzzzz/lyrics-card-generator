@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v4.3.8.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v4.3.9.en.md">Release Notes</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
   <a href="#features">Features</a> ·
   <a href="#local-development">Local Development</a> ·
@@ -51,30 +51,30 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 Download the latest version from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Recommended installer: `Lyrics Card Generator Setup 4.3.8.exe`
-* Portable version: `Lyrics Card Generator-4.3.8-portable.exe`
+* Recommended installer: `Lyrics Card Generator Setup 4.3.9.exe`
+* Portable version: `Lyrics Card Generator-4.3.9-portable.exe`
 
 The installer is recommended for regular use. The portable version is useful for temporary use, testing, or running from a removable drive.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v4.3.8 Highlights
+### v4.3.9 Highlights
 
-* The example-song interface now uses more compact local palette-masked cards.
-* Example preview images are generated through the main lyric-card rendering path.
-* Real album covers are only temporary palette inputs and are not distributed with the software.
-* Added `docs/examples.md` to document the example-song maintenance workflow.
+* Example songs now use full-card, clickable album-palette surfaces without swatches, simulated covers, or a separate load button.
+* Cards show the real album, song, artist, and source language, and can be imported by clicking anywhere or using the keyboard.
+* Existing contrast logic automatically selects readable text colors, while the import-translation toggle uses a simpler treatment.
+* Example maintenance now stores palette metadata extracted directly from album covers instead of committed local preview images.
 
 ## 🌐 Multilingual Release Notes
 
 The GitHub Release page defaults to a simplified Chinese short version, while the full release notes are maintained in `docs/releases/`:
 
-* [简体中文](./docs/releases/v4.3.8.zh-CN.md)
-* [繁體中文](./docs/releases/v4.3.8.zh-TW.md)
-* [English](./docs/releases/v4.3.8.en.md)
-* [Français](./docs/releases/v4.3.8.fr.md)
-* [日本語](./docs/releases/v4.3.8.ja.md)
-* [Español](./docs/releases/v4.3.8.es.md)
+* [简体中文](./docs/releases/v4.3.9.zh-CN.md)
+* [繁體中文](./docs/releases/v4.3.9.zh-TW.md)
+* [English](./docs/releases/v4.3.9.en.md)
+* [Français](./docs/releases/v4.3.9.fr.md)
+* [日本語](./docs/releases/v4.3.9.ja.md)
+* [Español](./docs/releases/v4.3.9.es.md)
 
 <a id="features"></a>
 
