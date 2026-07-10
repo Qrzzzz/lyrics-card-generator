@@ -230,7 +230,7 @@ npm run core:test       # 测试 3.0 核心纯函数
 
 感谢 [OpenAI Codex](https://openai.com/codex/)。它把许多零散想法转化为可运行的代码、桌面版构建流程和实际功能。
 
-感谢 [ChatGPT 5.5](https://chatgpt.com/) 在开发过程中进行问题定位、方案设计、修复复核和验收检查。
+感谢 [ChatGPT 5.6 Sol](https://chatgpt.com/) 在开发过程中进行问题定位、方案设计、修复复核和验收检查。
 
 感谢 [ReactBits](https://www.reactbits.dev/) 提供的多种 UI 创意，包括 Spark Cursor 等动效灵感。
 

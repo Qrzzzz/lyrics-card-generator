@@ -78,6 +78,9 @@ assert.equal(lyricsLandscape.height, 1080);
 assert.equal(defaultState.style.showFineGrid, false);
 assert.equal(defaultState.style.fineGridDensity, "medium");
 assert.equal(defaultState.style.showAlbumName, true);
+assert.equal(defaultState.style.layoutMode, "portrait");
+assert.equal(defaultState.style.ratio, "custom");
+assert.equal(defaultState.style.autoHeight, true);
 
 assert.deepEqual(BACKGROUND_GRID_SIZE_BY_DENSITY, {
   sparse: 72,
@@ -87,4 +90,4 @@ assert.deepEqual(BACKGROUND_GRID_SIZE_BY_DENSITY, {
 assert.equal(resolveBackgroundGridDensity(undefined), "medium");
 assert.equal(resolveBackgroundGridDensity("sparse"), "sparse");
 
-console.log(JSON.stringify({ ok: true, v34LayoutGridTests: 17 }, null, 2));
+console.log(JSON.stringify({ ok: true, v34LayoutGridTests: 20 }, null, 2));

@@ -257,7 +257,7 @@ npm run core:test       # 3.0 コア純粋関数をテスト
 
 [OpenAI Codex](https://openai.com/codex/) に感謝します。多くの断片的なアイデアを、実行可能なコード、デスクトップ版のビルドフロー、実際の機能へと変換してくれました。
 
-[ChatGPT 5.5](https://chatgpt.com/) に感謝します。開発過程での問題特定、方案設計、修正レビュー、受け入れ確認を支援しました。
+[ChatGPT 5.6 Sol](https://chatgpt.com/) に感謝します。開発過程での問題特定、方案設計、修正レビュー、受け入れ確認を支援しました。
 
 [ReactBits](https://www.reactbits.dev/) に感謝します。Spark Cursor などのモーションを含む、さまざまな UI アイデアの着想を提供してくれました。
 

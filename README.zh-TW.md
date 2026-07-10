@@ -252,7 +252,7 @@ npm run core:test       # 測試 3.0 核心純函式
 
 感謝 [OpenAI Codex](https://openai.com/codex/)。它把許多零散想法轉化為可執行的程式碼、桌面版建構流程和實際功能。
 
-感謝 [ChatGPT 5.5](https://chatgpt.com/) 在開發過程中進行問題定位、方案設計、修復複核和驗收檢查。
+感謝 [ChatGPT 5.6 Sol](https://chatgpt.com/) 在開發過程中進行問題定位、方案設計、修復複核和驗收檢查。
 
 感謝 [ReactBits](https://www.reactbits.dev/) 提供的多種 UI 創意，包括 Spark Cursor 等動效靈感。
 

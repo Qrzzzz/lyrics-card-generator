@@ -22,7 +22,7 @@ export function AiTranslateButton({
       aria-busy={loading}
       onClick={onClick}
       disabled={loading}
-      className="ai-translate-trigger h-10 px-3 text-sm font-semibold"
+      className="ai-translate-trigger h-11 px-4 text-sm font-semibold"
     >
       <span className="ai-translate-trigger__content">
         {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="ai-translate-trigger__icon h-4 w-4" />}

@@ -88,7 +88,7 @@ export function SettingsSurface({
       aria-hidden={!isActive}
       aria-labelledby="settings-surface-title"
       className={[
-        "settings-surface settings-wing absolute inset-0 z-20 flex min-w-0 flex-col overflow-hidden rounded-lg",
+        "settings-surface settings-wing absolute inset-0 z-20 flex min-w-0 flex-col overflow-hidden",
         isActive ? "pointer-events-auto" : "pointer-events-none"
       ].join(" ")}
       data-testid="settings-surface"
@@ -161,10 +161,8 @@ export function SettingsSurface({
                   {tab.id === "general" ? (
                     <GeneralSettingsSection
                       locale={locale}
-                      settings={workspace.draft}
                       copy={copy}
                       onLocaleChange={workspace.handleLocaleChange}
-                      onChange={workspace.updateDraft}
                     />
                   ) : tab.id === "appearance" ? (
                     <AppearanceSettingsSection settings={workspace.draft} copy={copy} onChange={workspace.updateDraft} />

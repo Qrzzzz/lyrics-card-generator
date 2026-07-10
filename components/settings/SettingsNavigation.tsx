@@ -54,11 +54,22 @@ export function SettingsNavigation({
               title={label}
             >
               {selected ? (
-                <motion.span
-                  layoutId="settings-navigation-active"
-                  className="settings-navigation__active"
-                  transition={reduceMotion ? reducedMotionTransition : motionSprings.control}
-                />
+                <>
+                  <motion.span
+                    className="settings-navigation__active"
+                    initial={reduceMotion ? false : { scaleX: 0, opacity: 0.72 }}
+                    animate={{ scaleX: 1, opacity: 1 }}
+                    style={{ transformOrigin: "left center" }}
+                    transition={reduceMotion ? reducedMotionTransition : motionSprings.control}
+                  />
+                  <motion.span
+                    className="settings-navigation__accent"
+                    initial={reduceMotion ? false : { scaleY: 0, opacity: 0.72 }}
+                    animate={{ scaleY: 1, opacity: 1 }}
+                    style={{ transformOrigin: "center center" }}
+                    transition={reduceMotion ? reducedMotionTransition : motionSprings.control}
+                  />
+                </>
               ) : null}
               <Icon className="relative h-5 w-5 shrink-0" aria-hidden="true" />
               <span className="settings-navigation__copy relative min-w-0">

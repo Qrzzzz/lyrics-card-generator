@@ -928,10 +928,10 @@ button {
 }
 
 .settings-wing {
-  border: 1px solid rgb(var(--panel-border));
+  border: 0;
   background:
     linear-gradient(145deg, color-mix(in srgb, rgb(var(--panel-bg)) 96%, transparent), rgb(var(--panel-bg)));
-  box-shadow: 0 26px 80px rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  box-shadow: none;
   backdrop-filter: blur(28px) saturate(1.12);
   -webkit-backdrop-filter: blur(28px) saturate(1.12);
 }
@@ -1105,7 +1105,7 @@ button {
     background: color-mix(in srgb, var(--app-accent) 12%, rgb(var(--button-bg-hover)));
   }
 
-  .settings-navigation__item[aria-current="page"]::before {
+  .settings-navigation__accent {
     position: absolute;
     left: 0;
     top: 0.7rem;
@@ -1114,7 +1114,6 @@ button {
     width: 3px;
     border-radius: 999px;
     background: var(--app-accent);
-    content: "";
   }
 
   .settings-navigation__copy {
@@ -1326,14 +1325,6 @@ button {
 
 .card-font-system-serif {
   font-family: ui-serif, Georgia, "Times New Roman", serif;
-}
-
-.noise-layer {
-  background-image:
-    linear-gradient(rgba(255,255,255,0.65) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.24) 1px, transparent 1px);
-  background-size: 46px 46px;
-  mask-image: radial-gradient(circle at center, black, transparent 82%);
 }
 
 .two-line-title {

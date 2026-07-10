@@ -257,7 +257,7 @@ Thanks to [Source Han Sans](https://github.com/adobe-fonts/source-han-sans) and 
 
 Thanks to [OpenAI Codex](https://openai.com/codex/). It turned many scattered ideas into runnable code, desktop build workflows, and real features.
 
-Thanks to [ChatGPT 5.5](https://chatgpt.com/) for issue diagnosis, solution design, fix review, and acceptance checks throughout development.
+Thanks to [ChatGPT 5.6 Sol](https://chatgpt.com/) for issue diagnosis, solution design, fix review, and acceptance checks throughout development.
 
 Thanks to [ReactBits](https://www.reactbits.dev/) for multiple UI ideas, including motion inspiration such as Spark Cursor.
 
