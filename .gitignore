@@ -8,5 +8,6 @@ output/playwright/
 .playwright-cli/
 tmp/example-covers/
 tmp/example-previews/
+tmp/example-palette-generator/
 *.log
 *.tsbuildinfo

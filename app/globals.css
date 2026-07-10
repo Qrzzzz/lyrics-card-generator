@@ -887,6 +887,11 @@ button {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .examples-toggle-track,
+  .examples-toggle-knob,
+  .example-song-card,
+  .example-song-card__cta,
+  .example-song-card__cta-icon,
   .control-surface,
   .control-variant-primary,
   .control-variant-danger,
@@ -910,7 +915,14 @@ button {
   .control-variant-ghost:hover:not(:disabled):not([aria-disabled="true"]),
   .control-variant-icon:hover:not(:disabled):not([aria-disabled="true"]),
   .option-card:hover:not(:disabled):not([aria-disabled="true"]),
-  .segmented-control__item:hover:not(:disabled):not([aria-disabled="true"]) {
+  .segmented-control__item:hover:not(:disabled):not([aria-disabled="true"]),
+  .example-song-card:hover,
+  .example-song-card:active {
+    transform: none;
+  }
+
+  .example-song-card:hover .example-song-card__cta-icon,
+  .example-song-card:focus-visible .example-song-card__cta-icon {
     transform: none;
   }
 }
@@ -920,6 +932,162 @@ button {
   border-radius: 14px;
   background: rgb(var(--panel-bg));
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.055);
+}
+
+.examples-toggle-track {
+  position: relative;
+  display: inline-flex;
+  height: 1.375rem;
+  width: 2.5rem;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: color-mix(in srgb, rgb(var(--app-fg)) 18%, transparent);
+  transition:
+    background var(--motion-duration-normal) var(--motion-ease-standard);
+}
+
+.examples-toggle-knob {
+  position: absolute;
+  left: 0.125rem;
+  top: 0.125rem;
+  height: 1.125rem;
+  width: 1.125rem;
+  border-radius: 999px;
+  background: rgb(var(--app-fg));
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.24);
+  transform: translateX(0);
+  transition: transform var(--motion-duration-normal) var(--motion-ease-emphasized);
+}
+
+[role="switch"][aria-checked="true"] .examples-toggle-track {
+  background: var(--app-accent);
+}
+
+[role="switch"][aria-checked="true"] .examples-toggle-knob {
+  background: #ffffff;
+  transform: translateX(1.125rem);
+}
+
+.examples-translation-switch {
+  background: transparent;
+  color: rgb(var(--app-fg));
+  transition:
+    background var(--motion-duration-fast) var(--motion-ease-standard),
+    opacity var(--motion-duration-fast) var(--motion-ease-standard);
+}
+
+.examples-translation-switch:hover {
+  background: rgb(var(--button-bg));
+}
+
+.examples-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1rem;
+}
+
+.example-song-card {
+  width: 100%;
+  min-height: 22rem;
+  appearance: none;
+  border: 1px solid rgb(var(--panel-border));
+  border-radius: 1rem;
+  background:
+    linear-gradient(var(--example-card-scrim), var(--example-card-scrim)),
+    linear-gradient(
+      155deg,
+      var(--example-palette-1) 0%,
+      var(--example-palette-2) 54%,
+      var(--example-palette-3) 100%
+    );
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--app-text-primary) 12%, transparent),
+    0 16px 38px rgba(0, 0, 0, 0.14);
+  color: var(--app-text-primary);
+  cursor: pointer;
+  transition:
+    box-shadow var(--motion-duration-normal) var(--motion-ease-standard),
+    transform var(--motion-duration-normal) var(--motion-ease-emphasized);
+}
+
+.example-song-card:hover {
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--app-text-primary) 14%, transparent),
+    0 22px 48px rgba(0, 0, 0, 0.2);
+  transform: translateY(-3px);
+}
+
+.example-song-card:focus-visible {
+  border-color: var(--control-focus-border);
+  box-shadow:
+    0 0 0 4px var(--control-focus-ring),
+    inset 0 1px 0 color-mix(in srgb, var(--app-text-primary) 14%, transparent),
+    0 22px 48px rgba(0, 0, 0, 0.2);
+}
+
+.example-song-card:active {
+  transform: translateY(-1px) scale(0.995);
+}
+
+.example-song-card__cta {
+  background: color-mix(in srgb, var(--app-text-primary) 7%, transparent);
+  opacity: 0.86;
+  transition:
+    background var(--motion-duration-normal) var(--motion-ease-standard),
+    opacity var(--motion-duration-normal) var(--motion-ease-standard);
+}
+
+.example-song-card__cta-icon {
+  transition: transform var(--motion-duration-normal) var(--motion-ease-emphasized);
+}
+
+.example-song-card:hover .example-song-card__cta,
+.example-song-card:focus-visible .example-song-card__cta {
+  background: color-mix(in srgb, var(--app-text-primary) 11%, transparent);
+  opacity: 1;
+}
+
+.example-song-card:hover .example-song-card__cta-icon,
+.example-song-card:focus-visible .example-song-card__cta-icon {
+  transform: translateX(0.25rem);
+}
+
+@media (max-width: 479px) {
+  .example-song-card {
+    aspect-ratio: 4 / 5;
+  }
+}
+
+@media (min-width: 480px) {
+  .examples-grid {
+    grid-template-columns: repeat(2, minmax(0, 248px));
+    justify-content: center;
+  }
+}
+
+@media (min-width: 700px) {
+  .examples-grid {
+    grid-template-columns: repeat(3, minmax(0, 248px));
+  }
+}
+
+@media (min-width: 880px) {
+  .examples-grid {
+    grid-template-columns: repeat(4, minmax(0, 248px));
+  }
+}
+
+@media (min-width: 1180px) {
+  .examples-grid[data-count="5"],
+  .examples-grid[data-count="6"] {
+    grid-template-columns: repeat(5, minmax(0, 248px));
+  }
+}
+
+@media (min-width: 1420px) {
+  .examples-grid[data-count="6"] {
+    grid-template-columns: repeat(6, minmax(0, 248px));
+  }
 }
 
 .settings-tip {

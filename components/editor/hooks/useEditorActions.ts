@@ -269,6 +269,7 @@ export function useEditorActions({
           source: example.source,
           title: example.title,
           artist: example.artist,
+          album: example.album,
           originalUrl: example.url
         },
         lyrics: example.lyrics,

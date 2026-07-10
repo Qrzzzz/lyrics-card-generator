@@ -1,9 +1,9 @@
 "use client";
 
 import { motion, type Transition } from "framer-motion";
-import { Music2 } from "lucide-react";
-import { useState } from "react";
-import { ActionButton } from "@/components/ui/controls";
+import { ArrowRight, Music2 } from "lucide-react";
+import { useState, type CSSProperties } from "react";
+import { resolveReadableTextTokens } from "@/lib/color/contrast";
 import {
   EXAMPLE_LANGUAGE_LABELS,
   EXAMPLE_SONGS,
@@ -11,6 +11,7 @@ import {
   type ExampleLoadPayload,
   type ExampleSong
 } from "@/lib/examples";
+import { createT } from "@/lib/i18n";
 import { settingsCopy } from "@/lib/settings/copy";
 import type { Locale } from "@/lib/types";
 
@@ -19,6 +20,20 @@ type ExamplesFloorProps = {
   locale: Locale;
   onLoad: (payload: ExampleLoadPayload) => void;
   transition: Transition;
+};
+
+type ExampleCardStyle = CSSProperties & {
+  "--example-palette-1": string;
+  "--example-palette-2": string;
+  "--example-palette-3": string;
+  "--example-card-scrim": string;
+  "--app-text-primary": string;
+  "--app-fg": string;
+  "--app-muted": string;
+  "--app-subtle": string;
+  "--panel-border": string;
+  "--control-focus-border": string;
+  "--control-focus-ring": string;
 };
 
 export function ExamplesFloor({ isActive, locale, onLoad, transition }: ExamplesFloorProps) {
@@ -43,37 +58,49 @@ export function ExamplesFloor({ isActive, locale, onLoad, transition }: Examples
       inert={!isActive ? true : undefined}
       transition={transition}
     >
-      <div className="mx-auto w-full max-w-[1280px] px-4 pb-[calc(var(--app-header-height)+1.5rem)] pt-6 sm:px-6 sm:pt-8">
-        <header className="mb-5 flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+      <div className="mx-auto w-full max-w-[1520px] px-4 pb-[calc(var(--app-header-height)+1.5rem)] pt-6 sm:px-6 sm:pt-8">
+        <header className="mb-6 flex min-w-0 flex-col gap-5 md:flex-row md:items-center md:justify-between">
           <div className="min-w-0">
-            <h2 id="examples-floor-title" className="app-text-primary flex min-w-0 items-center gap-2 text-2xl font-black tracking-normal sm:text-3xl">
-              <Music2 className="h-6 w-6 shrink-0" />
+            <h2 id="examples-floor-title" className="app-text-primary flex min-w-0 items-center gap-2.5 text-2xl font-black tracking-normal sm:text-3xl">
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-white/10 bg-white/[0.08] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]">
+                <Music2 className="h-5 w-5" />
+              </span>
               <span className="truncate">{copy.examples}</span>
             </h2>
-            <p className="app-text-subtle mt-2 max-w-2xl text-sm">
+            <p className="app-text-subtle mt-2 max-w-2xl text-sm leading-6">
               {intro}
             </p>
           </div>
-          <div className="flex shrink-0 flex-wrap items-center gap-3 sm:justify-end">
-            <div className="app-text-subtle min-w-0 text-right text-xs font-medium sm:max-w-56">
-              {copy.translationLanguage}: <span className="app-text-primary">{translationLanguageLabel}</span>
+
+          <div className="examples-translation-control flex w-full min-w-0 items-center justify-between gap-3 self-start md:w-auto md:shrink-0 md:self-auto">
+            <div id="examples-translation-language" className="min-w-0 flex-1 text-left leading-tight md:flex-none md:text-right">
+              <span className="app-text-subtle block text-[10px] font-semibold uppercase tracking-[0.14em]">
+                {copy.translationLanguage}
+              </span>
+              <span className={[
+                "block truncate text-sm font-semibold transition-opacity",
+                importTranslation ? "app-text-primary" : "app-text-subtle opacity-60"
+              ].join(" ")}>
+                {translationLanguageLabel}
+              </span>
             </div>
             <button
               type="button"
               role="switch"
               aria-checked={importTranslation}
-              className="app-button inline-flex h-10 items-center gap-2 rounded-lg px-3 text-xs font-semibold"
+              aria-describedby="examples-translation-language"
+              className="examples-translation-switch control-focus inline-flex h-10 min-w-0 items-center gap-2 rounded-full border border-transparent px-2.5 text-xs font-semibold"
               onClick={() => setImportTranslation((current) => !current)}
             >
-              <span>{getImportTranslationLabel(locale)}</span>
-              <span className="toggle-track" aria-hidden="true">
-                <span className="toggle-knob" />
+              <span className="truncate">{getImportTranslationLabel(locale)}</span>
+              <span className="examples-toggle-track" aria-hidden="true">
+                <span className="examples-toggle-knob" />
               </span>
             </button>
           </div>
         </header>
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="examples-grid" data-count={Math.min(EXAMPLE_SONGS.length, 6)}>
           {EXAMPLE_SONGS.map((song) => (
             <ExampleSongCard
               key={song.id}
@@ -100,7 +127,7 @@ function getImportTranslationLabel(locale: Locale) {
     case "ja":
       return "\u7ffb\u8a33\u3092\u8aad\u307f\u8fbc\u3080";
     case "es":
-      return "Importar traducción";
+      return "Importar traducci\u00f3n";
     default:
       return "Import translation";
   }
@@ -115,9 +142,9 @@ function getExamplesIntro(locale: Locale) {
     case "fr":
       return "Choisissez un exemple pour remplir rapidement les informations, les paroles et la traduction.";
     case "ja":
-      return "サンプルを選ぶと、曲情報、歌詞、翻訳をすばやく入力できます。";
+      return "\u30b5\u30f3\u30d7\u30eb\u3092\u9078\u3076\u3068\u3001\u66f2\u60c5\u5831\u3001\u6b4c\u8a5e\u3001\u7ffb\u8a33\u3092\u3059\u3070\u3084\u304f\u5165\u529b\u3067\u304d\u307e\u3059\u3002";
     case "es":
-      return "Elige un ejemplo para completar rápidamente la canción, la letra y la traducción.";
+      return "Elige un ejemplo para completar r\u00e1pidamente la canci\u00f3n, la letra y la traducci\u00f3n.";
     default:
       return "Choose an example to quickly fill in song details, lyrics, and translation.";
   }
@@ -135,41 +162,67 @@ function ExampleSongCard({
   onLoad: (payload: ExampleLoadPayload) => void;
 }) {
   const copy = settingsCopy[locale];
+  const t = createT(locale);
   const defaultTranslation = resolveExampleTranslation(song, locale);
   const cardStyle = getExampleCardStyle(song);
+  const originalLanguageLabel = song.originalLanguageLabel ?? EXAMPLE_LANGUAGE_LABELS[song.originalLanguage];
 
   return (
-    <div className="settings-panel-card relative isolate flex h-[124px] min-w-0 items-center overflow-hidden p-4" style={cardStyle}>
-      <div className="absolute inset-0 bg-black/22" aria-hidden="true" />
-      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(255,255,255,0.13),rgba(255,255,255,0.04)_34%,rgba(0,0,0,0.22))]" aria-hidden="true" />
-      <div className="relative z-10 flex min-w-0 flex-1 items-center justify-between gap-3">
-        <div className="min-w-0">
-          <div className="app-text-primary truncate text-sm font-bold sm:text-base">{song.title}</div>
-          <div className="app-text-subtle mt-0.5 truncate text-xs sm:text-sm">{song.artist}</div>
-          <div className="mt-2 inline-flex max-w-full items-center rounded-md border border-white/14 bg-black/20 px-2 py-1 text-[11px] font-semibold text-white/78 backdrop-blur">
-            <span className="truncate">{copy.originalLanguage}: {EXAMPLE_LANGUAGE_LABELS[song.originalLanguage]}</span>
-          </div>
-        </div>
-        <ActionButton
-          size="sm"
-          data-testid={`load-example-${song.id}`}
-          className="shrink-0"
-          onClick={() => onLoad({ example: song, translation: defaultTranslation, importTranslation })}
-        >
-          {copy.loadExample}
-        </ActionButton>
-      </div>
-    </div>
+    <button
+      type="button"
+      data-testid={`load-example-${song.id}`}
+      className="example-song-card control-focus group isolate flex min-w-0 flex-col overflow-hidden p-5 text-left"
+      style={cardStyle}
+      aria-label={`${copy.loadExample}: ${song.title} — ${song.artist} — ${song.album}`}
+      onClick={() => onLoad({ example: song, translation: defaultTranslation, importTranslation })}
+    >
+      <span className="block min-w-0">
+        <span className="app-text-primary block text-[10px] font-bold uppercase tracking-[0.16em] opacity-55">
+          {t("album")}
+        </span>
+        <span className="app-text-primary mt-1 line-clamp-2 text-sm font-semibold leading-5 opacity-80" title={song.album}>
+          {song.album}
+        </span>
+      </span>
+
+      <span className="mt-auto block min-w-0 pt-12">
+        <span className="block min-w-0">
+          <span role="heading" aria-level={3} className="app-text-primary block text-2xl font-black leading-tight tracking-tight">
+            {song.title}
+          </span>
+          <span className="app-text-primary mt-2 block truncate text-sm font-medium opacity-70">{song.artist}</span>
+        </span>
+
+        <span className="app-text-primary mt-5 flex min-w-0 items-baseline justify-between gap-3 text-xs">
+          <span className="shrink-0 font-medium opacity-55">{copy.originalLanguage}</span>
+          <span className="truncate text-right font-semibold opacity-80">{originalLanguageLabel}</span>
+        </span>
+
+        <span className="example-song-card__cta app-text-primary -mx-5 -mb-5 mt-5 flex h-14 items-center justify-between px-5 text-sm">
+          <span className="font-semibold">{copy.loadExample}</span>
+          <ArrowRight className="example-song-card__cta-icon h-4 w-4 shrink-0" aria-hidden="true" />
+        </span>
+      </span>
+    </button>
   );
 }
 
-function getExampleCardStyle(song: ExampleSong) {
-  const [primary, secondary, accent = secondary] = song.preview.colors;
+function getExampleCardStyle(song: ExampleSong): ExampleCardStyle {
+  const [primary, secondary = primary, accent = secondary] = song.palette.colors;
+  const textTokens = resolveReadableTextTokens(primary);
+  const usesDarkText = textTokens.primary === "#191612";
 
   return {
-    background:
-      `radial-gradient(circle at 16% 18%, ${accent} 0, transparent 34%), ` +
-      `radial-gradient(circle at 82% 26%, ${secondary} 0, transparent 38%), ` +
-      `linear-gradient(135deg, ${primary}, ${secondary} 56%, ${accent})`
+    "--example-palette-1": primary,
+    "--example-palette-2": secondary,
+    "--example-palette-3": accent,
+    "--example-card-scrim": usesDarkText ? "rgba(255, 255, 255, 0.12)" : "rgba(0, 0, 0, 0.3)",
+    "--app-text-primary": textTokens.primary,
+    "--app-fg": textTokens.fg,
+    "--app-muted": textTokens.muted,
+    "--app-subtle": textTokens.subtle,
+    "--panel-border": usesDarkText ? "25 22 18 / 0.16" : "255 255 255 / 0.2",
+    "--control-focus-border": textTokens.primary,
+    "--control-focus-ring": usesDarkText ? "rgba(25, 22, 18, 0.2)" : "rgba(255, 255, 255, 0.24)"
   };
 }
