@@ -22,6 +22,8 @@ const motionTokens = readFileSync(resolve("lib/motion/tokens.ts"), "utf8");
 assert.match(motionTokens, /motionDurations/);
 assert.match(motionTokens, /motionEasings/);
 assert.match(motionTokens, /motionSprings/);
+assert.match(motionTokens, /controlHoverTarget/);
+assert.match(motionTokens, /controlTapTarget/);
 assert.match(motionTokens, /reducedMotionTransition/);
 assert.match(motionTokens, /stepPanelVariants/);
 assert.match(motionTokens, /dialogPanelVariants/);
@@ -40,5 +42,8 @@ const globals = readFileSync(resolve("app/globals.css"), "utf8");
 assert.match(globals, /@media \(prefers-reduced-motion: reduce\)/);
 assert.match(globals, /ai-stream-progress/);
 assert.match(globals, /star-border-container::before/);
+assert.match(globals, /@media \(hover: hover\) and \(pointer: fine\)/);
+assert.match(globals, /not\(\.traffic-light\):not\(\.example-song-card\):hover/);
+assert.match(globals, /not\(\.traffic-light\):not\(\.example-song-card\):hover:active/);
 
-console.log(JSON.stringify({ ok: true, motionSystemRegressionChecks: 18 }, null, 2));
+console.log(JSON.stringify({ ok: true, motionSystemRegressionChecks: 23 }, null, 2));

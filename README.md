@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v4.4.0.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v4.4.3.zh-CN.md">发布说明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">在线 Web Lite 版</a> ·
   <a href="./docs/desktop.md">桌面维护文档</a> ·
   <a href="#主要功能">主要功能</a> ·
@@ -49,30 +49,30 @@
 
 请前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下载最新版：
 
-* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 4.4.0.exe`
-* 不想安装时可下载便携版：`Lyrics Card Generator-4.4.0-portable.exe`
+* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 4.4.3.exe`
+* 不想安装时可下载便携版：`Lyrics Card Generator-4.4.3-portable.exe`
 
 安装版适合长期使用；便携版适合临时运行、测试或放在移动硬盘中使用。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v4.4.0 更新重点
+### v4.4.3 更新重点
 
-* 设置从模态弹窗迁移为编辑器右侧的完整设置侧翼，通过横向滑动与编辑器切换。
-* 宽屏、中等宽度和小窗口分别使用完整侧栏、图标栏和顶部分类菜单。
-* 保留普通设置即时保存与 AI 延迟保存，并在关闭时补保存待处理的 AI 配置。
-* Escape、X、焦点恢复、`inert` 隔离与 reduced motion 统一纳入空间切换行为。
+* 为大多数按钮统一补齐轻量悬浮反馈，并复用现有 spring 与 reduced-motion 动效体系。
+* 小屏设置分类改为独立 disclosure 生命周期：第一次 Escape 仅收起分类并恢复焦点，关闭设置后不再残留展开状态。
+* AI 设置保存升级为“等待保存 / 正在保存 / 已保存 / 保存失败”四态，消除防抖等待与失败后的错误成功提示。
+* 修复示例页之后的设置切换，并优化无外框设置层、三档导出质量滑块、窗口圆角与示例页关闭按钮。
 
 ## 🌐 多语言发布说明
 
 GitHub Release 页面默认使用简体中文短版，完整发布说明维护在 `docs/releases/`：
 
-* [简体中文](./docs/releases/v4.4.0.zh-CN.md)
-* [繁體中文](./docs/releases/v4.4.0.zh-TW.md)
-* [English](./docs/releases/v4.4.0.en.md)
-* [Français](./docs/releases/v4.4.0.fr.md)
-* [日本語](./docs/releases/v4.4.0.ja.md)
-* [Español](./docs/releases/v4.4.0.es.md)
+* [简体中文](./docs/releases/v4.4.3.zh-CN.md)
+* [繁體中文](./docs/releases/v4.4.3.zh-TW.md)
+* [English](./docs/releases/v4.4.3.en.md)
+* [Français](./docs/releases/v4.4.3.fr.md)
+* [日本語](./docs/releases/v4.4.3.ja.md)
+* [Español](./docs/releases/v4.4.3.es.md)
 
 <a id="主要功能"></a>
 

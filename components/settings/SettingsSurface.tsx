@@ -65,11 +65,21 @@ export function SettingsSurface({
     onNotify
   });
   const activeTab = tabs.find((tab) => tab.id === workspace.activeTab) ?? tabs[0];
+  const saveStatus = workspace.saveState === "pending"
+    ? { label: aiCopy.changesPending, dotClass: "bg-amber-300" }
+    : workspace.saveState === "saving"
+      ? { label: aiCopy.saving, dotClass: "animate-pulse bg-amber-300" }
+      : workspace.saveState === "error"
+        ? {
+            label: workspace.syncErrorKind === "load" ? aiCopy.loadFailed : aiCopy.saveFailed,
+            dotClass: "bg-rose-300"
+          }
+        : { label: aiCopy.settingsSaved, dotClass: "bg-emerald-300" };
 
   useEffect(() => {
     if (!isActive) return;
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && !workspace.isClearingApiKey) {
+      if (event.key === "Escape" && !event.defaultPrevented && !workspace.isClearingApiKey) {
         workspace.closeWorkspace();
       }
     };
@@ -115,13 +125,14 @@ export function SettingsSurface({
         </div>
         <div className="flex shrink-0 items-center gap-2 sm:gap-3">
           <span className="app-text-subtle hidden items-center gap-2 text-xs sm:flex" role="status" aria-live="polite">
-            <span className={["h-1.5 w-1.5 rounded-full", workspace.isSaving ? "animate-pulse bg-amber-300" : "bg-emerald-300"].join(" ")} />
-            {workspace.isSaving ? aiCopy.saving : aiCopy.settingsSaved}
+            <span className={["h-1.5 w-1.5 rounded-full", saveStatus.dotClass].join(" ")} />
+            {saveStatus.label}
           </span>
           <button
             ref={closeButtonRef}
             type="button"
             onClick={workspace.closeWorkspace}
+            disabled={workspace.isClearingApiKey}
             className="app-button control-focus grid h-10 w-10 place-items-center rounded-xl"
             aria-label={copy.cancel}
             data-testid="settings-close-button"
@@ -135,6 +146,7 @@ export function SettingsSurface({
         <SettingsNavigation
           tabs={tabs}
           active={workspace.activeTab}
+          isActive={isActive}
           onChange={workspace.setActiveTab}
           ariaLabel={copy.settings}
         />

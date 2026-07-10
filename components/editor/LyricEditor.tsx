@@ -236,7 +236,6 @@ export function LyricEditor() {
   });
 
   function openSettings(tab?: SettingsTabId) {
-    if (!isEditorSurfaceActive) return;
     setRequestedSettingsTab(tab);
     setActiveSurface("settings");
   }

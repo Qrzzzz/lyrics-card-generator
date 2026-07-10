@@ -49,6 +49,7 @@ export function AiSettingsSection({
           id={baseUrlId}
           type="url"
           value={settings.baseUrl}
+          disabled={isClearingApiKey}
           onChange={(event) => onSettingsChange({ ...settings, baseUrl: event.target.value })}
           placeholder="https://api.openai.com/v1"
           autoComplete="url"
@@ -62,6 +63,7 @@ export function AiSettingsSection({
             id={apiKeyId}
             type="password"
             value={apiKey}
+            disabled={isClearingApiKey}
             onChange={(event) => onApiKeyChange(event.target.value)}
             placeholder={hasApiKey ? "****************" : copy.apiKeyPlaceholder}
             autoComplete="new-password"
@@ -87,6 +89,7 @@ export function AiSettingsSection({
         <TextInput
           id={modelId}
           value={settings.model}
+          disabled={isClearingApiKey}
           onChange={(event) => onSettingsChange({ ...settings, model: event.target.value })}
           placeholder={copy.modelPlaceholder}
           spellCheck={false}
@@ -103,6 +106,7 @@ export function AiSettingsSection({
             max={2}
             step={0.1}
             value={settings.temperature}
+            disabled={isClearingApiKey}
             onChange={(event) => onSettingsChange({ ...settings, temperature: Number(event.target.value) })}
           />
           <SettingTip>{copy.temperatureTip}</SettingTip>
@@ -112,6 +116,7 @@ export function AiSettingsSection({
           <SelectField
             id={defaultStyleId}
             value={settings.defaultStyle}
+            disabled={isClearingApiKey}
             onChange={(event) =>
               onSettingsChange({ ...settings, defaultStyle: event.target.value as AISettings["defaultStyle"] })
             }
@@ -129,6 +134,7 @@ export function AiSettingsSection({
       <ToggleRow
         label={copy.defaultReasoning}
         checked={settings.reasoningEnabled}
+        disabled={isClearingApiKey}
         onChange={(reasoningEnabled) => onSettingsChange({ ...settings, reasoningEnabled })}
       />
       <SettingTip>{copy.reasoningHint}</SettingTip>

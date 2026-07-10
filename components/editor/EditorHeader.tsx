@@ -61,7 +61,7 @@ export function EditorHeader({
           ].join(" ")}
         >
           {isDocked ? (
-            <X className="h-5 w-5" />
+            <X className="examples-close-button__icon h-5 w-5" />
           ) : (
             <>
               <Music2 className="h-4 w-4" />

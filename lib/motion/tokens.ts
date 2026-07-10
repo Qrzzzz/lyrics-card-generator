@@ -17,6 +17,12 @@ export const motionSprings = {
   dialog: { type: "spring", stiffness: 300, damping: 32, mass: 0.88 }
 } as const satisfies Record<string, Transition>;
 
+export const controlHoverTarget = { y: -1 } as const;
+
+export const controlTapTarget = { scale: 0.985 } as const;
+
+export const subtleControlTapTarget = { scale: 0.992 } as const;
+
 export type StepDirection = 1 | -1;
 
 export function opacityOnlyVariants(): Variants {

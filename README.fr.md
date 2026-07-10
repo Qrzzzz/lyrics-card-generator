@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v4.4.0.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v4.4.3.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="#développement-local">Développement local</a> ·
@@ -51,30 +51,30 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 Téléchargez la dernière version depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
 
-* Installateur recommandé : `Lyrics Card Generator Setup 4.4.0.exe`
-* Version portable : `Lyrics Card Generator-4.4.0-portable.exe`
+* Installateur recommandé : `Lyrics Card Generator Setup 4.4.3.exe`
+* Version portable : `Lyrics Card Generator-4.4.3-portable.exe`
 
 L'installateur est recommandé pour une utilisation régulière. La version portable convient aux essais, à une utilisation temporaire ou à un disque amovible.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### Points clés de la v4.4.0
+### Points clés de la v4.4.3
 
-* Les paramètres quittent la fenêtre modale pour une aile complète à droite de l’éditeur, avec des transitions spatiales horizontales.
-* Les fenêtres larges, moyennes et petites utilisent respectivement une barre latérale complète, un rail d’icônes et un menu de catégorie supérieur.
-* Les préférences ordinaires restent enregistrées immédiatement et les paramètres d’IA conservent la sauvegarde différée avec finalisation à la fermeture.
-* Échap, X, restauration du focus, isolation `inert` et mouvement réduit partagent désormais le même comportement spatial.
+* La plupart des boutons partagent désormais un léger effet de survol fondé sur le système spring et reduced-motion existant.
+* Sur petit écran, les catégories des paramètres ont leur propre cycle disclosure : le premier Échap ferme uniquement la liste et restitue le focus, tandis que la fermeture des paramètres réinitialise son état.
+* Les paramètres d’IA affichent quatre états fiables — en attente, enregistrement, enregistré et échec — au lieu d’annoncer un succès pendant le délai ou après une erreur.
+* Correction de la transition vers les paramètres après les exemples, avec amélioration de la surface sans cadre, du sélecteur de qualité à trois positions, des angles de fenêtre et du bouton de fermeture des exemples.
 
 ## 🌐 Notes de publication multilingues
 
 La page GitHub Release utilise par défaut la version courte en chinois simplifié, les notes de publication complètes sont conservées dans `docs/releases/` :
 
-* [简体中文](./docs/releases/v4.4.0.zh-CN.md)
-* [繁體中文](./docs/releases/v4.4.0.zh-TW.md)
-* [English](./docs/releases/v4.4.0.en.md)
-* [Français](./docs/releases/v4.4.0.fr.md)
-* [日本語](./docs/releases/v4.4.0.ja.md)
-* [Español](./docs/releases/v4.4.0.es.md)
+* [简体中文](./docs/releases/v4.4.3.zh-CN.md)
+* [繁體中文](./docs/releases/v4.4.3.zh-TW.md)
+* [English](./docs/releases/v4.4.3.en.md)
+* [Français](./docs/releases/v4.4.3.fr.md)
+* [日本語](./docs/releases/v4.4.3.ja.md)
+* [Español](./docs/releases/v4.4.3.es.md)
 
 <a id="fonctionnalités-principales"></a>
 
