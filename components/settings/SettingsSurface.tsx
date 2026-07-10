@@ -70,7 +70,10 @@ export function SettingsSurface({
     : workspace.saveState === "saving"
       ? { label: aiCopy.saving, dotClass: "animate-pulse bg-amber-300" }
       : workspace.saveState === "error"
-        ? { label: aiCopy.saveFailed, dotClass: "bg-rose-300" }
+        ? {
+            label: workspace.syncErrorKind === "load" ? aiCopy.loadFailed : aiCopy.saveFailed,
+            dotClass: "bg-rose-300"
+          }
         : { label: aiCopy.settingsSaved, dotClass: "bg-emerald-300" };
 
   useEffect(() => {
@@ -129,6 +132,7 @@ export function SettingsSurface({
             ref={closeButtonRef}
             type="button"
             onClick={workspace.closeWorkspace}
+            disabled={workspace.isClearingApiKey}
             className="app-button control-focus grid h-10 w-10 place-items-center rounded-xl"
             aria-label={copy.cancel}
             data-testid="settings-close-button"

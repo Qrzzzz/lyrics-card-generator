@@ -29,6 +29,7 @@ type AIUiCopy = {
   save: string;
   saving: string;
   changesPending: string;
+  loadFailed: string;
   saveFailed: string;
   cancel: string;
   settingsSaved: string;
@@ -90,6 +91,7 @@ const AI_UI_COPY: Record<Locale, AIUiCopy> = {
     save: "保存设置",
     saving: "保存中...",
     changesPending: "等待保存",
+    loadFailed: "加载失败",
     saveFailed: "保存失败",
     cancel: "取消",
     settingsSaved: "设置已保存",
@@ -149,6 +151,7 @@ const AI_UI_COPY: Record<Locale, AIUiCopy> = {
     save: "儲存設定",
     saving: "儲存中...",
     changesPending: "等待儲存",
+    loadFailed: "載入失敗",
     saveFailed: "儲存失敗",
     cancel: "取消",
     settingsSaved: "設定已儲存",
@@ -208,6 +211,7 @@ const AI_UI_COPY: Record<Locale, AIUiCopy> = {
     save: "Save Settings",
     saving: "Saving...",
     changesPending: "Waiting to save",
+    loadFailed: "Load failed",
     saveFailed: "Save failed",
     cancel: "Cancel",
     settingsSaved: "Settings saved",
@@ -267,6 +271,7 @@ const AI_UI_COPY: Record<Locale, AIUiCopy> = {
     save: "Enregistrer les paramètres",
     saving: "Enregistrement...",
     changesPending: "En attente d’enregistrement",
+    loadFailed: "Échec du chargement",
     saveFailed: "Échec de l’enregistrement",
     cancel: "Annuler",
     settingsSaved: "Paramètres enregistrés",
@@ -326,6 +331,7 @@ const AI_UI_COPY: Record<Locale, AIUiCopy> = {
     save: "設定を保存",
     saving: "保存中...",
     changesPending: "保存待ち",
+    loadFailed: "読み込みに失敗しました",
     saveFailed: "保存に失敗しました",
     cancel: "キャンセル",
     settingsSaved: "設定を保存しました",
@@ -385,6 +391,7 @@ const AI_UI_COPY: Record<Locale, AIUiCopy> = {
     save: "Guardar configuración",
     saving: "Guardando...",
     changesPending: "Pendiente de guardar",
+    loadFailed: "Error al cargar",
     saveFailed: "Error al guardar",
     cancel: "Cancelar",
     settingsSaved: "Configuración guardada",

@@ -773,6 +773,10 @@ button {
   .app-shell button:not(:disabled):not([aria-disabled="true"]):not(.traffic-light):not(.example-song-card):hover {
     transform: translateY(-1px);
   }
+
+  .app-shell button:not(:disabled):not([aria-disabled="true"]):not(.traffic-light):not(.example-song-card):hover:active {
+    transform: translateY(0) scale(0.985);
+  }
 }
 
 ::selection {
@@ -943,6 +947,7 @@ button {
 
   .app-button:active:not(:disabled),
   .app-shell button:not(:disabled):not([aria-disabled="true"]):not(.traffic-light):not(.example-song-card):hover,
+  .app-shell button:not(:disabled):not([aria-disabled="true"]):not(.traffic-light):not(.example-song-card):hover:active,
   .control-surface:hover:not(:disabled):not([aria-disabled="true"]),
   .control-variant-primary:hover:not(:disabled):not([aria-disabled="true"]),
   .control-variant-danger:hover:not(:disabled):not([aria-disabled="true"]),

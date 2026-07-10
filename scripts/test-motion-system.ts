@@ -44,5 +44,6 @@ assert.match(globals, /ai-stream-progress/);
 assert.match(globals, /star-border-container::before/);
 assert.match(globals, /@media \(hover: hover\) and \(pointer: fine\)/);
 assert.match(globals, /not\(\.traffic-light\):not\(\.example-song-card\):hover/);
+assert.match(globals, /not\(\.traffic-light\):not\(\.example-song-card\):hover:active/);
 
-console.log(JSON.stringify({ ok: true, motionSystemRegressionChecks: 22 }, null, 2));
+console.log(JSON.stringify({ ok: true, motionSystemRegressionChecks: 23 }, null, 2));

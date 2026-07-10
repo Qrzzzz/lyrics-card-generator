@@ -2,6 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { SettingsTabId } from "@/components/settings/settings-model";
+import {
+  createLatestSaveController,
+  type LatestSaveController,
+  type SaveSnapshot,
+  type SaveState
+} from "@/lib/ai/ai-settings-save-controller";
 import { clearAISettingsApiKey, loadAISettings, saveAISettings } from "@/lib/ai/client";
 import { DEFAULT_AI_SETTINGS, type AISettings, type AISettingsSummary } from "@/lib/ai/types";
 import { getAIUiCopy } from "@/lib/ai/ui-copy";
@@ -9,14 +15,14 @@ import { removeBackgroundImage } from "@/lib/settings/background-storage";
 import type { UserSettings } from "@/lib/settings/types";
 import type { Locale } from "@/lib/types";
 
-export type SaveState = "saved" | "pending" | "saving" | "error";
+export type { SaveState } from "@/lib/ai/ai-settings-save-controller";
 
-type AISaveSnapshot = {
+type AISaveValue = {
   settings: AISettings;
   apiKey: string;
-  signature: string;
-  session: number;
 };
+
+type SyncErrorKind = "load" | "save" | null;
 
 type SettingsWorkspaceInput = {
   open: boolean;
@@ -51,42 +57,84 @@ export function useSettingsWorkspace({
   const [hasApiKey, setHasApiKey] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [saveState, setSaveState] = useState<SaveState>("saved");
+  const [syncErrorKind, setSyncErrorKind] = useState<SyncErrorKind>(null);
   const [isClearingApiKey, setIsClearingApiKey] = useState(false);
   const [error, setError] = useState("");
   const notifyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const aiSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const aiSettingsLoadedRef = useRef(false);
-  const lastSavedAISettingsRef = useRef("");
-  const currentAISettingsSignatureRef = useRef("");
-  const aiSaveQueueRef = useRef<Promise<void>>(Promise.resolve());
-  const queuedAISavesRef = useRef(new Map<string, Promise<void>>());
-  const workspaceSessionRef = useRef(0);
+  const isClearingApiKeyRef = useRef(false);
+  const aiWriteQueueRef = useRef<Promise<void>>(Promise.resolve());
+  const latestLifecycleRef = useRef({ locale, onSaved });
+  latestLifecycleRef.current = { locale, onSaved };
+  const saveControllerRef = useRef<LatestSaveController<AISaveValue> | null>(null);
 
-  currentAISettingsSignatureRef.current = serializeAISettings(settings, apiKey);
+  function runSerializedAIWrite<T>(write: () => Promise<T>) {
+    const result = aiWriteQueueRef.current.then(write);
+    aiWriteQueueRef.current = result.then(() => undefined, () => undefined);
+    return result;
+  }
+
+  if (!saveControllerRef.current) {
+    saveControllerRef.current = createLatestSaveController<AISaveValue, AISettingsSummary>({
+      persist: ({ value }) => runSerializedAIWrite(() =>
+        saveAISettings({
+          ...value.settings,
+          apiKey: value.apiKey.trim() || undefined
+        })
+      ),
+      onStateChange: (nextState) => {
+        setSaveState(nextState);
+        if (nextState !== "error") {
+          setSyncErrorKind(null);
+          setError("");
+        }
+      },
+      onPersisted: (saved, _snapshot, isLatest) => {
+        if (!isLatest) return;
+        const { hasApiKey: configured, ...nextSettings } = saved;
+        setSettings(nextSettings);
+        setHasApiKey(configured);
+        latestLifecycleRef.current.onSaved(saved);
+      },
+      onError: (saveError) => {
+        const currentLocale = latestLifecycleRef.current.locale;
+        setError(saveError instanceof Error ? saveError.message : getAIUiCopy(currentLocale).settingsSaveFailed);
+        setSyncErrorKind("save");
+      }
+    });
+  }
 
   useEffect(() => {
     if (!open) return;
-    workspaceSessionRef.current += 1;
     if (requestedTab) setActiveTab(requestedTab);
     setDraft(userSettings);
     setApiKey("");
     setError("");
-    setSaveState("saved");
+    setSyncErrorKind(null);
     setIsLoading(true);
     aiSettingsLoadedRef.current = false;
 
     let active = true;
-    void loadAISettings()
-      .then(({ hasApiKey: configured, ...next }) => {
-        if (!active) return;
+    const saveController = saveControllerRef.current!;
+    setSaveState(saveController.getState().status);
+    void saveController.whenIdle()
+      .then(() => {
+        if (!active) return undefined;
+        return loadAISettings();
+      })
+      .then((loaded) => {
+        if (!active || !loaded) return;
+        const { hasApiKey: configured, ...next } = loaded;
         setSettings(next);
         setHasApiKey(configured);
-        lastSavedAISettingsRef.current = serializeAISettings(next, "");
+        saveController.resetPersisted(createAISaveSnapshot(next, ""));
         aiSettingsLoadedRef.current = true;
       })
       .catch(() => {
         if (active) {
           setError(getAIUiCopy(locale).settingsLoadFailed);
+          setSyncErrorKind("load");
           setSaveState("error");
         }
       })
@@ -105,26 +153,15 @@ export function useSettingsWorkspace({
   }, [open, requestedTab]);
 
   useEffect(() => {
-    if (!open || isLoading || !aiSettingsLoadedRef.current) return;
-    const signature = serializeAISettings(settings, apiKey);
-    if (signature === lastSavedAISettingsRef.current) {
-      setError("");
-      setSaveState("saved");
-      return;
-    }
+    if (!open || isLoading || isClearingApiKeyRef.current || !aiSettingsLoadedRef.current) return;
+    const saveController = saveControllerRef.current!;
+    saveController.setDesired(createAISaveSnapshot(settings, apiKey));
 
     if (aiSaveTimerRef.current) clearTimeout(aiSaveTimerRef.current);
-    setError("");
-    setSaveState("pending");
-    const snapshot: AISaveSnapshot = {
-      settings,
-      apiKey,
-      signature,
-      session: workspaceSessionRef.current
-    };
+    if (!saveController.needsPersistence() || saveController.getState().status === "saving") return;
     aiSaveTimerRef.current = setTimeout(() => {
       aiSaveTimerRef.current = null;
-      void saveCurrentAISettings(snapshot);
+      void saveController.flushLatest();
     }, 700);
 
     return () => {
@@ -133,7 +170,7 @@ export function useSettingsWorkspace({
         aiSaveTimerRef.current = null;
       }
     };
-  }, [apiKey, isLoading, open, settings]);
+  }, [apiKey, isClearingApiKey, isLoading, open, settings]);
 
   useEffect(() => () => {
     if (notifyTimerRef.current) clearTimeout(notifyTimerRef.current);
@@ -160,44 +197,83 @@ export function useSettingsWorkspace({
   }
 
   function closeWorkspace() {
+    if (isClearingApiKeyRef.current) return;
     if (aiSaveTimerRef.current) {
       clearTimeout(aiSaveTimerRef.current);
       aiSaveTimerRef.current = null;
     }
-    const signature = serializeAISettings(settings, apiKey);
-    if (aiSettingsLoadedRef.current && signature !== lastSavedAISettingsRef.current) {
-      void saveCurrentAISettings({
-        settings,
-        apiKey,
-        signature,
-        session: workspaceSessionRef.current
-      });
+    if (aiSettingsLoadedRef.current) {
+      const saveController = saveControllerRef.current!;
+      saveController.setDesired(createAISaveSnapshot(settings, apiKey));
+      void saveController.flushLatest();
     }
     onClose();
   }
 
   async function handleClearApiKey() {
-    if (!hasApiKey) {
+    const saveController = saveControllerRef.current!;
+    const desiredAfterClear = createAISaveSnapshot(settings, "");
+    const controllerState = saveController.getState();
+    const shouldClearPersistedKey =
+      hasApiKey ||
+      controllerState.inFlightSignature !== undefined ||
+      controllerState.persistedSignature === undefined ||
+      controllerState.persistedSignature !== desiredAfterClear.signature;
+
+    if (!shouldClearPersistedKey) {
+      if (aiSaveTimerRef.current) {
+        clearTimeout(aiSaveTimerRef.current);
+        aiSaveTimerRef.current = null;
+      }
+      saveController.setDesired(desiredAfterClear);
       setApiKey("");
       return;
     }
     if (!window.confirm(aiCopy.clearApiKeyConfirm)) return;
+    isClearingApiKeyRef.current = true;
     setIsClearingApiKey(true);
     setError("");
-    setSaveState("saving");
+    setSyncErrorKind(null);
     try {
-      const cleared = await clearAISettingsApiKey();
+      if (aiSaveTimerRef.current) {
+        clearTimeout(aiSaveTimerRef.current);
+        aiSaveTimerRef.current = null;
+      }
+      if (aiSettingsLoadedRef.current) {
+        saveController.setDesired(desiredAfterClear);
+        setApiKey("");
+        await saveController.flushLatest();
+      }
+      const saveFailedBeforeClear = saveController.getState().status === "error";
+      setSaveState("saving");
+      const cleared = await runSerializedAIWrite(clearAISettingsApiKey);
       const { hasApiKey: configured, ...nextSettings } = cleared;
-      setSettings(nextSettings);
       setHasApiKey(configured);
       setApiKey("");
-      lastSavedAISettingsRef.current = serializeAISettings(nextSettings, "");
-      setSaveState("saved");
-      onSaved(cleared, aiCopy.apiKeyCleared);
+      const clearedSnapshot = createAISaveSnapshot(nextSettings, "");
+      saveController.resetPersisted(clearedSnapshot);
+
+      if (saveFailedBeforeClear) {
+        saveController.setDesired(desiredAfterClear);
+        await saveController.flushLatest();
+        if (desiredAfterClear.signature === clearedSnapshot.signature) {
+          setSettings(nextSettings);
+          onSaved(cleared, aiCopy.apiKeyCleared);
+        } else {
+          onNotify(aiCopy.apiKeyCleared);
+        }
+      } else {
+        setSettings(nextSettings);
+        setSaveState("saved");
+        onSaved(cleared, aiCopy.apiKeyCleared);
+      }
     } catch (clearError) {
+      setHasApiKey(true);
       setError(clearError instanceof Error ? clearError.message : aiCopy.apiKeyClearFailed);
+      setSyncErrorKind("save");
       setSaveState("error");
     } finally {
+      isClearingApiKeyRef.current = false;
       setIsClearingApiKey(false);
     }
   }
@@ -207,72 +283,36 @@ export function useSettingsWorkspace({
     notifyTimerRef.current = setTimeout(() => onNotify(message), 420);
   }
 
-  function saveCurrentAISettings(snapshot: AISaveSnapshot) {
-    const queueKey = `${snapshot.session}:${snapshot.signature}`;
-    const queuedSave = queuedAISavesRef.current.get(queueKey);
-    if (queuedSave) return queuedSave;
-
-    const savePromise = aiSaveQueueRef.current
-      .catch(() => undefined)
-      .then(() => persistAISettings(snapshot))
-      .finally(() => {
-        queuedAISavesRef.current.delete(queueKey);
-      });
-    aiSaveQueueRef.current = savePromise;
-    queuedAISavesRef.current.set(queueKey, savePromise);
-    return savePromise;
-  }
-
-  async function persistAISettings(snapshot: AISaveSnapshot) {
-    const isCurrentSession = () => snapshot.session === workspaceSessionRef.current;
-    const isCurrentSnapshot = () =>
-      isCurrentSession() &&
-      snapshot.signature === currentAISettingsSignatureRef.current;
-
-    if (isCurrentSnapshot()) {
-      setError("");
-      setSaveState("saving");
-    }
-
-    try {
-      const saved = await saveAISettings({
-        ...snapshot.settings,
-        apiKey: snapshot.apiKey.trim() || undefined
-      });
-      if (isCurrentSession()) {
-        lastSavedAISettingsRef.current = snapshot.signature;
-      }
-      if (!isCurrentSnapshot()) return;
-      const { hasApiKey: configured, ...nextSettings } = saved;
-      setSettings(nextSettings);
-      setHasApiKey(configured);
-      setSaveState("saved");
-      onSaved(saved);
-    } catch (saveError) {
-      if (!isCurrentSnapshot()) return;
-      setError(saveError instanceof Error ? saveError.message : getAIUiCopy(locale).settingsSaveFailed);
-      setSaveState("error");
-    }
-  }
-
   return {
     activeTab,
     setActiveTab,
     draft,
     updateDraft,
     settings,
-    setSettings,
+    setSettings: (nextSettings: AISettings) => {
+      if (!isClearingApiKeyRef.current) setSettings(nextSettings);
+    },
     apiKey,
-    setApiKey,
+    setApiKey: (nextApiKey: string) => {
+      if (!isClearingApiKeyRef.current) setApiKey(nextApiKey);
+    },
     hasApiKey,
     isLoading,
     isSaving: saveState === "saving",
     saveState,
+    syncErrorKind,
     isClearingApiKey,
     error,
     handleLocaleChange,
     handleClearApiKey,
     closeWorkspace
+  };
+}
+
+function createAISaveSnapshot(settings: AISettings, apiKey: string): SaveSnapshot<AISaveValue> {
+  return {
+    signature: serializeAISettings(settings, apiKey),
+    value: { settings, apiKey }
   };
 }
 

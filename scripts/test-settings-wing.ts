@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { getAIUiCopy } from "../lib/ai/ui-copy";
 import { settingsCopy } from "../lib/settings/copy";
 import type { Locale } from "../lib/types";
 
@@ -8,12 +9,14 @@ const lyricEditor = readFileSync(resolve("components/editor/LyricEditor.tsx"), "
 const settingsSurface = readFileSync(resolve("components/settings/SettingsSurface.tsx"), "utf8");
 const settingsNavigation = readFileSync(resolve("components/settings/SettingsNavigation.tsx"), "utf8");
 const settingsWorkspace = readFileSync(resolve("components/settings/useSettingsWorkspace.ts"), "utf8");
+const saveController = readFileSync(resolve("lib/ai/ai-settings-save-controller.ts"), "utf8");
 const settingsLayout = readFileSync(resolve("components/settings/SettingsLayout.tsx"), "utf8");
 const preferences = readFileSync(resolve("components/editor/hooks/useEditorPreferences.ts"), "utf8");
 const editorHeader = readFileSync(resolve("components/editor/EditorHeader.tsx"), "utf8");
 const generalSettings = readFileSync(resolve("components/settings/GeneralSettingsSection.tsx"), "utf8");
 const appearanceSettings = readFileSync(resolve("components/settings/AppearanceSettingsSection.tsx"), "utf8");
 const exportSettings = readFileSync(resolve("components/settings/ExportSettingsSection.tsx"), "utf8");
+const aiSettingsSection = readFileSync(resolve("components/settings/AiSettingsSection.tsx"), "utf8");
 const dynamicBackground = readFileSync(resolve("components/layout/DynamicAppBackground.tsx"), "utf8");
 const aiTranslateButton = readFileSync(resolve("components/lyrics/AiTranslateButton.tsx"), "utf8");
 const lyricInput = readFileSync(resolve("components/editor/LyricInput.tsx"), "utf8");
@@ -33,6 +36,7 @@ assert.doesNotMatch(settingsSurface, /aria-modal|MotionDialog|createPortal|bg-bl
 assert.doesNotMatch(settingsSurface, /settings-wing[^"\n]*rounded-/);
 assert.match(settingsSurface, /workspace\.saveState === "pending"/);
 assert.match(settingsSurface, /workspace\.saveState === "error"/);
+assert.match(settingsSurface, /workspace\.syncErrorKind === "load" \? aiCopy\.loadFailed : aiCopy\.saveFailed/);
 assert.match(settingsSurface, /isActive=\{isActive\}/);
 assert.match(settingsNavigation, /settings-navigation-mobile/);
 assert.match(settingsNavigation, /isActive: boolean/);
@@ -57,12 +61,25 @@ assert.match(exportSettings, /<SegmentedControl/);
 assert.doesNotMatch(exportSettings, /<SelectField/);
 assert.match(aiTranslateButton, /ai-translate-trigger h-11/);
 assert.match(lyricInput, /<ActionButton\s+size="md"\s+icon=\{<SplitSquareVertical/);
-assert.match(settingsWorkspace, /export type SaveState = "saved" \| "pending" \| "saving" \| "error"/);
-assert.match(settingsWorkspace, /setSaveState\("pending"\)/);
+assert.match(settingsWorkspace, /createLatestSaveController/);
+assert.match(settingsWorkspace, /saveController\.setDesired\(createAISaveSnapshot\(settings, apiKey\)\)/);
+assert.match(settingsWorkspace, /void saveController\.flushLatest\(\)/);
+assert.match(settingsWorkspace, /saveController\.whenIdle\(\)/);
+assert.match(settingsWorkspace, /setSaveState\(saveController\.getState\(\)\.status\)/);
+assert.match(settingsWorkspace, /saveController\.getState\(\)\.status === "error"/);
+assert.match(settingsWorkspace, /runSerializedAIWrite\(clearAISettingsApiKey\)/);
+assert.match(settingsWorkspace, /if \(isClearingApiKeyRef\.current\) return/);
+assert.match(settingsWorkspace, /desiredAfterClear = createAISaveSnapshot\(settings, ""\)/);
+assert.match(settingsWorkspace, /saveFailedBeforeClear = saveController\.getState\(\)\.status === "error"/);
+assert.doesNotMatch(settingsWorkspace, /if \(!hasApiKey\) \{/);
+assert.match(settingsSurface, /disabled=\{workspace\.isClearingApiKey\}/);
+assert.match(aiSettingsSection, /disabled=\{isClearingApiKey\}/);
 assert.match(settingsWorkspace, /setSaveState\("error"\)/);
-assert.match(settingsWorkspace, /void saveCurrentAISettings\(snapshot\)/);
 assert.match(settingsWorkspace, /\}, 700\)/);
-assert.match(settingsWorkspace, /signature !== lastSavedAISettingsRef\.current/);
+assert.doesNotMatch(settingsWorkspace, /lastSavedAISettingsRef|queuedAISavesRef/);
+assert.match(saveController, /while \(desiredSnapshot && desiredSnapshot\.signature !== persistedSignature\)/);
+assert.match(saveController, /persistedSignature = undefined/);
+assert.match(saveController, /onPersisted\?\.\(result, snapshot, isLatest\)/);
 assert.match(settingsWorkspace, /removeBackgroundImage\(previousImageId\)/);
 assert.match(settingsLayout, /function SettingsSectionHeader/);
 assert.match(settingsLayout, /function SettingsGroup/);
@@ -71,9 +88,12 @@ assert.doesNotMatch(preferences, /isSettingsOpen|openSettings|closeSettings/);
 
 for (const locale of ["zh", "zh-TW", "en", "fr", "ja", "es"] satisfies Locale[]) {
   const copy = settingsCopy[locale];
+  const aiCopy = getAIUiCopy(locale);
+  assert.ok(aiCopy.loadFailed.trim(), `${locale} loadFailed`);
+  assert.ok(aiCopy.saveFailed.trim(), `${locale} saveFailed`);
   for (const key of ["generalDescription", "appearanceDescription", "exportDescription", "aiDescription", "aboutDescription"] as const) {
     assert.ok(copy[key].trim(), `${locale} ${key}`);
   }
 }
 
-console.log(JSON.stringify({ ok: true, settingsWingTests: 55 }, null, 2));
+console.log(JSON.stringify({ ok: true, settingsWingTests: 71 }, null, 2));
