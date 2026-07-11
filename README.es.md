@@ -60,8 +60,12 @@ El instalador se recomienda para uso habitual. La versión portable es útil par
 
 ### Aspectos destacados de la versión 4.6.2
 
-* Se corrige la escritura de reemplazo en los campos del escritorio, incluidos los preajustes de IA y las reglas de formato desbloqueadas.
-* Cada preajuste incorpora Restablecer y la Biblioteca de prompts permite restablecer todo con una sola acción.
+* Se corrige el bloqueo de todas las páginas y campos de texto después de restablecer un preajuste; el restablecimiento ya no abre un diálogo nativo bloqueante.
+* Las reglas de formato estrictas pasan a ser un módulo de seguridad integrado e inmutable y se eliminan todas las entradas para desbloquear su edición.
+* Se añade navegación global Atrás, Adelante y de ruta para todas las categorías y subpáginas de Ajustes, unificada en la cabecera superior izquierda.
+* La vista previa de la tarjeta real queda fijada arriba durante el desplazamiento y se elimina la tarjeta independiente de vista previa tipográfica.
+* Las cuatro tarjetas de ejemplo se acortan ligeramente y se elimina la etiqueta «Álbum».
+* Cada preajuste conserva Restablecer y la Biblioteca de prompts conserva Restablecer todo.
 * Los preajustes personalizados conservan el título y el prompt iniciales como base de restauración, también al migrar datos existentes.
 * El botón verde maximizado muestra ahora «Modo ventana» y se simplifica la descripción de la Biblioteca de prompts.
 * El borde de la vista previa en directo se adapta a la altura de la tarjeta y elimina el gran espacio vacío inferior.

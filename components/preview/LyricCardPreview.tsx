@@ -24,20 +24,40 @@ export function LyricCardPreview({
 }) {
   const shellRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(320);
+  const [availableHeight, setAvailableHeight] = useState(320);
   const size = getCardSize(style);
-  const scale = Math.min(Math.max(width, 280) / size.width, 0.52);
+  const widthScale = Math.max(width, 120) / size.width;
+  const heightScale = Math.max(availableHeight, 120) / size.height;
+  const scale = Math.min(widthScale, heightScale, 0.52);
 
   useEffect(() => {
-    if (!shellRef.current) {
-      return;
-    }
+    const shell = shellRef.current;
+    if (!shell) return;
 
-    const observer = new ResizeObserver(([entry]) => {
-      setWidth(entry.contentRect.width);
-    });
-    observer.observe(shellRef.current);
+    let frame = 0;
+    const measure = () => {
+      window.cancelAnimationFrame(frame);
+      frame = window.requestAnimationFrame(() => {
+        const rect = shell.getBoundingClientRect();
+        const styles = window.getComputedStyle(shell);
+        const horizontalPadding = Number.parseFloat(styles.paddingLeft) + Number.parseFloat(styles.paddingRight);
+        const verticalPadding = Number.parseFloat(styles.paddingTop) + Number.parseFloat(styles.paddingBottom);
+        setWidth(Math.max(0, shell.clientWidth - horizontalPadding));
+        setAvailableHeight(Math.max(0, window.innerHeight - rect.top - verticalPadding - 16));
+      });
+    };
+    const observer = new ResizeObserver(measure);
+    observer.observe(shell);
+    window.addEventListener("resize", measure);
+    window.addEventListener("scroll", measure, true);
+    measure();
 
-    return () => observer.disconnect();
+    return () => {
+      window.cancelAnimationFrame(frame);
+      observer.disconnect();
+      window.removeEventListener("resize", measure);
+      window.removeEventListener("scroll", measure, true);
+    };
   }, []);
 
   return (
@@ -51,7 +71,12 @@ export function LyricCardPreview({
           {size.width}x{size.height}
         </span>
       </div>
-      <div ref={shellRef} data-testid="lyric-card-preview-shell" className="flex min-w-0 items-center justify-center overflow-hidden rounded-lg bg-black/18 p-3">
+      <div
+        ref={shellRef}
+        data-testid="lyric-card-preview-shell"
+        data-preview-scale={scale.toFixed(4)}
+        className="flex min-w-0 items-center justify-center overflow-hidden rounded-lg bg-black/18 p-3"
+      >
         <div
           style={{
             width: size.width * scale,

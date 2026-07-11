@@ -321,7 +321,6 @@ const stylePanelSource = readFileSync(resolve("components/editor/StylePanel.tsx"
 const colorControlsSource = readFileSync(resolve("components/editor/style-panel/ColorControls.tsx"), "utf8");
 const previewPaneSource = readFileSync(resolve("components/editor/PreviewPane.tsx"), "utf8");
 const lyricCardPreviewSource = readFileSync(resolve("components/preview/LyricCardPreview.tsx"), "utf8");
-const fontPreviewSource = readFileSync(resolve("components/editor/font-scheme/FontSchemePreviewPanel.tsx"), "utf8");
 const lyricCardSource = readFileSync(resolve("components/preview/LyricCard.tsx"), "utf8");
 const autoHeightSource = readFileSync(resolve("components/editor/hooks/useMeasuredAutoCanvasHeight.ts"), "utf8");
 const landscapeCardSource = readFileSync(resolve("components/preview/LandscapeLyricCard.tsx"), "utf8");
@@ -342,15 +341,12 @@ assert.ok(stylePanelSource.includes("<RangeSlider"), "layout range inputs use th
 assert.ok(!stylePanelSource.includes('label={t("coverCrop")}'), "cover crop control is removed");
 assert.ok(colorControlsSource.includes('{ value: "white", label: t("pureWhite") }'), "white mode is exposed");
 assert.ok(!colorControlsSource.includes("TEXT_COLOR_PRESETS"), "legacy color presets are not exposed");
-assert.ok(previewPaneSource.includes("textColor={style.textColorMode"), "font preview receives the effective text color");
+assert.ok(previewPaneSource.includes("fontSchemePreview ? { ...style, fontScheme: fontSchemePreview } : style"), "font draft previews use the real card");
+assert.ok(previewPaneSource.includes("lg:sticky lg:top-0 lg:z-20"), "the right preview pane stays pinned above scrolling controls");
+assert.ok(!previewPaneSource.includes("FontSchemePreviewPanel"), "the dedicated font preview card is removed");
 assert.ok(lyricCardPreviewSource.includes("self-start"), "live preview panel follows its own content height");
 assert.ok(!lyricCardPreviewSource.includes("min-h-[520px]"), "live preview canvas no longer reserves empty vertical space");
 assert.ok(!lyricCardPreviewSource.includes("min-h-[calc(100vh-48px)]"), "live preview border no longer stretches to the viewport");
-assert.ok(fontPreviewSource.includes("style={{ color: textColor }}"), "font preview original text follows the selected color");
-assert.ok(fontPreviewSource.includes("withAlpha(textColor, 0.66)"), "font preview romanization follows the selected color");
-assert.ok(fontPreviewSource.includes("withAlpha(textColor, 0.86)"), "font preview translation follows the selected color");
-assert.ok(!fontPreviewSource.includes("text-white/66"), "font preview does not hard-code romanized text to white");
-assert.ok(!fontPreviewSource.includes("text-white/86"), "font preview does not hard-code translated text to white");
 assert.ok(!lyricCardSource.includes("cropScale={style.coverCropScale}"), "portrait rendering fixes crop scale");
 assert.ok(!landscapeCardSource.includes("cropScale={style.coverCropScale}"), "landscape rendering fixes crop scale");
 assert.ok(instrumentalBlockSource.includes("data-instrumental-song-info"), "instrumental metadata has a dedicated spaced layout");

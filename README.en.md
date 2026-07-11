@@ -60,8 +60,12 @@ The installer is recommended for regular use. The portable version is useful for
 
 ### v4.6.2 Highlights
 
-* Fixed replacement typing in desktop text fields, including AI presets and unlocked Strict Format Rules.
-* Added a Reset button to every prompt preset and a one-click Reset all action on the Prompt Library page.
+* Fixed the issue where resetting a prompt preset made every page and text field non-interactive; reset actions no longer invoke a blocking native confirmation dialog.
+* Made Strict Format Rules an immutable built-in safety module and removed every unlock-editing entry point.
+* Added global Back, Forward, and path navigation for every Settings category and subpage, unified in the upper-left header.
+* Pinned the real card preview to the top while the editor scrolls and removed the separate font-preview card from Text Design.
+* Slightly shortened the four example-song cards and removed their “Album” labels.
+* Kept Reset on every prompt preset and Reset all on the Prompt Library page.
 * Custom presets now preserve their initial title and prompt as a reset baseline; existing data migrates without losing content.
 * Renamed the maximized green-button tooltip to “Windowed” and simplified the Prompt Library description.
 * Made the Live Preview border follow the card content height instead of leaving a large blank area below it.

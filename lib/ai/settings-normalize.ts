@@ -16,15 +16,15 @@ export function normalizePromptLibrary(input: unknown): AIPromptLibrary {
   const localeOverrides: AIPromptLibrary["localeOverrides"] = {};
   for (const locale of LOCALES) {
     const normalized = normalizeLocaleOverrides(rawLocaleOverrides[locale]);
-    if (normalized.formatRulesOverride || normalized.styleOverrides.length) {
+    if (normalized.styleOverrides.length) {
       localeOverrides[locale] = normalized;
     }
   }
 
   // Migrate the short-lived v4.6 development schema without leaking its text into every locale.
-  if (!localeOverrides.zh && (source.formatRulesOverride || source.styleOverrides)) {
+  if (!localeOverrides.zh && source.styleOverrides) {
     const legacy = normalizeLocaleOverrides(source);
-    if (legacy.formatRulesOverride || legacy.styleOverrides.length) localeOverrides.zh = legacy;
+    if (legacy.styleOverrides.length) localeOverrides.zh = legacy;
   }
 
   const normalizedCustom = (Array.isArray(source.customPresets) ? source.customPresets : [])
@@ -47,12 +47,13 @@ export function normalizePromptLibrary(input: unknown): AIPromptLibrary {
 }
 
 export function getLocalePromptOverrides(library: AIPromptLibrary, locale: Locale): AILocalePromptOverrides {
-  return library.localeOverrides[locale] ?? { formatRulesOverride: "", styleOverrides: [] };
+  const overrides = library.localeOverrides[locale];
+  return { formatRulesOverride: "", styleOverrides: overrides?.styleOverrides ?? [] };
 }
 
 export function setLocalePromptOverrides(library: AIPromptLibrary, locale: Locale, overrides: AILocalePromptOverrides): AIPromptLibrary {
   const localeOverrides = { ...library.localeOverrides };
-  if (overrides.formatRulesOverride.trim() || overrides.styleOverrides.length) localeOverrides[locale] = overrides;
+  if (overrides.styleOverrides.length) localeOverrides[locale] = { ...overrides, formatRulesOverride: "" };
   else delete localeOverrides[locale];
   return { ...library, localeOverrides };
 }
@@ -89,7 +90,7 @@ function normalizeLocaleOverrides(input: unknown): AILocalePromptOverrides {
         prompt: cleanText(item.prompt, 4000)
       }])
   ).values());
-  return { formatRulesOverride: cleanText(source.formatRulesOverride, 6000), styleOverrides };
+  return { formatRulesOverride: "", styleOverrides };
 }
 
 function cleanText(value: unknown, maxLength: number) {

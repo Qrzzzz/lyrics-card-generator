@@ -21,6 +21,10 @@ const APP_ID = "com.lyriccard.generator";
 const START_TIMEOUT_MS = 45000;
 const WINDOW_BACKGROUND_COLOR = "#20242D";
 
+if (process.env.LYRICS_CARD_TEST_USER_DATA) {
+  app.setPath("userData", path.resolve(process.env.LYRICS_CARD_TEST_USER_DATA));
+}
+
 app.commandLine.appendSwitch(
   "enable-features",
   "OverlayScrollbar,OverlayScrollbarFlashAfterAnyScrollUpdate,OverlayScrollbarFlashWhenMouseEnter"

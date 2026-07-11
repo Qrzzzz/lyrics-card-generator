@@ -95,6 +95,9 @@ jobs:
       - name: Build Windows desktop artifacts
         run: npm run desktop:build
 
+      - name: Run packaged desktop interaction regression
+        run: npm run desktop:interaction-test
+
       - name: Verify Windows desktop artifacts
         shell: pwsh
         run: |
@@ -104,3 +107,11 @@ jobs:
             throw "Expected both NSIS and portable Windows artifacts."
           }
           @($setup + $portable) | Select-Object Name, Length
+
+      - name: Upload desktop interaction evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: desktop-interaction-evidence-${{ github.run_attempt }}
+          path: playwright-report/desktop
+          if-no-files-found: ignore

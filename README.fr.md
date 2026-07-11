@@ -60,8 +60,12 @@ L'installateur est recommandé pour une utilisation régulière. La version port
 
 ### Points clés de la v4.6.2
 
-* Correction de la saisie de remplacement dans les champs du bureau, notamment les préréglages IA et les règles de format déverrouillées.
-* Ajout d’un bouton Réinitialiser à chaque préréglage et d’une action Tout réinitialiser dans la Bibliothèque de prompts.
+* Correction du blocage de toutes les pages et zones de texte après la réinitialisation d’un préréglage ; la réinitialisation n’utilise plus de boîte de confirmation native bloquante.
+* Les règles de format strictes deviennent un module de sécurité intégré immuable et tous les accès de déverrouillage sont supprimés.
+* Ajout d’une navigation globale Précédent, Suivant et chemin pour toutes les catégories et sous-pages des Réglages, réunie dans l’en-tête supérieur gauche.
+* L’aperçu de la vraie carte reste fixé en haut pendant le défilement et la carte d’aperçu des polices séparée est supprimée.
+* Les quatre cartes d’exemple sont légèrement raccourcies et leur libellé « Album » est supprimé.
+* Chaque préréglage conserve Réinitialiser et la Bibliothèque de prompts conserve Tout réinitialiser.
 * Les préréglages personnalisés conservent leur titre et leur prompt initiaux comme base de réinitialisation, y compris après migration.
 * Le bouton vert maximisé affiche désormais « Mode fenêtré » et la description de la bibliothèque a été simplifiée.
 * Le cadre de l’aperçu en direct suit maintenant la hauteur de la carte sans grand espace vide inférieur.

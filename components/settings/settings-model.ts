@@ -2,6 +2,16 @@ import type { LucideIcon } from "lucide-react";
 
 export type SettingsTabId = "general" | "appearance" | "export" | "ai" | "about";
 
+export type SettingsDestination = {
+  section: SettingsTabId;
+  path: string[];
+};
+
+export type SettingsHistoryState = {
+  entries: SettingsDestination[];
+  index: number;
+};
+
 export type SettingsContentWidth = "narrow" | "wide";
 
 export type SettingsTabDefinition = {
