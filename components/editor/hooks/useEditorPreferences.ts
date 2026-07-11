@@ -23,6 +23,7 @@ export function useEditorPreferences({ currentLocale, applyLocale }: UseEditorPr
   const [backgroundImageUrl, setBackgroundImageUrl] = useState<string>();
   const [isDesktopShell, setIsDesktopShell] = useState(false);
   const [isFirstLaunchOpen, setIsFirstLaunchOpen] = useState(false);
+  const [preferencesLoaded, setPreferencesLoaded] = useState(false);
   const committedUserSettingsRef = useRef<UserSettings>(DEFAULT_USER_SETTINGS);
   const applyLocaleRef = useRef(applyLocale);
   applyLocaleRef.current = applyLocale;
@@ -71,19 +72,24 @@ export function useEditorPreferences({ currentLocale, applyLocale }: UseEditorPr
     document.body.dataset.desktopShell = desktopShell ? "true" : "false";
     let active = true;
 
-    void loadAppPreferences().then(({ locale: storedLocale, userSettings: loadedSettings }) => {
-      if (!active) {
-        return;
-      }
+    void loadAppPreferences()
+      .then(({ locale: storedLocale, userSettings: loadedSettings }) => {
+        if (!active) {
+          return;
+        }
 
-      committedUserSettingsRef.current = loadedSettings;
-      setUserSettings(loadedSettings);
-      syncWindowMaterial(loadedSettings);
-      if (isSupportedLocale(storedLocale)) {
-        applyLocaleRef.current(storedLocale);
-      }
-      setIsFirstLaunchOpen(shouldShowFirstLaunchLanguage(storedLocale, loadedSettings));
-    });
+        committedUserSettingsRef.current = loadedSettings;
+        setUserSettings(loadedSettings);
+        syncWindowMaterial(loadedSettings);
+        if (isSupportedLocale(storedLocale)) {
+          applyLocaleRef.current(storedLocale);
+        }
+        setIsFirstLaunchOpen(shouldShowFirstLaunchLanguage(storedLocale, loadedSettings));
+      })
+      .catch(() => undefined)
+      .finally(() => {
+        if (active) setPreferencesLoaded(true);
+      });
 
     return () => {
       active = false;
@@ -98,6 +104,13 @@ export function useEditorPreferences({ currentLocale, applyLocale }: UseEditorPr
       delete document.body.dataset.uiTheme;
     };
   }, [userSettings.uiThemeMode, userSettings.uiAcrylicEnabled]);
+
+  useEffect(() => {
+    document.body.dataset.reduceMotion = !preferencesLoaded || userSettings.reduceMotionEnabled ? "true" : "false";
+    return () => {
+      delete document.body.dataset.reduceMotion;
+    };
+  }, [preferencesLoaded, userSettings.reduceMotionEnabled]);
 
   useEffect(() => {
     let active = true;
@@ -134,6 +147,7 @@ export function useEditorPreferences({ currentLocale, applyLocale }: UseEditorPr
     backgroundImageUrl,
     isDesktopShell,
     isFirstLaunchOpen,
+    preferencesLoaded,
     previewUserSettings,
     commitUserSettings,
     setLocale,

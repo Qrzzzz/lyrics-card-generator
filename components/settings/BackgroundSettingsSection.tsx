@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { ImagePlus, RotateCcw } from "lucide-react";
-import { ActionButton, FieldLabel, SelectField, TextInput } from "@/components/ui/controls";
+import { ActionButton, FieldLabel, RangeSlider, SelectField, TextInput } from "@/components/ui/controls";
 import { getLyricsCardDesktopApi } from "@/lib/desktop-api";
 import { UI_ACCENT_PRESETS } from "@/lib/settings/accent";
 import { extractAverageColor, storeBackgroundImage } from "@/lib/settings/background-storage";
@@ -106,8 +106,7 @@ export function BackgroundSettingsSection({
       </ActionButton>
 
       <FieldLabel label={copy.overlay} hint={`${Math.round(settings.appBackground.overlayOpacity * 100)}%`}>
-        <TextInput
-          type="range"
+        <RangeSlider
           min="0"
           max="0.9"
           step="0.02"
@@ -118,8 +117,7 @@ export function BackgroundSettingsSection({
 
       {settings.appBackground.mode === "image-blur" ? (
         <FieldLabel label={copy.blurAmount} hint={`${settings.appBackground.blurAmount}px`}>
-          <TextInput
-            type="range"
+          <RangeSlider
             min="0"
             max="80"
             value={settings.appBackground.blurAmount}

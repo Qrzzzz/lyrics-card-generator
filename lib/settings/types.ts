@@ -25,6 +25,7 @@ export type ExportQualityId = "low" | "medium" | "high";
 export type UserSettings = {
   version: 1;
   sparkCursorEnabled: boolean;
+  reduceMotionEnabled: boolean;
   uiThemeMode: UiThemeMode;
   uiAcrylicEnabled: boolean;
   uiFontFamily: string;
@@ -40,6 +41,9 @@ export type UserSettings = {
     overlayOpacity: number;
     blurAmount: number;
   };
+  defaultShowGeneratedWatermark: boolean;
+  defaultShowSharedBy: boolean;
+  defaultSharedByText: string;
   defaultExportQuality: ExportQualityId;
   defaultExportPixelRatio: number;
   firstLaunchLanguageSelected: boolean;
@@ -58,6 +62,7 @@ export function getExportPixelRatio(quality: ExportQualityId): number {
 export const DEFAULT_USER_SETTINGS: UserSettings = {
   version: 1,
   sparkCursorEnabled: true,
+  reduceMotionEnabled: false,
   uiThemeMode: "album-dynamic",
   uiAcrylicEnabled: false,
   uiFontFamily: "",
@@ -70,6 +75,9 @@ export const DEFAULT_USER_SETTINGS: UserSettings = {
     overlayOpacity: 0.46,
     blurAmount: 24
   },
+  defaultShowGeneratedWatermark: false,
+  defaultShowSharedBy: false,
+  defaultSharedByText: "",
   defaultExportQuality: "high",
   defaultExportPixelRatio: 2,
   firstLaunchLanguageSelected: false

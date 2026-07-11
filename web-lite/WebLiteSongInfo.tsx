@@ -21,6 +21,7 @@ export function WebLiteSongInfo({
   onSongChange,
   onLocalCover,
   onRemoteCover,
+  onTransientStateChange,
   coverResetGeneration,
   validationGenerationRef
 }: {
@@ -30,6 +31,7 @@ export function WebLiteSongInfo({
   onSongChange: (song: SongInfo) => void;
   onLocalCover: (file: File) => void;
   onRemoteCover: (url: string, requestId: number) => boolean;
+  onTransientStateChange: (hasTransientState: boolean) => void;
   coverResetGeneration: number;
   validationGenerationRef: MutableRefObject<number>;
 }) {
@@ -46,6 +48,10 @@ export function WebLiteSongInfo({
       setRemoteCoverInput(song.coverUrl);
     }
   }, [song.coverUrl]);
+
+  useEffect(() => {
+    onTransientStateChange(Boolean(remoteCoverInput.trim() || status || isChecking));
+  }, [isChecking, onTransientStateChange, remoteCoverInput, status]);
 
   useEffect(() => {
     if (previousCoverResetGenerationRef.current === coverResetGeneration) {

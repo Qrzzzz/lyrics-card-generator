@@ -1,7 +1,8 @@
 "use client";
 
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import { useAppReducedMotion } from "@/components/motion/AppMotionProvider";
 import {
   dialogOverlayVariants,
   dialogPanelVariants,
@@ -29,7 +30,7 @@ export function MotionDialogOverlay({
   exit = "exit",
   ...props
 }: MotionDialogOverlayProps) {
-  const reducedMotion = useReducedMotion() ?? false;
+  const reducedMotion = useAppReducedMotion();
 
   return (
     <motion.div
@@ -54,7 +55,7 @@ export function MotionDialogPanel({
   exit = "exit",
   ...props
 }: MotionDialogPanelProps) {
-  const reducedMotion = useReducedMotion() ?? false;
+  const reducedMotion = useAppReducedMotion();
 
   return (
     <motion.div

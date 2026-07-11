@@ -1,7 +1,8 @@
 "use client";
 
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import { useAppMotionReady, useAppReducedMotion } from "@/components/motion/AppMotionProvider";
 import {
   panelTransition,
   panelVariants,
@@ -21,15 +22,16 @@ export function MotionPanel({
   exit,
   ...props
 }: MotionPanelProps) {
-  const reducedMotion = useReducedMotion() ?? false;
+  const reducedMotion = useAppReducedMotion();
+  const motionReady = useAppMotionReady();
 
   return (
     <motion.div
-      initial={initial}
-      animate={animate}
+      initial={motionReady ? initial : false}
+      animate={motionReady ? animate : "initial"}
       exit={exit}
-      variants={variants ?? panelVariants(reducedMotion)}
-      transition={transition ?? (reducedMotion ? reducedMotionTransition : panelTransition)}
+      variants={variants ?? panelVariants(motionReady ? reducedMotion : false)}
+      transition={!motionReady ? reducedMotionTransition : transition ?? (reducedMotion ? reducedMotionTransition : panelTransition)}
       {...props}
     >
       {children}

@@ -32,6 +32,7 @@ let normalWindowBounds = null;
 let windowMaximized = false;
 let windowRestoring = false;
 let lastEmittedWindowState = null;
+let appPreferencesWriteQueue = Promise.resolve();
 const aiTranslationRequests = new Map();
 
 const DEFAULT_AI_SETTINGS = {
@@ -443,7 +444,7 @@ function registerDesktopIpc() {
   ipcMain.handle("lyrics-card:app-preferences-save", async (_event, input) => {
     const preferences = normalizeStoredPreferences(input);
     if (!preferences) return false;
-    await writeAppPreferences(preferences);
+    await enqueueAppPreferencesWrite(preferences);
     return true;
   });
 
@@ -604,6 +605,14 @@ async function writeAppPreferences(preferences) {
   await fs.mkdir(app.getPath("userData"), { recursive: true });
   await fs.writeFile(getAppPreferencesPath(), JSON.stringify(preferences, null, 2), { encoding: "utf8", mode: 0o600 });
   await fs.chmod(getAppPreferencesPath(), 0o600).catch(() => undefined);
+}
+
+function enqueueAppPreferencesWrite(preferences) {
+  const operation = appPreferencesWriteQueue
+    .catch(() => undefined)
+    .then(() => writeAppPreferences(preferences));
+  appPreferencesWriteQueue = operation;
+  return operation;
 }
 
 async function readAppPreferences() {

@@ -14,25 +14,37 @@ import type { AppState } from "../lib/types";
 const defaults = normalizeUserSettings(undefined);
 assert.equal(defaults.uiThemeMode, DEFAULT_USER_SETTINGS.uiThemeMode);
 assert.equal(defaults.uiAcrylicEnabled, false);
+assert.equal(defaults.reduceMotionEnabled, false);
 assert.equal(defaults.uiAccentMode, "album-dynamic");
 assert.equal(resolveUiAccentColor({ settings: defaults, palette: { colors: [], primary: "#2255AA", dark: "#111827", light: "#FFFFFF", muted: "#64748B", averageLuminance: 0.2, averageSaturation: 0.6, hueVariance: 0.5, isLightCover: false, kind: "colorful" } }), "#2255AA");
 assert.equal(defaults.appBackground.mode, DEFAULT_USER_SETTINGS.appBackground.mode);
 assert.equal(defaults.defaultExportPixelRatio, DEFAULT_USER_SETTINGS.defaultExportPixelRatio);
+assert.equal(defaults.defaultShowGeneratedWatermark, false);
+assert.equal(defaults.defaultShowSharedBy, false);
+assert.equal(defaults.defaultSharedByText, "");
 assert.equal(shouldShowFirstLaunchLanguage(null, defaults), true);
 assert.equal(shouldShowFirstLaunchLanguage("zh", defaults), true);
 assert.equal(shouldShowFirstLaunchLanguage("zh", { ...defaults, firstLaunchLanguageSelected: true }), false);
 
 const migrated = normalizeUserSettings({
   sparkCursorEnabled: false,
+  reduceMotionEnabled: true,
   uiTheme: "light-blue",
+  defaultShowGeneratedWatermark: true,
+  defaultShowSharedBy: true,
+  defaultSharedByText: "Shared by Test",
   defaultExportQuality: "ultra",
   defaultExportPixelRatio: 99,
   appBackground: { mode: "image-cover", solidColor: "invalid", overlayOpacity: 2, blurAmount: -4 }
 });
 assert.equal(migrated.sparkCursorEnabled, false);
+assert.equal(migrated.reduceMotionEnabled, true);
 assert.equal(migrated.uiThemeMode, "light");
 assert.equal(migrated.defaultExportQuality, "high");
 assert.equal(migrated.defaultExportPixelRatio, 2);
+assert.equal(migrated.defaultShowGeneratedWatermark, true);
+assert.equal(migrated.defaultShowSharedBy, true);
+assert.equal(migrated.defaultSharedByText, "Shared by Test");
 assert.equal(migrated.appBackground.mode, "album-dynamic");
 assert.equal(migrated.appBackground.solidColor, DEFAULT_USER_SETTINGS.appBackground.solidColor);
 assert.equal(migrated.appBackground.overlayOpacity, DEFAULT_USER_SETTINGS.appBackground.overlayOpacity);
@@ -65,6 +77,17 @@ assert.equal(imageBackground.appBackground.extractedColor, undefined);
 assert.equal(resolveEffectiveAppBackgroundColor(imageBackground, "#080910"), "#080910");
 assert.equal(defaults.appBackground.mode, "album-dynamic");
 assert.equal(defaults.defaultExportPixelRatio, 2);
+
+const normalizedExportDefaults = normalizeUserSettings({
+  reduceMotionEnabled: "yes",
+  defaultShowGeneratedWatermark: 1,
+  defaultShowSharedBy: "true",
+  defaultSharedByText: "x".repeat(180)
+});
+assert.equal(normalizedExportDefaults.reduceMotionEnabled, false);
+assert.equal(normalizedExportDefaults.defaultShowGeneratedWatermark, false);
+assert.equal(normalizedExportDefaults.defaultShowSharedBy, false);
+assert.equal(normalizedExportDefaults.defaultSharedByText.length, 120);
 
 const settingsBeforeClear = structuredClone(legacyCustom);
 const cleared = clearLyricContent({

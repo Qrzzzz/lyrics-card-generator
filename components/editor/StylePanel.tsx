@@ -5,14 +5,14 @@ import { FontSchemePanel } from "@/components/editor/font-scheme/FontSchemePanel
 import { ColorControls } from "@/components/editor/style-panel/ColorControls";
 import {
   FieldLabel,
+  RangeSlider,
   Section,
   SegmentedControl,
-  SelectField,
   SettingRow,
   TextInput,
   ToggleRow
 } from "@/components/ui/controls";
-import { PRESET_CARD_SIZES } from "@/lib/card-size";
+import { AUTO_HEIGHT_MIN, PRESET_CARD_SIZES } from "@/lib/card-size";
 import { getLyricsCardDesktopApi, type SystemFontOption } from "@/lib/desktop-api";
 import { canBrowserUseFont, quoteSingleFontFamily, sanitizeCssFontFamilyName } from "@/lib/fonts";
 import type { createT } from "@/lib/i18n";
@@ -310,6 +310,18 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
   const layoutMode = isInstrumental ? "portrait" : style.layoutMode ?? "portrait";
   const instrumentalLayoutLockedHint = t("instrumentalLayoutLockedHint");
   const [instrumentalModeTitle, instrumentalModeQualifier] = t("instrumentalMode").split(/\s*\/\s*/, 2);
+  const sizeModeOptions =
+    layoutMode === "landscape"
+      ? [
+          { value: "16:9", label: t("sixteenNine") },
+          { value: "21:9", label: t("twentyOneNine") },
+          { value: "3:2", label: t("threeTwo") },
+          { value: "custom", label: t("custom") }
+        ]
+      : [
+          { value: "1:1", label: t("square") },
+          { value: "custom", label: t("custom") }
+        ];
 
   function update<K extends keyof CardStyle>(key: K, value: CardStyle[K]) {
     onStyleChange({ ...style, [key]: value });
@@ -376,11 +388,19 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
     });
   }
 
+  function updateAutoHeight(autoHeight: boolean) {
+    onStyleChange({
+      ...style,
+      autoHeight,
+      height: autoHeight ? style.height : Math.max(style.height, 720)
+    });
+  }
+
   return (
     <Section title={t("layout")} eyebrow={t("style")} variant="plain" contentClassName="gap-0">
       <SettingRow
         label={t("contentType")}
-        className="sm:grid-cols-[minmax(0,1fr)_minmax(280px,340px)]"
+        className="sm:grid-cols-[minmax(0,1fr)_minmax(220px,280px)]"
       >
         <SegmentedControl<ContentMode>
           value={style.contentMode}
@@ -403,7 +423,8 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
             }
           ]}
           aria-label={t("contentType")}
-          className="[&_.segmented-control__item]:px-2 [&_.segmented-control__item]:text-[13px]"
+          size="sm"
+          className="w-full max-w-[280px] justify-self-end [&_.segmented-control__item]:px-2 [&_.segmented-control__item]:text-[13px]"
         />
       </SettingRow>
 
@@ -425,25 +446,18 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
       </SettingRow>
 
       <SettingRow label={t("sizeMode")} description={isInstrumental ? t("instrumentalSizeLockedHint") : undefined}>
-        <SelectField
+        <SegmentedControl<CardRatio>
           aria-label={t("sizeMode")}
           value={isInstrumental ? "1:1" : style.ratio}
-          disabled={isInstrumental}
-          onChange={(event) => updateRatio(event.target.value as CardRatio)}
-        >
-          {layoutMode === "landscape" ? (
-            <>
-              <option value="16:9">{t("sixteenNine")}</option>
-              <option value="21:9">{t("twentyOneNine")}</option>
-              <option value="3:2">{t("threeTwo")}</option>
-            </>
-          ) : (
-            <>
-              <option value="1:1">{t("square")}</option>
-            </>
-          )}
-          <option value="custom">{t("custom")}</option>
-        </SelectField>
+          onChange={updateRatio}
+          columns={layoutMode === "landscape" ? 4 : 2}
+          size="sm"
+          options={sizeModeOptions.map((option) => ({ ...option, disabled: isInstrumental })) as Array<{
+            value: CardRatio;
+            label: string;
+            disabled: boolean;
+          }>}
+        />
       </SettingRow>
 
       {!isInstrumental && style.ratio === "custom" ? (
@@ -456,9 +470,8 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <FieldLabel label={t("width")} hint={`${style.width}px`}>
-              <TextInput
+              <RangeSlider
                 aria-label={t("width")}
-                type="range"
                 min={layoutMode === "landscape" ? 1080 : 720}
                 max={layoutMode === "landscape" ? 3000 : 1440}
                 step={20}
@@ -467,10 +480,9 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
               />
             </FieldLabel>
             <FieldLabel label={t("height")} hint={style.autoHeight ? t("auto") : `${style.height}px`}>
-              <TextInput
+              <RangeSlider
                 aria-label={t("height")}
-                type="range"
-                min={720}
+                min={style.autoHeight ? AUTO_HEIGHT_MIN : 720}
                 max={layoutMode === "landscape" ? 1600 : 3200}
                 step={20}
                 value={style.height}
@@ -479,16 +491,15 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
               />
             </FieldLabel>
           </div>
-          <ToggleRow label={t("autoHeight")} checked={style.autoHeight} onChange={(checked) => update("autoHeight", checked)} />
+          <ToggleRow label={t("autoHeight")} checked={style.autoHeight} onChange={updateAutoHeight} />
         </div>
       ) : null}
 
       {style.contentMode === "lyrics" ? (
         <>
           <SettingRow label={t("fontSize")} description={`${style.lyricFontSize}px`}>
-            <TextInput
+            <RangeSlider
               aria-label={t("fontSize")}
-              type="range"
               min={36}
               max={72}
               value={style.lyricFontSize}
@@ -496,9 +507,8 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
             />
           </SettingRow>
           <SettingRow label={t("lineHeight")} description={style.lineHeight.toFixed(2)}>
-            <TextInput
+            <RangeSlider
               aria-label={t("lineHeight")}
-              type="range"
               min={1.1}
               max={1.75}
               step={0.05}
@@ -522,9 +532,8 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
 
       {style.contentMode === "lyrics" && style.translationEnabled ? (
         <SettingRow label={t("translationScale")} description={style.translationScale.toFixed(2)}>
-          <TextInput
+          <RangeSlider
             aria-label={t("translationScale")}
-            type="range"
             min={0.6}
             max={0.9}
             step={0.01}

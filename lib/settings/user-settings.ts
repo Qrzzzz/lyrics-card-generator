@@ -88,6 +88,7 @@ export function normalizeUserSettings(input: unknown): UserSettings {
   return {
     version: 1,
     sparkCursorEnabled: typeof source.sparkCursorEnabled === "boolean" ? source.sparkCursorEnabled : true,
+    reduceMotionEnabled: source.reduceMotionEnabled === true,
     uiThemeMode,
     uiAcrylicEnabled: normalizeAcrylicEnabled(source, uiThemeMode),
     uiFontFamily: typeof source.uiFontFamily === "string" ? source.uiFontFamily.slice(0, 160) : "",
@@ -95,6 +96,11 @@ export function normalizeUserSettings(input: unknown): UserSettings {
     uiAccentPreset: normalizeAccentPreset(source.uiAccentPreset),
     uiCustomAccentColor: customAccentColor,
     appBackground: { ...DEFAULT_USER_SETTINGS.appBackground, mode: "album-dynamic" },
+    defaultShowGeneratedWatermark: source.defaultShowGeneratedWatermark === true,
+    defaultShowSharedBy: source.defaultShowSharedBy === true,
+    defaultSharedByText: typeof source.defaultSharedByText === "string"
+      ? source.defaultSharedByText.slice(0, 120)
+      : DEFAULT_USER_SETTINGS.defaultSharedByText,
     defaultExportQuality: quality,
     defaultExportPixelRatio: getExportPixelRatio(quality),
     firstLaunchLanguageSelected: source.firstLaunchLanguageSelected === true

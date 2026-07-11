@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { EditorHeader } from "@/components/editor/EditorHeader";
 import { ExamplesFloor } from "@/components/editor/ExamplesFloor";
 import { ExportCelebration } from "@/components/effects/ExportCelebration";
+import { AppToast, type ToastNotice } from "@/components/feedback/AppToast";
 import {
   DEFAULT_INSTRUMENTAL_TEXT,
   defaultState
@@ -15,6 +16,7 @@ import {
 } from "@/components/editor/hooks/useEditorAiTranslation";
 import { useEditorActions } from "@/components/editor/hooks/useEditorActions";
 import { useEditorPreferences } from "@/components/editor/hooks/useEditorPreferences";
+import { AppMotionProvider } from "@/components/motion/AppMotionProvider";
 import { MotionPanel } from "@/components/motion/MotionPanel";
 import { PreviewPane } from "@/components/editor/PreviewPane";
 import { SettingsStepper, type SettingsStep } from "@/components/editor/SettingsStepper";
@@ -62,19 +64,19 @@ export function LyricEditor() {
   const [activeSurface, setActiveSurface] = useState<ActiveSurface>("editor");
   const [requestedSettingsTab, setRequestedSettingsTab] = useState<SettingsTabId>();
   const [exportQuality, setExportQuality] = useState<ExportQualityId>(DEFAULT_USER_SETTINGS.defaultExportQuality);
-  const [toast, setToast] = useState("");
+  const [toast, setToast] = useState<ToastNotice | null>(null);
   const cardRef = useRef<HTMLElement | null>(null);
+  const toastIdRef = useRef(0);
   const stageRef = useRef<HTMLDivElement | null>(null);
   const headerRailRef = useRef<HTMLDivElement | null>(null);
   const settingsButtonRef = useRef<HTMLButtonElement | null>(null);
   const restoreSettingsFocusRef = useRef(false);
   const [headerDockY, setHeaderDockY] = useState(0);
   const t = useMemo(() => createT(state.locale), [state.locale]);
-  const shouldReduceMotion = useReducedMotion() ?? false;
+  const systemShouldReduceMotion = useReducedMotion() ?? false;
   const isExamplesSurfaceOpen = activeSurface === "examples";
   const isSettingsSurfaceOpen = activeSurface === "settings";
   const isEditorSurfaceActive = activeSurface === "editor";
-  const activeSurfaceTransition = shouldReduceMotion ? reducedSurfaceTransition : surfaceTransition;
 
   const parsedState = useMemo(
     () => ({
@@ -98,6 +100,7 @@ export function LyricEditor() {
     backgroundImageUrl,
     isDesktopShell,
     isFirstLaunchOpen,
+    preferencesLoaded,
     previewUserSettings,
     commitUserSettings: updateUserSettings,
     setLocale,
@@ -106,15 +109,30 @@ export function LyricEditor() {
     currentLocale: state.locale,
     applyLocale
   });
+  const shouldReduceMotion = userSettings.reduceMotionEnabled || systemShouldReduceMotion;
+  const activeSurfaceTransition = shouldReduceMotion ? reducedSurfaceTransition : surfaceTransition;
   const resolvedAccentColor = resolveUiAccentColor({
     settings: userSettings,
     palette: state.palette
   });
   const effectiveUiThemeId = resolveEffectiveUiThemeId(userSettings);
   const exportPixelRatio = getExportPixelRatio(exportQuality);
+
+  function showToast(message: string) {
+    const normalizedMessage = message.trim();
+    if (!normalizedMessage) {
+      setToast(null);
+      return;
+    }
+
+    toastIdRef.current += 1;
+    setToast({ id: toastIdRef.current, message: normalizedMessage });
+  }
+
   const {
     celebrationKey,
     isCompleteExporting,
+    clearTransitionKey,
     clearAllContent,
     handleStyleChange,
     setTranslation,
@@ -135,7 +153,8 @@ export function LyricEditor() {
     cardRef,
     exportPixelRatio,
     exampleLoadedMessage: settingsCopy[state.locale].exampleLoaded,
-    onNotify: setToast,
+    clearAlreadyEmptyMessage: settingsCopy[state.locale].clearAlreadyEmpty,
+    onNotify: showToast,
     onCloseExamples: () => setActiveSurface("editor"),
     onClearTransientState: () => setFontSchemePreview(null)
   });
@@ -144,13 +163,44 @@ export function LyricEditor() {
     if (!toast) {
       return;
     }
-    const timeout = window.setTimeout(() => setToast(""), 3600);
+    const timeout = window.setTimeout(() => setToast(null), 3600);
     return () => window.clearTimeout(timeout);
   }, [toast]);
 
   useEffect(() => {
     setExportQuality(userSettings.defaultExportQuality);
   }, [userSettings.defaultExportQuality]);
+
+  useEffect(() => {
+    setState((current) => {
+      const showGeneratedWatermark = userSettings.defaultShowGeneratedWatermark;
+      const showSharedBy = userSettings.defaultShowSharedBy;
+      const sharedByText = userSettings.defaultSharedByText;
+      if (
+        current.style.showGeneratedWatermark === showGeneratedWatermark &&
+        current.style.showWatermark === showGeneratedWatermark &&
+        current.style.showSharedBy === showSharedBy &&
+        current.style.sharedByText === sharedByText
+      ) {
+        return current;
+      }
+
+      return {
+        ...current,
+        style: {
+          ...current.style,
+          showGeneratedWatermark,
+          showWatermark: showGeneratedWatermark,
+          showSharedBy,
+          sharedByText
+        }
+      };
+    });
+  }, [
+    userSettings.defaultShowGeneratedWatermark,
+    userSettings.defaultShowSharedBy,
+    userSettings.defaultSharedByText
+  ]);
 
   useEffect(() => {
     const measureDockY = () => {
@@ -231,7 +281,7 @@ export function LyricEditor() {
       enabled: state.style.translationEnabled
     },
     setTranslation,
-    onNotify: setToast,
+    onNotify: showToast,
     onRequireSettings: () => openSettings("ai")
   });
 
@@ -266,7 +316,6 @@ export function LyricEditor() {
     t,
     canFetchLyrics,
     themeColor: resolvedAccentColor,
-    cardRef,
     isExporting: isCompleteExporting,
     exportQuality,
     ai: {
@@ -306,17 +355,19 @@ export function LyricEditor() {
   });
 
   return (
-    <div
-      className="app-shell min-h-screen"
-      data-ui-theme={effectiveUiThemeId}
-      data-desktop-shell={isDesktopShell ? "true" : "false"}
-      style={{
-        "--app-font-family": userSettings.uiFontFamily || undefined,
-        "--app-accent": resolvedAccentColor,
-        ...resolvedThemeTokens,
-        ...customThemeTokens
-      } as unknown as React.CSSProperties}
-    >
+    <AppMotionProvider reduceMotion={userSettings.reduceMotionEnabled} ready={preferencesLoaded}>
+      <div
+        className="app-shell min-h-screen"
+        data-ui-theme={effectiveUiThemeId}
+        data-desktop-shell={isDesktopShell ? "true" : "false"}
+        data-reduce-motion={!preferencesLoaded || shouldReduceMotion ? "true" : "false"}
+        style={{
+          "--app-font-family": userSettings.uiFontFamily || undefined,
+          "--app-accent": resolvedAccentColor,
+          ...resolvedThemeTokens,
+          ...customThemeTokens
+        } as unknown as React.CSSProperties}
+      >
       <DesktopTitleBar locale={state.locale} />
       <DynamicAppBackground palette={state.palette} settings={userSettings} imageUrl={backgroundImageUrl} />
       <ClickSpark enabled={userSettings.sparkCursorEnabled} themeColor={resolvedAccentColor}>
@@ -380,6 +431,7 @@ export function LyricEditor() {
                     cardRef={cardRef}
                     fontSchemePreview={fontSchemePreview}
                     showFontSchemePreview={settingsSteps[currentStep]?.id === "font"}
+                    clearTransitionKey={clearTransitionKey}
                     locale={state.locale}
                     t={t}
                   />
@@ -399,9 +451,9 @@ export function LyricEditor() {
               onClose={closeSettings}
               onSaved={(settings, message) => {
                 setAISettings(settings);
-                setToast(message || aiCopy.settingsSaved);
+                showToast(message || aiCopy.settingsSaved);
               }}
-              onNotify={setToast}
+              onNotify={showToast}
             />
 
             <motion.div
@@ -434,12 +486,9 @@ export function LyricEditor() {
         </main>
       </ClickSpark>
       <FirstLaunchLanguageDialog open={isFirstLaunchOpen} locale={state.locale} onChoose={chooseFirstLaunchLanguage} />
-      {toast ? (
-        <div role="status" className="status-info fixed bottom-5 left-1/2 z-[130] max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-lg border px-4 py-3 text-sm shadow-2xl backdrop-blur-xl">
-          {toast}
-        </div>
-      ) : null}
-      <ExportCelebration burstKey={celebrationKey} accentColor={resolvedAccentColor} />
-    </div>
+      <AppToast notice={toast} accentColor={resolvedAccentColor} />
+        <ExportCelebration burstKey={celebrationKey} accentColor={resolvedAccentColor} />
+      </div>
+    </AppMotionProvider>
   );
 }

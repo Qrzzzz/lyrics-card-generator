@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v4.4.6.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v4.5.0.en.md">Release Notes</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
   <a href="#features">Features</a> ·
   <a href="#local-development">Local Development</a> ·
@@ -51,30 +51,31 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 Download the latest version from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Recommended installer: `Lyrics Card Generator Setup 4.4.6.exe`
-* Portable version: `Lyrics Card Generator-4.4.6-portable.exe`
+* Recommended installer: `Lyrics Card Generator Setup 4.5.0.exe`
+* Portable version: `Lyrics Card Generator-4.5.0-portable.exe`
 
 The installer is recommended for regular use. The portable version is useful for temporary use, testing, or running from a removable drive.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v4.4.6 Highlights
+### v4.5.0 Highlights
 
-* Balanced spacing across the six-step Stepper and bottom navigation, removed the navigation’s large outer frame, and restored the Settings Wing’s missing horizontal transition.
-* Matched Settings to the editor’s visual language, unified its X feedback, and removed the persistent saved label; title-bar traffic lights are livelier and easier to click, and the app icon is borderless.
-* Reorganized controls in steps three through five: Text Design now owns White or custom text color, Cover Crop is removed, and Instrumental, portrait size, and alignment controls are clearer.
-* Refined the step-six export hierarchy and added an animated PNG-generation state without changing the quality slider or Complete & Export button behavior.
+* Improved the spacing of title, artist, and album information on Instrumental / No Lyrics cards, showing the album like lyric cards whenever an album name is available.
+* Restored the title-bar traffic lights to a flat style and tightened the gaps between them while preserving their current motion.
+* Added animated content transitions between Settings tabs. General now includes a reduced-motion switch that is off by default while continuing to respect the system preference.
+* Added default watermark and sharer settings before Export Quality. Sharer is off by default; when enabled, its default text field updates the current card immediately.
+* Added a leftward preview-card handoff and an already-empty notice to Clear All, refined lightweight notices, and removed redundant information cards and outer frames from the Export step.
 
 ## 🌐 Multilingual Release Notes
 
 The GitHub Release page defaults to a simplified Chinese short version, while the full release notes are maintained in `docs/releases/`:
 
-* [简体中文](./docs/releases/v4.4.6.zh-CN.md)
-* [繁體中文](./docs/releases/v4.4.6.zh-TW.md)
-* [English](./docs/releases/v4.4.6.en.md)
-* [Français](./docs/releases/v4.4.6.fr.md)
-* [日本語](./docs/releases/v4.4.6.ja.md)
-* [Español](./docs/releases/v4.4.6.es.md)
+* [简体中文](./docs/releases/v4.5.0.zh-CN.md)
+* [繁體中文](./docs/releases/v4.5.0.zh-TW.md)
+* [English](./docs/releases/v4.5.0.en.md)
+* [Français](./docs/releases/v4.5.0.fr.md)
+* [日本語](./docs/releases/v4.5.0.ja.md)
+* [Español](./docs/releases/v4.5.0.es.md)
 
 <a id="features"></a>
 

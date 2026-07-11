@@ -342,12 +342,12 @@ body[data-window-maximized="true"] .app-shell[data-desktop-shell="true"] {
   place-items: center;
   border: 0;
   border-radius: 999px;
-  padding: 5px;
+  padding: 6px;
   background: var(--traffic-light-color);
   background-clip: content-box;
   cursor: pointer;
   opacity: 0.94;
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.24));
+  filter: none;
   transform-origin: center;
   transition:
     opacity 180ms var(--motion-ease-standard),
@@ -356,35 +356,12 @@ body[data-window-maximized="true"] .app-shell[data-desktop-shell="true"] {
     box-shadow 180ms var(--motion-ease-standard);
 }
 
-.traffic-light::before {
-  content: "";
-  position: absolute;
-  inset: 5px;
-  border-radius: inherit;
-  background: radial-gradient(circle at 34% 26%, rgba(255, 255, 255, 0.72), transparent 42%);
-  opacity: 0.62;
-  box-shadow:
-    inset 0 0 0 0.5px rgba(0, 0, 0, 0.28),
-    inset 0 1px 1px rgba(255, 255, 255, 0.34);
-  pointer-events: none;
-  transition:
-    opacity 180ms var(--motion-ease-standard),
-    transform 180ms var(--motion-ease-emphasized);
-}
-
 .traffic-light:hover {
   opacity: 1;
   transform: translateY(-1px) scale(1.11);
   filter:
     brightness(1.08)
-    saturate(1.08)
-    drop-shadow(0 4px 6px color-mix(in srgb, var(--traffic-light-color) 44%, transparent));
-}
-
-.traffic-light:hover::before,
-.traffic-light:focus-visible::before {
-  opacity: 0.9;
-  transform: scale(1.08);
+    saturate(1.08);
 }
 
 .traffic-light:active {
@@ -911,6 +888,92 @@ button {
   opacity: 0.82;
 }
 
+.range-slider {
+  --range-track-rest: color-mix(in srgb, rgb(var(--app-fg)) 16%, transparent);
+  width: 100%;
+  height: 2.75rem;
+  margin: 0;
+  padding-inline: 0.125rem;
+  appearance: none;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  cursor: pointer;
+  outline: none;
+}
+
+.range-slider::-webkit-slider-runnable-track {
+  height: 0.55rem;
+  border: 1px solid color-mix(in srgb, rgb(var(--app-fg)) 10%, transparent);
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--app-accent) 88%, white) 0,
+    var(--app-accent) var(--range-progress),
+    var(--range-track-rest) var(--range-progress),
+    var(--range-track-rest) 100%
+  );
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.22);
+}
+
+.range-slider::-webkit-slider-thumb {
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-top: -0.42rem;
+  appearance: none;
+  border: 3px solid var(--app-accent);
+  border-radius: 999px;
+  background: rgb(var(--app-fg));
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--app-accent) 12%, transparent),
+    0 5px 14px rgba(0, 0, 0, 0.28);
+  transition:
+    box-shadow var(--motion-duration-fast) var(--motion-ease-standard),
+    transform var(--motion-duration-fast) var(--motion-ease-emphasized);
+}
+
+.range-slider:hover:not(:disabled)::-webkit-slider-thumb,
+.range-slider:focus-visible::-webkit-slider-thumb {
+  box-shadow:
+    0 0 0 6px color-mix(in srgb, var(--app-accent) 18%, transparent),
+    0 7px 18px rgba(0, 0, 0, 0.32);
+  transform: scale(1.06);
+}
+
+.range-slider::-moz-range-track {
+  height: 0.55rem;
+  border: 1px solid color-mix(in srgb, rgb(var(--app-fg)) 10%, transparent);
+  border-radius: 999px;
+  background: var(--range-track-rest);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.22);
+}
+
+.range-slider::-moz-range-progress {
+  height: 0.55rem;
+  border-radius: 999px;
+  background: var(--app-accent);
+}
+
+.range-slider::-moz-range-thumb {
+  width: 0.95rem;
+  height: 0.95rem;
+  border: 3px solid var(--app-accent);
+  border-radius: 999px;
+  background: rgb(var(--app-fg));
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--app-accent) 12%, transparent),
+    0 5px 14px rgba(0, 0, 0, 0.28);
+}
+
+.range-slider:focus-visible {
+  box-shadow: 0 0 0 4px var(--control-focus-ring);
+}
+
+.range-slider:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+}
+
 .settings-surface {
   --control-focus-border: color-mix(in srgb, var(--ai-accent, #7de1ff) 64%, #ffffff);
   --control-focus-ring: color-mix(in srgb, var(--ai-accent, #7de1ff) 16%, transparent);
@@ -952,9 +1015,50 @@ button {
   background: rgba(15, 23, 42, 0.36);
 }
 
+body[data-reduce-motion="true"] *,
+body[data-reduce-motion="true"] *::before,
+body[data-reduce-motion="true"] *::after,
+.app-shell[data-reduce-motion="true"] *,
+.app-shell[data-reduce-motion="true"] *::before,
+.app-shell[data-reduce-motion="true"] *::after {
+  scroll-behavior: auto !important;
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0ms !important;
+}
+
+body[data-reduce-motion="true"] .app-button:active:not(:disabled),
+body[data-reduce-motion="true"] .traffic-light:hover,
+body[data-reduce-motion="true"] .traffic-light:active,
+body[data-reduce-motion="true"] .app-shell button:not(:disabled):not([aria-disabled="true"]):hover,
+body[data-reduce-motion="true"] .app-shell button:not(:disabled):not([aria-disabled="true"]):hover:active,
+body[data-reduce-motion="true"] .control-surface:hover:not(:disabled):not([aria-disabled="true"]),
+body[data-reduce-motion="true"] .control-variant-primary:hover:not(:disabled):not([aria-disabled="true"]),
+body[data-reduce-motion="true"] .control-variant-danger:hover:not(:disabled):not([aria-disabled="true"]),
+body[data-reduce-motion="true"] .control-variant-ghost:hover:not(:disabled):not([aria-disabled="true"]),
+body[data-reduce-motion="true"] .control-variant-icon:hover:not(:disabled):not([aria-disabled="true"]),
+body[data-reduce-motion="true"] .option-card:hover:not(:disabled):not([aria-disabled="true"]),
+body[data-reduce-motion="true"] .segmented-control__item:hover:not(:disabled):not([aria-disabled="true"]),
+body[data-reduce-motion="true"] .example-song-card:hover,
+body[data-reduce-motion="true"] .example-song-card:active,
+body[data-reduce-motion="true"] .example-song-card:hover .example-song-card__cta-icon,
+body[data-reduce-motion="true"] .example-song-card:focus-visible .example-song-card__cta-icon,
+body[data-reduce-motion="true"] .examples-close-button:hover .examples-close-button__icon,
+body[data-reduce-motion="true"] .examples-close-button:focus-visible .examples-close-button__icon {
+  transform: none !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0ms !important;
+  }
+
   .traffic-light,
-  .traffic-light::before,
   .app-shell button:not(.traffic-light):not(.example-song-card),
   .examples-toggle-track,
   .examples-toggle-knob,
@@ -980,8 +1084,6 @@ button {
   .app-button:active:not(:disabled),
   .traffic-light:hover,
   .traffic-light:active,
-  .traffic-light:hover::before,
-  .traffic-light:focus-visible::before,
   .app-shell button:not(:disabled):not([aria-disabled="true"]):not(.traffic-light):not(.example-song-card):hover,
   .app-shell button:not(:disabled):not([aria-disabled="true"]):not(.traffic-light):not(.example-song-card):hover:active,
   .control-surface:hover:not(:disabled):not([aria-disabled="true"]),
@@ -1026,15 +1128,16 @@ button {
 
 .settings-wing__icon {
   display: grid;
-  height: 2.75rem;
-  width: 2.75rem;
+  height: 2rem;
+  width: 2rem;
   flex-shrink: 0;
   place-items: center;
   border: 0;
-  border-radius: 0.875rem;
-  background: color-mix(in srgb, var(--app-accent) 12%, transparent);
-  color: var(--app-accent);
+  border-radius: 0;
+  background: transparent;
+  color: rgb(var(--app-subtle));
   box-shadow: none;
+  opacity: 0.82;
 }
 
 .settings-wing__body {
@@ -1099,11 +1202,16 @@ button {
 }
 
 .settings-group-card {
-  border: 1px solid rgb(var(--panel-border));
-  border-radius: 1rem;
-  padding: 1rem;
-  background: color-mix(in srgb, rgb(var(--panel-bg)) 86%, transparent);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.055), 0 16px 40px rgba(0, 0, 0, 0.1);
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.settings-group-card > section > * + * {
+  border-top: 1px solid rgb(var(--panel-border));
+  padding-top: 1.25rem;
 }
 
 .settings-row {
@@ -1129,10 +1237,6 @@ button {
 
   .settings-wing__content {
     padding: 1.75rem 1.5rem 3rem;
-  }
-
-  .settings-group-card {
-    padding: 1.5rem;
   }
 
   .settings-row {
@@ -1195,6 +1299,16 @@ button {
 
   .settings-navigation__copy {
     display: none;
+  }
+
+  .settings-navigation__item > svg {
+    color: rgb(var(--app-subtle));
+    opacity: 0.82;
+  }
+
+  .settings-navigation__item[aria-current="page"] > svg {
+    color: rgb(var(--app-fg));
+    opacity: 1;
   }
 }
 

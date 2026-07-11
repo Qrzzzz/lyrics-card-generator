@@ -1,8 +1,9 @@
 "use client";
 
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { Bot, ChevronDown, Download, Info, Palette, SlidersHorizontal } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { useAppReducedMotion } from "@/components/motion/AppMotionProvider";
 import type { SettingsTabDefinition, SettingsTabId } from "@/components/settings/settings-model";
 import { motionSprings, reducedMotionTransition } from "@/lib/motion/tokens";
 import type { settingsCopy } from "@/lib/settings/copy";
@@ -31,7 +32,7 @@ export function SettingsNavigation({
   onChange: (id: SettingsTabId) => void;
   ariaLabel: string;
 }) {
-  const reduceMotion = useReducedMotion() ?? false;
+  const reduceMotion = useAppReducedMotion();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const mobileTriggerRef = useRef<HTMLButtonElement | null>(null);
   const activeTab = tabs.find((tab) => tab.id === active) ?? tabs[0];

@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import type {
   ButtonHTMLAttributes,
   CSSProperties,
@@ -13,6 +13,7 @@ import type {
   TextareaHTMLAttributes
 } from "react";
 import { Children, cloneElement, isValidElement, useId, useRef } from "react";
+import { useAppReducedMotion } from "@/components/motion/AppMotionProvider";
 import {
   controlHoverTarget,
   controlTapTarget,
@@ -137,6 +138,41 @@ export function TextInput(props: InputHTMLAttributes<HTMLInputElement>) {
   return <input {...props} className={cn(fieldShellClass, "h-11 px-3", props.className)} />;
 }
 
+export function RangeSlider({
+  min = 0,
+  max = 100,
+  value = 0,
+  className,
+  style,
+  ...props
+}: Omit<InputHTMLAttributes<HTMLInputElement>, "type">) {
+  const numericMin = Number(min);
+  const numericMax = Number(max);
+  const numericValue = Number(value);
+  const progress =
+    Number.isFinite(numericMin) &&
+    Number.isFinite(numericMax) &&
+    Number.isFinite(numericValue) &&
+    numericMax > numericMin
+      ? Math.min(100, Math.max(0, ((numericValue - numericMin) / (numericMax - numericMin)) * 100))
+      : 0;
+
+  return (
+    <input
+      {...props}
+      type="range"
+      min={min}
+      max={max}
+      value={value}
+      className={cn("range-slider", className)}
+      style={{
+        ...style,
+        "--range-progress": `${progress}%`
+      } as CSSProperties}
+    />
+  );
+}
+
 export function Input(props: InputHTMLAttributes<HTMLInputElement>) {
   return <TextInput {...props} />;
 }
@@ -249,7 +285,7 @@ export function ToggleRow({
   className
 }: ToggleRowProps) {
   const descriptionId = useId();
-  const reduceMotion = useReducedMotion();
+  const reduceMotion = useAppReducedMotion();
   const hoverMotion = disabled || reduceMotion ? undefined : controlHoverTarget;
   const pressMotion = disabled || reduceMotion ? undefined : subtleControlTapTarget;
 
@@ -336,7 +372,7 @@ export function ActionButton({
   ...props
 }: ActionButtonProps) {
   const isDisabled = disabled || loading;
-  const reduceMotion = useReducedMotion();
+  const reduceMotion = useAppReducedMotion();
   const hoverMotion = isDisabled || reduceMotion ? undefined : controlHoverTarget;
   const pressMotion = isDisabled || reduceMotion ? undefined : controlTapTarget;
   const resolvedLeftIcon = leftIcon ?? icon;
@@ -417,7 +453,7 @@ export function OptionCard({
   const resolvedShowIndicator = showIndicator ?? role === "radio";
   const resolvedTestId = testId ?? props["data-testid"];
   const resolvedTabIndex = props.tabIndex ?? (role === "radio" ? (selected ? 0 : -1) : undefined);
-  const reduceMotion = useReducedMotion();
+  const reduceMotion = useAppReducedMotion();
   const hoverMotion = disabled || reduceMotion ? undefined : controlHoverTarget;
   const pressMotion = disabled || reduceMotion ? undefined : subtleControlTapTarget;
 

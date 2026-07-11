@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ExportPanel } from "@/components/editor/ExportPanel";
+import { AppToast, type ToastNotice } from "@/components/feedback/AppToast";
 import { LyricInput } from "@/components/editor/LyricInput";
 import { MotionPanel } from "@/components/motion/MotionPanel";
 import { PreviewPane } from "@/components/editor/PreviewPane";
@@ -20,7 +21,7 @@ import {
   useResolvedTextColor
 } from "@/components/editor/hooks/useLyricEditorEffects";
 import { getCardSize } from "@/lib/card-size";
-import { clearLyricContent } from "@/lib/clear-content";
+import { clearLyricContent, hasClearableLyricContent } from "@/lib/clear-content";
 import { applyEditorStyleChange } from "@/lib/editor/apply-style-change";
 import { exportNodeAsPng } from "@/lib/export-image";
 import { createT } from "@/lib/i18n";
@@ -81,9 +82,12 @@ export function WebLiteEditor() {
     initialPreferences.exportQuality
   );
   const [isExporting, setIsExporting] = useState(false);
-  const [toast, setToast] = useState("");
+  const [toast, setToast] = useState<ToastNotice | null>(null);
+  const [clearTransitionKey, setClearTransitionKey] = useState(0);
+  const [hasPendingSongInput, setHasPendingSongInput] = useState(false);
   const [coverResetGeneration, setCoverResetGeneration] = useState(0);
   const cardRef = useRef<HTMLElement | null>(null);
+  const toastIdRef = useRef(0);
   const localCoverObjectUrlRef = useRef<string | undefined>(undefined);
   const coverValidationGenerationRef = useRef(0);
   const locale: WebLiteLocale = state.locale === "en" ? "en" : "zh";
@@ -142,7 +146,7 @@ export function WebLiteEditor() {
       return;
     }
 
-    const timeout = window.setTimeout(() => setToast(""), 3600);
+    const timeout = window.setTimeout(() => setToast(null), 3600);
     return () => window.clearTimeout(timeout);
   }, [toast]);
 
@@ -181,10 +185,21 @@ export function WebLiteEditor() {
     });
   }
 
+  function showToast(message: string) {
+    toastIdRef.current += 1;
+    setToast({ id: toastIdRef.current, message });
+  }
+
   function clearAllContent() {
+    if (!hasClearableLyricContent(state) && !hasPendingSongInput) {
+      showToast(copy.clearAlreadyEmpty);
+      return;
+    }
+
     invalidateCoverValidationAndResetSongInfo();
     revokeLocalCoverObjectUrl();
     setFontSchemePreview(null);
+    setClearTransitionKey((key) => key + 1);
     setState((current) => {
       const cleared = clearLyricContent(current);
       return {
@@ -299,10 +314,10 @@ export function WebLiteEditor() {
         size.height,
         getExportPixelRatio(exportQuality)
       );
-      setToast(copy.exportReady);
+      showToast(copy.exportReady);
     } catch (error) {
       console.error("[Lyrics Card Generator Web Lite] export failed", error);
-      setToast(copy.exportFailed);
+      showToast(copy.exportFailed);
     } finally {
       setIsExporting(false);
     }
@@ -327,6 +342,7 @@ export function WebLiteEditor() {
           onSongChange={setSong}
           onLocalCover={applyLocalCover}
           onRemoteCover={applyRemoteCover}
+          onTransientStateChange={setHasPendingSongInput}
           coverResetGeneration={coverResetGeneration}
           validationGenerationRef={coverValidationGenerationRef}
         />
@@ -397,7 +413,6 @@ export function WebLiteEditor() {
     {
       id: "export",
       title: t("step.export"),
-      description: t("exportHint"),
       isComplete: true,
       primaryAction: {
         label: t("step.complete"),
@@ -406,7 +421,6 @@ export function WebLiteEditor() {
       },
       content: (
         <ExportPanel
-          cardRef={cardRef}
           t={t}
           accentColor={accentColor}
           exportQuality={exportQuality}
@@ -418,7 +432,6 @@ export function WebLiteEditor() {
           qualityOptions={EXPORT_QUALITY_OPTIONS}
           qualityLabels={{ medium: copy.exportStandard, high: copy.exportHigh }}
           isExporting={isExporting}
-          onExport={completeAndExport}
         />
       )
     }
@@ -469,6 +482,7 @@ export function WebLiteEditor() {
                   cardRef={cardRef}
                   fontSchemePreview={fontSchemePreview}
                   showFontSchemePreview={steps[currentStep]?.id === "font"}
+                  clearTransitionKey={clearTransitionKey}
                   locale={locale}
                   t={t}
                 />
@@ -478,14 +492,7 @@ export function WebLiteEditor() {
         </div>
       </main>
 
-      {toast ? (
-        <div
-          role="status"
-          className="status-info fixed bottom-5 left-1/2 z-[130] max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-lg border px-4 py-3 text-sm shadow-2xl backdrop-blur-xl"
-        >
-          {toast}
-        </div>
-      ) : null}
+      <AppToast notice={toast} accentColor={accentColor} />
     </div>
   );
 }

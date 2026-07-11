@@ -1,10 +1,11 @@
 "use client";
 
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import { Check, Download } from "lucide-react";
 import type { ReactNode } from "react";
 import { useRef } from "react";
 import { useBalancedStepperLayout } from "@/components/editor/hooks/useBalancedStepperLayout";
+import { useAppReducedMotion } from "@/components/motion/AppMotionProvider";
 import { MotionPresence } from "@/components/motion/MotionPresence";
 import { getReadableForegroundColor } from "@/lib/contrast-color";
 import { StarBorder } from "@/components/ui/StarBorder";
@@ -54,7 +55,7 @@ export function SettingsStepper({
   backText = "Back",
   themeColor = "#7C3AED"
 }: SettingsStepperProps) {
-  const reduceMotion = useReducedMotion();
+  const reduceMotion = useAppReducedMotion();
   const previousStepRef = useRef(currentStep);
   const stepsGridRef = useRef<HTMLDivElement | null>(null);
   const stepsMeasureRef = useRef<HTMLDivElement | null>(null);

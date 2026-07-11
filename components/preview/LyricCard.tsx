@@ -77,7 +77,7 @@ export function LyricCard({
       >
         <div
           data-card-content
-          className="relative flex h-full w-full flex-col overflow-hidden rounded-none border border-transparent bg-transparent p-[18px] backdrop-blur-0"
+          className="relative flex h-full w-full flex-col overflow-hidden rounded-none border border-transparent bg-transparent px-[18px] pt-[18px] pb-[8px] backdrop-blur-0"
         >
           {(style.showCover || style.showSongInfo) && contentMode !== "instrumental" && layout.headerRect ? (
             <header
@@ -132,7 +132,7 @@ export function LyricCard({
             data-card-lyrics-viewport
             className={cn(
               "flex min-h-0 flex-1 items-center",
-              contentMode === "instrumental" ? "justify-center py-0" : "py-10",
+              contentMode === "instrumental" ? "justify-center py-0" : "pt-8 pb-4",
               contentMode === "lyrics" ? "overflow-hidden" : "justify-center"
             )}
             style={{
@@ -150,6 +150,7 @@ export function LyricCard({
                 textColor={textColor}
                 isDarkText={isDarkText}
                 showAlbumName={style.showAlbumName}
+                allowTwoLineTitle={style.allowTwoLineTitle}
               />
             ) : (
               <LyricsBlock

@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, useReducedMotion, type Transition } from "framer-motion";
+import { motion, type Transition } from "framer-motion";
 import { Loader2, Settings, X } from "lucide-react";
 import { useEffect, useMemo, useRef } from "react";
 import { AboutSettingsSection } from "@/components/settings/AboutSettingsSection";
@@ -8,6 +8,7 @@ import { AiSettingsSection } from "@/components/settings/AiSettingsSection";
 import { AppearanceSettingsSection } from "@/components/settings/AppearanceSettingsSection";
 import { ExportSettingsSection } from "@/components/settings/ExportSettingsSection";
 import { GeneralSettingsSection } from "@/components/settings/GeneralSettingsSection";
+import { useAppReducedMotion } from "@/components/motion/AppMotionProvider";
 import { SettingsGroup, SettingsSectionHeader } from "@/components/settings/SettingsLayout";
 import { getSettingsTabs, SettingsNavigation } from "@/components/settings/SettingsNavigation";
 import type { SettingsTabId } from "@/components/settings/settings-model";
@@ -15,6 +16,7 @@ import { useSettingsWorkspace } from "@/components/settings/useSettingsWorkspace
 import type { AISettingsSummary } from "@/lib/ai/types";
 import { getAIUiCopy } from "@/lib/ai/ui-copy";
 import { createT } from "@/lib/i18n";
+import { opacityTransition, reducedMotionTransition, tabPanelVariants } from "@/lib/motion/tokens";
 import { settingsCopy } from "@/lib/settings/copy";
 import type { UserSettings } from "@/lib/settings/types";
 import type { Locale } from "@/lib/types";
@@ -49,7 +51,7 @@ export function SettingsSurface({
   const copy = settingsCopy[locale];
   const aiCopy = getAIUiCopy(locale);
   const t = useMemo(() => createT(locale), [locale]);
-  const reduceMotion = useReducedMotion() ?? false;
+  const reduceMotion = useAppReducedMotion();
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
   const tabs = useMemo(() => getSettingsTabs(copy), [copy]);
   const workspace = useSettingsWorkspace({
@@ -65,6 +67,8 @@ export function SettingsSurface({
     onNotify
   });
   const activeTab = tabs.find((tab) => tab.id === workspace.activeTab) ?? tabs[0];
+  const tabVariants = tabPanelVariants(reduceMotion);
+  const tabTransition = reduceMotion ? reducedMotionTransition : opacityTransition;
   const saveStatus = workspace.saveState === "saved"
     ? null
     : workspace.saveState === "pending"
@@ -164,21 +168,29 @@ export function SettingsSurface({
           >
             <SettingsSectionHeader title={activeTab.label} description={activeTab.description} />
 
-            {tabs.map((tab) => (
-              <div
+            {tabs.map((tab) => {
+              const selected = tab.id === workspace.activeTab;
+              return (
+              <motion.div
                 key={tab.id}
-                hidden={tab.id !== workspace.activeTab}
-                aria-hidden={tab.id !== workspace.activeTab}
-                inert={tab.id !== workspace.activeTab ? true : undefined}
+                hidden={!selected}
+                aria-hidden={!selected}
+                inert={!selected ? true : undefined}
                 className="mt-6"
                 data-settings-panel={tab.id}
+                variants={tabVariants}
+                initial={false}
+                animate={selected ? "animate" : "initial"}
+                transition={tabTransition}
               >
                 <SettingsGroup>
                   {tab.id === "general" ? (
                     <GeneralSettingsSection
                       locale={locale}
                       copy={copy}
+                      settings={workspace.draft}
                       onLocaleChange={workspace.handleLocaleChange}
+                      onChange={workspace.updateDraft}
                     />
                   ) : tab.id === "appearance" ? (
                     <AppearanceSettingsSection settings={workspace.draft} copy={copy} onChange={workspace.updateDraft} />
@@ -205,8 +217,9 @@ export function SettingsSurface({
                     />
                   )}
                 </SettingsGroup>
-              </div>
-            ))}
+              </motion.div>
+              );
+            })}
 
             {workspace.error ? (
               <p role="alert" className="status-danger mt-4 rounded-xl border px-4 py-3 text-sm">{workspace.error}</p>
