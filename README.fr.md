@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v4.6.0.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v4.6.2.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="#développement-local">Développement local</a> ·
@@ -51,31 +51,31 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 Téléchargez la dernière version depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
 
-* Installateur recommandé : `Lyrics Card Generator Setup 4.6.0.exe`
-* Version portable : `Lyrics Card Generator-4.6.0-portable.exe`
+* Installateur recommandé : `Lyrics Card Generator Setup 4.6.2.exe`
+* Version portable : `Lyrics Card Generator-4.6.2-portable.exe`
 
 L'installateur est recommandé pour une utilisation régulière. La version portable convient aux essais, à une utilisation temporaire ou à un disque amovible.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### Points clés de la v4.6.0
+### Points clés de la v4.6.2
 
-* Refonte des réglages IA en deux pages, Configuration API et Bibliothèque de prompts, avec navigation Retour, Suivant et chemin cliquable.
-* Conservation de la version Recommandée protégée ; les cinq autres préréglages sont modifiables, supprimables, réinitialisables et restaurables, avec deux préréglages personnalisés supplémentaires.
-* Ajout sur le panneau principal d’une section personnalisée repliée, affichant au maximum deux préréglages utilisateur.
-* Séparation des règles de format strictes et des prompts de style, avec double confirmation avant modification et réinitialisation vers la v4.6.0.
-* Migration automatique des anciens réglages IA ; les styles personnalisés ne remplacent jamais la règle commune qui exige uniquement les paroles traduites.
+* Correction de la saisie de remplacement dans les champs du bureau, notamment les préréglages IA et les règles de format déverrouillées.
+* Ajout d’un bouton Réinitialiser à chaque préréglage et d’une action Tout réinitialiser dans la Bibliothèque de prompts.
+* Les préréglages personnalisés conservent leur titre et leur prompt initiaux comme base de réinitialisation, y compris après migration.
+* Le bouton vert maximisé affiche désormais « Mode fenêtré » et la description de la bibliothèque a été simplifiée.
+* Le cadre de l’aperçu en direct suit maintenant la hauteur de la carte sans grand espace vide inférieur.
 
 ## 🌐 Notes de publication multilingues
 
 La page GitHub Release utilise par défaut la version courte en chinois simplifié, les notes de publication complètes sont conservées dans `docs/releases/` :
 
-* [简体中文](./docs/releases/v4.6.0.zh-CN.md)
-* [繁體中文](./docs/releases/v4.6.0.zh-TW.md)
-* [English](./docs/releases/v4.6.0.en.md)
-* [Français](./docs/releases/v4.6.0.fr.md)
-* [日本語](./docs/releases/v4.6.0.ja.md)
-* [Español](./docs/releases/v4.6.0.es.md)
+* [简体中文](./docs/releases/v4.6.2.zh-CN.md)
+* [繁體中文](./docs/releases/v4.6.2.zh-TW.md)
+* [English](./docs/releases/v4.6.2.en.md)
+* [Français](./docs/releases/v4.6.2.fr.md)
+* [日本語](./docs/releases/v4.6.2.ja.md)
+* [Español](./docs/releases/v4.6.2.es.md)
 
 <a id="fonctionnalités-principales"></a>
 

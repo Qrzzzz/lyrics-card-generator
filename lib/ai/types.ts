@@ -20,6 +20,8 @@ export type AICustomPreset = {
   id: string;
   title: string;
   prompt: string;
+  initialTitle?: string;
+  initialPrompt?: string;
 };
 
 export type AILocalePromptOverrides = {

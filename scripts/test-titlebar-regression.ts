@@ -11,6 +11,9 @@ for (const locale of appLocales) {
   assert.ok(messages[locale]["titleBar.restore"], `${locale} restore copy`);
   assert.ok(messages[locale]["titleBar.close"], `${locale} close copy`);
 }
+assert.equal(messages.zh["titleBar.restore"], "窗口化");
+assert.equal(messages["zh-TW"]["titleBar.restore"], "窗口化");
+assert.equal(messages.en["titleBar.restore"], "Windowed");
 
 const titlebarSource = readFileSync(resolve("components/layout/DesktopTitleBar.tsx"), "utf8");
 assert.match(titlebarSource, /onWindowStateChanged/);

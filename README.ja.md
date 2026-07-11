@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v4.6.0.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v4.6.2.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="#ローカル開発">ローカル開発</a> ·
@@ -51,31 +51,31 @@
 
 最新版は [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) からダウンロードできます。
 
-* 推奨インストーラー：`Lyrics Card Generator Setup 4.6.0.exe`
-* ポータブル版：`Lyrics Card Generator-4.6.0-portable.exe`
+* 推奨インストーラー：`Lyrics Card Generator Setup 4.6.2.exe`
+* ポータブル版：`Lyrics Card Generator-4.6.2-portable.exe`
 
 通常利用にはインストーラーを推奨します。ポータブル版は一時利用、検証、リムーバブルドライブでの利用に向いています。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v4.6.0 の更新ポイント
+### v4.6.2 の更新ポイント
 
-* AI 設定を API 設定とプロンプトライブラリに分け、ファイル管理画面のような戻る、進む、パス移動を追加しました。
-* おすすめ版は固定し、他の 5 件は編集、削除、リセット、復元を可能にしました。さらにカスタムプリセットを最大 2 件追加できます。
-* メイン翻訳パネルに折りたたみ式のカスタム項目を追加し、展開時も最大 2 件だけ表示します。
-* 厳格な形式ルールとスタイルプロンプトを分離し、編集前の二重確認と v4.6.0 既定値へのリセットを追加しました。
-* 旧 AI 設定は自動移行され、カスタムスタイルを使っても翻訳本文だけを出力する共通ルールは維持されます。
+* AI プリセットとロック解除後の形式ルールを含め、デスクトップ版テキスト欄で全選択後に置換入力できない問題を修正しました。
+* 各プロンプトプリセットにリセットボタンを追加し、ライブラリ画面からすべてを一括リセットできるようにしました。
+* カスタムプリセットは初回保存時のタイトルとプロンプトを基準として保持し、既存データも内容を失わず移行します。
+* 最大化時の緑ボタン表示を「ウィンドウ表示」に変更し、プロンプトライブラリの説明を簡潔にしました。
+* ライブプレビューの枠をカード内容の高さに合わせ、下部の大きな空白を解消しました。
 
 ## 🌐 多言語リリースノート
 
 GitHub Release ページではデフォルトで簡体字中国語の短縮版が使用され、完全なリリースノートは `docs/releases/` にて管理されています：
 
-* [简体中文](./docs/releases/v4.6.0.zh-CN.md)
-* [繁體中文](./docs/releases/v4.6.0.zh-TW.md)
-* [English](./docs/releases/v4.6.0.en.md)
-* [Français](./docs/releases/v4.6.0.fr.md)
-* [日本語](./docs/releases/v4.6.0.ja.md)
-* [Español](./docs/releases/v4.6.0.es.md)
+* [简体中文](./docs/releases/v4.6.2.zh-CN.md)
+* [繁體中文](./docs/releases/v4.6.2.zh-TW.md)
+* [English](./docs/releases/v4.6.2.en.md)
+* [Français](./docs/releases/v4.6.2.fr.md)
+* [日本語](./docs/releases/v4.6.2.ja.md)
+* [Español](./docs/releases/v4.6.2.es.md)
 
 <a id="主な機能"></a>
 

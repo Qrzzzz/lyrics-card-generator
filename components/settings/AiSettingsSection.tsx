@@ -93,7 +93,7 @@ export function AiSettingsSection({
 
   function createDraft() {
     if (settings.promptLibrary.customPresets.length >= 2) return;
-    const draft = { id: `custom:${crypto.randomUUID()}`, title: "", prompt: "" };
+    const draft = { id: `custom:${crypto.randomUUID()}`, title: "", prompt: "", initialTitle: "", initialPrompt: "" };
     setDraftPreset(draft);
     navigate(`draft:${draft.id}`);
   }
@@ -105,7 +105,9 @@ export function AiSettingsSection({
       customPresets: [...settings.promptLibrary.customPresets, {
         ...draftPreset,
         title: draftPreset.title.trim(),
-        prompt: draftPreset.prompt.trim()
+        prompt: draftPreset.prompt.trim(),
+        initialTitle: draftPreset.title.trim(),
+        initialPrompt: draftPreset.prompt.trim()
       }]
     });
     setDraftPreset(null);
@@ -247,9 +249,19 @@ function PromptLibraryPage({ settings, locale, copy, onSettingsChange, onOpen, o
     });
   }
 
+  function resetAllPresets() {
+    if (!window.confirm(copy.resetAllConfirm)) return;
+    updateLibrary(settings, onSettingsChange, resetPromptLibraryToInitial(settings.promptLibrary));
+  }
+
+  const canResetAll = hasPromptLibraryChanges(settings.promptLibrary);
+
   return (
     <div className="grid gap-5">
-      <PageHeading icon={<FolderOpen className="h-5 w-5" />} title={copy.promptLibrary} description={copy.promptLibraryDescription} />
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <PageHeading icon={<FolderOpen className="h-5 w-5" />} title={copy.promptLibrary} description={copy.promptLibraryDescription} />
+        <ActionButton disabled={!canResetAll} onClick={resetAllPresets} leftIcon={<RotateCcw className="h-4 w-4" />}>{copy.resetAll}</ActionButton>
+      </div>
       <ExplorerCard icon={<FileLock2 className="h-6 w-6 text-amber-200" />} title={copy.formatRules} description={copy.formatRulesDescription} action={copy.open} badge={localeOverrides.formatRulesOverride ? copy.modified : undefined} onClick={() => onOpen("format")} />
 
       <div>
@@ -296,18 +308,30 @@ function FormatRulesPage({ settings, locale, copy, onSettingsChange }: { setting
   const [unlocked, setUnlocked] = useState(false);
   const defaultRules = getDefaultFormatRules(locale);
   const localeOverrides = getLocalePromptOverrides(settings.promptLibrary, locale);
-  const value = localeOverrides.formatRulesOverride || defaultRules;
+  const persistedValue = localeOverrides.formatRulesOverride || defaultRules;
+  const [draftValue, setDraftValue] = useState(persistedValue);
+
+  useEffect(() => {
+    if (!unlocked) setDraftValue(persistedValue);
+  }, [persistedValue, unlocked]);
 
   function requestUnlock() {
     if (!window.confirm(copy.unlockConfirmFirst)) return;
     if (!window.confirm(copy.unlockConfirmSecond)) return;
+    setDraftValue(persistedValue);
     setUnlocked(true);
   }
 
   function resetRules() {
     if (!window.confirm(copy.resetRulesConfirm)) return;
     updateLibrary(settings, onSettingsChange, setLocalePromptOverrides(settings.promptLibrary, locale, { ...localeOverrides, formatRulesOverride: "" }));
+    setDraftValue(defaultRules);
     setUnlocked(false);
+  }
+
+  function updateDraftValue(value: string) {
+    setDraftValue(value);
+    updateLibrary(settings, onSettingsChange, setLocalePromptOverrides(settings.promptLibrary, locale, { ...localeOverrides, formatRulesOverride: value }));
   }
 
   return (
@@ -316,7 +340,7 @@ function FormatRulesPage({ settings, locale, copy, onSettingsChange }: { setting
       <div className="rounded-xl border border-amber-300/25 bg-amber-300/10 p-4">
         <div className="flex gap-3"><AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-200" /><p className="text-sm leading-relaxed text-amber-50/90">{copy.formatRulesWarning}</p></div>
       </div>
-      <TextareaField aria-label={copy.formatRules} value={value} readOnly={!unlocked} className={`min-h-72 font-mono text-xs leading-relaxed ${unlocked ? "ring-1 ring-amber-300/40" : "opacity-80"}`} onChange={(event) => updateLibrary(settings, onSettingsChange, setLocalePromptOverrides(settings.promptLibrary, locale, { ...localeOverrides, formatRulesOverride: event.target.value }))} />
+      <TextareaField aria-label={copy.formatRules} value={draftValue} readOnly={!unlocked} className={`min-h-72 font-mono text-xs leading-relaxed ${unlocked ? "ring-1 ring-amber-300/40" : "opacity-80"}`} onChange={(event) => updateDraftValue(event.target.value)} />
       <div className="flex flex-wrap justify-end gap-2">
         {localeOverrides.formatRulesOverride ? <ActionButton onClick={resetRules} leftIcon={<RotateCcw className="h-4 w-4" />}>{copy.reset}</ActionButton> : null}
         <ActionButton variant={unlocked ? "primary" : "danger"} onClick={() => unlocked ? setUnlocked(false) : requestUnlock()} leftIcon={unlocked ? <LockKeyhole className="h-4 w-4" /> : <UnlockKeyhole className="h-4 w-4" />}>
@@ -366,8 +390,21 @@ function PresetEditorPage({ presetId, settings, locale, copy, onSettingsChange, 
   useEffect(() => {
     if (custom) setCustomDraft(custom);
   }, [custom?.id, presetId]);
-  const title = protectedPreset ? defaultStyle?.name || "" : override?.title || customDraft.title || defaultStyle?.name || "";
-  const prompt = protectedPreset ? getDefaultStylePrompt(locale, "recommended") : override?.prompt || customDraft.prompt || (editableBuiltIn ? getDefaultStylePrompt(locale, presetId) : "");
+  const title = protectedPreset
+    ? defaultStyle?.name || ""
+    : editableBuiltIn
+      ? override ? override.title : defaultStyle?.name || ""
+      : customDraft.title;
+  const prompt = protectedPreset
+    ? getDefaultStylePrompt(locale, "recommended")
+    : editableBuiltIn
+      ? override ? override.prompt : getDefaultStylePrompt(locale, presetId)
+      : customDraft.prompt;
+  const customInitialTitle = custom?.initialTitle || custom?.title || "";
+  const customInitialPrompt = custom?.initialPrompt || custom?.prompt || "";
+  const canReset = editableBuiltIn
+    ? Boolean(override)
+    : Boolean(custom && (customDraft.title !== customInitialTitle || customDraft.prompt !== customInitialPrompt));
 
   if (!builtIn && !custom) {
     return <div className="app-text-muted p-6 text-sm">{copy.customPresetsEmpty}</div>;
@@ -397,11 +434,22 @@ function PresetEditorPage({ presetId, settings, locale, copy, onSettingsChange, 
   }
 
   function resetPreset() {
-    if (!editableBuiltIn || !window.confirm(copy.resetPresetConfirm)) return;
-    updateLibrary(settings, onSettingsChange, setLocalePromptOverrides(settings.promptLibrary, locale, {
-      ...localeOverrides,
-      styleOverrides: localeOverrides.styleOverrides.filter((item) => item.id !== presetId)
-    }));
+    if (!canReset || !window.confirm(copy.resetPresetConfirm)) return;
+    if (editableBuiltIn) {
+      updateLibrary(settings, onSettingsChange, setLocalePromptOverrides(settings.promptLibrary, locale, {
+        ...localeOverrides,
+        styleOverrides: localeOverrides.styleOverrides.filter((item) => item.id !== presetId)
+      }));
+      return;
+    }
+    if (custom) {
+      const resetCustom = { ...custom, title: customInitialTitle, prompt: customInitialPrompt };
+      setCustomDraft(resetCustom);
+      updateLibrary(settings, onSettingsChange, {
+        ...settings.promptLibrary,
+        customPresets: settings.promptLibrary.customPresets.map((item) => item.id === presetId ? resetCustom : item)
+      });
+    }
   }
 
   function deletePreset() {
@@ -427,13 +475,15 @@ function PresetEditorPage({ presetId, settings, locale, copy, onSettingsChange, 
         <TextareaField value={prompt} readOnly={protectedPreset} maxLength={4000} placeholder={copy.presetPromptPlaceholder} className="min-h-64 text-sm leading-relaxed" onChange={(event) => updatePreset(title, event.target.value)} />
         <SettingTip>{copy.customPresetsDescription}</SettingTip>
       </FieldLabel>
-      {!protectedPreset ? (
-        <div className="flex flex-wrap justify-end gap-2">
-          {editableBuiltIn && override ? <ActionButton onClick={resetPreset} leftIcon={<RotateCcw className="h-4 w-4" />}>{copy.reset}</ActionButton> : null}
+      <div className="flex flex-wrap justify-end gap-2">
+        <ActionButton disabled={!canReset} onClick={resetPreset} leftIcon={<RotateCcw className="h-4 w-4" />}>{copy.reset}</ActionButton>
+        {!protectedPreset ? (
+          <>
           {custom ? <ActionButton variant="primary" disabled={!isValidCustomPreset(customDraft)} onClick={saveCustomPreset}>{copy.savePreset}</ActionButton> : null}
           <ActionButton variant="danger" onClick={deletePreset} leftIcon={<Trash2 className="h-4 w-4" />}>{copy.deletePreset}</ActionButton>
-        </div>
-      ) : null}
+          </>
+        ) : null}
+      </div>
     </div>
   );
 }
@@ -454,6 +504,27 @@ function ExplorerCard({ icon, title, description, action, badge, onClick }: { ic
 
 function updateLibrary(settings: AISettings, onSettingsChange: (settings: AISettings) => void, promptLibrary: AIPromptLibrary, removedDefaultId?: string) {
   onSettingsChange({ ...settings, defaultStyle: removedDefaultId === settings.defaultStyle ? "recommended" : settings.defaultStyle, promptLibrary });
+}
+
+export function resetPromptLibraryToInitial(promptLibrary: AIPromptLibrary): AIPromptLibrary {
+  return {
+    localeOverrides: {},
+    hiddenStyleIds: [],
+    customPresets: promptLibrary.customPresets.map((preset) => ({
+      ...preset,
+      title: preset.initialTitle || preset.title,
+      prompt: preset.initialPrompt || preset.prompt
+    }))
+  };
+}
+
+function hasPromptLibraryChanges(promptLibrary: AIPromptLibrary) {
+  return promptLibrary.hiddenStyleIds.length > 0
+    || Object.keys(promptLibrary.localeOverrides).length > 0
+    || promptLibrary.customPresets.some((preset) =>
+      preset.title !== (preset.initialTitle || preset.title)
+      || preset.prompt !== (preset.initialPrompt || preset.prompt)
+    );
 }
 
 function removeStyleOverrideFromAllLocales(library: AIPromptLibrary, id: EditableTranslationStyle) {
