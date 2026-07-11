@@ -1,8 +1,18 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { defaultState } from "../components/editor/editor-defaults";
 import { BACKGROUND_GRID_SIZE_BY_DENSITY, resolveBackgroundGridDensity } from "../lib/background-grid";
-import { normalizeInstrumentalLayout } from "../lib/card-style-normalize";
-import type { CardStyle } from "../lib/types";
+import { getCardSize, PRESET_CARD_SIZES } from "../lib/card-size";
+import {
+  FIXED_COVER_CROP_SCALE,
+  FIXED_WHITE_TEXT_COLOR,
+  normalizeCardStyle,
+  normalizeInstrumentalLayout
+} from "../lib/card-style-normalize";
+import { applyEditorStyleChange } from "../lib/editor/apply-style-change";
+import { messages } from "../lib/i18n";
+import type { AppState, CardStyle, Locale } from "../lib/types";
 
 const baseStyle: CardStyle = {
   backgroundMode: "palette",
@@ -81,6 +91,250 @@ assert.equal(defaultState.style.showAlbumName, true);
 assert.equal(defaultState.style.layoutMode, "portrait");
 assert.equal(defaultState.style.ratio, "custom");
 assert.equal(defaultState.style.autoHeight, true);
+assert.equal(defaultState.style.textColorMode, "preset");
+assert.equal(defaultState.style.textColorPreset, "white");
+assert.equal(defaultState.style.resolvedTextColor, FIXED_WHITE_TEXT_COLOR);
+assert.equal(defaultState.style.coverCropScale, FIXED_COVER_CROP_SCALE);
+
+const portraitStart: AppState = {
+  ...defaultState,
+  style: {
+    ...defaultState.style,
+    layoutMode: "portrait",
+    ratio: "custom",
+    width: 1040,
+    height: 1080,
+    autoHeight: true
+  },
+  lastPortraitSize: {
+    ratio: "custom",
+    width: 1040,
+    height: 1080,
+    autoHeight: true
+  },
+  lastLandscapeSize: undefined
+};
+const landscapeDefault = applyEditorStyleChange(portraitStart, {
+  ...portraitStart.style,
+  layoutMode: "landscape"
+});
+assert.deepEqual(
+  {
+    layoutMode: landscapeDefault.style.layoutMode,
+    ratio: landscapeDefault.style.ratio,
+    width: landscapeDefault.style.width,
+    height: landscapeDefault.style.height,
+    autoHeight: landscapeDefault.style.autoHeight
+  },
+  {
+    layoutMode: "landscape",
+    ratio: "16:9",
+    width: PRESET_CARD_SIZES["16:9"].width,
+    height: PRESET_CARD_SIZES["16:9"].height,
+    autoHeight: false
+  }
+);
+
+const portraitRestored = applyEditorStyleChange(landscapeDefault, {
+  ...landscapeDefault.style,
+  layoutMode: "portrait"
+});
+assert.deepEqual(
+  {
+    layoutMode: portraitRestored.style.layoutMode,
+    ratio: portraitRestored.style.ratio,
+    width: portraitRestored.style.width,
+    height: portraitRestored.style.height,
+    autoHeight: portraitRestored.style.autoHeight
+  },
+  {
+    layoutMode: "portrait",
+    ratio: "custom",
+    width: 1040,
+    height: 1080,
+    autoHeight: true
+  }
+);
+assert.deepEqual(getCardSize(portraitRestored.style), { width: 1040, height: 1080 });
+assert.notDeepEqual(getCardSize(portraitRestored.style), PRESET_CARD_SIZES["4:5"]);
+
+const landscapeRestored = applyEditorStyleChange(portraitRestored, {
+  ...portraitRestored.style,
+  layoutMode: "landscape"
+});
+assert.equal(landscapeRestored.style.ratio, "16:9");
+assert.deepEqual(getCardSize(landscapeRestored.style), PRESET_CARD_SIZES["16:9"]);
+
+const landscapeWide = applyEditorStyleChange(landscapeRestored, {
+  ...landscapeRestored.style,
+  ratio: "21:9",
+  width: PRESET_CARD_SIZES["21:9"].width,
+  height: PRESET_CARD_SIZES["21:9"].height,
+  autoHeight: false
+});
+const portraitAfterWide = applyEditorStyleChange(landscapeWide, {
+  ...landscapeWide.style,
+  layoutMode: "portrait"
+});
+const landscapeWideRestored = applyEditorStyleChange(portraitAfterWide, {
+  ...portraitAfterWide.style,
+  layoutMode: "landscape"
+});
+assert.deepEqual(
+  {
+    layoutMode: landscapeWideRestored.style.layoutMode,
+    ratio: landscapeWideRestored.style.ratio,
+    width: landscapeWideRestored.style.width,
+    height: landscapeWideRestored.style.height,
+    autoHeight: landscapeWideRestored.style.autoHeight
+  },
+  {
+    layoutMode: "landscape",
+    ratio: "21:9",
+    width: PRESET_CARD_SIZES["21:9"].width,
+    height: PRESET_CARD_SIZES["21:9"].height,
+    autoHeight: false
+  }
+);
+
+const portraitWithoutHistory = applyEditorStyleChange(
+  { ...landscapeWide, lastPortraitSize: undefined },
+  { ...landscapeWide.style, layoutMode: "portrait" }
+);
+assert.deepEqual(
+  {
+    layoutMode: portraitWithoutHistory.style.layoutMode,
+    ratio: portraitWithoutHistory.style.ratio,
+    width: portraitWithoutHistory.style.width,
+    height: portraitWithoutHistory.style.height,
+    autoHeight: portraitWithoutHistory.style.autoHeight
+  },
+  {
+    layoutMode: "portrait",
+    ratio: "custom",
+    width: 1040,
+    height: 1080,
+    autoHeight: true
+  }
+);
+
+const invalidPortraitRatioSize = getCardSize({
+  ...portraitRestored.style,
+  ratio: "16:9",
+  width: 1000,
+  height: 1200
+});
+assert.deepEqual(invalidPortraitRatioSize, { width: 1000, height: 1200 });
+assert.notDeepEqual(invalidPortraitRatioSize, PRESET_CARD_SIZES["4:5"]);
+
+const legacyInvalidPortraitState: AppState = {
+  ...portraitRestored,
+  style: {
+    ...portraitRestored.style,
+    ratio: "16:9",
+    width: PRESET_CARD_SIZES["16:9"].width,
+    height: PRESET_CARD_SIZES["16:9"].height,
+    autoHeight: false
+  }
+};
+const canonicalPortraitState = applyEditorStyleChange(legacyInvalidPortraitState, {
+  ...legacyInvalidPortraitState.style,
+  lyricFontSize: legacyInvalidPortraitState.style.lyricFontSize + 1
+});
+assert.deepEqual(
+  {
+    layoutMode: canonicalPortraitState.style.layoutMode,
+    ratio: canonicalPortraitState.style.ratio,
+    width: canonicalPortraitState.style.width,
+    height: canonicalPortraitState.style.height,
+    autoHeight: canonicalPortraitState.style.autoHeight
+  },
+  {
+    layoutMode: "portrait",
+    ratio: "custom",
+    width: 1040,
+    height: 1080,
+    autoHeight: true
+  }
+);
+assert.deepEqual(getCardSize(canonicalPortraitState.style), { width: 1040, height: 1080 });
+assert.notDeepEqual(getCardSize(canonicalPortraitState.style), PRESET_CARD_SIZES["4:5"]);
+
+const normalizedLegacyAuto = normalizeCardStyle({
+  ...baseStyle,
+  textColorMode: "auto",
+  textColorPreset: "black",
+  resolvedTextColor: "#111111",
+  coverCropScale: 1.72
+});
+assert.equal(normalizedLegacyAuto.textColorMode, "preset");
+assert.equal(normalizedLegacyAuto.textColorPreset, "white");
+assert.equal(normalizedLegacyAuto.resolvedTextColor, FIXED_WHITE_TEXT_COLOR);
+assert.equal(normalizedLegacyAuto.coverCropScale, FIXED_COVER_CROP_SCALE);
+
+const normalizedLegacyPreset = normalizeCardStyle({
+  ...baseStyle,
+  textColorMode: "preset",
+  textColorPreset: "softGold",
+  resolvedTextColor: "#E7D7A1"
+});
+assert.equal(normalizedLegacyPreset.textColorPreset, "white");
+assert.equal(normalizedLegacyPreset.resolvedTextColor, FIXED_WHITE_TEXT_COLOR);
+
+const normalizedCustomColor = normalizeCardStyle({
+  ...baseStyle,
+  textColorMode: "custom",
+  customTextColor: "#AABBCC",
+  resolvedTextColor: "#000000",
+  coverCropScale: 1.5
+});
+assert.equal(normalizedCustomColor.textColorMode, "custom");
+assert.equal(normalizedCustomColor.customTextColor, "#AABBCC");
+assert.equal(normalizedCustomColor.resolvedTextColor, "#AABBCC");
+assert.equal(normalizedCustomColor.coverCropScale, FIXED_COVER_CROP_SCALE);
+
+const expectedTextDesignTitles: Record<Locale, string> = {
+  zh: "文字设计",
+  "zh-TW": "文字設計",
+  en: "Text Design",
+  fr: "Design du texte",
+  ja: "文字デザイン",
+  es: "Diseño del texto"
+};
+for (const [locale, title] of Object.entries(expectedTextDesignTitles) as Array<[Locale, string]>) {
+  assert.equal(messages[locale]["step.fontScheme"], title, `${locale} text-design step title`);
+  assert.ok(messages[locale].fontSchemeDescription.trim(), `${locale} text-design description`);
+  assert.ok(messages[locale].pureWhite.trim(), `${locale} white color label`);
+}
+
+const stylePanelSource = readFileSync(resolve("components/editor/StylePanel.tsx"), "utf8");
+const colorControlsSource = readFileSync(resolve("components/editor/style-panel/ColorControls.tsx"), "utf8");
+const previewPaneSource = readFileSync(resolve("components/editor/PreviewPane.tsx"), "utf8");
+const fontPreviewSource = readFileSync(resolve("components/editor/font-scheme/FontSchemePreviewPanel.tsx"), "utf8");
+const lyricCardSource = readFileSync(resolve("components/preview/LyricCard.tsx"), "utf8");
+const landscapeCardSource = readFileSync(resolve("components/preview/LandscapeLyricCard.tsx"), "utf8");
+const fontPanelSource = stylePanelSource.slice(
+  stylePanelSource.indexOf("export function FontSchemeSettingsPanel"),
+  stylePanelSource.indexOf("function CustomFontPanel")
+);
+const visualPanelSource = stylePanelSource.slice(stylePanelSource.indexOf("export function VisualSettingsPanel"));
+assert.ok(fontPanelSource.includes("<ColorControls"), "text color is part of the text-design step");
+assert.ok(!visualPanelSource.includes("<ColorControls"), "visual step no longer duplicates text color");
+assert.ok(!stylePanelSource.includes('option value="4:5"'), "portrait presets omit 4:5");
+assert.ok(!stylePanelSource.includes('option value="9:16"'), "portrait presets omit 9:16");
+assert.ok(!stylePanelSource.includes("const portraitRatio"), "portrait ratio is never masked only at render time");
+assert.ok(stylePanelSource.includes("<SegmentedControl<CardAlign>"), "alignment uses the keyboard-accessible segmented slider");
+assert.ok(!stylePanelSource.includes('label={t("coverCrop")}'), "cover crop control is removed");
+assert.ok(colorControlsSource.includes('{ value: "white", label: t("pureWhite") }'), "white mode is exposed");
+assert.ok(!colorControlsSource.includes("TEXT_COLOR_PRESETS"), "legacy color presets are not exposed");
+assert.ok(previewPaneSource.includes("textColor={style.textColorMode"), "font preview receives the effective text color");
+assert.ok(fontPreviewSource.includes("style={{ color: textColor }}"), "font preview original text follows the selected color");
+assert.ok(fontPreviewSource.includes("withAlpha(textColor, 0.66)"), "font preview romanization follows the selected color");
+assert.ok(fontPreviewSource.includes("withAlpha(textColor, 0.86)"), "font preview translation follows the selected color");
+assert.ok(!fontPreviewSource.includes("text-white/66"), "font preview does not hard-code romanized text to white");
+assert.ok(!fontPreviewSource.includes("text-white/86"), "font preview does not hard-code translated text to white");
+assert.ok(!lyricCardSource.includes("cropScale={style.coverCropScale}"), "portrait rendering fixes crop scale");
+assert.ok(!landscapeCardSource.includes("cropScale={style.coverCropScale}"), "landscape rendering fixes crop scale");
 
 assert.deepEqual(BACKGROUND_GRID_SIZE_BY_DENSITY, {
   sparse: 72,
@@ -90,4 +344,4 @@ assert.deepEqual(BACKGROUND_GRID_SIZE_BY_DENSITY, {
 assert.equal(resolveBackgroundGridDensity(undefined), "medium");
 assert.equal(resolveBackgroundGridDensity("sparse"), "sparse");
 
-console.log(JSON.stringify({ ok: true, v34LayoutGridTests: 20 }, null, 2));
+console.log(JSON.stringify({ ok: true, v34LayoutGridTests: 80 }, null, 2));

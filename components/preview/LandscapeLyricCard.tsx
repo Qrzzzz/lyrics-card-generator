@@ -9,6 +9,7 @@ import { LandscapeSongInfo } from "@/components/preview/LandscapeSongInfo";
 import { PaletteBackground } from "@/components/preview/PaletteBackground";
 import { getCardSize } from "@/lib/card-size";
 import { getLandscapeLayout } from "@/lib/card-layout-engine";
+import { FIXED_COVER_CROP_SCALE } from "@/lib/card-style-normalize";
 import { cardFontStyle, fontClassName } from "@/lib/fonts";
 import { proxiedImageUrl } from "@/lib/image-utils";
 import type { CardStyle, SongInfo } from "@/lib/types";
@@ -66,7 +67,7 @@ export function LandscapeLyricCard({
           <LandscapeAlbumCover
             song={song}
             coverUrl={activeCover}
-            cropScale={style.coverCropScale}
+            cropScale={FIXED_COVER_CROP_SCALE}
             left={layout.coverRect.x}
             top={layout.coverRect.y}
             size={layout.coverRect.width}

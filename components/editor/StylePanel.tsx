@@ -47,20 +47,26 @@ export function StylePanel(props: StylePanelProps) {
 
 export function FontSchemeSettingsPanel({ style, onStyleChange, onFontSchemePreviewChange, t }: StylePanelProps) {
   return (
-    <Section
-      title={t("step.fontScheme")}
-      description={t("fontSchemeDescription")}
-      variant="plain"
-      className="border-t-0 pt-0"
-    >
-      <FontSchemePanel
-        style={style}
-        onStyleChange={onStyleChange}
-        onPreviewSchemeChange={onFontSchemePreviewChange}
-        showHeader={false}
-        t={t}
-      />
-    </Section>
+    <div className="grid gap-5">
+      <Section
+        title={t("fontSchemeTitle")}
+        description={t("fontSchemeDescription")}
+        variant="plain"
+        className="border-t-0 pt-0"
+      >
+        <FontSchemePanel
+          style={style}
+          onStyleChange={onStyleChange}
+          onPreviewSchemeChange={onFontSchemePreviewChange}
+          showHeader={false}
+          t={t}
+        />
+      </Section>
+
+      <Section title={t("textColor")} variant="plain" contentClassName="gap-0">
+        <ColorControls style={style} onStyleChange={onStyleChange} t={t} />
+      </Section>
+    </div>
   );
 }
 
@@ -303,6 +309,7 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
   const isInstrumental = style.contentMode === "instrumental";
   const layoutMode = isInstrumental ? "portrait" : style.layoutMode ?? "portrait";
   const instrumentalLayoutLockedHint = t("instrumentalLayoutLockedHint");
+  const [instrumentalModeTitle, instrumentalModeQualifier] = t("instrumentalMode").split(/\s*\/\s*/, 2);
 
   function update<K extends keyof CardStyle>(key: K, value: CardStyle[K]) {
     onStyleChange({ ...style, [key]: value });
@@ -318,7 +325,7 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
         ratio: "1:1",
         width: squareSize.width,
         height: squareSize.height,
-        autoHeight: true,
+        autoHeight: false,
         translationEnabled: false,
         translationText: ""
       });
@@ -371,15 +378,32 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
 
   return (
     <Section title={t("layout")} eyebrow={t("style")} variant="plain" contentClassName="gap-0">
-      <SettingRow label={t("contentType")}>
+      <SettingRow
+        label={t("contentType")}
+        className="sm:grid-cols-[minmax(0,1fr)_minmax(280px,340px)]"
+      >
         <SegmentedControl<ContentMode>
           value={style.contentMode}
           onChange={updateContentMode}
           options={[
             { value: "lyrics", label: t("lyricsMode") },
-            { value: "instrumental", label: t("instrumentalMode") }
+            {
+              value: "instrumental",
+              title: t("instrumentalMode"),
+              label: (
+                <span className="flex flex-col items-center justify-center leading-tight">
+                  <span className="whitespace-nowrap">{instrumentalModeTitle}</span>
+                  {instrumentalModeQualifier ? (
+                    <span className="whitespace-nowrap text-[10px] font-medium opacity-70">
+                      {instrumentalModeQualifier}
+                    </span>
+                  ) : null}
+                </span>
+              )
+            }
           ]}
           aria-label={t("contentType")}
+          className="[&_.segmented-control__item]:px-2 [&_.segmented-control__item]:text-[13px]"
         />
       </SettingRow>
 
@@ -416,8 +440,6 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
           ) : (
             <>
               <option value="1:1">{t("square")}</option>
-              <option value="4:5">{t("social")}</option>
-              <option value="9:16">{t("story")}</option>
             </>
           )}
           <option value="custom">{t("custom")}</option>
@@ -485,14 +507,15 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
             />
           </SettingRow>
           <SettingRow label={t("alignment")}>
-            <SelectField
+            <SegmentedControl<CardAlign>
               aria-label={t("alignment")}
               value={style.align}
-              onChange={(event) => update("align", event.target.value as CardAlign)}
-            >
-              <option value="left">{t("left")}</option>
-              <option value="center">{t("center")}</option>
-            </SelectField>
+              onChange={(value) => update("align", value)}
+              options={[
+                { value: "left", label: t("left") },
+                { value: "center", label: t("center") }
+              ]}
+            />
           </SettingRow>
         </>
       ) : null}
@@ -554,22 +577,7 @@ export function VisualSettingsPanel({
 
   return (
     <div className="grid gap-5">
-      <Section title={t("textColor")} variant="plain" contentClassName="gap-0">
-        <ColorControls style={style} onStyleChange={onStyleChange} t={t} />
-      </Section>
-
       <Section title={t("background")} variant="plain" contentClassName="gap-0">
-        <SettingRow label={t("coverCrop")} description={style.coverCropScale.toFixed(2)}>
-          <TextInput
-            type="range"
-            min={1}
-            max={2}
-            step={0.01}
-            value={style.coverCropScale}
-            onChange={(event) => update("coverCropScale", Number(event.target.value))}
-          />
-        </SettingRow>
-
         <ToggleRow
           label={t("backgroundGrid")}
           checked={style.showFineGrid === true}

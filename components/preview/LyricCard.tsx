@@ -10,7 +10,7 @@ import { PortraitFooter } from "@/components/preview/PortraitFooter";
 import { ExplicitBadge } from "@/components/preview/ExplicitBadge";
 import { getCardSize as resolveCardSize } from "@/lib/card-size";
 import { getPortraitLayout } from "@/lib/card-layout-engine";
-import { normalizeInstrumentalLayout } from "@/lib/card-style-normalize";
+import { FIXED_COVER_CROP_SCALE, normalizeCardStyle } from "@/lib/card-style-normalize";
 import { cardFontStyle, fontClassName } from "@/lib/fonts";
 import { proxiedImageUrl } from "@/lib/image-utils";
 import type { CardStyle, Locale, SongInfo } from "@/lib/types";
@@ -31,7 +31,7 @@ export function LyricCard({
   style: CardStyle;
   locale?: Locale;
 }) {
-  const style = normalizeInstrumentalLayout(rawStyle);
+  const style = normalizeCardStyle(rawStyle);
 
   if ((style.layoutMode ?? "portrait") === "landscape") {
     return <LandscapeLyricCard song={song} lyrics={lyrics} style={style} />;
@@ -91,7 +91,7 @@ export function LyricCard({
                   originalCoverUrl={song.originalCoverUrl}
                   normalizedCoverUrl={song.coverUrl}
                   proxiedCoverUrl={song.proxiedCoverUrl}
-                  cropScale={style.coverCropScale}
+                  cropScale={FIXED_COVER_CROP_SCALE}
                   onError={() => setCoverFailed(true)}
                 />
               ) : null}
@@ -145,7 +145,7 @@ export function LyricCard({
               <InstrumentalBlock
                 song={song}
                 coverUrl={activeCover}
-                cropScale={style.coverCropScale}
+                cropScale={FIXED_COVER_CROP_SCALE}
                 onCoverError={() => setCoverFailed(true)}
                 textColor={textColor}
                 isDarkText={isDarkText}

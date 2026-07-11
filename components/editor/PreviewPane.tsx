@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { FontSchemePreviewPanel } from "@/components/editor/font-scheme/FontSchemePreviewPanel";
 import { MotionPanel } from "@/components/motion/MotionPanel";
 import { LyricCardPreview } from "@/components/preview/LyricCardPreview";
+import { FIXED_WHITE_TEXT_COLOR } from "@/lib/card-style-normalize";
 import { getEffectiveFontScheme } from "@/lib/fonts";
 import type { createT } from "@/lib/i18n";
 import { motionDurations, motionEasings, reducedMotionTransition } from "@/lib/motion/tokens";
@@ -93,7 +94,11 @@ export function PreviewPane({
             t={t}
           />
           {showFontSchemePreview ? (
-            <FontSchemePreviewPanel scheme={fontSchemePreview ?? getEffectiveFontScheme(style)} t={t} />
+            <FontSchemePreviewPanel
+              scheme={fontSchemePreview ?? getEffectiveFontScheme(style)}
+              textColor={style.textColorMode === "custom" ? style.customTextColor : FIXED_WHITE_TEXT_COLOR}
+              t={t}
+            />
           ) : null}
         </div>
       </motion.div>

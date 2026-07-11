@@ -66,7 +66,7 @@ export function SettingsNavigation({
   return (
     <>
       <nav aria-label={ariaLabel} className="settings-navigation">
-        {tabs.map(({ id, label, description, icon: Icon }) => {
+        {tabs.map(({ id, label, icon: Icon }) => {
           const selected = active === id;
           return (
             <button
@@ -98,7 +98,6 @@ export function SettingsNavigation({
               <Icon className="relative h-5 w-5 shrink-0" aria-hidden="true" />
               <span className="settings-navigation__copy relative min-w-0">
                 <span className="app-text-primary block truncate text-sm font-bold">{label}</span>
-                <span className="app-text-subtle mt-0.5 block truncate text-xs">{description}</span>
               </span>
             </button>
           );

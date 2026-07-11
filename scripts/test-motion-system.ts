@@ -32,11 +32,18 @@ for (const file of [
   "components/motion/MotionPanel.tsx",
   "components/motion/MotionDialog.tsx",
   "components/editor/SettingsStepper.tsx",
-  "components/editor/PreviewPane.tsx"
+  "components/editor/PreviewPane.tsx",
+  "components/editor/ExportPanel.tsx"
 ]) {
   const source = readFileSync(resolve(file), "utf8");
   assert.match(source, /useReducedMotion|reducedMotion/, `${file} should wire reduced-motion behavior`);
 }
+
+const exportPanel = readFileSync(resolve("components/editor/ExportPanel.tsx"), "utf8");
+assert.match(exportPanel, /role="status"/);
+assert.match(exportPanel, /aria-live="polite"/);
+assert.match(exportPanel, /aria-atomic="true"/);
+assert.match(exportPanel, /aria-busy=\{isExporting\}/);
 
 const globals = readFileSync(resolve("app/globals.css"), "utf8");
 assert.match(globals, /@media \(prefers-reduced-motion: reduce\)/);
@@ -46,4 +53,4 @@ assert.match(globals, /@media \(hover: hover\) and \(pointer: fine\)/);
 assert.match(globals, /not\(\.traffic-light\):not\(\.example-song-card\):hover/);
 assert.match(globals, /not\(\.traffic-light\):not\(\.example-song-card\):hover:active/);
 
-console.log(JSON.stringify({ ok: true, motionSystemRegressionChecks: 23 }, null, 2));
+console.log(JSON.stringify({ ok: true, motionSystemRegressionChecks: 28 }, null, 2));
