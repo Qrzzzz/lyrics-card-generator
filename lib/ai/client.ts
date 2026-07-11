@@ -1,7 +1,7 @@
 import { getLyricsCardDesktopApi } from "@/lib/desktop-api";
 import { getChatCompletionMessage, getProviderErrorMessage, readProviderResponseBody } from "@/lib/ai/provider-response";
 import { DEFAULT_AI_SETTINGS } from "@/lib/ai/types";
-import { isTranslationStyle } from "@/lib/ai/styles";
+import { normalizeAISettings } from "@/lib/ai/settings-normalize";
 import type {
   AISettings,
   AISettingsSummary,
@@ -34,12 +34,13 @@ export async function loadAISettings(): Promise<AISettingsSummary> {
     temperature: stored.temperature,
     defaultStyle: stored.defaultStyle,
     reasoningEnabled: stored.reasoningEnabled,
+    promptLibrary: stored.promptLibrary,
     hasApiKey: Boolean(browserSessionApiKey)
   };
 }
 
 export async function saveAISettings(input: SaveAISettingsInput): Promise<AISettingsSummary> {
-  const normalized = normalizeSettings(input);
+  const normalized = normalizeAISettings(input);
   const desktop = getLyricsCardDesktopApi();
   if (desktop) {
     return desktop.saveAISettings({ ...normalized, apiKey: input.apiKey?.trim() || undefined });
@@ -228,7 +229,7 @@ function readBrowserSettings(): BrowserStoredSettings {
     const raw = window.localStorage.getItem(BROWSER_SETTINGS_KEY) || "{}";
     const parsed = JSON.parse(raw) as Partial<BrowserStoredSettings> & { apiKey?: unknown };
     const { apiKey: _legacyApiKey, ...settingsWithoutSecret } = parsed;
-    const normalized = normalizeSettings(settingsWithoutSecret);
+    const normalized = normalizeAISettings(settingsWithoutSecret);
     // Migrate old development builds that persisted a plaintext key. Never copy it into memory.
     if (Object.prototype.hasOwnProperty.call(parsed, "apiKey")) {
       window.localStorage.setItem(BROWSER_SETTINGS_KEY, JSON.stringify(normalized));
@@ -239,17 +240,6 @@ function readBrowserSettings(): BrowserStoredSettings {
     window.localStorage.removeItem(BROWSER_SETTINGS_KEY);
     return { ...DEFAULT_AI_SETTINGS };
   }
-}
-
-function normalizeSettings(input: Partial<SaveAISettingsInput>): AISettings {
-  const temperature = Number(input.temperature);
-  return {
-    baseUrl: typeof input.baseUrl === "string" && input.baseUrl.trim() ? input.baseUrl.trim() : DEFAULT_AI_SETTINGS.baseUrl,
-    model: typeof input.model === "string" ? input.model.trim() : "",
-    temperature: Number.isFinite(temperature) ? Math.min(2, Math.max(0, temperature)) : DEFAULT_AI_SETTINGS.temperature,
-    defaultStyle: isTranslationStyle(input.defaultStyle) ? input.defaultStyle : DEFAULT_AI_SETTINGS.defaultStyle,
-    reasoningEnabled: Boolean(input.reasoningEnabled)
-  };
 }
 
 function normalizeError(error: unknown) {

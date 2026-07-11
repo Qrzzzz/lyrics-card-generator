@@ -1,12 +1,13 @@
 "use client";
 
-import { Brain, CircleDot, Loader2, Sparkles, X } from "lucide-react";
+import { Brain, ChevronDown, CircleDot, FolderPen, Loader2, Sparkles, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { MotionPanel } from "@/components/motion/MotionPanel";
 import { MotionPresence } from "@/components/motion/MotionPresence";
 import { ActionButton, OptionCardGroup, ToggleRow } from "@/components/ui/controls";
-import { getTranslationStyles } from "@/lib/ai/styles";
-import type { AITranslationPhase, TranslationStyle } from "@/lib/ai/types";
+import { getTranslationPresets } from "@/lib/ai/styles";
+import type { AIPromptLibrary, AITranslationPhase } from "@/lib/ai/types";
+import { getAIPromptUiCopy } from "@/lib/ai/prompt-ui-copy";
 import { getAIUiCopy } from "@/lib/ai/ui-copy";
 import type { Locale } from "@/lib/types";
 
@@ -14,6 +15,7 @@ export function AiTranslatePanel({
   locale,
   initialStyle,
   initialReasoning,
+  promptLibrary,
   loading,
   streamingText,
   reasoningText,
@@ -25,8 +27,9 @@ export function AiTranslatePanel({
   onConfirm
 }: {
   locale: Locale;
-  initialStyle: TranslationStyle;
+  initialStyle: string;
   initialReasoning: boolean;
+  promptLibrary: AIPromptLibrary;
   loading: boolean;
   streamingText: string;
   reasoningText: string;
@@ -35,12 +38,16 @@ export function AiTranslatePanel({
   error: string;
   onClose: () => void;
   onCancel: () => void;
-  onConfirm: (style: TranslationStyle, reasoning: boolean) => void;
+  onConfirm: (presetId: string, reasoning: boolean) => void;
 }) {
   const copy = getAIUiCopy(locale);
-  const styles = getTranslationStyles(locale);
+  const promptCopy = getAIPromptUiCopy(locale);
+  const presets = getTranslationPresets(locale, promptLibrary);
+  const builtInPresets = presets.filter((preset) => preset.source !== "custom");
+  const customPresets = presets.filter((preset) => preset.source === "custom");
   const [style, setStyle] = useState(initialStyle);
   const [reasoning, setReasoning] = useState(initialReasoning);
+  const [customExpanded, setCustomExpanded] = useState(customPresets.some((preset) => preset.id === initialStyle));
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const reasoningRef = useRef<HTMLPreElement>(null);
   const translationRef = useRef<HTMLPreElement>(null);
@@ -67,10 +74,17 @@ export function AiTranslatePanel({
 
   const phaseLabel = getPhaseLabel(phase, copy);
   const phaseTip = phase === "connecting" ? copy.connectingTip : copy.connectedTip;
-  const styleOptions = styles.map((option) => ({
+  const styleOptions = builtInPresets.map((option) => ({
     value: option.id,
     label: option.name,
     description: option.description,
+    disabled: loading,
+    dataStyle: option.id
+  }));
+  const customOptions = customPresets.map((option) => ({
+    value: option.id,
+    label: option.name,
+    description: option.description.length > 120 ? `${option.description.slice(0, 120)}…` : option.description,
     disabled: loading,
     dataStyle: option.id
   }));
@@ -103,11 +117,45 @@ export function AiTranslatePanel({
 
         <OptionCardGroup
           value={style}
-          onChange={(nextStyle) => setStyle(nextStyle as TranslationStyle)}
+          onChange={setStyle}
           options={styleOptions}
           aria-label={copy.aiTranslateTitle}
           className="sm:grid-cols-2"
         />
+
+        <div className="mt-3 overflow-hidden rounded-xl border border-[rgb(var(--panel-border))] bg-[rgb(var(--input-bg))]">
+          <button
+            type="button"
+            className="app-text-primary flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[rgb(var(--focus-ring))]"
+            aria-expanded={customExpanded}
+            onClick={() => setCustomExpanded((expanded) => !expanded)}
+            disabled={loading}
+          >
+            <span className="flex min-w-0 items-center gap-2.5">
+              <FolderPen className="h-4 w-4 shrink-0" />
+              <span>
+                <span className="block text-sm font-semibold">{promptCopy.customPresets}</span>
+                <span className="app-text-muted mt-0.5 block text-xs">{customPresets.length}/2 · {promptCopy.manageCustomHint}</span>
+              </span>
+            </span>
+            <ChevronDown className={`h-4 w-4 shrink-0 transition-transform ${customExpanded ? "rotate-180" : ""}`} />
+          </button>
+          {customExpanded ? (
+            <div className="border-t border-[rgb(var(--panel-border))] p-3">
+              {customOptions.length ? (
+                <OptionCardGroup
+                  value={style}
+                  onChange={setStyle}
+                  options={customOptions}
+                  aria-label={promptCopy.customPresets}
+                  className="sm:grid-cols-2"
+                />
+              ) : (
+                <p className="app-text-muted px-2 py-3 text-xs leading-relaxed">{promptCopy.customPresetsEmpty}</p>
+              )}
+            </div>
+          ) : null}
+        </div>
 
         <ToggleRow
           label={<span className="flex items-center gap-2"><Brain className="h-4 w-4 shrink-0" />{copy.reasoning}</span>}

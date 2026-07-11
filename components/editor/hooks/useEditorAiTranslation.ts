@@ -13,8 +13,7 @@ import { buildLyricsTranslationPrompt } from "@/lib/ai/prompt";
 import {
   DEFAULT_AI_SETTINGS,
   type AISettingsSummary,
-  type AITranslationPhase,
-  type TranslationStyle
+  type AITranslationPhase
 } from "@/lib/ai/types";
 import { getAIUiCopy } from "@/lib/ai/ui-copy";
 import type { Locale } from "@/lib/types";
@@ -87,7 +86,7 @@ export function useEditorAiTranslation({
     setIsAITranslateOpen(true);
   }
 
-  async function translateWithAI(style: TranslationStyle, reasoning: boolean) {
+  async function translateWithAI(presetId: string, reasoning: boolean) {
     const previousTranslation = translation.text;
     const previousEnabled = translation.enabled;
     if (previousTranslation.trim() && !confirmOverwrite(aiCopy.overwriteConfirm)) {
@@ -106,8 +105,9 @@ export function useEditorAiTranslation({
     try {
       const prompt = buildLyricsTranslationPrompt({
         lyrics,
-        style,
-        targetLocale: locale
+        presetId,
+        targetLocale: locale,
+        promptLibrary: aiSettings.promptLibrary
       });
       const raw = await streamAITranslation({
         prompt,
@@ -129,7 +129,7 @@ export function useEditorAiTranslation({
         throw new AITranslationError(aiCopy.emptyResponse, "empty_response");
       }
       setTranslation({ text: cleaned, enabled: true });
-      setAISettings((current) => ({ ...current, defaultStyle: style, reasoningEnabled: reasoning }));
+      setAISettings((current) => ({ ...current, defaultStyle: presetId, reasoningEnabled: reasoning }));
       onNotify(aiCopy.translated);
     } catch (error) {
       if (wrotePartial) {

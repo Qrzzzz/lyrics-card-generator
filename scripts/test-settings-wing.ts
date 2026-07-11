@@ -2,6 +2,9 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { getAIUiCopy } from "../lib/ai/ui-copy";
+import { getAIPromptUiCopy } from "../lib/ai/prompt-ui-copy";
+import { DEFAULT_AI_SETTINGS } from "../lib/ai/types";
+import { isExistingPage, sanitizeDeletedPresetHistory } from "../components/settings/AiSettingsSection";
 import { settingsCopy } from "../lib/settings/copy";
 import type { Locale } from "../lib/types";
 
@@ -119,6 +122,9 @@ assert.match(settingsWorkspace, /saveFailedBeforeClear = saveController\.getStat
 assert.doesNotMatch(settingsWorkspace, /if \(!hasApiKey\) \{/);
 assert.match(settingsSurface, /disabled=\{workspace\.isClearingApiKey\}/);
 assert.match(aiSettingsSection, /disabled=\{isClearingApiKey\}/);
+assert.match(aiSettingsSection, /setDraftPreset\(draft\)/);
+assert.match(aiSettingsSection, /disabled=\{!valid\}/);
+assert.match(aiSettingsSection, /sanitizeDeletedPresetHistory/);
 assert.match(settingsWorkspace, /setSaveState\("error"\)/);
 assert.match(settingsWorkspace, /\}, 700\)/);
 assert.doesNotMatch(settingsWorkspace, /lastSavedAISettingsRef|queuedAISavesRef/);
@@ -131,11 +137,29 @@ assert.match(settingsLayout, /function SettingsGroup/);
 assert.match(settingsLayout, /function SettingsRow/);
 assert.doesNotMatch(preferences, /isSettingsOpen|openSettings|closeSettings/);
 
+const cleanedHistory = sanitizeDeletedPresetHistory({
+  entries: ["root", "library", "preset:lyrical", "api", "preset:lyrical"],
+  index: 2
+}, "lyrical");
+assert.ok(!cleanedHistory.entries.includes("preset:lyrical"), "deleted preset is removed from all navigation history");
+assert.equal(cleanedHistory.entries[cleanedHistory.index], "library", "deletion replaces the current history page with the library");
+const hiddenSettings = {
+  ...DEFAULT_AI_SETTINGS,
+  promptLibrary: { ...DEFAULT_AI_SETTINGS.promptLibrary, hiddenStyleIds: ["lyrical" as const] }
+};
+assert.equal(isExistingPage("preset:lyrical", hiddenSettings, null), false, "hidden built-in preset history is invalid");
+assert.equal(isExistingPage("preset:custom:missing", hiddenSettings, null), false, "missing custom preset history is invalid");
+assert.equal(isExistingPage("draft:custom:new", hiddenSettings, { id: "custom:new", title: "", prompt: "" }), true, "active draft page remains valid without persistence");
+
 for (const locale of ["zh", "zh-TW", "en", "fr", "ja", "es"] satisfies Locale[]) {
   const copy = settingsCopy[locale];
   const aiCopy = getAIUiCopy(locale);
+  const promptCopy = getAIPromptUiCopy(locale);
   assert.ok(aiCopy.loadFailed.trim(), `${locale} loadFailed`);
   assert.ok(aiCopy.saveFailed.trim(), `${locale} saveFailed`);
+  for (const [key, value] of Object.entries(promptCopy)) {
+    assert.ok(value.trim(), `${locale} prompt copy ${key}`);
+  }
   for (const key of [
     "generalDescription",
     "appearanceDescription",

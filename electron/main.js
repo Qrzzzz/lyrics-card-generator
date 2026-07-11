@@ -5,6 +5,7 @@ const http = require("node:http");
 const net = require("node:net");
 const path = require("node:path");
 const { getBackgroundImageMime, safeBackgroundPathForUserData } = require("./background-images");
+const { normalizePromptLibrary } = require("./ai-prompt-settings");
 const { normalizeFontOptions } = require("./font-options");
 const {
   buildChatCompletionsRequestBody: buildProviderChatCompletionsRequestBody,
@@ -40,7 +41,12 @@ const DEFAULT_AI_SETTINGS = {
   model: "",
   temperature: 0.7,
   defaultStyle: "recommended",
-  reasoningEnabled: false
+  reasoningEnabled: false,
+  promptLibrary: {
+    localeOverrides: {},
+    hiddenStyleIds: [],
+    customPresets: []
+  }
 };
 const TRANSLATION_STYLES = new Set(["lyrical", "faithful", "spoken", "imagistic", "restrained", "recommended"]);
 
@@ -656,14 +662,20 @@ async function readAISettings() {
 
 function normalizeAISettings(input) {
   const temperature = Number(input?.temperature);
+  const promptLibrary = normalizePromptLibrary(input?.promptLibrary);
+  const requestedDefault = typeof input?.defaultStyle === "string" ? input.defaultStyle : "";
+  const defaultBuiltInAvailable = TRANSLATION_STYLES.has(requestedDefault)
+    && (requestedDefault === "recommended" || !promptLibrary.hiddenStyleIds.includes(requestedDefault));
+  const defaultCustomAvailable = promptLibrary.customPresets.some((preset) => preset.id === requestedDefault);
   return {
     baseUrl: typeof input?.baseUrl === "string" && input.baseUrl.trim()
       ? input.baseUrl.trim()
       : DEFAULT_AI_SETTINGS.baseUrl,
     model: typeof input?.model === "string" ? input.model.trim() : "",
     temperature: Number.isFinite(temperature) ? Math.min(2, Math.max(0, temperature)) : DEFAULT_AI_SETTINGS.temperature,
-    defaultStyle: TRANSLATION_STYLES.has(input?.defaultStyle) ? input.defaultStyle : DEFAULT_AI_SETTINGS.defaultStyle,
-    reasoningEnabled: Boolean(input?.reasoningEnabled)
+    defaultStyle: defaultBuiltInAvailable || defaultCustomAvailable ? requestedDefault : DEFAULT_AI_SETTINGS.defaultStyle,
+    reasoningEnabled: Boolean(input?.reasoningEnabled),
+    promptLibrary
   };
 }
 
@@ -674,6 +686,7 @@ function toAISettingsSummary(settings) {
     temperature: settings.temperature,
     defaultStyle: settings.defaultStyle,
     reasoningEnabled: settings.reasoningEnabled,
+    promptLibrary: settings.promptLibrary,
     hasApiKey: Boolean(settings.encryptedApiKey)
   };
 }

@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v4.5.0.zh-TW.md">發布說明</a> ·
+  <a href="./docs/releases/v4.6.0.zh-TW.md">發布說明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">線上 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="#本機開發">本機開發</a> ·
@@ -48,31 +48,31 @@
 
 請前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載最新版：
 
-* 建議一般使用者下載安裝版：`Lyrics Card Generator Setup 4.5.0.exe`
-* 不想安裝時可下載可攜版：`Lyrics Card Generator-4.5.0-portable.exe`
+* 建議一般使用者下載安裝版：`Lyrics Card Generator Setup 4.6.0.exe`
+* 不想安裝時可下載可攜版：`Lyrics Card Generator-4.6.0-portable.exe`
 
 安裝版適合長期使用；可攜版適合臨時執行、測試或放在隨身碟中使用。
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v4.5.0 更新重點
+### v4.6.0 更新重點
 
-* 改善純音樂／無歌詞卡片的標題、歌手與專輯資訊間距，並在有專輯名稱時比照有歌詞模式顯示專輯資訊。
-* 標題列紅黃綠視窗按鈕恢復平面樣式並縮小彼此間距，同時保留現有動效。
-* 為設定的不同分頁加入內容切換動效；通用頁新增預設關閉的「減弱動效」開關，同時繼續遵循系統偏好。
-* 匯出設定在「匯出品質」前新增產生浮水印與分享者預設值；分享者預設關閉，啟用後可填寫預設文字並即時連動目前卡片。
-* 「一鍵清空」新增左右交接的卡片預覽動效與空白狀態輕提示；輕提示視覺與動效同步升級，匯出步驟則移除多餘說明卡與外圍大邊框。
+* AI 設定重構為 API 設定與提示詞資源庫兩個子頁面，加入類似檔案總管的上一頁、下一頁與路徑導覽。
+* 推薦版固定保留；其餘 5 個預設可編輯、刪除、重設與還原，並可新增最多 2 個自訂預設。
+* 主頁面新增預設收合的自訂預設入口，展開後最多顯示 2 個使用者預設。
+* 嚴格格式規則與風格提示詞分開管理，編輯前需兩次確認，並可一鍵還原 v4.6.0 預設內容。
+* 舊版 AI 設定會自動遷移至新結構，自訂風格不會覆蓋「只輸出譯文原文」的共用格式要求。
 
 ## 🌐 多語言發佈說明
 
 GitHub Release 頁面預設使用簡體中文短版，完整發佈說明維護在 `docs/releases/`：
 
-* [简体中文](./docs/releases/v4.5.0.zh-CN.md)
-* [繁體中文](./docs/releases/v4.5.0.zh-TW.md)
-* [English](./docs/releases/v4.5.0.en.md)
-* [Français](./docs/releases/v4.5.0.fr.md)
-* [日本語](./docs/releases/v4.5.0.ja.md)
-* [Español](./docs/releases/v4.5.0.es.md)
+* [简体中文](./docs/releases/v4.6.0.zh-CN.md)
+* [繁體中文](./docs/releases/v4.6.0.zh-TW.md)
+* [English](./docs/releases/v4.6.0.en.md)
+* [Français](./docs/releases/v4.6.0.fr.md)
+* [日本語](./docs/releases/v4.6.0.ja.md)
+* [Español](./docs/releases/v4.6.0.es.md)
 
 ## ✨ 主要功能
 
@@ -88,7 +88,7 @@ GitHub Release 頁面預設使用簡體中文短版，完整發佈說明維護�
 
 * 支援歌詞原文與翻譯並排排版
 * 支援按目前介面語言拆分原文 / 譯文，包括簡體中文、繁體中文、英文、法文、日文、西班牙文目標譯文
-* 支援相容 OpenAI Chat Completions 的 AI 歌詞翻譯，可設定服務商 Base URL、模型、API Key、六種翻譯風格、Reasoning 與串流輸出
+* 支援相容 OpenAI Chat Completions 的 AI 歌詞翻譯，可設定服務商 Base URL、模型、API Key、6 個預設、最多 2 個自訂預設、Reasoning 與串流輸出
 
 ### 🎵 歌曲搜尋、音樂連結與本機檔案解析
 

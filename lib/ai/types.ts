@@ -1,3 +1,5 @@
+import type { Locale } from "@/lib/types";
+
 export type TranslationStyle =
   | "lyrical"
   | "faithful"
@@ -6,12 +8,38 @@ export type TranslationStyle =
   | "restrained"
   | "recommended";
 
+export type EditableTranslationStyle = Exclude<TranslationStyle, "recommended">;
+
+export type AIStylePresetOverride = {
+  id: EditableTranslationStyle;
+  title: string;
+  prompt: string;
+};
+
+export type AICustomPreset = {
+  id: string;
+  title: string;
+  prompt: string;
+};
+
+export type AILocalePromptOverrides = {
+  formatRulesOverride: string;
+  styleOverrides: AIStylePresetOverride[];
+};
+
+export type AIPromptLibrary = {
+  localeOverrides: Partial<Record<Locale, AILocalePromptOverrides>>;
+  hiddenStyleIds: EditableTranslationStyle[];
+  customPresets: AICustomPreset[];
+};
+
 export type AISettings = {
   baseUrl: string;
   model: string;
   temperature: number;
-  defaultStyle: TranslationStyle;
+  defaultStyle: string;
   reasoningEnabled: boolean;
+  promptLibrary: AIPromptLibrary;
 };
 
 export type AISettingsSummary = AISettings & {
@@ -48,5 +76,10 @@ export const DEFAULT_AI_SETTINGS: AISettings = {
   model: "",
   temperature: 0.7,
   defaultStyle: "recommended",
-  reasoningEnabled: false
+  reasoningEnabled: false,
+  promptLibrary: {
+    localeOverrides: {},
+    hiddenStyleIds: [],
+    customPresets: []
+  }
 };
