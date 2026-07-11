@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v4.6.0.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v4.6.2.en.md">Release Notes</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
   <a href="#features">Features</a> ·
   <a href="#local-development">Local Development</a> ·
@@ -51,31 +51,31 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 Download the latest version from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Recommended installer: `Lyrics Card Generator Setup 4.6.0.exe`
-* Portable version: `Lyrics Card Generator-4.6.0-portable.exe`
+* Recommended installer: `Lyrics Card Generator Setup 4.6.2.exe`
+* Portable version: `Lyrics Card Generator-4.6.2-portable.exe`
 
 The installer is recommended for regular use. The portable version is useful for temporary use, testing, or running from a removable drive.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v4.6.0 Highlights
+### v4.6.2 Highlights
 
-* Rebuilt AI Settings as separate API Configuration and Prompt Library pages with file-explorer-style Back, Forward, and path navigation.
-* Kept Recommended protected while making the other five defaults editable, removable, resettable, and restorable, with room for two custom presets.
-* Added a collapsed custom-preset entry to the main translation panel that shows at most two user presets when expanded.
-* Separated strict format rules from style prompts, protected editing with two confirmations, and added a one-click v4.6.0 reset.
-* Migrated existing AI settings automatically; custom styles never replace the shared requirement to output only translated lyrics.
+* Fixed replacement typing in desktop text fields, including AI presets and unlocked Strict Format Rules.
+* Added a Reset button to every prompt preset and a one-click Reset all action on the Prompt Library page.
+* Custom presets now preserve their initial title and prompt as a reset baseline; existing data migrates without losing content.
+* Renamed the maximized green-button tooltip to “Windowed” and simplified the Prompt Library description.
+* Made the Live Preview border follow the card content height instead of leaving a large blank area below it.
 
 ## 🌐 Multilingual Release Notes
 
 The GitHub Release page defaults to a simplified Chinese short version, while the full release notes are maintained in `docs/releases/`:
 
-* [简体中文](./docs/releases/v4.6.0.zh-CN.md)
-* [繁體中文](./docs/releases/v4.6.0.zh-TW.md)
-* [English](./docs/releases/v4.6.0.en.md)
-* [Français](./docs/releases/v4.6.0.fr.md)
-* [日本語](./docs/releases/v4.6.0.ja.md)
-* [Español](./docs/releases/v4.6.0.es.md)
+* [简体中文](./docs/releases/v4.6.2.zh-CN.md)
+* [繁體中文](./docs/releases/v4.6.2.zh-TW.md)
+* [English](./docs/releases/v4.6.2.en.md)
+* [Français](./docs/releases/v4.6.2.fr.md)
+* [日本語](./docs/releases/v4.6.2.ja.md)
+* [Español](./docs/releases/v4.6.2.es.md)
 
 <a id="features"></a>
 

@@ -766,6 +766,14 @@ select {
   font: inherit;
 }
 
+.app-shell :where(button, input, textarea, select, label, [contenteditable="true"]) {
+  -webkit-app-region: no-drag;
+}
+
+.app-shell :where(input, textarea, [contenteditable="true"]) {
+  user-select: text;
+}
+
 button {
   touch-action: manipulation;
 }

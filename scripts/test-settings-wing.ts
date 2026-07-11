@@ -4,7 +4,7 @@ import { resolve } from "node:path";
 import { getAIUiCopy } from "../lib/ai/ui-copy";
 import { getAIPromptUiCopy } from "../lib/ai/prompt-ui-copy";
 import { DEFAULT_AI_SETTINGS } from "../lib/ai/types";
-import { isExistingPage, sanitizeDeletedPresetHistory } from "../components/settings/AiSettingsSection";
+import { isExistingPage, resetPromptLibraryToInitial, sanitizeDeletedPresetHistory } from "../components/settings/AiSettingsSection";
 import { settingsCopy } from "../lib/settings/copy";
 import type { Locale } from "../lib/types";
 
@@ -125,6 +125,15 @@ assert.match(aiSettingsSection, /disabled=\{isClearingApiKey\}/);
 assert.match(aiSettingsSection, /setDraftPreset\(draft\)/);
 assert.match(aiSettingsSection, /disabled=\{!valid\}/);
 assert.match(aiSettingsSection, /sanitizeDeletedPresetHistory/);
+assert.match(aiSettingsSection, /copy\.resetAll/);
+assert.match(aiSettingsSection, /disabled=\{!canReset\}/);
+assert.match(aiSettingsSection, /const \[draftValue, setDraftValue\] = useState\(persistedValue\)/);
+assert.match(aiSettingsSection, /if \(!unlocked\) setDraftValue\(persistedValue\)/);
+assert.match(aiSettingsSection, /override \? override\.title : defaultStyle\?\.name/);
+assert.match(aiSettingsSection, /override \? override\.prompt : getDefaultStylePrompt/);
+assert.doesNotMatch(aiSettingsSection, /override\?\.title \|\|/);
+assert.doesNotMatch(aiSettingsSection, /override\?\.prompt \|\|/);
+assert.match(globals, /:where\(button, input, textarea, select, label, \[contenteditable="true"\]\)[\s\S]*?-webkit-app-region: no-drag/);
 assert.match(settingsWorkspace, /setSaveState\("error"\)/);
 assert.match(settingsWorkspace, /\}, 700\)/);
 assert.doesNotMatch(settingsWorkspace, /lastSavedAISettingsRef|queuedAISavesRef/);
@@ -150,6 +159,16 @@ const hiddenSettings = {
 assert.equal(isExistingPage("preset:lyrical", hiddenSettings, null), false, "hidden built-in preset history is invalid");
 assert.equal(isExistingPage("preset:custom:missing", hiddenSettings, null), false, "missing custom preset history is invalid");
 assert.equal(isExistingPage("draft:custom:new", hiddenSettings, { id: "custom:new", title: "", prompt: "" }), true, "active draft page remains valid without persistence");
+
+const resetLibrary = resetPromptLibraryToInitial({
+  localeOverrides: { zh: { formatRulesOverride: "changed", styleOverrides: [{ id: "lyrical", title: "changed", prompt: "changed" }] } },
+  hiddenStyleIds: ["faithful"],
+  customPresets: [{ id: "custom:reset", title: "Changed", prompt: "Changed prompt", initialTitle: "Original", initialPrompt: "Original prompt" }]
+});
+assert.deepEqual(resetLibrary.localeOverrides, {}, "reset all clears every localized override");
+assert.deepEqual(resetLibrary.hiddenStyleIds, [], "reset all restores removed defaults");
+assert.equal(resetLibrary.customPresets[0]?.title, "Original", "reset all restores a custom preset title");
+assert.equal(resetLibrary.customPresets[0]?.prompt, "Original prompt", "reset all restores a custom preset prompt");
 
 for (const locale of ["zh", "zh-TW", "en", "fr", "ja", "es"] satisfies Locale[]) {
   const copy = settingsCopy[locale];

@@ -384,6 +384,12 @@ function testAITranslationPrompt() {
   });
   assertEqual(duplicateMigration.customPresets.length, 2, "custom migration filters, deduplicates, then caps at two");
   assertEqual(duplicateMigration.customPresets[1]?.id, "custom:b", "deduplication does not discard a later unique preset");
+  assertEqual(duplicateMigration.customPresets[0]?.initialTitle, "A", "legacy custom presets capture their current title as the reset baseline");
+  assertEqual(duplicateMigration.customPresets[0]?.initialPrompt, "Updated", "legacy custom presets capture their current prompt as the reset baseline");
+  const emptyEditableDraft = normalizePromptLibrary({
+    localeOverrides: { zh: { styleOverrides: [{ id: "lyrical", title: "", prompt: "" }] } }
+  });
+  assertEqual(getLocalePromptOverrides(emptyEditableDraft, "zh").styleOverrides.length, 1, "empty built-in draft remains present while replacing all text");
   assertEqual(cleanAITranslation("```text\n译文如下：\n想念你\n```"), "想念你", "clean AI wrapper text");
   assertThrows(
     () => validateConfiguredSettings({

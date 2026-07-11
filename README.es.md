@@ -19,7 +19,7 @@
 <p>
   <strong>Navegación</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Descargar la última versión</a> ·
-  <a href="./docs/releases/v4.6.0.es.md">Notas de la versión</a> ·
+  <a href="./docs/releases/v4.6.2.es.md">Notas de la versión</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en línea</a> ·
   <a href="#funciones-principales">Funciones principales</a> ·
   <a href="#desarrollo-local">Desarrollo local</a> ·
@@ -51,31 +51,31 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 Descarga la versión más reciente desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Instalador recomendado: `Lyrics Card Generator Setup 4.6.0.exe`
-* Versión portable: `Lyrics Card Generator-4.6.0-portable.exe`
+* Instalador recomendado: `Lyrics Card Generator Setup 4.6.2.exe`
+* Versión portable: `Lyrics Card Generator-4.6.2-portable.exe`
 
 El instalador se recomienda para uso habitual. La versión portable es útil para pruebas, uso temporal o ejecución desde una unidad extraíble.
 
 > La compilación actual no está firmada. Windows puede mostrar una advertencia de SmartScreen, algo habitual en aplicaciones personales sin firma.
 
-### Aspectos destacados de la versión 4.6.0
+### Aspectos destacados de la versión 4.6.2
 
-* Ajustes de IA se divide en Configuración de API y Biblioteca de prompts, con navegación Atrás, Adelante y ruta al estilo de un explorador de archivos.
-* Recomendada permanece protegida; los otros cinco preajustes se pueden editar, eliminar, restablecer y restaurar, además de crear dos preajustes personalizados.
-* El panel principal incorpora una sección personalizada plegada que muestra como máximo dos preajustes del usuario.
-* Las reglas de formato estrictas se separan de los prompts de estilo, con doble confirmación antes de editar y restablecimiento a los valores de v4.6.0.
-* Los ajustes de IA anteriores se migran automáticamente y los estilos personalizados nunca sustituyen la regla común de devolver solo la letra traducida.
+* Se corrige la escritura de reemplazo en los campos del escritorio, incluidos los preajustes de IA y las reglas de formato desbloqueadas.
+* Cada preajuste incorpora Restablecer y la Biblioteca de prompts permite restablecer todo con una sola acción.
+* Los preajustes personalizados conservan el título y el prompt iniciales como base de restauración, también al migrar datos existentes.
+* El botón verde maximizado muestra ahora «Modo ventana» y se simplifica la descripción de la Biblioteca de prompts.
+* El borde de la vista previa en directo se adapta a la altura de la tarjeta y elimina el gran espacio vacío inferior.
 
 ## 🌐 Notas de publicación multilingüe
 
 La página de GitHub Release utiliza por defecto la versión corta en chino simplificado, las notas de publicación completas se mantienen en `docs/releases/`:
 
-* [简体中文](./docs/releases/v4.6.0.zh-CN.md)
-* [繁體中文](./docs/releases/v4.6.0.zh-TW.md)
-* [English](./docs/releases/v4.6.0.en.md)
-* [Français](./docs/releases/v4.6.0.fr.md)
-* [日本語](./docs/releases/v4.6.0.ja.md)
-* [Español](./docs/releases/v4.6.0.es.md)
+* [简体中文](./docs/releases/v4.6.2.zh-CN.md)
+* [繁體中文](./docs/releases/v4.6.2.zh-TW.md)
+* [English](./docs/releases/v4.6.2.en.md)
+* [Français](./docs/releases/v4.6.2.fr.md)
+* [日本語](./docs/releases/v4.6.2.ja.md)
+* [Español](./docs/releases/v4.6.2.es.md)
 
 <a id="funciones-principales"></a>
 

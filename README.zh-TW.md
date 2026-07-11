@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v4.6.0.zh-TW.md">發布說明</a> ·
+  <a href="./docs/releases/v4.6.2.zh-TW.md">發布說明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">線上 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="#本機開發">本機開發</a> ·
@@ -48,31 +48,31 @@
 
 請前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載最新版：
 
-* 建議一般使用者下載安裝版：`Lyrics Card Generator Setup 4.6.0.exe`
-* 不想安裝時可下載可攜版：`Lyrics Card Generator-4.6.0-portable.exe`
+* 建議一般使用者下載安裝版：`Lyrics Card Generator Setup 4.6.2.exe`
+* 不想安裝時可下載可攜版：`Lyrics Card Generator-4.6.2-portable.exe`
 
 安裝版適合長期使用；可攜版適合臨時執行、測試或放在隨身碟中使用。
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v4.6.0 更新重點
+### v4.6.2 更新重點
 
-* AI 設定重構為 API 設定與提示詞資源庫兩個子頁面，加入類似檔案總管的上一頁、下一頁與路徑導覽。
-* 推薦版固定保留；其餘 5 個預設可編輯、刪除、重設與還原，並可新增最多 2 個自訂預設。
-* 主頁面新增預設收合的自訂預設入口，展開後最多顯示 2 個使用者預設。
-* 嚴格格式規則與風格提示詞分開管理，編輯前需兩次確認，並可一鍵還原 v4.6.0 預設內容。
-* 舊版 AI 設定會自動遷移至新結構，自訂風格不會覆蓋「只輸出譯文原文」的共用格式要求。
+* 修正桌面版主頁及 AI 設定中的預設、嚴格格式規則文字欄位無法正常取代輸入的問題。
+* 每個提示詞預設新增「重設」按鈕，可還原至各自初始內容；資源庫主頁可一鍵重設全部內容。
+* 自訂預設首次儲存時會記錄初始標題與提示詞，舊資料則以目前內容建立重設基準。
+* 最大化時綠燈提示改為「窗口化」，並精簡提示詞資源庫說明。
+* 即時預覽邊框改為隨卡片內容自動調整高度，不再於下方保留大片空白。
 
 ## 🌐 多語言發佈說明
 
 GitHub Release 頁面預設使用簡體中文短版，完整發佈說明維護在 `docs/releases/`：
 
-* [简体中文](./docs/releases/v4.6.0.zh-CN.md)
-* [繁體中文](./docs/releases/v4.6.0.zh-TW.md)
-* [English](./docs/releases/v4.6.0.en.md)
-* [Français](./docs/releases/v4.6.0.fr.md)
-* [日本語](./docs/releases/v4.6.0.ja.md)
-* [Español](./docs/releases/v4.6.0.es.md)
+* [简体中文](./docs/releases/v4.6.2.zh-CN.md)
+* [繁體中文](./docs/releases/v4.6.2.zh-TW.md)
+* [English](./docs/releases/v4.6.2.en.md)
+* [Français](./docs/releases/v4.6.2.fr.md)
+* [日本語](./docs/releases/v4.6.2.ja.md)
+* [Español](./docs/releases/v4.6.2.es.md)
 
 ## ✨ 主要功能
 

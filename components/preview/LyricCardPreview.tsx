@@ -41,7 +41,7 @@ export function LyricCardPreview({
   }, []);
 
   return (
-    <section className={`glass-panel min-w-0 rounded-lg p-4 ${sticky ? "sticky top-6 lg:min-h-[calc(100vh-48px)]" : ""}`}>
+    <section data-testid="lyric-card-preview" className={`glass-panel min-w-0 self-start rounded-lg p-4 ${sticky ? "sticky top-6" : ""}`}>
       <div className="mb-4 flex items-center justify-between gap-3">
         <div>
           <p className="app-text-subtle text-[11px] uppercase tracking-[0.16em]">{t("livePreview")}</p>
@@ -51,7 +51,7 @@ export function LyricCardPreview({
           {size.width}x{size.height}
         </span>
       </div>
-      <div ref={shellRef} className="flex min-h-[520px] min-w-0 items-center justify-center overflow-hidden rounded-lg bg-black/18 p-3">
+      <div ref={shellRef} data-testid="lyric-card-preview-shell" className="flex min-w-0 items-center justify-center overflow-hidden rounded-lg bg-black/18 p-3">
         <div
           style={{
             width: size.width * scale,

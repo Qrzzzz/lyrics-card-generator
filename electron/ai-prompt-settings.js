@@ -22,7 +22,15 @@ function normalizePromptLibrary(input) {
   const custom = new Map();
   for (const item of Array.isArray(source.customPresets) ? source.customPresets : []) {
     if (!item || typeof item.id !== "string" || !CUSTOM_PRESET_ID.test(item.id)) continue;
-    const normalized = { id: item.id, title: cleanText(item.title, 60), prompt: cleanText(item.prompt, 4000) };
+    const title = cleanText(item.title, 60);
+    const prompt = cleanText(item.prompt, 4000);
+    const normalized = {
+      id: item.id,
+      title,
+      prompt,
+      initialTitle: cleanText(item.initialTitle, 60) || title,
+      initialPrompt: cleanText(item.initialPrompt, 4000) || prompt
+    };
     if (!normalized.title || !normalized.prompt) continue;
     custom.set(item.id, normalized);
   }

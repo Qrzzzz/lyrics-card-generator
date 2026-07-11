@@ -19,6 +19,8 @@ assert.equal(normalized.localeOverrides.en.styleOverrides[0].prompt, "English st
 assert.equal(normalized.customPresets.length, 2);
 assert.equal(normalized.customPresets[0].title, "A");
 assert.equal(normalized.customPresets[1].id, "custom:b");
+assert.equal(normalized.customPresets[0].initialTitle, "A");
+assert.equal(normalized.customPresets[0].initialPrompt, "Updated");
 
 const legacy = normalizePromptLibrary({ formatRulesOverride: "legacy", styleOverrides: [{ id: "spoken", title: "Legacy", prompt: "Legacy prompt" }] });
 assert.equal(legacy.localeOverrides.zh.formatRulesOverride, "legacy");

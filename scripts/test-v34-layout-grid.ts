@@ -320,6 +320,7 @@ for (const [locale, title] of Object.entries(expectedTextDesignTitles) as Array<
 const stylePanelSource = readFileSync(resolve("components/editor/StylePanel.tsx"), "utf8");
 const colorControlsSource = readFileSync(resolve("components/editor/style-panel/ColorControls.tsx"), "utf8");
 const previewPaneSource = readFileSync(resolve("components/editor/PreviewPane.tsx"), "utf8");
+const lyricCardPreviewSource = readFileSync(resolve("components/preview/LyricCardPreview.tsx"), "utf8");
 const fontPreviewSource = readFileSync(resolve("components/editor/font-scheme/FontSchemePreviewPanel.tsx"), "utf8");
 const lyricCardSource = readFileSync(resolve("components/preview/LyricCard.tsx"), "utf8");
 const autoHeightSource = readFileSync(resolve("components/editor/hooks/useMeasuredAutoCanvasHeight.ts"), "utf8");
@@ -342,6 +343,9 @@ assert.ok(!stylePanelSource.includes('label={t("coverCrop")}'), "cover crop cont
 assert.ok(colorControlsSource.includes('{ value: "white", label: t("pureWhite") }'), "white mode is exposed");
 assert.ok(!colorControlsSource.includes("TEXT_COLOR_PRESETS"), "legacy color presets are not exposed");
 assert.ok(previewPaneSource.includes("textColor={style.textColorMode"), "font preview receives the effective text color");
+assert.ok(lyricCardPreviewSource.includes("self-start"), "live preview panel follows its own content height");
+assert.ok(!lyricCardPreviewSource.includes("min-h-[520px]"), "live preview canvas no longer reserves empty vertical space");
+assert.ok(!lyricCardPreviewSource.includes("min-h-[calc(100vh-48px)]"), "live preview border no longer stretches to the viewport");
 assert.ok(fontPreviewSource.includes("style={{ color: textColor }}"), "font preview original text follows the selected color");
 assert.ok(fontPreviewSource.includes("withAlpha(textColor, 0.66)"), "font preview romanization follows the selected color");
 assert.ok(fontPreviewSource.includes("withAlpha(textColor, 0.86)"), "font preview translation follows the selected color");

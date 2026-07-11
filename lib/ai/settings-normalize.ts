@@ -29,7 +29,17 @@ export function normalizePromptLibrary(input: unknown): AIPromptLibrary {
 
   const normalizedCustom = (Array.isArray(source.customPresets) ? source.customPresets : [])
     .filter((item): item is AICustomPreset => Boolean(item && typeof item === "object" && typeof item.id === "string" && CUSTOM_PRESET_ID.test(item.id)))
-    .map((item) => ({ id: item.id, title: cleanText(item.title, 60), prompt: cleanText(item.prompt, 4000) }))
+    .map((item) => {
+      const title = cleanText(item.title, 60);
+      const prompt = cleanText(item.prompt, 4000);
+      return {
+        id: item.id,
+        title,
+        prompt,
+        initialTitle: cleanText(item.initialTitle, 60) || title,
+        initialPrompt: cleanText(item.initialPrompt, 4000) || prompt
+      };
+    })
     .filter(isValidCustomPreset);
   const customPresets = Array.from(new Map(normalizedCustom.map((item) => [item.id, item])).values()).slice(0, 2);
 
