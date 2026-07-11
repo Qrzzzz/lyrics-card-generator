@@ -1,3 +1,5 @@
+import type { Locale } from "@/lib/types";
+
 export type TranslationStyle =
   | "lyrical"
   | "faithful"
@@ -20,9 +22,13 @@ export type AICustomPreset = {
   prompt: string;
 };
 
-export type AIPromptLibrary = {
+export type AILocalePromptOverrides = {
   formatRulesOverride: string;
   styleOverrides: AIStylePresetOverride[];
+};
+
+export type AIPromptLibrary = {
+  localeOverrides: Partial<Record<Locale, AILocalePromptOverrides>>;
   hiddenStyleIds: EditableTranslationStyle[];
   customPresets: AICustomPreset[];
 };
@@ -72,8 +78,7 @@ export const DEFAULT_AI_SETTINGS: AISettings = {
   defaultStyle: "recommended",
   reasoningEnabled: false,
   promptLibrary: {
-    formatRulesOverride: "",
-    styleOverrides: [],
+    localeOverrides: {},
     hiddenStyleIds: [],
     customPresets: []
   }

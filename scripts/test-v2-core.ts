@@ -1,9 +1,9 @@
 import { getLandscapeLayout, getPortraitLayout } from "../lib/card-layout-engine";
 import { cleanAITranslation } from "../lib/ai/clean";
 import { validateConfiguredSettings } from "../lib/ai/client";
-import { buildLyricsTranslationPrompt, PROMPT_OUTPUT_RULES } from "../lib/ai/prompt";
+import { buildLyricsTranslationPrompt, getDefaultStylePrompt, PROMPT_OUTPUT_RULES } from "../lib/ai/prompt";
 import { getTranslationPresets, getTranslationStyles } from "../lib/ai/styles";
-import { normalizeAISettings } from "../lib/ai/settings-normalize";
+import { getLocalePromptOverrides, normalizeAISettings, normalizePromptLibrary, setLocalePromptOverrides } from "../lib/ai/settings-normalize";
 import { DEFAULT_AI_SETTINGS } from "../lib/ai/types";
 import { getAIUiCopy } from "../lib/ai/ui-copy";
 import { buildUpdateResult } from "../lib/github-update";
@@ -332,8 +332,16 @@ function testAITranslationPrompt() {
   assertEqual(getAIUiCopy("ja").settingsSaveFailed, "AI 設定を保存できませんでした。", "Japanese AI UI copy");
   assertEqual(getAIUiCopy("es").defaultStyle, "Estilo de traducción predeterminado", "Spanish AI UI copy");
   const promptLibrary = {
-    formatRulesOverride: "ONLY THE TRANSLATED LINES.",
-    styleOverrides: [{ id: "lyrical" as const, title: "Quiet cut", prompt: "Keep every line quiet and close." }],
+    localeOverrides: {
+      zh: {
+        formatRulesOverride: "只输出中文译文。",
+        styleOverrides: [{ id: "lyrical" as const, title: "安静版", prompt: "保持中文表达安静克制。" }]
+      },
+      en: {
+        formatRulesOverride: "ONLY THE TRANSLATED LINES.",
+        styleOverrides: [{ id: "lyrical" as const, title: "Quiet cut", prompt: "Keep every line quiet and close." }]
+      }
+    },
     hiddenStyleIds: ["faithful" as const],
     customPresets: [
       { id: "custom:first", title: "Night drive", prompt: "Use cinematic night-drive imagery." },
@@ -344,7 +352,18 @@ function testAITranslationPrompt() {
   assert(customPrompt.includes("Use cinematic night-drive imagery."), "custom preset replaces the style module");
   assert(customPrompt.includes("ONLY THE TRANSLATED LINES."), "custom format rules remain a separate shared module");
   assert(!customPrompt.includes("Use the Recommended style"), "custom preset does not inherit recommended style text");
+  const englishStylePrompt = buildLyricsTranslationPrompt({ lyrics: "I miss you", presetId: "lyrical", targetLocale: "en", promptLibrary });
+  assert(englishStylePrompt.includes("Keep every line quiet and close."), "English uses its own style override");
+  assert(!englishStylePrompt.includes("保持中文表达安静克制"), "Chinese style override never leaks into English");
+  const japanesePrompt = buildLyricsTranslationPrompt({ lyrics: "I miss you", presetId: "lyrical", targetLocale: "ja", promptLibrary });
+  assert(japanesePrompt.includes(getDefaultStylePrompt("ja", "lyrical")), "Japanese keeps its localized default style");
+  assert(!japanesePrompt.includes("ONLY THE TRANSLATED LINES."), "English format override never leaks into Japanese");
   assertEqual(getTranslationPresets("en", promptLibrary).length, 7, "one hidden default plus two custom presets resolve to seven entries");
+  assertEqual(getTranslationPresets("zh", promptLibrary).find((preset) => preset.id === "lyrical")?.name, "安静版", "title override is locale scoped");
+  assertEqual(getTranslationPresets("ja", promptLibrary).find((preset) => preset.id === "lyrical")?.name, "抒情的", "title-only edits do not leak across locales");
+  const resetChinese = setLocalePromptOverrides(promptLibrary, "zh", { formatRulesOverride: "", styleOverrides: [] });
+  assertEqual(getLocalePromptOverrides(resetChinese, "zh").styleOverrides.length, 0, "reset clears only the current locale");
+  assertEqual(getLocalePromptOverrides(resetChinese, "en").styleOverrides.length, 1, "reset preserves other locale overrides");
   const normalizedLibrary = normalizeAISettings({
     ...DEFAULT_AI_SETTINGS,
     defaultStyle: "faithful",
@@ -355,6 +374,16 @@ function testAITranslationPrompt() {
   });
   assertEqual(normalizedLibrary.promptLibrary.customPresets.length, 2, "custom preset storage is capped at two");
   assertEqual(normalizedLibrary.defaultStyle, "recommended", "deleting the selected default falls back to recommended");
+  const duplicateMigration = normalizePromptLibrary({
+    customPresets: [
+      { id: "custom:a", title: "A old", prompt: "First" },
+      { id: "custom:a", title: "A", prompt: "Updated" },
+      { id: "custom:b", title: "B", prompt: "Second" },
+      { id: "custom:empty", title: "Empty", prompt: "" }
+    ]
+  });
+  assertEqual(duplicateMigration.customPresets.length, 2, "custom migration filters, deduplicates, then caps at two");
+  assertEqual(duplicateMigration.customPresets[1]?.id, "custom:b", "deduplication does not discard a later unique preset");
   assertEqual(cleanAITranslation("```text\n译文如下：\n想念你\n```"), "想念你", "clean AI wrapper text");
   assertThrows(
     () => validateConfiguredSettings({

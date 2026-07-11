@@ -205,6 +205,7 @@ export function SettingsSurface({
                     </div>
                   ) : (
                     <AiSettingsSection
+                      open={isActive}
                       settings={workspace.settings}
                       apiKey={workspace.apiKey}
                       hasApiKey={workspace.hasApiKey}

@@ -5,6 +5,7 @@ const http = require("node:http");
 const net = require("node:net");
 const path = require("node:path");
 const { getBackgroundImageMime, safeBackgroundPathForUserData } = require("./background-images");
+const { normalizePromptLibrary } = require("./ai-prompt-settings");
 const { normalizeFontOptions } = require("./font-options");
 const {
   buildChatCompletionsRequestBody: buildProviderChatCompletionsRequestBody,
@@ -42,15 +43,12 @@ const DEFAULT_AI_SETTINGS = {
   defaultStyle: "recommended",
   reasoningEnabled: false,
   promptLibrary: {
-    formatRulesOverride: "",
-    styleOverrides: [],
+    localeOverrides: {},
     hiddenStyleIds: [],
     customPresets: []
   }
 };
 const TRANSLATION_STYLES = new Set(["lyrical", "faithful", "spoken", "imagistic", "restrained", "recommended"]);
-const EDITABLE_TRANSLATION_STYLES = new Set(["lyrical", "faithful", "spoken", "imagistic", "restrained"]);
-const CUSTOM_PRESET_ID = /^custom:[a-z0-9-]{1,64}$/i;
 
 function getAvailablePort() {
   return new Promise((resolve, reject) => {
@@ -679,43 +677,6 @@ function normalizeAISettings(input) {
     reasoningEnabled: Boolean(input?.reasoningEnabled),
     promptLibrary
   };
-}
-
-function normalizePromptLibrary(input) {
-  const source = input && typeof input === "object" ? input : {};
-  const hiddenStyleIds = [...new Set(
-    Array.isArray(source.hiddenStyleIds)
-      ? source.hiddenStyleIds.filter((id) => EDITABLE_TRANSLATION_STYLES.has(id))
-      : []
-  )];
-  const overrides = new Map();
-  for (const item of Array.isArray(source.styleOverrides) ? source.styleOverrides : []) {
-    if (!item || !EDITABLE_TRANSLATION_STYLES.has(item.id)) continue;
-    overrides.set(item.id, {
-      id: item.id,
-      title: cleanAIText(item.title, 60),
-      prompt: cleanAIText(item.prompt, 4000)
-    });
-  }
-  const custom = new Map();
-  for (const item of (Array.isArray(source.customPresets) ? source.customPresets : []).slice(0, 2)) {
-    if (!item || typeof item.id !== "string" || !CUSTOM_PRESET_ID.test(item.id)) continue;
-    custom.set(item.id, {
-      id: item.id,
-      title: cleanAIText(item.title, 60),
-      prompt: cleanAIText(item.prompt, 4000)
-    });
-  }
-  return {
-    formatRulesOverride: cleanAIText(source.formatRulesOverride, 6000),
-    styleOverrides: [...overrides.values()],
-    hiddenStyleIds,
-    customPresets: [...custom.values()]
-  };
-}
-
-function cleanAIText(value, maxLength) {
-  return typeof value === "string" ? value.trim().slice(0, maxLength) : "";
 }
 
 function toAISettingsSummary(settings) {

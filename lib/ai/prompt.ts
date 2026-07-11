@@ -184,16 +184,17 @@ export function buildLyricsTranslationPrompt(params: {
   const bundle = PROMPT_BUNDLES[params.targetLocale];
   const presetId = params.presetId ?? params.style ?? "recommended";
   const library = params.promptLibrary;
+  const localeOverrides = library?.localeOverrides[params.targetLocale];
   let stylePrompt = bundle.styles.recommended;
   if (isTranslationStyle(presetId)) {
     const override = presetId === "recommended"
       ? undefined
-      : library?.styleOverrides.find((item) => item.id === presetId);
+      : localeOverrides?.styleOverrides.find((item) => item.id === presetId);
     stylePrompt = override?.prompt.trim() || bundle.styles[presetId];
   } else {
     stylePrompt = library?.customPresets.find((item) => item.id === presetId)?.prompt.trim() || stylePrompt;
   }
-  const outputRules = library?.formatRulesOverride.trim() || bundle.outputRules;
+  const outputRules = localeOverrides?.formatRulesOverride.trim() || bundle.outputRules;
   return [
     bundle.identity,
     bundle.principles,

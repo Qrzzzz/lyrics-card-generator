@@ -39,6 +39,9 @@ export type AIPromptUiCopy = {
   restorePreset: string;
   restorePresetDescription: string;
   newPresetTitle: string;
+  savePreset: string;
+  discardDraft: string;
+  requiredFields: string;
   modified: string;
 };
 
@@ -63,7 +66,7 @@ const COPY: Record<Locale, AIPromptUiCopy> = {
     deletePreset: "删除", deletePresetConfirm: "删除这个预设？此操作会立即保存。",
     resetPresetConfirm: "将这个预设恢复为 4.6.0 默认标题和提示词？",
     restorePreset: "恢复已删除的默认预设", restorePresetDescription: "选择一个默认预设，将它重新放回资源库。",
-    newPresetTitle: "新的自定义预设", modified: "已修改"
+    newPresetTitle: "新的自定义预设", savePreset: "保存预设", discardDraft: "放弃草稿", requiredFields: "标题和风格提示词均为必填；保存前不会占用自定义预设名额。", modified: "已修改"
   },
   "zh-TW": {
     workspace: "AI 工作區", workspaceDescription: "在兩個獨立頁面中管理 API 連線與模組化提示詞。",
@@ -80,7 +83,7 @@ const COPY: Record<Locale, AIPromptUiCopy> = {
     presetPromptPlaceholder: "例如：語氣溫柔克制，保留口語停頓；不要堆砌華麗辭藻。只寫風格要求即可。",
     protectedPreset: "固定推薦版", defaultPreset: "預設項目", customPreset: "自訂預設", editPreset: "編輯預設", deletePreset: "刪除",
     deletePresetConfirm: "刪除這個預設？此操作會立即儲存。", resetPresetConfirm: "將這個預設恢復為 4.6.0 預設標題與提示詞？",
-    restorePreset: "還原已刪除的預設", restorePresetDescription: "選擇一個預設，將它重新放回資源庫。", newPresetTitle: "新的自訂預設", modified: "已修改"
+    restorePreset: "還原已刪除的預設", restorePresetDescription: "選擇一個預設，將它重新放回資源庫。", newPresetTitle: "新的自訂預設", savePreset: "儲存預設", discardDraft: "放棄草稿", requiredFields: "標題與風格提示詞皆為必填；儲存前不會占用自訂預設名額。", modified: "已修改"
   },
   en: {
     workspace: "AI Workspace", workspaceDescription: "Manage provider access and modular prompts in two focused pages.",
@@ -97,7 +100,7 @@ const COPY: Record<Locale, AIPromptUiCopy> = {
     presetPromptPlaceholder: "Example: Keep the tone gentle and restrained, preserve conversational pauses, and avoid ornate wording. Write style guidance only.",
     protectedPreset: "Protected recommended preset", defaultPreset: "Default preset", customPreset: "Custom preset", editPreset: "Edit preset", deletePreset: "Delete",
     deletePresetConfirm: "Delete this preset? The change is saved immediately.", resetPresetConfirm: "Restore this preset's 4.6.0 default title and prompt?",
-    restorePreset: "Restore a removed default", restorePresetDescription: "Choose a default preset to return it to the library.", newPresetTitle: "New custom preset", modified: "Modified"
+    restorePreset: "Restore a removed default", restorePresetDescription: "Choose a default preset to return it to the library.", newPresetTitle: "New custom preset", savePreset: "Save preset", discardDraft: "Discard draft", requiredFields: "Title and style prompt are required. The draft uses no custom-preset slot until saved.", modified: "Modified"
   },
   fr: {
     workspace: "Espace de travail IA", workspaceDescription: "Gérez la connexion API et les prompts modulaires dans deux pages dédiées.",
@@ -113,7 +116,7 @@ const COPY: Record<Locale, AIPromptUiCopy> = {
     presetPromptPlaceholder: "Exemple : gardez un ton doux et retenu, préservez les pauses orales et évitez les formulations ornées. Décrivez uniquement le style.",
     protectedPreset: "Version recommandée protégée", defaultPreset: "Préréglage par défaut", customPreset: "Préréglage personnalisé", editPreset: "Modifier", deletePreset: "Supprimer",
     deletePresetConfirm: "Supprimer ce préréglage ? La modification sera enregistrée immédiatement.", resetPresetConfirm: "Rétablir le titre et le prompt par défaut de la 4.6.0 ?",
-    restorePreset: "Restaurer un préréglage supprimé", restorePresetDescription: "Choisissez un préréglage à remettre dans la bibliothèque.", newPresetTitle: "Nouveau préréglage", modified: "Modifié"
+    restorePreset: "Restaurer un préréglage supprimé", restorePresetDescription: "Choisissez un préréglage à remettre dans la bibliothèque.", newPresetTitle: "Nouveau préréglage", savePreset: "Enregistrer", discardDraft: "Abandonner le brouillon", requiredFields: "Le titre et le prompt de style sont obligatoires. Le brouillon n’occupe aucune place avant l’enregistrement.", modified: "Modifié"
   },
   ja: {
     workspace: "AI ワークスペース", workspaceDescription: "API 接続とモジュール式プロンプトを二つの専用ページで管理します。",
@@ -129,7 +132,7 @@ const COPY: Record<Locale, AIPromptUiCopy> = {
     presetPromptPlaceholder: "例：穏やかで抑制した語調にし、会話の間を残し、華美な表現を避ける。スタイルの指示だけを書いてください。",
     protectedPreset: "固定おすすめ版", defaultPreset: "既定プリセット", customPreset: "カスタムプリセット", editPreset: "編集", deletePreset: "削除",
     deletePresetConfirm: "このプリセットを削除しますか？変更はすぐ保存されます。", resetPresetConfirm: "タイトルとプロンプトを 4.6.0 の既定値に戻しますか？",
-    restorePreset: "削除した既定プリセットを復元", restorePresetDescription: "ライブラリに戻すプリセットを選択してください。", newPresetTitle: "新しいカスタムプリセット", modified: "変更済み"
+    restorePreset: "削除した既定プリセットを復元", restorePresetDescription: "ライブラリに戻すプリセットを選択してください。", newPresetTitle: "新しいカスタムプリセット", savePreset: "プリセットを保存", discardDraft: "下書きを破棄", requiredFields: "タイトルとスタイルプロンプトは必須です。保存するまでカスタム枠を使用しません。", modified: "変更済み"
   },
   es: {
     workspace: "Espacio de trabajo de IA", workspaceDescription: "Gestiona la conexión API y los prompts modulares en dos páginas específicas.",
@@ -145,7 +148,7 @@ const COPY: Record<Locale, AIPromptUiCopy> = {
     presetPromptPlaceholder: "Ejemplo: usa un tono suave y contenido, conserva las pausas coloquiales y evita palabras recargadas. Escribe solo indicaciones de estilo.",
     protectedPreset: "Versión recomendada protegida", defaultPreset: "Preajuste predeterminado", customPreset: "Preajuste personalizado", editPreset: "Editar", deletePreset: "Eliminar",
     deletePresetConfirm: "¿Eliminar este preajuste? El cambio se guardará de inmediato.", resetPresetConfirm: "¿Restaurar el título y el prompt predeterminados de 4.6.0?",
-    restorePreset: "Restaurar un preajuste eliminado", restorePresetDescription: "Elige un preajuste para devolverlo a la biblioteca.", newPresetTitle: "Nuevo preajuste personalizado", modified: "Modificado"
+    restorePreset: "Restaurar un preajuste eliminado", restorePresetDescription: "Elige un preajuste para devolverlo a la biblioteca.", newPresetTitle: "Nuevo preajuste personalizado", savePreset: "Guardar preajuste", discardDraft: "Descartar borrador", requiredFields: "El título y el prompt de estilo son obligatorios. El borrador no ocupa una plaza hasta guardarse.", modified: "Modificado"
   }
 };
 

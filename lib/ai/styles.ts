@@ -84,7 +84,7 @@ export function getTranslationStyles(locale: Locale): TranslationStyleOption[] {
 
 export function getTranslationPresets(locale: Locale, library: AIPromptLibrary): TranslationPresetOption[] {
   const hidden = new Set(library.hiddenStyleIds);
-  const overrides = new Map(library.styleOverrides.map((override) => [override.id, override]));
+  const overrides = new Map((library.localeOverrides[locale]?.styleOverrides ?? []).map((override) => [override.id, override]));
   const builtIns = STYLE_ORDER.filter((id) => id === "recommended" || !hidden.has(id as EditableTranslationStyle)).map((id) => {
     const copy = STYLE_COPY[locale][id];
     const override = id === "recommended" ? undefined : overrides.get(id as EditableTranslationStyle);
@@ -95,7 +95,7 @@ export function getTranslationPresets(locale: Locale, library: AIPromptLibrary):
       source: id === "recommended" ? "recommended" as const : "built-in" as const
     };
   });
-  const custom = library.customPresets.map((preset) => ({
+  const custom = library.customPresets.filter((preset) => preset.title.trim() && preset.prompt.trim()).map((preset) => ({
     id: preset.id,
     name: preset.title,
     description: preset.prompt,
