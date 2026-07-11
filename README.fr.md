@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v4.5.0.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v4.6.0.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="#développement-local">Développement local</a> ·
@@ -51,31 +51,31 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 Téléchargez la dernière version depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
 
-* Installateur recommandé : `Lyrics Card Generator Setup 4.5.0.exe`
-* Version portable : `Lyrics Card Generator-4.5.0-portable.exe`
+* Installateur recommandé : `Lyrics Card Generator Setup 4.6.0.exe`
+* Version portable : `Lyrics Card Generator-4.6.0-portable.exe`
 
 L'installateur est recommandé pour une utilisation régulière. La version portable convient aux essais, à une utilisation temporaire ou à un disque amovible.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### Points clés de la v4.5.0
+### Points clés de la v4.6.0
 
-* Amélioration de l’espacement du titre, de l’artiste et de l’album sur les cartes Instrumental / Sans paroles, avec affichage de l’album comme en mode paroles lorsqu’un nom d’album est disponible.
-* Retour des contrôles rouge, jaune et vert de la barre de titre à un style plat, avec des écarts réduits, tout en conservant leurs animations actuelles.
-* Ajout de transitions animées entre les onglets des paramètres. La section Général propose désormais une option de réduction des animations, désactivée par défaut, tout en continuant de respecter la préférence du système.
-* Ajout des valeurs par défaut pour le filigrane et la mention de partage avant Qualité d’exportation. La mention est désactivée par défaut ; une fois activée, son texte par défaut met immédiatement à jour la carte actuelle.
-* Ajout d’une transition de carte vers la gauche et d’un avis lorsque la carte est déjà vide pour « Tout effacer », amélioration des notifications légères et suppression des cartes d’information et grands cadres superflus de l’étape Exportation.
+* Refonte des réglages IA en deux pages, Configuration API et Bibliothèque de prompts, avec navigation Retour, Suivant et chemin cliquable.
+* Conservation de la version Recommandée protégée ; les cinq autres préréglages sont modifiables, supprimables, réinitialisables et restaurables, avec deux préréglages personnalisés supplémentaires.
+* Ajout sur le panneau principal d’une section personnalisée repliée, affichant au maximum deux préréglages utilisateur.
+* Séparation des règles de format strictes et des prompts de style, avec double confirmation avant modification et réinitialisation vers la v4.6.0.
+* Migration automatique des anciens réglages IA ; les styles personnalisés ne remplacent jamais la règle commune qui exige uniquement les paroles traduites.
 
 ## 🌐 Notes de publication multilingues
 
 La page GitHub Release utilise par défaut la version courte en chinois simplifié, les notes de publication complètes sont conservées dans `docs/releases/` :
 
-* [简体中文](./docs/releases/v4.5.0.zh-CN.md)
-* [繁體中文](./docs/releases/v4.5.0.zh-TW.md)
-* [English](./docs/releases/v4.5.0.en.md)
-* [Français](./docs/releases/v4.5.0.fr.md)
-* [日本語](./docs/releases/v4.5.0.ja.md)
-* [Español](./docs/releases/v4.5.0.es.md)
+* [简体中文](./docs/releases/v4.6.0.zh-CN.md)
+* [繁體中文](./docs/releases/v4.6.0.zh-TW.md)
+* [English](./docs/releases/v4.6.0.en.md)
+* [Français](./docs/releases/v4.6.0.fr.md)
+* [日本語](./docs/releases/v4.6.0.ja.md)
+* [Español](./docs/releases/v4.6.0.es.md)
 
 <a id="fonctionnalités-principales"></a>
 
@@ -93,7 +93,7 @@ La page GitHub Release utilise par défaut la version courte en chinois simplifi
 
 * Mise en page originale des paroles et des traductions
 * Séparation automatique des lignes original / traduction avec détection du chinois simplifié, chinois traditionnel, anglais, français, japonais et espagnol
-* Traduction de paroles par IA via les API Chat Completions compatibles OpenAI, avec URL du fournisseur, modèle, clé API, six styles, Reasoning et sortie en streaming configurables
+* Traduction de paroles par IA via les API Chat Completions compatibles OpenAI, avec URL du fournisseur, modèle, clé API, six préréglages par défaut, deux préréglages personnalisés, Reasoning et sortie en streaming configurables
 
 ### 🎵 Recherche de morceau, liens musicaux et analyse de fichiers locaux
 

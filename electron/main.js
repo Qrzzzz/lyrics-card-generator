@@ -40,9 +40,17 @@ const DEFAULT_AI_SETTINGS = {
   model: "",
   temperature: 0.7,
   defaultStyle: "recommended",
-  reasoningEnabled: false
+  reasoningEnabled: false,
+  promptLibrary: {
+    formatRulesOverride: "",
+    styleOverrides: [],
+    hiddenStyleIds: [],
+    customPresets: []
+  }
 };
 const TRANSLATION_STYLES = new Set(["lyrical", "faithful", "spoken", "imagistic", "restrained", "recommended"]);
+const EDITABLE_TRANSLATION_STYLES = new Set(["lyrical", "faithful", "spoken", "imagistic", "restrained"]);
+const CUSTOM_PRESET_ID = /^custom:[a-z0-9-]{1,64}$/i;
 
 function getAvailablePort() {
   return new Promise((resolve, reject) => {
@@ -656,15 +664,58 @@ async function readAISettings() {
 
 function normalizeAISettings(input) {
   const temperature = Number(input?.temperature);
+  const promptLibrary = normalizePromptLibrary(input?.promptLibrary);
+  const requestedDefault = typeof input?.defaultStyle === "string" ? input.defaultStyle : "";
+  const defaultBuiltInAvailable = TRANSLATION_STYLES.has(requestedDefault)
+    && (requestedDefault === "recommended" || !promptLibrary.hiddenStyleIds.includes(requestedDefault));
+  const defaultCustomAvailable = promptLibrary.customPresets.some((preset) => preset.id === requestedDefault);
   return {
     baseUrl: typeof input?.baseUrl === "string" && input.baseUrl.trim()
       ? input.baseUrl.trim()
       : DEFAULT_AI_SETTINGS.baseUrl,
     model: typeof input?.model === "string" ? input.model.trim() : "",
     temperature: Number.isFinite(temperature) ? Math.min(2, Math.max(0, temperature)) : DEFAULT_AI_SETTINGS.temperature,
-    defaultStyle: TRANSLATION_STYLES.has(input?.defaultStyle) ? input.defaultStyle : DEFAULT_AI_SETTINGS.defaultStyle,
-    reasoningEnabled: Boolean(input?.reasoningEnabled)
+    defaultStyle: defaultBuiltInAvailable || defaultCustomAvailable ? requestedDefault : DEFAULT_AI_SETTINGS.defaultStyle,
+    reasoningEnabled: Boolean(input?.reasoningEnabled),
+    promptLibrary
   };
+}
+
+function normalizePromptLibrary(input) {
+  const source = input && typeof input === "object" ? input : {};
+  const hiddenStyleIds = [...new Set(
+    Array.isArray(source.hiddenStyleIds)
+      ? source.hiddenStyleIds.filter((id) => EDITABLE_TRANSLATION_STYLES.has(id))
+      : []
+  )];
+  const overrides = new Map();
+  for (const item of Array.isArray(source.styleOverrides) ? source.styleOverrides : []) {
+    if (!item || !EDITABLE_TRANSLATION_STYLES.has(item.id)) continue;
+    overrides.set(item.id, {
+      id: item.id,
+      title: cleanAIText(item.title, 60),
+      prompt: cleanAIText(item.prompt, 4000)
+    });
+  }
+  const custom = new Map();
+  for (const item of (Array.isArray(source.customPresets) ? source.customPresets : []).slice(0, 2)) {
+    if (!item || typeof item.id !== "string" || !CUSTOM_PRESET_ID.test(item.id)) continue;
+    custom.set(item.id, {
+      id: item.id,
+      title: cleanAIText(item.title, 60),
+      prompt: cleanAIText(item.prompt, 4000)
+    });
+  }
+  return {
+    formatRulesOverride: cleanAIText(source.formatRulesOverride, 6000),
+    styleOverrides: [...overrides.values()],
+    hiddenStyleIds,
+    customPresets: [...custom.values()]
+  };
+}
+
+function cleanAIText(value, maxLength) {
+  return typeof value === "string" ? value.trim().slice(0, maxLength) : "";
 }
 
 function toAISettingsSummary(settings) {
@@ -674,6 +725,7 @@ function toAISettingsSummary(settings) {
     temperature: settings.temperature,
     defaultStyle: settings.defaultStyle,
     reasoningEnabled: settings.reasoningEnabled,
+    promptLibrary: settings.promptLibrary,
     hasApiKey: Boolean(settings.encryptedApiKey)
   };
 }

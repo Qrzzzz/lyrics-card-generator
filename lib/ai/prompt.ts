@@ -1,4 +1,5 @@
-import type { TranslationStyle } from "@/lib/ai/types";
+import type { AIPromptLibrary, TranslationStyle } from "@/lib/ai/types";
+import { isTranslationStyle } from "@/lib/ai/styles";
 import type { Locale } from "@/lib/types";
 
 type PromptBundle = {
@@ -165,17 +166,39 @@ Empieza directamente con el primer verso traducido y termina con el último.`,
 // Kept as the only exported output-rules definition. The highest-priority version is intentional.
 export const PROMPT_OUTPUT_RULES = PROMPT_BUNDLES.zh.outputRules;
 
+export function getDefaultFormatRules(locale: Locale) {
+  return PROMPT_BUNDLES[locale].outputRules;
+}
+
+export function getDefaultStylePrompt(locale: Locale, style: TranslationStyle) {
+  return PROMPT_BUNDLES[locale].styles[style];
+}
+
 export function buildLyricsTranslationPrompt(params: {
   lyrics: string;
-  style: TranslationStyle;
+  style?: TranslationStyle;
+  presetId?: string;
   targetLocale: Locale;
+  promptLibrary?: AIPromptLibrary;
 }) {
   const bundle = PROMPT_BUNDLES[params.targetLocale];
+  const presetId = params.presetId ?? params.style ?? "recommended";
+  const library = params.promptLibrary;
+  let stylePrompt = bundle.styles.recommended;
+  if (isTranslationStyle(presetId)) {
+    const override = presetId === "recommended"
+      ? undefined
+      : library?.styleOverrides.find((item) => item.id === presetId);
+    stylePrompt = override?.prompt.trim() || bundle.styles[presetId];
+  } else {
+    stylePrompt = library?.customPresets.find((item) => item.id === presetId)?.prompt.trim() || stylePrompt;
+  }
+  const outputRules = library?.formatRulesOverride.trim() || bundle.outputRules;
   return [
     bundle.identity,
     bundle.principles,
-    bundle.styles[params.style],
-    bundle.outputRules,
+    stylePrompt,
+    outputRules,
     `${bundle.lyricsLead}\n\n${params.lyrics.trim()}`
   ].join("\n\n");
 }

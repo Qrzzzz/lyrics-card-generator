@@ -326,7 +326,8 @@ export function LyricEditor() {
       phase: aiTranslationPhase,
       error: aiError,
       defaultStyle: aiSettings.defaultStyle,
-      reasoningEnabled: aiSettings.reasoningEnabled
+      reasoningEnabled: aiSettings.reasoningEnabled,
+      promptLibrary: aiSettings.promptLibrary
     },
     handlers: {
       onUrlChange: setUrl,

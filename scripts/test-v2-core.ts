@@ -2,7 +2,9 @@ import { getLandscapeLayout, getPortraitLayout } from "../lib/card-layout-engine
 import { cleanAITranslation } from "../lib/ai/clean";
 import { validateConfiguredSettings } from "../lib/ai/client";
 import { buildLyricsTranslationPrompt, PROMPT_OUTPUT_RULES } from "../lib/ai/prompt";
-import { getTranslationStyles } from "../lib/ai/styles";
+import { getTranslationPresets, getTranslationStyles } from "../lib/ai/styles";
+import { normalizeAISettings } from "../lib/ai/settings-normalize";
+import { DEFAULT_AI_SETTINGS } from "../lib/ai/types";
 import { getAIUiCopy } from "../lib/ai/ui-copy";
 import { buildUpdateResult } from "../lib/github-update";
 import { getUpdateLink } from "../lib/update-link";
@@ -329,6 +331,30 @@ function testAITranslationPrompt() {
   assertEqual(getAIUiCopy("fr").aiSection, "Traduction des paroles par IA", "French AI UI copy");
   assertEqual(getAIUiCopy("ja").settingsSaveFailed, "AI 設定を保存できませんでした。", "Japanese AI UI copy");
   assertEqual(getAIUiCopy("es").defaultStyle, "Estilo de traducción predeterminado", "Spanish AI UI copy");
+  const promptLibrary = {
+    formatRulesOverride: "ONLY THE TRANSLATED LINES.",
+    styleOverrides: [{ id: "lyrical" as const, title: "Quiet cut", prompt: "Keep every line quiet and close." }],
+    hiddenStyleIds: ["faithful" as const],
+    customPresets: [
+      { id: "custom:first", title: "Night drive", prompt: "Use cinematic night-drive imagery." },
+      { id: "custom:second", title: "Bare", prompt: "Use plain and spare language." }
+    ]
+  };
+  const customPrompt = buildLyricsTranslationPrompt({ lyrics: "I miss you", presetId: "custom:first", targetLocale: "en", promptLibrary });
+  assert(customPrompt.includes("Use cinematic night-drive imagery."), "custom preset replaces the style module");
+  assert(customPrompt.includes("ONLY THE TRANSLATED LINES."), "custom format rules remain a separate shared module");
+  assert(!customPrompt.includes("Use the Recommended style"), "custom preset does not inherit recommended style text");
+  assertEqual(getTranslationPresets("en", promptLibrary).length, 7, "one hidden default plus two custom presets resolve to seven entries");
+  const normalizedLibrary = normalizeAISettings({
+    ...DEFAULT_AI_SETTINGS,
+    defaultStyle: "faithful",
+    promptLibrary: {
+      ...promptLibrary,
+      customPresets: [...promptLibrary.customPresets, { id: "custom:third", title: "Third", prompt: "Ignored" }]
+    }
+  });
+  assertEqual(normalizedLibrary.promptLibrary.customPresets.length, 2, "custom preset storage is capped at two");
+  assertEqual(normalizedLibrary.defaultStyle, "recommended", "deleting the selected default falls back to recommended");
   assertEqual(cleanAITranslation("```text\n译文如下：\n想念你\n```"), "想念你", "clean AI wrapper text");
   assertThrows(
     () => validateConfiguredSettings({
@@ -337,6 +363,7 @@ function testAITranslationPrompt() {
       temperature: 0.7,
       defaultStyle: "recommended",
       reasoningEnabled: false,
+      promptLibrary: DEFAULT_AI_SETTINGS.promptLibrary,
       hasApiKey: false
     }),
     "未配置 API Key",
@@ -349,6 +376,7 @@ function testAITranslationPrompt() {
       temperature: 0.7,
       defaultStyle: "recommended",
       reasoningEnabled: false,
+      promptLibrary: DEFAULT_AI_SETTINGS.promptLibrary,
       hasApiKey: true
     }),
     "未配置模型",

@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v4.5.0.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v4.6.0.zh-CN.md">发布说明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">在线 Web Lite 版</a> ·
   <a href="./docs/desktop.md">桌面维护文档</a> ·
   <a href="#主要功能">主要功能</a> ·
@@ -49,31 +49,31 @@
 
 请前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下载最新版：
 
-* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 4.5.0.exe`
-* 不想安装时可下载便携版：`Lyrics Card Generator-4.5.0-portable.exe`
+* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 4.6.0.exe`
+* 不想安装时可下载便携版：`Lyrics Card Generator-4.6.0-portable.exe`
 
 安装版适合长期使用；便携版适合临时运行、测试或放在移动硬盘中使用。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v4.5.0 更新重点
+### v4.6.0 更新重点
 
-* 优化纯音乐 / 无歌词卡片的标题、歌手与专辑信息间距，并在存在专辑名时像有歌词模式一样显示专辑信息。
-* 标题栏红黄绿窗口按钮恢复平面样式并缩小彼此间距，同时保留现有动效。
-* 为设置的不同标签页加入内容切换动效；通用页新增默认关闭的“减弱动效”开关，同时继续尊重系统偏好。
-* 导出设置在“导出质量”前新增生成水印与分享人默认值；分享人默认关闭，启用后可填写默认文本并即时联动当前卡片。
-* “一键清空”新增左右交接的卡片预览动效与空状态轻提示；轻提示视觉和动效同步升级，导出步骤则移除冗余说明卡与外围大边框。
+* AI 设置重构为 API 配置与提示词资源库两个子页面，加入类似文件资源管理器的前进、后退和路径导航。
+* 推荐版固定保留；其余 5 个默认预设可编辑、删除、重置和恢复，并可新增最多 2 个自定义预设。
+* 主页面新增默认折叠的自定义预设入口，展开后最多显示 2 个用户预设。
+* 严格格式规则独立于风格提示词，编辑前需要两次确认，并支持一键恢复 v4.6.0 默认内容。
+* 旧版 AI 配置自动迁移到新结构，自定义风格不会覆盖“只输出译文原文”的共同格式要求。
 
 ## 🌐 多语言发布说明
 
 GitHub Release 页面默认使用简体中文短版，完整发布说明维护在 `docs/releases/`：
 
-* [简体中文](./docs/releases/v4.5.0.zh-CN.md)
-* [繁體中文](./docs/releases/v4.5.0.zh-TW.md)
-* [English](./docs/releases/v4.5.0.en.md)
-* [Français](./docs/releases/v4.5.0.fr.md)
-* [日本語](./docs/releases/v4.5.0.ja.md)
-* [Español](./docs/releases/v4.5.0.es.md)
+* [简体中文](./docs/releases/v4.6.0.zh-CN.md)
+* [繁體中文](./docs/releases/v4.6.0.zh-TW.md)
+* [English](./docs/releases/v4.6.0.en.md)
+* [Français](./docs/releases/v4.6.0.fr.md)
+* [日本語](./docs/releases/v4.6.0.ja.md)
+* [Español](./docs/releases/v4.6.0.es.md)
 
 <a id="主要功能"></a>
 
@@ -91,7 +91,7 @@ GitHub Release 页面默认使用简体中文短版，完整发布说明维护�
 
 * 支持歌词原文与翻译并排排版
 * 支持按当前界面语言拆分原文 / 译文，包括简体中文、繁体中文、英文、法语、日语、西班牙语目标译文
-* 支持兼容 OpenAI Chat Completions 的 AI 歌词翻译，可配置厂商 Base URL、模型、API Key、六种翻译风格、Reasoning 和流式输出
+* 支持兼容 OpenAI Chat Completions 的 AI 歌词翻译，可配置厂商 Base URL、模型、API Key、6 个默认预设、最多 2 个自定义预设、Reasoning 和流式输出
 
 ### 🎵 歌曲搜索、音乐链接与本地文件解析
 

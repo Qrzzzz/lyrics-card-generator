@@ -1,4 +1,4 @@
-import type { TranslationStyle } from "@/lib/ai/types";
+import type { AIPromptLibrary, EditableTranslationStyle, TranslationStyle } from "@/lib/ai/types";
 import type { Locale } from "@/lib/types";
 
 export type TranslationStyleOption = {
@@ -7,7 +7,14 @@ export type TranslationStyleOption = {
   description: string;
 };
 
-const STYLE_ORDER: TranslationStyle[] = [
+export type TranslationPresetOption = {
+  id: string;
+  name: string;
+  description: string;
+  source: "recommended" | "built-in" | "custom";
+};
+
+export const STYLE_ORDER: TranslationStyle[] = [
   "recommended",
   "lyrical",
   "faithful",
@@ -15,6 +22,10 @@ const STYLE_ORDER: TranslationStyle[] = [
   "imagistic",
   "restrained"
 ];
+
+export const EDITABLE_STYLE_ORDER = STYLE_ORDER.filter(
+  (style): style is EditableTranslationStyle => style !== "recommended"
+);
 
 const STYLE_COPY: Record<Locale, Record<TranslationStyle, Omit<TranslationStyleOption, "id">>> = {
   zh: {
@@ -71,6 +82,32 @@ export function getTranslationStyles(locale: Locale): TranslationStyleOption[] {
   return STYLE_ORDER.map((id) => ({ id, ...STYLE_COPY[locale][id] }));
 }
 
+export function getTranslationPresets(locale: Locale, library: AIPromptLibrary): TranslationPresetOption[] {
+  const hidden = new Set(library.hiddenStyleIds);
+  const overrides = new Map(library.styleOverrides.map((override) => [override.id, override]));
+  const builtIns = STYLE_ORDER.filter((id) => id === "recommended" || !hidden.has(id as EditableTranslationStyle)).map((id) => {
+    const copy = STYLE_COPY[locale][id];
+    const override = id === "recommended" ? undefined : overrides.get(id as EditableTranslationStyle);
+    return {
+      id,
+      name: override?.title.trim() || copy.name,
+      description: copy.description,
+      source: id === "recommended" ? "recommended" as const : "built-in" as const
+    };
+  });
+  const custom = library.customPresets.map((preset) => ({
+    id: preset.id,
+    name: preset.title,
+    description: preset.prompt,
+    source: "custom" as const
+  }));
+  return [...builtIns, ...custom];
+}
+
 export function isTranslationStyle(value: unknown): value is TranslationStyle {
   return STYLE_ORDER.includes(value as TranslationStyle);
+}
+
+export function isEditableTranslationStyle(value: unknown): value is EditableTranslationStyle {
+  return EDITABLE_STYLE_ORDER.includes(value as EditableTranslationStyle);
 }

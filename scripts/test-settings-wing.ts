@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { getAIUiCopy } from "../lib/ai/ui-copy";
+import { getAIPromptUiCopy } from "../lib/ai/prompt-ui-copy";
 import { settingsCopy } from "../lib/settings/copy";
 import type { Locale } from "../lib/types";
 
@@ -134,8 +135,12 @@ assert.doesNotMatch(preferences, /isSettingsOpen|openSettings|closeSettings/);
 for (const locale of ["zh", "zh-TW", "en", "fr", "ja", "es"] satisfies Locale[]) {
   const copy = settingsCopy[locale];
   const aiCopy = getAIUiCopy(locale);
+  const promptCopy = getAIPromptUiCopy(locale);
   assert.ok(aiCopy.loadFailed.trim(), `${locale} loadFailed`);
   assert.ok(aiCopy.saveFailed.trim(), `${locale} saveFailed`);
+  for (const [key, value] of Object.entries(promptCopy)) {
+    assert.ok(value.trim(), `${locale} prompt copy ${key}`);
+  }
   for (const key of [
     "generalDescription",
     "appearanceDescription",

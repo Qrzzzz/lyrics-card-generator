@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v4.5.0.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v4.6.0.en.md">Release Notes</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
   <a href="#features">Features</a> ·
   <a href="#local-development">Local Development</a> ·
@@ -51,31 +51,31 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 Download the latest version from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Recommended installer: `Lyrics Card Generator Setup 4.5.0.exe`
-* Portable version: `Lyrics Card Generator-4.5.0-portable.exe`
+* Recommended installer: `Lyrics Card Generator Setup 4.6.0.exe`
+* Portable version: `Lyrics Card Generator-4.6.0-portable.exe`
 
 The installer is recommended for regular use. The portable version is useful for temporary use, testing, or running from a removable drive.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v4.5.0 Highlights
+### v4.6.0 Highlights
 
-* Improved the spacing of title, artist, and album information on Instrumental / No Lyrics cards, showing the album like lyric cards whenever an album name is available.
-* Restored the title-bar traffic lights to a flat style and tightened the gaps between them while preserving their current motion.
-* Added animated content transitions between Settings tabs. General now includes a reduced-motion switch that is off by default while continuing to respect the system preference.
-* Added default watermark and sharer settings before Export Quality. Sharer is off by default; when enabled, its default text field updates the current card immediately.
-* Added a leftward preview-card handoff and an already-empty notice to Clear All, refined lightweight notices, and removed redundant information cards and outer frames from the Export step.
+* Rebuilt AI Settings as separate API Configuration and Prompt Library pages with file-explorer-style Back, Forward, and path navigation.
+* Kept Recommended protected while making the other five defaults editable, removable, resettable, and restorable, with room for two custom presets.
+* Added a collapsed custom-preset entry to the main translation panel that shows at most two user presets when expanded.
+* Separated strict format rules from style prompts, protected editing with two confirmations, and added a one-click v4.6.0 reset.
+* Migrated existing AI settings automatically; custom styles never replace the shared requirement to output only translated lyrics.
 
 ## 🌐 Multilingual Release Notes
 
 The GitHub Release page defaults to a simplified Chinese short version, while the full release notes are maintained in `docs/releases/`:
 
-* [简体中文](./docs/releases/v4.5.0.zh-CN.md)
-* [繁體中文](./docs/releases/v4.5.0.zh-TW.md)
-* [English](./docs/releases/v4.5.0.en.md)
-* [Français](./docs/releases/v4.5.0.fr.md)
-* [日本語](./docs/releases/v4.5.0.ja.md)
-* [Español](./docs/releases/v4.5.0.es.md)
+* [简体中文](./docs/releases/v4.6.0.zh-CN.md)
+* [繁體中文](./docs/releases/v4.6.0.zh-TW.md)
+* [English](./docs/releases/v4.6.0.en.md)
+* [Français](./docs/releases/v4.6.0.fr.md)
+* [日本語](./docs/releases/v4.6.0.ja.md)
+* [Español](./docs/releases/v4.6.0.es.md)
 
 <a id="features"></a>
 
@@ -93,7 +93,7 @@ The GitHub Release page defaults to a simplified Chinese short version, while th
 
 * Original lyric and translation layout
 * Split alternating original / translated lyrics with Simplified Chinese, Traditional Chinese, English, French, Japanese, and Spanish target-language detection
-* AI lyric translation through OpenAI-compatible Chat Completions APIs, with configurable provider URL, model, API key, six translation styles, reasoning, and streaming output
+* AI lyric translation through OpenAI-compatible Chat Completions APIs, with configurable provider URL, model, API key, six default presets, up to two custom presets, reasoning, and streaming output
 
 ### 🎵 Song Search, Music Links & Local File Parsing
 

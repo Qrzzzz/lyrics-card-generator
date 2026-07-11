@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v4.5.0.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v4.6.0.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="#ローカル開発">ローカル開発</a> ·
@@ -51,31 +51,31 @@
 
 最新版は [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) からダウンロードできます。
 
-* 推奨インストーラー：`Lyrics Card Generator Setup 4.5.0.exe`
-* ポータブル版：`Lyrics Card Generator-4.5.0-portable.exe`
+* 推奨インストーラー：`Lyrics Card Generator Setup 4.6.0.exe`
+* ポータブル版：`Lyrics Card Generator-4.6.0-portable.exe`
 
 通常利用にはインストーラーを推奨します。ポータブル版は一時利用、検証、リムーバブルドライブでの利用に向いています。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v4.5.0 の更新ポイント
+### v4.6.0 の更新ポイント
 
-* インストゥルメンタル／歌詞なしカードの曲名、アーティスト、アルバム情報の余白を改善し、アルバム名がある場合は歌詞ありモードと同様に表示します。
-* タイトルバーの赤・黄・緑ボタンを平面的なスタイルへ戻し、ボタン同士の間隔を狭めつつ、現在のアニメーションは維持しました。
-* 設定の各タブに内容切り替えアニメーションを追加しました。「一般」には、初期状態ではオフで、システム設定も引き続き尊重する「動きを減らす」スイッチを追加しました。
-* 「書き出し品質」の前に、透かしと共有者の既定値を追加しました。共有者は初期状態ではオフで、有効にすると既定テキストを入力でき、現在のカードへ即時反映されます。
-* 「すべて消去」に左方向のカード交代アニメーションと空状態の通知を追加し、軽い通知の見た目と動きを改善するとともに、書き出し手順から不要な案内カードと大きい外枠を削除しました。
+* AI 設定を API 設定とプロンプトライブラリに分け、ファイル管理画面のような戻る、進む、パス移動を追加しました。
+* おすすめ版は固定し、他の 5 件は編集、削除、リセット、復元を可能にしました。さらにカスタムプリセットを最大 2 件追加できます。
+* メイン翻訳パネルに折りたたみ式のカスタム項目を追加し、展開時も最大 2 件だけ表示します。
+* 厳格な形式ルールとスタイルプロンプトを分離し、編集前の二重確認と v4.6.0 既定値へのリセットを追加しました。
+* 旧 AI 設定は自動移行され、カスタムスタイルを使っても翻訳本文だけを出力する共通ルールは維持されます。
 
 ## 🌐 多言語リリースノート
 
 GitHub Release ページではデフォルトで簡体字中国語の短縮版が使用され、完全なリリースノートは `docs/releases/` にて管理されています：
 
-* [简体中文](./docs/releases/v4.5.0.zh-CN.md)
-* [繁體中文](./docs/releases/v4.5.0.zh-TW.md)
-* [English](./docs/releases/v4.5.0.en.md)
-* [Français](./docs/releases/v4.5.0.fr.md)
-* [日本語](./docs/releases/v4.5.0.ja.md)
-* [Español](./docs/releases/v4.5.0.es.md)
+* [简体中文](./docs/releases/v4.6.0.zh-CN.md)
+* [繁體中文](./docs/releases/v4.6.0.zh-TW.md)
+* [English](./docs/releases/v4.6.0.en.md)
+* [Français](./docs/releases/v4.6.0.fr.md)
+* [日本語](./docs/releases/v4.6.0.ja.md)
+* [Español](./docs/releases/v4.6.0.es.md)
 
 <a id="主な機能"></a>
 
@@ -93,7 +93,7 @@ GitHub Release ページではデフォルトで簡体字中国語の短縮版�
 
 * 原文歌詞と翻訳のレイアウト
 * 簡体字中国語、繁体字中国語、英語、フランス語、日本語、スペイン語の目標言語検出による原文 / 翻訳の自動分割
-* OpenAI 互換 Chat Completions API を使う AI 歌詞翻訳。プロバイダー URL、モデル、API キー、6 種類の翻訳スタイル、Reasoning、ストリーミング出力を設定可能
+* OpenAI 互換 Chat Completions API を使う AI 歌詞翻訳。プロバイダー URL、モデル、API キー、6 件の既定プリセット、最大 2 件のカスタムプリセット、Reasoning、ストリーミング出力を設定可能
 
 ### 🎵 曲検索、音楽リンクとローカルファイル解析
 

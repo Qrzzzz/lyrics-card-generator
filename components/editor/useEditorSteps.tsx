@@ -16,7 +16,7 @@ import {
 } from "@/components/editor/StylePanel";
 import { AiTranslatePanel } from "@/components/lyrics/AiTranslatePanel";
 import type { ExportQualityId } from "@/lib/settings/types";
-import type { AISettingsSummary, AITranslationPhase, TranslationStyle } from "@/lib/ai/types";
+import type { AISettingsSummary, AITranslationPhase } from "@/lib/ai/types";
 import type { createT } from "@/lib/i18n";
 import type {
   AppState,
@@ -35,6 +35,7 @@ export type EditorStepsAiState = {
   error: string;
   defaultStyle: AISettingsSummary["defaultStyle"];
   reasoningEnabled: AISettingsSummary["reasoningEnabled"];
+  promptLibrary: AISettingsSummary["promptLibrary"];
 };
 
 export type EditorStepHandlers = {
@@ -51,7 +52,7 @@ export type EditorStepHandlers = {
   onOpenAiTranslate: () => void;
   onCloseAiTranslate: () => void;
   onCancelAiTranslate: () => void;
-  onConfirmAiTranslate: (style: TranslationStyle, reasoning: boolean) => void | Promise<void>;
+  onConfirmAiTranslate: (presetId: string, reasoning: boolean) => void | Promise<void>;
   onStyleChange: (style: CardStyle) => void;
   onFontSchemePreviewChange: (scheme: FontScheme | null) => void;
   onExportQualityChange: (quality: ExportQualityId) => void;
@@ -153,6 +154,7 @@ export function useEditorSteps({
                 locale={state.locale}
                 initialStyle={ai.defaultStyle}
                 initialReasoning={ai.reasoningEnabled}
+                promptLibrary={ai.promptLibrary}
                 loading={ai.isTranslating}
                 streamingText={ai.streamingText}
                 reasoningText={ai.reasoningText}
