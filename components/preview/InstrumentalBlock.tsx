@@ -1,6 +1,7 @@
 "use client";
 
 import type { SongInfo } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 export function InstrumentalBlock({
   song,
@@ -9,7 +10,8 @@ export function InstrumentalBlock({
   onCoverError,
   textColor,
   isDarkText,
-  showAlbumName
+  showAlbumName,
+  allowTwoLineTitle
 }: {
   song: SongInfo;
   coverUrl?: string;
@@ -18,6 +20,7 @@ export function InstrumentalBlock({
   textColor: string;
   isDarkText: boolean;
   showAlbumName: boolean;
+  allowTwoLineTitle: boolean;
 }) {
   return (
     <div
@@ -27,7 +30,12 @@ export function InstrumentalBlock({
         textShadow: isDarkText ? "none" : "0 12px 34px rgba(0,0,0,0.34)"
       }}
     >
-      <div className="relative aspect-square w-[620px] max-w-[84%] shrink-0 overflow-hidden rounded-[48px] bg-black/12 shadow-[0_34px_90px_rgba(0,0,0,0.30)]">
+      <div
+        className={cn(
+          "relative aspect-square shrink-0 overflow-hidden rounded-[48px] bg-black/12 shadow-[0_34px_90px_rgba(0,0,0,0.30)]",
+          allowTwoLineTitle ? "w-[500px] max-w-[74%]" : "w-[568px] max-w-[82%]"
+        )}
+      >
         {coverUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -44,17 +52,28 @@ export function InstrumentalBlock({
         )}
       </div>
 
-      <h2 className="mt-12 max-w-full text-[64px] font-black leading-[1.12] tracking-normal">
-        {song.title || "Untitled"}
-      </h2>
-      <p className="mt-5 max-w-full text-[32px] font-semibold leading-[1.2] opacity-[0.72]">
-        {song.artist || "Unknown artist"}
-      </p>
-      {showAlbumName && song.album ? (
-        <p className="mt-4 max-w-full text-[24px] font-medium leading-[1.2] opacity-[0.54]">
-          {song.album}
+      <div
+        className={cn("grid w-full max-w-[860px] justify-items-center", allowTwoLineTitle ? "mt-12" : "mt-14")}
+        data-instrumental-song-info
+      >
+        <h2
+          className={cn(
+            "w-full text-[64px] font-black leading-[1.18] tracking-normal",
+            allowTwoLineTitle ? "two-line-title" : "truncate"
+          )}
+          data-allow-two-line-title={allowTwoLineTitle ? "true" : "false"}
+        >
+          {song.title || "Untitled"}
+        </h2>
+        <p className="mt-7 w-full truncate text-[32px] font-semibold leading-[1.34] opacity-[0.72]">
+          {song.artist || "Unknown artist"}
         </p>
-      ) : null}
+        {showAlbumName && song.album?.trim() ? (
+          <p className="mt-5 w-full truncate text-[24px] font-medium leading-[1.34] opacity-[0.54]" data-instrumental-album>
+            {song.album.trim()}
+          </p>
+        ) : null}
+      </div>
     </div>
   );
 }

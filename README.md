@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v4.4.6.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v4.5.0.zh-CN.md">发布说明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">在线 Web Lite 版</a> ·
   <a href="./docs/desktop.md">桌面维护文档</a> ·
   <a href="#主要功能">主要功能</a> ·
@@ -49,30 +49,31 @@
 
 请前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下载最新版：
 
-* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 4.4.6.exe`
-* 不想安装时可下载便携版：`Lyrics Card Generator-4.4.6-portable.exe`
+* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 4.5.0.exe`
+* 不想安装时可下载便携版：`Lyrics Card Generator-4.5.0-portable.exe`
 
 安装版适合长期使用；便携版适合临时运行、测试或放在移动硬盘中使用。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v4.4.6 更新重点
+### v4.5.0 更新重点
 
-* 统一六步 Stepper 和底部导航的留白，移除导航外围大边框，并修复设置侧翼偶发缺失的横向切换动画。
-* 设置界面改用主界面视觉语言，统一 X 号反馈，移除常驻保存提示；标题栏红黄绿按钮更灵动、易点按，应用图标不再带细边框。
-* 重组第三至第五步控件：新增“文字设计”，文字颜色仅保留白色与自定义，移除封面裁切，优化纯音乐、竖版尺寸和对齐控制。
-* 重新排布第六步导出信息并加入 PNG 生成动画，同时保持清晰度滑块与“完成并导出”按钮行为不变。
+* 优化纯音乐 / 无歌词卡片的标题、歌手与专辑信息间距，并在存在专辑名时像有歌词模式一样显示专辑信息。
+* 标题栏红黄绿窗口按钮恢复平面样式并缩小彼此间距，同时保留现有动效。
+* 为设置的不同标签页加入内容切换动效；通用页新增默认关闭的“减弱动效”开关，同时继续尊重系统偏好。
+* 导出设置在“导出质量”前新增生成水印与分享人默认值；分享人默认关闭，启用后可填写默认文本并即时联动当前卡片。
+* “一键清空”新增左右交接的卡片预览动效与空状态轻提示；轻提示视觉和动效同步升级，导出步骤则移除冗余说明卡与外围大边框。
 
 ## 🌐 多语言发布说明
 
 GitHub Release 页面默认使用简体中文短版，完整发布说明维护在 `docs/releases/`：
 
-* [简体中文](./docs/releases/v4.4.6.zh-CN.md)
-* [繁體中文](./docs/releases/v4.4.6.zh-TW.md)
-* [English](./docs/releases/v4.4.6.en.md)
-* [Français](./docs/releases/v4.4.6.fr.md)
-* [日本語](./docs/releases/v4.4.6.ja.md)
-* [Español](./docs/releases/v4.4.6.es.md)
+* [简体中文](./docs/releases/v4.5.0.zh-CN.md)
+* [繁體中文](./docs/releases/v4.5.0.zh-TW.md)
+* [English](./docs/releases/v4.5.0.en.md)
+* [Français](./docs/releases/v4.5.0.fr.md)
+* [日本語](./docs/releases/v4.5.0.ja.md)
+* [Español](./docs/releases/v4.5.0.es.md)
 
 <a id="主要功能"></a>
 

@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { defaultState } from "../components/editor/editor-defaults";
 import { BACKGROUND_GRID_SIZE_BY_DENSITY, resolveBackgroundGridDensity } from "../lib/background-grid";
-import { getCardSize, PRESET_CARD_SIZES } from "../lib/card-size";
+import { AUTO_HEIGHT_MIN, getCardSize, PRESET_CARD_SIZES } from "../lib/card-size";
 import {
   FIXED_COVER_CROP_SCALE,
   FIXED_WHITE_TEXT_COLOR,
@@ -259,6 +259,16 @@ assert.deepEqual(
 );
 assert.deepEqual(getCardSize(canonicalPortraitState.style), { width: 1040, height: 1080 });
 assert.notDeepEqual(getCardSize(canonicalPortraitState.style), PRESET_CARD_SIZES["4:5"]);
+assert.equal(
+  getCardSize({ ...baseStyle, height: 200, autoHeight: true }).height,
+  AUTO_HEIGHT_MIN,
+  "automatic height may compact below the manual canvas minimum"
+);
+assert.equal(
+  getCardSize({ ...baseStyle, height: 200, autoHeight: false }).height,
+  720,
+  "manual canvas height retains its existing minimum"
+);
 
 const normalizedLegacyAuto = normalizeCardStyle({
   ...baseStyle,
@@ -312,7 +322,9 @@ const colorControlsSource = readFileSync(resolve("components/editor/style-panel/
 const previewPaneSource = readFileSync(resolve("components/editor/PreviewPane.tsx"), "utf8");
 const fontPreviewSource = readFileSync(resolve("components/editor/font-scheme/FontSchemePreviewPanel.tsx"), "utf8");
 const lyricCardSource = readFileSync(resolve("components/preview/LyricCard.tsx"), "utf8");
+const autoHeightSource = readFileSync(resolve("components/editor/hooks/useMeasuredAutoCanvasHeight.ts"), "utf8");
 const landscapeCardSource = readFileSync(resolve("components/preview/LandscapeLyricCard.tsx"), "utf8");
+const instrumentalBlockSource = readFileSync(resolve("components/preview/InstrumentalBlock.tsx"), "utf8");
 const fontPanelSource = stylePanelSource.slice(
   stylePanelSource.indexOf("export function FontSchemeSettingsPanel"),
   stylePanelSource.indexOf("function CustomFontPanel")
@@ -324,6 +336,8 @@ assert.ok(!stylePanelSource.includes('option value="4:5"'), "portrait presets om
 assert.ok(!stylePanelSource.includes('option value="9:16"'), "portrait presets omit 9:16");
 assert.ok(!stylePanelSource.includes("const portraitRatio"), "portrait ratio is never masked only at render time");
 assert.ok(stylePanelSource.includes("<SegmentedControl<CardAlign>"), "alignment uses the keyboard-accessible segmented slider");
+assert.ok(stylePanelSource.includes("<SegmentedControl<CardRatio>"), "size mode uses a segmented slider");
+assert.ok(stylePanelSource.includes("<RangeSlider"), "layout range inputs use the shared polished slider");
 assert.ok(!stylePanelSource.includes('label={t("coverCrop")}'), "cover crop control is removed");
 assert.ok(colorControlsSource.includes('{ value: "white", label: t("pureWhite") }'), "white mode is exposed");
 assert.ok(!colorControlsSource.includes("TEXT_COLOR_PRESETS"), "legacy color presets are not exposed");
@@ -335,6 +349,17 @@ assert.ok(!fontPreviewSource.includes("text-white/66"), "font preview does not h
 assert.ok(!fontPreviewSource.includes("text-white/86"), "font preview does not hard-code translated text to white");
 assert.ok(!lyricCardSource.includes("cropScale={style.coverCropScale}"), "portrait rendering fixes crop scale");
 assert.ok(!landscapeCardSource.includes("cropScale={style.coverCropScale}"), "landscape rendering fixes crop scale");
+assert.ok(instrumentalBlockSource.includes("data-instrumental-song-info"), "instrumental metadata has a dedicated spaced layout");
+assert.ok(instrumentalBlockSource.includes("song.album?.trim()"), "instrumental album ignores blank metadata");
+assert.ok(instrumentalBlockSource.includes("data-instrumental-album"), "instrumental cards render album metadata when enabled");
+assert.ok(instrumentalBlockSource.includes("mt-7"), "instrumental title and artist use relaxed spacing");
+assert.ok(instrumentalBlockSource.includes('allowTwoLineTitle ? "two-line-title" : "truncate"'), "instrumental titles honor the two-line setting");
+assert.ok(lyricCardSource.includes("allowTwoLineTitle={style.allowTwoLineTitle}"), "instrumental rendering receives the two-line title setting");
+assert.ok(lyricCardSource.includes('pt-8 pb-4'), "lyrics keep a smaller but non-zero bottom breathing room");
+assert.ok(autoHeightSource.includes("new MutationObserver(scheduleMeasure)"), "arbitrary content mutations trigger auto-height measurement");
+assert.ok(autoHeightSource.includes("state.song.title"), "song title changes trigger auto-height measurement");
+assert.ok(autoHeightSource.includes("state.translationText"), "translation changes trigger auto-height measurement");
+assert.ok(autoHeightSource.includes("Math.max(AUTO_HEIGHT_MIN, nextHeight)"), "auto-height uses the compact lower bound");
 
 assert.deepEqual(BACKGROUND_GRID_SIZE_BY_DENSITY, {
   sparse: 72,

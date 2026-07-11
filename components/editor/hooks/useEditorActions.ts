@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { getCardSize } from "@/lib/card-size";
 import { normalizeCardStyle } from "@/lib/card-style-normalize";
-import { clearLyricContent } from "@/lib/clear-content";
+import { clearLyricContent, hasClearableLyricContent } from "@/lib/clear-content";
 import { applyEditorStyleChange } from "@/lib/editor/apply-style-change";
 import { getHighResolutionCoverUrl } from "@/lib/cover-url";
 import { exportNodeAsPng } from "@/lib/export-image";
@@ -28,6 +28,7 @@ type UseEditorActionsInput = {
   cardRef: React.RefObject<HTMLElement | null>;
   exportPixelRatio: number;
   exampleLoadedMessage: string;
+  clearAlreadyEmptyMessage: string;
   onNotify: (message: string) => void;
   onCloseExamples: () => void;
   onClearTransientState: () => void;
@@ -39,12 +40,14 @@ export function useEditorActions({
   cardRef,
   exportPixelRatio,
   exampleLoadedMessage,
+  clearAlreadyEmptyMessage,
   onNotify,
   onCloseExamples,
   onClearTransientState
 }: UseEditorActionsInput) {
   const [celebrationKey, setCelebrationKey] = useState(0);
   const [isCompleteExporting, setIsCompleteExporting] = useState(false);
+  const [clearTransitionKey, setClearTransitionKey] = useState(0);
   const clearVersionRef = useRef(0);
 
   function setTranslation({ text, enabled }: TranslationValue) {
@@ -61,8 +64,14 @@ export function useEditorActions({
   }
 
   function clearAllContent() {
+    if (!hasClearableLyricContent(parsedState)) {
+      onNotify(clearAlreadyEmptyMessage);
+      return;
+    }
+
     clearVersionRef.current += 1;
     setCelebrationKey(0);
+    setClearTransitionKey((key) => key + 1);
     onClearTransientState();
     setState(clearLyricContent);
   }
@@ -251,6 +260,7 @@ export function useEditorActions({
   return {
     celebrationKey,
     isCompleteExporting,
+    clearTransitionKey,
     clearAllContent,
     handleStyleChange,
     setTranslation,

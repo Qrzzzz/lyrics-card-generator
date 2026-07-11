@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useAppReducedMotion } from "@/components/motion/AppMotionProvider";
 
 type Particle = {
   x: number;
@@ -23,7 +24,9 @@ export function ExportCelebration({ burstKey, accentColor = "#7C3AED" }: { burst
   const animationRef = useRef<number | null>(null);
   const particlesRef = useRef<Particle[]>([]);
   const accentColorRef = useRef(accentColor);
+  const consumedBurstKeyRef = useRef(0);
   const [visible, setVisible] = useState(false);
+  const reduceMotion = useAppReducedMotion();
 
   useEffect(() => {
     accentColorRef.current = accentColor;
@@ -31,6 +34,7 @@ export function ExportCelebration({ burstKey, accentColor = "#7C3AED" }: { burst
 
   useEffect(() => {
     if (burstKey <= 0) {
+      consumedBurstKeyRef.current = 0;
       particlesRef.current = [];
       setVisible(false);
 
@@ -42,9 +46,16 @@ export function ExportCelebration({ burstKey, accentColor = "#7C3AED" }: { burst
       return;
     }
 
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    const isNewBurst = burstKey !== consumedBurstKeyRef.current;
+    if (isNewBurst) consumedBurstKeyRef.current = burstKey;
+
+    if (reduceMotion || !isNewBurst) {
       particlesRef.current = [];
       setVisible(false);
+      if (animationRef.current !== null) {
+        cancelAnimationFrame(animationRef.current);
+        animationRef.current = null;
+      }
       return;
     }
 
@@ -155,7 +166,7 @@ export function ExportCelebration({ burstKey, accentColor = "#7C3AED" }: { burst
         animationRef.current = null;
       }
     };
-  }, [burstKey]);
+  }, [burstKey, reduceMotion]);
 
   return (
     <canvas

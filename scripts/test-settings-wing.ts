@@ -37,6 +37,11 @@ assert.match(settingsSurface, /closeButtonRef\.current\?\.focus\(\{ preventScrol
 assert.match(settingsSurface, /x: reduceMotion \? "0%" : isActive \? "0%" : "100%"/);
 assert.match(settingsSurface, /opacity: reduceMotion \? \(isActive \? 1 : 0\) : 1/);
 assert.match(settingsSurface, /inert=\{!isActive \? true : undefined\}/);
+assert.match(settingsSurface, /tabPanelVariants\(reduceMotion\)/);
+assert.match(settingsSurface, /hidden=\{!selected\}/);
+assert.match(settingsSurface, /aria-hidden=\{!selected\}/);
+assert.match(settingsSurface, /inert=\{!selected \? true : undefined\}/);
+assert.match(settingsSurface, /animate=\{selected \? "animate" : "initial"\}/);
 assert.doesNotMatch(settingsSurface, /aria-modal|MotionDialog|createPortal|bg-black\/40/);
 assert.doesNotMatch(settingsSurface, /settings-wing[^"\n]*rounded-/);
 assert.match(settingsSurface, /workspace\.saveState === "saved"[\s\S]*?\? null/);
@@ -48,7 +53,8 @@ assert.doesNotMatch(settingsSurface, /aiCopy\.settingsSaved/);
 assert.match(settingsSurface, /examples-close-button/);
 assert.match(settingsSurface, /examples-close-button__icon/);
 assert.match(settingsWorkspace, /setTimeout\(\(\) => onNotify\(message\), 420\)/);
-assert.match(lyricEditor, /toast \? \([\s\S]*?role="status"/);
+assert.match(lyricEditor, /<AppToast notice=\{toast\} accentColor=\{resolvedAccentColor\} \/>/);
+assert.match(lyricEditor, /toastIdRef\.current \+= 1/);
 assert.match(settingsSurface, /isActive=\{isActive\}/);
 assert.match(settingsNavigation, /settings-navigation-mobile/);
 assert.match(settingsNavigation, /isActive: boolean/);
@@ -67,13 +73,37 @@ assert.match(globals, /@media \(min-width: 1024px\)/);
 assert.match(globals, /\.app-shell \.settings-surface\.settings-wing\s*\{[\s\S]*?background: transparent;[\s\S]*?box-shadow: none;/);
 assert.match(globals, /\.settings-wing__header\s*\{[\s\S]*?border: 0;[\s\S]*?background: transparent;/);
 assert.match(globals, /\.settings-navigation\s*\{[\s\S]*?border: 0;[\s\S]*?background: transparent;/);
+assert.match(globals, /\.settings-group-card\s*\{[\s\S]*?border: 0;[\s\S]*?background: transparent;[\s\S]*?box-shadow: none;/);
+assert.match(globals, /\.settings-group-card > section > \* \+ \*\s*\{[\s\S]*?border-top:/);
+assert.match(globals, /\.settings-wing__icon\s*\{[\s\S]*?background: transparent;[\s\S]*?color: rgb\(var\(--app-subtle\)\)/);
+assert.match(globals, /\.range-slider::-webkit-slider-runnable-track/);
+assert.match(globals, /\.range-slider::-webkit-slider-thumb/);
 assert.doesNotMatch(globals, /\.noise-layer\s*\{/);
 assert.doesNotMatch(dynamicBackground, /noise-layer/);
 assert.doesNotMatch(generalSettings, /sparkCursorEnabled|copy\.spark/);
+assert.match(generalSettings, /copy\.reduceMotion/);
+assert.match(generalSettings, /settings\.reduceMotionEnabled/);
+assert.match(generalSettings, /data-testid|testId="reduce-motion-toggle"/);
 assert.match(appearanceSettings, /label=\{copy\.spark\}/);
 assert.match(appearanceSettings, /settings\.sparkCursorEnabled/);
 assert.match(exportSettings, /<SegmentedControl/);
 assert.doesNotMatch(exportSettings, /<SelectField/);
+assert.match(exportSettings, /default-generated-watermark-toggle/);
+assert.match(exportSettings, /default-shared-by-toggle/);
+assert.match(exportSettings, /default-shared-by-text/);
+assert.ok(
+  exportSettings.indexOf("defaultShowGeneratedWatermark") < exportSettings.indexOf("defaultExportQuality"),
+  "watermark defaults appear before export quality"
+);
+assert.ok(
+  exportSettings.indexOf("defaultShowSharedBy") < exportSettings.indexOf("defaultExportQuality"),
+  "shared-by defaults appear before export quality"
+);
+assert.match(lyricEditor, /userSettings\.defaultShowGeneratedWatermark/);
+assert.match(lyricEditor, /userSettings\.defaultShowSharedBy/);
+assert.match(lyricEditor, /userSettings\.defaultSharedByText/);
+assert.match(lyricEditor, /ready=\{preferencesLoaded\}/);
+assert.match(lyricEditor, /!preferencesLoaded \|\| shouldReduceMotion/);
 assert.match(aiTranslateButton, /ai-translate-trigger h-11/);
 assert.match(lyricInput, /<ActionButton\s+size="md"\s+icon=\{<SplitSquareVertical/);
 assert.match(settingsWorkspace, /createLatestSaveController/);
@@ -106,9 +136,24 @@ for (const locale of ["zh", "zh-TW", "en", "fr", "ja", "es"] satisfies Locale[])
   const aiCopy = getAIUiCopy(locale);
   assert.ok(aiCopy.loadFailed.trim(), `${locale} loadFailed`);
   assert.ok(aiCopy.saveFailed.trim(), `${locale} saveFailed`);
-  for (const key of ["generalDescription", "appearanceDescription", "exportDescription", "aiDescription", "aboutDescription"] as const) {
+  for (const key of [
+    "generalDescription",
+    "appearanceDescription",
+    "exportDescription",
+    "aiDescription",
+    "aboutDescription",
+    "reduceMotion",
+    "reduceMotionDescription",
+    "defaultGeneratedWatermark",
+    "defaultGeneratedWatermarkDescription",
+    "defaultSharedBy",
+    "defaultSharedByDescription",
+    "defaultSharedByText",
+    "defaultSharedByPlaceholder",
+    "clearAlreadyEmpty"
+  ] as const) {
     assert.ok(copy[key].trim(), `${locale} ${key}`);
   }
 }
 
-console.log(JSON.stringify({ ok: true, settingsWingTests: 86 }, null, 2));
+console.log(JSON.stringify({ ok: true, settingsWingTests: 93 }, null, 2));

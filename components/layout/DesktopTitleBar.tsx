@@ -70,7 +70,7 @@ export function DesktopTitleBar({ locale }: DesktopTitleBarProps) {
 
   return (
     <header className="desktop-titlebar absolute inset-x-0 top-0 z-[90] flex h-12 items-center">
-      <div className="desktop-titlebar__traffic-lights flex shrink-0 items-center gap-2 px-4">
+      <div className="desktop-titlebar__traffic-lights flex shrink-0 items-center gap-0 px-4">
         <button
           type="button"
           className="traffic-light traffic-light--close"

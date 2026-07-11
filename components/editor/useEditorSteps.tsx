@@ -1,6 +1,5 @@
 "use client";
 
-import type { RefObject } from "react";
 import { useState } from "react";
 import { ExportPanel } from "@/components/editor/ExportPanel";
 import { LocalAudioParser } from "@/components/editor/LocalAudioParser";
@@ -64,7 +63,6 @@ type UseEditorStepsInput = {
   t: ReturnType<typeof createT>;
   canFetchLyrics: boolean;
   themeColor: string;
-  cardRef: RefObject<HTMLElement | null>;
   isExporting: boolean;
   exportQuality: ExportQualityId;
   ai: EditorStepsAiState;
@@ -76,7 +74,6 @@ export function useEditorSteps({
   t,
   canFetchLyrics,
   themeColor,
-  cardRef,
   isExporting,
   exportQuality,
   ai,
@@ -220,7 +217,6 @@ export function useEditorSteps({
     {
       id: "export",
       title: t("step.export"),
-      description: t("exportHint"),
       isComplete: true,
       primaryAction: {
         label: t("step.complete"),
@@ -229,13 +225,11 @@ export function useEditorSteps({
       },
       content: (
         <ExportPanel
-          cardRef={cardRef}
           t={t}
           accentColor={themeColor}
           exportQuality={exportQuality}
           onExportQualityChange={handlers.onExportQualityChange}
           isExporting={isExporting}
-          onExport={handlers.onExport}
         />
       )
     }

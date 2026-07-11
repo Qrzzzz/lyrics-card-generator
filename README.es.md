@@ -19,7 +19,7 @@
 <p>
   <strong>Navegación</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Descargar la última versión</a> ·
-  <a href="./docs/releases/v4.4.6.es.md">Notas de la versión</a> ·
+  <a href="./docs/releases/v4.5.0.es.md">Notas de la versión</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en línea</a> ·
   <a href="#funciones-principales">Funciones principales</a> ·
   <a href="#desarrollo-local">Desarrollo local</a> ·
@@ -51,30 +51,31 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 Descarga la versión más reciente desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Instalador recomendado: `Lyrics Card Generator Setup 4.4.6.exe`
-* Versión portable: `Lyrics Card Generator-4.4.6-portable.exe`
+* Instalador recomendado: `Lyrics Card Generator Setup 4.5.0.exe`
+* Versión portable: `Lyrics Card Generator-4.5.0-portable.exe`
 
 El instalador se recomienda para uso habitual. La versión portable es útil para pruebas, uso temporal o ejecución desde una unidad extraíble.
 
 > La compilación actual no está firmada. Windows puede mostrar una advertencia de SmartScreen, algo habitual en aplicaciones personales sin firma.
 
-### Aspectos destacados de la versión 4.4.6
+### Aspectos destacados de la versión 4.5.0
 
-* Se equilibra el espacio del Stepper de seis pasos y la navegación inferior, se elimina el gran marco de navegación y se recupera la transición horizontal que faltaba en el ala de Ajustes.
-* Ajustes adopta el lenguaje visual del editor, unifica la respuesta de la X y elimina el indicador permanente de guardado; los controles de colores de la barra de título son más dinámicos y fáciles de pulsar, y el icono ya no tiene borde.
-* Se reorganizan los pasos tres a cinco: Diseño del texto agrupa el color blanco o personalizado, desaparece el recorte de portada y se aclaran los controles de Instrumental, tamaño vertical y alineación.
-* Se mejora la jerarquía del sexto paso y se añade una animación durante la generación PNG sin cambiar el selector de calidad ni el comportamiento del botón Completar y exportar.
+* Se mejora el espaciado del título, el artista y el álbum en las tarjetas Instrumental / Sin letras, mostrando el álbum como en el modo con letras cuando hay un nombre disponible.
+* Los controles rojo, amarillo y verde de la barra de título recuperan el estilo plano y reducen la separación entre ellos, sin cambiar sus animaciones actuales.
+* Se añaden transiciones animadas entre las pestañas de Ajustes. General incorpora una opción para reducir el movimiento, desactivada de forma predeterminada, que sigue respetando la preferencia del sistema.
+* Se añaden valores predeterminados de marca de agua y persona que comparte antes de Calidad de exportación. La persona que comparte está desactivada de forma predeterminada; al activarla, su texto predeterminado actualiza de inmediato la tarjeta actual.
+* Borrar todo incorpora una transición de tarjeta hacia la izquierda y un aviso cuando ya está vacía; también se mejoran los avisos ligeros y se eliminan las tarjetas informativas y los grandes marcos redundantes del paso Exportar.
 
 ## 🌐 Notas de publicación multilingüe
 
 La página de GitHub Release utiliza por defecto la versión corta en chino simplificado, las notas de publicación completas se mantienen en `docs/releases/`:
 
-* [简体中文](./docs/releases/v4.4.6.zh-CN.md)
-* [繁體中文](./docs/releases/v4.4.6.zh-TW.md)
-* [English](./docs/releases/v4.4.6.en.md)
-* [Français](./docs/releases/v4.4.6.fr.md)
-* [日本語](./docs/releases/v4.4.6.ja.md)
-* [Español](./docs/releases/v4.4.6.es.md)
+* [简体中文](./docs/releases/v4.5.0.zh-CN.md)
+* [繁體中文](./docs/releases/v4.5.0.zh-TW.md)
+* [English](./docs/releases/v4.5.0.en.md)
+* [Français](./docs/releases/v4.5.0.fr.md)
+* [日本語](./docs/releases/v4.5.0.ja.md)
+* [Español](./docs/releases/v4.5.0.es.md)
 
 <a id="funciones-principales"></a>
 

@@ -10,6 +10,8 @@ export const PRESET_CARD_SIZES: Record<Exclude<CardRatio, "custom">, { width: nu
   "3:2": { width: 1800, height: 1200 }
 };
 
+export const AUTO_HEIGHT_MIN = 640;
+
 export function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
 }
@@ -43,7 +45,11 @@ export function getCardSize(style: CardStyle) {
 
   return {
     width: clamp(Math.round(style.width), portraitLayoutConfig.canvas.minWidth, portraitLayoutConfig.canvas.maxWidth),
-    height: clamp(Math.round(style.height), portraitLayoutConfig.canvas.minHeight, portraitLayoutConfig.canvas.maxHeight)
+    height: clamp(
+      Math.round(style.height),
+      style.autoHeight ? AUTO_HEIGHT_MIN : portraitLayoutConfig.canvas.minHeight,
+      portraitLayoutConfig.canvas.maxHeight
+    )
   };
 }
 

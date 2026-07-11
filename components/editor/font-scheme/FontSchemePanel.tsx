@@ -3,6 +3,7 @@
 import { createPortal } from "react-dom";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { FontPreviewBackground } from "@/components/editor/font-scheme/FontSchemePreviewPanel";
+import { useAppReducedMotion } from "@/components/motion/AppMotionProvider";
 import { getLyricsCardDesktopApi, type SystemFontOption } from "@/lib/desktop-api";
 import {
   FONT_SCHEME_PRESETS,
@@ -53,6 +54,7 @@ const RECOMMENDED_FONTS: FontFamilyOption[] = [
 ];
 
 export function FontSchemePanel({ style, onStyleChange, onPreviewSchemeChange, showHeader = true, t }: FontSchemePanelProps) {
+  const reduceMotion = useAppReducedMotion();
   const desktopApi = getLyricsCardDesktopApi();
   const currentScheme = getEffectiveFontScheme(style);
   const currentPresetId = identifyFontPreset(currentScheme);
@@ -116,7 +118,7 @@ export function FontSchemePanel({ style, onStyleChange, onPreviewSchemeChange, s
       latinFontFamily: currentScheme.latinFontFamily
     });
     onPreviewSchemeChange?.(currentScheme);
-    requestAnimationFrame(() => customSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }));
+    requestAnimationFrame(() => customSectionRef.current?.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "center" }));
   }
 
   function selectCustomFont(font: FontFamilyOption) {

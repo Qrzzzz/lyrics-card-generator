@@ -1,4 +1,4 @@
-import { FieldLabel, SegmentedControl } from "@/components/ui/controls";
+import { FieldLabel, SegmentedControl, TextInput, ToggleRow } from "@/components/ui/controls";
 import { EXPORT_QUALITY_OPTIONS, type UserSettings } from "@/lib/settings/types";
 import type { Locale } from "@/lib/types";
 import type { settingsCopy } from "@/lib/settings/copy";
@@ -15,7 +15,35 @@ export function ExportSettingsSection({
   const labels = { low: copy.low, medium: copy.medium, high: copy.high };
 
   return (
-    <section className="grid gap-4">
+    <section className="grid gap-5">
+      <div className="grid gap-1">
+        <ToggleRow
+          label={copy.defaultGeneratedWatermark}
+          description={copy.defaultGeneratedWatermarkDescription}
+          checked={settings.defaultShowGeneratedWatermark}
+          onChange={(defaultShowGeneratedWatermark) => onChange({ ...settings, defaultShowGeneratedWatermark })}
+          testId="default-generated-watermark-toggle"
+        />
+        <ToggleRow
+          label={copy.defaultSharedBy}
+          description={copy.defaultSharedByDescription}
+          checked={settings.defaultShowSharedBy}
+          onChange={(defaultShowSharedBy) => onChange({ ...settings, defaultShowSharedBy })}
+          testId="default-shared-by-toggle"
+        />
+        {settings.defaultShowSharedBy ? (
+          <FieldLabel label={copy.defaultSharedByText}>
+            <TextInput
+              value={settings.defaultSharedByText}
+              maxLength={120}
+              onChange={(event) => onChange({ ...settings, defaultSharedByText: event.target.value })}
+              placeholder={copy.defaultSharedByPlaceholder}
+              data-testid="default-shared-by-text"
+            />
+          </FieldLabel>
+        ) : null}
+      </div>
+
       <FieldLabel label={copy.exportQuality}>
         <SegmentedControl
           value={settings.defaultExportQuality}

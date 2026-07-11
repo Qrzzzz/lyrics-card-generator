@@ -171,8 +171,8 @@ test("supports bilingual splitting, layout modes, instrumental mode, and visual 
   const landscape = page.locator('[data-segment-value="landscape"]');
   await landscape.click();
   await expect(landscape).toHaveAttribute("aria-checked", "true");
-  const sizeMode = page.getByLabel("Size Mode", { exact: true });
-  await sizeMode.selectOption("custom");
+  const sizeMode = page.getByRole("radiogroup", { name: "Size Mode", exact: true });
+  await sizeMode.getByRole("radio", { name: "Custom", exact: true }).click();
   const autoHeight = page.getByRole("switch", { name: "Auto Height", exact: true });
   await expect(autoHeight).toHaveAttribute("aria-checked", "true");
   await autoHeight.click();
@@ -182,7 +182,8 @@ test("supports bilingual splitting, layout modes, instrumental mode, and visual 
   await instrumental.click();
   await expect(instrumental).toHaveAttribute("aria-checked", "true");
   await expect(landscape).toBeDisabled();
-  await expect(sizeMode).toBeDisabled();
+  await expect(sizeMode.getByRole("radio", { name: "1:1 Square", exact: true })).toBeDisabled();
+  await expect(sizeMode.getByRole("radio", { name: "Custom", exact: true })).toBeDisabled();
 
   await page.locator('[data-segment-value="lyrics"]').click();
   await page.locator('[data-step-id="visual"]').click();
@@ -200,7 +201,7 @@ test("restores portrait custom size and auto height after landscape round trips"
 
   const portrait = page.locator('[data-segment-value="portrait"]');
   const landscape = page.locator('[data-segment-value="landscape"]');
-  const sizeMode = page.getByLabel("Size Mode", { exact: true });
+  const sizeMode = page.getByRole("radiogroup", { name: "Size Mode", exact: true });
   const autoHeight = page.getByRole("switch", { name: "Auto Height", exact: true });
   const width = page.getByLabel("Width", { exact: true });
   const previewSection = page
@@ -210,7 +211,7 @@ test("restores portrait custom size and auto height after landscape round trips"
   const exportCard = page.locator('[data-export-card="true"]');
 
   await expect(portrait).toHaveAttribute("aria-checked", "true");
-  await expect(sizeMode).toHaveValue("custom");
+  await expect(sizeMode.getByRole("radio", { name: "Custom", exact: true })).toHaveAttribute("aria-checked", "true");
   await expect(autoHeight).toHaveAttribute("aria-checked", "true");
   await expect(width).toHaveValue("1040");
   await width.focus();
@@ -222,12 +223,14 @@ test("restores portrait custom size and auto height after landscape round trips"
   for (const landscapeRatio of ["16:9", "21:9"]) {
     await landscape.click();
     await expect(landscape).toHaveAttribute("aria-checked", "true");
-    await sizeMode.selectOption(landscapeRatio);
-    await expect(sizeMode).toHaveValue(landscapeRatio);
+    const ratioLabel = landscapeRatio === "16:9" ? "16:9 Landscape" : "21:9 Ultrawide";
+    const ratioOption = sizeMode.getByRole("radio", { name: ratioLabel, exact: true });
+    await ratioOption.click();
+    await expect(ratioOption).toHaveAttribute("aria-checked", "true");
 
     await portrait.click();
     await expect(portrait).toHaveAttribute("aria-checked", "true");
-    await expect(sizeMode).toHaveValue("custom");
+    await expect(sizeMode.getByRole("radio", { name: "Custom", exact: true })).toHaveAttribute("aria-checked", "true");
     await expect(autoHeight).toHaveAttribute("aria-checked", "true");
     await expect(width).toHaveValue("1200");
     await expect(previewSize).toHaveText(/^1200x\d+$/);
@@ -335,7 +338,10 @@ test("exports a CORS-safe remote cover at standard and high pixel ratios", async
   await expect(page.getByTestId("web-lite-cover-status")).toContainText("safe to preview");
 
   await page.locator('[data-step-id="layout"]').click();
-  await page.getByLabel("Size Mode", { exact: true }).selectOption("1:1");
+  await page
+    .getByRole("radiogroup", { name: "Size Mode", exact: true })
+    .getByRole("radio", { name: "1:1 Square", exact: true })
+    .click();
   await expect(page.locator('[data-export-card="true"]')).toHaveCSS("width", "1080px");
   await expect(page.locator('[data-export-card="true"]')).toHaveCSS("height", "1080px");
 

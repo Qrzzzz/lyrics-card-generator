@@ -1,10 +1,12 @@
 "use client";
 
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import type { RefObject } from "react";
 import { useEffect, useState } from "react";
 import { FontSchemePreviewPanel } from "@/components/editor/font-scheme/FontSchemePreviewPanel";
+import { useAppReducedMotion } from "@/components/motion/AppMotionProvider";
 import { MotionPanel } from "@/components/motion/MotionPanel";
+import { MotionPresence } from "@/components/motion/MotionPresence";
 import { LyricCardPreview } from "@/components/preview/LyricCardPreview";
 import { FIXED_WHITE_TEXT_COLOR } from "@/lib/card-style-normalize";
 import { getEffectiveFontScheme } from "@/lib/fonts";
@@ -21,6 +23,7 @@ type PreviewPaneProps = {
   cardRef: RefObject<HTMLElement | null>;
   fontSchemePreview: FontScheme | null;
   showFontSchemePreview: boolean;
+  clearTransitionKey: number;
   locale: Locale;
   t: ReturnType<typeof createT>;
 };
@@ -34,10 +37,11 @@ export function PreviewPane({
   cardRef,
   fontSchemePreview,
   showFontSchemePreview,
+  clearTransitionKey,
   locale,
   t
 }: PreviewPaneProps) {
-  const reduceMotion = useReducedMotion();
+  const reduceMotion = useAppReducedMotion();
   const [isDesktopPreview, setIsDesktopPreview] = useState(false);
   const previewExpanded = isPreviewVisible || isDesktopPreview;
 
@@ -84,15 +88,32 @@ export function PreviewPane({
         aria-hidden={!previewExpanded}
       >
         <div className="grid gap-5">
-          <LyricCardPreview
-            song={song}
-            lyrics={lyrics}
-            style={style}
-            cardRef={cardRef}
-            locale={locale}
-            sticky={!showFontSchemePreview}
-            t={t}
-          />
+          <div className="relative min-w-0" data-testid="preview-clear-transition">
+            <MotionPresence mode="popLayout">
+              <motion.div
+                key={`preview-clear-${clearTransitionKey}`}
+                data-clear-transition-key={clearTransitionKey}
+                initial={reduceMotion ? false : { opacity: 0, x: 72 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={reduceMotion ? { opacity: 0, x: 0 } : { opacity: 0, x: -72 }}
+                transition={
+                  reduceMotion
+                    ? reducedMotionTransition
+                    : { duration: motionDurations.slow, ease: motionEasings.emphasized }
+                }
+              >
+                <LyricCardPreview
+                  song={song}
+                  lyrics={lyrics}
+                  style={style}
+                  cardRef={cardRef}
+                  locale={locale}
+                  sticky={!showFontSchemePreview}
+                  t={t}
+                />
+              </motion.div>
+            </MotionPresence>
+          </div>
           {showFontSchemePreview ? (
             <FontSchemePreviewPanel
               scheme={fontSchemePreview ?? getEffectiveFontScheme(style)}

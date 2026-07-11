@@ -35,7 +35,11 @@ export function opacityOnlyVariants(): Variants {
 
 export function panelVariants(reducedMotion = false): Variants {
   if (reducedMotion) {
-    return opacityOnlyVariants();
+    return {
+      initial: { opacity: 0, y: 0 },
+      animate: { opacity: 1, y: 0 },
+      exit: { opacity: 0, y: 0 }
+    };
   }
 
   return {
@@ -55,7 +59,11 @@ export function dialogOverlayVariants(): Variants {
 
 export function dialogPanelVariants(reducedMotion = false): Variants {
   if (reducedMotion) {
-    return opacityOnlyVariants();
+    return {
+      initial: { opacity: 0, scale: 1, y: 0 },
+      animate: { opacity: 1, scale: 1, y: 0 },
+      exit: { opacity: 0, scale: 1, y: 0 }
+    };
   }
 
   return {
@@ -67,7 +75,11 @@ export function dialogPanelVariants(reducedMotion = false): Variants {
 
 export function tabPanelVariants(reducedMotion = false): Variants {
   if (reducedMotion) {
-    return opacityOnlyVariants();
+    return {
+      initial: { opacity: 0, x: 0 },
+      animate: { opacity: 1, x: 0 },
+      exit: { opacity: 0, x: 0 }
+    };
   }
 
   return {
@@ -79,7 +91,11 @@ export function tabPanelVariants(reducedMotion = false): Variants {
 
 export function stepPanelVariants(reducedMotion = false): Variants {
   if (reducedMotion) {
-    return opacityOnlyVariants();
+    return {
+      initial: { opacity: 0, x: 0 },
+      animate: { opacity: 1, x: 0 },
+      exit: { opacity: 0, x: 0 }
+    };
   }
 
   return {

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import type { PointerEvent, ReactNode } from "react";
+import { useAppReducedMotion } from "@/components/motion/AppMotionProvider";
 
 type Spark = {
   x: number;
@@ -25,22 +26,11 @@ export function ClickSpark({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const sparksRef = useRef<Spark[]>([]);
   const animationRef = useRef<number | null>(null);
-  const reducedMotionRef = useRef(false);
+  const reduceMotion = useAppReducedMotion();
 
   useEffect(() => {
-    const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const updatePreference = () => {
-      reducedMotionRef.current = motionPreference.matches;
-      if (motionPreference.matches) {
-        sparksRef.current = [];
-      }
-    };
-
-    updatePreference();
-    motionPreference.addEventListener("change", updatePreference);
-
-    return () => motionPreference.removeEventListener("change", updatePreference);
-  }, []);
+    if (reduceMotion) sparksRef.current = [];
+  }, [reduceMotion]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -132,7 +122,7 @@ export function ClickSpark({
   function handlePointerDown(event: PointerEvent<HTMLDivElement>) {
     const canvas = canvasRef.current;
 
-    if (!enabled || !canvas || reducedMotionRef.current) {
+    if (!enabled || reduceMotion || !canvas) {
       return;
     }
 
@@ -158,7 +148,7 @@ export function ClickSpark({
       {children}
       <canvas
         ref={canvasRef}
-        className={`pointer-events-none absolute inset-0 z-50 ${enabled ? "block" : "hidden"}`}
+        className={`pointer-events-none absolute inset-0 z-50 ${enabled && !reduceMotion ? "block" : "hidden"}`}
         style={{ pointerEvents: "none" }}
         aria-hidden="true"
       />

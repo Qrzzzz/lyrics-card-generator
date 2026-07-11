@@ -7,6 +7,8 @@ import { getAIUiCopy } from "../lib/ai/ui-copy";
 import { buildUpdateResult } from "../lib/github-update";
 import { getUpdateLink } from "../lib/update-link";
 import { proxiedImageUrl } from "../lib/image-utils";
+import { clearLyricContent, hasClearableLyricContent } from "../lib/clear-content";
+import { defaultState } from "../components/editor/editor-defaults";
 import {
   FONT_PREVIEW_COLORS,
   FONT_PREVIEW_PALETTE,
@@ -71,7 +73,29 @@ function main() {
   testFontResolution();
   testFontSchemeTranslations();
   testAITranslationPrompt();
-  console.log(JSON.stringify({ ok: true, tests: 8 }, null, 2));
+  testClearLyricContent();
+  console.log(JSON.stringify({ ok: true, tests: 9 }, null, 2));
+}
+
+function testClearLyricContent() {
+  assert(!hasClearableLyricContent(defaultState), "default state is already clear");
+  assert(
+    hasClearableLyricContent({ ...defaultState, song: { ...defaultState.song, explicit: true } }),
+    "explicit-only metadata can be cleared"
+  );
+
+  const populated = {
+    ...defaultState,
+    song: { ...defaultState.song, source: "apple" as const, title: "Opalite", album: "Album" },
+    lyrics: "One line",
+    style: { ...defaultState.style, showSharedBy: true, sharedByText: "Shared by Test" }
+  };
+  assert(hasClearableLyricContent(populated), "song content can be cleared");
+
+  const cleared = clearLyricContent(populated);
+  assert(!hasClearableLyricContent(cleared), "cleared state rejects repeated clear");
+  assertEqual(cleared.style.showSharedBy, true, "clear keeps card defaults and visual settings");
+  assertEqual(cleared.style.sharedByText, "Shared by Test", "clear keeps default sharer text");
 }
 
 function testLyricFormat() {

@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import type { Dispatch, RefObject, SetStateAction } from "react";
-import { getCardSize } from "@/lib/card-size";
+import { AUTO_HEIGHT_MIN, getCardSize } from "@/lib/card-size";
 import { getPortraitLayout } from "@/lib/card-layout-engine";
 import { portraitLayoutConfig } from "@/lib/card-layout-config";
 import type { AppState } from "@/lib/types";
@@ -22,6 +22,7 @@ export function useMeasuredAutoCanvasHeight(
     let active = true;
     let frame = 0;
     const observers: ResizeObserver[] = [];
+    let contentObserver: MutationObserver | undefined;
 
     const scheduleMeasure = () => {
       if (!active) {
@@ -76,6 +77,13 @@ export function useMeasuredAutoCanvasHeight(
         observers.push(observer);
       }
 
+      contentObserver = new MutationObserver(scheduleMeasure);
+      contentObserver.observe(root, {
+        childList: true,
+        characterData: true,
+        subtree: true
+      });
+
       scheduleMeasure();
     };
 
@@ -86,13 +94,20 @@ export function useMeasuredAutoCanvasHeight(
       active = false;
       cancelAnimationFrame(frame);
       observers.forEach((observer) => observer.disconnect());
+      contentObserver?.disconnect();
     };
   }, [
     cardRef,
     setState,
     state.lyrics,
+    state.locale,
     state.song.album,
+    state.song.artist,
+    state.song.explicit,
     state.song.source,
+    state.song.title,
+    state.translationEnabled,
+    state.translationText,
     state.style.align,
     state.style.allowTwoLineTitle,
     state.style.autoHeight,
@@ -152,7 +167,7 @@ export function useMeasuredAutoCanvasHeight(
 
     return Math.min(
       portraitLayoutConfig.canvas.maxHeight,
-      Math.max(portraitLayoutConfig.canvas.minHeight, nextHeight)
+      Math.max(AUTO_HEIGHT_MIN, nextHeight)
     );
   }
 }
