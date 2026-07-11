@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v4.6.4.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v5.0.0.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="#développement-local">Développement local</a> ·
@@ -51,35 +51,33 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 Téléchargez la dernière version depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
 
-* Installateur recommandé : `Lyrics Card Generator Setup 4.6.4.exe`
-* Version portable : `Lyrics Card Generator-4.6.4-portable.exe`
+* Installateur recommandé : `Lyrics Card Generator Setup 5.0.0.exe`
+* Version portable : `Lyrics Card Generator-5.0.0-portable.exe`
 
 L'installateur est recommandé pour une utilisation régulière. La version portable convient aux essais, à une utilisation temporaire ou à un disque amovible.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### Points clés de la v4.6.4
+### Points clés de la v5.0.0
 
-* Correction du blocage de toutes les pages et zones de texte après la réinitialisation d’un préréglage ; la réinitialisation n’utilise plus de boîte de confirmation native bloquante.
-* Les règles de format strictes deviennent un module de sécurité intégré immuable et tous les accès de déverrouillage sont supprimés.
-* Ajout d’une navigation globale Précédent, Suivant et chemin pour toutes les catégories et sous-pages des Réglages, réunie dans l’en-tête supérieur gauche.
-* L’aperçu de la vraie carte reste fixé en haut pendant le défilement et la carte d’aperçu des polices séparée est supprimée.
-* Les quatre cartes d’exemple sont légèrement raccourcies et leur libellé « Album » est supprimé.
-* Chaque préréglage conserve Réinitialiser et la Bibliothèque de prompts conserve Tout réinitialiser.
-* Les préréglages personnalisés conservent leur titre et leur prompt initiaux comme base de réinitialisation, y compris après migration.
-* Le bouton vert maximisé affiche désormais « Mode fenêtré » et la description de la bibliothèque a été simplifiée.
-* Le cadre de l’aperçu en direct suit maintenant la hauteur de la carte sans grand espace vide inférieur.
+* La première étape privilégie la recherche NetEase ; les liens, l’audio local et les métadonnées manuelles passent dans une colonne secondaire compacte.
+* La deuxième étape devient un espace à trois colonnes avec résumé du morceau, document à défilement partagé et outils fixes.
+* Ajout des vues Standard, Étendue et Immersive avec aimantation, double-clic, Échap et commandes clavier.
+* L’aperçu visible disparaît des deux premières étapes et revient avec la conception de carte à partir de la troisième.
+* L’export utilise un hôte hors écran indépendant, sans dépendre de la hauteur de l’éditeur.
+* Ajout de la limite de 36 lignes non vides, d’une hauteur automatique portrait de 6400px et du blocage des débordements réels.
+* Régressions validées sur cinq tailles de bureau, six langues, Web Lite et le paquet Electron.
 
 ## 🌐 Notes de publication multilingues
 
 La page GitHub Release utilise par défaut la version courte en chinois simplifié, les notes de publication complètes sont conservées dans `docs/releases/` :
 
-* [简体中文](./docs/releases/v4.6.4.zh-CN.md)
-* [繁體中文](./docs/releases/v4.6.4.zh-TW.md)
-* [English](./docs/releases/v4.6.4.en.md)
-* [Français](./docs/releases/v4.6.4.fr.md)
-* [日本語](./docs/releases/v4.6.4.ja.md)
-* [Español](./docs/releases/v4.6.4.es.md)
+* [简体中文](./docs/releases/v5.0.0.zh-CN.md)
+* [繁體中文](./docs/releases/v5.0.0.zh-TW.md)
+* [English](./docs/releases/v5.0.0.en.md)
+* [Français](./docs/releases/v5.0.0.fr.md)
+* [日本語](./docs/releases/v5.0.0.ja.md)
+* [Español](./docs/releases/v5.0.0.es.md)
 
 <a id="fonctionnalités-principales"></a>
 

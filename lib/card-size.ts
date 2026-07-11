@@ -11,6 +11,7 @@ export const PRESET_CARD_SIZES: Record<Exclude<CardRatio, "custom">, { width: nu
 };
 
 export const AUTO_HEIGHT_MIN = 640;
+export const AUTO_HEIGHT_MAX = 6400;
 
 export function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
@@ -48,7 +49,7 @@ export function getCardSize(style: CardStyle) {
     height: clamp(
       Math.round(style.height),
       style.autoHeight ? AUTO_HEIGHT_MIN : portraitLayoutConfig.canvas.minHeight,
-      portraitLayoutConfig.canvas.maxHeight
+      style.autoHeight ? AUTO_HEIGHT_MAX : portraitLayoutConfig.canvas.maxHeight
     )
   };
 }
@@ -91,5 +92,5 @@ export function estimateCardHeight(params: {
   const lyricArea = wrappedLines * params.lyricFontSize * params.lineHeight;
   const padding = 150;
 
-  return clamp(Math.round(topArea + lyricArea + bottomArea + padding), 1080, portraitLayoutConfig.canvas.maxHeight);
+  return clamp(Math.round(topArea + lyricArea + bottomArea + padding), 1080, AUTO_HEIGHT_MAX);
 }

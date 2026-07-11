@@ -2,9 +2,8 @@
 
 import { useEffect } from "react";
 import type { Dispatch, RefObject, SetStateAction } from "react";
-import { AUTO_HEIGHT_MIN, getCardSize } from "@/lib/card-size";
+import { AUTO_HEIGHT_MAX, AUTO_HEIGHT_MIN, getCardSize } from "@/lib/card-size";
 import { getPortraitLayout } from "@/lib/card-layout-engine";
-import { portraitLayoutConfig } from "@/lib/card-layout-config";
 import type { AppState } from "@/lib/types";
 
 type AppStateSetter = Dispatch<SetStateAction<AppState>>;
@@ -15,7 +14,7 @@ export function useMeasuredAutoCanvasHeight(
   cardRef: RefObject<HTMLElement | null>
 ) {
   useEffect(() => {
-    if ((state.style.layoutMode ?? "portrait") !== "portrait" || state.style.ratio !== "custom" || !state.style.autoHeight) {
+    if (!isPortraitCustomAutoHeight(state)) {
       return;
     }
 
@@ -31,13 +30,13 @@ export function useMeasuredAutoCanvasHeight(
 
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(() => {
-        const nextHeight = measureHeight(state);
+        const nextHeight = measureAutoCanvasHeight(state, cardRef.current);
         if (nextHeight === null) {
           return;
         }
 
         setState((current) => {
-          if ((current.style.layoutMode ?? "portrait") !== "portrait" || current.style.ratio !== "custom" || !current.style.autoHeight) {
+          if (!isPortraitCustomAutoHeight(current)) {
             return current;
           }
 
@@ -57,7 +56,7 @@ export function useMeasuredAutoCanvasHeight(
     };
 
     const attachObservers = () => {
-      const root = cardRef.current?.querySelector<HTMLElement>("[data-export-card]");
+      const root = findExportCard(cardRef.current);
       if (!root) {
         scheduleMeasure();
         return;
@@ -134,42 +133,65 @@ export function useMeasuredAutoCanvasHeight(
     state.style.translationText,
     state.style.width
   ]);
+}
 
-  function measureHeight(currentState: AppState) {
-    const root = cardRef.current?.querySelector<HTMLElement>("[data-export-card]");
-    const content = root?.querySelector<HTMLElement>("[data-card-content]");
-    const lyrics = root?.querySelector<HTMLElement>("[data-card-lyrics]");
-    if (!root || !content || !lyrics) {
-      return null;
-    }
+export function isPortraitCustomAutoHeight(state: AppState) {
+  return (
+    (state.style.layoutMode ?? "portrait") === "portrait" &&
+    state.style.ratio === "custom" &&
+    state.style.autoHeight
+  );
+}
 
-    const size = getCardSize(currentState.style);
-    const layout = getPortraitLayout(size, currentState.style, currentState.song);
-    const contentStyle = window.getComputedStyle(content);
-    const viewport = root.querySelector<HTMLElement>("[data-card-lyrics-viewport]");
-    const viewportStyle = viewport ? window.getComputedStyle(viewport) : null;
-    const header = root.querySelector<HTMLElement>("[data-card-header]");
-    const footer = root.querySelector<HTMLElement>("[data-card-footer]");
-    const contentPadding =
-      toPixels(contentStyle.paddingTop) +
-      toPixels(contentStyle.paddingBottom);
-    const viewportPadding =
-      (viewportStyle ? toPixels(viewportStyle.paddingTop) + toPixels(viewportStyle.paddingBottom) : 0);
-    const headerHeight = header?.scrollHeight ?? 0;
-    const footerHeight = footer?.scrollHeight ?? 0;
-    const lyricsHeight = lyrics.scrollHeight;
-    const headerGap = headerHeight > 0 ? Math.max(24, Math.round(size.height * 0.022)) : 0;
-    const footerGap = footerHeight > 0 ? Math.max(18, Math.round(size.height * 0.014)) : 0;
-    const requiredSafeHeight =
-      contentPadding + headerHeight + headerGap + viewportPadding + lyricsHeight + footerGap + footerHeight;
-    const chromeHeight = size.height - layout.safeRect.height;
-    const nextHeight = Math.ceil(chromeHeight + requiredSafeHeight);
-
-    return Math.min(
-      portraitLayoutConfig.canvas.maxHeight,
-      Math.max(AUTO_HEIGHT_MIN, nextHeight)
-    );
+export function findExportCard(container: HTMLElement | null) {
+  if (!container) {
+    return null;
   }
+
+  return container.matches("[data-export-card]")
+    ? container
+    : container.querySelector<HTMLElement>("[data-export-card]");
+}
+
+export function measureAutoCanvasHeight(
+  currentState: AppState,
+  container: HTMLElement | null
+) {
+  if (!isPortraitCustomAutoHeight(currentState)) {
+    return null;
+  }
+
+  const root = findExportCard(container);
+  const content = root?.querySelector<HTMLElement>("[data-card-content]");
+  const lyrics = root?.querySelector<HTMLElement>("[data-card-lyrics]");
+  if (!root || !content || !lyrics) {
+    return null;
+  }
+
+  const size = getCardSize(currentState.style);
+  const layout = getPortraitLayout(size, currentState.style, currentState.song);
+  const contentStyle = window.getComputedStyle(content);
+  const viewport = root.querySelector<HTMLElement>("[data-card-lyrics-viewport]");
+  const viewportStyle = viewport ? window.getComputedStyle(viewport) : null;
+  const header = root.querySelector<HTMLElement>("[data-card-header]");
+  const footer = root.querySelector<HTMLElement>("[data-card-footer]");
+  const contentPadding =
+    toPixels(contentStyle.paddingTop) +
+    toPixels(contentStyle.paddingBottom);
+  const viewportPadding = viewportStyle
+    ? toPixels(viewportStyle.paddingTop) + toPixels(viewportStyle.paddingBottom)
+    : 0;
+  const headerHeight = header?.scrollHeight ?? 0;
+  const footerHeight = footer?.scrollHeight ?? 0;
+  const lyricsHeight = lyrics.scrollHeight;
+  const headerGap = headerHeight > 0 ? Math.max(24, Math.round(size.height * 0.022)) : 0;
+  const footerGap = footerHeight > 0 ? Math.max(18, Math.round(size.height * 0.014)) : 0;
+  const requiredSafeHeight =
+    contentPadding + headerHeight + headerGap + viewportPadding + lyricsHeight + footerGap + footerHeight;
+  const chromeHeight = size.height - layout.safeRect.height;
+  const nextHeight = Math.ceil(chromeHeight + requiredSafeHeight);
+
+  return Math.min(AUTO_HEIGHT_MAX, Math.max(AUTO_HEIGHT_MIN, nextHeight));
 }
 
 function toPixels(value: string) {

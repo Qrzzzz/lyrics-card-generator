@@ -42,6 +42,12 @@ export function LandscapeLyricsBlock({
   const translationLines = splitUsefulLines(translationText ?? "");
   const lines = lyricLines.length > 0 ? lyricLines : ["Type your lyrics here..."];
   const hasTranslation = translationEnabled && translationLines.length > 0;
+  const displayLineCount = Math.max(lines.length, translationEnabled ? translationLines.length : 0);
+  const rows = Array.from({ length: displayLineCount }, (_, index) => ({
+    hasLyric: index < lines.length,
+    lyric: lines[index] ?? "",
+    translation: translationEnabled ? translationLines[index] ?? "" : ""
+  }));
   const targetLyricSize = useMemo(() => Math.max(24, lyricFontSize), [lyricFontSize]);
   const [activeLyricSize, setActiveLyricSize] = useState(targetLyricSize);
   const activeTranslationSize = Math.round(
@@ -107,25 +113,25 @@ export function LandscapeLyricsBlock({
         textShadow: isDarkText ? "none" : "0 10px 32px rgba(0,0,0,0.34)"
       }}
     >
-      {lines.map((line, index) => {
-        const translation = translationEnabled ? translationLines[index] : "";
-
+      {rows.map(({ hasLyric, lyric, translation }, index) => {
         return (
-          <div key={`${line}-${index}`} style={{ marginBottom: index === lines.length - 1 ? 0 : pairMargin }}>
-            <p
-              className={cn("font-black opacity-[0.96]")}
-              style={{
-                fontSize: activeLyricSize,
-                lineHeight
-              }}
-            >
-              {line || "\u00a0"}
-            </p>
+          <div key={`${lyric}-${translation}-${index}`} style={{ marginBottom: index === rows.length - 1 ? 0 : pairMargin }}>
+            {hasLyric ? (
+              <p
+                className={cn("font-black opacity-[0.96]")}
+                style={{
+                  fontSize: activeLyricSize,
+                  lineHeight
+                }}
+              >
+                {lyric || "\u00a0"}
+              </p>
+            ) : null}
             {translation ? (
               <p
                 className="font-semibold"
                 style={{
-                  marginTop: lyricLineGap,
+                  marginTop: hasLyric ? lyricLineGap : 0,
                   color: withAlpha(textColor, 0.68),
                   fontSize: activeTranslationSize,
                   lineHeight: 1.28

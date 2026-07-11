@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v4.6.4.zh-TW.md">發布說明</a> ·
+  <a href="./docs/releases/v5.0.0.zh-TW.md">發布說明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">線上 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="#本機開發">本機開發</a> ·
@@ -48,35 +48,33 @@
 
 請前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載最新版：
 
-* 建議一般使用者下載安裝版：`Lyrics Card Generator Setup 4.6.4.exe`
-* 不想安裝時可下載可攜版：`Lyrics Card Generator-4.6.4-portable.exe`
+* 建議一般使用者下載安裝版：`Lyrics Card Generator Setup 5.0.0.exe`
+* 不想安裝時可下載可攜版：`Lyrics Card Generator-5.0.0-portable.exe`
 
 安裝版適合長期使用；可攜版適合臨時執行、測試或放在隨身碟中使用。
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v4.6.4 更新重點
+### v5.0.0 更新重點
 
-* 修正提示詞預設重設後所有頁面與文字欄位失去互動的問題；重設不再呼叫會阻塞桌面殼層的原生確認框。
-* 嚴格格式規則固定為不可修改的內建安全模組，並移除「解鎖編輯」等入口。
-* 設定頁新增適用於全部分類與子頁的全域上一頁、下一頁與路徑列，並統一放入左上角頁首。
-* 右側真實卡片預覽會在編輯頁捲動時固定於頂部；文字設計頁移除獨立字型預覽卡片。
-* 四張範例歌曲卡片略為縮短，並移除卡片頂部的「專輯」標籤。
-* 每個提示詞預設保留「重設」按鈕，可還原至各自初始內容；資源庫主頁可一鍵重設全部內容。
-* 自訂預設首次儲存時會記錄初始標題與提示詞，舊資料則以目前內容建立重設基準。
-* 最大化時綠燈提示改為「窗口化」，並精簡提示詞資源庫說明。
-* 即時預覽邊框改為隨卡片內容自動調整高度，不再於下方保留大片空白。
+* 第一步以網易雲搜尋為核心，連結、本機音訊和手動歌曲資訊收進緊湊輔助欄。
+* 第二步升級為歌曲摘要、共用捲動歌詞文件和固定編輯工具組成的三欄長稿工作台。
+* 新增標準、延展、沉浸三種歌詞視窗，支援拖曳吸附、按兩下復位、Esc 與鍵盤操作。
+* 第一、二步隱藏可見卡片預覽；第三步起恢復原有卡片設計與預覽流程。
+* 匯出改用獨立畫面外卡片宿主，編輯視窗高度不再影響 PNG 邏輯尺寸。
+* 新增 36 個非空邏輯行的匯出上限、6400px 直式自動高度和真實溢出阻斷。
+* 完成五種桌面視窗、六語言、Web Lite 與 Electron 打包回歸。
 
 ## 🌐 多語言發佈說明
 
 GitHub Release 頁面預設使用簡體中文短版，完整發佈說明維護在 `docs/releases/`：
 
-* [简体中文](./docs/releases/v4.6.4.zh-CN.md)
-* [繁體中文](./docs/releases/v4.6.4.zh-TW.md)
-* [English](./docs/releases/v4.6.4.en.md)
-* [Français](./docs/releases/v4.6.4.fr.md)
-* [日本語](./docs/releases/v4.6.4.ja.md)
-* [Español](./docs/releases/v4.6.4.es.md)
+* [简体中文](./docs/releases/v5.0.0.zh-CN.md)
+* [繁體中文](./docs/releases/v5.0.0.zh-TW.md)
+* [English](./docs/releases/v5.0.0.en.md)
+* [Français](./docs/releases/v5.0.0.fr.md)
+* [日本語](./docs/releases/v5.0.0.ja.md)
+* [Español](./docs/releases/v5.0.0.es.md)
 
 ## ✨ 主要功能
 

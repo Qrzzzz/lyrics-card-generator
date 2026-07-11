@@ -18,12 +18,22 @@ import {
 } from "@/lib/motion/tokens";
 import { cn } from "@/lib/utils";
 
+export type SettingsStepPresentation = "focus" | "lyrics-workspace" | "preview-workbench";
+
 export type SettingsStep = {
   id: string;
   title: string;
   description?: string;
   isComplete?: boolean;
   content: ReactNode;
+  /**
+   * Describes how the desktop editor presents this step. The stepper itself
+   * only uses this to opt into the bounded lyrics-workspace skeleton; outer
+   * editor shells own any companion `aside` placement.
+   */
+  presentation?: SettingsStepPresentation;
+  aside?: ReactNode;
+  managesOwnScroll?: boolean;
   secondaryAction?: {
     label: ReactNode;
     onClick: () => void;
@@ -45,6 +55,7 @@ export type SettingsStepperProps = {
   nextText?: string;
   backText?: string;
   themeColor?: string;
+  compactChrome?: boolean;
 };
 
 export function SettingsStepper({
@@ -53,7 +64,8 @@ export function SettingsStepper({
   onStepChange,
   nextText = "Next",
   backText = "Back",
-  themeColor = "#7C3AED"
+  themeColor = "#7C3AED",
+  compactChrome = false
 }: SettingsStepperProps) {
   const reduceMotion = useAppReducedMotion();
   const previousStepRef = useRef(currentStep);
@@ -61,6 +73,8 @@ export function SettingsStepper({
   const stepsMeasureRef = useRef<HTMLDivElement | null>(null);
   const stepDirection: StepDirection = currentStep >= previousStepRef.current ? 1 : -1;
   const activeStep = steps[currentStep] ?? steps[0];
+  const activePresentation = activeStep?.presentation ?? "preview-workbench";
+  const isLyricsWorkspace = activePresentation === "lyrics-workspace";
   const isFirstStep = currentStep <= 0;
   const isLastStep = currentStep >= steps.length - 1;
   const secondaryAction = activeStep?.secondaryAction;
@@ -77,6 +91,7 @@ export function SettingsStepper({
     stepCount: steps.length,
     measurementKey: stepMeasurementKey
   });
+  const useCompactStepLabel = compactChrome || stepLayout.compact;
   previousStepRef.current = currentStep;
 
   function goToStep(step: number) {
@@ -84,9 +99,18 @@ export function SettingsStepper({
   }
 
   return (
-    <section className="grid min-w-0 content-start self-start gap-4">
-      <div className="glass-panel flex flex-col rounded-lg p-4">
-        <div className="mb-4 flex items-start justify-between gap-4">
+    <section
+      data-stepper-presentation={activePresentation}
+      data-stepper-compact-chrome={compactChrome ? "true" : "false"}
+      className={cn(
+        "grid min-w-0 gap-4",
+        isLyricsWorkspace
+          ? "lyrics-stepper-shell h-full min-h-0 self-stretch grid-rows-[auto_minmax(0,1fr)_auto]"
+          : "content-start self-start"
+      )}
+    >
+      <div className={cn("glass-panel lyrics-stepper-rail flex flex-col rounded-lg", compactChrome ? "p-3" : "p-4")}>
+        <div className={cn("flex items-start justify-between gap-4", compactChrome ? "mb-3" : "mb-4")}>
           <MotionPresence mode="popLayout">
             <motion.div
               key={activeStep.id}
@@ -98,10 +122,22 @@ export function SettingsStepper({
               transition={transition}
               className="min-w-0"
             >
-              <p className="app-text-subtle text-[11px] uppercase tracking-[0.16em]">
+              <p
+                className={cn(
+                  "app-text-subtle uppercase tracking-[0.16em]",
+                  compactChrome ? "text-[10px]" : "text-[11px]"
+                )}
+              >
                 {currentStep + 1} / {steps.length}
               </p>
-              <h2 className="app-text-primary mt-1 text-lg font-black">{activeStep.title}</h2>
+              <h2
+                className={cn(
+                  "app-text-primary mt-1 font-black",
+                  compactChrome ? "text-base" : "text-lg"
+                )}
+              >
+                {activeStep.title}
+              </h2>
             </motion.div>
           </MotionPresence>
         </div>
@@ -111,7 +147,7 @@ export function SettingsStepper({
           className="grid gap-2"
           data-compact={stepLayout.compact ? "true" : "false"}
           style={{
-            gridTemplateColumns: `repeat(${stepLayout.columns}, minmax(0, 1fr))`
+            gridTemplateColumns: `repeat(${compactChrome ? steps.length : stepLayout.columns}, minmax(0, 1fr))`
           }}
         >
           {steps.map((step, index) => {
@@ -128,7 +164,11 @@ export function SettingsStepper({
                 data-active={isActive ? "true" : "false"}
                 className={cn(
                   "group flex min-h-10 min-w-0 items-center gap-2 rounded-lg border text-left transition",
-                  stepLayout.compact ? "px-2 py-2" : "px-2.5 py-2",
+                  compactChrome
+                    ? "px-2 py-1.5"
+                    : stepLayout.compact
+                      ? "px-2 py-2"
+                      : "px-2.5 py-2",
                   isActive
                     ? "border-[rgb(var(--panel-border))] bg-[rgb(var(--button-bg-hover))] app-text-primary shadow-[0_16px_42px_rgba(0,0,0,0.22)]"
                     : "border-[rgb(var(--panel-border))] bg-[rgb(var(--button-bg))] app-text-muted hover:bg-[rgb(var(--button-bg-hover))] hover:text-[rgb(var(--app-fg))]"
@@ -136,7 +176,8 @@ export function SettingsStepper({
               >
                 <span
                   className={cn(
-                    "flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-[11px] font-black transition",
+                    "flex shrink-0 items-center justify-center rounded-full border font-black transition",
+                    compactChrome ? "h-5 w-5 text-[10px]" : "h-6 w-6 text-[11px]",
                     isActive || isComplete ? "border-transparent text-white" : "border-[rgb(var(--panel-border))] app-text-muted"
                   )}
                   style={isActive || isComplete ? { backgroundColor: themeColor, color: markerForegroundColor } : undefined}
@@ -146,7 +187,7 @@ export function SettingsStepper({
                 <span
                   className={cn(
                     "min-w-0 truncate font-semibold",
-                    stepLayout.compact ? "text-[11px]" : "text-xs"
+                    useCompactStepLabel ? "text-[11px]" : "text-xs"
                   )}
                   title={step.title}
                 >
@@ -178,7 +219,13 @@ export function SettingsStepper({
         </div>
       </div>
 
-      <div className="relative min-w-0">
+      <div
+        data-lyrics-viewport-bounds={isLyricsWorkspace ? "true" : undefined}
+        className={cn(
+          "lyrics-stepper-content relative min-w-0",
+          isLyricsWorkspace && "min-h-0 overflow-hidden"
+        )}
+      >
         <MotionPresence>
           {activeStep ? (
             <motion.div
@@ -189,6 +236,14 @@ export function SettingsStepper({
               animate="animate"
               exit="exit"
               transition={transition}
+              className={cn(
+                isLyricsWorkspace && "h-full min-h-0",
+                isLyricsWorkspace && activeStep.managesOwnScroll
+                  ? "overflow-hidden"
+                  : isLyricsWorkspace
+                    ? "overflow-y-auto overscroll-contain"
+                    : undefined
+              )}
             >
               {activeStep.content}
             </motion.div>
@@ -196,12 +251,20 @@ export function SettingsStepper({
         </MotionPresence>
       </div>
 
-      <div className="flex items-center justify-between gap-3">
+      <div
+        className={cn(
+          "lyrics-stepper-actions flex items-center justify-between gap-3",
+          isLyricsWorkspace && "min-h-0"
+        )}
+      >
         <button
           type="button"
           onClick={() => goToStep(currentStep - 1)}
           disabled={isFirstStep}
-          className="app-button h-11 rounded-lg px-4 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-45"
+          className={cn(
+            "app-button rounded-lg px-4 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-45",
+            compactChrome ? "h-10" : "h-11"
+          )}
         >
           {backText}
         </button>
@@ -213,7 +276,10 @@ export function SettingsStepper({
               disabled={secondaryAction.disabled}
               aria-pressed={secondaryAction.pressed}
               aria-expanded={secondaryAction.expanded}
-              className="app-button h-11 rounded-lg px-4 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-45"
+              className={cn(
+                "app-button rounded-lg px-4 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-45",
+                compactChrome ? "h-10" : "h-11"
+              )}
             >
               {secondaryAction.label}
             </button>
@@ -243,7 +309,10 @@ export function SettingsStepper({
             <button
               type="button"
               onClick={() => goToStep(currentStep + 1)}
-              className="app-button h-11 rounded-lg border px-5 text-sm font-semibold transition"
+              className={cn(
+                "app-button rounded-lg border px-5 text-sm font-semibold transition",
+                compactChrome ? "h-10" : "h-11"
+              )}
               style={{ borderColor: themeColor, boxShadow: `0 16px 44px ${themeColor}30` }}
             >
               {nextText}

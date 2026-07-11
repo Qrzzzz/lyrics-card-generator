@@ -8,11 +8,13 @@ import { settingsCopy } from "@/lib/settings/copy";
 import type { Locale } from "@/lib/types";
 
 export type EditorHeaderMode = "normal" | "examplesDocked";
+export type EditorHeaderDensity = "normal" | "compact";
 
 type EditorHeaderProps = {
   locale: Locale;
   t: ReturnType<typeof createT>;
   mode?: EditorHeaderMode;
+  density?: EditorHeaderDensity;
   onOpenExamples: () => void;
   onClearAll: () => void;
   onOpenSettings: () => void;
@@ -24,6 +26,7 @@ export function EditorHeader({
   locale,
   t,
   mode = "normal",
+  density = "normal",
   onOpenExamples,
   onClearAll,
   onOpenSettings,
@@ -33,20 +36,32 @@ export function EditorHeader({
   const aiCopy = getAIUiCopy(locale);
   const copy = settingsCopy[locale];
   const isDocked = mode === "examplesDocked";
+  const isCompact = density === "compact" && !isDocked;
 
   return (
     <header
-      className="glass-panel relative z-40 flex h-[var(--app-header-height)] min-w-0 max-w-full flex-col justify-center gap-3 rounded-lg px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+      data-density={density}
+      className={[
+        "editor-header glass-panel relative z-40 flex min-w-0 max-w-full flex-col justify-center rounded-lg sm:flex-row sm:items-center sm:justify-between",
+        isCompact ? "min-h-14 gap-2 px-3 py-2" : "h-[var(--app-header-height)] gap-3 px-4 py-3"
+      ].join(" ")}
     >
       <div className="flex min-w-0 items-center gap-3 sm:gap-4">
         <img
           src="/app-icon.png"
           alt="Lyrics Card"
-          className="h-12 w-12 shrink-0 rounded-2xl shadow-lg sm:h-16 sm:w-16"
+          className={isCompact
+            ? "h-10 w-10 shrink-0 rounded-xl shadow-lg"
+            : "editor-header__icon h-12 w-12 shrink-0 rounded-2xl shadow-lg sm:h-16 sm:w-16"}
         />
         <div className="min-w-0">
-          <h1 className="app-text-primary truncate text-xl font-black tracking-normal sm:text-3xl">{t("appTitle")}</h1>
-          <p className="app-text-subtle mt-1 truncate text-sm">{t("appSubtitle")}</p>
+          <h1 className={isCompact
+            ? "app-text-primary truncate text-xl font-black tracking-normal"
+            : "app-text-primary truncate text-xl font-black tracking-normal sm:text-3xl"}
+          >
+            {t("appTitle")}
+          </h1>
+          {!isCompact ? <p className="editor-header__subtitle app-text-subtle mt-1 truncate text-sm">{t("appSubtitle")}</p> : null}
         </div>
       </div>
       <div className="flex shrink-0 flex-wrap items-center gap-3">

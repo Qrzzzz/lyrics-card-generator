@@ -1,0 +1,53 @@
+"use client";
+
+import type { RefObject } from "react";
+import { LyricCard } from "@/components/preview/LyricCard";
+import { getCardSize } from "@/lib/card-size";
+import type { CardStyle, Locale, SongInfo } from "@/lib/types";
+
+export type ExportCardHostProps = {
+  song: SongInfo;
+  lyrics: string;
+  style: CardStyle;
+  exportCardRef: RefObject<HTMLElement | null>;
+  locale?: Locale;
+};
+
+/**
+ * Keeps an unscaled export card mounted even when the visible preview is absent.
+ * The off-screen positioning belongs to the outer shell so the referenced node
+ * can be cloned by html-to-image without inheriting hiding or transform styles.
+ */
+export function ExportCardHost({
+  song,
+  lyrics,
+  style,
+  exportCardRef,
+  locale = "en"
+}: ExportCardHostProps) {
+  const size = getCardSize(style);
+
+  return (
+    <div
+      aria-hidden="true"
+      inert
+      data-export-card-host
+      style={{
+        position: "fixed",
+        left: "-100000px",
+        top: 0,
+        width: size.width,
+        height: size.height,
+        pointerEvents: "none"
+      }}
+    >
+      <div
+        ref={exportCardRef as RefObject<HTMLDivElement | null>}
+        data-export-card-host-content
+        style={{ width: size.width, height: size.height }}
+      >
+        <LyricCard song={song} lyrics={lyrics} style={style} locale={locale} />
+      </div>
+    </div>
+  );
+}

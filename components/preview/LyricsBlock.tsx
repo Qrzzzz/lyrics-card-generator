@@ -27,7 +27,13 @@ export function LyricsBlock({
   const lyricLines = splitUsefulLines(lyrics);
   const translationLines = splitUsefulLines(translationText ?? "");
   const lines = lyricLines.length > 0 ? lyricLines : ["Type your lyrics here..."];
-  const activeLyricSize = Math.max(34, Math.min(lyricFontSize, lines.length > 10 ? lyricFontSize - 6 : lyricFontSize));
+  const displayLineCount = Math.max(lines.length, translationEnabled ? translationLines.length : 0);
+  const rows = Array.from({ length: displayLineCount }, (_, index) => ({
+    hasLyric: index < lines.length,
+    lyric: lines[index] ?? "",
+    translation: translationEnabled ? translationLines[index] ?? "" : ""
+  }));
+  const activeLyricSize = Math.max(34, Math.min(lyricFontSize, rows.length > 10 ? lyricFontSize - 6 : lyricFontSize));
   const activeTranslationSize = Math.round(activeLyricSize * translationScale);
   const pairMargin = activeLyricSize * (translationEnabled ? 0.42 : 0.18);
 
@@ -43,23 +49,23 @@ export function LyricsBlock({
         textShadow: isDarkText ? "none" : "0 8px 28px rgba(0,0,0,0.34)"
       }}
     >
-      {lines.map((line, index) => {
-        const translation = translationEnabled ? translationLines[index] : "";
-
+      {rows.map(({ hasLyric, lyric, translation }, index) => {
         return (
-          <div key={`${line}-${index}`} style={{ marginBottom: index === lines.length - 1 ? 0 : pairMargin }}>
-            <p
-              className="font-black opacity-[0.96]"
-              style={{
-                fontSize: activeLyricSize,
-                lineHeight
-              }}
-            >
-              {line || "\u00a0"}
-            </p>
+          <div key={`${lyric}-${translation}-${index}`} style={{ marginBottom: index === rows.length - 1 ? 0 : pairMargin }}>
+            {hasLyric ? (
+              <p
+                className="font-black opacity-[0.96]"
+                style={{
+                  fontSize: activeLyricSize,
+                  lineHeight
+                }}
+              >
+                {lyric || "\u00a0"}
+              </p>
+            ) : null}
             {translation ? (
               <p
-                className="mt-[0.28em] font-medium"
+                className={hasLyric ? "mt-[0.28em] font-medium" : "font-medium"}
                 style={{
                   color: withAlpha(textColor, 0.64),
                   fontSize: activeTranslationSize,

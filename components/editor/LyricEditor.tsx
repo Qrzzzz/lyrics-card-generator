@@ -19,6 +19,7 @@ import { useEditorPreferences } from "@/components/editor/hooks/useEditorPrefere
 import { AppMotionProvider } from "@/components/motion/AppMotionProvider";
 import { MotionPanel } from "@/components/motion/MotionPanel";
 import { PreviewPane } from "@/components/editor/PreviewPane";
+import { ExportCardHost } from "@/components/editor/ExportCardHost";
 import { SettingsStepper, type SettingsStep } from "@/components/editor/SettingsStepper";
 import { SettingsSurface } from "@/components/settings/SettingsSurface";
 import type { SettingsTabId } from "@/components/settings/settings-model";
@@ -30,6 +31,12 @@ import {
 } from "@/components/editor/hooks/useLyricEditorEffects";
 import { resolveEditorThemeTokens } from "@/components/editor/resolveEditorThemeTokens";
 import { useMeasuredAutoCanvasHeight } from "@/components/editor/hooks/useMeasuredAutoCanvasHeight";
+import {
+  getLiveExportCardValidation,
+  useExportCardReadiness,
+  type ExportCardBlockingReason
+} from "@/components/editor/hooks/useExportCardReadiness";
+import type { LyricsViewportMode } from "@/components/editor/hooks/useLyricsViewportSession";
 import { ClickSpark } from "@/components/layout/ClickSpark";
 import { DesktopTitleBar } from "@/components/layout/DesktopTitleBar";
 import { DynamicAppBackground } from "@/components/layout/DynamicAppBackground";
@@ -41,6 +48,8 @@ import { resolveUiAccentColor } from "@/lib/settings/accent";
 import { DEFAULT_USER_SETTINGS, getExportPixelRatio, type ExportQualityId } from "@/lib/settings/types";
 import { resolveEffectiveUiThemeId } from "@/lib/settings/user-settings";
 import type { AppState, FontScheme, Locale } from "@/lib/types";
+import { cn } from "@/lib/utils";
+import { MAX_EXPORT_LYRIC_LINES } from "@/lib/lyrics-document";
 
 type ActiveSurface = "editor" | "examples" | "settings";
 
@@ -64,8 +73,10 @@ export function LyricEditor() {
   const [activeSurface, setActiveSurface] = useState<ActiveSurface>("editor");
   const [requestedSettingsTab, setRequestedSettingsTab] = useState<SettingsTabId>();
   const [exportQuality, setExportQuality] = useState<ExportQualityId>(DEFAULT_USER_SETTINGS.defaultExportQuality);
+  const [lyricsViewportMode, setLyricsViewportMode] = useState<LyricsViewportMode>("standard");
   const [toast, setToast] = useState<ToastNotice | null>(null);
-  const cardRef = useRef<HTMLElement | null>(null);
+  const exportCardRef = useRef<HTMLElement | null>(null);
+  const previewCardRef = useRef<HTMLElement | null>(null);
   const toastIdRef = useRef(0);
   const stageRef = useRef<HTMLDivElement | null>(null);
   const headerRailRef = useRef<HTMLDivElement | null>(null);
@@ -94,7 +105,11 @@ export function LyricEditor() {
   useSyncedCoverProxy(state, setState);
   useCoverPalette(coverForPalette, setState);
   useResolvedTextColor(state, setState);
-  useMeasuredAutoCanvasHeight(state, setState, cardRef);
+  useMeasuredAutoCanvasHeight(state, setState, exportCardRef);
+  const exportReadiness = useExportCardReadiness({ state: parsedState, exportCardRef });
+  const exportBlockMessage = exportReadiness.blockingReason
+    ? resolveExportBlockingMessage(exportReadiness.blockingReason, exportReadiness.lineStatus.totalLineCount, t)
+    : undefined;
   const {
     userSettings,
     backgroundImageUrl,
@@ -150,8 +165,15 @@ export function LyricEditor() {
   } = useEditorActions({
     parsedState,
     setState,
-    cardRef,
+    cardRef: exportCardRef,
     exportPixelRatio,
+    exportBlockMessage,
+    getExportBlockMessage: () => {
+      const validation = getLiveExportCardValidation(parsedState, exportCardRef.current);
+      return validation.blockingReason
+        ? resolveExportBlockingMessage(validation.blockingReason, validation.lineStatus.totalLineCount, t)
+        : undefined;
+    },
     exampleLoadedMessage: settingsCopy[state.locale].exampleLoaded,
     clearAlreadyEmptyMessage: settingsCopy[state.locale].clearAlreadyEmpty,
     onNotify: showToast,
@@ -317,7 +339,12 @@ export function LyricEditor() {
     canFetchLyrics,
     themeColor: resolvedAccentColor,
     isExporting: isCompleteExporting,
+    exportBlockingMessage: exportBlockMessage,
     exportQuality,
+    lyricsLayout: {
+      lineStatus: exportReadiness.lineStatus,
+      onViewportModeChange: setLyricsViewportMode
+    },
     ai: {
       isOpen: isAITranslateOpen,
       isTranslating: isAITranslating,
@@ -350,6 +377,18 @@ export function LyricEditor() {
       onExport: completeAndExport
     }
   });
+  const activeSettingsStep = settingsSteps[currentStep] ?? settingsSteps[0];
+  const activePresentation = activeSettingsStep?.presentation ?? "preview-workbench";
+  const isLyricsWorkspace = activePresentation === "lyrics-workspace";
+  const isLyricsImmersive = isLyricsWorkspace && lyricsViewportMode === "immersive";
+  const usesCompactLyricsChrome = isLyricsWorkspace;
+  const showVisiblePreview = activePresentation === "preview-workbench";
+
+  useEffect(() => {
+    if (!isLyricsWorkspace && lyricsViewportMode === "immersive") {
+      setLyricsViewportMode("standard");
+    }
+  }, [isLyricsWorkspace, lyricsViewportMode]);
   const { resolvedThemeTokens, customThemeTokens } = resolveEditorThemeTokens({
     userSettings,
     palette: state.palette
@@ -373,7 +412,7 @@ export function LyricEditor() {
       <DynamicAppBackground palette={state.palette} settings={userSettings} imageUrl={backgroundImageUrl} />
       <ClickSpark enabled={userSettings.sparkCursorEnabled} themeColor={resolvedAccentColor}>
         <main className="app-main-content lyric-editor-main relative z-10 min-h-screen px-4 py-5 sm:px-6 lg:px-8">
-          <div ref={stageRef} className="lyric-editor-stage relative mx-auto min-w-0 max-w-[1520px] overflow-hidden">
+          <div ref={stageRef} className="lyric-editor-stage relative mx-auto min-w-0 max-w-[1520px] overflow-clip">
             <ExamplesFloor
               isActive={isExamplesSurfaceOpen}
               locale={state.locale}
@@ -384,10 +423,11 @@ export function LyricEditor() {
             <motion.div
               data-testid="editor-surface"
               aria-hidden={!isEditorSurfaceActive}
-              className={[
-                "relative z-10 h-full min-h-0 overflow-y-auto",
+              className={cn(
+                "relative z-10 h-full min-h-0",
+                isLyricsWorkspace ? "overflow-hidden" : "overflow-y-auto",
                 isEditorSurfaceActive ? "pointer-events-auto" : "pointer-events-none"
-              ].join(" ")}
+              )}
               animate={{
                 x: isSettingsSurfaceOpen ? "-100%" : "0%",
                 y: isExamplesSurfaceOpen ? "100%" : "0%",
@@ -398,12 +438,21 @@ export function LyricEditor() {
               inert={!isEditorSurfaceActive ? true : undefined}
               transition={activeSurfaceTransition}
             >
-              <div className="grid min-w-0 max-w-full gap-5">
-                <div className={isExamplesSurfaceOpen ? "invisible" : ""}>
+              <div
+                className={cn(
+                  "grid min-w-0 max-w-full gap-5",
+                  isLyricsWorkspace && "h-full min-h-0 grid-rows-[auto_minmax(0,1fr)]",
+                  isLyricsImmersive && "grid-rows-[minmax(0,1fr)] gap-0"
+                )}
+                data-editor-presentation={activePresentation}
+                data-lyrics-viewport-mode={isLyricsWorkspace ? lyricsViewportMode : undefined}
+              >
+                <div className={cn(isExamplesSurfaceOpen && "invisible", isLyricsImmersive && "hidden")}>
                   <EditorHeader
                     locale={state.locale}
                     t={t}
                     mode="normal"
+                    density={usesCompactLyricsChrome ? "compact" : "normal"}
                     onOpenExamples={() => setActiveSurface("examples")}
                     onClearAll={clearAllContent}
                     onOpenSettings={openSettings}
@@ -411,8 +460,24 @@ export function LyricEditor() {
                   />
                 </div>
 
-                <div className="grid min-w-0 max-w-full gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(420px,600px)]">
-                  <MotionPanel className="order-2 grid min-w-0 gap-4 lg:order-1">
+                <div
+                  className={cn(
+                    "grid min-w-0 max-w-full gap-5",
+                    isLyricsWorkspace && "h-full min-h-0",
+                    isLyricsWorkspace
+                      ? "grid-cols-1"
+                      : showVisiblePreview
+                        ? "lg:grid-cols-[minmax(0,1fr)_minmax(420px,600px)]"
+                        : "min-[960px]:grid-cols-[minmax(0,1fr)_320px] min-[1180px]:grid-cols-[minmax(0,1fr)_360px] min-[1440px]:grid-cols-[minmax(0,1fr)_400px]"
+                  )}
+                >
+                  <MotionPanel
+                    className={cn(
+                      "grid min-w-0 gap-4",
+                      isLyricsWorkspace && "h-full min-h-0",
+                      showVisiblePreview ? "order-2 lg:order-1" : "order-1"
+                    )}
+                  >
                     <SettingsStepper
                       steps={settingsSteps}
                       currentStep={currentStep}
@@ -420,24 +485,44 @@ export function LyricEditor() {
                       backText={t("step.back")}
                       nextText={t("step.next")}
                       themeColor={resolvedAccentColor}
+                      compactChrome={usesCompactLyricsChrome}
                     />
                   </MotionPanel>
 
-                  <PreviewPane
-                    isPreviewVisible={isPreviewVisible}
-                    onPreviewVisibleChange={setIsPreviewVisible}
-                    song={parsedState.song}
-                    lyrics={parsedState.lyrics}
-                    style={parsedState.style}
-                    cardRef={cardRef}
-                    fontSchemePreview={fontSchemePreview}
-                    clearTransitionKey={clearTransitionKey}
-                    locale={state.locale}
-                    t={t}
-                  />
+                  {showVisiblePreview ? (
+                    <PreviewPane
+                      isPreviewVisible={isPreviewVisible}
+                      onPreviewVisibleChange={setIsPreviewVisible}
+                      song={parsedState.song}
+                      lyrics={parsedState.lyrics}
+                      style={parsedState.style}
+                      cardRef={previewCardRef}
+                      fontSchemePreview={fontSchemePreview}
+                      clearTransitionKey={clearTransitionKey}
+                      locale={state.locale}
+                      t={t}
+                    />
+                  ) : activeSettingsStep?.aside ? (
+                    <MotionPanel
+                      className={cn(
+                        "order-2 min-h-0 min-w-0 self-start",
+                        isLyricsWorkspace && "h-full self-stretch"
+                      )}
+                    >
+                      {activeSettingsStep.aside}
+                    </MotionPanel>
+                  ) : null}
                 </div>
               </div>
             </motion.div>
+
+            <ExportCardHost
+              song={parsedState.song}
+              lyrics={parsedState.lyrics}
+              style={parsedState.style}
+              exportCardRef={exportCardRef}
+              locale={state.locale}
+            />
 
             <SettingsSurface
               isActive={isSettingsSurfaceOpen}
@@ -491,4 +576,24 @@ export function LyricEditor() {
       </div>
     </AppMotionProvider>
   );
+}
+
+function resolveExportBlockingMessage(
+  reason: ExportCardBlockingReason,
+  totalLineCount: number,
+  t: ReturnType<typeof createT>
+) {
+  switch (reason) {
+    case "lyrics-limit":
+      return t("lyricsLineLimitExceeded", { total: totalLineCount, max: MAX_EXPORT_LYRIC_LINES });
+    case "fonts-loading":
+      return t("exportFontsLoading");
+    case "card-measuring":
+      return t("exportCardMeasuring");
+    case "content-overflow":
+      return t("exportContentOverflow");
+    case "card-unavailable":
+    default:
+      return t("exportCardUnavailable");
+  }
 }

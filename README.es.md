@@ -19,7 +19,7 @@
 <p>
   <strong>Navegación</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Descargar la última versión</a> ·
-  <a href="./docs/releases/v4.6.4.es.md">Notas de la versión</a> ·
+  <a href="./docs/releases/v5.0.0.es.md">Notas de la versión</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en línea</a> ·
   <a href="#funciones-principales">Funciones principales</a> ·
   <a href="#desarrollo-local">Desarrollo local</a> ·
@@ -51,35 +51,33 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 Descarga la versión más reciente desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Instalador recomendado: `Lyrics Card Generator Setup 4.6.4.exe`
-* Versión portable: `Lyrics Card Generator-4.6.4-portable.exe`
+* Instalador recomendado: `Lyrics Card Generator Setup 5.0.0.exe`
+* Versión portable: `Lyrics Card Generator-5.0.0-portable.exe`
 
 El instalador se recomienda para uso habitual. La versión portable es útil para pruebas, uso temporal o ejecución desde una unidad extraíble.
 
 > La compilación actual no está firmada. Windows puede mostrar una advertencia de SmartScreen, algo habitual en aplicaciones personales sin firma.
 
-### Aspectos destacados de la versión 4.6.4
+### Aspectos destacados de la versión 5.0.0
 
-* Se corrige el bloqueo de todas las páginas y campos de texto después de restablecer un preajuste; el restablecimiento ya no abre un diálogo nativo bloqueante.
-* Las reglas de formato estrictas pasan a ser un módulo de seguridad integrado e inmutable y se eliminan todas las entradas para desbloquear su edición.
-* Se añade navegación global Atrás, Adelante y de ruta para todas las categorías y subpáginas de Ajustes, unificada en la cabecera superior izquierda.
-* La vista previa de la tarjeta real queda fijada arriba durante el desplazamiento y se elimina la tarjeta independiente de vista previa tipográfica.
-* Las cuatro tarjetas de ejemplo se acortan ligeramente y se elimina la etiqueta «Álbum».
-* Cada preajuste conserva Restablecer y la Biblioteca de prompts conserva Restablecer todo.
-* Los preajustes personalizados conservan el título y el prompt iniciales como base de restauración, también al migrar datos existentes.
-* El botón verde maximizado muestra ahora «Modo ventana» y se simplifica la descripción de la Biblioteca de prompts.
-* El borde de la vista previa en directo se adapta a la altura de la tarjeta y elimina el gran espacio vacío inferior.
+* El primer paso prioriza la búsqueda de NetEase y mueve enlaces, audio local y metadatos manuales a una columna secundaria compacta.
+* El segundo paso se convierte en un espacio de tres columnas con resumen, documento de desplazamiento compartido y herramientas fijas.
+* Se añaden vistas Estándar, Ampliada e Inmersiva con ajuste al arrastrar, doble clic, Esc y control por teclado.
+* La vista previa visible se oculta en los dos primeros pasos y vuelve con el diseño de tarjetas desde el tercero.
+* La exportación usa un host independiente fuera de pantalla, sin depender de la altura del editor.
+* Se añade el límite de 36 líneas no vacías, altura automática vertical de 6400px y bloqueo de desbordamientos reales.
+* Se completan regresiones en cinco tamaños de escritorio, seis idiomas, Web Lite y el paquete Electron.
 
 ## 🌐 Notas de publicación multilingüe
 
 La página de GitHub Release utiliza por defecto la versión corta en chino simplificado, las notas de publicación completas se mantienen en `docs/releases/`:
 
-* [简体中文](./docs/releases/v4.6.4.zh-CN.md)
-* [繁體中文](./docs/releases/v4.6.4.zh-TW.md)
-* [English](./docs/releases/v4.6.4.en.md)
-* [Français](./docs/releases/v4.6.4.fr.md)
-* [日本語](./docs/releases/v4.6.4.ja.md)
-* [Español](./docs/releases/v4.6.4.es.md)
+* [简体中文](./docs/releases/v5.0.0.zh-CN.md)
+* [繁體中文](./docs/releases/v5.0.0.zh-TW.md)
+* [English](./docs/releases/v5.0.0.en.md)
+* [Français](./docs/releases/v5.0.0.fr.md)
+* [日本語](./docs/releases/v5.0.0.ja.md)
+* [Español](./docs/releases/v5.0.0.es.md)
 
 <a id="funciones-principales"></a>
 
