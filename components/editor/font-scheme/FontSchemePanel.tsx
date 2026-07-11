@@ -2,7 +2,6 @@
 
 import { createPortal } from "react-dom";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { FontPreviewBackground } from "@/components/editor/font-scheme/FontSchemePreviewPanel";
 import { useAppReducedMotion } from "@/components/motion/AppMotionProvider";
 import { getLyricsCardDesktopApi, type SystemFontOption } from "@/lib/desktop-api";
 import {
@@ -190,7 +189,6 @@ export function FontSchemePanel({ style, onStyleChange, onPreviewSchemeChange, s
                   ) : null}
                 </div>
                 <p className="app-text-muted mt-3 min-h-10 text-sm">{presetDescription(presetId, t)}</p>
-                <MiniFontPreview scheme={preset} />
               </button>
             );
           })}
@@ -427,18 +425,6 @@ function FontOptionGroup({
   );
 }
 
-function MiniFontPreview({ scheme }: { scheme: FontScheme }) {
-  return (
-    <div className="relative isolate mt-4 overflow-hidden rounded-lg border border-white/10 p-3 text-white">
-      <FontPreviewBackground />
-      <div className="relative z-10">
-        <p className="truncate text-sm font-black" style={familyStyle(scheme.cjkFontFamily)}>共に歩んだ旅路を辿れば</p>
-        <p className="mt-1 truncate text-[11px] text-white/65" style={familyStyle(scheme.latinFontFamily)}>tomoni ayunda tabiji wo tadoreba</p>
-      </div>
-    </div>
-  );
-}
-
 function buildFontOptions(category: FontCategory, systemFonts: SystemFontOption[]) {
   const recommended = RECOMMENDED_FONTS.filter((font) => font.category === category);
   const discovered = systemFonts
@@ -471,10 +457,6 @@ function cjkFont(id: string, family: string): FontFamilyOption {
 
 function latinFont(id: string, family: string): FontFamilyOption {
   return { id, family, label: family, category: "latin", preview: "tomoni ayunda tabiji wo tadoreba" };
-}
-
-function familyStyle(family: string) {
-  return { fontFamily: `${quoteSingleFontFamily(family)}, sans-serif` };
 }
 
 function presetName(presetId: FontPresetId, t: ReturnType<typeof createT>) {

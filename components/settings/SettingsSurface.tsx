@@ -2,18 +2,20 @@
 
 import { motion, type Transition } from "framer-motion";
 import { Loader2, Settings, X } from "lucide-react";
-import { useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AboutSettingsSection } from "@/components/settings/AboutSettingsSection";
-import { AiSettingsSection } from "@/components/settings/AiSettingsSection";
+import { AiSettingsSection, getAISettingsBreadcrumbs, type AIPage } from "@/components/settings/AiSettingsSection";
 import { AppearanceSettingsSection } from "@/components/settings/AppearanceSettingsSection";
 import { ExportSettingsSection } from "@/components/settings/ExportSettingsSection";
 import { GeneralSettingsSection } from "@/components/settings/GeneralSettingsSection";
 import { useAppReducedMotion } from "@/components/motion/AppMotionProvider";
-import { SettingsGroup, SettingsSectionHeader } from "@/components/settings/SettingsLayout";
+import { SettingsHistoryBar, type SettingsBreadcrumb } from "@/components/settings/SettingsHistoryBar";
+import { SettingsGroup } from "@/components/settings/SettingsLayout";
 import { getSettingsTabs, SettingsNavigation } from "@/components/settings/SettingsNavigation";
-import type { SettingsTabId } from "@/components/settings/settings-model";
+import type { SettingsDestination, SettingsHistoryState, SettingsTabId } from "@/components/settings/settings-model";
 import { useSettingsWorkspace } from "@/components/settings/useSettingsWorkspace";
 import type { AISettingsSummary } from "@/lib/ai/types";
+import { getAIPromptUiCopy } from "@/lib/ai/prompt-ui-copy";
 import { getAIUiCopy } from "@/lib/ai/ui-copy";
 import { createT } from "@/lib/i18n";
 import { opacityTransition, reducedMotionTransition, tabPanelVariants } from "@/lib/motion/tokens";
@@ -54,6 +56,10 @@ export function SettingsSurface({
   const reduceMotion = useAppReducedMotion();
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
   const tabs = useMemo(() => getSettingsTabs(copy), [copy]);
+  const [history, setHistory] = useState<SettingsHistoryState>(() => ({
+    entries: [{ tab: requestedTab ?? "general", aiPage: requestedTab === "ai" ? "root" : undefined }],
+    index: 0
+  }));
   const workspace = useSettingsWorkspace({
     open: isActive,
     requestedTab,
@@ -66,7 +72,26 @@ export function SettingsSurface({
     onSaved,
     onNotify
   });
-  const activeTab = tabs.find((tab) => tab.id === workspace.activeTab) ?? tabs[0];
+  const destination = history.entries[history.index] ?? { tab: "general" as const };
+  const activeTab = tabs.find((tab) => tab.id === destination.tab) ?? tabs[0];
+  const aiPage = destination.tab === "ai" ? destination.aiPage ?? "root" : "root";
+  const promptCopy = getAIPromptUiCopy(locale);
+  const breadcrumbs = useMemo<SettingsBreadcrumb[]>(() => {
+    const root: SettingsBreadcrumb = {
+      key: `tab:${activeTab.id}`,
+      label: activeTab.label,
+      destination: { tab: activeTab.id, aiPage: activeTab.id === "ai" ? "root" : undefined }
+    };
+    if (activeTab.id !== "ai") return [root];
+    return [
+      root,
+      ...getAISettingsBreadcrumbs(aiPage, promptCopy, workspace.settings, locale).map((item, index) => ({
+        key: `ai:${item.page}:${index}`,
+        label: item.label,
+        destination: { tab: "ai" as const, aiPage: item.page }
+      }))
+    ];
+  }, [activeTab, aiPage, locale, promptCopy, workspace.settings]);
   const tabVariants = tabPanelVariants(reduceMotion);
   const tabTransition = reduceMotion ? reducedMotionTransition : opacityTransition;
   const saveStatus = workspace.saveState === "saved"
@@ -79,6 +104,42 @@ export function SettingsSurface({
             label: workspace.syncErrorKind === "load" ? aiCopy.loadFailed : aiCopy.saveFailed,
             dotClass: "bg-rose-300"
           };
+
+  const navigateDestination = useCallback((next: SettingsDestination, options?: { replace?: boolean }) => {
+    setHistory((current) => {
+      const normalized: SettingsDestination = {
+        tab: next.tab,
+        aiPage: next.tab === "ai" ? next.aiPage ?? "root" : undefined
+      };
+      const active = current.entries[current.index];
+      if (sameDestination(active, normalized)) return current;
+      if (options?.replace) {
+        const entries = [...current.entries];
+        entries[current.index] = normalized;
+        return { entries, index: current.index };
+      }
+      const entries = [...current.entries.slice(0, current.index + 1), normalized];
+      return { entries, index: entries.length - 1 };
+    });
+  }, []);
+
+  const moveHistory = useCallback((delta: number) => {
+    setHistory((current) => ({
+      ...current,
+      index: Math.max(0, Math.min(current.entries.length - 1, current.index + delta))
+    }));
+  }, []);
+
+  useEffect(() => {
+    if (!isActive) return;
+    const tab = requestedTab ?? workspace.activeTab;
+    setHistory({ entries: [{ tab, aiPage: tab === "ai" ? "root" : undefined }], index: 0 });
+  }, [isActive]);
+
+  useEffect(() => {
+    if (!isActive || workspace.activeTab === destination.tab) return;
+    workspace.setActiveTab(destination.tab);
+  }, [destination.tab, isActive, workspace.activeTab, workspace.setActiveTab]);
 
   useEffect(() => {
     if (!isActive) return;
@@ -117,17 +178,29 @@ export function SettingsSurface({
       transition={transition}
     >
       <header className="settings-wing__header">
-        <div className="flex min-w-0 items-center gap-3">
-          <span className="settings-wing__icon" aria-hidden="true">
-            <Settings className="h-5 w-5" />
-          </span>
-          <div className="min-w-0">
-            <div className="flex min-w-0 items-baseline gap-2">
-              <h1 id="settings-surface-title" className="app-text-primary truncate text-xl font-black tracking-normal sm:text-3xl">{copy.settings}</h1>
-              <span className="app-text-subtle hidden truncate text-sm font-medium sm:inline">/ {activeTab.label}</span>
+        <div className="settings-wing__identity min-w-0">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="settings-wing__icon" aria-hidden="true">
+              <Settings className="h-5 w-5" />
+            </span>
+            <div className="min-w-0">
+              <div className="flex min-w-0 items-baseline gap-2">
+                <h1 id="settings-surface-title" className="app-text-primary truncate text-xl font-black tracking-normal sm:text-3xl">{copy.settings}</h1>
+                <span className="app-text-subtle hidden truncate text-sm font-medium sm:inline">/ {activeTab.label}</span>
+              </div>
+              <p className="app-text-subtle mt-1 hidden truncate text-sm md:block">{activeTab.description}</p>
             </div>
-            <p className="app-text-subtle mt-1 hidden truncate text-sm md:block">{activeTab.description}</p>
           </div>
+          <SettingsHistoryBar
+            backLabel={promptCopy.back}
+            forwardLabel={promptCopy.forward}
+            breadcrumbs={breadcrumbs}
+            canGoBack={history.index > 0}
+            canGoForward={history.index < history.entries.length - 1}
+            onBack={() => moveHistory(-1)}
+            onForward={() => moveHistory(1)}
+            onNavigate={navigateDestination}
+          />
         </div>
         <div className="flex shrink-0 items-center gap-2 sm:gap-3">
           {saveStatus ? (
@@ -153,9 +226,9 @@ export function SettingsSurface({
       <div className="settings-wing__body">
         <SettingsNavigation
           tabs={tabs}
-          active={workspace.activeTab}
+          active={destination.tab}
           isActive={isActive}
-          onChange={workspace.setActiveTab}
+          onChange={(tab) => navigateDestination({ tab, aiPage: tab === "ai" ? "root" : undefined })}
           ariaLabel={copy.settings}
         />
 
@@ -166,17 +239,15 @@ export function SettingsSurface({
               activeTab.contentWidth === "wide" ? "settings-wing__content--wide" : "settings-wing__content--narrow"
             ].join(" ")}
           >
-            <SettingsSectionHeader title={activeTab.label} description={activeTab.description} />
-
             {tabs.map((tab) => {
-              const selected = tab.id === workspace.activeTab;
+              const selected = tab.id === destination.tab;
               return (
               <motion.div
                 key={tab.id}
                 hidden={!selected}
                 aria-hidden={!selected}
                 inert={!selected ? true : undefined}
-                className="mt-6"
+                className="mt-2"
                 data-settings-panel={tab.id}
                 variants={tabVariants}
                 initial={false}
@@ -206,6 +277,7 @@ export function SettingsSurface({
                   ) : (
                     <AiSettingsSection
                       open={isActive}
+                      page={aiPage}
                       settings={workspace.settings}
                       apiKey={workspace.apiKey}
                       hasApiKey={workspace.hasApiKey}
@@ -215,6 +287,7 @@ export function SettingsSurface({
                       onSettingsChange={workspace.setSettings}
                       onApiKeyChange={workspace.setApiKey}
                       onClearApiKey={workspace.handleClearApiKey}
+                      onNavigate={(page: AIPage, options) => navigateDestination({ tab: "ai", aiPage: page }, options)}
                     />
                   )}
                 </SettingsGroup>
@@ -230,4 +303,8 @@ export function SettingsSurface({
       </div>
     </motion.section>
   );
+}
+
+function sameDestination(left: SettingsDestination | undefined, right: SettingsDestination) {
+  return left?.tab === right.tab && left.aiPage === right.aiPage;
 }

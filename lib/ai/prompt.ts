@@ -194,12 +194,11 @@ export function buildLyricsTranslationPrompt(params: {
   } else {
     stylePrompt = library?.customPresets.find((item) => item.id === presetId)?.prompt.trim() || stylePrompt;
   }
-  const outputRules = localeOverrides?.formatRulesOverride.trim() || bundle.outputRules;
   return [
     bundle.identity,
     bundle.principles,
     stylePrompt,
-    outputRules,
+    bundle.outputRules,
     `${bundle.lyricsLead}\n\n${params.lyrics.trim()}`
   ].join("\n\n");
 }

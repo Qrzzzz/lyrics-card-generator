@@ -13,11 +13,11 @@ function normalizePromptLibrary(input) {
   const localeOverrides = {};
   for (const locale of AI_PROMPT_LOCALES) {
     const normalized = normalizeLocalePromptOverrides(rawLocaleOverrides[locale]);
-    if (normalized.formatRulesOverride || normalized.styleOverrides.length) localeOverrides[locale] = normalized;
+    if (normalized.styleOverrides.length) localeOverrides[locale] = normalized;
   }
-  if (!localeOverrides.zh && (source.formatRulesOverride || source.styleOverrides)) {
+  if (!localeOverrides.zh && source.styleOverrides) {
     const legacy = normalizeLocalePromptOverrides(source);
-    if (legacy.formatRulesOverride || legacy.styleOverrides.length) localeOverrides.zh = legacy;
+    if (legacy.styleOverrides.length) localeOverrides.zh = legacy;
   }
   const custom = new Map();
   for (const item of Array.isArray(source.customPresets) ? source.customPresets : []) {
@@ -44,7 +44,7 @@ function normalizeLocalePromptOverrides(input) {
     if (!item || !EDITABLE_TRANSLATION_STYLES.has(item.id)) continue;
     overrides.set(item.id, { id: item.id, title: cleanText(item.title, 60), prompt: cleanText(item.prompt, 4000) });
   }
-  return { formatRulesOverride: cleanText(source.formatRulesOverride, 6000), styleOverrides: [...overrides.values()] };
+  return { formatRulesOverride: "", styleOverrides: [...overrides.values()] };
 }
 
 function cleanText(value, maxLength) {

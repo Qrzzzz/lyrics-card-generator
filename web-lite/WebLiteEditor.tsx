@@ -481,7 +481,6 @@ export function WebLiteEditor() {
                   style={parsedState.style}
                   cardRef={cardRef}
                   fontSchemePreview={fontSchemePreview}
-                  showFontSchemePreview={steps[currentStep]?.id === "font"}
                   clearTransitionKey={clearTransitionKey}
                   locale={locale}
                   t={t}

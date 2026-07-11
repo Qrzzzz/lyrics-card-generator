@@ -3,13 +3,10 @@
 import { motion } from "framer-motion";
 import type { RefObject } from "react";
 import { useEffect, useState } from "react";
-import { FontSchemePreviewPanel } from "@/components/editor/font-scheme/FontSchemePreviewPanel";
 import { useAppReducedMotion } from "@/components/motion/AppMotionProvider";
 import { MotionPanel } from "@/components/motion/MotionPanel";
 import { MotionPresence } from "@/components/motion/MotionPresence";
 import { LyricCardPreview } from "@/components/preview/LyricCardPreview";
-import { FIXED_WHITE_TEXT_COLOR } from "@/lib/card-style-normalize";
-import { getEffectiveFontScheme } from "@/lib/fonts";
 import type { createT } from "@/lib/i18n";
 import { motionDurations, motionEasings, reducedMotionTransition } from "@/lib/motion/tokens";
 import type { CardStyle, FontScheme, Locale, SongInfo } from "@/lib/types";
@@ -22,7 +19,6 @@ type PreviewPaneProps = {
   style: CardStyle;
   cardRef: RefObject<HTMLElement | null>;
   fontSchemePreview: FontScheme | null;
-  showFontSchemePreview: boolean;
   clearTransitionKey: number;
   locale: Locale;
   t: ReturnType<typeof createT>;
@@ -36,7 +32,6 @@ export function PreviewPane({
   style,
   cardRef,
   fontSchemePreview,
-  showFontSchemePreview,
   clearTransitionKey,
   locale,
   t
@@ -44,6 +39,7 @@ export function PreviewPane({
   const reduceMotion = useAppReducedMotion();
   const [isDesktopPreview, setIsDesktopPreview] = useState(false);
   const previewExpanded = isPreviewVisible || isDesktopPreview;
+  const previewStyle = fontSchemePreview ? { ...style, fontScheme: fontSchemePreview } : style;
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(min-width: 1024px)");
@@ -62,7 +58,7 @@ export function PreviewPane({
           ? reducedMotionTransition
           : { duration: motionDurations.slow, delay: 0.05, ease: motionEasings.emphasized }
       }
-      className="order-1 min-w-0 lg:order-2"
+      className="order-1 min-w-0 lg:sticky lg:top-0 lg:z-20 lg:order-2 lg:self-start"
     >
       <button
         type="button"
@@ -87,7 +83,7 @@ export function PreviewPane({
         }
         aria-hidden={!previewExpanded}
       >
-        <div className="grid gap-5">
+        <div>
           <div className="relative min-w-0" data-testid="preview-clear-transition">
             <MotionPresence mode="popLayout">
               <motion.div
@@ -105,22 +101,15 @@ export function PreviewPane({
                 <LyricCardPreview
                   song={song}
                   lyrics={lyrics}
-                  style={style}
+                  style={previewStyle}
                   cardRef={cardRef}
                   locale={locale}
-                  sticky={!showFontSchemePreview}
+                  sticky={false}
                   t={t}
                 />
               </motion.div>
             </MotionPresence>
           </div>
-          {showFontSchemePreview ? (
-            <FontSchemePreviewPanel
-              scheme={fontSchemePreview ?? getEffectiveFontScheme(style)}
-              textColor={style.textColorMode === "custom" ? style.customTextColor : FIXED_WHITE_TEXT_COLOR}
-              t={t}
-            />
-          ) : null}
         </div>
       </motion.div>
     </MotionPanel>

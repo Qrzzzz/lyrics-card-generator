@@ -11,7 +11,6 @@ import {
   type ExampleLoadPayload,
   type ExampleSong
 } from "@/lib/examples";
-import { createT } from "@/lib/i18n";
 import { settingsCopy } from "@/lib/settings/copy";
 import type { Locale } from "@/lib/types";
 
@@ -162,7 +161,6 @@ function ExampleSongCard({
   onLoad: (payload: ExampleLoadPayload) => void;
 }) {
   const copy = settingsCopy[locale];
-  const t = createT(locale);
   const defaultTranslation = resolveExampleTranslation(song, locale);
   const cardStyle = getExampleCardStyle(song);
   const originalLanguageLabel = song.originalLanguageLabel ?? EXAMPLE_LANGUAGE_LABELS[song.originalLanguage];
@@ -177,15 +175,12 @@ function ExampleSongCard({
       onClick={() => onLoad({ example: song, translation: defaultTranslation, importTranslation })}
     >
       <span className="block min-w-0">
-        <span className="app-text-primary block text-[10px] font-bold uppercase tracking-[0.16em] opacity-55">
-          {t("album")}
-        </span>
-        <span className="app-text-primary mt-1 line-clamp-2 text-sm font-semibold leading-5 opacity-80" title={song.album}>
+        <span className="app-text-primary line-clamp-2 text-sm font-semibold leading-5 opacity-80" title={song.album}>
           {song.album}
         </span>
       </span>
 
-      <span className="mt-auto block min-w-0 pt-12">
+      <span className="mt-auto block min-w-0 pt-8">
         <span className="block min-w-0">
           <span role="heading" aria-level={3} className="app-text-primary block text-2xl font-black leading-tight tracking-tight">
             {song.title}

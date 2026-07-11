@@ -1,7 +1,7 @@
 import { getLandscapeLayout, getPortraitLayout } from "../lib/card-layout-engine";
 import { cleanAITranslation } from "../lib/ai/clean";
 import { validateConfiguredSettings } from "../lib/ai/client";
-import { buildLyricsTranslationPrompt, getDefaultStylePrompt, PROMPT_OUTPUT_RULES } from "../lib/ai/prompt";
+import { buildLyricsTranslationPrompt, getDefaultFormatRules, getDefaultStylePrompt, PROMPT_OUTPUT_RULES } from "../lib/ai/prompt";
 import { getTranslationPresets, getTranslationStyles } from "../lib/ai/styles";
 import { getLocalePromptOverrides, normalizeAISettings, normalizePromptLibrary, setLocalePromptOverrides } from "../lib/ai/settings-normalize";
 import { DEFAULT_AI_SETTINGS } from "../lib/ai/types";
@@ -350,7 +350,8 @@ function testAITranslationPrompt() {
   };
   const customPrompt = buildLyricsTranslationPrompt({ lyrics: "I miss you", presetId: "custom:first", targetLocale: "en", promptLibrary });
   assert(customPrompt.includes("Use cinematic night-drive imagery."), "custom preset replaces the style module");
-  assert(customPrompt.includes("ONLY THE TRANSLATED LINES."), "custom format rules remain a separate shared module");
+  assert(!customPrompt.includes("ONLY THE TRANSLATED LINES."), "saved format-rule overrides are ignored");
+  assert(customPrompt.includes(getDefaultFormatRules("en")), "the immutable built-in format rules remain the shared module");
   assert(!customPrompt.includes("Use the Recommended style"), "custom preset does not inherit recommended style text");
   const englishStylePrompt = buildLyricsTranslationPrompt({ lyrics: "I miss you", presetId: "lyrical", targetLocale: "en", promptLibrary });
   assert(englishStylePrompt.includes("Keep every line quiet and close."), "English uses its own style override");

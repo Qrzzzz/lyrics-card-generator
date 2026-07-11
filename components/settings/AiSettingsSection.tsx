@@ -2,8 +2,6 @@
 
 import {
   AlertTriangle,
-  ArrowLeft,
-  ArrowRight,
   Bot,
   ChevronRight,
   FileKey2,
@@ -15,8 +13,7 @@ import {
   LockKeyhole,
   Plus,
   RotateCcw,
-  Trash2,
-  UnlockKeyhole
+  Trash2
 } from "lucide-react";
 import { useEffect, useId, useState } from "react";
 import {
@@ -33,13 +30,15 @@ import { getLocalePromptOverrides, isValidCustomPreset, setLocalePromptOverrides
 import { EDITABLE_STYLE_ORDER, getTranslationPresets, getTranslationStyles, isEditableTranslationStyle, isTranslationStyle } from "@/lib/ai/styles";
 import type { AICustomPreset, AIPromptLibrary, AISettings, EditableTranslationStyle } from "@/lib/ai/types";
 import type { getAIUiCopy } from "@/lib/ai/ui-copy";
+import type { AISettingsPageId } from "@/components/settings/settings-model";
 import type { Locale } from "@/lib/types";
 
-export type AIPage = "root" | "api" | "library" | "format" | `preset:${string}` | `draft:${string}`;
+export type AIPage = AISettingsPageId;
 type NavigationState = { entries: AIPage[]; index: number };
 
 export function AiSettingsSection({
   open,
+  page,
   settings,
   apiKey,
   hasApiKey,
@@ -48,9 +47,11 @@ export function AiSettingsSection({
   isClearingApiKey,
   onSettingsChange,
   onApiKeyChange,
-  onClearApiKey
+  onClearApiKey,
+  onNavigate
 }: {
   open: boolean;
+  page: AIPage;
   settings: AISettings;
   apiKey: string;
   hasApiKey: boolean;
@@ -60,35 +61,25 @@ export function AiSettingsSection({
   onSettingsChange: (settings: AISettings) => void;
   onApiKeyChange: (apiKey: string) => void;
   onClearApiKey: () => void;
+  onNavigate: (page: AIPage, options?: { replace?: boolean }) => void;
 }) {
   const promptCopy = getAIPromptUiCopy(locale);
-  const [navigation, setNavigation] = useState<NavigationState>({ entries: ["root"], index: 0 });
   const [draftPreset, setDraftPreset] = useState<AICustomPreset | null>(null);
-  const page = navigation.entries[navigation.index];
 
   useEffect(() => {
     if (open) return;
     setDraftPreset(null);
-    setNavigation({ entries: ["root"], index: 0 });
   }, [open]);
 
   useEffect(() => {
     if (isExistingPage(page, settings, draftPreset)) return;
-    setNavigation((current) => replaceHistoryPage(current, "library"));
-  }, [draftPreset, page, settings]);
+    onNavigate("library", { replace: true });
+  }, [draftPreset, onNavigate, page, settings]);
 
   function navigate(next: AIPage) {
     if (next === page) return;
     if (page.startsWith("draft:")) setDraftPreset(null);
-    setNavigation((current) => {
-      const nextEntries = [...current.entries.slice(0, current.index + 1), next];
-      return { entries: nextEntries, index: nextEntries.length - 1 };
-    });
-  }
-
-  function moveHistory(delta: number) {
-    if (page.startsWith("draft:")) setDraftPreset(null);
-    setNavigation((current) => ({ ...current, index: Math.max(0, Math.min(current.entries.length - 1, current.index + delta)) }));
+    onNavigate(next);
   }
 
   function createDraft() {
@@ -111,34 +102,15 @@ export function AiSettingsSection({
       }]
     });
     setDraftPreset(null);
-    setNavigation((current) => replaceHistoryPage(current, `preset:${draftPreset.id}`));
+    onNavigate(`preset:${draftPreset.id}`, { replace: true });
   }
 
   function handlePresetDeleted(id: string) {
-    setNavigation((current) => sanitizeDeletedPresetHistory(current, id));
+    if (page === `preset:${id}`) onNavigate("library", { replace: true });
   }
-
-  const breadcrumbs = getBreadcrumbs(page, promptCopy, settings, locale);
 
   return (
     <section className="grid gap-4">
-      <div className="rounded-xl border border-[rgb(var(--panel-border))] bg-[rgb(var(--input-bg))] p-2">
-        <div className="flex items-center gap-1.5">
-          <ActionButton variant="icon" size="sm" aria-label={promptCopy.back} title={promptCopy.back} disabled={navigation.index === 0} onClick={() => moveHistory(-1)} icon={<ArrowLeft className="h-4 w-4" />} />
-          <ActionButton variant="icon" size="sm" aria-label={promptCopy.forward} title={promptCopy.forward} disabled={navigation.index >= navigation.entries.length - 1} onClick={() => moveHistory(1)} icon={<ArrowRight className="h-4 w-4" />} />
-          <div className="ml-1 flex min-w-0 flex-1 items-center overflow-x-auto rounded-lg border border-[rgb(var(--input-border))] bg-black/10 px-2 py-1.5">
-            {breadcrumbs.map((item, index) => (
-              <span key={`${item.page}-${index}`} className="flex shrink-0 items-center">
-                {index ? <ChevronRight className="app-text-subtle mx-1 h-3.5 w-3.5" /> : null}
-                <button type="button" onClick={() => navigate(item.page)} className={`rounded px-1.5 py-1 text-xs transition hover:bg-white/5 ${index === breadcrumbs.length - 1 ? "app-text-primary font-semibold" : "app-text-muted"}`}>
-                  {item.label}
-                </button>
-              </span>
-            ))}
-          </div>
-        </div>
-      </div>
-
       {page === "root" ? (
         <WorkspaceRoot copy={promptCopy} onOpen={navigate} />
       ) : page === "api" ? (
@@ -157,7 +129,7 @@ export function AiSettingsSection({
       ) : page === "library" ? (
         <PromptLibraryPage settings={settings} locale={locale} copy={promptCopy} onSettingsChange={onSettingsChange} onOpen={navigate} onCreateDraft={createDraft} />
       ) : page === "format" ? (
-        <FormatRulesPage settings={settings} locale={locale} copy={promptCopy} onSettingsChange={onSettingsChange} />
+        <FormatRulesPage locale={locale} copy={promptCopy} />
       ) : page.startsWith("draft:") && draftPreset ? (
         <CustomPresetDraftPage draft={draftPreset} copy={promptCopy} onChange={setDraftPreset} onSave={saveDraft} onCancel={() => navigate("library")} />
       ) : (
@@ -250,7 +222,6 @@ function PromptLibraryPage({ settings, locale, copy, onSettingsChange, onOpen, o
   }
 
   function resetAllPresets() {
-    if (!window.confirm(copy.resetAllConfirm)) return;
     updateLibrary(settings, onSettingsChange, resetPromptLibraryToInitial(settings.promptLibrary));
   }
 
@@ -262,7 +233,7 @@ function PromptLibraryPage({ settings, locale, copy, onSettingsChange, onOpen, o
         <PageHeading icon={<FolderOpen className="h-5 w-5" />} title={copy.promptLibrary} description={copy.promptLibraryDescription} />
         <ActionButton disabled={!canResetAll} onClick={resetAllPresets} leftIcon={<RotateCcw className="h-4 w-4" />}>{copy.resetAll}</ActionButton>
       </div>
-      <ExplorerCard icon={<FileLock2 className="h-6 w-6 text-amber-200" />} title={copy.formatRules} description={copy.formatRulesDescription} action={copy.open} badge={localeOverrides.formatRulesOverride ? copy.modified : undefined} onClick={() => onOpen("format")} />
+      <ExplorerCard icon={<FileLock2 className="h-6 w-6 text-amber-200" />} title={copy.formatRules} description={copy.formatRulesDescription} action={copy.open} onClick={() => onOpen("format")} />
 
       <div>
         <div className="mb-3 flex items-end justify-between gap-3">
@@ -304,35 +275,8 @@ function PromptLibraryPage({ settings, locale, copy, onSettingsChange, onOpen, o
   );
 }
 
-function FormatRulesPage({ settings, locale, copy, onSettingsChange }: { settings: AISettings; locale: Locale; copy: ReturnType<typeof getAIPromptUiCopy>; onSettingsChange: (settings: AISettings) => void }) {
-  const [unlocked, setUnlocked] = useState(false);
+function FormatRulesPage({ locale, copy }: { locale: Locale; copy: ReturnType<typeof getAIPromptUiCopy> }) {
   const defaultRules = getDefaultFormatRules(locale);
-  const localeOverrides = getLocalePromptOverrides(settings.promptLibrary, locale);
-  const persistedValue = localeOverrides.formatRulesOverride || defaultRules;
-  const [draftValue, setDraftValue] = useState(persistedValue);
-
-  useEffect(() => {
-    if (!unlocked) setDraftValue(persistedValue);
-  }, [persistedValue, unlocked]);
-
-  function requestUnlock() {
-    if (!window.confirm(copy.unlockConfirmFirst)) return;
-    if (!window.confirm(copy.unlockConfirmSecond)) return;
-    setDraftValue(persistedValue);
-    setUnlocked(true);
-  }
-
-  function resetRules() {
-    if (!window.confirm(copy.resetRulesConfirm)) return;
-    updateLibrary(settings, onSettingsChange, setLocalePromptOverrides(settings.promptLibrary, locale, { ...localeOverrides, formatRulesOverride: "" }));
-    setDraftValue(defaultRules);
-    setUnlocked(false);
-  }
-
-  function updateDraftValue(value: string) {
-    setDraftValue(value);
-    updateLibrary(settings, onSettingsChange, setLocalePromptOverrides(settings.promptLibrary, locale, { ...localeOverrides, formatRulesOverride: value }));
-  }
 
   return (
     <div className="grid gap-4">
@@ -340,13 +284,7 @@ function FormatRulesPage({ settings, locale, copy, onSettingsChange }: { setting
       <div className="rounded-xl border border-amber-300/25 bg-amber-300/10 p-4">
         <div className="flex gap-3"><AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-200" /><p className="text-sm leading-relaxed text-amber-50/90">{copy.formatRulesWarning}</p></div>
       </div>
-      <TextareaField aria-label={copy.formatRules} value={draftValue} readOnly={!unlocked} className={`min-h-72 font-mono text-xs leading-relaxed ${unlocked ? "ring-1 ring-amber-300/40" : "opacity-80"}`} onChange={(event) => updateDraftValue(event.target.value)} />
-      <div className="flex flex-wrap justify-end gap-2">
-        {localeOverrides.formatRulesOverride ? <ActionButton onClick={resetRules} leftIcon={<RotateCcw className="h-4 w-4" />}>{copy.reset}</ActionButton> : null}
-        <ActionButton variant={unlocked ? "primary" : "danger"} onClick={() => unlocked ? setUnlocked(false) : requestUnlock()} leftIcon={unlocked ? <LockKeyhole className="h-4 w-4" /> : <UnlockKeyhole className="h-4 w-4" />}>
-          {unlocked ? copy.lockRules : copy.unlockRules}
-        </ActionButton>
-      </div>
+      <TextareaField aria-label={copy.formatRules} value={defaultRules} readOnly className="min-h-72 cursor-default select-text font-mono text-xs leading-relaxed opacity-80" />
     </div>
   );
 }
@@ -434,7 +372,7 @@ function PresetEditorPage({ presetId, settings, locale, copy, onSettingsChange, 
   }
 
   function resetPreset() {
-    if (!canReset || !window.confirm(copy.resetPresetConfirm)) return;
+    if (!canReset) return;
     if (editableBuiltIn) {
       updateLibrary(settings, onSettingsChange, setLocalePromptOverrides(settings.promptLibrary, locale, {
         ...localeOverrides,
@@ -535,12 +473,6 @@ function removeStyleOverrideFromAllLocales(library: AIPromptLibrary, id: Editabl
   return { ...library, localeOverrides };
 }
 
-function replaceHistoryPage(navigation: NavigationState, page: AIPage): NavigationState {
-  const entries = [...navigation.entries];
-  entries[navigation.index] = page;
-  return { entries, index: navigation.index };
-}
-
 export function sanitizeDeletedPresetHistory(navigation: NavigationState, id: string): NavigationState {
   const target: AIPage = `preset:${id}`;
   const entries: AIPage[] = [];
@@ -562,7 +494,7 @@ export function isExistingPage(page: AIPage, settings: AISettings, draft: AICust
   return settings.promptLibrary.customPresets.some((preset) => preset.id === id && isValidCustomPreset(preset));
 }
 
-function getBreadcrumbs(page: AIPage, copy: ReturnType<typeof getAIPromptUiCopy>, settings: AISettings, locale: Locale): Array<{ page: AIPage; label: string }> {
+export function getAISettingsBreadcrumbs(page: AIPage, copy: ReturnType<typeof getAIPromptUiCopy>, settings: AISettings, locale: Locale): Array<{ page: AIPage; label: string }> {
   const items: Array<{ page: AIPage; label: string }> = [{ page: "root", label: copy.workspace }];
   if (page === "root") return items;
   if (page === "api") return [...items, { page: "api", label: copy.apiConfiguration }];

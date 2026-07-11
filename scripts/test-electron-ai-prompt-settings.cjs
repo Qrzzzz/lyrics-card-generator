@@ -16,6 +16,8 @@ const normalized = normalizePromptLibrary({
 
 assert.equal(normalized.localeOverrides.zh.styleOverrides[0].prompt, "中文风格");
 assert.equal(normalized.localeOverrides.en.styleOverrides[0].prompt, "English style");
+assert.equal(normalized.localeOverrides.zh.formatRulesOverride, "");
+assert.equal(normalized.localeOverrides.en.formatRulesOverride, "");
 assert.equal(normalized.customPresets.length, 2);
 assert.equal(normalized.customPresets[0].title, "A");
 assert.equal(normalized.customPresets[1].id, "custom:b");
@@ -23,7 +25,7 @@ assert.equal(normalized.customPresets[0].initialTitle, "A");
 assert.equal(normalized.customPresets[0].initialPrompt, "Updated");
 
 const legacy = normalizePromptLibrary({ formatRulesOverride: "legacy", styleOverrides: [{ id: "spoken", title: "Legacy", prompt: "Legacy prompt" }] });
-assert.equal(legacy.localeOverrides.zh.formatRulesOverride, "legacy");
+assert.equal(legacy.localeOverrides.zh.formatRulesOverride, "");
 assert.equal(legacy.localeOverrides.en, undefined);
 
-console.log(JSON.stringify({ ok: true, electronAiPromptSettingsTests: 8 }, null, 2));
+console.log(JSON.stringify({ ok: true, electronAiPromptSettingsTests: 10 }, null, 2));

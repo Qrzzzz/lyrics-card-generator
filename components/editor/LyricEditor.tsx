@@ -431,7 +431,6 @@ export function LyricEditor() {
                     style={parsedState.style}
                     cardRef={cardRef}
                     fontSchemePreview={fontSchemePreview}
-                    showFontSchemePreview={settingsSteps[currentStep]?.id === "font"}
                     clearTransitionKey={clearTransitionKey}
                     locale={state.locale}
                     t={t}
