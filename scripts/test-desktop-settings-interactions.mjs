@@ -73,11 +73,9 @@ try {
   page.on("pageerror", (error) => process.stderr.write(`[renderer] ${error.stack || error.message}\n`));
 
   const firstLaunch = page.getByTestId("first-launch-language-dialog");
-  await firstLaunch.waitFor({ state: "visible", timeout: 10_000 }).catch(() => {});
-  if (await firstLaunch.isVisible().catch(() => false)) {
-    await page.locator('[data-testid="first-launch-language"][data-locale="zh"]').click();
-    await firstLaunch.waitFor({ state: "hidden", timeout: 10_000 });
-  }
+  await firstLaunch.waitFor({ state: "visible", timeout: 60_000 });
+  await page.locator('[data-testid="first-launch-language"][data-locale="zh"]').click();
+  await firstLaunch.waitFor({ state: "hidden", timeout: 15_000 });
 
   await page.locator('[data-testid="editor-surface"] [data-testid="settings-button"]').click();
   await waitForVisible("settings-surface");
