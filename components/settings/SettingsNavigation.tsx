@@ -72,6 +72,7 @@ export function SettingsNavigation({
           return (
             <button
               key={id}
+              data-testid={`settings-tab-${id}`}
               type="button"
               onClick={() => selectTab(id)}
               aria-current={selected ? "page" : undefined}

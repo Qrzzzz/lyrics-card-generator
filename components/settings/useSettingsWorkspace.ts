@@ -229,7 +229,6 @@ export function useSettingsWorkspace({
       setApiKey("");
       return;
     }
-    if (!window.confirm(aiCopy.clearApiKeyConfirm)) return;
     isClearingApiKeyRef.current = true;
     setIsClearingApiKey(true);
     setError("");

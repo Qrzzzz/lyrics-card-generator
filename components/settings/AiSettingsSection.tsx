@@ -24,21 +24,19 @@ import {
   TextInput,
   ToggleRow
 } from "@/components/ui/controls";
+import { SettingsConfirmDialog } from "@/components/settings/SettingsConfirmDialog";
+import { getAISettingsPath, resolveAISettingsPage, type AIPage } from "@/components/settings/ai-settings-routing";
 import { getDefaultFormatRules, getDefaultStylePrompt } from "@/lib/ai/prompt";
 import { getAIPromptUiCopy } from "@/lib/ai/prompt-ui-copy";
 import { getLocalePromptOverrides, isValidCustomPreset, setLocalePromptOverrides } from "@/lib/ai/settings-normalize";
 import { EDITABLE_STYLE_ORDER, getTranslationPresets, getTranslationStyles, isEditableTranslationStyle, isTranslationStyle } from "@/lib/ai/styles";
 import type { AICustomPreset, AIPromptLibrary, AISettings, EditableTranslationStyle } from "@/lib/ai/types";
 import type { getAIUiCopy } from "@/lib/ai/ui-copy";
-import type { AISettingsPageId } from "@/components/settings/settings-model";
 import type { Locale } from "@/lib/types";
-
-export type AIPage = AISettingsPageId;
-type NavigationState = { entries: AIPage[]; index: number };
 
 export function AiSettingsSection({
   open,
-  page,
+  path,
   settings,
   apiKey,
   hasApiKey,
@@ -51,7 +49,7 @@ export function AiSettingsSection({
   onNavigate
 }: {
   open: boolean;
-  page: AIPage;
+  path: string[];
   settings: AISettings;
   apiKey: string;
   hasApiKey: boolean;
@@ -61,10 +59,11 @@ export function AiSettingsSection({
   onSettingsChange: (settings: AISettings) => void;
   onApiKeyChange: (apiKey: string) => void;
   onClearApiKey: () => void;
-  onNavigate: (page: AIPage, options?: { replace?: boolean }) => void;
+  onNavigate: (path: string[], options?: { replace?: boolean }) => void;
 }) {
   const promptCopy = getAIPromptUiCopy(locale);
   const [draftPreset, setDraftPreset] = useState<AICustomPreset | null>(null);
+  const page = resolveAISettingsPage(path);
 
   useEffect(() => {
     if (open) return;
@@ -73,13 +72,13 @@ export function AiSettingsSection({
 
   useEffect(() => {
     if (isExistingPage(page, settings, draftPreset)) return;
-    onNavigate("library", { replace: true });
+    onNavigate(getAISettingsPath("library"), { replace: true });
   }, [draftPreset, onNavigate, page, settings]);
 
   function navigate(next: AIPage) {
     if (next === page) return;
     if (page.startsWith("draft:")) setDraftPreset(null);
-    onNavigate(next);
+    onNavigate(getAISettingsPath(next));
   }
 
   function createDraft() {
@@ -102,11 +101,11 @@ export function AiSettingsSection({
       }]
     });
     setDraftPreset(null);
-    onNavigate(`preset:${draftPreset.id}`, { replace: true });
+    onNavigate(getAISettingsPath(`preset:${draftPreset.id}`), { replace: true });
   }
 
   function handlePresetDeleted(id: string) {
-    if (page === `preset:${id}`) onNavigate("library", { replace: true });
+    if (page === `preset:${id}`) onNavigate(getAISettingsPath("library"), { replace: true });
   }
 
   return (
@@ -138,6 +137,7 @@ export function AiSettingsSection({
           settings={settings}
           locale={locale}
           copy={promptCopy}
+          cancelLabel={copy.cancel}
           onSettingsChange={onSettingsChange}
           onDeleted={handlePresetDeleted}
         />
@@ -151,8 +151,8 @@ function WorkspaceRoot({ copy, onOpen }: { copy: ReturnType<typeof getAIPromptUi
     <div className="grid gap-4">
       <PageHeading icon={<Bot className="h-5 w-5" />} title={copy.workspace} description={copy.workspaceDescription} />
       <div className="grid gap-3 sm:grid-cols-2">
-        <ExplorerCard icon={<FileKey2 className="h-6 w-6" />} title={copy.apiConfiguration} description={copy.apiConfigurationDescription} action={copy.open} onClick={() => onOpen("api")} />
-        <ExplorerCard icon={<FolderCog className="h-6 w-6" />} title={copy.promptLibrary} description={copy.promptLibraryDescription} action={copy.open} onClick={() => onOpen("library")} />
+        <ExplorerCard testId="ai-open-api" icon={<FileKey2 className="h-6 w-6" />} title={copy.apiConfiguration} description={copy.apiConfigurationDescription} action={copy.open} onClick={() => onOpen("api")} />
+        <ExplorerCard testId="ai-open-library" icon={<FolderCog className="h-6 w-6" />} title={copy.promptLibrary} description={copy.promptLibraryDescription} action={copy.open} onClick={() => onOpen("library")} />
       </div>
     </div>
   );
@@ -168,33 +168,34 @@ function ApiConfigurationPage({ settings, apiKey, hasApiKey, locale, copy, promp
   const temperatureId = useId();
   const defaultStyleId = useId();
   const presets = getTranslationPresets(locale, settings.promptLibrary);
+  const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
   return (
     <div className="grid gap-4">
       <PageHeading icon={<FileKey2 className="h-5 w-5" />} title={promptCopy.apiConfiguration} description={promptCopy.apiConfigurationDescription} />
       <FieldLabel label={copy.baseUrl} htmlFor={baseUrlId}>
-        <TextInput id={baseUrlId} type="url" value={settings.baseUrl} disabled={isClearingApiKey} onChange={(event) => onSettingsChange({ ...settings, baseUrl: event.target.value })} placeholder="https://api.openai.com/v1" autoComplete="url" />
+        <TextInput data-testid="ai-base-url-input" id={baseUrlId} type="url" value={settings.baseUrl} disabled={isClearingApiKey} onChange={(event) => onSettingsChange({ ...settings, baseUrl: event.target.value })} placeholder="https://api.openai.com/v1" autoComplete="url" />
         <SettingTip>{copy.baseUrlTip}</SettingTip>
       </FieldLabel>
       <FieldLabel label={copy.apiKey} hint={hasApiKey ? copy.apiKeyConfigured : undefined} htmlFor={apiKeyId}>
         <div className="flex flex-col gap-2 sm:flex-row">
-          <TextInput id={apiKeyId} type="password" value={apiKey} disabled={isClearingApiKey} onChange={(event) => onApiKeyChange(event.target.value)} placeholder={hasApiKey ? "****************" : copy.apiKeyPlaceholder} autoComplete="new-password" spellCheck={false} className="min-w-0 flex-1" />
-          <ActionButton data-testid="clear-api-key" onClick={onClearApiKey} disabled={!hasApiKey && !apiKey} loading={isClearingApiKey} variant="danger" icon={<Trash2 className="h-4 w-4" />} className="shrink-0">
+          <TextInput data-testid="ai-api-key-input" id={apiKeyId} type="password" value={apiKey} disabled={isClearingApiKey} onChange={(event) => onApiKeyChange(event.target.value)} placeholder={hasApiKey ? "****************" : copy.apiKeyPlaceholder} autoComplete="new-password" spellCheck={false} className="min-w-0 flex-1" />
+          <ActionButton data-testid="clear-api-key" onClick={() => setClearConfirmOpen(true)} disabled={!hasApiKey && !apiKey} loading={isClearingApiKey} variant="danger" icon={<Trash2 className="h-4 w-4" />} className="shrink-0">
             {isClearingApiKey ? copy.clearingApiKey : copy.clearApiKey}
           </ActionButton>
         </div>
         <SettingTip>{copy.apiKeyTip}</SettingTip>
       </FieldLabel>
       <FieldLabel label={copy.model} htmlFor={modelId}>
-        <TextInput id={modelId} value={settings.model} disabled={isClearingApiKey} onChange={(event) => onSettingsChange({ ...settings, model: event.target.value })} placeholder={copy.modelPlaceholder} spellCheck={false} />
+        <TextInput data-testid="ai-model-input" id={modelId} value={settings.model} disabled={isClearingApiKey} onChange={(event) => onSettingsChange({ ...settings, model: event.target.value })} placeholder={copy.modelPlaceholder} spellCheck={false} />
         <SettingTip>{copy.modelTip}</SettingTip>
       </FieldLabel>
       <div className="grid gap-4 sm:grid-cols-2">
         <FieldLabel label={copy.temperature} htmlFor={temperatureId}>
-          <TextInput id={temperatureId} type="number" min={0} max={2} step={0.1} value={settings.temperature} disabled={isClearingApiKey} onChange={(event) => onSettingsChange({ ...settings, temperature: Number(event.target.value) })} />
+          <TextInput data-testid="ai-temperature-input" id={temperatureId} type="number" min={0} max={2} step={0.1} value={settings.temperature} disabled={isClearingApiKey} onChange={(event) => onSettingsChange({ ...settings, temperature: Number(event.target.value) })} />
           <SettingTip>{copy.temperatureTip}</SettingTip>
         </FieldLabel>
         <FieldLabel label={copy.defaultStyle} htmlFor={defaultStyleId}>
-          <SelectField id={defaultStyleId} value={settings.defaultStyle} disabled={isClearingApiKey} onChange={(event) => onSettingsChange({ ...settings, defaultStyle: event.target.value })}>
+          <SelectField data-testid="ai-default-style-select" id={defaultStyleId} value={settings.defaultStyle} disabled={isClearingApiKey} onChange={(event) => onSettingsChange({ ...settings, defaultStyle: event.target.value })}>
             {presets.map((preset) => <option key={preset.id} value={preset.id}>{preset.name}</option>)}
           </SelectField>
           <SettingTip>{copy.defaultStyleTip}</SettingTip>
@@ -202,6 +203,19 @@ function ApiConfigurationPage({ settings, apiKey, hasApiKey, locale, copy, promp
       </div>
       <ToggleRow label={copy.defaultReasoning} checked={settings.reasoningEnabled} disabled={isClearingApiKey} onChange={(reasoningEnabled) => onSettingsChange({ ...settings, reasoningEnabled })} />
       <SettingTip>{copy.reasoningHint}</SettingTip>
+      <SettingsConfirmDialog
+        open={clearConfirmOpen}
+        title={copy.clearApiKey}
+        description={copy.clearApiKeyConfirm}
+        confirmLabel={copy.clearApiKey}
+        cancelLabel={copy.cancel}
+        confirmTestId="confirm-clear-api-key"
+        onCancel={() => setClearConfirmOpen(false)}
+        onConfirm={() => {
+          setClearConfirmOpen(false);
+          onClearApiKey();
+        }}
+      />
     </div>
   );
 }
@@ -231,7 +245,7 @@ function PromptLibraryPage({ settings, locale, copy, onSettingsChange, onOpen, o
     <div className="grid gap-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <PageHeading icon={<FolderOpen className="h-5 w-5" />} title={copy.promptLibrary} description={copy.promptLibraryDescription} />
-        <ActionButton disabled={!canResetAll} onClick={resetAllPresets} leftIcon={<RotateCcw className="h-4 w-4" />}>{copy.resetAll}</ActionButton>
+        <ActionButton data-testid="prompt-reset-all" disabled={!canResetAll} onClick={resetAllPresets} leftIcon={<RotateCcw className="h-4 w-4" />}>{copy.resetAll}</ActionButton>
       </div>
       <ExplorerCard icon={<FileLock2 className="h-6 w-6 text-amber-200" />} title={copy.formatRules} description={copy.formatRulesDescription} action={copy.open} onClick={() => onOpen("format")} />
 
@@ -241,7 +255,7 @@ function PromptLibraryPage({ settings, locale, copy, onSettingsChange, onOpen, o
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
           {presets.filter((preset) => preset.source !== "custom").map((preset) => (
-            <ExplorerCard key={preset.id} icon={preset.source === "recommended" ? <LockKeyhole className="h-5 w-5" /> : <FilePenLine className="h-5 w-5" />} title={preset.name} description={preset.description} action={copy.open} badge={preset.source === "recommended" ? copy.protectedPreset : localeOverrides.styleOverrides.some((item) => item.id === preset.id) ? copy.modified : undefined} onClick={() => onOpen(`preset:${preset.id}`)} />
+            <ExplorerCard testId={`preset-card-${preset.id}`} key={preset.id} icon={preset.source === "recommended" ? <LockKeyhole className="h-5 w-5" /> : <FilePenLine className="h-5 w-5" />} title={preset.name} description={preset.description} action={copy.open} badge={preset.source === "recommended" ? copy.protectedPreset : localeOverrides.styleOverrides.some((item) => item.id === preset.id) ? copy.modified : undefined} onClick={() => onOpen(`preset:${preset.id}`)} />
           ))}
         </div>
       </div>
@@ -262,9 +276,9 @@ function PromptLibraryPage({ settings, locale, copy, onSettingsChange, onOpen, o
           <span className="app-text-subtle shrink-0 text-xs">{settings.promptLibrary.customPresets.length}/2</span>
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
-          {settings.promptLibrary.customPresets.map((preset) => <ExplorerCard key={preset.id} icon={<FilePenLine className="h-5 w-5" />} title={preset.title || copy.newPresetTitle} description={preset.prompt || copy.presetPromptPlaceholder} action={copy.open} badge={copy.customPreset} onClick={() => onOpen(`preset:${preset.id}`)} />)}
+          {settings.promptLibrary.customPresets.map((preset) => <ExplorerCard testId={`preset-card-${preset.id}`} key={preset.id} icon={<FilePenLine className="h-5 w-5" />} title={preset.title || copy.newPresetTitle} description={preset.prompt || copy.presetPromptPlaceholder} action={copy.open} badge={copy.customPreset} onClick={() => onOpen(`preset:${preset.id}`)} />)}
           {settings.promptLibrary.customPresets.length < 2 ? (
-            <button type="button" onClick={onCreateDraft} className="app-text-muted flex min-h-32 items-center justify-center gap-2 rounded-xl border border-dashed border-[rgb(var(--input-border))] p-5 text-sm transition hover:border-[rgb(var(--focus-ring))] hover:bg-white/5 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--focus-ring))]">
+            <button data-testid="preset-create" type="button" onClick={onCreateDraft} className="app-text-muted flex min-h-32 items-center justify-center gap-2 rounded-xl border border-dashed border-[rgb(var(--input-border))] p-5 text-sm transition hover:border-[rgb(var(--focus-ring))] hover:bg-white/5 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--focus-ring))]">
               <Plus className="h-4 w-4" />{copy.addPreset}
             </button>
           ) : null}
@@ -284,7 +298,7 @@ function FormatRulesPage({ locale, copy }: { locale: Locale; copy: ReturnType<ty
       <div className="rounded-xl border border-amber-300/25 bg-amber-300/10 p-4">
         <div className="flex gap-3"><AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-200" /><p className="text-sm leading-relaxed text-amber-50/90">{copy.formatRulesWarning}</p></div>
       </div>
-      <TextareaField aria-label={copy.formatRules} value={defaultRules} readOnly className="min-h-72 cursor-default select-text font-mono text-xs leading-relaxed opacity-80" />
+      <TextareaField data-testid="strict-format-rules" aria-label={copy.formatRules} value={defaultRules} readOnly className="min-h-72 cursor-default select-text font-mono text-xs leading-relaxed opacity-80" />
     </div>
   );
 }
@@ -301,21 +315,21 @@ function CustomPresetDraftPage({ draft, copy, onChange, onSave, onCancel }: {
     <div className="grid gap-4">
       <PageHeading icon={<FilePenLine className="h-5 w-5" />} title={draft.title.trim() || copy.newPresetTitle} description={copy.customPreset} />
       <FieldLabel label={copy.presetTitle}>
-        <TextInput value={draft.title} maxLength={60} onChange={(event) => onChange({ ...draft, title: event.target.value })} />
+        <TextInput data-testid="preset-title-input" value={draft.title} maxLength={60} onChange={(event) => onChange({ ...draft, title: event.target.value })} />
       </FieldLabel>
       <FieldLabel label={copy.presetPrompt}>
-        <TextareaField value={draft.prompt} maxLength={4000} placeholder={copy.presetPromptPlaceholder} className="min-h-64 text-sm leading-relaxed" onChange={(event) => onChange({ ...draft, prompt: event.target.value })} />
+        <TextareaField data-testid="preset-prompt-input" value={draft.prompt} maxLength={4000} placeholder={copy.presetPromptPlaceholder} className="min-h-64 text-sm leading-relaxed" onChange={(event) => onChange({ ...draft, prompt: event.target.value })} />
         <SettingTip>{copy.requiredFields}</SettingTip>
       </FieldLabel>
       <div className="flex flex-wrap justify-end gap-2">
         <ActionButton onClick={onCancel}>{copy.discardDraft}</ActionButton>
-        <ActionButton variant="primary" disabled={!valid} onClick={onSave}>{copy.savePreset}</ActionButton>
+        <ActionButton data-testid="preset-save" variant="primary" disabled={!valid} onClick={onSave}>{copy.savePreset}</ActionButton>
       </div>
     </div>
   );
 }
 
-function PresetEditorPage({ presetId, settings, locale, copy, onSettingsChange, onDeleted }: { presetId: string; settings: AISettings; locale: Locale; copy: ReturnType<typeof getAIPromptUiCopy>; onSettingsChange: (settings: AISettings) => void; onDeleted: (id: string) => void }) {
+function PresetEditorPage({ presetId, settings, locale, copy, cancelLabel, onSettingsChange, onDeleted }: { presetId: string; settings: AISettings; locale: Locale; copy: ReturnType<typeof getAIPromptUiCopy>; cancelLabel: string; onSettingsChange: (settings: AISettings) => void; onDeleted: (id: string) => void }) {
   const styles = getTranslationStyles(locale);
   const builtIn = isTranslationStyle(presetId);
   const protectedPreset = presetId === "recommended";
@@ -325,6 +339,7 @@ function PresetEditorPage({ presetId, settings, locale, copy, onSettingsChange, 
   const override = editableBuiltIn ? localeOverrides.styleOverrides.find((item) => item.id === presetId) : undefined;
   const custom = !builtIn ? settings.promptLibrary.customPresets.find((item) => item.id === presetId) : undefined;
   const [customDraft, setCustomDraft] = useState<AICustomPreset>(() => custom ?? { id: presetId, title: "", prompt: "" });
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   useEffect(() => {
     if (custom) setCustomDraft(custom);
   }, [custom?.id, presetId]);
@@ -390,8 +405,8 @@ function PresetEditorPage({ presetId, settings, locale, copy, onSettingsChange, 
     }
   }
 
-  function deletePreset() {
-    if (protectedPreset || !window.confirm(copy.deletePresetConfirm)) return;
+  function confirmDeletePreset() {
+    if (protectedPreset) return;
     if (editableBuiltIn) {
       updateLibrary(settings, onSettingsChange, {
         ...removeStyleOverrideFromAllLocales(settings.promptLibrary, presetId),
@@ -400,6 +415,7 @@ function PresetEditorPage({ presetId, settings, locale, copy, onSettingsChange, 
     } else {
       updateLibrary(settings, onSettingsChange, { ...settings.promptLibrary, customPresets: settings.promptLibrary.customPresets.filter((item) => item.id !== presetId) }, presetId);
     }
+    setDeleteConfirmOpen(false);
     onDeleted(presetId);
   }
 
@@ -407,21 +423,31 @@ function PresetEditorPage({ presetId, settings, locale, copy, onSettingsChange, 
     <div className="grid gap-4">
       <PageHeading icon={protectedPreset ? <LockKeyhole className="h-5 w-5" /> : <FilePenLine className="h-5 w-5" />} title={title || copy.editPreset} description={protectedPreset ? copy.protectedPreset : editableBuiltIn ? copy.defaultPreset : copy.customPreset} />
       <FieldLabel label={copy.presetTitle} hint={protectedPreset ? copy.protectedPreset : undefined}>
-        <TextInput value={title} readOnly={protectedPreset} maxLength={60} onChange={(event) => updatePreset(event.target.value, prompt)} />
+        <TextInput data-testid="preset-title-input" value={title} readOnly={protectedPreset} maxLength={60} onChange={(event) => updatePreset(event.target.value, prompt)} />
       </FieldLabel>
       <FieldLabel label={copy.presetPrompt}>
-        <TextareaField value={prompt} readOnly={protectedPreset} maxLength={4000} placeholder={copy.presetPromptPlaceholder} className="min-h-64 text-sm leading-relaxed" onChange={(event) => updatePreset(title, event.target.value)} />
+        <TextareaField data-testid="preset-prompt-input" value={prompt} readOnly={protectedPreset} maxLength={4000} placeholder={copy.presetPromptPlaceholder} className="min-h-64 text-sm leading-relaxed" onChange={(event) => updatePreset(title, event.target.value)} />
         <SettingTip>{copy.customPresetsDescription}</SettingTip>
       </FieldLabel>
       <div className="flex flex-wrap justify-end gap-2">
-        <ActionButton disabled={!canReset} onClick={resetPreset} leftIcon={<RotateCcw className="h-4 w-4" />}>{copy.reset}</ActionButton>
+        <ActionButton data-testid="preset-reset" disabled={!canReset} onClick={resetPreset} leftIcon={<RotateCcw className="h-4 w-4" />}>{copy.reset}</ActionButton>
         {!protectedPreset ? (
           <>
-          {custom ? <ActionButton variant="primary" disabled={!isValidCustomPreset(customDraft)} onClick={saveCustomPreset}>{copy.savePreset}</ActionButton> : null}
-          <ActionButton variant="danger" onClick={deletePreset} leftIcon={<Trash2 className="h-4 w-4" />}>{copy.deletePreset}</ActionButton>
+          {custom ? <ActionButton data-testid="preset-save" variant="primary" disabled={!isValidCustomPreset(customDraft)} onClick={saveCustomPreset}>{copy.savePreset}</ActionButton> : null}
+          <ActionButton data-testid="preset-delete" variant="danger" onClick={() => setDeleteConfirmOpen(true)} leftIcon={<Trash2 className="h-4 w-4" />}>{copy.deletePreset}</ActionButton>
           </>
         ) : null}
       </div>
+      <SettingsConfirmDialog
+        open={deleteConfirmOpen}
+        title={copy.deletePreset}
+        description={copy.deletePresetConfirm}
+        confirmLabel={copy.deletePreset}
+        cancelLabel={cancelLabel}
+        confirmTestId="confirm-delete-preset"
+        onCancel={() => setDeleteConfirmOpen(false)}
+        onConfirm={confirmDeletePreset}
+      />
     </div>
   );
 }
@@ -430,9 +456,9 @@ function PageHeading({ icon, title, description }: { icon: React.ReactNode; titl
   return <div className="flex items-start gap-3"><span className="app-text-primary mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[rgb(var(--panel-border))] bg-white/5">{icon}</span><div><h3 className="app-text-primary text-lg font-bold tracking-tight">{title}</h3><p className="app-text-muted mt-1 text-sm leading-relaxed">{description}</p></div></div>;
 }
 
-function ExplorerCard({ icon, title, description, action, badge, onClick }: { icon: React.ReactNode; title: string; description: string; action: string; badge?: string; onClick: () => void }) {
+function ExplorerCard({ icon, title, description, action, badge, testId, onClick }: { icon: React.ReactNode; title: string; description: string; action: string; badge?: string; testId?: string; onClick: () => void }) {
   return (
-    <button type="button" onClick={onClick} className="settings-panel-card group flex min-h-32 w-full flex-col p-4 text-left transition hover:-translate-y-0.5 hover:border-[rgb(var(--focus-ring))] hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--focus-ring))]">
+    <button data-testid={testId} type="button" onClick={onClick} className="settings-panel-card group flex min-h-32 w-full flex-col p-4 text-left transition hover:-translate-y-0.5 hover:border-[rgb(var(--focus-ring))] hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--focus-ring))]">
       <div className="flex items-start justify-between gap-3"><span className="app-text-primary flex h-10 w-10 items-center justify-center rounded-xl bg-white/5">{icon}</span>{badge ? <span className="rounded-full border border-[rgb(var(--panel-border))] px-2 py-1 text-[10px] font-semibold uppercase tracking-wide app-text-subtle">{badge}</span> : null}</div>
       <h4 className="app-text-primary mt-3 text-sm font-semibold">{title}</h4><p className="app-text-muted mt-1 line-clamp-2 text-xs leading-relaxed">{description}</p>
       <span className="app-text-subtle mt-auto flex items-center gap-1 pt-3 text-xs font-semibold group-hover:text-white">{action}<ChevronRight className="h-3.5 w-3.5" /></span>
@@ -473,18 +499,6 @@ function removeStyleOverrideFromAllLocales(library: AIPromptLibrary, id: Editabl
   return { ...library, localeOverrides };
 }
 
-export function sanitizeDeletedPresetHistory(navigation: NavigationState, id: string): NavigationState {
-  const target: AIPage = `preset:${id}`;
-  const entries: AIPage[] = [];
-  let index = 0;
-  navigation.entries.forEach((entry, oldIndex) => {
-    const mapped: AIPage = entry === target ? "library" : entry;
-    if (entries[entries.length - 1] !== mapped) entries.push(mapped);
-    if (oldIndex === navigation.index) index = entries.length - 1;
-  });
-  return { entries: entries.length ? entries : ["library"], index: Math.max(0, index) };
-}
-
 export function isExistingPage(page: AIPage, settings: AISettings, draft: AICustomPreset | null) {
   if (["root", "api", "library", "format"].includes(page)) return true;
   if (page.startsWith("draft:")) return draft?.id === page.slice("draft:".length);
@@ -492,19 +506,6 @@ export function isExistingPage(page: AIPage, settings: AISettings, draft: AICust
   if (id === "recommended") return true;
   if (isEditableTranslationStyle(id)) return !settings.promptLibrary.hiddenStyleIds.includes(id);
   return settings.promptLibrary.customPresets.some((preset) => preset.id === id && isValidCustomPreset(preset));
-}
-
-export function getAISettingsBreadcrumbs(page: AIPage, copy: ReturnType<typeof getAIPromptUiCopy>, settings: AISettings, locale: Locale): Array<{ page: AIPage; label: string }> {
-  const items: Array<{ page: AIPage; label: string }> = [{ page: "root", label: copy.workspace }];
-  if (page === "root") return items;
-  if (page === "api") return [...items, { page: "api", label: copy.apiConfiguration }];
-  items.push({ page: "library", label: copy.promptLibrary });
-  if (page === "library") return items;
-  if (page === "format") return [...items, { page: "format", label: copy.formatRules }];
-  if (page.startsWith("draft:")) return [...items, { page, label: copy.newPresetTitle }];
-  const id = page.startsWith("draft:") ? page.slice("draft:".length) : page.slice("preset:".length);
-  const preset = getTranslationPresets(locale, settings.promptLibrary).find((item) => item.id === id);
-  return [...items, { page, label: preset?.name || copy.editPreset }];
 }
 
 function SettingTip({ children }: { children: React.ReactNode }) {

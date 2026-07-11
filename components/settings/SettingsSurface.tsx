@@ -4,7 +4,7 @@ import { motion, type Transition } from "framer-motion";
 import { Loader2, Settings, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AboutSettingsSection } from "@/components/settings/AboutSettingsSection";
-import { AiSettingsSection, getAISettingsBreadcrumbs, type AIPage } from "@/components/settings/AiSettingsSection";
+import { AiSettingsSection } from "@/components/settings/AiSettingsSection";
 import { AppearanceSettingsSection } from "@/components/settings/AppearanceSettingsSection";
 import { ExportSettingsSection } from "@/components/settings/ExportSettingsSection";
 import { GeneralSettingsSection } from "@/components/settings/GeneralSettingsSection";
@@ -13,6 +13,12 @@ import { SettingsHistoryBar, type SettingsBreadcrumb } from "@/components/settin
 import { SettingsGroup } from "@/components/settings/SettingsLayout";
 import { getSettingsTabs, SettingsNavigation } from "@/components/settings/SettingsNavigation";
 import type { SettingsDestination, SettingsHistoryState, SettingsTabId } from "@/components/settings/settings-model";
+import {
+  createSettingsDestination,
+  getSettingsRouteBreadcrumbs,
+  normalizeSettingsDestination,
+  sameSettingsDestination
+} from "@/components/settings/settings-routing";
 import { useSettingsWorkspace } from "@/components/settings/useSettingsWorkspace";
 import type { AISettingsSummary } from "@/lib/ai/types";
 import { getAIPromptUiCopy } from "@/lib/ai/prompt-ui-copy";
@@ -57,7 +63,7 @@ export function SettingsSurface({
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
   const tabs = useMemo(() => getSettingsTabs(copy), [copy]);
   const [history, setHistory] = useState<SettingsHistoryState>(() => ({
-    entries: [{ tab: requestedTab ?? "general", aiPage: requestedTab === "ai" ? "root" : undefined }],
+    entries: [createSettingsDestination(requestedTab ?? "general")],
     index: 0
   }));
   const workspace = useSettingsWorkspace({
@@ -72,26 +78,15 @@ export function SettingsSurface({
     onSaved,
     onNotify
   });
-  const destination = history.entries[history.index] ?? { tab: "general" as const };
-  const activeTab = tabs.find((tab) => tab.id === destination.tab) ?? tabs[0];
-  const aiPage = destination.tab === "ai" ? destination.aiPage ?? "root" : "root";
+  const destination = history.entries[history.index] ?? createSettingsDestination("general");
+  const activeTab = tabs.find((tab) => tab.id === destination.section) ?? tabs[0];
   const promptCopy = getAIPromptUiCopy(locale);
   const breadcrumbs = useMemo<SettingsBreadcrumb[]>(() => {
-    const root: SettingsBreadcrumb = {
-      key: `tab:${activeTab.id}`,
-      label: activeTab.label,
-      destination: { tab: activeTab.id, aiPage: activeTab.id === "ai" ? "root" : undefined }
-    };
-    if (activeTab.id !== "ai") return [root];
-    return [
-      root,
-      ...getAISettingsBreadcrumbs(aiPage, promptCopy, workspace.settings, locale).map((item, index) => ({
-        key: `ai:${item.page}:${index}`,
-        label: item.label,
-        destination: { tab: "ai" as const, aiPage: item.page }
-      }))
-    ];
-  }, [activeTab, aiPage, locale, promptCopy, workspace.settings]);
+    return getSettingsRouteBreadcrumbs(destination, activeTab.label, {
+      locale,
+      settings: workspace.settings
+    });
+  }, [activeTab.label, destination, locale, workspace.settings]);
   const tabVariants = tabPanelVariants(reduceMotion);
   const tabTransition = reduceMotion ? reducedMotionTransition : opacityTransition;
   const saveStatus = workspace.saveState === "saved"
@@ -107,12 +102,9 @@ export function SettingsSurface({
 
   const navigateDestination = useCallback((next: SettingsDestination, options?: { replace?: boolean }) => {
     setHistory((current) => {
-      const normalized: SettingsDestination = {
-        tab: next.tab,
-        aiPage: next.tab === "ai" ? next.aiPage ?? "root" : undefined
-      };
+      const normalized = normalizeSettingsDestination(next);
       const active = current.entries[current.index];
-      if (sameDestination(active, normalized)) return current;
+      if (sameSettingsDestination(active, normalized)) return current;
       if (options?.replace) {
         const entries = [...current.entries];
         entries[current.index] = normalized;
@@ -133,13 +125,13 @@ export function SettingsSurface({
   useEffect(() => {
     if (!isActive) return;
     const tab = requestedTab ?? workspace.activeTab;
-    setHistory({ entries: [{ tab, aiPage: tab === "ai" ? "root" : undefined }], index: 0 });
+    setHistory({ entries: [createSettingsDestination(tab)], index: 0 });
   }, [isActive]);
 
   useEffect(() => {
-    if (!isActive || workspace.activeTab === destination.tab) return;
-    workspace.setActiveTab(destination.tab);
-  }, [destination.tab, isActive, workspace.activeTab, workspace.setActiveTab]);
+    if (!isActive || workspace.activeTab === destination.section) return;
+    workspace.setActiveTab(destination.section);
+  }, [destination.section, isActive, workspace.activeTab, workspace.setActiveTab]);
 
   useEffect(() => {
     if (!isActive) return;
@@ -226,9 +218,9 @@ export function SettingsSurface({
       <div className="settings-wing__body">
         <SettingsNavigation
           tabs={tabs}
-          active={destination.tab}
+          active={destination.section}
           isActive={isActive}
-          onChange={(tab) => navigateDestination({ tab, aiPage: tab === "ai" ? "root" : undefined })}
+          onChange={(tab) => navigateDestination(createSettingsDestination(tab))}
           ariaLabel={copy.settings}
         />
 
@@ -240,7 +232,7 @@ export function SettingsSurface({
             ].join(" ")}
           >
             {tabs.map((tab) => {
-              const selected = tab.id === destination.tab;
+              const selected = tab.id === destination.section;
               return (
               <motion.div
                 key={tab.id}
@@ -277,7 +269,7 @@ export function SettingsSurface({
                   ) : (
                     <AiSettingsSection
                       open={isActive}
-                      page={aiPage}
+                      path={destination.path}
                       settings={workspace.settings}
                       apiKey={workspace.apiKey}
                       hasApiKey={workspace.hasApiKey}
@@ -287,7 +279,7 @@ export function SettingsSurface({
                       onSettingsChange={workspace.setSettings}
                       onApiKeyChange={workspace.setApiKey}
                       onClearApiKey={workspace.handleClearApiKey}
-                      onNavigate={(page: AIPage, options) => navigateDestination({ tab: "ai", aiPage: page }, options)}
+                      onNavigate={(path, options) => navigateDestination(createSettingsDestination("ai", path), options)}
                     />
                   )}
                 </SettingsGroup>
@@ -303,8 +295,4 @@ export function SettingsSurface({
       </div>
     </motion.section>
   );
-}
-
-function sameDestination(left: SettingsDestination | undefined, right: SettingsDestination) {
-  return left?.tab === right.tab && left.aiPage === right.aiPage;
 }

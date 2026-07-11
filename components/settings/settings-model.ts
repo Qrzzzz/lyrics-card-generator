@@ -2,17 +2,9 @@ import type { LucideIcon } from "lucide-react";
 
 export type SettingsTabId = "general" | "appearance" | "export" | "ai" | "about";
 
-export type AISettingsPageId =
-  | "root"
-  | "api"
-  | "library"
-  | "format"
-  | `preset:${string}`
-  | `draft:${string}`;
-
 export type SettingsDestination = {
-  tab: SettingsTabId;
-  aiPage?: AISettingsPageId;
+  section: SettingsTabId;
+  path: string[];
 };
 
 export type SettingsHistoryState = {

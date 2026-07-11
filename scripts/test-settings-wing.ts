@@ -4,13 +4,17 @@ import { resolve } from "node:path";
 import { getAIUiCopy } from "../lib/ai/ui-copy";
 import { getAIPromptUiCopy } from "../lib/ai/prompt-ui-copy";
 import { DEFAULT_AI_SETTINGS } from "../lib/ai/types";
-import { isExistingPage, resetPromptLibraryToInitial, sanitizeDeletedPresetHistory } from "../components/settings/AiSettingsSection";
+import { isExistingPage, resetPromptLibraryToInitial } from "../components/settings/AiSettingsSection";
+import { resolveAISettingsPage } from "../components/settings/ai-settings-routing";
+import { createSettingsDestination, sameSettingsDestination } from "../components/settings/settings-routing";
 import { settingsCopy } from "../lib/settings/copy";
 import type { Locale } from "../lib/types";
 
 const lyricEditor = readFileSync(resolve("components/editor/LyricEditor.tsx"), "utf8");
 const settingsSurface = readFileSync(resolve("components/settings/SettingsSurface.tsx"), "utf8");
 const settingsHistoryBar = readFileSync(resolve("components/settings/SettingsHistoryBar.tsx"), "utf8");
+const settingsModel = readFileSync(resolve("components/settings/settings-model.ts"), "utf8");
+const settingsRouting = readFileSync(resolve("components/settings/settings-routing.ts"), "utf8");
 const settingsNavigation = readFileSync(resolve("components/settings/SettingsNavigation.tsx"), "utf8");
 const settingsWorkspace = readFileSync(resolve("components/settings/useSettingsWorkspace.ts"), "utf8");
 const saveController = readFileSync(resolve("lib/ai/ai-settings-save-controller.ts"), "utf8");
@@ -63,7 +67,13 @@ assert.match(settingsSurface, /isActive=\{isActive\}/);
 assert.match(settingsSurface, /<SettingsHistoryBar/);
 assert.match(settingsSurface, /SettingsHistoryState/);
 assert.match(settingsSurface, /navigateDestination/);
-assert.match(settingsSurface, /getAISettingsBreadcrumbs/);
+assert.match(settingsSurface, /getSettingsRouteBreadcrumbs/);
+assert.doesNotMatch(settingsSurface, /AIPage|getAISettingsBreadcrumbs|aiPage/);
+assert.match(settingsModel, /section: SettingsTabId/);
+assert.match(settingsModel, /path: string\[\]/);
+assert.doesNotMatch(settingsModel, /AISettingsPageId|aiPage/);
+assert.match(settingsRouting, /SectionRouteAdapter/);
+assert.match(settingsRouting, /sectionRouteAdapters/);
 assert.doesNotMatch(settingsSurface, /<SettingsSectionHeader/);
 assert.match(settingsHistoryBar, /data-testid="settings-history-bar"/);
 assert.match(settingsHistoryBar, /data-testid="settings-history-back"/);
@@ -134,12 +144,14 @@ assert.match(settingsSurface, /disabled=\{workspace\.isClearingApiKey\}/);
 assert.match(aiSettingsSection, /disabled=\{isClearingApiKey\}/);
 assert.match(aiSettingsSection, /setDraftPreset\(draft\)/);
 assert.match(aiSettingsSection, /disabled=\{!valid\}/);
-assert.match(aiSettingsSection, /sanitizeDeletedPresetHistory/);
 assert.match(aiSettingsSection, /copy\.resetAll/);
 assert.match(aiSettingsSection, /disabled=\{!canReset\}/);
 assert.match(aiSettingsSection, /value=\{defaultRules\} readOnly/);
 assert.doesNotMatch(aiSettingsSection, /UnlockKeyhole|requestUnlock|unlockRules|setUnlocked/);
 assert.doesNotMatch(aiSettingsSection, /window\.confirm\(copy\.reset/);
+assert.doesNotMatch(aiSettingsSection, /window\.confirm/);
+assert.doesNotMatch(settingsWorkspace, /window\.confirm/);
+assert.match(aiSettingsSection, /SettingsConfirmDialog/);
 assert.doesNotMatch(aiSettingsSection, /settings-history-bar|ArrowLeft|ArrowRight/);
 assert.match(aiSettingsSection, /override \? override\.title : defaultStyle\?\.name/);
 assert.match(aiSettingsSection, /override \? override\.prompt : getDefaultStylePrompt/);
@@ -158,12 +170,11 @@ assert.match(settingsLayout, /function SettingsGroup/);
 assert.match(settingsLayout, /function SettingsRow/);
 assert.doesNotMatch(preferences, /isSettingsOpen|openSettings|closeSettings/);
 
-const cleanedHistory = sanitizeDeletedPresetHistory({
-  entries: ["root", "library", "preset:lyrical", "api", "preset:lyrical"],
-  index: 2
-}, "lyrical");
-assert.ok(!cleanedHistory.entries.includes("preset:lyrical"), "deleted preset is removed from all navigation history");
-assert.equal(cleanedHistory.entries[cleanedHistory.index], "library", "deletion replaces the current history page with the library");
+const genericPresetDestination = createSettingsDestination("ai", ["library", "preset", "lyrical"]);
+assert.deepEqual(genericPresetDestination, { section: "ai", path: ["library", "preset", "lyrical"] });
+assert.equal(resolveAISettingsPage(genericPresetDestination.path), "preset:lyrical");
+assert.equal(sameSettingsDestination(genericPresetDestination, createSettingsDestination("ai", ["library", "preset", "lyrical"])), true);
+assert.equal(sameSettingsDestination(genericPresetDestination, createSettingsDestination("ai", ["library"])), false);
 const hiddenSettings = {
   ...DEFAULT_AI_SETTINGS,
   promptLibrary: { ...DEFAULT_AI_SETTINGS.promptLibrary, hiddenStyleIds: ["lyrical" as const] }
