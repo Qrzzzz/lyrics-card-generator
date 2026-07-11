@@ -19,7 +19,7 @@
 <p>
   <strong>Navegación</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Descargar la última versión</a> ·
-  <a href="./docs/releases/v4.6.2.es.md">Notas de la versión</a> ·
+  <a href="./docs/releases/v4.6.4.es.md">Notas de la versión</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en línea</a> ·
   <a href="#funciones-principales">Funciones principales</a> ·
   <a href="#desarrollo-local">Desarrollo local</a> ·
@@ -51,14 +51,14 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 Descarga la versión más reciente desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Instalador recomendado: `Lyrics Card Generator Setup 4.6.2.exe`
-* Versión portable: `Lyrics Card Generator-4.6.2-portable.exe`
+* Instalador recomendado: `Lyrics Card Generator Setup 4.6.4.exe`
+* Versión portable: `Lyrics Card Generator-4.6.4-portable.exe`
 
 El instalador se recomienda para uso habitual. La versión portable es útil para pruebas, uso temporal o ejecución desde una unidad extraíble.
 
 > La compilación actual no está firmada. Windows puede mostrar una advertencia de SmartScreen, algo habitual en aplicaciones personales sin firma.
 
-### Aspectos destacados de la versión 4.6.2
+### Aspectos destacados de la versión 4.6.4
 
 * Se corrige el bloqueo de todas las páginas y campos de texto después de restablecer un preajuste; el restablecimiento ya no abre un diálogo nativo bloqueante.
 * Las reglas de formato estrictas pasan a ser un módulo de seguridad integrado e inmutable y se eliminan todas las entradas para desbloquear su edición.
@@ -74,12 +74,12 @@ El instalador se recomienda para uso habitual. La versión portable es útil par
 
 La página de GitHub Release utiliza por defecto la versión corta en chino simplificado, las notas de publicación completas se mantienen en `docs/releases/`:
 
-* [简体中文](./docs/releases/v4.6.2.zh-CN.md)
-* [繁體中文](./docs/releases/v4.6.2.zh-TW.md)
-* [English](./docs/releases/v4.6.2.en.md)
-* [Français](./docs/releases/v4.6.2.fr.md)
-* [日本語](./docs/releases/v4.6.2.ja.md)
-* [Español](./docs/releases/v4.6.2.es.md)
+* [简体中文](./docs/releases/v4.6.4.zh-CN.md)
+* [繁體中文](./docs/releases/v4.6.4.zh-TW.md)
+* [English](./docs/releases/v4.6.4.en.md)
+* [Français](./docs/releases/v4.6.4.fr.md)
+* [日本語](./docs/releases/v4.6.4.ja.md)
+* [Español](./docs/releases/v4.6.4.es.md)
 
 <a id="funciones-principales"></a>
 

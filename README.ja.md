@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v4.6.2.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v4.6.4.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="#ローカル開発">ローカル開発</a> ·
@@ -51,14 +51,14 @@
 
 最新版は [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) からダウンロードできます。
 
-* 推奨インストーラー：`Lyrics Card Generator Setup 4.6.2.exe`
-* ポータブル版：`Lyrics Card Generator-4.6.2-portable.exe`
+* 推奨インストーラー：`Lyrics Card Generator Setup 4.6.4.exe`
+* ポータブル版：`Lyrics Card Generator-4.6.4-portable.exe`
 
 通常利用にはインストーラーを推奨します。ポータブル版は一時利用、検証、リムーバブルドライブでの利用に向いています。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v4.6.2 の更新ポイント
+### v4.6.4 の更新ポイント
 
 * プロンプトプリセットのリセット後に全ページとテキスト欄が操作不能になる問題を修正し、ブロックするネイティブ確認ダイアログを廃止しました。
 * 厳格な形式ルールを変更不可の内蔵安全モジュールに固定し、編集ロック解除の入口をすべて削除しました。
@@ -74,12 +74,12 @@
 
 GitHub Release ページではデフォルトで簡体字中国語の短縮版が使用され、完全なリリースノートは `docs/releases/` にて管理されています：
 
-* [简体中文](./docs/releases/v4.6.2.zh-CN.md)
-* [繁體中文](./docs/releases/v4.6.2.zh-TW.md)
-* [English](./docs/releases/v4.6.2.en.md)
-* [Français](./docs/releases/v4.6.2.fr.md)
-* [日本語](./docs/releases/v4.6.2.ja.md)
-* [Español](./docs/releases/v4.6.2.es.md)
+* [简体中文](./docs/releases/v4.6.4.zh-CN.md)
+* [繁體中文](./docs/releases/v4.6.4.zh-TW.md)
+* [English](./docs/releases/v4.6.4.en.md)
+* [Français](./docs/releases/v4.6.4.fr.md)
+* [日本語](./docs/releases/v4.6.4.ja.md)
+* [Español](./docs/releases/v4.6.4.es.md)
 
 <a id="主な機能"></a>
 
