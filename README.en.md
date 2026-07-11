@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v4.6.2.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v4.6.4.en.md">Release Notes</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
   <a href="#features">Features</a> ·
   <a href="#local-development">Local Development</a> ·
@@ -51,14 +51,14 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 Download the latest version from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Recommended installer: `Lyrics Card Generator Setup 4.6.2.exe`
-* Portable version: `Lyrics Card Generator-4.6.2-portable.exe`
+* Recommended installer: `Lyrics Card Generator Setup 4.6.4.exe`
+* Portable version: `Lyrics Card Generator-4.6.4-portable.exe`
 
 The installer is recommended for regular use. The portable version is useful for temporary use, testing, or running from a removable drive.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v4.6.2 Highlights
+### v4.6.4 Highlights
 
 * Fixed the issue where resetting a prompt preset made every page and text field non-interactive; reset actions no longer invoke a blocking native confirmation dialog.
 * Made Strict Format Rules an immutable built-in safety module and removed every unlock-editing entry point.
@@ -74,12 +74,12 @@ The installer is recommended for regular use. The portable version is useful for
 
 The GitHub Release page defaults to a simplified Chinese short version, while the full release notes are maintained in `docs/releases/`:
 
-* [简体中文](./docs/releases/v4.6.2.zh-CN.md)
-* [繁體中文](./docs/releases/v4.6.2.zh-TW.md)
-* [English](./docs/releases/v4.6.2.en.md)
-* [Français](./docs/releases/v4.6.2.fr.md)
-* [日本語](./docs/releases/v4.6.2.ja.md)
-* [Español](./docs/releases/v4.6.2.es.md)
+* [简体中文](./docs/releases/v4.6.4.zh-CN.md)
+* [繁體中文](./docs/releases/v4.6.4.zh-TW.md)
+* [English](./docs/releases/v4.6.4.en.md)
+* [Français](./docs/releases/v4.6.4.fr.md)
+* [日本語](./docs/releases/v4.6.4.ja.md)
+* [Español](./docs/releases/v4.6.4.es.md)
 
 <a id="features"></a>
 
