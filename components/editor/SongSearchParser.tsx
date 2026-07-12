@@ -213,17 +213,19 @@ export function SongSearchParser({
     }
   }
 
+  const showResults = expanded && suggestions.length > 0;
+
   return (
     <Section
       title={t("songSearchTitle")}
       eyebrow={t("songSearchSourceNetease")}
       variant="card"
-      className="song-search-focus overflow-visible"
+      className="song-search-focus"
       contentClassName="gap-5"
     >
       <p className="app-text-subtle max-w-2xl text-sm leading-6">{t("songSearchDescription")}</p>
-      <Label label={t("songSearchInput")} description={t("songSearchKeyboardHint")}>
-        <div className="relative">
+      <Label label={t("songSearchInput")}>
+        <div className="song-search-input-wrap relative">
           <Search className="app-text-subtle pointer-events-none absolute left-4 top-1/2 z-10 size-5 -translate-y-1/2" />
           <Input
             value={query}
@@ -248,16 +250,27 @@ export function SongSearchParser({
             disabled={isResolving}
             className="h-14 rounded-xl pl-12 pr-4 text-base shadow-[0_18px_48px_rgba(0,0,0,0.18)]"
           />
-          {expanded && suggestions.length > 0 ? (
-            <div
-              className="glass-panel absolute z-30 mt-2 w-full overflow-hidden rounded-xl border p-2 shadow-2xl backdrop-blur-xl"
-              data-testid="song-search-popup"
-            >
+        </div>
+        {showResults ? (
+          <div
+            className="song-search-results mt-3 overflow-hidden rounded-xl"
+            data-testid="song-search-popup"
+          >
+            <div className="song-search-results__header">
+              <div className="flex min-w-0 items-center gap-2">
+                <span className="app-text-primary truncate text-sm font-semibold">{t("songSearchResults")}</span>
+                <span className="song-search-results__count" aria-label={String(suggestions.length)}>
+                  {suggestions.length}
+                </span>
+              </div>
+              <span className="song-search-results__source">{t("songSearchSourceNetease")}</span>
+            </div>
+            <div className="song-search-results__body">
               <div
                 id={listboxId}
                 role="listbox"
                 aria-label={t("songSearchTitle")}
-                className="max-h-[min(22rem,44vh)] overflow-y-auto overscroll-contain"
+                className="song-search-results__list overscroll-contain"
                 data-testid="song-search-listbox"
               >
                 {suggestions.map((song, index) => (
@@ -273,8 +286,8 @@ export function SongSearchParser({
                     onClick={() => void resolveSong(song)}
                     disabled={isResolving}
                     className={cn(
-                      "control-focus control-disabled flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left transition",
-                      index === highlightedIndex ? "bg-white/10" : "hover:bg-white/10"
+                      "song-search-result control-focus control-disabled",
+                      index === highlightedIndex && "song-search-result--selected"
                     )}
                   >
                     {song.coverUrl ? (
@@ -290,20 +303,22 @@ export function SongSearchParser({
                         <Music2 className="size-5" />
                       </span>
                     )}
-                    <span className="min-w-0 flex-1">
-                      <span className="app-text-primary block truncate text-sm font-medium">
-                        {song.title} {song.artist ? `- ${song.artist}` : ""}
+                    <span className="song-search-result__copy min-w-0 flex-1">
+                      <span className="song-search-result__headline">
+                        <span className="app-text-primary truncate text-sm font-semibold">{song.title}</span>
+                        {song.artist ? (
+                          <span className="app-text-subtle truncate text-xs">{song.artist}</span>
+                        ) : null}
                       </span>
-                      <span className="app-text-subtle mt-1 block truncate text-xs">
+                      <span className="app-text-subtle block truncate text-xs">
                         {[song.album, formatDuration(song.durationMs)].filter(Boolean).join(" · ")}
                       </span>
                     </span>
-                    <span className="app-text-subtle shrink-0 text-[11px]">{t("songSearchSourceNetease")}</span>
                   </button>
                 ))}
               </div>
               {suggestions.length >= 8 ? (
-                <div className="mt-2 border-t border-white/10 pt-2">
+                <div className="song-search-results__footer">
                   <ActionButton
                     variant="ghost"
                     size="sm"
@@ -320,15 +335,15 @@ export function SongSearchParser({
                 </div>
               ) : null}
             </div>
-          ) : null}
-        </div>
+          </div>
+        ) : null}
       </Label>
       <p
         id={statusId}
         role="status"
         aria-live="polite"
         className={cn(
-          "rounded-lg border px-3 py-2 text-sm",
+          showResults ? "sr-only" : "rounded-lg border px-3 py-2 text-sm",
           status === "success" && "status-success",
           status === "partial" && "status-warning",
           status === "error" && "status-danger",

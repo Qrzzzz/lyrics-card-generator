@@ -2,74 +2,25 @@ import assert from "node:assert/strict";
 import { __internalLyricsViewportSession } from "../components/editor/hooks/useLyricsViewportSession";
 
 const {
-  calculatePointerDragHeight,
   calculateViewportMetrics,
   getParagraphLineRanges,
   getTextAnchor,
-  heightForMode,
   isConnectedEditorInWorkspace,
   resolveAnchoredScrollTop,
-  resolveMappedTextAnchorRatio,
-  resolveModeFromHeight,
-  immersiveSnapThreshold
+  resolveMappedTextAnchorRatio
 } = __internalLyricsViewportSession;
 
 const minimumDesktopMetrics = calculateViewportMetrics(398);
 assert.deepEqual(minimumDesktopMetrics, {
-  minHeight: 240,
-  standardHeight: 271,
-  expandedHeight: 334,
   maxHeight: 398
 });
-assert.ok(
-  minimumDesktopMetrics.standardHeight < minimumDesktopMetrics.expandedHeight &&
-    minimumDesktopMetrics.expandedHeight < minimumDesktopMetrics.maxHeight,
-  "the 1000x700 content budget keeps three distinct stable viewport heights"
-);
-assert.equal(heightForMode("standard", minimumDesktopMetrics), 271);
-assert.equal(heightForMode("expanded", minimumDesktopMetrics), 334);
-assert.equal(heightForMode("immersive", minimumDesktopMetrics), 398);
-assert.equal(immersiveSnapThreshold, 24);
-assert.equal(
-  resolveModeFromHeight(minimumDesktopMetrics.maxHeight - immersiveSnapThreshold, minimumDesktopMetrics),
-  "immersive"
-);
-assert.equal(
-  resolveModeFromHeight(minimumDesktopMetrics.maxHeight - immersiveSnapThreshold - 1, minimumDesktopMetrics),
-  "expanded"
-);
-assert.equal(
-  calculatePointerDragHeight(
-    { clientY: 100, height: minimumDesktopMetrics.standardHeight },
-    100 + minimumDesktopMetrics.maxHeight - minimumDesktopMetrics.standardHeight - 10,
-    minimumDesktopMetrics
-  ),
-  minimumDesktopMetrics.maxHeight,
-  "pointerup synchronously snaps a drag released inside the 24px immersive zone"
-);
-assert.equal(
-  calculatePointerDragHeight(
-    { clientY: 100, height: minimumDesktopMetrics.standardHeight },
-    100 + minimumDesktopMetrics.maxHeight - minimumDesktopMetrics.standardHeight - immersiveSnapThreshold - 1,
-    minimumDesktopMetrics
-  ),
-  minimumDesktopMetrics.maxHeight - immersiveSnapThreshold - 1,
-  "pointerup keeps a drag released outside the immersive snap zone unsnapped"
-);
-assert.equal(resolveModeFromHeight(271, minimumDesktopMetrics), "standard");
-assert.equal(resolveModeFromHeight(334, minimumDesktopMetrics), "expanded");
+assert.equal(minimumDesktopMetrics.maxHeight, 398, "the lyrics workspace uses the full available height");
 
 const shortWindowMetrics = calculateViewportMetrics(220);
 assert.deepEqual(shortWindowMetrics, {
-  minHeight: 240,
-  standardHeight: 240,
-  expandedHeight: 240,
   maxHeight: 240
 });
 assert.deepEqual(calculateViewportMetrics(800), {
-  minHeight: 240,
-  standardHeight: 544,
-  expandedHeight: 672,
   maxHeight: 800
 });
 

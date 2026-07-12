@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v5.0.2.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v5.0.4.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="#développement-local">Développement local</a> ·
@@ -51,33 +51,31 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 Téléchargez la dernière version depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
 
-* Installateur recommandé : `Lyrics Card Generator Setup 5.0.2.exe`
-* Version portable : `Lyrics Card Generator-5.0.2-portable.exe`
+* Installateur recommandé : `Lyrics Card Generator Setup 5.0.4.exe`
+* Version portable : `Lyrics Card Generator-5.0.4-portable.exe`
 
 L'installateur est recommandé pour une utilisation régulière. La version portable convient aux essais, à une utilisation temporaire ou à un disque amovible.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### Points clés de la v5.0.2
+### Points clés de la v5.0.4
 
-* La première étape privilégie la recherche NetEase ; les liens, l’audio local et les métadonnées manuelles passent dans une colonne secondaire compacte.
-* La deuxième étape devient un espace à trois colonnes avec résumé du morceau, document à défilement partagé et outils fixes.
-* Ajout des vues Standard, Étendue et Immersive avec aimantation, double-clic, Échap et commandes clavier.
-* L’aperçu visible disparaît des deux premières étapes et revient avec la conception de carte à partir de la troisième.
-* L’export utilise un hôte hors écran indépendant, sans dépendre de la hauteur de l’éditeur.
-* Ajout de la limite de 36 lignes non vides, d’une hauteur automatique portrait de 6400px et du blocage des débordements réels.
-* Régressions validées sur cinq tailles de bureau, six langues, Web Lite et le paquet Electron.
+* Reprend de la v5.0.2 la zone de résultats fixe, le nombre de résultats, le libellé de source NetEase et la liste de morceaux repensée.
+* La deuxième étape utilise toujours la hauteur maximale disponible ; les trois commandes de vue et la poignée inférieure sont supprimées.
+* L’en-tête des réglages et le fil d’Ariane offrent plus d’espace et rendent le chemin actuel plus clair.
+* L’espace de travail IA utilise désormais une liste compacte cohérente avec les autres pages de réglages.
+* Ajout des exemples « honeybee » et « Lies » dans une galerie défilante sur deux lignes.
 
 ## 🌐 Notes de publication multilingues
 
 La page GitHub Release utilise par défaut la version courte en chinois simplifié, les notes de publication complètes sont conservées dans `docs/releases/` :
 
-* [简体中文](./docs/releases/v5.0.2.zh-CN.md)
-* [繁體中文](./docs/releases/v5.0.2.zh-TW.md)
-* [English](./docs/releases/v5.0.2.en.md)
-* [Français](./docs/releases/v5.0.2.fr.md)
-* [日本語](./docs/releases/v5.0.2.ja.md)
-* [Español](./docs/releases/v5.0.2.es.md)
+* [简体中文](./docs/releases/v5.0.4.zh-CN.md)
+* [繁體中文](./docs/releases/v5.0.4.zh-TW.md)
+* [English](./docs/releases/v5.0.4.en.md)
+* [Français](./docs/releases/v5.0.4.fr.md)
+* [日本語](./docs/releases/v5.0.4.ja.md)
+* [Español](./docs/releases/v5.0.4.es.md)
 
 <a id="fonctionnalités-principales"></a>
 

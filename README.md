@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v5.0.2.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v5.0.4.zh-CN.md">发布说明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">在线 Web Lite 版</a> ·
   <a href="./docs/desktop.md">桌面维护文档</a> ·
   <a href="#主要功能">主要功能</a> ·
@@ -49,33 +49,31 @@
 
 请前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下载最新版：
 
-* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 5.0.2.exe`
-* 不想安装时可下载便携版：`Lyrics Card Generator-5.0.2-portable.exe`
+* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 5.0.4.exe`
+* 不想安装时可下载便携版：`Lyrics Card Generator-5.0.4-portable.exe`
 
 安装版适合长期使用；便携版适合临时运行、测试或放在移动硬盘中使用。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v5.0.2 更新重点
+### v5.0.4 更新重点
 
-* 第一步以网易云搜索为核心，链接、本地音频和手动歌曲信息收进紧凑辅助栏。
-* 第二步升级为歌曲摘要、共享滚动歌词文档和固定编辑工具组成的三栏长稿工作台。
-* 新增标准、扩展、沉浸三种歌词视口，支持拖动吸附、双击复位、Esc 与键盘操作。
-* 第一、二步隐藏可见卡片预览；第三步起恢复原有卡片设计与预览流程。
-* 导出改用独立离屏卡片宿主，编辑视口高度不再影响 PNG 逻辑尺寸。
-* 新增 36 个非空逻辑行的导出上限、6400px 纵向自动高度和真实溢出阻断。
-* 完成五档桌面窗口、六语言、Web Lite 与 Electron 打包回归。
+* 继承 5.0.2 的固定搜索结果区域、结果数量、网易云来源标签和重设计歌曲列表。
+* 第二步固定使用最大可用高度，移除三档视口切换与底部拖动条。
+* 重排设置页头与面包屑，让当前路径更舒展清晰。
+* 将 AI 工作区改为与其他设置页一致的紧凑入口列表。
+* 新增《honeybee》和《Lies》示例，并以两行可滚动布局展示示例库。
 
 ## 🌐 多语言发布说明
 
 GitHub Release 页面默认使用简体中文短版，完整发布说明维护在 `docs/releases/`：
 
-* [简体中文](./docs/releases/v5.0.2.zh-CN.md)
-* [繁體中文](./docs/releases/v5.0.2.zh-TW.md)
-* [English](./docs/releases/v5.0.2.en.md)
-* [Français](./docs/releases/v5.0.2.fr.md)
-* [日本語](./docs/releases/v5.0.2.ja.md)
-* [Español](./docs/releases/v5.0.2.es.md)
+* [简体中文](./docs/releases/v5.0.4.zh-CN.md)
+* [繁體中文](./docs/releases/v5.0.4.zh-TW.md)
+* [English](./docs/releases/v5.0.4.en.md)
+* [Français](./docs/releases/v5.0.4.fr.md)
+* [日本語](./docs/releases/v5.0.4.ja.md)
+* [Español](./docs/releases/v5.0.4.es.md)
 
 <a id="主要功能"></a>
 

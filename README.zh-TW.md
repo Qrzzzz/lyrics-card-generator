@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v5.0.2.zh-TW.md">發布說明</a> ·
+  <a href="./docs/releases/v5.0.4.zh-TW.md">發布說明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">線上 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="#本機開發">本機開發</a> ·
@@ -48,33 +48,31 @@
 
 請前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載最新版：
 
-* 建議一般使用者下載安裝版：`Lyrics Card Generator Setup 5.0.2.exe`
-* 不想安裝時可下載可攜版：`Lyrics Card Generator-5.0.2-portable.exe`
+* 建議一般使用者下載安裝版：`Lyrics Card Generator Setup 5.0.4.exe`
+* 不想安裝時可下載可攜版：`Lyrics Card Generator-5.0.4-portable.exe`
 
 安裝版適合長期使用；可攜版適合臨時執行、測試或放在隨身碟中使用。
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v5.0.2 更新重點
+### v5.0.4 更新重點
 
-* 第一步以網易雲搜尋為核心，連結、本機音訊和手動歌曲資訊收進緊湊輔助欄。
-* 第二步升級為歌曲摘要、共用捲動歌詞文件和固定編輯工具組成的三欄長稿工作台。
-* 新增標準、延展、沉浸三種歌詞視窗，支援拖曳吸附、按兩下復位、Esc 與鍵盤操作。
-* 第一、二步隱藏可見卡片預覽；第三步起恢復原有卡片設計與預覽流程。
-* 匯出改用獨立畫面外卡片宿主，編輯視窗高度不再影響 PNG 邏輯尺寸。
-* 新增 36 個非空邏輯行的匯出上限、6400px 直式自動高度和真實溢出阻斷。
-* 完成五種桌面視窗、六語言、Web Lite 與 Electron 打包回歸。
+* 繼承 5.0.2 的固定搜尋結果區域、結果數量、網易雲來源標籤和重新設計的歌曲清單。
+* 第二步固定使用最大可用高度，移除三段視窗切換與底部拖曳列。
+* 重排設定頁首與麵包屑，讓目前路徑更舒展清楚。
+* 將 AI 工作區改為與其他設定頁一致的緊湊入口清單。
+* 新增《honeybee》和《Lies》範例，並以兩列可捲動版面顯示範例庫。
 
 ## 🌐 多語言發佈說明
 
 GitHub Release 頁面預設使用簡體中文短版，完整發佈說明維護在 `docs/releases/`：
 
-* [简体中文](./docs/releases/v5.0.2.zh-CN.md)
-* [繁體中文](./docs/releases/v5.0.2.zh-TW.md)
-* [English](./docs/releases/v5.0.2.en.md)
-* [Français](./docs/releases/v5.0.2.fr.md)
-* [日本語](./docs/releases/v5.0.2.ja.md)
-* [Español](./docs/releases/v5.0.2.es.md)
+* [简体中文](./docs/releases/v5.0.4.zh-CN.md)
+* [繁體中文](./docs/releases/v5.0.4.zh-TW.md)
+* [English](./docs/releases/v5.0.4.en.md)
+* [Français](./docs/releases/v5.0.4.fr.md)
+* [日本語](./docs/releases/v5.0.4.ja.md)
+* [Español](./docs/releases/v5.0.4.es.md)
 
 ## ✨ 主要功能
 

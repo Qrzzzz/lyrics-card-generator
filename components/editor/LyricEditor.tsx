@@ -36,7 +36,6 @@ import {
   useExportCardReadiness,
   type ExportCardBlockingReason
 } from "@/components/editor/hooks/useExportCardReadiness";
-import type { LyricsViewportMode } from "@/components/editor/hooks/useLyricsViewportSession";
 import { ClickSpark } from "@/components/layout/ClickSpark";
 import { DesktopTitleBar } from "@/components/layout/DesktopTitleBar";
 import { DynamicAppBackground } from "@/components/layout/DynamicAppBackground";
@@ -73,7 +72,6 @@ export function LyricEditor() {
   const [activeSurface, setActiveSurface] = useState<ActiveSurface>("editor");
   const [requestedSettingsTab, setRequestedSettingsTab] = useState<SettingsTabId>();
   const [exportQuality, setExportQuality] = useState<ExportQualityId>(DEFAULT_USER_SETTINGS.defaultExportQuality);
-  const [lyricsViewportMode, setLyricsViewportMode] = useState<LyricsViewportMode>("standard");
   const [toast, setToast] = useState<ToastNotice | null>(null);
   const exportCardRef = useRef<HTMLElement | null>(null);
   const previewCardRef = useRef<HTMLElement | null>(null);
@@ -342,8 +340,7 @@ export function LyricEditor() {
     exportBlockingMessage: exportBlockMessage,
     exportQuality,
     lyricsLayout: {
-      lineStatus: exportReadiness.lineStatus,
-      onViewportModeChange: setLyricsViewportMode
+      lineStatus: exportReadiness.lineStatus
     },
     ai: {
       isOpen: isAITranslateOpen,
@@ -380,15 +377,10 @@ export function LyricEditor() {
   const activeSettingsStep = settingsSteps[currentStep] ?? settingsSteps[0];
   const activePresentation = activeSettingsStep?.presentation ?? "preview-workbench";
   const isLyricsWorkspace = activePresentation === "lyrics-workspace";
-  const isLyricsImmersive = isLyricsWorkspace && lyricsViewportMode === "immersive";
+  const isLyricsImmersive = isLyricsWorkspace;
   const usesCompactLyricsChrome = isLyricsWorkspace;
   const showVisiblePreview = activePresentation === "preview-workbench";
 
-  useEffect(() => {
-    if (!isLyricsWorkspace && lyricsViewportMode === "immersive") {
-      setLyricsViewportMode("standard");
-    }
-  }, [isLyricsWorkspace, lyricsViewportMode]);
   const { resolvedThemeTokens, customThemeTokens } = resolveEditorThemeTokens({
     userSettings,
     palette: state.palette
@@ -445,7 +437,7 @@ export function LyricEditor() {
                   isLyricsImmersive && "grid-rows-[minmax(0,1fr)] gap-0"
                 )}
                 data-editor-presentation={activePresentation}
-                data-lyrics-viewport-mode={isLyricsWorkspace ? lyricsViewportMode : undefined}
+                data-lyrics-viewport-mode={isLyricsWorkspace ? "immersive" : undefined}
               >
                 <div className={cn(isExamplesSurfaceOpen && "invisible", isLyricsImmersive && "hidden")}>
                   <EditorHeader

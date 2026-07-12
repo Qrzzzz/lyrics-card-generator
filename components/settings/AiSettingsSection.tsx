@@ -148,11 +148,11 @@ export function AiSettingsSection({
 
 function WorkspaceRoot({ copy, onOpen }: { copy: ReturnType<typeof getAIPromptUiCopy>; onOpen: (page: AIPage) => void }) {
   return (
-    <div className="grid gap-4">
+    <div className="ai-workspace-root grid gap-5">
       <PageHeading icon={<Bot className="h-5 w-5" />} title={copy.workspace} description={copy.workspaceDescription} />
-      <div className="grid gap-3 sm:grid-cols-2">
-        <ExplorerCard testId="ai-open-api" icon={<FileKey2 className="h-6 w-6" />} title={copy.apiConfiguration} description={copy.apiConfigurationDescription} action={copy.open} onClick={() => onOpen("api")} />
-        <ExplorerCard testId="ai-open-library" icon={<FolderCog className="h-6 w-6" />} title={copy.promptLibrary} description={copy.promptLibraryDescription} action={copy.open} onClick={() => onOpen("library")} />
+      <div className="ai-workspace-destinations">
+        <ExplorerCard variant="row" testId="ai-open-api" icon={<FileKey2 className="h-5 w-5" />} title={copy.apiConfiguration} description={copy.apiConfigurationDescription} action={copy.open} onClick={() => onOpen("api")} />
+        <ExplorerCard variant="row" testId="ai-open-library" icon={<FolderCog className="h-5 w-5" />} title={copy.promptLibrary} description={copy.promptLibraryDescription} action={copy.open} onClick={() => onOpen("library")} />
       </div>
     </div>
   );
@@ -456,7 +456,22 @@ function PageHeading({ icon, title, description }: { icon: React.ReactNode; titl
   return <div className="flex items-start gap-3"><span className="app-text-primary mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[rgb(var(--panel-border))] bg-white/5">{icon}</span><div><h3 className="app-text-primary text-lg font-bold tracking-tight">{title}</h3><p className="app-text-muted mt-1 text-sm leading-relaxed">{description}</p></div></div>;
 }
 
-function ExplorerCard({ icon, title, description, action, badge, testId, onClick }: { icon: React.ReactNode; title: string; description: string; action: string; badge?: string; testId?: string; onClick: () => void }) {
+function ExplorerCard({ icon, title, description, action, badge, testId, variant = "card", onClick }: { icon: React.ReactNode; title: string; description: string; action: string; badge?: string; testId?: string; variant?: "card" | "row"; onClick: () => void }) {
+  if (variant === "row") {
+    return (
+      <button data-testid={testId} type="button" onClick={onClick} className="ai-workspace-destination control-focus group w-full text-left">
+        <span className="ai-workspace-destination__icon app-text-primary" aria-hidden="true">{icon}</span>
+        <span className="min-w-0">
+          <span className="app-text-primary block text-sm font-semibold">{title}</span>
+          <span className="app-text-subtle mt-1 block text-xs leading-5">{description}</span>
+        </span>
+        <span className="app-text-muted flex shrink-0 items-center gap-1 text-xs font-semibold transition group-hover:text-[rgb(var(--app-fg))]">
+          {action}<ChevronRight className="h-4 w-4" aria-hidden="true" />
+        </span>
+      </button>
+    );
+  }
+
   return (
     <button data-testid={testId} type="button" onClick={onClick} className="settings-panel-card group flex min-h-32 w-full flex-col p-4 text-left transition hover:-translate-y-0.5 hover:border-[rgb(var(--focus-ring))] hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--focus-ring))]">
       <div className="flex items-start justify-between gap-3"><span className="app-text-primary flex h-10 w-10 items-center justify-center rounded-xl bg-white/5">{icon}</span>{badge ? <span className="rounded-full border border-[rgb(var(--panel-border))] px-2 py-1 text-[10px] font-semibold uppercase tracking-wide app-text-subtle">{badge}</span> : null}</div>
