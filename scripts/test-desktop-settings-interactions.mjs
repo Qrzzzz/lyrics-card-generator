@@ -63,6 +63,14 @@ async function waitForLayoutStable(locator, timeout = 5_000) {
   );
 }
 
+async function waitForLyricsLineBudget(expected, timeout = 5_000) {
+  await page.waitForFunction(
+    (text) => document.querySelector('[data-testid="lyrics-line-budget"]')?.textContent?.includes(text),
+    expected,
+    { timeout }
+  );
+}
+
 async function assertExportHost(stepLabel) {
   const state = await page.evaluate(() => {
     const host = document.querySelector("[data-export-card-host]");
@@ -377,7 +385,12 @@ async function assertPreviewFits(width, height, scrolled) {
   await page.locator('[data-testid="editor-surface"]').evaluate((element, shouldScroll) => {
     element.scrollTop = shouldScroll ? element.scrollHeight : 0;
   }, scrolled);
-  await page.waitForTimeout(250);
+  await page.waitForFunction(() => {
+    const preview = document.querySelector('[data-testid="lyric-card-preview"]');
+    if (!(preview instanceof HTMLElement)) return false;
+    const rect = preview.getBoundingClientRect();
+    return rect.top >= -1 && rect.bottom <= window.innerHeight + 1;
+  }, undefined, { timeout: 5_000 });
   const bounds = await page.getByTestId("lyric-card-preview").evaluate((element) => {
     const rect = element.getBoundingClientRect();
     const shell = element.querySelector('[data-testid="lyric-card-preview-shell"]');
@@ -578,6 +591,9 @@ try {
   assert.ok(contextBeforeModeChange.scrollTop > 0, "viewport regression starts from a non-zero scroll position");
 
   await expandedMode.click();
+  // Reproduce the browser selection event that can arrive after React has
+  // resized the workspace but before the queued anchor restoration frame.
+  await translationLyrics.dispatchEvent("select");
   await waitForLayoutStable(page.getByTestId("lyrics-workspace"));
   const expandedHeight = await page.getByTestId("lyrics-workspace").evaluate((element) => element.getBoundingClientRect().height);
   const contextAfterExpanded = await getLyricsContext(translationLyrics);
@@ -689,6 +705,13 @@ try {
   assert.ok(afterTranslationToggle.scrollTop > 0, `reopening translation does not reset shared scroll: ${JSON.stringify(afterTranslationToggle)}`);
   assert.equal(afterTranslationToggle.activeTestId, "translation-toggle", "reopening translation does not steal focus from the switch");
 
+  // Start the export-limit scenario from an explicit fixture instead of
+  // inheriting content from the preceding viewport interaction sequence.
+  await originalLyrics.fill(originalEighteen);
+  await translationLyrics.fill(translationEighteen);
+  assert.equal(await originalLyrics.inputValue(), originalEighteen, "export fixture restores exactly 18 original lines");
+  assert.equal(await translationLyrics.inputValue(), translationEighteen, "export fixture restores exactly 18 translated lines");
+  await waitForLyricsLineBudget("原文 18 + 译文 18 = 36 / 36");
   assert.match(await page.getByTestId("lyrics-line-budget").innerText(), /18.*18.*36 \/ 36/s);
   await page.locator('button[data-step-id="export"]').click();
   await page.waitForFunction(() => {
@@ -731,6 +754,7 @@ try {
 
   await page.locator('button[data-step-id="lyrics"]').click();
   await originalLyrics.fill(`${originalEighteen}\nline 19`);
+  await waitForLyricsLineBudget("37 / 36");
   assert.match(await page.getByTestId("lyrics-line-budget").innerText(), /37 \/ 36/);
   await page.locator('button[data-step-id="export"]').click();
   assert.equal(await page.getByTestId("complete-export-button").isDisabled(), true, "37 logical lines disable final export");
@@ -754,6 +778,9 @@ try {
   await page.locator('button[data-step-id="lyrics"]').click();
   await originalLyrics.fill(originalEighteen);
   await translationLyrics.fill(translationEighteen);
+  assert.equal(await originalLyrics.inputValue(), originalEighteen, "fixed-ratio fixture restores exactly 18 original lines");
+  assert.equal(await translationLyrics.inputValue(), translationEighteen, "fixed-ratio fixture restores exactly 18 translated lines");
+  await waitForLyricsLineBudget("原文 18 + 译文 18 = 36 / 36");
   assert.match(await page.getByTestId("lyrics-line-budget").innerText(), /18.*18.*36 \/ 36/s);
   await page.locator('button[data-step-id="layout"]').click();
   await page.locator('[role="radiogroup"][aria-label="尺寸模式"] [data-segment-value="1:1"]').click();

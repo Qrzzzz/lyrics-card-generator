@@ -246,8 +246,8 @@ export function LyricsWorkspace({
   }, [showTranslation]);
 
   useLayoutEffect(() => {
-    resizeEditors();
     viewport.restoreAnchor();
+    resizeEditors();
   }, [lyrics, resizeEditors, translationText, viewport.restoreAnchor, viewport.viewportHeight]);
 
   useLayoutEffect(() => {
@@ -257,8 +257,8 @@ export function LyricsWorkspace({
     }
 
     const observer = new ResizeObserver(() => {
-      resizeEditors();
       viewport.restoreAnchor();
+      resizeEditors();
     });
     observer.observe(container);
     return () => observer.disconnect();

@@ -94,9 +94,11 @@ export function useLyricsViewportSession({
   const [storageReady, setStorageReady] = useState(false);
   const dragStartRef = useRef<{ clientY: number; height: number } | null>(null);
   const anchorRef = useRef<AnchorSnapshot | null>(null);
+  const restoreSnapshotRef = useRef<AnchorSnapshot | null>(null);
   const restoreFrameRef = useRef(0);
   const restoreSettleFrameRef = useRef(0);
   const restorationPendingRef = useRef(false);
+  const dragCleanupRef = useRef<() => void>(() => {});
   const activeEditorKeyGetterRef = useRef(getActiveEditorKey);
   const editorGetterRef = useRef(getEditor);
   const editorNodesRef = useRef<Partial<Record<LyricsEditorKey, HTMLTextAreaElement>>>({});
@@ -171,6 +173,9 @@ export function useLyricsViewportSession({
   }, [scrollRef, workspaceRef]);
 
   const restoreAnchor = useCallback(() => {
+    if (!restorationPendingRef.current) {
+      restoreSnapshotRef.current = anchorRef.current;
+    }
     restorationPendingRef.current = true;
     window.cancelAnimationFrame(restoreFrameRef.current);
     window.cancelAnimationFrame(restoreSettleFrameRef.current);
@@ -178,14 +183,16 @@ export function useLyricsViewportSession({
       const finishRestore = () => {
         restoreSettleFrameRef.current = window.requestAnimationFrame(() => {
           restorationPendingRef.current = false;
+          restoreSnapshotRef.current = null;
           captureAnchor();
         });
       };
       const scrollNode = scrollRef.current;
       const workspace = workspaceRef.current;
-      const snapshot = anchorRef.current;
+      const snapshot = restoreSnapshotRef.current;
       if (!scrollNode || !workspace || !snapshot) {
         restorationPendingRef.current = false;
+        restoreSnapshotRef.current = null;
         return;
       }
 
@@ -416,9 +423,11 @@ export function useLyricsViewportSession({
   }, [restoreAnchor, viewportHeight]);
 
   useEffect(() => () => {
+    dragCleanupRef.current();
     window.cancelAnimationFrame(restoreFrameRef.current);
     window.cancelAnimationFrame(restoreSettleFrameRef.current);
     restorationPendingRef.current = false;
+    restoreSnapshotRef.current = null;
   }, []);
 
   function onResizePointerDown(event: ReactPointerEvent<HTMLElement>) {
@@ -429,26 +438,49 @@ export function useLyricsViewportSession({
     dragStartRef.current = { clientY: event.clientY, height: viewportHeight };
     setDragHeight(viewportHeight);
     setIsDragging(true);
-    event.currentTarget.setPointerCapture(event.pointerId);
+    const handle = event.currentTarget;
+    const pointerId = event.pointerId;
+    dragCleanupRef.current();
+
+    const cleanup = () => {
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerup", onPointerFinish);
+      window.removeEventListener("pointercancel", onPointerFinish);
+      if (dragCleanupRef.current === cleanup) {
+        dragCleanupRef.current = () => {};
+      }
+    };
+    const onPointerMove = (pointerEvent: PointerEvent) => {
+      const start = dragStartRef.current;
+      if (pointerEvent.pointerId !== pointerId || !start) {
+        return;
+      }
+      setDragHeight(calculatePointerDragHeight(start, pointerEvent.clientY, metrics));
+    };
+    const onPointerFinish = (pointerEvent: PointerEvent) => {
+      if (pointerEvent.pointerId !== pointerId) {
+        return;
+      }
+      cleanup();
+      if (handle.hasPointerCapture(pointerId)) {
+        handle.releasePointerCapture(pointerId);
+      }
+      finishPointerResizeAt(pointerEvent.clientY);
+    };
+
+    dragCleanupRef.current = cleanup;
+    window.addEventListener("pointermove", onPointerMove);
+    window.addEventListener("pointerup", onPointerFinish);
+    window.addEventListener("pointercancel", onPointerFinish);
+    handle.setPointerCapture(pointerId);
     event.preventDefault();
   }
 
-  function onResizePointerMove(event: ReactPointerEvent<HTMLElement>) {
-    const start = dragStartRef.current;
-    if (!start || !isDragging) {
-      return;
-    }
-    setDragHeight(calculatePointerDragHeight(start, event.clientY, metrics));
-  }
-
-  function finishPointerResize(event: ReactPointerEvent<HTMLElement>) {
+  function finishPointerResizeAt(clientY: number) {
     const start = dragStartRef.current;
     const finalHeight = start
-      ? calculatePointerDragHeight(start, event.clientY, metrics)
+      ? calculatePointerDragHeight(start, clientY, metrics)
       : dragHeight ?? viewportHeight;
-    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-      event.currentTarget.releasePointerCapture(event.pointerId);
-    }
     dragStartRef.current = null;
     setIsDragging(false);
     setDragHeight(null);
@@ -486,9 +518,6 @@ export function useLyricsViewportSession({
     restoreAnchor,
     resizeHandleProps: {
       onPointerDown: onResizePointerDown,
-      onPointerMove: onResizePointerMove,
-      onPointerUp: finishPointerResize,
-      onPointerCancel: finishPointerResize,
       onKeyDown: onResizeKeyDown,
       onDoubleClick: resetToStandard
     }
