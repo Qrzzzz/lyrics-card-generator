@@ -75,6 +75,8 @@ export function useEditorActions({
   const clearVersionRef = useRef(0);
   const documentControllerRef = useRef(new DocumentTransactionController());
   const [documentRevision, setDocumentRevision] = useState(0);
+  const currentDocumentRef = useRef(parsedState);
+  currentDocumentRef.current = parsedState;
   const [activeExportSnapshot, setActiveExportSnapshot] = useState<ExportSnapshot | null>(null);
   const exportMutexRef = useRef(new ExportTransactionMutex());
   const exportRevisionRef = useRef(0);
@@ -108,18 +110,33 @@ export function useEditorActions({
     return true;
   }
 
-  function setTranslation({ text, enabled }: TranslationValue) {
-    markDocumentMutation();
-    setState((current) => ({
-      ...current,
-      translationText: text,
-      translationEnabled: enabled,
-      style: {
-        ...current.style,
+  function applyAITranslation(
+    { text, enabled }: TranslationValue,
+    expectedRevision: number,
+    expectedSongIdentity: string
+  ) {
+    if (
+      !documentControllerRef.current.isCurrentRevision(expectedRevision) ||
+      songDocumentIdentity(currentDocumentRef.current.song) !== expectedSongIdentity
+    ) return false;
+
+    setState((current) => {
+      if (
+        !documentControllerRef.current.isCurrentRevision(expectedRevision) ||
+        songDocumentIdentity(current.song) !== expectedSongIdentity
+      ) return current;
+      return {
+        ...current,
         translationText: text,
-        translationEnabled: enabled
-      }
-    }));
+        translationEnabled: enabled,
+        style: {
+          ...current.style,
+          translationText: text,
+          translationEnabled: enabled
+        }
+      };
+    });
+    return true;
   }
 
   function clearAllContent() {
@@ -212,18 +229,19 @@ export function useEditorActions({
     const result = await runExportTransaction({
       mutex: exportMutexRef.current,
       snapshot,
-      mountSnapshot: async (mountedSnapshot) => {
+      mountSnapshot: async (mountedSnapshot, signal) => {
         setIsCompleteExporting(true);
         setActiveExportSnapshot(mountedSnapshot);
-        return waitForExportSnapshotNode(() => cardRef.current, mountedSnapshot.id);
+        return waitForExportSnapshotNode(() => cardRef.current, mountedSnapshot.id, signal);
       },
       validateSnapshot: (mountedSnapshot) => getExportBlockMessage?.(mountedSnapshot) ?? null,
-      captureSnapshot: (mountedSnapshot, node) => exportNodeAsPng(
+      captureSnapshot: (mountedSnapshot, node, signal) => exportNodeAsPng(
         node,
         mountedSnapshot.fileName,
         mountedSnapshot.width,
         mountedSnapshot.height,
-        mountedSnapshot.pixelRatio
+        mountedSnapshot.pixelRatio,
+        signal
       ),
       unmountSnapshot: () => {
         setActiveExportSnapshot(null);
@@ -328,7 +346,7 @@ export function useEditorActions({
     beginSongImport,
     clearAllContent,
     handleStyleChange,
-    setTranslation,
+    applyAITranslation,
     setUrl,
     applyParsedSong,
     applyLocalAudio,

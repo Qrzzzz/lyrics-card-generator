@@ -50,6 +50,7 @@ import type { AppState, FontScheme, Locale } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { snapshotAsAppState } from "@/lib/export-snapshot";
 import { resolveExportSafetyMessage } from "@/lib/export-safety";
+import { songDocumentIdentity } from "@/lib/editor/document-transactions";
 
 type ActiveSurface = "editor" | "examples" | "settings";
 
@@ -154,7 +155,7 @@ export function LyricEditor() {
     beginSongImport,
     clearAllContent,
     handleStyleChange,
-    setTranslation,
+    applyAITranslation,
     setUrl,
     applyParsedSong,
     applyLocalAudio,
@@ -307,19 +308,22 @@ export function LyricEditor() {
     closeAITranslate,
     translateWithAI,
     cancelAITranslation,
+    invalidateAITranslation,
     setAISettings
   } = useEditorAiTranslation({
     locale: state.locale,
     lyrics: state.lyrics,
+    documentRevision,
+    songIdentity: songDocumentIdentity(state.song),
     translation: {
       text: state.style.translationText,
       enabled: state.style.translationEnabled
     },
-    setTranslation,
+    applyTranslation: applyAITranslation,
     onNotify: showToast,
     onRequireSettings: () => openSettings("ai")
   });
-  invalidateDocumentAsyncRef.current = cancelAITranslation;
+  invalidateDocumentAsyncRef.current = invalidateAITranslation;
 
   function openSettings(tab?: SettingsTabId) {
     setRequestedSettingsTab(tab);

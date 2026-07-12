@@ -116,6 +116,11 @@ assert.ok(!paletteGeneratorClientSource.includes("LyricCard"), "palette generato
 assert.ok(!paletteGeneratorClientSource.includes("toPng"), "palette generator does not render preview PNG files");
 assert.ok(paletteGeneratorScriptSource.includes("validatePaletteResults(results)"), "palette generator validates result ids");
 assert.ok(paletteGeneratorScriptSource.includes("findExampleBlock(source, result.id)"), "palette sync is scoped to one example block");
+assert.ok(paletteGeneratorScriptSource.includes("safeFetch(rawUrl"), "palette cover downloads use the redirect-safe fetch path");
+assert.ok(paletteGeneratorScriptSource.includes("maxResponseBytes: imageLimit"), "palette cover downloads keep a hard body limit");
+assert.ok(paletteGeneratorScriptSource.includes("allowedContentTypes: [\"image/\"]"), "palette cover downloads require image content");
+assert.ok(!paletteGeneratorScriptSource.includes("validatePublicHttpUrl"), "palette cover downloads do not use validate-then-fetch");
+assert.ok(!paletteGeneratorScriptSource.includes("fetch(safety.url"), "palette cover downloads do not bypass safe fetch");
 assert.equal(
   execFileSync("git", ["ls-files", "tmp"], { encoding: "utf8" }).trim(),
   "",

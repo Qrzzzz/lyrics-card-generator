@@ -40,7 +40,12 @@ export function LocalAudioParser({
       return;
     }
     const intent = beginImport();
-    if (!intent) return;
+    if (!intent) {
+      // Selecting the same file does not fire another change event unless the
+      // native input is reset, including when replacement confirmation is cancelled.
+      if (inputRef.current) inputRef.current.value = "";
+      return;
+    }
     activeIntentRef.current?.cancel();
     activeIntentRef.current = intent;
 

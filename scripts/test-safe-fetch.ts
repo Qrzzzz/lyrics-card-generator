@@ -1,5 +1,13 @@
 import assert from "node:assert/strict";
-import { safeFetch, SafeFetchError, type SafeFetchTransport } from "../lib/safe-fetch";
+import { createServer } from "node:http";
+import type { AddressInfo } from "node:net";
+import {
+  nodeTransport,
+  safeFetch,
+  SafeFetchError,
+  type SafeFetchTransport,
+  type SafeFetchTransportRequest
+} from "../lib/safe-fetch";
 import { isPublicIpAddress, type PublicUrlResolver } from "../lib/url-safety";
 
 const publicAddress = { address: "93.184.216.34", family: 4 as const };
@@ -29,14 +37,29 @@ for (const address of [
   "::1",
   "fe80::1",
   "fc00::1",
+  "2001:100::1",
   "2001:db8::1",
+  "2001:20::1",
+  "2d00::1",
+  "3000::1",
   "::ffff:127.0.0.1",
   "64:ff9b::a9fe:a9fe",
   "2002:7f00:0001::"
 ]) {
   assert.equal(isPublicIpAddress(address), false, `${address} must be blocked`);
 }
-assert.equal(isPublicIpAddress("2606:4700:4700::1111"), true);
+for (const address of [
+  "2001:200::1",
+  "2001:1200::1",
+  "2001:1800::1",
+  "2001:3::1",
+  "2606:4700:4700::1111",
+  "::ffff:8.8.8.8",
+  "64:ff9b::808:808",
+  "2002:0808:0808::"
+]) {
+  assert.equal(isPublicIpAddress(address), true, `${address} must remain public`);
+}
 
 for (const target of [
   "http://127.0.0.1/admin",
@@ -127,7 +150,106 @@ for (const target of [
   }), "TIMEOUT");
 }
 
+{
+  const startedAt = Date.now();
+  const resolver: PublicUrlResolver = async () => new Promise(() => undefined);
+  await withTestDeadline(
+    expectCode(safeFetch("https://resolver-hangs.example/slow", {
+      resolver,
+      timeoutMs: 20
+    }), "TIMEOUT"),
+    500,
+    "the resolver deadline did not settle"
+  );
+  assert.ok(Date.now() - startedAt < 500, "the hard deadline must cover a resolver that ignores cancellation");
+}
+
+{
+  const startedAt = Date.now();
+  const transport: SafeFetchTransport = async () => new Promise(() => undefined);
+  await withTestDeadline(
+    expectCode(safeFetch("https://transport-hangs.example/slow", {
+      resolver: publicResolver,
+      transport,
+      timeoutMs: 20
+    }), "TIMEOUT"),
+    500,
+    "the transport deadline did not settle"
+  );
+  assert.ok(Date.now() - startedAt < 500, "the hard deadline must cover a transport that ignores cancellation");
+}
+
+await assertBodylessNativeTransportCloses("redirect", 302, "GET", false);
+await assertBodylessNativeTransportCloses("head", 200, "HEAD", false);
+await assertBodylessNativeTransportCloses("discard", 200, "GET", true);
+
 console.log("safe-fetch security tests passed");
+}
+
+async function assertBodylessNativeTransportCloses(
+  label: string,
+  status: number,
+  method: "GET" | "HEAD",
+  discardResponseBody: boolean
+) {
+  let resolveClosed: () => void = () => undefined;
+  const responseClosed = new Promise<void>((resolve) => {
+    resolveClosed = resolve;
+  });
+  const intervals = new Set<NodeJS.Timeout>();
+  const server = createServer((_request, response) => {
+    response.writeHead(status, status === 302 ? { location: "/next" } : { "content-type": "text/plain" });
+    response.flushHeaders();
+    const interval = setInterval(() => response.write(Buffer.alloc(1024)), 2);
+    intervals.add(interval);
+    response.on("close", () => {
+      clearInterval(interval);
+      intervals.delete(interval);
+      resolveClosed();
+    });
+  });
+
+  await new Promise<void>((resolve, reject) => {
+    server.once("error", reject);
+    server.listen(0, "127.0.0.1", resolve);
+  });
+
+  try {
+    const port = (server.address() as AddressInfo).port;
+    const controller = new AbortController();
+    const request: SafeFetchTransportRequest = {
+      url: new URL(`http://public.example:${port}/${label}`),
+      address: { address: "127.0.0.1", family: 4 },
+      method,
+      headers: new Headers(),
+      signal: controller.signal,
+      maxResponseBytes: 1,
+      allowedContentTypes: [],
+      discardResponseBody
+    };
+    const result = await nodeTransport(request);
+    assert.equal(result.status, status);
+    assert.equal(result.body.byteLength, 0);
+    await withTestDeadline(
+      responseClosed,
+      500,
+      `${label} response was drained instead of closed`
+    );
+  } finally {
+    intervals.forEach(clearInterval);
+    server.closeAllConnections();
+    await new Promise<void>((resolve) => server.close(() => resolve()));
+  }
+}
+
+async function withTestDeadline<T>(promise: Promise<T>, timeoutMs: number, message: string) {
+  let timer: NodeJS.Timeout | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error(message)), timeoutMs);
+  });
+  return Promise.race([promise, timeout]).finally(() => {
+    if (timer) clearTimeout(timer);
+  });
 }
 
 void main().catch((error) => {

@@ -16,6 +16,10 @@ import {
   type AITranslationPhase
 } from "@/lib/ai/types";
 import { getAIUiCopy } from "@/lib/ai/ui-copy";
+import {
+  AITranslationTransactionController,
+  type AITranslationDocumentIntent
+} from "@/lib/editor/ai-translation-transaction";
 import type { Locale } from "@/lib/types";
 
 export type TranslationValue = {
@@ -26,8 +30,14 @@ export type TranslationValue = {
 type UseEditorAiTranslationInput = {
   locale: Locale;
   lyrics: string;
+  documentRevision: number;
+  songIdentity: string;
   translation: TranslationValue;
-  setTranslation: (next: TranslationValue) => void;
+  applyTranslation: (
+    next: TranslationValue,
+    expectedRevision: number,
+    expectedSongIdentity: string
+  ) => boolean;
   onNotify: (message: string) => void;
   onRequireSettings: () => void;
   confirmOverwrite?: (message: string) => boolean;
@@ -36,8 +46,10 @@ type UseEditorAiTranslationInput = {
 export function useEditorAiTranslation({
   locale,
   lyrics,
+  documentRevision,
+  songIdentity,
   translation,
-  setTranslation,
+  applyTranslation,
   onNotify,
   onRequireSettings,
   confirmOverwrite = (message) => window.confirm(message)
@@ -50,6 +62,12 @@ export function useEditorAiTranslation({
   const [aiError, setAIError] = useState("");
   const [aiSettings, setAISettings] = useState<AISettingsSummary>({ ...DEFAULT_AI_SETTINGS, hasApiKey: false });
   const aiAbortControllerRef = useRef<AbortController | null>(null);
+  const aiIntentControllerRef = useRef(new AITranslationTransactionController<TranslationValue>());
+  const activeAIIntentRef = useRef<AITranslationDocumentIntent<TranslationValue> | null>(null);
+  const documentRevisionRef = useRef(documentRevision);
+  const songIdentityRef = useRef(songIdentity);
+  documentRevisionRef.current = documentRevision;
+  songIdentityRef.current = songIdentity;
   const aiCopy = useMemo(() => getAIUiCopy(locale), [locale]);
 
   useEffect(() => {
@@ -93,14 +111,29 @@ export function useEditorAiTranslation({
       return;
     }
 
+    aiAbortControllerRef.current?.abort();
     const controller = new AbortController();
+    const intent = aiIntentControllerRef.current.begin(documentRevision, songIdentity, {
+      text: previousTranslation,
+      enabled: previousEnabled
+    });
+    activeAIIntentRef.current = intent;
     aiAbortControllerRef.current = controller;
     setIsAITranslating(true);
     setAIError("");
     setAIStreamingText("");
     setAIReasoningText("");
     setAITranslationPhase("connecting");
-    let wrotePartial = false;
+    const isCurrentIntent = () => aiIntentControllerRef.current.isCurrent(
+      intent,
+      documentRevisionRef.current,
+      songIdentityRef.current
+    );
+    const writeIfCurrent = (next: TranslationValue) => isCurrentIntent() && applyTranslation(
+      next,
+      intent.revision,
+      intent.songIdentity
+    );
 
     try {
       const prompt = buildLyricsTranslationPrompt({
@@ -113,14 +146,18 @@ export function useEditorAiTranslation({
         prompt,
         reasoning,
         signal: controller.signal,
-        onStatus: setAITranslationPhase,
-        onReasoningDelta: (_delta, accumulated) => setAIReasoningText(accumulated.slice(-12000)),
+        onStatus: (phase) => {
+          if (isCurrentIntent()) setAITranslationPhase(phase);
+        },
+        onReasoningDelta: (_delta, accumulated) => {
+          if (isCurrentIntent()) setAIReasoningText(accumulated.slice(-12000));
+        },
         onDelta: (_delta, accumulated) => {
+          if (!isCurrentIntent()) return;
           const cleaned = cleanAITranslation(accumulated);
           setAIStreamingText(cleaned || accumulated.trim());
-          if (cleaned) {
-            wrotePartial = true;
-            setTranslation({ text: cleaned, enabled: true });
+          if (cleaned && writeIfCurrent({ text: cleaned, enabled: true })) {
+            intent.hasWrittenPartial = true;
           }
         }
       });
@@ -128,24 +165,49 @@ export function useEditorAiTranslation({
       if (!cleaned) {
         throw new AITranslationError(aiCopy.emptyResponse, "empty_response");
       }
-      setTranslation({ text: cleaned, enabled: true });
+      if (!writeIfCurrent({ text: cleaned, enabled: true })) return;
       setAISettings((current) => ({ ...current, defaultStyle: presetId, reasoningEnabled: reasoning }));
       onNotify(aiCopy.translated);
     } catch (error) {
-      if (wrotePartial) {
-        setTranslation({ text: previousTranslation, enabled: previousEnabled });
+      if (!isCurrentIntent()) return;
+      if (intent.hasWrittenPartial) {
+        writeIfCurrent(intent.previousTranslation);
       }
       const aborted = controller.signal.aborted;
       setAIError(aborted ? aiCopy.cancelled : normalizeAIErrorMessage(error));
     } finally {
-      aiAbortControllerRef.current = null;
-      setIsAITranslating(false);
-      setAITranslationPhase("idle");
+      if (isCurrentIntent()) {
+        aiIntentControllerRef.current.invalidate(intent);
+        activeAIIntentRef.current = null;
+        aiAbortControllerRef.current = null;
+        setIsAITranslating(false);
+        setAITranslationPhase("idle");
+      }
     }
   }
 
   function cancelAITranslation() {
     aiAbortControllerRef.current?.abort();
+  }
+
+  function invalidateAITranslation() {
+    const intent = activeAIIntentRef.current;
+    if (!intent) return;
+    if (
+      intent.hasWrittenPartial &&
+      aiIntentControllerRef.current.isCurrent(intent, documentRevisionRef.current, songIdentityRef.current)
+    ) {
+      applyTranslation(intent.previousTranslation, intent.revision, intent.songIdentity);
+    }
+    aiIntentControllerRef.current.invalidate(intent);
+    activeAIIntentRef.current = null;
+    aiAbortControllerRef.current?.abort();
+    aiAbortControllerRef.current = null;
+    setIsAITranslating(false);
+    setAITranslationPhase("idle");
+    setAIStreamingText("");
+    setAIReasoningText("");
+    setAIError("");
   }
 
   async function refreshAISettings() {
@@ -167,6 +229,7 @@ export function useEditorAiTranslation({
     closeAITranslate,
     translateWithAI,
     cancelAITranslation,
+    invalidateAITranslation,
     setAISettings,
     refreshAISettings
   };

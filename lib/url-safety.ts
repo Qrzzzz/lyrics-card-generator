@@ -30,6 +30,48 @@ const IPV4_BLOCKED_RANGES: Array<[number, number]> = [
   [0xf0000000, 4] // reserved / limited broadcast
 ];
 
+// IANA IPv6 Global Unicast Address Space entries with ALLOCATED status.
+// Unlisted space inside 2000::/3 remains reserved by IANA and must not be
+// treated as a routable public target.
+const IPV6_ALLOCATED_RANGES: Array<[string, number]> = [
+  ["2001::", 23],
+  ["2001:200::", 23],
+  ["2001:400::", 23],
+  ["2001:600::", 23],
+  ["2001:800::", 22],
+  ["2001:c00::", 23],
+  ["2001:e00::", 23],
+  ["2001:1200::", 23],
+  ["2001:1400::", 22],
+  ["2001:1800::", 23],
+  ["2001:1a00::", 23],
+  ["2001:1c00::", 22],
+  ["2001:2000::", 19],
+  ["2001:4000::", 23],
+  ["2001:4200::", 23],
+  ["2001:4400::", 23],
+  ["2001:4600::", 23],
+  ["2001:4800::", 23],
+  ["2001:4a00::", 23],
+  ["2001:4c00::", 23],
+  ["2001:5000::", 20],
+  ["2001:8000::", 19],
+  ["2001:a000::", 20],
+  ["2001:b000::", 20],
+  ["2002::", 16],
+  ["2003::", 18],
+  ["2400::", 12],
+  ["2410::", 12],
+  ["2600::", 12],
+  ["2610::", 23],
+  ["2620::", 23],
+  ["2630::", 12],
+  ["2800::", 12],
+  ["2a00::", 12],
+  ["2a10::", 12],
+  ["2c00::", 12]
+];
+
 export async function validatePublicHttpUrl(
   rawUrl: string,
   options: { resolver?: PublicUrlResolver } = {}
@@ -119,18 +161,30 @@ export function isPublicIpAddress(rawAddress: string) {
     return false;
   }
 
-  // IETF protocol/special-use blocks, benchmarking, documentation and ORCHID.
-  if (bytes[0] === 0x20 && bytes[1] === 0x01) {
-    if (bytes[2] <= 0x01) return false; // 2001:0000::/23
-    if (bytes[2] === 0x02 && bytes[3] === 0x00) return false; // 2001:2::/48
-    if (bytes[2] >= 0x10 && bytes[2] <= 0x1f) return false; // 2001:10::/28
-    if (bytes[2] === 0x0d && bytes[3] === 0xb8) return false; // 2001:db8::/32
-  }
-  if (bytes[0] === 0x3f && (bytes[1] & 0xf0) === 0xf0) {
-    return false; // 3fff::/20 documentation
+  // 2001::/23 is only partially allocated. Permit its explicitly globally
+  // reachable endpoint allocations instead of treating the entire IANA block
+  // as public. ORCHIDv2 is intentionally omitted because it is an identifier
+  // space rather than a conventional unicast endpoint.
+  const globallyReachableIanaProtocolAssignment =
+    inIpv6Cidr(bytes, "2001:1::1", 128) || // PCP anycast
+    inIpv6Cidr(bytes, "2001:1::2", 128) || // TURN anycast
+    inIpv6Cidr(bytes, "2001:1::3", 128) || // DNS-SD registration anycast
+    inIpv6Cidr(bytes, "2001:3::", 32) || // AMT
+    inIpv6Cidr(bytes, "2001:4:112::", 48) || // AS112-v6
+    inIpv6Cidr(bytes, "2001:30::", 28); // Drone Remote ID DETs
+  if (inIpv6Cidr(bytes, "2001::", 23) && !globallyReachableIanaProtocolAssignment) {
+    return false;
   }
 
-  return true;
+  // Other special-purpose ranges that are not globally routable endpoints.
+  if (
+    inIpv6Cidr(bytes, "2001:db8::", 32) || // documentation
+    inIpv6Cidr(bytes, "3fff::", 20) // documentation
+  ) {
+    return false;
+  }
+
+  return IPV6_ALLOCATED_RANGES.some(([network, prefix]) => inIpv6Cidr(bytes, network, prefix));
 }
 
 async function resolveAll(hostname: string): Promise<ResolvedAddress[]> {
@@ -151,6 +205,21 @@ function ipv4ToNumber(address: string) {
 function inIpv4Cidr(value: number, network: number, prefix: number) {
   const mask = prefix === 0 ? 0 : (0xffffffff << (32 - prefix)) >>> 0;
   return (value & mask) === (network & mask);
+}
+
+function inIpv6Cidr(value: number[], rawNetwork: string, prefix: number) {
+  const network = ipv6ToBytes(rawNetwork);
+  if (!network) return false;
+
+  const wholeBytes = Math.floor(prefix / 8);
+  for (let index = 0; index < wholeBytes; index += 1) {
+    if (value[index] !== network[index]) return false;
+  }
+
+  const remainingBits = prefix % 8;
+  if (remainingBits === 0) return true;
+  const mask = (0xff << (8 - remainingBits)) & 0xff;
+  return (value[wholeBytes] & mask) === (network[wholeBytes] & mask);
 }
 
 function numberToIpv4(value: number) {

@@ -336,10 +336,10 @@ export function WebLiteEditor() {
     const result = await runExportTransaction({
       mutex: exportMutexRef.current,
       snapshot,
-      mountSnapshot: async (mountedSnapshot) => {
+      mountSnapshot: async (mountedSnapshot, signal) => {
         setIsExporting(true);
         setActiveExportSnapshot(mountedSnapshot);
-        return waitForExportSnapshotNode(() => captureCardRef.current, mountedSnapshot.id);
+        return waitForExportSnapshotNode(() => captureCardRef.current, mountedSnapshot.id, signal);
       },
       validateSnapshot: (mountedSnapshot) => {
         const snapshotState = snapshotAsAppState(mountedSnapshot, parsedState);
@@ -348,12 +348,13 @@ export function WebLiteEditor() {
           ? resolveExportSafetyMessage(validation.blockingReason, validation.lineStatus.totalLineCount, t)
           : null;
       },
-      captureSnapshot: (mountedSnapshot, node) => exportNodeAsPng(
+      captureSnapshot: (mountedSnapshot, node, signal) => exportNodeAsPng(
         node,
         mountedSnapshot.fileName,
         mountedSnapshot.width,
         mountedSnapshot.height,
-        mountedSnapshot.pixelRatio
+        mountedSnapshot.pixelRatio,
+        signal
       ),
       unmountSnapshot: () => {
         setActiveExportSnapshot(null);

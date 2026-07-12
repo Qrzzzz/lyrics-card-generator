@@ -99,21 +99,29 @@ export async function safeFetch(rawUrl: string, options: SafeFetchOptions = {}):
         throw abortError(timedOut);
       }
 
-      const validation = await validatePublicHttpUrl(currentUrl, { resolver: options.resolver });
+      const validation = await raceWithAbort(
+        validatePublicHttpUrl(currentUrl, { resolver: options.resolver }),
+        controller.signal,
+        () => abortError(timedOut)
+      );
       if (!validation.ok) {
         throw new SafeFetchError(validation.error, "UNSAFE_URL");
       }
 
-      const response = await (options.transport ?? nodeTransport)({
-        url: validation.url,
-        address: validation.addresses[0],
-        method,
-        headers,
-        signal: controller.signal,
-        maxResponseBytes,
-        allowedContentTypes,
-        discardResponseBody: options.discardResponseBody ?? false
-      }).catch((error: unknown) => {
+      const response = await raceWithAbort(
+        (options.transport ?? nodeTransport)({
+          url: validation.url,
+          address: validation.addresses[0],
+          method,
+          headers,
+          signal: controller.signal,
+          maxResponseBytes,
+          allowedContentTypes,
+          discardResponseBody: options.discardResponseBody ?? false
+        }),
+        controller.signal,
+        () => abortError(timedOut)
+      ).catch((error: unknown) => {
         if (controller.signal.aborted) throw abortError(timedOut);
         if (error instanceof SafeFetchError) throw error;
         throw new SafeFetchError(error instanceof Error ? error.message : "The network request failed.", "NETWORK");
@@ -149,7 +157,7 @@ export async function safeFetch(rawUrl: string, options: SafeFetchOptions = {}):
   }
 }
 
-async function nodeTransport(request: SafeFetchTransportRequest): Promise<SafeFetchTransportResponse> {
+export async function nodeTransport(request: SafeFetchTransportRequest): Promise<SafeFetchTransportResponse> {
   return new Promise((resolve, reject) => {
     const headers = Object.fromEntries(request.headers.entries());
     headers.host = request.url.host;
@@ -172,7 +180,10 @@ async function nodeTransport(request: SafeFetchTransportRequest): Promise<SafeFe
       const responseHeaders = toHeaders(incoming.headers);
       const status = incoming.statusCode ?? 0;
       if (REDIRECT_STATUSES.has(status) || request.method === "HEAD" || request.discardResponseBody) {
-        incoming.resume();
+        // We only need the headers for these paths. Draining an untrusted
+        // response would let a redirect or discarded response stream without
+        // the configured body budget, so close the connection immediately.
+        incoming.destroy();
         resolve({ status, headers: responseHeaders, body: new Uint8Array() });
         return;
       }
@@ -243,4 +254,23 @@ function abortError(timedOut: boolean) {
     timedOut ? "The request timed out." : "The request was aborted.",
     timedOut ? "TIMEOUT" : "NETWORK"
   );
+}
+
+function raceWithAbort<T>(
+  operation: Promise<T>,
+  signal: AbortSignal,
+  createAbortError: () => SafeFetchError
+): Promise<T> {
+  if (signal.aborted) {
+    return Promise.reject(createAbortError());
+  }
+
+  let removeAbortListener: () => void = () => undefined;
+  const aborted = new Promise<never>((_, reject) => {
+    const onAbort = () => reject(createAbortError());
+    signal.addEventListener("abort", onAbort, { once: true });
+    removeAbortListener = () => signal.removeEventListener("abort", onAbort);
+  });
+
+  return Promise.race([operation, aborted]).finally(removeAbortListener);
 }
