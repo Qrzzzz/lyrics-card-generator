@@ -9,7 +9,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const executablePath = path.join(root, "release", "win-unpacked", "Lyrics Card Generator.exe");
 const reportDirectory = path.join(root, "playwright-report", "desktop");
 const userDataDirectory = await mkdtemp(path.join(tmpdir(), "lyrics-card-desktop-test-"));
-const exportOverflowTolerance = 2;
+const exportOverflowTolerance = 4;
 
 let electronApp;
 let page;

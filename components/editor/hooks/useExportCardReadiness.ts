@@ -22,6 +22,10 @@ export type ExportCardBlockingReason =
   | "card-measuring"
   | "content-overflow";
 
+// Fractional line heights can make Chromium report a 2-3px scroll delta even
+// when the intrinsic lyrics block is fully contained by its viewport.
+export const EXPORT_CARD_OVERFLOW_TOLERANCE = 4;
+
 export type ExportCardReadiness = {
   isReady: boolean;
   blockingReason: ExportCardBlockingReason | null;
@@ -211,7 +215,7 @@ function evaluateExportCardDom(state: AppState, container: HTMLElement | null): 
   };
 }
 
-export function detectExportCardOverflow(root: HTMLElement, tolerance = AUTO_HEIGHT_SETTLE_TOLERANCE) {
+export function detectExportCardOverflow(root: HTMLElement, tolerance = EXPORT_CARD_OVERFLOW_TOLERANCE) {
   const lyrics = root.querySelector<HTMLElement>("[data-card-lyrics]");
   const viewport = root.querySelector<HTMLElement>("[data-card-lyrics-viewport]");
 
