@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { __internalLyricsViewportSession } from "../components/editor/hooks/useLyricsViewportSession";
 
 const {
+  calculatePointerDragHeight,
   calculateViewportMetrics,
   getParagraphLineRanges,
   getTextAnchor,
@@ -36,6 +37,24 @@ assert.equal(
 assert.equal(
   resolveModeFromHeight(minimumDesktopMetrics.maxHeight - immersiveSnapThreshold - 1, minimumDesktopMetrics),
   "expanded"
+);
+assert.equal(
+  calculatePointerDragHeight(
+    { clientY: 100, height: minimumDesktopMetrics.standardHeight },
+    100 + minimumDesktopMetrics.maxHeight - minimumDesktopMetrics.standardHeight - 10,
+    minimumDesktopMetrics
+  ),
+  minimumDesktopMetrics.maxHeight,
+  "pointerup synchronously snaps a drag released inside the 24px immersive zone"
+);
+assert.equal(
+  calculatePointerDragHeight(
+    { clientY: 100, height: minimumDesktopMetrics.standardHeight },
+    100 + minimumDesktopMetrics.maxHeight - minimumDesktopMetrics.standardHeight - immersiveSnapThreshold - 1,
+    minimumDesktopMetrics
+  ),
+  minimumDesktopMetrics.maxHeight - immersiveSnapThreshold - 1,
+  "pointerup keeps a drag released outside the immersive snap zone unsnapped"
 );
 assert.equal(resolveModeFromHeight(271, minimumDesktopMetrics), "standard");
 assert.equal(resolveModeFromHeight(334, minimumDesktopMetrics), "expanded");
@@ -128,4 +147,4 @@ assert.equal(
   "scroll ratio is the final fallback when mapped line and center targets are both unavailable"
 );
 
-console.log(JSON.stringify({ ok: true, lyricsViewportTests: 22 }, null, 2));
+console.log(JSON.stringify({ ok: true, lyricsViewportTests: 24 }, null, 2));

@@ -438,13 +438,14 @@ export function useLyricsViewportSession({
     if (!start || !isDragging) {
       return;
     }
-    const rawHeight = clamp(start.height + event.clientY - start.clientY, metrics.standardHeight, metrics.maxHeight);
-    const nextHeight = metrics.maxHeight - rawHeight <= IMMERSIVE_SNAP_THRESHOLD ? metrics.maxHeight : rawHeight;
-    setDragHeight(nextHeight);
+    setDragHeight(calculatePointerDragHeight(start, event.clientY, metrics));
   }
 
   function finishPointerResize(event: ReactPointerEvent<HTMLElement>) {
-    const finalHeight = dragHeight ?? viewportHeight;
+    const start = dragStartRef.current;
+    const finalHeight = start
+      ? calculatePointerDragHeight(start, event.clientY, metrics)
+      : dragHeight ?? viewportHeight;
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);
     }
@@ -516,6 +517,21 @@ function resolveModeFromHeight(height: number, metrics: ViewportMetrics): Lyrics
   }
   const expandedBoundary = (metrics.standardHeight + metrics.expandedHeight) / 2;
   return height >= expandedBoundary ? "expanded" : "standard";
+}
+
+function calculatePointerDragHeight(
+  start: { clientY: number; height: number },
+  clientY: number,
+  metrics: ViewportMetrics
+) {
+  const rawHeight = clamp(
+    start.height + clientY - start.clientY,
+    metrics.standardHeight,
+    metrics.maxHeight
+  );
+  return metrics.maxHeight - rawHeight <= IMMERSIVE_SNAP_THRESHOLD
+    ? metrics.maxHeight
+    : rawHeight;
 }
 
 function isViewportMode(value: unknown): value is LyricsViewportMode {
@@ -636,6 +652,7 @@ function clamp(value: number, min: number, max: number) {
 }
 
 export const __internalLyricsViewportSession = {
+  calculatePointerDragHeight,
   calculateViewportMetrics,
   getParagraphLineRanges,
   getTextAnchor,
