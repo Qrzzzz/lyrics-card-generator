@@ -31,8 +31,7 @@ export function LyricInput({
   contentMode,
   locale,
   t,
-  showAiTranslate = true,
-  onViewportModeChange
+  showAiTranslate = true
 }: {
   lyrics: string;
   song?: SongInfo;
@@ -53,7 +52,6 @@ export function LyricInput({
   locale: Locale;
   t: ReturnType<typeof createT>;
   showAiTranslate?: boolean;
-  onViewportModeChange?: (mode: "standard" | "expanded" | "immersive") => void;
 }) {
   const translationFieldId = useId();
 
@@ -78,7 +76,6 @@ export function LyricInput({
       locale={locale}
       t={t}
       showAiTranslate={showAiTranslate}
-      onViewportModeChange={onViewportModeChange}
     />
     );
   }

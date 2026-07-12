@@ -64,21 +64,6 @@ async function waitForLayoutStable(locator, timeout = 5_000) {
   );
 }
 
-async function waitForLyricsViewportMode(mode, minimumHeightExclusive = null, timeout = 10_000) {
-  await page.waitForFunction(
-    ({ expectedMode, minimumHeight }) => {
-      const surface = document.querySelector('[data-lyrics-viewport-mode]');
-      const workspace = document.querySelector('[data-testid="lyrics-workspace"]');
-      if (!(workspace instanceof HTMLElement)) return false;
-      return surface?.getAttribute('data-lyrics-viewport-mode') === expectedMode &&
-        (minimumHeight === null || workspace.getBoundingClientRect().height > minimumHeight);
-    },
-    { expectedMode: mode, minimumHeight: minimumHeightExclusive },
-    { timeout }
-  );
-  await waitForLayoutStable(page.getByTestId("lyrics-workspace"), timeout);
-}
-
 async function waitForLyricsLineBudget(expected, timeout = 5_000) {
   await page.waitForFunction(
     (text) => document.querySelector('[data-testid="lyrics-line-budget"]')?.textContent?.includes(text),
@@ -208,6 +193,24 @@ function assertSameSelection(before, after, label) {
   );
 }
 
+async function waitForSameSelection(editor, expected, timeout = 5_000) {
+  const deadline = Date.now() + timeout;
+  let current = await getLyricsContext(editor);
+  while (
+    Date.now() < deadline &&
+    (
+      current.start !== expected.start ||
+      current.end !== expected.end ||
+      current.selectedText !== expected.selectedText ||
+      current.lineIndex !== expected.lineIndex
+    )
+  ) {
+    await page.waitForTimeout(50);
+    current = await getLyricsContext(editor);
+  }
+  return current;
+}
+
 async function measureExportCard() {
   return page.evaluate((overflowTolerance) => {
     const root = document.querySelector("[data-export-card-host] [data-export-card]");
@@ -248,6 +251,9 @@ async function assertSongSearchBehavior() {
   await combobox.fill("keyboard mock");
   const listbox = page.getByTestId("song-search-listbox");
   await listbox.waitFor({ state: "visible", timeout: 5_000 });
+  await page.waitForFunction(() => (
+    document.querySelector('[role="listbox"] [role="option"]')?.textContent?.includes("keyboard mock")
+  ));
   const popup = page.getByTestId("song-search-popup");
   const options = listbox.getByRole("option");
   assert.equal(await options.count(), 8, "mock search renders eight options");
@@ -259,6 +265,16 @@ async function assertSongSearchBehavior() {
   assert.equal(await combobox.getAttribute("aria-controls"), await listbox.getAttribute("id"));
   assert.equal(await listbox.locator('[data-testid="song-search-more"]').count(), 0, "footer action is not a listbox child");
   assert.equal(await popup.getByTestId("song-search-more").count(), 1, "popup shell owns an independent footer action");
+  assert.equal(
+    await popup.evaluate((node) => getComputedStyle(node).position),
+    "static",
+    "search results participate in document flow instead of floating over later controls"
+  );
+  assert.equal(
+    await page.getByTestId("song-search-primary").getByText(/方向键|Enter|Esc/).count(),
+    0,
+    "the mouse-first search UI does not display keyboard instructions"
+  );
 
   const firstId = await options.nth(0).getAttribute("id");
   await waitForActiveDescendant(firstId);
@@ -288,6 +304,9 @@ async function assertSongSearchBehavior() {
 
   await combobox.fill("mouse mock");
   await listbox.waitFor({ state: "visible" });
+  await page.waitForFunction(() => (
+    document.querySelector('[role="listbox"] [role="option"]')?.textContent?.includes("mouse mock")
+  ));
   await options.nth(2).click();
   await page.waitForFunction(() => document.querySelector('[role="combobox"]')?.hasAttribute("disabled"));
   assert.equal(await options.nth(0).isDisabled(), true, "options disable during resolve");
@@ -645,12 +664,13 @@ try {
 
   await setWindowSize(1000, 700);
   await waitForLayoutStable(page.getByTestId("lyrics-workspace"));
-  const standardMode = page.getByRole("button", { name: "标准", exact: true });
-  const expandedMode = page.getByRole("button", { name: "扩展", exact: true });
-  const immersiveMode = page.getByRole("button", { name: "沉浸", exact: true });
-  await standardMode.click();
-  await waitForLayoutStable(page.getByTestId("lyrics-workspace"));
-  const standardHeight = await page.getByTestId("lyrics-workspace").evaluate((element) => element.getBoundingClientRect().height);
+  const workspace = page.getByTestId("lyrics-workspace");
+  assert.equal(await page.getByRole("button", { name: "标准", exact: true }).count(), 0, "standard viewport control is removed");
+  assert.equal(await page.getByRole("button", { name: "扩展", exact: true }).count(), 0, "expanded viewport control is removed");
+  assert.equal(await page.getByRole("button", { name: "沉浸", exact: true }).count(), 0, "immersive viewport control is removed");
+  assert.equal(await page.getByTestId("lyrics-viewport-resize-handle").count(), 0, "lyrics resize handle is removed");
+  assert.equal(await workspace.getAttribute("data-lyrics-viewport-mode"), "immersive", "lyrics workspace always uses the maximum-height presentation");
+  const compactHeight = await workspace.evaluate((element) => element.getBoundingClientRect().height);
 
   const translationSelectionStart = translationEighteen.indexOf("translation 11") + 2;
   const translationSelectionEnd = translationSelectionStart + 14;
@@ -658,6 +678,7 @@ try {
     node.focus();
     node.setSelectionRange(selection.start, selection.end);
     node.dispatchEvent(new Event("select", { bubbles: true }));
+    node.dispatchEvent(new KeyboardEvent("keyup", { bubbles: true, key: "Shift" }));
     const scroll = node.closest('[data-testid="lyrics-shared-scroll"]');
     if (scroll instanceof HTMLElement) {
       scroll.scrollTop = Math.min(
@@ -666,107 +687,25 @@ try {
       );
     }
   }, { start: translationSelectionStart, end: translationSelectionEnd });
-  const contextBeforeModeChange = await getLyricsContext(translationLyrics);
-  assert.equal(contextBeforeModeChange.focused, true, "translation editor owns focus before viewport changes");
-  assert.ok(contextBeforeModeChange.scrollTop > 0, "viewport regression starts from a non-zero scroll position");
+  const contextBeforeWindowResize = await getLyricsContext(translationLyrics);
+  assert.equal(contextBeforeWindowResize.focused, true, "translation editor owns focus before viewport resizing");
+  assert.ok(contextBeforeWindowResize.scrollTop > 0, "viewport regression starts from a non-zero scroll position");
 
-  await expandedMode.click();
-  // Reproduce the browser selection event that can arrive after React has
-  // resized the workspace but before the queued anchor restoration frame.
-  await translationLyrics.dispatchEvent("select");
-  await waitForLayoutStable(page.getByTestId("lyrics-workspace"));
-  const expandedHeight = await page.getByTestId("lyrics-workspace").evaluate((element) => element.getBoundingClientRect().height);
-  const contextAfterExpanded = await getLyricsContext(translationLyrics);
-  assertSameSelection(contextBeforeModeChange, contextAfterExpanded, "expanded mode");
-  assert.ok(
-    Math.abs(contextAfterExpanded.anchorOffset - contextBeforeModeChange.anchorOffset) <= 10,
-    `expanded mode preserves the authored anchor: ${JSON.stringify({ contextBeforeModeChange, contextAfterExpanded })}`
-  );
-  assert.equal(await expandedMode.evaluate((node) => document.activeElement === node), true, "mode change does not steal focus from its button");
-
-  await immersiveMode.click();
-  await waitForLyricsViewportMode("immersive", expandedHeight);
-  const immersiveHeight = await page.getByTestId("lyrics-workspace").evaluate((element) => element.getBoundingClientRect().height);
-  assert.ok(
-    standardHeight < expandedHeight && expandedHeight < immersiveHeight,
-    `lyrics viewport exposes three distinct stable heights: ${JSON.stringify({ standardHeight, expandedHeight, immersiveHeight })}`
-  );
-  const resizeHandle = page.getByRole("separator", { name: "调整歌词编辑视口高度" });
-  await resizeHandle.press("Escape");
-  await waitForLayoutStable(page.getByTestId("lyrics-workspace"));
-  assert.equal(await expandedMode.getAttribute("aria-pressed"), "true", "Escape restores the pre-immersive mode");
-  assert.equal(await resizeHandle.evaluate((node) => document.activeElement === node), true, "Escape preserves focus on the invoking resize handle");
-
-  await resizeHandle.dblclick();
-  await waitForLayoutStable(page.getByTestId("lyrics-workspace"));
-  assert.equal(await standardMode.getAttribute("aria-pressed"), "true", "double-click restores standard height");
-
-  // Keep the real pointer target inside the packaged window. At 1000x700 the
-  // handle sits too close to the bottom edge for Windows CI to deliver the
-  // full downward mouse move, even though pointer capture is active.
   await setWindowSize(1280, 900);
-  await waitForLayoutStable(page.getByTestId("lyrics-workspace"));
-
-  const handleBox = await resizeHandle.boundingBox();
-  const currentHeight = Number(await resizeHandle.getAttribute("aria-valuenow"));
-  const maxHeight = Number(await resizeHandle.getAttribute("aria-valuemax"));
-  assert.ok(handleBox && maxHeight > currentHeight, "resize handle exposes a draggable height range");
-  const dragTargetY = handleBox.y + handleBox.height / 2 + (maxHeight - currentHeight - 10);
-  const browserHeight = await page.evaluate(() => window.innerHeight);
-  assert.ok(
-    dragTargetY < browserHeight,
-    `immersive drag target stays inside the packaged window: ${JSON.stringify({ dragTargetY, browserHeight })}`
-  );
-  await page.mouse.move(handleBox.x + handleBox.width / 2, handleBox.y + handleBox.height / 2);
-  await page.mouse.down();
-  await page.mouse.move(
-    handleBox.x + handleBox.width / 2,
-    dragTargetY,
-    { steps: 8 }
-  );
-  await page.mouse.up();
-  await waitForLyricsViewportMode("immersive", currentHeight);
-  assert.equal(await immersiveMode.getAttribute("aria-pressed"), "true", "dragging within the 24px snap zone enters immersive mode");
-  const contextAfterDrag = await getLyricsContext(translationLyrics);
-  assertSameSelection(contextBeforeModeChange, contextAfterDrag, "immersive drag");
-
-  await resizeHandle.dblclick();
-  await waitForLayoutStable(page.getByTestId("lyrics-workspace"));
-  await resizeHandle.focus();
-  await resizeHandle.press("End");
-  assert.equal(await immersiveMode.getAttribute("aria-pressed"), "true", "End selects immersive mode");
-  await resizeHandle.press("Escape");
-  assert.equal(await standardMode.getAttribute("aria-pressed"), "true", "Escape restores the mode active before keyboard immersive");
-  await resizeHandle.press("ArrowDown");
-  assert.equal(await expandedMode.getAttribute("aria-pressed"), "true", "ArrowDown selects expanded mode");
-  await resizeHandle.press("Home");
-  assert.equal(await standardMode.getAttribute("aria-pressed"), "true", "Home selects standard mode");
-  await resizeHandle.press("ArrowDown");
-  await resizeHandle.press("ArrowDown");
-  assert.equal(await immersiveMode.getAttribute("aria-pressed"), "true", "two ArrowDown presses reach immersive mode");
-  await resizeHandle.press("Escape");
-  assert.equal(await expandedMode.getAttribute("aria-pressed"), "true", "Escape returns to expanded after arrow-key entry");
-  await resizeHandle.press("ArrowUp");
-  assert.equal(await standardMode.getAttribute("aria-pressed"), "true", "ArrowUp returns to standard mode");
-
-  await translationLyrics.evaluate((node, selection) => {
-    node.focus();
-    node.setSelectionRange(selection.start, selection.end);
-    node.dispatchEvent(new Event("select", { bubbles: true }));
-  }, { start: translationSelectionStart, end: translationSelectionEnd });
-  const beforeWindowResize = await getLyricsContext(translationLyrics);
-  await setWindowSize(1280, 900);
-  await waitForLayoutStable(page.getByTestId("lyrics-workspace"));
-  const afterWindowResize = await getLyricsContext(translationLyrics);
-  assertSameSelection(beforeWindowResize, afterWindowResize, "window height change");
+  await waitForLayoutStable(workspace);
+  const expandedWindowHeight = await workspace.evaluate((element) => element.getBoundingClientRect().height);
+  assert.ok(expandedWindowHeight > compactHeight, `maximum workspace height follows available window space: ${JSON.stringify({ compactHeight, expandedWindowHeight })}`);
+  const afterWindowResize = await waitForSameSelection(translationLyrics, contextBeforeWindowResize);
+  assertSameSelection(contextBeforeWindowResize, afterWindowResize, "window height change");
   assert.equal(afterWindowResize.focused, true, "window size changes preserve translation focus");
   await setWindowSize(1000, 700);
-  await waitForLayoutStable(page.getByTestId("lyrics-workspace"));
+  await waitForLayoutStable(workspace);
 
   await translationLyrics.evaluate((node, selection) => {
     node.focus();
     node.setSelectionRange(selection.start, selection.end);
     node.dispatchEvent(new Event("select", { bubbles: true }));
+    node.dispatchEvent(new KeyboardEvent("keyup", { bubbles: true, key: "Shift" }));
     const scroll = node.closest('[data-testid="lyrics-shared-scroll"]');
     if (scroll instanceof HTMLElement) scroll.scrollTop = Math.min(155.4286, scroll.scrollHeight - scroll.clientHeight);
   }, { start: translationSelectionStart, end: translationSelectionEnd });

@@ -1,8 +1,6 @@
 "use client";
 
 import {
-  type KeyboardEvent as ReactKeyboardEvent,
-  type PointerEvent as ReactPointerEvent,
   type RefObject,
   useCallback,
   useEffect,
@@ -11,23 +9,10 @@ import {
   useState
 } from "react";
 
-export type LyricsViewportMode = "standard" | "expanded" | "immersive";
 export type LyricsEditorKey = "lyrics" | "translation";
 
 type ViewportMetrics = {
-  minHeight: number;
-  standardHeight: number;
-  expandedHeight: number;
   maxHeight: number;
-};
-
-type SessionState = {
-  mode: LyricsViewportMode;
-  previousMode: Exclude<LyricsViewportMode, "immersive">;
-};
-
-type PersistedSessionState = {
-  mode: Exclude<LyricsViewportMode, "immersive">;
 };
 
 type TextAnchor = {
@@ -61,23 +46,10 @@ type UseLyricsViewportSessionOptions = {
   getEditor?: (editor: LyricsEditorKey) => HTMLTextAreaElement | null;
 };
 
-const SESSION_STORAGE_KEY = "lyrics-card-generator:lyrics-viewport";
-const STANDARD_RATIO = 0.68;
-const EXPANDED_RATIO = 0.84;
-const MIN_VIEWPORT_HEIGHT = 240;
 const MIN_FALLBACK_HEIGHT = 240;
-const IMMERSIVE_SNAP_THRESHOLD = 24;
 const EDITOR_KEYS: LyricsEditorKey[] = ["lyrics", "translation"];
 
-const DEFAULT_SESSION: SessionState = {
-  mode: "standard",
-  previousMode: "standard"
-};
-
 const DEFAULT_METRICS: ViewportMetrics = {
-  minHeight: MIN_VIEWPORT_HEIGHT,
-  standardHeight: 520,
-  expandedHeight: 640,
   maxHeight: 760
 };
 
@@ -87,18 +59,12 @@ export function useLyricsViewportSession({
   getActiveEditorKey,
   getEditor
 }: UseLyricsViewportSessionOptions) {
-  const [session, setSession] = useState<SessionState>(DEFAULT_SESSION);
   const [metrics, setMetrics] = useState<ViewportMetrics>(DEFAULT_METRICS);
-  const [dragHeight, setDragHeight] = useState<number | null>(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const [storageReady, setStorageReady] = useState(false);
-  const dragStartRef = useRef<{ clientY: number; height: number } | null>(null);
   const anchorRef = useRef<AnchorSnapshot | null>(null);
   const restoreSnapshotRef = useRef<AnchorSnapshot | null>(null);
   const restoreFrameRef = useRef(0);
   const restoreSettleFrameRef = useRef(0);
   const restorationPendingRef = useRef(false);
-  const dragCleanupRef = useRef<() => void>(() => {});
   const activeEditorKeyGetterRef = useRef(getActiveEditorKey);
   const editorGetterRef = useRef(getEditor);
   const editorNodesRef = useRef<Partial<Record<LyricsEditorKey, HTMLTextAreaElement>>>({});
@@ -170,6 +136,9 @@ export function useLyricsViewportSession({
 
     const activeEditor = preferredEditor ?? activeEditorKeyGetterRef.current?.() ?? previous?.activeEditor ?? "lyrics";
     anchorRef.current = { activeEditor, editors, viewportCenterRatio, scrollRatio };
+    if (restorationPendingRef.current) {
+      restoreSnapshotRef.current = anchorRef.current;
+    }
   }, [scrollRef, workspaceRef]);
 
   const restoreAnchor = useCallback(() => {
@@ -278,12 +247,7 @@ export function useLyricsViewportSession({
     const nextMetrics = calculateViewportMetrics(Math.floor(availableBottom - workspaceTop));
 
     setMetrics((current) => {
-      if (
-        current.minHeight === nextMetrics.minHeight &&
-        current.standardHeight === nextMetrics.standardHeight &&
-        current.expandedHeight === nextMetrics.expandedHeight &&
-        current.maxHeight === nextMetrics.maxHeight
-      ) {
+      if (current.maxHeight === nextMetrics.maxHeight) {
         return current;
       }
 
@@ -324,251 +288,30 @@ export function useLyricsViewportSession({
     return () => scrollNode.removeEventListener("scroll", onScroll);
   }, [captureAnchor, scrollRef]);
 
-  useEffect(() => {
-    try {
-      const stored = window.sessionStorage.getItem(SESSION_STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored) as Partial<PersistedSessionState>;
-        if (isStableViewportMode(parsed.mode)) {
-          setSession({
-            mode: parsed.mode,
-            previousMode: parsed.mode
-          });
-        }
-      }
-    } catch {
-      // Session state is optional; private browsing and hardened shells may reject storage.
-    } finally {
-      setStorageReady(true);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!storageReady || session.mode === "immersive") {
-      return;
-    }
-
-    try {
-      const persisted: PersistedSessionState = { mode: session.mode };
-      window.sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(persisted));
-    } catch {
-      // Keep the in-memory state when session storage is unavailable.
-    }
-  }, [session, storageReady]);
-
-  useEffect(() => {
-    if (!isDragging) {
-      return;
-    }
-
-    const previousCursor = document.body.style.cursor;
-    const previousUserSelect = document.body.style.userSelect;
-    document.body.style.cursor = "ns-resize";
-    document.body.style.userSelect = "none";
-
-    return () => {
-      document.body.style.cursor = previousCursor;
-      document.body.style.userSelect = previousUserSelect;
-    };
-  }, [isDragging]);
-
-  const setMode = useCallback((mode: LyricsViewportMode) => {
-    captureAnchor();
-    setDragHeight(null);
-    setSession((current) => {
-      if (mode === "immersive") {
-        return {
-          mode,
-          previousMode: current.mode === "immersive" ? current.previousMode : current.mode
-        };
-      }
-
-      return { mode, previousMode: mode };
-    });
-  }, [captureAnchor]);
-
-  const resetToStandard = useCallback(() => {
-    setMode("standard");
-  }, [setMode]);
-
-  const exitImmersive = useCallback(() => {
-    if (session.mode !== "immersive") {
-      return;
-    }
-    setMode(session.previousMode);
-  }, [session.mode, session.previousMode, setMode]);
-
-  useEffect(() => {
-    if (session.mode !== "immersive") {
-      return;
-    }
-
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== "Escape") {
-        return;
-      }
-      event.preventDefault();
-      exitImmersive();
-    };
-
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [exitImmersive, session.mode]);
-
-  const modeHeight = heightForMode(session.mode, metrics);
-  const viewportHeight = clamp(dragHeight ?? modeHeight, metrics.minHeight, metrics.maxHeight);
+  const viewportHeight = metrics.maxHeight;
 
   useLayoutEffect(() => {
     restoreAnchor();
   }, [restoreAnchor, viewportHeight]);
 
   useEffect(() => () => {
-    dragCleanupRef.current();
     window.cancelAnimationFrame(restoreFrameRef.current);
     window.cancelAnimationFrame(restoreSettleFrameRef.current);
     restorationPendingRef.current = false;
     restoreSnapshotRef.current = null;
   }, []);
 
-  function onResizePointerDown(event: ReactPointerEvent<HTMLElement>) {
-    if (event.button !== 0) {
-      return;
-    }
-    captureAnchor();
-    dragStartRef.current = { clientY: event.clientY, height: viewportHeight };
-    setDragHeight(viewportHeight);
-    setIsDragging(true);
-    const handle = event.currentTarget;
-    const pointerId = event.pointerId;
-    dragCleanupRef.current();
-
-    const cleanup = () => {
-      window.removeEventListener("pointermove", onPointerMove);
-      window.removeEventListener("pointerup", onPointerFinish);
-      window.removeEventListener("pointercancel", onPointerFinish);
-      if (dragCleanupRef.current === cleanup) {
-        dragCleanupRef.current = () => {};
-      }
-    };
-    const onPointerMove = (pointerEvent: PointerEvent) => {
-      const start = dragStartRef.current;
-      if (pointerEvent.pointerId !== pointerId || !start) {
-        return;
-      }
-      setDragHeight(calculatePointerDragHeight(start, pointerEvent.clientY, metrics));
-    };
-    const onPointerFinish = (pointerEvent: PointerEvent) => {
-      if (pointerEvent.pointerId !== pointerId) {
-        return;
-      }
-      cleanup();
-      if (handle.hasPointerCapture(pointerId)) {
-        handle.releasePointerCapture(pointerId);
-      }
-      finishPointerResizeAt(pointerEvent.clientY);
-    };
-
-    dragCleanupRef.current = cleanup;
-    window.addEventListener("pointermove", onPointerMove);
-    window.addEventListener("pointerup", onPointerFinish);
-    window.addEventListener("pointercancel", onPointerFinish);
-    handle.setPointerCapture(pointerId);
-    event.preventDefault();
-  }
-
-  function finishPointerResizeAt(clientY: number) {
-    const start = dragStartRef.current;
-    const finalHeight = start
-      ? calculatePointerDragHeight(start, clientY, metrics)
-      : dragHeight ?? viewportHeight;
-    dragStartRef.current = null;
-    setIsDragging(false);
-    setDragHeight(null);
-    setMode(resolveModeFromHeight(finalHeight, metrics));
-  }
-
-  function onResizeKeyDown(event: ReactKeyboardEvent<HTMLElement>) {
-    let nextMode: LyricsViewportMode | null = null;
-    if (event.key === "ArrowDown" || event.key === "PageDown") {
-      nextMode = session.mode === "standard" ? "expanded" : "immersive";
-    } else if (event.key === "ArrowUp" || event.key === "PageUp") {
-      nextMode = session.mode === "immersive" ? "expanded" : "standard";
-    } else if (event.key === "Home") {
-      nextMode = "standard";
-    } else if (event.key === "End") {
-      nextMode = "immersive";
-    }
-
-    if (nextMode) {
-      event.preventDefault();
-      setMode(nextMode);
-    }
-  }
-
   return {
-    mode: session.mode,
+    mode: "immersive" as const,
     viewportHeight,
-    minHeight: metrics.minHeight,
-    maxHeight: metrics.maxHeight,
-    isDragging,
-    setMode,
-    resetToStandard,
-    exitImmersive,
     captureAnchor,
-    restoreAnchor,
-    resizeHandleProps: {
-      onPointerDown: onResizePointerDown,
-      onKeyDown: onResizeKeyDown,
-      onDoubleClick: resetToStandard
-    }
+    restoreAnchor
   };
-}
-
-function heightForMode(mode: LyricsViewportMode, metrics: ViewportMetrics) {
-  if (mode === "immersive") {
-    return metrics.maxHeight;
-  }
-  return mode === "expanded" ? metrics.expandedHeight : metrics.standardHeight;
 }
 
 function calculateViewportMetrics(availableHeight: number): ViewportMetrics {
   const maxHeight = Math.max(MIN_FALLBACK_HEIGHT, availableHeight);
-  const minHeight = Math.min(MIN_VIEWPORT_HEIGHT, maxHeight);
-  const standardHeight = clamp(Math.round(maxHeight * STANDARD_RATIO), minHeight, maxHeight);
-  const expandedHeight = clamp(Math.round(maxHeight * EXPANDED_RATIO), standardHeight, maxHeight);
-
-  return { minHeight, standardHeight, expandedHeight, maxHeight };
-}
-
-function resolveModeFromHeight(height: number, metrics: ViewportMetrics): LyricsViewportMode {
-  if (metrics.maxHeight - height <= IMMERSIVE_SNAP_THRESHOLD) {
-    return "immersive";
-  }
-  const expandedBoundary = (metrics.standardHeight + metrics.expandedHeight) / 2;
-  return height >= expandedBoundary ? "expanded" : "standard";
-}
-
-function calculatePointerDragHeight(
-  start: { clientY: number; height: number },
-  clientY: number,
-  metrics: ViewportMetrics
-) {
-  const rawHeight = clamp(
-    start.height + clientY - start.clientY,
-    metrics.standardHeight,
-    metrics.maxHeight
-  );
-  return metrics.maxHeight - rawHeight <= IMMERSIVE_SNAP_THRESHOLD
-    ? metrics.maxHeight
-    : rawHeight;
-}
-
-function isViewportMode(value: unknown): value is LyricsViewportMode {
-  return value === "standard" || value === "expanded" || value === "immersive";
-}
-
-function isStableViewportMode(value: unknown): value is Exclude<LyricsViewportMode, "immersive"> {
-  return isViewportMode(value) && value !== "immersive";
+  return { maxHeight };
 }
 
 function getTextAnchor(value: string, selectionStart: number): TextAnchor {
@@ -681,14 +424,10 @@ function clamp(value: number, min: number, max: number) {
 }
 
 export const __internalLyricsViewportSession = {
-  calculatePointerDragHeight,
   calculateViewportMetrics,
   getParagraphLineRanges,
   getTextAnchor,
-  heightForMode,
   isConnectedEditorInWorkspace,
   resolveAnchoredScrollTop,
-  resolveMappedTextAnchorRatio,
-  resolveModeFromHeight,
-  immersiveSnapThreshold: IMMERSIVE_SNAP_THRESHOLD
+  resolveMappedTextAnchorRatio
 };

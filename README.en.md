@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v5.0.2.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v5.0.4.en.md">Release Notes</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
   <a href="#features">Features</a> ·
   <a href="#local-development">Local Development</a> ·
@@ -51,33 +51,31 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 Download the latest version from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Recommended installer: `Lyrics Card Generator Setup 5.0.2.exe`
-* Portable version: `Lyrics Card Generator-5.0.2-portable.exe`
+* Recommended installer: `Lyrics Card Generator Setup 5.0.4.exe`
+* Portable version: `Lyrics Card Generator-5.0.4-portable.exe`
 
 The installer is recommended for regular use. The portable version is useful for temporary use, testing, or running from a removable drive.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v5.0.2 Highlights
+### v5.0.4 Highlights
 
-* Step one now centers NetEase search while link, local-audio, and manual metadata imports move into a compact secondary column.
-* Step two becomes a three-column long-document workspace with song summary, shared-scroll lyrics document, and fixed editing tools.
-* Added Standard, Expanded, and Immersive lyric viewports with drag snapping, double-click reset, Escape, and keyboard controls.
-* Visible card preview is removed from steps one and two and returns with the existing card-design workflow from step three.
-* Export uses an independent off-screen card host, so editor viewport height cannot affect PNG dimensions.
-* Added a 36 non-empty logical-line export limit, 6400px portrait auto height, and real-overflow blocking.
-* Completed regression coverage for five desktop sizes, six locales, Web Lite, and Electron packaging.
+* Carries forward the 5.0.2 fixed search-results area, result count, NetEase source label, and redesigned song list.
+* Step two now always uses the maximum available height, with the three viewport controls and bottom resize handle removed.
+* The Settings header and breadcrumbs now give the current path more room and clarity.
+* The AI workspace now uses a compact destination list consistent with the other Settings pages.
+* Added the “honeybee” and “Lies” examples in a scrollable two-row gallery.
 
 ## 🌐 Multilingual Release Notes
 
 The GitHub Release page defaults to a simplified Chinese short version, while the full release notes are maintained in `docs/releases/`:
 
-* [简体中文](./docs/releases/v5.0.2.zh-CN.md)
-* [繁體中文](./docs/releases/v5.0.2.zh-TW.md)
-* [English](./docs/releases/v5.0.2.en.md)
-* [Français](./docs/releases/v5.0.2.fr.md)
-* [日本語](./docs/releases/v5.0.2.ja.md)
-* [Español](./docs/releases/v5.0.2.es.md)
+* [简体中文](./docs/releases/v5.0.4.zh-CN.md)
+* [繁體中文](./docs/releases/v5.0.4.zh-TW.md)
+* [English](./docs/releases/v5.0.4.en.md)
+* [Français](./docs/releases/v5.0.4.fr.md)
+* [日本語](./docs/releases/v5.0.4.ja.md)
+* [Español](./docs/releases/v5.0.4.es.md)
 
 <a id="features"></a>
 

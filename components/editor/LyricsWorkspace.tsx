@@ -9,7 +9,6 @@ import {
   useId,
   useLayoutEffect,
   useMemo,
-  useEffect,
   useRef,
   useState
 } from "react";
@@ -19,7 +18,6 @@ import {
   type LyricsEditorKey,
   useLyricsViewportSession
 } from "@/components/editor/hooks/useLyricsViewportSession";
-import { useAppReducedMotion } from "@/components/motion/AppMotionProvider";
 import { Section } from "@/components/ui/controls";
 import type { createT } from "@/lib/i18n";
 import { proxiedImageUrl } from "@/lib/image-utils";
@@ -35,8 +33,6 @@ type WorkspaceCopy = LyricsToolsLabels & {
   paragraphs: string;
   currentPosition: string;
   sharedScrollHint: string;
-  resizeLabel: string;
-  resizeHint: string;
 };
 
 type LyricsWorkspaceProps = {
@@ -58,7 +54,6 @@ type LyricsWorkspaceProps = {
   locale: Locale;
   t: ReturnType<typeof createT>;
   showAiTranslate?: boolean;
-  onViewportModeChange?: (mode: "standard" | "expanded" | "immersive") => void;
 };
 
 type ActiveEditor = LyricsEditorKey;
@@ -78,14 +73,7 @@ const WORKSPACE_COPY: Record<Locale, WorkspaceCopy> = {
     paragraphs: "{count} 段",
     currentPosition: "{label} · 第 {line} / {total} 行",
     sharedScrollHint: "原文与译文共享同一个滚动位置",
-    tools: "编辑工具",
-    viewMode: "编辑视口",
-    standard: "标准",
-    expanded: "扩展",
-    immersive: "沉浸",
-    immersiveExitHint: "按 Esc 返回之前的视图",
-    resizeLabel: "调整歌词编辑视口高度",
-    resizeHint: "上下方向键切换视图；双击恢复标准高度"
+    tools: "编辑工具"
   },
   "zh-TW": {
     summary: "長稿摘要",
@@ -95,14 +83,7 @@ const WORKSPACE_COPY: Record<Locale, WorkspaceCopy> = {
     paragraphs: "{count} 段",
     currentPosition: "{label} · 第 {line} / {total} 行",
     sharedScrollHint: "原文與譯文共用同一個捲動位置",
-    tools: "編輯工具",
-    viewMode: "編輯視窗",
-    standard: "標準",
-    expanded: "延展",
-    immersive: "沉浸",
-    immersiveExitHint: "按 Esc 返回先前的視圖",
-    resizeLabel: "調整歌詞編輯視窗高度",
-    resizeHint: "上下方向鍵切換視圖；按兩下恢復標準高度"
+    tools: "編輯工具"
   },
   en: {
     summary: "Manuscript summary",
@@ -112,14 +93,7 @@ const WORKSPACE_COPY: Record<Locale, WorkspaceCopy> = {
     paragraphs: "{count} sections",
     currentPosition: "{label} · line {line} / {total}",
     sharedScrollHint: "Original and translation share one scroll position",
-    tools: "Editing tools",
-    viewMode: "Editor viewport",
-    standard: "Standard",
-    expanded: "Expanded",
-    immersive: "Immersive",
-    immersiveExitHint: "Press Esc to return to the previous view",
-    resizeLabel: "Resize the lyrics editor viewport",
-    resizeHint: "Use arrow keys to change view; double-click to reset"
+    tools: "Editing tools"
   },
   fr: {
     summary: "Résumé du texte",
@@ -129,14 +103,7 @@ const WORKSPACE_COPY: Record<Locale, WorkspaceCopy> = {
     paragraphs: "{count} sections",
     currentPosition: "{label} · ligne {line} / {total}",
     sharedScrollHint: "L’original et la traduction partagent le même défilement",
-    tools: "Outils d’édition",
-    viewMode: "Fenêtre d’édition",
-    standard: "Standard",
-    expanded: "Étendu",
-    immersive: "Immersif",
-    immersiveExitHint: "Appuyez sur Échap pour revenir à la vue précédente",
-    resizeLabel: "Redimensionner la fenêtre d’édition des paroles",
-    resizeHint: "Utilisez les flèches pour changer de vue ; double-cliquez pour réinitialiser"
+    tools: "Outils d’édition"
   },
   ja: {
     summary: "原稿の概要",
@@ -146,14 +113,7 @@ const WORKSPACE_COPY: Record<Locale, WorkspaceCopy> = {
     paragraphs: "{count} セクション",
     currentPosition: "{label} · {line} / {total} 行",
     sharedScrollHint: "原文と翻訳は同じスクロール位置を共有します",
-    tools: "編集ツール",
-    viewMode: "編集ビューポート",
-    standard: "標準",
-    expanded: "拡張",
-    immersive: "集中",
-    immersiveExitHint: "Esc キーで前の表示に戻ります",
-    resizeLabel: "歌詞編集ビューポートの高さを調整",
-    resizeHint: "矢印キーで表示を切り替え、ダブルクリックで標準に戻します"
+    tools: "編集ツール"
   },
   es: {
     summary: "Resumen del texto",
@@ -163,14 +123,7 @@ const WORKSPACE_COPY: Record<Locale, WorkspaceCopy> = {
     paragraphs: "{count} secciones",
     currentPosition: "{label} · línea {line} / {total}",
     sharedScrollHint: "El original y la traducción comparten una sola posición de desplazamiento",
-    tools: "Herramientas de edición",
-    viewMode: "Vista del editor",
-    standard: "Estándar",
-    expanded: "Ampliada",
-    immersive: "Inmersiva",
-    immersiveExitHint: "Pulsa Esc para volver a la vista anterior",
-    resizeLabel: "Cambiar la altura de la vista del editor de letras",
-    resizeHint: "Usa las flechas para cambiar de vista; haz doble clic para restablecer"
+    tools: "Herramientas de edición"
   }
 };
 
@@ -192,11 +145,9 @@ export function LyricsWorkspace({
   contentMode,
   locale,
   t,
-  showAiTranslate = true,
-  onViewportModeChange
+  showAiTranslate = true
 }: LyricsWorkspaceProps) {
   const copy = WORKSPACE_COPY[locale];
-  const reduceMotion = useAppReducedMotion();
   const workspaceRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const lyricsRef = useRef<HTMLTextAreaElement>(null);
@@ -204,8 +155,6 @@ export function LyricsWorkspace({
   const activeEditorRef = useRef<ActiveEditor>("lyrics");
   const lyricsId = useId();
   const translationId = useId();
-  const scrollRegionId = useId();
-  const resizeHintId = useId();
   const showTranslation = contentMode === "lyrics" && translationEnabled;
   const lyricsStats = useMemo(() => getTextStats(lyrics), [lyrics]);
   const translationStats = useMemo(() => getTextStats(translationText), [translationText]);
@@ -224,10 +173,6 @@ export function LyricsWorkspace({
     getActiveEditorKey,
     getEditor
   });
-
-  useEffect(() => {
-    onViewportModeChange?.(viewport.mode);
-  }, [onViewportModeChange, viewport.mode]);
 
   const resizeEditors = useCallback(() => {
     const editors = [lyricsRef.current, showTranslation ? translationRef.current : null].filter(Boolean) as HTMLTextAreaElement[];
@@ -313,12 +258,9 @@ export function LyricsWorkspace({
   return (
     <div
       ref={workspaceRef}
-      className={cn(
-        "relative flex min-h-0 flex-col overflow-hidden rounded-lg border border-[rgb(var(--panel-border))] bg-[rgb(var(--panel-bg))] transition-[height] ease-out",
-        viewport.isDragging || reduceMotion ? "duration-0" : "duration-200"
-      )}
+      className="relative flex min-h-0 flex-col overflow-hidden rounded-lg border border-[rgb(var(--panel-border))] bg-[rgb(var(--panel-bg))]"
       style={{ height: viewport.viewportHeight }}
-      data-lyrics-viewport-mode={viewport.mode}
+      data-lyrics-viewport-mode="immersive"
       data-testid="lyrics-workspace"
     >
         <div className="lyrics-workspace-grid min-h-0 flex-1 gap-3 p-3">
@@ -329,9 +271,7 @@ export function LyricsWorkspace({
             <div className="lyrics-summary-header flex items-center justify-between gap-3 md:block">
               <div>
                 <p className="app-text-primary text-sm font-semibold">{copy.summary}</p>
-                {viewport.mode !== "immersive" ? (
-                  <p className="lyrics-summary-description app-text-subtle mt-1 text-[11px] leading-relaxed">{copy.manuscript}</p>
-                ) : null}
+                <p className="lyrics-summary-description app-text-subtle mt-1 text-[11px] leading-relaxed">{copy.manuscript}</p>
               </div>
               <span className="lyrics-summary-position app-text-subtle rounded-md border border-[rgb(var(--panel-border))] bg-[rgb(var(--button-bg))] px-2 py-1 text-[11px] md:mt-3 md:inline-block">
                 {currentPosition}
@@ -409,7 +349,6 @@ export function LyricsWorkspace({
             </header>
             <div
               ref={scrollRef}
-              id={scrollRegionId}
               className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain [scrollbar-gutter:stable]"
               data-testid="lyrics-shared-scroll"
             >
@@ -484,41 +423,12 @@ export function LyricsWorkspace({
             themeColor={themeColor}
             locale={locale}
             t={t}
-            mode={viewport.mode}
-            onModeChange={viewport.setMode}
             labels={copy}
             lyricsFetchPanel={lyricsFetchPanel}
             aiPanel={aiPanel}
           />
         </div>
 
-        <div
-          role="separator"
-          aria-orientation="horizontal"
-          aria-label={copy.resizeLabel}
-          aria-controls={scrollRegionId}
-          aria-describedby={resizeHintId}
-          aria-valuemin={viewport.minHeight}
-          aria-valuemax={viewport.maxHeight}
-          aria-valuenow={Math.round(viewport.viewportHeight)}
-          aria-valuetext={`${copy[viewport.mode]} · ${Math.round(viewport.viewportHeight)}px`}
-          tabIndex={0}
-          title={copy.resizeHint}
-          className={cn(
-            "group flex h-6 shrink-0 touch-none cursor-ns-resize items-center justify-center gap-2 border-t border-transparent outline-none transition",
-            "hover:border-[rgb(var(--panel-border))] focus-visible:border-[var(--control-focus-border)] focus-visible:bg-[rgb(var(--button-bg))]",
-            viewport.isDragging ? "border-[var(--control-focus-border)] bg-[rgb(var(--button-bg))]" : ""
-          )}
-          {...viewport.resizeHandleProps}
-          data-testid="lyrics-viewport-resize-handle"
-        >
-          <span id={resizeHintId} className="sr-only">{copy.resizeHint}</span>
-          <span className="h-px w-12 bg-[rgb(var(--panel-border))] transition group-hover:bg-[var(--control-focus-border)]" />
-          <span className="app-text-subtle text-[12px] leading-none tracking-[0.22em] transition group-hover:text-[var(--control-focus-border)]" aria-hidden="true">
-            ···
-          </span>
-          <span className="h-px w-12 bg-[rgb(var(--panel-border))] transition group-hover:bg-[var(--control-focus-border)]" />
-        </div>
     </div>
   );
 }

@@ -176,25 +176,12 @@ export function SettingsSurface({
               <Settings className="h-5 w-5" />
             </span>
             <div className="min-w-0">
-              <div className="flex min-w-0 items-baseline gap-2">
-                <h1 id="settings-surface-title" className="app-text-primary truncate text-xl font-black tracking-normal sm:text-3xl">{copy.settings}</h1>
-                <span className="app-text-subtle hidden truncate text-sm font-medium sm:inline">/ {activeTab.label}</span>
-              </div>
+              <h1 id="settings-surface-title" className="app-text-primary truncate text-xl font-black tracking-normal sm:text-3xl">{copy.settings}</h1>
               <p className="app-text-subtle mt-1 hidden truncate text-sm md:block">{activeTab.description}</p>
             </div>
           </div>
-          <SettingsHistoryBar
-            backLabel={promptCopy.back}
-            forwardLabel={promptCopy.forward}
-            breadcrumbs={breadcrumbs}
-            canGoBack={history.index > 0}
-            canGoForward={history.index < history.entries.length - 1}
-            onBack={() => moveHistory(-1)}
-            onForward={() => moveHistory(1)}
-            onNavigate={navigateDestination}
-          />
         </div>
-        <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+        <div className="settings-wing__actions flex shrink-0 items-center gap-2 sm:gap-3">
           {saveStatus ? (
             <span className="app-text-subtle hidden items-center gap-2 text-xs sm:flex" role="status" aria-live="polite">
               <span className={["h-1.5 w-1.5 rounded-full", saveStatus.dotClass].join(" ")} />
@@ -213,6 +200,16 @@ export function SettingsSurface({
             <X className="examples-close-button__icon h-5 w-5" />
           </button>
         </div>
+        <SettingsHistoryBar
+          backLabel={promptCopy.back}
+          forwardLabel={promptCopy.forward}
+          breadcrumbs={breadcrumbs}
+          canGoBack={history.index > 0}
+          canGoForward={history.index < history.entries.length - 1}
+          onBack={() => moveHistory(-1)}
+          onForward={() => moveHistory(1)}
+          onNavigate={navigateDestination}
+        />
       </header>
 
       <div className="settings-wing__body">

@@ -18,7 +18,6 @@ import {
 import { AiTranslatePanel } from "@/components/lyrics/AiTranslatePanel";
 import type { ExportQualityId } from "@/lib/settings/types";
 import type { ExportLyricLineStatus } from "@/lib/lyrics-document";
-import type { LyricsViewportMode } from "@/components/editor/hooks/useLyricsViewportSession";
 import type { AISettingsSummary, AITranslationPhase } from "@/lib/ai/types";
 import type { createT } from "@/lib/i18n";
 import type {
@@ -72,7 +71,6 @@ type UseEditorStepsInput = {
   exportQuality: ExportQualityId;
   lyricsLayout: {
     lineStatus: ExportLyricLineStatus;
-    onViewportModeChange: (mode: LyricsViewportMode) => void;
   };
   ai: EditorStepsAiState;
   handlers: EditorStepHandlers;
@@ -191,7 +189,6 @@ export function useEditorSteps({
             contentMode={state.style.contentMode}
             locale={state.locale}
             t={t}
-            onViewportModeChange={lyricsLayout.onViewportModeChange}
           />
         </div>
       )

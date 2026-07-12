@@ -8,7 +8,7 @@ import type { Locale, SongSource } from "@/lib/types";
 // - Commit only the extracted color metadata used by the examples gallery.
 // - Gallery palettes must be extracted directly from album covers, never from rendered lyric cards.
 
-export type ExampleSongId = "opposite" | "yuusha" | "glorious-years" | "opalite";
+export type ExampleSongId = "opposite" | "yuusha" | "glorious-years" | "opalite" | "honeybee" | "lies";
 
 export const EXAMPLE_TRANSLATION_LANGUAGES = [
   "zh",
@@ -16,7 +16,8 @@ export const EXAMPLE_TRANSLATION_LANGUAGES = [
   "en",
   "fr",
   "ja",
-  "es"
+  "es",
+  "ko"
 ] as const;
 
 export type ExampleTranslationLanguage = typeof EXAMPLE_TRANSLATION_LANGUAGES[number];
@@ -27,7 +28,8 @@ export const EXAMPLE_LANGUAGE_LABELS: Record<ExampleTranslationLanguage, string>
   en: "English",
   fr: "Français",
   ja: "日本語",
-  es: "Español"
+  es: "Español",
+  ko: "한국어"
 };
 
 export type ExampleTranslationSample = {
@@ -299,6 +301,151 @@ export const EXAMPLE_SONGS: ExampleSong[] = [{
         "Tras una vida de dudas y lucha",
         "La confianza puede cambiar el porvenir",
         "Pero ¿quién podría lograrlo de verdad?"
+      ].join("\n")
+    }
+  ],
+  translationEnabled: true
+}, {
+  id: "honeybee",
+  title: "honeybee",
+  artist: "Olivia Rodrigo",
+  album: "you seem pretty sad for a girl so in love",
+  url: "https://music.apple.com/tr/album/honeybee/1889992111?i=1889992116",
+  source: "apple",
+  palette: {
+    colors: ["#88A0AC", "#F3B39E", "#CF9072", "#955B41", "#EDD9C7", "#342620"],
+    extractedFrom: "album-cover"
+  },
+  originalLanguage: "en",
+  lyrics: [
+    "and i hope i never see",
+    "what your face looks like going",
+    "a face i swear that i could",
+    "spend my whole life knowing"
+  ].join("\n"),
+  translations: [
+    {
+      language: "zh",
+      label: EXAMPLE_LANGUAGE_LABELS.zh,
+      text: [
+        "而我愿永远不必看见",
+        "你转身离去时的模样",
+        "那张脸，我发誓我愿意",
+        "用尽一生去懂得"
+      ].join("\n")
+    },
+    {
+      language: "zh-TW",
+      label: EXAMPLE_LANGUAGE_LABELS["zh-TW"],
+      text: [
+        "而我願永遠不必看見",
+        "你轉身離去時的模樣",
+        "那張臉，我發誓我願意",
+        "用盡一生去懂得"
+      ].join("\n")
+    },
+    {
+      language: "fr",
+      label: EXAMPLE_LANGUAGE_LABELS.fr,
+      text: [
+        "et j’espère ne jamais voir",
+        "à quoi ressemble ton visage quand tu pars",
+        "ce visage que, je le jure, je pourrais",
+        "passer toute ma vie à connaître"
+      ].join("\n")
+    },
+    {
+      language: "ja",
+      label: EXAMPLE_LANGUAGE_LABELS.ja,
+      text: [
+        "どうか決して見ずにいられますように",
+        "君が去るとき どんな顔をするのか",
+        "その顔なら きっと私は",
+        "一生かけて知ってゆける"
+      ].join("\n")
+    },
+    {
+      language: "es",
+      label: EXAMPLE_LANGUAGE_LABELS.es,
+      text: [
+        "y espero no ver jamás",
+        "cómo es tu rostro cuando te vas",
+        "un rostro que, lo juro, podría",
+        "pasarme la vida entera conociendo"
+      ].join("\n")
+    }
+  ],
+  translationEnabled: true
+}, {
+  id: "lies",
+  title: "Lies",
+  artist: "BIGBANG",
+  album: "Always - EP",
+  url: "https://music.apple.com/tr/album/lies/1330947214?i=1330947216",
+  source: "apple",
+  palette: {
+    colors: ["#86A1AC", "#7D7773", "#343332", "#B6B6B6", "#334147", "#C0CACE"],
+    extractedFrom: "album-cover"
+  },
+  originalLanguage: "ko",
+  lyrics: [
+    "I'm so sorry but I love you",
+    "다 거짓말이야 몰랐어",
+    "이제야 알았어 네가 필요해"
+  ].join("\n"),
+  translations: [
+    {
+      language: "en",
+      label: EXAMPLE_LANGUAGE_LABELS.en,
+      text: [
+        "I'm so sorry, but I love you",
+        "It was all a lie—I never knew",
+        "Only now I know that I need you"
+      ].join("\n")
+    },
+    {
+      language: "zh",
+      label: EXAMPLE_LANGUAGE_LABELS.zh,
+      text: [
+        "真的很抱歉，可我爱你",
+        "一切都是谎言，我却不曾明白",
+        "直到现在才懂，我需要你"
+      ].join("\n")
+    },
+    {
+      language: "zh-TW",
+      label: EXAMPLE_LANGUAGE_LABELS["zh-TW"],
+      text: [
+        "真的很抱歉，可我愛你",
+        "一切都是謊言，我卻不曾明白",
+        "直到現在才懂，我需要你"
+      ].join("\n")
+    },
+    {
+      language: "fr",
+      label: EXAMPLE_LANGUAGE_LABELS.fr,
+      text: [
+        "Pardon, mais je t'aime",
+        "Tout n'était que mensonge, je ne le savais pas",
+        "Ce n'est que maintenant que je comprends : j'ai besoin de toi"
+      ].join("\n")
+    },
+    {
+      language: "ja",
+      label: EXAMPLE_LANGUAGE_LABELS.ja,
+      text: [
+        "本当にごめん　それでも君を愛してる",
+        "すべて嘘だった　知らなかった",
+        "今になってわかった　君が必要なんだ"
+      ].join("\n")
+    },
+    {
+      language: "es",
+      label: EXAMPLE_LANGUAGE_LABELS.es,
+      text: [
+        "Lo siento tanto, pero te amo",
+        "Todo era mentira, yo no lo sabía",
+        "Ahora por fin lo sé: te necesito"
       ].join("\n")
     }
   ],
