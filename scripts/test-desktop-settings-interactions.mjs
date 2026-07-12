@@ -14,6 +14,7 @@ const exportOverflowTolerance = 4;
 let electronApp;
 let page;
 const nativeDialogs = [];
+let acceptDocumentReplacementDialogs = false;
 const searchRequests = [];
 const resolveRequests = [];
 
@@ -324,7 +325,9 @@ async function assertSongSearchBehavior() {
   const activeId = await combobox.getAttribute("aria-activedescendant");
   const activeIndex = Number(activeId?.match(/option-(\d+)$/)?.[1]);
   assert.ok(Number.isInteger(activeIndex), `active descendant exposes an option index: ${activeId}`);
+  acceptDocumentReplacementDialogs = true;
   await combobox.press("Enter");
+  acceptDocumentReplacementDialogs = false;
   await page.waitForFunction(() => !document.querySelector('[role="combobox"]')?.hasAttribute("disabled"));
   assert.match(
     await combobox.inputValue(),
@@ -518,7 +521,11 @@ try {
   page = await electronApp.firstWindow({ timeout: 60_000 });
   page.on("dialog", async (dialog) => {
     nativeDialogs.push({ type: dialog.type(), message: dialog.message() });
-    await dialog.dismiss();
+    if (acceptDocumentReplacementDialogs && dialog.type() === "confirm") {
+      await dialog.accept();
+    } else {
+      await dialog.dismiss();
+    }
   });
   page.on("pageerror", (error) => process.stderr.write(`[renderer] ${error.stack || error.message}\n`));
   await page.route("**/api/search-song", async (route) => {

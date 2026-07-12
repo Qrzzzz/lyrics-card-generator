@@ -175,7 +175,10 @@ export function LyricEditor() {
     exportBlockMessage,
     getExportBlockMessage: (snapshot) => {
       const validationState = snapshot ? snapshotAsAppState(snapshot, parsedState) : parsedState;
-      const validation = getLiveExportCardValidation(validationState, captureCardRef.current);
+      const validation = getLiveExportCardValidation(
+        validationState,
+        snapshot ? captureCardRef.current : exportCardRef.current
+      );
       return validation.blockingReason
         ? resolveExportSafetyMessage(validation.blockingReason, validation.lineStatus.totalLineCount, t)
         : undefined;

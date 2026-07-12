@@ -201,7 +201,7 @@ export function useEditorActions({
   }
 
   async function completeAndExport() {
-    const initialBlockMessage = exportBlockMessage;
+    const initialBlockMessage = getExportBlockMessage?.() ?? exportBlockMessage;
     if (initialBlockMessage) {
       onNotify(initialBlockMessage);
       return;

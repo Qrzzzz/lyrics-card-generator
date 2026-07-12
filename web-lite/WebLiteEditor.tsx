@@ -323,8 +323,12 @@ export function WebLiteEditor() {
   }
 
   async function completeAndExport() {
-    if (exportBlockingMessage) {
-      showToast(exportBlockingMessage);
+    const liveValidation = getLiveExportCardValidation(parsedState, exportCardRef.current);
+    const liveBlockingMessage = liveValidation.blockingReason
+      ? resolveExportSafetyMessage(liveValidation.blockingReason, liveValidation.lineStatus.totalLineCount, t)
+      : exportBlockingMessage;
+    if (liveBlockingMessage) {
+      showToast(liveBlockingMessage);
       return;
     }
 
