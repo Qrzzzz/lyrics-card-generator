@@ -3,7 +3,10 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { defaultState } from "../components/editor/editor-defaults";
 import { detectExportCardOverflow } from "../components/editor/hooks/useExportCardReadiness";
-import { AUTO_HEIGHT_SETTLE_TOLERANCE } from "../components/editor/hooks/useMeasuredAutoCanvasHeight";
+import {
+  AUTO_HEIGHT_SETTLE_TOLERANCE,
+  reconcileAutoCanvasHeight
+} from "../components/editor/hooks/useMeasuredAutoCanvasHeight";
 import {
   AUTO_HEIGHT_MAX,
   AUTO_HEIGHT_MIN,
@@ -49,6 +52,16 @@ assert.equal(
   detectExportCardOverflow(mockExportCard(AUTO_HEIGHT_SETTLE_TOLERANCE + 1)),
   true,
   "overflow beyond the shared settle tolerance remains blocking"
+);
+assert.equal(
+  reconcileAutoCanvasHeight(5808, 5808, 3),
+  5811,
+  "a settled estimate absorbs the remaining real DOM overflow"
+);
+assert.equal(
+  reconcileAutoCanvasHeight(3200, 5808, 2064),
+  5808,
+  "the first large auto-height measurement does not double-count existing overflow"
 );
 
 const translationDisabled = getExportLyricLineStatus({
@@ -172,4 +185,4 @@ assert.ok(
   "the export action performs a fresh defensive validation"
 );
 
-console.log(JSON.stringify({ ok: true, lyricsDocumentTests: 33 }, null, 2));
+console.log(JSON.stringify({ ok: true, lyricsDocumentTests: 35 }, null, 2));

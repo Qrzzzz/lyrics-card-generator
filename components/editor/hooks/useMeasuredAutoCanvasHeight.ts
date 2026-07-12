@@ -191,9 +191,31 @@ export function measureAutoCanvasHeight(
   const requiredSafeHeight =
     contentPadding + headerHeight + headerGap + viewportPadding + lyricsHeight + footerGap + footerHeight;
   const chromeHeight = size.height - layout.safeRect.height;
-  const nextHeight = Math.ceil(chromeHeight + requiredSafeHeight);
+  const measuredHeight = Math.ceil(chromeHeight + requiredSafeHeight);
+  const renderedVerticalOverflow = Math.max(
+    0,
+    lyrics.scrollHeight - lyrics.clientHeight,
+    viewport ? viewport.scrollHeight - viewport.clientHeight : 0
+  );
+  const nextHeight = reconcileAutoCanvasHeight(
+    size.height,
+    measuredHeight,
+    renderedVerticalOverflow
+  );
 
   return Math.min(AUTO_HEIGHT_MAX, Math.max(AUTO_HEIGHT_MIN, nextHeight));
+}
+
+export function reconcileAutoCanvasHeight(
+  currentHeight: number,
+  measuredHeight: number,
+  renderedVerticalOverflow: number,
+  tolerance = AUTO_HEIGHT_SETTLE_TOLERANCE
+) {
+  const estimateHasSettled = Math.abs(measuredHeight - currentHeight) <= tolerance;
+  return estimateHasSettled && renderedVerticalOverflow > tolerance
+    ? measuredHeight + renderedVerticalOverflow
+    : measuredHeight;
 }
 
 function toPixels(value: string) {
