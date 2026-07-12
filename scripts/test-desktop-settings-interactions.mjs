@@ -9,6 +9,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const executablePath = path.join(root, "release", "win-unpacked", "Lyrics Card Generator.exe");
 const reportDirectory = path.join(root, "playwright-report", "desktop");
 const userDataDirectory = await mkdtemp(path.join(tmpdir(), "lyrics-card-desktop-test-"));
+const exportOverflowTolerance = 2;
 
 let electronApp;
 let page;
@@ -100,6 +101,7 @@ async function waitForCompleteExportEnabled(timeout = 15_000) {
       const lyrics = root?.querySelector('[data-card-lyrics]');
       const viewport = root?.querySelector('[data-card-lyrics-viewport]');
       return {
+        fontsStatus: document.fonts.status,
         buttonMounted: button instanceof HTMLButtonElement,
         buttonDisabled: button instanceof HTMLButtonElement ? button.disabled : null,
         blockingMessage: alert?.textContent?.trim() ?? null,
@@ -123,6 +125,29 @@ async function waitForCompleteExportEnabled(timeout = 15_000) {
     });
     throw new Error(`complete export did not become ready: ${JSON.stringify(diagnostics)}`, { cause: error });
   }
+}
+
+async function waitForActiveDescendant(expected, timeout = 5_000) {
+  await page.waitForFunction(
+    (id) => document.querySelector('[role="combobox"]')?.getAttribute("aria-activedescendant") === id,
+    expected,
+    { timeout }
+  );
+}
+
+async function fillExact(locator, value, timeout = 5_000) {
+  const deadline = Date.now() + timeout;
+  let actual = "";
+  do {
+    await locator.fill(value);
+    await page.waitForTimeout(100);
+    actual = await locator.inputValue();
+    if (actual === value) {
+      await page.waitForTimeout(100);
+      if (await locator.inputValue() === value) return;
+    }
+  } while (Date.now() < deadline);
+  assert.equal(actual, value, "controlled textarea settles on the exact fixture value");
 }
 
 async function assertExportHost(stepLabel) {
@@ -184,13 +209,14 @@ function assertSameSelection(before, after, label) {
 }
 
 async function measureExportCard() {
-  return page.evaluate(() => {
+  return page.evaluate((overflowTolerance) => {
     const root = document.querySelector("[data-export-card-host] [data-export-card]");
     const lyrics = root?.querySelector("[data-card-lyrics]");
     const viewport = root?.querySelector("[data-card-lyrics-viewport]");
     if (!(root instanceof HTMLElement)) return null;
     const overflow = (node) => node instanceof HTMLElement && (
-      node.scrollHeight > node.clientHeight + 2 || node.scrollWidth > node.clientWidth + 2
+      node.scrollHeight > node.clientHeight + overflowTolerance ||
+      node.scrollWidth > node.clientWidth + overflowTolerance
     );
     return {
       width: root.offsetWidth,
@@ -201,7 +227,7 @@ async function measureExportCard() {
       viewportScrollHeight: viewport?.scrollHeight ?? 0,
       hasOverflow: overflow(lyrics) || overflow(viewport)
     };
-  });
+  }, exportOverflowTolerance);
 }
 
 function mockSearchResults(keyword, limit = 8) {
@@ -235,14 +261,14 @@ async function assertSongSearchBehavior() {
   assert.equal(await popup.getByTestId("song-search-more").count(), 1, "popup shell owns an independent footer action");
 
   const firstId = await options.nth(0).getAttribute("id");
-  assert.equal(await combobox.getAttribute("aria-activedescendant"), firstId);
+  await waitForActiveDescendant(firstId);
   await combobox.press("ArrowDown");
   const secondId = await options.nth(1).getAttribute("id");
-  assert.equal(await combobox.getAttribute("aria-activedescendant"), secondId);
-  assert.equal(await options.nth(1).getAttribute("aria-selected"), "true");
+  await waitForActiveDescendant(secondId);
+  await page.waitForFunction(() => document.querySelector('[role="option"][aria-selected="true"]')?.id.endsWith("option-1"));
   assert.equal(await combobox.evaluate((node) => document.activeElement === node), true, "ArrowDown keeps DOM focus on the combobox");
   await combobox.press("ArrowUp");
-  assert.equal(await combobox.getAttribute("aria-activedescendant"), firstId);
+  await waitForActiveDescendant(firstId);
   await combobox.press("Escape");
   await popup.waitFor({ state: "hidden" });
   assert.equal(await combobox.getAttribute("aria-activedescendant"), null);
@@ -761,8 +787,8 @@ try {
 
   // Start the export-limit scenario from an explicit fixture instead of
   // inheriting content from the preceding viewport interaction sequence.
-  await originalLyrics.fill(originalEighteen);
-  await translationLyrics.fill(translationEighteen);
+  await fillExact(originalLyrics, originalEighteen);
+  await fillExact(translationLyrics, translationEighteen);
   assert.equal(await originalLyrics.inputValue(), originalEighteen, "export fixture restores exactly 18 original lines");
   assert.equal(await translationLyrics.inputValue(), translationEighteen, "export fixture restores exactly 18 translated lines");
   await waitForLyricsLineBudget("原文 18 + 译文 18 = 36 / 36");
@@ -804,7 +830,7 @@ try {
   await page.waitForFunction(() => /计算|高度|稍候/.test(document.querySelector('[data-testid="app-toast"]')?.textContent ?? ""));
 
   await page.locator('button[data-step-id="lyrics"]').click();
-  await originalLyrics.fill(`${originalEighteen}\nline 19`);
+  await fillExact(originalLyrics, `${originalEighteen}\nline 19`);
   await waitForLyricsLineBudget("37 / 36");
   assert.match(await page.getByTestId("lyrics-line-budget").innerText(), /37 \/ 36/);
   await page.locator('button[data-step-id="export"]').click();
@@ -827,8 +853,8 @@ try {
   }
 
   await page.locator('button[data-step-id="lyrics"]').click();
-  await originalLyrics.fill(originalEighteen);
-  await translationLyrics.fill(translationEighteen);
+  await fillExact(originalLyrics, originalEighteen);
+  await fillExact(translationLyrics, translationEighteen);
   assert.equal(await originalLyrics.inputValue(), originalEighteen, "fixed-ratio fixture restores exactly 18 original lines");
   assert.equal(await translationLyrics.inputValue(), translationEighteen, "fixed-ratio fixture restores exactly 18 translated lines");
   await waitForLyricsLineBudget("原文 18 + 译文 18 = 36 / 36");

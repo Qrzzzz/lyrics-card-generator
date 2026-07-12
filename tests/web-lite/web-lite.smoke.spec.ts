@@ -9,22 +9,38 @@ const remoteCoverUrl = "https://covers.test/cover.png";
 const remoteCoverRequestPattern = /^https:\/\/covers\.test\/cover\.png(?:\?.*)?$/;
 const preferencesKey = "lyrics-card-web-lite-preferences-v1";
 const stepIds = ["song-info", "lyrics", "layout", "font", "visual", "export"] as const;
+const unsafeBrowserPorts = new Set([
+  1, 7, 9, 11, 13, 15, 17, 19, 20, 21, 22, 23, 25, 37, 42, 43, 53, 69, 77, 79, 87, 95,
+  101, 102, 103, 104, 109, 110, 111, 113, 115, 117, 119, 123, 135, 137, 139, 143, 161, 179,
+  389, 427, 465, 512, 513, 514, 515, 526, 530, 531, 532, 540, 548, 554, 556, 563, 587, 601,
+  636, 989, 990, 993, 995, 1719, 1720, 1723, 2049, 3659, 4045, 5060, 5061, 6000, 6566,
+  6665, 6666, 6667, 6668, 6669, 6697, 10080
+]);
 
 let staticServer: Server;
 let baseUrl = "";
 
 test.beforeAll(async () => {
-  staticServer = createStaticServer();
-  await new Promise<void>((resolve, reject) => {
-    staticServer.once("error", reject);
-    staticServer.listen(0, "127.0.0.1", () => resolve());
-  });
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    staticServer = createStaticServer();
+    await new Promise<void>((resolve, reject) => {
+      staticServer.once("error", reject);
+      staticServer.listen(0, "127.0.0.1", () => resolve());
+    });
 
-  const address = staticServer.address();
-  if (!address || typeof address === "string") {
-    throw new Error("Web Lite smoke server did not expose a TCP port.");
+    const address = staticServer.address();
+    if (!address || typeof address === "string") {
+      throw new Error("Web Lite smoke server did not expose a TCP port.");
+    }
+    if (!unsafeBrowserPorts.has(address.port)) {
+      baseUrl = `http://127.0.0.1:${address.port}`;
+      return;
+    }
+    await new Promise<void>((resolve, reject) => {
+      staticServer.close((error) => (error ? reject(error) : resolve()));
+    });
   }
-  baseUrl = `http://127.0.0.1:${address.port}`;
+  throw new Error("Web Lite smoke server repeatedly received browser-restricted ports.");
 });
 
 test.afterAll(async () => {

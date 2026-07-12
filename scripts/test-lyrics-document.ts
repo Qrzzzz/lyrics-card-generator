@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { defaultState } from "../components/editor/editor-defaults";
+import { detectExportCardOverflow } from "../components/editor/hooks/useExportCardReadiness";
+import { AUTO_HEIGHT_SETTLE_TOLERANCE } from "../components/editor/hooks/useMeasuredAutoCanvasHeight";
 import {
   AUTO_HEIGHT_MAX,
   AUTO_HEIGHT_MIN,
@@ -19,6 +21,35 @@ assert.equal(countNonEmptyLogicalLines(""), 0);
 assert.equal(countNonEmptyLogicalLines("one\n\n two \n\t\nthree"), 3);
 assert.equal(countNonEmptyLogicalLines("one\r\ntwo\rthree"), 3);
 assert.equal(countNonEmptyLogicalLines("a single visually wrapping line ".repeat(20)), 1);
+
+function mockExportCard(overflowPixels: number) {
+  const lyrics = {
+    clientHeight: 100,
+    clientWidth: 100,
+    scrollHeight: 100 + overflowPixels,
+    scrollWidth: 100
+  } as HTMLElement;
+  const viewport = {
+    clientHeight: 100,
+    clientWidth: 100,
+    scrollHeight: 100,
+    scrollWidth: 100
+  } as HTMLElement;
+  return {
+    querySelector: (selector: string) => selector === "[data-card-lyrics]" ? lyrics : viewport
+  } as unknown as HTMLElement;
+}
+
+assert.equal(
+  detectExportCardOverflow(mockExportCard(AUTO_HEIGHT_SETTLE_TOLERANCE)),
+  false,
+  "font rounding at the shared settle tolerance remains exportable"
+);
+assert.equal(
+  detectExportCardOverflow(mockExportCard(AUTO_HEIGHT_SETTLE_TOLERANCE + 1)),
+  true,
+  "overflow beyond the shared settle tolerance remains blocking"
+);
 
 const translationDisabled = getExportLyricLineStatus({
   lyrics: "one\ntwo",
@@ -141,4 +172,4 @@ assert.ok(
   "the export action performs a fresh defensive validation"
 );
 
-console.log(JSON.stringify({ ok: true, lyricsDocumentTests: 31 }, null, 2));
+console.log(JSON.stringify({ ok: true, lyricsDocumentTests: 33 }, null, 2));
