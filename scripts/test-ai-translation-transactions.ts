@@ -70,7 +70,13 @@ function createHarness() {
       ...document,
       previousTranslation: { ...translation },
       getCurrentDocument: () => ({ ...document }),
-      applyTranslation: (value, expectedRevision, expectedSongIdentity) => {
+      applyPartial: (value, expectedRevision, expectedSongIdentity) => {
+        if (document.revision !== expectedRevision || document.songIdentity !== expectedSongIdentity) return false;
+        translation = { ...value };
+        writes.push(value.text);
+        return true;
+      },
+      commitTerminal: (value, expectedRevision, expectedSongIdentity) => {
         if (document.revision !== expectedRevision || document.songIdentity !== expectedSongIdentity) return false;
         translation = { ...value };
         writes.push(value.text);
@@ -131,14 +137,30 @@ function createDeferredEditorHarness() {
     enqueuedAtRevision.push(controller.currentRevision);
     queuedUpdates.push(updater);
   };
-  const adapter = new EditorDocumentStateAdapter(controller, enqueue, () => state);
-  const orchestrator = new AITranslationOrchestrator<TranslationValue, Phase>();
 
   function flushReactQueue() {
     while (queuedUpdates.length) {
       state = queuedUpdates.shift()!(state);
     }
   }
+
+  const commitSynchronously = (updater: (current: AppState) => AppState) => {
+    flushReactQueue();
+    state = updater(state);
+  };
+  const adapter = new EditorDocumentStateAdapter(controller, enqueue, commitSynchronously, () => state);
+  const orchestrator = new AITranslationOrchestrator<TranslationValue, Phase>();
+  const ui = {
+    translating: false,
+    starts: 0,
+    settlements: 0,
+    cancellations: 0,
+    invalidations: 0,
+    failures: 0,
+    translationAtCancellation: "",
+    translationAtFailure: "",
+    translationAtSettlement: ""
+  };
 
   function options(stream: ReturnType<typeof deferredStream>): AITranslationRunOptions<TranslationValue, Phase> {
     return {
@@ -152,7 +174,12 @@ function createDeferredEditorHarness() {
         revision: controller.currentRevision,
         songIdentity: songDocumentIdentity(state.song)
       }),
-      applyTranslation: (value, expectedRevision, expectedSongIdentity) => adapter.applyAITranslation(
+      applyPartial: (value, expectedRevision, expectedSongIdentity) => adapter.applyAIPartial(
+        value,
+        expectedRevision,
+        expectedSongIdentity
+      ),
+      commitTerminal: (value, expectedRevision, expectedSongIdentity) => adapter.commitAITranslation(
         value,
         expectedRevision,
         expectedSongIdentity
@@ -161,15 +188,32 @@ function createDeferredEditorHarness() {
       clean: (value) => value.trim(),
       toValue: (text) => ({ text, enabled: true }),
       createEmptyResponseError: () => new Error("empty"),
-      onStart: () => undefined,
+      onStart: () => {
+        ui.translating = true;
+        ui.starts += 1;
+      },
       onStatus: () => undefined,
       onReasoning: () => undefined,
       onStreaming: () => undefined,
       onSuccess: () => undefined,
-      onFailure: () => undefined,
-      onCancelled: () => undefined,
-      onInvalidated: () => undefined,
-      onSettled: () => undefined
+      onFailure: () => {
+        ui.failures += 1;
+        ui.translationAtFailure = state.translationText;
+      },
+      onCancelled: () => {
+        ui.translating = false;
+        ui.cancellations += 1;
+        ui.translationAtCancellation = state.translationText;
+      },
+      onInvalidated: () => {
+        ui.translating = false;
+        ui.invalidations += 1;
+      },
+      onSettled: () => {
+        ui.translating = false;
+        ui.settlements += 1;
+        ui.translationAtSettlement = state.translationText;
+      }
     };
   }
 
@@ -181,6 +225,7 @@ function createDeferredEditorHarness() {
     flushReactQueue,
     options,
     orchestrator,
+    ui,
     get state() { return state; },
     get queuedUpdateCount() { return queuedUpdates.length; }
   };
@@ -427,18 +472,22 @@ async function batchedPartialAndMutationTest() {
 async function deferredCancelAndFailureRollbackTest() {
   {
     const harness = createDeferredEditorHarness();
-    const stream = deferredStream();
+    let translationAtAbort = "";
+    const stream = deferredStream(() => {
+      translationAtAbort = harness.state.translationText;
+    });
     const running = harness.orchestrator.run(harness.options(stream));
     stream.emitPartial("partial A");
     harness.flushReactQueue();
     assert.equal(harness.state.translationText, "partial A");
 
     assert.equal(harness.orchestrator.cancel(), true);
-    assert.equal(harness.state.translationText, "partial A", "cancel rollback may remain deferred by React");
-    assert.equal(harness.queuedUpdateCount, 1);
-    harness.flushReactQueue();
+    assert.equal(harness.state.translationText, "old A", "cancel commits rollback before returning");
+    assert.equal(harness.queuedUpdateCount, 0);
     assert.equal(harness.state.translationText, "old A");
     assert.equal(harness.state.style.translationText, "old A");
+    assert.equal(harness.ui.translationAtCancellation, "old A");
+    assert.equal(translationAtAbort, "old A", "cancel rollback commits before abort");
 
     stream.emitPartial("late cancel delta");
     stream.resolve("late cancel final");
@@ -455,18 +504,171 @@ async function deferredCancelAndFailureRollbackTest() {
     harness.flushReactQueue();
     stream.reject(new Error("provider failed"));
     await running;
-    assert.equal(harness.state.translationText, "partial A", "failure rollback may remain deferred by React");
-    assert.equal(harness.queuedUpdateCount, 1);
-    harness.flushReactQueue();
+    assert.equal(harness.state.translationText, "old A", "failure rollback commits before run settles");
+    assert.equal(harness.queuedUpdateCount, 0);
     assert.equal(harness.state.translationText, "old A");
     assert.equal(harness.state.style.translationText, "old A");
+    assert.equal(harness.ui.translationAtFailure, "old A");
+    assert.equal(harness.ui.translationAtSettlement, "old A");
   }
+}
+
+async function aiStartSupersedesPendingDocumentIntentsTest() {
+  for (const kind of ["link", "example-enrichment"] as const) {
+    const harness = createDeferredEditorHarness();
+    const pendingIntent = harness.controller.begin(kind);
+    const start = harness.adapter.beginAITranslation();
+
+    assert.equal(start.revision, 1, `${kind}: AI start advances the shared document revision exactly once`);
+    assert.equal(harness.controller.currentRevision, 1);
+    assert.equal(pendingIntent.signal.aborted, true, `${kind}: AI start aborts the older import transport`);
+    assert.equal(harness.controller.tryCommit(pendingIntent), null, `${kind}: older intent cannot commit after AI start`);
+
+    const stream = deferredStream();
+    const running = harness.orchestrator.run(harness.options(stream));
+    stream.emitPartial(`partial after ${kind}`);
+    harness.flushReactQueue();
+    assert.equal(harness.state.translationText, `partial after ${kind}`);
+    stream.resolve(`final after ${kind}`);
+    await running;
+
+    assert.equal(harness.state.translationText, `final after ${kind}`);
+    assert.equal(harness.queuedUpdateCount, 0, `${kind}: final is committed before run settles`);
+    assert.equal(harness.ui.translating, false);
+    assert.equal(harness.ui.settlements, 1);
+  }
+
+  // A pending import may itself have queued rollback for an older AI run.
+  // The newer AI start must drain that queue before taking its snapshot so
+  // the old rollback cannot render over generation 2.
+  {
+    const harness = createDeferredEditorHarness();
+    const oldStream = deferredStream();
+    const oldRun = harness.orchestrator.run(harness.options(oldStream));
+    oldStream.emitPartial("partial generation 1");
+    harness.flushReactQueue();
+    const pendingImport = harness.controller.begin("link");
+    const rollback = harness.orchestrator.invalidate();
+    assert.equal(harness.adapter.queueRollback(rollback), true);
+    assert.equal(harness.queuedUpdateCount, 1);
+
+    const start = harness.adapter.beginAITranslation();
+    assert.equal(start.revision, 1);
+    assert.equal(start.translation.text, "old A", "AI start snapshots after draining older rollback");
+    assert.equal(harness.state.translationText, "old A");
+    assert.equal(harness.queuedUpdateCount, 0);
+    assert.equal(pendingImport.signal.aborted, true);
+    assert.equal(harness.controller.tryCommit(pendingImport), null);
+
+    const nextStream = deferredStream();
+    const nextRun = harness.orchestrator.run(harness.options(nextStream));
+    nextStream.emitPartial("partial generation 2");
+    harness.flushReactQueue();
+    oldStream.resolve("late final generation 1");
+    await oldRun;
+    assert.equal(harness.state.translationText, "partial generation 2");
+    nextStream.resolve("final generation 2");
+    await nextRun;
+    assert.equal(harness.state.translationText, "final generation 2");
+  }
+}
+
+async function terminalCommitPrecedesLaterDocumentMutationsTest() {
+  const mutations: Array<{
+    label: string;
+    apply: (current: AppState) => AppState;
+    assertResult: (state: AppState) => void;
+  }> = [
+    {
+      label: "song",
+      apply: (current) => ({
+        ...current,
+        song: canonicalSongInfo({ source: "qq", title: "Song B", artist: "Artist B" })
+      }),
+      assertResult: (state) => assert.equal(state.song.title, "Song B")
+    },
+    {
+      label: "lyrics",
+      apply: (current) => ({ ...current, lyrics: "manual lyrics B" }),
+      assertResult: (state) => assert.equal(state.lyrics, "manual lyrics B")
+    },
+    {
+      label: "url",
+      apply: (current) => ({ ...current, url: "https://music.example/manual-b" }),
+      assertResult: (state) => assert.equal(state.url, "https://music.example/manual-b")
+    }
+  ];
+
+  for (const mutation of mutations) {
+    const harness = createDeferredEditorHarness();
+    const start = harness.adapter.beginAITranslation();
+    assert.equal(start.revision, 1);
+    const stream = deferredStream();
+    const running = harness.orchestrator.run(harness.options(stream));
+    stream.emitPartial("partial A");
+    harness.flushReactQueue();
+    assert.equal(harness.state.translationText, "partial A");
+
+    stream.resolve("final A");
+    await running;
+    assert.equal(harness.state.translationText, "final A", `${mutation.label}: terminal write is committed before run resolves`);
+    assert.equal(harness.queuedUpdateCount, 0);
+
+    const rollback = harness.orchestrator.invalidate();
+    assert.equal(rollback, undefined, `${mutation.label}: completed generation is no longer active`);
+    assert.equal(harness.adapter.queueDocumentMutation(rollback, mutation.apply), 2);
+    harness.flushReactQueue();
+    mutation.assertResult(harness.state);
+    assert.equal(harness.state.translationText, "final A");
+
+    stream.emitPartial(`late ${mutation.label}`);
+    assert.equal(harness.queuedUpdateCount, 0, `${mutation.label}: late delta cannot enqueue after terminal finish`);
+    assert.equal(harness.state.translationText, "final A");
+  }
+}
+
+async function replacementCommitsRollbackBeforeAbortTest() {
+  const harness = createDeferredEditorHarness();
+  const firstStart = harness.adapter.beginAITranslation();
+  assert.equal(firstStart.revision, 1);
+  let translationAtAbort = "";
+  const first = deferredStream(() => {
+    translationAtAbort = harness.state.translationText;
+  });
+  const firstRun = harness.orchestrator.run(harness.options(first));
+  first.emitPartial("partial generation 1");
+  harness.flushReactQueue();
+
+  assert.equal(harness.orchestrator.prepareReplacement(), true);
+  assert.equal(harness.state.translationText, "old A", "replacement rollback commits synchronously");
+  assert.equal(translationAtAbort, "old A", "replacement rollback commits before transport abort");
+  assert.equal(harness.queuedUpdateCount, 0);
+
+  const secondStart = harness.adapter.beginAITranslation();
+  assert.equal(secondStart.revision, 2, "replacement generation advances one new shared revision");
+  const second = deferredStream();
+  const secondRun = harness.orchestrator.run(harness.options(second));
+  second.emitPartial("partial generation 2");
+  harness.flushReactQueue();
+  first.emitPartial("late generation 1");
+  first.resolve("late final generation 1");
+  await firstRun;
+  assert.equal(harness.state.translationText, "partial generation 2");
+
+  second.resolve("final generation 2");
+  await secondRun;
+  assert.equal(harness.state.translationText, "final generation 2");
+  assert.equal(harness.ui.translating, false);
+  assert.equal(harness.ui.settlements, 1, "only the current generation settles the shared UI");
 }
 
 function productionAdapterWiringTest() {
   const source = readFileSync("components/editor/hooks/useEditorActions.ts", "utf8");
   assert.match(source, /documentStateAdapter\.queueDocumentMutation\(rollback, mutation\)/);
   assert.match(source, /documentStateAdapter\.queueRollback\(onInvalidateDocument\(\)\)/);
+  assert.match(source, /flushSync\(\(\) => setState\(updater\)\)/);
+  assert.match(source, /onInvalidateDocument\("ai-start"\)/);
+  assert.match(source, /documentStateAdapter\.beginAITranslation\(\)/);
   assert.doesNotMatch(source, /function markDocumentMutation/);
 }
 
@@ -513,6 +715,9 @@ void (async () => {
   await deferredImportRollbackTest();
   await batchedPartialAndMutationTest();
   await deferredCancelAndFailureRollbackTest();
+  await aiStartSupersedesPendingDocumentIntentsTest();
+  await terminalCommitPrecedesLaterDocumentMutationsTest();
+  await replacementCommitsRollbackBeforeAbortTest();
   await providerFailureRestoresCurrentDocumentTest();
   await newerGenerationWinsTest();
   productionAdapterWiringTest();

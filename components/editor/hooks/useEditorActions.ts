@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { normalizeCardStyle } from "@/lib/card-style-normalize";
 import { clearLyricContent, hasClearableLyricContent } from "@/lib/clear-content";
 import { applyEditorStyleChange } from "@/lib/editor/apply-style-change";
@@ -48,7 +49,7 @@ type UseEditorActionsInput = {
   onNotify: (message: string) => void;
   onCloseExamples: () => void;
   onClearTransientState: () => void;
-  onInvalidateDocument: () => TranslationValue | undefined;
+  onInvalidateDocument: (reason?: "document" | "ai-start") => TranslationValue | undefined;
 };
 
 export function useEditorActions({
@@ -81,6 +82,7 @@ export function useEditorActions({
     documentStateAdapterRef.current = new EditorDocumentStateAdapter(
       documentControllerRef.current,
       (updater) => setState(updater),
+      (updater) => flushSync(() => setState(updater)),
       () => currentDocumentRef.current
     );
   }
@@ -118,12 +120,37 @@ export function useEditorActions({
     return true;
   }
 
-  function applyAITranslation(
+  function beginAITranslation() {
+    // A replacement generation restores its own partial synchronously before
+    // this new document intent advances the shared revision.
+    onInvalidateDocument("ai-start");
+    const snapshot = documentStateAdapter.beginAITranslation();
+    setDocumentRevision(snapshot.revision);
+    return snapshot;
+  }
+
+  function getCurrentDocumentSnapshot() {
+    return documentStateAdapter.getDocumentSnapshot();
+  }
+
+  function applyAIPartial(
     { text, enabled }: TranslationValue,
     expectedRevision: number,
     expectedSongIdentity: string
   ) {
-    return documentStateAdapter.applyAITranslation(
+    return documentStateAdapter.applyAIPartial(
+      { text, enabled },
+      expectedRevision,
+      expectedSongIdentity
+    );
+  }
+
+  function commitAITranslation(
+    { text, enabled }: TranslationValue,
+    expectedRevision: number,
+    expectedSongIdentity: string
+  ) {
+    return documentStateAdapter.commitAITranslation(
       { text, enabled },
       expectedRevision,
       expectedSongIdentity
@@ -329,7 +356,10 @@ export function useEditorActions({
     beginSongImport,
     clearAllContent,
     handleStyleChange,
-    applyAITranslation,
+    beginAITranslation,
+    getCurrentDocumentSnapshot,
+    applyAIPartial,
+    commitAITranslation,
     setUrl,
     applyParsedSong,
     applyLocalAudio,

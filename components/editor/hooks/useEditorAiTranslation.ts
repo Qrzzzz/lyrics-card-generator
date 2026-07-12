@@ -17,16 +17,23 @@ import {
 } from "@/lib/ai/types";
 import { getAIUiCopy } from "@/lib/ai/ui-copy";
 import { AITranslationOrchestrator } from "@/lib/editor/ai-translation-orchestrator";
-import type { TranslationValue } from "@/lib/editor/editor-document-state-adapter";
+import type {
+  EditorDocumentSnapshot,
+  TranslationValue
+} from "@/lib/editor/editor-document-state-adapter";
 import type { Locale } from "@/lib/types";
 
 type UseEditorAiTranslationInput = {
   locale: Locale;
   lyrics: string;
-  documentRevision: number;
-  songIdentity: string;
-  translation: TranslationValue;
-  applyTranslation: (
+  beginAITranslation: () => EditorDocumentSnapshot;
+  getCurrentDocumentSnapshot: () => EditorDocumentSnapshot;
+  applyPartial: (
+    next: TranslationValue,
+    expectedRevision: number,
+    expectedSongIdentity: string
+  ) => boolean;
+  commitTerminal: (
     next: TranslationValue,
     expectedRevision: number,
     expectedSongIdentity: string
@@ -39,10 +46,10 @@ type UseEditorAiTranslationInput = {
 export function useEditorAiTranslation({
   locale,
   lyrics,
-  documentRevision,
-  songIdentity,
-  translation,
-  applyTranslation,
+  beginAITranslation,
+  getCurrentDocumentSnapshot,
+  applyPartial,
+  commitTerminal,
   onNotify,
   onRequireSettings,
   confirmOverwrite = (message) => window.confirm(message)
@@ -55,10 +62,6 @@ export function useEditorAiTranslation({
   const [aiError, setAIError] = useState("");
   const [aiSettings, setAISettings] = useState<AISettingsSummary>({ ...DEFAULT_AI_SETTINGS, hasApiKey: false });
   const aiOrchestratorRef = useRef(new AITranslationOrchestrator<TranslationValue, AITranslationPhase>());
-  const documentRevisionRef = useRef(documentRevision);
-  const songIdentityRef = useRef(songIdentity);
-  documentRevisionRef.current = documentRevision;
-  songIdentityRef.current = songIdentity;
   const aiCopy = useMemo(() => getAIUiCopy(locale), [locale]);
 
   useEffect(() => {
@@ -96,21 +99,20 @@ export function useEditorAiTranslation({
   }
 
   async function translateWithAI(presetId: string, reasoning: boolean) {
-    const previousTranslation = translation.text;
-    const previousEnabled = translation.enabled;
+    const currentDocument = getCurrentDocumentSnapshot();
+    const previousTranslation = currentDocument.translation.text;
     if (previousTranslation.trim() && !confirmOverwrite(aiCopy.overwriteConfirm)) {
       return;
     }
+    const intent = beginAITranslation();
 
     await aiOrchestratorRef.current.run({
-      revision: documentRevision,
-      songIdentity,
-      previousTranslation: { text: previousTranslation, enabled: previousEnabled },
-      getCurrentDocument: () => ({
-        revision: documentRevisionRef.current,
-        songIdentity: songIdentityRef.current
-      }),
-      applyTranslation,
+      revision: intent.revision,
+      songIdentity: intent.songIdentity,
+      previousTranslation: intent.translation,
+      getCurrentDocument: () => getCurrentDocumentSnapshot(),
+      applyPartial,
+      commitTerminal,
       clean: cleanAITranslation,
       toValue: (text) => ({ text, enabled: true }),
       createEmptyResponseError: () => new AITranslationError(aiCopy.emptyResponse, "empty_response"),
@@ -147,7 +149,7 @@ export function useEditorAiTranslation({
       },
       stream: async (signal, events) => {
         const prompt = buildLyricsTranslationPrompt({
-          lyrics,
+          lyrics: intent.lyrics,
           presetId,
           targetLocale: locale,
           promptLibrary: aiSettings.promptLibrary
@@ -168,7 +170,11 @@ export function useEditorAiTranslation({
     aiOrchestratorRef.current.cancel();
   }
 
-  function invalidateAITranslation() {
+  function invalidateAITranslation(reason: "document" | "ai-start" = "document") {
+    if (reason === "ai-start") {
+      aiOrchestratorRef.current.prepareReplacement();
+      return undefined;
+    }
     return aiOrchestratorRef.current.invalidate();
   }
 
