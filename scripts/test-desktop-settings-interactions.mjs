@@ -71,6 +71,45 @@ async function waitForLyricsLineBudget(expected, timeout = 5_000) {
   );
 }
 
+async function waitForCompleteExportEnabled(timeout = 15_000) {
+  try {
+    await page.waitForFunction(() => {
+      const button = document.querySelector('[data-testid="complete-export-button"]');
+      return button instanceof HTMLButtonElement && !button.disabled;
+    }, undefined, { timeout });
+  } catch (error) {
+    const diagnostics = await page.evaluate(() => {
+      const button = document.querySelector('[data-testid="complete-export-button"]');
+      const alert = document.querySelector('[role="alert"]');
+      const root = document.querySelector('[data-export-card]');
+      const lyrics = root?.querySelector('[data-card-lyrics]');
+      const viewport = root?.querySelector('[data-card-lyrics-viewport]');
+      return {
+        buttonMounted: button instanceof HTMLButtonElement,
+        buttonDisabled: button instanceof HTMLButtonElement ? button.disabled : null,
+        blockingMessage: alert?.textContent?.trim() ?? null,
+        card: root instanceof HTMLElement ? {
+          width: root.offsetWidth,
+          height: root.offsetHeight
+        } : null,
+        lyrics: lyrics instanceof HTMLElement ? {
+          clientHeight: lyrics.clientHeight,
+          scrollHeight: lyrics.scrollHeight,
+          clientWidth: lyrics.clientWidth,
+          scrollWidth: lyrics.scrollWidth
+        } : null,
+        viewport: viewport instanceof HTMLElement ? {
+          clientHeight: viewport.clientHeight,
+          scrollHeight: viewport.scrollHeight,
+          clientWidth: viewport.clientWidth,
+          scrollWidth: viewport.scrollWidth
+        } : null
+      };
+    });
+    throw new Error(`complete export did not become ready: ${JSON.stringify(diagnostics)}`, { cause: error });
+  }
+}
+
 async function assertExportHost(stepLabel) {
   const state = await page.evaluate(() => {
     const host = document.querySelector("[data-export-card-host]");
@@ -714,10 +753,7 @@ try {
   await waitForLyricsLineBudget("原文 18 + 译文 18 = 36 / 36");
   assert.match(await page.getByTestId("lyrics-line-budget").innerText(), /18.*18.*36 \/ 36/s);
   await page.locator('button[data-step-id="export"]').click();
-  await page.waitForFunction(() => {
-    const button = document.querySelector('[data-testid="complete-export-button"]');
-    return button instanceof HTMLButtonElement && !button.disabled;
-  }, undefined, { timeout: 15_000 });
+  await waitForCompleteExportEnabled();
   assert.equal(await page.getByTestId("complete-export-button").isEnabled(), true, "36 logical lines remain exportable in auto-height mode");
   const autoHeightCard = await measureExportCard();
   assert.ok(autoHeightCard && autoHeightCard.height > 3200 && autoHeightCard.height <= 6400, `auto-height export uses the real measured card height: ${JSON.stringify(autoHeightCard)}`);

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { RefObject } from "react";
 import {
+  AUTO_HEIGHT_SETTLE_TOLERANCE,
   findExportCard,
   isPortraitCustomAutoHeight,
   measureAutoCanvasHeight
@@ -195,7 +196,8 @@ function evaluateExportCardDom(state: AppState, container: HTMLElement | null): 
   );
   const measuredAutoHeight = root ? measureAutoCanvasHeight(state, container) : null;
   const isAutoHeightStable = !isPortraitCustomAutoHeight(state) || Boolean(
-    measuredAutoHeight !== null && Math.abs(measuredAutoHeight - expectedSize.height) < 4
+    measuredAutoHeight !== null &&
+    Math.abs(measuredAutoHeight - expectedSize.height) <= AUTO_HEIGHT_SETTLE_TOLERANCE
   );
 
   return {
@@ -209,7 +211,7 @@ function evaluateExportCardDom(state: AppState, container: HTMLElement | null): 
   };
 }
 
-export function detectExportCardOverflow(root: HTMLElement, tolerance = 2) {
+export function detectExportCardOverflow(root: HTMLElement, tolerance = AUTO_HEIGHT_SETTLE_TOLERANCE) {
   const lyrics = root.querySelector<HTMLElement>("[data-card-lyrics]");
   const viewport = root.querySelector<HTMLElement>("[data-card-lyrics-viewport]");
 

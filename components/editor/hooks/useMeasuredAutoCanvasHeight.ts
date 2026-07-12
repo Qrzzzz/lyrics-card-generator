@@ -8,6 +8,8 @@ import type { AppState } from "@/lib/types";
 
 type AppStateSetter = Dispatch<SetStateAction<AppState>>;
 
+export const AUTO_HEIGHT_SETTLE_TOLERANCE = 2;
+
 export function useMeasuredAutoCanvasHeight(
   state: AppState,
   setState: AppStateSetter,
@@ -40,7 +42,7 @@ export function useMeasuredAutoCanvasHeight(
             return current;
           }
 
-          if (Math.abs(current.style.height - nextHeight) < 4) {
+          if (Math.abs(current.style.height - nextHeight) <= AUTO_HEIGHT_SETTLE_TOLERANCE) {
             return current;
           }
 
