@@ -48,7 +48,8 @@ import { DEFAULT_USER_SETTINGS, getExportPixelRatio, type ExportQualityId } from
 import { resolveEffectiveUiThemeId } from "@/lib/settings/user-settings";
 import type { AppState, FontScheme, Locale } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { MAX_EXPORT_LYRIC_LINES } from "@/lib/lyrics-document";
+import { snapshotAsAppState } from "@/lib/export-snapshot";
+import { resolveExportSafetyMessage } from "@/lib/export-safety";
 
 type ActiveSurface = "editor" | "examples" | "settings";
 
@@ -74,6 +75,7 @@ export function LyricEditor() {
   const [exportQuality, setExportQuality] = useState<ExportQualityId>(DEFAULT_USER_SETTINGS.defaultExportQuality);
   const [toast, setToast] = useState<ToastNotice | null>(null);
   const exportCardRef = useRef<HTMLElement | null>(null);
+  const captureCardRef = useRef<HTMLElement | null>(null);
   const previewCardRef = useRef<HTMLElement | null>(null);
   const toastIdRef = useRef(0);
   const stageRef = useRef<HTMLDivElement | null>(null);
@@ -107,7 +109,7 @@ export function LyricEditor() {
   useMeasuredAutoCanvasHeight(state, setState, exportCardRef);
   const exportReadiness = useExportCardReadiness({ state: parsedState, exportCardRef });
   const exportBlockMessage = exportReadiness.blockingReason
-    ? resolveExportBlockingMessage(exportReadiness.blockingReason, exportReadiness.lineStatus.totalLineCount, t)
+    ? resolveExportSafetyMessage(exportReadiness.blockingReason, exportReadiness.lineStatus.totalLineCount, t)
     : undefined;
   const {
     userSettings,
@@ -147,6 +149,7 @@ export function LyricEditor() {
     celebrationKey,
     isCompleteExporting,
     clearTransitionKey,
+    activeExportSnapshot,
     documentRevision,
     beginSongImport,
     clearAllContent,
@@ -167,17 +170,20 @@ export function LyricEditor() {
   } = useEditorActions({
     parsedState,
     setState,
-    cardRef: exportCardRef,
+    cardRef: captureCardRef,
     exportPixelRatio,
     exportBlockMessage,
-    getExportBlockMessage: () => {
-      const validation = getLiveExportCardValidation(parsedState, exportCardRef.current);
+    getExportBlockMessage: (snapshot) => {
+      const validationState = snapshot ? snapshotAsAppState(snapshot, parsedState) : parsedState;
+      const validation = getLiveExportCardValidation(validationState, captureCardRef.current);
       return validation.blockingReason
-        ? resolveExportBlockingMessage(validation.blockingReason, validation.lineStatus.totalLineCount, t)
+        ? resolveExportSafetyMessage(validation.blockingReason, validation.lineStatus.totalLineCount, t)
         : undefined;
     },
     exampleLoadedMessage: settingsCopy[state.locale].exampleLoaded,
     clearAlreadyEmptyMessage: settingsCopy[state.locale].clearAlreadyEmpty,
+    exportBusyMessage: t("exportBusy"),
+    exportFailedMessage: (detail) => t("exportFailed", { detail }),
     confirmReplaceDocument: () => window.confirm(t("replaceDocumentConfirm")),
     onNotify: showToast,
     onCloseExamples: () => setActiveSurface("editor"),
@@ -522,8 +528,18 @@ export function LyricEditor() {
               lyrics={parsedState.lyrics}
               style={parsedState.style}
               exportCardRef={exportCardRef}
-              locale={state.locale}
+              locale={parsedState.locale}
             />
+            {activeExportSnapshot ? (
+              <ExportCardHost
+                song={activeExportSnapshot.song as AppState["song"]}
+                lyrics={activeExportSnapshot.lyrics}
+                style={activeExportSnapshot.style as AppState["style"]}
+                exportCardRef={captureCardRef}
+                locale={activeExportSnapshot.locale}
+                snapshotId={activeExportSnapshot.id}
+              />
+            ) : null}
 
             <SettingsSurface
               isActive={isSettingsSurfaceOpen}
@@ -577,24 +593,4 @@ export function LyricEditor() {
       </div>
     </AppMotionProvider>
   );
-}
-
-function resolveExportBlockingMessage(
-  reason: ExportCardBlockingReason,
-  totalLineCount: number,
-  t: ReturnType<typeof createT>
-) {
-  switch (reason) {
-    case "lyrics-limit":
-      return t("lyricsLineLimitExceeded", { total: totalLineCount, max: MAX_EXPORT_LYRIC_LINES });
-    case "fonts-loading":
-      return t("exportFontsLoading");
-    case "card-measuring":
-      return t("exportCardMeasuring");
-    case "content-overflow":
-      return t("exportContentOverflow");
-    case "card-unavailable":
-    default:
-      return t("exportCardUnavailable");
-  }
 }

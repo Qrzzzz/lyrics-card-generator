@@ -224,7 +224,7 @@ test("restores portrait custom size and auto height after landscape round trips"
     .getByRole("heading", { name: "Export Card Only", exact: true })
     .locator("xpath=ancestor::section[1]");
   const previewSize = previewSection.locator("span").filter({ hasText: /^\d+x\d+$/ }).first();
-  const exportCard = page.locator('[data-export-card="true"]');
+  const exportCard = page.locator('[data-export-card-host] [data-export-card="true"]');
 
   await expect(portrait).toHaveAttribute("aria-checked", "true");
   await expect(sizeMode.getByRole("radio", { name: "Custom", exact: true })).toHaveAttribute("aria-checked", "true");
@@ -358,12 +358,62 @@ test("exports a CORS-safe remote cover at standard and high pixel ratios", async
     .getByRole("radiogroup", { name: "Size Mode", exact: true })
     .getByRole("radio", { name: "1:1 Square", exact: true })
     .click();
-  await expect(page.locator('[data-export-card="true"]')).toHaveCSS("width", "1080px");
-  await expect(page.locator('[data-export-card="true"]')).toHaveCSS("height", "1080px");
+  await expect(page.locator('[data-export-card-host] [data-export-card="true"]')).toHaveCSS("width", "1080px");
+  await expect(page.locator('[data-export-card-host] [data-export-card="true"]')).toHaveCSS("height", "1080px");
 
   await page.locator('[data-step-id="export"]').click();
   await exportAndExpectDimensions(page, "medium", 1512, 1512);
   await exportAndExpectDimensions(page, "high", 2160, 2160);
+});
+
+test("shares the 36/37 logical-line export boundary with desktop", async ({ page }) => {
+  await openWebLite(page, { width: 1280, height: 900 });
+  await page.locator('[data-step-id="lyrics"]').click();
+  const lyricText = page.getByLabel("Lyric Text", { exact: true });
+  const lines = (count: number) => Array.from({ length: count }, (_, index) => `Line ${index + 1}`).join("\n");
+
+  await lyricText.fill(lines(36));
+  await page.locator('[data-step-id="export"]').click();
+  await expect(page.getByText(/36-line limit/i)).toHaveCount(0);
+
+  await page.locator('[data-step-id="lyrics"]').click();
+  await lyricText.fill(lines(37));
+  await page.locator('[data-step-id="export"]').click();
+  await expect(page.getByText(/37 non-empty lines.*36-line limit/i)).toBeVisible();
+});
+
+test("blocks real overflow on a fixed 1:1 export canvas", async ({ page }) => {
+  await openWebLite(page, { width: 1280, height: 900 });
+  await page.locator('[data-step-id="lyrics"]').click();
+  await page.getByLabel("Lyric Text", { exact: true }).fill(
+    Array.from({ length: 20 }, (_, index) => `${index + 1} ${"W".repeat(180)}`).join("\n")
+  );
+  await page.locator('[data-step-id="layout"]').click();
+  await page
+    .getByRole("radiogroup", { name: "Size Mode", exact: true })
+    .getByRole("radio", { name: "1:1 Square", exact: true })
+    .click();
+  await page.locator('[data-step-id="export"]').click();
+  await expect(page.getByText(/cannot contain all lyrics/i)).toBeVisible();
+});
+
+test("exports from the independent host while the visible preview is collapsed", async ({ page }) => {
+  test.setTimeout(120_000);
+  await openWebLite(page, { width: 768, height: 1024 });
+  await page.locator('[data-step-id="lyrics"]').click();
+  await page.getByLabel("Lyric Text", { exact: true }).fill("A stable line\nA second line");
+  await page.locator('[data-step-id="layout"]').click();
+  await page
+    .getByRole("radiogroup", { name: "Size Mode", exact: true })
+    .getByRole("radio", { name: "1:1 Square", exact: true })
+    .click();
+  const previewToggle = page.getByTestId("preview-pane-toggle");
+  await previewToggle.click();
+  await expect(page.getByTestId("preview-pane-content")).toHaveAttribute("aria-hidden", "true");
+  await expect(page.locator("[data-export-card-host]")).toHaveCount(1);
+
+  await page.locator('[data-step-id="export"]').click();
+  await exportAndExpectDimensions(page, "medium", 1512, 1512);
 });
 
 async function openWebLite(page: Page, viewport = { width: 1280, height: 900 }) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import type { RefObject } from "react";
 import {
   AUTO_HEIGHT_SETTLE_TOLERANCE,
@@ -10,17 +10,13 @@ import {
 } from "@/components/editor/hooks/useMeasuredAutoCanvasHeight";
 import { getCardSize } from "@/lib/card-size";
 import {
-  getExportLyricLineStatus,
-  type ExportLyricLineStatus
-} from "@/lib/lyrics-document";
+  evaluateMinimumExportSafety,
+  type ExportSafetyBlockingReason
+} from "@/lib/export-safety";
+import type { ExportLyricLineStatus } from "@/lib/lyrics-document";
 import type { AppState } from "@/lib/types";
 
-export type ExportCardBlockingReason =
-  | "lyrics-limit"
-  | "card-unavailable"
-  | "fonts-loading"
-  | "card-measuring"
-  | "content-overflow";
+export type ExportCardBlockingReason = ExportSafetyBlockingReason;
 
 // Fractional line heights can make Chromium report a 2-3px scroll delta even
 // when the intrinsic lyrics block is fully contained by its viewport.
@@ -72,21 +68,6 @@ export function useExportCardReadiness({
   exportCardRef
 }: UseExportCardReadinessInput): ExportCardReadiness {
   const [domReadiness, setDomReadiness] = useState<DomReadiness>(initialDomReadiness);
-  const lineStatus = useMemo(
-    () => getExportLyricLineStatus({
-      lyrics: state.lyrics,
-      translationText: state.style.translationText,
-      translationEnabled: state.style.translationEnabled,
-      contentMode: state.style.contentMode
-    }),
-    [
-      state.lyrics,
-      state.style.contentMode,
-      state.style.translationEnabled,
-      state.style.translationText
-    ]
-  );
-
   useEffect(() => {
     let active = true;
     let frame = 0;
@@ -154,7 +135,7 @@ export function useExportCardReadiness({
   const currentDomReadiness = isCurrentState
     ? domReadiness
     : initialDomReadiness;
-  const blockingReason = resolveBlockingReason(lineStatus, currentDomReadiness);
+  const { lineStatus, blockingReason } = evaluateMinimumExportSafety(state, currentDomReadiness);
 
   return {
     isReady: blockingReason === null,
@@ -174,16 +155,11 @@ export function getLiveExportCardValidation(
   state: AppState,
   container: HTMLElement | null
 ): LiveExportCardValidation {
-  const lineStatus = getExportLyricLineStatus({
-    lyrics: state.lyrics,
-    translationText: state.style.translationText,
-    translationEnabled: state.style.translationEnabled,
-    contentMode: state.style.contentMode
-  });
   const readiness = evaluateExportCardDom(state, container);
+  const { lineStatus, blockingReason } = evaluateMinimumExportSafety(state, readiness);
 
   return {
-    blockingReason: resolveBlockingReason(lineStatus, readiness),
+    blockingReason,
     lineStatus
   };
 }
@@ -229,28 +205,6 @@ export function detectExportCardOverflow(root: HTMLElement, tolerance = EXPORT_C
       viewport.scrollWidth > viewport.clientWidth + tolerance
     ))
   );
-}
-
-function resolveBlockingReason(
-  lineStatus: ExportLyricLineStatus,
-  readiness: DomReadiness
-): ExportCardBlockingReason | null {
-  if (!lineStatus.canExport) {
-    return "lyrics-limit";
-  }
-  if (!readiness.isCardMounted) {
-    return "card-unavailable";
-  }
-  if (!readiness.areFontsReady) {
-    return "fonts-loading";
-  }
-  if (!readiness.isCardSizeStable || !readiness.isAutoHeightStable) {
-    return "card-measuring";
-  }
-  if (readiness.hasContentOverflow) {
-    return "content-overflow";
-  }
-  return null;
 }
 
 function sameDomReadiness(left: DomReadiness, right: DomReadiness) {

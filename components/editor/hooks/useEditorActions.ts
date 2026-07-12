@@ -1,11 +1,16 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { getCardSize } from "@/lib/card-size";
 import { normalizeCardStyle } from "@/lib/card-style-normalize";
 import { clearLyricContent, hasClearableLyricContent } from "@/lib/clear-content";
 import { applyEditorStyleChange } from "@/lib/editor/apply-style-change";
 import { exportNodeAsPng } from "@/lib/export-image";
+import { createExportSnapshot, type ExportSnapshot } from "@/lib/export-snapshot";
+import {
+  ExportTransactionMutex,
+  runExportTransaction,
+  waitForExportSnapshotNode
+} from "@/lib/export-transaction";
 import {
   canApplyLyricsCandidate,
   canonicalSongInfo,
@@ -23,7 +28,6 @@ import type {
   ParsedSongData,
   SongInfo
 } from "@/lib/types";
-import { sanitizeFilePart } from "@/lib/utils";
 
 type TranslationValue = {
   text: string;
@@ -36,7 +40,9 @@ type UseEditorActionsInput = {
   cardRef: React.RefObject<HTMLElement | null>;
   exportPixelRatio: number;
   exportBlockMessage?: string;
-  getExportBlockMessage?: () => string | undefined;
+  getExportBlockMessage?: (snapshot?: ExportSnapshot) => string | undefined;
+  exportBusyMessage: string;
+  exportFailedMessage: (detail: string) => string;
   exampleLoadedMessage: string;
   clearAlreadyEmptyMessage: string;
   confirmReplaceDocument: () => boolean;
@@ -53,6 +59,8 @@ export function useEditorActions({
   exportPixelRatio,
   exportBlockMessage,
   getExportBlockMessage,
+  exportBusyMessage,
+  exportFailedMessage,
   exampleLoadedMessage,
   clearAlreadyEmptyMessage,
   confirmReplaceDocument,
@@ -67,6 +75,14 @@ export function useEditorActions({
   const clearVersionRef = useRef(0);
   const documentControllerRef = useRef(new DocumentTransactionController());
   const [documentRevision, setDocumentRevision] = useState(0);
+  const [activeExportSnapshot, setActiveExportSnapshot] = useState<ExportSnapshot | null>(null);
+  const exportMutexRef = useRef(new ExportTransactionMutex());
+  const exportRevisionRef = useRef(0);
+  const previousExportStateRef = useRef(parsedState);
+  if (previousExportStateRef.current !== parsedState) {
+    previousExportStateRef.current = parsedState;
+    exportRevisionRef.current += 1;
+  }
 
   function markDocumentMutation() {
     onInvalidateDocument();
@@ -185,35 +201,49 @@ export function useEditorActions({
   }
 
   async function completeAndExport() {
-    const initialBlockMessage = getExportBlockMessage?.() ?? exportBlockMessage;
+    const initialBlockMessage = exportBlockMessage;
     if (initialBlockMessage) {
       onNotify(initialBlockMessage);
       return;
     }
 
-    if (!cardRef.current || isCompleteExporting) {
-      return;
-    }
-
     const clearVersion = clearVersionRef.current;
-    setIsCompleteExporting(true);
-
-    try {
-      const finalBlockMessage = getExportBlockMessage?.() ?? exportBlockMessage;
-      if (finalBlockMessage) {
-        onNotify(finalBlockMessage);
-        return;
+    const snapshot = createExportSnapshot(parsedState, exportPixelRatio, exportRevisionRef.current);
+    const result = await runExportTransaction({
+      mutex: exportMutexRef.current,
+      snapshot,
+      mountSnapshot: async (mountedSnapshot) => {
+        setIsCompleteExporting(true);
+        setActiveExportSnapshot(mountedSnapshot);
+        return waitForExportSnapshotNode(() => cardRef.current, mountedSnapshot.id);
+      },
+      validateSnapshot: (mountedSnapshot) => getExportBlockMessage?.(mountedSnapshot) ?? null,
+      captureSnapshot: (mountedSnapshot, node) => exportNodeAsPng(
+        node,
+        mountedSnapshot.fileName,
+        mountedSnapshot.width,
+        mountedSnapshot.height,
+        mountedSnapshot.pixelRatio
+      ),
+      unmountSnapshot: () => {
+        setActiveExportSnapshot(null);
+        setIsCompleteExporting(false);
       }
-      const size = getCardSize(parsedState.style);
-      const fileName = `lyric-card-${sanitizeFilePart(parsedState.song.title)}.png`;
-      await exportNodeAsPng(cardRef.current, fileName, size.width, size.height, exportPixelRatio);
+    });
+
+    if (result.ok) {
       if (clearVersion === clearVersionRef.current) {
         setCelebrationKey((key) => key + 1);
       }
-    } catch (error) {
-      console.error("[Lyric Card Generator] complete export failed", error);
-    } finally {
-      setIsCompleteExporting(false);
+      return;
+    }
+    if (result.kind === "busy") {
+      onNotify(exportBusyMessage);
+    } else if (result.kind === "blocked") {
+      onNotify(result.reason);
+    } else {
+      console.error("[Lyric Card Generator] complete export failed", result.error);
+      onNotify(exportFailedMessage(result.error instanceof Error ? result.error.message : "Unknown error"));
     }
   }
 
@@ -293,6 +323,7 @@ export function useEditorActions({
     celebrationKey,
     isCompleteExporting,
     clearTransitionKey,
+    activeExportSnapshot,
     documentRevision,
     beginSongImport,
     clearAllContent,
