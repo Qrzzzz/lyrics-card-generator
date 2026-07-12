@@ -193,6 +193,24 @@ function assertSameSelection(before, after, label) {
   );
 }
 
+async function waitForSameSelection(editor, expected, timeout = 5_000) {
+  const deadline = Date.now() + timeout;
+  let current = await getLyricsContext(editor);
+  while (
+    Date.now() < deadline &&
+    (
+      current.start !== expected.start ||
+      current.end !== expected.end ||
+      current.selectedText !== expected.selectedText ||
+      current.lineIndex !== expected.lineIndex
+    )
+  ) {
+    await page.waitForTimeout(50);
+    current = await getLyricsContext(editor);
+  }
+  return current;
+}
+
 async function measureExportCard() {
   return page.evaluate((overflowTolerance) => {
     const root = document.querySelector("[data-export-card-host] [data-export-card]");
@@ -233,6 +251,9 @@ async function assertSongSearchBehavior() {
   await combobox.fill("keyboard mock");
   const listbox = page.getByTestId("song-search-listbox");
   await listbox.waitFor({ state: "visible", timeout: 5_000 });
+  await page.waitForFunction(() => (
+    document.querySelector('[role="listbox"] [role="option"]')?.textContent?.includes("keyboard mock")
+  ));
   const popup = page.getByTestId("song-search-popup");
   const options = listbox.getByRole("option");
   assert.equal(await options.count(), 8, "mock search renders eight options");
@@ -283,6 +304,9 @@ async function assertSongSearchBehavior() {
 
   await combobox.fill("mouse mock");
   await listbox.waitFor({ state: "visible" });
+  await page.waitForFunction(() => (
+    document.querySelector('[role="listbox"] [role="option"]')?.textContent?.includes("mouse mock")
+  ));
   await options.nth(2).click();
   await page.waitForFunction(() => document.querySelector('[role="combobox"]')?.hasAttribute("disabled"));
   assert.equal(await options.nth(0).isDisabled(), true, "options disable during resolve");
@@ -654,6 +678,7 @@ try {
     node.focus();
     node.setSelectionRange(selection.start, selection.end);
     node.dispatchEvent(new Event("select", { bubbles: true }));
+    node.dispatchEvent(new KeyboardEvent("keyup", { bubbles: true, key: "Shift" }));
     const scroll = node.closest('[data-testid="lyrics-shared-scroll"]');
     if (scroll instanceof HTMLElement) {
       scroll.scrollTop = Math.min(
@@ -670,7 +695,7 @@ try {
   await waitForLayoutStable(workspace);
   const expandedWindowHeight = await workspace.evaluate((element) => element.getBoundingClientRect().height);
   assert.ok(expandedWindowHeight > compactHeight, `maximum workspace height follows available window space: ${JSON.stringify({ compactHeight, expandedWindowHeight })}`);
-  const afterWindowResize = await getLyricsContext(translationLyrics);
+  const afterWindowResize = await waitForSameSelection(translationLyrics, contextBeforeWindowResize);
   assertSameSelection(contextBeforeWindowResize, afterWindowResize, "window height change");
   assert.equal(afterWindowResize.focused, true, "window size changes preserve translation focus");
   await setWindowSize(1000, 700);
@@ -680,6 +705,7 @@ try {
     node.focus();
     node.setSelectionRange(selection.start, selection.end);
     node.dispatchEvent(new Event("select", { bubbles: true }));
+    node.dispatchEvent(new KeyboardEvent("keyup", { bubbles: true, key: "Shift" }));
     const scroll = node.closest('[data-testid="lyrics-shared-scroll"]');
     if (scroll instanceof HTMLElement) scroll.scrollTop = Math.min(155.4286, scroll.scrollHeight - scroll.clientHeight);
   }, { start: translationSelectionStart, end: translationSelectionEnd });
