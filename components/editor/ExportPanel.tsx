@@ -1,6 +1,6 @@
 "use client";
 
-import { ImageDown } from "lucide-react";
+import { AlertTriangle, ImageDown } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useAppReducedMotion } from "@/components/motion/AppMotionProvider";
 import { FieldLabel, Section, SegmentedControl } from "@/components/ui/controls";
@@ -13,6 +13,7 @@ export function ExportPanel({
   exportQuality,
   onExportQualityChange,
   isExporting,
+  blockingMessage,
   qualityOptions = ["low", "medium", "high"],
   qualityLabels
 }: {
@@ -21,6 +22,7 @@ export function ExportPanel({
   exportQuality: ExportQualityId;
   onExportQualityChange: (quality: ExportQualityId) => void;
   isExporting: boolean;
+  blockingMessage?: string;
   qualityOptions?: readonly ExportQualityId[];
   qualityLabels?: Partial<Record<ExportQualityId, string>>;
 }) {
@@ -39,6 +41,15 @@ export function ExportPanel({
       contentClassName="gap-4"
     >
       <div aria-busy={isExporting} className="grid gap-4">
+        {blockingMessage ? (
+          <div
+            role="alert"
+            className="status-warning flex items-start gap-3 rounded-lg border px-3 py-3 text-sm leading-relaxed"
+          >
+            <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+            <span>{blockingMessage}</span>
+          </div>
+        ) : null}
         <FieldLabel label={t("exportQuality")} className="gap-3">
           <SegmentedControl<ExportQualityId>
             value={exportQuality}

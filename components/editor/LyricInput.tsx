@@ -2,16 +2,21 @@
 
 import { Languages, SplitSquareVertical } from "lucide-react";
 import { type ReactNode, useId } from "react";
+import { LyricsWorkspace } from "@/components/editor/LyricsWorkspace";
 import { AiTranslateButton } from "@/components/lyrics/AiTranslateButton";
 import { TranslationFieldBorder } from "@/components/lyrics/TranslationFieldBorder";
 import { ActionButton, FieldLabel, Section, TextareaField, ToggleRow } from "@/components/ui/controls";
 import { getAIUiCopy } from "@/lib/ai/ui-copy";
 import type { createT } from "@/lib/i18n";
+import type { ExportLyricLineStatus } from "@/lib/lyrics-document";
 import { formatChineseTranslation, splitAlternatingLyrics } from "@/lib/lyric-format";
-import type { ContentMode, Locale } from "@/lib/types";
+import type { ContentMode, Locale, SongInfo } from "@/lib/types";
 
 export function LyricInput({
   lyrics,
+  song,
+  lineStatus,
+  presentation = "legacy",
   onLyricsChange,
   translationEnabled,
   translationText,
@@ -21,13 +26,18 @@ export function LyricInput({
   onAITranslate,
   isAITranslating,
   aiTranslatePanel,
+  lyricsFetchPanel,
   themeColor,
   contentMode,
   locale,
   t,
-  showAiTranslate = true
+  showAiTranslate = true,
+  onViewportModeChange
 }: {
   lyrics: string;
+  song?: SongInfo;
+  lineStatus?: ExportLyricLineStatus;
+  presentation?: "legacy" | "workspace";
   onLyricsChange: (lyrics: string) => void;
   translationEnabled: boolean;
   translationText: string;
@@ -37,16 +47,45 @@ export function LyricInput({
   onAITranslate: () => void;
   isAITranslating: boolean;
   aiTranslatePanel?: ReactNode;
+  lyricsFetchPanel?: ReactNode;
   themeColor: string;
   contentMode: ContentMode;
   locale: Locale;
   t: ReturnType<typeof createT>;
   showAiTranslate?: boolean;
+  onViewportModeChange?: (mode: "standard" | "expanded" | "immersive") => void;
 }) {
+  const translationFieldId = useId();
+
+  if (presentation === "workspace" && song && lineStatus) {
+    return (
+    <LyricsWorkspace
+      lyrics={lyrics}
+      song={song}
+      lineStatus={lineStatus}
+      onLyricsChange={onLyricsChange}
+      translationEnabled={translationEnabled}
+      translationText={translationText}
+      onTranslationEnabledChange={onTranslationEnabledChange}
+      onTranslationTextChange={onTranslationTextChange}
+      onSplitAlternatingLyrics={onSplitAlternatingLyrics}
+      onAITranslate={onAITranslate}
+      isAITranslating={isAITranslating}
+      aiPanel={aiTranslatePanel}
+      lyricsFetchPanel={lyricsFetchPanel}
+      themeColor={themeColor}
+      contentMode={contentMode}
+      locale={locale}
+      t={t}
+      showAiTranslate={showAiTranslate}
+      onViewportModeChange={onViewportModeChange}
+    />
+    );
+  }
+
   const lines = lyrics ? lyrics.split(/\r?\n/).length : 0;
   const showTranslation = contentMode === "lyrics" && translationEnabled;
   const aiCopy = getAIUiCopy(locale);
-  const translationFieldId = useId();
 
   return (
     <Section title={t("lyrics")} eyebrow={t("manualText")}>

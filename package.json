@@ -1,6 +1,6 @@
 {
   "name": "lyric-card-generator",
-  "version": "4.6.4",
+  "version": "5.0.0",
   "private": true,
   "main": "electron/main.js",
   "scripts": {
@@ -17,7 +17,7 @@
     "web-lite:build": "node scripts/build-web-lite.mjs",
     "web-lite:check": "node scripts/check-web-lite.mjs",
     "web-lite:smoke": "playwright test --config=playwright.web-lite.config.ts",
-    "core:test": "tsx scripts/test-v2-core.ts && tsx scripts/test-v32-settings.ts && tsx scripts/test-v321-theme-tokens.ts && tsx scripts/test-v34-layout-grid.ts && tsx scripts/test-stepper-layout.ts && tsx scripts/test-titlebar-regression.ts && tsx scripts/test-examples.ts && tsx scripts/test-settings-wing.ts && tsx scripts/test-ai-settings-save-controller.ts && tsx scripts/test-release-consistency.ts && tsx scripts/test-motion-system.ts && tsx scripts/test-ai-provider-response.ts && tsx scripts/test-netease-search-normalize.ts && node scripts/test-electron-ai-prompt-settings.cjs && node scripts/test-electron-font-options.cjs && node scripts/test-electron-user-preferences.cjs && node scripts/test-electron-background-images.cjs",
+    "core:test": "tsx scripts/test-v2-core.ts && tsx scripts/test-v32-settings.ts && tsx scripts/test-v321-theme-tokens.ts && tsx scripts/test-v34-layout-grid.ts && tsx scripts/test-stepper-layout.ts && tsx scripts/test-lyrics-document.ts && tsx scripts/test-lyrics-viewport.ts && tsx scripts/test-titlebar-regression.ts && tsx scripts/test-examples.ts && tsx scripts/test-settings-wing.ts && tsx scripts/test-ai-settings-save-controller.ts && tsx scripts/test-release-consistency.ts && tsx scripts/test-motion-system.ts && tsx scripts/test-ai-provider-response.ts && tsx scripts/test-netease-search-normalize.ts && node scripts/test-electron-ai-prompt-settings.cjs && node scripts/test-electron-font-options.cjs && node scripts/test-electron-user-preferences.cjs && node scripts/test-electron-background-images.cjs",
     "desktop:dev": "node scripts/start-electron-dev.mjs",
     "desktop:prepare": "node scripts/prepare-electron-dist.mjs",
     "desktop:interaction-test": "node scripts/test-desktop-settings-interactions.mjs",

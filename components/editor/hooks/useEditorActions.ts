@@ -27,6 +27,8 @@ type UseEditorActionsInput = {
   setState: React.Dispatch<React.SetStateAction<AppState>>;
   cardRef: React.RefObject<HTMLElement | null>;
   exportPixelRatio: number;
+  exportBlockMessage?: string;
+  getExportBlockMessage?: () => string | undefined;
   exampleLoadedMessage: string;
   clearAlreadyEmptyMessage: string;
   onNotify: (message: string) => void;
@@ -39,6 +41,8 @@ export function useEditorActions({
   setState,
   cardRef,
   exportPixelRatio,
+  exportBlockMessage,
+  getExportBlockMessage,
   exampleLoadedMessage,
   clearAlreadyEmptyMessage,
   onNotify,
@@ -179,6 +183,12 @@ export function useEditorActions({
   }
 
   async function completeAndExport() {
+    const initialBlockMessage = getExportBlockMessage?.() ?? exportBlockMessage;
+    if (initialBlockMessage) {
+      onNotify(initialBlockMessage);
+      return;
+    }
+
     if (!cardRef.current || isCompleteExporting) {
       return;
     }
@@ -187,6 +197,11 @@ export function useEditorActions({
     setIsCompleteExporting(true);
 
     try {
+      const finalBlockMessage = getExportBlockMessage?.() ?? exportBlockMessage;
+      if (finalBlockMessage) {
+        onNotify(finalBlockMessage);
+        return;
+      }
       const size = getCardSize(parsedState.style);
       const fileName = `lyric-card-${sanitizeFilePart(parsedState.song.title)}.png`;
       await exportNodeAsPng(cardRef.current, fileName, size.width, size.height, exportPixelRatio);

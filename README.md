@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v4.6.4.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v5.0.0.zh-CN.md">发布说明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">在线 Web Lite 版</a> ·
   <a href="./docs/desktop.md">桌面维护文档</a> ·
   <a href="#主要功能">主要功能</a> ·
@@ -49,35 +49,33 @@
 
 请前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下载最新版：
 
-* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 4.6.4.exe`
-* 不想安装时可下载便携版：`Lyrics Card Generator-4.6.4-portable.exe`
+* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 5.0.0.exe`
+* 不想安装时可下载便携版：`Lyrics Card Generator-5.0.0-portable.exe`
 
 安装版适合长期使用；便携版适合临时运行、测试或放在移动硬盘中使用。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v4.6.4 更新重点
+### v5.0.0 更新重点
 
-* 修复提示词预设重置后所有页面与文本框失去交互的问题；重置不再调用会阻塞桌面壳的原生确认框。
-* 严格格式规则固定为不可修改的内置安全模块，并移除“解锁编辑”等入口。
-* 设置页新增适用于全部分类与子页的全局前进、后退和路径栏，并统一放入左上角页头。
-* 右侧真实卡片预览在编辑页滚动时固定在顶部；文字设计页移除独立字体预览卡片。
-* 四张示例歌曲卡片略微缩短，并移除卡片顶部的“专辑”标签。
-* 每个提示词预设保留“重置”按钮，可回退至各自的初始内容；资源库主界面支持一键重置全部内容。
-* 自定义预设会在首次保存时记录初始标题与提示词，旧数据会以当前内容建立重置基线。
-* 最大化窗口的绿灯提示改为“窗口化”，并精简提示词资源库说明文案。
-* 实时预览边框改为随卡片内容自适应高度，不再在下方保留大块空白。
+* 第一步以网易云搜索为核心，链接、本地音频和手动歌曲信息收进紧凑辅助栏。
+* 第二步升级为歌曲摘要、共享滚动歌词文档和固定编辑工具组成的三栏长稿工作台。
+* 新增标准、扩展、沉浸三种歌词视口，支持拖动吸附、双击复位、Esc 与键盘操作。
+* 第一、二步隐藏可见卡片预览；第三步起恢复原有卡片设计与预览流程。
+* 导出改用独立离屏卡片宿主，编辑视口高度不再影响 PNG 逻辑尺寸。
+* 新增 36 个非空逻辑行的导出上限、6400px 纵向自动高度和真实溢出阻断。
+* 完成五档桌面窗口、六语言、Web Lite 与 Electron 打包回归。
 
 ## 🌐 多语言发布说明
 
 GitHub Release 页面默认使用简体中文短版，完整发布说明维护在 `docs/releases/`：
 
-* [简体中文](./docs/releases/v4.6.4.zh-CN.md)
-* [繁體中文](./docs/releases/v4.6.4.zh-TW.md)
-* [English](./docs/releases/v4.6.4.en.md)
-* [Français](./docs/releases/v4.6.4.fr.md)
-* [日本語](./docs/releases/v4.6.4.ja.md)
-* [Español](./docs/releases/v4.6.4.es.md)
+* [简体中文](./docs/releases/v5.0.0.zh-CN.md)
+* [繁體中文](./docs/releases/v5.0.0.zh-TW.md)
+* [English](./docs/releases/v5.0.0.en.md)
+* [Français](./docs/releases/v5.0.0.fr.md)
+* [日本語](./docs/releases/v5.0.0.ja.md)
+* [Español](./docs/releases/v5.0.0.es.md)
 
 <a id="主要功能"></a>
 

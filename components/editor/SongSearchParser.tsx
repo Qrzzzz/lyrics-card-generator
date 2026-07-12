@@ -22,6 +22,7 @@ export function SongSearchParser({
   t: ReturnType<typeof createT>;
 }) {
   const listboxId = useId();
+  const statusId = useId();
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState<SongSearchResult[]>([]);
   const [highlightedIndex, setHighlightedIndex] = useState(0);
@@ -174,6 +175,11 @@ export function SongSearchParser({
   }
 
   function handleKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
+    if (event.key === "Tab") {
+      setExpanded(false);
+      return;
+    }
+
     if (event.key === "ArrowDown") {
       if (suggestions.length > 0) {
         event.preventDefault();
@@ -202,16 +208,23 @@ export function SongSearchParser({
     }
 
     if (event.key === "Escape") {
+      event.preventDefault();
       setExpanded(false);
     }
   }
 
   return (
-    <Section title={t("songSearchTitle")} eyebrow={t("songSearchSourceNetease")}>
-      <p className="app-text-subtle text-sm">{t("songSearchDescription")}</p>
+    <Section
+      title={t("songSearchTitle")}
+      eyebrow={t("songSearchSourceNetease")}
+      variant="card"
+      className="song-search-focus overflow-visible"
+      contentClassName="gap-5"
+    >
+      <p className="app-text-subtle max-w-2xl text-sm leading-6">{t("songSearchDescription")}</p>
       <Label label={t("songSearchInput")} description={t("songSearchKeyboardHint")}>
         <div className="relative">
-          <Search className="app-text-subtle pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2" />
+          <Search className="app-text-subtle pointer-events-none absolute left-4 top-1/2 z-10 size-5 -translate-y-1/2" />
           <Input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
@@ -221,56 +234,74 @@ export function SongSearchParser({
             role="combobox"
             aria-expanded={expanded}
             aria-controls={listboxId}
+            aria-activedescendant={
+              expanded && suggestions[highlightedIndex]
+                ? `${listboxId}-option-${highlightedIndex}`
+                : undefined
+            }
             aria-autocomplete="list"
+            aria-haspopup="listbox"
+            aria-label={t("songSearchInput")}
+            aria-describedby={statusId}
+            aria-busy={status === "loading"}
             placeholder={t("songSearchPlaceholder")}
             disabled={isResolving}
-            className="pl-9"
+            className="h-14 rounded-xl pl-12 pr-4 text-base shadow-[0_18px_48px_rgba(0,0,0,0.18)]"
           />
           {expanded && suggestions.length > 0 ? (
             <div
-              id={listboxId}
-              role="listbox"
-              className="glass-panel absolute z-30 mt-2 max-h-80 w-full overflow-y-auto rounded-lg border p-2 shadow-2xl backdrop-blur-xl"
+              className="glass-panel absolute z-30 mt-2 w-full overflow-hidden rounded-xl border p-2 shadow-2xl backdrop-blur-xl"
+              data-testid="song-search-popup"
             >
-              {suggestions.map((song, index) => (
-                <button
-                  key={song.id}
-                  type="button"
-                  role="option"
-                  aria-selected={index === highlightedIndex}
-                  onMouseEnter={() => setHighlightedIndex(index)}
-                  onMouseDown={(event) => event.preventDefault()}
-                  onClick={() => void resolveSong(song)}
-                  disabled={isResolving}
-                  className={cn(
-                    "control-focus control-disabled flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition",
-                    index === highlightedIndex ? "bg-white/10" : "hover:bg-white/10"
-                  )}
-                >
-                  {song.coverUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={song.coverUrl}
-                      alt=""
-                      className="size-11 shrink-0 rounded-md object-cover"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <span className="control-surface inline-flex size-11 shrink-0 items-center justify-center rounded-md">
-                      <Music2 className="size-5" />
+              <div
+                id={listboxId}
+                role="listbox"
+                aria-label={t("songSearchTitle")}
+                className="max-h-[min(22rem,44vh)] overflow-y-auto overscroll-contain"
+                data-testid="song-search-listbox"
+              >
+                {suggestions.map((song, index) => (
+                  <button
+                    key={song.id}
+                    id={`${listboxId}-option-${index}`}
+                    type="button"
+                    role="option"
+                    tabIndex={-1}
+                    aria-selected={index === highlightedIndex}
+                    onMouseEnter={() => setHighlightedIndex(index)}
+                    onMouseDown={(event) => event.preventDefault()}
+                    onClick={() => void resolveSong(song)}
+                    disabled={isResolving}
+                    className={cn(
+                      "control-focus control-disabled flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left transition",
+                      index === highlightedIndex ? "bg-white/10" : "hover:bg-white/10"
+                    )}
+                  >
+                    {song.coverUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={song.coverUrl}
+                        alt=""
+                        className="size-12 shrink-0 rounded-md object-cover"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <span className="control-surface inline-flex size-12 shrink-0 items-center justify-center rounded-md">
+                        <Music2 className="size-5" />
+                      </span>
+                    )}
+                    <span className="min-w-0 flex-1">
+                      <span className="app-text-primary block truncate text-sm font-medium">
+                        {song.title} {song.artist ? `- ${song.artist}` : ""}
+                      </span>
+                      <span className="app-text-subtle mt-1 block truncate text-xs">
+                        {[song.album, formatDuration(song.durationMs)].filter(Boolean).join(" · ")}
+                      </span>
                     </span>
-                  )}
-                  <span className="min-w-0 flex-1">
-                    <span className="app-text-primary block truncate text-sm font-medium">
-                      {song.title} {song.artist ? `- ${song.artist}` : ""}
-                    </span>
-                    <span className="app-text-subtle mt-1 block truncate text-xs">
-                      {[song.album, formatDuration(song.durationMs)].filter(Boolean).join(" · ")}
-                    </span>
-                  </span>
-                  <span className="app-text-subtle shrink-0 text-[11px]">{t("songSearchSourceNetease")}</span>
-                </button>
-              ))}
+                    <span className="app-text-subtle shrink-0 text-[11px]">{t("songSearchSourceNetease")}</span>
+                  </button>
+                ))}
+              </div>
               {suggestions.length >= 8 ? (
                 <div className="mt-2 border-t border-white/10 pt-2">
                   <ActionButton
@@ -279,8 +310,10 @@ export function SongSearchParser({
                     className="w-full"
                     loading={status === "loading"}
                     disabled={isResolving}
+                    tabIndex={-1}
                     onMouseDown={(event) => event.preventDefault()}
                     onClick={() => void searchMore()}
+                    data-testid="song-search-more"
                   >
                     {t("songSearchMore")}
                   </ActionButton>
@@ -291,6 +324,9 @@ export function SongSearchParser({
         </div>
       </Label>
       <p
+        id={statusId}
+        role="status"
+        aria-live="polite"
         className={cn(
           "rounded-lg border px-3 py-2 text-sm",
           status === "success" && "status-success",

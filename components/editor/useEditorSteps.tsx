@@ -6,6 +6,7 @@ import { LocalAudioParser } from "@/components/editor/LocalAudioParser";
 import { LyricsFetchPanel } from "@/components/editor/LyricsFetchPanel";
 import { LyricInput } from "@/components/editor/LyricInput";
 import { SettingsStep } from "@/components/editor/SettingsStepper";
+import { SongImportAside } from "@/components/editor/SongImportAside";
 import { SongInfoForm } from "@/components/editor/SongInfoForm";
 import { SongLinkParser } from "@/components/editor/SongLinkParser";
 import { SongSearchParser } from "@/components/editor/SongSearchParser";
@@ -16,6 +17,8 @@ import {
 } from "@/components/editor/StylePanel";
 import { AiTranslatePanel } from "@/components/lyrics/AiTranslatePanel";
 import type { ExportQualityId } from "@/lib/settings/types";
+import type { ExportLyricLineStatus } from "@/lib/lyrics-document";
+import type { LyricsViewportMode } from "@/components/editor/hooks/useLyricsViewportSession";
 import type { AISettingsSummary, AITranslationPhase } from "@/lib/ai/types";
 import type { createT } from "@/lib/i18n";
 import type {
@@ -65,7 +68,12 @@ type UseEditorStepsInput = {
   canFetchLyrics: boolean;
   themeColor: string;
   isExporting: boolean;
+  exportBlockingMessage?: string;
   exportQuality: ExportQualityId;
+  lyricsLayout: {
+    lineStatus: ExportLyricLineStatus;
+    onViewportModeChange: (mode: LyricsViewportMode) => void;
+  };
   ai: EditorStepsAiState;
   handlers: EditorStepHandlers;
 };
@@ -76,7 +84,9 @@ export function useEditorSteps({
   canFetchLyrics,
   themeColor,
   isExporting,
+  exportBlockingMessage,
   exportQuality,
+  lyricsLayout,
   ai,
   handlers
 }: UseEditorStepsInput): SettingsStep[] {
@@ -87,34 +97,36 @@ export function useEditorSteps({
       id: "link",
       title: t("step.chooseSong"),
       description: t("songSearchDescription"),
+      presentation: "focus",
       isComplete: Boolean(state.url.trim() || state.song.title.trim() || state.song.artist.trim() || state.song.coverUrl?.trim()),
-      secondaryAction: {
-        label: t("manualOverride"),
-        onClick: () => setSongInfoExpanded((expanded) => !expanded),
-        pressed: songInfoExpanded,
-        expanded: songInfoExpanded
-      },
       content: (
-        <div className="grid gap-4">
+        <div className="grid gap-4" data-testid="song-search-primary">
           <SongSearchParser
             t={t}
             onResolved={handlers.onSearchedSongResolved}
           />
-          <div className="app-text-subtle text-xs font-medium uppercase tracking-[0.16em]">
-            {t("songSearchOtherMethods")}
-          </div>
-          <SongLinkParser
-            url={state.url}
-            onUrlChange={handlers.onUrlChange}
-            onParsed={handlers.onSongParsed}
-            t={t}
-            autoParseOnMount
-          />
-          <LocalAudioParser
-            t={t}
-            onParsed={handlers.onLocalAudioParsed}
-          />
-          {songInfoExpanded ? (
+        </div>
+      ),
+      aside: (
+        <SongImportAside
+          song={state.song}
+          t={t}
+          linkParser={(
+            <SongLinkParser
+              url={state.url}
+              onUrlChange={handlers.onUrlChange}
+              onParsed={handlers.onSongParsed}
+              t={t}
+              autoParseOnMount
+            />
+          )}
+          localAudioParser={(
+            <LocalAudioParser
+              t={t}
+              onParsed={handlers.onLocalAudioParsed}
+            />
+          )}
+          manualForm={(
             <SongInfoForm
               song={state.song}
               onSongChange={handlers.onSongChange}
@@ -122,25 +134,26 @@ export function useEditorSteps({
               showToggle={false}
               forceEnabled
             />
-          ) : null}
-        </div>
+          )}
+          manualExpanded={songInfoExpanded}
+          onManualExpandedChange={setSongInfoExpanded}
+        />
       )
     },
     {
       id: "lyrics",
       title: t("step.lyrics"),
       description: t("manualText"),
+      presentation: "lyrics-workspace",
+      managesOwnScroll: true,
       isComplete: state.style.contentMode === "instrumental" || Boolean(state.lyrics.trim()),
       content: (
-        <div className="grid gap-4">
-          <LyricsFetchPanel
-            song={state.song}
-            visible={canFetchLyrics}
-            onUseLyrics={handlers.onUseFetchedLyrics}
-            t={t}
-          />
+        <div className="h-full min-h-0">
           <LyricInput
             lyrics={state.lyrics}
+            song={state.song}
+            lineStatus={lyricsLayout.lineStatus}
+            presentation="workspace"
             onLyricsChange={handlers.onLyricsChange}
             translationEnabled={state.style.translationEnabled}
             translationText={state.style.translationText}
@@ -166,10 +179,19 @@ export function useEditorSteps({
                 onConfirm={handlers.onConfirmAiTranslate}
               />
             ) : null}
+            lyricsFetchPanel={canFetchLyrics && !ai.isOpen ? (
+              <LyricsFetchPanel
+                song={state.song}
+                visible
+                onUseLyrics={handlers.onUseFetchedLyrics}
+                t={t}
+              />
+            ) : undefined}
             themeColor={themeColor}
             contentMode={state.style.contentMode}
             locale={state.locale}
             t={t}
+            onViewportModeChange={lyricsLayout.onViewportModeChange}
           />
         </div>
       )
@@ -178,6 +200,7 @@ export function useEditorSteps({
       id: "layout",
       title: t("step.layout"),
       description: t("layoutCompatibility"),
+      presentation: "preview-workbench",
       isComplete: true,
       content: (
         <LayoutSettingsPanel
@@ -191,6 +214,7 @@ export function useEditorSteps({
       id: "font",
       title: t("step.fontScheme"),
       description: t("fontSchemeDescription"),
+      presentation: "preview-workbench",
       isComplete: true,
       content: (
         <FontSchemeSettingsPanel
@@ -205,6 +229,7 @@ export function useEditorSteps({
       id: "visual",
       title: t("step.visual"),
       description: t("background"),
+      presentation: "preview-workbench",
       isComplete: true,
       content: (
         <VisualSettingsPanel
@@ -219,11 +244,12 @@ export function useEditorSteps({
     {
       id: "export",
       title: t("step.export"),
+      presentation: "preview-workbench",
       isComplete: true,
       primaryAction: {
         label: t("step.complete"),
         onClick: handlers.onExport,
-        disabled: isExporting
+        disabled: isExporting || Boolean(exportBlockingMessage)
       },
       content: (
         <ExportPanel
@@ -232,6 +258,7 @@ export function useEditorSteps({
           exportQuality={exportQuality}
           onExportQualityChange={handlers.onExportQualityChange}
           isExporting={isExporting}
+          blockingMessage={exportBlockingMessage}
         />
       )
     }

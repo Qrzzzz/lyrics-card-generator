@@ -59,16 +59,48 @@ assert.deepEqual(
 
 const stepperSource = readFileSync(resolve("components/editor/SettingsStepper.tsx"), "utf8");
 assert.ok(
-  stepperSource.includes('className="grid min-w-0 content-start self-start gap-4"'),
-  "stepper keeps natural height instead of stretching to the preview column"
+  stepperSource.includes(': "content-start self-start"'),
+  "default and Web Lite steps keep natural height instead of stretching to the preview column"
 );
 assert.ok(
   !stepperSource.includes("useMeasuredStepperPanelHeight"),
   "stepper header is not padded by a fixed measured minimum height"
 );
 assert.ok(
-  stepperSource.includes('className="flex items-center justify-between gap-3"'),
+  stepperSource.includes("lyrics-stepper-actions flex items-center justify-between gap-3"),
   "step navigation uses the same borderless shell on every step"
 );
+assert.ok(
+  stepperSource.includes('"focus" | "lyrics-workspace" | "preview-workbench"'),
+  "step metadata exposes all supported desktop presentations"
+);
+assert.ok(
+  stepperSource.includes('activeStep?.presentation ?? "preview-workbench"'),
+  "steps without presentation metadata preserve the preview-workbench default"
+);
+assert.ok(
+  stepperSource.includes("grid-rows-[auto_minmax(0,1fr)_auto]"),
+  "lyrics workspace pins chrome around one bounded content row"
+);
+assert.ok(
+  stepperSource.includes("isLyricsWorkspace && activeStep.managesOwnScroll"),
+  "workspace content can own its only scrolling surface"
+);
+assert.ok(
+  stepperSource.includes("compactChrome = false"),
+  "compact chrome is opt-in so shared Web Lite rendering stays unchanged"
+);
 
-console.log(JSON.stringify({ ok: true, stepperLayoutTests: 7 }, null, 2));
+const songImportAsideSource = readFileSync(resolve("components/editor/SongImportAside.tsx"), "utf8");
+assert.ok(
+  songImportAsideSource.includes("linkParser: ReactNode") &&
+    songImportAsideSource.includes("localAudioParser: ReactNode"),
+  "song import aside composes the existing parser nodes instead of duplicating their handlers"
+);
+assert.ok(
+  songImportAsideSource.includes("aria-expanded={manualExpanded}") &&
+    songImportAsideSource.includes("aria-controls={manualRegionId}"),
+  "manual song metadata disclosure exposes its state to assistive technology"
+);
+
+console.log(JSON.stringify({ ok: true, stepperLayoutTests: 14 }, null, 2));
