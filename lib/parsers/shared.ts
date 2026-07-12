@@ -1,5 +1,6 @@
 import * as cheerio from "cheerio";
 import { getHighResolutionCoverUrl } from "@/lib/cover-url";
+import { safeFetch } from "@/lib/safe-fetch";
 import type { SongInfo, SongSource } from "@/lib/types";
 
 export type ExtractedMeta = {
@@ -33,11 +34,17 @@ const PLATFORM_TAILS = [
   "y.qq.com"
 ];
 
-export async function fetchHtml(url: string): Promise<{ html: string; finalUrl: string }> {
-  const res = await fetch(url, {
-    headers: REQUEST_HEADERS,
-    signal: AbortSignal.timeout(10000),
-    redirect: "follow"
+export async function fetchHtml(
+  url: string,
+  init?: Pick<RequestInit, "headers" | "signal">
+): Promise<{ html: string; finalUrl: string }> {
+  const res = await safeFetch(url, {
+    headers: { ...REQUEST_HEADERS, ...(init?.headers ?? {}) },
+    signal: init?.signal ?? undefined,
+    timeoutMs: 10000,
+    maxRedirects: 5,
+    maxResponseBytes: HTML_LIMIT,
+    allowedContentTypes: ["text/html", "application/xhtml+xml"]
   });
 
   if (!res.ok) {
@@ -45,28 +52,30 @@ export async function fetchHtml(url: string): Promise<{ html: string; finalUrl: 
   }
 
   return {
-    html: await limitedRead(res, HTML_LIMIT),
+    html: res.text(),
     finalUrl: res.url || url
   };
 }
 
-export async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(url, {
-    ...init,
+export async function fetchJson<T>(url: string, init?: Pick<RequestInit, "headers" | "signal">): Promise<T> {
+  const res = await safeFetch(url, {
     headers: {
       ...REQUEST_HEADERS,
       accept: "application/json,text/plain,*/*",
       ...(init?.headers ?? {})
     },
-    signal: init?.signal ?? AbortSignal.timeout(10000),
-    redirect: "follow"
+    signal: init?.signal ?? undefined,
+    timeoutMs: 10000,
+    maxRedirects: 5,
+    maxResponseBytes: HTML_LIMIT,
+    allowedContentTypes: ["application/json", "text/json", "text/plain", "application/javascript"]
   });
 
   if (!res.ok) {
     throw new Error(`The JSON endpoint returned HTTP ${res.status}.`);
   }
 
-  return (await res.json()) as T;
+  return res.json<T>();
 }
 
 export function extractMeta(html: string, baseUrl: string): ExtractedMeta {
@@ -253,45 +262,6 @@ function removePlatformSuffix(raw: string) {
   }
 
   return result.replace(/\s+/g, " ").trim();
-}
-
-async function limitedRead(res: Response, limit: number) {
-  if (!res.body) {
-    return "";
-  }
-
-  const reader = res.body.getReader();
-  const chunks: Uint8Array[] = [];
-  let received = 0;
-
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) {
-      break;
-    }
-
-    received += value.byteLength;
-    if (received > limit) {
-      reader.cancel().catch(() => undefined);
-      throw new Error("The HTML response is too large to parse.");
-    }
-
-    chunks.push(value);
-  }
-
-  return new TextDecoder("utf-8").decode(concatChunks(chunks, received));
-}
-
-function concatChunks(chunks: Uint8Array[], length: number) {
-  const merged = new Uint8Array(length);
-  let offset = 0;
-
-  for (const chunk of chunks) {
-    merged.set(chunk, offset);
-    offset += chunk.byteLength;
-  }
-
-  return merged;
 }
 
 function escapeRegExp(value: string) {

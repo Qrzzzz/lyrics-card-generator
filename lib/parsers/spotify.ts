@@ -2,6 +2,7 @@ import * as cheerio from "cheerio";
 import {
   buildSongInfo,
   extractMeta,
+  fetchHtml,
   fetchJson,
   splitTitleAndArtist
 } from "@/lib/parsers/shared";
@@ -81,23 +82,12 @@ async function fetchSpotifyMetaArtist(finalUrl: string, title: string) {
 }
 
 async function fetchSpotifyHtml(url: string) {
-  const response = await fetch(url, {
+  return fetchHtml(url, {
     headers: {
       "user-agent": "Mozilla/5.0",
       accept: "text/html,*/*;q=0.8"
-    },
-    signal: AbortSignal.timeout(10000),
-    redirect: "follow"
+    }
   });
-
-  if (!response.ok) {
-    throw new Error(`The song page returned HTTP ${response.status}.`);
-  }
-
-  return {
-    html: await response.text(),
-    finalUrl: response.url || url
-  };
 }
 
 function extractSpotifyArtistFromHtml(html: string, title: string) {
