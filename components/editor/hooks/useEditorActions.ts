@@ -17,10 +17,14 @@ import {
   DocumentTransactionController,
   replaceSongDocument,
   requestDocumentImport,
-  songDocumentIdentity,
   type DocumentImportIntent,
   type DocumentImportKind
 } from "@/lib/editor/document-transactions";
+import {
+  EditorDocumentStateAdapter,
+  type EditorDocumentStateMutation,
+  type TranslationValue
+} from "@/lib/editor/editor-document-state-adapter";
 import type { ExampleLoadPayload } from "@/lib/examples";
 import type {
   AppState,
@@ -28,11 +32,6 @@ import type {
   ParsedSongData,
   SongInfo
 } from "@/lib/types";
-
-type TranslationValue = {
-  text: string;
-  enabled: boolean;
-};
 
 type UseEditorActionsInput = {
   parsedState: AppState;
@@ -49,7 +48,7 @@ type UseEditorActionsInput = {
   onNotify: (message: string) => void;
   onCloseExamples: () => void;
   onClearTransientState: () => void;
-  onInvalidateDocument: () => void;
+  onInvalidateDocument: () => TranslationValue | undefined;
 };
 
 export function useEditorActions({
@@ -77,6 +76,15 @@ export function useEditorActions({
   const [documentRevision, setDocumentRevision] = useState(0);
   const currentDocumentRef = useRef(parsedState);
   currentDocumentRef.current = parsedState;
+  const documentStateAdapterRef = useRef<EditorDocumentStateAdapter | null>(null);
+  if (!documentStateAdapterRef.current) {
+    documentStateAdapterRef.current = new EditorDocumentStateAdapter(
+      documentControllerRef.current,
+      (updater) => setState(updater),
+      () => currentDocumentRef.current
+    );
+  }
+  const documentStateAdapter = documentStateAdapterRef.current;
   const [activeExportSnapshot, setActiveExportSnapshot] = useState<ExportSnapshot | null>(null);
   const exportMutexRef = useRef(new ExportTransactionMutex());
   const exportRevisionRef = useRef(0);
@@ -86,9 +94,9 @@ export function useEditorActions({
     exportRevisionRef.current += 1;
   }
 
-  function markDocumentMutation() {
-    onInvalidateDocument();
-    setDocumentRevision(documentControllerRef.current.mutate());
+  function applyDocumentMutation(mutation: EditorDocumentStateMutation) {
+    const rollback = onInvalidateDocument();
+    setDocumentRevision(documentStateAdapter.queueDocumentMutation(rollback, mutation));
   }
 
   function beginSongImport(kind: DocumentImportKind) {
@@ -98,7 +106,7 @@ export function useEditorActions({
       kind,
       confirmReplaceDocument
     );
-    if (intent) onInvalidateDocument();
+    if (intent) documentStateAdapter.queueRollback(onInvalidateDocument());
     return intent;
   }
 
@@ -115,28 +123,11 @@ export function useEditorActions({
     expectedRevision: number,
     expectedSongIdentity: string
   ) {
-    if (
-      !documentControllerRef.current.isCurrentRevision(expectedRevision) ||
-      songDocumentIdentity(currentDocumentRef.current.song) !== expectedSongIdentity
-    ) return false;
-
-    setState((current) => {
-      if (
-        !documentControllerRef.current.isCurrentRevision(expectedRevision) ||
-        songDocumentIdentity(current.song) !== expectedSongIdentity
-      ) return current;
-      return {
-        ...current,
-        translationText: text,
-        translationEnabled: enabled,
-        style: {
-          ...current.style,
-          translationText: text,
-          translationEnabled: enabled
-        }
-      };
-    });
-    return true;
+    return documentStateAdapter.applyAITranslation(
+      { text, enabled },
+      expectedRevision,
+      expectedSongIdentity
+    );
   }
 
   function clearAllContent() {
@@ -146,11 +137,10 @@ export function useEditorActions({
     }
 
     clearVersionRef.current += 1;
-    markDocumentMutation();
     setCelebrationKey(0);
     setClearTransitionKey((key) => key + 1);
     onClearTransientState();
-    setState(clearLyricContent);
+    applyDocumentMutation(clearLyricContent);
   }
 
   function handleStyleChange(nextStyle: CardStyle) {
@@ -158,8 +148,7 @@ export function useEditorActions({
   }
 
   function setUrl(url: string) {
-    markDocumentMutation();
-    setState((current) => ({ ...current, url }));
+    applyDocumentMutation((current) => ({ ...current, url }));
   }
 
   function applyParsedSong(song: ParsedSongData, intent: DocumentImportIntent) {
@@ -175,18 +164,15 @@ export function useEditorActions({
   }
 
   function setSong(song: SongInfo) {
-    markDocumentMutation();
-    setState((current) => ({ ...current, song: canonicalSongInfo(song) }));
+    applyDocumentMutation((current) => ({ ...current, song: canonicalSongInfo(song) }));
   }
 
   function setLyrics(lyrics: string) {
-    markDocumentMutation();
-    setState((current) => ({ ...current, lyrics }));
+    applyDocumentMutation((current) => ({ ...current, lyrics }));
   }
 
   function setTranslationEnabled(translationEnabled: boolean) {
-    markDocumentMutation();
-    setState((current) => ({
+    applyDocumentMutation((current) => ({
       ...current,
       translationEnabled,
       style: { ...current.style, translationEnabled }
@@ -194,8 +180,7 @@ export function useEditorActions({
   }
 
   function setTranslationText(translationText: string) {
-    markDocumentMutation();
-    setState((current) => ({
+    applyDocumentMutation((current) => ({
       ...current,
       translationText,
       style: { ...current.style, translationText }
@@ -203,8 +188,7 @@ export function useEditorActions({
   }
 
   function splitAlternatingLyrics(lyrics: string, translationText: string) {
-    markDocumentMutation();
-    setState((current) => ({
+    applyDocumentMutation((current) => ({
       ...current,
       lyrics,
       translationText,
@@ -326,8 +310,7 @@ export function useEditorActions({
       expectedSongIdentity,
       currentSong: parsedState.song
     })) return false;
-    markDocumentMutation();
-    setState((current) => ({
+    applyDocumentMutation((current) => ({
       ...current,
       lyrics,
       translationText: "",

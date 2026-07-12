@@ -131,7 +131,7 @@ export class AITranslationOrchestrator<Value, Phase> {
   }
 
   invalidate() {
-    return this.stopActive("invalidate") !== null;
+    return this.stopActive("invalidate")?.previous;
   }
 
   private stopActive(reason: "replace" | "invalidate") {
@@ -140,7 +140,9 @@ export class AITranslationOrchestrator<Value, Phase> {
     const current = this.isCurrent(active);
     let previous: Value | undefined;
     if (current && active.intent.hasWrittenPartial) {
-      if (active.options.applyTranslation(
+      if (reason === "invalidate") {
+        previous = active.intent.previousTranslation;
+      } else if (active.options.applyTranslation(
         active.intent.previousTranslation,
         active.intent.revision,
         active.intent.songIdentity

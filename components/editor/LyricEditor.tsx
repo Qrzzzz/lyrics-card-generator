@@ -51,6 +51,7 @@ import { cn } from "@/lib/utils";
 import { snapshotAsAppState } from "@/lib/export-snapshot";
 import { resolveExportSafetyMessage } from "@/lib/export-safety";
 import { songDocumentIdentity } from "@/lib/editor/document-transactions";
+import type { TranslationValue } from "@/lib/editor/editor-document-state-adapter";
 
 type ActiveSurface = "editor" | "examples" | "settings";
 
@@ -83,7 +84,7 @@ export function LyricEditor() {
   const headerRailRef = useRef<HTMLDivElement | null>(null);
   const settingsButtonRef = useRef<HTMLButtonElement | null>(null);
   const restoreSettingsFocusRef = useRef(false);
-  const invalidateDocumentAsyncRef = useRef<() => void>(() => undefined);
+  const invalidateDocumentAsyncRef = useRef<() => TranslationValue | undefined>(() => undefined);
   const [headerDockY, setHeaderDockY] = useState(0);
   const t = useMemo(() => createT(state.locale), [state.locale]);
   const systemShouldReduceMotion = useReducedMotion() ?? false;

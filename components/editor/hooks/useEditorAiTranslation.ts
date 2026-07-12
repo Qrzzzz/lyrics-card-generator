@@ -17,12 +17,8 @@ import {
 } from "@/lib/ai/types";
 import { getAIUiCopy } from "@/lib/ai/ui-copy";
 import { AITranslationOrchestrator } from "@/lib/editor/ai-translation-orchestrator";
+import type { TranslationValue } from "@/lib/editor/editor-document-state-adapter";
 import type { Locale } from "@/lib/types";
-
-export type TranslationValue = {
-  text: string;
-  enabled: boolean;
-};
 
 type UseEditorAiTranslationInput = {
   locale: Locale;
@@ -173,7 +169,7 @@ export function useEditorAiTranslation({
   }
 
   function invalidateAITranslation() {
-    aiOrchestratorRef.current.invalidate();
+    return aiOrchestratorRef.current.invalidate();
   }
 
   async function refreshAISettings() {
