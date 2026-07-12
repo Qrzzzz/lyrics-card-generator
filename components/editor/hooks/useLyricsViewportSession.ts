@@ -95,6 +95,8 @@ export function useLyricsViewportSession({
   const dragStartRef = useRef<{ clientY: number; height: number } | null>(null);
   const anchorRef = useRef<AnchorSnapshot | null>(null);
   const restoreFrameRef = useRef(0);
+  const restoreSettleFrameRef = useRef(0);
+  const restorationPendingRef = useRef(false);
   const activeEditorKeyGetterRef = useRef(getActiveEditorKey);
   const editorGetterRef = useRef(getEditor);
   const editorNodesRef = useRef<Partial<Record<LyricsEditorKey, HTMLTextAreaElement>>>({});
@@ -169,12 +171,21 @@ export function useLyricsViewportSession({
   }, [scrollRef, workspaceRef]);
 
   const restoreAnchor = useCallback(() => {
+    restorationPendingRef.current = true;
     window.cancelAnimationFrame(restoreFrameRef.current);
+    window.cancelAnimationFrame(restoreSettleFrameRef.current);
     restoreFrameRef.current = window.requestAnimationFrame(() => {
+      const finishRestore = () => {
+        restoreSettleFrameRef.current = window.requestAnimationFrame(() => {
+          restorationPendingRef.current = false;
+          captureAnchor();
+        });
+      };
       const scrollNode = scrollRef.current;
       const workspace = workspaceRef.current;
       const snapshot = anchorRef.current;
       if (!scrollNode || !workspace || !snapshot) {
+        restorationPendingRef.current = false;
         return;
       }
 
@@ -206,6 +217,7 @@ export function useLyricsViewportSession({
 
       if (!editor || !sourceSnapshot) {
         scrollNode.scrollTop = clamp(snapshot.scrollRatio * maxScroll, 0, maxScroll);
+        finishRestore();
         return;
       }
 
@@ -226,6 +238,7 @@ export function useLyricsViewportSession({
           scrollRatio: snapshot.scrollRatio,
           allowCenterFallback: !directEditor
         });
+        finishRestore();
         return;
       }
 
@@ -233,12 +246,14 @@ export function useLyricsViewportSession({
       if (centerRatio !== null) {
         const centerPosition = editorContentTop + editor.scrollHeight * centerRatio;
         scrollNode.scrollTop = clamp(centerPosition - scrollNode.clientHeight / 2, 0, maxScroll);
+        finishRestore();
         return;
       }
 
       scrollNode.scrollTop = clamp(snapshot.scrollRatio * maxScroll, 0, maxScroll);
+      finishRestore();
     });
-  }, [scrollRef, workspaceRef]);
+  }, [captureAnchor, scrollRef, workspaceRef]);
 
   const measureViewport = useCallback(() => {
     const workspace = workspaceRef.current;
@@ -255,7 +270,6 @@ export function useLyricsViewportSession({
       : window.innerHeight - 20;
     const nextMetrics = calculateViewportMetrics(Math.floor(availableBottom - workspaceTop));
 
-    captureAnchor();
     setMetrics((current) => {
       if (
         current.minHeight === nextMetrics.minHeight &&
@@ -268,7 +282,7 @@ export function useLyricsViewportSession({
 
       return nextMetrics;
     });
-  }, [captureAnchor, workspaceRef]);
+  }, [workspaceRef]);
 
   useLayoutEffect(() => {
     measureViewport();
@@ -287,6 +301,21 @@ export function useLyricsViewportSession({
       window.removeEventListener("resize", measureViewport);
     };
   }, [measureViewport, workspaceRef]);
+
+  useEffect(() => {
+    const scrollNode = scrollRef.current;
+    if (!scrollNode) {
+      return;
+    }
+
+    const onScroll = () => {
+      if (!restorationPendingRef.current) {
+        captureAnchor();
+      }
+    };
+    scrollNode.addEventListener("scroll", onScroll, { passive: true });
+    return () => scrollNode.removeEventListener("scroll", onScroll);
+  }, [captureAnchor, scrollRef]);
 
   useEffect(() => {
     try {
@@ -386,7 +415,11 @@ export function useLyricsViewportSession({
     restoreAnchor();
   }, [restoreAnchor, viewportHeight]);
 
-  useEffect(() => () => window.cancelAnimationFrame(restoreFrameRef.current), []);
+  useEffect(() => () => {
+    window.cancelAnimationFrame(restoreFrameRef.current);
+    window.cancelAnimationFrame(restoreSettleFrameRef.current);
+    restorationPendingRef.current = false;
+  }, []);
 
   function onResizePointerDown(event: ReactPointerEvent<HTMLElement>) {
     if (event.button !== 0) {

@@ -257,7 +257,6 @@ export function LyricsWorkspace({
     }
 
     const observer = new ResizeObserver(() => {
-      viewport.captureAnchor();
       resizeEditors();
       viewport.restoreAnchor();
     });
@@ -268,6 +267,7 @@ export function LyricsWorkspace({
   function updateCursor(event: SyntheticEvent<HTMLTextAreaElement>, editor: ActiveEditor) {
     const node = event.currentTarget;
     activeEditorRef.current = editor;
+    viewport.captureAnchor(editor);
     const value = node.value;
     const line = value.slice(0, node.selectionStart ?? 0).split(/\r?\n/).length;
     setCursor({ editor, line, totalLines: Math.max(1, value.split(/\r?\n/).length) });
