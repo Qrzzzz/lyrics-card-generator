@@ -2,6 +2,7 @@ import { mkdtemp, readFile, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { Script } from "node:vm";
 import { buildWebLite } from "./build-web-lite.mjs";
 
 const scriptsDirectory = path.dirname(fileURLToPath(import.meta.url));
@@ -53,6 +54,22 @@ try {
     /<link\s+[^>]*rel=["']stylesheet["']/i.test(generated)
   ) {
     throw new Error("Generated Web Lite HTML must inline its application style and script.");
+  }
+
+  if (generated.includes("/* WEB_LITE_STYLES */") || generated.includes("/* WEB_LITE_SCRIPT */")) {
+    throw new Error("Generated Web Lite HTML still contains an unreplaced template marker.");
+  }
+
+  const inlineScript = generated.match(/<script>([\s\S]*?)<\/script>/i)?.[1];
+  if (!inlineScript?.trim()) {
+    throw new Error("Generated Web Lite HTML does not contain a non-empty inline application script.");
+  }
+  try {
+    new Script(inlineScript, { filename: "web-lite-inline.js" });
+  } catch (error) {
+    throw new Error(
+      `Generated Web Lite inline script is invalid JavaScript: ${error instanceof Error ? error.message : error}`
+    );
   }
 
   const sourceContracts = [

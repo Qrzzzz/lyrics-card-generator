@@ -605,15 +605,27 @@ try {
   await waitForLayoutStable(page.getByTestId("lyrics-workspace"));
   assert.equal(await standardMode.getAttribute("aria-pressed"), "true", "double-click restores standard height");
 
+  // Keep the real pointer target inside the packaged window. At 1000x700 the
+  // handle sits too close to the bottom edge for Windows CI to deliver the
+  // full downward mouse move, even though pointer capture is active.
+  await setWindowSize(1280, 900);
+  await waitForLayoutStable(page.getByTestId("lyrics-workspace"));
+
   const handleBox = await resizeHandle.boundingBox();
   const currentHeight = Number(await resizeHandle.getAttribute("aria-valuenow"));
   const maxHeight = Number(await resizeHandle.getAttribute("aria-valuemax"));
   assert.ok(handleBox && maxHeight > currentHeight, "resize handle exposes a draggable height range");
+  const dragTargetY = handleBox.y + handleBox.height / 2 + (maxHeight - currentHeight - 10);
+  const browserHeight = await page.evaluate(() => window.innerHeight);
+  assert.ok(
+    dragTargetY < browserHeight,
+    `immersive drag target stays inside the packaged window: ${JSON.stringify({ dragTargetY, browserHeight })}`
+  );
   await page.mouse.move(handleBox.x + handleBox.width / 2, handleBox.y + handleBox.height / 2);
   await page.mouse.down();
   await page.mouse.move(
     handleBox.x + handleBox.width / 2,
-    handleBox.y + handleBox.height / 2 + (maxHeight - currentHeight - 10),
+    dragTargetY,
     { steps: 8 }
   );
   await page.mouse.up();

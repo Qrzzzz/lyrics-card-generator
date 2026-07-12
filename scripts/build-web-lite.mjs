@@ -63,8 +63,8 @@ export async function buildWebLite(outputFile = path.join(projectRoot, "index.ht
   }
 
   const html = template
-    .replace("/* WEB_LITE_STYLES */", minifiedCss.code.trim())
-    .replace("/* WEB_LITE_SCRIPT */", javascript.trim().replace(/<\/script/gi, "<\\/script"));
+    .replace("/* WEB_LITE_STYLES */", () => minifiedCss.code.trim())
+    .replace("/* WEB_LITE_SCRIPT */", () => javascript.trim().replace(/<\/script/gi, "<\\/script"));
 
   await mkdir(path.dirname(outputFile), { recursive: true });
   await writeFile(outputFile, html.replace(/\r\n/g, "\n"), "utf8");
