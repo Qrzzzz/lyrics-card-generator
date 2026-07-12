@@ -19,7 +19,7 @@
 <p>
   <strong>Navegación</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Descargar la última versión</a> ·
-  <a href="./docs/releases/v5.0.4.es.md">Notas de la versión</a> ·
+  <a href="./docs/releases/v5.1.0.es.md">Notas de la versión</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en línea</a> ·
   <a href="#funciones-principales">Funciones principales</a> ·
   <a href="#desarrollo-local">Desarrollo local</a> ·
@@ -51,31 +51,30 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 Descarga la versión más reciente desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Instalador recomendado: `Lyrics Card Generator Setup 5.0.4.exe`
-* Versión portable: `Lyrics Card Generator-5.0.4-portable.exe`
+* Instalador recomendado: `Lyrics Card Generator Setup 5.1.0.exe`
+* Versión portable: `Lyrics Card Generator-5.1.0-portable.exe`
 
 El instalador se recomienda para uso habitual. La versión portable es útil para pruebas, uso temporal o ejecución desde una unidad extraíble.
 
 > La compilación actual no está firmada. Windows puede mostrar una advertencia de SmartScreen, algo habitual en aplicaciones personales sin firma.
 
-### Aspectos destacados de la versión 5.0.4
+### Aspectos destacados de la versión 5.1.0
 
-* Conserva de la versión 5.0.2 el área fija de resultados, el contador, la etiqueta de origen de NetEase y la lista de canciones rediseñada.
-* El segundo paso usa siempre la altura máxima disponible y elimina los tres controles de vista y el tirador inferior.
-* La cabecera de Ajustes y las migas de pan ofrecen más espacio y muestran mejor la ruta actual.
-* El espacio de trabajo de IA usa ahora una lista compacta coherente con las demás páginas de Ajustes.
-* Se añaden los ejemplos «honeybee» y «Lies» en una galería desplazable de dos filas.
+* Todas las URL no fiables de canciones e imágenes usan Safe Fetch con validación antes de cada redirección, bloqueando destinos privados, reservados y de metadatos de nube.
+* Las importaciones de canciones, letras y ejemplos son atómicas; borrar, cambiar de canción o una intención más reciente invalida solicitudes y candidatos antiguos.
+* La exportación de escritorio usa una instantánea inmutable y un mutex síncrono para mantener contenido, dimensiones y nombre de archivo en la misma revisión.
+* Web Lite usa un host de exportación independiente y comparte con escritorio los controles de 36 líneas, fuentes, dimensiones estables y overflow.
 
 ## 🌐 Notas de publicación multilingüe
 
 La página de GitHub Release utiliza por defecto la versión corta en chino simplificado, las notas de publicación completas se mantienen en `docs/releases/`:
 
-* [简体中文](./docs/releases/v5.0.4.zh-CN.md)
-* [繁體中文](./docs/releases/v5.0.4.zh-TW.md)
-* [English](./docs/releases/v5.0.4.en.md)
-* [Français](./docs/releases/v5.0.4.fr.md)
-* [日本語](./docs/releases/v5.0.4.ja.md)
-* [Español](./docs/releases/v5.0.4.es.md)
+* [简体中文](./docs/releases/v5.1.0.zh-CN.md)
+* [繁體中文](./docs/releases/v5.1.0.zh-TW.md)
+* [English](./docs/releases/v5.1.0.en.md)
+* [Français](./docs/releases/v5.1.0.fr.md)
+* [日本語](./docs/releases/v5.1.0.ja.md)
+* [Español](./docs/releases/v5.1.0.es.md)
 
 <a id="funciones-principales"></a>
 

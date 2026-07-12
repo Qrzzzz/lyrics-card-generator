@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v5.0.4.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v5.1.0.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="#ローカル開発">ローカル開発</a> ·
@@ -51,31 +51,30 @@
 
 最新版は [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) からダウンロードできます。
 
-* 推奨インストーラー：`Lyrics Card Generator Setup 5.0.4.exe`
-* ポータブル版：`Lyrics Card Generator-5.0.4-portable.exe`
+* 推奨インストーラー：`Lyrics Card Generator Setup 5.1.0.exe`
+* ポータブル版：`Lyrics Card Generator-5.1.0-portable.exe`
 
 通常利用にはインストーラーを推奨します。ポータブル版は一時利用、検証、リムーバブルドライブでの利用に向いています。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v5.0.4 の更新ポイント
+### v5.1.0 の更新ポイント
 
-* 5.0.2 の固定検索結果領域、件数表示、NetEase のソースラベル、再設計した曲一覧を引き継ぎました。
-* ステップ 2 は常に利用可能な最大高さを使い、3 つの表示切り替えと下部のサイズ変更バーを削除しました。
-* 設定画面のヘッダーとパンくずを再配置し、現在位置を見やすくしました。
-* AI ワークスペースを、ほかの設定ページと揃えたコンパクトな移動先リストへ変更しました。
-* 「honeybee」と「Lies」のサンプルを追加し、一覧をスクロール可能な 2 行レイアウトにしました。
+* 信頼できない曲・画像 URL は、各リダイレクト前に Safe Fetch で検証され、プライベート、予約済み、クラウドメタデータ宛ての SSRF を遮断します。
+* 曲、歌詞、サンプルの読み込みを原子的にし、クリア、曲変更、より新しい操作で古いリクエストと候補を無効化します。
+* デスクトップ書き出しは不変スナップショットと同期 mutex を使い、内容、寸法、ファイル名を同じリビジョンに固定します。
+* Web Lite は独立した書き出し host を使い、36 行、フォント、寸法安定性、overflow の安全判定をデスクトップ版と共有します。
 
 ## 🌐 多言語リリースノート
 
 GitHub Release ページではデフォルトで簡体字中国語の短縮版が使用され、完全なリリースノートは `docs/releases/` にて管理されています：
 
-* [简体中文](./docs/releases/v5.0.4.zh-CN.md)
-* [繁體中文](./docs/releases/v5.0.4.zh-TW.md)
-* [English](./docs/releases/v5.0.4.en.md)
-* [Français](./docs/releases/v5.0.4.fr.md)
-* [日本語](./docs/releases/v5.0.4.ja.md)
-* [Español](./docs/releases/v5.0.4.es.md)
+* [简体中文](./docs/releases/v5.1.0.zh-CN.md)
+* [繁體中文](./docs/releases/v5.1.0.zh-TW.md)
+* [English](./docs/releases/v5.1.0.en.md)
+* [Français](./docs/releases/v5.1.0.fr.md)
+* [日本語](./docs/releases/v5.1.0.ja.md)
+* [Español](./docs/releases/v5.1.0.es.md)
 
 <a id="主な機能"></a>
 
