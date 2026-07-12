@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v5.0.0.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v5.0.2.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="#développement-local">Développement local</a> ·
@@ -51,14 +51,14 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 Téléchargez la dernière version depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
 
-* Installateur recommandé : `Lyrics Card Generator Setup 5.0.0.exe`
-* Version portable : `Lyrics Card Generator-5.0.0-portable.exe`
+* Installateur recommandé : `Lyrics Card Generator Setup 5.0.2.exe`
+* Version portable : `Lyrics Card Generator-5.0.2-portable.exe`
 
 L'installateur est recommandé pour une utilisation régulière. La version portable convient aux essais, à une utilisation temporaire ou à un disque amovible.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### Points clés de la v5.0.0
+### Points clés de la v5.0.2
 
 * La première étape privilégie la recherche NetEase ; les liens, l’audio local et les métadonnées manuelles passent dans une colonne secondaire compacte.
 * La deuxième étape devient un espace à trois colonnes avec résumé du morceau, document à défilement partagé et outils fixes.
@@ -72,12 +72,12 @@ L'installateur est recommandé pour une utilisation régulière. La version port
 
 La page GitHub Release utilise par défaut la version courte en chinois simplifié, les notes de publication complètes sont conservées dans `docs/releases/` :
 
-* [简体中文](./docs/releases/v5.0.0.zh-CN.md)
-* [繁體中文](./docs/releases/v5.0.0.zh-TW.md)
-* [English](./docs/releases/v5.0.0.en.md)
-* [Français](./docs/releases/v5.0.0.fr.md)
-* [日本語](./docs/releases/v5.0.0.ja.md)
-* [Español](./docs/releases/v5.0.0.es.md)
+* [简体中文](./docs/releases/v5.0.2.zh-CN.md)
+* [繁體中文](./docs/releases/v5.0.2.zh-TW.md)
+* [English](./docs/releases/v5.0.2.en.md)
+* [Français](./docs/releases/v5.0.2.fr.md)
+* [日本語](./docs/releases/v5.0.2.ja.md)
+* [Español](./docs/releases/v5.0.2.es.md)
 
 <a id="fonctionnalités-principales"></a>
 

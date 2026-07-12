@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v5.0.0.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v5.0.2.en.md">Release Notes</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
   <a href="#features">Features</a> ·
   <a href="#local-development">Local Development</a> ·
@@ -51,14 +51,14 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 Download the latest version from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Recommended installer: `Lyrics Card Generator Setup 5.0.0.exe`
-* Portable version: `Lyrics Card Generator-5.0.0-portable.exe`
+* Recommended installer: `Lyrics Card Generator Setup 5.0.2.exe`
+* Portable version: `Lyrics Card Generator-5.0.2-portable.exe`
 
 The installer is recommended for regular use. The portable version is useful for temporary use, testing, or running from a removable drive.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v5.0.0 Highlights
+### v5.0.2 Highlights
 
 * Step one now centers NetEase search while link, local-audio, and manual metadata imports move into a compact secondary column.
 * Step two becomes a three-column long-document workspace with song summary, shared-scroll lyrics document, and fixed editing tools.
@@ -72,12 +72,12 @@ The installer is recommended for regular use. The portable version is useful for
 
 The GitHub Release page defaults to a simplified Chinese short version, while the full release notes are maintained in `docs/releases/`:
 
-* [简体中文](./docs/releases/v5.0.0.zh-CN.md)
-* [繁體中文](./docs/releases/v5.0.0.zh-TW.md)
-* [English](./docs/releases/v5.0.0.en.md)
-* [Français](./docs/releases/v5.0.0.fr.md)
-* [日本語](./docs/releases/v5.0.0.ja.md)
-* [Español](./docs/releases/v5.0.0.es.md)
+* [简体中文](./docs/releases/v5.0.2.zh-CN.md)
+* [繁體中文](./docs/releases/v5.0.2.zh-TW.md)
+* [English](./docs/releases/v5.0.2.en.md)
+* [Français](./docs/releases/v5.0.2.fr.md)
+* [日本語](./docs/releases/v5.0.2.ja.md)
+* [Español](./docs/releases/v5.0.2.es.md)
 
 <a id="features"></a>
 
