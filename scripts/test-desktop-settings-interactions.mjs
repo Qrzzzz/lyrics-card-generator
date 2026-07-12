@@ -63,6 +63,21 @@ async function waitForLayoutStable(locator, timeout = 5_000) {
   );
 }
 
+async function waitForLyricsViewportMode(mode, minimumHeightExclusive = null, timeout = 10_000) {
+  await page.waitForFunction(
+    ({ expectedMode, minimumHeight }) => {
+      const surface = document.querySelector('[data-lyrics-viewport-mode]');
+      const workspace = document.querySelector('[data-testid="lyrics-workspace"]');
+      if (!(workspace instanceof HTMLElement)) return false;
+      return surface?.getAttribute('data-lyrics-viewport-mode') === expectedMode &&
+        (minimumHeight === null || workspace.getBoundingClientRect().height > minimumHeight);
+    },
+    { expectedMode: mode, minimumHeight: minimumHeightExclusive },
+    { timeout }
+  );
+  await waitForLayoutStable(page.getByTestId("lyrics-workspace"), timeout);
+}
+
 async function waitForLyricsLineBudget(expected, timeout = 5_000) {
   await page.waitForFunction(
     (text) => document.querySelector('[data-testid="lyrics-line-budget"]')?.textContent?.includes(text),
@@ -644,7 +659,7 @@ try {
   assert.equal(await expandedMode.evaluate((node) => document.activeElement === node), true, "mode change does not steal focus from its button");
 
   await immersiveMode.click();
-  await waitForLayoutStable(page.getByTestId("lyrics-workspace"));
+  await waitForLyricsViewportMode("immersive", expandedHeight);
   const immersiveHeight = await page.getByTestId("lyrics-workspace").evaluate((element) => element.getBoundingClientRect().height);
   assert.ok(
     standardHeight < expandedHeight && expandedHeight < immersiveHeight,
@@ -684,7 +699,7 @@ try {
     { steps: 8 }
   );
   await page.mouse.up();
-  await waitForLayoutStable(page.getByTestId("lyrics-workspace"));
+  await waitForLyricsViewportMode("immersive", currentHeight);
   assert.equal(await immersiveMode.getAttribute("aria-pressed"), "true", "dragging within the 24px snap zone enters immersive mode");
   const contextAfterDrag = await getLyricsContext(translationLyrics);
   assertSameSelection(contextBeforeModeChange, contextAfterDrag, "immersive drag");
