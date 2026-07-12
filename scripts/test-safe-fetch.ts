@@ -8,16 +8,17 @@ import {
   type SafeFetchTransport,
   type SafeFetchTransportRequest
 } from "../lib/safe-fetch";
+import { detectSource, resolveRedirect } from "../lib/song-parser";
 import { isPublicIpAddress, type PublicUrlResolver } from "../lib/url-safety";
 
 const publicAddress = { address: "93.184.216.34", family: 4 as const };
 const publicResolver: PublicUrlResolver = async () => [publicAddress];
 
-function response(status: number, headers: Record<string, string> = {}, body = "") {
+function response(status: number, headers: Record<string, string> = {}, body: string | Uint8Array = "") {
   return {
     status,
     headers: new Headers(headers),
-    body: new TextEncoder().encode(body)
+    body: typeof body === "string" ? new TextEncoder().encode(body) : body
   };
 }
 
@@ -96,6 +97,86 @@ for (const target of [
     "/middle@93.184.216.34",
     "/final@93.184.216.34"
   ]);
+}
+
+{
+  const fixtures = [
+    {
+      start: "https://spotify.link/card",
+      middle: "https://spotify.link/r/song",
+      final: "https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC",
+      source: "spotify"
+    },
+    {
+      start: "https://163cn.tv/song",
+      middle: "https://163cn.tv/r/song",
+      final: "https://music.163.com/song?id=186016",
+      source: "netease"
+    },
+    {
+      start: "https://u.y.qq.com/card",
+      middle: "https://u.y.qq.com/r/song",
+      final: "https://y.qq.com/n/ryqq/songDetail/0039MnYb0qxYhV",
+      source: "qq"
+    }
+  ] as const;
+
+  for (const fixture of fixtures) {
+    const visited: string[] = [];
+    const transport: SafeFetchTransport = async ({ url }) => {
+      visited.push(url.toString());
+      if (url.toString() === fixture.start) return response(302, { location: "/r/song" });
+      if (url.toString() === fixture.middle) return response(307, { location: fixture.final });
+      return response(200, { "content-type": "text/html" });
+    };
+    const finalUrl = await resolveRedirect(fixture.start, { resolver: publicResolver, transport });
+    assert.equal(finalUrl, fixture.final);
+    assert.equal(detectSource(fixture.start), fixture.source, `${fixture.start} shortlink platform`);
+    assert.equal(detectSource(finalUrl), fixture.source, `${fixture.final} final platform`);
+    assert.deepEqual(visited, [fixture.start, fixture.middle, fixture.final]);
+  }
+}
+
+{
+  const expectedBytes = Uint8Array.from([0xff, 0xd8, 0xff, 0xe0, 0x01, 0x02, 0x03]);
+  const visited: string[] = [];
+  const transport: SafeFetchTransport = async ({ url }) => {
+    visited.push(url.toString());
+    if (url.toString() === "https://i.scdn.co/image/cover") {
+      return response(302, { location: "/image/cover-middle" });
+    }
+    if (url.toString() === "https://i.scdn.co/image/cover-middle") {
+      return response(307, { location: "https://p.scdn.co/image/cover-final" });
+    }
+    return response(200, { "content-type": "image/jpeg" }, expectedBytes);
+  };
+  const cover = await safeFetch("https://i.scdn.co/image/cover", {
+    resolver: publicResolver,
+    transport,
+    allowedContentTypes: ["image/"],
+    maxResponseBytes: 32
+  });
+  assert.equal(cover.url, "https://p.scdn.co/image/cover-final");
+  assert.equal(cover.headers.get("content-type"), "image/jpeg");
+  assert.deepEqual(cover.body, expectedBytes);
+  assert.deepEqual(visited, [
+    "https://i.scdn.co/image/cover",
+    "https://i.scdn.co/image/cover-middle",
+    "https://p.scdn.co/image/cover-final"
+  ]);
+}
+
+{
+  const visited: string[] = [];
+  const transport: SafeFetchTransport = async ({ url }) => {
+    visited.push(url.toString());
+    return response(302, { location: "http://169.254.169.254/latest/meta-data" });
+  };
+  await expectCode(resolveRedirect("https://spotify.link/private", {
+    resolver: publicResolver,
+    transport
+  }), "UNSAFE_URL");
+  assert.deepEqual(visited, ["https://spotify.link/private"], "platform shortlink private target receives zero requests");
 }
 
 {

@@ -5,7 +5,7 @@ import { fetchHtml, REQUEST_HEADERS, songInfoFromMeta } from "@/lib/parsers/shar
 import { extractSpotifyTrackId, parseSpotify } from "@/lib/parsers/spotify";
 import type { SongInfo, SongSource } from "@/lib/types";
 import { extractFirstUrl } from "@/lib/url-normalize";
-import { safeFetch, SafeFetchError } from "@/lib/safe-fetch";
+import { safeFetch, SafeFetchError, type SafeFetchOptions } from "@/lib/safe-fetch";
 
 export type ParseDebugDetails = {
   input: string;
@@ -130,14 +130,18 @@ export function detectSource(inputUrl: string): SongSource {
   return "unknown";
 }
 
-export async function resolveRedirect(url: string) {
+export async function resolveRedirect(
+  url: string,
+  networkOverrides: Pick<SafeFetchOptions, "resolver" | "transport"> = {}
+) {
   const response = await safeFetch(url, {
     headers: REQUEST_HEADERS,
     method: "GET",
     timeoutMs: 10000,
     maxRedirects: 5,
     maxResponseBytes: 0,
-    discardResponseBody: true
+    discardResponseBody: true,
+    ...networkOverrides
   });
   return response.url || url;
 }

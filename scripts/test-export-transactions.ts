@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { defaultState } from "../components/editor/editor-defaults";
 import { evaluateMinimumExportSafety, type ExportDomSafety } from "../lib/export-safety";
+import { exportNodeAsPng, type ExportImageDependencies } from "../lib/export-image";
 import { createExportSnapshot } from "../lib/export-snapshot";
 import { ExportTransactionMutex, runExportTransaction, waitForExportSnapshotNode } from "../lib/export-transaction";
 import type { AppState } from "../lib/types";
@@ -162,11 +163,107 @@ async function fontReadinessTimeoutTest() {
   }
 }
 
+function deferredRender() {
+  let resolve!: (value: string) => void;
+  let startedResolve!: () => void;
+  const started = new Promise<void>((resolvePromise) => { startedResolve = resolvePromise; });
+  const promise = new Promise<string>((resolvePromise) => { resolve = resolvePromise; });
+  return {
+    renderNode: async () => {
+      startedResolve();
+      return promise;
+    },
+    started,
+    resolve
+  };
+}
+
+async function exportImageAbortGuardTest() {
+  const render = deferredRender();
+  const commits: Array<{ dataUrl: string; fileName: string }> = [];
+  const dependencies: ExportImageDependencies = {
+    renderNode: render.renderNode,
+    commitDownload: (dataUrl, fileName) => { commits.push({ dataUrl, fileName }); }
+  };
+  const controller = new AbortController();
+  const exporting = exportNodeAsPng(
+    {} as HTMLElement,
+    "cancelled.png",
+    1200,
+    1800,
+    2,
+    controller.signal,
+    dependencies
+  );
+  await render.started;
+  controller.abort(new Error("cancelled during render"));
+  render.resolve("data:image/png;base64,LATE");
+  await assert.rejects(exporting, /cancelled during render/);
+  assert.equal(commits.length, 0, "an aborted production export must never reach link.click/commit");
+
+  let normalRenderCount = 0;
+  await exportNodeAsPng(
+    {} as HTMLElement,
+    "normal.png",
+    640,
+    960,
+    1,
+    undefined,
+    {
+      renderNode: async (_node, options) => {
+        normalRenderCount += 1;
+        assert.equal(options.width, 640);
+        assert.equal(options.height, 960);
+        return "data:image/png;base64,OK";
+      },
+      commitDownload: (dataUrl, fileName) => { commits.push({ dataUrl, fileName }); }
+    }
+  );
+  assert.equal(normalRenderCount, 1);
+  assert.deepEqual(commits, [{ dataUrl: "data:image/png;base64,OK", fileName: "normal.png" }]);
+}
+
+async function transactionTimeoutBlocksLateExportCommitTest() {
+  const mutex = new ExportTransactionMutex();
+  const snapshot = createExportSnapshot(defaultState, 1, 5);
+  const render = deferredRender();
+  let commitCount = 0;
+  const resultPromise = runExportTransaction({
+    mutex,
+    snapshot,
+    mountSnapshot: async () => ({} as HTMLElement),
+    validateSnapshot: () => null,
+    captureSnapshot: (current, node, signal) => exportNodeAsPng(
+      node,
+      current.fileName,
+      current.width,
+      current.height,
+      current.pixelRatio,
+      signal,
+      {
+        renderNode: render.renderNode,
+        commitDownload: () => { commitCount += 1; }
+      }
+    ),
+    unmountSnapshot: () => undefined,
+    timeoutMs: 20
+  });
+  await render.started;
+  const result = await resultPromise;
+  assert.equal(result.ok, false);
+  assert.equal(result.ok ? null : result.kind, "error");
+  render.resolve("data:image/png;base64,LATE");
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  assert.equal(commitCount, 0, "a transaction timeout must block a late html-to-image result from downloading");
+}
+
 void (async () => {
   await concurrencyTest();
   await timeoutReleasesMutexTest();
   await postSettleRevalidationTest();
   await fontReadinessTimeoutTest();
+  await exportImageAbortGuardTest();
+  await transactionTimeoutBlocksLateExportCommitTest();
 })().then(() => {
   console.log("export snapshot and concurrency tests passed");
 }).catch((error) => {
