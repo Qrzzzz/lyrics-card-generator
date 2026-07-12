@@ -80,6 +80,7 @@ export function LyricEditor() {
   const headerRailRef = useRef<HTMLDivElement | null>(null);
   const settingsButtonRef = useRef<HTMLButtonElement | null>(null);
   const restoreSettingsFocusRef = useRef(false);
+  const invalidateDocumentAsyncRef = useRef<() => void>(() => undefined);
   const [headerDockY, setHeaderDockY] = useState(0);
   const t = useMemo(() => createT(state.locale), [state.locale]);
   const systemShouldReduceMotion = useReducedMotion() ?? false;
@@ -146,6 +147,8 @@ export function LyricEditor() {
     celebrationKey,
     isCompleteExporting,
     clearTransitionKey,
+    documentRevision,
+    beginSongImport,
     clearAllContent,
     handleStyleChange,
     setTranslation,
@@ -158,6 +161,7 @@ export function LyricEditor() {
     setTranslationEnabled,
     setTranslationText,
     splitAlternatingLyrics,
+    applyFetchedLyrics,
     loadExample,
     completeAndExport
   } = useEditorActions({
@@ -174,9 +178,11 @@ export function LyricEditor() {
     },
     exampleLoadedMessage: settingsCopy[state.locale].exampleLoaded,
     clearAlreadyEmptyMessage: settingsCopy[state.locale].clearAlreadyEmpty,
+    confirmReplaceDocument: () => window.confirm(t("replaceDocumentConfirm")),
     onNotify: showToast,
     onCloseExamples: () => setActiveSurface("editor"),
-    onClearTransientState: () => setFontSchemePreview(null)
+    onClearTransientState: () => setFontSchemePreview(null),
+    onInvalidateDocument: () => invalidateDocumentAsyncRef.current()
   });
 
   useEffect(() => {
@@ -304,6 +310,7 @@ export function LyricEditor() {
     onNotify: showToast,
     onRequireSettings: () => openSettings("ai")
   });
+  invalidateDocumentAsyncRef.current = cancelAITranslation;
 
   function openSettings(tab?: SettingsTabId) {
     setRequestedSettingsTab(tab);
@@ -342,6 +349,7 @@ export function LyricEditor() {
     lyricsLayout: {
       lineStatus: exportReadiness.lineStatus
     },
+    documentRevision,
     ai: {
       isOpen: isAITranslateOpen,
       isTranslating: isAITranslating,
@@ -355,11 +363,12 @@ export function LyricEditor() {
     },
     handlers: {
       onUrlChange: setUrl,
+      onBeginSongImport: beginSongImport,
       onSearchedSongResolved: applySearchedSong,
       onSongParsed: applyParsedSong,
       onLocalAudioParsed: applyLocalAudio,
       onSongChange: setSong,
-      onUseFetchedLyrics: setLyrics,
+      onUseFetchedLyrics: applyFetchedLyrics,
       onLyricsChange: setLyrics,
       onTranslationEnabledChange: setTranslationEnabled,
       onTranslationTextChange: setTranslationText,

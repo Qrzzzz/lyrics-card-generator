@@ -5,9 +5,17 @@ import { getCardSize } from "@/lib/card-size";
 import { normalizeCardStyle } from "@/lib/card-style-normalize";
 import { clearLyricContent, hasClearableLyricContent } from "@/lib/clear-content";
 import { applyEditorStyleChange } from "@/lib/editor/apply-style-change";
-import { getHighResolutionCoverUrl } from "@/lib/cover-url";
 import { exportNodeAsPng } from "@/lib/export-image";
-import { proxiedImageUrl } from "@/lib/image-utils";
+import {
+  canApplyLyricsCandidate,
+  canonicalSongInfo,
+  DocumentTransactionController,
+  replaceSongDocument,
+  requestDocumentImport,
+  songDocumentIdentity,
+  type DocumentImportIntent,
+  type DocumentImportKind
+} from "@/lib/editor/document-transactions";
 import type { ExampleLoadPayload } from "@/lib/examples";
 import type {
   AppState,
@@ -31,9 +39,11 @@ type UseEditorActionsInput = {
   getExportBlockMessage?: () => string | undefined;
   exampleLoadedMessage: string;
   clearAlreadyEmptyMessage: string;
+  confirmReplaceDocument: () => boolean;
   onNotify: (message: string) => void;
   onCloseExamples: () => void;
   onClearTransientState: () => void;
+  onInvalidateDocument: () => void;
 };
 
 export function useEditorActions({
@@ -45,16 +55,45 @@ export function useEditorActions({
   getExportBlockMessage,
   exampleLoadedMessage,
   clearAlreadyEmptyMessage,
+  confirmReplaceDocument,
   onNotify,
   onCloseExamples,
-  onClearTransientState
+  onClearTransientState,
+  onInvalidateDocument
 }: UseEditorActionsInput) {
   const [celebrationKey, setCelebrationKey] = useState(0);
   const [isCompleteExporting, setIsCompleteExporting] = useState(false);
   const [clearTransitionKey, setClearTransitionKey] = useState(0);
   const clearVersionRef = useRef(0);
+  const documentControllerRef = useRef(new DocumentTransactionController());
+  const [documentRevision, setDocumentRevision] = useState(0);
+
+  function markDocumentMutation() {
+    onInvalidateDocument();
+    setDocumentRevision(documentControllerRef.current.mutate());
+  }
+
+  function beginSongImport(kind: DocumentImportKind) {
+    const intent = requestDocumentImport(
+      documentControllerRef.current,
+      parsedState,
+      kind,
+      confirmReplaceDocument
+    );
+    if (intent) onInvalidateDocument();
+    return intent;
+  }
+
+  function commitSongImport(intent: DocumentImportIntent, song: ParsedSongData, lyrics = "") {
+    const revision = documentControllerRef.current.tryCommit(intent);
+    if (revision === null) return false;
+    setDocumentRevision(revision);
+    setState((current) => replaceSongDocument(current, song, lyrics));
+    return true;
+  }
 
   function setTranslation({ text, enabled }: TranslationValue) {
+    markDocumentMutation();
     setState((current) => ({
       ...current,
       translationText: text,
@@ -74,6 +113,7 @@ export function useEditorActions({
     }
 
     clearVersionRef.current += 1;
+    markDocumentMutation();
     setCelebrationKey(0);
     setClearTransitionKey((key) => key + 1);
     onClearTransientState();
@@ -85,74 +125,34 @@ export function useEditorActions({
   }
 
   function setUrl(url: string) {
+    markDocumentMutation();
     setState((current) => ({ ...current, url }));
   }
 
-  function applyParsedSong(song: ParsedSongData) {
-    setState((current) => {
-      const originalCoverUrl = song.coverUrl ?? "";
-      const coverUrl = getHighResolutionCoverUrl(originalCoverUrl, song.source);
-
-      return {
-        ...current,
-        song: {
-          ...current.song,
-          ...song,
-          originalCoverUrl,
-          coverUrl,
-          proxiedCoverUrl: proxiedImageUrl(coverUrl)
-        }
-      };
-    });
+  function applyParsedSong(song: ParsedSongData, intent: DocumentImportIntent) {
+    return commitSongImport(intent, song);
   }
 
-  function applyLocalAudio(song: ParsedSongData, embeddedLyrics?: string) {
-    setState((current) => {
-      const { lyrics: _lyrics, ...songInfo } = song;
-
-      return {
-        ...current,
-        url: song.originalUrl,
-        song: {
-          ...current.song,
-          ...songInfo,
-          proxiedCoverUrl: song.coverUrl ? proxiedImageUrl(song.coverUrl) : ""
-        },
-        lyrics: embeddedLyrics ? embeddedLyrics : current.lyrics
-      };
-    });
+  function applyLocalAudio(song: ParsedSongData, embeddedLyrics: string | undefined, intent: DocumentImportIntent) {
+    return commitSongImport(intent, song, embeddedLyrics ?? "");
   }
 
-  function applySearchedSong(song: ParsedSongData, lyrics?: string) {
-    setState((current) => {
-      const { lyrics: _lyrics, ...songInfo } = song;
-      const originalCoverUrl = song.coverUrl ?? "";
-      const coverUrl = getHighResolutionCoverUrl(originalCoverUrl, song.source);
-
-      return {
-        ...current,
-        url: song.originalUrl,
-        song: {
-          ...current.song,
-          ...songInfo,
-          originalCoverUrl,
-          coverUrl,
-          proxiedCoverUrl: coverUrl ? proxiedImageUrl(coverUrl) : ""
-        },
-        lyrics: lyrics?.trim() ? lyrics : current.lyrics
-      };
-    });
+  function applySearchedSong(song: ParsedSongData, lyrics: string | undefined, intent: DocumentImportIntent) {
+    return commitSongImport(intent, song, lyrics ?? "");
   }
 
   function setSong(song: SongInfo) {
-    setState((current) => ({ ...current, song }));
+    markDocumentMutation();
+    setState((current) => ({ ...current, song: canonicalSongInfo(song) }));
   }
 
   function setLyrics(lyrics: string) {
+    markDocumentMutation();
     setState((current) => ({ ...current, lyrics }));
   }
 
   function setTranslationEnabled(translationEnabled: boolean) {
+    markDocumentMutation();
     setState((current) => ({
       ...current,
       translationEnabled,
@@ -161,6 +161,7 @@ export function useEditorActions({
   }
 
   function setTranslationText(translationText: string) {
+    markDocumentMutation();
     setState((current) => ({
       ...current,
       translationText,
@@ -169,6 +170,7 @@ export function useEditorActions({
   }
 
   function splitAlternatingLyrics(lyrics: string, translationText: string) {
+    markDocumentMutation();
     setState((current) => ({
       ...current,
       lyrics,
@@ -217,27 +219,29 @@ export function useEditorActions({
 
   async function loadExample(payload: ExampleLoadPayload) {
     const { example, translation, importTranslation = true } = payload;
+    const intent = beginSongImport("example");
+    if (!intent) return;
     clearVersionRef.current += 1;
+    const revision = documentControllerRef.current.tryCommit(intent);
+    if (revision === null) return;
+    setDocumentRevision(revision);
     setState((current) => {
       const translationText = importTranslation ? translation.text : "";
       const translationEnabled = importTranslation && Boolean(translationText.trim()) && example.translationEnabled;
+      const replaced = replaceSongDocument(current, {
+        source: example.source,
+        title: example.title,
+        artist: example.artist,
+        album: example.album,
+        originalUrl: example.url
+      }, example.lyrics);
 
       return {
-        ...current,
-        url: example.url,
-        song: {
-          ...current.song,
-          source: example.source,
-          title: example.title,
-          artist: example.artist,
-          album: example.album,
-          originalUrl: example.url
-        },
-        lyrics: example.lyrics,
+        ...replaced,
         translationText,
         translationEnabled,
         style: {
-          ...normalizeCardStyle(current.style),
+          ...normalizeCardStyle(replaced.style),
           translationText,
           translationEnabled
         }
@@ -246,36 +250,51 @@ export function useEditorActions({
     onCloseExamples();
     onNotify(exampleLoadedMessage);
 
+    const enrichmentIntent = documentControllerRef.current.begin("example-enrichment");
     try {
       const response = await fetch("/api/parse-song", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ url: example.url })
+        body: JSON.stringify({ url: example.url }),
+        signal: enrichmentIntent.signal
       });
       const payload = await response.json() as { ok: boolean; data?: AppState["song"] };
       if (payload.ok && payload.data) {
-        const originalCoverUrl = payload.data.coverUrl ?? "";
-        const coverUrl = getHighResolutionCoverUrl(originalCoverUrl, payload.data.source);
-        setState((current) => ({
-          ...current,
-          song: {
-            ...current.song,
-            ...payload.data,
-            originalCoverUrl,
-            coverUrl,
-            proxiedCoverUrl: proxiedImageUrl(coverUrl)
-          }
-        }));
+        const enrichedRevision = documentControllerRef.current.tryCommit(enrichmentIntent);
+        if (enrichedRevision !== null) {
+          setDocumentRevision(enrichedRevision);
+          setState((current) => ({ ...current, song: canonicalSongInfo(payload.data!) }));
+        }
       }
     } catch {
       // The example remains useful offline; cover/palette enrichment is best effort.
     }
   }
 
+  function applyFetchedLyrics(lyrics: string, revision: number, expectedSongIdentity: string) {
+    if (!canApplyLyricsCandidate({
+      controller: documentControllerRef.current,
+      revision,
+      expectedSongIdentity,
+      currentSong: parsedState.song
+    })) return false;
+    markDocumentMutation();
+    setState((current) => ({
+      ...current,
+      lyrics,
+      translationText: "",
+      translationEnabled: false,
+      style: { ...current.style, translationText: "", translationEnabled: false }
+    }));
+    return true;
+  }
+
   return {
     celebrationKey,
     isCompleteExporting,
     clearTransitionKey,
+    documentRevision,
+    beginSongImport,
     clearAllContent,
     handleStyleChange,
     setTranslation,
@@ -288,6 +307,7 @@ export function useEditorActions({
     setTranslationEnabled,
     setTranslationText,
     splitAlternatingLyrics,
+    applyFetchedLyrics,
     loadExample,
     completeAndExport
   };

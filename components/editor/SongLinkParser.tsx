@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { Input, Label, Section } from "@/components/ui/controls";
 import type { createT } from "@/lib/i18n";
 import type { ParsedSongData } from "@/lib/types";
+import type { DocumentImportIntent } from "@/lib/editor/document-transactions";
 import { cn } from "@/lib/utils";
 
 type ParseResponse =
@@ -25,19 +26,24 @@ type ParseResponse =
 export function SongLinkParser({
   url,
   onUrlChange,
+  beginImport,
   onParsed,
   t,
   autoParseOnMount = false
 }: {
   url: string;
   onUrlChange: (url: string) => void;
-  onParsed: (song: ParsedSongData) => void;
+  beginImport: () => DocumentImportIntent | null;
+  onParsed: (song: ParsedSongData, intent: DocumentImportIntent) => boolean;
   t: ReturnType<typeof createT>;
   autoParseOnMount?: boolean;
 }) {
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [message, setMessage] = useState<string>(t("parseIdle"));
   const autoParsed = useRef(false);
+  const activeIntentRef = useRef<DocumentImportIntent | null>(null);
+
+  useEffect(() => () => activeIntentRef.current?.cancel(), []);
 
   useEffect(() => {
     if (status === "idle") {
@@ -61,6 +67,10 @@ export function SongLinkParser({
       return;
     }
 
+    const intent = beginImport();
+    if (!intent) return;
+    activeIntentRef.current?.cancel();
+    activeIntentRef.current = intent;
     setStatus("loading");
     setMessage(t("parseLoading"));
 
@@ -68,7 +78,8 @@ export function SongLinkParser({
       const res = await fetch("/api/parse-song", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ url })
+        body: JSON.stringify({ url }),
+        signal: intent.signal
       });
       const payload = (await res.json()) as ParseResponse;
 
@@ -86,10 +97,15 @@ export function SongLinkParser({
         throw new Error(payload.error);
       }
 
-      onParsed(payload.data);
+      if (!onParsed(payload.data, intent)) return;
       setStatus("success");
       setMessage(t("parseSuccess", { source: payload.data.source }));
     } catch (error) {
+      if (intent.signal.aborted) {
+        setStatus("idle");
+        setMessage(t("parseIdle"));
+        return;
+      }
       setStatus("error");
       if (process.env.NODE_ENV === "development" && error instanceof Error) {
         console.debug("[Lyric Card Generator] parse-song error", {
@@ -98,6 +114,8 @@ export function SongLinkParser({
         });
       }
       setMessage(t("parseError"));
+    } finally {
+      if (activeIntentRef.current?.id === intent.id) activeIntentRef.current = null;
     }
   }
 

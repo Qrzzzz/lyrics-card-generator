@@ -14,6 +14,7 @@
     "music-search:normalize-test": "tsx scripts/test-netease-search-normalize.ts",
     "music-search:test": "tsx scripts/test-netease-search-live.ts",
     "security:test": "tsx scripts/test-safe-fetch.ts",
+    "transactions:test": "tsx scripts/test-document-transactions.ts",
     "examples:generate-palettes": "tsx scripts/generate-example-palettes.ts",
     "web-lite:build": "node scripts/build-web-lite.mjs",
     "web-lite:check": "node scripts/check-web-lite.mjs",
