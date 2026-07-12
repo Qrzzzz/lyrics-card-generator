@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v5.0.0.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v5.0.2.zh-CN.md">发布说明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">在线 Web Lite 版</a> ·
   <a href="./docs/desktop.md">桌面维护文档</a> ·
   <a href="#主要功能">主要功能</a> ·
@@ -49,14 +49,14 @@
 
 请前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下载最新版：
 
-* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 5.0.0.exe`
-* 不想安装时可下载便携版：`Lyrics Card Generator-5.0.0-portable.exe`
+* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 5.0.2.exe`
+* 不想安装时可下载便携版：`Lyrics Card Generator-5.0.2-portable.exe`
 
 安装版适合长期使用；便携版适合临时运行、测试或放在移动硬盘中使用。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v5.0.0 更新重点
+### v5.0.2 更新重点
 
 * 第一步以网易云搜索为核心，链接、本地音频和手动歌曲信息收进紧凑辅助栏。
 * 第二步升级为歌曲摘要、共享滚动歌词文档和固定编辑工具组成的三栏长稿工作台。
@@ -70,12 +70,12 @@
 
 GitHub Release 页面默认使用简体中文短版，完整发布说明维护在 `docs/releases/`：
 
-* [简体中文](./docs/releases/v5.0.0.zh-CN.md)
-* [繁體中文](./docs/releases/v5.0.0.zh-TW.md)
-* [English](./docs/releases/v5.0.0.en.md)
-* [Français](./docs/releases/v5.0.0.fr.md)
-* [日本語](./docs/releases/v5.0.0.ja.md)
-* [Español](./docs/releases/v5.0.0.es.md)
+* [简体中文](./docs/releases/v5.0.2.zh-CN.md)
+* [繁體中文](./docs/releases/v5.0.2.zh-TW.md)
+* [English](./docs/releases/v5.0.2.en.md)
+* [Français](./docs/releases/v5.0.2.fr.md)
+* [日本語](./docs/releases/v5.0.2.ja.md)
+* [Español](./docs/releases/v5.0.2.es.md)
 
 <a id="主要功能"></a>
 
