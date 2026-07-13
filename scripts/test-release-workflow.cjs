@@ -4,6 +4,8 @@ const { version } = require("../package.json");
 
 const workflow = readFileSync(`.github/workflows/release-${version}.yml`, "utf8");
 
+assert.match(workflow, /^concurrency:\s+group: release-/m, "release workflow serializes runs for the same tag");
+
 for (const file of readdirSync(".github/workflows").filter((name) => /^release-\d+\.\d+\.\d+\.yml$/.test(name))) {
   const targetVersion = file.match(/^release-(\d+\.\d+\.\d+)\.yml$/)[1];
   const source = readFileSync(`.github/workflows/${file}`, "utf8");
@@ -29,7 +31,12 @@ const publishSection = workflow.slice(publishVerified);
 
 assert.match(createSection, /gh release create[^\r\n]+--draft\b/, "release creation remains draft-only");
 assert.match(createSection, /--verify-tag\b/, "release creation verifies the tag");
-assert.match(verifySection, /gh release download \$env:RELEASE_TAG --dir published/, "verification uses downloaded release assets");
+assert.match(createSection, /Matching published release already exists/, "an existing published release blocks draft creation");
+assert.match(createSection, /gh api --method DELETE[^\r\n]+\$staleDraft\.id/, "reruns remove only stale matching drafts");
+assert.match(createSection, /RELEASE_ID=/, "the exact draft release id is persisted");
+assert.doesNotMatch(verifySection, /gh release download \$env:RELEASE_TAG/, "verification never resolves assets by an ambiguous tag");
+assert.match(verifySection, /releases\/\$env:RELEASE_ID/, "verification loads the exact draft release by id");
+assert.match(verifySection, /Invoke-WebRequest -Uri \$asset\.url/, "verification downloads each asset from the exact release response");
 assert.match(verifySection, /\$setup\.Count -ne 1/, "exactly one Setup artifact is required");
 assert.match(verifySection, /\$portable\.Count -ne 1/, "exactly one portable artifact is required");
 assert.match(verifySection, /\$sbom\.Count -ne 1/, "exactly one SBOM is required");
@@ -41,7 +48,12 @@ assert.match(
   /\$assets \| ForEach-Object \{\s+gh attestation verify \$_\.FullName/s,
   "every downloaded release asset is attestation-verified"
 );
-assert.match(publishSection, /gh release edit \$env:RELEASE_TAG --draft=false/, "verified draft is explicitly published");
+assert.match(
+  publishSection,
+  /gh api --method PATCH[^\r\n]+releases\/\$env:RELEASE_ID[^\r\n]+-F draft=false/,
+  "the verified draft is published by exact release id"
+);
+assert.doesNotMatch(publishSection, /gh release edit \$env:RELEASE_TAG/, "publishing never resolves a release by tag");
 
 const nativeFailureGuards = workflow.match(/\$PSNativeCommandUseErrorActionPreference = \$true/g) || [];
 assert.equal(nativeFailureGuards.length, 3, "every gh release step treats native command failures as fatal");

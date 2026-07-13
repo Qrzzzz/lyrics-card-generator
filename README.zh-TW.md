@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v5.2.2.zh-TW.md">發布說明</a> ·
+  <a href="./docs/releases/v5.2.3.zh-TW.md">發布說明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">線上 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="#本機開發">本機開發</a> ·
@@ -48,24 +48,24 @@
 
 請前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載最新版：
 
-* 建議一般使用者下載安裝版：`Lyrics Card Generator Setup 5.2.2.exe`
-* 不想安裝時可下載可攜版：`Lyrics Card Generator-5.2.2-portable.exe`
+* 建議一般使用者下載安裝版：`Lyrics Card Generator Setup 5.2.3.exe`
+* 不想安裝時可下載可攜版：`Lyrics Card Generator-5.2.3-portable.exe`
 
 安裝版適合長期使用；可攜版適合臨時執行、測試或放在隨身碟中使用。
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v5.2.2 更新重點
+### v5.2.3 更新重點
 
-* 修正 v5.2.1 發布工作流程誤驗證 v5.2.0 標籤的問題，並加入版本匹配回歸檢查。
-* Stepper 只在目前步驟之前顯示完成勾選，目前與後續步驟維持正確編號。
-* 移除設定麵包屑前進/後退按鈕組的最外層邊框，拉開按鈕間距並稍微收緊右側路徑條。
-* 從歌詞範例確認匯入另一首歌並返回第三步時，即時預覽會立即恢復正常大尺寸。
+* 修正同一標籤同時存在已發布 Release 與草稿 Release 時，發布驗證可能下載錯誤附件集的問題。
+* 發布流程會記錄並只驗證本次建立的草稿 Release ID，逐項核對安裝版、可攜版、SBOM、SHA256SUMS 與 attestation 後才發布。
+* 同標籤已有正式發布時會提前中止；重新執行時只清理同標籤殘留草稿，避免重複 Release 或不完整附件被誤判為成功。
+* 應用程式功能與 v5.2.2 維持一致，本版本只修正發布與供應鏈驗證流程。
 
 ## 🌐 多語言發佈說明
 
 GitHub Release 預設顯示簡體中文摘要，完整說明請見：
-[简体中文](./docs/releases/v5.2.2.zh-CN.md) · [繁體中文](./docs/releases/v5.2.2.zh-TW.md) · [English](./docs/releases/v5.2.2.en.md) · [Français](./docs/releases/v5.2.2.fr.md) · [日本語](./docs/releases/v5.2.2.ja.md) · [Español](./docs/releases/v5.2.2.es.md)
+[简体中文](./docs/releases/v5.2.3.zh-CN.md) · [繁體中文](./docs/releases/v5.2.3.zh-TW.md) · [English](./docs/releases/v5.2.3.en.md) · [Français](./docs/releases/v5.2.3.fr.md) · [日本語](./docs/releases/v5.2.3.ja.md) · [Español](./docs/releases/v5.2.3.es.md)
 
 ## ✨ 主要功能
 

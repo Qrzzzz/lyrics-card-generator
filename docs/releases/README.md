@@ -64,6 +64,7 @@ docs/releases/vX.Y.Z.es.md
 - `v5.2.0`：稳定性、可访问性、Electron 安全与发布工程版本，加入多地址 Safe Fetch、关闭前持久化、六语错误码、最终制品 smoke、SBOM 与 attestation。
 - `v5.2.1`：歌曲链接解析恢复版本，修复 QQ 音乐数值 songDetail、网易云 JSON 元数据和 Apple Music 首页跳转后的曲目解析，同时保留既有 Safe Fetch 安全边界。
 - `v5.2.2`：修复发布标签校验、Stepper 勾选状态、设置面包屑导航样式，以及示例歌曲替换后实时预览尺寸异常。
+- `v5.2.3`：修复同标签下已发布与草稿 Release 的附件解析歧义，改为按唯一 Release ID 校验并发布完整制品。
 
 旧的 `docs/release-notes-v*.md` 单文件发布说明已迁移到本目录，避免同一版本存在多套入口。
 

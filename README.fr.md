@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v5.2.2.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v5.2.3.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="#développement-local">Développement local</a> ·
@@ -51,24 +51,24 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 Téléchargez la dernière version depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
 
-* Installateur recommandé : `Lyrics Card Generator Setup 5.2.2.exe`
-* Version portable : `Lyrics Card Generator-5.2.2-portable.exe`
+* Installateur recommandé : `Lyrics Card Generator Setup 5.2.3.exe`
+* Version portable : `Lyrics Card Generator-5.2.3-portable.exe`
 
 L'installateur est recommandé pour une utilisation régulière. La version portable convient aux essais, à une utilisation temporaire ou à un disque amovible.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### Points clés de la v5.2.2
+### Points clés de la v5.2.3
 
-* Corrige le workflow de publication v5.2.1 qui validait encore les tags v5.2.0 et ajoute un contrôle de régression de version.
-* Affiche les coches du Stepper uniquement avant l’étape active et conserve les numéros de l’étape active et des étapes suivantes.
-* Supprime le contour externe des boutons précédent/suivant des Réglages, augmente leur espacement et compacte légèrement le fil d’Ariane.
-* Rétablit immédiatement l’aperçu en taille normale après confirmation d’un autre exemple et retour à la troisième étape.
+* Corrige le téléchargement du mauvais jeu de fichiers lorsque deux Releases, l’une publiée et l’autre en brouillon, partagent le même tag.
+* Le workflow enregistre et vérifie uniquement l’identifiant du brouillon qu’il crée, puis contrôle l’installateur, la version portable, le SBOM, SHA256SUMS et les attestations avant publication.
+* Une Release déjà publiée pour le tag bloque désormais le workflow ; une relance ne supprime que les brouillons résiduels portant ce même tag.
+* Le comportement de l’application reste identique à la v5.2.2 ; cette version corrige uniquement la publication et la vérification de la chaîne d’approvisionnement.
 
 ## 🌐 Notes de publication multilingues
 
 Par défaut, GitHub Release affiche un résumé en chinois simplifié. Consultez les notes complètes :
-[简体中文](./docs/releases/v5.2.2.zh-CN.md) · [繁體中文](./docs/releases/v5.2.2.zh-TW.md) · [English](./docs/releases/v5.2.2.en.md) · [Français](./docs/releases/v5.2.2.fr.md) · [日本語](./docs/releases/v5.2.2.ja.md) · [Español](./docs/releases/v5.2.2.es.md)
+[简体中文](./docs/releases/v5.2.3.zh-CN.md) · [繁體中文](./docs/releases/v5.2.3.zh-TW.md) · [English](./docs/releases/v5.2.3.en.md) · [Français](./docs/releases/v5.2.3.fr.md) · [日本語](./docs/releases/v5.2.3.ja.md) · [Español](./docs/releases/v5.2.3.es.md)
 
 <a id="fonctionnalités-principales"></a>
 
