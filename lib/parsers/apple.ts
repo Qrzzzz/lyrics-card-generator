@@ -8,6 +8,7 @@ type AppleLookupResponse = {
     collectionName?: string;
     artworkUrl100?: string;
     artworkUrl600?: string;
+    trackViewUrl?: string;
   }>;
 };
 
@@ -32,7 +33,7 @@ export async function parseAppleMusic(finalUrl: string, originalUrl: string) {
   });
 }
 
-function extractAppleTrackId(inputUrl: string) {
+export function extractAppleTrackId(inputUrl: string) {
   try {
     const url = new URL(inputUrl);
     const parts = url.pathname.split("/").filter(Boolean);
@@ -64,7 +65,7 @@ async function parseAppleLookup(id: string, country: string, finalUrl: string, o
     album: song.collectionName || "",
     coverUrl: song.artworkUrl600 || song.artworkUrl100 || "",
     originalUrl,
-    finalUrl,
-    parseMethod: "apple-og"
+    finalUrl: song.trackViewUrl || originalUrl || finalUrl,
+    parseMethod: "apple-lookup"
   });
 }

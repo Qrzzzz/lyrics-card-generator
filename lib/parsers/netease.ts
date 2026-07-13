@@ -3,7 +3,6 @@ import {
   extractMeta,
   fetchHtml,
   fetchJson,
-  REQUEST_HEADERS,
   songInfoFromMeta,
   splitTitleAndArtist
 } from "@/lib/parsers/shared";
@@ -69,7 +68,6 @@ async function parseNeteaseApi(songId: string, finalUrl: string, originalUrl: st
     `https://music.163.com/api/song/detail?ids=[${encodeURIComponent(songId)}]`,
     {
       headers: {
-        ...REQUEST_HEADERS,
         referer: "https://music.163.com/"
       }
     }

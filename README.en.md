@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v5.2.0.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v5.2.1.en.md">Release Notes</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
   <a href="#features">Features</a> ·
   <a href="#local-development">Local Development</a> ·
@@ -51,30 +51,30 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 Download the latest version from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Recommended installer: `Lyrics Card Generator Setup 5.2.0.exe`
-* Portable version: `Lyrics Card Generator-5.2.0-portable.exe`
+* Recommended installer: `Lyrics Card Generator Setup 5.2.1.exe`
+* Portable version: `Lyrics Card Generator-5.2.1-portable.exe`
 
 The installer is recommended for regular use. The portable version is useful for temporary use, testing, or running from a removable drive.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v5.2.0 Highlights
+### v5.2.1 Highlights
 
-* Safe Fetch supports fully validated multi-address IPv6/IPv4 fallback with one redirect, timeout, abort, and body budget.
-* AI document races, early Electron cancellation, close-time settings flushes, and JSON/localStorage reconciliation are hardened.
-* Shared dialogs, keyboard search, live regions, six-language error codes, focus contrast, and Forced Colors improve accessibility.
-* Electron navigation, IPC senders, permissions, and CSP share explicit policies; final Setup/portable bytes receive smoke and provenance checks.
+* Restores numeric QQ Music `songDetail` links with the correct song ID, title, artist, album, and cover.
+* Fixes NetEase JSON response negotiation so complete song, artist, and album metadata is imported again.
+* Apple Music now resolves the original track ID even when the page redirects home; Spotify compatibility is preserved.
+* Keeps v5.1.0 per-hop validation and v5.2.0 multi-address IPv6/IPv4 fallback without weakening network boundaries.
 
 ## 🌐 Multilingual Release Notes
 
 The GitHub Release page defaults to a simplified Chinese short version, while the full release notes are maintained in `docs/releases/`:
 
-* [简体中文](./docs/releases/v5.2.0.zh-CN.md)
-* [繁體中文](./docs/releases/v5.2.0.zh-TW.md)
-* [English](./docs/releases/v5.2.0.en.md)
-* [Français](./docs/releases/v5.2.0.fr.md)
-* [日本語](./docs/releases/v5.2.0.ja.md)
-* [Español](./docs/releases/v5.2.0.es.md)
+* [简体中文](./docs/releases/v5.2.1.zh-CN.md)
+* [繁體中文](./docs/releases/v5.2.1.zh-TW.md)
+* [English](./docs/releases/v5.2.1.en.md)
+* [Français](./docs/releases/v5.2.1.fr.md)
+* [日本語](./docs/releases/v5.2.1.ja.md)
+* [Español](./docs/releases/v5.2.1.es.md)
 
 <a id="features"></a>
 

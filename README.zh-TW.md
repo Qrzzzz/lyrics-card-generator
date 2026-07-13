@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v5.2.0.zh-TW.md">發布說明</a> ·
+  <a href="./docs/releases/v5.2.1.zh-TW.md">發布說明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">線上 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="#本機開發">本機開發</a> ·
@@ -48,30 +48,30 @@
 
 請前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載最新版：
 
-* 建議一般使用者下載安裝版：`Lyrics Card Generator Setup 5.2.0.exe`
-* 不想安裝時可下載可攜版：`Lyrics Card Generator-5.2.0-portable.exe`
+* 建議一般使用者下載安裝版：`Lyrics Card Generator Setup 5.2.1.exe`
+* 不想安裝時可下載可攜版：`Lyrics Card Generator-5.2.1-portable.exe`
 
 安裝版適合長期使用；可攜版適合臨時執行、測試或放在隨身碟中使用。
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v5.2.0 更新重點
+### v5.2.1 更新重點
 
-* Safe Fetch 支援完整驗證的多位址 IPv6/IPv4 fallback，並讓 redirect、逾時、取消與 body budget 覆蓋整個請求。
-* 修正 AI 文件語意競態、Electron 早期取消、關閉前設定 flush，以及 JSON/localStorage 新舊衝突。
-* 共用對話框、鍵盤搜尋、live region、六語錯誤碼、焦點對比與 Forced Colors 完成可存取性加固。
-* Electron 外部導覽、IPC sender、權限與 CSP 採用統一策略；最終 Setup/portable 加入實際成品測試與 provenance。
+* 恢復 QQ 音樂數值 `songDetail` 連結解析，正確識別歌曲 ID、標題、歌手、專輯與封面。
+* 修正網易雲音樂 JSON API 回應協商，恢復完整歌曲、歌手與專輯中繼資料。
+* Apple Music 連結即使重新導向首頁，也會透過原始曲目 ID 取得正確歌曲資訊；Spotify 保持相容。
+* 保留 v5.1.0 逐跳安全驗證與 v5.2.0 多位址 IPv6/IPv4 fallback，不放寬網路安全邊界。
 
 ## 🌐 多語言發佈說明
 
 GitHub Release 頁面預設使用簡體中文短版，完整發佈說明維護在 `docs/releases/`：
 
-* [简体中文](./docs/releases/v5.2.0.zh-CN.md)
-* [繁體中文](./docs/releases/v5.2.0.zh-TW.md)
-* [English](./docs/releases/v5.2.0.en.md)
-* [Français](./docs/releases/v5.2.0.fr.md)
-* [日本語](./docs/releases/v5.2.0.ja.md)
-* [Español](./docs/releases/v5.2.0.es.md)
+* [简体中文](./docs/releases/v5.2.1.zh-CN.md)
+* [繁體中文](./docs/releases/v5.2.1.zh-TW.md)
+* [English](./docs/releases/v5.2.1.en.md)
+* [Français](./docs/releases/v5.2.1.fr.md)
+* [日本語](./docs/releases/v5.2.1.ja.md)
+* [Español](./docs/releases/v5.2.1.es.md)
 
 ## ✨ 主要功能
 

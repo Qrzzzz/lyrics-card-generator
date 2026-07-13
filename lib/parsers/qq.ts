@@ -111,6 +111,7 @@ async function parseQQApi(
   const res = await safeFetch(apiUrl, {
     headers: {
       ...REQUEST_HEADERS,
+      accept: "application/json,text/plain,application/javascript,*/*;q=0.8",
       referer: "https://y.qq.com/"
     },
     timeoutMs: 10000,
@@ -150,23 +151,40 @@ function parseQQJsonp(text: string): QQApiResponse {
 }
 
 export function extractQQSongId(inputUrl: string) {
-  const songMid = extractQQSongMid(inputUrl);
-  if (songMid) {
-    return { type: "songmid", value: songMid };
-  }
-
   try {
     const url = new URL(inputUrl);
-    const songId = url.searchParams.get("songid");
+    const songId = url.searchParams.get("songid") || url.hash.match(/[?&]songid=([^&#]+)/i)?.[1];
     if (songId) {
       return { type: "songid", value: songId };
+    }
+
+    const songMid = url.searchParams.get("songmid") || url.hash.match(/[?&]songmid=([^&#]+)/i)?.[1];
+    if (songMid) {
+      return { type: "songmid", value: songMid };
+    }
+
+    const pathValue = url.pathname.match(/\/songDetail\/([^/?#]+)/i)?.[1];
+    if (pathValue) {
+      return { type: /^\d+$/.test(pathValue) ? "songid" : "songmid", value: pathValue };
     }
   } catch {
     // Fall through to regex parsing.
   }
 
   const regexSongId = inputUrl.match(/[?&]songid=([^&#]+)/i)?.[1];
-  return regexSongId ? { type: "songid", value: regexSongId } : null;
+  if (regexSongId) {
+    return { type: "songid", value: regexSongId };
+  }
+
+  const regexSongMid = inputUrl.match(/[?&]songmid=([^&#]+)/i)?.[1];
+  if (regexSongMid) {
+    return { type: "songmid", value: regexSongMid };
+  }
+
+  const pathValue = inputUrl.match(/\/songDetail\/([^/?#]+)/i)?.[1];
+  return pathValue
+    ? { type: /^\d+$/.test(pathValue) ? "songid" : "songmid", value: pathValue }
+    : null;
 }
 
 export function extractQQSongMid(inputUrl: string) {

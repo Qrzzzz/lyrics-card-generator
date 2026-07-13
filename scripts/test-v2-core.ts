@@ -28,6 +28,11 @@ import {
 import { formatChineseTranslation, splitAlternatingLyrics } from "../lib/lyric-format";
 import type { CardStyle } from "../lib/types";
 import { compareVersionStrings } from "../lib/version-compare";
+import { extractAppleTrackId } from "../lib/parsers/apple";
+import { extractNeteaseSongId } from "../lib/parsers/netease";
+import { extractQQSongId } from "../lib/parsers/qq";
+import { extractSpotifyTrackId } from "../lib/parsers/spotify";
+import { detectSource } from "../lib/song-parser";
 
 const baseStyle: CardStyle = {
   backgroundMode: "palette",
@@ -76,7 +81,36 @@ function main() {
   testFontSchemeTranslations();
   testAITranslationPrompt();
   testClearLyricContent();
-  console.log(JSON.stringify({ ok: true, tests: 9 }, null, 2));
+  testSongLinkExtraction();
+  console.log(JSON.stringify({ ok: true, tests: 10 }, null, 2));
+}
+
+function testSongLinkExtraction() {
+  const qqUrl = "https://y.qq.com/n/ryqq/songDetail/577816187";
+  const neteaseUrl = "https://music.163.com/#/song?id=186016";
+  const appleUrl = "https://music.apple.com/us/song/sunny-day/1721464906?l=zh-Hant-TW";
+  const spotifyUrl = "https://open.spotify.com/track/5pIcwtJYNJx93l420oR2Vm";
+
+  assertEqual(detectSource(qqUrl), "qq", "detect numeric QQ song URL");
+  assertEqual(extractQQSongId(qqUrl)?.type, "songid", "numeric QQ songDetail path uses songid API key");
+  assertEqual(extractQQSongId(qqUrl)?.value, "577816187", "extract numeric QQ song id");
+  assertEqual(
+    extractQQSongId("https://y.qq.com/n/ryqq/songDetail/0039MnYb0qxYhV")?.type,
+    "songmid",
+    "alphanumeric QQ songDetail path keeps songmid API key"
+  );
+  assertEqual(
+    extractQQSongId("https://y.qq.com/song?songmid=577816187")?.type,
+    "songmid",
+    "explicit QQ songmid query wins over numeric path heuristic"
+  );
+  assertEqual(detectSource(neteaseUrl), "netease", "detect NetEase hash song URL");
+  assertEqual(extractNeteaseSongId(neteaseUrl), "186016", "extract NetEase hash song id");
+  assertEqual(detectSource(appleUrl), "apple", "detect Apple Music song URL");
+  assertEqual(extractAppleTrackId(appleUrl)?.id, "1721464906", "extract Apple Music track id");
+  assertEqual(extractAppleTrackId(appleUrl)?.country, "us", "extract Apple Music storefront");
+  assertEqual(detectSource(spotifyUrl), "spotify", "detect Spotify track URL");
+  assertEqual(extractSpotifyTrackId(spotifyUrl), "5pIcwtJYNJx93l420oR2Vm", "extract Spotify track id");
 }
 
 function testClearLyricContent() {
