@@ -28,8 +28,8 @@ export type SettingsStep = {
   content: ReactNode;
   /**
    * Describes how the desktop editor presents this step. The stepper itself
-   * only uses this to opt into the bounded lyrics-workspace skeleton; outer
-   * editor shells own any companion `aside` placement.
+   * uses this to opt into the bounded lyrics-workspace skeleton. The desktop
+   * editor can also provide a workbench aside so the rail spans both columns.
    */
   presentation?: SettingsStepPresentation;
   aside?: ReactNode;
@@ -56,6 +56,8 @@ export type SettingsStepperProps = {
   backText?: string;
   themeColor?: string;
   compactChrome?: boolean;
+  headerActions?: ReactNode;
+  workbenchAside?: ReactNode;
 };
 
 export function SettingsStepper({
@@ -65,7 +67,9 @@ export function SettingsStepper({
   nextText = "Next",
   backText = "Back",
   themeColor = "#7C3AED",
-  compactChrome = false
+  compactChrome = false,
+  headerActions,
+  workbenchAside
 }: SettingsStepperProps) {
   const reduceMotion = useAppReducedMotion();
   const previousStepRef = useRef(currentStep);
@@ -77,6 +81,7 @@ export function SettingsStepper({
   const activeStep = steps[currentStep] ?? steps[0];
   const activePresentation = activeStep?.presentation ?? "preview-workbench";
   const isLyricsWorkspace = activePresentation === "lyrics-workspace";
+  const hasWorkbenchAside = Boolean(workbenchAside);
   const isFirstStep = currentStep <= 0;
   const isLastStep = currentStep >= steps.length - 1;
   const secondaryAction = activeStep?.secondaryAction;
@@ -108,11 +113,22 @@ export function SettingsStepper({
         "grid min-w-0 gap-4",
         isLyricsWorkspace
           ? "lyrics-stepper-shell h-full min-h-0 self-stretch grid-rows-[auto_minmax(0,1fr)_auto]"
-          : "content-start self-start"
+          : hasWorkbenchAside
+            ? "settings-stepper-workbench content-start self-start lg:grid-cols-[minmax(0,1fr)_minmax(420px,600px)]"
+            : "content-start self-start"
       )}
     >
-      <div className={cn("glass-panel lyrics-stepper-rail flex flex-col rounded-lg", compactChrome ? "p-3" : "p-4")}>
-        <div className={cn("flex items-start justify-between gap-4", compactChrome ? "mb-3" : "mb-4")}>
+      <div
+        className={cn(
+          "glass-panel lyrics-stepper-rail flex flex-col rounded-lg",
+          compactChrome ? "p-3" : "p-4",
+          hasWorkbenchAside && "lg:col-span-2"
+        )}
+      >
+        <div
+          data-stepper-heading-row="true"
+          className={cn("flex items-start justify-between gap-4", compactChrome ? "mb-3" : "mb-4")}
+        >
           <MotionPresence mode="popLayout">
             <motion.div
               key={activeStep.id}
@@ -142,6 +158,11 @@ export function SettingsStepper({
               </h2>
             </motion.div>
           </MotionPresence>
+          {headerActions ? (
+            <div className="min-w-0 shrink-0 self-center" data-stepper-header-actions="true">
+              {headerActions}
+            </div>
+          ) : null}
         </div>
 
         <div
@@ -234,7 +255,8 @@ export function SettingsStepper({
         data-lyrics-viewport-bounds={isLyricsWorkspace ? "true" : undefined}
         className={cn(
           "lyrics-stepper-content relative min-w-0",
-          isLyricsWorkspace && "min-h-0 overflow-hidden"
+          isLyricsWorkspace && "min-h-0 overflow-hidden",
+          hasWorkbenchAside && "max-lg:order-3 lg:col-start-1 lg:row-start-2"
         )}
       >
         <MotionPresence>
@@ -262,10 +284,17 @@ export function SettingsStepper({
         </MotionPresence>
       </div>
 
+      {workbenchAside ? (
+        <div className="min-h-0 min-w-0 max-lg:order-2 lg:col-start-2 lg:row-start-2 lg:row-span-2">
+          {workbenchAside}
+        </div>
+      ) : null}
+
       <div
         className={cn(
           "lyrics-stepper-actions flex items-center justify-between gap-3",
-          isLyricsWorkspace && "min-h-0"
+          isLyricsWorkspace && "min-h-0",
+          hasWorkbenchAside && "max-lg:order-4 lg:col-start-1 lg:row-start-3"
         )}
       >
         <button

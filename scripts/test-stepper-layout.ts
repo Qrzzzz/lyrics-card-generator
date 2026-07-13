@@ -91,6 +91,21 @@ assert.ok(
   "compact chrome is opt-in so shared Web Lite rendering stays unchanged"
 );
 assert.ok(
+  stepperSource.includes("headerActions?: ReactNode") &&
+    stepperSource.includes('data-stepper-header-actions="true"'),
+  "desktop chrome can place editor actions inside the stepper heading row"
+);
+assert.ok(
+  stepperSource.includes("workbenchAside?: ReactNode") &&
+    stepperSource.includes("settings-stepper-workbench"),
+  "preview workbench chrome can span the settings and preview columns"
+);
+assert.ok(
+  stepperSource.includes("hasWorkbenchAside && \"lg:col-span-2\"") &&
+    stepperSource.includes("lg:col-start-2 lg:row-start-2 lg:row-span-2"),
+  "the shared rail spans both workbench columns before settings and preview split"
+);
+assert.ok(
   stepperSource.includes("const isComplete = index < currentStep"),
   "checkmarks represent steps completed before the active step"
 );
@@ -98,6 +113,21 @@ assert.ok(
   stepperSource.includes('data-ready={isReady ? "true" : "false"}') &&
     stepperSource.includes('data-complete={isComplete ? "true" : "false"}'),
   "semantic readiness stays separate from positional step completion"
+);
+
+const editorSource = readFileSync(resolve("components/editor/LyricEditor.tsx"), "utf8");
+assert.ok(
+  editorSource.includes("const usesUnifiedStepperChrome = currentStep > 0"),
+  "steps two through six opt into one compact stepper chrome"
+);
+assert.ok(
+  editorSource.includes("const showLegacyEditorHeader = currentStep === 0"),
+  "step one alone preserves the legacy editor header"
+);
+assert.ok(
+  editorSource.includes('placement="stepper"') &&
+    editorSource.includes("headerActions={usesUnifiedStepperChrome"),
+  "steps two through six embed the shared action group in the stepper"
 );
 
 const songImportAsideSource = readFileSync(resolve("components/editor/SongImportAside.tsx"), "utf8");
@@ -112,4 +142,4 @@ assert.ok(
   "manual song metadata disclosure exposes its state to assistive technology"
 );
 
-console.log(JSON.stringify({ ok: true, stepperLayoutTests: 16 }, null, 2));
+console.log(JSON.stringify({ ok: true, stepperLayoutTests: 22 }, null, 2));

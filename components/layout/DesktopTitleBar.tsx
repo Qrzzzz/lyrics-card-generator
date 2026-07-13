@@ -107,7 +107,14 @@ export function DesktopTitleBar({ locale }: DesktopTitleBarProps) {
           onClick={() => void toggleMaximize()}
         />
       </div>
-      <div className="desktop-titlebar__brand flex min-w-0 items-baseline gap-2">
+      <div className="desktop-titlebar__brand flex min-w-0 items-center gap-2">
+        <img
+          src="/app-icon.png"
+          alt=""
+          aria-hidden="true"
+          draggable={false}
+          className="desktop-titlebar__icon h-[18px] w-[18px] shrink-0 rounded-[5px]"
+        />
         <span className="truncate text-sm font-bold">{t("appTitle")}</span>
         <span className="shrink-0 text-[11px] font-semibold uppercase opacity-70">v{APP_VERSION}</span>
       </div>

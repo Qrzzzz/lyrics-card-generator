@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v5.2.3.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v5.3.0.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="#développement-local">Développement local</a> ·
@@ -51,24 +51,24 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 Téléchargez la dernière version depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
 
-* Installateur recommandé : `Lyrics Card Generator Setup 5.2.3.exe`
-* Version portable : `Lyrics Card Generator-5.2.3-portable.exe`
+* Installateur recommandé : `Lyrics Card Generator Setup 5.3.0.exe`
+* Version portable : `Lyrics Card Generator-5.3.0-portable.exe`
 
 L'installateur est recommandé pour une utilisation régulière. La version portable convient aux essais, à une utilisation temporaire ou à un disque amovible.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### Points clés de la v5.2.3
+### Points clés de la v5.3.0
 
-* Corrige le téléchargement du mauvais jeu de fichiers lorsque deux Releases, l’une publiée et l’autre en brouillon, partagent le même tag.
-* Le workflow enregistre et vérifie uniquement l’identifiant du brouillon qu’il crée, puis contrôle l’installateur, la version portable, le SBOM, SHA256SUMS et les attestations avant publication.
-* Une Release déjà publiée pour le tag bloque désormais le workflow ; une relance ne supprime que les brouillons résiduels portant ce même tag.
-* Le comportement de l’application reste identique à la v5.2.2 ; cette version corrige uniquement la publication et la vérification de la chaîne d’approvisionnement.
+* Les étapes 2 à 6 partagent un Stepper compact qui réunit l’étape active, le parcours complet et les actions courantes.
+* Exemples, Tout effacer et Paramètres sont intégrés à l’en-tête du Stepper ; la barre séparée de l’étape 2 et le grand en-tête des étapes 3 à 6 disparaissent.
+* Les étapes 3 à 6 conservent leurs réglages, l’aperçu en direct et l’exportation, avec davantage d’espace utile.
+* La barre de titre Windows reçoit une petite icône à côté du nom de l’application ; l’étape 1 reste inchangée.
 
 ## 🌐 Notes de publication multilingues
 
 Par défaut, GitHub Release affiche un résumé en chinois simplifié. Consultez les notes complètes :
-[简体中文](./docs/releases/v5.2.3.zh-CN.md) · [繁體中文](./docs/releases/v5.2.3.zh-TW.md) · [English](./docs/releases/v5.2.3.en.md) · [Français](./docs/releases/v5.2.3.fr.md) · [日本語](./docs/releases/v5.2.3.ja.md) · [Español](./docs/releases/v5.2.3.es.md)
+[简体中文](./docs/releases/v5.3.0.zh-CN.md) · [繁體中文](./docs/releases/v5.3.0.zh-TW.md) · [English](./docs/releases/v5.3.0.en.md) · [Français](./docs/releases/v5.3.0.fr.md) · [日本語](./docs/releases/v5.3.0.ja.md) · [Español](./docs/releases/v5.3.0.es.md)
 
 <a id="fonctionnalités-principales"></a>
 
