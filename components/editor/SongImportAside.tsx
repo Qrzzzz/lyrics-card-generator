@@ -41,7 +41,11 @@ export function SongImportAside({
       data-testid="song-import-aside"
       aria-label={t("songSearchOtherMethods")}
     >
-      <section className="glass-panel rounded-lg p-4" aria-labelledby={`${manualRegionId}-summary-title`}>
+      <section
+        className="glass-panel rounded-lg p-4"
+        data-song-import-panel="true"
+        aria-labelledby={`${manualRegionId}-summary-title`}
+      >
         <div className="mb-3 flex items-center justify-between gap-3">
           <div>
             <p className="app-text-subtle text-[10px] font-semibold uppercase tracking-[0.16em]">
@@ -84,48 +88,43 @@ export function SongImportAside({
             ) : null}
           </div>
         </div>
-      </section>
 
-      <section className="glass-panel rounded-lg p-4" aria-labelledby={`${manualRegionId}-methods-title`}>
-        <div className="mb-4">
-          <p className="app-text-subtle text-[10px] font-semibold uppercase tracking-[0.16em]">
-            {t("metadata")}
-          </p>
-          <h2 id={`${manualRegionId}-methods-title`} className="app-text-primary mt-1 text-sm font-bold">
+        <div className="mt-4 border-t border-[rgb(var(--panel-border))] pt-4">
+          <h2 id={`${manualRegionId}-methods-title`} className="app-text-primary mb-4 text-sm font-bold">
             {t("songSearchOtherMethods")}
           </h2>
-        </div>
 
-        <div className="song-import-aside__methods grid gap-4 [&>section]:border-0 [&>section]:pt-0">
-          {linkParser}
-          {localAudioParser}
-        </div>
-
-        {manualForm ? (
-          <div className="mt-4 border-t border-[rgb(var(--panel-border))] pt-3">
-            <button
-              type="button"
-              onClick={() => onManualExpandedChange(!manualExpanded)}
-              aria-expanded={manualExpanded}
-              aria-controls={manualRegionId}
-              className="control-focus app-button flex min-h-10 w-full items-center justify-between gap-3 rounded-lg px-3 text-left text-sm font-semibold"
-            >
-              <span>{t("manualOverride")}</span>
-              <ChevronDown
-                className={cn("size-4 shrink-0 transition-transform", manualExpanded && "rotate-180")}
-                aria-hidden="true"
-              />
-            </button>
-            {manualExpanded ? (
-              <div
-                id={manualRegionId}
-                className="mt-4 grid gap-3 [&>section]:border-0 [&>section]:pt-0"
-              >
-                {manualForm}
-              </div>
-            ) : null}
+          <div className="song-import-aside__methods grid gap-4 [&>section]:border-0 [&>section]:pt-0">
+            {linkParser}
+            {localAudioParser}
           </div>
-        ) : null}
+
+          {manualForm ? (
+            <div className="mt-4 border-t border-[rgb(var(--panel-border))] pt-3">
+              <button
+                type="button"
+                onClick={() => onManualExpandedChange(!manualExpanded)}
+                aria-expanded={manualExpanded}
+                aria-controls={manualRegionId}
+                className="control-focus app-button flex min-h-10 w-full items-center justify-between gap-3 rounded-lg px-3 text-left text-sm font-semibold"
+              >
+                <span>{t("manualOverride")}</span>
+                <ChevronDown
+                  className={cn("size-4 shrink-0 transition-transform", manualExpanded && "rotate-180")}
+                  aria-hidden="true"
+                />
+              </button>
+              {manualExpanded ? (
+                <div
+                  id={manualRegionId}
+                  className="mt-4 grid gap-3 [&>section]:border-0 [&>section]:pt-0"
+                >
+                  {manualForm}
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
       </section>
     </aside>
   );

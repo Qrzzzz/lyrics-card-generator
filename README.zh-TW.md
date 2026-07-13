@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v5.3.0.zh-TW.md">發布說明</a> ·
+  <a href="./docs/releases/v5.4.0.zh-TW.md">發布說明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">線上 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="#本機開發">本機開發</a> ·
@@ -48,24 +48,24 @@
 
 請前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載最新版：
 
-* 建議一般使用者下載安裝版：`Lyrics Card Generator Setup 5.3.0.exe`
-* 不想安裝時可下載可攜版：`Lyrics Card Generator-5.3.0-portable.exe`
+* 建議一般使用者下載安裝版：`Lyrics Card Generator Setup 5.4.0.exe`
+* 不想安裝時可下載可攜版：`Lyrics Card Generator-5.4.0-portable.exe`
 
 安裝版適合長期使用；可攜版適合臨時執行、測試或放在隨身碟中使用。
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v5.3.0 更新重點
+### v5.4.0 更新重點
 
-* 第 2 至第 6 步共用緊湊 Stepper，將目前步驟、完整六步導覽與常用操作集中在同一面板中。
-* 「範例」「一鍵清空」與「設定」移入 Stepper 標題列，移除第二步的獨立操作列，以及第 3 至第 6 步的大型軟體標題列。
-* 第 3 至第 6 步繼續保留原有設定、即時預覽與匯出流程，只擴大可用內容空間。
-* Windows 視窗列在軟體名稱左側新增小型應用程式圖示；第一步版面保持不變。
+* 六個步驟現在共用同一套緊湊 Stepper，第一步不再顯示重複的大型軟體標題列。
+* 第一頁改為共用雙欄工作區，流程標頭橫跨歌曲搜尋主區與匯入側欄。
+* 歌曲資訊、連結解析、本機音訊與手動調整整合到同一個側欄面板，原有匯入能力保持不變。
+* 第 2 至第 6 步、即時預覽、PNG 匯出、設定資料與專案格式均不改變。
 
 ## 🌐 多語言發佈說明
 
 GitHub Release 預設顯示簡體中文摘要，完整說明請見：
-[简体中文](./docs/releases/v5.3.0.zh-CN.md) · [繁體中文](./docs/releases/v5.3.0.zh-TW.md) · [English](./docs/releases/v5.3.0.en.md) · [Français](./docs/releases/v5.3.0.fr.md) · [日本語](./docs/releases/v5.3.0.ja.md) · [Español](./docs/releases/v5.3.0.es.md)
+[简体中文](./docs/releases/v5.4.0.zh-CN.md) · [繁體中文](./docs/releases/v5.4.0.zh-TW.md) · [English](./docs/releases/v5.4.0.en.md) · [Français](./docs/releases/v5.4.0.fr.md) · [日本語](./docs/releases/v5.4.0.ja.md) · [Español](./docs/releases/v5.4.0.es.md)
 
 ## ✨ 主要功能
 

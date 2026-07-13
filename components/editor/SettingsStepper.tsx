@@ -29,7 +29,7 @@ export type SettingsStep = {
   /**
    * Describes how the desktop editor presents this step. The stepper itself
    * uses this to opt into the bounded lyrics-workspace skeleton. The desktop
-   * editor can also provide a workbench aside so the rail spans both columns.
+   * editor can also provide a companion aside so the rail spans both columns.
    */
   presentation?: SettingsStepPresentation;
   aside?: ReactNode;
@@ -57,7 +57,7 @@ export type SettingsStepperProps = {
   themeColor?: string;
   compactChrome?: boolean;
   headerActions?: ReactNode;
-  workbenchAside?: ReactNode;
+  companionAside?: ReactNode;
 };
 
 export function SettingsStepper({
@@ -69,7 +69,7 @@ export function SettingsStepper({
   themeColor = "#7C3AED",
   compactChrome = false,
   headerActions,
-  workbenchAside
+  companionAside
 }: SettingsStepperProps) {
   const reduceMotion = useAppReducedMotion();
   const previousStepRef = useRef(currentStep);
@@ -80,8 +80,9 @@ export function SettingsStepper({
   const stepDirection: StepDirection = currentStep >= previousStepRef.current ? 1 : -1;
   const activeStep = steps[currentStep] ?? steps[0];
   const activePresentation = activeStep?.presentation ?? "preview-workbench";
+  const isFocus = activePresentation === "focus";
   const isLyricsWorkspace = activePresentation === "lyrics-workspace";
-  const hasWorkbenchAside = Boolean(workbenchAside);
+  const hasCompanionAside = Boolean(companionAside);
   const isFirstStep = currentStep <= 0;
   const isLastStep = currentStep >= steps.length - 1;
   const secondaryAction = activeStep?.secondaryAction;
@@ -113,8 +114,13 @@ export function SettingsStepper({
         "grid min-w-0 gap-4",
         isLyricsWorkspace
           ? "lyrics-stepper-shell h-full min-h-0 self-stretch grid-rows-[auto_minmax(0,1fr)_auto]"
-          : hasWorkbenchAside
-            ? "settings-stepper-workbench content-start self-start lg:grid-cols-[minmax(0,1fr)_minmax(420px,600px)]"
+          : hasCompanionAside
+            ? cn(
+                "settings-stepper-workbench content-start self-start",
+                isFocus
+                  ? "min-[960px]:grid-cols-[minmax(0,1fr)_320px] min-[1180px]:grid-cols-[minmax(0,1fr)_360px] min-[1440px]:grid-cols-[minmax(0,1fr)_400px]"
+                  : "lg:grid-cols-[minmax(0,1fr)_minmax(420px,600px)]"
+              )
             : "content-start self-start"
       )}
     >
@@ -122,7 +128,7 @@ export function SettingsStepper({
         className={cn(
           "glass-panel lyrics-stepper-rail flex flex-col rounded-lg",
           compactChrome ? "p-3" : "p-4",
-          hasWorkbenchAside && "lg:col-span-2"
+          hasCompanionAside && (isFocus ? "min-[960px]:col-span-2" : "lg:col-span-2")
         )}
       >
         <div
@@ -256,7 +262,11 @@ export function SettingsStepper({
         className={cn(
           "lyrics-stepper-content relative min-w-0",
           isLyricsWorkspace && "min-h-0 overflow-hidden",
-          hasWorkbenchAside && "max-lg:order-3 lg:col-start-1 lg:row-start-2"
+          hasCompanionAside && (
+            isFocus
+              ? "max-[959px]:order-2 min-[960px]:col-start-1 min-[960px]:row-start-2"
+              : "max-lg:order-3 lg:col-start-1 lg:row-start-2"
+          )
         )}
       >
         <MotionPresence>
@@ -284,9 +294,17 @@ export function SettingsStepper({
         </MotionPresence>
       </div>
 
-      {workbenchAside ? (
-        <div className="min-h-0 min-w-0 max-lg:order-2 lg:col-start-2 lg:row-start-2 lg:row-span-2">
-          {workbenchAside}
+      {companionAside ? (
+        <div
+          data-stepper-companion="true"
+          className={cn(
+            "min-h-0 min-w-0",
+            isFocus
+              ? "max-[959px]:order-3 min-[960px]:col-start-2 min-[960px]:row-start-2 min-[960px]:row-span-2"
+              : "max-lg:order-2 lg:col-start-2 lg:row-start-2 lg:row-span-2"
+          )}
+        >
+          {companionAside}
         </div>
       ) : null}
 
@@ -294,7 +312,11 @@ export function SettingsStepper({
         className={cn(
           "lyrics-stepper-actions flex items-center justify-between gap-3",
           isLyricsWorkspace && "min-h-0",
-          hasWorkbenchAside && "max-lg:order-4 lg:col-start-1 lg:row-start-3"
+          hasCompanionAside && (
+            isFocus
+              ? "max-[959px]:order-4 min-[960px]:col-start-1 min-[960px]:row-start-3"
+              : "max-lg:order-4 lg:col-start-1 lg:row-start-3"
+          )
         )}
       >
         <button

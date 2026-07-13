@@ -96,14 +96,21 @@ assert.ok(
   "desktop chrome can place editor actions inside the stepper heading row"
 );
 assert.ok(
-  stepperSource.includes("workbenchAside?: ReactNode") &&
-    stepperSource.includes("settings-stepper-workbench"),
-  "preview workbench chrome can span the settings and preview columns"
+  stepperSource.includes("companionAside?: ReactNode") &&
+    stepperSource.includes("settings-stepper-workbench") &&
+    stepperSource.includes('data-stepper-companion="true"'),
+  "shared chrome can span a content column and any companion panel"
 );
 assert.ok(
-  stepperSource.includes("hasWorkbenchAside && \"lg:col-span-2\"") &&
+  stepperSource.includes('isFocus ? "min-[960px]:col-span-2" : "lg:col-span-2"') &&
+    stepperSource.includes("min-[960px]:col-start-2") &&
     stepperSource.includes("lg:col-start-2 lg:row-start-2 lg:row-span-2"),
-  "the shared rail spans both workbench columns before settings and preview split"
+  "the shared rail spans both focus and preview workbench columns at their desktop breakpoints"
+);
+assert.ok(
+  stepperSource.includes('? "max-[959px]:order-2 min-[960px]:col-start-1') &&
+    stepperSource.includes('? "max-[959px]:order-3 min-[960px]:col-start-2'),
+  "the narrow focus layout keeps primary search before alternate import methods"
 );
 assert.ok(
   stepperSource.includes("const isComplete = index < currentStep"),
@@ -117,17 +124,24 @@ assert.ok(
 
 const editorSource = readFileSync(resolve("components/editor/LyricEditor.tsx"), "utf8");
 assert.ok(
-  editorSource.includes("const usesUnifiedStepperChrome = currentStep > 0"),
-  "steps two through six opt into one compact stepper chrome"
+  editorSource.includes("compactChrome") &&
+    !editorSource.includes("const usesUnifiedStepperChrome = currentStep > 0"),
+  "all six desktop steps opt into one compact stepper chrome"
 );
 assert.ok(
-  editorSource.includes("const showLegacyEditorHeader = currentStep === 0"),
-  "step one alone preserves the legacy editor header"
+  !editorSource.includes("const showLegacyEditorHeader = currentStep === 0") &&
+    (editorSource.match(/<EditorHeader\b/g)?.length ?? 0) === 1,
+  "the editor surface no longer renders a separate legacy header for step one"
 );
 assert.ok(
   editorSource.includes('placement="stepper"') &&
-    editorSource.includes("headerActions={usesUnifiedStepperChrome"),
-  "steps two through six embed the shared action group in the stepper"
+    editorSource.includes("headerActions={"),
+  "all editor steps embed the shared action group in the stepper"
+);
+assert.ok(
+  editorSource.includes("companionAside={") &&
+    editorSource.includes(") : activeSettingsStep?.aside"),
+  "step one and preview steps place their companion panels inside the shared workbench"
 );
 
 const songImportAsideSource = readFileSync(resolve("components/editor/SongImportAside.tsx"), "utf8");
@@ -141,5 +155,10 @@ assert.ok(
     songImportAsideSource.includes("aria-controls={manualRegionId}"),
   "manual song metadata disclosure exposes its state to assistive technology"
 );
+assert.ok(
+  songImportAsideSource.includes('data-song-import-panel="true"') &&
+    songImportAsideSource.match(/className="glass-panel/g)?.length === 1,
+  "song summary and alternate import methods share one companion panel"
+);
 
-console.log(JSON.stringify({ ok: true, stepperLayoutTests: 22 }, null, 2));
+console.log(JSON.stringify({ ok: true, stepperLayoutTests: 25 }, null, 2));
