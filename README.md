@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v5.2.3.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v5.3.0.zh-CN.md">发布说明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">在线 Web Lite 版</a> ·
   <a href="./docs/desktop.md">桌面维护文档</a> ·
   <a href="#主要功能">主要功能</a> ·
@@ -49,24 +49,24 @@
 
 请前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下载最新版：
 
-* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 5.2.3.exe`
-* 不想安装时可下载便携版：`Lyrics Card Generator-5.2.3-portable.exe`
+* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 5.3.0.exe`
+* 不想安装时可下载便携版：`Lyrics Card Generator-5.3.0-portable.exe`
 
 安装版适合长期使用；便携版适合临时运行、测试或放在移动硬盘中使用。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v5.2.3 更新重点
+### v5.3.0 更新重点
 
-* 修复同一标签同时存在已发布 Release 与草稿 Release 时，发布校验可能下载错误附件集的问题。
-* 发布流程会记录并只校验本次创建的草稿 Release ID，逐项核对 Setup、便携版、SBOM、SHA256SUMS 与 attestation 后再发布。
-* 同标签已发布版本会提前阻止流程；重跑时只清理同标签残留草稿，避免重复 Release 或不完整附件被误认为成功。
-* 应用功能与 v5.2.2 保持一致，本版本仅修复发布与供应链验证流程。
+* 第 2 至第 6 步共用紧凑 Stepper，把当前步骤、六步导航和常用操作集中在同一面板中。
+* “示例”“一键清空”和“设置”移入 Stepper 标题行，移除第二步独立操作栏及第 3 至第 6 步的大型软件标题栏。
+* 第 3 至第 6 步继续保留原有设置、实时预览与导出流程，只扩大可用内容空间。
+* Windows 窗口条在软件名称左侧新增小型应用图标；第一步布局保持不变。
 
 ## 🌐 多语言发布说明
 
 GitHub Release 默认展示简体中文摘要，完整说明见：
-[简体中文](./docs/releases/v5.2.3.zh-CN.md) · [繁體中文](./docs/releases/v5.2.3.zh-TW.md) · [English](./docs/releases/v5.2.3.en.md) · [Français](./docs/releases/v5.2.3.fr.md) · [日本語](./docs/releases/v5.2.3.ja.md) · [Español](./docs/releases/v5.2.3.es.md)
+[简体中文](./docs/releases/v5.3.0.zh-CN.md) · [繁體中文](./docs/releases/v5.3.0.zh-TW.md) · [English](./docs/releases/v5.3.0.en.md) · [Français](./docs/releases/v5.3.0.fr.md) · [日本語](./docs/releases/v5.3.0.ja.md) · [Español](./docs/releases/v5.3.0.es.md)
 
 <a id="主要功能"></a>
 

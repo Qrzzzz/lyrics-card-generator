@@ -24,7 +24,8 @@ assert.match(titlebarSource, /traffic-light--minimize/);
 assert.match(titlebarSource, /traffic-light--maximize/);
 assert.match(titlebarSource, /desktop-titlebar__traffic-lights[^"\n]*gap-0/);
 assert.match(titlebarSource, /windowMaximized/);
-assert.doesNotMatch(titlebarSource, /desktop-titlebar__corner-icon|app-icon\.png/);
+assert.match(titlebarSource, /desktop-titlebar__icon/);
+assert.match(titlebarSource, /src="\/app-icon\.png"/);
 assert.doesNotMatch(titlebarSource, /aria-label="(?:Minimize|Maximize|Close)"/);
 assert.doesNotMatch(titlebarSource, /import\s+\{[^}]*\b(?:Minus|Square|Copy|X)\b[^}]*\}\s+from\s+"lucide-react"/);
 
@@ -62,4 +63,4 @@ assert.match(globalsSource, /clip-path: inset\(0 round var\(--window-corner-radi
 const dynamicBackgroundSource = readFileSync(resolve("components/layout/DynamicAppBackground.tsx"), "utf8");
 assert.doesNotMatch(dynamicBackgroundSource, /className="[^"]*\bfixed\s+inset-0[^"]*"/);
 
-console.log(JSON.stringify({ ok: true, titlebarRegressionTests: 37 }, null, 2));
+console.log(JSON.stringify({ ok: true, titlebarRegressionTests: 38 }, null, 2));

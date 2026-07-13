@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v5.2.3.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v5.3.0.en.md">Release Notes</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
   <a href="#features">Features</a> ·
   <a href="#local-development">Local Development</a> ·
@@ -51,24 +51,24 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 Download the latest version from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Recommended installer: `Lyrics Card Generator Setup 5.2.3.exe`
-* Portable version: `Lyrics Card Generator-5.2.3-portable.exe`
+* Recommended installer: `Lyrics Card Generator Setup 5.3.0.exe`
+* Portable version: `Lyrics Card Generator-5.3.0-portable.exe`
 
 The installer is recommended for regular use. The portable version is useful for temporary use, testing, or running from a removable drive.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v5.2.3 Highlights
+### v5.3.0 Highlights
 
-* Fixes release verification downloading the wrong asset set when a published release and a draft release share the same tag.
-* The workflow records and verifies only the draft release ID it created, checking Setup, portable, SBOM, SHA256SUMS, and attestations before publishing.
-* An existing published release for the tag now blocks the workflow early; reruns remove only stale matching drafts to prevent ambiguous duplicate releases.
-* App behavior is unchanged from v5.2.2; this release only repairs release and supply-chain verification.
+* Steps two through six now share one compact Stepper that combines the active step, the full route, and common actions.
+* Examples, Clear all, and Settings move into the Stepper heading row, removing step two’s separate action rail and the large app header from steps three through six.
+* Steps three through six keep their existing settings, live preview, and export flow while gaining more usable space.
+* The Windows title bar gains a small app icon beside the app name; step one remains unchanged.
 
 ## 🌐 Multilingual Release Notes
 
 GitHub Release displays a Simplified Chinese summary by default. See the full release notes:
-[简体中文](./docs/releases/v5.2.3.zh-CN.md) · [繁體中文](./docs/releases/v5.2.3.zh-TW.md) · [English](./docs/releases/v5.2.3.en.md) · [Français](./docs/releases/v5.2.3.fr.md) · [日本語](./docs/releases/v5.2.3.ja.md) · [Español](./docs/releases/v5.2.3.es.md)
+[简体中文](./docs/releases/v5.3.0.zh-CN.md) · [繁體中文](./docs/releases/v5.3.0.zh-TW.md) · [English](./docs/releases/v5.3.0.en.md) · [Français](./docs/releases/v5.3.0.fr.md) · [日本語](./docs/releases/v5.3.0.ja.md) · [Español](./docs/releases/v5.3.0.es.md)
 
 <a id="features"></a>
 

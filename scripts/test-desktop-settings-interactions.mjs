@@ -489,7 +489,10 @@ async function assertFocusedPresentation(width, height) {
   await setWindowSize(width, height);
   await waitForLayoutStable(page.locator('[data-stepper-presentation="focus"]'));
   const result = await page.evaluate(() => {
-    const stepper = document.querySelector('[data-stepper-presentation="focus"]');
+    const editor = document.querySelector('[data-testid="editor-surface"]');
+    const stepper = editor?.querySelector('[data-stepper-presentation="focus"]');
+    const legacyHeader = editor?.querySelector('.editor-header');
+    const headerActions = legacyHeader?.querySelector('[data-testid="editor-header-actions"]');
     const preview = document.querySelector('[data-testid="lyric-card-preview"]');
     const previewToggle = document.querySelector('[data-testid="preview-pane-toggle"]');
     const exportHost = document.querySelector('[data-export-card-host]');
@@ -507,6 +510,13 @@ async function assertFocusedPresentation(width, height) {
       hasLinkEntry: Boolean(aside?.querySelector('.song-import-aside__methods input:not([type="file"])')),
       hasLocalEntry: Boolean(aside?.querySelector('input[type="file"]')),
       hasManualEntry: Boolean(aside?.querySelector('button[aria-controls][aria-expanded]')),
+      legacyHeaderCount: editor?.querySelectorAll('.editor-header').length ?? -1,
+      headerActionPlacement: headerActions?.getAttribute('data-placement'),
+      headerActionIds: headerActions
+        ? [...headerActions.querySelectorAll('button')].map((button) => button.getAttribute('data-testid'))
+        : [],
+      hasStepperHeaderActions: Boolean(stepper?.querySelector('[data-stepper-header-actions="true"]')),
+      compactChrome: stepper?.getAttribute('data-stepper-compact-chrome'),
       activeStep: document.querySelector('[aria-current="step"]')?.getAttribute("data-step-id")
     };
   });
@@ -517,6 +527,15 @@ async function assertFocusedPresentation(width, height) {
   assert.equal(result.hasLinkEntry, true, `${width}x${height} preserves link import`);
   assert.equal(result.hasLocalEntry, true, `${width}x${height} preserves local audio import`);
   assert.equal(result.hasManualEntry, true, `${width}x${height} preserves manual metadata entry`);
+  assert.equal(result.legacyHeaderCount, 1, `${width}x${height} keeps step one's legacy app header`);
+  assert.equal(result.headerActionPlacement, "header", `${width}x${height} keeps step one's actions in the app header`);
+  assert.deepEqual(
+    result.headerActionIds,
+    ["examples-button", "clear-all-button", "settings-button"],
+    `${width}x${height} preserves every step-one header action`
+  );
+  assert.equal(result.hasStepperHeaderActions, false, `${width}x${height} does not move step-one actions into the Stepper`);
+  assert.equal(result.compactChrome, "false", `${width}x${height} keeps step one's original non-compact Stepper`);
   assert.ok(
     result.stepper.width > result.aside.width,
     `${width}x${height} keeps search primary over import methods: ${JSON.stringify(result)}`
@@ -525,6 +544,54 @@ async function assertFocusedPresentation(width, height) {
   assert.equal(result.hasPreviewToggle, false, `${width}x${height} removes the mobile preview toggle on step one`);
   assert.ok(result.exportHostLeft < -90_000, `${width}x${height} keeps the export card off-screen`);
   await assertExportHost(`step one ${width}x${height}`);
+}
+
+async function assertUnifiedPreviewChrome(stepId) {
+  await page.locator(`button[data-step-id="${stepId}"]`).click();
+  await waitForLayoutStable(page.locator('[data-stepper-presentation="preview-workbench"]'));
+  const result = await page.evaluate(() => {
+    const editor = document.querySelector('[data-testid="editor-surface"]');
+    const stepper = editor?.querySelector('[data-stepper-presentation="preview-workbench"]');
+    const rail = stepper?.querySelector('.lyrics-stepper-rail');
+    const heading = rail?.querySelector('[data-stepper-heading-row="true"]');
+    const actions = heading?.querySelector('[data-testid="editor-header-actions"]');
+    const content = stepper?.querySelector('.lyrics-stepper-content');
+    const preview = stepper?.querySelector('[data-testid="lyric-card-preview"]');
+    const titlebarBrand = document.querySelector('.desktop-titlebar__brand');
+    const titlebarName = titlebarBrand?.querySelector('span');
+    const iconRect = document.querySelector('.desktop-titlebar__icon')?.getBoundingClientRect();
+    const titlebarNameRect = titlebarName?.getBoundingClientRect();
+    const actionsRect = actions?.getBoundingClientRect();
+    const railRect = rail?.getBoundingClientRect();
+    const contentRect = content?.getBoundingClientRect();
+    const previewRect = preview?.getBoundingClientRect();
+    return {
+      activeStep: document.querySelector('[aria-current="step"]')?.getAttribute('data-step-id'),
+      compactChrome: stepper?.getAttribute('data-stepper-compact-chrome'),
+      legacyHeaderCount: editor?.querySelectorAll('.editor-header').length ?? -1,
+      actionPlacement: actions?.getAttribute('data-placement'),
+      actionIds: actions ? [...actions.querySelectorAll('button')].map((button) => button.getAttribute('data-testid')) : [],
+      actionsInsideRail: Boolean(actions && rail?.contains(actions)),
+      actionsFitRail: Boolean(actionsRect && railRect && actionsRect.left >= railRect.left && actionsRect.right <= railRect.right),
+      railSpansWorkbench: Boolean(
+        railRect && contentRect && previewRect &&
+        railRect.left <= contentRect.left && railRect.right >= previewRect.right &&
+        contentRect.top >= railRect.bottom && previewRect.top >= railRect.bottom
+      ),
+      titlebarIcon: iconRect ? { width: iconRect.width, height: iconRect.height } : null,
+      titlebarIconBeforeName: Boolean(iconRect && titlebarNameRect && iconRect.right <= titlebarNameRect.left)
+    };
+  });
+  assert.equal(result.activeStep, stepId, `${stepId} remains active after the chrome settles`);
+  assert.equal(result.compactChrome, "true", `${stepId} uses the shared compact stepper chrome`);
+  assert.equal(result.legacyHeaderCount, 0, `${stepId} removes the legacy editor header`);
+  assert.equal(result.actionPlacement, "stepper", `${stepId} places the shared actions in the stepper`);
+  assert.deepEqual(result.actionIds, ["examples-button", "clear-all-button", "settings-button"], `${stepId} preserves all editor actions`);
+  assert.equal(result.actionsInsideRail, true, `${stepId} keeps the actions inside the stepper rail`);
+  assert.equal(result.actionsFitRail, true, `${stepId} keeps the actions within the stepper bounds`);
+  assert.equal(result.railSpansWorkbench, true, `${stepId} spans the shared rail across settings and preview`);
+  assert.ok(result.titlebarIcon && result.titlebarIcon.width === 18 && result.titlebarIcon.height === 18, `${stepId} renders the small titlebar app icon`);
+  assert.equal(result.titlebarIconBeforeName, true, `${stepId} places the titlebar app icon before the app name`);
 }
 
 async function assertLyricsWorkspace(width, height) {
@@ -541,6 +608,12 @@ async function assertLyricsWorkspace(width, height) {
     const main = document.querySelector('.lyric-editor-main');
     const stepContent = document.querySelector('.lyrics-stepper-content');
     const fetchBoundary = document.querySelector('[data-testid="lyrics-fetch-panel-boundary"]');
+    const stepper = editor?.querySelector('[data-stepper-presentation="lyrics-workspace"]');
+    const rail = stepper?.querySelector('.lyrics-stepper-rail');
+    const heading = rail?.querySelector('[data-stepper-heading-row="true"]');
+    const headerActions = heading?.querySelector('[data-testid="editor-header-actions"]');
+    const railRect = rail?.getBoundingClientRect();
+    const headerActionsRect = headerActions?.getBoundingClientRect();
     const textareas = [...document.querySelectorAll('[data-testid="lyrics-shared-scroll"] textarea')];
     const rect = (element) => {
       const value = element?.getBoundingClientRect();
@@ -586,6 +659,22 @@ async function assertLyricsWorkspace(width, height) {
       textareaStyles: textareas.map((area) => ({ overflowY: getComputedStyle(area).overflowY, resize: getComputedStyle(area).resize })),
       hasPreview: Boolean(document.querySelector('[data-testid="lyric-card-preview"]')),
       hasPreviewToggle: Boolean(document.querySelector('[data-testid="preview-pane-toggle"]')),
+      compactChrome: stepper?.getAttribute('data-stepper-compact-chrome'),
+      legacyHeaderCount: editor?.querySelectorAll('.editor-header').length ?? -1,
+      actionPlacement: headerActions?.getAttribute('data-placement'),
+      actionIds: headerActions
+        ? [...headerActions.querySelectorAll('button')].map((button) => button.getAttribute('data-testid'))
+        : [],
+      actionsInsideRail: Boolean(headerActions && rail?.contains(headerActions)),
+      actionsFitRail: Boolean(
+        headerActionsRect && railRect &&
+        headerActionsRect.left >= railRect.left && headerActionsRect.right <= railRect.right
+      ),
+      railSpansWorkspace: Boolean(
+        railRect && workspace &&
+        railRect.left <= workspace.getBoundingClientRect().left &&
+        railRect.right >= workspace.getBoundingClientRect().right
+      ),
       activeStep: document.querySelector('[aria-current="step"]')?.getAttribute("data-step-id")
     };
   });
@@ -618,6 +707,17 @@ async function assertLyricsWorkspace(width, height) {
   assert.ok(result.actions.bottom <= height + 1, `${width}x${height} keeps navigation visible`);
   assert.equal(result.hasPreview, false, `${width}x${height} hides the visible preview on step two`);
   assert.equal(result.hasPreviewToggle, false, `${width}x${height} removes the preview toggle on step two`);
+  assert.equal(result.compactChrome, "true", `${width}x${height} gives step two the shared compact Stepper chrome`);
+  assert.equal(result.legacyHeaderCount, 0, `${width}x${height} removes the separate step-two app header`);
+  assert.equal(result.actionPlacement, "stepper", `${width}x${height} places step-two actions in the Stepper heading`);
+  assert.deepEqual(
+    result.actionIds,
+    ["examples-button", "clear-all-button", "settings-button"],
+    `${width}x${height} preserves every step-two editor action`
+  );
+  assert.equal(result.actionsInsideRail, true, `${width}x${height} keeps step-two actions inside the shared rail`);
+  assert.equal(result.actionsFitRail, true, `${width}x${height} keeps step-two actions within the rail bounds`);
+  assert.equal(result.railSpansWorkspace, true, `${width}x${height} spans the step-two rail across the lyrics workspace`);
   assert.ok(result.textareaCount >= 1, `${width}x${height} renders the document editor`);
   if (result.textareaHeights.length === 2) {
     assert.ok(Math.abs(result.textareaHeights[0] - result.textareaHeights[1]) <= 1, `${width}x${height} keeps original and translation equal height`);
@@ -884,10 +984,17 @@ try {
   await selectSettingsSection("ai");
   await page.getByTestId("settings-close-button").click();
   await page.locator('[data-testid="settings-surface"][data-surface-state="closed"]').waitFor({ state: "attached" });
+  await page.waitForFunction(() => document.activeElement?.getAttribute("data-testid") === "settings-button");
+  assert.equal(
+    await page.locator('[data-testid="editor-surface"] [data-testid="settings-button"]').evaluate((node) => document.activeElement === node),
+    true,
+    "closing settings restores focus to the step-one settings button"
+  );
   await page.locator('[data-testid="editor-surface"] [data-testid="settings-button"]').click();
   await page.locator('[data-testid="settings-surface"][data-surface-state="open"]').waitFor({ state: "visible" });
   await page.getByTestId("settings-close-button").click();
   await page.locator('[data-testid="settings-surface"][data-surface-state="closed"]').waitFor({ state: "attached" });
+  await page.waitForFunction(() => document.activeElement?.getAttribute("data-testid") === "settings-button");
 
   const minimumWindowSize = await electronApp.evaluate(({ BrowserWindow }) => (
     BrowserWindow.getAllWindows()[0].getMinimumSize()
@@ -905,6 +1012,45 @@ try {
   ];
   for (const size of focusedSizes) {
     await assertFocusedPresentation(size.width, size.height);
+  }
+
+  await setWindowSize(1000, 700);
+  await assertUnifiedPreviewChrome("layout");
+  for (const size of [
+    { width: 1023, height: 700 },
+    { width: 1024, height: 700 },
+    { width: 1440, height: 900 },
+    { width: 1920, height: 1080 }
+  ]) {
+    await setWindowSize(size.width, size.height);
+    await assertUnifiedPreviewChrome("layout");
+  }
+  await setWindowSize(1280, 900);
+  for (const stepId of ["layout", "font", "visual", "export"]) {
+    await assertUnifiedPreviewChrome(stepId);
+  }
+
+  await page.locator('[data-testid="editor-surface"] [data-testid="settings-button"]').click();
+  await waitForVisible("settings-surface");
+  await page.getByTestId("settings-close-button").click();
+  await page.locator('[data-testid="settings-surface"][data-surface-state="closed"]').waitFor({ state: "attached" });
+  await page.waitForFunction(() => document.activeElement?.getAttribute("data-testid") === "settings-button");
+  assert.equal(
+    await page.locator('[data-testid="editor-surface"] [data-stepper-header-actions="true"] [data-testid="settings-button"]').evaluate((node) => document.activeElement === node),
+    true,
+    "closing settings restores focus to the unified Stepper settings button"
+  );
+
+  await setWindowSize(1000, 700);
+  for (const locale of ["en", "fr", "ja", "es", "zh-TW", "zh"]) {
+    await page.locator('[data-testid="editor-surface"] [data-testid="settings-button"]').click();
+    await waitForVisible("settings-surface");
+    await selectSettingsSection("general");
+    await page.locator(`[data-testid="language-option"][data-locale="${locale}"]`).click();
+    await page.getByTestId("settings-close-button").click();
+    await page.locator('[data-testid="settings-surface"][data-surface-state="closed"]').waitFor({ state: "attached" });
+    await page.waitForFunction(() => document.activeElement?.getAttribute("data-testid") === "settings-button");
+    await assertUnifiedPreviewChrome("layout");
   }
 
   await page.locator('button[data-step-id="lyrics"]').click();

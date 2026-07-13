@@ -333,9 +333,34 @@ body[data-window-maximized="true"] .app-shell[data-desktop-shell="true"] {
   text-shadow: 0 1px 14px rgba(0, 0, 0, 0.24);
 }
 
+.desktop-titlebar__icon {
+  opacity: 0.96;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.24);
+}
+
 .app-shell[data-ui-theme="light"] .desktop-titlebar__brand,
 .app-shell[data-ui-theme="light-acrylic"] .desktop-titlebar__brand {
   text-shadow: 0 1px 14px rgba(255, 255, 255, 0.32);
+}
+
+.editor-header-actions--stepper {
+  flex-wrap: nowrap;
+  justify-content: flex-end;
+}
+
+.editor-header-actions--stepper .app-button {
+  white-space: nowrap;
+}
+
+@media (max-width: 1100px) {
+  .editor-header-actions--stepper {
+    gap: 0.375rem;
+  }
+
+  .editor-header-actions--stepper .app-button {
+    padding-inline: 0.5rem;
+    font-size: 0.75rem;
+  }
 }
 
 .desktop-titlebar__traffic-lights,
@@ -1054,23 +1079,6 @@ button {
 }
 
 @media (max-height: 900px) {
-  [data-editor-presentation="lyrics-workspace"] .editor-header[data-density="normal"] {
-    min-height: 3.5rem;
-    height: auto;
-    gap: 0.5rem;
-    padding: 0.5rem 0.75rem;
-  }
-
-  [data-editor-presentation="lyrics-workspace"] .editor-header[data-density="normal"] .editor-header__icon {
-    width: 2.5rem;
-    height: 2.5rem;
-    border-radius: 0.75rem;
-  }
-
-  [data-editor-presentation="lyrics-workspace"] .editor-header[data-density="normal"] .editor-header__subtitle {
-    display: none;
-  }
-
   .lyrics-stepper-shell .lyrics-stepper-rail {
     padding: 0.75rem;
   }

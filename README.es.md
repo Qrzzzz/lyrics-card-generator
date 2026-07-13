@@ -19,7 +19,7 @@
 <p>
   <strong>Navegación</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Descargar la última versión</a> ·
-  <a href="./docs/releases/v5.2.3.es.md">Notas de la versión</a> ·
+  <a href="./docs/releases/v5.3.0.es.md">Notas de la versión</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en línea</a> ·
   <a href="#funciones-principales">Funciones principales</a> ·
   <a href="#desarrollo-local">Desarrollo local</a> ·
@@ -51,24 +51,24 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 Descarga la versión más reciente desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Instalador recomendado: `Lyrics Card Generator Setup 5.2.3.exe`
-* Versión portable: `Lyrics Card Generator-5.2.3-portable.exe`
+* Instalador recomendado: `Lyrics Card Generator Setup 5.3.0.exe`
+* Versión portable: `Lyrics Card Generator-5.3.0-portable.exe`
 
 El instalador se recomienda para uso habitual. La versión portable es útil para pruebas, uso temporal o ejecución desde una unidad extraíble.
 
 > La compilación actual no está firmada. Windows puede mostrar una advertencia de SmartScreen, algo habitual en aplicaciones personales sin firma.
 
-### Aspectos destacados de la versión 5.2.3
+### Aspectos destacados de la versión 5.3.0
 
-* Corrige la descarga del conjunto de archivos equivocado cuando una publicación y un borrador comparten la misma etiqueta.
-* El flujo registra y verifica solo el ID del borrador que acaba de crear, comprobando el instalador, la versión portable, el SBOM, SHA256SUMS y las attestations antes de publicarlo.
-* Una publicación existente para la etiqueta bloquea el flujo de forma anticipada; al reintentarlo solo se eliminan borradores residuales con esa misma etiqueta.
-* El comportamiento de la aplicación no cambia respecto a v5.2.2; esta versión solo corrige la publicación y la verificación de la cadena de suministro.
+* Los pasos 2 a 6 comparten un Stepper compacto que reúne el paso activo, la ruta completa y las acciones habituales.
+* Ejemplos, Borrar todo y Ajustes pasan al encabezado del Stepper, eliminando la barra separada del paso 2 y el gran encabezado de los pasos 3 a 6.
+* Los pasos 3 a 6 conservan sus ajustes, la vista previa en directo y la exportación, con más espacio útil.
+* La barra de título de Windows añade un pequeño icono junto al nombre de la aplicación; el paso 1 permanece sin cambios.
 
 ## 🌐 Notas de publicación multilingües
 
 GitHub Release muestra de forma predeterminada un resumen en chino simplificado. Consulta las notas completas:
-[简体中文](./docs/releases/v5.2.3.zh-CN.md) · [繁體中文](./docs/releases/v5.2.3.zh-TW.md) · [English](./docs/releases/v5.2.3.en.md) · [Français](./docs/releases/v5.2.3.fr.md) · [日本語](./docs/releases/v5.2.3.ja.md) · [Español](./docs/releases/v5.2.3.es.md)
+[简体中文](./docs/releases/v5.3.0.zh-CN.md) · [繁體中文](./docs/releases/v5.3.0.zh-TW.md) · [English](./docs/releases/v5.3.0.en.md) · [Français](./docs/releases/v5.3.0.fr.md) · [日本語](./docs/releases/v5.3.0.ja.md) · [Español](./docs/releases/v5.3.0.es.md)
 
 <a id="funciones-principales"></a>
 
