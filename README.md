@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v5.2.1.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v5.2.2.zh-CN.md">发布说明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">在线 Web Lite 版</a> ·
   <a href="./docs/desktop.md">桌面维护文档</a> ·
   <a href="#主要功能">主要功能</a> ·
@@ -49,30 +49,30 @@
 
 请前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下载最新版：
 
-* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 5.2.1.exe`
-* 不想安装时可下载便携版：`Lyrics Card Generator-5.2.1-portable.exe`
+* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 5.2.2.exe`
+* 不想安装时可下载便携版：`Lyrics Card Generator-5.2.2-portable.exe`
 
 安装版适合长期使用；便携版适合临时运行、测试或放在移动硬盘中使用。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v5.2.1 更新重点
+### v5.2.2 更新重点
 
-* 恢复 QQ 音乐数值 `songDetail` 链接解析，正确识别歌曲 ID、标题、歌手、专辑和封面。
-* 修复网易云音乐 JSON API 响应协商，恢复完整的歌曲、歌手和专辑元数据。
-* Apple Music 链接即使跳转首页，也会通过原始曲目 ID 获取正确歌曲信息；Spotify 解析保持兼容。
-* 保留 v5.1.0 的逐跳安全校验与 v5.2.0 的多地址 IPv6/IPv4 fallback，不放宽网络安全边界。
+* 修复 v5.2.1 发布工作流误校验 v5.2.0 标签的问题，并加入版本匹配回归检查。
+* Stepper 只对当前步骤之前的已完成步骤显示勾选，当前与后续步骤保持正确编号。
+* 去掉设置面包屑前进/后退按钮组的最外层边框，拉开按钮间距并略微收紧右侧路径条。
+* 从歌词示例确认导入另一首歌并返回第三步时，实时预览会立即按可用区域恢复正常大尺寸。
 
 ## 🌐 多语言发布说明
 
 GitHub Release 页面默认使用简体中文短版，完整发布说明维护在 `docs/releases/`：
 
-* [简体中文](./docs/releases/v5.2.1.zh-CN.md)
-* [繁體中文](./docs/releases/v5.2.1.zh-TW.md)
-* [English](./docs/releases/v5.2.1.en.md)
-* [Français](./docs/releases/v5.2.1.fr.md)
-* [日本語](./docs/releases/v5.2.1.ja.md)
-* [Español](./docs/releases/v5.2.1.es.md)
+* [简体中文](./docs/releases/v5.2.2.zh-CN.md)
+* [繁體中文](./docs/releases/v5.2.2.zh-TW.md)
+* [English](./docs/releases/v5.2.2.en.md)
+* [Français](./docs/releases/v5.2.2.fr.md)
+* [日本語](./docs/releases/v5.2.2.ja.md)
+* [Español](./docs/releases/v5.2.2.es.md)
 
 <a id="主要功能"></a>
 

@@ -20,6 +20,7 @@ type PreviewPaneProps = {
   cardRef: RefObject<HTMLElement | null>;
   fontSchemePreview: FontScheme | null;
   clearTransitionKey: number;
+  measurementKey?: number;
   locale: Locale;
   t: ReturnType<typeof createT>;
 };
@@ -33,6 +34,7 @@ export function PreviewPane({
   cardRef,
   fontSchemePreview,
   clearTransitionKey,
+  measurementKey = 0,
   locale,
   t
 }: PreviewPaneProps) {
@@ -106,6 +108,7 @@ export function PreviewPane({
                   locale={locale}
                   sticky={false}
                   t={t}
+                  measurementKey={measurementKey}
                 />
               </motion.div>
             </MotionPresence>

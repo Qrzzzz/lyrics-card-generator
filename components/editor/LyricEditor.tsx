@@ -72,6 +72,7 @@ export function LyricEditor() {
   const [isPreviewVisible, setIsPreviewVisible] = useState(true);
   const [activeSurface, setActiveSurface] = useState<ActiveSurface>("editor");
   const [requestedSettingsTab, setRequestedSettingsTab] = useState<SettingsTabId>();
+  const [previewMeasurementKey, setPreviewMeasurementKey] = useState(0);
   const [exportQuality, setExportQuality] = useState<ExportQualityId>(DEFAULT_USER_SETTINGS.defaultExportQuality);
   const [toast, setToast] = useState<ToastNotice | null>(null);
   const exportCardRef = useRef<HTMLElement | null>(null);
@@ -452,6 +453,11 @@ export function LyricEditor() {
               initial={false}
               inert={!isEditorSurfaceActive ? true : undefined}
               transition={activeSurfaceTransition}
+              onAnimationComplete={() => {
+                if (isEditorSurfaceActive) {
+                  setPreviewMeasurementKey((key) => key + 1);
+                }
+              }}
             >
               <div
                 className={cn(
@@ -515,6 +521,7 @@ export function LyricEditor() {
                       cardRef={previewCardRef}
                       fontSchemePreview={fontSchemePreview}
                       clearTransitionKey={clearTransitionKey}
+                      measurementKey={previewMeasurementKey}
                       locale={state.locale}
                       t={t}
                     />

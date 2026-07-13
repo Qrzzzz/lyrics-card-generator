@@ -1,14 +1,14 @@
-name: Release 5.2.1
+name: Release 5.2.2
 
 on:
   push:
     tags:
-      - "v5.2.1"
-      - "v5.2.1-rc.*"
+      - "v5.2.2"
+      - "v5.2.2-rc.*"
   workflow_dispatch:
     inputs:
       tag:
-        description: Existing v5.2.1 tag to publish
+        description: Existing v5.2.2 tag to publish
         required: true
         type: string
 
@@ -43,13 +43,13 @@ jobs:
         shell: pwsh
         run: |
           $version = node -p "require('./package.json').version"
-          if ($version -ne "5.2.1") { throw "package.json is $version, expected 5.2.1" }
-          if ($env:RELEASE_TAG -notmatch '^v5\.2\.1(?:-rc\.[0-9]+)?$') { throw "Unexpected release tag $env:RELEASE_TAG" }
+          if ($version -ne "5.2.2") { throw "package.json is $version, expected 5.2.2" }
+          if ($env:RELEASE_TAG -notmatch '^v5\.2\.2(?:-rc\.[0-9]+)?$') { throw "Unexpected release tag $env:RELEASE_TAG" }
           $head = git rev-parse HEAD
           $tagHead = git rev-list -n 1 $env:RELEASE_TAG
           if ($head -ne $tagHead) { throw "Checkout SHA $head does not match tag SHA $tagHead" }
           @('en','es','fr','ja','zh-CN','zh-TW') | ForEach-Object {
-            if (-not (Test-Path "docs/releases/v5.2.1.$_.md")) { throw "Missing v5.2.1.$_.md" }
+            if (-not (Test-Path "docs/releases/v5.2.2.$_.md")) { throw "Missing v5.2.2.$_.md" }
           }
       - name: Install dependencies
         run: npm ci
@@ -79,7 +79,7 @@ jobs:
         with:
           path: .
           format: spdx-json
-          output-file: release/lyrics-card-generator-5.2.1.spdx.json
+          output-file: release/lyrics-card-generator-5.2.2.spdx.json
           upload-artifact: false
 
       - name: Generate SHA256SUMS
@@ -118,7 +118,7 @@ jobs:
           $PSNativeCommandUseErrorActionPreference = $true
           $flags = @()
           if ($env:RELEASE_TAG -like '*-rc.*') { $flags += '--prerelease' }
-          gh release create $env:RELEASE_TAG release/*.exe release/SHA256SUMS release/*.spdx.json --draft --verify-tag --title "Lyrics Card Generator $env:RELEASE_TAG" --notes-file docs/releases/v5.2.1.en.md @flags
+          gh release create $env:RELEASE_TAG release/*.exe release/SHA256SUMS release/*.spdx.json --draft --verify-tag --title "Lyrics Card Generator $env:RELEASE_TAG" --notes-file docs/releases/v5.2.2.en.md @flags
 
       - name: Re-download and verify draft release bytes and attestations
         shell: pwsh
@@ -132,7 +132,7 @@ jobs:
           $assets = @(Get-ChildItem published -File)
           $setup = @($assets | Where-Object { $_.Extension -eq '.exe' -and $_.Name -match '(?i)setup' })
           $portable = @($assets | Where-Object { $_.Name -match '(?i)-portable\.exe$' })
-          $sbom = @($assets | Where-Object { $_.Name -eq 'lyrics-card-generator-5.2.1.spdx.json' })
+          $sbom = @($assets | Where-Object { $_.Name -eq 'lyrics-card-generator-5.2.2.spdx.json' })
           $checksums = @($assets | Where-Object { $_.Name -eq 'SHA256SUMS' })
           if ($setup.Count -ne 1) { throw "Expected exactly one Setup executable, found $($setup.Count)." }
           if ($portable.Count -ne 1) { throw "Expected exactly one portable executable, found $($portable.Count)." }

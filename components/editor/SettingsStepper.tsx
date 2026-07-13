@@ -155,7 +155,8 @@ export function SettingsStepper({
           {steps.map((step, index) => {
             const isActive = index === currentStep;
             const isVisited = visitedStepsRef.current.has(index);
-            const isComplete = step.isComplete === true;
+            const isReady = step.isComplete === true;
+            const isComplete = index < currentStep;
             const stepState = isActive ? "active" : isComplete ? "complete" : isVisited ? "visited" : "upcoming";
 
             return (
@@ -167,6 +168,7 @@ export function SettingsStepper({
                 aria-current={isActive ? "step" : undefined}
                 data-active={isActive ? "true" : "false"}
                 data-visited={isVisited ? "true" : "false"}
+                data-ready={isReady ? "true" : "false"}
                 data-complete={isComplete ? "true" : "false"}
                 data-step-state={stepState}
                 className={cn(

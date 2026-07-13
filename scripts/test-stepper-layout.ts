@@ -90,6 +90,15 @@ assert.ok(
   stepperSource.includes("compactChrome = false"),
   "compact chrome is opt-in so shared Web Lite rendering stays unchanged"
 );
+assert.ok(
+  stepperSource.includes("const isComplete = index < currentStep"),
+  "checkmarks represent steps completed before the active step"
+);
+assert.ok(
+  stepperSource.includes('data-ready={isReady ? "true" : "false"}') &&
+    stepperSource.includes('data-complete={isComplete ? "true" : "false"}'),
+  "semantic readiness stays separate from positional step completion"
+);
 
 const songImportAsideSource = readFileSync(resolve("components/editor/SongImportAside.tsx"), "utf8");
 assert.ok(
@@ -103,4 +112,4 @@ assert.ok(
   "manual song metadata disclosure exposes its state to assistive technology"
 );
 
-console.log(JSON.stringify({ ok: true, stepperLayoutTests: 14 }, null, 2));
+console.log(JSON.stringify({ ok: true, stepperLayoutTests: 16 }, null, 2));

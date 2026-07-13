@@ -1,8 +1,19 @@
 const assert = require("node:assert/strict");
-const { readFileSync } = require("node:fs");
+const { readFileSync, readdirSync } = require("node:fs");
 const { version } = require("../package.json");
 
 const workflow = readFileSync(`.github/workflows/release-${version}.yml`, "utf8");
+
+for (const file of readdirSync(".github/workflows").filter((name) => /^release-\d+\.\d+\.\d+\.yml$/.test(name))) {
+  const targetVersion = file.match(/^release-(\d+\.\d+\.\d+)\.yml$/)[1];
+  const source = readFileSync(`.github/workflows/${file}`, "utf8");
+  const escapedVersion = targetVersion.replace(/\./g, "\\.");
+  const expectedTagPattern = `^v${escapedVersion}(?:-rc\\.[0-9]+)?$`;
+  assert.ok(
+    source.includes(`-notmatch '${expectedTagPattern}'`),
+    `${file} validates its own tag instead of a copied release version`
+  );
+}
 
 const createDraft = workflow.indexOf("- name: Create draft GitHub release");
 const verifyDraft = workflow.indexOf("- name: Re-download and verify draft release bytes and attestations");

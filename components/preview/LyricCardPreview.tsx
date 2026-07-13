@@ -12,7 +12,8 @@ export function LyricCardPreview({
   cardRef,
   t,
   sticky = true,
-  locale = "en"
+  locale = "en",
+  measurementKey = 0
 }: {
   song: SongInfo;
   lyrics: string;
@@ -21,6 +22,7 @@ export function LyricCardPreview({
   t: ReturnType<typeof createT>;
   sticky?: boolean;
   locale?: Locale;
+  measurementKey?: number;
 }) {
   const shellRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(320);
@@ -39,6 +41,9 @@ export function LyricCardPreview({
       window.cancelAnimationFrame(frame);
       frame = window.requestAnimationFrame(() => {
         const rect = shell.getBoundingClientRect();
+        if (rect.width <= 0 || rect.height <= 0 || rect.bottom <= 0 || rect.top >= window.innerHeight) {
+          return;
+        }
         const styles = window.getComputedStyle(shell);
         const horizontalPadding = Number.parseFloat(styles.paddingLeft) + Number.parseFloat(styles.paddingRight);
         const verticalPadding = Number.parseFloat(styles.paddingTop) + Number.parseFloat(styles.paddingBottom);
@@ -58,7 +63,7 @@ export function LyricCardPreview({
       window.removeEventListener("resize", measure);
       window.removeEventListener("scroll", measure, true);
     };
-  }, []);
+  }, [measurementKey]);
 
   return (
     <section data-testid="lyric-card-preview" className={`glass-panel min-w-0 self-start rounded-lg p-4 ${sticky ? "sticky top-6" : ""}`}>

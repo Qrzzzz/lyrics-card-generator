@@ -43,6 +43,80 @@ async function setWindowSize(width, height) {
   await page.waitForTimeout(260);
 }
 
+async function assertSettingsHistoryBarChrome() {
+  const back = page.getByTestId("settings-history-back");
+  const forward = page.getByTestId("settings-history-forward");
+  await page.locator(".settings-history-bar__link").first().focus();
+  await page.keyboard.press("Shift+Tab");
+
+  const chrome = await page.getByTestId("settings-history-bar").evaluate((bar) => {
+    const buttons = bar.querySelector(".settings-history-bar__buttons");
+    const path = bar.querySelector(".settings-history-bar__path");
+    const backButton = bar.querySelector('[data-testid="settings-history-back"]');
+    const forwardButton = bar.querySelector('[data-testid="settings-history-forward"]');
+    if (!(buttons instanceof HTMLElement) || !(path instanceof HTMLElement) ||
+        !(backButton instanceof HTMLButtonElement) || !(forwardButton instanceof HTMLButtonElement)) {
+      return null;
+    }
+
+    const buttonsStyle = getComputedStyle(buttons);
+    const pathStyle = getComputedStyle(path);
+    const backStyle = getComputedStyle(backButton);
+    const forwardStyle = getComputedStyle(forwardButton);
+    const backRect = backButton.getBoundingClientRect();
+    const forwardRect = forwardButton.getBoundingClientRect();
+    const pathRect = path.getBoundingClientRect();
+    return {
+      groupBorderWidths: [
+        buttonsStyle.borderTopWidth,
+        buttonsStyle.borderRightWidth,
+        buttonsStyle.borderBottomWidth,
+        buttonsStyle.borderLeftWidth
+      ],
+      groupBackground: buttonsStyle.backgroundColor,
+      groupGap: Number.parseFloat(buttonsStyle.columnGap),
+      renderedButtonGap: forwardRect.left - backRect.right,
+      backSize: { width: backRect.width, height: backRect.height },
+      forwardSize: { width: forwardRect.width, height: forwardRect.height },
+      buttonBorderWidths: [Number.parseFloat(backStyle.borderTopWidth), Number.parseFloat(forwardStyle.borderTopWidth)],
+      buttonBorderStyles: [backStyle.borderTopStyle, forwardStyle.borderTopStyle],
+      pathHeight: pathRect.height,
+      pathMinHeight: Number.parseFloat(pathStyle.minHeight),
+      pathBorderWidth: Number.parseFloat(pathStyle.borderTopWidth),
+      pathBorderStyle: pathStyle.borderTopStyle,
+      pathFlexGrow: Number.parseFloat(pathStyle.flexGrow),
+      backLabel: backButton.getAttribute("aria-label"),
+      forwardLabel: forwardButton.getAttribute("aria-label"),
+      focused: document.activeElement === backButton,
+      focusVisible: backButton.matches(":focus-visible"),
+      focusOutlineWidth: Number.parseFloat(backStyle.outlineWidth),
+      focusOutlineStyle: backStyle.outlineStyle
+    };
+  });
+
+  assert.ok(chrome, "settings history chrome is mounted");
+  assert.deepEqual(chrome.groupBorderWidths, ["0px", "0px", "0px", "0px"], "history buttons have no outer group border");
+  assert.equal(chrome.groupBackground, "rgba(0, 0, 0, 0)", "history buttons have no outer group fill");
+  assert.ok(Math.abs(chrome.groupGap - 8) <= 0.25, `history button CSS gap is 8px: ${chrome.groupGap}`);
+  assert.ok(Math.abs(chrome.renderedButtonGap - 8) <= 0.5, `history buttons render 8px apart: ${chrome.renderedButtonGap}`);
+  assert.deepEqual(chrome.backSize, { width: 36, height: 36 }, "back button keeps its clickable area");
+  assert.deepEqual(chrome.forwardSize, { width: 36, height: 36 }, "forward button keeps its clickable area");
+  assert.ok(chrome.buttonBorderWidths.every((width) => width > 0.5), `history buttons retain independent border widths: ${chrome.buttonBorderWidths}`);
+  assert.deepEqual(chrome.buttonBorderStyles, ["solid", "solid"], "history buttons retain independent solid borders");
+  assert.ok(Math.abs(chrome.pathHeight - 40) <= 0.5, `breadcrumb path renders at 40px: ${chrome.pathHeight}`);
+  assert.ok(Math.abs(chrome.pathMinHeight - 40) <= 0.25, `breadcrumb path minimum height is 40px: ${chrome.pathMinHeight}`);
+  assert.ok(chrome.pathBorderWidth > 0.5, `breadcrumb path retains its own border width: ${chrome.pathBorderWidth}`);
+  assert.equal(chrome.pathBorderStyle, "solid", "breadcrumb path retains its own solid border");
+  assert.equal(chrome.pathFlexGrow, 1, "breadcrumb path keeps the remaining horizontal space");
+  assert.ok(chrome.backLabel && chrome.forwardLabel, "history buttons keep accessible names");
+  assert.equal(chrome.focused, true, "back button accepts focus");
+  assert.equal(chrome.focusVisible, true, "keyboard focus remains visibly exposed");
+  assert.ok(
+    chrome.focusOutlineWidth > 1 && chrome.focusOutlineStyle !== "none",
+    `back button keeps a visible focus ring: ${chrome.focusOutlineWidth}px ${chrome.focusOutlineStyle}`
+  );
+}
+
 async function waitForLayoutStable(locator, timeout = 5_000) {
   await locator.waitFor({ state: "visible", timeout });
   await page.waitForFunction(
@@ -369,15 +443,28 @@ async function assertFontPickerBehavior() {
   await page.waitForFunction(() => (
     document.querySelector('[data-testid="font-picker-search"]')?.value === ""
   ));
+  await page.waitForFunction(() => document.activeElement?.getAttribute("data-testid") === "font-picker-search");
   assert.equal(await search.inputValue(), "", "reopening the same font category clears the previous query");
 
   const closeButton = cjkDialog.getByRole("button", { name: "关闭", exact: true });
   await closeButton.focus();
   await closeButton.press("Shift+Tab");
+  const reverseTabFocus = await cjkDialog.evaluate((dialog) => {
+    const expected = dialog.querySelectorAll('section[aria-labelledby] button[aria-pressed]');
+    const active = document.activeElement;
+    return {
+      matchesExpected: active === expected.item(expected.length - 1),
+      activeTag: active?.tagName ?? null,
+      activeTestId: active?.getAttribute("data-testid") ?? null,
+      activeText: active?.textContent?.trim().slice(0, 120) ?? null,
+      expectedText: expected.item(expected.length - 1)?.textContent?.trim().slice(0, 120) ?? null,
+      expectedCount: expected.length
+    };
+  });
   assert.equal(
-    await cjkDialog.locator('section[aria-labelledby] button[aria-pressed]').last().evaluate((node) => document.activeElement === node),
+    reverseTabFocus.matchesExpected,
     true,
-    "font dialog traps reverse Tab on the native button list"
+    `font dialog traps reverse Tab on the native button list: ${JSON.stringify(reverseTabFocus)}`
   );
   await closeButton.click();
   await cjkDialog.waitFor({ state: "hidden" });
@@ -571,6 +658,95 @@ async function assertPreviewFits(width, height, scrolled) {
   assert.ok(Number(bounds.scale) > 0, `${width}x${height} preview scale is invalid: ${JSON.stringify(bounds)}`);
 }
 
+async function assertExampleImportRemeasuresPreview() {
+  await setWindowSize(1440, 900);
+  const beforeMeasurement = await page.getByTestId("lyric-card-preview-shell").evaluate((shell) => {
+    const card = shell.querySelector('[data-export-card="true"]');
+    if (!(shell instanceof HTMLElement) || !(card instanceof HTMLElement)) return null;
+    const rect = shell.getBoundingClientRect();
+    const styles = getComputedStyle(shell);
+    const availableWidth = shell.clientWidth - Number.parseFloat(styles.paddingLeft) - Number.parseFloat(styles.paddingRight);
+    const availableHeight = window.innerHeight - rect.top - Number.parseFloat(styles.paddingTop) - Number.parseFloat(styles.paddingBottom) - 16;
+    const expected = Math.min(
+      Math.max(availableWidth, 120) / card.offsetWidth,
+      Math.max(availableHeight, 120) / card.offsetHeight,
+      0.52
+    );
+    return {
+      actual: Number(shell.getAttribute("data-preview-scale")),
+      expected,
+      cardWidth: card.offsetWidth,
+      cardHeight: card.offsetHeight,
+      availableWidth,
+      availableHeight
+    };
+  });
+  assert.ok(beforeMeasurement, "precondition exposes preview geometry");
+  assert.ok(
+    Math.abs(beforeMeasurement.actual - beforeMeasurement.expected) <= 0.005,
+    `precondition uses the calculated preview scale: ${JSON.stringify(beforeMeasurement)}`
+  );
+  assert.equal(await page.locator('button[data-step-id="layout"]').getAttribute("aria-current"), "step", "example import starts on step three");
+
+  await page.getByTestId("editor-surface").getByTestId("examples-button").click();
+  await page.getByTestId("load-example-opalite").waitFor({ state: "visible" });
+  acceptDocumentReplacementDialogs = true;
+  await page.getByTestId("load-example-opalite").click();
+  acceptDocumentReplacementDialogs = false;
+
+  await page.waitForFunction(() => {
+    const surface = document.querySelector('[data-testid="editor-surface"]');
+    const shell = document.querySelector('[data-testid="lyric-card-preview-shell"]');
+    const card = shell?.querySelector('[data-export-card="true"]');
+    if (!(surface instanceof HTMLElement) || !(shell instanceof HTMLElement) || !(card instanceof HTMLElement)) return false;
+    const transform = getComputedStyle(surface).transform;
+    const matrix = transform === "none" ? new DOMMatrixReadOnly() : new DOMMatrixReadOnly(transform);
+    const rect = shell.getBoundingClientRect();
+    const styles = getComputedStyle(shell);
+    const availableWidth = shell.clientWidth - Number.parseFloat(styles.paddingLeft) - Number.parseFloat(styles.paddingRight);
+    const availableHeight = window.innerHeight - rect.top - Number.parseFloat(styles.paddingTop) - Number.parseFloat(styles.paddingBottom) - 16;
+    const expectedScale = Math.min(
+      Math.max(availableWidth, 120) / card.offsetWidth,
+      Math.max(availableHeight, 120) / card.offsetHeight,
+      0.52
+    );
+    const scale = Number(shell.getAttribute("data-preview-scale"));
+    return surface.getAttribute("aria-hidden") === "false" &&
+      Math.abs(matrix.m41) <= 1 &&
+      Math.abs(matrix.m42) <= 1 &&
+      Number.isFinite(scale) &&
+      Math.abs(scale - expectedScale) <= 0.005;
+  }, undefined, { timeout: 10_000 });
+
+  const afterMeasurement = await page.getByTestId("lyric-card-preview-shell").evaluate((shell) => {
+    const card = shell.querySelector('[data-export-card="true"]');
+    if (!(shell instanceof HTMLElement) || !(card instanceof HTMLElement)) return null;
+    const rect = shell.getBoundingClientRect();
+    const styles = getComputedStyle(shell);
+    const availableWidth = shell.clientWidth - Number.parseFloat(styles.paddingLeft) - Number.parseFloat(styles.paddingRight);
+    const availableHeight = window.innerHeight - rect.top - Number.parseFloat(styles.paddingTop) - Number.parseFloat(styles.paddingBottom) - 16;
+    const expected = Math.min(
+      Math.max(availableWidth, 120) / card.offsetWidth,
+      Math.max(availableHeight, 120) / card.offsetHeight,
+      0.52
+    );
+    return {
+      actual: Number(shell.getAttribute("data-preview-scale")),
+      expected,
+      cardWidth: card.offsetWidth,
+      cardHeight: card.offsetHeight,
+      availableWidth,
+      availableHeight
+    };
+  });
+  assert.ok(afterMeasurement, "example import exposes returned preview geometry");
+  assert.ok(
+    Math.abs(afterMeasurement.actual - afterMeasurement.expected) <= 0.005,
+    `example import restores the calculated preview scale: ${JSON.stringify(afterMeasurement)}`
+  );
+  assert.equal(await page.locator('button[data-step-id="layout"]').getAttribute("aria-current"), "step", "example import returns directly to step three");
+}
+
 try {
   await mkdir(reportDirectory, { recursive: true });
   electronApp = await electron.launch({
@@ -621,11 +797,19 @@ try {
       })
     });
   });
+  await page.route("**/api/parse-song", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ ok: false, error: "desktop example enrichment fixture" })
+    });
+  });
 
   const firstLaunch = page.getByTestId("first-launch-language-dialog");
   await firstLaunch.waitFor({ state: "visible", timeout: 60_000 });
   const firstLanguageButton = page.locator('[data-testid="first-launch-language"]').first();
   const lastLanguageButton = page.locator('[data-testid="first-launch-language"]').last();
+  await page.waitForFunction(() => document.activeElement === document.querySelector('[data-testid="first-launch-language"]'));
   assert.equal(await firstLanguageButton.evaluate((node) => document.activeElement === node), true, "language dialog sets initial focus");
   assert.equal(await page.getByTestId("editor-surface").evaluate((node) => Boolean(node.closest('[inert]'))), true, "dialog makes the app background inert");
   await firstLanguageButton.press("Shift+Tab");
@@ -641,6 +825,7 @@ try {
   await selectSettingsSection("ai");
   await (await waitForVisible("ai-open-library")).click();
   await (await waitForVisible("preset-card-lyrical")).click();
+  await assertSettingsHistoryBarChrome();
   const presetTitle = await waitForVisible("preset-title-input");
   const presetPrompt = await waitForVisible("preset-prompt-input");
   const initialTitle = await presetTitle.inputValue();
@@ -861,6 +1046,21 @@ try {
   await translationLyrics.fill("translation one\ntranslation two");
   await page.locator('button[data-step-id="layout"]').click();
   await page.getByTestId("lyric-card-preview").waitFor({ state: "visible" });
+  const positionalCompletion = await page.locator('button[data-step-id]').evaluateAll((steps) =>
+    steps.map((step) => ({ id: step.getAttribute("data-step-id"), complete: step.getAttribute("data-complete") }))
+  );
+  assert.deepEqual(
+    positionalCompletion,
+    [
+      { id: "link", complete: "true" },
+      { id: "lyrics", complete: "true" },
+      { id: "layout", complete: "false" },
+      { id: "font", complete: "false" },
+      { id: "visual", complete: "false" },
+      { id: "export", complete: "false" }
+    ],
+    "stepper checkmarks stop at the active step"
+  );
   await assertExportHost("step three");
 
   for (const size of [
@@ -871,6 +1071,7 @@ try {
     await assertPreviewFits(size.width, size.height, false);
     await assertPreviewFits(size.width, size.height, true);
   }
+  await assertExampleImportRemeasuresPreview();
 
   await page.locator('button[data-step-id="lyrics"]').click();
   await fillExact(originalLyrics, originalEighteen);

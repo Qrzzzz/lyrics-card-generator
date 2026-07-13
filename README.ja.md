@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v5.2.1.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v5.2.2.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="#ローカル開発">ローカル開発</a> ·
@@ -51,30 +51,30 @@
 
 最新版は [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) からダウンロードできます。
 
-* 推奨インストーラー：`Lyrics Card Generator Setup 5.2.1.exe`
-* ポータブル版：`Lyrics Card Generator-5.2.1-portable.exe`
+* 推奨インストーラー：`Lyrics Card Generator Setup 5.2.2.exe`
+* ポータブル版：`Lyrics Card Generator-5.2.2-portable.exe`
 
 通常利用にはインストーラーを推奨します。ポータブル版は一時利用、検証、リムーバブルドライブでの利用に向いています。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v5.2.1 の更新ポイント
+### v5.2.2 の更新ポイント
 
-* 数値形式の QQ Music `songDetail` リンクから正しい曲 ID、タイトル、アーティスト、アルバム、カバーを取得します。
-* NetEase JSON の応答ネゴシエーションを修正し、曲・アーティスト・アルバムの完全なメタデータを復元しました。
-* Apple Music ページがホームへ転送されても元のトラック ID を解決し、Spotify の互換性も維持します。
-* v5.1.0 のホップ単位検証と v5.2.0 の複数アドレス IPv6/IPv4 fallback を維持し、ネットワーク境界を緩和しません。
+* v5.2.1 のリリースワークフローが誤って v5.2.0 タグを検証していた問題を修正し、バージョン一致の回帰チェックを追加しました。
+* Stepper のチェックを現在の手順より前に完了した項目だけに表示し、現在と以降の手順は正しい番号を維持します。
+* 設定の戻る/進むボタン群から外枠を除き、間隔を広げて右側のパンくずバーを少しコンパクトにしました。
+* 別の歌詞サンプルを確認して読み込み、手順 3 に戻った直後からライブプレビューを通常サイズで表示します。
 
 ## 🌐 多言語リリースノート
 
 GitHub Release ページではデフォルトで簡体字中国語の短縮版が使用され、完全なリリースノートは `docs/releases/` にて管理されています：
 
-* [简体中文](./docs/releases/v5.2.1.zh-CN.md)
-* [繁體中文](./docs/releases/v5.2.1.zh-TW.md)
-* [English](./docs/releases/v5.2.1.en.md)
-* [Français](./docs/releases/v5.2.1.fr.md)
-* [日本語](./docs/releases/v5.2.1.ja.md)
-* [Español](./docs/releases/v5.2.1.es.md)
+* [简体中文](./docs/releases/v5.2.2.zh-CN.md)
+* [繁體中文](./docs/releases/v5.2.2.zh-TW.md)
+* [English](./docs/releases/v5.2.2.en.md)
+* [Français](./docs/releases/v5.2.2.fr.md)
+* [日本語](./docs/releases/v5.2.2.ja.md)
+* [Español](./docs/releases/v5.2.2.es.md)
 
 <a id="主な機能"></a>
 

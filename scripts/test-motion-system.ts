@@ -60,6 +60,8 @@ assert.match(exportCelebration, /reduceMotion \|\| !isNewBurst/);
 
 const exportPanel = readFileSync(resolve("components/editor/ExportPanel.tsx"), "utf8");
 const previewPane = readFileSync(resolve("components/editor/PreviewPane.tsx"), "utf8");
+const lyricCardPreview = readFileSync(resolve("components/preview/LyricCardPreview.tsx"), "utf8");
+const lyricEditor = readFileSync(resolve("components/editor/LyricEditor.tsx"), "utf8");
 const appToast = readFileSync(resolve("components/feedback/AppToast.tsx"), "utf8");
 const editorActions = readFileSync(resolve("components/editor/hooks/useEditorActions.ts"), "utf8");
 const editorSteps = readFileSync(resolve("components/editor/useEditorSteps.tsx"), "utf8");
@@ -75,6 +77,10 @@ assert.match(previewPane, /data-testid="preview-clear-transition"/);
 assert.match(previewPane, /mode="popLayout"/);
 assert.match(previewPane, /initial=\{reduceMotion \? false : \{ opacity: 0, x: 72 \}\}/);
 assert.match(previewPane, /exit=\{reduceMotion \? \{ opacity: 0, x: 0 \} : \{ opacity: 0, x: -72 \}\}/);
+assert.match(previewPane, /measurementKey=\{measurementKey\}/);
+assert.match(lyricCardPreview, /rect\.top >= window\.innerHeight/);
+assert.match(lyricCardPreview, /\}, \[measurementKey\]\);/);
+assert.match(lyricEditor, /onAnimationComplete=\{\(\) => \{[\s\S]*?setPreviewMeasurementKey/);
 assert.match(editorActions, /if \(!hasClearableLyricContent\(parsedState\)\)[\s\S]*?onNotify\(clearAlreadyEmptyMessage\);[\s\S]*?return;[\s\S]*?setClearTransitionKey/);
 assert.match(appToast, /role="status"/);
 assert.match(appToast, /aria-live="polite"/);
@@ -92,4 +98,4 @@ assert.match(globals, /@media \(hover: hover\) and \(pointer: fine\)/);
 assert.match(globals, /not\(\.traffic-light\):not\(\.example-song-card\):hover/);
 assert.match(globals, /not\(\.traffic-light\):not\(\.example-song-card\):hover:active/);
 
-console.log(JSON.stringify({ ok: true, motionSystemRegressionChecks: 43 }, null, 2));
+console.log(JSON.stringify({ ok: true, motionSystemRegressionChecks: 47 }, null, 2));

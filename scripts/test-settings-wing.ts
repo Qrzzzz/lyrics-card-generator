@@ -99,6 +99,8 @@ assert.match(globals, /\.settings-navigation\s*\{[\s\S]*?border: 0;[\s\S]*?backg
 assert.match(globals, /\.settings-group-card\s*\{[\s\S]*?border: 0;[\s\S]*?background: transparent;[\s\S]*?box-shadow: none;/);
 assert.match(globals, /\.settings-group-card > section > \* \+ \*\s*\{[\s\S]*?border-top:/);
 assert.match(globals, /\.settings-wing__icon\s*\{[\s\S]*?background: transparent;[\s\S]*?color: rgb\(var\(--app-subtle\)\)/);
+assert.match(globals, /\.settings-history-bar__buttons\s*\{[\s\S]*?gap: 0\.5rem;[\s\S]*?border: 0;[\s\S]*?background: transparent;/);
+assert.match(globals, /\.settings-history-bar__path\s*\{[\s\S]*?min-height: 2\.5rem;[\s\S]*?padding: 0\.25rem 0\.45rem;/);
 assert.match(globals, /\.range-slider::-webkit-slider-runnable-track/);
 assert.match(globals, /\.range-slider::-webkit-slider-thumb/);
 assert.doesNotMatch(globals, /\.noise-layer\s*\{/);
