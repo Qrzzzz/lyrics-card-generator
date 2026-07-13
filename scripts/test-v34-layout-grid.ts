@@ -20,6 +20,7 @@ const baseStyle: CardStyle = {
   ratio: "custom",
   width: 1040,
   height: 1400,
+  autoWidth: false,
   autoHeight: true,
   font: "sans-heavy",
   customFontEnabled: false,

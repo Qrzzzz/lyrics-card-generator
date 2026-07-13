@@ -29,6 +29,7 @@ export type ExportCardReadiness = {
   isCardMounted: boolean;
   areFontsReady: boolean;
   isCardSizeStable: boolean;
+  isAutoWidthStable: boolean;
   isAutoHeightStable: boolean;
   measuredAutoHeight: number | null;
   hasContentOverflow: boolean;
@@ -37,6 +38,7 @@ export type ExportCardReadiness = {
 export type UseExportCardReadinessInput = {
   state: AppState;
   exportCardRef: RefObject<HTMLElement | null>;
+  isAutoWidthStable?: boolean;
 };
 
 export type LiveExportCardValidation = {
@@ -53,6 +55,7 @@ const initialDomReadiness: DomReadiness = {
   isCardMounted: false,
   areFontsReady: false,
   isCardSizeStable: false,
+  isAutoWidthStable: false,
   isAutoHeightStable: false,
   measuredAutoHeight: null,
   hasContentOverflow: false
@@ -65,7 +68,8 @@ const initialDomReadiness: DomReadiness = {
  */
 export function useExportCardReadiness({
   state,
-  exportCardRef
+  exportCardRef,
+  isAutoWidthStable = true
 }: UseExportCardReadinessInput): ExportCardReadiness {
   const [domReadiness, setDomReadiness] = useState<DomReadiness>(initialDomReadiness);
   useEffect(() => {
@@ -80,7 +84,7 @@ export function useExportCardReadiness({
         return;
       }
 
-      const next = evaluateExportCardDom(state, exportCardRef.current);
+      const next = evaluateExportCardDom(state, exportCardRef.current, isAutoWidthStable);
 
       setDomReadiness((current) => sameDomReadiness(current, next) ? current : next);
     };
@@ -129,7 +133,7 @@ export function useExportCardReadiness({
       resizeObservers.forEach((observer) => observer.disconnect());
       mutationObserver?.disconnect();
     };
-  }, [exportCardRef, state]);
+  }, [exportCardRef, isAutoWidthStable, state]);
 
   const isCurrentState = domReadiness.evaluatedState === state;
   const currentDomReadiness = isCurrentState
@@ -144,6 +148,7 @@ export function useExportCardReadiness({
     isCardMounted: currentDomReadiness.isCardMounted,
     areFontsReady: currentDomReadiness.areFontsReady,
     isCardSizeStable: currentDomReadiness.isCardSizeStable,
+    isAutoWidthStable: currentDomReadiness.isAutoWidthStable,
     isAutoHeightStable: currentDomReadiness.isAutoHeightStable,
     measuredAutoHeight: currentDomReadiness.measuredAutoHeight,
     hasContentOverflow: currentDomReadiness.hasContentOverflow
@@ -153,9 +158,10 @@ export function useExportCardReadiness({
 /** Re-evaluates the DOM immediately at export time instead of trusting hook state. */
 export function getLiveExportCardValidation(
   state: AppState,
-  container: HTMLElement | null
+  container: HTMLElement | null,
+  isAutoWidthStable = true
 ): LiveExportCardValidation {
-  const readiness = evaluateExportCardDom(state, container);
+  const readiness = evaluateExportCardDom(state, container, isAutoWidthStable);
   const { lineStatus, blockingReason } = evaluateMinimumExportSafety(state, readiness);
 
   return {
@@ -164,7 +170,11 @@ export function getLiveExportCardValidation(
   };
 }
 
-function evaluateExportCardDom(state: AppState, container: HTMLElement | null): DomReadiness {
+function evaluateExportCardDom(
+  state: AppState,
+  container: HTMLElement | null,
+  isAutoWidthStable: boolean
+): DomReadiness {
   const root = findExportCard(container);
   const isCardMounted = Boolean(root);
   const areFontsReady = typeof document !== "undefined" && document.fonts.status === "loaded";
@@ -185,6 +195,7 @@ function evaluateExportCardDom(state: AppState, container: HTMLElement | null): 
     isCardMounted,
     areFontsReady,
     isCardSizeStable,
+    isAutoWidthStable,
     isAutoHeightStable,
     measuredAutoHeight,
     hasContentOverflow: root ? detectExportCardOverflow(root) : false
@@ -213,6 +224,7 @@ function sameDomReadiness(left: DomReadiness, right: DomReadiness) {
     left.isCardMounted === right.isCardMounted &&
     left.areFontsReady === right.areFontsReady &&
     left.isCardSizeStable === right.isCardSizeStable &&
+    left.isAutoWidthStable === right.isAutoWidthStable &&
     left.isAutoHeightStable === right.isAutoHeightStable &&
     left.measuredAutoHeight === right.measuredAutoHeight &&
     left.hasContentOverflow === right.hasContentOverflow

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ExportPanel } from "@/components/editor/ExportPanel";
 import { ExportCardHost } from "@/components/editor/ExportCardHost";
+import { AutoWidthMeasurementHost } from "@/components/editor/AutoWidthMeasurementHost";
 import { AppToast, type ToastNotice } from "@/components/feedback/AppToast";
 import { LyricInput } from "@/components/editor/LyricInput";
 import { MotionPanel } from "@/components/motion/MotionPanel";
@@ -17,6 +18,7 @@ import {
   defaultState
 } from "@/components/editor/editor-defaults";
 import { useMeasuredAutoCanvasHeight } from "@/components/editor/hooks/useMeasuredAutoCanvasHeight";
+import { useMeasuredAutoCanvasWidth } from "@/components/editor/hooks/useMeasuredAutoCanvasWidth";
 import {
   getLiveExportCardValidation,
   useExportCardReadiness
@@ -100,6 +102,7 @@ export function WebLiteEditor() {
   const [coverResetGeneration, setCoverResetGeneration] = useState(0);
   const cardRef = useRef<HTMLElement | null>(null);
   const exportCardRef = useRef<HTMLElement | null>(null);
+  const autoWidthMeasurementRef = useRef<HTMLDivElement | null>(null);
   const captureCardRef = useRef<HTMLElement | null>(null);
   const exportMutexRef = useRef(new ExportTransactionMutex());
   const exportRevisionRef = useRef(0);
@@ -114,7 +117,8 @@ export function WebLiteEditor() {
 
   useCoverPalette(activeCover, setState);
   useResolvedTextColor(state, setState);
-  useMeasuredAutoCanvasHeight(state, setState, exportCardRef);
+  const autoWidthReadiness = useMeasuredAutoCanvasWidth(state, setState, autoWidthMeasurementRef);
+  useMeasuredAutoCanvasHeight(state, setState, exportCardRef, autoWidthReadiness.isStable);
 
   const parsedState = useMemo(
     () => ({
@@ -131,7 +135,11 @@ export function WebLiteEditor() {
     previousExportStateRef.current = parsedState;
     exportRevisionRef.current += 1;
   }
-  const exportReadiness = useExportCardReadiness({ state: parsedState, exportCardRef });
+  const exportReadiness = useExportCardReadiness({
+    state: parsedState,
+    exportCardRef,
+    isAutoWidthStable: autoWidthReadiness.isStable
+  });
   const exportBlockingMessage = exportReadiness.blockingReason
     ? resolveExportSafetyMessage(exportReadiness.blockingReason, exportReadiness.lineStatus.totalLineCount, t)
     : undefined;
@@ -324,7 +332,11 @@ export function WebLiteEditor() {
   }
 
   async function completeAndExport() {
-    const liveValidation = getLiveExportCardValidation(parsedState, exportCardRef.current);
+    const liveValidation = getLiveExportCardValidation(
+      parsedState,
+      exportCardRef.current,
+      autoWidthReadiness.isStable
+    );
     const liveBlockingMessage = liveValidation.blockingReason
       ? resolveExportSafetyMessage(liveValidation.blockingReason, liveValidation.lineStatus.totalLineCount, t)
       : exportBlockingMessage;
@@ -551,6 +563,7 @@ export function WebLiteEditor() {
         exportCardRef={exportCardRef}
         locale={parsedState.locale}
       />
+      <AutoWidthMeasurementHost state={state} hostRef={autoWidthMeasurementRef} />
       {activeExportSnapshot ? (
         <ExportCardHost
           song={activeExportSnapshot.song as SongInfo}

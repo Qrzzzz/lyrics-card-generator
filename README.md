@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v5.4.0.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v5.5.0.zh-CN.md">发布说明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">在线 Web Lite 版</a> ·
   <a href="./docs/desktop.md">桌面维护文档</a> ·
   <a href="#主要功能">主要功能</a> ·
@@ -49,24 +49,24 @@
 
 请前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下载最新版：
 
-* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 5.4.0.exe`
-* 不想安装时可下载便携版：`Lyrics Card Generator-5.4.0-portable.exe`
+* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 5.5.0.exe`
+* 不想安装时可下载便携版：`Lyrics Card Generator-5.5.0-portable.exe`
 
 安装版适合长期使用；便携版适合临时运行、测试或放在移动硬盘中使用。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v5.4.0 更新重点
+### v5.5.0 更新重点
 
-* 六个步骤现在共用同一套紧凑 Stepper，第一步不再显示重复的大型软件标题栏。
-* 第一页改为共享双栏工作台，流程头横跨歌曲搜索主区与导入侧栏。
-* 歌曲信息、链接解析、本地音频与手动调整收敛到一个侧栏面板，原有导入能力保持不变。
-* 第 2 至第 6 步、实时预览、导出 PNG、设置数据与项目格式均不改变。
+* 竖版自定义歌词卡新增可选的“自动宽度”，根据最终字体的真实浏览器排版选择舒适宽度。
+* 正文与翻译会分别检测视觉换行，避免只剩 1–2 个字或短词落在下一行。
+* 极短副歌、少数超长正文或翻译会被降权，不会轻易把整张卡片拉到最大宽度。
+* 自动宽度稳定后才计算自动高度并开放导出；关闭开关后保留最后计算宽度供手动微调。
 
 ## 🌐 多语言发布说明
 
 GitHub Release 默认展示简体中文摘要，完整说明见：
-[简体中文](./docs/releases/v5.4.0.zh-CN.md) · [繁體中文](./docs/releases/v5.4.0.zh-TW.md) · [English](./docs/releases/v5.4.0.en.md) · [Français](./docs/releases/v5.4.0.fr.md) · [日本語](./docs/releases/v5.4.0.ja.md) · [Español](./docs/releases/v5.4.0.es.md)
+[简体中文](./docs/releases/v5.5.0.zh-CN.md) · [繁體中文](./docs/releases/v5.5.0.zh-TW.md) · [English](./docs/releases/v5.5.0.en.md) · [Français](./docs/releases/v5.5.0.fr.md) · [日本語](./docs/releases/v5.5.0.ja.md) · [Español](./docs/releases/v5.5.0.es.md)
 
 <a id="主要功能"></a>
 
@@ -77,7 +77,7 @@ GitHub Release 默认展示简体中文摘要，完整说明见：
 * 生成高质感歌词分享图片
 * 支持竖版、横版和自定义画布尺寸
 * 横版布局基于安全区域重构，封面列、内容列和底部信息更稳定
-* 竖版自定义尺寸支持基于真实 DOM 测量的自动高度
+* 竖版自定义尺寸支持基于真实 DOM 测量的自动宽度与自动高度
 * 支持导出高清 PNG 图片
 
 ### 📝 歌词排版与翻译

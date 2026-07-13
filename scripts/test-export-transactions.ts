@@ -10,6 +10,7 @@ const readyDom: ExportDomSafety = {
   isCardMounted: true,
   areFontsReady: true,
   isCardSizeStable: true,
+  isAutoWidthStable: true,
   isAutoHeightStable: true,
   hasContentOverflow: false
 };
