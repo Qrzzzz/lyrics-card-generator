@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v5.2.0.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v5.2.1.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="#ローカル開発">ローカル開発</a> ·
@@ -51,30 +51,30 @@
 
 最新版は [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) からダウンロードできます。
 
-* 推奨インストーラー：`Lyrics Card Generator Setup 5.2.0.exe`
-* ポータブル版：`Lyrics Card Generator-5.2.0-portable.exe`
+* 推奨インストーラー：`Lyrics Card Generator Setup 5.2.1.exe`
+* ポータブル版：`Lyrics Card Generator-5.2.1-portable.exe`
 
 通常利用にはインストーラーを推奨します。ポータブル版は一時利用、検証、リムーバブルドライブでの利用に向いています。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v5.2.0 の更新ポイント
+### v5.2.1 の更新ポイント
 
-* Safe Fetch は検証済みの複数 IPv6/IPv4 アドレスへ安全に切り替え、リダイレクト、タイムアウト、取消、本文上限を要求全体で共有します。
-* AI 文書競合、Electron の早期取消、終了前の設定 flush、JSON/localStorage の新旧調整を強化しました。
-* 共通ダイアログ、キーボード検索、live region、6 言語エラー、フォーカス対比、Forced Colors を改善しました。
-* Electron の外部遷移、IPC sender、権限、CSP を統一し、最終 Setup/portable バイトを実際にテストして attest します。
+* 数値形式の QQ Music `songDetail` リンクから正しい曲 ID、タイトル、アーティスト、アルバム、カバーを取得します。
+* NetEase JSON の応答ネゴシエーションを修正し、曲・アーティスト・アルバムの完全なメタデータを復元しました。
+* Apple Music ページがホームへ転送されても元のトラック ID を解決し、Spotify の互換性も維持します。
+* v5.1.0 のホップ単位検証と v5.2.0 の複数アドレス IPv6/IPv4 fallback を維持し、ネットワーク境界を緩和しません。
 
 ## 🌐 多言語リリースノート
 
 GitHub Release ページではデフォルトで簡体字中国語の短縮版が使用され、完全なリリースノートは `docs/releases/` にて管理されています：
 
-* [简体中文](./docs/releases/v5.2.0.zh-CN.md)
-* [繁體中文](./docs/releases/v5.2.0.zh-TW.md)
-* [English](./docs/releases/v5.2.0.en.md)
-* [Français](./docs/releases/v5.2.0.fr.md)
-* [日本語](./docs/releases/v5.2.0.ja.md)
-* [Español](./docs/releases/v5.2.0.es.md)
+* [简体中文](./docs/releases/v5.2.1.zh-CN.md)
+* [繁體中文](./docs/releases/v5.2.1.zh-TW.md)
+* [English](./docs/releases/v5.2.1.en.md)
+* [Français](./docs/releases/v5.2.1.fr.md)
+* [日本語](./docs/releases/v5.2.1.ja.md)
+* [Español](./docs/releases/v5.2.1.es.md)
 
 <a id="主な機能"></a>
 

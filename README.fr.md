@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v5.2.0.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v5.2.1.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="#développement-local">Développement local</a> ·
@@ -51,30 +51,30 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 Téléchargez la dernière version depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
 
-* Installateur recommandé : `Lyrics Card Generator Setup 5.2.0.exe`
-* Version portable : `Lyrics Card Generator-5.2.0-portable.exe`
+* Installateur recommandé : `Lyrics Card Generator Setup 5.2.1.exe`
+* Version portable : `Lyrics Card Generator-5.2.1-portable.exe`
 
 L'installateur est recommandé pour une utilisation régulière. La version portable convient aux essais, à une utilisation temporaire ou à un disque amovible.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### Points clés de la v5.2.0
+### Points clés de la v5.2.1
 
-* Safe Fetch prend en charge un basculement IPv6/IPv4 multi-adresses entièrement validé avec un budget commun pour les redirections, délais, annulations et corps.
-* Les courses IA, l’annulation Electron précoce, la sauvegarde avant fermeture et la réconciliation JSON/localStorage sont renforcées.
-* Dialogues partagés, recherche au clavier, live regions, erreurs en six langues, contraste du focus et Forced Colors améliorent l’accessibilité.
-* Navigation, IPC, permissions et CSP Electron suivent des politiques communes ; les octets Setup/portable finaux sont testés et attestés.
+* Rétablit les liens QQ Music `songDetail` numériques avec l’identifiant, le titre, l’artiste, l’album et la pochette corrects.
+* Corrige la négociation JSON de NetEase afin d’importer à nouveau toutes les métadonnées du morceau, de l’artiste et de l’album.
+* Apple Music résout l’identifiant de piste original même si la page redirige vers l’accueil ; Spotify reste compatible.
+* Conserve la validation par étape de la v5.1.0 et le fallback IPv6/IPv4 multi-adresses de la v5.2.0 sans réduire la sécurité réseau.
 
 ## 🌐 Notes de publication multilingues
 
 La page GitHub Release utilise par défaut la version courte en chinois simplifié, les notes de publication complètes sont conservées dans `docs/releases/` :
 
-* [简体中文](./docs/releases/v5.2.0.zh-CN.md)
-* [繁體中文](./docs/releases/v5.2.0.zh-TW.md)
-* [English](./docs/releases/v5.2.0.en.md)
-* [Français](./docs/releases/v5.2.0.fr.md)
-* [日本語](./docs/releases/v5.2.0.ja.md)
-* [Español](./docs/releases/v5.2.0.es.md)
+* [简体中文](./docs/releases/v5.2.1.zh-CN.md)
+* [繁體中文](./docs/releases/v5.2.1.zh-TW.md)
+* [English](./docs/releases/v5.2.1.en.md)
+* [Français](./docs/releases/v5.2.1.fr.md)
+* [日本語](./docs/releases/v5.2.1.ja.md)
+* [Español](./docs/releases/v5.2.1.es.md)
 
 <a id="fonctionnalités-principales"></a>
 

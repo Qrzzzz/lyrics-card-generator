@@ -1,7 +1,8 @@
 const assert = require("node:assert/strict");
 const { readFileSync } = require("node:fs");
+const { version } = require("../package.json");
 
-const workflow = readFileSync(".github/workflows/release-5.2.0.yml", "utf8");
+const workflow = readFileSync(`.github/workflows/release-${version}.yml`, "utf8");
 
 const createDraft = workflow.indexOf("- name: Create draft GitHub release");
 const verifyDraft = workflow.indexOf("- name: Re-download and verify draft release bytes and attestations");

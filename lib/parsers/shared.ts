@@ -17,6 +17,14 @@ export const REQUEST_HEADERS = {
 } as const;
 
 const HTML_LIMIT = 2 * 1024 * 1024;
+const JSON_ACCEPT = "application/json,text/json,text/plain,application/javascript,text/javascript,*/*;q=0.8";
+const JSON_CONTENT_TYPES = [
+  "application/json",
+  "text/json",
+  "text/plain",
+  "application/javascript",
+  "text/javascript"
+];
 
 const PLATFORM_TAILS = [
   "Apple Music",
@@ -58,17 +66,20 @@ export async function fetchHtml(
 }
 
 export async function fetchJson<T>(url: string, init?: Pick<RequestInit, "headers" | "signal">): Promise<T> {
+  const headers = new Headers(REQUEST_HEADERS);
+  new Headers(init?.headers).forEach((value, name) => headers.set(name, value));
+  // JSON endpoints in this project negotiate their response type from Accept.
+  // Keep that contract owned by this helper even when a caller adds Referer or
+  // other platform headers.
+  headers.set("accept", JSON_ACCEPT);
+
   const res = await safeFetch(url, {
-    headers: {
-      ...REQUEST_HEADERS,
-      accept: "application/json,text/plain,*/*",
-      ...(init?.headers ?? {})
-    },
+    headers,
     signal: init?.signal ?? undefined,
     timeoutMs: 10000,
     maxRedirects: 5,
     maxResponseBytes: HTML_LIMIT,
-    allowedContentTypes: ["application/json", "text/json", "text/plain", "application/javascript"]
+    allowedContentTypes: JSON_CONTENT_TYPES
   });
 
   if (!res.ok) {

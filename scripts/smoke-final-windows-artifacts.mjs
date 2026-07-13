@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { execFile, spawn } from "node:child_process";
-import { mkdtemp, mkdir, readdir, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import net from "node:net";
@@ -15,11 +15,13 @@ const releaseDirectory = path.join(root, "release");
 const reportDirectory = path.join(root, "playwright-report", "desktop-final-artifacts");
 await mkdir(reportDirectory, { recursive: true });
 
+const packageJson = JSON.parse(await readFile(path.join(root, "package.json"), "utf8"));
+assert.match(packageJson.version, /^\d+\.\d+\.\d+$/, "package version must be a stable semantic version");
 const artifacts = await readdir(releaseDirectory);
-const portableName = artifacts.find((name) => /^Lyrics Card Generator-.*-portable\.exe$/i.test(name));
-const setupName = artifacts.find((name) => /^Lyrics Card Generator Setup .*\.exe$/i.test(name));
-assert.ok(portableName, "portable artifact is missing");
-assert.ok(setupName, "Setup artifact is missing");
+const portableName = `Lyrics Card Generator-${packageJson.version}-portable.exe`;
+const setupName = `Lyrics Card Generator Setup ${packageJson.version}.exe`;
+assert.ok(artifacts.includes(portableName), `${portableName} is missing`);
+assert.ok(artifacts.includes(setupName), `${setupName} is missing`);
 
 const results = [];
 await smokeExecutable(path.join(releaseDirectory, portableName), "portable", results);
