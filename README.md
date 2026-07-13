@@ -228,7 +228,7 @@ npm run core:test       # 测试 3.0 核心纯函数
 
 感谢 [ReactBits](https://www.reactbits.dev/) 提供的多种 UI 创意，包括 Spark Cursor 等动效灵感。
 
-感谢 Rangerov 对此项目的关注和提出意见。
+感谢 [Rangerov](https://github.com/rangerov0716) 对此项目的关注和提出意见。
 
 感谢 [V0idream](https://github.com/V0idream) 提出的代码瘦身建议，[`v1.1.0`](https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v1.1.0) 已据此进行了相关优化。
 

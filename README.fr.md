@@ -255,7 +255,7 @@ Merci à [ChatGPT 5.6 Sol](https://chatgpt.com/) pour le diagnostic des problèm
 
 Merci à [ReactBits](https://www.reactbits.dev/) pour ses nombreuses idées d’interface, notamment des inspirations d’animation comme Spark Cursor.
 
-Merci à Rangerov pour l’attention portée à ce projet et pour ses retours.
+Merci à [Rangerov](https://github.com/rangerov0716) pour l’attention portée à ce projet et pour ses retours.
 
 Merci à [V0idream](https://github.com/V0idream) pour ses suggestions d’allègement du code. [`v1.1.0`](https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v1.1.0) a déjà été optimisée en conséquence.
 

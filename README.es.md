@@ -255,7 +255,7 @@ Gracias a [ChatGPT 5.6 Sol](https://chatgpt.com/) por ayudar durante el desarrol
 
 Gracias a [ReactBits](https://www.reactbits.dev/) por varias ideas de UI, incluidas inspiraciones de animación como Spark Cursor.
 
-Gracias a Rangerov por prestar atención a este proyecto y aportar sugerencias.
+Gracias a [Rangerov](https://github.com/rangerov0716) por prestar atención a este proyecto y aportar sugerencias.
 
 Gracias a [V0idream](https://github.com/V0idream) por proponer mejoras para aligerar el código. [`v1.1.0`](https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v1.1.0) ya incorporó optimizaciones relacionadas.
 

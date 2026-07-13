@@ -255,7 +255,7 @@ npm run core:test       # 3.0 コア純粋関数をテスト
 
 [ReactBits](https://www.reactbits.dev/) に感謝します。Spark Cursor などのモーションを含む、さまざまな UI アイデアの着想を提供してくれました。
 
-Rangerov に感謝します。このプロジェクトへの関心と意見に感謝します。
+[Rangerov](https://github.com/rangerov0716) に感謝します。このプロジェクトへの関心と意見に感謝します。
 
 [V0idream](https://github.com/V0idream) によるコード軽量化の提案に感謝します。[`v1.1.0`](https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v1.1.0) では、それに基づく関連最適化を実施済みです。
 

@@ -255,7 +255,7 @@ Thanks to [ChatGPT 5.6 Sol](https://chatgpt.com/) for issue diagnosis, solution 
 
 Thanks to [ReactBits](https://www.reactbits.dev/) for multiple UI ideas, including motion inspiration such as Spark Cursor.
 
-Thanks to Rangerov for attention to this project and for providing feedback.
+Thanks to [Rangerov](https://github.com/rangerov0716) for attention to this project and for providing feedback.
 
 Thanks to [V0idream](https://github.com/V0idream) for suggesting code slimming improvements. [`v1.1.0`](https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v1.1.0) has already made related optimizations accordingly.
 

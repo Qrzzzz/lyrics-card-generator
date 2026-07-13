@@ -250,7 +250,7 @@ npm run core:test       # 測試 3.0 核心純函式
 
 感謝 [ReactBits](https://www.reactbits.dev/) 提供的多種 UI 創意，包括 Spark Cursor 等動效靈感。
 
-感謝 Rangerov 對此專案的關注和提出意見。
+感謝 [Rangerov](https://github.com/rangerov0716) 對此專案的關注和提出意見。
 
 感謝 [V0idream](https://github.com/V0idream) 提出的程式碼瘦身建議，[`v1.1.0`](https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v1.1.0) 已據此進行相關最佳化。
 
