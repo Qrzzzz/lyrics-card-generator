@@ -65,14 +65,8 @@
 
 ## 🌐 多语言发布说明
 
-GitHub Release 页面默认使用简体中文短版，完整发布说明维护在 `docs/releases/`：
-
-* [简体中文](./docs/releases/v5.2.2.zh-CN.md)
-* [繁體中文](./docs/releases/v5.2.2.zh-TW.md)
-* [English](./docs/releases/v5.2.2.en.md)
-* [Français](./docs/releases/v5.2.2.fr.md)
-* [日本語](./docs/releases/v5.2.2.ja.md)
-* [Español](./docs/releases/v5.2.2.es.md)
+GitHub Release 默认展示简体中文摘要，完整说明见：
+[简体中文](./docs/releases/v5.2.2.zh-CN.md) · [繁體中文](./docs/releases/v5.2.2.zh-TW.md) · [English](./docs/releases/v5.2.2.en.md) · [Français](./docs/releases/v5.2.2.fr.md) · [日本語](./docs/releases/v5.2.2.ja.md) · [Español](./docs/releases/v5.2.2.es.md)
 
 <a id="主要功能"></a>
 

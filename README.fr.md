@@ -67,14 +67,8 @@ L'installateur est recommandé pour une utilisation régulière. La version port
 
 ## 🌐 Notes de publication multilingues
 
-La page GitHub Release utilise par défaut la version courte en chinois simplifié, les notes de publication complètes sont conservées dans `docs/releases/` :
-
-* [简体中文](./docs/releases/v5.2.2.zh-CN.md)
-* [繁體中文](./docs/releases/v5.2.2.zh-TW.md)
-* [English](./docs/releases/v5.2.2.en.md)
-* [Français](./docs/releases/v5.2.2.fr.md)
-* [日本語](./docs/releases/v5.2.2.ja.md)
-* [Español](./docs/releases/v5.2.2.es.md)
+Par défaut, GitHub Release affiche un résumé en chinois simplifié. Consultez les notes complètes :
+[简体中文](./docs/releases/v5.2.2.zh-CN.md) · [繁體中文](./docs/releases/v5.2.2.zh-TW.md) · [English](./docs/releases/v5.2.2.en.md) · [Français](./docs/releases/v5.2.2.fr.md) · [日本語](./docs/releases/v5.2.2.ja.md) · [Español](./docs/releases/v5.2.2.es.md)
 
 <a id="fonctionnalités-principales"></a>
 

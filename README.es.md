@@ -65,16 +65,10 @@ El instalador se recomienda para uso habitual. La versión portable es útil par
 * Elimina el borde exterior de los botones atrás/adelante de Ajustes, aumenta su separación y compacta ligeramente la barra de migas.
 * Recupera de inmediato la vista previa a tamaño normal tras confirmar otra canción de ejemplo y volver al tercer paso.
 
-## 🌐 Notas de publicación multilingüe
+## 🌐 Notas de publicación multilingües
 
-La página de GitHub Release utiliza por defecto la versión corta en chino simplificado, las notas de publicación completas se mantienen en `docs/releases/`:
-
-* [简体中文](./docs/releases/v5.2.2.zh-CN.md)
-* [繁體中文](./docs/releases/v5.2.2.zh-TW.md)
-* [English](./docs/releases/v5.2.2.en.md)
-* [Français](./docs/releases/v5.2.2.fr.md)
-* [日本語](./docs/releases/v5.2.2.ja.md)
-* [Español](./docs/releases/v5.2.2.es.md)
+GitHub Release muestra de forma predeterminada un resumen en chino simplificado. Consulta las notas completas:
+[简体中文](./docs/releases/v5.2.2.zh-CN.md) · [繁體中文](./docs/releases/v5.2.2.zh-TW.md) · [English](./docs/releases/v5.2.2.en.md) · [Français](./docs/releases/v5.2.2.fr.md) · [日本語](./docs/releases/v5.2.2.ja.md) · [Español](./docs/releases/v5.2.2.es.md)
 
 <a id="funciones-principales"></a>
 

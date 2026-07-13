@@ -67,14 +67,8 @@ The installer is recommended for regular use. The portable version is useful for
 
 ## 🌐 Multilingual Release Notes
 
-The GitHub Release page defaults to a simplified Chinese short version, while the full release notes are maintained in `docs/releases/`:
-
-* [简体中文](./docs/releases/v5.2.2.zh-CN.md)
-* [繁體中文](./docs/releases/v5.2.2.zh-TW.md)
-* [English](./docs/releases/v5.2.2.en.md)
-* [Français](./docs/releases/v5.2.2.fr.md)
-* [日本語](./docs/releases/v5.2.2.ja.md)
-* [Español](./docs/releases/v5.2.2.es.md)
+GitHub Release displays a Simplified Chinese summary by default. See the full release notes:
+[简体中文](./docs/releases/v5.2.2.zh-CN.md) · [繁體中文](./docs/releases/v5.2.2.zh-TW.md) · [English](./docs/releases/v5.2.2.en.md) · [Français](./docs/releases/v5.2.2.fr.md) · [日本語](./docs/releases/v5.2.2.ja.md) · [Español](./docs/releases/v5.2.2.es.md)
 
 <a id="features"></a>
 
