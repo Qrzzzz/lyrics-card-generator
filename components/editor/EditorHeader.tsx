@@ -15,6 +15,7 @@ type EditorHeaderProps = {
   t: ReturnType<typeof createT>;
   mode?: EditorHeaderMode;
   density?: EditorHeaderDensity;
+  actionsOnly?: boolean;
   onOpenExamples: () => void;
   onClearAll: () => void;
   onOpenSettings: () => void;
@@ -27,6 +28,7 @@ export function EditorHeader({
   t,
   mode = "normal",
   density = "normal",
+  actionsOnly = false,
   onOpenExamples,
   onClearAll,
   onOpenSettings,
@@ -43,10 +45,12 @@ export function EditorHeader({
       data-density={density}
       className={[
         "editor-header glass-panel relative z-40 flex min-w-0 max-w-full flex-col justify-center rounded-lg sm:flex-row sm:items-center sm:justify-between",
-        isCompact ? "min-h-14 gap-2 px-3 py-2" : "h-[var(--app-header-height)] gap-3 px-4 py-3"
+        actionsOnly
+          ? "editor-action-rail ml-auto min-h-12 w-fit gap-2 px-2 py-1.5"
+          : isCompact ? "min-h-14 gap-2 px-3 py-2" : "h-[var(--app-header-height)] gap-3 px-4 py-3"
       ].join(" ")}
     >
-      <div className="flex min-w-0 items-center gap-3 sm:gap-4">
+      {!actionsOnly ? <div className="flex min-w-0 items-center gap-3 sm:gap-4">
         <img
           src="/app-icon.png"
           alt="Lyrics Card"
@@ -63,7 +67,7 @@ export function EditorHeader({
           </h1>
           {!isCompact ? <p className="editor-header__subtitle app-text-subtle mt-1 truncate text-sm">{t("appSubtitle")}</p> : null}
         </div>
-      </div>
+      </div> : null}
       <div className="flex shrink-0 flex-wrap items-center gap-3">
         <button
           type="button"

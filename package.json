@@ -1,6 +1,6 @@
 {
   "name": "lyric-card-generator",
-  "version": "5.1.0",
+  "version": "5.2.0",
   "private": true,
   "main": "electron/main.js",
   "scripts": {
@@ -10,21 +10,26 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
+    "lint": "eslint . --max-warnings=0",
     "parse:test": "tsx scripts/test-parse-song.ts",
     "music-search:normalize-test": "tsx scripts/test-netease-search-normalize.ts",
     "music-search:test": "tsx scripts/test-netease-search-live.ts",
     "security:test": "tsx scripts/test-safe-fetch.ts",
-    "transactions:test": "tsx scripts/test-document-transactions.ts && tsx scripts/test-ai-translation-transactions.ts",
+    "transactions:test": "tsx scripts/test-document-transactions.ts && tsx scripts/test-ai-translation-transactions.ts && tsx scripts/test-ai-desktop-cancellation.ts",
     "export:test": "tsx scripts/test-export-transactions.ts",
     "p0:test": "npm run security:test && npm run transactions:test && npm run export:test",
     "examples:generate-palettes": "tsx scripts/generate-example-palettes.ts",
     "web-lite:build": "node scripts/build-web-lite.mjs",
     "web-lite:check": "node scripts/check-web-lite.mjs",
     "web-lite:smoke": "playwright test --config=playwright.web-lite.config.ts",
-    "core:test": "npm run p0:test && tsx scripts/test-v2-core.ts && tsx scripts/test-v32-settings.ts && tsx scripts/test-v321-theme-tokens.ts && tsx scripts/test-v34-layout-grid.ts && tsx scripts/test-stepper-layout.ts && tsx scripts/test-lyrics-document.ts && tsx scripts/test-lyrics-viewport.ts && tsx scripts/test-titlebar-regression.ts && tsx scripts/test-examples.ts && tsx scripts/test-settings-wing.ts && tsx scripts/test-ai-settings-save-controller.ts && tsx scripts/test-release-consistency.ts && tsx scripts/test-motion-system.ts && tsx scripts/test-ai-provider-response.ts && tsx scripts/test-netease-search-normalize.ts && node scripts/test-electron-ai-prompt-settings.cjs && node scripts/test-electron-font-options.cjs && node scripts/test-electron-user-preferences.cjs && node scripts/test-electron-background-images.cjs",
+    "a11y:test": "playwright test --config=playwright.web-lite.config.ts --grep axe",
+    "stability:test": "tsx scripts/test-app-preferences-reconciliation.ts && tsx scripts/test-app-preferences-behavior.ts && tsx scripts/test-shutdown-coordinator.ts && tsx scripts/test-ai-error-localization.ts && tsx scripts/test-locale-completeness.ts && node scripts/test-electron-ai-request-lifecycle.cjs && node scripts/test-electron-security-contract.cjs && node scripts/test-release-workflow.cjs",
+    "coverage": "c8 --include=lib/settings/app-preferences-reconciliation.ts --include=lib/ai/error-copy.ts --check-coverage --lines 85 --functions 85 --branches 80 --statements 85 tsx scripts/test-stability-coverage.ts",
+    "core:test": "npm run p0:test && node scripts/test-electron-ai-request-lifecycle.cjs && tsx scripts/test-v2-core.ts && tsx scripts/test-v32-settings.ts && tsx scripts/test-v321-theme-tokens.ts && tsx scripts/test-v34-layout-grid.ts && tsx scripts/test-stepper-layout.ts && tsx scripts/test-lyrics-document.ts && tsx scripts/test-lyrics-viewport.ts && tsx scripts/test-titlebar-regression.ts && tsx scripts/test-examples.ts && tsx scripts/test-settings-wing.ts && tsx scripts/test-ai-settings-save-controller.ts && tsx scripts/test-release-consistency.ts && tsx scripts/test-motion-system.ts && tsx scripts/test-ai-provider-response.ts && tsx scripts/test-netease-search-normalize.ts && node scripts/test-electron-ai-prompt-settings.cjs && node scripts/test-electron-font-options.cjs && node scripts/test-electron-user-preferences.cjs && node scripts/test-electron-background-images.cjs",
     "desktop:dev": "node scripts/start-electron-dev.mjs",
     "desktop:prepare": "node scripts/prepare-electron-dist.mjs",
     "desktop:interaction-test": "node scripts/test-desktop-settings-interactions.mjs",
+    "desktop:final-artifact-smoke": "node scripts/smoke-final-windows-artifacts.mjs",
     "desktop:size": "node scripts/audit-desktop-size.mjs",
     "desktop:pack": "npm run typecheck && npm run build && npm run desktop:prepare && electron-builder --dir --projectDir dist-desktop/app",
     "desktop:build": "npm run typecheck && npm run build && npm run desktop:prepare && electron-builder --projectDir dist-desktop/app"
@@ -43,19 +48,26 @@
     "zod": "^3.24.0"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.12.1",
     "@playwright/test": "^1.61.1",
     "@types/node": "^22.10.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "autoprefixer": "^10.4.20",
+    "c8": "^11.0.0",
     "cross-env": "^10.1.0",
     "electron": "^42.4.0",
     "electron-builder": "^26.15.2",
     "esbuild": "^0.28.1",
-    "postcss": "^8.4.49",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "15.5.20",
+    "postcss": "8.5.15",
     "tailwindcss": "^3.4.17",
     "tsx": "^4.22.3",
     "typescript": "^5.7.0",
     "wait-on": "^9.0.10"
+  },
+  "overrides": {
+    "postcss": "$postcss"
   }
 }

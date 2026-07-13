@@ -53,7 +53,7 @@ assert.doesNotMatch(globalsSource, /radial-gradient\(circle at 34% 26%/);
 assert.doesNotMatch(globalsSource, /drop-shadow\([^\n]*--traffic-light-color/);
 assert.match(globalsSource, /\.traffic-light:hover[\s\S]*?translateY\(-1px\) scale\(1\.11\)/);
 assert.match(globalsSource, /\.traffic-light:active[\s\S]*?scale\(0\.9\)/);
-assert.match(globalsSource, /\.traffic-light:focus-visible[\s\S]*?outline: 2px solid var\(--app-accent\)/);
+assert.match(globalsSource, /\.traffic-light:focus-visible[\s\S]*?outline: 2px solid var\(--control-focus-color\)/);
 assert.match(globalsSource, /body\[data-window-maximized="true"\]\s+\.app-shell\[data-desktop-shell="true"\]/);
 assert.match(globalsSource, /--segmented-active-translate/);
 assert.match(globalsSource, /--window-corner-radius: 8px/);

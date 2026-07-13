@@ -38,6 +38,7 @@ export function SongSearchParser({
   const skipNextSearchRef = useRef(false);
   const cacheRef = useRef(new Map<string, SongSearchResult[]>());
   const activeResolveRef = useRef<DocumentImportIntent | null>(null);
+  const popupRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => () => activeResolveRef.current?.cancel(), []);
 
@@ -203,6 +204,7 @@ export function SongSearchParser({
 
   function handleKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
     if (event.key === "Tab") {
+      if (!event.shiftKey && expanded && suggestions.length >= 8) return;
       setExpanded(false);
       return;
     }
@@ -252,10 +254,11 @@ export function SongSearchParser({
       contentClassName="gap-5"
     >
       <p className="app-text-subtle max-w-2xl text-sm leading-6">{t("songSearchDescription")}</p>
-      <Label label={t("songSearchInput")}>
+      <Label label={t("songSearchInput")} htmlFor={listboxId + "-input"}>
         <div className="song-search-input-wrap relative">
           <Search className="app-text-subtle pointer-events-none absolute left-4 top-1/2 z-10 size-5 -translate-y-1/2" />
           <Input
+            id={listboxId + "-input"}
             value={query}
             onChange={(event) => {
               activeResolveRef.current?.cancel();
@@ -273,7 +276,10 @@ export function SongSearchParser({
             }}
             onKeyDown={handleKeyDown}
             onFocus={() => setExpanded(suggestions.length > 0)}
-            onBlur={() => window.setTimeout(() => setExpanded(false), 150)}
+            onBlur={(event) => {
+              if (event.relatedTarget instanceof Node && popupRef.current?.contains(event.relatedTarget)) return;
+              window.setTimeout(() => setExpanded(false), 150);
+            }}
             role="combobox"
             aria-expanded={expanded}
             aria-controls={listboxId}
@@ -294,8 +300,13 @@ export function SongSearchParser({
         </div>
         {showResults ? (
           <div
+            ref={popupRef}
             className="song-search-results mt-3 overflow-hidden rounded-xl"
             data-testid="song-search-popup"
+            onBlur={(event) => {
+              if (event.relatedTarget instanceof Node && event.currentTarget.contains(event.relatedTarget)) return;
+              setExpanded(false);
+            }}
           >
             <div className="song-search-results__header">
               <div className="flex min-w-0 items-center gap-2">
@@ -310,6 +321,7 @@ export function SongSearchParser({
               <div
                 id={listboxId}
                 role="listbox"
+                tabIndex={-1}
                 aria-label={t("songSearchTitle")}
                 className="song-search-results__list overscroll-contain"
                 data-testid="song-search-listbox"
@@ -366,7 +378,6 @@ export function SongSearchParser({
                     className="w-full"
                     loading={status === "loading"}
                     disabled={isResolving}
-                    tabIndex={-1}
                     onMouseDown={(event) => event.preventDefault()}
                     onClick={() => void searchMore()}
                     data-testid="song-search-more"
@@ -383,6 +394,7 @@ export function SongSearchParser({
         id={statusId}
         role="status"
         aria-live="polite"
+        aria-atomic="true"
         className={cn(
           showResults ? "sr-only" : "rounded-lg border px-3 py-2 text-sm",
           status === "success" && "status-success",

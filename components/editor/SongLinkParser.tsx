@@ -1,7 +1,7 @@
 "use client";
 
 import { Link2, WandSparkles } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { Input, Label, Section } from "@/components/ui/controls";
 import type { createT } from "@/lib/i18n";
 import type { ParsedSongData } from "@/lib/types";
@@ -39,6 +39,8 @@ export function SongLinkParser({
   autoParseOnMount?: boolean;
 }) {
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const inputId = useId();
+  const statusId = useId();
   const [message, setMessage] = useState<string>(t("parseIdle"));
   const autoParsed = useRef(false);
   const activeIntentRef = useRef<DocumentImportIntent | null>(null);
@@ -121,13 +123,22 @@ export function SongLinkParser({
 
   return (
     <Section title={t("songLink")} eyebrow={t("metadata")}>
-      <Label label={t("musicUrl")}>
+      <Label label={t("musicUrl")} htmlFor={inputId}>
         <div className="flex flex-col gap-2 sm:flex-row">
           <div className="relative flex-1">
             <Link2 className="app-text-subtle pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2" />
             <Input
+              id={inputId}
               value={url}
               onChange={(event) => onUrlChange(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key !== "Enter" || event.nativeEvent.isComposing) return;
+                event.preventDefault();
+                void parseUrl();
+              }}
+              aria-label={t("musicUrl")}
+              aria-describedby={statusId}
+              aria-busy={status === "loading"}
               placeholder="https://music.apple.com/..."
               className="pl-9"
             />
@@ -144,6 +155,10 @@ export function SongLinkParser({
         </div>
       </Label>
       <p
+        id={statusId}
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
         className={cn(
           "rounded-lg border px-3 py-2 text-sm",
           status === "success" && "status-success",

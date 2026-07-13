@@ -34,7 +34,6 @@ import { useMeasuredAutoCanvasHeight } from "@/components/editor/hooks/useMeasur
 import {
   getLiveExportCardValidation,
   useExportCardReadiness,
-  type ExportCardBlockingReason
 } from "@/components/editor/hooks/useExportCardReadiness";
 import { ClickSpark } from "@/components/layout/ClickSpark";
 import { DesktopTitleBar } from "@/components/layout/DesktopTitleBar";
@@ -458,17 +457,18 @@ export function LyricEditor() {
                 className={cn(
                   "grid min-w-0 max-w-full gap-5",
                   isLyricsWorkspace && "h-full min-h-0 grid-rows-[auto_minmax(0,1fr)]",
-                  isLyricsImmersive && "grid-rows-[minmax(0,1fr)] gap-0"
+                  isLyricsImmersive && "grid-rows-[auto_minmax(0,1fr)] gap-2"
                 )}
                 data-editor-presentation={activePresentation}
                 data-lyrics-viewport-mode={isLyricsWorkspace ? "immersive" : undefined}
               >
-                <div className={cn(isExamplesSurfaceOpen && "invisible", isLyricsImmersive && "hidden")}>
+                <div className={cn(isExamplesSurfaceOpen && "invisible")}>
                   <EditorHeader
                     locale={state.locale}
                     t={t}
                     mode="normal"
                     density={usesCompactLyricsChrome ? "compact" : "normal"}
+                    actionsOnly={isLyricsImmersive}
                     onOpenExamples={() => setActiveSurface("examples")}
                     onClearAll={clearAllContent}
                     onOpenSettings={openSettings}

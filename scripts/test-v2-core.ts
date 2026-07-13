@@ -402,7 +402,7 @@ function testAITranslationPrompt() {
       promptLibrary: DEFAULT_AI_SETTINGS.promptLibrary,
       hasApiKey: false
     }),
-    "未配置 API Key",
+    "AI_ERROR:missing_api_key",
     "missing API key validation"
   );
   assertThrows(
@@ -415,7 +415,7 @@ function testAITranslationPrompt() {
       promptLibrary: DEFAULT_AI_SETTINGS.promptLibrary,
       hasApiKey: true
     }),
-    "未配置模型",
+    "AI_ERROR:missing_model",
     "missing model validation"
   );
 }

@@ -100,6 +100,89 @@ for (const target of [
 }
 
 {
+  const attempts: string[] = [];
+  const resolver: PublicUrlResolver = async () => [
+    { address: "2606:4700:4700::1111", family: 6 },
+    { address: "2606:4700:4700::1001", family: 6 },
+    { address: "8.8.8.8", family: 4 },
+    { address: "1.1.1.1", family: 4 }
+  ];
+  const transport: SafeFetchTransport = async ({ address }) => {
+    attempts.push(address.address);
+    if (address.family === 6) throw new Error("IPv6 route unavailable");
+    return response(200, { "content-type": "text/plain" }, "fallback ok");
+  };
+  const result = await safeFetch("https://dual-stack.example/card", {
+    resolver,
+    transport,
+    allowedContentTypes: ["text/plain"]
+  });
+  assert.equal(result.text(), "fallback ok");
+  assert.deepEqual(
+    attempts,
+    ["2606:4700:4700::1111", "8.8.8.8"],
+    "validated IPv6 and IPv4 candidates are interleaved so IPv4 can immediately recover"
+  );
+}
+
+{
+  let transportCount = 0;
+  const resolver: PublicUrlResolver = async () => [
+    { address: "8.8.8.8", family: 4 },
+    { address: "127.0.0.1", family: 4 }
+  ];
+  await expectCode(safeFetch("https://mixed-addresses.example/card", {
+    resolver,
+    transport: async () => {
+      transportCount += 1;
+      return response(200);
+    }
+  }), "UNSAFE_URL");
+  assert.equal(transportCount, 0, "one unsafe DNS candidate blocks the complete hop before networking");
+}
+
+{
+  const candidates = [
+    { address: "8.8.8.8", family: 4 as const },
+    { address: "1.1.1.1", family: 4 as const }
+  ];
+  const error = await safeFetch("https://all-fail.example/card", {
+    resolver: async () => candidates,
+    transport: async ({ address }) => {
+      throw new Error(`connect ${address.address} refused`);
+    }
+  }).then(
+    () => undefined,
+    (reason: unknown) => reason
+  );
+  assert.ok(error instanceof SafeFetchError);
+  assert.equal(error.code, "ALL_ADDRESSES_FAILED");
+  assert.deepEqual(error.candidateFailures.map(({ address }) => address), ["8.8.8.8", "1.1.1.1"]);
+  assert.match(error.message, /8\.8\.8\.8.*1\.1\.1\.1/);
+}
+
+{
+  let resolveCount = 0;
+  const visited: string[] = [];
+  const resolver: PublicUrlResolver = async () => {
+    resolveCount += 1;
+    return resolveCount === 1
+      ? [{ address: "8.8.8.8", family: 4 }]
+      : [{ address: "1.1.1.1", family: 4 }];
+  };
+  const transport: SafeFetchTransport = async ({ url, address }) => {
+    visited.push(`${url.pathname}@${address.address}`);
+    return url.pathname === "/start"
+      ? response(302, { location: "/final" })
+      : response(200, { "content-type": "text/plain" }, "redirect ok");
+  };
+  const result = await safeFetch("https://redirect-reresolve.example/start", { resolver, transport });
+  assert.equal(result.text(), "redirect ok");
+  assert.deepEqual(visited, ["/start@8.8.8.8", "/final@1.1.1.1"]);
+  assert.equal(resolveCount, 2, "redirects must not reuse the previous hop's validated address");
+}
+
+{
   const fixtures = [
     {
       start: "https://spotify.link/card",

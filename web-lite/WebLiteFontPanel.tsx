@@ -25,7 +25,6 @@ const SYSTEM_SERIF_SCHEME: FontScheme = {
 export function WebLiteFontPanel({
   style,
   copy,
-  t,
   onStyleChange,
   onPreviewSchemeChange
 }: {

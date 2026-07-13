@@ -5,11 +5,17 @@ contextBridge.exposeInMainWorld("lyricsCardDesktop", {
   minimizeWindow: () => ipcRenderer.invoke("lyrics-card:window-minimize"),
   toggleMaximizeWindow: () => ipcRenderer.invoke("lyrics-card:window-toggle-maximize"),
   closeWindow: () => ipcRenderer.invoke("lyrics-card:window-close"),
+  confirmWindowClose: () => ipcRenderer.invoke("lyrics-card:window-close-confirm"),
   getWindowState: () => ipcRenderer.invoke("lyrics-card:window-state"),
   onWindowStateChanged: (callback) => {
     const listener = (_event, payload) => callback(payload);
     ipcRenderer.on("lyrics-card:window-state-changed", listener);
     return () => ipcRenderer.removeListener("lyrics-card:window-state-changed", listener);
+  },
+  onWindowCloseRequested: (callback) => {
+    const listener = () => callback();
+    ipcRenderer.on("lyrics-card:window-close-requested", listener);
+    return () => ipcRenderer.removeListener("lyrics-card:window-close-requested", listener);
   },
   loadAppPreferences: () => ipcRenderer.invoke("lyrics-card:app-preferences-load"),
   saveAppPreferences: (preferences) => ipcRenderer.invoke("lyrics-card:app-preferences-save", preferences),
@@ -23,7 +29,7 @@ contextBridge.exposeInMainWorld("lyricsCardDesktop", {
   saveAISettings: (settings) => ipcRenderer.invoke("lyrics-card:ai-settings-save", settings),
   clearAISettingsApiKey: () => ipcRenderer.invoke("lyrics-card:ai-settings-api-key-clear"),
   startAITranslation: (requestId, request) => ipcRenderer.invoke("lyrics-card:ai-translate", requestId, request),
-  cancelAITranslation: (requestId) => ipcRenderer.send("lyrics-card:ai-translate-cancel", requestId),
+  cancelAITranslation: (requestId) => ipcRenderer.invoke("lyrics-card:ai-translate-cancel", requestId),
   onAITranslationChunk: (callback) => {
     const listener = (_event, payload) => callback(payload);
     ipcRenderer.on("lyrics-card:ai-translate-chunk", listener);

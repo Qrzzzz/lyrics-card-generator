@@ -294,14 +294,17 @@ async function assertSongSearchBehavior() {
   await combobox.press("ArrowDown");
   await popup.waitFor({ state: "visible" });
   await combobox.press("Tab");
-  await popup.waitFor({ state: "hidden" });
+  await page.getByTestId("song-search-more").waitFor({ state: "visible" });
   const tabTarget = await page.evaluate(() => ({
     tag: document.activeElement?.tagName ?? "",
     role: document.activeElement?.getAttribute("role") ?? "",
     insidePopup: Boolean(document.activeElement?.closest('[data-testid="song-search-popup"]'))
   }));
-  assert.equal(tabTarget.insidePopup, false, `Tab skips popup options and footer: ${JSON.stringify(tabTarget)}`);
+  assert.equal(tabTarget.insidePopup, true, `Tab reaches the explicit popup footer action: ${JSON.stringify(tabTarget)}`);
   assert.notEqual(tabTarget.role, "option", "Tab never focuses an option");
+  assert.equal(tabTarget.tag, "BUTTON", "Tab reaches the more-results button");
+  await page.keyboard.press("Tab");
+  await popup.waitFor({ state: "hidden" });
 
   await combobox.fill("mouse mock");
   await listbox.waitFor({ state: "visible" });
@@ -336,6 +339,63 @@ async function assertSongSearchBehavior() {
   );
   assert.ok(searchRequests.length >= 3, "search route mock received keyboard, Tab, and mouse queries");
   assert.equal(resolveRequests.length, 2, "mouse and Enter each resolve exactly one mocked result");
+}
+
+async function assertFontPickerBehavior() {
+  await page.locator('button[data-step-id="font"]').click();
+  await page.getByTestId("font-scheme-panel").waitFor({ state: "visible" });
+
+  const cjkTrigger = page.getByTestId("choose-cjk-font");
+  const latinTrigger = page.getByTestId("choose-latin-font");
+  await cjkTrigger.click();
+
+  const cjkDialog = page.getByTestId("font-picker-cjk");
+  await cjkDialog.waitFor({ state: "visible" });
+  const search = page.getByTestId("font-picker-search");
+  await page.waitForFunction(() => document.activeElement?.getAttribute("data-testid") === "font-picker-search");
+  assert.equal(await search.inputValue(), "", "font picker starts with an empty query");
+  assert.equal(await cjkDialog.getByRole("listbox").count(), 0, "font groups do not claim an incomplete listbox interaction model");
+  assert.equal(await cjkDialog.getByRole("option").count(), 0, "native font buttons do not claim option semantics");
+  assert.ok(await cjkDialog.locator('section[aria-labelledby] button[aria-pressed]').count() > 0, "font groups expose labelled native selection buttons");
+
+  await search.fill("Microsoft YaHei");
+  await cjkDialog.getByRole("button", { name: /Microsoft YaHei/ }).waitFor({ state: "visible" });
+  await cjkDialog.getByRole("button", { name: "关闭", exact: true }).click();
+  await cjkDialog.waitFor({ state: "hidden" });
+  await page.waitForFunction(() => document.activeElement?.getAttribute("data-testid") === "choose-cjk-font");
+
+  await cjkTrigger.click();
+  await cjkDialog.waitFor({ state: "visible" });
+  await page.waitForFunction(() => (
+    document.querySelector('[data-testid="font-picker-search"]')?.value === ""
+  ));
+  assert.equal(await search.inputValue(), "", "reopening the same font category clears the previous query");
+
+  const closeButton = cjkDialog.getByRole("button", { name: "关闭", exact: true });
+  await closeButton.focus();
+  await closeButton.press("Shift+Tab");
+  assert.equal(
+    await cjkDialog.locator('section[aria-labelledby] button[aria-pressed]').last().evaluate((node) => document.activeElement === node),
+    true,
+    "font dialog traps reverse Tab on the native button list"
+  );
+  await closeButton.click();
+  await cjkDialog.waitFor({ state: "hidden" });
+  await page.waitForFunction(() => document.activeElement?.getAttribute("data-testid") === "choose-cjk-font");
+
+  await latinTrigger.click();
+  const latinDialog = page.getByTestId("font-picker-latin");
+  await latinDialog.waitFor({ state: "visible" });
+  await page.waitForFunction(() => (
+    document.querySelector('[data-testid="font-picker-search"]')?.value === ""
+  ));
+  assert.equal(await page.getByTestId("font-picker-search").inputValue(), "", "switching font categories does not retain the previous query");
+  assert.equal(await latinDialog.getByRole("listbox").count(), 0, "Latin font groups also use native button semantics");
+  await latinDialog.getByRole("button", { name: "关闭", exact: true }).click();
+  await latinDialog.waitFor({ state: "hidden" });
+  await page.waitForFunction(() => document.activeElement?.getAttribute("data-testid") === "choose-latin-font");
+
+  await page.locator('button[data-step-id="link"]').click();
 }
 
 async function assertFocusedPresentation(width, height) {
@@ -564,8 +624,16 @@ try {
 
   const firstLaunch = page.getByTestId("first-launch-language-dialog");
   await firstLaunch.waitFor({ state: "visible", timeout: 60_000 });
+  const firstLanguageButton = page.locator('[data-testid="first-launch-language"]').first();
+  const lastLanguageButton = page.locator('[data-testid="first-launch-language"]').last();
+  assert.equal(await firstLanguageButton.evaluate((node) => document.activeElement === node), true, "language dialog sets initial focus");
+  assert.equal(await page.getByTestId("editor-surface").evaluate((node) => Boolean(node.closest('[inert]'))), true, "dialog makes the app background inert");
+  await firstLanguageButton.press("Shift+Tab");
+  assert.equal(await lastLanguageButton.evaluate((node) => document.activeElement === node), true, "Shift+Tab wraps inside the language dialog");
   await page.locator('[data-testid="first-launch-language"][data-locale="zh"]').click();
   await firstLaunch.waitFor({ state: "hidden", timeout: 15_000 });
+  assert.equal(await page.getByRole("combobox").first().evaluate((node) => document.activeElement === node), true, "language selection moves focus to song search");
+  assert.equal(await page.getByTestId("editor-surface").evaluate((node) => Boolean(node.closest('[inert]'))), false, "background inertness ends after dialog exit");
 
   await page.locator('[data-testid="editor-surface"] [data-testid="settings-button"]').click();
   await waitForVisible("settings-surface");
@@ -602,6 +670,11 @@ try {
   await page.getByTestId("ai-api-key-input").fill("sk-desktop-regression");
   await page.getByTestId("clear-api-key").click();
   await waitForVisible("settings-confirm-overlay");
+  const cancelConfirmation = page.getByTestId("settings-confirm-cancel");
+  await page.waitForFunction(() => document.activeElement?.getAttribute("data-testid") === "settings-confirm-cancel");
+  assert.equal(await cancelConfirmation.evaluate((node) => document.activeElement === node), true, "confirm dialog focuses the safe action");
+  await cancelConfirmation.press("Shift+Tab");
+  assert.equal(await page.getByTestId("confirm-clear-api-key").evaluate((node) => document.activeElement === node), true, "confirm dialog traps reverse Tab");
   await page.getByTestId("confirm-clear-api-key").click();
   await page.getByTestId("ai-api-key-input").waitFor({ state: "visible" });
   await page.getByTestId("settings-history-back").click();
@@ -636,6 +709,7 @@ try {
   ));
   assert.deepEqual(minimumWindowSize, [1000, 700], "desktop window preserves the 1000px minimum width");
   await assertSongSearchBehavior();
+  await assertFontPickerBehavior();
 
   const focusedSizes = [
     { width: 1000, height: 700 },

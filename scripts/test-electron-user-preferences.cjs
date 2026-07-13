@@ -14,6 +14,9 @@ const valid = normalizeStoredPreferences({
   }
 });
 assert.equal(valid.locale, "zh-TW");
+assert.equal(valid.schemaVersion, 2);
+assert.equal(valid.revision, 0);
+assert.equal(valid.updatedAt, 0);
 assert.equal(valid.userSettings.firstLaunchLanguageSelected, true);
 assert.equal(valid.userSettings.reduceMotionEnabled, true);
 assert.equal(valid.userSettings.defaultShowGeneratedWatermark, true);
@@ -26,5 +29,7 @@ const mainSource = readFileSync(resolve("electron/main.js"), "utf8");
 assert.match(mainSource, /let appPreferencesWriteQueue = Promise\.resolve\(\)/);
 assert.match(mainSource, /await enqueueAppPreferencesWrite\(preferences\)/);
 assert.match(mainSource, /appPreferencesWriteQueue[\s\S]*?\.catch\(\(\) => undefined\)[\s\S]*?\.then\(\(\) => writeAppPreferences\(preferences\)\)/);
+assert.match(mainSource, /current\.revision > preferences\.revision/);
+assert.match(mainSource, /fs\.rename\(temporary, target\)/);
 
 console.log(JSON.stringify({ ok: true, preferenceTests: 12 }, null, 2));
