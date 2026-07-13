@@ -20,7 +20,7 @@ export async function POST(request: Request) {
   try {
     body = (await request.json()) as TranslateBody;
   } catch {
-    return NextResponse.json({ error: "请求格式无效。" }, { status: 400 });
+    return errorResponse("invalid_request", 400);
   }
 
   const prompt = body.prompt?.trim() ?? "";
@@ -28,20 +28,20 @@ export async function POST(request: Request) {
   const apiKey = settings?.apiKey?.trim() ?? "";
 
   if (!prompt) {
-    return NextResponse.json({ error: "歌词为空，请先输入歌词。" }, { status: 400 });
+    return errorResponse("empty_prompt", 400);
   }
   if (!apiKey) {
-    return NextResponse.json({ error: "未配置 API Key，请先前往设置页配置。" }, { status: 400 });
+    return errorResponse("missing_api_key", 400);
   }
   if (!settings?.model?.trim()) {
-    return NextResponse.json({ error: "未配置模型，请先前往设置页填写模型名称。" }, { status: 400 });
+    return errorResponse("missing_model", 400);
   }
 
   let endpoint: string;
   try {
     endpoint = getChatCompletionsUrl(settings.baseUrl);
   } catch {
-    return NextResponse.json({ error: "Base URL 无效，请检查设置。" }, { status: 400 });
+    return errorResponse("invalid_base_url", 400);
   }
 
   const requestBody = buildChatCompletionsRequestBody({
@@ -65,14 +65,11 @@ export async function POST(request: Request) {
     });
 
     if (!response.ok) {
-      return NextResponse.json(
-        { error: await readProviderError(response) },
-        { status: response.status }
-      );
+      return errorResponse("provider_error", response.status, await readProviderError(response));
     }
     const contentType = response.headers.get("content-type") || "";
     if (!response.body) {
-      return NextResponse.json({ error: "接口返回为空，请重试或更换模型。" }, { status: 502 });
+      return errorResponse("empty_stream", 502);
     }
 
     if (!contentType.includes("text/event-stream")) {
@@ -81,7 +78,7 @@ export async function POST(request: Request) {
         return NextResponse.json(body.data, { status: 200 });
       }
 
-      return NextResponse.json({ error: getProviderErrorMessage(body, 502) }, { status: 502 });
+      return errorResponse("invalid_response", 502, getProviderErrorMessage(body, 502));
     }
 
     return new Response(response.body, {
@@ -93,11 +90,12 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     if (error instanceof DOMException && error.name === "AbortError") {
-      return NextResponse.json({ error: "AI 翻译已取消。" }, { status: 499 });
+      return errorResponse("cancelled", 499);
     }
-    return NextResponse.json(
-      { error: "网络请求失败，请检查 Base URL、网络连接和接口可用性。" },
-      { status: 502 }
-    );
+    return errorResponse("network", 502);
   }
+}
+
+function errorResponse(code: string, status: number, diagnostic?: string) {
+  return NextResponse.json({ error: { code, diagnostic } }, { status });
 }

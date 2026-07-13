@@ -48,6 +48,7 @@ body {
   --app-text-primary: #ffffff;
   --app-text-secondary: rgba(255, 255, 255, 0.68);
   --app-accent: #7c3aed;
+  --control-focus-color: #fef08a;
   --app-font-family: inherit;
   --app-fg: 255 255 255;
   --app-muted: 255 255 255 / 0.68;
@@ -93,7 +94,8 @@ body {
   --app-text-secondary: #4b5563;
   --app-fg: 17 24 39;
   --app-muted: 75 85 99;
-  --app-subtle: 107 114 128 / 0.76;
+  --app-subtle: 75 85 99;
+  --control-focus-color: #1d4ed8;
   --panel-bg: 255 255 255 / 0.86;
   --elevated-panel-bg: 255 255 255 / 0.98;
   --panel-border: 17 24 39 / 0.12;
@@ -122,7 +124,8 @@ body {
   --app-text-secondary: rgba(226, 232, 240, 0.72);
   --app-fg: 248 250 252;
   --app-muted: 226 232 240 / 0.72;
-  --app-subtle: 148 163 184 / 0.62;
+  --app-subtle: 148 163 184;
+  --control-focus-color: #fef08a;
   --panel-bg: 15 23 42 / 0.72;
   --elevated-panel-bg: 15 23 42 / 0.98;
   --panel-border: 148 163 184 / 0.18;
@@ -140,7 +143,8 @@ body {
   --app-accent: #93c5fd;
   --app-fg: 248 250 252;
   --app-muted: 226 232 240 / 0.74;
-  --app-subtle: 203 213 225 / 0.58;
+  --app-subtle: 203 213 225;
+  --control-focus-color: #fef08a;
   --panel-bg: 15 23 42 / 0.34;
   --elevated-panel-bg: 17 24 39 / 0.94;
   --panel-border: 255 255 255 / 0.16;
@@ -170,7 +174,8 @@ body {
   --app-accent: #2563eb;
   --app-fg: 17 24 39;
   --app-muted: 55 65 81 / 0.74;
-  --app-subtle: 75 85 99 / 0.58;
+  --app-subtle: 55 65 81;
+  --control-focus-color: #1d4ed8;
   --panel-bg: 255 255 255 / 0.38;
   --elevated-panel-bg: 250 252 255 / 0.94;
   --panel-border: 15 23 42 / 0.14;
@@ -375,7 +380,7 @@ body[data-window-maximized="true"] .app-shell[data-desktop-shell="true"] {
 }
 
 .traffic-light:focus-visible {
-  outline: 2px solid var(--app-accent);
+  outline: 2px solid var(--control-focus-color);
   outline-offset: 3px;
 }
 
@@ -453,7 +458,8 @@ body[data-window-maximized="true"] .app-shell[data-desktop-shell="true"] {
 }
 
 .app-button:focus-visible {
-  outline: none;
+  outline: 2px solid var(--control-focus-color);
+  outline-offset: 2px;
   border-color: var(--control-focus-border);
   box-shadow: 0 0 0 4px var(--control-focus-ring);
 }
@@ -486,6 +492,8 @@ body[data-window-maximized="true"] .app-shell[data-desktop-shell="true"] {
 }
 
 .control-focus:focus-visible {
+  outline: 2px solid var(--control-focus-color);
+  outline-offset: 2px;
   border-color: var(--control-focus-border);
   box-shadow: 0 0 0 4px var(--control-focus-ring);
 }
@@ -1220,6 +1228,8 @@ button {
 
 .field-shell:focus,
 .field-shell:focus-visible {
+  outline: 2px solid var(--control-focus-color);
+  outline-offset: 2px;
   border-color: var(--control-focus-border);
   box-shadow: 0 0 0 4px var(--control-focus-ring);
 }
@@ -1315,7 +1325,53 @@ button {
 }
 
 .range-slider:focus-visible {
+  outline: 2px solid var(--control-focus-color);
+  outline-offset: 3px;
   box-shadow: 0 0 0 4px var(--control-focus-ring);
+}
+
+@media (forced-colors: active) {
+  .app-shell {
+    --control-focus-color: Highlight;
+    --control-focus-border: Highlight;
+    --control-focus-ring: transparent;
+    --app-accent: Highlight;
+    forced-color-adjust: auto;
+  }
+
+  .app-button:focus-visible,
+  .control-focus:focus-visible,
+  .field-shell:focus-visible,
+  .range-slider:focus-visible,
+  .traffic-light:focus-visible,
+  .example-song-card:focus-visible {
+    outline: 3px solid Highlight !important;
+    outline-offset: 3px;
+    box-shadow: none !important;
+  }
+
+  [aria-checked="true"],
+  [aria-selected="true"],
+  [aria-pressed="true"],
+  [data-selected="true"] {
+    border: 2px solid Highlight !important;
+    outline: 1px solid CanvasText;
+    outline-offset: -4px;
+  }
+
+  .status-danger,
+  [aria-invalid="true"] {
+    border: 2px solid CanvasText !important;
+    text-decoration: underline;
+    text-decoration-style: wavy;
+  }
+
+  :disabled,
+  [aria-disabled="true"] {
+    color: GrayText !important;
+    border-style: dashed !important;
+    opacity: 1 !important;
+  }
 }
 
 .range-slider:disabled {

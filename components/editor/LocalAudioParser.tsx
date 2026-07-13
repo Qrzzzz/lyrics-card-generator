@@ -118,6 +118,9 @@ export function LocalAudioParser({
         ) : null}
       </div>
       <p
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
         className={cn(
           "rounded-lg border px-3 py-2 text-sm",
           status === "success" && "status-success",

@@ -69,6 +69,8 @@ export function SettingsStepper({
 }: SettingsStepperProps) {
   const reduceMotion = useAppReducedMotion();
   const previousStepRef = useRef(currentStep);
+  const visitedStepsRef = useRef(new Set([currentStep]));
+  visitedStepsRef.current.add(currentStep);
   const stepsGridRef = useRef<HTMLDivElement | null>(null);
   const stepsMeasureRef = useRef<HTMLDivElement | null>(null);
   const stepDirection: StepDirection = currentStep >= previousStepRef.current ? 1 : -1;
@@ -152,7 +154,9 @@ export function SettingsStepper({
         >
           {steps.map((step, index) => {
             const isActive = index === currentStep;
-            const isComplete = index < currentStep;
+            const isVisited = visitedStepsRef.current.has(index);
+            const isComplete = step.isComplete === true;
+            const stepState = isActive ? "active" : isComplete ? "complete" : isVisited ? "visited" : "upcoming";
 
             return (
               <button
@@ -162,6 +166,9 @@ export function SettingsStepper({
                 onClick={() => goToStep(index)}
                 aria-current={isActive ? "step" : undefined}
                 data-active={isActive ? "true" : "false"}
+                data-visited={isVisited ? "true" : "false"}
+                data-complete={isComplete ? "true" : "false"}
+                data-step-state={stepState}
                 className={cn(
                   "group flex min-h-10 min-w-0 items-center gap-2 rounded-lg border text-left transition",
                   compactChrome
@@ -171,6 +178,8 @@ export function SettingsStepper({
                       : "px-2.5 py-2",
                   isActive
                     ? "border-[rgb(var(--panel-border))] bg-[rgb(var(--button-bg-hover))] app-text-primary shadow-[0_16px_42px_rgba(0,0,0,0.22)]"
+                    : isVisited
+                      ? "border-[var(--control-selected-border)] bg-[rgb(var(--button-bg))] app-text-primary hover:bg-[rgb(var(--button-bg-hover))]"
                     : "border-[rgb(var(--panel-border))] bg-[rgb(var(--button-bg))] app-text-muted hover:bg-[rgb(var(--button-bg-hover))] hover:text-[rgb(var(--app-fg))]"
                 )}
               >

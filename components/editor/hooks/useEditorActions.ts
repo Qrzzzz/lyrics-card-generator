@@ -4,7 +4,10 @@ import { useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { normalizeCardStyle } from "@/lib/card-style-normalize";
 import { clearLyricContent, hasClearableLyricContent } from "@/lib/clear-content";
-import { applyEditorStyleChange } from "@/lib/editor/apply-style-change";
+import {
+  applyEditorStyleChange,
+  isDocumentSemanticStyleChange
+} from "@/lib/editor/apply-style-change";
 import { exportNodeAsPng } from "@/lib/export-image";
 import { createExportSnapshot, type ExportSnapshot } from "@/lib/export-snapshot";
 import {
@@ -171,6 +174,10 @@ export function useEditorActions({
   }
 
   function handleStyleChange(nextStyle: CardStyle) {
+    if (isDocumentSemanticStyleChange(currentDocumentRef.current.style, nextStyle)) {
+      applyDocumentMutation((current) => applyEditorStyleChange(current, nextStyle));
+      return;
+    }
     setState((current) => applyEditorStyleChange(current, nextStyle));
   }
 

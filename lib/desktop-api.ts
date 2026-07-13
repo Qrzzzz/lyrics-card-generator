@@ -4,8 +4,8 @@ import type {
   DesktopAIStreamEvent,
   SaveAISettingsInput
 } from "@/lib/ai/types";
-import type { Locale } from "@/lib/types";
-import type { EffectiveUiThemeId, UserSettings } from "@/lib/settings/types";
+import type { EffectiveUiThemeId } from "@/lib/settings/types";
+import type { AppPreferencesRecord } from "@/lib/settings/app-preferences-reconciliation";
 
 export type SystemFontOption = {
   label: string;
@@ -29,10 +29,12 @@ export type LyricsCardDesktopApi = {
   minimizeWindow: () => Promise<boolean>;
   toggleMaximizeWindow: () => Promise<DesktopWindowState>;
   closeWindow: () => Promise<boolean>;
+  confirmWindowClose: () => Promise<boolean>;
   getWindowState: () => Promise<DesktopWindowState>;
   onWindowStateChanged: (callback: (state: DesktopWindowState) => void) => () => void;
-  loadAppPreferences: () => Promise<{ locale: Locale; userSettings: UserSettings } | null>;
-  saveAppPreferences: (preferences: { locale: Locale; userSettings: UserSettings }) => Promise<boolean>;
+  onWindowCloseRequested: (callback: () => void) => () => void;
+  loadAppPreferences: () => Promise<AppPreferencesRecord | null>;
+  saveAppPreferences: (preferences: AppPreferencesRecord) => Promise<boolean>;
   listSystemFonts: () => Promise<SystemFontOption[]>;
   pickFont: () => Promise<string | null>;
   openExternal: (url: string) => Promise<boolean>;
@@ -43,7 +45,7 @@ export type LyricsCardDesktopApi = {
   saveAISettings: (settings: SaveAISettingsInput) => Promise<AISettingsSummary>;
   clearAISettingsApiKey: () => Promise<AISettingsSummary>;
   startAITranslation: (requestId: string, request: AITranslationRequest) => Promise<string>;
-  cancelAITranslation: (requestId: string) => void;
+  cancelAITranslation: (requestId: string) => Promise<{ cancelled: boolean; active: boolean }>;
   onAITranslationChunk: (callback: (event: DesktopAIStreamEvent) => void) => () => void;
 };
 

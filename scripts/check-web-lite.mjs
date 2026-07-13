@@ -21,7 +21,7 @@ try {
     readFile(path.join(projectRoot, "web-lite", "WebLiteEditor.tsx"), "utf8")
   ]);
 
-  if (generated !== committed) {
+  if (normalizeLineEndings(generated) !== normalizeLineEndings(committed)) {
     throw new Error("index.html is stale. Run npm run web-lite:build and commit the generated file.");
   }
 
@@ -89,4 +89,8 @@ try {
   console.log("Web Lite generated artifact is current and self-contained apart from approved public assets.");
 } finally {
   await rm(temporaryDirectory, { recursive: true, force: true });
+}
+
+function normalizeLineEndings(value) {
+  return value.replace(/\r\n?/g, "\n");
 }

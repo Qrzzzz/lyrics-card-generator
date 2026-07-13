@@ -38,6 +38,7 @@ import {
 import { createT } from "@/lib/i18n";
 import { DEFAULT_PALETTE } from "@/lib/palette-background";
 import { resolveUiAccentColor } from "@/lib/settings/accent";
+import { documentLanguageForLocale } from "@/lib/locale-language";
 import {
   DEFAULT_USER_SETTINGS,
   getExportPixelRatio,
@@ -140,7 +141,7 @@ export function WebLiteEditor() {
   });
 
   useEffect(() => {
-    document.documentElement.lang = locale === "zh" ? "zh-CN" : "en";
+    document.documentElement.lang = documentLanguageForLocale(locale);
     document.title = locale === "zh" ? "歌词卡片生成器 · Web Lite" : "Lyrics Card Generator · Web Lite";
     document.body.dataset.uiTheme = "dark";
     document.body.dataset.desktopShell = "false";

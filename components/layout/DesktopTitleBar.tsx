@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { APP_VERSION } from "@/lib/app-version";
 import { getLyricsCardDesktopApi, type LyricsCardDesktopApi } from "@/lib/desktop-api";
 import { createT } from "@/lib/i18n";
+import { shutdownCoordinator } from "@/lib/persistence/shutdown-coordinator";
 import type { Locale } from "@/lib/types";
 
 type DesktopTitleBarProps = {
@@ -55,6 +56,19 @@ export function DesktopTitleBar({ locale }: DesktopTitleBarProps) {
     };
   }, [desktop, maximized]);
 
+  useEffect(() => {
+    if (!desktop) return undefined;
+    const handleCloseRequest = async () => {
+      try {
+        await shutdownCoordinator.flushAll();
+        await desktop.confirmWindowClose();
+      } catch {
+        window.alert(closeFailureMessages[locale]);
+      }
+    };
+    return desktop.onWindowCloseRequested(() => void handleCloseRequest());
+  }, [desktop, locale]);
+
   if (!desktop) {
     return null;
   }
@@ -101,3 +115,12 @@ export function DesktopTitleBar({ locale }: DesktopTitleBarProps) {
     </header>
   );
 }
+
+const closeFailureMessages: Record<Locale, string> = {
+  zh: "设置保存失败，应用尚未关闭。请检查磁盘状态后重试。",
+  "zh-TW": "設定儲存失敗，應用程式尚未關閉。請檢查磁碟狀態後重試。",
+  en: "Settings could not be saved, so the app remains open. Check the disk and try again.",
+  fr: "Les paramètres n’ont pas pu être enregistrés. L’application reste ouverte. Vérifiez le disque et réessayez.",
+  ja: "設定を保存できなかったため、アプリは開いたままです。ディスクを確認して再試行してください。",
+  es: "No se pudo guardar la configuración, por lo que la aplicación sigue abierta. Comprueba el disco e inténtalo de nuevo."
+};

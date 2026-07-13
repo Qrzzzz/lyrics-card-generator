@@ -2,6 +2,7 @@ import { getLyricsCardDesktopApi } from "@/lib/desktop-api";
 import { getChatCompletionMessage, getProviderErrorMessage, readProviderResponseBody } from "@/lib/ai/provider-response";
 import { DEFAULT_AI_SETTINGS } from "@/lib/ai/types";
 import { normalizeAISettings } from "@/lib/ai/settings-normalize";
+import type { AIErrorCode } from "@/lib/ai/error-copy";
 import type {
   AISettings,
   AISettingsSummary,
@@ -15,8 +16,9 @@ type BrowserStoredSettings = AISettings;
 let browserSessionApiKey = "";
 
 export class AITranslationError extends Error {
-  constructor(message: string, readonly code: string = "unknown") {
-    super(message);
+  constructor(message: string, readonly code: AIErrorCode = "unknown", readonly diagnostic?: string) {
+    const detail = diagnostic ?? (code === "provider_error" ? message : undefined);
+    super(`AI_ERROR:${code}${detail ? `:${detail}` : ""}`);
     this.name = "AITranslationError";
   }
 }
@@ -83,7 +85,7 @@ export async function streamAITranslation(params: AITranslationStreamParams) {
   });
 
   if (!response.ok) {
-    throw new AITranslationError(await readErrorMessage(response), "request_failed");
+    throw await readAIError(response);
   }
 
   params.onStatus?.("connected");
@@ -92,13 +94,13 @@ export async function streamAITranslation(params: AITranslationStreamParams) {
 
 export function validateConfiguredSettings(settings: AISettingsSummary) {
   if (!settings.hasApiKey) {
-    throw new AITranslationError("未配置 API Key，请先前往设置页配置。", "missing_api_key");
+    throw new AITranslationError("Missing API key.", "missing_api_key");
   }
   if (!settings.model.trim()) {
-    throw new AITranslationError("未配置模型，请先前往设置页填写模型名称。", "missing_model");
+    throw new AITranslationError("Missing model.", "missing_model");
   }
   if (!settings.baseUrl.trim()) {
-    throw new AITranslationError("未配置 Base URL，请先前往设置页配置。", "missing_base_url");
+    throw new AITranslationError("Missing Base URL.", "missing_base_url");
   }
 }
 
@@ -107,10 +109,11 @@ async function streamFromDesktop(
   params: AITranslationStreamParams
 ) {
   const requestId = crypto.randomUUID();
+  let aborted = Boolean(params.signal?.aborted);
   let accumulated = "";
   let accumulatedReasoning = "";
   const unsubscribe = desktop.onAITranslationChunk((event) => {
-    if (event.requestId !== requestId) {
+    if (aborted || event.requestId !== requestId) {
       return;
     }
     if (event.kind === "status" && event.phase) {
@@ -128,14 +131,20 @@ async function streamFromDesktop(
     accumulated += event.delta;
     params.onDelta?.(event.delta, accumulated);
   });
-  const abort = () => desktop.cancelAITranslation(requestId);
-  params.signal?.addEventListener("abort", abort, { once: true });
+  const abort = () => {
+    aborted = true;
+    void desktop.cancelAITranslation(requestId);
+  };
+  if (params.signal?.aborted) abort();
+  else params.signal?.addEventListener("abort", abort, { once: true });
 
   try {
+    if (aborted) throw createAbortError();
     const finalContent = await desktop.startAITranslation(requestId, {
       prompt: params.prompt,
       reasoning: params.reasoning
     });
+    if (aborted) throw createAbortError();
     return finalContent || accumulated;
   } catch (error) {
     throw normalizeError(error);
@@ -143,6 +152,10 @@ async function streamFromDesktop(
     params.signal?.removeEventListener("abort", abort);
     unsubscribe();
   }
+}
+
+function createAbortError() {
+  return new DOMException("The AI translation request was aborted.", "AbortError");
 }
 
 async function consumeOpenAIStream(
@@ -161,13 +174,13 @@ async function consumeOpenAIStream(
       params.onDelta?.(content, content);
     }
     if (!content && body.kind !== "json") {
-      throw new AITranslationError("AI 接口返回了无法解析的响应。", "request_failed");
+      throw new AITranslationError("Invalid provider response.", "invalid_response");
     }
     return content;
   }
 
   if (!response.body) {
-    throw new AITranslationError("接口未返回可读取的数据流。", "empty_stream");
+    throw new AITranslationError("Empty provider stream.", "empty_stream");
   }
 
   const reader = response.body.getReader();
@@ -228,8 +241,9 @@ function readBrowserSettings(): BrowserStoredSettings {
   try {
     const raw = window.localStorage.getItem(BROWSER_SETTINGS_KEY) || "{}";
     const parsed = JSON.parse(raw) as Partial<BrowserStoredSettings> & { apiKey?: unknown };
-    const { apiKey: _legacyApiKey, ...settingsWithoutSecret } = parsed;
-    const normalized = normalizeAISettings(settingsWithoutSecret);
+    const settingsWithoutSecret = { ...parsed };
+    delete settingsWithoutSecret.apiKey;
+    const normalized = normalizeAISettings(settingsWithoutSecret as Partial<SaveAISettingsInput>);
     // Migrate old development builds that persisted a plaintext key. Never copy it into memory.
     if (Object.prototype.hasOwnProperty.call(parsed, "apiKey")) {
       window.localStorage.setItem(BROWSER_SETTINGS_KEY, JSON.stringify(normalized));
@@ -246,10 +260,27 @@ function normalizeError(error: unknown) {
   if (error instanceof AITranslationError || (error instanceof DOMException && error.name === "AbortError")) {
     return error;
   }
-  const message = error instanceof Error ? error.message : "AI 翻译请求失败。";
-  return new AITranslationError(message || "AI 翻译请求失败。", "request_failed");
+  const message = error instanceof Error ? error.message : "AI translation request failed.";
+  if (/timeout/i.test(message)) return new AITranslationError(message, "timeout");
+  if (/network|fetch/i.test(message)) return new AITranslationError(message, "network");
+  return new AITranslationError(message, "request_failed");
 }
 
-async function readErrorMessage(response: Response) {
-  return getProviderErrorMessage(await readProviderResponseBody(response), response.status);
+async function readAIError(response: Response) {
+  const body = await readProviderResponseBody(response);
+  if (body.kind === "json" && body.data && typeof body.data === "object") {
+    const error = (body.data as { error?: { code?: unknown; diagnostic?: unknown } }).error;
+    if (error && typeof error.code === "string") {
+      return new AITranslationError(
+        "AI request failed.",
+        error.code as AIErrorCode,
+        typeof error.diagnostic === "string" ? error.diagnostic : undefined
+      );
+    }
+  }
+  return new AITranslationError(
+    "Provider request failed.",
+    "provider_error",
+    getProviderErrorMessage(body, response.status)
+  );
 }

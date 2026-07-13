@@ -1,8 +1,8 @@
 "use client";
 
-import { createPortal } from "react-dom";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useAppReducedMotion } from "@/components/motion/AppMotionProvider";
+import { AccessibleDialog } from "@/components/ui/AccessibleDialog";
 import { getLyricsCardDesktopApi, type SystemFontOption } from "@/lib/desktop-api";
 import {
   FONT_SCHEME_PRESETS,
@@ -64,6 +64,9 @@ export function FontSchemePanel({ style, onStyleChange, onPreviewSchemeChange, s
     latinFontFamily: currentScheme.latinFontFamily
   }));
   const [pickerCategory, setPickerCategory] = useState<FontCategory | null>(null);
+  const [pickerQuery, setPickerQuery] = useState("");
+  const lastPickerCategoryRef = useRef<FontCategory>("cjk");
+  if (pickerCategory) lastPickerCategoryRef.current = pickerCategory;
   const [systemFonts, setSystemFonts] = useState<SystemFontOption[]>([]);
   const [systemFontStatus, setSystemFontStatus] = useState("");
 
@@ -118,6 +121,11 @@ export function FontSchemePanel({ style, onStyleChange, onPreviewSchemeChange, s
     });
     onPreviewSchemeChange?.(currentScheme);
     requestAnimationFrame(() => customSectionRef.current?.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "center" }));
+  }
+
+  function openFontPicker(category: FontCategory) {
+    setPickerQuery("");
+    setPickerCategory(category);
   }
 
   function selectCustomFont(font: FontFamilyOption) {
@@ -198,15 +206,17 @@ export function FontSchemePanel({ style, onStyleChange, onPreviewSchemeChange, s
       <PanelBlock title={t("fontSchemeCustomTitle")} blockRef={customSectionRef}>
         <div className="grid gap-3 md:grid-cols-2">
           <FontChoice
+            testId="choose-cjk-font"
             label={t("fontSchemeCjkFont")}
             value={customDraft.cjkFontFamily}
-            onChoose={() => setPickerCategory("cjk")}
+            onChoose={() => openFontPicker("cjk")}
             chooseLabel={t("fontSchemeChoose")}
           />
           <FontChoice
+            testId="choose-latin-font"
             label={t("fontSchemeLatinFont")}
             value={customDraft.latinFontFamily}
-            onChoose={() => setPickerCategory("latin")}
+            onChoose={() => openFontPicker("latin")}
             chooseLabel={t("fontSchemeChoose")}
           />
         </div>
@@ -220,17 +230,18 @@ export function FontSchemePanel({ style, onStyleChange, onPreviewSchemeChange, s
         </button>
       </PanelBlock>
 
-      {pickerCategory ? (
-        <FontPickerDialog
-          category={pickerCategory}
-          selectedFamily={pickerCategory === "cjk" ? customDraft.cjkFontFamily : customDraft.latinFontFamily}
-          systemFonts={systemFonts}
-          status={systemFontStatus}
-          onSelect={selectCustomFont}
-          onClose={() => setPickerCategory(null)}
-          t={t}
-        />
-      ) : null}
+      <FontPickerDialog
+        open={pickerCategory !== null}
+        category={lastPickerCategoryRef.current}
+        query={pickerQuery}
+        selectedFamily={pickerCategory === "cjk" ? customDraft.cjkFontFamily : customDraft.latinFontFamily}
+        systemFonts={systemFonts}
+        status={systemFontStatus}
+        onQueryChange={setPickerQuery}
+        onSelect={selectCustomFont}
+        onClose={() => setPickerCategory(null)}
+        t={t}
+      />
     </section>
   );
 }
@@ -272,11 +283,13 @@ function FontSummaryRow({ label, value }: { label: string; value: string }) {
 }
 
 function FontChoice({
+  testId,
   label,
   value,
   chooseLabel,
   onChoose
 }: {
+  testId: string;
   label: string;
   value: string;
   chooseLabel: string;
@@ -287,6 +300,7 @@ function FontChoice({
       <p className="app-text-primary text-sm font-medium">{label}</p>
       <button
         type="button"
+        data-testid={testId}
         onClick={onChoose}
         className="app-button flex min-h-11 items-center justify-between gap-3 rounded-lg px-3 py-2 text-left text-sm"
       >
@@ -298,23 +312,28 @@ function FontChoice({
 }
 
 function FontPickerDialog({
+  open,
   category,
+  query,
   selectedFamily,
   systemFonts,
   status,
+  onQueryChange,
   onSelect,
   onClose,
   t
 }: {
+  open: boolean;
   category: FontCategory;
+  query: string;
   selectedFamily: string;
   systemFonts: SystemFontOption[];
   status: string;
+  onQueryChange: (query: string) => void;
   onSelect: (font: FontFamilyOption) => void;
   onClose: () => void;
   t: ReturnType<typeof createT>;
 }) {
-  const [query, setQuery] = useState("");
   const options = useMemo(() => buildFontOptions(category, systemFonts), [category, systemFonts]);
   const filtered = useMemo(() => {
     const normalized = query.trim().toLocaleLowerCase();
@@ -326,26 +345,11 @@ function FontPickerDialog({
   const recommended = filtered.filter((font) => recommendedIds.has(font.id));
   const allFonts = filtered.filter((font) => !recommendedIds.has(font.id));
 
-  useEffect(() => {
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") onClose();
-    }
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [onClose]);
-
-  if (typeof document === "undefined") return null;
-
-  return createPortal(
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4" role="presentation" onMouseDown={(event) => {
-      if (event.target === event.currentTarget) onClose();
-    }}>
+  return (
+    <AccessibleDialog open={open} labelledBy="font-picker-title" onClose={onClose} initialFocusSelector='[data-testid="font-picker-search"]' overlayClassName="z-[160] bg-black/70" panelClassName="settings-surface flex max-h-[86vh] max-w-3xl flex-col overflow-hidden rounded-2xl border">
       <section
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="font-picker-title"
         data-testid={`font-picker-${category}`}
-        className="settings-surface flex max-h-[86vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border"
+        className="flex min-h-0 flex-1 flex-col"
       >
         <header className="flex items-start justify-between gap-4 border-b border-[rgb(var(--panel-border))] p-5">
           <div>
@@ -360,50 +364,51 @@ function FontPickerDialog({
         </header>
         <div className="grid min-h-0 gap-4 overflow-y-auto p-5">
           <input
-            autoFocus
+            data-testid="font-picker-search"
+            aria-label={t("fontSchemeSearchPlaceholder")}
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
+            onChange={(event) => onQueryChange(event.target.value)}
             placeholder={t("fontSchemeSearchPlaceholder")}
             className="field-shell h-11 w-full rounded-lg px-3 text-sm"
           />
           {recommended.length > 0 ? (
-            <FontOptionGroup title={t("fontSchemeRecommendedFonts")} fonts={recommended} selectedFamily={selectedFamily} onSelect={onSelect} />
+            <FontOptionGroup headingId="font-picker-recommended-heading" title={t("fontSchemeRecommendedFonts")} fonts={recommended} selectedFamily={selectedFamily} onSelect={onSelect} />
           ) : null}
           {allFonts.length > 0 ? (
-            <FontOptionGroup title={t("fontSchemeAllFonts")} fonts={allFonts} selectedFamily={selectedFamily} onSelect={onSelect} />
+            <FontOptionGroup headingId="font-picker-all-heading" title={t("fontSchemeAllFonts")} fonts={allFonts} selectedFamily={selectedFamily} onSelect={onSelect} />
           ) : null}
           {filtered.length === 0 ? <p className="app-text-muted rounded-lg border border-[rgb(var(--panel-border))] p-4 text-sm">{t("customFontNoResults")}</p> : null}
           {status ? <p className="app-text-subtle text-sm">{status}</p> : null}
         </div>
       </section>
-    </div>,
-    document.body
+    </AccessibleDialog>
   );
 }
 
 function FontOptionGroup({
+  headingId,
   title,
   fonts,
   selectedFamily,
   onSelect
 }: {
+  headingId: string;
   title: string;
   fonts: FontFamilyOption[];
   selectedFamily: string;
   onSelect: (font: FontFamilyOption) => void;
 }) {
   return (
-    <div className="grid gap-2">
-      <h3 className="app-text-primary text-sm font-semibold">{title}</h3>
-      <div className="grid gap-2" role="listbox">
+    <section className="grid gap-2" aria-labelledby={headingId}>
+      <h3 id={headingId} className="app-text-primary text-sm font-semibold">{title}</h3>
+      <div className="grid gap-2">
         {fonts.map((font) => {
           const selected = selectedFamily === font.family;
           return (
             <button
               key={font.id}
               type="button"
-              role="option"
-              aria-selected={selected}
+              aria-pressed={selected}
               onClick={() => onSelect(font)}
               className={cn(
                 "grid gap-2 rounded-xl border p-3 text-left transition sm:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] sm:items-center",
@@ -421,7 +426,7 @@ function FontOptionGroup({
           );
         })}
       </div>
-    </div>
+    </section>
   );
 }
 

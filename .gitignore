@@ -8,6 +8,7 @@ output/playwright/
 .playwright-cli/
 playwright-report/
 test-results/
+coverage/
 tmp/example-covers/
 tmp/example-previews/
 tmp/example-palette-generator/

@@ -51,6 +51,10 @@ export type SafeFetchTransportResponse = {
 
 export type SafeFetchTransport = (request: SafeFetchTransportRequest) => Promise<SafeFetchTransportResponse>;
 
+export type SafeFetchCandidateFailure = ResolvedAddress & {
+  message: string;
+};
+
 export class SafeFetchError extends Error {
   constructor(
     message: string,
@@ -61,7 +65,9 @@ export class SafeFetchError extends Error {
       | "TIMEOUT"
       | "BODY_TOO_LARGE"
       | "CONTENT_TYPE"
-      | "NETWORK"
+      | "ALL_ADDRESSES_FAILED"
+      | "NETWORK",
+    readonly candidateFailures: SafeFetchCandidateFailure[] = []
   ) {
     super(message);
     this.name = "SafeFetchError";
@@ -108,23 +114,17 @@ export async function safeFetch(rawUrl: string, options: SafeFetchOptions = {}):
         throw new SafeFetchError(validation.error, "UNSAFE_URL");
       }
 
-      const response = await raceWithAbort(
-        (options.transport ?? nodeTransport)({
-          url: validation.url,
-          address: validation.addresses[0],
-          method,
-          headers,
-          signal: controller.signal,
-          maxResponseBytes,
-          allowedContentTypes,
-          discardResponseBody: options.discardResponseBody ?? false
-        }),
-        controller.signal,
-        () => abortError(timedOut)
-      ).catch((error: unknown) => {
-        if (controller.signal.aborted) throw abortError(timedOut);
-        if (error instanceof SafeFetchError) throw error;
-        throw new SafeFetchError(error instanceof Error ? error.message : "The network request failed.", "NETWORK");
+      const response = await tryValidatedAddresses({
+        url: validation.url,
+        addresses: validation.addresses,
+        method,
+        headers,
+        signal: controller.signal,
+        maxResponseBytes,
+        allowedContentTypes,
+        discardResponseBody: options.discardResponseBody ?? false,
+        transport: options.transport ?? nodeTransport,
+        timedOut: () => timedOut
       });
 
       if (!REDIRECT_STATUSES.has(response.status)) {
@@ -155,6 +155,76 @@ export async function safeFetch(rawUrl: string, options: SafeFetchOptions = {}):
     clearTimeout(timer);
     options.signal?.removeEventListener("abort", abortFromCaller);
   }
+}
+
+type ValidatedAddressAttempt = Omit<SafeFetchTransportRequest, "address"> & {
+  addresses: ResolvedAddress[];
+  transport: SafeFetchTransport;
+  timedOut: () => boolean;
+};
+
+async function tryValidatedAddresses(request: ValidatedAddressAttempt) {
+  const failures: SafeFetchCandidateFailure[] = [];
+  for (const address of interleaveAddressFamilies(request.addresses)) {
+    if (request.signal.aborted) {
+      throw abortError(request.timedOut());
+    }
+
+    try {
+      return await raceWithAbort(
+        request.transport({
+          url: request.url,
+          address,
+          method: request.method,
+          headers: request.headers,
+          signal: request.signal,
+          maxResponseBytes: request.maxResponseBytes,
+          allowedContentTypes: request.allowedContentTypes,
+          discardResponseBody: request.discardResponseBody
+        }),
+        request.signal,
+        () => abortError(request.timedOut())
+      );
+    } catch (error: unknown) {
+      if (request.signal.aborted) {
+        throw abortError(request.timedOut());
+      }
+      if (error instanceof SafeFetchError && error.code !== "NETWORK" && error.code !== "ALL_ADDRESSES_FAILED") {
+        throw error;
+      }
+      failures.push({
+        ...address,
+        message: error instanceof Error && error.message ? error.message : "The network request failed."
+      });
+    }
+  }
+
+  const summary = failures
+    .map(({ address, family, message }) => `${family === 6 ? "IPv6" : "IPv4"} ${address}: ${message}`)
+    .join("; ");
+  throw new SafeFetchError(
+    summary ? `All validated addresses failed. ${summary}` : "All validated addresses failed.",
+    "ALL_ADDRESSES_FAILED",
+    failures
+  );
+}
+
+export function interleaveAddressFamilies(addresses: ResolvedAddress[]) {
+  const unique = addresses.filter((candidate, index, entries) => entries.findIndex(
+    (entry) => entry.family === candidate.family && entry.address === candidate.address
+  ) === index);
+  if (unique.length < 2) return unique;
+
+  const firstFamily = unique[0].family;
+  const primary = unique.filter(({ family }) => family === firstFamily);
+  const secondary = unique.filter(({ family }) => family !== firstFamily);
+  const ordered: ResolvedAddress[] = [];
+  const count = Math.max(primary.length, secondary.length);
+  for (let index = 0; index < count; index += 1) {
+    if (primary[index]) ordered.push(primary[index]);
+    if (secondary[index]) ordered.push(secondary[index]);
+  }
+  return ordered;
 }
 
 export async function nodeTransport(request: SafeFetchTransportRequest): Promise<SafeFetchTransportResponse> {

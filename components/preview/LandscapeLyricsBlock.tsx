@@ -16,8 +16,6 @@ export function LandscapeLyricsBlock({
   top,
   width,
   maxHeight,
-  cardWidth,
-  cardHeight,
   align,
   isDarkText
 }: {

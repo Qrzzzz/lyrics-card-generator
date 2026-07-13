@@ -23,8 +23,7 @@ export function getCardSize(style: CardStyle) {
 export function LyricCard({
   song,
   lyrics,
-  style: rawStyle,
-  locale = "en"
+  style: rawStyle
 }: {
   song: SongInfo;
   lyrics: string;
@@ -32,24 +31,24 @@ export function LyricCard({
   locale?: Locale;
 }) {
   const style = normalizeCardStyle(rawStyle);
+  const cover = song.proxiedCoverUrl || proxiedImageUrl(song.coverUrl);
+  const [coverFailed, setCoverFailed] = useState(false);
+
+  useEffect(() => {
+    setCoverFailed(false);
+  }, [cover]);
 
   if ((style.layoutMode ?? "portrait") === "landscape") {
     return <LandscapeLyricCard song={song} lyrics={lyrics} style={style} />;
   }
 
   const size = getCardSize(style);
-  const cover = song.proxiedCoverUrl || proxiedImageUrl(song.coverUrl);
-  const [coverFailed, setCoverFailed] = useState(false);
   const activeCover = coverFailed ? "" : cover;
   const textColor = style.resolvedTextColor || "#FFFFFF";
   const isDarkText = isColorDark(textColor);
   const contentMode = style.contentMode ?? "lyrics";
   const showGeneratedWatermark = style.showGeneratedWatermark ?? style.showWatermark;
   const layout = getPortraitLayout(size, style, song);
-
-  useEffect(() => {
-    setCoverFailed(false);
-  }, [cover]);
 
   return (
     <article

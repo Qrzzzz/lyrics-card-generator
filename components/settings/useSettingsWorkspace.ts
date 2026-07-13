@@ -11,6 +11,7 @@ import {
 import { clearAISettingsApiKey, loadAISettings, saveAISettings } from "@/lib/ai/client";
 import { DEFAULT_AI_SETTINGS, type AISettings, type AISettingsSummary } from "@/lib/ai/types";
 import { getAIUiCopy } from "@/lib/ai/ui-copy";
+import { shutdownCoordinator } from "@/lib/persistence/shutdown-coordinator";
 import { removeBackgroundImage } from "@/lib/settings/background-storage";
 import type { UserSettings } from "@/lib/settings/types";
 import type { Locale } from "@/lib/types";
@@ -29,9 +30,9 @@ type SettingsWorkspaceInput = {
   requestedTab?: SettingsTabId;
   locale: Locale;
   userSettings: UserSettings;
-  onLocaleChange: (locale: Locale) => void;
+  onLocaleChange: (locale: Locale) => void | Promise<void>;
   onUserSettingsPreview: (settings: UserSettings) => void;
-  onUserSettingsChange: (settings: UserSettings) => void;
+  onUserSettingsChange: (settings: UserSettings) => void | Promise<void>;
   onClose: () => void;
   onSaved: (settings: AISettingsSummary, message?: string) => void;
   onNotify: (message: string) => void;
@@ -67,6 +68,8 @@ export function useSettingsWorkspace({
   const aiWriteQueueRef = useRef<Promise<void>>(Promise.resolve());
   const latestLifecycleRef = useRef({ locale, onSaved });
   latestLifecycleRef.current = { locale, onSaved };
+  const latestAISaveValueRef = useRef<AISaveValue>({ settings, apiKey });
+  latestAISaveValueRef.current = { settings, apiKey };
   const saveControllerRef = useRef<LatestSaveController<AISaveValue> | null>(null);
 
   function runSerializedAIWrite<T>(write: () => Promise<T>) {
@@ -104,6 +107,26 @@ export function useSettingsWorkspace({
       }
     });
   }
+
+  async function flushPendingAISettings() {
+    if (aiSaveTimerRef.current) {
+      clearTimeout(aiSaveTimerRef.current);
+      aiSaveTimerRef.current = null;
+    }
+    const saveController = saveControllerRef.current!;
+    if (aiSettingsLoadedRef.current) {
+      const { settings: latestSettings, apiKey: latestApiKey } = latestAISaveValueRef.current;
+      saveController.setDesired(createAISaveSnapshot(latestSettings, latestApiKey));
+      await saveController.flushLatest();
+    }
+    await saveController.whenIdle();
+    await aiWriteQueueRef.current;
+    if (saveController.getState().status === "error") {
+      throw new Error(error || getAIUiCopy(latestLifecycleRef.current.locale).settingsSaveFailed);
+    }
+  }
+
+  useEffect(() => shutdownCoordinator.register("ai-settings", flushPendingAISettings), [error]);
 
   useEffect(() => {
     if (!open) return;
@@ -187,13 +210,23 @@ export function useSettingsWorkspace({
       return next;
     });
     onUserSettingsPreview(next);
-    onUserSettingsChange(next);
-    queueSavedNotification();
+    void Promise.resolve(onUserSettingsChange(next))
+      .then(() => queueSavedNotification())
+      .catch((saveError) => {
+        setError(saveError instanceof Error ? saveError.message : aiCopy.settingsSaveFailed);
+        setSyncErrorKind("save");
+        setSaveState("error");
+      });
   }
 
   function handleLocaleChange(nextLocale: Locale) {
-    onLocaleChange(nextLocale);
-    queueSavedNotification(getAIUiCopy(nextLocale).settingsSaved);
+    void Promise.resolve(onLocaleChange(nextLocale))
+      .then(() => queueSavedNotification(getAIUiCopy(nextLocale).settingsSaved))
+      .catch((saveError) => {
+        setError(saveError instanceof Error ? saveError.message : getAIUiCopy(nextLocale).settingsSaveFailed);
+        setSyncErrorKind("save");
+        setSaveState("error");
+      });
   }
 
   function closeWorkspace() {

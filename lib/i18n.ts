@@ -1830,15 +1830,14 @@ function toTraditionalText(value: string) {
 
 export const messages: Record<Locale, MessageMap> = {
   zh: baseMessages.zh,
-  "zh-TW": {
-    ...toTraditionalMessages(baseMessages.zh),
+  "zh-TW": Object.assign(toTraditionalMessages(baseMessages.zh), {
     lyricsLineLimitSummary: "原文 {original} + 譯文 {translation} = {total} / {max}",
     lyricsLineLimitExceeded: "目前共有 {total} 個非空行，超過最多 {max} 行。請精簡歌詞或關閉部分譯文後再匯出。",
     exportCardUnavailable: "匯出卡片尚未準備好，請稍候。",
     exportFontsLoading: "字型仍在載入，請稍候再匯出。",
     exportCardMeasuring: "正在計算完整歌詞卡片高度，請稍候。",
     exportContentOverflow: "目前版式無法完整容納歌詞，請切換為縱向自動高度或調整排版。"
-  },
+  }),
   en: baseMessages.en,
   fr: baseMessages.fr,
   ja: baseMessages.ja,

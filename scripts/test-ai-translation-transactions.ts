@@ -9,6 +9,10 @@ import {
 } from "../lib/editor/ai-translation-orchestrator";
 import { EditorDocumentStateAdapter } from "../lib/editor/editor-document-state-adapter";
 import {
+  applyEditorStyleChange,
+  isDocumentSemanticStyleChange
+} from "../lib/editor/apply-style-change";
+import {
   canonicalSongInfo,
   DocumentTransactionController,
   replaceSongDocument,
@@ -355,6 +359,22 @@ async function deferredReactMutationRollbackTest() {
       }
     },
     {
+      label: "instrumental content mode",
+      mutation: (current) => applyEditorStyleChange(current, {
+        ...current.style,
+        contentMode: "instrumental",
+        translationText: "",
+        translationEnabled: false
+      }),
+      assertResult: (state) => {
+        assert.equal(state.style.contentMode, "instrumental");
+        assert.equal(state.translationText, "");
+        assert.equal(state.style.translationText, "");
+        assert.equal(state.translationEnabled, false);
+        assert.equal(state.style.translationEnabled, false);
+      }
+    },
+    {
       label: "clear",
       mutation: clearLyricContent,
       assertResult: (state) => {
@@ -669,7 +689,16 @@ function productionAdapterWiringTest() {
   assert.match(source, /flushSync\(\(\) => setState\(updater\)\)/);
   assert.match(source, /onInvalidateDocument\("ai-start"\)/);
   assert.match(source, /documentStateAdapter\.beginAITranslation\(\)/);
+  assert.match(source, /isDocumentSemanticStyleChange\(currentDocumentRef\.current\.style, nextStyle\)/);
   assert.doesNotMatch(source, /function markDocumentMutation/);
+}
+
+function styleMutationClassificationTest() {
+  const current = defaultState.style;
+  assert.equal(isDocumentSemanticStyleChange(current, { ...current, lyricFontSize: current.lyricFontSize + 1 }), false);
+  assert.equal(isDocumentSemanticStyleChange(current, { ...current, contentMode: "instrumental" }), true);
+  assert.equal(isDocumentSemanticStyleChange(current, { ...current, translationEnabled: true }), true);
+  assert.equal(isDocumentSemanticStyleChange(current, { ...current, translationText: "translated" }), true);
 }
 
 async function providerFailureRestoresCurrentDocumentTest() {
@@ -720,6 +749,7 @@ void (async () => {
   await replacementCommitsRollbackBeforeAbortTest();
   await providerFailureRestoresCurrentDocumentTest();
   await newerGenerationWinsTest();
+  styleMutationClassificationTest();
   productionAdapterWiringTest();
 })().then(() => {
   console.log("AI translation production orchestration race tests passed");

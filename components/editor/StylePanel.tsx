@@ -70,6 +70,8 @@ export function FontSchemeSettingsPanel({ style, onStyleChange, onFontSchemePrev
   );
 }
 
+// Kept as the legacy single-font fallback while the font-scheme dialog remains the active surface.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function CustomFontPanel({ style, onStyleChange, t }: StylePanelProps) {
   const desktopApi = getLyricsCardDesktopApi();
   const [fonts, setFonts] = useState<SystemFontOption[]>([]);

@@ -31,10 +31,10 @@ assert.deepEqual(sizeSnapshot(defaultState.style), {
 });
 
 assert.equal(
-  normalizeAIErrorMessage(new Error("Error invoking remote method 'lyrics-card:ai-translate': Error: boom")),
-  "boom"
+  normalizeAIErrorMessage(new Error("Error invoking remote method 'lyrics-card:ai-translate': Error: AI_ERROR:provider_error:boom"), "en"),
+  "The AI provider returned an error. (boom)"
 );
-assert.equal(normalizeAIErrorMessage("unexpected"), "AI 翻译请求失败，请检查网络和接口设置。");
+assert.equal(normalizeAIErrorMessage("unexpected", "zh"), "AI 翻译请求失败，请检查网络和接口设置。");
 
 const albumTokens = resolveEditorThemeTokens({
   userSettings: normalizeUserSettings({ uiThemeMode: "album-dynamic" }),

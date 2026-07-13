@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v5.1.0.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v5.2.0.zh-CN.md">发布说明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">在线 Web Lite 版</a> ·
   <a href="./docs/desktop.md">桌面维护文档</a> ·
   <a href="#主要功能">主要功能</a> ·
@@ -49,30 +49,30 @@
 
 请前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下载最新版：
 
-* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 5.1.0.exe`
-* 不想安装时可下载便携版：`Lyrics Card Generator-5.1.0-portable.exe`
+* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 5.2.0.exe`
+* 不想安装时可下载便携版：`Lyrics Card Generator-5.2.0-portable.exe`
 
 安装版适合长期使用；便携版适合临时运行、测试或放在移动硬盘中使用。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v5.1.0 更新重点
+### v5.2.0 更新重点
 
-* 所有不可信歌曲与图片 URL 改用逐跳校验的 Safe Fetch，拦截重定向到私网、保留地址和云元数据地址的 SSRF。
-* 歌曲、歌词与示例导入改为原子事务；清空、换歌和较新的操作会使旧请求与旧候选失效。
-* 桌面版导出使用不可变快照与同步互斥，内容、尺寸和文件名始终来自同一版本。
-* Web Lite 使用独立导出 host，并与桌面版共享 36 行、字体、尺寸稳定和 overflow 安全判断。
+* Safe Fetch 支持经过完整验证的多地址 IPv6/IPv4 fallback，并让 redirect、timeout、abort 与 body budget 覆盖整个请求。
+* 修复 AI 文档语义竞态、Electron 早取消窗口、桌面设置关闭前 flush 和 JSON/localStorage 新旧冲突。
+* 首批共享对话框、键盘搜索、live region、六语错误码、焦点与 Forced Colors 完成可访问性加固。
+* Electron 外链、IPC sender、权限和 CSP 使用统一安全策略；最终 Setup/portable 加入真实制品测试与 provenance。
 
 ## 🌐 多语言发布说明
 
 GitHub Release 页面默认使用简体中文短版，完整发布说明维护在 `docs/releases/`：
 
-* [简体中文](./docs/releases/v5.1.0.zh-CN.md)
-* [繁體中文](./docs/releases/v5.1.0.zh-TW.md)
-* [English](./docs/releases/v5.1.0.en.md)
-* [Français](./docs/releases/v5.1.0.fr.md)
-* [日本語](./docs/releases/v5.1.0.ja.md)
-* [Español](./docs/releases/v5.1.0.es.md)
+* [简体中文](./docs/releases/v5.2.0.zh-CN.md)
+* [繁體中文](./docs/releases/v5.2.0.zh-TW.md)
+* [English](./docs/releases/v5.2.0.en.md)
+* [Français](./docs/releases/v5.2.0.fr.md)
+* [日本語](./docs/releases/v5.2.0.ja.md)
+* [Español](./docs/releases/v5.2.0.es.md)
 
 <a id="主要功能"></a>
 

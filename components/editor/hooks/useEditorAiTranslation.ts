@@ -59,10 +59,14 @@ export function useEditorAiTranslation({
   const [aiStreamingText, setAIStreamingText] = useState("");
   const [aiReasoningText, setAIReasoningText] = useState("");
   const [aiTranslationPhase, setAITranslationPhase] = useState<AITranslationPhase>("idle");
-  const [aiError, setAIError] = useState("");
+  const [aiFailure, setAIFailure] = useState<unknown>(null);
   const [aiSettings, setAISettings] = useState<AISettingsSummary>({ ...DEFAULT_AI_SETTINGS, hasApiKey: false });
   const aiOrchestratorRef = useRef(new AITranslationOrchestrator<TranslationValue, AITranslationPhase>());
   const aiCopy = useMemo(() => getAIUiCopy(locale), [locale]);
+  const aiError = useMemo(
+    () => aiFailure ? normalizeAIErrorMessage(aiFailure, locale) : "",
+    [aiFailure, locale]
+  );
 
   useEffect(() => {
     void loadAISettings().then(setAISettings).catch(() => undefined);
@@ -86,12 +90,12 @@ export function useEditorAiTranslation({
     try {
       validateConfiguredSettings(aiSettings);
     } catch (error) {
-      onNotify(error instanceof Error ? error.message : aiCopy.configureFirst);
+      onNotify(normalizeAIErrorMessage(error, locale));
       onRequireSettings();
       return;
     }
 
-    setAIError("");
+    setAIFailure(null);
     setAIStreamingText("");
     setAIReasoningText("");
     setAITranslationPhase("idle");
@@ -118,7 +122,7 @@ export function useEditorAiTranslation({
       createEmptyResponseError: () => new AITranslationError(aiCopy.emptyResponse, "empty_response"),
       onStart: () => {
         setIsAITranslating(true);
-        setAIError("");
+        setAIFailure(null);
         setAIStreamingText("");
         setAIReasoningText("");
         setAITranslationPhase("connecting");
@@ -130,9 +134,9 @@ export function useEditorAiTranslation({
         setAISettings((current) => ({ ...current, defaultStyle: presetId, reasoningEnabled: reasoning }));
         onNotify(aiCopy.translated);
       },
-      onFailure: (error) => setAIError(normalizeAIErrorMessage(error)),
+      onFailure: setAIFailure,
       onCancelled: () => {
-        setAIError(aiCopy.cancelled);
+        setAIFailure(new AITranslationError("Cancelled.", "cancelled"));
         setIsAITranslating(false);
         setAITranslationPhase("idle");
       },
@@ -141,7 +145,7 @@ export function useEditorAiTranslation({
         setAITranslationPhase("idle");
         setAIStreamingText("");
         setAIReasoningText("");
-        setAIError("");
+        setAIFailure(null);
       },
       onSettled: () => {
         setIsAITranslating(false);

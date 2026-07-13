@@ -79,11 +79,15 @@ async function prepareMinimalElectronApp() {
       },
       files: [
         "electron/main.js",
+        "electron/ai-request-registry.js",
         "electron/ai-prompt-settings.js",
         "electron/background-images.js",
         "electron/font-options.js",
         "electron/provider-response.js",
         "electron/preload.js",
+        "electron/ipc-security.js",
+        "electron/local-app-url.js",
+        "electron/url-policy.js",
         "electron/user-preferences.js",
         "package.json"
       ],
@@ -124,11 +128,15 @@ async function prepareMinimalElectronApp() {
   };
 
   await cp(path.join(projectRoot, "electron", "main.js"), path.join(electronOutputDir, "main.js"));
+  await cp(path.join(projectRoot, "electron", "ai-request-registry.js"), path.join(electronOutputDir, "ai-request-registry.js"));
   await cp(path.join(projectRoot, "electron", "ai-prompt-settings.js"), path.join(electronOutputDir, "ai-prompt-settings.js"));
   await cp(path.join(projectRoot, "electron", "background-images.js"), path.join(electronOutputDir, "background-images.js"));
   await cp(path.join(projectRoot, "electron", "font-options.js"), path.join(electronOutputDir, "font-options.js"));
   await cp(path.join(projectRoot, "electron", "provider-response.js"), path.join(electronOutputDir, "provider-response.js"));
   await cp(path.join(projectRoot, "electron", "preload.js"), path.join(electronOutputDir, "preload.js"));
+  await cp(path.join(projectRoot, "electron", "ipc-security.js"), path.join(electronOutputDir, "ipc-security.js"));
+  await cp(path.join(projectRoot, "electron", "local-app-url.js"), path.join(electronOutputDir, "local-app-url.js"));
+  await cp(path.join(projectRoot, "electron", "url-policy.js"), path.join(electronOutputDir, "url-policy.js"));
   await cp(path.join(projectRoot, "electron", "user-preferences.js"), path.join(electronOutputDir, "user-preferences.js"));
   await writeFile(path.join(appOutputDir, "package.json"), `${JSON.stringify(desktopPackage, null, 2)}\n`);
 }

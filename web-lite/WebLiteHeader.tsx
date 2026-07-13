@@ -1,6 +1,7 @@
 "use client";
 
 import { Download, Github, Trash2 } from "lucide-react";
+import { APP_VERSION } from "@/lib/app-version";
 import type { createT } from "@/lib/i18n";
 import type { WebLiteCopy, WebLiteLocale } from "@/web-lite/copy";
 import { WEB_LITE_DESKTOP_URL, WEB_LITE_REPOSITORY_URL } from "@/web-lite/links";
@@ -30,7 +31,7 @@ export function WebLiteHeader({
           <div className="flex min-w-0 items-center gap-2">
             <h1 className="app-text-primary truncate text-xl font-black tracking-normal sm:text-3xl">{t("appTitle")}</h1>
             <span className="shrink-0 rounded-full border border-[rgb(var(--panel-border))] bg-[rgb(var(--button-bg))] px-2 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-[var(--app-accent)] sm:text-[11px]">
-              {copy.badge}
+              {copy.badge} · v{APP_VERSION}
             </span>
           </div>
           <p className="app-text-subtle mt-1 truncate text-sm">{t("appSubtitle")}</p>

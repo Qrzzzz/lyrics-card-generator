@@ -1,7 +1,7 @@
-export function normalizeAIErrorMessage(error: unknown) {
-  if (error instanceof Error) {
-    return error.message.replace(/^Error invoking remote method '[^']+':\s*/i, "").replace(/^Error:\s*/i, "");
-  }
+import { getAIErrorMessage, parseSerializedAIError } from "@/lib/ai/error-copy";
+import type { Locale } from "@/lib/types";
 
-  return "AI 翻译请求失败，请检查网络和接口设置。";
+export function normalizeAIErrorMessage(error: unknown, locale: Locale) {
+  const parsed = parseSerializedAIError(error instanceof Error ? error.message : "");
+  return getAIErrorMessage(locale, parsed.code, parsed.diagnostic);
 }

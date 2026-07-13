@@ -14,10 +14,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 22
           cache: npm
@@ -31,6 +31,15 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      - name: Lint
+        run: npm run lint
+
+      - name: Stability, security, locale, and lifecycle tests
+        run: npm run stability:test
+
+      - name: Critical-module coverage thresholds
+        run: npm run coverage
+
       - name: Core tests
         run: npm run core:test
 
@@ -43,10 +52,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 22
           cache: npm
@@ -65,13 +74,42 @@ jobs:
 
       - name: Upload Web Lite browser evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: web-lite-playwright-report-${{ github.run_attempt }}
           path: playwright-report/web-lite
           if-no-files-found: ignore
 
-  desktop-build:
+  security-locale-a11y-gates:
+    name: security/locale/a11y gates
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies and Chromium
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: Run security, locale, lifecycle, and coverage gates
+        run: |
+          npm run stability:test
+          npm run coverage
+
+      - name: Run automated axe gate
+        run: npm run a11y:test
+
+  desktop-final-artifact-smoke:
+    name: desktop-final-artifact-smoke
     if: github.event_name == 'pull_request'
     runs-on: windows-latest
     timeout-minutes: 60
@@ -81,10 +119,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 22
           cache: npm
@@ -98,6 +136,9 @@ jobs:
       - name: Run packaged desktop interaction regression
         run: npm run desktop:interaction-test
 
+      - name: Run Setup and portable final-artifact smoke
+        run: npm run desktop:final-artifact-smoke
+
       - name: Verify Windows desktop artifacts
         shell: pwsh
         run: |
@@ -110,7 +151,7 @@ jobs:
 
       - name: Upload desktop interaction evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: desktop-interaction-evidence-${{ github.run_attempt }}
           path: playwright-report/desktop

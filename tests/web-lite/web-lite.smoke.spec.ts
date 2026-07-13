@@ -2,6 +2,7 @@ import { createServer, type Server } from "node:http";
 import { readFile, stat } from "node:fs/promises";
 import path from "node:path";
 import { expect, test, type Download, type Page } from "@playwright/test";
+import AxeBuilder from "@axe-core/playwright";
 
 const projectRoot = process.cwd();
 const localCoverBytesPromise = readFile(path.join(projectRoot, "public", "app-icon.png"));
@@ -81,6 +82,13 @@ test.beforeEach(async ({ page }) => {
     },
     { key: preferencesKey }
   );
+});
+
+test("axe reports no serious accessibility violations", async ({ page }) => {
+  await openWebLite(page, { width: 1280, height: 900 });
+  const results = await new AxeBuilder({ page }).analyze();
+  const serious = results.violations.filter(({ impact }) => impact === "serious" || impact === "critical");
+  expect(serious).toEqual([]);
 });
 
 test("stays responsive at 360px, 768px, and 1440px", async ({ page }) => {

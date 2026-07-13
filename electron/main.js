@@ -15,6 +15,10 @@ const {
   readProviderResponseBody
 } = require("./provider-response");
 const { normalizeStoredPreferences } = require("./user-preferences");
+const { AIRequestRegistry } = require("./ai-request-registry");
+const { assertTrustedIpcEvent } = require("./ipc-security");
+const { resolveLocalAppUrl } = require("./local-app-url");
+const { isAllowedLocalNavigation, parseAllowedExternalUrl } = require("./url-policy");
 
 const HOST = "127.0.0.1";
 const APP_ID = "com.lyriccard.generator";
@@ -38,7 +42,8 @@ let windowMaximized = false;
 let windowRestoring = false;
 let lastEmittedWindowState = null;
 let appPreferencesWriteQueue = Promise.resolve();
-const aiTranslationRequests = new Map();
+let allowWindowClose = false;
+const aiTranslationRequests = new AIRequestRegistry();
 
 const DEFAULT_AI_SETTINGS = {
   baseUrl: "https://api.openai.com/v1",
@@ -158,21 +163,8 @@ async function startPackagedNextServer() {
   return url;
 }
 
-function isAllowedLocalNavigation(targetUrl) {
-  if (!localAppUrl) {
-    return false;
-  }
-
-  try {
-    const target = new URL(targetUrl);
-    const local = new URL(localAppUrl);
-    return target.origin === local.origin;
-  } catch {
-    return false;
-  }
-}
-
 function createWindow() {
+  allowWindowClose = false;
   mainWindow = new BrowserWindow({
     title: "Lyrics Card Generator",
     width: 1280,
@@ -239,23 +231,36 @@ function createWindow() {
   mainWindow.once("ready-to-show", () => {
     mainWindow?.show();
   });
+  const desktopSession = mainWindow.webContents.session;
+  desktopSession.setPermissionRequestHandler((_webContents, _permission, callback) => callback(false));
+  desktopSession.setPermissionCheckHandler(() => false);
+  if (typeof desktopSession.setDevicePermissionHandler === "function") {
+    desktopSession.setDevicePermissionHandler(() => false);
+  }
+
+  mainWindow.on("close", (event) => {
+    if (allowWindowClose) return;
+    event.preventDefault();
+    requestRendererClose();
+  });
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    if (isAllowedLocalNavigation(url)) {
+    if (isAllowedLocalNavigation(url, localAppUrl)) {
       return { action: "allow" };
     }
-
-    shell.openExternal(url);
+    const external = parseAllowedExternalUrl(url);
+    if (external) void shell.openExternal(external.toString());
     return { action: "deny" };
   });
 
   mainWindow.webContents.on("will-navigate", (event, url) => {
-    if (isAllowedLocalNavigation(url)) {
+    if (isAllowedLocalNavigation(url, localAppUrl)) {
       return;
     }
 
     event.preventDefault();
-    shell.openExternal(url);
+    const external = parseAllowedExternalUrl(url);
+    if (external) void shell.openExternal(external.toString());
   });
 
   mainWindow.loadURL(localAppUrl);
@@ -370,8 +375,13 @@ function stopNextServer() {
 
 async function boot() {
   try {
-    localAppUrl = process.env.ELECTRON_DEV_SERVER_URL || (await startPackagedNextServer());
-    if (process.env.ELECTRON_DEV_SERVER_URL) {
+    const resolvedAppUrl = await resolveLocalAppUrl({
+      isPackaged: app.isPackaged,
+      devServerUrl: process.env.ELECTRON_DEV_SERVER_URL,
+      startLocalServer: startPackagedNextServer
+    });
+    localAppUrl = resolvedAppUrl.url;
+    if (resolvedAppUrl.waitForReady) {
       await waitForHttpReady(localAppUrl);
     }
     createWindow();
@@ -387,7 +397,14 @@ Menu.setApplicationMenu(null);
 registerDesktopIpc();
 app.whenReady().then(boot);
 
-app.on("before-quit", stopNextServer);
+app.on("before-quit", (event) => {
+  if (mainWindow && !mainWindow.isDestroyed() && !allowWindowClose) {
+    event.preventDefault();
+    requestRendererClose();
+    return;
+  }
+  stopNextServer();
+});
 
 app.on("window-all-closed", () => {
   stopNextServer();
@@ -403,13 +420,17 @@ app.on("activate", () => {
 });
 
 function registerDesktopIpc() {
-  ipcMain.handle("lyrics-card:set-window-material", (_event, theme) => applyWindowMaterial(theme));
-  ipcMain.handle("lyrics-card:window-minimize", () => {
+  const handle = (channel, handler) => ipcMain.handle(channel, (event, ...args) => {
+    assertTrustedIpcEvent(event, mainWindow, localAppUrl);
+    return handler(event, ...args);
+  });
+  handle("lyrics-card:set-window-material", (_event, theme) => applyWindowMaterial(theme));
+  handle("lyrics-card:window-minimize", () => {
     if (!mainWindow || mainWindow.isDestroyed()) return false;
     mainWindow.minimize();
     return true;
   });
-  ipcMain.handle("lyrics-card:window-toggle-maximize", () => {
+  handle("lyrics-card:window-toggle-maximize", () => {
     if (!mainWindow || mainWindow.isDestroyed()) return { maximized: false };
     const isCurrentlyMaximized = windowMaximized || mainWindow.isMaximized();
 
@@ -441,24 +462,31 @@ function registerDesktopIpc() {
       return getWindowState();
     }
   });
-  ipcMain.handle("lyrics-card:window-close", () => {
+  handle("lyrics-card:window-close", () => {
     if (!mainWindow || mainWindow.isDestroyed()) return false;
+    requestRendererClose();
+    return true;
+  });
+  handle("lyrics-card:window-close-confirm", async () => {
+    if (!mainWindow || mainWindow.isDestroyed()) return false;
+    await appPreferencesWriteQueue;
+    allowWindowClose = true;
     mainWindow.close();
     return true;
   });
-  ipcMain.handle("lyrics-card:window-state", () => {
+  handle("lyrics-card:window-state", () => {
     return getWindowState();
   });
 
-  ipcMain.handle("lyrics-card:app-preferences-load", () => readAppPreferences());
-  ipcMain.handle("lyrics-card:app-preferences-save", async (_event, input) => {
+  handle("lyrics-card:app-preferences-load", () => readAppPreferences());
+  handle("lyrics-card:app-preferences-save", async (_event, input) => {
     const preferences = normalizeStoredPreferences(input);
     if (!preferences) return false;
     await enqueueAppPreferencesWrite(preferences);
     return true;
   });
 
-  ipcMain.handle("lyrics-card:list-system-fonts", async () => {
+  handle("lyrics-card:list-system-fonts", async () => {
     if (process.platform !== "win32") {
       return [];
     }
@@ -466,30 +494,19 @@ function registerDesktopIpc() {
     return listWindowsFontOptions();
   });
 
-  ipcMain.handle("lyrics-card:pick-font", async () => {
+  handle("lyrics-card:pick-font", async () => {
     const fonts = process.platform === "win32" ? await listWindowsFontOptions() : [];
     return fonts[0]?.family || null;
   });
 
-  ipcMain.handle("lyrics-card:open-external", async (_event, targetUrl) => {
-    if (typeof targetUrl !== "string") {
-      return false;
-    }
-
-    try {
-      const parsed = new URL(targetUrl);
-      if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
-        return false;
-      }
-
-      await shell.openExternal(parsed.toString());
-      return true;
-    } catch {
-      return false;
-    }
+  handle("lyrics-card:open-external", async (_event, targetUrl) => {
+    const parsed = parseAllowedExternalUrl(targetUrl);
+    if (!parsed) return false;
+    await shell.openExternal(parsed.toString());
+    return true;
   });
 
-  ipcMain.handle("lyrics-card:background-save", async () => {
+  handle("lyrics-card:background-save", async () => {
     const result = await dialog.showOpenDialog(mainWindow, {
       properties: ["openFile"],
       filters: [{ name: "Images", extensions: ["png", "jpg", "jpeg", "webp", "gif"] }]
@@ -504,20 +521,20 @@ function registerDesktopIpc() {
     return { imageId, imageUrl: await readBackgroundDataUrl(imageId) };
   });
 
-  ipcMain.handle("lyrics-card:background-read", (_event, imageId) => readBackgroundDataUrl(imageId));
-  ipcMain.handle("lyrics-card:background-remove", async (_event, imageId) => {
+  handle("lyrics-card:background-read", (_event, imageId) => readBackgroundDataUrl(imageId));
+  handle("lyrics-card:background-remove", async (_event, imageId) => {
     const target = safeBackgroundPath(imageId);
     if (!target) return false;
     await fs.rm(target, { force: true });
     return true;
   });
 
-  ipcMain.handle("lyrics-card:ai-settings-load", async () => {
+  handle("lyrics-card:ai-settings-load", async () => {
     const settings = await readAISettings();
     return toAISettingsSummary(settings);
   });
 
-  ipcMain.handle("lyrics-card:ai-settings-save", async (_event, input) => {
+  handle("lyrics-card:ai-settings-save", async (_event, input) => {
     const current = await readAISettings();
     const normalized = normalizeAISettings(input);
     let encryptedApiKey = current.encryptedApiKey || "";
@@ -533,25 +550,26 @@ function registerDesktopIpc() {
     return toAISettingsSummary(stored);
   });
 
-  ipcMain.handle("lyrics-card:ai-settings-api-key-clear", async () => {
+  handle("lyrics-card:ai-settings-api-key-clear", async () => {
     const current = await readAISettings();
     const stored = { ...normalizeAISettings(current), encryptedApiKey: "" };
     await writeAISettings(stored);
     return toAISettingsSummary(stored);
   });
 
-  ipcMain.handle("lyrics-card:ai-translate", async (event, requestId, request) => {
+  handle("lyrics-card:ai-translate", async (event, requestId, request) => {
     if (!isValidAIRequestId(requestId) || typeof request?.prompt !== "string" || !request.prompt.trim()) {
-      throw new Error("AI 翻译请求无效。");
+      throw createAIError("invalid_request");
     }
 
-    const settings = await readAISettings();
-    const apiKey = decryptStoredApiKey(settings.encryptedApiKey);
-    validateAISettings(settings, apiKey);
-    const controller = new AbortController();
-    aiTranslationRequests.set(requestId, controller);
+    const sender = event.sender;
+    const controller = aiTranslationRequests.begin(sender, requestId);
 
     try {
+      const settings = await readAISettings();
+      if (controller.signal.aborted) throw controller.signal.reason;
+      const apiKey = decryptStoredApiKey(settings.encryptedApiKey);
+      validateAISettings(settings, apiKey);
       return await streamAITranslationInMain({
         settings,
         apiKey,
@@ -559,30 +577,29 @@ function registerDesktopIpc() {
         reasoning: Boolean(request.reasoning),
         signal: controller.signal,
         onStatus: (phase) => {
-          if (!event.sender.isDestroyed()) {
-            event.sender.send("lyrics-card:ai-translate-chunk", { requestId, kind: "status", phase });
+          if (aiTranslationRequests.isActive(sender, requestId, controller)) {
+            sender.send("lyrics-card:ai-translate-chunk", { requestId, kind: "status", phase });
           }
         },
         onReasoningDelta: (delta) => {
-          if (!event.sender.isDestroyed()) {
-            event.sender.send("lyrics-card:ai-translate-chunk", { requestId, kind: "reasoning", delta });
+          if (aiTranslationRequests.isActive(sender, requestId, controller)) {
+            sender.send("lyrics-card:ai-translate-chunk", { requestId, kind: "reasoning", delta });
           }
         },
         onDelta: (delta) => {
-          if (!event.sender.isDestroyed()) {
-            event.sender.send("lyrics-card:ai-translate-chunk", { requestId, kind: "content", delta });
+          if (aiTranslationRequests.isActive(sender, requestId, controller)) {
+            sender.send("lyrics-card:ai-translate-chunk", { requestId, kind: "content", delta });
           }
         }
       });
     } finally {
-      aiTranslationRequests.delete(requestId);
+      aiTranslationRequests.finish(sender, requestId, controller);
     }
   });
 
-  ipcMain.on("lyrics-card:ai-translate-cancel", (_event, requestId) => {
-    if (isValidAIRequestId(requestId)) {
-      aiTranslationRequests.get(requestId)?.abort();
-    }
+  handle("lyrics-card:ai-translate-cancel", (event, requestId) => {
+    if (!isValidAIRequestId(requestId)) return { cancelled: false, active: false };
+    return aiTranslationRequests.cancel(event.sender, requestId);
   });
 }
 
@@ -612,9 +629,30 @@ function getAppPreferencesPath() {
 }
 
 async function writeAppPreferences(preferences) {
+  try {
+    const current = normalizeStoredPreferences(JSON.parse(await fs.readFile(getAppPreferencesPath(), "utf8")));
+    if (current && (
+      current.revision > preferences.revision ||
+      (current.revision === preferences.revision && current.updatedAt > preferences.updatedAt)
+    )) {
+      return current;
+    }
+  } catch {
+    // Missing, corrupt, or legacy files are replaced atomically below.
+  }
   await fs.mkdir(app.getPath("userData"), { recursive: true });
-  await fs.writeFile(getAppPreferencesPath(), JSON.stringify(preferences, null, 2), { encoding: "utf8", mode: 0o600 });
+  const target = getAppPreferencesPath();
+  const temporary = `${target}.tmp`;
+  await fs.writeFile(temporary, JSON.stringify(preferences, null, 2), { encoding: "utf8", mode: 0o600 });
+  await fs.rename(temporary, target);
   await fs.chmod(getAppPreferencesPath(), 0o600).catch(() => undefined);
+  return preferences;
+}
+
+function requestRendererClose() {
+  if (!mainWindow || mainWindow.isDestroyed() || mainWindow.webContents.isDestroyed()) return false;
+  mainWindow.webContents.send("lyrics-card:window-close-requested");
+  return true;
 }
 
 function enqueueAppPreferencesWrite(preferences) {
@@ -722,12 +760,17 @@ function ensureSecureStorageAvailable() {
 
 function validateAISettings(settings, apiKey) {
   if (!apiKey.trim()) {
-    throw new Error("未配置 API Key，请先前往设置页配置。");
+    throw createAIError("missing_api_key");
   }
   if (!settings.model.trim()) {
-    throw new Error("未配置模型，请先前往设置页填写模型名称。");
+    throw createAIError("missing_model");
   }
-  resolveProviderChatCompletionsUrl(settings.baseUrl);
+  if (!settings.baseUrl?.trim()) throw createAIError("missing_base_url");
+  try {
+    resolveProviderChatCompletionsUrl(settings.baseUrl);
+  } catch {
+    throw createAIError("invalid_base_url");
+  }
 }
 
 async function streamAITranslationInMain({ settings, apiKey, prompt, reasoning, signal, onStatus, onReasoningDelta, onDelta }) {
@@ -753,13 +796,13 @@ async function streamAITranslationInMain({ settings, apiKey, prompt, reasoning, 
     });
   } catch (error) {
     if (error?.name === "AbortError") {
-      throw new Error("AI 翻译已取消。");
+      throw createAIError("cancelled");
     }
-    throw new Error("网络请求失败，请检查 Base URL、网络连接和接口可用性。");
+    throw createAIError("network");
   }
 
   if (!response.ok) {
-    throw new Error(await readNormalizedProviderError(response));
+    throw createAIError("provider_error", await readNormalizedProviderError(response));
   }
   onStatus("connected");
 
@@ -772,7 +815,7 @@ async function streamAITranslationInMain({ settings, apiKey, prompt, reasoning, 
       onReasoningDelta(reasoningContent);
     }
     if (!content) {
-      throw new Error("AI 返回为空，请重试或更换模型。");
+      throw createAIError("empty_response");
     }
     onStatus("translating");
     onDelta(content);
@@ -780,7 +823,7 @@ async function streamAITranslationInMain({ settings, apiKey, prompt, reasoning, 
   }
 
   if (!response.body) {
-    throw new Error("AI 返回为空，请重试或更换模型。");
+    throw createAIError("empty_stream");
   }
 
   const reader = response.body.getReader();
@@ -828,13 +871,17 @@ async function streamAITranslationInMain({ settings, apiKey, prompt, reasoning, 
   }
 
   if (!receivedContent.trim()) {
-    throw new Error("AI 返回为空，请重试或更换模型。");
+    throw createAIError("empty_response");
   }
   return receivedContent;
 }
 
 function isValidAIRequestId(value) {
   return typeof value === "string" && /^[a-zA-Z0-9-]{8,80}$/.test(value);
+}
+
+function createAIError(code, diagnostic) {
+  return new Error(`AI_ERROR:${code}${diagnostic ? `:${String(diagnostic).slice(0, 500)}` : ""}`);
 }
 
 async function listWindowsFontOptions() {
