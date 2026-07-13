@@ -62,9 +62,9 @@ async function smokeExecutable(executablePath, label, results) {
     const page = await waitForApplicationPage(browser, 90_000);
     await page.getByTestId("editor-surface").waitFor({ state: "visible", timeout: 60_000 });
     const languageDialog = page.getByTestId("first-launch-language-dialog");
-    if (await languageDialog.isVisible().catch(() => false)) {
-      await page.locator('[data-testid="first-launch-language"][data-locale="en"]').click();
-    }
+    await languageDialog.waitFor({ state: "visible", timeout: 30_000 });
+    await page.locator('[data-testid="first-launch-language"][data-locale="en"]').click();
+    await languageDialog.waitFor({ state: "hidden", timeout: 15_000 });
     const search = page.getByRole("combobox").first();
     await search.waitFor({ state: "visible" });
     await search.fill("final artifact smoke");
