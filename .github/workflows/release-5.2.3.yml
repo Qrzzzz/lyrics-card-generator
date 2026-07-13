@@ -79,6 +79,22 @@ jobs:
       - name: Test final Setup and portable bytes
         run: npm run desktop:final-artifact-smoke
 
+      - name: Normalize release asset filenames
+        shell: pwsh
+        run: |
+          $executables = @(Get-ChildItem release -File -Filter '*.exe')
+          if ($executables.Count -ne 2) { throw "Expected exactly two release executables, found $($executables.Count)." }
+          $executables | ForEach-Object {
+            $file = $_
+            $normalizedName = $file.Name -replace ' ', '.'
+            if ($normalizedName -eq $file.Name) { return }
+            $normalizedPath = Join-Path $file.DirectoryName $normalizedName
+            if (Test-Path -LiteralPath $normalizedPath) { throw "Normalized asset already exists: $normalizedName" }
+            Rename-Item -LiteralPath $file.FullName -NewName $normalizedName
+          }
+          $remainingSpaces = @(Get-ChildItem release -File -Filter '*.exe' | Where-Object { $_.Name.Contains(' ') })
+          if ($remainingSpaces.Count -gt 0) { throw "Release asset normalization left names with spaces: $($remainingSpaces.Name -join ', ')" }
+
       - name: Generate SPDX SBOM
         uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0
         with:

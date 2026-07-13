@@ -20,10 +20,21 @@ for (const file of readdirSync(".github/workflows").filter((name) => /^release-\
 const createDraft = workflow.indexOf("- name: Create draft GitHub release");
 const verifyDraft = workflow.indexOf("- name: Re-download and verify draft release bytes and attestations");
 const publishVerified = workflow.indexOf("- name: Publish verified GitHub release");
+const normalizeAssets = workflow.indexOf("- name: Normalize release asset filenames");
+const generateChecksums = workflow.indexOf("- name: Generate SHA256SUMS");
 
 assert.ok(createDraft >= 0, "release workflow creates a draft release");
 assert.ok(verifyDraft > createDraft, "draft assets are verified after upload");
 assert.ok(publishVerified > verifyDraft, "release is published only after verification");
+assert.ok(normalizeAssets >= 0 && normalizeAssets < generateChecksums, "executable names are normalized before checksums");
+assert.ok(
+  workflow.includes("$normalizedName = $file.Name -replace ' ', '.'"),
+  "release filenames match GitHub's uploaded asset normalization"
+);
+assert.ok(
+  workflow.includes("Rename-Item -LiteralPath $file.FullName -NewName $normalizedName"),
+  "normalized filenames are applied before attestation and upload"
+);
 
 const createSection = workflow.slice(createDraft, verifyDraft);
 const verifySection = workflow.slice(verifyDraft, publishVerified);
