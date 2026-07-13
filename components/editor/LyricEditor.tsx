@@ -401,8 +401,6 @@ export function LyricEditor() {
   const activeSettingsStep = settingsSteps[currentStep] ?? settingsSteps[0];
   const activePresentation = activeSettingsStep?.presentation ?? "preview-workbench";
   const isLyricsWorkspace = activePresentation === "lyrics-workspace";
-  const usesUnifiedStepperChrome = currentStep > 0;
-  const showLegacyEditorHeader = currentStep === 0;
   const showVisiblePreview = activePresentation === "preview-workbench";
 
   const { resolvedThemeTokens, customThemeTokens } = resolveEditorThemeTokens({
@@ -467,31 +465,7 @@ export function LyricEditor() {
                 data-editor-presentation={activePresentation}
                 data-lyrics-viewport-mode={isLyricsWorkspace ? "immersive" : undefined}
               >
-                {showLegacyEditorHeader ? (
-                  <div className={cn(isExamplesSurfaceOpen && "invisible")}>
-                    <EditorHeader
-                      locale={state.locale}
-                      t={t}
-                      mode="normal"
-                      onOpenExamples={() => setActiveSurface("examples")}
-                      onClearAll={clearAllContent}
-                      onOpenSettings={openSettings}
-                      settingsButtonRef={settingsButtonRef}
-                    />
-                  </div>
-                ) : null}
-
-                <div
-                  className={cn(
-                    "grid min-w-0 max-w-full gap-5",
-                    isLyricsWorkspace && "h-full min-h-0",
-                    isLyricsWorkspace
-                      ? "grid-cols-1"
-                      : !showVisiblePreview
-                        ? "min-[960px]:grid-cols-[minmax(0,1fr)_320px] min-[1180px]:grid-cols-[minmax(0,1fr)_360px] min-[1440px]:grid-cols-[minmax(0,1fr)_400px]"
-                        : undefined
-                  )}
-                >
+                <div className={cn("grid min-w-0 max-w-full gap-5", isLyricsWorkspace && "h-full min-h-0")}>
                   <MotionPanel
                     className={cn(
                       "grid min-w-0 gap-4",
@@ -506,8 +480,8 @@ export function LyricEditor() {
                       backText={t("step.back")}
                       nextText={t("step.next")}
                       themeColor={resolvedAccentColor}
-                      compactChrome={usesUnifiedStepperChrome}
-                      headerActions={usesUnifiedStepperChrome ? (
+                      compactChrome
+                      headerActions={
                         <EditorHeaderActions
                           locale={state.locale}
                           density="compact"
@@ -517,35 +491,26 @@ export function LyricEditor() {
                           onOpenSettings={openSettings}
                           settingsButtonRef={settingsButtonRef}
                         />
-                      ) : undefined}
-                      workbenchAside={showVisiblePreview ? (
-                        <PreviewPane
-                          isPreviewVisible={isPreviewVisible}
-                          onPreviewVisibleChange={setIsPreviewVisible}
-                          song={parsedState.song}
-                          lyrics={parsedState.lyrics}
-                          style={parsedState.style}
-                          cardRef={previewCardRef}
-                          fontSchemePreview={fontSchemePreview}
-                          clearTransitionKey={clearTransitionKey}
-                          measurementKey={previewMeasurementKey}
-                          locale={state.locale}
-                          t={t}
-                        />
-                      ) : undefined}
+                      }
+                      companionAside={
+                        showVisiblePreview ? (
+                          <PreviewPane
+                            isPreviewVisible={isPreviewVisible}
+                            onPreviewVisibleChange={setIsPreviewVisible}
+                            song={parsedState.song}
+                            lyrics={parsedState.lyrics}
+                            style={parsedState.style}
+                            cardRef={previewCardRef}
+                            fontSchemePreview={fontSchemePreview}
+                            clearTransitionKey={clearTransitionKey}
+                            measurementKey={previewMeasurementKey}
+                            locale={state.locale}
+                            t={t}
+                          />
+                        ) : activeSettingsStep?.aside
+                      }
                     />
                   </MotionPanel>
-
-                  {!showVisiblePreview && activeSettingsStep?.aside ? (
-                    <MotionPanel
-                      className={cn(
-                        "order-2 min-h-0 min-w-0 self-start",
-                        isLyricsWorkspace && "h-full self-stretch"
-                      )}
-                    >
-                      {activeSettingsStep.aside}
-                    </MotionPanel>
-                  ) : null}
                 </div>
               </div>
             </motion.div>

@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v5.3.0.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v5.4.0.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="#développement-local">Développement local</a> ·
@@ -51,24 +51,24 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 Téléchargez la dernière version depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
 
-* Installateur recommandé : `Lyrics Card Generator Setup 5.3.0.exe`
-* Version portable : `Lyrics Card Generator-5.3.0-portable.exe`
+* Installateur recommandé : `Lyrics Card Generator Setup 5.4.0.exe`
+* Version portable : `Lyrics Card Generator-5.4.0-portable.exe`
 
 L'installateur est recommandé pour une utilisation régulière. La version portable convient aux essais, à une utilisation temporaire ou à un disque amovible.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### Points clés de la v5.3.0
+### Points clés de la v5.4.0
 
-* Les étapes 2 à 6 partagent un Stepper compact qui réunit l’étape active, le parcours complet et les actions courantes.
-* Exemples, Tout effacer et Paramètres sont intégrés à l’en-tête du Stepper ; la barre séparée de l’étape 2 et le grand en-tête des étapes 3 à 6 disparaissent.
-* Les étapes 3 à 6 conservent leurs réglages, l’aperçu en direct et l’exportation, avec davantage d’espace utile.
-* La barre de titre Windows reçoit une petite icône à côté du nom de l’application ; l’étape 1 reste inchangée.
+* Les six étapes partagent désormais le même Stepper compact, sans répéter le grand en-tête de l’application à l’étape 1.
+* La première page devient un espace de travail à deux colonnes dont le rail de progression couvre la recherche et la barre latérale d’importation.
+* Les informations du morceau, l’analyse de lien, l’audio local et la saisie manuelle sont regroupés dans un seul panneau sans supprimer de méthode d’importation.
+* Les étapes 2 à 6, l’aperçu, l’export PNG, les réglages et les fichiers de projet restent inchangés.
 
 ## 🌐 Notes de publication multilingues
 
 Par défaut, GitHub Release affiche un résumé en chinois simplifié. Consultez les notes complètes :
-[简体中文](./docs/releases/v5.3.0.zh-CN.md) · [繁體中文](./docs/releases/v5.3.0.zh-TW.md) · [English](./docs/releases/v5.3.0.en.md) · [Français](./docs/releases/v5.3.0.fr.md) · [日本語](./docs/releases/v5.3.0.ja.md) · [Español](./docs/releases/v5.3.0.es.md)
+[简体中文](./docs/releases/v5.4.0.zh-CN.md) · [繁體中文](./docs/releases/v5.4.0.zh-TW.md) · [English](./docs/releases/v5.4.0.en.md) · [Français](./docs/releases/v5.4.0.fr.md) · [日本語](./docs/releases/v5.4.0.ja.md) · [Español](./docs/releases/v5.4.0.es.md)
 
 <a id="fonctionnalités-principales"></a>
 

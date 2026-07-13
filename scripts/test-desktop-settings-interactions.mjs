@@ -413,6 +413,46 @@ async function assertSongSearchBehavior() {
   );
   assert.ok(searchRequests.length >= 3, "search route mock received keyboard, Tab, and mouse queries");
   assert.equal(resolveRequests.length, 2, "mouse and Enter each resolve exactly one mocked result");
+  assert.match(
+    await page.getByTestId("song-import-aside").textContent(),
+    new RegExp(`Resolved result ${activeIndex + 1}.*Mock Artist ${activeIndex + 1}`, "s"),
+    "resolved song state is reflected in the combined import panel"
+  );
+}
+
+async function assertSongImportAsideBehavior() {
+  const aside = page.getByTestId("song-import-aside");
+  const manualToggle = aside.locator('button[aria-controls][aria-expanded]');
+  assert.equal(await manualToggle.getAttribute("aria-expanded"), "false", "manual song details start collapsed");
+
+  await manualToggle.focus();
+  await manualToggle.press("Enter");
+  assert.equal(await manualToggle.getAttribute("aria-expanded"), "true", "manual song details expand from the keyboard");
+  assert.equal(
+    await manualToggle.evaluate((node) => document.activeElement === node),
+    true,
+    "expanding manual song details preserves focus on the disclosure button"
+  );
+
+  const manualRegionId = await manualToggle.getAttribute("aria-controls");
+  assert.ok(manualRegionId, "manual song details expose a controlled region id");
+  const manualRegion = page.locator(`#${manualRegionId}`);
+  await manualRegion.waitFor({ state: "visible" });
+  await manualToggle.press("Tab");
+  assert.equal(
+    await manualRegion.evaluate((region) => region.contains(document.activeElement)),
+    true,
+    "Tab enters the expanded manual song form in visual order"
+  );
+  await page.keyboard.press("Shift+Tab");
+  assert.equal(
+    await manualToggle.evaluate((node) => document.activeElement === node),
+    true,
+    "reverse Tab returns to the manual song disclosure"
+  );
+  await manualToggle.press("Enter");
+  assert.equal(await manualToggle.getAttribute("aria-expanded"), "false", "manual song details collapse from the keyboard");
+  await manualRegion.waitFor({ state: "detached" });
 }
 
 async function assertFontPickerBehavior() {
@@ -491,8 +531,11 @@ async function assertFocusedPresentation(width, height) {
   const result = await page.evaluate(() => {
     const editor = document.querySelector('[data-testid="editor-surface"]');
     const stepper = editor?.querySelector('[data-stepper-presentation="focus"]');
-    const legacyHeader = editor?.querySelector('.editor-header');
-    const headerActions = legacyHeader?.querySelector('[data-testid="editor-header-actions"]');
+    const rail = stepper?.querySelector('.lyrics-stepper-rail');
+    const heading = rail?.querySelector('[data-stepper-heading-row="true"]');
+    const headerActions = heading?.querySelector('[data-testid="editor-header-actions"]');
+    const content = stepper?.querySelector('.lyrics-stepper-content');
+    const companion = stepper?.querySelector('[data-stepper-companion="true"]');
     const preview = document.querySelector('[data-testid="lyric-card-preview"]');
     const previewToggle = document.querySelector('[data-testid="preview-pane-toggle"]');
     const exportHost = document.querySelector('[data-export-card-host]');
@@ -500,9 +543,19 @@ async function assertFocusedPresentation(width, height) {
     const stepperRect = stepper?.getBoundingClientRect();
     const asideRect = document.querySelector('[data-testid="song-import-aside"]')?.getBoundingClientRect();
     const aside = document.querySelector('[data-testid="song-import-aside"]');
+    const railRect = rail?.getBoundingClientRect();
+    const contentRect = content?.getBoundingClientRect();
+    const companionRect = companion?.getBoundingClientRect();
+    const actionsRect = headerActions?.getBoundingClientRect();
+    const geometryTolerance = 1;
+    const expectedAsideWidth = window.innerWidth >= 1440 ? 400 : window.innerWidth >= 1180 ? 360 : 320;
     return {
       stepper: stepperRect ? { x: stepperRect.x, width: stepperRect.width } : null,
       aside: asideRect ? { x: asideRect.x, width: asideRect.width } : null,
+      content: contentRect ? { x: contentRect.x, width: contentRect.width } : null,
+      expectedAsideWidth,
+      horizontalOverflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      railOverflow: rail ? rail.scrollWidth - rail.clientWidth : null,
       hasVisiblePreview: Boolean(preview && preview.getBoundingClientRect().right > 0),
       hasPreviewToggle: Boolean(previewToggle),
       exportHostLeft: exportHost?.getBoundingClientRect().left ?? 0,
@@ -510,12 +563,21 @@ async function assertFocusedPresentation(width, height) {
       hasLinkEntry: Boolean(aside?.querySelector('.song-import-aside__methods input:not([type="file"])')),
       hasLocalEntry: Boolean(aside?.querySelector('input[type="file"]')),
       hasManualEntry: Boolean(aside?.querySelector('button[aria-controls][aria-expanded]')),
+      songImportPanelCount: aside?.querySelectorAll('[data-song-import-panel="true"]').length ?? -1,
       legacyHeaderCount: editor?.querySelectorAll('.editor-header').length ?? -1,
       headerActionPlacement: headerActions?.getAttribute('data-placement'),
       headerActionIds: headerActions
         ? [...headerActions.querySelectorAll('button')].map((button) => button.getAttribute('data-testid'))
         : [],
       hasStepperHeaderActions: Boolean(stepper?.querySelector('[data-stepper-header-actions="true"]')),
+      actionsFitRail: Boolean(actionsRect && railRect && actionsRect.left >= railRect.left && actionsRect.right <= railRect.right),
+      railSpansFocusWorkbench: Boolean(
+        railRect && contentRect && companionRect &&
+        Math.abs(railRect.left - contentRect.left) <= geometryTolerance &&
+        Math.abs(railRect.right - companionRect.right) <= geometryTolerance &&
+        contentRect.top + geometryTolerance >= railRect.bottom &&
+        companionRect.top + geometryTolerance >= railRect.bottom
+      ),
       compactChrome: stepper?.getAttribute('data-stepper-compact-chrome'),
       activeStep: document.querySelector('[aria-current="step"]')?.getAttribute("data-step-id")
     };
@@ -527,15 +589,25 @@ async function assertFocusedPresentation(width, height) {
   assert.equal(result.hasLinkEntry, true, `${width}x${height} preserves link import`);
   assert.equal(result.hasLocalEntry, true, `${width}x${height} preserves local audio import`);
   assert.equal(result.hasManualEntry, true, `${width}x${height} preserves manual metadata entry`);
-  assert.equal(result.legacyHeaderCount, 1, `${width}x${height} keeps step one's legacy app header`);
-  assert.equal(result.headerActionPlacement, "header", `${width}x${height} keeps step one's actions in the app header`);
+  assert.equal(result.songImportPanelCount, 1, `${width}x${height} combines song summary and alternate imports`);
+  assert.equal(result.legacyHeaderCount, 0, `${width}x${height} removes step one's legacy app header`);
+  assert.equal(result.headerActionPlacement, "stepper", `${width}x${height} moves step-one actions into the Stepper`);
   assert.deepEqual(
     result.headerActionIds,
     ["examples-button", "clear-all-button", "settings-button"],
     `${width}x${height} preserves every step-one header action`
   );
-  assert.equal(result.hasStepperHeaderActions, false, `${width}x${height} does not move step-one actions into the Stepper`);
-  assert.equal(result.compactChrome, "false", `${width}x${height} keeps step one's original non-compact Stepper`);
+  assert.equal(result.hasStepperHeaderActions, true, `${width}x${height} keeps step-one actions inside the Stepper`);
+  assert.equal(result.actionsFitRail, true, `${width}x${height} keeps step-one actions within the Stepper rail`);
+  assert.equal(result.railSpansFocusWorkbench, true, `${width}x${height} spans the Stepper rail across search and import columns`);
+  assert.ok(
+    Math.abs(result.aside.width - result.expectedAsideWidth) <= 1,
+    `${width}x${height} uses the intended ${result.expectedAsideWidth}px import column: ${JSON.stringify(result)}`
+  );
+  assert.ok(result.content.width >= 500, `${width}x${height} preserves a usable primary search column: ${JSON.stringify(result)}`);
+  assert.ok(result.horizontalOverflow <= 1, `${width}x${height} avoids document-level horizontal overflow: ${JSON.stringify(result)}`);
+  assert.ok(result.railOverflow <= 1, `${width}x${height} keeps the compact rail contents inside its panel: ${JSON.stringify(result)}`);
+  assert.equal(result.compactChrome, "true", `${width}x${height} uses the shared compact Stepper on step one`);
   assert.ok(
     result.stepper.width > result.aside.width,
     `${width}x${height} keeps search primary over import methods: ${JSON.stringify(result)}`
@@ -1001,6 +1073,7 @@ try {
   ));
   assert.deepEqual(minimumWindowSize, [1000, 700], "desktop window preserves the 1000px minimum width");
   await assertSongSearchBehavior();
+  await assertSongImportAsideBehavior();
   await assertFontPickerBehavior();
 
   const focusedSizes = [
@@ -1013,6 +1086,7 @@ try {
   for (const size of focusedSizes) {
     await assertFocusedPresentation(size.width, size.height);
   }
+  await page.screenshot({ path: path.join(reportDirectory, "step-one-unified.png"), fullPage: false });
 
   await setWindowSize(1000, 700);
   await assertUnifiedPreviewChrome("layout");
@@ -1050,6 +1124,8 @@ try {
     await page.getByTestId("settings-close-button").click();
     await page.locator('[data-testid="settings-surface"][data-surface-state="closed"]').waitFor({ state: "attached" });
     await page.waitForFunction(() => document.activeElement?.getAttribute("data-testid") === "settings-button");
+    await page.locator('button[data-step-id="link"]').click();
+    await assertFocusedPresentation(1000, 700);
     await assertUnifiedPreviewChrome("layout");
   }
 

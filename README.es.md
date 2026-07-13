@@ -19,7 +19,7 @@
 <p>
   <strong>Navegación</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Descargar la última versión</a> ·
-  <a href="./docs/releases/v5.3.0.es.md">Notas de la versión</a> ·
+  <a href="./docs/releases/v5.4.0.es.md">Notas de la versión</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en línea</a> ·
   <a href="#funciones-principales">Funciones principales</a> ·
   <a href="#desarrollo-local">Desarrollo local</a> ·
@@ -51,24 +51,24 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 Descarga la versión más reciente desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Instalador recomendado: `Lyrics Card Generator Setup 5.3.0.exe`
-* Versión portable: `Lyrics Card Generator-5.3.0-portable.exe`
+* Instalador recomendado: `Lyrics Card Generator Setup 5.4.0.exe`
+* Versión portable: `Lyrics Card Generator-5.4.0-portable.exe`
 
 El instalador se recomienda para uso habitual. La versión portable es útil para pruebas, uso temporal o ejecución desde una unidad extraíble.
 
 > La compilación actual no está firmada. Windows puede mostrar una advertencia de SmartScreen, algo habitual en aplicaciones personales sin firma.
 
-### Aspectos destacados de la versión 5.3.0
+### Aspectos destacados de la versión 5.4.0
 
-* Los pasos 2 a 6 comparten un Stepper compacto que reúne el paso activo, la ruta completa y las acciones habituales.
-* Ejemplos, Borrar todo y Ajustes pasan al encabezado del Stepper, eliminando la barra separada del paso 2 y el gran encabezado de los pasos 3 a 6.
-* Los pasos 3 a 6 conservan sus ajustes, la vista previa en directo y la exportación, con más espacio útil.
-* La barra de título de Windows añade un pequeño icono junto al nombre de la aplicación; el paso 1 permanece sin cambios.
+* Los seis pasos comparten ahora el mismo Stepper compacto y el paso 1 deja de repetir el gran encabezado de la aplicación.
+* La primera página pasa a ser un espacio de trabajo de dos columnas cuyo indicador de progreso abarca la búsqueda y la barra lateral de importación.
+* La información de la canción, el análisis de enlaces, el audio local y la edición manual se reúnen en un único panel sin eliminar ninguna vía de importación.
+* Los pasos 2 a 6, la vista previa, la exportación PNG, los ajustes y los archivos de proyecto permanecen sin cambios.
 
 ## 🌐 Notas de publicación multilingües
 
 GitHub Release muestra de forma predeterminada un resumen en chino simplificado. Consulta las notas completas:
-[简体中文](./docs/releases/v5.3.0.zh-CN.md) · [繁體中文](./docs/releases/v5.3.0.zh-TW.md) · [English](./docs/releases/v5.3.0.en.md) · [Français](./docs/releases/v5.3.0.fr.md) · [日本語](./docs/releases/v5.3.0.ja.md) · [Español](./docs/releases/v5.3.0.es.md)
+[简体中文](./docs/releases/v5.4.0.zh-CN.md) · [繁體中文](./docs/releases/v5.4.0.zh-TW.md) · [English](./docs/releases/v5.4.0.en.md) · [Français](./docs/releases/v5.4.0.fr.md) · [日本語](./docs/releases/v5.4.0.ja.md) · [Español](./docs/releases/v5.4.0.es.md)
 
 <a id="funciones-principales"></a>
 

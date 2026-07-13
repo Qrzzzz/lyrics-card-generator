@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v5.3.0.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v5.4.0.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="#ローカル開発">ローカル開発</a> ·
@@ -51,24 +51,24 @@
 
 最新版は [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) からダウンロードできます。
 
-* 推奨インストーラー：`Lyrics Card Generator Setup 5.3.0.exe`
-* ポータブル版：`Lyrics Card Generator-5.3.0-portable.exe`
+* 推奨インストーラー：`Lyrics Card Generator Setup 5.4.0.exe`
+* ポータブル版：`Lyrics Card Generator-5.4.0-portable.exe`
 
 通常利用にはインストーラーを推奨します。ポータブル版は一時利用、検証、リムーバブルドライブでの利用に向いています。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v5.3.0 の更新ポイント
+### v5.4.0 の更新ポイント
 
-* 手順2〜6で、現在の手順、6手順すべてのナビゲーション、共通操作をまとめたコンパクトな Stepper を共有します。
-* 「サンプル」「すべて消去」「設定」を Stepper の見出し行へ移動し、手順2の独立した操作バーと手順3〜6の大きなアプリ見出しを廃止しました。
-* 手順3〜6の設定、リアルタイムプレビュー、エクスポートフローは維持したまま、利用可能な領域を広げました。
-* Windows タイトルバーのアプリ名の横に小さなアイコンを追加しました。手順1は変更していません。
+* 6つすべての手順で同じコンパクトな Stepper を共有し、手順1の大きなアプリ見出しの重複をなくしました。
+* 最初のページを2列の共通ワークベンチへ変更し、進行レールが検索エリアとインポート用サイドバーを横断します。
+* 曲情報、リンク解析、ローカル音源、手動編集を1つのサイドパネルにまとめ、既存の取り込み方法はすべて維持します。
+* 手順2〜6、リアルタイムプレビュー、PNG書き出し、設定データ、プロジェクト形式は変更していません。
 
 ## 🌐 多言語リリースノート
 
 GitHub Release ではデフォルトで簡体字中国語の概要が表示されます。完全なリリースノートはこちら：
-[简体中文](./docs/releases/v5.3.0.zh-CN.md) · [繁體中文](./docs/releases/v5.3.0.zh-TW.md) · [English](./docs/releases/v5.3.0.en.md) · [Français](./docs/releases/v5.3.0.fr.md) · [日本語](./docs/releases/v5.3.0.ja.md) · [Español](./docs/releases/v5.3.0.es.md)
+[简体中文](./docs/releases/v5.4.0.zh-CN.md) · [繁體中文](./docs/releases/v5.4.0.zh-TW.md) · [English](./docs/releases/v5.4.0.en.md) · [Français](./docs/releases/v5.4.0.fr.md) · [日本語](./docs/releases/v5.4.0.ja.md) · [Español](./docs/releases/v5.4.0.es.md)
 
 <a id="主な機能"></a>
 
