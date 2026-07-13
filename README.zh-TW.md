@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v5.0.4.zh-TW.md">發布說明</a> ·
+  <a href="./docs/releases/v5.1.0.zh-TW.md">發布說明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">線上 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="#本機開發">本機開發</a> ·
@@ -48,31 +48,30 @@
 
 請前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載最新版：
 
-* 建議一般使用者下載安裝版：`Lyrics Card Generator Setup 5.0.4.exe`
-* 不想安裝時可下載可攜版：`Lyrics Card Generator-5.0.4-portable.exe`
+* 建議一般使用者下載安裝版：`Lyrics Card Generator Setup 5.1.0.exe`
+* 不想安裝時可下載可攜版：`Lyrics Card Generator-5.1.0-portable.exe`
 
 安裝版適合長期使用；可攜版適合臨時執行、測試或放在隨身碟中使用。
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v5.0.4 更新重點
+### v5.1.0 更新重點
 
-* 繼承 5.0.2 的固定搜尋結果區域、結果數量、網易雲來源標籤和重新設計的歌曲清單。
-* 第二步固定使用最大可用高度，移除三段視窗切換與底部拖曳列。
-* 重排設定頁首與麵包屑，讓目前路徑更舒展清楚。
-* 將 AI 工作區改為與其他設定頁一致的緊湊入口清單。
-* 新增《honeybee》和《Lies》範例，並以兩列可捲動版面顯示範例庫。
+* 所有不受信任的歌曲與圖片 URL 改用逐跳驗證的 Safe Fetch，阻擋重新導向至私有網路、保留位址與雲端中繼資料位址的 SSRF。
+* 歌曲、歌詞與範例匯入改為原子交易；清空、換歌與較新的操作會讓舊請求及舊候選失效。
+* 桌面版匯出使用不可變快照與同步互斥，內容、尺寸及檔名始終來自同一版本。
+* Web Lite 使用獨立匯出 host，並與桌面版共用 36 行、字型、尺寸穩定及 overflow 安全判斷。
 
 ## 🌐 多語言發佈說明
 
 GitHub Release 頁面預設使用簡體中文短版，完整發佈說明維護在 `docs/releases/`：
 
-* [简体中文](./docs/releases/v5.0.4.zh-CN.md)
-* [繁體中文](./docs/releases/v5.0.4.zh-TW.md)
-* [English](./docs/releases/v5.0.4.en.md)
-* [Français](./docs/releases/v5.0.4.fr.md)
-* [日本語](./docs/releases/v5.0.4.ja.md)
-* [Español](./docs/releases/v5.0.4.es.md)
+* [简体中文](./docs/releases/v5.1.0.zh-CN.md)
+* [繁體中文](./docs/releases/v5.1.0.zh-TW.md)
+* [English](./docs/releases/v5.1.0.en.md)
+* [Français](./docs/releases/v5.1.0.fr.md)
+* [日本語](./docs/releases/v5.1.0.ja.md)
+* [Español](./docs/releases/v5.1.0.es.md)
 
 ## ✨ 主要功能
 

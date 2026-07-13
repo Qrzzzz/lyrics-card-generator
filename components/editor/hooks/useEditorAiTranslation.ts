@@ -16,18 +16,28 @@ import {
   type AITranslationPhase
 } from "@/lib/ai/types";
 import { getAIUiCopy } from "@/lib/ai/ui-copy";
+import { AITranslationOrchestrator } from "@/lib/editor/ai-translation-orchestrator";
+import type {
+  EditorDocumentSnapshot,
+  TranslationValue
+} from "@/lib/editor/editor-document-state-adapter";
 import type { Locale } from "@/lib/types";
-
-export type TranslationValue = {
-  text: string;
-  enabled: boolean;
-};
 
 type UseEditorAiTranslationInput = {
   locale: Locale;
   lyrics: string;
-  translation: TranslationValue;
-  setTranslation: (next: TranslationValue) => void;
+  beginAITranslation: () => EditorDocumentSnapshot;
+  getCurrentDocumentSnapshot: () => EditorDocumentSnapshot;
+  applyPartial: (
+    next: TranslationValue,
+    expectedRevision: number,
+    expectedSongIdentity: string
+  ) => boolean;
+  commitTerminal: (
+    next: TranslationValue,
+    expectedRevision: number,
+    expectedSongIdentity: string
+  ) => boolean;
   onNotify: (message: string) => void;
   onRequireSettings: () => void;
   confirmOverwrite?: (message: string) => boolean;
@@ -36,8 +46,10 @@ type UseEditorAiTranslationInput = {
 export function useEditorAiTranslation({
   locale,
   lyrics,
-  translation,
-  setTranslation,
+  beginAITranslation,
+  getCurrentDocumentSnapshot,
+  applyPartial,
+  commitTerminal,
   onNotify,
   onRequireSettings,
   confirmOverwrite = (message) => window.confirm(message)
@@ -49,7 +61,7 @@ export function useEditorAiTranslation({
   const [aiTranslationPhase, setAITranslationPhase] = useState<AITranslationPhase>("idle");
   const [aiError, setAIError] = useState("");
   const [aiSettings, setAISettings] = useState<AISettingsSummary>({ ...DEFAULT_AI_SETTINGS, hasApiKey: false });
-  const aiAbortControllerRef = useRef<AbortController | null>(null);
+  const aiOrchestratorRef = useRef(new AITranslationOrchestrator<TranslationValue, AITranslationPhase>());
   const aiCopy = useMemo(() => getAIUiCopy(locale), [locale]);
 
   useEffect(() => {
@@ -87,65 +99,83 @@ export function useEditorAiTranslation({
   }
 
   async function translateWithAI(presetId: string, reasoning: boolean) {
-    const previousTranslation = translation.text;
-    const previousEnabled = translation.enabled;
+    const currentDocument = getCurrentDocumentSnapshot();
+    const previousTranslation = currentDocument.translation.text;
     if (previousTranslation.trim() && !confirmOverwrite(aiCopy.overwriteConfirm)) {
       return;
     }
+    const intent = beginAITranslation();
 
-    const controller = new AbortController();
-    aiAbortControllerRef.current = controller;
-    setIsAITranslating(true);
-    setAIError("");
-    setAIStreamingText("");
-    setAIReasoningText("");
-    setAITranslationPhase("connecting");
-    let wrotePartial = false;
-
-    try {
-      const prompt = buildLyricsTranslationPrompt({
-        lyrics,
-        presetId,
-        targetLocale: locale,
-        promptLibrary: aiSettings.promptLibrary
-      });
-      const raw = await streamAITranslation({
-        prompt,
-        reasoning,
-        signal: controller.signal,
-        onStatus: setAITranslationPhase,
-        onReasoningDelta: (_delta, accumulated) => setAIReasoningText(accumulated.slice(-12000)),
-        onDelta: (_delta, accumulated) => {
-          const cleaned = cleanAITranslation(accumulated);
-          setAIStreamingText(cleaned || accumulated.trim());
-          if (cleaned) {
-            wrotePartial = true;
-            setTranslation({ text: cleaned, enabled: true });
-          }
-        }
-      });
-      const cleaned = cleanAITranslation(raw);
-      if (!cleaned) {
-        throw new AITranslationError(aiCopy.emptyResponse, "empty_response");
+    await aiOrchestratorRef.current.run({
+      revision: intent.revision,
+      songIdentity: intent.songIdentity,
+      previousTranslation: intent.translation,
+      getCurrentDocument: () => getCurrentDocumentSnapshot(),
+      applyPartial,
+      commitTerminal,
+      clean: cleanAITranslation,
+      toValue: (text) => ({ text, enabled: true }),
+      createEmptyResponseError: () => new AITranslationError(aiCopy.emptyResponse, "empty_response"),
+      onStart: () => {
+        setIsAITranslating(true);
+        setAIError("");
+        setAIStreamingText("");
+        setAIReasoningText("");
+        setAITranslationPhase("connecting");
+      },
+      onStatus: setAITranslationPhase,
+      onReasoning: (accumulated) => setAIReasoningText(accumulated.slice(-12000)),
+      onStreaming: setAIStreamingText,
+      onSuccess: () => {
+        setAISettings((current) => ({ ...current, defaultStyle: presetId, reasoningEnabled: reasoning }));
+        onNotify(aiCopy.translated);
+      },
+      onFailure: (error) => setAIError(normalizeAIErrorMessage(error)),
+      onCancelled: () => {
+        setAIError(aiCopy.cancelled);
+        setIsAITranslating(false);
+        setAITranslationPhase("idle");
+      },
+      onInvalidated: () => {
+        setIsAITranslating(false);
+        setAITranslationPhase("idle");
+        setAIStreamingText("");
+        setAIReasoningText("");
+        setAIError("");
+      },
+      onSettled: () => {
+        setIsAITranslating(false);
+        setAITranslationPhase("idle");
+      },
+      stream: async (signal, events) => {
+        const prompt = buildLyricsTranslationPrompt({
+          lyrics: intent.lyrics,
+          presetId,
+          targetLocale: locale,
+          promptLibrary: aiSettings.promptLibrary
+        });
+        return streamAITranslation({
+          prompt,
+          reasoning,
+          signal,
+          onStatus: events.onStatus,
+          onReasoningDelta: events.onReasoningDelta,
+          onDelta: events.onDelta
+        });
       }
-      setTranslation({ text: cleaned, enabled: true });
-      setAISettings((current) => ({ ...current, defaultStyle: presetId, reasoningEnabled: reasoning }));
-      onNotify(aiCopy.translated);
-    } catch (error) {
-      if (wrotePartial) {
-        setTranslation({ text: previousTranslation, enabled: previousEnabled });
-      }
-      const aborted = controller.signal.aborted;
-      setAIError(aborted ? aiCopy.cancelled : normalizeAIErrorMessage(error));
-    } finally {
-      aiAbortControllerRef.current = null;
-      setIsAITranslating(false);
-      setAITranslationPhase("idle");
-    }
+    });
   }
 
   function cancelAITranslation() {
-    aiAbortControllerRef.current?.abort();
+    aiOrchestratorRef.current.cancel();
+  }
+
+  function invalidateAITranslation(reason: "document" | "ai-start" = "document") {
+    if (reason === "ai-start") {
+      aiOrchestratorRef.current.prepareReplacement();
+      return undefined;
+    }
+    return aiOrchestratorRef.current.invalidate();
   }
 
   async function refreshAISettings() {
@@ -167,6 +197,7 @@ export function useEditorAiTranslation({
     closeAITranslate,
     translateWithAI,
     cancelAITranslation,
+    invalidateAITranslation,
     setAISettings,
     refreshAISettings
   };

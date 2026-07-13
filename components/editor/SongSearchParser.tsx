@@ -10,15 +10,18 @@ import type {
   SongSearchResult
 } from "@/lib/music-search/types";
 import type { ParsedSongData } from "@/lib/types";
+import type { DocumentImportIntent } from "@/lib/editor/document-transactions";
 import { cn } from "@/lib/utils";
 
 type SearchStatus = "idle" | "typing" | "loading" | "success" | "partial" | "empty" | "error";
 
 export function SongSearchParser({
   onResolved,
+  beginImport,
   t
 }: {
-  onResolved: (song: ParsedSongData, lyrics?: string) => void;
+  beginImport: () => DocumentImportIntent | null;
+  onResolved: (song: ParsedSongData, lyrics: string | undefined, intent: DocumentImportIntent) => boolean;
   t: ReturnType<typeof createT>;
 }) {
   const listboxId = useId();
@@ -30,9 +33,13 @@ export function SongSearchParser({
   const [message, setMessage] = useState(t("songSearchNeedMoreInput"));
   const [expanded, setExpanded] = useState(false);
   const [isResolving, setIsResolving] = useState(false);
+  const [isComposing, setIsComposing] = useState(false);
   const latestRequestRef = useRef(0);
   const skipNextSearchRef = useRef(false);
   const cacheRef = useRef(new Map<string, SongSearchResult[]>());
+  const activeResolveRef = useRef<DocumentImportIntent | null>(null);
+
+  useEffect(() => () => activeResolveRef.current?.cancel(), []);
 
   useEffect(() => {
     if (skipNextSearchRef.current) {
@@ -44,6 +51,13 @@ export function SongSearchParser({
     }
 
     const keyword = query.trim();
+
+    if (isComposing) {
+      latestRequestRef.current += 1;
+      setSuggestions([]);
+      setExpanded(false);
+      return;
+    }
 
     if (!keyword) {
       latestRequestRef.current += 1;
@@ -75,7 +89,7 @@ export function SongSearchParser({
       window.clearTimeout(timer);
       controller.abort();
     };
-  }, [query, t]);
+  }, [isComposing, query, t]);
 
   async function search(keyword: string, signal: AbortSignal, requestId: number, limit: number) {
     const cacheKey = `${keyword.toLowerCase()}::${limit}`;
@@ -143,6 +157,10 @@ export function SongSearchParser({
       return;
     }
 
+    const intent = beginImport();
+    if (!intent) return;
+    activeResolveRef.current?.cancel();
+    activeResolveRef.current = intent;
     setIsResolving(true);
     setStatus("loading");
     setMessage(t("songSearchResolving"));
@@ -151,7 +169,8 @@ export function SongSearchParser({
       const response = await fetch("/api/resolve-searched-song", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ source: "netease", id: song.id })
+        body: JSON.stringify({ source: "netease", id: song.id }),
+        signal: intent.signal
       });
       const payload = (await response.json()) as ResolveSearchedSongResponse;
 
@@ -159,7 +178,7 @@ export function SongSearchParser({
         throw new Error(payload.error);
       }
 
-      onResolved(payload.data.song, payload.data.lyrics);
+      if (!onResolved(payload.data.song, payload.data.lyrics, intent)) return;
       skipNextSearchRef.current = true;
       setQuery(`${payload.data.song.title} - ${payload.data.song.artist}`);
       setExpanded(false);
@@ -167,10 +186,18 @@ export function SongSearchParser({
       setStatus(payload.data.lyrics ? "success" : "partial");
       setMessage(payload.data.lyrics ? t("songSearchImportedWithLyrics") : t("songSearchImportedNoLyrics"));
     } catch (error) {
+      if (intent.signal.aborted) {
+        setStatus("idle");
+        setMessage(t("songSearchNeedMoreInput"));
+        return;
+      }
       setStatus("error");
       setMessage(error instanceof Error ? error.message : t("songSearchResolveFailed"));
     } finally {
-      setIsResolving(false);
+      if (activeResolveRef.current?.id === intent.id) {
+        activeResolveRef.current = null;
+        setIsResolving(false);
+      }
     }
   }
 
@@ -199,6 +226,7 @@ export function SongSearchParser({
     }
 
     if (event.key === "Enter") {
+      if (event.nativeEvent.isComposing || isComposing) return;
       const selected = expanded ? suggestions[highlightedIndex] : suggestions[0];
       if (selected) {
         event.preventDefault();
@@ -229,7 +257,20 @@ export function SongSearchParser({
           <Search className="app-text-subtle pointer-events-none absolute left-4 top-1/2 z-10 size-5 -translate-y-1/2" />
           <Input
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
+            onChange={(event) => {
+              activeResolveRef.current?.cancel();
+              activeResolveRef.current = null;
+              setIsResolving(false);
+              latestRequestRef.current += 1;
+              setSuggestions([]);
+              setExpanded(false);
+              setQuery(event.target.value);
+            }}
+            onCompositionStart={() => setIsComposing(true)}
+            onCompositionEnd={(event) => {
+              setQuery(event.currentTarget.value);
+              setIsComposing(false);
+            }}
             onKeyDown={handleKeyDown}
             onFocus={() => setExpanded(suggestions.length > 0)}
             onBlur={() => window.setTimeout(() => setExpanded(false), 150)}

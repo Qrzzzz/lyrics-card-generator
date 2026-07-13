@@ -1,13 +1,31 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { getCardSize } from "@/lib/card-size";
+import { flushSync } from "react-dom";
 import { normalizeCardStyle } from "@/lib/card-style-normalize";
 import { clearLyricContent, hasClearableLyricContent } from "@/lib/clear-content";
 import { applyEditorStyleChange } from "@/lib/editor/apply-style-change";
-import { getHighResolutionCoverUrl } from "@/lib/cover-url";
 import { exportNodeAsPng } from "@/lib/export-image";
-import { proxiedImageUrl } from "@/lib/image-utils";
+import { createExportSnapshot, type ExportSnapshot } from "@/lib/export-snapshot";
+import {
+  ExportTransactionMutex,
+  runExportTransaction,
+  waitForExportSnapshotNode
+} from "@/lib/export-transaction";
+import {
+  canApplyLyricsCandidate,
+  canonicalSongInfo,
+  DocumentTransactionController,
+  replaceSongDocument,
+  requestDocumentImport,
+  type DocumentImportIntent,
+  type DocumentImportKind
+} from "@/lib/editor/document-transactions";
+import {
+  EditorDocumentStateAdapter,
+  type EditorDocumentStateMutation,
+  type TranslationValue
+} from "@/lib/editor/editor-document-state-adapter";
 import type { ExampleLoadPayload } from "@/lib/examples";
 import type {
   AppState,
@@ -15,12 +33,6 @@ import type {
   ParsedSongData,
   SongInfo
 } from "@/lib/types";
-import { sanitizeFilePart } from "@/lib/utils";
-
-type TranslationValue = {
-  text: string;
-  enabled: boolean;
-};
 
 type UseEditorActionsInput = {
   parsedState: AppState;
@@ -28,12 +40,16 @@ type UseEditorActionsInput = {
   cardRef: React.RefObject<HTMLElement | null>;
   exportPixelRatio: number;
   exportBlockMessage?: string;
-  getExportBlockMessage?: () => string | undefined;
+  getExportBlockMessage?: (snapshot?: ExportSnapshot) => string | undefined;
+  exportBusyMessage: string;
+  exportFailedMessage: (detail: string) => string;
   exampleLoadedMessage: string;
   clearAlreadyEmptyMessage: string;
+  confirmReplaceDocument: () => boolean;
   onNotify: (message: string) => void;
   onCloseExamples: () => void;
   onClearTransientState: () => void;
+  onInvalidateDocument: (reason?: "document" | "ai-start") => TranslationValue | undefined;
 };
 
 export function useEditorActions({
@@ -43,28 +59,102 @@ export function useEditorActions({
   exportPixelRatio,
   exportBlockMessage,
   getExportBlockMessage,
+  exportBusyMessage,
+  exportFailedMessage,
   exampleLoadedMessage,
   clearAlreadyEmptyMessage,
+  confirmReplaceDocument,
   onNotify,
   onCloseExamples,
-  onClearTransientState
+  onClearTransientState,
+  onInvalidateDocument
 }: UseEditorActionsInput) {
   const [celebrationKey, setCelebrationKey] = useState(0);
   const [isCompleteExporting, setIsCompleteExporting] = useState(false);
   const [clearTransitionKey, setClearTransitionKey] = useState(0);
   const clearVersionRef = useRef(0);
+  const documentControllerRef = useRef(new DocumentTransactionController());
+  const [documentRevision, setDocumentRevision] = useState(0);
+  const currentDocumentRef = useRef(parsedState);
+  currentDocumentRef.current = parsedState;
+  const documentStateAdapterRef = useRef<EditorDocumentStateAdapter | null>(null);
+  if (!documentStateAdapterRef.current) {
+    documentStateAdapterRef.current = new EditorDocumentStateAdapter(
+      documentControllerRef.current,
+      (updater) => setState(updater),
+      (updater) => flushSync(() => setState(updater)),
+      () => currentDocumentRef.current
+    );
+  }
+  const documentStateAdapter = documentStateAdapterRef.current;
+  const [activeExportSnapshot, setActiveExportSnapshot] = useState<ExportSnapshot | null>(null);
+  const exportMutexRef = useRef(new ExportTransactionMutex());
+  const exportRevisionRef = useRef(0);
+  const previousExportStateRef = useRef(parsedState);
+  if (previousExportStateRef.current !== parsedState) {
+    previousExportStateRef.current = parsedState;
+    exportRevisionRef.current += 1;
+  }
 
-  function setTranslation({ text, enabled }: TranslationValue) {
-    setState((current) => ({
-      ...current,
-      translationText: text,
-      translationEnabled: enabled,
-      style: {
-        ...current.style,
-        translationText: text,
-        translationEnabled: enabled
-      }
-    }));
+  function applyDocumentMutation(mutation: EditorDocumentStateMutation) {
+    const rollback = onInvalidateDocument();
+    setDocumentRevision(documentStateAdapter.queueDocumentMutation(rollback, mutation));
+  }
+
+  function beginSongImport(kind: DocumentImportKind) {
+    const intent = requestDocumentImport(
+      documentControllerRef.current,
+      parsedState,
+      kind,
+      confirmReplaceDocument
+    );
+    if (intent) documentStateAdapter.queueRollback(onInvalidateDocument());
+    return intent;
+  }
+
+  function commitSongImport(intent: DocumentImportIntent, song: ParsedSongData, lyrics = "") {
+    const revision = documentControllerRef.current.tryCommit(intent);
+    if (revision === null) return false;
+    setDocumentRevision(revision);
+    setState((current) => replaceSongDocument(current, song, lyrics));
+    return true;
+  }
+
+  function beginAITranslation() {
+    // A replacement generation restores its own partial synchronously before
+    // this new document intent advances the shared revision.
+    onInvalidateDocument("ai-start");
+    const snapshot = documentStateAdapter.beginAITranslation();
+    setDocumentRevision(snapshot.revision);
+    return snapshot;
+  }
+
+  function getCurrentDocumentSnapshot() {
+    return documentStateAdapter.getDocumentSnapshot();
+  }
+
+  function applyAIPartial(
+    { text, enabled }: TranslationValue,
+    expectedRevision: number,
+    expectedSongIdentity: string
+  ) {
+    return documentStateAdapter.applyAIPartial(
+      { text, enabled },
+      expectedRevision,
+      expectedSongIdentity
+    );
+  }
+
+  function commitAITranslation(
+    { text, enabled }: TranslationValue,
+    expectedRevision: number,
+    expectedSongIdentity: string
+  ) {
+    return documentStateAdapter.commitAITranslation(
+      { text, enabled },
+      expectedRevision,
+      expectedSongIdentity
+    );
   }
 
   function clearAllContent() {
@@ -77,7 +167,7 @@ export function useEditorActions({
     setCelebrationKey(0);
     setClearTransitionKey((key) => key + 1);
     onClearTransientState();
-    setState(clearLyricContent);
+    applyDocumentMutation(clearLyricContent);
   }
 
   function handleStyleChange(nextStyle: CardStyle) {
@@ -85,75 +175,31 @@ export function useEditorActions({
   }
 
   function setUrl(url: string) {
-    setState((current) => ({ ...current, url }));
+    applyDocumentMutation((current) => ({ ...current, url }));
   }
 
-  function applyParsedSong(song: ParsedSongData) {
-    setState((current) => {
-      const originalCoverUrl = song.coverUrl ?? "";
-      const coverUrl = getHighResolutionCoverUrl(originalCoverUrl, song.source);
-
-      return {
-        ...current,
-        song: {
-          ...current.song,
-          ...song,
-          originalCoverUrl,
-          coverUrl,
-          proxiedCoverUrl: proxiedImageUrl(coverUrl)
-        }
-      };
-    });
+  function applyParsedSong(song: ParsedSongData, intent: DocumentImportIntent) {
+    return commitSongImport(intent, song);
   }
 
-  function applyLocalAudio(song: ParsedSongData, embeddedLyrics?: string) {
-    setState((current) => {
-      const { lyrics: _lyrics, ...songInfo } = song;
-
-      return {
-        ...current,
-        url: song.originalUrl,
-        song: {
-          ...current.song,
-          ...songInfo,
-          proxiedCoverUrl: song.coverUrl ? proxiedImageUrl(song.coverUrl) : ""
-        },
-        lyrics: embeddedLyrics ? embeddedLyrics : current.lyrics
-      };
-    });
+  function applyLocalAudio(song: ParsedSongData, embeddedLyrics: string | undefined, intent: DocumentImportIntent) {
+    return commitSongImport(intent, song, embeddedLyrics ?? "");
   }
 
-  function applySearchedSong(song: ParsedSongData, lyrics?: string) {
-    setState((current) => {
-      const { lyrics: _lyrics, ...songInfo } = song;
-      const originalCoverUrl = song.coverUrl ?? "";
-      const coverUrl = getHighResolutionCoverUrl(originalCoverUrl, song.source);
-
-      return {
-        ...current,
-        url: song.originalUrl,
-        song: {
-          ...current.song,
-          ...songInfo,
-          originalCoverUrl,
-          coverUrl,
-          proxiedCoverUrl: coverUrl ? proxiedImageUrl(coverUrl) : ""
-        },
-        lyrics: lyrics?.trim() ? lyrics : current.lyrics
-      };
-    });
+  function applySearchedSong(song: ParsedSongData, lyrics: string | undefined, intent: DocumentImportIntent) {
+    return commitSongImport(intent, song, lyrics ?? "");
   }
 
   function setSong(song: SongInfo) {
-    setState((current) => ({ ...current, song }));
+    applyDocumentMutation((current) => ({ ...current, song: canonicalSongInfo(song) }));
   }
 
   function setLyrics(lyrics: string) {
-    setState((current) => ({ ...current, lyrics }));
+    applyDocumentMutation((current) => ({ ...current, lyrics }));
   }
 
   function setTranslationEnabled(translationEnabled: boolean) {
-    setState((current) => ({
+    applyDocumentMutation((current) => ({
       ...current,
       translationEnabled,
       style: { ...current.style, translationEnabled }
@@ -161,7 +207,7 @@ export function useEditorActions({
   }
 
   function setTranslationText(translationText: string) {
-    setState((current) => ({
+    applyDocumentMutation((current) => ({
       ...current,
       translationText,
       style: { ...current.style, translationText }
@@ -169,7 +215,7 @@ export function useEditorActions({
   }
 
   function splitAlternatingLyrics(lyrics: string, translationText: string) {
-    setState((current) => ({
+    applyDocumentMutation((current) => ({
       ...current,
       lyrics,
       translationText,
@@ -189,55 +235,72 @@ export function useEditorActions({
       return;
     }
 
-    if (!cardRef.current || isCompleteExporting) {
-      return;
-    }
-
     const clearVersion = clearVersionRef.current;
-    setIsCompleteExporting(true);
-
-    try {
-      const finalBlockMessage = getExportBlockMessage?.() ?? exportBlockMessage;
-      if (finalBlockMessage) {
-        onNotify(finalBlockMessage);
-        return;
+    const snapshot = createExportSnapshot(parsedState, exportPixelRatio, exportRevisionRef.current);
+    const result = await runExportTransaction({
+      mutex: exportMutexRef.current,
+      snapshot,
+      mountSnapshot: async (mountedSnapshot, signal) => {
+        setIsCompleteExporting(true);
+        setActiveExportSnapshot(mountedSnapshot);
+        return waitForExportSnapshotNode(() => cardRef.current, mountedSnapshot.id, signal);
+      },
+      validateSnapshot: (mountedSnapshot) => getExportBlockMessage?.(mountedSnapshot) ?? null,
+      captureSnapshot: (mountedSnapshot, node, signal) => exportNodeAsPng(
+        node,
+        mountedSnapshot.fileName,
+        mountedSnapshot.width,
+        mountedSnapshot.height,
+        mountedSnapshot.pixelRatio,
+        signal
+      ),
+      unmountSnapshot: () => {
+        setActiveExportSnapshot(null);
+        setIsCompleteExporting(false);
       }
-      const size = getCardSize(parsedState.style);
-      const fileName = `lyric-card-${sanitizeFilePart(parsedState.song.title)}.png`;
-      await exportNodeAsPng(cardRef.current, fileName, size.width, size.height, exportPixelRatio);
+    });
+
+    if (result.ok) {
       if (clearVersion === clearVersionRef.current) {
         setCelebrationKey((key) => key + 1);
       }
-    } catch (error) {
-      console.error("[Lyric Card Generator] complete export failed", error);
-    } finally {
-      setIsCompleteExporting(false);
+      return;
+    }
+    if (result.kind === "busy") {
+      onNotify(exportBusyMessage);
+    } else if (result.kind === "blocked") {
+      onNotify(result.reason);
+    } else {
+      console.error("[Lyric Card Generator] complete export failed", result.error);
+      onNotify(exportFailedMessage(result.error instanceof Error ? result.error.message : "Unknown error"));
     }
   }
 
   async function loadExample(payload: ExampleLoadPayload) {
     const { example, translation, importTranslation = true } = payload;
+    const intent = beginSongImport("example");
+    if (!intent) return;
     clearVersionRef.current += 1;
+    const revision = documentControllerRef.current.tryCommit(intent);
+    if (revision === null) return;
+    setDocumentRevision(revision);
     setState((current) => {
       const translationText = importTranslation ? translation.text : "";
       const translationEnabled = importTranslation && Boolean(translationText.trim()) && example.translationEnabled;
+      const replaced = replaceSongDocument(current, {
+        source: example.source,
+        title: example.title,
+        artist: example.artist,
+        album: example.album,
+        originalUrl: example.url
+      }, example.lyrics);
 
       return {
-        ...current,
-        url: example.url,
-        song: {
-          ...current.song,
-          source: example.source,
-          title: example.title,
-          artist: example.artist,
-          album: example.album,
-          originalUrl: example.url
-        },
-        lyrics: example.lyrics,
+        ...replaced,
         translationText,
         translationEnabled,
         style: {
-          ...normalizeCardStyle(current.style),
+          ...normalizeCardStyle(replaced.style),
           translationText,
           translationEnabled
         }
@@ -246,39 +309,57 @@ export function useEditorActions({
     onCloseExamples();
     onNotify(exampleLoadedMessage);
 
+    const enrichmentIntent = documentControllerRef.current.begin("example-enrichment");
     try {
       const response = await fetch("/api/parse-song", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ url: example.url })
+        body: JSON.stringify({ url: example.url }),
+        signal: enrichmentIntent.signal
       });
       const payload = await response.json() as { ok: boolean; data?: AppState["song"] };
       if (payload.ok && payload.data) {
-        const originalCoverUrl = payload.data.coverUrl ?? "";
-        const coverUrl = getHighResolutionCoverUrl(originalCoverUrl, payload.data.source);
-        setState((current) => ({
-          ...current,
-          song: {
-            ...current.song,
-            ...payload.data,
-            originalCoverUrl,
-            coverUrl,
-            proxiedCoverUrl: proxiedImageUrl(coverUrl)
-          }
-        }));
+        const enrichedRevision = documentControllerRef.current.tryCommit(enrichmentIntent);
+        if (enrichedRevision !== null) {
+          setDocumentRevision(enrichedRevision);
+          setState((current) => ({ ...current, song: canonicalSongInfo(payload.data!) }));
+        }
       }
     } catch {
       // The example remains useful offline; cover/palette enrichment is best effort.
     }
   }
 
+  function applyFetchedLyrics(lyrics: string, revision: number, expectedSongIdentity: string) {
+    if (!canApplyLyricsCandidate({
+      controller: documentControllerRef.current,
+      revision,
+      expectedSongIdentity,
+      currentSong: parsedState.song
+    })) return false;
+    applyDocumentMutation((current) => ({
+      ...current,
+      lyrics,
+      translationText: "",
+      translationEnabled: false,
+      style: { ...current.style, translationText: "", translationEnabled: false }
+    }));
+    return true;
+  }
+
   return {
     celebrationKey,
     isCompleteExporting,
     clearTransitionKey,
+    activeExportSnapshot,
+    documentRevision,
+    beginSongImport,
     clearAllContent,
     handleStyleChange,
-    setTranslation,
+    beginAITranslation,
+    getCurrentDocumentSnapshot,
+    applyAIPartial,
+    commitAITranslation,
     setUrl,
     applyParsedSong,
     applyLocalAudio,
@@ -288,6 +369,7 @@ export function useEditorActions({
     setTranslationEnabled,
     setTranslationText,
     splitAlternatingLyrics,
+    applyFetchedLyrics,
     loadExample,
     completeAndExport
   };

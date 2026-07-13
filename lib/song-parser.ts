@@ -5,7 +5,7 @@ import { fetchHtml, REQUEST_HEADERS, songInfoFromMeta } from "@/lib/parsers/shar
 import { extractSpotifyTrackId, parseSpotify } from "@/lib/parsers/spotify";
 import type { SongInfo, SongSource } from "@/lib/types";
 import { extractFirstUrl } from "@/lib/url-normalize";
-import { validatePublicHttpUrl } from "@/lib/url-safety";
+import { safeFetch, SafeFetchError, type SafeFetchOptions } from "@/lib/safe-fetch";
 
 export type ParseDebugDetails = {
   input: string;
@@ -39,25 +39,16 @@ export async function parseSong(input: string): Promise<SongInfo> {
     throw new SongParseError("No URL was found in the input.", details);
   }
 
-  const rawSafety = await validatePublicHttpUrl(rawUrl);
-  if (!rawSafety.ok) {
-    throw new SongParseError(rawSafety.error, details);
-  }
-
-  let finalUrl = rawSafety.url.toString();
+  let finalUrl = rawUrl;
   try {
     triedMethods.push("resolve-redirect");
     finalUrl = await resolveRedirect(finalUrl);
   } catch (error) {
+    if (error instanceof SafeFetchError && error.code === "UNSAFE_URL") {
+      throw new SongParseError(error.message, details);
+    }
     details.error = error instanceof Error ? error.message : "Unable to resolve redirects.";
   }
-
-  const finalSafety = await validatePublicHttpUrl(finalUrl);
-  if (!finalSafety.ok) {
-    throw new SongParseError(finalSafety.error, { ...details, finalUrl });
-  }
-
-  finalUrl = finalSafety.url.toString();
   const source = detectSource(finalUrl) !== "unknown" ? detectSource(finalUrl) : detectSource(rawUrl);
   details.finalUrl = finalUrl;
   details.detectedSource = source;
@@ -139,14 +130,19 @@ export function detectSource(inputUrl: string): SongSource {
   return "unknown";
 }
 
-export async function resolveRedirect(url: string) {
-  const response = await fetch(url, {
+export async function resolveRedirect(
+  url: string,
+  networkOverrides: Pick<SafeFetchOptions, "resolver" | "transport"> = {}
+) {
+  const response = await safeFetch(url, {
     headers: REQUEST_HEADERS,
     method: "GET",
-    redirect: "follow"
+    timeoutMs: 10000,
+    maxRedirects: 5,
+    maxResponseBytes: 0,
+    discardResponseBody: true,
+    ...networkOverrides
   });
-
-  response.body?.cancel().catch(() => undefined);
   return response.url || url;
 }
 

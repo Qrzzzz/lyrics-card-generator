@@ -7,6 +7,7 @@ import {
   songInfoFromMeta,
   splitTitleAndArtist
 } from "@/lib/parsers/shared";
+import { safeFetch } from "@/lib/safe-fetch";
 
 type QQEmbeddedSong = {
   songname?: string;
@@ -107,18 +108,22 @@ async function parseQQApi(
   const apiUrl = `https://c.y.qq.com/v8/fcg-bin/fcg_play_single_song.fcg?${queryKey}=${encodeURIComponent(
     songId.value
   )}&format=jsonp`;
-  const res = await fetch(apiUrl, {
+  const res = await safeFetch(apiUrl, {
     headers: {
       ...REQUEST_HEADERS,
       referer: "https://y.qq.com/"
-    }
+    },
+    timeoutMs: 10000,
+    maxRedirects: 5,
+    maxResponseBytes: 2 * 1024 * 1024,
+    allowedContentTypes: ["application/json", "text/plain", "application/javascript"]
   });
 
   if (!res.ok) {
     throw new Error(`QQ Music API returned HTTP ${res.status}.`);
   }
 
-  const data = parseQQJsonp(await res.text());
+  const data = parseQQJsonp(res.text());
   const song = data.data?.[0];
   if (!song?.name && !song?.title) {
     throw new Error("QQ Music API did not return song metadata.");

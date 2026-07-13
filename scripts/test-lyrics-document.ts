@@ -169,8 +169,9 @@ assert.ok(
 );
 const editorActionsSource = readFileSync(resolve("components/editor/hooks/useEditorActions.ts"), "utf8");
 assert.ok(
-  editorActionsSource.includes("getExportBlockMessage?.()"),
-  "the export action performs a fresh defensive validation"
+  editorActionsSource.includes("getExportBlockMessage?.(mountedSnapshot)") &&
+    editorActionsSource.includes("runExportTransaction"),
+  "the export action performs a fresh validation against the mounted immutable snapshot"
 );
 
 console.log(JSON.stringify({ ok: true, lyricsDocumentTests: 33 }, null, 2));

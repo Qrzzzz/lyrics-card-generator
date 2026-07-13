@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v5.0.4.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v5.1.0.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="#développement-local">Développement local</a> ·
@@ -51,31 +51,30 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 Téléchargez la dernière version depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
 
-* Installateur recommandé : `Lyrics Card Generator Setup 5.0.4.exe`
-* Version portable : `Lyrics Card Generator-5.0.4-portable.exe`
+* Installateur recommandé : `Lyrics Card Generator Setup 5.1.0.exe`
+* Version portable : `Lyrics Card Generator-5.1.0-portable.exe`
 
 L'installateur est recommandé pour une utilisation régulière. La version portable convient aux essais, à une utilisation temporaire ou à un disque amovible.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### Points clés de la v5.0.4
+### Points clés de la v5.1.0
 
-* Reprend de la v5.0.2 la zone de résultats fixe, le nombre de résultats, le libellé de source NetEase et la liste de morceaux repensée.
-* La deuxième étape utilise toujours la hauteur maximale disponible ; les trois commandes de vue et la poignée inférieure sont supprimées.
-* L’en-tête des réglages et le fil d’Ariane offrent plus d’espace et rendent le chemin actuel plus clair.
-* L’espace de travail IA utilise désormais une liste compacte cohérente avec les autres pages de réglages.
-* Ajout des exemples « honeybee » et « Lies » dans une galerie défilante sur deux lignes.
+* Toutes les URL de morceaux et d’images non fiables passent par Safe Fetch, avec validation avant chaque redirection vers les réseaux privés ou réservés.
+* Les imports de morceaux, paroles et exemples sont atomiques ; une action plus récente, un effacement ou un changement de morceau invalide les anciens résultats.
+* L’export bureau utilise un instantané immuable et un verrou synchrone pour conserver contenu, dimensions et nom de fichier dans la même révision.
+* Web Lite utilise un hôte d’export indépendant et partage les contrôles de 36 lignes, polices, dimensions stables et débordement avec la version bureau.
 
 ## 🌐 Notes de publication multilingues
 
 La page GitHub Release utilise par défaut la version courte en chinois simplifié, les notes de publication complètes sont conservées dans `docs/releases/` :
 
-* [简体中文](./docs/releases/v5.0.4.zh-CN.md)
-* [繁體中文](./docs/releases/v5.0.4.zh-TW.md)
-* [English](./docs/releases/v5.0.4.en.md)
-* [Français](./docs/releases/v5.0.4.fr.md)
-* [日本語](./docs/releases/v5.0.4.ja.md)
-* [Español](./docs/releases/v5.0.4.es.md)
+* [简体中文](./docs/releases/v5.1.0.zh-CN.md)
+* [繁體中文](./docs/releases/v5.1.0.zh-TW.md)
+* [English](./docs/releases/v5.1.0.en.md)
+* [Français](./docs/releases/v5.1.0.fr.md)
+* [日本語](./docs/releases/v5.1.0.ja.md)
+* [Español](./docs/releases/v5.1.0.es.md)
 
 <a id="fonctionnalités-principales"></a>
 

@@ -48,7 +48,9 @@ import { DEFAULT_USER_SETTINGS, getExportPixelRatio, type ExportQualityId } from
 import { resolveEffectiveUiThemeId } from "@/lib/settings/user-settings";
 import type { AppState, FontScheme, Locale } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { MAX_EXPORT_LYRIC_LINES } from "@/lib/lyrics-document";
+import { snapshotAsAppState } from "@/lib/export-snapshot";
+import { resolveExportSafetyMessage } from "@/lib/export-safety";
+import type { TranslationValue } from "@/lib/editor/editor-document-state-adapter";
 
 type ActiveSurface = "editor" | "examples" | "settings";
 
@@ -74,12 +76,16 @@ export function LyricEditor() {
   const [exportQuality, setExportQuality] = useState<ExportQualityId>(DEFAULT_USER_SETTINGS.defaultExportQuality);
   const [toast, setToast] = useState<ToastNotice | null>(null);
   const exportCardRef = useRef<HTMLElement | null>(null);
+  const captureCardRef = useRef<HTMLElement | null>(null);
   const previewCardRef = useRef<HTMLElement | null>(null);
   const toastIdRef = useRef(0);
   const stageRef = useRef<HTMLDivElement | null>(null);
   const headerRailRef = useRef<HTMLDivElement | null>(null);
   const settingsButtonRef = useRef<HTMLButtonElement | null>(null);
   const restoreSettingsFocusRef = useRef(false);
+  const invalidateDocumentAsyncRef = useRef<(
+    reason?: "document" | "ai-start"
+  ) => TranslationValue | undefined>(() => undefined);
   const [headerDockY, setHeaderDockY] = useState(0);
   const t = useMemo(() => createT(state.locale), [state.locale]);
   const systemShouldReduceMotion = useReducedMotion() ?? false;
@@ -106,7 +112,7 @@ export function LyricEditor() {
   useMeasuredAutoCanvasHeight(state, setState, exportCardRef);
   const exportReadiness = useExportCardReadiness({ state: parsedState, exportCardRef });
   const exportBlockMessage = exportReadiness.blockingReason
-    ? resolveExportBlockingMessage(exportReadiness.blockingReason, exportReadiness.lineStatus.totalLineCount, t)
+    ? resolveExportSafetyMessage(exportReadiness.blockingReason, exportReadiness.lineStatus.totalLineCount, t)
     : undefined;
   const {
     userSettings,
@@ -146,9 +152,15 @@ export function LyricEditor() {
     celebrationKey,
     isCompleteExporting,
     clearTransitionKey,
+    activeExportSnapshot,
+    documentRevision,
+    beginSongImport,
     clearAllContent,
     handleStyleChange,
-    setTranslation,
+    beginAITranslation,
+    getCurrentDocumentSnapshot,
+    applyAIPartial,
+    commitAITranslation,
     setUrl,
     applyParsedSong,
     applyLocalAudio,
@@ -158,25 +170,34 @@ export function LyricEditor() {
     setTranslationEnabled,
     setTranslationText,
     splitAlternatingLyrics,
+    applyFetchedLyrics,
     loadExample,
     completeAndExport
   } = useEditorActions({
     parsedState,
     setState,
-    cardRef: exportCardRef,
+    cardRef: captureCardRef,
     exportPixelRatio,
     exportBlockMessage,
-    getExportBlockMessage: () => {
-      const validation = getLiveExportCardValidation(parsedState, exportCardRef.current);
+    getExportBlockMessage: (snapshot) => {
+      const validationState = snapshot ? snapshotAsAppState(snapshot, parsedState) : parsedState;
+      const validation = getLiveExportCardValidation(
+        validationState,
+        snapshot ? captureCardRef.current : exportCardRef.current
+      );
       return validation.blockingReason
-        ? resolveExportBlockingMessage(validation.blockingReason, validation.lineStatus.totalLineCount, t)
+        ? resolveExportSafetyMessage(validation.blockingReason, validation.lineStatus.totalLineCount, t)
         : undefined;
     },
     exampleLoadedMessage: settingsCopy[state.locale].exampleLoaded,
     clearAlreadyEmptyMessage: settingsCopy[state.locale].clearAlreadyEmpty,
+    exportBusyMessage: t("exportBusy"),
+    exportFailedMessage: (detail) => t("exportFailed", { detail }),
+    confirmReplaceDocument: () => window.confirm(t("replaceDocumentConfirm")),
     onNotify: showToast,
     onCloseExamples: () => setActiveSurface("editor"),
-    onClearTransientState: () => setFontSchemePreview(null)
+    onClearTransientState: () => setFontSchemePreview(null),
+    onInvalidateDocument: (reason) => invalidateDocumentAsyncRef.current(reason)
   });
 
   useEffect(() => {
@@ -292,18 +313,19 @@ export function LyricEditor() {
     closeAITranslate,
     translateWithAI,
     cancelAITranslation,
+    invalidateAITranslation,
     setAISettings
   } = useEditorAiTranslation({
     locale: state.locale,
     lyrics: state.lyrics,
-    translation: {
-      text: state.style.translationText,
-      enabled: state.style.translationEnabled
-    },
-    setTranslation,
+    beginAITranslation,
+    getCurrentDocumentSnapshot,
+    applyPartial: applyAIPartial,
+    commitTerminal: commitAITranslation,
     onNotify: showToast,
     onRequireSettings: () => openSettings("ai")
   });
+  invalidateDocumentAsyncRef.current = invalidateAITranslation;
 
   function openSettings(tab?: SettingsTabId) {
     setRequestedSettingsTab(tab);
@@ -342,6 +364,7 @@ export function LyricEditor() {
     lyricsLayout: {
       lineStatus: exportReadiness.lineStatus
     },
+    documentRevision,
     ai: {
       isOpen: isAITranslateOpen,
       isTranslating: isAITranslating,
@@ -355,11 +378,12 @@ export function LyricEditor() {
     },
     handlers: {
       onUrlChange: setUrl,
+      onBeginSongImport: beginSongImport,
       onSearchedSongResolved: applySearchedSong,
       onSongParsed: applyParsedSong,
       onLocalAudioParsed: applyLocalAudio,
       onSongChange: setSong,
-      onUseFetchedLyrics: setLyrics,
+      onUseFetchedLyrics: applyFetchedLyrics,
       onLyricsChange: setLyrics,
       onTranslationEnabledChange: setTranslationEnabled,
       onTranslationTextChange: setTranslationText,
@@ -513,8 +537,18 @@ export function LyricEditor() {
               lyrics={parsedState.lyrics}
               style={parsedState.style}
               exportCardRef={exportCardRef}
-              locale={state.locale}
+              locale={parsedState.locale}
             />
+            {activeExportSnapshot ? (
+              <ExportCardHost
+                song={activeExportSnapshot.song as AppState["song"]}
+                lyrics={activeExportSnapshot.lyrics}
+                style={activeExportSnapshot.style as AppState["style"]}
+                exportCardRef={captureCardRef}
+                locale={activeExportSnapshot.locale}
+                snapshotId={activeExportSnapshot.id}
+              />
+            ) : null}
 
             <SettingsSurface
               isActive={isSettingsSurfaceOpen}
@@ -568,24 +602,4 @@ export function LyricEditor() {
       </div>
     </AppMotionProvider>
   );
-}
-
-function resolveExportBlockingMessage(
-  reason: ExportCardBlockingReason,
-  totalLineCount: number,
-  t: ReturnType<typeof createT>
-) {
-  switch (reason) {
-    case "lyrics-limit":
-      return t("lyricsLineLimitExceeded", { total: totalLineCount, max: MAX_EXPORT_LYRIC_LINES });
-    case "fonts-loading":
-      return t("exportFontsLoading");
-    case "card-measuring":
-      return t("exportCardMeasuring");
-    case "content-overflow":
-      return t("exportContentOverflow");
-    case "card-unavailable":
-    default:
-      return t("exportCardUnavailable");
-  }
 }

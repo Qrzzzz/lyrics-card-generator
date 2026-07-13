@@ -5,8 +5,8 @@ import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { getHighResolutionCoverUrl } from "../lib/cover-url";
 import { EXAMPLE_SONGS } from "../lib/examples";
+import { safeFetch } from "../lib/safe-fetch";
 import { parseSong } from "../lib/song-parser";
-import { validatePublicHttpUrl } from "../lib/url-safety";
 
 type PaletteInput = {
   id: string;
@@ -66,64 +66,22 @@ async function collectPaletteInput(): Promise<PaletteInput[]> {
 }
 
 async function fetchCover(rawUrl: string) {
-  const safety = await validatePublicHttpUrl(rawUrl);
-  if (!safety.ok) {
-    throw new Error(`Unsafe cover URL: ${safety.error}`);
-  }
-
-  const response = await fetch(safety.url, {
+  const response = await safeFetch(rawUrl, {
     headers: {
       "user-agent": "Mozilla/5.0 LyricsCardGenerator/2.0.0"
     },
-    signal: AbortSignal.timeout(8000),
-    redirect: "follow"
+    timeoutMs: 8000,
+    maxResponseBytes: imageLimit,
+    allowedContentTypes: ["image/"]
   });
 
   if (!response.ok) {
     throw new Error(`Cover returned HTTP ${response.status}.`);
   }
 
-  const contentType = response.headers.get("content-type") || "";
-  if (!contentType.toLowerCase().startsWith("image/")) {
-    throw new Error("The cover resource is not an image.");
-  }
-
-  const bytes = await limitedBinaryRead(response, imageLimit);
+  const contentType = response.headers.get("content-type") || "image/jpeg";
+  const bytes = response.body;
   return { bytes, contentType };
-}
-
-async function limitedBinaryRead(response: Response, limit: number) {
-  if (!response.body) {
-    return new Uint8Array();
-  }
-
-  const reader = response.body.getReader();
-  const chunks: Uint8Array[] = [];
-  let received = 0;
-
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) {
-      break;
-    }
-
-    received += value.byteLength;
-    if (received > limit) {
-      reader.cancel().catch(() => undefined);
-      throw new Error("The cover response is too large.");
-    }
-
-    chunks.push(value);
-  }
-
-  const merged = new Uint8Array(received);
-  let offset = 0;
-  for (const chunk of chunks) {
-    merged.set(chunk, offset);
-    offset += chunk.byteLength;
-  }
-
-  return merged;
 }
 
 function startNextServer(port: number) {

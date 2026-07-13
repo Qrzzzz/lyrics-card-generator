@@ -20,6 +20,7 @@ import type { ExportQualityId } from "@/lib/settings/types";
 import type { ExportLyricLineStatus } from "@/lib/lyrics-document";
 import type { AISettingsSummary, AITranslationPhase } from "@/lib/ai/types";
 import type { createT } from "@/lib/i18n";
+import type { DocumentImportIntent, DocumentImportKind } from "@/lib/editor/document-transactions";
 import type {
   AppState,
   CardStyle,
@@ -42,11 +43,12 @@ export type EditorStepsAiState = {
 
 export type EditorStepHandlers = {
   onUrlChange: (url: string) => void;
-  onSearchedSongResolved: (song: ParsedSongData, lyrics?: string) => void;
-  onSongParsed: (song: ParsedSongData) => void;
-  onLocalAudioParsed: (song: ParsedSongData, embeddedLyrics?: string) => void;
+  onBeginSongImport: (kind: DocumentImportKind) => DocumentImportIntent | null;
+  onSearchedSongResolved: (song: ParsedSongData, lyrics: string | undefined, intent: DocumentImportIntent) => boolean;
+  onSongParsed: (song: ParsedSongData, intent: DocumentImportIntent) => boolean;
+  onLocalAudioParsed: (song: ParsedSongData, embeddedLyrics: string | undefined, intent: DocumentImportIntent) => boolean;
   onSongChange: (song: SongInfo) => void;
-  onUseFetchedLyrics: (lyrics: string) => void;
+  onUseFetchedLyrics: (lyrics: string, revision: number, songIdentity: string) => boolean;
   onLyricsChange: (lyrics: string) => void;
   onTranslationEnabledChange: (enabled: boolean) => void;
   onTranslationTextChange: (translationText: string) => void;
@@ -72,6 +74,7 @@ type UseEditorStepsInput = {
   lyricsLayout: {
     lineStatus: ExportLyricLineStatus;
   };
+  documentRevision: number;
   ai: EditorStepsAiState;
   handlers: EditorStepHandlers;
 };
@@ -85,6 +88,7 @@ export function useEditorSteps({
   exportBlockingMessage,
   exportQuality,
   lyricsLayout,
+  documentRevision,
   ai,
   handlers
 }: UseEditorStepsInput): SettingsStep[] {
@@ -101,6 +105,7 @@ export function useEditorSteps({
         <div className="grid gap-4" data-testid="song-search-primary">
           <SongSearchParser
             t={t}
+            beginImport={() => handlers.onBeginSongImport("search")}
             onResolved={handlers.onSearchedSongResolved}
           />
         </div>
@@ -113,6 +118,7 @@ export function useEditorSteps({
             <SongLinkParser
               url={state.url}
               onUrlChange={handlers.onUrlChange}
+              beginImport={() => handlers.onBeginSongImport("link")}
               onParsed={handlers.onSongParsed}
               t={t}
               autoParseOnMount
@@ -121,6 +127,7 @@ export function useEditorSteps({
           localAudioParser={(
             <LocalAudioParser
               t={t}
+              beginImport={() => handlers.onBeginSongImport("local-audio")}
               onParsed={handlers.onLocalAudioParsed}
             />
           )}
@@ -181,6 +188,7 @@ export function useEditorSteps({
               <LyricsFetchPanel
                 song={state.song}
                 visible
+                documentRevision={documentRevision}
                 onUseLyrics={handlers.onUseFetchedLyrics}
                 t={t}
               />

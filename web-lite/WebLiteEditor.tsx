@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ExportPanel } from "@/components/editor/ExportPanel";
+import { ExportCardHost } from "@/components/editor/ExportCardHost";
 import { AppToast, type ToastNotice } from "@/components/feedback/AppToast";
 import { LyricInput } from "@/components/editor/LyricInput";
 import { MotionPanel } from "@/components/motion/MotionPanel";
@@ -17,13 +18,23 @@ import {
 } from "@/components/editor/editor-defaults";
 import { useMeasuredAutoCanvasHeight } from "@/components/editor/hooks/useMeasuredAutoCanvasHeight";
 import {
+  getLiveExportCardValidation,
+  useExportCardReadiness
+} from "@/components/editor/hooks/useExportCardReadiness";
+import {
   useCoverPalette,
   useResolvedTextColor
 } from "@/components/editor/hooks/useLyricEditorEffects";
-import { getCardSize } from "@/lib/card-size";
 import { clearLyricContent, hasClearableLyricContent } from "@/lib/clear-content";
 import { applyEditorStyleChange } from "@/lib/editor/apply-style-change";
 import { exportNodeAsPng } from "@/lib/export-image";
+import { createExportSnapshot, snapshotAsAppState, type ExportSnapshot } from "@/lib/export-snapshot";
+import { resolveExportSafetyMessage } from "@/lib/export-safety";
+import {
+  ExportTransactionMutex,
+  runExportTransaction,
+  waitForExportSnapshotNode
+} from "@/lib/export-transaction";
 import { createT } from "@/lib/i18n";
 import { DEFAULT_PALETTE } from "@/lib/palette-background";
 import { resolveUiAccentColor } from "@/lib/settings/accent";
@@ -39,7 +50,6 @@ import type {
   FontScheme,
   SongInfo
 } from "@/lib/types";
-import { sanitizeFilePart } from "@/lib/utils";
 import { WebLiteFontPanel } from "@/web-lite/WebLiteFontPanel";
 import { WebLiteHeader } from "@/web-lite/WebLiteHeader";
 import { WebLiteSongInfo } from "@/web-lite/WebLiteSongInfo";
@@ -82,11 +92,17 @@ export function WebLiteEditor() {
     initialPreferences.exportQuality
   );
   const [isExporting, setIsExporting] = useState(false);
+  const [activeExportSnapshot, setActiveExportSnapshot] = useState<ExportSnapshot | null>(null);
   const [toast, setToast] = useState<ToastNotice | null>(null);
   const [clearTransitionKey, setClearTransitionKey] = useState(0);
   const [hasPendingSongInput, setHasPendingSongInput] = useState(false);
   const [coverResetGeneration, setCoverResetGeneration] = useState(0);
   const cardRef = useRef<HTMLElement | null>(null);
+  const exportCardRef = useRef<HTMLElement | null>(null);
+  const captureCardRef = useRef<HTMLElement | null>(null);
+  const exportMutexRef = useRef(new ExportTransactionMutex());
+  const exportRevisionRef = useRef(0);
+  const previousExportStateRef = useRef<AppState | null>(null);
   const toastIdRef = useRef(0);
   const localCoverObjectUrlRef = useRef<string | undefined>(undefined);
   const coverValidationGenerationRef = useRef(0);
@@ -97,7 +113,7 @@ export function WebLiteEditor() {
 
   useCoverPalette(activeCover, setState);
   useResolvedTextColor(state, setState);
-  useMeasuredAutoCanvasHeight(state, setState, cardRef);
+  useMeasuredAutoCanvasHeight(state, setState, exportCardRef);
 
   const parsedState = useMemo(
     () => ({
@@ -110,6 +126,14 @@ export function WebLiteEditor() {
     }),
     [state]
   );
+  if (previousExportStateRef.current !== parsedState) {
+    previousExportStateRef.current = parsedState;
+    exportRevisionRef.current += 1;
+  }
+  const exportReadiness = useExportCardReadiness({ state: parsedState, exportCardRef });
+  const exportBlockingMessage = exportReadiness.blockingReason
+    ? resolveExportSafetyMessage(exportReadiness.blockingReason, exportReadiness.lineStatus.totalLineCount, t)
+    : undefined;
   const accentColor = resolveUiAccentColor({
     settings: WEB_LITE_SETTINGS,
     palette: state.palette
@@ -299,27 +323,54 @@ export function WebLiteEditor() {
   }
 
   async function completeAndExport() {
-    if (!cardRef.current || isExporting) {
+    const liveValidation = getLiveExportCardValidation(parsedState, exportCardRef.current);
+    const liveBlockingMessage = liveValidation.blockingReason
+      ? resolveExportSafetyMessage(liveValidation.blockingReason, liveValidation.lineStatus.totalLineCount, t)
+      : exportBlockingMessage;
+    if (liveBlockingMessage) {
+      showToast(liveBlockingMessage);
       return;
     }
 
-    setIsExporting(true);
-    try {
-      const size = getCardSize(parsedState.style);
-      const fileName = `lyric-card-${sanitizeFilePart(parsedState.song.title)}.png`;
-      await exportNodeAsPng(
-        cardRef.current,
-        fileName,
-        size.width,
-        size.height,
-        getExportPixelRatio(exportQuality)
-      );
+    const snapshot = createExportSnapshot(parsedState, getExportPixelRatio(exportQuality), exportRevisionRef.current);
+    const result = await runExportTransaction({
+      mutex: exportMutexRef.current,
+      snapshot,
+      mountSnapshot: async (mountedSnapshot, signal) => {
+        setIsExporting(true);
+        setActiveExportSnapshot(mountedSnapshot);
+        return waitForExportSnapshotNode(() => captureCardRef.current, mountedSnapshot.id, signal);
+      },
+      validateSnapshot: (mountedSnapshot) => {
+        const snapshotState = snapshotAsAppState(mountedSnapshot, parsedState);
+        const validation = getLiveExportCardValidation(snapshotState, captureCardRef.current);
+        return validation.blockingReason
+          ? resolveExportSafetyMessage(validation.blockingReason, validation.lineStatus.totalLineCount, t)
+          : null;
+      },
+      captureSnapshot: (mountedSnapshot, node, signal) => exportNodeAsPng(
+        node,
+        mountedSnapshot.fileName,
+        mountedSnapshot.width,
+        mountedSnapshot.height,
+        mountedSnapshot.pixelRatio,
+        signal
+      ),
+      unmountSnapshot: () => {
+        setActiveExportSnapshot(null);
+        setIsExporting(false);
+      }
+    });
+
+    if (result.ok) {
       showToast(copy.exportReady);
-    } catch (error) {
-      console.error("[Lyrics Card Generator Web Lite] export failed", error);
+    } else if (result.kind === "busy") {
+      showToast(t("exportBusy"));
+    } else if (result.kind === "blocked") {
+      showToast(result.reason);
+    } else {
+      console.error("[Lyrics Card Generator Web Lite] export failed", result.error);
       showToast(copy.exportFailed);
-    } finally {
-      setIsExporting(false);
     }
   }
 
@@ -432,6 +483,7 @@ export function WebLiteEditor() {
           qualityOptions={EXPORT_QUALITY_OPTIONS}
           qualityLabels={{ medium: copy.exportStandard, high: copy.exportHigh }}
           isExporting={isExporting}
+          blockingMessage={exportBlockingMessage}
         />
       )
     }
@@ -490,6 +542,24 @@ export function WebLiteEditor() {
           </div>
         </div>
       </main>
+
+      <ExportCardHost
+        song={parsedState.song}
+        lyrics={parsedState.lyrics}
+        style={parsedState.style}
+        exportCardRef={exportCardRef}
+        locale={parsedState.locale}
+      />
+      {activeExportSnapshot ? (
+        <ExportCardHost
+          song={activeExportSnapshot.song as SongInfo}
+          lyrics={activeExportSnapshot.lyrics}
+          style={activeExportSnapshot.style as CardStyle}
+          exportCardRef={captureCardRef}
+          locale={activeExportSnapshot.locale}
+          snapshotId={activeExportSnapshot.id}
+        />
+      ) : null}
 
       <AppToast notice={toast} accentColor={accentColor} />
     </div>

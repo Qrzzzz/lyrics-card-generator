@@ -1,10 +1,11 @@
 "use client";
 
 import { FileAudio, Upload } from "lucide-react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Section } from "@/components/ui/controls";
 import type { createT } from "@/lib/i18n";
 import type { ParsedSongData } from "@/lib/types";
+import type { DocumentImportIntent } from "@/lib/editor/document-transactions";
 import { cn } from "@/lib/utils";
 
 type ParseLocalAudioResponse =
@@ -21,20 +22,32 @@ type ParseLocalAudioResponse =
 
 export function LocalAudioParser({
   onParsed,
+  beginImport,
   t
 }: {
-  onParsed: (song: ParsedSongData, lyrics?: string) => void;
+  beginImport: () => DocumentImportIntent | null;
+  onParsed: (song: ParsedSongData, lyrics: string | undefined, intent: DocumentImportIntent) => boolean;
   t: ReturnType<typeof createT>;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [fileName, setFileName] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "partial" | "error">("idle");
   const [message, setMessage] = useState(t("localAudioIdle"));
+  const activeIntentRef = useRef<DocumentImportIntent | null>(null);
 
   async function parseFile(file?: File) {
     if (!file) {
       return;
     }
+    const intent = beginImport();
+    if (!intent) {
+      // Selecting the same file does not fire another change event unless the
+      // native input is reset, including when replacement confirmation is cancelled.
+      if (inputRef.current) inputRef.current.value = "";
+      return;
+    }
+    activeIntentRef.current?.cancel();
+    activeIntentRef.current = intent;
 
     setFileName(file.name);
     setStatus("loading");
@@ -46,7 +59,8 @@ export function LocalAudioParser({
     try {
       const response = await fetch("/api/parse-local-audio", {
         method: "POST",
-        body: formData
+        body: formData,
+        signal: intent.signal
       });
       const payload = (await response.json()) as ParseLocalAudioResponse;
 
@@ -54,18 +68,27 @@ export function LocalAudioParser({
         throw new Error(payload.error);
       }
 
-      onParsed(payload.data, payload.data.lyrics);
+      if (!onParsed(payload.data, payload.data.lyrics, intent)) return;
       setStatus(payload.status === "success" ? "success" : "partial");
       setMessage(payload.status === "success" ? t("localAudioSuccess") : t("localAudioNoLyrics"));
     } catch (error) {
+      if (intent.signal.aborted) {
+        setStatus("idle");
+        setMessage(t("localAudioIdle"));
+        return;
+      }
       setStatus("error");
       setMessage(error instanceof Error ? error.message : t("localAudioFailed"));
     } finally {
+      if (activeIntentRef.current?.id === intent.id) activeIntentRef.current = null;
       if (inputRef.current) {
         inputRef.current.value = "";
       }
     }
   }
+
+  // Abort upload parsing when this import surface unmounts.
+  useEffect(() => () => activeIntentRef.current?.cancel(), []);
 
   return (
     <Section title={t("localAudioTitle")} eyebrow={t("metadata")}>

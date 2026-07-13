@@ -11,6 +11,7 @@ export type ExportCardHostProps = {
   style: CardStyle;
   exportCardRef: RefObject<HTMLElement | null>;
   locale?: Locale;
+  snapshotId?: string;
 };
 
 /**
@@ -23,7 +24,8 @@ export function ExportCardHost({
   lyrics,
   style,
   exportCardRef,
-  locale = "en"
+  locale = "en",
+  snapshotId
 }: ExportCardHostProps) {
   const size = getCardSize(style);
 
@@ -44,6 +46,7 @@ export function ExportCardHost({
       <div
         ref={exportCardRef as RefObject<HTMLDivElement | null>}
         data-export-card-host-content
+        data-export-snapshot-id={snapshotId}
         style={{ width: size.width, height: size.height }}
       >
         <LyricCard song={song} lyrics={lyrics} style={style} locale={locale} />
