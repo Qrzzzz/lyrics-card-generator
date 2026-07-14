@@ -102,19 +102,16 @@ export function useEditorSteps({
       presentation: "focus",
       isComplete: Boolean(state.url.trim() || state.song.title.trim() || state.song.artist.trim() || state.song.coverUrl?.trim()),
       content: (
-        <div className="grid gap-4" data-testid="song-search-primary">
+        <div className="song-import-primary grid gap-4" data-testid="song-search-primary">
           <SongSearchParser
             t={t}
             beginImport={() => handlers.onBeginSongImport("search")}
             onResolved={handlers.onSearchedSongResolved}
           />
-        </div>
-      ),
-      aside: (
-        <SongImportAside
-          song={state.song}
-          t={t}
-          linkParser={(
+          <div
+            className="song-import-primary__alternates grid min-w-0 gap-4 min-[1180px]:grid-cols-2 [&>section]:min-w-0"
+            data-testid="song-import-alternates"
+          >
             <SongLinkParser
               url={state.url}
               onUrlChange={handlers.onUrlChange}
@@ -123,14 +120,18 @@ export function useEditorSteps({
               t={t}
               autoParseOnMount
             />
-          )}
-          localAudioParser={(
             <LocalAudioParser
               t={t}
               beginImport={() => handlers.onBeginSongImport("local-audio")}
               onParsed={handlers.onLocalAudioParsed}
             />
-          )}
+          </div>
+        </div>
+      ),
+      aside: (
+        <SongImportAside
+          song={state.song}
+          t={t}
           manualForm={(
             <SongInfoForm
               song={state.song}

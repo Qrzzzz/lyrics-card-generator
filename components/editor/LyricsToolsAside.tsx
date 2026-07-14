@@ -52,7 +52,7 @@ export function LyricsToolsAside({
 
   return (
     <aside
-      className="lyrics-tools-aside app-text-muted h-full min-h-0 overflow-hidden rounded-lg border border-[rgb(var(--panel-border))] bg-[rgb(var(--panel-bg))] p-3"
+      className="lyrics-workspace-column lyrics-tools-aside app-text-muted h-full min-h-0 overflow-hidden p-3"
       aria-label={labels.tools}
     >
       <div className="lyrics-tools-aside__body flex h-full min-h-0 flex-col gap-4">

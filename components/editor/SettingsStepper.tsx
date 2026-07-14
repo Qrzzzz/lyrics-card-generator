@@ -319,18 +319,20 @@ export function SettingsStepper({
           )
         )}
       >
-        <button
-          type="button"
-          onClick={() => goToStep(currentStep - 1)}
-          disabled={isFirstStep}
-          className={cn(
-            "app-button rounded-lg px-4 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-45",
-            compactChrome ? "h-10" : "h-11"
-          )}
-        >
-          {backText}
-        </button>
-        <div className="flex items-center gap-3">
+        {!isFirstStep ? (
+          <button
+            type="button"
+            data-testid="stepper-back-button"
+            onClick={() => goToStep(currentStep - 1)}
+            className={cn(
+              "app-button rounded-lg px-4 text-sm font-semibold transition",
+              compactChrome ? "h-10" : "h-11"
+            )}
+          >
+            {backText}
+          </button>
+        ) : null}
+        <div className="ml-auto flex items-center gap-3">
           {secondaryAction ? (
             <button
               type="button"
@@ -370,6 +372,7 @@ export function SettingsStepper({
           ) : !isLastStep ? (
             <button
               type="button"
+              data-testid="stepper-next-button"
               onClick={() => goToStep(currentStep + 1)}
               className={cn(
                 "app-button rounded-lg border px-5 text-sm font-semibold transition",
