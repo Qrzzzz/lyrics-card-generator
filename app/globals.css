@@ -285,6 +285,7 @@ body[data-window-maximized="true"] .app-shell[data-desktop-shell="true"] {
   overflow: hidden;
   pointer-events: none;
   isolation: isolate;
+  contain: paint;
   mask-image: linear-gradient(
     to bottom,
     #000 0%,
@@ -305,9 +306,11 @@ body[data-window-maximized="true"] .app-shell[data-desktop-shell="true"] {
 
 .desktop-titlebar__blur-layer {
   position: absolute;
-  inset: 0;
+  left: 0;
+  right: 0;
   z-index: 0;
   pointer-events: none;
+  will-change: backdrop-filter;
 }
 
 .desktop-titlebar__veil {

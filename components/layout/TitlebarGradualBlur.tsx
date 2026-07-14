@@ -2,20 +2,28 @@ import type { CSSProperties } from "react";
 
 const TITLEBAR_BLUR_LAYERS = [
   {
+    top: 0,
+    height: 84,
     blur: 30,
-    mask: "linear-gradient(to bottom, #000 0%, #000 24%, rgba(0,0,0,0.82) 44%, transparent 70%)"
+    mask: "linear-gradient(to bottom, #000 0%, #000 38%, rgba(0,0,0,0.82) 68%, transparent 100%)"
   },
   {
+    top: 24,
+    height: 78,
     blur: 21,
-    mask: "linear-gradient(to bottom, transparent 10%, rgba(0,0,0,0.72) 24%, #000 42%, rgba(0,0,0,0.72) 60%, transparent 80%)"
+    mask: "linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.72) 18%, #000 42%, rgba(0,0,0,0.72) 70%, transparent 100%)"
   },
   {
+    top: 52,
+    height: 70,
     blur: 13,
-    mask: "linear-gradient(to bottom, transparent 30%, rgba(0,0,0,0.68) 44%, #000 58%, rgba(0,0,0,0.62) 74%, transparent 92%)"
+    mask: "linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.68) 18%, #000 46%, rgba(0,0,0,0.62) 74%, transparent 100%)"
   },
   {
+    top: 80,
+    height: 64,
     blur: 6,
-    mask: "linear-gradient(to bottom, transparent 50%, rgba(0,0,0,0.62) 64%, #000 76%, rgba(0,0,0,0.52) 88%, transparent 100%)"
+    mask: "linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.62) 18%, #000 44%, rgba(0,0,0,0.52) 70%, transparent 100%)"
   }
 ] as const;
 
@@ -34,9 +42,11 @@ export function TitlebarGradualBlur() {
       data-effect-height="144"
       aria-hidden="true"
     >
-      {TITLEBAR_BLUR_LAYERS.map(({ blur, mask }) => {
+      {TITLEBAR_BLUR_LAYERS.map(({ top, height, blur, mask }) => {
         const filter = `blur(${blur}px) saturate(1.18)`;
         const style: CSSProperties = {
+          top,
+          height,
           backdropFilter: filter,
           WebkitBackdropFilter: filter,
           maskImage: mask,

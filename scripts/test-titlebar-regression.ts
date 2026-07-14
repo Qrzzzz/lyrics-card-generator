@@ -31,6 +31,7 @@ assert.match(titlebarSource, /<TitlebarGradualBlur \/>/);
 assert.doesNotMatch(titlebarSource, /aria-label="(?:Minimize|Maximize|Close)"/);
 assert.doesNotMatch(titlebarSource, /import\s+\{[^}]*\b(?:Minus|Square|Copy|X)\b[^}]*\}\s+from\s+"lucide-react"/);
 assert.equal(gradualBlurSource.match(/mask: "linear-gradient\(to bottom/g)?.length, 4, "titlebar uses four overlapping top-anchored blur bands");
+assert.equal(gradualBlurSource.match(/height:\s*\d+/g)?.length, 4, "each titlebar blur band has a bounded raster height");
 assert.match(gradualBlurSource, /blur:\s*30/);
 assert.match(gradualBlurSource, /blur:\s*6/);
 assert.match(gradualBlurSource, /data-effect-height="144"/);
@@ -68,11 +69,12 @@ assert.match(globalsSource, /--segmented-active-translate/);
 assert.match(globalsSource, /--window-corner-radius: 8px/);
 assert.match(globalsSource, /clip-path: inset\(0 round var\(--window-corner-radius\)\)/);
 assert.doesNotMatch(globalsSource, /\.desktop-titlebar::before\s*\{/);
-assert.match(globalsSource, /\.desktop-titlebar__gradual-blur\s*\{[\s\S]*?height: 144px;[\s\S]*?pointer-events: none;[\s\S]*?mask-image:[\s\S]*?transparent 100%/);
+assert.match(globalsSource, /\.desktop-titlebar__gradual-blur\s*\{[\s\S]*?height: 144px;[\s\S]*?pointer-events: none;[\s\S]*?contain: paint;[\s\S]*?mask-image:[\s\S]*?transparent 100%/);
+assert.match(globalsSource, /\.desktop-titlebar__blur-layer\s*\{[\s\S]*?left: 0;[\s\S]*?right: 0;[\s\S]*?will-change: backdrop-filter/);
 assert.match(globalsSource, /\.desktop-titlebar__veil\s*\{[\s\S]*?var\(--titlebar-veil-top\)[\s\S]*?transparent 100%/);
 assert.match(globalsSource, /\.desktop-titlebar > :not\(\.desktop-titlebar__gradual-blur\)[\s\S]*?z-index: 2/);
 
 const dynamicBackgroundSource = readFileSync(resolve("components/layout/DynamicAppBackground.tsx"), "utf8");
 assert.doesNotMatch(dynamicBackgroundSource, /className="[^"]*\bfixed\s+inset-0[^"]*"/);
 
-console.log(JSON.stringify({ ok: true, titlebarRegressionTests: 48 }, null, 2));
+console.log(JSON.stringify({ ok: true, titlebarRegressionTests: 51 }, null, 2));
