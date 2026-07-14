@@ -1,40 +1,38 @@
 const assert = require("node:assert/strict");
 const { readFileSync, readdirSync } = require("node:fs");
-const { version } = require("../package.json");
 
-const workflow = readFileSync(`.github/workflows/release-${version}.yml`, "utf8");
+const workflow = readFileSync(".github/workflows/release.yml", "utf8");
+const verifier = readFileSync("scripts/verify-github-release.ps1", "utf8");
+const versionSpecificWorkflows = readdirSync(".github/workflows")
+  .filter((name) => /^release-\d+\.\d+\.\d+\.yml$/.test(name));
 
-assert.match(workflow, /^concurrency:\s+group: release-/m, "release workflow serializes runs for the same tag");
-
-for (const file of readdirSync(".github/workflows").filter((name) => /^release-\d+\.\d+\.\d+\.yml$/.test(name))) {
-  const targetVersion = file.match(/^release-(\d+\.\d+\.\d+)\.yml$/)[1];
-  const source = readFileSync(`.github/workflows/${file}`, "utf8");
-  const escapedVersion = targetVersion.replace(/\./g, "\\.");
-  const expectedTagPattern = `^v${escapedVersion}(?:-rc\\.[0-9]+)?$`;
-  assert.ok(
-    source.includes(`-notmatch '${expectedTagPattern}'`),
-    `${file} validates its own tag instead of a copied release version`
-  );
-}
+assert.deepEqual(
+  versionSpecificWorkflows,
+  [],
+  "one tag-driven release workflow replaces version-specific copies"
+);
+assert.match(workflow, /^concurrency:\s+group: release-/m, "release runs for one tag are serialized");
+assert.match(workflow, /- "v\*\.\*\.\*"/, "stable and RC version tags enter the generic release workflow");
+assert.match(
+  workflow,
+  /\^v\$escapedVersion\(\?:-rc\\\.\[0-9\]\+\)\?\$/,
+  "the checked-out package version strictly validates the requested tag"
+);
+assert.match(workflow, /docs\/releases\/v\$version\.\$_\.md/, "all six release-note locales are derived from package.json");
+assert.match(workflow, /if: needs\.resolve\.outputs\.published != 'true'/, "an already-published release is an idempotent no-op");
+assert.match(workflow, /ExpectedState published/, "an existing published release is verified before the no-op succeeds");
+assert.match(workflow, /published=\$\(\$published\.ToString\(\)\.ToLowerInvariant\(\)\)/, "published state is passed between jobs");
 
 const createDraft = workflow.indexOf("- name: Create draft GitHub release");
-const verifyDraft = workflow.indexOf("- name: Re-download and verify draft release bytes and attestations");
+const verifyDraft = workflow.indexOf("- name: Re-download and verify exact draft release");
 const publishVerified = workflow.indexOf("- name: Publish verified GitHub release");
 const normalizeAssets = workflow.indexOf("- name: Normalize release asset filenames");
 const generateChecksums = workflow.indexOf("- name: Generate SHA256SUMS");
 
 assert.ok(createDraft >= 0, "release workflow creates a draft release");
 assert.ok(verifyDraft > createDraft, "draft assets are verified after upload");
-assert.ok(publishVerified > verifyDraft, "release is published only after verification");
+assert.ok(publishVerified > verifyDraft, "release is published only after exact draft verification");
 assert.ok(normalizeAssets >= 0 && normalizeAssets < generateChecksums, "executable names are normalized before checksums");
-assert.ok(
-  workflow.includes("$normalizedName = $file.Name -replace ' ', '.'"),
-  "release filenames match GitHub's uploaded asset normalization"
-);
-assert.ok(
-  workflow.includes("Rename-Item -LiteralPath $file.FullName -NewName $normalizedName"),
-  "normalized filenames are applied before attestation and upload"
-);
 
 const createSection = workflow.slice(createDraft, verifyDraft);
 const verifySection = workflow.slice(verifyDraft, publishVerified);
@@ -42,31 +40,27 @@ const publishSection = workflow.slice(publishVerified);
 
 assert.match(createSection, /gh release create[^\r\n]+--draft\b/, "release creation remains draft-only");
 assert.match(createSection, /--verify-tag\b/, "release creation verifies the tag");
-assert.match(createSection, /Matching published release already exists/, "an existing published release blocks draft creation");
-assert.match(createSection, /gh api --method DELETE[^\r\n]+\$staleDraft\.id/, "reruns remove only stale matching drafts");
+assert.match(createSection, /gh api --method DELETE[^\r\n]+\$\(\$_\.id\)/, "reruns remove only stale matching drafts");
 assert.match(createSection, /RELEASE_ID=/, "the exact draft release id is persisted");
-assert.doesNotMatch(verifySection, /gh release download \$env:RELEASE_TAG/, "verification never resolves assets by an ambiguous tag");
-assert.match(verifySection, /releases\/\$env:RELEASE_ID/, "verification loads the exact draft release by id");
-assert.match(verifySection, /Invoke-WebRequest -Uri \$asset\.url/, "verification downloads each asset from the exact release response");
-assert.match(verifySection, /\$setup\.Count -ne 1/, "exactly one Setup artifact is required");
-assert.match(verifySection, /\$portable\.Count -ne 1/, "exactly one portable artifact is required");
-assert.match(verifySection, /\$sbom\.Count -ne 1/, "exactly one SBOM is required");
-assert.match(verifySection, /\$checksums\.Count -ne 1/, "exactly one checksum manifest is required");
-assert.match(verifySection, /Unexpected release asset set/, "unexpected downloaded assets fail verification");
-assert.match(verifySection, /Unexpected checksum coverage/, "checksum coverage must match the expected assets");
-assert.match(
-  verifySection,
-  /\$assets \| ForEach-Object \{\s+gh attestation verify \$_\.FullName/s,
-  "every downloaded release asset is attestation-verified"
-);
+assert.match(verifySection, /verify-github-release\.ps1/, "draft verification uses the shared exact-release verifier");
+assert.match(verifySection, /ExpectedState draft/, "draft verification rejects an unexpectedly published release");
 assert.match(
   publishSection,
-  /gh api --method PATCH[^\r\n]+releases\/\$env:RELEASE_ID[^\r\n]+-F draft=false/,
+  /gh api --method PATCH[^\r\n]+repos\/\$env:GITHUB_REPOSITORY\/releases\/\$env:RELEASE_ID/,
   "the verified draft is published by exact release id"
 );
-assert.doesNotMatch(publishSection, /gh release edit \$env:RELEASE_TAG/, "publishing never resolves a release by tag");
+
+assert.match(verifier, /releases\/\$ReleaseId/, "verification resolves a release by exact numeric id");
+assert.match(verifier, /Invoke-WebRequest -Uri \$asset\.url/, "verification downloads exact asset API URLs");
+assert.match(verifier, /\$setup\.Count -ne 1/, "exactly one Setup artifact is required");
+assert.match(verifier, /\$portable\.Count -ne 1/, "exactly one portable artifact is required");
+assert.match(verifier, /\$sbom\.Count -ne 1/, "exactly one SBOM is required");
+assert.match(verifier, /\$checksums\.Count -ne 1/, "exactly one checksum manifest is required");
+assert.match(verifier, /Unexpected release asset set/, "unexpected downloaded assets fail verification");
+assert.match(verifier, /Unexpected checksum coverage/, "checksum coverage must match the expected assets");
+assert.match(verifier, /gh attestation verify \$_\.FullName/, "every downloaded release asset is attestation-verified");
 
 const nativeFailureGuards = workflow.match(/\$PSNativeCommandUseErrorActionPreference = \$true/g) || [];
-assert.equal(nativeFailureGuards.length, 3, "every gh release step treats native command failures as fatal");
+assert.equal(nativeFailureGuards.length, 3, "each inline gh section treats native command failures as fatal");
 
-console.log("Release workflow contract tests passed");
+console.log("Generic idempotent release workflow contract tests passed");

@@ -10,6 +10,7 @@ const executablePath = path.join(root, "release", "win-unpacked", "Lyrics Card G
 const reportDirectory = path.join(root, "playwright-report", "desktop");
 const userDataDirectory = await mkdtemp(path.join(tmpdir(), "lyrics-card-desktop-test-"));
 const exportOverflowTolerance = 4;
+const runVisualDiagnostics = process.argv.includes("--visual-diagnostics");
 const builtInAutoWidthCases = [
   { id: "opalite", lyricLines: 4, translationLines: 4, min: 1360, max: 1400 },
   { id: "opposite", lyricLines: 4, translationLines: 4, min: 820, max: 860 },
@@ -932,7 +933,7 @@ async function assertAcrylicVisuals() {
   assert.match(lightTokens?.buttonBackground ?? "", /rgba\(255, 255, 255, 0\.6\)/, "light acrylic buttons keep a 60% white surface");
   assert.equal(lightTokens?.subtleColor, "rgb(71, 85, 105)", "light acrylic subtle copy is fully opaque");
   await page.screenshot({ path: path.join(reportDirectory, "light-acrylic-step-one.png"), fullPage: false });
-  await analyzeTitlebarVisualEffect("light-acrylic");
+  if (runVisualDiagnostics) await analyzeTitlebarVisualEffect("light-acrylic");
 
   await selectVisualTheme("dark", true);
   const darkTokens = await page.evaluate(() => {
@@ -951,7 +952,7 @@ async function assertAcrylicVisuals() {
     "dark acrylic keeps its existing foreground and transparent panel tokens"
   );
   await page.screenshot({ path: path.join(reportDirectory, "dark-acrylic-step-one.png"), fullPage: false });
-  await analyzeTitlebarVisualEffect("dark-acrylic");
+  if (runVisualDiagnostics) await analyzeTitlebarVisualEffect("dark-acrylic");
 
   await selectVisualTheme("light", false);
   assert.equal(
@@ -959,7 +960,7 @@ async function assertAcrylicVisuals() {
     "light",
     "ordinary light theme remains selectable without Acrylic"
   );
-  await analyzeTitlebarVisualEffect("light");
+  if (runVisualDiagnostics) await analyzeTitlebarVisualEffect("light");
 
   await selectVisualTheme("dark", false);
   assert.equal(
@@ -967,7 +968,7 @@ async function assertAcrylicVisuals() {
     "dark",
     "ordinary dark theme remains selectable without Acrylic"
   );
-  await analyzeTitlebarVisualEffect("dark");
+  if (runVisualDiagnostics) await analyzeTitlebarVisualEffect("dark");
 }
 
 async function assertFontPickerBehavior() {
@@ -1919,7 +1920,7 @@ try {
   for (const size of focusedSizes) {
     await assertLyricsWorkspace(size.width, size.height);
   }
-  await assertTitlebarScrollPerformance();
+  if (runVisualDiagnostics) await assertTitlebarScrollPerformance();
 
   await setWindowSize(1000, 700);
   await waitForLayoutStable(page.getByTestId("lyrics-workspace"));
@@ -2125,6 +2126,7 @@ try {
     searchMock: { searches: searchRequests.length, resolves: resolveRequests.length },
     focusedViewports: focusedSizes.map(({ width, height }) => `${width}x${height}`),
     previewViewports: ["1366x768", "1440x900", "1920x1080"],
+    visualDiagnostics: runVisualDiagnostics,
     titlebarVisualMetrics,
     titlebarPerformanceComparison,
     exportCards: {
