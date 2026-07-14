@@ -16,6 +16,11 @@ import { AUTO_HEIGHT_MIN, PRESET_CARD_SIZES } from "@/lib/card-size";
 import { getLyricsCardDesktopApi, type SystemFontOption } from "@/lib/desktop-api";
 import { canBrowserUseFont, quoteSingleFontFamily, sanitizeCssFontFamilyName } from "@/lib/fonts";
 import type { createT } from "@/lib/i18n";
+import {
+  LYRIC_LINE_HEIGHT_MAX,
+  LYRIC_LINE_HEIGHT_MIN,
+  LYRIC_LINE_HEIGHT_STEP
+} from "@/lib/lyric-typography";
 import type {
   CardAlign,
   CardLayoutMode,
@@ -524,9 +529,9 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
           <SettingRow label={t("lineHeight")} description={style.lineHeight.toFixed(2)}>
             <RangeSlider
               aria-label={t("lineHeight")}
-              min={1.1}
-              max={1.75}
-              step={0.05}
+              min={LYRIC_LINE_HEIGHT_MIN}
+              max={LYRIC_LINE_HEIGHT_MAX}
+              step={LYRIC_LINE_HEIGHT_STEP}
               value={style.lineHeight}
               onChange={(event) => update("lineHeight", Number(event.target.value))}
             />

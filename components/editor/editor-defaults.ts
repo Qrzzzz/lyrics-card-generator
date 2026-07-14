@@ -1,6 +1,7 @@
 import { PRESET_CARD_SIZES } from "@/lib/card-size";
 import { DEFAULT_FONT_SCHEME } from "@/lib/font-schemes";
 import { messages } from "@/lib/i18n";
+import { DEFAULT_LYRIC_LINE_HEIGHT } from "@/lib/lyric-typography";
 import { DEFAULT_PALETTE } from "@/lib/palette-background";
 import type { AppState, Locale } from "@/lib/types";
 
@@ -51,7 +52,7 @@ export const defaultState: AppState = {
     ratio: "custom",
     width: 1040,
     height: 1080,
-    autoWidth: false,
+    autoWidth: true,
     autoHeight: true,
     font: "sans-heavy",
     fontScheme: { ...DEFAULT_FONT_SCHEME },
@@ -61,7 +62,7 @@ export const defaultState: AppState = {
     customFontWeight: 400,
     customFontStyle: "normal",
     lyricFontSize: 60,
-    lineHeight: 1.4,
+    lineHeight: DEFAULT_LYRIC_LINE_HEIGHT,
     align: "left",
     textColorMode: "preset",
     textColorPreset: "white",
@@ -90,14 +91,14 @@ export const defaultState: AppState = {
     ratio: "custom",
     width: 1040,
     height: 1080,
-    autoWidth: false,
+    autoWidth: true,
     autoHeight: true
   },
   lastPortraitCustomSize: {
     ratio: "custom",
     width: 1040,
     height: 1080,
-    autoWidth: false,
+    autoWidth: true,
     autoHeight: true
   },
   lastLandscapeSize: {

@@ -1,4 +1,5 @@
 import { PRESET_CARD_SIZES } from "@/lib/card-size";
+import { normalizeLyricLineHeight } from "@/lib/lyric-typography";
 import type { CardStyle } from "@/lib/types";
 
 export const FIXED_COVER_CROP_SCALE = 1;
@@ -20,7 +21,10 @@ export function normalizeCardStyle(style: CardStyle): CardStyle {
           resolvedTextColor: FIXED_WHITE_TEXT_COLOR
         };
 
-  return normalizeAutomaticSizing(normalizeInstrumentalLayout(normalizedStyle));
+  return normalizeAutomaticSizing(normalizeInstrumentalLayout({
+    ...normalizedStyle,
+    lineHeight: normalizeLyricLineHeight(normalizedStyle.lineHeight)
+  }));
 }
 
 export function normalizeAutomaticSizing(style: CardStyle): CardStyle {

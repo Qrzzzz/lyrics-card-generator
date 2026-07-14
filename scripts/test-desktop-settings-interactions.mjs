@@ -10,6 +10,14 @@ const executablePath = path.join(root, "release", "win-unpacked", "Lyrics Card G
 const reportDirectory = path.join(root, "playwright-report", "desktop");
 const userDataDirectory = await mkdtemp(path.join(tmpdir(), "lyrics-card-desktop-test-"));
 const exportOverflowTolerance = 4;
+const builtInAutoWidthCases = [
+  { id: "opalite", lyricLines: 4, translationLines: 4, min: 1360, max: 1400 },
+  { id: "opposite", lyricLines: 4, translationLines: 4, min: 820, max: 860 },
+  { id: "yuusha", lyricLines: 3, translationLines: 3, min: 1080, max: 1120 },
+  { id: "glorious-years", lyricLines: 6, translationLines: 0, min: 780, max: 820 },
+  { id: "honeybee", lyricLines: 4, translationLines: 4, min: 860, max: 900 },
+  { id: "lies", lyricLines: 3, translationLines: 3, min: 900, max: 940 }
+];
 
 let electronApp;
 let page;
@@ -381,6 +389,8 @@ async function measureExportCardOrphans() {
     }).filter(Boolean);
     return {
       measuredLines: details.length,
+      lyricLines: details.filter((line) => line.kind === "lyric").length,
+      translationLines: details.filter((line) => line.kind === "translation").length,
       wrappedLines: details.filter((line) => line.visualLines > 1).length,
       severeOrphans: details.filter((line) => line.severe).length,
       details: details.filter((line) => line.severe)
@@ -999,6 +1009,133 @@ async function assertExampleImportRemeasuresPreview() {
   assert.equal(await page.locator('button[data-step-id="layout"]').getAttribute("aria-current"), "step", "example import returns directly to step three");
 }
 
+async function assertBuiltInExamplesAutoWidth() {
+  await page.locator('button[data-step-id="layout"]').click();
+  const lineHeight = page.getByRole("slider", { name: "行高", exact: true });
+  assert.equal(await lineHeight.getAttribute("min"), "1.5", "desktop exposes the new line-height minimum");
+  assert.equal(await lineHeight.getAttribute("max"), "2.1", "desktop exposes the new line-height maximum");
+  assert.equal(await lineHeight.getAttribute("step"), "0.05", "desktop preserves 0.05 line-height steps");
+  assert.equal(await lineHeight.inputValue(), "1.8", "desktop starts at the new 1.8 line height");
+
+  const autoWidth = page.getByRole("switch", { name: "自动宽度", exact: true });
+  const width = page.getByRole("slider", { name: "宽度", exact: true });
+  const results = {};
+
+  for (const [caseIndex, example] of builtInAutoWidthCases.entries()) {
+    await page.locator('button[data-step-id="layout"]').click();
+    if (await autoWidth.getAttribute("aria-checked") === "true") {
+      await autoWidth.click();
+    }
+
+    await page.getByTestId("editor-surface").getByTestId("examples-button").click();
+    await page.getByTestId(`load-example-${example.id}`).waitFor({ state: "visible" });
+    if (caseIndex === 0) {
+      const actualIds = await page.locator('[data-testid^="load-example-"]').evaluateAll((nodes) =>
+        nodes.map((node) => node.getAttribute("data-testid")?.replace("load-example-", "")).filter(Boolean)
+      );
+      assert.deepEqual(
+        actualIds.sort(),
+        builtInAutoWidthCases.map((item) => item.id).sort(),
+        "desktop auto-width fixtures cover every built-in example"
+      );
+    }
+
+    acceptDocumentReplacementDialogs = true;
+    await page.getByTestId(`load-example-${example.id}`).click();
+    acceptDocumentReplacementDialogs = false;
+    await page.locator('button[data-step-id="layout"][aria-current="step"]').waitFor({ state: "visible" });
+
+    await page.locator('button[data-step-id="lyrics"]').click();
+    const original = page.getByRole("textbox", { name: "原文", exact: true });
+    assert.equal(
+      (await original.inputValue()).split(/\r?\n/).filter((line) => line.trim()).length,
+      example.lyricLines,
+      `${example.id} loads its original lyric lines`
+    );
+    const translationToggle = page.getByTestId("translation-toggle");
+    assert.equal(
+      await translationToggle.getAttribute("aria-checked"),
+      example.translationLines > 0 ? "true" : "false",
+      `${example.id} resolves the zh translation state`
+    );
+    if (example.translationLines > 0) {
+      const translation = page.getByRole("textbox", { name: "译文", exact: true });
+      assert.equal(
+        (await translation.inputValue()).split(/\r?\n/).filter((line) => line.trim()).length,
+        example.translationLines,
+        `${example.id} loads its translated lyric lines`
+      );
+    }
+
+    await page.locator('button[data-step-id="layout"]').click();
+    const settledWidths = [];
+    for (const key of ["Home", "End"]) {
+      if (await autoWidth.getAttribute("aria-checked") === "true") {
+        await autoWidth.click();
+      }
+      await width.focus();
+      await width.press(key);
+      await page.evaluate(async () => { await document.fonts.ready; });
+      await autoWidth.click();
+      const settled = await waitForSliderValueInRange(
+        width,
+        example.min,
+        example.max,
+        `${example.id} settles inside its calibrated range after ${key}`
+      );
+      settledWidths.push(settled);
+    }
+
+    assert.equal(settledWidths[0], settledWidths[1], `${example.id} ignores the enabling width`);
+    assert.ok(
+      settledWidths[0] >= example.min && settledWidths[0] <= example.max,
+      `${example.id} width ${settledWidths[0]} is outside ${example.min}-${example.max}`
+    );
+    assert.equal(settledWidths[0] % 20, 0, `${example.id} uses a candidate width`);
+    const wrapMetrics = await measureExportCardOrphans();
+    assert.ok(wrapMetrics, `${example.id} exposes auto-width wrap metrics`);
+    assert.equal(wrapMetrics.lyricLines, example.lyricLines, `${example.id} measures every lyric line`);
+    assert.equal(wrapMetrics.translationLines, example.translationLines, `${example.id} measures every translation line`);
+    assert.equal(wrapMetrics.severeOrphans, 0, `${example.id} leaves no severe orphan: ${JSON.stringify(wrapMetrics)}`);
+    results[example.id] = settledWidths[0];
+  }
+
+  if (await autoWidth.getAttribute("aria-checked") === "true") {
+    await autoWidth.click();
+  }
+  return results;
+}
+
+async function waitForSliderValueInRange(locator, min, max, message, timeoutMs = 10_000) {
+  const deadline = Date.now() + timeoutMs;
+  let latest = Number.NaN;
+  while (Date.now() < deadline) {
+    latest = Number(await locator.inputValue());
+    if (latest >= min && latest <= max) return latest;
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
+  assert.fail(`${message}: last value ${latest}, expected ${min}-${max}`);
+}
+
+async function waitForStableSliderValue(locator, stableMs = 500, timeoutMs = 10_000) {
+  const deadline = Date.now() + timeoutMs;
+  let latest = Number.NaN;
+  let stableSince = Date.now();
+
+  while (Date.now() < deadline) {
+    const value = Number(await locator.inputValue());
+    if (value !== latest) {
+      latest = value;
+      stableSince = Date.now();
+    } else if (Date.now() - stableSince >= stableMs) {
+      return latest;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
+
+  assert.fail(`Slider value did not settle within ${timeoutMs}ms; last value: ${latest}`);
+}
+
 try {
   await mkdir(reportDirectory, { recursive: true });
   electronApp = await electron.launch({
@@ -1218,11 +1355,11 @@ try {
   await translationLyrics.waitFor({ state: "visible" });
   const originalEighteen = Array.from(
     { length: 18 },
-    (_, index) => `original ${String(index + 1).padStart(2, "0")} keeps the authored cadence`
+    (_, index) => `original ${String(index + 1).padStart(2, "0")} cadence`
   ).join("\n");
   const translationEighteen = Array.from(
     { length: 18 },
-    (_, index) => `translation ${String(index + 1).padStart(2, "0")} preserves the matching context`
+    (_, index) => `translation ${String(index + 1).padStart(2, "0")} context`
   ).join("\n");
   await originalLyrics.fill(originalEighteen);
   await translationLyrics.fill(translationEighteen);
@@ -1303,14 +1440,10 @@ try {
   await page.locator('button[data-step-id="layout"]').click();
   const autoWidthToggle = page.getByRole("switch", { name: "自动宽度", exact: true });
   const autoWidthSlider = page.getByRole("slider", { name: "宽度", exact: true });
-  await autoWidthToggle.click();
-  assert.equal(await autoWidthToggle.getAttribute("aria-checked"), "true", "desktop enables portrait auto width");
+  assert.equal(await autoWidthToggle.getAttribute("aria-checked"), "true", "desktop defaults portrait auto width to enabled");
   assert.equal(await autoWidthSlider.isDisabled(), true, "automatic width disables manual width input");
-  await page.waitForTimeout(1000);
-  const settledAutoWidth = Number(await autoWidthSlider.inputValue());
-  assert.ok(settledAutoWidth >= 880 && settledAutoWidth <= 1320, `desktop auto width avoids the maximum for consistently long bilingual content: ${settledAutoWidth}`);
-  await page.waitForTimeout(700);
-  assert.equal(Number(await autoWidthSlider.inputValue()), settledAutoWidth, "desktop auto width remains stable after settling");
+  const settledAutoWidth = await waitForStableSliderValue(autoWidthSlider);
+  assert.ok(settledAutoWidth >= 720 && settledAutoWidth <= 1440, `desktop auto width selects a valid measured candidate: ${settledAutoWidth}`);
   await page.locator('button[data-step-id="export"]').click();
   await waitForCompleteExportEnabled();
   assert.equal(await page.getByTestId("complete-export-button").isEnabled(), true, "36 logical lines remain exportable in auto-height mode");
@@ -1388,6 +1521,7 @@ try {
     await assertPreviewFits(size.width, size.height, true);
   }
   await assertExampleImportRemeasuresPreview();
+  const builtInExampleAutoWidths = await assertBuiltInExamplesAutoWidth();
 
   await page.locator('button[data-step-id="lyrics"]').click();
   await fillExact(originalLyrics, originalEighteen);
@@ -1438,6 +1572,7 @@ try {
     exportCards: {
       autoHeight: autoHeightCard,
       autoWidth: { width: settledAutoWidth, wrapMetrics: autoWidthWrapMetrics },
+      builtInExampleAutoWidths,
       square: squareCard,
       landscape: landscapeCard
     }

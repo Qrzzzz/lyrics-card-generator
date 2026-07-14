@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v5.5.0.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v5.5.1.zh-CN.md">发布说明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">在线 Web Lite 版</a> ·
   <a href="./docs/desktop.md">桌面维护文档</a> ·
   <a href="#主要功能">主要功能</a> ·
@@ -49,16 +49,17 @@
 
 请前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下载最新版：
 
-* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 5.5.0.exe`
-* 不想安装时可下载便携版：`Lyrics Card Generator-5.5.0-portable.exe`
+* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 5.5.1.exe`
+* 不想安装时可下载便携版：`Lyrics Card Generator-5.5.1-portable.exe`
 
 安装版适合长期使用；便携版适合临时运行、测试或放在移动硬盘中使用。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v5.5.0 更新重点
+### v5.5.1 更新重点
 
-* 竖版自定义歌词卡新增可选的“自动宽度”，根据最终字体的真实浏览器排版选择舒适宽度。
+* 新建竖版自定义歌词卡默认开启“自动宽度”，并只根据当前内容与最终字体的真实浏览器排版选择舒适宽度。
+* 行高范围调整为 1.5–2.1，新建卡片默认使用 1.8。
 * 正文与翻译会分别检测视觉换行，避免只剩 1–2 个字或短词落在下一行。
 * 极短副歌、少数超长正文或翻译会被降权，不会轻易把整张卡片拉到最大宽度。
 * 自动宽度稳定后才计算自动高度并开放导出；关闭开关后保留最后计算宽度供手动微调。
@@ -66,7 +67,7 @@
 ## 🌐 多语言发布说明
 
 GitHub Release 默认展示简体中文摘要，完整说明见：
-[简体中文](./docs/releases/v5.5.0.zh-CN.md) · [繁體中文](./docs/releases/v5.5.0.zh-TW.md) · [English](./docs/releases/v5.5.0.en.md) · [Français](./docs/releases/v5.5.0.fr.md) · [日本語](./docs/releases/v5.5.0.ja.md) · [Español](./docs/releases/v5.5.0.es.md)
+[简体中文](./docs/releases/v5.5.1.zh-CN.md) · [繁體中文](./docs/releases/v5.5.1.zh-TW.md) · [English](./docs/releases/v5.5.1.en.md) · [Français](./docs/releases/v5.5.1.fr.md) · [日本語](./docs/releases/v5.5.1.ja.md) · [Español](./docs/releases/v5.5.1.es.md)
 
 <a id="主要功能"></a>
 
