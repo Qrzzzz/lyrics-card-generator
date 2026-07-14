@@ -12,7 +12,8 @@ export function LyricsBlock({
   lineHeight,
   textColor,
   align,
-  isDarkText
+  isDarkText,
+  autoWidth = false
 }: {
   lyrics: string;
   translationText?: string;
@@ -23,6 +24,7 @@ export function LyricsBlock({
   textColor: string;
   align: "left" | "center";
   isDarkText: boolean;
+  autoWidth?: boolean;
 }) {
   const lyricLines = splitUsefulLines(lyrics);
   const translationLines = splitUsefulLines(translationText ?? "");
@@ -54,10 +56,13 @@ export function LyricsBlock({
           <div key={`${lyric}-${translation}-${index}`} style={{ marginBottom: index === rows.length - 1 ? 0 : pairMargin }}>
             {hasLyric ? (
               <p
+                data-auto-width-line="lyric"
+                data-auto-width-line-index={index}
                 className="font-black opacity-[0.96]"
                 style={{
                   fontSize: activeLyricSize,
-                  lineHeight
+                  lineHeight,
+                  textWrap: autoWidth ? "balance" : undefined
                 }}
               >
                 {lyric || "\u00a0"}
@@ -65,11 +70,14 @@ export function LyricsBlock({
             ) : null}
             {translation ? (
               <p
+                data-auto-width-line="translation"
+                data-auto-width-line-index={index}
                 className={hasLyric ? "mt-[0.28em] font-medium" : "font-medium"}
                 style={{
                   color: withAlpha(textColor, 0.64),
                   fontSize: activeTranslationSize,
-                  lineHeight: 1.32
+                  lineHeight: 1.32,
+                  textWrap: autoWidth ? "balance" : undefined
                 }}
               >
                 {translation}

@@ -13,10 +13,11 @@ export const AUTO_HEIGHT_SETTLE_TOLERANCE = 2;
 export function useMeasuredAutoCanvasHeight(
   state: AppState,
   setState: AppStateSetter,
-  cardRef: RefObject<HTMLElement | null>
+  cardRef: RefObject<HTMLElement | null>,
+  isAutoWidthStable = true
 ) {
   useEffect(() => {
-    if (!isPortraitCustomAutoHeight(state)) {
+    if (!isPortraitCustomAutoHeight(state) || !isAutoWidthStable) {
       return;
     }
 
@@ -38,7 +39,7 @@ export function useMeasuredAutoCanvasHeight(
         }
 
         setState((current) => {
-          if (!isPortraitCustomAutoHeight(current)) {
+          if (!isPortraitCustomAutoHeight(current) || !isAutoWidthStable) {
             return current;
           }
 
@@ -99,6 +100,7 @@ export function useMeasuredAutoCanvasHeight(
     };
   }, [
     cardRef,
+    isAutoWidthStable,
     setState,
     state.lyrics,
     state.locale,

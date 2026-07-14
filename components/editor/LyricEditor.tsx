@@ -20,6 +20,7 @@ import { AppMotionProvider } from "@/components/motion/AppMotionProvider";
 import { MotionPanel } from "@/components/motion/MotionPanel";
 import { PreviewPane } from "@/components/editor/PreviewPane";
 import { ExportCardHost } from "@/components/editor/ExportCardHost";
+import { AutoWidthMeasurementHost } from "@/components/editor/AutoWidthMeasurementHost";
 import { SettingsStepper, type SettingsStep } from "@/components/editor/SettingsStepper";
 import { SettingsSurface } from "@/components/settings/SettingsSurface";
 import type { SettingsTabId } from "@/components/settings/settings-model";
@@ -31,6 +32,7 @@ import {
 } from "@/components/editor/hooks/useLyricEditorEffects";
 import { resolveEditorThemeTokens } from "@/components/editor/resolveEditorThemeTokens";
 import { useMeasuredAutoCanvasHeight } from "@/components/editor/hooks/useMeasuredAutoCanvasHeight";
+import { useMeasuredAutoCanvasWidth } from "@/components/editor/hooks/useMeasuredAutoCanvasWidth";
 import {
   getLiveExportCardValidation,
   useExportCardReadiness,
@@ -76,6 +78,7 @@ export function LyricEditor() {
   const [exportQuality, setExportQuality] = useState<ExportQualityId>(DEFAULT_USER_SETTINGS.defaultExportQuality);
   const [toast, setToast] = useState<ToastNotice | null>(null);
   const exportCardRef = useRef<HTMLElement | null>(null);
+  const autoWidthMeasurementRef = useRef<HTMLDivElement | null>(null);
   const captureCardRef = useRef<HTMLElement | null>(null);
   const previewCardRef = useRef<HTMLElement | null>(null);
   const toastIdRef = useRef(0);
@@ -109,8 +112,13 @@ export function LyricEditor() {
   useSyncedCoverProxy(state, setState);
   useCoverPalette(coverForPalette, setState);
   useResolvedTextColor(state, setState);
-  useMeasuredAutoCanvasHeight(state, setState, exportCardRef);
-  const exportReadiness = useExportCardReadiness({ state: parsedState, exportCardRef });
+  const autoWidthReadiness = useMeasuredAutoCanvasWidth(state, setState, autoWidthMeasurementRef);
+  useMeasuredAutoCanvasHeight(state, setState, exportCardRef, autoWidthReadiness.isStable);
+  const exportReadiness = useExportCardReadiness({
+    state: parsedState,
+    exportCardRef,
+    isAutoWidthStable: autoWidthReadiness.isStable
+  });
   const exportBlockMessage = exportReadiness.blockingReason
     ? resolveExportSafetyMessage(exportReadiness.blockingReason, exportReadiness.lineStatus.totalLineCount, t)
     : undefined;
@@ -183,7 +191,8 @@ export function LyricEditor() {
       const validationState = snapshot ? snapshotAsAppState(snapshot, parsedState) : parsedState;
       const validation = getLiveExportCardValidation(
         validationState,
-        snapshot ? captureCardRef.current : exportCardRef.current
+        snapshot ? captureCardRef.current : exportCardRef.current,
+        snapshot ? true : autoWidthReadiness.isStable
       );
       return validation.blockingReason
         ? resolveExportSafetyMessage(validation.blockingReason, validation.lineStatus.totalLineCount, t)
@@ -522,6 +531,7 @@ export function LyricEditor() {
               exportCardRef={exportCardRef}
               locale={parsedState.locale}
             />
+            <AutoWidthMeasurementHost state={state} hostRef={autoWidthMeasurementRef} />
             {activeExportSnapshot ? (
               <ExportCardHost
                 song={activeExportSnapshot.song as AppState["song"]}

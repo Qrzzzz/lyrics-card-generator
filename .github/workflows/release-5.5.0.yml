@@ -1,0 +1,231 @@
+name: Release 5.5.0
+
+on:
+  push:
+    tags:
+      - "v5.5.0"
+      - "v5.5.0-rc.*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing v5.5.0 tag to publish
+        required: true
+        type: string
+
+concurrency:
+  group: release-${{ inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    timeout-minutes: 90
+    env:
+      CI: "true"
+      CSC_IDENTITY_AUTO_DISCOVERY: "false"
+      RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+
+    steps:
+      - name: Checkout exact tag SHA
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          ref: ${{ env.RELEASE_TAG }}
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Verify tag, package, and release surfaces
+        shell: pwsh
+        run: |
+          $version = node -p "require('./package.json').version"
+          if ($version -ne "5.5.0") { throw "package.json is $version, expected 5.5.0" }
+          if ($env:RELEASE_TAG -notmatch '^v5\.5\.0(?:-rc\.[0-9]+)?$') { throw "Unexpected release tag $env:RELEASE_TAG" }
+          $head = git rev-parse HEAD
+          $tagHead = git rev-list -n 1 $env:RELEASE_TAG
+          if ($head -ne $tagHead) { throw "Checkout SHA $head does not match tag SHA $tagHead" }
+          @('en','es','fr','ja','zh-CN','zh-TW') | ForEach-Object {
+            if (-not (Test-Path "docs/releases/v5.5.0.$_.md")) { throw "Missing v5.5.0.$_.md" }
+          }
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run release quality gates
+        shell: pwsh
+        run: |
+          npm run web-lite:check
+          npm run typecheck
+          npm run lint
+          npm run stability:test
+          npm run coverage
+          npm run core:test
+          npm run build
+
+      - name: Build Setup and portable from tag SHA
+        run: npm run desktop:build
+
+      - name: Run deep unpacked interaction regression
+        run: npm run desktop:interaction-test
+
+      - name: Test final Setup and portable bytes
+        run: npm run desktop:final-artifact-smoke
+
+      - name: Normalize release asset filenames
+        shell: pwsh
+        run: |
+          $executables = @(Get-ChildItem release -File -Filter '*.exe')
+          if ($executables.Count -ne 2) { throw "Expected exactly two release executables, found $($executables.Count)." }
+          $executables | ForEach-Object {
+            $file = $_
+            $normalizedName = $file.Name -replace ' ', '.'
+            if ($normalizedName -eq $file.Name) { return }
+            $normalizedPath = Join-Path $file.DirectoryName $normalizedName
+            if (Test-Path -LiteralPath $normalizedPath) { throw "Normalized asset already exists: $normalizedName" }
+            Rename-Item -LiteralPath $file.FullName -NewName $normalizedName
+          }
+          $remainingSpaces = @(Get-ChildItem release -File -Filter '*.exe' | Where-Object { $_.Name.Contains(' ') })
+          if ($remainingSpaces.Count -gt 0) { throw "Release asset normalization left names with spaces: $($remainingSpaces.Name -join ', ')" }
+
+      - name: Generate SPDX SBOM
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0
+        with:
+          path: .
+          format: spdx-json
+          output-file: release/lyrics-card-generator-5.5.0.spdx.json
+          upload-artifact: false
+
+      - name: Generate SHA256SUMS
+        shell: pwsh
+        run: |
+          $files = Get-ChildItem release -File | Where-Object { $_.Extension -eq '.exe' -or $_.Name -like '*.spdx.json' } | Sort-Object Name
+          if ($files.Count -lt 3) { throw 'Expected Setup, portable, and SBOM files.' }
+          $lines = $files | ForEach-Object { '{0} *{1}' -f (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant(), $_.Name }
+          [IO.File]::WriteAllLines((Join-Path $PWD 'release/SHA256SUMS'), $lines, [Text.UTF8Encoding]::new($false))
+
+      - name: Attest tested release files
+        uses: actions/attest-build-provenance@96b4a1ef7235a096b17240c259729fdd70c83d45 # v2
+        with:
+          subject-path: |
+            release/*.exe
+            release/SHA256SUMS
+            release/*.spdx.json
+
+      - name: Upload tested release bundle
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: lyrics-card-generator-${{ env.RELEASE_TAG }}-tested
+          path: |
+            release/*.exe
+            release/SHA256SUMS
+            release/*.spdx.json
+            playwright-report/desktop/**
+            playwright-report/desktop-final-artifacts/**
+          if-no-files-found: error
+
+      - name: Create draft GitHub release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $PSNativeCommandUseErrorActionPreference = $true
+          $releases = @(gh api "repos/$env:GITHUB_REPOSITORY/releases?per_page=100" | ConvertFrom-Json)
+          $matchingReleases = @($releases | Where-Object { $_.tag_name -eq $env:RELEASE_TAG })
+          $publishedReleases = @($matchingReleases | Where-Object { -not $_.draft })
+          if ($publishedReleases.Count -gt 0) {
+            throw "Matching published release already exists for $env:RELEASE_TAG. Refusing to create an ambiguous duplicate."
+          }
+          @($matchingReleases | Where-Object { $_.draft }) | ForEach-Object {
+            $staleDraft = $_
+            gh api --method DELETE "repos/$env:GITHUB_REPOSITORY/releases/$($staleDraft.id)"
+          }
+
+          $flags = @()
+          if ($env:RELEASE_TAG -like '*-rc.*') { $flags += '--prerelease' }
+          gh release create $env:RELEASE_TAG release/*.exe release/SHA256SUMS release/*.spdx.json --draft --verify-tag --title "Lyrics Card Generator $env:RELEASE_TAG" --notes-file docs/releases/v5.5.0.zh-CN.md @flags
+
+          $releases = @(gh api "repos/$env:GITHUB_REPOSITORY/releases?per_page=100" | ConvertFrom-Json)
+          $drafts = @($releases | Where-Object { $_.tag_name -eq $env:RELEASE_TAG -and $_.draft })
+          if ($drafts.Count -ne 1) { throw "Expected exactly one draft release for $env:RELEASE_TAG, found $($drafts.Count)." }
+          Add-Content -LiteralPath $env:GITHUB_ENV -Value "RELEASE_ID=$($drafts[0].id)" -Encoding utf8
+
+      - name: Re-download and verify draft release bytes and attestations
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $PSNativeCommandUseErrorActionPreference = $true
+          if ($env:RELEASE_ID -notmatch '^[0-9]+$') { throw "Invalid release id $env:RELEASE_ID" }
+          $release = gh api "repos/$env:GITHUB_REPOSITORY/releases/$env:RELEASE_ID" | ConvertFrom-Json
+          if (-not $release.draft) { throw "Release $env:RELEASE_ID is not a draft." }
+          if ($release.tag_name -ne $env:RELEASE_TAG) { throw "Release $env:RELEASE_ID belongs to $($release.tag_name), expected $env:RELEASE_TAG." }
+
+          New-Item -ItemType Directory -Force published | Out-Null
+          $headers = @{
+            Authorization = "Bearer $env:GH_TOKEN"
+            Accept = 'application/octet-stream'
+            'X-GitHub-Api-Version' = '2022-11-28'
+          }
+          @($release.assets) | ForEach-Object {
+            $asset = $_
+            if ([IO.Path]::GetFileName($asset.name) -ne $asset.name) { throw "Unsafe release asset name: $($asset.name)" }
+            Invoke-WebRequest -Uri $asset.url -Headers $headers -OutFile (Join-Path published $asset.name)
+          }
+
+          $assets = @(Get-ChildItem published -File)
+          $setup = @($assets | Where-Object { $_.Extension -eq '.exe' -and $_.Name -match '(?i)setup' })
+          $portable = @($assets | Where-Object { $_.Name -match '(?i)-portable\.exe$' })
+          $sbom = @($assets | Where-Object { $_.Name -eq 'lyrics-card-generator-5.5.0.spdx.json' })
+          $checksums = @($assets | Where-Object { $_.Name -eq 'SHA256SUMS' })
+          if ($setup.Count -ne 1) { throw "Expected exactly one Setup executable, found $($setup.Count)." }
+          if ($portable.Count -ne 1) { throw "Expected exactly one portable executable, found $($portable.Count)." }
+          if ($sbom.Count -ne 1) { throw "Expected exactly one SPDX SBOM, found $($sbom.Count)." }
+          if ($checksums.Count -ne 1) { throw "Expected exactly one SHA256SUMS file, found $($checksums.Count)." }
+
+          $expectedNames = @($setup[0].Name, $portable[0].Name, $sbom[0].Name, $checksums[0].Name) | Sort-Object
+          $actualNames = @($assets.Name | Sort-Object)
+          if (($actualNames -join "`n") -ne ($expectedNames -join "`n")) {
+            throw "Unexpected release asset set: $($actualNames -join ', ')"
+          }
+
+          $checksummedNames = @()
+          Get-Content $checksums[0].FullName | ForEach-Object {
+            if ($_ -notmatch '^([0-9a-f]{64}) \*(.+)$') { throw "Invalid checksum line: $_" }
+            $expectedDigest = $Matches[1]
+            $assetName = $Matches[2]
+            if ([IO.Path]::GetFileName($assetName) -ne $assetName) { throw "Unsafe checksum asset name: $assetName" }
+            if ($checksummedNames -contains $assetName) { throw "Duplicate checksum entry: $assetName" }
+            $target = Join-Path published $assetName
+            if (-not (Test-Path -LiteralPath $target -PathType Leaf)) { throw "Missing checksummed asset: $assetName" }
+            $actualDigest = (Get-FileHash -LiteralPath $target -Algorithm SHA256).Hash.ToLowerInvariant()
+            if ($actualDigest -ne $expectedDigest) { throw "Digest mismatch for $assetName" }
+            $checksummedNames += $assetName
+          }
+
+          $expectedChecksummedNames = @($setup[0].Name, $portable[0].Name, $sbom[0].Name) | Sort-Object
+          $actualChecksummedNames = @($checksummedNames | Sort-Object)
+          if (($actualChecksummedNames -join "`n") -ne ($expectedChecksummedNames -join "`n")) {
+            throw "Unexpected checksum coverage: $($actualChecksummedNames -join ', ')"
+          }
+
+          $assets | ForEach-Object {
+            gh attestation verify $_.FullName --repo $env:GITHUB_REPOSITORY
+          }
+
+      - name: Publish verified GitHub release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $PSNativeCommandUseErrorActionPreference = $true
+          $published = gh api --method PATCH "repos/$env:GITHUB_REPOSITORY/releases/$env:RELEASE_ID" -F draft=false | ConvertFrom-Json
+          if ($published.draft) { throw "Release $env:RELEASE_ID remained a draft after publishing." }
+          if ($published.tag_name -ne $env:RELEASE_TAG) { throw "Published release tag $($published.tag_name) does not match $env:RELEASE_TAG." }

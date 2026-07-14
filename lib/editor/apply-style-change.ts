@@ -7,6 +7,7 @@ export const DEFAULT_PORTRAIT_SIZE: Required<CardSizeSnapshot> = {
   ratio: "custom",
   width: 1040,
   height: 1080,
+  autoWidth: false,
   autoHeight: true
 };
 
@@ -14,6 +15,7 @@ export const DEFAULT_LANDSCAPE_SIZE: Required<CardSizeSnapshot> = {
   ratio: "16:9",
   width: PRESET_CARD_SIZES["16:9"].width,
   height: PRESET_CARD_SIZES["16:9"].height,
+  autoWidth: false,
   autoHeight: false
 };
 
@@ -49,6 +51,7 @@ function restoreSize(
     ratio: restored.ratio,
     width: restored.width,
     height: restored.height,
+    autoWidth: layoutMode === "portrait" && restored.ratio === "custom" ? (restored.autoWidth ?? false) : false,
     autoHeight: restored.ratio === "custom" ? (restored.autoHeight ?? true) : false
   };
 }
@@ -61,8 +64,27 @@ export function applyEditorStyleChange(current: AppState, nextStyle: CardStyle):
   if (normalizedNextStyle.contentMode === "instrumental") {
     return applyCanonicalStyleState(current, normalizedNextStyle, {
       lastLandscapeSize: currentMode === "landscape" ? sizeSnapshot(current.style) : current.lastLandscapeSize,
-      lastPortraitSize: sizeSnapshot(normalizedNextStyle)
+      lastPortraitSize: currentMode === "portrait" && current.style.contentMode !== "instrumental"
+        ? sizeSnapshot(current.style)
+        : current.lastPortraitSize,
+      lastPortraitCustomSize: currentMode === "portrait" && current.style.ratio === "custom"
+        ? sizeSnapshot(current.style)
+        : current.lastPortraitCustomSize
     });
+  }
+
+  if (current.style.contentMode === "instrumental") {
+    const restored = restoreSize("portrait", current.lastPortraitSize);
+    const canonicalStyle: CardStyle = {
+      ...normalizedNextStyle,
+      layoutMode: "portrait",
+      ratio: restored.ratio,
+      width: restored.width,
+      height: restored.height,
+      autoWidth: restored.autoWidth,
+      autoHeight: restored.autoHeight
+    };
+    return applyCanonicalStyleState(current, canonicalStyle, sizeHistoryFields(current, canonicalStyle));
   }
 
   if (currentMode !== nextMode) {
@@ -77,12 +99,27 @@ export function applyEditorStyleChange(current: AppState, nextStyle: CardStyle):
       ratio: restored.ratio,
       width: restored.width,
       height: restored.height,
+      autoWidth: restored.autoWidth,
       autoHeight: restored.autoHeight
     };
-    return applyCanonicalStyleState(current, canonicalStyle, {
-      lastPortraitSize: currentMode === "portrait" ? sizeSnapshot(current.style) : current.lastPortraitSize,
-      lastLandscapeSize: currentMode === "landscape" ? sizeSnapshot(current.style) : current.lastLandscapeSize
-    });
+    return applyCanonicalStyleState(current, canonicalStyle, sizeHistoryFields(current, canonicalStyle));
+  }
+
+  if (
+    nextMode === "portrait" &&
+    current.style.ratio !== "custom" &&
+    normalizedNextStyle.ratio === "custom"
+  ) {
+    const restored = restoreSize("portrait", current.lastPortraitCustomSize);
+    const canonicalStyle: CardStyle = {
+      ...normalizedNextStyle,
+      ratio: "custom",
+      width: restored.width,
+      height: restored.height,
+      autoWidth: restored.autoWidth,
+      autoHeight: restored.autoHeight
+    };
+    return applyCanonicalStyleState(current, canonicalStyle, sizeHistoryFields(current, canonicalStyle));
   }
 
   if (!validRatiosByMode[nextMode].has(normalizedNextStyle.ratio)) {
@@ -95,17 +132,36 @@ export function applyEditorStyleChange(current: AppState, nextStyle: CardStyle):
       ratio: restored.ratio,
       width: restored.width,
       height: restored.height,
+      autoWidth: restored.autoWidth,
       autoHeight: restored.autoHeight
     };
 
-    return applyCanonicalStyleState(current, canonicalStyle, {
-      lastPortraitSize: nextMode === "portrait" ? sizeSnapshot(canonicalStyle) : current.lastPortraitSize,
-      lastLandscapeSize: nextMode === "landscape" ? sizeSnapshot(canonicalStyle) : current.lastLandscapeSize
-    });
+    return applyCanonicalStyleState(current, canonicalStyle, sizeHistoryFields(current, canonicalStyle));
   }
 
-  return applyCanonicalStyleState(current, normalizedNextStyle, {
-    lastPortraitSize: nextMode === "portrait" ? sizeSnapshot(normalizedNextStyle) : current.lastPortraitSize,
-    lastLandscapeSize: nextMode === "landscape" ? sizeSnapshot(normalizedNextStyle) : current.lastLandscapeSize
-  });
+  return applyCanonicalStyleState(current, normalizedNextStyle, sizeHistoryFields(current, normalizedNextStyle));
+}
+
+function sizeHistoryFields(current: AppState, canonicalStyle: CardStyle): Partial<AppState> {
+  const currentMode = current.style.layoutMode ?? "portrait";
+  const nextMode = canonicalStyle.layoutMode ?? "portrait";
+  const previousPortraitCustom = currentMode === "portrait" && current.style.ratio === "custom"
+    ? sizeSnapshot(current.style)
+    : current.lastPortraitCustomSize;
+
+  return {
+    lastPortraitSize: nextMode === "portrait"
+      ? sizeSnapshot(canonicalStyle)
+      : currentMode === "portrait"
+        ? sizeSnapshot(current.style)
+        : current.lastPortraitSize,
+    lastPortraitCustomSize: nextMode === "portrait" && canonicalStyle.ratio === "custom"
+      ? sizeSnapshot(canonicalStyle)
+      : previousPortraitCustom,
+    lastLandscapeSize: nextMode === "landscape"
+      ? sizeSnapshot(canonicalStyle)
+      : currentMode === "landscape"
+        ? sizeSnapshot(current.style)
+        : current.lastLandscapeSize
+  };
 }

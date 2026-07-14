@@ -162,6 +162,7 @@ export function LyricCard({
                 textColor={textColor}
                 align={style.align}
                 isDarkText={isDarkText}
+                autoWidth={style.autoWidth === true}
               />
             )}
           </main>

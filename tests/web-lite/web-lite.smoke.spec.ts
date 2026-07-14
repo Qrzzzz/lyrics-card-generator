@@ -268,6 +268,105 @@ test("restores portrait custom size and auto height after landscape round trips"
   }
 });
 
+test("auto width measures bilingual wrapping and settles on a comfortable portrait width", async ({ page }) => {
+  await openWebLite(page);
+  await page.locator('[data-step-id="lyrics"]').click();
+  await page.getByLabel("Lyric Text", { exact: true }).fill([
+    "Hold on to every little moment tonight",
+    "Stay close until the morning finds us",
+    "I still remember every word you said",
+    "We can leave the lonely past behind"
+  ].join("\n"));
+  await page.getByRole("switch", { name: "Enable Translation", exact: true }).click();
+  await page.getByLabel("Translation", { exact: true }).fill([
+    "把今晚每一个细小而珍贵的瞬间都好好留在我们心里",
+    "请陪在我身边直到清晨到来",
+    "我仍然记得你说过的每一句话",
+    "我们终于可以把孤独留在身后"
+  ].join("\n"));
+
+  await page.locator('[data-step-id="layout"]').click();
+  const autoWidth = page.getByRole("switch", { name: "Auto Width", exact: true });
+  const width = page.getByLabel("Width", { exact: true });
+  await expect(autoWidth).toHaveAttribute("aria-checked", "false");
+  await autoWidth.click();
+  await expect(autoWidth).toHaveAttribute("aria-checked", "true");
+  await expect(width).toBeDisabled();
+  await expect(page.locator("[data-auto-width-measurement-host]")).toHaveCount(1);
+
+  await page.waitForTimeout(1000);
+  const settledWidth = Number(await width.inputValue());
+  expect(settledWidth).toBeLessThanOrEqual(1200);
+  expect(settledWidth % 20).toBe(0);
+  await page.waitForTimeout(700);
+  expect(Number(await width.inputValue())).toBe(settledWidth);
+
+  const wrapMetrics = await page.locator('[data-export-card-host] [data-export-card="true"]').first().evaluate((root) => {
+    return Array.from(root.querySelectorAll<HTMLElement>("[data-auto-width-line]")).map((line) => {
+      const textNode = Array.from(line.childNodes).find((node): node is Text => node.nodeType === Node.TEXT_NODE);
+      if (!textNode) return null;
+      const isCjk = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/u.test(textNode.data);
+      const segments = Array.from(new Intl.Segmenter("und", {
+        granularity: isCjk ? "grapheme" : "word"
+      }).segment(textNode.data)).filter((segment) =>
+        isCjk
+          ? /[\p{L}\p{N}]/u.test(segment.segment)
+          : segment.isWordLike === true
+      );
+      const range = document.createRange();
+      const fragments: Array<{ top: number; left: number; right: number; index: number }> = [];
+      segments.forEach((segment, index) => {
+        range.setStart(textNode, segment.index);
+        range.setEnd(textNode, segment.index + segment.segment.length);
+        Array.from(range.getClientRects()).forEach((rect) => {
+          if (rect.width > 0) fragments.push({ top: rect.top, left: rect.left, right: rect.right, index });
+        });
+      });
+      const visualLines: Array<{
+        top: number;
+        left: number;
+        right: number;
+        indexes: Set<number>;
+      }> = [];
+      fragments.sort((left, right) => left.top - right.top || left.left - right.left).forEach((fragment) => {
+        const visualLine = visualLines.find((candidate) => Math.abs(candidate.top - fragment.top) <= 2);
+        if (visualLine) {
+          visualLine.left = Math.min(visualLine.left, fragment.left);
+          visualLine.right = Math.max(visualLine.right, fragment.right);
+          visualLine.indexes.add(fragment.index);
+        } else {
+          visualLines.push({
+            top: fragment.top,
+            left: fragment.left,
+            right: fragment.right,
+            indexes: new Set([fragment.index])
+          });
+        }
+      });
+      const last = visualLines.at(-1);
+      const lastFill = last ? (last.right - last.left) / Math.max(1, line.clientWidth) : 0;
+      return {
+        kind: line.dataset.autoWidthLine,
+        visualLines: visualLines.length,
+        lastUnits: last?.indexes.size ?? 0,
+        lastFill,
+        severe: visualLines.length > 1 && (last?.indexes.size ?? 0) <= 2 && lastFill <= 0.3
+      };
+    }).filter((metric): metric is NonNullable<typeof metric> => metric !== null);
+  });
+  expect(wrapMetrics.some((metric) => metric.kind === "lyric" && metric.visualLines > 1)).toBe(true);
+  expect(wrapMetrics.some((metric) => metric.kind === "translation" && metric.visualLines > 1)).toBe(true);
+  expect(wrapMetrics.filter((metric) => metric.severe)).toEqual([]);
+
+  await page.locator('[data-step-id="export"]').click();
+  await expect(page.getByTestId("complete-export-button")).toBeEnabled({ timeout: 5000 });
+
+  await page.locator('[data-step-id="layout"]').click();
+  await autoWidth.click();
+  await expect(width).toBeEnabled();
+  await expect(width).toHaveValue(String(settledWidth));
+});
+
 test("clears remote input and status after a successful remote cover", async ({ page }) => {
   await installRemoteCoverRoute(page);
   await openWebLite(page);

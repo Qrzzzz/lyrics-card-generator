@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v5.4.0.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v5.5.0.en.md">Release Notes</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
   <a href="#features">Features</a> ·
   <a href="#local-development">Local Development</a> ·
@@ -51,24 +51,24 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 Download the latest version from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Recommended installer: `Lyrics Card Generator Setup 5.4.0.exe`
-* Portable version: `Lyrics Card Generator-5.4.0-portable.exe`
+* Recommended installer: `Lyrics Card Generator Setup 5.5.0.exe`
+* Portable version: `Lyrics Card Generator-5.5.0-portable.exe`
 
 The installer is recommended for regular use. The portable version is useful for temporary use, testing, or running from a removable drive.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v5.4.0 Highlights
+### v5.5.0 Highlights
 
-* All six steps now share the same compact Stepper, and step one no longer repeats the large app header.
-* The first page becomes a shared two-column workbench whose process rail spans search and the import sidebar.
-* Song details, link parsing, local audio, and manual editing are consolidated into one sidebar panel without removing any import path.
-* Steps two through six, live preview, PNG export, settings data, and project files remain unchanged.
+* Portrait custom lyric cards gain an optional Auto Width control based on real browser layout with the final font.
+* Original lyrics and translations are measured separately to avoid leaving only one or two characters or short words on a new line.
+* Very short ad-libs and isolated long lyrics or translations are down-weighted so they do not stretch the whole card to its maximum.
+* Auto height and export readiness wait for width to settle; turning Auto Width off keeps the calculated width available for manual tuning.
 
 ## 🌐 Multilingual Release Notes
 
 GitHub Release displays a Simplified Chinese summary by default. See the full release notes:
-[简体中文](./docs/releases/v5.4.0.zh-CN.md) · [繁體中文](./docs/releases/v5.4.0.zh-TW.md) · [English](./docs/releases/v5.4.0.en.md) · [Français](./docs/releases/v5.4.0.fr.md) · [日本語](./docs/releases/v5.4.0.ja.md) · [Español](./docs/releases/v5.4.0.es.md)
+[简体中文](./docs/releases/v5.5.0.zh-CN.md) · [繁體中文](./docs/releases/v5.5.0.zh-TW.md) · [English](./docs/releases/v5.5.0.en.md) · [Français](./docs/releases/v5.5.0.fr.md) · [日本語](./docs/releases/v5.5.0.ja.md) · [Español](./docs/releases/v5.5.0.es.md)
 
 <a id="features"></a>
 
@@ -79,7 +79,7 @@ GitHub Release displays a Simplified Chinese summary by default. See the full re
 * Generate high-polish lyric sharing images
 * Portrait, landscape, and custom canvas sizes
 * Rebuilt landscape layout based on safe areas, cover column, content column, and footer regions
-* Measured auto height for portrait custom canvases
+* Measured auto width and auto height for portrait custom canvases
 * High-resolution PNG export
 
 ### 📝 Lyrics Layout & Translation

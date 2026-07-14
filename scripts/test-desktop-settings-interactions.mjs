@@ -308,6 +308,86 @@ async function measureExportCard() {
   }, exportOverflowTolerance);
 }
 
+async function measureExportCardOrphans() {
+  return page.evaluate(() => {
+    const root = document.querySelector("[data-export-card-host] [data-export-card]");
+    if (!(root instanceof HTMLElement)) return null;
+    const details = Array.from(root.querySelectorAll("[data-auto-width-line]")).map((element) => {
+      const textNode = Array.from(element.childNodes).find((node) => node.nodeType === Node.TEXT_NODE);
+      if (!(element instanceof HTMLElement) || !(textNode instanceof Text)) return null;
+      const graphemes = Array.from(new Intl.Segmenter("und", { granularity: "grapheme" }).segment(textNode.data));
+      const units = [];
+      let word = null;
+      const flushWord = () => {
+        if (word) units.push(word);
+        word = null;
+      };
+      for (const grapheme of graphemes) {
+        const end = grapheme.index + grapheme.segment.length;
+        if (/[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/u.test(grapheme.segment)) {
+          flushWord();
+          units.push({ start: grapheme.index, end, kind: "cjk", text: grapheme.segment });
+        } else if (/[\p{L}\p{N}]/u.test(grapheme.segment)) {
+          if (word) {
+            word.end = end;
+            word.text += grapheme.segment;
+          } else {
+            word = { start: grapheme.index, end, kind: "word", text: grapheme.segment };
+          }
+        } else {
+          flushWord();
+        }
+      }
+      flushWord();
+      const range = document.createRange();
+      const fragments = [];
+      for (const unit of units) {
+        range.setStart(textNode, unit.start);
+        range.setEnd(textNode, unit.end);
+        for (const rect of range.getClientRects()) {
+          if (rect.width > 0) fragments.push({ ...unit, top: rect.top, left: rect.left, right: rect.right });
+        }
+      }
+      const lines = [];
+      for (const fragment of fragments.sort((left, right) => left.top - right.top || left.left - right.left)) {
+        const line = lines.find((candidate) => Math.abs(candidate.top - fragment.top) <= 2);
+        if (line) {
+          line.left = Math.min(line.left, fragment.left);
+          line.right = Math.max(line.right, fragment.right);
+          line.fragments.push(fragment);
+        } else {
+          lines.push({ top: fragment.top, left: fragment.left, right: fragment.right, fragments: [fragment] });
+        }
+      }
+      const last = lines.at(-1);
+      if (!last) return null;
+      const unique = Array.from(new Map(last.fragments.map((unit) => [`${unit.start}:${unit.end}`, unit])).values());
+      const cjkCount = unique.filter((unit) => unit.kind === "cjk").length;
+      const words = unique.filter((unit) => unit.kind === "word");
+      const wordCharacters = words.reduce((total, unit) => total + unit.text.length, 0);
+      const fill = (last.right - last.left) / Math.max(1, element.clientWidth);
+      const severe = lines.length > 1 && fill <= 0.3 && (
+        (cjkCount > 0 && unique.length <= 2) ||
+        (cjkCount === 0 && words.length > 0 && words.length <= 2 && wordCharacters <= 14)
+      );
+      return {
+        kind: element.getAttribute("data-auto-width-line"),
+        index: Number(element.getAttribute("data-auto-width-line-index")),
+        visualLines: lines.length,
+        lastUnits: unique.length,
+        lastFill: Number(fill.toFixed(3)),
+        severe
+      };
+    }).filter(Boolean);
+    return {
+      measuredLines: details.length,
+      wrappedLines: details.filter((line) => line.visualLines > 1).length,
+      severeOrphans: details.filter((line) => line.severe).length,
+      details: details.filter((line) => line.severe)
+    };
+  });
+}
+
 function mockSearchResults(keyword, limit = 8) {
   return Array.from({ length: limit }, (_, index) => ({
     source: "netease",
@@ -1220,12 +1300,26 @@ try {
   assert.equal(await translationLyrics.inputValue(), translationEighteen, "export fixture restores exactly 18 translated lines");
   await waitForLyricsLineBudget("原文 18 + 译文 18 = 36 / 36");
   assert.match(await page.getByTestId("lyrics-line-budget").innerText(), /18.*18.*36 \/ 36/s);
+  await page.locator('button[data-step-id="layout"]').click();
+  const autoWidthToggle = page.getByRole("switch", { name: "自动宽度", exact: true });
+  const autoWidthSlider = page.getByRole("slider", { name: "宽度", exact: true });
+  await autoWidthToggle.click();
+  assert.equal(await autoWidthToggle.getAttribute("aria-checked"), "true", "desktop enables portrait auto width");
+  assert.equal(await autoWidthSlider.isDisabled(), true, "automatic width disables manual width input");
+  await page.waitForTimeout(1000);
+  const settledAutoWidth = Number(await autoWidthSlider.inputValue());
+  assert.ok(settledAutoWidth >= 880 && settledAutoWidth <= 1320, `desktop auto width avoids the maximum for consistently long bilingual content: ${settledAutoWidth}`);
+  await page.waitForTimeout(700);
+  assert.equal(Number(await autoWidthSlider.inputValue()), settledAutoWidth, "desktop auto width remains stable after settling");
   await page.locator('button[data-step-id="export"]').click();
   await waitForCompleteExportEnabled();
   assert.equal(await page.getByTestId("complete-export-button").isEnabled(), true, "36 logical lines remain exportable in auto-height mode");
   const autoHeightCard = await measureExportCard();
   assert.ok(autoHeightCard && autoHeightCard.height > 3200 && autoHeightCard.height <= 6400, `auto-height export uses the real measured card height: ${JSON.stringify(autoHeightCard)}`);
   assert.equal(autoHeightCard.hasOverflow, false, `auto-height export contains the real DOM within tolerance: ${JSON.stringify(autoHeightCard)}`);
+  const autoWidthWrapMetrics = await measureExportCardOrphans();
+  assert.ok(autoWidthWrapMetrics && autoWidthWrapMetrics.measuredLines === 36, `auto-width metrics cover original and translated lines: ${JSON.stringify(autoWidthWrapMetrics)}`);
+  assert.equal(autoWidthWrapMetrics.severeOrphans, 0, `auto width leaves no severe body or translation orphan: ${JSON.stringify(autoWidthWrapMetrics)}`);
 
   const fontOverrideSupported = await page.evaluate(() => {
     try {
@@ -1343,6 +1437,7 @@ try {
     previewViewports: ["1366x768", "1440x900", "1920x1080"],
     exportCards: {
       autoHeight: autoHeightCard,
+      autoWidth: { width: settledAutoWidth, wrapMetrics: autoWidthWrapMetrics },
       square: squareCard,
       landscape: landscapeCard
     }

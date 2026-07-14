@@ -339,6 +339,7 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
         ratio: "1:1",
         width: squareSize.width,
         height: squareSize.height,
+        autoWidth: false,
         autoHeight: false,
         translationEnabled: false,
         translationText: ""
@@ -361,18 +362,19 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
         ratio: "1:1",
         width: squareSize.width,
         height: squareSize.height,
+        autoWidth: false,
         autoHeight: false
       });
       return;
     }
 
     if (ratio === "custom") {
-      onStyleChange({ ...style, ratio, width: style.width || 1080, height: style.height || 1480, autoHeight: true });
+      onStyleChange({ ...style, ratio, width: style.width || 1080, height: style.height || 1480, autoWidth: false, autoHeight: true });
       return;
     }
 
     const preset = PRESET_CARD_SIZES[ratio];
-    onStyleChange({ ...style, ratio, width: preset.width, height: preset.height, autoHeight: false });
+    onStyleChange({ ...style, ratio, width: preset.width, height: preset.height, autoWidth: false, autoHeight: false });
   }
 
   function updateLayoutMode(layoutMode: CardLayoutMode) {
@@ -395,6 +397,13 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
       ...style,
       autoHeight,
       height: autoHeight ? style.height : Math.max(style.height, 720)
+    });
+  }
+
+  function updateAutoWidth(autoWidth: boolean) {
+    onStyleChange({
+      ...style,
+      autoWidth
     });
   }
 
@@ -471,13 +480,14 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
             </span>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
-            <FieldLabel label={t("width")} hint={`${style.width}px`}>
+            <FieldLabel label={t("width")} hint={style.autoWidth ? `${t("auto")} · ${style.width}px` : `${style.width}px`}>
               <RangeSlider
                 aria-label={t("width")}
                 min={layoutMode === "landscape" ? 1080 : 720}
                 max={layoutMode === "landscape" ? 3000 : 1440}
                 step={20}
                 value={style.width}
+                disabled={style.autoWidth}
                 onChange={(event) => update("width", Number(event.target.value))}
               />
             </FieldLabel>
@@ -493,6 +503,9 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
               />
             </FieldLabel>
           </div>
+          {layoutMode === "portrait" && style.contentMode === "lyrics" ? (
+            <ToggleRow label={t("autoWidth")} checked={style.autoWidth === true} onChange={updateAutoWidth} />
+          ) : null}
           <ToggleRow label={t("autoHeight")} checked={style.autoHeight} onChange={updateAutoHeight} />
         </div>
       ) : null}

@@ -20,7 +20,20 @@ export function normalizeCardStyle(style: CardStyle): CardStyle {
           resolvedTextColor: FIXED_WHITE_TEXT_COLOR
         };
 
-  return normalizeInstrumentalLayout(normalizedStyle);
+  return normalizeAutomaticSizing(normalizeInstrumentalLayout(normalizedStyle));
+}
+
+export function normalizeAutomaticSizing(style: CardStyle): CardStyle {
+  const supportsAutoWidth =
+    (style.layoutMode ?? "portrait") === "portrait" &&
+    style.ratio === "custom" &&
+    style.contentMode === "lyrics";
+
+  return {
+    ...style,
+    autoWidth: supportsAutoWidth && style.autoWidth === true,
+    autoHeight: style.ratio === "custom" ? style.autoHeight === true : false
+  };
 }
 
 export function normalizeInstrumentalLayout(style: CardStyle): CardStyle {
@@ -36,6 +49,7 @@ export function normalizeInstrumentalLayout(style: CardStyle): CardStyle {
     ratio: "1:1",
     width: squareSize.width,
     height: squareSize.height,
+    autoWidth: false,
     autoHeight: false,
     translationEnabled: false,
     translationText: ""

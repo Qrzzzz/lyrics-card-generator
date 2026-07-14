@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v5.4.0.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v5.5.0.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="#développement-local">Développement local</a> ·
@@ -51,24 +51,24 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 Téléchargez la dernière version depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
 
-* Installateur recommandé : `Lyrics Card Generator Setup 5.4.0.exe`
-* Version portable : `Lyrics Card Generator-5.4.0-portable.exe`
+* Installateur recommandé : `Lyrics Card Generator Setup 5.5.0.exe`
+* Version portable : `Lyrics Card Generator-5.5.0-portable.exe`
 
 L'installateur est recommandé pour une utilisation régulière. La version portable convient aux essais, à une utilisation temporaire ou à un disque amovible.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### Points clés de la v5.4.0
+### Points clés de la v5.5.0
 
-* Les six étapes partagent désormais le même Stepper compact, sans répéter le grand en-tête de l’application à l’étape 1.
-* La première page devient un espace de travail à deux colonnes dont le rail de progression couvre la recherche et la barre latérale d’importation.
-* Les informations du morceau, l’analyse de lien, l’audio local et la saisie manuelle sont regroupés dans un seul panneau sans supprimer de méthode d’importation.
-* Les étapes 2 à 6, l’aperçu, l’export PNG, les réglages et les fichiers de projet restent inchangés.
+* Les cartes de paroles portrait personnalisées proposent une largeur automatique facultative fondée sur la mise en page réelle du navigateur et la police finale.
+* Les paroles et leur traduction sont mesurées séparément pour éviter de laisser un ou deux caractères ou mots courts seuls sur la ligne suivante.
+* Les interjections très courtes et les rares lignes ou traductions très longues sont moins pondérées afin de ne pas étirer toute la carte au maximum.
+* La hauteur automatique et l’export attendent la stabilisation de la largeur ; désactiver l’option conserve la largeur calculée pour un réglage manuel.
 
 ## 🌐 Notes de publication multilingues
 
 Par défaut, GitHub Release affiche un résumé en chinois simplifié. Consultez les notes complètes :
-[简体中文](./docs/releases/v5.4.0.zh-CN.md) · [繁體中文](./docs/releases/v5.4.0.zh-TW.md) · [English](./docs/releases/v5.4.0.en.md) · [Français](./docs/releases/v5.4.0.fr.md) · [日本語](./docs/releases/v5.4.0.ja.md) · [Español](./docs/releases/v5.4.0.es.md)
+[简体中文](./docs/releases/v5.5.0.zh-CN.md) · [繁體中文](./docs/releases/v5.5.0.zh-TW.md) · [English](./docs/releases/v5.5.0.en.md) · [Français](./docs/releases/v5.5.0.fr.md) · [日本語](./docs/releases/v5.5.0.ja.md) · [Español](./docs/releases/v5.5.0.es.md)
 
 <a id="fonctionnalités-principales"></a>
 
@@ -79,7 +79,7 @@ Par défaut, GitHub Release affiche un résumé en chinois simplifié. Consultez
 * Génération d'images de paroles très soignées
 * Formats portrait, paysage et dimensions de toile personnalisées
 * Mise en page paysage reconstruite autour des zones sûres, de la colonne de pochette, de la colonne de contenu et du pied de page
-* Hauteur automatique mesurée pour les toiles portrait personnalisées
+* Largeur et hauteur automatiques mesurées pour les toiles portrait personnalisées
 * Export PNG haute résolution
 
 ### 📝 Mise en page et traduction des paroles

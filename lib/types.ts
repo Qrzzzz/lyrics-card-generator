@@ -65,6 +65,7 @@ export type CardStyle = {
   ratio: CardRatio;
   width: number;
   height: number;
+  autoWidth: boolean;
   autoHeight: boolean;
   font: CardFont;
   fontScheme?: FontScheme;
@@ -101,6 +102,7 @@ export type CardStyle = {
 };
 
 export type CardSizeSnapshot = Pick<CardStyle, "ratio" | "width" | "height"> & {
+  autoWidth?: boolean;
   autoHeight?: boolean;
 };
 
@@ -120,6 +122,7 @@ export type AppState = {
   translationEnabled: boolean;
   style: CardStyle;
   lastPortraitSize?: CardSizeSnapshot;
+  lastPortraitCustomSize?: CardSizeSnapshot;
   lastLandscapeSize?: CardSizeSnapshot;
   palette?: ExtractedPalette;
   paletteWarning?: string;
