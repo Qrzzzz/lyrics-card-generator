@@ -747,7 +747,11 @@ async function analyzeTitlebarVisualEffect(theme) {
   );
 
   assert.ok(metrics.meanRgbDifference >= 1, `${theme} enabled effect differs measurably from disabled: ${JSON.stringify(metrics)}`);
-  assert.ok(metrics.contentRowDifference >= 0.45, `${theme} effect remains measurable inside the real Stepper rail: ${JSON.stringify(metrics)}`);
+  const minimumContentRowDifference = 0.25 * Math.min(2, metrics.image.scaleY);
+  assert.ok(
+    metrics.contentRowDifference >= minimumContentRowDifference,
+    `${theme} effect remains measurable inside the real Stepper rail at ${metrics.image.scaleY}x: ${JSON.stringify(metrics)}`
+  );
   assert.ok(
     metrics.terminalRowDifference <= Math.max(1.2, metrics.peakRowDifference * 0.32),
     `${theme} effect decays near its lower edge instead of ending as a hard band: ${JSON.stringify(metrics)}`
