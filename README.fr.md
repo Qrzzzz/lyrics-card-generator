@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v5.5.1.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v5.5.2.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="#développement-local">Développement local</a> ·
@@ -51,25 +51,24 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 Téléchargez la dernière version depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
 
-* Installateur recommandé : `Lyrics Card Generator Setup 5.5.1.exe`
-* Version portable : `Lyrics Card Generator-5.5.1-portable.exe`
+* Installateur recommandé : `Lyrics Card Generator Setup 5.5.2.exe`
+* Version portable : `Lyrics Card Generator-5.5.2-portable.exe`
 
 L'installateur est recommandé pour une utilisation régulière. La version portable convient aux essais, à une utilisation temporaire ou à un disque amovible.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### Points clés de la v5.5.1
+### Points clés de la v5.5.2
 
-* Les nouvelles cartes de paroles portrait personnalisées activent la largeur automatique par défaut et choisissent leur largeur uniquement d’après le contenu actuel, la mise en page réelle du navigateur et la police finale.
-* L’interligne va désormais de 1,5 à 2,1, avec 1,8 par défaut pour les nouvelles cartes.
-* Les paroles et leur traduction sont mesurées séparément pour éviter de laisser un ou deux caractères ou mots courts seuls sur la ligne suivante.
-* Les interjections très courtes et les rares lignes ou traductions très longues sont moins pondérées afin de ne pas étirer toute la carte au maximum.
-* La hauteur automatique et l’export attendent la stabilisation de la largeur ; désactiver l’option conserve la largeur calculée pour un réglage manuel.
+* À l’étape 1, la recherche NetEase occupe le haut de la colonne gauche ; l’import par lien et par fichier audio se trouve dessous, côte à côte sur les écrans larges.
+* La pochette, le titre, l’artiste et l’album sont regroupés dans la colonne d’informations à droite, avec l’édition manuelle toujours disponible.
+* L’étape 1 n’affiche plus de bouton Retour inactif.
+* L’étape 2 retire le cadre général et les cadres propres aux trois colonnes, en ne conservant que des séparateurs d’un pixel entre elles.
 
 ## 🌐 Notes de publication multilingues
 
 Par défaut, GitHub Release affiche un résumé en chinois simplifié. Consultez les notes complètes :
-[简体中文](./docs/releases/v5.5.1.zh-CN.md) · [繁體中文](./docs/releases/v5.5.1.zh-TW.md) · [English](./docs/releases/v5.5.1.en.md) · [Français](./docs/releases/v5.5.1.fr.md) · [日本語](./docs/releases/v5.5.1.ja.md) · [Español](./docs/releases/v5.5.1.es.md)
+[简体中文](./docs/releases/v5.5.2.zh-CN.md) · [繁體中文](./docs/releases/v5.5.2.zh-TW.md) · [English](./docs/releases/v5.5.2.en.md) · [Français](./docs/releases/v5.5.2.fr.md) · [日本語](./docs/releases/v5.5.2.ja.md) · [Español](./docs/releases/v5.5.2.es.md)
 
 <a id="fonctionnalités-principales"></a>
 
