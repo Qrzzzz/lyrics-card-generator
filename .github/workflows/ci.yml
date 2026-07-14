@@ -7,6 +7,17 @@ on:
   pull_request:
     branches:
       - main
+  workflow_dispatch:
+    inputs:
+      desktop_visual_diagnostics:
+        description: Run the non-blocking desktop pixel and frame-timing diagnostics
+        required: false
+        default: false
+        type: boolean
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   verify:
@@ -108,9 +119,9 @@ jobs:
       - name: Run automated axe gate
         run: npm run a11y:test
 
-  desktop-final-artifact-smoke:
-    name: desktop-final-artifact-smoke
-    if: github.event_name == 'pull_request'
+  desktop-packaged-regression:
+    name: desktop-packaged-regression
+    if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.desktop_visual_diagnostics)
     runs-on: windows-latest
     timeout-minutes: 60
     env:
@@ -131,15 +142,23 @@ jobs:
         run: npm ci
 
       - name: Build Windows desktop artifacts
+        id: desktop_build
         run: npm run desktop:build
 
       - name: Run packaged desktop interaction regression
         run: npm run desktop:interaction-test
 
       - name: Run Setup and portable final-artifact smoke
+        if: ${{ always() && steps.desktop_build.outcome == 'success' }}
         run: npm run desktop:final-artifact-smoke
 
+      - name: Run opt-in desktop visual and frame-timing diagnostics
+        if: ${{ always() && steps.desktop_build.outcome == 'success' && github.event_name == 'workflow_dispatch' && inputs.desktop_visual_diagnostics }}
+        continue-on-error: true
+        run: npm run desktop:visual-diagnostic
+
       - name: Verify Windows desktop artifacts
+        if: ${{ always() && steps.desktop_build.outcome == 'success' }}
         shell: pwsh
         run: |
           $setup = @(Get-ChildItem release -File -Filter "Lyrics Card Generator Setup *.exe")
@@ -149,10 +168,12 @@ jobs:
           }
           @($setup + $portable) | Select-Object Name, Length
 
-      - name: Upload desktop interaction evidence
+      - name: Upload desktop regression evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: desktop-interaction-evidence-${{ github.run_attempt }}
-          path: playwright-report/desktop
+          name: desktop-regression-evidence-${{ github.run_attempt }}
+          path: |
+            playwright-report/desktop/**
+            playwright-report/desktop-final-artifacts/**
           if-no-files-found: ignore
