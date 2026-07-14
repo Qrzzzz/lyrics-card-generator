@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 
-const TITLEBAR_BLUR_MASK = "linear-gradient(to bottom, #000 0%, #000 30%, rgba(0,0,0,0.82) 52%, rgba(0,0,0,0.46) 76%, transparent 100%)";
+const TITLEBAR_BLUR_MASK = "linear-gradient(to bottom, #000 0%, #000 64%, rgba(0,0,0,0.82) 78%, rgba(0,0,0,0.46) 90%, transparent 100%)";
 
 /**
  * One continuous titlebar effect: a bounded backdrop-filter and theme-aware
