@@ -306,8 +306,7 @@ body[data-window-maximized="true"] .app-shell[data-desktop-shell="true"] {
 
 .desktop-titlebar__blur-layer {
   position: absolute;
-  left: 0;
-  right: 0;
+  inset: 0;
   z-index: 0;
   pointer-events: none;
   will-change: backdrop-filter;

@@ -61,7 +61,7 @@ The installer is recommended for regular use. The portable version is useful for
 ### v5.5.3 Highlights
 
 * The Source Han Sans and Source Han Serif scheme cards in Step 4 now render the entire card with their matching bundled font.
-* The desktop titlebar uses four lightweight blur bands that fade below the 48px bar while keeping branding and window controls sharp.
+* The desktop titlebar uses a lightweight gradual blur below the 48px bar while keeping branding and window controls sharp.
 * Step 1 moves Manual adjustment immediately before Next, with complete disclosure semantics and stable narrow-window ordering.
 * Light Acrylic raises panel, input, and button masks and uses opaque slate helper text while retaining visible material depth.
 

@@ -61,7 +61,7 @@ L'installateur est recommandé pour une utilisation régulière. La version port
 ### Points clés de la v5.5.3
 
 * À l’étape 4, les cartes Source Han Sans et Source Han Serif affichent désormais toute leur interface avec la police locale correspondante.
-* La barre de titre du bureau utilise quatre bandes de flou légères qui s’estompent sous ses 48 px, sans altérer la marque ni les boutons de fenêtre.
+* La barre de titre du bureau utilise un flou progressif léger sous ses 48 px, sans altérer la marque ni les boutons de fenêtre.
 * À l’étape 1, Réglage manuel se place juste avant Suivant, avec une relation d’ouverture accessible et un ordre stable en fenêtre étroite.
 * Le thème Acrylique clair renforce les surfaces des panneaux, champs et boutons, avec des textes secondaires ardoise opaques tout en conservant la profondeur du matériau.
 

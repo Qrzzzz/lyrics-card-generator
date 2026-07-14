@@ -61,7 +61,7 @@ El instalador se recomienda para uso habitual. La versión portable es útil par
 ### Aspectos destacados de la versión 5.5.3
 
 * En el paso 4, las tarjetas Source Han Sans y Source Han Serif muestran toda la tarjeta con su fuente local correspondiente.
-* La barra de título de escritorio usa cuatro bandas de desenfoque ligeras que se desvanecen bajo sus 48 px sin afectar a la marca ni a los controles de ventana.
+* La barra de título de escritorio usa un desenfoque gradual ligero bajo sus 48 px sin afectar a la marca ni a los controles de ventana.
 * En el paso 1, Ajuste manual se sitúa justo antes de Siguiente, con una relación de expansión accesible y un orden estable en ventanas estrechas.
 * Acrílico claro refuerza las superficies de paneles, campos y botones y usa texto auxiliar pizarra opaco, manteniendo la profundidad visible del material.
 

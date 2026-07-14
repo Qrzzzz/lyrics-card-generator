@@ -885,8 +885,8 @@ async function assertTitlebarScrollPerformance() {
   const disabled = await runPass(false);
   const enabled = await runPass(true);
   assert.equal(enabled.frames, disabled.frames, "scroll comparison samples the same number of frames");
-  assert.ok(enabled.p95Ms <= Math.max(50, disabled.p95Ms * 2.5 + 8), `four titlebar layers keep reasonable p95 scroll pacing: ${JSON.stringify({ disabled, enabled })}`);
-  assert.ok(enabled.meanMs <= Math.max(30, disabled.meanMs * 2 + 6), `four titlebar layers keep reasonable mean scroll pacing: ${JSON.stringify({ disabled, enabled })}`);
+  assert.ok(enabled.p95Ms <= Math.max(50, disabled.p95Ms * 2.5 + 8), `titlebar blur keeps reasonable p95 scroll pacing: ${JSON.stringify({ disabled, enabled })}`);
+  assert.ok(enabled.meanMs <= Math.max(30, disabled.meanMs * 2 + 6), `titlebar blur keeps reasonable mean scroll pacing: ${JSON.stringify({ disabled, enabled })}`);
   assert.ok(enabled.over34Ms <= disabled.over34Ms + 12, `titlebar effect does not add sustained long frames: ${JSON.stringify({ disabled, enabled })}`);
   titlebarPerformanceComparison = { disabled, enabled };
 }
@@ -1245,8 +1245,8 @@ async function assertUnifiedPreviewChrome(stepId) {
       pointerEvents: result.titlebarBlur.pointerEvents,
       layerCount: result.titlebarBlur.layerCount
     },
-    { height: 144, pointerEvents: "none", layerCount: 4 },
-    `${stepId} keeps the measured four-layer titlebar effect without intercepting input`
+    { height: 144, pointerEvents: "none", layerCount: 1 },
+    `${stepId} keeps the measured gradual titlebar effect without intercepting input`
   );
   assert.ok(
     result.titlebarGeometry && result.titlebarBlur && result.railGeometry && result.contentGeometry &&
