@@ -57,6 +57,7 @@ body {
   --panel-bg: 255 255 255 / 0.08;
   --elevated-panel-bg: 11 15 25 / 0.96;
   --panel-border: 255 255 255 / 0.16;
+  --control-border: var(--panel-border);
   --input-bg: 5 8 14 / 0.44;
   --input-border: 255 255 255 / 0.13;
   --button-bg: 255 255 255 / 0.1;
@@ -169,20 +170,21 @@ body {
 .app-shell[data-ui-theme="light-acrylic"] {
   color-scheme: light;
   --app-bg: transparent;
-  --app-text-primary: #111827;
-  --app-text-secondary: rgba(17, 24, 39, 0.72);
+  --app-text-primary: #0f172a;
+  --app-text-secondary: #334155;
   --app-accent: #2563eb;
-  --app-fg: 17 24 39;
-  --app-muted: 55 65 81 / 0.74;
-  --app-subtle: 55 65 81;
+  --app-fg: 15 23 42;
+  --app-muted: 51 65 85;
+  --app-subtle: 71 85 105;
   --control-focus-color: #1d4ed8;
-  --panel-bg: 255 255 255 / 0.38;
-  --elevated-panel-bg: 250 252 255 / 0.94;
-  --panel-border: 15 23 42 / 0.14;
-  --input-bg: 255 255 255 / 0.34;
-  --input-border: 15 23 42 / 0.16;
-  --button-bg: 255 255 255 / 0.30;
-  --button-bg-hover: 255 255 255 / 0.46;
+  --panel-bg: 255 255 255 / 0.70;
+  --elevated-panel-bg: 250 252 255 / 0.97;
+  --panel-border: 71 85 105 / 0.38;
+  --control-border: 100 116 139 / 0.86;
+  --input-bg: 255 255 255 / 0.76;
+  --input-border: 100 116 139 / 0.86;
+  --button-bg: 255 255 255 / 0.60;
+  --button-bg-hover: 255 255 255 / 0.74;
   --control-focus-border: color-mix(in srgb, var(--app-accent) 58%, #ffffff);
   --control-focus-ring: color-mix(in srgb, var(--app-accent) 16%, transparent);
   --status-success-fg: 21 128 61;
@@ -261,6 +263,9 @@ body[data-window-maximized="true"] .app-shell[data-desktop-shell="true"] {
 }
 
 .desktop-titlebar {
+  --titlebar-veil-top: rgba(17, 18, 22, 0.62);
+  --titlebar-veil-middle: rgba(17, 18, 22, 0.31);
+  --titlebar-veil-low: rgba(17, 18, 22, 0.09);
   -webkit-app-region: drag;
   user-select: none;
   color: rgb(var(--app-fg));
@@ -272,46 +277,69 @@ body[data-window-maximized="true"] .app-shell[data-desktop-shell="true"] {
   -webkit-backdrop-filter: none;
 }
 
-.desktop-titlebar::before {
-  content: "";
+.desktop-titlebar__gradual-blur {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 0;
+  height: 144px;
+  overflow: hidden;
+  pointer-events: none;
+  isolation: isolate;
+  mask-image: linear-gradient(
+    to bottom,
+    #000 0%,
+    #000 34%,
+    rgba(0, 0, 0, 0.94) 52%,
+    rgba(0, 0, 0, 0.56) 76%,
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    #000 0%,
+    #000 34%,
+    rgba(0, 0, 0, 0.94) 52%,
+    rgba(0, 0, 0, 0.56) 76%,
+    transparent 100%
+  );
+}
+
+.desktop-titlebar__blur-layer {
   position: absolute;
   inset: 0;
-  height: 72px;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.desktop-titlebar__veil {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
   pointer-events: none;
   background: linear-gradient(
     to bottom,
-    rgba(17, 18, 22, 0.48),
-    rgba(17, 18, 22, 0.22) 58%,
-    rgba(17, 18, 22, 0)
-  );
-  backdrop-filter: blur(30px) saturate(1.35);
-  -webkit-backdrop-filter: blur(30px) saturate(1.35);
-  mask-image: linear-gradient(to bottom, #000 0%, #000 54%, transparent 100%);
-  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 54%, transparent 100%);
-}
-
-.app-shell[data-ui-theme="light"] .desktop-titlebar::before,
-.app-shell[data-ui-theme="light-acrylic"] .desktop-titlebar::before {
-  background: linear-gradient(
-    to bottom,
-    rgba(248, 250, 252, 0.46),
-    rgba(248, 250, 252, 0.2) 58%,
-    rgba(248, 250, 252, 0)
+    var(--titlebar-veil-top) 0%,
+    var(--titlebar-veil-middle) 42%,
+    var(--titlebar-veil-low) 76%,
+    transparent 100%
   );
 }
 
-.app-shell[data-ui-theme="dark-acrylic"] .desktop-titlebar::before {
-  background: linear-gradient(
-    to bottom,
-    rgba(15, 23, 42, 0.42),
-    rgba(15, 23, 42, 0.2) 58%,
-    rgba(15, 23, 42, 0)
-  );
+.app-shell[data-ui-theme="light"] .desktop-titlebar,
+.app-shell[data-ui-theme="light-acrylic"] .desktop-titlebar {
+  --titlebar-veil-top: rgba(248, 250, 252, 0.68);
+  --titlebar-veil-middle: rgba(248, 250, 252, 0.36);
+  --titlebar-veil-low: rgba(248, 250, 252, 0.11);
 }
 
-.desktop-titlebar > * {
+.app-shell[data-ui-theme="dark-acrylic"] .desktop-titlebar {
+  --titlebar-veil-top: rgba(15, 23, 42, 0.60);
+  --titlebar-veil-middle: rgba(15, 23, 42, 0.32);
+  --titlebar-veil-low: rgba(15, 23, 42, 0.09);
+}
+
+.desktop-titlebar > :not(.desktop-titlebar__gradual-blur) {
   position: relative;
-  z-index: 1;
+  z-index: 2;
 }
 
 .dynamic-app-background__image {
@@ -438,7 +466,7 @@ body[data-window-maximized="true"] .app-shell[data-desktop-shell="true"] {
 }
 
 .app-button {
-  border: 1px solid rgb(var(--panel-border));
+  border: 1px solid rgb(var(--control-border));
   background: rgb(var(--button-bg));
   color: rgb(var(--app-fg));
   transition:
@@ -495,7 +523,7 @@ body[data-window-maximized="true"] .app-shell[data-desktop-shell="true"] {
 }
 
 .control-surface {
-  border: 1px solid rgb(var(--panel-border));
+  border: 1px solid rgb(var(--control-border));
   background: rgb(var(--button-bg));
   color: rgb(var(--app-fg));
   transition:
@@ -578,7 +606,7 @@ body[data-window-maximized="true"] .app-shell[data-desktop-shell="true"] {
 }
 
 .control-variant-icon {
-  border: 1px solid rgb(var(--panel-border));
+  border: 1px solid rgb(var(--control-border));
   background: transparent;
   color: rgb(var(--app-fg));
 }
@@ -594,7 +622,7 @@ body[data-window-maximized="true"] .app-shell[data-desktop-shell="true"] {
   height: 1.5rem;
   width: 2.75rem;
   flex-shrink: 0;
-  border: 1px solid rgb(var(--panel-border));
+  border: 1px solid rgb(var(--control-border));
   border-radius: 999px;
   background: rgb(var(--button-bg));
   transition:
@@ -629,7 +657,7 @@ body[data-window-maximized="true"] .app-shell[data-desktop-shell="true"] {
 }
 
 .option-card {
-  border: 1px solid rgb(var(--panel-border));
+  border: 1px solid rgb(var(--control-border));
   background: rgb(var(--button-bg));
   color: rgb(var(--app-fg));
 }
@@ -650,7 +678,7 @@ body[data-window-maximized="true"] .app-shell[data-desktop-shell="true"] {
   display: inline-flex;
   height: 1.125rem;
   width: 1.125rem;
-  border: 1px solid rgb(var(--panel-border));
+  border: 1px solid rgb(var(--control-border));
   border-radius: 999px;
   background: transparent;
   box-shadow: inset 0 0 0 0 transparent;
@@ -675,9 +703,9 @@ body[data-window-maximized="true"] .app-shell[data-desktop-shell="true"] {
   gap: 0;
   padding: 0.5rem;
   overflow: hidden;
-  border: 1px solid rgb(var(--panel-border));
+  border: 1px solid rgb(var(--control-border));
   border-radius: 18px;
-  background: rgba(18, 24, 34, 0.78);
+  background: rgb(var(--input-bg));
 }
 
 .segmented-control__item {
@@ -710,9 +738,9 @@ body[data-window-maximized="true"] .app-shell[data-desktop-shell="true"] {
   left: 0.5rem;
   width: calc((100% - 1rem) / var(--segmented-count));
   height: calc(100% - 1rem);
-  border: 1px solid rgba(180, 200, 230, 0.35);
+  border: 1px solid var(--control-selected-border);
   border-radius: 12px;
-  background: rgba(112, 132, 158, 0.72);
+  background: var(--control-selected-bg-strong);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.18),
     0 8px 20px rgba(0, 0, 0, 0.18);
@@ -1423,8 +1451,8 @@ button {
 }
 
 .app-shell[data-ui-theme="light-acrylic"] [role="switch"][aria-checked="false"] .toggle-track {
-  border-color: rgba(15, 23, 42, 0.18);
-  background: rgba(255, 255, 255, 0.42);
+  border-color: rgb(var(--control-border));
+  background: rgb(var(--button-bg));
 }
 
 .app-shell[data-ui-theme="dark-acrylic"] [role="switch"][aria-checked="false"] .toggle-track {

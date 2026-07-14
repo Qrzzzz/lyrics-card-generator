@@ -39,6 +39,8 @@ export type SettingsStep = {
     onClick: () => void;
     pressed?: boolean;
     expanded?: boolean;
+    controls?: string;
+    testId?: string;
     disabled?: boolean;
   };
   primaryAction?: {
@@ -332,16 +334,18 @@ export function SettingsStepper({
             {backText}
           </button>
         ) : null}
-        <div className="ml-auto flex items-center gap-3">
+        <div className="ml-auto flex min-w-0 flex-wrap items-center justify-end gap-2 sm:gap-3">
           {secondaryAction ? (
             <button
               type="button"
+              data-testid={secondaryAction.testId}
               onClick={secondaryAction.onClick}
               disabled={secondaryAction.disabled}
               aria-pressed={secondaryAction.pressed}
               aria-expanded={secondaryAction.expanded}
+              aria-controls={secondaryAction.controls}
               className={cn(
-                "app-button rounded-lg px-4 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-45",
+                "app-button rounded-lg px-3 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-45 sm:px-4",
                 compactChrome ? "h-10" : "h-11"
               )}
             >

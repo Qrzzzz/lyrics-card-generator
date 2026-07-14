@@ -1,17 +1,16 @@
 "use client";
 
-import { ChevronDown, Music2 } from "lucide-react";
-import { useId, type ReactNode } from "react";
+import { Music2 } from "lucide-react";
+import type { ReactNode } from "react";
 import { proxiedImageUrl } from "@/lib/image-utils";
 import type { createT } from "@/lib/i18n";
 import type { SongInfo } from "@/lib/types";
-import { cn } from "@/lib/utils";
 
 export type SongImportAsideProps = {
   song: SongInfo;
   manualForm: ReactNode;
   manualExpanded: boolean;
-  onManualExpandedChange: (expanded: boolean) => void;
+  manualRegionId: string;
   t: ReturnType<typeof createT>;
 };
 
@@ -24,10 +23,9 @@ export function SongImportAside({
   song,
   manualForm,
   manualExpanded,
-  onManualExpandedChange,
+  manualRegionId,
   t
 }: SongImportAsideProps) {
-  const manualRegionId = useId();
   const coverUrl = song.proxiedCoverUrl || (song.coverUrl ? proxiedImageUrl(song.coverUrl) : "");
 
   return (
@@ -95,23 +93,12 @@ export function SongImportAside({
 
         {manualForm ? (
           <div className="mt-4 border-t border-[rgb(var(--panel-border))] pt-4">
-            <button
-              type="button"
-              onClick={() => onManualExpandedChange(!manualExpanded)}
-              aria-expanded={manualExpanded}
-              aria-controls={manualRegionId}
-              className="control-focus app-button flex min-h-10 w-full items-center justify-between gap-3 rounded-lg px-3 text-left text-sm font-semibold"
-            >
-              <span>{t("manualOverride")}</span>
-              <ChevronDown
-                className={cn("size-4 shrink-0 transition-transform", manualExpanded && "rotate-180")}
-                aria-hidden="true"
-              />
-            </button>
             {manualExpanded ? (
               <div
                 id={manualRegionId}
-                className="mt-4 grid gap-3 [&>section]:border-0 [&>section]:pt-0"
+                role="region"
+                aria-label={t("manualOverride")}
+                className="grid gap-3 [&>section]:border-0 [&>section]:pt-0"
               >
                 {manualForm}
               </div>

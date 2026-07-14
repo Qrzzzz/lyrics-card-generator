@@ -170,9 +170,22 @@ assert.ok(
   "the large song cover stays bounded when the companion column stacks on narrow screens"
 );
 assert.ok(
-  songImportAsideSource.includes("aria-expanded={manualExpanded}") &&
-    songImportAsideSource.includes("aria-controls={manualRegionId}"),
-  "manual song metadata disclosure exposes its state to assistive technology"
+  editorStepsSource.includes('testId: "song-info-toggle"') &&
+    editorStepsSource.includes("expanded: songInfoExpanded") &&
+    editorStepsSource.includes("controls: songInfoRegionId") &&
+    stepperSource.includes("aria-controls={secondaryAction.controls}"),
+  "manual song metadata disclosure exposes its state and controlled region from the shared action row"
+);
+assert.ok(
+  !songImportAsideSource.includes("<button") &&
+    songImportAsideSource.includes('role="region"') &&
+    songImportAsideSource.includes("id={manualRegionId}"),
+  "the metadata aside keeps one labelled region without a duplicate disclosure button"
+);
+assert.ok(
+  stepperSource.includes("flex min-w-0 flex-wrap items-center justify-end") &&
+    stepperSource.indexOf("{secondaryAction ? (") < stepperSource.indexOf("data-testid=\"stepper-next-button\""),
+  "secondary action remains before Next and wraps safely in a narrow action row"
 );
 assert.ok(
   songImportAsideSource.includes('data-song-import-panel="true"') &&
@@ -196,4 +209,4 @@ assert.ok(
   "lyrics columns use only one thin responsive divider between neighbours"
 );
 
-console.log(JSON.stringify({ ok: true, stepperLayoutTests: 30 }, null, 2));
+console.log(JSON.stringify({ ok: true, stepperLayoutTests: 32 }, null, 2));

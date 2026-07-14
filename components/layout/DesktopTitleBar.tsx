@@ -6,6 +6,7 @@ import { getLyricsCardDesktopApi, type LyricsCardDesktopApi } from "@/lib/deskto
 import { createT } from "@/lib/i18n";
 import { shutdownCoordinator } from "@/lib/persistence/shutdown-coordinator";
 import type { Locale } from "@/lib/types";
+import { TitlebarGradualBlur } from "@/components/layout/TitlebarGradualBlur";
 
 type DesktopTitleBarProps = {
   locale: Locale;
@@ -84,6 +85,7 @@ export function DesktopTitleBar({ locale }: DesktopTitleBarProps) {
 
   return (
     <header className="desktop-titlebar absolute inset-x-0 top-0 z-[90] flex h-12 items-center">
+      <TitlebarGradualBlur />
       <div className="desktop-titlebar__traffic-lights flex shrink-0 items-center gap-0 px-4">
         <button
           type="button"

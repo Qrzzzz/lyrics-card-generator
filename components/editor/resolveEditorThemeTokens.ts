@@ -1,4 +1,4 @@
-import { resolveReadableTextTokens } from "@/lib/color/contrast";
+import { LIGHT_ACRYLIC_TEXT_TOKENS, resolveReadableTextTokens } from "@/lib/color/contrast";
 import type { UserSettings } from "@/lib/settings/types";
 import { resolveUiAccentColor } from "@/lib/settings/accent";
 import { resolveEffectiveAppBackgroundColor, resolveEffectiveUiThemeId } from "@/lib/settings/user-settings";
@@ -19,7 +19,9 @@ export function resolveEditorThemeTokens({ userSettings, palette }: ResolveEdito
       : effectiveTheme === "dark" || effectiveTheme === "dark-acrylic"
         ? "#FFFFFF"
         : undefined;
-  const uiTextTokens = resolveReadableTextTokens(uiBackgroundColor, preferredTextColor);
+  const uiTextTokens = effectiveTheme === "light-acrylic"
+    ? LIGHT_ACRYLIC_TEXT_TOKENS
+    : resolveReadableTextTokens(uiBackgroundColor, preferredTextColor);
 
   return {
     themeAccent,
