@@ -46,7 +46,7 @@ const baseStyle: CardStyle = {
   customFontEnabled: false,
   customFontFamily: "",
   lyricFontSize: 60,
-  lineHeight: 1.4,
+  lineHeight: 1.8,
   align: "center",
   textColorMode: "auto",
   textColorPreset: "white",

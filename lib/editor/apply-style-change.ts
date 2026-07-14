@@ -7,7 +7,7 @@ export const DEFAULT_PORTRAIT_SIZE: Required<CardSizeSnapshot> = {
   ratio: "custom",
   width: 1040,
   height: 1080,
-  autoWidth: false,
+  autoWidth: true,
   autoHeight: true
 };
 

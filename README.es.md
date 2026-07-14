@@ -19,7 +19,7 @@
 <p>
   <strong>Navegación</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Descargar la última versión</a> ·
-  <a href="./docs/releases/v5.5.0.es.md">Notas de la versión</a> ·
+  <a href="./docs/releases/v5.5.1.es.md">Notas de la versión</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en línea</a> ·
   <a href="#funciones-principales">Funciones principales</a> ·
   <a href="#desarrollo-local">Desarrollo local</a> ·
@@ -51,16 +51,17 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 Descarga la versión más reciente desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Instalador recomendado: `Lyrics Card Generator Setup 5.5.0.exe`
-* Versión portable: `Lyrics Card Generator-5.5.0-portable.exe`
+* Instalador recomendado: `Lyrics Card Generator Setup 5.5.1.exe`
+* Versión portable: `Lyrics Card Generator-5.5.1-portable.exe`
 
 El instalador se recomienda para uso habitual. La versión portable es útil para pruebas, uso temporal o ejecución desde una unidad extraíble.
 
 > La compilación actual no está firmada. Windows puede mostrar una advertencia de SmartScreen, algo habitual en aplicaciones personales sin firma.
 
-### Aspectos destacados de la versión 5.5.0
+### Aspectos destacados de la versión 5.5.1
 
-* Las tarjetas verticales personalizadas incorporan un Ancho automático opcional basado en la composición real del navegador con la fuente final.
+* Las nuevas tarjetas verticales personalizadas empiezan con Ancho automático activado y eligen un ancho cómodo solo a partir del contenido actual y la composición real del navegador con la fuente final.
+* El interlineado ahora abarca de 1,5 a 2,1, con 1,8 como valor predeterminado para las tarjetas nuevas.
 * El texto original y la traducción se miden por separado para evitar que solo uno o dos caracteres o palabras cortas queden en la línea siguiente.
 * Las interjecciones muy breves y las pocas líneas o traducciones muy largas pesan menos para que no estiren toda la tarjeta al máximo.
 * La altura automática y la exportación esperan a que se estabilice el ancho; al desactivarlo se conserva el ancho calculado para ajustarlo manualmente.
@@ -68,7 +69,7 @@ El instalador se recomienda para uso habitual. La versión portable es útil par
 ## 🌐 Notas de publicación multilingües
 
 GitHub Release muestra de forma predeterminada un resumen en chino simplificado. Consulta las notas completas:
-[简体中文](./docs/releases/v5.5.0.zh-CN.md) · [繁體中文](./docs/releases/v5.5.0.zh-TW.md) · [English](./docs/releases/v5.5.0.en.md) · [Français](./docs/releases/v5.5.0.fr.md) · [日本語](./docs/releases/v5.5.0.ja.md) · [Español](./docs/releases/v5.5.0.es.md)
+[简体中文](./docs/releases/v5.5.1.zh-CN.md) · [繁體中文](./docs/releases/v5.5.1.zh-TW.md) · [English](./docs/releases/v5.5.1.en.md) · [Français](./docs/releases/v5.5.1.fr.md) · [日本語](./docs/releases/v5.5.1.ja.md) · [Español](./docs/releases/v5.5.1.es.md)
 
 <a id="funciones-principales"></a>
 

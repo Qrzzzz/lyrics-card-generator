@@ -12,6 +12,12 @@ import {
 } from "../lib/card-style-normalize";
 import { applyEditorStyleChange } from "../lib/editor/apply-style-change";
 import { messages } from "../lib/i18n";
+import {
+  DEFAULT_LYRIC_LINE_HEIGHT,
+  LYRIC_LINE_HEIGHT_MAX,
+  LYRIC_LINE_HEIGHT_MIN,
+  LYRIC_LINE_HEIGHT_STEP
+} from "../lib/lyric-typography";
 import type { AppState, CardStyle, Locale } from "../lib/types";
 
 const baseStyle: CardStyle = {
@@ -26,7 +32,7 @@ const baseStyle: CardStyle = {
   customFontEnabled: false,
   customFontFamily: "",
   lyricFontSize: 60,
-  lineHeight: 1.4,
+  lineHeight: 1.8,
   align: "center",
   textColorMode: "auto",
   textColorPreset: "white",
@@ -91,7 +97,10 @@ assert.equal(defaultState.style.fineGridDensity, "medium");
 assert.equal(defaultState.style.showAlbumName, true);
 assert.equal(defaultState.style.layoutMode, "portrait");
 assert.equal(defaultState.style.ratio, "custom");
+assert.equal(defaultState.style.autoWidth, true, "new portrait custom cards enable automatic width");
 assert.equal(defaultState.style.autoHeight, true);
+assert.equal(defaultState.lastPortraitSize?.autoWidth, true, "new portrait history keeps automatic width enabled");
+assert.equal(defaultState.lastPortraitCustomSize?.autoWidth, true, "new custom history keeps automatic width enabled");
 assert.equal(defaultState.style.textColorMode, "preset");
 assert.equal(defaultState.style.textColorPreset, "white");
 assert.equal(defaultState.style.resolvedTextColor, FIXED_WHITE_TEXT_COLOR);
@@ -202,6 +211,7 @@ const portraitWithoutHistory = applyEditorStyleChange(
   { ...landscapeWide, lastPortraitSize: undefined },
   { ...landscapeWide.style, layoutMode: "portrait" }
 );
+assert.equal(portraitWithoutHistory.style.autoWidth, true, "missing portrait history uses the new automatic-width default");
 assert.deepEqual(
   {
     layoutMode: portraitWithoutHistory.style.layoutMode,
@@ -217,6 +227,24 @@ assert.deepEqual(
     height: 1080,
     autoHeight: true
   }
+);
+
+const legacyPortraitWithoutAutoWidth = applyEditorStyleChange(
+  {
+    ...landscapeWide,
+    lastPortraitSize: {
+      ratio: "custom",
+      width: 980,
+      height: 1200,
+      autoHeight: true
+    }
+  },
+  { ...landscapeWide.style, layoutMode: "portrait" }
+);
+assert.equal(
+  legacyPortraitWithoutAutoWidth.style.autoWidth,
+  false,
+  "legacy portrait history without the field remains manual"
 );
 
 const invalidPortraitRatioSize = getCardSize({
@@ -303,6 +331,31 @@ assert.equal(normalizedCustomColor.textColorMode, "custom");
 assert.equal(normalizedCustomColor.customTextColor, "#AABBCC");
 assert.equal(normalizedCustomColor.resolvedTextColor, "#AABBCC");
 assert.equal(normalizedCustomColor.coverCropScale, FIXED_COVER_CROP_SCALE);
+
+assert.equal(defaultState.style.lineHeight, DEFAULT_LYRIC_LINE_HEIGHT, "new documents use the 1.8 line-height default");
+assert.equal(LYRIC_LINE_HEIGHT_MIN, 1.5);
+assert.equal(LYRIC_LINE_HEIGHT_MAX, 2.1);
+assert.equal(LYRIC_LINE_HEIGHT_STEP, 0.05);
+assert.equal(
+  normalizeCardStyle({ ...baseStyle, lineHeight: 1.1 }).lineHeight,
+  LYRIC_LINE_HEIGHT_MIN,
+  "legacy line heights clamp to the new lower bound"
+);
+assert.equal(
+  normalizeCardStyle({ ...baseStyle, lineHeight: 2.4 }).lineHeight,
+  LYRIC_LINE_HEIGHT_MAX,
+  "oversized line heights clamp to the new upper bound"
+);
+assert.equal(
+  normalizeCardStyle({ ...baseStyle, lineHeight: 1.83 }).lineHeight,
+  1.85,
+  "legacy off-step line heights snap to the nearest supported step"
+);
+assert.equal(
+  normalizeCardStyle({ ...baseStyle, lineHeight: Number.NaN }).lineHeight,
+  DEFAULT_LYRIC_LINE_HEIGHT,
+  "invalid line heights recover to the default"
+);
 
 const expectedTextDesignTitles: Record<Locale, string> = {
   zh: "文字设计",

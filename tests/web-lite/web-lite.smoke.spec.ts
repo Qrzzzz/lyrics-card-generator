@@ -1,8 +1,9 @@
 import { createServer, type Server } from "node:http";
 import { readFile, stat } from "node:fs/promises";
 import path from "node:path";
-import { expect, test, type Download, type Page } from "@playwright/test";
+import { expect, test, type Download, type Locator, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import { EXAMPLE_SONGS, resolveExampleTranslation } from "../../lib/examples";
 
 const projectRoot = process.cwd();
 const localCoverBytesPromise = readFile(path.join(projectRoot, "public", "app-icon.png"));
@@ -10,6 +11,14 @@ const remoteCoverUrl = "https://covers.test/cover.png";
 const remoteCoverRequestPattern = /^https:\/\/covers\.test\/cover\.png(?:\?.*)?$/;
 const preferencesKey = "lyrics-card-web-lite-preferences-v1";
 const stepIds = ["song-info", "lyrics", "layout", "font", "visual", "export"] as const;
+const expectedExampleAutoWidths: Record<string, { min: number; max: number }> = {
+  opalite: { min: 1360, max: 1400 },
+  opposite: { min: 820, max: 860 },
+  yuusha: { min: 1080, max: 1120 },
+  "glorious-years": { min: 780, max: 820 },
+  honeybee: { min: 860, max: 900 },
+  lies: { min: 900, max: 940 }
+};
 const unsafeBrowserPorts = new Set([
   1, 7, 9, 11, 13, 15, 17, 19, 20, 21, 22, 23, 25, 37, 42, 43, 53, 69, 77, 79, 87, 95,
   101, 102, 103, 104, 109, 110, 111, 113, 115, 117, 119, 123, 135, 137, 139, 143, 161, 179,
@@ -226,6 +235,7 @@ test("restores portrait custom size and auto height after landscape round trips"
   const portrait = page.locator('[data-segment-value="portrait"]');
   const landscape = page.locator('[data-segment-value="landscape"]');
   const sizeMode = page.getByRole("radiogroup", { name: "Size Mode", exact: true });
+  const autoWidth = page.getByRole("switch", { name: "Auto Width", exact: true });
   const autoHeight = page.getByRole("switch", { name: "Auto Height", exact: true });
   const width = page.getByLabel("Width", { exact: true });
   const previewSection = page
@@ -236,6 +246,9 @@ test("restores portrait custom size and auto height after landscape round trips"
 
   await expect(portrait).toHaveAttribute("aria-checked", "true");
   await expect(sizeMode.getByRole("radio", { name: "Custom", exact: true })).toHaveAttribute("aria-checked", "true");
+  await expect(autoWidth).toHaveAttribute("aria-checked", "true");
+  await autoWidth.click();
+  await expect(autoWidth).toHaveAttribute("aria-checked", "false");
   await expect(autoHeight).toHaveAttribute("aria-checked", "true");
   await expect(width).toHaveValue("1040");
   await width.focus();
@@ -288,72 +301,15 @@ test("auto width measures bilingual wrapping and settles on a comfortable portra
   await page.locator('[data-step-id="layout"]').click();
   const autoWidth = page.getByRole("switch", { name: "Auto Width", exact: true });
   const width = page.getByLabel("Width", { exact: true });
-  await expect(autoWidth).toHaveAttribute("aria-checked", "false");
-  await autoWidth.click();
   await expect(autoWidth).toHaveAttribute("aria-checked", "true");
   await expect(width).toBeDisabled();
   await expect(page.locator("[data-auto-width-measurement-host]")).toHaveCount(1);
 
-  await page.waitForTimeout(1000);
-  const settledWidth = Number(await width.inputValue());
+  const settledWidth = await waitForStableSliderValue(width);
   expect(settledWidth).toBeLessThanOrEqual(1200);
   expect(settledWidth % 20).toBe(0);
-  await page.waitForTimeout(700);
-  expect(Number(await width.inputValue())).toBe(settledWidth);
 
-  const wrapMetrics = await page.locator('[data-export-card-host] [data-export-card="true"]').first().evaluate((root) => {
-    return Array.from(root.querySelectorAll<HTMLElement>("[data-auto-width-line]")).map((line) => {
-      const textNode = Array.from(line.childNodes).find((node): node is Text => node.nodeType === Node.TEXT_NODE);
-      if (!textNode) return null;
-      const isCjk = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/u.test(textNode.data);
-      const segments = Array.from(new Intl.Segmenter("und", {
-        granularity: isCjk ? "grapheme" : "word"
-      }).segment(textNode.data)).filter((segment) =>
-        isCjk
-          ? /[\p{L}\p{N}]/u.test(segment.segment)
-          : segment.isWordLike === true
-      );
-      const range = document.createRange();
-      const fragments: Array<{ top: number; left: number; right: number; index: number }> = [];
-      segments.forEach((segment, index) => {
-        range.setStart(textNode, segment.index);
-        range.setEnd(textNode, segment.index + segment.segment.length);
-        Array.from(range.getClientRects()).forEach((rect) => {
-          if (rect.width > 0) fragments.push({ top: rect.top, left: rect.left, right: rect.right, index });
-        });
-      });
-      const visualLines: Array<{
-        top: number;
-        left: number;
-        right: number;
-        indexes: Set<number>;
-      }> = [];
-      fragments.sort((left, right) => left.top - right.top || left.left - right.left).forEach((fragment) => {
-        const visualLine = visualLines.find((candidate) => Math.abs(candidate.top - fragment.top) <= 2);
-        if (visualLine) {
-          visualLine.left = Math.min(visualLine.left, fragment.left);
-          visualLine.right = Math.max(visualLine.right, fragment.right);
-          visualLine.indexes.add(fragment.index);
-        } else {
-          visualLines.push({
-            top: fragment.top,
-            left: fragment.left,
-            right: fragment.right,
-            indexes: new Set([fragment.index])
-          });
-        }
-      });
-      const last = visualLines.at(-1);
-      const lastFill = last ? (last.right - last.left) / Math.max(1, line.clientWidth) : 0;
-      return {
-        kind: line.dataset.autoWidthLine,
-        visualLines: visualLines.length,
-        lastUnits: last?.indexes.size ?? 0,
-        lastFill,
-        severe: visualLines.length > 1 && (last?.indexes.size ?? 0) <= 2 && lastFill <= 0.3
-      };
-    }).filter((metric): metric is NonNullable<typeof metric> => metric !== null);
-  });
+  const wrapMetrics = await measureAutoWidthWrapMetrics(page);
   expect(wrapMetrics.some((metric) => metric.kind === "lyric" && metric.visualLines > 1)).toBe(true);
   expect(wrapMetrics.some((metric) => metric.kind === "translation" && metric.visualLines > 1)).toBe(true);
   expect(wrapMetrics.filter((metric) => metric.severe)).toEqual([]);
@@ -365,6 +321,78 @@ test("auto width measures bilingual wrapping and settles on a comfortable portra
   await autoWidth.click();
   await expect(width).toBeEnabled();
   await expect(width).toHaveValue(String(settledWidth));
+});
+
+test("auto width calibrates every built-in example independently of the starting width", async ({ page }) => {
+  await openWebLite(page);
+  await page.getByRole("radio", { name: "中", exact: true }).click();
+
+  const lyricsStep = page.locator('[data-step-id="lyrics"]');
+  const layoutStep = page.locator('[data-step-id="layout"]');
+  await layoutStep.click();
+  const lineHeight = page.getByRole("slider", { name: "行高", exact: true });
+  await expect(lineHeight).toHaveAttribute("min", "1.5");
+  await expect(lineHeight).toHaveAttribute("max", "2.1");
+  await expect(lineHeight).toHaveAttribute("step", "0.05");
+  await expect(lineHeight).toHaveValue("1.8");
+
+  const autoWidth = page.getByRole("switch", { name: "自动宽度", exact: true });
+  const width = page.getByRole("slider", { name: "宽度", exact: true });
+
+  expect(Object.keys(expectedExampleAutoWidths).sort()).toEqual(EXAMPLE_SONGS.map((example) => example.id).sort());
+
+  for (const example of EXAMPLE_SONGS) {
+    await layoutStep.click();
+    if (await autoWidth.getAttribute("aria-checked") === "true") {
+      await autoWidth.click();
+    }
+
+    await lyricsStep.click();
+    await page.getByRole("textbox", { name: "歌词文本", exact: true }).fill(example.lyrics);
+    const translation = resolveExampleTranslation(example, "zh");
+    const translationEnabled = example.translationEnabled && Boolean(translation.text.trim());
+    const translationToggle = page.getByRole("switch", { name: "启用翻译", exact: true });
+    if ((await translationToggle.getAttribute("aria-checked") === "true") !== translationEnabled) {
+      await translationToggle.click();
+    }
+    if (translationEnabled) {
+      await page.getByRole("textbox", { name: "翻译文本", exact: true }).fill(translation.text);
+    }
+
+    await layoutStep.click();
+    const results: number[] = [];
+    for (const key of ["Home", "End"] as const) {
+      if (await autoWidth.getAttribute("aria-checked") === "true") {
+        await autoWidth.click();
+      }
+      await width.focus();
+      await width.press(key);
+      await autoWidth.click();
+      const expected = expectedExampleAutoWidths[example.id];
+      await expect.poll(
+        async () => {
+          const value = Number(await width.inputValue());
+          return value >= expected.min && value <= expected.max;
+        },
+        { message: `${example.id} settles inside its calibrated range after ${key}`, timeout: 10_000 }
+      ).toBe(true);
+      const settled = Number(await width.inputValue());
+      results.push(settled);
+    }
+
+    expect(results[0], `${example.id} ignores its enabling width`).toBe(results[1]);
+    const expected = expectedExampleAutoWidths[example.id];
+    expect(results[0], `${example.id} stays inside its calibrated range`).toBeGreaterThanOrEqual(expected.min);
+    expect(results[0], `${example.id} stays inside its calibrated range`).toBeLessThanOrEqual(expected.max);
+    expect(results[0] % 20, `${example.id} uses a candidate width`).toBe(0);
+
+    const wrapMetrics = await measureAutoWidthWrapMetrics(page);
+    expect(wrapMetrics.filter((metric) => metric.kind === "lyric")).toHaveLength(effectiveLineCount(example.lyrics));
+    expect(wrapMetrics.filter((metric) => metric.kind === "translation")).toHaveLength(
+      translationEnabled ? effectiveLineCount(translation.text) : 0
+    );
+    expect(wrapMetrics.filter((metric) => metric.severe), `${example.id} leaves no severe orphan`).toEqual([]);
+  }
 });
 
 test("clears remote input and status after a successful remote cover", async ({ page }) => {
@@ -523,6 +551,102 @@ test("exports from the independent host while the visible preview is collapsed",
   await exportAndExpectDimensions(page, "medium", 1512, 1512);
 });
 
+async function measureAutoWidthWrapMetrics(page: Page) {
+  return page.locator('[data-export-card-host] [data-export-card="true"]').first().evaluate((root) => {
+    return Array.from(root.querySelectorAll<HTMLElement>("[data-auto-width-line]")).map((line) => {
+      const textNode = Array.from(line.childNodes).find((node): node is Text => node.nodeType === Node.TEXT_NODE);
+      if (!textNode) return null;
+      type Unit = { start: number; end: number; kind: "cjk" | "word"; text: string };
+      const graphemes = Array.from(new Intl.Segmenter("und", { granularity: "grapheme" }).segment(textNode.data));
+      const units: Unit[] = [];
+      let pendingWord: Unit | null = null;
+      const flushWord = () => {
+        if (pendingWord) units.push(pendingWord);
+        pendingWord = null;
+      };
+      for (const grapheme of graphemes) {
+        const end = grapheme.index + grapheme.segment.length;
+        if (/[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/u.test(grapheme.segment)) {
+          flushWord();
+          units.push({ start: grapheme.index, end, kind: "cjk", text: grapheme.segment });
+        } else if (/[\p{L}\p{N}]/u.test(grapheme.segment)) {
+          if (pendingWord) {
+            pendingWord.end = end;
+            pendingWord.text += grapheme.segment;
+          } else {
+            pendingWord = { start: grapheme.index, end, kind: "word", text: grapheme.segment };
+          }
+        } else if (/^[’'\-‐‑]$/u.test(grapheme.segment) && pendingWord) {
+          pendingWord.end = end;
+          pendingWord.text += grapheme.segment;
+        } else {
+          flushWord();
+          if (!/^\s+$/u.test(grapheme.segment) && units.length > 0) {
+            const previous = units[units.length - 1];
+            previous.end = end;
+            previous.text += grapheme.segment;
+          }
+        }
+      }
+      flushWord();
+      const range = document.createRange();
+      const fragments: Array<{ top: number; left: number; right: number; index: number }> = [];
+      units.forEach((unit, index) => {
+        range.setStart(textNode, unit.start);
+        range.setEnd(textNode, unit.end);
+        Array.from(range.getClientRects()).forEach((rect) => {
+          if (rect.width > 0) fragments.push({ top: rect.top, left: rect.left, right: rect.right, index });
+        });
+      });
+      range.detach();
+      const visualLines: Array<{
+        top: number;
+        left: number;
+        right: number;
+        indexes: Set<number>;
+      }> = [];
+      fragments.sort((left, right) => left.top - right.top || left.left - right.left).forEach((fragment) => {
+        const visualLine = visualLines.find((candidate) => Math.abs(candidate.top - fragment.top) <= 2);
+        if (visualLine) {
+          visualLine.left = Math.min(visualLine.left, fragment.left);
+          visualLine.right = Math.max(visualLine.right, fragment.right);
+          visualLine.indexes.add(fragment.index);
+        } else {
+          visualLines.push({
+            top: fragment.top,
+            left: fragment.left,
+            right: fragment.right,
+            indexes: new Set([fragment.index])
+          });
+        }
+      });
+      const last = visualLines.at(-1);
+      const lastFill = last ? (last.right - last.left) / Math.max(1, line.clientWidth) : 0;
+      const lastUnits = last ? Array.from(last.indexes, (index) => units[index]) : [];
+      const cjkCount = lastUnits.filter((unit) => unit.kind === "cjk").length;
+      const wordUnits = lastUnits.filter((unit) => unit.kind === "word");
+      const wordCharacterCount = wordUnits.reduce(
+        (total, unit) => total + unit.text.replace(/[^\p{L}\p{N}]/gu, "").length,
+        0
+      );
+      return {
+        kind: line.dataset.autoWidthLine,
+        visualLines: visualLines.length,
+        lastUnits: lastUnits.length,
+        lastFill,
+        severe: visualLines.length > 1 && lastFill <= 0.3 && (
+          (cjkCount > 0 && lastUnits.length <= 2) ||
+          (cjkCount === 0 && wordUnits.length > 0 && wordUnits.length <= 2 && wordCharacterCount <= 14)
+        )
+      };
+    }).filter((metric): metric is NonNullable<typeof metric> => metric !== null);
+  });
+}
+
+function effectiveLineCount(value: string) {
+  return value.split(/\r?\n/).filter((line) => line.trim().length > 0).length;
+}
+
 async function openWebLite(page: Page, viewport = { width: 1280, height: 900 }) {
   await page.setViewportSize(viewport);
   await page.goto(`${baseUrl}/index.html`, { waitUntil: "networkidle" });
@@ -672,6 +796,25 @@ function deferred<T>() {
       }
     }
   };
+}
+
+async function waitForStableSliderValue(locator: Locator, stableMs = 500, timeoutMs = 10_000) {
+  const deadline = Date.now() + timeoutMs;
+  let latest = Number.NaN;
+  let stableSince = Date.now();
+
+  while (Date.now() < deadline) {
+    const value = Number(await locator.inputValue());
+    if (value !== latest) {
+      latest = value;
+      stableSince = Date.now();
+    } else if (Date.now() - stableSince >= stableMs) {
+      return latest;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
+
+  throw new Error(`Slider value did not settle within ${timeoutMs}ms; last value: ${latest}`);
 }
 
 function createStaticServer() {

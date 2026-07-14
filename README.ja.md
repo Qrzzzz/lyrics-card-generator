@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v5.5.0.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v5.5.1.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="#ローカル開発">ローカル開発</a> ·
@@ -51,16 +51,17 @@
 
 最新版は [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) からダウンロードできます。
 
-* 推奨インストーラー：`Lyrics Card Generator Setup 5.5.0.exe`
-* ポータブル版：`Lyrics Card Generator-5.5.0-portable.exe`
+* 推奨インストーラー：`Lyrics Card Generator Setup 5.5.1.exe`
+* ポータブル版：`Lyrics Card Generator-5.5.1-portable.exe`
 
 通常利用にはインストーラーを推奨します。ポータブル版は一時利用、検証、リムーバブルドライブでの利用に向いています。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v5.5.0 の更新ポイント
+### v5.5.1 の更新ポイント
 
-* 縦向きカスタム歌詞カードに、最終フォントの実ブラウザ組版から快適な幅を選ぶ任意の「自動幅」を追加しました。
+* 新しい縦向きカスタム歌詞カードでは「自動幅」が初期状態から有効になり、現在の内容と最終フォントの実ブラウザ組版だけから快適な幅を選びます。
+* 行間の範囲を 1.5〜2.1 に変更し、新しいカードの初期値を 1.8 にしました。
 * 原文と翻訳を別々に測定し、次の表示行に1〜2文字や短い単語だけが残る状態を避けます。
 * ごく短い合いの手や一部の長い原文・翻訳は重みを下げ、カード全体が最大幅まで広がりにくくしました。
 * 自動高さと書き出しは幅の安定後に進み、自動幅をオフにすると計算済みの幅を手動で調整できます。
@@ -68,7 +69,7 @@
 ## 🌐 多言語リリースノート
 
 GitHub Release ではデフォルトで簡体字中国語の概要が表示されます。完全なリリースノートはこちら：
-[简体中文](./docs/releases/v5.5.0.zh-CN.md) · [繁體中文](./docs/releases/v5.5.0.zh-TW.md) · [English](./docs/releases/v5.5.0.en.md) · [Français](./docs/releases/v5.5.0.fr.md) · [日本語](./docs/releases/v5.5.0.ja.md) · [Español](./docs/releases/v5.5.0.es.md)
+[简体中文](./docs/releases/v5.5.1.zh-CN.md) · [繁體中文](./docs/releases/v5.5.1.zh-TW.md) · [English](./docs/releases/v5.5.1.en.md) · [Français](./docs/releases/v5.5.1.fr.md) · [日本語](./docs/releases/v5.5.1.ja.md) · [Español](./docs/releases/v5.5.1.es.md)
 
 <a id="主な機能"></a>
 

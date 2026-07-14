@@ -2,9 +2,8 @@ export const AUTO_WIDTH_MIN = 720;
 export const AUTO_WIDTH_MAX = 1440;
 export const AUTO_WIDTH_STEP = 20;
 export const AUTO_WIDTH_DEBOUNCE_MS = 300;
-export const AUTO_WIDTH_SETTLE_TOLERANCE = 20;
-export const AUTO_WIDTH_SOFT_MIN = 880;
-export const AUTO_WIDTH_SOFT_MAX = 1200;
+export const AUTO_WIDTH_SETTLE_TOLERANCE = 5;
+export const AUTO_WIDTH_TARGET_FILL = 0.625;
 
 export type AutoWidthLineKind = "lyric" | "translation";
 
@@ -59,11 +58,11 @@ export function getAutoWidthCandidates() {
 
 export function chooseAutoWidth(
   candidates: AutoWidthCandidateMetrics[],
-  currentWidth: number
+  fallbackWidthHint: number
 ): AutoWidthDecision {
-  const fallbackWidth = nearestCandidateWidth(currentWidth, candidates);
+  const fallbackWidth = nearestCandidateWidth(fallbackWidthHint, candidates);
   const fallback = candidates.find((candidate) => candidate.canvasWidth === fallbackWidth);
-  if (!fallback || candidates.length === 0 || candidates.some((candidate) => candidate.lines.length === 0)) {
+  if (!fallback || candidates.length === 0 || !haveCompleteLineSets(candidates, fallback)) {
     return {
       width: fallbackWidth,
       score: Number.POSITIVE_INFINITY,
@@ -76,7 +75,7 @@ export function chooseAutoWidth(
   if (lyricLines.length < 3) {
     return {
       width: fallbackWidth,
-      score: scoreCandidate(fallback, currentWidth, new Set(lyricLines.map((line) => line.key)), new Set()),
+      score: scoreCandidate(fallback, new Set(lyricLines.map((line) => line.key)), new Set()),
       confidence: "low",
       reason: "insufficient-samples"
     };
@@ -89,7 +88,7 @@ export function chooseAutoWidth(
   if (hasExtremeCoreDistribution(lyricLines, lyricCore)) {
     return {
       width: fallbackWidth,
-      score: scoreCandidate(fallback, currentWidth, lyricCore, translationCore),
+      score: scoreCandidate(fallback, lyricCore, translationCore),
       confidence: "low",
       reason: "extreme-distribution"
     };
@@ -98,11 +97,9 @@ export function chooseAutoWidth(
   const scored = candidates
     .map((candidate) => ({
       candidate,
-      score: scoreCandidate(candidate, currentWidth, lyricCore, translationCore)
+      score: scoreCandidate(candidate, lyricCore, translationCore)
     }))
-    .sort((left, right) => left.score - right.score ||
-      Math.abs(left.candidate.canvasWidth - currentWidth) - Math.abs(right.candidate.canvasWidth - currentWidth) ||
-      left.candidate.canvasWidth - right.candidate.canvasWidth);
+    .sort((left, right) => left.score - right.score || left.candidate.canvasWidth - right.candidate.canvasWidth);
   const best = scored[0];
 
   return {
@@ -136,13 +133,14 @@ export function selectCoreLineKeys(lines: AutoWidthLineMetrics[]) {
 
 export function scoreCandidate(
   candidate: AutoWidthCandidateMetrics,
-  currentWidth: number,
   lyricCore: ReadonlySet<string>,
   translationCore: ReadonlySet<string>
 ) {
   let score = 0;
   const lyricCoreFills: number[] = [];
   const translationCoreFills: number[] = [];
+  let lyricCoreExtraLines = 0;
+  let translationCoreExtraLines = 0;
 
   for (const line of candidate.lines) {
     const isTranslation = line.kind === "translation";
@@ -154,29 +152,21 @@ export function scoreCandidate(
     if (line.severeOrphan) {
       score += isCore ? (isTranslation ? 9_000 : 14_000) : (isTranslation ? 350 : 700);
     }
-    score += extraLines * (isCore ? 120 : 30) * kindWeight;
-
     if (isCore) {
       (isTranslation ? translationCoreFills : lyricCoreFills).push(line.maxLineFill);
-      if (line.averageLineFill < 0.42) score += (0.42 - line.averageLineFill) * 160 * kindWeight;
+      if (isTranslation) {
+        translationCoreExtraLines += extraLines;
+      } else {
+        lyricCoreExtraLines += extraLines;
+      }
+      if (line.averageLineFill < 0.38) score += (0.38 - line.averageLineFill) * 160 * kindWeight;
     }
   }
 
   score += fillPenalty(lyricCoreFills, 1);
   score += fillPenalty(translationCoreFills, 0.6);
-
-  if (candidate.canvasWidth < AUTO_WIDTH_SOFT_MIN) {
-    score += ((AUTO_WIDTH_SOFT_MIN - candidate.canvasWidth) / AUTO_WIDTH_STEP) * 80;
-  } else if (candidate.canvasWidth > AUTO_WIDTH_SOFT_MAX) {
-    score += ((candidate.canvasWidth - AUTO_WIDTH_SOFT_MAX) / AUTO_WIDTH_STEP) * 120;
-  }
-
-  const delta = Math.abs(candidate.canvasWidth - currentWidth);
-  const inexpensiveDelta = Math.max(AUTO_WIDTH_STEP * 2, currentWidth * 0.08);
-  score += delta / AUTO_WIDTH_STEP;
-  if (delta > inexpensiveDelta) {
-    score += Math.pow((delta - inexpensiveDelta) / AUTO_WIDTH_STEP, 1.35) * 5;
-  }
+  score += normalizedWrapPenalty(lyricCoreExtraLines, lyricCoreFills.length, 1);
+  score += normalizedWrapPenalty(translationCoreExtraLines, translationCoreFills.length, 0.6);
 
   return score;
 }
@@ -193,9 +183,34 @@ function hasExtremeCoreDistribution(lines: AutoWidthLineMetrics[], coreKeys: Rea
 function fillPenalty(fills: number[], weight: number) {
   if (fills.length === 0) return 0;
   const fill = median(fills);
-  if (fill < 0.58) return Math.pow(0.58 - fill, 2) * 5_000 * weight;
-  if (fill > 0.97) return Math.pow(fill - 0.97, 2) * 2_000 * weight;
-  return 0;
+  return Math.pow(fill - AUTO_WIDTH_TARGET_FILL, 2) * 5_000 * weight;
+}
+
+function normalizedWrapPenalty(extraLines: number, coreLineCount: number, weight: number) {
+  if (coreLineCount === 0) return 0;
+  return (extraLines / coreLineCount) * 24 * weight;
+}
+
+function haveCompleteLineSets(candidates: AutoWidthCandidateMetrics[], fallback: AutoWidthCandidateMetrics) {
+  const expectedWidths = getAutoWidthCandidates();
+  const actualWidths = [...new Set(candidates.map((candidate) => candidate.canvasWidth))]
+    .sort((left, right) => left - right);
+  if (
+    actualWidths.length !== candidates.length ||
+    actualWidths.length !== expectedWidths.length ||
+    actualWidths.some((width, index) => width !== expectedWidths[index])
+  ) {
+    return false;
+  }
+
+  const expected = [...new Set(fallback.lines.map((line) => line.key))].sort();
+  if (expected.length === 0 || expected.length !== fallback.lines.length) return false;
+  return candidates.every((candidate) => {
+    const actual = [...new Set(candidate.lines.map((line) => line.key))].sort();
+    return actual.length === candidate.lines.length &&
+      actual.length === expected.length &&
+      actual.every((key, index) => key === expected[index]);
+  });
 }
 
 function nearestCandidateWidth(currentWidth: number, candidates: AutoWidthCandidateMetrics[]) {
@@ -209,8 +224,9 @@ function nearestCandidateWidth(currentWidth: number, candidates: AutoWidthCandid
 
 function median(values: number[]) {
   if (values.length === 0) return 0;
-  const middle = Math.floor(values.length / 2);
-  return values.length % 2 === 0
-    ? (values[middle - 1] + values[middle]) / 2
-    : values[middle];
+  const sorted = [...values].sort((left, right) => left - right);
+  const middle = Math.floor(sorted.length / 2);
+  return sorted.length % 2 === 0
+    ? (sorted[middle - 1] + sorted[middle]) / 2
+    : sorted[middle];
 }
