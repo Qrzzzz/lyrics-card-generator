@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { ExportPanel } from "@/components/editor/ExportPanel";
 import { LocalAudioParser } from "@/components/editor/LocalAudioParser";
 import { LyricsFetchPanel } from "@/components/editor/LyricsFetchPanel";
@@ -93,6 +93,7 @@ export function useEditorSteps({
   handlers
 }: UseEditorStepsInput): SettingsStep[] {
   const [songInfoExpanded, setSongInfoExpanded] = useState(false);
+  const songInfoRegionId = useId();
 
   return [
     {
@@ -101,6 +102,13 @@ export function useEditorSteps({
       description: t("songSearchDescription"),
       presentation: "focus",
       isComplete: Boolean(state.url.trim() || state.song.title.trim() || state.song.artist.trim() || state.song.coverUrl?.trim()),
+      secondaryAction: {
+        label: t("manualOverride"),
+        onClick: () => setSongInfoExpanded((expanded) => !expanded),
+        expanded: songInfoExpanded,
+        controls: songInfoRegionId,
+        testId: "song-info-toggle"
+      },
       content: (
         <div className="song-import-primary grid gap-4" data-testid="song-search-primary">
           <SongSearchParser
@@ -142,7 +150,7 @@ export function useEditorSteps({
             />
           )}
           manualExpanded={songInfoExpanded}
-          onManualExpandedChange={setSongInfoExpanded}
+          manualRegionId={songInfoRegionId}
         />
       )
     },

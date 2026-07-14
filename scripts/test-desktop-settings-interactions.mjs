@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, mkdir, rm } from "node:fs/promises";
+import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -25,6 +25,8 @@ const nativeDialogs = [];
 let acceptDocumentReplacementDialogs = false;
 const searchRequests = [];
 const resolveRequests = [];
+const titlebarVisualMetrics = [];
+let titlebarPerformanceComparison = null;
 
 async function waitForVisible(testId) {
   const locator = page.getByTestId(testId);
@@ -512,7 +514,21 @@ async function assertSongSearchBehavior() {
 
 async function assertSongImportAsideBehavior() {
   const aside = page.getByTestId("song-import-aside");
-  const manualToggle = aside.locator('button[aria-controls][aria-expanded]');
+  const stepper = page.locator('[data-stepper-presentation="focus"]');
+  const manualToggle = stepper.getByTestId("song-info-toggle");
+  const nextButton = stepper.getByTestId("stepper-next-button");
+  assert.equal(
+    await aside.locator('button[aria-controls][aria-expanded]').count(),
+    0,
+    "manual song details no longer render a duplicate disclosure inside the metadata panel"
+  );
+  assert.deepEqual(
+    await stepper.locator('.lyrics-stepper-actions button').evaluateAll((buttons) => (
+      buttons.map((button) => button.getAttribute('data-testid'))
+    )),
+    ["song-info-toggle", "stepper-next-button"],
+    "manual adjustment stays immediately before Next"
+  );
   assert.equal(await manualToggle.getAttribute("aria-expanded"), "false", "manual song details start collapsed");
 
   await manualToggle.focus();
@@ -530,9 +546,9 @@ async function assertSongImportAsideBehavior() {
   await manualRegion.waitFor({ state: "visible" });
   await manualToggle.press("Tab");
   assert.equal(
-    await manualRegion.evaluate((region) => region.contains(document.activeElement)),
+    await nextButton.evaluate((node) => document.activeElement === node),
     true,
-    "Tab enters the expanded manual song form in visual order"
+    "Tab follows the visible action order from manual adjustment to Next"
   );
   await page.keyboard.press("Shift+Tab");
   assert.equal(
@@ -542,12 +558,438 @@ async function assertSongImportAsideBehavior() {
   );
   await manualToggle.press("Enter");
   assert.equal(await manualToggle.getAttribute("aria-expanded"), "false", "manual song details collapse from the keyboard");
-  await manualRegion.waitFor({ state: "detached" });
+  await manualRegion.waitFor({ state: "hidden" });
+
+  await manualToggle.click();
+  await manualRegion.waitFor({ state: "visible" });
+  await page.locator('button[data-step-id="lyrics"]').click();
+  await page.locator('button[data-step-id="link"]').click();
+  assert.equal(await manualToggle.getAttribute("aria-expanded"), "true", "manual song details remain expanded after returning to step one");
+  await manualToggle.click();
+  await manualRegion.waitFor({ state: "hidden" });
+}
+
+async function selectVisualTheme(mode, acrylicEnabled) {
+  await page.locator('[data-testid="editor-surface"] [data-testid="settings-button"]').click();
+  await waitForVisible("settings-surface");
+  await selectSettingsSection("appearance");
+  const panel = page.locator('[data-settings-panel="appearance"]:not([hidden])');
+  await panel.locator(`[data-segment-value="${mode}"]`).click();
+  const acrylicToggle = panel.getByRole("switch").first();
+  if ((await acrylicToggle.getAttribute("aria-checked") === "true") !== acrylicEnabled) {
+    await acrylicToggle.click();
+  }
+  const expectedTheme = acrylicEnabled ? `${mode}-acrylic` : mode;
+  await page.waitForFunction(
+    (theme) => document.querySelector('.app-shell')?.getAttribute('data-ui-theme') === theme,
+    expectedTheme
+  );
+  await page.getByTestId("settings-close-button").click();
+  await page.locator('[data-testid="settings-surface"][data-surface-state="closed"]').waitFor({ state: "attached" });
+  await page.waitForFunction(() => {
+    const surface = document.querySelector('[data-testid="settings-surface"][data-surface-state="closed"]');
+    if (!(surface instanceof HTMLElement)) return false;
+    const transform = new DOMMatrixReadOnly(getComputedStyle(surface).transform);
+    return transform.m41 >= surface.getBoundingClientRect().width - 1;
+  }, undefined, { timeout: 5_000 });
+}
+
+async function analyzeTitlebarVisualEffect(theme) {
+  const effect = page.getByTestId("titlebar-gradual-blur");
+  await effect.waitFor({ state: "visible" });
+  const geometry = await page.evaluate(() => {
+    const toRect = (element) => {
+      if (!(element instanceof HTMLElement)) return null;
+      const rect = element.getBoundingClientRect();
+      return { top: rect.top, bottom: rect.bottom, height: rect.height, left: rect.left, right: rect.right };
+    };
+    return {
+      viewport: { width: window.innerWidth, height: window.innerHeight },
+      titlebar: toRect(document.querySelector(".desktop-titlebar")),
+      effect: toRect(document.querySelector('[data-testid="titlebar-gradual-blur"]')),
+      rail: toRect(document.querySelector(".lyrics-stepper-rail")),
+      content: toRect(document.querySelector(".lyrics-stepper-content"))
+    };
+  });
+  assert.ok(geometry.titlebar && geometry.effect && geometry.rail && geometry.content, `${theme} exposes measurable titlebar and content geometry`);
+  assert.ok(Math.abs(geometry.titlebar.bottom - 48) <= 0.5, `${theme} keeps the measured 48px titlebar edge`);
+  assert.ok(geometry.rail.top > geometry.titlebar.bottom, `${theme} places the Stepper rail below the titlebar edge`);
+  assert.ok(geometry.effect.bottom >= geometry.rail.top + 72, `${theme} effect reaches at least 72px into the real Stepper rail`);
+  assert.ok(geometry.effect.bottom < geometry.content.top, `${theme} effect fades before the main content panel begins`);
+
+  const clip = {
+    x: 0,
+    y: 0,
+    width: Math.floor(geometry.viewport.width),
+    height: Math.min(Math.ceil(geometry.effect.bottom + 36), Math.floor(geometry.viewport.height))
+  };
+  const prefix = `titlebar-${theme}`;
+  await effect.evaluate((element) => {
+    element.style.visibility = "hidden";
+  });
+  await page.waitForTimeout(180);
+  const offBuffer = await page.screenshot({
+    path: path.join(reportDirectory, `${prefix}-effect-off.png`),
+    clip
+  });
+  await effect.evaluate((element) => {
+    element.style.removeProperty("visibility");
+  });
+  await page.waitForTimeout(180);
+  const onBuffer = await page.screenshot({
+    path: path.join(reportDirectory, `${prefix}-effect-on.png`),
+    clip
+  });
+  await page.screenshot({ path: path.join(reportDirectory, `${prefix}-final.png`), fullPage: false });
+
+  const images = { off: offBuffer.toString("base64"), on: onBuffer.toString("base64") };
+  const metrics = await page.evaluate(async ({ images: encoded, geometry: measured, clip: crop }) => {
+    const loadImage = (base64) => new Promise((resolve, reject) => {
+      const image = new Image();
+      image.onload = () => resolve(image);
+      image.onerror = () => reject(new Error("Could not decode titlebar comparison screenshot"));
+      image.src = `data:image/png;base64,${base64}`;
+    });
+    const [offImage, onImage] = await Promise.all([loadImage(encoded.off), loadImage(encoded.on)]);
+    if (offImage.width !== onImage.width || offImage.height !== onImage.height) {
+      throw new Error("Titlebar comparison screenshots have different dimensions");
+    }
+    const canvas = document.createElement("canvas");
+    canvas.width = onImage.width;
+    canvas.height = onImage.height;
+    const context = canvas.getContext("2d", { willReadFrequently: true });
+    if (!context) throw new Error("Canvas is unavailable for titlebar comparison");
+    context.drawImage(offImage, 0, 0);
+    const offPixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    context.drawImage(onImage, 0, 0);
+    const onPixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
+    const scaleX = canvas.width / crop.width;
+    const scaleY = canvas.height / crop.height;
+    const luma = (pixels, offset) => 0.2126 * pixels[offset] + 0.7152 * pixels[offset + 1] + 0.0722 * pixels[offset + 2];
+    const stripWidth = Math.max(2, Math.round(24 * scaleX));
+    const rowLuma = (pixels, y) => {
+      let total = 0;
+      let count = 0;
+      for (const [start, end] of [[0, stripWidth], [canvas.width - stripWidth, canvas.width]]) {
+        for (let x = start; x < end; x += 1) {
+          total += luma(pixels, (y * canvas.width + x) * 4);
+          count += 1;
+        }
+      }
+      return total / count;
+    };
+    const offRows = Array.from({ length: canvas.height }, (_, y) => rowLuma(offPixels, y));
+    const onRows = Array.from({ length: canvas.height }, (_, y) => rowLuma(onPixels, y));
+    const effectRows = onRows.map((value, y) => Math.abs(value - offRows[y]));
+    const cssRow = (value) => Math.max(0, Math.min(canvas.height - 1, Math.round((value - crop.y) * scaleY)));
+    const startY = cssRow(measured.titlebar.bottom - 4);
+    const endY = cssRow(measured.effect.bottom);
+    let rgbDifference = 0;
+    let rgbSamples = 0;
+    for (let y = startY; y <= endY; y += 1) {
+      for (let x = 0; x < canvas.width; x += 1) {
+        const offset = (y * canvas.width + x) * 4;
+        rgbDifference += Math.abs(onPixels[offset] - offPixels[offset]);
+        rgbDifference += Math.abs(onPixels[offset + 1] - offPixels[offset + 1]);
+        rgbDifference += Math.abs(onPixels[offset + 2] - offPixels[offset + 2]);
+        rgbSamples += 3;
+      }
+    }
+    const adjacentSteps = [];
+    for (let y = startY + 1; y <= endY; y += 1) adjacentSteps.push(Math.abs(effectRows[y] - effectRows[y - 1]));
+    const boundaryCenter = cssRow(measured.titlebar.bottom);
+    const boundaryGradients = [];
+    for (let y = Math.max(1, boundaryCenter - Math.ceil(3 * scaleY)); y <= Math.min(canvas.height - 1, boundaryCenter + Math.ceil(3 * scaleY)); y += 1) {
+      boundaryGradients.push(Math.abs(onRows[y] - onRows[y - 1]));
+    }
+    const terminalStart = Math.max(startY, endY - Math.ceil(8 * scaleY));
+    const terminalRows = effectRows.slice(terminalStart, endY + 1);
+    const sampleDifference = (cssY) => effectRows[cssRow(cssY)];
+    return {
+      image: { width: canvas.width, height: canvas.height, scaleX, scaleY },
+      meanRgbDifference: rgbDifference / rgbSamples,
+      peakRowDifference: Math.max(...effectRows.slice(startY, endY + 1)),
+      contentRowDifference: sampleDifference(measured.rail.top + 28),
+      terminalRowDifference: terminalRows.reduce((sum, value) => sum + value, 0) / terminalRows.length,
+      maxAdjacentEffectStep: Math.max(...adjacentSteps),
+      maxBoundaryLumaGradient: Math.max(...boundaryGradients)
+    };
+  }, { images, geometry, clip });
+
+  const comparisonDataUrl = await page.evaluate(async ({ images: encoded }) => {
+    const loadImage = (base64) => new Promise((resolve, reject) => {
+      const image = new Image();
+      image.onload = () => resolve(image);
+      image.onerror = reject;
+      image.src = `data:image/png;base64,${base64}`;
+    });
+    const [offImage, onImage] = await Promise.all([loadImage(encoded.off), loadImage(encoded.on)]);
+    const labelHeight = 36;
+    const canvas = document.createElement("canvas");
+    canvas.width = offImage.width + onImage.width;
+    canvas.height = Math.max(offImage.height, onImage.height) + labelHeight;
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("Canvas is unavailable for titlebar comparison board");
+    context.fillStyle = "#111827";
+    context.fillRect(0, 0, canvas.width, labelHeight);
+    context.fillStyle = "#ffffff";
+    context.font = "600 20px sans-serif";
+    context.fillText("EFFECT OFF", 16, 25);
+    context.fillText("EFFECT ON", offImage.width + 16, 25);
+    context.drawImage(offImage, 0, labelHeight);
+    context.drawImage(onImage, offImage.width, labelHeight);
+    return canvas.toDataURL("image/png");
+  }, { images });
+  await writeFile(
+    path.join(reportDirectory, `${prefix}-comparison.png`),
+    Buffer.from(comparisonDataUrl.replace(/^data:image\/png;base64,/, ""), "base64")
+  );
+
+  assert.ok(metrics.meanRgbDifference >= 1, `${theme} enabled effect differs measurably from disabled: ${JSON.stringify(metrics)}`);
+  const minimumContentRowDifference = 0.25 * Math.min(2, metrics.image.scaleY);
+  assert.ok(
+    metrics.contentRowDifference >= minimumContentRowDifference,
+    `${theme} effect remains measurable inside the real Stepper rail at ${metrics.image.scaleY}x: ${JSON.stringify(metrics)}`
+  );
+  assert.ok(
+    metrics.terminalRowDifference <= Math.max(1.2, metrics.peakRowDifference * 0.32),
+    `${theme} effect decays near its lower edge instead of ending as a hard band: ${JSON.stringify(metrics)}`
+  );
+  assert.ok(
+    metrics.maxAdjacentEffectStep <= Math.max(4.5, metrics.peakRowDifference * 0.38),
+    `${theme} effect contribution has no single-row luminance jump: ${JSON.stringify(metrics)}`
+  );
+  assert.ok(metrics.maxBoundaryLumaGradient <= 7, `${theme} titlebar edge has no visible one-line luminance seam: ${JSON.stringify(metrics)}`);
+  titlebarVisualMetrics.push({ theme, geometry, metrics });
+}
+
+async function assertTitlebarWindowInteractions() {
+  await setWindowSize(1000, 700);
+  const titlebar = page.locator(".desktop-titlebar");
+  const effect = page.getByTestId("titlebar-gradual-blur");
+  const buttons = [
+    page.locator(".traffic-light--close"),
+    page.locator(".traffic-light--minimize"),
+    page.locator(".traffic-light--maximize")
+  ];
+  const stacking = await page.evaluate(() => {
+    const bar = document.querySelector(".desktop-titlebar");
+    const visualEffect = document.querySelector('[data-testid="titlebar-gradual-blur"]');
+    const brand = document.querySelector(".desktop-titlebar__brand");
+    if (!(bar instanceof HTMLElement) || !(visualEffect instanceof HTMLElement) || !(brand instanceof HTMLElement)) return null;
+    return {
+      dragRegion: getComputedStyle(bar).getPropertyValue("-webkit-app-region"),
+      effectPointerEvents: getComputedStyle(visualEffect).pointerEvents,
+      effectZIndex: Number(getComputedStyle(visualEffect).zIndex),
+      brandZIndex: Number(getComputedStyle(brand).zIndex)
+    };
+  });
+  assert.deepEqual(
+    stacking,
+    { dragRegion: "drag", effectPointerEvents: "none", effectZIndex: 0, brandZIndex: 2 },
+    "titlebar effect stays below sharp brand content and does not intercept the drag region"
+  );
+  for (const button of buttons) {
+    await button.click({ trial: true });
+    assert.equal(
+      await button.evaluate((node) => {
+        const rect = node.getBoundingClientRect();
+        return document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2) === node;
+      }),
+      true,
+      "each traffic-light center remains the topmost clickable hit target"
+    );
+  }
+
+  await buttons[2].click();
+  await page.waitForFunction(() => document.body.dataset.windowMaximized === "true");
+  assert.equal(
+    await electronApp.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].isMaximized()),
+    true,
+    "maximize traffic light maximizes the native window"
+  );
+  await buttons[2].click();
+  await page.waitForFunction(() => document.body.dataset.windowMaximized === "false");
+  assert.equal(
+    await electronApp.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].isMaximized()),
+    false,
+    "restore traffic light returns the native window to windowed mode"
+  );
+
+  await buttons[1].click();
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    if (await electronApp.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].isMinimized())) break;
+    await page.waitForTimeout(50);
+  }
+  assert.equal(
+    await electronApp.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].isMinimized()),
+    true,
+    "minimize traffic light minimizes the native window"
+  );
+  await electronApp.evaluate(({ BrowserWindow }) => {
+    const window = BrowserWindow.getAllWindows()[0];
+    window.restore();
+    window.show();
+    window.focus();
+  });
+  await page.waitForFunction(() => document.visibilityState === "visible");
+
+  await setWindowSize(1000, 700);
+  assert.equal(
+    await page.evaluate(() => {
+      const hit = document.elementFromPoint(500, 24);
+      return Boolean(hit?.closest(".desktop-titlebar") && !hit.closest("button"));
+    }),
+    true,
+    "an empty titlebar point reaches the native drag region instead of an effect or control"
+  );
+  await titlebar.waitFor({ state: "visible" });
+  await effect.waitFor({ state: "visible" });
+}
+
+async function assertTitlebarScrollPerformance() {
+  await setWindowSize(1000, 700);
+  const effect = page.getByTestId("titlebar-gradual-blur");
+  const runPass = async (enabled) => {
+    await effect.evaluate((element, shouldEnable) => {
+      if (shouldEnable) element.style.removeProperty("visibility");
+      else element.style.visibility = "hidden";
+    }, enabled);
+    await page.waitForTimeout(120);
+    return page.evaluate(async () => {
+      const scroller = document.querySelector('[data-testid="lyrics-shared-scroll"]');
+      if (!(scroller instanceof HTMLElement)) throw new Error("Lyrics scroller is unavailable for performance comparison");
+      const maximum = scroller.scrollHeight - scroller.clientHeight;
+      if (maximum <= 0) throw new Error("Lyrics scroller does not have enough overflow for performance comparison");
+      const intervals = [];
+      await new Promise((resolve) => {
+        let frame = 0;
+        let previous = performance.now();
+        const tick = (now) => {
+          if (frame > 0) intervals.push(now - previous);
+          previous = now;
+          scroller.scrollTop = maximum * (0.5 + 0.45 * Math.sin(frame / 8));
+          frame += 1;
+          if (frame <= 96) requestAnimationFrame(tick);
+          else resolve();
+        };
+        requestAnimationFrame(tick);
+      });
+      scroller.scrollTop = 0;
+      const sorted = [...intervals].sort((a, b) => a - b);
+      return {
+        frames: intervals.length,
+        meanMs: intervals.reduce((sum, value) => sum + value, 0) / intervals.length,
+        p95Ms: sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * 0.95))],
+        over34Ms: intervals.filter((value) => value > 34).length
+      };
+    });
+  };
+  const disabled = await runPass(false);
+  const enabled = await runPass(true);
+  assert.equal(enabled.frames, disabled.frames, "scroll comparison samples the same number of frames");
+  assert.ok(enabled.p95Ms <= Math.max(50, disabled.p95Ms * 2.5 + 8), `titlebar blur keeps reasonable p95 scroll pacing: ${JSON.stringify({ disabled, enabled })}`);
+  assert.ok(enabled.meanMs <= Math.max(30, disabled.meanMs * 2 + 6), `titlebar blur keeps reasonable mean scroll pacing: ${JSON.stringify({ disabled, enabled })}`);
+  assert.ok(enabled.over34Ms <= disabled.over34Ms + 12, `titlebar effect does not add sustained long frames: ${JSON.stringify({ disabled, enabled })}`);
+  titlebarPerformanceComparison = { disabled, enabled };
+}
+
+async function assertAcrylicVisuals() {
+  await setWindowSize(1440, 900);
+  await page.locator('button[data-step-id="link"]').click();
+  await selectVisualTheme("light", true);
+
+  const lightTokens = await page.evaluate(() => {
+    const shell = document.querySelector('.app-shell');
+    const primary = document.querySelector('[data-testid="song-search-primary"]');
+    const panel = primary?.querySelector('.glass-panel');
+    const input = primary?.querySelector('.field-shell');
+    const button = document.querySelector('[data-testid="song-info-toggle"]');
+    const subtle = primary?.querySelector('.app-text-subtle');
+    if (!(shell instanceof HTMLElement) || !(panel instanceof HTMLElement) ||
+        !(input instanceof HTMLElement) || !(button instanceof HTMLElement) ||
+        !(subtle instanceof HTMLElement)) return null;
+    const shellStyle = getComputedStyle(shell);
+    return {
+      theme: shell.dataset.uiTheme,
+      muted: shellStyle.getPropertyValue('--app-muted').trim(),
+      subtle: shellStyle.getPropertyValue('--app-subtle').trim(),
+      panelBackground: getComputedStyle(panel).backgroundColor,
+      inputBackground: getComputedStyle(input).backgroundColor,
+      inputBorder: getComputedStyle(input).borderTopColor,
+      buttonBackground: getComputedStyle(button).backgroundColor,
+      subtleColor: getComputedStyle(subtle).color
+    };
+  });
+  assert.deepEqual(
+    lightTokens && { theme: lightTokens.theme, muted: lightTokens.muted, subtle: lightTokens.subtle },
+    { theme: "light-acrylic", muted: "51 65 85", subtle: "71 85 105" },
+    "light acrylic exposes opaque muted and subtle text tokens"
+  );
+  assert.match(lightTokens?.panelBackground ?? "", /rgba\(255, 255, 255, 0\.7\)/, "light acrylic panels keep a 70% white surface");
+  assert.match(lightTokens?.inputBackground ?? "", /rgba\(255, 255, 255, 0\.76\)/, "light acrylic inputs keep a 76% white surface");
+  assert.match(lightTokens?.buttonBackground ?? "", /rgba\(255, 255, 255, 0\.6\)/, "light acrylic buttons keep a 60% white surface");
+  assert.equal(lightTokens?.subtleColor, "rgb(71, 85, 105)", "light acrylic subtle copy is fully opaque");
+  await page.screenshot({ path: path.join(reportDirectory, "light-acrylic-step-one.png"), fullPage: false });
+  await analyzeTitlebarVisualEffect("light-acrylic");
+
+  await selectVisualTheme("dark", true);
+  const darkTokens = await page.evaluate(() => {
+    const shell = document.querySelector('.app-shell');
+    if (!(shell instanceof HTMLElement)) return null;
+    const style = getComputedStyle(shell);
+    return {
+      theme: shell.dataset.uiTheme,
+      foreground: style.getPropertyValue('--app-fg').trim(),
+      panel: style.getPropertyValue('--panel-bg').trim()
+    };
+  });
+  assert.deepEqual(
+    darkTokens,
+    { theme: "dark-acrylic", foreground: "255 255 255", panel: "15 23 42/0.34" },
+    "dark acrylic keeps its existing foreground and transparent panel tokens"
+  );
+  await page.screenshot({ path: path.join(reportDirectory, "dark-acrylic-step-one.png"), fullPage: false });
+  await analyzeTitlebarVisualEffect("dark-acrylic");
+
+  await selectVisualTheme("light", false);
+  assert.equal(
+    await page.locator(".app-shell").getAttribute("data-ui-theme"),
+    "light",
+    "ordinary light theme remains selectable without Acrylic"
+  );
+  await analyzeTitlebarVisualEffect("light");
+
+  await selectVisualTheme("dark", false);
+  assert.equal(
+    await page.locator(".app-shell").getAttribute("data-ui-theme"),
+    "dark",
+    "ordinary dark theme remains selectable without Acrylic"
+  );
+  await analyzeTitlebarVisualEffect("dark");
 }
 
 async function assertFontPickerBehavior() {
   await page.locator('button[data-step-id="font"]').click();
   await page.getByTestId("font-scheme-panel").waitFor({ state: "visible" });
+
+  const presetFontFamilies = await page.locator('[data-testid^="apply-font-preset-"]').evaluateAll((buttons) => (
+    buttons.map((button) => ({
+      testId: button.getAttribute("data-testid"),
+      fontFamily: getComputedStyle(button).fontFamily
+    }))
+  ));
+  assert.match(
+    presetFontFamilies.find((item) => item.testId === "apply-font-preset-source-han-sans")?.fontFamily ?? "",
+    /Source Han Sans SC.*sans-serif/i,
+    "the Source Han Sans card renders the entire button in its own font stack"
+  );
+  assert.match(
+    presetFontFamilies.find((item) => item.testId === "apply-font-preset-source-han-serif")?.fontFamily ?? "",
+    /Source Han Serif SC.*serif/i,
+    "the Source Han Serif card renders the entire button in its own font stack"
+  );
 
   const cjkTrigger = page.getByTestId("choose-cjk-font");
   const latinTrigger = page.getByTestId("choose-latin-font");
@@ -660,7 +1102,15 @@ async function assertFocusedPresentation(width, height) {
         linkEntry && localEntry &&
         Math.abs(linkEntry.closest('section')?.getBoundingClientRect().top - localEntry.closest('section')?.getBoundingClientRect().top) <= 1
       ),
-      hasManualEntry: Boolean(aside?.querySelector('button[aria-controls][aria-expanded]')),
+      hasManualEntry: Boolean(stepper?.querySelector('[data-testid="song-info-toggle"][aria-controls][aria-expanded]')),
+      hasDuplicateManualEntry: Boolean(aside?.querySelector('button[aria-controls][aria-expanded]')),
+      navigationButtonIds: stepper
+        ? [...stepper.querySelectorAll('.lyrics-stepper-actions button')].map((button) => button.getAttribute('data-testid'))
+        : [],
+      navigationOverflow: (() => {
+        const navigation = stepper?.querySelector('.lyrics-stepper-actions');
+        return navigation instanceof HTMLElement ? navigation.scrollWidth - navigation.clientWidth : null;
+      })(),
       hasLargeCover: Boolean(aside?.querySelector('[data-testid="song-import-cover"]')),
       hasBackButton: Boolean(stepper?.querySelector('[data-testid="stepper-back-button"]')),
       songImportPanelCount: aside?.querySelectorAll('[data-song-import-panel="true"]').length ?? -1,
@@ -694,6 +1144,13 @@ async function assertFocusedPresentation(width, height) {
     `${width}x${height} places alternate imports side by side when the left column is wide enough`
   );
   assert.equal(result.hasManualEntry, true, `${width}x${height} preserves manual metadata entry`);
+  assert.equal(result.hasDuplicateManualEntry, false, `${width}x${height} has no duplicate manual metadata button in the aside`);
+  assert.deepEqual(
+    result.navigationButtonIds,
+    ["song-info-toggle", "stepper-next-button"],
+    `${width}x${height} keeps manual adjustment before Next`
+  );
+  assert.ok(result.navigationOverflow !== null && result.navigationOverflow <= 1, `${width}x${height} keeps navigation actions inside their row`);
   assert.equal(result.hasLargeCover, true, `${width}x${height} keeps the album cover in the metadata column`);
   assert.equal(result.hasBackButton, false, `${width}x${height} removes the inapplicable Back button from step one`);
   assert.equal(result.songImportPanelCount, 1, `${width}x${height} combines cover, song metadata, and manual editing`);
@@ -736,10 +1193,14 @@ async function assertUnifiedPreviewChrome(stepId) {
     const actions = heading?.querySelector('[data-testid="editor-header-actions"]');
     const content = stepper?.querySelector('.lyrics-stepper-content');
     const preview = stepper?.querySelector('[data-testid="lyric-card-preview"]');
+    const titlebarRect = document.querySelector('.desktop-titlebar')?.getBoundingClientRect();
     const titlebarBrand = document.querySelector('.desktop-titlebar__brand');
     const titlebarName = titlebarBrand?.querySelector('span');
     const iconRect = document.querySelector('.desktop-titlebar__icon')?.getBoundingClientRect();
     const titlebarNameRect = titlebarName?.getBoundingClientRect();
+    const gradualBlur = document.querySelector('[data-testid="titlebar-gradual-blur"]');
+    const gradualBlurRect = gradualBlur?.getBoundingClientRect();
+    const blurLayers = gradualBlur?.querySelectorAll('.desktop-titlebar__blur-layer') ?? [];
     const actionsRect = actions?.getBoundingClientRect();
     const railRect = rail?.getBoundingClientRect();
     const contentRect = content?.getBoundingClientRect();
@@ -758,7 +1219,18 @@ async function assertUnifiedPreviewChrome(stepId) {
         contentRect.top >= railRect.bottom && previewRect.top >= railRect.bottom
       ),
       titlebarIcon: iconRect ? { width: iconRect.width, height: iconRect.height } : null,
-      titlebarIconBeforeName: Boolean(iconRect && titlebarNameRect && iconRect.right <= titlebarNameRect.left)
+      titlebarIconBeforeName: Boolean(iconRect && titlebarNameRect && iconRect.right <= titlebarNameRect.left),
+      titlebarGeometry: titlebarRect ? { top: titlebarRect.top, bottom: titlebarRect.bottom } : null,
+      railGeometry: railRect ? { top: railRect.top, bottom: railRect.bottom } : null,
+      contentGeometry: contentRect ? { top: contentRect.top, bottom: contentRect.bottom } : null,
+      titlebarBlur: gradualBlurRect ? {
+        top: gradualBlurRect.top,
+        bottom: gradualBlurRect.bottom,
+        height: gradualBlurRect.height,
+        pointerEvents: getComputedStyle(gradualBlur).pointerEvents,
+        layerCount: blurLayers.length,
+        backdropFilters: [...blurLayers].map((layer) => getComputedStyle(layer).backdropFilter)
+      } : null
     };
   });
   assert.equal(result.activeStep, stepId, `${stepId} remains active after the chrome settles`);
@@ -771,6 +1243,26 @@ async function assertUnifiedPreviewChrome(stepId) {
   assert.equal(result.railSpansWorkbench, true, `${stepId} spans the shared rail across settings and preview`);
   assert.ok(result.titlebarIcon && result.titlebarIcon.width === 18 && result.titlebarIcon.height === 18, `${stepId} renders the small titlebar app icon`);
   assert.equal(result.titlebarIconBeforeName, true, `${stepId} places the titlebar app icon before the app name`);
+  assert.deepEqual(
+    result.titlebarBlur && {
+      height: result.titlebarBlur.height,
+      pointerEvents: result.titlebarBlur.pointerEvents,
+      layerCount: result.titlebarBlur.layerCount
+    },
+    { height: 144, pointerEvents: "none", layerCount: 1 },
+    `${stepId} keeps the measured gradual titlebar effect without intercepting input`
+  );
+  assert.ok(
+    result.titlebarGeometry && result.titlebarBlur && result.railGeometry && result.contentGeometry &&
+      Math.abs(result.titlebarGeometry.bottom - 48) <= 0.5 &&
+      result.titlebarBlur.bottom >= result.railGeometry.top + 72 &&
+      result.titlebarBlur.bottom < result.contentGeometry.top,
+    `${stepId} titlebar effect crosses the real rail boundary and fades before the content panel`
+  );
+  assert.ok(
+    result.titlebarBlur?.backdropFilters.every((filter) => filter.includes("blur(")),
+    `${stepId} applies backdrop blur to every gradual layer`
+  );
 }
 
 async function assertLyricsWorkspace(width, height) {
@@ -1267,6 +1759,7 @@ try {
   await firstLaunch.waitFor({ state: "hidden", timeout: 15_000 });
   assert.equal(await page.getByRole("combobox").first().evaluate((node) => document.activeElement === node), true, "language selection moves focus to song search");
   assert.equal(await page.getByTestId("editor-surface").evaluate((node) => Boolean(node.closest('[inert]'))), false, "background inertness ends after dialog exit");
+  await assertTitlebarWindowInteractions();
 
   await page.locator('[data-testid="editor-surface"] [data-testid="settings-button"]').click();
   await waitForVisible("settings-surface");
@@ -1426,6 +1919,7 @@ try {
   for (const size of focusedSizes) {
     await assertLyricsWorkspace(size.width, size.height);
   }
+  await assertTitlebarScrollPerformance();
 
   await setWindowSize(1000, 700);
   await waitForLayoutStable(page.getByTestId("lyrics-workspace"));
@@ -1622,6 +2116,8 @@ try {
   await landscapeAlert.waitFor({ state: "visible" });
   assert.match(await landscapeAlert.innerText(), /无法容纳|自动高度|调整排版/, "16:9 overflow shows an explicit alert");
 
+  await assertAcrylicVisuals();
+
   await page.screenshot({ path: path.join(reportDirectory, "settings-interaction.png"), fullPage: false });
   process.stdout.write(`${JSON.stringify({
     ok: true,
@@ -1629,6 +2125,8 @@ try {
     searchMock: { searches: searchRequests.length, resolves: resolveRequests.length },
     focusedViewports: focusedSizes.map(({ width, height }) => `${width}x${height}`),
     previewViewports: ["1366x768", "1440x900", "1920x1080"],
+    titlebarVisualMetrics,
+    titlebarPerformanceComparison,
     exportCards: {
       autoHeight: autoHeightCard,
       autoWidth: { width: settledAutoWidth, wrapMetrics: autoWidthWrapMetrics },

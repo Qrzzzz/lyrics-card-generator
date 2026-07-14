@@ -173,6 +173,7 @@ export function FontSchemePanel({ style, onStyleChange, onPreviewSchemeChange, s
           {(["source-han-sans", "source-han-serif"] as FontPresetId[]).map((presetId) => {
             const preset = FONT_SCHEME_PRESETS[presetId];
             const active = currentPresetId === presetId;
+            const genericFallback = presetId === "source-han-serif" ? "serif" : "sans-serif";
             return (
               <button
                 type="button"
@@ -180,6 +181,7 @@ export function FontSchemePanel({ style, onStyleChange, onPreviewSchemeChange, s
                 data-testid={`apply-font-preset-${presetId}`}
                 aria-pressed={active}
                 onClick={() => applyScheme(preset)}
+                style={{ fontFamily: `${quoteSingleFontFamily(preset.cjkFontFamily)}, ${genericFallback}` }}
                 className={cn(
                   "control-focus rounded-xl border p-4 text-left transition",
                   active ? "border-cyan-200/55 bg-cyan-300/10" : "app-border bg-black/10"

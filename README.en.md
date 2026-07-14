@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v5.5.2.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v5.5.3.en.md">Release Notes</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
   <a href="#features">Features</a> ·
   <a href="#local-development">Local Development</a> ·
@@ -51,24 +51,24 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 Download the latest version from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Recommended installer: `Lyrics Card Generator Setup 5.5.2.exe`
-* Portable version: `Lyrics Card Generator-5.5.2-portable.exe`
+* Recommended installer: `Lyrics Card Generator Setup 5.5.3.exe`
+* Portable version: `Lyrics Card Generator-5.5.3-portable.exe`
 
 The installer is recommended for regular use. The portable version is useful for temporary use, testing, or running from a removable drive.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v5.5.2 Highlights
+### v5.5.3 Highlights
 
-* Step 1 keeps NetEase search across the top of the left column, with song-link and local-audio import below it and side by side on wide screens.
-* Album art, title, artist, and album metadata are grouped in the right song-information column, while manual editing remains available.
-* Step 1 no longer renders an inapplicable Back button.
-* Step 2 removes the workspace frame and the individual frames around its three columns, leaving only one-pixel dividers between neighbours.
+* The Source Han Sans and Source Han Serif scheme cards in Step 4 now render the entire card with their matching bundled font.
+* The desktop titlebar uses a lightweight gradual blur below the 48px bar while keeping branding and window controls sharp.
+* Step 1 moves Manual adjustment immediately before Next, with complete disclosure semantics and stable narrow-window ordering.
+* Light Acrylic raises panel, input, and button masks and uses opaque slate helper text while retaining visible material depth.
 
 ## 🌐 Multilingual Release Notes
 
 GitHub Release displays a Simplified Chinese summary by default. See the full release notes:
-[简体中文](./docs/releases/v5.5.2.zh-CN.md) · [繁體中文](./docs/releases/v5.5.2.zh-TW.md) · [English](./docs/releases/v5.5.2.en.md) · [Français](./docs/releases/v5.5.2.fr.md) · [日本語](./docs/releases/v5.5.2.ja.md) · [Español](./docs/releases/v5.5.2.es.md)
+[简体中文](./docs/releases/v5.5.3.zh-CN.md) · [繁體中文](./docs/releases/v5.5.3.zh-TW.md) · [English](./docs/releases/v5.5.3.en.md) · [Français](./docs/releases/v5.5.3.fr.md) · [日本語](./docs/releases/v5.5.3.ja.md) · [Español](./docs/releases/v5.5.3.es.md)
 
 <a id="features"></a>
 

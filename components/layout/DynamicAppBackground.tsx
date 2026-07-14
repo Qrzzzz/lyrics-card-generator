@@ -2,6 +2,7 @@
 
 import type { ExtractedPalette } from "@/lib/types";
 import type { UserSettings } from "@/lib/settings/types";
+import { LIGHT_ACRYLIC_CONTRAST_FLOOR } from "@/lib/color/contrast";
 import { resolveEffectiveUiThemeId } from "@/lib/settings/user-settings";
 import {
   DEFAULT_PALETTE,
@@ -45,7 +46,10 @@ export function DynamicAppBackground({
           className="absolute inset-0"
           style={{
           background: isLight
-            ? "rgba(245, 248, 252, 0.055)"
+            ? withAlpha(
+                LIGHT_ACRYLIC_CONTRAST_FLOOR.windowBase.color,
+                LIGHT_ACRYLIC_CONTRAST_FLOOR.windowBase.opacity
+              )
             : "rgba(8, 12, 18, 0.105)"
           }}
         />
@@ -53,7 +57,7 @@ export function DynamicAppBackground({
           className="absolute inset-0"
           style={{
           background: isLight
-            ? "linear-gradient(135deg, rgba(255,255,255,0.065), rgba(255,255,255,0.012))"
+            ? "linear-gradient(135deg, rgba(255,255,255,0.12), rgba(255,255,255,0.035))"
             : "linear-gradient(135deg, rgba(255,255,255,0.038), rgba(255,255,255,0.008))"
           }}
         />

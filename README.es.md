@@ -19,7 +19,7 @@
 <p>
   <strong>Navegación</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Descargar la última versión</a> ·
-  <a href="./docs/releases/v5.5.2.es.md">Notas de la versión</a> ·
+  <a href="./docs/releases/v5.5.3.es.md">Notas de la versión</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en línea</a> ·
   <a href="#funciones-principales">Funciones principales</a> ·
   <a href="#desarrollo-local">Desarrollo local</a> ·
@@ -51,24 +51,24 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 Descarga la versión más reciente desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Instalador recomendado: `Lyrics Card Generator Setup 5.5.2.exe`
-* Versión portable: `Lyrics Card Generator-5.5.2-portable.exe`
+* Instalador recomendado: `Lyrics Card Generator Setup 5.5.3.exe`
+* Versión portable: `Lyrics Card Generator-5.5.3-portable.exe`
 
 El instalador se recomienda para uso habitual. La versión portable es útil para pruebas, uso temporal o ejecución desde una unidad extraíble.
 
 > La compilación actual no está firmada. Windows puede mostrar una advertencia de SmartScreen, algo habitual en aplicaciones personales sin firma.
 
-### Aspectos destacados de la versión 5.5.2
+### Aspectos destacados de la versión 5.5.3
 
-* El paso 1 mantiene la búsqueda de NetEase en la parte superior de la columna izquierda y coloca debajo la importación por enlace y audio local, en paralelo en pantallas anchas.
-* La portada, el título, el artista y el álbum se agrupan en la columna derecha de información, sin perder la edición manual.
-* El paso 1 deja de mostrar un botón Atrás que no se podía utilizar.
-* El paso 2 elimina el marco general y los marcos individuales de sus tres columnas, dejando solo separadores de un píxel entre columnas adyacentes.
+* En el paso 4, las tarjetas Source Han Sans y Source Han Serif muestran toda la tarjeta con su fuente local correspondiente.
+* La barra de título de escritorio usa un desenfoque gradual ligero bajo sus 48 px sin afectar a la marca ni a los controles de ventana.
+* En el paso 1, Ajuste manual se sitúa justo antes de Siguiente, con una relación de expansión accesible y un orden estable en ventanas estrechas.
+* Acrílico claro refuerza las superficies de paneles, campos y botones y usa texto auxiliar pizarra opaco, manteniendo la profundidad visible del material.
 
 ## 🌐 Notas de publicación multilingües
 
 GitHub Release muestra de forma predeterminada un resumen en chino simplificado. Consulta las notas completas:
-[简体中文](./docs/releases/v5.5.2.zh-CN.md) · [繁體中文](./docs/releases/v5.5.2.zh-TW.md) · [English](./docs/releases/v5.5.2.en.md) · [Français](./docs/releases/v5.5.2.fr.md) · [日本語](./docs/releases/v5.5.2.ja.md) · [Español](./docs/releases/v5.5.2.es.md)
+[简体中文](./docs/releases/v5.5.3.zh-CN.md) · [繁體中文](./docs/releases/v5.5.3.zh-TW.md) · [English](./docs/releases/v5.5.3.en.md) · [Français](./docs/releases/v5.5.3.fr.md) · [日本語](./docs/releases/v5.5.3.ja.md) · [Español](./docs/releases/v5.5.3.es.md)
 
 <a id="funciones-principales"></a>
 
