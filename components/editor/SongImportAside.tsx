@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import { proxiedImageUrl } from "@/lib/image-utils";
 import type { createT } from "@/lib/i18n";
 import type { SongInfo } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 export type SongImportAsideProps = {
   song: SongInfo;
@@ -92,17 +93,17 @@ export function SongImportAside({
         </dl>
 
         {manualForm ? (
-          <div className="mt-4 border-t border-[rgb(var(--panel-border))] pt-4">
-            {manualExpanded ? (
-              <div
-                id={manualRegionId}
-                role="region"
-                aria-label={t("manualOverride")}
-                className="grid gap-3 [&>section]:border-0 [&>section]:pt-0"
-              >
-                {manualForm}
-              </div>
-            ) : null}
+          <div
+            id={manualRegionId}
+            role="region"
+            aria-label={t("manualOverride")}
+            hidden={!manualExpanded}
+            className={cn(
+              "mt-4 gap-3 border-t border-[rgb(var(--panel-border))] pt-4 [&>section]:border-0 [&>section]:pt-0",
+              manualExpanded ? "grid" : "hidden"
+            )}
+          >
+            {manualForm}
           </div>
         ) : null}
       </section>

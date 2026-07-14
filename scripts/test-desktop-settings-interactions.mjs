@@ -558,7 +558,7 @@ async function assertSongImportAsideBehavior() {
   );
   await manualToggle.press("Enter");
   assert.equal(await manualToggle.getAttribute("aria-expanded"), "false", "manual song details collapse from the keyboard");
-  await manualRegion.waitFor({ state: "detached" });
+  await manualRegion.waitFor({ state: "hidden" });
 
   await manualToggle.click();
   await manualRegion.waitFor({ state: "visible" });
@@ -566,7 +566,7 @@ async function assertSongImportAsideBehavior() {
   await page.locator('button[data-step-id="link"]').click();
   assert.equal(await manualToggle.getAttribute("aria-expanded"), "true", "manual song details remain expanded after returning to step one");
   await manualToggle.click();
-  await manualRegion.waitFor({ state: "detached" });
+  await manualRegion.waitFor({ state: "hidden" });
 }
 
 async function selectVisualTheme(mode, acrylicEnabled) {

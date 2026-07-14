@@ -179,8 +179,10 @@ assert.ok(
 assert.ok(
   !songImportAsideSource.includes("<button") &&
     songImportAsideSource.includes('role="region"') &&
-    songImportAsideSource.includes("id={manualRegionId}"),
-  "the metadata aside keeps one labelled region without a duplicate disclosure button"
+    songImportAsideSource.includes("id={manualRegionId}") &&
+    songImportAsideSource.includes("hidden={!manualExpanded}") &&
+    songImportAsideSource.includes('manualExpanded ? "grid" : "hidden"'),
+  "the metadata aside keeps one stable labelled region without a duplicate disclosure button"
 );
 assert.ok(
   stepperSource.includes("flex min-w-0 flex-wrap items-center justify-end") &&
