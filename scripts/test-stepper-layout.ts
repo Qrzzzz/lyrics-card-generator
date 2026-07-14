@@ -71,6 +71,12 @@ assert.ok(
   "step navigation uses the same borderless shell on every step"
 );
 assert.ok(
+  stepperSource.includes("!isFirstStep ? (") &&
+    stepperSource.includes('data-testid="stepper-back-button"') &&
+    stepperSource.includes('data-testid="stepper-next-button"'),
+  "step one omits Back while later steps retain explicit Back and Next controls"
+);
+assert.ok(
   stepperSource.includes('"focus" | "lyrics-workspace" | "preview-workbench"'),
   "step metadata exposes all supported desktop presentations"
 );
@@ -145,10 +151,23 @@ assert.ok(
 );
 
 const songImportAsideSource = readFileSync(resolve("components/editor/SongImportAside.tsx"), "utf8");
+const editorStepsSource = readFileSync(resolve("components/editor/useEditorSteps.tsx"), "utf8");
 assert.ok(
-  songImportAsideSource.includes("linkParser: ReactNode") &&
-    songImportAsideSource.includes("localAudioParser: ReactNode"),
-  "song import aside composes the existing parser nodes instead of duplicating their handlers"
+  editorStepsSource.includes("song-import-primary__alternates") &&
+    editorStepsSource.includes("<SongLinkParser") &&
+    editorStepsSource.includes("<LocalAudioParser"),
+  "link and local-audio imports sit below the primary search in the left column"
+);
+assert.ok(
+  !songImportAsideSource.includes("linkParser:") &&
+    !songImportAsideSource.includes("localAudioParser:") &&
+    songImportAsideSource.includes('data-testid="song-import-cover"'),
+  "the right column is reserved for cover and song metadata"
+);
+assert.ok(
+  songImportAsideSource.includes("max-w-80") &&
+    songImportAsideSource.includes("min-[960px]:max-w-none"),
+  "the large song cover stays bounded when the companion column stacks on narrow screens"
 );
 assert.ok(
   songImportAsideSource.includes("aria-expanded={manualExpanded}") &&
@@ -158,7 +177,23 @@ assert.ok(
 assert.ok(
   songImportAsideSource.includes('data-song-import-panel="true"') &&
     songImportAsideSource.match(/className="glass-panel/g)?.length === 1,
-  "song summary and alternate import methods share one companion panel"
+  "cover, song metadata, and manual editing share one companion panel"
 );
 
-console.log(JSON.stringify({ ok: true, stepperLayoutTests: 25 }, null, 2));
+const lyricsWorkspaceSource = readFileSync(resolve("components/editor/LyricsWorkspace.tsx"), "utf8");
+const lyricsToolsSource = readFileSync(resolve("components/editor/LyricsToolsAside.tsx"), "utf8");
+const globalsSource = readFileSync(resolve("app/globals.css"), "utf8");
+assert.ok(
+  lyricsWorkspaceSource.includes('className="relative flex min-h-0 flex-col overflow-hidden"') &&
+    lyricsWorkspaceSource.includes("lyrics-workspace-column lyrics-summary-aside") &&
+    lyricsWorkspaceSource.includes("lyrics-workspace-column lyrics-document-column") &&
+    lyricsToolsSource.includes("lyrics-workspace-column lyrics-tools-aside"),
+  "the lyrics workspace and its three columns do not render framed panel shells"
+);
+assert.ok(
+  globalsSource.includes(".lyrics-workspace-column + .lyrics-workspace-column") &&
+    globalsSource.includes("border-left: 1px solid rgb(var(--panel-border));"),
+  "lyrics columns use only one thin responsive divider between neighbours"
+);
+
+console.log(JSON.stringify({ ok: true, stepperLayoutTests: 30 }, null, 2));

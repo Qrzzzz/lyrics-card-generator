@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v5.5.1.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v5.5.2.en.md">Release Notes</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
   <a href="#features">Features</a> ·
   <a href="#local-development">Local Development</a> ·
@@ -51,25 +51,24 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 Download the latest version from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Recommended installer: `Lyrics Card Generator Setup 5.5.1.exe`
-* Portable version: `Lyrics Card Generator-5.5.1-portable.exe`
+* Recommended installer: `Lyrics Card Generator Setup 5.5.2.exe`
+* Portable version: `Lyrics Card Generator-5.5.2-portable.exe`
 
 The installer is recommended for regular use. The portable version is useful for temporary use, testing, or running from a removable drive.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v5.5.1 Highlights
+### v5.5.2 Highlights
 
-* New portrait custom lyric cards start with Auto Width enabled and choose a comfortable width only from the current content and real browser layout with the final font.
-* Line height now ranges from 1.5 to 2.1, with 1.8 as the default for new cards.
-* Original lyrics and translations are measured separately to avoid leaving only one or two characters or short words on a new line.
-* Very short ad-libs and isolated long lyrics or translations are down-weighted so they do not stretch the whole card to its maximum.
-* Auto height and export readiness wait for width to settle; turning Auto Width off keeps the calculated width available for manual tuning.
+* Step 1 keeps NetEase search across the top of the left column, with song-link and local-audio import below it and side by side on wide screens.
+* Album art, title, artist, and album metadata are grouped in the right song-information column, while manual editing remains available.
+* Step 1 no longer renders an inapplicable Back button.
+* Step 2 removes the workspace frame and the individual frames around its three columns, leaving only one-pixel dividers between neighbours.
 
 ## 🌐 Multilingual Release Notes
 
 GitHub Release displays a Simplified Chinese summary by default. See the full release notes:
-[简体中文](./docs/releases/v5.5.1.zh-CN.md) · [繁體中文](./docs/releases/v5.5.1.zh-TW.md) · [English](./docs/releases/v5.5.1.en.md) · [Français](./docs/releases/v5.5.1.fr.md) · [日本語](./docs/releases/v5.5.1.ja.md) · [Español](./docs/releases/v5.5.1.es.md)
+[简体中文](./docs/releases/v5.5.2.zh-CN.md) · [繁體中文](./docs/releases/v5.5.2.zh-TW.md) · [English](./docs/releases/v5.5.2.en.md) · [Français](./docs/releases/v5.5.2.fr.md) · [日本語](./docs/releases/v5.5.2.ja.md) · [Español](./docs/releases/v5.5.2.es.md)
 
 <a id="features"></a>
 

@@ -258,14 +258,14 @@ export function LyricsWorkspace({
   return (
     <div
       ref={workspaceRef}
-      className="relative flex min-h-0 flex-col overflow-hidden rounded-lg border border-[rgb(var(--panel-border))] bg-[rgb(var(--panel-bg))]"
+      className="relative flex min-h-0 flex-col overflow-hidden"
       style={{ height: viewport.viewportHeight }}
       data-lyrics-viewport-mode="immersive"
       data-testid="lyrics-workspace"
     >
-        <div className="lyrics-workspace-grid min-h-0 flex-1 gap-3 p-3">
+        <div className="lyrics-workspace-grid min-h-0 flex-1">
           <aside
-            className="lyrics-summary-aside app-text-muted rounded-lg border border-[rgb(var(--panel-border))] bg-[rgb(var(--panel-bg))] p-3"
+            className="lyrics-workspace-column lyrics-summary-aside app-text-muted p-3"
             aria-label={copy.summary}
           >
             <div className="lyrics-summary-header flex items-center justify-between gap-3 md:block">
@@ -337,7 +337,7 @@ export function LyricsWorkspace({
             </div>
           </aside>
 
-          <section className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-lg border border-[rgb(var(--panel-border))] bg-[rgb(var(--input-bg))]" aria-labelledby="lyrics-document-title">
+          <section className="lyrics-workspace-column lyrics-document-column flex min-h-0 min-w-0 flex-col overflow-hidden bg-[rgb(var(--input-bg))]" aria-labelledby="lyrics-document-title">
             <header className="flex shrink-0 items-center justify-between gap-3 border-b border-[rgb(var(--panel-border))] px-3 py-2.5">
               <div className="min-w-0">
                 <h3 id="lyrics-document-title" className="app-text-primary truncate text-sm font-semibold">

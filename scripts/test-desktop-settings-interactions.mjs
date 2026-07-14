@@ -630,6 +630,10 @@ async function assertFocusedPresentation(width, height) {
     const previewToggle = document.querySelector('[data-testid="preview-pane-toggle"]');
     const exportHost = document.querySelector('[data-export-card-host]');
     const search = document.querySelector('[role="combobox"]');
+    const primary = document.querySelector('[data-testid="song-search-primary"]');
+    const alternates = document.querySelector('[data-testid="song-import-alternates"]');
+    const linkEntry = alternates?.querySelector('input:not([type="file"])');
+    const localEntry = alternates?.querySelector('input[type="file"]');
     const stepperRect = stepper?.getBoundingClientRect();
     const asideRect = document.querySelector('[data-testid="song-import-aside"]')?.getBoundingClientRect();
     const aside = document.querySelector('[data-testid="song-import-aside"]');
@@ -650,9 +654,15 @@ async function assertFocusedPresentation(width, height) {
       hasPreviewToggle: Boolean(previewToggle),
       exportHostLeft: exportHost?.getBoundingClientRect().left ?? 0,
       hasSearch: Boolean(search),
-      hasLinkEntry: Boolean(aside?.querySelector('.song-import-aside__methods input:not([type="file"])')),
-      hasLocalEntry: Boolean(aside?.querySelector('input[type="file"]')),
+      hasLinkEntry: Boolean(primary?.contains(linkEntry ?? null)),
+      hasLocalEntry: Boolean(primary?.contains(localEntry ?? null)),
+      alternatesShareRow: Boolean(
+        linkEntry && localEntry &&
+        Math.abs(linkEntry.closest('section')?.getBoundingClientRect().top - localEntry.closest('section')?.getBoundingClientRect().top) <= 1
+      ),
       hasManualEntry: Boolean(aside?.querySelector('button[aria-controls][aria-expanded]')),
+      hasLargeCover: Boolean(aside?.querySelector('[data-testid="song-import-cover"]')),
+      hasBackButton: Boolean(stepper?.querySelector('[data-testid="stepper-back-button"]')),
       songImportPanelCount: aside?.querySelectorAll('[data-song-import-panel="true"]').length ?? -1,
       legacyHeaderCount: editor?.querySelectorAll('.editor-header').length ?? -1,
       headerActionPlacement: headerActions?.getAttribute('data-placement'),
@@ -678,8 +688,15 @@ async function assertFocusedPresentation(width, height) {
   assert.equal(result.hasSearch, true, `${width}x${height} renders the primary search entry`);
   assert.equal(result.hasLinkEntry, true, `${width}x${height} preserves link import`);
   assert.equal(result.hasLocalEntry, true, `${width}x${height} preserves local audio import`);
+  assert.equal(
+    result.alternatesShareRow,
+    width >= 1180,
+    `${width}x${height} places alternate imports side by side when the left column is wide enough`
+  );
   assert.equal(result.hasManualEntry, true, `${width}x${height} preserves manual metadata entry`);
-  assert.equal(result.songImportPanelCount, 1, `${width}x${height} combines song summary and alternate imports`);
+  assert.equal(result.hasLargeCover, true, `${width}x${height} keeps the album cover in the metadata column`);
+  assert.equal(result.hasBackButton, false, `${width}x${height} removes the inapplicable Back button from step one`);
+  assert.equal(result.songImportPanelCount, 1, `${width}x${height} combines cover, song metadata, and manual editing`);
   assert.equal(result.legacyHeaderCount, 0, `${width}x${height} removes step one's legacy app header`);
   assert.equal(result.headerActionPlacement, "stepper", `${width}x${height} moves step-one actions into the Stepper`);
   assert.deepEqual(
@@ -781,9 +798,21 @@ async function assertLyricsWorkspace(width, height) {
       const value = element?.getBoundingClientRect();
       return value ? { x: value.x, y: value.y, width: value.width, height: value.height, right: value.right, bottom: value.bottom } : null;
     };
+    const frame = (element) => {
+      if (!element) return null;
+      const style = getComputedStyle(element);
+      return {
+        top: Number.parseFloat(style.borderTopWidth),
+        right: Number.parseFloat(style.borderRightWidth),
+        bottom: Number.parseFloat(style.borderBottomWidth),
+        left: Number.parseFloat(style.borderLeftWidth),
+        radius: style.borderRadius
+      };
+    };
     return {
       editor: editor ? { clientHeight: editor.clientHeight, scrollHeight: editor.scrollHeight, overflowY: getComputedStyle(editor).overflowY } : null,
       workspace: rect(workspace),
+      workspaceFrame: frame(workspace),
       shared: shared ? { ...rect(shared), overflowX: getComputedStyle(shared).overflowX, overflowY: getComputedStyle(shared).overflowY } : null,
       summary: summary ? {
         ...rect(summary),
@@ -794,7 +823,9 @@ async function assertLyricsWorkspace(width, height) {
           ...[...summary.children].map((child) => child.getBoundingClientRect().bottom)
         )
       } : null,
+      summaryFrame: frame(summary),
       documentColumn: rect(documentColumn),
+      documentFrame: frame(documentColumn),
       tools: tools ? {
         ...rect(tools),
         clientHeight: tools.clientHeight,
@@ -806,6 +837,7 @@ async function assertLyricsWorkspace(width, height) {
             return controlRect.top >= toolsRect.top - 1 && controlRect.bottom <= toolsRect.bottom + 1;
           })
       } : null,
+      toolsFrame: frame(tools),
       actions: rect(actions),
       documentRoot: {
         clientHeight: document.documentElement.clientHeight,
@@ -842,6 +874,34 @@ async function assertLyricsWorkspace(width, height) {
   });
   assert.equal(result.activeStep, "lyrics", `${width}x${height} keeps the lyrics step active`);
   assert.ok(result.workspace && result.shared && result.actions && result.documentColumn, `${width}x${height} renders the bounded lyrics skeleton`);
+  assert.deepEqual(
+    result.workspaceFrame,
+    { top: 0, right: 0, bottom: 0, left: 0, radius: "0px" },
+    `${width}x${height} removes the outer lyrics-workspace frame`
+  );
+  assert.deepEqual(
+    result.summaryFrame,
+    { top: 0, right: 0, bottom: 0, left: 0, radius: "0px" },
+    `${width}x${height} removes the summary-column frame`
+  );
+  assert.deepEqual(
+    { ...result.documentFrame, left: 0 },
+    { top: 0, right: 0, bottom: 0, left: 0, radius: "0px" },
+    `${width}x${height} removes every document-column edge except its left divider`
+  );
+  assert.ok(
+    result.documentFrame.left > 0 && result.documentFrame.left <= 1,
+    `${width}x${height} gives the document only one device-scaled thin left divider: ${result.documentFrame.left}`
+  );
+  assert.deepEqual(
+    { ...result.toolsFrame, left: 0 },
+    { top: 0, right: 0, bottom: 0, left: 0, radius: "0px" },
+    `${width}x${height} removes every tools-column edge except its left divider`
+  );
+  assert.ok(
+    result.toolsFrame.left > 0 && result.toolsFrame.left <= 1,
+    `${width}x${height} gives the tools only one device-scaled thin left divider: ${result.toolsFrame.left}`
+  );
   assert.ok(result.workspace.x >= -1 && result.workspace.right <= width + 1, `${width}x${height} keeps the workspace inside the viewport`);
   assert.equal(result.editor.scrollHeight, result.editor.clientHeight, `${width}x${height} prevents editor-root scrolling`);
   assert.equal(result.editor.overflowY, "hidden", `${width}x${height} hides editor-root overflow`);

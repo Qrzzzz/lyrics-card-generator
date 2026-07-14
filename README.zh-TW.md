@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v5.5.1.zh-TW.md">發布說明</a> ·
+  <a href="./docs/releases/v5.5.2.zh-TW.md">發布說明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">線上 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="#本機開發">本機開發</a> ·
@@ -48,25 +48,24 @@
 
 請前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載最新版：
 
-* 建議一般使用者下載安裝版：`Lyrics Card Generator Setup 5.5.1.exe`
-* 不想安裝時可下載可攜版：`Lyrics Card Generator-5.5.1-portable.exe`
+* 建議一般使用者下載安裝版：`Lyrics Card Generator Setup 5.5.2.exe`
+* 不想安裝時可下載可攜版：`Lyrics Card Generator-5.5.2-portable.exe`
 
 安裝版適合長期使用；可攜版適合臨時執行、測試或放在隨身碟中使用。
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v5.5.1 更新重點
+### v5.5.2 更新重點
 
-* 新建直式自訂歌詞卡預設開啟「自動寬度」，並只依目前內容與最終字型的真實瀏覽器排版選擇舒適寬度。
-* 行高範圍調整為 1.5–2.1，新建卡片預設使用 1.8。
-* 正文與譯文會分別檢查視覺換行，避免只剩 1–2 個字或短詞落在下一行。
-* 極短副歌、少數超長正文或譯文會降低權重，不會輕易把整張卡片拉到最大寬度。
-* 自動寬度穩定後才計算自動高度並開放匯出；關閉後保留最後計算寬度供手動微調。
+* 第一步將網易雲音樂搜尋固定於左側上方，歌曲連結解析與本機音訊解析移至下方，並在寬螢幕並排顯示。
+* 專輯封面、歌曲名、歌手名與專輯名集中在右側歌曲資訊欄，並保留手動編輯入口。
+* 第一步不再顯示無法使用的「上一步」按鈕。
+* 第二步移除工作區外框及左、中、右三欄各自的卡片邊框，僅以 1 像素細線分隔相鄰欄位。
 
 ## 🌐 多語言發佈說明
 
 GitHub Release 預設顯示簡體中文摘要，完整說明請見：
-[简体中文](./docs/releases/v5.5.1.zh-CN.md) · [繁體中文](./docs/releases/v5.5.1.zh-TW.md) · [English](./docs/releases/v5.5.1.en.md) · [Français](./docs/releases/v5.5.1.fr.md) · [日本語](./docs/releases/v5.5.1.ja.md) · [Español](./docs/releases/v5.5.1.es.md)
+[简体中文](./docs/releases/v5.5.2.zh-CN.md) · [繁體中文](./docs/releases/v5.5.2.zh-TW.md) · [English](./docs/releases/v5.5.2.en.md) · [Français](./docs/releases/v5.5.2.fr.md) · [日本語](./docs/releases/v5.5.2.ja.md) · [Español](./docs/releases/v5.5.2.es.md)
 
 ## ✨ 主要功能
 
