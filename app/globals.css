@@ -264,9 +264,9 @@ body[data-window-maximized="true"] .app-shell[data-desktop-shell="true"] {
 
 .desktop-titlebar,
 .examples-floor {
-  --titlebar-veil-top: rgba(17, 18, 22, 0.62);
-  --titlebar-veil-middle: rgba(17, 18, 22, 0.31);
-  --titlebar-veil-low: rgba(17, 18, 22, 0.09);
+  --titlebar-veil-top: rgba(17, 18, 22, 0.46);
+  --titlebar-veil-middle: rgba(17, 18, 22, 0.18);
+  --titlebar-veil-low: rgba(17, 18, 22, 0.035);
 }
 
 .desktop-titlebar {
@@ -285,7 +285,7 @@ body[data-window-maximized="true"] .app-shell[data-desktop-shell="true"] {
   position: absolute;
   inset: 0 0 auto;
   z-index: 0;
-  height: 144px;
+  height: 72px;
   overflow: hidden;
   pointer-events: none;
   isolation: isolate;
@@ -294,17 +294,19 @@ body[data-window-maximized="true"] .app-shell[data-desktop-shell="true"] {
   mask-image: linear-gradient(
     to bottom,
     #000 0%,
-    #000 34%,
-    rgba(0, 0, 0, 0.94) 52%,
-    rgba(0, 0, 0, 0.56) 76%,
+    rgba(0, 0, 0, 0.92) 18%,
+    rgba(0, 0, 0, 0.70) 40%,
+    rgba(0, 0, 0, 0.38) 64%,
+    rgba(0, 0, 0, 0.12) 84%,
     transparent 100%
   );
   -webkit-mask-image: linear-gradient(
     to bottom,
     #000 0%,
-    #000 34%,
-    rgba(0, 0, 0, 0.94) 52%,
-    rgba(0, 0, 0, 0.56) 76%,
+    rgba(0, 0, 0, 0.92) 18%,
+    rgba(0, 0, 0, 0.70) 40%,
+    rgba(0, 0, 0, 0.38) 64%,
+    rgba(0, 0, 0, 0.12) 84%,
     transparent 100%
   );
 }
@@ -317,8 +319,8 @@ body[data-window-maximized="true"] .app-shell[data-desktop-shell="true"] {
   background: linear-gradient(
     to bottom,
     var(--titlebar-veil-top) 0%,
-    var(--titlebar-veil-middle) 42%,
-    var(--titlebar-veil-low) 76%,
+    var(--titlebar-veil-middle) 34%,
+    var(--titlebar-veil-low) 68%,
     transparent 100%
   );
 }
@@ -327,8 +329,8 @@ body[data-window-maximized="true"] .app-shell[data-desktop-shell="true"] {
   background: linear-gradient(
     to top,
     var(--titlebar-veil-top) 0%,
-    var(--titlebar-veil-middle) 42%,
-    var(--titlebar-veil-low) 76%,
+    var(--titlebar-veil-middle) 34%,
+    var(--titlebar-veil-low) 68%,
     transparent 100%
   );
 }
@@ -338,17 +340,19 @@ body[data-window-maximized="true"] .app-shell[data-desktop-shell="true"] {
   mask-image: linear-gradient(
     to top,
     #000 0%,
-    #000 34%,
-    rgba(0, 0, 0, 0.94) 52%,
-    rgba(0, 0, 0, 0.56) 76%,
+    rgba(0, 0, 0, 0.92) 18%,
+    rgba(0, 0, 0, 0.70) 40%,
+    rgba(0, 0, 0, 0.38) 64%,
+    rgba(0, 0, 0, 0.12) 84%,
     transparent 100%
   );
   -webkit-mask-image: linear-gradient(
     to top,
     #000 0%,
-    #000 34%,
-    rgba(0, 0, 0, 0.94) 52%,
-    rgba(0, 0, 0, 0.56) 76%,
+    rgba(0, 0, 0, 0.92) 18%,
+    rgba(0, 0, 0, 0.70) 40%,
+    rgba(0, 0, 0, 0.38) 64%,
+    rgba(0, 0, 0, 0.12) 84%,
     transparent 100%
   );
 }
@@ -357,16 +361,16 @@ body[data-window-maximized="true"] .app-shell[data-desktop-shell="true"] {
 .app-shell[data-ui-theme="light"] .examples-floor,
 .app-shell[data-ui-theme="light-acrylic"] .desktop-titlebar,
 .app-shell[data-ui-theme="light-acrylic"] .examples-floor {
-  --titlebar-veil-top: rgba(248, 250, 252, 0.68);
-  --titlebar-veil-middle: rgba(248, 250, 252, 0.36);
-  --titlebar-veil-low: rgba(248, 250, 252, 0.11);
+  --titlebar-veil-top: rgba(248, 250, 252, 0.50);
+  --titlebar-veil-middle: rgba(248, 250, 252, 0.20);
+  --titlebar-veil-low: rgba(248, 250, 252, 0.04);
 }
 
 .app-shell[data-ui-theme="dark-acrylic"] .desktop-titlebar,
 .app-shell[data-ui-theme="dark-acrylic"] .examples-floor {
-  --titlebar-veil-top: rgba(15, 23, 42, 0.60);
-  --titlebar-veil-middle: rgba(15, 23, 42, 0.32);
-  --titlebar-veil-low: rgba(15, 23, 42, 0.09);
+  --titlebar-veil-top: rgba(15, 23, 42, 0.44);
+  --titlebar-veil-middle: rgba(15, 23, 42, 0.19);
+  --titlebar-veil-low: rgba(15, 23, 42, 0.035);
 }
 
 .desktop-titlebar > :not(.desktop-titlebar__gradual-blur) {

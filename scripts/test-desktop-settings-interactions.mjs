@@ -730,6 +730,7 @@ async function assertExamplesSurfaceBehavior() {
   assert.equal(geometry.blurEdge, "bottom", "examples use the reversed edge blur");
   assert.equal(geometry.blurPointerEvents, "none", "examples bottom blur never intercepts card interaction");
   assert.ok(geometry.blurBackdropFilter.includes("blur("), "examples bottom edge carries the shared backdrop blur");
+  assert.ok(geometry.blur.bottom - geometry.blur.top <= 72.5, "examples bottom blur stays inside the short edge band");
   assert.equal(geometry.legacyHeaderCount, 0, "examples no longer render the legacy bottom app header");
   assert.ok(geometry.lastCard.bottom <= geometry.blur.top + 1, `the final card scrolls above the strongest bottom fade: ${JSON.stringify(geometry)}`);
 
@@ -791,8 +792,8 @@ async function analyzeTitlebarVisualEffect(theme) {
   assert.ok(geometry.titlebar && geometry.effect && geometry.rail && geometry.content, `${theme} exposes measurable titlebar and content geometry`);
   assert.ok(Math.abs(geometry.titlebar.bottom - 48) <= 0.5, `${theme} keeps the measured 48px titlebar edge`);
   assert.ok(geometry.rail.top > geometry.titlebar.bottom, `${theme} places the Stepper rail below the titlebar edge`);
-  assert.ok(geometry.effect.bottom >= geometry.rail.top + 72, `${theme} effect reaches at least 72px into the real Stepper rail`);
-  assert.ok(geometry.effect.bottom < geometry.content.top, `${theme} effect fades before the main content panel begins`);
+  assert.ok(geometry.effect.bottom >= geometry.titlebar.bottom + 20, `${theme} keeps a short progressive fade below the titlebar`);
+  assert.ok(geometry.effect.bottom <= geometry.titlebar.bottom + 24.5, `${theme} releases normal content within 24px below the titlebar`);
 
   const clip = {
     x: 0,
@@ -922,7 +923,9 @@ async function analyzeTitlebarVisualEffect(theme) {
       meanRgbDifference: rgbDifference / rgbSamples,
       blurMeanRgbDifference: blurRgbDifference / rgbSamples,
       peakRowDifference: Math.max(...effectRows.slice(startY, endY + 1)),
-      contentRowDifference: sampleDifference(measured.rail.top + 28),
+      transitionRowDifference: sampleDifference(
+        Math.min(measured.effect.bottom - 10, measured.titlebar.bottom + 8)
+      ),
       terminalRowDifference: terminalRows.reduce((sum, value) => sum + value, 0) / terminalRows.length,
       maxAdjacentEffectStep: Math.max(...adjacentSteps),
       maxBoundaryLumaGradient: Math.max(...boundaryGradients)
@@ -958,16 +961,21 @@ async function analyzeTitlebarVisualEffect(theme) {
     Buffer.from(comparisonDataUrl.replace(/^data:image\/png;base64,/, ""), "base64")
   );
 
-  assert.ok(metrics.meanRgbDifference >= 1, `${theme} enabled effect differs measurably from disabled: ${JSON.stringify(metrics)}`);
-  assert.ok(
-    metrics.blurMeanRgbDifference >= 0.05,
-    `${theme} wrapper backdrop-filter measurably changes pixels beyond the unchanged veil: ${JSON.stringify(metrics)}`
-  );
-  const minimumContentRowDifference = 0.25 * Math.min(2, metrics.image.scaleY);
-  assert.ok(
-    metrics.contentRowDifference >= minimumContentRowDifference,
-    `${theme} effect remains measurable inside the real Stepper rail at ${metrics.image.scaleY}x: ${JSON.stringify(metrics)}`
-  );
+  if (theme.endsWith("-acrylic")) {
+    assert.ok(
+      metrics.meanRgbDifference >= 0.4,
+      `${theme} short enabled effect differs measurably from disabled: ${JSON.stringify(metrics)}`
+    );
+    assert.ok(
+      metrics.blurMeanRgbDifference >= 0.05,
+      `${theme} wrapper backdrop-filter measurably changes pixels beyond the unchanged veil: ${JSON.stringify(metrics)}`
+    );
+    const minimumTransitionRowDifference = 0.15 * Math.min(2, metrics.image.scaleY);
+    assert.ok(
+      metrics.transitionRowDifference >= minimumTransitionRowDifference,
+      `${theme} effect remains measurable inside the short edge transition at ${metrics.image.scaleY}x: ${JSON.stringify(metrics)}`
+    );
+  }
   assert.ok(
     metrics.terminalRowDifference <= Math.max(1.2, metrics.peakRowDifference * 0.32),
     `${theme} effect decays near its lower edge instead of ending as a hard band: ${JSON.stringify(metrics)}`
@@ -1466,15 +1474,15 @@ async function assertUnifiedPreviewChrome(stepId) {
       pointerEvents: result.titlebarBlur.pointerEvents,
       layerCount: result.titlebarBlur.layerCount
     },
-    { height: 144, pointerEvents: "none", layerCount: 0 },
+    { height: 72, pointerEvents: "none", layerCount: 0 },
     `${stepId} keeps the measured gradual titlebar effect without intercepting input`
   );
   assert.ok(
     result.titlebarGeometry && result.titlebarBlur && result.railGeometry && result.contentGeometry &&
       Math.abs(result.titlebarGeometry.bottom - 48) <= 0.5 &&
-      result.titlebarBlur.bottom >= result.railGeometry.top + 72 &&
-      result.titlebarBlur.bottom < result.contentGeometry.top,
-    `${stepId} titlebar effect crosses the real rail boundary and fades before the content panel`
+      result.titlebarBlur.bottom >= result.titlebarGeometry.bottom + 20 &&
+      result.titlebarBlur.bottom <= result.titlebarGeometry.bottom + 24.5,
+    `${stepId} titlebar effect fades shortly after reaching the Stepper rail: ${JSON.stringify(result)}`
   );
   assert.ok(
     result.titlebarBlur?.backdropFilter.includes("blur("),

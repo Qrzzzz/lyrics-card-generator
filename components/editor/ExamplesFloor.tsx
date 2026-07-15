@@ -123,7 +123,7 @@ export function ExamplesFloor({ isActive, locale, onLoad, onClose, transition }:
       </header>
 
       <div className="examples-floor__content-scroll relative z-0 min-h-0 flex-1 overflow-y-auto overscroll-contain">
-        <div className="mx-auto w-full max-w-[1520px] px-4 pb-[calc(9rem+1.5rem)] pt-4 sm:px-6 sm:pt-6">
+        <div className="mx-auto w-full max-w-[1520px] px-4 pb-24 pt-4 sm:px-6 sm:pt-6">
           <div className="examples-grid" data-count={Math.min(EXAMPLE_SONGS.length, 6)}>
             {EXAMPLE_SONGS.map((song) => (
               <ExampleSongCard
