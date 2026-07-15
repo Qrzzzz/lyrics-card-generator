@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v5.6.0.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v5.6.1.en.md">Release Notes</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
   <a href="#features">Features</a> ·
   <a href="#local-development">Local Development</a> ·
@@ -51,24 +51,23 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 Download the latest version from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Recommended installer: `Lyrics Card Generator Setup 5.6.0.exe`
-* Portable version: `Lyrics Card Generator-5.6.0-portable.exe`
+* Recommended installer: `Lyrics Card Generator Setup 5.6.1.exe`
+* Portable version: `Lyrics Card Generator-5.6.1-portable.exe`
 
 The installer is recommended for regular use. The portable version is useful for temporary use, testing, or running from a removable drive.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v5.6.0 Highlights
+### v5.6.1 Highlights
 
-* Lyrics Examples now uses a Settings-style top header with a close button in the upper-right. The oversized bottom app-title frame is gone, while the example cards themselves are unchanged.
-* The duplicate mask on the single window-edge gradient has been fixed, preserving the full titlebar fade and reusing its reversed form at the bottom of Lyrics Examples.
-* Manual Adjust now uses a draft flow: the song summary slides left as the editor enters from the right. Save applies the draft, Cancel discards it, and both return with the reverse transition.
-* The GitHub Actions warning about SHA-pinned Node.js 20 actions being forced onto Node.js 24 remains a separate 5.6.0-cycle evaluation; this change does not modify workflows.
+* Fixes the v5.5.4 request boundary treating the browser's `127.0.0.1` origin and Next's internal `localhost` route URL as cross-origin.
+* Restores NetEase Cloud Music search, result metadata and lyric imports, plus Spotify, Apple Music, NetEase, and QQ Music link parsing.
+* Keeps the app-request marker, media-type validation, and explicit cross-site rejection in place; editing, import, and export UI remain unchanged.
 
 ## 🌐 Multilingual Release Notes
 
 GitHub Release displays a Simplified Chinese summary by default. See the full release notes:
-[简体中文](./docs/releases/v5.6.0.zh-CN.md) · [繁體中文](./docs/releases/v5.6.0.zh-TW.md) · [English](./docs/releases/v5.6.0.en.md) · [Français](./docs/releases/v5.6.0.fr.md) · [日本語](./docs/releases/v5.6.0.ja.md) · [Español](./docs/releases/v5.6.0.es.md)
+[简体中文](./docs/releases/v5.6.1.zh-CN.md) · [繁體中文](./docs/releases/v5.6.1.zh-TW.md) · [English](./docs/releases/v5.6.1.en.md) · [Français](./docs/releases/v5.6.1.fr.md) · [日本語](./docs/releases/v5.6.1.ja.md) · [Español](./docs/releases/v5.6.1.es.md)
 
 <a id="features"></a>
 

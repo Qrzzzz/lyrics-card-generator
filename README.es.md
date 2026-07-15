@@ -19,7 +19,7 @@
 <p>
   <strong>Navegación</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Descargar la última versión</a> ·
-  <a href="./docs/releases/v5.6.0.es.md">Notas de la versión</a> ·
+  <a href="./docs/releases/v5.6.1.es.md">Notas de la versión</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en línea</a> ·
   <a href="#funciones-principales">Funciones principales</a> ·
   <a href="#desarrollo-local">Desarrollo local</a> ·
@@ -51,24 +51,23 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 Descarga la versión más reciente desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Instalador recomendado: `Lyrics Card Generator Setup 5.6.0.exe`
-* Versión portable: `Lyrics Card Generator-5.6.0-portable.exe`
+* Instalador recomendado: `Lyrics Card Generator Setup 5.6.1.exe`
+* Versión portable: `Lyrics Card Generator-5.6.1-portable.exe`
 
 El instalador se recomienda para uso habitual. La versión portable es útil para pruebas, uso temporal o ejecución desde una unidad extraíble.
 
 > La compilación actual no está firmada. Windows puede mostrar una advertencia de SmartScreen, algo habitual en aplicaciones personales sin firma.
 
-### Aspectos destacados de la versión 5.6.0
+### Aspectos destacados de la versión 5.6.1
 
-* «Ejemplos de letras» usa ahora un encabezado superior como el de Ajustes y sitúa el botón de cierre en la esquina superior derecha. Se elimina el gran marco de título inferior sin modificar las tarjetas de ejemplo.
-* Se corrigió la máscara duplicada del único degradado del borde de la ventana, conservando todo el desvanecimiento de la barra de título y reutilizando su versión invertida en la parte inferior de los ejemplos.
-* «Ajuste manual» usa ahora un borrador: el resumen de la canción se desliza hacia la izquierda mientras el editor entra desde la derecha. Guardar aplica el borrador, Cancelar lo descarta y ambos vuelven con la animación inversa.
-* La advertencia de GitHub Actions sobre acciones Node.js 20 con SHA fijo forzadas a ejecutarse en Node.js 24 queda para una evaluación independiente durante el ciclo 5.6.0; este cambio no modifica los workflows.
+* Corrige el límite de solicitudes introducido en v5.5.4, que trataba por error el origen `127.0.0.1` del navegador y la URL interna `localhost` de Next como orígenes distintos.
+* Restablece la búsqueda en NetEase Cloud Music, la importación de metadatos y letras, y el análisis de enlaces de Spotify, Apple Music, NetEase y QQ Music.
+* Mantiene el identificador de solicitud, la validación del tipo de contenido y el rechazo explícito de solicitudes entre sitios; las interfaces de edición, importación y exportación no cambian.
 
 ## 🌐 Notas de publicación multilingües
 
 GitHub Release muestra de forma predeterminada un resumen en chino simplificado. Consulta las notas completas:
-[简体中文](./docs/releases/v5.6.0.zh-CN.md) · [繁體中文](./docs/releases/v5.6.0.zh-TW.md) · [English](./docs/releases/v5.6.0.en.md) · [Français](./docs/releases/v5.6.0.fr.md) · [日本語](./docs/releases/v5.6.0.ja.md) · [Español](./docs/releases/v5.6.0.es.md)
+[简体中文](./docs/releases/v5.6.1.zh-CN.md) · [繁體中文](./docs/releases/v5.6.1.zh-TW.md) · [English](./docs/releases/v5.6.1.en.md) · [Français](./docs/releases/v5.6.1.fr.md) · [日本語](./docs/releases/v5.6.1.ja.md) · [Español](./docs/releases/v5.6.1.es.md)
 
 <a id="funciones-principales"></a>
 
