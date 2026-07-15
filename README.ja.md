@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v5.5.4.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v5.6.0.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="#ローカル開発">ローカル開発</a> ·
@@ -51,24 +51,24 @@
 
 最新版は [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) からダウンロードできます。
 
-* 推奨インストーラー：`Lyrics Card Generator Setup 5.5.4.exe`
-* ポータブル版：`Lyrics Card Generator-5.5.4-portable.exe`
+* 推奨インストーラー：`Lyrics Card Generator Setup 5.6.0.exe`
+* ポータブル版：`Lyrics Card Generator-5.6.0-portable.exe`
 
 通常利用にはインストーラーを推奨します。ポータブル版は一時利用、検証、リムーバブルドライブでの利用に向いています。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v5.5.4 の更新ポイント
+### v5.6.0 の更新ポイント
 
-* ローカルアプリの POST ルートで、同一オリジン、アプリ識別子、想定する内容形式を共通確認します。拒否された AI リクエストはプロバイダーへ送信されません。
-* 簡体字中国語、繁体字中国語、英語、フランス語、日本語、スペイン語の画面テキストを見直し、Web Lite も 6 言語に対応しました。
-* 固定ウォーターマーク、設定画面の閉じる操作、更新メッセージ、API / デスクトップのエラーを自然な文面または安定した翻訳用コードに統一しました。
-* CI とリリース処理は共通ワークフローを使用し、バージョン固有の重複した公開状態をなくしました。
+* 「歌詞サンプル」画面は設定画面と同じ形式の上部ヘッダーを採用し、閉じるボタンを右上に配置しました。下部の大きなアプリタイトル枠は削除し、サンプルカード自体は変更していません。
+* ウィンドウ端の単一グラデーションに重複していたマスクを修正し、タイトルバーのフェードを最後まで表示します。反転した効果を「歌詞サンプル」画面の下端にも再利用しました。
+* 「手動調整」は下書き方式になりました。曲情報の概要が左へスライドし、編集画面が右から入ります。保存は下書きを反映し、キャンセルは破棄して、どちらも逆向きのアニメーションで概要へ戻ります。
+* SHA 固定の Node.js 20 アクションが Node.js 24 で強制実行される GitHub Actions の警告は、5.6.0 開発サイクル内の別評価項目です。今回 workflows は変更していません。
 
 ## 🌐 多言語リリースノート
 
 GitHub Release ではデフォルトで簡体字中国語の概要が表示されます。完全なリリースノートはこちら：
-[简体中文](./docs/releases/v5.5.4.zh-CN.md) · [繁體中文](./docs/releases/v5.5.4.zh-TW.md) · [English](./docs/releases/v5.5.4.en.md) · [Français](./docs/releases/v5.5.4.fr.md) · [日本語](./docs/releases/v5.5.4.ja.md) · [Español](./docs/releases/v5.5.4.es.md)
+[简体中文](./docs/releases/v5.6.0.zh-CN.md) · [繁體中文](./docs/releases/v5.6.0.zh-TW.md) · [English](./docs/releases/v5.6.0.en.md) · [Français](./docs/releases/v5.6.0.fr.md) · [日本語](./docs/releases/v5.6.0.ja.md) · [Español](./docs/releases/v5.6.0.es.md)
 
 <a id="主な機能"></a>
 

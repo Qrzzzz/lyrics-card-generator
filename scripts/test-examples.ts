@@ -91,6 +91,8 @@ for (const example of EXAMPLE_SONGS) {
 
 const examplesSource = readFileSync(resolve("lib/examples.ts"), "utf8");
 const examplesFloorSource = readFileSync(resolve("components/editor/ExamplesFloor.tsx"), "utf8");
+const lyricEditorSource = readFileSync(resolve("components/editor/LyricEditor.tsx"), "utf8");
+const surfaceCloseButtonSource = readFileSync(resolve("components/layout/SurfaceCloseButton.tsx"), "utf8");
 const exampleSongCardStart = examplesFloorSource.indexOf("function ExampleSongCard");
 const exampleSongCardEnd = examplesFloorSource.indexOf("function getExampleCardStyle");
 assert.ok(exampleSongCardStart >= 0 && exampleSongCardEnd > exampleSongCardStart, "example song card source bounds");
@@ -110,6 +112,14 @@ assert.ok(exampleSongCardSource.includes("onClick={() => onLoad"), "the whole ex
 assert.ok(examplesFloorSource.includes("examples-grid"), "examples floor uses the responsive gallery grid");
 assert.ok(examplesFloorSource.includes("examples-toggle-track"), "examples floor uses its compact translation toggle");
 assert.ok(examplesFloorSource.includes("examples-translation-switch"), "examples floor keeps the translation switch borderless");
+assert.ok(examplesFloorSource.includes("settings-wing__header examples-wing__header"), "examples reuse the settings-style top header");
+assert.ok(examplesFloorSource.includes('testId="examples-close-button"'), "examples expose the shared close control at the top");
+assert.ok(examplesFloorSource.includes('edge="bottom"'), "examples reuse the corrected edge blur at the bottom");
+assert.ok(examplesFloorSource.includes("examples-floor__content-scroll"), "example cards scroll independently below the fixed header");
+assert.ok(surfaceCloseButtonSource.includes("examples-close-button__icon"), "settings and examples share one close button implementation");
+assert.equal(lyricEditorSource.match(/<EditorHeader\b/g)?.length ?? 0, 0, "examples no longer render the legacy bottom app header");
+assert.ok(!lyricEditorSource.includes("headerDockY"), "examples no longer measure a docked bottom header");
+assert.ok(!examplesFloorSource.includes("var(--app-header-height)"), "examples no longer reserve space for the removed bottom header");
 assert.ok(paletteGeneratorClientSource.includes("extractPaletteFromImage(item.coverDataUrl)"), "palette generator extracts directly from album covers");
 assert.ok(paletteGeneratorClientSource.includes("palette === DEFAULT_PALETTE"), "palette generator rejects extraction fallback colors");
 assert.ok(!paletteGeneratorClientSource.includes("LyricCard"), "palette generator does not render lyric cards");
@@ -127,4 +137,4 @@ assert.equal(
   "temporary example-generation files must not be tracked"
 );
 
-console.log(JSON.stringify({ ok: true, exampleSongTests: 36 + EXAMPLE_SONGS.length * 18 }, null, 2));
+console.log(JSON.stringify({ ok: true, exampleSongTests: 44 + EXAMPLE_SONGS.length * 18 }, null, 2));

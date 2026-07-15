@@ -2,7 +2,9 @@
 
 import { motion, type Transition } from "framer-motion";
 import { ArrowRight, Music2 } from "lucide-react";
-import { useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { SurfaceCloseButton } from "@/components/layout/SurfaceCloseButton";
+import { TitlebarGradualBlur } from "@/components/layout/TitlebarGradualBlur";
 import { resolveReadableTextTokens } from "@/lib/color/contrast";
 import {
   EXAMPLE_LANGUAGE_LABELS,
@@ -18,6 +20,7 @@ type ExamplesFloorProps = {
   isActive: boolean;
   locale: Locale;
   onLoad: (payload: ExampleLoadPayload) => void;
+  onClose: () => void;
   transition: Transition;
 };
 
@@ -35,18 +38,27 @@ type ExampleCardStyle = CSSProperties & {
   "--control-focus-ring": string;
 };
 
-export function ExamplesFloor({ isActive, locale, onLoad, transition }: ExamplesFloorProps) {
+export function ExamplesFloor({ isActive, locale, onLoad, onClose, transition }: ExamplesFloorProps) {
   const copy = settingsCopy[locale];
   const intro = getExamplesIntro(locale);
   const [importTranslation, setImportTranslation] = useState(true);
   const translationLanguageLabel = EXAMPLE_LANGUAGE_LABELS[locale];
+  const closeButtonRef = useRef<HTMLButtonElement | null>(null);
+
+  useEffect(() => {
+    if (!isActive) return;
+    const frame = window.requestAnimationFrame(() => closeButtonRef.current?.focus({ preventScroll: true }));
+    return () => window.cancelAnimationFrame(frame);
+  }, [isActive]);
 
   return (
     <motion.section
+      data-testid="examples-surface"
+      data-surface-state={isActive ? "open" : "closed"}
       aria-hidden={!isActive}
       aria-labelledby="examples-floor-title"
       className={[
-        "absolute inset-0 z-20 min-w-0 overflow-y-auto",
+        "examples-floor absolute inset-0 z-20 flex min-w-0 flex-col overflow-hidden",
         isActive ? "pointer-events-auto" : "pointer-events-none"
       ].join(" ")}
       animate={{
@@ -57,20 +69,30 @@ export function ExamplesFloor({ isActive, locale, onLoad, transition }: Examples
       inert={!isActive ? true : undefined}
       transition={transition}
     >
-      <div className="mx-auto w-full max-w-[1520px] px-4 pb-[calc(var(--app-header-height)+1.5rem)] pt-6 sm:px-6 sm:pt-8">
-        <header className="mb-6 flex min-w-0 flex-col gap-5 md:flex-row md:items-center md:justify-between">
-          <div className="min-w-0">
-            <h2 id="examples-floor-title" className="app-text-primary flex min-w-0 items-center gap-2.5 text-2xl font-black tracking-normal sm:text-3xl">
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-white/10 bg-white/[0.08] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]">
-                <Music2 className="h-5 w-5" />
-              </span>
-              <span className="truncate">{copy.examples}</span>
-            </h2>
-            <p className="app-text-subtle mt-2 max-w-2xl text-sm leading-6">
-              {intro}
-            </p>
+      <header className="settings-wing__header examples-wing__header relative z-20">
+        <div className="settings-wing__identity min-w-0">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="settings-wing__icon" aria-hidden="true">
+              <Music2 className="h-5 w-5" />
+            </span>
+            <div className="min-w-0">
+              <h1 id="examples-floor-title" className="app-text-primary truncate text-xl font-black tracking-normal sm:text-3xl">
+                {copy.examples}
+              </h1>
+              <p className="app-text-subtle mt-1 hidden max-w-2xl truncate text-sm md:block">{intro}</p>
+            </div>
           </div>
+        </div>
+        <div className="settings-wing__actions flex shrink-0 items-center gap-2 sm:gap-3">
+          <SurfaceCloseButton
+            buttonRef={closeButtonRef}
+            label={copy.close}
+            testId="examples-close-button"
+            onClick={onClose}
+          />
+        </div>
 
+        <div className="examples-wing__controls">
           <div className="examples-translation-control flex w-full min-w-0 items-center justify-between gap-3 self-start md:w-auto md:shrink-0 md:self-auto">
             <div id="examples-translation-language" className="min-w-0 flex-1 text-left leading-tight md:flex-none md:text-right">
               <span className="app-text-subtle block text-[10px] font-semibold uppercase tracking-[0.14em]">
@@ -97,20 +119,30 @@ export function ExamplesFloor({ isActive, locale, onLoad, transition }: Examples
               </span>
             </button>
           </div>
-        </header>
+        </div>
+      </header>
 
-        <div className="examples-grid" data-count={Math.min(EXAMPLE_SONGS.length, 6)}>
-          {EXAMPLE_SONGS.map((song) => (
-            <ExampleSongCard
-              key={song.id}
-              song={song}
-              locale={locale}
-              importTranslation={importTranslation}
-              onLoad={onLoad}
-            />
-          ))}
+      <div className="examples-floor__content-scroll relative z-0 min-h-0 flex-1 overflow-y-auto overscroll-contain">
+        <div className="mx-auto w-full max-w-[1520px] px-4 pb-[calc(9rem+1.5rem)] pt-4 sm:px-6 sm:pt-6">
+          <div className="examples-grid" data-count={Math.min(EXAMPLE_SONGS.length, 6)}>
+            {EXAMPLE_SONGS.map((song) => (
+              <ExampleSongCard
+                key={song.id}
+                song={song}
+                locale={locale}
+                importTranslation={importTranslation}
+                onLoad={onLoad}
+              />
+            ))}
+          </div>
         </div>
       </div>
+
+      <TitlebarGradualBlur
+        edge="bottom"
+        testId="examples-bottom-gradual-blur"
+        className="examples-floor__bottom-blur"
+      />
     </motion.section>
   );
 }

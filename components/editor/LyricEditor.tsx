@@ -2,7 +2,7 @@
 
 import { motion, useReducedMotion, type Transition } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { EditorHeader, EditorHeaderActions } from "@/components/editor/EditorHeader";
+import { EditorHeaderActions } from "@/components/editor/EditorHeader";
 import { ExamplesFloor } from "@/components/editor/ExamplesFloor";
 import { ExportCelebration } from "@/components/effects/ExportCelebration";
 import { AppToast, type ToastNotice } from "@/components/feedback/AppToast";
@@ -28,6 +28,7 @@ import { FirstLaunchLanguageDialog } from "@/components/settings/FirstLaunchLang
 import {
   useCoverPalette,
   useResolvedTextColor,
+  useSongCoverObjectUrlLifecycle,
   useSyncedCoverProxy
 } from "@/components/editor/hooks/useLyricEditorEffects";
 import { resolveEditorThemeTokens } from "@/components/editor/resolveEditorThemeTokens";
@@ -82,14 +83,12 @@ export function LyricEditor() {
   const captureCardRef = useRef<HTMLElement | null>(null);
   const previewCardRef = useRef<HTMLElement | null>(null);
   const toastIdRef = useRef(0);
-  const stageRef = useRef<HTMLDivElement | null>(null);
-  const headerRailRef = useRef<HTMLDivElement | null>(null);
+  const examplesButtonRef = useRef<HTMLButtonElement | null>(null);
   const settingsButtonRef = useRef<HTMLButtonElement | null>(null);
-  const restoreSettingsFocusRef = useRef(false);
+  const surfaceReturnFocusRef = useRef<HTMLButtonElement | null>(null);
   const invalidateDocumentAsyncRef = useRef<(
     reason?: "document" | "ai-start"
   ) => TranslationValue | undefined>(() => undefined);
-  const [headerDockY, setHeaderDockY] = useState(0);
   const t = useMemo(() => createT(state.locale), [state.locale]);
   const systemShouldReduceMotion = useReducedMotion() ?? false;
   const isExamplesSurfaceOpen = activeSurface === "examples";
@@ -156,6 +155,11 @@ export function LyricEditor() {
     setToast({ id: toastIdRef.current, message: normalizedMessage });
   }
 
+  function closeExamples() {
+    surfaceReturnFocusRef.current = examplesButtonRef.current;
+    setActiveSurface("editor");
+  }
+
   const {
     celebrationKey,
     isCompleteExporting,
@@ -204,10 +208,15 @@ export function LyricEditor() {
     exportFailedMessage: (detail) => t("exportFailed", { detail }),
     confirmReplaceDocument: () => window.confirm(t("replaceDocumentConfirm")),
     onNotify: showToast,
-    onCloseExamples: () => setActiveSurface("editor"),
+    onCloseExamples: closeExamples,
     onClearTransientState: () => setFontSchemePreview(null),
     onInvalidateDocument: (reason) => invalidateDocumentAsyncRef.current(reason)
   });
+
+  useSongCoverObjectUrlLifecycle(
+    state.song.coverUrl,
+    activeExportSnapshot?.song.coverUrl
+  );
 
   useEffect(() => {
     if (!toast) {
@@ -253,46 +262,13 @@ export function LyricEditor() {
   ]);
 
   useEffect(() => {
-    const measureDockY = () => {
-      const stage = stageRef.current;
-      const headerRail = headerRailRef.current;
-
-      if (!stage || !headerRail) {
-        return;
-      }
-
-      setHeaderDockY(Math.max(0, stage.clientHeight - headerRail.offsetHeight));
-    };
-
-    measureDockY();
-
-    if (typeof ResizeObserver === "undefined") {
-      window.addEventListener("resize", measureDockY);
-      return () => window.removeEventListener("resize", measureDockY);
-    }
-
-    const observer = new ResizeObserver(measureDockY);
-    if (stageRef.current) {
-      observer.observe(stageRef.current);
-    }
-    if (headerRailRef.current) {
-      observer.observe(headerRailRef.current);
-    }
-    window.addEventListener("resize", measureDockY);
-
-    return () => {
-      observer.disconnect();
-      window.removeEventListener("resize", measureDockY);
-    };
-  }, []);
-
-  useEffect(() => {
     if (!isExamplesSurfaceOpen) {
       return;
     }
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
+        surfaceReturnFocusRef.current = examplesButtonRef.current;
         setActiveSurface("editor");
       }
     };
@@ -302,10 +278,11 @@ export function LyricEditor() {
   }, [isExamplesSurfaceOpen]);
 
   useEffect(() => {
-    if (!isEditorSurfaceActive || !restoreSettingsFocusRef.current) return;
-    restoreSettingsFocusRef.current = false;
+    if (!isEditorSurfaceActive || !surfaceReturnFocusRef.current) return;
+    const returnFocus = surfaceReturnFocusRef.current;
+    surfaceReturnFocusRef.current = null;
     setRequestedSettingsTab(undefined);
-    const frame = window.requestAnimationFrame(() => settingsButtonRef.current?.focus({ preventScroll: true }));
+    const frame = window.requestAnimationFrame(() => returnFocus.focus({ preventScroll: true }));
     return () => window.cancelAnimationFrame(frame);
   }, [isEditorSurfaceActive]);
 
@@ -342,7 +319,7 @@ export function LyricEditor() {
   }
 
   function closeSettings() {
-    restoreSettingsFocusRef.current = true;
+    surfaceReturnFocusRef.current = settingsButtonRef.current;
     setActiveSurface("editor");
   }
 
@@ -435,11 +412,12 @@ export function LyricEditor() {
       <DynamicAppBackground palette={state.palette} settings={userSettings} imageUrl={backgroundImageUrl} />
       <ClickSpark enabled={userSettings.sparkCursorEnabled} themeColor={resolvedAccentColor}>
         <main className="app-main-content lyric-editor-main relative z-10 min-h-screen px-4 py-5 sm:px-6 lg:px-8">
-          <div ref={stageRef} className="lyric-editor-stage relative mx-auto min-w-0 max-w-[1520px] overflow-clip">
+          <div className="lyric-editor-stage relative mx-auto min-w-0 max-w-[1520px] overflow-clip">
             <ExamplesFloor
               isActive={isExamplesSurfaceOpen}
               locale={state.locale}
               onLoad={loadExample}
+              onClose={closeExamples}
               transition={activeSurfaceTransition}
             />
 
@@ -498,6 +476,7 @@ export function LyricEditor() {
                           onOpenExamples={() => setActiveSurface("examples")}
                           onClearAll={clearAllContent}
                           onOpenSettings={openSettings}
+                          examplesButtonRef={examplesButtonRef}
                           settingsButtonRef={settingsButtonRef}
                         />
                       }
@@ -559,33 +538,6 @@ export function LyricEditor() {
               }}
               onNotify={showToast}
             />
-
-            <motion.div
-              aria-hidden={!isExamplesSurfaceOpen}
-              ref={headerRailRef}
-              className={[
-                "absolute left-0 right-0 z-30",
-                isExamplesSurfaceOpen ? "pointer-events-auto" : "pointer-events-none"
-              ].join(" ")}
-              style={{ top: 0 }}
-              animate={{
-                y: isExamplesSurfaceOpen ? headerDockY : 0,
-                opacity: isExamplesSurfaceOpen ? 1 : 0
-              }}
-              initial={false}
-              inert={!isExamplesSurfaceOpen ? true : undefined}
-              transition={activeSurfaceTransition}
-            >
-              <EditorHeader
-                locale={state.locale}
-                t={t}
-                mode={isExamplesSurfaceOpen ? "examplesDocked" : "normal"}
-                onOpenExamples={() => setActiveSurface("examples")}
-                onClearAll={clearAllContent}
-                onOpenSettings={openSettings}
-                onCloseSurface={() => setActiveSurface("editor")}
-              />
-            </motion.div>
           </div>
         </main>
       </ClickSpark>

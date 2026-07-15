@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v5.5.4.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v5.6.0.zh-CN.md">发布说明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">在线 Web Lite 版</a> ·
   <a href="./docs/desktop.md">桌面维护文档</a> ·
   <a href="#主要功能">主要功能</a> ·
@@ -49,24 +49,24 @@
 
 请前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下载最新版：
 
-* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 5.5.4.exe`
-* 不想安装时可下载便携版：`Lyrics Card Generator-5.5.4-portable.exe`
+* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 5.6.0.exe`
+* 不想安装时可下载便携版：`Lyrics Card Generator-5.6.0-portable.exe`
 
 安装版适合长期使用；便携版适合临时运行、测试或放在移动硬盘中使用。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v5.5.4 更新重点
+### v5.6.0 更新重点
 
-* 本地应用的 POST 请求统一校验同源、应用请求标记和预期内容格式；不合规的 AI 请求不会访问上游服务。
-* 简体中文、繁體中文、English、Français、日本語和 Español 的界面文案经过统一整理，Web Lite 也支持全部六种语言。
-* 固定水印、设置关闭、更新提示以及 API / 桌面错误改用自然文案或稳定错误码映射。
-* CI 与发布自动化沿用统一工作流，减少版本发布过程中的重复与状态漂移。
+* “歌词示例”现在复用“设置”式顶部标题栏和右上角关闭按钮，移除底部大型应用标题框架，内部示例卡片保持不变。
+* 修复单层窗口边缘渐变的重复遮罩，让标题栏渐隐完整呈现，并将反向效果复用到“歌词示例”底部。
+* 第一步“手动调整”改为草稿式编辑：歌曲信息预览向左滑出，编辑页从右侧进入；保存应用草稿，取消放弃草稿，两者都以反向动画返回。
+* GitHub Actions 的 Node.js 20 → 24 固定 SHA 提示留作 5.6.0 开发周期内的独立评估；本次未修改 workflows。
 
 ## 🌐 多语言发布说明
 
 GitHub Release 默认展示简体中文摘要，完整说明见：
-[简体中文](./docs/releases/v5.5.4.zh-CN.md) · [繁體中文](./docs/releases/v5.5.4.zh-TW.md) · [English](./docs/releases/v5.5.4.en.md) · [Français](./docs/releases/v5.5.4.fr.md) · [日本語](./docs/releases/v5.5.4.ja.md) · [Español](./docs/releases/v5.5.4.es.md)
+[简体中文](./docs/releases/v5.6.0.zh-CN.md) · [繁體中文](./docs/releases/v5.6.0.zh-TW.md) · [English](./docs/releases/v5.6.0.en.md) · [Français](./docs/releases/v5.6.0.fr.md) · [日本語](./docs/releases/v5.6.0.ja.md) · [Español](./docs/releases/v5.6.0.es.md)
 
 <a id="主要功能"></a>
 

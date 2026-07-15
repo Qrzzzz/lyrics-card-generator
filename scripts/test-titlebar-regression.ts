@@ -17,6 +17,7 @@ assert.equal(messages.en["titleBar.restore"], "Windowed");
 
 const titlebarSource = readFileSync(resolve("components/layout/DesktopTitleBar.tsx"), "utf8");
 const gradualBlurSource = readFileSync(resolve("components/layout/TitlebarGradualBlur.tsx"), "utf8");
+const examplesFloorSource = readFileSync(resolve("components/editor/ExamplesFloor.tsx"), "utf8");
 assert.match(titlebarSource, /onWindowStateChanged/);
 assert.match(titlebarSource, /getWindowState/);
 assert.match(titlebarSource, /titleBar\.restore/);
@@ -30,12 +31,18 @@ assert.match(titlebarSource, /src="\/app-icon\.png"/);
 assert.match(titlebarSource, /<TitlebarGradualBlur \/>/);
 assert.doesNotMatch(titlebarSource, /aria-label="(?:Minimize|Maximize|Close)"/);
 assert.doesNotMatch(titlebarSource, /import\s+\{[^}]*\b(?:Minus|Square|Copy|X)\b[^}]*\}\s+from\s+"lucide-react"/);
-assert.match(gradualBlurSource, /TITLEBAR_BLUR_MASK/);
 assert.match(gradualBlurSource, /blur\(22px\) saturate\(1\.18\)/);
 assert.doesNotMatch(gradualBlurSource, /TITLEBAR_BLUR_LAYERS|\.map\(/);
+assert.doesNotMatch(gradualBlurSource, /maskImage|WebkitMaskImage/);
+assert.doesNotMatch(gradualBlurSource, /desktop-titlebar__blur-layer/);
+assert.match(gradualBlurSource, /aria-hidden="true"[\s\S]*?style=\{\{[\s\S]*?backdropFilter:/);
+assert.match(gradualBlurSource, /edge\?: "top" \| "bottom"/);
 assert.match(gradualBlurSource, /data-effect-height="144"/);
+assert.match(gradualBlurSource, /data-effect-edge=\{edge\}/);
 assert.match(gradualBlurSource, /desktop-titlebar__veil/);
 assert.doesNotMatch(gradualBlurSource, /IntersectionObserver|addEventListener|useEffect|<style/);
+assert.match(examplesFloorSource, /edge="bottom"/);
+assert.match(examplesFloorSource, /testId="examples-bottom-gradual-blur"/);
 
 const preloadSource = readFileSync(resolve("electron/preload.js"), "utf8");
 assert.match(preloadSource, /onWindowStateChanged/);
@@ -68,12 +75,14 @@ assert.match(globalsSource, /--segmented-active-translate/);
 assert.match(globalsSource, /--window-corner-radius: 8px/);
 assert.match(globalsSource, /clip-path: inset\(0 round var\(--window-corner-radius\)\)/);
 assert.doesNotMatch(globalsSource, /\.desktop-titlebar::before\s*\{/);
-assert.match(globalsSource, /\.desktop-titlebar__gradual-blur\s*\{[\s\S]*?height: 144px;[\s\S]*?pointer-events: none;[\s\S]*?contain: paint;[\s\S]*?mask-image:[\s\S]*?transparent 100%/);
-assert.match(globalsSource, /\.desktop-titlebar__blur-layer\s*\{[\s\S]*?inset: 0;[\s\S]*?will-change: backdrop-filter/);
+assert.match(globalsSource, /\.desktop-titlebar__gradual-blur\s*\{[\s\S]*?height: 144px;[\s\S]*?pointer-events: none;[\s\S]*?contain: paint;[\s\S]*?will-change: backdrop-filter;[\s\S]*?mask-image:[\s\S]*?transparent 100%/);
+assert.doesNotMatch(globalsSource, /\.desktop-titlebar__blur-layer\s*\{/);
 assert.match(globalsSource, /\.desktop-titlebar__veil\s*\{[\s\S]*?var\(--titlebar-veil-top\)[\s\S]*?transparent 100%/);
+assert.match(globalsSource, /\.desktop-titlebar__gradual-blur--bottom\s*\{[\s\S]*?inset: auto 0 0;[\s\S]*?to top/);
+assert.match(globalsSource, /\.desktop-titlebar__gradual-blur--bottom \.desktop-titlebar__veil\s*\{[\s\S]*?to top/);
 assert.match(globalsSource, /\.desktop-titlebar > :not\(\.desktop-titlebar__gradual-blur\)[\s\S]*?z-index: 2/);
 
 const dynamicBackgroundSource = readFileSync(resolve("components/layout/DynamicAppBackground.tsx"), "utf8");
 assert.doesNotMatch(dynamicBackgroundSource, /className="[^"]*\bfixed\s+inset-0[^"]*"/);
 
-console.log(JSON.stringify({ ok: true, titlebarRegressionTests: 50 }, null, 2));
+console.log(JSON.stringify({ ok: true, titlebarRegressionTests: 58 }, null, 2));
