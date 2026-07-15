@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v5.5.4.zh-TW.md">發布說明</a> ·
+  <a href="./docs/releases/v5.6.0.zh-TW.md">發布說明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">線上 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="#本機開發">本機開發</a> ·
@@ -48,24 +48,24 @@
 
 請前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載最新版：
 
-* 建議一般使用者下載安裝版：`Lyrics Card Generator Setup 5.5.4.exe`
-* 不想安裝時可下載可攜版：`Lyrics Card Generator-5.5.4-portable.exe`
+* 建議一般使用者下載安裝版：`Lyrics Card Generator Setup 5.6.0.exe`
+* 不想安裝時可下載可攜版：`Lyrics Card Generator-5.6.0-portable.exe`
 
 安裝版適合長期使用；可攜版適合臨時執行、測試或放在隨身碟中使用。
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v5.5.4 更新重點
+### v5.6.0 更新重點
 
-* 本機應用程式的 POST 請求統一檢查同來源、應用程式請求標記與預期內容格式；不符合條件的 AI 請求不會連線至上游服務。
-* 簡體中文、繁體中文、English、Français、日本語與 Español 的介面文字已全面整理，Web Lite 也支援全部六種語言。
-* 固定浮水印、設定關閉、更新提示，以及 API / 桌面錯誤改用自然文字或穩定錯誤碼對應。
-* CI 與發行自動化沿用統一工作流程，減少不同版本之間的重複與狀態落差。
+* 「歌詞範例」現在沿用「設定」式頂部標題列與右上角關閉按鈕，移除底部大型應用程式標題框架，內部範例卡片維持不變。
+* 修正單層視窗邊緣漸層的重複遮罩，讓標題列漸隱完整呈現，並將反向效果沿用至「歌詞範例」底部。
+* 第一步「手動調整」改為草稿式編輯：歌曲資訊預覽向左滑出，編輯頁面由右側進入；儲存會套用草稿，取消會捨棄草稿，兩者都以反向動畫返回。
+* GitHub Actions 的 Node.js 20 → 24 固定 SHA 提示留待 5.6.0 開發週期內獨立評估；本次未修改 workflows。
 
 ## 🌐 多語言發佈說明
 
 GitHub Release 預設顯示簡體中文摘要，完整說明請見：
-[简体中文](./docs/releases/v5.5.4.zh-CN.md) · [繁體中文](./docs/releases/v5.5.4.zh-TW.md) · [English](./docs/releases/v5.5.4.en.md) · [Français](./docs/releases/v5.5.4.fr.md) · [日本語](./docs/releases/v5.5.4.ja.md) · [Español](./docs/releases/v5.5.4.es.md)
+[简体中文](./docs/releases/v5.6.0.zh-CN.md) · [繁體中文](./docs/releases/v5.6.0.zh-TW.md) · [English](./docs/releases/v5.6.0.en.md) · [Français](./docs/releases/v5.6.0.fr.md) · [日本語](./docs/releases/v5.6.0.ja.md) · [Español](./docs/releases/v5.6.0.es.md)
 
 ## ✨ 主要功能
 

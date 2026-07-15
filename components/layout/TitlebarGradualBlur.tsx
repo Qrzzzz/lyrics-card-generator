@@ -1,31 +1,38 @@
-import type { CSSProperties } from "react";
-
-const TITLEBAR_BLUR_MASK = "linear-gradient(to bottom, #000 0%, #000 30%, rgba(0,0,0,0.82) 52%, rgba(0,0,0,0.46) 76%, transparent 100%)";
+type TitlebarGradualBlurProps = {
+  edge?: "top" | "bottom";
+  testId?: string;
+  className?: string;
+};
 
 /**
- * One continuous titlebar effect: a bounded backdrop-filter and theme-aware
- * veil share the same 144px fade envelope. The measured desktop
- * layout places the 48px titlebar edge at y=48 and the first Stepper rail at
- * y=62, so the effect reaches well into real content instead of ending above
- * it. This intentionally has no runtime observers, animation, or injected CSS.
+ * One continuous edge effect: a bounded backdrop-filter and theme-aware veil
+ * share one short 72px fade on the wrapper. The continuous mask makes the
+ * strongest blur hug the window edge and releases normal content quickly.
+ * The filter lives on that wrapper because
+ * a masked parent would otherwise form a backdrop root that starves a child
+ * backdrop-filter of the content behind the effect.
  */
-export function TitlebarGradualBlur() {
+export function TitlebarGradualBlur({
+  edge = "top",
+  testId = "titlebar-gradual-blur",
+  className
+}: TitlebarGradualBlurProps = {}) {
   return (
     <div
-      className="desktop-titlebar__gradual-blur"
-      data-testid="titlebar-gradual-blur"
-      data-effect-height="144"
+      className={[
+        "desktop-titlebar__gradual-blur",
+        edge === "bottom" ? "desktop-titlebar__gradual-blur--bottom" : "",
+        className ?? ""
+      ].filter(Boolean).join(" ")}
+      data-testid={testId}
+      data-effect-height="72"
+      data-effect-edge={edge}
       aria-hidden="true"
+      style={{
+        backdropFilter: "blur(14px) saturate(1.08)",
+        WebkitBackdropFilter: "blur(14px) saturate(1.08)"
+      }}
     >
-      <span
-        className="desktop-titlebar__blur-layer"
-        style={{
-          backdropFilter: "blur(22px) saturate(1.18)",
-          WebkitBackdropFilter: "blur(22px) saturate(1.18)",
-          maskImage: TITLEBAR_BLUR_MASK,
-          WebkitMaskImage: TITLEBAR_BLUR_MASK
-        } satisfies CSSProperties}
-      />
       <span className="desktop-titlebar__veil" />
     </div>
   );

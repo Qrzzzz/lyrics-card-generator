@@ -4,6 +4,10 @@ import { evaluateMinimumExportSafety, type ExportDomSafety } from "../lib/export
 import { exportNodeAsPng, type ExportImageDependencies } from "../lib/export-image";
 import { createExportSnapshot } from "../lib/export-snapshot";
 import { ExportTransactionMutex, runExportTransaction, waitForExportSnapshotNode } from "../lib/export-transaction";
+import {
+  createBlobUrlRetirementState,
+  reconcileBlobUrlRetirement
+} from "../lib/object-url-lifecycle";
 import type { AppState } from "../lib/types";
 
 const readyDom: ExportDomSafety = {
@@ -77,6 +81,45 @@ async function concurrencyTest() {
   releaseCapture();
   assert.deepEqual(await first, { ok: true });
   assert.equal(unmountCount, 1);
+}
+
+function exportSnapshotProtectsBlobUrlTest() {
+  const originalRevokeObjectUrl = URL.revokeObjectURL;
+  const revokedUrls: string[] = [];
+  URL.revokeObjectURL = (url) => {
+    revokedUrls.push(url);
+  };
+
+  try {
+    const snapshotCoverUrl = "blob:export-snapshot";
+    const live: AppState = {
+      ...defaultState,
+      song: { ...defaultState.song, coverUrl: snapshotCoverUrl }
+    };
+    const snapshot = createExportSnapshot(live, 1, 9);
+    const retirement = createBlobUrlRetirementState(live.song.coverUrl);
+
+    assert.deepEqual(
+      reconcileBlobUrlRetirement(retirement, "blob:live-next", snapshot.song.coverUrl),
+      [],
+      "an active export snapshot keeps its old local cover alive after the document changes"
+    );
+    assert.deepEqual(
+      reconcileBlobUrlRetirement(retirement, "blob:live-latest", snapshot.song.coverUrl),
+      ["blob:live-next"],
+      "superseded live covers that are not in the snapshot can retire immediately"
+    );
+    assert.deepEqual(revokedUrls, ["blob:live-next"]);
+    assert.deepEqual(
+      reconcileBlobUrlRetirement(retirement, "blob:live-latest"),
+      [snapshotCoverUrl],
+      "the frozen cover retires only after the export snapshot unmounts"
+    );
+    assert.deepEqual(revokedUrls, ["blob:live-next", snapshotCoverUrl]);
+    assert.equal(revokedUrls.includes("blob:live-latest"), false, "the current live cover remains usable");
+  } finally {
+    URL.revokeObjectURL = originalRevokeObjectUrl;
+  }
 }
 
 async function timeoutReleasesMutexTest() {
@@ -259,6 +302,7 @@ async function transactionTimeoutBlocksLateExportCommitTest() {
 }
 
 void (async () => {
+  exportSnapshotProtectsBlobUrlTest();
   await concurrencyTest();
   await timeoutReleasesMutexTest();
   await postSettleRevalidationTest();

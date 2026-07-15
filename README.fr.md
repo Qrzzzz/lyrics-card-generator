@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v5.5.4.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v5.6.0.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="#développement-local">Développement local</a> ·
@@ -51,24 +51,24 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 Téléchargez la dernière version depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
 
-* Installateur recommandé : `Lyrics Card Generator Setup 5.5.4.exe`
-* Version portable : `Lyrics Card Generator-5.5.4-portable.exe`
+* Installateur recommandé : `Lyrics Card Generator Setup 5.6.0.exe`
+* Version portable : `Lyrics Card Generator-5.6.0-portable.exe`
 
 L'installateur est recommandé pour une utilisation régulière. La version portable convient aux essais, à une utilisation temporaire ou à un disque amovible.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### Points clés de la v5.5.4
+### Points clés de la v5.6.0
 
-* Les routes POST de l’application locale partagent désormais les mêmes contrôles d’origine, de marqueur d’application et de format. Une requête IA refusée ne contacte aucun fournisseur.
-* Les textes de l’interface ont été révisés en chinois simplifié et traditionnel, anglais, français, japonais et espagnol ; Web Lite propose maintenant ces six langues.
-* Les filigranes fixes, la fermeture des paramètres, les messages de mise à jour et les erreurs API / bureau utilisent un texte naturel ou des codes traduits stables.
-* L’intégration continue et la publication utilisent le workflow commun afin d’éviter les états de publication propres à chaque version.
+* La page « Exemples de paroles » reprend l’en-tête supérieur des paramètres et place le bouton de fermeture en haut à droite. Le grand cadre de titre inférieur disparaît, sans modifier les cartes d’exemple.
+* Le masque appliqué deux fois au dégradé unique du bord de fenêtre a été corrigé : le fondu de la barre de titre reste complet et sa version inversée est réutilisée au bas des exemples.
+* Le réglage manuel suit désormais un brouillon : le résumé du morceau glisse vers la gauche tandis que l’éditeur arrive de la droite. Enregistrer applique le brouillon, Annuler l’abandonne, puis l’animation inverse rétablit le résumé.
+* L’avertissement GitHub Actions concernant les actions Node.js 20 à SHA fixe forcées sur Node.js 24 reste une évaluation séparée du cycle 5.6.0 ; cette modification ne touche pas aux workflows.
 
 ## 🌐 Notes de publication multilingues
 
 Par défaut, GitHub Release affiche un résumé en chinois simplifié. Consultez les notes complètes :
-[简体中文](./docs/releases/v5.5.4.zh-CN.md) · [繁體中文](./docs/releases/v5.5.4.zh-TW.md) · [English](./docs/releases/v5.5.4.en.md) · [Français](./docs/releases/v5.5.4.fr.md) · [日本語](./docs/releases/v5.5.4.ja.md) · [Español](./docs/releases/v5.5.4.es.md)
+[简体中文](./docs/releases/v5.6.0.zh-CN.md) · [繁體中文](./docs/releases/v5.6.0.zh-TW.md) · [English](./docs/releases/v5.6.0.en.md) · [Français](./docs/releases/v5.6.0.fr.md) · [日本語](./docs/releases/v5.6.0.ja.md) · [Español](./docs/releases/v5.6.0.es.md)
 
 <a id="fonctionnalités-principales"></a>
 

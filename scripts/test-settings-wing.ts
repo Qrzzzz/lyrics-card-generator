@@ -21,6 +21,7 @@ const saveController = readFileSync(resolve("lib/ai/ai-settings-save-controller.
 const settingsLayout = readFileSync(resolve("components/settings/SettingsLayout.tsx"), "utf8");
 const preferences = readFileSync(resolve("components/editor/hooks/useEditorPreferences.ts"), "utf8");
 const editorHeader = readFileSync(resolve("components/editor/EditorHeader.tsx"), "utf8");
+const surfaceCloseButton = readFileSync(resolve("components/layout/SurfaceCloseButton.tsx"), "utf8");
 const generalSettings = readFileSync(resolve("components/settings/GeneralSettingsSection.tsx"), "utf8");
 const appearanceSettings = readFileSync(resolve("components/settings/AppearanceSettingsSection.tsx"), "utf8");
 const exportSettings = readFileSync(resolve("components/settings/ExportSettingsSection.tsx"), "utf8");
@@ -34,10 +35,11 @@ const globals = readFileSync(resolve("app/globals.css"), "utf8");
 assert.match(lyricEditor, /type ActiveSurface = "editor" \| "examples" \| "settings"/);
 assert.match(lyricEditor, /x: isSettingsSurfaceOpen \? "-100%" : "0%"/);
 assert.match(lyricEditor, /onRequireSettings: \(\) => openSettings\("ai"\)/);
-assert.match(lyricEditor, /settingsButtonRef\.current\?\.focus\(\{ preventScroll: true \}\)/);
+assert.match(lyricEditor, /surfaceReturnFocusRef\.current = settingsButtonRef\.current/);
+assert.match(lyricEditor, /returnFocus\.focus\(\{ preventScroll: true \}\)/);
 assert.doesNotMatch(lyricEditor, /if \(!isEditorSurfaceActive\) return/);
 assert.match(editorHeader, /ref=\{settingsButtonRef\}[\s\S]*data-testid="settings-button"[\s\S]*onClick=\{\(\) => onOpenSettings\(\)\}/);
-assert.match(editorHeader, /examples-close-button__icon/);
+assert.match(editorHeader, /ref=\{examplesButtonRef\}[\s\S]*data-testid="examples-button"/);
 assert.doesNotMatch(editorHeader, /app-icon\.png"[\s\S]*?border border-\[rgb\(var\(--panel-border\)\)\]/);
 assert.doesNotMatch(aboutSettings, /app-icon\.png"[\s\S]*?border border-white\/15/);
 assert.match(settingsSurface, /data-testid="settings-surface"/);
@@ -58,8 +60,10 @@ assert.match(settingsSurface, /workspace\.saveState === "saving"/);
 assert.match(settingsSurface, /workspace\.syncErrorKind === "load" \? aiCopy\.loadFailed : aiCopy\.saveFailed/);
 assert.match(settingsSurface, /saveStatus \? \([\s\S]*?role="status"/);
 assert.doesNotMatch(settingsSurface, /aiCopy\.settingsSaved/);
-assert.match(settingsSurface, /examples-close-button/);
-assert.match(settingsSurface, /examples-close-button__icon/);
+assert.match(settingsSurface, /<SurfaceCloseButton/);
+assert.match(settingsSurface, /testId="settings-close-button"/);
+assert.match(surfaceCloseButton, /examples-close-button/);
+assert.match(surfaceCloseButton, /examples-close-button__icon/);
 assert.match(settingsWorkspace, /setTimeout\(\(\) => onNotify\(message\), 420\)/);
 assert.match(lyricEditor, /<AppToast notice=\{toast\} accentColor=\{resolvedAccentColor\} \/>/);
 assert.match(lyricEditor, /toastIdRef\.current \+= 1/);
@@ -224,4 +228,4 @@ for (const locale of ["zh", "zh-TW", "en", "fr", "ja", "es"] satisfies Locale[])
   }
 }
 
-console.log(JSON.stringify({ ok: true, settingsWingTests: 93 }, null, 2));
+console.log(JSON.stringify({ ok: true, settingsWingTests: 96 }, null, 2));

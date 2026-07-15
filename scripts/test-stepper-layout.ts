@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { __internalStepperLayout } from "../components/editor/hooks/useBalancedStepperLayout";
+import { revokeReplacedBlobUrl } from "../lib/object-url-lifecycle";
 
 const { chooseStepperLayout } = __internalStepperLayout;
 
@@ -136,8 +137,8 @@ assert.ok(
 );
 assert.ok(
   !editorSource.includes("const showLegacyEditorHeader = currentStep === 0") &&
-    (editorSource.match(/<EditorHeader\b/g)?.length ?? 0) === 1,
-  "the editor surface no longer renders a separate legacy header for step one"
+    (editorSource.match(/<EditorHeader\b/g)?.length ?? 0) === 0,
+  "the editor surface no longer renders the legacy app header above or below examples"
 );
 assert.ok(
   editorSource.includes('placement="stepper"') &&
@@ -152,6 +153,7 @@ assert.ok(
 
 const songImportAsideSource = readFileSync(resolve("components/editor/SongImportAside.tsx"), "utf8");
 const editorStepsSource = readFileSync(resolve("components/editor/useEditorSteps.tsx"), "utf8");
+const editorEffectsSource = readFileSync(resolve("components/editor/hooks/useLyricEditorEffects.ts"), "utf8");
 assert.ok(
   editorStepsSource.includes("song-import-primary__alternates") &&
     editorStepsSource.includes("<SongLinkParser") &&
@@ -173,16 +175,39 @@ assert.ok(
   editorStepsSource.includes('testId: "song-info-toggle"') &&
     editorStepsSource.includes("expanded: songInfoExpanded") &&
     editorStepsSource.includes("controls: songInfoRegionId") &&
+    editorStepsSource.includes("buttonRef: songInfoToggleRef") &&
+    stepperSource.includes("ref={secondaryAction.buttonRef}") &&
     stepperSource.includes("aria-controls={secondaryAction.controls}"),
-  "manual song metadata disclosure exposes its state and controlled region from the shared action row"
+  "manual song metadata disclosure exposes its state, controlled region, and return-focus target"
 );
 assert.ok(
-  !songImportAsideSource.includes("<button") &&
     songImportAsideSource.includes('role="region"') &&
     songImportAsideSource.includes("id={manualRegionId}") &&
-    songImportAsideSource.includes("hidden={!manualExpanded}") &&
-    songImportAsideSource.includes('manualExpanded ? "grid" : "hidden"'),
-  "the metadata aside keeps one stable labelled region without a duplicate disclosure button"
+    songImportAsideSource.includes('data-song-info-view={manualExpanded ? "editor" : "summary"}') &&
+    songImportAsideSource.includes('data-testid="song-info-summary"') &&
+    songImportAsideSource.includes('data-testid="song-info-editor"'),
+  "the metadata aside swaps summary and editor views inside one stable labelled region"
+);
+assert.ok(
+  songImportAsideSource.includes('mode="popLayout"') &&
+    songImportAsideSource.includes('data-testid="song-info-save"') &&
+    songImportAsideSource.includes('data-testid="song-info-cancel"'),
+  "manual song metadata editing crossfades in one panel and provides explicit save and cancel actions"
+);
+assert.ok(
+  editorStepsSource.includes("useState<SongInfo>") &&
+    editorStepsSource.includes("onSongChange={updateSongInfoDraft}") &&
+    editorStepsSource.includes("handlers.onSongChange({ ...songInfoDraft })") &&
+    editorStepsSource.includes("songInfoEditRevision !== documentRevision") &&
+    editorStepsSource.includes("songInfoDraftCoverRef") &&
+    editorStepsSource.includes("revokeReplacedBlobUrl"),
+  "manual song metadata stays in a guarded draft until one explicit save transaction"
+);
+assert.ok(
+  editorEffectsSource.includes("useSongCoverObjectUrlLifecycle") &&
+    editorEffectsSource.includes("reconcileBlobUrlRetirement") &&
+    editorSource.includes("activeExportSnapshot?.song.coverUrl"),
+  "committed local cover object URLs wait for any active export snapshot before retirement"
 );
 assert.ok(
   stepperSource.includes("flex min-w-0 flex-wrap items-center justify-end") &&
@@ -211,4 +236,19 @@ assert.ok(
   "lyrics columns use only one thin responsive divider between neighbours"
 );
 
-console.log(JSON.stringify({ ok: true, stepperLayoutTests: 32 }, null, 2));
+const originalRevokeObjectUrl = URL.revokeObjectURL;
+const revokedObjectUrls: string[] = [];
+URL.revokeObjectURL = (url) => {
+  revokedObjectUrls.push(url);
+};
+try {
+  assert.equal(revokeReplacedBlobUrl("https://example.com/cover.png", ""), false);
+  assert.equal(revokeReplacedBlobUrl("blob:kept", "blob:kept"), false);
+  assert.equal(revokeReplacedBlobUrl("blob:committed", "blob:draft", "blob:committed"), false);
+  assert.equal(revokeReplacedBlobUrl("blob:discarded", "blob:next"), true);
+  assert.deepEqual(revokedObjectUrls, ["blob:discarded"]);
+} finally {
+  URL.revokeObjectURL = originalRevokeObjectUrl;
+}
+
+console.log(JSON.stringify({ ok: true, stepperLayoutTests: 41 }, null, 2));

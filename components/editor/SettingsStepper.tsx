@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Check, Download } from "lucide-react";
-import type { ReactNode } from "react";
+import type { ReactNode, RefObject } from "react";
 import { useRef } from "react";
 import { useBalancedStepperLayout } from "@/components/editor/hooks/useBalancedStepperLayout";
 import { useAppReducedMotion } from "@/components/motion/AppMotionProvider";
@@ -42,6 +42,7 @@ export type SettingsStep = {
     controls?: string;
     testId?: string;
     disabled?: boolean;
+    buttonRef?: RefObject<HTMLButtonElement | null>;
   };
   primaryAction?: {
     label: ReactNode;
@@ -337,6 +338,7 @@ export function SettingsStepper({
         <div className="ml-auto flex min-w-0 flex-wrap items-center justify-end gap-2 sm:gap-3">
           {secondaryAction ? (
             <button
+              ref={secondaryAction.buttonRef}
               type="button"
               data-testid={secondaryAction.testId}
               onClick={secondaryAction.onClick}

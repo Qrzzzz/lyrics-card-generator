@@ -1,14 +1,33 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import { estimateCardHeight } from "@/lib/card-size";
 import { FIXED_WHITE_TEXT_COLOR } from "@/lib/card-style-normalize";
 import { proxiedImageUrl } from "@/lib/image-utils";
+import {
+  createBlobUrlRetirementState,
+  reconcileBlobUrlRetirement
+} from "@/lib/object-url-lifecycle";
 import { extractPaletteFromImage } from "@/lib/palette-extraction";
 import type { AppState } from "@/lib/types";
 
 type AppStateSetter = Dispatch<SetStateAction<AppState>>;
+
+export function useSongCoverObjectUrlLifecycle(coverUrl?: string, preservedCoverUrl?: string) {
+  const retirementStateRef = useRef<ReturnType<typeof createBlobUrlRetirementState> | null>(null);
+  if (!retirementStateRef.current) {
+    retirementStateRef.current = createBlobUrlRetirementState(coverUrl);
+  }
+
+  useEffect(() => {
+    reconcileBlobUrlRetirement(
+      retirementStateRef.current!,
+      coverUrl,
+      preservedCoverUrl
+    );
+  }, [coverUrl, preservedCoverUrl]);
+}
 
 export function useSyncedCoverProxy(state: AppState, setState: AppStateSetter) {
   useEffect(() => {

@@ -1,8 +1,9 @@
 "use client";
 
 import { motion, type Transition } from "framer-motion";
-import { Loader2, Settings, X } from "lucide-react";
+import { Loader2, Settings } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { SurfaceCloseButton } from "@/components/layout/SurfaceCloseButton";
 import { AboutSettingsSection } from "@/components/settings/AboutSettingsSection";
 import { AiSettingsSection } from "@/components/settings/AiSettingsSection";
 import { AppearanceSettingsSection } from "@/components/settings/AppearanceSettingsSection";
@@ -188,17 +189,13 @@ export function SettingsSurface({
               {saveStatus.label}
             </span>
           ) : null}
-          <button
-            ref={closeButtonRef}
-            type="button"
+          <SurfaceCloseButton
+            buttonRef={closeButtonRef}
             onClick={workspace.closeWorkspace}
             disabled={workspace.isClearingApiKey}
-            className="app-button control-focus examples-close-button inline-flex h-10 items-center justify-center gap-2 rounded-lg px-3 text-sm font-semibold"
-            aria-label={copy.close}
-            data-testid="settings-close-button"
-          >
-            <X className="examples-close-button__icon h-5 w-5" />
-          </button>
+            label={copy.close}
+            testId="settings-close-button"
+          />
         </div>
         <SettingsHistoryBar
           backLabel={promptCopy.back}

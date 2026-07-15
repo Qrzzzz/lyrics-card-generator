@@ -518,11 +518,29 @@ async function assertSongImportAsideBehavior() {
   const stepper = page.locator('[data-stepper-presentation="focus"]');
   const manualToggle = stepper.getByTestId("song-info-toggle");
   const nextButton = stepper.getByTestId("stepper-next-button");
-  assert.equal(
-    await aside.locator('button[aria-controls][aria-expanded]').count(),
-    0,
-    "manual song details no longer render a duplicate disclosure inside the metadata panel"
+  const tinyPng = Buffer.from(
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
+    "base64"
   );
+  await page.evaluate(() => {
+    const originalCreateObjectUrl = URL.createObjectURL.bind(URL);
+    const originalRevokeObjectUrl = URL.revokeObjectURL.bind(URL);
+    const audit = { created: [], revoked: [] };
+    window.__songCoverObjectUrlAudit = audit;
+    window.__restoreSongCoverObjectUrlAudit = () => {
+      URL.createObjectURL = originalCreateObjectUrl;
+      URL.revokeObjectURL = originalRevokeObjectUrl;
+    };
+    URL.createObjectURL = (blob) => {
+      const url = originalCreateObjectUrl(blob);
+      audit.created.push(url);
+      return url;
+    };
+    URL.revokeObjectURL = (url) => {
+      audit.revoked.push(url);
+      originalRevokeObjectUrl(url);
+    };
+  });
   assert.deepEqual(
     await stepper.locator('.lyrics-stepper-actions button').evaluateAll((buttons) => (
       buttons.map((button) => button.getAttribute('data-testid'))
@@ -531,43 +549,202 @@ async function assertSongImportAsideBehavior() {
     "manual adjustment stays immediately before Next"
   );
   assert.equal(await manualToggle.getAttribute("aria-expanded"), "false", "manual song details start collapsed");
+  const originalTitle = (await aside.getByTestId("song-info-summary").locator("dd").first().textContent())?.trim() ?? "";
 
   await manualToggle.focus();
   await manualToggle.press("Enter");
-  assert.equal(await manualToggle.getAttribute("aria-expanded"), "true", "manual song details expand from the keyboard");
+  const manualEditor = aside.getByTestId("song-info-editor");
+  await manualEditor.waitFor({ state: "visible" });
+  await page.waitForFunction(() => Boolean(document.activeElement?.closest('[data-testid="song-info-editor"]')));
+  assert.equal(await manualToggle.getAttribute("aria-expanded"), "true", "manual song details open from the keyboard");
   assert.equal(
-    await manualToggle.evaluate((node) => document.activeElement === node),
+    await manualEditor.evaluate((node) => node.contains(document.activeElement)),
     true,
-    "expanding manual song details preserves focus on the disclosure button"
+    "opening manual song details moves focus into the incoming editor"
   );
 
   const manualRegionId = await manualToggle.getAttribute("aria-controls");
   assert.ok(manualRegionId, "manual song details expose a controlled region id");
   const manualRegion = page.locator(`#${manualRegionId}`);
-  await manualRegion.waitFor({ state: "visible" });
+  assert.equal(await manualRegion.getAttribute("data-song-info-view"), "editor", "the controlled panel swaps to the editor view");
+  const titleInput = manualEditor.locator('input:not([type="file"])').first();
+  await titleInput.fill("Discarded manual title");
+  const draftCoverInput = manualEditor.locator('input[type="file"]');
+  await draftCoverInput.setInputFiles({ name: "draft-one.png", mimeType: "image/png", buffer: tinyPng });
+  await page.waitForFunction(() => window.__songCoverObjectUrlAudit?.created.length === 1);
+  await draftCoverInput.setInputFiles({ name: "draft-two.png", mimeType: "image/png", buffer: tinyPng });
+  await page.waitForFunction(() => {
+    const audit = window.__songCoverObjectUrlAudit;
+    return Boolean(audit && audit.revoked.includes(audit.created[0]));
+  });
+  await manualEditor.getByTestId("song-info-cancel").click();
+  await page.waitForFunction(() => {
+    const audit = window.__songCoverObjectUrlAudit;
+    return Boolean(audit && audit.revoked.includes(audit.created[1]));
+  });
+  const restoredSummary = aside.getByTestId("song-info-summary");
+  await restoredSummary.waitFor({ state: "visible" });
+  await page.waitForFunction(() => document.activeElement?.getAttribute("data-testid") === "song-info-toggle");
+  assert.equal(await manualRegion.getAttribute("data-song-info-view"), "summary", "cancel reverses back to the summary view");
+  assert.equal(
+    (await restoredSummary.locator("dd").first().textContent())?.trim(),
+    originalTitle,
+    "cancel discards the uncommitted metadata draft"
+  );
+  assert.equal(
+    await manualToggle.evaluate((node) => document.activeElement === node),
+    true,
+    "cancel returns focus to the manual adjustment entry"
+  );
+
+  await manualToggle.click();
+  const saveEditor = aside.getByTestId("song-info-editor");
+  await saveEditor.waitFor({ state: "visible" });
+  await saveEditor.locator('input:not([type="file"])').first().fill("Saved manual title");
+  await saveEditor.locator('input[type="file"]').setInputFiles({
+    name: "committed-one.png",
+    mimeType: "image/png",
+    buffer: tinyPng
+  });
+  await saveEditor.getByTestId("song-info-save").click();
+  const savedSummary = aside.getByTestId("song-info-summary");
+  await savedSummary.waitFor({ state: "visible" });
+  await page.waitForFunction(() => document.activeElement?.getAttribute("data-testid") === "song-info-toggle");
+  assert.equal(
+    (await savedSummary.locator("dd").first().textContent())?.trim(),
+    "Saved manual title",
+    "save commits the metadata draft before the reverse animation restores the summary"
+  );
+  assert.equal(await manualToggle.getAttribute("aria-expanded"), "false", "save closes the manual editor");
+  assert.equal(
+    await manualToggle.evaluate((node) => document.activeElement === node),
+    true,
+    "save returns focus to the manual adjustment entry"
+  );
+
+  await manualToggle.click();
+  const replacementEditor = aside.getByTestId("song-info-editor");
+  await replacementEditor.waitFor({ state: "visible" });
+  await replacementEditor.locator('input[type="file"]').setInputFiles({
+    name: "committed-two.png",
+    mimeType: "image/png",
+    buffer: tinyPng
+  });
+  await replacementEditor.getByTestId("song-info-save").click();
+  await aside.getByTestId("song-info-summary").waitFor({ state: "visible" });
+  await page.waitForFunction(() => {
+    const audit = window.__songCoverObjectUrlAudit;
+    return Boolean(audit && audit.created.length === 4 && audit.revoked.includes(audit.created[2]));
+  });
+  const objectUrlAudit = await page.evaluate(() => window.__songCoverObjectUrlAudit);
+  assert.deepEqual(
+    objectUrlAudit.revoked,
+    objectUrlAudit.created.slice(0, 3),
+    "replaced drafts, cancelled drafts, and replaced committed covers each release their object URL once"
+  );
+  assert.equal(
+    objectUrlAudit.revoked.includes(objectUrlAudit.created[3]),
+    false,
+    "the currently committed local cover remains usable"
+  );
+
+  await manualToggle.click();
+  const guardedEditor = aside.getByTestId("song-info-editor");
+  await guardedEditor.waitFor({ state: "visible" });
+  await guardedEditor.locator('input:not([type="file"])').first().fill("Stale manual title");
+  const linkInput = page.locator('[data-testid="song-import-alternates"] input:not([type="file"])').first();
+  await linkInput.fill("https://example.com/revision-guard");
+  await page.waitForFunction(() => {
+    const toggle = document.querySelector('[data-testid="song-info-toggle"]');
+    const regionId = toggle?.getAttribute("aria-controls");
+    const region = regionId ? document.getElementById(regionId) : null;
+    return toggle?.getAttribute("aria-expanded") === "false" &&
+      region?.getAttribute("data-song-info-view") === "summary";
+  });
+  const guardedSummary = aside.getByTestId("song-info-summary");
+  await guardedSummary.waitFor({ state: "visible" });
+  assert.equal(
+    (await guardedSummary.locator("dd").first().textContent())?.trim(),
+    "Saved manual title",
+    "an external document revision closes the editor without overwriting newer document state"
+  );
+  assert.equal(await manualToggle.getAttribute("aria-expanded"), "false", "an external document revision resets the editor state");
+  await page.waitForFunction(() => document.activeElement?.getAttribute("data-testid") === "song-info-toggle");
+  await linkInput.fill("");
+  await manualToggle.focus();
+
   await manualToggle.press("Tab");
   assert.equal(
     await nextButton.evaluate((node) => document.activeElement === node),
     true,
-    "Tab follows the visible action order from manual adjustment to Next"
+    "the collapsed action row keeps manual adjustment immediately before Next"
   );
-  await page.keyboard.press("Shift+Tab");
-  assert.equal(
-    await manualToggle.evaluate((node) => document.activeElement === node),
-    true,
-    "reverse Tab returns to the manual song disclosure"
-  );
-  await manualToggle.press("Enter");
-  assert.equal(await manualToggle.getAttribute("aria-expanded"), "false", "manual song details collapse from the keyboard");
-  await manualRegion.waitFor({ state: "hidden" });
+  await page.evaluate(() => {
+    window.__restoreSongCoverObjectUrlAudit?.();
+    delete window.__restoreSongCoverObjectUrlAudit;
+    delete window.__songCoverObjectUrlAudit;
+  });
+}
 
-  await manualToggle.click();
-  await manualRegion.waitFor({ state: "visible" });
-  await page.locator('button[data-step-id="lyrics"]').click();
-  await page.locator('button[data-step-id="link"]').click();
-  assert.equal(await manualToggle.getAttribute("aria-expanded"), "true", "manual song details remain expanded after returning to step one");
-  await manualToggle.click();
-  await manualRegion.waitFor({ state: "hidden" });
+async function assertExamplesSurfaceBehavior() {
+  await setWindowSize(1000, 700);
+  const entry = page.locator('[data-testid="editor-surface"] [data-testid="examples-button"]');
+  await entry.click();
+  const surface = page.getByTestId("examples-surface");
+  await page.locator('[data-testid="examples-surface"][data-surface-state="open"]').waitFor({ state: "visible" });
+  const close = page.getByTestId("examples-close-button");
+  await close.waitFor({ state: "visible" });
+  await page.waitForFunction(() => document.activeElement?.getAttribute("data-testid") === "examples-close-button");
+
+  const geometry = await surface.evaluate((node) => {
+    const header = node.querySelector(".examples-wing__header");
+    const closeButton = node.querySelector('[data-testid="examples-close-button"]');
+    const blur = node.querySelector('[data-testid="examples-bottom-gradual-blur"]');
+    const scroller = node.querySelector(".examples-floor__content-scroll");
+    const lastCard = node.querySelector(".example-song-card:last-child");
+    if (!(node instanceof HTMLElement) || !(header instanceof HTMLElement) ||
+        !(closeButton instanceof HTMLElement) || !(blur instanceof HTMLElement) ||
+        !(scroller instanceof HTMLElement) || !(lastCard instanceof HTMLElement)) return null;
+    scroller.scrollTop = scroller.scrollHeight;
+    const toRect = (element) => {
+      const rect = element.getBoundingClientRect();
+      return { top: rect.top, right: rect.right, bottom: rect.bottom, left: rect.left };
+    };
+    return {
+      surface: toRect(node),
+      header: toRect(header),
+      close: toRect(closeButton),
+      blur: toRect(blur),
+      scroller: toRect(scroller),
+      lastCard: toRect(lastCard),
+      blurPointerEvents: getComputedStyle(blur).pointerEvents,
+      blurBackdropFilter: getComputedStyle(blur).backdropFilter,
+      blurEdge: blur.getAttribute("data-effect-edge"),
+      legacyHeaderCount: node.querySelectorAll(".editor-header").length
+    };
+  });
+  assert.ok(geometry, "examples surface exposes measurable header, scroller, cards, and bottom blur");
+  assert.ok(geometry.close.right <= geometry.surface.right + 0.5, `examples close stays inside the right edge: ${JSON.stringify(geometry)}`);
+  assert.ok(geometry.close.top >= geometry.header.top && geometry.close.bottom <= geometry.header.bottom, "examples close sits in the top header");
+  assert.ok(Math.abs(geometry.blur.bottom - geometry.surface.bottom) <= 0.5, "examples edge blur is anchored to the bottom");
+  assert.equal(geometry.blurEdge, "bottom", "examples use the reversed edge blur");
+  assert.equal(geometry.blurPointerEvents, "none", "examples bottom blur never intercepts card interaction");
+  assert.ok(geometry.blurBackdropFilter.includes("blur("), "examples bottom edge carries the shared backdrop blur");
+  assert.ok(geometry.blur.bottom - geometry.blur.top <= 72.5, "examples bottom blur stays inside the short edge band");
+  assert.equal(geometry.legacyHeaderCount, 0, "examples no longer render the legacy bottom app header");
+  assert.ok(geometry.lastCard.bottom <= geometry.blur.top + 1, `the final card scrolls above the strongest bottom fade: ${JSON.stringify(geometry)}`);
+
+  await page.keyboard.press("Escape");
+  await page.locator('[data-testid="examples-surface"][data-surface-state="closed"]').waitFor({ state: "attached" });
+  await page.waitForFunction(() => document.activeElement?.getAttribute("data-testid") === "examples-button");
+  assert.equal(await entry.evaluate((node) => document.activeElement === node), true, "Escape restores focus to the examples entry");
+
+  await entry.click();
+  await close.waitFor({ state: "visible" });
+  await close.click();
+  await page.locator('[data-testid="examples-surface"][data-surface-state="closed"]').waitFor({ state: "attached" });
+  await page.waitForFunction(() => document.activeElement?.getAttribute("data-testid") === "examples-button");
+  assert.equal(await entry.evaluate((node) => document.activeElement === node), true, "the top-right X restores focus to the examples entry");
 }
 
 async function selectVisualTheme(mode, acrylicEnabled) {
@@ -615,8 +792,8 @@ async function analyzeTitlebarVisualEffect(theme) {
   assert.ok(geometry.titlebar && geometry.effect && geometry.rail && geometry.content, `${theme} exposes measurable titlebar and content geometry`);
   assert.ok(Math.abs(geometry.titlebar.bottom - 48) <= 0.5, `${theme} keeps the measured 48px titlebar edge`);
   assert.ok(geometry.rail.top > geometry.titlebar.bottom, `${theme} places the Stepper rail below the titlebar edge`);
-  assert.ok(geometry.effect.bottom >= geometry.rail.top + 72, `${theme} effect reaches at least 72px into the real Stepper rail`);
-  assert.ok(geometry.effect.bottom < geometry.content.top, `${theme} effect fades before the main content panel begins`);
+  assert.ok(geometry.effect.bottom >= geometry.titlebar.bottom + 20, `${theme} keeps a short progressive fade below the titlebar`);
+  assert.ok(geometry.effect.bottom <= geometry.titlebar.bottom + 24.5, `${theme} releases normal content within 24px below the titlebar`);
 
   const clip = {
     x: 0,
@@ -633,9 +810,25 @@ async function analyzeTitlebarVisualEffect(theme) {
     path: path.join(reportDirectory, `${prefix}-effect-off.png`),
     clip
   });
-  await effect.evaluate((element) => {
+  const originalBackdropFilter = await effect.evaluate((element) => {
     element.style.removeProperty("visibility");
+    const original = {
+      backdropFilter: element.style.getPropertyValue("backdrop-filter"),
+      webkitBackdropFilter: element.style.getPropertyValue("-webkit-backdrop-filter")
+    };
+    element.style.setProperty("backdrop-filter", "none");
+    element.style.setProperty("-webkit-backdrop-filter", "none");
+    return original;
   });
+  await page.waitForTimeout(180);
+  const blurOffBuffer = await page.screenshot({
+    path: path.join(reportDirectory, `${prefix}-blur-off.png`),
+    clip
+  });
+  await effect.evaluate((element, original) => {
+    element.style.setProperty("backdrop-filter", original.backdropFilter);
+    element.style.setProperty("-webkit-backdrop-filter", original.webkitBackdropFilter);
+  }, originalBackdropFilter);
   await page.waitForTimeout(180);
   const onBuffer = await page.screenshot({
     path: path.join(reportDirectory, `${prefix}-effect-on.png`),
@@ -643,7 +836,11 @@ async function analyzeTitlebarVisualEffect(theme) {
   });
   await page.screenshot({ path: path.join(reportDirectory, `${prefix}-final.png`), fullPage: false });
 
-  const images = { off: offBuffer.toString("base64"), on: onBuffer.toString("base64") };
+  const images = {
+    off: offBuffer.toString("base64"),
+    blurOff: blurOffBuffer.toString("base64"),
+    on: onBuffer.toString("base64")
+  };
   const metrics = await page.evaluate(async ({ images: encoded, geometry: measured, clip: crop }) => {
     const loadImage = (base64) => new Promise((resolve, reject) => {
       const image = new Image();
@@ -651,8 +848,15 @@ async function analyzeTitlebarVisualEffect(theme) {
       image.onerror = () => reject(new Error("Could not decode titlebar comparison screenshot"));
       image.src = `data:image/png;base64,${base64}`;
     });
-    const [offImage, onImage] = await Promise.all([loadImage(encoded.off), loadImage(encoded.on)]);
-    if (offImage.width !== onImage.width || offImage.height !== onImage.height) {
+    const [offImage, blurOffImage, onImage] = await Promise.all([
+      loadImage(encoded.off),
+      loadImage(encoded.blurOff),
+      loadImage(encoded.on)
+    ]);
+    if (
+      offImage.width !== onImage.width || offImage.height !== onImage.height ||
+      blurOffImage.width !== onImage.width || blurOffImage.height !== onImage.height
+    ) {
       throw new Error("Titlebar comparison screenshots have different dimensions");
     }
     const canvas = document.createElement("canvas");
@@ -662,6 +866,9 @@ async function analyzeTitlebarVisualEffect(theme) {
     if (!context) throw new Error("Canvas is unavailable for titlebar comparison");
     context.drawImage(offImage, 0, 0);
     const offPixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    context.drawImage(blurOffImage, 0, 0);
+    const blurOffPixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
     context.clearRect(0, 0, canvas.width, canvas.height);
     context.drawImage(onImage, 0, 0);
     const onPixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
@@ -687,6 +894,7 @@ async function analyzeTitlebarVisualEffect(theme) {
     const startY = cssRow(measured.titlebar.bottom - 4);
     const endY = cssRow(measured.effect.bottom);
     let rgbDifference = 0;
+    let blurRgbDifference = 0;
     let rgbSamples = 0;
     for (let y = startY; y <= endY; y += 1) {
       for (let x = 0; x < canvas.width; x += 1) {
@@ -694,6 +902,9 @@ async function analyzeTitlebarVisualEffect(theme) {
         rgbDifference += Math.abs(onPixels[offset] - offPixels[offset]);
         rgbDifference += Math.abs(onPixels[offset + 1] - offPixels[offset + 1]);
         rgbDifference += Math.abs(onPixels[offset + 2] - offPixels[offset + 2]);
+        blurRgbDifference += Math.abs(onPixels[offset] - blurOffPixels[offset]);
+        blurRgbDifference += Math.abs(onPixels[offset + 1] - blurOffPixels[offset + 1]);
+        blurRgbDifference += Math.abs(onPixels[offset + 2] - blurOffPixels[offset + 2]);
         rgbSamples += 3;
       }
     }
@@ -710,8 +921,11 @@ async function analyzeTitlebarVisualEffect(theme) {
     return {
       image: { width: canvas.width, height: canvas.height, scaleX, scaleY },
       meanRgbDifference: rgbDifference / rgbSamples,
+      blurMeanRgbDifference: blurRgbDifference / rgbSamples,
       peakRowDifference: Math.max(...effectRows.slice(startY, endY + 1)),
-      contentRowDifference: sampleDifference(measured.rail.top + 28),
+      transitionRowDifference: sampleDifference(
+        Math.min(measured.effect.bottom - 10, measured.titlebar.bottom + 8)
+      ),
       terminalRowDifference: terminalRows.reduce((sum, value) => sum + value, 0) / terminalRows.length,
       maxAdjacentEffectStep: Math.max(...adjacentSteps),
       maxBoundaryLumaGradient: Math.max(...boundaryGradients)
@@ -747,12 +961,21 @@ async function analyzeTitlebarVisualEffect(theme) {
     Buffer.from(comparisonDataUrl.replace(/^data:image\/png;base64,/, ""), "base64")
   );
 
-  assert.ok(metrics.meanRgbDifference >= 1, `${theme} enabled effect differs measurably from disabled: ${JSON.stringify(metrics)}`);
-  const minimumContentRowDifference = 0.25 * Math.min(2, metrics.image.scaleY);
-  assert.ok(
-    metrics.contentRowDifference >= minimumContentRowDifference,
-    `${theme} effect remains measurable inside the real Stepper rail at ${metrics.image.scaleY}x: ${JSON.stringify(metrics)}`
-  );
+  if (theme.endsWith("-acrylic")) {
+    assert.ok(
+      metrics.meanRgbDifference >= 0.4,
+      `${theme} short enabled effect differs measurably from disabled: ${JSON.stringify(metrics)}`
+    );
+    assert.ok(
+      metrics.blurMeanRgbDifference >= 0.05,
+      `${theme} wrapper backdrop-filter measurably changes pixels beyond the unchanged veil: ${JSON.stringify(metrics)}`
+    );
+    const minimumTransitionRowDifference = 0.15 * Math.min(2, metrics.image.scaleY);
+    assert.ok(
+      metrics.transitionRowDifference >= minimumTransitionRowDifference,
+      `${theme} effect remains measurable inside the short edge transition at ${metrics.image.scaleY}x: ${JSON.stringify(metrics)}`
+    );
+  }
   assert.ok(
     metrics.terminalRowDifference <= Math.max(1.2, metrics.peakRowDifference * 0.32),
     `${theme} effect decays near its lower edge instead of ending as a hard band: ${JSON.stringify(metrics)}`
@@ -1202,6 +1425,7 @@ async function assertUnifiedPreviewChrome(stepId) {
     const gradualBlur = document.querySelector('[data-testid="titlebar-gradual-blur"]');
     const gradualBlurRect = gradualBlur?.getBoundingClientRect();
     const blurLayers = gradualBlur?.querySelectorAll('.desktop-titlebar__blur-layer') ?? [];
+    const gradualBlurStyle = gradualBlur ? getComputedStyle(gradualBlur) : null;
     const actionsRect = actions?.getBoundingClientRect();
     const railRect = rail?.getBoundingClientRect();
     const contentRect = content?.getBoundingClientRect();
@@ -1228,9 +1452,9 @@ async function assertUnifiedPreviewChrome(stepId) {
         top: gradualBlurRect.top,
         bottom: gradualBlurRect.bottom,
         height: gradualBlurRect.height,
-        pointerEvents: getComputedStyle(gradualBlur).pointerEvents,
+        pointerEvents: gradualBlurStyle?.pointerEvents,
         layerCount: blurLayers.length,
-        backdropFilters: [...blurLayers].map((layer) => getComputedStyle(layer).backdropFilter)
+        backdropFilter: gradualBlurStyle?.backdropFilter
       } : null
     };
   });
@@ -1250,19 +1474,19 @@ async function assertUnifiedPreviewChrome(stepId) {
       pointerEvents: result.titlebarBlur.pointerEvents,
       layerCount: result.titlebarBlur.layerCount
     },
-    { height: 144, pointerEvents: "none", layerCount: 1 },
+    { height: 72, pointerEvents: "none", layerCount: 0 },
     `${stepId} keeps the measured gradual titlebar effect without intercepting input`
   );
   assert.ok(
     result.titlebarGeometry && result.titlebarBlur && result.railGeometry && result.contentGeometry &&
       Math.abs(result.titlebarGeometry.bottom - 48) <= 0.5 &&
-      result.titlebarBlur.bottom >= result.railGeometry.top + 72 &&
-      result.titlebarBlur.bottom < result.contentGeometry.top,
-    `${stepId} titlebar effect crosses the real rail boundary and fades before the content panel`
+      result.titlebarBlur.bottom >= result.titlebarGeometry.bottom + 20 &&
+      result.titlebarBlur.bottom <= result.titlebarGeometry.bottom + 24.5,
+    `${stepId} titlebar effect fades shortly after reaching the Stepper rail: ${JSON.stringify(result)}`
   );
   assert.ok(
-    result.titlebarBlur?.backdropFilters.every((filter) => filter.includes("blur(")),
-    `${stepId} applies backdrop blur to every gradual layer`
+    result.titlebarBlur?.backdropFilter.includes("blur("),
+    `${stepId} applies backdrop blur directly to the masked edge wrapper`
   );
 }
 
@@ -1843,6 +2067,7 @@ try {
     BrowserWindow.getAllWindows()[0].getMinimumSize()
   ));
   assert.deepEqual(minimumWindowSize, [1000, 700], "desktop window preserves the 1000px minimum width");
+  await assertExamplesSurfaceBehavior();
   await assertSongSearchBehavior();
   await assertSongImportAsideBehavior();
   await assertFontPickerBehavior();

@@ -34,6 +34,7 @@ for (const file of [
   "components/motion/MotionDialog.tsx",
   "components/editor/SettingsStepper.tsx",
   "components/editor/PreviewPane.tsx",
+  "components/editor/SongImportAside.tsx",
   "components/editor/ExportPanel.tsx"
 ]) {
   const source = readFileSync(resolve(file), "utf8");
@@ -60,6 +61,7 @@ assert.match(exportCelebration, /reduceMotion \|\| !isNewBurst/);
 
 const exportPanel = readFileSync(resolve("components/editor/ExportPanel.tsx"), "utf8");
 const previewPane = readFileSync(resolve("components/editor/PreviewPane.tsx"), "utf8");
+const songImportAside = readFileSync(resolve("components/editor/SongImportAside.tsx"), "utf8");
 const lyricCardPreview = readFileSync(resolve("components/preview/LyricCardPreview.tsx"), "utf8");
 const lyricEditor = readFileSync(resolve("components/editor/LyricEditor.tsx"), "utf8");
 const appToast = readFileSync(resolve("components/feedback/AppToast.tsx"), "utf8");
@@ -78,6 +80,11 @@ assert.match(previewPane, /mode="popLayout"/);
 assert.match(previewPane, /initial=\{reduceMotion \? false : \{ opacity: 0, x: 72 \}\}/);
 assert.match(previewPane, /exit=\{reduceMotion \? \{ opacity: 0, x: 0 \} : \{ opacity: 0, x: -72 \}\}/);
 assert.match(previewPane, /measurementKey=\{measurementKey\}/);
+assert.match(songImportAside, /mode="popLayout"/);
+assert.match(songImportAside, /key="song-info-editor"[\s\S]*?initial=\{reduceMotion \? \{ opacity: 0, x: 0 \} : \{ opacity: 0, x: 72 \}\}/);
+assert.match(songImportAside, /key="song-info-editor"[\s\S]*?exit=\{reduceMotion \? \{ opacity: 0, x: 0 \} : \{ opacity: 0, x: 72 \}\}/);
+assert.match(songImportAside, /key="song-info-summary"[\s\S]*?initial=\{reduceMotion \? \{ opacity: 0, x: 0 \} : \{ opacity: 0, x: -72 \}\}/);
+assert.match(songImportAside, /key="song-info-summary"[\s\S]*?exit=\{reduceMotion \? \{ opacity: 0, x: 0 \} : \{ opacity: 0, x: -72 \}\}/);
 assert.match(lyricCardPreview, /rect\.top >= window\.innerHeight/);
 assert.match(lyricCardPreview, /\}, \[measurementKey\]\);/);
 assert.match(lyricEditor, /onAnimationComplete=\{\(\) => \{[\s\S]*?setPreviewMeasurementKey/);
@@ -98,4 +105,4 @@ assert.match(globals, /@media \(hover: hover\) and \(pointer: fine\)/);
 assert.match(globals, /not\(\.traffic-light\):not\(\.example-song-card\):hover/);
 assert.match(globals, /not\(\.traffic-light\):not\(\.example-song-card\):hover:active/);
 
-console.log(JSON.stringify({ ok: true, motionSystemRegressionChecks: 47 }, null, 2));
+console.log(JSON.stringify({ ok: true, motionSystemRegressionChecks: 52 }, null, 2));

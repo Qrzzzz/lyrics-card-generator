@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { ExportPanel } from "@/components/editor/ExportPanel";
 import { LocalAudioParser } from "@/components/editor/LocalAudioParser";
 import { LyricsFetchPanel } from "@/components/editor/LyricsFetchPanel";
@@ -20,6 +20,7 @@ import type { ExportQualityId } from "@/lib/settings/types";
 import type { ExportLyricLineStatus } from "@/lib/lyrics-document";
 import type { AISettingsSummary, AITranslationPhase } from "@/lib/ai/types";
 import type { createT } from "@/lib/i18n";
+import { revokeReplacedBlobUrl } from "@/lib/object-url-lifecycle";
 import type { DocumentImportIntent, DocumentImportKind } from "@/lib/editor/document-transactions";
 import type {
   AppState,
@@ -93,7 +94,83 @@ export function useEditorSteps({
   handlers
 }: UseEditorStepsInput): SettingsStep[] {
   const [songInfoExpanded, setSongInfoExpanded] = useState(false);
+  const [songInfoDraft, setSongInfoDraft] = useState<SongInfo>(() => ({ ...state.song }));
+  const [songInfoEditRevision, setSongInfoEditRevision] = useState<number | null>(null);
   const songInfoRegionId = useId();
+  const songInfoToggleRef = useRef<HTMLButtonElement | null>(null);
+  const songInfoDraftCoverRef = useRef(state.song.coverUrl ?? "");
+
+  function restoreSongInfoToggleFocus() {
+    window.requestAnimationFrame(() => songInfoToggleRef.current?.focus({ preventScroll: true }));
+  }
+
+  function discardSongInfoDraft() {
+    revokeReplacedBlobUrl(songInfoDraftCoverRef.current, state.song.coverUrl);
+  }
+
+  function syncSongInfoDraft(song: SongInfo) {
+    songInfoDraftCoverRef.current = song.coverUrl ?? "";
+    setSongInfoDraft(song);
+  }
+
+  function updateSongInfoDraft(song: SongInfo) {
+    const nextCoverUrl = song.coverUrl ?? "";
+    revokeReplacedBlobUrl(
+      songInfoDraftCoverRef.current,
+      nextCoverUrl,
+      state.song.coverUrl
+    );
+    songInfoDraftCoverRef.current = nextCoverUrl;
+    setSongInfoDraft(song);
+  }
+
+  function closeSongInfoEditor() {
+    discardSongInfoDraft();
+    syncSongInfoDraft(state.song);
+    setSongInfoEditRevision(null);
+    setSongInfoExpanded(false);
+    restoreSongInfoToggleFocus();
+  }
+
+  function toggleSongInfoEditor() {
+    if (songInfoExpanded) {
+      closeSongInfoEditor();
+      return;
+    }
+
+    syncSongInfoDraft(state.song);
+    setSongInfoEditRevision(documentRevision);
+    setSongInfoExpanded(true);
+  }
+
+  function saveSongInfoEditor() {
+    if (songInfoEditRevision !== documentRevision) {
+      closeSongInfoEditor();
+      return;
+    }
+
+    handlers.onSongChange({ ...songInfoDraft });
+    setSongInfoEditRevision(null);
+    setSongInfoExpanded(false);
+    restoreSongInfoToggleFocus();
+  }
+
+  useEffect(() => {
+    if (!songInfoExpanded) {
+      syncSongInfoDraft(state.song);
+      return;
+    }
+
+    if (songInfoEditRevision === documentRevision) {
+      return;
+    }
+
+    discardSongInfoDraft();
+    syncSongInfoDraft(state.song);
+    setSongInfoEditRevision(null);
+    setSongInfoExpanded(false);
+    window.requestAnimationFrame(() => songInfoToggleRef.current?.focus({ preventScroll: true }));
+  }, [documentRevision, songInfoEditRevision, songInfoExpanded, state.song]);
 
   return [
     {
@@ -104,10 +181,11 @@ export function useEditorSteps({
       isComplete: Boolean(state.url.trim() || state.song.title.trim() || state.song.artist.trim() || state.song.coverUrl?.trim()),
       secondaryAction: {
         label: t("manualOverride"),
-        onClick: () => setSongInfoExpanded((expanded) => !expanded),
+        onClick: toggleSongInfoEditor,
         expanded: songInfoExpanded,
         controls: songInfoRegionId,
-        testId: "song-info-toggle"
+        testId: "song-info-toggle",
+        buttonRef: songInfoToggleRef
       },
       content: (
         <div className="song-import-primary grid gap-4" data-testid="song-search-primary">
@@ -139,11 +217,12 @@ export function useEditorSteps({
       aside: (
         <SongImportAside
           song={state.song}
+          locale={state.locale}
           t={t}
           manualForm={(
             <SongInfoForm
-              song={state.song}
-              onSongChange={handlers.onSongChange}
+              song={songInfoDraft}
+              onSongChange={updateSongInfoDraft}
               t={t}
               showToggle={false}
               forceEnabled
@@ -151,6 +230,8 @@ export function useEditorSteps({
           )}
           manualExpanded={songInfoExpanded}
           manualRegionId={songInfoRegionId}
+          onSave={saveSongInfoEditor}
+          onCancel={closeSongInfoEditor}
         />
       )
     },
