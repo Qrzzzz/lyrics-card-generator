@@ -75,6 +75,25 @@ try {
     assert.equal(providerCalls, providerCallsBefore, `${name} boundary cases do not contact an upstream service`);
   }
 
+  const normalizedLoopbackRequest = new Request(`http://localhost:3210/api/parse-song`, {
+    method: "POST",
+    headers: createAppRequestHeaders({
+      origin: APP_ORIGIN,
+      host: "127.0.0.1:3210",
+      "x-forwarded-host": "127.0.0.1:3210",
+      "x-forwarded-proto": "http",
+      "content-type": "application/json"
+    }),
+    body: "{}"
+  });
+  const acceptedNormalizedLoopback = await parseSong(normalizedLoopbackRequest);
+  assert.equal(
+    acceptedNormalizedLoopback.status,
+    400,
+    "Next localhost-normalized request URL accepts the external 127.0.0.1 origin"
+  );
+  assert.equal((await acceptedNormalizedLoopback.json() as { code?: string }).code, "invalid_request");
+
   const crossSiteForm = new FormData();
   const rejectedCrossSiteForm = await parseLocalAudio(formRequest(crossSiteForm, CROSS_SITE_ORIGIN));
   await assertStandardRejection(rejectedCrossSiteForm, 403, "cross_origin_request", "parse-local-audio cross-site origin");
@@ -96,6 +115,18 @@ try {
     403,
     "missing_app_request_marker",
     "missing app request marker"
+  );
+
+  const missingOrigin = new Request(`${APP_ORIGIN}/api/parse-song`, {
+    method: "POST",
+    headers: createAppRequestHeaders({ "content-type": "application/json" }),
+    body: "{}"
+  });
+  await assertStandardRejection(
+    await parseSong(missingOrigin),
+    403,
+    "cross_origin_request",
+    "missing Origin is rejected"
   );
 
   const fetchSiteMismatch = jsonRequest("/api/parse-song", {}, { secFetchSite: "cross-site" });

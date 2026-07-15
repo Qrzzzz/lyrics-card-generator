@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v5.6.0.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v5.6.1.zh-CN.md">发布说明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">在线 Web Lite 版</a> ·
   <a href="./docs/desktop.md">桌面维护文档</a> ·
   <a href="#主要功能">主要功能</a> ·
@@ -49,24 +49,23 @@
 
 请前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下载最新版：
 
-* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 5.6.0.exe`
-* 不想安装时可下载便携版：`Lyrics Card Generator-5.6.0-portable.exe`
+* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 5.6.1.exe`
+* 不想安装时可下载便携版：`Lyrics Card Generator-5.6.1-portable.exe`
 
 安装版适合长期使用；便携版适合临时运行、测试或放在移动硬盘中使用。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v5.6.0 更新重点
+### v5.6.1 更新重点
 
-* “歌词示例”现在复用“设置”式顶部标题栏和右上角关闭按钮，移除底部大型应用标题框架，内部示例卡片保持不变。
-* 修复单层窗口边缘渐变的重复遮罩，让标题栏渐隐完整呈现，并将反向效果复用到“歌词示例”底部。
-* 第一步“手动调整”改为草稿式编辑：歌曲信息预览向左滑出，编辑页从右侧进入；保存应用草稿，取消放弃草稿，两者都以反向动画返回。
-* GitHub Actions 的 Node.js 20 → 24 固定 SHA 提示留作 5.6.0 开发周期内的独立评估；本次未修改 workflows。
+* 修复 v5.5.4 请求边界把浏览器的 `127.0.0.1` 来源与 Next 内部的 `localhost` 路由地址误判为跨域的问题。
+* 恢复“搜索网易云音乐”、搜索结果详情与歌词导入，以及 Spotify、Apple Music、网易云音乐和 QQ 音乐链接解析。
+* 保留应用请求标记、内容格式校验及明确跨站请求拒绝；编辑、导入和导出界面保持不变。
 
 ## 🌐 多语言发布说明
 
 GitHub Release 默认展示简体中文摘要，完整说明见：
-[简体中文](./docs/releases/v5.6.0.zh-CN.md) · [繁體中文](./docs/releases/v5.6.0.zh-TW.md) · [English](./docs/releases/v5.6.0.en.md) · [Français](./docs/releases/v5.6.0.fr.md) · [日本語](./docs/releases/v5.6.0.ja.md) · [Español](./docs/releases/v5.6.0.es.md)
+[简体中文](./docs/releases/v5.6.1.zh-CN.md) · [繁體中文](./docs/releases/v5.6.1.zh-TW.md) · [English](./docs/releases/v5.6.1.en.md) · [Français](./docs/releases/v5.6.1.fr.md) · [日本語](./docs/releases/v5.6.1.ja.md) · [Español](./docs/releases/v5.6.1.es.md)
 
 <a id="主要功能"></a>
 

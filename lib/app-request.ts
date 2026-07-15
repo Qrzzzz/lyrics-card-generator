@@ -25,7 +25,7 @@ export function validateAppMutationRequest(
   request: Request,
   expectedMediaType: AppMutationMediaType
 ): AppMutationRejection | null {
-  if (!hasSameOrigin(request)) {
+  if (!hasAllowedRequestOrigin(request)) {
     return { ok: false, code: "cross_origin_request", status: 403 };
   }
 
@@ -45,15 +45,35 @@ export function appMutationRejectionResponse(rejection: AppMutationRejection) {
   return appApiErrorResponse(rejection.code, rejection.status);
 }
 
-function hasSameOrigin(request: Request) {
+function hasAllowedRequestOrigin(request: Request) {
+  if (request.headers.get("sec-fetch-site")?.trim().toLowerCase() === "cross-site") {
+    return false;
+  }
+
   const origin = request.headers.get("origin");
-  if (!origin || request.headers.get("sec-fetch-site") === "cross-site") {
+  if (!origin) {
     return false;
   }
 
   try {
-    return new URL(origin).origin === new URL(request.url).origin;
+    return new URL(origin).origin === getExternalRequestOrigin(request);
   } catch {
     return false;
   }
+}
+
+function getExternalRequestOrigin(request: Request) {
+  const requestUrl = new URL(request.url);
+  const forwardedHost = firstForwardedValue(request.headers.get("x-forwarded-host"));
+  const host = forwardedHost || request.headers.get("host")?.trim();
+  const forwardedProto = firstForwardedValue(request.headers.get("x-forwarded-proto")).toLowerCase();
+  const protocol = forwardedProto === "http" || forwardedProto === "https"
+    ? `${forwardedProto}:`
+    : requestUrl.protocol;
+
+  return host ? new URL(`${protocol}//${host}`).origin : requestUrl.origin;
+}
+
+function firstForwardedValue(value: string | null) {
+  return value?.split(",", 1)[0]?.trim() ?? "";
 }
