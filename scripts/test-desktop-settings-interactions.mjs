@@ -654,6 +654,13 @@ async function assertSongImportAsideBehavior() {
   await guardedEditor.locator('input:not([type="file"])').first().fill("Stale manual title");
   const linkInput = page.locator('[data-testid="song-import-alternates"] input:not([type="file"])').first();
   await linkInput.fill("https://example.com/revision-guard");
+  await page.waitForFunction(() => {
+    const toggle = document.querySelector('[data-testid="song-info-toggle"]');
+    const regionId = toggle?.getAttribute("aria-controls");
+    const region = regionId ? document.getElementById(regionId) : null;
+    return toggle?.getAttribute("aria-expanded") === "false" &&
+      region?.getAttribute("data-song-info-view") === "summary";
+  });
   const guardedSummary = aside.getByTestId("song-info-summary");
   await guardedSummary.waitFor({ state: "visible" });
   assert.equal(
