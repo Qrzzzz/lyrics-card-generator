@@ -4,7 +4,7 @@
 
 ### 生成可用于分享的高质感歌词分享卡片
 
-**Spotify / Apple Music / 网易云音乐 / QQ 音乐 · Windows 桌面应用 · 高清 PNG 导出 · 多语言文档**
+**Spotify / Apple Music / 网易云音乐 / QQ 音乐 · Windows 桌面应用 · 高清 PNG / WebP / JPG 导出 · 多语言文档**
 
 <p>
   <strong>语言</strong><br/>
@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v5.6.1.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v5.6.2.zh-CN.md">发布说明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">在线 Web Lite 版</a> ·
   <a href="./docs/desktop.md">桌面维护文档</a> ·
   <a href="#主要功能">主要功能</a> ·
@@ -30,7 +30,7 @@
 ![Platform](https://img.shields.io/badge/Platform-Windows%20Desktop-111827)
 ![Stack](https://img.shields.io/badge/Stack-Next.js%20%2B%20React%20%2B%20TypeScript-0F766E)
 ![Desktop](https://img.shields.io/badge/Desktop-Electron-1D4ED8)
-![Output](https://img.shields.io/badge/Output-PNG-FF5722)
+![Output](https://img.shields.io/badge/Output-PNG%20%2F%20WebP%20%2F%20JPG-FF5722)
 ![Docs](https://img.shields.io/badge/Docs-6%20Languages-7C3AED)
 ![Release](https://img.shields.io/github/v/release/Qrzzzz/lyrics-card-generator?include_prereleases)
 
@@ -49,23 +49,23 @@
 
 请前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下载最新版：
 
-* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 5.6.1.exe`
-* 不想安装时可下载便携版：`Lyrics Card Generator-5.6.1-portable.exe`
+* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 5.6.2.exe`
+* 不想安装时可下载便携版：`Lyrics Card Generator-5.6.2-portable.exe`
 
 安装版适合长期使用；便携版适合临时运行、测试或放在移动硬盘中使用。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v5.6.1 更新重点
+### v5.6.2 更新重点
 
-* 修复 v5.5.4 请求边界把浏览器的 `127.0.0.1` 来源与 Next 内部的 `localhost` 路由地址误判为跨域的问题。
-* 恢复“搜索网易云音乐”、搜索结果详情与歌词导入，以及 Spotify、Apple Music、网易云音乐和 QQ 音乐链接解析。
-* 保留应用请求标记、内容格式校验及明确跨站请求拒绝；编辑、导入和导出界面保持不变。
+* 第 3 至第 6 步的实时预览新增随指针倾斜、悬停抬升和按压回弹；触控设备与减弱动效模式会自动使用稳定的静态反馈。
+* 第 5 步进入第 6 步时，整组工作台向左平移，让预览从右侧连续移动到左侧、导出设置从右侧进入；反向切换与小窗口布局同样受支持。
+* 桌面版与 Web Lite 均可真实导出 PNG、WebP 和 JPG，并在设置中持久化默认格式；导出仍使用独立快照，交互动效不会进入成品。
 
 ## 🌐 多语言发布说明
 
 GitHub Release 默认展示简体中文摘要，完整说明见：
-[简体中文](./docs/releases/v5.6.1.zh-CN.md) · [繁體中文](./docs/releases/v5.6.1.zh-TW.md) · [English](./docs/releases/v5.6.1.en.md) · [Français](./docs/releases/v5.6.1.fr.md) · [日本語](./docs/releases/v5.6.1.ja.md) · [Español](./docs/releases/v5.6.1.es.md)
+[简体中文](./docs/releases/v5.6.2.zh-CN.md) · [繁體中文](./docs/releases/v5.6.2.zh-TW.md) · [English](./docs/releases/v5.6.2.en.md) · [Français](./docs/releases/v5.6.2.fr.md) · [日本語](./docs/releases/v5.6.2.ja.md) · [Español](./docs/releases/v5.6.2.es.md)
 
 <a id="主要功能"></a>
 
@@ -77,7 +77,7 @@ GitHub Release 默认展示简体中文摘要，完整说明见：
 * 支持竖版、横版和自定义画布尺寸
 * 横版布局基于安全区域重构，封面列、内容列和底部信息更稳定
 * 竖版自定义尺寸支持基于真实 DOM 测量的自动宽度与自动高度
-* 支持导出高清 PNG 图片
+* 支持导出高清 PNG、WebP 和 JPG 图片
 
 ### 📝 歌词排版与翻译
 
@@ -124,7 +124,7 @@ GitHub Release 默认展示简体中文摘要，完整说明见：
 * 上传本地封面
 * 解析本地 MP3 / FLAC 文件中的元数据和内嵌歌词
 * 调整样式
-* 生成和导出 PNG 图片
+* 生成并导出 PNG、WebP 和 JPG 图片
 
 以下功能需要联网：
 
@@ -143,7 +143,7 @@ GitHub Release 默认展示简体中文摘要，完整说明见：
 4. 编辑歌词和翻译；可使用 AI 翻译，也可将原文 / 译文交替行按当前界面语言自动拆分。
 5. 调整画布比例、字体方案（中日韩 / 西文）、字号、颜色、边框、水印等样式。
 6. 在右侧预览卡片。
-7. 点击“完成并导出”，保存 PNG 图片。
+7. 选择 PNG、WebP 或 JPG，点击“完成并导出”保存图片。
 
 ## 🔄 检查更新
 

@@ -56,9 +56,12 @@ async function jsonAndLocalReconciliation() {
     const storage = new MemoryStorage();
     const saves: AppPreferencesRecord[] = [];
     storage.setItem(APP_PREFERENCES_STORAGE_KEY, JSON.stringify(record(2, 20, "en")));
-    installWindow(storage, record(3, 10, "ja"), saves);
+    const desktopRecord = record(3, 10, "ja");
+    desktopRecord.userSettings.defaultExportFormat = "webp";
+    installWindow(storage, desktopRecord, saves);
     const loaded = await loadAppPreferences();
     assert.equal(loaded.locale, "ja", "newer desktop JSON wins");
+    assert.equal(loaded.userSettings.defaultExportFormat, "webp", "the saved default export format survives desktop reconciliation");
     assert.equal(JSON.parse(storage.getItem(APP_PREFERENCES_STORAGE_KEY)!).locale, "ja");
     assert.equal(saves.length, 0);
   }
@@ -112,13 +115,15 @@ async function rapidSavesAreMonotonic() {
   const storage = new MemoryStorage();
   const saves: AppPreferencesRecord[] = [];
   installWindow(storage, null, saves);
+  const jpgSettings = { ...DEFAULT_USER_SETTINGS, defaultExportFormat: "jpg" as const };
   await Promise.all([
     saveAppPreferences("en", DEFAULT_USER_SETTINGS),
     saveAppPreferences("fr", DEFAULT_USER_SETTINGS),
-    saveAppPreferences("ja", DEFAULT_USER_SETTINGS)
+    saveAppPreferences("ja", jpgSettings)
   ]);
   assert.deepEqual(saves.map(({ revision }) => revision), [1, 2, 3]);
   assert.equal(JSON.parse(storage.getItem(APP_PREFERENCES_STORAGE_KEY)!).locale, "ja");
+  assert.equal(JSON.parse(storage.getItem(APP_PREFERENCES_STORAGE_KEY)!).userSettings.defaultExportFormat, "jpg");
 }
 
 void (async () => {

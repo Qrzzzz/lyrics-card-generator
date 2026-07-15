@@ -23,7 +23,7 @@ const zh = {
   uploadCover: "上传本地封面",
   coverHint: "本地图片最稳定；远程图片必须允许匿名跨域读取。",
   noticeTitle: "Web Lite 功能范围",
-  noticeBody: "Web Lite 支持手动编辑、实时预览和本地 PNG 导出。歌曲搜索、音乐链接解析、本地音频信息、在线歌词和 AI 翻译请使用桌面版。",
+  noticeBody: "Web Lite 支持手动编辑、实时预览和本地 PNG、WebP、JPG 导出。歌曲搜索、音乐链接解析、本地音频信息、在线歌词和 AI 翻译请使用桌面版。",
   downloadDesktop: "下载桌面版",
   fontTitle: "字体方案",
   fontDescription: "内置字体的输出更一致；系统字体会因设备而异。",
@@ -36,8 +36,8 @@ const zh = {
   selected: "已选择",
   exportStandard: "标准",
   exportHigh: "高清",
-  exportReady: "PNG 已开始下载。",
-  exportFailed: "PNG 导出失败。请检查封面后重试。",
+  exportReady: "图片已开始下载。",
+  exportFailed: "图片导出失败。请检查封面后重试。",
   remoteCoverApplyFailed: "封面检查失败，请改为上传本地图片。"
 };
 
@@ -66,7 +66,7 @@ export const webLiteCopy: Record<WebLiteLocale, WebLiteCopyShape> = {
     uploadCover: "上傳本機封面",
     coverHint: "本機圖片最穩定；遠端圖片必須允許匿名跨來源讀取。",
     noticeTitle: "Web Lite 功能範圍",
-    noticeBody: "Web Lite 支援手動編輯、即時預覽與本機 PNG 匯出。歌曲搜尋、音樂連結解析、本機音訊資訊、線上歌詞與 AI 翻譯請使用桌面版。",
+    noticeBody: "Web Lite 支援手動編輯、即時預覽與本機 PNG、WebP、JPG 匯出。歌曲搜尋、音樂連結解析、本機音訊資訊、線上歌詞與 AI 翻譯請使用桌面版。",
     downloadDesktop: "下載桌面版",
     fontTitle: "字型方案",
     fontDescription: "內建字型的輸出較一致；系統字型會因裝置而異。",
@@ -79,8 +79,8 @@ export const webLiteCopy: Record<WebLiteLocale, WebLiteCopyShape> = {
     selected: "已選取",
     exportStandard: "標準",
     exportHigh: "高畫質",
-    exportReady: "PNG 已開始下載。",
-    exportFailed: "PNG 匯出失敗。請檢查封面後再試一次。",
+    exportReady: "圖片已開始下載。",
+    exportFailed: "圖片匯出失敗。請檢查封面後再試一次。",
     remoteCoverApplyFailed: "封面檢查失敗，請改為上傳本機圖片。"
   },
   en: {
@@ -104,7 +104,7 @@ export const webLiteCopy: Record<WebLiteLocale, WebLiteCopyShape> = {
     uploadCover: "Upload local cover",
     coverHint: "Local images are most reliable. Remote images must allow anonymous cross-origin access.",
     noticeTitle: "What Web Lite supports",
-    noticeBody: "Web Lite supports manual editing, live preview, and local PNG export. Use the desktop app for song search, music-link parsing, local-audio metadata, online lyrics, and AI translation.",
+    noticeBody: "Web Lite supports manual editing, live preview, and local PNG, WebP, and JPG export. Use the desktop app for song search, music-link parsing, local-audio metadata, online lyrics, and AI translation.",
     downloadDesktop: "Download desktop app",
     fontTitle: "Font scheme",
     fontDescription: "Bundled fonts produce consistent output; system fonts vary by device.",
@@ -117,8 +117,8 @@ export const webLiteCopy: Record<WebLiteLocale, WebLiteCopyShape> = {
     selected: "Selected",
     exportStandard: "Standard",
     exportHigh: "High",
-    exportReady: "PNG download started.",
-    exportFailed: "PNG export failed. Check the cover and try again.",
+    exportReady: "Image download started.",
+    exportFailed: "Image export failed. Check the cover and try again.",
     remoteCoverApplyFailed: "The cover check failed. Upload the image locally instead."
   },
   fr: {
@@ -142,7 +142,7 @@ export const webLiteCopy: Record<WebLiteLocale, WebLiteCopyShape> = {
     uploadCover: "Importer une pochette",
     coverHint: "Une image locale est plus fiable. Une image distante doit autoriser l’accès anonyme entre origines.",
     noticeTitle: "Fonctions de Web Lite",
-    noticeBody: "Web Lite permet la saisie manuelle, l’aperçu en direct et l’export PNG local. Utilisez l’application de bureau pour la recherche de morceaux, l’analyse de liens, les métadonnées audio locales, les paroles en ligne et la traduction par IA.",
+    noticeBody: "Web Lite permet la saisie manuelle, l’aperçu en direct et l’export local en PNG, WebP et JPG. Utilisez l’application de bureau pour la recherche de morceaux, l’analyse de liens, les métadonnées audio locales, les paroles en ligne et la traduction par IA.",
     downloadDesktop: "Télécharger l’application de bureau",
     fontTitle: "Jeu de polices",
     fontDescription: "Les polices intégrées donnent un résultat constant ; les polices système varient selon l’appareil.",
@@ -155,8 +155,8 @@ export const webLiteCopy: Record<WebLiteLocale, WebLiteCopyShape> = {
     selected: "Sélectionnée",
     exportStandard: "Standard",
     exportHigh: "Élevée",
-    exportReady: "Le téléchargement du PNG a commencé.",
-    exportFailed: "Échec de l’export PNG. Vérifiez la pochette et réessayez.",
+    exportReady: "Le téléchargement de l’image a commencé.",
+    exportFailed: "Échec de l’export de l’image. Vérifiez la pochette et réessayez.",
     remoteCoverApplyFailed: "La vérification de la pochette a échoué. Importez plutôt une image locale."
   },
   ja: {
@@ -180,7 +180,7 @@ export const webLiteCopy: Record<WebLiteLocale, WebLiteCopyShape> = {
     uploadCover: "画像をアップロード",
     coverHint: "端末の画像が最も確実です。外部画像は匿名のクロスオリジンアクセスを許可している必要があります。",
     noticeTitle: "Web Lite で使える機能",
-    noticeBody: "Web Lite では手動編集、リアルタイムプレビュー、端末への PNG 書き出しができます。曲の検索、音楽リンクの解析、音声ファイルの情報、オンライン歌詞、AI 翻訳にはデスクトップ版を使用してください。",
+    noticeBody: "Web Lite では手動編集、リアルタイムプレビュー、端末への PNG、WebP、JPG 書き出しができます。曲の検索、音楽リンクの解析、音声ファイルの情報、オンライン歌詞、AI 翻訳にはデスクトップ版を使用してください。",
     downloadDesktop: "デスクトップ版をダウンロード",
     fontTitle: "フォント設定",
     fontDescription: "内蔵フォントは同じ結果になります。システムフォントは端末によって変わります。",
@@ -193,8 +193,8 @@ export const webLiteCopy: Record<WebLiteLocale, WebLiteCopyShape> = {
     selected: "選択中",
     exportStandard: "標準",
     exportHigh: "高画質",
-    exportReady: "PNG のダウンロードを開始しました。",
-    exportFailed: "PNG の書き出しに失敗しました。画像を確認して、もう一度お試しください。",
+    exportReady: "画像のダウンロードを開始しました。",
+    exportFailed: "画像の書き出しに失敗しました。画像を確認して、もう一度お試しください。",
     remoteCoverApplyFailed: "画像の確認に失敗しました。端末からアップロードしてください。"
   },
   es: {
@@ -218,7 +218,7 @@ export const webLiteCopy: Record<WebLiteLocale, WebLiteCopyShape> = {
     uploadCover: "Subir portada",
     coverHint: "Las imágenes locales son más fiables. Las remotas deben permitir el acceso anónimo entre orígenes.",
     noticeTitle: "Funciones de Web Lite",
-    noticeBody: "Web Lite permite editar manualmente, ver los cambios al instante y exportar un PNG local. Usa la aplicación de escritorio para buscar canciones, analizar enlaces, leer metadatos de audio local, obtener letras en línea y traducir con IA.",
+    noticeBody: "Web Lite permite editar manualmente, ver los cambios al instante y exportar archivos PNG, WebP y JPG de forma local. Usa la aplicación de escritorio para buscar canciones, analizar enlaces, leer metadatos de audio local, obtener letras en línea y traducir con IA.",
     downloadDesktop: "Descargar aplicación de escritorio",
     fontTitle: "Conjunto de fuentes",
     fontDescription: "Las fuentes incluidas mantienen el resultado; las del sistema varían según el dispositivo.",
@@ -231,8 +231,8 @@ export const webLiteCopy: Record<WebLiteLocale, WebLiteCopyShape> = {
     selected: "Seleccionada",
     exportStandard: "Estándar",
     exportHigh: "Alta",
-    exportReady: "Se inició la descarga del PNG.",
-    exportFailed: "No se pudo exportar el PNG. Revisa la portada e inténtalo de nuevo.",
+    exportReady: "Se inició la descarga de la imagen.",
+    exportFailed: "No se pudo exportar la imagen. Revisa la portada e inténtalo de nuevo.",
     remoteCoverApplyFailed: "No se pudo comprobar la portada. Súbela desde el dispositivo."
   }
 };

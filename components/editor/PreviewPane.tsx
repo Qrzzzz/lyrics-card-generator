@@ -21,6 +21,7 @@ type PreviewPaneProps = {
   fontSchemePreview: FontScheme | null;
   clearTransitionKey: number;
   measurementKey?: number;
+  pressureEnabled?: boolean;
   locale: Locale;
   t: ReturnType<typeof createT>;
 };
@@ -35,6 +36,7 @@ export function PreviewPane({
   fontSchemePreview,
   clearTransitionKey,
   measurementKey = 0,
+  pressureEnabled = true,
   locale,
   t
 }: PreviewPaneProps) {
@@ -109,6 +111,7 @@ export function PreviewPane({
                   sticky={false}
                   t={t}
                   measurementKey={measurementKey}
+                  pressureEnabled={pressureEnabled}
                 />
               </motion.div>
             </MotionPresence>

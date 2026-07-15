@@ -4,7 +4,7 @@
 
 ### 生成可用於分享的高質感歌詞分享卡片
 
-**Spotify / Apple Music / 網易雲音樂 / QQ 音樂 · Windows 桌面應用程式 · 高清 PNG 匯出 · 多語言文件**
+**Spotify / Apple Music / 網易雲音樂 / QQ 音樂 · Windows 桌面應用程式 · 高清 PNG / WebP / JPG 匯出 · 多語言文件**
 
 <p>
   <strong>語言</strong><br/>
@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v5.6.1.zh-TW.md">發布說明</a> ·
+  <a href="./docs/releases/v5.6.2.zh-TW.md">發布說明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">線上 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="#本機開發">本機開發</a> ·
@@ -29,7 +29,7 @@
 ![Platform](https://img.shields.io/badge/Platform-Windows%20Desktop-111827)
 ![Stack](https://img.shields.io/badge/Stack-Next.js%20%2B%20React%20%2B%20TypeScript-0F766E)
 ![Desktop](https://img.shields.io/badge/Desktop-Electron-1D4ED8)
-![Output](https://img.shields.io/badge/Output-PNG-FF5722)
+![Output](https://img.shields.io/badge/Output-PNG%20%2F%20WebP%20%2F%20JPG-FF5722)
 ![Docs](https://img.shields.io/badge/Docs-6%20Languages-7C3AED)
 ![Release](https://img.shields.io/github/v/release/Qrzzzz/lyrics-card-generator?include_prereleases)
 
@@ -48,23 +48,23 @@
 
 請前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載最新版：
 
-* 建議一般使用者下載安裝版：`Lyrics Card Generator Setup 5.6.1.exe`
-* 不想安裝時可下載可攜版：`Lyrics Card Generator-5.6.1-portable.exe`
+* 建議一般使用者下載安裝版：`Lyrics Card Generator Setup 5.6.2.exe`
+* 不想安裝時可下載可攜版：`Lyrics Card Generator-5.6.2-portable.exe`
 
 安裝版適合長期使用；可攜版適合臨時執行、測試或放在隨身碟中使用。
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v5.6.1 更新重點
+### v5.6.2 更新重點
 
-* 修正 v5.5.4 的請求邊界把瀏覽器的 `127.0.0.1` 來源與 Next 內部的 `localhost` 路由位址誤判為跨來源的問題。
-* 恢復「搜尋網易雲音樂」、搜尋結果詳情與歌詞匯入，以及 Spotify、Apple Music、網易雲音樂和 QQ 音樂連結解析。
-* 保留應用程式請求標記、內容格式檢查與明確跨站請求拒絕；編輯、匯入和匯出介面維持不變。
+* 第 3 至第 6 步的即時預覽新增指標傾斜、懸停抬升與按壓回彈；觸控裝置與減少動態效果模式會自動改用穩定的靜態回饋。
+* 從第 5 步進入第 6 步時，整組工作台會向左平移，讓預覽由右側連續移至左側、匯出設定由右側進入；反向切換與小視窗版面同樣適用。
+* 桌面版與 Web Lite 均可實際匯出 PNG、WebP 與 JPG，並在設定中保存預設格式；匯出仍使用獨立快照，互動效果不會進入成品。
 
 ## 🌐 多語言發佈說明
 
 GitHub Release 預設顯示簡體中文摘要，完整說明請見：
-[简体中文](./docs/releases/v5.6.1.zh-CN.md) · [繁體中文](./docs/releases/v5.6.1.zh-TW.md) · [English](./docs/releases/v5.6.1.en.md) · [Français](./docs/releases/v5.6.1.fr.md) · [日本語](./docs/releases/v5.6.1.ja.md) · [Español](./docs/releases/v5.6.1.es.md)
+[简体中文](./docs/releases/v5.6.2.zh-CN.md) · [繁體中文](./docs/releases/v5.6.2.zh-TW.md) · [English](./docs/releases/v5.6.2.en.md) · [Français](./docs/releases/v5.6.2.fr.md) · [日本語](./docs/releases/v5.6.2.ja.md) · [Español](./docs/releases/v5.6.2.es.md)
 
 ## ✨ 主要功能
 
@@ -74,7 +74,7 @@ GitHub Release 預設顯示簡體中文摘要，完整說明請見：
 * 支援直式、橫式和自訂畫布尺寸
 * 橫式版面基於安全區域重構，封面欄、內容欄和底部資訊更穩定
 * 直式自訂尺寸支援基於真實 DOM 測量的自動寬度與自動高度
-* 支援匯出高解析 PNG 圖片
+* 支援匯出高解析 PNG、WebP 與 JPG 圖片
 
 ### 📝 歌詞排版與翻譯
 
@@ -121,7 +121,7 @@ GitHub Release 預設顯示簡體中文摘要，完整說明請見：
 * 上傳本機封面
 * 解析本機 MP3 / FLAC 檔案中的中繼資料和內嵌歌詞
 * 調整樣式
-* 生成和匯出 PNG 圖片
+* 生成並匯出 PNG、WebP 與 JPG 圖片
 
 以下功能需要連線：
 
@@ -140,7 +140,7 @@ GitHub Release 預設顯示簡體中文摘要，完整說明請見：
 4. 編輯歌詞和翻譯；可使用 AI 翻譯，也可將原文 / 譯文交替行依目前介面語言自動拆分。
 5. 調整畫布比例、字型方案（中日韓 / 西文）、字號、顏色、邊框、浮水印等樣式。
 6. 在右側預覽卡片。
-7. 點擊「完成並匯出」，儲存 PNG 圖片。
+7. 選擇 PNG、WebP 或 JPG，再點擊「完成並匯出」儲存圖片。
 
 ## 🔄 檢查更新
 

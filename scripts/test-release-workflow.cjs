@@ -57,6 +57,10 @@ assert.match(verifier, /\$portable\.Count -ne 1/, "exactly one portable artifact
 assert.match(verifier, /\$sbom\.Count -ne 1/, "exactly one SBOM is required");
 assert.match(verifier, /\$checksums\.Count -ne 1/, "exactly one checksum manifest is required");
 assert.match(verifier, /Unexpected release asset set/, "unexpected downloaded assets fail verification");
+assert.match(verifier, /Lyrics\.Card\.Generator\.Setup\.\$version\.exe/, "the exact versioned Setup filename is required");
+assert.match(verifier, /Lyrics\.Card\.Generator-\$version-portable\.exe/, "the exact versioned portable filename is required");
+assert.match(verifier, /lyrics-card-generator-\$version\.spdx\.json/, "the exact versioned SBOM filename is required");
+assert.match(verifier, /prerelease state does not match tag/, "stable and RC tags enforce matching prerelease state");
 assert.match(verifier, /Unexpected checksum coverage/, "checksum coverage must match the expected assets");
 assert.match(verifier, /gh attestation verify \$_\.FullName/, "every downloaded release asset is attestation-verified");
 

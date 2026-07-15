@@ -120,6 +120,10 @@ assert.doesNotMatch(exportSettings, /<SelectField/);
 assert.match(exportSettings, /default-generated-watermark-toggle/);
 assert.match(exportSettings, /default-shared-by-toggle/);
 assert.match(exportSettings, /default-shared-by-text/);
+assert.match(exportSettings, /defaultExportFormat/);
+assert.match(exportSettings, /EXPORT_FORMAT_OPTIONS/);
+assert.match(exportSettings, /ariaLabel=\{copy\.exportFormat\}/);
+assert.match(exportSettings, /ariaLabel=\{copy\.exportQuality\}/);
 assert.ok(
   exportSettings.indexOf("defaultShowGeneratedWatermark") < exportSettings.indexOf("defaultExportQuality"),
   "watermark defaults appear before export quality"
@@ -127,6 +131,10 @@ assert.ok(
 assert.ok(
   exportSettings.indexOf("defaultShowSharedBy") < exportSettings.indexOf("defaultExportQuality"),
   "shared-by defaults appear before export quality"
+);
+assert.ok(
+  exportSettings.indexOf("defaultExportFormat") < exportSettings.indexOf("defaultExportQuality"),
+  "default export format appears before export quality"
 );
 assert.match(lyricEditor, /userSettings\.defaultShowGeneratedWatermark/);
 assert.match(lyricEditor, /userSettings\.defaultShowSharedBy/);

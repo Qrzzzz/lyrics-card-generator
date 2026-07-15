@@ -134,6 +134,17 @@ test("stays responsive at 360px, 768px, and 1440px", async ({ page }) => {
         await expectNoHorizontalClipping(page);
       }
 
+      if (viewport.width < 1024) {
+        const previewPanel = page.locator('[data-workbench-panel="preview"]');
+        const exportPanel = page.locator('[data-workbench-panel="export-settings"]');
+        const editorPanel = page.locator('[data-workbench-panel="editor-settings"]');
+        await expect(previewPanel).toBeVisible();
+        await expect(exportPanel).toBeVisible();
+        await expect(editorPanel).toBeHidden();
+        const [previewBox, exportBox] = await Promise.all([previewPanel.boundingBox(), exportPanel.boundingBox()]);
+        expect(previewBox && exportBox && previewBox.y < exportBox.y).toBe(true);
+      }
+
       const previewToggle = page.getByTestId("preview-pane-toggle");
       if (viewport.width < 1024) {
         await expect(previewToggle).toBeVisible();
@@ -151,7 +162,77 @@ test("stays responsive at 360px, 768px, and 1440px", async ({ page }) => {
   }
 });
 
-test("exposes all four font schemes and persists all six languages and export quality", async ({ page }) => {
+test("pans the shared preview workbench in both directions and degrades pressure feedback", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await openWebLite(page, { width: 1280, height: 900 });
+
+  const pressureStage = page.getByTestId("lyric-card-preview-pressure");
+  await expect(pressureStage).toHaveAttribute("data-pressure-enabled", "false");
+  await page.locator('[data-step-id="visual"]').click();
+  await expect(pressureStage).toHaveAttribute("data-pressure-enabled", "true");
+
+  const pressureBox = await pressureStage.boundingBox();
+  if (!pressureBox) throw new Error("Web Lite pressure target is not visible.");
+  const transformBeforeTouch = await pressureStage.locator(".preview-pressure-card").evaluate((element) => getComputedStyle(element).transform);
+  await pressureStage.dispatchEvent("pointermove", {
+    pointerId: 7,
+    pointerType: "touch",
+    isPrimary: true,
+    clientX: pressureBox.x + pressureBox.width * 0.2,
+    clientY: pressureBox.y + pressureBox.height * 0.2
+  });
+  await page.waitForTimeout(80);
+  const touchTransform = await pressureStage.locator(".preview-pressure-card").evaluate((element) => getComputedStyle(element).transform);
+  expect(touchTransform).toBe(transformBeforeTouch);
+
+  await page.mouse.move(pressureBox.x + pressureBox.width * 0.2, pressureBox.y + pressureBox.height * 0.2);
+  await expect.poll(async () => (
+    pressureStage.locator(".preview-pressure-card").evaluate((element) => getComputedStyle(element).transform)
+  )).toMatch(/^matrix3d\(/);
+
+  const readGeometry = () => page.evaluate(() => {
+    const rect = (selector: string) => {
+      const value = document.querySelector(selector)?.getBoundingClientRect();
+      return value ? { left: value.left, right: value.right } : null;
+    };
+    return {
+      viewport: rect('[data-testid="preview-workbench-viewport"]'),
+      editor: rect('[data-workbench-panel="editor-settings"]'),
+      preview: rect('[data-workbench-panel="preview"]'),
+      exportPanel: rect('[data-workbench-panel="export-settings"]')
+    };
+  });
+
+  const before = await readGeometry();
+  expect(before.viewport && before.editor && Math.abs(before.editor.left - before.viewport.left)).toBeLessThanOrEqual(2);
+  expect(before.viewport && before.preview && Math.abs(before.preview.right - before.viewport.right)).toBeLessThanOrEqual(2);
+
+  await page.locator('[data-step-id="export"]').click();
+  await expect(page.getByTestId("preview-workbench-viewport")).toHaveAttribute("data-export-active", "true");
+  await expect.poll(async () => {
+    const geometry = await readGeometry();
+    return geometry.viewport && geometry.preview ? Math.abs(geometry.preview.left - geometry.viewport.left) : Number.POSITIVE_INFINITY;
+  }).toBeLessThanOrEqual(2);
+  const after = await readGeometry();
+  expect(after.viewport && after.exportPanel && Math.abs(after.exportPanel.right - after.viewport.right)).toBeLessThanOrEqual(2);
+
+  await page.locator('[data-step-id="visual"]').click();
+  await expect(page.getByTestId("preview-workbench-viewport")).toHaveAttribute("data-export-active", "false");
+  await expect.poll(async () => {
+    const geometry = await readGeometry();
+    return geometry.viewport && geometry.editor ? Math.abs(geometry.editor.left - geometry.viewport.left) : Number.POSITIVE_INFINITY;
+  }).toBeLessThanOrEqual(2);
+
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.reload();
+  await page.locator('[data-step-id="visual"]').click();
+  await expect(page.getByTestId("lyric-card-preview-pressure")).toHaveAttribute(
+    "data-pressure-enabled",
+    "false"
+  );
+});
+
+test("exposes all four font schemes and persists all six languages, export format, and quality", async ({ page }) => {
   await openWebLite(page, { width: 1280, height: 900 });
 
   await page.locator('[data-step-id="font"]').click();
@@ -179,6 +260,9 @@ test("exposes all four font schemes and persists all six languages and export qu
   const standardQuality = page.locator('[data-segment-value="medium"]');
   await standardQuality.click();
   await expect(standardQuality).toHaveAttribute("aria-checked", "true");
+  const webpFormat = page.locator('[data-segment-value="webp"]');
+  await webpFormat.click();
+  await expect(webpFormat).toHaveAttribute("aria-checked", "true");
 
   for (const [name, lang] of [
     ["简体中文", "zh-CN"],
@@ -198,6 +282,7 @@ test("exposes all four font schemes and persists all six languages and export qu
   await expect(page.locator("html")).toHaveAttribute("lang", "zh-CN");
   await page.locator('[data-step-id="export"]').click();
   await expect(page.locator('[data-segment-value="medium"]')).toHaveAttribute("aria-checked", "true");
+  await expect(page.locator('[data-segment-value="webp"]')).toHaveAttribute("aria-checked", "true");
 });
 
 test("supports bilingual splitting, layout modes, instrumental mode, and visual toggles", async ({ page }) => {
@@ -513,6 +598,15 @@ test("exports a CORS-safe remote cover at standard and high pixel ratios", async
   await exportAndExpectDimensions(page, "high", 2160, 2160);
 });
 
+test("exports WebP and JPG with matching filenames and file signatures", async ({ page }) => {
+  test.setTimeout(120_000);
+  await openWebLite(page, { width: 1280, height: 900 });
+  await page.locator('[data-step-id="export"]').click();
+
+  await exportAndExpectFormat(page, "webp");
+  await exportAndExpectFormat(page, "jpg");
+});
+
 test("shares the 36/37 logical-line export boundary with desktop", async ({ page }) => {
   await openWebLite(page, { width: 1280, height: 900 });
   await page.locator('[data-step-id="lyrics"]').click();
@@ -686,7 +780,13 @@ async function expectNoHorizontalClipping(page: Page) {
       .filter((element) => {
         const style = window.getComputedStyle(element);
         const rect = element.getBoundingClientRect();
-        return style.display !== "none" && style.visibility !== "hidden" && rect.width > 0 && rect.height > 0;
+        return (
+          !element.closest('[inert], [aria-hidden="true"]') &&
+          style.display !== "none" &&
+          style.visibility !== "hidden" &&
+          rect.width > 0 &&
+          rect.height > 0
+        );
       })
       .filter((element) => {
         const rect = element.getBoundingClientRect();
@@ -775,6 +875,27 @@ async function exportAndExpectDimensions(page: Page, quality: "medium" | "high",
   await expect(exportButton).toBeEnabled();
   const [download] = await Promise.all([page.waitForEvent("download"), exportButton.click()]);
   expect(await pngDimensions(download)).toEqual({ width, height });
+  await expect(exportButton).toBeEnabled();
+}
+
+async function exportAndExpectFormat(page: Page, format: "webp" | "jpg") {
+  const formatButton = page.locator(`[data-segment-value="${format}"]`);
+  await formatButton.click();
+  await expect(formatButton).toHaveAttribute("aria-checked", "true");
+
+  const exportButton = page.getByTestId("complete-export-button");
+  await expect(exportButton).toBeEnabled();
+  const [download] = await Promise.all([page.waitForEvent("download"), exportButton.click()]);
+  expect(download.suggestedFilename()).toMatch(new RegExp(`\\.${format}$`, "i"));
+  const downloadPath = await download.path();
+  if (!downloadPath) throw new Error(`Playwright did not expose the downloaded ${format} path.`);
+  const image = await readFile(downloadPath);
+  if (format === "webp") {
+    expect(image.subarray(0, 4).toString("ascii")).toBe("RIFF");
+    expect(image.subarray(8, 12).toString("ascii")).toBe("WEBP");
+  } else {
+    expect(image.subarray(0, 3)).toEqual(Buffer.from([0xff, 0xd8, 0xff]));
+  }
   await expect(exportButton).toBeEnabled();
 }
 

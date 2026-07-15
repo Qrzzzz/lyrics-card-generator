@@ -4,7 +4,7 @@
 
 ### Generate polished lyric sharing cards for social sharing
 
-**Spotify / Apple Music / NetEase Cloud Music / QQ Music · Windows desktop app · HD PNG export · multilingual documentation**
+**Spotify / Apple Music / NetEase Cloud Music / QQ Music · Windows desktop app · HD PNG / WebP / JPG export · multilingual documentation**
 
 <p>
   <strong>Language</strong><br/>
@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v5.6.1.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v5.6.2.en.md">Release Notes</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
   <a href="#features">Features</a> ·
   <a href="#local-development">Local Development</a> ·
@@ -29,7 +29,7 @@
 ![Platform](https://img.shields.io/badge/Platform-Windows%20Desktop-111827)
 ![Stack](https://img.shields.io/badge/Stack-Next.js%20%2B%20React%20%2B%20TypeScript-0F766E)
 ![Desktop](https://img.shields.io/badge/Desktop-Electron-1D4ED8)
-![Output](https://img.shields.io/badge/Output-PNG-FF5722)
+![Output](https://img.shields.io/badge/Output-PNG%20%2F%20WebP%20%2F%20JPG-FF5722)
 ![Docs](https://img.shields.io/badge/Docs-6%20Languages-7C3AED)
 ![Release](https://img.shields.io/github/v/release/Qrzzzz/lyrics-card-generator?include_prereleases)
 
@@ -45,29 +45,29 @@
 />
 
 A Windows desktop app for creating lyric sharing cards.
-Paste a song link or enter song information manually, edit lyrics, translations, cover art, and visual styles, then export a high-resolution PNG image for sharing.
+Paste a song link or enter song information manually, edit lyrics, translations, cover art, and visual styles, then export a high-resolution PNG, WebP, or JPG image for sharing.
 
 ## 📦 Download and Installation
 
 Download the latest version from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Recommended installer: `Lyrics Card Generator Setup 5.6.1.exe`
-* Portable version: `Lyrics Card Generator-5.6.1-portable.exe`
+* Recommended installer: `Lyrics Card Generator Setup 5.6.2.exe`
+* Portable version: `Lyrics Card Generator-5.6.2-portable.exe`
 
 The installer is recommended for regular use. The portable version is useful for temporary use, testing, or running from a removable drive.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v5.6.1 Highlights
+### v5.6.2 Highlights
 
-* Fixes the v5.5.4 request boundary treating the browser's `127.0.0.1` origin and Next's internal `localhost` route URL as cross-origin.
-* Restores NetEase Cloud Music search, result metadata and lyric imports, plus Spotify, Apple Music, NetEase, and QQ Music link parsing.
-* Keeps the app-request marker, media-type validation, and explicit cross-site rejection in place; editing, import, and export UI remain unchanged.
+* Adds pointer tilt, hover lift, and press feedback to the live preview in steps 3–6, with stable fallbacks for touch and reduced-motion environments.
+* Pans the whole workbench left between steps 5 and 6, continuously moving the preview from right to left while export settings enter from the right; reverse navigation and small windows remain responsive.
+* Exports real PNG, WebP, and JPG files in both Desktop and Web Lite, persists the default format in Settings, and keeps preview effects isolated from snapshot-based output.
 
 ## 🌐 Multilingual Release Notes
 
 GitHub Release displays a Simplified Chinese summary by default. See the full release notes:
-[简体中文](./docs/releases/v5.6.1.zh-CN.md) · [繁體中文](./docs/releases/v5.6.1.zh-TW.md) · [English](./docs/releases/v5.6.1.en.md) · [Français](./docs/releases/v5.6.1.fr.md) · [日本語](./docs/releases/v5.6.1.ja.md) · [Español](./docs/releases/v5.6.1.es.md)
+[简体中文](./docs/releases/v5.6.2.zh-CN.md) · [繁體中文](./docs/releases/v5.6.2.zh-TW.md) · [English](./docs/releases/v5.6.2.en.md) · [Français](./docs/releases/v5.6.2.fr.md) · [日本語](./docs/releases/v5.6.2.ja.md) · [Español](./docs/releases/v5.6.2.es.md)
 
 <a id="features"></a>
 
@@ -79,7 +79,7 @@ GitHub Release displays a Simplified Chinese summary by default. See the full re
 * Portrait, landscape, and custom canvas sizes
 * Rebuilt landscape layout based on safe areas, cover column, content column, and footer regions
 * Measured auto width and auto height for portrait custom canvases
-* High-resolution PNG export
+* High-resolution PNG, WebP, and JPG export
 
 ### 📝 Lyrics Layout & Translation
 
@@ -126,7 +126,7 @@ The desktop app can start offline. These features remain available without inter
 * Local cover upload
 * Local MP3 / FLAC metadata and embedded lyric parsing
 * Style customization
-* PNG generation and export
+* PNG, WebP, and JPG generation and export
 
 These features require internet access:
 
@@ -145,7 +145,7 @@ These features require internet access:
 4. Edit lyrics and translations; use AI translation or split alternating original / translated text according to the selected interface language.
 5. Adjust canvas ratio, CJK / Latin font schemes, colors, frames, watermarks, and other styles.
 6. Preview the card on the right.
-7. Use “Complete & Export” to save the PNG image.
+7. Choose PNG, WebP, or JPG, then use “Complete & Export” to save the image.
 
 ## 🔄 Update Checking
 

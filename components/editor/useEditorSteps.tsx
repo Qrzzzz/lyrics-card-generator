@@ -16,7 +16,7 @@ import {
   VisualSettingsPanel
 } from "@/components/editor/StylePanel";
 import { AiTranslatePanel } from "@/components/lyrics/AiTranslatePanel";
-import type { ExportQualityId } from "@/lib/settings/types";
+import type { ExportFormatId, ExportQualityId } from "@/lib/settings/types";
 import type { ExportLyricLineStatus } from "@/lib/lyrics-document";
 import type { AISettingsSummary, AITranslationPhase } from "@/lib/ai/types";
 import type { createT } from "@/lib/i18n";
@@ -60,6 +60,7 @@ export type EditorStepHandlers = {
   onConfirmAiTranslate: (presetId: string, reasoning: boolean) => void | Promise<void>;
   onStyleChange: (style: CardStyle) => void;
   onFontSchemePreviewChange: (scheme: FontScheme | null) => void;
+  onExportFormatChange: (format: ExportFormatId) => void;
   onExportQualityChange: (quality: ExportQualityId) => void;
   onExport: () => void | Promise<void>;
 };
@@ -71,6 +72,7 @@ type UseEditorStepsInput = {
   themeColor: string;
   isExporting: boolean;
   exportBlockingMessage?: string;
+  exportFormat: ExportFormatId;
   exportQuality: ExportQualityId;
   lyricsLayout: {
     lineStatus: ExportLyricLineStatus;
@@ -87,6 +89,7 @@ export function useEditorSteps({
   themeColor,
   isExporting,
   exportBlockingMessage,
+  exportFormat,
   exportQuality,
   lyricsLayout,
   documentRevision,
@@ -350,6 +353,8 @@ export function useEditorSteps({
         <ExportPanel
           t={t}
           accentColor={themeColor}
+          exportFormat={exportFormat}
+          onExportFormatChange={handlers.onExportFormatChange}
           exportQuality={exportQuality}
           onExportQualityChange={handlers.onExportQualityChange}
           isExporting={isExporting}

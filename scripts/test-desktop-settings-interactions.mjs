@@ -1415,7 +1415,7 @@ async function assertUnifiedPreviewChrome(stepId) {
     const rail = stepper?.querySelector('.lyrics-stepper-rail');
     const heading = rail?.querySelector('[data-stepper-heading-row="true"]');
     const actions = heading?.querySelector('[data-testid="editor-header-actions"]');
-    const content = stepper?.querySelector('.lyrics-stepper-content');
+    const workbench = stepper?.querySelector('[data-testid="preview-workbench-viewport"]');
     const preview = stepper?.querySelector('[data-testid="lyric-card-preview"]');
     const titlebarRect = document.querySelector('.desktop-titlebar')?.getBoundingClientRect();
     const titlebarBrand = document.querySelector('.desktop-titlebar__brand');
@@ -1428,7 +1428,7 @@ async function assertUnifiedPreviewChrome(stepId) {
     const gradualBlurStyle = gradualBlur ? getComputedStyle(gradualBlur) : null;
     const actionsRect = actions?.getBoundingClientRect();
     const railRect = rail?.getBoundingClientRect();
-    const contentRect = content?.getBoundingClientRect();
+    const workbenchRect = workbench?.getBoundingClientRect();
     const previewRect = preview?.getBoundingClientRect();
     return {
       activeStep: document.querySelector('[aria-current="step"]')?.getAttribute('data-step-id'),
@@ -1439,15 +1439,15 @@ async function assertUnifiedPreviewChrome(stepId) {
       actionsInsideRail: Boolean(actions && rail?.contains(actions)),
       actionsFitRail: Boolean(actionsRect && railRect && actionsRect.left >= railRect.left && actionsRect.right <= railRect.right),
       railSpansWorkbench: Boolean(
-        railRect && contentRect && previewRect &&
-        railRect.left <= contentRect.left && railRect.right >= previewRect.right &&
-        contentRect.top >= railRect.bottom && previewRect.top >= railRect.bottom
+        railRect && workbenchRect && previewRect &&
+        railRect.left <= workbenchRect.left && railRect.right >= workbenchRect.right &&
+        workbenchRect.top >= railRect.bottom && previewRect.top >= railRect.bottom
       ),
       titlebarIcon: iconRect ? { width: iconRect.width, height: iconRect.height } : null,
       titlebarIconBeforeName: Boolean(iconRect && titlebarNameRect && iconRect.right <= titlebarNameRect.left),
       titlebarGeometry: titlebarRect ? { top: titlebarRect.top, bottom: titlebarRect.bottom } : null,
       railGeometry: railRect ? { top: railRect.top, bottom: railRect.bottom } : null,
-      contentGeometry: contentRect ? { top: contentRect.top, bottom: contentRect.bottom } : null,
+      workbenchGeometry: workbenchRect ? { top: workbenchRect.top, bottom: workbenchRect.bottom } : null,
       titlebarBlur: gradualBlurRect ? {
         top: gradualBlurRect.top,
         bottom: gradualBlurRect.bottom,
@@ -1465,7 +1465,7 @@ async function assertUnifiedPreviewChrome(stepId) {
   assert.deepEqual(result.actionIds, ["examples-button", "clear-all-button", "settings-button"], `${stepId} preserves all editor actions`);
   assert.equal(result.actionsInsideRail, true, `${stepId} keeps the actions inside the stepper rail`);
   assert.equal(result.actionsFitRail, true, `${stepId} keeps the actions within the stepper bounds`);
-  assert.equal(result.railSpansWorkbench, true, `${stepId} spans the shared rail across settings and preview`);
+  assert.equal(result.railSpansWorkbench, true, `${stepId} spans the shared rail across the preview workbench`);
   assert.ok(result.titlebarIcon && result.titlebarIcon.width === 18 && result.titlebarIcon.height === 18, `${stepId} renders the small titlebar app icon`);
   assert.equal(result.titlebarIconBeforeName, true, `${stepId} places the titlebar app icon before the app name`);
   assert.deepEqual(
@@ -1478,7 +1478,7 @@ async function assertUnifiedPreviewChrome(stepId) {
     `${stepId} keeps the measured gradual titlebar effect without intercepting input`
   );
   assert.ok(
-    result.titlebarGeometry && result.titlebarBlur && result.railGeometry && result.contentGeometry &&
+    result.titlebarGeometry && result.titlebarBlur && result.railGeometry && result.workbenchGeometry &&
       Math.abs(result.titlebarGeometry.bottom - 48) <= 0.5 &&
       result.titlebarBlur.bottom >= result.titlebarGeometry.bottom + 20 &&
       result.titlebarBlur.bottom <= result.titlebarGeometry.bottom + 24.5,
@@ -1488,6 +1488,154 @@ async function assertUnifiedPreviewChrome(stepId) {
     result.titlebarBlur?.backdropFilter.includes("blur("),
     `${stepId} applies backdrop blur directly to the masked edge wrapper`
   );
+}
+
+async function readPreviewWorkbenchGeometry() {
+  return page.evaluate(() => {
+    const viewport = document.querySelector('[data-testid="preview-workbench-viewport"]');
+    const track = document.querySelector('[data-testid="preview-workbench-track"]');
+    const editor = document.querySelector('[data-workbench-panel="editor-settings"]');
+    const preview = document.querySelector('[data-workbench-panel="preview"]');
+    const exportPanel = document.querySelector('[data-workbench-panel="export-settings"]');
+    const rect = (element) => {
+      const value = element?.getBoundingClientRect();
+      return value ? { left: value.left, right: value.right, width: value.width } : null;
+    };
+    const state = (element) => ({
+      active: element?.getAttribute('data-active') ?? null,
+      ariaHidden: element?.getAttribute('aria-hidden') ?? null,
+      inert: Boolean(element?.inert)
+    });
+    return {
+      exportActive: viewport?.getAttribute('data-export-active'),
+      viewport: rect(viewport),
+      track: rect(track),
+      editor: rect(editor),
+      preview: rect(preview),
+      exportPanel: rect(exportPanel),
+      editorState: state(editor),
+      exportState: state(exportPanel),
+      transform: track ? getComputedStyle(track).transform : null
+    };
+  });
+}
+
+async function assertPreviewWorkbenchPan() {
+  await setWindowSize(1280, 900);
+  await page.locator('button[data-step-id="visual"]').click();
+  await waitForLayoutStable(page.getByTestId('preview-workbench-track'));
+
+  const before = await readPreviewWorkbenchGeometry();
+  assert.equal(before.exportActive, "false", "step five keeps the editor side of the workbench active");
+  assert.deepEqual(before.editorState, { active: "true", ariaHidden: "false", inert: false }, "step five editor settings remain interactive");
+  assert.deepEqual(before.exportState, { active: "false", ariaHidden: "true", inert: true }, "step six export settings stay inert off-screen");
+  assert.ok(
+    before.viewport && before.editor && before.preview && before.exportPanel &&
+      Math.abs(before.editor.left - before.viewport.left) <= 1.5 &&
+      Math.abs(before.preview.right - before.viewport.right) <= 1.5 &&
+      before.exportPanel.left > before.viewport.right,
+    `step five shows settings then preview while export remains off-screen: ${JSON.stringify(before)}`
+  );
+
+  const pressureStage = page.getByTestId('lyric-card-preview-pressure');
+  const pressureBox = await pressureStage.boundingBox();
+  assert.ok(pressureBox, "step five preview pressure target is visible");
+  await page.mouse.move(pressureBox.x + pressureBox.width * 0.18, pressureBox.y + pressureBox.height * 0.2);
+  await page.waitForTimeout(120);
+  const pressureState = await pressureStage.evaluate((element) => {
+    const card = element.querySelector('.preview-pressure-card');
+    const style = card ? getComputedStyle(card) : null;
+    return {
+      enabled: element.getAttribute('data-pressure-enabled'),
+      transform: style?.transform ?? null,
+      filter: style?.filter ?? null
+    };
+  });
+  assert.equal(pressureState.enabled, "true", "step five enables preview pressure feedback");
+  assert.ok(pressureState.transform?.startsWith("matrix3d("), `preview hover produces a 3D transform: ${JSON.stringify(pressureState)}`);
+  assert.ok(pressureState.filter?.includes("drop-shadow"), `preview hover keeps the raised card shadow: ${JSON.stringify(pressureState)}`);
+
+  await page.locator('button[data-step-id="export"]').click();
+  await page.waitForTimeout(80);
+  const during = await readPreviewWorkbenchGeometry();
+  await waitForLayoutStable(page.getByTestId('preview-workbench-track'));
+  const after = await readPreviewWorkbenchGeometry();
+
+  assert.ok(
+    during.track && before.track && during.track.left < before.track.left - 1,
+    `step five to six begins by translating the full track left: ${JSON.stringify({ before, during })}`
+  );
+  assert.equal(after.exportActive, "true", "step six activates the export side of the workbench");
+  assert.deepEqual(after.editorState, { active: "false", ariaHidden: "true", inert: true }, "step five settings become inert off-screen left");
+  assert.deepEqual(after.exportState, { active: "true", ariaHidden: "false", inert: false }, "step six export settings become interactive on the right");
+  const exportFormatState = await page.locator('[data-workbench-panel="export-settings"] [data-segment-value="png"], [data-workbench-panel="export-settings"] [data-segment-value="webp"], [data-workbench-panel="export-settings"] [data-segment-value="jpg"]').evaluateAll((buttons) => (
+    buttons.map((button) => ({
+      value: button.getAttribute('data-segment-value'),
+      checked: button.getAttribute('aria-checked')
+    }))
+  ));
+  assert.deepEqual(
+    exportFormatState,
+    [
+      { value: "png", checked: "false" },
+      { value: "webp", checked: "true" },
+      { value: "jpg", checked: "false" }
+    ],
+    "step six inherits the WebP default selected in settings"
+  );
+  assert.ok(
+    after.viewport && after.editor && after.preview && after.exportPanel && before.viewport &&
+      after.editor.right <= after.viewport.left + 1.5 &&
+      Math.abs(after.preview.left - after.viewport.left) <= 1.5 &&
+      Math.abs(after.exportPanel.right - after.viewport.right) <= 1.5 &&
+      after.preview.left < before.preview.left - before.viewport.width * 0.4 &&
+      after.exportPanel.left < before.exportPanel.left - before.viewport.width * 0.4,
+    `step six lands with preview left and export settings right after a shared left pan: ${JSON.stringify({ before, after })}`
+  );
+  assert.ok(after.transform && after.transform !== "none", `step six retains the translated workbench transform: ${after.transform}`);
+
+  await page.locator('button[data-step-id="visual"]').click();
+  await waitForLayoutStable(page.getByTestId('preview-workbench-track'));
+  const reversed = await readPreviewWorkbenchGeometry();
+  assert.equal(reversed.exportActive, "false", "reverse navigation restores the editor side of the workbench");
+  assert.deepEqual(reversed.editorState, { active: "true", ariaHidden: "false", inert: false }, "reverse navigation re-enables visual settings");
+  assert.deepEqual(reversed.exportState, { active: "false", ariaHidden: "true", inert: true }, "reverse navigation makes export settings inert again");
+  assert.ok(
+    reversed.viewport && reversed.editor && reversed.preview && reversed.exportPanel && before.viewport &&
+      Math.abs(reversed.editor.left - reversed.viewport.left) <= 1.5 &&
+      Math.abs(reversed.preview.right - reversed.viewport.right) <= 1.5 &&
+      reversed.exportPanel.left > reversed.viewport.right &&
+      Math.abs(reversed.preview.left - before.preview.left) <= 1.5,
+    `step six to five returns the same track to settings-left and preview-right: ${JSON.stringify({ before, reversed })}`
+  );
+
+  await setWindowSize(1000, 700);
+  await page.locator('button[data-step-id="export"]').click();
+  await waitForLayoutStable(page.getByTestId('preview-workbench-track'));
+  const narrow = await page.evaluate(() => {
+    const preview = document.querySelector('[data-workbench-panel="preview"]');
+    const editor = document.querySelector('[data-workbench-panel="editor-settings"]');
+    const exportPanel = document.querySelector('[data-workbench-panel="export-settings"]');
+    const track = document.querySelector('[data-testid="preview-workbench-track"]');
+    const previewRect = preview?.getBoundingClientRect();
+    const exportRect = exportPanel?.getBoundingClientRect();
+    return {
+      preview: previewRect ? { top: previewRect.top, bottom: previewRect.bottom } : null,
+      exportPanel: exportRect ? { top: exportRect.top, bottom: exportRect.bottom } : null,
+      editorDisplay: editor ? getComputedStyle(editor).display : null,
+      exportDisplay: exportPanel ? getComputedStyle(exportPanel).display : null,
+      transform: track ? getComputedStyle(track).transform : null,
+      horizontalOverflow: document.documentElement.scrollWidth - document.documentElement.clientWidth
+    };
+  });
+  assert.equal(narrow.editorDisplay, "none", `the minimum-width export view removes inert old settings: ${JSON.stringify(narrow)}`);
+  assert.notEqual(narrow.exportDisplay, "none", `the minimum-width export settings remain visible: ${JSON.stringify(narrow)}`);
+  assert.equal(narrow.transform, "none", `the minimum-width layout uses the stacked reduced transform: ${JSON.stringify(narrow)}`);
+  assert.ok(
+    narrow.preview && narrow.exportPanel && narrow.preview.top < narrow.exportPanel.top,
+    `the minimum-width layout stacks preview before export settings: ${JSON.stringify(narrow)}`
+  );
+  assert.ok(narrow.horizontalOverflow <= 1, `the minimum-width workbench avoids horizontal overflow: ${JSON.stringify(narrow)}`);
 }
 
 async function assertLyricsWorkspace(width, height) {
@@ -1673,12 +1821,34 @@ async function assertPreviewFits(width, height, scrolled) {
   await page.locator('[data-testid="editor-surface"]').evaluate((element, shouldScroll) => {
     element.scrollTop = shouldScroll ? element.scrollHeight : 0;
   }, scrolled);
-  await page.waitForFunction(() => {
-    const preview = document.querySelector('[data-testid="lyric-card-preview"]');
-    if (!(preview instanceof HTMLElement)) return false;
-    const rect = preview.getBoundingClientRect();
-    return rect.top >= -1 && rect.bottom <= window.innerHeight + 1;
-  }, undefined, { timeout: 5_000 });
+  try {
+    await page.waitForFunction(() => {
+      const preview = document.querySelector('[data-testid="lyric-card-preview"]');
+      if (!(preview instanceof HTMLElement)) return false;
+      const rect = preview.getBoundingClientRect();
+      return rect.top >= -1 && rect.bottom <= window.innerHeight + 1;
+    }, undefined, { timeout: 5_000 });
+  } catch (error) {
+    const geometry = await page.evaluate(() => {
+      const preview = document.querySelector('[data-testid="lyric-card-preview"]');
+      const previewPanel = document.querySelector('[data-workbench-panel="preview"]');
+      const track = document.querySelector('[data-testid="preview-workbench-track"]');
+      const editor = document.querySelector('[data-testid="editor-surface"]');
+      const rect = (element) => {
+        const value = element?.getBoundingClientRect();
+        return value ? { top: value.top, bottom: value.bottom, height: value.height } : null;
+      };
+      return {
+        preview: rect(preview),
+        previewPanel: rect(previewPanel),
+        track: rect(track),
+        editor: rect(editor),
+        editorScrollTop: editor instanceof HTMLElement ? editor.scrollTop : null,
+        viewportHeight: window.innerHeight
+      };
+    });
+    throw new Error(`${width}x${height} preview did not settle inside the viewport: ${JSON.stringify(geometry)}`, { cause: error });
+  }
   const bounds = await page.getByTestId("lyric-card-preview").evaluate((element) => {
     const rect = element.getBoundingClientRect();
     const shell = element.querySelector('[data-testid="lyric-card-preview-shell"]');
@@ -2047,6 +2217,16 @@ try {
   await waitForVisible("preset-create");
   assert.deepEqual(nativeDialogs, [], `settings interactions must not open native dialogs: ${JSON.stringify(nativeDialogs)}`);
 
+  await selectSettingsSection("export");
+  const settingsExportPanel = page.locator('[data-settings-panel="export"]:not([hidden])');
+  const defaultFormatOptions = settingsExportPanel.locator('[data-segment-value="png"], [data-segment-value="webp"], [data-segment-value="jpg"]');
+  assert.deepEqual(await defaultFormatOptions.allTextContents(), ["PNG", "WebP", "JPG"], "settings exposes PNG, WebP, and JPG defaults");
+  assert.equal(await defaultFormatOptions.nth(0).getAttribute("aria-checked"), "true", "PNG remains the initial default export format");
+  await settingsExportPanel.locator('[data-segment-value="webp"]').click();
+  await page.waitForFunction(() => (
+    document.querySelector('[data-settings-panel="export"]:not([hidden]) [data-segment-value="webp"]')?.getAttribute('aria-checked') === 'true'
+  ));
+
   await selectSettingsSection("general");
   await selectSettingsSection("ai");
   await page.getByTestId("settings-close-button").click();
@@ -2099,6 +2279,7 @@ try {
   for (const stepId of ["layout", "font", "visual", "export"]) {
     await assertUnifiedPreviewChrome(stepId);
   }
+  await assertPreviewWorkbenchPan();
 
   await page.locator('[data-testid="editor-surface"] [data-testid="settings-button"]').click();
   await waitForVisible("settings-surface");

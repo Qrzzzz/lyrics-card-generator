@@ -9,7 +9,7 @@ import {
   applyEditorStyleChange,
   isDocumentSemanticStyleChange
 } from "@/lib/editor/apply-style-change";
-import { exportNodeAsPng } from "@/lib/export-image";
+import { exportNodeAsImage } from "@/lib/export-image";
 import { createExportSnapshot, type ExportSnapshot } from "@/lib/export-snapshot";
 import {
   ExportTransactionMutex,
@@ -37,12 +37,14 @@ import type {
   ParsedSongData,
   SongInfo
 } from "@/lib/types";
+import type { ExportFormatId } from "@/lib/settings/types";
 
 type UseEditorActionsInput = {
   parsedState: AppState;
   setState: React.Dispatch<React.SetStateAction<AppState>>;
   cardRef: React.RefObject<HTMLElement | null>;
   exportPixelRatio: number;
+  exportFormat: ExportFormatId;
   exportBlockMessage?: string;
   getExportBlockMessage?: (snapshot?: ExportSnapshot) => string | undefined;
   exportBusyMessage: string;
@@ -61,6 +63,7 @@ export function useEditorActions({
   setState,
   cardRef,
   exportPixelRatio,
+  exportFormat,
   exportBlockMessage,
   getExportBlockMessage,
   exportBusyMessage,
@@ -244,7 +247,7 @@ export function useEditorActions({
     }
 
     const clearVersion = clearVersionRef.current;
-    const snapshot = createExportSnapshot(parsedState, exportPixelRatio, exportRevisionRef.current);
+    const snapshot = createExportSnapshot(parsedState, exportPixelRatio, exportRevisionRef.current, exportFormat);
     const result = await runExportTransaction({
       mutex: exportMutexRef.current,
       snapshot,
@@ -254,9 +257,10 @@ export function useEditorActions({
         return waitForExportSnapshotNode(() => cardRef.current, mountedSnapshot.id, signal);
       },
       validateSnapshot: (mountedSnapshot) => getExportBlockMessage?.(mountedSnapshot) ?? null,
-      captureSnapshot: (mountedSnapshot, node, signal) => exportNodeAsPng(
+      captureSnapshot: (mountedSnapshot, node, signal) => exportNodeAsImage(
         node,
         mountedSnapshot.fileName,
+        mountedSnapshot.format,
         mountedSnapshot.width,
         mountedSnapshot.height,
         mountedSnapshot.pixelRatio,
