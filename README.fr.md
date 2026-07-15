@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v5.5.3.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v5.5.4.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="#développement-local">Développement local</a> ·
@@ -44,31 +44,31 @@
   width="200"
 />
 
-Une application Windows pour générer des cartes de paroles élégantes.
+Une application Windows pour créer des cartes de paroles.
 Collez un lien de morceau ou saisissez les informations manuellement, modifiez les paroles, traductions, pochettes et styles visuels, puis exportez une image PNG haute résolution.
 
 ## 📦 Téléchargement et installation
 
 Téléchargez la dernière version depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
 
-* Installateur recommandé : `Lyrics Card Generator Setup 5.5.3.exe`
-* Version portable : `Lyrics Card Generator-5.5.3-portable.exe`
+* Installateur recommandé : `Lyrics Card Generator Setup 5.5.4.exe`
+* Version portable : `Lyrics Card Generator-5.5.4-portable.exe`
 
 L'installateur est recommandé pour une utilisation régulière. La version portable convient aux essais, à une utilisation temporaire ou à un disque amovible.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### Points clés de la v5.5.3
+### Points clés de la v5.5.4
 
-* À l’étape 4, les cartes Source Han Sans et Source Han Serif affichent désormais toute leur interface avec la police locale correspondante.
-* La barre de titre du bureau utilise un flou progressif léger sous ses 48 px, sans altérer la marque ni les boutons de fenêtre.
-* À l’étape 1, Réglage manuel se place juste avant Suivant, avec une relation d’ouverture accessible et un ordre stable en fenêtre étroite.
-* Le thème Acrylique clair renforce les surfaces des panneaux, champs et boutons, avec des textes secondaires ardoise opaques tout en conservant la profondeur du matériau.
+* Les routes POST de l’application locale partagent désormais les mêmes contrôles d’origine, de marqueur d’application et de format. Une requête IA refusée ne contacte aucun fournisseur.
+* Les textes de l’interface ont été révisés en chinois simplifié et traditionnel, anglais, français, japonais et espagnol ; Web Lite propose maintenant ces six langues.
+* Les filigranes fixes, la fermeture des paramètres, les messages de mise à jour et les erreurs API / bureau utilisent un texte naturel ou des codes traduits stables.
+* L’intégration continue et la publication utilisent le workflow commun afin d’éviter les états de publication propres à chaque version.
 
 ## 🌐 Notes de publication multilingues
 
 Par défaut, GitHub Release affiche un résumé en chinois simplifié. Consultez les notes complètes :
-[简体中文](./docs/releases/v5.5.3.zh-CN.md) · [繁體中文](./docs/releases/v5.5.3.zh-TW.md) · [English](./docs/releases/v5.5.3.en.md) · [Français](./docs/releases/v5.5.3.fr.md) · [日本語](./docs/releases/v5.5.3.ja.md) · [Español](./docs/releases/v5.5.3.es.md)
+[简体中文](./docs/releases/v5.5.4.zh-CN.md) · [繁體中文](./docs/releases/v5.5.4.zh-TW.md) · [English](./docs/releases/v5.5.4.en.md) · [Français](./docs/releases/v5.5.4.fr.md) · [日本語](./docs/releases/v5.5.4.ja.md) · [Español](./docs/releases/v5.5.4.es.md)
 
 <a id="fonctionnalités-principales"></a>
 

@@ -1,4 +1,5 @@
 import type { ParsedSongData } from "@/lib/types";
+import type { AppApiErrorCode } from "@/lib/app-api-errors";
 
 export type MusicSearchSource = "netease";
 
@@ -23,8 +24,8 @@ export type ResolvedSongSearchResult = {
 
 export type SearchSongResponse =
   | { ok: true; data: SongSearchResult[] }
-  | { ok: false; error: string };
+  | { ok: false; error: string; code?: AppApiErrorCode };
 
 export type ResolveSearchedSongResponse =
   | { ok: true; data: ResolvedSongSearchResult }
-  | { ok: false; error: string };
+  | { ok: false; error: string; code?: AppApiErrorCode };

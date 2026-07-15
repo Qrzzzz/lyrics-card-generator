@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Lyric Card Generator",
-  description: "Generate premium Apple Music-style lyric share images from manual lyrics and song metadata."
+  description: "Create Apple Music-style lyric share images from lyrics and song information."
 };
 
 export default function RootLayout({

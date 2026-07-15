@@ -6,6 +6,15 @@ import type { createT } from "@/lib/i18n";
 import type { WebLiteCopy, WebLiteLocale } from "@/web-lite/copy";
 import { WEB_LITE_DESKTOP_URL, WEB_LITE_REPOSITORY_URL } from "@/web-lite/links";
 
+const LANGUAGE_OPTIONS: Array<{ locale: WebLiteLocale; label: string; name: string }> = [
+  { locale: "zh", label: "简", name: "简体中文" },
+  { locale: "zh-TW", label: "繁", name: "繁體中文" },
+  { locale: "en", label: "EN", name: "English" },
+  { locale: "fr", label: "FR", name: "Français" },
+  { locale: "ja", label: "日", name: "日本語" },
+  { locale: "es", label: "ES", name: "Español" }
+];
+
 export function WebLiteHeader({
   locale,
   t,
@@ -66,22 +75,23 @@ export function WebLiteHeader({
           <div
             role="radiogroup"
             aria-label={copy.language}
-            className="segmented-control grid h-10 shrink-0 grid-cols-2 rounded-lg border border-[rgb(var(--panel-border))] bg-[rgb(var(--button-bg))] p-1"
+            className="segmented-control grid h-10 shrink-0 grid-cols-6 rounded-lg border border-[rgb(var(--panel-border))] bg-[rgb(var(--button-bg))] p-1"
           >
-            {(["zh", "en"] as const).map((option) => (
+            {LANGUAGE_OPTIONS.map((option) => (
               <button
-                key={option}
+                key={option.locale}
                 type="button"
                 role="radio"
-                aria-checked={locale === option}
-                onClick={() => onLocaleChange(option)}
-                className={`control-focus min-w-12 rounded-md px-3 text-xs font-bold transition ${
-                  locale === option
+                aria-label={option.name}
+                aria-checked={locale === option.locale}
+                onClick={() => onLocaleChange(option.locale)}
+                className={`control-focus min-w-9 rounded-md px-2 text-xs font-bold transition ${
+                  locale === option.locale
                     ? "app-text-primary bg-[rgb(var(--button-bg-hover))] shadow-sm"
                     : "app-text-muted hover:text-[rgb(var(--app-fg))]"
                 }`}
               >
-                {option === "zh" ? "中" : "EN"}
+                {option.label}
               </button>
             ))}
           </div>

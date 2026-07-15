@@ -14,6 +14,8 @@ export type GitHubRelease = {
   assets?: ReleaseAsset[];
 };
 
+export type UpdateErrorCode = "no_release" | "http_error" | "network_error" | "invalid_release_version";
+
 export type UpdateResult =
   | {
       status: "latest";
@@ -30,7 +32,15 @@ export type UpdateResult =
       portableUrl?: string;
     }
   | {
-      status: "no-release" | "error";
+      status: "no-release";
+      code: "no_release";
+      currentVersion: string;
+      message: string;
+      details?: string;
+    }
+  | {
+      status: "error";
+      code: Exclude<UpdateErrorCode, "no_release">;
       currentVersion: string;
       message: string;
       details?: string;
@@ -49,6 +59,7 @@ export async function checkGitHubUpdate(currentVersion = APP_VERSION): Promise<U
     if (response.status === 404) {
       return {
         status: "no-release",
+        code: "no_release",
         currentVersion,
         message: "No GitHub Release was found for this project."
       };
@@ -57,6 +68,7 @@ export async function checkGitHubUpdate(currentVersion = APP_VERSION): Promise<U
     if (!response.ok) {
       return {
         status: "error",
+        code: "http_error",
         currentVersion,
         message: `GitHub Releases returned HTTP ${response.status}.`,
         details: response.statusText
@@ -67,6 +79,7 @@ export async function checkGitHubUpdate(currentVersion = APP_VERSION): Promise<U
   } catch (error) {
     return {
       status: "error",
+      code: "network_error",
       currentVersion,
       message: "Unable to check GitHub Releases.",
       details: error instanceof Error ? error.message : String(error)
@@ -81,6 +94,7 @@ export function buildUpdateResult(release: GitHubRelease, currentVersion = APP_V
   if (comparison === null) {
     return {
       status: "error",
+      code: "invalid_release_version",
       currentVersion,
       message: "The release version could not be compared.",
       details: `current=${currentVersion}, latest=${release.tag_name}`

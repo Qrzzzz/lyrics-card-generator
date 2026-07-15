@@ -1,4 +1,6 @@
 import { resolveNeteaseSong } from "@/lib/music-search/netease";
+import { appApiErrorResponse } from "@/lib/app-api-errors";
+import { appMutationRejectionResponse, validateAppMutationRequest } from "@/lib/app-request";
 import { z } from "zod";
 
 export const runtime = "nodejs";
@@ -9,23 +11,27 @@ const schema = z.object({
 });
 
 export async function POST(req: Request) {
+  const rejection = validateAppMutationRequest(req, "application/json");
+  if (rejection) {
+    return appMutationRejectionResponse(rejection);
+  }
+
   let body: unknown;
   try {
     body = await req.json();
   } catch {
-    return Response.json({ ok: false, error: "Invalid JSON body." }, { status: 400 });
+    return appApiErrorResponse("invalid_json", 400);
   }
 
   const parsed = schema.safeParse(body);
   if (!parsed.success) {
-    return Response.json({ ok: false, error: "Invalid request." }, { status: 400 });
+    return appApiErrorResponse("invalid_request", 400);
   }
 
   try {
     const data = await resolveNeteaseSong(parsed.data.id);
     return Response.json({ ok: true, data });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Unable to resolve this song.";
-    return Response.json({ ok: false, error: message }, { status: 502 });
+  } catch {
+    return appApiErrorResponse("song_resolve_failed", 502);
   }
 }

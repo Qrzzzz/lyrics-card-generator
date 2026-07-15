@@ -151,7 +151,7 @@ test("stays responsive at 360px, 768px, and 1440px", async ({ page }) => {
   }
 });
 
-test("exposes all four font schemes and persists language and export quality", async ({ page }) => {
+test("exposes all four font schemes and persists all six languages and export quality", async ({ page }) => {
   await openWebLite(page, { width: 1280, height: 900 });
 
   await page.locator('[data-step-id="font"]').click();
@@ -180,7 +180,19 @@ test("exposes all four font schemes and persists language and export quality", a
   await standardQuality.click();
   await expect(standardQuality).toHaveAttribute("aria-checked", "true");
 
-  await page.getByRole("radio", { name: "中" }).click();
+  for (const [name, lang] of [
+    ["简体中文", "zh-CN"],
+    ["繁體中文", "zh-TW"],
+    ["English", "en"],
+    ["Français", "fr"],
+    ["日本語", "ja"],
+    ["Español", "es"]
+  ] as const) {
+    await page.getByRole("radio", { name, exact: true }).click();
+    await expect(page.locator("html")).toHaveAttribute("lang", lang);
+  }
+
+  await page.getByRole("radio", { name: "简体中文", exact: true }).click();
   await expect(page.locator("html")).toHaveAttribute("lang", "zh-CN");
   await page.reload();
   await expect(page.locator("html")).toHaveAttribute("lang", "zh-CN");
@@ -325,7 +337,7 @@ test("auto width measures bilingual wrapping and settles on a comfortable portra
 
 test("auto width calibrates every built-in example independently of the starting width", async ({ page }) => {
   await openWebLite(page);
-  await page.getByRole("radio", { name: "中", exact: true }).click();
+  await page.getByRole("radio", { name: "简体中文", exact: true }).click();
 
   const lyricsStep = page.locator('[data-step-id="lyrics"]');
   const layoutStep = page.locator('[data-step-id="layout"]');

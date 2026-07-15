@@ -335,6 +335,8 @@ function testAITranslationPrompt() {
   });
   assert(prompt.includes("输出规则是最高优先级，必须严格遵守"), "strong output rules retained");
   assert(prompt.includes(PROMPT_OUTPUT_RULES), "output rule block included");
+  assert(prompt.includes("原文几行，译文尽量对应几行"), "line-by-line correspondence retained");
+  assert(!prompt.includes("有文学品味"), "exaggerated translator persona removed");
   assert(prompt.includes("采用“推荐版”风格：这是一个独立版本"), "recommended is its own style");
   assert(!prompt.includes("采用“抒情译版”风格"), "only selected style included");
   const frenchPrompt = buildLyricsTranslationPrompt({

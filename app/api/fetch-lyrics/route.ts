@@ -1,4 +1,6 @@
 import { rankLyricsCandidate } from "@/lib/lyrics";
+import { appApiErrorResponse } from "@/lib/app-api-errors";
+import { appMutationRejectionResponse, validateAppMutationRequest } from "@/lib/app-request";
 import { z } from "zod";
 
 export const runtime = "nodejs";
@@ -20,17 +22,22 @@ type LrclibRecord = {
 };
 
 export async function POST(req: Request) {
+  const rejection = validateAppMutationRequest(req, "application/json");
+  if (rejection) {
+    return appMutationRejectionResponse(rejection);
+  }
+
   let body: unknown;
 
   try {
     body = await req.json();
   } catch {
-    return Response.json({ ok: false, error: "Invalid JSON body." }, { status: 400 });
+    return appApiErrorResponse("invalid_json", 400);
   }
 
   const parsed = schema.safeParse(body);
   if (!parsed.success) {
-    return Response.json({ ok: false, error: "Invalid request." }, { status: 400 });
+    return appApiErrorResponse("invalid_request", 400);
   }
 
   try {
@@ -46,7 +53,7 @@ export async function POST(req: Request) {
     });
 
     if (!res.ok) {
-      return Response.json({ ok: false, error: "Could not fetch lyrics automatically." }, { status: 502 });
+      return appApiErrorResponse("lyrics_fetch_failed", 502);
     }
 
     const records = (await res.json()) as LrclibRecord[];
@@ -57,11 +64,11 @@ export async function POST(req: Request) {
 
     const best = candidates[0];
     if (!best) {
-      return Response.json({ ok: false, error: "Could not fetch lyrics automatically." }, { status: 404 });
+      return appApiErrorResponse("lyrics_fetch_failed", 404);
     }
 
     return Response.json({ ok: true, data: best });
   } catch {
-    return Response.json({ ok: false, error: "Could not fetch lyrics automatically." }, { status: 502 });
+    return appApiErrorResponse("lyrics_fetch_failed", 502);
   }
 }

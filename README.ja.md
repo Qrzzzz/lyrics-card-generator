@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v5.5.3.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v5.5.4.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="#ローカル開発">ローカル開発</a> ·
@@ -51,24 +51,24 @@
 
 最新版は [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) からダウンロードできます。
 
-* 推奨インストーラー：`Lyrics Card Generator Setup 5.5.3.exe`
-* ポータブル版：`Lyrics Card Generator-5.5.3-portable.exe`
+* 推奨インストーラー：`Lyrics Card Generator Setup 5.5.4.exe`
+* ポータブル版：`Lyrics Card Generator-5.5.4-portable.exe`
 
 通常利用にはインストーラーを推奨します。ポータブル版は一時利用、検証、リムーバブルドライブでの利用に向いています。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v5.5.3 の更新ポイント
+### v5.5.4 の更新ポイント
 
-* ステップ 4 の Source Han Sans／Source Han Serif カード全体が、対応する内蔵ローカルフォントで表示されるようになりました。
-* デスクトップのタイトルバーは、48 px のバー下へ滑らかに消える軽量な段階ぼかしに変更し、ブランドとウィンドウ操作を鮮明に保ちます。
-* ステップ 1 の「手動調整」を「次へ」の直前へ移し、開閉状態と対象領域の関連付け、狭いウィンドウでの順序を整えました。
-* ライトアクリルはパネル、入力欄、ボタンのマスクを強め、不透明なスレート色の補助テキストで可読性を確保しつつ素材感を維持します。
+* ローカルアプリの POST ルートで、同一オリジン、アプリ識別子、想定する内容形式を共通確認します。拒否された AI リクエストはプロバイダーへ送信されません。
+* 簡体字中国語、繁体字中国語、英語、フランス語、日本語、スペイン語の画面テキストを見直し、Web Lite も 6 言語に対応しました。
+* 固定ウォーターマーク、設定画面の閉じる操作、更新メッセージ、API / デスクトップのエラーを自然な文面または安定した翻訳用コードに統一しました。
+* CI とリリース処理は共通ワークフローを使用し、バージョン固有の重複した公開状態をなくしました。
 
 ## 🌐 多言語リリースノート
 
 GitHub Release ではデフォルトで簡体字中国語の概要が表示されます。完全なリリースノートはこちら：
-[简体中文](./docs/releases/v5.5.3.zh-CN.md) · [繁體中文](./docs/releases/v5.5.3.zh-TW.md) · [English](./docs/releases/v5.5.3.en.md) · [Français](./docs/releases/v5.5.3.fr.md) · [日本語](./docs/releases/v5.5.3.ja.md) · [Español](./docs/releases/v5.5.3.es.md)
+[简体中文](./docs/releases/v5.5.4.zh-CN.md) · [繁體中文](./docs/releases/v5.5.4.zh-TW.md) · [English](./docs/releases/v5.5.4.en.md) · [Français](./docs/releases/v5.5.4.fr.md) · [日本語](./docs/releases/v5.5.4.ja.md) · [Español](./docs/releases/v5.5.4.es.md)
 
 <a id="主な機能"></a>
 

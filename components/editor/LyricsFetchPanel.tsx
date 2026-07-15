@@ -3,6 +3,7 @@
 import { FileText, WandSparkles } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Section } from "@/components/ui/controls";
+import { createAppRequestHeaders } from "@/lib/app-request";
 import type { createT } from "@/lib/i18n";
 import type { LyricsCandidate, SongInfo } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -62,7 +63,7 @@ export function LyricsFetchPanel({
     try {
       const res = await fetch("/api/fetch-lyrics", {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: createAppRequestHeaders({ "content-type": "application/json" }),
         body: JSON.stringify({
           source: song.source,
           url: song.originalUrl,

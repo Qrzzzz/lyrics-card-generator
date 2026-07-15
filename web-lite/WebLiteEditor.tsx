@@ -57,6 +57,8 @@ import { WebLiteFontPanel } from "@/web-lite/WebLiteFontPanel";
 import { WebLiteHeader } from "@/web-lite/WebLiteHeader";
 import { WebLiteSongInfo } from "@/web-lite/WebLiteSongInfo";
 import {
+  detectWebLiteLocale,
+  isWebLiteLocale,
   webLiteCopy,
   type WebLiteLocale
 } from "@/web-lite/copy";
@@ -110,7 +112,7 @@ export function WebLiteEditor() {
   const toastIdRef = useRef(0);
   const localCoverObjectUrlRef = useRef<string | undefined>(undefined);
   const coverValidationGenerationRef = useRef(0);
-  const locale: WebLiteLocale = state.locale === "en" ? "en" : "zh";
+  const locale: WebLiteLocale = state.locale;
   const copy = webLiteCopy[locale];
   const t = useMemo(() => createT(locale), [locale]);
   const activeCover = state.song.proxiedCoverUrl || state.song.coverUrl || "";
@@ -150,7 +152,7 @@ export function WebLiteEditor() {
 
   useEffect(() => {
     document.documentElement.lang = documentLanguageForLocale(locale);
-    document.title = locale === "zh" ? "歌词卡片生成器 · Web Lite" : "Lyrics Card Generator · Web Lite";
+    document.title = copy.documentTitle;
     document.body.dataset.uiTheme = "dark";
     document.body.dataset.desktopShell = "false";
 
@@ -158,7 +160,7 @@ export function WebLiteEditor() {
       delete document.body.dataset.uiTheme;
       delete document.body.dataset.desktopShell;
     };
-  }, [locale]);
+  }, [copy.documentTitle, locale]);
 
   useEffect(() => {
     const preferences: WebLitePreferences = {
@@ -599,8 +601,9 @@ function createInitialState(locale: WebLiteLocale): AppState {
 }
 
 function readPreferences(): WebLitePreferences {
-  const browserLocale: WebLiteLocale =
-    typeof navigator !== "undefined" && navigator.language.toLowerCase().startsWith("zh") ? "zh" : "en";
+  const browserLocale = detectWebLiteLocale(
+    typeof navigator !== "undefined" ? navigator.languages?.[0] || navigator.language : "en"
+  );
   const fallback: WebLitePreferences = {
     version: 1,
     locale: browserLocale,
@@ -615,7 +618,7 @@ function readPreferences(): WebLitePreferences {
     const parsed = JSON.parse(window.localStorage.getItem(PREFERENCES_KEY) || "{}") as Partial<WebLitePreferences>;
     return {
       version: 1,
-      locale: parsed.locale === "zh" || parsed.locale === "en" ? parsed.locale : fallback.locale,
+      locale: isWebLiteLocale(parsed.locale) ? parsed.locale : fallback.locale,
       exportQuality: parsed.exportQuality === "medium" || parsed.exportQuality === "high" ? parsed.exportQuality : "high"
     };
   } catch {

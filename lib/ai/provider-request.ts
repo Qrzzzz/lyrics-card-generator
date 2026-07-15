@@ -1,7 +1,7 @@
 import { getProviderErrorMessage, readProviderResponseBody } from "./provider-response";
 import type { AISettings } from "./types";
 
-const INVALID_BASE_URL_MESSAGE = "Base URL \u65e0\u6548\uff0c\u8bf7\u68c0\u67e5\u8bbe\u7f6e\u3002";
+const INVALID_BASE_URL_MESSAGE = "invalid_base_url";
 
 type BuildChatCompletionsRequestBodyOptions = Pick<AISettings, "baseUrl" | "model" | "temperature"> & {
   prompt: string;

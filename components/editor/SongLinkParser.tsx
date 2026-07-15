@@ -3,6 +3,7 @@
 import { Link2, WandSparkles } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 import { Input, Label, Section } from "@/components/ui/controls";
+import { createAppRequestHeaders } from "@/lib/app-request";
 import type { createT } from "@/lib/i18n";
 import type { ParsedSongData } from "@/lib/types";
 import type { DocumentImportIntent } from "@/lib/editor/document-transactions";
@@ -79,7 +80,7 @@ export function SongLinkParser({
     try {
       const res = await fetch("/api/parse-song", {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: createAppRequestHeaders({ "content-type": "application/json" }),
         body: JSON.stringify({ url }),
         signal: intent.signal
       });
