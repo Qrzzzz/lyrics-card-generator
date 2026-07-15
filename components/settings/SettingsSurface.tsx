@@ -194,7 +194,7 @@ export function SettingsSurface({
             onClick={workspace.closeWorkspace}
             disabled={workspace.isClearingApiKey}
             className="app-button control-focus examples-close-button inline-flex h-10 items-center justify-center gap-2 rounded-lg px-3 text-sm font-semibold"
-            aria-label={copy.cancel}
+            aria-label={copy.close}
             data-testid="settings-close-button"
           >
             <X className="examples-close-button__icon h-5 w-5" />

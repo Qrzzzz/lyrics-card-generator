@@ -3,6 +3,8 @@
 import { Search, Music2 } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 import { ActionButton, Input, Label, Section } from "@/components/ui/controls";
+import { createAppRequestHeaders } from "@/lib/app-request";
+import { getLocalizedAppApiError } from "@/lib/app-api-errors";
 import type { createT } from "@/lib/i18n";
 import type {
   ResolveSearchedSongResponse,
@@ -112,7 +114,7 @@ export function SongSearchParser({
     try {
       const response = await fetch("/api/search-song", {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: createAppRequestHeaders({ "content-type": "application/json" }),
         body: JSON.stringify({ keyword, limit }),
         signal
       });
@@ -121,7 +123,7 @@ export function SongSearchParser({
       if (requestId !== latestRequestRef.current) return;
 
       if (!payload.ok) {
-        throw new Error(payload.error);
+        throw new Error(getLocalizedAppApiError(payload.code, t, payload.error));
       }
 
       cacheRef.current.set(cacheKey, payload.data);
@@ -169,14 +171,14 @@ export function SongSearchParser({
     try {
       const response = await fetch("/api/resolve-searched-song", {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: createAppRequestHeaders({ "content-type": "application/json" }),
         body: JSON.stringify({ source: "netease", id: song.id }),
         signal: intent.signal
       });
       const payload = (await response.json()) as ResolveSearchedSongResponse;
 
       if (!payload.ok) {
-        throw new Error(payload.error);
+        throw new Error(getLocalizedAppApiError(payload.code, t, payload.error));
       }
 
       if (!onResolved(payload.data.song, payload.data.lyrics, intent)) return;

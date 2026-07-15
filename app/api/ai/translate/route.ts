@@ -5,6 +5,7 @@ import {
   readProviderError
 } from "@/lib/ai/provider-request";
 import { getProviderErrorMessage, readProviderResponseBody } from "@/lib/ai/provider-response";
+import { validateAppMutationRequest } from "@/lib/app-request";
 import type { SaveAISettingsInput } from "@/lib/ai/types";
 
 export const runtime = "nodejs";
@@ -16,6 +17,11 @@ type TranslateBody = {
 };
 
 export async function POST(request: Request) {
+  const rejection = validateAppMutationRequest(request, "application/json");
+  if (rejection) {
+    return errorResponse(rejection.code, rejection.status);
+  }
+
   let body: TranslateBody;
   try {
     body = (await request.json()) as TranslateBody;

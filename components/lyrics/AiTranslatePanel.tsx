@@ -109,7 +109,7 @@ export function AiTranslatePanel({
             variant="icon"
             size="sm"
             onClick={loading ? onCancel : onClose}
-            aria-label={copy.cancel}
+            aria-label={loading ? copy.stop : copy.close}
             icon={<X className="h-4 w-4" />}
             className="shrink-0"
           />
@@ -189,7 +189,7 @@ export function AiTranslatePanel({
             <MotionPanel key="reasoning" className="settings-panel-card mt-4 p-4">
               <div className="mb-2 flex items-center justify-between gap-3">
                 <p className="app-text-primary text-xs font-semibold uppercase tracking-[0.14em]">{copy.reasoningStream}</p>
-                {phase === "reasoning" ? <span className="app-text-subtle text-[11px]">LIVE</span> : null}
+                {phase === "reasoning" ? <span className="app-text-subtle text-[11px]">{copy.live}</span> : null}
               </div>
               <pre ref={reasoningRef} data-testid="ai-reasoning-stream" className="app-text-muted max-h-48 min-h-20 overflow-auto whitespace-pre-wrap rounded-lg border border-[rgb(var(--input-border))] bg-[rgb(var(--input-bg))] p-3 text-xs leading-relaxed">
                 {reasoningText || copy.reasoningWaiting}
@@ -212,7 +212,7 @@ export function AiTranslatePanel({
         {error ? <p role="alert" className="status-danger mt-4 rounded-lg border px-3 py-2 text-sm">{error}</p> : null}
 
         <div className="mt-5 flex justify-end gap-3">
-          <ActionButton onClick={loading ? onCancel : onClose}>{loading ? copy.stop : copy.cancel}</ActionButton>
+          <ActionButton onClick={loading ? onCancel : onClose}>{loading ? copy.stop : copy.close}</ActionButton>
           <ActionButton
             data-testid="confirm-ai-translate"
             variant="primary"

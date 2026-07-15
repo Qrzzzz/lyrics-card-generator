@@ -32,6 +32,7 @@ type AIUiCopy = {
   loadFailed: string;
   saveFailed: string;
   cancel: string;
+  close: string;
   settingsSaved: string;
   settingsLoadFailed: string;
   settingsSaveFailed: string;
@@ -47,6 +48,7 @@ type AIUiCopy = {
   connectingTip: string;
   connectedTip: string;
   reasoningStream: string;
+  live: string;
   reasoningWaiting: string;
   translationWaiting: string;
   translate: string;
@@ -94,6 +96,7 @@ const AI_UI_COPY: Record<Locale, AIUiCopy> = {
     loadFailed: "加载失败",
     saveFailed: "保存失败",
     cancel: "取消",
+    close: "关闭",
     settingsSaved: "设置已保存",
     settingsLoadFailed: "无法读取 AI 设置。",
     settingsSaveFailed: "无法保存 AI 设置。",
@@ -109,6 +112,7 @@ const AI_UI_COPY: Record<Locale, AIUiCopy> = {
     connectingTip: "如果长时间停留在这里，请检查 Base URL、API Key、模型标识符和网络连接。",
     connectedTip: "接口已接受请求；等待时间取决于模型负载、歌词长度和是否启用 Reasoning。",
     reasoningStream: "Reasoning 实时过程",
+    live: "实时",
     reasoningWaiting: "正在等待模型返回 reasoning_content…",
     translationWaiting: "推理完成后，译文会在这里逐段出现。",
     translate: "开始翻译",
@@ -154,6 +158,7 @@ const AI_UI_COPY: Record<Locale, AIUiCopy> = {
     loadFailed: "載入失敗",
     saveFailed: "儲存失敗",
     cancel: "取消",
+    close: "關閉",
     settingsSaved: "設定已儲存",
     settingsLoadFailed: "無法讀取 AI 設定。",
     settingsSaveFailed: "無法儲存 AI 設定。",
@@ -169,6 +174,7 @@ const AI_UI_COPY: Record<Locale, AIUiCopy> = {
     connectingTip: "若長時間停留在此處，請檢查 Base URL、API Key、模型識別碼與網路連線。",
     connectedTip: "介面已接受請求；等待時間取決於模型負載、歌詞長度及是否啟用 Reasoning。",
     reasoningStream: "Reasoning 即時過程",
+    live: "即時",
     reasoningWaiting: "正在等待模型回傳 reasoning_content…",
     translationWaiting: "推理完成後，譯文會在這裡逐段顯示。",
     translate: "開始翻譯",
@@ -214,6 +220,7 @@ const AI_UI_COPY: Record<Locale, AIUiCopy> = {
     loadFailed: "Load failed",
     saveFailed: "Save failed",
     cancel: "Cancel",
+    close: "Close",
     settingsSaved: "Settings saved",
     settingsLoadFailed: "Unable to load AI settings.",
     settingsSaveFailed: "Unable to save AI settings.",
@@ -229,6 +236,7 @@ const AI_UI_COPY: Record<Locale, AIUiCopy> = {
     connectingTip: "If this takes too long, check the Base URL, API key, model identifier, and network connection.",
     connectedTip: "The request was accepted. Wait time depends on provider load, lyric length, and reasoning mode.",
     reasoningStream: "Live Reasoning",
+    live: "Live",
     reasoningWaiting: "Waiting for reasoning_content from the model…",
     translationWaiting: "The translation will stream here after reasoning finishes.",
     translate: "Translate",
@@ -274,6 +282,7 @@ const AI_UI_COPY: Record<Locale, AIUiCopy> = {
     loadFailed: "Échec du chargement",
     saveFailed: "Échec de l’enregistrement",
     cancel: "Annuler",
+    close: "Fermer",
     settingsSaved: "Paramètres enregistrés",
     settingsLoadFailed: "Impossible de charger les paramètres de l’IA.",
     settingsSaveFailed: "Impossible d’enregistrer les paramètres de l’IA.",
@@ -289,6 +298,7 @@ const AI_UI_COPY: Record<Locale, AIUiCopy> = {
     connectingTip: "Si l’attente se prolonge, vérifiez l’URL de base, la clé API, l’identifiant du modèle et la connexion réseau.",
     connectedTip: "La requête a été acceptée. L’attente dépend de la charge du prestataire, de la longueur des paroles et du mode Reasoning.",
     reasoningStream: "Raisonnement en direct",
+    live: "En direct",
     reasoningWaiting: "En attente du reasoning_content renvoyé par le modèle…",
     translationWaiting: "La traduction apparaîtra ici progressivement une fois le raisonnement terminé.",
     translate: "Traduire",
@@ -334,6 +344,7 @@ const AI_UI_COPY: Record<Locale, AIUiCopy> = {
     loadFailed: "読み込みに失敗しました",
     saveFailed: "保存に失敗しました",
     cancel: "キャンセル",
+    close: "閉じる",
     settingsSaved: "設定を保存しました",
     settingsLoadFailed: "AI 設定を読み込めませんでした。",
     settingsSaveFailed: "AI 設定を保存できませんでした。",
@@ -349,6 +360,7 @@ const AI_UI_COPY: Record<Locale, AIUiCopy> = {
     connectingTip: "時間がかかる場合は、ベース URL、API キー、モデル識別子、ネットワーク接続を確認してください。",
     connectedTip: "リクエストは受け付けられました。待ち時間はプロバイダーの負荷、歌詞の長さ、Reasoning の有無で変わります。",
     reasoningStream: "リアルタイム推論",
+    live: "リアルタイム",
     reasoningWaiting: "モデルから reasoning_content が返されるのを待っています…",
     translationWaiting: "推論が終わると、訳詞がここに順次表示されます。",
     translate: "翻訳を開始",
@@ -394,6 +406,7 @@ const AI_UI_COPY: Record<Locale, AIUiCopy> = {
     loadFailed: "Error al cargar",
     saveFailed: "Error al guardar",
     cancel: "Cancelar",
+    close: "Cerrar",
     settingsSaved: "Configuración guardada",
     settingsLoadFailed: "No se pudo cargar la configuración de IA.",
     settingsSaveFailed: "No se pudo guardar la configuración de IA.",
@@ -409,6 +422,7 @@ const AI_UI_COPY: Record<Locale, AIUiCopy> = {
     connectingTip: "Si tarda demasiado, comprueba la URL base, la clave API, el identificador del modelo y la conexión de red.",
     connectedTip: "La solicitud ha sido aceptada. La espera depende de la carga del proveedor, la longitud de la letra y el modo Reasoning.",
     reasoningStream: "Razonamiento en directo",
+    live: "En directo",
     reasoningWaiting: "Esperando reasoning_content del modelo…",
     translationWaiting: "La traducción aparecerá aquí progresivamente cuando termine el razonamiento.",
     translate: "Traducir",

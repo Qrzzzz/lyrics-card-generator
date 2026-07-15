@@ -1,4 +1,6 @@
 import { parseBuffer } from "music-metadata";
+import { appApiErrorResponse } from "@/lib/app-api-errors";
+import { appMutationRejectionResponse, validateAppMutationRequest } from "@/lib/app-request";
 import type { ParsedSongData } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -13,27 +15,32 @@ type NativeTag = {
 };
 
 export async function POST(req: Request) {
+  const rejection = validateAppMutationRequest(req, "multipart/form-data");
+  if (rejection) {
+    return appMutationRejectionResponse(rejection);
+  }
+
   let formData: FormData;
 
   try {
     formData = await req.formData();
   } catch {
-    return Response.json({ ok: false, error: "Invalid multipart form-data request." }, { status: 400 });
+    return appApiErrorResponse("local_audio_invalid_multipart", 400);
   }
 
   const file = formData.get("file");
   if (!(file instanceof File)) {
-    return Response.json({ ok: false, error: "No audio file was provided." }, { status: 400 });
+    return appApiErrorResponse("local_audio_missing_file", 400);
   }
 
   const extension = getFileExtension(file.name);
   const mimeType = file.type.toLowerCase();
   if (!ACCEPTED_EXTENSIONS.has(extension) && !ACCEPTED_MIME_TYPES.has(mimeType)) {
-    return Response.json({ ok: false, error: "Only MP3 and FLAC files are supported." }, { status: 415 });
+    return appApiErrorResponse("local_audio_unsupported_type", 415);
   }
 
   if (file.size > MAX_AUDIO_BYTES) {
-    return Response.json({ ok: false, error: "The audio file is larger than the 100MB limit." }, { status: 413 });
+    return appApiErrorResponse("local_audio_too_large", 413);
   }
 
   try {
@@ -63,14 +70,8 @@ export async function POST(req: Request) {
       status: lyrics ? "success" : "no-lyrics",
       message: lyrics ? "Parsed metadata and embedded lyrics." : "Parsed metadata, but no embedded lyrics were found."
     });
-  } catch (error) {
-    return Response.json(
-      {
-        ok: false,
-        error: error instanceof Error ? error.message : "Unable to parse this audio file."
-      },
-      { status: 422 }
-    );
+  } catch {
+    return appApiErrorResponse("local_audio_parse_failed", 422);
   }
 }
 

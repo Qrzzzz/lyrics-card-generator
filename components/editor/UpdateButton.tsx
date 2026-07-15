@@ -30,6 +30,7 @@ export function UpdateButton({ t }: UpdateButtonProps) {
     } catch (error) {
       setResult({
         status: "error",
+        code: "network_error",
         currentVersion: "unknown",
         message: t("updateFailed"),
         details: error instanceof Error ? error.message : String(error)
@@ -93,9 +94,9 @@ function getUpdateMessage(result: UpdateResult, t: ReturnType<typeof createT>) {
   }
 
   if (result.status === "no-release") {
-    return `${t("updateNoRelease")} ${result.message}`;
+    return t("updateNoRelease");
   }
 
-  return `${t("updateFailed")} ${result.message}${result.details ? ` (${result.details})` : ""}`;
+  return t("updateFailed");
 }
 

@@ -12,7 +12,7 @@ type PromptBundle = {
 
 const PROMPT_BUNDLES: Record<Locale, PromptBundle> = {
   zh: {
-    identity: `你是一位有文学品味、懂欧美流行音乐语感的歌词翻译者。你的任务是把用户提供的外语歌词译成简体中文。目标不是逐词翻译，而是译出歌词里的情绪、叙事关系、暧昧感、遗憾感、节奏和审美。译文应像真正的中文歌词，而不是机器翻译文本。`,
+    identity: `请把用户提供的外语歌词译成自然的简体中文歌词。不要逐词翻译；请保留歌曲的情绪、叙事关系、暧昧、遗憾与节奏。译文应符合中文表达习惯。`,
     principles: `请遵守以下翻译原则：
 1. 保留原歌词的换行结构，原文几行，译文尽量对应几行。
 2. 不要逐词硬翻。先理解整段歌词的情绪、语境和潜台词，再选择自然表达。
@@ -21,7 +21,7 @@ const PROMPT_BUNDLES: Record<Locale, PromptBundle> = {
 5. 可以适度补足语气和情绪，但不能篡改原意。
 6. 避免直译腔和僵硬句式。
 7. 尽量保留原文的双关、暧昧、反讽、怨恨、遗憾、嫉妒或欲望。
-8. 译文要体现译者的字斟句酌，而不是简单替换词语。`,
+8. 逐行推敲措辞，不要只做词语替换。`,
     styles: {
       recommended: `采用“推荐版”风格：这是一个独立版本，不以其他版本为草稿，也不综合多个版本。兼顾准确、自然、情绪和中文歌词质感，给出最适合作为成品的一版。`,
       lyrical: `采用“抒情译版”风格：强化画面、余韵和现代中文歌词的旋律感，在不改变原意的前提下让表达更具抒情性。`,
@@ -37,7 +37,7 @@ const PROMPT_BUNDLES: Record<Locale, PromptBundle> = {
     lyricsLead: "需要翻译的歌词如下："
   },
   "zh-TW": {
-    identity: `你是一位具備文學品味、熟悉歐美流行音樂語感的歌詞翻譯者。你的任務是把使用者提供的外語歌詞譯成繁體中文。目標不是逐字翻譯，而是譯出歌詞裡的情緒、敘事關係、曖昧、遺憾、節奏與審美。譯文應像真正的中文歌詞，而不是機器翻譯文字。`,
+    identity: `請將使用者提供的外語歌詞譯成自然的繁體中文歌詞。不要逐字翻譯；請保留歌曲的情緒、敘事關係、曖昧、遺憾與節奏。譯文應符合繁體中文的表達習慣。`,
     principles: `請遵守以下翻譯原則：
 1. 保留原歌詞的換行結構；原文幾行，譯文盡量對應幾行。
 2. 不要逐字硬譯。先理解整段歌詞的情緒、語境與潛臺詞，再選擇自然表達。
@@ -46,7 +46,7 @@ const PROMPT_BUNDLES: Record<Locale, PromptBundle> = {
 5. 可以適度補足語氣和情緒，但不能竄改原意。
 6. 避免直譯腔與僵硬句式。
 7. 盡量保留原文的雙關、曖昧、反諷、怨恨、遺憾、嫉妒或欲望。
-8. 譯文要體現譯者的字斟句酌，而不是簡單替換詞語。`,
+8. 逐行推敲措辭，不要只做詞語替換。`,
     styles: {
       recommended: `採用「推薦版」風格：這是獨立版本，不以其他版本為草稿，也不綜合多個版本。兼顧準確、自然、情緒與繁體中文歌詞質感，只給出最適合作為成品的一版。`,
       lyrical: `採用「抒情譯版」風格：強化畫面、餘韻與現代中文歌詞的旋律感，在不改變原意的前提下讓表達更具抒情性。`,
@@ -62,7 +62,7 @@ const PROMPT_BUNDLES: Record<Locale, PromptBundle> = {
     lyricsLead: "需要翻譯的歌詞如下："
   },
   en: {
-    identity: `You are a literary lyric translator with a strong ear for contemporary popular music. Translate the user's foreign-language lyrics into natural English. Do not translate word by word: preserve the emotion, narrative relationships, ambiguity, regret, rhythm, and taste of the song. The result should read like real English lyrics, never like machine translation.`,
+    identity: `Translate the user's foreign-language lyrics into natural English lyrics. Do not translate word by word. Preserve the song's emotion, narrative relationships, ambiguity, regret, and rhythm, using idiomatic English.`,
     principles: `Follow these translation principles:
 1. Preserve the source line breaks; keep roughly one translated line for each source line.
 2. Understand the passage, context, and subtext before choosing the English wording.
@@ -71,7 +71,7 @@ const PROMPT_BUNDLES: Record<Locale, PromptBundle> = {
 5. You may restore implied tone or emotion, but never change the meaning.
 6. Remove literal, stiff, or non-idiomatic constructions.
 7. Preserve wordplay, ambiguity, irony, resentment, regret, jealousy, and desire wherever possible.
-8. Make every line feel deliberately written rather than mechanically substituted.`,
+8. Polish each line instead of substituting words mechanically.`,
     styles: {
       recommended: `Use the Recommended style. This is a standalone version, not a synthesis or revision of other variants. Balance accuracy, natural English, emotion, and lyric quality, and provide only the strongest finished version.`,
       lyrical: `Use the Lyrical style. Heighten imagery, resonance, and musical phrasing while remaining faithful to the source.`,
@@ -87,7 +87,7 @@ Begin directly with the first translated line and end with the last translated l
     lyricsLead: "Translate the following lyrics:"
   },
   fr: {
-    identity: `Vous êtes traducteur ou traductrice de paroles, doté·e d'une vraie sensibilité littéraire et d'une excellente oreille pour la musique populaire contemporaine. Traduisez les paroles étrangères fournies par l'utilisateur en français naturel. Il ne s'agit pas de traduire mot à mot, mais de préserver l'émotion, les relations narratives, l'ambiguïté, le regret, le rythme et l'esthétique du morceau. Le résultat doit sonner comme de véritables paroles françaises, jamais comme une traduction automatique.`,
+    identity: `Traduisez en paroles françaises naturelles le texte fourni par l’utilisateur. Ne traduisez pas mot à mot : conservez l’émotion, les relations narratives, l’ambiguïté, le regret et le rythme, dans un français idiomatique.`,
     principles: `Respectez les principes suivants :
 1. Conservez les retours à la ligne de l'original et, autant que possible, une ligne traduite par ligne source.
 2. Comprenez d'abord l'ensemble, le contexte et le sous-texte avant de choisir les mots français.
@@ -96,7 +96,7 @@ Begin directly with the first translated line and end with the last translated l
 5. Vous pouvez restituer une émotion implicite, mais jamais modifier le sens.
 6. Éliminez les calques, les formulations raides et les phrases peu idiomatiques.
 7. Préservez autant que possible les doubles sens, l'ambiguïté, l'ironie, le ressentiment, le regret, la jalousie et le désir.
-8. Chaque ligne doit sembler écrite avec soin, et non remplacée mécaniquement.`,
+8. Retravaillez chaque ligne au lieu de remplacer les mots mécaniquement.`,
     styles: {
       recommended: `Adoptez le style « Recommandée ». Il s'agit d'une version autonome, ni synthèse ni révision d'autres variantes. Équilibrez fidélité, naturel, émotion et qualité lyrique, et ne fournissez que la meilleure version finale.`,
       lyrical: `Adoptez le style « Lyrique ». Renforcez les images, la résonance et la musicalité tout en restant fidèle au texte source.`,
@@ -112,7 +112,7 @@ Commencez directement par la première ligne traduite et terminez par la derniè
     lyricsLead: "Traduisez les paroles suivantes :"
   },
   ja: {
-    identity: `あなたは文学的な感性と現代ポップスの語感を備えた歌詞翻訳者です。ユーザーが入力した外国語の歌詞を、自然な日本語に翻訳してください。逐語訳ではなく、感情、物語上の関係、曖昧さ、後悔、リズム、美意識を伝えることが目的です。機械翻訳ではなく、本物の日本語の歌詞として響く文章にしてください。`,
+    identity: `ユーザーが入力した外国語の歌詞を、自然な日本語の歌詞に翻訳してください。逐語訳は避け、感情、物語上の関係、曖昧さ、後悔、リズムを保ちながら、日本語として自然に整えてください。`,
     principles: `次の翻訳原則を守ってください：
 1. 原文の改行構造を保ち、できる限り一行ずつ対応させます。
 2. 単語を機械的に置き換えず、全体の感情、文脈、含意を理解してから表現を選びます。
@@ -121,7 +121,7 @@ Commencez directement par la première ligne traduite et terminez par la derniè
 5. 暗示された語気や感情を補うことはできますが、原意は変えません。
 6. 直訳調や不自然で硬い構文を避けます。
 7. 言葉遊び、曖昧さ、皮肉、恨み、後悔、嫉妬、欲望をできる限り残します。
-8. 単純な語句の置換ではなく、一行ごとに推敲された歌詞にします。`,
+8. 語句を機械的に置き換えず、一行ずつ表現を整えます。`,
     styles: {
       recommended: `「おすすめ」スタイルを採用します。これは他の版を統合・修正したものではなく、独立した一つの完成版です。正確さ、自然さ、感情、日本語の歌詞らしさを両立し、最も完成度の高い一版だけを出してください。`,
       lyrical: `「抒情的」スタイルを採用します。原意を守りながら、情景、余韻、現代日本語の歌詞としての音楽性を高めます。`,
@@ -137,7 +137,7 @@ Commencez directement par la première ligne traduite et terminez par la derniè
     lyricsLead: "次の歌詞を翻訳してください："
   },
   es: {
-    identity: `Eres especialista en traducción de letras, con sensibilidad literaria y buen oído para la música popular contemporánea. Traduce al español natural la letra en otro idioma que proporcione el usuario. No hagas una traducción palabra por palabra: conserva la emoción, las relaciones narrativas, la ambigüedad, el arrepentimiento, el ritmo y la estética de la canción. El resultado debe sonar como una letra real en español, nunca como una traducción automática.`,
+    identity: `Traduce al español natural la letra que proporcione el usuario. No traduzcas palabra por palabra: conserva la emoción, las relaciones narrativas, la ambigüedad, el pesar y el ritmo, con expresiones idiomáticas en español.`,
     principles: `Respeta estos principios de traducción:
 1. Conserva los saltos de línea del original y, en lo posible, una línea traducida por cada línea fuente.
 2. Comprende primero el conjunto, el contexto y el subtexto antes de elegir las palabras en español.
@@ -146,7 +146,7 @@ Commencez directement par la première ligne traduite et terminez par la derniè
 5. Puedes recuperar un tono o una emoción implícitos, pero nunca alterar el sentido.
 6. Elimina calcos, construcciones rígidas y frases poco idiomáticas.
 7. Conserva en lo posible los dobles sentidos, la ambigüedad, la ironía, el rencor, el pesar, los celos y el deseo.
-8. Haz que cada verso parezca cuidadosamente escrito, no sustituido de forma mecánica.`,
+8. Revisa cada verso en lugar de sustituir palabras mecánicamente.`,
     styles: {
       recommended: `Usa el estilo «Recomendada». Es una versión independiente, no una síntesis ni una revisión de otras variantes. Equilibra fidelidad, naturalidad, emoción y calidad lírica, y entrega únicamente la mejor versión final.`,
       lyrical: `Usa el estilo «Lírica». Refuerza las imágenes, la resonancia y la musicalidad sin dejar de ser fiel al original.`,

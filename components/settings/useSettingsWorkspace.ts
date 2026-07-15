@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { SettingsTabId } from "@/components/settings/settings-model";
+import { normalizeAIErrorMessage } from "@/components/editor/utils/normalizeAIErrorMessage";
 import {
   createLatestSaveController,
   type LatestSaveController,
@@ -102,7 +103,7 @@ export function useSettingsWorkspace({
       },
       onError: (saveError) => {
         const currentLocale = latestLifecycleRef.current.locale;
-        setError(saveError instanceof Error ? saveError.message : getAIUiCopy(currentLocale).settingsSaveFailed);
+        setError(normalizeAIErrorMessage(saveError, currentLocale, getAIUiCopy(currentLocale).settingsSaveFailed));
         setSyncErrorKind("save");
       }
     });
@@ -154,9 +155,9 @@ export function useSettingsWorkspace({
         saveController.resetPersisted(createAISaveSnapshot(next, ""));
         aiSettingsLoadedRef.current = true;
       })
-      .catch(() => {
+      .catch((loadError) => {
         if (active) {
-          setError(getAIUiCopy(locale).settingsLoadFailed);
+          setError(normalizeAIErrorMessage(loadError, locale, getAIUiCopy(locale).settingsLoadFailed));
           setSyncErrorKind("load");
           setSaveState("error");
         }
@@ -213,7 +214,7 @@ export function useSettingsWorkspace({
     void Promise.resolve(onUserSettingsChange(next))
       .then(() => queueSavedNotification())
       .catch((saveError) => {
-        setError(saveError instanceof Error ? saveError.message : aiCopy.settingsSaveFailed);
+        setError(normalizeAIErrorMessage(saveError, locale, aiCopy.settingsSaveFailed));
         setSyncErrorKind("save");
         setSaveState("error");
       });
@@ -223,7 +224,7 @@ export function useSettingsWorkspace({
     void Promise.resolve(onLocaleChange(nextLocale))
       .then(() => queueSavedNotification(getAIUiCopy(nextLocale).settingsSaved))
       .catch((saveError) => {
-        setError(saveError instanceof Error ? saveError.message : getAIUiCopy(nextLocale).settingsSaveFailed);
+        setError(normalizeAIErrorMessage(saveError, nextLocale, getAIUiCopy(nextLocale).settingsSaveFailed));
         setSyncErrorKind("save");
         setSaveState("error");
       });
@@ -301,7 +302,7 @@ export function useSettingsWorkspace({
       }
     } catch (clearError) {
       setHasApiKey(true);
-      setError(clearError instanceof Error ? clearError.message : aiCopy.apiKeyClearFailed);
+      setError(normalizeAIErrorMessage(clearError, locale, aiCopy.apiKeyClearFailed));
       setSyncErrorKind("save");
       setSaveState("error");
     } finally {

@@ -3,6 +3,8 @@
 import { FileAudio, Upload } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Section } from "@/components/ui/controls";
+import { createAppRequestHeaders } from "@/lib/app-request";
+import { getLocalizedAppApiError, type AppApiErrorCode } from "@/lib/app-api-errors";
 import type { createT } from "@/lib/i18n";
 import type { ParsedSongData } from "@/lib/types";
 import type { DocumentImportIntent } from "@/lib/editor/document-transactions";
@@ -18,6 +20,7 @@ type ParseLocalAudioResponse =
   | {
       ok: false;
       error: string;
+      code?: AppApiErrorCode;
     };
 
 export function LocalAudioParser({
@@ -59,13 +62,14 @@ export function LocalAudioParser({
     try {
       const response = await fetch("/api/parse-local-audio", {
         method: "POST",
+        headers: createAppRequestHeaders(),
         body: formData,
         signal: intent.signal
       });
       const payload = (await response.json()) as ParseLocalAudioResponse;
 
       if (!payload.ok) {
-        throw new Error(payload.error);
+        throw new Error(getLocalizedAppApiError(payload.code, t, payload.error));
       }
 
       if (!onParsed(payload.data, payload.data.lyrics, intent)) return;

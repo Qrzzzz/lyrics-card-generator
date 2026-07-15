@@ -17,10 +17,10 @@ function getChatCompletionsUrl(baseUrl) {
   try {
     parsed = new URL(normalized);
   } catch {
-    throw new Error("Base URL 无效，请检查设置。");
+    throw new Error("invalid_base_url");
   }
   if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
-    throw new Error("Base URL 无效，请检查设置。");
+    throw new Error("invalid_base_url");
   }
   return normalized.endsWith("/chat/completions") ? normalized : `${normalized}/chat/completions`;
 }

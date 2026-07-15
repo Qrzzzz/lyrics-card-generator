@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { flushSync } from "react-dom";
+import { createAppRequestHeaders } from "@/lib/app-request";
 import { normalizeCardStyle } from "@/lib/card-style-normalize";
 import { clearLyricContent, hasClearableLyricContent } from "@/lib/clear-content";
 import {
@@ -320,7 +321,7 @@ export function useEditorActions({
     try {
       const response = await fetch("/api/parse-song", {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: createAppRequestHeaders({ "content-type": "application/json" }),
         body: JSON.stringify({ url: example.url }),
         signal: enrichmentIntent.signal
       });

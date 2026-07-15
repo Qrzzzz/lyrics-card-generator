@@ -1,4 +1,5 @@
 import { getLyricsCardDesktopApi } from "@/lib/desktop-api";
+import { createAppRequestHeaders } from "@/lib/app-request";
 import { getChatCompletionMessage, getProviderErrorMessage, readProviderResponseBody } from "@/lib/ai/provider-response";
 import { DEFAULT_AI_SETTINGS } from "@/lib/ai/types";
 import { normalizeAISettings } from "@/lib/ai/settings-normalize";
@@ -75,7 +76,7 @@ export async function streamAITranslation(params: AITranslationStreamParams) {
 
   const response = await fetch("/api/ai/translate", {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers: createAppRequestHeaders({ "content-type": "application/json" }),
     body: JSON.stringify({
       prompt: params.prompt,
       reasoning: params.reasoning,

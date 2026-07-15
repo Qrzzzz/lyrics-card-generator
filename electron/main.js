@@ -741,20 +741,20 @@ function decryptStoredApiKey(encryptedApiKey) {
   try {
     return safeStorage.decryptString(Buffer.from(encryptedApiKey, "base64"));
   } catch {
-    throw new Error("无法读取已保存的 API Key，请在设置中重新输入。");
+    throw createAIError("api_key_read_failed");
   }
 }
 
 function ensureSecureStorageAvailable() {
   if (!safeStorage.isEncryptionAvailable()) {
-    throw new Error("系统安全存储暂不可用，无法安全处理 API Key。");
+    throw createAIError("secure_storage_unavailable");
   }
   if (
     process.platform === "linux"
     && typeof safeStorage.getSelectedStorageBackend === "function"
     && safeStorage.getSelectedStorageBackend() === "basic_text"
   ) {
-    throw new Error("系统未提供安全的密钥存储后端，已拒绝保存 API Key。");
+    throw createAIError("secure_storage_unavailable");
   }
 }
 
