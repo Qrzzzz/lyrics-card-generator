@@ -1,6 +1,7 @@
 import {
   DEFAULT_USER_SETTINGS,
   getExportPixelRatio,
+  type ExportFormatId,
   type ExportQualityId,
   type EffectiveUiThemeId,
   type UiAccentMode,
@@ -16,6 +17,7 @@ const THEME_MODES = new Set<UiThemeMode>(["album-dynamic", "dark", "light"]);
 const ACCENT_MODES = new Set<UiAccentMode>(["album-dynamic", "preset", "custom"]);
 const ACCENT_PRESETS = new Set<UiAccentPresetId>(["red", "orange", "yellow", "green", "blue", "purple"]);
 const QUALITIES = new Set<ExportQualityId>(["low", "medium", "high"]);
+const EXPORT_FORMATS = new Set<ExportFormatId>(["png", "webp", "jpg"]);
 
 type UserSettingsInput = Partial<UserSettings> & Record<string, unknown>;
 
@@ -76,6 +78,12 @@ function normalizeExportQuality(value: unknown): ExportQualityId {
     : DEFAULT_USER_SETTINGS.defaultExportQuality;
 }
 
+function normalizeExportFormat(value: unknown): ExportFormatId {
+  return EXPORT_FORMATS.has(value as ExportFormatId)
+    ? value as ExportFormatId
+    : DEFAULT_USER_SETTINGS.defaultExportFormat;
+}
+
 export function normalizeUserSettings(input: unknown): UserSettings {
   const source = input && typeof input === "object" ? input as UserSettingsInput : {};
   const uiThemeMode = normalizeThemeMode(source);
@@ -101,6 +109,7 @@ export function normalizeUserSettings(input: unknown): UserSettings {
     defaultSharedByText: typeof source.defaultSharedByText === "string"
       ? source.defaultSharedByText.slice(0, 120)
       : DEFAULT_USER_SETTINGS.defaultSharedByText,
+    defaultExportFormat: normalizeExportFormat(source.defaultExportFormat),
     defaultExportQuality: quality,
     defaultExportPixelRatio: getExportPixelRatio(quality),
     firstLaunchLanguageSelected: source.firstLaunchLanguageSelected === true

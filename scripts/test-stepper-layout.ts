@@ -59,6 +59,7 @@ assert.deepEqual(
 );
 
 const stepperSource = readFileSync(resolve("components/editor/SettingsStepper.tsx"), "utf8");
+const webLiteEditorSource = readFileSync(resolve("web-lite/WebLiteEditor.tsx"), "utf8");
 assert.ok(
   stepperSource.includes(': "content-start self-start"'),
   "default and Web Lite steps keep natural height instead of stretching to the preview column"
@@ -109,15 +110,27 @@ assert.ok(
   "shared chrome can span a content column and any companion panel"
 );
 assert.ok(
-  stepperSource.includes('isFocus ? "min-[960px]:col-span-2" : "lg:col-span-2"') &&
-    stepperSource.includes("min-[960px]:col-start-2") &&
-    stepperSource.includes("lg:col-start-2 lg:row-start-2 lg:row-span-2"),
-  "the shared rail spans both focus and preview workbench columns at their desktop breakpoints"
+  stepperSource.includes('hasCompanionAside && isFocus && "min-[960px]:col-span-2"') &&
+    stepperSource.includes("min-[960px]:col-start-2"),
+  "the shared rail still spans the two-column focus presentation"
 );
 assert.ok(
-  stepperSource.includes('? "max-[959px]:order-2 min-[960px]:col-start-1') &&
-    stepperSource.includes('? "max-[959px]:order-3 min-[960px]:col-start-2'),
+  stepperSource.includes('hasCompanionAside && isFocus && "max-[959px]:order-2 min-[960px]:col-start-1') &&
+    stepperSource.includes('className="min-h-0 min-w-0 max-[959px]:order-3 min-[960px]:col-start-2'),
   "the narrow focus layout keeps primary search before alternate import methods"
+);
+assert.ok(
+  stepperSource.includes('data-testid="preview-workbench-track"') &&
+    stepperSource.includes('data-workbench-panel="editor-settings"') &&
+    stepperSource.includes('data-workbench-panel="preview"') &&
+    stepperSource.includes('data-workbench-panel="export-settings"'),
+  "preview steps use one ordered three-panel track"
+);
+assert.ok(
+  stepperSource.includes('animate={{ x: isExportWorkbench ? "calc(-33.333333% - 0.416667rem)" : "0%" }}') &&
+    stepperSource.includes('aria-hidden={isExportWorkbench}') &&
+    stepperSource.includes('inert={!isExportWorkbench ? true : undefined}'),
+  "the export step pans the whole track while keeping off-screen settings inert"
 );
 assert.ok(
   stepperSource.includes("const isComplete = index < currentStep"),
@@ -149,6 +162,11 @@ assert.ok(
   editorSource.includes("companionAside={") &&
     editorSource.includes(") : activeSettingsStep?.aside"),
   "step one and preview steps place their companion panels inside the shared workbench"
+);
+assert.ok(
+  webLiteEditorSource.includes("companionAside={") &&
+    webLiteEditorSource.includes("pressureEnabled={currentStep >= 2}"),
+  "Web Lite shares the preview/export workbench and limits pressure feedback to steps three through six"
 );
 
 const songImportAsideSource = readFileSync(resolve("components/editor/SongImportAside.tsx"), "utf8");
@@ -224,6 +242,13 @@ const lyricsWorkspaceSource = readFileSync(resolve("components/editor/LyricsWork
 const lyricsToolsSource = readFileSync(resolve("components/editor/LyricsToolsAside.tsx"), "utf8");
 const globalsSource = readFileSync(resolve("app/globals.css"), "utf8");
 assert.ok(
+  globalsSource.includes(".preview-workbench-track") &&
+    globalsSource.includes("width: calc(150% + 0.625rem);") &&
+    globalsSource.includes("grid-template-columns: repeat(3, minmax(0, 1fr));") &&
+    globalsSource.includes('.preview-workbench-export[data-active="false"]'),
+  "desktop uses a three-panel horizontal track while narrow layouts hide inactive settings"
+);
+assert.ok(
   lyricsWorkspaceSource.includes('className="relative flex min-h-0 flex-col overflow-hidden"') &&
     lyricsWorkspaceSource.includes("lyrics-workspace-column lyrics-summary-aside") &&
     lyricsWorkspaceSource.includes("lyrics-workspace-column lyrics-document-column") &&
@@ -251,4 +276,4 @@ try {
   URL.revokeObjectURL = originalRevokeObjectUrl;
 }
 
-console.log(JSON.stringify({ ok: true, stepperLayoutTests: 41 }, null, 2));
+console.log(JSON.stringify({ ok: true, stepperLayoutTests: 45 }, null, 2));

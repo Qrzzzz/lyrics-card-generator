@@ -4,7 +4,7 @@
 
 ### Générez des cartes de paroles soignées prêtes à partager
 
-**Spotify / Apple Music / NetEase Cloud Music / QQ Music · application de bureau Windows · export PNG haute résolution · documentation multilingue**
+**Spotify / Apple Music / NetEase Cloud Music / QQ Music · application de bureau Windows · export PNG / WebP / JPG haute résolution · documentation multilingue**
 
 <p>
   <strong>Langue</strong><br/>
@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v5.6.1.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v5.6.2.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="#développement-local">Développement local</a> ·
@@ -29,7 +29,7 @@
 ![Platform](https://img.shields.io/badge/Platform-Windows%20Desktop-111827)
 ![Stack](https://img.shields.io/badge/Stack-Next.js%20%2B%20React%20%2B%20TypeScript-0F766E)
 ![Desktop](https://img.shields.io/badge/Desktop-Electron-1D4ED8)
-![Output](https://img.shields.io/badge/Output-PNG-FF5722)
+![Output](https://img.shields.io/badge/Output-PNG%20%2F%20WebP%20%2F%20JPG-FF5722)
 ![Docs](https://img.shields.io/badge/Docs-6%20Languages-7C3AED)
 ![Release](https://img.shields.io/github/v/release/Qrzzzz/lyrics-card-generator?include_prereleases)
 
@@ -45,29 +45,29 @@
 />
 
 Une application Windows pour créer des cartes de paroles.
-Collez un lien de morceau ou saisissez les informations manuellement, modifiez les paroles, traductions, pochettes et styles visuels, puis exportez une image PNG haute résolution.
+Collez un lien de morceau ou saisissez les informations manuellement, modifiez les paroles, traductions, pochettes et styles visuels, puis exportez une image PNG, WebP ou JPG haute résolution.
 
 ## 📦 Téléchargement et installation
 
 Téléchargez la dernière version depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
 
-* Installateur recommandé : `Lyrics Card Generator Setup 5.6.1.exe`
-* Version portable : `Lyrics Card Generator-5.6.1-portable.exe`
+* Installateur recommandé : `Lyrics Card Generator Setup 5.6.2.exe`
+* Version portable : `Lyrics Card Generator-5.6.2-portable.exe`
 
 L'installateur est recommandé pour une utilisation régulière. La version portable convient aux essais, à une utilisation temporaire ou à un disque amovible.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### Points clés de la v5.6.1
+### Points clés de la v5.6.2
 
-* Corrige le filtrage introduit en v5.5.4, qui considérait à tort l’origine `127.0.0.1` du navigateur et l’URL de route interne `localhost` de Next comme deux origines différentes.
-* Rétablit la recherche NetEase Cloud Music, l’import des métadonnées et des paroles, ainsi que l’analyse des liens Spotify, Apple Music, NetEase et QQ Music.
-* Conserve le marqueur de requête, la validation du type de contenu et le rejet explicite des requêtes intersites ; les interfaces d’édition, d’import et d’export restent inchangées.
+* Ajoute à l’aperçu des étapes 3 à 6 une inclinaison au pointeur, une élévation au survol et un retour à la pression, avec un rendu stable sur écran tactile et en mode de réduction des animations.
+* Fait glisser tout l’espace de travail vers la gauche entre les étapes 5 et 6 : l’aperçu passe continûment de droite à gauche tandis que les réglages d’export arrivent par la droite ; le retour et les petites fenêtres restent adaptatifs.
+* Produit de vrais fichiers PNG, WebP et JPG dans les versions Desktop et Web Lite, mémorise le format par défaut dans les réglages et isole les effets d’aperçu de l’export par instantané.
 
 ## 🌐 Notes de publication multilingues
 
 Par défaut, GitHub Release affiche un résumé en chinois simplifié. Consultez les notes complètes :
-[简体中文](./docs/releases/v5.6.1.zh-CN.md) · [繁體中文](./docs/releases/v5.6.1.zh-TW.md) · [English](./docs/releases/v5.6.1.en.md) · [Français](./docs/releases/v5.6.1.fr.md) · [日本語](./docs/releases/v5.6.1.ja.md) · [Español](./docs/releases/v5.6.1.es.md)
+[简体中文](./docs/releases/v5.6.2.zh-CN.md) · [繁體中文](./docs/releases/v5.6.2.zh-TW.md) · [English](./docs/releases/v5.6.2.en.md) · [Français](./docs/releases/v5.6.2.fr.md) · [日本語](./docs/releases/v5.6.2.ja.md) · [Español](./docs/releases/v5.6.2.es.md)
 
 <a id="fonctionnalités-principales"></a>
 
@@ -79,7 +79,7 @@ Par défaut, GitHub Release affiche un résumé en chinois simplifié. Consultez
 * Formats portrait, paysage et dimensions de toile personnalisées
 * Mise en page paysage reconstruite autour des zones sûres, de la colonne de pochette, de la colonne de contenu et du pied de page
 * Largeur et hauteur automatiques mesurées pour les toiles portrait personnalisées
-* Export PNG haute résolution
+* Export PNG, WebP et JPG haute résolution
 
 ### 📝 Mise en page et traduction des paroles
 
@@ -126,7 +126,7 @@ L'application peut démarrer hors ligne. Les fonctions suivantes restent disponi
 * Import de pochette locale
 * Analyse des métadonnées et paroles intégrées de fichiers MP3 / FLAC
 * Personnalisation visuelle
-* Génération et export PNG
+* Génération et export PNG, WebP et JPG
 
 Ces fonctions nécessitent Internet :
 
@@ -145,7 +145,7 @@ Ces fonctions nécessitent Internet :
 4. Modifiez les paroles et traductions ; utilisez la traduction IA ou séparez automatiquement les lignes original / traduction selon la langue de l'interface.
 5. Ajustez le ratio de toile, les jeux de polices CJK / latines, les couleurs, cadres, filigranes et autres styles.
 6. Prévisualisez la carte à droite.
-7. Utilisez « Terminer et exporter » pour enregistrer l'image PNG.
+7. Choisissez PNG, WebP ou JPG, puis utilisez « Terminer et exporter » pour enregistrer l’image.
 
 ## 🔄 Vérification des mises à jour
 

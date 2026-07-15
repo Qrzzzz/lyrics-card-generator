@@ -29,7 +29,7 @@ import {
 } from "@/components/editor/hooks/useLyricEditorEffects";
 import { clearLyricContent, hasClearableLyricContent } from "@/lib/clear-content";
 import { applyEditorStyleChange } from "@/lib/editor/apply-style-change";
-import { exportNodeAsPng } from "@/lib/export-image";
+import { exportNodeAsImage } from "@/lib/export-image";
 import { createExportSnapshot, snapshotAsAppState, type ExportSnapshot } from "@/lib/export-snapshot";
 import { resolveExportSafetyMessage } from "@/lib/export-safety";
 import {
@@ -44,6 +44,7 @@ import { documentLanguageForLocale } from "@/lib/locale-language";
 import {
   DEFAULT_USER_SETTINGS,
   getExportPixelRatio,
+  type ExportFormatId,
   type ExportQualityId,
   type UserSettings
 } from "@/lib/settings/types";
@@ -84,6 +85,7 @@ const WEB_LITE_SETTINGS: UserSettings = {
 type WebLitePreferences = {
   version: 1;
   locale: WebLiteLocale;
+  exportFormat: ExportFormatId;
   exportQuality: Extract<ExportQualityId, "medium" | "high">;
 };
 
@@ -93,6 +95,7 @@ export function WebLiteEditor() {
   const [currentStep, setCurrentStep] = useState(0);
   const [fontSchemePreview, setFontSchemePreview] = useState<FontScheme | null>(null);
   const [isPreviewVisible, setIsPreviewVisible] = useState(true);
+  const [exportFormat, setExportFormat] = useState<ExportFormatId>(initialPreferences.exportFormat);
   const [exportQuality, setExportQuality] = useState<Extract<ExportQualityId, "medium" | "high">>(
     initialPreferences.exportQuality
   );
@@ -166,6 +169,7 @@ export function WebLiteEditor() {
     const preferences: WebLitePreferences = {
       version: 1,
       locale,
+      exportFormat,
       exportQuality
     };
 
@@ -174,7 +178,7 @@ export function WebLiteEditor() {
     } catch {
       // Web Lite remains fully usable when storage is blocked.
     }
-  }, [exportQuality, locale]);
+  }, [exportFormat, exportQuality, locale]);
 
   useEffect(() => {
     if (!toast) {
@@ -347,7 +351,12 @@ export function WebLiteEditor() {
       return;
     }
 
-    const snapshot = createExportSnapshot(parsedState, getExportPixelRatio(exportQuality), exportRevisionRef.current);
+    const snapshot = createExportSnapshot(
+      parsedState,
+      getExportPixelRatio(exportQuality),
+      exportRevisionRef.current,
+      exportFormat
+    );
     const result = await runExportTransaction({
       mutex: exportMutexRef.current,
       snapshot,
@@ -363,9 +372,10 @@ export function WebLiteEditor() {
           ? resolveExportSafetyMessage(validation.blockingReason, validation.lineStatus.totalLineCount, t)
           : null;
       },
-      captureSnapshot: (mountedSnapshot, node, signal) => exportNodeAsPng(
+      captureSnapshot: (mountedSnapshot, node, signal) => exportNodeAsImage(
         node,
         mountedSnapshot.fileName,
+        mountedSnapshot.format,
         mountedSnapshot.width,
         mountedSnapshot.height,
         mountedSnapshot.pixelRatio,
@@ -489,6 +499,8 @@ export function WebLiteEditor() {
         <ExportPanel
           t={t}
           accentColor={accentColor}
+          exportFormat={exportFormat}
+          onExportFormatChange={setExportFormat}
           exportQuality={exportQuality}
           onExportQualityChange={(quality) => {
             if (quality === "medium" || quality === "high") {
@@ -528,8 +540,8 @@ export function WebLiteEditor() {
                 onClearAll={clearAllContent}
               />
 
-              <div className="grid min-w-0 max-w-full gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(420px,600px)]">
-                <MotionPanel className="order-2 grid min-w-0 gap-4 lg:order-1">
+              <div className="grid min-w-0 max-w-full gap-5">
+                <MotionPanel className="grid min-w-0 gap-4">
                   <SettingsStepper
                     steps={steps}
                     currentStep={currentStep}
@@ -537,21 +549,23 @@ export function WebLiteEditor() {
                     backText={t("step.back")}
                     nextText={t("step.next")}
                     themeColor={accentColor}
+                    companionAside={
+                      <PreviewPane
+                        isPreviewVisible={isPreviewVisible}
+                        onPreviewVisibleChange={setIsPreviewVisible}
+                        song={parsedState.song}
+                        lyrics={parsedState.lyrics}
+                        style={parsedState.style}
+                        cardRef={cardRef}
+                        fontSchemePreview={fontSchemePreview}
+                        clearTransitionKey={clearTransitionKey}
+                        pressureEnabled={currentStep >= 2}
+                        locale={locale}
+                        t={t}
+                      />
+                    }
                   />
                 </MotionPanel>
-
-                <PreviewPane
-                  isPreviewVisible={isPreviewVisible}
-                  onPreviewVisibleChange={setIsPreviewVisible}
-                  song={parsedState.song}
-                  lyrics={parsedState.lyrics}
-                  style={parsedState.style}
-                  cardRef={cardRef}
-                  fontSchemePreview={fontSchemePreview}
-                  clearTransitionKey={clearTransitionKey}
-                  locale={locale}
-                  t={t}
-                />
               </div>
             </div>
           </div>
@@ -607,6 +621,7 @@ function readPreferences(): WebLitePreferences {
   const fallback: WebLitePreferences = {
     version: 1,
     locale: browserLocale,
+    exportFormat: "png",
     exportQuality: "high"
   };
 
@@ -619,6 +634,7 @@ function readPreferences(): WebLitePreferences {
     return {
       version: 1,
       locale: isWebLiteLocale(parsed.locale) ? parsed.locale : fallback.locale,
+      exportFormat: parsed.exportFormat === "webp" || parsed.exportFormat === "jpg" ? parsed.exportFormat : "png",
       exportQuality: parsed.exportQuality === "medium" || parsed.exportQuality === "high" ? parsed.exportQuality : "high"
     };
   } catch {

@@ -4,7 +4,7 @@
 
 ### Genera tarjetas de letras de alta calidad listas para compartir
 
-**Spotify / Apple Music / NetEase Cloud Music / QQ Music · aplicación de escritorio para Windows · exportación PNG en alta resolución · documentación multilingüe**
+**Spotify / Apple Music / NetEase Cloud Music / QQ Music · aplicación de escritorio para Windows · exportación PNG / WebP / JPG en alta resolución · documentación multilingüe**
 
 <p>
   <strong>Idioma</strong><br/>
@@ -19,7 +19,7 @@
 <p>
   <strong>Navegación</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Descargar la última versión</a> ·
-  <a href="./docs/releases/v5.6.1.es.md">Notas de la versión</a> ·
+  <a href="./docs/releases/v5.6.2.es.md">Notas de la versión</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en línea</a> ·
   <a href="#funciones-principales">Funciones principales</a> ·
   <a href="#desarrollo-local">Desarrollo local</a> ·
@@ -29,7 +29,7 @@
 ![Platform](https://img.shields.io/badge/Platform-Windows%20Desktop-111827)
 ![Stack](https://img.shields.io/badge/Stack-Next.js%20%2B%20React%20%2B%20TypeScript-0F766E)
 ![Desktop](https://img.shields.io/badge/Desktop-Electron-1D4ED8)
-![Output](https://img.shields.io/badge/Output-PNG-FF5722)
+![Output](https://img.shields.io/badge/Output-PNG%20%2F%20WebP%20%2F%20JPG-FF5722)
 ![Docs](https://img.shields.io/badge/Docs-6%20Languages-7C3AED)
 ![Release](https://img.shields.io/github/v/release/Qrzzzz/lyrics-card-generator?include_prereleases)
 
@@ -45,29 +45,29 @@
 />
 
 Una aplicación de escritorio para Windows que crea tarjetas de letras.
-Pega un enlace de canción o introduce la información manualmente, edita letras, traducciones, portada y estilos visuales, y exporta una imagen PNG de alta resolución para compartir.
+Pega un enlace de canción o introduce la información manualmente, edita letras, traducciones, portada y estilos visuales, y exporta una imagen PNG, WebP o JPG de alta resolución para compartir.
 
 ## 📦 Descarga e instalación
 
 Descarga la versión más reciente desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Instalador recomendado: `Lyrics Card Generator Setup 5.6.1.exe`
-* Versión portable: `Lyrics Card Generator-5.6.1-portable.exe`
+* Instalador recomendado: `Lyrics Card Generator Setup 5.6.2.exe`
+* Versión portable: `Lyrics Card Generator-5.6.2-portable.exe`
 
 El instalador se recomienda para uso habitual. La versión portable es útil para pruebas, uso temporal o ejecución desde una unidad extraíble.
 
 > La compilación actual no está firmada. Windows puede mostrar una advertencia de SmartScreen, algo habitual en aplicaciones personales sin firma.
 
-### Aspectos destacados de la versión 5.6.1
+### Aspectos destacados de la versión 5.6.2
 
-* Corrige el límite de solicitudes introducido en v5.5.4, que trataba por error el origen `127.0.0.1` del navegador y la URL interna `localhost` de Next como orígenes distintos.
-* Restablece la búsqueda en NetEase Cloud Music, la importación de metadatos y letras, y el análisis de enlaces de Spotify, Apple Music, NetEase y QQ Music.
-* Mantiene el identificador de solicitud, la validación del tipo de contenido y el rechazo explícito de solicitudes entre sitios; las interfaces de edición, importación y exportación no cambian.
+* Añade a la vista previa de los pasos 3–6 inclinación con el puntero, elevación al pasar el cursor y respuesta al pulsar, con una presentación estable en pantallas táctiles y cuando se reduce el movimiento.
+* Desplaza todo el espacio de trabajo hacia la izquierda entre los pasos 5 y 6: la vista previa pasa de la derecha a la izquierda mientras los ajustes de exportación entran por la derecha; el regreso y las ventanas pequeñas siguen siendo adaptables.
+* Exporta archivos PNG, WebP y JPG reales tanto en Desktop como en Web Lite, guarda el formato predeterminado en Ajustes y mantiene los efectos de la vista previa fuera de la salida basada en instantáneas.
 
 ## 🌐 Notas de publicación multilingües
 
 GitHub Release muestra de forma predeterminada un resumen en chino simplificado. Consulta las notas completas:
-[简体中文](./docs/releases/v5.6.1.zh-CN.md) · [繁體中文](./docs/releases/v5.6.1.zh-TW.md) · [English](./docs/releases/v5.6.1.en.md) · [Français](./docs/releases/v5.6.1.fr.md) · [日本語](./docs/releases/v5.6.1.ja.md) · [Español](./docs/releases/v5.6.1.es.md)
+[简体中文](./docs/releases/v5.6.2.zh-CN.md) · [繁體中文](./docs/releases/v5.6.2.zh-TW.md) · [English](./docs/releases/v5.6.2.en.md) · [Français](./docs/releases/v5.6.2.fr.md) · [日本語](./docs/releases/v5.6.2.ja.md) · [Español](./docs/releases/v5.6.2.es.md)
 
 <a id="funciones-principales"></a>
 
@@ -79,7 +79,7 @@ GitHub Release muestra de forma predeterminada un resumen en chino simplificado.
 * Tamaños verticales, horizontales y de lienzo personalizado
 * Diseño horizontal reconstruido con áreas seguras, columna de portada, columna de contenido y regiones de pie
 * Ancho y altura automáticos medidos para lienzos verticales personalizados
-* Exportación PNG de alta resolución
+* Exportación PNG, WebP y JPG de alta resolución
 
 ### 📝 Diseño y traducción de letras
 
@@ -126,7 +126,7 @@ La aplicación de escritorio puede iniciarse sin conexión. Estas funciones sigu
 * Subida de portada local
 * Análisis de metadatos y letras incrustadas en MP3 / FLAC locales
 * Personalización visual
-* Generación y exportación PNG
+* Generación y exportación PNG, WebP y JPG
 
 Estas funciones requieren internet:
 
@@ -145,7 +145,7 @@ Estas funciones requieren internet:
 4. Edita letras y traducciones; usa traducción con IA o separa texto original / traducido alternado según el idioma de interfaz seleccionado.
 5. Ajusta proporción del lienzo, combinaciones CJK / latinas, colores, marcos, marcas de agua y otros estilos.
 6. Previsualiza la tarjeta a la derecha.
-7. Usa “Completar y exportar” para guardar la imagen PNG.
+7. Elige PNG, WebP o JPG y usa “Completar y exportar” para guardar la imagen.
 
 ## 🔄 Búsqueda de actualizaciones
 

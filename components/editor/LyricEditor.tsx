@@ -46,7 +46,12 @@ import { proxiedImageUrl } from "@/lib/image-utils";
 import { DEFAULT_PALETTE } from "@/lib/palette-background";
 import { settingsCopy } from "@/lib/settings/copy";
 import { resolveUiAccentColor } from "@/lib/settings/accent";
-import { DEFAULT_USER_SETTINGS, getExportPixelRatio, type ExportQualityId } from "@/lib/settings/types";
+import {
+  DEFAULT_USER_SETTINGS,
+  getExportPixelRatio,
+  type ExportFormatId,
+  type ExportQualityId
+} from "@/lib/settings/types";
 import { resolveEffectiveUiThemeId } from "@/lib/settings/user-settings";
 import type { AppState, FontScheme, Locale } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -76,6 +81,7 @@ export function LyricEditor() {
   const [activeSurface, setActiveSurface] = useState<ActiveSurface>("editor");
   const [requestedSettingsTab, setRequestedSettingsTab] = useState<SettingsTabId>();
   const [previewMeasurementKey, setPreviewMeasurementKey] = useState(0);
+  const [exportFormat, setExportFormat] = useState<ExportFormatId>(DEFAULT_USER_SETTINGS.defaultExportFormat);
   const [exportQuality, setExportQuality] = useState<ExportQualityId>(DEFAULT_USER_SETTINGS.defaultExportQuality);
   const [toast, setToast] = useState<ToastNotice | null>(null);
   const exportCardRef = useRef<HTMLElement | null>(null);
@@ -190,6 +196,7 @@ export function LyricEditor() {
     setState,
     cardRef: captureCardRef,
     exportPixelRatio,
+    exportFormat,
     exportBlockMessage,
     getExportBlockMessage: (snapshot) => {
       const validationState = snapshot ? snapshotAsAppState(snapshot, parsedState) : parsedState;
@@ -225,6 +232,10 @@ export function LyricEditor() {
     const timeout = window.setTimeout(() => setToast(null), 3600);
     return () => window.clearTimeout(timeout);
   }, [toast]);
+
+  useEffect(() => {
+    setExportFormat(userSettings.defaultExportFormat);
+  }, [userSettings.defaultExportFormat]);
 
   useEffect(() => {
     setExportQuality(userSettings.defaultExportQuality);
@@ -346,6 +357,7 @@ export function LyricEditor() {
     themeColor: resolvedAccentColor,
     isExporting: isCompleteExporting,
     exportBlockingMessage: exportBlockMessage,
+    exportFormat,
     exportQuality,
     lyricsLayout: {
       lineStatus: exportReadiness.lineStatus
@@ -380,6 +392,7 @@ export function LyricEditor() {
       onConfirmAiTranslate: translateWithAI,
       onStyleChange: handleStyleChange,
       onFontSchemePreviewChange: setFontSchemePreview,
+      onExportFormatChange: setExportFormat,
       onExportQualityChange: setExportQuality,
       onExport: completeAndExport
     }
@@ -492,6 +505,7 @@ export function LyricEditor() {
                             fontSchemePreview={fontSchemePreview}
                             clearTransitionKey={clearTransitionKey}
                             measurementKey={previewMeasurementKey}
+                            pressureEnabled={currentStep >= 2}
                             locale={state.locale}
                             t={t}
                           />

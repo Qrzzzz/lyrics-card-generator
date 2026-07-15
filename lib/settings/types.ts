@@ -22,6 +22,8 @@ export type AppBackgroundMode =
 
 export type ExportQualityId = "low" | "medium" | "high";
 
+export type ExportFormatId = "png" | "webp" | "jpg";
+
 export type UserSettings = {
   version: 1;
   sparkCursorEnabled: boolean;
@@ -44,6 +46,7 @@ export type UserSettings = {
   defaultShowGeneratedWatermark: boolean;
   defaultShowSharedBy: boolean;
   defaultSharedByText: string;
+  defaultExportFormat: ExportFormatId;
   defaultExportQuality: ExportQualityId;
   defaultExportPixelRatio: number;
   firstLaunchLanguageSelected: boolean;
@@ -53,6 +56,12 @@ export const EXPORT_QUALITY_OPTIONS = [
   { id: "low", pixelRatio: 1 },
   { id: "medium", pixelRatio: 1.4 },
   { id: "high", pixelRatio: 2 }
+] as const;
+
+export const EXPORT_FORMAT_OPTIONS = [
+  { id: "png", extension: "png", mimeType: "image/png" },
+  { id: "webp", extension: "webp", mimeType: "image/webp" },
+  { id: "jpg", extension: "jpg", mimeType: "image/jpeg" }
 ] as const;
 
 export function getExportPixelRatio(quality: ExportQualityId): number {
@@ -78,6 +87,7 @@ export const DEFAULT_USER_SETTINGS: UserSettings = {
   defaultShowGeneratedWatermark: false,
   defaultShowSharedBy: false,
   defaultSharedByText: "",
+  defaultExportFormat: "png",
   defaultExportQuality: "high",
   defaultExportPixelRatio: 2,
   firstLaunchLanguageSelected: false

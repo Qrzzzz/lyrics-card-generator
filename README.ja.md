@@ -4,7 +4,7 @@
 
 ### 共有に使える高品質な歌詞カードを生成
 
-**Spotify / Apple Music / NetEase Cloud Music / QQ Music · Windows デスクトップアプリ · 高解像度 PNG 書き出し · 多言語ドキュメント**
+**Spotify / Apple Music / NetEase Cloud Music / QQ Music · Windows デスクトップアプリ · 高解像度 PNG / WebP / JPG 書き出し · 多言語ドキュメント**
 
 <p>
   <strong>言語</strong><br/>
@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v5.6.1.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v5.6.2.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="#ローカル開発">ローカル開発</a> ·
@@ -29,7 +29,7 @@
 ![Platform](https://img.shields.io/badge/Platform-Windows%20Desktop-111827)
 ![Stack](https://img.shields.io/badge/Stack-Next.js%20%2B%20React%20%2B%20TypeScript-0F766E)
 ![Desktop](https://img.shields.io/badge/Desktop-Electron-1D4ED8)
-![Output](https://img.shields.io/badge/Output-PNG-FF5722)
+![Output](https://img.shields.io/badge/Output-PNG%20%2F%20WebP%20%2F%20JPG-FF5722)
 ![Docs](https://img.shields.io/badge/Docs-6%20Languages-7C3AED)
 ![Release](https://img.shields.io/github/v/release/Qrzzzz/lyrics-card-generator?include_prereleases)
 
@@ -45,29 +45,29 @@
 />
 
 歌詞共有カードを作成する Windows デスクトップアプリです。
-曲リンクを貼り付けるか情報を手入力し、歌詞、翻訳、カバー、見た目を編集して、高解像度 PNG として書き出せます。
+曲リンクを貼り付けるか情報を手入力し、歌詞、翻訳、カバー、見た目を編集して、高解像度の PNG、WebP、JPG として書き出せます。
 
 ## 📦 ダウンロードとインストール
 
 最新版は [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) からダウンロードできます。
 
-* 推奨インストーラー：`Lyrics Card Generator Setup 5.6.1.exe`
-* ポータブル版：`Lyrics Card Generator-5.6.1-portable.exe`
+* 推奨インストーラー：`Lyrics Card Generator Setup 5.6.2.exe`
+* ポータブル版：`Lyrics Card Generator-5.6.2-portable.exe`
 
 通常利用にはインストーラーを推奨します。ポータブル版は一時利用、検証、リムーバブルドライブでの利用に向いています。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v5.6.1 の更新ポイント
+### v5.6.2 の更新ポイント
 
-* v5.5.4 のリクエスト境界が、ブラウザー側の `127.0.0.1` と Next 内部の `localhost` ルート URL を別オリジンと誤判定する問題を修正しました。
-* NetEase Cloud Music の検索、検索結果の曲情報と歌詞の取り込み、および Spotify、Apple Music、NetEase、QQ Music のリンク解析を復旧しました。
-* アプリ識別ヘッダー、コンテンツ形式の検証、明示的なクロスサイト拒否は維持しています。編集、取り込み、書き出し画面に変更はありません。
+* ステップ 3〜6 のライブプレビューに、ポインターに応じた傾き、ホバー時の浮き上がり、押下時の反発を追加しました。タッチ操作や視差効果を減らす設定では安定した静止表示に切り替わります。
+* ステップ 5 から 6 へ進むと作業領域全体が左へ移動し、右側のプレビューが連続して左へ移りながら、書き出し設定が右から入ります。逆方向の切り替えと小さいウィンドウにも対応します。
+* Desktop と Web Lite の両方で実際の PNG、WebP、JPG を書き出せます。設定では既定形式を保存でき、プレビュー効果はスナップショット方式の出力に混入しません。
 
 ## 🌐 多言語リリースノート
 
 GitHub Release ではデフォルトで簡体字中国語の概要が表示されます。完全なリリースノートはこちら：
-[简体中文](./docs/releases/v5.6.1.zh-CN.md) · [繁體中文](./docs/releases/v5.6.1.zh-TW.md) · [English](./docs/releases/v5.6.1.en.md) · [Français](./docs/releases/v5.6.1.fr.md) · [日本語](./docs/releases/v5.6.1.ja.md) · [Español](./docs/releases/v5.6.1.es.md)
+[简体中文](./docs/releases/v5.6.2.zh-CN.md) · [繁體中文](./docs/releases/v5.6.2.zh-TW.md) · [English](./docs/releases/v5.6.2.en.md) · [Français](./docs/releases/v5.6.2.fr.md) · [日本語](./docs/releases/v5.6.2.ja.md) · [Español](./docs/releases/v5.6.2.es.md)
 
 <a id="主な機能"></a>
 
@@ -79,7 +79,7 @@ GitHub Release ではデフォルトで簡体字中国語の概要が表示さ�
 * 縦向き、横向き、カスタムキャンバスサイズに対応
 * 安全領域、カバー列、コンテンツ列、フッター領域に基づく安定した横向きレイアウト
 * 縦向きカスタムキャンバスで実測に基づく自動幅と自動高さ
-* 高解像度 PNG 書き出し
+* 高解像度 PNG、WebP、JPG 書き出し
 
 ### 📝 歌詞のレイアウトと翻訳
 
@@ -126,7 +126,7 @@ EXE を起動すると、ユーザーのマシン上でローカル Next サー�
 * ローカルカバーのアップロード
 * ローカル MP3 / FLAC のメタデータと埋め込み歌詞の解析
 * スタイル調整
-* PNG 生成と書き出し
+* PNG、WebP、JPG の生成と書き出し
 
 以下の機能にはインターネット接続が必要です。
 
@@ -145,7 +145,7 @@ EXE を起動すると、ユーザーのマシン上でローカル Next サー�
 4. 歌詞と翻訳を編集します。AI 翻訳を使うか、選択中の UI 言語に応じて原文 / 翻訳の交互行を自動分割できます。
 5. キャンバス比率、CJK / 欧文フォント構成、色、フレーム、ウォーターマークなどのスタイルを調整します。
 6. 右側でカードをプレビューします。
-7. 「完了して書き出し」を使って PNG 画像を保存します。
+7. PNG、WebP、JPG のいずれかを選び、「完了して書き出し」で画像を保存します。
 
 ## 🔄 アップデート確認
 

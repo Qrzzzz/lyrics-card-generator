@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { defaultState } from "../components/editor/editor-defaults";
 import { evaluateMinimumExportSafety, type ExportDomSafety } from "../lib/export-safety";
-import { exportNodeAsPng, type ExportImageDependencies } from "../lib/export-image";
+import { exportNodeAsImage, exportNodeAsPng, type ExportImageDependencies } from "../lib/export-image";
 import { createExportSnapshot } from "../lib/export-snapshot";
 import { ExportTransactionMutex, runExportTransaction, waitForExportSnapshotNode } from "../lib/export-transaction";
 import {
@@ -33,11 +33,19 @@ const readyDom: ExportDomSafety = {
   assert.equal(snapshot.song.title, "Snapshot Song");
   assert.equal(snapshot.lyrics, "old lyrics");
   assert.equal(snapshot.width, 1200);
+  assert.equal(snapshot.format, "png");
   assert.equal(snapshot.fileName, "lyric-card-Snapshot-Song.png");
   assert.equal(snapshot.revision, 42);
   assert.equal(Object.isFrozen(snapshot), true);
   assert.equal(Object.isFrozen(snapshot.song), true);
   assert.equal(Object.isFrozen(snapshot.style), true);
+
+  const webpSnapshot = createExportSnapshot(live, 1.4, 43, "webp");
+  const jpgSnapshot = createExportSnapshot(live, 1, 44, "jpg");
+  assert.equal(webpSnapshot.format, "webp");
+  assert.equal(webpSnapshot.fileName, "lyric-card-Mutated-Song.webp");
+  assert.equal(jpgSnapshot.format, "jpg");
+  assert.equal(jpgSnapshot.fileName, "lyric-card-Mutated-Song.jpg");
 }
 
 {
@@ -254,8 +262,9 @@ async function exportImageAbortGuardTest() {
     1,
     undefined,
     {
-      renderNode: async (_node, options) => {
+      renderNode: async (_node, format, options) => {
         normalRenderCount += 1;
+        assert.equal(format, "png");
         assert.equal(options.width, 640);
         assert.equal(options.height, 960);
         return "data:image/png;base64,OK";
@@ -265,6 +274,60 @@ async function exportImageAbortGuardTest() {
   );
   assert.equal(normalRenderCount, 1);
   assert.deepEqual(commits, [{ dataUrl: "data:image/png;base64,OK", fileName: "normal.png" }]);
+
+  await exportNodeAsImage(
+    {} as HTMLElement,
+    "normal.webp",
+    "webp",
+    640,
+    960,
+    1.4,
+    undefined,
+    {
+      renderNode: async (_node, format, options) => {
+        assert.equal(format, "webp");
+        assert.equal(options.pixelRatio, 1.4);
+        return "data:image/webp;base64,OK";
+      },
+      commitDownload: (dataUrl, fileName) => { commits.push({ dataUrl, fileName }); }
+    }
+  );
+  assert.deepEqual(commits[1], { dataUrl: "data:image/webp;base64,OK", fileName: "normal.webp" });
+
+  await exportNodeAsImage(
+    {} as HTMLElement,
+    "normal.jpg",
+    "jpg",
+    640,
+    960,
+    2,
+    undefined,
+    {
+      renderNode: async (_node, format) => {
+        assert.equal(format, "jpg");
+        return "data:image/jpeg;base64,OK";
+      },
+      commitDownload: (dataUrl, fileName) => { commits.push({ dataUrl, fileName }); }
+    }
+  );
+  assert.deepEqual(commits[2], { dataUrl: "data:image/jpeg;base64,OK", fileName: "normal.jpg" });
+
+  await assert.rejects(
+    exportNodeAsImage(
+      {} as HTMLElement,
+      "mismatch.jpg",
+      "jpg",
+      640,
+      960,
+      1,
+      undefined,
+      {
+        renderNode: async () => "data:image/png;base64,WRONG",
+        commitDownload: () => assert.fail("a MIME mismatch must not commit a download")
+      }
+    ),
+    /does not match the requested JPG format/
+  );
 }
 
 async function transactionTimeoutBlocksLateExportCommitTest() {

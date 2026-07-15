@@ -10,7 +10,8 @@ const valid = normalizeStoredPreferences({
     reduceMotionEnabled: true,
     defaultShowGeneratedWatermark: true,
     defaultShowSharedBy: true,
-    defaultSharedByText: "Shared by Test"
+    defaultSharedByText: "Shared by Test",
+    defaultExportFormat: "webp"
   }
 });
 assert.equal(valid.locale, "zh-TW");
@@ -22,6 +23,7 @@ assert.equal(valid.userSettings.reduceMotionEnabled, true);
 assert.equal(valid.userSettings.defaultShowGeneratedWatermark, true);
 assert.equal(valid.userSettings.defaultShowSharedBy, true);
 assert.equal(valid.userSettings.defaultSharedByText, "Shared by Test");
+assert.equal(valid.userSettings.defaultExportFormat, "webp");
 assert.equal(normalizeStoredPreferences({ locale: "de", userSettings: {} }), null);
 assert.equal(normalizeStoredPreferences({ locale: "en", userSettings: null }), null);
 
@@ -32,4 +34,4 @@ assert.match(mainSource, /appPreferencesWriteQueue[\s\S]*?\.catch\(\(\) => undef
 assert.match(mainSource, /current\.revision > preferences\.revision/);
 assert.match(mainSource, /fs\.rename\(temporary, target\)/);
 
-console.log(JSON.stringify({ ok: true, preferenceTests: 12 }, null, 2));
+console.log(JSON.stringify({ ok: true, preferenceTests: 14 }, null, 2));

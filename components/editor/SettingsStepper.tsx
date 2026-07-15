@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, type Transition } from "framer-motion";
 import { Check, Download } from "lucide-react";
 import type { ReactNode, RefObject } from "react";
 import { useRef } from "react";
@@ -63,6 +63,114 @@ export type SettingsStepperProps = {
   companionAside?: ReactNode;
 };
 
+type StepActionsProps = {
+  step: SettingsStep;
+  stepIndex: number;
+  stepCount: number;
+  onStepChange: (step: number) => void;
+  nextText: string;
+  backText: string;
+  themeColor: string;
+  markerForegroundColor: string;
+  compactChrome: boolean;
+  className?: string;
+};
+
+function StepActions({
+  step,
+  stepIndex,
+  stepCount,
+  onStepChange,
+  nextText,
+  backText,
+  themeColor,
+  markerForegroundColor,
+  compactChrome,
+  className
+}: StepActionsProps) {
+  const isFirstStep = stepIndex <= 0;
+  const isLastStep = stepIndex >= stepCount - 1;
+  const secondaryAction = step.secondaryAction;
+  const primaryAction = step.primaryAction;
+
+  function goToStep(nextStep: number) {
+    onStepChange(Math.min(Math.max(nextStep, 0), stepCount - 1));
+  }
+
+  return (
+    <div className={cn("lyrics-stepper-actions flex items-center justify-between gap-3", className)}>
+      {!isFirstStep ? (
+        <button
+          type="button"
+          data-testid="stepper-back-button"
+          onClick={() => goToStep(stepIndex - 1)}
+          className={cn(
+            "app-button rounded-lg px-4 text-sm font-semibold transition",
+            compactChrome ? "h-10" : "h-11"
+          )}
+        >
+          {backText}
+        </button>
+      ) : null}
+      <div className="ml-auto flex min-w-0 flex-wrap items-center justify-end gap-2 sm:gap-3">
+        {secondaryAction ? (
+          <button
+            ref={secondaryAction.buttonRef}
+            type="button"
+            data-testid={secondaryAction.testId}
+            onClick={secondaryAction.onClick}
+            disabled={secondaryAction.disabled}
+            aria-pressed={secondaryAction.pressed}
+            aria-expanded={secondaryAction.expanded}
+            aria-controls={secondaryAction.controls}
+            className={cn(
+              "app-button rounded-lg px-3 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-45 sm:px-4",
+              compactChrome ? "h-10" : "h-11"
+            )}
+          >
+            {secondaryAction.label}
+          </button>
+        ) : null}
+        {isLastStep && primaryAction ? (
+          <StarBorder
+            type="button"
+            data-testid="complete-export-button"
+            color={themeColor}
+            speed="7.2s"
+            onClick={() => void primaryAction.onClick()}
+            disabled={primaryAction.disabled}
+            className="complete-export-button transition hover:scale-[1.006] disabled:cursor-default disabled:opacity-70"
+            style={{
+              minHeight: 44,
+              borderRadius: 8,
+              color: markerForegroundColor,
+              filter: `drop-shadow(0 12px 28px ${themeColor}44)`
+            }}
+          >
+            <span className="inline-flex h-11 items-center justify-center gap-2 px-6 text-sm font-black tracking-normal sm:px-8">
+              <Download className="h-5 w-5 shrink-0" />
+              <span className="whitespace-nowrap">{primaryAction.label}</span>
+            </span>
+          </StarBorder>
+        ) : !isLastStep ? (
+          <button
+            type="button"
+            data-testid="stepper-next-button"
+            onClick={() => goToStep(stepIndex + 1)}
+            className={cn(
+              "app-button rounded-lg border px-5 text-sm font-semibold transition",
+              compactChrome ? "h-10" : "h-11"
+            )}
+            style={{ borderColor: themeColor, boxShadow: `0 16px 44px ${themeColor}30` }}
+          >
+            {nextText}
+          </button>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
 export function SettingsStepper({
   steps,
   currentStep,
@@ -86,15 +194,25 @@ export function SettingsStepper({
   const isFocus = activePresentation === "focus";
   const isLyricsWorkspace = activePresentation === "lyrics-workspace";
   const hasCompanionAside = Boolean(companionAside);
-  const isFirstStep = currentStep <= 0;
-  const isLastStep = currentStep >= steps.length - 1;
-  const secondaryAction = activeStep?.secondaryAction;
-  const primaryAction = activeStep?.primaryAction;
+  const isPreviewWorkbench = activePresentation === "preview-workbench" && hasCompanionAside;
+  const exportStep = steps[steps.length - 1] ?? activeStep;
+  const isExportWorkbench = isPreviewWorkbench && currentStep === steps.length - 1;
+  const lastPreviewSettingsStepRef = useRef<SettingsStep | null>(null);
+  if (isPreviewWorkbench && !isExportWorkbench) {
+    lastPreviewSettingsStepRef.current = activeStep;
+  }
+  const workbenchSettingsStep = lastPreviewSettingsStepRef.current
+    ?? steps[Math.max(0, steps.length - 2)]
+    ?? activeStep;
+  const workbenchSettingsStepIndex = Math.max(0, steps.indexOf(workbenchSettingsStep));
   const markerForegroundColor = getReadableForegroundColor(themeColor);
   const variants = stepPanelVariants(reduceMotion ?? false);
   const transition = reduceMotion
     ? reducedMotionTransition
     : { duration: motionDurations.normal, ease: motionEasings.standard };
+  const workbenchTransition: Transition = reduceMotion
+    ? reducedMotionTransition
+    : { type: "spring", stiffness: 190, damping: 30, mass: 1.02 };
   const stepMeasurementKey = steps.map((step) => step.title).join("\u0000");
   const stepLayout = useBalancedStepperLayout({
     containerRef: stepsGridRef,
@@ -117,21 +235,21 @@ export function SettingsStepper({
         "grid min-w-0 gap-4",
         isLyricsWorkspace
           ? "lyrics-stepper-shell h-full min-h-0 self-stretch grid-rows-[auto_minmax(0,1fr)_auto]"
-          : hasCompanionAside
-            ? cn(
-                "settings-stepper-workbench content-start self-start",
-                isFocus
-                  ? "min-[960px]:grid-cols-[minmax(0,1fr)_320px] min-[1180px]:grid-cols-[minmax(0,1fr)_360px] min-[1440px]:grid-cols-[minmax(0,1fr)_400px]"
-                  : "lg:grid-cols-[minmax(0,1fr)_minmax(420px,600px)]"
-              )
-            : "content-start self-start"
+          : isPreviewWorkbench
+            ? "settings-stepper-workbench content-start self-start"
+            : hasCompanionAside
+              ? cn(
+                  "settings-stepper-workbench content-start self-start",
+                  "min-[960px]:grid-cols-[minmax(0,1fr)_320px] min-[1180px]:grid-cols-[minmax(0,1fr)_360px] min-[1440px]:grid-cols-[minmax(0,1fr)_400px]"
+                )
+              : "content-start self-start"
       )}
     >
       <div
         className={cn(
           "glass-panel lyrics-stepper-rail flex flex-col rounded-lg",
           compactChrome ? "p-3" : "p-4",
-          hasCompanionAside && (isFocus ? "min-[960px]:col-span-2" : "lg:col-span-2")
+          hasCompanionAside && isFocus && "min-[960px]:col-span-2"
         )}
       >
         <div
@@ -260,137 +378,149 @@ export function SettingsStepper({
         </div>
       </div>
 
-      <div
-        data-lyrics-viewport-bounds={isLyricsWorkspace ? "true" : undefined}
-        className={cn(
-          "lyrics-stepper-content relative min-w-0",
-          isLyricsWorkspace && "min-h-0 overflow-hidden",
-          hasCompanionAside && (
-            isFocus
-              ? "max-[959px]:order-2 min-[960px]:col-start-1 min-[960px]:row-start-2"
-              : "max-lg:order-3 lg:col-start-1 lg:row-start-2"
-          )
-        )}
-      >
-        <MotionPresence>
-          {activeStep ? (
-            <motion.div
-              key={activeStep.id}
-              custom={stepDirection}
-              variants={variants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              transition={transition}
-              className={cn(
-                isLyricsWorkspace && "h-full min-h-0",
-                isLyricsWorkspace && activeStep.managesOwnScroll
-                  ? "overflow-hidden"
-                  : isLyricsWorkspace
-                    ? "overflow-y-auto overscroll-contain"
-                    : undefined
-              )}
-            >
-              {activeStep.content}
-            </motion.div>
-          ) : null}
-        </MotionPresence>
-      </div>
-
-      {companionAside ? (
+      {isPreviewWorkbench ? (
         <div
-          data-stepper-companion="true"
-          className={cn(
-            "min-h-0 min-w-0",
-            isFocus
-              ? "max-[959px]:order-3 min-[960px]:col-start-2 min-[960px]:row-start-2 min-[960px]:row-span-2"
-              : "max-lg:order-2 lg:col-start-2 lg:row-start-2 lg:row-span-2"
-          )}
+          className="preview-workbench-viewport min-w-0"
+          data-testid="preview-workbench-viewport"
+          data-export-active={isExportWorkbench ? "true" : "false"}
         >
-          {companionAside}
-        </div>
-      ) : null}
+          <motion.div
+            className="preview-workbench-track grid min-w-0 items-stretch"
+            data-testid="preview-workbench-track"
+            data-export-active={isExportWorkbench ? "true" : "false"}
+            initial={false}
+            animate={{ x: isExportWorkbench ? "calc(-33.333333% - 0.416667rem)" : "0%" }}
+            transition={workbenchTransition}
+          >
+            <div
+              className="preview-workbench-panel preview-workbench-editor flex min-w-0 flex-col gap-4"
+              data-workbench-panel="editor-settings"
+              data-active={!isExportWorkbench ? "true" : "false"}
+              aria-hidden={isExportWorkbench}
+              inert={isExportWorkbench ? true : undefined}
+            >
+              <div className="relative min-w-0">
+                <MotionPresence>
+                  <motion.div
+                    key={workbenchSettingsStep.id}
+                    custom={stepDirection}
+                    variants={variants}
+                    initial="initial"
+                    animate="animate"
+                    exit="exit"
+                    transition={transition}
+                  >
+                    {workbenchSettingsStep.content}
+                  </motion.div>
+                </MotionPresence>
+              </div>
+              <StepActions
+                step={workbenchSettingsStep}
+                stepIndex={workbenchSettingsStepIndex}
+                stepCount={steps.length}
+                onStepChange={onStepChange}
+                nextText={nextText}
+                backText={backText}
+                themeColor={themeColor}
+                markerForegroundColor={markerForegroundColor}
+                compactChrome={compactChrome}
+                className="mt-auto"
+              />
+            </div>
 
-      <div
-        className={cn(
-          "lyrics-stepper-actions flex items-center justify-between gap-3",
-          isLyricsWorkspace && "min-h-0",
-          hasCompanionAside && (
-            isFocus
-              ? "max-[959px]:order-4 min-[960px]:col-start-1 min-[960px]:row-start-3"
-              : "max-lg:order-4 lg:col-start-1 lg:row-start-3"
-          )
-        )}
-      >
-        {!isFirstStep ? (
-          <button
-            type="button"
-            data-testid="stepper-back-button"
-            onClick={() => goToStep(currentStep - 1)}
+            <div
+              data-stepper-companion="true"
+              data-workbench-panel="preview"
+              className="preview-workbench-panel preview-workbench-preview min-h-0 min-w-0"
+            >
+              {companionAside}
+            </div>
+
+            <div
+              className="preview-workbench-panel preview-workbench-export flex min-w-0 flex-col gap-4"
+              data-testid="export-settings-panel"
+              data-workbench-panel="export-settings"
+              data-active={isExportWorkbench ? "true" : "false"}
+              aria-hidden={!isExportWorkbench}
+              inert={!isExportWorkbench ? true : undefined}
+            >
+              <div className="relative min-w-0">{exportStep.content}</div>
+              <StepActions
+                step={exportStep}
+                stepIndex={steps.length - 1}
+                stepCount={steps.length}
+                onStepChange={onStepChange}
+                nextText={nextText}
+                backText={backText}
+                themeColor={themeColor}
+                markerForegroundColor={markerForegroundColor}
+                compactChrome={compactChrome}
+                className="mt-auto"
+              />
+            </div>
+          </motion.div>
+        </div>
+      ) : (
+        <>
+          <div
+            data-lyrics-viewport-bounds={isLyricsWorkspace ? "true" : undefined}
             className={cn(
-              "app-button rounded-lg px-4 text-sm font-semibold transition",
-              compactChrome ? "h-10" : "h-11"
+              "lyrics-stepper-content relative min-w-0",
+              isLyricsWorkspace && "min-h-0 overflow-hidden",
+              hasCompanionAside && isFocus && "max-[959px]:order-2 min-[960px]:col-start-1 min-[960px]:row-start-2"
             )}
           >
-            {backText}
-          </button>
-        ) : null}
-        <div className="ml-auto flex min-w-0 flex-wrap items-center justify-end gap-2 sm:gap-3">
-          {secondaryAction ? (
-            <button
-              ref={secondaryAction.buttonRef}
-              type="button"
-              data-testid={secondaryAction.testId}
-              onClick={secondaryAction.onClick}
-              disabled={secondaryAction.disabled}
-              aria-pressed={secondaryAction.pressed}
-              aria-expanded={secondaryAction.expanded}
-              aria-controls={secondaryAction.controls}
-              className={cn(
-                "app-button rounded-lg px-3 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-45 sm:px-4",
-                compactChrome ? "h-10" : "h-11"
-              )}
+            <MotionPresence>
+              {activeStep ? (
+                <motion.div
+                  key={activeStep.id}
+                  custom={stepDirection}
+                  variants={variants}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  transition={transition}
+                  className={cn(
+                    isLyricsWorkspace && "h-full min-h-0",
+                    isLyricsWorkspace && activeStep.managesOwnScroll
+                      ? "overflow-hidden"
+                      : isLyricsWorkspace
+                        ? "overflow-y-auto overscroll-contain"
+                        : undefined
+                  )}
+                >
+                  {activeStep.content}
+                </motion.div>
+              ) : null}
+            </MotionPresence>
+          </div>
+
+          {companionAside ? (
+            <div
+              data-stepper-companion="true"
+              className="min-h-0 min-w-0 max-[959px]:order-3 min-[960px]:col-start-2 min-[960px]:row-start-2 min-[960px]:row-span-2"
             >
-              {secondaryAction.label}
-            </button>
+              {companionAside}
+            </div>
           ) : null}
-          {isLastStep && primaryAction ? (
-            <StarBorder
-              type="button"
-              data-testid="complete-export-button"
-              color={themeColor}
-              speed="7.2s"
-              onClick={() => void primaryAction.onClick()}
-              disabled={primaryAction.disabled}
-              className="complete-export-button transition hover:scale-[1.006] disabled:cursor-default disabled:opacity-70"
-              style={{
-                minHeight: 44,
-                borderRadius: 8,
-                color: markerForegroundColor,
-                filter: `drop-shadow(0 12px 28px ${themeColor}44)`
-              }}
-            >
-              <span className="inline-flex h-11 items-center justify-center gap-2 px-6 text-sm font-black tracking-normal sm:px-8">
-                <Download className="h-5 w-5 shrink-0" />
-                <span className="whitespace-nowrap">{primaryAction.label}</span>
-              </span>
-            </StarBorder>
-          ) : !isLastStep ? (
-            <button
-              type="button"
-              data-testid="stepper-next-button"
-              onClick={() => goToStep(currentStep + 1)}
-              className={cn(
-                "app-button rounded-lg border px-5 text-sm font-semibold transition",
-                compactChrome ? "h-10" : "h-11"
-              )}
-              style={{ borderColor: themeColor, boxShadow: `0 16px 44px ${themeColor}30` }}
-            >
-              {nextText}
-            </button>
-          ) : null}
-        </div>
-      </div>
+
+          <StepActions
+            step={activeStep}
+            stepIndex={currentStep}
+            stepCount={steps.length}
+            onStepChange={onStepChange}
+            nextText={nextText}
+            backText={backText}
+            themeColor={themeColor}
+            markerForegroundColor={markerForegroundColor}
+            compactChrome={compactChrome}
+            className={cn(
+              isLyricsWorkspace && "min-h-0",
+              hasCompanionAside && isFocus && "max-[959px]:order-4 min-[960px]:col-start-1 min-[960px]:row-start-3"
+            )}
+          />
+        </>
+      )}
     </section>
   );
 }

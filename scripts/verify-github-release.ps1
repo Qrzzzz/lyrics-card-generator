@@ -34,6 +34,18 @@ if ($ExpectedState -eq "draft" -and -not $release.draft) {
 if ($ExpectedState -eq "published" -and $release.draft) {
   throw "Release $ReleaseId is still a draft; expected a published release."
 }
+$expectsPrerelease = $Tag -match '-rc\.[0-9]+$'
+if ([bool]$release.prerelease -ne $expectsPrerelease) {
+  throw "Release $ReleaseId prerelease state does not match tag $Tag."
+}
+
+$version = $Tag -replace '^v', '' -replace '-rc\.[0-9]+$', ''
+$expectedAssetNames = @(
+  "Lyrics.Card.Generator.Setup.$version.exe",
+  "Lyrics.Card.Generator-$version-portable.exe",
+  "lyrics-card-generator-$version.spdx.json",
+  "SHA256SUMS"
+) | Sort-Object
 
 if (Test-Path -LiteralPath $OutputDirectory) {
   $existing = @(Get-ChildItem -LiteralPath $OutputDirectory -Force)
@@ -57,6 +69,10 @@ $headers = @{
 }
 
 $assets = @(Get-ChildItem -LiteralPath $OutputDirectory -File)
+$actualNames = @($assets.Name | Sort-Object)
+if (($actualNames -join "`n") -ne ($expectedAssetNames -join "`n")) {
+  throw "Unexpected release asset set: $($actualNames -join ', ')"
+}
 $setup = @($assets | Where-Object { $_.Name -match '(?i)setup.*\.exe$' })
 $portable = @($assets | Where-Object { $_.Name -match '(?i)-portable\.exe$' })
 $sbom = @($assets | Where-Object { $_.Name -like '*.spdx.json' })
@@ -66,12 +82,6 @@ if ($setup.Count -ne 1) { throw "Expected exactly one Setup executable, found $(
 if ($portable.Count -ne 1) { throw "Expected exactly one portable executable, found $($portable.Count)." }
 if ($sbom.Count -ne 1) { throw "Expected exactly one SPDX SBOM, found $($sbom.Count)." }
 if ($checksums.Count -ne 1) { throw "Expected exactly one SHA256SUMS file, found $($checksums.Count)." }
-
-$expectedNames = @($setup[0].Name, $portable[0].Name, $sbom[0].Name, $checksums[0].Name) | Sort-Object
-$actualNames = @($assets.Name | Sort-Object)
-if (($actualNames -join "`n") -ne ($expectedNames -join "`n")) {
-  throw "Unexpected release asset set: $($actualNames -join ', ')"
-}
 
 $checksummedNames = @()
 Get-Content -LiteralPath $checksums[0].FullName | ForEach-Object {

@@ -1,5 +1,5 @@
 import { FieldLabel, SegmentedControl, TextInput, ToggleRow } from "@/components/ui/controls";
-import { EXPORT_QUALITY_OPTIONS, type UserSettings } from "@/lib/settings/types";
+import { EXPORT_FORMAT_OPTIONS, EXPORT_QUALITY_OPTIONS, type UserSettings } from "@/lib/settings/types";
 import type { Locale } from "@/lib/types";
 import type { settingsCopy } from "@/lib/settings/copy";
 
@@ -44,9 +44,23 @@ export function ExportSettingsSection({
         ) : null}
       </div>
 
+      <FieldLabel label={copy.exportFormat}>
+        <SegmentedControl
+          value={settings.defaultExportFormat}
+          onChange={(defaultExportFormat) => onChange({ ...settings, defaultExportFormat })}
+          columns={3}
+          ariaLabel={copy.exportFormat}
+          options={EXPORT_FORMAT_OPTIONS.map((option) => ({
+            value: option.id,
+            label: option.id === "webp" ? "WebP" : option.id.toUpperCase()
+          }))}
+        />
+      </FieldLabel>
+
       <FieldLabel label={copy.exportQuality}>
         <SegmentedControl
           value={settings.defaultExportQuality}
+          ariaLabel={copy.exportQuality}
           onChange={(quality) => {
             const option = EXPORT_QUALITY_OPTIONS.find((item) => item.id === quality)!;
             onChange({

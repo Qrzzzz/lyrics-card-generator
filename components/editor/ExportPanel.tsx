@@ -4,12 +4,14 @@ import { AlertTriangle, ImageDown } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useAppReducedMotion } from "@/components/motion/AppMotionProvider";
 import { FieldLabel, Section, SegmentedControl } from "@/components/ui/controls";
-import type { ExportQualityId } from "@/lib/settings/types";
+import { EXPORT_FORMAT_OPTIONS, type ExportFormatId, type ExportQualityId } from "@/lib/settings/types";
 import type { createT } from "@/lib/i18n";
 
 export function ExportPanel({
   t,
   accentColor,
+  exportFormat,
+  onExportFormatChange,
   exportQuality,
   onExportQualityChange,
   isExporting,
@@ -19,6 +21,8 @@ export function ExportPanel({
 }: {
   t: ReturnType<typeof createT>;
   accentColor: string;
+  exportFormat: ExportFormatId;
+  onExportFormatChange: (format: ExportFormatId) => void;
   exportQuality: ExportQualityId;
   onExportQualityChange: (quality: ExportQualityId) => void;
   isExporting: boolean;
@@ -50,6 +54,18 @@ export function ExportPanel({
             <span>{blockingMessage}</span>
           </div>
         ) : null}
+        <FieldLabel label={t("exportFormat")} className="gap-3">
+          <SegmentedControl<ExportFormatId>
+            value={exportFormat}
+            onChange={onExportFormatChange}
+            columns={3}
+            ariaLabel={t("exportFormat")}
+            options={EXPORT_FORMAT_OPTIONS.map((format) => ({
+              value: format.id,
+              label: format.id === "webp" ? "WebP" : format.id.toUpperCase()
+            }))}
+          />
+        </FieldLabel>
         <FieldLabel label={t("exportQuality")} className="gap-3">
           <SegmentedControl<ExportQualityId>
             value={exportQuality}
@@ -91,7 +107,9 @@ export function ExportPanel({
                   </div>
 
                   <div className="min-w-0 flex-1">
-                    <p className="app-text-primary text-sm font-semibold">{t("preparingPng")}</p>
+                    <p className="app-text-primary text-sm font-semibold">
+                      {t("preparingImage", { format: exportFormat === "webp" ? "WebP" : exportFormat.toUpperCase() })}
+                    </p>
                     <div
                       aria-hidden="true"
                       className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-[rgb(var(--button-bg))]"

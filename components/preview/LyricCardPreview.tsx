@@ -1,6 +1,8 @@
 "use client";
 
+import { motion, useMotionValue, useSpring } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
+import { useAppReducedMotion } from "@/components/motion/AppMotionProvider";
 import { LyricCard, getCardSize } from "@/components/preview/LyricCard";
 import type { createT } from "@/lib/i18n";
 import type { CardStyle, Locale, SongInfo } from "@/lib/types";
@@ -13,7 +15,8 @@ export function LyricCardPreview({
   t,
   sticky = true,
   locale = "en",
-  measurementKey = 0
+  measurementKey = 0,
+  pressureEnabled = true
 }: {
   song: SongInfo;
   lyrics: string;
@@ -23,10 +26,26 @@ export function LyricCardPreview({
   sticky?: boolean;
   locale?: Locale;
   measurementKey?: number;
+  pressureEnabled?: boolean;
 }) {
+  const reduceMotion = useAppReducedMotion();
+  const pressureFeedbackEnabled = pressureEnabled && !reduceMotion;
   const shellRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(320);
   const [availableHeight, setAvailableHeight] = useState(320);
+  const rotateXTarget = useMotionValue(0);
+  const rotateYTarget = useMotionValue(0);
+  const xTarget = useMotionValue(0);
+  const yTarget = useMotionValue(0);
+  const zTarget = useMotionValue(0);
+  const scaleTarget = useMotionValue(1);
+  const spring = { stiffness: 285, damping: 30, mass: 0.52 };
+  const rotateX = useSpring(rotateXTarget, spring);
+  const rotateY = useSpring(rotateYTarget, spring);
+  const x = useSpring(xTarget, spring);
+  const y = useSpring(yTarget, spring);
+  const z = useSpring(zTarget, spring);
+  const pressureScale = useSpring(scaleTarget, { stiffness: 420, damping: 34, mass: 0.48 });
   const size = getCardSize(style);
   const widthScale = Math.max(width, 120) / size.width;
   const heightScale = Math.max(availableHeight, 120) / size.height;
@@ -65,6 +84,69 @@ export function LyricCardPreview({
     };
   }, [measurementKey]);
 
+  useEffect(() => {
+    if (!pressureFeedbackEnabled) resetPressureFeedback();
+  }, [pressureFeedbackEnabled]);
+
+  function resetPressureFeedback() {
+    rotateXTarget.set(0);
+    rotateYTarget.set(0);
+    xTarget.set(0);
+    yTarget.set(0);
+    zTarget.set(0);
+    scaleTarget.set(1);
+  }
+
+  function handlePointerMove(event: React.PointerEvent<HTMLDivElement>) {
+    if (!pressureFeedbackEnabled || event.pointerType === "touch") return;
+    const rect = event.currentTarget.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) return;
+    const normalizedX = Math.min(1, Math.max(-1, ((event.clientX - rect.left) / rect.width - 0.5) * 2));
+    const normalizedY = Math.min(1, Math.max(-1, ((event.clientY - rect.top) / rect.height - 0.5) * 2));
+
+    rotateXTarget.set(normalizedY * -5.5);
+    rotateYTarget.set(normalizedX * 7.5);
+    xTarget.set(normalizedX * 3.5);
+    yTarget.set(normalizedY * 2.5 - 2);
+    event.currentTarget.style.setProperty("--preview-pressure-x", `${((normalizedX + 1) / 2) * 100}%`);
+    event.currentTarget.style.setProperty("--preview-pressure-y", `${((normalizedY + 1) / 2) * 100}%`);
+  }
+
+  function handlePointerEnter(event: React.PointerEvent<HTMLDivElement>) {
+    if (!pressureFeedbackEnabled || event.pointerType === "touch") return;
+    zTarget.set(18);
+    scaleTarget.set(1.012);
+  }
+
+  function handlePointerDown(event: React.PointerEvent<HTMLDivElement>) {
+    if (!pressureFeedbackEnabled || event.pointerType === "touch" || !event.isPrimary || event.button !== 0) return;
+    event.currentTarget.setPointerCapture(event.pointerId);
+    zTarget.set(4);
+    yTarget.set(1);
+    scaleTarget.set(0.992);
+  }
+
+  function handlePointerUp(event: React.PointerEvent<HTMLDivElement>) {
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+    if (!pressureFeedbackEnabled || event.pointerType === "touch") return;
+
+    const rect = event.currentTarget.getBoundingClientRect();
+    const isPointerInside = event.clientX >= rect.left
+      && event.clientX <= rect.right
+      && event.clientY >= rect.top
+      && event.clientY <= rect.bottom;
+    if (!isPointerInside) {
+      resetPressureFeedback();
+      return;
+    }
+
+    zTarget.set(18);
+    scaleTarget.set(1.012);
+    handlePointerMove(event);
+  }
+
   return (
     <section data-testid="lyric-card-preview" className={`glass-panel min-w-0 self-start rounded-lg p-4 ${sticky ? "sticky top-6" : ""}`}>
       <div className="mb-4 flex items-center justify-between gap-3">
@@ -83,21 +165,46 @@ export function LyricCardPreview({
         className="flex min-w-0 items-center justify-center overflow-hidden rounded-lg bg-black/18 p-3"
       >
         <div
+          data-testid="lyric-card-preview-pressure"
+          data-pressure-enabled={pressureFeedbackEnabled ? "true" : "false"}
+          className="preview-pressure-stage relative"
           style={{
             width: size.width * scale,
             height: size.height * scale,
             maxWidth: "100%"
           }}
+          onPointerMove={handlePointerMove}
+          onPointerEnter={handlePointerEnter}
+          onPointerDown={handlePointerDown}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={resetPressureFeedback}
+          onPointerLeave={resetPressureFeedback}
         >
-          <div
-            ref={cardRef as React.RefObject<HTMLDivElement>}
+          <motion.div
+            className="preview-pressure-card relative"
             style={{
-              transform: `scale(${scale})`,
-              transformOrigin: "top left"
+              width: size.width * scale,
+              height: size.height * scale,
+              rotateX,
+              rotateY,
+              x,
+              y,
+              z,
+              scale: pressureScale,
+              transformStyle: "preserve-3d"
             }}
           >
-            <LyricCard song={song} lyrics={lyrics} style={style} locale={locale} />
-          </div>
+            <div
+              ref={cardRef as React.RefObject<HTMLDivElement>}
+              style={{
+                transform: `scale(${scale})`,
+                transformOrigin: "top left"
+              }}
+            >
+              <LyricCard song={song} lyrics={lyrics} style={style} locale={locale} />
+            </div>
+            <span className="preview-pressure-highlight pointer-events-none absolute inset-0" aria-hidden="true" />
+          </motion.div>
         </div>
       </div>
     </section>

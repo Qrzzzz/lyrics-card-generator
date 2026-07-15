@@ -1,4 +1,5 @@
 import { getCardSize } from "@/lib/card-size";
+import { EXPORT_FORMAT_OPTIONS, type ExportFormatId } from "@/lib/settings/types";
 import type { AppState, CardStyle, Locale, SongInfo } from "@/lib/types";
 import { sanitizeFilePart } from "@/lib/utils";
 
@@ -10,6 +11,7 @@ export type ExportSnapshot = Readonly<{
   style: Readonly<CardStyle>;
   locale: Locale;
   pixelRatio: number;
+  format: ExportFormatId;
   width: number;
   height: number;
   fileName: string;
@@ -20,11 +22,13 @@ let nextSnapshotId = 0;
 export function createExportSnapshot(
   state: AppState,
   pixelRatio: number,
-  revision: number
+  revision: number,
+  format: ExportFormatId = "png"
 ): ExportSnapshot {
   const song = structuredClone(state.song);
   const style = structuredClone(state.style);
   const size = getCardSize(style);
+  const extension = EXPORT_FORMAT_OPTIONS.find((option) => option.id === format)?.extension ?? "png";
   return deepFreeze({
     id: `export-${++nextSnapshotId}`,
     revision,
@@ -33,9 +37,10 @@ export function createExportSnapshot(
     style,
     locale: state.locale,
     pixelRatio,
+    format,
     width: size.width,
     height: size.height,
-    fileName: `lyric-card-${sanitizeFilePart(song.title)}.png`
+    fileName: `lyric-card-${sanitizeFilePart(song.title)}.${extension}`
   });
 }
 

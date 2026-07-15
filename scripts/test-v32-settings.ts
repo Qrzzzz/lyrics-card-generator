@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { clearLyricContent } from "../lib/clear-content";
 import { getContrastRatio, resolveReadableTextColor, resolveReadableTextTokens } from "../lib/color/contrast";
-import { DEFAULT_USER_SETTINGS, EXPORT_QUALITY_OPTIONS } from "../lib/settings/types";
+import { DEFAULT_USER_SETTINGS, EXPORT_FORMAT_OPTIONS, EXPORT_QUALITY_OPTIONS } from "../lib/settings/types";
 import { UI_ACCENT_PRESETS, resolveUiAccentColor } from "../lib/settings/accent";
 import { shouldShowFirstLaunchLanguage } from "../lib/settings/app-preferences";
 import {
@@ -19,6 +19,7 @@ assert.equal(defaults.uiAccentMode, "album-dynamic");
 assert.equal(resolveUiAccentColor({ settings: defaults, palette: { colors: [], primary: "#2255AA", dark: "#111827", light: "#FFFFFF", muted: "#64748B", averageLuminance: 0.2, averageSaturation: 0.6, hueVariance: 0.5, isLightCover: false, kind: "colorful" } }), "#2255AA");
 assert.equal(defaults.appBackground.mode, DEFAULT_USER_SETTINGS.appBackground.mode);
 assert.equal(defaults.defaultExportPixelRatio, DEFAULT_USER_SETTINGS.defaultExportPixelRatio);
+assert.equal(defaults.defaultExportFormat, "png");
 assert.equal(defaults.defaultShowGeneratedWatermark, false);
 assert.equal(defaults.defaultShowSharedBy, false);
 assert.equal(defaults.defaultSharedByText, "");
@@ -33,6 +34,7 @@ const migrated = normalizeUserSettings({
   defaultShowGeneratedWatermark: true,
   defaultShowSharedBy: true,
   defaultSharedByText: "Shared by Test",
+  defaultExportFormat: "webp",
   defaultExportQuality: "ultra",
   defaultExportPixelRatio: 99,
   appBackground: { mode: "image-cover", solidColor: "invalid", overlayOpacity: 2, blurAmount: -4 }
@@ -41,6 +43,7 @@ assert.equal(migrated.sparkCursorEnabled, false);
 assert.equal(migrated.reduceMotionEnabled, true);
 assert.equal(migrated.uiThemeMode, "light");
 assert.equal(migrated.defaultExportQuality, "high");
+assert.equal(migrated.defaultExportFormat, "webp");
 assert.equal(migrated.defaultExportPixelRatio, 2);
 assert.equal(migrated.defaultShowGeneratedWatermark, true);
 assert.equal(migrated.defaultShowSharedBy, true);
@@ -50,6 +53,10 @@ assert.equal(migrated.appBackground.solidColor, DEFAULT_USER_SETTINGS.appBackgro
 assert.equal(migrated.appBackground.overlayOpacity, DEFAULT_USER_SETTINGS.appBackground.overlayOpacity);
 assert.equal(migrated.appBackground.blurAmount, DEFAULT_USER_SETTINGS.appBackground.blurAmount);
 assert.deepEqual(EXPORT_QUALITY_OPTIONS.map((item) => item.pixelRatio), [1, 1.4, 2]);
+assert.deepEqual(EXPORT_FORMAT_OPTIONS.map((item) => item.id), ["png", "webp", "jpg"]);
+assert.deepEqual(EXPORT_FORMAT_OPTIONS.map((item) => item.mimeType), ["image/png", "image/webp", "image/jpeg"]);
+assert.equal(normalizeUserSettings({ defaultExportFormat: "jpg" }).defaultExportFormat, "jpg");
+assert.equal(normalizeUserSettings({ defaultExportFormat: "svg" }).defaultExportFormat, "png");
 assert.ok(getContrastRatio("#FFFFFF", "#191612") > 15);
 assert.equal(resolveReadableTextColor("#FFFFFF"), "#191612");
 assert.equal(resolveReadableTextTokens("#FFFFFF").primary, "#191612");
@@ -106,4 +113,4 @@ assert.equal(cleared.lyrics, "");
 assert.equal(cleared.translationText, "");
 assert.deepEqual(legacyCustom, settingsBeforeClear);
 
-console.log(JSON.stringify({ ok: true, settingsTests: 34 }, null, 2));
+console.log(JSON.stringify({ ok: true, settingsTests: 40 }, null, 2));
