@@ -1938,6 +1938,22 @@ async function assertPreviewFits(width, height, scrolled) {
 
 async function assertExampleImportRemeasuresPreview() {
   await setWindowSize(1440, 900);
+  await page.waitForFunction(() => {
+    const shell = document.querySelector('[data-testid="lyric-card-preview-shell"]');
+    const card = shell?.querySelector('[data-export-card="true"]');
+    if (!(shell instanceof HTMLElement) || !(card instanceof HTMLElement)) return false;
+    const rect = shell.getBoundingClientRect();
+    const styles = getComputedStyle(shell);
+    const availableWidth = shell.clientWidth - Number.parseFloat(styles.paddingLeft) - Number.parseFloat(styles.paddingRight);
+    const availableHeight = window.innerHeight - rect.top - Number.parseFloat(styles.paddingTop) - Number.parseFloat(styles.paddingBottom) - 16;
+    const expectedScale = Math.min(
+      Math.max(availableWidth, 120) / card.offsetWidth,
+      Math.max(availableHeight, 120) / card.offsetHeight,
+      0.52
+    );
+    const scale = Number(shell.getAttribute("data-preview-scale"));
+    return Number.isFinite(scale) && Math.abs(scale - expectedScale) <= 0.005;
+  }, undefined, { timeout: 10_000 });
   const beforeMeasurement = await page.getByTestId("lyric-card-preview-shell").evaluate((shell) => {
     const card = shell.querySelector('[data-export-card="true"]');
     if (!(shell instanceof HTMLElement) || !(card instanceof HTMLElement)) return null;
