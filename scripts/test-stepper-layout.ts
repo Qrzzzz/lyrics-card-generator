@@ -309,15 +309,16 @@ assert.ok(
 );
 assert.ok(
   lyricsWorkspaceSource.includes('className="relative flex min-h-0 flex-col overflow-hidden"') &&
-    lyricsWorkspaceSource.includes("lyrics-workspace-column lyrics-summary-aside") &&
-    lyricsWorkspaceSource.includes("lyrics-workspace-column lyrics-document-column") &&
-    lyricsToolsSource.includes("lyrics-workspace-column lyrics-tools-aside"),
-  "the lyrics workspace and its three columns do not render framed panel shells"
+    lyricsWorkspaceSource.includes("lyrics-workspace-split") &&
+    lyricsWorkspaceSource.includes("lyrics-document-column") &&
+    lyricsToolsSource.includes("lyrics-tools-aside"),
+  "the lyrics workspace uses an internal editor/tools split without framed panel shells"
 );
 assert.ok(
-  globalsSource.includes(".lyrics-workspace-column + .lyrics-workspace-column") &&
-    globalsSource.includes("border-left: 1px solid rgb(var(--panel-border));"),
-  "lyrics columns use only one thin responsive divider between neighbours"
+  globalsSource.includes(".lyrics-workspace-resizer") &&
+    lyricsWorkspaceSource.includes('className="preview-workbench-resizer lyrics-workspace-resizer"') &&
+    lyricsWorkspaceSource.includes("width: split.geometry.gap"),
+  "step two reuses the full-height one-pixel divider contract with a 20px hit area"
 );
 
 const originalRevokeObjectUrl = URL.revokeObjectURL;

@@ -9,6 +9,10 @@ import { ActionButton, FieldLabel, Section, TextareaField, ToggleRow } from "@/c
 import { getAIUiCopy } from "@/lib/ai/ui-copy";
 import type { createT } from "@/lib/i18n";
 import type { ExportLyricLineStatus } from "@/lib/lyrics-document";
+import type {
+  LyricsWorkspaceLayoutAction,
+  LyricsWorkspaceLayoutState
+} from "@/lib/lyrics-workspace-layout";
 import { formatChineseTranslation, splitAlternatingLyrics } from "@/lib/lyric-format";
 import type { ContentMode, Locale, SongInfo } from "@/lib/types";
 
@@ -16,6 +20,8 @@ export function LyricInput({
   lyrics,
   song,
   lineStatus,
+  workspaceLayout,
+  onWorkspaceLayoutAction,
   presentation = "legacy",
   onLyricsChange,
   translationEnabled,
@@ -36,6 +42,8 @@ export function LyricInput({
   lyrics: string;
   song?: SongInfo;
   lineStatus?: ExportLyricLineStatus;
+  workspaceLayout?: LyricsWorkspaceLayoutState;
+  onWorkspaceLayoutAction?: (action: LyricsWorkspaceLayoutAction) => void;
   presentation?: "legacy" | "workspace";
   onLyricsChange: (lyrics: string) => void;
   translationEnabled: boolean;
@@ -55,28 +63,30 @@ export function LyricInput({
 }) {
   const translationFieldId = useId();
 
-  if (presentation === "workspace" && song && lineStatus) {
+  if (presentation === "workspace" && song && lineStatus && workspaceLayout && onWorkspaceLayoutAction) {
     return (
-    <LyricsWorkspace
-      lyrics={lyrics}
-      song={song}
-      lineStatus={lineStatus}
-      onLyricsChange={onLyricsChange}
-      translationEnabled={translationEnabled}
-      translationText={translationText}
-      onTranslationEnabledChange={onTranslationEnabledChange}
-      onTranslationTextChange={onTranslationTextChange}
-      onSplitAlternatingLyrics={onSplitAlternatingLyrics}
-      onAITranslate={onAITranslate}
-      isAITranslating={isAITranslating}
-      aiPanel={aiTranslatePanel}
-      lyricsFetchPanel={lyricsFetchPanel}
-      themeColor={themeColor}
-      contentMode={contentMode}
-      locale={locale}
-      t={t}
-      showAiTranslate={showAiTranslate}
-    />
+      <LyricsWorkspace
+        lyrics={lyrics}
+        song={song}
+        lineStatus={lineStatus}
+        layout={workspaceLayout}
+        onLayoutAction={onWorkspaceLayoutAction}
+        onLyricsChange={onLyricsChange}
+        translationEnabled={translationEnabled}
+        translationText={translationText}
+        onTranslationEnabledChange={onTranslationEnabledChange}
+        onTranslationTextChange={onTranslationTextChange}
+        onSplitAlternatingLyrics={onSplitAlternatingLyrics}
+        onAITranslate={onAITranslate}
+        isAITranslating={isAITranslating}
+        aiPanel={aiTranslatePanel}
+        lyricsFetchPanel={lyricsFetchPanel}
+        themeColor={themeColor}
+        contentMode={contentMode}
+        locale={locale}
+        t={t}
+        showAiTranslate={showAiTranslate}
+      />
     );
   }
 

@@ -1770,10 +1770,13 @@ async function assertLyricsWorkspace(width, height) {
   const result = await page.evaluate(() => {
     const editor = document.querySelector('[data-testid="editor-surface"]');
     const workspace = document.querySelector('[data-testid="lyrics-workspace"]');
+    const split = document.querySelector('[data-testid="lyrics-workspace-split"]');
     const shared = document.querySelector('[data-testid="lyrics-shared-scroll"]');
-    const summary = document.querySelector('.lyrics-summary-aside');
-    const documentColumn = document.querySelector('.lyrics-workspace-grid > section');
-    const tools = document.querySelector('.lyrics-tools-aside');
+    const documentColumn = document.querySelector('#lyrics-workspace-editor');
+    const tools = document.querySelector('[data-testid="lyrics-tools-aside"]');
+    const resizer = document.querySelector('[data-testid="lyrics-workspace-resizer"]');
+    const statusBar = document.querySelector('[data-testid="lyrics-editor-status"]');
+    const editorColumns = document.querySelector('[data-testid="lyrics-editor-columns"]');
     const actions = document.querySelector('.lyrics-stepper-actions');
     const main = document.querySelector('.lyric-editor-main');
     const stepContent = document.querySelector('.lyrics-stepper-content');
@@ -1800,28 +1803,35 @@ async function assertLyricsWorkspace(width, height) {
         radius: style.borderRadius
       };
     };
+    const resizerStyle = resizer ? getComputedStyle(resizer) : null;
+    const resizerLineStyle = resizer ? getComputedStyle(resizer, '::before') : null;
+    const statusStyle = statusBar ? getComputedStyle(statusBar) : null;
+    const documentScrollers = documentColumn
+      ? [...documentColumn.querySelectorAll('*')].filter((node) => {
+          const style = getComputedStyle(node);
+          return style.overflowY === 'auto' || style.overflowY === 'scroll';
+        })
+      : [];
     return {
       editor: editor ? { clientHeight: editor.clientHeight, scrollHeight: editor.scrollHeight, overflowY: getComputedStyle(editor).overflowY } : null,
       workspace: rect(workspace),
       workspaceFrame: frame(workspace),
-      shared: shared ? { ...rect(shared), overflowX: getComputedStyle(shared).overflowX, overflowY: getComputedStyle(shared).overflowY } : null,
-      summary: summary ? {
-        ...rect(summary),
-        clientHeight: summary.clientHeight,
-        scrollHeight: summary.scrollHeight,
-        contentBottom: Math.max(
-          summary.getBoundingClientRect().top,
-          ...[...summary.children].map((child) => child.getBoundingClientRect().bottom)
-        )
+      split: split ? {
+        ...rect(split),
+        sideBySide: split.getAttribute('data-side-by-side'),
+        collapsed: split.getAttribute('data-tools-collapsed'),
+        ratio: Number(split.getAttribute('data-editor-ratio')),
+        columnGap: Number.parseFloat(getComputedStyle(split).columnGap)
       } : null,
-      summaryFrame: frame(summary),
+      shared: shared ? { ...rect(shared), overflowX: getComputedStyle(shared).overflowX, overflowY: getComputedStyle(shared).overflowY } : null,
       documentColumn: rect(documentColumn),
       documentFrame: frame(documentColumn),
       tools: tools ? {
         ...rect(tools),
         clientHeight: tools.clientHeight,
         scrollHeight: tools.scrollHeight,
-        fixedControlsVisible: [...tools.querySelectorAll('.lyrics-tools-aside__modes button, .lyrics-tools-aside__actions button')]
+        collapsed: tools.getAttribute('data-collapsed'),
+        fixedControlsVisible: [...tools.querySelectorAll('.lyrics-tools-aside__actions button, [data-testid="translation-toggle"], [data-testid="lyrics-tools-collapse"]')]
           .every((control) => {
             const controlRect = control.getBoundingClientRect();
             const toolsRect = tools.getBoundingClientRect();
@@ -1829,6 +1839,26 @@ async function assertLyricsWorkspace(width, height) {
           })
       } : null,
       toolsFrame: frame(tools),
+      resizer: resizer ? {
+        ...rect(resizer),
+        cursor: resizerStyle?.cursor,
+        touchAction: resizerStyle?.touchAction,
+        lineWidth: resizerLineStyle?.width,
+        lineTop: resizerLineStyle?.top,
+        lineBottom: resizerLineStyle?.bottom,
+        value: Number(resizer.getAttribute('aria-valuenow')),
+        minimum: Number(resizer.getAttribute('aria-valuemin')),
+        maximum: Number(resizer.getAttribute('aria-valuemax')),
+        controls: resizer.getAttribute('aria-controls')
+      } : null,
+      statusBar: statusBar ? {
+        ...rect(statusBar),
+        position: statusStyle?.position,
+        top: statusStyle?.top
+      } : null,
+      editorColumns: rect(editorColumns),
+      documentScrollerCount: documentScrollers.length,
+      documentScrollerIsShared: documentScrollers.length === 1 && documentScrollers[0] === shared,
       actions: rect(actions),
       documentRoot: {
         clientHeight: document.documentElement.clientHeight,
@@ -1841,7 +1871,15 @@ async function assertLyricsWorkspace(width, height) {
       fetchBoundary: fetchBoundary ? { ...rect(fetchBoundary), overflowY: getComputedStyle(fetchBoundary).overflowY } : null,
       textareaCount: textareas.length,
       textareaHeights: textareas.map((area) => area.getBoundingClientRect().height),
-      textareaStyles: textareas.map((area) => ({ overflowY: getComputedStyle(area).overflowY, resize: getComputedStyle(area).resize })),
+      textareaWidths: textareas.map((area) => area.getBoundingClientRect().width),
+      textareaStyles: textareas.map((area) => ({
+        overflowX: getComputedStyle(area).overflowX,
+        overflowY: getComputedStyle(area).overflowY,
+        resize: getComputedStyle(area).resize,
+        scrollWidth: area.scrollWidth,
+        clientWidth: area.clientWidth
+      })),
+      horizontalOverflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
       hasPreview: Boolean(document.querySelector('[data-testid="lyric-card-preview"]')),
       hasPreviewToggle: Boolean(document.querySelector('[data-testid="preview-pane-toggle"]')),
       compactChrome: stepper?.getAttribute('data-stepper-compact-chrome'),
@@ -1864,51 +1902,56 @@ async function assertLyricsWorkspace(width, height) {
     };
   });
   assert.equal(result.activeStep, "lyrics", `${width}x${height} keeps the lyrics step active`);
-  assert.ok(result.workspace && result.shared && result.actions && result.documentColumn, `${width}x${height} renders the bounded lyrics skeleton`);
+  assert.ok(
+    result.workspace && result.split && result.shared && result.actions && result.documentColumn && result.tools && result.resizer && result.statusBar,
+    `${width}x${height} renders the bounded lyrics split skeleton`
+  );
   assert.deepEqual(
     result.workspaceFrame,
     { top: 0, right: 0, bottom: 0, left: 0, radius: "0px" },
     `${width}x${height} removes the outer lyrics-workspace frame`
   );
   assert.deepEqual(
-    result.summaryFrame,
+    result.documentFrame,
     { top: 0, right: 0, bottom: 0, left: 0, radius: "0px" },
-    `${width}x${height} removes the summary-column frame`
+    `${width}x${height} keeps the editor as an unframed primary surface`
   );
   assert.deepEqual(
-    { ...result.documentFrame, left: 0 },
+    result.toolsFrame,
     { top: 0, right: 0, bottom: 0, left: 0, radius: "0px" },
-    `${width}x${height} removes every document-column edge except its left divider`
-  );
-  assert.ok(
-    result.documentFrame.left > 0 && result.documentFrame.left <= 1,
-    `${width}x${height} gives the document only one device-scaled thin left divider: ${result.documentFrame.left}`
-  );
-  assert.deepEqual(
-    { ...result.toolsFrame, left: 0 },
-    { top: 0, right: 0, bottom: 0, left: 0, radius: "0px" },
-    `${width}x${height} removes every tools-column edge except its left divider`
-  );
-  assert.ok(
-    result.toolsFrame.left > 0 && result.toolsFrame.left <= 1,
-    `${width}x${height} gives the tools only one device-scaled thin left divider: ${result.toolsFrame.left}`
+    `${width}x${height} keeps the expanded tool rail unframed`
   );
   assert.ok(result.workspace.x >= -1 && result.workspace.right <= width + 1, `${width}x${height} keeps the workspace inside the viewport`);
+  assert.equal(result.split.sideBySide, "true", `${width}x${height} uses the desktop two-column workspace`);
+  assert.equal(result.split.collapsed, "false", `${width}x${height} starts with the tool rail expanded`);
+  assert.ok(Math.abs(result.split.ratio - 0.75) <= 0.002, `${width}x${height} starts at the 3/4 editor ratio: ${JSON.stringify(result.split)}`);
+  assert.ok(Math.abs(result.split.columnGap - 20) <= 0.5, `${width}x${height} keeps the 20px expanded gap`);
+  assert.ok(result.documentColumn.width >= 599, `${width}x${height} preserves the minimum editor width: ${result.documentColumn.width}`);
+  assert.ok(result.tools.width >= 223, `${width}x${height} preserves the minimum tools width: ${result.tools.width}`);
+  assert.ok(
+    Math.abs(result.tools.x - result.documentColumn.right - 20) <= 1,
+    `${width}x${height} places the tools after one 20px separator gap: ${JSON.stringify({ document: result.documentColumn, tools: result.tools })}`
+  );
+  assert.ok(Math.abs(result.resizer.width - 20) <= 0.5, `${width}x${height} gives the separator a 20px hit area`);
+  assert.equal(result.resizer.lineWidth, "1px", `${width}x${height} renders one central 1px line`);
+  assert.equal(result.resizer.lineTop, "0px", `${width}x${height} extends the separator line to the top`);
+  assert.equal(result.resizer.lineBottom, "0px", `${width}x${height} extends the separator line to the bottom`);
+  assert.equal(result.resizer.cursor, "col-resize", `${width}x${height} exposes column resize feedback`);
+  assert.equal(result.resizer.touchAction, "none", `${width}x${height} keeps pointer dragging deterministic`);
+  assert.equal(result.resizer.value, 75, `${width}x${height} exposes the default separator value`);
+  assert.ok(result.resizer.minimum >= 66 && result.resizer.minimum <= 67, `${width}x${height} exposes the two-thirds editor minimum`);
+  assert.equal(result.resizer.maximum, 75, `${width}x${height} exposes the three-quarter editor maximum`);
+  assert.equal(result.resizer.controls, "lyrics-workspace-editor lyrics-workspace-tools", `${width}x${height} links both controlled panes`);
   assert.equal(result.editor.scrollHeight, result.editor.clientHeight, `${width}x${height} prevents editor-root scrolling`);
   assert.equal(result.editor.overflowY, "hidden", `${width}x${height} hides editor-root overflow`);
   assert.equal(result.shared.overflowX, "hidden", `${width}x${height} prevents a second horizontal document scroll`);
   assert.equal(result.shared.overflowY, "auto", `${width}x${height} gives the document the main scrollbar`);
-  assert.ok(result.summary.right <= result.documentColumn.x + 1, `${width}x${height} summary does not overlap document`);
-  assert.ok(result.documentColumn.right <= result.tools.x + 1, `${width}x${height} document does not overlap tools`);
+  assert.ok(result.documentColumn.right <= result.tools.x + 1, `${width}x${height} editor does not overlap tools`);
   assert.equal(result.documentRoot.scrollY, 0, `${width}x${height} keeps the document viewport at the top`);
   assert.equal(result.documentRoot.scrollX, 0, `${width}x${height} prevents focus from horizontally scrolling the stage`);
   assert.ok(result.documentRoot.scrollHeight <= result.documentRoot.clientHeight + 1, `${width}x${height} prevents document-root scrolling`);
   assert.ok(result.main.scrollHeight <= result.main.clientHeight + 1, `${width}x${height} prevents main-root scrolling`);
   assert.equal(result.stepContent.overflowY, "hidden", `${width}x${height} gives the step content no second scrollbar`);
-  assert.ok(
-    result.summary.contentBottom <= result.summary.bottom + 1,
-    `${width}x${height} keeps visible summary content inside its column: ${JSON.stringify(result.summary)}`
-  );
   assert.equal(result.tools.fixedControlsVisible, true, `${width}x${height} keeps every fixed tool inside the aside`);
   if (result.fetchBoundary) {
     assert.equal(result.fetchBoundary.overflowY, "auto", `${width}x${height} confines dynamic lyrics results to their own scroller`);
@@ -1931,15 +1974,171 @@ async function assertLyricsWorkspace(width, height) {
   assert.equal(result.actionsInsideRail, true, `${width}x${height} keeps step-two actions inside the shared rail`);
   assert.equal(result.actionsFitRail, true, `${width}x${height} keeps step-two actions within the rail bounds`);
   assert.equal(result.railSpansWorkspace, true, `${width}x${height} spans the step-two rail across the lyrics workspace`);
+  assert.equal(result.statusBar.position, "sticky", `${width}x${height} keeps one compact sticky editor status bar`);
+  assert.ok(result.statusBar.height <= 36, `${width}x${height} keeps the merged status bar compact: ${result.statusBar.height}`);
+  assert.ok(
+    result.shared.y >= result.statusBar.bottom - 1,
+    `${width}x${height} reserves the status bar height above the shared editor viewport: ${JSON.stringify({ statusBar: result.statusBar, shared: result.shared })}`
+  );
+  assert.equal(result.documentScrollerCount, 1, `${width}x${height} exposes exactly one editor scroller`);
+  assert.equal(result.documentScrollerIsShared, true, `${width}x${height} makes the shared viewport the only editor scroller`);
   assert.ok(result.textareaCount >= 1, `${width}x${height} renders the document editor`);
   if (result.textareaHeights.length === 2) {
     assert.ok(Math.abs(result.textareaHeights[0] - result.textareaHeights[1]) <= 1, `${width}x${height} keeps original and translation equal height`);
   }
   for (const style of result.textareaStyles) {
+    assert.equal(style.overflowX, "hidden", `${width}x${height} textarea wraps long lines without horizontal scrolling`);
     assert.equal(style.overflowY, "hidden", `${width}x${height} textarea delegates scrolling to the shared viewport`);
     assert.equal(style.resize, "none", `${width}x${height} textarea disables native resize`);
+    assert.ok(style.scrollWidth <= style.clientWidth + 1, `${width}x${height} textarea has no horizontal overflow: ${JSON.stringify(style)}`);
+  }
+  assert.ok(result.textareaWidths.every((value) => value >= 260), `${width}x${height} keeps both bilingual editors usable: ${result.textareaWidths}`);
+  assert.ok(result.horizontalOverflow <= 1, `${width}x${height} avoids document horizontal overflow: ${result.horizontalOverflow}`);
+  if (runVisualDiagnostics) {
+    await page.screenshot({ path: path.join(reportDirectory, `step-two-${width}x${height}.png`), fullPage: false });
   }
   await assertExportHost(`step two ${width}x${height}`);
+}
+
+async function assertLyricsWorkspaceSplitInteractions() {
+  await setWindowSize(1280, 900);
+  await waitForLayoutStable(page.getByTestId("lyrics-workspace-split"));
+  const resizer = page.getByTestId("lyrics-workspace-resizer");
+  assert.equal(await resizer.getAttribute("aria-valuenow"), "75", "lyrics separator starts at the 3/4 default");
+
+  const idleLine = await resizer.evaluate((element) => ({
+    width: getComputedStyle(element, "::before").width,
+    color: getComputedStyle(element, "::before").backgroundColor
+  }));
+  await resizer.hover();
+  const hoverLine = await resizer.evaluate((element) => ({
+    width: getComputedStyle(element, "::before").width,
+    color: getComputedStyle(element, "::before").backgroundColor
+  }));
+  assert.equal(idleLine.width, "1px", "lyrics separator is one pixel at rest");
+  assert.equal(hoverLine.width, "1px", "hover keeps the lyrics separator one pixel wide");
+  assert.notEqual(hoverLine.color, idleLine.color, "hover changes the lyrics separator theme color");
+
+  await resizer.focus();
+  await resizer.press("ArrowLeft");
+  await page.waitForFunction(() => document.querySelector('[data-testid="lyrics-workspace-resizer"]')?.getAttribute('aria-valuenow') === '73');
+  await resizer.press("Shift+ArrowLeft");
+  await page.waitForFunction(() => document.querySelector('[data-testid="lyrics-workspace-resizer"]')?.getAttribute('aria-valuenow') === '68');
+  await resizer.press("Home");
+  await page.waitForFunction(() => document.querySelector('[data-testid="lyrics-workspace-resizer"]')?.getAttribute('aria-valuenow') === '67');
+  await resizer.press("End");
+  await page.waitForFunction(() => document.querySelector('[data-testid="lyrics-workspace-resizer"]')?.getAttribute('aria-valuenow') === '75');
+  await resizer.press("Home");
+  await resizer.dblclick();
+  await page.waitForFunction(() => document.querySelector('[data-testid="lyrics-workspace-resizer"]')?.getAttribute('aria-valuenow') === '75');
+
+  const dragGeometry = await page.getByTestId("lyrics-workspace-split").boundingBox();
+  const resizerGeometry = await resizer.boundingBox();
+  assert.ok(dragGeometry && resizerGeometry, "lyrics split exposes pointer geometry");
+  await page.mouse.move(resizerGeometry.x + resizerGeometry.width / 2, resizerGeometry.y + resizerGeometry.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(dragGeometry.x + 10 + (dragGeometry.width - 20) * (2 / 3), resizerGeometry.y + resizerGeometry.height / 2, { steps: 5 });
+  await page.mouse.up();
+  await page.waitForFunction(() => document.querySelector('[data-testid="lyrics-workspace-resizer"]')?.getAttribute('aria-valuenow') === '67');
+
+  const beforeCollapse = await page.getByTestId("lyrics-workspace-split").evaluate((split) => ({
+    ratio: split.getAttribute("data-editor-ratio"),
+    toolsWidth: document.querySelector('[data-testid="lyrics-tools-aside"]')?.getBoundingClientRect().width ?? 0
+  }));
+  assert.ok(beforeCollapse.toolsWidth > 300, `dragging expands tools to approximately one third: ${JSON.stringify(beforeCollapse)}`);
+
+  const collapseButton = page.getByTestId("lyrics-tools-collapse");
+  await collapseButton.click();
+  await page.waitForFunction(() => document.querySelector('[data-testid="lyrics-tools-aside"]')?.getAttribute('data-collapsed') === 'true');
+  assert.equal(
+    await collapseButton.evaluate((node) => document.activeElement === node),
+    true,
+    "collapsing keeps keyboard focus on the persistent disclosure button"
+  );
+  assert.equal(await resizer.count(), 0, "collapsed tools leave ratio geometry and hide the resize separator");
+  const collapsedGeometry = await page.getByTestId("lyrics-tools-aside").boundingBox();
+  assert.ok(collapsedGeometry && Math.abs(collapsedGeometry.width - 64) <= 1, `collapsed tools use the 64px rail: ${JSON.stringify(collapsedGeometry)}`);
+  await page.getByTestId("lyrics-tool-ai-collapsed").waitFor({ state: "visible" });
+  await page.getByTestId("translation-toggle").waitFor({ state: "visible" });
+  await page.getByTestId("lyrics-tool-split-collapsed").waitFor({ state: "visible" });
+  await page.getByTestId("lyrics-line-budget").waitFor({ state: "visible" });
+  if (runVisualDiagnostics) {
+    await page.screenshot({ path: path.join(reportDirectory, "step-two-collapsed-1280x900.png"), fullPage: false });
+  }
+
+  await page.locator('button[data-step-id="layout"]').click();
+  await page.locator('button[data-step-id="lyrics"]').click();
+  await page.waitForFunction(() => document.querySelector('[data-testid="lyrics-tools-aside"]')?.getAttribute('data-collapsed') === 'true');
+  assert.equal(await page.getByTestId("lyrics-tools-collapse").getAttribute("aria-expanded"), "false", "step switching preserves collapsed state");
+
+  await page.getByTestId("lyrics-tools-collapse").click();
+  await page.waitForFunction(() => document.querySelector('[data-testid="lyrics-workspace-resizer"]')?.getAttribute('aria-valuenow') === '67');
+  assert.equal(
+    await page.getByTestId("lyrics-workspace-split").getAttribute("data-editor-ratio"),
+    beforeCollapse.ratio,
+    "expanding restores the last expanded ratio"
+  );
+  await page.getByTestId("lyrics-workspace-resizer").dblclick();
+  await page.waitForFunction(() => document.querySelector('[data-testid="lyrics-workspace-resizer"]')?.getAttribute('aria-valuenow') === '75');
+}
+
+async function assertLyricsWorkspaceContentPressure(originalLyrics, translationLyrics, translationToggle) {
+  await setWindowSize(1920, 1080);
+  await translationToggle.click();
+  await translationLyrics.waitFor({ state: "detached" });
+
+  const shortThirtySix = Array.from({ length: 36 }, (_, index) => `short phrase ${String(index + 1).padStart(2, "0")}`).join("\n");
+  await originalLyrics.fill(shortThirtySix);
+  await waitForLyricsLineBudget("36 / 36");
+  const singleColumn = await page.getByTestId("lyrics-editor-columns").evaluate((columns) => {
+    const editor = columns.querySelector("textarea");
+    const viewport = columns.parentElement;
+    const columnsRect = columns.getBoundingClientRect();
+    const viewportRect = viewport?.getBoundingClientRect();
+    const editorRect = editor?.getBoundingClientRect();
+    return {
+      bilingual: columns.getAttribute("data-bilingual"),
+      columnsWidth: columnsRect.width,
+      editorWidth: editorRect?.width ?? 0,
+      leftGap: viewportRect ? columnsRect.left - viewportRect.left : 0,
+      rightGap: viewportRect ? viewportRect.right - columnsRect.right : 0,
+      textareaCount: columns.querySelectorAll("textarea").length
+    };
+  });
+  assert.equal(singleColumn.bilingual, "false", "single-language editing uses one canvas");
+  assert.equal(singleColumn.textareaCount, 1, "single-language editing renders one textarea");
+  assert.ok(singleColumn.columnsWidth >= 720 && singleColumn.columnsWidth <= 840, `single-language paper stays in the comfortable width range: ${JSON.stringify(singleColumn)}`);
+  assert.ok(Math.abs(singleColumn.leftGap - singleColumn.rightGap) <= 2, `single-language paper stays centered: ${JSON.stringify(singleColumn)}`);
+
+  await setWindowSize(1000, 700);
+  const ninetySixLines = Array.from({ length: 96 }, (_, index) => `pressure line ${String(index + 1).padStart(2, "0")}`).join("\n");
+  await originalLyrics.fill(ninetySixLines);
+  await waitForLyricsLineBudget("96 / 36");
+  await page.getByTestId("lyrics-shared-scroll").evaluate((node) => {
+    node.scrollTop = node.scrollHeight;
+  });
+  const longLine = "a deliberately long lyric fragment ".repeat(28).trim();
+  const trimmedThirtySix = [longLine, ...Array.from({ length: 35 }, (_, index) => `trimmed line ${index + 2}`)].join("\n");
+  await originalLyrics.fill(trimmedThirtySix);
+  await waitForLyricsLineBudget("36 / 36");
+  const pressureResult = await page.getByTestId("lyrics-workspace").evaluate((workspace) => {
+    const textarea = workspace.querySelector("textarea");
+    const shared = workspace.querySelector('[data-testid="lyrics-shared-scroll"]');
+    return {
+      textareaCount: workspace.querySelectorAll("textarea").length,
+      textareaScrollWidth: textarea?.scrollWidth ?? 0,
+      textareaClientWidth: textarea?.clientWidth ?? 0,
+      sharedOverflowX: shared ? getComputedStyle(shared).overflowX : null,
+      pageOverflow: document.documentElement.scrollWidth - document.documentElement.clientWidth
+    };
+  });
+  assert.equal(pressureResult.textareaCount, 1, "96-line trimming pressure stays in the single editor");
+  assert.ok(pressureResult.textareaScrollWidth <= pressureResult.textareaClientWidth + 1, `long lines wrap without textarea overflow: ${JSON.stringify(pressureResult)}`);
+  assert.equal(pressureResult.sharedOverflowX, "hidden", "long lines do not add a shared horizontal scrollbar");
+  assert.ok(pressureResult.pageOverflow <= 1, `pressure content does not overflow the window: ${JSON.stringify(pressureResult)}`);
+
+  await translationToggle.click();
+  await translationLyrics.waitFor({ state: "visible" });
 }
 
 async function assertPreviewFits(width, height, scrolled) {
@@ -2401,6 +2600,12 @@ try {
     { width: 1280, height: 900 },
     { width: 1440, height: 900 }
   ];
+  const lyricsWorkspaceSizes = [
+    { width: 1000, height: 700 },
+    { width: 1280, height: 900 },
+    { width: 1440, height: 900 },
+    { width: 1920, height: 1080 }
+  ];
   for (const size of focusedSizes) {
     await assertFocusedPresentation(size.width, size.height);
   }
@@ -2465,9 +2670,13 @@ try {
   ).join("\n");
   await originalLyrics.fill(originalEighteen);
   await translationLyrics.fill(translationEighteen);
-  for (const size of focusedSizes) {
+  for (const size of lyricsWorkspaceSizes) {
     await assertLyricsWorkspace(size.width, size.height);
   }
+  await assertLyricsWorkspaceSplitInteractions();
+  await assertLyricsWorkspaceContentPressure(originalLyrics, translationLyrics, translationToggle);
+  await fillExact(originalLyrics, originalEighteen);
+  await fillExact(translationLyrics, translationEighteen);
   if (runVisualDiagnostics) await assertTitlebarScrollPerformance();
 
   await setWindowSize(1000, 700);
@@ -2675,6 +2884,7 @@ try {
     nativeDialogs,
     searchMock: { searches: searchRequests.length, resolves: resolveRequests.length },
     focusedViewports: focusedSizes.map(({ width, height }) => `${width}x${height}`),
+    lyricsWorkspaceViewports: lyricsWorkspaceSizes.map(({ width, height }) => `${width}x${height}`),
     previewViewports: ["1366x768", "1440x900", "1920x1080"],
     visualDiagnostics: runVisualDiagnostics,
     titlebarVisualMetrics,

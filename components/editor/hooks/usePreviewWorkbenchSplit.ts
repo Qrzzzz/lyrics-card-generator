@@ -1,7 +1,8 @@
 "use client";
 
-import type { KeyboardEvent, PointerEvent, RefObject } from "react";
-import { useLayoutEffect, useRef, useState } from "react";
+import { useState } from "react";
+import { useResizableSplit } from "@/components/editor/hooks/useResizableSplit";
+import { resolveResizableSplit, type ResizableSplitGeometry } from "@/lib/resizable-split";
 
 const DESKTOP_WORKBENCH_QUERY = "(min-width: 1024px)";
 const DEFAULT_SETTINGS_RATIO = 0.5;
@@ -21,15 +22,9 @@ type ResolvePreviewWorkbenchSplitInput = {
   minPreviewWidth?: number;
 };
 
-export type PreviewWorkbenchSplitGeometry = {
-  viewportWidth: number;
-  usableWidth: number;
+export type PreviewWorkbenchSplitGeometry = ResizableSplitGeometry & {
   settingsWidth: number;
   previewWidth: number;
-  ratio: number;
-  minRatio: number;
-  maxRatio: number;
-  gap: number;
 };
 
 export type PreviewWorkbenchTrackGeometry = {
@@ -38,10 +33,6 @@ export type PreviewWorkbenchTrackGeometry = {
   exportWidth: number;
   offset: number;
 };
-
-function clamp(value: number, minimum: number, maximum: number) {
-  return Math.min(Math.max(value, minimum), maximum);
-}
 
 export function resolvePreviewWorkbenchSplit({
   viewportWidth,
@@ -52,41 +43,20 @@ export function resolvePreviewWorkbenchSplit({
   minSettingsWidth = MIN_SETTINGS_WIDTH,
   minPreviewWidth = MIN_PREVIEW_WIDTH
 }: ResolvePreviewWorkbenchSplitInput): PreviewWorkbenchSplitGeometry {
-  const resolvedViewportWidth = Math.max(0, viewportWidth);
-  const usableWidth = Math.max(0, resolvedViewportWidth - gap);
-
-  if (usableWidth <= 0) {
-    return {
-      viewportWidth: resolvedViewportWidth,
-      usableWidth,
-      settingsWidth: 0,
-      previewWidth: 0,
-      ratio: DEFAULT_SETTINGS_RATIO,
-      minRatio: minSettingsRatio,
-      maxRatio: maxSettingsRatio,
-      gap
-    };
-  }
-
-  const widthConstrainedMinimum = minSettingsWidth / usableWidth;
-  const widthConstrainedMaximum = 1 - minPreviewWidth / usableWidth;
-  const resolvedMinimum = Math.max(minSettingsRatio, widthConstrainedMinimum);
-  const resolvedMaximum = Math.min(maxSettingsRatio, widthConstrainedMaximum);
-  const constraintsFit = resolvedMinimum <= resolvedMaximum;
-  const effectiveMinimum = constraintsFit ? resolvedMinimum : minSettingsRatio;
-  const effectiveMaximum = constraintsFit ? resolvedMaximum : minSettingsRatio;
-  const ratio = clamp(requestedRatio, effectiveMinimum, effectiveMaximum);
-  const settingsWidth = usableWidth * ratio;
-
-  return {
-    viewportWidth: resolvedViewportWidth,
-    usableWidth,
-    settingsWidth,
-    previewWidth: usableWidth - settingsWidth,
-    ratio,
-    minRatio: effectiveMinimum,
-    maxRatio: effectiveMaximum,
+  const split = resolveResizableSplit({
+    viewportWidth,
+    requestedRatio,
+    defaultRatio: DEFAULT_SETTINGS_RATIO,
+    minRatio: minSettingsRatio,
+    maxRatio: maxSettingsRatio,
+    minLeadingWidth: minSettingsWidth,
+    minTrailingWidth: minPreviewWidth,
     gap
+  });
+  return {
+    ...split,
+    settingsWidth: split.leadingWidth,
+    previewWidth: split.trailingWidth
   };
 }
 
@@ -113,149 +83,26 @@ export function resolvePreviewWorkbenchTrack(
 }
 
 export function usePreviewWorkbenchSplit(enabled = true) {
-  const viewportRef = useRef<HTMLDivElement | null>(null);
-  const activePointerIdRef = useRef<number | null>(null);
-  const [viewportWidth, setViewportWidth] = useState(0);
   const [requestedRatio, setRequestedRatio] = useState(DEFAULT_SETTINGS_RATIO);
-  const [isDesktop, setIsDesktop] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
-  const geometry = resolvePreviewWorkbenchSplit({ viewportWidth, requestedRatio });
-
-  useLayoutEffect(() => {
-    if (!enabled) {
-      return;
-    }
-
-    const viewport = viewportRef.current;
-    if (!viewport) {
-      return;
-    }
-
-    let frame = 0;
-    const mediaQuery = window.matchMedia(DESKTOP_WORKBENCH_QUERY);
-    const update = () => {
-      window.cancelAnimationFrame(frame);
-      frame = window.requestAnimationFrame(() => {
-        setViewportWidth(viewport.getBoundingClientRect().width);
-        setIsDesktop(mediaQuery.matches);
-      });
-    };
-
-    const observer = new ResizeObserver(update);
-    observer.observe(viewport);
-    mediaQuery.addEventListener("change", update);
-    update();
-
-    return () => {
-      window.cancelAnimationFrame(frame);
-      observer.disconnect();
-      mediaQuery.removeEventListener("change", update);
-    };
-  }, [enabled]);
-
-  function updateRatioFromPointer(clientX: number) {
-    const viewport = viewportRef.current;
-    if (!viewport || !isDesktop) {
-      return;
-    }
-
-    const rect = viewport.getBoundingClientRect();
-    const nextRatio = (clientX - rect.left - geometry.gap / 2) / Math.max(1, rect.width - geometry.gap);
-    setRequestedRatio(clamp(nextRatio, MIN_SETTINGS_RATIO, MAX_SETTINGS_RATIO));
-  }
-
-  function handlePointerDown(event: PointerEvent<HTMLDivElement>) {
-    if (!isDesktop) {
-      return;
-    }
-
-    event.preventDefault();
-    activePointerIdRef.current = event.pointerId;
-    event.currentTarget.setPointerCapture(event.pointerId);
-    setIsDragging(true);
-    updateRatioFromPointer(event.clientX);
-  }
-
-  function handlePointerMove(event: PointerEvent<HTMLDivElement>) {
-    if (activePointerIdRef.current !== event.pointerId) {
-      return;
-    }
-
-    event.preventDefault();
-    updateRatioFromPointer(event.clientX);
-  }
-
-  function finishPointerInteraction(event: PointerEvent<HTMLDivElement>) {
-    if (activePointerIdRef.current !== event.pointerId) {
-      return;
-    }
-
-    updateRatioFromPointer(event.clientX);
-    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-      event.currentTarget.releasePointerCapture(event.pointerId);
-    }
-    activePointerIdRef.current = null;
-    setIsDragging(false);
-  }
-
-  function handleLostPointerCapture() {
-    activePointerIdRef.current = null;
-    setIsDragging(false);
-  }
-
-  function handlePointerCancel(event: PointerEvent<HTMLDivElement>) {
-    if (activePointerIdRef.current !== event.pointerId) {
-      return;
-    }
-
-    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-      event.currentTarget.releasePointerCapture(event.pointerId);
-    }
-    activePointerIdRef.current = null;
-    setIsDragging(false);
-  }
-
-  function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
-    const step = event.shiftKey ? 0.05 : 0.02;
-    let nextRatio: number | null = null;
-
-    if (event.key === "ArrowLeft") {
-      nextRatio = geometry.ratio - step;
-    } else if (event.key === "ArrowRight") {
-      nextRatio = geometry.ratio + step;
-    } else if (event.key === "Home") {
-      nextRatio = MIN_SETTINGS_RATIO;
-    } else if (event.key === "End") {
-      nextRatio = MAX_SETTINGS_RATIO;
-    }
-
-    if (nextRatio === null) {
-      return;
-    }
-
-    event.preventDefault();
-    setRequestedRatio(clamp(nextRatio, MIN_SETTINGS_RATIO, MAX_SETTINGS_RATIO));
-  }
-
-  function reset() {
-    setRequestedRatio(DEFAULT_SETTINGS_RATIO);
-  }
+  const split = useResizableSplit({
+    enabled,
+    requestedRatio,
+    onRequestedRatioChange: setRequestedRatio,
+    defaultRatio: DEFAULT_SETTINGS_RATIO,
+    minRatio: MIN_SETTINGS_RATIO,
+    maxRatio: MAX_SETTINGS_RATIO,
+    minLeadingWidth: MIN_SETTINGS_WIDTH,
+    minTrailingWidth: MIN_PREVIEW_WIDTH,
+    gap: WORKBENCH_GAP,
+    desktopQuery: DESKTOP_WORKBENCH_QUERY
+  });
 
   return {
-    viewportRef: viewportRef as RefObject<HTMLDivElement | null>,
-    geometry,
-    isDesktop,
-    isDragging,
-    reset,
-    separatorProps: {
-      onPointerDown: handlePointerDown,
-      onPointerMove: handlePointerMove,
-      onPointerUp: finishPointerInteraction,
-      onPointerCancel: handlePointerCancel,
-      onLostPointerCapture: handleLostPointerCapture,
-      onKeyDown: handleKeyDown,
-      onDoubleClick: reset
-    }
+    ...split,
+    geometry: resolvePreviewWorkbenchSplit({
+      viewportWidth: split.geometry.viewportWidth,
+      requestedRatio
+    })
   };
 }
 

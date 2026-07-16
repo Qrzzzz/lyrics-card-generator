@@ -1115,39 +1115,46 @@ button {
   grid-template-columns: minmax(0, 1fr);
 }
 
-.lyrics-workspace-grid {
+.lyrics-workspace-split {
   display: grid;
   min-height: 0;
+  min-width: 0;
   grid-template-columns: 1fr;
-  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-rows: minmax(0, 1fr) minmax(9rem, 40%);
+  gap: 0.75rem;
 }
 
-.lyrics-workspace-column + .lyrics-workspace-column {
+.lyrics-workspace-split[data-side-by-side="true"] {
+  grid-template-rows: minmax(0, 1fr);
+  align-items: stretch;
+}
+
+.lyrics-workspace-split[data-side-by-side="false"] .lyrics-tools-aside {
   border-top: 1px solid rgb(var(--panel-border));
 }
 
-@media (min-width: 960px) {
-  .lyrics-workspace-grid {
-    grid-template-columns: 132px minmax(0, 1fr) 320px;
-    grid-template-rows: minmax(0, 1fr);
-  }
-
-  .lyrics-workspace-column + .lyrics-workspace-column {
-    border-top: 0;
-    border-left: 1px solid rgb(var(--panel-border));
-  }
+.lyrics-workspace-split[data-tools-collapsed="true"] .lyrics-tools-aside {
+  border-left: 1px solid rgb(var(--panel-border));
 }
 
-@media (min-width: 1180px) {
-  .lyrics-workspace-grid {
-    grid-template-columns: 176px minmax(0, 1fr) 360px;
-  }
+.lyrics-document-column,
+.lyrics-tools-aside,
+.lyrics-editor-status {
+  min-width: 0;
 }
 
-@media (min-width: 1440px) {
-  .lyrics-workspace-grid {
-    grid-template-columns: 176px minmax(0, 1fr) 400px;
-  }
+.lyrics-workspace-resizer {
+  top: 0;
+  bottom: 0;
+}
+
+.lyrics-tools-aside--collapsed .app-button {
+  width: 2.5rem;
+  min-width: 2.5rem;
+}
+
+.lyrics-tools-summary {
+  scrollbar-gutter: stable;
 }
 
 @media (max-height: 900px) {
@@ -1163,23 +1170,11 @@ button {
     gap: 0.75rem;
   }
 
-  .lyrics-workspace-grid {
-    gap: 0;
-    padding: 0;
-  }
-
-  .lyrics-summary-aside,
   .lyrics-tools-aside {
     padding: 0.5rem;
   }
 
-  .lyrics-summary-description,
-  .lyrics-summary-position,
   .lyrics-summary-metric__detail {
-    display: none !important;
-  }
-
-  .lyrics-summary-header {
     display: none !important;
   }
 
@@ -1189,8 +1184,7 @@ button {
   }
 
   .lyrics-song-summary,
-  .lyrics-summary-metrics,
-  .lyrics-line-budget {
+  .lyrics-summary-metrics {
     margin-top: 0.5rem;
   }
 
@@ -1243,10 +1237,6 @@ button {
     gap: 0.25rem;
   }
 
-  .lyrics-tools-aside__actions > p:first-child {
-    display: none !important;
-  }
-
   .lyrics-tools-aside__actions {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -1282,6 +1272,12 @@ button {
   .lyrics-tools-aside [data-testid="lyrics-fetch-panel-boundary"],
   .lyrics-tools-aside [data-testid="lyrics-ai-panel-boundary"] {
     min-height: 1.5rem;
+  }
+}
+
+@media (max-width: 1100px) {
+  .lyrics-tools-aside__actions {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
