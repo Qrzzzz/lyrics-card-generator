@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v5.7.0.zh-TW.md">發布說明</a> ·
+  <a href="./docs/releases/v5.7.1.zh-TW.md">發布說明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">線上 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="#本機開發">本機開發</a> ·
@@ -48,23 +48,23 @@
 
 請前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載最新版：
 
-* 建議一般使用者下載安裝版：`Lyrics Card Generator Setup 5.7.0.exe`
-* 不想安裝時可下載可攜版：`Lyrics Card Generator-5.7.0-portable.exe`
+* 建議一般使用者下載安裝版：`Lyrics Card Generator Setup 5.7.1.exe`
+* 不想安裝時可下載可攜版：`Lyrics Card Generator-5.7.1-portable.exe`
 
 安裝版適合長期使用；可攜版適合臨時執行、測試或放在隨身碟中使用。
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v5.7.0 更新重點
+### v5.7.1 更新重點
 
-* 第 3–5 步新增可拖曳的設定/預覽分隔器，設定區可從 1/2 擴展到最高 2/3，並自動保留預覽最低寬度。
-* 設定項改為按左側容器實際寬度自動重排；視覺開關在寬欄下可由兩欄變為三欄三列。
-* 延續 PNG、WebP 與 JPG 匯出能力，同時重構桌面版六步工作區、預覽縮放與第 5→6 步過場。
+* 將第 3–5 步的可調分隔器精簡為單條 1 px 直線，滑鼠停留、鍵盤聚焦與拖曳時只以主題色回饋。
+* 第 5→6 步切換時，無論先前如何調整分欄，歌詞卡片預覽都會與整組軌道同步平滑放大到等分半寬。
+* 返回第 5 步時會恢復原有比例，並保留窄視窗上下排列與 PNG、WebP、JPG 匯出行為。
 
 ## 🌐 多語言發佈說明
 
 GitHub Release 預設顯示簡體中文摘要，完整說明請見：
-[简体中文](./docs/releases/v5.7.0.zh-CN.md) · [繁體中文](./docs/releases/v5.7.0.zh-TW.md) · [English](./docs/releases/v5.7.0.en.md) · [Français](./docs/releases/v5.7.0.fr.md) · [日本語](./docs/releases/v5.7.0.ja.md) · [Español](./docs/releases/v5.7.0.es.md)
+[简体中文](./docs/releases/v5.7.1.zh-CN.md) · [繁體中文](./docs/releases/v5.7.1.zh-TW.md) · [English](./docs/releases/v5.7.1.en.md) · [Français](./docs/releases/v5.7.1.fr.md) · [日本語](./docs/releases/v5.7.1.ja.md) · [Español](./docs/releases/v5.7.1.es.md)
 
 ## ✨ 主要功能
 

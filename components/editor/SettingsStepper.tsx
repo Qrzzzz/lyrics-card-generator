@@ -5,7 +5,10 @@ import { Check, Download } from "lucide-react";
 import type { ReactNode, RefObject } from "react";
 import { useRef } from "react";
 import { useBalancedStepperLayout } from "@/components/editor/hooks/useBalancedStepperLayout";
-import { usePreviewWorkbenchSplit } from "@/components/editor/hooks/usePreviewWorkbenchSplit";
+import {
+  resolvePreviewWorkbenchTrack,
+  usePreviewWorkbenchSplit
+} from "@/components/editor/hooks/usePreviewWorkbenchSplit";
 import { useAppReducedMotion } from "@/components/motion/AppMotionProvider";
 import { MotionPresence } from "@/components/motion/MotionPresence";
 import { getReadableForegroundColor } from "@/lib/contrast-color";
@@ -187,11 +190,12 @@ export function SettingsStepper({
 }: SettingsStepperProps) {
   const reduceMotion = useAppReducedMotion();
   const previousStepRef = useRef(currentStep);
+  const previousStep = previousStepRef.current;
   const visitedStepsRef = useRef(new Set([currentStep]));
   visitedStepsRef.current.add(currentStep);
   const stepsGridRef = useRef<HTMLDivElement | null>(null);
   const stepsMeasureRef = useRef<HTMLDivElement | null>(null);
-  const stepDirection: StepDirection = currentStep >= previousStepRef.current ? 1 : -1;
+  const stepDirection: StepDirection = currentStep >= previousStep ? 1 : -1;
   const activeStep = steps[currentStep] ?? steps[0];
   const activePresentation = activeStep?.presentation ?? "preview-workbench";
   const isFocus = activePresentation === "focus";
@@ -201,6 +205,10 @@ export function SettingsStepper({
   const workbenchSplit = usePreviewWorkbenchSplit(isPreviewWorkbench);
   const exportStep = steps[steps.length - 1] ?? activeStep;
   const isExportWorkbench = isPreviewWorkbench && currentStep === steps.length - 1;
+  const wasExportWorkbench = isPreviewWorkbench && previousStep === steps.length - 1;
+  const isWorkbenchPanelTransition = previousStep !== currentStep && (isExportWorkbench || wasExportWorkbench);
+  const workbenchTrack = resolvePreviewWorkbenchTrack(workbenchSplit.geometry, isExportWorkbench);
+  const balancedWorkbenchPanelWidth = workbenchSplit.geometry.usableWidth / 2;
   const lastPreviewSettingsStepRef = useRef<SettingsStep | null>(null);
   if (isPreviewWorkbench && !isExportWorkbench) {
     lastPreviewSettingsStepRef.current = activeStep;
@@ -217,6 +225,11 @@ export function SettingsStepper({
   const workbenchTransition: Transition = reduceMotion
     ? reducedMotionTransition
     : { type: "spring", stiffness: 190, damping: 30, mass: 1.02 };
+  const workbenchLayoutTransition: Transition = reduceMotion
+    ? reducedMotionTransition
+    : isWorkbenchPanelTransition
+      ? workbenchTransition
+      : { duration: 0 };
   const stepMeasurementKey = steps.map((step) => step.title).join("\u0000");
   const stepLayout = useBalancedStepperLayout({
     containerRef: stepsGridRef,
@@ -398,18 +411,19 @@ export function SettingsStepper({
             animate={{
               x: isExportWorkbench
                 ? workbenchSplit.geometry.viewportWidth > 0
-                  ? -(workbenchSplit.geometry.settingsWidth + workbenchSplit.geometry.gap)
+                  ? workbenchTrack.offset
                   : "calc(-50% - 0.625rem)"
-                : 0
-            }}
-            transition={workbenchTransition}
-            style={
-              workbenchSplit.isDesktop && workbenchSplit.geometry.viewportWidth > 0
+                : 0,
+              ...(workbenchSplit.isDesktop && workbenchSplit.geometry.viewportWidth > 0
                 ? {
-                    gridTemplateColumns: `${workbenchSplit.geometry.settingsWidth}px ${workbenchSplit.geometry.previewWidth}px ${workbenchSplit.geometry.settingsWidth}px`
+                    gridTemplateColumns: `${workbenchTrack.editorWidth}px ${workbenchTrack.previewWidth}px ${workbenchTrack.exportWidth}px`
                   }
-                : undefined
-            }
+                : {})
+            }}
+            transition={{
+              x: workbenchTransition,
+              gridTemplateColumns: workbenchLayoutTransition
+            }}
           >
             <div
               id="preview-workbench-settings-panel"
@@ -481,7 +495,7 @@ export function SettingsStepper({
             </div>
           </motion.div>
           {workbenchSplit.isDesktop && !isExportWorkbench && workbenchSplit.geometry.viewportWidth > 0 ? (
-            <div
+            <motion.div
               {...workbenchSplit.separatorProps}
               role="separator"
               aria-label={workbenchResizeLabel}
@@ -496,8 +510,10 @@ export function SettingsStepper({
               className="preview-workbench-resizer"
               data-testid="preview-workbench-resizer"
               data-dragging={workbenchSplit.isDragging ? "true" : "false"}
+              initial={wasExportWorkbench ? { left: balancedWorkbenchPanelWidth } : false}
+              animate={{ left: workbenchSplit.geometry.settingsWidth }}
+              transition={workbenchLayoutTransition}
               style={{
-                left: workbenchSplit.geometry.settingsWidth,
                 width: workbenchSplit.geometry.gap
               }}
             />

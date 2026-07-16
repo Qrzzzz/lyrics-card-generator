@@ -1398,54 +1398,26 @@ button {
   outline: none;
 }
 
-.preview-workbench-resizer::before,
-.preview-workbench-resizer::after {
+.preview-workbench-resizer::before {
   position: absolute;
   left: 50%;
-  top: 50%;
-  content: "";
-  transform: translate(-50%, -50%);
-  transition:
-    width var(--motion-duration-fast) var(--motion-ease-standard),
-    height var(--motion-duration-fast) var(--motion-ease-standard),
-    border-color var(--motion-duration-fast) var(--motion-ease-standard),
-    background var(--motion-duration-fast) var(--motion-ease-standard),
-    box-shadow var(--motion-duration-fast) var(--motion-ease-standard),
-    opacity var(--motion-duration-fast) var(--motion-ease-standard);
-}
-
-.preview-workbench-resizer::before {
+  top: 0;
+  bottom: 0;
   width: 1px;
-  height: calc(100% - 1rem);
-  background: rgb(var(--panel-border));
+  content: "";
+  transform: translateX(-50%);
+  background-color: rgb(var(--panel-border));
   opacity: 0.72;
-}
-
-.preview-workbench-resizer::after {
-  width: 5px;
-  height: 44px;
-  border: 1px solid rgb(var(--panel-border));
-  border-radius: 999px;
-  background: rgb(var(--button-bg));
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
+  transition:
+    background-color var(--motion-duration-fast) var(--motion-ease-standard),
+    opacity var(--motion-duration-fast) var(--motion-ease-standard);
 }
 
 .preview-workbench-resizer:hover::before,
 .preview-workbench-resizer:focus-visible::before,
 .preview-workbench-resizer[data-dragging="true"]::before {
-  width: 2px;
-  background: var(--app-accent);
-  opacity: 0.9;
-}
-
-.preview-workbench-resizer:hover::after,
-.preview-workbench-resizer:focus-visible::after,
-.preview-workbench-resizer[data-dragging="true"]::after {
-  width: 7px;
-  height: 52px;
-  border-color: var(--app-accent);
-  background: color-mix(in srgb, var(--app-accent) 28%, rgb(var(--button-bg)));
-  box-shadow: 0 12px 30px color-mix(in srgb, var(--app-accent) 28%, transparent);
+  background-color: var(--control-focus-border);
+  opacity: 1;
 }
 
 @media (min-width: 1024px) {
@@ -1476,7 +1448,7 @@ button {
 
   .preview-workbench-track {
     width: 100%;
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) !important;
     transform: none !important;
   }
 

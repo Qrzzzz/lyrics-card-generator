@@ -4,7 +4,8 @@ import { resolve } from "node:path";
 import { __internalStepperLayout } from "../components/editor/hooks/useBalancedStepperLayout";
 import {
   __internalPreviewWorkbenchSplit,
-  resolvePreviewWorkbenchSplit
+  resolvePreviewWorkbenchSplit,
+  resolvePreviewWorkbenchTrack
 } from "../components/editor/hooks/usePreviewWorkbenchSplit";
 import { revokeReplacedBlobUrl } from "../lib/object-url-lifecycle";
 
@@ -76,6 +77,16 @@ const wideWorkbench = resolvePreviewWorkbenchSplit({
 assert.ok(
   Math.abs(wideWorkbench.ratio - 2 / 3) < 0.0001 && wideWorkbench.previewWidth > 398,
   "a 1280-class window can expand settings to two thirds while preserving the preview"
+);
+
+const expandedStepFiveTrack = resolvePreviewWorkbenchTrack(wideWorkbench, false);
+const balancedStepSixTrack = resolvePreviewWorkbenchTrack(wideWorkbench, true);
+assert.ok(
+  expandedStepFiveTrack.previewWidth < balancedStepSixTrack.previewWidth &&
+    Math.abs(balancedStepSixTrack.previewWidth - wideWorkbench.usableWidth / 2) < 0.001 &&
+    Math.abs(balancedStepSixTrack.previewWidth - balancedStepSixTrack.exportWidth) < 0.001 &&
+    Math.abs(balancedStepSixTrack.offset + balancedStepSixTrack.editorWidth + wideWorkbench.gap) < 0.001,
+  "step six grows any narrower step-five preview to an equal half-width split and pans by the matching track width"
 );
 
 const constrainedWorkbench = resolvePreviewWorkbenchSplit({
@@ -158,7 +169,8 @@ assert.ok(
 );
 assert.ok(
   stepperSource.includes("usePreviewWorkbenchSplit(isPreviewWorkbench)") &&
-    stepperSource.includes("workbenchSplit.geometry.settingsWidth + workbenchSplit.geometry.gap") &&
+    stepperSource.includes("resolvePreviewWorkbenchTrack(workbenchSplit.geometry, isExportWorkbench)") &&
+    stepperSource.includes("gridTemplateColumns: `${workbenchTrack.editorWidth}px ${workbenchTrack.previewWidth}px ${workbenchTrack.exportWidth}px`") &&
     stepperSource.includes('data-testid="preview-workbench-resizer"') &&
     stepperSource.includes('role="separator"') &&
     stepperSource.includes('aria-hidden={isExportWorkbench}') &&
@@ -282,6 +294,13 @@ assert.ok(
   "desktop uses an adjustable three-panel track while narrow layouts hide inactive settings"
 );
 assert.ok(
+  globalsSource.includes(".preview-workbench-resizer::before") &&
+    !globalsSource.includes(".preview-workbench-resizer::after") &&
+    globalsSource.includes("background-color: var(--control-focus-border)") &&
+    /\.preview-workbench-resizer::before\s*\{[\s\S]*?top:\s*0;[\s\S]*?bottom:\s*0;[\s\S]*?width:\s*1px;/.test(globalsSource),
+  "the adjustable workbench uses one full-height one-pixel line whose hover feedback is color-only"
+);
+assert.ok(
   globalsSource.includes(".settings-adaptive-grid--toggles") &&
     globalsSource.includes(".settings-adaptive-grid--rows") &&
     globalsSource.includes(".settings-adaptive-grid--pairs") &&
@@ -316,4 +335,4 @@ try {
   URL.revokeObjectURL = originalRevokeObjectUrl;
 }
 
-console.log(JSON.stringify({ ok: true, stepperLayoutTests: 49 }, null, 2));
+console.log(JSON.stringify({ ok: true, stepperLayoutTests: 51 }, null, 2));

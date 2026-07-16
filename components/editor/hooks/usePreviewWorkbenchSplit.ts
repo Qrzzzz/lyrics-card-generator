@@ -32,6 +32,13 @@ export type PreviewWorkbenchSplitGeometry = {
   gap: number;
 };
 
+export type PreviewWorkbenchTrackGeometry = {
+  editorWidth: number;
+  previewWidth: number;
+  exportWidth: number;
+  offset: number;
+};
+
 function clamp(value: number, minimum: number, maximum: number) {
   return Math.min(Math.max(value, minimum), maximum);
 }
@@ -80,6 +87,28 @@ export function resolvePreviewWorkbenchSplit({
     minRatio: effectiveMinimum,
     maxRatio: effectiveMaximum,
     gap
+  };
+}
+
+export function resolvePreviewWorkbenchTrack(
+  split: PreviewWorkbenchSplitGeometry,
+  exportActive: boolean
+): PreviewWorkbenchTrackGeometry {
+  if (!exportActive) {
+    return {
+      editorWidth: split.settingsWidth,
+      previewWidth: split.previewWidth,
+      exportWidth: split.settingsWidth,
+      offset: 0
+    };
+  }
+
+  const balancedPanelWidth = split.usableWidth / 2;
+  return {
+    editorWidth: balancedPanelWidth,
+    previewWidth: balancedPanelWidth,
+    exportWidth: balancedPanelWidth,
+    offset: split.viewportWidth > 0 ? -(balancedPanelWidth + split.gap) : 0
   };
 }
 
