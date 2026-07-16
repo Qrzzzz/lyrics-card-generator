@@ -137,13 +137,18 @@ async function waitForLayoutStable(locator, timeout = 5_000) {
       const rect = element.getBoundingClientRect();
       const signature = `${rect.x.toFixed(2)}:${rect.y.toFixed(2)}:${rect.width.toFixed(2)}:${rect.height.toFixed(2)}`;
       const previous = element.getAttribute("data-test-layout-signature");
+      const stableSamples = previous === signature
+        ? Number(element.getAttribute("data-test-layout-stable-samples") ?? "0") + 1
+        : 0;
       element.setAttribute("data-test-layout-signature", signature);
-      return previous === signature;
+      element.setAttribute("data-test-layout-stable-samples", String(stableSamples));
+      return stableSamples >= 3;
     },
     await locator.evaluate((element) => {
       const marker = `layout-${Math.random().toString(36).slice(2)}`;
       element.setAttribute("data-test-layout-marker", marker);
       element.removeAttribute("data-test-layout-signature");
+      element.removeAttribute("data-test-layout-stable-samples");
       return `[data-test-layout-marker="${marker}"]`;
     }),
     { polling: 80, timeout }
@@ -1695,6 +1700,27 @@ async function assertPreviewWorkbenchPan() {
   assert.ok(after.transform && after.transform !== "none", `step six retains the translated workbench transform: ${after.transform}`);
 
   await page.locator('button[data-step-id="visual"]').click();
+  await page.waitForFunction(
+    ({ expectedPreviewLeft, tolerance }) => {
+      const viewport = document.querySelector('[data-testid="preview-workbench-viewport"]');
+      const editor = document.querySelector('[data-workbench-panel="editor-settings"]');
+      const preview = document.querySelector('[data-workbench-panel="preview"]');
+      const exportPanel = document.querySelector('[data-workbench-panel="export-settings"]');
+      if (!viewport || !editor || !preview || !exportPanel) return false;
+
+      const viewportRect = viewport.getBoundingClientRect();
+      const editorRect = editor.getBoundingClientRect();
+      const previewRect = preview.getBoundingClientRect();
+      const exportRect = exportPanel.getBoundingClientRect();
+      return viewport.getAttribute("data-export-active") === "false"
+        && Math.abs(editorRect.left - viewportRect.left) <= tolerance
+        && Math.abs(previewRect.right - viewportRect.right) <= tolerance
+        && Math.abs(previewRect.left - expectedPreviewLeft) <= tolerance
+        && exportRect.left > viewportRect.right;
+    },
+    { expectedPreviewLeft: before.preview.left, tolerance: 1.5 },
+    { polling: 80, timeout: 10_000 }
+  );
   await waitForLayoutStable(page.getByTestId('preview-workbench-track'));
   const reversed = await readPreviewWorkbenchGeometry();
   assert.equal(reversed.exportActive, "false", "reverse navigation restores the editor side of the workbench");
