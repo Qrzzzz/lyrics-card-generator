@@ -2,6 +2,10 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { __internalStepperLayout } from "../components/editor/hooks/useBalancedStepperLayout";
+import {
+  __internalPreviewWorkbenchSplit,
+  resolvePreviewWorkbenchSplit
+} from "../components/editor/hooks/usePreviewWorkbenchSplit";
 import { revokeReplacedBlobUrl } from "../lib/object-url-lifecycle";
 
 const { chooseStepperLayout } = __internalStepperLayout;
@@ -56,6 +60,32 @@ assert.deepEqual(
   }),
   { columns: 2, compact: true },
   "compact fallback should prefer 2 + 2 + 2 over a heavily truncated 3 + 3"
+);
+
+const equalWorkbench = resolvePreviewWorkbenchSplit({ viewportWidth: 1216, requestedRatio: 0.5 });
+assert.equal(equalWorkbench.ratio, 0.5, "the preview workbench defaults to an equal split");
+assert.ok(
+  Math.abs(equalWorkbench.settingsWidth - equalWorkbench.previewWidth) < 0.001,
+  "the default split gives settings and preview the same usable width"
+);
+
+const wideWorkbench = resolvePreviewWorkbenchSplit({
+  viewportWidth: 1216,
+  requestedRatio: __internalPreviewWorkbenchSplit.MAX_SETTINGS_RATIO
+});
+assert.ok(
+  Math.abs(wideWorkbench.ratio - 2 / 3) < 0.0001 && wideWorkbench.previewWidth > 398,
+  "a 1280-class window can expand settings to two thirds while preserving the preview"
+);
+
+const constrainedWorkbench = resolvePreviewWorkbenchSplit({
+  viewportWidth: 960,
+  requestedRatio: __internalPreviewWorkbenchSplit.MAX_SETTINGS_RATIO
+});
+assert.ok(
+  Math.abs(constrainedWorkbench.previewWidth - __internalPreviewWorkbenchSplit.MIN_PREVIEW_WIDTH) < 0.001 &&
+    constrainedWorkbench.ratio < 2 / 3,
+  "the smallest side-by-side window caps settings before the preview becomes too narrow"
 );
 
 const stepperSource = readFileSync(resolve("components/editor/SettingsStepper.tsx"), "utf8");
@@ -127,10 +157,13 @@ assert.ok(
   "preview steps use one ordered three-panel track"
 );
 assert.ok(
-  stepperSource.includes('animate={{ x: isExportWorkbench ? "calc(-33.333333% - 0.416667rem)" : "0%" }}') &&
+  stepperSource.includes("usePreviewWorkbenchSplit(isPreviewWorkbench)") &&
+    stepperSource.includes("workbenchSplit.geometry.settingsWidth + workbenchSplit.geometry.gap") &&
+    stepperSource.includes('data-testid="preview-workbench-resizer"') &&
+    stepperSource.includes('role="separator"') &&
     stepperSource.includes('aria-hidden={isExportWorkbench}') &&
     stepperSource.includes('inert={!isExportWorkbench ? true : undefined}'),
-  "the export step pans the whole track while keeping off-screen settings inert"
+  "the adjustable workbench pans by the measured settings width while keeping off-screen settings inert"
 );
 assert.ok(
   stepperSource.includes("const isComplete = index < currentStep"),
@@ -243,10 +276,17 @@ const lyricsToolsSource = readFileSync(resolve("components/editor/LyricsToolsAsi
 const globalsSource = readFileSync(resolve("app/globals.css"), "utf8");
 assert.ok(
   globalsSource.includes(".preview-workbench-track") &&
-    globalsSource.includes("width: calc(150% + 0.625rem);") &&
-    globalsSource.includes("grid-template-columns: repeat(3, minmax(0, 1fr));") &&
+    globalsSource.includes("calc(50% - 0.625rem)") &&
+    globalsSource.includes(".preview-workbench-resizer") &&
     globalsSource.includes('.preview-workbench-export[data-active="false"]'),
-  "desktop uses a three-panel horizontal track while narrow layouts hide inactive settings"
+  "desktop uses an adjustable three-panel track while narrow layouts hide inactive settings"
+);
+assert.ok(
+  globalsSource.includes(".settings-adaptive-grid--toggles") &&
+    globalsSource.includes(".settings-adaptive-grid--rows") &&
+    globalsSource.includes(".settings-adaptive-grid--pairs") &&
+    globalsSource.includes("repeat(auto-fit"),
+  "settings groups derive compact columns from their own available width"
 );
 assert.ok(
   lyricsWorkspaceSource.includes('className="relative flex min-h-0 flex-col overflow-hidden"') &&
@@ -276,4 +316,4 @@ try {
   URL.revokeObjectURL = originalRevokeObjectUrl;
 }
 
-console.log(JSON.stringify({ ok: true, stepperLayoutTests: 45 }, null, 2));
+console.log(JSON.stringify({ ok: true, stepperLayoutTests: 49 }, null, 2));

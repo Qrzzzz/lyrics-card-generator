@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { FontSchemePanel } from "@/components/editor/font-scheme/FontSchemePanel";
 import { ColorControls } from "@/components/editor/style-panel/ColorControls";
 import {
+  AdaptiveSettingsGrid,
   FieldLabel,
   RangeSlider,
   Section,
@@ -414,10 +415,8 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
 
   return (
     <Section title={t("layout")} eyebrow={t("style")} variant="plain" contentClassName="gap-0">
-      <SettingRow
-        label={t("contentType")}
-        className="sm:grid-cols-[minmax(0,1fr)_minmax(220px,280px)]"
-      >
+      <AdaptiveSettingsGrid kind="rows" data-testid="layout-settings-grid">
+      <SettingRow label={t("contentType")}>
         <SegmentedControl<ContentMode>
           value={style.contentMode}
           onChange={updateContentMode}
@@ -477,14 +476,14 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
       </SettingRow>
 
       {!isInstrumental && style.ratio === "custom" ? (
-        <div className="my-3 grid gap-4 rounded-md border border-[rgb(var(--panel-border))] bg-[rgb(var(--panel-bg))] p-3">
+        <div className="settings-adaptive-span-all my-3 grid gap-4 rounded-md border border-[rgb(var(--panel-border))] bg-[rgb(var(--panel-bg))] p-3">
           <div className="app-text-subtle flex items-center justify-between gap-3 text-sm">
             <span>{t("customCanvas")}</span>
             <span className="app-text-primary font-semibold">
               {style.width} x {style.height}
             </span>
           </div>
-          <div className="grid gap-4 sm:grid-cols-2">
+          <AdaptiveSettingsGrid kind="pairs" className="gap-4">
             <FieldLabel label={t("width")} hint={style.autoWidth ? `${t("auto")} · ${style.width}px` : `${style.width}px`}>
               <RangeSlider
                 aria-label={t("width")}
@@ -507,7 +506,7 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
                 onChange={(event) => update("height", Number(event.target.value))}
               />
             </FieldLabel>
-          </div>
+          </AdaptiveSettingsGrid>
           {layoutMode === "portrait" && style.contentMode === "lyrics" ? (
             <ToggleRow label={t("autoWidth")} checked={style.autoWidth === true} onChange={updateAutoWidth} />
           ) : null}
@@ -564,18 +563,19 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
       ) : null}
 
       {style.contentMode === "lyrics" && layoutMode === "landscape" ? (
-        <div className="my-3 grid gap-3 rounded-md border border-[rgb(var(--panel-border))] bg-[rgb(var(--panel-bg))] p-3">
+        <div className="settings-adaptive-span-all my-3 grid gap-3 rounded-md border border-[rgb(var(--panel-border))] bg-[rgb(var(--panel-bg))] p-3">
           <p className="app-text-primary text-sm font-semibold">{t("landscapeLayoutSettings")}</p>
-          <div className="grid gap-4 sm:grid-cols-2">
+          <AdaptiveSettingsGrid kind="pairs" className="gap-4">
             <FieldLabel label={t("landscapeCoverSize")} hint="auto">
               <TextInput value="520px base" readOnly />
             </FieldLabel>
             <FieldLabel label={t("landscapeContentWidth")} hint="auto">
               <TextInput value="920px base" readOnly />
             </FieldLabel>
-          </div>
+          </AdaptiveSettingsGrid>
         </div>
       ) : null}
+      </AdaptiveSettingsGrid>
     </Section>
   );
 }
@@ -628,7 +628,8 @@ export function VisualSettingsPanel({
         ) : null}
       </Section>
 
-      <Section title={t("step.visual")} variant="plain" contentClassName="grid gap-3 sm:grid-cols-2">
+      <Section title={t("step.visual")} variant="plain" contentClassName="gap-0">
+        <AdaptiveSettingsGrid kind="toggles" data-testid="visual-toggle-grid">
         <ToggleRow label={t("cover")} checked={style.showCover} onChange={(checked) => update("showCover", checked)} />
         <ToggleRow label={t("showSongInfo")} checked={style.showSongInfo} onChange={(checked) => update("showSongInfo", checked)} />
         <ToggleRow label={t("explicitBadge")} checked={song?.explicit === true} onChange={updateExplicitBadge} />
@@ -645,7 +646,7 @@ export function VisualSettingsPanel({
         <ToggleRow label={t("showSharedBy")} checked={style.showSharedBy} onChange={(checked) => update("showSharedBy", checked)} />
 
         {style.showSharedBy ? (
-          <SettingRow label={t("sharedBy")}>
+          <SettingRow label={t("sharedBy")} className="settings-adaptive-span-all">
             <TextInput
               value={style.sharedByText}
               onChange={(event) => update("sharedByText", event.target.value)}
@@ -653,6 +654,7 @@ export function VisualSettingsPanel({
             />
           </SettingRow>
         ) : null}
+        </AdaptiveSettingsGrid>
       </Section>
     </div>
   );

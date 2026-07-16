@@ -5,6 +5,7 @@ import { Check, Download } from "lucide-react";
 import type { ReactNode, RefObject } from "react";
 import { useRef } from "react";
 import { useBalancedStepperLayout } from "@/components/editor/hooks/useBalancedStepperLayout";
+import { usePreviewWorkbenchSplit } from "@/components/editor/hooks/usePreviewWorkbenchSplit";
 import { useAppReducedMotion } from "@/components/motion/AppMotionProvider";
 import { MotionPresence } from "@/components/motion/MotionPresence";
 import { getReadableForegroundColor } from "@/lib/contrast-color";
@@ -61,6 +62,7 @@ export type SettingsStepperProps = {
   compactChrome?: boolean;
   headerActions?: ReactNode;
   companionAside?: ReactNode;
+  workbenchResizeLabel?: string;
 };
 
 type StepActionsProps = {
@@ -180,7 +182,8 @@ export function SettingsStepper({
   themeColor = "#7C3AED",
   compactChrome = false,
   headerActions,
-  companionAside
+  companionAside,
+  workbenchResizeLabel = "Resize settings and preview panes"
 }: SettingsStepperProps) {
   const reduceMotion = useAppReducedMotion();
   const previousStepRef = useRef(currentStep);
@@ -195,6 +198,7 @@ export function SettingsStepper({
   const isLyricsWorkspace = activePresentation === "lyrics-workspace";
   const hasCompanionAside = Boolean(companionAside);
   const isPreviewWorkbench = activePresentation === "preview-workbench" && hasCompanionAside;
+  const workbenchSplit = usePreviewWorkbenchSplit(isPreviewWorkbench);
   const exportStep = steps[steps.length - 1] ?? activeStep;
   const isExportWorkbench = isPreviewWorkbench && currentStep === steps.length - 1;
   const lastPreviewSettingsStepRef = useRef<SettingsStep | null>(null);
@@ -380,19 +384,35 @@ export function SettingsStepper({
 
       {isPreviewWorkbench ? (
         <div
-          className="preview-workbench-viewport min-w-0"
+          ref={workbenchSplit.viewportRef}
+          className="preview-workbench-viewport relative min-w-0"
           data-testid="preview-workbench-viewport"
           data-export-active={isExportWorkbench ? "true" : "false"}
+          data-settings-ratio={workbenchSplit.geometry.ratio.toFixed(4)}
         >
           <motion.div
             className="preview-workbench-track grid min-w-0 items-stretch"
             data-testid="preview-workbench-track"
             data-export-active={isExportWorkbench ? "true" : "false"}
             initial={false}
-            animate={{ x: isExportWorkbench ? "calc(-33.333333% - 0.416667rem)" : "0%" }}
+            animate={{
+              x: isExportWorkbench
+                ? workbenchSplit.geometry.viewportWidth > 0
+                  ? -(workbenchSplit.geometry.settingsWidth + workbenchSplit.geometry.gap)
+                  : "calc(-50% - 0.625rem)"
+                : 0
+            }}
             transition={workbenchTransition}
+            style={
+              workbenchSplit.isDesktop && workbenchSplit.geometry.viewportWidth > 0
+                ? {
+                    gridTemplateColumns: `${workbenchSplit.geometry.settingsWidth}px ${workbenchSplit.geometry.previewWidth}px ${workbenchSplit.geometry.settingsWidth}px`
+                  }
+                : undefined
+            }
           >
             <div
+              id="preview-workbench-settings-panel"
               className="preview-workbench-panel preview-workbench-editor flex min-w-0 flex-col gap-4"
               data-workbench-panel="editor-settings"
               data-active={!isExportWorkbench ? "true" : "false"}
@@ -429,6 +449,7 @@ export function SettingsStepper({
             </div>
 
             <div
+              id="preview-workbench-preview-panel"
               data-stepper-companion="true"
               data-workbench-panel="preview"
               className="preview-workbench-panel preview-workbench-preview min-h-0 min-w-0"
@@ -459,6 +480,28 @@ export function SettingsStepper({
               />
             </div>
           </motion.div>
+          {workbenchSplit.isDesktop && !isExportWorkbench && workbenchSplit.geometry.viewportWidth > 0 ? (
+            <div
+              {...workbenchSplit.separatorProps}
+              role="separator"
+              aria-label={workbenchResizeLabel}
+              aria-controls="preview-workbench-settings-panel preview-workbench-preview-panel"
+              aria-orientation="vertical"
+              aria-valuemin={Math.round(workbenchSplit.geometry.minRatio * 100)}
+              aria-valuemax={Math.round(workbenchSplit.geometry.maxRatio * 100)}
+              aria-valuenow={Math.round(workbenchSplit.geometry.ratio * 100)}
+              aria-valuetext={`${Math.round(workbenchSplit.geometry.ratio * 100)}%`}
+              tabIndex={0}
+              title={workbenchResizeLabel}
+              className="preview-workbench-resizer"
+              data-testid="preview-workbench-resizer"
+              data-dragging={workbenchSplit.isDragging ? "true" : "false"}
+              style={{
+                left: workbenchSplit.geometry.settingsWidth,
+                width: workbenchSplit.geometry.gap
+              }}
+            />
+          ) : null}
         </div>
       ) : (
         <>
