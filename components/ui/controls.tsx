@@ -195,6 +195,28 @@ export function Select(props: SelectHTMLAttributes<HTMLSelectElement>) {
 
 type SectionVariant = "plain" | "card" | "subtle";
 
+export type AdaptiveSettingsGridKind = "toggles" | "rows" | "pairs";
+
+export function AdaptiveSettingsGrid({
+  kind,
+  className,
+  children,
+  ...props
+}: HTMLAttributes<HTMLDivElement> & { kind: AdaptiveSettingsGridKind }) {
+  return (
+    <div
+      {...props}
+      className={cn(
+        "settings-adaptive-grid",
+        `settings-adaptive-grid--${kind}`,
+        className
+      )}
+    >
+      {children}
+    </div>
+  );
+}
+
 type SectionProps = {
   title: string;
   eyebrow?: string;
@@ -248,8 +270,7 @@ export function SettingRow({
   return (
     <div
       className={cn(
-        "grid gap-3 border-b border-[rgb(var(--panel-border))] py-3 last:border-b-0",
-        "sm:grid-cols-[minmax(0,1fr)_minmax(160px,220px)]",
+        "setting-row-adaptive grid gap-3 border-b border-[rgb(var(--panel-border))] py-3 last:border-b-0",
         align === "center" ? "items-center" : "items-start",
         className
       )}
@@ -303,12 +324,12 @@ export function ToggleRow({
       transition={reduceMotion ? reducedMotionTransition : motionSprings.control}
       className={cn(
         "control-focus control-disabled group flex w-full items-center justify-between gap-3 rounded-md border border-transparent border-b-[rgb(var(--panel-border))] px-2 text-left transition hover:bg-[rgb(var(--button-bg-hover))] last:border-b-transparent",
-        description ? "min-h-14 py-2.5" : size === "sm" ? "h-10 py-2" : "h-11 py-2.5",
+        description ? "min-h-14 py-2.5" : size === "sm" ? "min-h-10 py-2" : "min-h-11 py-2.5",
         className
       )}
     >
       <span className="min-w-0 flex-1">
-        <span className="app-text-primary block text-sm font-medium">{label}</span>
+        <span className="app-text-primary block text-sm font-medium leading-5">{label}</span>
         {description ? (
           <span id={descriptionId} className="app-text-subtle mt-1 block text-xs leading-5">
             {description}

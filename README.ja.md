@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v5.6.2.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v5.7.0.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="#ローカル開発">ローカル開発</a> ·
@@ -51,23 +51,23 @@
 
 最新版は [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) からダウンロードできます。
 
-* 推奨インストーラー：`Lyrics Card Generator Setup 5.6.2.exe`
-* ポータブル版：`Lyrics Card Generator-5.6.2-portable.exe`
+* 推奨インストーラー：`Lyrics Card Generator Setup 5.7.0.exe`
+* ポータブル版：`Lyrics Card Generator-5.7.0-portable.exe`
 
 通常利用にはインストーラーを推奨します。ポータブル版は一時利用、検証、リムーバブルドライブでの利用に向いています。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v5.6.2 の更新ポイント
+### v5.7.0 の更新ポイント
 
-* ステップ 3〜6 のライブプレビューに、ポインターに応じた傾き、ホバー時の浮き上がり、押下時の反発を追加しました。タッチ操作や視差効果を減らす設定では安定した静止表示に切り替わります。
-* ステップ 5 から 6 へ進むと作業領域全体が左へ移動し、右側のプレビューが連続して左へ移りながら、書き出し設定が右から入ります。逆方向の切り替えと小さいウィンドウにも対応します。
-* Desktop と Web Lite の両方で実際の PNG、WebP、JPG を書き出せます。設定では既定形式を保存でき、プレビュー効果はスナップショット方式の出力に混入しません。
+* ステップ 3〜5 に設定/プレビュー用のドラッグ可能な区切りを追加。設定領域を 1/2 から最大 2/3 まで広げつつ、プレビューの最小幅を保護します。
+* 左ペインの実際の幅に合わせてコントロールを自動再配置し、視覚スイッチは空間に応じて 2 列から 3 列に変化します。
+* PNG、WebP、JPG 書き出しを維持しつつ、6 ステップのデスクトップ作業領域、プレビューサイズ、ステップ 5→6 の遷移を再構成しました。
 
 ## 🌐 多言語リリースノート
 
 GitHub Release ではデフォルトで簡体字中国語の概要が表示されます。完全なリリースノートはこちら：
-[简体中文](./docs/releases/v5.6.2.zh-CN.md) · [繁體中文](./docs/releases/v5.6.2.zh-TW.md) · [English](./docs/releases/v5.6.2.en.md) · [Français](./docs/releases/v5.6.2.fr.md) · [日本語](./docs/releases/v5.6.2.ja.md) · [Español](./docs/releases/v5.6.2.es.md)
+[简体中文](./docs/releases/v5.7.0.zh-CN.md) · [繁體中文](./docs/releases/v5.7.0.zh-TW.md) · [English](./docs/releases/v5.7.0.en.md) · [Français](./docs/releases/v5.7.0.fr.md) · [日本語](./docs/releases/v5.7.0.ja.md) · [Español](./docs/releases/v5.7.0.es.md)
 
 <a id="主な機能"></a>
 

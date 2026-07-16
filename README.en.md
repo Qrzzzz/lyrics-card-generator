@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v5.6.2.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v5.7.0.en.md">Release Notes</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
   <a href="#features">Features</a> ·
   <a href="#local-development">Local Development</a> ·
@@ -51,23 +51,23 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 Download the latest version from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Recommended installer: `Lyrics Card Generator Setup 5.6.2.exe`
-* Portable version: `Lyrics Card Generator-5.6.2-portable.exe`
+* Recommended installer: `Lyrics Card Generator Setup 5.7.0.exe`
+* Portable version: `Lyrics Card Generator-5.7.0-portable.exe`
 
 The installer is recommended for regular use. The portable version is useful for temporary use, testing, or running from a removable drive.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v5.6.2 Highlights
+### v5.7.0 Highlights
 
-* Adds pointer tilt, hover lift, and press feedback to the live preview in steps 3–6, with stable fallbacks for touch and reduced-motion environments.
-* Pans the whole workbench left between steps 5 and 6, continuously moving the preview from right to left while export settings enter from the right; reverse navigation and small windows remain responsive.
-* Exports real PNG, WebP, and JPG files in both Desktop and Web Lite, persists the default format in Settings, and keeps preview effects isolated from snapshot-based output.
+* Adds a draggable settings/preview divider to steps 3–5. Settings can grow from one half to two thirds while the preview keeps a protected minimum width.
+* Reflows controls from the actual settings-pane width: visual toggles can move from two columns to three columns and three rows when space permits.
+* Retains PNG, WebP, and JPG export while rebuilding the six-step desktop workbench, live-preview sizing, and the step 5→6 transition.
 
 ## 🌐 Multilingual Release Notes
 
 GitHub Release displays a Simplified Chinese summary by default. See the full release notes:
-[简体中文](./docs/releases/v5.6.2.zh-CN.md) · [繁體中文](./docs/releases/v5.6.2.zh-TW.md) · [English](./docs/releases/v5.6.2.en.md) · [Français](./docs/releases/v5.6.2.fr.md) · [日本語](./docs/releases/v5.6.2.ja.md) · [Español](./docs/releases/v5.6.2.es.md)
+[简体中文](./docs/releases/v5.7.0.zh-CN.md) · [繁體中文](./docs/releases/v5.7.0.zh-TW.md) · [English](./docs/releases/v5.7.0.en.md) · [Français](./docs/releases/v5.7.0.fr.md) · [日本語](./docs/releases/v5.7.0.ja.md) · [Español](./docs/releases/v5.7.0.es.md)
 
 <a id="features"></a>
 

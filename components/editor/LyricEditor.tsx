@@ -481,6 +481,7 @@ export function LyricEditor() {
                       nextText={t("step.next")}
                       themeColor={resolvedAccentColor}
                       compactChrome
+                      workbenchResizeLabel={t("step.resizeWorkbench")}
                       headerActions={
                         <EditorHeaderActions
                           locale={state.locale}

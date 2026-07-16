@@ -1497,9 +1497,15 @@ async function readPreviewWorkbenchGeometry() {
     const editor = document.querySelector('[data-workbench-panel="editor-settings"]');
     const preview = document.querySelector('[data-workbench-panel="preview"]');
     const exportPanel = document.querySelector('[data-workbench-panel="export-settings"]');
+    const resizer = document.querySelector('[data-testid="preview-workbench-resizer"]');
     const rect = (element) => {
       const value = element?.getBoundingClientRect();
       return value ? { left: value.left, right: value.right, width: value.width } : null;
+    };
+    const columnCount = (testId) => {
+      const element = document.querySelector(`[data-testid="${testId}"]`);
+      const columns = element ? getComputedStyle(element).gridTemplateColumns : "";
+      return columns ? columns.trim().split(/\s+/).length : 0;
     };
     const state = (element) => ({
       active: element?.getAttribute('data-active') ?? null,
@@ -1513,6 +1519,14 @@ async function readPreviewWorkbenchGeometry() {
       editor: rect(editor),
       preview: rect(preview),
       exportPanel: rect(exportPanel),
+      resizer: rect(resizer),
+      settingsRatio: Number(viewport?.getAttribute('data-settings-ratio') ?? 0),
+      resizerValue: Number(resizer?.getAttribute('aria-valuenow') ?? 0),
+      resizerMinimum: Number(resizer?.getAttribute('aria-valuemin') ?? 0),
+      resizerMaximum: Number(resizer?.getAttribute('aria-valuemax') ?? 0),
+      resizerDragging: resizer?.getAttribute('data-dragging') ?? null,
+      visualColumns: columnCount('visual-toggle-grid'),
+      layoutColumns: columnCount('layout-settings-grid'),
       editorState: state(editor),
       exportState: state(exportPanel),
       transform: track ? getComputedStyle(track).transform : null
@@ -1525,6 +1539,60 @@ async function assertPreviewWorkbenchPan() {
   await page.locator('button[data-step-id="visual"]').click();
   await waitForLayoutStable(page.getByTestId('preview-workbench-track'));
 
+  const initial = await readPreviewWorkbenchGeometry();
+  assert.ok(Math.abs(initial.settingsRatio - 0.5) <= 0.005, `step five starts at an equal split: ${JSON.stringify(initial)}`);
+  assert.equal(initial.resizerValue, 50, "the resize separator exposes the default percentage");
+  assert.equal(initial.resizerMinimum, 50, "the resize separator does not shrink settings below half");
+  assert.ok(initial.resizerMaximum >= 66, "a 1280-wide window exposes the full two-thirds setting range");
+  assert.equal(initial.visualColumns, 2, "the default-width visual settings use two compact columns");
+
+  const resizer = page.getByTestId('preview-workbench-resizer');
+  await resizer.focus();
+  await page.keyboard.press('End');
+  await page.waitForFunction(() => Number(document.querySelector('[data-testid="preview-workbench-viewport"]')?.getAttribute('data-settings-ratio')) > 0.65);
+  const expanded = await readPreviewWorkbenchGeometry();
+  assert.ok(
+    expanded.editor && expanded.preview && initial.editor && initial.preview &&
+      expanded.editor.width > initial.editor.width + 150 &&
+      expanded.preview.width < initial.preview.width - 150 &&
+      expanded.preview.width >= 360,
+    `End expands settings while preserving the preview minimum: ${JSON.stringify({ initial, expanded })}`
+  );
+  assert.equal(expanded.visualColumns, 3, "the wider visual settings reflow eight toggles into three columns");
+  await page.screenshot({ path: path.join(reportDirectory, "step-five-expanded.png"), fullPage: false });
+
+  await page.locator('button[data-step-id="layout"]').click();
+  await waitForLayoutStable(page.getByTestId('layout-settings-grid'));
+  const expandedLayout = await readPreviewWorkbenchGeometry();
+  assert.equal(expandedLayout.layoutColumns, 2, "the wider layout settings compact ordinary rows into two columns");
+
+  await page.locator('button[data-step-id="visual"]').click();
+  await waitForLayoutStable(page.getByTestId('visual-toggle-grid'));
+  await page.getByTestId('preview-workbench-resizer').focus();
+  await page.keyboard.press('Home');
+  await page.waitForFunction(() => Math.abs(Number(document.querySelector('[data-testid="preview-workbench-viewport"]')?.getAttribute('data-settings-ratio')) - 0.5) < 0.005);
+  assert.equal((await readPreviewWorkbenchGeometry()).visualColumns, 2, "Home restores the equal split and two-column toggles");
+
+  const viewportBox = await page.getByTestId('preview-workbench-viewport').boundingBox();
+  const resizerBox = await page.getByTestId('preview-workbench-resizer').boundingBox();
+  assert.ok(viewportBox && resizerBox, "the adjustable workbench exposes draggable geometry");
+  await page.mouse.move(resizerBox.x + resizerBox.width / 2, resizerBox.y + Math.min(80, resizerBox.height / 2));
+  await page.mouse.down();
+  await page.mouse.move(viewportBox.x + 10 + (viewportBox.width - 20) * 0.62, resizerBox.y + Math.min(80, resizerBox.height / 2), { steps: 8 });
+  await page.mouse.up();
+  await page.waitForFunction(() => {
+    const ratio = Number(document.querySelector('[data-testid="preview-workbench-viewport"]')?.getAttribute('data-settings-ratio'));
+    return ratio > 0.60 && ratio < 0.64;
+  });
+  const dragged = await readPreviewWorkbenchGeometry();
+  assert.equal(dragged.resizerDragging, "false", "pointer release ends the resize interaction");
+  assert.ok(dragged.settingsRatio > 0.60 && dragged.settingsRatio < 0.64, `pointer drag sets a continuous ratio: ${JSON.stringify(dragged)}`);
+
+  await page.getByTestId('preview-workbench-resizer').dblclick();
+  await page.waitForFunction(() => Math.abs(Number(document.querySelector('[data-testid="preview-workbench-viewport"]')?.getAttribute('data-settings-ratio')) - 0.5) < 0.005);
+  await page.getByTestId('preview-workbench-resizer').focus();
+  await page.keyboard.press('End');
+  await page.waitForFunction(() => Number(document.querySelector('[data-testid="preview-workbench-viewport"]')?.getAttribute('data-settings-ratio')) > 0.65);
   const before = await readPreviewWorkbenchGeometry();
   assert.equal(before.exportActive, "false", "step five keeps the editor side of the workbench active");
   assert.deepEqual(before.editorState, { active: "true", ariaHidden: "false", inert: false }, "step five editor settings remain interactive");
@@ -1566,6 +1634,7 @@ async function assertPreviewWorkbenchPan() {
     `step five to six begins by translating the full track left: ${JSON.stringify({ before, during })}`
   );
   assert.equal(after.exportActive, "true", "step six activates the export side of the workbench");
+  assert.equal(await page.getByTestId('preview-workbench-resizer').count(), 0, "step six hides the step-three-to-five resize separator");
   assert.deepEqual(after.editorState, { active: "false", ariaHidden: "true", inert: true }, "step five settings become inert off-screen left");
   assert.deepEqual(after.exportState, { active: "true", ariaHidden: "false", inert: false }, "step six export settings become interactive on the right");
   const exportFormatState = await page.locator('[data-workbench-panel="export-settings"] [data-segment-value="png"], [data-workbench-panel="export-settings"] [data-segment-value="webp"], [data-workbench-panel="export-settings"] [data-segment-value="jpg"]').evaluateAll((buttons) => (
@@ -1869,6 +1938,22 @@ async function assertPreviewFits(width, height, scrolled) {
 
 async function assertExampleImportRemeasuresPreview() {
   await setWindowSize(1440, 900);
+  await page.waitForFunction(() => {
+    const shell = document.querySelector('[data-testid="lyric-card-preview-shell"]');
+    const card = shell?.querySelector('[data-export-card="true"]');
+    if (!(shell instanceof HTMLElement) || !(card instanceof HTMLElement)) return false;
+    const rect = shell.getBoundingClientRect();
+    const styles = getComputedStyle(shell);
+    const availableWidth = shell.clientWidth - Number.parseFloat(styles.paddingLeft) - Number.parseFloat(styles.paddingRight);
+    const availableHeight = window.innerHeight - rect.top - Number.parseFloat(styles.paddingTop) - Number.parseFloat(styles.paddingBottom) - 16;
+    const expectedScale = Math.min(
+      Math.max(availableWidth, 120) / card.offsetWidth,
+      Math.max(availableHeight, 120) / card.offsetHeight,
+      0.52
+    );
+    const scale = Number(shell.getAttribute("data-preview-scale"));
+    return Number.isFinite(scale) && Math.abs(scale - expectedScale) <= 0.005;
+  }, undefined, { timeout: 10_000 });
   const beforeMeasurement = await page.getByTestId("lyric-card-preview-shell").evaluate((shell) => {
     const card = shell.querySelector('[data-export-card="true"]');
     if (!(shell instanceof HTMLElement) || !(card instanceof HTMLElement)) return null;
@@ -2429,7 +2514,9 @@ try {
     }
   });
   assert.equal(fontOverrideSupported, true, "test shell can simulate fonts-loading readiness");
-  await page.getByTestId("app-toast").waitFor({ state: "visible" });
+  await page.waitForFunction(() => /字体.*加载|加载.*字体/.test(
+    document.querySelector('[data-testid="app-toast"]')?.textContent ?? ""
+  ));
   assert.match(await page.getByTestId("app-toast").innerText(), /字体.*加载|加载.*字体/, "live export defense rejects fonts that are not ready");
 
   await page.evaluate(() => {

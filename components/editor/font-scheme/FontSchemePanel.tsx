@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useAppReducedMotion } from "@/components/motion/AppMotionProvider";
 import { AccessibleDialog } from "@/components/ui/AccessibleDialog";
+import { AdaptiveSettingsGrid } from "@/components/ui/controls";
 import { getLyricsCardDesktopApi, type SystemFontOption } from "@/lib/desktop-api";
 import {
   FONT_SCHEME_PRESETS,
@@ -169,7 +170,7 @@ export function FontSchemePanel({ style, onStyleChange, onPreviewSchemeChange, s
       </PanelBlock>
 
       <PanelBlock title={t("fontSchemePresetsTitle")} tone="plain">
-        <div className="grid gap-3 md:grid-cols-2">
+        <AdaptiveSettingsGrid kind="pairs">
           {(["source-han-sans", "source-han-serif"] as FontPresetId[]).map((presetId) => {
             const preset = FONT_SCHEME_PRESETS[presetId];
             const active = currentPresetId === presetId;
@@ -202,11 +203,11 @@ export function FontSchemePanel({ style, onStyleChange, onPreviewSchemeChange, s
               </button>
             );
           })}
-        </div>
+        </AdaptiveSettingsGrid>
       </PanelBlock>
 
       <PanelBlock title={t("fontSchemeCustomTitle")} blockRef={customSectionRef}>
-        <div className="grid gap-3 md:grid-cols-2">
+        <AdaptiveSettingsGrid kind="pairs">
           <FontChoice
             testId="choose-cjk-font"
             label={t("fontSchemeCjkFont")}
@@ -221,7 +222,7 @@ export function FontSchemePanel({ style, onStyleChange, onPreviewSchemeChange, s
             onChoose={() => openFontPicker("latin")}
             chooseLabel={t("fontSchemeChoose")}
           />
-        </div>
+        </AdaptiveSettingsGrid>
         <button
           type="button"
           data-testid="save-custom-font-scheme"
