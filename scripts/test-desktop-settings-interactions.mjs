@@ -2498,7 +2498,9 @@ try {
     }
   });
   assert.equal(fontOverrideSupported, true, "test shell can simulate fonts-loading readiness");
-  await page.getByTestId("app-toast").waitFor({ state: "visible" });
+  await page.waitForFunction(() => /字体.*加载|加载.*字体/.test(
+    document.querySelector('[data-testid="app-toast"]')?.textContent ?? ""
+  ));
   assert.match(await page.getByTestId("app-toast").innerText(), /字体.*加载|加载.*字体/, "live export defense rejects fonts that are not ready");
 
   await page.evaluate(() => {
