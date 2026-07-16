@@ -1547,9 +1547,26 @@ async function assertPreviewWorkbenchPan() {
   assert.equal(initial.visualColumns, 2, "the default-width visual settings use two compact columns");
 
   const resizer = page.getByTestId('preview-workbench-resizer');
+  const idleResizerLine = await resizer.evaluate((element) => {
+    const line = getComputedStyle(element, '::before');
+    return { backgroundColor: line.backgroundColor, width: line.width };
+  });
+  assert.equal(idleResizerLine.width, '1px', "the resize separator renders as one thin line without a wider visual handle");
+  await resizer.hover();
+  await page.waitForFunction((idleColor) => {
+    const element = document.querySelector('[data-testid="preview-workbench-resizer"]');
+    return element && getComputedStyle(element, '::before').backgroundColor !== idleColor;
+  }, idleResizerLine.backgroundColor);
+  const hoveredResizerLine = await resizer.evaluate((element) => {
+    const line = getComputedStyle(element, '::before');
+    return { backgroundColor: line.backgroundColor, width: line.width };
+  });
+  assert.equal(hoveredResizerLine.width, '1px', "hover feedback keeps the separator at one-pixel width");
+  assert.notEqual(hoveredResizerLine.backgroundColor, idleResizerLine.backgroundColor, "hover changes only the separator line color");
   await resizer.focus();
   await page.keyboard.press('End');
   await page.waitForFunction(() => Number(document.querySelector('[data-testid="preview-workbench-viewport"]')?.getAttribute('data-settings-ratio')) > 0.65);
+  await waitForLayoutStable(page.getByTestId('preview-workbench-track'));
   const expanded = await readPreviewWorkbenchGeometry();
   assert.ok(
     expanded.editor && expanded.preview && initial.editor && initial.preview &&
@@ -1571,6 +1588,7 @@ async function assertPreviewWorkbenchPan() {
   await page.getByTestId('preview-workbench-resizer').focus();
   await page.keyboard.press('Home');
   await page.waitForFunction(() => Math.abs(Number(document.querySelector('[data-testid="preview-workbench-viewport"]')?.getAttribute('data-settings-ratio')) - 0.5) < 0.005);
+  await waitForLayoutStable(page.getByTestId('preview-workbench-track'));
   assert.equal((await readPreviewWorkbenchGeometry()).visualColumns, 2, "Home restores the equal split and two-column toggles");
 
   const viewportBox = await page.getByTestId('preview-workbench-viewport').boundingBox();
@@ -1584,15 +1602,18 @@ async function assertPreviewWorkbenchPan() {
     const ratio = Number(document.querySelector('[data-testid="preview-workbench-viewport"]')?.getAttribute('data-settings-ratio'));
     return ratio > 0.60 && ratio < 0.64;
   });
+  await waitForLayoutStable(page.getByTestId('preview-workbench-track'));
   const dragged = await readPreviewWorkbenchGeometry();
   assert.equal(dragged.resizerDragging, "false", "pointer release ends the resize interaction");
   assert.ok(dragged.settingsRatio > 0.60 && dragged.settingsRatio < 0.64, `pointer drag sets a continuous ratio: ${JSON.stringify(dragged)}`);
 
   await page.getByTestId('preview-workbench-resizer').dblclick();
   await page.waitForFunction(() => Math.abs(Number(document.querySelector('[data-testid="preview-workbench-viewport"]')?.getAttribute('data-settings-ratio')) - 0.5) < 0.005);
+  await waitForLayoutStable(page.getByTestId('preview-workbench-track'));
   await page.getByTestId('preview-workbench-resizer').focus();
   await page.keyboard.press('End');
   await page.waitForFunction(() => Number(document.querySelector('[data-testid="preview-workbench-viewport"]')?.getAttribute('data-settings-ratio')) > 0.65);
+  await waitForLayoutStable(page.getByTestId('preview-workbench-track'));
   const before = await readPreviewWorkbenchGeometry();
   assert.equal(before.exportActive, "false", "step five keeps the editor side of the workbench active");
   assert.deepEqual(before.editorState, { active: "true", ariaHidden: "false", inert: false }, "step five editor settings remain interactive");
@@ -1623,15 +1644,23 @@ async function assertPreviewWorkbenchPan() {
   assert.ok(pressureState.transform?.startsWith("matrix3d("), `preview hover produces a 3D transform: ${JSON.stringify(pressureState)}`);
   assert.ok(pressureState.filter?.includes("drop-shadow"), `preview hover keeps the raised card shadow: ${JSON.stringify(pressureState)}`);
 
+  const expectedStepSixPanelWidth = (before.viewport.width - before.resizer.width) / 2;
   await page.locator('button[data-step-id="export"]').click();
-  await page.waitForTimeout(80);
+  await page.waitForFunction(({ initialWidth, targetWidth }) => {
+    const preview = document.querySelector('[data-workbench-panel="preview"]');
+    const width = preview?.getBoundingClientRect().width ?? 0;
+    return width > initialWidth + 1 && width < targetWidth - 1;
+  }, { initialWidth: before.preview.width, targetWidth: expectedStepSixPanelWidth });
   const during = await readPreviewWorkbenchGeometry();
   await waitForLayoutStable(page.getByTestId('preview-workbench-track'));
   const after = await readPreviewWorkbenchGeometry();
 
   assert.ok(
-    during.track && before.track && during.track.left < before.track.left - 1,
-    `step five to six begins by translating the full track left: ${JSON.stringify({ before, during })}`
+    during.track && before.track && during.preview &&
+      during.track.left < before.track.left - 1 &&
+      during.preview.width > before.preview.width + 1 &&
+      during.preview.width < expectedStepSixPanelWidth - 1,
+    `step five to six synchronizes the left pan with a smooth preview expansion: ${JSON.stringify({ before, during })}`
   );
   assert.equal(after.exportActive, "true", "step six activates the export side of the workbench");
   assert.equal(await page.getByTestId('preview-workbench-resizer').count(), 0, "step six hides the step-three-to-five resize separator");
@@ -1657,9 +1686,11 @@ async function assertPreviewWorkbenchPan() {
       after.editor.right <= after.viewport.left + 1.5 &&
       Math.abs(after.preview.left - after.viewport.left) <= 1.5 &&
       Math.abs(after.exportPanel.right - after.viewport.right) <= 1.5 &&
+      Math.abs(after.preview.width - expectedStepSixPanelWidth) <= 1.5 &&
+      Math.abs(after.preview.width - after.exportPanel.width) <= 1.5 &&
       after.preview.left < before.preview.left - before.viewport.width * 0.4 &&
       after.exportPanel.left < before.exportPanel.left - before.viewport.width * 0.4,
-    `step six lands with preview left and export settings right after a shared left pan: ${JSON.stringify({ before, after })}`
+    `step six lands with an equal half-width preview and export panel after a synchronized left pan: ${JSON.stringify({ before, after })}`
   );
   assert.ok(after.transform && after.transform !== "none", `step six retains the translated workbench transform: ${after.transform}`);
 

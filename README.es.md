@@ -19,7 +19,7 @@
 <p>
   <strong>Navegación</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Descargar la última versión</a> ·
-  <a href="./docs/releases/v5.7.0.es.md">Notas de la versión</a> ·
+  <a href="./docs/releases/v5.7.1.es.md">Notas de la versión</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en línea</a> ·
   <a href="#funciones-principales">Funciones principales</a> ·
   <a href="#desarrollo-local">Desarrollo local</a> ·
@@ -51,23 +51,23 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 Descarga la versión más reciente desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Instalador recomendado: `Lyrics Card Generator Setup 5.7.0.exe`
-* Versión portable: `Lyrics Card Generator-5.7.0-portable.exe`
+* Instalador recomendado: `Lyrics Card Generator Setup 5.7.1.exe`
+* Versión portable: `Lyrics Card Generator-5.7.1-portable.exe`
 
 El instalador se recomienda para uso habitual. La versión portable es útil para pruebas, uso temporal o ejecución desde una unidad extraíble.
 
 > La compilación actual no está firmada. Windows puede mostrar una advertencia de SmartScreen, algo habitual en aplicaciones personales sin firma.
 
-### Aspectos destacados de la versión 5.7.0
+### Aspectos destacados de la versión 5.7.1
 
-* Añade en los pasos 3–5 un divisor ajustable entre configuración y vista previa, desde la mitad hasta dos tercios, protegiendo un ancho mínimo para la vista previa.
-* Reorganiza los controles según el ancho real del panel: los interruptores visuales pasan de dos a tres columnas cuando hay espacio suficiente.
-* Conserva la exportación PNG, WebP y JPG, y reconstruye el espacio de trabajo de seis pasos, el tamaño de la vista previa y la transición 5→6.
+* Reduce el divisor ajustable de los pasos 3–5 a una sola línea vertical de 1 px, con respuesta de color al pasar el cursor, enfocar con el teclado o arrastrar.
+* Al pasar del paso 5 al 6, la vista previa de la tarjeta crece suavemente hasta una mitad igual desde cualquier posición anterior, sincronizada con el desplazamiento de la pista.
+* Al volver al paso 5 se restaura su proporción, sin cambiar el apilado en ventanas estrechas ni la exportación PNG, WebP y JPG.
 
 ## 🌐 Notas de publicación multilingües
 
 GitHub Release muestra de forma predeterminada un resumen en chino simplificado. Consulta las notas completas:
-[简体中文](./docs/releases/v5.7.0.zh-CN.md) · [繁體中文](./docs/releases/v5.7.0.zh-TW.md) · [English](./docs/releases/v5.7.0.en.md) · [Français](./docs/releases/v5.7.0.fr.md) · [日本語](./docs/releases/v5.7.0.ja.md) · [Español](./docs/releases/v5.7.0.es.md)
+[简体中文](./docs/releases/v5.7.1.zh-CN.md) · [繁體中文](./docs/releases/v5.7.1.zh-TW.md) · [English](./docs/releases/v5.7.1.en.md) · [Français](./docs/releases/v5.7.1.fr.md) · [日本語](./docs/releases/v5.7.1.ja.md) · [Español](./docs/releases/v5.7.1.es.md)
 
 <a id="funciones-principales"></a>
 

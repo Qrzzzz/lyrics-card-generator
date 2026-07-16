@@ -193,7 +193,7 @@ test("pans the shared preview workbench in both directions and degrades pressure
   const readGeometry = () => page.evaluate(() => {
     const rect = (selector: string) => {
       const value = document.querySelector(selector)?.getBoundingClientRect();
-      return value ? { left: value.left, right: value.right } : null;
+      return value ? { left: value.left, right: value.right, width: value.width } : null;
     };
     return {
       viewport: rect('[data-testid="preview-workbench-viewport"]'),
@@ -203,6 +203,18 @@ test("pans the shared preview workbench in both directions and degrades pressure
     };
   });
 
+  const resizer = page.getByTestId("preview-workbench-resizer");
+  await resizer.focus();
+  await page.keyboard.press("End");
+  await expect.poll(async () => Number(
+    await page.getByTestId("preview-workbench-viewport").getAttribute("data-settings-ratio")
+  )).toBeGreaterThan(0.65);
+  await expect.poll(async () => {
+    const geometry = await readGeometry();
+    return geometry.editor && geometry.preview ? geometry.editor.width - geometry.preview.width : 0;
+  }).toBeGreaterThan(100);
+  const resizerBox = await resizer.boundingBox();
+  if (!resizerBox) throw new Error("Web Lite resize separator is not visible.");
   const before = await readGeometry();
   expect(before.viewport && before.editor && Math.abs(before.editor.left - before.viewport.left)).toBeLessThanOrEqual(2);
   expect(before.viewport && before.preview && Math.abs(before.preview.right - before.viewport.right)).toBeLessThanOrEqual(2);
@@ -215,6 +227,12 @@ test("pans the shared preview workbench in both directions and degrades pressure
   }).toBeLessThanOrEqual(2);
   const after = await readGeometry();
   expect(after.viewport && after.exportPanel && Math.abs(after.exportPanel.right - after.viewport.right)).toBeLessThanOrEqual(2);
+  expect(after.preview && after.exportPanel && Math.abs(after.preview.width - after.exportPanel.width)).toBeLessThanOrEqual(2);
+  expect(
+    after.viewport && after.preview
+      ? Math.abs(after.preview.width - (after.viewport.width - resizerBox.width) / 2)
+      : Number.POSITIVE_INFINITY
+  ).toBeLessThanOrEqual(2);
 
   await page.locator('[data-step-id="visual"]').click();
   await expect(page.getByTestId("preview-workbench-viewport")).toHaveAttribute("data-export-active", "false");
@@ -222,6 +240,8 @@ test("pans the shared preview workbench in both directions and degrades pressure
     const geometry = await readGeometry();
     return geometry.viewport && geometry.editor ? Math.abs(geometry.editor.left - geometry.viewport.left) : Number.POSITIVE_INFINITY;
   }).toBeLessThanOrEqual(2);
+  const restored = await readGeometry();
+  expect(restored.preview && before.preview && Math.abs(restored.preview.width - before.preview.width)).toBeLessThanOrEqual(2);
 
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.reload();
