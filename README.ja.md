@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v5.7.1.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v5.7.3.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="#ローカル開発">ローカル開発</a> ·
@@ -51,23 +51,23 @@
 
 最新版は [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) からダウンロードできます。
 
-* 推奨インストーラー：`Lyrics Card Generator Setup 5.7.1.exe`
-* ポータブル版：`Lyrics Card Generator-5.7.1-portable.exe`
+* 推奨インストーラー：`Lyrics Card Generator Setup 5.7.3.exe`
+* ポータブル版：`Lyrics Card Generator-5.7.3-portable.exe`
 
 通常利用にはインストーラーを推奨します。ポータブル版は一時利用、検証、リムーバブルドライブでの利用に向いています。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v5.7.1 の更新ポイント
+### v5.7.3 の更新ポイント
 
-* ステップ 3〜5 の調整用区切りを 1 px の縦線 1 本に簡素化し、ホバー、キーボードフォーカス、ドラッグ時はアクセント色だけで反応します。
-* ステップ 5→6 では、元の区切り位置にかかわらず、歌詞カードのプレビューがトラック移動と同期して均等な半幅まで滑らかに拡大します。
-* ステップ 5 に戻ると保存済みの比率を復元し、狭い画面の縦積みと PNG、WebP、JPG 書き出しは従来どおりです。
+* ステップ 2 を編集中心の 2 カラムワークスペースに刷新しました。エディターは初期状態で 3/4、ツールは最大 1/3 まで広げられ、約 64 px のクイックレールにも折りたためます。
+* 単言語では読みやすい幅の原稿を中央に保ち、二言語では編集領域全体を均等に分割します。主スクロール、カーソル、論理行アンカーは 1 つのままです。
+* 折りたたみ時も AI 翻訳、翻訳スイッチ、二言語分割、36 行の状態を利用できます。上部 Stepper、ステップ 3〜5 の分割、書き出し安全境界は変更していません。
 
 ## 🌐 多言語リリースノート
 
 GitHub Release ではデフォルトで簡体字中国語の概要が表示されます。完全なリリースノートはこちら：
-[简体中文](./docs/releases/v5.7.1.zh-CN.md) · [繁體中文](./docs/releases/v5.7.1.zh-TW.md) · [English](./docs/releases/v5.7.1.en.md) · [Français](./docs/releases/v5.7.1.fr.md) · [日本語](./docs/releases/v5.7.1.ja.md) · [Español](./docs/releases/v5.7.1.es.md)
+[简体中文](./docs/releases/v5.7.3.zh-CN.md) · [繁體中文](./docs/releases/v5.7.3.zh-TW.md) · [English](./docs/releases/v5.7.3.en.md) · [Français](./docs/releases/v5.7.3.fr.md) · [日本語](./docs/releases/v5.7.3.ja.md) · [Español](./docs/releases/v5.7.3.es.md)
 
 <a id="主な機能"></a>
 

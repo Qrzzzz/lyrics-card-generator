@@ -12,33 +12,36 @@ import {
   useRef,
   useState
 } from "react";
-import { Music2 } from "lucide-react";
 import { LyricsToolsAside, type LyricsToolsLabels } from "@/components/editor/LyricsToolsAside";
+import { useLyricsWorkspaceSplit } from "@/components/editor/hooks/useLyricsWorkspaceSplit";
 import {
   type LyricsEditorKey,
   useLyricsViewportSession
 } from "@/components/editor/hooks/useLyricsViewportSession";
 import { Section } from "@/components/ui/controls";
 import type { createT } from "@/lib/i18n";
-import { proxiedImageUrl } from "@/lib/image-utils";
 import type { ExportLyricLineStatus } from "@/lib/lyrics-document";
+import {
+  __internalLyricsWorkspaceLayout,
+  type LyricsWorkspaceLayoutAction,
+  type LyricsWorkspaceLayoutState
+} from "@/lib/lyrics-workspace-layout";
 import type { ContentMode, Locale, SongInfo } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 type WorkspaceCopy = LyricsToolsLabels & {
-  summary: string;
   manuscript: string;
-  original: string;
-  translation: string;
-  paragraphs: string;
   currentPosition: string;
   sharedScrollHint: string;
+  resizeTools: string;
 };
 
 type LyricsWorkspaceProps = {
   lyrics: string;
   song: SongInfo;
   lineStatus: ExportLyricLineStatus;
+  layout: LyricsWorkspaceLayoutState;
+  onLayoutAction: (action: LyricsWorkspaceLayoutAction) => void;
   onLyricsChange: (lyrics: string) => void;
   translationEnabled: boolean;
   translationText: string;
@@ -73,7 +76,10 @@ const WORKSPACE_COPY: Record<Locale, WorkspaceCopy> = {
     paragraphs: "{count} 段",
     currentPosition: "{label} · 第 {line} / {total} 行",
     sharedScrollHint: "原文与译文共享同一个滚动位置",
-    tools: "编辑工具"
+    tools: "编辑工具",
+    collapseTools: "折叠编辑工具",
+    expandTools: "展开编辑工具",
+    resizeTools: "调整歌词编辑区和工具区宽度"
   },
   "zh-TW": {
     summary: "長稿摘要",
@@ -83,7 +89,10 @@ const WORKSPACE_COPY: Record<Locale, WorkspaceCopy> = {
     paragraphs: "{count} 段",
     currentPosition: "{label} · 第 {line} / {total} 行",
     sharedScrollHint: "原文與譯文共用同一個捲動位置",
-    tools: "編輯工具"
+    tools: "編輯工具",
+    collapseTools: "收合編輯工具",
+    expandTools: "展開編輯工具",
+    resizeTools: "調整歌詞編輯區與工具區寬度"
   },
   en: {
     summary: "Manuscript summary",
@@ -93,7 +102,10 @@ const WORKSPACE_COPY: Record<Locale, WorkspaceCopy> = {
     paragraphs: "{count} sections",
     currentPosition: "{label} · line {line} / {total}",
     sharedScrollHint: "Original and translation share one scroll position",
-    tools: "Editing tools"
+    tools: "Editing tools",
+    collapseTools: "Collapse editing tools",
+    expandTools: "Expand editing tools",
+    resizeTools: "Resize the lyrics editor and tools"
   },
   fr: {
     summary: "Résumé du texte",
@@ -103,7 +115,10 @@ const WORKSPACE_COPY: Record<Locale, WorkspaceCopy> = {
     paragraphs: "{count} sections",
     currentPosition: "{label} · ligne {line} / {total}",
     sharedScrollHint: "L’original et la traduction partagent le même défilement",
-    tools: "Outils d’édition"
+    tools: "Outils d’édition",
+    collapseTools: "Réduire les outils d’édition",
+    expandTools: "Développer les outils d’édition",
+    resizeTools: "Redimensionner l’éditeur de paroles et les outils"
   },
   ja: {
     summary: "原稿の概要",
@@ -113,7 +128,10 @@ const WORKSPACE_COPY: Record<Locale, WorkspaceCopy> = {
     paragraphs: "{count} セクション",
     currentPosition: "{label} · {line} / {total} 行",
     sharedScrollHint: "原文と翻訳は同じスクロール位置を共有します",
-    tools: "編集ツール"
+    tools: "編集ツール",
+    collapseTools: "編集ツールを折りたたむ",
+    expandTools: "編集ツールを展開",
+    resizeTools: "歌詞エディターとツールの幅を調整"
   },
   es: {
     summary: "Resumen del texto",
@@ -123,7 +141,10 @@ const WORKSPACE_COPY: Record<Locale, WorkspaceCopy> = {
     paragraphs: "{count} secciones",
     currentPosition: "{label} · línea {line} / {total}",
     sharedScrollHint: "El original y la traducción comparten una sola posición de desplazamiento",
-    tools: "Herramientas de edición"
+    tools: "Herramientas de edición",
+    collapseTools: "Contraer las herramientas de edición",
+    expandTools: "Expandir las herramientas de edición",
+    resizeTools: "Cambiar el ancho del editor de letras y las herramientas"
   }
 };
 
@@ -131,6 +152,8 @@ export function LyricsWorkspace({
   lyrics,
   song,
   lineStatus,
+  layout,
+  onLayoutAction,
   onLyricsChange,
   translationEnabled,
   translationText,
@@ -173,6 +196,13 @@ export function LyricsWorkspace({
     getActiveEditorKey,
     getEditor
   });
+  const split = useLyricsWorkspaceSplit({
+    layout,
+    onLayoutAction,
+    onBeforeLayoutChange: viewport.captureAnchor
+  });
+  const sideBySide = split.isDesktop;
+  const toolsCollapsed = sideBySide && layout.collapsed;
 
   const resizeEditors = useCallback(() => {
     const editors = [lyricsRef.current, showTranslation ? translationRef.current : null].filter(Boolean) as HTMLTextAreaElement[];
@@ -183,7 +213,10 @@ export function LyricsWorkspace({
     for (const editor of editors) {
       editor.style.height = "auto";
     }
-    const viewportFloor = Math.max(280, (scrollRef.current?.clientHeight ?? 0) - 24);
+    const viewportFloor = Math.max(
+      280,
+      (scrollRef.current?.clientHeight ?? 0) - 24
+    );
     const commonHeight = Math.max(viewportFloor, ...editors.map((editor) => editor.scrollHeight));
     for (const editor of editors) {
       editor.style.height = `${commonHeight}px`;
@@ -254,6 +287,17 @@ export function LyricsWorkspace({
     line: String(Math.min(cursor.line, currentTotalLines)),
     total: String(currentTotalLines)
   });
+  const splitStyle = sideBySide
+    ? toolsCollapsed
+      ? {
+          gridTemplateColumns: `minmax(0, 1fr) ${__internalLyricsWorkspaceLayout.COLLAPSED_TOOLS_WIDTH}px`,
+          columnGap: __internalLyricsWorkspaceLayout.COLLAPSED_GAP
+        }
+      : {
+          gridTemplateColumns: `${split.geometry.editorWidth}px ${split.geometry.toolsWidth}px`,
+          columnGap: split.geometry.gap
+        }
+    : undefined;
 
   return (
     <div
@@ -263,89 +307,45 @@ export function LyricsWorkspace({
       data-lyrics-viewport-mode="immersive"
       data-testid="lyrics-workspace"
     >
-        <div className="lyrics-workspace-grid min-h-0 flex-1">
-          <aside
-            className="lyrics-workspace-column lyrics-summary-aside app-text-muted p-3"
-            aria-label={copy.summary}
+        <div
+          ref={split.viewportRef}
+          className="lyrics-workspace-split relative grid min-h-0 flex-1 min-w-0 overflow-hidden"
+          style={splitStyle}
+          data-side-by-side={sideBySide ? "true" : "false"}
+          data-tools-collapsed={toolsCollapsed ? "true" : "false"}
+          data-editor-ratio={split.geometry.ratio.toFixed(4)}
+          data-testid="lyrics-workspace-split"
+        >
+          <section
+            id="lyrics-workspace-editor"
+            className="lyrics-document-column flex min-h-0 min-w-0 flex-col overflow-hidden bg-[rgb(var(--input-bg))]"
+            aria-labelledby="lyrics-document-title"
           >
-            <div className="lyrics-summary-header flex items-center justify-between gap-3 md:block">
-              <div>
-                <p className="app-text-primary text-sm font-semibold">{copy.summary}</p>
-                <p className="lyrics-summary-description app-text-subtle mt-1 text-[11px] leading-relaxed">{copy.manuscript}</p>
-              </div>
-              <span className="lyrics-summary-position app-text-subtle rounded-md border border-[rgb(var(--panel-border))] bg-[rgb(var(--button-bg))] px-2 py-1 text-[11px] md:mt-3 md:inline-block">
-                {currentPosition}
-              </span>
-            </div>
-            <div className="lyrics-song-summary mt-3 flex min-w-0 items-center gap-2.5 rounded-md border border-[rgb(var(--panel-border))] bg-[rgb(var(--button-bg))] p-2.5">
-              <div className="lyrics-song-summary__cover control-surface relative flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-md">
-                {song.coverUrl || song.proxiedCoverUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={song.proxiedCoverUrl || proxiedImageUrl(song.coverUrl)}
-                    alt=""
-                    className="absolute inset-0 size-full object-cover"
-                    crossOrigin="anonymous"
-                  />
-                ) : (
-                  <Music2 className="app-text-subtle size-4" aria-hidden="true" />
-                )}
-              </div>
-              <div className="min-w-0">
-                <p className="app-text-primary truncate text-xs font-semibold">{song.title || t("untitled")}</p>
-                <p className="app-text-subtle mt-0.5 truncate text-[10px]">{song.artist || t("unknownArtist")}</p>
-              </div>
-            </div>
-            <dl className="lyrics-summary-metrics mt-3 grid grid-cols-2 gap-2 text-xs md:grid-cols-1">
-              <SummaryMetric
-                label={copy.original}
-                value={t("lineCount", { lines: lyricsStats.lines, chars: lyricsStats.characters })}
-                detail={interpolate(copy.paragraphs, { count: String(lyricsStats.paragraphs) })}
-              />
-              {showTranslation ? (
-                <SummaryMetric
-                  label={copy.translation}
-                  value={t("lineCount", { lines: translationStats.lines, chars: translationStats.characters })}
-                  detail={interpolate(copy.paragraphs, { count: String(translationStats.paragraphs) })}
-                />
-              ) : null}
-            </dl>
-            <div
-              className={cn(
-                "lyrics-line-budget mt-3 rounded-md border px-2.5 py-2 text-xs leading-relaxed",
-                lineStatus.isOverLimit ? "status-danger" : "status-idle"
-              )}
-              role={lineStatus.isOverLimit ? "alert" : "status"}
-              data-testid="lyrics-line-budget"
+            <header
+              className="lyrics-editor-status sticky top-0 z-20 flex min-w-0 items-center justify-between gap-3 border-b border-[rgb(var(--panel-border))] bg-[rgb(var(--input-bg))] px-3 py-1.5"
+              data-testid="lyrics-editor-status"
             >
-              <p className="font-semibold">
-                {t("lyricsLineLimitSummary", {
-                  original: lineStatus.originalLineCount,
-                  translation: lineStatus.translationLineCount,
-                  total: lineStatus.totalLineCount,
-                  max: lineStatus.maxLineCount
-                })}
-              </p>
-              {lineStatus.isOverLimit ? (
-                <p className="lyrics-line-budget__error mt-1">
-                  {t("lyricsLineLimitExceeded", {
-                    total: lineStatus.totalLineCount,
-                    max: lineStatus.maxLineCount
-                  })}
-                </p>
-              ) : null}
-            </div>
-          </aside>
-
-          <section className="lyrics-workspace-column lyrics-document-column flex min-h-0 min-w-0 flex-col overflow-hidden bg-[rgb(var(--input-bg))]" aria-labelledby="lyrics-document-title">
-            <header className="flex shrink-0 items-center justify-between gap-3 border-b border-[rgb(var(--panel-border))] px-3 py-2.5">
-              <div className="min-w-0">
-                <h3 id="lyrics-document-title" className="app-text-primary truncate text-sm font-semibold">
+              <div className="flex min-w-0 items-center gap-2 overflow-hidden text-[11px]">
+                <h3 id="lyrics-document-title" className="app-text-primary shrink-0 text-xs font-semibold">
                   {copy.manuscript}
                 </h3>
-                <p className="app-text-subtle mt-0.5 truncate text-[11px]">{copy.sharedScrollHint}</p>
+                <span className="app-text-subtle" aria-hidden="true">·</span>
+                <span className="app-text-subtle min-w-0 truncate">
+                  <span className="font-semibold">{copy.original}</span>
+                  <span className="ml-1">{t("lineCount", { lines: lyricsStats.lines, chars: lyricsStats.characters })}</span>
+                </span>
+                {showTranslation ? (
+                  <>
+                    <span className="app-text-subtle" aria-hidden="true">·</span>
+                    <span className="app-text-subtle min-w-0 truncate">
+                      <span className="font-semibold">{copy.translation}</span>
+                      <span className="ml-1">{t("lineCount", { lines: translationStats.lines, chars: translationStats.characters })}</span>
+                    </span>
+                  </>
+                ) : null}
+                <span className="sr-only">{copy.sharedScrollHint}</span>
               </div>
-              <span className="app-text-subtle shrink-0 font-mono text-[11px]">{currentPosition}</span>
+              <span className="app-text-subtle shrink-0 font-mono text-[10px]">{currentPosition}</span>
             </header>
             <div
               ref={scrollRef}
@@ -354,11 +354,13 @@ export function LyricsWorkspace({
             >
               <div
                 className={cn(
-                  "grid min-h-full items-start gap-3 p-3",
+                  "grid min-h-full min-w-0 items-start gap-3 p-3",
                   showTranslation ? "grid-cols-2" : "mx-auto w-full max-w-[52rem] grid-cols-1"
                 )}
+                data-testid="lyrics-editor-columns"
+                data-bilingual={showTranslation ? "true" : "false"}
               >
-                <EditorColumn label={copy.original} htmlFor={lyricsId} hint={t("lineCount", { lines: lyricsStats.lines, chars: lyricsStats.characters })}>
+                <EditorColumn label={copy.original} htmlFor={lyricsId}>
                   <textarea
                     ref={lyricsRef}
                     id={lyricsId}
@@ -368,15 +370,15 @@ export function LyricsWorkspace({
                     onSelect={(event) => updateCursor(event, "lyrics")}
                     onKeyUp={(event) => updateCursor(event, "lyrics")}
                     onClick={(event) => updateCursor(event, "lyrics")}
+                    wrap="soft"
                     placeholder={t("lyricPlaceholder")}
-                    className="field-shell control-focus block min-h-[280px] w-full resize-none overflow-hidden rounded-lg px-3 py-3 text-sm leading-[1.75]"
+                    className="field-shell control-focus block min-h-[280px] min-w-0 w-full resize-none overflow-x-hidden overflow-y-hidden rounded-lg px-3 py-3 text-sm leading-[1.75]"
                   />
                 </EditorColumn>
                 {showTranslation ? (
                   <EditorColumn
                     label={copy.translation}
                     htmlFor={translationId}
-                    hint={t("lineCount", { lines: translationStats.lines, chars: translationStats.characters })}
                   >
                     <div
                       className="rounded-[10px] p-px"
@@ -391,8 +393,9 @@ export function LyricsWorkspace({
                         onSelect={(event) => updateCursor(event, "translation")}
                         onKeyUp={(event) => updateCursor(event, "translation")}
                         onClick={(event) => updateCursor(event, "translation")}
+                        wrap="soft"
                         placeholder={t("translationPlaceholder")}
-                        className="field-shell control-focus block min-h-[280px] w-full resize-none overflow-hidden rounded-[9px] border-transparent px-3 py-3 text-sm leading-[1.75]"
+                        className="field-shell control-focus block min-h-[280px] min-w-0 w-full resize-none overflow-x-hidden overflow-y-hidden rounded-[9px] border-transparent px-3 py-3 text-sm leading-[1.75]"
                       />
                     </div>
                   </EditorColumn>
@@ -403,6 +406,17 @@ export function LyricsWorkspace({
 
           <LyricsToolsAside
             lyrics={lyrics}
+            song={song}
+            lineStatus={lineStatus}
+            lyricsStats={lyricsStats}
+            translationStats={translationStats}
+            showTranslation={showTranslation}
+            collapsed={toolsCollapsed}
+            collapsible={sideBySide}
+            onToggleCollapsed={() => {
+              viewport.captureAnchor();
+              onLayoutAction({ type: "toggle" });
+            }}
             translationEnabled={translationEnabled}
             translationText={translationText}
             onTranslationEnabledChange={(enabled) => {
@@ -427,6 +441,28 @@ export function LyricsWorkspace({
             lyricsFetchPanel={lyricsFetchPanel}
             aiPanel={aiPanel}
           />
+          {sideBySide && !layout.collapsed && split.geometry.viewportWidth > 0 ? (
+            <div
+              {...split.separatorProps}
+              role="separator"
+              aria-label={copy.resizeTools}
+              aria-controls="lyrics-workspace-editor lyrics-workspace-tools"
+              aria-orientation="vertical"
+              aria-valuemin={Math.round(split.geometry.minRatio * 100)}
+              aria-valuemax={Math.round(split.geometry.maxRatio * 100)}
+              aria-valuenow={Math.round(split.geometry.ratio * 100)}
+              aria-valuetext={`${Math.round(split.geometry.ratio * 100)}% / ${Math.round((1 - split.geometry.ratio) * 100)}%`}
+              tabIndex={0}
+              title={copy.resizeTools}
+              className="preview-workbench-resizer lyrics-workspace-resizer"
+              data-testid="lyrics-workspace-resizer"
+              data-dragging={split.isDragging ? "true" : "false"}
+              style={{
+                left: split.geometry.editorWidth,
+                width: split.geometry.gap
+              }}
+            />
+          ) : null}
         </div>
 
     </div>
@@ -435,34 +471,17 @@ export function LyricsWorkspace({
 
 function EditorColumn({
   label,
-  hint,
   htmlFor,
   children
 }: {
   label: string;
-  hint: string;
   htmlFor: string;
   children: ReactNode;
 }) {
   return (
     <div className="min-w-0">
-      <div className="sticky top-0 z-10 mb-2 flex items-center justify-between gap-2 bg-[rgb(var(--input-bg))] py-1">
-        <label htmlFor={htmlFor} className="app-text-primary text-xs font-semibold">
-          {label}
-        </label>
-        <span className="app-text-subtle truncate text-[10px]">{hint}</span>
-      </div>
+      <label htmlFor={htmlFor} className="sr-only">{label}</label>
       {children}
-    </div>
-  );
-}
-
-function SummaryMetric({ label, value, detail }: { label: string; value: string; detail: string }) {
-  return (
-    <div className="lyrics-summary-metric rounded-md border border-[rgb(var(--panel-border))] bg-[rgb(var(--button-bg))] p-2.5">
-      <dt className="app-text-primary font-semibold">{label}</dt>
-      <dd className="app-text-subtle mt-1 leading-relaxed">{value}</dd>
-      <dd className="lyrics-summary-metric__detail app-text-subtle mt-0.5">{detail}</dd>
     </div>
   );
 }
