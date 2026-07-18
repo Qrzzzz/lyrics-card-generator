@@ -9,7 +9,7 @@ import {
   Sparkles,
   SplitSquareVertical
 } from "lucide-react";
-import type { ReactNode } from "react";
+import { useRef, type ReactNode } from "react";
 import { AiTranslateButton } from "@/components/lyrics/AiTranslateButton";
 import { ActionButton, ToggleRow } from "@/components/ui/controls";
 import { getAIUiCopy } from "@/lib/ai/ui-copy";
@@ -90,10 +90,17 @@ export function LyricsToolsAside({
   const aiCopy = getAIUiCopy(locale);
   const bodyId = "lyrics-tools-expanded-body";
   const hasDynamicPanel = Boolean(lyricsFetchPanel || aiPanel);
+  const collapseButtonRef = useRef<HTMLButtonElement>(null);
 
   function splitLyrics() {
     const result = splitAlternatingLyrics(lyrics, locale);
     onSplitAlternatingLyrics(result.lyrics, result.translationText);
+  }
+
+  function openAITranslateFromCollapsedRail() {
+    onToggleCollapsed();
+    onAITranslate();
+    requestAnimationFrame(() => collapseButtonRef.current?.focus());
   }
 
   return (
@@ -116,6 +123,7 @@ export function LyricsToolsAside({
           ) : null}
           {collapsible ? (
             <button
+              ref={collapseButtonRef}
               type="button"
               className="app-button control-focus flex size-10 shrink-0 items-center justify-center rounded-lg"
               onClick={onToggleCollapsed}
@@ -135,7 +143,7 @@ export function LyricsToolsAside({
             {showAiTranslate ? (
               <CollapsedToolButton
                 label={isAITranslating ? aiCopy.translating : aiCopy.aiTranslate}
-                onClick={onAITranslate}
+                onClick={openAITranslateFromCollapsedRail}
                 disabled={isAITranslating}
                 icon={isAITranslating ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
                 testId="lyrics-tool-ai-collapsed"

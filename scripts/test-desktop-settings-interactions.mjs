@@ -2047,6 +2047,15 @@ async function assertLyricsWorkspaceSplitInteractions() {
   }));
   assert.ok(beforeCollapse.toolsWidth > 300, `dragging expands tools to approximately one third: ${JSON.stringify(beforeCollapse)}`);
 
+  await page.locator('[data-testid="editor-surface"] [data-testid="settings-button"]').click();
+  await waitForVisible("settings-surface");
+  await selectSettingsSection("ai");
+  await (await waitForVisible("ai-open-api")).click();
+  await page.getByTestId("ai-api-key-input").fill("sk-desktop-panel-regression");
+  await page.waitForFunction(async () => Boolean((await window.lyricsCardDesktop?.loadAISettings())?.hasApiKey));
+  await page.getByTestId("settings-close-button").click();
+  await page.locator('[data-testid="settings-surface"][data-surface-state="closed"]').waitFor({ state: "attached" });
+
   const collapseButton = page.getByTestId("lyrics-tools-collapse");
   await collapseButton.click();
   await page.waitForFunction(() => document.querySelector('[data-testid="lyrics-tools-aside"]')?.getAttribute('data-collapsed') === 'true');
@@ -2058,13 +2067,37 @@ async function assertLyricsWorkspaceSplitInteractions() {
   assert.equal(await resizer.count(), 0, "collapsed tools leave ratio geometry and hide the resize separator");
   const collapsedGeometry = await page.getByTestId("lyrics-tools-aside").boundingBox();
   assert.ok(collapsedGeometry && Math.abs(collapsedGeometry.width - 64) <= 1, `collapsed tools use the 64px rail: ${JSON.stringify(collapsedGeometry)}`);
-  await page.getByTestId("lyrics-tool-ai-collapsed").waitFor({ state: "visible" });
+  const collapsedAiButton = page.getByTestId("lyrics-tool-ai-collapsed");
+  await collapsedAiButton.waitFor({ state: "visible" });
   await page.getByTestId("translation-toggle").waitFor({ state: "visible" });
   await page.getByTestId("lyrics-tool-split-collapsed").waitFor({ state: "visible" });
   await page.getByTestId("lyrics-line-budget").waitFor({ state: "visible" });
   if (runVisualDiagnostics) {
     await page.screenshot({ path: path.join(reportDirectory, "step-two-collapsed-1280x900.png"), fullPage: false });
   }
+
+  const persistedAiSettings = await page.evaluate(() => window.lyricsCardDesktop?.loadAISettings());
+  assert.equal(persistedAiSettings?.hasApiKey, true, `collapsed AI regression has configured settings: ${JSON.stringify(persistedAiSettings)}`);
+  await collapsedAiButton.click();
+  await page.waitForFunction(() => document.querySelector('[data-testid="lyrics-tools-aside"]')?.getAttribute('data-collapsed') === 'false');
+  const collapsedAiOutcome = await page.waitForFunction(() => {
+    if (document.querySelector('[data-testid="lyrics-ai-panel-boundary"]')) return "panel";
+    if (document.querySelector('[data-testid="settings-surface"][data-surface-state="open"]')) return "settings";
+    return false;
+  });
+  assert.equal(await collapsedAiOutcome.jsonValue(), "panel", "configured collapsed AI action opens the inline panel");
+  await page.getByTestId("lyrics-ai-panel-boundary").waitFor({ state: "visible" });
+  await page.getByTestId("ai-translate-panel").waitFor({ state: "visible" });
+  assert.equal(await page.getByTestId("lyrics-tools-collapse").getAttribute("aria-expanded"), "true", "collapsed AI action expands the tools rail");
+  assert.equal(
+    await page.getByTestId("lyrics-tools-collapse").evaluate((node) => document.activeElement === node),
+    true,
+    "collapsed AI action restores focus to the persistent tools disclosure"
+  );
+  await page.getByTestId("ai-translate-panel").getByRole("button").first().click();
+  await page.getByTestId("lyrics-ai-panel-boundary").waitFor({ state: "detached" });
+  await page.getByTestId("lyrics-tools-collapse").click();
+  await page.waitForFunction(() => document.querySelector('[data-testid="lyrics-tools-aside"]')?.getAttribute('data-collapsed') === 'true');
 
   await page.locator('button[data-step-id="layout"]').click();
   await page.locator('button[data-step-id="lyrics"]').click();
@@ -2898,6 +2931,7 @@ try {
     }
   }, null, 2)}\n`);
 } catch (error) {
+  process.stderr.write(`[desktop-regression] ${error instanceof Error ? error.stack || error.message : String(error)}\n`);
   if (page) {
     await page.screenshot({ path: path.join(reportDirectory, "settings-interaction-failure.png"), fullPage: false }).catch(() => {});
   }
