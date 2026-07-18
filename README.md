@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v5.7.3.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v5.8.0.zh-CN.md">发布说明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">在线 Web Lite 版</a> ·
   <a href="./docs/desktop.md">桌面维护文档</a> ·
   <a href="#主要功能">主要功能</a> ·
@@ -49,23 +49,23 @@
 
 请前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下载最新版：
 
-* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 5.7.3.exe`
-* 不想安装时可下载便携版：`Lyrics Card Generator-5.7.3-portable.exe`
+* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 5.8.0.exe`
+* 不想安装时可下载便携版：`Lyrics Card Generator-5.8.0-portable.exe`
 
 安装版适合长期使用；便携版适合临时运行、测试或放在移动硬盘中使用。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v5.7.3 更新重点
+### v5.8.0 更新重点
 
-* 将第二步改为以编辑为主体的双栏工作台：编辑区默认占 3/4，工具区可扩展到 1/3，也可折叠为约 64 px 的快捷轨道。
-* 单语稿纸保持舒适居中宽度；双语编辑等分使用全部编辑空间，并继续共享唯一主滚动、光标与逻辑行锚点。
-* 折叠态仍保留 AI 翻译、翻译开关、拆分双语歌词和 36 行状态；顶部 Stepper、第 3–5 步分栏及导出安全边界保持不变。
+* 第二步新增约 44 px 的紧凑命令栏，可查看活动面板与光标行，并直接撤销/重做、整理空行、查找、打开 AI 翻译和检查 36 行额度。
+* 右侧工具区固定为“整理、翻译、检查、来源”四个 Tab；选区优先、双栏同步空行安全、风险操作预览和即时撤销共同避免静默误改。
+* 编辑区继续共享唯一主滚动与选区锚点；桌面侧栏可调宽/折叠，窄屏改用覆盖式抽屉，不再挤压歌词正文。顶部主 Stepper 保持不变。
 
 ## 🌐 多语言发布说明
 
 GitHub Release 默认展示简体中文摘要，完整说明见：
-[简体中文](./docs/releases/v5.7.3.zh-CN.md) · [繁體中文](./docs/releases/v5.7.3.zh-TW.md) · [English](./docs/releases/v5.7.3.en.md) · [Français](./docs/releases/v5.7.3.fr.md) · [日本語](./docs/releases/v5.7.3.ja.md) · [Español](./docs/releases/v5.7.3.es.md)
+[简体中文](./docs/releases/v5.8.0.zh-CN.md) · [繁體中文](./docs/releases/v5.8.0.zh-TW.md) · [English](./docs/releases/v5.8.0.en.md) · [Français](./docs/releases/v5.8.0.fr.md) · [日本語](./docs/releases/v5.8.0.ja.md) · [Español](./docs/releases/v5.8.0.es.md)
 
 <a id="主要功能"></a>
 

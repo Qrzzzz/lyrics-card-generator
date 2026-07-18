@@ -6,13 +6,22 @@ import {
   type ReactNode,
   type SyntheticEvent,
   useCallback,
+  useEffect,
   useId,
   useLayoutEffect,
   useMemo,
   useRef,
   useState
 } from "react";
-import { LyricsToolsAside, type LyricsToolsLabels } from "@/components/editor/LyricsToolsAside";
+import {
+  LyricsCommandBar,
+  type LyricsCommandIntent
+} from "@/components/editor/LyricsCommandBar";
+import { LyricsSidebar } from "@/components/editor/LyricsSidebar";
+import {
+  formatLyricsWorkspaceCopy,
+  getLyricsWorkspaceCopy
+} from "@/components/editor/lyrics-workspace-copy";
 import { useLyricsWorkspaceSplit } from "@/components/editor/hooks/useLyricsWorkspaceSplit";
 import {
   type LyricsEditorKey,
@@ -26,28 +35,51 @@ import {
   type LyricsWorkspaceLayoutAction,
   type LyricsWorkspaceLayoutState
 } from "@/lib/lyrics-workspace-layout";
+import {
+  analyzeLyricsDocument,
+  cleanPastedLyrics,
+  cleanSynchronizedBlankRows,
+  collapseConsecutiveBlankLines,
+  createLyricsOperationHistory,
+  getLyricsLineSelection,
+  mergeSelectedLyricsLines,
+  recordLyricsOperation,
+  redoLyricsOperation,
+  removeAllBlankLines,
+  removeParagraphTags,
+  replaceLyricsText,
+  resolveLyricsTextScope,
+  snapshotsEqual,
+  stripLrcTimeline,
+  swapLyricsColumns,
+  trimBoundaryBlankLines,
+  undoLyricsOperation,
+  type LyricsBlankMode,
+  type LyricsDocumentSnapshot,
+  type LyricsHistoryEntry,
+  type LyricsScopedTransform,
+  type LyricsSelectionSnapshot,
+  type LyricsSidebarTab,
+  type LyricsTextSelection,
+  type LyricsWorkbenchEditor
+} from "@/lib/lyrics-workbench";
 import type { ContentMode, Locale, SongInfo } from "@/lib/types";
 import { cn } from "@/lib/utils";
-
-type WorkspaceCopy = LyricsToolsLabels & {
-  manuscript: string;
-  currentPosition: string;
-  sharedScrollHint: string;
-  resizeTools: string;
-};
 
 type LyricsWorkspaceProps = {
   lyrics: string;
   song: SongInfo;
   lineStatus: ExportLyricLineStatus;
   layout: LyricsWorkspaceLayoutState;
+  sidebarTab: LyricsSidebarTab;
+  onSidebarTabChange: (tab: LyricsSidebarTab) => void;
   onLayoutAction: (action: LyricsWorkspaceLayoutAction) => void;
   onLyricsChange: (lyrics: string) => void;
   translationEnabled: boolean;
   translationText: string;
   onTranslationEnabledChange: (enabled: boolean) => void;
   onTranslationTextChange: (translation: string) => void;
-  onSplitAlternatingLyrics: (lyrics: string, translationText: string) => void;
+  onLyricsDocumentChange: (snapshot: LyricsDocumentSnapshot) => void;
   onAITranslate: () => void;
   isAITranslating: boolean;
   aiPanel?: ReactNode;
@@ -59,93 +91,15 @@ type LyricsWorkspaceProps = {
   showAiTranslate?: boolean;
 };
 
-type ActiveEditor = LyricsEditorKey;
-
 type CursorPosition = {
-  editor: ActiveEditor;
+  editor: LyricsWorkbenchEditor;
   line: number;
   totalLines: number;
 };
 
-const WORKSPACE_COPY: Record<Locale, WorkspaceCopy> = {
-  zh: {
-    summary: "长稿摘要",
-    manuscript: "歌词文档",
-    original: "原文",
-    translation: "译文",
-    paragraphs: "{count} 段",
-    currentPosition: "{label} · 第 {line} / {total} 行",
-    sharedScrollHint: "原文与译文共享同一个滚动位置",
-    tools: "编辑工具",
-    collapseTools: "折叠编辑工具",
-    expandTools: "展开编辑工具",
-    resizeTools: "调整歌词编辑区和工具区宽度"
-  },
-  "zh-TW": {
-    summary: "長稿摘要",
-    manuscript: "歌詞文件",
-    original: "原文",
-    translation: "譯文",
-    paragraphs: "{count} 段",
-    currentPosition: "{label} · 第 {line} / {total} 行",
-    sharedScrollHint: "原文與譯文共用同一個捲動位置",
-    tools: "編輯工具",
-    collapseTools: "收合編輯工具",
-    expandTools: "展開編輯工具",
-    resizeTools: "調整歌詞編輯區與工具區寬度"
-  },
-  en: {
-    summary: "Manuscript summary",
-    manuscript: "Lyrics document",
-    original: "Original",
-    translation: "Translation",
-    paragraphs: "{count} sections",
-    currentPosition: "{label} · line {line} / {total}",
-    sharedScrollHint: "Original and translation share one scroll position",
-    tools: "Editing tools",
-    collapseTools: "Collapse editing tools",
-    expandTools: "Expand editing tools",
-    resizeTools: "Resize the lyrics editor and tools"
-  },
-  fr: {
-    summary: "Résumé du texte",
-    manuscript: "Document de paroles",
-    original: "Original",
-    translation: "Traduction",
-    paragraphs: "{count} sections",
-    currentPosition: "{label} · ligne {line} / {total}",
-    sharedScrollHint: "L’original et la traduction partagent le même défilement",
-    tools: "Outils d’édition",
-    collapseTools: "Réduire les outils d’édition",
-    expandTools: "Développer les outils d’édition",
-    resizeTools: "Redimensionner l’éditeur de paroles et les outils"
-  },
-  ja: {
-    summary: "原稿の概要",
-    manuscript: "歌詞ドキュメント",
-    original: "原文",
-    translation: "翻訳",
-    paragraphs: "{count} セクション",
-    currentPosition: "{label} · {line} / {total} 行",
-    sharedScrollHint: "原文と翻訳は同じスクロール位置を共有します",
-    tools: "編集ツール",
-    collapseTools: "編集ツールを折りたたむ",
-    expandTools: "編集ツールを展開",
-    resizeTools: "歌詞エディターとツールの幅を調整"
-  },
-  es: {
-    summary: "Resumen del texto",
-    manuscript: "Documento de letras",
-    original: "Original",
-    translation: "Traducción",
-    paragraphs: "{count} secciones",
-    currentPosition: "{label} · línea {line} / {total}",
-    sharedScrollHint: "El original y la traducción comparten una sola posición de desplazamiento",
-    tools: "Herramientas de edición",
-    collapseTools: "Contraer las herramientas de edición",
-    expandTools: "Expandir las herramientas de edición",
-    resizeTools: "Cambiar el ancho del editor de letras y las herramientas"
-  }
+type OperationFeedback = {
+  message: string;
+  canUndo: boolean;
 };
 
 export function LyricsWorkspace({
@@ -153,13 +107,15 @@ export function LyricsWorkspace({
   song,
   lineStatus,
   layout,
+  sidebarTab,
+  onSidebarTabChange,
   onLayoutAction,
   onLyricsChange,
   translationEnabled,
   translationText,
   onTranslationEnabledChange,
   onTranslationTextChange,
-  onSplitAlternatingLyrics,
+  onLyricsDocumentChange,
   onAITranslate,
   isAITranslating,
   aiPanel,
@@ -170,22 +126,41 @@ export function LyricsWorkspace({
   t,
   showAiTranslate = true
 }: LyricsWorkspaceProps) {
-  const copy = WORKSPACE_COPY[locale];
+  const copy = getLyricsWorkspaceCopy(locale);
   const workspaceRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const lyricsRef = useRef<HTMLTextAreaElement>(null);
   const translationRef = useRef<HTMLTextAreaElement>(null);
-  const activeEditorRef = useRef<ActiveEditor>("lyrics");
+  const activeEditorRef = useRef<LyricsWorkbenchEditor>("lyrics");
   const lyricsId = useId();
   const translationId = useId();
   const showTranslation = contentMode === "lyrics" && translationEnabled;
   const lyricsStats = useMemo(() => getTextStats(lyrics), [lyrics]);
   const translationStats = useMemo(() => getTextStats(translationText), [translationText]);
+  const documentSnapshot = useMemo<LyricsDocumentSnapshot>(() => ({
+    lyrics,
+    translationText,
+    translationEnabled
+  }), [lyrics, translationEnabled, translationText]);
   const [cursor, setCursor] = useState<CursorPosition>({
     editor: "lyrics",
     line: 1,
     totalLines: Math.max(1, lyricsStats.lines)
   });
+  const [selections, setSelections] = useState<Record<LyricsWorkbenchEditor, LyricsTextSelection>>({
+    lyrics: { start: 0, end: 0 },
+    translation: { start: 0, end: 0 }
+  });
+  const selectionsRef = useRef(selections);
+  selectionsRef.current = selections;
+  const [feedback, setFeedback] = useState<OperationFeedback | null>(null);
+  const [historyRevision, setHistoryRevision] = useState(0);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [focusIntent, setFocusIntent] = useState<LyricsCommandIntent | null>(null);
+  const historyRef = useRef(createLyricsOperationHistory());
+  const expectedSnapshotRef = useRef<LyricsDocumentSnapshot | null>(null);
+  const previousSnapshotRef = useRef(documentSnapshot);
+  const pendingSelectionRef = useRef<LyricsSelectionSnapshot | null>(null);
   const getActiveEditorKey = useCallback(() => activeEditorRef.current, []);
   const getEditor = useCallback((editor: LyricsEditorKey) => (
     editor === "translation" ? translationRef.current : lyricsRef.current
@@ -202,25 +177,24 @@ export function LyricsWorkspace({
     onBeforeLayoutChange: viewport.captureAnchor
   });
   const sideBySide = split.isDesktop;
-  const toolsCollapsed = sideBySide && layout.collapsed;
+  const sidebarCollapsed = sideBySide && layout.collapsed;
+  const sidebarExpanded = sideBySide ? !layout.collapsed : mobileSidebarOpen;
+  const activeText = cursor.editor === "translation" ? translationText : lyrics;
+  const activeSelection = clampSelection(selections[cursor.editor], activeText.length);
+  const activeScope = resolveLyricsTextScope(activeText, activeSelection);
+  const analysis = useMemo(() => analyzeLyricsDocument({
+    lyrics,
+    translationText,
+    translationEnabled: showTranslation
+  }), [lyrics, showTranslation, translationText]);
 
   const resizeEditors = useCallback(() => {
     const editors = [lyricsRef.current, showTranslation ? translationRef.current : null].filter(Boolean) as HTMLTextAreaElement[];
-    if (editors.length === 0) {
-      return;
-    }
-
-    for (const editor of editors) {
-      editor.style.height = "auto";
-    }
-    const viewportFloor = Math.max(
-      280,
-      (scrollRef.current?.clientHeight ?? 0) - 24
-    );
+    if (editors.length === 0) return;
+    for (const editor of editors) editor.style.height = "auto";
+    const viewportFloor = Math.max(280, (scrollRef.current?.clientHeight ?? 0) - 24);
     const commonHeight = Math.max(viewportFloor, ...editors.map((editor) => editor.scrollHeight));
-    for (const editor of editors) {
-      editor.style.height = `${commonHeight}px`;
-    }
+    for (const editor of editors) editor.style.height = `${commonHeight}px`;
   }, [showTranslation]);
 
   useLayoutEffect(() => {
@@ -229,33 +203,70 @@ export function LyricsWorkspace({
   }, [lyrics, resizeEditors, translationText, viewport.restoreAnchor, viewport.viewportHeight]);
 
   useLayoutEffect(() => {
-    const container = scrollRef.current;
-    if (!container || typeof ResizeObserver === "undefined") {
-      return;
-    }
+    const pending = pendingSelectionRef.current;
+    if (!pending) return;
+    const editor = getEditor(pending.editor);
+    if (!editor) return;
+    const selection = clampSelection(pending, editor.value.length);
+    editor.setSelectionRange(selection.start, selection.end);
+    editor.focus({ preventScroll: true });
+    activeEditorRef.current = pending.editor;
+    const nextCursor = cursorForSelection(pending.editor, editor.value, selection.start);
+    setSelections((current) => ({ ...current, [pending.editor]: selection }));
+    setCursor(nextCursor);
+    pendingSelectionRef.current = null;
+    viewport.restoreAnchor();
+  }, [getEditor, lyrics, translationEnabled, translationText, viewport.restoreAnchor]);
 
+  useLayoutEffect(() => {
+    const container = scrollRef.current;
+    if (!container || typeof ResizeObserver === "undefined") return;
     const observer = new ResizeObserver(() => {
       viewport.restoreAnchor();
       resizeEditors();
     });
     observer.observe(container);
     return () => observer.disconnect();
-  }, [resizeEditors, viewport.captureAnchor, viewport.restoreAnchor]);
+  }, [resizeEditors, viewport.restoreAnchor]);
 
-  function updateCursor(event: SyntheticEvent<HTMLTextAreaElement>, editor: ActiveEditor) {
+  useEffect(() => {
+    const previous = previousSnapshotRef.current;
+    previousSnapshotRef.current = documentSnapshot;
+    if (snapshotsEqual(previous, documentSnapshot)) return;
+    if (expectedSnapshotRef.current && snapshotsEqual(expectedSnapshotRef.current, documentSnapshot)) {
+      expectedSnapshotRef.current = null;
+      return;
+    }
+    historyRef.current = createLyricsOperationHistory();
+    setHistoryRevision((value) => value + 1);
+    setFeedback(null);
+  }, [documentSnapshot]);
+
+  function clearOperationHistory() {
+    if (historyRef.current.past.length === 0 && historyRef.current.future.length === 0 && !feedback) return;
+    historyRef.current = createLyricsOperationHistory();
+    setHistoryRevision((value) => value + 1);
+    setFeedback(null);
+  }
+
+  function updateCursor(event: SyntheticEvent<HTMLTextAreaElement>, editor: LyricsWorkbenchEditor) {
     const node = event.currentTarget;
     activeEditorRef.current = editor;
     viewport.captureAnchor(editor);
-    const value = node.value;
-    const line = value.slice(0, node.selectionStart ?? 0).split(/\r?\n/).length;
-    setCursor({ editor, line, totalLines: Math.max(1, value.split(/\r?\n/).length) });
+    const selection = {
+      start: node.selectionStart ?? 0,
+      end: node.selectionEnd ?? node.selectionStart ?? 0
+    };
+    setSelections((current) => ({ ...current, [editor]: selection }));
+    setCursor(cursorForSelection(editor, node.value, selection.start));
   }
 
-  function onEditorFocus(event: FocusEvent<HTMLTextAreaElement>, editor: ActiveEditor) {
+  function onEditorFocus(event: FocusEvent<HTMLTextAreaElement>, editor: LyricsWorkbenchEditor) {
     updateCursor(event, editor);
   }
 
   function onLyricsEditorChange(event: ChangeEvent<HTMLTextAreaElement>) {
+    clearOperationHistory();
     activeEditorRef.current = "lyrics";
     viewport.captureAnchor("lyrics");
     updateCursor(event, "lyrics");
@@ -263,10 +274,286 @@ export function LyricsWorkspace({
   }
 
   function onTranslationEditorChange(event: ChangeEvent<HTMLTextAreaElement>) {
+    clearOperationHistory();
     activeEditorRef.current = "translation";
     viewport.captureAnchor("translation");
     updateCursor(event, "translation");
     onTranslationTextChange(event.currentTarget.value);
+  }
+
+  function captureCurrentSelection(editor = activeEditorRef.current): LyricsSelectionSnapshot {
+    const node = getEditor(editor);
+    const valueLength = editor === "translation" ? translationText.length : lyrics.length;
+    const selection = node
+      ? { start: node.selectionStart ?? 0, end: node.selectionEnd ?? node.selectionStart ?? 0 }
+      : selectionsRef.current[editor];
+    return { editor, ...clampSelection(selection, valueLength) };
+  }
+
+  function commitOperation(params: {
+    label: string;
+    next: LyricsDocumentSnapshot;
+    afterSelection: LyricsSelectionSnapshot;
+    message: string;
+  }) {
+    if (snapshotsEqual(documentSnapshot, params.next)) {
+      setFeedback({ message: copy.noChanges, canUndo: false });
+      return false;
+    }
+    viewport.captureAnchor(params.afterSelection.editor);
+    const entry: LyricsHistoryEntry = {
+      label: params.label,
+      before: documentSnapshot,
+      after: params.next,
+      beforeSelection: captureCurrentSelection(),
+      afterSelection: params.afterSelection
+    };
+    historyRef.current = recordLyricsOperation(historyRef.current, entry);
+    expectedSnapshotRef.current = params.next;
+    pendingSelectionRef.current = params.afterSelection;
+    setHistoryRevision((value) => value + 1);
+    setFeedback({ message: params.message, canUndo: true });
+    onLyricsDocumentChange(params.next);
+    return true;
+  }
+
+  function applyActiveTransform(
+    label: string,
+    result: LyricsScopedTransform,
+    message: string
+  ) {
+    if (!result.changed) {
+      setFeedback({ message: copy.noChanges, canUndo: false });
+      return;
+    }
+    const editor = activeEditorRef.current;
+    commitOperation({
+      label,
+      next: editor === "translation"
+        ? { ...documentSnapshot, translationText: result.text, translationEnabled: true }
+        : { ...documentSnapshot, lyrics: result.text },
+      afterSelection: { editor, ...result.selection },
+      message
+    });
+  }
+
+  function blankCleanup(mode: LyricsBlankMode, synchronized: boolean) {
+    const label = mode === "trim"
+      ? copy.trimBlankLines
+      : mode === "collapse"
+        ? copy.collapseBlankLines
+        : copy.removeBlankLines;
+    if (synchronized && showTranslation) {
+      const result = cleanSynchronizedBlankRows({
+        lyrics,
+        translationText,
+        mode,
+        lineRange: activeScope.hasSelection
+          ? { startLine: activeScope.startLine, endLine: activeScope.endLine }
+          : undefined
+      });
+      if (!result.changed) {
+        setFeedback({ message: copy.noChanges, canUndo: false });
+        return;
+      }
+      const selection = captureCurrentSelection();
+      commitOperation({
+        label,
+        next: {
+          lyrics: result.lyrics,
+          translationText: result.translationText,
+          translationEnabled: true
+        },
+        afterSelection: {
+          ...selection,
+          start: Math.min(selection.start, selection.editor === "lyrics" ? result.lyrics.length : result.translationText.length),
+          end: Math.min(selection.end, selection.editor === "lyrics" ? result.lyrics.length : result.translationText.length)
+        },
+        message: formatLyricsWorkspaceCopy(copy.synchronizedResult, { count: result.removedRows })
+      });
+      return;
+    }
+
+    const transform = mode === "trim"
+      ? trimBoundaryBlankLines
+      : mode === "collapse"
+        ? collapseConsecutiveBlankLines
+        : removeAllBlankLines;
+    const result = transform(activeText, activeSelection);
+    applyActiveTransform(
+      label,
+      result,
+      formatLyricsWorkspaceCopy(copy.removedLinesResult, {
+        scope: scopeLabel,
+        count: result.stats.removedLines ?? 0
+      })
+    );
+  }
+
+  function cleanPaste() {
+    const result = cleanPastedLyrics(activeText, activeSelection);
+    const count = (result.stats.trailingWhitespaceLines ?? 0) +
+      (result.stats.whitespaceOnlyLines ?? 0) +
+      (result.stats.invisibleCharacters ?? 0) +
+      (result.stats.newlineChanges ?? 0);
+    applyActiveTransform(
+      copy.cleanPaste,
+      result,
+      formatLyricsWorkspaceCopy(copy.cleanedPasteResult, { count })
+    );
+  }
+
+  function cleanLrc() {
+    const result = stripLrcTimeline(activeText, activeSelection);
+    applyActiveTransform(
+      copy.lrcHeading,
+      result,
+      formatLyricsWorkspaceCopy(copy.cleanedLrcResult, {
+        timestamps: result.stats.timestamps ?? 0,
+        metadata: result.stats.metadata ?? 0
+      })
+    );
+  }
+
+  function replaceText(query: string, replacement: string, matchCase: boolean) {
+    const result = replaceLyricsText(activeText, activeSelection, query, replacement, matchCase);
+    applyActiveTransform(
+      copy.findReplaceHeading,
+      result,
+      formatLyricsWorkspaceCopy(copy.replacedResult, {
+        scope: scopeLabel,
+        count: result.stats.replacements ?? 0
+      })
+    );
+  }
+
+  function mergeLines() {
+    const result = mergeSelectedLyricsLines(activeText, activeSelection);
+    applyActiveTransform(
+      copy.mergeHeading,
+      result,
+      formatLyricsWorkspaceCopy(copy.mergedResult, {
+        count: (result.stats.mergedLines ?? 0) + 1
+      })
+    );
+  }
+
+  function cleanParagraphTags() {
+    const result = removeParagraphTags(activeText, activeSelection);
+    applyActiveTransform(
+      copy.tagsHeading,
+      result,
+      formatLyricsWorkspaceCopy(copy.tagsRemovedResult, {
+        scope: scopeLabel,
+        count: result.stats.tags?.length ?? 0
+      })
+    );
+  }
+
+  function formatTranslation(nextTranslation: string) {
+    const selection = captureCurrentSelection("translation");
+    commitOperation({
+      label: copy.formatTranslation,
+      next: { ...documentSnapshot, translationText: nextTranslation, translationEnabled: true },
+      afterSelection: {
+        ...selection,
+        start: Math.min(selection.start, nextTranslation.length),
+        end: Math.min(selection.end, nextTranslation.length)
+      },
+      message: copy.formattedResult
+    });
+  }
+
+  function splitAlternating(nextLyrics: string, nextTranslation: string) {
+    commitOperation({
+      label: copy.splitApply,
+      next: { lyrics: nextLyrics, translationText: nextTranslation, translationEnabled: true },
+      afterSelection: { editor: "lyrics", start: 0, end: 0 },
+      message: copy.splitResult
+    });
+  }
+
+  function swapColumns() {
+    commitOperation({
+      label: copy.swapApply,
+      next: swapLyricsColumns(documentSnapshot),
+      afterSelection: { editor: "lyrics", start: 0, end: 0 },
+      message: copy.swappedResult
+    });
+  }
+
+  function undoOperation() {
+    const result = undoLyricsOperation(historyRef.current);
+    if (!result.entry || !result.snapshot || !result.selection) return;
+    historyRef.current = result.history;
+    expectedSnapshotRef.current = result.snapshot;
+    pendingSelectionRef.current = result.selection;
+    viewport.captureAnchor(result.selection.editor);
+    setHistoryRevision((value) => value + 1);
+    setFeedback({
+      message: formatLyricsWorkspaceCopy(copy.undoneResult, { label: result.entry.label }),
+      canUndo: result.history.past.length > 0
+    });
+    onLyricsDocumentChange(result.snapshot);
+  }
+
+  function redoOperation() {
+    const result = redoLyricsOperation(historyRef.current);
+    if (!result.entry || !result.snapshot || !result.selection) return;
+    historyRef.current = result.history;
+    expectedSnapshotRef.current = result.snapshot;
+    pendingSelectionRef.current = result.selection;
+    viewport.captureAnchor(result.selection.editor);
+    setHistoryRevision((value) => value + 1);
+    setFeedback({
+      message: formatLyricsWorkspaceCopy(copy.redoneResult, { label: result.entry.label }),
+      canUndo: true
+    });
+    onLyricsDocumentChange(result.snapshot);
+  }
+
+  function handleTranslationEnabledChange(enabled: boolean) {
+    clearOperationHistory();
+    viewport.captureAnchor(enabled ? "translation" : activeEditorRef.current);
+    onTranslationEnabledChange(enabled);
+  }
+
+  function locateIssue(editor: LyricsWorkbenchEditor, line: number) {
+    const node = getEditor(editor);
+    if (!node) return;
+    const selection = getLyricsLineSelection(node.value, line);
+    activeEditorRef.current = editor;
+    node.focus({ preventScroll: true });
+    node.setSelectionRange(selection.start, selection.end);
+    setSelections((current) => ({ ...current, [editor]: selection }));
+    setCursor(cursorForSelection(editor, node.value, selection.start));
+    const scroll = scrollRef.current;
+    if (scroll) {
+      const total = Math.max(1, node.value.split(/\r?\n/u).length);
+      const ratio = total > 1 ? (Math.max(1, line) - 1) / (total - 1) : 0;
+      scroll.scrollTop = ratio * Math.max(0, scroll.scrollHeight - scroll.clientHeight);
+    }
+  }
+
+  function openTab(tab: LyricsSidebarTab, intent?: LyricsCommandIntent) {
+    viewport.captureAnchor();
+    onSidebarTabChange(tab);
+    if (sideBySide) {
+      if (layout.collapsed) onLayoutAction({ type: "expand" });
+    } else {
+      setMobileSidebarOpen(true);
+    }
+    if (intent) setFocusIntent(intent);
+    if (intent === "ai") onAITranslate();
+  }
+
+  function toggleSidebar() {
+    viewport.captureAnchor();
+    if (sideBySide) {
+      onLayoutAction({ type: "toggle" });
+    } else {
+      setMobileSidebarOpen((value) => !value);
+    }
   }
 
   if (contentMode !== "lyrics") {
@@ -282,13 +569,28 @@ export function LyricsWorkspace({
     1,
     cursor.editor === "translation" ? translationStats.lines : lyricsStats.lines
   );
-  const currentPosition = interpolate(copy.currentPosition, {
+  const currentPosition = formatLyricsWorkspaceCopy(copy.currentPosition, {
     label: currentLabel,
-    line: String(Math.min(cursor.line, currentTotalLines)),
-    total: String(currentTotalLines)
+    line: Math.min(cursor.line, currentTotalLines),
+    total: currentTotalLines
   });
+  const scopeLabel = formatLyricsWorkspaceCopy(
+    activeScope.hasSelection ? copy.selectedLinesScope : copy.activeColumnScope,
+    {
+      label: currentLabel,
+      start: activeScope.startLine,
+      end: activeScope.endLine
+    }
+  );
+  const activeTabLabel = sidebarTab === "cleanup"
+    ? copy.cleanupTab
+    : sidebarTab === "translation"
+      ? copy.translationTab
+      : sidebarTab === "review"
+        ? copy.reviewTab
+        : copy.sourceTab;
   const splitStyle = sideBySide
-    ? toolsCollapsed
+    ? sidebarCollapsed
       ? {
           gridTemplateColumns: `minmax(0, 1fr) ${__internalLyricsWorkspaceLayout.COLLAPSED_TOOLS_WIDTH}px`,
           columnGap: __internalLyricsWorkspaceLayout.COLLAPSED_GAP
@@ -298,173 +600,190 @@ export function LyricsWorkspace({
           columnGap: split.geometry.gap
         }
     : undefined;
+  void historyRevision;
 
   return (
     <div
       ref={workspaceRef}
-      className="relative flex min-h-0 flex-col overflow-hidden"
+      className="relative flex min-h-0 flex-col overflow-hidden bg-[rgb(var(--input-bg))]"
       style={{ height: viewport.viewportHeight }}
       data-lyrics-viewport-mode="immersive"
       data-testid="lyrics-workspace"
     >
-        <div
-          ref={split.viewportRef}
-          className="lyrics-workspace-split relative grid min-h-0 flex-1 min-w-0 overflow-hidden"
-          style={splitStyle}
-          data-side-by-side={sideBySide ? "true" : "false"}
-          data-tools-collapsed={toolsCollapsed ? "true" : "false"}
-          data-editor-ratio={split.geometry.ratio.toFixed(4)}
-          data-testid="lyrics-workspace-split"
-        >
-          <section
-            id="lyrics-workspace-editor"
-            className="lyrics-document-column flex min-h-0 min-w-0 flex-col overflow-hidden bg-[rgb(var(--input-bg))]"
-            aria-labelledby="lyrics-document-title"
-          >
-            <header
-              className="lyrics-editor-status sticky top-0 z-20 flex min-w-0 items-center justify-between gap-3 border-b border-[rgb(var(--panel-border))] bg-[rgb(var(--input-bg))] px-3 py-1.5"
-              data-testid="lyrics-editor-status"
-            >
-              <div className="flex min-w-0 items-center gap-2 overflow-hidden text-[11px]">
-                <h3 id="lyrics-document-title" className="app-text-primary shrink-0 text-xs font-semibold">
-                  {copy.manuscript}
-                </h3>
-                <span className="app-text-subtle" aria-hidden="true">·</span>
-                <span className="app-text-subtle min-w-0 truncate">
-                  <span className="font-semibold">{copy.original}</span>
-                  <span className="ml-1">{t("lineCount", { lines: lyricsStats.lines, chars: lyricsStats.characters })}</span>
-                </span>
-                {showTranslation ? (
-                  <>
-                    <span className="app-text-subtle" aria-hidden="true">·</span>
-                    <span className="app-text-subtle min-w-0 truncate">
-                      <span className="font-semibold">{copy.translation}</span>
-                      <span className="ml-1">{t("lineCount", { lines: translationStats.lines, chars: translationStats.characters })}</span>
-                    </span>
-                  </>
-                ) : null}
-                <span className="sr-only">{copy.sharedScrollHint}</span>
-              </div>
-              <span className="app-text-subtle shrink-0 font-mono text-[10px]">{currentPosition}</span>
-            </header>
-            <div
-              ref={scrollRef}
-              className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain [scrollbar-gutter:stable]"
-              data-testid="lyrics-shared-scroll"
-            >
-              <div
-                className={cn(
-                  "grid min-h-full min-w-0 items-start gap-3 p-3",
-                  showTranslation ? "grid-cols-2" : "mx-auto w-full max-w-[52rem] grid-cols-1"
-                )}
-                data-testid="lyrics-editor-columns"
-                data-bilingual={showTranslation ? "true" : "false"}
-              >
-                <EditorColumn label={copy.original} htmlFor={lyricsId}>
-                  <textarea
-                    ref={lyricsRef}
-                    id={lyricsId}
-                    value={lyrics}
-                    onChange={onLyricsEditorChange}
-                    onFocus={(event) => onEditorFocus(event, "lyrics")}
-                    onSelect={(event) => updateCursor(event, "lyrics")}
-                    onKeyUp={(event) => updateCursor(event, "lyrics")}
-                    onClick={(event) => updateCursor(event, "lyrics")}
-                    wrap="soft"
-                    placeholder={t("lyricPlaceholder")}
-                    className="field-shell control-focus block min-h-[280px] min-w-0 w-full resize-none overflow-x-hidden overflow-y-hidden rounded-lg px-3 py-3 text-sm leading-[1.75]"
-                  />
-                </EditorColumn>
-                {showTranslation ? (
-                  <EditorColumn
-                    label={copy.translation}
-                    htmlFor={translationId}
-                  >
-                    <div
-                      className="rounded-[10px] p-px"
-                      style={{ background: `color-mix(in srgb, ${themeColor} 36%, rgb(var(--input-border)))` }}
-                    >
-                      <textarea
-                        ref={translationRef}
-                        id={translationId}
-                        value={translationText}
-                        onChange={onTranslationEditorChange}
-                        onFocus={(event) => onEditorFocus(event, "translation")}
-                        onSelect={(event) => updateCursor(event, "translation")}
-                        onKeyUp={(event) => updateCursor(event, "translation")}
-                        onClick={(event) => updateCursor(event, "translation")}
-                        wrap="soft"
-                        placeholder={t("translationPlaceholder")}
-                        className="field-shell control-focus block min-h-[280px] min-w-0 w-full resize-none overflow-x-hidden overflow-y-hidden rounded-[9px] border-transparent px-3 py-3 text-sm leading-[1.75]"
-                      />
-                    </div>
-                  </EditorColumn>
-                ) : null}
-              </div>
-            </div>
-          </section>
+      <LyricsCommandBar
+        copy={copy}
+        activeTab={sidebarTab}
+        activeTabLabel={activeTabLabel}
+        currentPosition={currentPosition}
+        scopeLabel={scopeLabel}
+        lineBudget={{
+          total: lineStatus.totalLineCount,
+          max: lineStatus.maxLineCount,
+          over: lineStatus.isOverLimit
+        }}
+        canUndo={historyRef.current.past.length > 0}
+        canRedo={historyRef.current.future.length > 0}
+        isAITranslating={isAITranslating}
+        sidebarExpanded={sidebarExpanded}
+        onUndo={undoOperation}
+        onRedo={redoOperation}
+        onOpen={openTab}
+        onToggleSidebar={toggleSidebar}
+      />
 
-          <LyricsToolsAside
+      <div
+        ref={split.viewportRef}
+        className="lyrics-workspace-split relative grid min-h-0 flex-1 min-w-0 overflow-hidden"
+        style={splitStyle}
+        data-side-by-side={sideBySide ? "true" : "false"}
+        data-sidebar-collapsed={sidebarCollapsed ? "true" : "false"}
+        data-mobile-sidebar-open={mobileSidebarOpen ? "true" : "false"}
+        data-editor-ratio={split.geometry.ratio.toFixed(4)}
+        data-testid="lyrics-workspace-split"
+      >
+        <section
+          id="lyrics-workspace-editor"
+          className="lyrics-document-column flex min-h-0 min-w-0 flex-col overflow-hidden bg-[rgb(var(--input-bg))]"
+          aria-label={copy.manuscript}
+        >
+          <span className="sr-only">{copy.sharedScrollHint}</span>
+          <div
+            ref={scrollRef}
+            className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain [scrollbar-gutter:stable]"
+            data-testid="lyrics-shared-scroll"
+          >
+            <div
+              className={cn(
+                "grid min-h-full min-w-0 items-start gap-3 p-3",
+                showTranslation
+                  ? "grid-cols-2 max-[620px]:grid-cols-1"
+                  : "mx-auto w-full max-w-[52rem] grid-cols-1"
+              )}
+              data-testid="lyrics-editor-columns"
+              data-bilingual={showTranslation ? "true" : "false"}
+            >
+              <EditorColumn label={copy.original} htmlFor={lyricsId}>
+                <textarea
+                  ref={lyricsRef}
+                  id={lyricsId}
+                  value={lyrics}
+                  onChange={onLyricsEditorChange}
+                  onFocus={(event) => onEditorFocus(event, "lyrics")}
+                  onSelect={(event) => updateCursor(event, "lyrics")}
+                  onKeyUp={(event) => updateCursor(event, "lyrics")}
+                  onClick={(event) => updateCursor(event, "lyrics")}
+                  wrap="soft"
+                  placeholder={t("lyricPlaceholder")}
+                  className="field-shell control-focus block min-h-[280px] min-w-0 w-full resize-none overflow-x-hidden overflow-y-hidden rounded-lg px-3 py-3 text-sm leading-[1.75]"
+                  data-testid="lyrics-editor-original"
+                />
+              </EditorColumn>
+              {showTranslation ? (
+                <EditorColumn label={copy.translation} htmlFor={translationId}>
+                  <div
+                    className="rounded-[10px] p-px"
+                    style={{ background: `color-mix(in srgb, ${themeColor} 36%, rgb(var(--input-border)))` }}
+                  >
+                    <textarea
+                      ref={translationRef}
+                      id={translationId}
+                      value={translationText}
+                      onChange={onTranslationEditorChange}
+                      onFocus={(event) => onEditorFocus(event, "translation")}
+                      onSelect={(event) => updateCursor(event, "translation")}
+                      onKeyUp={(event) => updateCursor(event, "translation")}
+                      onClick={(event) => updateCursor(event, "translation")}
+                      wrap="soft"
+                      placeholder={t("translationPlaceholder")}
+                      className="field-shell control-focus block min-h-[280px] min-w-0 w-full resize-none overflow-x-hidden overflow-y-hidden rounded-[9px] border-transparent px-3 py-3 text-sm leading-[1.75]"
+                      data-testid="lyrics-editor-translation"
+                    />
+                  </div>
+                </EditorColumn>
+              ) : null}
+            </div>
+          </div>
+        </section>
+
+        {!sideBySide && mobileSidebarOpen ? (
+          <button
+            type="button"
+            className="lyrics-sidebar-backdrop absolute inset-0 z-30 bg-black/35"
+            onClick={() => setMobileSidebarOpen(false)}
+            aria-label={copy.closeDrawer}
+            data-testid="lyrics-sidebar-backdrop"
+          />
+        ) : null}
+
+        {(sideBySide || mobileSidebarOpen) ? (
+          <LyricsSidebar
+            copy={copy}
+            activeTab={sidebarTab}
+            activeEditor={cursor.editor}
+            activeText={activeText}
+            selection={activeSelection}
             lyrics={lyrics}
-            song={song}
-            lineStatus={lineStatus}
-            lyricsStats={lyricsStats}
-            translationStats={translationStats}
-            showTranslation={showTranslation}
-            collapsed={toolsCollapsed}
-            collapsible={sideBySide}
-            onToggleCollapsed={() => {
-              viewport.captureAnchor();
-              onLayoutAction({ type: "toggle" });
-            }}
-            translationEnabled={translationEnabled}
             translationText={translationText}
-            onTranslationEnabledChange={(enabled) => {
-              viewport.captureAnchor();
-              onTranslationEnabledChange(enabled);
-            }}
-            onTranslationTextChange={(translation) => {
-              viewport.captureAnchor("translation");
-              onTranslationTextChange(translation);
-            }}
-            onSplitAlternatingLyrics={(nextLyrics, nextTranslation) => {
-              viewport.captureAnchor("lyrics");
-              onSplitAlternatingLyrics(nextLyrics, nextTranslation);
-            }}
-            onAITranslate={onAITranslate}
+            translationEnabled={translationEnabled}
+            lineStatus={lineStatus}
+            analysis={analysis}
+            song={song}
+            locale={locale}
+            themeColor={themeColor}
+            t={t}
+            collapsed={sidebarCollapsed}
+            collapsible={sideBySide}
+            mobileDrawer={!sideBySide}
+            feedback={feedback}
+            focusIntent={focusIntent}
             isAITranslating={isAITranslating}
             showAiTranslate={showAiTranslate}
-            themeColor={themeColor}
-            locale={locale}
-            t={t}
-            labels={copy}
-            lyricsFetchPanel={lyricsFetchPanel}
             aiPanel={aiPanel}
+            lyricsFetchPanel={lyricsFetchPanel}
+            onTabChange={onSidebarTabChange}
+            onOpenTab={(tab) => openTab(tab)}
+            onToggleCollapsed={toggleSidebar}
+            onCloseDrawer={() => setMobileSidebarOpen(false)}
+            onIntentHandled={() => setFocusIntent(null)}
+            onUndo={undoOperation}
+            onBlankCleanup={blankCleanup}
+            onCleanPaste={cleanPaste}
+            onStripLrc={cleanLrc}
+            onReplace={replaceText}
+            onMergeSelectedLines={mergeLines}
+            onRemoveParagraphTags={cleanParagraphTags}
+            onTranslationEnabledChange={handleTranslationEnabledChange}
+            onAITranslate={onAITranslate}
+            onSplitAlternatingLyrics={splitAlternating}
+            onFormatTranslation={formatTranslation}
+            onSwapColumns={swapColumns}
+            onLocate={locateIssue}
           />
-          {sideBySide && !layout.collapsed && split.geometry.viewportWidth > 0 ? (
-            <div
-              {...split.separatorProps}
-              role="separator"
-              aria-label={copy.resizeTools}
-              aria-controls="lyrics-workspace-editor lyrics-workspace-tools"
-              aria-orientation="vertical"
-              aria-valuemin={Math.round(split.geometry.minRatio * 100)}
-              aria-valuemax={Math.round(split.geometry.maxRatio * 100)}
-              aria-valuenow={Math.round(split.geometry.ratio * 100)}
-              aria-valuetext={`${Math.round(split.geometry.ratio * 100)}% / ${Math.round((1 - split.geometry.ratio) * 100)}%`}
-              tabIndex={0}
-              title={copy.resizeTools}
-              className="preview-workbench-resizer lyrics-workspace-resizer"
-              data-testid="lyrics-workspace-resizer"
-              data-dragging={split.isDragging ? "true" : "false"}
-              style={{
-                left: split.geometry.editorWidth,
-                width: split.geometry.gap
-              }}
-            />
-          ) : null}
-        </div>
+        ) : null}
 
+        {sideBySide && !layout.collapsed && split.geometry.viewportWidth > 0 ? (
+          <div
+            {...split.separatorProps}
+            role="separator"
+            aria-label={copy.resizeSidebar}
+            aria-controls="lyrics-workspace-editor lyrics-workspace-sidebar"
+            aria-orientation="vertical"
+            aria-valuemin={Math.round(split.geometry.minRatio * 100)}
+            aria-valuemax={Math.round(split.geometry.maxRatio * 100)}
+            aria-valuenow={Math.round(split.geometry.ratio * 100)}
+            aria-valuetext={`${Math.round(split.geometry.ratio * 100)}% / ${Math.round((1 - split.geometry.ratio) * 100)}%`}
+            tabIndex={0}
+            title={copy.resizeSidebar}
+            className="preview-workbench-resizer lyrics-workspace-resizer"
+            data-testid="lyrics-workspace-resizer"
+            data-dragging={split.isDragging ? "true" : "false"}
+            style={{
+              left: split.geometry.editorWidth,
+              width: split.geometry.gap
+            }}
+          />
+        ) : null}
+      </div>
     </div>
   );
 }
@@ -486,14 +805,26 @@ function EditorColumn({
   );
 }
 
-function getTextStats(text: string) {
-  const lines = text ? text.split(/\r?\n/).length : 0;
-  const paragraphs = text.trim()
-    ? text.trim().split(/(?:\r?\n){2,}/).filter((part) => part.trim().length > 0).length
-    : 0;
-  return { lines, characters: text.length, paragraphs };
+function cursorForSelection(
+  editor: LyricsWorkbenchEditor,
+  value: string,
+  selectionStart: number
+): CursorPosition {
+  const totalLines = Math.max(1, value ? value.split(/\r?\n/u).length : 1);
+  const line = value.slice(0, selectionStart).split(/\r?\n/u).length;
+  return { editor, line, totalLines };
 }
 
-function interpolate(template: string, values: Record<string, string>) {
-  return template.replace(/\{(\w+)\}/g, (match, key: string) => values[key] ?? match);
+function getTextStats(text: string) {
+  const lines = text ? text.split(/\r?\n/u).length : 0;
+  return { lines, characters: text.length };
+}
+
+function clampSelection(
+  selection: LyricsTextSelection,
+  textLength: number
+): LyricsTextSelection {
+  const start = Math.min(textLength, Math.max(0, selection.start));
+  const end = Math.min(textLength, Math.max(start, selection.end));
+  return { start, end };
 }

@@ -30,6 +30,7 @@ import {
   type EditorDocumentStateMutation,
   type TranslationValue
 } from "@/lib/editor/editor-document-state-adapter";
+import type { LyricsDocumentSnapshot } from "@/lib/lyrics-workbench";
 import type { ExampleLoadPayload } from "@/lib/examples";
 import type {
   AppState,
@@ -225,6 +226,20 @@ export function useEditorActions({
     }));
   }
 
+  function setLyricsDocument(snapshot: LyricsDocumentSnapshot) {
+    applyDocumentMutation((current) => ({
+      ...current,
+      lyrics: snapshot.lyrics,
+      translationText: snapshot.translationText,
+      translationEnabled: snapshot.translationEnabled,
+      style: {
+        ...current.style,
+        translationText: snapshot.translationText,
+        translationEnabled: snapshot.translationEnabled
+      }
+    }));
+  }
+
   function splitAlternatingLyrics(lyrics: string, translationText: string) {
     applyDocumentMutation((current) => ({
       ...current,
@@ -380,6 +395,7 @@ export function useEditorActions({
     setLyrics,
     setTranslationEnabled,
     setTranslationText,
+    setLyricsDocument,
     splitAlternatingLyrics,
     applyFetchedLyrics,
     loadExample,

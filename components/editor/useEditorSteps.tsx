@@ -25,6 +25,7 @@ import {
   createLyricsWorkspaceLayoutState,
   lyricsWorkspaceLayoutReducer
 } from "@/lib/lyrics-workspace-layout";
+import type { LyricsDocumentSnapshot, LyricsSidebarTab } from "@/lib/lyrics-workbench";
 import type { DocumentImportIntent, DocumentImportKind } from "@/lib/editor/document-transactions";
 import type {
   AppState,
@@ -57,6 +58,7 @@ export type EditorStepHandlers = {
   onLyricsChange: (lyrics: string) => void;
   onTranslationEnabledChange: (enabled: boolean) => void;
   onTranslationTextChange: (translationText: string) => void;
+  onLyricsDocumentChange: (snapshot: LyricsDocumentSnapshot) => void;
   onSplitAlternatingLyrics: (lyrics: string, translationText: string) => void;
   onOpenAiTranslate: () => void;
   onCloseAiTranslate: () => void;
@@ -106,6 +108,7 @@ export function useEditorSteps({
     undefined,
     createLyricsWorkspaceLayoutState
   );
+  const [lyricsSidebarTab, setLyricsSidebarTab] = useState<LyricsSidebarTab>("cleanup");
   const [songInfoDraft, setSongInfoDraft] = useState<SongInfo>(() => ({ ...state.song }));
   const [songInfoEditRevision, setSongInfoEditRevision] = useState<number | null>(null);
   const songInfoRegionId = useId();
@@ -261,6 +264,8 @@ export function useEditorSteps({
             song={state.song}
             lineStatus={lyricsLayout.lineStatus}
             workspaceLayout={lyricsWorkspaceLayout}
+            sidebarTab={lyricsSidebarTab}
+            onSidebarTabChange={setLyricsSidebarTab}
             onWorkspaceLayoutAction={dispatchLyricsWorkspaceLayout}
             presentation="workspace"
             onLyricsChange={handlers.onLyricsChange}
@@ -268,6 +273,7 @@ export function useEditorSteps({
             translationText={state.style.translationText}
             onTranslationEnabledChange={handlers.onTranslationEnabledChange}
             onTranslationTextChange={handlers.onTranslationTextChange}
+            onLyricsDocumentChange={handlers.onLyricsDocumentChange}
             onSplitAlternatingLyrics={handlers.onSplitAlternatingLyrics}
             onAITranslate={handlers.onOpenAiTranslate}
             isAITranslating={ai.isTranslating}
@@ -288,7 +294,7 @@ export function useEditorSteps({
                 onConfirm={handlers.onConfirmAiTranslate}
               />
             ) : null}
-            lyricsFetchPanel={canFetchLyrics && !ai.isOpen ? (
+            lyricsFetchPanel={canFetchLyrics ? (
               <LyricsFetchPanel
                 song={state.song}
                 visible

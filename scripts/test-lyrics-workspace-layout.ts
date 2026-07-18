@@ -128,15 +128,19 @@ assert.equal(COLLAPSED_TOOLS_WIDTH, 64, "the collapsed tool rail stays approxima
 
 const editorStepsSource = readFileSync(resolve("components/editor/useEditorSteps.tsx"), "utf8");
 const workspaceSource = readFileSync(resolve("components/editor/LyricsWorkspace.tsx"), "utf8");
-const toolsSource = readFileSync(resolve("components/editor/LyricsToolsAside.tsx"), "utf8");
+const commandBarSource = readFileSync(resolve("components/editor/LyricsCommandBar.tsx"), "utf8");
+const sidebarSource = readFileSync(resolve("components/editor/LyricsSidebar.tsx"), "utf8");
+const copySource = readFileSync(resolve("components/editor/lyrics-workspace-copy.ts"), "utf8");
 const resizableSource = readFileSync(resolve("components/editor/hooks/useResizableSplit.ts"), "utf8");
 const stepperSource = readFileSync(resolve("components/editor/SettingsStepper.tsx"), "utf8");
+const globalsSource = readFileSync(resolve("app/globals.css"), "utf8");
 
 assert.ok(
-  editorStepsSource.includes("useReducer(") &&
-    editorStepsSource.includes("lyricsWorkspaceLayoutReducer") &&
-    editorStepsSource.includes("workspaceLayout={lyricsWorkspaceLayout}"),
-  "the split state is owned above the step-two content lifecycle"
+    editorStepsSource.includes("useReducer(") &&
+      editorStepsSource.includes("lyricsWorkspaceLayoutReducer") &&
+      editorStepsSource.includes('useState<LyricsSidebarTab>("cleanup")') &&
+      editorStepsSource.includes("workspaceLayout={lyricsWorkspaceLayout}"),
+  "split and active-tab state are owned above the step-two content lifecycle"
 );
 assert.ok(
   workspaceSource.includes('data-testid="lyrics-workspace-resizer"') &&
@@ -157,16 +161,66 @@ assert.ok(
 assert.ok(
   workspaceSource.includes('data-testid="lyrics-shared-scroll"') &&
     (workspaceSource.match(/overflow-y-auto/g)?.length ?? 0) === 1 &&
-    workspaceSource.includes('data-testid="lyrics-editor-status"'),
-  "the two editors retain one shared vertical scroller and one compact sticky status bar"
+    workspaceSource.includes("<LyricsCommandBar"),
+  "the two editors retain one shared vertical scroller beneath one compact command bar"
 );
 assert.ok(
-  toolsSource.includes('data-collapsed={collapsed ? "true" : "false"}') &&
-    toolsSource.includes('testId="lyrics-tool-ai-collapsed"') &&
-    toolsSource.includes('data-testid="translation-toggle"') &&
-    toolsSource.includes('testId="lyrics-tool-split-collapsed"') &&
-    toolsSource.includes('data-testid="lyrics-line-budget"'),
-  "the collapsed rail keeps every required essential control"
+  sidebarSource.includes('data-collapsed={collapsed ? "true" : "false"}') &&
+    sidebarSource.includes('testId={`lyrics-sidebar-tab-${tab}`}') &&
+    sidebarSource.includes('data-testid="lyrics-line-budget"') &&
+    !sidebarSource.includes("lyrics-tool-split-collapsed"),
+  "the collapsed rail keeps stable tab icons and status without duplicating every tool"
+);
+assert.ok(
+  commandBarSource.includes('role="toolbar"') &&
+    commandBarSource.includes('testId="lyrics-command-undo"') &&
+    commandBarSource.includes('testId="lyrics-command-redo"') &&
+    commandBarSource.includes('testId="lyrics-command-blank"') &&
+    commandBarSource.includes('testId="lyrics-command-find"') &&
+    commandBarSource.includes('testId="lyrics-command-ai"') &&
+    commandBarSource.includes('data-testid="lyrics-command-budget"') &&
+    commandBarSource.includes("copy.lineBudgetLabel"),
+  "the compact command bar exposes history, cleanup, find, AI, budget, and sidebar controls"
+);
+assert.ok(
+  sidebarSource.includes('role="tablist"') &&
+    sidebarSource.includes('tab="cleanup"') &&
+    sidebarSource.includes('tab="translation"') &&
+    sidebarSource.includes('tab="review"') &&
+    sidebarSource.includes('tab="source"') &&
+    sidebarSource.includes("hidden={activeTab !== tab}") &&
+    sidebarSource.includes('event.key === "ArrowRight"') &&
+    sidebarSource.includes("tabIndex={activeTab === tab ? 0 : -1}"),
+  "all four stable panels remain mounted and expose roving keyboard tab navigation"
+);
+assert.ok(
+  editorStepsSource.includes("lyricsFetchPanel={canFetchLyrics ? (") &&
+    !editorStepsSource.includes("canFetchLyrics && !ai.isOpen"),
+  "the source panel no longer disappears when the AI translation panel opens"
+);
+assert.ok(
+  workspaceSource.includes("cleanSynchronizedBlankRows") &&
+    sidebarSource.includes("alignedColumnsHint") &&
+    sidebarSource.includes('testId="lyrics-cleanup-scope-synchronized"') &&
+    sidebarSource.includes('data-testid="lyrics-cleanup-scope-summary"') &&
+    sidebarSource.includes('testId="lyrics-cleanup-blank-all-preview"') &&
+    sidebarSource.includes('testId="lyrics-cleanup-blank-all"'),
+  "two-column blank cleanup is explicit, previewed, and keeps the active scope visible"
+);
+assert.ok(
+  globalsSource.includes(".lyrics-sidebar--drawer") &&
+    globalsSource.includes("position: absolute") &&
+    workspaceSource.includes('data-testid="lyrics-sidebar-backdrop"'),
+  "narrow layouts use an overlay drawer instead of shrinking the editor"
+);
+for (const locale of ['zh:', '"zh-TW":', 'en:', 'fr:', 'ja:', 'es:']) {
+  assert.ok(copySource.includes(locale), `workspace copy includes ${locale}`);
+}
+assert.ok(
+  copySource.includes("duplicateLineIssue") &&
+    sidebarSource.includes("issue.kind === \"duplicate-line\"") &&
+    !sidebarSource.includes("removeDuplicate"),
+  "duplicate lines are reported for navigation and never silently deleted"
 );
 assert.ok(
   !stepperSource.includes("useLyricsWorkspaceSplit") &&
@@ -174,4 +228,4 @@ assert.ok(
   "the step-two split stays inside LyricsWorkspace and leaves the shared Stepper structure unchanged"
 );
 
-console.log(JSON.stringify({ ok: true, lyricsWorkspaceLayoutTests: 30 }, null, 2));
+console.log(JSON.stringify({ ok: true, lyricsWorkspaceLayoutTests: 40 }, null, 2));

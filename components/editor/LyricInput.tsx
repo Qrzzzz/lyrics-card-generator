@@ -13,6 +13,10 @@ import type {
   LyricsWorkspaceLayoutAction,
   LyricsWorkspaceLayoutState
 } from "@/lib/lyrics-workspace-layout";
+import type {
+  LyricsDocumentSnapshot,
+  LyricsSidebarTab
+} from "@/lib/lyrics-workbench";
 import { formatChineseTranslation, splitAlternatingLyrics } from "@/lib/lyric-format";
 import type { ContentMode, Locale, SongInfo } from "@/lib/types";
 
@@ -21,6 +25,8 @@ export function LyricInput({
   song,
   lineStatus,
   workspaceLayout,
+  sidebarTab,
+  onSidebarTabChange,
   onWorkspaceLayoutAction,
   presentation = "legacy",
   onLyricsChange,
@@ -28,6 +34,7 @@ export function LyricInput({
   translationText,
   onTranslationEnabledChange,
   onTranslationTextChange,
+  onLyricsDocumentChange,
   onSplitAlternatingLyrics,
   onAITranslate,
   isAITranslating,
@@ -43,6 +50,8 @@ export function LyricInput({
   song?: SongInfo;
   lineStatus?: ExportLyricLineStatus;
   workspaceLayout?: LyricsWorkspaceLayoutState;
+  sidebarTab?: LyricsSidebarTab;
+  onSidebarTabChange?: (tab: LyricsSidebarTab) => void;
   onWorkspaceLayoutAction?: (action: LyricsWorkspaceLayoutAction) => void;
   presentation?: "legacy" | "workspace";
   onLyricsChange: (lyrics: string) => void;
@@ -50,6 +59,7 @@ export function LyricInput({
   translationText: string;
   onTranslationEnabledChange: (enabled: boolean) => void;
   onTranslationTextChange: (translation: string) => void;
+  onLyricsDocumentChange?: (snapshot: LyricsDocumentSnapshot) => void;
   onSplitAlternatingLyrics: (lyrics: string, translationText: string) => void;
   onAITranslate: () => void;
   isAITranslating: boolean;
@@ -63,20 +73,31 @@ export function LyricInput({
 }) {
   const translationFieldId = useId();
 
-  if (presentation === "workspace" && song && lineStatus && workspaceLayout && onWorkspaceLayoutAction) {
+  if (
+    presentation === "workspace" &&
+    song &&
+    lineStatus &&
+    workspaceLayout &&
+    sidebarTab &&
+    onSidebarTabChange &&
+    onWorkspaceLayoutAction &&
+    onLyricsDocumentChange
+  ) {
     return (
       <LyricsWorkspace
         lyrics={lyrics}
         song={song}
         lineStatus={lineStatus}
         layout={workspaceLayout}
+        sidebarTab={sidebarTab}
+        onSidebarTabChange={onSidebarTabChange}
         onLayoutAction={onWorkspaceLayoutAction}
         onLyricsChange={onLyricsChange}
         translationEnabled={translationEnabled}
         translationText={translationText}
         onTranslationEnabledChange={onTranslationEnabledChange}
         onTranslationTextChange={onTranslationTextChange}
-        onSplitAlternatingLyrics={onSplitAlternatingLyrics}
+        onLyricsDocumentChange={onLyricsDocumentChange}
         onAITranslate={onAITranslate}
         isAITranslating={isAITranslating}
         aiPanel={aiTranslatePanel}
