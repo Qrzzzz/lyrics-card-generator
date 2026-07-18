@@ -1120,8 +1120,8 @@ button {
   min-height: 0;
   min-width: 0;
   grid-template-columns: 1fr;
-  grid-template-rows: minmax(0, 1fr) minmax(9rem, 40%);
-  gap: 0.75rem;
+  grid-template-rows: minmax(0, 1fr);
+  gap: 0;
 }
 
 .lyrics-workspace-split[data-side-by-side="true"] {
@@ -1129,17 +1129,18 @@ button {
   align-items: stretch;
 }
 
-.lyrics-workspace-split[data-side-by-side="false"] .lyrics-tools-aside {
-  border-top: 1px solid rgb(var(--panel-border));
-}
-
-.lyrics-workspace-split[data-tools-collapsed="true"] .lyrics-tools-aside {
+.lyrics-workspace-split[data-side-by-side="true"] .lyrics-sidebar {
   border-left: 1px solid rgb(var(--panel-border));
 }
 
+.lyrics-command-bar {
+  min-width: 0;
+  scrollbar-width: none;
+}
+
 .lyrics-document-column,
-.lyrics-tools-aside,
-.lyrics-editor-status {
+.lyrics-sidebar,
+.lyrics-command-bar {
   min-width: 0;
 }
 
@@ -1148,13 +1149,48 @@ button {
   bottom: 0;
 }
 
-.lyrics-tools-aside--collapsed .app-button {
-  width: 2.5rem;
-  min-width: 2.5rem;
+.lyrics-sidebar--collapsed {
+  border-left: 1px solid rgb(var(--panel-border));
 }
 
-.lyrics-tools-summary {
+.lyrics-sidebar--collapsed .app-button {
+  width: 2.25rem;
+  min-width: 2.25rem;
+}
+
+.lyrics-sidebar--drawer {
+  position: absolute;
+  z-index: 40;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: min(62%, 30rem);
+  min-height: 16rem;
+  background: rgb(var(--elevated-panel-bg));
+  border-top: 1px solid rgb(var(--panel-border));
+  border-radius: 0.75rem 0.75rem 0 0;
+  box-shadow: 0 -24px 64px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(28px) saturate(1.15);
+  animation: lyrics-drawer-enter var(--motion-duration-normal) var(--motion-ease-standard);
+}
+
+.lyrics-sidebar-panel {
   scrollbar-gutter: stable;
+}
+
+.lyrics-sidebar-panel[hidden] {
+  display: none;
+}
+
+@keyframes lyrics-drawer-enter {
+  from {
+    opacity: 0;
+    transform: translateY(1rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @media (max-height: 900px) {
@@ -1170,114 +1206,14 @@ button {
     gap: 0.75rem;
   }
 
-  .lyrics-tools-aside {
+  .lyrics-sidebar-panel {
     padding: 0.5rem;
-  }
-
-  .lyrics-summary-metric__detail {
-    display: none !important;
-  }
-
-  .lyrics-song-summary__cover {
-    width: 2rem;
-    height: 2rem;
-  }
-
-  .lyrics-song-summary,
-  .lyrics-summary-metrics {
-    margin-top: 0.5rem;
-  }
-
-  .lyrics-song-summary,
-  .lyrics-summary-metric,
-  .lyrics-line-budget {
-    padding: 0.25rem;
-  }
-
-  .lyrics-summary-metrics {
-    gap: 0.25rem;
-  }
-
-  .lyrics-summary-metric {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    align-items: center;
-    gap: 0.25rem;
-  }
-
-  .lyrics-summary-metric dd:not(.lyrics-summary-metric__detail) {
-    min-width: 0;
-    margin-top: 0;
-    overflow: hidden;
-    line-height: 1.25;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .lyrics-line-budget {
-    font-size: 0.625rem;
-    line-height: 1.25;
-  }
-
-  .lyrics-line-budget__error {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-  }
-
-  .lyrics-tools-aside__body {
-    gap: 0.25rem;
-  }
-
-  .lyrics-tools-aside__actions {
-    gap: 0.25rem;
-  }
-
-  .lyrics-tools-aside__actions {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .lyrics-tool-ai,
-  .lyrics-tool-split,
-  .lyrics-tool-format {
-    min-width: 0;
-  }
-
-  .lyrics-tool-ai .ai-translate-trigger,
-  .lyrics-tool-split,
-  .lyrics-tool-format {
-    height: 2.25rem;
-    padding-inline: 0.5rem;
-    font-size: 0.6875rem;
-  }
-
-  .lyrics-tool-ai .ai-translate-trigger {
-    width: 100%;
-  }
-
-  .lyrics-tool-ai .ai-translate-trigger__content {
-    max-width: 100%;
-    gap: 0.25rem;
-  }
-
-  .lyrics-tool-translation {
-    grid-column: 1 / -1;
-    height: 2.25rem;
-  }
-
-  .lyrics-tools-aside [data-testid="lyrics-fetch-panel-boundary"],
-  .lyrics-tools-aside [data-testid="lyrics-ai-panel-boundary"] {
-    min-height: 1.5rem;
   }
 }
 
-@media (max-width: 1100px) {
-  .lyrics-tools-aside__actions {
-    grid-template-columns: minmax(0, 1fr);
+@media (prefers-reduced-motion: reduce) {
+  .lyrics-sidebar--drawer {
+    animation: none;
   }
 }
 

@@ -19,7 +19,7 @@
 <p>
   <strong>Navegación</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Descargar la última versión</a> ·
-  <a href="./docs/releases/v5.7.3.es.md">Notas de la versión</a> ·
+  <a href="./docs/releases/v5.8.0.es.md">Notas de la versión</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en línea</a> ·
   <a href="#funciones-principales">Funciones principales</a> ·
   <a href="#desarrollo-local">Desarrollo local</a> ·
@@ -51,23 +51,23 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 Descarga la versión más reciente desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Instalador recomendado: `Lyrics Card Generator Setup 5.7.3.exe`
-* Versión portable: `Lyrics Card Generator-5.7.3-portable.exe`
+* Instalador recomendado: `Lyrics Card Generator Setup 5.8.0.exe`
+* Versión portable: `Lyrics Card Generator-5.8.0-portable.exe`
 
 El instalador se recomienda para uso habitual. La versión portable es útil para pruebas, uso temporal o ejecución desde una unidad extraíble.
 
 > La compilación actual no está firmada. Windows puede mostrar una advertencia de SmartScreen, algo habitual en aplicaciones personales sin firma.
 
-### Aspectos destacados de la versión 5.7.3
+### Aspectos destacados de la versión 5.8.0
 
-* Reconstruye el paso 2 como un espacio de dos columnas centrado en la edición: el editor ocupa 3/4 de forma predeterminada y las herramientas pueden ampliarse hasta 1/3 o plegarse en una barra rápida de unos 64 px.
-* Mantiene un lienzo centrado y cómodo con un solo idioma; en modo bilingüe, ambos editores comparten por igual todo el espacio y conservan un único desplazamiento principal, el cursor y el ancla de línea lógica.
-* La barra plegada mantiene la traducción con IA, el interruptor de traducción, la separación bilingüe y el estado de 36 líneas; el Stepper superior, la división de los pasos 3–5 y los límites de seguridad de exportación no cambian.
+* Añade al paso 2 una barra de comandos compacta de unos 44 px con el panel activo y la línea del cursor, además de deshacer/rehacer, limpieza de líneas vacías, búsqueda, traducción con IA y el presupuesto pulsable de 36 líneas.
+* Estabiliza la barra lateral en cuatro pestañas: Limpieza, Traducción, Revisión y Fuente. El alcance prioritario a la selección, la limpieza alineada de ambas columnas, las vistas previas y el deshacer inmediato evitan cambios destructivos silenciosos.
+* Conserva un único desplazamiento compartido y las anclas de selección. En escritorio la barra lateral se puede redimensionar/plegar; en pantallas estrechas usa un cajón superpuesto que no comprime la letra. El Stepper principal no cambia.
 
 ## 🌐 Notas de publicación multilingües
 
 GitHub Release muestra de forma predeterminada un resumen en chino simplificado. Consulta las notas completas:
-[简体中文](./docs/releases/v5.7.3.zh-CN.md) · [繁體中文](./docs/releases/v5.7.3.zh-TW.md) · [English](./docs/releases/v5.7.3.en.md) · [Français](./docs/releases/v5.7.3.fr.md) · [日本語](./docs/releases/v5.7.3.ja.md) · [Español](./docs/releases/v5.7.3.es.md)
+[简体中文](./docs/releases/v5.8.0.zh-CN.md) · [繁體中文](./docs/releases/v5.8.0.zh-TW.md) · [English](./docs/releases/v5.8.0.en.md) · [Français](./docs/releases/v5.8.0.fr.md) · [日本語](./docs/releases/v5.8.0.ja.md) · [Español](./docs/releases/v5.8.0.es.md)
 
 <a id="funciones-principales"></a>
 

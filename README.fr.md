@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v5.7.3.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v5.8.0.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="#développement-local">Développement local</a> ·
@@ -51,23 +51,23 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 Téléchargez la dernière version depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
 
-* Installateur recommandé : `Lyrics Card Generator Setup 5.7.3.exe`
-* Version portable : `Lyrics Card Generator-5.7.3-portable.exe`
+* Installateur recommandé : `Lyrics Card Generator Setup 5.8.0.exe`
+* Version portable : `Lyrics Card Generator-5.8.0-portable.exe`
 
 L'installateur est recommandé pour une utilisation régulière. La version portable convient aux essais, à une utilisation temporaire ou à un disque amovible.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### Points clés de la v5.7.3
+### Points clés de la v5.8.0
 
-* Reconstruit l’étape 2 autour de l’édition, avec deux colonnes : l’éditeur occupe 3/4 par défaut, tandis que les outils peuvent atteindre 1/3 ou se replier en une barre rapide d’environ 64 px.
-* Conserve une feuille centrée et confortable en mode monolingue ; en mode bilingue, les deux éditeurs se partagent tout l’espace et gardent un seul défilement principal, le curseur et l’ancre de ligne logique.
-* La barre repliée conserve la traduction IA, l’activation de la traduction, la séparation bilingue et l’état des 36 lignes ; le Stepper supérieur, le partage des étapes 3 à 5 et les limites de sécurité d’export restent inchangés.
+* Ajoute à l’étape 2 une barre de commandes d’environ 44 px avec le panneau actif et la ligne du curseur, ainsi que l’annulation/rétablissement, le nettoyage des lignes vides, la recherche, la traduction IA et le budget cliquable de 36 lignes.
+* Stabilise la barre latérale en quatre onglets : Nettoyage, Traduction, Vérification et Source. La portée prioritaire à la sélection, le nettoyage aligné des deux colonnes, les aperçus et l’annulation immédiate évitent les modifications destructrices silencieuses.
+* Conserve un seul défilement partagé et les ancres de sélection. La barre latérale reste redimensionnable/repliable sur ordinateur et devient un tiroir superposé sur écran étroit, sans comprimer les paroles. Le Stepper principal ne change pas.
 
 ## 🌐 Notes de publication multilingues
 
 Par défaut, GitHub Release affiche un résumé en chinois simplifié. Consultez les notes complètes :
-[简体中文](./docs/releases/v5.7.3.zh-CN.md) · [繁體中文](./docs/releases/v5.7.3.zh-TW.md) · [English](./docs/releases/v5.7.3.en.md) · [Français](./docs/releases/v5.7.3.fr.md) · [日本語](./docs/releases/v5.7.3.ja.md) · [Español](./docs/releases/v5.7.3.es.md)
+[简体中文](./docs/releases/v5.8.0.zh-CN.md) · [繁體中文](./docs/releases/v5.8.0.zh-TW.md) · [English](./docs/releases/v5.8.0.en.md) · [Français](./docs/releases/v5.8.0.fr.md) · [日本語](./docs/releases/v5.8.0.ja.md) · [Español](./docs/releases/v5.8.0.es.md)
 
 <a id="fonctionnalités-principales"></a>
 

@@ -284,7 +284,8 @@ assert.ok(
 );
 
 const lyricsWorkspaceSource = readFileSync(resolve("components/editor/LyricsWorkspace.tsx"), "utf8");
-const lyricsToolsSource = readFileSync(resolve("components/editor/LyricsToolsAside.tsx"), "utf8");
+const lyricsCommandBarSource = readFileSync(resolve("components/editor/LyricsCommandBar.tsx"), "utf8");
+const lyricsSidebarSource = readFileSync(resolve("components/editor/LyricsSidebar.tsx"), "utf8");
 const globalsSource = readFileSync(resolve("app/globals.css"), "utf8");
 assert.ok(
   globalsSource.includes(".preview-workbench-track") &&
@@ -308,11 +309,12 @@ assert.ok(
   "settings groups derive compact columns from their own available width"
 );
 assert.ok(
-  lyricsWorkspaceSource.includes('className="relative flex min-h-0 flex-col overflow-hidden"') &&
+  lyricsWorkspaceSource.includes("relative flex min-h-0 flex-col overflow-hidden") &&
     lyricsWorkspaceSource.includes("lyrics-workspace-split") &&
     lyricsWorkspaceSource.includes("lyrics-document-column") &&
-    lyricsToolsSource.includes("lyrics-tools-aside"),
-  "the lyrics workspace uses an internal editor/tools split without framed panel shells"
+    lyricsCommandBarSource.includes('role="toolbar"') &&
+    lyricsSidebarSource.includes("lyrics-sidebar"),
+  "the lyrics workspace uses a semantic command bar and internal editor/sidebar split without framed panel shells"
 );
 assert.ok(
   globalsSource.includes(".lyrics-workspace-resizer") &&
