@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import {
   type KeyboardEvent,
+  type Ref,
   type ReactNode,
   useEffect,
   useMemo,
@@ -62,6 +63,7 @@ type LyricsSidebarProps = {
   locale: Locale;
   themeColor: string;
   t: ReturnType<typeof createT>;
+  open: boolean;
   collapsed: boolean;
   collapsible: boolean;
   mobileDrawer: boolean;
@@ -72,7 +74,7 @@ type LyricsSidebarProps = {
   aiPanel?: ReactNode;
   lyricsFetchPanel?: ReactNode;
   onTabChange: (tab: LyricsSidebarTab) => void;
-  onOpenTab: (tab: LyricsSidebarTab) => void;
+  onOpenTab: (tab: LyricsSidebarTab, intent?: LyricsCommandIntent) => void;
   onToggleCollapsed: () => void;
   onCloseDrawer: () => void;
   onIntentHandled: () => void;
@@ -97,6 +99,7 @@ export function LyricsSidebar(props: LyricsSidebarProps) {
   const {
     copy,
     activeTab,
+    open,
     collapsed,
     collapsible,
     mobileDrawer,
@@ -113,6 +116,8 @@ export function LyricsSidebar(props: LyricsSidebarProps) {
     onUndo
   } = props;
   const intentTargets = useRef<Partial<Record<LyricsCommandIntent, HTMLElement | null>>>({});
+  const closeDrawerButtonRef = useRef<HTMLButtonElement | null>(null);
+  const drawerOpenRef = useRef(false);
   const reviewCount = analysis.issues.length + (analysis.lineDifference === 0 ? 0 : 1) + (lineStatus.isOverLimit ? 1 : 0);
 
   function onTabKeyDown(event: KeyboardEvent<HTMLButtonElement>, tab: LyricsSidebarTab) {
@@ -136,18 +141,68 @@ export function LyricsSidebar(props: LyricsSidebarProps) {
   }
 
   useEffect(() => {
-    if (!focusIntent || collapsed) return;
+    if (!open || !focusIntent || collapsed) return;
     const frame = window.requestAnimationFrame(() => {
       intentTargets.current[focusIntent]?.focus({ preventScroll: true });
       onIntentHandled();
     });
     return () => window.cancelAnimationFrame(frame);
-  }, [activeTab, collapsed, focusIntent, onIntentHandled]);
+  }, [activeTab, collapsed, focusIntent, onIntentHandled, open]);
+
+  useEffect(() => {
+    const drawerOpen = open && mobileDrawer;
+    const wasOpen = drawerOpenRef.current;
+    drawerOpenRef.current = drawerOpen;
+    if (!drawerOpen || wasOpen || focusIntent) return;
+    const frame = window.requestAnimationFrame(() => {
+      closeDrawerButtonRef.current?.focus({ preventScroll: true });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [focusIntent, mobileDrawer, open]);
+
+  function openCollapsedTab(tab: LyricsSidebarTab) {
+    onOpenTab(tab);
+    window.requestAnimationFrame(() => {
+      document.getElementById(`lyrics-sidebar-tab-${tab}`)?.focus({ preventScroll: true });
+    });
+  }
+
+  function onDrawerKeyDown(event: KeyboardEvent<HTMLElement>) {
+    if (!mobileDrawer) return;
+    if (event.key === "Escape") {
+      event.preventDefault();
+      event.stopPropagation();
+      onCloseDrawer();
+      return;
+    }
+    if (event.key !== "Tab") return;
+
+    const focusable = [...event.currentTarget.querySelectorAll<HTMLElement>(
+      'button:not(:disabled), input:not(:disabled), textarea:not(:disabled), select:not(:disabled), [href], [tabindex]:not([tabindex="-1"])'
+    )].filter((node) => !node.closest("[hidden]") && node.getClientRects().length > 0);
+    if (focusable.length === 0) {
+      event.preventDefault();
+      return;
+    }
+    const first = focusable[0];
+    const last = focusable.at(-1)!;
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus({ preventScroll: true });
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus({ preventScroll: true });
+    }
+  }
 
   return (
     <aside
       id="lyrics-workspace-sidebar"
       aria-label={copy.sidebar}
+      aria-modal={mobileDrawer ? true : undefined}
+      role={mobileDrawer ? "dialog" : undefined}
+      hidden={!open}
+      onKeyDown={onDrawerKeyDown}
       className={cn(
         "lyrics-sidebar app-text-muted h-full min-h-0 min-w-0 overflow-hidden bg-[rgb(var(--panel-bg))]",
         collapsed && "lyrics-sidebar--collapsed",
@@ -158,43 +213,44 @@ export function LyricsSidebar(props: LyricsSidebarProps) {
       data-mobile-drawer={mobileDrawer ? "true" : "false"}
       data-active-tab={activeTab}
     >
-      {collapsed ? (
-        <div className="flex h-full min-h-0 flex-col items-center gap-2 p-2">
-          <SidebarIconButton
-            label={copy.expandSidebar}
-            testId="lyrics-sidebar-collapse"
-            onClick={onToggleCollapsed}
-            icon={<PanelRightOpen className="size-4" />}
-          />
-          <div className="h-px w-7 bg-[rgb(var(--panel-border))]" aria-hidden="true" />
-          <nav className="flex flex-col gap-2" aria-label={copy.sidebar}>
-            {TABS.map((tab) => (
-              <SidebarIconButton
-                key={tab}
-                label={tabLabel(copy, tab)}
-                testId={`lyrics-sidebar-tab-${tab}`}
-                onClick={() => onOpenTab(tab)}
-                active={activeTab === tab}
-                badge={tab === "review" ? reviewCount : tab === "source" && lyricsFetchPanel ? 1 : 0}
-                icon={tabIcon(tab)}
-              />
-            ))}
-          </nav>
-          <button
-            type="button"
-            className={cn(
-              "mt-auto w-full rounded-md border px-1 py-2 text-center font-mono text-[10px] font-bold",
-              lineStatus.isOverLimit ? "status-danger" : "status-idle"
-            )}
-            onClick={() => onOpenTab("review")}
-            aria-label={`${copy.lineBudgetLabel}: ${lineStatus.totalLineCount}/${lineStatus.maxLineCount}`}
-            data-testid="lyrics-line-budget"
-          >
-            {lineStatus.totalLineCount}/{lineStatus.maxLineCount}
-          </button>
-        </div>
-      ) : (
-        <div className="flex h-full min-h-0 flex-col">
+      <div className={cn("h-full min-h-0", !collapsed && "flex flex-col")}>
+        {collapsed ? (
+          <div className="flex h-full min-h-0 flex-col items-center gap-2 p-2">
+            <SidebarIconButton
+              label={copy.expandSidebar}
+              testId="lyrics-sidebar-collapse"
+              onClick={onToggleCollapsed}
+              icon={<PanelRightOpen className="size-4" />}
+            />
+            <div className="h-px w-7 bg-[rgb(var(--panel-border))]" aria-hidden="true" />
+            <nav className="flex flex-col gap-2" aria-label={copy.sidebar}>
+              {TABS.map((tab) => (
+                <SidebarIconButton
+                  key={tab}
+                  label={tabLabel(copy, tab)}
+                  testId={`lyrics-sidebar-tab-${tab}`}
+                  onClick={() => openCollapsedTab(tab)}
+                  active={activeTab === tab}
+                  badge={tab === "review" ? reviewCount : tab === "source" && lyricsFetchPanel ? 1 : 0}
+                  icon={tabIcon(tab)}
+                />
+              ))}
+            </nav>
+            <button
+              type="button"
+              className={cn(
+                "mt-auto w-full rounded-md border px-1 py-2 text-center font-mono text-[10px] font-bold",
+                lineStatus.isOverLimit ? "status-danger" : "status-idle"
+              )}
+              onClick={() => onOpenTab("review", "budget")}
+              aria-label={`${copy.lineBudgetLabel}: ${lineStatus.totalLineCount}/${lineStatus.maxLineCount}`}
+              data-testid="lyrics-sidebar-budget"
+            >
+              {lineStatus.totalLineCount}/{lineStatus.maxLineCount}
+            </button>
+          </div>
+        ) : (
+          <>
           <header className="flex h-11 shrink-0 items-center gap-2 border-b border-[rgb(var(--panel-border))] px-2.5">
             <p className="app-text-primary min-w-0 flex-1 truncate text-xs font-semibold">{copy.sidebar}</p>
             {mobileDrawer ? (
@@ -203,6 +259,7 @@ export function LyricsSidebar(props: LyricsSidebarProps) {
                 testId="lyrics-sidebar-close-drawer"
                 onClick={onCloseDrawer}
                 icon={<X className="size-4" />}
+                buttonRef={closeDrawerButtonRef}
               />
             ) : collapsible ? (
               <SidebarIconButton
@@ -266,33 +323,37 @@ export function LyricsSidebar(props: LyricsSidebarProps) {
               ) : null}
             </div>
           ) : null}
+          </>
+        )}
 
-          <div className="min-h-0 flex-1 overflow-hidden">
-            <SidebarPanel tab="cleanup" activeTab={activeTab}>
-              <CleanupPanel
-                {...props}
-                blankIntentRef={(node) => { intentTargets.current.blank = node; }}
-                findIntentRef={(node) => { intentTargets.current.find = node; }}
-              />
-            </SidebarPanel>
-            <SidebarPanel tab="translation" activeTab={activeTab}>
-              <TranslationPanel
-                {...props}
-                aiIntentRef={(node) => { intentTargets.current.ai = node; }}
-              />
-            </SidebarPanel>
-            <SidebarPanel tab="review" activeTab={activeTab}>
-              <ReviewPanel
-                {...props}
-                budgetIntentRef={(node) => { intentTargets.current.budget = node; }}
-              />
-            </SidebarPanel>
-            <SidebarPanel tab="source" activeTab={activeTab}>
-              <SourcePanel {...props} />
-            </SidebarPanel>
-          </div>
+        <div
+          className={cn("min-h-0 flex-1 overflow-hidden", collapsed && "hidden")}
+          data-testid="lyrics-sidebar-panels"
+        >
+          <SidebarPanel tab="cleanup" activeTab={activeTab}>
+            <CleanupPanel
+              {...props}
+              blankIntentRef={(node) => { intentTargets.current.blank = node; }}
+              findIntentRef={(node) => { intentTargets.current.find = node; }}
+            />
+          </SidebarPanel>
+          <SidebarPanel tab="translation" activeTab={activeTab}>
+            <TranslationPanel
+              {...props}
+              aiIntentRef={(node) => { intentTargets.current.ai = node; }}
+            />
+          </SidebarPanel>
+          <SidebarPanel tab="review" activeTab={activeTab}>
+            <ReviewPanel
+              {...props}
+              budgetIntentRef={(node) => { intentTargets.current.budget = node; }}
+            />
+          </SidebarPanel>
+          <SidebarPanel tab="source" activeTab={activeTab}>
+            <SourcePanel {...props} />
+          </SidebarPanel>
         </div>
-      )}
+      </div>
     </aside>
   );
 }
@@ -347,6 +408,12 @@ function CleanupPanel({
   const [showLrcPreview, setShowLrcPreview] = useState(false);
   const [showTagPreview, setShowTagPreview] = useState(false);
   const [showRemoveAllPreview, setShowRemoveAllPreview] = useState(false);
+  const synchronizedActive = synchronized && translationEnabled;
+
+  useEffect(() => {
+    if (!translationEnabled) setSynchronized(false);
+  }, [translationEnabled]);
+
   const scope = resolveLyricsTextScope(activeText, selection);
   const selectedLineCount = scope.hasSelection ? scope.endLine - scope.startLine + 1 : 0;
   const matchCount = countFindMatches(activeText, selection, query, matchCase);
@@ -368,7 +435,13 @@ function CleanupPanel({
       end: scope.endLine
     }
   );
-  const removeAllCount = synchronized && translationEnabled
+  const synchronizedScopeSummary = scope.hasSelection
+    ? formatLyricsWorkspaceCopy(copy.synchronizedScope, {
+        start: scope.startLine,
+        end: scope.endLine
+      })
+    : copy.alignedColumns;
+  const removeAllCount = synchronizedActive
     ? cleanSynchronizedBlankRows({
         lyrics,
         translationText,
@@ -378,7 +451,7 @@ function CleanupPanel({
           : undefined
       }).removedRows
     : removeAllBlankLines(activeText, selection).stats.removedLines ?? 0;
-  const removeAllScope = synchronized ? copy.alignedColumns : scopeSummary;
+  const removeAllScope = synchronizedActive ? synchronizedScopeSummary : scopeSummary;
 
   return (
     <div className="grid gap-3">
@@ -386,13 +459,13 @@ function CleanupPanel({
       <PanelSection title={copy.scopeHeading}>
         <div className="grid grid-cols-2 gap-1">
           <ChoiceButton
-            selected={!synchronized}
+            selected={!synchronizedActive}
             onClick={() => setSynchronized(false)}
             label={copy.activeColumn}
             testId="lyrics-cleanup-scope-active"
           />
           <ChoiceButton
-            selected={synchronized}
+            selected={synchronizedActive}
             onClick={() => setSynchronized(true)}
             label={copy.alignedColumns}
             testId="lyrics-cleanup-scope-synchronized"
@@ -400,9 +473,9 @@ function CleanupPanel({
           />
         </div>
         <p className="app-text-subtle text-[10px] leading-relaxed" data-testid="lyrics-cleanup-scope-summary">
-          {scopeSummary}
+          {synchronizedActive ? synchronizedScopeSummary : scopeSummary}
         </p>
-        {synchronized ? <p className="app-text-subtle text-[10px] leading-relaxed">{copy.alignedColumnsHint}</p> : null}
+        {synchronizedActive ? <p className="app-text-subtle text-[10px] leading-relaxed">{copy.alignedColumnsHint}</p> : null}
       </PanelSection>
 
       <PanelSection title={copy.blankLinesHeading}>
@@ -410,12 +483,12 @@ function CleanupPanel({
           <ToolButton
             ref={blankIntentRef}
             label={copy.trimBlankLines}
-            onClick={() => onBlankCleanup("trim", synchronized)}
+            onClick={() => onBlankCleanup("trim", synchronizedActive)}
             testId="lyrics-cleanup-blank-trim"
           />
           <ToolButton
             label={copy.collapseBlankLines}
-            onClick={() => onBlankCleanup("collapse", synchronized)}
+            onClick={() => onBlankCleanup("collapse", synchronizedActive)}
             testId="lyrics-cleanup-blank-collapse"
           />
           <ToolButton
@@ -433,7 +506,7 @@ function CleanupPanel({
               <ToolButton
                 label={copy.confirmRemoveBlankLines}
                 onClick={() => {
-                  onBlankCleanup("all", synchronized);
+                  onBlankCleanup("all", synchronizedActive);
                   setShowRemoveAllPreview(false);
                 }}
                 disabled={removeAllCount === 0}
@@ -920,7 +993,8 @@ function SidebarIconButton({
   onClick,
   testId,
   active = false,
-  badge = 0
+  badge = 0,
+  buttonRef
 }: {
   label: string;
   icon: ReactNode;
@@ -928,9 +1002,11 @@ function SidebarIconButton({
   testId: string;
   active?: boolean;
   badge?: number;
+  buttonRef?: Ref<HTMLButtonElement>;
 }) {
   return (
     <button
+      ref={buttonRef}
       type="button"
       className={cn(
         "app-button control-focus relative flex size-9 items-center justify-center rounded-md",

@@ -2127,6 +2127,49 @@ async function assertLyricsWorkbenchOperations(originalLyrics, translationLyrics
   await fillExact(originalLyrics, originalFixture);
   await fillExact(translationLyrics, translationFixture);
   await page.getByTestId("lyrics-sidebar-tab-translation").click();
+
+  const hiddenEditorFixture = `${originalFixture}\noriginal tail  `;
+  await fillExact(originalLyrics, hiddenEditorFixture);
+  await fillExact(translationLyrics, translationFixture);
+  await selectLyricsRange(originalLyrics, 0, 0);
+  await selectLyricsRange(translationLyrics, 0, 0);
+  const translationToggle = page.getByTestId("translation-toggle");
+  await translationToggle.click();
+  await translationLyrics.waitFor({ state: "detached" });
+  assert.match(
+    await page.getByTestId("lyrics-command-position").textContent(),
+    /原文/,
+    "disabling the active translation editor transfers command scope to the visible original"
+  );
+  await page.getByTestId("lyrics-sidebar-tab-cleanup").click();
+  assert.equal(
+    await page.getByTestId("lyrics-cleanup-scope-active").getAttribute("aria-pressed"),
+    "true",
+    "disabling translation resets cleanup to the explicit active-column scope"
+  );
+  assert.equal(
+    await page.getByTestId("lyrics-cleanup-scope-synchronized").getAttribute("aria-pressed"),
+    "false",
+    "a hidden translation column cannot leave synchronized cleanup selected"
+  );
+  await page.getByTestId("lyrics-cleanup-paste").click();
+  assert.equal(
+    await originalLyrics.inputValue(),
+    `${originalFixture}\noriginal tail`,
+    "cleanup after hiding translation edits the visible original instead of the detached translation"
+  );
+  await page.getByTestId("lyrics-command-undo").click();
+  assert.equal(await originalLyrics.inputValue(), hiddenEditorFixture, "hidden-editor scope cleanup remains undoable");
+  await page.getByTestId("lyrics-sidebar-tab-translation").click();
+  await translationToggle.click();
+  await translationLyrics.waitFor({ state: "visible" });
+  assert.equal(
+    await translationLyrics.inputValue(),
+    translationFixture,
+    "hiding translation and cleaning the original leaves hidden translation text untouched"
+  );
+  await fillExact(originalLyrics, originalFixture);
+  await fillExact(translationLyrics, translationFixture);
 }
 
 async function assertLyricsWorkspaceSplitInteractions() {
@@ -2185,6 +2228,8 @@ async function assertLyricsWorkspaceSplitInteractions() {
   await page.getByTestId("settings-close-button").click();
   await page.locator('[data-testid="settings-surface"][data-surface-state="closed"]').waitFor({ state: "attached" });
 
+  await page.getByTestId("lyrics-sidebar-tab-cleanup").click();
+  await page.getByTestId("lyrics-find-input").fill("persistent collapse query");
   const collapseButton = page.getByTestId("lyrics-command-sidebar-toggle");
   await collapseButton.click();
   await page.waitForFunction(() => document.querySelector('[data-testid="lyrics-sidebar"]')?.getAttribute('data-collapsed') === 'true');
@@ -2199,12 +2244,33 @@ async function assertLyricsWorkspaceSplitInteractions() {
   for (const tab of ["cleanup", "translation", "review", "source"]) {
     await page.getByTestId(`lyrics-sidebar-tab-${tab}`).waitFor({ state: "visible" });
   }
-  await page.getByTestId("lyrics-line-budget").waitFor({ state: "visible" });
-  assert.equal(await page.getByTestId("lyrics-cleanup-paste").count(), 0, "collapsed rail does not duplicate the full cleanup toolbox");
-  assert.equal(await page.getByTestId("translation-toggle").count(), 0, "collapsed rail keeps translation configuration out of the icon strip");
+  await page.getByTestId("lyrics-sidebar-budget").waitFor({ state: "visible" });
+  assert.equal(await page.getByTestId("lyrics-cleanup-paste").count(), 1, "collapsed rail keeps one stable cleanup panel mounted");
+  assert.equal(await page.getByTestId("lyrics-cleanup-paste").isHidden(), true, "collapsed rail hides the full cleanup toolbox");
+  assert.equal(await page.getByTestId("translation-toggle").isHidden(), true, "collapsed rail keeps translation configuration out of the visible icon strip");
   if (runVisualDiagnostics) {
     await page.screenshot({ path: path.join(reportDirectory, "step-two-collapsed-1280x900.png"), fullPage: false });
   }
+
+  await page.getByTestId("lyrics-sidebar-tab-cleanup").click();
+  await page.waitForFunction(() => document.querySelector('[data-testid="lyrics-sidebar"]')?.getAttribute('data-collapsed') === 'false');
+  assert.equal(
+    await page.getByTestId("lyrics-sidebar-tab-cleanup").evaluate((node) => document.activeElement === node),
+    true,
+    "opening a collapsed tab transfers focus to the corresponding expanded tab"
+  );
+  assert.equal(
+    await page.getByTestId("lyrics-find-input").inputValue(),
+    "persistent collapse query",
+    "collapsing and restoring keeps hidden panel input state mounted"
+  );
+  await page.getByTestId("lyrics-sidebar-collapse").click();
+  await page.waitForFunction(() => document.querySelector('[data-testid="lyrics-sidebar"]')?.getAttribute('data-collapsed') === 'true');
+  assert.equal(
+    await collapseButton.evaluate((node) => document.activeElement === node),
+    true,
+    "the sidebar-local collapse control restores focus to the persistent command-bar disclosure"
+  );
 
   const persistedAiSettings = await page.evaluate(() => window.lyricsCardDesktop?.loadAISettings());
   assert.equal(persistedAiSettings?.hasApiKey, true, `collapsed AI regression has configured settings: ${JSON.stringify(persistedAiSettings)}`);
@@ -2314,12 +2380,18 @@ async function assertLyricsWorkspaceNarrowBehavior(originalLyrics, translationLy
   try {
     await setWindowSize(760, 720);
     await page.waitForFunction(() => document.querySelector('[data-testid="lyrics-workspace-split"]')?.getAttribute("data-side-by-side") === "false");
-    assert.equal(await page.getByTestId("lyrics-sidebar").count(), 0, "narrow layout does not reserve width for a closed sidebar");
+    assert.equal(await page.getByTestId("lyrics-sidebar").count(), 1, "narrow layout keeps one stable drawer lifecycle");
+    await page.getByTestId("lyrics-sidebar").waitFor({ state: "hidden" });
     assert.equal(await page.getByTestId("lyrics-workspace-resizer").count(), 0, "narrow layout removes the desktop separator");
     const editorWidthBefore = await page.locator("#lyrics-workspace-editor").evaluate((node) => node.getBoundingClientRect().width);
     await page.getByTestId("lyrics-command-sidebar-toggle").click();
     await page.getByTestId("lyrics-sidebar").waitFor({ state: "visible" });
     await waitForLayoutStable(page.getByTestId("lyrics-sidebar"));
+    assert.equal(
+      await page.getByTestId("lyrics-sidebar-close-drawer").evaluate((node) => document.activeElement === node),
+      true,
+      "opening the narrow drawer moves keyboard focus to its close control"
+    );
     const drawerGeometry = await page.evaluate(() => {
       const editor = document.querySelector('#lyrics-workspace-editor');
       const sidebar = document.querySelector('[data-testid="lyrics-sidebar"]');
@@ -2343,8 +2415,57 @@ async function assertLyricsWorkspaceNarrowBehavior(originalLyrics, translationLy
     assert.ok(Math.abs(drawerGeometry.sidebarBottom - drawerGeometry.splitBottom) <= 1, `drawer anchors to the workspace bottom: ${JSON.stringify(drawerGeometry)}`);
     assert.ok(drawerGeometry.sidebarWidth >= editorWidthBefore - 1, `drawer uses the workspace width without shrinking the editor: ${JSON.stringify(drawerGeometry)}`);
     assert.ok(drawerGeometry.horizontalOverflow <= 1, `760px drawer avoids horizontal page overflow: ${JSON.stringify(drawerGeometry)}`);
+    assert.equal(await page.getByTestId("lyrics-sidebar").getAttribute("role"), "dialog", "narrow drawer exposes dialog semantics");
+    assert.equal(await page.getByTestId("lyrics-sidebar").getAttribute("aria-modal"), "true", "narrow drawer identifies its modal focus boundary");
+    if (runVisualDiagnostics) {
+      await page.screenshot({ path: path.join(reportDirectory, "step-two-drawer-760x720.png"), fullPage: false });
+    }
+
+    await page.getByTestId("lyrics-command-find").click();
+    await page.waitForFunction(() => document.activeElement?.getAttribute("data-testid") === "lyrics-find-input");
+    await page.getByTestId("lyrics-find-input").fill("persistent drawer query");
+    await page.getByTestId("lyrics-find-input").press("Escape");
+    await page.getByTestId("lyrics-sidebar").waitFor({ state: "hidden" });
+    await page.waitForFunction(() => document.activeElement?.getAttribute("data-testid") === "lyrics-command-sidebar-toggle");
+    assert.equal(
+      await page.getByTestId("lyrics-command-sidebar-toggle").evaluate((node) => document.activeElement === node),
+      true,
+      "Escape closes the drawer and restores focus to its disclosure"
+    );
+    await page.getByTestId("lyrics-command-sidebar-toggle").click();
+    await page.getByTestId("lyrics-sidebar").waitFor({ state: "visible" });
+    assert.equal(
+      await page.getByTestId("lyrics-find-input").inputValue(),
+      "persistent drawer query",
+      "closing and reopening the drawer preserves stable panel state"
+    );
+    assert.equal(
+      await page.getByTestId("lyrics-sidebar-close-drawer").evaluate((node) => document.activeElement === node),
+      true,
+      "plain drawer disclosure focuses the close control"
+    );
+    await page.getByTestId("lyrics-sidebar-close-drawer").press("Shift+Tab");
+    assert.equal(
+      await page.getByTestId("lyrics-sidebar").evaluate((node) => node.contains(document.activeElement)),
+      true,
+      "reverse Tab remains inside the modal drawer"
+    );
+    await page.keyboard.press("Tab");
+    assert.equal(
+      await page.getByTestId("lyrics-sidebar-close-drawer").evaluate((node) => document.activeElement === node),
+      true,
+      "forward Tab wraps from the drawer's final control to its close control"
+    );
+    await page.getByTestId("lyrics-sidebar-tab-translation").click();
+    await page.getByTestId("translation-toggle").waitFor({ state: "visible" });
     await page.getByTestId("lyrics-sidebar-close-drawer").click();
-    await page.getByTestId("lyrics-sidebar").waitFor({ state: "detached" });
+    await page.getByTestId("lyrics-sidebar").waitFor({ state: "hidden" });
+    await page.waitForFunction(() => document.activeElement?.getAttribute("data-testid") === "lyrics-command-sidebar-toggle");
+    assert.equal(
+      await page.getByTestId("lyrics-command-sidebar-toggle").evaluate((node) => document.activeElement === node),
+      true,
+      "the drawer close control restores focus to its disclosure"
+    );
 
     await setWindowSize(610, 720);
     await waitForLayoutStable(page.getByTestId("lyrics-workspace"));
@@ -2365,6 +2486,9 @@ async function assertLyricsWorkspaceNarrowBehavior(originalLyrics, translationLy
     assert.ok(stacked.horizontalOverflow <= 1, `610px bilingual editor avoids horizontal page overflow: ${JSON.stringify(stacked)}`);
     assert.equal(await originalLyrics.isVisible(), true, "narrow mode keeps the original editor usable");
     assert.equal(await translationLyrics.isVisible(), true, "narrow mode keeps the translation editor usable");
+    if (runVisualDiagnostics) {
+      await page.screenshot({ path: path.join(reportDirectory, "step-two-stacked-610x720.png"), fullPage: false });
+    }
   } finally {
     await electronApp.evaluate(({ BrowserWindow }) => {
       BrowserWindow.getAllWindows()[0].setMinimumSize(1000, 700);

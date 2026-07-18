@@ -131,6 +131,7 @@ export function LyricsWorkspace({
   const scrollRef = useRef<HTMLDivElement>(null);
   const lyricsRef = useRef<HTMLTextAreaElement>(null);
   const translationRef = useRef<HTMLTextAreaElement>(null);
+  const sidebarToggleRef = useRef<HTMLButtonElement>(null);
   const activeEditorRef = useRef<LyricsWorkbenchEditor>("lyrics");
   const lyricsId = useId();
   const translationId = useId();
@@ -514,7 +515,14 @@ export function LyricsWorkspace({
 
   function handleTranslationEnabledChange(enabled: boolean) {
     clearOperationHistory();
-    viewport.captureAnchor(enabled ? "translation" : activeEditorRef.current);
+    if (!enabled && activeEditorRef.current === "translation") {
+      viewport.captureAnchor("translation");
+      activeEditorRef.current = "lyrics";
+      const selection = clampSelection(selectionsRef.current.lyrics, lyrics.length);
+      setCursor(cursorForSelection("lyrics", lyrics, selection.start));
+    } else {
+      viewport.captureAnchor(enabled ? "translation" : activeEditorRef.current);
+    }
     onTranslationEnabledChange(enabled);
   }
 
@@ -544,7 +552,7 @@ export function LyricsWorkspace({
       setMobileSidebarOpen(true);
     }
     if (intent) setFocusIntent(intent);
-    if (intent === "ai") onAITranslate();
+    if (intent === "ai" && showAiTranslate) onAITranslate();
   }
 
   function toggleSidebar() {
@@ -554,6 +562,17 @@ export function LyricsWorkspace({
     } else {
       setMobileSidebarOpen((value) => !value);
     }
+  }
+
+  function toggleSidebarFromSidebar() {
+    toggleSidebar();
+    window.requestAnimationFrame(() => sidebarToggleRef.current?.focus({ preventScroll: true }));
+  }
+
+  function closeMobileSidebar() {
+    setMobileSidebarOpen(false);
+    setFocusIntent(null);
+    window.requestAnimationFrame(() => sidebarToggleRef.current?.focus({ preventScroll: true }));
   }
 
   if (contentMode !== "lyrics") {
@@ -624,7 +643,9 @@ export function LyricsWorkspace({
         canUndo={historyRef.current.past.length > 0}
         canRedo={historyRef.current.future.length > 0}
         isAITranslating={isAITranslating}
+        showAITranslate={showAiTranslate}
         sidebarExpanded={sidebarExpanded}
+        sidebarToggleRef={sidebarToggleRef}
         onUndo={undoOperation}
         onRedo={redoOperation}
         onOpen={openTab}
@@ -645,6 +666,7 @@ export function LyricsWorkspace({
           id="lyrics-workspace-editor"
           className="lyrics-document-column flex min-h-0 min-w-0 flex-col overflow-hidden bg-[rgb(var(--input-bg))]"
           aria-label={copy.manuscript}
+          inert={!sideBySide && mobileSidebarOpen ? true : undefined}
         >
           <span className="sr-only">{copy.sharedScrollHint}</span>
           <div
@@ -709,57 +731,57 @@ export function LyricsWorkspace({
           <button
             type="button"
             className="lyrics-sidebar-backdrop absolute inset-0 z-30 bg-black/35"
-            onClick={() => setMobileSidebarOpen(false)}
+            onClick={closeMobileSidebar}
+            tabIndex={-1}
             aria-label={copy.closeDrawer}
             data-testid="lyrics-sidebar-backdrop"
           />
         ) : null}
 
-        {(sideBySide || mobileSidebarOpen) ? (
-          <LyricsSidebar
-            copy={copy}
-            activeTab={sidebarTab}
-            activeEditor={cursor.editor}
-            activeText={activeText}
-            selection={activeSelection}
-            lyrics={lyrics}
-            translationText={translationText}
-            translationEnabled={translationEnabled}
-            lineStatus={lineStatus}
-            analysis={analysis}
-            song={song}
-            locale={locale}
-            themeColor={themeColor}
-            t={t}
-            collapsed={sidebarCollapsed}
-            collapsible={sideBySide}
-            mobileDrawer={!sideBySide}
-            feedback={feedback}
-            focusIntent={focusIntent}
-            isAITranslating={isAITranslating}
-            showAiTranslate={showAiTranslate}
-            aiPanel={aiPanel}
-            lyricsFetchPanel={lyricsFetchPanel}
-            onTabChange={onSidebarTabChange}
-            onOpenTab={(tab) => openTab(tab)}
-            onToggleCollapsed={toggleSidebar}
-            onCloseDrawer={() => setMobileSidebarOpen(false)}
-            onIntentHandled={() => setFocusIntent(null)}
-            onUndo={undoOperation}
-            onBlankCleanup={blankCleanup}
-            onCleanPaste={cleanPaste}
-            onStripLrc={cleanLrc}
-            onReplace={replaceText}
-            onMergeSelectedLines={mergeLines}
-            onRemoveParagraphTags={cleanParagraphTags}
-            onTranslationEnabledChange={handleTranslationEnabledChange}
-            onAITranslate={onAITranslate}
-            onSplitAlternatingLyrics={splitAlternating}
-            onFormatTranslation={formatTranslation}
-            onSwapColumns={swapColumns}
-            onLocate={locateIssue}
-          />
-        ) : null}
+        <LyricsSidebar
+          copy={copy}
+          activeTab={sidebarTab}
+          activeEditor={cursor.editor}
+          activeText={activeText}
+          selection={activeSelection}
+          lyrics={lyrics}
+          translationText={translationText}
+          translationEnabled={translationEnabled}
+          lineStatus={lineStatus}
+          analysis={analysis}
+          song={song}
+          locale={locale}
+          themeColor={themeColor}
+          t={t}
+          open={sideBySide || mobileSidebarOpen}
+          collapsed={sidebarCollapsed}
+          collapsible={sideBySide}
+          mobileDrawer={!sideBySide}
+          feedback={feedback}
+          focusIntent={focusIntent}
+          isAITranslating={isAITranslating}
+          showAiTranslate={showAiTranslate}
+          aiPanel={aiPanel}
+          lyricsFetchPanel={lyricsFetchPanel}
+          onTabChange={onSidebarTabChange}
+          onOpenTab={openTab}
+          onToggleCollapsed={toggleSidebarFromSidebar}
+          onCloseDrawer={closeMobileSidebar}
+          onIntentHandled={() => setFocusIntent(null)}
+          onUndo={undoOperation}
+          onBlankCleanup={blankCleanup}
+          onCleanPaste={cleanPaste}
+          onStripLrc={cleanLrc}
+          onReplace={replaceText}
+          onMergeSelectedLines={mergeLines}
+          onRemoveParagraphTags={cleanParagraphTags}
+          onTranslationEnabledChange={handleTranslationEnabledChange}
+          onAITranslate={onAITranslate}
+          onSplitAlternatingLyrics={splitAlternating}
+          onFormatTranslation={formatTranslation}
+          onSwapColumns={swapColumns}
+          onLocate={locateIssue}
+        />
 
         {sideBySide && !layout.collapsed && split.geometry.viewportWidth > 0 ? (
           <div

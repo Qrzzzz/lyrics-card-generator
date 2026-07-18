@@ -9,6 +9,7 @@ import {
   Sparkles,
   Undo2
 } from "lucide-react";
+import type { Ref } from "react";
 import type { LyricsWorkspaceCopy } from "@/components/editor/lyrics-workspace-copy";
 import type { LyricsSidebarTab } from "@/lib/lyrics-workbench";
 import { cn } from "@/lib/utils";
@@ -25,7 +26,9 @@ export function LyricsCommandBar({
   canUndo,
   canRedo,
   isAITranslating,
+  showAITranslate,
   sidebarExpanded,
+  sidebarToggleRef,
   onUndo,
   onRedo,
   onOpen,
@@ -40,7 +43,9 @@ export function LyricsCommandBar({
   canUndo: boolean;
   canRedo: boolean;
   isAITranslating: boolean;
+  showAITranslate: boolean;
   sidebarExpanded: boolean;
+  sidebarToggleRef?: Ref<HTMLButtonElement>;
   onUndo: () => void;
   onRedo: () => void;
   onOpen: (tab: LyricsSidebarTab, intent: LyricsCommandIntent) => void;
@@ -94,13 +99,15 @@ export function LyricsCommandBar({
           onClick={() => onOpen("cleanup", "find")}
           icon={<Search className="size-3.5" />}
         />
-        <CommandShortcut
-          label={copy.aiShortcut}
-          testId="lyrics-command-ai"
-          onClick={() => onOpen("translation", "ai")}
-          disabled={isAITranslating}
-          icon={<Sparkles className={cn("size-3.5", isAITranslating && "animate-pulse")} />}
-        />
+        {showAITranslate ? (
+          <CommandShortcut
+            label={copy.aiShortcut}
+            testId="lyrics-command-ai"
+            onClick={() => onOpen("translation", "ai")}
+            disabled={isAITranslating}
+            icon={<Sparkles className={cn("size-3.5", isAITranslating && "animate-pulse")} />}
+          />
+        ) : null}
         <button
           type="button"
           className={cn(
@@ -119,6 +126,7 @@ export function LyricsCommandBar({
           testId="lyrics-command-sidebar-toggle"
           onClick={onToggleSidebar}
           pressed={sidebarExpanded}
+          buttonRef={sidebarToggleRef}
           icon={sidebarExpanded
             ? <PanelRightClose className="size-3.5" />
             : <PanelRightOpen className="size-3.5" />}
@@ -134,7 +142,8 @@ function CommandIconButton({
   testId,
   onClick,
   disabled = false,
-  pressed
+  pressed,
+  buttonRef
 }: {
   label: string;
   icon: React.ReactNode;
@@ -142,9 +151,11 @@ function CommandIconButton({
   onClick: () => void;
   disabled?: boolean;
   pressed?: boolean;
+  buttonRef?: Ref<HTMLButtonElement>;
 }) {
   return (
     <button
+      ref={buttonRef}
       type="button"
       className="app-button control-focus flex size-8 items-center justify-center rounded-md disabled:cursor-default disabled:opacity-35"
       aria-label={label}

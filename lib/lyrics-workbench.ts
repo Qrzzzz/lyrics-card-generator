@@ -109,7 +109,10 @@ export function resolveLyricsTextScope(
   const lineStart = text.lastIndexOf("\n", Math.max(0, start - 1)) + 1;
   const inclusiveEnd = Math.max(start, end - 1);
   const nextBreak = text.indexOf("\n", inclusiveEnd);
-  const lineEnd = nextBreak === -1 ? text.length : nextBreak;
+  const rawLineEnd = nextBreak === -1 ? text.length : nextBreak;
+  const lineEnd = rawLineEnd > lineStart && text[rawLineEnd - 1] === "\r"
+    ? rawLineEnd - 1
+    : rawLineEnd;
 
   return {
     start: lineStart,
@@ -568,29 +571,22 @@ function replaceLiteralMatches(
   replacement: string,
   matchCase: boolean
 ) {
-  const haystack = matchCase ? source : source.toLocaleLowerCase();
-  const needle = matchCase ? query : query.toLocaleLowerCase();
-  let cursor = 0;
   let count = 0;
-  let text = "";
-
-  while (cursor <= source.length) {
-    const index = haystack.indexOf(needle, cursor);
-    if (index === -1) {
-      text += source.slice(cursor);
-      break;
-    }
-    text += source.slice(cursor, index);
-    text += replacement;
-    cursor = index + query.length;
+  const pattern = new RegExp(escapeRegExp(query), matchCase ? "gu" : "giu");
+  const text = source.replace(pattern, () => {
     count += 1;
-  }
+    return replacement;
+  });
 
   return { text, count };
 }
 
 function countLiteralMatches(source: string, query: string, matchCase: boolean) {
   return replaceLiteralMatches(source, query, "", matchCase).count;
+}
+
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
 }
 
 function normalizeNewlines(text: string) {

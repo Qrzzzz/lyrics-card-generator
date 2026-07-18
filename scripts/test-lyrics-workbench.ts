@@ -63,6 +63,23 @@ assert.deepEqual(
   },
   "a selection ending at the next line start does not include that line"
 );
+assert.deepEqual(
+  resolveLyricsTextScope("one\r\ntwo", { start: 0, end: 3 }),
+  {
+    start: 0,
+    end: 3,
+    startLine: 1,
+    endLine: 1,
+    hasSelection: true,
+    text: "one"
+  },
+  "a selected CRLF line excludes the complete line terminator"
+);
+assert.equal(
+  cleanPastedLyrics("one\r\ntwo", { start: 0, end: 3 }).text,
+  "one\r\ntwo",
+  "selected cleanup does not duplicate the LF half of a CRLF terminator"
+);
 
 const trimmed = trimBoundaryBlankLines(
   "\n \nalpha\n\nbeta\n\t\n",
@@ -127,6 +144,24 @@ const replaced = replaceLyricsText(
 );
 assert.equal(replaced.text, "Moon light\nsun river\nMOON");
 assert.equal(replaced.stats.replacements, 1);
+const unicodeExpansionReplace = replaceLyricsText(
+  "İA",
+  { start: 0, end: 0 },
+  "A",
+  "x",
+  false
+);
+assert.equal(
+  unicodeExpansionReplace.text,
+  "İx",
+  "case-insensitive replacement keeps source offsets stable around Unicode lowercase expansion"
+);
+assert.equal(unicodeExpansionReplace.stats.replacements, 1);
+assert.equal(
+  replaceLyricsText("a.b a-b", { start: 0, end: 0 }, "a.b", "$&", true).text,
+  "$& a-b",
+  "find text and replacement strings stay literal when they contain regular-expression tokens"
+);
 
 const mergeSource = "before\nfirst selected\n second selected \nthird selected\nafter";
 const merged = mergeSelectedLyricsLines(
@@ -273,4 +308,4 @@ assert.equal(history.future.length, 0, "a new operation clears redo history");
 assert.equal(snapshotsEqual(before, { ...before }), true);
 assert.equal(snapshotsEqual(before, after), false);
 
-console.log(JSON.stringify({ ok: true, lyricsWorkbenchTests: 57 }, null, 2));
+console.log(JSON.stringify({ ok: true, lyricsWorkbenchTests: 63 }, null, 2));

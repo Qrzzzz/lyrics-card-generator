@@ -167,7 +167,7 @@ assert.ok(
 assert.ok(
   sidebarSource.includes('data-collapsed={collapsed ? "true" : "false"}') &&
     sidebarSource.includes('testId={`lyrics-sidebar-tab-${tab}`}') &&
-    sidebarSource.includes('data-testid="lyrics-line-budget"') &&
+    sidebarSource.includes('data-testid="lyrics-sidebar-budget"') &&
     !sidebarSource.includes("lyrics-tool-split-collapsed"),
   "the collapsed rail keeps stable tab icons and status without duplicating every tool"
 );
@@ -189,9 +189,11 @@ assert.ok(
     sidebarSource.includes('tab="review"') &&
     sidebarSource.includes('tab="source"') &&
     sidebarSource.includes("hidden={activeTab !== tab}") &&
+    sidebarSource.includes('data-testid="lyrics-sidebar-panels"') &&
+    sidebarSource.includes('collapsed && "hidden"') &&
     sidebarSource.includes('event.key === "ArrowRight"') &&
     sidebarSource.includes("tabIndex={activeTab === tab ? 0 : -1}"),
-  "all four stable panels remain mounted and expose roving keyboard tab navigation"
+  "all four stable panels remain mounted across tab and rail visibility changes and expose roving keyboard navigation"
 );
 assert.ok(
   editorStepsSource.includes("lyricsFetchPanel={canFetchLyrics ? (") &&
@@ -210,8 +212,10 @@ assert.ok(
 assert.ok(
   globalsSource.includes(".lyrics-sidebar--drawer") &&
     globalsSource.includes("position: absolute") &&
-    workspaceSource.includes('data-testid="lyrics-sidebar-backdrop"'),
-  "narrow layouts use an overlay drawer instead of shrinking the editor"
+    workspaceSource.includes('data-testid="lyrics-sidebar-backdrop"') &&
+    sidebarSource.includes('role={mobileDrawer ? "dialog" : undefined}') &&
+    sidebarSource.includes('event.key === "Escape"'),
+  "narrow layouts use a keyboard-dismissible modal overlay drawer instead of shrinking the editor"
 );
 for (const locale of ['zh:', '"zh-TW":', 'en:', 'fr:', 'ja:', 'es:']) {
   assert.ok(copySource.includes(locale), `workspace copy includes ${locale}`);
