@@ -2266,6 +2266,7 @@ async function assertLyricsWorkspaceSplitInteractions() {
   );
   await page.getByTestId("lyrics-sidebar-collapse").click();
   await page.waitForFunction(() => document.querySelector('[data-testid="lyrics-sidebar"]')?.getAttribute('data-collapsed') === 'true');
+  await page.waitForFunction(() => document.activeElement?.getAttribute("data-testid") === "lyrics-command-sidebar-toggle");
   assert.equal(
     await collapseButton.evaluate((node) => document.activeElement === node),
     true,
