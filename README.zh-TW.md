@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v5.8.1.zh-TW.md">發布說明</a> ·
+  <a href="./docs/releases/v5.8.2.zh-TW.md">發布說明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">線上 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="#本機開發">本機開發</a> ·
@@ -48,23 +48,23 @@
 
 請前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載最新版：
 
-* 建議一般使用者下載安裝版：`Lyrics Card Generator Setup 5.8.1.exe`
-* 不想安裝時可下載可攜版：`Lyrics Card Generator-5.8.1-portable.exe`
+* 建議一般使用者下載安裝版：`Lyrics Card Generator Setup 5.8.2.exe`
+* 不想安裝時可下載可攜版：`Lyrics Card Generator-5.8.2-portable.exe`
 
 安裝版適合長期使用；可攜版適合臨時執行、測試或放在隨身碟中使用。
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v5.8.1 更新重點
+### v5.8.2 更新重點
 
-* 第二步頂部命令列改為高頻操作區：直接提供貼上清理、連續空行整理、LRC 清理與 AI 翻譯，並移除實用性較低的尋找取代。
-* 「取得歌詞」與「檢查」成為命令列右側的獨立入口；右側欄只保留「整理、翻譯」，不再重複堆疊來源、檢查與雙欄對齊內容。
-* 單一入口的工具區直接展開，不再額外收合；桌面與 760 px 窄螢幕皆維持完整、可定位，且不擠壓歌詞正文。
+* 第二步移除覆蓋整個工作區的實色底板，命令列、狀態資訊與桌面側欄直接呈現在應用程式畫布上。
+* 歌詞輸入框成為唯一主要內容面；一般命令與側欄操作改為輕量互動，取得歌詞、檢查、AI 與風險確認仍保留清楚的小型面板。
+* 功能分區、共享捲動、可調分欄、52 px 收合工具軌、窄螢幕抽屜與 36 行匯出邊界全部保持不變。
 
 ## 🌐 多語言發佈說明
 
 GitHub Release 預設顯示簡體中文摘要，完整說明請見：
-[简体中文](./docs/releases/v5.8.1.zh-CN.md) · [繁體中文](./docs/releases/v5.8.1.zh-TW.md) · [English](./docs/releases/v5.8.1.en.md) · [Français](./docs/releases/v5.8.1.fr.md) · [日本語](./docs/releases/v5.8.1.ja.md) · [Español](./docs/releases/v5.8.1.es.md)
+[简体中文](./docs/releases/v5.8.2.zh-CN.md) · [繁體中文](./docs/releases/v5.8.2.zh-TW.md) · [English](./docs/releases/v5.8.2.en.md) · [Français](./docs/releases/v5.8.2.fr.md) · [日本語](./docs/releases/v5.8.2.ja.md) · [Español](./docs/releases/v5.8.2.es.md)
 
 ## ✨ 主要功能
 

@@ -1801,6 +1801,7 @@ async function assertLyricsWorkspace(width, height) {
     const tools = document.querySelector('[data-testid="lyrics-sidebar"]');
     const resizer = document.querySelector('[data-testid="lyrics-workspace-resizer"]');
     const commandBar = document.querySelector('[data-testid="lyrics-command-bar"]');
+    const statusBar = document.querySelector('[data-testid="lyrics-status-bar"]');
     const editorColumns = document.querySelector('[data-testid="lyrics-editor-columns"]');
     const actions = document.querySelector('.lyrics-stepper-actions');
     const main = document.querySelector('.lyric-editor-main');
@@ -1827,6 +1828,7 @@ async function assertLyricsWorkspace(width, height) {
         radius: style.borderRadius
       };
     };
+    const background = (element) => element ? getComputedStyle(element).backgroundColor : null;
     const resizerStyle = resizer ? getComputedStyle(resizer) : null;
     const resizerLineStyle = resizer ? getComputedStyle(resizer, '::before') : null;
     const documentScrollers = documentColumn
@@ -1839,6 +1841,7 @@ async function assertLyricsWorkspace(width, height) {
       editor: editor ? { clientHeight: editor.clientHeight, scrollHeight: editor.scrollHeight, overflowY: getComputedStyle(editor).overflowY } : null,
       workspace: rect(workspace),
       workspaceFrame: frame(workspace),
+      workspaceBackground: background(workspace),
       split: split ? {
         ...rect(split),
         sideBySide: split.getAttribute('data-side-by-side'),
@@ -1849,6 +1852,7 @@ async function assertLyricsWorkspace(width, height) {
       shared: shared ? { ...rect(shared), overflowX: getComputedStyle(shared).overflowX, overflowY: getComputedStyle(shared).overflowY } : null,
       documentColumn: rect(documentColumn),
       documentFrame: frame(documentColumn),
+      documentBackground: background(documentColumn),
       tools: tools ? {
         ...rect(tools),
         clientHeight: tools.clientHeight,
@@ -1857,6 +1861,7 @@ async function assertLyricsWorkspace(width, height) {
         activeTab: tools.getAttribute('data-active-tab')
       } : null,
       toolsFrame: frame(tools),
+      toolsBackground: background(tools),
       resizer: resizer ? {
         ...rect(resizer),
         cursor: resizerStyle?.cursor,
@@ -1870,6 +1875,8 @@ async function assertLyricsWorkspace(width, height) {
         controls: resizer.getAttribute('aria-controls')
       } : null,
       commandBar: rect(commandBar),
+      commandBarBackground: background(commandBar),
+      statusBarBackground: background(statusBar),
       editorColumns: rect(editorColumns),
       documentScrollerCount: documentScrollers.length,
       documentScrollerIsShared: documentScrollers.length === 1 && documentScrollers[0] === shared,
@@ -1889,6 +1896,7 @@ async function assertLyricsWorkspace(width, height) {
         overflowX: getComputedStyle(area).overflowX,
         overflowY: getComputedStyle(area).overflowY,
         resize: getComputedStyle(area).resize,
+        backgroundColor: getComputedStyle(area).backgroundColor,
         scrollWidth: area.scrollWidth,
         clientWidth: area.clientWidth
       })),
@@ -1937,15 +1945,27 @@ async function assertLyricsWorkspace(width, height) {
     { top: 0, right: 0, bottom: 0, left: 0, radius: "0px" },
     `${width}x${height} keeps the editor as an unframed primary surface`
   );
-  assert.ok(
-    result.toolsFrame &&
-      result.toolsFrame.top === 0 &&
-      result.toolsFrame.right === 0 &&
-      result.toolsFrame.bottom === 0 &&
-      result.toolsFrame.left > 0 &&
-      result.toolsFrame.left <= 1.1 &&
-      result.toolsFrame.radius === "0px",
-    `${width}x${height} gives the expanded sidebar only its separating border: ${JSON.stringify(result.toolsFrame)}`
+  assert.deepEqual(
+    result.toolsFrame,
+    { top: 0, right: 0, bottom: 0, left: 0, radius: "0px" },
+    `${width}x${height} leaves the expanded utility column unframed`
+  );
+  assert.deepEqual(
+    {
+      workspace: result.workspaceBackground,
+      commandBar: result.commandBarBackground,
+      document: result.documentBackground,
+      tools: result.toolsBackground,
+      status: result.statusBarBackground
+    },
+    {
+      workspace: "rgba(0, 0, 0, 0)",
+      commandBar: "rgba(0, 0, 0, 0)",
+      document: "rgba(0, 0, 0, 0)",
+      tools: "rgba(0, 0, 0, 0)",
+      status: "rgba(0, 0, 0, 0)"
+    },
+    `${width}x${height} presents the workspace chrome directly on the app canvas`
   );
   assert.ok(result.workspace.x >= -1 && result.workspace.right <= width + 1, `${width}x${height} keeps the workspace inside the viewport`);
   assert.equal(result.split.sideBySide, "true", `${width}x${height} uses the desktop two-column workspace`);
@@ -2010,6 +2030,7 @@ async function assertLyricsWorkspace(width, height) {
     assert.equal(style.overflowX, "hidden", `${width}x${height} textarea wraps long lines without horizontal scrolling`);
     assert.equal(style.overflowY, "hidden", `${width}x${height} textarea delegates scrolling to the shared viewport`);
     assert.equal(style.resize, "none", `${width}x${height} textarea disables native resize`);
+    assert.notEqual(style.backgroundColor, "rgba(0, 0, 0, 0)", `${width}x${height} keeps the lyric editor as the one readable content surface`);
     assert.ok(style.scrollWidth <= style.clientWidth + 1, `${width}x${height} textarea has no horizontal overflow: ${JSON.stringify(style)}`);
   }
   assert.ok(result.textareaWidths.every((value) => value >= 260), `${width}x${height} keeps both bilingual editors usable: ${result.textareaWidths}`);
@@ -2285,6 +2306,11 @@ async function assertLyricsWorkspaceSplitInteractions() {
 
   await page.getByTestId("lyrics-sidebar-tab-cleanup").click();
   await page.waitForFunction(() => document.querySelector('[data-testid="lyrics-sidebar"]')?.getAttribute('data-collapsed') === 'false');
+  await page.waitForFunction(
+    () => document.activeElement?.getAttribute("data-testid") === "lyrics-sidebar-tab-cleanup",
+    undefined,
+    { timeout: 5_000 }
+  );
   assert.equal(
     await page.getByTestId("lyrics-sidebar-tab-cleanup").evaluate((node) => document.activeElement === node),
     true,

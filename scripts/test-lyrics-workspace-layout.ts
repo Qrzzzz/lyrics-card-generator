@@ -167,6 +167,15 @@ assert.ok(
   "the two editors retain one shared vertical scroller beneath one compact command bar"
 );
 assert.ok(
+  workspaceSource.includes("lyrics-workspace-surface") &&
+    workspaceSource.includes("lyrics-document-editor") &&
+    commandBarSource.includes("lyrics-command-button") &&
+    sidebarSource.includes("lyrics-sidebar-action") &&
+    globalsSource.includes(".lyrics-workspace-surface") &&
+    globalsSource.includes(".lyrics-sidebar-section--sticky"),
+  "the workspace chrome stays transparent while the lyric editor and critical inline states retain bounded surfaces"
+);
+assert.ok(
   sidebarSource.includes('data-collapsed={collapsed ? "true" : "false"}') &&
     sidebarSource.includes('testId={`lyrics-sidebar-tab-${tab}`}') &&
     !sidebarSource.includes('data-testid="lyrics-sidebar-budget"') &&
@@ -246,4 +255,4 @@ assert.ok(
   "the step-two split stays inside LyricsWorkspace and leaves the shared Stepper structure unchanged"
 );
 
-console.log(JSON.stringify({ ok: true, lyricsWorkspaceLayoutTests: 40 }, null, 2));
+console.log(JSON.stringify({ ok: true, lyricsWorkspaceLayoutTests: 41 }, null, 2));

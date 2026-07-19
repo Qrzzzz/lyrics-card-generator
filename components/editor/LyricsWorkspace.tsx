@@ -598,7 +598,7 @@ export function LyricsWorkspace({
   return (
     <div
       ref={workspaceRef}
-      className="relative flex min-h-0 flex-col overflow-hidden bg-[rgb(var(--input-bg))]"
+      className="lyrics-workspace-surface relative flex min-h-0 flex-col overflow-hidden"
       style={{ height: viewport.viewportHeight }}
       data-lyrics-viewport-mode="immersive"
       data-testid="lyrics-workspace"
@@ -642,7 +642,7 @@ export function LyricsWorkspace({
       >
         <section
           id="lyrics-workspace-editor"
-          className="lyrics-document-column flex min-h-0 min-w-0 flex-col overflow-hidden bg-[rgb(var(--input-bg))]"
+          className="lyrics-document-column flex min-h-0 min-w-0 flex-col overflow-hidden"
           aria-label={copy.manuscript}
           inert={!sideBySide && mobileSidebarOpen ? true : undefined}
         >
@@ -654,7 +654,7 @@ export function LyricsWorkspace({
           >
             <div
               className={cn(
-                "grid min-h-full min-w-0 items-start gap-3 p-3",
+                "lyrics-editor-grid grid min-h-full min-w-0 items-start gap-3 p-3",
                 showTranslation
                   ? "grid-cols-2 max-[620px]:grid-cols-1"
                   : "mx-auto w-full max-w-[52rem] grid-cols-1"
@@ -674,15 +674,15 @@ export function LyricsWorkspace({
                   onClick={(event) => updateCursor(event, "lyrics")}
                   wrap="soft"
                   placeholder={t("lyricPlaceholder")}
-                  className="field-shell control-focus block min-h-[280px] min-w-0 w-full resize-none overflow-x-hidden overflow-y-hidden rounded-lg px-3 py-3 text-sm leading-[1.75]"
+                  className="field-shell lyrics-document-editor control-focus block min-h-[280px] min-w-0 w-full resize-none overflow-x-hidden overflow-y-hidden rounded-lg px-3 py-3 text-sm leading-[1.75]"
                   data-testid="lyrics-editor-original"
                 />
               </EditorColumn>
               {showTranslation ? (
                 <EditorColumn label={copy.translation} htmlFor={translationId}>
                   <div
-                    className="rounded-[10px] p-px"
-                    style={{ background: `color-mix(in srgb, ${themeColor} 36%, rgb(var(--input-border)))` }}
+                    className="lyrics-translation-editor-shell rounded-[10px] p-px"
+                    style={{ background: `color-mix(in srgb, ${themeColor} 24%, rgb(var(--input-border)))` }}
                   >
                     <textarea
                       ref={translationRef}
@@ -695,7 +695,7 @@ export function LyricsWorkspace({
                       onClick={(event) => updateCursor(event, "translation")}
                       wrap="soft"
                       placeholder={t("translationPlaceholder")}
-                      className="field-shell control-focus block min-h-[280px] min-w-0 w-full resize-none overflow-x-hidden overflow-y-hidden rounded-[9px] border-transparent px-3 py-3 text-sm leading-[1.75]"
+                      className="field-shell lyrics-document-editor control-focus block min-h-[280px] min-w-0 w-full resize-none overflow-x-hidden overflow-y-hidden rounded-[9px] border-transparent px-3 py-3 text-sm leading-[1.75]"
                       data-testid="lyrics-editor-translation"
                     />
                   </div>
