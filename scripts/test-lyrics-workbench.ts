@@ -4,7 +4,6 @@ import {
   cleanPastedLyrics,
   cleanSynchronizedBlankRows,
   collapseConsecutiveBlankLines,
-  countFindMatches,
   createLyricsOperationHistory,
   getLyricsLineSelection,
   mergeSelectedLyricsLines,
@@ -13,7 +12,6 @@ import {
   redoLyricsOperation,
   removeAllBlankLines,
   removeParagraphTags,
-  replaceLyricsText,
   resolveLyricsTextScope,
   snapshotsEqual,
   stripLrcTimeline,
@@ -131,37 +129,6 @@ const lrc = stripLrcTimeline(
 assert.equal(lrc.text, "\n\nFirst line\nSecond line\n");
 assert.equal(lrc.stats.metadata, 2);
 assert.equal(lrc.stats.timestamps, 4);
-
-const findSource = "Moon light\nmoon river\nMOON";
-assert.equal(countFindMatches(findSource, { start: 0, end: 0 }, "moon", false), 3);
-assert.equal(countFindMatches(findSource, { start: 0, end: 0 }, "moon", true), 1);
-const replaced = replaceLyricsText(
-  findSource,
-  { start: findSource.indexOf("moon river"), end: findSource.indexOf("moon river") + 10 },
-  "moon",
-  "sun",
-  false
-);
-assert.equal(replaced.text, "Moon light\nsun river\nMOON");
-assert.equal(replaced.stats.replacements, 1);
-const unicodeExpansionReplace = replaceLyricsText(
-  "İA",
-  { start: 0, end: 0 },
-  "A",
-  "x",
-  false
-);
-assert.equal(
-  unicodeExpansionReplace.text,
-  "İx",
-  "case-insensitive replacement keeps source offsets stable around Unicode lowercase expansion"
-);
-assert.equal(unicodeExpansionReplace.stats.replacements, 1);
-assert.equal(
-  replaceLyricsText("a.b a-b", { start: 0, end: 0 }, "a.b", "$&", true).text,
-  "$& a-b",
-  "find text and replacement strings stay literal when they contain regular-expression tokens"
-);
 
 const mergeSource = "before\nfirst selected\n second selected \nthird selected\nafter";
 const merged = mergeSelectedLyricsLines(

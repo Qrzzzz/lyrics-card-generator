@@ -1,13 +1,8 @@
 "use client";
 
 import {
-  Database,
   Eraser,
   Languages,
-  ListChecks,
-  Music2,
-  PanelRightClose,
-  PanelRightOpen,
   X
 } from "lucide-react";
 import {
@@ -27,25 +22,20 @@ import {
 } from "@/components/editor/lyrics-workspace-copy";
 import { ToggleRow } from "@/components/ui/controls";
 import { getAIUiCopy } from "@/lib/ai/ui-copy";
-import { proxiedImageUrl } from "@/lib/image-utils";
 import type { createT } from "@/lib/i18n";
 import { formatChineseTranslation, splitAlternatingLyrics } from "@/lib/lyric-format";
-import type { ExportLyricLineStatus } from "@/lib/lyrics-document";
 import {
   cleanSynchronizedBlankRows,
-  countFindMatches,
   previewParagraphTags,
   removeAllBlankLines,
   resolveLyricsTextScope,
   stripLrcTimeline,
   type LyricsBlankMode,
-  type LyricsDocumentAnalysis,
-  type LyricsIssue,
   type LyricsSidebarTab,
   type LyricsTextSelection,
   type LyricsWorkbenchEditor
 } from "@/lib/lyrics-workbench";
-import type { Locale, SongInfo } from "@/lib/types";
+import type { Locale } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 type LyricsSidebarProps = {
@@ -57,32 +47,25 @@ type LyricsSidebarProps = {
   lyrics: string;
   translationText: string;
   translationEnabled: boolean;
-  lineStatus: ExportLyricLineStatus;
-  analysis: LyricsDocumentAnalysis;
-  song: SongInfo;
   locale: Locale;
   themeColor: string;
   t: ReturnType<typeof createT>;
   open: boolean;
   collapsed: boolean;
-  collapsible: boolean;
   mobileDrawer: boolean;
   feedback: { message: string; canUndo: boolean } | null;
   focusIntent: LyricsCommandIntent | null;
   isAITranslating: boolean;
   showAiTranslate: boolean;
   aiPanel?: ReactNode;
-  lyricsFetchPanel?: ReactNode;
   onTabChange: (tab: LyricsSidebarTab) => void;
   onOpenTab: (tab: LyricsSidebarTab, intent?: LyricsCommandIntent) => void;
-  onToggleCollapsed: () => void;
   onCloseDrawer: () => void;
   onIntentHandled: () => void;
   onUndo: () => void;
   onBlankCleanup: (mode: LyricsBlankMode, synchronized: boolean) => void;
   onCleanPaste: () => void;
   onStripLrc: () => void;
-  onReplace: (query: string, replacement: string, matchCase: boolean) => void;
   onMergeSelectedLines: () => void;
   onRemoveParagraphTags: () => void;
   onTranslationEnabledChange: (enabled: boolean) => void;
@@ -90,10 +73,9 @@ type LyricsSidebarProps = {
   onSplitAlternatingLyrics: (lyrics: string, translationText: string) => void;
   onFormatTranslation: (translationText: string) => void;
   onSwapColumns: () => void;
-  onLocate: (editor: LyricsWorkbenchEditor, line: number) => void;
 };
 
-const TABS: LyricsSidebarTab[] = ["cleanup", "translation", "review", "source"];
+const TABS: LyricsSidebarTab[] = ["cleanup", "translation"];
 
 export function LyricsSidebar(props: LyricsSidebarProps) {
   const {
@@ -101,16 +83,11 @@ export function LyricsSidebar(props: LyricsSidebarProps) {
     activeTab,
     open,
     collapsed,
-    collapsible,
     mobileDrawer,
-    lineStatus,
-    analysis,
-    lyricsFetchPanel,
     feedback,
     focusIntent,
     onTabChange,
     onOpenTab,
-    onToggleCollapsed,
     onCloseDrawer,
     onIntentHandled,
     onUndo
@@ -118,7 +95,6 @@ export function LyricsSidebar(props: LyricsSidebarProps) {
   const intentTargets = useRef<Partial<Record<LyricsCommandIntent, HTMLElement | null>>>({});
   const closeDrawerButtonRef = useRef<HTMLButtonElement | null>(null);
   const drawerOpenRef = useRef(false);
-  const reviewCount = analysis.issues.length + (analysis.lineDifference === 0 ? 0 : 1) + (lineStatus.isOverLimit ? 1 : 0);
 
   function onTabKeyDown(event: KeyboardEvent<HTMLButtonElement>, tab: LyricsSidebarTab) {
     const currentIndex = TABS.indexOf(tab);
@@ -216,13 +192,6 @@ export function LyricsSidebar(props: LyricsSidebarProps) {
       <div className={cn("h-full min-h-0", !collapsed && "flex flex-col")}>
         {collapsed ? (
           <div className="flex h-full min-h-0 flex-col items-center gap-2 p-2">
-            <SidebarIconButton
-              label={copy.expandSidebar}
-              testId="lyrics-sidebar-collapse"
-              onClick={onToggleCollapsed}
-              icon={<PanelRightOpen className="size-4" />}
-            />
-            <div className="h-px w-7 bg-[rgb(var(--panel-border))]" aria-hidden="true" />
             <nav className="flex flex-col gap-2" aria-label={copy.sidebar}>
               {TABS.map((tab) => (
                 <SidebarIconButton
@@ -231,28 +200,43 @@ export function LyricsSidebar(props: LyricsSidebarProps) {
                   testId={`lyrics-sidebar-tab-${tab}`}
                   onClick={() => openCollapsedTab(tab)}
                   active={activeTab === tab}
-                  badge={tab === "review" ? reviewCount : tab === "source" && lyricsFetchPanel ? 1 : 0}
                   icon={tabIcon(tab)}
                 />
               ))}
             </nav>
-            <button
-              type="button"
-              className={cn(
-                "mt-auto w-full rounded-md border px-1 py-2 text-center font-mono text-[10px] font-bold",
-                lineStatus.isOverLimit ? "status-danger" : "status-idle"
-              )}
-              onClick={() => onOpenTab("review", "budget")}
-              aria-label={`${copy.lineBudgetLabel}: ${lineStatus.totalLineCount}/${lineStatus.maxLineCount}`}
-              data-testid="lyrics-sidebar-budget"
-            >
-              {lineStatus.totalLineCount}/{lineStatus.maxLineCount}
-            </button>
           </div>
         ) : (
           <>
-          <header className="flex h-11 shrink-0 items-center gap-2 border-b border-[rgb(var(--panel-border))] px-2.5">
-            <p className="app-text-primary min-w-0 flex-1 truncate text-xs font-semibold">{copy.sidebar}</p>
+          <header className="flex shrink-0 items-center gap-1 border-b border-[rgb(var(--panel-border))] p-1.5">
+            <div
+              role="tablist"
+              aria-label={copy.sidebar}
+              className="grid min-w-0 flex-1 grid-cols-2 gap-1"
+            >
+              {TABS.map((tab) => (
+                <button
+                  key={tab}
+                  type="button"
+                  role="tab"
+                  aria-selected={activeTab === tab}
+                  aria-controls={`lyrics-sidebar-panel-${tab}`}
+                  id={`lyrics-sidebar-tab-${tab}`}
+                  className={cn(
+                    "control-focus relative flex min-h-9 min-w-0 items-center justify-center gap-1 rounded-md px-1 text-[10px] font-semibold transition",
+                    activeTab === tab
+                      ? "app-text-primary bg-[rgb(var(--button-bg-hover))]"
+                      : "app-text-subtle hover:bg-[rgb(var(--button-bg))]"
+                  )}
+                  onClick={() => onTabChange(tab)}
+                  onKeyDown={(event) => onTabKeyDown(event, tab)}
+                  tabIndex={activeTab === tab ? 0 : -1}
+                  data-testid={`lyrics-sidebar-tab-${tab}`}
+                >
+                  {tabIcon(tab, "size-3.5")}
+                  <span className="truncate">{tabLabel(copy, tab)}</span>
+                </button>
+              ))}
+            </div>
             {mobileDrawer ? (
               <SidebarIconButton
                 label={copy.closeDrawer}
@@ -261,48 +245,8 @@ export function LyricsSidebar(props: LyricsSidebarProps) {
                 icon={<X className="size-4" />}
                 buttonRef={closeDrawerButtonRef}
               />
-            ) : collapsible ? (
-              <SidebarIconButton
-                label={copy.collapseSidebar}
-                testId="lyrics-sidebar-collapse"
-                onClick={onToggleCollapsed}
-                icon={<PanelRightClose className="size-4" />}
-              />
             ) : null}
           </header>
-
-          <div
-            role="tablist"
-            aria-label={copy.sidebar}
-            className="grid shrink-0 grid-cols-4 gap-1 border-b border-[rgb(var(--panel-border))] p-1.5"
-          >
-            {TABS.map((tab) => (
-              <button
-                key={tab}
-                type="button"
-                role="tab"
-                aria-selected={activeTab === tab}
-                aria-controls={`lyrics-sidebar-panel-${tab}`}
-                id={`lyrics-sidebar-tab-${tab}`}
-                className={cn(
-                  "control-focus relative flex min-h-9 min-w-0 items-center justify-center gap-1 rounded-md px-1 text-[10px] font-semibold transition",
-                  activeTab === tab
-                    ? "app-text-primary bg-[rgb(var(--button-bg-hover))]"
-                    : "app-text-subtle hover:bg-[rgb(var(--button-bg))]"
-                )}
-                 onClick={() => onTabChange(tab)}
-                 onKeyDown={(event) => onTabKeyDown(event, tab)}
-                 tabIndex={activeTab === tab ? 0 : -1}
-                 data-testid={`lyrics-sidebar-tab-${tab}`}
-              >
-                {tabIcon(tab, "size-3.5")}
-                <span className="truncate">{tabLabel(copy, tab)}</span>
-                {tab === "review" && reviewCount > 0 ? (
-                  <span className="absolute right-1 top-1 size-1.5 rounded-full bg-[var(--control-focus-border)]" aria-hidden="true" />
-                ) : null}
-              </button>
-            ))}
-          </div>
 
           {feedback ? (
             <div
@@ -331,26 +275,13 @@ export function LyricsSidebar(props: LyricsSidebarProps) {
           data-testid="lyrics-sidebar-panels"
         >
           <SidebarPanel tab="cleanup" activeTab={activeTab}>
-            <CleanupPanel
-              {...props}
-              blankIntentRef={(node) => { intentTargets.current.blank = node; }}
-              findIntentRef={(node) => { intentTargets.current.find = node; }}
-            />
+            <CleanupPanel {...props} />
           </SidebarPanel>
           <SidebarPanel tab="translation" activeTab={activeTab}>
             <TranslationPanel
               {...props}
               aiIntentRef={(node) => { intentTargets.current.ai = node; }}
             />
-          </SidebarPanel>
-          <SidebarPanel tab="review" activeTab={activeTab}>
-            <ReviewPanel
-              {...props}
-              budgetIntentRef={(node) => { intentTargets.current.budget = node; }}
-            />
-          </SidebarPanel>
-          <SidebarPanel tab="source" activeTab={activeTab}>
-            <SourcePanel {...props} />
           </SidebarPanel>
         </div>
       </div>
@@ -392,19 +323,10 @@ function CleanupPanel({
   onBlankCleanup,
   onCleanPaste,
   onStripLrc,
-  onReplace,
   onMergeSelectedLines,
-  onRemoveParagraphTags,
-  blankIntentRef,
-  findIntentRef
-}: LyricsSidebarProps & {
-  blankIntentRef: (node: HTMLButtonElement | null) => void;
-  findIntentRef: (node: HTMLInputElement | null) => void;
-}) {
+  onRemoveParagraphTags
+}: LyricsSidebarProps) {
   const [synchronized, setSynchronized] = useState(false);
-  const [query, setQuery] = useState("");
-  const [replacement, setReplacement] = useState("");
-  const [matchCase, setMatchCase] = useState(false);
   const [showLrcPreview, setShowLrcPreview] = useState(false);
   const [showTagPreview, setShowTagPreview] = useState(false);
   const [showRemoveAllPreview, setShowRemoveAllPreview] = useState(false);
@@ -416,7 +338,6 @@ function CleanupPanel({
 
   const scope = resolveLyricsTextScope(activeText, selection);
   const selectedLineCount = scope.hasSelection ? scope.endLine - scope.startLine + 1 : 0;
-  const matchCount = countFindMatches(activeText, selection, query, matchCase);
   const lrcPreview = useMemo(
     () => stripLrcTimeline(activeText, selection),
     [activeText, selection]
@@ -454,9 +375,8 @@ function CleanupPanel({
   const removeAllScope = synchronizedActive ? synchronizedScopeSummary : scopeSummary;
 
   return (
-    <div className="grid gap-3">
-      <PanelHeading title={copy.cleanupHeading} />
-      <PanelSection title={copy.scopeHeading}>
+    <div className="grid gap-0">
+      <PanelSection title={copy.scopeHeading} sticky>
         <div className="grid grid-cols-2 gap-1">
           <ChoiceButton
             selected={!synchronizedActive}
@@ -481,7 +401,6 @@ function CleanupPanel({
       <PanelSection title={copy.blankLinesHeading}>
         <div className="grid gap-1.5">
           <ToolButton
-            ref={blankIntentRef}
             label={copy.trimBlankLines}
             onClick={() => onBlankCleanup("trim", synchronizedActive)}
             testId="lyrics-cleanup-blank-trim"
@@ -518,7 +437,7 @@ function CleanupPanel({
         </div>
       </PanelSection>
 
-      <PanelSection title={copy.cleanPaste}>
+      <PanelSection title={copy.cleanPaste} testId="lyrics-cleanup-section-paste">
         <p className="app-text-subtle text-[10px] leading-relaxed">{copy.cleanPasteHint}</p>
         <ToolButton
           label={copy.cleanPaste}
@@ -527,7 +446,7 @@ function CleanupPanel({
         />
       </PanelSection>
 
-      <PanelSection title={copy.lrcHeading}>
+      <PanelSection title={copy.lrcHeading} testId="lyrics-cleanup-section-lrc">
         <ToolButton
           label={copy.previewLrc}
           onClick={() => setShowLrcPreview((value) => !value)}
@@ -549,47 +468,7 @@ function CleanupPanel({
         ) : null}
       </PanelSection>
 
-      <PanelSection title={copy.findReplaceHeading}>
-        <label className="grid gap-1 text-[10px] font-semibold">
-          <span>{copy.findLabel}</span>
-          <input
-            ref={findIntentRef}
-            value={query}
-            onChange={(event) => setQuery(event.currentTarget.value)}
-            className="field-shell control-focus h-9 rounded-md px-2 text-xs"
-            data-testid="lyrics-find-input"
-          />
-        </label>
-        <label className="grid gap-1 text-[10px] font-semibold">
-          <span>{copy.replaceLabel}</span>
-          <input
-            value={replacement}
-            onChange={(event) => setReplacement(event.currentTarget.value)}
-            className="field-shell control-focus h-9 rounded-md px-2 text-xs"
-            data-testid="lyrics-replace-input"
-          />
-        </label>
-        <label className="app-text-subtle flex items-center gap-2 text-[10px]">
-          <input
-            type="checkbox"
-            checked={matchCase}
-            onChange={(event) => setMatchCase(event.currentTarget.checked)}
-            className="control-focus"
-          />
-          {copy.matchCase}
-        </label>
-        <p className="app-text-subtle text-[10px]">
-          {formatLyricsWorkspaceCopy(copy.matchCount, { count: matchCount })}
-        </p>
-        <ToolButton
-          label={formatLyricsWorkspaceCopy(copy.replaceMatches, { count: matchCount })}
-          onClick={() => onReplace(query, replacement, matchCase)}
-          disabled={!query || matchCount === 0}
-          testId="lyrics-replace-apply"
-        />
-      </PanelSection>
-
-      <PanelSection title={copy.mergeHeading}>
+      <PanelSection title={copy.mergeHeading} testId="lyrics-cleanup-section-merge">
         <ToolButton
           label={selectedLineCount >= 2
             ? formatLyricsWorkspaceCopy(copy.mergeSelectedLines, { count: selectedLineCount })
@@ -600,7 +479,7 @@ function CleanupPanel({
         />
       </PanelSection>
 
-      <PanelSection title={copy.tagsHeading}>
+      <PanelSection title={copy.tagsHeading} testId="lyrics-cleanup-section-tags">
         <ToolButton
           label={copy.previewTags}
           onClick={() => setShowTagPreview((value) => !value)}
@@ -634,7 +513,6 @@ function TranslationPanel({
   lyrics,
   translationText,
   translationEnabled,
-  analysis,
   themeColor,
   t,
   isAITranslating,
@@ -645,7 +523,6 @@ function TranslationPanel({
   onSplitAlternatingLyrics,
   onFormatTranslation,
   onSwapColumns,
-  onLocate,
   aiIntentRef
 }: LyricsSidebarProps & {
   aiIntentRef: (node: HTMLDivElement | null) => void;
@@ -658,26 +535,27 @@ function TranslationPanel({
   const splitTranslationLines = countRows(split.translationText);
 
   return (
-    <div className="grid gap-3">
-      <PanelHeading title={copy.translationHeading} />
-      <ToggleRow
-        label={t("enableTranslation")}
-        checked={translationEnabled}
-        onChange={onTranslationEnabledChange}
-        size="sm"
-        testId="translation-toggle"
-      />
+    <div className="grid gap-0">
+      <div className="grid gap-2 border-b border-[rgb(var(--panel-border))] pb-3">
+        <ToggleRow
+          label={t("enableTranslation")}
+          checked={translationEnabled}
+          onChange={onTranslationEnabledChange}
+          size="sm"
+          testId="translation-toggle"
+        />
 
-      {showAiTranslate ? (
-        <div ref={aiIntentRef} tabIndex={-1} className="control-focus rounded-md" data-testid="lyrics-ai-entry">
-          <AiTranslateButton
-            label={isAITranslating ? aiCopy.translating : aiCopy.aiTranslate}
-            loading={isAITranslating}
-            themeColor={themeColor}
-            onClick={onAITranslate}
-          />
-        </div>
-      ) : null}
+        {showAiTranslate ? (
+          <div ref={aiIntentRef} tabIndex={-1} className="control-focus rounded-md" data-testid="lyrics-ai-entry">
+            <AiTranslateButton
+              label={isAITranslating ? aiCopy.translating : aiCopy.aiTranslate}
+              loading={isAITranslating}
+              themeColor={themeColor}
+              onClick={onAITranslate}
+            />
+          </div>
+        ) : null}
+      </div>
       <div
         hidden={!aiPanel}
         className="min-w-0 rounded-md border border-[rgb(var(--panel-border))] bg-[rgb(var(--input-bg))] p-2"
@@ -686,7 +564,7 @@ function TranslationPanel({
         {aiPanel}
       </div>
 
-      <PanelSection title={t("splitAlternatingLyrics")}>
+      <PanelSection title={t("splitAlternatingLyrics")} testId="lyrics-translation-section-split">
         <ToolButton
           label={copy.splitPreview}
           onClick={() => setShowSplitPreview((value) => !value)}
@@ -708,7 +586,7 @@ function TranslationPanel({
         ) : null}
       </PanelSection>
 
-      <PanelSection title={copy.formatTranslation}>
+      <PanelSection title={copy.formatTranslation} testId="lyrics-translation-section-format">
         <ToolButton
           label={copy.formatTranslation}
           onClick={() => onFormatTranslation(formatChineseTranslation(translationText))}
@@ -717,7 +595,7 @@ function TranslationPanel({
         />
       </PanelSection>
 
-      <PanelSection title={copy.swapPreview}>
+      <PanelSection title={copy.swapPreview} testId="lyrics-translation-section-swap">
         <ToolButton
           label={copy.swapPreview}
           onClick={() => setShowSwapPreview((value) => !value)}
@@ -737,150 +615,29 @@ function TranslationPanel({
         ) : null}
       </PanelSection>
 
-      <PanelSection title={copy.alignmentHeading}>
-        {analysis.lineDifference === 0 ? (
-          <p className="status-success rounded-md border px-2.5 py-2 text-[11px]">{copy.alignmentOk}</p>
-        ) : (
-          <div className="status-info grid gap-2 rounded-md border px-2.5 py-2 text-[11px]">
-            <p>{formatLyricsWorkspaceCopy(copy.alignmentMismatch, {
-              count: Math.abs(analysis.lineDifference),
-              line: analysis.firstUnpairedLine ?? 1
-            })}</p>
-            <ToolButton
-              label={formatLyricsWorkspaceCopy(copy.locateLine, { line: analysis.firstUnpairedLine ?? 1 })}
-              onClick={() => onLocate(
-                analysis.lineDifference > 0 ? "lyrics" : "translation",
-                analysis.firstUnpairedLine ?? 1
-              )}
-              testId="lyrics-alignment-locate"
-            />
-          </div>
-        )}
-      </PanelSection>
     </div>
   );
 }
 
-function ReviewPanel({
-  copy,
-  lineStatus,
-  analysis,
-  onLocate,
-  budgetIntentRef
-}: LyricsSidebarProps & {
-  budgetIntentRef: (node: HTMLDivElement | null) => void;
+function PanelSection({
+  title,
+  children,
+  sticky = false,
+  testId
+}: {
+  title: string;
+  children: ReactNode;
+  sticky?: boolean;
+  testId?: string;
 }) {
   return (
-    <div className="grid gap-3">
-      <PanelHeading title={copy.reviewHeading} />
-      <div
-        ref={budgetIntentRef}
-        tabIndex={-1}
-        className={cn(
-          "control-focus rounded-md border px-3 py-2.5 text-xs leading-relaxed",
-          lineStatus.isOverLimit ? "status-danger" : "status-idle"
-        )}
-        data-testid="lyrics-line-budget"
-      >
-        <p className="font-semibold">
-          {lineStatus.originalLineCount} + {lineStatus.translationLineCount} = {lineStatus.totalLineCount} / {lineStatus.maxLineCount}
-        </p>
-        <p className="mt-1 text-[10px]">
-          {formatLyricsWorkspaceCopy(
-            lineStatus.isOverLimit ? copy.budgetExceeded : copy.budgetRemaining,
-            { count: lineStatus.isOverLimit ? lineStatus.exceededLineCount : lineStatus.remainingLineCount }
-          )}
-        </p>
-      </div>
-
-      <PanelSection title={copy.alignmentHeading}>
-        {analysis.lineDifference === 0 ? (
-          <p className="app-text-subtle text-[11px]">{copy.alignmentOk}</p>
-        ) : (
-          <IssueButton
-            label={formatLyricsWorkspaceCopy(copy.alignmentMismatch, {
-              count: Math.abs(analysis.lineDifference),
-              line: analysis.firstUnpairedLine ?? 1
-            })}
-            onClick={() => onLocate(
-              analysis.lineDifference > 0 ? "lyrics" : "translation",
-              analysis.firstUnpairedLine ?? 1
-            )}
-            testId="lyrics-review-alignment"
-          />
-        )}
-      </PanelSection>
-
-      <PanelSection title={copy.issueHeading}>
-        {analysis.issues.length > 0 ? (
-          <div className="grid gap-1.5">
-            {analysis.issues.slice(0, 24).map((issue) => (
-              <IssueButton
-                key={issue.id}
-                label={issueLabel(copy, issue)}
-                excerpt={issue.excerpt}
-                onClick={() => onLocate(issue.editor, issue.line)}
-                testId="lyrics-review-issue"
-              />
-            ))}
-          </div>
-        ) : (
-          <p className="app-text-subtle text-[11px] leading-relaxed">{copy.noIssues}</p>
-        )}
-      </PanelSection>
-    </div>
-  );
-}
-
-function SourcePanel({
-  copy,
-  song,
-  t,
-  lyricsFetchPanel
-}: LyricsSidebarProps) {
-  const source = song.source || "manual";
-  return (
-    <div className="grid gap-3">
-      <PanelHeading title={copy.sourceHeading} />
-      <section className="rounded-md border border-[rgb(var(--panel-border))] bg-[rgb(var(--button-bg))] p-2.5" aria-label={copy.currentSong}>
-        <div className="flex min-w-0 items-center gap-2.5">
-          <div className="control-surface relative flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-md">
-            {song.coverUrl || song.proxiedCoverUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={song.proxiedCoverUrl || proxiedImageUrl(song.coverUrl)}
-                alt=""
-                className="absolute inset-0 size-full object-cover"
-                crossOrigin="anonymous"
-              />
-            ) : <Music2 className="app-text-subtle size-4" aria-hidden="true" />}
-          </div>
-          <div className="min-w-0">
-            <p className="app-text-primary truncate text-xs font-semibold">{song.title || t("untitled")}</p>
-            <p className="app-text-subtle mt-0.5 truncate text-[10px]">{song.artist || t("unknownArtist")}</p>
-          </div>
-        </div>
-        <p className="app-text-subtle mt-2 text-[10px]">
-          {formatLyricsWorkspaceCopy(copy.sourceStatus, { source })}
-        </p>
-      </section>
-      <div
-        className="min-w-0 rounded-md border border-[rgb(var(--panel-border))] bg-[rgb(var(--input-bg))] p-2"
-        data-testid="lyrics-fetch-panel-boundary"
-      >
-        {lyricsFetchPanel ?? <p className="app-text-subtle text-[11px] leading-relaxed">{copy.noSourceTools}</p>}
-      </div>
-    </div>
-  );
-}
-
-function PanelHeading({ title }: { title: string }) {
-  return <h3 className="app-text-primary text-sm font-semibold">{title}</h3>;
-}
-
-function PanelSection({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <section className="grid gap-2 rounded-md border border-[rgb(var(--panel-border))] bg-[rgb(var(--button-bg))] p-2.5">
+    <section
+      className={cn(
+        "grid gap-2 border-b border-[rgb(var(--panel-border))] py-3 last:border-b-0",
+        sticky && "sticky top-0 z-10 bg-[rgb(var(--panel-bg))] pt-0"
+      )}
+      data-testid={testId}
+    >
       <h4 className="app-text-primary text-[11px] font-semibold">{title}</h4>
       {children}
     </section>
@@ -963,30 +720,6 @@ const ToolButton = function ToolButton({
   );
 };
 
-function IssueButton({
-  label,
-  excerpt,
-  onClick,
-  testId
-}: {
-  label: string;
-  excerpt?: string;
-  onClick: () => void;
-  testId: string;
-}) {
-  return (
-    <button
-      type="button"
-      className="app-button control-focus grid min-h-10 w-full gap-0.5 rounded-md px-2.5 py-2 text-left"
-      onClick={onClick}
-      data-testid={testId}
-    >
-      <span className="app-text-primary text-[10px] font-semibold leading-relaxed">{label}</span>
-      {excerpt ? <span className="app-text-subtle truncate font-mono text-[9px]">{excerpt}</span> : null}
-    </button>
-  );
-}
-
 function SidebarIconButton({
   label,
   icon,
@@ -1030,30 +763,12 @@ function SidebarIconButton({
 
 function tabLabel(copy: LyricsWorkspaceCopy, tab: LyricsSidebarTab) {
   if (tab === "cleanup") return copy.cleanupTab;
-  if (tab === "translation") return copy.translationTab;
-  if (tab === "review") return copy.reviewTab;
-  return copy.sourceTab;
+  return copy.translationTab;
 }
 
 function tabIcon(tab: LyricsSidebarTab, className = "size-4") {
   if (tab === "cleanup") return <Eraser className={className} />;
-  if (tab === "translation") return <Languages className={className} />;
-  if (tab === "review") return <ListChecks className={className} />;
-  return <Database className={className} />;
-}
-
-function issueLabel(copy: LyricsWorkspaceCopy, issue: LyricsIssue) {
-  const label = issue.editor === "translation" ? copy.translation : copy.original;
-  const template = issue.kind === "long-line"
-    ? copy.longLineIssue
-    : issue.kind === "duplicate-line"
-      ? copy.duplicateLineIssue
-      : copy.invisibleIssue;
-  return formatLyricsWorkspaceCopy(template, {
-    label,
-    line: issue.line,
-    count: issue.count
-  });
+  return <Languages className={className} />;
 }
 
 function countRows(text: string) {

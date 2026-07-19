@@ -294,15 +294,15 @@ export function useEditorSteps({
                 onConfirm={handlers.onConfirmAiTranslate}
               />
             ) : null}
-            lyricsFetchPanel={canFetchLyrics ? (
+            lyricsFetchPanel={(
               <LyricsFetchPanel
                 song={state.song}
-                visible
+                available={canFetchLyrics}
                 documentRevision={documentRevision}
                 onUseLyrics={handlers.onUseFetchedLyrics}
                 t={t}
               />
-            ) : undefined}
+            )}
             themeColor={themeColor}
             contentMode={state.style.contentMode}
             locale={state.locale}
