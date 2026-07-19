@@ -1,8 +1,7 @@
 "use client";
 
-import { FileText, WandSparkles } from "lucide-react";
+import { FileText, WandSparkles, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { Section } from "@/components/ui/controls";
 import { createAppRequestHeaders } from "@/lib/app-request";
 import type { createT } from "@/lib/i18n";
 import type { LyricsCandidate, SongInfo } from "@/lib/types";
@@ -15,25 +14,28 @@ type FetchResponse =
 
 export function LyricsFetchPanel({
   song,
-  visible,
+  available,
   documentRevision,
   onUseLyrics,
   t
 }: {
   song: SongInfo;
-  visible: boolean;
+  available: boolean;
   documentRevision: number;
   onUseLyrics: (lyrics: string, revision: number, songIdentity: string) => boolean;
   t: ReturnType<typeof createT>;
 }) {
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
+  const [open, setOpen] = useState(false);
   const [candidate, setCandidate] = useState<{
     data: LyricsCandidate;
     revision: number;
     songIdentity: string;
   } | null>(null);
   const activeRequestRef = useRef<AbortController | null>(null);
+  const rootRef = useRef<HTMLDivElement | null>(null);
+  const triggerRef = useRef<HTMLButtonElement | null>(null);
   const identity = songDocumentIdentity(song);
 
   useEffect(() => {
@@ -42,20 +44,37 @@ export function LyricsFetchPanel({
     setCandidate(null);
     setStatus("idle");
     setMessage("");
+    setOpen(false);
   }, [documentRevision, identity]);
 
   useEffect(() => () => activeRequestRef.current?.abort(), []);
 
-  if (!visible) {
-    return null;
-  }
+  useEffect(() => {
+    if (!open) return;
+    function onPointerDown(event: PointerEvent) {
+      if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
+    }
+    function onKeyDown(event: globalThis.KeyboardEvent) {
+      if (event.key !== "Escape") return;
+      setOpen(false);
+      window.requestAnimationFrame(() => triggerRef.current?.focus({ preventScroll: true }));
+    }
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open]);
 
   async function fetchLyrics() {
+    if (!available) return;
     activeRequestRef.current?.abort();
     const controller = new AbortController();
     activeRequestRef.current = controller;
     const requestRevision = documentRevision;
     const requestIdentity = identity;
+    setOpen(true);
     setStatus("loading");
     setMessage(t("fetchingLyrics"));
     setCandidate(null);
@@ -90,50 +109,92 @@ export function LyricsFetchPanel({
   }
 
   return (
-    <Section title={t("lyricsCandidate")} eyebrow={t("tryFetchLyrics")}>
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="app-text-subtle text-sm">{t("lyricsFetchNotice")}</p>
-        <button
-          type="button"
-          onClick={fetchLyrics}
-          disabled={status === "loading"}
-          className="app-button inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-lg px-4 text-sm font-semibold transition disabled:cursor-wait disabled:opacity-65"
-        >
-          <WandSparkles className="h-4 w-4" />
+    <div ref={rootRef} className="relative">
+      <button
+        ref={triggerRef}
+        type="button"
+        onClick={() => void fetchLyrics()}
+        disabled={!available || status === "loading"}
+        className="app-button control-focus flex h-8 items-center gap-1.5 rounded-md px-2 text-[10px] font-semibold transition disabled:cursor-default disabled:opacity-35"
+        title={t("tryFetchLyrics")}
+        aria-label={t("tryFetchLyrics")}
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        aria-controls="lyrics-fetch-panel"
+        data-testid="lyrics-command-fetch"
+      >
+        <WandSparkles className={cn("size-3.5", status === "loading" && "animate-pulse")} />
+        <span className="hidden min-[1080px]:inline">
           {status === "loading" ? t("fetchingLyrics") : t("tryFetchLyrics")}
-        </button>
-      </div>
-      {message ? (
-        <p
-          className={cn(
-            "rounded-lg border px-3 py-2 text-sm",
-            status === "success" && "status-success",
-            status === "error" && "status-danger",
-            status === "loading" && "status-info"
-          )}
+        </span>
+      </button>
+
+      {open ? (
+        <div
+          id="lyrics-fetch-panel"
+          role="dialog"
+          aria-label={t("lyricsCandidate")}
+          className="absolute right-0 top-[calc(100%+0.5rem)] z-50 max-h-[calc(100vh-12rem)] w-96 max-w-[calc(100vw-1rem)] overflow-y-auto rounded-lg border border-[rgb(var(--panel-border))] bg-[rgb(var(--elevated-panel-bg))] p-3 shadow-2xl backdrop-blur-xl"
+          data-testid="lyrics-fetch-panel-boundary"
         >
-          {message}
-        </p>
-      ) : null}
-      {candidate ? (
-        <div className="grid gap-3">
-          <pre className="app-text-primary max-h-56 overflow-auto whitespace-pre-wrap rounded-lg border border-[rgb(var(--panel-border))] bg-[rgb(var(--input-bg))] p-3 text-sm leading-relaxed">
-            {candidate.data.lyrics}
-          </pre>
-          <button
-            type="button"
-            onClick={() => {
-              if (onUseLyrics(candidate.data.lyrics, candidate.revision, candidate.songIdentity)) {
-                setCandidate(null);
-              }
-            }}
-            className="app-button inline-flex h-11 items-center justify-center gap-2 rounded-lg px-4 text-sm font-semibold transition"
-          >
-            <FileText className="h-4 w-4" />
-            {t("useFetchedLyrics")}
-          </button>
+          <header className="mb-2 flex items-center justify-between gap-2 border-b border-[rgb(var(--panel-border))] pb-2">
+            <div>
+              <p className="app-text-subtle text-[9px] font-semibold uppercase tracking-[0.12em]">{t("tryFetchLyrics")}</p>
+              <h3 className="app-text-primary mt-0.5 text-xs font-semibold">{t("lyricsCandidate")}</h3>
+            </div>
+            <button
+              type="button"
+              className="app-button control-focus flex size-7 items-center justify-center rounded-md"
+              onClick={() => {
+                setOpen(false);
+                window.requestAnimationFrame(() => triggerRef.current?.focus({ preventScroll: true }));
+              }}
+              aria-label={t("titleBar.close")}
+              data-testid="lyrics-fetch-close"
+            >
+              <X className="size-3.5" />
+            </button>
+          </header>
+
+          <p className="app-text-subtle text-[10px] leading-relaxed">{t("lyricsFetchNotice")}</p>
+
+          {message ? (
+            <p
+              className={cn(
+                "mt-2 rounded-md border px-2.5 py-2 text-[11px]",
+                status === "success" && "status-success",
+                status === "error" && "status-danger",
+                status === "loading" && "status-info"
+              )}
+              data-testid="lyrics-fetch-status"
+            >
+              {message}
+            </p>
+          ) : null}
+
+          {candidate ? (
+            <div className="mt-2 grid gap-2">
+              <pre className="app-text-primary max-h-56 overflow-auto whitespace-pre-wrap rounded-md border border-[rgb(var(--panel-border))] bg-[rgb(var(--input-bg))] p-2.5 text-[11px] leading-relaxed">
+                {candidate.data.lyrics}
+              </pre>
+              <button
+                type="button"
+                onClick={() => {
+                  if (onUseLyrics(candidate.data.lyrics, candidate.revision, candidate.songIdentity)) {
+                    setCandidate(null);
+                    setOpen(false);
+                  }
+                }}
+                className="app-button control-focus inline-flex h-9 items-center justify-center gap-2 rounded-md px-3 text-[11px] font-semibold transition"
+                data-testid="lyrics-fetch-use"
+              >
+                <FileText className="size-3.5" />
+                {t("useFetchedLyrics")}
+              </button>
+            </div>
+          ) : null}
         </div>
       ) : null}
-    </Section>
+    </div>
   );
 }

@@ -24,14 +24,14 @@ const {
 } = __internalLyricsWorkspaceLayout;
 
 const defaultSplit = resolveLyricsWorkspaceSplit(1220, DEFAULT_EDITOR_RATIO);
-assert.equal(defaultSplit.usableWidth, 1200);
-assert.equal(defaultSplit.editorWidth, 900, "the lyrics editor defaults to three quarters of usable width");
-assert.equal(defaultSplit.toolsWidth, 300, "the expanded tools default to one quarter of usable width");
-assert.equal(defaultSplit.gap, 20, "the expanded separator keeps the shared 20px hit area");
+assert.equal(defaultSplit.usableWidth, 1212);
+assert.equal(defaultSplit.editorWidth, 909, "the lyrics editor defaults to three quarters of usable width");
+assert.equal(defaultSplit.toolsWidth, 303, "the expanded tools stay above the readable 300px floor");
+assert.equal(defaultSplit.gap, 8, "the expanded separator uses a compact visual gutter with a usable hit area");
 
 const expandedTools = resolveLyricsWorkspaceSplit(1220, MIN_EDITOR_RATIO);
-assert.ok(Math.abs(expandedTools.editorWidth - 800) < 0.001);
-assert.ok(Math.abs(expandedTools.toolsWidth - 400) < 0.001);
+assert.ok(Math.abs(expandedTools.editorWidth - 808) < 0.001);
+assert.ok(Math.abs(expandedTools.toolsWidth - 404) < 0.001);
 assert.ok(Math.abs(expandedTools.ratio - 2 / 3) < 0.0001, "tools can expand to one third without shrinking the editor further");
 
 const minimumSplit = resolveLyricsWorkspaceSplit(MIN_SIDE_BY_SIDE_WIDTH, DEFAULT_EDITOR_RATIO);
@@ -47,7 +47,7 @@ let layout = createLyricsWorkspaceLayoutState();
 assert.deepEqual(layout, {
   editorRatio: 0.75,
   lastExpandedEditorRatio: 0.75,
-  collapsed: false
+  collapsed: true
 });
 layout = lyricsWorkspaceLayoutReducer(layout, { type: "set-ratio", ratio: MIN_EDITOR_RATIO });
 layout = lyricsWorkspaceLayoutReducer(layout, { type: "collapse" });
@@ -124,11 +124,13 @@ assert.equal(
   "pointer geometry measures from the separator center and clamps at one third tools"
 );
 
-assert.equal(COLLAPSED_TOOLS_WIDTH, 64, "the collapsed tool rail stays approximately 64px wide");
+assert.equal(COLLAPSED_TOOLS_WIDTH, 52, "the collapsed tool rail stays compact while preserving 36px targets");
 
 const editorStepsSource = readFileSync(resolve("components/editor/useEditorSteps.tsx"), "utf8");
 const workspaceSource = readFileSync(resolve("components/editor/LyricsWorkspace.tsx"), "utf8");
 const commandBarSource = readFileSync(resolve("components/editor/LyricsCommandBar.tsx"), "utf8");
+const reviewMenuSource = readFileSync(resolve("components/editor/LyricsReviewMenu.tsx"), "utf8");
+const fetchPanelSource = readFileSync(resolve("components/editor/LyricsFetchPanel.tsx"), "utf8");
 const sidebarSource = readFileSync(resolve("components/editor/LyricsSidebar.tsx"), "utf8");
 const copySource = readFileSync(resolve("components/editor/lyrics-workspace-copy.ts"), "utf8");
 const resizableSource = readFileSync(resolve("components/editor/hooks/useResizableSplit.ts"), "utf8");
@@ -167,38 +169,50 @@ assert.ok(
 assert.ok(
   sidebarSource.includes('data-collapsed={collapsed ? "true" : "false"}') &&
     sidebarSource.includes('testId={`lyrics-sidebar-tab-${tab}`}') &&
-    sidebarSource.includes('data-testid="lyrics-sidebar-budget"') &&
+    !sidebarSource.includes('data-testid="lyrics-sidebar-budget"') &&
+    !sidebarSource.includes("<CollapsiblePanelSection") &&
+    sidebarSource.includes('testId="lyrics-cleanup-section-paste"') &&
+    sidebarSource.includes('testId="lyrics-cleanup-section-lrc"') &&
     !sidebarSource.includes("lyrics-tool-split-collapsed"),
-  "the collapsed rail keeps stable tab icons and status without duplicating every tool"
+  "the collapsed rail keeps stable tab icons while single-action sections remain directly visible when expanded"
 );
 assert.ok(
   commandBarSource.includes('role="toolbar"') &&
     commandBarSource.includes('testId="lyrics-command-undo"') &&
     commandBarSource.includes('testId="lyrics-command-redo"') &&
-    commandBarSource.includes('testId="lyrics-command-blank"') &&
-    commandBarSource.includes('testId="lyrics-command-find"') &&
+    commandBarSource.includes('testId="lyrics-command-clean-paste"') &&
+    commandBarSource.includes('testId="lyrics-command-collapse-blanks"') &&
+    commandBarSource.includes('testId="lyrics-command-strip-lrc"') &&
     commandBarSource.includes('testId="lyrics-command-ai"') &&
-    commandBarSource.includes('data-testid="lyrics-command-budget"') &&
-    commandBarSource.includes("copy.lineBudgetLabel"),
-  "the compact command bar exposes history, cleanup, find, AI, budget, and sidebar controls"
+    commandBarSource.includes('data-testid="lyrics-status-bar"') &&
+    commandBarSource.includes("{lyricsFetchAction}") &&
+    commandBarSource.includes("{reviewAction}") &&
+    reviewMenuSource.includes('data-testid="lyrics-command-review"') &&
+    reviewMenuSource.includes('data-testid="lyrics-line-budget"') &&
+    fetchPanelSource.includes('data-testid="lyrics-command-fetch"') &&
+    fetchPanelSource.includes('data-testid="lyrics-fetch-panel-boundary"') &&
+    !commandBarSource.includes("lyrics-command-budget") &&
+    !commandBarSource.includes("lyrics-command-find") &&
+    !commandBarSource.includes("lyrics-find-input"),
+  "the command strip exposes editing actions on the left and independent fetch/review actions on the right"
 );
 assert.ok(
   sidebarSource.includes('role="tablist"') &&
     sidebarSource.includes('tab="cleanup"') &&
     sidebarSource.includes('tab="translation"') &&
-    sidebarSource.includes('tab="review"') &&
-    sidebarSource.includes('tab="source"') &&
+    !sidebarSource.includes('tab="review"') &&
+    !sidebarSource.includes('tab="source"') &&
     sidebarSource.includes("hidden={activeTab !== tab}") &&
     sidebarSource.includes('data-testid="lyrics-sidebar-panels"') &&
     sidebarSource.includes('collapsed && "hidden"') &&
     sidebarSource.includes('event.key === "ArrowRight"') &&
     sidebarSource.includes("tabIndex={activeTab === tab ? 0 : -1}"),
-  "all four stable panels remain mounted across tab and rail visibility changes and expose roving keyboard navigation"
+  "the sidebar keeps only cleanup and translation panels with roving keyboard navigation"
 );
 assert.ok(
-  editorStepsSource.includes("lyricsFetchPanel={canFetchLyrics ? (") &&
-    !editorStepsSource.includes("canFetchLyrics && !ai.isOpen"),
-  "the source panel no longer disappears when the AI translation panel opens"
+  editorStepsSource.includes("lyricsFetchPanel={(") &&
+    editorStepsSource.includes("available={canFetchLyrics}"),
+  "the independent fetch command remains mounted and reflects source availability"
 );
 assert.ok(
   workspaceSource.includes("cleanSynchronizedBlankRows") &&
@@ -222,7 +236,7 @@ for (const locale of ['zh:', '"zh-TW":', 'en:', 'fr:', 'ja:', 'es:']) {
 }
 assert.ok(
   copySource.includes("duplicateLineIssue") &&
-    sidebarSource.includes("issue.kind === \"duplicate-line\"") &&
+    reviewMenuSource.includes("issue.kind === \"duplicate-line\"") &&
     !sidebarSource.includes("removeDuplicate"),
   "duplicate lines are reported for navigation and never silently deleted"
 );

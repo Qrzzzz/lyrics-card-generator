@@ -15,8 +15,10 @@ import {
 } from "react";
 import {
   LyricsCommandBar,
+  LyricsStatusBar,
   type LyricsCommandIntent
 } from "@/components/editor/LyricsCommandBar";
+import { LyricsReviewMenu } from "@/components/editor/LyricsReviewMenu";
 import { LyricsSidebar } from "@/components/editor/LyricsSidebar";
 import {
   formatLyricsWorkspaceCopy,
@@ -47,7 +49,6 @@ import {
   redoLyricsOperation,
   removeAllBlankLines,
   removeParagraphTags,
-  replaceLyricsText,
   resolveLyricsTextScope,
   snapshotsEqual,
   stripLrcTimeline,
@@ -63,12 +64,11 @@ import {
   type LyricsTextSelection,
   type LyricsWorkbenchEditor
 } from "@/lib/lyrics-workbench";
-import type { ContentMode, Locale, SongInfo } from "@/lib/types";
+import type { ContentMode, Locale } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 type LyricsWorkspaceProps = {
   lyrics: string;
-  song: SongInfo;
   lineStatus: ExportLyricLineStatus;
   layout: LyricsWorkspaceLayoutState;
   sidebarTab: LyricsSidebarTab;
@@ -104,7 +104,6 @@ type OperationFeedback = {
 
 export function LyricsWorkspace({
   lyrics,
-  song,
   lineStatus,
   layout,
   sidebarTab,
@@ -188,7 +187,6 @@ export function LyricsWorkspace({
     translationText,
     translationEnabled: showTranslation
   }), [lyrics, showTranslation, translationText]);
-
   const resizeEditors = useCallback(() => {
     const editors = [lyricsRef.current, showTranslation ? translationRef.current : null].filter(Boolean) as HTMLTextAreaElement[];
     if (editors.length === 0) return;
@@ -416,18 +414,6 @@ export function LyricsWorkspace({
     );
   }
 
-  function replaceText(query: string, replacement: string, matchCase: boolean) {
-    const result = replaceLyricsText(activeText, activeSelection, query, replacement, matchCase);
-    applyActiveTransform(
-      copy.findReplaceHeading,
-      result,
-      formatLyricsWorkspaceCopy(copy.replacedResult, {
-        scope: scopeLabel,
-        count: result.stats.replacements ?? 0
-      })
-    );
-  }
-
   function mergeLines() {
     const result = mergeSelectedLyricsLines(activeText, activeSelection);
     applyActiveTransform(
@@ -564,11 +550,6 @@ export function LyricsWorkspace({
     }
   }
 
-  function toggleSidebarFromSidebar() {
-    toggleSidebar();
-    window.requestAnimationFrame(() => sidebarToggleRef.current?.focus({ preventScroll: true }));
-  }
-
   function closeMobileSidebar() {
     setMobileSidebarOpen(false);
     setFocusIntent(null);
@@ -601,13 +582,6 @@ export function LyricsWorkspace({
       end: activeScope.endLine
     }
   );
-  const activeTabLabel = sidebarTab === "cleanup"
-    ? copy.cleanupTab
-    : sidebarTab === "translation"
-      ? copy.translationTab
-      : sidebarTab === "review"
-        ? copy.reviewTab
-        : copy.sourceTab;
   const splitStyle = sideBySide
     ? sidebarCollapsed
       ? {
@@ -632,23 +606,27 @@ export function LyricsWorkspace({
       <LyricsCommandBar
         copy={copy}
         activeTab={sidebarTab}
-        activeTabLabel={activeTabLabel}
-        currentPosition={currentPosition}
-        scopeLabel={scopeLabel}
-        lineBudget={{
-          total: lineStatus.totalLineCount,
-          max: lineStatus.maxLineCount,
-          over: lineStatus.isOverLimit
-        }}
         canUndo={historyRef.current.past.length > 0}
         canRedo={historyRef.current.future.length > 0}
         isAITranslating={isAITranslating}
         showAITranslate={showAiTranslate}
+        lyricsFetchAction={lyricsFetchPanel}
+        reviewAction={(
+          <LyricsReviewMenu
+            copy={copy}
+            lineStatus={lineStatus}
+            analysis={analysis}
+            onLocate={locateIssue}
+          />
+        )}
         sidebarExpanded={sidebarExpanded}
         sidebarToggleRef={sidebarToggleRef}
         onUndo={undoOperation}
         onRedo={redoOperation}
-        onOpen={openTab}
+        onCleanPaste={cleanPaste}
+        onCollapseBlankLines={() => blankCleanup("collapse", false)}
+        onStripLrc={cleanLrc}
+        onAITranslate={() => openTab("translation", "ai")}
         onToggleSidebar={toggleSidebar}
       />
 
@@ -747,32 +725,25 @@ export function LyricsWorkspace({
           lyrics={lyrics}
           translationText={translationText}
           translationEnabled={translationEnabled}
-          lineStatus={lineStatus}
-          analysis={analysis}
-          song={song}
           locale={locale}
           themeColor={themeColor}
           t={t}
           open={sideBySide || mobileSidebarOpen}
           collapsed={sidebarCollapsed}
-          collapsible={sideBySide}
           mobileDrawer={!sideBySide}
           feedback={feedback}
           focusIntent={focusIntent}
           isAITranslating={isAITranslating}
           showAiTranslate={showAiTranslate}
           aiPanel={aiPanel}
-          lyricsFetchPanel={lyricsFetchPanel}
           onTabChange={onSidebarTabChange}
           onOpenTab={openTab}
-          onToggleCollapsed={toggleSidebarFromSidebar}
           onCloseDrawer={closeMobileSidebar}
           onIntentHandled={() => setFocusIntent(null)}
           onUndo={undoOperation}
           onBlankCleanup={blankCleanup}
           onCleanPaste={cleanPaste}
           onStripLrc={cleanLrc}
-          onReplace={replaceText}
           onMergeSelectedLines={mergeLines}
           onRemoveParagraphTags={cleanParagraphTags}
           onTranslationEnabledChange={handleTranslationEnabledChange}
@@ -780,7 +751,6 @@ export function LyricsWorkspace({
           onSplitAlternatingLyrics={splitAlternating}
           onFormatTranslation={formatTranslation}
           onSwapColumns={swapColumns}
-          onLocate={locateIssue}
         />
 
         {sideBySide && !layout.collapsed && split.geometry.viewportWidth > 0 ? (
@@ -806,6 +776,10 @@ export function LyricsWorkspace({
           />
         ) : null}
       </div>
+      <LyricsStatusBar
+        currentPosition={currentPosition}
+        scopeLabel={scopeLabel}
+      />
     </div>
   );
 }

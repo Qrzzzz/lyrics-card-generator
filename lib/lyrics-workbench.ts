@@ -1,5 +1,5 @@
 export type LyricsWorkbenchEditor = "lyrics" | "translation";
-export type LyricsSidebarTab = "cleanup" | "translation" | "review" | "source";
+export type LyricsSidebarTab = "cleanup" | "translation";
 
 export type LyricsTextSelection = {
   start: number;
@@ -238,31 +238,6 @@ export function stripLrcTimeline(
     });
 
     return { text: next.join("\n"), stats: { timestamps, metadata } };
-  });
-}
-
-export function countFindMatches(
-  text: string,
-  selection: LyricsTextSelection,
-  query: string,
-  matchCase: boolean
-) {
-  if (!query) return 0;
-  const scope = resolveLyricsTextScope(text, selection);
-  return countLiteralMatches(scope.text, query, matchCase);
-}
-
-export function replaceLyricsText(
-  text: string,
-  selection: LyricsTextSelection,
-  query: string,
-  replacement: string,
-  matchCase: boolean
-): LyricsScopedTransform {
-  return applyScopedTransform(text, selection, (source) => {
-    if (!query) return { text: source, stats: { replacements: 0 } };
-    const result = replaceLiteralMatches(source, query, replacement, matchCase);
-    return { text: result.text, stats: { replacements: result.count } };
   });
 }
 
@@ -563,30 +538,6 @@ function analyzeLyricsText(
   });
 
   return issues;
-}
-
-function replaceLiteralMatches(
-  source: string,
-  query: string,
-  replacement: string,
-  matchCase: boolean
-) {
-  let count = 0;
-  const pattern = new RegExp(escapeRegExp(query), matchCase ? "gu" : "giu");
-  const text = source.replace(pattern, () => {
-    count += 1;
-    return replacement;
-  });
-
-  return { text, count };
-}
-
-function countLiteralMatches(source: string, query: string, matchCase: boolean) {
-  return replaceLiteralMatches(source, query, "", matchCase).count;
-}
-
-function escapeRegExp(value: string) {
-  return value.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
 }
 
 function normalizeNewlines(text: string) {

@@ -86,7 +86,6 @@ export function LyricInput({
     return (
       <LyricsWorkspace
         lyrics={lyrics}
-        song={song}
         lineStatus={lineStatus}
         layout={workspaceLayout}
         sidebarTab={sidebarTab}

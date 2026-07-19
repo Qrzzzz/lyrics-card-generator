@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v5.8.0.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v5.8.1.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="#ローカル開発">ローカル開発</a> ·
@@ -51,23 +51,23 @@
 
 最新版は [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) からダウンロードできます。
 
-* 推奨インストーラー：`Lyrics Card Generator Setup 5.8.0.exe`
-* ポータブル版：`Lyrics Card Generator-5.8.0-portable.exe`
+* 推奨インストーラー：`Lyrics Card Generator Setup 5.8.1.exe`
+* ポータブル版：`Lyrics Card Generator-5.8.1-portable.exe`
 
 通常利用にはインストーラーを推奨します。ポータブル版は一時利用、検証、リムーバブルドライブでの利用に向いています。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v5.8.0 の更新ポイント
+### v5.8.1 の更新ポイント
 
-* ステップ 2 に約 44 px のコンパクトなコマンドバーを追加し、現在のパネルとカーソル行、元に戻す/やり直す、空行整理、検索、AI 翻訳、クリック可能な 36 行予算をまとめました。
-* 右サイドバーを「整理・翻訳・チェック・ソース」の 4 タブに固定しました。選択範囲優先、2 列同期の安全な空行整理、危険操作のプレビュー、即時取り消しで無言の破壊的変更を防ぎます。
-* 共有スクロールと選択アンカーを維持します。デスクトップではサイズ変更/折りたたみができ、狭い画面では歌詞を圧迫しないオーバーレイドロワーになります。メイン Stepper は変更していません。
+* ステップ 2 のコマンドバーを高頻度操作向けに整理し、貼り付け整理、連続空行の圧縮、LRC 整理、AI 翻訳を直接配置しました。利用価値の低い検索と置換は削除しています。
+* 「歌詞を取得」と「チェック」をツールバー右側の独立した入口にしました。サイドバーは「整理・翻訳」のみとし、ソース、チェック、行対応の重複表示をなくしました。
+* 操作が 1 つだけのセクションは折りたたまずに直接表示します。デスクトップと 760 px の狭い画面でも、歌詞領域を圧迫せず完全に操作できます。
 
 ## 🌐 多言語リリースノート
 
 GitHub Release ではデフォルトで簡体字中国語の概要が表示されます。完全なリリースノートはこちら：
-[简体中文](./docs/releases/v5.8.0.zh-CN.md) · [繁體中文](./docs/releases/v5.8.0.zh-TW.md) · [English](./docs/releases/v5.8.0.en.md) · [Français](./docs/releases/v5.8.0.fr.md) · [日本語](./docs/releases/v5.8.0.ja.md) · [Español](./docs/releases/v5.8.0.es.md)
+[简体中文](./docs/releases/v5.8.1.zh-CN.md) · [繁體中文](./docs/releases/v5.8.1.zh-TW.md) · [English](./docs/releases/v5.8.1.en.md) · [Français](./docs/releases/v5.8.1.fr.md) · [日本語](./docs/releases/v5.8.1.ja.md) · [Español](./docs/releases/v5.8.1.es.md)
 
 <a id="主な機能"></a>
 

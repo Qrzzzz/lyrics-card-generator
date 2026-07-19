@@ -8,10 +8,10 @@ const DEFAULT_EDITOR_RATIO = 0.75;
 const MIN_EDITOR_RATIO = 2 / 3;
 const MAX_EDITOR_RATIO = 0.75;
 const MIN_EDITOR_WIDTH = 600;
-const MIN_TOOLS_WIDTH = 224;
-const EXPANDED_GAP = 20;
-const COLLAPSED_GAP = 12;
-const COLLAPSED_TOOLS_WIDTH = 64;
+const MIN_TOOLS_WIDTH = 300;
+const EXPANDED_GAP = 8;
+const COLLAPSED_GAP = 0;
+const COLLAPSED_TOOLS_WIDTH = 52;
 const MIN_SIDE_BY_SIDE_WIDTH = MIN_EDITOR_WIDTH + MIN_TOOLS_WIDTH + EXPANDED_GAP;
 
 export type LyricsWorkspaceLayoutState = {
@@ -36,7 +36,7 @@ export function createLyricsWorkspaceLayoutState(): LyricsWorkspaceLayoutState {
   return {
     editorRatio: DEFAULT_EDITOR_RATIO,
     lastExpandedEditorRatio: DEFAULT_EDITOR_RATIO,
-    collapsed: false
+    collapsed: true
   };
 }
 

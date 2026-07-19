@@ -15,16 +15,14 @@ export type LyricsWorkspaceCopy = {
   cleanupTab: string;
   translationTab: string;
   reviewTab: string;
-  sourceTab: string;
   activeColumnScope: string;
   selectedLinesScope: string;
   synchronizedScope: string;
   undo: string;
   redo: string;
   undoNow: string;
-  blankShortcut: string;
-  findShortcut: string;
   aiShortcut: string;
+  stripLrcShortcut: string;
   cleanupHeading: string;
   scopeHeading: string;
   activeColumn: string;
@@ -42,12 +40,6 @@ export type LyricsWorkspaceCopy = {
   previewLrc: string;
   applyLrc: string;
   lrcPreview: string;
-  findReplaceHeading: string;
-  findLabel: string;
-  replaceLabel: string;
-  matchCase: string;
-  matchCount: string;
-  replaceMatches: string;
   mergeHeading: string;
   mergeSelectedLines: string;
   mergeSelectionHint: string;
@@ -76,15 +68,10 @@ export type LyricsWorkspaceCopy = {
   longLineIssue: string;
   duplicateLineIssue: string;
   invisibleIssue: string;
-  sourceHeading: string;
-  currentSong: string;
-  sourceStatus: string;
-  noSourceTools: string;
   noChanges: string;
   removedLinesResult: string;
   cleanedPasteResult: string;
   cleanedLrcResult: string;
-  replacedResult: string;
   mergedResult: string;
   tagsRemovedResult: string;
   synchronizedResult: string;
@@ -111,16 +98,14 @@ const COPY: Record<Locale, LyricsWorkspaceCopy> = {
     cleanupTab: "整理",
     translationTab: "翻译",
     reviewTab: "检查",
-    sourceTab: "来源",
     activeColumnScope: "{label}全栏",
     selectedLinesScope: "{label}第 {start}–{end} 行",
     synchronizedScope: "原译同步第 {start}–{end} 行",
     undo: "撤销上次整理",
     redo: "重做上次整理",
     undoNow: "立即撤销",
-    blankShortcut: "空行整理",
-    findShortcut: "查找",
     aiShortcut: "AI 翻译",
+    stripLrcShortcut: "移除 LRC 时间轴",
     cleanupHeading: "确定性文本整理",
     scopeHeading: "作用范围",
     activeColumn: "当前栏",
@@ -138,12 +123,6 @@ const COPY: Record<Locale, LyricsWorkspaceCopy> = {
     previewLrc: "预览 LRC 清理",
     applyLrc: "应用 LRC 清理",
     lrcPreview: "将清理 {timestamps} 个时间标记和 {metadata} 行元数据。",
-    findReplaceHeading: "查找替换",
-    findLabel: "查找",
-    replaceLabel: "替换为",
-    matchCase: "区分大小写",
-    matchCount: "{count} 处匹配",
-    replaceMatches: "替换 {count} 处",
     mergeHeading: "合并行",
     mergeSelectedLines: "合并 {count} 个选中行",
     mergeSelectionHint: "先在歌词编辑区选择至少两行。",
@@ -172,15 +151,10 @@ const COPY: Record<Locale, LyricsWorkspaceCopy> = {
     longLineIssue: "{label}第 {line} 行较长（{count} 字符）",
     duplicateLineIssue: "{label}第 {line} 行与上一行连续重复",
     invisibleIssue: "{label}第 {line} 行含 {count} 个不可见字符",
-    sourceHeading: "歌曲与歌词来源",
-    currentSong: "当前歌曲",
-    sourceStatus: "来源状态：{source}",
-    noSourceTools: "当前歌曲没有可用的在线歌词获取入口。",
     noChanges: "当前范围无需更改。",
     removedLinesResult: "已从{scope}移除 {count} 行。",
     cleanedPasteResult: "已清理 {count} 项粘贴残留。",
     cleanedLrcResult: "已清理 {timestamps} 个时间标记和 {metadata} 行元数据。",
-    replacedResult: "已在{scope}替换 {count} 处。",
     mergedResult: "已将 {count} 行合并为一行。",
     tagsRemovedResult: "已从{scope}移除 {count} 个段落标签。",
     synchronizedResult: "已同步移除原译两栏的 {count} 个空行。",
@@ -205,16 +179,14 @@ const COPY: Record<Locale, LyricsWorkspaceCopy> = {
     cleanupTab: "整理",
     translationTab: "翻譯",
     reviewTab: "檢查",
-    sourceTab: "來源",
     activeColumnScope: "{label}全欄",
     selectedLinesScope: "{label}第 {start}–{end} 行",
     synchronizedScope: "原譯同步第 {start}–{end} 行",
     undo: "復原上次整理",
     redo: "重做上次整理",
     undoNow: "立即復原",
-    blankShortcut: "空行整理",
-    findShortcut: "尋找",
     aiShortcut: "AI 翻譯",
+    stripLrcShortcut: "移除 LRC 時間軸",
     cleanupHeading: "確定性文字整理",
     scopeHeading: "作用範圍",
     activeColumn: "目前欄",
@@ -232,12 +204,6 @@ const COPY: Record<Locale, LyricsWorkspaceCopy> = {
     previewLrc: "預覽 LRC 清理",
     applyLrc: "套用 LRC 清理",
     lrcPreview: "將清理 {timestamps} 個時間標記與 {metadata} 行中繼資料。",
-    findReplaceHeading: "尋找與取代",
-    findLabel: "尋找",
-    replaceLabel: "取代為",
-    matchCase: "區分大小寫",
-    matchCount: "{count} 處相符",
-    replaceMatches: "取代 {count} 處",
     mergeHeading: "合併行",
     mergeSelectedLines: "合併 {count} 個選取行",
     mergeSelectionHint: "請先在歌詞編輯區選取至少兩行。",
@@ -266,15 +232,10 @@ const COPY: Record<Locale, LyricsWorkspaceCopy> = {
     longLineIssue: "{label}第 {line} 行較長（{count} 字元）",
     duplicateLineIssue: "{label}第 {line} 行與上一行連續重複",
     invisibleIssue: "{label}第 {line} 行含 {count} 個不可見字元",
-    sourceHeading: "歌曲與歌詞來源",
-    currentSong: "目前歌曲",
-    sourceStatus: "來源狀態：{source}",
-    noSourceTools: "目前歌曲沒有可用的線上歌詞取得入口。",
     noChanges: "目前範圍不需要更改。",
     removedLinesResult: "已從{scope}移除 {count} 行。",
     cleanedPasteResult: "已清理 {count} 項貼上殘留。",
     cleanedLrcResult: "已清理 {timestamps} 個時間標記與 {metadata} 行中繼資料。",
-    replacedResult: "已在{scope}取代 {count} 處。",
     mergedResult: "已將 {count} 行合併為一行。",
     tagsRemovedResult: "已從{scope}移除 {count} 個段落標籤。",
     synchronizedResult: "已同步移除原譯兩欄的 {count} 個空行。",
@@ -299,16 +260,14 @@ const COPY: Record<Locale, LyricsWorkspaceCopy> = {
     cleanupTab: "Cleanup",
     translationTab: "Translation",
     reviewTab: "Review",
-    sourceTab: "Source",
     activeColumnScope: "All {label}",
     selectedLinesScope: "{label} lines {start}–{end}",
     synchronizedScope: "Aligned lines {start}–{end}",
     undo: "Undo last cleanup",
     redo: "Redo last cleanup",
     undoNow: "Undo now",
-    blankShortcut: "Blank lines",
-    findShortcut: "Find",
     aiShortcut: "AI translate",
+    stripLrcShortcut: "Remove LRC timing",
     cleanupHeading: "Deterministic text cleanup",
     scopeHeading: "Apply to",
     activeColumn: "Active column",
@@ -326,12 +285,6 @@ const COPY: Record<Locale, LyricsWorkspaceCopy> = {
     previewLrc: "Preview LRC cleanup",
     applyLrc: "Apply LRC cleanup",
     lrcPreview: "Will clear {timestamps} timestamps and {metadata} metadata rows.",
-    findReplaceHeading: "Find and replace",
-    findLabel: "Find",
-    replaceLabel: "Replace with",
-    matchCase: "Match case",
-    matchCount: "{count} matches",
-    replaceMatches: "Replace {count}",
     mergeHeading: "Merge lines",
     mergeSelectedLines: "Merge {count} selected lines",
     mergeSelectionHint: "Select at least two lines in the lyrics editor first.",
@@ -360,15 +313,10 @@ const COPY: Record<Locale, LyricsWorkspaceCopy> = {
     longLineIssue: "{label} line {line} is long ({count} characters)",
     duplicateLineIssue: "{label} line {line} repeats the previous line",
     invisibleIssue: "{label} line {line} has {count} invisible characters",
-    sourceHeading: "Song and lyrics source",
-    currentSong: "Current song",
-    sourceStatus: "Source status: {source}",
-    noSourceTools: "No online lyrics source is available for this song.",
     noChanges: "Nothing in this scope needs changing.",
     removedLinesResult: "Removed {count} lines from {scope}.",
     cleanedPasteResult: "Cleaned {count} pasted-text artifacts.",
     cleanedLrcResult: "Cleared {timestamps} timestamps and {metadata} metadata rows.",
-    replacedResult: "Replaced {count} matches in {scope}.",
     mergedResult: "Merged {count} lines into one.",
     tagsRemovedResult: "Removed {count} section labels from {scope}.",
     synchronizedResult: "Removed {count} aligned blank rows from both columns.",
@@ -393,16 +341,14 @@ const COPY: Record<Locale, LyricsWorkspaceCopy> = {
     cleanupTab: "Nettoyer",
     translationTab: "Traduction",
     reviewTab: "Vérifier",
-    sourceTab: "Source",
     activeColumnScope: "Toute la colonne {label}",
     selectedLinesScope: "{label}, lignes {start}–{end}",
     synchronizedScope: "Lignes alignées {start}–{end}",
     undo: "Annuler le dernier nettoyage",
     redo: "Rétablir le dernier nettoyage",
     undoNow: "Annuler",
-    blankShortcut: "Lignes vides",
-    findShortcut: "Rechercher",
     aiShortcut: "Traduction IA",
+    stripLrcShortcut: "Retirer le minutage LRC",
     cleanupHeading: "Nettoyage déterministe du texte",
     scopeHeading: "Appliquer à",
     activeColumn: "Colonne active",
@@ -420,12 +366,6 @@ const COPY: Record<Locale, LyricsWorkspaceCopy> = {
     previewLrc: "Prévisualiser le nettoyage LRC",
     applyLrc: "Appliquer le nettoyage LRC",
     lrcPreview: "{timestamps} horodatages et {metadata} lignes de métadonnées seront effacés.",
-    findReplaceHeading: "Rechercher et remplacer",
-    findLabel: "Rechercher",
-    replaceLabel: "Remplacer par",
-    matchCase: "Respecter la casse",
-    matchCount: "{count} occurrences",
-    replaceMatches: "Remplacer {count}",
     mergeHeading: "Fusionner les lignes",
     mergeSelectedLines: "Fusionner {count} lignes sélectionnées",
     mergeSelectionHint: "Sélectionnez d’abord au moins deux lignes dans l’éditeur.",
@@ -454,15 +394,10 @@ const COPY: Record<Locale, LyricsWorkspaceCopy> = {
     longLineIssue: "{label}, ligne {line} longue ({count} caractères)",
     duplicateLineIssue: "{label}, ligne {line} identique à la précédente",
     invisibleIssue: "{label}, ligne {line} contient {count} caractères invisibles",
-    sourceHeading: "Source du morceau et des paroles",
-    currentSong: "Morceau actuel",
-    sourceStatus: "État de la source : {source}",
-    noSourceTools: "Aucune source de paroles en ligne n’est disponible pour ce morceau.",
     noChanges: "Aucune modification nécessaire dans cette zone.",
     removedLinesResult: "{count} lignes retirées de {scope}.",
     cleanedPasteResult: "{count} résidus de collage nettoyés.",
     cleanedLrcResult: "{timestamps} horodatages et {metadata} lignes de métadonnées effacés.",
-    replacedResult: "{count} occurrences remplacées dans {scope}.",
     mergedResult: "{count} lignes fusionnées en une.",
     tagsRemovedResult: "{count} libellés retirés de {scope}.",
     synchronizedResult: "{count} lignes vides alignées retirées des deux colonnes.",
@@ -487,16 +422,14 @@ const COPY: Record<Locale, LyricsWorkspaceCopy> = {
     cleanupTab: "整理",
     translationTab: "翻訳",
     reviewTab: "確認",
-    sourceTab: "ソース",
     activeColumnScope: "{label}全体",
     selectedLinesScope: "{label} {start}〜{end} 行",
     synchronizedScope: "原文・翻訳の同期 {start}〜{end} 行",
     undo: "直前の整理を元に戻す",
     redo: "直前の整理をやり直す",
     undoNow: "今すぐ元に戻す",
-    blankShortcut: "空行整理",
-    findShortcut: "検索",
     aiShortcut: "AI 翻訳",
+    stripLrcShortcut: "LRC タイムコードを削除",
     cleanupHeading: "確定的なテキスト整理",
     scopeHeading: "対象範囲",
     activeColumn: "現在の列",
@@ -514,12 +447,6 @@ const COPY: Record<Locale, LyricsWorkspaceCopy> = {
     previewLrc: "LRC 整理をプレビュー",
     applyLrc: "LRC 整理を適用",
     lrcPreview: "{timestamps} 個の時刻タグと {metadata} 行のメタデータを消去します。",
-    findReplaceHeading: "検索と置換",
-    findLabel: "検索",
-    replaceLabel: "置換後",
-    matchCase: "大文字小文字を区別",
-    matchCount: "{count} 件一致",
-    replaceMatches: "{count} 件を置換",
     mergeHeading: "行を結合",
     mergeSelectedLines: "選択した {count} 行を結合",
     mergeSelectionHint: "歌詞エディターで2行以上を選択してください。",
@@ -548,15 +475,10 @@ const COPY: Record<Locale, LyricsWorkspaceCopy> = {
     longLineIssue: "{label} {line} 行目が長いです（{count} 文字）",
     duplicateLineIssue: "{label} {line} 行目が直前の行と連続重複",
     invisibleIssue: "{label} {line} 行目に不可視文字が {count} 個",
-    sourceHeading: "曲と歌詞のソース",
-    currentSong: "現在の曲",
-    sourceStatus: "ソース状態：{source}",
-    noSourceTools: "この曲ではオンライン歌詞取得を利用できません。",
     noChanges: "この範囲に変更は必要ありません。",
     removedLinesResult: "{scope}から {count} 行を削除しました。",
     cleanedPasteResult: "貼り付け時の残留要素を {count} 件整理しました。",
     cleanedLrcResult: "{timestamps} 個の時刻タグと {metadata} 行のメタデータを消去しました。",
-    replacedResult: "{scope}で {count} 件を置換しました。",
     mergedResult: "{count} 行を1行に結合しました。",
     tagsRemovedResult: "{scope}から {count} 個のラベルを削除しました。",
     synchronizedResult: "両方の列から同期した空行を {count} 行削除しました。",
@@ -581,16 +503,14 @@ const COPY: Record<Locale, LyricsWorkspaceCopy> = {
     cleanupTab: "Limpiar",
     translationTab: "Traducción",
     reviewTab: "Revisar",
-    sourceTab: "Fuente",
     activeColumnScope: "Toda la columna {label}",
     selectedLinesScope: "{label}, líneas {start}–{end}",
     synchronizedScope: "Líneas alineadas {start}–{end}",
     undo: "Deshacer la última limpieza",
     redo: "Rehacer la última limpieza",
     undoNow: "Deshacer ahora",
-    blankShortcut: "Líneas vacías",
-    findShortcut: "Buscar",
     aiShortcut: "Traducción IA",
+    stripLrcShortcut: "Quitar tiempos LRC",
     cleanupHeading: "Limpieza determinista de texto",
     scopeHeading: "Aplicar a",
     activeColumn: "Columna activa",
@@ -608,12 +528,6 @@ const COPY: Record<Locale, LyricsWorkspaceCopy> = {
     previewLrc: "Previsualizar limpieza LRC",
     applyLrc: "Aplicar limpieza LRC",
     lrcPreview: "Se limpiarán {timestamps} marcas de tiempo y {metadata} filas de metadatos.",
-    findReplaceHeading: "Buscar y reemplazar",
-    findLabel: "Buscar",
-    replaceLabel: "Reemplazar por",
-    matchCase: "Distinguir mayúsculas",
-    matchCount: "{count} coincidencias",
-    replaceMatches: "Reemplazar {count}",
     mergeHeading: "Unir líneas",
     mergeSelectedLines: "Unir {count} líneas seleccionadas",
     mergeSelectionHint: "Selecciona primero al menos dos líneas en el editor.",
@@ -642,15 +556,10 @@ const COPY: Record<Locale, LyricsWorkspaceCopy> = {
     longLineIssue: "{label}, línea {line} larga ({count} caracteres)",
     duplicateLineIssue: "{label}, línea {line} repite la anterior",
     invisibleIssue: "{label}, línea {line} contiene {count} caracteres invisibles",
-    sourceHeading: "Fuente de la canción y la letra",
-    currentSong: "Canción actual",
-    sourceStatus: "Estado de la fuente: {source}",
-    noSourceTools: "No hay una fuente de letras en línea disponible para esta canción.",
     noChanges: "No hace falta cambiar nada en este ámbito.",
     removedLinesResult: "Se eliminaron {count} líneas de {scope}.",
     cleanedPasteResult: "Se limpiaron {count} residuos del texto pegado.",
     cleanedLrcResult: "Se limpiaron {timestamps} marcas de tiempo y {metadata} filas de metadatos.",
-    replacedResult: "Se reemplazaron {count} coincidencias en {scope}.",
     mergedResult: "Se unieron {count} líneas en una.",
     tagsRemovedResult: "Se quitaron {count} etiquetas de {scope}.",
     synchronizedResult: "Se eliminaron {count} filas vacías alineadas de ambas columnas.",
