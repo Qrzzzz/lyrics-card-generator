@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v5.8.1.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v5.8.2.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="#ローカル開発">ローカル開発</a> ·
@@ -51,23 +51,23 @@
 
 最新版は [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) からダウンロードできます。
 
-* 推奨インストーラー：`Lyrics Card Generator Setup 5.8.1.exe`
-* ポータブル版：`Lyrics Card Generator-5.8.1-portable.exe`
+* 推奨インストーラー：`Lyrics Card Generator Setup 5.8.2.exe`
+* ポータブル版：`Lyrics Card Generator-5.8.2-portable.exe`
 
 通常利用にはインストーラーを推奨します。ポータブル版は一時利用、検証、リムーバブルドライブでの利用に向いています。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v5.8.1 の更新ポイント
+### v5.8.2 の更新ポイント
 
-* ステップ 2 のコマンドバーを高頻度操作向けに整理し、貼り付け整理、連続空行の圧縮、LRC 整理、AI 翻訳を直接配置しました。利用価値の低い検索と置換は削除しています。
-* 「歌詞を取得」と「チェック」をツールバー右側の独立した入口にしました。サイドバーは「整理・翻訳」のみとし、ソース、チェック、行対応の重複表示をなくしました。
-* 操作が 1 つだけのセクションは折りたたまずに直接表示します。デスクトップと 760 px の狭い画面でも、歌詞領域を圧迫せず完全に操作できます。
+* ステップ 2 全体を覆っていた塗りつぶし背景をなくし、コマンドバー、状態表示、デスクトップのサイドバーをアプリのキャンバス上へ直接配置しました。
+* 歌詞エディターだけを主要な内容面として残し、通常のコマンドとサイドバー操作を軽量化しました。「歌詞を取得」「チェック」、AI、危険操作の確認は小さく明確なパネルを維持します。
+* 機能区分、共有スクロール、サイズ変更可能な分割、52 px の折りたたみレール、狭幅用ドロワー、36 行の書き出し上限は変更していません。
 
 ## 🌐 多言語リリースノート
 
 GitHub Release ではデフォルトで簡体字中国語の概要が表示されます。完全なリリースノートはこちら：
-[简体中文](./docs/releases/v5.8.1.zh-CN.md) · [繁體中文](./docs/releases/v5.8.1.zh-TW.md) · [English](./docs/releases/v5.8.1.en.md) · [Français](./docs/releases/v5.8.1.fr.md) · [日本語](./docs/releases/v5.8.1.ja.md) · [Español](./docs/releases/v5.8.1.es.md)
+[简体中文](./docs/releases/v5.8.2.zh-CN.md) · [繁體中文](./docs/releases/v5.8.2.zh-TW.md) · [English](./docs/releases/v5.8.2.en.md) · [Français](./docs/releases/v5.8.2.fr.md) · [日本語](./docs/releases/v5.8.2.ja.md) · [Español](./docs/releases/v5.8.2.es.md)
 
 <a id="主な機能"></a>
 

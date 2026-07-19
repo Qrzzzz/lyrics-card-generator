@@ -58,11 +58,11 @@ export function LyricsCommandBar({
     <div
       role="toolbar"
       aria-label={copy.commandBar}
-      className="lyrics-command-bar grid min-h-11 shrink-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-2 border-b border-[rgb(var(--panel-border))] bg-[rgb(var(--panel-bg))] px-2"
+      className="lyrics-command-bar grid min-h-11 shrink-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-2 px-1 pb-2"
       data-testid="lyrics-command-bar"
       data-active-tab={activeTab}
     >
-      <div className="flex min-w-0 items-center gap-1 overflow-hidden">
+      <div className="lyrics-command-group flex min-w-0 items-center gap-1 overflow-hidden">
         <CommandIconButton
           label={copy.undo}
           testId="lyrics-command-undo"
@@ -77,7 +77,7 @@ export function LyricsCommandBar({
           onClick={onRedo}
           icon={<Redo2 className="size-3.5" />}
         />
-        <span className="mx-0.5 h-5 w-px bg-[rgb(var(--panel-border))]" aria-hidden="true" />
+        <span className="lyrics-command-separator mx-0.5 h-5 w-px" aria-hidden="true" />
         <CommandShortcut
           label={copy.cleanPaste}
           testId="lyrics-command-clean-paste"
@@ -107,10 +107,10 @@ export function LyricsCommandBar({
         ) : null}
       </div>
 
-      <div className="flex shrink-0 items-center gap-1">
+      <div className="lyrics-command-group flex shrink-0 items-center gap-1">
         {lyricsFetchAction}
         {reviewAction}
-        <span className="mx-0.5 h-5 w-px bg-[rgb(var(--panel-border))]" aria-hidden="true" />
+        <span className="lyrics-command-separator mx-0.5 h-5 w-px" aria-hidden="true" />
         <CommandIconButton
           label={sidebarExpanded ? copy.collapseSidebar : copy.expandSidebar}
           testId="lyrics-command-sidebar-toggle"
@@ -135,7 +135,7 @@ export function LyricsStatusBar({
 }) {
   return (
     <div
-      className="lyrics-status-bar flex min-h-7 shrink-0 items-center gap-2 border-t border-[rgb(var(--panel-border))] bg-[rgb(var(--panel-bg))] px-2 text-[10px]"
+      className="lyrics-status-bar flex min-h-7 shrink-0 items-center gap-2 px-3 text-[10px]"
       data-testid="lyrics-status-bar"
     >
       <span className="app-text-muted truncate font-medium" data-testid="lyrics-command-position">
@@ -169,7 +169,7 @@ function CommandIconButton({
     <button
       ref={buttonRef}
       type="button"
-      className="app-button control-focus flex size-8 items-center justify-center rounded-md disabled:cursor-default disabled:opacity-35"
+      className="app-button lyrics-command-button lyrics-command-button--icon control-focus flex size-8 items-center justify-center rounded-md disabled:cursor-default disabled:opacity-35"
       aria-label={label}
       title={label}
       aria-pressed={pressed}
@@ -198,7 +198,7 @@ function CommandShortcut({
   return (
     <button
       type="button"
-      className="app-button control-focus flex h-8 items-center gap-1.5 rounded-md px-2 text-[10px] font-semibold disabled:cursor-wait disabled:opacity-45"
+      className="app-button lyrics-command-button control-focus flex h-8 items-center gap-1.5 rounded-md px-2 text-[10px] font-semibold disabled:cursor-wait disabled:opacity-45"
       onClick={onClick}
       disabled={disabled}
       title={label}

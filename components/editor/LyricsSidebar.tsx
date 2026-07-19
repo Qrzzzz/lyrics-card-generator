@@ -180,7 +180,7 @@ export function LyricsSidebar(props: LyricsSidebarProps) {
       hidden={!open}
       onKeyDown={onDrawerKeyDown}
       className={cn(
-        "lyrics-sidebar app-text-muted h-full min-h-0 min-w-0 overflow-hidden bg-[rgb(var(--panel-bg))]",
+        "lyrics-sidebar app-text-muted h-full min-h-0 min-w-0 overflow-hidden",
         collapsed && "lyrics-sidebar--collapsed",
         mobileDrawer && "lyrics-sidebar--drawer"
       )}
@@ -207,7 +207,7 @@ export function LyricsSidebar(props: LyricsSidebarProps) {
           </div>
         ) : (
           <>
-          <header className="flex shrink-0 items-center gap-1 border-b border-[rgb(var(--panel-border))] p-1.5">
+          <header className="lyrics-sidebar-header flex shrink-0 items-center gap-1 border-b border-[rgb(var(--panel-border))] p-1.5">
             <div
               role="tablist"
               aria-label={copy.sidebar}
@@ -222,10 +222,10 @@ export function LyricsSidebar(props: LyricsSidebarProps) {
                   aria-controls={`lyrics-sidebar-panel-${tab}`}
                   id={`lyrics-sidebar-tab-${tab}`}
                   className={cn(
-                    "control-focus relative flex min-h-9 min-w-0 items-center justify-center gap-1 rounded-md px-1 text-[10px] font-semibold transition",
+                    "lyrics-sidebar-tab control-focus relative flex min-h-9 min-w-0 items-center justify-center gap-1 rounded-md px-1 text-[10px] font-semibold transition",
                     activeTab === tab
-                      ? "app-text-primary bg-[rgb(var(--button-bg-hover))]"
-                      : "app-text-subtle hover:bg-[rgb(var(--button-bg))]"
+                      ? "app-text-primary"
+                      : "app-text-subtle"
                   )}
                   onClick={() => onTabChange(tab)}
                   onKeyDown={(event) => onTabKeyDown(event, tab)}
@@ -633,8 +633,8 @@ function PanelSection({
   return (
     <section
       className={cn(
-        "grid gap-2 border-b border-[rgb(var(--panel-border))] py-3 last:border-b-0",
-        sticky && "sticky top-0 z-10 bg-[rgb(var(--panel-bg))] pt-0"
+        "lyrics-sidebar-section grid gap-2 border-b border-[rgb(var(--panel-border))] py-3 last:border-b-0",
+        sticky && "lyrics-sidebar-section--sticky sticky top-0 z-10 pt-0"
       )}
       data-testid={testId}
     >
@@ -708,7 +708,7 @@ const ToolButton = function ToolButton({
       ref={ref}
       type="button"
       className={cn(
-        "app-button control-focus min-h-9 w-full rounded-md px-2.5 text-left text-[11px] font-semibold disabled:cursor-default disabled:opacity-35",
+        "app-button lyrics-sidebar-action control-focus min-h-9 w-full rounded-md px-2.5 text-left text-[11px] font-semibold disabled:cursor-default disabled:opacity-35",
         danger && "hover:border-[rgb(var(--danger))]"
       )}
       onClick={onClick}

@@ -1115,6 +1115,10 @@ button {
   grid-template-columns: minmax(0, 1fr);
 }
 
+.lyrics-workspace-surface {
+  background: transparent;
+}
+
 .lyrics-workspace-split {
   display: grid;
   min-height: 0;
@@ -1130,18 +1134,76 @@ button {
 }
 
 .lyrics-workspace-split[data-side-by-side="true"] .lyrics-sidebar {
-  border-left: 1px solid rgb(var(--panel-border));
+  border-left: 0;
 }
 
 .lyrics-command-bar {
   min-width: 0;
+  border: 0;
+  background: transparent;
   scrollbar-width: none;
+}
+
+.lyrics-command-separator {
+  background: color-mix(in srgb, rgb(var(--app-fg)) 12%, transparent);
+}
+
+.lyrics-command-button {
+  border-color: transparent;
+  background: transparent;
+}
+
+.lyrics-command-button:hover:not(:disabled):not([aria-disabled="true"]) {
+  border-color: color-mix(in srgb, rgb(var(--panel-border)) 72%, transparent);
+  background: color-mix(in srgb, rgb(var(--button-bg-hover)) 76%, transparent);
+}
+
+.lyrics-command-button[aria-pressed="true"] {
+  border-color: var(--control-selected-border);
+  background: var(--control-selected-bg);
+}
+
+.lyrics-command-button--prominent {
+  border-color: color-mix(in srgb, rgb(var(--panel-border)) 76%, transparent);
+  background: color-mix(in srgb, rgb(var(--button-bg)) 72%, transparent);
+}
+
+.lyrics-command-button--prominent.status-danger {
+  border-color: rgb(var(--status-danger-border));
+  background: rgb(var(--status-danger-bg));
+}
+
+.lyrics-status-bar {
+  border: 0;
+  background: transparent;
 }
 
 .lyrics-document-column,
 .lyrics-sidebar,
 .lyrics-command-bar {
   min-width: 0;
+}
+
+.lyrics-document-column,
+.lyrics-sidebar {
+  background: transparent;
+}
+
+.lyrics-document-editor {
+  border-color: color-mix(in srgb, rgb(var(--input-border)) 70%, transparent);
+  background: color-mix(in srgb, rgb(var(--input-bg)) 38%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, rgb(var(--app-fg)) 4%, transparent);
+  backdrop-filter: blur(14px) saturate(1.06);
+  -webkit-backdrop-filter: blur(14px) saturate(1.06);
+}
+
+.lyrics-document-editor:hover:not(:focus) {
+  border-color: color-mix(in srgb, rgb(var(--input-border)) 96%, transparent);
+}
+
+.lyrics-document-editor:focus,
+.lyrics-document-editor:focus-visible {
+  background: color-mix(in srgb, rgb(var(--input-bg)) 60%, transparent);
 }
 
 .lyrics-workspace-resizer {
@@ -1156,6 +1218,71 @@ button {
 .lyrics-sidebar--collapsed .app-button {
   width: 2.25rem;
   min-width: 2.25rem;
+  border-color: transparent;
+  background: transparent;
+}
+
+.lyrics-sidebar--collapsed .app-button:hover:not(:disabled) {
+  border-color: color-mix(in srgb, rgb(var(--panel-border)) 72%, transparent);
+  background: color-mix(in srgb, rgb(var(--button-bg-hover)) 76%, transparent);
+}
+
+.lyrics-sidebar--collapsed .app-button[aria-pressed="true"] {
+  border-color: var(--control-selected-border);
+  background: var(--control-selected-bg);
+}
+
+.lyrics-sidebar-header {
+  border-bottom-color: color-mix(in srgb, rgb(var(--panel-border)) 76%, transparent);
+}
+
+.lyrics-sidebar-tab {
+  background: transparent;
+}
+
+.lyrics-sidebar-tab::after {
+  position: absolute;
+  right: 0.5rem;
+  bottom: -0.0625rem;
+  left: 0.5rem;
+  height: 0.125rem;
+  border-radius: 999px;
+  background: var(--app-accent);
+  content: "";
+  opacity: 0;
+  transform: scaleX(0.42);
+  transition:
+    opacity var(--motion-duration-fast) var(--motion-ease-standard),
+    transform var(--motion-duration-fast) var(--motion-ease-standard);
+}
+
+.lyrics-sidebar-tab:hover {
+  background: color-mix(in srgb, rgb(var(--button-bg)) 58%, transparent);
+}
+
+.lyrics-sidebar-tab[aria-selected="true"] {
+  background: color-mix(in srgb, var(--app-accent) 5%, transparent);
+}
+
+.lyrics-sidebar-tab[aria-selected="true"]::after {
+  opacity: 0.9;
+  transform: scaleX(1);
+}
+
+.lyrics-sidebar-section--sticky {
+  background: color-mix(in srgb, rgb(var(--panel-bg)) 30%, transparent);
+  box-shadow: 0 0.5rem 1rem color-mix(in srgb, rgb(var(--input-bg)) 12%, transparent);
+  backdrop-filter: blur(18px) saturate(1.08);
+  -webkit-backdrop-filter: blur(18px) saturate(1.08);
+}
+
+.lyrics-sidebar-action {
+  border-color: transparent;
+  background: transparent;
+}
+
+.lyrics-sidebar-action:hover:not(:disabled) {
+  background: color-mix(in srgb, rgb(var(--button-bg-hover)) 66%, transparent);
 }
 
 .lyrics-sidebar--drawer {

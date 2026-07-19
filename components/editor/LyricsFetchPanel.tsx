@@ -115,7 +115,7 @@ export function LyricsFetchPanel({
         type="button"
         onClick={() => void fetchLyrics()}
         disabled={!available || status === "loading"}
-        className="app-button control-focus flex h-8 items-center gap-1.5 rounded-md px-2 text-[10px] font-semibold transition disabled:cursor-default disabled:opacity-35"
+        className="app-button lyrics-command-button lyrics-command-button--prominent control-focus flex h-8 items-center gap-1.5 rounded-md px-2 text-[10px] font-semibold transition disabled:cursor-default disabled:opacity-35"
         title={t("tryFetchLyrics")}
         aria-label={t("tryFetchLyrics")}
         aria-haspopup="dialog"

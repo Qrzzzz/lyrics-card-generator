@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v5.8.1.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v5.8.2.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="#développement-local">Développement local</a> ·
@@ -51,23 +51,23 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 Téléchargez la dernière version depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
 
-* Installateur recommandé : `Lyrics Card Generator Setup 5.8.1.exe`
-* Version portable : `Lyrics Card Generator-5.8.1-portable.exe`
+* Installateur recommandé : `Lyrics Card Generator Setup 5.8.2.exe`
+* Version portable : `Lyrics Card Generator-5.8.2-portable.exe`
 
 L'installateur est recommandé pour une utilisation régulière. La version portable convient aux essais, à une utilisation temporaire ou à un disque amovible.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### Points clés de la v5.8.1
+### Points clés de la v5.8.2
 
-* Transforme la barre de commandes de l’étape 2 en zone d’actions fréquentes : nettoyage du collage, réduction des lignes vides consécutives, nettoyage LRC et traduction IA. La recherche et le remplacement, peu utiles ici, sont supprimés.
-* Place Récupérer les paroles et Vérification comme entrées indépendantes à droite de la barre. La barre latérale ne conserve que Nettoyage et Traduction, sans contenu Source, Vérification ou alignement dupliqué.
-* Affiche directement les sections à action unique au lieu de les masquer derrière un volet. Les dispositions bureau et étroite à 760 px restent complètes et ne compriment pas les paroles.
+* Supprime le grand fond plein de l’étape 2 : barre de commandes, état et barre latérale de bureau reposent désormais directement sur le canevas de l’application.
+* Conserve l’éditeur de paroles comme seule surface principale. Les commandes courantes sont allégées, tandis que Récupérer les paroles, Vérification, l’IA et les confirmations à risque gardent des panneaux compacts bien délimités.
+* Préserve les zones fonctionnelles, le défilement partagé, la séparation redimensionnable, le rail replié de 52 px, le tiroir étroit et la limite d’exportation de 36 lignes.
 
 ## 🌐 Notes de publication multilingues
 
 Par défaut, GitHub Release affiche un résumé en chinois simplifié. Consultez les notes complètes :
-[简体中文](./docs/releases/v5.8.1.zh-CN.md) · [繁體中文](./docs/releases/v5.8.1.zh-TW.md) · [English](./docs/releases/v5.8.1.en.md) · [Français](./docs/releases/v5.8.1.fr.md) · [日本語](./docs/releases/v5.8.1.ja.md) · [Español](./docs/releases/v5.8.1.es.md)
+[简体中文](./docs/releases/v5.8.2.zh-CN.md) · [繁體中文](./docs/releases/v5.8.2.zh-TW.md) · [English](./docs/releases/v5.8.2.en.md) · [Français](./docs/releases/v5.8.2.fr.md) · [日本語](./docs/releases/v5.8.2.ja.md) · [Español](./docs/releases/v5.8.2.es.md)
 
 <a id="fonctionnalités-principales"></a>
 

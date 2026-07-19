@@ -61,7 +61,7 @@ export function LyricsReviewMenu({
         ref={triggerRef}
         type="button"
         className={cn(
-          "app-button control-focus relative flex h-8 items-center gap-1.5 rounded-md px-2 text-[10px] font-semibold",
+          "app-button lyrics-command-button lyrics-command-button--prominent control-focus relative flex h-8 items-center gap-1.5 rounded-md px-2 text-[10px] font-semibold",
           lineStatus.isOverLimit && "status-danger"
         )}
         onClick={() => setOpen((value) => !value)}
