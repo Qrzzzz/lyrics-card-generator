@@ -26,8 +26,11 @@ assert.match(motionTokens, /controlHoverTarget/);
 assert.match(motionTokens, /controlTapTarget/);
 assert.match(motionTokens, /reducedMotionTransition/);
 assert.match(motionTokens, /stepPanelVariants/);
+assert.match(motionTokens, /workbenchStepPanelVariants/);
 assert.match(motionTokens, /tabPanelVariants/);
 assert.match(motionTokens, /dialogPanelVariants/);
+assert.match(motionTokens, /direction > 0 \? 72 : -72/);
+assert.match(motionTokens, /direction > 0 \? -72 : 72/);
 
 for (const file of [
   "components/motion/MotionPanel.tsx",
@@ -67,6 +70,10 @@ const lyricEditor = readFileSync(resolve("components/editor/LyricEditor.tsx"), "
 const appToast = readFileSync(resolve("components/feedback/AppToast.tsx"), "utf8");
 const editorActions = readFileSync(resolve("components/editor/hooks/useEditorActions.ts"), "utf8");
 const editorSteps = readFileSync(resolve("components/editor/useEditorSteps.tsx"), "utf8");
+const settingsStepper = readFileSync(resolve("components/editor/SettingsStepper.tsx"), "utf8");
+const lyricsWorkspace = readFileSync(resolve("components/editor/LyricsWorkspace.tsx"), "utf8");
+const lyricsSidebar = readFileSync(resolve("components/editor/LyricsSidebar.tsx"), "utf8");
+const motionPresence = readFileSync(resolve("components/motion/MotionPresence.tsx"), "utf8");
 assert.match(exportPanel, /role="status"/);
 assert.match(exportPanel, /aria-live="polite"/);
 assert.match(exportPanel, /aria-atomic="true"/);
@@ -80,6 +87,19 @@ assert.match(previewPane, /mode="popLayout"/);
 assert.match(previewPane, /initial=\{reduceMotion \? false : \{ opacity: 0, x: 72 \}\}/);
 assert.match(previewPane, /exit=\{reduceMotion \? \{ opacity: 0, x: 0 \} : \{ opacity: 0, x: -72 \}\}/);
 assert.match(previewPane, /measurementKey=\{measurementKey\}/);
+assert.match(settingsStepper, /data-testid="preview-workbench-settings-transition"/);
+assert.match(settingsStepper, /<MotionPresence custom=\{stepDirection\} mode="popLayout">/);
+assert.match(settingsStepper, /variants=\{workbenchStepVariants\}/);
+assert.match(settingsStepper, /data-step-direction=\{stepDirection > 0 \? "forward" : "backward"\}/);
+assert.match(settingsStepper, /data-settings-step-id=\{workbenchSettingsStep\.id\}/);
+assert.match(motionPresence, /<AnimatePresence custom=\{custom\}/);
+assert.match(lyricsWorkspace, /<motion\.div[\s\S]*?animate=\{splitTarget\}[\s\S]*?transition=\{splitTransition\}/);
+assert.match(lyricsWorkspace, /previousSidebarCollapsedRef[\s\S]*?animateSidebarDisclosure/);
+assert.match(lyricsWorkspace, /reduceMotion \|\| split\.isDragging \|\| !animateSidebarDisclosure/);
+assert.match(lyricsWorkspace, /data-motion-active=\{sidebarCollapsed \? "false" : "true"\}/);
+assert.match(lyricsSidebar, /data-testid="lyrics-sidebar-collapsed-layer"/);
+assert.match(lyricsSidebar, /data-testid="lyrics-sidebar-expanded-layer"/);
+assert.match(lyricsSidebar, /transitionEnd: \{ visibility: "hidden" \}/);
 assert.match(songImportAside, /mode="popLayout"/);
 assert.match(songImportAside, /key="song-info-editor"[\s\S]*?initial=\{reduceMotion \? \{ opacity: 0, x: 0 \} : \{ opacity: 0, x: 72 \}\}/);
 assert.match(songImportAside, /key="song-info-editor"[\s\S]*?exit=\{reduceMotion \? \{ opacity: 0, x: 0 \} : \{ opacity: 0, x: 72 \}\}/);
@@ -113,4 +133,4 @@ assert.match(globals, /not\(\.traffic-light\):not\(\.example-song-card\):hover:a
 assert.match(globals, /\.preview-pressure-stage/);
 assert.match(globals, /\.app-shell\[data-reduce-motion="true"\] \.preview-pressure-card/);
 
-console.log(JSON.stringify({ ok: true, motionSystemRegressionChecks: 60 }, null, 2));
+console.log(JSON.stringify({ ok: true, motionSystemRegressionChecks: 74 }, null, 2));

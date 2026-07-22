@@ -105,6 +105,22 @@ export function stepPanelVariants(reducedMotion = false): Variants {
   };
 }
 
+export function workbenchStepPanelVariants(reducedMotion = false): Variants {
+  if (reducedMotion) {
+    return {
+      initial: { opacity: 0, x: 0 },
+      animate: { opacity: 1, x: 0 },
+      exit: { opacity: 0, x: 0 }
+    };
+  }
+
+  return {
+    initial: (direction: StepDirection) => ({ opacity: 0, x: direction > 0 ? 72 : -72 }),
+    animate: { opacity: 1, x: 0 },
+    exit: (direction: StepDirection) => ({ opacity: 0, x: direction > 0 ? -72 : 72 })
+  };
+}
+
 export const opacityTransition: Transition = {
   duration: motionDurations.normal,
   ease: motionEasings.standard

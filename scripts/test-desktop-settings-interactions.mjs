@@ -1564,6 +1564,58 @@ async function readPreviewWorkbenchGeometry() {
   });
 }
 
+async function assertDirectionalWorkbenchTransitions() {
+  async function switchAndRead(stepId) {
+    await page.locator(`button[data-step-id="${stepId}"]`).click();
+    await page.waitForFunction((expectedStepId) => {
+      const container = document.querySelector('[data-testid="preview-workbench-settings-transition"]');
+      if (!(container instanceof HTMLElement) || container.children.length !== 1) return false;
+      const panel = container.firstElementChild;
+      if (!(panel instanceof HTMLElement) || panel.getAttribute("data-settings-step-id") !== expectedStepId) return false;
+      const style = getComputedStyle(panel);
+      return style.opacity === "1" && style.transform === "none";
+    }, stepId, { timeout: 5_000 });
+
+    return page.getByTestId("preview-workbench-settings-transition").evaluate((container) => {
+      const panel = container.firstElementChild;
+      const preview = document.querySelector('[data-testid="lyric-card-preview"]');
+      const previewRect = preview?.getBoundingClientRect();
+      return {
+        stepId: panel?.getAttribute("data-settings-step-id"),
+        direction: panel?.getAttribute("data-step-direction"),
+        overflow: getComputedStyle(container).overflow,
+        previewProbe: preview?.getAttribute("data-motion-probe"),
+        previewLeft: previewRect?.left ?? 0,
+        previewWidth: previewRect?.width ?? 0
+      };
+    });
+  }
+
+  await page.locator('button[data-step-id="layout"]').click();
+  await waitForLayoutStable(page.getByTestId("preview-workbench-track"));
+  await page.waitForFunction(() => document.querySelector('[data-testid="preview-workbench-settings-transition"]')?.children.length === 1);
+  await page.getByTestId("lyric-card-preview").evaluate((preview) => preview.setAttribute("data-motion-probe", "stable"));
+  const baseline = await switchAndRead("layout");
+  const checks = [
+    ["font", "forward"],
+    ["visual", "forward"],
+    ["font", "backward"],
+    ["layout", "backward"]
+  ];
+
+  for (const [stepId, direction] of checks) {
+    const result = await switchAndRead(stepId);
+    assert.equal(result.stepId, stepId, `${stepId} settles as the only active settings panel`);
+    assert.equal(result.direction, direction, `${stepId} uses the expected ${direction} transition`);
+    assert.equal(result.overflow, "hidden", `${stepId} clips the moving settings panels inside the left workbench`);
+    assert.equal(result.previewProbe, "stable", `${stepId} keeps the same lyric preview mounted while settings move`);
+    assert.ok(
+      Math.abs(result.previewLeft - baseline.previewLeft) <= 1 && Math.abs(result.previewWidth - baseline.previewWidth) <= 1,
+      `${stepId} leaves preview geometry stable: ${JSON.stringify({ baseline, result })}`
+    );
+  }
+}
+
 async function assertPreviewWorkbenchPan() {
   await setWindowSize(1280, 900);
   await page.locator('button[data-step-id="visual"]').click();
@@ -1792,6 +1844,12 @@ async function assertPreviewWorkbenchPan() {
 async function assertLyricsWorkspace(width, height) {
   await setWindowSize(width, height);
   await waitForLayoutStable(page.getByTestId("lyrics-workspace"));
+  await waitForLayoutStable(page.getByTestId("lyrics-sidebar"));
+  await page.waitForFunction(() => {
+    const split = document.querySelector('[data-testid="lyrics-workspace-split"]');
+    if (!(split instanceof HTMLElement)) return false;
+    return Math.abs(Number.parseFloat(getComputedStyle(split).columnGap) - 8) <= 0.05;
+  }, undefined, { polling: 80, timeout: 5_000 });
   const result = await page.evaluate(() => {
     const editor = document.querySelector('[data-testid="editor-surface"]');
     const workspace = document.querySelector('[data-testid="lyrics-workspace"]');
@@ -1983,7 +2041,10 @@ async function assertLyricsWorkspace(width, height) {
     Math.abs(result.split.ratio - expectedMaximumRatio) <= 0.002,
     `${width}x${height} uses the 3/4 editor target while preserving a 300px inspector: ${JSON.stringify(result.split)}`
   );
-  assert.ok(Math.abs(result.split.columnGap - expandedGap) <= 0.5, `${width}x${height} keeps the compact 8px expanded gap`);
+  assert.ok(
+    Math.abs(result.split.columnGap - expandedGap) <= 0.5,
+    `${width}x${height} keeps the compact 8px expanded gap: ${JSON.stringify(result.split)}`
+  );
   assert.ok(result.documentColumn.width >= 599, `${width}x${height} preserves the minimum editor width: ${result.documentColumn.width}`);
   assert.ok(result.tools.width >= 299, `${width}x${height} preserves the 300px minimum tools width: ${result.tools.width}`);
   assert.ok(
@@ -2246,6 +2307,20 @@ async function assertLyricsWorkbenchOperations(originalLyrics, translationLyrics
 }
 
 async function assertLyricsWorkspaceSplitInteractions() {
+  async function waitForSidebarMotion(collapsed) {
+    await page.waitForFunction((expectedCollapsed) => {
+      const collapsedLayer = document.querySelector('[data-testid="lyrics-sidebar-collapsed-layer"]');
+      const expandedLayer = document.querySelector('[data-testid="lyrics-sidebar-expanded-layer"]');
+      if (!(collapsedLayer instanceof HTMLElement) || !(expandedLayer instanceof HTMLElement)) return false;
+      const activeLayer = expectedCollapsed ? collapsedLayer : expandedLayer;
+      const inactiveLayer = expectedCollapsed ? expandedLayer : collapsedLayer;
+      return getComputedStyle(activeLayer).opacity === "1"
+        && getComputedStyle(activeLayer).visibility === "visible"
+        && getComputedStyle(inactiveLayer).visibility === "hidden";
+    }, collapsed, { timeout: 5_000 });
+    await waitForLayoutStable(page.getByTestId("lyrics-sidebar"), 10_000);
+  }
+
   await setWindowSize(1280, 900);
   await waitForLayoutStable(page.getByTestId("lyrics-workspace-split"));
   const resizer = page.getByTestId("lyrics-workspace-resizer");
@@ -2276,6 +2351,7 @@ async function assertLyricsWorkspaceSplitInteractions() {
   await resizer.press("Home");
   await resizer.dblclick();
   await page.waitForFunction(() => document.querySelector('[data-testid="lyrics-workspace-resizer"]')?.getAttribute('aria-valuenow') === '75');
+  await waitForLayoutStable(resizer);
 
   const dragGeometry = await page.getByTestId("lyrics-workspace-split").boundingBox();
   const resizerGeometry = await resizer.boundingBox();
@@ -2308,6 +2384,7 @@ async function assertLyricsWorkspaceSplitInteractions() {
   const collapseButton = page.getByTestId("lyrics-command-sidebar-toggle");
   await collapseButton.click();
   await page.waitForFunction(() => document.querySelector('[data-testid="lyrics-sidebar"]')?.getAttribute('data-collapsed') === 'true');
+  await waitForSidebarMotion(true);
   assert.equal(
     await collapseButton.evaluate((node) => document.activeElement === node),
     true,
@@ -2329,6 +2406,7 @@ async function assertLyricsWorkspaceSplitInteractions() {
 
   await page.getByTestId("lyrics-sidebar-tab-cleanup").click();
   await page.waitForFunction(() => document.querySelector('[data-testid="lyrics-sidebar"]')?.getAttribute('data-collapsed') === 'false');
+  await waitForSidebarMotion(false);
   await page.waitForFunction(
     () => document.activeElement?.getAttribute("data-testid") === "lyrics-sidebar-tab-cleanup",
     undefined,
@@ -2346,6 +2424,7 @@ async function assertLyricsWorkspaceSplitInteractions() {
   );
   await collapseButton.click();
   await page.waitForFunction(() => document.querySelector('[data-testid="lyrics-sidebar"]')?.getAttribute('data-collapsed') === 'true');
+  await waitForSidebarMotion(true);
   await page.waitForFunction(() => document.activeElement?.getAttribute("data-testid") === "lyrics-command-sidebar-toggle");
   assert.equal(
     await collapseButton.evaluate((node) => document.activeElement === node),
@@ -2357,6 +2436,7 @@ async function assertLyricsWorkspaceSplitInteractions() {
   assert.equal(persistedAiSettings?.hasApiKey, true, `collapsed AI regression has configured settings: ${JSON.stringify(persistedAiSettings)}`);
   await page.getByTestId("lyrics-command-ai").click();
   await page.waitForFunction(() => document.querySelector('[data-testid="lyrics-sidebar"]')?.getAttribute('data-collapsed') === 'false');
+  await waitForSidebarMotion(false);
   const collapsedAiOutcome = await page.waitForFunction(() => {
     const panel = document.querySelector('[data-testid="lyrics-ai-panel-boundary"]');
     if (panel && !panel.hasAttribute("hidden")) return "panel";
@@ -2382,6 +2462,7 @@ async function assertLyricsWorkspaceSplitInteractions() {
   await page.getByTestId("lyrics-ai-panel-boundary").waitFor({ state: "hidden" });
   await page.getByTestId("lyrics-command-sidebar-toggle").click();
   await page.waitForFunction(() => document.querySelector('[data-testid="lyrics-sidebar"]')?.getAttribute('data-collapsed') === 'true');
+  await waitForSidebarMotion(true);
 
   await page.locator('button[data-step-id="layout"]').click();
   await page.locator('button[data-step-id="lyrics"]').click();
@@ -2391,6 +2472,7 @@ async function assertLyricsWorkspaceSplitInteractions() {
 
   await page.getByTestId("lyrics-command-sidebar-toggle").click();
   await page.waitForFunction(() => document.querySelector('[data-testid="lyrics-workspace-resizer"]')?.getAttribute('aria-valuenow') === '67');
+  await waitForSidebarMotion(false);
   assert.equal(
     await page.getByTestId("lyrics-workspace-split").getAttribute("data-editor-ratio"),
     beforeCollapse.ratio,
@@ -2636,6 +2718,8 @@ async function assertPreviewFits(width, height, scrolled) {
 
 async function assertExampleImportRemeasuresPreview() {
   await setWindowSize(1440, 900);
+  await waitForLayoutStable(page.getByTestId("preview-workbench-track"), 10_000);
+  await waitForLayoutStable(page.getByTestId("lyric-card-preview-shell"), 10_000);
   await page.waitForFunction(() => {
     const shell = document.querySelector('[data-testid="lyric-card-preview-shell"]');
     const card = shell?.querySelector('[data-export-card="true"]');
@@ -2686,6 +2770,9 @@ async function assertExampleImportRemeasuresPreview() {
   await page.getByTestId("load-example-opalite").click();
   acceptDocumentReplacementDialogs = false;
 
+  await waitForLayoutStable(page.getByTestId("editor-surface"), 10_000);
+  await waitForLayoutStable(page.getByTestId("preview-workbench-track"), 10_000);
+  await waitForLayoutStable(page.getByTestId("lyric-card-preview-shell"), 10_000);
   await page.waitForFunction(() => {
     const surface = document.querySelector('[data-testid="editor-surface"]');
     const shell = document.querySelector('[data-testid="lyric-card-preview-shell"]');
@@ -3068,6 +3155,7 @@ try {
   for (const stepId of ["layout", "font", "visual", "export"]) {
     await assertUnifiedPreviewChrome(stepId);
   }
+  await assertDirectionalWorkbenchTransitions();
   await assertPreviewWorkbenchPan();
 
   await page.locator('[data-testid="editor-surface"] [data-testid="settings-button"]').click();

@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v5.8.3.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v5.8.4.zh-CN.md">发布说明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">在线 Web Lite 版</a> ·
   <a href="./docs/desktop.md">桌面维护文档</a> ·
   <a href="#主要功能">主要功能</a> ·
@@ -49,23 +49,23 @@
 
 请前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下载最新版：
 
-* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 5.8.3.exe`
-* 不想安装时可下载便携版：`Lyrics Card Generator-5.8.3-portable.exe`
+* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 5.8.4.exe`
+* 不想安装时可下载便携版：`Lyrics Card Generator-5.8.4-portable.exe`
 
 安装版适合长期使用；便携版适合临时运行、测试或放在移动硬盘中使用。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v5.8.3 更新重点
+### v5.8.4 更新重点
 
-* 第二步右侧的“整理／翻译”侧栏改用与全局设置一致的分段控件、分组标题和操作样式，阅读与点击更清楚。
-* 取消首个作用范围区的黏性悬浮，侧栏维持单一的边界滚动，长内容不会再与底部步骤导航重叠。
-* 歌词处理、AI 翻译、键盘操作、可调分栏、52 px 折叠工具轨、窄屏抽屉和 36 行导出边界均保持不变。
+* 第二步右侧的“整理／翻译”侧栏现在会连续展开和折叠，内容与工具轨同步平移、渐隐和渐显，同时保留原有编辑与滚动状态。
+* 第 3–5 步前进时，旧设置面板向左移出、新面板从右侧移入；返回上一步时方向相反，右侧歌词预览始终保持原位。
+* 系统启用“减少动态效果”时会移除位移动画；歌词处理、可调分栏、共享滚动和导出行为均保持不变。
 
 ## 🌐 多语言发布说明
 
 GitHub Release 默认展示简体中文摘要，完整说明见：
-[简体中文](./docs/releases/v5.8.3.zh-CN.md) · [繁體中文](./docs/releases/v5.8.3.zh-TW.md) · [English](./docs/releases/v5.8.3.en.md) · [Français](./docs/releases/v5.8.3.fr.md) · [日本語](./docs/releases/v5.8.3.ja.md) · [Español](./docs/releases/v5.8.3.es.md)
+[简体中文](./docs/releases/v5.8.4.zh-CN.md) · [繁體中文](./docs/releases/v5.8.4.zh-TW.md) · [English](./docs/releases/v5.8.4.en.md) · [Français](./docs/releases/v5.8.4.fr.md) · [日本語](./docs/releases/v5.8.4.ja.md) · [Español](./docs/releases/v5.8.4.es.md)
 
 <a id="主要功能"></a>
 
@@ -242,6 +242,8 @@ npm run core:test       # 测试 3.0 核心纯函数
 | 《勇者》       | *THE BOOK 3*               | [YOASOBI](https://www.yoasobi-music.jp/)               |
 | 《光辉岁月》    | *命运派对*                   | [Beyond](https://music.apple.com/cn/artist/beyond/79668659) |
 | 《Opalite》 | *The Life of a Showgirl* | [Taylor Swift](https://www.taylorswift.com/)                |
+| 《honeybee》 | *you seem pretty sad for a girl so in love* | [Olivia Rodrigo](https://www.oliviarodrigo.com/) |
+| 《Lies》 | *Always - EP* | [BIGBANG](https://ygfamily.com/en/artists/bigbang/discography) |
 
 </details>
 

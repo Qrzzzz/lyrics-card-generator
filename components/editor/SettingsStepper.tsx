@@ -18,7 +18,8 @@ import {
   motionEasings,
   reducedMotionTransition,
   stepPanelVariants,
-  type StepDirection
+  type StepDirection,
+  workbenchStepPanelVariants
 } from "@/lib/motion/tokens";
 import { cn } from "@/lib/utils";
 
@@ -219,9 +220,13 @@ export function SettingsStepper({
   const workbenchSettingsStepIndex = Math.max(0, steps.indexOf(workbenchSettingsStep));
   const markerForegroundColor = getReadableForegroundColor(themeColor);
   const variants = stepPanelVariants(reduceMotion ?? false);
+  const workbenchStepVariants = workbenchStepPanelVariants(reduceMotion ?? false);
   const transition = reduceMotion
     ? reducedMotionTransition
     : { duration: motionDurations.normal, ease: motionEasings.standard };
+  const workbenchStepTransition = reduceMotion
+    ? reducedMotionTransition
+    : { duration: motionDurations.slow, ease: motionEasings.emphasized };
   const workbenchTransition: Transition = reduceMotion
     ? reducedMotionTransition
     : { type: "spring", stiffness: 190, damping: 30, mass: 1.02 };
@@ -273,7 +278,7 @@ export function SettingsStepper({
           data-stepper-heading-row="true"
           className={cn("flex items-start justify-between gap-4", compactChrome ? "mb-3" : "mb-4")}
         >
-          <MotionPresence mode="popLayout">
+          <MotionPresence custom={stepDirection} mode="popLayout">
             <motion.div
               key={activeStep.id}
               custom={stepDirection}
@@ -433,16 +438,18 @@ export function SettingsStepper({
               aria-hidden={isExportWorkbench}
               inert={isExportWorkbench ? true : undefined}
             >
-              <div className="relative min-w-0">
-                <MotionPresence>
+              <div className="relative min-w-0 overflow-hidden" data-testid="preview-workbench-settings-transition">
+                <MotionPresence custom={stepDirection} mode="popLayout">
                   <motion.div
                     key={workbenchSettingsStep.id}
                     custom={stepDirection}
-                    variants={variants}
+                    variants={workbenchStepVariants}
                     initial="initial"
                     animate="animate"
                     exit="exit"
-                    transition={transition}
+                    transition={workbenchStepTransition}
+                    data-step-direction={stepDirection > 0 ? "forward" : "backward"}
+                    data-settings-step-id={workbenchSettingsStep.id}
                   >
                     {workbenchSettingsStep.content}
                   </motion.div>
@@ -529,7 +536,7 @@ export function SettingsStepper({
               hasCompanionAside && isFocus && "max-[959px]:order-2 min-[960px]:col-start-1 min-[960px]:row-start-2"
             )}
           >
-            <MotionPresence>
+            <MotionPresence custom={stepDirection}>
               {activeStep ? (
                 <motion.div
                   key={activeStep.id}

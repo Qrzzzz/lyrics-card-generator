@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v5.8.3.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v5.8.4.en.md">Release Notes</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
   <a href="#features">Features</a> ·
   <a href="#local-development">Local Development</a> ·
@@ -51,23 +51,23 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 Download the latest version from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Recommended installer: `Lyrics Card Generator Setup 5.8.3.exe`
-* Portable version: `Lyrics Card Generator-5.8.3-portable.exe`
+* Recommended installer: `Lyrics Card Generator Setup 5.8.4.exe`
+* Portable version: `Lyrics Card Generator-5.8.4-portable.exe`
 
 The installer is recommended for regular use. The portable version is useful for temporary use, testing, or running from a removable drive.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v5.8.3 Highlights
+### v5.8.4 Highlights
 
-* Aligns the step-two Cleanup and Translation sidebar with the app-wide settings language through segmented controls, clearer section headings, and more readable actions.
-* Removes the sticky scope block and keeps one bounded sidebar scroller, preventing long tool content from overlapping the bottom step navigation.
-* Preserves lyric operations, AI translation, keyboard behavior, the resizable split, 52 px collapsed rail, narrow-screen drawer, and 36-line export boundary.
+* The step-two Cleanup and Translation sidebar now expands and collapses continuously, with the content and tool rail sliding and crossfading while edit and scroll state remain intact.
+* Moving forward through steps 3–5 sends the old settings panel left and brings the next one in from the right; Back reverses the direction while the lyric preview stays fixed.
+* Reduced-motion preferences remove the positional movement; lyric processing, the resizable split, shared scrolling, and export behavior remain unchanged.
 
 ## 🌐 Multilingual Release Notes
 
 GitHub Release displays a Simplified Chinese summary by default. See the full release notes:
-[简体中文](./docs/releases/v5.8.3.zh-CN.md) · [繁體中文](./docs/releases/v5.8.3.zh-TW.md) · [English](./docs/releases/v5.8.3.en.md) · [Français](./docs/releases/v5.8.3.fr.md) · [日本語](./docs/releases/v5.8.3.ja.md) · [Español](./docs/releases/v5.8.3.es.md)
+[简体中文](./docs/releases/v5.8.4.zh-CN.md) · [繁體中文](./docs/releases/v5.8.4.zh-TW.md) · [English](./docs/releases/v5.8.4.en.md) · [Français](./docs/releases/v5.8.4.fr.md) · [日本語](./docs/releases/v5.8.4.ja.md) · [Español](./docs/releases/v5.8.4.es.md)
 
 <a id="features"></a>
 
@@ -269,6 +269,8 @@ Thanks to the following songs and their creators. They serve as project samples,
 | 《勇者》 | *THE BOOK 3* | [YOASOBI](https://www.yoasobi-music.jp/) |
 | 《光辉岁月》 | *命运派对* | [Beyond](https://music.apple.com/cn/artist/beyond/79668659) |
 | 《Opalite》 | *The Life of a Showgirl* | [Taylor Swift](https://www.taylorswift.com/) |
+| 《honeybee》 | *you seem pretty sad for a girl so in love* | [Olivia Rodrigo](https://www.oliviarodrigo.com/) |
+| 《Lies》 | *Always - EP* | [BIGBANG](https://ygfamily.com/en/artists/bigbang/discography) |
 
 </details>
 
