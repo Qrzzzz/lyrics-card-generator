@@ -149,19 +149,18 @@ export function LyricsSidebar(props: LyricsSidebarProps) {
     return () => window.cancelAnimationFrame(frame);
   }, [focusIntent, mobileDrawer, open]);
 
-  useEffect(() => {
-    const pendingTab = pendingCollapsedTabFocusRef.current;
-    if (!open || collapsed || !pendingTab) return;
-    const frame = window.requestAnimationFrame(() => {
-      document.getElementById(`lyrics-sidebar-tab-${pendingTab}`)?.focus({ preventScroll: true });
-      pendingCollapsedTabFocusRef.current = null;
-    });
-    return () => window.cancelAnimationFrame(frame);
-  }, [activeTab, collapsed, open]);
-
   function openCollapsedTab(tab: LyricsSidebarTab) {
     pendingCollapsedTabFocusRef.current = tab;
     onOpenTab(tab);
+  }
+
+  function focusPendingCollapsedTab() {
+    const pendingTab = pendingCollapsedTabFocusRef.current;
+    if (!open || collapsed || !pendingTab) return;
+    const tab = document.getElementById(`lyrics-sidebar-tab-${pendingTab}`);
+    if (!(tab instanceof HTMLButtonElement)) return;
+    tab.focus({ preventScroll: true });
+    if (document.activeElement === tab) pendingCollapsedTabFocusRef.current = null;
   }
 
   function onDrawerKeyDown(event: KeyboardEvent<HTMLElement>) {
@@ -248,6 +247,7 @@ export function LyricsSidebar(props: LyricsSidebarProps) {
               : { opacity: 1, x: 0, visibility: "visible" }
           }
           transition={sidebarContentTransition}
+          onAnimationComplete={focusPendingCollapsedTab}
           aria-hidden={collapsed}
           inert={collapsed ? true : undefined}
           className="lyrics-sidebar-motion-layer absolute inset-0 flex h-full min-h-0 flex-col"
