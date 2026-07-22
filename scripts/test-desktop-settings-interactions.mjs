@@ -2368,6 +2368,11 @@ async function assertLyricsWorkspaceSplitInteractions() {
   await page.getByTestId("ai-translate-panel").waitFor({ state: "visible" });
   assert.equal(await page.getByTestId("lyrics-command-sidebar-toggle").getAttribute("aria-pressed"), "true", "AI command expands the sidebar");
   assert.equal(await page.getByTestId("lyrics-sidebar").getAttribute("data-active-tab"), "translation", "AI command selects the Translation tab");
+  await page.waitForFunction(
+    () => document.activeElement?.getAttribute("data-testid") === "lyrics-ai-entry",
+    undefined,
+    { timeout: 5_000 }
+  );
   assert.equal(
     await page.getByTestId("lyrics-ai-entry").evaluate((node) => document.activeElement === node),
     true,
@@ -3239,17 +3244,25 @@ try {
       if (!(button instanceof HTMLButtonElement)) return false;
       button.removeAttribute("disabled");
       button.click();
-      delete document.fonts.status;
       return true;
     } catch {
+      delete document.fonts.status;
       return false;
     }
   });
   assert.equal(fontOverrideSupported, true, "test shell can simulate fonts-loading readiness");
-  await page.waitForFunction(() => /字体.*加载|加载.*字体/.test(
-    document.querySelector('[data-testid="app-toast"]')?.textContent ?? ""
-  ));
-  assert.match(await page.getByTestId("app-toast").innerText(), /字体.*加载|加载.*字体/, "live export defense rejects fonts that are not ready");
+  try {
+    await page.waitForFunction(
+      () => /字体.*加载|加载.*字体/.test(document.querySelector('[data-testid="app-toast"]')?.textContent ?? ""),
+      undefined,
+      { timeout: 10_000 }
+    );
+    assert.match(await page.getByTestId("app-toast").innerText(), /字体.*加载|加载.*字体/, "live export defense rejects fonts that are not ready");
+  } finally {
+    await page.evaluate(() => {
+      delete document.fonts.status;
+    });
+  }
 
   await page.evaluate(() => {
     const root = document.querySelector('[data-export-card-host] [data-export-card]');
