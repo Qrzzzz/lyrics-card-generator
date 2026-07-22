@@ -1,7 +1,7 @@
 "use client";
 
-import { motion } from "framer-motion";
 import {
+  ChevronDown,
   Eraser,
   Languages,
   X
@@ -18,7 +18,6 @@ import {
 } from "react";
 import { AiTranslateButton } from "@/components/lyrics/AiTranslateButton";
 import type { LyricsCommandIntent } from "@/components/editor/LyricsCommandBar";
-import { useAppReducedMotion } from "@/components/motion/AppMotionProvider";
 import {
   formatLyricsWorkspaceCopy,
   type LyricsWorkspaceCopy
@@ -27,11 +26,6 @@ import { Section, ToggleRow } from "@/components/ui/controls";
 import { getAIUiCopy } from "@/lib/ai/ui-copy";
 import type { createT } from "@/lib/i18n";
 import { formatChineseTranslation, splitAlternatingLyrics } from "@/lib/lyric-format";
-import {
-  motionDurations,
-  motionEasings,
-  reducedMotionTransition
-} from "@/lib/motion/tokens";
 import {
   cleanSynchronizedBlankRows,
   previewParagraphTags,
@@ -59,7 +53,6 @@ type LyricsSidebarProps = {
   themeColor: string;
   t: ReturnType<typeof createT>;
   open: boolean;
-  collapsed: boolean;
   mobileDrawer: boolean;
   feedback: { message: string; canUndo: boolean } | null;
   focusIntent: LyricsCommandIntent | null;
@@ -67,7 +60,6 @@ type LyricsSidebarProps = {
   showAiTranslate: boolean;
   aiPanel?: ReactNode;
   onTabChange: (tab: LyricsSidebarTab) => void;
-  onOpenTab: (tab: LyricsSidebarTab, intent?: LyricsCommandIntent) => void;
   onCloseDrawer: () => void;
   onIntentHandled: () => void;
   onUndo: () => void;
@@ -90,24 +82,17 @@ export function LyricsSidebar(props: LyricsSidebarProps) {
     copy,
     activeTab,
     open,
-    collapsed,
     mobileDrawer,
     feedback,
     focusIntent,
     onTabChange,
-    onOpenTab,
     onCloseDrawer,
     onIntentHandled,
     onUndo
   } = props;
-  const reduceMotion = useAppReducedMotion();
   const intentTargets = useRef<Partial<Record<LyricsCommandIntent, HTMLElement | null>>>({});
   const closeDrawerButtonRef = useRef<HTMLButtonElement | null>(null);
-  const pendingCollapsedTabFocusRef = useRef<LyricsSidebarTab | null>(null);
   const drawerOpenRef = useRef(false);
-  const sidebarContentTransition = reduceMotion
-    ? reducedMotionTransition
-    : { duration: motionDurations.slow, ease: motionEasings.emphasized };
 
   function onTabKeyDown(event: KeyboardEvent<HTMLButtonElement>, tab: LyricsSidebarTab) {
     const currentIndex = TABS.indexOf(tab);
@@ -130,13 +115,13 @@ export function LyricsSidebar(props: LyricsSidebarProps) {
   }
 
   useEffect(() => {
-    if (!open || !focusIntent || collapsed) return;
+    if (!open || !focusIntent) return;
     const frame = window.requestAnimationFrame(() => {
       intentTargets.current[focusIntent]?.focus({ preventScroll: true });
       onIntentHandled();
     });
     return () => window.cancelAnimationFrame(frame);
-  }, [activeTab, collapsed, focusIntent, onIntentHandled, open]);
+  }, [activeTab, focusIntent, onIntentHandled, open]);
 
   useEffect(() => {
     const drawerOpen = open && mobileDrawer;
@@ -148,20 +133,6 @@ export function LyricsSidebar(props: LyricsSidebarProps) {
     });
     return () => window.cancelAnimationFrame(frame);
   }, [focusIntent, mobileDrawer, open]);
-
-  function openCollapsedTab(tab: LyricsSidebarTab) {
-    pendingCollapsedTabFocusRef.current = tab;
-    onOpenTab(tab);
-  }
-
-  function focusPendingCollapsedTab() {
-    const pendingTab = pendingCollapsedTabFocusRef.current;
-    if (!open || collapsed || !pendingTab) return;
-    const tab = document.getElementById(`lyrics-sidebar-tab-${pendingTab}`);
-    if (!(tab instanceof HTMLButtonElement)) return;
-    tab.focus({ preventScroll: true });
-    if (document.activeElement === tab) pendingCollapsedTabFocusRef.current = null;
-  }
 
   function onDrawerKeyDown(event: KeyboardEvent<HTMLElement>) {
     if (!mobileDrawer) return;
@@ -201,60 +172,13 @@ export function LyricsSidebar(props: LyricsSidebarProps) {
       onKeyDown={onDrawerKeyDown}
       className={cn(
         "lyrics-sidebar app-text-muted h-full min-h-0 min-w-0 overflow-hidden",
-        collapsed && "lyrics-sidebar--collapsed",
         mobileDrawer && "lyrics-sidebar--drawer"
       )}
       data-testid="lyrics-sidebar"
-      data-collapsed={collapsed ? "true" : "false"}
       data-mobile-drawer={mobileDrawer ? "true" : "false"}
       data-active-tab={activeTab}
     >
-      <div className="relative h-full min-h-0">
-        <motion.div
-          initial={false}
-          animate={
-            collapsed
-              ? { opacity: 1, x: 0, visibility: "visible" }
-              : { opacity: 0, x: 18, transitionEnd: { visibility: "hidden" } }
-          }
-          transition={sidebarContentTransition}
-          aria-hidden={!collapsed}
-          inert={!collapsed ? true : undefined}
-          className="lyrics-sidebar-motion-layer absolute inset-0 flex h-full min-h-0 flex-col items-center gap-2 p-2"
-          data-testid="lyrics-sidebar-collapsed-layer"
-          data-active={collapsed ? "true" : "false"}
-          style={{ pointerEvents: collapsed ? "auto" : "none" }}
-        >
-          <nav className="flex flex-col gap-2" aria-label={copy.sidebar}>
-            {TABS.map((tab) => (
-              <SidebarIconButton
-                key={tab}
-                label={tabLabel(copy, tab)}
-                testId={collapsed ? `lyrics-sidebar-tab-${tab}` : undefined}
-                onClick={() => openCollapsedTab(tab)}
-                active={activeTab === tab}
-                icon={tabIcon(tab)}
-              />
-            ))}
-          </nav>
-        </motion.div>
-
-        <motion.div
-          initial={false}
-          animate={
-            collapsed
-              ? { opacity: 0, x: 24, transitionEnd: { visibility: "hidden" } }
-              : { opacity: 1, x: 0, visibility: "visible" }
-          }
-          transition={sidebarContentTransition}
-          onAnimationComplete={focusPendingCollapsedTab}
-          aria-hidden={collapsed}
-          inert={collapsed ? true : undefined}
-          className="lyrics-sidebar-motion-layer absolute inset-0 flex h-full min-h-0 flex-col"
-          data-testid="lyrics-sidebar-expanded-layer"
-          data-active={collapsed ? "false" : "true"}
-          style={{ pointerEvents: collapsed ? "none" : "auto" }}
-        >
+      <div className="flex h-full min-h-0 flex-col">
           <header className="lyrics-sidebar-header flex shrink-0 items-center gap-2 border-b border-[rgb(var(--panel-border))] p-2">
             <div
               role="tablist"
@@ -283,8 +207,8 @@ export function LyricsSidebar(props: LyricsSidebarProps) {
                   data-selected={activeTab === tab ? "true" : "false"}
                   onClick={() => onTabChange(tab)}
                   onKeyDown={(event) => onTabKeyDown(event, tab)}
-                  tabIndex={!collapsed && activeTab === tab ? 0 : -1}
-                  data-testid={!collapsed ? `lyrics-sidebar-tab-${tab}` : undefined}
+                  tabIndex={activeTab === tab ? 0 : -1}
+                  data-testid={`lyrics-sidebar-tab-${tab}`}
                 >
                   {tabIcon(tab, "size-3.5")}
                   <span className="truncate">{tabLabel(copy, tab)}</span>
@@ -336,7 +260,6 @@ export function LyricsSidebar(props: LyricsSidebarProps) {
               />
             </SidebarPanel>
           </div>
-        </motion.div>
       </div>
     </aside>
   );
@@ -414,7 +337,9 @@ function CleanupPanel({
         start: scope.startLine,
         end: scope.endLine
       })
-    : copy.alignedColumns;
+    : formatLyricsWorkspaceCopy(copy.activeColumnScope, {
+        label: `${copy.original}/${copy.translation}`
+      });
   const removeAllCount = synchronizedActive
     ? cleanSynchronizedBlankRows({
         lyrics,
@@ -428,15 +353,23 @@ function CleanupPanel({
   const removeAllScope = synchronizedActive ? synchronizedScopeSummary : scopeSummary;
 
   return (
-    <div className="grid gap-0">
-      <PanelSection
-        title={copy.scopeHeading}
-        description={(
-          <span data-testid="lyrics-cleanup-scope-summary">
-            {synchronizedActive ? synchronizedScopeSummary : scopeSummary}
-          </span>
-        )}
+    <div className="grid gap-3">
+      <div
+        className="lyrics-sidebar-context"
+        data-testid="lyrics-cleanup-context"
       >
+        <div className="flex min-w-0 items-center gap-2 px-0.5">
+          <span className="app-text-subtle shrink-0 text-[10px] font-semibold uppercase tracking-[0.08em]">
+            {copy.scopeHeading}
+          </span>
+          <strong
+            className="app-text-primary min-w-0 flex-1 truncate text-right text-xs font-semibold"
+            data-testid="lyrics-cleanup-scope-summary"
+            title={synchronizedActive ? synchronizedScopeSummary : scopeSummary}
+          >
+            {synchronizedActive ? synchronizedScopeSummary : scopeSummary}
+          </strong>
+        </div>
         <div
           role="group"
           aria-label={copy.scopeHeading}
@@ -461,114 +394,142 @@ function CleanupPanel({
             disabled={!translationEnabled}
           />
         </div>
-        {synchronizedActive ? <p className="app-text-subtle text-xs leading-relaxed">{copy.alignedColumnsHint}</p> : null}
-      </PanelSection>
-
-      <PanelSection title={copy.blankLinesHeading}>
-        <div className="grid gap-1.5">
-          <ToolButton
-            label={copy.trimBlankLines}
-            onClick={() => onBlankCleanup("trim", synchronizedActive)}
-            testId="lyrics-cleanup-blank-trim"
-          />
-          <ToolButton
-            label={copy.collapseBlankLines}
-            onClick={() => onBlankCleanup("collapse", synchronizedActive)}
-            testId="lyrics-cleanup-blank-collapse"
-          />
-          <ToolButton
-            label={copy.removeBlankLines}
-            onClick={() => setShowRemoveAllPreview((value) => !value)}
-            testId="lyrics-cleanup-blank-all-preview"
-            danger
-          />
-          {showRemoveAllPreview ? (
-            <PreviewBox testId="lyrics-cleanup-blank-all-preview-result">
-              <p>{formatLyricsWorkspaceCopy(copy.removeBlankLinesPreview, {
-                count: removeAllCount,
-                scope: removeAllScope
-              })}</p>
-              <ToolButton
-                label={copy.confirmRemoveBlankLines}
-                onClick={() => {
-                  onBlankCleanup("all", synchronizedActive);
-                  setShowRemoveAllPreview(false);
-                }}
-                disabled={removeAllCount === 0}
-                testId="lyrics-cleanup-blank-all"
-                danger
-              />
-            </PreviewBox>
-          ) : null}
-        </div>
-      </PanelSection>
-
-      <PanelSection title={copy.cleanPaste} testId="lyrics-cleanup-section-paste">
-        <p className="app-text-subtle text-xs leading-relaxed">{copy.cleanPasteHint}</p>
-        <ToolButton
-          label={copy.cleanPaste}
-          onClick={onCleanPaste}
-          testId="lyrics-cleanup-paste"
-        />
-      </PanelSection>
-
-      <PanelSection title={copy.lrcHeading} testId="lyrics-cleanup-section-lrc">
-        <ToolButton
-          label={copy.previewLrc}
-          onClick={() => setShowLrcPreview((value) => !value)}
-          testId="lyrics-cleanup-lrc-preview"
-        />
-        {showLrcPreview ? (
-          <PreviewBox testId="lyrics-cleanup-lrc-preview-result">
-            <p>{formatLyricsWorkspaceCopy(copy.lrcPreview, {
-              timestamps: lrcPreview.stats.timestamps ?? 0,
-              metadata: lrcPreview.stats.metadata ?? 0
-            })}</p>
-            <ToolButton
-              label={copy.applyLrc}
-              onClick={onStripLrc}
-              disabled={cleanupCount === 0}
-              testId="lyrics-cleanup-lrc-apply"
-            />
-          </PreviewBox>
+        {synchronizedActive ? (
+          <p className="app-text-subtle px-0.5 text-[10px] leading-4">{copy.alignedColumnsHint}</p>
         ) : null}
-      </PanelSection>
+      </div>
 
-      <PanelSection title={copy.mergeHeading} testId="lyrics-cleanup-section-merge">
-        <ToolButton
-          label={selectedLineCount >= 2
-            ? formatLyricsWorkspaceCopy(copy.mergeSelectedLines, { count: selectedLineCount })
-            : copy.mergeSelectionHint}
-          onClick={onMergeSelectedLines}
-          disabled={selectedLineCount < 2}
-          testId="lyrics-merge-selected"
-        />
-      </PanelSection>
-
-      <PanelSection title={copy.tagsHeading} testId="lyrics-cleanup-section-tags">
-        <ToolButton
-          label={copy.previewTags}
-          onClick={() => setShowTagPreview((value) => !value)}
-          testId="lyrics-tags-preview"
-        />
-        {showTagPreview ? (
-          <PreviewBox testId="lyrics-tags-preview-result">
-            {tags.length > 0 ? (
-              <>
-                <ul className="grid gap-1 font-mono text-[10px]">
-                  {tags.slice(0, 8).map((tag) => <li key={`${tag.line}-${tag.text}`}>{tag.line}: {tag.text}</li>)}
-                </ul>
+      <PanelSection title={copy.commonCleanupHeading} testId="lyrics-cleanup-section-common">
+        <OperationGroup title={copy.blankLinesHeading}>
+          <OperationItem>
+            <ToolButton
+              label={copy.trimBlankLines}
+              onClick={() => onBlankCleanup("trim", synchronizedActive)}
+              testId="lyrics-cleanup-blank-trim"
+            />
+          </OperationItem>
+          <OperationItem>
+            <ToolButton
+              label={copy.collapseBlankLines}
+              onClick={() => onBlankCleanup("collapse", synchronizedActive)}
+              testId="lyrics-cleanup-blank-collapse"
+            />
+          </OperationItem>
+          <OperationItem>
+            <ToolButton
+              label={copy.removeBlankLines}
+              onClick={() => setShowRemoveAllPreview((value) => !value)}
+              testId="lyrics-cleanup-blank-all-preview"
+              danger
+            />
+            {showRemoveAllPreview ? (
+              <PreviewBox testId="lyrics-cleanup-blank-all-preview-result">
+                <p>{formatLyricsWorkspaceCopy(copy.removeBlankLinesPreview, {
+                  count: removeAllCount,
+                  scope: removeAllScope
+                })}</p>
                 <ToolButton
-                  label={formatLyricsWorkspaceCopy(copy.removeTags, { count: tags.length })}
-                  onClick={onRemoveParagraphTags}
-                  testId="lyrics-tags-apply"
+                  label={copy.confirmRemoveBlankLines}
+                  onClick={() => {
+                    onBlankCleanup("all", synchronizedActive);
+                    setShowRemoveAllPreview(false);
+                  }}
+                  disabled={removeAllCount === 0}
+                  testId="lyrics-cleanup-blank-all"
                   danger
                 />
-              </>
-            ) : <p>{copy.noTags}</p>}
-          </PreviewBox>
-        ) : null}
+              </PreviewBox>
+            ) : null}
+          </OperationItem>
+        </OperationGroup>
+
+        <OperationGroup testId="lyrics-cleanup-section-paste">
+          <OperationItem>
+            <ToolButton
+              label={copy.cleanPaste}
+              description={copy.cleanPasteHint}
+              onClick={onCleanPaste}
+              testId="lyrics-cleanup-paste"
+            />
+          </OperationItem>
+        </OperationGroup>
       </PanelSection>
+
+      <details className="lyrics-sidebar-more" data-testid="lyrics-cleanup-more">
+        <summary
+          className="control-focus lyrics-sidebar-more__summary"
+          data-testid="lyrics-cleanup-more-summary"
+        >
+          <span>{copy.moreCleanupHeading}</span>
+          <ChevronDown className="lyrics-sidebar-more__chevron size-4" aria-hidden="true" />
+        </summary>
+        <div className="lyrics-sidebar-more__content">
+          <OperationGroup title={copy.lrcHeading} testId="lyrics-cleanup-section-lrc">
+            <OperationItem>
+              <ToolButton
+                label={copy.previewLrc}
+                onClick={() => setShowLrcPreview((value) => !value)}
+                testId="lyrics-cleanup-lrc-preview"
+              />
+              {showLrcPreview ? (
+                <PreviewBox testId="lyrics-cleanup-lrc-preview-result">
+                  <p>{formatLyricsWorkspaceCopy(copy.lrcPreview, {
+                    timestamps: lrcPreview.stats.timestamps ?? 0,
+                    metadata: lrcPreview.stats.metadata ?? 0
+                  })}</p>
+                  <ToolButton
+                    label={copy.applyLrc}
+                    onClick={onStripLrc}
+                    disabled={cleanupCount === 0}
+                    testId="lyrics-cleanup-lrc-apply"
+                  />
+                </PreviewBox>
+              ) : null}
+            </OperationItem>
+          </OperationGroup>
+
+          <OperationGroup title={copy.mergeHeading} testId="lyrics-cleanup-section-merge">
+            <OperationItem>
+              <ToolButton
+                label={selectedLineCount >= 2
+                  ? formatLyricsWorkspaceCopy(copy.mergeSelectedLines, { count: selectedLineCount })
+                  : copy.mergeHeading}
+                description={selectedLineCount < 2 ? copy.mergeSelectionHint : undefined}
+                onClick={onMergeSelectedLines}
+                disabled={selectedLineCount < 2}
+                testId="lyrics-merge-selected"
+              />
+            </OperationItem>
+          </OperationGroup>
+
+          <OperationGroup title={copy.tagsHeading} testId="lyrics-cleanup-section-tags">
+            <OperationItem>
+              <ToolButton
+                label={copy.previewTags}
+                onClick={() => setShowTagPreview((value) => !value)}
+                testId="lyrics-tags-preview"
+              />
+              {showTagPreview ? (
+                <PreviewBox testId="lyrics-tags-preview-result">
+                  {tags.length > 0 ? (
+                    <>
+                      <ul className="grid gap-1 font-mono text-[10px]">
+                        {tags.slice(0, 8).map((tag) => <li key={`${tag.line}-${tag.text}`}>{tag.line}: {tag.text}</li>)}
+                      </ul>
+                      <ToolButton
+                        label={formatLyricsWorkspaceCopy(copy.removeTags, { count: tags.length })}
+                        onClick={onRemoveParagraphTags}
+                        testId="lyrics-tags-apply"
+                        danger
+                      />
+                    </>
+                  ) : <p>{copy.noTags}</p>}
+                </PreviewBox>
+              ) : null}
+            </OperationItem>
+          </OperationGroup>
+        </div>
+      </details>
     </div>
   );
 }
@@ -601,14 +562,21 @@ function TranslationPanel({
   const splitTranslationLines = countRows(split.translationText);
 
   return (
-    <div className="grid gap-0">
-      <PanelSection title={copy.translationHeading}>
+    <div className="grid gap-3">
+      <section
+        className="lyrics-sidebar-primary"
+        data-testid="lyrics-translation-primary"
+      >
+        <p className="app-text-subtle px-0.5 text-[10px] font-semibold uppercase tracking-[0.08em]">
+          {copy.translationHeading}
+        </p>
         <ToggleRow
           label={t("enableTranslation")}
           checked={translationEnabled}
           onChange={onTranslationEnabledChange}
           size="sm"
           testId="translation-toggle"
+          className="lyrics-sidebar-primary__toggle"
         />
 
         {showAiTranslate ? (
@@ -628,59 +596,67 @@ function TranslationPanel({
         >
           {aiPanel}
         </div>
-      </PanelSection>
+      </section>
 
-      <PanelSection title={t("splitAlternatingLyrics")} testId="lyrics-translation-section-split">
-        <ToolButton
-          label={copy.splitPreview}
-          onClick={() => setShowSplitPreview((value) => !value)}
-          testId="lyrics-split-preview"
-        />
-        {showSplitPreview ? (
-          <PreviewBox testId="lyrics-split-preview-result">
-            <p>{formatLyricsWorkspaceCopy(copy.splitSummary, {
-              original: splitOriginalLines,
-              translation: splitTranslationLines
-            })}</p>
+      <PanelSection title={copy.columnToolsHeading} testId="lyrics-translation-column-tools">
+        <OperationGroup testId="lyrics-translation-section-split">
+          <OperationItem>
             <ToolButton
-              label={copy.splitApply}
-              onClick={() => onSplitAlternatingLyrics(split.lyrics, split.translationText)}
-              disabled={!split.lyrics && !split.translationText}
-              testId="lyrics-split-apply"
+              label={copy.splitPreview}
+              onClick={() => setShowSplitPreview((value) => !value)}
+              testId="lyrics-split-preview"
             />
-          </PreviewBox>
-        ) : null}
-      </PanelSection>
+            {showSplitPreview ? (
+              <PreviewBox testId="lyrics-split-preview-result">
+                <p>{formatLyricsWorkspaceCopy(copy.splitSummary, {
+                  original: splitOriginalLines,
+                  translation: splitTranslationLines
+                })}</p>
+                <ToolButton
+                  label={copy.splitApply}
+                  onClick={() => onSplitAlternatingLyrics(split.lyrics, split.translationText)}
+                  disabled={!split.lyrics && !split.translationText}
+                  testId="lyrics-split-apply"
+                />
+              </PreviewBox>
+            ) : null}
+          </OperationItem>
+        </OperationGroup>
 
-      <PanelSection title={copy.formatTranslation} testId="lyrics-translation-section-format">
-        <ToolButton
-          label={copy.formatTranslation}
-          onClick={() => onFormatTranslation(formatChineseTranslation(translationText))}
-          disabled={!translationText}
-          testId="lyrics-format-translation"
-        />
-      </PanelSection>
-
-      <PanelSection title={copy.swapPreview} testId="lyrics-translation-section-swap">
-        <ToolButton
-          label={copy.swapPreview}
-          onClick={() => setShowSwapPreview((value) => !value)}
-          disabled={!translationText}
-          testId="lyrics-swap-preview"
-        />
-        {showSwapPreview ? (
-          <PreviewBox testId="lyrics-swap-preview-result">
-            <p>{copy.swapSummary}</p>
+        <OperationGroup testId="lyrics-translation-section-format">
+          <OperationItem>
             <ToolButton
-              label={copy.swapApply}
-              onClick={onSwapColumns}
-              testId="lyrics-swap-apply"
+              label={copy.formatTranslation}
+              onClick={() => onFormatTranslation(formatChineseTranslation(translationText))}
+              disabled={!translationText}
+              testId="lyrics-format-translation"
+            />
+          </OperationItem>
+        </OperationGroup>
+
+        <OperationGroup testId="lyrics-translation-section-swap">
+          <OperationItem>
+            <ToolButton
+              label={copy.swapPreview}
+              onClick={() => setShowSwapPreview((value) => !value)}
+              disabled={!translationText}
+              testId="lyrics-swap-preview"
               danger
             />
-          </PreviewBox>
-        ) : null}
+            {showSwapPreview ? (
+              <PreviewBox testId="lyrics-swap-preview-result">
+                <p>{copy.swapSummary}</p>
+                <ToolButton
+                  label={copy.swapApply}
+                  onClick={onSwapColumns}
+                  testId="lyrics-swap-apply"
+                  danger
+                />
+              </PreviewBox>
+            ) : null}
+          </OperationItem>
+        </OperationGroup>
       </PanelSection>
-
     </div>
   );
 }
@@ -724,6 +700,31 @@ function PreviewBox({
   );
 }
 
+function OperationGroup({
+  title,
+  children,
+  testId
+}: {
+  title?: string;
+  children: ReactNode;
+  testId?: string;
+}) {
+  return (
+    <div className="lyrics-sidebar-operation-group" data-testid={testId}>
+      {title ? (
+        <p className="app-text-subtle px-1 text-[10px] font-semibold uppercase tracking-[0.08em]">
+          {title}
+        </p>
+      ) : null}
+      <div className="lyrics-sidebar-operation-list">{children}</div>
+    </div>
+  );
+}
+
+function OperationItem({ children }: { children: ReactNode }) {
+  return <div className="lyrics-sidebar-operation">{children}</div>;
+}
+
 function ChoiceButton({
   label,
   selected,
@@ -741,7 +742,7 @@ function ChoiceButton({
     <button
       type="button"
       className={cn(
-        "segmented-control__item control-focus control-disabled relative z-[2] h-9 min-w-0 rounded-lg px-2 text-xs font-semibold",
+        "segmented-control__item control-focus control-disabled relative z-[2] h-8 min-w-0 rounded-lg px-2 text-[11px] font-semibold",
         selected && "app-text-primary"
       )}
       aria-pressed={selected}
@@ -757,6 +758,7 @@ function ChoiceButton({
 
 const ToolButton = function ToolButton({
   label,
+  description,
   onClick,
   testId,
   disabled = false,
@@ -764,6 +766,7 @@ const ToolButton = function ToolButton({
   ref
 }: {
   label: string;
+  description?: string;
   onClick: () => void;
   testId: string;
   disabled?: boolean;
@@ -775,14 +778,21 @@ const ToolButton = function ToolButton({
       ref={ref}
       type="button"
       className={cn(
-        "control-surface lyrics-sidebar-action control-focus control-disabled flex min-h-9 w-full items-center rounded-lg px-3 py-2 text-left text-[13px] font-medium leading-5",
+        "control-surface lyrics-sidebar-action control-focus control-disabled flex min-h-9 w-full items-start rounded-lg px-2.5 py-2 text-left text-[13px] font-medium leading-5",
         danger && "lyrics-sidebar-action--danger"
       )}
       onClick={onClick}
       disabled={disabled}
       data-testid={testId}
     >
-      {label}
+      <span className="min-w-0 flex-1">
+        <span className="app-text-primary block">{label}</span>
+        {description ? (
+          <span className="app-text-subtle mt-0.5 block text-[10px] font-normal leading-4">
+            {description}
+          </span>
+        ) : null}
+      </span>
     </button>
   );
 };

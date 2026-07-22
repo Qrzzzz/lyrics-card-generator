@@ -3,38 +3,25 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import {
   __internalLyricsWorkspaceLayout,
-  createLyricsWorkspaceLayoutState,
-  lyricsWorkspaceLayoutReducer,
   resolveLyricsWorkspaceSplit
 } from "../lib/lyrics-workspace-layout";
-import {
-  resolveSplitKeyboardRatio,
-  resolveSplitPointerRatio
-} from "../lib/resizable-split";
 
 const {
   DEFAULT_EDITOR_RATIO,
-  MIN_EDITOR_RATIO,
-  MAX_EDITOR_RATIO,
   MIN_EDITOR_WIDTH,
   MIN_TOOLS_WIDTH,
   EXPANDED_GAP,
-  COLLAPSED_TOOLS_WIDTH,
   MIN_SIDE_BY_SIDE_WIDTH
 } = __internalLyricsWorkspaceLayout;
 
-const defaultSplit = resolveLyricsWorkspaceSplit(1220, DEFAULT_EDITOR_RATIO);
+const defaultSplit = resolveLyricsWorkspaceSplit(1220);
 assert.equal(defaultSplit.usableWidth, 1212);
-assert.equal(defaultSplit.editorWidth, 909, "the lyrics editor defaults to three quarters of usable width");
-assert.equal(defaultSplit.toolsWidth, 303, "the expanded tools stay above the readable 300px floor");
-assert.equal(defaultSplit.gap, 8, "the expanded separator uses a compact visual gutter with a usable hit area");
+assert.equal(defaultSplit.editorWidth, 808, "the lyrics editor keeps two thirds of the usable width");
+assert.equal(defaultSplit.toolsWidth, 404, "the tools default to their maximum one-third width");
+assert.equal(defaultSplit.gap, 8, "the fixed columns retain a compact visual gutter");
+assert.equal(defaultSplit.ratio, DEFAULT_EDITOR_RATIO, "the fixed desktop ratio is two thirds to one third");
 
-const expandedTools = resolveLyricsWorkspaceSplit(1220, MIN_EDITOR_RATIO);
-assert.ok(Math.abs(expandedTools.editorWidth - 808) < 0.001);
-assert.ok(Math.abs(expandedTools.toolsWidth - 404) < 0.001);
-assert.ok(Math.abs(expandedTools.ratio - 2 / 3) < 0.0001, "tools can expand to one third without shrinking the editor further");
-
-const minimumSplit = resolveLyricsWorkspaceSplit(MIN_SIDE_BY_SIDE_WIDTH, DEFAULT_EDITOR_RATIO);
+const minimumSplit = resolveLyricsWorkspaceSplit(MIN_SIDE_BY_SIDE_WIDTH);
 assert.ok(Math.abs(minimumSplit.editorWidth - MIN_EDITOR_WIDTH) < 0.001);
 assert.ok(Math.abs(minimumSplit.toolsWidth - MIN_TOOLS_WIDTH) < 0.001);
 assert.equal(
@@ -43,89 +30,6 @@ assert.equal(
   "minimum width constraints fit without horizontal overflow"
 );
 
-let layout = createLyricsWorkspaceLayoutState();
-assert.deepEqual(layout, {
-  editorRatio: 0.75,
-  lastExpandedEditorRatio: 0.75,
-  collapsed: true
-});
-layout = lyricsWorkspaceLayoutReducer(layout, { type: "set-ratio", ratio: MIN_EDITOR_RATIO });
-layout = lyricsWorkspaceLayoutReducer(layout, { type: "collapse" });
-assert.equal(layout.collapsed, true);
-assert.equal(layout.lastExpandedEditorRatio, MIN_EDITOR_RATIO);
-layout = lyricsWorkspaceLayoutReducer(layout, { type: "expand" });
-assert.equal(layout.collapsed, false);
-assert.equal(layout.editorRatio, MIN_EDITOR_RATIO, "expanding restores the last expanded ratio");
-layout = lyricsWorkspaceLayoutReducer(layout, { type: "reset-ratio" });
-assert.equal(layout.editorRatio, DEFAULT_EDITOR_RATIO, "double-click reset returns to the three-quarter default");
-
-assert.equal(
-  resolveSplitKeyboardRatio({
-    key: "ArrowLeft",
-    shiftKey: false,
-    currentRatio: MAX_EDITOR_RATIO,
-    minRatio: MIN_EDITOR_RATIO,
-    maxRatio: MAX_EDITOR_RATIO
-  }),
-  0.73
-);
-assert.equal(
-  resolveSplitKeyboardRatio({
-    key: "ArrowLeft",
-    shiftKey: true,
-    currentRatio: MAX_EDITOR_RATIO,
-    minRatio: MIN_EDITOR_RATIO,
-    maxRatio: MAX_EDITOR_RATIO
-  }),
-  0.7,
-  "Shift accelerates keyboard resizing"
-);
-assert.equal(
-  resolveSplitKeyboardRatio({
-    key: "Home",
-    shiftKey: false,
-    currentRatio: DEFAULT_EDITOR_RATIO,
-    minRatio: MIN_EDITOR_RATIO,
-    maxRatio: MAX_EDITOR_RATIO
-  }),
-  MIN_EDITOR_RATIO
-);
-assert.equal(
-  resolveSplitKeyboardRatio({
-    key: "End",
-    shiftKey: false,
-    currentRatio: MIN_EDITOR_RATIO,
-    minRatio: MIN_EDITOR_RATIO,
-    maxRatio: MAX_EDITOR_RATIO
-  }),
-  MAX_EDITOR_RATIO
-);
-assert.equal(
-  resolveSplitKeyboardRatio({
-    key: "Enter",
-    shiftKey: false,
-    currentRatio: DEFAULT_EDITOR_RATIO,
-    minRatio: MIN_EDITOR_RATIO,
-    maxRatio: MAX_EDITOR_RATIO
-  }),
-  null
-);
-
-assert.equal(
-  resolveSplitPointerRatio({
-    clientX: 810,
-    viewportLeft: 0,
-    viewportWidth: 1220,
-    gap: EXPANDED_GAP,
-    minRatio: MIN_EDITOR_RATIO,
-    maxRatio: MAX_EDITOR_RATIO
-  }),
-  MIN_EDITOR_RATIO,
-  "pointer geometry measures from the separator center and clamps at one third tools"
-);
-
-assert.equal(COLLAPSED_TOOLS_WIDTH, 52, "the collapsed tool rail stays compact while preserving 36px targets");
-
 const editorStepsSource = readFileSync(resolve("components/editor/useEditorSteps.tsx"), "utf8");
 const workspaceSource = readFileSync(resolve("components/editor/LyricsWorkspace.tsx"), "utf8");
 const commandBarSource = readFileSync(resolve("components/editor/LyricsCommandBar.tsx"), "utf8");
@@ -133,34 +37,33 @@ const reviewMenuSource = readFileSync(resolve("components/editor/LyricsReviewMen
 const fetchPanelSource = readFileSync(resolve("components/editor/LyricsFetchPanel.tsx"), "utf8");
 const sidebarSource = readFileSync(resolve("components/editor/LyricsSidebar.tsx"), "utf8");
 const copySource = readFileSync(resolve("components/editor/lyrics-workspace-copy.ts"), "utf8");
-const resizableSource = readFileSync(resolve("components/editor/hooks/useResizableSplit.ts"), "utf8");
+const workspaceSplitHookSource = readFileSync(resolve("components/editor/hooks/useLyricsWorkspaceSplit.ts"), "utf8");
 const stepperSource = readFileSync(resolve("components/editor/SettingsStepper.tsx"), "utf8");
 const globalsSource = readFileSync(resolve("app/globals.css"), "utf8");
 
 assert.ok(
-    editorStepsSource.includes("useReducer(") &&
-      editorStepsSource.includes("lyricsWorkspaceLayoutReducer") &&
-      editorStepsSource.includes('useState<LyricsSidebarTab>("cleanup")') &&
-      editorStepsSource.includes("workspaceLayout={lyricsWorkspaceLayout}"),
-  "split and active-tab state are owned above the step-two content lifecycle"
+  editorStepsSource.includes('useState<LyricsSidebarTab>("cleanup")') &&
+    !editorStepsSource.includes("lyricsWorkspaceLayoutReducer") &&
+    !editorStepsSource.includes("workspaceLayout={lyricsWorkspaceLayout}") &&
+    !editorStepsSource.includes("onWorkspaceLayoutAction"),
+  "step two keeps only active-tab state after removing adjustable layout state"
 );
 assert.ok(
-  workspaceSource.includes('data-testid={!sidebarCollapsed ? "lyrics-workspace-resizer" : undefined}') &&
-    workspaceSource.includes('role={!sidebarCollapsed ? "separator" : undefined}') &&
-    workspaceSource.includes('aria-orientation={!sidebarCollapsed ? "vertical" : undefined}') &&
-    workspaceSource.includes('aria-valuemin=') &&
-    workspaceSource.includes('aria-valuemax=') &&
-    workspaceSource.includes('aria-valuenow=') &&
-    workspaceSource.includes('aria-valuetext=') &&
-    workspaceSource.includes('aria-hidden={sidebarCollapsed}') &&
-    workspaceSource.includes('inert={sidebarCollapsed ? true : undefined}'),
-  "the active lyrics separator exposes the complete ARIA contract and becomes inert when collapsed"
+  workspaceSource.includes("const splitStyle = sideBySide") &&
+    workspaceSource.includes("gridTemplateColumns: `${split.geometry.editorWidth}px ${split.geometry.toolsWidth}px`") &&
+    workspaceSource.includes("showSidebarToggle={!sideBySide}") &&
+    !workspaceSource.includes("lyrics-workspace-resizer") &&
+    !workspaceSource.includes('role="separator"') &&
+    !workspaceSource.includes("sidebarCollapsed"),
+  "the desktop split is fixed while only narrow layouts expose the drawer control"
 );
 assert.ok(
-  resizableSource.includes("onDoubleClick: reset") &&
-    resizableSource.includes("setPointerCapture") &&
-    resizableSource.includes("resolveSplitKeyboardRatio"),
-  "pointer, keyboard, and double-click behavior share one interaction hook"
+  workspaceSplitHookSource.includes("new ResizeObserver(update)") &&
+    workspaceSplitHookSource.includes("window.matchMedia(LYRICS_WORKSPACE_DESKTOP_QUERY)") &&
+    workspaceSplitHookSource.includes("resolveLyricsWorkspaceSplit(viewportWidth)") &&
+    !workspaceSplitHookSource.includes("onRequestedRatioChange") &&
+    !workspaceSplitHookSource.includes("separatorProps"),
+  "the lyrics split observes its viewport without exposing resize interactions"
 );
 assert.ok(
   workspaceSource.includes('data-testid="lyrics-shared-scroll"') &&
@@ -182,17 +85,31 @@ assert.ok(
   "the workspace stays transparent while the sidebar reuses the settings control language without overlapping sticky content"
 );
 assert.ok(
-  sidebarSource.includes('data-collapsed={collapsed ? "true" : "false"}') &&
-    sidebarSource.includes('testId={collapsed ? `lyrics-sidebar-tab-${tab}` : undefined}') &&
-    sidebarSource.includes('data-testid={!collapsed ? `lyrics-sidebar-tab-${tab}` : undefined}') &&
-    sidebarSource.includes('data-testid="lyrics-sidebar-collapsed-layer"') &&
-    sidebarSource.includes('data-testid="lyrics-sidebar-expanded-layer"') &&
+  sidebarSource.includes('data-testid={`lyrics-sidebar-tab-${tab}`}') &&
+    sidebarSource.includes("tabIndex={activeTab === tab ? 0 : -1}") &&
+    !sidebarSource.includes("data-collapsed") &&
+    !sidebarSource.includes("lyrics-sidebar-collapsed-layer") &&
+    !sidebarSource.includes("lyrics-sidebar-expanded-layer") &&
+    !sidebarSource.includes("framer-motion") &&
     !sidebarSource.includes('data-testid="lyrics-sidebar-budget"') &&
     !sidebarSource.includes("<CollapsiblePanelSection") &&
+    sidebarSource.includes('data-testid="lyrics-cleanup-context"') &&
+    sidebarSource.includes('testId="lyrics-cleanup-section-common"') &&
+    sidebarSource.includes('data-testid="lyrics-cleanup-more"') &&
+    sidebarSource.includes('<details className="lyrics-sidebar-more"') &&
     sidebarSource.includes('testId="lyrics-cleanup-section-paste"') &&
-    sidebarSource.includes('testId="lyrics-cleanup-section-lrc"') &&
-    !sidebarSource.includes("lyrics-tool-split-collapsed"),
-  "the collapsed rail keeps stable tab icons while single-action sections remain directly visible when expanded"
+    sidebarSource.includes('testId="lyrics-cleanup-section-lrc"'),
+  "the always-open sidebar keeps stable tab navigation while concentrating low-frequency cleanup in one native disclosure"
+);
+assert.ok(
+  sidebarSource.includes('data-testid="lyrics-translation-primary"') &&
+    sidebarSource.includes('testId="translation-toggle"') &&
+    sidebarSource.includes('data-testid="lyrics-ai-entry"') &&
+    sidebarSource.includes('testId="lyrics-translation-column-tools"') &&
+    sidebarSource.includes('testId="lyrics-translation-section-split"') &&
+    sidebarSource.includes('testId="lyrics-translation-section-format"') &&
+    sidebarSource.includes('testId="lyrics-translation-section-swap"'),
+  "the translation panel leads with enablement and AI while grouping the remaining column tools"
 );
 assert.ok(
   commandBarSource.includes('role="toolbar"') &&
@@ -203,6 +120,7 @@ assert.ok(
     commandBarSource.includes('testId="lyrics-command-strip-lrc"') &&
     commandBarSource.includes('testId="lyrics-command-ai"') &&
     commandBarSource.includes('data-testid="lyrics-status-bar"') &&
+    commandBarSource.includes("showSidebarToggle ?") &&
     commandBarSource.includes("{lyricsFetchAction}") &&
     commandBarSource.includes("{reviewAction}") &&
     reviewMenuSource.includes('data-testid="lyrics-command-review"') &&
@@ -212,7 +130,15 @@ assert.ok(
     !commandBarSource.includes("lyrics-command-budget") &&
     !commandBarSource.includes("lyrics-command-find") &&
     !commandBarSource.includes("lyrics-find-input"),
-  "the command strip exposes editing actions on the left and independent fetch/review actions on the right"
+  "the command strip includes document status, editing actions, and independent fetch/review actions"
+);
+assert.ok(
+  copySource.includes("openDrawer") &&
+    copySource.includes("closeDrawer") &&
+    !copySource.includes("resizeSidebar") &&
+    !copySource.includes("collapseSidebar") &&
+    !copySource.includes("expandSidebar"),
+  "desktop resize and collapse copy is removed while narrow layouts use drawer language"
 );
 assert.ok(
   sidebarSource.includes('role="tablist"') &&
@@ -222,10 +148,8 @@ assert.ok(
     !sidebarSource.includes('tab="source"') &&
     sidebarSource.includes("hidden={activeTab !== tab}") &&
     sidebarSource.includes('data-testid="lyrics-sidebar-panels"') &&
-    sidebarSource.includes('aria-hidden={collapsed}') &&
-    sidebarSource.includes('inert={collapsed ? true : undefined}') &&
     sidebarSource.includes('event.key === "ArrowRight"') &&
-    sidebarSource.includes("tabIndex={!collapsed && activeTab === tab ? 0 : -1}"),
+    sidebarSource.includes("tabIndex={activeTab === tab ? 0 : -1}"),
   "the sidebar keeps only cleanup and translation panels with roving keyboard navigation"
 );
 assert.ok(
@@ -238,9 +162,10 @@ assert.ok(
     sidebarSource.includes("alignedColumnsHint") &&
     sidebarSource.includes('testId="lyrics-cleanup-scope-synchronized"') &&
     sidebarSource.includes('data-testid="lyrics-cleanup-scope-summary"') &&
+    sidebarSource.includes('label: `${copy.original}/${copy.translation}`') &&
     sidebarSource.includes('testId="lyrics-cleanup-blank-all-preview"') &&
     sidebarSource.includes('testId="lyrics-cleanup-blank-all"'),
-  "two-column blank cleanup is explicit, previewed, and keeps the active scope visible"
+  "the compact context bar names whole columns or selected lines while synchronized blank cleanup stays explicit and previewed"
 );
 assert.ok(
   globalsSource.includes(".lyrics-sidebar--drawer") &&
@@ -252,6 +177,9 @@ assert.ok(
 );
 for (const locale of ['zh:', '"zh-TW":', 'en:', 'fr:', 'ja:', 'es:']) {
   assert.ok(copySource.includes(locale), `workspace copy includes ${locale}`);
+}
+for (const key of ["commonCleanupHeading", "moreCleanupHeading", "columnToolsHeading"]) {
+  assert.equal(copySource.match(new RegExp(`${key}:`, "g"))?.length, 7, `${key} is typed and localized in all six workspace locales`);
 }
 assert.ok(
   copySource.includes("duplicateLineIssue") &&
@@ -265,4 +193,4 @@ assert.ok(
   "the step-two split stays inside LyricsWorkspace and leaves the shared Stepper structure unchanged"
 );
 
-console.log(JSON.stringify({ ok: true, lyricsWorkspaceLayoutTests: 42 }, null, 2));
+console.log(JSON.stringify({ ok: true, lyricsWorkspaceLayoutTests: 47 }, null, 2));

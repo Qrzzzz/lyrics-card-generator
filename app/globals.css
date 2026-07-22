@@ -378,10 +378,6 @@ body[data-window-maximized="true"] .app-shell[data-desktop-shell="true"] {
   z-index: 2;
 }
 
-.examples-floor__bottom-blur {
-  z-index: 10;
-}
-
 .dynamic-app-background__image {
   opacity: 1;
   transform: scale(1);
@@ -1206,36 +1202,6 @@ button {
   background: color-mix(in srgb, rgb(var(--input-bg)) 60%, transparent);
 }
 
-.lyrics-workspace-resizer {
-  top: 0;
-  bottom: 0;
-}
-
-.lyrics-sidebar--collapsed {
-  border-left: 1px solid rgb(var(--panel-border));
-}
-
-.lyrics-sidebar-motion-layer {
-  will-change: transform, opacity;
-}
-
-.lyrics-sidebar--collapsed .app-button {
-  width: 2.25rem;
-  min-width: 2.25rem;
-  border-color: transparent;
-  background: transparent;
-}
-
-.lyrics-sidebar--collapsed .app-button:hover:not(:disabled) {
-  border-color: color-mix(in srgb, rgb(var(--panel-border)) 72%, transparent);
-  background: color-mix(in srgb, rgb(var(--button-bg-hover)) 76%, transparent);
-}
-
-.lyrics-sidebar--collapsed .app-button[aria-pressed="true"] {
-  border-color: var(--control-selected-border);
-  background: var(--control-selected-bg);
-}
-
 .lyrics-sidebar-header {
   border-bottom-color: color-mix(in srgb, rgb(var(--panel-border)) 76%, transparent);
 }
@@ -1263,6 +1229,43 @@ button {
   border-radius: 0.5rem;
 }
 
+.lyrics-sidebar-context {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.625rem;
+  border: 1px solid color-mix(in srgb, rgb(var(--panel-border)) 78%, transparent);
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, rgb(var(--input-bg)) 52%, transparent);
+}
+
+.lyrics-sidebar-context .lyrics-sidebar-choice-grid.segmented-control {
+  padding: 0.125rem;
+  border-radius: 0.625rem;
+  background: color-mix(in srgb, rgb(var(--input-bg)) 82%, transparent);
+}
+
+.lyrics-sidebar-context .lyrics-sidebar-choice-grid .segmented-control__active-indicator {
+  top: 0.125rem;
+  left: 0.125rem;
+  width: calc((100% - 0.25rem) / 2);
+  height: calc(100% - 0.25rem);
+  border-radius: 0.4375rem;
+}
+
+.lyrics-sidebar-primary {
+  display: grid;
+  gap: 0.625rem;
+  padding: 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--control-selected-border) 62%, rgb(var(--panel-border)));
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, var(--control-selected-bg) 34%, rgb(var(--input-bg)));
+}
+
+.lyrics-sidebar-primary__toggle {
+  padding-right: 0.5rem;
+  padding-left: 0.5rem;
+}
+
 .lyrics-sidebar-section:first-child {
   padding-top: 0;
   border-top: 0;
@@ -1277,17 +1280,100 @@ button {
   line-height: 1.25rem;
 }
 
+.lyrics-sidebar-operation-group {
+  display: grid;
+  gap: 0.375rem;
+}
+
+.lyrics-sidebar-operation-group + .lyrics-sidebar-operation-group {
+  padding-top: 0.625rem;
+  border-top: 1px solid color-mix(in srgb, rgb(var(--panel-border)) 72%, transparent);
+}
+
+.lyrics-sidebar-operation-list,
+.lyrics-sidebar-operation {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.lyrics-sidebar-operation + .lyrics-sidebar-operation {
+  padding-top: 0.375rem;
+  border-top: 1px solid color-mix(in srgb, rgb(var(--panel-border)) 58%, transparent);
+}
+
 .lyrics-sidebar-action {
   justify-content: flex-start;
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
 }
 
 .lyrics-sidebar-action:hover:not(:disabled) {
-  background: rgb(var(--button-bg-hover));
+  border-color: transparent;
+  background: color-mix(in srgb, rgb(var(--button-bg-hover)) 76%, transparent);
+  transform: none;
+}
+
+.lyrics-sidebar-action--danger .app-text-primary {
+  color: rgb(var(--status-danger-fg));
 }
 
 .lyrics-sidebar-action--danger:hover:not(:disabled) {
   border-color: rgb(var(--status-danger-border));
   color: rgb(var(--status-danger-fg));
+}
+
+.status-info .lyrics-sidebar-action {
+  border-color: rgb(var(--control-border));
+  background: rgb(var(--button-bg));
+}
+
+.status-info .lyrics-sidebar-action--danger {
+  border-color: rgb(var(--status-danger-border));
+  background: rgb(var(--status-danger-bg));
+}
+
+.lyrics-sidebar-more {
+  padding-top: 0.25rem;
+  border-top: 1px solid rgb(var(--panel-border));
+}
+
+.lyrics-sidebar-more__summary {
+  display: flex;
+  min-height: 2.5rem;
+  cursor: pointer;
+  list-style: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.625rem;
+  color: rgb(var(--app-fg));
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.lyrics-sidebar-more__summary::-webkit-details-marker {
+  display: none;
+}
+
+.lyrics-sidebar-more__summary:hover {
+  background: color-mix(in srgb, rgb(var(--button-bg-hover)) 72%, transparent);
+}
+
+.lyrics-sidebar-more__chevron {
+  flex: none;
+  transition: transform var(--motion-duration-fast) var(--motion-ease-standard);
+}
+
+.lyrics-sidebar-more[open] .lyrics-sidebar-more__chevron {
+  transform: rotate(180deg);
+}
+
+.lyrics-sidebar-more__content {
+  display: grid;
+  gap: 0.625rem;
+  padding: 0.375rem 0.25rem 0.25rem;
 }
 
 .lyrics-sidebar--drawer {
@@ -1344,8 +1430,10 @@ button {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .lyrics-sidebar--drawer {
+  .lyrics-sidebar--drawer,
+  .lyrics-sidebar-more__chevron {
     animation: none;
+    transition: none;
   }
 }
 

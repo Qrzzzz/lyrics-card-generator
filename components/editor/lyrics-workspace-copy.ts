@@ -6,11 +6,9 @@ export type LyricsWorkspaceCopy = {
   translation: string;
   currentPosition: string;
   sharedScrollHint: string;
-  resizeSidebar: string;
   commandBar: string;
   sidebar: string;
-  collapseSidebar: string;
-  expandSidebar: string;
+  openDrawer: string;
   closeDrawer: string;
   cleanupTab: string;
   translationTab: string;
@@ -24,6 +22,8 @@ export type LyricsWorkspaceCopy = {
   aiShortcut: string;
   stripLrcShortcut: string;
   cleanupHeading: string;
+  commonCleanupHeading: string;
+  moreCleanupHeading: string;
   scopeHeading: string;
   activeColumn: string;
   alignedColumns: string;
@@ -48,6 +48,7 @@ export type LyricsWorkspaceCopy = {
   removeTags: string;
   noTags: string;
   translationHeading: string;
+  columnToolsHeading: string;
   splitPreview: string;
   splitApply: string;
   splitSummary: string;
@@ -89,11 +90,9 @@ const COPY: Record<Locale, LyricsWorkspaceCopy> = {
     translation: "译文",
     currentPosition: "{label} · 第 {line} / {total} 行",
     sharedScrollHint: "原文与译文共享同一个滚动位置",
-    resizeSidebar: "调整歌词编辑区和侧栏宽度",
     commandBar: "歌词命令栏",
     sidebar: "歌词工具侧栏",
-    collapseSidebar: "折叠侧栏",
-    expandSidebar: "展开侧栏",
+    openDrawer: "打开工具抽屉",
     closeDrawer: "关闭工具抽屉",
     cleanupTab: "整理",
     translationTab: "翻译",
@@ -107,6 +106,8 @@ const COPY: Record<Locale, LyricsWorkspaceCopy> = {
     aiShortcut: "AI 翻译",
     stripLrcShortcut: "移除 LRC 时间轴",
     cleanupHeading: "确定性文本整理",
+    commonCleanupHeading: "常用整理",
+    moreCleanupHeading: "更多整理",
     scopeHeading: "作用范围",
     activeColumn: "当前栏",
     alignedColumns: "原译同步",
@@ -131,6 +132,7 @@ const COPY: Record<Locale, LyricsWorkspaceCopy> = {
     removeTags: "移除 {count} 个标签",
     noTags: "当前范围没有可安全识别的段落标签。",
     translationHeading: "双栏翻译工作流",
+    columnToolsHeading: "栏位工具",
     splitPreview: "预览交替歌词拆分",
     splitApply: "应用拆分",
     splitSummary: "将生成原文 {original} 行、译文 {translation} 行。",
@@ -170,11 +172,9 @@ const COPY: Record<Locale, LyricsWorkspaceCopy> = {
     translation: "譯文",
     currentPosition: "{label} · 第 {line} / {total} 行",
     sharedScrollHint: "原文與譯文共用同一個捲動位置",
-    resizeSidebar: "調整歌詞編輯區與側欄寬度",
     commandBar: "歌詞命令列",
     sidebar: "歌詞工具側欄",
-    collapseSidebar: "收合側欄",
-    expandSidebar: "展開側欄",
+    openDrawer: "開啟工具抽屜",
     closeDrawer: "關閉工具抽屜",
     cleanupTab: "整理",
     translationTab: "翻譯",
@@ -188,6 +188,8 @@ const COPY: Record<Locale, LyricsWorkspaceCopy> = {
     aiShortcut: "AI 翻譯",
     stripLrcShortcut: "移除 LRC 時間軸",
     cleanupHeading: "確定性文字整理",
+    commonCleanupHeading: "常用整理",
+    moreCleanupHeading: "更多整理",
     scopeHeading: "作用範圍",
     activeColumn: "目前欄",
     alignedColumns: "原譯同步",
@@ -212,6 +214,7 @@ const COPY: Record<Locale, LyricsWorkspaceCopy> = {
     removeTags: "移除 {count} 個標籤",
     noTags: "目前範圍沒有可安全辨識的段落標籤。",
     translationHeading: "雙欄翻譯流程",
+    columnToolsHeading: "欄位工具",
     splitPreview: "預覽交替歌詞拆分",
     splitApply: "套用拆分",
     splitSummary: "將產生原文 {original} 行、譯文 {translation} 行。",
@@ -251,11 +254,9 @@ const COPY: Record<Locale, LyricsWorkspaceCopy> = {
     translation: "Translation",
     currentPosition: "{label} · line {line} / {total}",
     sharedScrollHint: "Original and translation share one scroll position",
-    resizeSidebar: "Resize the lyrics editor and sidebar",
     commandBar: "Lyrics command bar",
     sidebar: "Lyrics tools sidebar",
-    collapseSidebar: "Collapse sidebar",
-    expandSidebar: "Expand sidebar",
+    openDrawer: "Open tools drawer",
     closeDrawer: "Close tools drawer",
     cleanupTab: "Cleanup",
     translationTab: "Translation",
@@ -269,6 +270,8 @@ const COPY: Record<Locale, LyricsWorkspaceCopy> = {
     aiShortcut: "AI translate",
     stripLrcShortcut: "Remove LRC timing",
     cleanupHeading: "Deterministic text cleanup",
+    commonCleanupHeading: "Common cleanup",
+    moreCleanupHeading: "More cleanup",
     scopeHeading: "Apply to",
     activeColumn: "Active column",
     alignedColumns: "Both, aligned",
@@ -293,6 +296,7 @@ const COPY: Record<Locale, LyricsWorkspaceCopy> = {
     removeTags: "Remove {count} labels",
     noTags: "No safely recognized section labels in this scope.",
     translationHeading: "Two-column translation workflow",
+    columnToolsHeading: "Column tools",
     splitPreview: "Preview alternating split",
     splitApply: "Apply split",
     splitSummary: "Creates {original} original and {translation} translated lines.",
@@ -332,11 +336,9 @@ const COPY: Record<Locale, LyricsWorkspaceCopy> = {
     translation: "Traduction",
     currentPosition: "{label} · ligne {line} / {total}",
     sharedScrollHint: "L’original et la traduction partagent le même défilement",
-    resizeSidebar: "Redimensionner l’éditeur et la barre latérale",
     commandBar: "Barre de commandes des paroles",
     sidebar: "Outils de paroles",
-    collapseSidebar: "Réduire la barre latérale",
-    expandSidebar: "Développer la barre latérale",
+    openDrawer: "Ouvrir le tiroir d’outils",
     closeDrawer: "Fermer le tiroir d’outils",
     cleanupTab: "Nettoyer",
     translationTab: "Traduction",
@@ -350,6 +352,8 @@ const COPY: Record<Locale, LyricsWorkspaceCopy> = {
     aiShortcut: "Traduction IA",
     stripLrcShortcut: "Retirer le minutage LRC",
     cleanupHeading: "Nettoyage déterministe du texte",
+    commonCleanupHeading: "Nettoyage courant",
+    moreCleanupHeading: "Autres nettoyages",
     scopeHeading: "Appliquer à",
     activeColumn: "Colonne active",
     alignedColumns: "Deux colonnes alignées",
@@ -374,6 +378,7 @@ const COPY: Record<Locale, LyricsWorkspaceCopy> = {
     removeTags: "Retirer {count} libellés",
     noTags: "Aucun libellé de section reconnu de façon sûre dans cette zone.",
     translationHeading: "Flux de traduction en deux colonnes",
+    columnToolsHeading: "Outils de colonnes",
     splitPreview: "Prévisualiser la séparation alternée",
     splitApply: "Appliquer la séparation",
     splitSummary: "Créera {original} lignes originales et {translation} lignes traduites.",
@@ -413,11 +418,9 @@ const COPY: Record<Locale, LyricsWorkspaceCopy> = {
     translation: "翻訳",
     currentPosition: "{label} · {line} / {total} 行",
     sharedScrollHint: "原文と翻訳は同じスクロール位置を共有します",
-    resizeSidebar: "歌詞エディターとサイドバーの幅を調整",
     commandBar: "歌詞コマンドバー",
     sidebar: "歌詞ツールサイドバー",
-    collapseSidebar: "サイドバーを折りたたむ",
-    expandSidebar: "サイドバーを展開",
+    openDrawer: "ツールドロワーを開く",
     closeDrawer: "ツールドロワーを閉じる",
     cleanupTab: "整理",
     translationTab: "翻訳",
@@ -431,6 +434,8 @@ const COPY: Record<Locale, LyricsWorkspaceCopy> = {
     aiShortcut: "AI 翻訳",
     stripLrcShortcut: "LRC タイムコードを削除",
     cleanupHeading: "確定的なテキスト整理",
+    commonCleanupHeading: "よく使う整理",
+    moreCleanupHeading: "その他の整理",
     scopeHeading: "対象範囲",
     activeColumn: "現在の列",
     alignedColumns: "原文・翻訳を同期",
@@ -455,6 +460,7 @@ const COPY: Record<Locale, LyricsWorkspaceCopy> = {
     removeTags: "{count} 個のラベルを削除",
     noTags: "この範囲に安全に認識できるセクションラベルはありません。",
     translationHeading: "2列翻訳ワークフロー",
+    columnToolsHeading: "列ツール",
     splitPreview: "交互歌詞の分割をプレビュー",
     splitApply: "分割を適用",
     splitSummary: "原文 {original} 行、翻訳 {translation} 行を作成します。",
@@ -494,11 +500,9 @@ const COPY: Record<Locale, LyricsWorkspaceCopy> = {
     translation: "Traducción",
     currentPosition: "{label} · línea {line} / {total}",
     sharedScrollHint: "El original y la traducción comparten una sola posición de desplazamiento",
-    resizeSidebar: "Cambiar el ancho del editor y la barra lateral",
     commandBar: "Barra de comandos de letras",
     sidebar: "Herramientas de letras",
-    collapseSidebar: "Contraer la barra lateral",
-    expandSidebar: "Expandir la barra lateral",
+    openDrawer: "Abrir el cajón de herramientas",
     closeDrawer: "Cerrar el panel de herramientas",
     cleanupTab: "Limpiar",
     translationTab: "Traducción",
@@ -512,6 +516,8 @@ const COPY: Record<Locale, LyricsWorkspaceCopy> = {
     aiShortcut: "Traducción IA",
     stripLrcShortcut: "Quitar tiempos LRC",
     cleanupHeading: "Limpieza determinista de texto",
+    commonCleanupHeading: "Limpieza habitual",
+    moreCleanupHeading: "Más opciones de limpieza",
     scopeHeading: "Aplicar a",
     activeColumn: "Columna activa",
     alignedColumns: "Ambas, alineadas",
@@ -536,6 +542,7 @@ const COPY: Record<Locale, LyricsWorkspaceCopy> = {
     removeTags: "Quitar {count} etiquetas",
     noTags: "No hay etiquetas de sección reconocidas con seguridad en este ámbito.",
     translationHeading: "Flujo de traducción en dos columnas",
+    columnToolsHeading: "Herramientas de columnas",
     splitPreview: "Previsualizar separación alternada",
     splitApply: "Aplicar separación",
     splitSummary: "Creará {original} líneas originales y {translation} traducidas.",

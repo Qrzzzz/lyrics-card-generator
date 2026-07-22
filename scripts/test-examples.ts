@@ -114,7 +114,8 @@ assert.ok(examplesFloorSource.includes("examples-toggle-track"), "examples floor
 assert.ok(examplesFloorSource.includes("examples-translation-switch"), "examples floor keeps the translation switch borderless");
 assert.ok(examplesFloorSource.includes("settings-wing__header examples-wing__header"), "examples reuse the settings-style top header");
 assert.ok(examplesFloorSource.includes('testId="examples-close-button"'), "examples expose the shared close control at the top");
-assert.ok(examplesFloorSource.includes('edge="bottom"'), "examples reuse the corrected edge blur at the bottom");
+assert.ok(!examplesFloorSource.includes("TitlebarGradualBlur"), "examples remove the bottom blur layer");
+assert.ok(examplesFloorSource.includes("pb-6"), "examples keep only compact clear space below the final row");
 assert.ok(examplesFloorSource.includes("examples-floor__content-scroll"), "example cards scroll independently below the fixed header");
 assert.ok(surfaceCloseButtonSource.includes("examples-close-button__icon"), "settings and examples share one close button implementation");
 assert.equal(lyricEditorSource.match(/<EditorHeader\b/g)?.length ?? 0, 0, "examples no longer render the legacy bottom app header");

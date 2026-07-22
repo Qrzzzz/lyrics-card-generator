@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v5.8.4.zh-TW.md">發布說明</a> ·
+  <a href="./docs/releases/v5.8.5.zh-TW.md">發布說明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">線上 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="#本機開發">本機開發</a> ·
@@ -48,23 +48,23 @@
 
 請前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載最新版：
 
-* 建議一般使用者下載安裝版：`Lyrics Card Generator Setup 5.8.4.exe`
-* 不想安裝時可下載可攜版：`Lyrics Card Generator-5.8.4-portable.exe`
+* 建議一般使用者下載安裝版：`Lyrics Card Generator Setup 5.8.5.exe`
+* 不想安裝時可下載可攜版：`Lyrics Card Generator-5.8.5-portable.exe`
 
 安裝版適合長期使用；可攜版適合臨時執行、測試或放在隨身碟中使用。
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v5.8.4 更新重點
+### v5.8.5 更新重點
 
-* 第二步右側的「整理／翻譯」側欄現在會連續展開與收合，內容與工具軌同步平移、淡出和淡入，同時保留原有編輯與捲動狀態。
-* 第 3–5 步前進時，舊設定面板向左移出、新面板從右側移入；返回上一步時方向相反，右側歌詞預覽始終保持原位。
-* 系統啟用「減少動態效果」時會移除位移動畫；歌詞處理、可調分欄、共享捲動與匯出行為均保持不變。
+* 桌面端第二步改為穩定的 2:1 歌詞／工具分欄，移除調寬、收合和相關動效，並將狀態與快捷執行集中到頂部命令列。
+* 整理／翻譯側欄以緊湊範圍列、常用整理、更多整理、翻譯主操作和欄位工具重新編排，所有既有動作及危險操作的預覽確認均保留。
+* 設定各分頁首頁加入用途說明，歌詞範例頁移除底部模糊遮罩；共享捲動、選取錨點、復原、AI、窄螢幕抽屜和 36 行匯出邊界維持不變。
 
 ## 🌐 多語言發佈說明
 
 GitHub Release 預設顯示簡體中文摘要，完整說明請見：
-[简体中文](./docs/releases/v5.8.4.zh-CN.md) · [繁體中文](./docs/releases/v5.8.4.zh-TW.md) · [English](./docs/releases/v5.8.4.en.md) · [Français](./docs/releases/v5.8.4.fr.md) · [日本語](./docs/releases/v5.8.4.ja.md) · [Español](./docs/releases/v5.8.4.es.md)
+[简体中文](./docs/releases/v5.8.5.zh-CN.md) · [繁體中文](./docs/releases/v5.8.5.zh-TW.md) · [English](./docs/releases/v5.8.5.en.md) · [Français](./docs/releases/v5.8.5.fr.md) · [日本語](./docs/releases/v5.8.5.ja.md) · [Español](./docs/releases/v5.8.5.es.md)
 
 ## ✨ 主要功能
 

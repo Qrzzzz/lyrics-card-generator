@@ -26,7 +26,10 @@ export function LyricsCommandBar({
   showAITranslate,
   lyricsFetchAction,
   reviewAction,
+  currentPosition,
+  scopeLabel,
   sidebarExpanded,
+  showSidebarToggle,
   sidebarToggleRef,
   onUndo,
   onRedo,
@@ -44,7 +47,10 @@ export function LyricsCommandBar({
   showAITranslate: boolean;
   lyricsFetchAction: ReactNode;
   reviewAction: ReactNode;
+  currentPosition: string;
+  scopeLabel: string;
   sidebarExpanded: boolean;
+  showSidebarToggle: boolean;
   sidebarToggleRef?: Ref<HTMLButtonElement>;
   onUndo: () => void;
   onRedo: () => void;
@@ -108,19 +114,25 @@ export function LyricsCommandBar({
       </div>
 
       <div className="lyrics-command-group flex shrink-0 items-center gap-1">
+        <LyricsStatusBar currentPosition={currentPosition} scopeLabel={scopeLabel} />
+        <span className="lyrics-command-separator mx-0.5 hidden h-5 w-px min-[900px]:block" aria-hidden="true" />
         {lyricsFetchAction}
         {reviewAction}
-        <span className="lyrics-command-separator mx-0.5 h-5 w-px" aria-hidden="true" />
-        <CommandIconButton
-          label={sidebarExpanded ? copy.collapseSidebar : copy.expandSidebar}
-          testId="lyrics-command-sidebar-toggle"
-          onClick={onToggleSidebar}
-          pressed={sidebarExpanded}
-          buttonRef={sidebarToggleRef}
-          icon={sidebarExpanded
-            ? <PanelRightClose className="size-3.5" />
-            : <PanelRightOpen className="size-3.5" />}
-        />
+        {showSidebarToggle ? (
+          <>
+            <span className="lyrics-command-separator mx-0.5 h-5 w-px" aria-hidden="true" />
+            <CommandIconButton
+              label={sidebarExpanded ? copy.closeDrawer : copy.openDrawer}
+              testId="lyrics-command-sidebar-toggle"
+              onClick={onToggleSidebar}
+              pressed={sidebarExpanded}
+              buttonRef={sidebarToggleRef}
+              icon={sidebarExpanded
+                ? <PanelRightClose className="size-3.5" />
+                : <PanelRightOpen className="size-3.5" />}
+            />
+          </>
+        ) : null}
       </div>
     </div>
   );
@@ -135,13 +147,14 @@ export function LyricsStatusBar({
 }) {
   return (
     <div
-      className="lyrics-status-bar flex min-h-7 shrink-0 items-center gap-2 px-3 text-[10px]"
+      className="lyrics-status-bar hidden min-w-0 max-w-[18rem] shrink items-center gap-2 px-1.5 text-[10px] min-[900px]:flex"
       data-testid="lyrics-status-bar"
+      title={`${currentPosition} · ${scopeLabel}`}
     >
-      <span className="app-text-muted truncate font-medium" data-testid="lyrics-command-position">
+      <span className="app-text-muted max-w-36 truncate font-medium" data-testid="lyrics-command-position">
         {currentPosition}
       </span>
-      <span className="app-text-subtle hidden truncate min-[760px]:inline" data-testid="lyrics-command-scope">
+      <span className="app-text-subtle hidden max-w-32 truncate min-[1180px]:inline" data-testid="lyrics-command-scope">
         {scopeLabel}
       </span>
     </div>

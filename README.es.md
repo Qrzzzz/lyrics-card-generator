@@ -19,7 +19,7 @@
 <p>
   <strong>Navegación</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Descargar la última versión</a> ·
-  <a href="./docs/releases/v5.8.4.es.md">Notas de la versión</a> ·
+  <a href="./docs/releases/v5.8.5.es.md">Notas de la versión</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en línea</a> ·
   <a href="#funciones-principales">Funciones principales</a> ·
   <a href="#desarrollo-local">Desarrollo local</a> ·
@@ -51,23 +51,23 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 Descarga la versión más reciente desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Instalador recomendado: `Lyrics Card Generator Setup 5.8.4.exe`
-* Versión portable: `Lyrics Card Generator-5.8.4-portable.exe`
+* Instalador recomendado: `Lyrics Card Generator Setup 5.8.5.exe`
+* Versión portable: `Lyrics Card Generator-5.8.5-portable.exe`
 
 El instalador se recomienda para uso habitual. La versión portable es útil para pruebas, uso temporal o ejecución desde una unidad extraíble.
 
 > La compilación actual no está firmada. Windows puede mostrar una advertencia de SmartScreen, algo habitual en aplicaciones personales sin firma.
 
-### Aspectos destacados de la versión 5.8.4
+### Aspectos destacados de la versión 5.8.5
 
-* La barra lateral Limpieza／Traducción del paso 2 ahora se expande y se contrae de forma continua; el contenido y el riel de herramientas se deslizan con un fundido cruzado sin perder el estado de edición ni de desplazamiento.
-* Al avanzar por los pasos 3–5, el panel de ajustes anterior sale hacia la izquierda y el siguiente entra desde la derecha; Volver invierte el movimiento mientras la vista previa de letras permanece fija.
-* La preferencia de movimiento reducido elimina los desplazamientos; el procesamiento de letras, la división redimensionable, el desplazamiento compartido y la exportación no cambian.
+* El paso 2 usa ahora una división estable 2:1 entre letras y herramientas en escritorio. Se eliminan el ajuste de ancho, el plegado y sus animaciones, mientras que el estado y las acciones rápidas pasan a la barra de comandos superior.
+* La barra Limpieza／Traducción se reorganiza en torno a un contexto compacto, limpiezas habituales y adicionales, una entrada de traducción destacada y herramientas de columnas unificadas. Se conservan todas las acciones y confirmaciones existentes.
+* Las pestañas de ajustes incorporan una breve introducción y la página de ejemplos elimina el desenfoque inferior. El desplazamiento compartido, las anclas de selección, deshacer, la IA, el cajón estrecho y el límite de exportación de 36 líneas permanecen sin cambios.
 
 ## 🌐 Notas de publicación multilingües
 
 GitHub Release muestra de forma predeterminada un resumen en chino simplificado. Consulta las notas completas:
-[简体中文](./docs/releases/v5.8.4.zh-CN.md) · [繁體中文](./docs/releases/v5.8.4.zh-TW.md) · [English](./docs/releases/v5.8.4.en.md) · [Français](./docs/releases/v5.8.4.fr.md) · [日本語](./docs/releases/v5.8.4.ja.md) · [Español](./docs/releases/v5.8.4.es.md)
+[简体中文](./docs/releases/v5.8.5.zh-CN.md) · [繁體中文](./docs/releases/v5.8.5.zh-TW.md) · [English](./docs/releases/v5.8.5.en.md) · [Français](./docs/releases/v5.8.5.fr.md) · [日本語](./docs/releases/v5.8.5.ja.md) · [Español](./docs/releases/v5.8.5.es.md)
 
 <a id="funciones-principales"></a>
 

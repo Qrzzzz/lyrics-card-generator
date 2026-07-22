@@ -1,44 +1,50 @@
 "use client";
 
-import { useResizableSplit } from "@/components/editor/hooks/useResizableSplit";
+import { useLayoutEffect, useRef, useState } from "react";
 import {
   __internalLyricsWorkspaceLayout,
-  type LyricsWorkspaceLayoutAction,
-  type LyricsWorkspaceLayoutState,
   resolveLyricsWorkspaceSplit
 } from "@/lib/lyrics-workspace-layout";
 
 const LYRICS_WORKSPACE_DESKTOP_QUERY = "(min-width: 900px)";
 
-type UseLyricsWorkspaceSplitInput = {
-  layout: LyricsWorkspaceLayoutState;
-  onLayoutAction: (action: LyricsWorkspaceLayoutAction) => void;
-  onBeforeLayoutChange?: () => void;
-};
+export function useLyricsWorkspaceSplit() {
+  const viewportRef = useRef<HTMLDivElement | null>(null);
+  const [viewportWidth, setViewportWidth] = useState(0);
+  const [matchesDesktopQuery, setMatchesDesktopQuery] = useState(false);
 
-export function useLyricsWorkspaceSplit({
-  layout,
-  onLayoutAction,
-  onBeforeLayoutChange
-}: UseLyricsWorkspaceSplitInput) {
-  const split = useResizableSplit({
-    requestedRatio: layout.editorRatio,
-    onRequestedRatioChange: (ratio) => {
-      onBeforeLayoutChange?.();
-      onLayoutAction({ type: "set-ratio", ratio });
-    },
-    defaultRatio: __internalLyricsWorkspaceLayout.DEFAULT_EDITOR_RATIO,
-    minRatio: __internalLyricsWorkspaceLayout.MIN_EDITOR_RATIO,
-    maxRatio: __internalLyricsWorkspaceLayout.MAX_EDITOR_RATIO,
-    minLeadingWidth: __internalLyricsWorkspaceLayout.MIN_EDITOR_WIDTH,
-    minTrailingWidth: __internalLyricsWorkspaceLayout.MIN_TOOLS_WIDTH,
-    gap: __internalLyricsWorkspaceLayout.EXPANDED_GAP,
-    desktopQuery: LYRICS_WORKSPACE_DESKTOP_QUERY,
-    minimumViewportWidth: __internalLyricsWorkspaceLayout.MIN_SIDE_BY_SIDE_WIDTH
-  });
+  useLayoutEffect(() => {
+    const viewport = viewportRef.current;
+    if (!viewport) return;
+
+    let frame = 0;
+    const mediaQuery = window.matchMedia(LYRICS_WORKSPACE_DESKTOP_QUERY);
+    const update = () => {
+      window.cancelAnimationFrame(frame);
+      frame = window.requestAnimationFrame(() => {
+        setViewportWidth(viewport.getBoundingClientRect().width);
+        setMatchesDesktopQuery(mediaQuery.matches);
+      });
+    };
+
+    const observer = new ResizeObserver(update);
+    observer.observe(viewport);
+    mediaQuery.addEventListener("change", update);
+    update();
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      observer.disconnect();
+      mediaQuery.removeEventListener("change", update);
+    };
+  }, []);
+
+  const geometry = resolveLyricsWorkspaceSplit(viewportWidth);
+  const isDesktop = matchesDesktopQuery && viewportWidth >= __internalLyricsWorkspaceLayout.MIN_SIDE_BY_SIDE_WIDTH;
 
   return {
-    ...split,
-    geometry: resolveLyricsWorkspaceSplit(split.geometry.viewportWidth, layout.editorRatio)
+    viewportRef,
+    geometry,
+    isDesktop
   };
 }

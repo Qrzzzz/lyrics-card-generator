@@ -1,6 +1,5 @@
 "use client";
 
-import { motion, type Transition } from "framer-motion";
 import {
   type ChangeEvent,
   type FocusEvent,
@@ -16,7 +15,6 @@ import {
 } from "react";
 import {
   LyricsCommandBar,
-  LyricsStatusBar,
   type LyricsCommandIntent
 } from "@/components/editor/LyricsCommandBar";
 import { LyricsReviewMenu } from "@/components/editor/LyricsReviewMenu";
@@ -31,14 +29,8 @@ import {
   useLyricsViewportSession
 } from "@/components/editor/hooks/useLyricsViewportSession";
 import { Section } from "@/components/ui/controls";
-import { useAppReducedMotion } from "@/components/motion/AppMotionProvider";
 import type { createT } from "@/lib/i18n";
 import type { ExportLyricLineStatus } from "@/lib/lyrics-document";
-import {
-  __internalLyricsWorkspaceLayout,
-  type LyricsWorkspaceLayoutAction,
-  type LyricsWorkspaceLayoutState
-} from "@/lib/lyrics-workspace-layout";
 import {
   analyzeLyricsDocument,
   cleanPastedLyrics,
@@ -66,17 +58,14 @@ import {
   type LyricsTextSelection,
   type LyricsWorkbenchEditor
 } from "@/lib/lyrics-workbench";
-import { reducedMotionTransition } from "@/lib/motion/tokens";
 import type { ContentMode, Locale } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 type LyricsWorkspaceProps = {
   lyrics: string;
   lineStatus: ExportLyricLineStatus;
-  layout: LyricsWorkspaceLayoutState;
   sidebarTab: LyricsSidebarTab;
   onSidebarTabChange: (tab: LyricsSidebarTab) => void;
-  onLayoutAction: (action: LyricsWorkspaceLayoutAction) => void;
   onLyricsChange: (lyrics: string) => void;
   translationEnabled: boolean;
   translationText: string;
@@ -108,10 +97,8 @@ type OperationFeedback = {
 export function LyricsWorkspace({
   lyrics,
   lineStatus,
-  layout,
   sidebarTab,
   onSidebarTabChange,
-  onLayoutAction,
   onLyricsChange,
   translationEnabled,
   translationText,
@@ -129,13 +116,11 @@ export function LyricsWorkspace({
   showAiTranslate = true
 }: LyricsWorkspaceProps) {
   const copy = getLyricsWorkspaceCopy(locale);
-  const reduceMotion = useAppReducedMotion();
   const workspaceRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const lyricsRef = useRef<HTMLTextAreaElement>(null);
   const translationRef = useRef<HTMLTextAreaElement>(null);
   const sidebarToggleRef = useRef<HTMLButtonElement>(null);
-  const previousSidebarCollapsedRef = useRef(layout.collapsed);
   const activeEditorRef = useRef<LyricsWorkbenchEditor>("lyrics");
   const lyricsId = useId();
   const translationId = useId();
@@ -176,15 +161,8 @@ export function LyricsWorkspace({
     getActiveEditorKey,
     getEditor
   });
-  const split = useLyricsWorkspaceSplit({
-    layout,
-    onLayoutAction,
-    onBeforeLayoutChange: viewport.captureAnchor
-  });
+  const split = useLyricsWorkspaceSplit();
   const sideBySide = split.isDesktop;
-  const sidebarCollapsed = sideBySide && layout.collapsed;
-  const sidebarExpanded = sideBySide ? !layout.collapsed : mobileSidebarOpen;
-  const animateSidebarDisclosure = sideBySide && previousSidebarCollapsedRef.current !== layout.collapsed;
   const activeText = cursor.editor === "translation" ? translationText : lyrics;
   const activeSelection = clampSelection(selections[cursor.editor], activeText.length);
   const activeScope = resolveLyricsTextScope(activeText, activeSelection);
@@ -194,9 +172,6 @@ export function LyricsWorkspace({
     translationEnabled: showTranslation
   }), [lyrics, showTranslation, translationText]);
 
-  useEffect(() => {
-    previousSidebarCollapsedRef.current = layout.collapsed;
-  }, [layout.collapsed]);
   const resizeEditors = useCallback(() => {
     const editors = [lyricsRef.current, showTranslation ? translationRef.current : null].filter(Boolean) as HTMLTextAreaElement[];
     if (editors.length === 0) return;
@@ -542,9 +517,7 @@ export function LyricsWorkspace({
   function openTab(tab: LyricsSidebarTab, intent?: LyricsCommandIntent) {
     viewport.captureAnchor();
     onSidebarTabChange(tab);
-    if (sideBySide) {
-      if (layout.collapsed) onLayoutAction({ type: "expand" });
-    } else {
+    if (!sideBySide) {
       setMobileSidebarOpen(true);
     }
     if (intent) setFocusIntent(intent);
@@ -553,11 +526,7 @@ export function LyricsWorkspace({
 
   function toggleSidebar() {
     viewport.captureAnchor();
-    if (sideBySide) {
-      onLayoutAction({ type: "toggle" });
-    } else {
-      setMobileSidebarOpen((value) => !value);
-    }
+    setMobileSidebarOpen((value) => !value);
   }
 
   function closeMobileSidebar() {
@@ -592,30 +561,15 @@ export function LyricsWorkspace({
       end: activeScope.endLine
     }
   );
-  const collapsedEditorWidth = Math.max(
-    0,
-    split.geometry.viewportWidth
-      - __internalLyricsWorkspaceLayout.COLLAPSED_TOOLS_WIDTH
-      - __internalLyricsWorkspaceLayout.COLLAPSED_GAP
-  );
-  const splitTarget = sideBySide
-    ? sidebarCollapsed
-      ? {
-          gridTemplateColumns: `${collapsedEditorWidth}px ${__internalLyricsWorkspaceLayout.COLLAPSED_TOOLS_WIDTH}px`,
-          columnGap: `${__internalLyricsWorkspaceLayout.COLLAPSED_GAP}px`
-        }
-      : {
-          gridTemplateColumns: `${split.geometry.editorWidth}px ${split.geometry.toolsWidth}px`,
-          columnGap: `${split.geometry.gap}px`
-        }
+  const splitStyle = sideBySide
+    ? {
+        gridTemplateColumns: `${split.geometry.editorWidth}px ${split.geometry.toolsWidth}px`,
+        columnGap: `${split.geometry.gap}px`
+      }
     : {
         gridTemplateColumns: "minmax(0, 1fr)",
         columnGap: "0px"
       };
-  const splitTransition: Transition = reduceMotion || split.isDragging || !animateSidebarDisclosure
-    ? reducedMotionTransition
-    : { type: "spring", stiffness: 210, damping: 31, mass: 0.96 };
-  const resizerLeft = sidebarCollapsed ? collapsedEditorWidth : split.geometry.editorWidth;
   void historyRevision;
 
   return (
@@ -642,7 +596,10 @@ export function LyricsWorkspace({
             onLocate={locateIssue}
           />
         )}
-        sidebarExpanded={sidebarExpanded}
+        currentPosition={currentPosition}
+        scopeLabel={scopeLabel}
+        sidebarExpanded={mobileSidebarOpen}
+        showSidebarToggle={!sideBySide}
         sidebarToggleRef={sidebarToggleRef}
         onUndo={undoOperation}
         onRedo={redoOperation}
@@ -653,14 +610,11 @@ export function LyricsWorkspace({
         onToggleSidebar={toggleSidebar}
       />
 
-      <motion.div
+      <div
         ref={split.viewportRef}
         className="lyrics-workspace-split relative grid min-h-0 flex-1 min-w-0 overflow-hidden"
-        initial={false}
-        animate={splitTarget}
-        transition={splitTransition}
+        style={splitStyle}
         data-side-by-side={sideBySide ? "true" : "false"}
-        data-sidebar-collapsed={sidebarCollapsed ? "true" : "false"}
         data-mobile-sidebar-open={mobileSidebarOpen ? "true" : "false"}
         data-editor-ratio={split.geometry.ratio.toFixed(4)}
         data-testid="lyrics-workspace-split"
@@ -754,7 +708,6 @@ export function LyricsWorkspace({
           themeColor={themeColor}
           t={t}
           open={sideBySide || mobileSidebarOpen}
-          collapsed={sidebarCollapsed}
           mobileDrawer={!sideBySide}
           feedback={feedback}
           focusIntent={focusIntent}
@@ -762,7 +715,6 @@ export function LyricsWorkspace({
           showAiTranslate={showAiTranslate}
           aiPanel={aiPanel}
           onTabChange={onSidebarTabChange}
-          onOpenTab={openTab}
           onCloseDrawer={closeMobileSidebar}
           onIntentHandled={() => setFocusIntent(null)}
           onUndo={undoOperation}
@@ -778,46 +730,7 @@ export function LyricsWorkspace({
           onSwapColumns={swapColumns}
         />
 
-        {sideBySide && split.geometry.viewportWidth > 0 ? (
-          <motion.div
-            {...split.separatorProps}
-            role={!sidebarCollapsed ? "separator" : undefined}
-            aria-label={!sidebarCollapsed ? copy.resizeSidebar : undefined}
-            aria-controls={!sidebarCollapsed ? "lyrics-workspace-editor lyrics-workspace-sidebar" : undefined}
-            aria-orientation={!sidebarCollapsed ? "vertical" : undefined}
-            aria-valuemin={!sidebarCollapsed ? Math.round(split.geometry.minRatio * 100) : undefined}
-            aria-valuemax={!sidebarCollapsed ? Math.round(split.geometry.maxRatio * 100) : undefined}
-            aria-valuenow={!sidebarCollapsed ? Math.round(split.geometry.ratio * 100) : undefined}
-            aria-valuetext={!sidebarCollapsed
-              ? `${Math.round(split.geometry.ratio * 100)}% / ${Math.round((1 - split.geometry.ratio) * 100)}%`
-              : undefined}
-            aria-hidden={sidebarCollapsed}
-            inert={sidebarCollapsed ? true : undefined}
-            tabIndex={sidebarCollapsed ? -1 : 0}
-            title={!sidebarCollapsed ? copy.resizeSidebar : undefined}
-            className="preview-workbench-resizer lyrics-workspace-resizer"
-            data-testid={!sidebarCollapsed ? "lyrics-workspace-resizer" : undefined}
-            data-dragging={split.isDragging ? "true" : "false"}
-            data-motion-active={sidebarCollapsed ? "false" : "true"}
-            initial={false}
-            animate={{
-              left: resizerLeft,
-              opacity: sidebarCollapsed ? 0 : 1,
-              scaleY: sidebarCollapsed ? 0.82 : 1
-            }}
-            transition={splitTransition}
-            style={{
-              width: split.geometry.gap,
-              pointerEvents: sidebarCollapsed ? "none" : "auto",
-              transformOrigin: "center"
-            }}
-          />
-        ) : null}
-      </motion.div>
-      <LyricsStatusBar
-        currentPosition={currentPosition}
-        scopeLabel={scopeLabel}
-      />
+      </div>
     </div>
   );
 }

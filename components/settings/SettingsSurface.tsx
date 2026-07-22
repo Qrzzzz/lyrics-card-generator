@@ -11,7 +11,7 @@ import { ExportSettingsSection } from "@/components/settings/ExportSettingsSecti
 import { GeneralSettingsSection } from "@/components/settings/GeneralSettingsSection";
 import { useAppReducedMotion } from "@/components/motion/AppMotionProvider";
 import { SettingsHistoryBar, type SettingsBreadcrumb } from "@/components/settings/SettingsHistoryBar";
-import { SettingsGroup } from "@/components/settings/SettingsLayout";
+import { SettingsGroup, SettingsPageHeading } from "@/components/settings/SettingsLayout";
 import { getSettingsTabs, SettingsNavigation } from "@/components/settings/SettingsNavigation";
 import type { SettingsDestination, SettingsHistoryState, SettingsTabId } from "@/components/settings/settings-model";
 import {
@@ -227,6 +227,7 @@ export function SettingsSurface({
           >
             {tabs.map((tab) => {
               const selected = tab.id === destination.section;
+              const TabIcon = tab.icon;
               return (
               <motion.div
                 key={tab.id}
@@ -241,40 +242,53 @@ export function SettingsSurface({
                 transition={tabTransition}
               >
                 <SettingsGroup>
-                  {tab.id === "general" ? (
-                    <GeneralSettingsSection
-                      locale={locale}
-                      copy={copy}
-                      settings={workspace.draft}
-                      onLocaleChange={workspace.handleLocaleChange}
-                      onChange={workspace.updateDraft}
-                    />
-                  ) : tab.id === "appearance" ? (
-                    <AppearanceSettingsSection settings={workspace.draft} copy={copy} onChange={workspace.updateDraft} />
-                  ) : tab.id === "export" ? (
-                    <ExportSettingsSection settings={workspace.draft} copy={copy} onChange={workspace.updateDraft} />
-                  ) : tab.id === "about" ? (
-                    <AboutSettingsSection copy={copy} t={t} />
-                  ) : workspace.isLoading ? (
-                    <div className="app-text-subtle flex items-center gap-2 p-2 text-sm">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      {copy.ai}
-                    </div>
+                  {tab.id === "ai" ? (
+                    workspace.isLoading ? (
+                      <div className="app-text-subtle flex items-center gap-2 p-2 text-sm">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        {copy.ai}
+                      </div>
+                    ) : (
+                      <AiSettingsSection
+                        open={isActive}
+                        path={destination.path}
+                        settings={workspace.settings}
+                        apiKey={workspace.apiKey}
+                        hasApiKey={workspace.hasApiKey}
+                        locale={locale}
+                        copy={aiCopy}
+                        isClearingApiKey={workspace.isClearingApiKey}
+                        onSettingsChange={workspace.setSettings}
+                        onApiKeyChange={workspace.setApiKey}
+                        onClearApiKey={workspace.handleClearApiKey}
+                        onNavigate={(path, options) => navigateDestination(createSettingsDestination("ai", path), options)}
+                      />
+                    )
                   ) : (
-                    <AiSettingsSection
-                      open={isActive}
-                      path={destination.path}
-                      settings={workspace.settings}
-                      apiKey={workspace.apiKey}
-                      hasApiKey={workspace.hasApiKey}
-                      locale={locale}
-                      copy={aiCopy}
-                      isClearingApiKey={workspace.isClearingApiKey}
-                      onSettingsChange={workspace.setSettings}
-                      onApiKeyChange={workspace.setApiKey}
-                      onClearApiKey={workspace.handleClearApiKey}
-                      onNavigate={(path, options) => navigateDestination(createSettingsDestination("ai", path), options)}
-                    />
+                    <>
+                      <SettingsPageHeading
+                        className="mb-5"
+                        icon={<TabIcon className="h-5 w-5" />}
+                        title={tab.label}
+                        description={tab.description}
+                        testId={`settings-page-heading-${tab.id}`}
+                      />
+                      {tab.id === "general" ? (
+                        <GeneralSettingsSection
+                          locale={locale}
+                          copy={copy}
+                          settings={workspace.draft}
+                          onLocaleChange={workspace.handleLocaleChange}
+                          onChange={workspace.updateDraft}
+                        />
+                      ) : tab.id === "appearance" ? (
+                        <AppearanceSettingsSection settings={workspace.draft} copy={copy} onChange={workspace.updateDraft} />
+                      ) : tab.id === "export" ? (
+                        <ExportSettingsSection settings={workspace.draft} copy={copy} onChange={workspace.updateDraft} />
+                      ) : (
+                        <AboutSettingsSection copy={copy} t={t} />
+                      )}
+                    </>
                   )}
                 </SettingsGroup>
               </motion.div>

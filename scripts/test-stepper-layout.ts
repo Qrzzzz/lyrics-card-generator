@@ -317,10 +317,11 @@ assert.ok(
   "the lyrics workspace uses a semantic command bar and internal editor/sidebar split without framed panel shells"
 );
 assert.ok(
-  globalsSource.includes(".lyrics-workspace-resizer") &&
-    lyricsWorkspaceSource.includes('className="preview-workbench-resizer lyrics-workspace-resizer"') &&
-    lyricsWorkspaceSource.includes("width: split.geometry.gap"),
-  "step two reuses the full-height one-pixel divider contract with a 20px hit area"
+  !globalsSource.includes(".lyrics-workspace-resizer") &&
+    !lyricsWorkspaceSource.includes("lyrics-workspace-resizer") &&
+    lyricsWorkspaceSource.includes("const splitStyle = sideBySide") &&
+    lyricsWorkspaceSource.includes("gridTemplateColumns: `${split.geometry.editorWidth}px ${split.geometry.toolsWidth}px`"),
+  "step two uses a fixed editor/sidebar split without a resize affordance"
 );
 
 const originalRevokeObjectUrl = URL.revokeObjectURL;
