@@ -25,6 +25,7 @@ import {
   ToggleRow
 } from "@/components/ui/controls";
 import { SettingsConfirmDialog } from "@/components/settings/SettingsConfirmDialog";
+import { SettingsPageHeading } from "@/components/settings/SettingsLayout";
 import { getAISettingsPath, resolveAISettingsPage, type AIPage } from "@/components/settings/ai-settings-routing";
 import { getDefaultFormatRules, getDefaultStylePrompt } from "@/lib/ai/prompt";
 import { getAIPromptUiCopy } from "@/lib/ai/prompt-ui-copy";
@@ -149,7 +150,12 @@ export function AiSettingsSection({
 function WorkspaceRoot({ copy, onOpen }: { copy: ReturnType<typeof getAIPromptUiCopy>; onOpen: (page: AIPage) => void }) {
   return (
     <div className="ai-workspace-root grid gap-5">
-      <PageHeading icon={<Bot className="h-5 w-5" />} title={copy.workspace} description={copy.workspaceDescription} />
+      <SettingsPageHeading
+        icon={<Bot className="h-5 w-5" />}
+        title={copy.workspace}
+        description={copy.workspaceDescription}
+        testId="settings-page-heading-ai"
+      />
       <div className="ai-workspace-destinations">
         <ExplorerCard variant="row" testId="ai-open-api" icon={<FileKey2 className="h-5 w-5" />} title={copy.apiConfiguration} description={copy.apiConfigurationDescription} action={copy.open} onClick={() => onOpen("api")} />
         <ExplorerCard variant="row" testId="ai-open-library" icon={<FolderCog className="h-5 w-5" />} title={copy.promptLibrary} description={copy.promptLibraryDescription} action={copy.open} onClick={() => onOpen("library")} />
@@ -171,7 +177,7 @@ function ApiConfigurationPage({ settings, apiKey, hasApiKey, locale, copy, promp
   const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
   return (
     <div className="grid gap-4">
-      <PageHeading icon={<FileKey2 className="h-5 w-5" />} title={promptCopy.apiConfiguration} description={promptCopy.apiConfigurationDescription} />
+      <SettingsPageHeading icon={<FileKey2 className="h-5 w-5" />} title={promptCopy.apiConfiguration} description={promptCopy.apiConfigurationDescription} />
       <FieldLabel label={copy.baseUrl} htmlFor={baseUrlId}>
         <TextInput data-testid="ai-base-url-input" id={baseUrlId} type="url" value={settings.baseUrl} disabled={isClearingApiKey} onChange={(event) => onSettingsChange({ ...settings, baseUrl: event.target.value })} placeholder="https://api.openai.com/v1" autoComplete="url" />
         <SettingTip>{copy.baseUrlTip}</SettingTip>
@@ -244,7 +250,7 @@ function PromptLibraryPage({ settings, locale, copy, onSettingsChange, onOpen, o
   return (
     <div className="grid gap-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <PageHeading icon={<FolderOpen className="h-5 w-5" />} title={copy.promptLibrary} description={copy.promptLibraryDescription} />
+        <SettingsPageHeading icon={<FolderOpen className="h-5 w-5" />} title={copy.promptLibrary} description={copy.promptLibraryDescription} />
         <ActionButton data-testid="prompt-reset-all" disabled={!canResetAll} onClick={resetAllPresets} leftIcon={<RotateCcw className="h-4 w-4" />}>{copy.resetAll}</ActionButton>
       </div>
       <ExplorerCard icon={<FileLock2 className="h-6 w-6 text-amber-200" />} title={copy.formatRules} description={copy.formatRulesDescription} action={copy.open} onClick={() => onOpen("format")} />
@@ -294,7 +300,7 @@ function FormatRulesPage({ locale, copy }: { locale: Locale; copy: ReturnType<ty
 
   return (
     <div className="grid gap-4">
-      <PageHeading icon={<FileLock2 className="h-5 w-5 text-amber-200" />} title={copy.formatRules} description={copy.formatRulesDescription} />
+      <SettingsPageHeading icon={<FileLock2 className="h-5 w-5 text-amber-200" />} title={copy.formatRules} description={copy.formatRulesDescription} />
       <div className="rounded-xl border border-amber-300/25 bg-amber-300/10 p-4">
         <div className="flex gap-3"><AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-200" /><p className="text-sm leading-relaxed text-amber-50/90">{copy.formatRulesWarning}</p></div>
       </div>
@@ -313,7 +319,7 @@ function CustomPresetDraftPage({ draft, copy, onChange, onSave, onCancel }: {
   const valid = isValidCustomPreset(draft);
   return (
     <div className="grid gap-4">
-      <PageHeading icon={<FilePenLine className="h-5 w-5" />} title={draft.title.trim() || copy.newPresetTitle} description={copy.customPreset} />
+      <SettingsPageHeading icon={<FilePenLine className="h-5 w-5" />} title={draft.title.trim() || copy.newPresetTitle} description={copy.customPreset} />
       <FieldLabel label={copy.presetTitle}>
         <TextInput data-testid="preset-title-input" value={draft.title} maxLength={60} onChange={(event) => onChange({ ...draft, title: event.target.value })} />
       </FieldLabel>
@@ -421,7 +427,7 @@ function PresetEditorPage({ presetId, settings, locale, copy, cancelLabel, onSet
 
   return (
     <div className="grid gap-4">
-      <PageHeading icon={protectedPreset ? <LockKeyhole className="h-5 w-5" /> : <FilePenLine className="h-5 w-5" />} title={title || copy.editPreset} description={protectedPreset ? copy.protectedPreset : editableBuiltIn ? copy.defaultPreset : copy.customPreset} />
+      <SettingsPageHeading icon={protectedPreset ? <LockKeyhole className="h-5 w-5" /> : <FilePenLine className="h-5 w-5" />} title={title || copy.editPreset} description={protectedPreset ? copy.protectedPreset : editableBuiltIn ? copy.defaultPreset : copy.customPreset} />
       <FieldLabel label={copy.presetTitle} hint={protectedPreset ? copy.protectedPreset : undefined}>
         <TextInput data-testid="preset-title-input" value={title} readOnly={protectedPreset} maxLength={60} onChange={(event) => updatePreset(event.target.value, prompt)} />
       </FieldLabel>
@@ -450,10 +456,6 @@ function PresetEditorPage({ presetId, settings, locale, copy, cancelLabel, onSet
       />
     </div>
   );
-}
-
-function PageHeading({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
-  return <div className="flex items-start gap-3"><span className="app-text-primary mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[rgb(var(--panel-border))] bg-white/5">{icon}</span><div><h3 className="app-text-primary text-lg font-bold tracking-tight">{title}</h3><p className="app-text-muted mt-1 text-sm leading-relaxed">{description}</p></div></div>;
 }
 
 function ExplorerCard({ icon, title, description, action, badge, testId, variant = "card", onClick }: { icon: React.ReactNode; title: string; description: string; action: string; badge?: string; testId?: string; variant?: "card" | "row"; onClick: () => void }) {

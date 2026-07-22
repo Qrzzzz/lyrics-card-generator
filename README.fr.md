@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v5.8.4.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v5.8.5.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="#développement-local">Développement local</a> ·
@@ -51,23 +51,23 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 Téléchargez la dernière version depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
 
-* Installateur recommandé : `Lyrics Card Generator Setup 5.8.4.exe`
-* Version portable : `Lyrics Card Generator-5.8.4-portable.exe`
+* Installateur recommandé : `Lyrics Card Generator Setup 5.8.5.exe`
+* Version portable : `Lyrics Card Generator-5.8.5-portable.exe`
 
 L'installateur est recommandé pour une utilisation régulière. La version portable convient aux essais, à une utilisation temporaire ou à un disque amovible.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### Points clés de la v5.8.4
+### Points clés de la v5.8.5
 
-* La barre latérale Nettoyage／Traduction de l’étape 2 se déploie et se replie désormais en continu ; son contenu et son rail coulissent avec un fondu croisé, sans perdre l’état d’édition ni de défilement.
-* En avançant dans les étapes 3 à 5, l’ancien panneau de réglages sort vers la gauche et le suivant entre par la droite ; Retour inverse le mouvement tandis que l’aperçu des paroles reste fixe.
-* La préférence de réduction des animations supprime les déplacements ; le traitement des paroles, la séparation redimensionnable, le défilement partagé et l’exportation restent inchangés.
+* L’étape 2 adopte une séparation fixe 2:1 entre paroles et outils sur ordinateur. Le redimensionnement, le repli et leurs animations disparaissent, tandis que l’état et les actions rapides rejoignent la barre de commandes supérieure.
+* La barre Nettoyage／Traduction est réorganisée autour d’un contexte compact, des nettoyages courants et supplémentaires, d’une entrée de traduction mise en avant et d’outils de colonnes unifiés. Toutes les actions et confirmations existantes restent disponibles.
+* Les onglets des réglages gagnent une courte introduction et la page d’exemples perd son flou inférieur. Le défilement partagé, les ancres de sélection, l’annulation, l’IA, le tiroir étroit et la limite d’exportation de 36 lignes restent inchangés.
 
 ## 🌐 Notes de publication multilingues
 
 Par défaut, GitHub Release affiche un résumé en chinois simplifié. Consultez les notes complètes :
-[简体中文](./docs/releases/v5.8.4.zh-CN.md) · [繁體中文](./docs/releases/v5.8.4.zh-TW.md) · [English](./docs/releases/v5.8.4.en.md) · [Français](./docs/releases/v5.8.4.fr.md) · [日本語](./docs/releases/v5.8.4.ja.md) · [Español](./docs/releases/v5.8.4.es.md)
+[简体中文](./docs/releases/v5.8.5.zh-CN.md) · [繁體中文](./docs/releases/v5.8.5.zh-TW.md) · [English](./docs/releases/v5.8.5.en.md) · [Français](./docs/releases/v5.8.5.fr.md) · [日本語](./docs/releases/v5.8.5.ja.md) · [Español](./docs/releases/v5.8.5.es.md)
 
 <a id="fonctionnalités-principales"></a>
 

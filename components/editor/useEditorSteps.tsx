@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useReducer, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { ExportPanel } from "@/components/editor/ExportPanel";
 import { LocalAudioParser } from "@/components/editor/LocalAudioParser";
 import { LyricsFetchPanel } from "@/components/editor/LyricsFetchPanel";
@@ -21,10 +21,6 @@ import type { ExportLyricLineStatus } from "@/lib/lyrics-document";
 import type { AISettingsSummary, AITranslationPhase } from "@/lib/ai/types";
 import type { createT } from "@/lib/i18n";
 import { revokeReplacedBlobUrl } from "@/lib/object-url-lifecycle";
-import {
-  createLyricsWorkspaceLayoutState,
-  lyricsWorkspaceLayoutReducer
-} from "@/lib/lyrics-workspace-layout";
 import type { LyricsDocumentSnapshot, LyricsSidebarTab } from "@/lib/lyrics-workbench";
 import type { DocumentImportIntent, DocumentImportKind } from "@/lib/editor/document-transactions";
 import type {
@@ -103,11 +99,6 @@ export function useEditorSteps({
   handlers
 }: UseEditorStepsInput): SettingsStep[] {
   const [songInfoExpanded, setSongInfoExpanded] = useState(false);
-  const [lyricsWorkspaceLayout, dispatchLyricsWorkspaceLayout] = useReducer(
-    lyricsWorkspaceLayoutReducer,
-    undefined,
-    createLyricsWorkspaceLayoutState
-  );
   const [lyricsSidebarTab, setLyricsSidebarTab] = useState<LyricsSidebarTab>("cleanup");
   const [songInfoDraft, setSongInfoDraft] = useState<SongInfo>(() => ({ ...state.song }));
   const [songInfoEditRevision, setSongInfoEditRevision] = useState<number | null>(null);
@@ -263,10 +254,8 @@ export function useEditorSteps({
             lyrics={state.lyrics}
             song={state.song}
             lineStatus={lyricsLayout.lineStatus}
-            workspaceLayout={lyricsWorkspaceLayout}
             sidebarTab={lyricsSidebarTab}
             onSidebarTabChange={setLyricsSidebarTab}
-            onWorkspaceLayoutAction={dispatchLyricsWorkspaceLayout}
             presentation="workspace"
             onLyricsChange={handlers.onLyricsChange}
             translationEnabled={state.style.translationEnabled}

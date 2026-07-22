@@ -10,10 +10,6 @@ import { getAIUiCopy } from "@/lib/ai/ui-copy";
 import type { createT } from "@/lib/i18n";
 import type { ExportLyricLineStatus } from "@/lib/lyrics-document";
 import type {
-  LyricsWorkspaceLayoutAction,
-  LyricsWorkspaceLayoutState
-} from "@/lib/lyrics-workspace-layout";
-import type {
   LyricsDocumentSnapshot,
   LyricsSidebarTab
 } from "@/lib/lyrics-workbench";
@@ -24,10 +20,8 @@ export function LyricInput({
   lyrics,
   song,
   lineStatus,
-  workspaceLayout,
   sidebarTab,
   onSidebarTabChange,
-  onWorkspaceLayoutAction,
   presentation = "legacy",
   onLyricsChange,
   translationEnabled,
@@ -49,10 +43,8 @@ export function LyricInput({
   lyrics: string;
   song?: SongInfo;
   lineStatus?: ExportLyricLineStatus;
-  workspaceLayout?: LyricsWorkspaceLayoutState;
   sidebarTab?: LyricsSidebarTab;
   onSidebarTabChange?: (tab: LyricsSidebarTab) => void;
-  onWorkspaceLayoutAction?: (action: LyricsWorkspaceLayoutAction) => void;
   presentation?: "legacy" | "workspace";
   onLyricsChange: (lyrics: string) => void;
   translationEnabled: boolean;
@@ -77,20 +69,16 @@ export function LyricInput({
     presentation === "workspace" &&
     song &&
     lineStatus &&
-    workspaceLayout &&
     sidebarTab &&
     onSidebarTabChange &&
-    onWorkspaceLayoutAction &&
     onLyricsDocumentChange
   ) {
     return (
       <LyricsWorkspace
         lyrics={lyrics}
         lineStatus={lineStatus}
-        layout={workspaceLayout}
         sidebarTab={sidebarTab}
         onSidebarTabChange={onSidebarTabChange}
-        onLayoutAction={onWorkspaceLayoutAction}
         onLyricsChange={onLyricsChange}
         translationEnabled={translationEnabled}
         translationText={translationText}

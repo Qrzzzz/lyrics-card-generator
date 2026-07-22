@@ -729,11 +729,10 @@ async function assertExamplesSurfaceBehavior() {
   const geometry = await surface.evaluate((node) => {
     const header = node.querySelector(".examples-wing__header");
     const closeButton = node.querySelector('[data-testid="examples-close-button"]');
-    const blur = node.querySelector('[data-testid="examples-bottom-gradual-blur"]');
     const scroller = node.querySelector(".examples-floor__content-scroll");
     const lastCard = node.querySelector(".example-song-card:last-child");
     if (!(node instanceof HTMLElement) || !(header instanceof HTMLElement) ||
-        !(closeButton instanceof HTMLElement) || !(blur instanceof HTMLElement) ||
+        !(closeButton instanceof HTMLElement) ||
         !(scroller instanceof HTMLElement) || !(lastCard instanceof HTMLElement)) return null;
     scroller.scrollTop = scroller.scrollHeight;
     const toRect = (element) => {
@@ -744,25 +743,18 @@ async function assertExamplesSurfaceBehavior() {
       surface: toRect(node),
       header: toRect(header),
       close: toRect(closeButton),
-      blur: toRect(blur),
       scroller: toRect(scroller),
       lastCard: toRect(lastCard),
-      blurPointerEvents: getComputedStyle(blur).pointerEvents,
-      blurBackdropFilter: getComputedStyle(blur).backdropFilter,
-      blurEdge: blur.getAttribute("data-effect-edge"),
+      bottomBlurCount: node.querySelectorAll('[data-testid="examples-bottom-gradual-blur"]').length,
       legacyHeaderCount: node.querySelectorAll(".editor-header").length
     };
   });
-  assert.ok(geometry, "examples surface exposes measurable header, scroller, cards, and bottom blur");
+  assert.ok(geometry, "examples surface exposes measurable header, scroller, and cards");
   assert.ok(geometry.close.right <= geometry.surface.right + 0.5, `examples close stays inside the right edge: ${JSON.stringify(geometry)}`);
   assert.ok(geometry.close.top >= geometry.header.top && geometry.close.bottom <= geometry.header.bottom, "examples close sits in the top header");
-  assert.ok(Math.abs(geometry.blur.bottom - geometry.surface.bottom) <= 0.5, "examples edge blur is anchored to the bottom");
-  assert.equal(geometry.blurEdge, "bottom", "examples use the reversed edge blur");
-  assert.equal(geometry.blurPointerEvents, "none", "examples bottom blur never intercepts card interaction");
-  assert.ok(geometry.blurBackdropFilter.includes("blur("), "examples bottom edge carries the shared backdrop blur");
-  assert.ok(geometry.blur.bottom - geometry.blur.top <= 72.5, "examples bottom blur stays inside the short edge band");
+  assert.equal(geometry.bottomBlurCount, 0, "examples no longer render a bottom blur layer");
   assert.equal(geometry.legacyHeaderCount, 0, "examples no longer render the legacy bottom app header");
-  assert.ok(geometry.lastCard.bottom <= geometry.blur.top + 1, `the final card scrolls above the strongest bottom fade: ${JSON.stringify(geometry)}`);
+  assert.ok(geometry.lastCard.bottom <= geometry.scroller.bottom + 1, `the final card scrolls fully into the clear viewport: ${JSON.stringify(geometry)}`);
 
   await page.keyboard.press("Escape");
   await page.locator('[data-testid="examples-surface"][data-surface-state="closed"]').waitFor({ state: "attached" });
@@ -1859,7 +1851,6 @@ async function assertLyricsWorkspace(width, height) {
     const tools = document.querySelector('[data-testid="lyrics-sidebar"]');
     const toolsPanel = tools?.querySelector('[role="tabpanel"]:not([hidden])');
     const firstToolsSection = toolsPanel?.querySelector('.lyrics-sidebar-section');
-    const resizer = document.querySelector('[data-testid="lyrics-workspace-resizer"]');
     const commandBar = document.querySelector('[data-testid="lyrics-command-bar"]');
     const statusBar = document.querySelector('[data-testid="lyrics-status-bar"]');
     const editorColumns = document.querySelector('[data-testid="lyrics-editor-columns"]');
@@ -1889,8 +1880,6 @@ async function assertLyricsWorkspace(width, height) {
       };
     };
     const background = (element) => element ? getComputedStyle(element).backgroundColor : null;
-    const resizerStyle = resizer ? getComputedStyle(resizer) : null;
-    const resizerLineStyle = resizer ? getComputedStyle(resizer, '::before') : null;
     const documentScrollers = documentColumn
       ? [...documentColumn.querySelectorAll('*')].filter((node) => {
           const style = getComputedStyle(node);
@@ -1905,7 +1894,6 @@ async function assertLyricsWorkspace(width, height) {
       split: split ? {
         ...rect(split),
         sideBySide: split.getAttribute('data-side-by-side'),
-        collapsed: split.getAttribute('data-sidebar-collapsed'),
         ratio: Number(split.getAttribute('data-editor-ratio')),
         columnGap: Number.parseFloat(getComputedStyle(split).columnGap)
       } : null,
@@ -1917,7 +1905,6 @@ async function assertLyricsWorkspace(width, height) {
         ...rect(tools),
         clientHeight: tools.clientHeight,
         scrollHeight: tools.scrollHeight,
-        collapsed: tools.getAttribute('data-collapsed'),
         activeTab: tools.getAttribute('data-active-tab')
       } : null,
       toolsPanel: toolsPanel ? {
@@ -1929,21 +1916,12 @@ async function assertLyricsWorkspace(width, height) {
       } : null,
       toolsFrame: frame(tools),
       toolsBackground: background(tools),
-      resizer: resizer ? {
-        ...rect(resizer),
-        cursor: resizerStyle?.cursor,
-        touchAction: resizerStyle?.touchAction,
-        lineWidth: resizerLineStyle?.width,
-        lineTop: resizerLineStyle?.top,
-        lineBottom: resizerLineStyle?.bottom,
-        value: Number(resizer.getAttribute('aria-valuenow')),
-        minimum: Number(resizer.getAttribute('aria-valuemin')),
-        maximum: Number(resizer.getAttribute('aria-valuemax')),
-        controls: resizer.getAttribute('aria-controls')
-      } : null,
+      resizerCount: document.querySelectorAll('[data-testid="lyrics-workspace-resizer"]').length,
+      sidebarToggleCount: document.querySelectorAll('[data-testid="lyrics-command-sidebar-toggle"]').length,
       commandBar: rect(commandBar),
       commandBarBackground: background(commandBar),
       statusBarBackground: background(statusBar),
+      statusInsideCommandBar: Boolean(commandBar && statusBar && commandBar.contains(statusBar)),
       editorColumns: rect(editorColumns),
       documentScrollerCount: documentScrollers.length,
       documentScrollerIsShared: documentScrollers.length === 1 && documentScrollers[0] === shared,
@@ -1990,16 +1968,10 @@ async function assertLyricsWorkspace(width, height) {
     };
   });
   const expandedGap = 8;
-  const minimumToolsWidth = 300;
-  const usableSplitWidth = result.split ? result.split.width - expandedGap : 0;
-  const expectedMaximumRatio = Math.max(
-    2 / 3,
-    Math.min(0.75, (usableSplitWidth - minimumToolsWidth) / usableSplitWidth)
-  );
-  const expectedSeparatorValue = Math.round(expectedMaximumRatio * 100);
+  const expectedFixedRatio = 2 / 3;
   assert.equal(result.activeStep, "lyrics", `${width}x${height} keeps the lyrics step active`);
   assert.ok(
-    result.workspace && result.split && result.shared && result.actions && result.documentColumn && result.tools && result.toolsPanel && result.resizer && result.commandBar,
+    result.workspace && result.split && result.shared && result.actions && result.documentColumn && result.tools && result.toolsPanel && result.commandBar,
     `${width}x${height} renders the bounded lyrics split skeleton`
   );
   assert.deepEqual(
@@ -2036,31 +2008,23 @@ async function assertLyricsWorkspace(width, height) {
   );
   assert.ok(result.workspace.x >= -1 && result.workspace.right <= width + 1, `${width}x${height} keeps the workspace inside the viewport`);
   assert.equal(result.split.sideBySide, "true", `${width}x${height} uses the desktop two-column workspace`);
-  assert.equal(result.split.collapsed, "false", `${width}x${height} starts with the tool rail expanded`);
   assert.ok(
-    Math.abs(result.split.ratio - expectedMaximumRatio) <= 0.002,
-    `${width}x${height} uses the 3/4 editor target while preserving a 300px inspector: ${JSON.stringify(result.split)}`
+    Math.abs(result.split.ratio - expectedFixedRatio) <= 0.002,
+    `${width}x${height} gives the always-open inspector its maximum one-third width: ${JSON.stringify(result.split)}`
   );
   assert.ok(
     Math.abs(result.split.columnGap - expandedGap) <= 0.5,
-    `${width}x${height} keeps the compact 8px expanded gap: ${JSON.stringify(result.split)}`
+    `${width}x${height} keeps the compact 8px fixed gap: ${JSON.stringify(result.split)}`
   );
   assert.ok(result.documentColumn.width >= 599, `${width}x${height} preserves the minimum editor width: ${result.documentColumn.width}`);
   assert.ok(result.tools.width >= 299, `${width}x${height} preserves the 300px minimum tools width: ${result.tools.width}`);
   assert.ok(
     Math.abs(result.tools.x - result.documentColumn.right - expandedGap) <= 1,
-    `${width}x${height} places the tools after one 8px separator gap: ${JSON.stringify({ document: result.documentColumn, tools: result.tools })}`
+    `${width}x${height} places the tools after one fixed 8px gutter: ${JSON.stringify({ document: result.documentColumn, tools: result.tools })}`
   );
-  assert.ok(Math.abs(result.resizer.width - expandedGap) <= 0.5, `${width}x${height} gives the separator an 8px hit area`);
-  assert.equal(result.resizer.lineWidth, "1px", `${width}x${height} renders one central 1px line`);
-  assert.equal(result.resizer.lineTop, "0px", `${width}x${height} extends the separator line to the top`);
-  assert.equal(result.resizer.lineBottom, "0px", `${width}x${height} extends the separator line to the bottom`);
-  assert.equal(result.resizer.cursor, "col-resize", `${width}x${height} exposes column resize feedback`);
-  assert.equal(result.resizer.touchAction, "none", `${width}x${height} keeps pointer dragging deterministic`);
-  assert.equal(result.resizer.value, expectedSeparatorValue, `${width}x${height} exposes the resolved separator value`);
-  assert.ok(result.resizer.minimum >= 66 && result.resizer.minimum <= 67, `${width}x${height} exposes the two-thirds editor minimum`);
-  assert.equal(result.resizer.maximum, expectedSeparatorValue, `${width}x${height} exposes the width-constrained editor maximum`);
-  assert.equal(result.resizer.controls, "lyrics-workspace-editor lyrics-workspace-sidebar", `${width}x${height} links both controlled panes`);
+  assert.equal(result.resizerCount, 0, `${width}x${height} exposes no adjustable column separator`);
+  assert.equal(result.sidebarToggleCount, 0, `${width}x${height} exposes no desktop collapse control`);
+  assert.equal(result.statusInsideCommandBar, true, `${width}x${height} keeps cursor and scope status inside the top command bar`);
   assert.equal(result.editor.scrollHeight, result.editor.clientHeight, `${width}x${height} prevents editor-root scrolling`);
   assert.equal(result.editor.overflowY, "hidden", `${width}x${height} hides editor-root overflow`);
   assert.equal(result.shared.overflowX, "hidden", `${width}x${height} prevents a second horizontal document scroll`);
@@ -2127,8 +2091,6 @@ async function assertLyricsWorkspace(width, height) {
 
 async function assertLyricsWorkbenchOperations(originalLyrics, translationLyrics, originalFixture, translationFixture) {
   await setWindowSize(1280, 900);
-  const sidebarToggle = page.getByTestId("lyrics-command-sidebar-toggle");
-  if (await sidebarToggle.getAttribute("aria-pressed") === "false") await sidebarToggle.click();
   await page.getByTestId("lyrics-sidebar").waitFor({ state: "visible" });
   await page.getByTestId("lyrics-sidebar-tab-cleanup").click();
 
@@ -2138,6 +2100,13 @@ async function assertLyricsWorkbenchOperations(originalLyrics, translationLyrics
   await page.waitForFunction(() => /原文第 1.*1 行/.test(
     document.querySelector('[data-testid="lyrics-cleanup-scope-summary"]')?.textContent ?? ""
   ));
+  const scopeContext = page.getByTestId("lyrics-cleanup-context");
+  assert.equal(await scopeContext.locator("h2").count(), 0, "scope is presented as a compact context bar instead of a full Section");
+  assert.equal(
+    await scopeContext.getByRole("group").count(),
+    1,
+    "the compact context bar contains the current-column / aligned-columns choice"
+  );
   await page.getByTestId("lyrics-command-clean-paste").click();
   await page.waitForFunction(() => document.querySelector('[data-testid="lyrics-operation-feedback"]')?.textContent?.includes("粘贴"));
   assert.equal(
@@ -2173,8 +2142,19 @@ async function assertLyricsWorkbenchOperations(originalLyrics, translationLyrics
   assert.equal(await originalLyrics.inputValue(), "[Verse 1]\nWorld\nEnd", "LRC shortcut applies the high-frequency cleanup directly");
   await page.getByTestId("lyrics-command-undo").click();
   assert.equal(await originalLyrics.inputValue(), previewFixture, "LRC shortcut participates in operation-level undo");
+  const moreCleanup = page.getByTestId("lyrics-cleanup-more");
+  assert.equal(await moreCleanup.getAttribute("open"), null, "low-frequency cleanup starts inside one closed More cleanup disclosure");
+  assert.equal(await page.getByTestId("lyrics-cleanup-lrc-preview").isHidden(), true, "LRC preview stays out of the first cleanup view");
+  await page.getByTestId("lyrics-cleanup-more-summary").focus();
+  await page.getByTestId("lyrics-cleanup-more-summary").press("Enter");
+  assert.equal(await moreCleanup.getAttribute("open"), "", "the More cleanup disclosure opens from the keyboard");
   await page.getByTestId("lyrics-cleanup-lrc-preview").click();
   await page.getByTestId("lyrics-cleanup-lrc-preview-result").waitFor({ state: "visible" });
+  assert.equal(
+    await page.getByTestId("lyrics-cleanup-lrc-preview-result").evaluate((node) => Boolean(node.closest(".lyrics-sidebar-operation"))),
+    true,
+    "LRC preview expands inline beneath its operation"
+  );
   assert.equal(await originalLyrics.inputValue(), previewFixture, "LRC preview is non-mutating");
   await page.getByTestId("lyrics-cleanup-lrc-apply").click();
   assert.equal(await originalLyrics.inputValue(), "[Verse 1]\nWorld\nEnd", "LRC cleanup applies only after preview confirmation");
@@ -2192,6 +2172,11 @@ async function assertLyricsWorkbenchOperations(originalLyrics, translationLyrics
   await fillExact(translationLyrics, nonAlignedTranslation);
   await selectLyricsRange(originalLyrics, 0, 0);
   await page.getByTestId("lyrics-cleanup-scope-synchronized").click();
+  assert.match(
+    await page.getByTestId("lyrics-cleanup-scope-summary").textContent(),
+    /原文\/译文全栏/,
+    "the synchronized whole-document context explicitly names both columns"
+  );
   await page.getByTestId("lyrics-cleanup-blank-all-preview").click();
   await page.getByTestId("lyrics-cleanup-blank-all-preview-result").waitFor({ state: "visible" });
   assert.match(await page.getByTestId("lyrics-cleanup-blank-all-preview-result").textContent(), /0 个空行/, "zero-change synchronized cleanup reports an explicit preview");
@@ -2307,66 +2292,23 @@ async function assertLyricsWorkbenchOperations(originalLyrics, translationLyrics
 }
 
 async function assertLyricsWorkspaceSplitInteractions() {
-  async function waitForSidebarMotion(collapsed) {
-    await page.waitForFunction((expectedCollapsed) => {
-      const collapsedLayer = document.querySelector('[data-testid="lyrics-sidebar-collapsed-layer"]');
-      const expandedLayer = document.querySelector('[data-testid="lyrics-sidebar-expanded-layer"]');
-      if (!(collapsedLayer instanceof HTMLElement) || !(expandedLayer instanceof HTMLElement)) return false;
-      const activeLayer = expectedCollapsed ? collapsedLayer : expandedLayer;
-      const inactiveLayer = expectedCollapsed ? expandedLayer : collapsedLayer;
-      return getComputedStyle(activeLayer).opacity === "1"
-        && getComputedStyle(activeLayer).visibility === "visible"
-        && getComputedStyle(inactiveLayer).visibility === "hidden";
-    }, collapsed, { timeout: 5_000 });
-    await waitForLayoutStable(page.getByTestId("lyrics-sidebar"), 10_000);
-  }
-
   await setWindowSize(1280, 900);
   await waitForLayoutStable(page.getByTestId("lyrics-workspace-split"));
-  const resizer = page.getByTestId("lyrics-workspace-resizer");
-  assert.equal(await resizer.getAttribute("aria-valuenow"), "75", "lyrics separator starts at the 3/4 default");
-
-  const idleLine = await resizer.evaluate((element) => ({
-    width: getComputedStyle(element, "::before").width,
-    color: getComputedStyle(element, "::before").backgroundColor
+  const fixedLayout = await page.getByTestId("lyrics-workspace-split").evaluate((split) => ({
+    ratio: Number(split.getAttribute("data-editor-ratio")),
+    splitWidth: split.getBoundingClientRect().width,
+    toolsWidth: document.querySelector('[data-testid="lyrics-sidebar"]')?.getBoundingClientRect().width ?? 0,
+    statusInsideToolbar: Boolean(document.querySelector('[data-testid="lyrics-command-bar"]')?.contains(
+      document.querySelector('[data-testid="lyrics-status-bar"]')
+    ))
   }));
-  await resizer.hover();
-  const hoverLine = await resizer.evaluate((element) => ({
-    width: getComputedStyle(element, "::before").width,
-    color: getComputedStyle(element, "::before").backgroundColor
-  }));
-  assert.equal(idleLine.width, "1px", "lyrics separator is one pixel at rest");
-  assert.equal(hoverLine.width, "1px", "hover keeps the lyrics separator one pixel wide");
-  assert.notEqual(hoverLine.color, idleLine.color, "hover changes the lyrics separator theme color");
-
-  await resizer.focus();
-  await resizer.press("ArrowLeft");
-  await page.waitForFunction(() => document.querySelector('[data-testid="lyrics-workspace-resizer"]')?.getAttribute('aria-valuenow') === '73');
-  await resizer.press("Shift+ArrowLeft");
-  await page.waitForFunction(() => document.querySelector('[data-testid="lyrics-workspace-resizer"]')?.getAttribute('aria-valuenow') === '68');
-  await resizer.press("Home");
-  await page.waitForFunction(() => document.querySelector('[data-testid="lyrics-workspace-resizer"]')?.getAttribute('aria-valuenow') === '67');
-  await resizer.press("End");
-  await page.waitForFunction(() => document.querySelector('[data-testid="lyrics-workspace-resizer"]')?.getAttribute('aria-valuenow') === '75');
-  await resizer.press("Home");
-  await resizer.dblclick();
-  await page.waitForFunction(() => document.querySelector('[data-testid="lyrics-workspace-resizer"]')?.getAttribute('aria-valuenow') === '75');
-  await waitForLayoutStable(resizer);
-
-  const dragGeometry = await page.getByTestId("lyrics-workspace-split").boundingBox();
-  const resizerGeometry = await resizer.boundingBox();
-  assert.ok(dragGeometry && resizerGeometry, "lyrics split exposes pointer geometry");
-  await page.mouse.move(resizerGeometry.x + resizerGeometry.width / 2, resizerGeometry.y + resizerGeometry.height / 2);
-  await page.mouse.down();
-  await page.mouse.move(dragGeometry.x + 10 + (dragGeometry.width - 20) * (2 / 3), resizerGeometry.y + resizerGeometry.height / 2, { steps: 5 });
-  await page.mouse.up();
-  await page.waitForFunction(() => document.querySelector('[data-testid="lyrics-workspace-resizer"]')?.getAttribute('aria-valuenow') === '67');
-
-  const beforeCollapse = await page.getByTestId("lyrics-workspace-split").evaluate((split) => ({
-    ratio: split.getAttribute("data-editor-ratio"),
-    toolsWidth: document.querySelector('[data-testid="lyrics-sidebar"]')?.getBoundingClientRect().width ?? 0
-  }));
-  assert.ok(beforeCollapse.toolsWidth > 300, `dragging expands the sidebar to approximately one third: ${JSON.stringify(beforeCollapse)}`);
+  assert.ok(Math.abs(fixedLayout.ratio - 2 / 3) <= 0.002, `desktop lyrics use the fixed maximum sidebar ratio: ${JSON.stringify(fixedLayout)}`);
+  assert.ok(Math.abs(fixedLayout.toolsWidth / (fixedLayout.splitWidth - 8) - 1 / 3) <= 0.01, `the sidebar occupies one third of usable width: ${JSON.stringify(fixedLayout)}`);
+  assert.equal(fixedLayout.statusInsideToolbar, true, "cursor and scope status live inside the command toolbar");
+  assert.equal(await page.getByTestId("lyrics-workspace-resizer").count(), 0, "step two exposes no width adjustment separator");
+  assert.equal(await page.getByTestId("lyrics-command-sidebar-toggle").count(), 0, "desktop step two exposes no collapse button");
+  assert.equal(await page.getByTestId("lyrics-sidebar").getAttribute("data-collapsed"), null, "the sidebar has no collapsed state");
+  assert.equal(await page.getByTestId("lyrics-sidebar-collapsed-layer").count(), 0, "the collapsed motion layer is removed");
 
   await page.locator('[data-testid="editor-surface"] [data-testid="settings-button"]').click();
   await waitForVisible("settings-surface");
@@ -2381,73 +2323,51 @@ async function assertLyricsWorkspaceSplitInteractions() {
   const pasteSection = page.getByTestId("lyrics-cleanup-section-paste");
   assert.equal(await pasteSection.locator("summary").count(), 0, "single-action cleanup section has no redundant disclosure");
   await page.getByTestId("lyrics-cleanup-paste").waitFor({ state: "visible" });
-  const collapseButton = page.getByTestId("lyrics-command-sidebar-toggle");
-  await collapseButton.click();
-  await page.waitForFunction(() => document.querySelector('[data-testid="lyrics-sidebar"]')?.getAttribute('data-collapsed') === 'true');
-  await waitForSidebarMotion(true);
-  assert.equal(
-    await collapseButton.evaluate((node) => document.activeElement === node),
-    true,
-    "collapsing keeps keyboard focus on the persistent disclosure button"
-  );
-  assert.equal(await resizer.count(), 0, "collapsed tools leave ratio geometry and hide the resize separator");
-  const collapsedGeometry = await page.getByTestId("lyrics-sidebar").boundingBox();
-  assert.ok(collapsedGeometry && Math.abs(collapsedGeometry.width - 52) <= 1, `collapsed tools use the 52px rail: ${JSON.stringify(collapsedGeometry)}`);
   for (const tab of ["cleanup", "translation"]) {
     await page.getByTestId(`lyrics-sidebar-tab-${tab}`).waitFor({ state: "visible" });
   }
   await page.getByTestId("lyrics-status-bar").waitFor({ state: "visible" });
-  assert.equal(await page.getByTestId("lyrics-cleanup-paste").count(), 1, "collapsed rail keeps one stable cleanup panel mounted");
-  assert.equal(await page.getByTestId("lyrics-cleanup-paste").isHidden(), true, "collapsed rail hides the full cleanup toolbox");
-  assert.equal(await page.getByTestId("translation-toggle").isHidden(), true, "collapsed rail keeps translation configuration out of the visible icon strip");
-  if (runVisualDiagnostics) {
-    await page.screenshot({ path: path.join(reportDirectory, "step-two-collapsed-1280x900.png"), fullPage: false });
-  }
-
-  await page.getByTestId("lyrics-sidebar-tab-cleanup").click();
-  await page.waitForFunction(() => document.querySelector('[data-testid="lyrics-sidebar"]')?.getAttribute('data-collapsed') === 'false');
-  await waitForSidebarMotion(false);
-  await page.waitForFunction(
-    () => document.activeElement?.getAttribute("data-testid") === "lyrics-sidebar-tab-cleanup",
-    undefined,
-    { timeout: 5_000 }
-  );
-  assert.equal(
-    await page.getByTestId("lyrics-sidebar-tab-cleanup").evaluate((node) => document.activeElement === node),
-    true,
-    "opening a collapsed tab transfers focus to the corresponding expanded tab"
-  );
-  assert.equal(
-    await page.getByTestId("lyrics-cleanup-paste").isVisible(),
-    true,
-    "restoring the inspector exposes the direct cleanup action without another disclosure"
-  );
-  await collapseButton.click();
-  await page.waitForFunction(() => document.querySelector('[data-testid="lyrics-sidebar"]')?.getAttribute('data-collapsed') === 'true');
-  await waitForSidebarMotion(true);
-  await page.waitForFunction(() => document.activeElement?.getAttribute("data-testid") === "lyrics-command-sidebar-toggle");
-  assert.equal(
-    await collapseButton.evaluate((node) => document.activeElement === node),
-    true,
-    "the single desktop disclosure keeps focus after collapsing the inspector"
-  );
+  assert.equal(await page.getByTestId("lyrics-cleanup-paste").isVisible(), true, "the always-open inspector exposes direct cleanup actions");
 
   const persistedAiSettings = await page.evaluate(() => window.lyricsCardDesktop?.loadAISettings());
-  assert.equal(persistedAiSettings?.hasApiKey, true, `collapsed AI regression has configured settings: ${JSON.stringify(persistedAiSettings)}`);
+  assert.equal(persistedAiSettings?.hasApiKey, true, `AI regression has configured settings: ${JSON.stringify(persistedAiSettings)}`);
   await page.getByTestId("lyrics-command-ai").click();
-  await page.waitForFunction(() => document.querySelector('[data-testid="lyrics-sidebar"]')?.getAttribute('data-collapsed') === 'false');
-  await waitForSidebarMotion(false);
-  const collapsedAiOutcome = await page.waitForFunction(() => {
+  const aiOutcome = await page.waitForFunction(() => {
     const panel = document.querySelector('[data-testid="lyrics-ai-panel-boundary"]');
     if (panel && !panel.hasAttribute("hidden")) return "panel";
     if (document.querySelector('[data-testid="settings-surface"][data-surface-state="open"]')) return "settings";
     return false;
   });
-  assert.equal(await collapsedAiOutcome.jsonValue(), "panel", "configured compact command opens the inline AI panel");
+  assert.equal(await aiOutcome.jsonValue(), "panel", "the configured AI command opens the inline panel");
   await page.getByTestId("lyrics-ai-panel-boundary").waitFor({ state: "visible" });
   await page.getByTestId("ai-translate-panel").waitFor({ state: "visible" });
-  assert.equal(await page.getByTestId("lyrics-command-sidebar-toggle").getAttribute("aria-pressed"), "true", "AI command expands the sidebar");
   assert.equal(await page.getByTestId("lyrics-sidebar").getAttribute("data-active-tab"), "translation", "AI command selects the Translation tab");
+  const translationHierarchy = await page.evaluate(() => {
+    const primary = document.querySelector('[data-testid="lyrics-translation-primary"]');
+    const tools = document.querySelector('[data-testid="lyrics-translation-column-tools"]');
+    const primaryRect = primary?.getBoundingClientRect();
+    const toolsRect = tools?.getBoundingClientRect();
+    return {
+      primaryBeforeTools: Boolean(primaryRect && toolsRect && primaryRect.top < toolsRect.top),
+      toggleInPrimary: Boolean(primary?.contains(document.querySelector('[data-testid="translation-toggle"]'))),
+      aiInPrimary: Boolean(primary?.contains(document.querySelector('[data-testid="lyrics-ai-entry"]'))),
+      splitInTools: Boolean(tools?.contains(document.querySelector('[data-testid="lyrics-translation-section-split"]'))),
+      formatInTools: Boolean(tools?.contains(document.querySelector('[data-testid="lyrics-translation-section-format"]'))),
+      swapInTools: Boolean(tools?.contains(document.querySelector('[data-testid="lyrics-translation-section-swap"]')))
+    };
+  });
+  assert.deepEqual(
+    translationHierarchy,
+    {
+      primaryBeforeTools: true,
+      toggleInPrimary: true,
+      aiInPrimary: true,
+      splitInTools: true,
+      formatInTools: true,
+      swapInTools: true
+    },
+    `translation first view prioritizes enablement and AI before one column-tools group: ${JSON.stringify(translationHierarchy)}`
+  );
   await page.waitForFunction(
     () => document.activeElement?.getAttribute("data-testid") === "lyrics-ai-entry",
     undefined,
@@ -2460,26 +2380,25 @@ async function assertLyricsWorkspaceSplitInteractions() {
   );
   await page.getByTestId("ai-translate-panel").getByRole("button").first().click();
   await page.getByTestId("lyrics-ai-panel-boundary").waitFor({ state: "hidden" });
-  await page.getByTestId("lyrics-command-sidebar-toggle").click();
-  await page.waitForFunction(() => document.querySelector('[data-testid="lyrics-sidebar"]')?.getAttribute('data-collapsed') === 'true');
-  await waitForSidebarMotion(true);
+
+  await page.getByTestId("lyrics-swap-preview").click();
+  await page.getByTestId("lyrics-swap-preview-result").waitFor({ state: "visible" });
+  assert.equal(
+    await page.getByTestId("lyrics-swap-preview-result").evaluate((node) => Boolean(
+      node.closest(".lyrics-sidebar-operation")?.querySelector('[data-testid="lyrics-swap-preview"]')
+    )),
+    true,
+    "the dangerous column swap keeps its preview and confirmation inline with the invoking operation"
+  );
+  await page.getByTestId("lyrics-swap-preview").click();
+  await page.getByTestId("lyrics-swap-preview-result").waitFor({ state: "hidden" });
 
   await page.locator('button[data-step-id="layout"]').click();
   await page.locator('button[data-step-id="lyrics"]').click();
-  await page.waitForFunction(() => document.querySelector('[data-testid="lyrics-sidebar"]')?.getAttribute('data-collapsed') === 'true');
-  assert.equal(await page.getByTestId("lyrics-command-sidebar-toggle").getAttribute("aria-pressed"), "false", "step switching preserves collapsed state");
+  await page.getByTestId("lyrics-sidebar").waitFor({ state: "visible" });
   assert.equal(await page.getByTestId("lyrics-sidebar").getAttribute("data-active-tab"), "translation", "step switching preserves the active sidebar tab");
-
-  await page.getByTestId("lyrics-command-sidebar-toggle").click();
-  await page.waitForFunction(() => document.querySelector('[data-testid="lyrics-workspace-resizer"]')?.getAttribute('aria-valuenow') === '67');
-  await waitForSidebarMotion(false);
-  assert.equal(
-    await page.getByTestId("lyrics-workspace-split").getAttribute("data-editor-ratio"),
-    beforeCollapse.ratio,
-    "expanding restores the last expanded ratio"
-  );
-  await page.getByTestId("lyrics-workspace-resizer").dblclick();
-  await page.waitForFunction(() => document.querySelector('[data-testid="lyrics-workspace-resizer"]')?.getAttribute('aria-valuenow') === '75');
+  assert.equal(await page.getByTestId("lyrics-command-sidebar-toggle").count(), 0, "step switching does not restore a desktop collapse control");
+  assert.ok(Math.abs(Number(await page.getByTestId("lyrics-workspace-split").getAttribute("data-editor-ratio")) - 2 / 3) <= 0.002, "step switching preserves the fixed maximum sidebar width");
 }
 
 async function assertLyricsWorkspaceContentPressure(originalLyrics, translationLyrics, translationToggle) {
@@ -3052,6 +2971,9 @@ try {
 
   for (const section of ["general", "appearance", "export", "ai", "about"]) {
     await selectSettingsSection(section);
+    const heading = page.getByTestId(`settings-page-heading-${section}`);
+    await heading.waitFor({ state: "visible" });
+    assert.ok((await heading.textContent())?.trim(), `${section} settings home includes a concise heading and description`);
   }
   await selectSettingsSection("ai");
   await (await waitForVisible("ai-open-api")).click();
@@ -3191,9 +3113,6 @@ try {
     await assertUnifiedPreviewChrome("layout");
     await page.locator('button[data-step-id="lyrics"]').click();
     await page.getByTestId("lyrics-sidebar").waitFor({ state: "visible" });
-    if (await page.getByTestId("lyrics-sidebar").getAttribute("data-collapsed") === "true") {
-      await page.getByTestId("lyrics-command-sidebar-toggle").click();
-    }
     const localizedTabs = await page.locator('[role="tab"][data-testid^="lyrics-sidebar-tab-"]').allTextContents();
     assert.deepEqual(
       localizedTabs.map((label) => label.trim()),

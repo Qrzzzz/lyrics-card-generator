@@ -41,9 +41,9 @@ assert.match(gradualBlurSource, /data-effect-height="72"/);
 assert.match(gradualBlurSource, /data-effect-edge=\{edge\}/);
 assert.match(gradualBlurSource, /desktop-titlebar__veil/);
 assert.doesNotMatch(gradualBlurSource, /IntersectionObserver|addEventListener|useEffect|<style/);
-assert.match(examplesFloorSource, /edge="bottom"/);
-assert.match(examplesFloorSource, /testId="examples-bottom-gradual-blur"/);
-assert.match(examplesFloorSource, /\bpb-24\b/);
+assert.doesNotMatch(examplesFloorSource, /TitlebarGradualBlur|examples-bottom-gradual-blur/);
+assert.match(examplesFloorSource, /\bpb-6\b/);
+assert.doesNotMatch(examplesFloorSource, /\bpb-24\b/);
 
 const preloadSource = readFileSync(resolve("electron/preload.js"), "utf8");
 assert.match(preloadSource, /onWindowStateChanged/);

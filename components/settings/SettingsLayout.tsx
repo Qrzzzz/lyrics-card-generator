@@ -1,5 +1,31 @@
 import { cn } from "@/lib/utils";
 
+export function SettingsPageHeading({
+  icon,
+  title,
+  description,
+  className,
+  testId
+}: {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  className?: string;
+  testId?: string;
+}) {
+  return (
+    <div className={cn("flex items-start gap-3", className)} data-testid={testId}>
+      <span className="app-text-primary mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[rgb(var(--panel-border))] bg-white/5">
+        {icon}
+      </span>
+      <div className="min-w-0">
+        <h3 className="app-text-primary text-lg font-bold tracking-tight">{title}</h3>
+        <p className="app-text-muted mt-1 text-sm leading-relaxed">{description}</p>
+      </div>
+    </div>
+  );
+}
+
 export function SettingsSectionHeader({
   title,
   description,
