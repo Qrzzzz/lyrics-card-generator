@@ -1236,53 +1236,54 @@ button {
   border-bottom-color: color-mix(in srgb, rgb(var(--panel-border)) 76%, transparent);
 }
 
-.lyrics-sidebar-tab {
-  background: transparent;
+.lyrics-sidebar-tabs.segmented-control,
+.lyrics-sidebar-choice-grid.segmented-control {
+  gap: 0;
+  padding: 0.25rem;
+  border-color: color-mix(in srgb, rgb(var(--control-border)) 82%, transparent);
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, rgb(var(--input-bg)) 72%, transparent);
 }
 
-.lyrics-sidebar-tab::after {
-  position: absolute;
-  right: 0.5rem;
-  bottom: -0.0625rem;
-  left: 0.5rem;
-  height: 0.125rem;
-  border-radius: 999px;
-  background: var(--app-accent);
-  content: "";
-  opacity: 0;
-  transform: scaleX(0.42);
-  transition:
-    opacity var(--motion-duration-fast) var(--motion-ease-standard),
-    transform var(--motion-duration-fast) var(--motion-ease-standard);
+.lyrics-sidebar-tabs .segmented-control__active-indicator,
+.lyrics-sidebar-choice-grid .segmented-control__active-indicator {
+  top: 0.25rem;
+  left: 0.25rem;
+  width: calc((100% - 0.5rem) / 2);
+  height: calc(100% - 0.5rem);
+  border-radius: 0.5rem;
 }
 
-.lyrics-sidebar-tab:hover {
-  background: color-mix(in srgb, rgb(var(--button-bg)) 58%, transparent);
+.lyrics-sidebar-tab,
+.lyrics-sidebar-choice-grid .segmented-control__item {
+  border-radius: 0.5rem;
 }
 
-.lyrics-sidebar-tab[aria-selected="true"] {
-  background: color-mix(in srgb, var(--app-accent) 5%, transparent);
+.lyrics-sidebar-section:first-child {
+  padding-top: 0;
+  border-top: 0;
 }
 
-.lyrics-sidebar-tab[aria-selected="true"]::after {
-  opacity: 0.9;
-  transform: scaleX(1);
+.lyrics-sidebar-section > div:first-child {
+  margin-bottom: 0.5rem;
 }
 
-.lyrics-sidebar-section--sticky {
-  background: color-mix(in srgb, rgb(var(--panel-bg)) 30%, transparent);
-  box-shadow: 0 0.5rem 1rem color-mix(in srgb, rgb(var(--input-bg)) 12%, transparent);
-  backdrop-filter: blur(18px) saturate(1.08);
-  -webkit-backdrop-filter: blur(18px) saturate(1.08);
+.lyrics-sidebar-section h2 {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
 }
 
 .lyrics-sidebar-action {
-  border-color: transparent;
-  background: transparent;
+  justify-content: flex-start;
 }
 
 .lyrics-sidebar-action:hover:not(:disabled) {
-  background: color-mix(in srgb, rgb(var(--button-bg-hover)) 66%, transparent);
+  background: rgb(var(--button-bg-hover));
+}
+
+.lyrics-sidebar-action--danger:hover:not(:disabled) {
+  border-color: rgb(var(--status-danger-border));
+  color: rgb(var(--status-danger-fg));
 }
 
 .lyrics-sidebar--drawer {
@@ -1334,7 +1335,7 @@ button {
   }
 
   .lyrics-sidebar-panel {
-    padding: 0.5rem;
+    padding: 0.75rem;
   }
 }
 

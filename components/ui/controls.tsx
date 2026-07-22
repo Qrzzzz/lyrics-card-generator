@@ -225,6 +225,7 @@ type SectionProps = {
   children: ReactNode;
   className?: string;
   contentClassName?: string;
+  testId?: string;
 };
 
 const sectionVariantClass: Record<SectionVariant, string> = {
@@ -239,10 +240,11 @@ export function Section({
   variant = "plain",
   children,
   className,
-  contentClassName
+  contentClassName,
+  testId
 }: SectionProps) {
   return (
-    <section className={cn(sectionVariantClass[variant], className)}>
+    <section className={cn(sectionVariantClass[variant], className)} data-testid={testId}>
       <div className="mb-4">
         <h2 className="app-text-primary text-base font-semibold">{title}</h2>
         {description ? <p className="app-text-subtle mt-1 text-sm leading-6">{description}</p> : null}

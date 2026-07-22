@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v5.8.2.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v5.8.3.en.md">Release Notes</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
   <a href="#features">Features</a> ·
   <a href="#local-development">Local Development</a> ·
@@ -51,23 +51,23 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 Download the latest version from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Recommended installer: `Lyrics Card Generator Setup 5.8.2.exe`
-* Portable version: `Lyrics Card Generator-5.8.2-portable.exe`
+* Recommended installer: `Lyrics Card Generator Setup 5.8.3.exe`
+* Portable version: `Lyrics Card Generator-5.8.3-portable.exe`
 
 The installer is recommended for regular use. The portable version is useful for temporary use, testing, or running from a removable drive.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v5.8.2 Highlights
+### v5.8.3 Highlights
 
-* Removes the full workspace slab from step two, placing the command bar, status copy, and desktop sidebar directly on the app canvas.
-* Keeps the lyric editor as the only primary content surface. Routine commands and sidebar actions become lightweight, while Fetch Lyrics, Review, AI, and risky confirmations retain clear compact panels.
-* Preserves the existing feature regions, shared scroll, resizable split, 52 px collapsed rail, narrow-screen drawer, and 36-line export boundary.
+* Aligns the step-two Cleanup and Translation sidebar with the app-wide settings language through segmented controls, clearer section headings, and more readable actions.
+* Removes the sticky scope block and keeps one bounded sidebar scroller, preventing long tool content from overlapping the bottom step navigation.
+* Preserves lyric operations, AI translation, keyboard behavior, the resizable split, 52 px collapsed rail, narrow-screen drawer, and 36-line export boundary.
 
 ## 🌐 Multilingual Release Notes
 
 GitHub Release displays a Simplified Chinese summary by default. See the full release notes:
-[简体中文](./docs/releases/v5.8.2.zh-CN.md) · [繁體中文](./docs/releases/v5.8.2.zh-TW.md) · [English](./docs/releases/v5.8.2.en.md) · [Français](./docs/releases/v5.8.2.fr.md) · [日本語](./docs/releases/v5.8.2.ja.md) · [Español](./docs/releases/v5.8.2.es.md)
+[简体中文](./docs/releases/v5.8.3.zh-CN.md) · [繁體中文](./docs/releases/v5.8.3.zh-TW.md) · [English](./docs/releases/v5.8.3.en.md) · [Français](./docs/releases/v5.8.3.fr.md) · [日本語](./docs/releases/v5.8.3.ja.md) · [Español](./docs/releases/v5.8.3.es.md)
 
 <a id="features"></a>
 

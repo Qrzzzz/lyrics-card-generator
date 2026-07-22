@@ -19,7 +19,7 @@
 <p>
   <strong>Navegación</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Descargar la última versión</a> ·
-  <a href="./docs/releases/v5.8.2.es.md">Notas de la versión</a> ·
+  <a href="./docs/releases/v5.8.3.es.md">Notas de la versión</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en línea</a> ·
   <a href="#funciones-principales">Funciones principales</a> ·
   <a href="#desarrollo-local">Desarrollo local</a> ·
@@ -51,23 +51,23 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 Descarga la versión más reciente desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Instalador recomendado: `Lyrics Card Generator Setup 5.8.2.exe`
-* Versión portable: `Lyrics Card Generator-5.8.2-portable.exe`
+* Instalador recomendado: `Lyrics Card Generator Setup 5.8.3.exe`
+* Versión portable: `Lyrics Card Generator-5.8.3-portable.exe`
 
 El instalador se recomienda para uso habitual. La versión portable es útil para pruebas, uso temporal o ejecución desde una unidad extraíble.
 
 > La compilación actual no está firmada. Windows puede mostrar una advertencia de SmartScreen, algo habitual en aplicaciones personales sin firma.
 
-### Aspectos destacados de la versión 5.8.2
+### Aspectos destacados de la versión 5.8.3
 
-* Elimina el gran fondo sólido del paso 2: la barra de comandos, el estado y la barra lateral de escritorio se muestran directamente sobre el lienzo de la aplicación.
-* Mantiene el editor de letras como única superficie principal. Los comandos habituales se aligeran, mientras Obtener letras, Revisión, la IA y las confirmaciones de riesgo conservan paneles compactos y claros.
-* Conserva las zonas funcionales, el desplazamiento compartido, la división redimensionable, el riel plegado de 52 px, el cajón estrecho y el límite de exportación de 36 líneas.
+* Unifica la barra lateral Limpieza／Traducción del paso 2 con los ajustes globales mediante controles segmentados, títulos más claros y acciones más legibles.
+* Elimina el bloque de alcance fijo y mantiene un único desplazamiento delimitado en la barra lateral, evitando que las herramientas largas se superpongan a la navegación inferior.
+* Conserva las operaciones de letras, la traducción con IA, el teclado, la división redimensionable, el riel plegado de 52 px, el cajón estrecho y el límite de exportación de 36 líneas.
 
 ## 🌐 Notas de publicación multilingües
 
 GitHub Release muestra de forma predeterminada un resumen en chino simplificado. Consulta las notas completas:
-[简体中文](./docs/releases/v5.8.2.zh-CN.md) · [繁體中文](./docs/releases/v5.8.2.zh-TW.md) · [English](./docs/releases/v5.8.2.en.md) · [Français](./docs/releases/v5.8.2.fr.md) · [日本語](./docs/releases/v5.8.2.ja.md) · [Español](./docs/releases/v5.8.2.es.md)
+[简体中文](./docs/releases/v5.8.3.zh-CN.md) · [繁體中文](./docs/releases/v5.8.3.zh-TW.md) · [English](./docs/releases/v5.8.3.en.md) · [Français](./docs/releases/v5.8.3.fr.md) · [日本語](./docs/releases/v5.8.3.ja.md) · [Español](./docs/releases/v5.8.3.es.md)
 
 <a id="funciones-principales"></a>
 
