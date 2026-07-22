@@ -1799,6 +1799,8 @@ async function assertLyricsWorkspace(width, height) {
     const shared = document.querySelector('[data-testid="lyrics-shared-scroll"]');
     const documentColumn = document.querySelector('#lyrics-workspace-editor');
     const tools = document.querySelector('[data-testid="lyrics-sidebar"]');
+    const toolsPanel = tools?.querySelector('[role="tabpanel"]:not([hidden])');
+    const firstToolsSection = toolsPanel?.querySelector('.lyrics-sidebar-section');
     const resizer = document.querySelector('[data-testid="lyrics-workspace-resizer"]');
     const commandBar = document.querySelector('[data-testid="lyrics-command-bar"]');
     const statusBar = document.querySelector('[data-testid="lyrics-status-bar"]');
@@ -1859,6 +1861,13 @@ async function assertLyricsWorkspace(width, height) {
         scrollHeight: tools.scrollHeight,
         collapsed: tools.getAttribute('data-collapsed'),
         activeTab: tools.getAttribute('data-active-tab')
+      } : null,
+      toolsPanel: toolsPanel ? {
+        ...rect(toolsPanel),
+        clientHeight: toolsPanel.clientHeight,
+        scrollHeight: toolsPanel.scrollHeight,
+        overflowY: getComputedStyle(toolsPanel).overflowY,
+        firstSectionPosition: firstToolsSection ? getComputedStyle(firstToolsSection).position : null
       } : null,
       toolsFrame: frame(tools),
       toolsBackground: background(tools),
@@ -1932,7 +1941,7 @@ async function assertLyricsWorkspace(width, height) {
   const expectedSeparatorValue = Math.round(expectedMaximumRatio * 100);
   assert.equal(result.activeStep, "lyrics", `${width}x${height} keeps the lyrics step active`);
   assert.ok(
-    result.workspace && result.split && result.shared && result.actions && result.documentColumn && result.tools && result.resizer && result.commandBar,
+    result.workspace && result.split && result.shared && result.actions && result.documentColumn && result.tools && result.toolsPanel && result.resizer && result.commandBar,
     `${width}x${height} renders the bounded lyrics split skeleton`
   );
   assert.deepEqual(
@@ -1996,6 +2005,20 @@ async function assertLyricsWorkspace(width, height) {
   assert.equal(result.shared.overflowX, "hidden", `${width}x${height} prevents a second horizontal document scroll`);
   assert.equal(result.shared.overflowY, "auto", `${width}x${height} gives the document the main scrollbar`);
   assert.ok(result.documentColumn.right <= result.tools.x + 1, `${width}x${height} editor does not overlap tools`);
+  assert.ok(
+    result.tools.bottom < result.actions.y,
+    `${width}x${height} keeps the sidebar above the step navigation: ${JSON.stringify({ tools: result.tools, actions: result.actions })}`
+  );
+  assert.equal(result.toolsPanel.overflowY, "auto", `${width}x${height} gives the sidebar one bounded scroller`);
+  assert.ok(
+    result.toolsPanel.y >= result.tools.y - 1 && result.toolsPanel.bottom <= result.tools.bottom + 1,
+    `${width}x${height} clips sidebar content inside the tool column: ${JSON.stringify({ tools: result.tools, panel: result.toolsPanel })}`
+  );
+  assert.equal(
+    result.toolsPanel.firstSectionPosition,
+    "static",
+    `${width}x${height} keeps the scope section in document flow instead of overlapping scrolled tools`
+  );
   assert.equal(result.documentRoot.scrollY, 0, `${width}x${height} keeps the document viewport at the top`);
   assert.equal(result.documentRoot.scrollX, 0, `${width}x${height} prevents focus from horizontally scrolling the stage`);
   assert.ok(result.documentRoot.scrollHeight <= result.documentRoot.clientHeight + 1, `${width}x${height} prevents document-root scrolling`);

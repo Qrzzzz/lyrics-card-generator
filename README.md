@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v5.8.2.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v5.8.3.zh-CN.md">发布说明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">在线 Web Lite 版</a> ·
   <a href="./docs/desktop.md">桌面维护文档</a> ·
   <a href="#主要功能">主要功能</a> ·
@@ -49,23 +49,23 @@
 
 请前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下载最新版：
 
-* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 5.8.2.exe`
-* 不想安装时可下载便携版：`Lyrics Card Generator-5.8.2-portable.exe`
+* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 5.8.3.exe`
+* 不想安装时可下载便携版：`Lyrics Card Generator-5.8.3-portable.exe`
 
 安装版适合长期使用；便携版适合临时运行、测试或放在移动硬盘中使用。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v5.8.2 更新重点
+### v5.8.3 更新重点
 
-* 第二步移除覆盖整个工作区的实色底板，命令栏、状态信息和桌面侧栏直接呈现在应用画布上。
-* 歌词输入框成为唯一主要内容面；普通命令与侧栏操作改为轻量交互，获取歌词、检查、AI 和风险确认仍保留清晰的小型面板。
-* 功能分区、共享滚动、可调分栏、52 px 折叠工具轨、窄屏抽屉和 36 行导出边界全部保持不变。
+* 第二步右侧的“整理／翻译”侧栏改用与全局设置一致的分段控件、分组标题和操作样式，阅读与点击更清楚。
+* 取消首个作用范围区的黏性悬浮，侧栏维持单一的边界滚动，长内容不会再与底部步骤导航重叠。
+* 歌词处理、AI 翻译、键盘操作、可调分栏、52 px 折叠工具轨、窄屏抽屉和 36 行导出边界均保持不变。
 
 ## 🌐 多语言发布说明
 
 GitHub Release 默认展示简体中文摘要，完整说明见：
-[简体中文](./docs/releases/v5.8.2.zh-CN.md) · [繁體中文](./docs/releases/v5.8.2.zh-TW.md) · [English](./docs/releases/v5.8.2.en.md) · [Français](./docs/releases/v5.8.2.fr.md) · [日本語](./docs/releases/v5.8.2.ja.md) · [Español](./docs/releases/v5.8.2.es.md)
+[简体中文](./docs/releases/v5.8.3.zh-CN.md) · [繁體中文](./docs/releases/v5.8.3.zh-TW.md) · [English](./docs/releases/v5.8.3.en.md) · [Français](./docs/releases/v5.8.3.fr.md) · [日本語](./docs/releases/v5.8.3.ja.md) · [Español](./docs/releases/v5.8.3.es.md)
 
 <a id="主要功能"></a>
 

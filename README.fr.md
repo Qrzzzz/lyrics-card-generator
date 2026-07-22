@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v5.8.2.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v5.8.3.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="#développement-local">Développement local</a> ·
@@ -51,23 +51,23 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 Téléchargez la dernière version depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
 
-* Installateur recommandé : `Lyrics Card Generator Setup 5.8.2.exe`
-* Version portable : `Lyrics Card Generator-5.8.2-portable.exe`
+* Installateur recommandé : `Lyrics Card Generator Setup 5.8.3.exe`
+* Version portable : `Lyrics Card Generator-5.8.3-portable.exe`
 
 L'installateur est recommandé pour une utilisation régulière. La version portable convient aux essais, à une utilisation temporaire ou à un disque amovible.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### Points clés de la v5.8.2
+### Points clés de la v5.8.3
 
-* Supprime le grand fond plein de l’étape 2 : barre de commandes, état et barre latérale de bureau reposent désormais directement sur le canevas de l’application.
-* Conserve l’éditeur de paroles comme seule surface principale. Les commandes courantes sont allégées, tandis que Récupérer les paroles, Vérification, l’IA et les confirmations à risque gardent des panneaux compacts bien délimités.
-* Préserve les zones fonctionnelles, le défilement partagé, la séparation redimensionnable, le rail replié de 52 px, le tiroir étroit et la limite d’exportation de 36 lignes.
+* Harmonise la barre latérale Nettoyage／Traduction de l’étape 2 avec les réglages globaux grâce à des contrôles segmentés, des titres plus clairs et des actions plus lisibles.
+* Supprime le bloc de portée fixe et conserve un seul défilement borné dans la barre latérale, afin que les outils longs ne recouvrent plus la navigation inférieure.
+* Préserve les opérations sur les paroles, la traduction IA, le clavier, la séparation redimensionnable, le rail replié de 52 px, le tiroir étroit et la limite d’exportation de 36 lignes.
 
 ## 🌐 Notes de publication multilingues
 
 Par défaut, GitHub Release affiche un résumé en chinois simplifié. Consultez les notes complètes :
-[简体中文](./docs/releases/v5.8.2.zh-CN.md) · [繁體中文](./docs/releases/v5.8.2.zh-TW.md) · [English](./docs/releases/v5.8.2.en.md) · [Français](./docs/releases/v5.8.2.fr.md) · [日本語](./docs/releases/v5.8.2.ja.md) · [Español](./docs/releases/v5.8.2.es.md)
+[简体中文](./docs/releases/v5.8.3.zh-CN.md) · [繁體中文](./docs/releases/v5.8.3.zh-TW.md) · [English](./docs/releases/v5.8.3.en.md) · [Français](./docs/releases/v5.8.3.fr.md) · [日本語](./docs/releases/v5.8.3.ja.md) · [Español](./docs/releases/v5.8.3.es.md)
 
 <a id="fonctionnalités-principales"></a>
 

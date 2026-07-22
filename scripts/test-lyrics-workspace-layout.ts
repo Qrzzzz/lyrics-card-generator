@@ -170,10 +170,14 @@ assert.ok(
   workspaceSource.includes("lyrics-workspace-surface") &&
     workspaceSource.includes("lyrics-document-editor") &&
     commandBarSource.includes("lyrics-command-button") &&
-    sidebarSource.includes("lyrics-sidebar-action") &&
+    sidebarSource.includes("control-surface lyrics-sidebar-action") &&
+    sidebarSource.includes("<Section") &&
     globalsSource.includes(".lyrics-workspace-surface") &&
-    globalsSource.includes(".lyrics-sidebar-section--sticky"),
-  "the workspace chrome stays transparent while the lyric editor and critical inline states retain bounded surfaces"
+    globalsSource.includes(".lyrics-sidebar-tabs.segmented-control") &&
+    globalsSource.includes(".lyrics-sidebar-section:first-child") &&
+    !globalsSource.includes(".lyrics-sidebar-section--sticky") &&
+    !sidebarSource.includes("sticky top-0"),
+  "the workspace stays transparent while the sidebar reuses the settings control language without overlapping sticky content"
 );
 assert.ok(
   sidebarSource.includes('data-collapsed={collapsed ? "true" : "false"}') &&
@@ -255,4 +259,4 @@ assert.ok(
   "the step-two split stays inside LyricsWorkspace and leaves the shared Stepper structure unchanged"
 );
 
-console.log(JSON.stringify({ ok: true, lyricsWorkspaceLayoutTests: 41 }, null, 2));
+console.log(JSON.stringify({ ok: true, lyricsWorkspaceLayoutTests: 42 }, null, 2));

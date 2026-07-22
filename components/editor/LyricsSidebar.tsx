@@ -6,6 +6,7 @@ import {
   X
 } from "lucide-react";
 import {
+  type CSSProperties,
   type KeyboardEvent,
   type Ref,
   type ReactNode,
@@ -20,7 +21,7 @@ import {
   formatLyricsWorkspaceCopy,
   type LyricsWorkspaceCopy
 } from "@/components/editor/lyrics-workspace-copy";
-import { ToggleRow } from "@/components/ui/controls";
+import { Section, ToggleRow } from "@/components/ui/controls";
 import { getAIUiCopy } from "@/lib/ai/ui-copy";
 import type { createT } from "@/lib/i18n";
 import { formatChineseTranslation, splitAlternatingLyrics } from "@/lib/lyric-format";
@@ -207,12 +208,17 @@ export function LyricsSidebar(props: LyricsSidebarProps) {
           </div>
         ) : (
           <>
-          <header className="lyrics-sidebar-header flex shrink-0 items-center gap-1 border-b border-[rgb(var(--panel-border))] p-1.5">
+          <header className="lyrics-sidebar-header flex shrink-0 items-center gap-2 border-b border-[rgb(var(--panel-border))] p-2">
             <div
               role="tablist"
               aria-label={copy.sidebar}
-              className="grid min-w-0 flex-1 grid-cols-2 gap-1"
+              className="segmented-control lyrics-sidebar-tabs grid min-w-0 flex-1 grid-cols-2"
+              style={{
+                "--segmented-count": 2,
+                "--segmented-active-translate": activeTab === "cleanup" ? "0%" : "100%"
+              } as CSSProperties}
             >
+              <span className="segmented-control__active-indicator" aria-hidden="true" />
               {TABS.map((tab) => (
                 <button
                   key={tab}
@@ -222,11 +228,12 @@ export function LyricsSidebar(props: LyricsSidebarProps) {
                   aria-controls={`lyrics-sidebar-panel-${tab}`}
                   id={`lyrics-sidebar-tab-${tab}`}
                   className={cn(
-                    "lyrics-sidebar-tab control-focus relative flex min-h-9 min-w-0 items-center justify-center gap-1 rounded-md px-1 text-[10px] font-semibold transition",
+                    "segmented-control__item lyrics-sidebar-tab control-focus relative flex h-9 min-w-0 items-center justify-center gap-1.5 rounded-lg px-2 text-xs font-semibold transition",
                     activeTab === tab
                       ? "app-text-primary"
                       : "app-text-subtle"
                   )}
+                  data-selected={activeTab === tab ? "true" : "false"}
                   onClick={() => onTabChange(tab)}
                   onKeyDown={(event) => onTabKeyDown(event, tab)}
                   tabIndex={activeTab === tab ? 0 : -1}
@@ -304,7 +311,7 @@ function SidebarPanel({
       role="tabpanel"
       aria-labelledby={`lyrics-sidebar-tab-${tab}`}
       hidden={activeTab !== tab}
-      className="lyrics-sidebar-panel h-full min-h-0 overflow-y-auto overscroll-contain p-2.5"
+      className="lyrics-sidebar-panel h-full min-h-0 overflow-y-auto overscroll-contain p-3"
       data-testid={`lyrics-sidebar-panel-${tab}`}
     >
       {children}
@@ -376,8 +383,24 @@ function CleanupPanel({
 
   return (
     <div className="grid gap-0">
-      <PanelSection title={copy.scopeHeading} sticky>
-        <div className="grid grid-cols-2 gap-1">
+      <PanelSection
+        title={copy.scopeHeading}
+        description={(
+          <span data-testid="lyrics-cleanup-scope-summary">
+            {synchronizedActive ? synchronizedScopeSummary : scopeSummary}
+          </span>
+        )}
+      >
+        <div
+          role="group"
+          aria-label={copy.scopeHeading}
+          className="segmented-control lyrics-sidebar-choice-grid grid grid-cols-2"
+          style={{
+            "--segmented-count": 2,
+            "--segmented-active-translate": synchronizedActive ? "100%" : "0%"
+          } as CSSProperties}
+        >
+          <span className="segmented-control__active-indicator" aria-hidden="true" />
           <ChoiceButton
             selected={!synchronizedActive}
             onClick={() => setSynchronized(false)}
@@ -392,10 +415,7 @@ function CleanupPanel({
             disabled={!translationEnabled}
           />
         </div>
-        <p className="app-text-subtle text-[10px] leading-relaxed" data-testid="lyrics-cleanup-scope-summary">
-          {synchronizedActive ? synchronizedScopeSummary : scopeSummary}
-        </p>
-        {synchronizedActive ? <p className="app-text-subtle text-[10px] leading-relaxed">{copy.alignedColumnsHint}</p> : null}
+        {synchronizedActive ? <p className="app-text-subtle text-xs leading-relaxed">{copy.alignedColumnsHint}</p> : null}
       </PanelSection>
 
       <PanelSection title={copy.blankLinesHeading}>
@@ -438,7 +458,7 @@ function CleanupPanel({
       </PanelSection>
 
       <PanelSection title={copy.cleanPaste} testId="lyrics-cleanup-section-paste">
-        <p className="app-text-subtle text-[10px] leading-relaxed">{copy.cleanPasteHint}</p>
+        <p className="app-text-subtle text-xs leading-relaxed">{copy.cleanPasteHint}</p>
         <ToolButton
           label={copy.cleanPaste}
           onClick={onCleanPaste}
@@ -536,7 +556,7 @@ function TranslationPanel({
 
   return (
     <div className="grid gap-0">
-      <div className="grid gap-2 border-b border-[rgb(var(--panel-border))] pb-3">
+      <PanelSection title={copy.translationHeading}>
         <ToggleRow
           label={t("enableTranslation")}
           checked={translationEnabled}
@@ -555,14 +575,14 @@ function TranslationPanel({
             />
           </div>
         ) : null}
-      </div>
-      <div
-        hidden={!aiPanel}
-        className="min-w-0 rounded-md border border-[rgb(var(--panel-border))] bg-[rgb(var(--input-bg))] p-2"
-        data-testid="lyrics-ai-panel-boundary"
-      >
-        {aiPanel}
-      </div>
+        <div
+          hidden={!aiPanel}
+          className="min-w-0 rounded-lg border border-[rgb(var(--panel-border))] bg-[rgb(var(--input-bg))] p-3"
+          data-testid="lyrics-ai-panel-boundary"
+        >
+          {aiPanel}
+        </div>
+      </PanelSection>
 
       <PanelSection title={t("splitAlternatingLyrics")} testId="lyrics-translation-section-split">
         <ToolButton
@@ -622,25 +642,25 @@ function TranslationPanel({
 function PanelSection({
   title,
   children,
-  sticky = false,
+  description,
   testId
 }: {
   title: string;
   children: ReactNode;
-  sticky?: boolean;
+  description?: ReactNode;
   testId?: string;
 }) {
   return (
-    <section
-      className={cn(
-        "lyrics-sidebar-section grid gap-2 border-b border-[rgb(var(--panel-border))] py-3 last:border-b-0",
-        sticky && "lyrics-sidebar-section--sticky sticky top-0 z-10 pt-0"
-      )}
-      data-testid={testId}
+    <Section
+      title={title}
+      description={description}
+      variant="plain"
+      className="lyrics-sidebar-section"
+      contentClassName="gap-2.5"
+      testId={testId}
     >
-      <h4 className="app-text-primary text-[11px] font-semibold">{title}</h4>
       {children}
-    </section>
+    </Section>
   );
 }
 
@@ -652,7 +672,7 @@ function PreviewBox({
   testId: string;
 }) {
   return (
-    <div className="status-info grid gap-2 rounded-md border px-2.5 py-2 text-[10px] leading-relaxed" data-testid={testId}>
+    <div className="status-info grid gap-2.5 rounded-lg border p-3 text-xs leading-relaxed" data-testid={testId}>
       {children}
     </div>
   );
@@ -675,10 +695,11 @@ function ChoiceButton({
     <button
       type="button"
       className={cn(
-        "app-button control-focus min-h-9 rounded-md px-2 text-[10px] font-semibold disabled:opacity-35",
-        selected && "border-[var(--control-selected-border)] bg-[rgb(var(--button-bg-hover))]"
+        "segmented-control__item control-focus control-disabled relative z-[2] h-9 min-w-0 rounded-lg px-2 text-xs font-semibold",
+        selected && "app-text-primary"
       )}
       aria-pressed={selected}
+      data-selected={selected ? "true" : "false"}
       onClick={onClick}
       disabled={disabled}
       data-testid={testId}
@@ -708,8 +729,8 @@ const ToolButton = function ToolButton({
       ref={ref}
       type="button"
       className={cn(
-        "app-button lyrics-sidebar-action control-focus min-h-9 w-full rounded-md px-2.5 text-left text-[11px] font-semibold disabled:cursor-default disabled:opacity-35",
-        danger && "hover:border-[rgb(var(--danger))]"
+        "control-surface lyrics-sidebar-action control-focus control-disabled flex min-h-9 w-full items-center rounded-lg px-3 py-2 text-left text-[13px] font-medium leading-5",
+        danger && "lyrics-sidebar-action--danger"
       )}
       onClick={onClick}
       disabled={disabled}
