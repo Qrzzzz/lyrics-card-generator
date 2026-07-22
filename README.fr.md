@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v5.8.3.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v5.8.4.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="#développement-local">Développement local</a> ·
@@ -51,23 +51,23 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 Téléchargez la dernière version depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
 
-* Installateur recommandé : `Lyrics Card Generator Setup 5.8.3.exe`
-* Version portable : `Lyrics Card Generator-5.8.3-portable.exe`
+* Installateur recommandé : `Lyrics Card Generator Setup 5.8.4.exe`
+* Version portable : `Lyrics Card Generator-5.8.4-portable.exe`
 
 L'installateur est recommandé pour une utilisation régulière. La version portable convient aux essais, à une utilisation temporaire ou à un disque amovible.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### Points clés de la v5.8.3
+### Points clés de la v5.8.4
 
-* Harmonise la barre latérale Nettoyage／Traduction de l’étape 2 avec les réglages globaux grâce à des contrôles segmentés, des titres plus clairs et des actions plus lisibles.
-* Supprime le bloc de portée fixe et conserve un seul défilement borné dans la barre latérale, afin que les outils longs ne recouvrent plus la navigation inférieure.
-* Préserve les opérations sur les paroles, la traduction IA, le clavier, la séparation redimensionnable, le rail replié de 52 px, le tiroir étroit et la limite d’exportation de 36 lignes.
+* La barre latérale Nettoyage／Traduction de l’étape 2 se déploie et se replie désormais en continu ; son contenu et son rail coulissent avec un fondu croisé, sans perdre l’état d’édition ni de défilement.
+* En avançant dans les étapes 3 à 5, l’ancien panneau de réglages sort vers la gauche et le suivant entre par la droite ; Retour inverse le mouvement tandis que l’aperçu des paroles reste fixe.
+* La préférence de réduction des animations supprime les déplacements ; le traitement des paroles, la séparation redimensionnable, le défilement partagé et l’exportation restent inchangés.
 
 ## 🌐 Notes de publication multilingues
 
 Par défaut, GitHub Release affiche un résumé en chinois simplifié. Consultez les notes complètes :
-[简体中文](./docs/releases/v5.8.3.zh-CN.md) · [繁體中文](./docs/releases/v5.8.3.zh-TW.md) · [English](./docs/releases/v5.8.3.en.md) · [Français](./docs/releases/v5.8.3.fr.md) · [日本語](./docs/releases/v5.8.3.ja.md) · [Español](./docs/releases/v5.8.3.es.md)
+[简体中文](./docs/releases/v5.8.4.zh-CN.md) · [繁體中文](./docs/releases/v5.8.4.zh-TW.md) · [English](./docs/releases/v5.8.4.en.md) · [Français](./docs/releases/v5.8.4.fr.md) · [日本語](./docs/releases/v5.8.4.ja.md) · [Español](./docs/releases/v5.8.4.es.md)
 
 <a id="fonctionnalités-principales"></a>
 
@@ -270,6 +270,8 @@ Merci aux chansons suivantes et à leurs créateurs. Elles servent d’exemples 
 | 《勇者》 | *THE BOOK 3* | [YOASOBI](https://www.yoasobi-music.jp/) |
 | 《光辉岁月》 | *命运派对* | [Beyond](https://music.apple.com/cn/artist/beyond/79668659) |
 | 《Opalite》 | *The Life of a Showgirl* | [Taylor Swift](https://www.taylorswift.com/) |
+| 《honeybee》 | *you seem pretty sad for a girl so in love* | [Olivia Rodrigo](https://www.oliviarodrigo.com/) |
+| 《Lies》 | *Always - EP* | [BIGBANG](https://ygfamily.com/en/artists/bigbang/discography) |
 
 </details>
 

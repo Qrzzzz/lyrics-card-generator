@@ -1215,6 +1215,10 @@ button {
   border-left: 1px solid rgb(var(--panel-border));
 }
 
+.lyrics-sidebar-motion-layer {
+  will-change: transform, opacity;
+}
+
 .lyrics-sidebar--collapsed .app-button {
   width: 2.25rem;
   min-width: 2.25rem;

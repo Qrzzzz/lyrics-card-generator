@@ -145,14 +145,16 @@ assert.ok(
   "split and active-tab state are owned above the step-two content lifecycle"
 );
 assert.ok(
-  workspaceSource.includes('data-testid="lyrics-workspace-resizer"') &&
-    workspaceSource.includes('role="separator"') &&
-    workspaceSource.includes('aria-orientation="vertical"') &&
+  workspaceSource.includes('data-testid={!sidebarCollapsed ? "lyrics-workspace-resizer" : undefined}') &&
+    workspaceSource.includes('role={!sidebarCollapsed ? "separator" : undefined}') &&
+    workspaceSource.includes('aria-orientation={!sidebarCollapsed ? "vertical" : undefined}') &&
     workspaceSource.includes('aria-valuemin=') &&
     workspaceSource.includes('aria-valuemax=') &&
     workspaceSource.includes('aria-valuenow=') &&
-    workspaceSource.includes('aria-valuetext='),
-  "the lyrics separator exposes the complete ARIA contract"
+    workspaceSource.includes('aria-valuetext=') &&
+    workspaceSource.includes('aria-hidden={sidebarCollapsed}') &&
+    workspaceSource.includes('inert={sidebarCollapsed ? true : undefined}'),
+  "the active lyrics separator exposes the complete ARIA contract and becomes inert when collapsed"
 );
 assert.ok(
   resizableSource.includes("onDoubleClick: reset") &&
@@ -181,7 +183,10 @@ assert.ok(
 );
 assert.ok(
   sidebarSource.includes('data-collapsed={collapsed ? "true" : "false"}') &&
-    sidebarSource.includes('testId={`lyrics-sidebar-tab-${tab}`}') &&
+    sidebarSource.includes('testId={collapsed ? `lyrics-sidebar-tab-${tab}` : undefined}') &&
+    sidebarSource.includes('data-testid={!collapsed ? `lyrics-sidebar-tab-${tab}` : undefined}') &&
+    sidebarSource.includes('data-testid="lyrics-sidebar-collapsed-layer"') &&
+    sidebarSource.includes('data-testid="lyrics-sidebar-expanded-layer"') &&
     !sidebarSource.includes('data-testid="lyrics-sidebar-budget"') &&
     !sidebarSource.includes("<CollapsiblePanelSection") &&
     sidebarSource.includes('testId="lyrics-cleanup-section-paste"') &&
@@ -217,9 +222,10 @@ assert.ok(
     !sidebarSource.includes('tab="source"') &&
     sidebarSource.includes("hidden={activeTab !== tab}") &&
     sidebarSource.includes('data-testid="lyrics-sidebar-panels"') &&
-    sidebarSource.includes('collapsed && "hidden"') &&
+    sidebarSource.includes('aria-hidden={collapsed}') &&
+    sidebarSource.includes('inert={collapsed ? true : undefined}') &&
     sidebarSource.includes('event.key === "ArrowRight"') &&
-    sidebarSource.includes("tabIndex={activeTab === tab ? 0 : -1}"),
+    sidebarSource.includes("tabIndex={!collapsed && activeTab === tab ? 0 : -1}"),
   "the sidebar keeps only cleanup and translation panels with roving keyboard navigation"
 );
 assert.ok(

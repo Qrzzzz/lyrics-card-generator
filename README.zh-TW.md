@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v5.8.3.zh-TW.md">發布說明</a> ·
+  <a href="./docs/releases/v5.8.4.zh-TW.md">發布說明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">線上 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="#本機開發">本機開發</a> ·
@@ -48,23 +48,23 @@
 
 請前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載最新版：
 
-* 建議一般使用者下載安裝版：`Lyrics Card Generator Setup 5.8.3.exe`
-* 不想安裝時可下載可攜版：`Lyrics Card Generator-5.8.3-portable.exe`
+* 建議一般使用者下載安裝版：`Lyrics Card Generator Setup 5.8.4.exe`
+* 不想安裝時可下載可攜版：`Lyrics Card Generator-5.8.4-portable.exe`
 
 安裝版適合長期使用；可攜版適合臨時執行、測試或放在隨身碟中使用。
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v5.8.3 更新重點
+### v5.8.4 更新重點
 
-* 第二步右側的「整理／翻譯」側欄改用與全域設定一致的分段控制、分組標題與操作樣式，閱讀與點擊更清楚。
-* 取消首個作用範圍區的黏性懸浮，側欄維持單一的邊界捲動，長內容不再與底部步驟導覽重疊。
-* 歌詞處理、AI 翻譯、鍵盤操作、可調分欄、52 px 收合工具軌、窄螢幕抽屜與 36 行匯出邊界均保持不變。
+* 第二步右側的「整理／翻譯」側欄現在會連續展開與收合，內容與工具軌同步平移、淡出和淡入，同時保留原有編輯與捲動狀態。
+* 第 3–5 步前進時，舊設定面板向左移出、新面板從右側移入；返回上一步時方向相反，右側歌詞預覽始終保持原位。
+* 系統啟用「減少動態效果」時會移除位移動畫；歌詞處理、可調分欄、共享捲動與匯出行為均保持不變。
 
 ## 🌐 多語言發佈說明
 
 GitHub Release 預設顯示簡體中文摘要，完整說明請見：
-[简体中文](./docs/releases/v5.8.3.zh-CN.md) · [繁體中文](./docs/releases/v5.8.3.zh-TW.md) · [English](./docs/releases/v5.8.3.en.md) · [Français](./docs/releases/v5.8.3.fr.md) · [日本語](./docs/releases/v5.8.3.ja.md) · [Español](./docs/releases/v5.8.3.es.md)
+[简体中文](./docs/releases/v5.8.4.zh-CN.md) · [繁體中文](./docs/releases/v5.8.4.zh-TW.md) · [English](./docs/releases/v5.8.4.en.md) · [Français](./docs/releases/v5.8.4.fr.md) · [日本語](./docs/releases/v5.8.4.ja.md) · [Español](./docs/releases/v5.8.4.es.md)
 
 ## ✨ 主要功能
 
@@ -264,6 +264,8 @@ npm run core:test       # 測試 3.0 核心純函式
 | 《勇者》 | *THE BOOK 3* | [YOASOBI](https://www.yoasobi-music.jp/) |
 | 《光辉岁月》 | *命運派對* | [Beyond](https://music.apple.com/cn/artist/beyond/79668659) |
 | 《Opalite》 | *The Life of a Showgirl* | [Taylor Swift](https://www.taylorswift.com/) |
+| 《honeybee》 | *you seem pretty sad for a girl so in love* | [Olivia Rodrigo](https://www.oliviarodrigo.com/) |
+| 《Lies》 | *Always - EP* | [BIGBANG](https://ygfamily.com/en/artists/bigbang/discography) |
 
 </details>
 

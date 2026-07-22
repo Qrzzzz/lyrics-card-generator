@@ -1,5 +1,6 @@
 "use client";
 
+import { motion } from "framer-motion";
 import {
   Eraser,
   Languages,
@@ -17,6 +18,7 @@ import {
 } from "react";
 import { AiTranslateButton } from "@/components/lyrics/AiTranslateButton";
 import type { LyricsCommandIntent } from "@/components/editor/LyricsCommandBar";
+import { useAppReducedMotion } from "@/components/motion/AppMotionProvider";
 import {
   formatLyricsWorkspaceCopy,
   type LyricsWorkspaceCopy
@@ -25,6 +27,11 @@ import { Section, ToggleRow } from "@/components/ui/controls";
 import { getAIUiCopy } from "@/lib/ai/ui-copy";
 import type { createT } from "@/lib/i18n";
 import { formatChineseTranslation, splitAlternatingLyrics } from "@/lib/lyric-format";
+import {
+  motionDurations,
+  motionEasings,
+  reducedMotionTransition
+} from "@/lib/motion/tokens";
 import {
   cleanSynchronizedBlankRows,
   previewParagraphTags,
@@ -93,9 +100,13 @@ export function LyricsSidebar(props: LyricsSidebarProps) {
     onIntentHandled,
     onUndo
   } = props;
+  const reduceMotion = useAppReducedMotion();
   const intentTargets = useRef<Partial<Record<LyricsCommandIntent, HTMLElement | null>>>({});
   const closeDrawerButtonRef = useRef<HTMLButtonElement | null>(null);
   const drawerOpenRef = useRef(false);
+  const sidebarContentTransition = reduceMotion
+    ? reducedMotionTransition
+    : { duration: motionDurations.slow, ease: motionEasings.emphasized };
 
   function onTabKeyDown(event: KeyboardEvent<HTMLButtonElement>, tab: LyricsSidebarTab) {
     const currentIndex = TABS.indexOf(tab);
@@ -190,24 +201,51 @@ export function LyricsSidebar(props: LyricsSidebarProps) {
       data-mobile-drawer={mobileDrawer ? "true" : "false"}
       data-active-tab={activeTab}
     >
-      <div className={cn("h-full min-h-0", !collapsed && "flex flex-col")}>
-        {collapsed ? (
-          <div className="flex h-full min-h-0 flex-col items-center gap-2 p-2">
-            <nav className="flex flex-col gap-2" aria-label={copy.sidebar}>
-              {TABS.map((tab) => (
-                <SidebarIconButton
-                  key={tab}
-                  label={tabLabel(copy, tab)}
-                  testId={`lyrics-sidebar-tab-${tab}`}
-                  onClick={() => openCollapsedTab(tab)}
-                  active={activeTab === tab}
-                  icon={tabIcon(tab)}
-                />
-              ))}
-            </nav>
-          </div>
-        ) : (
-          <>
+      <div className="relative h-full min-h-0">
+        <motion.div
+          initial={false}
+          animate={
+            collapsed
+              ? { opacity: 1, x: 0, visibility: "visible" }
+              : { opacity: 0, x: 18, transitionEnd: { visibility: "hidden" } }
+          }
+          transition={sidebarContentTransition}
+          aria-hidden={!collapsed}
+          inert={!collapsed ? true : undefined}
+          className="lyrics-sidebar-motion-layer absolute inset-0 flex h-full min-h-0 flex-col items-center gap-2 p-2"
+          data-testid="lyrics-sidebar-collapsed-layer"
+          data-active={collapsed ? "true" : "false"}
+          style={{ pointerEvents: collapsed ? "auto" : "none" }}
+        >
+          <nav className="flex flex-col gap-2" aria-label={copy.sidebar}>
+            {TABS.map((tab) => (
+              <SidebarIconButton
+                key={tab}
+                label={tabLabel(copy, tab)}
+                testId={collapsed ? `lyrics-sidebar-tab-${tab}` : undefined}
+                onClick={() => openCollapsedTab(tab)}
+                active={activeTab === tab}
+                icon={tabIcon(tab)}
+              />
+            ))}
+          </nav>
+        </motion.div>
+
+        <motion.div
+          initial={false}
+          animate={
+            collapsed
+              ? { opacity: 0, x: 24, transitionEnd: { visibility: "hidden" } }
+              : { opacity: 1, x: 0, visibility: "visible" }
+          }
+          transition={sidebarContentTransition}
+          aria-hidden={collapsed}
+          inert={collapsed ? true : undefined}
+          className="lyrics-sidebar-motion-layer absolute inset-0 flex h-full min-h-0 flex-col"
+          data-testid="lyrics-sidebar-expanded-layer"
+          data-active={collapsed ? "false" : "true"}
+          style={{ pointerEvents: collapsed ? "none" : "auto" }}
+        >
           <header className="lyrics-sidebar-header flex shrink-0 items-center gap-2 border-b border-[rgb(var(--panel-border))] p-2">
             <div
               role="tablist"
@@ -236,8 +274,8 @@ export function LyricsSidebar(props: LyricsSidebarProps) {
                   data-selected={activeTab === tab ? "true" : "false"}
                   onClick={() => onTabChange(tab)}
                   onKeyDown={(event) => onTabKeyDown(event, tab)}
-                  tabIndex={activeTab === tab ? 0 : -1}
-                  data-testid={`lyrics-sidebar-tab-${tab}`}
+                  tabIndex={!collapsed && activeTab === tab ? 0 : -1}
+                  data-testid={!collapsed ? `lyrics-sidebar-tab-${tab}` : undefined}
                 >
                   {tabIcon(tab, "size-3.5")}
                   <span className="truncate">{tabLabel(copy, tab)}</span>
@@ -274,23 +312,22 @@ export function LyricsSidebar(props: LyricsSidebarProps) {
               ) : null}
             </div>
           ) : null}
-          </>
-        )}
 
-        <div
-          className={cn("min-h-0 flex-1 overflow-hidden", collapsed && "hidden")}
-          data-testid="lyrics-sidebar-panels"
-        >
-          <SidebarPanel tab="cleanup" activeTab={activeTab}>
-            <CleanupPanel {...props} />
-          </SidebarPanel>
-          <SidebarPanel tab="translation" activeTab={activeTab}>
-            <TranslationPanel
-              {...props}
-              aiIntentRef={(node) => { intentTargets.current.ai = node; }}
-            />
-          </SidebarPanel>
-        </div>
+          <div
+            className="min-h-0 flex-1 overflow-hidden"
+            data-testid="lyrics-sidebar-panels"
+          >
+            <SidebarPanel tab="cleanup" activeTab={activeTab}>
+              <CleanupPanel {...props} />
+            </SidebarPanel>
+            <SidebarPanel tab="translation" activeTab={activeTab}>
+              <TranslationPanel
+                {...props}
+                aiIntentRef={(node) => { intentTargets.current.ai = node; }}
+              />
+            </SidebarPanel>
+          </div>
+        </motion.div>
       </div>
     </aside>
   );
@@ -753,7 +790,7 @@ function SidebarIconButton({
   label: string;
   icon: ReactNode;
   onClick: () => void;
-  testId: string;
+  testId?: string;
   active?: boolean;
   badge?: number;
   buttonRef?: Ref<HTMLButtonElement>;
