@@ -2318,6 +2318,7 @@ async function assertLyricsWorkspaceSplitInteractions() {
         && getComputedStyle(activeLayer).visibility === "visible"
         && getComputedStyle(inactiveLayer).visibility === "hidden";
     }, collapsed, { timeout: 5_000 });
+    await waitForLayoutStable(page.getByTestId("lyrics-sidebar"), 10_000);
   }
 
   await setWindowSize(1280, 900);
