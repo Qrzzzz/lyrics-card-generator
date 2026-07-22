@@ -42,6 +42,9 @@ assert.match(createSection, /gh release create[^\r\n]+--draft\b/, "release creat
 assert.match(createSection, /--verify-tag\b/, "release creation verifies the tag");
 assert.match(createSection, /gh api --method DELETE[^\r\n]+\$\(\$_\.id\)/, "reruns remove only stale matching drafts");
 assert.match(createSection, /RELEASE_ID=/, "the exact draft release id is persisted");
+assert.match(createSection, /for \(\$attempt = 1; \$attempt -le 10; \$attempt\+\+\)/, "draft discovery uses a finite retry loop");
+assert.match(createSection, /Start-Sleep -Seconds 2/, "draft discovery tolerates GitHub API propagation delay");
+assert.match(createSection, /\$null -eq \$draft/, "draft discovery fails closed after bounded retries");
 assert.match(verifySection, /verify-github-release\.ps1/, "draft verification uses the shared exact-release verifier");
 assert.match(verifySection, /ExpectedState draft/, "draft verification rejects an unexpectedly published release");
 assert.match(

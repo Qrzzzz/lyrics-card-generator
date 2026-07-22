@@ -210,10 +210,26 @@ jobs:
           if ($env:RELEASE_TAG -like '*-rc.*') { $flags += '--prerelease' }
           gh release create $env:RELEASE_TAG release/*.exe release/SHA256SUMS release/*.spdx.json --draft --verify-tag --title "Lyrics Card Generator $env:RELEASE_TAG" --notes-file "docs/releases/v$env:PACKAGE_VERSION.zh-CN.md" @flags
 
-          $releases = @(gh api "repos/$env:GITHUB_REPOSITORY/releases?per_page=100" | ConvertFrom-Json)
-          $drafts = @($releases | Where-Object { $_.tag_name -eq $env:RELEASE_TAG -and $_.draft })
-          if ($drafts.Count -ne 1) { throw "Expected exactly one draft release for $env:RELEASE_TAG, found $($drafts.Count)." }
-          Add-Content -LiteralPath $env:GITHUB_ENV -Value "RELEASE_ID=$($drafts[0].id)" -Encoding utf8
+          $draft = $null
+          for ($attempt = 1; $attempt -le 10; $attempt++) {
+            $releases = @(gh api "repos/$env:GITHUB_REPOSITORY/releases?per_page=100" | ConvertFrom-Json)
+            $matching = @($releases | Where-Object { $_.tag_name -eq $env:RELEASE_TAG })
+            if ($matching.Count -gt 1) {
+              throw "Found multiple GitHub releases for $env:RELEASE_TAG after draft creation."
+            }
+            if ($matching.Count -eq 1 -and -not $matching[0].draft) {
+              throw "Release $env:RELEASE_TAG became published before draft verification."
+            }
+            if ($matching.Count -eq 1) {
+              $draft = $matching[0]
+              break
+            }
+            if ($attempt -lt 10) { Start-Sleep -Seconds 2 }
+          }
+          if ($null -eq $draft) {
+            throw "Draft release for $env:RELEASE_TAG was not visible after 10 bounded attempts."
+          }
+          Add-Content -LiteralPath $env:GITHUB_ENV -Value "RELEASE_ID=$($draft.id)" -Encoding utf8
 
       - name: Re-download and verify exact draft release
         shell: pwsh
