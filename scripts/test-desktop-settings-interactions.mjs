@@ -2368,6 +2368,11 @@ async function assertLyricsWorkspaceSplitInteractions() {
   await page.getByTestId("ai-translate-panel").waitFor({ state: "visible" });
   assert.equal(await page.getByTestId("lyrics-command-sidebar-toggle").getAttribute("aria-pressed"), "true", "AI command expands the sidebar");
   assert.equal(await page.getByTestId("lyrics-sidebar").getAttribute("data-active-tab"), "translation", "AI command selects the Translation tab");
+  await page.waitForFunction(
+    () => document.activeElement?.getAttribute("data-testid") === "lyrics-ai-entry",
+    undefined,
+    { timeout: 5_000 }
+  );
   assert.equal(
     await page.getByTestId("lyrics-ai-entry").evaluate((node) => document.activeElement === node),
     true,
