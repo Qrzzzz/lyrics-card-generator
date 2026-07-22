@@ -103,6 +103,7 @@ export function LyricsSidebar(props: LyricsSidebarProps) {
   const reduceMotion = useAppReducedMotion();
   const intentTargets = useRef<Partial<Record<LyricsCommandIntent, HTMLElement | null>>>({});
   const closeDrawerButtonRef = useRef<HTMLButtonElement | null>(null);
+  const pendingCollapsedTabFocusRef = useRef<LyricsSidebarTab | null>(null);
   const drawerOpenRef = useRef(false);
   const sidebarContentTransition = reduceMotion
     ? reducedMotionTransition
@@ -148,11 +149,19 @@ export function LyricsSidebar(props: LyricsSidebarProps) {
     return () => window.cancelAnimationFrame(frame);
   }, [focusIntent, mobileDrawer, open]);
 
-  function openCollapsedTab(tab: LyricsSidebarTab) {
-    onOpenTab(tab);
-    window.requestAnimationFrame(() => {
-      document.getElementById(`lyrics-sidebar-tab-${tab}`)?.focus({ preventScroll: true });
+  useEffect(() => {
+    const pendingTab = pendingCollapsedTabFocusRef.current;
+    if (!open || collapsed || !pendingTab) return;
+    const frame = window.requestAnimationFrame(() => {
+      document.getElementById(`lyrics-sidebar-tab-${pendingTab}`)?.focus({ preventScroll: true });
+      pendingCollapsedTabFocusRef.current = null;
     });
+    return () => window.cancelAnimationFrame(frame);
+  }, [activeTab, collapsed, open]);
+
+  function openCollapsedTab(tab: LyricsSidebarTab) {
+    pendingCollapsedTabFocusRef.current = tab;
+    onOpenTab(tab);
   }
 
   function onDrawerKeyDown(event: KeyboardEvent<HTMLElement>) {
