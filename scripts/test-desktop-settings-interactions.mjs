@@ -2717,6 +2717,8 @@ async function assertPreviewFits(width, height, scrolled) {
 
 async function assertExampleImportRemeasuresPreview() {
   await setWindowSize(1440, 900);
+  await waitForLayoutStable(page.getByTestId("preview-workbench-track"), 10_000);
+  await waitForLayoutStable(page.getByTestId("lyric-card-preview-shell"), 10_000);
   await page.waitForFunction(() => {
     const shell = document.querySelector('[data-testid="lyric-card-preview-shell"]');
     const card = shell?.querySelector('[data-export-card="true"]');
@@ -2767,6 +2769,9 @@ async function assertExampleImportRemeasuresPreview() {
   await page.getByTestId("load-example-opalite").click();
   acceptDocumentReplacementDialogs = false;
 
+  await waitForLayoutStable(page.getByTestId("editor-surface"), 10_000);
+  await waitForLayoutStable(page.getByTestId("preview-workbench-track"), 10_000);
+  await waitForLayoutStable(page.getByTestId("lyric-card-preview-shell"), 10_000);
   await page.waitForFunction(() => {
     const surface = document.querySelector('[data-testid="editor-surface"]');
     const shell = document.querySelector('[data-testid="lyric-card-preview-shell"]');
