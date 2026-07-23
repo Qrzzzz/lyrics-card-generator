@@ -2725,6 +2725,35 @@ async function assertLyricsWorkspaceNarrowBehavior(originalLyrics, translationLy
       undefined,
       { timeout: 5_000 }
     );
+    const exitFocusTrap = await page.evaluate(() => {
+      const exitingPage = document.querySelector('[data-testid="lyrics-translation-ai-page"][inert]');
+      const lastHomeControl = document.querySelector('[data-testid="lyrics-swap-preview"]');
+      if (!(exitingPage instanceof HTMLElement) || !(lastHomeControl instanceof HTMLElement)) {
+        return null;
+      }
+
+      lastHomeControl.focus({ preventScroll: true });
+      const event = new KeyboardEvent("keydown", {
+        key: "Tab",
+        bubbles: true,
+        cancelable: true
+      });
+      lastHomeControl.dispatchEvent(event);
+      return {
+        defaultPrevented: event.defaultPrevented,
+        activeTestId: document.activeElement?.getAttribute("data-testid"),
+        exitingPageInert: exitingPage.hasAttribute("inert")
+      };
+    });
+    assert.deepEqual(
+      exitFocusTrap,
+      {
+        defaultPrevented: true,
+        activeTestId: "lyrics-sidebar-tab-translation",
+        exitingPageInert: true
+      },
+      "the narrow focus trap ignores inert exit controls and wraps to the active Translation tab"
+    );
     await page.waitForTimeout(400);
     const focusAfterAiEscape = await page.evaluate(() => ({
       testId: document.activeElement?.getAttribute("data-testid"),

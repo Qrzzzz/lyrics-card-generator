@@ -157,7 +157,11 @@ export function LyricsSidebar(props: LyricsSidebarProps) {
 
     const focusable = [...event.currentTarget.querySelectorAll<HTMLElement>(
       'button:not(:disabled), input:not(:disabled), textarea:not(:disabled), select:not(:disabled), [href], [tabindex]:not([tabindex="-1"])'
-    )].filter((node) => !node.closest("[hidden]") && node.getClientRects().length > 0);
+    )].filter((node) => (
+      node.tabIndex >= 0 &&
+      !node.closest("[hidden], [inert]") &&
+      node.getClientRects().length > 0
+    ));
     if (focusable.length === 0) {
       event.preventDefault();
       return;
