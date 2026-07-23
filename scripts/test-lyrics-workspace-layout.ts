@@ -36,7 +36,9 @@ const commandBarSource = readFileSync(resolve("components/editor/LyricsCommandBa
 const reviewMenuSource = readFileSync(resolve("components/editor/LyricsReviewMenu.tsx"), "utf8");
 const fetchPanelSource = readFileSync(resolve("components/editor/LyricsFetchPanel.tsx"), "utf8");
 const sidebarSource = readFileSync(resolve("components/editor/LyricsSidebar.tsx"), "utf8");
+const aiTranslatePanelSource = readFileSync(resolve("components/lyrics/AiTranslatePanel.tsx"), "utf8");
 const copySource = readFileSync(resolve("components/editor/lyrics-workspace-copy.ts"), "utf8");
+const motionTokensSource = readFileSync(resolve("lib/motion/tokens.ts"), "utf8");
 const workspaceSplitHookSource = readFileSync(resolve("components/editor/hooks/useLyricsWorkspaceSplit.ts"), "utf8");
 const stepperSource = readFileSync(resolve("components/editor/SettingsStepper.tsx"), "utf8");
 const globalsSource = readFileSync(resolve("app/globals.css"), "utf8");
@@ -90,7 +92,6 @@ assert.ok(
     !sidebarSource.includes("data-collapsed") &&
     !sidebarSource.includes("lyrics-sidebar-collapsed-layer") &&
     !sidebarSource.includes("lyrics-sidebar-expanded-layer") &&
-    !sidebarSource.includes("framer-motion") &&
     !sidebarSource.includes('data-testid="lyrics-sidebar-budget"') &&
     !sidebarSource.includes("<CollapsiblePanelSection") &&
     sidebarSource.includes('data-testid="lyrics-cleanup-context"') &&
@@ -110,6 +111,45 @@ assert.ok(
     sidebarSource.includes('testId="lyrics-translation-section-format"') &&
     sidebarSource.includes('testId="lyrics-translation-section-swap"'),
   "the translation panel leads with enablement and AI while grouping the remaining column tools"
+);
+assert.ok(
+  sidebarSource.includes('data-testid="lyrics-translation-page-viewport"') &&
+    sidebarSource.includes('data-testid="lyrics-translation-home-page"') &&
+    sidebarSource.includes('testId="lyrics-translation-ai-page"') &&
+    sidebarSource.includes('data-translation-page={aiPageOpen ? "ai" : "home"}') &&
+    sidebarSource.includes('mode="sync"') &&
+    sidebarSource.includes("custom={direction}") &&
+    sidebarSource.includes('x: reduceMotion || !aiPageOpen ? "0%" : "-100%"') &&
+    sidebarSource.includes('data-page-active={aiPageOpen ? "false" : "true"}') &&
+    sidebarSource.includes('pendingFocusRef.current || focusIntent !== "ai"') &&
+    !sidebarSource.includes('data-testid="lyrics-ai-panel-boundary"'),
+  "translation owns one synchronized page viewport with a persistent home surface and post-animation focus"
+);
+assert.ok(
+  sidebarSource.includes('className="absolute inset-0 min-h-0 overflow-x-hidden overflow-y-auto overscroll-contain') &&
+    sidebarSource.includes("inert={isPresent ? undefined : true}") &&
+    sidebarSource.includes("aria-hidden={isPresent ? undefined : true}") &&
+    sidebarSource.includes('style={{ pointerEvents: isPresent ? "auto" : "none" }}'),
+  "each translation page scrolls independently while the exiting page immediately leaves the interaction tree"
+);
+assert.ok(
+  sidebarSource.includes("useAppReducedMotion") &&
+    sidebarSource.includes("sidebarPageVariants(reducedMotion)") &&
+    sidebarSource.includes("reducedMotion ? reducedMotionTransition : sidebarPageTransition") &&
+    motionTokensSource.includes("function sidebarPageVariants(reducedMotion = false)") &&
+    motionTokensSource.includes('direction > 0 ? "100%" : "-100%"') &&
+    motionTokensSource.includes('direction > 0 ? "-100%" : "100%"'),
+  "translation page motion uses the shared directional token and removes horizontal travel under reduced motion"
+);
+assert.ok(
+  aiTranslatePanelSource.includes('presentation = "inline"') &&
+    aiTranslatePanelSource.includes('data-presentation={presentation}') &&
+    aiTranslatePanelSource.includes('data-testid="lyrics-ai-page-back"') &&
+    aiTranslatePanelSource.includes("if (loading) onCancel();") &&
+    aiTranslatePanelSource.includes("onClose();") &&
+    aiTranslatePanelSource.includes("return sidebarPage ? panel : <MotionPanel") &&
+    editorStepsSource.includes('presentation="sidebar-page"'),
+  "AI translation keeps its inline presentation available while the lyrics workspace disables the nested entrance and card shell"
 );
 assert.ok(
   commandBarSource.includes('role="toolbar"') &&
@@ -172,8 +212,10 @@ assert.ok(
     globalsSource.includes("position: absolute") &&
     workspaceSource.includes('data-testid="lyrics-sidebar-backdrop"') &&
     sidebarSource.includes('role={mobileDrawer ? "dialog" : undefined}') &&
-    sidebarSource.includes('event.key === "Escape"'),
-  "narrow layouts use a keyboard-dismissible modal overlay drawer instead of shrinking the editor"
+    sidebarSource.includes('event.key === "Escape"') &&
+    sidebarSource.includes("if (aiPanel)") &&
+    sidebarSource.includes("onCloseAITranslate()"),
+  "narrow layouts dismiss the AI child page before closing the modal overlay drawer"
 );
 for (const locale of ['zh:', '"zh-TW":', 'en:', 'fr:', 'ja:', 'es:']) {
   assert.ok(copySource.includes(locale), `workspace copy includes ${locale}`);
@@ -193,4 +235,4 @@ assert.ok(
   "the step-two split stays inside LyricsWorkspace and leaves the shared Stepper structure unchanged"
 );
 
-console.log(JSON.stringify({ ok: true, lyricsWorkspaceLayoutTests: 47 }, null, 2));
+console.log(JSON.stringify({ ok: true, lyricsWorkspaceLayoutTests: 55 }, null, 2));

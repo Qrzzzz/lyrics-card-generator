@@ -40,6 +40,22 @@ async function selectSettingsSection(section) {
   await page.locator(`[data-settings-panel="${section}"]:not([hidden])`).waitFor({ state: "visible" });
 }
 
+async function setAppReducedMotion(enabled) {
+  await page.locator('[data-testid="editor-surface"] [data-testid="settings-button"]').click();
+  await waitForVisible("settings-surface");
+  await selectSettingsSection("general");
+  const toggle = page.getByTestId("reduce-motion-toggle");
+  if (await toggle.getAttribute("aria-checked") !== String(enabled)) {
+    await toggle.click();
+  }
+  await page.waitForFunction(
+    (expected) => document.body.getAttribute("data-reduce-motion") === String(expected),
+    enabled
+  );
+  await page.getByTestId("settings-close-button").click();
+  await page.locator('[data-testid="settings-surface"][data-surface-state="closed"]').waitFor({ state: "attached" });
+}
+
 async function setWindowSize(width, height) {
   await electronApp.evaluate(({ BrowserWindow }, size) => {
     const window = BrowserWindow.getAllWindows()[0];
@@ -1850,6 +1866,7 @@ async function assertLyricsWorkspace(width, height) {
     const documentColumn = document.querySelector('#lyrics-workspace-editor');
     const tools = document.querySelector('[data-testid="lyrics-sidebar"]');
     const toolsPanel = tools?.querySelector('[role="tabpanel"]:not([hidden])');
+    const translationPage = toolsPanel?.querySelector('[data-testid="lyrics-translation-home-page"]');
     const firstToolsSection = toolsPanel?.querySelector('.lyrics-sidebar-section');
     const commandBar = document.querySelector('[data-testid="lyrics-command-bar"]');
     const statusBar = document.querySelector('[data-testid="lyrics-status-bar"]');
@@ -1913,6 +1930,12 @@ async function assertLyricsWorkspace(width, height) {
         scrollHeight: toolsPanel.scrollHeight,
         overflowY: getComputedStyle(toolsPanel).overflowY,
         firstSectionPosition: firstToolsSection ? getComputedStyle(firstToolsSection).position : null
+      } : null,
+      translationPage: translationPage ? {
+        ...rect(translationPage),
+        clientHeight: translationPage.clientHeight,
+        scrollHeight: translationPage.scrollHeight,
+        overflowY: getComputedStyle(translationPage).overflowY
       } : null,
       toolsFrame: frame(tools),
       toolsBackground: background(tools),
@@ -2034,7 +2057,16 @@ async function assertLyricsWorkspace(width, height) {
     result.tools.bottom < result.actions.y,
     `${width}x${height} keeps the sidebar above the step navigation: ${JSON.stringify({ tools: result.tools, actions: result.actions })}`
   );
-  assert.equal(result.toolsPanel.overflowY, "auto", `${width}x${height} gives the sidebar one bounded scroller`);
+  if (result.tools.activeTab === "translation") {
+    assert.equal(result.toolsPanel.overflowY, "hidden", `${width}x${height} clips the Translation page viewport`);
+    assert.equal(result.translationPage?.overflowY, "auto", `${width}x${height} gives Translation home its own bounded scroller`);
+    assert.ok(
+      result.translationPage.y >= result.toolsPanel.y - 1 && result.translationPage.bottom <= result.toolsPanel.bottom + 1,
+      `${width}x${height} contains Translation home inside the page viewport`
+    );
+  } else {
+    assert.equal(result.toolsPanel.overflowY, "auto", `${width}x${height} gives the cleanup sidebar one bounded scroller`);
+  }
   assert.ok(
     result.toolsPanel.y >= result.tools.y - 1 && result.toolsPanel.bottom <= result.tools.bottom + 1,
     `${width}x${height} clips sidebar content inside the tool column: ${JSON.stringify({ tools: result.tools, panel: result.toolsPanel })}`
@@ -2331,17 +2363,82 @@ async function assertLyricsWorkspaceSplitInteractions() {
 
   const persistedAiSettings = await page.evaluate(() => window.lyricsCardDesktop?.loadAISettings());
   assert.equal(persistedAiSettings?.hasApiKey, true, `AI regression has configured settings: ${JSON.stringify(persistedAiSettings)}`);
-  await page.getByTestId("lyrics-command-ai").click();
-  const aiOutcome = await page.waitForFunction(() => {
-    const panel = document.querySelector('[data-testid="lyrics-ai-panel-boundary"]');
-    if (panel && !panel.hasAttribute("hidden")) return "panel";
-    if (document.querySelector('[data-testid="settings-surface"][data-surface-state="open"]')) return "settings";
-    return false;
+  const fixedBeforeAI = await page.evaluate(() => {
+    const editor = document.querySelector("#lyrics-workspace-editor")?.getBoundingClientRect();
+    const sidebar = document.querySelector('[data-testid="lyrics-sidebar"]')?.getBoundingClientRect();
+    const tabs = document.querySelector('[data-testid="lyrics-sidebar-tab-translation"]')?.getBoundingClientRect();
+    return {
+      editor: editor ? { left: editor.left, width: editor.width } : null,
+      sidebar: sidebar ? { left: sidebar.left, width: sidebar.width } : null,
+      tabs: tabs ? { left: tabs.left, top: tabs.top, width: tabs.width } : null
+    };
   });
-  assert.equal(await aiOutcome.jsonValue(), "panel", "the configured AI command opens the inline panel");
-  await page.getByTestId("lyrics-ai-panel-boundary").waitFor({ state: "visible" });
+  await page.getByTestId("lyrics-command-ai").click();
+  const concurrentPages = await page.waitForFunction(() => {
+    const viewport = document.querySelector('[data-testid="lyrics-translation-page-viewport"]');
+    const home = document.querySelector('[data-testid="lyrics-translation-home-page"]');
+    const ai = document.querySelector('[data-testid="lyrics-translation-ai-page"]');
+    if (viewport?.getAttribute("data-translation-page") !== "ai" || !home || !ai) return false;
+    return {
+      homeAriaHidden: home.getAttribute("aria-hidden"),
+      homeInert: home.hasAttribute("inert"),
+      homePointerEvents: getComputedStyle(home).pointerEvents,
+      aiAriaHidden: ai.getAttribute("aria-hidden")
+    };
+  });
+  assert.deepEqual(
+    await concurrentPages.jsonValue(),
+    {
+      homeAriaHidden: "true",
+      homeInert: true,
+      homePointerEvents: "none",
+      aiAriaHidden: null
+    },
+    "the home and AI pages move concurrently while the exiting home immediately leaves the interaction tree"
+  );
+  await page.getByTestId("lyrics-translation-ai-page").waitFor({ state: "visible" });
   await page.getByTestId("ai-translate-panel").waitFor({ state: "visible" });
+  await page.waitForFunction(
+    () => document.activeElement?.getAttribute("data-testid") === "lyrics-ai-page-back",
+    undefined,
+    { timeout: 5_000 }
+  );
   assert.equal(await page.getByTestId("lyrics-sidebar").getAttribute("data-active-tab"), "translation", "AI command selects the Translation tab");
+  assert.equal(await page.getByTestId("lyrics-ai-panel-boundary").count(), 0, "AI translation is no longer an inline child of the home page");
+  assert.equal(await page.getByTestId("ai-translate-panel").getAttribute("data-presentation"), "sidebar-page", "AI uses the dedicated sidebar-page presentation");
+  assert.equal(
+    await page.getByTestId("lyrics-ai-page-back").evaluate((node) => document.activeElement === node),
+    true,
+    "the top command transfers focus to the AI page back control after the slide completes"
+  );
+  const fixedDuringAI = await page.evaluate(() => {
+    const editor = document.querySelector("#lyrics-workspace-editor")?.getBoundingClientRect();
+    const sidebar = document.querySelector('[data-testid="lyrics-sidebar"]')?.getBoundingClientRect();
+    const tabs = document.querySelector('[data-testid="lyrics-sidebar-tab-translation"]')?.getBoundingClientRect();
+    return {
+      editor: editor ? { left: editor.left, width: editor.width } : null,
+      sidebar: sidebar ? { left: sidebar.left, width: sidebar.width } : null,
+      tabs: tabs ? { left: tabs.left, top: tabs.top, width: tabs.width } : null
+    };
+  });
+  for (const area of ["editor", "sidebar", "tabs"]) {
+    assert.ok(fixedBeforeAI[area] && fixedDuringAI[area], `${area} geometry is measurable`);
+    for (const key of Object.keys(fixedBeforeAI[area])) {
+      assert.ok(
+        Math.abs(fixedBeforeAI[area][key] - fixedDuringAI[area][key]) <= 1,
+        `${area}.${key} stays fixed while only the Translation content page slides`
+      );
+    }
+  }
+
+  await page.getByTestId("lyrics-ai-page-back").click();
+  await page.waitForFunction(
+    () => document.querySelector('[data-testid="lyrics-translation-page-viewport"]')?.getAttribute("data-translation-page") === "home"
+      && document.activeElement?.getAttribute("data-testid") === "ai-translate-button",
+    undefined,
+    { timeout: 5_000 }
+  );
+  await page.getByTestId("lyrics-translation-home-page").waitFor({ state: "visible" });
   const translationHierarchy = await page.evaluate(() => {
     const primary = document.querySelector('[data-testid="lyrics-translation-primary"]');
     const tools = document.querySelector('[data-testid="lyrics-translation-column-tools"]');
@@ -2368,18 +2465,88 @@ async function assertLyricsWorkspaceSplitInteractions() {
     },
     `translation first view prioritizes enablement and AI before one column-tools group: ${JSON.stringify(translationHierarchy)}`
   );
+  assert.equal(
+    await page.getByTestId("ai-translate-button").evaluate((node) => document.activeElement === node),
+    true,
+    "returning from the AI page restores focus to the home-page AI trigger"
+  );
+
+  await setAppReducedMotion(true);
   await page.waitForFunction(
-    () => document.activeElement?.getAttribute("data-testid") === "lyrics-ai-entry",
+    () => document.querySelector('[data-testid="lyrics-translation-page-viewport"]')?.getAttribute("data-reduced-motion") === "true"
+  );
+  await page.getByTestId("ai-translate-button").click();
+  await page.waitForFunction(
+    () => document.querySelector('[data-testid="lyrics-translation-page-viewport"]')?.getAttribute("data-translation-page") === "ai"
+      && document.activeElement?.getAttribute("data-testid") === "lyrics-ai-page-back",
     undefined,
     { timeout: 5_000 }
   );
-  assert.equal(
-    await page.getByTestId("lyrics-ai-entry").evaluate((node) => document.activeElement === node),
-    true,
-    "AI command moves focus to the stable Translation panel entry"
+  const reducedMotionAIPage = await page.evaluate(() => {
+    const viewport = document.querySelector('[data-testid="lyrics-translation-page-viewport"]');
+    const aiPage = document.querySelector('[data-testid="lyrics-translation-ai-page"]');
+    const viewportRect = viewport?.getBoundingClientRect();
+    const pageRect = aiPage?.getBoundingClientRect();
+    return {
+      reducedMotion: viewport?.getAttribute("data-reduced-motion"),
+      horizontalOffset: viewportRect && pageRect ? pageRect.left - viewportRect.left : null,
+      transform: aiPage ? getComputedStyle(aiPage).transform : null
+    };
+  });
+  assert.equal(reducedMotionAIPage.reducedMotion, "true", "the Translation viewport follows the shared reduced-motion preference");
+  assert.ok(
+    reducedMotionAIPage.horizontalOffset !== null && Math.abs(reducedMotionAIPage.horizontalOffset) <= 1,
+    `reduced motion enters the AI page without horizontal travel: ${JSON.stringify(reducedMotionAIPage)}`
   );
-  await page.getByTestId("ai-translate-panel").getByRole("button").first().click();
-  await page.getByTestId("lyrics-ai-panel-boundary").waitFor({ state: "hidden" });
+  await page.getByTestId("lyrics-ai-page-back").click();
+  await page.waitForFunction(
+    () => document.querySelector('[data-testid="lyrics-translation-page-viewport"]')?.getAttribute("data-translation-page") === "home"
+      && document.activeElement?.getAttribute("data-testid") === "ai-translate-button",
+    undefined,
+    { timeout: 5_000 }
+  );
+  await setAppReducedMotion(false);
+  await page.waitForFunction(
+    () => document.querySelector('[data-testid="lyrics-translation-page-viewport"]')?.getAttribute("data-reduced-motion") === "false"
+  );
+  const homeOffsetAfterReducedMotion = await page.evaluate(() => {
+    const viewport = document.querySelector('[data-testid="lyrics-translation-page-viewport"]');
+    const home = document.querySelector('[data-testid="lyrics-translation-home-page"]');
+    const viewportRect = viewport?.getBoundingClientRect();
+    const homeRect = home?.getBoundingClientRect();
+    return viewportRect && homeRect ? homeRect.left - viewportRect.left : null;
+  });
+  assert.ok(
+    homeOffsetAfterReducedMotion !== null && Math.abs(homeOffsetAfterReducedMotion) <= 1,
+    `restoring regular motion keeps the active Translation home page anchored: ${homeOffsetAfterReducedMotion}`
+  );
+
+  await page.getByTestId("ai-translate-button").click();
+  await page.waitForFunction(
+    () => document.querySelector('[data-testid="lyrics-translation-page-viewport"]')?.getAttribute("data-translation-page") === "ai"
+      && document.activeElement?.getAttribute("data-testid") === "lyrics-ai-page-back",
+    undefined,
+    { timeout: 5_000 }
+  );
+  await page.locator('button[data-step-id="layout"]').click();
+  await page.locator('button[data-step-id="lyrics"]').click();
+  await page.waitForFunction(
+    () => document.querySelector('[data-testid="lyrics-translation-page-viewport"]')?.getAttribute("data-translation-page") === "home",
+    undefined,
+    { timeout: 5_000 }
+  );
+  assert.equal(await page.getByTestId("lyrics-translation-ai-page").count(), 0, "unmounting step two clears the AI child page before the workspace is reopened");
+  const homeOffsetAfterStepReopen = await page.evaluate(() => {
+    const viewport = document.querySelector('[data-testid="lyrics-translation-page-viewport"]');
+    const home = document.querySelector('[data-testid="lyrics-translation-home-page"]');
+    const viewportRect = viewport?.getBoundingClientRect();
+    const homeRect = home?.getBoundingClientRect();
+    return viewportRect && homeRect ? homeRect.left - viewportRect.left : null;
+  });
+  assert.ok(
+    homeOffsetAfterStepReopen !== null && Math.abs(homeOffsetAfterStepReopen) <= 1,
+    `reopening Step 2 anchors the Translation home page inside its viewport: ${homeOffsetAfterStepReopen}`
+  );
 
   await page.getByTestId("lyrics-swap-preview").click();
   await page.getByTestId("lyrics-swap-preview-result").waitFor({ state: "visible" });
@@ -2545,7 +2712,47 @@ async function assertLyricsWorkspaceNarrowBehavior(originalLyrics, translationLy
     );
     await page.getByTestId("lyrics-sidebar-tab-translation").click();
     await page.getByTestId("translation-toggle").waitFor({ state: "visible" });
-    await page.getByTestId("lyrics-sidebar-close-drawer").click();
+    await page.getByTestId("ai-translate-button").click();
+    await page.waitForFunction(
+      () => document.querySelector('[data-testid="lyrics-translation-page-viewport"]')?.getAttribute("data-translation-page") === "ai"
+        && document.activeElement?.getAttribute("data-testid") === "lyrics-ai-page-back",
+      undefined,
+      { timeout: 5_000 }
+    );
+    await page.keyboard.press("Escape");
+    await page.waitForFunction(
+      () => document.querySelector('[data-testid="lyrics-translation-page-viewport"]')?.getAttribute("data-translation-page") === "home",
+      undefined,
+      { timeout: 5_000 }
+    );
+    await page.waitForTimeout(400);
+    const focusAfterAiEscape = await page.evaluate(() => ({
+      testId: document.activeElement?.getAttribute("data-testid"),
+      tag: document.activeElement?.tagName,
+      drawerOpen: !document.querySelector('[data-testid="lyrics-sidebar"]')?.hasAttribute("hidden"),
+      homeActive: document.querySelector('[data-testid="lyrics-translation-home-page"]')?.getAttribute("data-page-active"),
+      reducedMotion: document.querySelector('[data-testid="lyrics-translation-page-viewport"]')?.getAttribute("data-reduced-motion"),
+      homeOffset: (() => {
+        const viewportRect = document.querySelector('[data-testid="lyrics-translation-page-viewport"]')?.getBoundingClientRect();
+        const homeRect = document.querySelector('[data-testid="lyrics-translation-home-page"]')?.getBoundingClientRect();
+        return viewportRect && homeRect ? homeRect.left - viewportRect.left : null;
+      })(),
+      homeTransform: (() => {
+        const home = document.querySelector('[data-testid="lyrics-translation-home-page"]');
+        return home ? getComputedStyle(home).transform : null;
+      })()
+    }));
+    assert.ok(
+      focusAfterAiEscape.homeOffset !== null && Math.abs(focusAfterAiEscape.homeOffset) <= 1,
+      `the first narrow Escape completes the Translation home entry before drawer dismissal: ${JSON.stringify(focusAfterAiEscape)}`
+    );
+    assert.equal(
+      focusAfterAiEscape.testId,
+      "ai-translate-button",
+      `the first narrow Escape restores focus after returning home: ${JSON.stringify(focusAfterAiEscape)}`
+    );
+    assert.equal(await page.getByTestId("lyrics-sidebar").isVisible(), true, "the first narrow Escape returns to Translation home without closing the drawer");
+    await page.keyboard.press("Escape");
     await page.getByTestId("lyrics-sidebar").waitFor({ state: "hidden" });
     await page.waitForFunction(() => document.activeElement?.getAttribute("data-testid") === "lyrics-command-sidebar-toggle");
     assert.equal(
@@ -3152,7 +3359,29 @@ try {
   }
   await assertLyricsWorkspaceSplitInteractions();
   await assertLyricsWorkspaceContentPressure(originalLyrics, translationLyrics, translationToggle);
+  const homeOffsetAfterContentPressure = await page.evaluate(() => {
+    const viewport = document.querySelector('[data-testid="lyrics-translation-page-viewport"]');
+    const home = document.querySelector('[data-testid="lyrics-translation-home-page"]');
+    const viewportRect = viewport?.getBoundingClientRect();
+    const homeRect = home?.getBoundingClientRect();
+    return viewportRect && homeRect ? homeRect.left - viewportRect.left : null;
+  });
+  assert.ok(
+    homeOffsetAfterContentPressure !== null && Math.abs(homeOffsetAfterContentPressure) <= 1,
+    `content-pressure resizing leaves the active Translation home page anchored: ${homeOffsetAfterContentPressure}`
+  );
   await assertLyricsWorkspaceNarrowBehavior(originalLyrics, translationLyrics);
+  const homeOffsetAfterNarrowDrawer = await page.evaluate(() => {
+    const viewport = document.querySelector('[data-testid="lyrics-translation-page-viewport"]');
+    const home = document.querySelector('[data-testid="lyrics-translation-home-page"]');
+    const viewportRect = viewport?.getBoundingClientRect();
+    const homeRect = home?.getBoundingClientRect();
+    return viewportRect && homeRect ? homeRect.left - viewportRect.left : null;
+  });
+  assert.ok(
+    homeOffsetAfterNarrowDrawer !== null && Math.abs(homeOffsetAfterNarrowDrawer) <= 1,
+    `closing the narrow drawer leaves the active Translation home page anchored: ${homeOffsetAfterNarrowDrawer}`
+  );
   await fillExact(originalLyrics, originalEighteen);
   await fillExact(translationLyrics, translationEighteen);
   if (runVisualDiagnostics) await assertTitlebarScrollPerformance();
@@ -3205,6 +3434,57 @@ try {
     if (scroll instanceof HTMLElement) scroll.scrollTop = Math.min(155.4286, scroll.scrollHeight - scroll.clientHeight);
   }, { start: translationSelectionStart, end: translationSelectionEnd });
   const beforeTranslationToggle = await getLyricsContext(translationLyrics);
+  const translationToggleHitTest = await page.evaluate(() => {
+    const toggle = document.querySelector('[data-testid="translation-toggle"]');
+    const editor = document.querySelector('#lyrics-workspace-editor');
+    const sidebar = document.querySelector('[data-testid="lyrics-sidebar"]');
+    const split = document.querySelector('[data-testid="lyrics-workspace-split"]');
+    const viewport = document.querySelector('[data-testid="lyrics-translation-page-viewport"]');
+    const home = document.querySelector('[data-testid="lyrics-translation-home-page"]');
+    const toRect = (node) => {
+      const rect = node?.getBoundingClientRect();
+      return rect
+        ? {
+            left: rect.left,
+            top: rect.top,
+            right: rect.right,
+            bottom: rect.bottom,
+            width: rect.width,
+            height: rect.height
+          }
+        : null;
+    };
+    const toggleRect = toggle?.getBoundingClientRect();
+    const hit = toggleRect
+      ? document.elementFromPoint(
+          toggleRect.left + toggleRect.width / 2,
+          toggleRect.top + toggleRect.height / 2
+        )
+      : null;
+
+    return {
+      toggleCount: document.querySelectorAll('[data-testid="translation-toggle"]').length,
+      toggle: toRect(toggle),
+      editor: toRect(editor),
+      sidebar: toRect(sidebar),
+      split: toRect(split),
+      viewport: toRect(viewport),
+      home: toRect(home),
+      hitTestId: hit?.getAttribute("data-testid"),
+      hitTag: hit?.tagName,
+      hitInsideToggle: Boolean(toggle && hit && toggle.contains(hit)),
+      sideBySide: split?.getAttribute("data-side-by-side"),
+      mobileSidebarOpen: split?.getAttribute("data-mobile-sidebar-open"),
+      translationPage: viewport?.getAttribute("data-translation-page"),
+      homeTransform: home ? getComputedStyle(home).transform : null,
+      homePointerEvents: home ? getComputedStyle(home).pointerEvents : null
+    };
+  });
+  assert.equal(
+    translationToggleHitTest.hitInsideToggle,
+    true,
+    `the restored desktop translation toggle remains above the editor hit target: ${JSON.stringify(translationToggleHitTest)}`
+  );
   await translationToggle.click();
   await translationLyrics.waitFor({ state: "detached" });
   await waitForLayoutStable(page.getByTestId("lyrics-workspace"));

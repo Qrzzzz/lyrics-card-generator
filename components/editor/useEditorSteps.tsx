@@ -265,6 +265,8 @@ export function useEditorSteps({
             onLyricsDocumentChange={handlers.onLyricsDocumentChange}
             onSplitAlternatingLyrics={handlers.onSplitAlternatingLyrics}
             onAITranslate={handlers.onOpenAiTranslate}
+            onCloseAITranslate={handlers.onCloseAiTranslate}
+            onCancelAITranslate={handlers.onCancelAiTranslate}
             isAITranslating={ai.isTranslating}
             aiTranslatePanel={ai.isOpen ? (
               <AiTranslatePanel
@@ -281,6 +283,7 @@ export function useEditorSteps({
                 onClose={handlers.onCloseAiTranslate}
                 onCancel={handlers.onCancelAiTranslate}
                 onConfirm={handlers.onConfirmAiTranslate}
+                presentation="sidebar-page"
               />
             ) : null}
             lyricsFetchPanel={(

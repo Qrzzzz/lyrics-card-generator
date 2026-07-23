@@ -31,6 +31,8 @@ export function LyricInput({
   onLyricsDocumentChange,
   onSplitAlternatingLyrics,
   onAITranslate,
+  onCloseAITranslate,
+  onCancelAITranslate,
   isAITranslating,
   aiTranslatePanel,
   lyricsFetchPanel,
@@ -54,6 +56,8 @@ export function LyricInput({
   onLyricsDocumentChange?: (snapshot: LyricsDocumentSnapshot) => void;
   onSplitAlternatingLyrics: (lyrics: string, translationText: string) => void;
   onAITranslate: () => void;
+  onCloseAITranslate?: () => void;
+  onCancelAITranslate?: () => void;
   isAITranslating: boolean;
   aiTranslatePanel?: ReactNode;
   lyricsFetchPanel?: ReactNode;
@@ -71,7 +75,9 @@ export function LyricInput({
     lineStatus &&
     sidebarTab &&
     onSidebarTabChange &&
-    onLyricsDocumentChange
+    onLyricsDocumentChange &&
+    onCloseAITranslate &&
+    onCancelAITranslate
   ) {
     return (
       <LyricsWorkspace
@@ -86,6 +92,8 @@ export function LyricInput({
         onTranslationTextChange={onTranslationTextChange}
         onLyricsDocumentChange={onLyricsDocumentChange}
         onAITranslate={onAITranslate}
+        onCloseAITranslate={onCloseAITranslate}
+        onCancelAITranslate={onCancelAITranslate}
         isAITranslating={isAITranslating}
         aiPanel={aiTranslatePanel}
         lyricsFetchPanel={lyricsFetchPanel}

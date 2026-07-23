@@ -1,6 +1,6 @@
 "use client";
 
-import { Brain, ChevronDown, CircleDot, FolderPen, Loader2, Sparkles, X } from "lucide-react";
+import { ArrowLeft, Brain, ChevronDown, CircleDot, FolderPen, Loader2, Sparkles, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { MotionPanel } from "@/components/motion/MotionPanel";
 import { MotionPresence } from "@/components/motion/MotionPresence";
@@ -10,6 +10,8 @@ import type { AIPromptLibrary, AITranslationPhase } from "@/lib/ai/types";
 import { getAIPromptUiCopy } from "@/lib/ai/prompt-ui-copy";
 import { getAIUiCopy } from "@/lib/ai/ui-copy";
 import type { Locale } from "@/lib/types";
+
+export type AiTranslatePanelPresentation = "inline" | "sidebar-page";
 
 export function AiTranslatePanel({
   locale,
@@ -24,7 +26,8 @@ export function AiTranslatePanel({
   error,
   onClose,
   onCancel,
-  onConfirm
+  onConfirm,
+  presentation = "inline"
 }: {
   locale: Locale;
   initialStyle: string;
@@ -39,6 +42,7 @@ export function AiTranslatePanel({
   onClose: () => void;
   onCancel: () => void;
   onConfirm: (presetId: string, reasoning: boolean) => void;
+  presentation?: AiTranslatePanelPresentation;
 }) {
   const copy = getAIUiCopy(locale);
   const promptCopy = getAIPromptUiCopy(locale);
@@ -88,15 +92,41 @@ export function AiTranslatePanel({
     disabled: loading,
     dataStyle: option.id
   }));
+  const sidebarPage = presentation === "sidebar-page";
 
-  return (
-    <MotionPanel className="mt-3">
-      <section
-        aria-labelledby="ai-translate-title"
-        data-testid="ai-translate-panel"
-        className="ai-inline-panel overflow-hidden rounded-xl border border-[rgb(var(--panel-border))] p-4 sm:p-5"
-        style={{ ["--ai-accent" as string]: themeColor }}
-      >
+  function navigateBack() {
+    if (loading) onCancel();
+    onClose();
+  }
+
+  const panel = (
+    <section
+      aria-labelledby="ai-translate-title"
+      data-testid="ai-translate-panel"
+      data-presentation={presentation}
+      className={
+        sidebarPage
+          ? "min-h-full overflow-hidden px-0.5 py-1"
+          : "ai-inline-panel overflow-hidden rounded-xl border border-[rgb(var(--panel-border))] p-4 sm:p-5"
+      }
+      style={{ ["--ai-accent" as string]: themeColor }}
+    >
+      {sidebarPage ? (
+        <div className="mb-4">
+          <button
+            type="button"
+            onClick={navigateBack}
+            aria-label={loading ? copy.stopAndBack : copy.back}
+            title={loading ? copy.stopAndBack : copy.back}
+            className="control-focus app-text-primary inline-flex min-h-9 max-w-full items-center gap-2 rounded-lg px-2 text-left text-sm font-semibold transition hover:bg-white/5"
+            data-testid="lyrics-ai-page-back"
+          >
+            <ArrowLeft className="size-4 shrink-0" aria-hidden="true" />
+            <span className="truncate" id="ai-translate-title">{copy.aiTranslateTitle}</span>
+          </button>
+          <p className="app-text-muted mt-2 px-2 text-xs leading-relaxed">{copy.aiTranslateDescription}</p>
+        </div>
+      ) : (
         <div className="mb-4 flex items-start justify-between gap-4">
           <div>
             <div className="mb-1.5 flex items-center gap-2">
@@ -114,16 +144,17 @@ export function AiTranslatePanel({
             className="shrink-0"
           />
         </div>
+      )}
 
-        <OptionCardGroup
-          value={style}
-          onChange={setStyle}
-          options={styleOptions}
-          aria-label={copy.aiTranslateTitle}
-          className="sm:grid-cols-2"
-        />
+      <OptionCardGroup
+        value={style}
+        onChange={setStyle}
+        options={styleOptions}
+        aria-label={copy.aiTranslateTitle}
+        className="sm:grid-cols-2"
+      />
 
-        <div className="mt-3 overflow-hidden rounded-xl border border-[rgb(var(--panel-border))] bg-[rgb(var(--input-bg))]">
+      <div className="mt-3 overflow-hidden rounded-xl border border-[rgb(var(--panel-border))] bg-[rgb(var(--input-bg))]">
           <button
             type="button"
             className="app-text-primary flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[rgb(var(--focus-ring))]"
@@ -155,18 +186,18 @@ export function AiTranslatePanel({
               )}
             </div>
           ) : null}
-        </div>
+      </div>
 
-        <ToggleRow
-          label={<span className="flex items-center gap-2"><Brain className="h-4 w-4 shrink-0" />{copy.reasoning}</span>}
-          description={copy.reasoningDescription}
-          checked={reasoning}
-          onChange={setReasoning}
-          disabled={loading}
-          className="mt-4"
-        />
+      <ToggleRow
+        label={<span className="flex items-center gap-2"><Brain className="h-4 w-4 shrink-0" />{copy.reasoning}</span>}
+        description={copy.reasoningDescription}
+        checked={reasoning}
+        onChange={setReasoning}
+        disabled={loading}
+        className="mt-4"
+      />
 
-        <MotionPresence>
+      <MotionPresence>
           {loading ? (
             <MotionPanel key="status" role="status" aria-live="polite" className="settings-panel-card mt-4 overflow-hidden p-4">
               <div className="flex items-center justify-between gap-4">
@@ -182,9 +213,9 @@ export function AiTranslatePanel({
               <p className="app-text-muted mt-3 text-xs leading-relaxed">{phaseTip}</p>
             </MotionPanel>
           ) : null}
-        </MotionPresence>
+      </MotionPresence>
 
-        <MotionPresence>
+      <MotionPresence>
           {(loading && reasoning) || reasoningText ? (
             <MotionPanel key="reasoning" className="settings-panel-card mt-4 p-4">
               <div className="mb-2 flex items-center justify-between gap-3">
@@ -196,9 +227,9 @@ export function AiTranslatePanel({
               </pre>
             </MotionPanel>
           ) : null}
-        </MotionPresence>
+      </MotionPresence>
 
-        <MotionPresence>
+      <MotionPresence>
           {loading || streamingText ? (
             <MotionPanel key="translation" className="settings-panel-card mt-4 p-4">
               <p className="app-text-primary mb-2 text-xs font-semibold uppercase tracking-[0.14em]">{copy.streamPreview}</p>
@@ -207,12 +238,17 @@ export function AiTranslatePanel({
               </pre>
             </MotionPanel>
           ) : null}
-        </MotionPresence>
+      </MotionPresence>
 
-        {error ? <p role="alert" className="status-danger mt-4 rounded-lg border px-3 py-2 text-sm">{error}</p> : null}
+      {error ? <p role="alert" className="status-danger mt-4 rounded-lg border px-3 py-2 text-sm">{error}</p> : null}
 
-        <div className="mt-5 flex justify-end gap-3">
+      <div className="mt-5 flex justify-end gap-3">
+        {sidebarPage ? (
+          loading ? <ActionButton onClick={onCancel}>{copy.stop}</ActionButton> : null
+        ) : (
           <ActionButton onClick={loading ? onCancel : onClose}>{loading ? copy.stop : copy.close}</ActionButton>
+        )}
+        {!sidebarPage || !loading ? (
           <ActionButton
             data-testid="confirm-ai-translate"
             variant="primary"
@@ -223,10 +259,12 @@ export function AiTranslatePanel({
           >
             {loading ? phaseLabel : copy.translate}
           </ActionButton>
-        </div>
-      </section>
-    </MotionPanel>
+        ) : null}
+      </div>
+    </section>
   );
+
+  return sidebarPage ? panel : <MotionPanel className="mt-3">{panel}</MotionPanel>;
 }
 
 function getPhaseLabel(phase: AITranslationPhase, copy: ReturnType<typeof getAIUiCopy>) {

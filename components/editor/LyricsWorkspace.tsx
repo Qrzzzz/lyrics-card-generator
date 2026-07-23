@@ -73,6 +73,8 @@ type LyricsWorkspaceProps = {
   onTranslationTextChange: (translation: string) => void;
   onLyricsDocumentChange: (snapshot: LyricsDocumentSnapshot) => void;
   onAITranslate: () => void;
+  onCloseAITranslate: () => void;
+  onCancelAITranslate: () => void;
   isAITranslating: boolean;
   aiPanel?: ReactNode;
   lyricsFetchPanel?: ReactNode;
@@ -106,6 +108,8 @@ export function LyricsWorkspace({
   onTranslationTextChange,
   onLyricsDocumentChange,
   onAITranslate,
+  onCloseAITranslate,
+  onCancelAITranslate,
   isAITranslating,
   aiPanel,
   lyricsFetchPanel,
@@ -121,6 +125,18 @@ export function LyricsWorkspace({
   const lyricsRef = useRef<HTMLTextAreaElement>(null);
   const translationRef = useRef<HTMLTextAreaElement>(null);
   const sidebarToggleRef = useRef<HTMLButtonElement>(null);
+  const aiLifecycleRef = useRef({
+    open: Boolean(aiPanel),
+    translating: isAITranslating,
+    close: onCloseAITranslate,
+    cancel: onCancelAITranslate
+  });
+  aiLifecycleRef.current = {
+    open: Boolean(aiPanel),
+    translating: isAITranslating,
+    close: onCloseAITranslate,
+    cancel: onCancelAITranslate
+  };
   const activeEditorRef = useRef<LyricsWorkbenchEditor>("lyrics");
   const lyricsId = useId();
   const translationId = useId();
@@ -171,6 +187,13 @@ export function LyricsWorkspace({
     translationText,
     translationEnabled: showTranslation
   }), [lyrics, showTranslation, translationText]);
+
+  useEffect(() => () => {
+    const ai = aiLifecycleRef.current;
+    if (!ai.open) return;
+    if (ai.translating) ai.cancel();
+    ai.close();
+  }, []);
 
   const resizeEditors = useCallback(() => {
     const editors = [lyricsRef.current, showTranslation ? translationRef.current : null].filter(Boolean) as HTMLTextAreaElement[];
@@ -530,6 +553,10 @@ export function LyricsWorkspace({
   }
 
   function closeMobileSidebar() {
+    if (aiPanel) {
+      if (isAITranslating) onCancelAITranslate();
+      onCloseAITranslate();
+    }
     setMobileSidebarOpen(false);
     setFocusIntent(null);
     window.requestAnimationFrame(() => sidebarToggleRef.current?.focus({ preventScroll: true }));
@@ -725,6 +752,8 @@ export function LyricsWorkspace({
           onRemoveParagraphTags={cleanParagraphTags}
           onTranslationEnabledChange={handleTranslationEnabledChange}
           onAITranslate={onAITranslate}
+          onCloseAITranslate={onCloseAITranslate}
+          onCancelAITranslate={onCancelAITranslate}
           onSplitAlternatingLyrics={splitAlternating}
           onFormatTranslation={formatTranslation}
           onSwapColumns={swapColumns}

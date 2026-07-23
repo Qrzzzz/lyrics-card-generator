@@ -27,6 +27,8 @@ assert.match(motionTokens, /controlTapTarget/);
 assert.match(motionTokens, /reducedMotionTransition/);
 assert.match(motionTokens, /stepPanelVariants/);
 assert.match(motionTokens, /workbenchStepPanelVariants/);
+assert.match(motionTokens, /sidebarPageVariants/);
+assert.match(motionTokens, /sidebarPageTransition/);
 assert.match(motionTokens, /tabPanelVariants/);
 assert.match(motionTokens, /dialogPanelVariants/);
 assert.match(motionTokens, /direction > 0 \? 72 : -72/);
@@ -92,11 +94,16 @@ assert.match(settingsStepper, /<MotionPresence custom=\{stepDirection\} mode="po
 assert.match(settingsStepper, /variants=\{workbenchStepVariants\}/);
 assert.match(settingsStepper, /data-step-direction=\{stepDirection > 0 \? "forward" : "backward"\}/);
 assert.match(settingsStepper, /data-settings-step-id=\{workbenchSettingsStep\.id\}/);
-assert.match(motionPresence, /<AnimatePresence custom=\{custom\}/);
+assert.match(motionPresence, /<AnimatePresence[\s\S]*?custom=\{custom\}/);
 assert.doesNotMatch(lyricsWorkspace, /splitTransition|animateSidebarDisclosure|sidebarCollapsed/);
 assert.doesNotMatch(lyricsWorkspace, /lyrics-workspace-resizer|data-motion-active/);
-assert.doesNotMatch(lyricsSidebar, /framer-motion|lyrics-sidebar-collapsed-layer|lyrics-sidebar-expanded-layer/);
+assert.doesNotMatch(lyricsSidebar, /lyrics-sidebar-collapsed-layer|lyrics-sidebar-expanded-layer/);
 assert.doesNotMatch(lyricsSidebar, /transitionEnd: \{ visibility: "hidden" \}/);
+assert.match(lyricsSidebar, /<MotionPresence[\s\S]*?mode="sync"[\s\S]*?custom=\{direction\}/);
+assert.match(lyricsSidebar, /variants=\{sidebarPageVariants\(reducedMotion\)\}/);
+assert.match(lyricsSidebar, /x: reduceMotion \|\| !aiPageOpen \? "0%" : "-100%"/);
+assert.match(lyricsSidebar, /onAnimationComplete=\{\(\) => \{[\s\S]*?focusEnteredPage\("home"\)/);
+assert.match(lyricsSidebar, /inert=\{isPresent \? undefined : true\}/);
 assert.match(songImportAside, /mode="popLayout"/);
 assert.match(songImportAside, /key="song-info-editor"[\s\S]*?initial=\{reduceMotion \? \{ opacity: 0, x: 0 \} : \{ opacity: 0, x: 72 \}\}/);
 assert.match(songImportAside, /key="song-info-editor"[\s\S]*?exit=\{reduceMotion \? \{ opacity: 0, x: 0 \} : \{ opacity: 0, x: 72 \}\}/);
@@ -130,4 +137,4 @@ assert.match(globals, /not\(\.traffic-light\):not\(\.example-song-card\):hover:a
 assert.match(globals, /\.preview-pressure-stage/);
 assert.match(globals, /\.app-shell\[data-reduce-motion="true"\] \.preview-pressure-card/);
 
-console.log(JSON.stringify({ ok: true, motionSystemRegressionChecks: 74 }, null, 2));
+console.log(JSON.stringify({ ok: true, motionSystemRegressionChecks: 79 }, null, 2));

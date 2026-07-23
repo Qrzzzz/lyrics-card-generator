@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v5.8.5.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v5.8.6.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="#développement-local">Développement local</a> ·
@@ -51,23 +51,23 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 Téléchargez la dernière version depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
 
-* Installateur recommandé : `Lyrics Card Generator Setup 5.8.5.exe`
-* Version portable : `Lyrics Card Generator-5.8.5-portable.exe`
+* Installateur recommandé : `Lyrics Card Generator Setup 5.8.6.exe`
+* Version portable : `Lyrics Card Generator-5.8.6-portable.exe`
 
 L'installateur est recommandé pour une utilisation régulière. La version portable convient aux essais, à une utilisation temporaire ou à un disque amovible.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### Points clés de la v5.8.5
+### Points clés de la v5.8.6
 
-* L’étape 2 adopte une séparation fixe 2:1 entre paroles et outils sur ordinateur. Le redimensionnement, le repli et leurs animations disparaissent, tandis que l’état et les actions rapides rejoignent la barre de commandes supérieure.
-* La barre Nettoyage／Traduction est réorganisée autour d’un contexte compact, des nettoyages courants et supplémentaires, d’une entrée de traduction mise en avant et d’outils de colonnes unifiés. Toutes les actions et confirmations existantes restent disponibles.
-* Les onglets des réglages gagnent une courte introduction et la page d’exemples perd son flou inférieur. Le défilement partagé, les ancres de sélection, l’annulation, l’IA, le tiroir étroit et la limite d’exportation de 36 lignes restent inchangés.
+* Dans l’étape 2, la traduction par IA ne se déploie plus dans l’accueil Traduction. Elle s’ouvre sur une page secondaire indépendante : l’accueil sort vers la gauche, la page IA entre par la droite et Retour inverse le mouvement.
+* Les onglets Nettoyage／Traduction, le cadre latéral, l’éditeur de paroles et la séparation fixe 2:1 restent immobiles. Chaque page défile séparément, avec gestion du focus, isolement de la page inactive et touche Échap hiérarchique sur écran étroit.
+* Les styles d’IA, Reasoning, la sortie en continu, l’application de la traduction et les outils Nettoyage／colonnes existants restent inchangés. Le mode de réduction des animations supprime tout déplacement horizontal.
 
 ## 🌐 Notes de publication multilingues
 
 Par défaut, GitHub Release affiche un résumé en chinois simplifié. Consultez les notes complètes :
-[简体中文](./docs/releases/v5.8.5.zh-CN.md) · [繁體中文](./docs/releases/v5.8.5.zh-TW.md) · [English](./docs/releases/v5.8.5.en.md) · [Français](./docs/releases/v5.8.5.fr.md) · [日本語](./docs/releases/v5.8.5.ja.md) · [Español](./docs/releases/v5.8.5.es.md)
+[简体中文](./docs/releases/v5.8.6.zh-CN.md) · [繁體中文](./docs/releases/v5.8.6.zh-TW.md) · [English](./docs/releases/v5.8.6.en.md) · [Français](./docs/releases/v5.8.6.fr.md) · [日本語](./docs/releases/v5.8.6.ja.md) · [Español](./docs/releases/v5.8.6.es.md)
 
 <a id="fonctionnalités-principales"></a>
 

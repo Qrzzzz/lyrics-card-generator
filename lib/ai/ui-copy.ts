@@ -33,6 +33,8 @@ type AIUiCopy = {
   saveFailed: string;
   cancel: string;
   close: string;
+  back: string;
+  stopAndBack: string;
   settingsSaved: string;
   settingsLoadFailed: string;
   settingsSaveFailed: string;
@@ -97,6 +99,8 @@ const AI_UI_COPY: Record<Locale, AIUiCopy> = {
     saveFailed: "保存失败",
     cancel: "取消",
     close: "关闭",
+    back: "返回",
+    stopAndBack: "停止翻译并返回",
     settingsSaved: "设置已保存",
     settingsLoadFailed: "无法读取 AI 设置。",
     settingsSaveFailed: "无法保存 AI 设置。",
@@ -159,6 +163,8 @@ const AI_UI_COPY: Record<Locale, AIUiCopy> = {
     saveFailed: "儲存失敗",
     cancel: "取消",
     close: "關閉",
+    back: "返回",
+    stopAndBack: "停止翻譯並返回",
     settingsSaved: "設定已儲存",
     settingsLoadFailed: "無法讀取 AI 設定。",
     settingsSaveFailed: "無法儲存 AI 設定。",
@@ -221,6 +227,8 @@ const AI_UI_COPY: Record<Locale, AIUiCopy> = {
     saveFailed: "Save failed",
     cancel: "Cancel",
     close: "Close",
+    back: "Back",
+    stopAndBack: "Stop translation and go back",
     settingsSaved: "Settings saved",
     settingsLoadFailed: "Unable to load AI settings.",
     settingsSaveFailed: "Unable to save AI settings.",
@@ -283,6 +291,8 @@ const AI_UI_COPY: Record<Locale, AIUiCopy> = {
     saveFailed: "Échec de l’enregistrement",
     cancel: "Annuler",
     close: "Fermer",
+    back: "Retour",
+    stopAndBack: "Arrêter la traduction et revenir",
     settingsSaved: "Paramètres enregistrés",
     settingsLoadFailed: "Impossible de charger les paramètres de l’IA.",
     settingsSaveFailed: "Impossible d’enregistrer les paramètres de l’IA.",
@@ -345,6 +355,8 @@ const AI_UI_COPY: Record<Locale, AIUiCopy> = {
     saveFailed: "保存に失敗しました",
     cancel: "キャンセル",
     close: "閉じる",
+    back: "戻る",
+    stopAndBack: "翻訳を停止して戻る",
     settingsSaved: "設定を保存しました",
     settingsLoadFailed: "AI 設定を読み込めませんでした。",
     settingsSaveFailed: "AI 設定を保存できませんでした。",
@@ -407,6 +419,8 @@ const AI_UI_COPY: Record<Locale, AIUiCopy> = {
     saveFailed: "Error al guardar",
     cancel: "Cancelar",
     close: "Cerrar",
+    back: "Volver",
+    stopAndBack: "Detener la traducción y volver",
     settingsSaved: "Configuración guardada",
     settingsLoadFailed: "No se pudo cargar la configuración de IA.",
     settingsSaveFailed: "No se pudo guardar la configuración de IA.",
