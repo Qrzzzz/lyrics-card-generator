@@ -1,9 +1,10 @@
 "use client";
 
-import type { ButtonHTMLAttributes, ReactNode } from "react";
+import type { ButtonHTMLAttributes, ReactNode, Ref } from "react";
 import { cn } from "@/lib/utils";
 
 type StarBorderProps = ButtonHTMLAttributes<HTMLButtonElement> & {
+  buttonRef?: Ref<HTMLButtonElement>;
   color?: string;
   speed?: string;
   variant?: "default" | "ai";
@@ -11,6 +12,7 @@ type StarBorderProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 };
 
 export function StarBorder({
+  buttonRef,
   className = "",
   color = "white",
   speed = "6s",
@@ -21,6 +23,7 @@ export function StarBorder({
 }: StarBorderProps) {
   return (
     <button
+      ref={buttonRef}
       className={cn("star-border-container", className)}
       data-variant={variant}
       style={{

@@ -77,10 +77,7 @@ export function useEditorAiTranslation({
   }
 
   function openAITranslate() {
-    if (isAITranslateOpen) {
-      setIsAITranslateOpen(false);
-      return;
-    }
+    if (isAITranslateOpen) return;
 
     if (!lyrics.trim()) {
       onNotify(aiCopy.lyricsEmpty);

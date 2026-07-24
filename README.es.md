@@ -19,7 +19,7 @@
 <p>
   <strong>Navegación</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Descargar la última versión</a> ·
-  <a href="./docs/releases/v5.8.5.es.md">Notas de la versión</a> ·
+  <a href="./docs/releases/v5.8.6.es.md">Notas de la versión</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en línea</a> ·
   <a href="#funciones-principales">Funciones principales</a> ·
   <a href="#desarrollo-local">Desarrollo local</a> ·
@@ -51,23 +51,23 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 Descarga la versión más reciente desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Instalador recomendado: `Lyrics Card Generator Setup 5.8.5.exe`
-* Versión portable: `Lyrics Card Generator-5.8.5-portable.exe`
+* Instalador recomendado: `Lyrics Card Generator Setup 5.8.6.exe`
+* Versión portable: `Lyrics Card Generator-5.8.6-portable.exe`
 
 El instalador se recomienda para uso habitual. La versión portable es útil para pruebas, uso temporal o ejecución desde una unidad extraíble.
 
 > La compilación actual no está firmada. Windows puede mostrar una advertencia de SmartScreen, algo habitual en aplicaciones personales sin firma.
 
-### Aspectos destacados de la versión 5.8.5
+### Aspectos destacados de la versión 5.8.6
 
-* El paso 2 usa ahora una división estable 2:1 entre letras y herramientas en escritorio. Se eliminan el ajuste de ancho, el plegado y sus animaciones, mientras que el estado y las acciones rápidas pasan a la barra de comandos superior.
-* La barra Limpieza／Traducción se reorganiza en torno a un contexto compacto, limpiezas habituales y adicionales, una entrada de traducción destacada y herramientas de columnas unificadas. Se conservan todas las acciones y confirmaciones existentes.
-* Las pestañas de ajustes incorporan una breve introducción y la página de ejemplos elimina el desenfoque inferior. El desplazamiento compartido, las anclas de selección, deshacer, la IA, el cajón estrecho y el límite de exportación de 36 líneas permanecen sin cambios.
+* En el paso 2, la traducción con IA deja de desplegarse dentro del inicio de Traducción. Se abre como una página secundaria independiente: el inicio sale hacia la izquierda, la página de IA entra desde la derecha y Volver invierte el movimiento.
+* Las pestañas Limpieza／Traducción, el marco lateral, el editor de letras y la división fija 2:1 permanecen inmóviles. Cada página tiene desplazamiento propio, gestión de foco, aislamiento de la página inactiva y Escape jerárquico en pantallas estrechas.
+* Los estilos de IA, Reasoning, la salida en directo, la aplicación de la traducción y las herramientas existentes de Limpieza／columnas no cambian. El modo de movimiento reducido elimina todo desplazamiento horizontal.
 
 ## 🌐 Notas de publicación multilingües
 
 GitHub Release muestra de forma predeterminada un resumen en chino simplificado. Consulta las notas completas:
-[简体中文](./docs/releases/v5.8.5.zh-CN.md) · [繁體中文](./docs/releases/v5.8.5.zh-TW.md) · [English](./docs/releases/v5.8.5.en.md) · [Français](./docs/releases/v5.8.5.fr.md) · [日本語](./docs/releases/v5.8.5.ja.md) · [Español](./docs/releases/v5.8.5.es.md)
+[简体中文](./docs/releases/v5.8.6.zh-CN.md) · [繁體中文](./docs/releases/v5.8.6.zh-TW.md) · [English](./docs/releases/v5.8.6.en.md) · [Français](./docs/releases/v5.8.6.fr.md) · [日本語](./docs/releases/v5.8.6.ja.md) · [Español](./docs/releases/v5.8.6.es.md)
 
 <a id="funciones-principales"></a>
 

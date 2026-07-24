@@ -1,12 +1,15 @@
 import { Loader2, Sparkles } from "lucide-react";
+import type { Ref } from "react";
 import { StarBorder } from "@/components/ui/StarBorder";
 
 export function AiTranslateButton({
+  buttonRef,
   label,
   loading,
   themeColor,
   onClick
 }: {
+  buttonRef?: Ref<HTMLButtonElement>;
   label: string;
   loading: boolean;
   themeColor: string;
@@ -14,6 +17,7 @@ export function AiTranslateButton({
 }) {
   return (
     <StarBorder
+      buttonRef={buttonRef}
       type="button"
       variant="ai"
       color={themeColor}

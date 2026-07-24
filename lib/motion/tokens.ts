@@ -121,9 +121,30 @@ export function workbenchStepPanelVariants(reducedMotion = false): Variants {
   };
 }
 
+const reducedMotionSidebarPageVariants: Variants = {
+  initial: { opacity: 1, x: 0 },
+  animate: { opacity: 1, x: 0 },
+  exit: { opacity: 1, x: 0 }
+};
+
+const directionalSidebarPageVariants: Variants = {
+  initial: (direction: StepDirection) => ({ opacity: 1, x: direction > 0 ? "100%" : "-100%" }),
+  animate: { opacity: 1, x: "0%" },
+  exit: (direction: StepDirection) => ({ opacity: 1, x: direction > 0 ? "-100%" : "100%" })
+};
+
+export function sidebarPageVariants(reducedMotion = false): Variants {
+  return reducedMotion ? reducedMotionSidebarPageVariants : directionalSidebarPageVariants;
+}
+
 export const opacityTransition: Transition = {
   duration: motionDurations.normal,
   ease: motionEasings.standard
+};
+
+export const sidebarPageTransition: Transition = {
+  duration: motionDurations.normal,
+  ease: motionEasings.emphasized
 };
 
 export const panelTransition: Transition = {
