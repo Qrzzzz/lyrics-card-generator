@@ -3553,30 +3553,62 @@ try {
   assert.ok(autoWidthWrapMetrics && autoWidthWrapMetrics.measuredLines === 36, `auto-width metrics cover original and translated lines: ${JSON.stringify(autoWidthWrapMetrics)}`);
   assert.equal(autoWidthWrapMetrics.severeOrphans, 0, `auto width leaves no severe body or translation orphan: ${JSON.stringify(autoWidthWrapMetrics)}`);
 
-  const fontOverrideSupported = await page.evaluate(() => {
+  const fontOverride = await page.evaluate(() => {
+    const toastAudit = [];
+    const recordToast = () => {
+      const text = document.querySelector('[data-testid="app-toast"]')?.textContent?.trim();
+      if (text && toastAudit.at(-1) !== text) toastAudit.push(text);
+    };
+    const toastObserver = new MutationObserver(recordToast);
+    toastObserver.observe(document.body, {
+      childList: true,
+      characterData: true,
+      subtree: true
+    });
+    window.__desktopExportToastAudit = toastAudit;
+    window.__desktopExportToastObserver = toastObserver;
+    recordToast();
+
     try {
       Object.defineProperty(document.fonts, "status", { configurable: true, get: () => "loading" });
       const button = document.querySelector('[data-testid="complete-export-button"]');
-      if (!(button instanceof HTMLButtonElement)) return false;
+      if (!(button instanceof HTMLButtonElement)) {
+        throw new Error("complete export button is unavailable");
+      }
+      const status = document.fonts.status;
       button.removeAttribute("disabled");
       button.click();
-      return true;
+      return { supported: status === "loading", status };
     } catch {
       delete document.fonts.status;
-      return false;
+      toastObserver.disconnect();
+      delete window.__desktopExportToastAudit;
+      delete window.__desktopExportToastObserver;
+      return { supported: false, status: document.fonts.status };
     }
   });
-  assert.equal(fontOverrideSupported, true, "test shell can simulate fonts-loading readiness");
+  assert.deepEqual(
+    fontOverride,
+    { supported: true, status: "loading" },
+    "test shell can simulate fonts-loading readiness"
+  );
   try {
     await page.waitForFunction(
-      () => /字体.*加载|加载.*字体/.test(document.querySelector('[data-testid="app-toast"]')?.textContent ?? ""),
+      () => window.__desktopExportToastAudit?.some((text) => /字体.*加载|加载.*字体/.test(text)),
       undefined,
       { timeout: 10_000 }
     );
-    assert.match(await page.getByTestId("app-toast").innerText(), /字体.*加载|加载.*字体/, "live export defense rejects fonts that are not ready");
+    const exportToastAudit = await page.evaluate(() => window.__desktopExportToastAudit ?? []);
+    assert.ok(
+      exportToastAudit.some((text) => /字体.*加载|加载.*字体/.test(text)),
+      `live export defense rejects fonts that are not ready: ${JSON.stringify(exportToastAudit)}`
+    );
   } finally {
     await page.evaluate(() => {
       delete document.fonts.status;
+      window.__desktopExportToastObserver?.disconnect();
+      delete window.__desktopExportToastAudit;
+      delete window.__desktopExportToastObserver;
     });
   }
 
