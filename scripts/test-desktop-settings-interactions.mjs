@@ -1865,8 +1865,11 @@ async function assertLyricsWorkspace(width, height) {
     const shared = document.querySelector('[data-testid="lyrics-shared-scroll"]');
     const documentColumn = document.querySelector('#lyrics-workspace-editor');
     const tools = document.querySelector('[data-testid="lyrics-sidebar"]');
+    const pageViewport = tools?.querySelector('[data-testid="lyrics-translation-page-viewport"]');
     const toolsPanel = tools?.querySelector('[role="tabpanel"]:not([hidden])');
-    const translationPage = toolsPanel?.querySelector('[data-testid="lyrics-translation-home-page"]');
+    const translationPage = toolsPanel?.matches('[data-testid="lyrics-translation-home-page"]')
+      ? toolsPanel
+      : toolsPanel?.querySelector('[data-testid="lyrics-translation-home-page"]');
     const firstToolsSection = toolsPanel?.querySelector('.lyrics-sidebar-section');
     const commandBar = document.querySelector('[data-testid="lyrics-command-bar"]');
     const statusBar = document.querySelector('[data-testid="lyrics-status-bar"]');
@@ -1923,6 +1926,11 @@ async function assertLyricsWorkspace(width, height) {
         clientHeight: tools.clientHeight,
         scrollHeight: tools.scrollHeight,
         activeTab: tools.getAttribute('data-active-tab')
+      } : null,
+      pageViewport: pageViewport ? {
+        ...rect(pageViewport),
+        overflowX: getComputedStyle(pageViewport).overflowX,
+        overflowY: getComputedStyle(pageViewport).overflowY
       } : null,
       toolsPanel: toolsPanel ? {
         ...rect(toolsPanel),
@@ -2058,8 +2066,9 @@ async function assertLyricsWorkspace(width, height) {
     `${width}x${height} keeps the sidebar above the step navigation: ${JSON.stringify({ tools: result.tools, actions: result.actions })}`
   );
   if (result.tools.activeTab === "translation") {
-    assert.equal(result.toolsPanel.overflowY, "hidden", `${width}x${height} clips the Translation page viewport`);
-    assert.equal(result.translationPage?.overflowY, "auto", `${width}x${height} gives Translation home its own bounded scroller`);
+    assert.equal(result.pageViewport.overflowY, "hidden", `${width}x${height} clips the shared sidebar page deck`);
+    assert.equal(result.toolsPanel.overflowY, "auto", `${width}x${height} gives the active Translation page one bounded scroller`);
+    assert.equal(result.translationPage?.overflowY, "auto", `${width}x${height} keeps Translation home as that bounded scroller`);
     assert.ok(
       result.translationPage.y >= result.toolsPanel.y - 1 && result.translationPage.bottom <= result.toolsPanel.bottom + 1,
       `${width}x${height} contains Translation home inside the page viewport`
@@ -2358,6 +2367,55 @@ async function assertLyricsWorkspaceSplitInteractions() {
   for (const tab of ["cleanup", "translation"]) {
     await page.getByTestId(`lyrics-sidebar-tab-${tab}`).waitFor({ state: "visible" });
   }
+  await page.getByTestId("lyrics-sidebar-tab-translation").click();
+  const tabSlide = await page.waitForFunction(() => {
+    const viewport = document.querySelector('[data-testid="lyrics-translation-page-viewport"]');
+    const cleanup = document.querySelector('[data-testid="lyrics-sidebar-panel-cleanup"]');
+    const translation = document.querySelector('[data-testid="lyrics-translation-home-page"]');
+    if (
+      viewport?.getAttribute("data-sidebar-page") !== "translation" ||
+      !(cleanup instanceof HTMLElement) ||
+      !(translation instanceof HTMLElement) ||
+      cleanup.hidden ||
+      translation.hidden
+    ) {
+      return false;
+    }
+    return {
+      cleanupAriaHidden: cleanup.getAttribute("aria-hidden"),
+      cleanupInert: cleanup.hasAttribute("inert"),
+      cleanupPointerEvents: getComputedStyle(cleanup).pointerEvents,
+      translationAriaHidden: translation.getAttribute("aria-hidden"),
+      translationInert: translation.hasAttribute("inert")
+    };
+  });
+  assert.deepEqual(
+    await tabSlide.jsonValue(),
+    {
+      cleanupAriaHidden: "true",
+      cleanupInert: true,
+      cleanupPointerEvents: "none",
+      translationAriaHidden: null,
+      translationInert: false
+    },
+    "Cleanup and Translation slide concurrently while the outgoing page immediately leaves the interaction tree"
+  );
+  await page.waitForFunction(() => {
+    const viewport = document.querySelector('[data-testid="lyrics-translation-page-viewport"]');
+    const translation = document.querySelector('[data-testid="lyrics-translation-home-page"]');
+    const viewportRect = viewport?.getBoundingClientRect();
+    const translationRect = translation?.getBoundingClientRect();
+    return Boolean(
+      viewportRect &&
+      translationRect &&
+      Math.abs(translationRect.left - viewportRect.left) <= 1
+    );
+  });
+  await page.getByTestId("lyrics-sidebar-tab-cleanup").click();
+  await page.waitForFunction(() => (
+    document.querySelector('[data-testid="lyrics-translation-page-viewport"]')?.getAttribute("data-sidebar-page") === "cleanup" &&
+    !document.querySelector('[data-testid="lyrics-sidebar-panel-cleanup"]')?.hasAttribute("hidden")
+  ));
   await page.getByTestId("lyrics-status-bar").waitFor({ state: "visible" });
   assert.equal(await page.getByTestId("lyrics-cleanup-paste").isVisible(), true, "the always-open inspector exposes direct cleanup actions");
 
@@ -2376,25 +2434,37 @@ async function assertLyricsWorkspaceSplitInteractions() {
   await page.getByTestId("lyrics-command-ai").click();
   const concurrentPages = await page.waitForFunction(() => {
     const viewport = document.querySelector('[data-testid="lyrics-translation-page-viewport"]');
+    const cleanup = document.querySelector('[data-testid="lyrics-sidebar-panel-cleanup"]');
     const home = document.querySelector('[data-testid="lyrics-translation-home-page"]');
     const ai = document.querySelector('[data-testid="lyrics-translation-ai-page"]');
-    if (viewport?.getAttribute("data-translation-page") !== "ai" || !home || !ai) return false;
+    if (
+      viewport?.getAttribute("data-sidebar-page") !== "ai" ||
+      !(cleanup instanceof HTMLElement) ||
+      !(home instanceof HTMLElement) ||
+      !(ai instanceof HTMLElement) ||
+      cleanup.hidden ||
+      ai.hidden
+    ) {
+      return false;
+    }
     return {
-      homeAriaHidden: home.getAttribute("aria-hidden"),
-      homeInert: home.hasAttribute("inert"),
-      homePointerEvents: getComputedStyle(home).pointerEvents,
+      cleanupAriaHidden: cleanup.getAttribute("aria-hidden"),
+      cleanupInert: cleanup.hasAttribute("inert"),
+      cleanupPointerEvents: getComputedStyle(cleanup).pointerEvents,
+      intermediateHomeHidden: home.hidden,
       aiAriaHidden: ai.getAttribute("aria-hidden")
     };
   });
   assert.deepEqual(
     await concurrentPages.jsonValue(),
     {
-      homeAriaHidden: "true",
-      homeInert: true,
-      homePointerEvents: "none",
+      cleanupAriaHidden: "true",
+      cleanupInert: true,
+      cleanupPointerEvents: "none",
+      intermediateHomeHidden: true,
       aiAriaHidden: null
     },
-    "the home and AI pages move concurrently while the exiting home immediately leaves the interaction tree"
+    "the top AI command performs one direct Cleanup-to-AI slide without exposing the intermediate Translation home"
   );
   await page.getByTestId("lyrics-translation-ai-page").waitFor({ state: "visible" });
   await page.getByTestId("ai-translate-panel").waitFor({ state: "visible" });
@@ -2430,6 +2500,91 @@ async function assertLyricsWorkspaceSplitInteractions() {
       );
     }
   }
+
+  assert.equal(
+    await page.getByTestId("ai-translate-stage-viewport").getAttribute("data-ai-stage"),
+    "setup",
+    "AI opens on the preset and reasoning setup page"
+  );
+  acceptDocumentReplacementDialogs = true;
+  await page.getByTestId("confirm-ai-translate").click();
+  acceptDocumentReplacementDialogs = false;
+  const runPageTransition = await page.waitForFunction(() => {
+    const viewport = document.querySelector('[data-testid="ai-translate-stage-viewport"]');
+    const setup = document.querySelector('[data-testid="ai-translate-setup-page"]');
+    const run = document.querySelector('[data-testid="ai-translate-run-page"]');
+    if (
+      viewport?.getAttribute("data-ai-stage") !== "run" ||
+      !(setup instanceof HTMLElement) ||
+      !(run instanceof HTMLElement)
+    ) {
+      return false;
+    }
+    return {
+      setupAriaHidden: setup.getAttribute("aria-hidden"),
+      setupInert: setup.hasAttribute("inert"),
+      setupPointerEvents: getComputedStyle(setup).pointerEvents,
+      runAriaHidden: run.getAttribute("aria-hidden"),
+      runInert: run.hasAttribute("inert")
+    };
+  });
+  assert.deepEqual(
+    await runPageTransition.jsonValue(),
+    {
+      setupAriaHidden: "true",
+      setupInert: true,
+      setupPointerEvents: "none",
+      runAriaHidden: null,
+      runInert: false
+    },
+    "starting AI translation slides to a dedicated runtime page and immediately isolates the setup page"
+  );
+  await page.waitForFunction(
+    () => document.activeElement?.getAttribute("data-testid") === "lyrics-ai-run-page-back",
+    undefined,
+    { timeout: 5_000 }
+  );
+  assert.equal(
+    await page.getByTestId("lyrics-translation-page-viewport").getAttribute("data-sidebar-page"),
+    "ai",
+    "the runtime transition stays inside the fixed AI sidebar route"
+  );
+  await page.evaluate(() => {
+    const cancel = document.querySelector('[data-testid="cancel-ai-translate"]');
+    if (cancel instanceof HTMLButtonElement) cancel.click();
+  });
+  await page.waitForFunction(() => {
+    const command = document.querySelector('[data-testid="lyrics-command-ai"]');
+    return command instanceof HTMLButtonElement && !command.disabled;
+  });
+  await page.getByTestId("lyrics-sidebar-tab-cleanup").click();
+  await page.waitForFunction(() => (
+    document.querySelector('[data-testid="lyrics-translation-page-viewport"]')?.getAttribute("data-sidebar-page") === "cleanup"
+  ));
+  await page.getByTestId("lyrics-command-ai").click();
+  await page.waitForFunction(
+    () => document.querySelector('[data-testid="lyrics-translation-page-viewport"]')?.getAttribute("data-sidebar-page") === "ai"
+      && document.activeElement?.getAttribute("data-testid") === "lyrics-ai-run-page-back",
+    undefined,
+    { timeout: 5_000 }
+  );
+  assert.equal(
+    await page.getByTestId("ai-translate-stage-viewport").getAttribute("data-ai-stage"),
+    "run",
+    "the AI command restores a retained run/results page and focuses its active back control"
+  );
+  await page.getByTestId("lyrics-ai-run-page-back").click();
+  await page.waitForFunction(
+    () => document.querySelector('[data-testid="ai-translate-stage-viewport"]')?.getAttribute("data-ai-stage") === "setup"
+      && document.activeElement?.getAttribute("data-testid") === "confirm-ai-translate",
+    undefined,
+    { timeout: 5_000 }
+  );
+  assert.equal(
+    await page.getByTestId("ai-translate-run-page").count(),
+    0,
+    "returning from the runtime page completes its exit before restoring setup focus"
+  );
 
   await page.getByTestId("lyrics-ai-page-back").click();
   await page.waitForFunction(
@@ -2719,6 +2874,59 @@ async function assertLyricsWorkspaceNarrowBehavior(originalLyrics, translationLy
       undefined,
       { timeout: 5_000 }
     );
+    const setupScrollBeforeRun = await page.getByTestId("ai-translate-setup-page").evaluate((node) => {
+      const target = Math.min(96, Math.max(0, node.scrollHeight - node.clientHeight));
+      node.scrollTop = target;
+      return { target, actual: node.scrollTop };
+    });
+    assert.ok(
+      setupScrollBeforeRun.target > 0 &&
+        Math.abs(setupScrollBeforeRun.actual - setupScrollBeforeRun.target) <= 1,
+      `the narrow AI setup page has an independently scrollable position: ${JSON.stringify(setupScrollBeforeRun)}`
+    );
+    acceptDocumentReplacementDialogs = true;
+    await page.getByTestId("confirm-ai-translate").evaluate((node) => {
+      if (!(node instanceof HTMLButtonElement)) throw new Error("AI confirm control is not a button");
+      node.click();
+    });
+    acceptDocumentReplacementDialogs = false;
+    await page.waitForFunction(
+      () => document.querySelector('[data-testid="ai-translate-stage-viewport"]')?.getAttribute("data-ai-stage") === "run"
+        && document.activeElement?.getAttribute("data-testid") === "lyrics-ai-run-page-back",
+      undefined,
+      { timeout: 5_000 }
+    );
+    await page.getByTestId("lyrics-sidebar-tab-translation").focus();
+    assert.equal(
+      await page.getByTestId("lyrics-sidebar-tab-translation").evaluate((node) => document.activeElement === node),
+      true,
+      "the fixed Translation tab can hold focus while the runtime page is active"
+    );
+    await page.keyboard.press("Escape");
+    await page.waitForFunction(
+      () => document.querySelector('[data-testid="ai-translate-stage-viewport"]')?.getAttribute("data-ai-stage") === "setup"
+        && document.activeElement?.getAttribute("data-testid") === "confirm-ai-translate",
+      undefined,
+      { timeout: 5_000 }
+    );
+    const setupScrollAfterRun = await page.getByTestId("ai-translate-setup-page").evaluate((node) => node.scrollTop);
+    assert.ok(
+      Math.abs(setupScrollAfterRun - setupScrollBeforeRun.target) <= 1,
+      `returning from runtime restores the setup page scroll position: ${JSON.stringify({
+        before: setupScrollBeforeRun,
+        after: setupScrollAfterRun
+      })}`
+    );
+    assert.equal(
+      await page.getByTestId("lyrics-translation-page-viewport").getAttribute("data-sidebar-page"),
+      "ai",
+      "the first narrow Escape cancels runtime and returns to AI setup without leaving the AI route"
+    );
+    assert.equal(
+      await page.getByTestId("lyrics-sidebar").isVisible(),
+      true,
+      "the first narrow Escape keeps the modal drawer open even when focus started on its fixed tabs"
+    );
     await page.keyboard.press("Escape");
     await page.waitForFunction(
       () => document.querySelector('[data-testid="lyrics-translation-page-viewport"]')?.getAttribute("data-translation-page") === "home",
@@ -2773,14 +2981,14 @@ async function assertLyricsWorkspaceNarrowBehavior(originalLyrics, translationLy
     }));
     assert.ok(
       focusAfterAiEscape.homeOffset !== null && Math.abs(focusAfterAiEscape.homeOffset) <= 1,
-      `the first narrow Escape completes the Translation home entry before drawer dismissal: ${JSON.stringify(focusAfterAiEscape)}`
+      `the second narrow Escape completes the Translation home entry before drawer dismissal: ${JSON.stringify(focusAfterAiEscape)}`
     );
     assert.equal(
       focusAfterAiEscape.testId,
       "ai-translate-button",
-      `the first narrow Escape restores focus after returning home: ${JSON.stringify(focusAfterAiEscape)}`
+      `the second narrow Escape restores focus after returning home: ${JSON.stringify(focusAfterAiEscape)}`
     );
-    assert.equal(await page.getByTestId("lyrics-sidebar").isVisible(), true, "the first narrow Escape returns to Translation home without closing the drawer");
+    assert.equal(await page.getByTestId("lyrics-sidebar").isVisible(), true, "the second narrow Escape returns to Translation home without closing the drawer");
     await page.keyboard.press("Escape");
     await page.getByTestId("lyrics-sidebar").waitFor({ state: "hidden" });
     await page.waitForFunction(() => document.activeElement?.getAttribute("data-testid") === "lyrics-command-sidebar-toggle");

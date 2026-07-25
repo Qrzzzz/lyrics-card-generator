@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, useIsPresent } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   ChevronDown,
   Eraser,
@@ -22,7 +22,6 @@ import {
 import { AiTranslateButton } from "@/components/lyrics/AiTranslateButton";
 import type { LyricsCommandIntent } from "@/components/editor/LyricsCommandBar";
 import { useAppReducedMotion } from "@/components/motion/AppMotionProvider";
-import { MotionPresence } from "@/components/motion/MotionPresence";
 import {
   formatLyricsWorkspaceCopy,
   type LyricsWorkspaceCopy
@@ -46,8 +45,6 @@ import type { Locale } from "@/lib/types";
 import {
   reducedMotionTransition,
   sidebarPageTransition,
-  sidebarPageVariants,
-  type StepDirection
 } from "@/lib/motion/tokens";
 import { cn } from "@/lib/utils";
 
@@ -89,6 +86,18 @@ type LyricsSidebarProps = {
 };
 
 const TABS: LyricsSidebarTab[] = ["cleanup", "translation"];
+type LyricsSidebarPage = "cleanup" | "translation" | "ai";
+
+const SIDEBAR_PAGE_INDEX: Record<LyricsSidebarPage, number> = {
+  cleanup: 0,
+  translation: 1,
+  ai: 2
+};
+
+function resolveSidebarPage(activeTab: LyricsSidebarTab, aiPanel: ReactNode | undefined): LyricsSidebarPage {
+  if (activeTab === "cleanup") return "cleanup";
+  return aiPanel ? "ai" : "translation";
+}
 
 export function LyricsSidebar(props: LyricsSidebarProps) {
   const {
@@ -102,12 +111,55 @@ export function LyricsSidebar(props: LyricsSidebarProps) {
     isAITranslating,
     onTabChange,
     onCloseDrawer,
+    onIntentHandled,
     onCloseAITranslate,
     onCancelAITranslate,
     onUndo
   } = props;
   const closeDrawerButtonRef = useRef<HTMLButtonElement | null>(null);
   const drawerOpenRef = useRef(false);
+  const reduceMotion = useAppReducedMotion();
+  const viewportRef = useRef<HTMLDivElement | null>(null);
+  const aiPageRef = useRef<HTMLElement | null>(null);
+  const aiButtonRef = useRef<HTMLButtonElement | null>(null);
+  const activePage = resolveSidebarPage(activeTab, aiPanel);
+  const previousPageRef = useRef<LyricsSidebarPage>(activePage);
+  const retainedAiPanelRef = useRef<ReactNode>(aiPanel);
+  const [transitionFrom, setTransitionFrom] = useState<LyricsSidebarPage | null>(null);
+  const pendingFocusRef = useRef<"translation" | "ai" | null>(null);
+  const pageChangingFrom = previousPageRef.current === activePage
+    ? null
+    : previousPageRef.current;
+  const visibleTransitionFrom = transitionFrom ?? pageChangingFrom;
+  if (aiPanel) retainedAiPanelRef.current = aiPanel;
+  const renderedAiPanel = aiPanel ?? (
+    pageChangingFrom === "ai" || transitionFrom === "ai"
+      ? retainedAiPanelRef.current
+      : null
+  );
+
+  const focusAiPagePrimary = useCallback(() => {
+    const target = aiPageRef.current?.querySelector<HTMLButtonElement>(
+      '[data-testid="ai-translate-run-page"][data-page-active="true"] [data-testid="lyrics-ai-run-page-back"], [data-testid="lyrics-ai-page-back"]'
+    );
+    target?.focus({ preventScroll: true });
+    return Boolean(target);
+  }, []);
+
+  const focusEnteredPage = useCallback((page: LyricsSidebarPage) => {
+    if (page !== activePage) return;
+    setTransitionFrom(null);
+    if (pendingFocusRef.current === "ai" && page === "ai") {
+      pendingFocusRef.current = null;
+      focusAiPagePrimary();
+      if (focusIntent === "ai") onIntentHandled();
+      return;
+    }
+    if (pendingFocusRef.current === "translation" && page === "translation") {
+      pendingFocusRef.current = null;
+      aiButtonRef.current?.focus({ preventScroll: true });
+    }
+  }, [activePage, focusAiPagePrimary, focusIntent, onIntentHandled]);
 
   function onTabKeyDown(event: KeyboardEvent<HTMLButtonElement>, tab: LyricsSidebarTab) {
     const currentIndex = TABS.indexOf(tab);
@@ -140,11 +192,57 @@ export function LyricsSidebar(props: LyricsSidebarProps) {
     return () => window.cancelAnimationFrame(frame);
   }, [focusIntent, mobileDrawer, open]);
 
+  useLayoutEffect(() => {
+    const previousPage = previousPageRef.current;
+    if (previousPage === activePage) return;
+    previousPageRef.current = activePage;
+    setTransitionFrom(previousPage);
+
+    const activeElement = document.activeElement;
+    const contentHadFocus = activeElement instanceof HTMLElement && Boolean(
+      activeElement.closest("[data-lyrics-sidebar-page]")
+    );
+    if (contentHadFocus) {
+      pendingFocusRef.current = activePage === "ai"
+        ? "ai"
+        : activePage === "translation"
+          ? "translation"
+          : null;
+      viewportRef.current?.focus({ preventScroll: true });
+    } else if (focusIntent === "ai" && activePage === "ai") {
+      pendingFocusRef.current = "ai";
+    }
+
+    if (activePage === "ai") aiPageRef.current?.scrollTo({ top: 0 });
+  }, [activePage, focusIntent]);
+
+  useEffect(() => {
+    if (focusIntent !== "ai" || activePage !== "ai" || pendingFocusRef.current) return;
+    const frame = window.requestAnimationFrame(() => {
+      focusAiPagePrimary();
+      onIntentHandled();
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [activePage, focusAiPagePrimary, focusIntent, onIntentHandled]);
+
+  useEffect(() => {
+    if (!reduceMotion || !transitionFrom) return;
+    const frame = window.requestAnimationFrame(() => focusEnteredPage(activePage));
+    return () => window.cancelAnimationFrame(frame);
+  }, [activePage, focusEnteredPage, reduceMotion, transitionFrom]);
+
   function onDrawerKeyDown(event: KeyboardEvent<HTMLElement>) {
     if (!mobileDrawer) return;
     if (event.key === "Escape") {
       event.preventDefault();
       event.stopPropagation();
+      const activeRunPageBack = event.currentTarget.querySelector<HTMLButtonElement>(
+        '[data-testid="ai-translate-run-page"][data-page-active="true"] [data-testid="lyrics-ai-run-page-back"]'
+      );
+      if (activeRunPageBack) {
+        activeRunPageBack.click();
+        return;
+      }
       if (aiPanel) {
         if (isAITranslating) onCancelAITranslate();
         onCloseAITranslate();
@@ -265,43 +363,130 @@ export function LyricsSidebar(props: LyricsSidebarProps) {
             className="min-h-0 flex-1 overflow-hidden"
             data-testid="lyrics-sidebar-panels"
           >
-            <SidebarPanel tab="cleanup" activeTab={activeTab}>
-              <CleanupPanel {...props} />
-            </SidebarPanel>
-            <SidebarPanel tab="translation" activeTab={activeTab}>
-              <TranslationPanel {...props} />
-            </SidebarPanel>
+            <div
+              ref={viewportRef}
+              tabIndex={-1}
+              className="relative h-full min-h-0 overflow-hidden focus:outline-none"
+              data-testid="lyrics-translation-page-viewport"
+              data-sidebar-page={activePage}
+              data-translation-page={aiPanel ? "ai" : "home"}
+              data-reduced-motion={reduceMotion ? "true" : "false"}
+            >
+              <SidebarDeckPage
+                page="cleanup"
+                activePage={activePage}
+                transitionFrom={visibleTransitionFrom}
+                reducedMotion={reduceMotion}
+                id="lyrics-sidebar-panel-cleanup"
+                labelledBy="lyrics-sidebar-tab-cleanup"
+                testId="lyrics-sidebar-panel-cleanup"
+                className="overflow-x-hidden overflow-y-auto overscroll-contain p-3 [scrollbar-gutter:stable]"
+                onEntered={focusEnteredPage}
+              >
+                <CleanupPanel {...props} />
+              </SidebarDeckPage>
+              <SidebarDeckPage
+                page="translation"
+                activePage={activePage}
+                transitionFrom={visibleTransitionFrom}
+                reducedMotion={reduceMotion}
+                id={!aiPanel ? "lyrics-sidebar-panel-translation" : undefined}
+                labelledBy="lyrics-sidebar-tab-translation"
+                testId="lyrics-translation-home-page"
+                className="overflow-x-hidden overflow-y-auto overscroll-contain p-3 [scrollbar-gutter:stable]"
+                onEntered={focusEnteredPage}
+              >
+                <TranslationPanel {...props} aiButtonRef={aiButtonRef} />
+              </SidebarDeckPage>
+              <SidebarDeckPage
+                page="ai"
+                activePage={activePage}
+                transitionFrom={visibleTransitionFrom}
+                reducedMotion={reduceMotion}
+                id={aiPanel ? "lyrics-sidebar-panel-translation" : undefined}
+                labelledBy="lyrics-sidebar-tab-translation"
+                testId={renderedAiPanel ? "lyrics-translation-ai-page" : undefined}
+                className="overflow-hidden"
+                pageRef={aiPageRef}
+                onEntered={focusEnteredPage}
+              >
+                {renderedAiPanel}
+              </SidebarDeckPage>
+            </div>
           </div>
       </div>
     </aside>
   );
 }
 
-function SidebarPanel({
-  tab,
-  activeTab,
+function SidebarDeckPage({
+  page,
+  activePage,
+  transitionFrom,
+  reducedMotion,
+  id,
+  labelledBy,
+  testId,
+  className,
+  pageRef,
+  onEntered,
   children
 }: {
-  tab: LyricsSidebarTab;
-  activeTab: LyricsSidebarTab;
+  page: LyricsSidebarPage;
+  activePage: LyricsSidebarPage;
+  transitionFrom: LyricsSidebarPage | null;
+  reducedMotion: boolean;
+  id?: string;
+  labelledBy: string;
+  testId?: string;
+  className: string;
+  pageRef?: Ref<HTMLElement>;
+  onEntered: (page: LyricsSidebarPage) => void;
   children: ReactNode;
 }) {
+  const active = page === activePage;
+  const exiting = page === transitionFrom;
+  const visible = active || exiting;
+  const pageOffset = SIDEBAR_PAGE_INDEX[page] - SIDEBAR_PAGE_INDEX[activePage];
+
   return (
-    <section
-      id={`lyrics-sidebar-panel-${tab}`}
+    <motion.section
+      ref={pageRef}
+      id={id}
       role="tabpanel"
-      aria-labelledby={`lyrics-sidebar-tab-${tab}`}
-      hidden={activeTab !== tab}
+      aria-labelledby={labelledBy}
+      aria-hidden={active ? undefined : true}
+      inert={active ? undefined : true}
+      hidden={!visible}
+      initial={false}
+      animate={{
+        opacity: reducedMotion ? (active ? 1 : 0) : (visible ? 1 : 0),
+        x: reducedMotion
+          ? "0%"
+          : pageOffset < 0
+            ? "-100%"
+            : pageOffset > 0
+              ? "100%"
+              : "0%"
+      }}
+      transition={reducedMotion ? reducedMotionTransition : sidebarPageTransition}
+      onAnimationComplete={() => {
+        if (active) onEntered(page);
+      }}
       className={cn(
-        "lyrics-sidebar-panel h-full min-h-0",
-        tab === "translation"
-          ? "overflow-hidden"
-          : "overflow-y-auto overscroll-contain p-3"
+        "absolute inset-0 h-full min-h-0",
+        className
       )}
-      data-testid={`lyrics-sidebar-panel-${tab}`}
+      data-lyrics-sidebar-page={page}
+      data-testid={testId}
+      data-page-active={active ? "true" : "false"}
+      style={{
+        pointerEvents: active ? "auto" : "none",
+        zIndex: active ? 2 : exiting ? 1 : 0
+      }}
     >
       {children}
-    </section>
+    </motion.section>
   );
 }
 
@@ -561,267 +746,113 @@ function TranslationPanel({
   t,
   isAITranslating,
   showAiTranslate,
-  aiPanel,
-  focusIntent,
   onTranslationEnabledChange,
   onAITranslate,
-  onIntentHandled,
   onSplitAlternatingLyrics,
   onFormatTranslation,
-  onSwapColumns
-}: LyricsSidebarProps) {
+  onSwapColumns,
+  aiButtonRef
+}: LyricsSidebarProps & { aiButtonRef: Ref<HTMLButtonElement> }) {
   const [showSplitPreview, setShowSplitPreview] = useState(false);
   const [showSwapPreview, setShowSwapPreview] = useState(false);
-  const reduceMotion = useAppReducedMotion();
-  const viewportRef = useRef<HTMLDivElement | null>(null);
-  const homePageRef = useRef<HTMLElement | null>(null);
-  const aiPageRef = useRef<HTMLElement | null>(null);
-  const aiButtonRef = useRef<HTMLButtonElement | null>(null);
-  const aiPageOpen = Boolean(aiPanel);
-  const previousAiPageOpenRef = useRef(aiPageOpen);
-  const pendingFocusRef = useRef<"home" | "ai" | null>(null);
-  const pageChanged = previousAiPageOpenRef.current !== aiPageOpen;
   const split = useMemo(() => splitAlternatingLyrics(lyrics, locale), [locale, lyrics]);
   const aiCopy = getAIUiCopy(locale);
   const splitOriginalLines = countRows(split.lyrics);
   const splitTranslationLines = countRows(split.translationText);
-  const direction: StepDirection = aiPageOpen ? 1 : -1;
-  const focusEnteredPage = useCallback((page: "home" | "ai") => {
-    const activePage = aiPageOpen ? "ai" : "home";
-    if (
-      page !== activePage ||
-      (pendingFocusRef.current !== page && document.activeElement !== viewportRef.current)
-    ) {
-      return;
-    }
-    pendingFocusRef.current = null;
-    const target = page === "ai"
-      ? aiPageRef.current?.querySelector<HTMLButtonElement>('[data-testid="lyrics-ai-page-back"]')
-      : aiButtonRef.current;
-    target?.focus({ preventScroll: true });
-    if (page === "ai" && focusIntent === "ai") onIntentHandled();
-  }, [aiPageOpen, focusIntent, onIntentHandled]);
-
-  useLayoutEffect(() => {
-    if (!pageChanged) return;
-    previousAiPageOpenRef.current = aiPageOpen;
-    pendingFocusRef.current = aiPageOpen ? "ai" : "home";
-    const activeElement = document.activeElement;
-    if (
-      activeElement instanceof HTMLElement &&
-      activeElement.closest(
-        '[data-testid="lyrics-translation-home-page"], [data-testid="lyrics-translation-ai-page"]'
-      )
-    ) {
-      viewportRef.current?.focus({ preventScroll: true });
-    }
-
-    if (aiPageOpen) aiPageRef.current?.scrollTo({ top: 0 });
-  }, [aiPageOpen, pageChanged]);
-
-  useEffect(() => {
-    if (pageChanged || pendingFocusRef.current || focusIntent !== "ai") return;
-    const frame = window.requestAnimationFrame(() => {
-      const target = aiPageOpen
-        ? aiPageRef.current?.querySelector<HTMLButtonElement>('[data-testid="lyrics-ai-page-back"]')
-        : aiButtonRef.current;
-      target?.focus({ preventScroll: true });
-      onIntentHandled();
-    });
-    return () => window.cancelAnimationFrame(frame);
-  }, [aiPageOpen, focusIntent, onIntentHandled, pageChanged]);
-
-  useEffect(() => {
-    if (!pageChanged || !reduceMotion) return;
-    const frame = window.requestAnimationFrame(() => {
-      focusEnteredPage(aiPageOpen ? "ai" : "home");
-    });
-    return () => window.cancelAnimationFrame(frame);
-  }, [aiPageOpen, focusEnteredPage, pageChanged, reduceMotion]);
 
   return (
-    <div
-      ref={viewportRef}
-      tabIndex={-1}
-      className="relative h-full min-h-0 overflow-hidden focus:outline-none"
-      data-testid="lyrics-translation-page-viewport"
-      data-translation-page={aiPageOpen ? "ai" : "home"}
-      data-reduced-motion={reduceMotion ? "true" : "false"}
-    >
-      <motion.section
-        ref={homePageRef}
-        initial={false}
-        animate={{
-          opacity: 1,
-          x: reduceMotion || !aiPageOpen ? "0%" : "-100%"
-        }}
-        transition={reduceMotion ? reducedMotionTransition : sidebarPageTransition}
-        onAnimationComplete={() => {
-          if (!aiPageOpen) focusEnteredPage("home");
-        }}
-        aria-hidden={aiPageOpen ? true : undefined}
-        inert={aiPageOpen ? true : undefined}
-        className="absolute inset-0 min-h-0 overflow-x-hidden overflow-y-auto overscroll-contain p-3 [scrollbar-gutter:stable]"
-        data-testid="lyrics-translation-home-page"
-        data-page-active={aiPageOpen ? "false" : "true"}
-        style={{ pointerEvents: aiPageOpen ? "none" : "auto" }}
+    <div className="grid gap-3">
+      <section
+        className="lyrics-sidebar-primary"
+        data-testid="lyrics-translation-primary"
       >
-        <div className="grid gap-3">
-          <section
-            className="lyrics-sidebar-primary"
-            data-testid="lyrics-translation-primary"
-          >
-            <p className="app-text-subtle px-0.5 text-[10px] font-semibold uppercase tracking-[0.08em]">
-              {copy.translationHeading}
-            </p>
-            <ToggleRow
-              label={t("enableTranslation")}
-              checked={translationEnabled}
-              onChange={onTranslationEnabledChange}
-              size="sm"
-              testId="translation-toggle"
-              className="lyrics-sidebar-primary__toggle"
+        <p className="app-text-subtle px-0.5 text-[10px] font-semibold uppercase tracking-[0.08em]">
+          {copy.translationHeading}
+        </p>
+        <ToggleRow
+          label={t("enableTranslation")}
+          checked={translationEnabled}
+          onChange={onTranslationEnabledChange}
+          size="sm"
+          testId="translation-toggle"
+          className="lyrics-sidebar-primary__toggle"
+        />
+
+        {showAiTranslate ? (
+          <div className="rounded-md" data-testid="lyrics-ai-entry">
+            <AiTranslateButton
+              buttonRef={aiButtonRef}
+              label={isAITranslating ? aiCopy.translating : aiCopy.aiTranslate}
+              loading={isAITranslating}
+              themeColor={themeColor}
+              onClick={onAITranslate}
             />
+          </div>
+        ) : null}
+      </section>
 
-            {showAiTranslate ? (
-              <div className="rounded-md" data-testid="lyrics-ai-entry">
-                <AiTranslateButton
-                  buttonRef={aiButtonRef}
-                  label={isAITranslating ? aiCopy.translating : aiCopy.aiTranslate}
-                  loading={isAITranslating}
-                  themeColor={themeColor}
-                  onClick={onAITranslate}
+      <PanelSection title={copy.columnToolsHeading} testId="lyrics-translation-column-tools">
+        <OperationGroup testId="lyrics-translation-section-split">
+          <OperationItem>
+            <ToolButton
+              label={copy.splitPreview}
+              onClick={() => setShowSplitPreview((value) => !value)}
+              testId="lyrics-split-preview"
+            />
+            {showSplitPreview ? (
+              <PreviewBox testId="lyrics-split-preview-result">
+                <p>{formatLyricsWorkspaceCopy(copy.splitSummary, {
+                  original: splitOriginalLines,
+                  translation: splitTranslationLines
+                })}</p>
+                <ToolButton
+                  label={copy.splitApply}
+                  onClick={() => onSplitAlternatingLyrics(split.lyrics, split.translationText)}
+                  disabled={!split.lyrics && !split.translationText}
+                  testId="lyrics-split-apply"
                 />
-              </div>
+              </PreviewBox>
             ) : null}
-          </section>
+          </OperationItem>
+        </OperationGroup>
 
-          <PanelSection title={copy.columnToolsHeading} testId="lyrics-translation-column-tools">
-            <OperationGroup testId="lyrics-translation-section-split">
-              <OperationItem>
-                <ToolButton
-                  label={copy.splitPreview}
-                  onClick={() => setShowSplitPreview((value) => !value)}
-                  testId="lyrics-split-preview"
-                />
-                {showSplitPreview ? (
-                  <PreviewBox testId="lyrics-split-preview-result">
-                    <p>{formatLyricsWorkspaceCopy(copy.splitSummary, {
-                      original: splitOriginalLines,
-                      translation: splitTranslationLines
-                    })}</p>
-                    <ToolButton
-                      label={copy.splitApply}
-                      onClick={() => onSplitAlternatingLyrics(split.lyrics, split.translationText)}
-                      disabled={!split.lyrics && !split.translationText}
-                      testId="lyrics-split-apply"
-                    />
-                  </PreviewBox>
-                ) : null}
-              </OperationItem>
-            </OperationGroup>
+        <OperationGroup testId="lyrics-translation-section-format">
+          <OperationItem>
+            <ToolButton
+              label={copy.formatTranslation}
+              onClick={() => onFormatTranslation(formatChineseTranslation(translationText))}
+              disabled={!translationText}
+              testId="lyrics-format-translation"
+            />
+          </OperationItem>
+        </OperationGroup>
 
-            <OperationGroup testId="lyrics-translation-section-format">
-              <OperationItem>
+        <OperationGroup testId="lyrics-translation-section-swap">
+          <OperationItem>
+            <ToolButton
+              label={copy.swapPreview}
+              onClick={() => setShowSwapPreview((value) => !value)}
+              disabled={!translationText}
+              testId="lyrics-swap-preview"
+              danger
+            />
+            {showSwapPreview ? (
+              <PreviewBox testId="lyrics-swap-preview-result">
+                <p>{copy.swapSummary}</p>
                 <ToolButton
-                  label={copy.formatTranslation}
-                  onClick={() => onFormatTranslation(formatChineseTranslation(translationText))}
-                  disabled={!translationText}
-                  testId="lyrics-format-translation"
-                />
-              </OperationItem>
-            </OperationGroup>
-
-            <OperationGroup testId="lyrics-translation-section-swap">
-              <OperationItem>
-                <ToolButton
-                  label={copy.swapPreview}
-                  onClick={() => setShowSwapPreview((value) => !value)}
-                  disabled={!translationText}
-                  testId="lyrics-swap-preview"
+                  label={copy.swapApply}
+                  onClick={onSwapColumns}
+                  testId="lyrics-swap-apply"
                   danger
                 />
-                {showSwapPreview ? (
-                  <PreviewBox testId="lyrics-swap-preview-result">
-                    <p>{copy.swapSummary}</p>
-                    <ToolButton
-                      label={copy.swapApply}
-                      onClick={onSwapColumns}
-                      testId="lyrics-swap-apply"
-                      danger
-                    />
-                  </PreviewBox>
-                ) : null}
-              </OperationItem>
-            </OperationGroup>
-          </PanelSection>
-        </div>
-      </motion.section>
-
-      <MotionPresence mode="sync" custom={direction}>
-        {aiPageOpen ? (
-          <TranslationSidebarPage
-            key="ai"
-            direction={direction}
-            reducedMotion={reduceMotion}
-            pageRef={aiPageRef}
-            testId="lyrics-translation-ai-page"
-            onEntered={() => focusEnteredPage("ai")}
-          >
-            {aiPanel}
-          </TranslationSidebarPage>
-        ) : null}
-      </MotionPresence>
+              </PreviewBox>
+            ) : null}
+          </OperationItem>
+        </OperationGroup>
+      </PanelSection>
     </div>
   );
 }
-
-function TranslationSidebarPage({
-  children,
-  direction,
-  reducedMotion,
-  pageRef,
-  testId,
-  onEntered
-}: {
-  children: ReactNode;
-  direction: StepDirection;
-  reducedMotion: boolean;
-  pageRef: Ref<HTMLElement>;
-  testId: string;
-  onEntered: () => void;
-}) {
-  const isPresent = useIsPresent();
-
-  return (
-    <motion.section
-      ref={pageRef}
-      custom={direction}
-      variants={sidebarPageVariants(reducedMotion)}
-      initial="initial"
-      animate="animate"
-      exit="exit"
-      transition={reducedMotion ? reducedMotionTransition : sidebarPageTransition}
-      onAnimationComplete={() => {
-        if (isPresent) onEntered();
-      }}
-      aria-hidden={isPresent ? undefined : true}
-      inert={isPresent ? undefined : true}
-      className="absolute inset-0 min-h-0 overflow-x-hidden overflow-y-auto overscroll-contain p-3 [scrollbar-gutter:stable]"
-      data-testid={testId}
-      data-page-active={isPresent ? "true" : "false"}
-      style={{ pointerEvents: isPresent ? "auto" : "none" }}
-    >
-      {children}
-    </motion.section>
-  );
-}
-
-/*
- * Translation home remains mounted so its reverse motion cannot be interrupted
- * by remount timing. AnimatePresence retains the exiting AI page only for the
- * horizontal transition, and both inactive surfaces become inert immediately.
- */
 
 function PanelSection({
   title,

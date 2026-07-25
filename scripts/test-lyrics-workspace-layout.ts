@@ -114,42 +114,50 @@ assert.ok(
 );
 assert.ok(
   sidebarSource.includes('data-testid="lyrics-translation-page-viewport"') &&
-    sidebarSource.includes('data-testid="lyrics-translation-home-page"') &&
-    sidebarSource.includes('testId="lyrics-translation-ai-page"') &&
-    sidebarSource.includes('data-translation-page={aiPageOpen ? "ai" : "home"}') &&
-    sidebarSource.includes('mode="sync"') &&
-    sidebarSource.includes("custom={direction}") &&
-    sidebarSource.includes('x: reduceMotion || !aiPageOpen ? "0%" : "-100%"') &&
-    sidebarSource.includes('data-page-active={aiPageOpen ? "false" : "true"}') &&
-    sidebarSource.includes('pendingFocusRef.current || focusIntent !== "ai"') &&
+    sidebarSource.includes('testId="lyrics-translation-home-page"') &&
+    sidebarSource.includes('testId={renderedAiPanel ? "lyrics-translation-ai-page" : undefined}') &&
+    sidebarSource.includes('data-sidebar-page={activePage}') &&
+    sidebarSource.includes('data-translation-page={aiPanel ? "ai" : "home"}') &&
+    sidebarSource.includes('page="cleanup"') &&
+    sidebarSource.includes('page="translation"') &&
+    sidebarSource.includes('page="ai"') &&
+    sidebarSource.includes("visibleTransitionFrom") &&
+    sidebarSource.includes('pendingFocusRef.current === "ai"') &&
     !sidebarSource.includes('data-testid="lyrics-ai-panel-boundary"'),
-  "translation owns one synchronized page viewport with a persistent home surface and post-animation focus"
+  "the sidebar owns one retained cleanup, translation, and AI page deck with post-animation focus"
 );
 assert.ok(
-  sidebarSource.includes('className="absolute inset-0 min-h-0 overflow-x-hidden overflow-y-auto overscroll-contain') &&
-    sidebarSource.includes("inert={isPresent ? undefined : true}") &&
-    sidebarSource.includes("aria-hidden={isPresent ? undefined : true}") &&
-    sidebarSource.includes('style={{ pointerEvents: isPresent ? "auto" : "none" }}'),
-  "each translation page scrolls independently while the exiting page immediately leaves the interaction tree"
+  sidebarSource.includes('"absolute inset-0 h-full min-h-0"') &&
+    sidebarSource.includes("hidden={!visible}") &&
+    sidebarSource.includes("inert={active ? undefined : true}") &&
+    sidebarSource.includes("aria-hidden={active ? undefined : true}") &&
+    sidebarSource.includes('pointerEvents: active ? "auto" : "none"'),
+  "each sidebar page retains independent state while inactive and exiting pages leave the interaction tree"
 );
 assert.ok(
   sidebarSource.includes("useAppReducedMotion") &&
-    sidebarSource.includes("sidebarPageVariants(reducedMotion)") &&
+    sidebarSource.includes('pageOffset < 0') &&
+    sidebarSource.includes('pageOffset > 0') &&
     sidebarSource.includes("reducedMotion ? reducedMotionTransition : sidebarPageTransition") &&
+    aiTranslatePanelSource.includes("sidebarPageVariants(reducedMotion)") &&
     motionTokensSource.includes("function sidebarPageVariants(reducedMotion = false)") &&
     motionTokensSource.includes('direction > 0 ? "100%" : "-100%"') &&
     motionTokensSource.includes('direction > 0 ? "-100%" : "100%"'),
-  "translation page motion uses the shared directional token and removes horizontal travel under reduced motion"
+  "the sidebar deck and AI stage pager share full-width directional motion and remove travel under reduced motion"
 );
 assert.ok(
   aiTranslatePanelSource.includes('presentation = "inline"') &&
     aiTranslatePanelSource.includes('data-presentation={presentation}') &&
     aiTranslatePanelSource.includes('data-testid="lyrics-ai-page-back"') &&
+    aiTranslatePanelSource.includes('data-testid="ai-translate-stage-viewport"') &&
+    aiTranslatePanelSource.includes('testId="ai-translate-setup-page"') &&
+    aiTranslatePanelSource.includes('testId="ai-translate-run-page"') &&
+    aiTranslatePanelSource.includes('data-testid="lyrics-ai-run-page-back"') &&
     aiTranslatePanelSource.includes("if (loading) onCancel();") &&
     aiTranslatePanelSource.includes("onClose();") &&
-    aiTranslatePanelSource.includes("return sidebarPage ? panel : <MotionPanel") &&
+    aiTranslatePanelSource.includes('return <MotionPanel className="mt-3">{inlinePanel}</MotionPanel>') &&
     editorStepsSource.includes('presentation="sidebar-page"'),
-  "AI translation keeps its inline presentation available while the lyrics workspace disables the nested entrance and card shell"
+  "AI translation preserves inline compatibility while sidebar setup and runtime use separate pages"
 );
 assert.ok(
   commandBarSource.includes('role="toolbar"') &&
@@ -182,15 +190,15 @@ assert.ok(
 );
 assert.ok(
   sidebarSource.includes('role="tablist"') &&
-    sidebarSource.includes('tab="cleanup"') &&
-    sidebarSource.includes('tab="translation"') &&
-    !sidebarSource.includes('tab="review"') &&
-    !sidebarSource.includes('tab="source"') &&
-    sidebarSource.includes("hidden={activeTab !== tab}") &&
+    sidebarSource.includes('page="cleanup"') &&
+    sidebarSource.includes('page="translation"') &&
+    !sidebarSource.includes('page="review"') &&
+    !sidebarSource.includes('page="source"') &&
+    sidebarSource.includes("hidden={!visible}") &&
     sidebarSource.includes('data-testid="lyrics-sidebar-panels"') &&
     sidebarSource.includes('event.key === "ArrowRight"') &&
     sidebarSource.includes("tabIndex={activeTab === tab ? 0 : -1}"),
-  "the sidebar keeps only cleanup and translation panels with roving keyboard navigation"
+  "the sidebar keeps cleanup and translation roots with roving keyboard navigation and retained motion pages"
 );
 assert.ok(
   editorStepsSource.includes("lyricsFetchPanel={(") &&
