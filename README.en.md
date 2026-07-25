@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v5.8.6.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v5.8.7.en.md">Release Notes</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
   <a href="#features">Features</a> ·
   <a href="#local-development">Local Development</a> ·
@@ -51,23 +51,23 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 Download the latest version from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Recommended installer: `Lyrics Card Generator Setup 5.8.6.exe`
-* Portable version: `Lyrics Card Generator-5.8.6-portable.exe`
+* Recommended installer: `Lyrics Card Generator Setup 5.8.7.exe`
+* Portable version: `Lyrics Card Generator-5.8.7-portable.exe`
 
 The installer is recommended for regular use. The portable version is useful for temporary use, testing, or running from a removable drive.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v5.8.6 Highlights
+### v5.8.7 Highlights
 
-* AI translation in step two no longer expands inline on Translation home. It opens as an independent second-level page: home exits left, the AI page enters from the right, and Back reverses the motion.
-* Cleanup／Translation tabs, the sidebar frame, lyric editor, and fixed 2:1 split stay still. Each page scrolls independently, with complete entry/return focus, inactive-page isolation, and layered Escape behavior on narrow screens.
-* AI styles, Reasoning, streaming output, translation application, and existing Cleanup／column tools are unchanged. Reduced motion removes all horizontal travel.
+* Cleanup and Translation in step two now share one horizontal page track: the old page exits according to direction while the new page enters from the corresponding side. The top tabs and lyric editor stay in place.
+* After AI translation starts, connection status, reasoning, and translation streams slide from the setup page into an independent run/results page. Going back first stops an active request, then reverses the transition.
+* Cleanup, translation setup, and AI run pages retain their own state and scroll positions, with focus handoff, inactive-page isolation, three-level Escape behavior on narrow screens, and reduced-motion support.
 
 ## 🌐 Multilingual Release Notes
 
 GitHub Release displays a Simplified Chinese summary by default. See the full release notes:
-[简体中文](./docs/releases/v5.8.6.zh-CN.md) · [繁體中文](./docs/releases/v5.8.6.zh-TW.md) · [English](./docs/releases/v5.8.6.en.md) · [Français](./docs/releases/v5.8.6.fr.md) · [日本語](./docs/releases/v5.8.6.ja.md) · [Español](./docs/releases/v5.8.6.es.md)
+[简体中文](./docs/releases/v5.8.7.zh-CN.md) · [繁體中文](./docs/releases/v5.8.7.zh-TW.md) · [English](./docs/releases/v5.8.7.en.md) · [Français](./docs/releases/v5.8.7.fr.md) · [日本語](./docs/releases/v5.8.7.ja.md) · [Español](./docs/releases/v5.8.7.es.md)
 
 <a id="features"></a>
 

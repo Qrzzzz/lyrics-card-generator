@@ -19,7 +19,7 @@
 <p>
   <strong>Navegación</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Descargar la última versión</a> ·
-  <a href="./docs/releases/v5.8.6.es.md">Notas de la versión</a> ·
+  <a href="./docs/releases/v5.8.7.es.md">Notas de la versión</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en línea</a> ·
   <a href="#funciones-principales">Funciones principales</a> ·
   <a href="#desarrollo-local">Desarrollo local</a> ·
@@ -51,23 +51,23 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 Descarga la versión más reciente desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Instalador recomendado: `Lyrics Card Generator Setup 5.8.6.exe`
-* Versión portable: `Lyrics Card Generator-5.8.6-portable.exe`
+* Instalador recomendado: `Lyrics Card Generator Setup 5.8.7.exe`
+* Versión portable: `Lyrics Card Generator-5.8.7-portable.exe`
 
 El instalador se recomienda para uso habitual. La versión portable es útil para pruebas, uso temporal o ejecución desde una unidad extraíble.
 
 > La compilación actual no está firmada. Windows puede mostrar una advertencia de SmartScreen, algo habitual en aplicaciones personales sin firma.
 
-### Aspectos destacados de la versión 5.8.6
+### Aspectos destacados de la versión 5.8.7
 
-* En el paso 2, la traducción con IA deja de desplegarse dentro del inicio de Traducción. Se abre como una página secundaria independiente: el inicio sale hacia la izquierda, la página de IA entra desde la derecha y Volver invierte el movimiento.
-* Las pestañas Limpieza／Traducción, el marco lateral, el editor de letras y la división fija 2:1 permanecen inmóviles. Cada página tiene desplazamiento propio, gestión de foco, aislamiento de la página inactiva y Escape jerárquico en pantallas estrechas.
-* Los estilos de IA, Reasoning, la salida en directo, la aplicación de la traducción y las herramientas existentes de Limpieza／columnas no cambian. El modo de movimiento reducido elimina todo desplazamiento horizontal.
+* Limpieza y Traducción del paso 2 comparten ahora una misma pista horizontal: la página anterior sale según la dirección y la nueva entra desde el lado correspondiente. Las pestañas superiores y el editor de letras permanecen fijos.
+* Al iniciar la traducción con IA, el estado de conexión y los flujos de razonamiento y traducción pasan desde la página de parámetros a una página independiente de ejecución／resultados. Volver detiene primero una solicitud activa y después invierte la transición.
+* Limpieza, los parámetros de traducción y la ejecución con IA conservan por separado su estado y posición de desplazamiento, con transferencia de foco, aislamiento de páginas inactivas, Escape de tres niveles en pantallas estrechas y movimiento reducido.
 
 ## 🌐 Notas de publicación multilingües
 
 GitHub Release muestra de forma predeterminada un resumen en chino simplificado. Consulta las notas completas:
-[简体中文](./docs/releases/v5.8.6.zh-CN.md) · [繁體中文](./docs/releases/v5.8.6.zh-TW.md) · [English](./docs/releases/v5.8.6.en.md) · [Français](./docs/releases/v5.8.6.fr.md) · [日本語](./docs/releases/v5.8.6.ja.md) · [Español](./docs/releases/v5.8.6.es.md)
+[简体中文](./docs/releases/v5.8.7.zh-CN.md) · [繁體中文](./docs/releases/v5.8.7.zh-TW.md) · [English](./docs/releases/v5.8.7.en.md) · [Français](./docs/releases/v5.8.7.fr.md) · [日本語](./docs/releases/v5.8.7.ja.md) · [Español](./docs/releases/v5.8.7.es.md)
 
 <a id="funciones-principales"></a>
 

@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v5.8.6.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v5.8.7.zh-CN.md">发布说明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">在线 Web Lite 版</a> ·
   <a href="./docs/desktop.md">桌面维护文档</a> ·
   <a href="#主要功能">主要功能</a> ·
@@ -49,23 +49,23 @@
 
 请前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下载最新版：
 
-* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 5.8.6.exe`
-* 不想安装时可下载便携版：`Lyrics Card Generator-5.8.6-portable.exe`
+* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 5.8.7.exe`
+* 不想安装时可下载便携版：`Lyrics Card Generator-5.8.7-portable.exe`
 
 安装版适合长期使用；便携版适合临时运行、测试或放在移动硬盘中使用。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v5.8.6 更新重点
+### v5.8.7 更新重点
 
-* 第二步“翻译”工具中的 AI 翻译不再在首页内联展开，而是进入独立二级页面；首页向左退出，AI 页从右侧进入，返回时方向相反。
-* 整理／翻译 Tab、侧栏外框、歌词编辑区和固定 2:1 分栏保持不动；两页独立滚动，并补齐进入／返回焦点、非活动页隔离和窄屏分层 Esc。
-* AI 风格、Reasoning、流式输出、译文应用及现有整理／栏位工具保持不变，减弱动效模式下不执行横向位移。
+* 第二步“整理／翻译”现在共用一条横向页面轨道：切换 Tab 时旧页按方向退出，新页从对应一侧进入，顶部 Tab 与歌词编辑区保持原位。
+* AI 翻译启动后，连接状态、推理流与译文流从参数页滑入独立执行／结果页；返回时先停止进行中的请求，再按反方向回到参数页。
+* 整理、翻译参数与 AI 执行页分别保持自己的状态和滚动位置，并补齐焦点接力、非活动页隔离、窄屏三级 Esc 与减少动态效果。
 
 ## 🌐 多语言发布说明
 
 GitHub Release 默认展示简体中文摘要，完整说明见：
-[简体中文](./docs/releases/v5.8.6.zh-CN.md) · [繁體中文](./docs/releases/v5.8.6.zh-TW.md) · [English](./docs/releases/v5.8.6.en.md) · [Français](./docs/releases/v5.8.6.fr.md) · [日本語](./docs/releases/v5.8.6.ja.md) · [Español](./docs/releases/v5.8.6.es.md)
+[简体中文](./docs/releases/v5.8.7.zh-CN.md) · [繁體中文](./docs/releases/v5.8.7.zh-TW.md) · [English](./docs/releases/v5.8.7.en.md) · [Français](./docs/releases/v5.8.7.fr.md) · [日本語](./docs/releases/v5.8.7.ja.md) · [Español](./docs/releases/v5.8.7.es.md)
 
 <a id="主要功能"></a>
 
