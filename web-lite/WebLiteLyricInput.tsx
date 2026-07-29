@@ -1,114 +1,41 @@
 "use client";
 
 import { Languages, SplitSquareVertical } from "lucide-react";
-import { type ReactNode, useId } from "react";
-import { LyricsWorkspace } from "@/components/editor/LyricsWorkspace";
-import { AiTranslateButton } from "@/components/lyrics/AiTranslateButton";
+import { useId } from "react";
 import { TranslationFieldBorder } from "@/components/lyrics/TranslationFieldBorder";
 import { ActionButton, FieldLabel, Section, TextareaField, ToggleRow } from "@/components/ui/controls";
-import { getAIUiCopy } from "@/lib/ai/ui-copy";
 import type { createT } from "@/lib/i18n";
-import type { ExportLyricLineStatus } from "@/lib/lyrics-document";
-import type {
-  LyricsDocumentSnapshot,
-  LyricsSidebarTab
-} from "@/lib/lyrics-workbench";
 import { formatChineseTranslation, splitAlternatingLyrics } from "@/lib/lyric-format";
-import type { ContentMode, Locale, SongInfo } from "@/lib/types";
+import type { ContentMode, Locale } from "@/lib/types";
 
-export function LyricInput({
+export function WebLiteLyricInput({
   lyrics,
-  song,
-  lineStatus,
-  sidebarTab,
-  onSidebarTabChange,
-  presentation = "legacy",
   onLyricsChange,
   translationEnabled,
   translationText,
   onTranslationEnabledChange,
   onTranslationTextChange,
-  onLyricsDocumentChange,
   onSplitAlternatingLyrics,
-  onAITranslate,
-  onCloseAITranslate,
-  onCancelAITranslate,
-  isAITranslating,
-  aiTranslatePanel,
-  lyricsFetchPanel,
   themeColor,
   contentMode,
   locale,
-  t,
-  showAiTranslate = true
+  t
 }: {
   lyrics: string;
-  song?: SongInfo;
-  lineStatus?: ExportLyricLineStatus;
-  sidebarTab?: LyricsSidebarTab;
-  onSidebarTabChange?: (tab: LyricsSidebarTab) => void;
-  presentation?: "legacy" | "workspace";
   onLyricsChange: (lyrics: string) => void;
   translationEnabled: boolean;
   translationText: string;
   onTranslationEnabledChange: (enabled: boolean) => void;
   onTranslationTextChange: (translation: string) => void;
-  onLyricsDocumentChange?: (snapshot: LyricsDocumentSnapshot) => void;
   onSplitAlternatingLyrics: (lyrics: string, translationText: string) => void;
-  onAITranslate: () => void;
-  onCloseAITranslate?: () => void;
-  onCancelAITranslate?: () => void;
-  isAITranslating: boolean;
-  aiTranslatePanel?: ReactNode;
-  lyricsFetchPanel?: ReactNode;
   themeColor: string;
   contentMode: ContentMode;
   locale: Locale;
   t: ReturnType<typeof createT>;
-  showAiTranslate?: boolean;
 }) {
   const translationFieldId = useId();
-
-  if (
-    presentation === "workspace" &&
-    song &&
-    lineStatus &&
-    sidebarTab &&
-    onSidebarTabChange &&
-    onLyricsDocumentChange &&
-    onCloseAITranslate &&
-    onCancelAITranslate
-  ) {
-    return (
-      <LyricsWorkspace
-        lyrics={lyrics}
-        lineStatus={lineStatus}
-        sidebarTab={sidebarTab}
-        onSidebarTabChange={onSidebarTabChange}
-        onLyricsChange={onLyricsChange}
-        translationEnabled={translationEnabled}
-        translationText={translationText}
-        onTranslationEnabledChange={onTranslationEnabledChange}
-        onTranslationTextChange={onTranslationTextChange}
-        onLyricsDocumentChange={onLyricsDocumentChange}
-        onAITranslate={onAITranslate}
-        onCloseAITranslate={onCloseAITranslate}
-        onCancelAITranslate={onCancelAITranslate}
-        isAITranslating={isAITranslating}
-        aiPanel={aiTranslatePanel}
-        lyricsFetchPanel={lyricsFetchPanel}
-        themeColor={themeColor}
-        contentMode={contentMode}
-        locale={locale}
-        t={t}
-        showAiTranslate={showAiTranslate}
-      />
-    );
-  }
-
   const lines = lyrics ? lyrics.split(/\r?\n/).length : 0;
   const showTranslation = contentMode === "lyrics" && translationEnabled;
-  const aiCopy = getAIUiCopy(locale);
 
   return (
     <Section title={t("lyrics")} eyebrow={t("manualText")}>
@@ -123,14 +50,6 @@ export function LyricInput({
             />
           </FieldLabel>
           <div className="flex flex-wrap gap-2">
-            {showAiTranslate ? (
-              <AiTranslateButton
-                label={isAITranslating ? aiCopy.translating : aiCopy.aiTranslate}
-                loading={isAITranslating}
-                themeColor={themeColor}
-                onClick={onAITranslate}
-              />
-            ) : null}
             <ActionButton
               size="md"
               icon={<SplitSquareVertical className="h-4 w-4" />}
@@ -142,7 +61,6 @@ export function LyricInput({
               {t("splitAlternatingLyrics")}
             </ActionButton>
           </div>
-          {aiTranslatePanel}
           <ToggleRow label={t("enableTranslation")} checked={translationEnabled} onChange={onTranslationEnabledChange} />
           {showTranslation ? (
             <FieldLabel label={t("translation")} htmlFor={translationFieldId}>

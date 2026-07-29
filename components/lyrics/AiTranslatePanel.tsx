@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, useIsPresent } from "framer-motion";
-import { ArrowLeft, Brain, ChevronDown, CircleDot, FolderPen, Loader2, Sparkles, X } from "lucide-react";
+import { ArrowLeft, Brain, ChevronDown, CircleDot, FolderPen, Loader2, Sparkles } from "lucide-react";
 import {
   type KeyboardEvent,
   type ReactNode,
@@ -28,8 +28,6 @@ import {
 } from "@/lib/motion/tokens";
 import type { Locale } from "@/lib/types";
 
-export type AiTranslatePanelPresentation = "inline" | "sidebar-page";
-
 export function AiTranslatePanel({
   locale,
   initialStyle,
@@ -43,8 +41,7 @@ export function AiTranslatePanel({
   error,
   onClose,
   onCancel,
-  onConfirm,
-  presentation = "inline"
+  onConfirm
 }: {
   locale: Locale;
   initialStyle: string;
@@ -59,11 +56,9 @@ export function AiTranslatePanel({
   onClose: () => void;
   onCancel: () => void;
   onConfirm: (presetId: string, reasoning: boolean) => void;
-  presentation?: AiTranslatePanelPresentation;
 }) {
   const copy = getAIUiCopy(locale);
   const promptCopy = getAIPromptUiCopy(locale);
-  const sidebarPage = presentation === "sidebar-page";
   const reduceMotion = useAppReducedMotion();
   const presets = getTranslationPresets(locale, promptLibrary);
   const builtInPresets = presets.filter((preset) => preset.source !== "custom");
@@ -72,9 +67,7 @@ export function AiTranslatePanel({
   const [reasoning, setReasoning] = useState(initialReasoning);
   const [customExpanded, setCustomExpanded] = useState(customPresets.some((preset) => preset.id === initialStyle));
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
-  const [runPageOpen, setRunPageOpen] = useState(
-    sidebarPage && Boolean(loading || streamingText || reasoningText || error)
-  );
+  const [runPageOpen, setRunPageOpen] = useState(Boolean(loading || streamingText || reasoningText || error));
   const reasoningRef = useRef<HTMLPreElement>(null);
   const translationRef = useRef<HTMLPreElement>(null);
   const stageViewportRef = useRef<HTMLDivElement | null>(null);
@@ -110,11 +103,11 @@ export function AiTranslatePanel({
   useLayoutEffect(() => {
     const wasLoading = previousLoadingRef.current;
     previousLoadingRef.current = loading;
-    if (sidebarPage && loading && !wasLoading) {
+    if (loading && !wasLoading) {
       runScrollTopRef.current = 0;
       setRunPageOpen(true);
     }
-  }, [loading, sidebarPage]);
+  }, [loading]);
 
   const focusEnteredStage = useCallback((stage: "setup" | "run") => {
     const activeStage = runPageOpen ? "run" : "setup";
@@ -258,7 +251,7 @@ export function AiTranslatePanel({
             key="status"
             role="status"
             aria-live="polite"
-            className={`settings-panel-card overflow-hidden p-4 ${sidebarPage ? "" : "mt-4"}`}
+            className="settings-panel-card overflow-hidden p-4"
             data-testid="ai-translate-run-status"
           >
             <div className="flex items-center justify-between gap-4">
@@ -318,13 +311,12 @@ export function AiTranslatePanel({
     </ActionButton>
   );
 
-  if (sidebarPage) {
-    const direction: StepDirection = runPageOpen ? 1 : -1;
-    return (
+  const direction: StepDirection = runPageOpen ? 1 : -1;
+  return (
       <section
         aria-labelledby={runPageOpen ? "ai-translate-run-title" : "ai-translate-title"}
         data-testid="ai-translate-panel"
-        data-presentation={presentation}
+        data-presentation="sidebar-page"
         className="h-full min-h-0 overflow-hidden"
         style={{ ["--ai-accent" as string]: themeColor }}
         onKeyDown={onSidebarPageKeyDown}
@@ -408,46 +400,7 @@ export function AiTranslatePanel({
           </MotionPresence>
         </div>
       </section>
-    );
-  }
-
-  const inlinePanel = (
-    <section
-      aria-labelledby="ai-translate-title"
-      data-testid="ai-translate-panel"
-      data-presentation={presentation}
-      className="ai-inline-panel overflow-hidden rounded-xl border border-[rgb(var(--panel-border))] p-4 sm:p-5"
-      style={{ ["--ai-accent" as string]: themeColor }}
-    >
-      <div className="mb-4 flex items-start justify-between gap-4">
-        <div>
-          <div className="mb-1.5 flex items-center gap-2">
-            <Sparkles className="h-4 w-4 app-text-primary" style={{ filter: `drop-shadow(0 0 7px ${themeColor})` }} />
-            <h3 id="ai-translate-title" className="app-text-primary text-base font-bold">{copy.aiTranslateTitle}</h3>
-          </div>
-          <p className="app-text-muted text-xs leading-relaxed">{copy.aiTranslateDescription}</p>
-        </div>
-        <ActionButton
-          variant="icon"
-          size="sm"
-          onClick={loading ? onCancel : onClose}
-          aria-label={loading ? copy.stop : copy.close}
-          icon={<X className="h-4 w-4" />}
-          className="shrink-0"
-        />
-      </div>
-
-      {setupControls}
-      {runPanels}
-
-      <div className="mt-5 flex justify-end gap-3">
-        <ActionButton onClick={loading ? onCancel : onClose}>{loading ? copy.stop : copy.close}</ActionButton>
-        {confirmAction}
-      </div>
-    </section>
   );
-
-  return <MotionPanel className="mt-3">{inlinePanel}</MotionPanel>;
 }
 
 function AiSidebarSubpage({

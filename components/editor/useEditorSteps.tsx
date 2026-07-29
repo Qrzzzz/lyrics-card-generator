@@ -4,7 +4,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { ExportPanel } from "@/components/editor/ExportPanel";
 import { LocalAudioParser } from "@/components/editor/LocalAudioParser";
 import { LyricsFetchPanel } from "@/components/editor/LyricsFetchPanel";
-import { LyricInput } from "@/components/editor/LyricInput";
+import { LyricsWorkspace } from "@/components/editor/LyricsWorkspace";
 import { SettingsStep } from "@/components/editor/SettingsStepper";
 import { SongImportAside } from "@/components/editor/SongImportAside";
 import { SongInfoForm } from "@/components/editor/SongInfoForm";
@@ -55,7 +55,6 @@ export type EditorStepHandlers = {
   onTranslationEnabledChange: (enabled: boolean) => void;
   onTranslationTextChange: (translationText: string) => void;
   onLyricsDocumentChange: (snapshot: LyricsDocumentSnapshot) => void;
-  onSplitAlternatingLyrics: (lyrics: string, translationText: string) => void;
   onOpenAiTranslate: () => void;
   onCloseAiTranslate: () => void;
   onCancelAiTranslate: () => void;
@@ -250,25 +249,22 @@ export function useEditorSteps({
       isComplete: state.style.contentMode === "instrumental" || Boolean(state.lyrics.trim()),
       content: (
         <div className="h-full min-h-0">
-          <LyricInput
+          <LyricsWorkspace
             lyrics={state.lyrics}
-            song={state.song}
             lineStatus={lyricsLayout.lineStatus}
             sidebarTab={lyricsSidebarTab}
             onSidebarTabChange={setLyricsSidebarTab}
-            presentation="workspace"
             onLyricsChange={handlers.onLyricsChange}
             translationEnabled={state.style.translationEnabled}
             translationText={state.style.translationText}
             onTranslationEnabledChange={handlers.onTranslationEnabledChange}
             onTranslationTextChange={handlers.onTranslationTextChange}
             onLyricsDocumentChange={handlers.onLyricsDocumentChange}
-            onSplitAlternatingLyrics={handlers.onSplitAlternatingLyrics}
             onAITranslate={handlers.onOpenAiTranslate}
             onCloseAITranslate={handlers.onCloseAiTranslate}
             onCancelAITranslate={handlers.onCancelAiTranslate}
             isAITranslating={ai.isTranslating}
-            aiTranslatePanel={ai.isOpen ? (
+            aiPanel={ai.isOpen ? (
               <AiTranslatePanel
                 locale={state.locale}
                 initialStyle={ai.defaultStyle}
@@ -283,7 +279,6 @@ export function useEditorSteps({
                 onClose={handlers.onCloseAiTranslate}
                 onCancel={handlers.onCancelAiTranslate}
                 onConfirm={handlers.onConfirmAiTranslate}
-                presentation="sidebar-page"
               />
             ) : null}
             lyricsFetchPanel={(

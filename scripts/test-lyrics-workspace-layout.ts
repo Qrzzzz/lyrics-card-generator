@@ -44,11 +44,14 @@ const stepperSource = readFileSync(resolve("components/editor/SettingsStepper.ts
 const globalsSource = readFileSync(resolve("app/globals.css"), "utf8");
 
 assert.ok(
-  editorStepsSource.includes('useState<LyricsSidebarTab>("cleanup")') &&
+  editorStepsSource.includes('import { LyricsWorkspace } from "@/components/editor/LyricsWorkspace"') &&
+    editorStepsSource.includes('useState<LyricsSidebarTab>("cleanup")') &&
+    !editorStepsSource.includes("LyricInput") &&
+    !editorStepsSource.includes("onSplitAlternatingLyrics") &&
     !editorStepsSource.includes("lyricsWorkspaceLayoutReducer") &&
     !editorStepsSource.includes("workspaceLayout={lyricsWorkspaceLayout}") &&
     !editorStepsSource.includes("onWorkspaceLayoutAction"),
-  "step two keeps only active-tab state after removing adjustable layout state"
+  "step two uses LyricsWorkspace directly and keeps only active-tab state"
 );
 assert.ok(
   workspaceSource.includes("const splitStyle = sideBySide") &&
@@ -146,8 +149,7 @@ assert.ok(
   "the sidebar deck and AI stage pager share full-width directional motion and remove travel under reduced motion"
 );
 assert.ok(
-  aiTranslatePanelSource.includes('presentation = "inline"') &&
-    aiTranslatePanelSource.includes('data-presentation={presentation}') &&
+  aiTranslatePanelSource.includes('data-presentation="sidebar-page"') &&
     aiTranslatePanelSource.includes('data-testid="lyrics-ai-page-back"') &&
     aiTranslatePanelSource.includes('data-testid="ai-translate-stage-viewport"') &&
     aiTranslatePanelSource.includes('testId="ai-translate-setup-page"') &&
@@ -155,9 +157,11 @@ assert.ok(
     aiTranslatePanelSource.includes('data-testid="lyrics-ai-run-page-back"') &&
     aiTranslatePanelSource.includes("if (loading) onCancel();") &&
     aiTranslatePanelSource.includes("onClose();") &&
-    aiTranslatePanelSource.includes('return <MotionPanel className="mt-3">{inlinePanel}</MotionPanel>') &&
-    editorStepsSource.includes('presentation="sidebar-page"'),
-  "AI translation preserves inline compatibility while sidebar setup and runtime use separate pages"
+    !aiTranslatePanelSource.includes("AiTranslatePanelPresentation") &&
+    !aiTranslatePanelSource.includes("inlinePanel") &&
+    !aiTranslatePanelSource.includes("ai-inline-panel") &&
+    !editorStepsSource.includes('presentation="sidebar-page"'),
+  "AI translation exposes only the active sidebar setup and runtime pages"
 );
 assert.ok(
   commandBarSource.includes('role="toolbar"') &&

@@ -381,10 +381,11 @@ const landscapeCardSource = readFileSync(resolve("components/preview/LandscapeLy
 const instrumentalBlockSource = readFileSync(resolve("components/preview/InstrumentalBlock.tsx"), "utf8");
 const fontPanelSource = stylePanelSource.slice(
   stylePanelSource.indexOf("export function FontSchemeSettingsPanel"),
-  stylePanelSource.indexOf("function CustomFontPanel")
+  stylePanelSource.indexOf("export function LayoutSettingsPanel")
 );
 const visualPanelSource = stylePanelSource.slice(stylePanelSource.indexOf("export function VisualSettingsPanel"));
 assert.ok(fontPanelSource.includes("<ColorControls"), "text color is part of the text-design step");
+assert.ok(!stylePanelSource.includes("CustomFontPanel"), "the retired custom-font panel stays removed");
 assert.ok(!visualPanelSource.includes("<ColorControls"), "visual step no longer duplicates text color");
 assert.ok(!stylePanelSource.includes('option value="4:5"'), "portrait presets omit 4:5");
 assert.ok(!stylePanelSource.includes('option value="9:16"'), "portrait presets omit 9:16");

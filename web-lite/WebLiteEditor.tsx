@@ -5,7 +5,6 @@ import { ExportPanel } from "@/components/editor/ExportPanel";
 import { ExportCardHost } from "@/components/editor/ExportCardHost";
 import { AutoWidthMeasurementHost } from "@/components/editor/AutoWidthMeasurementHost";
 import { AppToast, type ToastNotice } from "@/components/feedback/AppToast";
-import { LyricInput } from "@/components/editor/LyricInput";
 import { MotionPanel } from "@/components/motion/MotionPanel";
 import { PreviewPane } from "@/components/editor/PreviewPane";
 import { SettingsStepper, type SettingsStep } from "@/components/editor/SettingsStepper";
@@ -56,6 +55,7 @@ import type {
 } from "@/lib/types";
 import { WebLiteFontPanel } from "@/web-lite/WebLiteFontPanel";
 import { WebLiteHeader } from "@/web-lite/WebLiteHeader";
+import { WebLiteLyricInput } from "@/web-lite/WebLiteLyricInput";
 import { WebLiteSongInfo } from "@/web-lite/WebLiteSongInfo";
 import {
   detectWebLiteLocale,
@@ -430,7 +430,7 @@ export function WebLiteEditor() {
       description: t("manualText"),
       isComplete: state.style.contentMode === "instrumental" || Boolean(state.lyrics.trim()),
       content: (
-        <LyricInput
+        <WebLiteLyricInput
           lyrics={state.lyrics}
           onLyricsChange={setLyrics}
           translationEnabled={state.style.translationEnabled}
@@ -438,13 +438,10 @@ export function WebLiteEditor() {
           onTranslationEnabledChange={setTranslationEnabled}
           onTranslationTextChange={setTranslationText}
           onSplitAlternatingLyrics={splitAlternatingLyrics}
-          onAITranslate={() => undefined}
-          isAITranslating={false}
           themeColor={accentColor}
           contentMode={state.style.contentMode}
           locale={locale}
           t={t}
-          showAiTranslate={false}
         />
       )
     },

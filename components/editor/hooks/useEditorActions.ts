@@ -240,20 +240,6 @@ export function useEditorActions({
     }));
   }
 
-  function splitAlternatingLyrics(lyrics: string, translationText: string) {
-    applyDocumentMutation((current) => ({
-      ...current,
-      lyrics,
-      translationText,
-      translationEnabled: true,
-      style: {
-        ...current.style,
-        translationText,
-        translationEnabled: true
-      }
-    }));
-  }
-
   async function completeAndExport() {
     const initialBlockMessage = getExportBlockMessage?.() ?? exportBlockMessage;
     if (initialBlockMessage) {
@@ -396,7 +382,6 @@ export function useEditorActions({
     setTranslationEnabled,
     setTranslationText,
     setLyricsDocument,
-    splitAlternatingLyrics,
     applyFetchedLyrics,
     loadExample,
     completeAndExport
