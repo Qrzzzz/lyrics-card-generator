@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v5.8.7.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v5.8.8.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="#développement-local">Développement local</a> ·
@@ -51,23 +51,23 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 Téléchargez la dernière version depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
 
-* Installateur recommandé : `Lyrics Card Generator Setup 5.8.7.exe`
-* Version portable : `Lyrics Card Generator-5.8.7-portable.exe`
+* Installateur recommandé : `Lyrics Card Generator Setup 5.8.8.exe`
+* Version portable : `Lyrics Card Generator-5.8.8-portable.exe`
 
 L'installateur est recommandé pour une utilisation régulière. La version portable convient aux essais, à une utilisation temporaire ou à un disque amovible.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### Points clés de la v5.8.7
+### Points clés de la v5.8.8
 
-* À l’étape 2, Nettoyage et Traduction partagent désormais une même piste horizontale : l’ancienne page sort selon le sens choisi et la nouvelle entre depuis le côté correspondant. Les onglets supérieurs et l’éditeur de paroles restent fixes.
-* Après le démarrage d’une traduction par IA, l’état de connexion ainsi que les flux de raisonnement et de traduction glissent de la page de paramètres vers une page d’exécution／résultats indépendante. Retour arrête d’abord toute requête active, puis inverse la transition.
-* Nettoyage, les paramètres de traduction et l’exécution IA conservent chacun leur état et leur position de défilement, avec transfert du focus, isolement des pages inactives, Échap à trois niveaux sur écran étroit et prise en charge de la réduction des animations.
+* La v5.8.8 fige l’interface de la v5.8.7. L’aspect visuel, les contrats DOM, la mise en page, le défilement, le focus, le clavier et le parcours de traduction par IA restent inchangés.
+* En interne, la navigation et le focus de la barre latérale sont séparés de la présentation Nettoyage／Traduction, sans modifier l’isolement des pages inactives, la hiérarchie Échap sur écran étroit ni la réduction des animations.
+* Les anciens chemins sans point d’entrée sont supprimés, tandis que les opérations de document, l’historique et le contrôle de sélection de l’espace de travail rejoignent un module dédié. Les versions bureau et Web Lite passent ensemble à la 5.8.8.
 
 ## 🌐 Notes de publication multilingues
 
 Par défaut, GitHub Release affiche un résumé en chinois simplifié. Consultez les notes complètes :
-[简体中文](./docs/releases/v5.8.7.zh-CN.md) · [繁體中文](./docs/releases/v5.8.7.zh-TW.md) · [English](./docs/releases/v5.8.7.en.md) · [Français](./docs/releases/v5.8.7.fr.md) · [日本語](./docs/releases/v5.8.7.ja.md) · [Español](./docs/releases/v5.8.7.es.md)
+[简体中文](./docs/releases/v5.8.8.zh-CN.md) · [繁體中文](./docs/releases/v5.8.8.zh-TW.md) · [English](./docs/releases/v5.8.8.en.md) · [Français](./docs/releases/v5.8.8.fr.md) · [日本語](./docs/releases/v5.8.8.ja.md) · [Español](./docs/releases/v5.8.8.es.md)
 
 <a id="fonctionnalités-principales"></a>
 

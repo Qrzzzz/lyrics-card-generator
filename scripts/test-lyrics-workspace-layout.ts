@@ -36,6 +36,9 @@ const commandBarSource = readFileSync(resolve("components/editor/LyricsCommandBa
 const reviewMenuSource = readFileSync(resolve("components/editor/LyricsReviewMenu.tsx"), "utf8");
 const fetchPanelSource = readFileSync(resolve("components/editor/LyricsFetchPanel.tsx"), "utf8");
 const sidebarSource = readFileSync(resolve("components/editor/LyricsSidebar.tsx"), "utf8");
+const sidebarPanelsSource = readFileSync(resolve("components/editor/LyricsSidebarPanels.tsx"), "utf8");
+const sidebarNavigationSource = readFileSync(resolve("components/editor/hooks/useLyricsSidebarNavigation.ts"), "utf8");
+const documentControllerSource = readFileSync(resolve("components/editor/hooks/useLyricsWorkspaceDocumentController.ts"), "utf8");
 const aiTranslatePanelSource = readFileSync(resolve("components/lyrics/AiTranslatePanel.tsx"), "utf8");
 const copySource = readFileSync(resolve("components/editor/lyrics-workspace-copy.ts"), "utf8");
 const motionTokensSource = readFileSync(resolve("lib/motion/tokens.ts"), "utf8");
@@ -80,13 +83,13 @@ assert.ok(
   workspaceSource.includes("lyrics-workspace-surface") &&
     workspaceSource.includes("lyrics-document-editor") &&
     commandBarSource.includes("lyrics-command-button") &&
-    sidebarSource.includes("control-surface lyrics-sidebar-action") &&
-    sidebarSource.includes("<Section") &&
+    sidebarPanelsSource.includes("control-surface lyrics-sidebar-action") &&
+    sidebarPanelsSource.includes("<Section") &&
     globalsSource.includes(".lyrics-workspace-surface") &&
     globalsSource.includes(".lyrics-sidebar-tabs.segmented-control") &&
     globalsSource.includes(".lyrics-sidebar-section:first-child") &&
     !globalsSource.includes(".lyrics-sidebar-section--sticky") &&
-    !sidebarSource.includes("sticky top-0"),
+    !sidebarPanelsSource.includes("sticky top-0"),
   "the workspace stays transparent while the sidebar reuses the settings control language without overlapping sticky content"
 );
 assert.ok(
@@ -96,23 +99,23 @@ assert.ok(
     !sidebarSource.includes("lyrics-sidebar-collapsed-layer") &&
     !sidebarSource.includes("lyrics-sidebar-expanded-layer") &&
     !sidebarSource.includes('data-testid="lyrics-sidebar-budget"') &&
-    !sidebarSource.includes("<CollapsiblePanelSection") &&
-    sidebarSource.includes('data-testid="lyrics-cleanup-context"') &&
-    sidebarSource.includes('testId="lyrics-cleanup-section-common"') &&
-    sidebarSource.includes('data-testid="lyrics-cleanup-more"') &&
-    sidebarSource.includes('<details className="lyrics-sidebar-more"') &&
-    sidebarSource.includes('testId="lyrics-cleanup-section-paste"') &&
-    sidebarSource.includes('testId="lyrics-cleanup-section-lrc"'),
+    !sidebarPanelsSource.includes("<CollapsiblePanelSection") &&
+    sidebarPanelsSource.includes('data-testid="lyrics-cleanup-context"') &&
+    sidebarPanelsSource.includes('testId="lyrics-cleanup-section-common"') &&
+    sidebarPanelsSource.includes('data-testid="lyrics-cleanup-more"') &&
+    sidebarPanelsSource.includes('<details className="lyrics-sidebar-more"') &&
+    sidebarPanelsSource.includes('testId="lyrics-cleanup-section-paste"') &&
+    sidebarPanelsSource.includes('testId="lyrics-cleanup-section-lrc"'),
   "the always-open sidebar keeps stable tab navigation while concentrating low-frequency cleanup in one native disclosure"
 );
 assert.ok(
-  sidebarSource.includes('data-testid="lyrics-translation-primary"') &&
-    sidebarSource.includes('testId="translation-toggle"') &&
-    sidebarSource.includes('data-testid="lyrics-ai-entry"') &&
-    sidebarSource.includes('testId="lyrics-translation-column-tools"') &&
-    sidebarSource.includes('testId="lyrics-translation-section-split"') &&
-    sidebarSource.includes('testId="lyrics-translation-section-format"') &&
-    sidebarSource.includes('testId="lyrics-translation-section-swap"'),
+  sidebarPanelsSource.includes('data-testid="lyrics-translation-primary"') &&
+    sidebarPanelsSource.includes('testId="translation-toggle"') &&
+    sidebarPanelsSource.includes('data-testid="lyrics-ai-entry"') &&
+    sidebarPanelsSource.includes('testId="lyrics-translation-column-tools"') &&
+    sidebarPanelsSource.includes('testId="lyrics-translation-section-split"') &&
+    sidebarPanelsSource.includes('testId="lyrics-translation-section-format"') &&
+    sidebarPanelsSource.includes('testId="lyrics-translation-section-swap"'),
   "the translation panel leads with enablement and AI while grouping the remaining column tools"
 );
 assert.ok(
@@ -125,7 +128,7 @@ assert.ok(
     sidebarSource.includes('page="translation"') &&
     sidebarSource.includes('page="ai"') &&
     sidebarSource.includes("visibleTransitionFrom") &&
-    sidebarSource.includes('pendingFocusRef.current === "ai"') &&
+    sidebarNavigationSource.includes('pendingFocusRef.current === "ai"') &&
     !sidebarSource.includes('data-testid="lyrics-ai-panel-boundary"'),
   "the sidebar owns one retained cleanup, translation, and AI page deck with post-animation focus"
 );
@@ -138,7 +141,7 @@ assert.ok(
   "each sidebar page retains independent state while inactive and exiting pages leave the interaction tree"
 );
 assert.ok(
-  sidebarSource.includes("useAppReducedMotion") &&
+  sidebarNavigationSource.includes("useAppReducedMotion") &&
     sidebarSource.includes('pageOffset < 0') &&
     sidebarSource.includes('pageOffset > 0') &&
     sidebarSource.includes("reducedMotion ? reducedMotionTransition : sidebarPageTransition") &&
@@ -200,7 +203,7 @@ assert.ok(
     !sidebarSource.includes('page="source"') &&
     sidebarSource.includes("hidden={!visible}") &&
     sidebarSource.includes('data-testid="lyrics-sidebar-panels"') &&
-    sidebarSource.includes('event.key === "ArrowRight"') &&
+    sidebarNavigationSource.includes('event.key === "ArrowRight"') &&
     sidebarSource.includes("tabIndex={activeTab === tab ? 0 : -1}"),
   "the sidebar keeps cleanup and translation roots with roving keyboard navigation and retained motion pages"
 );
@@ -210,13 +213,13 @@ assert.ok(
   "the independent fetch command remains mounted and reflects source availability"
 );
 assert.ok(
-  workspaceSource.includes("cleanSynchronizedBlankRows") &&
-    sidebarSource.includes("alignedColumnsHint") &&
-    sidebarSource.includes('testId="lyrics-cleanup-scope-synchronized"') &&
-    sidebarSource.includes('data-testid="lyrics-cleanup-scope-summary"') &&
-    sidebarSource.includes('label: `${copy.original}/${copy.translation}`') &&
-    sidebarSource.includes('testId="lyrics-cleanup-blank-all-preview"') &&
-    sidebarSource.includes('testId="lyrics-cleanup-blank-all"'),
+  documentControllerSource.includes("cleanSynchronizedBlankRows") &&
+    sidebarPanelsSource.includes("alignedColumnsHint") &&
+    sidebarPanelsSource.includes('testId="lyrics-cleanup-scope-synchronized"') &&
+    sidebarPanelsSource.includes('data-testid="lyrics-cleanup-scope-summary"') &&
+    sidebarPanelsSource.includes('label: `${copy.original}/${copy.translation}`') &&
+    sidebarPanelsSource.includes('testId="lyrics-cleanup-blank-all-preview"') &&
+    sidebarPanelsSource.includes('testId="lyrics-cleanup-blank-all"'),
   "the compact context bar names whole columns or selected lines while synchronized blank cleanup stays explicit and previewed"
 );
 assert.ok(
@@ -224,9 +227,9 @@ assert.ok(
     globalsSource.includes("position: absolute") &&
     workspaceSource.includes('data-testid="lyrics-sidebar-backdrop"') &&
     sidebarSource.includes('role={mobileDrawer ? "dialog" : undefined}') &&
-    sidebarSource.includes('event.key === "Escape"') &&
-    sidebarSource.includes("if (aiPanel)") &&
-    sidebarSource.includes("onCloseAITranslate()"),
+    sidebarNavigationSource.includes('event.key === "Escape"') &&
+    sidebarNavigationSource.includes("if (aiPanel)") &&
+    sidebarNavigationSource.includes("onCloseAITranslate()"),
   "narrow layouts dismiss the AI child page before closing the modal overlay drawer"
 );
 for (const locale of ['zh:', '"zh-TW":', 'en:', 'fr:', 'ja:', 'es:']) {
@@ -236,10 +239,31 @@ for (const key of ["commonCleanupHeading", "moreCleanupHeading", "columnToolsHea
   assert.equal(copySource.match(new RegExp(`${key}:`, "g"))?.length, 7, `${key} is typed and localized in all six workspace locales`);
 }
 assert.ok(
-  copySource.includes("duplicateLineIssue") &&
+    copySource.includes("duplicateLineIssue") &&
     reviewMenuSource.includes("issue.kind === \"duplicate-line\"") &&
-    !sidebarSource.includes("removeDuplicate"),
+    !sidebarPanelsSource.includes("removeDuplicate"),
   "duplicate lines are reported for navigation and never silently deleted"
+);
+assert.ok(
+  sidebarSource.includes('from "@/components/editor/LyricsSidebarPanels"') &&
+    sidebarSource.includes('from "@/components/editor/hooks/useLyricsSidebarNavigation"') &&
+    !sidebarSource.includes("useLayoutEffect") &&
+    !sidebarSource.includes("function LyricsCleanupPanel") &&
+    sidebarNavigationSource.includes("getClientRects().length > 0") &&
+    sidebarPanelsSource.includes("export function LyricsCleanupPanel") &&
+    sidebarPanelsSource.includes("export function LyricsTranslationPanel"),
+  "sidebar navigation and focus are isolated from the retained Cleanup and Translation presentation"
+);
+assert.ok(
+  workspaceSource.includes('from "@/components/editor/hooks/useLyricsWorkspaceDocumentController"') &&
+    !workspaceSource.includes("recordLyricsOperation") &&
+    !workspaceSource.includes("pendingSelectionRef") &&
+    documentControllerSource.includes("recordLyricsOperation") &&
+    documentControllerSource.includes("pendingSelectionRef") &&
+    documentControllerSource.includes("captureCurrentSelection") &&
+    documentControllerSource.includes("undoLyricsOperation") &&
+    documentControllerSource.includes("redoLyricsOperation"),
+  "workspace document transforms, history, and selection restoration live in one dedicated controller"
 );
 assert.ok(
   !stepperSource.includes("useLyricsWorkspaceSplit") &&
@@ -247,4 +271,4 @@ assert.ok(
   "the step-two split stays inside LyricsWorkspace and leaves the shared Stepper structure unchanged"
 );
 
-console.log(JSON.stringify({ ok: true, lyricsWorkspaceLayoutTests: 55 }, null, 2));
+console.log(JSON.stringify({ ok: true, lyricsWorkspaceLayoutTests: 57 }, null, 2));
