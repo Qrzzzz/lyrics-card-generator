@@ -792,7 +792,7 @@ async function expectEmptyCoverState(page: Page) {
 }
 
 async function expectNoHorizontalClipping(page: Page) {
-  const audit = await page.getByTestId("web-lite-editor-surface").evaluate((surface) => {
+  const readAudit = () => page.getByTestId("web-lite-editor-surface").evaluate((surface) => {
     const viewportWidth = document.documentElement.clientWidth;
     const clippedControls = Array.from(
       surface.querySelectorAll<HTMLElement>("button, input, select, textarea, a[href]")
@@ -828,9 +828,10 @@ async function expectNoHorizontalClipping(page: Page) {
     };
   });
 
+  await expect.poll(async () => (await readAudit()).clippedControls).toEqual([]);
+  const audit = await readAudit();
   expect(audit.documentScrollWidth).toBeLessThanOrEqual(audit.documentClientWidth + 1);
   expect(audit.surfaceScrollWidth).toBeLessThanOrEqual(audit.surfaceClientWidth + 1);
-  expect(audit.clippedControls).toEqual([]);
 }
 
 async function waitForValidationRead(page: Page) {
