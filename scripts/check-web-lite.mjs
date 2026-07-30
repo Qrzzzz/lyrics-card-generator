@@ -12,10 +12,19 @@ const temporaryOutput = path.join(temporaryDirectory, "index.html");
 
 try {
   await buildWebLite(temporaryOutput);
-  const [generated, committed, lyricInputSource, visualPanelSource, exportPanelSource, webLiteEditorSource] = await Promise.all([
+  const [
+    generated,
+    committed,
+    lyricsWorkspaceSource,
+    webLiteLyricInputSource,
+    visualPanelSource,
+    exportPanelSource,
+    webLiteEditorSource
+  ] = await Promise.all([
     readFile(temporaryOutput, "utf8"),
     readFile(path.join(projectRoot, "index.html"), "utf8"),
-    readFile(path.join(projectRoot, "components", "editor", "LyricInput.tsx"), "utf8"),
+    readFile(path.join(projectRoot, "components", "editor", "LyricsWorkspace.tsx"), "utf8"),
+    readFile(path.join(projectRoot, "web-lite", "WebLiteLyricInput.tsx"), "utf8"),
     readFile(path.join(projectRoot, "components", "editor", "StylePanel.tsx"), "utf8"),
     readFile(path.join(projectRoot, "components", "editor", "ExportPanel.tsx"), "utf8"),
     readFile(path.join(projectRoot, "web-lite", "WebLiteEditor.tsx"), "utf8")
@@ -73,15 +82,26 @@ try {
   }
 
   const sourceContracts = [
-    [lyricInputSource, "showAiTranslate = true", "LyricInput must keep AI visible by default."],
+    [lyricsWorkspaceSource, "showAiTranslate = true", "LyricsWorkspace must keep AI visible by default."],
     [visualPanelSource, "showPlatformBadgeControl = true", "VisualSettingsPanel must keep the platform control by default."],
     [exportPanelSource, 'qualityOptions = ["low", "medium", "high"]', "ExportPanel must keep all desktop qualities by default."],
-    [webLiteEditorSource, "showAiTranslate={false}", "Web Lite must hide AI translation."],
+    [webLiteEditorSource, "<WebLiteLyricInput", "Web Lite must use its dedicated lyrics form."],
     [webLiteEditorSource, "showPlatformBadgeControl={false}", "Web Lite must hide the platform badge control."],
     [webLiteEditorSource, "qualityOptions={EXPORT_QUALITY_OPTIONS}", "Web Lite must provide only its approved export qualities."]
   ];
   for (const [source, fragment, message] of sourceContracts) {
     if (!source.includes(fragment)) {
+      throw new Error(message);
+    }
+  }
+
+  const forbiddenSourceContracts = [
+    [webLiteLyricInputSource, "AiTranslateButton", "Web Lite lyrics must not include desktop AI translation."],
+    [webLiteEditorSource, "showAiTranslate", "Web Lite must not carry the retired AI visibility prop."],
+    [webLiteEditorSource, "onAITranslate", "Web Lite must not carry the retired AI handler."]
+  ];
+  for (const [source, fragment, message] of forbiddenSourceContracts) {
+    if (source.includes(fragment)) {
       throw new Error(message);
     }
   }

@@ -1,6 +1,6 @@
 {
   "name": "lyric-card-generator",
-  "version": "5.8.7",
+  "version": "5.8.8",
   "private": true,
   "main": "electron/main.js",
   "scripts": {

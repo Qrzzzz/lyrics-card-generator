@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v5.8.7.zh-TW.md">發布說明</a> ·
+  <a href="./docs/releases/v5.8.8.zh-TW.md">發布說明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">線上 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="#本機開發">本機開發</a> ·
@@ -48,23 +48,23 @@
 
 請前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載最新版：
 
-* 建議一般使用者下載安裝版：`Lyrics Card Generator Setup 5.8.7.exe`
-* 不想安裝時可下載可攜版：`Lyrics Card Generator-5.8.7-portable.exe`
+* 建議一般使用者下載安裝版：`Lyrics Card Generator Setup 5.8.8.exe`
+* 不想安裝時可下載可攜版：`Lyrics Card Generator-5.8.8-portable.exe`
 
 安裝版適合長期使用；可攜版適合臨時執行、測試或放在隨身碟中使用。
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v5.8.7 更新重點
+### v5.8.8 更新重點
 
-* 第二步「整理／翻譯」現在共用一條水平頁面軌道：切換分頁時舊頁依方向退出，新頁從對應一側進入，頂部分頁與歌詞編輯區維持原位。
-* AI 翻譯啟動後，連線狀態、推理串流與譯文串流會從參數頁滑入獨立的執行／結果頁；返回時會先停止進行中的請求，再依相反方向回到參數頁。
-* 整理、翻譯參數與 AI 執行頁分別保留自己的狀態與捲動位置，並補齊焦點接力、非作用中頁面隔離、窄螢幕三級 Esc 與減少動態效果。
+* v5.8.8 凍結 v5.8.7 的前端呈現；視覺、DOM 契約、版面、捲動、焦點、鍵盤與 AI 翻譯流程皆維持不變。
+* 內部將側欄導覽／焦點與「整理／翻譯」呈現拆開，保留非作用中頁面隔離、窄螢幕 Esc 層級與減少動態效果語意。
+* 移除無執行入口的退役路徑，並將工作區的文件操作、歷史與選取範圍控制器收斂為獨立模組；桌面版與 Web Lite 同步為 5.8.8。
 
 ## 🌐 多語言發佈說明
 
 GitHub Release 預設顯示簡體中文摘要，完整說明請見：
-[简体中文](./docs/releases/v5.8.7.zh-CN.md) · [繁體中文](./docs/releases/v5.8.7.zh-TW.md) · [English](./docs/releases/v5.8.7.en.md) · [Français](./docs/releases/v5.8.7.fr.md) · [日本語](./docs/releases/v5.8.7.ja.md) · [Español](./docs/releases/v5.8.7.es.md)
+[简体中文](./docs/releases/v5.8.8.zh-CN.md) · [繁體中文](./docs/releases/v5.8.8.zh-TW.md) · [English](./docs/releases/v5.8.8.en.md) · [Français](./docs/releases/v5.8.8.fr.md) · [日本語](./docs/releases/v5.8.8.ja.md) · [Español](./docs/releases/v5.8.8.es.md)
 
 ## ✨ 主要功能
 

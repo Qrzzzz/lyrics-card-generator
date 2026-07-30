@@ -29,7 +29,7 @@ const aiSettingsSection = readFileSync(resolve("components/settings/AiSettingsSe
 const aboutSettings = readFileSync(resolve("components/settings/AboutSettingsSection.tsx"), "utf8");
 const dynamicBackground = readFileSync(resolve("components/layout/DynamicAppBackground.tsx"), "utf8");
 const aiTranslateButton = readFileSync(resolve("components/lyrics/AiTranslateButton.tsx"), "utf8");
-const lyricInput = readFileSync(resolve("components/editor/LyricInput.tsx"), "utf8");
+const webLiteLyricInput = readFileSync(resolve("web-lite/WebLiteLyricInput.tsx"), "utf8");
 const globals = readFileSync(resolve("app/globals.css"), "utf8");
 
 assert.match(lyricEditor, /type ActiveSurface = "editor" \| "examples" \| "settings"/);
@@ -146,7 +146,7 @@ assert.match(lyricEditor, /userSettings\.defaultSharedByText/);
 assert.match(lyricEditor, /ready=\{preferencesLoaded\}/);
 assert.match(lyricEditor, /!preferencesLoaded \|\| shouldReduceMotion/);
 assert.match(aiTranslateButton, /ai-translate-trigger h-11/);
-assert.match(lyricInput, /<ActionButton\s+size="md"\s+icon=\{<SplitSquareVertical/);
+assert.match(webLiteLyricInput, /<ActionButton\s+size="md"\s+icon=\{<SplitSquareVertical/);
 assert.match(settingsWorkspace, /createLatestSaveController/);
 assert.match(settingsWorkspace, /saveController\.setDesired\(createAISaveSnapshot\(settings, apiKey\)\)/);
 assert.match(settingsWorkspace, /void saveController\.flushLatest\(\)/);

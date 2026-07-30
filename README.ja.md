@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v5.8.7.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v5.8.8.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="#ローカル開発">ローカル開発</a> ·
@@ -51,23 +51,23 @@
 
 最新版は [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) からダウンロードできます。
 
-* 推奨インストーラー：`Lyrics Card Generator Setup 5.8.7.exe`
-* ポータブル版：`Lyrics Card Generator-5.8.7-portable.exe`
+* 推奨インストーラー：`Lyrics Card Generator Setup 5.8.8.exe`
+* ポータブル版：`Lyrics Card Generator-5.8.8-portable.exe`
 
 通常利用にはインストーラーを推奨します。ポータブル版は一時利用、検証、リムーバブルドライブでの利用に向いています。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v5.8.7 の更新ポイント
+### v5.8.8 の更新ポイント
 
-* ステップ 2 の「整理／翻訳」は、1 本の横方向ページトラックを共有します。切り替え時は旧ページが方向に応じて退出し、新ページが対応する側から入ります。上部タブと歌詞エディターは固定されたままです。
-* AI 翻訳を開始すると、接続状態、推論ストリーム、翻訳ストリームが設定ページから独立した実行／結果ページへスライドします。戻る操作では進行中のリクエストを先に停止し、遷移を逆再生します。
-* 整理、翻訳設定、AI 実行ページはそれぞれ状態とスクロール位置を保持し、フォーカス移動、非アクティブページの隔離、狭幅画面での 3 段階 Esc、モーション軽減に対応します。
+* v5.8.8 は v5.8.7 のフロントエンドを固定した内部整理版です。見た目、DOM 契約、レイアウト、スクロール、フォーカス、キーボード操作、AI 翻訳フローは変わりません。
+* 内部では、サイドバーのナビゲーション／フォーカスを「整理／翻訳」の表示から分離し、非アクティブページの隔離、狭幅画面の Esc 階層、モーション軽減の意味を維持しました。
+* 実行入口のない旧経路を削除し、ワークスペースの文書操作、履歴、選択範囲制御を専用モジュールへ移しました。デスクトップ版と Web Lite はともに 5.8.8 です。
 
 ## 🌐 多言語リリースノート
 
 GitHub Release ではデフォルトで簡体字中国語の概要が表示されます。完全なリリースノートはこちら：
-[简体中文](./docs/releases/v5.8.7.zh-CN.md) · [繁體中文](./docs/releases/v5.8.7.zh-TW.md) · [English](./docs/releases/v5.8.7.en.md) · [Français](./docs/releases/v5.8.7.fr.md) · [日本語](./docs/releases/v5.8.7.ja.md) · [Español](./docs/releases/v5.8.7.es.md)
+[简体中文](./docs/releases/v5.8.8.zh-CN.md) · [繁體中文](./docs/releases/v5.8.8.zh-TW.md) · [English](./docs/releases/v5.8.8.en.md) · [Français](./docs/releases/v5.8.8.fr.md) · [日本語](./docs/releases/v5.8.8.ja.md) · [Español](./docs/releases/v5.8.8.es.md)
 
 <a id="主な機能"></a>
 

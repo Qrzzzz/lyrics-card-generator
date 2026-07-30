@@ -188,7 +188,6 @@ export function LyricEditor() {
     setTranslationEnabled,
     setTranslationText,
     setLyricsDocument,
-    splitAlternatingLyrics,
     applyFetchedLyrics,
     loadExample,
     completeAndExport
@@ -387,7 +386,6 @@ export function LyricEditor() {
       onTranslationEnabledChange: setTranslationEnabled,
       onTranslationTextChange: setTranslationText,
       onLyricsDocumentChange: setLyricsDocument,
-      onSplitAlternatingLyrics: splitAlternatingLyrics,
       onOpenAiTranslate: openAITranslate,
       onCloseAiTranslate: closeAITranslate,
       onCancelAiTranslate: cancelAITranslation,

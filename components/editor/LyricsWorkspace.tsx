@@ -1,10 +1,7 @@
 "use client";
 
 import {
-  type ChangeEvent,
-  type FocusEvent,
   type ReactNode,
-  type SyntheticEvent,
   useCallback,
   useEffect,
   useId,
@@ -19,10 +16,8 @@ import {
 } from "@/components/editor/LyricsCommandBar";
 import { LyricsReviewMenu } from "@/components/editor/LyricsReviewMenu";
 import { LyricsSidebar } from "@/components/editor/LyricsSidebar";
-import {
-  formatLyricsWorkspaceCopy,
-  getLyricsWorkspaceCopy
-} from "@/components/editor/lyrics-workspace-copy";
+import { getLyricsWorkspaceCopy } from "@/components/editor/lyrics-workspace-copy";
+import { useLyricsWorkspaceDocumentController } from "@/components/editor/hooks/useLyricsWorkspaceDocumentController";
 import { useLyricsWorkspaceSplit } from "@/components/editor/hooks/useLyricsWorkspaceSplit";
 import {
   type LyricsEditorKey,
@@ -33,29 +28,8 @@ import type { createT } from "@/lib/i18n";
 import type { ExportLyricLineStatus } from "@/lib/lyrics-document";
 import {
   analyzeLyricsDocument,
-  cleanPastedLyrics,
-  cleanSynchronizedBlankRows,
-  collapseConsecutiveBlankLines,
-  createLyricsOperationHistory,
-  getLyricsLineSelection,
-  mergeSelectedLyricsLines,
-  recordLyricsOperation,
-  redoLyricsOperation,
-  removeAllBlankLines,
-  removeParagraphTags,
-  resolveLyricsTextScope,
-  snapshotsEqual,
-  stripLrcTimeline,
-  swapLyricsColumns,
-  trimBoundaryBlankLines,
-  undoLyricsOperation,
-  type LyricsBlankMode,
   type LyricsDocumentSnapshot,
-  type LyricsHistoryEntry,
-  type LyricsScopedTransform,
-  type LyricsSelectionSnapshot,
   type LyricsSidebarTab,
-  type LyricsTextSelection,
   type LyricsWorkbenchEditor
 } from "@/lib/lyrics-workbench";
 import type { ContentMode, Locale } from "@/lib/types";
@@ -83,17 +57,6 @@ type LyricsWorkspaceProps = {
   locale: Locale;
   t: ReturnType<typeof createT>;
   showAiTranslate?: boolean;
-};
-
-type CursorPosition = {
-  editor: LyricsWorkbenchEditor;
-  line: number;
-  totalLines: number;
-};
-
-type OperationFeedback = {
-  message: string;
-  canUndo: boolean;
 };
 
 export function LyricsWorkspace({
@@ -141,32 +104,8 @@ export function LyricsWorkspace({
   const lyricsId = useId();
   const translationId = useId();
   const showTranslation = contentMode === "lyrics" && translationEnabled;
-  const lyricsStats = useMemo(() => getTextStats(lyrics), [lyrics]);
-  const translationStats = useMemo(() => getTextStats(translationText), [translationText]);
-  const documentSnapshot = useMemo<LyricsDocumentSnapshot>(() => ({
-    lyrics,
-    translationText,
-    translationEnabled
-  }), [lyrics, translationEnabled, translationText]);
-  const [cursor, setCursor] = useState<CursorPosition>({
-    editor: "lyrics",
-    line: 1,
-    totalLines: Math.max(1, lyricsStats.lines)
-  });
-  const [selections, setSelections] = useState<Record<LyricsWorkbenchEditor, LyricsTextSelection>>({
-    lyrics: { start: 0, end: 0 },
-    translation: { start: 0, end: 0 }
-  });
-  const selectionsRef = useRef(selections);
-  selectionsRef.current = selections;
-  const [feedback, setFeedback] = useState<OperationFeedback | null>(null);
-  const [historyRevision, setHistoryRevision] = useState(0);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [focusIntent, setFocusIntent] = useState<LyricsCommandIntent | null>(null);
-  const historyRef = useRef(createLyricsOperationHistory());
-  const expectedSnapshotRef = useRef<LyricsDocumentSnapshot | null>(null);
-  const previousSnapshotRef = useRef(documentSnapshot);
-  const pendingSelectionRef = useRef<LyricsSelectionSnapshot | null>(null);
   const getActiveEditorKey = useCallback(() => activeEditorRef.current, []);
   const getEditor = useCallback((editor: LyricsEditorKey) => (
     editor === "translation" ? translationRef.current : lyricsRef.current
@@ -179,9 +118,6 @@ export function LyricsWorkspace({
   });
   const split = useLyricsWorkspaceSplit();
   const sideBySide = split.isDesktop;
-  const activeText = cursor.editor === "translation" ? translationText : lyrics;
-  const activeSelection = clampSelection(selections[cursor.editor], activeText.length);
-  const activeScope = resolveLyricsTextScope(activeText, activeSelection);
   const analysis = useMemo(() => analyzeLyricsDocument({
     lyrics,
     translationText,
@@ -209,21 +145,22 @@ export function LyricsWorkspace({
     resizeEditors();
   }, [lyrics, resizeEditors, translationText, viewport.restoreAnchor, viewport.viewportHeight]);
 
-  useLayoutEffect(() => {
-    const pending = pendingSelectionRef.current;
-    if (!pending) return;
-    const editor = getEditor(pending.editor);
-    if (!editor) return;
-    const selection = clampSelection(pending, editor.value.length);
-    editor.setSelectionRange(selection.start, selection.end);
-    editor.focus({ preventScroll: true });
-    activeEditorRef.current = pending.editor;
-    const nextCursor = cursorForSelection(pending.editor, editor.value, selection.start);
-    setSelections((current) => ({ ...current, [pending.editor]: selection }));
-    setCursor(nextCursor);
-    pendingSelectionRef.current = null;
-    viewport.restoreAnchor();
-  }, [getEditor, lyrics, translationEnabled, translationText, viewport.restoreAnchor]);
+  const documentController = useLyricsWorkspaceDocumentController({
+    copy,
+    lyrics,
+    translationText,
+    translationEnabled,
+    showTranslation,
+    scrollRef,
+    activeEditorRef,
+    getEditor,
+    captureViewportAnchor: viewport.captureAnchor,
+    restoreViewportAnchor: viewport.restoreAnchor,
+    onLyricsChange,
+    onTranslationEnabledChange,
+    onTranslationTextChange,
+    onLyricsDocumentChange
+  });
 
   useLayoutEffect(() => {
     const container = scrollRef.current;
@@ -235,307 +172,6 @@ export function LyricsWorkspace({
     observer.observe(container);
     return () => observer.disconnect();
   }, [resizeEditors, viewport.restoreAnchor]);
-
-  useEffect(() => {
-    const previous = previousSnapshotRef.current;
-    previousSnapshotRef.current = documentSnapshot;
-    if (snapshotsEqual(previous, documentSnapshot)) return;
-    if (expectedSnapshotRef.current && snapshotsEqual(expectedSnapshotRef.current, documentSnapshot)) {
-      expectedSnapshotRef.current = null;
-      return;
-    }
-    historyRef.current = createLyricsOperationHistory();
-    setHistoryRevision((value) => value + 1);
-    setFeedback(null);
-  }, [documentSnapshot]);
-
-  function clearOperationHistory() {
-    if (historyRef.current.past.length === 0 && historyRef.current.future.length === 0 && !feedback) return;
-    historyRef.current = createLyricsOperationHistory();
-    setHistoryRevision((value) => value + 1);
-    setFeedback(null);
-  }
-
-  function updateCursor(event: SyntheticEvent<HTMLTextAreaElement>, editor: LyricsWorkbenchEditor) {
-    const node = event.currentTarget;
-    activeEditorRef.current = editor;
-    viewport.captureAnchor(editor);
-    const selection = {
-      start: node.selectionStart ?? 0,
-      end: node.selectionEnd ?? node.selectionStart ?? 0
-    };
-    setSelections((current) => ({ ...current, [editor]: selection }));
-    setCursor(cursorForSelection(editor, node.value, selection.start));
-  }
-
-  function onEditorFocus(event: FocusEvent<HTMLTextAreaElement>, editor: LyricsWorkbenchEditor) {
-    updateCursor(event, editor);
-  }
-
-  function onLyricsEditorChange(event: ChangeEvent<HTMLTextAreaElement>) {
-    clearOperationHistory();
-    activeEditorRef.current = "lyrics";
-    viewport.captureAnchor("lyrics");
-    updateCursor(event, "lyrics");
-    onLyricsChange(event.currentTarget.value);
-  }
-
-  function onTranslationEditorChange(event: ChangeEvent<HTMLTextAreaElement>) {
-    clearOperationHistory();
-    activeEditorRef.current = "translation";
-    viewport.captureAnchor("translation");
-    updateCursor(event, "translation");
-    onTranslationTextChange(event.currentTarget.value);
-  }
-
-  function captureCurrentSelection(editor = activeEditorRef.current): LyricsSelectionSnapshot {
-    const node = getEditor(editor);
-    const valueLength = editor === "translation" ? translationText.length : lyrics.length;
-    const selection = node
-      ? { start: node.selectionStart ?? 0, end: node.selectionEnd ?? node.selectionStart ?? 0 }
-      : selectionsRef.current[editor];
-    return { editor, ...clampSelection(selection, valueLength) };
-  }
-
-  function commitOperation(params: {
-    label: string;
-    next: LyricsDocumentSnapshot;
-    afterSelection: LyricsSelectionSnapshot;
-    message: string;
-  }) {
-    if (snapshotsEqual(documentSnapshot, params.next)) {
-      setFeedback({ message: copy.noChanges, canUndo: false });
-      return false;
-    }
-    viewport.captureAnchor(params.afterSelection.editor);
-    const entry: LyricsHistoryEntry = {
-      label: params.label,
-      before: documentSnapshot,
-      after: params.next,
-      beforeSelection: captureCurrentSelection(),
-      afterSelection: params.afterSelection
-    };
-    historyRef.current = recordLyricsOperation(historyRef.current, entry);
-    expectedSnapshotRef.current = params.next;
-    pendingSelectionRef.current = params.afterSelection;
-    setHistoryRevision((value) => value + 1);
-    setFeedback({ message: params.message, canUndo: true });
-    onLyricsDocumentChange(params.next);
-    return true;
-  }
-
-  function applyActiveTransform(
-    label: string,
-    result: LyricsScopedTransform,
-    message: string
-  ) {
-    if (!result.changed) {
-      setFeedback({ message: copy.noChanges, canUndo: false });
-      return;
-    }
-    const editor = activeEditorRef.current;
-    commitOperation({
-      label,
-      next: editor === "translation"
-        ? { ...documentSnapshot, translationText: result.text, translationEnabled: true }
-        : { ...documentSnapshot, lyrics: result.text },
-      afterSelection: { editor, ...result.selection },
-      message
-    });
-  }
-
-  function blankCleanup(mode: LyricsBlankMode, synchronized: boolean) {
-    const label = mode === "trim"
-      ? copy.trimBlankLines
-      : mode === "collapse"
-        ? copy.collapseBlankLines
-        : copy.removeBlankLines;
-    if (synchronized && showTranslation) {
-      const result = cleanSynchronizedBlankRows({
-        lyrics,
-        translationText,
-        mode,
-        lineRange: activeScope.hasSelection
-          ? { startLine: activeScope.startLine, endLine: activeScope.endLine }
-          : undefined
-      });
-      if (!result.changed) {
-        setFeedback({ message: copy.noChanges, canUndo: false });
-        return;
-      }
-      const selection = captureCurrentSelection();
-      commitOperation({
-        label,
-        next: {
-          lyrics: result.lyrics,
-          translationText: result.translationText,
-          translationEnabled: true
-        },
-        afterSelection: {
-          ...selection,
-          start: Math.min(selection.start, selection.editor === "lyrics" ? result.lyrics.length : result.translationText.length),
-          end: Math.min(selection.end, selection.editor === "lyrics" ? result.lyrics.length : result.translationText.length)
-        },
-        message: formatLyricsWorkspaceCopy(copy.synchronizedResult, { count: result.removedRows })
-      });
-      return;
-    }
-
-    const transform = mode === "trim"
-      ? trimBoundaryBlankLines
-      : mode === "collapse"
-        ? collapseConsecutiveBlankLines
-        : removeAllBlankLines;
-    const result = transform(activeText, activeSelection);
-    applyActiveTransform(
-      label,
-      result,
-      formatLyricsWorkspaceCopy(copy.removedLinesResult, {
-        scope: scopeLabel,
-        count: result.stats.removedLines ?? 0
-      })
-    );
-  }
-
-  function cleanPaste() {
-    const result = cleanPastedLyrics(activeText, activeSelection);
-    const count = (result.stats.trailingWhitespaceLines ?? 0) +
-      (result.stats.whitespaceOnlyLines ?? 0) +
-      (result.stats.invisibleCharacters ?? 0) +
-      (result.stats.newlineChanges ?? 0);
-    applyActiveTransform(
-      copy.cleanPaste,
-      result,
-      formatLyricsWorkspaceCopy(copy.cleanedPasteResult, { count })
-    );
-  }
-
-  function cleanLrc() {
-    const result = stripLrcTimeline(activeText, activeSelection);
-    applyActiveTransform(
-      copy.lrcHeading,
-      result,
-      formatLyricsWorkspaceCopy(copy.cleanedLrcResult, {
-        timestamps: result.stats.timestamps ?? 0,
-        metadata: result.stats.metadata ?? 0
-      })
-    );
-  }
-
-  function mergeLines() {
-    const result = mergeSelectedLyricsLines(activeText, activeSelection);
-    applyActiveTransform(
-      copy.mergeHeading,
-      result,
-      formatLyricsWorkspaceCopy(copy.mergedResult, {
-        count: (result.stats.mergedLines ?? 0) + 1
-      })
-    );
-  }
-
-  function cleanParagraphTags() {
-    const result = removeParagraphTags(activeText, activeSelection);
-    applyActiveTransform(
-      copy.tagsHeading,
-      result,
-      formatLyricsWorkspaceCopy(copy.tagsRemovedResult, {
-        scope: scopeLabel,
-        count: result.stats.tags?.length ?? 0
-      })
-    );
-  }
-
-  function formatTranslation(nextTranslation: string) {
-    const selection = captureCurrentSelection("translation");
-    commitOperation({
-      label: copy.formatTranslation,
-      next: { ...documentSnapshot, translationText: nextTranslation, translationEnabled: true },
-      afterSelection: {
-        ...selection,
-        start: Math.min(selection.start, nextTranslation.length),
-        end: Math.min(selection.end, nextTranslation.length)
-      },
-      message: copy.formattedResult
-    });
-  }
-
-  function splitAlternating(nextLyrics: string, nextTranslation: string) {
-    commitOperation({
-      label: copy.splitApply,
-      next: { lyrics: nextLyrics, translationText: nextTranslation, translationEnabled: true },
-      afterSelection: { editor: "lyrics", start: 0, end: 0 },
-      message: copy.splitResult
-    });
-  }
-
-  function swapColumns() {
-    commitOperation({
-      label: copy.swapApply,
-      next: swapLyricsColumns(documentSnapshot),
-      afterSelection: { editor: "lyrics", start: 0, end: 0 },
-      message: copy.swappedResult
-    });
-  }
-
-  function undoOperation() {
-    const result = undoLyricsOperation(historyRef.current);
-    if (!result.entry || !result.snapshot || !result.selection) return;
-    historyRef.current = result.history;
-    expectedSnapshotRef.current = result.snapshot;
-    pendingSelectionRef.current = result.selection;
-    viewport.captureAnchor(result.selection.editor);
-    setHistoryRevision((value) => value + 1);
-    setFeedback({
-      message: formatLyricsWorkspaceCopy(copy.undoneResult, { label: result.entry.label }),
-      canUndo: result.history.past.length > 0
-    });
-    onLyricsDocumentChange(result.snapshot);
-  }
-
-  function redoOperation() {
-    const result = redoLyricsOperation(historyRef.current);
-    if (!result.entry || !result.snapshot || !result.selection) return;
-    historyRef.current = result.history;
-    expectedSnapshotRef.current = result.snapshot;
-    pendingSelectionRef.current = result.selection;
-    viewport.captureAnchor(result.selection.editor);
-    setHistoryRevision((value) => value + 1);
-    setFeedback({
-      message: formatLyricsWorkspaceCopy(copy.redoneResult, { label: result.entry.label }),
-      canUndo: true
-    });
-    onLyricsDocumentChange(result.snapshot);
-  }
-
-  function handleTranslationEnabledChange(enabled: boolean) {
-    clearOperationHistory();
-    if (!enabled && activeEditorRef.current === "translation") {
-      viewport.captureAnchor("translation");
-      activeEditorRef.current = "lyrics";
-      const selection = clampSelection(selectionsRef.current.lyrics, lyrics.length);
-      setCursor(cursorForSelection("lyrics", lyrics, selection.start));
-    } else {
-      viewport.captureAnchor(enabled ? "translation" : activeEditorRef.current);
-    }
-    onTranslationEnabledChange(enabled);
-  }
-
-  function locateIssue(editor: LyricsWorkbenchEditor, line: number) {
-    const node = getEditor(editor);
-    if (!node) return;
-    const selection = getLyricsLineSelection(node.value, line);
-    activeEditorRef.current = editor;
-    node.focus({ preventScroll: true });
-    node.setSelectionRange(selection.start, selection.end);
-    setSelections((current) => ({ ...current, [editor]: selection }));
-    setCursor(cursorForSelection(editor, node.value, selection.start));
-    const scroll = scrollRef.current;
-    if (scroll) {
-      const total = Math.max(1, node.value.split(/\r?\n/u).length);
-      const ratio = total > 1 ? (Math.max(1, line) - 1) / (total - 1) : 0;
-      scroll.scrollTop = ratio * Math.max(0, scroll.scrollHeight - scroll.clientHeight);
-    }
-  }
 
   function openTab(tab: LyricsSidebarTab, intent?: LyricsCommandIntent) {
     viewport.captureAnchor();
@@ -570,24 +206,6 @@ export function LyricsWorkspace({
     );
   }
 
-  const currentLabel = cursor.editor === "translation" ? copy.translation : copy.original;
-  const currentTotalLines = Math.max(
-    1,
-    cursor.editor === "translation" ? translationStats.lines : lyricsStats.lines
-  );
-  const currentPosition = formatLyricsWorkspaceCopy(copy.currentPosition, {
-    label: currentLabel,
-    line: Math.min(cursor.line, currentTotalLines),
-    total: currentTotalLines
-  });
-  const scopeLabel = formatLyricsWorkspaceCopy(
-    activeScope.hasSelection ? copy.selectedLinesScope : copy.activeColumnScope,
-    {
-      label: currentLabel,
-      start: activeScope.startLine,
-      end: activeScope.endLine
-    }
-  );
   const splitStyle = sideBySide
     ? {
         gridTemplateColumns: `${split.geometry.editorWidth}px ${split.geometry.toolsWidth}px`,
@@ -597,7 +215,6 @@ export function LyricsWorkspace({
         gridTemplateColumns: "minmax(0, 1fr)",
         columnGap: "0px"
       };
-  void historyRevision;
 
   return (
     <div
@@ -610,8 +227,8 @@ export function LyricsWorkspace({
       <LyricsCommandBar
         copy={copy}
         activeTab={sidebarTab}
-        canUndo={historyRef.current.past.length > 0}
-        canRedo={historyRef.current.future.length > 0}
+        canUndo={documentController.canUndo}
+        canRedo={documentController.canRedo}
         isAITranslating={isAITranslating}
         showAITranslate={showAiTranslate}
         lyricsFetchAction={lyricsFetchPanel}
@@ -620,19 +237,19 @@ export function LyricsWorkspace({
             copy={copy}
             lineStatus={lineStatus}
             analysis={analysis}
-            onLocate={locateIssue}
+            onLocate={documentController.locateIssue}
           />
         )}
-        currentPosition={currentPosition}
-        scopeLabel={scopeLabel}
+        currentPosition={documentController.currentPosition}
+        scopeLabel={documentController.scopeLabel}
         sidebarExpanded={mobileSidebarOpen}
         showSidebarToggle={!sideBySide}
         sidebarToggleRef={sidebarToggleRef}
-        onUndo={undoOperation}
-        onRedo={redoOperation}
-        onCleanPaste={cleanPaste}
-        onCollapseBlankLines={() => blankCleanup("collapse", false)}
-        onStripLrc={cleanLrc}
+        onUndo={documentController.undoOperation}
+        onRedo={documentController.redoOperation}
+        onCleanPaste={documentController.cleanPaste}
+        onCollapseBlankLines={() => documentController.blankCleanup("collapse", false)}
+        onStripLrc={documentController.cleanLrc}
         onAITranslate={() => openTab("translation", "ai")}
         onToggleSidebar={toggleSidebar}
       />
@@ -673,11 +290,11 @@ export function LyricsWorkspace({
                   ref={lyricsRef}
                   id={lyricsId}
                   value={lyrics}
-                  onChange={onLyricsEditorChange}
-                  onFocus={(event) => onEditorFocus(event, "lyrics")}
-                  onSelect={(event) => updateCursor(event, "lyrics")}
-                  onKeyUp={(event) => updateCursor(event, "lyrics")}
-                  onClick={(event) => updateCursor(event, "lyrics")}
+                  onChange={documentController.onLyricsEditorChange}
+                  onFocus={(event) => documentController.onEditorFocus(event, "lyrics")}
+                  onSelect={(event) => documentController.updateCursor(event, "lyrics")}
+                  onKeyUp={(event) => documentController.updateCursor(event, "lyrics")}
+                  onClick={(event) => documentController.updateCursor(event, "lyrics")}
                   wrap="soft"
                   placeholder={t("lyricPlaceholder")}
                   className="field-shell lyrics-document-editor control-focus block min-h-[280px] min-w-0 w-full resize-none overflow-x-hidden overflow-y-hidden rounded-lg px-3 py-3 text-sm leading-[1.75]"
@@ -694,11 +311,11 @@ export function LyricsWorkspace({
                       ref={translationRef}
                       id={translationId}
                       value={translationText}
-                      onChange={onTranslationEditorChange}
-                      onFocus={(event) => onEditorFocus(event, "translation")}
-                      onSelect={(event) => updateCursor(event, "translation")}
-                      onKeyUp={(event) => updateCursor(event, "translation")}
-                      onClick={(event) => updateCursor(event, "translation")}
+                      onChange={documentController.onTranslationEditorChange}
+                      onFocus={(event) => documentController.onEditorFocus(event, "translation")}
+                      onSelect={(event) => documentController.updateCursor(event, "translation")}
+                      onKeyUp={(event) => documentController.updateCursor(event, "translation")}
+                      onClick={(event) => documentController.updateCursor(event, "translation")}
                       wrap="soft"
                       placeholder={t("translationPlaceholder")}
                       className="field-shell lyrics-document-editor control-focus block min-h-[280px] min-w-0 w-full resize-none overflow-x-hidden overflow-y-hidden rounded-[9px] border-transparent px-3 py-3 text-sm leading-[1.75]"
@@ -725,9 +342,9 @@ export function LyricsWorkspace({
         <LyricsSidebar
           copy={copy}
           activeTab={sidebarTab}
-          activeEditor={cursor.editor}
-          activeText={activeText}
-          selection={activeSelection}
+          activeEditor={documentController.activeEditor}
+          activeText={documentController.activeText}
+          selection={documentController.activeSelection}
           lyrics={lyrics}
           translationText={translationText}
           translationEnabled={translationEnabled}
@@ -736,7 +353,7 @@ export function LyricsWorkspace({
           t={t}
           open={sideBySide || mobileSidebarOpen}
           mobileDrawer={!sideBySide}
-          feedback={feedback}
+          feedback={documentController.feedback}
           focusIntent={focusIntent}
           isAITranslating={isAITranslating}
           showAiTranslate={showAiTranslate}
@@ -744,21 +361,20 @@ export function LyricsWorkspace({
           onTabChange={onSidebarTabChange}
           onCloseDrawer={closeMobileSidebar}
           onIntentHandled={() => setFocusIntent(null)}
-          onUndo={undoOperation}
-          onBlankCleanup={blankCleanup}
-          onCleanPaste={cleanPaste}
-          onStripLrc={cleanLrc}
-          onMergeSelectedLines={mergeLines}
-          onRemoveParagraphTags={cleanParagraphTags}
-          onTranslationEnabledChange={handleTranslationEnabledChange}
+          onUndo={documentController.undoOperation}
+          onBlankCleanup={documentController.blankCleanup}
+          onCleanPaste={documentController.cleanPaste}
+          onStripLrc={documentController.cleanLrc}
+          onMergeSelectedLines={documentController.mergeLines}
+          onRemoveParagraphTags={documentController.cleanParagraphTags}
+          onTranslationEnabledChange={documentController.handleTranslationEnabledChange}
           onAITranslate={onAITranslate}
           onCloseAITranslate={onCloseAITranslate}
           onCancelAITranslate={onCancelAITranslate}
-          onSplitAlternatingLyrics={splitAlternating}
-          onFormatTranslation={formatTranslation}
-          onSwapColumns={swapColumns}
+          onSplitAlternatingLyrics={documentController.splitAlternating}
+          onFormatTranslation={documentController.formatTranslation}
+          onSwapColumns={documentController.swapColumns}
         />
-
       </div>
     </div>
   );
@@ -779,28 +395,4 @@ function EditorColumn({
       {children}
     </div>
   );
-}
-
-function cursorForSelection(
-  editor: LyricsWorkbenchEditor,
-  value: string,
-  selectionStart: number
-): CursorPosition {
-  const totalLines = Math.max(1, value ? value.split(/\r?\n/u).length : 1);
-  const line = value.slice(0, selectionStart).split(/\r?\n/u).length;
-  return { editor, line, totalLines };
-}
-
-function getTextStats(text: string) {
-  const lines = text ? text.split(/\r?\n/u).length : 0;
-  return { lines, characters: text.length };
-}
-
-function clampSelection(
-  selection: LyricsTextSelection,
-  textLength: number
-): LyricsTextSelection {
-  const start = Math.min(textLength, Math.max(0, selection.start));
-  const end = Math.min(textLength, Math.max(start, selection.end));
-  return { start, end };
 }

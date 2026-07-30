@@ -2600,13 +2600,6 @@ body[data-reduce-motion="true"] .examples-close-button:focus-visible .examples-c
   display: none;
 }
 
-.ai-inline-panel {
-  color: rgb(var(--app-fg));
-  background: rgb(var(--panel-bg));
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.075), 0 18px 45px rgba(0,0,0,0.18);
-  backdrop-filter: blur(20px) saturate(105%);
-}
-
 .translation-star-border {
   position: relative;
   isolation: isolate;
