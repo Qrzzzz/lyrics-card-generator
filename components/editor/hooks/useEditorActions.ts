@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { createAppRequestHeaders } from "@/lib/app-request";
+import { getLyricsCardDesktopApi } from "@/lib/desktop-api";
 import { normalizeCardStyle } from "@/lib/card-style-normalize";
 import { clearLyricContent, hasClearableLyricContent } from "@/lib/clear-content";
 import {
@@ -32,6 +33,17 @@ import {
 } from "@/lib/editor/editor-document-state-adapter";
 import type { LyricsDocumentSnapshot } from "@/lib/lyrics-workbench";
 import type { ExampleLoadPayload } from "@/lib/examples";
+import {
+  type ImportHistoryDisplayInput,
+  type ImportHistoryReplayResult,
+  type ImportHistoryReplayUiResult,
+  type ImportHistoryWriteCandidate,
+  type LinkImportHistoryContext,
+  type LocalAudioImportHistoryContext,
+  type ManualCoverImportHistoryContext,
+  type SearchImportHistoryContext
+} from "@/lib/import-history";
+import { importHistoryCopy } from "@/lib/import-history-copy";
 import type {
   AppState,
   CardStyle,
@@ -55,9 +67,22 @@ type UseEditorActionsInput = {
   confirmReplaceDocument: () => boolean;
   onNotify: (message: string) => void;
   onCloseExamples: () => void;
+  onCloseHistory: () => void;
   onClearTransientState: () => void;
   onInvalidateDocument: (reason?: "document" | "ai-start") => TranslationValue | undefined;
 };
+
+type HistorySongParseResponse =
+  | { ok: true; data: ParsedSongData }
+  | { ok: false; error?: string };
+
+type HistorySearchResolveResponse =
+  | { ok: true; data: { song: ParsedSongData; lyrics?: string } }
+  | { ok: false; error?: string };
+
+type HistoryLocalAudioResponse =
+  | { ok: true; data: ParsedSongData; status: "success" | "no-lyrics" }
+  | { ok: false; error?: string };
 
 export function useEditorActions({
   parsedState,
@@ -74,6 +99,7 @@ export function useEditorActions({
   confirmReplaceDocument,
   onNotify,
   onCloseExamples,
+  onCloseHistory,
   onClearTransientState,
   onInvalidateDocument
 }: UseEditorActionsInput) {
@@ -126,6 +152,32 @@ export function useEditorActions({
     setDocumentRevision(revision);
     setState((current) => replaceSongDocument(current, song, lyrics));
     return true;
+  }
+
+  function queueImportHistoryRecord(candidate: ImportHistoryWriteCandidate) {
+    const desktop = getLyricsCardDesktopApi();
+    if (!desktop) return;
+    void desktop.recordImportHistory(candidate)
+      .then((result) => {
+        if (!result.ok) {
+          onNotify(importHistoryCopy[currentDocumentRef.current.locale].historySaveFailed);
+        }
+      })
+      .catch(() => {
+        onNotify(importHistoryCopy[currentDocumentRef.current.locale].historySaveFailed);
+      });
+  }
+
+  function historyDisplay(song: ParsedSongData | SongInfo): ImportHistoryDisplayInput {
+    const remoteCoverUrl = [song.originalCoverUrl, song.coverUrl]
+      .find((value) => typeof value === "string" && /^https?:\/\//i.test(value));
+    return {
+      title: song.title,
+      artist: song.artist,
+      album: song.album,
+      source: song.source,
+      ...(remoteCoverUrl ? { remoteCoverUrl } : {})
+    };
   }
 
   function beginAITranslation() {
@@ -190,20 +242,85 @@ export function useEditorActions({
     applyDocumentMutation((current) => ({ ...current, url }));
   }
 
-  function applyParsedSong(song: ParsedSongData, intent: DocumentImportIntent) {
-    return commitSongImport(intent, song);
+  function applyParsedSong(
+    song: ParsedSongData,
+    intent: DocumentImportIntent,
+    context: LinkImportHistoryContext
+  ) {
+    const committed = commitSongImport(intent, song);
+    if (committed) {
+      queueImportHistoryRecord({
+        kind: "link",
+        inputUrl: context.inputUrl,
+        normalizedUrl: song.originalUrl,
+        finalUrl: song.finalUrl,
+        display: historyDisplay(song)
+      });
+    }
+    return committed;
   }
 
-  function applyLocalAudio(song: ParsedSongData, embeddedLyrics: string | undefined, intent: DocumentImportIntent) {
-    return commitSongImport(intent, song, embeddedLyrics ?? "");
+  function applyLocalAudio(
+    song: ParsedSongData,
+    embeddedLyrics: string | undefined,
+    intent: DocumentImportIntent,
+    context: LocalAudioImportHistoryContext
+  ) {
+    const committed = commitSongImport(intent, song, embeddedLyrics ?? "");
+    if (committed) {
+      queueImportHistoryRecord({
+        kind: "local-audio",
+        fileToken: context.fileToken,
+        display: historyDisplay(song)
+      });
+    }
+    return committed;
   }
 
-  function applySearchedSong(song: ParsedSongData, lyrics: string | undefined, intent: DocumentImportIntent) {
-    return commitSongImport(intent, song, lyrics ?? "");
+  function applySearchedSong(
+    song: ParsedSongData,
+    lyrics: string | undefined,
+    intent: DocumentImportIntent,
+    context: SearchImportHistoryContext
+  ) {
+    const committed = commitSongImport(intent, song, lyrics ?? "");
+    if (committed) {
+      queueImportHistoryRecord({
+        kind: "search",
+        query: context.query,
+        platform: context.platform,
+        songId: context.songId,
+        pageUrl: context.pageUrl,
+        display: historyDisplay(song)
+      });
+    }
+    return committed;
   }
 
   function setSong(song: SongInfo) {
     applyDocumentMutation((current) => ({ ...current, song: canonicalSongInfo(song) }));
+  }
+
+  function saveSongInfo(song: SongInfo, context: ManualCoverImportHistoryContext) {
+    applyDocumentMutation((current) => ({ ...current, song: canonicalSongInfo(song) }));
+    if (!context.uploaded) return;
+    const snapshot = currentDocumentRef.current;
+    queueImportHistoryRecord({
+      kind: "manual-cover",
+      fileToken: context.fileToken,
+      display: historyDisplay(song),
+      snapshot: {
+        title: song.title,
+        artist: song.artist,
+        album: song.album,
+        source: song.source,
+        originalUrl: song.originalUrl,
+        finalUrl: song.finalUrl,
+        lyrics: snapshot.lyrics,
+        translationText: snapshot.translationText,
+        translationEnabled: snapshot.translationEnabled
+      }
+    });
   }
 
   function setLyrics(lyrics: string) {
@@ -360,6 +477,145 @@ export function useEditorActions({
     return true;
   }
 
+  async function reimportHistory(recordId: string, relocate = false): Promise<ImportHistoryReplayUiResult> {
+    const desktop = getLyricsCardDesktopApi();
+    const copy = importHistoryCopy[currentDocumentRef.current.locale];
+    if (!desktop) {
+      onNotify(copy.replayFailed);
+      return { status: "error" };
+    }
+    const intent = beginSongImport("history-replay");
+    if (!intent) return { status: "cancelled" };
+
+    try {
+      const replay = relocate
+        ? await desktop.relocateImportHistory(recordId)
+        : await desktop.replayImportHistory(recordId);
+      if (!replay.ok) {
+        intent.cancel();
+        if (replay.code === "cancelled") return { status: "cancelled" };
+        if (relocate) {
+          onNotify(copy.relocateFailed);
+          return { status: "missing" };
+        }
+        if (replay.canRelocate) {
+          onNotify(replay.code === "file_missing" ? copy.fileMissing : copy.relocateFailed);
+          return { status: "missing" };
+        }
+        onNotify(copy.replayFailed);
+        return { status: "error" };
+      }
+
+      const committed = await commitHistoryReplay(replay, intent);
+      if (!committed) return { status: "cancelled" };
+      onCloseHistory();
+
+      let touched = false;
+      try {
+        touched = (await desktop.touchImportHistory(recordId)).ok;
+      } catch {
+        touched = false;
+      }
+      if (!touched) {
+        onNotify(copy.historySaveFailed);
+      } else if ("file" in replay && replay.file.changed) {
+        onNotify(copy.fileChanged);
+      } else {
+        onNotify(copy.replaySucceeded);
+      }
+      return { status: "success" };
+    } catch {
+      const wasAborted = intent.signal.aborted;
+      intent.cancel();
+      if (wasAborted) return { status: "cancelled" };
+      onNotify(copy.replayFailed);
+      return { status: "error" };
+    }
+  }
+
+  async function commitHistoryReplay(replay: Extract<ImportHistoryReplayResult, { ok: true }>, intent: DocumentImportIntent) {
+    if (replay.kind === "link") {
+      const response = await fetch("/api/parse-song", {
+        method: "POST",
+        headers: createAppRequestHeaders({ "content-type": "application/json" }),
+        body: JSON.stringify({ url: replay.url }),
+        signal: intent.signal
+      });
+      const payload = await response.json() as HistorySongParseResponse;
+      if (!payload.ok) throw new Error(payload.error || "history_link_replay_failed");
+      return commitSongImport(intent, payload.data, payload.data.lyrics ?? "");
+    }
+
+    if (replay.kind === "search") {
+      const response = await fetch("/api/resolve-searched-song", {
+        method: "POST",
+        headers: createAppRequestHeaders({ "content-type": "application/json" }),
+        body: JSON.stringify({ source: replay.platform, id: replay.songId }),
+        signal: intent.signal
+      });
+      const payload = await response.json() as HistorySearchResolveResponse;
+      if (!payload.ok) throw new Error(payload.error || "history_search_replay_failed");
+      return commitSongImport(intent, payload.data.song, payload.data.lyrics ?? "");
+    }
+
+    if (replay.kind === "local-audio") {
+      const file = new File(
+        [copyReplayBytes(replay.file.bytes)],
+        replay.file.fileName,
+        { type: replay.file.mimeType, lastModified: replay.file.mtimeMs }
+      );
+      const formData = new FormData();
+      formData.set("file", file);
+      const response = await fetch("/api/parse-local-audio", {
+        method: "POST",
+        headers: createAppRequestHeaders(),
+        body: formData,
+        signal: intent.signal
+      });
+      const payload = await response.json() as HistoryLocalAudioResponse;
+      if (!payload.ok) throw new Error(payload.error || "history_local_audio_replay_failed");
+      return commitSongImport(intent, payload.data, payload.data.lyrics ?? "");
+    }
+
+    const coverUrl = URL.createObjectURL(new Blob(
+      [copyReplayBytes(replay.file.bytes)],
+      { type: replay.file.mimeType }
+    ));
+    const revision = documentControllerRef.current.tryCommit(intent);
+    if (revision === null) {
+      URL.revokeObjectURL(coverUrl);
+      return false;
+    }
+    const snapshot = replay.snapshot;
+    setDocumentRevision(revision);
+    setState((current) => {
+      const replaced = replaceSongDocument(current, {
+        source: snapshot.source,
+        title: snapshot.title,
+        artist: snapshot.artist,
+        album: snapshot.album,
+        coverUrl,
+        originalCoverUrl: "",
+        proxiedCoverUrl: "",
+        originalUrl: snapshot.originalUrl ?? "",
+        finalUrl: snapshot.finalUrl ?? "",
+        parseMethod: "import-history-manual-cover"
+      }, snapshot.lyrics);
+      const translationEnabled = snapshot.translationEnabled && Boolean(snapshot.translationText.trim());
+      return {
+        ...replaced,
+        translationText: snapshot.translationText,
+        translationEnabled,
+        style: {
+          ...replaced.style,
+          translationText: snapshot.translationText,
+          translationEnabled
+        }
+      };
+    });
+    return true;
+  }
+
   return {
     celebrationKey,
     isCompleteExporting,
@@ -377,6 +633,7 @@ export function useEditorActions({
     applyParsedSong,
     applyLocalAudio,
     applySearchedSong,
+    saveSongInfo,
     setSong,
     setLyrics,
     setTranslationEnabled,
@@ -384,6 +641,13 @@ export function useEditorActions({
     setLyricsDocument,
     applyFetchedLyrics,
     loadExample,
+    reimportHistory,
     completeAndExport
   };
+}
+
+function copyReplayBytes(bytes: Uint8Array) {
+  const copy = new Uint8Array(bytes.byteLength);
+  copy.set(bytes);
+  return copy.buffer;
 }

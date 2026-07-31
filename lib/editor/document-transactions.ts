@@ -2,7 +2,13 @@ import { getHighResolutionCoverUrl } from "@/lib/cover-url";
 import { proxiedImageUrl } from "@/lib/image-utils";
 import type { AppState, ParsedSongData, SongInfo } from "@/lib/types";
 
-export type DocumentImportKind = "search" | "link" | "local-audio" | "example" | "example-enrichment";
+export type DocumentImportKind =
+  | "search"
+  | "link"
+  | "local-audio"
+  | "history-replay"
+  | "example"
+  | "example-enrichment";
 
 export type DocumentImportIntent = {
   id: number;

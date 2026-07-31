@@ -22,6 +22,7 @@ export type SongImportAsideProps = {
   manualExpanded: boolean;
   manualRegionId: string;
   t: ReturnType<typeof createT>;
+  manualSavePending?: boolean;
   onSave: () => void;
   onCancel: () => void;
 };
@@ -38,6 +39,7 @@ export function SongImportAside({
   manualExpanded,
   manualRegionId,
   t,
+  manualSavePending = false,
   onSave,
   onCancel
 }: SongImportAsideProps) {
@@ -86,7 +88,7 @@ export function SongImportAside({
               transition={transition}
               onSubmit={(event) => {
                 event.preventDefault();
-                onSave();
+                if (!manualSavePending) onSave();
               }}
             >
               {manualForm}
@@ -95,6 +97,7 @@ export function SongImportAside({
                   type="button"
                   data-testid="song-info-cancel"
                   className="app-button control-focus inline-flex h-10 items-center justify-center rounded-lg px-4 text-sm font-semibold"
+                  disabled={manualSavePending}
                   onClick={onCancel}
                 >
                   {copy.cancel}
@@ -102,7 +105,8 @@ export function SongImportAside({
                 <button
                   type="submit"
                   data-testid="song-info-save"
-                  className="control-variant-primary control-focus inline-flex h-10 items-center justify-center gap-2 rounded-lg px-4 text-sm font-semibold"
+                  disabled={manualSavePending}
+                  className="control-variant-primary control-focus control-disabled inline-flex h-10 items-center justify-center gap-2 rounded-lg px-4 text-sm font-semibold"
                 >
                   <Save className="h-4 w-4" aria-hidden="true" />
                   {copy.save}

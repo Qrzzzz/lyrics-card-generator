@@ -24,6 +24,12 @@ import { revokeReplacedBlobUrl } from "@/lib/object-url-lifecycle";
 import type { LyricsDocumentSnapshot, LyricsSidebarTab } from "@/lib/lyrics-workbench";
 import type { DocumentImportIntent, DocumentImportKind } from "@/lib/editor/document-transactions";
 import type {
+  LinkImportHistoryContext,
+  LocalAudioImportHistoryContext,
+  ManualCoverImportHistoryContext,
+  SearchImportHistoryContext
+} from "@/lib/import-history";
+import type {
   AppState,
   CardStyle,
   FontScheme,
@@ -46,9 +52,20 @@ export type EditorStepsAiState = {
 export type EditorStepHandlers = {
   onUrlChange: (url: string) => void;
   onBeginSongImport: (kind: DocumentImportKind) => DocumentImportIntent | null;
-  onSearchedSongResolved: (song: ParsedSongData, lyrics: string | undefined, intent: DocumentImportIntent) => boolean;
-  onSongParsed: (song: ParsedSongData, intent: DocumentImportIntent) => boolean;
-  onLocalAudioParsed: (song: ParsedSongData, embeddedLyrics: string | undefined, intent: DocumentImportIntent) => boolean;
+  onSearchedSongResolved: (
+    song: ParsedSongData,
+    lyrics: string | undefined,
+    intent: DocumentImportIntent,
+    context: SearchImportHistoryContext
+  ) => boolean;
+  onSongParsed: (song: ParsedSongData, intent: DocumentImportIntent, context: LinkImportHistoryContext) => boolean;
+  onLocalAudioParsed: (
+    song: ParsedSongData,
+    embeddedLyrics: string | undefined,
+    intent: DocumentImportIntent,
+    context: LocalAudioImportHistoryContext
+  ) => boolean;
+  onSaveSongInfo: (song: SongInfo, context: ManualCoverImportHistoryContext) => void;
   onSongChange: (song: SongInfo) => void;
   onUseFetchedLyrics: (lyrics: string, revision: number, songIdentity: string) => boolean;
   onLyricsChange: (lyrics: string) => void;
@@ -101,9 +118,11 @@ export function useEditorSteps({
   const [lyricsSidebarTab, setLyricsSidebarTab] = useState<LyricsSidebarTab>("cleanup");
   const [songInfoDraft, setSongInfoDraft] = useState<SongInfo>(() => ({ ...state.song }));
   const [songInfoEditRevision, setSongInfoEditRevision] = useState<number | null>(null);
+  const [manualCoverPending, setManualCoverPending] = useState(false);
   const songInfoRegionId = useId();
   const songInfoToggleRef = useRef<HTMLButtonElement | null>(null);
   const songInfoDraftCoverRef = useRef(state.song.coverUrl ?? "");
+  const manualCoverContextRef = useRef<ManualCoverImportHistoryContext>({ uploaded: false });
 
   function restoreSongInfoToggleFocus() {
     window.requestAnimationFrame(() => songInfoToggleRef.current?.focus({ preventScroll: true }));
@@ -115,6 +134,8 @@ export function useEditorSteps({
 
   function syncSongInfoDraft(song: SongInfo) {
     songInfoDraftCoverRef.current = song.coverUrl ?? "";
+    manualCoverContextRef.current = { uploaded: false };
+    setManualCoverPending(false);
     setSongInfoDraft(song);
   }
 
@@ -154,7 +175,8 @@ export function useEditorSteps({
       return;
     }
 
-    handlers.onSongChange({ ...songInfoDraft });
+    handlers.onSaveSongInfo({ ...songInfoDraft }, manualCoverContextRef.current);
+    manualCoverContextRef.current = { uploaded: false };
     setSongInfoEditRevision(null);
     setSongInfoExpanded(false);
     restoreSongInfoToggleFocus();
@@ -228,6 +250,10 @@ export function useEditorSteps({
             <SongInfoForm
               song={songInfoDraft}
               onSongChange={updateSongInfoDraft}
+              onManualCoverChange={(context) => {
+                manualCoverContextRef.current = context;
+              }}
+              onManualCoverPendingChange={setManualCoverPending}
               t={t}
               showToggle={false}
               forceEnabled
@@ -235,6 +261,7 @@ export function useEditorSteps({
           )}
           manualExpanded={songInfoExpanded}
           manualRegionId={songInfoRegionId}
+          manualSavePending={manualCoverPending}
           onSave={saveSongInfoEditor}
           onCancel={closeSongInfoEditor}
         />

@@ -7,6 +7,7 @@ import { createAppRequestHeaders } from "@/lib/app-request";
 import type { createT } from "@/lib/i18n";
 import type { ParsedSongData } from "@/lib/types";
 import type { DocumentImportIntent } from "@/lib/editor/document-transactions";
+import type { LinkImportHistoryContext } from "@/lib/import-history";
 import { cn } from "@/lib/utils";
 
 type ParseResponse =
@@ -35,7 +36,7 @@ export function SongLinkParser({
   url: string;
   onUrlChange: (url: string) => void;
   beginImport: () => DocumentImportIntent | null;
-  onParsed: (song: ParsedSongData, intent: DocumentImportIntent) => boolean;
+  onParsed: (song: ParsedSongData, intent: DocumentImportIntent, context: LinkImportHistoryContext) => boolean;
   t: ReturnType<typeof createT>;
   autoParseOnMount?: boolean;
 }) {
@@ -100,7 +101,7 @@ export function SongLinkParser({
         throw new Error(payload.error);
       }
 
-      if (!onParsed(payload.data, intent)) return;
+      if (!onParsed(payload.data, intent, { inputUrl: url })) return;
       setStatus("success");
       setMessage(t("parseSuccess", { source: payload.data.source }));
     } catch (error) {

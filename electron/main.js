@@ -1,5 +1,6 @@
 const { app, BrowserWindow, Menu, dialog, ipcMain, safeStorage, shell } = require("electron");
 const { spawn } = require("node:child_process");
+const crypto = require("node:crypto");
 const fs = require("node:fs/promises");
 const http = require("node:http");
 const net = require("node:net");
@@ -17,6 +18,12 @@ const {
 const { normalizeStoredPreferences } = require("./user-preferences");
 const { AIRequestRegistry } = require("./ai-request-registry");
 const { assertTrustedIpcEvent } = require("./ipc-security");
+const {
+  ImportHistoryStore,
+  normalizeImportHistoryLimit,
+  toPublicImportHistoryRecord,
+  validateImportFileDescriptor
+} = require("./import-history");
 const { resolveLocalAppUrl } = require("./local-app-url");
 const { isAllowedLocalNavigation, parseAllowedExternalUrl } = require("./url-policy");
 
@@ -24,6 +31,7 @@ const HOST = "127.0.0.1";
 const APP_ID = "com.lyriccard.generator";
 const START_TIMEOUT_MS = 45000;
 const WINDOW_BACKGROUND_COLOR = "#20242D";
+const IMPORT_FILE_REGISTRATION_TTL_MS = 30 * 60 * 1000;
 
 if (process.env.LYRICS_CARD_TEST_USER_DATA) {
   app.setPath("userData", path.resolve(process.env.LYRICS_CARD_TEST_USER_DATA));
@@ -44,6 +52,11 @@ let lastEmittedWindowState = null;
 let appPreferencesWriteQueue = Promise.resolve();
 let allowWindowClose = false;
 const aiTranslationRequests = new AIRequestRegistry();
+const importFileRegistrations = new Map();
+const importHistoryOperations = new Set();
+const importHistoryStore = new ImportHistoryStore({
+  filePath: path.join(app.getPath("userData"), "app-data", "import-history.json")
+});
 
 const DEFAULT_AI_SETTINGS = {
   baseUrl: "https://api.openai.com/v1",
@@ -242,6 +255,10 @@ function createWindow() {
     if (allowWindowClose) return;
     event.preventDefault();
     requestRendererClose();
+  });
+  mainWindow.on("closed", () => {
+    importFileRegistrations.clear();
+    mainWindow = null;
   });
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
@@ -470,6 +487,7 @@ function registerDesktopIpc() {
   handle("lyrics-card:window-close-confirm", async () => {
     if (!mainWindow || mainWindow.isDestroyed()) return false;
     await appPreferencesWriteQueue;
+    await flushImportHistoryOperations();
     allowWindowClose = true;
     mainWindow.close();
     return true;
@@ -479,12 +497,13 @@ function registerDesktopIpc() {
   });
 
   handle("lyrics-card:app-preferences-load", () => readAppPreferences());
-  handle("lyrics-card:app-preferences-save", async (_event, input) => {
+  handle("lyrics-card:app-preferences-save", (_event, input) => trackImportHistoryOperation(async () => {
     const preferences = normalizeStoredPreferences(input);
     if (!preferences) return false;
     await enqueueAppPreferencesWrite(preferences);
+    await importHistoryStore.trim(normalizeImportHistoryLimit(preferences.userSettings?.importHistoryLimit));
     return true;
-  });
+  }));
 
   handle("lyrics-card:list-system-fonts", async () => {
     if (process.platform !== "win32") {
@@ -528,6 +547,115 @@ function registerDesktopIpc() {
     await fs.rm(target, { force: true });
     return true;
   });
+
+  handle("lyrics-card:import-file-register", async (event, input) => {
+    const kind = input?.kind === "local-audio" || input?.kind === "manual-cover" ? input.kind : "";
+    const filePath = typeof input?.path === "string" ? input.path : "";
+    if (!kind || !filePath || !path.isAbsolute(filePath)) return null;
+    try {
+      const stat = await fs.stat(filePath);
+      const validated = validateImportFileDescriptor(kind, filePath, stat);
+      if (!validated.ok) return null;
+      const rendererSize = Number(input?.size);
+      if (Number.isSafeInteger(rendererSize) && rendererSize >= 0 && rendererSize !== validated.size) return null;
+      pruneImportFileRegistrations();
+      const token = crypto.randomUUID();
+      importFileRegistrations.set(token, {
+        kind,
+        senderId: event.sender.id,
+        expiresAt: Date.now() + IMPORT_FILE_REGISTRATION_TTL_MS,
+        path: validated.path,
+        fileName: path.basename(validated.path),
+        size: validated.size,
+        mtimeMs: validated.mtimeMs
+      });
+      return { token };
+    } catch {
+      return null;
+    }
+  });
+
+  handle("lyrics-card:import-history-list", async (_event, input) => {
+    return importHistoryStore.list({
+      offset: input?.offset,
+      limit: input?.limit,
+      query: input?.query,
+      source: input?.source
+    });
+  });
+
+  handle("lyrics-card:import-history-stats", () => importHistoryStore.stats());
+
+  handle("lyrics-card:import-history-record", (event, input) => trackImportHistoryOperation(async () => {
+    try {
+      let candidate = input;
+      if (input?.kind === "local-audio" || input?.kind === "manual-cover") {
+        const file = takeImportFileRegistration(event.sender.id, input?.fileToken, input.kind);
+        if (!file) return { ok: false, code: "file_reference_expired" };
+        candidate = { ...input, file };
+      }
+      const limit = await readImportHistoryLimit();
+      const record = await importHistoryStore.upsert(candidate, limit);
+      return { ok: true, record };
+    } catch (error) {
+      console.error("[import-history] unable to save record", error instanceof Error ? error.message : "unknown error");
+      return { ok: false, code: typeof error?.code === "string" ? error.code : "history_write_failed" };
+    }
+  }));
+
+  handle("lyrics-card:import-history-touch", (_event, recordId) => trackImportHistoryOperation(async () => {
+    try {
+      return {
+        ok: await importHistoryStore.touch(recordId, await readImportHistoryLimit())
+      };
+    } catch (error) {
+      console.error("[import-history] unable to touch record", error instanceof Error ? error.message : "unknown error");
+      return { ok: false, code: "history_write_failed" };
+    }
+  }));
+
+  handle("lyrics-card:import-history-remove", (_event, recordId) => trackImportHistoryOperation(
+    () => importHistoryStore.remove(recordId)
+  ));
+
+  handle("lyrics-card:import-history-clear", () => trackImportHistoryOperation(
+    () => importHistoryStore.clear()
+  ));
+
+  handle("lyrics-card:import-history-replay", async (_event, recordId) => {
+    const record = await importHistoryStore.get(recordId);
+    if (!record) return { ok: false, code: "not_found" };
+    return createImportHistoryReplayPayload(record);
+  });
+
+  handle("lyrics-card:import-history-relocate", (_event, recordId) => trackImportHistoryOperation(async () => {
+    const record = await importHistoryStore.get(recordId);
+    if (!record || (record.kind !== "local-audio" && record.kind !== "manual-cover")) {
+      return { ok: false, code: "not_found" };
+    }
+    const result = await dialog.showOpenDialog(mainWindow, {
+      properties: ["openFile"],
+      filters: record.kind === "local-audio"
+        ? [{ name: "Audio", extensions: ["mp3", "flac"] }]
+        : [{ name: "Images", extensions: ["png", "jpg", "jpeg", "webp", "gif"] }]
+    });
+    if (result.canceled || !result.filePaths[0]) return { ok: false, code: "cancelled" };
+    const filePath = result.filePaths[0];
+    try {
+      const stat = await fs.stat(filePath);
+      const validated = validateImportFileDescriptor(record.kind, filePath, stat);
+      if (!validated.ok) return { ok: false, code: validated.code };
+      const updated = await importHistoryStore.updateFileReference(record.id, {
+        path: validated.path,
+        fileName: path.basename(validated.path),
+        size: validated.size,
+        mtimeMs: validated.mtimeMs
+      });
+      return updated ? createImportHistoryReplayPayload(updated) : { ok: false, code: "not_found" };
+    } catch (error) {
+      return { ok: false, code: error?.code === "ENOENT" ? "file_missing" : "file_invalid" };
+    }
+  }));
 
   handle("lyrics-card:ai-settings-load", async () => {
     const settings = await readAISettings();
@@ -601,6 +729,116 @@ function registerDesktopIpc() {
     if (!isValidAIRequestId(requestId)) return { cancelled: false, active: false };
     return aiTranslationRequests.cancel(event.sender, requestId);
   });
+}
+
+function trackImportHistoryOperation(operation) {
+  const pending = Promise.resolve().then(operation);
+  importHistoryOperations.add(pending);
+  void pending
+    .finally(() => importHistoryOperations.delete(pending))
+    .catch(() => undefined);
+  return pending;
+}
+
+async function flushImportHistoryOperations() {
+  while (importHistoryOperations.size > 0) {
+    await Promise.allSettled([...importHistoryOperations]);
+  }
+  await importHistoryStore.flush();
+}
+
+function pruneImportFileRegistrations() {
+  const now = Date.now();
+  for (const [token, registration] of importFileRegistrations) {
+    if (registration.expiresAt <= now) importFileRegistrations.delete(token);
+  }
+}
+
+function takeImportFileRegistration(senderId, token, kind) {
+  pruneImportFileRegistrations();
+  if (typeof token !== "string") return null;
+  const registration = importFileRegistrations.get(token);
+  if (!registration || registration.senderId !== senderId || registration.kind !== kind) return null;
+  importFileRegistrations.delete(token);
+  return {
+    path: registration.path,
+    fileName: registration.fileName,
+    size: registration.size,
+    mtimeMs: registration.mtimeMs
+  };
+}
+
+async function readImportHistoryLimit() {
+  const preferences = await readAppPreferences();
+  return normalizeImportHistoryLimit(preferences?.userSettings?.importHistoryLimit);
+}
+
+async function createImportHistoryReplayPayload(record) {
+  if (record.kind === "link") {
+    return {
+      ok: true,
+      kind: "link",
+      record: toPublicImportHistoryRecord(record),
+      url: record.source.inputUrl || record.source.normalizedUrl || record.source.finalUrl
+    };
+  }
+  if (record.kind === "search") {
+    return {
+      ok: true,
+      kind: "search",
+      record: toPublicImportHistoryRecord(record),
+      query: record.source.query,
+      platform: record.source.platform,
+      songId: record.source.songId,
+      pageUrl: record.source.pageUrl || ""
+    };
+  }
+
+  try {
+    const stat = await fs.stat(record.source.path);
+    const validated = validateImportFileDescriptor(record.kind, record.source.path, stat);
+    if (!validated.ok) return { ok: false, code: validated.code, canRelocate: true };
+    const bytes = await fs.readFile(validated.path);
+    const changed = validated.size !== record.source.size || Math.abs(validated.mtimeMs - record.source.mtimeMs) > 1;
+    const file = {
+      bytes,
+      fileName: path.basename(validated.path),
+      size: validated.size,
+      mtimeMs: validated.mtimeMs,
+      mimeType: mimeTypeForHistoryFile(validated.extension),
+      changed
+    };
+    if (record.kind === "manual-cover") {
+      return {
+        ok: true,
+        kind: "manual-cover",
+        record: toPublicImportHistoryRecord(record),
+        file,
+        snapshot: record.snapshot
+      };
+    }
+    return {
+      ok: true,
+      kind: "local-audio",
+      record: toPublicImportHistoryRecord(record),
+      file
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      code: error?.code === "ENOENT" ? "file_missing" : "file_invalid",
+      canRelocate: true
+    };
+  }
+}
+
+function mimeTypeForHistoryFile(extension) {
+  if (extension === ".mp3") return "audio/mpeg";
+  if (extension === ".flac") return "audio/flac";
+  if (extension === ".png") return "image/png";
+  if (extension === ".webp") return "image/webp";
+  if (extension === ".gif") return "image/gif";
+  return "image/jpeg";
 }
 
 function safeBackgroundPath(imageId) {

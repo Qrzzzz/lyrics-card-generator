@@ -35,6 +35,7 @@ type SettingsSurfaceProps = {
   requestedTab?: SettingsTabId;
   locale: Locale;
   userSettings: UserSettings;
+  isDesktopShell: boolean;
   transition: Transition;
   onLocaleChange: (locale: Locale) => void;
   onUserSettingsPreview: (settings: UserSettings) => void;
@@ -49,6 +50,7 @@ export function SettingsSurface({
   requestedTab,
   locale,
   userSettings,
+  isDesktopShell,
   transition,
   onLocaleChange,
   onUserSettingsPreview,
@@ -278,6 +280,7 @@ export function SettingsSurface({
                           locale={locale}
                           copy={copy}
                           settings={workspace.draft}
+                          showImportHistorySettings={isDesktopShell}
                           onLocaleChange={workspace.handleLocaleChange}
                           onChange={workspace.updateDraft}
                         />

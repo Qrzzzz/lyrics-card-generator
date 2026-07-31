@@ -1,5 +1,13 @@
+"use client";
+
 import { LanguageSettingsSection } from "@/components/settings/LanguageSettingsSection";
-import { ToggleRow } from "@/components/ui/controls";
+import { FieldLabel, SelectField, ToggleRow } from "@/components/ui/controls";
+import { getLyricsCardDesktopApi } from "@/lib/desktop-api";
+import {
+  formatImportHistoryText,
+  importHistoryCopy
+} from "@/lib/import-history-copy";
+import type { ImportHistoryLimit } from "@/lib/import-history";
 import type { UserSettings } from "@/lib/settings/types";
 import type { Locale } from "@/lib/types";
 import type { settingsCopy } from "@/lib/settings/copy";
@@ -8,15 +16,43 @@ export function GeneralSettingsSection({
   locale,
   copy,
   settings,
+  showImportHistorySettings,
   onLocaleChange,
   onChange
 }: {
   locale: Locale;
   copy: typeof settingsCopy[Locale];
   settings: UserSettings;
+  showImportHistorySettings: boolean;
   onLocaleChange: (locale: Locale) => void;
   onChange: (settings: UserSettings) => void;
 }) {
+  const historyCopy = importHistoryCopy[locale];
+
+  async function changeImportHistoryLimit(next: ImportHistoryLimit) {
+    const current = settings.importHistoryLimit;
+    const decreasing = next !== "unlimited" && (current === "unlimited" || next < current);
+    if (decreasing) {
+      const desktop = getLyricsCardDesktopApi();
+      if (desktop) {
+        try {
+          const { total } = await desktop.getImportHistoryStats();
+          const trimmed = Math.max(0, total - next);
+          if (trimmed > 0 && !window.confirm(formatImportHistoryText(historyCopy.limitTrimConfirm, {
+            limit: next,
+            count: trimmed
+          }))) {
+            return;
+          }
+        } catch {
+          window.alert(historyCopy.limitStatsFailed);
+          return;
+        }
+      }
+    }
+    onChange({ ...settings, importHistoryLimit: next });
+  }
+
   return (
     <section className="grid gap-4">
       <LanguageSettingsSection locale={locale} title={copy.language} onLocaleChange={onLocaleChange} />
@@ -27,6 +63,25 @@ export function GeneralSettingsSection({
         onChange={(reduceMotionEnabled) => onChange({ ...settings, reduceMotionEnabled })}
         testId="reduce-motion-toggle"
       />
+      {showImportHistorySettings ? (
+        <FieldLabel
+          label={historyCopy.limitLabel}
+          description={historyCopy.limitDescription}
+        >
+          <SelectField
+            value={String(settings.importHistoryLimit)}
+            data-testid="import-history-limit"
+            onChange={(event) => {
+              const value = event.target.value;
+              void changeImportHistoryLimit(value === "unlimited" ? "unlimited" : value === "5" ? 5 : 10);
+            }}
+          >
+            <option value="5">{historyCopy.limitFive}</option>
+            <option value="10">{historyCopy.limitTen}</option>
+            <option value="unlimited">{historyCopy.limitUnlimited}</option>
+          </SelectField>
+        </FieldLabel>
+      ) : null}
     </section>
   );
 }

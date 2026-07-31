@@ -1420,7 +1420,7 @@ async function assertFocusedPresentation(width, height) {
   assert.equal(result.headerActionPlacement, "stepper", `${width}x${height} moves step-one actions into the Stepper`);
   assert.deepEqual(
     result.headerActionIds,
-    ["examples-button", "clear-all-button", "settings-button"],
+    ["examples-button", "history-button", "clear-all-button", "settings-button"],
     `${width}x${height} preserves every step-one header action`
   );
   assert.equal(result.hasStepperHeaderActions, true, `${width}x${height} keeps step-one actions inside the Stepper`);
@@ -1500,7 +1500,7 @@ async function assertUnifiedPreviewChrome(stepId) {
   assert.equal(result.compactChrome, "true", `${stepId} uses the shared compact stepper chrome`);
   assert.equal(result.legacyHeaderCount, 0, `${stepId} removes the legacy editor header`);
   assert.equal(result.actionPlacement, "stepper", `${stepId} places the shared actions in the stepper`);
-  assert.deepEqual(result.actionIds, ["examples-button", "clear-all-button", "settings-button"], `${stepId} preserves all editor actions`);
+  assert.deepEqual(result.actionIds, ["examples-button", "history-button", "clear-all-button", "settings-button"], `${stepId} preserves all editor actions`);
   assert.equal(result.actionsInsideRail, true, `${stepId} keeps the actions inside the stepper rail`);
   assert.equal(result.actionsFitRail, true, `${stepId} keeps the actions within the stepper bounds`);
   assert.equal(result.railSpansWorkbench, true, `${stepId} spans the shared rail across the preview workbench`);
@@ -2098,7 +2098,7 @@ async function assertLyricsWorkspace(width, height) {
   assert.equal(result.actionPlacement, "stepper", `${width}x${height} places step-two actions in the Stepper heading`);
   assert.deepEqual(
     result.actionIds,
-    ["examples-button", "clear-all-button", "settings-button"],
+    ["examples-button", "history-button", "clear-all-button", "settings-button"],
     `${width}x${height} preserves every step-two editor action`
   );
   assert.equal(result.actionsInsideRail, true, `${width}x${height} keeps step-two actions inside the shared rail`);

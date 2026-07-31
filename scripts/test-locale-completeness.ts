@@ -3,6 +3,7 @@ import { AI_ERROR_CODES, getAIErrorMessage } from "../lib/ai/error-copy";
 import { getAIPromptUiCopy } from "../lib/ai/prompt-ui-copy";
 import { getAIUiCopy } from "../lib/ai/ui-copy";
 import { messages } from "../lib/i18n";
+import { importHistoryCopy } from "../lib/import-history-copy";
 import { LOCALE_BCP47 } from "../lib/locale-language";
 import { settingsCopy } from "../lib/settings/copy";
 import type { Locale } from "../lib/types";
@@ -18,6 +19,7 @@ assertCatalog("main", messages, new Set([
 assertCatalog("settings", settingsCopy, new Set([
   "ai", "general", "export", "image", "source", "low", "accentOrange", "accentCustomPlaceholder", "version"
 ]));
+assertCatalog("import history", importHistoryCopy, new Set(["filterLabel"]));
 assertCatalog("AI UI", fromGetter((locale) => getAIUiCopy(locale) as unknown as Record<string, string>), new Set([
   "temperature"
 ]));

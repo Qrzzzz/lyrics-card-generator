@@ -6,6 +6,15 @@ import type {
 } from "@/lib/ai/types";
 import type { EffectiveUiThemeId } from "@/lib/settings/types";
 import type { AppPreferencesRecord } from "@/lib/settings/app-preferences-reconciliation";
+import type {
+  ImportHistoryFileKind,
+  ImportHistoryFileRegistration,
+  ImportHistoryKind,
+  ImportHistoryListResult,
+  ImportHistoryReplayResult,
+  ImportHistoryWriteCandidate,
+  ImportHistoryWriteResult
+} from "@/lib/import-history";
 
 export type SystemFontOption = {
   label: string;
@@ -41,6 +50,20 @@ export type LyricsCardDesktopApi = {
   saveBackgroundImage: () => Promise<{ imageId: string; imageUrl: string } | null>;
   readBackgroundImage: (imageId: string) => Promise<string | undefined>;
   removeBackgroundImage: (imageId: string) => Promise<boolean>;
+  registerImportFile: (file: File, kind: ImportHistoryFileKind) => Promise<ImportHistoryFileRegistration | null>;
+  listImportHistory: (options: {
+    offset: number;
+    limit: number;
+    query?: string;
+    source?: ImportHistoryKind | "all";
+  }) => Promise<ImportHistoryListResult>;
+  getImportHistoryStats: () => Promise<{ total: number }>;
+  recordImportHistory: (record: ImportHistoryWriteCandidate) => Promise<ImportHistoryWriteResult>;
+  touchImportHistory: (recordId: string) => Promise<{ ok: boolean; code?: string }>;
+  removeImportHistory: (recordId: string) => Promise<boolean>;
+  clearImportHistory: () => Promise<number>;
+  replayImportHistory: (recordId: string) => Promise<ImportHistoryReplayResult>;
+  relocateImportHistory: (recordId: string) => Promise<ImportHistoryReplayResult>;
   loadAISettings: () => Promise<AISettingsSummary>;
   saveAISettings: (settings: SaveAISettingsInput) => Promise<AISettingsSummary>;
   clearAISettingsApiKey: () => Promise<AISettingsSummary>;
