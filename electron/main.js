@@ -21,6 +21,7 @@ const { assertTrustedIpcEvent } = require("./ipc-security");
 const {
   ImportHistoryStore,
   normalizeImportHistoryLimit,
+  readValidatedImportFile,
   toPublicImportHistoryRecord,
   validateImportFileDescriptor
 } = require("./import-history");
@@ -53,6 +54,7 @@ let appPreferencesWriteQueue = Promise.resolve();
 let allowWindowClose = false;
 const aiTranslationRequests = new AIRequestRegistry();
 const importFileRegistrations = new Map();
+const importHistoryRelocations = new Map();
 const importHistoryOperations = new Set();
 const importHistoryStore = new ImportHistoryStore({
   filePath: path.join(app.getPath("userData"), "app-data", "import-history.json")
@@ -258,6 +260,7 @@ function createWindow() {
   });
   mainWindow.on("closed", () => {
     importFileRegistrations.clear();
+    importHistoryRelocations.clear();
     mainWindow = null;
   });
 
@@ -392,6 +395,9 @@ function stopNextServer() {
 
 async function boot() {
   try {
+    await importHistoryStore.initialize().catch((error) => {
+      console.error("[import-history] unable to initialize history", error instanceof Error ? error.message : "unknown error");
+    });
     const resolvedAppUrl = await resolveLocalAppUrl({
       isPackaged: app.isPackaged,
       devServerUrl: process.env.ELECTRON_DEV_SERVER_URL,
@@ -497,11 +503,26 @@ function registerDesktopIpc() {
   });
 
   handle("lyrics-card:app-preferences-load", () => readAppPreferences());
-  handle("lyrics-card:app-preferences-save", (_event, input) => trackImportHistoryOperation(async () => {
+  handle("lyrics-card:app-preferences-save", (_event, input, options) => trackImportHistoryOperation(async () => {
     const preferences = normalizeStoredPreferences(input);
     if (!preferences) return false;
-    await enqueueAppPreferencesWrite(preferences);
-    await importHistoryStore.trim(normalizeImportHistoryLimit(preferences.userSettings?.importHistoryLimit));
+    const limit = normalizeImportHistoryLimit(preferences.userSettings?.importHistoryLimit);
+    await importHistoryStore.applyLimitTransaction(
+      limit,
+      options?.importHistoryTrimConfirmation,
+      async () => {
+        const persisted = await enqueueAppPreferencesWrite(preferences);
+        if (
+          persisted?.revision !== preferences.revision ||
+          persisted?.updatedAt !== preferences.updatedAt
+        ) {
+          const error = new Error("stale_app_preferences");
+          error.code = "stale_app_preferences";
+          throw error;
+        }
+        return persisted;
+      }
+    );
     return true;
   }));
 
@@ -603,17 +624,6 @@ function registerDesktopIpc() {
     }
   }));
 
-  handle("lyrics-card:import-history-touch", (_event, recordId) => trackImportHistoryOperation(async () => {
-    try {
-      return {
-        ok: await importHistoryStore.touch(recordId, await readImportHistoryLimit())
-      };
-    } catch (error) {
-      console.error("[import-history] unable to touch record", error instanceof Error ? error.message : "unknown error");
-      return { ok: false, code: "history_write_failed" };
-    }
-  }));
-
   handle("lyrics-card:import-history-remove", (_event, recordId) => trackImportHistoryOperation(
     () => importHistoryStore.remove(recordId)
   ));
@@ -628,7 +638,7 @@ function registerDesktopIpc() {
     return createImportHistoryReplayPayload(record);
   });
 
-  handle("lyrics-card:import-history-relocate", (_event, recordId) => trackImportHistoryOperation(async () => {
+  handle("lyrics-card:import-history-relocate", async (event, recordId) => {
     const record = await importHistoryStore.get(recordId);
     if (!record || (record.kind !== "local-audio" && record.kind !== "manual-cover")) {
       return { ok: false, code: "not_found" };
@@ -641,19 +651,43 @@ function registerDesktopIpc() {
     });
     if (result.canceled || !result.filePaths[0]) return { ok: false, code: "cancelled" };
     const filePath = result.filePaths[0];
+    const prepared = await readValidatedImportFile(record.kind, filePath);
+    if (!prepared.ok) return { ...prepared, canRelocate: true };
+
+    pruneImportHistoryRelocations();
+    const relocationToken = crypto.randomUUID();
+    importHistoryRelocations.set(relocationToken, {
+      senderId: event.sender.id,
+      recordId: record.id,
+      expiresAt: Date.now() + IMPORT_FILE_REGISTRATION_TTL_MS,
+      file: {
+        path: prepared.path,
+        fileName: path.basename(prepared.path),
+        size: prepared.size,
+        mtimeMs: prepared.mtimeMs
+      }
+    });
+    const replay = await createImportHistoryReplayPayload(record, prepared);
+    return replay.ok ? { ...replay, relocationToken } : replay;
+  });
+
+  handle("lyrics-card:import-history-replay-commit", (event, recordId, relocationToken) => trackImportHistoryOperation(async () => {
     try {
-      const stat = await fs.stat(filePath);
-      const validated = validateImportFileDescriptor(record.kind, filePath, stat);
-      if (!validated.ok) return { ok: false, code: validated.code };
-      const updated = await importHistoryStore.updateFileReference(record.id, {
-        path: validated.path,
-        fileName: path.basename(validated.path),
-        size: validated.size,
-        mtimeMs: validated.mtimeMs
-      });
-      return updated ? createImportHistoryReplayPayload(updated) : { ok: false, code: "not_found" };
+      const file = relocationToken === undefined
+        ? undefined
+        : takeImportHistoryRelocation(event.sender.id, recordId, relocationToken);
+      if (relocationToken !== undefined && !file) {
+        return { ok: false, code: "file_reference_expired" };
+      }
+      return {
+        ok: await importHistoryStore.commitReplay(recordId, {
+          limit: await readImportHistoryLimit(),
+          file
+        })
+      };
     } catch (error) {
-      return { ok: false, code: error?.code === "ENOENT" ? "file_missing" : "file_invalid" };
+      console.error("[import-history] unable to commit replay", error instanceof Error ? error.message : "unknown error");
+      return { ok: false, code: typeof error?.code === "string" ? error.code : "history_write_failed" };
     }
   }));
 
@@ -754,6 +788,13 @@ function pruneImportFileRegistrations() {
   }
 }
 
+function pruneImportHistoryRelocations() {
+  const now = Date.now();
+  for (const [token, relocation] of importHistoryRelocations) {
+    if (relocation.expiresAt <= now) importHistoryRelocations.delete(token);
+  }
+}
+
 function takeImportFileRegistration(senderId, token, kind) {
   pruneImportFileRegistrations();
   if (typeof token !== "string") return null;
@@ -768,12 +809,21 @@ function takeImportFileRegistration(senderId, token, kind) {
   };
 }
 
+function takeImportHistoryRelocation(senderId, recordId, token) {
+  pruneImportHistoryRelocations();
+  if (typeof token !== "string" || typeof recordId !== "string") return null;
+  const relocation = importHistoryRelocations.get(token);
+  if (!relocation || relocation.senderId !== senderId || relocation.recordId !== recordId) return null;
+  importHistoryRelocations.delete(token);
+  return relocation.file;
+}
+
 async function readImportHistoryLimit() {
   const preferences = await readAppPreferences();
   return normalizeImportHistoryLimit(preferences?.userSettings?.importHistoryLimit);
 }
 
-async function createImportHistoryReplayPayload(record) {
+async function createImportHistoryReplayPayload(record, preparedFile) {
   if (record.kind === "link") {
     return {
       ok: true,
@@ -795,13 +845,11 @@ async function createImportHistoryReplayPayload(record) {
   }
 
   try {
-    const stat = await fs.stat(record.source.path);
-    const validated = validateImportFileDescriptor(record.kind, record.source.path, stat);
+    const validated = preparedFile ?? await readValidatedImportFile(record.kind, record.source.path);
     if (!validated.ok) return { ok: false, code: validated.code, canRelocate: true };
-    const bytes = await fs.readFile(validated.path);
     const changed = validated.size !== record.source.size || Math.abs(validated.mtimeMs - record.source.mtimeMs) > 1;
     const file = {
-      bytes,
+      bytes: validated.bytes,
       fileName: path.basename(validated.path),
       size: validated.size,
       mtimeMs: validated.mtimeMs,

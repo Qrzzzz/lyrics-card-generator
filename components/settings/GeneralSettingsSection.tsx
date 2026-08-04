@@ -8,6 +8,7 @@ import {
   importHistoryCopy
 } from "@/lib/import-history-copy";
 import type { ImportHistoryLimit } from "@/lib/import-history";
+import type { AppPreferencesPersistenceOptions } from "@/lib/settings/app-preferences";
 import type { UserSettings } from "@/lib/settings/types";
 import type { Locale } from "@/lib/types";
 import type { settingsCopy } from "@/lib/settings/copy";
@@ -25,18 +26,19 @@ export function GeneralSettingsSection({
   settings: UserSettings;
   showImportHistorySettings: boolean;
   onLocaleChange: (locale: Locale) => void;
-  onChange: (settings: UserSettings) => void;
+  onChange: (settings: UserSettings, options?: AppPreferencesPersistenceOptions) => void;
 }) {
   const historyCopy = importHistoryCopy[locale];
 
   async function changeImportHistoryLimit(next: ImportHistoryLimit) {
     const current = settings.importHistoryLimit;
     const decreasing = next !== "unlimited" && (current === "unlimited" || next < current);
+    let options: AppPreferencesPersistenceOptions | undefined;
     if (decreasing) {
       const desktop = getLyricsCardDesktopApi();
       if (desktop) {
         try {
-          const { total } = await desktop.getImportHistoryStats();
+          const { total, version } = await desktop.getImportHistoryStats();
           const trimmed = Math.max(0, total - next);
           if (trimmed > 0 && !window.confirm(formatImportHistoryText(historyCopy.limitTrimConfirm, {
             limit: next,
@@ -44,13 +46,21 @@ export function GeneralSettingsSection({
           }))) {
             return;
           }
+          if (trimmed > 0) {
+            options = {
+              importHistoryTrimConfirmation: {
+                expectedVersion: version,
+                confirmedTrimCount: trimmed
+              }
+            };
+          }
         } catch {
           window.alert(historyCopy.limitStatsFailed);
           return;
         }
       }
     }
-    onChange({ ...settings, importHistoryLimit: next });
+    onChange({ ...settings, importHistoryLimit: next }, options);
   }
 
   return (

@@ -11,7 +11,9 @@ const userDataDirectory = await mkdtemp(path.join(tmpdir(), "lyrics-card-history
 const fixtureDirectory = path.join(userDataDirectory, "fixtures");
 const audioPath = path.join(fixtureDirectory, "history-audio.mp3");
 const relocatedAudioPath = path.join(fixtureDirectory, "history-audio-relocated.mp3");
+const rejectedRelocatedAudioPath = path.join(fixtureDirectory, "history-audio-rejected.mp3");
 const coverPath = path.join(fixtureDirectory, "history-cover.png");
+const coverOnlyPath = path.join(fixtureDirectory, "history-cover-only.png");
 const historyPath = path.join(userDataDirectory, "app-data", "import-history.json");
 const tinyPng = Buffer.from(
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
@@ -22,6 +24,7 @@ let electronApp;
 let page;
 let dialogDecision = "accept";
 let resolveShouldFail = false;
+let localAudioShouldFail = false;
 let nextSongId = 71_000;
 const keywordIds = new Map([["same platform song", "70001"]]);
 const songsById = new Map();
@@ -30,6 +33,7 @@ const dialogMessages = [];
 await mkdir(fixtureDirectory, { recursive: true });
 await writeFile(audioPath, Buffer.from("initial desktop audio fixture"));
 await writeFile(coverPath, tinyPng);
+await writeFile(coverOnlyPath, tinyPng);
 
 function idForKeyword(keyword) {
   if (!keywordIds.has(keyword)) keywordIds.set(keyword, String(nextSongId++));
@@ -136,6 +140,14 @@ async function attachRoutes(targetPage) {
   });
 
   await targetPage.route("**/api/parse-local-audio", async (route) => {
+    if (localAudioShouldFail) {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ ok: false, error: "history replacement parse fixture failure" })
+      });
+      return;
+    }
     await route.fulfill({
       status: 200,
       contentType: "application/json",
@@ -315,15 +327,20 @@ async function replayCard(kind, { relocate = false } = {}) {
   await action.click();
 }
 
-async function editManualSong({ title, uploadPath = null }) {
+async function editManualSong({
+  title,
+  artist = "Manual History Artist",
+  album = "Manual History Album",
+  uploadPath = null
+}) {
   const aside = page.getByTestId("song-import-aside");
   await page.getByTestId("song-info-toggle").click();
   const editor = aside.getByTestId("song-info-editor");
   await editor.waitFor({ state: "visible" });
   const textInputs = editor.locator('input:not([type="file"])');
   await textInputs.nth(0).fill(title);
-  await textInputs.nth(1).fill("Manual History Artist");
-  await textInputs.nth(2).fill("Manual History Album");
+  await textInputs.nth(1).fill(artist);
+  await textInputs.nth(2).fill(album);
   if (uploadPath) {
     await editor.locator('input[type="file"]').setInputFiles(uploadPath);
     await page.waitForFunction(() => {
@@ -428,6 +445,15 @@ try {
   ));
   await closeHistoryWithEscape();
 
+  dialogDecision = "dismiss";
+  await openGeneralSettings();
+  await page.getByTestId("import-history-limit").selectOption("10");
+  await page.waitForTimeout(300);
+  assert.equal(await page.getByTestId("import-history-limit").inputValue(), "unlimited");
+  assert.equal(await historyTotal(), 26, "cancelling a destructive limit change preserves all records");
+  dialogDecision = "accept";
+  await closeSettings();
+
   await changeHistoryLimit(10, 10);
   await changeHistoryLimit(5, 5);
   assert.ok(
@@ -492,6 +518,28 @@ try {
   assert.equal(await missingSurface.getAttribute("data-surface-state"), "open");
   assert.equal(await currentSongTitle(), beforeMissingReplay, "a missing file preserves the current document");
 
+  await writeFile(rejectedRelocatedAudioPath, Buffer.from("replacement fixture rejected by the renderer"));
+  await electronApp.evaluate(({ dialog }, selectedPath) => {
+    dialog.showOpenDialog = async () => ({ canceled: false, filePaths: [selectedPath] });
+  }, rejectedRelocatedAudioPath);
+  localAudioShouldFail = true;
+  await replayCard("local-audio", { relocate: true });
+  await page.getByTestId("app-toast").filter({ hasText: "current document was not changed" }).waitFor({
+    state: "visible",
+    timeout: 15_000
+  });
+  localAudioShouldFail = false;
+  const historyAfterRejectedRelocation = JSON.parse(await readFile(historyPath, "utf8"));
+  const localRecordAfterRejectedRelocation = historyAfterRejectedRelocation.records.find(
+    (record) => record.kind === "local-audio"
+  );
+  assert.equal(
+    localRecordAfterRejectedRelocation?.source?.path,
+    audioPath,
+    "a replacement rejected by renderer parsing does not overwrite the persisted history path"
+  );
+  assert.equal(await currentSongTitle(), beforeMissingReplay, "a rejected replacement preserves the current document");
+
   await writeFile(relocatedAudioPath, Buffer.from("relocated desktop audio fixture"));
   await electronApp.evaluate(({ dialog }, selectedPath) => {
     dialog.showOpenDialog = async () => ({ canceled: false, filePaths: [selectedPath] });
@@ -509,15 +557,26 @@ try {
   await editManualSong({ title: "Ordinary metadata edit" });
   await page.waitForTimeout(300);
   assert.equal(await historyTotal(), beforeOrdinaryEditCount, "ordinary metadata edits are not recorded");
-  await editManualSong({ title: "Manual cover history", uploadPath: coverPath });
+  await editManualSong({ title: "", artist: "", album: "", uploadPath: coverOnlyPath });
   await waitForHistoryTotal(beforeOrdinaryEditCount + 1);
-  const manualSurface = await openHistory(beforeOrdinaryEditCount + 1);
-  assert.equal(await manualSurface.locator('[data-history-kind="manual-cover"]').count(), 1, "saving an uploaded cover is recorded");
+  const coverOnlySurface = await openHistory(beforeOrdinaryEditCount + 1);
+  const coverOnlyCard = coverOnlySurface.locator('[data-history-kind="manual-cover"]').first();
+  assert.match(await coverOnlyCard.textContent(), /history-cover-only\.png/i);
+  assert.equal(
+    await coverOnlyCard.locator("p").count(),
+    0,
+    "a cover-only record omits an empty artist row instead of rendering a blank line"
+  );
+  await closeHistoryWithEscape();
+  await editManualSong({ title: "Manual cover history", uploadPath: coverPath });
+  await waitForHistoryTotal(beforeOrdinaryEditCount + 2);
+  const manualSurface = await openHistory(beforeOrdinaryEditCount + 2);
+  assert.equal(await manualSurface.locator('[data-history-kind="manual-cover"]').count(), 2, "cover-only and metadata cover saves are recorded");
   await replayCard("manual-cover");
   await manualSurface.waitFor({ state: "hidden", timeout: 15_000 });
   assert.equal(await currentSongTitle(), "Manual cover history");
 
-  const failureSurface = await openHistory(beforeOrdinaryEditCount + 1);
+  const failureSurface = await openHistory(beforeOrdinaryEditCount + 2);
   await page.getByTestId("history-clear-all").click();
   await waitForHistoryTotal(0);
   await closeHistoryWithEscape();
@@ -544,10 +603,10 @@ try {
       "desktop-only entry and surface focus",
       "Escape, inert, pointer isolation, reduced motion, narrow layout",
       "link and search commit, cross-source upsert, replacement cancellation",
-      "paged unlimited history and 10/5 trimming",
+      "paged unlimited history, cancelled limit change, and 10/5 trimming",
       "delete, clear, restart persistence",
-      "local changed, missing, and relocate",
-      "manual cover and ordinary-edit exclusion",
+      "local changed, missing, rejected relocate, and committed relocate",
+      "cover-only/manual cover and ordinary-edit exclusion",
       "remote failure and write-failure non-rollback"
     ]
   }, null, 2)}\n`);

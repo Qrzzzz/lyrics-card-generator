@@ -1,4 +1,4 @@
-import { getLyricsCardDesktopApi } from "@/lib/desktop-api";
+import { getLyricsCardDesktopApi, type AppPreferencesSaveOptions } from "@/lib/desktop-api";
 import type { Locale } from "@/lib/types";
 import type { UserSettings } from "@/lib/settings/types";
 import { loadUserSettings, normalizeUserSettings, saveUserSettings } from "@/lib/settings/user-settings";
@@ -12,6 +12,9 @@ import {
 export const LOCALE_STORAGE_KEY = "lyric-card-generator-locale";
 export const APP_PREFERENCES_STORAGE_KEY = "lyric-card-generator-app-preferences-v2";
 export const SUPPORTED_LOCALES: Locale[] = ["zh", "zh-TW", "en", "fr", "ja", "es"];
+export type AppPreferencesPersistenceOptions = AppPreferencesSaveOptions;
+
+let appPreferencesSaveQueue = Promise.resolve();
 
 export function isSupportedLocale(locale: string | null): locale is Locale {
   return Boolean(locale && SUPPORTED_LOCALES.includes(locale as Locale));
@@ -44,7 +47,21 @@ export async function loadAppPreferences(): Promise<AppPreferencesRecord> {
   }
 }
 
-export async function saveAppPreferences(locale: Locale, userSettings: UserSettings) {
+export function saveAppPreferences(
+  locale: Locale,
+  userSettings: UserSettings,
+  options?: AppPreferencesPersistenceOptions
+) {
+  const operation = appPreferencesSaveQueue.then(() => persistAppPreferences(locale, userSettings, options));
+  appPreferencesSaveQueue = operation.then(() => undefined, () => undefined);
+  return operation;
+}
+
+async function persistAppPreferences(
+  locale: Locale,
+  userSettings: UserSettings,
+  options?: AppPreferencesPersistenceOptions
+) {
   const normalized = normalizeUserSettings(userSettings);
   const current = readLocalAppPreferences(locale, normalized);
   const version = nextAppPreferencesRevision(current);
@@ -54,10 +71,18 @@ export async function saveAppPreferences(locale: Locale, userSettings: UserSetti
     locale,
     userSettings: normalized
   };
-  writeLocalAppPreferences(record);
   const desktop = getLyricsCardDesktopApi();
   if (desktop) {
-    await desktop.saveAppPreferences(toDesktopRecord(record));
+    const saved = await desktop.saveAppPreferences(toDesktopRecord(record), options);
+    if (!saved) throw new Error("Unable to save application preferences.");
+    try {
+      writeLocalAppPreferences(record);
+    } catch {
+      // Desktop JSON is authoritative; a renderer cache failure must not report
+      // a committed history/preferences transaction as failed.
+    }
+  } else {
+    writeLocalAppPreferences(record);
   }
   return record;
 }

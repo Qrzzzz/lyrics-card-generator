@@ -25,6 +25,16 @@ export type ImportHistoryListResult = {
   } | null;
 };
 
+export type ImportHistoryStats = {
+  total: number;
+  version: string;
+};
+
+export type ImportHistoryTrimConfirmation = {
+  expectedVersion: string;
+  confirmedTrimCount: number;
+};
+
 export type ImportHistoryDisplayInput = {
   title: string;
   artist: string;
@@ -131,6 +141,7 @@ export type ImportHistoryReplayResult =
       kind: "local-audio";
       record: ImportHistoryRecord;
       file: ImportHistoryReplayFile;
+      relocationToken?: string;
     }
   | {
       ok: true;
@@ -138,12 +149,18 @@ export type ImportHistoryReplayResult =
       record: ImportHistoryRecord;
       file: ImportHistoryReplayFile;
       snapshot: ImportHistoryManualSnapshot;
+      relocationToken?: string;
     }
   | {
       ok: false;
       code: string;
       canRelocate?: boolean;
     };
+
+export type ImportHistoryReplayCommitResult = {
+  ok: boolean;
+  code?: string;
+};
 
 export type ImportHistoryReplayUiResult =
   | { status: "success" }

@@ -18,7 +18,7 @@ contextBridge.exposeInMainWorld("lyricsCardDesktop", {
     return () => ipcRenderer.removeListener("lyrics-card:window-close-requested", listener);
   },
   loadAppPreferences: () => ipcRenderer.invoke("lyrics-card:app-preferences-load"),
-  saveAppPreferences: (preferences) => ipcRenderer.invoke("lyrics-card:app-preferences-save", preferences),
+  saveAppPreferences: (preferences, options) => ipcRenderer.invoke("lyrics-card:app-preferences-save", preferences, options),
   listSystemFonts: () => ipcRenderer.invoke("lyrics-card:list-system-fonts"),
   pickFont: () => ipcRenderer.invoke("lyrics-card:pick-font"),
   openExternal: (url) => ipcRenderer.invoke("lyrics-card:open-external", url),
@@ -38,11 +38,15 @@ contextBridge.exposeInMainWorld("lyricsCardDesktop", {
   listImportHistory: (options) => ipcRenderer.invoke("lyrics-card:import-history-list", options),
   getImportHistoryStats: () => ipcRenderer.invoke("lyrics-card:import-history-stats"),
   recordImportHistory: (record) => ipcRenderer.invoke("lyrics-card:import-history-record", record),
-  touchImportHistory: (recordId) => ipcRenderer.invoke("lyrics-card:import-history-touch", recordId),
   removeImportHistory: (recordId) => ipcRenderer.invoke("lyrics-card:import-history-remove", recordId),
   clearImportHistory: () => ipcRenderer.invoke("lyrics-card:import-history-clear"),
   replayImportHistory: (recordId) => ipcRenderer.invoke("lyrics-card:import-history-replay", recordId),
   relocateImportHistory: (recordId) => ipcRenderer.invoke("lyrics-card:import-history-relocate", recordId),
+  commitImportHistoryReplay: (recordId, relocationToken) => ipcRenderer.invoke(
+    "lyrics-card:import-history-replay-commit",
+    recordId,
+    relocationToken
+  ),
   loadAISettings: () => ipcRenderer.invoke("lyrics-card:ai-settings-load"),
   saveAISettings: (settings) => ipcRenderer.invoke("lyrics-card:ai-settings-save", settings),
   clearAISettingsApiKey: () => ipcRenderer.invoke("lyrics-card:ai-settings-api-key-clear"),

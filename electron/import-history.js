@@ -60,8 +60,19 @@ class ImportHistoryStore {
   stats() {
     return this.#enqueue(async () => {
       const document = await this.#ensureLoaded();
-      return { total: document.records.length };
+      return {
+        total: document.records.length,
+        version: importHistoryDocumentVersion(document)
+      };
     });
+  }
+
+  initialize() {
+    return this.#enqueue(() => cleanupImportHistoryTemporaryFiles({
+      filePath: this.filePath,
+      fs: this.fs,
+      path: this.path
+    }));
   }
 
   get(recordId) {
@@ -151,25 +162,79 @@ class ImportHistoryStore {
     });
   }
 
-  updateFileReference(recordId, file) {
+  commitReplay(recordId, { limit = DEFAULT_IMPORT_HISTORY_LIMIT, file } = {}) {
     return this.#mutate((document) => {
       const id = normalizeId(recordId);
       const existing = id ? document.records.find((record) => record.id === id) : null;
-      if (!existing || (existing.kind !== "local-audio" && existing.kind !== "manual-cover")) {
-        return { document, result: null, write: false };
+      if (!existing) {
+        return { document, result: false, write: false };
       }
-      const source = normalizeFileSource(file, existing.kind, this.path);
-      if (!source) throw historyError("invalid_file");
-      const updated = normalizeImportHistoryRecord({ ...existing, source }, this.path);
+
+      let source = existing.source;
+      if (file !== undefined) {
+        if (existing.kind !== "local-audio" && existing.kind !== "manual-cover") {
+          throw historyError("invalid_file");
+        }
+        source = normalizeFileSource(file, existing.kind, this.path);
+        if (!source) throw historyError("invalid_file");
+      }
+
+      const updated = normalizeImportHistoryRecord({
+        ...existing,
+        source,
+        lastUsedAt: this.now()
+      }, this.path);
       if (!updated) throw historyError("invalid_record");
       const key = importHistoryDedupeKey(updated, this.path);
-      const records = document.records
-        .map((record) => record.id === id ? updated : record)
-        .filter((record) => record.id === id || importHistoryDedupeKey(record, this.path) !== key);
+      const records = [
+        updated,
+        ...document.records.filter((record) => (
+          record.id !== id && importHistoryDedupeKey(record, this.path) !== key
+        ))
+      ];
       return {
-        document: { schemaVersion: IMPORT_HISTORY_SCHEMA_VERSION, records },
-        result: updated
+        document: withHistoryLimit({ schemaVersion: IMPORT_HISTORY_SCHEMA_VERSION, records }, limit),
+        result: true
       };
+    });
+  }
+
+  applyLimitTransaction(limit, confirmation, persistPreferences) {
+    if (typeof persistPreferences !== "function") {
+      throw new TypeError("Import history limit transactions require a preference writer.");
+    }
+    return this.#enqueue(async () => {
+      const current = await this.#ensureLoaded();
+      const next = withHistoryLimit(current, limit);
+      const trimmed = current.records.length - next.records.length;
+      if (trimmed > 0) {
+        const expectedVersion = boundedString(confirmation?.expectedVersion, 128);
+        const confirmedTrimCount = Number(confirmation?.confirmedTrimCount);
+        if (
+          expectedVersion !== importHistoryDocumentVersion(current) ||
+          !Number.isSafeInteger(confirmedTrimCount) ||
+          confirmedTrimCount !== trimmed
+        ) {
+          throw historyError("history_confirmation_stale");
+        }
+
+        await this.#writeDocument(next);
+        try {
+          const persisted = await persistPreferences();
+          this.document = next;
+          return { trimmed, persisted };
+        } catch (error) {
+          try {
+            await this.#writeDocument(current);
+          } catch (rollbackError) {
+            this.document = next;
+            if (isObject(error)) error.rollbackError = rollbackError;
+          }
+          throw error;
+        }
+      }
+
+      return { trimmed: 0, persisted: await persistPreferences() };
     });
   }
 
@@ -208,11 +273,19 @@ class ImportHistoryStore {
   }
 
   async #readDocument() {
+    await cleanupImportHistoryTemporaryFiles({
+      filePath: this.filePath,
+      fs: this.fs,
+      path: this.path
+    });
     try {
       const parsed = JSON.parse(await this.fs.readFile(this.filePath, "utf8"));
       const normalized = normalizeImportHistoryDocument(parsed, this.path);
       if (!normalized) throw historyError("corrupt_history");
       this.document = normalized;
+      if (JSON.stringify(parsed) !== JSON.stringify(normalized)) {
+        await this.#writeDocument(normalized).catch(() => undefined);
+      }
       return normalized;
     } catch (error) {
       if (error?.code === "ENOENT") {
@@ -283,7 +356,7 @@ function normalizeImportHistoryRecord(input, path = defaultPath) {
   const createdAt = normalizeTimestamp(input.createdAt);
   const lastUsedAt = normalizeTimestamp(input.lastUsedAt);
   if (!id || createdAt === null || lastUsedAt === null) return null;
-  const display = normalizeDisplay(input.display);
+  const display = normalizeDisplay(input.display, input.kind);
   if (!display) return null;
 
   let source;
@@ -312,14 +385,14 @@ function normalizeImportHistoryRecord(input, path = defaultPath) {
   return Buffer.byteLength(JSON.stringify(record), "utf8") <= MAX_RECORD_BYTES ? record : null;
 }
 
-function normalizeDisplay(input) {
+function normalizeDisplay(input, kind) {
   if (!isObject(input)) return null;
   const title = boundedString(input.title, 512);
   const artist = boundedString(input.artist, 512);
   const album = boundedString(input.album, 512);
   const source = boundedString(input.source, 64).toLowerCase() || "unknown";
   const remoteCoverUrl = normalizeHttpUrl(input.remoteCoverUrl);
-  if (!title && !artist) return null;
+  if (!title && !artist && kind !== "manual-cover") return null;
   return {
     title,
     artist,
@@ -331,13 +404,13 @@ function normalizeDisplay(input) {
 
 function normalizeLinkSource(input) {
   if (!isObject(input)) return null;
-  const inputUrl = boundedString(input.inputUrl, 8192);
-  const extracted = extractHttpUrl(inputUrl);
+  const extracted = extractHttpUrl(input.inputUrl);
+  const inputUrl = normalizeHttpUrl(extracted);
   const normalizedUrl = normalizeHttpUrl(input.normalizedUrl) || normalizeHttpUrl(extracted);
   const finalUrl = normalizeHttpUrl(input.finalUrl);
-  if (!inputUrl || (!normalizedUrl && !finalUrl)) return null;
+  if (!inputUrl && !normalizedUrl && !finalUrl) return null;
   return {
-    inputUrl,
+    ...(inputUrl ? { inputUrl } : {}),
     ...(normalizedUrl ? { normalizedUrl } : {}),
     ...(finalUrl ? { finalUrl } : {})
   };
@@ -375,7 +448,6 @@ function normalizeManualSnapshot(input) {
   if (!isObject(input)) return null;
   const title = boundedString(input.title, 512);
   const artist = boundedString(input.artist, 512);
-  if (!title && !artist) return null;
   const source = SONG_SOURCES.has(input.source) ? input.source : "unknown";
   return {
     title,
@@ -442,6 +514,13 @@ function withHistoryLimit(document, limit) {
   };
 }
 
+function importHistoryDocumentVersion(document) {
+  return crypto
+    .createHash("sha256")
+    .update(JSON.stringify(document.records))
+    .digest("base64url");
+}
+
 function normalizeImportHistoryLimit(value) {
   return IMPORT_HISTORY_LIMITS.has(value) ? value : DEFAULT_IMPORT_HISTORY_LIMIT;
 }
@@ -488,6 +567,94 @@ function validateImportFileDescriptor(kind, filePath, stat, path = defaultPath) 
   const maximum = kind === "local-audio" ? MAX_AUDIO_BYTES : MAX_IMAGE_BYTES;
   if (size > maximum) return { ok: false, code: "file_too_large" };
   return { ok: true, path: normalizedPath, extension, size, mtimeMs };
+}
+
+async function readValidatedImportFile(kind, filePath, {
+  fs = defaultFs,
+  path = defaultPath,
+  chunkSize = 64 * 1024
+} = {}) {
+  const normalizedPath = normalizeAbsolutePath(filePath, path);
+  if (!normalizedPath) return { ok: false, code: "invalid_path" };
+
+  let handle;
+  try {
+    handle = await fs.open(normalizedPath, "r");
+    const before = await handle.stat();
+    const validated = validateImportFileDescriptor(kind, normalizedPath, before, path);
+    if (!validated.ok) return validated;
+
+    const maximum = kind === "local-audio" ? MAX_AUDIO_BYTES : MAX_IMAGE_BYTES;
+    const safeChunkSize = boundedInteger(chunkSize, 4 * 1024, 1024 * 1024, 64 * 1024);
+    const chunks = [];
+    let total = 0;
+    while (total <= maximum) {
+      const buffer = Buffer.allocUnsafe(Math.min(safeChunkSize, maximum + 1 - total));
+      const { bytesRead } = await handle.read(buffer, 0, buffer.length, total);
+      if (bytesRead === 0) break;
+      chunks.push(buffer.subarray(0, bytesRead));
+      total += bytesRead;
+    }
+    if (total > maximum) return { ok: false, code: "file_too_large" };
+
+    const after = await handle.stat();
+    const revalidated = validateImportFileDescriptor(kind, normalizedPath, after, path);
+    if (!revalidated.ok) return revalidated;
+    const beforeCtimeMs = Number(before.ctimeMs);
+    const afterCtimeMs = Number(after.ctimeMs);
+    const ctimeChanged = Number.isFinite(beforeCtimeMs) && Number.isFinite(afterCtimeMs) &&
+      Math.abs(beforeCtimeMs - afterCtimeMs) > 1;
+    if (
+      validated.size !== revalidated.size ||
+      Math.abs(validated.mtimeMs - revalidated.mtimeMs) > 1 ||
+      ctimeChanged ||
+      total !== revalidated.size
+    ) {
+      return { ok: false, code: "file_changed_during_read" };
+    }
+
+    return {
+      ok: true,
+      bytes: Buffer.concat(chunks, total),
+      path: revalidated.path,
+      extension: revalidated.extension,
+      size: revalidated.size,
+      mtimeMs: revalidated.mtimeMs
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      code: error?.code === "ENOENT" ? "file_missing" : "file_invalid"
+    };
+  } finally {
+    await handle?.close().catch(() => undefined);
+  }
+}
+
+async function cleanupImportHistoryTemporaryFiles({ filePath, fs = defaultFs, path = defaultPath }) {
+  const directory = path.dirname(filePath);
+  const prefix = `${path.basename(filePath)}.tmp-`;
+  let entries;
+  try {
+    entries = await fs.readdir(directory, { withFileTypes: true });
+  } catch {
+    // Cleanup is best effort and must not make an otherwise readable history unavailable.
+    return 0;
+  }
+
+  let removed = 0;
+  for (const entry of entries) {
+    const name = typeof entry === "string" ? entry : entry.name;
+    const isFile = typeof entry === "string" || entry.isFile();
+    if (!isFile || !name.startsWith(prefix) || !/^.+\.tmp-\d+-[a-f0-9]{12}$/i.test(name)) continue;
+    try {
+      await fs.rm(path.join(directory, name), { force: true });
+      removed += 1;
+    } catch {
+      // Cleanup is best effort; an unreadable stale file must not block history loading.
+    }
+  }
+  return removed;
 }
 
 async function preserveCorruptHistoryFile({ filePath, fs = defaultFs, path = defaultPath, now = Date.now() }) {
@@ -607,13 +774,16 @@ module.exports = {
   ImportHistoryStore,
   MAX_AUDIO_BYTES,
   MAX_IMAGE_BYTES,
+  cleanupImportHistoryTemporaryFiles,
   importHistoryDedupeKey,
+  importHistoryDocumentVersion,
   normalizeHttpUrl,
   normalizeImportHistoryDocument,
   normalizeImportHistoryLimit,
   normalizeImportHistoryRecord,
   platformSongKey,
   preserveCorruptHistoryFile,
+  readValidatedImportFile,
   toPublicImportHistoryRecord,
   validateImportFileDescriptor,
   withHistoryLimit

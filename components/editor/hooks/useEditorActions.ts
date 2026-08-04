@@ -132,7 +132,9 @@ export function useEditorActions({
 
   function applyDocumentMutation(mutation: EditorDocumentStateMutation) {
     const rollback = onInvalidateDocument();
+    const projected = documentStateAdapter.projectDocumentMutation(rollback, mutation);
     setDocumentRevision(documentStateAdapter.queueDocumentMutation(rollback, mutation));
+    return projected;
   }
 
   function beginSongImport(kind: DocumentImportKind) {
@@ -142,13 +144,21 @@ export function useEditorActions({
       kind,
       confirmReplaceDocument
     );
-    if (intent) documentStateAdapter.queueRollback(onInvalidateDocument());
+    if (intent && kind !== "history-replay") {
+      documentStateAdapter.queueRollback(onInvalidateDocument());
+    }
     return intent;
   }
 
-  function commitSongImport(intent: DocumentImportIntent, song: ParsedSongData, lyrics = "") {
+  function commitSongImport(
+    intent: DocumentImportIntent,
+    song: ParsedSongData,
+    lyrics = "",
+    invalidateAIOnCommit = false
+  ) {
     const revision = documentControllerRef.current.tryCommit(intent);
     if (revision === null) return false;
+    if (invalidateAIOnCommit) onInvalidateDocument();
     setDocumentRevision(revision);
     setState((current) => replaceSongDocument(current, song, lyrics));
     return true;
@@ -302,9 +312,8 @@ export function useEditorActions({
   }
 
   function saveSongInfo(song: SongInfo, context: ManualCoverImportHistoryContext) {
-    applyDocumentMutation((current) => ({ ...current, song: canonicalSongInfo(song) }));
+    const savedDocument = applyDocumentMutation((current) => ({ ...current, song: canonicalSongInfo(song) }));
     if (!context.uploaded) return;
-    const snapshot = currentDocumentRef.current;
     queueImportHistoryRecord({
       kind: "manual-cover",
       fileToken: context.fileToken,
@@ -316,9 +325,9 @@ export function useEditorActions({
         source: song.source,
         originalUrl: song.originalUrl,
         finalUrl: song.finalUrl,
-        lyrics: snapshot.lyrics,
-        translationText: snapshot.translationText,
-        translationEnabled: snapshot.translationEnabled
+        lyrics: savedDocument.lyrics,
+        translationText: savedDocument.translationText,
+        translationEnabled: savedDocument.translationEnabled
       }
     });
   }
@@ -510,13 +519,16 @@ export function useEditorActions({
       if (!committed) return { status: "cancelled" };
       onCloseHistory();
 
-      let touched = false;
+      let replayPersisted = false;
       try {
-        touched = (await desktop.touchImportHistory(recordId)).ok;
+        replayPersisted = (await desktop.commitImportHistoryReplay(
+          recordId,
+          "relocationToken" in replay ? replay.relocationToken : undefined
+        )).ok;
       } catch {
-        touched = false;
+        replayPersisted = false;
       }
-      if (!touched) {
+      if (!replayPersisted) {
         onNotify(copy.historySaveFailed);
       } else if ("file" in replay && replay.file.changed) {
         onNotify(copy.fileChanged);
@@ -543,7 +555,7 @@ export function useEditorActions({
       });
       const payload = await response.json() as HistorySongParseResponse;
       if (!payload.ok) throw new Error(payload.error || "history_link_replay_failed");
-      return commitSongImport(intent, payload.data, payload.data.lyrics ?? "");
+      return commitSongImport(intent, payload.data, payload.data.lyrics ?? "", true);
     }
 
     if (replay.kind === "search") {
@@ -555,7 +567,7 @@ export function useEditorActions({
       });
       const payload = await response.json() as HistorySearchResolveResponse;
       if (!payload.ok) throw new Error(payload.error || "history_search_replay_failed");
-      return commitSongImport(intent, payload.data.song, payload.data.lyrics ?? "");
+      return commitSongImport(intent, payload.data.song, payload.data.lyrics ?? "", true);
     }
 
     if (replay.kind === "local-audio") {
@@ -574,7 +586,7 @@ export function useEditorActions({
       });
       const payload = await response.json() as HistoryLocalAudioResponse;
       if (!payload.ok) throw new Error(payload.error || "history_local_audio_replay_failed");
-      return commitSongImport(intent, payload.data, payload.data.lyrics ?? "");
+      return commitSongImport(intent, payload.data, payload.data.lyrics ?? "", true);
     }
 
     const coverUrl = URL.createObjectURL(new Blob(
@@ -586,6 +598,7 @@ export function useEditorActions({
       URL.revokeObjectURL(coverUrl);
       return false;
     }
+    onInvalidateDocument();
     const snapshot = replay.snapshot;
     setDocumentRevision(revision);
     setState((current) => {

@@ -56,6 +56,10 @@ function trustedFixture(frameUrl = `${localUrl}/`, frameIsMain = true) {
 }
 
 const mainSource = readFileSync("electron/main.js", "utf8");
+const replayPayloadSource = mainSource.slice(
+  mainSource.indexOf("async function createImportHistoryReplayPayload"),
+  mainSource.indexOf("function mimeTypeForHistoryFile")
+);
 assert.equal((mainSource.match(/ipcMain\.handle\(/g) || []).length, 1, "every privileged IPC handler uses the trusted wrapper");
 assert.match(mainSource, /setPermissionRequestHandler[\s\S]*?callback\(false\)/);
 assert.match(mainSource, /setPermissionCheckHandler\(\(\) => false\)/);
@@ -83,6 +87,11 @@ assert.match(preloadSource, /webUtils\.getPathForFile\(file\)/, "local file path
 assert.doesNotMatch(preloadSource, /\bfile\.path\b/, "the removed File.path API is never used");
 assert.match(preloadSource, /replayImportHistory: \(recordId\)[\s\S]*?invoke\("lyrics-card:import-history-replay", recordId\)/);
 assert.doesNotMatch(preloadSource, /replayImportHistory: \([^)]*path/, "history replay exposes only an opaque record id");
+assert.match(
+  preloadSource,
+  /commitImportHistoryReplay: \(recordId, relocationToken\)[\s\S]*?"lyrics-card:import-history-replay-commit"[\s\S]*?recordId,[\s\S]*?relocationToken/,
+  "relocation finalization exposes only a record id and opaque main-process token"
+);
 
 assert.match(
   mainSource,
@@ -94,8 +103,27 @@ assert.match(
   /handle\("lyrics-card:import-history-replay", async \(_event, recordId\)[\s\S]*?importHistoryStore\.get\(recordId\)[\s\S]*?createImportHistoryReplayPayload\(record\)/,
   "history replay resolves its source only from a validated stored record"
 );
-assert.match(mainSource, /validateImportFileDescriptor\(record\.kind, record\.source\.path, stat\)/);
-assert.match(mainSource, /await fs\.readFile\(validated\.path\)/);
+assert.match(mainSource, /readValidatedImportFile\(record\.kind, record\.source\.path\)/);
+assert.doesNotMatch(
+  replayPayloadSource,
+  /await fs\.readFile\(/,
+  "history replay never validates one path object and reopens another by path"
+);
+assert.match(
+  mainSource,
+  /handle\("lyrics-card:import-history-relocate", async \(event, recordId\)[\s\S]*?readValidatedImportFile[\s\S]*?relocationToken/,
+  "relocation returns a sender-bound opaque token without persisting the path"
+);
+assert.doesNotMatch(
+  mainSource,
+  /handle\("lyrics-card:import-history-relocate"[\s\S]*?updateFileReference/,
+  "relocation cannot mutate history before renderer parsing and document commit"
+);
+assert.match(
+  mainSource,
+  /handle\("lyrics-card:import-history-replay-commit"[\s\S]*?takeImportHistoryRelocation[\s\S]*?importHistoryStore\.commitReplay/,
+  "path replacement, dedupe, and touch occur only in the post-document-commit IPC"
+);
 assert.match(
   mainSource,
   /handle\("lyrics-card:import-history-record", \(event, input\) => trackImportHistoryOperation\(/,

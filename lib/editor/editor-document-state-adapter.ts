@@ -142,6 +142,14 @@ export class EditorDocumentStateAdapter {
     return this.controller.mutate();
   }
 
+  projectDocumentMutation(
+    rollback: TranslationValue | undefined,
+    mutation: EditorDocumentStateMutation
+  ) {
+    const current = this.getCurrentState();
+    return mutation(rollback ? applyTranslationValue(current, rollback) : current);
+  }
+
   queueRollback(rollback: TranslationValue | undefined) {
     if (!rollback) return false;
     this.enqueueStateUpdate((current) => applyTranslationValue(current, rollback));

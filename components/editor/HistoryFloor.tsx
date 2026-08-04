@@ -92,6 +92,7 @@ export function HistoryFloor({
     const requestId = requestIdRef.current + 1;
     requestIdRef.current = requestId;
     setLoading(true);
+    setLoadingMore(false);
     setError("");
     const timer = window.setTimeout(() => {
       void loadFirstPage(requestId);
@@ -153,9 +154,11 @@ export function HistoryFloor({
       });
       setTotal(result.total);
     } catch {
-      setError(copy.loadFailed);
+      if (requestId === requestIdRef.current) {
+        setError(copy.loadFailed);
+      }
     } finally {
-      setLoadingMore(false);
+      if (requestId === requestIdRef.current) setLoadingMore(false);
     }
   }
 
@@ -373,6 +376,7 @@ function HistoryCard({
 }) {
   const copy = importHistoryCopy[locale];
   const sourceLabel = sourceLabelForKind(record.kind, locale);
+  const title = record.title || record.detail || sourceLabel;
   const SourceIcon = record.kind === "link"
     ? Link2
     : record.kind === "search"
@@ -393,8 +397,8 @@ function HistoryCard({
             <SourceIcon className="h-5 w-5" />
           </span>
           <div className="min-w-0 flex-1">
-            <h2 className="app-text-primary line-clamp-2 text-lg font-black leading-tight">{record.title}</h2>
-            <p className="app-text-muted mt-1 truncate text-sm font-medium">{record.artist}</p>
+            <h2 className="app-text-primary line-clamp-2 text-lg font-black leading-tight">{title}</h2>
+            {record.artist ? <p className="app-text-muted mt-1 truncate text-sm font-medium">{record.artist}</p> : null}
             {record.album ? <p className="app-text-subtle mt-1 truncate text-xs">{record.album}</p> : null}
           </div>
           {record.remoteCoverUrl ? (

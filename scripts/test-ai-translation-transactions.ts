@@ -463,6 +463,89 @@ async function deferredImportRollbackTest() {
   assert.equal(harness.state.translationText, "");
 }
 
+async function failedHistoryReplayPreservesActiveAIPartialTest() {
+  const harness = createDeferredEditorHarness();
+  const stream = deferredStream();
+  const running = harness.orchestrator.run(harness.options(stream));
+  stream.emitPartial("partial before failed replay");
+  harness.flushReactQueue();
+
+  const replayIntent = harness.controller.begin("history-replay");
+  replayIntent.cancel();
+  assert.equal(
+    harness.state.translationText,
+    "partial before failed replay",
+    "starting and failing a history replay does not roll back the current document"
+  );
+  assert.equal(harness.ui.invalidations, 0, "failed history replay leaves the active AI generation intact");
+
+  stream.emitPartial("partial after failed replay");
+  harness.flushReactQueue();
+  assert.equal(harness.state.translationText, "partial after failed replay");
+  stream.resolve("final after failed replay");
+  await running;
+  assert.equal(harness.state.translationText, "final after failed replay");
+}
+
+async function successfulHistoryReplayInvalidatesAIAtCommitTest() {
+  const harness = createDeferredEditorHarness();
+  const stream = deferredStream();
+  const running = harness.orchestrator.run(harness.options(stream));
+  stream.emitPartial("partial before committed replay");
+  harness.flushReactQueue();
+
+  const replayIntent = harness.controller.begin("history-replay");
+  assert.equal(harness.controller.tryCommit(replayIntent), 1);
+  assert.equal(
+    harness.orchestrator.invalidate(),
+    undefined,
+    "the committed document revision makes the old AI partial ineligible for rollback"
+  );
+  harness.enqueue((current) => replaceSongDocument(current, {
+    source: "qq",
+    title: "History song",
+    artist: "History artist",
+    originalUrl: "https://music.example/history-song"
+  }, "history lyrics"));
+  harness.flushReactQueue();
+  assert.equal(harness.state.song.title, "History song");
+  assert.equal(harness.state.translationText, "");
+
+  stream.emitPartial("late replay partial");
+  stream.resolve("late replay final");
+  await running;
+  harness.flushReactQueue();
+  assert.equal(harness.state.translationText, "", "late AI writes cannot overwrite a committed history replay");
+}
+
+async function manualCoverProjectionUsesRolledBackTranslationTest() {
+  const harness = createDeferredEditorHarness();
+  const stream = deferredStream();
+  const running = harness.orchestrator.run(harness.options(stream));
+  stream.emitPartial("uncommitted AI partial");
+  harness.flushReactQueue();
+
+  const rollback = harness.orchestrator.invalidate();
+  const mutation = (current: AppState) => ({
+    ...current,
+    song: canonicalSongInfo({
+      ...current.song,
+      coverUrl: "blob:manual-cover"
+    })
+  });
+  const projected = harness.adapter.projectDocumentMutation(rollback, mutation);
+  assert.equal(projected.translationText, "old A");
+  assert.equal(projected.style.translationText, "old A");
+  assert.notEqual(projected.translationText, "uncommitted AI partial");
+  assert.equal(harness.state.translationText, "uncommitted AI partial", "projection does not require an early React commit");
+
+  harness.adapter.queueDocumentMutation(rollback, mutation);
+  harness.flushReactQueue();
+  stream.resolve("late manual-cover final");
+  await running;
+  assert.equal(harness.state.translationText, "old A");
+}
+
 async function batchedPartialAndMutationTest() {
   const harness = createDeferredEditorHarness();
   const stream = deferredStream();
@@ -686,6 +769,9 @@ function productionAdapterWiringTest() {
   const source = readFileSync("components/editor/hooks/useEditorActions.ts", "utf8");
   assert.match(source, /documentStateAdapter\.queueDocumentMutation\(rollback, mutation\)/);
   assert.match(source, /documentStateAdapter\.queueRollback\(onInvalidateDocument\(\)\)/);
+  assert.match(source, /intent && kind !== "history-replay"/);
+  assert.match(source, /documentStateAdapter\.projectDocumentMutation\(rollback, mutation\)/);
+  assert.match(source, /commitImportHistoryReplay/);
   assert.match(source, /flushSync\(\(\) => setState\(updater\)\)/);
   assert.match(source, /onInvalidateDocument\("ai-start"\)/);
   assert.match(source, /documentStateAdapter\.beginAITranslation\(\)/);
@@ -742,6 +828,9 @@ void (async () => {
   await switchAndClearWinTest();
   await deferredReactMutationRollbackTest();
   await deferredImportRollbackTest();
+  await failedHistoryReplayPreservesActiveAIPartialTest();
+  await successfulHistoryReplayInvalidatesAIAtCommitTest();
+  await manualCoverProjectionUsesRolledBackTranslationTest();
   await batchedPartialAndMutationTest();
   await deferredCancelAndFailureRollbackTest();
   await aiStartSupersedesPendingDocumentIntentsTest();

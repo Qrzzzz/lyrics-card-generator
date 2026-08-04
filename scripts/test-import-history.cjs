@@ -8,6 +8,7 @@ const {
   normalizeImportHistoryDocument,
   normalizeImportHistoryLimit,
   normalizeImportHistoryRecord,
+  readValidatedImportFile,
   validateImportFileDescriptor,
   withHistoryLimit
 } = require("../electron/import-history");
@@ -69,6 +70,45 @@ async function main() {
   assert.equal(link.display.remoteCoverUrl, undefined, "binary/data cover values are not persisted");
   assert.equal("exportedImage" in link, false, "unknown export fields are dropped");
   assert.equal(importHistoryDedupeKey(link), importHistoryDedupeKey(search), "normalized platform songs share a dedupe key");
+
+  const sanitizedLink = normalizeImportHistoryRecord({
+    ...link,
+    id: "sanitized-link",
+    source: {
+      inputUrl: "data:image/png;base64,SECRET_PAYLOAD https://music.163.com/song?id=42#private",
+      normalizedUrl: "https://music.163.com/song?id=42"
+    }
+  });
+  assert.equal(
+    sanitizedLink.source.inputUrl,
+    "https://music.163.com/song?id=42",
+    "link history persists only the sanitized replayable HTTP URL"
+  );
+  assert.doesNotMatch(JSON.stringify(sanitizedLink), /SECRET_PAYLOAD|base64|data:image/);
+
+  const coverOnly = normalizeImportHistoryRecord({
+    id: "cover-only",
+    kind: "manual-cover",
+    createdAt: timestamp,
+    lastUsedAt: timestamp,
+    display: { title: "", artist: "", album: "", source: "unknown" },
+    source: {
+      path: path.resolve("cover-only.png"),
+      fileName: "cover-only.png",
+      size: 3,
+      mtimeMs: 1
+    },
+    snapshot: {
+      title: "",
+      artist: "",
+      album: "",
+      source: "unknown",
+      lyrics: "",
+      translationText: "",
+      translationEnabled: false
+    }
+  });
+  assert.ok(coverOnly, "a successfully saved cover-only document is valid history");
 
   assert.deepEqual(validateImportFileDescriptor(
     "local-audio",
@@ -169,6 +209,29 @@ async function main() {
       "the serialized queue leaves a complete atomic document on disk"
     );
 
+    const privacyMigrationTarget = path.join(root, "app-data", "privacy-migration-history.json");
+    await fs.writeFile(privacyMigrationTarget, JSON.stringify({
+      schemaVersion: 1,
+      records: [{
+        ...link,
+        id: "legacy-raw-input",
+        source: {
+          inputUrl: "data:image/png;base64,LEGACY_SECRET https://music.163.com/song?id=42#private",
+          normalizedUrl: "https://music.163.com/song?id=42",
+          finalUrl: "https://music.163.com/song?id=42"
+        }
+      }]
+    }), "utf8");
+    const privacyMigrationStore = new ImportHistoryStore({ filePath: privacyMigrationTarget });
+    assert.equal((await privacyMigrationStore.list({ offset: 0, limit: 10 })).total, 1);
+    const scrubbedHistory = await fs.readFile(privacyMigrationTarget, "utf8");
+    assert.doesNotMatch(scrubbedHistory, /LEGACY_SECRET|base64|data:image/);
+    assert.equal(
+      JSON.parse(scrubbedHistory).records[0].source.inputUrl,
+      "https://music.163.com/song?id=42",
+      "loading an older history file scrubs already-persisted raw input"
+    );
+
     await fs.writeFile(target, "{ definitely not JSON", "utf8");
     const recovered = new ImportHistoryStore({ filePath: target, now: () => timestamp });
     const recoveredList = await recovered.list({ offset: 0, limit: 24 });
@@ -178,6 +241,141 @@ async function main() {
     const files = await fs.readdir(path.dirname(target));
     assert.ok(files.some((file) => /^import-history\.corrupt-.*\.json$/.test(file)), "corrupt source is retained as a timestamped backup");
     assert.deepEqual(JSON.parse(await fs.readFile(target, "utf8")), { schemaVersion: 1, records: [] });
+
+    const cleanupTarget = path.join(root, "cleanup", "import-history.json");
+    await fs.mkdir(path.dirname(cleanupTarget), { recursive: true });
+    const staleTemporary = `${cleanupTarget}.tmp-999-${"ab".repeat(6)}`;
+    const unrelatedTemporary = `${cleanupTarget}.tmp-not-ours`;
+    await fs.writeFile(staleTemporary, "stale history copy", "utf8");
+    await fs.writeFile(unrelatedTemporary, "keep", "utf8");
+    const cleanupStore = new ImportHistoryStore({ filePath: cleanupTarget });
+    await cleanupStore.initialize();
+    await assert.rejects(fs.stat(staleTemporary), (error) => error?.code === "ENOENT");
+    assert.equal((await fs.stat(unrelatedTemporary)).isFile(), true, "startup cleanup only removes owned temp files");
+
+    const stableAudioPath = path.join(root, "stable.mp3");
+    await fs.writeFile(stableAudioPath, Buffer.from([1, 2, 3, 4]));
+    const stableRead = await readValidatedImportFile("local-audio", stableAudioPath);
+    assert.equal(stableRead.ok, true);
+    assert.deepEqual([...stableRead.bytes], [1, 2, 3, 4], "replay reads bytes through the validated file handle");
+
+    let statCall = 0;
+    const racedRead = await readValidatedImportFile("local-audio", path.resolve("raced.mp3"), {
+      fs: {
+        open: async () => ({
+          stat: async () => statCall++ === 0
+            ? { size: 3, mtimeMs: 1, isFile: () => true }
+            : { size: 4, mtimeMs: 2, isFile: () => true },
+          read: async (buffer, _offset, _length, position) => {
+            if (position >= 3) return { bytesRead: 0, buffer };
+            Buffer.from("abc").copy(buffer);
+            return { bytesRead: 3, buffer };
+          },
+          close: async () => undefined
+        })
+      }
+    });
+    assert.deepEqual(racedRead, { ok: false, code: "file_changed_during_read" });
+
+    const replayTarget = path.join(root, "app-data", "replay-commit-history.json");
+    let replayId = 0;
+    const replayStore = new ImportHistoryStore({
+      filePath: replayTarget,
+      now: () => ++now,
+      createId: () => `replay-${++replayId}`
+    });
+    const oldPath = path.join(root, "old.mp3");
+    const replacementPath = path.join(root, "replacement.mp3");
+    const oldRecord = await replayStore.upsert(localCandidate(oldPath, "Old"), 10);
+    await replayStore.upsert(localCandidate(replacementPath, "Replacement"), 10);
+    assert.equal((await replayStore.stats()).total, 2);
+    assert.equal((await replayStore.get(oldRecord.id)).source.path, oldPath, "relocation is not persisted before replay commit");
+    assert.equal(await replayStore.commitReplay(oldRecord.id, {
+      limit: 10,
+      file: { path: replacementPath, fileName: "replacement.mp3", size: 4, mtimeMs: 2 }
+    }), true);
+    const replayCommitted = await replayStore.list({ offset: 0, limit: 10 });
+    assert.equal(replayCommitted.total, 1, "relocation dedupe occurs atomically at replay commit");
+    assert.equal(replayCommitted.records[0].id, oldRecord.id);
+    assert.equal((await replayStore.get(oldRecord.id)).source.path, replacementPath);
+
+    const transactionTarget = path.join(root, "app-data", "limit-transaction-history.json");
+    const transactionStore = new ImportHistoryStore({
+      filePath: transactionTarget,
+      now: () => ++now,
+      createId: () => `transaction-${++nextId}`
+    });
+    for (let index = 0; index < 6; index += 1) {
+      await transactionStore.upsert(linkCandidate(500 + index), "unlimited");
+    }
+    let preferenceWrites = 0;
+    const initialStats = await transactionStore.stats();
+    await assert.rejects(
+      transactionStore.applyLimitTransaction(5, {
+        expectedVersion: "stale-version",
+        confirmedTrimCount: 1
+      }, async () => { preferenceWrites += 1; }),
+      /history_confirmation_stale/
+    );
+    assert.equal(preferenceWrites, 0, "stale confirmation cannot write preferences or trim history");
+    assert.equal((await transactionStore.stats()).total, 6);
+
+    await assert.rejects(
+      transactionStore.applyLimitTransaction(5, {
+        expectedVersion: initialStats.version,
+        confirmedTrimCount: 1
+      }, async () => {
+        preferenceWrites += 1;
+        throw new Error("simulated preference failure");
+      }),
+      /simulated preference failure/
+    );
+    assert.equal((await transactionStore.stats()).total, 6, "preference failure restores the pre-trim history");
+    assert.equal(JSON.parse(await fs.readFile(transactionTarget, "utf8")).records.length, 6);
+
+    const restoredStats = await transactionStore.stats();
+    const committedLimit = await transactionStore.applyLimitTransaction(5, {
+      expectedVersion: restoredStats.version,
+      confirmedTrimCount: 1
+    }, async () => {
+      preferenceWrites += 1;
+      return "preferences-saved";
+    });
+    assert.deepEqual(committedLimit, { trimmed: 1, persisted: "preferences-saved" });
+    assert.equal((await transactionStore.stats()).total, 5);
+
+    const failingTransactionTarget = path.join(root, "app-data", "failing-limit-history.json");
+    const sourceStore = new ImportHistoryStore({
+      filePath: failingTransactionTarget,
+      now: () => ++now,
+      createId: () => `failing-transaction-${++nextId}`
+    });
+    for (let index = 0; index < 6; index += 1) {
+      await sourceStore.upsert(linkCandidate(600 + index), "unlimited");
+    }
+    const historyWriteFailureFs = {
+      ...fs,
+      rename: async () => {
+        const error = new Error("simulated history trim failure");
+        error.code = "EACCES";
+        throw error;
+      }
+    };
+    const failingTransactionStore = new ImportHistoryStore({
+      filePath: failingTransactionTarget,
+      fs: historyWriteFailureFs
+    });
+    const failingStats = await failingTransactionStore.stats();
+    let wrotePreferencesAfterHistoryFailure = false;
+    await assert.rejects(
+      failingTransactionStore.applyLimitTransaction(5, {
+        expectedVersion: failingStats.version,
+        confirmedTrimCount: 1
+      }, async () => { wrotePreferencesAfterHistoryFailure = true; }),
+      /simulated history trim failure/
+    );
+    assert.equal(wrotePreferencesAfterHistoryFailure, false, "preferences are not saved when history trim fails");
+    assert.equal(JSON.parse(await fs.readFile(failingTransactionTarget, "utf8")).records.length, 6);
 
     const stable = new ImportHistoryStore({ filePath: target, now: () => ++now, createId: () => `stable-${++nextId}` });
     const stableRecord = await stable.upsert(linkCandidate(99), 10);
@@ -218,6 +416,14 @@ function linkCandidate(index) {
       source: "netease",
       remoteCoverUrl: "https://example.com/cover.jpg"
     }
+  };
+}
+
+function localCandidate(filePath, title) {
+  return {
+    kind: "local-audio",
+    file: { path: filePath, fileName: path.basename(filePath), size: 4, mtimeMs: 1 },
+    display: { title, artist: "Artist", album: "", source: "unknown" }
   };
 }
 
