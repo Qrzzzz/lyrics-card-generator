@@ -4,6 +4,7 @@ import { motion, useReducedMotion, type Transition } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { EditorHeaderActions } from "@/components/editor/EditorHeader";
 import { ExamplesFloor } from "@/components/editor/ExamplesFloor";
+import { HistoryFloor } from "@/components/editor/HistoryFloor";
 import { ExportCelebration } from "@/components/effects/ExportCelebration";
 import { AppToast, type ToastNotice } from "@/components/feedback/AppToast";
 import {
@@ -59,7 +60,7 @@ import { snapshotAsAppState } from "@/lib/export-snapshot";
 import { resolveExportSafetyMessage } from "@/lib/export-safety";
 import type { TranslationValue } from "@/lib/editor/editor-document-state-adapter";
 
-type ActiveSurface = "editor" | "examples" | "settings";
+type ActiveSurface = "editor" | "examples" | "history" | "settings";
 
 const surfaceTransition: Transition = {
   type: "spring",
@@ -90,6 +91,7 @@ export function LyricEditor() {
   const previewCardRef = useRef<HTMLElement | null>(null);
   const toastIdRef = useRef(0);
   const examplesButtonRef = useRef<HTMLButtonElement | null>(null);
+  const historyButtonRef = useRef<HTMLButtonElement | null>(null);
   const settingsButtonRef = useRef<HTMLButtonElement | null>(null);
   const surfaceReturnFocusRef = useRef<HTMLButtonElement | null>(null);
   const invalidateDocumentAsyncRef = useRef<(
@@ -98,6 +100,7 @@ export function LyricEditor() {
   const t = useMemo(() => createT(state.locale), [state.locale]);
   const systemShouldReduceMotion = useReducedMotion() ?? false;
   const isExamplesSurfaceOpen = activeSurface === "examples";
+  const isHistorySurfaceOpen = activeSurface === "history";
   const isSettingsSurfaceOpen = activeSurface === "settings";
   const isEditorSurfaceActive = activeSurface === "editor";
 
@@ -166,6 +169,11 @@ export function LyricEditor() {
     setActiveSurface("editor");
   }
 
+  function closeHistory() {
+    surfaceReturnFocusRef.current = historyButtonRef.current;
+    setActiveSurface("editor");
+  }
+
   const {
     celebrationKey,
     isCompleteExporting,
@@ -183,6 +191,7 @@ export function LyricEditor() {
     applyParsedSong,
     applyLocalAudio,
     applySearchedSong,
+    saveSongInfo,
     setSong,
     setLyrics,
     setTranslationEnabled,
@@ -190,6 +199,7 @@ export function LyricEditor() {
     setLyricsDocument,
     applyFetchedLyrics,
     loadExample,
+    reimportHistory,
     completeAndExport
   } = useEditorActions({
     parsedState,
@@ -216,6 +226,7 @@ export function LyricEditor() {
     confirmReplaceDocument: () => window.confirm(t("replaceDocumentConfirm")),
     onNotify: showToast,
     onCloseExamples: closeExamples,
+    onCloseHistory: closeHistory,
     onClearTransientState: () => setFontSchemePreview(null),
     onInvalidateDocument: (reason) => invalidateDocumentAsyncRef.current(reason)
   });
@@ -380,6 +391,7 @@ export function LyricEditor() {
       onSearchedSongResolved: applySearchedSong,
       onSongParsed: applyParsedSong,
       onLocalAudioParsed: applyLocalAudio,
+      onSaveSongInfo: saveSongInfo,
       onSongChange: setSong,
       onUseFetchedLyrics: applyFetchedLyrics,
       onLyricsChange: setLyrics,
@@ -433,6 +445,17 @@ export function LyricEditor() {
               onClose={closeExamples}
               transition={activeSurfaceTransition}
             />
+            {isDesktopShell ? (
+              <HistoryFloor
+                isActive={isHistorySurfaceOpen}
+                locale={state.locale}
+                transition={activeSurfaceTransition}
+                reduceMotion={shouldReduceMotion}
+                onClose={closeHistory}
+                onReplay={reimportHistory}
+                onNotify={showToast}
+              />
+            ) : null}
 
             <motion.div
               data-testid="editor-surface"
@@ -444,7 +467,7 @@ export function LyricEditor() {
               )}
               animate={{
                 x: isSettingsSurfaceOpen ? "-100%" : "0%",
-                y: isExamplesSurfaceOpen ? "100%" : "0%",
+                y: isExamplesSurfaceOpen || isHistorySurfaceOpen ? "100%" : "0%",
                 opacity: isEditorSurfaceActive ? 1 : shouldReduceMotion ? 0 : 0.35,
                 scale: isEditorSurfaceActive ? 1 : shouldReduceMotion ? 1 : 0.985
               }}
@@ -488,9 +511,11 @@ export function LyricEditor() {
                           density="compact"
                           placement="stepper"
                           onOpenExamples={() => setActiveSurface("examples")}
+                          onOpenHistory={isDesktopShell ? () => setActiveSurface("history") : undefined}
                           onClearAll={clearAllContent}
                           onOpenSettings={openSettings}
                           examplesButtonRef={examplesButtonRef}
+                          historyButtonRef={historyButtonRef}
                           settingsButtonRef={settingsButtonRef}
                         />
                       }
@@ -542,6 +567,7 @@ export function LyricEditor() {
               requestedTab={requestedSettingsTab}
               locale={state.locale}
               userSettings={userSettings}
+              isDesktopShell={isDesktopShell}
               transition={activeSurfaceTransition}
               onLocaleChange={setLocale}
               onUserSettingsPreview={previewUserSettings}

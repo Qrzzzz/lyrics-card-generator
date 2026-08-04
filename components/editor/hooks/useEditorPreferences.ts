@@ -10,10 +10,11 @@ import {
   isSupportedLocale,
   loadAppPreferences,
   saveAppPreferences,
-  shouldShowFirstLaunchLanguage
+  shouldShowFirstLaunchLanguage,
+  type AppPreferencesPersistenceOptions
 } from "@/lib/settings/app-preferences";
 import { DEFAULT_USER_SETTINGS, type UserSettings } from "@/lib/settings/types";
-import { resolveEffectiveUiThemeId, saveUserSettings } from "@/lib/settings/user-settings";
+import { normalizeUserSettings, resolveEffectiveUiThemeId, saveUserSettings } from "@/lib/settings/user-settings";
 import type { Locale } from "@/lib/types";
 
 type UseEditorPreferencesInput = {
@@ -21,7 +22,11 @@ type UseEditorPreferencesInput = {
   applyLocale: (locale: Locale) => void;
 };
 
-type PreferenceSaveValue = { locale: Locale; userSettings: UserSettings };
+type PreferenceSaveValue = {
+  locale: Locale;
+  userSettings: UserSettings;
+  options?: AppPreferencesPersistenceOptions;
+};
 
 export function useEditorPreferences({ currentLocale, applyLocale }: UseEditorPreferencesInput) {
   const [userSettings, setUserSettings] = useState<UserSettings>(DEFAULT_USER_SETTINGS);
@@ -40,8 +45,11 @@ export function useEditorPreferences({ currentLocale, applyLocale }: UseEditorPr
   const preferenceSaveControllerRef = useRef<ReturnType<typeof createLatestSaveController<PreferenceSaveValue, unknown>> | null>(null);
   if (!preferenceSaveControllerRef.current) {
     preferenceSaveControllerRef.current = createLatestSaveController<PreferenceSaveValue, unknown>({
-      persist: ({ value }) => saveAppPreferences(value.locale, value.userSettings),
-      onPersisted: () => { persistenceErrorRef.current = null; },
+      persist: ({ value }) => saveAppPreferences(value.locale, value.userSettings, value.options),
+      onPersisted: (_result, snapshot) => {
+        committedUserSettingsRef.current = snapshot.value.userSettings;
+        persistenceErrorRef.current = null;
+      },
       onError: (error) => { persistenceErrorRef.current = error; }
     });
   }
@@ -60,13 +68,23 @@ export function useEditorPreferences({ currentLocale, applyLocale }: UseEditorPr
     syncWindowMaterial(next);
   }
 
-  function commitUserSettings(next: UserSettings) {
-    const saved = saveUserSettings(next);
-    committedUserSettingsRef.current = saved;
-    setUserSettings(saved);
-    syncWindowMaterial(saved);
-    queuePreferenceSave(currentLocaleRef.current, saved);
-    return flushPreferenceSave();
+  async function commitUserSettings(next: UserSettings, options?: AppPreferencesPersistenceOptions) {
+    const normalized = normalizeUserSettings(next);
+    setUserSettings(normalized);
+    syncWindowMaterial(normalized);
+    queuePreferenceSave(currentLocaleRef.current, normalized, options);
+    try {
+      await flushPreferenceSave();
+    } catch (error) {
+      const committed = committedUserSettingsRef.current;
+      const fallback = { locale: currentLocaleRef.current, userSettings: committed };
+      latestPreferencesRef.current = fallback;
+      preferenceSaveControllerRef.current!.resetPersisted(createPreferenceSaveSnapshot(fallback));
+      persistenceErrorRef.current = null;
+      setUserSettings(committed);
+      syncWindowMaterial(committed);
+      throw error;
+    }
   }
 
   function setLocale(locale: Locale) {
@@ -91,8 +109,12 @@ export function useEditorPreferences({ currentLocale, applyLocale }: UseEditorPr
     setIsFirstLaunchOpen(false);
   }
 
-  function queuePreferenceSave(locale: Locale, settings: UserSettings) {
-    const value = { locale, userSettings: settings };
+  function queuePreferenceSave(
+    locale: Locale,
+    settings: UserSettings,
+    options?: AppPreferencesPersistenceOptions
+  ) {
+    const value = { locale, userSettings: settings, options };
     latestPreferencesRef.current = value;
     const controller = preferenceSaveControllerRef.current!;
     controller.setDesired(createPreferenceSaveSnapshot(value));

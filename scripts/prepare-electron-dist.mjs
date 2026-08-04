@@ -83,6 +83,7 @@ async function prepareMinimalElectronApp() {
         "electron/ai-prompt-settings.js",
         "electron/background-images.js",
         "electron/font-options.js",
+        "electron/import-history.js",
         "electron/provider-response.js",
         "electron/preload.js",
         "electron/ipc-security.js",
@@ -132,6 +133,7 @@ async function prepareMinimalElectronApp() {
   await cp(path.join(projectRoot, "electron", "ai-prompt-settings.js"), path.join(electronOutputDir, "ai-prompt-settings.js"));
   await cp(path.join(projectRoot, "electron", "background-images.js"), path.join(electronOutputDir, "background-images.js"));
   await cp(path.join(projectRoot, "electron", "font-options.js"), path.join(electronOutputDir, "font-options.js"));
+  await cp(path.join(projectRoot, "electron", "import-history.js"), path.join(electronOutputDir, "import-history.js"));
   await cp(path.join(projectRoot, "electron", "provider-response.js"), path.join(electronOutputDir, "provider-response.js"));
   await cp(path.join(projectRoot, "electron", "preload.js"), path.join(electronOutputDir, "preload.js"));
   await cp(path.join(projectRoot, "electron", "ipc-security.js"), path.join(electronOutputDir, "ipc-security.js"));

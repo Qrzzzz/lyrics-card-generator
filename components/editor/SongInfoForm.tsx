@@ -10,19 +10,25 @@ import {
   ToggleRow
 } from "@/components/ui/controls";
 import { getHighResolutionCoverUrl } from "@/lib/cover-url";
+import { getLyricsCardDesktopApi } from "@/lib/desktop-api";
 import { proxiedImageUrl } from "@/lib/image-utils";
+import type { ManualCoverImportHistoryContext } from "@/lib/import-history";
 import type { createT } from "@/lib/i18n";
 import type { SongInfo } from "@/lib/types";
 
 export function SongInfoForm({
   song,
   onSongChange,
+  onManualCoverChange,
+  onManualCoverPendingChange,
   t,
   showToggle = true,
   forceEnabled
 }: {
   song: SongInfo;
   onSongChange: (song: SongInfo) => void;
+  onManualCoverChange?: (context: ManualCoverImportHistoryContext) => void;
+  onManualCoverPendingChange?: (pending: boolean) => void;
   t: ReturnType<typeof createT>;
   showToggle?: boolean;
   forceEnabled?: boolean;
@@ -30,19 +36,40 @@ export function SongInfoForm({
   const [enabled, setEnabled] = useState(false);
   const fieldsEnabled = forceEnabled ?? enabled;
   const coverInputRef = useRef<HTMLInputElement>(null);
+  const coverRegistrationRequestRef = useRef(0);
 
   function update<K extends keyof SongInfo>(key: K, value: SongInfo[K]) {
     onSongChange({ ...song, [key]: value });
   }
 
-  function onUpload(file?: File) {
+  async function onUpload(file?: File) {
     if (!file) {
       return;
     }
-    onSongChange({ ...song, originalCoverUrl: "", coverUrl: URL.createObjectURL(file), proxiedCoverUrl: "" });
+    const requestId = coverRegistrationRequestRef.current + 1;
+    coverRegistrationRequestRef.current = requestId;
+    onManualCoverPendingChange?.(true);
+    const coverUrl = URL.createObjectURL(file);
+    onSongChange({ ...song, originalCoverUrl: "", coverUrl, proxiedCoverUrl: "" });
+    let fileToken: string | undefined;
+    try {
+      const desktop = getLyricsCardDesktopApi();
+      if (desktop) {
+        fileToken = (await desktop.registerImportFile(file, "manual-cover"))?.token;
+      }
+    } catch {
+      fileToken = undefined;
+    } finally {
+      if (requestId !== coverRegistrationRequestRef.current) return;
+      onManualCoverChange?.({ uploaded: true, fileToken });
+      onManualCoverPendingChange?.(false);
+    }
   }
 
   function updateCoverUrl(url: string) {
+    coverRegistrationRequestRef.current += 1;
+    onManualCoverChange?.({ uploaded: false });
+    onManualCoverPendingChange?.(false);
     const coverUrl = getHighResolutionCoverUrl(url, song.source);
     onSongChange({ ...song, originalCoverUrl: url, coverUrl, proxiedCoverUrl: proxiedImageUrl(coverUrl) });
   }
@@ -82,7 +109,7 @@ export function SongInfoForm({
               type="file"
               accept="image/*"
               className="hidden"
-              onChange={(event) => onUpload(event.target.files?.[0])}
+              onChange={(event) => void onUpload(event.target.files?.[0])}
             />
             <div className="flex items-center gap-3">
               {song.coverUrl ? (

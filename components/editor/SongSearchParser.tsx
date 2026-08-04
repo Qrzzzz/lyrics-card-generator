@@ -13,6 +13,7 @@ import type {
 } from "@/lib/music-search/types";
 import type { ParsedSongData } from "@/lib/types";
 import type { DocumentImportIntent } from "@/lib/editor/document-transactions";
+import type { SearchImportHistoryContext } from "@/lib/import-history";
 import { cn } from "@/lib/utils";
 
 type SearchStatus = "idle" | "typing" | "loading" | "success" | "partial" | "empty" | "error";
@@ -23,7 +24,12 @@ export function SongSearchParser({
   t
 }: {
   beginImport: () => DocumentImportIntent | null;
-  onResolved: (song: ParsedSongData, lyrics: string | undefined, intent: DocumentImportIntent) => boolean;
+  onResolved: (
+    song: ParsedSongData,
+    lyrics: string | undefined,
+    intent: DocumentImportIntent,
+    context: SearchImportHistoryContext
+  ) => boolean;
   t: ReturnType<typeof createT>;
 }) {
   const listboxId = useId();
@@ -181,7 +187,12 @@ export function SongSearchParser({
         throw new Error(getLocalizedAppApiError(payload.code, t, payload.error));
       }
 
-      if (!onResolved(payload.data.song, payload.data.lyrics, intent)) return;
+      if (!onResolved(payload.data.song, payload.data.lyrics, intent, {
+        query: query.trim(),
+        platform: song.source,
+        songId: song.id,
+        pageUrl: song.pageUrl
+      })) return;
       skipNextSearchRef.current = true;
       setQuery(`${payload.data.song.title} - ${payload.data.song.artist}`);
       setExpanded(false);

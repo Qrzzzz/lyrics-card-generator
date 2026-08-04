@@ -1,3 +1,5 @@
+import type { ImportHistoryLimit } from "@/lib/import-history";
+
 export type UiThemeMode = "album-dynamic" | "dark" | "light";
 
 export type EffectiveUiThemeId =
@@ -49,6 +51,7 @@ export type UserSettings = {
   defaultExportFormat: ExportFormatId;
   defaultExportQuality: ExportQualityId;
   defaultExportPixelRatio: number;
+  importHistoryLimit: ImportHistoryLimit;
   firstLaunchLanguageSelected: boolean;
 };
 
@@ -90,5 +93,6 @@ export const DEFAULT_USER_SETTINGS: UserSettings = {
   defaultExportFormat: "png",
   defaultExportQuality: "high",
   defaultExportPixelRatio: 2,
+  importHistoryLimit: 10,
   firstLaunchLanguageSelected: false
 };

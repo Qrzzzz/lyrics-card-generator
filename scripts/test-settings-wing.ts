@@ -32,7 +32,7 @@ const aiTranslateButton = readFileSync(resolve("components/lyrics/AiTranslateBut
 const webLiteLyricInput = readFileSync(resolve("web-lite/WebLiteLyricInput.tsx"), "utf8");
 const globals = readFileSync(resolve("app/globals.css"), "utf8");
 
-assert.match(lyricEditor, /type ActiveSurface = "editor" \| "examples" \| "settings"/);
+assert.match(lyricEditor, /type ActiveSurface = "editor" \| "examples" \| "history" \| "settings"/);
 assert.match(lyricEditor, /x: isSettingsSurfaceOpen \? "-100%" : "0%"/);
 assert.match(lyricEditor, /onRequireSettings: \(\) => openSettings\("ai"\)/);
 assert.match(lyricEditor, /surfaceReturnFocusRef\.current = settingsButtonRef\.current/);
@@ -40,6 +40,8 @@ assert.match(lyricEditor, /returnFocus\.focus\(\{ preventScroll: true \}\)/);
 assert.doesNotMatch(lyricEditor, /if \(!isEditorSurfaceActive\) return/);
 assert.match(editorHeader, /ref=\{settingsButtonRef\}[\s\S]*data-testid="settings-button"[\s\S]*onClick=\{\(\) => onOpenSettings\(\)\}/);
 assert.match(editorHeader, /ref=\{examplesButtonRef\}[\s\S]*data-testid="examples-button"/);
+assert.match(editorHeader, /\{onOpenHistory \? \([\s\S]*data-testid="history-button"/);
+assert.match(lyricEditor, /onOpenHistory=\{isDesktopShell \? \(\) => setActiveSurface\("history"\) : undefined\}/);
 assert.doesNotMatch(editorHeader, /app-icon\.png"[\s\S]*?border border-\[rgb\(var\(--panel-border\)\)\]/);
 assert.doesNotMatch(aboutSettings, /app-icon\.png"[\s\S]*?border border-white\/15/);
 assert.match(settingsSurface, /data-testid="settings-surface"/);
@@ -117,6 +119,9 @@ assert.doesNotMatch(generalSettings, /sparkCursorEnabled|copy\.spark/);
 assert.match(generalSettings, /copy\.reduceMotion/);
 assert.match(generalSettings, /settings\.reduceMotionEnabled/);
 assert.match(generalSettings, /data-testid|testId="reduce-motion-toggle"/);
+assert.match(generalSettings, /data-testid="import-history-limit"/);
+assert.match(generalSettings, /total - next/);
+assert.match(generalSettings, /window\.confirm\(formatImportHistoryText\(historyCopy\.limitTrimConfirm/);
 assert.match(appearanceSettings, /label=\{copy\.spark\}/);
 assert.match(appearanceSettings, /settings\.sparkCursorEnabled/);
 assert.match(exportSettings, /<SegmentedControl/);

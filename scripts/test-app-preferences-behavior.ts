@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import type { LyricsCardDesktopApi } from "../lib/desktop-api";
+import type { AppPreferencesSaveOptions, LyricsCardDesktopApi } from "../lib/desktop-api";
 import {
   APP_PREFERENCES_STORAGE_KEY,
   LOCALE_STORAGE_KEY,
@@ -15,8 +15,12 @@ import { USER_SETTINGS_STORAGE_KEY } from "../lib/settings/user-settings";
 
 class MemoryStorage {
   private values = new Map<string, string>();
+  failWrites = false;
   getItem(key: string) { return this.values.get(key) ?? null; }
-  setItem(key: string, value: string) { this.values.set(key, value); }
+  setItem(key: string, value: string) {
+    if (this.failWrites) throw new Error("renderer cache unavailable");
+    this.values.set(key, value);
+  }
   removeItem(key: string) { this.values.delete(key); }
   clear() { this.values.clear(); }
 }
@@ -35,13 +39,15 @@ function installWindow(
   localStorage: MemoryStorage,
   desktopRecord: AppPreferencesRecord | null,
   saves: AppPreferencesRecord[],
-  saveFailure?: Error
+  saveFailure?: Error,
+  saveOptions: Array<AppPreferencesSaveOptions | undefined> = []
 ) {
   const desktop = {
     loadAppPreferences: async () => desktopRecord,
-    saveAppPreferences: async (preferences: AppPreferencesRecord) => {
+    saveAppPreferences: async (preferences: AppPreferencesRecord, options?: AppPreferencesSaveOptions) => {
       if (saveFailure) throw saveFailure;
       saves.push(structuredClone(preferences));
+      saveOptions.push(structuredClone(options));
       return true;
     }
   } as Pick<LyricsCardDesktopApi, "loadAppPreferences" | "saveAppPreferences">;
@@ -107,7 +113,26 @@ async function migrationAndFailures() {
     const loaded = await loadAppPreferences();
     assert.equal(loaded.locale, "en", "load remains usable when desktop repair write fails");
     await assert.rejects(saveAppPreferences("ja", DEFAULT_USER_SETTINGS), /disk full/);
-    assert.equal(JSON.parse(storage.getItem(APP_PREFERENCES_STORAGE_KEY)!).locale, "ja");
+    assert.equal(
+      JSON.parse(storage.getItem(APP_PREFERENCES_STORAGE_KEY)!).locale,
+      "en",
+      "renderer caches remain at the last durable value when desktop persistence fails"
+    );
+  }
+
+  {
+    const storage = new MemoryStorage();
+    const saves: AppPreferencesRecord[] = [];
+    storage.setItem(APP_PREFERENCES_STORAGE_KEY, JSON.stringify(record(8, 80, "en")));
+    storage.failWrites = true;
+    installWindow(storage, null, saves);
+    await saveAppPreferences("ja", DEFAULT_USER_SETTINGS);
+    assert.equal(saves.at(-1)?.locale, "ja", "desktop persistence remains authoritative");
+    assert.equal(
+      JSON.parse(storage.getItem(APP_PREFERENCES_STORAGE_KEY)!).locale,
+      "en",
+      "a failed renderer cache does not turn a durable desktop transaction into an error"
+    );
   }
 }
 
@@ -126,10 +151,27 @@ async function rapidSavesAreMonotonic() {
   assert.equal(JSON.parse(storage.getItem(APP_PREFERENCES_STORAGE_KEY)!).userSettings.defaultExportFormat, "jpg");
 }
 
+async function destructiveHistoryConfirmationIsForwarded() {
+  const storage = new MemoryStorage();
+  const saves: AppPreferencesRecord[] = [];
+  const options: Array<AppPreferencesSaveOptions | undefined> = [];
+  installWindow(storage, null, saves, undefined, options);
+  const confirmation = {
+    importHistoryTrimConfirmation: {
+      expectedVersion: "history-version",
+      confirmedTrimCount: 7
+    }
+  };
+  await saveAppPreferences("en", { ...DEFAULT_USER_SETTINGS, importHistoryLimit: 5 }, confirmation);
+  assert.deepEqual(options.at(-1), confirmation);
+  assert.equal(JSON.parse(storage.getItem(APP_PREFERENCES_STORAGE_KEY)!).userSettings.importHistoryLimit, 5);
+}
+
 void (async () => {
   await jsonAndLocalReconciliation();
   await migrationAndFailures();
   await rapidSavesAreMonotonic();
+  await destructiveHistoryConfirmationIsForwarded();
   console.log("app preference persistence behavior tests passed");
 })().catch((error) => {
   console.error(error);

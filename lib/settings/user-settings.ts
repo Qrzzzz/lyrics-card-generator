@@ -10,6 +10,7 @@ import {
   type UserSettings
 } from "@/lib/settings/types";
 import { normalizeHexColor, UI_ACCENT_PRESETS } from "@/lib/settings/accent";
+import type { ImportHistoryLimit } from "@/lib/import-history";
 
 export const USER_SETTINGS_STORAGE_KEY = "lyric-card-generator-user-settings";
 
@@ -18,6 +19,7 @@ const ACCENT_MODES = new Set<UiAccentMode>(["album-dynamic", "preset", "custom"]
 const ACCENT_PRESETS = new Set<UiAccentPresetId>(["red", "orange", "yellow", "green", "blue", "purple"]);
 const QUALITIES = new Set<ExportQualityId>(["low", "medium", "high"]);
 const EXPORT_FORMATS = new Set<ExportFormatId>(["png", "webp", "jpg"]);
+const IMPORT_HISTORY_LIMITS = new Set<ImportHistoryLimit>([5, 10, "unlimited"]);
 
 type UserSettingsInput = Partial<UserSettings> & Record<string, unknown>;
 
@@ -84,6 +86,12 @@ function normalizeExportFormat(value: unknown): ExportFormatId {
     : DEFAULT_USER_SETTINGS.defaultExportFormat;
 }
 
+function normalizeImportHistoryLimit(value: unknown): ImportHistoryLimit {
+  return IMPORT_HISTORY_LIMITS.has(value as ImportHistoryLimit)
+    ? value as ImportHistoryLimit
+    : DEFAULT_USER_SETTINGS.importHistoryLimit;
+}
+
 export function normalizeUserSettings(input: unknown): UserSettings {
   const source = input && typeof input === "object" ? input as UserSettingsInput : {};
   const uiThemeMode = normalizeThemeMode(source);
@@ -112,6 +120,7 @@ export function normalizeUserSettings(input: unknown): UserSettings {
     defaultExportFormat: normalizeExportFormat(source.defaultExportFormat),
     defaultExportQuality: quality,
     defaultExportPixelRatio: getExportPixelRatio(quality),
+    importHistoryLimit: normalizeImportHistoryLimit(source.importHistoryLimit),
     firstLaunchLanguageSelected: source.firstLaunchLanguageSelected === true
   };
 }

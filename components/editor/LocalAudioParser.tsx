@@ -4,10 +4,12 @@ import { FileAudio, Upload } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Section } from "@/components/ui/controls";
 import { createAppRequestHeaders } from "@/lib/app-request";
+import { getLyricsCardDesktopApi } from "@/lib/desktop-api";
 import { getLocalizedAppApiError, type AppApiErrorCode } from "@/lib/app-api-errors";
 import type { createT } from "@/lib/i18n";
 import type { ParsedSongData } from "@/lib/types";
 import type { DocumentImportIntent } from "@/lib/editor/document-transactions";
+import type { LocalAudioImportHistoryContext } from "@/lib/import-history";
 import { cn } from "@/lib/utils";
 
 type ParseLocalAudioResponse =
@@ -29,7 +31,12 @@ export function LocalAudioParser({
   t
 }: {
   beginImport: () => DocumentImportIntent | null;
-  onParsed: (song: ParsedSongData, lyrics: string | undefined, intent: DocumentImportIntent) => boolean;
+  onParsed: (
+    song: ParsedSongData,
+    lyrics: string | undefined,
+    intent: DocumentImportIntent,
+    context: LocalAudioImportHistoryContext
+  ) => boolean;
   t: ReturnType<typeof createT>;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -55,6 +62,15 @@ export function LocalAudioParser({
     setFileName(file.name);
     setStatus("loading");
     setMessage(t("localAudioParsing"));
+    let fileToken: string | undefined;
+    const desktop = getLyricsCardDesktopApi();
+    if (desktop) {
+      try {
+        fileToken = (await desktop.registerImportFile(file, "local-audio"))?.token;
+      } catch {
+        fileToken = undefined;
+      }
+    }
 
     const formData = new FormData();
     formData.set("file", file);
@@ -72,7 +88,7 @@ export function LocalAudioParser({
         throw new Error(getLocalizedAppApiError(payload.code, t, payload.error));
       }
 
-      if (!onParsed(payload.data, payload.data.lyrics, intent)) return;
+      if (!onParsed(payload.data, payload.data.lyrics, intent, { fileToken })) return;
       setStatus(payload.status === "success" ? "success" : "partial");
       setMessage(payload.status === "success" ? t("localAudioSuccess") : t("localAudioNoLyrics"));
     } catch (error) {

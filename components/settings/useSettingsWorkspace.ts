@@ -14,6 +14,7 @@ import { DEFAULT_AI_SETTINGS, type AISettings, type AISettingsSummary } from "@/
 import { getAIUiCopy } from "@/lib/ai/ui-copy";
 import { shutdownCoordinator } from "@/lib/persistence/shutdown-coordinator";
 import { removeBackgroundImage } from "@/lib/settings/background-storage";
+import type { AppPreferencesPersistenceOptions } from "@/lib/settings/app-preferences";
 import type { UserSettings } from "@/lib/settings/types";
 import type { Locale } from "@/lib/types";
 
@@ -33,7 +34,7 @@ type SettingsWorkspaceInput = {
   userSettings: UserSettings;
   onLocaleChange: (locale: Locale) => void | Promise<void>;
   onUserSettingsPreview: (settings: UserSettings) => void;
-  onUserSettingsChange: (settings: UserSettings) => void | Promise<void>;
+  onUserSettingsChange: (settings: UserSettings, options?: AppPreferencesPersistenceOptions) => void | Promise<void>;
   onClose: () => void;
   onSaved: (settings: AISettingsSummary, message?: string) => void;
   onNotify: (message: string) => void;
@@ -201,7 +202,8 @@ export function useSettingsWorkspace({
     if (aiSaveTimerRef.current) clearTimeout(aiSaveTimerRef.current);
   }, []);
 
-  function updateDraft(next: UserSettings) {
+  function updateDraft(next: UserSettings, options?: AppPreferencesPersistenceOptions) {
+    const previous = draft;
     setDraft((current) => {
       const previousImageId = current.appBackground.imageId;
       const nextImageId = next.appBackground.imageId;
@@ -211,9 +213,10 @@ export function useSettingsWorkspace({
       return next;
     });
     onUserSettingsPreview(next);
-    void Promise.resolve(onUserSettingsChange(next))
+    void Promise.resolve(onUserSettingsChange(next, options))
       .then(() => queueSavedNotification())
       .catch((saveError) => {
+        setDraft((current) => current === next ? previous : current);
         setError(normalizeAIErrorMessage(saveError, locale, aiCopy.settingsSaveFailed));
         setSyncErrorKind("save");
         setSaveState("error");

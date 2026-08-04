@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v5.8.8.zh-TW.md">發布說明</a> ·
+  <a href="./docs/releases/v5.9.0.zh-TW.md">發布說明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">線上 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="#本機開發">本機開發</a> ·
@@ -48,23 +48,23 @@
 
 請前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載最新版：
 
-* 建議一般使用者下載安裝版：`Lyrics Card Generator Setup 5.8.8.exe`
-* 不想安裝時可下載可攜版：`Lyrics Card Generator-5.8.8-portable.exe`
+* 建議一般使用者下載安裝版：`Lyrics Card Generator Setup 5.9.0.exe`
+* 不想安裝時可下載可攜版：`Lyrics Card Generator-5.9.0-portable.exe`
 
 安裝版適合長期使用；可攜版適合臨時執行、測試或放在隨身碟中使用。
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v5.8.8 更新重點
+### v5.9.0 更新重點
 
-* v5.8.8 凍結 v5.8.7 的前端呈現；視覺、DOM 契約、版面、捲動、焦點、鍵盤與 AI 翻譯流程皆維持不變。
-* 內部將側欄導覽／焦點與「整理／翻譯」呈現拆開，保留非作用中頁面隔離、窄螢幕 Esc 層級與減少動態效果語意。
-* 移除無執行入口的退役路徑，並將工作區的文件操作、歷史與選取範圍控制器收斂為獨立模組；桌面版與 Web Lite 同步為 5.8.8。
+* Windows 桌面版新增「匯入／解析歷史」，只記錄成功提交的連結、歌曲搜尋、本機 MP3／FLAC 與本機封面匯入；一般編輯、範例、清除和匯出不會進入歷史。
+* 全螢幕歷史頁支援搜尋、來源篩選、分批載入、重新匯入、刪除和清除；本機檔案移動後可重新定位，檔案變更或遺失時不會破壞目前文件。
+* 歷史由主程序安全持久化，預設保留最近 10 筆，也可設為 5 筆或無限制。Web Lite 維持原有介面與行為，不新增瀏覽器版歷史。
 
 ## 🌐 多語言發佈說明
 
 GitHub Release 預設顯示簡體中文摘要，完整說明請見：
-[简体中文](./docs/releases/v5.8.8.zh-CN.md) · [繁體中文](./docs/releases/v5.8.8.zh-TW.md) · [English](./docs/releases/v5.8.8.en.md) · [Français](./docs/releases/v5.8.8.fr.md) · [日本語](./docs/releases/v5.8.8.ja.md) · [Español](./docs/releases/v5.8.8.es.md)
+[简体中文](./docs/releases/v5.9.0.zh-CN.md) · [繁體中文](./docs/releases/v5.9.0.zh-TW.md) · [English](./docs/releases/v5.9.0.en.md) · [Français](./docs/releases/v5.9.0.fr.md) · [日本語](./docs/releases/v5.9.0.ja.md) · [Español](./docs/releases/v5.9.0.es.md)
 
 ## ✨ 主要功能
 

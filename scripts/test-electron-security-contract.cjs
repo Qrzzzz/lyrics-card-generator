@@ -56,6 +56,10 @@ function trustedFixture(frameUrl = `${localUrl}/`, frameIsMain = true) {
 }
 
 const mainSource = readFileSync("electron/main.js", "utf8");
+const replayPayloadSource = mainSource.slice(
+  mainSource.indexOf("async function createImportHistoryReplayPayload"),
+  mainSource.indexOf("function mimeTypeForHistoryFile")
+);
 assert.equal((mainSource.match(/ipcMain\.handle\(/g) || []).length, 1, "every privileged IPC handler uses the trusted wrapper");
 assert.match(mainSource, /setPermissionRequestHandler[\s\S]*?callback\(false\)/);
 assert.match(mainSource, /setPermissionCheckHandler\(\(\) => false\)/);
@@ -69,6 +73,71 @@ assert.match(
   prepareElectronSource,
   /path\.join\(projectRoot, "electron", "local-app-url\.js"\)[\s\S]*?path\.join\(electronOutputDir, "local-app-url\.js"\)/,
   "desktop preparation copies the local URL policy helper into the minimal app"
+);
+assert.match(prepareElectronSource, /"electron\/import-history\.js"/, "packaged desktop bundles the import history store");
+assert.match(
+  prepareElectronSource,
+  /path\.join\(projectRoot, "electron", "import-history\.js"\)[\s\S]*?path\.join\(electronOutputDir, "import-history\.js"\)/,
+  "desktop preparation copies the import history store into the minimal app"
+);
+
+const preloadSource = readFileSync("electron/preload.js", "utf8");
+assert.match(preloadSource, /const \{ contextBridge, ipcRenderer, webUtils \} = require\("electron"\)/);
+assert.match(preloadSource, /webUtils\.getPathForFile\(file\)/, "local file paths come from Electron 42 webUtils");
+assert.doesNotMatch(preloadSource, /\bfile\.path\b/, "the removed File.path API is never used");
+assert.match(preloadSource, /replayImportHistory: \(recordId\)[\s\S]*?invoke\("lyrics-card:import-history-replay", recordId\)/);
+assert.doesNotMatch(preloadSource, /replayImportHistory: \([^)]*path/, "history replay exposes only an opaque record id");
+assert.match(
+  preloadSource,
+  /commitImportHistoryReplay: \(recordId, relocationToken\)[\s\S]*?"lyrics-card:import-history-replay-commit"[\s\S]*?recordId,[\s\S]*?relocationToken/,
+  "relocation finalization exposes only a record id and opaque main-process token"
+);
+
+assert.match(
+  mainSource,
+  /path\.join\(app\.getPath\("userData"\), "app-data", "import-history\.json"\)/,
+  "history is stored under the desktop userData app-data directory"
+);
+assert.match(
+  mainSource,
+  /handle\("lyrics-card:import-history-replay", async \(_event, recordId\)[\s\S]*?importHistoryStore\.get\(recordId\)[\s\S]*?createImportHistoryReplayPayload\(record\)/,
+  "history replay resolves its source only from a validated stored record"
+);
+assert.match(mainSource, /readValidatedImportFile\(record\.kind, record\.source\.path\)/);
+assert.doesNotMatch(
+  replayPayloadSource,
+  /await fs\.readFile\(/,
+  "history replay never validates one path object and reopens another by path"
+);
+assert.match(
+  mainSource,
+  /handle\("lyrics-card:import-history-relocate", async \(event, recordId\)[\s\S]*?readValidatedImportFile[\s\S]*?relocationToken/,
+  "relocation returns a sender-bound opaque token without persisting the path"
+);
+assert.doesNotMatch(
+  mainSource,
+  /handle\("lyrics-card:import-history-relocate"[\s\S]*?updateFileReference/,
+  "relocation cannot mutate history before renderer parsing and document commit"
+);
+assert.match(
+  mainSource,
+  /handle\("lyrics-card:import-history-replay-commit"[\s\S]*?takeImportHistoryRelocation[\s\S]*?importHistoryStore\.commitReplay/,
+  "path replacement, dedupe, and touch occur only in the post-document-commit IPC"
+);
+assert.match(
+  mainSource,
+  /handle\("lyrics-card:import-history-record", \(event, input\) => trackImportHistoryOperation\(/,
+  "history writes are tracked before their first asynchronous step"
+);
+assert.match(
+  mainSource,
+  /while \(importHistoryOperations\.size > 0\)[\s\S]*?Promise\.allSettled[\s\S]*?await importHistoryStore\.flush\(\)/,
+  "desktop close waits for in-flight history operations and then the serialized store queue"
+);
+assert.match(
+  mainSource,
+  /await appPreferencesWriteQueue;\s*await flushImportHistoryOperations\(\);\s*allowWindowClose = true/,
+  "window close is allowed only after preferences and import history are durable"
 );
 
 const nextConfig = readFileSync("next.config.mjs", "utf8");

@@ -260,7 +260,7 @@ assert.ok(
 assert.ok(
   editorStepsSource.includes("useState<SongInfo>") &&
     editorStepsSource.includes("onSongChange={updateSongInfoDraft}") &&
-    editorStepsSource.includes("handlers.onSongChange({ ...songInfoDraft })") &&
+    editorStepsSource.includes("handlers.onSaveSongInfo({ ...songInfoDraft }, manualCoverContextRef.current)") &&
     editorStepsSource.includes("songInfoEditRevision !== documentRevision") &&
     editorStepsSource.includes("songInfoDraftCoverRef") &&
     editorStepsSource.includes("revokeReplacedBlobUrl"),

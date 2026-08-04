@@ -1,8 +1,9 @@
 "use client";
 
-import { Music2, Settings, Trash2 } from "lucide-react";
+import { History as HistoryIcon, Music2, Settings, Trash2 } from "lucide-react";
 import type { RefObject } from "react";
 import { getAIUiCopy } from "@/lib/ai/ui-copy";
+import { importHistoryCopy } from "@/lib/import-history-copy";
 import { settingsCopy } from "@/lib/settings/copy";
 import type { Locale } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -12,9 +13,11 @@ export type EditorHeaderDensity = "normal" | "compact";
 type EditorHeaderActionsProps = {
   locale: Locale;
   onOpenExamples: () => void;
+  onOpenHistory?: () => void;
   onClearAll: () => void;
   onOpenSettings: () => void;
   examplesButtonRef?: RefObject<HTMLButtonElement | null>;
+  historyButtonRef?: RefObject<HTMLButtonElement | null>;
   settingsButtonRef?: RefObject<HTMLButtonElement | null>;
   density?: EditorHeaderDensity;
   placement?: "header" | "stepper";
@@ -25,9 +28,11 @@ export function EditorHeaderActions({
   density = "normal",
   placement = "header",
   onOpenExamples,
+  onOpenHistory,
   onClearAll,
   onOpenSettings,
   examplesButtonRef,
+  historyButtonRef,
   settingsButtonRef
 }: EditorHeaderActionsProps) {
   const aiCopy = getAIUiCopy(locale);
@@ -58,6 +63,18 @@ export function EditorHeaderActions({
         <Music2 className="h-4 w-4" />
         <span>{copy.example}</span>
       </button>
+      {onOpenHistory ? (
+        <button
+          ref={historyButtonRef}
+          type="button"
+          data-testid="history-button"
+          onClick={onOpenHistory}
+          className={buttonClassName}
+        >
+          <HistoryIcon className="h-4 w-4" />
+          <span>{importHistoryCopy[locale].entry}</span>
+        </button>
+      ) : null}
       <button
         type="button"
         data-testid="clear-all-button"
