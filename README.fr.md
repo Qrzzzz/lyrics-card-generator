@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v5.9.0.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v5.9.1.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="#développement-local">Développement local</a> ·
@@ -51,23 +51,23 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 Téléchargez la dernière version depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
 
-* Installateur recommandé : `Lyrics Card Generator Setup 5.9.0.exe`
-* Version portable : `Lyrics Card Generator-5.9.0-portable.exe`
+* Installateur recommandé : `Lyrics Card Generator Setup 5.9.1.exe`
+* Version portable : `Lyrics Card Generator-5.9.1-portable.exe`
 
 L'installateur est recommandé pour une utilisation régulière. La version portable convient aux essais, à une utilisation temporaire ou à un disque amovible.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### Points clés de la v5.9.0
+### Points clés de la v5.9.1
 
-* L’application Windows conserve désormais un historique des liens, résultats de recherche, fichiers MP3／FLAC locaux et pochettes locales dont l’importation a réellement réussi. Les modifications ordinaires, exemples, effacements et exports ne sont pas enregistrés.
-* La vue plein écran propose recherche, filtres, chargement paginé, réimportation, suppression et effacement complet. Un fichier déplacé peut être relocalisé ; un fichier modifié ou manquant n’altère jamais le document actuel.
-* L’historique est conservé de manière sûre par le processus principal, avec 10 éléments par défaut et des options 5 ou Illimité. Web Lite garde son interface et son comportement actuels, sans historique dans le navigateur.
+* L’en-tête de l’application Windows propose désormais une action d’enregistrement manuel. Le premier enregistrement crée une archive ; les suivants, après modification, mettent à jour cette même entrée.
+* Les sauvegardes manuelles peuvent être filtrées et chargées depuis l’historique. Seul le contenu sémantique du morceau et des paroles est conservé, jamais les styles, réglages, exports, chemins locaux ni configurations sensibles.
+* L’enregistrement reste toujours explicite : aucun enregistrement automatique ni nouveau raccourci `Ctrl+S`. Web Lite conserve son interface et son comportement actuels.
 
 ## 🌐 Notes de publication multilingues
 
 Par défaut, GitHub Release affiche un résumé en chinois simplifié. Consultez les notes complètes :
-[简体中文](./docs/releases/v5.9.0.zh-CN.md) · [繁體中文](./docs/releases/v5.9.0.zh-TW.md) · [English](./docs/releases/v5.9.0.en.md) · [Français](./docs/releases/v5.9.0.fr.md) · [日本語](./docs/releases/v5.9.0.ja.md) · [Español](./docs/releases/v5.9.0.es.md)
+[简体中文](./docs/releases/v5.9.1.zh-CN.md) · [繁體中文](./docs/releases/v5.9.1.zh-TW.md) · [English](./docs/releases/v5.9.1.en.md) · [Français](./docs/releases/v5.9.1.fr.md) · [日本語](./docs/releases/v5.9.1.ja.md) · [Español](./docs/releases/v5.9.1.es.md)
 
 <a id="fonctionnalités-principales"></a>
 

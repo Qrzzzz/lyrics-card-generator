@@ -38,6 +38,8 @@ contextBridge.exposeInMainWorld("lyricsCardDesktop", {
   listImportHistory: (options) => ipcRenderer.invoke("lyrics-card:import-history-list", options),
   getImportHistoryStats: () => ipcRenderer.invoke("lyrics-card:import-history-stats"),
   recordImportHistory: (record) => ipcRenderer.invoke("lyrics-card:import-history-record", record),
+  createManualSave: (input) => ipcRenderer.invoke("lyrics-card:manual-save-create", input),
+  updateManualSave: (recordId, input) => ipcRenderer.invoke("lyrics-card:manual-save-update", recordId, input),
   removeImportHistory: (recordId) => ipcRenderer.invoke("lyrics-card:import-history-remove", recordId),
   clearImportHistory: () => ipcRenderer.invoke("lyrics-card:import-history-clear"),
   replayImportHistory: (recordId) => ipcRenderer.invoke("lyrics-card:import-history-replay", recordId),

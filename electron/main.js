@@ -624,6 +624,26 @@ function registerDesktopIpc() {
     }
   }));
 
+  handle("lyrics-card:manual-save-create", (_event, input) => trackImportHistoryOperation(async () => {
+    try {
+      const record = await importHistoryStore.createManualSave(input, await readImportHistoryLimit());
+      return { ok: true, record };
+    } catch (error) {
+      console.error("[import-history] unable to create manual save", error instanceof Error ? error.message : "unknown error");
+      return { ok: false, code: typeof error?.code === "string" ? error.code : "history_write_failed" };
+    }
+  }));
+
+  handle("lyrics-card:manual-save-update", (_event, recordId, input) => trackImportHistoryOperation(async () => {
+    try {
+      const record = await importHistoryStore.updateManualSave(recordId, input, await readImportHistoryLimit());
+      return { ok: true, record };
+    } catch (error) {
+      console.error("[import-history] unable to update manual save", error instanceof Error ? error.message : "unknown error");
+      return { ok: false, code: typeof error?.code === "string" ? error.code : "history_write_failed" };
+    }
+  }));
+
   handle("lyrics-card:import-history-remove", (_event, recordId) => trackImportHistoryOperation(
     () => importHistoryStore.remove(recordId)
   ));
@@ -679,12 +699,11 @@ function registerDesktopIpc() {
       if (relocationToken !== undefined && !file) {
         return { ok: false, code: "file_reference_expired" };
       }
-      return {
-        ok: await importHistoryStore.commitReplay(recordId, {
+      const committed = await importHistoryStore.commitReplay(recordId, {
           limit: await readImportHistoryLimit(),
           file
-        })
-      };
+        });
+      return committed ? { ok: true } : { ok: false, code: "not_found" };
     } catch (error) {
       console.error("[import-history] unable to commit replay", error instanceof Error ? error.message : "unknown error");
       return { ok: false, code: typeof error?.code === "string" ? error.code : "history_write_failed" };
@@ -841,6 +860,14 @@ async function createImportHistoryReplayPayload(record, preparedFile) {
       platform: record.source.platform,
       songId: record.source.songId,
       pageUrl: record.source.pageUrl || ""
+    };
+  }
+  if (record.kind === "manual-save") {
+    return {
+      ok: true,
+      kind: "manual-save",
+      record: toPublicImportHistoryRecord(record),
+      snapshot: record.snapshot
     };
   }
 

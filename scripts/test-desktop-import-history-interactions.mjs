@@ -29,6 +29,7 @@ let nextSongId = 71_000;
 const keywordIds = new Map([["same platform song", "70001"]]);
 const songsById = new Map();
 const dialogMessages = [];
+const routeCounts = { parseSong: 0, resolveSearch: 0, localAudio: 0 };
 
 await mkdir(fixtureDirectory, { recursive: true });
 await writeFile(audioPath, Buffer.from("initial desktop audio fixture"));
@@ -83,6 +84,7 @@ async function attachRoutes(targetPage) {
   });
 
   await targetPage.route("**/api/resolve-searched-song", async (route) => {
+    routeCounts.resolveSearch += 1;
     const body = route.request().postDataJSON();
     const id = String(body.id ?? "");
     if (resolveShouldFail) {
@@ -116,6 +118,7 @@ async function attachRoutes(targetPage) {
   });
 
   await targetPage.route("**/api/parse-song", async (route) => {
+    routeCounts.parseSong += 1;
     const body = route.request().postDataJSON();
     const parsed = new URL(String(body.url));
     const id = parsed.searchParams.get("id") || "70001";
@@ -140,6 +143,7 @@ async function attachRoutes(targetPage) {
   });
 
   await targetPage.route("**/api/parse-local-audio", async (route) => {
+    routeCounts.localAudio += 1;
     if (localAudioShouldFail) {
       await route.fulfill({
         status: 200,
@@ -225,6 +229,32 @@ async function waitForLeadingHistoryKind(expected) {
     });
     return result?.records[0]?.kind === kind;
   }, expected, { timeout: 15_000 });
+}
+
+async function manualSaveRecords() {
+  return page.evaluate(async () => (await window.lyricsCardDesktop.listImportHistory({
+    offset: 0,
+    limit: 50,
+    source: "manual-save"
+  })).records);
+}
+
+async function waitForManualSaveState(expected) {
+  await page.waitForFunction((state) => (
+    document.querySelector('[data-testid="manual-save-button"]')?.getAttribute("data-manual-save-state") === state
+  ), expected, { timeout: 15_000 });
+}
+
+async function clickManualSave({ rapid = false } = {}) {
+  const button = page.getByTestId("manual-save-button");
+  if (rapid) {
+    await button.evaluate((node) => {
+      node.click();
+      node.click();
+    });
+  } else {
+    await button.click();
+  }
 }
 
 async function waitForPreferenceLimit(expected) {
@@ -337,10 +367,20 @@ async function editManualSong({
   await page.getByTestId("song-info-toggle").click();
   const editor = aside.getByTestId("song-info-editor");
   await editor.waitFor({ state: "visible" });
-  const textInputs = editor.locator('input:not([type="file"])');
-  await textInputs.nth(0).fill(title);
-  await textInputs.nth(1).fill(artist);
-  await textInputs.nth(2).fill(album);
+  const titleInput = editor.getByLabel("Title");
+  const artistInput = editor.getByLabel("Artist");
+  const albumInput = editor.getByLabel("Album");
+  await titleInput.fill(title);
+  await page.waitForTimeout(25);
+  await artistInput.fill(artist);
+  await page.waitForTimeout(25);
+  await albumInput.fill(album);
+  await page.waitForTimeout(25);
+  assert.deepEqual(
+    [await titleInput.inputValue(), await artistInput.inputValue(), await albumInput.inputValue()],
+    [title, artist, album],
+    "manual metadata inputs settle independently before commit"
+  );
   if (uploadPath) {
     await editor.locator('input[type="file"]').setInputFiles(uploadPath);
     await page.waitForFunction(() => {
@@ -350,6 +390,11 @@ async function editManualSong({
   }
   await editor.getByTestId("song-info-save").click();
   await aside.getByTestId("song-info-summary").waitFor({ state: "visible" });
+  if (title) {
+    await page.waitForFunction((expectedTitle) => (
+      document.querySelector('[data-testid="song-import-aside"] [data-testid="song-info-summary"] dd')?.textContent?.trim() === expectedTitle
+    ), title, { timeout: 15_000 });
+  }
 }
 
 try {
@@ -360,9 +405,13 @@ try {
   );
   assert.deepEqual(
     actionIds,
-    ["examples-button", "history-button", "clear-all-button", "settings-button"],
-    "desktop history entry is present in the required order"
+    ["examples-button", "history-button", "manual-save-button", "clear-all-button", "settings-button"],
+    "desktop actions use the required examples/history/manual-save/clear/settings order"
   );
+  const manualSaveButton = page.getByTestId("manual-save-button");
+  assert.equal(await manualSaveButton.locator("span").count(), 0, "manual save renders no visible text");
+  assert.ok((await manualSaveButton.getAttribute("aria-label"))?.trim(), "manual save has an accessible name");
+  assert.equal(await manualSaveButton.getAttribute("title"), await manualSaveButton.getAttribute("aria-label"));
 
   const emptySurface = await openHistory(0);
   await page.waitForFunction(() => document.activeElement?.getAttribute("data-testid") === "history-close-button");
@@ -395,6 +444,49 @@ try {
   assert.ok(historyBounds.left >= 0 && historyBounds.right <= historyBounds.viewport + 1, JSON.stringify(historyBounds));
   await closeHistoryWithEscape();
 
+  await electronApp.evaluate(({ BrowserWindow }) => {
+    BrowserWindow.getAllWindows()[0].setMinimumSize(600, 600);
+    BrowserWindow.getAllWindows()[0].setContentSize(720, 700, false);
+  });
+  await page.waitForFunction(() => window.innerWidth >= 718 && window.innerWidth <= 722);
+  const compactHeaderBounds = await page.locator('[data-stepper-heading-row="true"]').evaluate((row) => {
+    const heading = row.querySelector("h2");
+    const actions = row.querySelector('[data-testid="editor-header-actions"]');
+    const rowRect = row.getBoundingClientRect();
+    const headingRect = heading?.getBoundingClientRect();
+    const actionRect = actions?.getBoundingClientRect();
+    const buttons = [...(actions?.querySelectorAll("button") ?? [])].map((button) => {
+      const rect = button.getBoundingClientRect();
+      return { left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom, width: rect.width };
+    });
+    return {
+      viewport: window.innerWidth,
+      row: { left: rowRect.left, right: rowRect.right, top: rowRect.top, bottom: rowRect.bottom },
+      heading: headingRect && { left: headingRect.left, right: headingRect.right },
+      actions: actionRect && { left: actionRect.left, right: actionRect.right, top: actionRect.top, bottom: actionRect.bottom },
+      buttons
+    };
+  });
+  assert.ok(compactHeaderBounds.actions, JSON.stringify(compactHeaderBounds));
+  assert.ok(compactHeaderBounds.actions.left >= compactHeaderBounds.heading.right - 1, JSON.stringify(compactHeaderBounds));
+  assert.ok(compactHeaderBounds.actions.right <= compactHeaderBounds.viewport + 1, JSON.stringify(compactHeaderBounds));
+  assert.ok(compactHeaderBounds.actions.top >= compactHeaderBounds.row.top - 1, JSON.stringify(compactHeaderBounds));
+  assert.ok(compactHeaderBounds.actions.bottom <= compactHeaderBounds.row.bottom + 1, JSON.stringify(compactHeaderBounds));
+  assert.ok(compactHeaderBounds.buttons.every((button) => button.width <= 37), JSON.stringify(compactHeaderBounds));
+  for (let index = 1; index < compactHeaderBounds.buttons.length; index += 1) {
+    assert.ok(
+      compactHeaderBounds.buttons[index - 1].right <= compactHeaderBounds.buttons[index].left + 0.5,
+      JSON.stringify(compactHeaderBounds)
+    );
+  }
+  await manualSaveButton.focus();
+  assert.equal(await page.evaluate(() => document.activeElement?.getAttribute("data-testid")), "manual-save-button");
+  await electronApp.evaluate(({ BrowserWindow }) => {
+    BrowserWindow.getAllWindows()[0].setContentSize(1000, 700, false);
+    BrowserWindow.getAllWindows()[0].setMinimumSize(1000, 700);
+  });
+  await page.waitForFunction(() => window.innerWidth >= 998 && window.innerWidth <= 1002);
+
   assert.equal(
     await page.getByTestId("import-history-limit").evaluate((node) => Boolean(node.closest("[inert]"))),
     true,
@@ -405,6 +497,138 @@ try {
   await page.getByTestId("import-history-limit").selectOption("unlimited");
   await waitForPreferenceLimit("unlimited");
   await closeSettings();
+
+  await waitForManualSaveState("unavailable");
+  await clickManualSave();
+  await page.getByTestId("app-toast").filter({ hasText: "cannot be saved right now" }).waitFor({
+    state: "visible",
+    timeout: 15_000
+  });
+  assert.equal(await historyTotal(), 0, "the default blank document cannot create a manual save");
+
+  await editManualSong({ title: "Manual archive original" });
+  await waitForManualSaveState("create");
+  await clickManualSave({ rapid: true });
+  await waitForHistoryTotal(1);
+  await waitForManualSaveState("current");
+  let manualRecords = await manualSaveRecords();
+  assert.equal(manualRecords.length, 1, "a rapid double click creates exactly one manual save");
+  const firstManualId = manualRecords[0].id;
+  let manualDocument = JSON.parse(await readFile(historyPath, "utf8"));
+  assert.equal(manualDocument.schemaVersion, 2);
+  const firstManualInternal = manualDocument.records.find((record) => record.id === firstManualId);
+  assert.equal(firstManualInternal?.kind, "manual-save");
+  assert.equal(firstManualInternal?.snapshot?.title, "Manual archive original");
+  const firstManualCreatedAt = firstManualInternal.createdAt;
+  const unchangedDisk = await readFile(historyPath, "utf8");
+  await clickManualSave();
+  await page.getByTestId("app-toast").filter({ hasText: "already up to date" }).waitFor({
+    state: "visible",
+    timeout: 15_000
+  });
+  await page.waitForTimeout(120);
+  assert.equal(await readFile(historyPath, "utf8"), unchangedDisk, "an unchanged document does not write history");
+
+  await editManualSong({ title: "Manual archive updated" });
+  await waitForManualSaveState("update");
+  await clickManualSave();
+  await waitForManualSaveState("current");
+  manualRecords = await manualSaveRecords();
+  assert.equal(manualRecords.length, 1);
+  assert.equal(manualRecords[0].id, firstManualId, "editing updates the bound manual save ID");
+  manualDocument = JSON.parse(await readFile(historyPath, "utf8"));
+  const updatedManualInternal = manualDocument.records.find((record) => record.id === firstManualId);
+  assert.equal(updatedManualInternal.createdAt, firstManualCreatedAt, "manual updates retain createdAt");
+  assert.ok(updatedManualInternal.lastUsedAt >= firstManualInternal.lastUsedAt);
+  assert.equal(updatedManualInternal.snapshot.title, "Manual archive updated");
+
+  await closeThroughDesktopApi();
+  await launchApp();
+  await waitForHistoryTotal(1);
+  const manualRestartSurface = await openHistory(1);
+  const restartedManualCard = manualRestartSurface.locator('[data-history-kind="manual-save"]');
+  assert.equal(await restartedManualCard.count(), 1, "manual saves survive a desktop restart");
+  assert.match(await restartedManualCard.textContent(), /Manual archive updated/);
+  assert.equal(await restartedManualCard.locator('[data-testid^="history-relocate-"]').count(), 0);
+  assert.match(await restartedManualCard.locator('[data-testid^="history-replay-"]').textContent(), /Load save/i);
+  const routeCountsBeforeManualReplay = { ...routeCounts };
+  await replayCard("manual-save");
+  await manualRestartSurface.waitFor({ state: "hidden", timeout: 15_000 });
+  assert.deepEqual(routeCounts, routeCountsBeforeManualReplay, "manual-save replay performs no parse/network request");
+  assert.equal(await currentSongTitle(), "Manual archive updated");
+  await waitForManualSaveState("current");
+
+  await editManualSong({ title: "Manual archive replay update" });
+  await waitForManualSaveState("update");
+  await clickManualSave();
+  await waitForManualSaveState("current");
+  manualRecords = await manualSaveRecords();
+  assert.equal(manualRecords.length, 1);
+  assert.equal(manualRecords[0].id, firstManualId, "a loaded manual save remains bound for updates");
+
+  assert.equal(
+    await page.evaluate((recordId) => window.lyricsCardDesktop.removeImportHistory(recordId), firstManualId),
+    true
+  );
+  await waitForHistoryTotal(0);
+  await editManualSong({ title: "Stale binding recovery" });
+  await clickManualSave();
+  await page.getByTestId("app-toast").filter({ hasText: "no longer exists" }).waitFor({
+    state: "visible",
+    timeout: 15_000
+  });
+  await waitForManualSaveState("create");
+  assert.equal(await historyTotal(), 0, "not-found does not silently create a replacement in the same click");
+  await clickManualSave();
+  await waitForHistoryTotal(1);
+  await waitForManualSaveState("current");
+  manualRecords = await manualSaveRecords();
+  assert.notEqual(manualRecords[0].id, firstManualId, "the next explicit save creates a new record after not-found");
+
+  const boundDeleteSurface = await openHistory(1);
+  await boundDeleteSurface.locator('[data-history-kind="manual-save"] [data-testid^="history-remove-"]').click();
+  await waitForHistoryTotal(0);
+  await closeHistoryWithEscape();
+  await waitForManualSaveState("create");
+  await clickManualSave();
+  await waitForHistoryTotal(1);
+  await waitForManualSaveState("current");
+
+  await openHistory(1);
+  await page.getByTestId("history-clear-all").click();
+  await waitForHistoryTotal(0);
+  await closeHistoryWithEscape();
+  await waitForManualSaveState("create");
+  await clickManualSave();
+  await waitForHistoryTotal(1);
+  await waitForManualSaveState("current");
+
+  await openHistory(1);
+  await page.getByTestId("history-clear-all").click();
+  await waitForHistoryTotal(0);
+  await closeHistoryWithEscape();
+  await parseLink("70991");
+  await waitForHistoryTotal(1);
+  const ordinaryReplaySurface = await openHistory(1);
+  await replayCard("link");
+  await ordinaryReplaySurface.waitFor({ state: "hidden", timeout: 15_000 });
+  await waitForManualSaveState("create");
+  await clickManualSave();
+  await waitForHistoryTotal(2);
+  const ordinaryReplayRecords = await page.evaluate(async () => (await window.lyricsCardDesktop.listImportHistory({
+    offset: 0,
+    limit: 10,
+    source: "all"
+  })).records);
+  assert.deepEqual(
+    ordinaryReplayRecords.map((record) => record.kind).sort(),
+    ["link", "manual-save"],
+    "saving after an ordinary history replay creates a manual save and retains the source record"
+  );
+  await openHistory(2);
+  await page.getByTestId("history-clear-all").click();
+  await waitForHistoryTotal(0);
+  await closeHistoryWithEscape();
 
   await parseLink();
   await waitForHistoryTotal(1);
@@ -477,7 +701,7 @@ try {
 
   await performSearch("restart persistence", { waitForTotal: 1 });
   const persistedBeforeRestart = JSON.parse(await readFile(historyPath, "utf8"));
-  assert.equal(persistedBeforeRestart.schemaVersion, 1);
+  assert.equal(persistedBeforeRestart.schemaVersion, 2);
   assert.equal(persistedBeforeRestart.records.length, 1);
   await closeThroughDesktopApi();
 
@@ -576,12 +800,21 @@ try {
   await manualSurface.waitFor({ state: "hidden", timeout: 15_000 });
   assert.equal(await currentSongTitle(), "Manual cover history");
 
-  const failureSurface = await openHistory(beforeOrdinaryEditCount + 2);
+  await openHistory(beforeOrdinaryEditCount + 2);
   await page.getByTestId("history-clear-all").click();
   await waitForHistoryTotal(0);
   await closeHistoryWithEscape();
   await rm(historyPath, { force: true });
   await mkdir(historyPath);
+
+  await waitForManualSaveState("create");
+  await clickManualSave();
+  await page.getByTestId("app-toast").filter({ hasText: "manual save could not be written" }).waitFor({
+    state: "visible",
+    timeout: 15_000
+  });
+  await waitForManualSaveState("create");
+  assert.equal(await historyTotal(), 0, "a failed manual-save create does not bind or advance the saved revision");
 
   await performSearch("history write failure");
   await page.getByTestId("app-toast").filter({ hasText: "history could not be saved" }).waitFor({
@@ -593,11 +826,39 @@ try {
 
   await rm(historyPath, { recursive: true, force: true });
   await performSearch("history write recovery", { waitForTotal: 1 });
+  await clickManualSave();
+  await waitForHistoryTotal(2);
+  await waitForManualSaveState("current");
+  const [pendingCloseManual] = await manualSaveRecords();
+  await editManualSong({ title: "Manual update pending close" });
+  await waitForManualSaveState("update");
+  await rm(historyPath, { force: true });
+  await mkdir(historyPath);
+  await clickManualSave();
+  await page.getByTestId("app-toast").filter({ hasText: "manual save could not be written" }).waitFor({
+    state: "visible",
+    timeout: 15_000
+  });
+  await waitForManualSaveState("update");
+  await rm(historyPath, { recursive: true, force: true });
+  await page.locator('[data-step-id="lyrics"]').click();
+  const pendingCloseLyrics = "pending close archive line\n".repeat(4_000);
+  await page.getByTestId("lyrics-editor-original").fill(pendingCloseLyrics);
+  await waitForManualSaveState("update");
+  await clickManualSave();
   await closeThroughDesktopApi();
+  const pendingCloseHistory = JSON.parse(await readFile(historyPath, "utf8"));
+  const durablePendingCloseRecord = pendingCloseHistory.records.find((record) => record.id === pendingCloseManual.id);
+  assert.equal(durablePendingCloseRecord?.snapshot?.title, "Manual update pending close");
+  assert.equal(
+    durablePendingCloseRecord?.snapshot?.lyrics,
+    pendingCloseLyrics,
+    "window close drains the in-flight manual-save update before shutdown"
+  );
 
   process.stdout.write(`${JSON.stringify({
     ok: true,
-    historyVersion: 1,
+    historyVersion: 2,
     dialogs: dialogMessages.length,
     covered: [
       "desktop-only entry and surface focus",
@@ -607,6 +868,9 @@ try {
       "delete, clear, restart persistence",
       "local changed, missing, rejected relocate, and committed relocate",
       "cover-only/manual cover and ordinary-edit exclusion",
+      "manual create/update/no-op, restart replay, binding deletion/clear/not-found",
+      "manual replay without parse network, ordinary replay creates a distinct save",
+      "manual create/update failures, saved-revision retry, and pending-close drain",
       "remote failure and write-failure non-rollback"
     ]
   }, null, 2)}\n`);

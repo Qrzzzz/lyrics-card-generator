@@ -94,6 +94,7 @@ export function LyricEditor() {
   const historyButtonRef = useRef<HTMLButtonElement | null>(null);
   const settingsButtonRef = useRef<HTMLButtonElement | null>(null);
   const surfaceReturnFocusRef = useRef<HTMLButtonElement | null>(null);
+  const aiTranslationBusyRef = useRef(false);
   const invalidateDocumentAsyncRef = useRef<(
     reason?: "document" | "ai-start"
   ) => TranslationValue | undefined>(() => undefined);
@@ -180,6 +181,8 @@ export function LyricEditor() {
     clearTransitionKey,
     activeExportSnapshot,
     documentRevision,
+    isDocumentTransactionPending,
+    manualSaveButtonState,
     beginSongImport,
     clearAllContent,
     handleStyleChange,
@@ -200,6 +203,9 @@ export function LyricEditor() {
     applyFetchedLyrics,
     loadExample,
     reimportHistory,
+    saveManualArchive,
+    handleHistoryRecordRemoved,
+    handleHistoryCleared,
     completeAndExport
   } = useEditorActions({
     parsedState,
@@ -228,7 +234,8 @@ export function LyricEditor() {
     onCloseExamples: closeExamples,
     onCloseHistory: closeHistory,
     onClearTransientState: () => setFontSchemePreview(null),
-    onInvalidateDocument: (reason) => invalidateDocumentAsyncRef.current(reason)
+    onInvalidateDocument: (reason) => invalidateDocumentAsyncRef.current(reason),
+    isManualSaveBlocked: () => aiTranslationBusyRef.current
   });
 
   useSongCoverObjectUrlLifecycle(
@@ -333,6 +340,7 @@ export function LyricEditor() {
     onNotify: showToast,
     onRequireSettings: () => openSettings("ai")
   });
+  aiTranslationBusyRef.current = isAITranslating;
   invalidateDocumentAsyncRef.current = invalidateAITranslation;
 
   function openSettings(tab?: SettingsTabId) {
@@ -454,6 +462,8 @@ export function LyricEditor() {
                 onClose={closeHistory}
                 onReplay={reimportHistory}
                 onNotify={showToast}
+                onRecordRemoved={handleHistoryRecordRemoved}
+                onHistoryCleared={handleHistoryCleared}
               />
             ) : null}
 
@@ -512,6 +522,9 @@ export function LyricEditor() {
                           placement="stepper"
                           onOpenExamples={() => setActiveSurface("examples")}
                           onOpenHistory={isDesktopShell ? () => setActiveSurface("history") : undefined}
+                          onManualSave={isDesktopShell ? () => void saveManualArchive() : undefined}
+                          manualSaveState={manualSaveButtonState}
+                          manualSaveDisabled={isAITranslating || isDocumentTransactionPending}
                           onClearAll={clearAllContent}
                           onOpenSettings={openSettings}
                           examplesButtonRef={examplesButtonRef}

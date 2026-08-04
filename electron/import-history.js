@@ -2,7 +2,8 @@ const crypto = require("node:crypto");
 const defaultFs = require("node:fs/promises");
 const defaultPath = require("node:path");
 
-const IMPORT_HISTORY_SCHEMA_VERSION = 1;
+const IMPORT_HISTORY_SCHEMA_VERSION = 2;
+const LEGACY_IMPORT_HISTORY_SCHEMA_VERSION = 1;
 const DEFAULT_IMPORT_HISTORY_LIMIT = 10;
 const IMPORT_HISTORY_LIMITS = new Set([5, 10, "unlimited"]);
 const MAX_RECORD_BYTES = 512 * 1024;
@@ -11,7 +12,7 @@ const MAX_IMAGE_BYTES = 20 * 1024 * 1024;
 const MAX_TIMESTAMP_MS = 8_640_000_000_000_000;
 const AUDIO_EXTENSIONS = new Set([".mp3", ".flac"]);
 const IMAGE_EXTENSIONS = new Set([".png", ".jpg", ".jpeg", ".webp", ".gif"]);
-const HISTORY_KINDS = new Set(["link", "search", "local-audio", "manual-cover"]);
+const HISTORY_KINDS = new Set(["link", "search", "local-audio", "manual-cover", "manual-save"]);
 const SONG_SOURCES = new Set(["qq", "netease", "apple", "spotify", "unknown"]);
 
 class ImportHistoryStore {
@@ -86,6 +87,9 @@ class ImportHistoryStore {
 
   upsert(candidate, limit = DEFAULT_IMPORT_HISTORY_LIMIT) {
     return this.#mutate((document) => {
+      if (candidate?.kind === "manual-save") {
+        throw historyError("invalid_kind");
+      }
       const timestamp = this.now();
       const normalized = normalizeImportHistoryRecord({
         ...candidate,
@@ -105,6 +109,44 @@ class ImportHistoryStore {
         record,
         ...document.records.filter((existing) => existing.id !== record.id && importHistoryDedupeKey(existing, this.path) !== key)
       ];
+      return {
+        document: withHistoryLimit({ schemaVersion: IMPORT_HISTORY_SCHEMA_VERSION, records }, limit),
+        result: toPublicImportHistoryRecord(record)
+      };
+    });
+  }
+
+  createManualSave(candidate, limit = DEFAULT_IMPORT_HISTORY_LIMIT) {
+    return this.#mutate((document) => {
+      const timestamp = this.now();
+      const record = normalizeManualSaveWriteRecord(candidate, {
+        id: this.createId(),
+        createdAt: timestamp,
+        lastUsedAt: timestamp
+      }, this.path);
+      if (!record) throw historyError("invalid_snapshot");
+      const records = [record, ...document.records];
+      return {
+        document: withHistoryLimit({ schemaVersion: IMPORT_HISTORY_SCHEMA_VERSION, records }, limit),
+        result: toPublicImportHistoryRecord(record)
+      };
+    });
+  }
+
+  updateManualSave(recordId, candidate, limit = DEFAULT_IMPORT_HISTORY_LIMIT) {
+    return this.#mutate((document) => {
+      const id = normalizeId(recordId);
+      const existing = id ? document.records.find((record) => record.id === id) : null;
+      if (!existing) throw historyError("not_found");
+      if (existing.kind !== "manual-save") throw historyError("invalid_kind");
+
+      const record = normalizeManualSaveWriteRecord(candidate, {
+        id: existing.id,
+        createdAt: existing.createdAt,
+        lastUsedAt: this.now()
+      }, this.path);
+      if (!record) throw historyError("invalid_snapshot");
+      const records = [record, ...document.records.filter((current) => current.id !== existing.id)];
       return {
         document: withHistoryLimit({ schemaVersion: IMPORT_HISTORY_SCHEMA_VERSION, records }, limit),
         result: toPublicImportHistoryRecord(record)
@@ -333,20 +375,23 @@ function emptyHistoryDocument() {
 }
 
 function normalizeImportHistoryDocument(input, path = defaultPath) {
-  if (!isObject(input) || input.schemaVersion !== IMPORT_HISTORY_SCHEMA_VERSION || !Array.isArray(input.records)) {
+  if (
+    !isObject(input) ||
+    (input.schemaVersion !== LEGACY_IMPORT_HISTORY_SCHEMA_VERSION && input.schemaVersion !== IMPORT_HISTORY_SCHEMA_VERSION) ||
+    !Array.isArray(input.records)
+  ) {
     return null;
   }
   const records = [];
-  const dedupe = new Set();
+  const recordIds = new Set();
   for (const candidate of input.records) {
+    if (input.schemaVersion === LEGACY_IMPORT_HISTORY_SCHEMA_VERSION && candidate?.kind === "manual-save") continue;
     const record = normalizeImportHistoryRecord(candidate, path);
     if (!record) continue;
-    const key = importHistoryDedupeKey(record, path);
-    if (dedupe.has(key)) continue;
-    dedupe.add(key);
+    if (recordIds.has(record.id)) continue;
+    recordIds.add(record.id);
     records.push(record);
   }
-  records.sort((left, right) => right.lastUsedAt - left.lastUsedAt);
   return { schemaVersion: IMPORT_HISTORY_SCHEMA_VERSION, records };
 }
 
@@ -356,7 +401,13 @@ function normalizeImportHistoryRecord(input, path = defaultPath) {
   const createdAt = normalizeTimestamp(input.createdAt);
   const lastUsedAt = normalizeTimestamp(input.lastUsedAt);
   if (!id || createdAt === null || lastUsedAt === null) return null;
-  const display = normalizeDisplay(input.display, input.kind);
+  let snapshot;
+  const display = input.kind === "manual-save"
+    ? (() => {
+        snapshot = normalizeManualSnapshot(input.snapshot, "manual-save");
+        return snapshot ? normalizeManualSaveDisplay(snapshot) : null;
+      })()
+    : normalizeDisplay(input.display, input.kind);
   if (!display) return null;
 
   let source;
@@ -364,10 +415,10 @@ function normalizeImportHistoryRecord(input, path = defaultPath) {
     source = normalizeLinkSource(input.source ?? input);
   } else if (input.kind === "search") {
     source = normalizeSearchSource(input.source ?? input);
-  } else {
+  } else if (input.kind !== "manual-save") {
     source = normalizeFileSource(input.source ?? input.file, input.kind, path);
   }
-  if (!source) return null;
+  if (input.kind !== "manual-save" && !source) return null;
 
   const record = {
     id,
@@ -375,11 +426,13 @@ function normalizeImportHistoryRecord(input, path = defaultPath) {
     createdAt,
     lastUsedAt: Math.max(createdAt, lastUsedAt),
     display,
-    source
+    ...(source ? { source } : {})
   };
   if (input.kind === "manual-cover") {
-    const snapshot = normalizeManualSnapshot(input.snapshot);
+    snapshot = normalizeManualSnapshot(input.snapshot, "manual-cover");
     if (!snapshot) return null;
+    record.snapshot = snapshot;
+  } else if (input.kind === "manual-save") {
     record.snapshot = snapshot;
   }
   return Buffer.byteLength(JSON.stringify(record), "utf8") <= MAX_RECORD_BYTES ? record : null;
@@ -392,7 +445,7 @@ function normalizeDisplay(input, kind) {
   const album = boundedString(input.album, 512);
   const source = boundedString(input.source, 64).toLowerCase() || "unknown";
   const remoteCoverUrl = normalizeHttpUrl(input.remoteCoverUrl);
-  if (!title && !artist && kind !== "manual-cover") return null;
+  if (!title && !artist && kind !== "manual-cover" && kind !== "manual-save") return null;
   return {
     title,
     artist,
@@ -444,12 +497,12 @@ function normalizeFileSource(input, kind, path = defaultPath) {
   };
 }
 
-function normalizeManualSnapshot(input) {
+function normalizeManualSnapshot(input, kind = "manual-cover") {
   if (!isObject(input)) return null;
   const title = boundedString(input.title, 512);
   const artist = boundedString(input.artist, 512);
   const source = SONG_SOURCES.has(input.source) ? input.source : "unknown";
-  return {
+  const snapshot = {
     title,
     artist,
     album: boundedString(input.album, 512),
@@ -460,9 +513,81 @@ function normalizeManualSnapshot(input) {
     translationText: boundedString(input.translationText, 120_000, false),
     translationEnabled: input.translationEnabled === true
   };
+  if (kind === "manual-save") {
+    snapshot.explicit = input.explicit === true;
+    snapshot.originalCoverUrl = normalizeHttpUrl(input.originalCoverUrl);
+    snapshot.coverUrl = normalizeHttpUrl(input.coverUrl);
+    snapshot.parseMethod = normalizeParseMethod(input.parseMethod);
+    if (!isMeaningfulManualSaveSnapshot(snapshot)) return null;
+  }
+  return snapshot;
+}
+
+function normalizeManualSaveWriteRecord(candidate, metadata, path = defaultPath) {
+  if (!isObject(candidate) || !manualSaveSnapshotFieldsFit(candidate.snapshot)) return null;
+  return normalizeImportHistoryRecord({
+    kind: "manual-save",
+    id: metadata.id,
+    createdAt: metadata.createdAt,
+    lastUsedAt: metadata.lastUsedAt,
+    snapshot: candidate.snapshot
+  }, path);
+}
+
+function normalizeManualSaveDisplay(snapshot) {
+  return normalizeDisplay({
+    title: snapshot.title,
+    artist: snapshot.artist,
+    album: snapshot.album,
+    source: snapshot.source,
+    remoteCoverUrl: snapshot.originalCoverUrl || snapshot.coverUrl
+  }, "manual-save");
+}
+
+function manualSaveSnapshotFieldsFit(input) {
+  if (!isObject(input)) return false;
+  const limits = {
+    title: 512,
+    artist: 512,
+    album: 512,
+    originalCoverUrl: 8192,
+    coverUrl: 8192,
+    originalUrl: 8192,
+    finalUrl: 8192,
+    parseMethod: 128,
+    lyrics: 120_000,
+    translationText: 120_000
+  };
+  return Object.entries(limits).every(([field, limit]) => (
+    input[field] === undefined || (typeof input[field] === "string" && input[field].length <= limit)
+  ));
+}
+
+function isMeaningfulManualSaveSnapshot(snapshot) {
+  return Boolean(
+    snapshot.source !== "unknown" ||
+    snapshot.explicit ||
+    snapshot.title ||
+    snapshot.artist ||
+    snapshot.album ||
+    snapshot.originalCoverUrl ||
+    snapshot.coverUrl ||
+    snapshot.originalUrl ||
+    snapshot.finalUrl ||
+    snapshot.parseMethod ||
+    snapshot.lyrics.trim() ||
+    snapshot.translationText.trim() ||
+    snapshot.translationEnabled
+  );
+}
+
+function normalizeParseMethod(value) {
+  const method = boundedString(value, 128);
+  return /^[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}$/.test(method) ? method : "";
 }
 
 function importHistoryDedupeKey(record, path = defaultPath) {
+  if (record.kind === "manual-save") return `manual-save:${record.id}`;
   if (record.kind === "search") {
     return `song:${record.source.platform}:${record.source.songId.toLowerCase()}`;
   }
@@ -531,7 +656,7 @@ function toPublicImportHistoryRecord(record) {
     detail = hostnameForUrl(record.source.finalUrl || record.source.normalizedUrl);
   } else if (record.kind === "search") {
     detail = hostnameForUrl(record.source.pageUrl) || record.source.platform;
-  } else {
+  } else if (record.kind !== "manual-save") {
     detail = record.source.fileName;
   }
   return {
@@ -710,7 +835,8 @@ function normalizeAbsolutePath(value, path = defaultPath) {
 }
 
 function historySearchText(record) {
-  const source = record.source;
+  const source = record.source ?? {};
+  const snapshot = record.snapshot ?? {};
   return normalizeSearchText([
     record.display.title,
     record.display.artist,
@@ -724,7 +850,8 @@ function historySearchText(record) {
     source.query,
     source.platform,
     source.songId,
-    source.pageUrl
+    source.pageUrl,
+    snapshot.parseMethod
   ].filter(Boolean).join("\n"));
 }
 

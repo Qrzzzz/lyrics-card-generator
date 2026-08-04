@@ -1,8 +1,9 @@
 import type { SongSource } from "@/lib/types";
 
-export type ImportHistoryKind = "link" | "search" | "local-audio" | "manual-cover";
+export type ImportHistoryKind = "link" | "search" | "local-audio" | "manual-cover" | "manual-save";
 export type ImportHistoryFileKind = Extract<ImportHistoryKind, "local-audio" | "manual-cover">;
 export type ImportHistoryLimit = 5 | 10 | "unlimited";
+export type ManualSaveButtonState = "create" | "update" | "current" | "saving" | "unavailable";
 
 export type ImportHistoryRecord = {
   id: string;
@@ -96,11 +97,19 @@ export type ImportHistoryManualSnapshot = {
   artist: string;
   album?: string;
   source: SongSource;
+  explicit?: boolean;
+  originalCoverUrl?: string;
+  coverUrl?: string;
   originalUrl?: string;
   finalUrl?: string;
+  parseMethod?: string;
   lyrics: string;
   translationText: string;
   translationEnabled: boolean;
+};
+
+export type ImportHistoryManualSaveInput = {
+  snapshot: ImportHistoryManualSnapshot;
 };
 
 export type ImportHistoryWriteResult =
@@ -150,6 +159,12 @@ export type ImportHistoryReplayResult =
       file: ImportHistoryReplayFile;
       snapshot: ImportHistoryManualSnapshot;
       relocationToken?: string;
+    }
+  | {
+      ok: true;
+      kind: "manual-save";
+      record: ImportHistoryRecord;
+      snapshot: ImportHistoryManualSnapshot;
     }
   | {
       ok: false;

@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v5.9.0.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v5.9.1.zh-CN.md">发布说明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">在线 Web Lite 版</a> ·
   <a href="./docs/desktop.md">桌面维护文档</a> ·
   <a href="#主要功能">主要功能</a> ·
@@ -49,23 +49,23 @@
 
 请前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下载最新版：
 
-* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 5.9.0.exe`
-* 不想安装时可下载便携版：`Lyrics Card Generator-5.9.0-portable.exe`
+* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 5.9.1.exe`
+* 不想安装时可下载便携版：`Lyrics Card Generator-5.9.1-portable.exe`
 
 安装版适合长期使用；便携版适合临时运行、测试或放在移动硬盘中使用。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v5.9.0 更新重点
+### v5.9.1 更新重点
 
-* Windows 桌面版新增“导入/解析历史”，只记录成功提交的链接、歌曲搜索、本地 MP3／FLAC 和本地封面导入；普通编辑、示例、清空和导出不会进入历史。
-* 全屏历史页支持搜索、来源筛选、分批加载、重新导入、删除和清空；本地文件移动后可重新定位，文件变化或缺失时不会破坏当前文档。
-* 历史由主进程安全持久化，默认保留最近 10 条，也可设为 5 条或无限。Web Lite 保持原有界面与行为，不新增浏览器端历史。
+* Windows 桌面版顶部新增手动存档按钮；首次保存建立一条存档，继续编辑后再次保存会更新同一条记录。
+* 手动存档可在历史页筛选并载入，只保存歌词、译文和歌曲文字等语义内容，不保存样式、设置、导出图片、本地路径或敏感配置。
+* 这是明确触发的手动保存，不是自动保存，也不新增 `Ctrl+S` 快捷键。Web Lite 保持原有界面与行为。
 
 ## 🌐 多语言发布说明
 
 GitHub Release 默认展示简体中文摘要，完整说明见：
-[简体中文](./docs/releases/v5.9.0.zh-CN.md) · [繁體中文](./docs/releases/v5.9.0.zh-TW.md) · [English](./docs/releases/v5.9.0.en.md) · [Français](./docs/releases/v5.9.0.fr.md) · [日本語](./docs/releases/v5.9.0.ja.md) · [Español](./docs/releases/v5.9.0.es.md)
+[简体中文](./docs/releases/v5.9.1.zh-CN.md) · [繁體中文](./docs/releases/v5.9.1.zh-TW.md) · [English](./docs/releases/v5.9.1.en.md) · [Français](./docs/releases/v5.9.1.fr.md) · [日本語](./docs/releases/v5.9.1.ja.md) · [Español](./docs/releases/v5.9.1.es.md)
 
 <a id="主要功能"></a>
 

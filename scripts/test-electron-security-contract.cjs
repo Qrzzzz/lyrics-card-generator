@@ -92,6 +92,16 @@ assert.match(
   /commitImportHistoryReplay: \(recordId, relocationToken\)[\s\S]*?"lyrics-card:import-history-replay-commit"[\s\S]*?recordId,[\s\S]*?relocationToken/,
   "relocation finalization exposes only a record id and opaque main-process token"
 );
+assert.match(preloadSource, /createManualSave: \(input\) => ipcRenderer\.invoke\("lyrics-card:manual-save-create", input\)/);
+assert.match(
+  preloadSource,
+  /updateManualSave: \(recordId, input\) => ipcRenderer\.invoke\("lyrics-card:manual-save-update", recordId, input\)/
+);
+assert.doesNotMatch(
+  preloadSource,
+  /(?:createManualSave|updateManualSave): \([^)]*(?:path|createdAt|lastUsedAt)/,
+  "manual saves expose no renderer-selected path or timestamp"
+);
 
 assert.match(
   mainSource,
@@ -128,6 +138,24 @@ assert.match(
   mainSource,
   /handle\("lyrics-card:import-history-record", \(event, input\) => trackImportHistoryOperation\(/,
   "history writes are tracked before their first asynchronous step"
+);
+assert.match(
+  mainSource,
+  /handle\("lyrics-card:manual-save-create", \(_event, input\) => trackImportHistoryOperation\([\s\S]*?importHistoryStore\.createManualSave/,
+  "manual save creation participates in shutdown draining"
+);
+assert.match(
+  mainSource,
+  /handle\("lyrics-card:manual-save-update", \(_event, recordId, input\) => trackImportHistoryOperation\([\s\S]*?importHistoryStore\.updateManualSave/,
+  "manual save updates participate in shutdown draining"
+);
+const manualReplayStart = replayPayloadSource.indexOf('record.kind === "manual-save"');
+const manualReplayEnd = replayPayloadSource.indexOf("try {", manualReplayStart);
+assert.ok(manualReplayStart >= 0 && manualReplayEnd > manualReplayStart);
+assert.doesNotMatch(
+  replayPayloadSource.slice(manualReplayStart, manualReplayEnd),
+  /readValidatedImportFile|fetch\(|source\.path/,
+  "manual save replay returns only the validated stored snapshot without file or network access"
 );
 assert.match(
   mainSource,

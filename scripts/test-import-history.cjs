@@ -3,6 +3,7 @@ const fs = require("node:fs/promises");
 const os = require("node:os");
 const path = require("node:path");
 const {
+  IMPORT_HISTORY_SCHEMA_VERSION,
   ImportHistoryStore,
   importHistoryDedupeKey,
   normalizeImportHistoryDocument,
@@ -140,11 +141,37 @@ async function main() {
     schemaVersion: 1,
     records: [link, search, { invalid: true }]
   });
-  assert.equal(normalizedDocument.records.length, 1, "normalization drops invalid and duplicate records");
+  assert.deepEqual(
+    normalizedDocument.records.map((record) => record.id),
+    [link.id, search.id],
+    "migration drops invalid entries without merging distinct legacy records that share a semantic key"
+  );
+  assert.equal(normalizedDocument.schemaVersion, 2);
   assert.equal(normalizeImportHistoryDocument({ schemaVersion: 99, records: [] }), null);
   assert.equal(withHistoryLimit({ schemaVersion: 1, records: Array(12).fill(link) }, 5).records.length, 5);
   assert.equal(withHistoryLimit({ schemaVersion: 1, records: Array(12).fill(link) }, 10).records.length, 10);
   assert.equal(withHistoryLimit({ schemaVersion: 1, records: Array(12).fill(link) }, "unlimited").records.length, 12);
+
+  const legacySecond = normalizeImportHistoryRecord({
+    ...search,
+    id: "legacy-search",
+    createdAt: timestamp + 1,
+    lastUsedAt: timestamp + 2,
+    source: {
+      ...search.source,
+      songId: "54321",
+      pageUrl: "https://music.163.com/song?id=54321"
+    }
+  });
+  const legacyDocument = { schemaVersion: 1, records: [link, legacySecond] };
+  const migrated = normalizeImportHistoryDocument(legacyDocument);
+  assert.equal(migrated.schemaVersion, IMPORT_HISTORY_SCHEMA_VERSION);
+  assert.deepEqual(
+    migrated.records,
+    [link, legacySecond],
+    "v1 to v2 migration preserves the four legacy kinds, IDs, order, timestamps, and normalized content"
+  );
+  assert.deepEqual(normalizeImportHistoryDocument(migrated), migrated, "v1 to v2 migration is idempotent");
 
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "lyrics-card-history-test-"));
   try {
@@ -190,7 +217,116 @@ async function main() {
     await store.flush();
 
     const persisted = JSON.parse(await fs.readFile(target, "utf8"));
-    assert.deepEqual(persisted, { schemaVersion: 1, records: [] }, "store persists schema-versioned UTF-8 JSON");
+    assert.deepEqual(persisted, { schemaVersion: 2, records: [] }, "store persists schema-versioned UTF-8 JSON");
+
+    const manualTarget = path.join(root, "app-data", "manual-save-history.json");
+    let manualId = 0;
+    let manualNow = timestamp + 100;
+    const manualStore = new ImportHistoryStore({
+      filePath: manualTarget,
+      now: () => ++manualNow,
+      createId: () => `manual-${++manualId}`
+    });
+    const firstManual = await manualStore.createManualSave(manualSaveCandidate("Same title", "First lyrics"), "unlimited");
+    const firstCreatedAt = (await manualStore.get(firstManual.id)).createdAt;
+    const secondManual = await manualStore.createManualSave(manualSaveCandidate("Same title", "Second lyrics"), "unlimited");
+    assert.notEqual(firstManual.id, secondManual.id);
+    assert.equal((await manualStore.stats()).total, 2, "same-title manual saves coexist without dedupe");
+
+    const updatedManual = await manualStore.updateManualSave(
+      firstManual.id,
+      manualSaveCandidate("Updated title", "Updated lyrics"),
+      "unlimited"
+    );
+    const updatedInternal = await manualStore.get(firstManual.id);
+    const updatedList = await manualStore.list({ offset: 0, limit: 10 });
+    assert.equal(updatedManual.id, firstManual.id);
+    assert.equal(updatedInternal.createdAt, firstCreatedAt, "manual save updates retain createdAt");
+    assert.ok(updatedInternal.lastUsedAt > firstCreatedAt, "manual save updates advance lastUsedAt");
+    assert.equal(updatedList.records[0].id, firstManual.id, "updated manual saves move to the top");
+    assert.equal(updatedList.total, 2, "manual save updates do not change the total");
+
+    await assert.rejects(
+      manualStore.updateManualSave("missing-record", manualSaveCandidate("Missing", "lyrics"), 10),
+      (error) => error?.code === "not_found"
+    );
+    const ordinary = await manualStore.upsert(linkCandidate(777), "unlimited");
+    await assert.rejects(
+      manualStore.updateManualSave(ordinary.id, manualSaveCandidate("Wrong kind", "lyrics"), 10),
+      (error) => error?.code === "invalid_kind"
+    );
+    await assert.rejects(
+      manualStore.upsert({ kind: "manual-save", ...manualSaveCandidate("Bypass", "lyrics") }, 10),
+      (error) => error?.code === "invalid_kind"
+    );
+    await assert.rejects(
+      manualStore.createManualSave({ snapshot: emptyManualSnapshot() }, 10),
+      (error) => error?.code === "invalid_snapshot"
+    );
+    await assert.rejects(
+      manualStore.createManualSave(manualSaveCandidate("Oversized", "x".repeat(120_001)), 10),
+      (error) => error?.code === "invalid_snapshot"
+    );
+    await assert.rejects(
+      manualStore.createManualSave({
+        snapshot: {
+          ...emptyManualSnapshot(),
+          title: "Record byte ceiling",
+          lyrics: "界".repeat(120_000),
+          translationText: "界".repeat(120_000)
+        }
+      }, 10),
+      (error) => error?.code === "invalid_snapshot"
+    );
+
+    const sanitizedManual = await manualStore.createManualSave({
+      snapshot: {
+        ...emptyManualSnapshot(),
+        title: "Sanitized manual save",
+        lyrics: "Safe semantic content",
+        originalCoverUrl: "data:image/png;base64,SECRET_IMAGE",
+        coverUrl: "blob:renderer-secret",
+        originalUrl: "file:///C:/Users/private/song.mp3",
+        finalUrl: "https://user:password@example.com/private",
+        parseMethod: "C:\\Users\\private\\parser",
+        proxiedCoverUrl: "https://proxy.invalid/private",
+        apiKey: "SECRET_API_KEY",
+        localPath: "C:\\Users\\private\\song.mp3"
+      }
+    }, "unlimited");
+    const sanitizedSnapshot = (await manualStore.get(sanitizedManual.id)).snapshot;
+    assert.equal(sanitizedSnapshot.originalCoverUrl, "");
+    assert.equal(sanitizedSnapshot.coverUrl, "");
+    assert.equal(sanitizedSnapshot.originalUrl, "");
+    assert.equal(sanitizedSnapshot.finalUrl, "");
+    assert.equal(sanitizedSnapshot.parseMethod, "");
+    assert.doesNotMatch(
+      JSON.stringify(await manualStore.get(sanitizedManual.id)),
+      /SECRET_|blob:|data:image|file:\/\/|C:\\\\Users|proxiedCoverUrl|apiKey|localPath/
+    );
+
+    for (const limit of [5, 10, "unlimited"]) {
+      const limitTarget = path.join(root, "app-data", `manual-limit-${limit}.json`);
+      let limitId = 0;
+      let limitNow = timestamp + 1_000;
+      const limitStore = new ImportHistoryStore({
+        filePath: limitTarget,
+        now: () => ++limitNow,
+        createId: () => `limit-${limit}-${++limitId}`
+      });
+      const expectedTotal = limit === "unlimited" ? 12 : limit;
+      const created = [];
+      for (let index = 0; index < 12; index += 1) {
+        created.push(await limitStore.createManualSave(manualSaveCandidate(`Limit ${index}`, `Lyrics ${index}`), limit));
+      }
+      assert.equal((await limitStore.stats()).total, expectedTotal, `${limit} trims manual save creates correctly`);
+      const retained = (await limitStore.list({ offset: 0, limit: 50 })).records.at(-1);
+      const beforeUpdateTotal = (await limitStore.stats()).total;
+      await limitStore.updateManualSave(retained.id, manualSaveCandidate("Moved to top", "updated"), limit);
+      const afterUpdate = await limitStore.list({ offset: 0, limit: 50 });
+      assert.equal(afterUpdate.total, beforeUpdateTotal, `${limit} update does not delete the updated record`);
+      assert.equal(afterUpdate.records[0].id, retained.id, `${limit} update retains and promotes the selected ID`);
+    }
 
     const concurrentTarget = path.join(root, "app-data", "concurrent-import-history.json");
     const concurrentStore = new ImportHistoryStore({
@@ -232,7 +368,7 @@ async function main() {
       "loading an older history file scrubs already-persisted raw input"
     );
 
-    await fs.writeFile(target, "{ definitely not JSON", "utf8");
+    await fs.writeFile(target, JSON.stringify({ schemaVersion: 2, records: "not-an-array" }), "utf8");
     const recovered = new ImportHistoryStore({ filePath: target, now: () => timestamp });
     const recoveredList = await recovered.list({ offset: 0, limit: 24 });
     assert.equal(recoveredList.total, 0);
@@ -240,7 +376,7 @@ async function main() {
     assert.match(recoveredList.notice?.backupFileName ?? "", /^import-history\.corrupt-.*\.json$/);
     const files = await fs.readdir(path.dirname(target));
     assert.ok(files.some((file) => /^import-history\.corrupt-.*\.json$/.test(file)), "corrupt source is retained as a timestamped backup");
-    assert.deepEqual(JSON.parse(await fs.readFile(target, "utf8")), { schemaVersion: 1, records: [] });
+    assert.deepEqual(JSON.parse(await fs.readFile(target, "utf8")), { schemaVersion: 2, records: [] });
 
     const cleanupTarget = path.join(root, "cleanup", "import-history.json");
     await fs.mkdir(path.dirname(cleanupTarget), { recursive: true });
@@ -396,11 +532,29 @@ async function main() {
     await assert.rejects(failing.upsert(linkCandidate(100), 10), /simulated disk failure/);
     const afterFailure = await failing.list({ offset: 0, limit: 20 });
     assert.deepEqual(afterFailure.records.map((record) => record.id), [stableRecord.id], "failed writes do not mutate the in-memory committed store");
+
+    const stableManual = await stable.createManualSave(manualSaveCandidate("Stable manual", "before"), 10);
+    const failedManualUpdate = new ImportHistoryStore({
+      filePath: target,
+      fs: failingFs,
+      now: () => ++now,
+      createId: () => `failed-manual-${++nextId}`
+    });
+    await assert.rejects(
+      failedManualUpdate.updateManualSave(stableManual.id, manualSaveCandidate("Failed manual", "after"), 10),
+      /simulated disk failure/
+    );
+    assert.equal((await failedManualUpdate.get(stableManual.id)).snapshot.lyrics, "before");
+    assert.equal(
+      JSON.parse(await fs.readFile(target, "utf8")).records.find((record) => record.id === stableManual.id).snapshot.lyrics,
+      "before",
+      "failed manual save updates do not pollute memory or disk"
+    );
   } finally {
     await fs.rm(root, { recursive: true, force: true });
   }
 
-  console.log("import history store, normalization, dedupe, limits, paths, and corrupt recovery tests passed");
+  console.log("import history schema v2, manual saves, normalization, limits, paths, and corrupt recovery tests passed");
 }
 
 function linkCandidate(index) {
@@ -424,6 +578,45 @@ function localCandidate(filePath, title) {
     kind: "local-audio",
     file: { path: filePath, fileName: path.basename(filePath), size: 4, mtimeMs: 1 },
     display: { title, artist: "Artist", album: "", source: "unknown" }
+  };
+}
+
+function emptyManualSnapshot() {
+  return {
+    source: "unknown",
+    title: "",
+    artist: "",
+    album: "",
+    explicit: false,
+    originalCoverUrl: "",
+    coverUrl: "",
+    originalUrl: "",
+    finalUrl: "",
+    parseMethod: "",
+    lyrics: "",
+    translationText: "",
+    translationEnabled: false
+  };
+}
+
+function manualSaveCandidate(title, lyrics) {
+  return {
+    snapshot: {
+      ...emptyManualSnapshot(),
+      source: "netease",
+      title,
+      artist: "Archive artist",
+      album: "Archive album",
+      explicit: true,
+      originalCoverUrl: "https://example.com/original-cover.jpg#ignored",
+      coverUrl: "https://example.com/cover.jpg",
+      originalUrl: "https://music.163.com/song?id=123",
+      finalUrl: "https://music.163.com/song?id=123#ignored",
+      parseMethod: "manual-save-test",
+      lyrics,
+      translationText: "Translated lyrics",
+      translationEnabled: true
+    }
   };
 }
 

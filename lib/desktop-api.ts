@@ -11,6 +11,7 @@ import type {
   ImportHistoryFileRegistration,
   ImportHistoryKind,
   ImportHistoryListResult,
+  ImportHistoryManualSaveInput,
   ImportHistoryReplayCommitResult,
   ImportHistoryReplayResult,
   ImportHistoryStats,
@@ -66,6 +67,8 @@ export type LyricsCardDesktopApi = {
   }) => Promise<ImportHistoryListResult>;
   getImportHistoryStats: () => Promise<ImportHistoryStats>;
   recordImportHistory: (record: ImportHistoryWriteCandidate) => Promise<ImportHistoryWriteResult>;
+  createManualSave: (input: ImportHistoryManualSaveInput) => Promise<ImportHistoryWriteResult>;
+  updateManualSave: (recordId: string, input: ImportHistoryManualSaveInput) => Promise<ImportHistoryWriteResult>;
   removeImportHistory: (recordId: string) => Promise<boolean>;
   clearImportHistory: () => Promise<number>;
   replayImportHistory: (recordId: string) => Promise<ImportHistoryReplayResult>;
