@@ -6,7 +6,9 @@ import { fileURLToPath } from "node:url";
 import { _electron as electron } from "playwright";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const executablePath = path.join(root, "release", "win-unpacked", "Lyrics Card Generator.exe");
+const executablePath = process.env.LYRICS_CARD_TEST_EXECUTABLE
+  ? path.resolve(process.env.LYRICS_CARD_TEST_EXECUTABLE)
+  : path.join(root, "release", "win-unpacked", "Lyrics Card Generator.exe");
 const userDataDirectory = await mkdtemp(path.join(tmpdir(), "lyrics-card-history-desktop-test-"));
 const fixtureDirectory = path.join(userDataDirectory, "fixtures");
 const audioPath = path.join(fixtureDirectory, "history-audio.mp3");
@@ -536,8 +538,9 @@ try {
   await waitForPreferenceLimit("unlimited");
   await closeSettings();
 
-  const ipcSnapshotValidation = await page.evaluate(async (maximumBytes) => {
+  const ipcShapeValidation = await page.evaluate(async () => {
     const api = window.lyricsCardDesktop;
+    const bridge = window.lyricsCardDesktopBridge;
     const snapshotFor = (label) => ({
       source: "unknown",
       title: `IPC snapshot ${label}`,
@@ -553,52 +556,252 @@ try {
       translationText: "",
       translationEnabled: false
     });
-    const cycle = {};
-    cycle.self = cycle;
-    const rejectedValues = [
-      ["ArrayBuffer", new ArrayBuffer(2 * 1024 * 1024)],
-      ["Uint8Array", new Uint8Array([1, 2, 3, 4])],
-      ["Map", new Map([["secret", "value"]])],
-      ["Set", new Set(["secret"])],
-      ["Date", new Date(0)],
-      ["RegExp", /secret/u],
-      ["cycle", cycle],
-      ["oversized unknown string", "x".repeat(maximumBytes)]
-    ];
-    const rejected = [];
-    for (const [label, value] of rejectedValues) {
+    const candidateWithUnknown = (label, value) => {
       const snapshot = snapshotFor(label);
       snapshot.unknownValue = value;
-      try {
-        rejected.push({ label, result: await api.createManualSave({ snapshot }) });
-      } catch (error) {
-        rejected.push({ label, result: { threw: true, message: String(error) } });
-      }
-    }
+      return { snapshot };
+    };
 
+    let publicGetterCalls = 0;
+    const accessorCandidate = {};
+    Object.defineProperty(accessorCandidate, "snapshot", {
+      enumerable: true,
+      get() {
+        publicGetterCalls += 1;
+        return snapshotFor("public accessor");
+      }
+    });
+    let publicProxyGets = 0;
+    let publicProxyOwnKeys = 0;
+    const proxyCandidate = new Proxy({ snapshot: snapshotFor("public Proxy") }, {
+      get(target, key, receiver) {
+        publicProxyGets += 1;
+        return Reflect.get(target, key, receiver);
+      },
+      ownKeys(target) {
+        publicProxyOwnKeys += 1;
+        return Reflect.ownKeys(target);
+      }
+    });
+    const symbolCandidate = { snapshot: snapshotFor("symbol") };
+    symbolCandidate.snapshot[Symbol("secret")] = "secret";
+    const nonEnumerableCandidate = { snapshot: snapshotFor("non-enumerable") };
+    Object.defineProperty(nonEnumerableCandidate.snapshot, "hidden", { value: "secret", enumerable: false });
+    const extendedArray = ["safe"];
+    extendedArray.extra = "secret";
+    const sparseArray = new Array(2);
+    sparseArray[1] = "safe";
+    const shared = { safe: true };
+    const cycle = {};
+    cycle.self = cycle;
+    const rejectedInputs = [
+      ["plain object instead of a canonical string envelope", { snapshot: snapshotFor("plain object") }],
+      ["accessor/getter", accessorCandidate],
+      ["Proxy", proxyCandidate],
+      ["symbol", symbolCandidate],
+      ["non-enumerable property", nonEnumerableCandidate],
+      ["extended array", candidateWithUnknown("extended array", extendedArray)],
+      ["sparse array", candidateWithUnknown("sparse array", sparseArray)],
+      ["shared object", candidateWithUnknown("shared object", { first: shared, second: shared })],
+      ["ArrayBuffer", candidateWithUnknown("ArrayBuffer", new ArrayBuffer(2 * 1024 * 1024))],
+      ["Uint8Array", candidateWithUnknown("Uint8Array", new Uint8Array([1, 2, 3, 4]))],
+      ["DataView", candidateWithUnknown("DataView", new DataView(new ArrayBuffer(8)))],
+      ["Map", candidateWithUnknown("Map", new Map([["secret", "value"]]))],
+      ["Set", candidateWithUnknown("Set", new Set(["secret"]))],
+      ["Date", candidateWithUnknown("Date", new Date(0))],
+      ["RegExp", candidateWithUnknown("RegExp", /secret/u)],
+      ["Error", candidateWithUnknown("Error", new Error("secret"))],
+      ["cycle", candidateWithUnknown("cycle", cycle)]
+    ];
+    if (typeof SharedArrayBuffer === "function") {
+      rejectedInputs.push([
+        "SharedArrayBuffer",
+        candidateWithUnknown("SharedArrayBuffer", new SharedArrayBuffer(16))
+      ]);
+    }
+    const rejected = [];
+    for (const [label, input] of rejectedInputs) {
+      rejected.push({ label, result: await api.createManualSave(input) });
+    }
+    const rejectedUpdate = await api.updateManualSave("missing-record", accessorCandidate);
+
+    let bridgeGetterCalls = 0;
+    const bridgeAccessorCandidate = {};
+    Object.defineProperty(bridgeAccessorCandidate, "snapshot", {
+      enumerable: true,
+      get() {
+        bridgeGetterCalls += 1;
+        return snapshotFor("raw contextBridge accessor");
+      }
+    });
+    const bridgeAccessorResult = await bridge.createManualSaveEnvelope(bridgeAccessorCandidate);
+    return {
+      rejected,
+      rejectedUpdate,
+      publicGetterCalls,
+      publicProxyGets,
+      publicProxyOwnKeys,
+      bridgeGetterCalls,
+      bridgeAccessorResult,
+      total: (await api.getImportHistoryStats()).total
+    };
+  });
+  for (const { label, result } of ipcShapeValidation.rejected) {
+    assert.deepEqual(result, { ok: false, code: "invalid_snapshot" }, `${label} returns a stable product error`);
+  }
+  assert.deepEqual(
+    ipcShapeValidation.rejectedUpdate,
+    { ok: false, code: "invalid_snapshot" },
+    "the update product API rejects an object before record lookup or IPC"
+  );
+  assert.deepEqual(
+    {
+      publicGetterCalls: ipcShapeValidation.publicGetterCalls,
+      publicProxyGets: ipcShapeValidation.publicProxyGets,
+      publicProxyOwnKeys: ipcShapeValidation.publicProxyOwnKeys
+    },
+    { publicGetterCalls: 0, publicProxyGets: 0, publicProxyOwnKeys: 0 },
+    "the renderer product service rejects objects before executing getters or Proxy traps"
+  );
+  assert.equal(
+    ipcShapeValidation.bridgeGetterCalls,
+    1,
+    "the raw contextBridge probe documents Electron's one caller-getter execution before preload"
+  );
+  assert.deepEqual(
+    ipcShapeValidation.bridgeAccessorResult,
+    { ok: false, code: "invalid_snapshot" },
+    "preload still rejects the clone-erased object without invoking storage"
+  );
+  assert.equal(ipcShapeValidation.total, 0, "invalid product/bridge calls cause no in-memory mutation");
+  await assert.rejects(
+    readFile(historyPath, "utf8"),
+    (error) => error?.code === "ENOENT",
+    "invalid product/bridge calls cause no history file side effect"
+  );
+
+  const ipcSnapshotValidation = await page.evaluate(async (maximumBytes) => {
+    const api = window.lyricsCardDesktop;
+    const snapshotFor = (label) => ({
+      source: "unknown",
+      title: `IPC snapshot ${label}`,
+      artist: "Canonical envelope regression",
+      album: "",
+      explicit: false,
+      originalCoverUrl: "",
+      coverUrl: "",
+      originalUrl: "",
+      finalUrl: "",
+      parseMethod: "manual-save-ipc-test",
+      lyrics: "Safe lyrics",
+      translationText: "",
+      translationEnabled: false
+    });
+    const envelopeFor = (snapshot) => JSON.stringify({ version: 1, snapshot });
     const boundarySnapshot = snapshotFor("legal byte boundary");
     boundarySnapshot.unknownPadding = "";
     const encoder = new TextEncoder();
     const boundaryBaseBytes = encoder.encode(JSON.stringify(boundarySnapshot)).byteLength;
     boundarySnapshot.unknownPadding = "x".repeat(maximumBytes - boundaryBaseBytes);
     const boundaryBytes = encoder.encode(JSON.stringify(boundarySnapshot)).byteLength;
-    const legal = await api.createManualSave({ snapshot: boundarySnapshot });
+    const legal = await api.createManualSave(envelopeFor(boundarySnapshot));
+    boundarySnapshot.unknownPadding += "x";
+    const oversized = await api.createManualSave(envelopeFor(boundarySnapshot));
+    const deepValue = `${'{"next":'.repeat(1_000)}null${"}".repeat(1_000)}`;
+    const deepEnvelope = `{"version":1,"snapshot":{"source":"unknown","title":"Deep input","artist":"","album":"","explicit":false,"originalCoverUrl":"","coverUrl":"","originalUrl":"","finalUrl":"","parseMethod":"","lyrics":"Safe lyrics","translationText":"","translationEnabled":false,"unknownDeep":${deepValue}}}`;
+    const deep = await api.createManualSave(deepEnvelope);
     const removed = legal.ok ? await api.removeImportHistory(legal.record.id) : false;
     const total = (await api.getImportHistoryStats()).total;
-    return { rejected, boundaryBytes, legal, removed, total };
+    return { boundaryBytes, legal, oversized, deep, removed, total };
   }, 512 * 1024);
-  for (const { label, result } of ipcSnapshotValidation.rejected) {
-    assert.deepEqual(result, { ok: false, code: "invalid_snapshot" }, `${label} returns a stable IPC domain error`);
-  }
   assert.equal(ipcSnapshotValidation.boundaryBytes, 512 * 1024);
   assert.equal(ipcSnapshotValidation.legal.ok, true, "an exact-limit plain JSON-like snapshot crosses IPC successfully");
+  assert.deepEqual(
+    ipcSnapshotValidation.oversized,
+    { ok: false, code: "invalid_snapshot" },
+    "a canonical snapshot one byte over the limit has a stable IPC error"
+  );
+  assert.deepEqual(
+    ipcSnapshotValidation.deep,
+    { ok: false, code: "invalid_snapshot" },
+    "an excessively deep canonical envelope has a stable IPC error"
+  );
   assert.equal(ipcSnapshotValidation.removed, true);
-  assert.equal(ipcSnapshotValidation.total, 0, "rejected IPC snapshots never mutate history");
+  assert.equal(ipcSnapshotValidation.total, 0, "rejected canonical IPC snapshots never mutate history");
+
+  const routeCountsBeforeIdentityIpc = { ...routeCounts };
+  const identityIpc = await page.evaluate(async () => {
+    const api = window.lyricsCardDesktop;
+    const cases = [
+      [
+        "netease",
+        "https://music.163.com/song?id=70001&token=SECRET&utm_source=tracker#private",
+        "https://music.163.com/song?id=70001"
+      ],
+      [
+        "apple",
+        "https://music.apple.com/us/album/example/123456?i=654321&auth=SECRET&signature=SECRET#private",
+        "https://music.apple.com/us/album/example/123456?i=654321"
+      ],
+      [
+        "qq",
+        "https://y.qq.com/portal/player.html?songmid=003OUlho2HcRHC&api_key=SECRET&utm_campaign=tracker#private",
+        "https://y.qq.com/portal/player.html?songmid=003OUlho2HcRHC"
+      ],
+      [
+        "qq",
+        "https://y.qq.com/account/settings?songmid=003OUlho2HcRHC&token=SECRET#private",
+        "https://y.qq.com/account/settings"
+      ],
+      [
+        "spotify",
+        "https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC?si=SECRET&utm_source=tracker#private",
+        "https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC"
+      ]
+    ];
+    const results = [];
+    for (const [source, inputUrl, expected] of cases) {
+      const envelope = JSON.stringify({
+        version: 1,
+        snapshot: {
+          source,
+          title: `${source} identity archive`,
+          artist: "Identity regression",
+          album: "",
+          explicit: false,
+          originalCoverUrl: "",
+          coverUrl: "",
+          originalUrl: inputUrl,
+          finalUrl: inputUrl,
+          parseMethod: "manual-save-identity-test",
+          lyrics: "Safe lyrics",
+          translationText: "",
+          translationEnabled: false
+        }
+      });
+      const created = await api.createManualSave(envelope);
+      const replay = created.ok ? await api.replayImportHistory(created.record.id) : created;
+      const removed = created.ok ? await api.removeImportHistory(created.record.id) : false;
+      results.push({ source, expected, created, replay, removed });
+    }
+    return { results, total: (await api.getImportHistoryStats()).total };
+  });
+  for (const { source, expected, created, replay, removed } of identityIpc.results) {
+    assert.equal(created.ok, true, `${source} identity fixture is accepted through the product API`);
+    assert.equal(replay.ok, true, `${source} identity fixture replays through packaged IPC`);
+    assert.equal(replay.snapshot.originalUrl, expected, `${source} original URL keeps only safe identity`);
+    assert.equal(replay.snapshot.finalUrl, expected, `${source} final URL keeps only safe identity`);
+    assert.doesNotMatch(JSON.stringify(replay.snapshot), /SECRET|token=|api_key=|auth=|signature=|utm_|#|\bsi=/i);
+    assert.equal(removed, true);
+  }
+  assert.equal(identityIpc.total, 0);
+  assert.deepEqual(routeCounts, routeCountsBeforeIdentityIpc, "identity-only IPC replay performs no network request");
 
   for (let index = 0; index < 10; index += 1) {
     const ordered = await page.evaluate(async (sequence) => {
       const api = window.lyricsCardDesktop;
-      const createPromise = api.createManualSave({
+      const createPromise = api.createManualSave(JSON.stringify({
+        version: 1,
         snapshot: {
           source: "unknown",
           title: `Ordered create ${sequence}`,
@@ -608,7 +811,7 @@ try {
           translationText: "",
           translationEnabled: false
         }
-      });
+      }));
       const clearPromise = api.clearImportHistory();
       const [create, cleared] = await Promise.all([createPromise, clearPromise]);
       return { create, cleared, total: (await api.getImportHistoryStats()).total };
@@ -620,7 +823,8 @@ try {
 
   const updateOrdering = await page.evaluate(async () => {
     const api = window.lyricsCardDesktop;
-    const created = await api.createManualSave({
+    const created = await api.createManualSave(JSON.stringify({
+      version: 1,
       snapshot: {
         source: "unknown",
         title: "Ordered update seed",
@@ -630,9 +834,10 @@ try {
         translationText: "",
         translationEnabled: false
       }
-    });
+    }));
     if (!created.ok) return { created, update: null, cleared: -1, total: -1 };
-    const updatePromise = api.updateManualSave(created.record.id, {
+    const updatePromise = api.updateManualSave(created.record.id, JSON.stringify({
+      version: 1,
       snapshot: {
         source: "unknown",
         title: "Ordered update committed",
@@ -642,7 +847,7 @@ try {
         translationText: "",
         translationEnabled: false
       }
-    });
+    }));
     const clearPromise = api.clearImportHistory();
     const [update, cleared] = await Promise.all([updatePromise, clearPromise]);
     return { created, update, cleared, total: (await api.getImportHistoryStats()).total };
@@ -695,7 +900,8 @@ try {
   assert.equal(updatedManualInternal.snapshot.title, "Manual archive updated");
 
   const replayFixtureUpdate = await page.evaluate(async ({ recordId }) => (
-    window.lyricsCardDesktop.updateManualSave(recordId, {
+    window.lyricsCardDesktop.updateManualSave(recordId, JSON.stringify({
+      version: 1,
       snapshot: {
         source: "netease",
         title: "Manual archive updated",
@@ -711,13 +917,23 @@ try {
         translationText: "",
         translationEnabled: true
       }
-    })
+    }))
   ), { recordId: firstManualId });
   assert.equal(replayFixtureUpdate.ok, true);
   manualDocument = JSON.parse(await readFile(historyPath, "utf8"));
   const replayFixtureInternal = manualDocument.records.find((record) => record.id === firstManualId);
   assert.equal(replayFixtureInternal.snapshot.translationEnabled, true);
   assert.equal(replayFixtureInternal.snapshot.translationText, "");
+  assert.equal(
+    replayFixtureInternal.snapshot.originalUrl,
+    "https://music.163.com/song?id=70001",
+    "manual-save storage retains the NetEase song identity while removing credentials"
+  );
+  assert.equal(
+    replayFixtureInternal.snapshot.finalUrl,
+    "https://music.163.com/song?id=70001",
+    "original/final URL sanitization preserves identical song semantics"
+  );
   assert.doesNotMatch(JSON.stringify(replayFixtureInternal.snapshot), /DO_NOT_PERSIST|token=|api_key=/);
 
   await closeThroughDesktopApi();
@@ -743,7 +959,11 @@ try {
 
   const linkInput = page.getByLabel("Music URL");
   const replayUrl = await linkInput.inputValue();
-  assert.ok(replayUrl.startsWith("https://music.163.com/song"), "manual replay retains its sanitized URL semantics");
+  assert.equal(
+    replayUrl,
+    "https://music.163.com/song?id=70001",
+    "manual replay retains its exact sanitized song identity"
+  );
   await editManualSong({ title: "Manual replay local edit" });
   await waitForManualSaveState("update");
   const routeCountsBeforeManualReplayRemount = { ...routeCounts };
@@ -916,7 +1136,8 @@ try {
   await closeHistoryWithEscape();
 
   const emptyTranslationFixture = await page.evaluate(async () => (
-    window.lyricsCardDesktop.createManualSave({
+    window.lyricsCardDesktop.createManualSave(JSON.stringify({
+      version: 1,
       snapshot: {
         source: "unknown",
         title: "Empty translation roundtrip",
@@ -932,7 +1153,7 @@ try {
         translationText: "",
         translationEnabled: true
       }
-    })
+    }))
   ));
   assert.equal(emptyTranslationFixture.ok, true);
   await waitForHistoryTotal(1);
@@ -1189,7 +1410,8 @@ try {
   await rm(historyPath, { recursive: true, force: true });
   const pendingCloseLyrics = "pending close archive line\n".repeat(4_000);
   const pendingCloseSeed = await page.evaluate(async ({ recordId, lyrics }) => (
-    window.lyricsCardDesktop.updateManualSave(recordId, {
+    window.lyricsCardDesktop.updateManualSave(recordId, JSON.stringify({
+      version: 1,
       snapshot: {
         source: "unknown",
         title: "Manual update pending close",
@@ -1205,7 +1427,7 @@ try {
         translationText: "",
         translationEnabled: false
       }
-    })
+    }))
   ), { recordId: pendingCloseManual.id, lyrics: pendingCloseLyrics });
   assert.equal(pendingCloseSeed.ok, true, "the real preload/store path seeds a 4,000-line pending-close archive");
   assert.equal(pendingCloseSeed.record.id, pendingCloseManual.id);

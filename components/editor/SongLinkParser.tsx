@@ -32,7 +32,7 @@ export function SongLinkParser({
   onParsed,
   t,
   autoParseOnMount = false,
-  suppressAutoParseOnMount = false
+  autoParseVisitIntent = { id: 0, allowAutoParse: true }
 }: {
   url: string;
   onUrlChange: (url: string) => void;
@@ -40,14 +40,13 @@ export function SongLinkParser({
   onParsed: (song: ParsedSongData, intent: DocumentImportIntent, context: LinkImportHistoryContext) => boolean;
   t: ReturnType<typeof createT>;
   autoParseOnMount?: boolean;
-  suppressAutoParseOnMount?: boolean;
+  autoParseVisitIntent?: Readonly<{ id: number; allowAutoParse: boolean }>;
 }) {
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const inputId = useId();
   const statusId = useId();
   const [message, setMessage] = useState<string>(t("parseIdle"));
-  const autoParsed = useRef(false);
-  const autoParseSuppressedAtMount = useRef(suppressAutoParseOnMount);
+  const handledAutoParseVisitRef = useRef<number | null>(null);
   const activeIntentRef = useRef<DocumentImportIntent | null>(null);
 
   useEffect(() => () => activeIntentRef.current?.cancel(), []);
@@ -59,13 +58,16 @@ export function SongLinkParser({
   }, [status, t]);
 
   useEffect(() => {
-    if (!autoParseOnMount || autoParseSuppressedAtMount.current || autoParsed.current || !url.trim()) {
+    if (!autoParseOnMount || handledAutoParseVisitRef.current === autoParseVisitIntent.id) {
       return;
     }
 
-    autoParsed.current = true;
+    // Each visit ID carries an immutable decision captured synchronously by the
+    // navigation event. URL edits alone must never trigger this effect.
+    handledAutoParseVisitRef.current = autoParseVisitIntent.id;
+    if (!autoParseVisitIntent.allowAutoParse || !url.trim()) return;
     void parseUrl();
-  }, [autoParseOnMount]);
+  }, [autoParseOnMount, autoParseVisitIntent.id]);
 
   async function parseUrl() {
     if (!url.trim()) {

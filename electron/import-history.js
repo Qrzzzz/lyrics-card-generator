@@ -8,6 +8,10 @@ const LEGACY_IMPORT_HISTORY_SCHEMA_VERSION = 1;
 const DEFAULT_IMPORT_HISTORY_LIMIT = 10;
 const IMPORT_HISTORY_LIMITS = new Set([5, 10, "unlimited"]);
 const MAX_RECORD_BYTES = 512 * 1024;
+const MAX_MANUAL_SAVE_JSON_DEPTH = 128;
+const MANUAL_SAVE_ENVELOPE_VERSION = 1;
+const MANUAL_SAVE_ENVELOPE_PREFIX = `{"version":${MANUAL_SAVE_ENVELOPE_VERSION},"snapshot":`;
+const MAX_MANUAL_SAVE_ENVELOPE_BYTES = MAX_RECORD_BYTES + Buffer.byteLength(`${MANUAL_SAVE_ENVELOPE_PREFIX}}`, "utf8");
 const MAX_AUDIO_BYTES = 100 * 1024 * 1024;
 const MAX_IMAGE_BYTES = 20 * 1024 * 1024;
 const MAX_TIMESTAMP_MS = 8_640_000_000_000_000;
@@ -117,10 +121,12 @@ class ImportHistoryStore {
     });
   }
 
-  createManualSave(candidate, limit = DEFAULT_IMPORT_HISTORY_LIMIT) {
+  createManualSave(envelope, limit = DEFAULT_IMPORT_HISTORY_LIMIT) {
+    const snapshot = parseManualSaveEnvelope(envelope);
+    if (!snapshot) return Promise.reject(historyError("invalid_snapshot"));
     return this.#mutate((document) => {
       const timestamp = this.now();
-      const record = normalizeManualSaveWriteRecord(candidate, {
+      const record = normalizeManualSaveWriteRecord(snapshot, {
         id: this.createId(),
         createdAt: timestamp,
         lastUsedAt: timestamp
@@ -134,14 +140,16 @@ class ImportHistoryStore {
     });
   }
 
-  updateManualSave(recordId, candidate, limit = DEFAULT_IMPORT_HISTORY_LIMIT) {
+  updateManualSave(recordId, envelope, limit = DEFAULT_IMPORT_HISTORY_LIMIT) {
+    const snapshot = parseManualSaveEnvelope(envelope);
+    if (!snapshot) return Promise.reject(historyError("invalid_snapshot"));
     return this.#mutate((document) => {
       const id = normalizeId(recordId);
       const existing = id ? document.records.find((record) => record.id === id) : null;
       if (!existing) throw historyError("not_found");
       if (existing.kind !== "manual-save") throw historyError("invalid_kind");
 
-      const record = normalizeManualSaveWriteRecord(candidate, {
+      const record = normalizeManualSaveWriteRecord(snapshot, {
         id: existing.id,
         createdAt: existing.createdAt,
         lastUsedAt: this.now()
@@ -538,14 +546,13 @@ function normalizeManualSnapshot(input, kind = "manual-cover") {
   return snapshot;
 }
 
-function normalizeManualSaveWriteRecord(candidate, metadata, path = defaultPath) {
-  if (!isObject(candidate) || !manualSaveSnapshotFieldsFit(candidate.snapshot)) return null;
+function normalizeManualSaveWriteRecord(snapshot, metadata, path = defaultPath) {
   return normalizeImportHistoryRecord({
     kind: "manual-save",
     id: metadata.id,
     createdAt: metadata.createdAt,
     lastUsedAt: metadata.lastUsedAt,
-    snapshot: candidate.snapshot
+    snapshot
   }, path);
 }
 
@@ -559,8 +566,52 @@ function normalizeManualSaveDisplay(snapshot) {
   }, "manual-save");
 }
 
+function parseManualSaveEnvelope(value) {
+  if (
+    typeof value !== "string" ||
+    value.length > MAX_MANUAL_SAVE_ENVELOPE_BYTES ||
+    Buffer.byteLength(value, "utf8") > MAX_MANUAL_SAVE_ENVELOPE_BYTES ||
+    !value.startsWith(MANUAL_SAVE_ENVELOPE_PREFIX) ||
+    !value.endsWith("}")
+  ) {
+    return null;
+  }
+
+  let envelope;
+  try {
+    envelope = JSON.parse(value);
+  } catch {
+    return null;
+  }
+
+  if (!isObject(envelope) || Object.getPrototypeOf(envelope) !== Object.prototype) return null;
+  const keys = Reflect.ownKeys(envelope);
+  if (keys.length !== 2 || keys[0] !== "version" || keys[1] !== "snapshot") return null;
+  const version = Object.getOwnPropertyDescriptor(envelope, "version");
+  const snapshot = Object.getOwnPropertyDescriptor(envelope, "snapshot");
+  if (
+    !isEnumerableDataProperty(version) ||
+    version.value !== MANUAL_SAVE_ENVELOPE_VERSION ||
+    !isEnumerableDataProperty(snapshot) ||
+    !manualSaveSnapshotFieldsFit(snapshot.value)
+  ) {
+    return null;
+  }
+
+  try {
+    return JSON.stringify(envelope) === value ? snapshot.value : null;
+  } catch {
+    return null;
+  }
+}
+
 function manualSaveSnapshotFieldsFit(input) {
-  if (!jsonLikeTreeFitsWithinByteLimit(input, MAX_RECORD_BYTES) || !isObject(input)) return false;
+  if (
+    !jsonLikeTreeFitsWithinByteLimit(input, MAX_RECORD_BYTES, MAX_MANUAL_SAVE_JSON_DEPTH) ||
+    !isObject(input)
+  ) {
+    return false;
+  }
   const limits = {
     title: 512,
     artist: 512,
@@ -573,16 +624,39 @@ function manualSaveSnapshotFieldsFit(input) {
     lyrics: 120_000,
     translationText: 120_000
   };
-  const fieldsFit = Object.entries(limits).every(([field, limit]) => (
-    input[field] === undefined || (typeof input[field] === "string" && input[field].length <= limit)
-  ));
-  return fieldsFit;
+  const fieldsFit = Object.entries(limits).every(([field, limit]) => {
+    const descriptor = Object.getOwnPropertyDescriptor(input, field);
+    return !descriptor || (
+      isEnumerableDataProperty(descriptor) &&
+      typeof descriptor.value === "string" &&
+      descriptor.value.length <= limit
+    );
+  });
+  if (!fieldsFit) return false;
+  const source = Object.getOwnPropertyDescriptor(input, "source");
+  const explicit = Object.getOwnPropertyDescriptor(input, "explicit");
+  const translationEnabled = Object.getOwnPropertyDescriptor(input, "translationEnabled");
+  return (
+    (!source || (isEnumerableDataProperty(source) && typeof source.value === "string")) &&
+    (!explicit || (isEnumerableDataProperty(explicit) && typeof explicit.value === "boolean")) &&
+    (!translationEnabled || (
+      isEnumerableDataProperty(translationEnabled) &&
+      typeof translationEnabled.value === "boolean"
+    ))
+  );
 }
 
-function jsonLikeTreeFitsWithinByteLimit(root, maximumBytes) {
-  if (!Number.isSafeInteger(maximumBytes) || maximumBytes < 0) return false;
+function jsonLikeTreeFitsWithinByteLimit(root, maximumBytes, maximumDepth) {
+  if (
+    !Number.isSafeInteger(maximumBytes) ||
+    maximumBytes < 0 ||
+    !Number.isSafeInteger(maximumDepth) ||
+    maximumDepth < 0
+  ) {
+    return false;
+  }
   let remainingBytes = maximumBytes;
-  const pending = [root];
+  const pending = [{ value: root, depth: 0 }];
   const seen = new WeakSet();
   const consume = (bytes) => {
     if (!Number.isSafeInteger(bytes) || bytes < 0 || bytes > remainingBytes) return false;
@@ -592,7 +666,8 @@ function jsonLikeTreeFitsWithinByteLimit(root, maximumBytes) {
 
   try {
     while (pending.length > 0) {
-      const value = pending.pop();
+      const { value, depth } = pending.pop();
+      if (depth > maximumDepth) return false;
       if (value === null) {
         if (!consume(4)) return false;
         continue;
@@ -623,7 +698,7 @@ function jsonLikeTreeFitsWithinByteLimit(root, maximumBytes) {
         for (let index = length - 1; index >= 0; index -= 1) {
           const descriptor = Object.getOwnPropertyDescriptor(value, String(index));
           if (!isEnumerableDataProperty(descriptor)) return false;
-          pending.push(descriptor.value);
+          pending.push({ value: descriptor.value, depth: depth + 1 });
         }
         continue;
       }
@@ -637,7 +712,7 @@ function jsonLikeTreeFitsWithinByteLimit(root, maximumBytes) {
         const descriptor = Object.getOwnPropertyDescriptor(value, key);
         if (!isEnumerableDataProperty(descriptor)) return false;
         if (!consumeJsonStringUtf8Bytes(key, consume) || !consume(1)) return false;
-        pending.push(descriptor.value);
+        pending.push({ value: descriptor.value, depth: depth + 1 });
       }
     }
   } catch {
@@ -943,10 +1018,65 @@ function normalizeManualHttpUrl(value) {
   const normalized = normalizeHttpUrl(value);
   if (!normalized) return "";
   const url = new URL(normalized);
-  // Query strings are not needed to restore a local semantic snapshot and are
-  // a common carrier for tokens, API keys, signatures, and user identifiers.
+  const identity = manualUrlIdentity(value, url);
   url.search = "";
+  for (const [key, identityValue] of identity.parameters) {
+    url.searchParams.set(key, identityValue);
+  }
+  if (identity.pathname) url.pathname = identity.pathname;
   return url.toString();
+}
+
+function manualUrlIdentity(value, normalizedUrl) {
+  let original;
+  try {
+    original = new URL(boundedString(value, 8192));
+  } catch {
+    return { parameters: [], pathname: "" };
+  }
+
+  const host = normalizedUrl.hostname.toLowerCase();
+  const originalPath = original.pathname;
+  const hashRoute = original.hash.startsWith("#/") ? original.hash.slice(1) : "";
+  const hashQueryIndex = hashRoute.indexOf("?");
+  const hashPath = hashQueryIndex >= 0 ? hashRoute.slice(0, hashQueryIndex) : hashRoute;
+  const hashParameters = new URLSearchParams(hashQueryIndex >= 0 ? hashRoute.slice(hashQueryIndex + 1) : "");
+  const parameter = (name) => original.searchParams.get(name) || hashParameters.get(name) || "";
+
+  if (
+    (host === "music.163.com" || host.endsWith(".music.163.com")) &&
+    (/\/(?:song)(?:\/|$)/i.test(originalPath) || /\/(?:song)(?:\/|$)/i.test(hashPath))
+  ) {
+    const id = parameter("id");
+    if (/^\d{1,32}$/.test(id)) {
+      return {
+        parameters: [["id", id]],
+        pathname: /\/(?:song)(?:\/|$)/i.test(originalPath) ? "" : "/song"
+      };
+    }
+  }
+
+  if (
+    (host === "music.apple.com" || host.endsWith(".music.apple.com")) &&
+    /\/album\//i.test(originalPath)
+  ) {
+    const id = parameter("i");
+    if (/^\d{1,32}$/.test(id)) return { parameters: [["i", id]], pathname: "" };
+  }
+
+  if (
+    (host === "y.qq.com" || host.endsWith(".y.qq.com")) &&
+    [originalPath, hashPath].some((candidatePath) => (
+      /(?:^|\/)(?:song|songdetail|player)(?:\/|\.html$|$)/i.test(candidatePath)
+    ))
+  ) {
+    const songId = parameter("songid");
+    if (/^\d{1,32}$/.test(songId)) return { parameters: [["songid", songId]], pathname: "" };
+    const songMid = parameter("songmid");
+    if (/^[A-Za-z0-9]{1,64}$/.test(songMid)) return { parameters: [["songmid", songMid]], pathname: "" };
+  }
+
+  return { parameters: [], pathname: "" };
 }
 
 function extractHttpUrl(value) {

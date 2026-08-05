@@ -11,7 +11,7 @@ import type {
   ImportHistoryFileRegistration,
   ImportHistoryKind,
   ImportHistoryListResult,
-  ImportHistoryManualSaveInput,
+  ImportHistoryManualSaveEnvelope,
   ImportHistoryReplayCommitResult,
   ImportHistoryReplayResult,
   ImportHistoryStats,
@@ -67,8 +67,8 @@ export type LyricsCardDesktopApi = {
   }) => Promise<ImportHistoryListResult>;
   getImportHistoryStats: () => Promise<ImportHistoryStats>;
   recordImportHistory: (record: ImportHistoryWriteCandidate) => Promise<ImportHistoryWriteResult>;
-  createManualSave: (input: ImportHistoryManualSaveInput) => Promise<ImportHistoryWriteResult>;
-  updateManualSave: (recordId: string, input: ImportHistoryManualSaveInput) => Promise<ImportHistoryWriteResult>;
+  createManualSave: (envelope: ImportHistoryManualSaveEnvelope) => Promise<ImportHistoryWriteResult>;
+  updateManualSave: (recordId: string, envelope: ImportHistoryManualSaveEnvelope) => Promise<ImportHistoryWriteResult>;
   removeImportHistory: (recordId: string) => Promise<boolean>;
   clearImportHistory: () => Promise<number>;
   replayImportHistory: (recordId: string) => Promise<ImportHistoryReplayResult>;
@@ -85,7 +85,51 @@ export type LyricsCardDesktopApi = {
 declare global {
   interface Window {
     lyricsCardDesktop?: LyricsCardDesktopApi;
+    lyricsCardDesktopBridge?: LyricsCardDesktopBridge;
   }
+}
+
+type LyricsCardDesktopBridge = Omit<LyricsCardDesktopApi, "createManualSave" | "updateManualSave"> & {
+  createManualSaveEnvelope: (envelope: string) => Promise<ImportHistoryWriteResult>;
+  updateManualSaveEnvelope: (recordId: string, envelope: string) => Promise<ImportHistoryWriteResult>;
+};
+
+const MAX_MANUAL_SAVE_ENVELOPE_CODE_UNITS = 512 * 1024 + 64;
+
+function isManualSaveEnvelope(value: unknown): value is ImportHistoryManualSaveEnvelope {
+  return (
+    typeof value === "string" &&
+    value.length <= MAX_MANUAL_SAVE_ENVELOPE_CODE_UNITS &&
+    value.startsWith('{"version":1,"snapshot":') &&
+    value.endsWith("}")
+  );
+}
+
+function invalidManualSaveResult(): Promise<ImportHistoryWriteResult> {
+  return Promise.resolve({ ok: false, code: "invalid_snapshot" });
+}
+
+function createDesktopApi(bridge: LyricsCardDesktopBridge): LyricsCardDesktopApi {
+  const api = Object.create(bridge) as LyricsCardDesktopApi;
+  Object.defineProperties(api, {
+    createManualSave: {
+      enumerable: true,
+      value: (envelope: unknown) => (
+        isManualSaveEnvelope(envelope)
+          ? bridge.createManualSaveEnvelope(envelope)
+          : invalidManualSaveResult()
+      )
+    },
+    updateManualSave: {
+      enumerable: true,
+      value: (recordId: string, envelope: unknown) => (
+        isManualSaveEnvelope(envelope)
+          ? bridge.updateManualSaveEnvelope(recordId, envelope)
+          : invalidManualSaveResult()
+      )
+    }
+  });
+  return Object.freeze(api);
 }
 
 export function getLyricsCardDesktopApi() {
@@ -93,5 +137,14 @@ export function getLyricsCardDesktopApi() {
     return undefined;
   }
 
-  return window.lyricsCardDesktop;
+  if (window.lyricsCardDesktop) return window.lyricsCardDesktop;
+  if (!window.lyricsCardDesktopBridge) return undefined;
+  const api = createDesktopApi(window.lyricsCardDesktopBridge);
+  Object.defineProperty(window, "lyricsCardDesktop", {
+    configurable: false,
+    enumerable: true,
+    value: api,
+    writable: false
+  });
+  return api;
 }

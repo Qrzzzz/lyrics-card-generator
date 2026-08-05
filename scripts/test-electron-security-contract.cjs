@@ -57,6 +57,7 @@ function trustedFixture(frameUrl = `${localUrl}/`, frameIsMain = true) {
 
 const mainSource = readFileSync("electron/main.js", "utf8");
 const importHistorySource = readFileSync("electron/import-history.js", "utf8");
+const desktopApiSource = readFileSync("lib/desktop-api.ts", "utf8");
 const desktopHistoryInteractionSource = readFileSync("scripts/test-desktop-import-history-interactions.mjs", "utf8");
 const replayPayloadSource = mainSource.slice(
   mainSource.indexOf("async function createImportHistoryReplayPayload"),
@@ -94,14 +95,29 @@ assert.match(
   /commitImportHistoryReplay: \(recordId, relocationToken\)[\s\S]*?"lyrics-card:import-history-replay-commit"[\s\S]*?recordId,[\s\S]*?relocationToken/,
   "relocation finalization exposes only a record id and opaque main-process token"
 );
-assert.match(preloadSource, /createManualSave: \(input\) => ipcRenderer\.invoke\("lyrics-card:manual-save-create", input\)/);
 assert.match(
   preloadSource,
-  /updateManualSave: \(recordId, input\) => ipcRenderer\.invoke\("lyrics-card:manual-save-update", recordId, input\)/
+  /exposeInMainWorld\("lyricsCardDesktopBridge"[\s\S]*?createManualSaveEnvelope: \(envelope\)[\s\S]*?invokeManualSave\("lyrics-card:manual-save-create", undefined, envelope\)/,
+  "preload exposes only the primitive canonical-envelope transport"
+);
+assert.match(
+  preloadSource,
+  /function invokeManualSave\(channel, recordId, envelope\)[\s\S]*?typeof envelope !== "string"[\s\S]*?invalidManualSaveResult/,
+  "preload rejects clone-erased objects instead of forwarding them to IPC"
+);
+assert.match(
+  desktopApiSource,
+  /function isManualSaveEnvelope\(value: unknown\)[\s\S]*?typeof value === "string"[\s\S]*?createDesktopApi[\s\S]*?bridge\.createManualSaveEnvelope\(envelope\)/,
+  "the renderer-local product API rejects objects before crossing contextBridge"
 );
 assert.doesNotMatch(
   preloadSource,
-  /(?:createManualSave|updateManualSave): \([^)]*(?:path|createdAt|lastUsedAt)/,
+  /(?:^|\s)createManualSave: /m,
+  "the contextBridge surface cannot accept an object-shaped manual-save request"
+);
+assert.doesNotMatch(
+  preloadSource,
+  /(?:createManualSaveEnvelope|updateManualSaveEnvelope): \([^)]*(?:path|createdAt|lastUsedAt)/,
   "manual saves expose no renderer-selected path or timestamp"
 );
 
@@ -143,12 +159,12 @@ assert.match(
 );
 assert.match(
   mainSource,
-  /handle\("lyrics-card:manual-save-create", \(_event, input\) => trackImportHistoryMutation\([\s\S]*?importHistoryStore\.createManualSave/,
+  /handle\("lyrics-card:manual-save-create", \(_event, envelope\) => trackImportHistoryMutation\([\s\S]*?importHistoryStore\.createManualSave\(envelope/,
   "manual save creation participates in ordered shutdown-drained mutations"
 );
 assert.match(
   mainSource,
-  /handle\("lyrics-card:manual-save-update", \(_event, recordId, input\) => trackImportHistoryMutation\([\s\S]*?importHistoryStore\.updateManualSave/,
+  /handle\("lyrics-card:manual-save-update", \(_event, recordId, envelope\) => trackImportHistoryMutation\([\s\S]*?importHistoryStore\.updateManualSave\(recordId, envelope/,
   "manual save updates participate in ordered shutdown-drained mutations"
 );
 assert.match(
@@ -177,10 +193,36 @@ assert.doesNotMatch(
 );
 assert.match(
   manualSnapshotValidationSource,
-  /jsonLikeTreeFitsWithinByteLimit[\s\S]*?utilTypes\.isProxy[\s\S]*?seen\.has[\s\S]*?Object\.getPrototypeOf/,
-  "manual snapshots require an acyclic, non-proxy, plain JSON-like data tree before projection"
+  /jsonLikeTreeFitsWithinByteLimit[\s\S]*?maximumDepth[\s\S]*?utilTypes\.isProxy[\s\S]*?seen\.has[\s\S]*?Object\.getPrototypeOf/,
+  "manual snapshots require a bounded-depth, acyclic, non-proxy, plain JSON-like tree"
 );
-for (const valueType of ["ArrayBuffer", "Uint8Array", "Map", "Set", "Date", "RegExp", "cycle"]) {
+const envelopeParserSource = importHistorySource.slice(
+  importHistorySource.indexOf("function parseManualSaveEnvelope"),
+  importHistorySource.indexOf("function manualSaveSnapshotFieldsFit")
+);
+assert.match(
+  envelopeParserSource,
+  /typeof value !== "string"[\s\S]*?JSON\.parse\(value\)[\s\S]*?manualSaveSnapshotFieldsFit[\s\S]*?JSON\.stringify\(envelope\) === value/,
+  "the Store independently parses and validates an exact canonical string envelope before mutation"
+);
+for (const valueType of [
+  "accessor/getter",
+  "Proxy",
+  "symbol",
+  "non-enumerable property",
+  "extended array",
+  "sparse array",
+  "shared object",
+  "ArrayBuffer",
+  "Uint8Array",
+  "DataView",
+  "Map",
+  "Set",
+  "Date",
+  "RegExp",
+  "Error",
+  "cycle"
+]) {
   assert.ok(
     desktopHistoryInteractionSource.includes(`["${valueType}"`),
     `desktop IPC regression covers ${valueType}`
@@ -188,13 +230,23 @@ for (const valueType of ["ArrayBuffer", "Uint8Array", "Map", "Set", "Date", "Reg
 }
 assert.match(
   desktopHistoryInteractionSource,
-  /oversized unknown string[\s\S]*?invalid_snapshot[\s\S]*?stable IPC domain error/,
-  "desktop IPC rejects pre-projection structured-clone payloads with a stable domain error"
+  /snapshot one byte over the limit has a stable IPC error[\s\S]*?excessively deep canonical envelope has a stable IPC error/,
+  "desktop IPC rejects oversized and excessively deep canonical envelopes"
 );
 assert.match(
   desktopHistoryInteractionSource,
   /boundaryBytes[\s\S]*?512 \* 1024[\s\S]*?exact-limit plain JSON-like snapshot crosses IPC successfully/,
   "desktop IPC preserves an exact-limit legal JSON-like snapshot"
+);
+assert.match(
+  importHistorySource,
+  /function manualUrlIdentity[\s\S]*?music\.163\.com[\s\S]*?\[\["id", id\]\][\s\S]*?music\.apple\.com[\s\S]*?\[\["i", id\]\][\s\S]*?y\.qq\.com[\s\S]*?songmid/,
+  "manual URL sanitization uses an auditable host/path identity-parameter allowlist"
+);
+assert.match(
+  desktopHistoryInteractionSource,
+  /NetEase song identity while removing credentials[\s\S]*?manual replay retains its exact sanitized song identity[\s\S]*?routeCountsBeforeManualReplayRemount/,
+  "packaged replay preserves the song ID while retaining local-only remount behavior"
 );
 const manualReplayStart = replayPayloadSource.indexOf('record.kind === "manual-save"');
 const manualReplayEnd = replayPayloadSource.indexOf("try {", manualReplayStart);

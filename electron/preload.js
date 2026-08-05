@@ -1,6 +1,21 @@
 const { contextBridge, ipcRenderer, webUtils } = require("electron");
 
-contextBridge.exposeInMainWorld("lyricsCardDesktop", {
+const MAX_MANUAL_SAVE_ENVELOPE_CODE_UNITS = 512 * 1024 + 64;
+
+function invalidManualSaveResult() {
+  return Promise.resolve({ ok: false, code: "invalid_snapshot" });
+}
+
+function invokeManualSave(channel, recordId, envelope) {
+  if (typeof envelope !== "string" || envelope.length > MAX_MANUAL_SAVE_ENVELOPE_CODE_UNITS) {
+    return invalidManualSaveResult();
+  }
+  return recordId === undefined
+    ? ipcRenderer.invoke(channel, envelope)
+    : ipcRenderer.invoke(channel, recordId, envelope);
+}
+
+contextBridge.exposeInMainWorld("lyricsCardDesktopBridge", {
   setWindowMaterial: (theme) => ipcRenderer.invoke("lyrics-card:set-window-material", theme),
   minimizeWindow: () => ipcRenderer.invoke("lyrics-card:window-minimize"),
   toggleMaximizeWindow: () => ipcRenderer.invoke("lyrics-card:window-toggle-maximize"),
@@ -38,8 +53,12 @@ contextBridge.exposeInMainWorld("lyricsCardDesktop", {
   listImportHistory: (options) => ipcRenderer.invoke("lyrics-card:import-history-list", options),
   getImportHistoryStats: () => ipcRenderer.invoke("lyrics-card:import-history-stats"),
   recordImportHistory: (record) => ipcRenderer.invoke("lyrics-card:import-history-record", record),
-  createManualSave: (input) => ipcRenderer.invoke("lyrics-card:manual-save-create", input),
-  updateManualSave: (recordId, input) => ipcRenderer.invoke("lyrics-card:manual-save-update", recordId, input),
+  createManualSaveEnvelope: (envelope) => invokeManualSave("lyrics-card:manual-save-create", undefined, envelope),
+  updateManualSaveEnvelope: (recordId, envelope) => invokeManualSave(
+    "lyrics-card:manual-save-update",
+    recordId,
+    envelope
+  ),
   removeImportHistory: (recordId) => ipcRenderer.invoke("lyrics-card:import-history-remove", recordId),
   clearImportHistory: () => ipcRenderer.invoke("lyrics-card:import-history-clear"),
   replayImportHistory: (recordId) => ipcRenderer.invoke("lyrics-card:import-history-replay", recordId),

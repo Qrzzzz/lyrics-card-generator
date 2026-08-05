@@ -8,6 +8,8 @@ const editorHeader = read("components/editor/EditorHeader.tsx");
 const historyFloor = read("components/editor/HistoryFloor.tsx");
 const editorActions = read("components/editor/hooks/useEditorActions.ts");
 const editorSteps = read("components/editor/useEditorSteps.tsx");
+const desktopApi = read("lib/desktop-api.ts");
+const importHistoryTypes = read("lib/import-history.ts");
 const editorPreferences = read("components/editor/hooks/useEditorPreferences.ts");
 const songLinkParser = read("components/editor/SongLinkParser.tsx");
 const songSearchParser = read("components/editor/SongSearchParser.tsx");
@@ -76,10 +78,28 @@ assert.match(editorActions, /desktop\.commitImportHistoryReplay\(/);
 assert.match(editorActions, /"relocationToken" in replay \? replay\.relocationToken : undefined/);
 assert.match(editorActions, /historySaveFailed/);
 assert.match(editorActions, /bindingAtStart\?\.savedRevision === revision[\s\S]*?manualSaveUnchanged[\s\S]*?return/);
-assert.match(editorActions, /desktop\.updateManualSave\(bindingAtStart\.recordId, input\)[\s\S]*?desktop\.createManualSave\(input\)/);
+assert.match(
+  editorActions,
+  /serializeImportHistoryManualSave\(input\)[\s\S]*?desktop\.updateManualSave\(bindingAtStart\.recordId, envelope\)[\s\S]*?desktop\.createManualSave\(envelope\)/,
+  "manual-save writes cross the desktop bridge only as a renderer-built canonical string envelope"
+);
+assert.match(
+  importHistoryTypes,
+  /serializeImportHistoryManualSave[\s\S]*?version: 1[\s\S]*?snapshot: \{[\s\S]*?translationEnabled: snapshot\.translationEnabled/,
+  "the renderer serializer constructs only the whitelisted semantic snapshot"
+);
+assert.match(
+  desktopApi,
+  /typeof value === "string"[\s\S]*?createManualSave: [\s\S]*?isManualSaveEnvelope\(envelope\)[\s\S]*?bridge\.createManualSaveEnvelope\(envelope\)/,
+  "the public renderer service rejects object inputs before contextBridge"
+);
 assert.match(editorActions, /result\.code === "not_found" \|\| result\.code === "invalid_kind"/);
 assert.match(editorActions, /manualSaveSessionRef\.current === sessionAtStart/);
-assert.match(editorActions, /bindLoadedManualSave\(replay\.record\.id, revision\)/);
+assert.match(
+  editorActions,
+  /bindLoadedManualSave\([\s\S]*?replay\.record\.id,[\s\S]*?revision,[\s\S]*?snapshot\.finalUrl \|\| snapshot\.originalUrl \|\| ""[\s\S]*?\)/,
+  "manual replay provenance binds the exact sanitized replay URL"
+);
 assert.match(editorActions, /handleHistoryRecordRemoved[\s\S]*?startNewManualSaveSession/);
 const commitHistoryReplayIndex = editorActions.indexOf("async function commitHistoryReplay");
 const manualReplayIndex = editorActions.indexOf('if (replay.kind === "manual-save")', commitHistoryReplayIndex);
@@ -90,10 +110,13 @@ const manualReplayBranch = editorActions.slice(
 assert.doesNotMatch(manualReplayBranch, /fetch\(/, "manual-save replay commits its stored snapshot without network parsing");
 assert.match(manualReplayBranch, /coverUrl: ""/, "manual-save replay cannot reactivate a remote cover URL");
 assert.match(editorActions, /const translationEnabled = snapshot\.translationEnabled;/);
-assert.match(editorActions, /type ManualReplayProvenance = \{[\s\S]*?recordId: string;[\s\S]*?\};/);
 assert.match(
   editorActions,
-  /function bindLoadedManualSave[\s\S]*?replaceManualReplayProvenance\(\{[\s\S]*?recordId[\s\S]*?\}\)/,
+  /type ManualReplayProvenance = \{[\s\S]*?recordId: string;[\s\S]*?replayUrl: string;[\s\S]*?\};/
+);
+assert.match(
+  editorActions,
+  /function bindLoadedManualSave\(recordId: string, savedRevision: number, replayUrl: string\)[\s\S]*?replaceManualReplayProvenance\(\{[\s\S]*?recordId,[\s\S]*?replayUrl[\s\S]*?\}\)/,
   "manual-save replay binding records explicit provenance"
 );
 assert.match(
@@ -103,16 +126,24 @@ assert.match(
 );
 assert.match(
   editorActions,
-  /suppressSongLinkAutoParse = Boolean\([\s\S]*?manualReplayProvenance &&[\s\S]*?manualSaveBinding &&[\s\S]*?manualReplayProvenance\.recordId === manualSaveBinding\.recordId/,
-  "auto-parse suppression is scoped to the currently bound replay record"
+  /function createSongLinkAutoParseVisitIntent\(\)[\s\S]*?manualReplayProvenanceRef\.current[\s\S]*?manualSaveBindingRef\.current[\s\S]*?replayProvenance\.replayUrl === currentDocumentRef\.current\.url[\s\S]*?allowAutoParse: !replayStillOwnsCurrentUrl/,
+  "each navigation visit captures one immutable decision from synchronous replay provenance and the exact current URL"
 );
-assert.match(songLinkParser, /const autoParseSuppressedAtMount = useRef\(suppressAutoParseOnMount\)/);
 assert.match(
   songLinkParser,
-  /autoParseSuppressedAtMount\.current[\s\S]*?void parseUrl\(\)/,
-  "only automatic parsing at component mount is suppressed; explicit parsing remains available"
+  /handledAutoParseVisitRef\.current === autoParseVisitIntent\.id[\s\S]*?handledAutoParseVisitRef\.current = autoParseVisitIntent\.id;[\s\S]*?autoParseVisitIntent\.allowAutoParse[\s\S]*?void parseUrl\(\)[\s\S]*?\[autoParseOnMount, autoParseVisitIntent\.id\]/,
+  "the parser consumes each immutable navigation intent at most once"
 );
-assert.match(editorSteps, /suppressAutoParseOnMount=\{suppressSongLinkAutoParse\}/);
+assert.match(
+  editorSteps,
+  /autoParseVisitIntent=\{songLinkAutoParseVisitIntent\}/,
+  "the parser receives the explicit song-import navigation intent"
+);
+assert.match(
+  lyricEditor,
+  /function changeEditorStep\(nextStep: number\)[\s\S]*?nextStep === 0 && currentStep !== 0[\s\S]*?setSongLinkAutoParseVisitIntent\(createSongLinkAutoParseVisitIntent\(\)\)[\s\S]*?onStepChange=\{changeEditorStep\}/,
+  "the real navigation event creates the visit intent independently of animation remount timing"
+);
 assert.match(
   desktopHistoryInteractions,
   /routeCountsBeforeManualReplayRemount[\s\S]*?roundTrip <= 2[\s\S]*?manual replay remains local across song-import remount/,
@@ -122,6 +153,16 @@ assert.match(
   desktopHistoryInteractions,
   /routeCountsBeforeExplicitUrlImport[\s\S]*?editing the replay URL alone performs no request[\s\S]*?explicit URL edit restores exactly one normal auto-parse request on the next mount[\s\S]*?waitForManualSaveState\("create"\)/,
   "desktop regression covers explicit URL release and detachment from the prior manual save"
+);
+assert.match(
+  desktopHistoryInteractions,
+  /publicGetterCalls[\s\S]*?publicProxyOwnKeys[\s\S]*?contextBridge probe documents Electron's one caller-getter execution[\s\S]*?no history file side effect/,
+  "packaged regression distinguishes caller-side contextBridge cloning from product storage effects"
+);
+assert.match(
+  desktopHistoryInteractions,
+  /NetEase song identity while removing credentials[\s\S]*?manual replay retains its exact sanitized song identity[\s\S]*?manual replay remains local across song-import remount/,
+  "packaged replay keeps the allowlisted song ID with zero remount network activity"
 );
 assert.match(
   desktopHistoryInteractions,
@@ -169,4 +210,4 @@ assert.match(
   "narrow icon-only adaptation remains scoped to the desktop shell"
 );
 
-console.log(JSON.stringify({ ok: true, importHistoryUiContracts: 67 }, null, 2));
+console.log(JSON.stringify({ ok: true, importHistoryUiContracts: 72 }, null, 2));

@@ -625,9 +625,9 @@ function registerDesktopIpc() {
     }
   }));
 
-  handle("lyrics-card:manual-save-create", (_event, input) => trackImportHistoryMutation(async () => {
+  handle("lyrics-card:manual-save-create", (_event, envelope) => trackImportHistoryMutation(async () => {
     try {
-      const record = await importHistoryStore.createManualSave(input, await readImportHistoryLimit());
+      const record = await importHistoryStore.createManualSave(envelope, await readImportHistoryLimit());
       return { ok: true, record };
     } catch (error) {
       console.error("[import-history] unable to create manual save", error instanceof Error ? error.message : "unknown error");
@@ -635,9 +635,9 @@ function registerDesktopIpc() {
     }
   }));
 
-  handle("lyrics-card:manual-save-update", (_event, recordId, input) => trackImportHistoryMutation(async () => {
+  handle("lyrics-card:manual-save-update", (_event, recordId, envelope) => trackImportHistoryMutation(async () => {
     try {
-      const record = await importHistoryStore.updateManualSave(recordId, input, await readImportHistoryLimit());
+      const record = await importHistoryStore.updateManualSave(recordId, envelope, await readImportHistoryLimit());
       return { ok: true, record };
     } catch (error) {
       console.error("[import-history] unable to update manual save", error instanceof Error ? error.message : "unknown error");

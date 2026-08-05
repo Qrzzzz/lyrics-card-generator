@@ -45,7 +45,8 @@ import {
   type LocalAudioImportHistoryContext,
   type ManualCoverImportHistoryContext,
   type ManualSaveButtonState,
-  type SearchImportHistoryContext
+  type SearchImportHistoryContext,
+  serializeImportHistoryManualSave
 } from "@/lib/import-history";
 import { importHistoryCopy } from "@/lib/import-history-copy";
 import type {
@@ -85,7 +86,13 @@ type ManualSaveBinding = {
 type ManualReplayProvenance = {
   kind: "manual-save";
   recordId: string;
+  replayUrl: string;
 };
+
+export type SongLinkAutoParseVisitIntent = Readonly<{
+  id: number;
+  allowAutoParse: boolean;
+}>;
 
 type HistorySongParseResponse =
   | { ok: true; data: ParsedSongData }
@@ -129,8 +136,8 @@ export function useEditorActions({
   const trackedDocumentIntentRef = useRef<number | null>(null);
   const [manualSaveBinding, setManualSaveBinding] = useState<ManualSaveBinding | null>(null);
   const manualSaveBindingRef = useRef<ManualSaveBinding | null>(null);
-  const [manualReplayProvenance, setManualReplayProvenance] = useState<ManualReplayProvenance | null>(null);
   const manualReplayProvenanceRef = useRef<ManualReplayProvenance | null>(null);
+  const songLinkAutoParseVisitRef = useRef(0);
   const manualSaveSessionRef = useRef(0);
   const manualSavePendingRef = useRef(false);
   const [isManualSaveSaving, setIsManualSaveSaving] = useState(false);
@@ -182,7 +189,6 @@ export function useEditorActions({
 
   function replaceManualReplayProvenance(provenance: ManualReplayProvenance | null) {
     manualReplayProvenanceRef.current = provenance;
-    setManualReplayProvenance(provenance);
   }
 
   function startNewManualSaveSession() {
@@ -191,10 +197,26 @@ export function useEditorActions({
     if (manualReplayProvenanceRef.current) replaceManualReplayProvenance(null);
   }
 
-  function bindLoadedManualSave(recordId: string, savedRevision: number) {
+  function bindLoadedManualSave(recordId: string, savedRevision: number, replayUrl: string) {
     manualSaveSessionRef.current += 1;
     replaceManualSaveBinding({ recordId, savedRevision });
-    replaceManualReplayProvenance({ kind: "manual-save", recordId });
+    replaceManualReplayProvenance({ kind: "manual-save", recordId, replayUrl });
+  }
+
+  function createSongLinkAutoParseVisitIntent(): SongLinkAutoParseVisitIntent {
+    const replayProvenance = manualReplayProvenanceRef.current;
+    const binding = manualSaveBindingRef.current;
+    const replayStillOwnsCurrentUrl = Boolean(
+      replayProvenance &&
+      binding &&
+      replayProvenance.recordId === binding.recordId &&
+      replayProvenance.replayUrl === currentDocumentRef.current.url
+    );
+    songLinkAutoParseVisitRef.current += 1;
+    return {
+      id: songLinkAutoParseVisitRef.current,
+      allowAutoParse: !replayStillOwnsCurrentUrl
+    };
   }
 
   function applyDocumentMutation(mutation: EditorDocumentStateMutation) {
@@ -306,12 +328,17 @@ export function useEditorActions({
 
     const sessionAtStart = manualSaveSessionRef.current;
     const input = currentManualSaveInput();
+    const envelope = serializeImportHistoryManualSave(input);
+    if (!envelope) {
+      onNotify(copy.manualSaveUnavailable);
+      return;
+    }
     manualSavePendingRef.current = true;
     setIsManualSaveSaving(true);
     try {
       const result = bindingAtStart
-        ? await desktop.updateManualSave(bindingAtStart.recordId, input)
-        : await desktop.createManualSave(input);
+        ? await desktop.updateManualSave(bindingAtStart.recordId, envelope)
+        : await desktop.createManualSave(envelope);
       if (!result.ok) {
         if (bindingAtStart && (result.code === "not_found" || result.code === "invalid_kind")) {
           if (manualSaveBindingRef.current?.recordId === bindingAtStart.recordId) {
@@ -788,7 +815,11 @@ export function useEditorActions({
       onInvalidateDocument();
       const snapshot = replay.snapshot;
       setDocumentRevision(revision);
-      bindLoadedManualSave(replay.record.id, revision);
+      bindLoadedManualSave(
+        replay.record.id,
+        revision,
+        snapshot.finalUrl || snapshot.originalUrl || ""
+      );
       setState((current) => replaceWithHistorySnapshot(current, snapshot, {
         // Manual archives must replay from their persisted semantic snapshot only.
         // Keeping the remote reference as provenance while leaving coverUrl empty
@@ -823,11 +854,6 @@ export function useEditorActions({
     return { revision };
   }
 
-  const suppressSongLinkAutoParse = Boolean(
-    manualReplayProvenance &&
-    manualSaveBinding &&
-    manualReplayProvenance.recordId === manualSaveBinding.recordId
-  );
   const manualSaveButtonState: ManualSaveButtonState = isManualSaveSaving
     ? "saving"
     : !hasClearableLyricContent(parsedState)
@@ -844,7 +870,7 @@ export function useEditorActions({
     documentRevision,
     isDocumentTransactionPending,
     manualSaveButtonState,
-    suppressSongLinkAutoParse,
+    createSongLinkAutoParseVisitIntent,
     beginSongImport,
     clearAllContent,
     handleStyleChange,

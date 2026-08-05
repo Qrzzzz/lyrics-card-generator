@@ -229,15 +229,177 @@ async function main() {
       now: () => ++manualNow,
       createId: () => `manual-${++manualId}`
     });
-    const firstManual = await manualStore.createManualSave(manualSaveCandidate("Same title", "First lyrics"), "unlimited");
+
+    const shapeBoundaryTarget = path.join(root, "app-data", "manual-save-shape-boundary.json");
+    let shapeBoundaryNowCalls = 0;
+    let shapeBoundaryIdCalls = 0;
+    const shapeBoundaryStore = new ImportHistoryStore({
+      filePath: shapeBoundaryTarget,
+      now: () => {
+        shapeBoundaryNowCalls += 1;
+        return timestamp;
+      },
+      createId: () => {
+        shapeBoundaryIdCalls += 1;
+        return "must-not-be-created";
+      }
+    });
+    let outerGetterCalls = 0;
+    const accessorCandidate = {};
+    Object.defineProperty(accessorCandidate, "snapshot", {
+      enumerable: true,
+      get() {
+        outerGetterCalls += 1;
+        return manualSaveCandidate("Accessor must be rejected", "Safe lyrics").snapshot;
+      }
+    });
+    await assert.rejects(
+      shapeBoundaryStore.createManualSave(accessorCandidate, "unlimited"),
+      (error) => error?.code === "invalid_snapshot",
+      "the Store boundary rejects an accessor-bearing outer request"
+    );
+    assert.equal(outerGetterCalls, 0, "the Store boundary never executes an outer snapshot getter");
+
+    let proxyGets = 0;
+    let proxyOwnKeys = 0;
+    const proxyCandidate = new Proxy(manualSaveCandidate("Proxy must be rejected", "Safe lyrics"), {
+      get(target, key, receiver) {
+        proxyGets += 1;
+        return Reflect.get(target, key, receiver);
+      },
+      ownKeys(target) {
+        proxyOwnKeys += 1;
+        return Reflect.ownKeys(target);
+      }
+    });
+    await assert.rejects(
+      shapeBoundaryStore.createManualSave(proxyCandidate, "unlimited"),
+      (error) => error?.code === "invalid_snapshot",
+      "the Store boundary rejects a Proxy request"
+    );
+    assert.deepEqual(
+      { proxyGets, proxyOwnKeys },
+      { proxyGets: 0, proxyOwnKeys: 0 },
+      "the Store boundary rejects a Proxy without executing any trap"
+    );
+
+    let nestedGetterCalls = 0;
+    const nestedAccessorCandidate = manualSaveCandidate("Nested accessor", "Safe lyrics");
+    Object.defineProperty(nestedAccessorCandidate.snapshot, "unknownAccessor", {
+      enumerable: true,
+      get() {
+        nestedGetterCalls += 1;
+        return "secret";
+      }
+    });
+    const symbolCandidate = manualSaveCandidate("Symbol property", "Safe lyrics");
+    symbolCandidate.snapshot[Symbol("secret")] = "secret";
+    const nonEnumerableCandidate = manualSaveCandidate("Non-enumerable property", "Safe lyrics");
+    Object.defineProperty(nonEnumerableCandidate.snapshot, "hidden", { value: "secret", enumerable: false });
+    const extendedArray = ["safe"];
+    extendedArray.extra = "secret";
+    const sparseArray = new Array(2);
+    sparseArray[1] = "safe";
+    const sharedValue = { safe: true };
+    const cycle = {};
+    cycle.self = cycle;
+    const rawStructuredCloneCases = [
+      ["nested accessor", nestedAccessorCandidate],
+      ["symbol property", symbolCandidate],
+      ["non-enumerable property", nonEnumerableCandidate],
+      ["extended array", manualSaveCandidateWithUnknown(extendedArray)],
+      ["sparse array", manualSaveCandidateWithUnknown(sparseArray)],
+      ["shared object", manualSaveCandidateWithUnknown({ first: sharedValue, second: sharedValue })],
+      ["ArrayBuffer", manualSaveCandidateWithUnknown(new ArrayBuffer(16))],
+      ["Uint8Array", manualSaveCandidateWithUnknown(new Uint8Array([1, 2, 3]))],
+      ["DataView", manualSaveCandidateWithUnknown(new DataView(new ArrayBuffer(8)))],
+      ["Map", manualSaveCandidateWithUnknown(new Map([["secret", "value"]]))],
+      ["Set", manualSaveCandidateWithUnknown(new Set(["secret"]))],
+      ["Date", manualSaveCandidateWithUnknown(new Date(0))],
+      ["RegExp", manualSaveCandidateWithUnknown(/secret/u)],
+      ["Error", manualSaveCandidateWithUnknown(new Error("secret"))],
+      ["cycle", manualSaveCandidateWithUnknown(cycle)]
+    ];
+    if (typeof SharedArrayBuffer === "function") {
+      rawStructuredCloneCases.push([
+        "SharedArrayBuffer",
+        manualSaveCandidateWithUnknown(new SharedArrayBuffer(16))
+      ]);
+    }
+    for (const [label, candidate] of rawStructuredCloneCases) {
+      await assert.rejects(
+        shapeBoundaryStore.createManualSave(candidate, "unlimited"),
+        (error) => error?.code === "invalid_snapshot",
+        `the Store rejects raw ${label} input with the stable domain error`
+      );
+    }
+    assert.equal(nestedGetterCalls, 0, "the Store never executes a nested accessor");
+
+    const canonicalSnapshot = manualSaveCandidate("Canonical schema", "Safe lyrics").snapshot;
+    for (const [label, invalidEnvelope] of [
+      ["missing envelope version", JSON.stringify({ snapshot: canonicalSnapshot })],
+      ["unknown outer field", JSON.stringify({ version: 1, snapshot: canonicalSnapshot, extra: true })],
+      ["wrong envelope version", JSON.stringify({ version: 2, snapshot: canonicalSnapshot })],
+      ["non-canonical whitespace", ` ${manualSaveEnvelope({ snapshot: canonicalSnapshot })}`],
+      ["malformed JSON", '{"version":1,"snapshot":']
+    ]) {
+      await assert.rejects(
+        shapeBoundaryStore.createManualSave(invalidEnvelope, "unlimited"),
+        (error) => error?.code === "invalid_snapshot",
+        `${label} is rejected before Store mutation`
+      );
+    }
+
+    const deepValue = `${'{"next":'.repeat(1_000)}null${"}".repeat(1_000)}`;
+    const deepEnvelope = `{"version":1,"snapshot":{"source":"unknown","title":"Deep input","artist":"","album":"","explicit":false,"originalCoverUrl":"","coverUrl":"","originalUrl":"","finalUrl":"","parseMethod":"","lyrics":"Safe lyrics","translationText":"","translationEnabled":false,"unknownDeep":${deepValue}}}`;
+    await assert.rejects(
+      shapeBoundaryStore.createManualSave(deepEnvelope, "unlimited"),
+      (error) => error?.code === "invalid_snapshot",
+      "a canonical but excessively deep envelope is rejected without recursion failure"
+    );
+    assert.equal(shapeBoundaryStore.document, null, "invalid requests never initialize Store memory state");
+    assert.deepEqual(
+      { shapeBoundaryNowCalls, shapeBoundaryIdCalls },
+      { shapeBoundaryNowCalls: 0, shapeBoundaryIdCalls: 0 },
+      "invalid requests never allocate metadata"
+    );
+    await assert.rejects(
+      fs.readFile(shapeBoundaryTarget, "utf8"),
+      (error) => error?.code === "ENOENT",
+      "an invalid request creates no history file"
+    );
+
+    const firstManual = await manualStore.createManualSave(
+      manualSaveEnvelope(manualSaveCandidate("Same title", "First lyrics")),
+      "unlimited"
+    );
+    let updateGetterCalls = 0;
+    const updateAccessorCandidate = {};
+    Object.defineProperty(updateAccessorCandidate, "snapshot", {
+      enumerable: true,
+      get() {
+        updateGetterCalls += 1;
+        return manualSaveCandidate("Accessor update", "Unsafe update").snapshot;
+      }
+    });
+    await assert.rejects(
+      manualStore.updateManualSave(firstManual.id, updateAccessorCandidate, "unlimited"),
+      (error) => error?.code === "invalid_snapshot",
+      "Store update rejects an accessor envelope before record lookup or mutation"
+    );
+    assert.equal(updateGetterCalls, 0, "Store update never executes the accessor getter");
+    assert.equal((await manualStore.get(firstManual.id)).snapshot.title, "Same title");
     const firstCreatedAt = (await manualStore.get(firstManual.id)).createdAt;
-    const secondManual = await manualStore.createManualSave(manualSaveCandidate("Same title", "Second lyrics"), "unlimited");
+    const secondManual = await manualStore.createManualSave(
+      manualSaveEnvelope(manualSaveCandidate("Same title", "Second lyrics")),
+      "unlimited"
+    );
     assert.notEqual(firstManual.id, secondManual.id);
     assert.equal((await manualStore.stats()).total, 2, "same-title manual saves coexist without dedupe");
 
     const updatedManual = await manualStore.updateManualSave(
       firstManual.id,
-      manualSaveCandidate("Updated title", "Updated lyrics"),
+      manualSaveEnvelope(manualSaveCandidate("Updated title", "Updated lyrics")),
       "unlimited"
     );
     const updatedInternal = await manualStore.get(firstManual.id);
@@ -249,12 +411,20 @@ async function main() {
     assert.equal(updatedList.total, 2, "manual save updates do not change the total");
 
     await assert.rejects(
-      manualStore.updateManualSave("missing-record", manualSaveCandidate("Missing", "lyrics"), 10),
+      manualStore.updateManualSave(
+        "missing-record",
+        manualSaveEnvelope(manualSaveCandidate("Missing", "lyrics")),
+        10
+      ),
       (error) => error?.code === "not_found"
     );
     const ordinary = await manualStore.upsert(linkCandidate(777), "unlimited");
     await assert.rejects(
-      manualStore.updateManualSave(ordinary.id, manualSaveCandidate("Wrong kind", "lyrics"), 10),
+      manualStore.updateManualSave(
+        ordinary.id,
+        manualSaveEnvelope(manualSaveCandidate("Wrong kind", "lyrics")),
+        10
+      ),
       (error) => error?.code === "invalid_kind"
     );
     await assert.rejects(
@@ -262,33 +432,36 @@ async function main() {
       (error) => error?.code === "invalid_kind"
     );
     await assert.rejects(
-      manualStore.createManualSave({ snapshot: emptyManualSnapshot() }, 10),
+      manualStore.createManualSave(manualSaveEnvelope({ snapshot: emptyManualSnapshot() }), 10),
       (error) => error?.code === "invalid_snapshot"
     );
     await assert.rejects(
-      manualStore.createManualSave(manualSaveCandidate("Oversized", "x".repeat(120_001)), 10),
+      manualStore.createManualSave(
+        manualSaveEnvelope(manualSaveCandidate("Oversized", "x".repeat(120_001))),
+        10
+      ),
       (error) => error?.code === "invalid_snapshot"
     );
     await assert.rejects(
-      manualStore.createManualSave({
+      manualStore.createManualSave(manualSaveEnvelope({
         snapshot: {
           ...emptyManualSnapshot(),
           title: "Record byte ceiling",
           lyrics: "界".repeat(120_000),
           translationText: "界".repeat(120_000)
         }
-      }, 10),
+      }), 10),
       (error) => error?.code === "invalid_snapshot"
     );
     await assert.rejects(
-      manualStore.createManualSave({
+      manualStore.createManualSave(manualSaveEnvelope({
         snapshot: {
           ...emptyManualSnapshot(),
           title: "Oversized unknown object",
           lyrics: "Safe lyrics",
           style: { embeddedImage: `data:image/png;base64,${"A".repeat(600_000)}` }
         }
-      }, 10),
+      }), 10),
       (error) => error?.code === "invalid_snapshot",
       "large unknown snapshot objects are rejected before whitelist projection"
     );
@@ -331,7 +504,7 @@ async function main() {
       MAX_MANUAL_SNAPSHOT_BYTES,
       "the legal JSON-like fixture is exactly the pre-projection byte ceiling"
     );
-    const boundaryRecord = await manualStore.createManualSave(boundaryCandidate, "unlimited");
+    const boundaryRecord = await manualStore.createManualSave(manualSaveEnvelope(boundaryCandidate), "unlimited");
     assert.equal("unknownPadding" in (await manualStore.get(boundaryRecord.id)).snapshot, false);
     assert.equal("unknownTree" in (await manualStore.get(boundaryRecord.id)).snapshot, false);
 
@@ -342,12 +515,12 @@ async function main() {
       MAX_MANUAL_SNAPSHOT_BYTES - oversizedBaseBytes + 1
     );
     await assert.rejects(
-      manualStore.createManualSave(oversizedUnknownString, "unlimited"),
+      manualStore.createManualSave(manualSaveEnvelope(oversizedUnknownString), "unlimited"),
       (error) => error?.code === "invalid_snapshot",
       "a JSON-like unknown string one byte over the pre-projection ceiling is rejected"
     );
 
-    const sanitizedManual = await manualStore.createManualSave({
+    const sanitizedManual = await manualStore.createManualSave(manualSaveEnvelope({
       snapshot: {
         ...emptyManualSnapshot(),
         title: "Sanitized manual save",
@@ -362,35 +535,87 @@ async function main() {
         localPath: "C:\\Users\\private\\song.mp3",
         style: { backgroundImage: "data:image/png;base64,SECRET_STYLE" }
       }
-    }, "unlimited");
+    }), "unlimited");
     const sanitizedSnapshot = (await manualStore.get(sanitizedManual.id)).snapshot;
     assert.equal(sanitizedSnapshot.originalCoverUrl, "https://covers.example/manual.jpg");
     assert.equal(sanitizedSnapshot.coverUrl, "https://covers.example/fallback.jpg");
-    assert.equal(sanitizedSnapshot.originalUrl, "https://music.163.com/song");
+    assert.equal(sanitizedSnapshot.originalUrl, "https://music.163.com/song?id=42");
     assert.equal(sanitizedSnapshot.finalUrl, "");
     assert.equal(sanitizedSnapshot.parseMethod, "");
     assert.doesNotMatch(
       JSON.stringify(await manualStore.get(sanitizedManual.id)),
       /SECRET_|blob:|data:image|file:\/\/|C:\\\\Users|proxiedCoverUrl|apiKey|localPath|backgroundImage/
     );
-    const backslashMethod = await manualStore.createManualSave({
+    const backslashMethod = await manualStore.createManualSave(manualSaveEnvelope({
       snapshot: {
         ...emptyManualSnapshot(),
         title: "Backslash parse method",
         lyrics: "Safe semantic content",
         parseMethod: "C:\\Users\\private\\parser"
       }
-    }, "unlimited");
+    }), "unlimited");
     assert.equal((await manualStore.get(backslashMethod.id)).snapshot.parseMethod, "");
-    const validMethod = await manualStore.createManualSave({
+    const validMethod = await manualStore.createManualSave(manualSaveEnvelope({
       snapshot: {
         ...emptyManualSnapshot(),
         title: "Valid parse method",
         lyrics: "Safe semantic content",
         parseMethod: "manual-save_test.v2"
       }
-    }, "unlimited");
+    }), "unlimited");
     assert.equal((await manualStore.get(validMethod.id)).snapshot.parseMethod, "manual-save_test.v2");
+
+    const identityUrlCases = [
+      {
+        label: "NetEase query identity",
+        input: "https://music.163.com/song?id=70001&token=SECRET&api_key=SECRET&utm_source=tracker#private",
+        expected: "https://music.163.com/song?id=70001"
+      },
+      {
+        label: "NetEase hash-route identity",
+        input: "https://music.163.com/#/song?id=70002&auth=SECRET",
+        expected: "https://music.163.com/song?id=70002"
+      },
+      {
+        label: "Apple Music track identity",
+        input: "https://music.apple.com/us/album/example/123456?i=654321&token=SECRET&signature=SECRET#private",
+        expected: "https://music.apple.com/us/album/example/123456?i=654321"
+      },
+      {
+        label: "QQ Music songmid identity",
+        input: "https://y.qq.com/portal/player.html?songmid=003OUlho2HcRHC&auth=SECRET&utm_campaign=tracker#private",
+        expected: "https://y.qq.com/portal/player.html?songmid=003OUlho2HcRHC"
+      },
+      {
+        label: "QQ Music non-song path",
+        input: "https://y.qq.com/account/settings?songmid=003OUlho2HcRHC&token=SECRET#private",
+        expected: "https://y.qq.com/account/settings"
+      },
+      {
+        label: "Spotify path identity",
+        input: "https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC?si=SECRET&utm_source=tracker#private",
+        expected: "https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC"
+      },
+      {
+        label: "unsupported host has no identity query",
+        input: "https://example.com/song?id=70001&i=654321&token=SECRET#private",
+        expected: "https://example.com/song"
+      }
+    ];
+    for (const { label, input, expected } of identityUrlCases) {
+      const candidate = manualSaveCandidate(label, "Safe lyrics");
+      candidate.snapshot.originalUrl = input;
+      candidate.snapshot.finalUrl = input;
+      const saved = await manualStore.createManualSave(manualSaveEnvelope(candidate), "unlimited");
+      const stored = (await manualStore.get(saved.id)).snapshot;
+      assert.equal(stored.originalUrl, expected, `${label} keeps only its allowlisted identity`);
+      assert.equal(stored.finalUrl, expected, `${label} has identical original/final URL semantics`);
+      assert.doesNotMatch(
+        `${stored.originalUrl}\n${stored.finalUrl}`,
+        /SECRET|token=|api_key=|auth=|signature=|utm_|#|\bsi=/i,
+        `${label} removes credentials, fragments, signatures, and tracking`
+      );
+    }
 
     for (const limit of [5, 10, "unlimited"]) {
       const limitTarget = path.join(root, "app-data", `manual-limit-${limit}.json`);
@@ -404,12 +629,19 @@ async function main() {
       const expectedTotal = limit === "unlimited" ? 12 : limit;
       const created = [];
       for (let index = 0; index < 12; index += 1) {
-        created.push(await limitStore.createManualSave(manualSaveCandidate(`Limit ${index}`, `Lyrics ${index}`), limit));
+        created.push(await limitStore.createManualSave(
+          manualSaveEnvelope(manualSaveCandidate(`Limit ${index}`, `Lyrics ${index}`)),
+          limit
+        ));
       }
       assert.equal((await limitStore.stats()).total, expectedTotal, `${limit} trims manual save creates correctly`);
       const retained = (await limitStore.list({ offset: 0, limit: 50 })).records.at(-1);
       const beforeUpdateTotal = (await limitStore.stats()).total;
-      await limitStore.updateManualSave(retained.id, manualSaveCandidate("Moved to top", "updated"), limit);
+      await limitStore.updateManualSave(
+        retained.id,
+        manualSaveEnvelope(manualSaveCandidate("Moved to top", "updated")),
+        limit
+      );
       const afterUpdate = await limitStore.list({ offset: 0, limit: 50 });
       assert.equal(afterUpdate.total, beforeUpdateTotal, `${limit} update does not delete the updated record`);
       assert.equal(afterUpdate.records[0].id, retained.id, `${limit} update retains and promotes the selected ID`);
@@ -671,7 +903,10 @@ async function main() {
     const afterFailure = await failing.list({ offset: 0, limit: 20 });
     assert.deepEqual(afterFailure.records.map((record) => record.id), [stableRecord.id], "failed writes do not mutate the in-memory committed store");
 
-    const stableManual = await stable.createManualSave(manualSaveCandidate("Stable manual", "before"), 10);
+    const stableManual = await stable.createManualSave(
+      manualSaveEnvelope(manualSaveCandidate("Stable manual", "before")),
+      10
+    );
     const failedManualUpdate = new ImportHistoryStore({
       filePath: target,
       fs: failingFs,
@@ -679,7 +914,11 @@ async function main() {
       createId: () => `failed-manual-${++nextId}`
     });
     await assert.rejects(
-      failedManualUpdate.updateManualSave(stableManual.id, manualSaveCandidate("Failed manual", "after"), 10),
+      failedManualUpdate.updateManualSave(
+        stableManual.id,
+        manualSaveEnvelope(manualSaveCandidate("Failed manual", "after")),
+        10
+      ),
       /simulated disk failure/
     );
     assert.equal((await failedManualUpdate.get(stableManual.id)).snapshot.lyrics, "before");
@@ -756,6 +995,16 @@ function manualSaveCandidate(title, lyrics) {
       translationEnabled: true
     }
   };
+}
+
+function manualSaveEnvelope(candidate) {
+  return JSON.stringify({ version: 1, snapshot: candidate.snapshot });
+}
+
+function manualSaveCandidateWithUnknown(value) {
+  const candidate = manualSaveCandidate("Rejected raw shape", "Safe lyrics");
+  candidate.snapshot.unknownValue = value;
+  return candidate;
 }
 
 main().catch((error) => {

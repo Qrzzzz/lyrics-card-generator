@@ -23,6 +23,7 @@ import type { createT } from "@/lib/i18n";
 import { revokeReplacedBlobUrl } from "@/lib/object-url-lifecycle";
 import type { LyricsDocumentSnapshot, LyricsSidebarTab } from "@/lib/lyrics-workbench";
 import type { DocumentImportIntent, DocumentImportKind } from "@/lib/editor/document-transactions";
+import type { SongLinkAutoParseVisitIntent } from "@/components/editor/hooks/useEditorActions";
 import type {
   LinkImportHistoryContext,
   LocalAudioImportHistoryContext,
@@ -96,7 +97,7 @@ type UseEditorStepsInput = {
     lineStatus: ExportLyricLineStatus;
   };
   documentRevision: number;
-  suppressSongLinkAutoParse: boolean;
+  songLinkAutoParseVisitIntent: SongLinkAutoParseVisitIntent;
   ai: EditorStepsAiState;
   handlers: EditorStepHandlers;
 };
@@ -112,7 +113,7 @@ export function useEditorSteps({
   exportQuality,
   lyricsLayout,
   documentRevision,
-  suppressSongLinkAutoParse,
+  songLinkAutoParseVisitIntent,
   ai,
   handlers
 }: UseEditorStepsInput): SettingsStep[] {
@@ -234,7 +235,7 @@ export function useEditorSteps({
               onParsed={handlers.onSongParsed}
               t={t}
               autoParseOnMount
-              suppressAutoParseOnMount={suppressSongLinkAutoParse}
+              autoParseVisitIntent={songLinkAutoParseVisitIntent}
             />
             <LocalAudioParser
               t={t}

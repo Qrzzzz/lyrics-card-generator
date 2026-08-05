@@ -15,7 +15,10 @@ import { useEditorSteps } from "@/components/editor/useEditorSteps";
 import {
   useEditorAiTranslation
 } from "@/components/editor/hooks/useEditorAiTranslation";
-import { useEditorActions } from "@/components/editor/hooks/useEditorActions";
+import {
+  useEditorActions,
+  type SongLinkAutoParseVisitIntent
+} from "@/components/editor/hooks/useEditorActions";
 import { useEditorPreferences } from "@/components/editor/hooks/useEditorPreferences";
 import { AppMotionProvider } from "@/components/motion/AppMotionProvider";
 import { MotionPanel } from "@/components/motion/MotionPanel";
@@ -77,6 +80,10 @@ const reducedSurfaceTransition: Transition = {
 export function LyricEditor() {
   const [state, setState] = useState<AppState>(defaultState);
   const [currentStep, setCurrentStep] = useState(0);
+  const [songLinkAutoParseVisitIntent, setSongLinkAutoParseVisitIntent] = useState<SongLinkAutoParseVisitIntent>({
+    id: 0,
+    allowAutoParse: true
+  });
   const [fontSchemePreview, setFontSchemePreview] = useState<FontScheme | null>(null);
   const [isPreviewVisible, setIsPreviewVisible] = useState(true);
   const [activeSurface, setActiveSurface] = useState<ActiveSurface>("editor");
@@ -183,7 +190,7 @@ export function LyricEditor() {
     documentRevision,
     isDocumentTransactionPending,
     manualSaveButtonState,
-    suppressSongLinkAutoParse,
+    createSongLinkAutoParseVisitIntent,
     beginSongImport,
     clearAllContent,
     handleStyleChange,
@@ -370,6 +377,13 @@ export function LyricEditor() {
     });
   }
 
+  function changeEditorStep(nextStep: number) {
+    if (nextStep === 0 && currentStep !== 0) {
+      setSongLinkAutoParseVisitIntent(createSongLinkAutoParseVisitIntent());
+    }
+    setCurrentStep(nextStep);
+  }
+
   const settingsSteps: SettingsStep[] = useEditorSteps({
     state,
     t,
@@ -383,7 +397,7 @@ export function LyricEditor() {
       lineStatus: exportReadiness.lineStatus
     },
     documentRevision,
-    suppressSongLinkAutoParse,
+    songLinkAutoParseVisitIntent,
     ai: {
       isOpen: isAITranslateOpen,
       isTranslating: isAITranslating,
@@ -511,7 +525,7 @@ export function LyricEditor() {
                     <SettingsStepper
                       steps={settingsSteps}
                       currentStep={currentStep}
-                      onStepChange={setCurrentStep}
+                      onStepChange={changeEditorStep}
                       backText={t("step.back")}
                       nextText={t("step.next")}
                       themeColor={resolvedAccentColor}
