@@ -800,6 +800,7 @@ try {
   assert.equal(ipcSnapshotValidation.total, 0, "rejected canonical IPC snapshots never mutate history");
 
   const routeCountsBeforeIdentityIpc = { ...routeCounts };
+  const historyDiskBeforeIdentityIpc = await readFile(historyPath, "utf8");
   const identityIpc = await page.evaluate(async () => {
     const api = window.lyricsCardDesktop;
     const snapshotFor = (source, originalUrl, finalUrl = originalUrl) => ({
@@ -817,7 +818,7 @@ try {
       translationText: "",
       translationEnabled: false
     });
-    const cases = [
+    const acceptedCases = [
       [
         "netease",
         "https://music.163.com/song?id=70001&token=SECRET&utm_source=tracker#private",
@@ -845,48 +846,8 @@ try {
       ],
       [
         "netease",
-        "https://music.163.com/song?id=70001&id=70002",
-        "https://music.163.com/song"
-      ],
-      [
-        "netease",
-        "https://music.163.com/song?id=70001&%69d=70002",
-        "https://music.163.com/song"
-      ],
-      [
-        "netease",
-        "https://music.163.com/song?id=70001&ID=70001",
-        "https://music.163.com/song"
-      ],
-      [
-        "netease",
-        "https://music.163.com/song?id=70001&ID=70002",
-        "https://music.163.com/song"
-      ],
-      [
-        "netease",
-        "https://music.163.com/song?id=70001&%49%44=70002",
-        "https://music.163.com/song"
-      ],
-      [
-        "netease",
         "https://music.163.com/song?ID=70001",
         "https://music.163.com/song"
-      ],
-      [
-        "qq",
-        "https://y.qq.com/portal/player.html?songmid=003OUlho2HcRHC&SongMid=003OUlho2HcRHC",
-        "https://y.qq.com/portal/player.html"
-      ],
-      [
-        "qq",
-        "https://y.qq.com/player?songid=70001&SONGID=70002",
-        "https://y.qq.com/player"
-      ],
-      [
-        "apple",
-        "https://music.apple.com/us/album/example/123456?i=654321&I=654321",
-        "https://music.apple.com/us/album/example/123456"
       ],
       [
         "netease",
@@ -899,8 +860,8 @@ try {
         "https://unexpected.music.163.com/song"
       ]
     ];
-    const results = [];
-    for (const [source, inputUrl, expected] of cases) {
+    const accepted = [];
+    for (const [source, inputUrl, expected] of acceptedCases) {
       const envelope = JSON.stringify({
         version: 1,
         snapshot: snapshotFor(source, inputUrl)
@@ -908,7 +869,43 @@ try {
       const created = await api.createManualSave(envelope);
       const replay = created.ok ? await api.replayImportHistory(created.record.id) : created;
       const removed = created.ok ? await api.removeImportHistory(created.record.id) : false;
-      results.push({ source, expected, created, replay, removed });
+      accepted.push({ source, expected, created, replay, removed });
+    }
+    const ambiguousCases = [
+      ["duplicate NetEase identity", "netease", "https://music.163.com/song?id=70001&id=70002"],
+      ["encoded duplicate NetEase identity", "netease", "https://music.163.com/song?id=70001&%69d=70002"],
+      ["same-value case duplicate", "netease", "https://music.163.com/song?id=70001&ID=70001"],
+      ["conflicting case duplicate", "netease", "https://music.163.com/song?id=70001&ID=70002"],
+      ["percent-decoded case duplicate", "netease", "https://music.163.com/song?id=70001&%49%44=70002"],
+      ["QQ songmid case duplicate", "qq", "https://y.qq.com/portal/player.html?songmid=003OUlho2HcRHC&SongMid=003OUlho2HcRHC"],
+      ["QQ songid case conflict", "qq", "https://y.qq.com/player?songid=70001&SONGID=70002"],
+      ["Apple case duplicate", "apple", "https://music.apple.com/us/album/example/123456?i=654321&I=654321"],
+      ["QQ path/query conflict", "qq", "https://y.qq.com/n/ryqq/songDetail/003OUlho2HcRHC?songmid=OTHERID"],
+      ["Apple path/query conflict", "apple", "https://music.apple.com/us/song/example/654322?i=654323"],
+      [
+        "ambiguous original with canonical final",
+        "netease",
+        "https://music.163.com/song?id=70001&ID=70002",
+        "https://music.163.com/song?id=70002"
+      ],
+      [
+        "canonical original with ambiguous final",
+        "netease",
+        "https://music.163.com/song?id=70001",
+        "https://music.163.com/song?id=70001&%69d=70002"
+      ]
+    ];
+    const rejected = [];
+    for (const [label, source, originalUrl, finalUrl = originalUrl] of ambiguousCases) {
+      const envelope = JSON.stringify({
+        version: 1,
+        snapshot: snapshotFor(source, originalUrl, finalUrl)
+      });
+      rejected.push({
+        label,
+        create: await api.createManualSave(envelope),
+        update: await api.updateManualSave("missing-record", envelope)
+      });
     }
     const conflict = await api.createManualSave(JSON.stringify({
       version: 1,
@@ -918,9 +915,9 @@ try {
         "https://music.163.com/song?id=70002"
       )
     }));
-    return { results, conflict, total: (await api.getImportHistoryStats()).total };
+    return { accepted, rejected, conflict, total: (await api.getImportHistoryStats()).total };
   });
-  for (const { source, expected, created, replay, removed } of identityIpc.results) {
+  for (const { source, expected, created, replay, removed } of identityIpc.accepted) {
     assert.equal(created.ok, true, `${source} identity fixture is accepted through the product API`);
     assert.equal(replay.ok, true, `${source} identity fixture replays through packaged IPC`);
     assert.equal(replay.snapshot.originalUrl, expected, `${source} original URL keeps only safe identity`);
@@ -928,12 +925,21 @@ try {
     assert.doesNotMatch(JSON.stringify(replay.snapshot), /SECRET|token=|api_key=|auth=|signature=|utm_|#|\bsi=/i);
     assert.equal(removed, true);
   }
+  for (const { label, create, update } of identityIpc.rejected) {
+    assert.deepEqual(create, { ok: false, code: "invalid_snapshot" }, `${label} create is rejected`);
+    assert.deepEqual(update, { ok: false, code: "invalid_snapshot" }, `${label} update is rejected before lookup`);
+  }
   assert.deepEqual(
     identityIpc.conflict,
     { ok: false, code: "invalid_snapshot" },
     "packaged IPC rejects conflicting original/final song identities"
   );
   assert.equal(identityIpc.total, 0);
+  assert.equal(
+    await readFile(historyPath, "utf8"),
+    historyDiskBeforeIdentityIpc,
+    "ambiguous identity create/update attempts leave packaged history bytes unchanged"
+  );
   assert.deepEqual(routeCounts, routeCountsBeforeIdentityIpc, "identity-only IPC replay performs no network request");
 
   for (let index = 0; index < 10; index += 1) {

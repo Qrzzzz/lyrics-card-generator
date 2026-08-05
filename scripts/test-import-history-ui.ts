@@ -96,8 +96,8 @@ assert.match(
 );
 assert.match(
   importHistoryStore,
-  /function normalizeManualSongUrls\(original, final\)[\s\S]*?original\.identityKey !== final\.identityKey[\s\S]*?return null[\s\S]*?originalUrl: provenanceUrl, finalUrl: provenanceUrl/,
-  "manual archives reject conflicting identities and expose one replay provenance URL"
+  /function normalizeManualSongUrls\(original, final\)[\s\S]*?identityState === "ambiguous"[\s\S]*?return null[\s\S]*?original\.identityKey !== final\.identityKey[\s\S]*?originalUrl: provenanceUrl, finalUrl: provenanceUrl/,
+  "manual archives reject any ambiguous URL before resolving one replay provenance URL"
 );
 assert.match(
   desktopApi,

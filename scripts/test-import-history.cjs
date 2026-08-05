@@ -642,51 +642,11 @@ async function main() {
       );
     }
 
-    const ambiguousIdentityUrlCases = [
-      {
-        label: "duplicate NetEase identity",
-        input: "https://music.163.com/song?id=70001&id=70002",
-        expected: "https://music.163.com/song"
-      },
-      {
-        label: "encoded duplicate NetEase identity",
-        input: "https://music.163.com/song?id=70001&%69d=70002",
-        expected: "https://music.163.com/song"
-      },
-      {
-        label: "case-equivalent duplicate NetEase identity with the same value",
-        input: "https://music.163.com/song?id=70001&ID=70001",
-        expected: "https://music.163.com/song"
-      },
-      {
-        label: "case-equivalent duplicate NetEase identity with a conflicting value",
-        input: "https://music.163.com/song?id=70001&ID=70002",
-        expected: "https://music.163.com/song"
-      },
-      {
-        label: "percent-decoded case-equivalent NetEase identity",
-        input: "https://music.163.com/song?id=70001&%49%44=70002",
-        expected: "https://music.163.com/song"
-      },
+    const noIdentityUrlCases = [
       {
         label: "non-canonical NetEase identity spelling",
         input: "https://music.163.com/song?ID=70001",
         expected: "https://music.163.com/song"
-      },
-      {
-        label: "case-equivalent duplicate QQ songmid identity",
-        input: "https://y.qq.com/portal/player.html?songmid=003OUlho2HcRHC&SongMid=003OUlho2HcRHC",
-        expected: "https://y.qq.com/portal/player.html"
-      },
-      {
-        label: "case-equivalent conflicting QQ songid identity",
-        input: "https://y.qq.com/player?songid=70001&SONGID=70002",
-        expected: "https://y.qq.com/player"
-      },
-      {
-        label: "case-equivalent duplicate Apple identity",
-        input: "https://music.apple.com/us/album/example/123456?i=654321&I=654321",
-        expected: "https://music.apple.com/us/album/example/123456"
       },
       {
         label: "NetEase alternate HTTPS port",
@@ -697,27 +657,95 @@ async function main() {
         label: "unlisted NetEase subdomain",
         input: "https://unexpected.music.163.com/song?id=70001",
         expected: "https://unexpected.music.163.com/song"
-      },
-      {
-        label: "QQ path and parameter ambiguity",
-        input: "https://y.qq.com/n/ryqq/songDetail/003OUlho2HcRHC?songmid=OTHERID",
-        expected: "https://y.qq.com/n/ryqq/songDetail/003OUlho2HcRHC"
-      },
-      {
-        label: "Apple song path and parameter ambiguity",
-        input: "https://music.apple.com/us/song/example/654322?i=654323",
-        expected: "https://music.apple.com/us/song/example/654322"
       }
     ];
-    for (const { label, input, expected } of ambiguousIdentityUrlCases) {
+    for (const { label, input, expected } of noIdentityUrlCases) {
       const candidate = manualSaveCandidate(label, "Safe lyrics");
       candidate.snapshot.originalUrl = input;
       candidate.snapshot.finalUrl = input;
       const saved = await manualStore.createManualSave(manualSaveEnvelope(candidate), "unlimited");
       const stored = (await manualStore.get(saved.id)).snapshot;
-      assert.equal(stored.originalUrl, expected, `${label} has no retained identity parameter`);
-      assert.equal(stored.finalUrl, expected, `${label} has one unambiguous replay provenance URL`);
+      assert.equal(stored.originalUrl, expected, `${label} strips non-allowlisted identity data`);
+      assert.equal(stored.finalUrl, expected, `${label} retains one privacy-sanitized URL`);
     }
+
+    const ambiguousIdentityUrlCases = [
+      {
+        label: "duplicate NetEase identity",
+        input: "https://music.163.com/song?id=70001&id=70002"
+      },
+      {
+        label: "encoded duplicate NetEase identity",
+        input: "https://music.163.com/song?id=70001&%69d=70002"
+      },
+      {
+        label: "case-equivalent duplicate NetEase identity with the same value",
+        input: "https://music.163.com/song?id=70001&ID=70001"
+      },
+      {
+        label: "case-equivalent duplicate NetEase identity with a conflicting value",
+        input: "https://music.163.com/song?id=70001&ID=70002"
+      },
+      {
+        label: "percent-decoded case-equivalent NetEase identity",
+        input: "https://music.163.com/song?id=70001&%49%44=70002"
+      },
+      {
+        label: "case-equivalent duplicate QQ songmid identity",
+        input: "https://y.qq.com/portal/player.html?songmid=003OUlho2HcRHC&SongMid=003OUlho2HcRHC"
+      },
+      {
+        label: "case-equivalent conflicting QQ songid identity",
+        input: "https://y.qq.com/player?songid=70001&SONGID=70002"
+      },
+      {
+        label: "case-equivalent duplicate Apple identity",
+        input: "https://music.apple.com/us/album/example/123456?i=654321&I=654321"
+      },
+      {
+        label: "QQ path and parameter ambiguity",
+        input: "https://y.qq.com/n/ryqq/songDetail/003OUlho2HcRHC?songmid=OTHERID"
+      },
+      {
+        label: "Apple song path and parameter ambiguity",
+        input: "https://music.apple.com/us/song/example/654322?i=654323"
+      },
+      {
+        label: "ambiguous original URL cannot fall back to a canonical final URL",
+        originalUrl: "https://music.163.com/song?id=70001&ID=70002",
+        finalUrl: "https://music.163.com/song?id=70002"
+      },
+      {
+        label: "ambiguous final URL cannot fall back to a canonical original URL",
+        originalUrl: "https://music.163.com/song?id=70001",
+        finalUrl: "https://music.163.com/song?id=70001&%69d=70002"
+      }
+    ];
+    const beforeAmbiguousTotal = (await manualStore.stats()).total;
+    const beforeAmbiguousDisk = await fs.readFile(manualTarget, "utf8");
+    const beforeAmbiguousMetadata = { manualId, manualNow };
+    for (const { label, input, originalUrl = input, finalUrl = input } of ambiguousIdentityUrlCases) {
+      const candidate = manualSaveCandidate(label, "Safe lyrics");
+      candidate.snapshot.originalUrl = originalUrl;
+      candidate.snapshot.finalUrl = finalUrl;
+      await assert.rejects(
+        manualStore.createManualSave(manualSaveEnvelope(candidate), "unlimited"),
+        (error) => error?.code === "invalid_snapshot",
+        `${label} rejects the entire ambiguous manual snapshot`
+      );
+      await assert.rejects(
+        manualStore.updateManualSave(validMethod.id, manualSaveEnvelope(candidate), "unlimited"),
+        (error) => error?.code === "invalid_snapshot",
+        `${label} rejects update before touching the bound record`
+      );
+      assert.equal((await manualStore.stats()).total, beforeAmbiguousTotal, `${label} never mutates Store memory`);
+      assert.equal(await fs.readFile(manualTarget, "utf8"), beforeAmbiguousDisk, `${label} never writes history`);
+    }
+    assert.deepEqual(
+      { manualId, manualNow },
+      beforeAmbiguousMetadata,
+      "ambiguous identities are rejected before ID/time allocation"
+    );
 
     const sameIdentityRepresentations = manualSaveCandidate("Same identity representations", "Safe lyrics");
     sameIdentityRepresentations.snapshot.originalUrl = "https://music.163.com/#/song?id=70001&token=SECRET";

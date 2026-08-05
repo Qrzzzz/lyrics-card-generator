@@ -1064,9 +1064,12 @@ function normalizeManualHttpUrl(value) {
 
 function normalizeManualHttpUrlDetails(value) {
   const normalized = normalizeHttpUrl(value);
-  if (!normalized) return { url: "", identityKey: "" };
+  if (!normalized) return { url: "", identityKey: "", identityState: "absent" };
   const url = new URL(normalized);
   const identity = manualUrlIdentity(value, url);
+  if (identity.state === "ambiguous") {
+    return { url: "", identityKey: "", identityState: "ambiguous" };
+  }
   url.search = "";
   for (const [key, identityValue] of identity.parameters) {
     url.searchParams.set(key, identityValue);
@@ -1074,17 +1077,20 @@ function normalizeManualHttpUrlDetails(value) {
   if (identity.pathname) url.pathname = identity.pathname;
   const sanitized = url.toString();
   return sanitized.length <= MANUAL_SAVE_STRING_LIMITS.originalUrl
-    ? { url: sanitized, identityKey: identity.key }
-    : { url: "", identityKey: "" };
+    ? { url: sanitized, identityKey: identity.key, identityState: identity.state }
+    : { url: "", identityKey: "", identityState: "absent" };
 }
 
 function normalizeManualSongUrls(original, final) {
+  if (original.identityState === "ambiguous" || final.identityState === "ambiguous") {
+    return null;
+  }
   if (original.identityKey && final.identityKey && original.identityKey !== final.identityKey) {
     return null;
   }
-  const selected = original.identityKey
+  const selected = original.identityState === "unique"
     ? original
-    : final.identityKey
+    : final.identityState === "unique"
       ? final
       : original.url
         ? original
@@ -1094,12 +1100,13 @@ function normalizeManualSongUrls(original, final) {
 }
 
 function manualUrlIdentity(value, normalizedUrl) {
-  const noIdentity = { key: "", parameters: [], pathname: "" };
+  const absentIdentity = { state: "absent", key: "", parameters: [], pathname: "" };
+  const ambiguousIdentity = { state: "ambiguous", key: "", parameters: [], pathname: "" };
   let original;
   try {
     original = new URL(boundedString(value, 8192));
   } catch {
-    return noIdentity;
+    return absentIdentity;
   }
 
   if (
@@ -1108,7 +1115,7 @@ function manualUrlIdentity(value, normalizedUrl) {
     normalizedUrl.protocol !== "https:" ||
     normalizedUrl.port
   ) {
-    return noIdentity;
+    return absentIdentity;
   }
 
   const host = normalizedUrl.hostname.toLowerCase();
@@ -1137,6 +1144,7 @@ function manualUrlIdentity(value, normalizedUrl) {
     (exactPath(originalPath, "/song") || exactPath(hashPath, "/song"))
   ) {
     const identityParameters = parameters(["id"]);
+    if (identityParameters.length > 1) return ambiguousIdentity;
     if (
       identityParameters.length === 1 &&
       identityParameters[0].canonical &&
@@ -1144,33 +1152,35 @@ function manualUrlIdentity(value, normalizedUrl) {
     ) {
       const id = identityParameters[0].value;
       return {
+        state: "unique",
         key: `netease:${id}`,
         parameters: [["id", id]],
         pathname: exactPath(originalPath, "/song") ? "" : "/song"
       };
     }
-    return noIdentity;
+    return absentIdentity;
   }
 
   if (APPLE_MANUAL_IDENTITY_HOSTS.has(host)) {
     const trackParameters = parameters(["i"]);
     const albumMatch = originalPath.match(/^\/[a-z]{2}\/album\/[^/]+\/\d+\/?$/iu);
     if (albumMatch) {
+      if (trackParameters.length > 1) return ambiguousIdentity;
       if (
         trackParameters.length === 1 &&
         trackParameters[0].canonical &&
         /^\d{1,32}$/.test(trackParameters[0].value)
       ) {
         const id = trackParameters[0].value;
-        return { key: `apple:${id}`, parameters: [["i", id]], pathname: "" };
+        return { state: "unique", key: `apple:${id}`, parameters: [["i", id]], pathname: "" };
       }
-      return noIdentity;
+      return absentIdentity;
     }
     const songMatch = originalPath.match(/^\/[a-z]{2}\/song\/[^/]+\/(\d{1,32})\/?$/iu);
     if (songMatch) {
       return trackParameters.length === 0
-        ? { key: `apple:${songMatch[1]}`, parameters: [], pathname: "" }
-        : noIdentity;
+        ? { state: "unique", key: `apple:${songMatch[1]}`, parameters: [], pathname: "" }
+        : ambiguousIdentity;
     }
   }
 
@@ -1179,10 +1189,11 @@ function manualUrlIdentity(value, normalizedUrl) {
     const pathCandidate = hashPath || originalPath;
     const pathMatch = pathCandidate.match(/^\/(?:n\/ryqq\/)?songDetail\/([A-Za-z0-9]{1,64})\/?$/iu);
     if (pathMatch) {
-      if (identityParameters.length !== 0) return noIdentity;
+      if (identityParameters.length !== 0) return ambiguousIdentity;
       const id = pathMatch[1];
       const kind = /^\d+$/u.test(id) ? "songid" : "songmid";
       return {
+        state: "unique",
         key: `qq:${kind}:${id}`,
         parameters: [],
         pathname: hashPath ? pathCandidate : ""
@@ -1191,26 +1202,28 @@ function manualUrlIdentity(value, normalizedUrl) {
     const permitsQueryIdentity = ["/song", "/portal/player.html", "/player"].some((candidate) => (
       exactPath(originalPath, candidate) || exactPath(hashPath, candidate)
     ));
+    if (permitsQueryIdentity && identityParameters.length > 1) return ambiguousIdentity;
     if (permitsQueryIdentity && identityParameters.length === 1 && identityParameters[0].canonical) {
       const { name, value: id } = identityParameters[0];
       const valid = name === "songid" ? /^\d{1,32}$/u.test(id) : /^[A-Za-z0-9]{1,64}$/u.test(id);
       if (valid) {
         return {
+          state: "unique",
           key: `qq:${name}:${id}`,
           parameters: [[name, id]],
           pathname: !exactPath(originalPath, pathCandidate) && hashPath ? pathCandidate : ""
         };
       }
     }
-    if (permitsQueryIdentity) return noIdentity;
+    if (permitsQueryIdentity) return absentIdentity;
   }
 
   if (SPOTIFY_MANUAL_IDENTITY_HOSTS.has(host)) {
     const track = originalPath.match(/^\/track\/([A-Za-z0-9]{1,64})\/?$/u)?.[1];
-    if (track) return { key: `spotify:${track}`, parameters: [], pathname: "" };
+    if (track) return { state: "unique", key: `spotify:${track}`, parameters: [], pathname: "" };
   }
 
-  return noIdentity;
+  return absentIdentity;
 }
 
 function extractHttpUrl(value) {

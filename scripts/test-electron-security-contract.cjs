@@ -267,6 +267,11 @@ assert.match(
   "manual URL identity uses exact hosts/paths and audits percent-decoded names under explicit ASCII case folding"
 );
 assert.match(
+  importHistorySource,
+  /function normalizeManualSongUrls\(original, final\)[\s\S]*?identityState === "ambiguous"[\s\S]*?return null[\s\S]*?const absentIdentity = \{ state: "absent"[\s\S]*?const ambiguousIdentity = \{ state: "ambiguous"[\s\S]*?identityParameters\.length > 1[\s\S]*?return ambiguousIdentity/,
+  "manual URL provenance preserves absent/unique/ambiguous state and rejects ambiguity before mutation"
+);
+assert.match(
   desktopHistoryInteractionSource,
   /NetEase song identity while removing credentials[\s\S]*?manual replay retains its exact sanitized song identity[\s\S]*?routeCountsBeforeManualReplayRemount/,
   "packaged replay preserves the song ID while retaining local-only remount behavior"
@@ -373,6 +378,10 @@ async function testManualSaveIpcEarlyRejection() {
   ];
   const swappedSnapshot = Object.fromEntries(swappedSnapshotEntries);
   const deepValue = `${'{"next":'.repeat(25_000)}null${"}".repeat(25_000)}`;
+  const envelopeWithUrls = (originalUrl, finalUrl = originalUrl) => JSON.stringify({
+    version: 1,
+    snapshot: { ...snapshot, originalUrl, finalUrl }
+  });
   const invalidPrimitiveStrings = [
     ["malformed JSON", '{"version":1,"snapshot":'],
     ["non-canonical whitespace", ` ${canonicalEnvelope}`],
@@ -383,7 +392,29 @@ async function testManualSaveIpcEarlyRejection() {
     ["reversed snapshot fields", JSON.stringify({ version: 1, snapshot: reversedSnapshot })],
     ["one swapped snapshot field pair", JSON.stringify({ version: 1, snapshot: swappedSnapshot })],
     ["oversized legal field", JSON.stringify({ version: 1, snapshot: { ...snapshot, lyrics: "x".repeat(600_000) } })],
-    ["25,000-level input", `{"version":1,"snapshot":${deepValue}}`]
+    ["25,000-level input", `{"version":1,"snapshot":${deepValue}}`],
+    [
+      "ambiguous original identity with canonical final identity",
+      envelopeWithUrls(
+        "https://music.163.com/song?id=70001&ID=70002",
+        "https://music.163.com/song?id=70002"
+      )
+    ],
+    [
+      "canonical original identity with ambiguous final identity",
+      envelopeWithUrls(
+        "https://music.163.com/song?id=70001",
+        "https://music.163.com/song?id=70001&%69d=70002"
+      )
+    ],
+    [
+      "QQ path/query identity conflict",
+      envelopeWithUrls("https://y.qq.com/n/ryqq/songDetail/003OUlho2HcRHC?songmid=OTHERID")
+    ],
+    [
+      "Apple path/query identity conflict",
+      envelopeWithUrls("https://music.apple.com/us/song/example/654322?i=654323")
+    ]
   ];
   for (const [label, envelope] of invalidPrimitiveStrings) {
     assert.deepEqual(
