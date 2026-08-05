@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v5.9.0.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v5.9.1.zh-CN.md">发布说明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">在线 Web Lite 版</a> ·
   <a href="./docs/desktop.md">桌面维护文档</a> ·
   <a href="#主要功能">主要功能</a> ·
@@ -49,16 +49,14 @@
 
 请前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下载最新版：
 
-* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 5.9.0.exe`
-* 不想安装时可下载便携版：`Lyrics Card Generator-5.9.0-portable.exe`
+* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 5.9.1.exe`
+* 不想安装时可下载便携版：`Lyrics Card Generator-5.9.1-portable.exe`
 
 安装版适合长期使用；便携版适合临时运行、测试或放在移动硬盘中使用。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v5.9.1 本地候选说明（尚未发布）
-
-> v5.9.1 目前只是本地发布候选，尚无公开的安装版或便携版；上方下载项对应当前已发布的 v5.9.0。
+### v5.9.1 更新重点
 
 * Windows 桌面版顶部新增手动存档按钮；首次保存建立一条存档，继续编辑后再次保存会更新同一条记录。
 * 手动存档可在历史页筛选并载入，只保存歌词、译文和歌曲文字等语义内容，不保存样式、设置、导出图片、本地路径或敏感配置。

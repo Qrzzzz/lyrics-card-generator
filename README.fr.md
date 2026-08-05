@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v5.9.0.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v5.9.1.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="#développement-local">Développement local</a> ·
@@ -51,16 +51,14 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 Téléchargez la dernière version depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
 
-* Installateur recommandé : `Lyrics Card Generator Setup 5.9.0.exe`
-* Version portable : `Lyrics Card Generator-5.9.0-portable.exe`
+* Installateur recommandé : `Lyrics Card Generator Setup 5.9.1.exe`
+* Version portable : `Lyrics Card Generator-5.9.1-portable.exe`
 
 L'installateur est recommandé pour une utilisation régulière. La version portable convient aux essais, à une utilisation temporaire ou à un disque amovible.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### Candidat local v5.9.1 (pas encore publié)
-
-> v5.9.1 est uniquement un candidat local. Aucun installateur ni exécutable portable v5.9.1 n’a été publié ; les téléchargements ci-dessus correspondent à la version v5.9.0 actuellement publiée.
+### Points forts de la v5.9.1
 
 * L’en-tête de l’application Windows propose désormais une action d’enregistrement manuel. Le premier enregistrement crée une archive ; les suivants, après modification, mettent à jour cette même entrée.
 * Les sauvegardes manuelles peuvent être filtrées et chargées depuis l’historique. Seul le contenu sémantique du morceau et des paroles est conservé, jamais les styles, réglages, exports, chemins locaux ni configurations sensibles.

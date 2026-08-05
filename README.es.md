@@ -19,7 +19,7 @@
 <p>
   <strong>Navegación</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Descargar la última versión</a> ·
-  <a href="./docs/releases/v5.9.0.es.md">Notas de la versión</a> ·
+  <a href="./docs/releases/v5.9.1.es.md">Notas de la versión</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en línea</a> ·
   <a href="#funciones-principales">Funciones principales</a> ·
   <a href="#desarrollo-local">Desarrollo local</a> ·
@@ -51,16 +51,14 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 Descarga la versión más reciente desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Instalador recomendado: `Lyrics Card Generator Setup 5.9.0.exe`
-* Versión portable: `Lyrics Card Generator-5.9.0-portable.exe`
+* Instalador recomendado: `Lyrics Card Generator Setup 5.9.1.exe`
+* Versión portable: `Lyrics Card Generator-5.9.1-portable.exe`
 
 El instalador se recomienda para uso habitual. La versión portable es útil para pruebas, uso temporal o ejecución desde una unidad extraíble.
 
 > La compilación actual no está firmada. Windows puede mostrar una advertencia de SmartScreen, algo habitual en aplicaciones personales sin firma.
 
-### Candidato local v5.9.1 (aún no publicado)
-
-> v5.9.1 es únicamente un candidato local. No se ha publicado ningún instalador ni ejecutable portable v5.9.1; las descargas anteriores corresponden a la versión v5.9.0 actualmente publicada.
+### Novedades de v5.9.1
 
 * La cabecera de la aplicación de escritorio para Windows incorpora una acción de guardado manual. El primer guardado crea una entrada y los posteriores, tras editar, actualizan esa misma entrada.
 * Los guardados manuales se pueden filtrar y cargar desde el historial. Solo conservan el contenido semántico de la canción y la letra, nunca estilos, ajustes, exportaciones, rutas locales ni configuración sensible.
