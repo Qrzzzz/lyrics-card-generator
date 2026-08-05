@@ -320,36 +320,50 @@ class ImportHistoryStore {
       fs: this.fs,
       path: this.path
     });
+
+    let parsed;
     try {
-      const parsed = JSON.parse(await this.fs.readFile(this.filePath, "utf8"));
-      const normalized = normalizeImportHistoryDocument(parsed, this.path);
-      if (!normalized) throw historyError("corrupt_history");
-      this.document = normalized;
-      if (JSON.stringify(parsed) !== JSON.stringify(normalized)) {
-        await this.#writeDocument(normalized).catch(() => undefined);
-      }
-      return normalized;
+      parsed = JSON.parse(await this.fs.readFile(this.filePath, "utf8"));
     } catch (error) {
       if (error?.code === "ENOENT") {
         const empty = emptyHistoryDocument();
         this.document = empty;
         return empty;
       }
-      const backupPath = await preserveCorruptHistoryFile({
-        filePath: this.filePath,
-        fs: this.fs,
-        path: this.path,
-        now: this.now()
-      });
-      const empty = emptyHistoryDocument();
-      await this.#writeDocument(empty);
-      this.notice = {
-        code: "corrupt_recovered",
-        backupFileName: backupPath ? this.path.basename(backupPath) : ""
-      };
-      this.document = empty;
-      return empty;
+      if (!(error instanceof SyntaxError)) throw error;
+      return this.#recoverCorruptDocument();
     }
+
+    const normalized = normalizeImportHistoryDocument(parsed, this.path);
+    if (!normalized) return this.#recoverCorruptDocument();
+    if (JSON.stringify(parsed) !== JSON.stringify(normalized)) {
+      try {
+        await this.#writeDocument(normalized);
+      } catch (cause) {
+        const error = historyError("history_migration_failed");
+        error.cause = cause;
+        throw error;
+      }
+    }
+    this.document = normalized;
+    return normalized;
+  }
+
+  async #recoverCorruptDocument() {
+    const backupPath = await preserveCorruptHistoryFile({
+      filePath: this.filePath,
+      fs: this.fs,
+      path: this.path,
+      now: this.now()
+    });
+    const empty = emptyHistoryDocument();
+    await this.#writeDocument(empty);
+    this.notice = {
+      code: "corrupt_recovered",
+      backupFileName: backupPath ? this.path.basename(backupPath) : ""
+    };
+    this.document = empty;
+    return empty;
   }
 
   async #writeDocument(document) {
@@ -507,16 +521,16 @@ function normalizeManualSnapshot(input, kind = "manual-cover") {
     artist,
     album: boundedString(input.album, 512),
     source,
-    originalUrl: normalizeHttpUrl(input.originalUrl),
-    finalUrl: normalizeHttpUrl(input.finalUrl),
+    originalUrl: normalizeManualHttpUrl(input.originalUrl),
+    finalUrl: normalizeManualHttpUrl(input.finalUrl),
     lyrics: boundedString(input.lyrics, 120_000, false),
     translationText: boundedString(input.translationText, 120_000, false),
     translationEnabled: input.translationEnabled === true
   };
   if (kind === "manual-save") {
     snapshot.explicit = input.explicit === true;
-    snapshot.originalCoverUrl = normalizeHttpUrl(input.originalCoverUrl);
-    snapshot.coverUrl = normalizeHttpUrl(input.coverUrl);
+    snapshot.originalCoverUrl = normalizeManualHttpUrl(input.originalCoverUrl);
+    snapshot.coverUrl = normalizeManualHttpUrl(input.coverUrl);
     snapshot.parseMethod = normalizeParseMethod(input.parseMethod);
     if (!isMeaningfulManualSaveSnapshot(snapshot)) return null;
   }
@@ -558,9 +572,15 @@ function manualSaveSnapshotFieldsFit(input) {
     lyrics: 120_000,
     translationText: 120_000
   };
-  return Object.entries(limits).every(([field, limit]) => (
+  const fieldsFit = Object.entries(limits).every(([field, limit]) => (
     input[field] === undefined || (typeof input[field] === "string" && input[field].length <= limit)
   ));
+  if (!fieldsFit) return false;
+  try {
+    return Buffer.byteLength(JSON.stringify(input), "utf8") <= MAX_RECORD_BYTES;
+  } catch {
+    return false;
+  }
 }
 
 function isMeaningfulManualSaveSnapshot(snapshot) {
@@ -583,7 +603,7 @@ function isMeaningfulManualSaveSnapshot(snapshot) {
 
 function normalizeParseMethod(value) {
   const method = boundedString(value, 128);
-  return /^[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}$/.test(method) ? method : "";
+  return /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/.test(method) ? method : "";
 }
 
 function importHistoryDedupeKey(record, path = defaultPath) {
@@ -814,6 +834,16 @@ function normalizeHttpUrl(value) {
   } catch {
     return "";
   }
+}
+
+function normalizeManualHttpUrl(value) {
+  const normalized = normalizeHttpUrl(value);
+  if (!normalized) return "";
+  const url = new URL(normalized);
+  // Query strings are not needed to restore a local semantic snapshot and are
+  // a common carrier for tokens, API keys, signatures, and user identifiers.
+  url.search = "";
+  return url.toString();
 }
 
 function extractHttpUrl(value) {

@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v5.9.1.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v5.9.0.en.md">Release Notes</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
   <a href="#features">Features</a> ·
   <a href="#local-development">Local Development</a> ·
@@ -51,14 +51,16 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 Download the latest version from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Recommended installer: `Lyrics Card Generator Setup 5.9.1.exe`
-* Portable version: `Lyrics Card Generator-5.9.1-portable.exe`
+* Recommended installer: `Lyrics Card Generator Setup 5.9.0.exe`
+* Portable version: `Lyrics Card Generator-5.9.0-portable.exe`
 
 The installer is recommended for regular use. The portable version is useful for temporary use, testing, or running from a removable drive.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v5.9.1 Highlights
+### v5.9.1 Local Candidate (not yet released)
+
+> v5.9.1 is a local release candidate. No v5.9.1 installer or portable build has been published; the downloads above are the current v5.9.0 release.
 
 * The Windows desktop header now has a manual Save action. The first save creates an archive entry; later saves after editing update that same entry.
 * Manual saves can be filtered and loaded from History. They retain semantic song and lyric content only—never styles, settings, exports, local paths, or sensitive configuration.

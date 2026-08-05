@@ -8,6 +8,9 @@ const editorHeader = read("components/editor/EditorHeader.tsx");
 const historyFloor = read("components/editor/HistoryFloor.tsx");
 const editorActions = read("components/editor/hooks/useEditorActions.ts");
 const editorPreferences = read("components/editor/hooks/useEditorPreferences.ts");
+const songLinkParser = read("components/editor/SongLinkParser.tsx");
+const songSearchParser = read("components/editor/SongSearchParser.tsx");
+const localAudioParser = read("components/editor/LocalAudioParser.tsx");
 const documentTransactions = read("lib/editor/document-transactions.ts");
 const webLiteApp = read("web-lite/WebLiteEditor.tsx");
 const webLiteHeader = read("web-lite/WebLiteHeader.tsx");
@@ -35,7 +38,10 @@ const manualSaveButton = editorHeader.slice(manualSaveIndex, editorHeader.indexO
 assert.match(manualSaveButton, /aria-label=\{manualSaveLabel\}/);
 assert.match(manualSaveButton, /title=\{manualSaveLabel\}/);
 assert.doesNotMatch(manualSaveButton, /<span/, "manual save remains icon-only");
-assert.match(manualSaveButton, /disabled=\{manualSaveDisabled \|\| manualSaveState === "saving"\}/);
+assert.match(
+  manualSaveButton,
+  /disabled=\{manualSaveDisabled \|\| manualSaveState === "saving" \|\| manualSaveState === "unavailable"\}/
+);
 
 assert.match(historyFloor, /closeButtonRef\.current\?\.focus\(\{ preventScroll: true \}\)/);
 assert.match(historyFloor, /event\.key !== "Escape"/);
@@ -80,6 +86,19 @@ const manualReplayBranch = editorActions.slice(
   editorActions.indexOf("const coverUrl = URL.createObjectURL")
 );
 assert.doesNotMatch(manualReplayBranch, /fetch\(/, "manual-save replay commits its stored snapshot without network parsing");
+assert.match(manualReplayBranch, /coverUrl: ""/, "manual-save replay cannot reactivate a remote cover URL");
+assert.match(editorActions, /const translationEnabled = snapshot\.translationEnabled;/);
+for (const [name, source] of [
+  ["link", songLinkParser],
+  ["search", songSearchParser],
+  ["local audio", localAudioParser]
+] as const) {
+  assert.match(
+    source,
+    /catch \(error\) \{\s*const wasAborted = intent\.signal\.aborted;\s*intent\.cancel\(\);/,
+    `${name} failure settles its document intent`
+  );
+}
 assert.doesNotMatch(editorActions, /loadExample[\s\S]{0,500}queueImportHistoryRecord/, "built-in examples are not recorded");
 assert.match(
   editorPreferences,
@@ -100,4 +119,4 @@ assert.match(
   "narrow icon-only adaptation remains scoped to the desktop shell"
 );
 
-console.log(JSON.stringify({ ok: true, importHistoryUiContracts: 49 }, null, 2));
+console.log(JSON.stringify({ ok: true, importHistoryUiContracts: 55 }, null, 2));

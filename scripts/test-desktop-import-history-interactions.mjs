@@ -23,13 +23,14 @@ const tinyPng = Buffer.from(
 let electronApp;
 let page;
 let dialogDecision = "accept";
+let parseSongShouldFail = false;
 let resolveShouldFail = false;
 let localAudioShouldFail = false;
 let nextSongId = 71_000;
 const keywordIds = new Map([["same platform song", "70001"]]);
 const songsById = new Map();
 const dialogMessages = [];
-const routeCounts = { parseSong: 0, resolveSearch: 0, localAudio: 0 };
+const routeCounts = { parseSong: 0, resolveSearch: 0, localAudio: 0, imageProxy: 0, remoteCover: 0 };
 
 await mkdir(fixtureDirectory, { recursive: true });
 await writeFile(audioPath, Buffer.from("initial desktop audio fixture"));
@@ -119,6 +120,14 @@ async function attachRoutes(targetPage) {
 
   await targetPage.route("**/api/parse-song", async (route) => {
     routeCounts.parseSong += 1;
+    if (parseSongShouldFail) {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ ok: false, error: "history link parse fixture failure" })
+      });
+      return;
+    }
     const body = route.request().postDataJSON();
     const parsed = new URL(String(body.url));
     const id = parsed.searchParams.get("id") || "70001";
@@ -169,6 +178,15 @@ async function attachRoutes(targetPage) {
         }
       })
     });
+  });
+
+  await targetPage.route("**/api/image-proxy**", async (route) => {
+    routeCounts.imageProxy += 1;
+    await route.fulfill({ status: 200, contentType: "image/png", body: tinyPng });
+  });
+  await targetPage.route("https://covers.example/**", async (route) => {
+    routeCounts.remoteCover += 1;
+    await route.fulfill({ status: 200, contentType: "image/png", body: tinyPng });
   });
 }
 
@@ -240,9 +258,23 @@ async function manualSaveRecords() {
 }
 
 async function waitForManualSaveState(expected) {
-  await page.waitForFunction((state) => (
-    document.querySelector('[data-testid="manual-save-button"]')?.getAttribute("data-manual-save-state") === state
-  ), expected, { timeout: 15_000 });
+  try {
+    await page.waitForFunction((state) => (
+      document.querySelector('[data-testid="manual-save-button"]')?.getAttribute("data-manual-save-state") === state
+    ), expected, { timeout: 15_000 });
+  } catch (error) {
+    const actual = await page.getByTestId("manual-save-button").getAttribute("data-manual-save-state").catch(() => null);
+    throw new Error(`manual save state did not become ${expected}; actual=${actual}`, { cause: error });
+  }
+}
+
+async function assertManualSaveEnabledAfterImportFailure(label) {
+  const button = page.getByTestId("manual-save-button");
+  await page.waitForFunction(() => {
+    const node = document.querySelector('[data-testid="manual-save-button"]');
+    return node instanceof HTMLButtonElement && !node.disabled && node.dataset.manualSaveState !== "saving";
+  }, null, { timeout: 15_000 });
+  assert.equal(await button.isDisabled(), false, `${label} settles its document intent`);
 }
 
 async function clickManualSave({ rapid = false } = {}) {
@@ -479,8 +511,14 @@ try {
       JSON.stringify(compactHeaderBounds)
     );
   }
-  await manualSaveButton.focus();
-  assert.equal(await page.evaluate(() => document.activeElement?.getAttribute("data-testid")), "manual-save-button");
+  const compactHistoryButton = page.locator('[data-testid="editor-surface"] [data-testid="history-button"]');
+  await compactHistoryButton.focus();
+  await page.keyboard.press("Tab");
+  assert.equal(
+    await page.evaluate(() => document.activeElement?.getAttribute("data-testid")),
+    "clear-all-button",
+    "keyboard navigation skips the unavailable disabled manual-save control"
+  );
   await electronApp.evaluate(({ BrowserWindow }) => {
     BrowserWindow.getAllWindows()[0].setContentSize(1000, 700, false);
     BrowserWindow.getAllWindows()[0].setMinimumSize(1000, 700);
@@ -498,12 +536,67 @@ try {
   await waitForPreferenceLimit("unlimited");
   await closeSettings();
 
-  await waitForManualSaveState("unavailable");
-  await clickManualSave();
-  await page.getByTestId("app-toast").filter({ hasText: "cannot be saved right now" }).waitFor({
-    state: "visible",
-    timeout: 15_000
+  for (let index = 0; index < 10; index += 1) {
+    const ordered = await page.evaluate(async (sequence) => {
+      const api = window.lyricsCardDesktop;
+      const createPromise = api.createManualSave({
+        snapshot: {
+          source: "unknown",
+          title: `Ordered create ${sequence}`,
+          artist: "Queue regression",
+          album: "",
+          lyrics: `ordered create ${sequence}`,
+          translationText: "",
+          translationEnabled: false
+        }
+      });
+      const clearPromise = api.clearImportHistory();
+      const [create, cleared] = await Promise.all([createPromise, clearPromise]);
+      return { create, cleared, total: (await api.getImportHistoryStats()).total };
+    }, index);
+    assert.equal(ordered.create.ok, true, `ordered create ${index} succeeds`);
+    assert.equal(ordered.cleared, 1, `clear ${index} observes the preceding create`);
+    assert.equal(ordered.total, 0, `clear ${index} is the durable ordering boundary`);
+  }
+
+  const updateOrdering = await page.evaluate(async () => {
+    const api = window.lyricsCardDesktop;
+    const created = await api.createManualSave({
+      snapshot: {
+        source: "unknown",
+        title: "Ordered update seed",
+        artist: "Queue regression",
+        album: "",
+        lyrics: "before ordered update",
+        translationText: "",
+        translationEnabled: false
+      }
+    });
+    if (!created.ok) return { created, update: null, cleared: -1, total: -1 };
+    const updatePromise = api.updateManualSave(created.record.id, {
+      snapshot: {
+        source: "unknown",
+        title: "Ordered update committed",
+        artist: "Queue regression",
+        album: "",
+        lyrics: "after ordered update",
+        translationText: "",
+        translationEnabled: false
+      }
+    });
+    const clearPromise = api.clearImportHistory();
+    const [update, cleared] = await Promise.all([updatePromise, clearPromise]);
+    return { created, update, cleared, total: (await api.getImportHistoryStats()).total };
   });
+  assert.equal(updateOrdering.created.ok, true);
+  assert.equal(updateOrdering.update?.ok, true, "ordered update completes before the following clear");
+  assert.equal(updateOrdering.cleared, 1, "clear observes the preceding update record");
+  assert.equal(updateOrdering.total, 0, "an update cannot cross and survive the clear boundary");
+
+  await waitForManualSaveState("unavailable");
+  assert.equal(await manualSaveButton.isDisabled(), true, "an unavailable manual save is a genuinely disabled control");
+  await manualSaveButton.evaluate((node) => node.click());
+  await page.waitForTimeout(120);
   assert.equal(await historyTotal(), 0, "the default blank document cannot create a manual save");
 
   await editManualSong({ title: "Manual archive original" });
@@ -542,6 +635,32 @@ try {
   assert.ok(updatedManualInternal.lastUsedAt >= firstManualInternal.lastUsedAt);
   assert.equal(updatedManualInternal.snapshot.title, "Manual archive updated");
 
+  const replayFixtureUpdate = await page.evaluate(async ({ recordId }) => (
+    window.lyricsCardDesktop.updateManualSave(recordId, {
+      snapshot: {
+        source: "netease",
+        title: "Manual archive updated",
+        artist: "Manual History Artist",
+        album: "Manual History Album",
+        explicit: true,
+        originalCoverUrl: "https://covers.example/manual-replay.png?token=DO_NOT_PERSIST",
+        coverUrl: "https://covers.example/manual-replay.png?api_key=DO_NOT_PERSIST",
+        originalUrl: "https://music.163.com/song?id=70001&token=DO_NOT_PERSIST",
+        finalUrl: "https://music.163.com/song?id=70001&api_key=DO_NOT_PERSIST",
+        parseMethod: "manual-save-replay-fixture",
+        lyrics: "manual replay line one\nmanual replay line two",
+        translationText: "",
+        translationEnabled: true
+      }
+    })
+  ), { recordId: firstManualId });
+  assert.equal(replayFixtureUpdate.ok, true);
+  manualDocument = JSON.parse(await readFile(historyPath, "utf8"));
+  const replayFixtureInternal = manualDocument.records.find((record) => record.id === firstManualId);
+  assert.equal(replayFixtureInternal.snapshot.translationEnabled, true);
+  assert.equal(replayFixtureInternal.snapshot.translationText, "");
+  assert.doesNotMatch(JSON.stringify(replayFixtureInternal.snapshot), /DO_NOT_PERSIST|token=|api_key=/);
+
   await closeThroughDesktopApi();
   await launchApp();
   await waitForHistoryTotal(1);
@@ -551,12 +670,69 @@ try {
   assert.match(await restartedManualCard.textContent(), /Manual archive updated/);
   assert.equal(await restartedManualCard.locator('[data-testid^="history-relocate-"]').count(), 0);
   assert.match(await restartedManualCard.locator('[data-testid^="history-replay-"]').textContent(), /Load save/i);
+  await page.waitForFunction(() => {
+    const image = document.querySelector('[data-testid="history-surface"] [data-history-kind="manual-save"] img');
+    return image instanceof HTMLImageElement && image.complete;
+  }, null, { timeout: 15_000 });
   const routeCountsBeforeManualReplay = { ...routeCounts };
   await replayCard("manual-save");
   await manualRestartSurface.waitFor({ state: "hidden", timeout: 15_000 });
+  await page.waitForTimeout(350);
   assert.deepEqual(routeCounts, routeCountsBeforeManualReplay, "manual-save replay performs no parse/network request");
   assert.equal(await currentSongTitle(), "Manual archive updated");
   await waitForManualSaveState("current");
+
+  const titleBeforeImportFailures = await currentSongTitle();
+  const linkInput = page.getByLabel("Music URL");
+  const linkSection = linkInput.locator("xpath=ancestor::section[1]");
+  parseSongShouldFail = true;
+  await linkInput.fill("https://music.163.com/song?id=79991");
+  await linkInput.press("Enter");
+  await linkSection.locator('[role="status"].status-danger').waitFor({ state: "visible", timeout: 15_000 });
+  parseSongShouldFail = false;
+  await assertManualSaveEnabledAfterImportFailure("link parse failure");
+  assert.equal(
+    await page.getByTestId("manual-save-button").getAttribute("data-manual-save-state"),
+    "update",
+    "a failed link parse preserves the loaded manual-save binding"
+  );
+  assert.equal(await currentSongTitle(), titleBeforeImportFailures);
+
+  resolveShouldFail = true;
+  const failedSearchInput = page.getByTestId("song-search-primary").getByRole("combobox");
+  await failedSearchInput.fill("manual archive failed search");
+  const failedSearchListbox = page.getByTestId("song-search-listbox");
+  await failedSearchListbox.waitFor({ state: "visible", timeout: 15_000 });
+  await failedSearchListbox.getByRole("option").first().click();
+  await page.getByTestId("song-search-primary")
+    .locator('[role="status"].status-danger')
+    .filter({ hasText: "history remote replay fixture failure" })
+    .waitFor({
+      state: "attached",
+      timeout: 15_000
+    });
+  resolveShouldFail = false;
+  await assertManualSaveEnabledAfterImportFailure("search resolve failure");
+  assert.equal(
+    await page.getByTestId("manual-save-button").getAttribute("data-manual-save-state"),
+    "update",
+    "a failed search resolve preserves the loaded manual-save binding"
+  );
+  assert.equal(await currentSongTitle(), titleBeforeImportFailures);
+
+  localAudioShouldFail = true;
+  const failedLocalInput = page.locator('input[accept*=".mp3"]');
+  const failedLocalSection = failedLocalInput.locator("xpath=ancestor::section[1]");
+  await failedLocalInput.setInputFiles(audioPath);
+  await failedLocalSection.locator('[role="status"].status-danger').waitFor({ state: "visible", timeout: 15_000 });
+  localAudioShouldFail = false;
+  await assertManualSaveEnabledAfterImportFailure("local audio parse failure");
+  assert.equal(
+    await page.getByTestId("manual-save-button").getAttribute("data-manual-save-state"),
+    "update",
+    "a failed local-audio parse preserves the loaded manual-save binding"
+  );
+  assert.equal(await currentSongTitle(), titleBeforeImportFailures);
 
   await editManualSong({ title: "Manual archive replay update" });
   await waitForManualSaveState("update");
@@ -607,6 +783,45 @@ try {
   await page.getByTestId("history-clear-all").click();
   await waitForHistoryTotal(0);
   await closeHistoryWithEscape();
+
+  const emptyTranslationFixture = await page.evaluate(async () => (
+    window.lyricsCardDesktop.createManualSave({
+      snapshot: {
+        source: "unknown",
+        title: "Empty translation roundtrip",
+        artist: "Manual History Artist",
+        album: "",
+        explicit: false,
+        originalCoverUrl: "",
+        coverUrl: "",
+        originalUrl: "",
+        finalUrl: "",
+        parseMethod: "manual-save-translation-fixture",
+        lyrics: "empty translation line",
+        translationText: "",
+        translationEnabled: true
+      }
+    })
+  ));
+  assert.equal(emptyTranslationFixture.ok, true);
+  await waitForHistoryTotal(1);
+  const emptyTranslationSurface = await openHistory(1);
+  await replayCard("manual-save");
+  await emptyTranslationSurface.waitFor({ state: "hidden", timeout: 15_000 });
+  await page.getByTestId("stepper-next-button").click();
+  await page.getByTestId("lyrics-editor-columns").waitFor({ state: "visible", timeout: 15_000 });
+  assert.equal(
+    await page.getByTestId("lyrics-editor-columns").getAttribute("data-bilingual"),
+    "true",
+    "manual replay preserves translationEnabled=true even when the translation text is empty"
+  );
+  assert.equal(await page.getByTestId("lyrics-editor-translation").inputValue(), "");
+  await page.getByTestId("stepper-back-button").click();
+  await openHistory(1);
+  await page.getByTestId("history-clear-all").click();
+  await waitForHistoryTotal(0);
+  await closeHistoryWithEscape();
+
   await parseLink("70991");
   await waitForHistoryTotal(1);
   const ordinaryReplaySurface = await openHistory(1);
@@ -868,8 +1083,9 @@ try {
       "delete, clear, restart persistence",
       "local changed, missing, rejected relocate, and committed relocate",
       "cover-only/manual cover and ordinary-edit exclusion",
-      "manual create/update/no-op, restart replay, binding deletion/clear/not-found",
-      "manual replay without parse network, ordinary replay creates a distinct save",
+      "manual create/update/no-op, ordered clear boundaries, binding deletion/clear/not-found",
+      "manual replay without any network, exact empty-translation roundtrip",
+      "link/search/local failure intent settlement, ordinary replay creates a distinct save",
       "manual create/update failures, saved-revision retry, and pending-close drain",
       "remote failure and write-failure non-rollback"
     ]

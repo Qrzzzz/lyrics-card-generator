@@ -278,32 +278,63 @@ async function main() {
       }, 10),
       (error) => error?.code === "invalid_snapshot"
     );
+    await assert.rejects(
+      manualStore.createManualSave({
+        snapshot: {
+          ...emptyManualSnapshot(),
+          title: "Oversized unknown object",
+          lyrics: "Safe lyrics",
+          style: { embeddedImage: `data:image/png;base64,${"A".repeat(600_000)}` }
+        }
+      }, 10),
+      (error) => error?.code === "invalid_snapshot",
+      "large unknown snapshot objects are rejected before whitelist projection"
+    );
 
     const sanitizedManual = await manualStore.createManualSave({
       snapshot: {
         ...emptyManualSnapshot(),
         title: "Sanitized manual save",
         lyrics: "Safe semantic content",
-        originalCoverUrl: "data:image/png;base64,SECRET_IMAGE",
-        coverUrl: "blob:renderer-secret",
-        originalUrl: "file:///C:/Users/private/song.mp3",
+        originalCoverUrl: "https://covers.example/manual.jpg?token=SECRET_TOKEN#private",
+        coverUrl: "https://covers.example/fallback.jpg?api_key=SECRET_API_KEY",
+        originalUrl: "https://music.163.com/song?id=42&token=SECRET_TOKEN",
         finalUrl: "https://user:password@example.com/private",
-        parseMethod: "C:\\Users\\private\\parser",
+        parseMethod: "C:/Users/private/parser",
         proxiedCoverUrl: "https://proxy.invalid/private",
         apiKey: "SECRET_API_KEY",
-        localPath: "C:\\Users\\private\\song.mp3"
+        localPath: "C:\\Users\\private\\song.mp3",
+        style: { backgroundImage: "data:image/png;base64,SECRET_STYLE" }
       }
     }, "unlimited");
     const sanitizedSnapshot = (await manualStore.get(sanitizedManual.id)).snapshot;
-    assert.equal(sanitizedSnapshot.originalCoverUrl, "");
-    assert.equal(sanitizedSnapshot.coverUrl, "");
-    assert.equal(sanitizedSnapshot.originalUrl, "");
+    assert.equal(sanitizedSnapshot.originalCoverUrl, "https://covers.example/manual.jpg");
+    assert.equal(sanitizedSnapshot.coverUrl, "https://covers.example/fallback.jpg");
+    assert.equal(sanitizedSnapshot.originalUrl, "https://music.163.com/song");
     assert.equal(sanitizedSnapshot.finalUrl, "");
     assert.equal(sanitizedSnapshot.parseMethod, "");
     assert.doesNotMatch(
       JSON.stringify(await manualStore.get(sanitizedManual.id)),
-      /SECRET_|blob:|data:image|file:\/\/|C:\\\\Users|proxiedCoverUrl|apiKey|localPath/
+      /SECRET_|blob:|data:image|file:\/\/|C:\\\\Users|proxiedCoverUrl|apiKey|localPath|backgroundImage/
     );
+    const backslashMethod = await manualStore.createManualSave({
+      snapshot: {
+        ...emptyManualSnapshot(),
+        title: "Backslash parse method",
+        lyrics: "Safe semantic content",
+        parseMethod: "C:\\Users\\private\\parser"
+      }
+    }, "unlimited");
+    assert.equal((await manualStore.get(backslashMethod.id)).snapshot.parseMethod, "");
+    const validMethod = await manualStore.createManualSave({
+      snapshot: {
+        ...emptyManualSnapshot(),
+        title: "Valid parse method",
+        lyrics: "Safe semantic content",
+        parseMethod: "manual-save_test.v2"
+      }
+    }, "unlimited");
+    assert.equal((await manualStore.get(validMethod.id)).snapshot.parseMethod, "manual-save_test.v2");
 
     for (const limit of [5, 10, "unlimited"]) {
       const limitTarget = path.join(root, "app-data", `manual-limit-${limit}.json`);
@@ -368,7 +399,46 @@ async function main() {
       "loading an older history file scrubs already-persisted raw input"
     );
 
-    await fs.writeFile(target, JSON.stringify({ schemaVersion: 2, records: "not-an-array" }), "utf8");
+    const migrationFailureTarget = path.join(root, "app-data", "migration-write-failure-history.json");
+    await fs.writeFile(migrationFailureTarget, JSON.stringify({
+      schemaVersion: 1,
+      records: [{ ...link, id: "migration-write-failure" }]
+    }), "utf8");
+    let migrationRenameAttempts = 0;
+    const migrationFailureStore = new ImportHistoryStore({
+      filePath: migrationFailureTarget,
+      fs: {
+        ...fs,
+        rename: async () => {
+          migrationRenameAttempts += 1;
+          const error = new Error("simulated migration permission failure");
+          error.code = "EACCES";
+          throw error;
+        }
+      }
+    });
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      await assert.rejects(
+        migrationFailureStore.list({ offset: 0, limit: 10 }),
+        (error) => error?.code === "history_migration_failed",
+        "a failed v1 migration is observable instead of returning an in-memory v2 success"
+      );
+      assert.equal(
+        JSON.parse(await fs.readFile(migrationFailureTarget, "utf8")).schemaVersion,
+        1,
+        "a failed migration leaves the durable v1 source intact"
+      );
+    }
+    assert.equal(migrationRenameAttempts, 2, "the same process retries a migration that never became durable");
+    const restartedMigrationStore = new ImportHistoryStore({ filePath: migrationFailureTarget });
+    assert.equal((await restartedMigrationStore.list({ offset: 0, limit: 10 })).total, 1);
+    assert.equal(
+      JSON.parse(await fs.readFile(migrationFailureTarget, "utf8")).schemaVersion,
+      2,
+      "a clean restart observes v1 and durably completes the migration"
+    );
+
+    await fs.writeFile(target, '{"schemaVersion":2,"records":[', "utf8");
     const recovered = new ImportHistoryStore({ filePath: target, now: () => timestamp });
     const recoveredList = await recovered.list({ offset: 0, limit: 24 });
     assert.equal(recoveredList.total, 0);
@@ -377,6 +447,18 @@ async function main() {
     const files = await fs.readdir(path.dirname(target));
     assert.ok(files.some((file) => /^import-history\.corrupt-.*\.json$/.test(file)), "corrupt source is retained as a timestamped backup");
     assert.deepEqual(JSON.parse(await fs.readFile(target, "utf8")), { schemaVersion: 2, records: [] });
+
+    const schemaInvalidTarget = path.join(root, "app-data", "schema-invalid-history.json");
+    await fs.writeFile(schemaInvalidTarget, JSON.stringify({ schemaVersion: 2, records: "not-an-array" }), "utf8");
+    const schemaInvalidStore = new ImportHistoryStore({ filePath: schemaInvalidTarget, now: () => timestamp + 1 });
+    const schemaInvalidList = await schemaInvalidStore.list({ offset: 0, limit: 24 });
+    assert.equal(schemaInvalidList.total, 0);
+    assert.equal(schemaInvalidList.notice?.code, "corrupt_recovered");
+    assert.deepEqual(
+      JSON.parse(await fs.readFile(schemaInvalidTarget, "utf8")),
+      { schemaVersion: 2, records: [] },
+      "schema-invalid JSON remains covered separately from JSON.parse failures"
+    );
 
     const cleanupTarget = path.join(root, "cleanup", "import-history.json");
     await fs.mkdir(path.dirname(cleanupTarget), { recursive: true });

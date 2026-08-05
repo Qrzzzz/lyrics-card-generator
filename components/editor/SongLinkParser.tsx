@@ -101,11 +101,16 @@ export function SongLinkParser({
         throw new Error(payload.error);
       }
 
-      if (!onParsed(payload.data, intent, { inputUrl: url })) return;
+      if (!onParsed(payload.data, intent, { inputUrl: url })) {
+        intent.cancel();
+        return;
+      }
       setStatus("success");
       setMessage(t("parseSuccess", { source: payload.data.source }));
     } catch (error) {
-      if (intent.signal.aborted) {
+      const wasAborted = intent.signal.aborted;
+      intent.cancel();
+      if (wasAborted) {
         setStatus("idle");
         setMessage(t("parseIdle"));
         return;

@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v5.9.1.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v5.9.0.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="#ローカル開発">ローカル開発</a> ·
@@ -51,14 +51,16 @@
 
 最新版は [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) からダウンロードできます。
 
-* 推奨インストーラー：`Lyrics Card Generator Setup 5.9.1.exe`
-* ポータブル版：`Lyrics Card Generator-5.9.1-portable.exe`
+* 推奨インストーラー：`Lyrics Card Generator Setup 5.9.0.exe`
+* ポータブル版：`Lyrics Card Generator-5.9.0-portable.exe`
 
 通常利用にはインストーラーを推奨します。ポータブル版は一時利用、検証、リムーバブルドライブでの利用に向いています。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v5.9.1 の更新ポイント
+### v5.9.1 ローカル候補（未公開）
+
+> v5.9.1 は現在ローカルのリリース候補です。v5.9.1 のインストーラー／ポータブル版はまだ公開されておらず、上記のダウンロードは公開済みの v5.9.0 です。
 
 * Windows デスクトップ版のヘッダーに手動保存を追加しました。最初の保存でアーカイブを作成し、その後に編集して保存すると同じ項目を更新します。
 * 手動保存は履歴で絞り込み、読み込めます。保存するのは曲と歌詞の意味内容だけで、スタイル、設定、書き出し画像、ローカルパス、機密設定は含めません。

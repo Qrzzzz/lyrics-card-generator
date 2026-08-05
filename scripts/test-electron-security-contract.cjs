@@ -136,18 +136,33 @@ assert.match(
 );
 assert.match(
   mainSource,
-  /handle\("lyrics-card:import-history-record", \(event, input\) => trackImportHistoryOperation\(/,
-  "history writes are tracked before their first asynchronous step"
+  /handle\("lyrics-card:import-history-record", \(event, input\) => trackImportHistoryMutation\(/,
+  "history writes enter the shared mutation queue before their first asynchronous step"
 );
 assert.match(
   mainSource,
-  /handle\("lyrics-card:manual-save-create", \(_event, input\) => trackImportHistoryOperation\([\s\S]*?importHistoryStore\.createManualSave/,
-  "manual save creation participates in shutdown draining"
+  /handle\("lyrics-card:manual-save-create", \(_event, input\) => trackImportHistoryMutation\([\s\S]*?importHistoryStore\.createManualSave/,
+  "manual save creation participates in ordered shutdown-drained mutations"
 );
 assert.match(
   mainSource,
-  /handle\("lyrics-card:manual-save-update", \(_event, recordId, input\) => trackImportHistoryOperation\([\s\S]*?importHistoryStore\.updateManualSave/,
-  "manual save updates participate in shutdown draining"
+  /handle\("lyrics-card:manual-save-update", \(_event, recordId, input\) => trackImportHistoryMutation\([\s\S]*?importHistoryStore\.updateManualSave/,
+  "manual save updates participate in ordered shutdown-drained mutations"
+);
+assert.match(
+  mainSource,
+  /handle\("lyrics-card:import-history-clear", \(\) => trackImportHistoryMutation\(/,
+  "clear shares the same dispatch-order mutation boundary as create and update"
+);
+assert.match(
+  mainSource,
+  /function importHistoryErrorCode\(error\)[\s\S]*?IMPORT_HISTORY_DOMAIN_ERROR_CODES\.has\(error\?\.code\)[\s\S]*?: "history_write_failed"/,
+  "filesystem error codes are reduced to a stable history domain error"
+);
+assert.doesNotMatch(
+  mainSource,
+  /unable to (?:create|update) manual save[\s\S]{0,260}typeof error\?\.code/,
+  "manual save IPC never forwards EACCES, EPERM, or another raw platform code"
 );
 const manualReplayStart = replayPayloadSource.indexOf('record.kind === "manual-save"');
 const manualReplayEnd = replayPayloadSource.indexOf("try {", manualReplayStart);
@@ -159,7 +174,7 @@ assert.doesNotMatch(
 );
 assert.match(
   mainSource,
-  /while \(importHistoryOperations\.size > 0\)[\s\S]*?Promise\.allSettled[\s\S]*?await importHistoryStore\.flush\(\)/,
+  /while \(importHistoryOperations\.size > 0\)[\s\S]*?Promise\.allSettled[\s\S]*?await importHistoryMutationQueue[\s\S]*?await importHistoryStore\.flush\(\)/,
   "desktop close waits for in-flight history operations and then the serialized store queue"
 );
 assert.match(

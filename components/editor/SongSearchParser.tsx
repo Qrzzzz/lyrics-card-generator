@@ -192,7 +192,10 @@ export function SongSearchParser({
         platform: song.source,
         songId: song.id,
         pageUrl: song.pageUrl
-      })) return;
+      })) {
+        intent.cancel();
+        return;
+      }
       skipNextSearchRef.current = true;
       setQuery(`${payload.data.song.title} - ${payload.data.song.artist}`);
       setExpanded(false);
@@ -200,7 +203,9 @@ export function SongSearchParser({
       setStatus(payload.data.lyrics ? "success" : "partial");
       setMessage(payload.data.lyrics ? t("songSearchImportedWithLyrics") : t("songSearchImportedNoLyrics"));
     } catch (error) {
-      if (intent.signal.aborted) {
+      const wasAborted = intent.signal.aborted;
+      intent.cancel();
+      if (wasAborted) {
         setStatus("idle");
         setMessage(t("songSearchNeedMoreInput"));
         return;

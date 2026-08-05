@@ -51,6 +51,7 @@ let windowMaximized = false;
 let windowRestoring = false;
 let lastEmittedWindowState = null;
 let appPreferencesWriteQueue = Promise.resolve();
+let importHistoryMutationQueue = Promise.resolve();
 let allowWindowClose = false;
 const aiTranslationRequests = new AIRequestRegistry();
 const importFileRegistrations = new Map();
@@ -503,7 +504,7 @@ function registerDesktopIpc() {
   });
 
   handle("lyrics-card:app-preferences-load", () => readAppPreferences());
-  handle("lyrics-card:app-preferences-save", (_event, input, options) => trackImportHistoryOperation(async () => {
+  handle("lyrics-card:app-preferences-save", (_event, input, options) => trackImportHistoryMutation(async () => {
     const preferences = normalizeStoredPreferences(input);
     if (!preferences) return false;
     const limit = normalizeImportHistoryLimit(preferences.userSettings?.importHistoryLimit);
@@ -607,7 +608,7 @@ function registerDesktopIpc() {
 
   handle("lyrics-card:import-history-stats", () => importHistoryStore.stats());
 
-  handle("lyrics-card:import-history-record", (event, input) => trackImportHistoryOperation(async () => {
+  handle("lyrics-card:import-history-record", (event, input) => trackImportHistoryMutation(async () => {
     try {
       let candidate = input;
       if (input?.kind === "local-audio" || input?.kind === "manual-cover") {
@@ -620,35 +621,35 @@ function registerDesktopIpc() {
       return { ok: true, record };
     } catch (error) {
       console.error("[import-history] unable to save record", error instanceof Error ? error.message : "unknown error");
-      return { ok: false, code: typeof error?.code === "string" ? error.code : "history_write_failed" };
+      return { ok: false, code: importHistoryErrorCode(error) };
     }
   }));
 
-  handle("lyrics-card:manual-save-create", (_event, input) => trackImportHistoryOperation(async () => {
+  handle("lyrics-card:manual-save-create", (_event, input) => trackImportHistoryMutation(async () => {
     try {
       const record = await importHistoryStore.createManualSave(input, await readImportHistoryLimit());
       return { ok: true, record };
     } catch (error) {
       console.error("[import-history] unable to create manual save", error instanceof Error ? error.message : "unknown error");
-      return { ok: false, code: typeof error?.code === "string" ? error.code : "history_write_failed" };
+      return { ok: false, code: importHistoryErrorCode(error) };
     }
   }));
 
-  handle("lyrics-card:manual-save-update", (_event, recordId, input) => trackImportHistoryOperation(async () => {
+  handle("lyrics-card:manual-save-update", (_event, recordId, input) => trackImportHistoryMutation(async () => {
     try {
       const record = await importHistoryStore.updateManualSave(recordId, input, await readImportHistoryLimit());
       return { ok: true, record };
     } catch (error) {
       console.error("[import-history] unable to update manual save", error instanceof Error ? error.message : "unknown error");
-      return { ok: false, code: typeof error?.code === "string" ? error.code : "history_write_failed" };
+      return { ok: false, code: importHistoryErrorCode(error) };
     }
   }));
 
-  handle("lyrics-card:import-history-remove", (_event, recordId) => trackImportHistoryOperation(
+  handle("lyrics-card:import-history-remove", (_event, recordId) => trackImportHistoryMutation(
     () => importHistoryStore.remove(recordId)
   ));
 
-  handle("lyrics-card:import-history-clear", () => trackImportHistoryOperation(
+  handle("lyrics-card:import-history-clear", () => trackImportHistoryMutation(
     () => importHistoryStore.clear()
   ));
 
@@ -691,7 +692,7 @@ function registerDesktopIpc() {
     return replay.ok ? { ...replay, relocationToken } : replay;
   });
 
-  handle("lyrics-card:import-history-replay-commit", (event, recordId, relocationToken) => trackImportHistoryOperation(async () => {
+  handle("lyrics-card:import-history-replay-commit", (event, recordId, relocationToken) => trackImportHistoryMutation(async () => {
     try {
       const file = relocationToken === undefined
         ? undefined
@@ -706,7 +707,7 @@ function registerDesktopIpc() {
       return committed ? { ok: true } : { ok: false, code: "not_found" };
     } catch (error) {
       console.error("[import-history] unable to commit replay", error instanceof Error ? error.message : "unknown error");
-      return { ok: false, code: typeof error?.code === "string" ? error.code : "history_write_failed" };
+      return { ok: false, code: importHistoryErrorCode(error) };
     }
   }));
 
@@ -784,8 +785,13 @@ function registerDesktopIpc() {
   });
 }
 
-function trackImportHistoryOperation(operation) {
-  const pending = Promise.resolve().then(operation);
+function trackImportHistoryMutation(operation) {
+  const pending = importHistoryMutationQueue.then(operation, operation);
+  importHistoryMutationQueue = pending.then(() => undefined, () => undefined);
+  return trackImportHistoryPromise(pending);
+}
+
+function trackImportHistoryPromise(pending) {
   importHistoryOperations.add(pending);
   void pending
     .finally(() => importHistoryOperations.delete(pending))
@@ -797,7 +803,25 @@ async function flushImportHistoryOperations() {
   while (importHistoryOperations.size > 0) {
     await Promise.allSettled([...importHistoryOperations]);
   }
+  await importHistoryMutationQueue;
   await importHistoryStore.flush();
+}
+
+const IMPORT_HISTORY_DOMAIN_ERROR_CODES = new Set([
+  "corrupt_backup_failed",
+  "history_confirmation_stale",
+  "history_migration_failed",
+  "invalid_file",
+  "invalid_kind",
+  "invalid_record",
+  "invalid_snapshot",
+  "not_found"
+]);
+
+function importHistoryErrorCode(error) {
+  return IMPORT_HISTORY_DOMAIN_ERROR_CODES.has(error?.code)
+    ? error.code
+    : "history_write_failed";
 }
 
 function pruneImportFileRegistrations() {

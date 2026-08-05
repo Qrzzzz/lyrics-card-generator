@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v5.9.1.zh-TW.md">發布說明</a> ·
+  <a href="./docs/releases/v5.9.0.zh-TW.md">發布說明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">線上 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="#本機開發">本機開發</a> ·
@@ -48,14 +48,16 @@
 
 請前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載最新版：
 
-* 建議一般使用者下載安裝版：`Lyrics Card Generator Setup 5.9.1.exe`
-* 不想安裝時可下載可攜版：`Lyrics Card Generator-5.9.1-portable.exe`
+* 建議一般使用者下載安裝版：`Lyrics Card Generator Setup 5.9.0.exe`
+* 不想安裝時可下載可攜版：`Lyrics Card Generator-5.9.0-portable.exe`
 
 安裝版適合長期使用；可攜版適合臨時執行、測試或放在隨身碟中使用。
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v5.9.1 更新重點
+### v5.9.1 本機候選說明（尚未發布）
+
+> v5.9.1 目前只是本機發布候選，尚無公開的安裝版或可攜版；上方下載項目對應目前已發布的 v5.9.0。
 
 * Windows 桌面版頂端新增手動存檔按鈕；第一次儲存會建立一筆存檔，繼續編輯後再次儲存則更新同一筆記錄。
 * 手動存檔可在歷史頁篩選並載入，只保存歌詞、翻譯和歌曲文字等語義內容，不保存樣式、設定、匯出圖片、本機路徑或敏感設定。

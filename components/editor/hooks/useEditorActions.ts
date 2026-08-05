@@ -775,7 +775,10 @@ export function useEditorActions({
       setDocumentRevision(revision);
       bindLoadedManualSave(replay.record.id, revision);
       setState((current) => replaceWithHistorySnapshot(current, snapshot, {
-        coverUrl: snapshot.coverUrl || snapshot.originalCoverUrl || "",
+        // Manual archives must replay from their persisted semantic snapshot only.
+        // Keeping the remote reference as provenance while leaving coverUrl empty
+        // prevents the normal editor cover-proxy/palette effects from issuing a request.
+        coverUrl: "",
         originalCoverUrl: snapshot.originalCoverUrl || snapshot.coverUrl || "",
         parseMethod: snapshot.parseMethod || "import-history-manual-save"
       }));
@@ -866,7 +869,7 @@ function replaceWithHistorySnapshot(
     finalUrl: snapshot.finalUrl ?? "",
     parseMethod: cover.parseMethod
   }, snapshot.lyrics);
-  const translationEnabled = snapshot.translationEnabled && Boolean(snapshot.translationText.trim());
+  const translationEnabled = snapshot.translationEnabled;
   return {
     ...replaced,
     translationText: snapshot.translationText,

@@ -104,7 +104,7 @@ export function EditorHeaderActions({
           aria-label={manualSaveLabel}
           aria-busy={manualSaveState === "saving"}
           title={manualSaveLabel}
-          disabled={manualSaveDisabled || manualSaveState === "saving"}
+          disabled={manualSaveDisabled || manualSaveState === "saving" || manualSaveState === "unavailable"}
           onClick={onManualSave}
           className={cn(buttonClassName, "editor-header-actions__icon-only p-0", isCompact ? "w-9" : "w-10")}
         >
