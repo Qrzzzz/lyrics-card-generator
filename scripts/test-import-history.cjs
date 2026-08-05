@@ -341,13 +341,23 @@ async function main() {
     delete missingArtistSnapshot.artist;
     const invalidSourceSnapshot = { ...canonicalSnapshot, source: "attacker-source" };
     const oversizedUnknownFieldSnapshot = { ...canonicalSnapshot, unknownPadding: "x".repeat(600_000) };
+    const reversedSnapshot = Object.fromEntries(Object.entries(canonicalSnapshot).reverse());
+    const swappedSnapshotEntries = Object.entries(canonicalSnapshot);
+    [swappedSnapshotEntries[1], swappedSnapshotEntries[2]] = [
+      swappedSnapshotEntries[2],
+      swappedSnapshotEntries[1]
+    ];
+    const swappedSnapshot = Object.fromEntries(swappedSnapshotEntries);
     for (const [label, invalidEnvelope] of [
       ["missing envelope version", JSON.stringify({ snapshot: canonicalSnapshot })],
       ["unknown outer field", JSON.stringify({ version: 1, snapshot: canonicalSnapshot, extra: true })],
       ["wrong envelope version", JSON.stringify({ version: 2, snapshot: canonicalSnapshot })],
+      ["reordered outer fields", JSON.stringify({ snapshot: canonicalSnapshot, version: 1 })],
       ["unknown snapshot field", manualSaveEnvelope({ snapshot: unknownFieldSnapshot })],
       ["missing required artist", manualSaveEnvelope({ snapshot: missingArtistSnapshot })],
       ["unsupported source enum", manualSaveEnvelope({ snapshot: invalidSourceSnapshot })],
+      ["reversed canonical snapshot fields", manualSaveEnvelope({ snapshot: reversedSnapshot })],
+      ["one swapped canonical snapshot field pair", manualSaveEnvelope({ snapshot: swappedSnapshot })],
       ["oversized unknown string", manualSaveEnvelope({ snapshot: oversizedUnknownFieldSnapshot })],
       ["non-canonical whitespace", ` ${manualSaveEnvelope({ snapshot: canonicalSnapshot })}`],
       ["malformed JSON", '{"version":1,"snapshot":']
@@ -359,7 +369,7 @@ async function main() {
       );
     }
 
-    const deepValue = `${'{"next":'.repeat(1_000)}null${"}".repeat(1_000)}`;
+    const deepValue = `${'{"next":'.repeat(25_000)}null${"}".repeat(25_000)}`;
     const deepEnvelope = `{"version":1,"snapshot":{"source":"unknown","title":"Deep input","artist":"","album":"","explicit":false,"originalCoverUrl":"","coverUrl":"","originalUrl":"","finalUrl":"","parseMethod":"","lyrics":"Safe lyrics","translationText":"","translationEnabled":false,"unknownDeep":${deepValue}}}`;
     await assert.rejects(
       shapeBoundaryStore.createManualSave(deepEnvelope, "unlimited"),
@@ -642,6 +652,41 @@ async function main() {
         label: "encoded duplicate NetEase identity",
         input: "https://music.163.com/song?id=70001&%69d=70002",
         expected: "https://music.163.com/song"
+      },
+      {
+        label: "case-equivalent duplicate NetEase identity with the same value",
+        input: "https://music.163.com/song?id=70001&ID=70001",
+        expected: "https://music.163.com/song"
+      },
+      {
+        label: "case-equivalent duplicate NetEase identity with a conflicting value",
+        input: "https://music.163.com/song?id=70001&ID=70002",
+        expected: "https://music.163.com/song"
+      },
+      {
+        label: "percent-decoded case-equivalent NetEase identity",
+        input: "https://music.163.com/song?id=70001&%49%44=70002",
+        expected: "https://music.163.com/song"
+      },
+      {
+        label: "non-canonical NetEase identity spelling",
+        input: "https://music.163.com/song?ID=70001",
+        expected: "https://music.163.com/song"
+      },
+      {
+        label: "case-equivalent duplicate QQ songmid identity",
+        input: "https://y.qq.com/portal/player.html?songmid=003OUlho2HcRHC&SongMid=003OUlho2HcRHC",
+        expected: "https://y.qq.com/portal/player.html"
+      },
+      {
+        label: "case-equivalent conflicting QQ songid identity",
+        input: "https://y.qq.com/player?songid=70001&SONGID=70002",
+        expected: "https://y.qq.com/player"
+      },
+      {
+        label: "case-equivalent duplicate Apple identity",
+        input: "https://music.apple.com/us/album/example/123456?i=654321&I=654321",
+        expected: "https://music.apple.com/us/album/example/123456"
       },
       {
         label: "NetEase alternate HTTPS port",

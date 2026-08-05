@@ -177,13 +177,13 @@ assert.match(
 );
 assert.match(
   manualSaveIpcSource,
-  /const create = \(_event, envelope\) => \{\s*if \(typeof envelope !== "string"\) return \{ ok: false, code: "invalid_snapshot" \};\s*return trackMutation/,
-  "create rejects non-primitive envelopes before queue, preferences, or Store access"
+  /require\("\.\/import-history"\)[\s\S]*?const create = \(_event, envelope\) => \{\s*if \(typeof envelope !== "string" \|\| !isCanonicalManualSaveEnvelope\(envelope\)\) \{\s*return \{ ok: false, code: "invalid_snapshot" \};\s*\}\s*return trackMutation/,
+  "create uses the Store's pure canonical validator before queue, preferences, or Store access"
 );
 assert.match(
   manualSaveIpcSource,
-  /const update = \(_event, recordId, envelope\) => \{\s*if \(typeof envelope !== "string"\) return \{ ok: false, code: "invalid_snapshot" \};\s*return trackMutation/,
-  "update rejects non-primitive envelopes before queue, preferences, or Store access"
+  /const update = \(_event, recordId, envelope\) => \{\s*if \(typeof envelope !== "string" \|\| !isCanonicalManualSaveEnvelope\(envelope\)\) \{\s*return \{ ok: false, code: "invalid_snapshot" \};\s*\}\s*return trackMutation/,
+  "update uses the same pure canonical validator before queue, preferences, or Store access"
 );
 assert.match(
   mainSource,
@@ -225,8 +225,8 @@ assert.match(
 );
 assert.match(
   manualSnapshotValidationSource,
-  /keys\.length !== MANUAL_SAVE_SNAPSHOT_FIELDS\.length[\s\S]*?MANUAL_SAVE_SNAPSHOT_FIELDS\.includes\(key\)[\s\S]*?SONG_SOURCES\.has\(source\.value\)/,
-  "canonical snapshots require the complete exact field set and a supported source enum"
+  /keys\.length !== MANUAL_SAVE_SNAPSHOT_FIELDS\.length[\s\S]*?key !== MANUAL_SAVE_SNAPSHOT_FIELDS\[index\][\s\S]*?SONG_SOURCES\.has\(source\.value\)/,
+  "canonical snapshots require the complete exact ordered field sequence and a supported source enum"
 );
 for (const valueType of [
   "accessor/getter",
@@ -263,8 +263,8 @@ assert.match(
 );
 assert.match(
   importHistorySource,
-  /NETEASE_MANUAL_IDENTITY_HOSTS = new Set\(\["music\.163\.com", "y\.music\.163\.com"\]\)[\s\S]*?APPLE_MANUAL_IDENTITY_HOSTS = new Set\(\["music\.apple\.com"\]\)[\s\S]*?QQ_MANUAL_IDENTITY_HOSTS = new Set\(\["y\.qq\.com"\]\)[\s\S]*?function manualUrlIdentity[\s\S]*?getAll\(name\)[\s\S]*?identityParameters\.length === 1/,
-  "manual URL identity uses explicit hosts, unique decoded parameters, and exact path rules"
+  /NETEASE_MANUAL_IDENTITY_HOSTS = new Set\(\["music\.163\.com", "y\.music\.163\.com"\]\)[\s\S]*?APPLE_MANUAL_IDENTITY_HOSTS = new Set\(\["music\.apple\.com"\]\)[\s\S]*?QQ_MANUAL_IDENTITY_HOSTS = new Set\(\["y\.qq\.com"\]\)[\s\S]*?function manualUrlIdentity[\s\S]*?foldedNames[\s\S]*?searchParameters\.entries\(\)[\s\S]*?asciiLowercase\(name\)[\s\S]*?canonicalNames\.has\(name\)[\s\S]*?identityParameters\.length === 1[\s\S]*?identityParameters\[0\]\.canonical/,
+  "manual URL identity uses exact hosts/paths and audits percent-decoded names under explicit ASCII case folding"
 );
 assert.match(
   desktopHistoryInteractionSource,
@@ -297,7 +297,7 @@ for (const directive of ["default-src 'self'", "script-src", "style-src", "img-s
 assert.match(nextConfig, /Permissions-Policy/);
 
 async function testManualSaveIpcEarlyRejection() {
-  const calls = { queue: 0, preferences: 0, create: 0, update: 0, logs: 0 };
+  const calls = { queue: 0, preferences: 0, create: 0, update: 0, historyFilesystem: 0, logs: 0 };
   const handlers = createManualSaveIpcHandlers({
     trackMutation: async (operation) => {
       calls.queue += 1;
@@ -310,10 +310,12 @@ async function testManualSaveIpcEarlyRejection() {
     store: {
       createManualSave: async (envelope, limit) => {
         calls.create += 1;
+        calls.historyFilesystem += 1;
         return { id: "created", envelope, limit };
       },
       updateManualSave: async (recordId, envelope, limit) => {
         calls.update += 1;
+        calls.historyFilesystem += 1;
         return { id: recordId, envelope, limit };
       }
     },
@@ -341,22 +343,78 @@ async function testManualSaveIpcEarlyRejection() {
   }
   assert.deepEqual(
     calls,
-    { queue: 0, preferences: 0, create: 0, update: 0, logs: 0 },
+    { queue: 0, preferences: 0, create: 0, update: 0, historyFilesystem: 0, logs: 0 },
     "non-primitive envelopes perform zero queue, preference I/O, Store, and logging work"
   );
 
+  const snapshot = {
+    source: "unknown",
+    title: "Canonical handler contract",
+    artist: "Security regression",
+    album: "",
+    explicit: false,
+    originalCoverUrl: "",
+    coverUrl: "",
+    originalUrl: "",
+    finalUrl: "",
+    parseMethod: "manual-save-security-test",
+    lyrics: "Safe lyrics",
+    translationText: "",
+    translationEnabled: false
+  };
+  const canonicalEnvelope = JSON.stringify({ version: 1, snapshot });
+  const snapshotWithoutArtist = { ...snapshot };
+  delete snapshotWithoutArtist.artist;
+  const reversedSnapshot = Object.fromEntries(Object.entries(snapshot).reverse());
+  const swappedSnapshotEntries = Object.entries(snapshot);
+  [swappedSnapshotEntries[1], swappedSnapshotEntries[2]] = [
+    swappedSnapshotEntries[2],
+    swappedSnapshotEntries[1]
+  ];
+  const swappedSnapshot = Object.fromEntries(swappedSnapshotEntries);
+  const deepValue = `${'{"next":'.repeat(25_000)}null${"}".repeat(25_000)}`;
+  const invalidPrimitiveStrings = [
+    ["malformed JSON", '{"version":1,"snapshot":'],
+    ["non-canonical whitespace", ` ${canonicalEnvelope}`],
+    ["unknown envelope field", JSON.stringify({ version: 1, snapshot, extra: true })],
+    ["reordered envelope fields", JSON.stringify({ snapshot, version: 1 })],
+    ["missing required artist", JSON.stringify({ version: 1, snapshot: snapshotWithoutArtist })],
+    ["unsupported source", JSON.stringify({ version: 1, snapshot: { ...snapshot, source: "attacker-source" } })],
+    ["reversed snapshot fields", JSON.stringify({ version: 1, snapshot: reversedSnapshot })],
+    ["one swapped snapshot field pair", JSON.stringify({ version: 1, snapshot: swappedSnapshot })],
+    ["oversized legal field", JSON.stringify({ version: 1, snapshot: { ...snapshot, lyrics: "x".repeat(600_000) } })],
+    ["25,000-level input", `{"version":1,"snapshot":${deepValue}}`]
+  ];
+  for (const [label, envelope] of invalidPrimitiveStrings) {
+    assert.deepEqual(
+      await handlers.create(null, envelope),
+      { ok: false, code: "invalid_snapshot" },
+      `${label} is rejected before the create mutation queue`
+    );
+    assert.deepEqual(
+      await handlers.update(null, "record-id", envelope),
+      { ok: false, code: "invalid_snapshot" },
+      `${label} is rejected before the update mutation queue`
+    );
+  }
   assert.deepEqual(
-    await handlers.create(null, "canonical-create"),
-    { ok: true, record: { id: "created", envelope: "canonical-create", limit: 10 } }
+    calls,
+    { queue: 0, preferences: 0, create: 0, update: 0, historyFilesystem: 0, logs: 0 },
+    "invalid primitive strings perform zero queue, preference, Store, history filesystem, and logging work"
+  );
+
+  assert.deepEqual(
+    await handlers.create(null, canonicalEnvelope),
+    { ok: true, record: { id: "created", envelope: canonicalEnvelope, limit: 10 } }
   );
   assert.deepEqual(
-    await handlers.update(null, "record-id", "canonical-update"),
-    { ok: true, record: { id: "record-id", envelope: "canonical-update", limit: 10 } }
+    await handlers.update(null, "record-id", canonicalEnvelope),
+    { ok: true, record: { id: "record-id", envelope: canonicalEnvelope, limit: 10 } }
   );
   assert.deepEqual(
     calls,
-    { queue: 2, preferences: 2, create: 1, update: 1, logs: 0 },
-    "primitive strings enter the real queue and Store path exactly once"
+    { queue: 2, preferences: 2, create: 1, update: 1, historyFilesystem: 2, logs: 0 },
+    "only a complete canonical string enters the real queue, preference, Store, and filesystem path exactly once"
   );
 }
 

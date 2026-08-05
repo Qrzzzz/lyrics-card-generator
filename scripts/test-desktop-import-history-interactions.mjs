@@ -701,16 +701,30 @@ try {
     const missingArtist = { ...snapshot };
     delete missingArtist.artist;
     const invalidSource = { ...snapshot, source: "attacker-source" };
+    const reversedSnapshot = Object.fromEntries(Object.entries(snapshot).reverse());
+    const swappedSnapshotEntries = Object.entries(snapshot);
+    [swappedSnapshotEntries[1], swappedSnapshotEntries[2]] = [
+      swappedSnapshotEntries[2],
+      swappedSnapshotEntries[1]
+    ];
+    const swappedSnapshot = Object.fromEntries(swappedSnapshotEntries);
+    const envelopeFor = (candidate) => JSON.stringify({ version: 1, snapshot: candidate });
     const results = [];
-    for (const [label, candidate] of [
-      ["unknown snapshot field", unknownField],
-      ["missing required artist", missingArtist],
-      ["unsupported source enum", invalidSource]
+    for (const [label, envelope] of [
+      ["malformed JSON", '{"version":1,"snapshot":'],
+      ["non-canonical whitespace", ` ${envelopeFor(snapshot)}`],
+      ["unknown envelope field", JSON.stringify({ version: 1, snapshot, extra: true })],
+      ["reordered envelope fields", JSON.stringify({ snapshot, version: 1 })],
+      ["unknown snapshot field", envelopeFor(unknownField)],
+      ["missing required artist", envelopeFor(missingArtist)],
+      ["unsupported source enum", envelopeFor(invalidSource)],
+      ["reversed canonical snapshot fields", envelopeFor(reversedSnapshot)],
+      ["one swapped canonical snapshot field pair", envelopeFor(swappedSnapshot)]
     ]) {
       results.push({
         label,
-        create: await api.createManualSave(JSON.stringify({ version: 1, snapshot: candidate })),
-        update: await api.updateManualSave("missing-record", JSON.stringify({ version: 1, snapshot: candidate }))
+        create: await api.createManualSave(envelope),
+        update: await api.updateManualSave("missing-record", envelope)
       });
     }
     return { results, total: (await api.getImportHistoryStats()).total };
@@ -762,7 +776,7 @@ try {
     const legal = await api.createManualSave(envelopeFor(boundarySnapshot));
     boundarySnapshot.translationText += "x";
     const oversized = await api.createManualSave(envelopeFor(boundarySnapshot));
-    const deepValue = `${'{"next":'.repeat(1_000)}null${"}".repeat(1_000)}`;
+    const deepValue = `${'{"next":'.repeat(25_000)}null${"}".repeat(25_000)}`;
     const deepEnvelope = `{"version":1,"snapshot":{"source":"unknown","title":"Deep input","artist":"","album":"","explicit":false,"originalCoverUrl":"","coverUrl":"","originalUrl":"","finalUrl":"","parseMethod":"","lyrics":"Safe lyrics","translationText":"","translationEnabled":false,"unknownDeep":${deepValue}}}`;
     const deep = await api.createManualSave(deepEnvelope);
     const removed = legal.ok ? await api.removeImportHistory(legal.record.id) : false;
@@ -838,6 +852,41 @@ try {
         "netease",
         "https://music.163.com/song?id=70001&%69d=70002",
         "https://music.163.com/song"
+      ],
+      [
+        "netease",
+        "https://music.163.com/song?id=70001&ID=70001",
+        "https://music.163.com/song"
+      ],
+      [
+        "netease",
+        "https://music.163.com/song?id=70001&ID=70002",
+        "https://music.163.com/song"
+      ],
+      [
+        "netease",
+        "https://music.163.com/song?id=70001&%49%44=70002",
+        "https://music.163.com/song"
+      ],
+      [
+        "netease",
+        "https://music.163.com/song?ID=70001",
+        "https://music.163.com/song"
+      ],
+      [
+        "qq",
+        "https://y.qq.com/portal/player.html?songmid=003OUlho2HcRHC&SongMid=003OUlho2HcRHC",
+        "https://y.qq.com/portal/player.html"
+      ],
+      [
+        "qq",
+        "https://y.qq.com/player?songid=70001&SONGID=70002",
+        "https://y.qq.com/player"
+      ],
+      [
+        "apple",
+        "https://music.apple.com/us/album/example/123456?i=654321&I=654321",
+        "https://music.apple.com/us/album/example/123456"
       ],
       [
         "netease",

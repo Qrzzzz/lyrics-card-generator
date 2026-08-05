@@ -648,6 +648,10 @@ function parseManualSaveEnvelope(value) {
   }
 }
 
+function isCanonicalManualSaveEnvelope(value) {
+  return parseManualSaveEnvelope(value) !== null;
+}
+
 function manualSaveSnapshotFieldsFit(input) {
   if (
     !jsonLikeTreeFitsWithinByteLimit(input, MAX_RECORD_BYTES, MAX_MANUAL_SAVE_JSON_DEPTH) ||
@@ -658,7 +662,7 @@ function manualSaveSnapshotFieldsFit(input) {
   const keys = Reflect.ownKeys(input);
   if (
     keys.length !== MANUAL_SAVE_SNAPSHOT_FIELDS.length ||
-    keys.some((key) => typeof key !== "string" || !MANUAL_SAVE_SNAPSHOT_FIELDS.includes(key))
+    keys.some((key, index) => key !== MANUAL_SAVE_SNAPSHOT_FIELDS[index])
   ) {
     return false;
   }
@@ -1113,10 +1117,19 @@ function manualUrlIdentity(value, normalizedUrl) {
   const hashQueryIndex = hashRoute.indexOf("?");
   const hashPath = hashQueryIndex >= 0 ? hashRoute.slice(0, hashQueryIndex) : hashRoute;
   const hashParameters = new URLSearchParams(hashQueryIndex >= 0 ? hashRoute.slice(hashQueryIndex + 1) : "");
-  const parameters = (names) => names.flatMap((name) => [
-    ...original.searchParams.getAll(name).map((parameterValue) => ({ name, value: parameterValue })),
-    ...hashParameters.getAll(name).map((parameterValue) => ({ name, value: parameterValue }))
-  ]);
+  const parameters = (names) => {
+    const canonicalNames = new Set(names);
+    const foldedNames = new Set(names.map(asciiLowercase));
+    return [original.searchParams, hashParameters].flatMap((searchParameters) => (
+      Array.from(searchParameters.entries())
+        .filter(([name]) => foldedNames.has(asciiLowercase(name)))
+        .map(([name, parameterValue]) => ({
+          name,
+          value: parameterValue,
+          canonical: canonicalNames.has(name)
+        }))
+    ));
+  };
   const exactPath = (candidate, expected) => candidate.replace(/\/+$/u, "") === expected;
 
   if (
@@ -1124,7 +1137,11 @@ function manualUrlIdentity(value, normalizedUrl) {
     (exactPath(originalPath, "/song") || exactPath(hashPath, "/song"))
   ) {
     const identityParameters = parameters(["id"]);
-    if (identityParameters.length === 1 && /^\d{1,32}$/.test(identityParameters[0].value)) {
+    if (
+      identityParameters.length === 1 &&
+      identityParameters[0].canonical &&
+      /^\d{1,32}$/.test(identityParameters[0].value)
+    ) {
       const id = identityParameters[0].value;
       return {
         key: `netease:${id}`,
@@ -1139,7 +1156,11 @@ function manualUrlIdentity(value, normalizedUrl) {
     const trackParameters = parameters(["i"]);
     const albumMatch = originalPath.match(/^\/[a-z]{2}\/album\/[^/]+\/\d+\/?$/iu);
     if (albumMatch) {
-      if (trackParameters.length === 1 && /^\d{1,32}$/.test(trackParameters[0].value)) {
+      if (
+        trackParameters.length === 1 &&
+        trackParameters[0].canonical &&
+        /^\d{1,32}$/.test(trackParameters[0].value)
+      ) {
         const id = trackParameters[0].value;
         return { key: `apple:${id}`, parameters: [["i", id]], pathname: "" };
       }
@@ -1170,7 +1191,7 @@ function manualUrlIdentity(value, normalizedUrl) {
     const permitsQueryIdentity = ["/song", "/portal/player.html", "/player"].some((candidate) => (
       exactPath(originalPath, candidate) || exactPath(hashPath, candidate)
     ));
-    if (permitsQueryIdentity && identityParameters.length === 1) {
+    if (permitsQueryIdentity && identityParameters.length === 1 && identityParameters[0].canonical) {
       const { name, value: id } = identityParameters[0];
       const valid = name === "songid" ? /^\d{1,32}$/u.test(id) : /^[A-Za-z0-9]{1,64}$/u.test(id);
       if (valid) {
@@ -1194,6 +1215,12 @@ function manualUrlIdentity(value, normalizedUrl) {
 
 function extractHttpUrl(value) {
   return boundedString(value, 8192).match(/https?:\/\/[^\s<>"']+/i)?.[0] ?? "";
+}
+
+function asciiLowercase(value) {
+  return value.replace(/[A-Z]/gu, (character) => (
+    String.fromCharCode(character.charCodeAt(0) + 0x20)
+  ));
 }
 
 function hostnameForUrl(value) {
@@ -1280,6 +1307,7 @@ module.exports = {
   cleanupImportHistoryTemporaryFiles,
   importHistoryDedupeKey,
   importHistoryDocumentVersion,
+  isCanonicalManualSaveEnvelope,
   normalizeHttpUrl,
   normalizeImportHistoryDocument,
   normalizeImportHistoryLimit,

@@ -1,5 +1,7 @@
 "use strict";
 
+const { isCanonicalManualSaveEnvelope } = require("./import-history");
+
 function createManualSaveIpcHandlers({
   trackMutation,
   readLimit,
@@ -19,7 +21,9 @@ function createManualSaveIpcHandlers({
   }
 
   const create = (_event, envelope) => {
-    if (typeof envelope !== "string") return { ok: false, code: "invalid_snapshot" };
+    if (typeof envelope !== "string" || !isCanonicalManualSaveEnvelope(envelope)) {
+      return { ok: false, code: "invalid_snapshot" };
+    }
     return trackMutation(async () => {
       try {
         const record = await store.createManualSave(envelope, await readLimit());
@@ -35,7 +39,9 @@ function createManualSaveIpcHandlers({
   };
 
   const update = (_event, recordId, envelope) => {
-    if (typeof envelope !== "string") return { ok: false, code: "invalid_snapshot" };
+    if (typeof envelope !== "string" || !isCanonicalManualSaveEnvelope(envelope)) {
+      return { ok: false, code: "invalid_snapshot" };
+    }
     return trackMutation(async () => {
       try {
         const record = await store.updateManualSave(recordId, envelope, await readLimit());

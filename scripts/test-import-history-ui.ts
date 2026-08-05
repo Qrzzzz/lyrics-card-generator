@@ -86,13 +86,13 @@ assert.match(
 );
 assert.match(
   importHistoryTypes,
-  /serializeImportHistoryManualSave[\s\S]*?version: 1[\s\S]*?snapshot: \{[\s\S]*?translationEnabled: snapshot\.translationEnabled/,
-  "the renderer serializer constructs only the whitelisted semantic snapshot"
+  /serializeImportHistoryManualSave[\s\S]*?version: 1[\s\S]*?snapshot: \{\s*source: snapshot\.source,\s*title: snapshot\.title,\s*artist: snapshot\.artist,\s*album: snapshot\.album \?\? "",\s*explicit: snapshot\.explicit === true,\s*originalCoverUrl: snapshot\.originalCoverUrl \?\? "",\s*coverUrl: snapshot\.coverUrl \?\? "",\s*originalUrl: snapshot\.originalUrl \?\? "",\s*finalUrl: snapshot\.finalUrl \?\? "",\s*parseMethod: snapshot\.parseMethod \?\? "",\s*lyrics: snapshot\.lyrics,\s*translationText: snapshot\.translationText,\s*translationEnabled: snapshot\.translationEnabled/,
+  "the renderer serializer emits the one canonical ordered semantic snapshot"
 );
 assert.match(
   importHistoryStore,
-  /MANUAL_SAVE_SNAPSHOT_FIELDS = Object\.freeze\(\[[\s\S]*?"translationEnabled"[\s\S]*?keys\.length !== MANUAL_SAVE_SNAPSHOT_FIELDS\.length[\s\S]*?SONG_SOURCES\.has\(source\.value\)/,
-  "the Store requires every canonical field, rejects extras, and enforces the source enum"
+  /MANUAL_SAVE_SNAPSHOT_FIELDS = Object\.freeze\(\[[\s\S]*?"translationEnabled"[\s\S]*?keys\.length !== MANUAL_SAVE_SNAPSHOT_FIELDS\.length[\s\S]*?key !== MANUAL_SAVE_SNAPSHOT_FIELDS\[index\][\s\S]*?SONG_SOURCES\.has\(source\.value\)/,
+  "the Store requires the one canonical field order, rejects extras, and enforces the source enum"
 );
 assert.match(
   importHistoryStore,
