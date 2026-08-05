@@ -88,11 +88,16 @@ export function LocalAudioParser({
         throw new Error(getLocalizedAppApiError(payload.code, t, payload.error));
       }
 
-      if (!onParsed(payload.data, payload.data.lyrics, intent, { fileToken })) return;
+      if (!onParsed(payload.data, payload.data.lyrics, intent, { fileToken })) {
+        intent.cancel();
+        return;
+      }
       setStatus(payload.status === "success" ? "success" : "partial");
       setMessage(payload.status === "success" ? t("localAudioSuccess") : t("localAudioNoLyrics"));
     } catch (error) {
-      if (intent.signal.aborted) {
+      const wasAborted = intent.signal.aborted;
+      intent.cancel();
+      if (wasAborted) {
         setStatus("idle");
         setMessage(t("localAudioIdle"));
         return;

@@ -15,7 +15,10 @@ import { useEditorSteps } from "@/components/editor/useEditorSteps";
 import {
   useEditorAiTranslation
 } from "@/components/editor/hooks/useEditorAiTranslation";
-import { useEditorActions } from "@/components/editor/hooks/useEditorActions";
+import {
+  useEditorActions,
+  type SongLinkAutoParseVisitIntent
+} from "@/components/editor/hooks/useEditorActions";
 import { useEditorPreferences } from "@/components/editor/hooks/useEditorPreferences";
 import { AppMotionProvider } from "@/components/motion/AppMotionProvider";
 import { MotionPanel } from "@/components/motion/MotionPanel";
@@ -77,6 +80,10 @@ const reducedSurfaceTransition: Transition = {
 export function LyricEditor() {
   const [state, setState] = useState<AppState>(defaultState);
   const [currentStep, setCurrentStep] = useState(0);
+  const [songLinkAutoParseVisitIntent, setSongLinkAutoParseVisitIntent] = useState<SongLinkAutoParseVisitIntent>({
+    id: 0,
+    allowAutoParse: true
+  });
   const [fontSchemePreview, setFontSchemePreview] = useState<FontScheme | null>(null);
   const [isPreviewVisible, setIsPreviewVisible] = useState(true);
   const [activeSurface, setActiveSurface] = useState<ActiveSurface>("editor");
@@ -94,6 +101,7 @@ export function LyricEditor() {
   const historyButtonRef = useRef<HTMLButtonElement | null>(null);
   const settingsButtonRef = useRef<HTMLButtonElement | null>(null);
   const surfaceReturnFocusRef = useRef<HTMLButtonElement | null>(null);
+  const aiTranslationBusyRef = useRef(false);
   const invalidateDocumentAsyncRef = useRef<(
     reason?: "document" | "ai-start"
   ) => TranslationValue | undefined>(() => undefined);
@@ -180,6 +188,9 @@ export function LyricEditor() {
     clearTransitionKey,
     activeExportSnapshot,
     documentRevision,
+    isDocumentTransactionPending,
+    manualSaveButtonState,
+    createSongLinkAutoParseVisitIntent,
     beginSongImport,
     clearAllContent,
     handleStyleChange,
@@ -200,6 +211,9 @@ export function LyricEditor() {
     applyFetchedLyrics,
     loadExample,
     reimportHistory,
+    saveManualArchive,
+    handleHistoryRecordRemoved,
+    handleHistoryCleared,
     completeAndExport
   } = useEditorActions({
     parsedState,
@@ -228,7 +242,8 @@ export function LyricEditor() {
     onCloseExamples: closeExamples,
     onCloseHistory: closeHistory,
     onClearTransientState: () => setFontSchemePreview(null),
-    onInvalidateDocument: (reason) => invalidateDocumentAsyncRef.current(reason)
+    onInvalidateDocument: (reason) => invalidateDocumentAsyncRef.current(reason),
+    isManualSaveBlocked: () => aiTranslationBusyRef.current
   });
 
   useSongCoverObjectUrlLifecycle(
@@ -333,6 +348,7 @@ export function LyricEditor() {
     onNotify: showToast,
     onRequireSettings: () => openSettings("ai")
   });
+  aiTranslationBusyRef.current = isAITranslating;
   invalidateDocumentAsyncRef.current = invalidateAITranslation;
 
   function openSettings(tab?: SettingsTabId) {
@@ -361,6 +377,13 @@ export function LyricEditor() {
     });
   }
 
+  function changeEditorStep(nextStep: number) {
+    if (nextStep === 0 && currentStep !== 0) {
+      setSongLinkAutoParseVisitIntent(createSongLinkAutoParseVisitIntent());
+    }
+    setCurrentStep(nextStep);
+  }
+
   const settingsSteps: SettingsStep[] = useEditorSteps({
     state,
     t,
@@ -374,6 +397,7 @@ export function LyricEditor() {
       lineStatus: exportReadiness.lineStatus
     },
     documentRevision,
+    songLinkAutoParseVisitIntent,
     ai: {
       isOpen: isAITranslateOpen,
       isTranslating: isAITranslating,
@@ -454,6 +478,8 @@ export function LyricEditor() {
                 onClose={closeHistory}
                 onReplay={reimportHistory}
                 onNotify={showToast}
+                onRecordRemoved={handleHistoryRecordRemoved}
+                onHistoryCleared={handleHistoryCleared}
               />
             ) : null}
 
@@ -499,7 +525,7 @@ export function LyricEditor() {
                     <SettingsStepper
                       steps={settingsSteps}
                       currentStep={currentStep}
-                      onStepChange={setCurrentStep}
+                      onStepChange={changeEditorStep}
                       backText={t("step.back")}
                       nextText={t("step.next")}
                       themeColor={resolvedAccentColor}
@@ -512,6 +538,9 @@ export function LyricEditor() {
                           placement="stepper"
                           onOpenExamples={() => setActiveSurface("examples")}
                           onOpenHistory={isDesktopShell ? () => setActiveSurface("history") : undefined}
+                          onManualSave={isDesktopShell ? () => void saveManualArchive() : undefined}
+                          manualSaveState={manualSaveButtonState}
+                          manualSaveDisabled={isAITranslating || isDocumentTransactionPending}
                           onClearAll={clearAllContent}
                           onOpenSettings={openSettings}
                           examplesButtonRef={examplesButtonRef}

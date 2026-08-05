@@ -32,6 +32,10 @@ export class DocumentTransactionController {
     return this.revision;
   }
 
+  get hasActiveIntent() {
+    return this.active !== null;
+  }
+
   begin(kind: DocumentImportKind): DocumentImportIntent {
     this.abortActive();
     const controller = new AbortController();

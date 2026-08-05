@@ -1,8 +1,9 @@
 import type { SongSource } from "@/lib/types";
 
-export type ImportHistoryKind = "link" | "search" | "local-audio" | "manual-cover";
+export type ImportHistoryKind = "link" | "search" | "local-audio" | "manual-cover" | "manual-save";
 export type ImportHistoryFileKind = Extract<ImportHistoryKind, "local-audio" | "manual-cover">;
 export type ImportHistoryLimit = 5 | 10 | "unlimited";
+export type ManualSaveButtonState = "create" | "update" | "current" | "saving" | "unavailable";
 
 export type ImportHistoryRecord = {
   id: string;
@@ -96,12 +97,68 @@ export type ImportHistoryManualSnapshot = {
   artist: string;
   album?: string;
   source: SongSource;
+  explicit?: boolean;
+  originalCoverUrl?: string;
+  coverUrl?: string;
   originalUrl?: string;
   finalUrl?: string;
+  parseMethod?: string;
   lyrics: string;
   translationText: string;
   translationEnabled: boolean;
 };
+
+export type ImportHistoryManualSaveInput = {
+  snapshot: ImportHistoryManualSnapshot;
+};
+
+export type ImportHistoryManualSaveEnvelope = string & {
+  readonly __manualSaveEnvelope: unique symbol;
+};
+
+const MANUAL_SAVE_SOURCES = new Set<SongSource>(["qq", "netease", "apple", "spotify", "unknown"]);
+
+export function serializeImportHistoryManualSave(
+  input: ImportHistoryManualSaveInput
+): ImportHistoryManualSaveEnvelope | null {
+  const snapshot = input.snapshot;
+  if (
+    !MANUAL_SAVE_SOURCES.has(snapshot.source) ||
+    typeof snapshot.title !== "string" ||
+    typeof snapshot.artist !== "string" ||
+    (snapshot.album !== undefined && typeof snapshot.album !== "string") ||
+    (snapshot.explicit !== undefined && typeof snapshot.explicit !== "boolean") ||
+    (snapshot.originalCoverUrl !== undefined && typeof snapshot.originalCoverUrl !== "string") ||
+    (snapshot.coverUrl !== undefined && typeof snapshot.coverUrl !== "string") ||
+    (snapshot.originalUrl !== undefined && typeof snapshot.originalUrl !== "string") ||
+    (snapshot.finalUrl !== undefined && typeof snapshot.finalUrl !== "string") ||
+    (snapshot.parseMethod !== undefined && typeof snapshot.parseMethod !== "string") ||
+    typeof snapshot.lyrics !== "string" ||
+    typeof snapshot.translationText !== "string" ||
+    typeof snapshot.translationEnabled !== "boolean"
+  ) {
+    return null;
+  }
+
+  return JSON.stringify({
+    version: 1,
+    snapshot: {
+      source: snapshot.source,
+      title: snapshot.title,
+      artist: snapshot.artist,
+      album: snapshot.album ?? "",
+      explicit: snapshot.explicit === true,
+      originalCoverUrl: snapshot.originalCoverUrl ?? "",
+      coverUrl: snapshot.coverUrl ?? "",
+      originalUrl: snapshot.originalUrl ?? "",
+      finalUrl: snapshot.finalUrl ?? "",
+      parseMethod: snapshot.parseMethod ?? "",
+      lyrics: snapshot.lyrics,
+      translationText: snapshot.translationText,
+      translationEnabled: snapshot.translationEnabled
+    }
+  }) as ImportHistoryManualSaveEnvelope;
+}
 
 export type ImportHistoryWriteResult =
   | { ok: true; record: ImportHistoryRecord }
@@ -150,6 +207,12 @@ export type ImportHistoryReplayResult =
       file: ImportHistoryReplayFile;
       snapshot: ImportHistoryManualSnapshot;
       relocationToken?: string;
+    }
+  | {
+      ok: true;
+      kind: "manual-save";
+      record: ImportHistoryRecord;
+      snapshot: ImportHistoryManualSnapshot;
     }
   | {
       ok: false;

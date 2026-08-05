@@ -31,7 +31,8 @@ export function SongLinkParser({
   beginImport,
   onParsed,
   t,
-  autoParseOnMount = false
+  autoParseOnMount = false,
+  autoParseVisitIntent = { id: 0, allowAutoParse: true }
 }: {
   url: string;
   onUrlChange: (url: string) => void;
@@ -39,12 +40,13 @@ export function SongLinkParser({
   onParsed: (song: ParsedSongData, intent: DocumentImportIntent, context: LinkImportHistoryContext) => boolean;
   t: ReturnType<typeof createT>;
   autoParseOnMount?: boolean;
+  autoParseVisitIntent?: Readonly<{ id: number; allowAutoParse: boolean }>;
 }) {
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const inputId = useId();
   const statusId = useId();
   const [message, setMessage] = useState<string>(t("parseIdle"));
-  const autoParsed = useRef(false);
+  const handledAutoParseVisitRef = useRef<number | null>(null);
   const activeIntentRef = useRef<DocumentImportIntent | null>(null);
 
   useEffect(() => () => activeIntentRef.current?.cancel(), []);
@@ -56,13 +58,16 @@ export function SongLinkParser({
   }, [status, t]);
 
   useEffect(() => {
-    if (!autoParseOnMount || autoParsed.current || !url.trim()) {
+    if (!autoParseOnMount || handledAutoParseVisitRef.current === autoParseVisitIntent.id) {
       return;
     }
 
-    autoParsed.current = true;
+    // Each visit ID carries an immutable decision captured synchronously by the
+    // navigation event. URL edits alone must never trigger this effect.
+    handledAutoParseVisitRef.current = autoParseVisitIntent.id;
+    if (!autoParseVisitIntent.allowAutoParse || !url.trim()) return;
     void parseUrl();
-  }, [autoParseOnMount]);
+  }, [autoParseOnMount, autoParseVisitIntent.id]);
 
   async function parseUrl() {
     if (!url.trim()) {
@@ -101,11 +106,16 @@ export function SongLinkParser({
         throw new Error(payload.error);
       }
 
-      if (!onParsed(payload.data, intent, { inputUrl: url })) return;
+      if (!onParsed(payload.data, intent, { inputUrl: url })) {
+        intent.cancel();
+        return;
+      }
       setStatus("success");
       setMessage(t("parseSuccess", { source: payload.data.source }));
     } catch (error) {
-      if (intent.signal.aborted) {
+      const wasAborted = intent.signal.aborted;
+      intent.cancel();
+      if (wasAborted) {
         setStatus("idle");
         setMessage(t("parseIdle"));
         return;

@@ -2,6 +2,7 @@ const assert = require("node:assert/strict");
 const { readFileSync } = require("node:fs");
 const { isTrustedIpcEvent } = require("../electron/ipc-security");
 const { normalizeLoopbackHttpUrl, resolveLocalAppUrl } = require("../electron/local-app-url");
+const { createManualSaveIpcHandlers } = require("../electron/manual-save-ipc");
 const { isAllowedLocalNavigation, parseAllowedExternalUrl } = require("../electron/url-policy");
 
 const localUrl = "http://127.0.0.1:43123";
@@ -56,6 +57,10 @@ function trustedFixture(frameUrl = `${localUrl}/`, frameIsMain = true) {
 }
 
 const mainSource = readFileSync("electron/main.js", "utf8");
+const importHistorySource = readFileSync("electron/import-history.js", "utf8");
+const manualSaveIpcSource = readFileSync("electron/manual-save-ipc.js", "utf8");
+const desktopApiSource = readFileSync("lib/desktop-api.ts", "utf8");
+const desktopHistoryInteractionSource = readFileSync("scripts/test-desktop-import-history-interactions.mjs", "utf8");
 const replayPayloadSource = mainSource.slice(
   mainSource.indexOf("async function createImportHistoryReplayPayload"),
   mainSource.indexOf("function mimeTypeForHistoryFile")
@@ -80,6 +85,12 @@ assert.match(
   /path\.join\(projectRoot, "electron", "import-history\.js"\)[\s\S]*?path\.join\(electronOutputDir, "import-history\.js"\)/,
   "desktop preparation copies the import history store into the minimal app"
 );
+assert.match(prepareElectronSource, /"electron\/manual-save-ipc\.js"/, "packaged desktop bundles the manual-save IPC boundary");
+assert.match(
+  prepareElectronSource,
+  /path\.join\(projectRoot, "electron", "manual-save-ipc\.js"\)[\s\S]*?path\.join\(electronOutputDir, "manual-save-ipc\.js"\)/,
+  "desktop preparation copies the real manual-save IPC handlers into the minimal app"
+);
 
 const preloadSource = readFileSync("electron/preload.js", "utf8");
 assert.match(preloadSource, /const \{ contextBridge, ipcRenderer, webUtils \} = require\("electron"\)/);
@@ -91,6 +102,31 @@ assert.match(
   preloadSource,
   /commitImportHistoryReplay: \(recordId, relocationToken\)[\s\S]*?"lyrics-card:import-history-replay-commit"[\s\S]*?recordId,[\s\S]*?relocationToken/,
   "relocation finalization exposes only a record id and opaque main-process token"
+);
+assert.match(
+  preloadSource,
+  /exposeInMainWorld\("lyricsCardDesktopBridge"[\s\S]*?createManualSaveEnvelope: \(envelope\)[\s\S]*?invokeManualSave\("lyrics-card:manual-save-create", undefined, envelope\)/,
+  "preload exposes only the primitive canonical-envelope transport"
+);
+assert.match(
+  preloadSource,
+  /function invokeManualSave\(channel, recordId, envelope\)[\s\S]*?typeof envelope !== "string"[\s\S]*?invalidManualSaveResult/,
+  "preload rejects clone-erased objects instead of forwarding them to IPC"
+);
+assert.match(
+  desktopApiSource,
+  /function isManualSaveEnvelope\(value: unknown\)[\s\S]*?typeof value === "string"[\s\S]*?createDesktopApi[\s\S]*?bridge\.createManualSaveEnvelope\(envelope\)/,
+  "the renderer-local product API rejects objects before crossing contextBridge"
+);
+assert.doesNotMatch(
+  preloadSource,
+  /(?:^|\s)createManualSave: /m,
+  "the contextBridge surface cannot accept an object-shaped manual-save request"
+);
+assert.doesNotMatch(
+  preloadSource,
+  /(?:createManualSaveEnvelope|updateManualSaveEnvelope): \([^)]*(?:path|createdAt|lastUsedAt)/,
+  "manual saves expose no renderer-selected path or timestamp"
 );
 
 assert.match(
@@ -126,12 +162,131 @@ assert.match(
 );
 assert.match(
   mainSource,
-  /handle\("lyrics-card:import-history-record", \(event, input\) => trackImportHistoryOperation\(/,
-  "history writes are tracked before their first asynchronous step"
+  /handle\("lyrics-card:import-history-record", \(event, input\) => trackImportHistoryMutation\(/,
+  "history writes enter the shared mutation queue before their first asynchronous step"
 );
 assert.match(
   mainSource,
-  /while \(importHistoryOperations\.size > 0\)[\s\S]*?Promise\.allSettled[\s\S]*?await importHistoryStore\.flush\(\)/,
+  /createManualSaveIpcHandlers\([\s\S]*?trackMutation: trackImportHistoryMutation[\s\S]*?readLimit: readImportHistoryLimit[\s\S]*?store: importHistoryStore[\s\S]*?handle\("lyrics-card:manual-save-create", manualSaveHandlers\.create\)/,
+  "manual save creation uses the independently tested early-rejection handler and ordered mutation queue"
+);
+assert.match(
+  mainSource,
+  /handle\("lyrics-card:manual-save-update", manualSaveHandlers\.update\)/,
+  "manual save updates use the same independently tested early-rejection boundary"
+);
+assert.match(
+  manualSaveIpcSource,
+  /require\("\.\/import-history"\)[\s\S]*?const create = \(_event, envelope\) => \{\s*if \(typeof envelope !== "string" \|\| !isCanonicalManualSaveEnvelope\(envelope\)\) \{\s*return \{ ok: false, code: "invalid_snapshot" \};\s*\}\s*return trackMutation/,
+  "create uses the Store's pure canonical validator before queue, preferences, or Store access"
+);
+assert.match(
+  manualSaveIpcSource,
+  /const update = \(_event, recordId, envelope\) => \{\s*if \(typeof envelope !== "string" \|\| !isCanonicalManualSaveEnvelope\(envelope\)\) \{\s*return \{ ok: false, code: "invalid_snapshot" \};\s*\}\s*return trackMutation/,
+  "update uses the same pure canonical validator before queue, preferences, or Store access"
+);
+assert.match(
+  mainSource,
+  /handle\("lyrics-card:import-history-clear", \(\) => trackImportHistoryMutation\(/,
+  "clear shares the same dispatch-order mutation boundary as create and update"
+);
+assert.match(
+  mainSource,
+  /function importHistoryErrorCode\(error\)[\s\S]*?IMPORT_HISTORY_DOMAIN_ERROR_CODES\.has\(error\?\.code\)[\s\S]*?: "history_write_failed"/,
+  "filesystem error codes are reduced to a stable history domain error"
+);
+assert.doesNotMatch(
+  mainSource,
+  /unable to (?:create|update) manual save[\s\S]{0,260}typeof error\?\.code/,
+  "manual save IPC never forwards EACCES, EPERM, or another raw platform code"
+);
+const manualSnapshotValidationSource = importHistorySource.slice(
+  importHistorySource.indexOf("function manualSaveSnapshotFieldsFit"),
+  importHistorySource.indexOf("function isMeaningfulManualSaveSnapshot")
+);
+assert.doesNotMatch(
+  manualSnapshotValidationSource,
+  /JSON\.stringify/,
+  "pre-projection snapshot limits never estimate opaque structured-clone objects through JSON.stringify"
+);
+assert.match(
+  manualSnapshotValidationSource,
+  /jsonLikeTreeFitsWithinByteLimit[\s\S]*?maximumDepth[\s\S]*?utilTypes\.isProxy[\s\S]*?seen\.has[\s\S]*?Object\.getPrototypeOf/,
+  "manual snapshots require a bounded-depth, acyclic, non-proxy, plain JSON-like tree"
+);
+const envelopeParserSource = importHistorySource.slice(
+  importHistorySource.indexOf("function parseManualSaveEnvelope"),
+  importHistorySource.indexOf("function manualSaveSnapshotFieldsFit")
+);
+assert.match(
+  envelopeParserSource,
+  /typeof value !== "string"[\s\S]*?JSON\.parse\(value\)[\s\S]*?manualSaveSnapshotFieldsFit[\s\S]*?JSON\.stringify\(envelope\) === value/,
+  "the Store independently parses and validates an exact canonical string envelope before mutation"
+);
+assert.match(
+  manualSnapshotValidationSource,
+  /keys\.length !== MANUAL_SAVE_SNAPSHOT_FIELDS\.length[\s\S]*?key !== MANUAL_SAVE_SNAPSHOT_FIELDS\[index\][\s\S]*?SONG_SOURCES\.has\(source\.value\)/,
+  "canonical snapshots require the complete exact ordered field sequence and a supported source enum"
+);
+for (const valueType of [
+  "accessor/getter",
+  "Proxy",
+  "symbol",
+  "non-enumerable property",
+  "extended array",
+  "sparse array",
+  "shared object",
+  "ArrayBuffer",
+  "Uint8Array",
+  "DataView",
+  "Map",
+  "Set",
+  "Date",
+  "RegExp",
+  "Error",
+  "cycle"
+]) {
+  assert.ok(
+    desktopHistoryInteractionSource.includes(`["${valueType}"`),
+    `desktop IPC regression covers ${valueType}`
+  );
+}
+assert.match(
+  desktopHistoryInteractionSource,
+  /snapshot one byte over the limit has a stable IPC error[\s\S]*?excessively deep canonical envelope has a stable IPC error/,
+  "desktop IPC rejects oversized and excessively deep canonical envelopes"
+);
+assert.match(
+  desktopHistoryInteractionSource,
+  /boundaryBytes[\s\S]*?512 \* 1024[\s\S]*?exact-limit complete legal snapshot crosses IPC successfully/,
+  "desktop IPC preserves an exact-limit snapshot made only from the canonical legal fields"
+);
+assert.match(
+  importHistorySource,
+  /NETEASE_MANUAL_IDENTITY_HOSTS = new Set\(\["music\.163\.com", "y\.music\.163\.com"\]\)[\s\S]*?APPLE_MANUAL_IDENTITY_HOSTS = new Set\(\["music\.apple\.com"\]\)[\s\S]*?QQ_MANUAL_IDENTITY_HOSTS = new Set\(\["y\.qq\.com"\]\)[\s\S]*?function manualUrlIdentity[\s\S]*?foldedNames[\s\S]*?searchParameters\.entries\(\)[\s\S]*?asciiLowercase\(name\)[\s\S]*?canonicalNames\.has\(name\)[\s\S]*?identityParameters\.length === 1[\s\S]*?identityParameters\[0\]\.canonical/,
+  "manual URL identity uses exact hosts/paths and audits percent-decoded names under explicit ASCII case folding"
+);
+assert.match(
+  importHistorySource,
+  /function normalizeManualSongUrls\(original, final\)[\s\S]*?identityState === "ambiguous"[\s\S]*?return null[\s\S]*?const absentIdentity = \{ state: "absent"[\s\S]*?const ambiguousIdentity = \{ state: "ambiguous"[\s\S]*?identityParameters\.length > 1[\s\S]*?return ambiguousIdentity/,
+  "manual URL provenance preserves absent/unique/ambiguous state and rejects ambiguity before mutation"
+);
+assert.match(
+  desktopHistoryInteractionSource,
+  /NetEase song identity while removing credentials[\s\S]*?manual replay retains its exact sanitized song identity[\s\S]*?routeCountsBeforeManualReplayRemount/,
+  "packaged replay preserves the song ID while retaining local-only remount behavior"
+);
+const manualReplayStart = replayPayloadSource.indexOf('record.kind === "manual-save"');
+const manualReplayEnd = replayPayloadSource.indexOf("try {", manualReplayStart);
+assert.ok(manualReplayStart >= 0 && manualReplayEnd > manualReplayStart);
+assert.doesNotMatch(
+  replayPayloadSource.slice(manualReplayStart, manualReplayEnd),
+  /readValidatedImportFile|fetch\(|source\.path/,
+  "manual save replay returns only the validated stored snapshot without file or network access"
+);
+assert.match(
+  mainSource,
+  /while \(importHistoryOperations\.size > 0\)[\s\S]*?Promise\.allSettled[\s\S]*?await importHistoryMutationQueue[\s\S]*?await importHistoryStore\.flush\(\)/,
   "desktop close waits for in-flight history operations and then the serialized store queue"
 );
 assert.match(
@@ -145,6 +300,154 @@ for (const directive of ["default-src 'self'", "script-src", "style-src", "img-s
   assert.ok(nextConfig.includes(directive), directive);
 }
 assert.match(nextConfig, /Permissions-Policy/);
+
+async function testManualSaveIpcEarlyRejection() {
+  const calls = { queue: 0, preferences: 0, create: 0, update: 0, historyFilesystem: 0, logs: 0 };
+  const handlers = createManualSaveIpcHandlers({
+    trackMutation: async (operation) => {
+      calls.queue += 1;
+      return operation();
+    },
+    readLimit: async () => {
+      calls.preferences += 1;
+      return 10;
+    },
+    store: {
+      createManualSave: async (envelope, limit) => {
+        calls.create += 1;
+        calls.historyFilesystem += 1;
+        return { id: "created", envelope, limit };
+      },
+      updateManualSave: async (recordId, envelope, limit) => {
+        calls.update += 1;
+        calls.historyFilesystem += 1;
+        return { id: recordId, envelope, limit };
+      }
+    },
+    errorCode: () => "history_write_failed",
+    logger: { error: () => { calls.logs += 1; } }
+  });
+
+  const rejected = [
+    ["plain object", {}],
+    ["array", []],
+    ["String object", new String("canonical")],
+    ["ArrayBuffer", new ArrayBuffer(16)]
+  ];
+  for (const [label, value] of rejected) {
+    assert.deepEqual(
+      await handlers.create(null, value),
+      { ok: false, code: "invalid_snapshot" },
+      `${label} is rejected by the real create handler`
+    );
+    assert.deepEqual(
+      await handlers.update(null, "record-id", value),
+      { ok: false, code: "invalid_snapshot" },
+      `${label} is rejected by the real update handler`
+    );
+  }
+  assert.deepEqual(
+    calls,
+    { queue: 0, preferences: 0, create: 0, update: 0, historyFilesystem: 0, logs: 0 },
+    "non-primitive envelopes perform zero queue, preference I/O, Store, and logging work"
+  );
+
+  const snapshot = {
+    source: "unknown",
+    title: "Canonical handler contract",
+    artist: "Security regression",
+    album: "",
+    explicit: false,
+    originalCoverUrl: "",
+    coverUrl: "",
+    originalUrl: "",
+    finalUrl: "",
+    parseMethod: "manual-save-security-test",
+    lyrics: "Safe lyrics",
+    translationText: "",
+    translationEnabled: false
+  };
+  const canonicalEnvelope = JSON.stringify({ version: 1, snapshot });
+  const snapshotWithoutArtist = { ...snapshot };
+  delete snapshotWithoutArtist.artist;
+  const reversedSnapshot = Object.fromEntries(Object.entries(snapshot).reverse());
+  const swappedSnapshotEntries = Object.entries(snapshot);
+  [swappedSnapshotEntries[1], swappedSnapshotEntries[2]] = [
+    swappedSnapshotEntries[2],
+    swappedSnapshotEntries[1]
+  ];
+  const swappedSnapshot = Object.fromEntries(swappedSnapshotEntries);
+  const deepValue = `${'{"next":'.repeat(25_000)}null${"}".repeat(25_000)}`;
+  const envelopeWithUrls = (originalUrl, finalUrl = originalUrl) => JSON.stringify({
+    version: 1,
+    snapshot: { ...snapshot, originalUrl, finalUrl }
+  });
+  const invalidPrimitiveStrings = [
+    ["malformed JSON", '{"version":1,"snapshot":'],
+    ["non-canonical whitespace", ` ${canonicalEnvelope}`],
+    ["unknown envelope field", JSON.stringify({ version: 1, snapshot, extra: true })],
+    ["reordered envelope fields", JSON.stringify({ snapshot, version: 1 })],
+    ["missing required artist", JSON.stringify({ version: 1, snapshot: snapshotWithoutArtist })],
+    ["unsupported source", JSON.stringify({ version: 1, snapshot: { ...snapshot, source: "attacker-source" } })],
+    ["reversed snapshot fields", JSON.stringify({ version: 1, snapshot: reversedSnapshot })],
+    ["one swapped snapshot field pair", JSON.stringify({ version: 1, snapshot: swappedSnapshot })],
+    ["oversized legal field", JSON.stringify({ version: 1, snapshot: { ...snapshot, lyrics: "x".repeat(600_000) } })],
+    ["25,000-level input", `{"version":1,"snapshot":${deepValue}}`],
+    [
+      "ambiguous original identity with canonical final identity",
+      envelopeWithUrls(
+        "https://music.163.com/song?id=70001&ID=70002",
+        "https://music.163.com/song?id=70002"
+      )
+    ],
+    [
+      "canonical original identity with ambiguous final identity",
+      envelopeWithUrls(
+        "https://music.163.com/song?id=70001",
+        "https://music.163.com/song?id=70001&%69d=70002"
+      )
+    ],
+    [
+      "QQ path/query identity conflict",
+      envelopeWithUrls("https://y.qq.com/n/ryqq/songDetail/003OUlho2HcRHC?songmid=OTHERID")
+    ],
+    [
+      "Apple path/query identity conflict",
+      envelopeWithUrls("https://music.apple.com/us/song/example/654322?i=654323")
+    ]
+  ];
+  for (const [label, envelope] of invalidPrimitiveStrings) {
+    assert.deepEqual(
+      await handlers.create(null, envelope),
+      { ok: false, code: "invalid_snapshot" },
+      `${label} is rejected before the create mutation queue`
+    );
+    assert.deepEqual(
+      await handlers.update(null, "record-id", envelope),
+      { ok: false, code: "invalid_snapshot" },
+      `${label} is rejected before the update mutation queue`
+    );
+  }
+  assert.deepEqual(
+    calls,
+    { queue: 0, preferences: 0, create: 0, update: 0, historyFilesystem: 0, logs: 0 },
+    "invalid primitive strings perform zero queue, preference, Store, history filesystem, and logging work"
+  );
+
+  assert.deepEqual(
+    await handlers.create(null, canonicalEnvelope),
+    { ok: true, record: { id: "created", envelope: canonicalEnvelope, limit: 10 } }
+  );
+  assert.deepEqual(
+    await handlers.update(null, "record-id", canonicalEnvelope),
+    { ok: true, record: { id: "record-id", envelope: canonicalEnvelope, limit: 10 } }
+  );
+  assert.deepEqual(
+    calls,
+    { queue: 2, preferences: 2, create: 1, update: 1, historyFilesystem: 2, logs: 0 },
+    "only a complete canonical string enters the real queue, preference, Store, and filesystem path exactly once"
+  );
+}
 
 async function testLocalAppUrlSelection() {
   assert.equal(normalizeLoopbackHttpUrl("http://localhost:3000"), "http://localhost:3000/");
@@ -203,7 +506,7 @@ async function testLocalAppUrlSelection() {
   assert.equal(localServerStarts, 2, "development without an override starts the embedded server");
 }
 
-testLocalAppUrlSelection()
+Promise.all([testManualSaveIpcEarlyRejection(), testLocalAppUrlSelection()])
   .then(() => console.log("Electron security contract tests passed"))
   .catch((error) => {
     console.error(error);

@@ -9,6 +9,7 @@ import {
   Link2,
   Loader2,
   RotateCcw,
+  Save,
   Search,
   SearchCheck,
   Trash2
@@ -40,6 +41,8 @@ type HistoryFloorProps = {
   onClose: () => void;
   onReplay: (recordId: string, relocate?: boolean) => Promise<ImportHistoryReplayUiResult>;
   onNotify: (message: string) => void;
+  onRecordRemoved: (recordId: string) => void;
+  onHistoryCleared: () => void;
 };
 
 export function HistoryFloor({
@@ -49,7 +52,9 @@ export function HistoryFloor({
   reduceMotion,
   onClose,
   onReplay,
-  onNotify
+  onNotify,
+  onRecordRemoved,
+  onHistoryCleared
 }: HistoryFloorProps) {
   const copy = importHistoryCopy[locale];
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -193,6 +198,7 @@ export function HistoryFloor({
           return next;
         });
         onNotify(copy.removed);
+        onRecordRemoved(recordId);
         if (nextRecords.length === 0 && total > 1) void loadFirstPage();
       }
     } catch {
@@ -212,6 +218,7 @@ export function HistoryFloor({
       setTotal(0);
       setMissingIds(new Set());
       onNotify(copy.cleared);
+      onHistoryCleared();
     } catch {
       setError(copy.loadFailed);
     } finally {
@@ -290,6 +297,7 @@ export function HistoryFloor({
               <option value="search">{copy.sourceSearch}</option>
               <option value="local-audio">{copy.sourceLocalAudio}</option>
               <option value="manual-cover">{copy.sourceManualCover}</option>
+              <option value="manual-save">{copy.sourceManualSave}</option>
             </SelectField>
           </label>
           <span className="app-text-subtle shrink-0 text-xs" aria-live="polite">
@@ -383,7 +391,10 @@ function HistoryCard({
       ? Search
       : record.kind === "local-audio"
         ? FileAudio
-        : ImageIcon;
+        : record.kind === "manual-cover"
+          ? ImageIcon
+          : Save;
+  const ReplayIcon = record.kind === "manual-save" ? Save : RotateCcw;
 
   return (
     <article
@@ -418,7 +429,9 @@ function HistoryCard({
           ) : null}
         </dl>
         <time className="app-text-subtle text-xs" dateTime={new Date(record.importedAt).toISOString()}>
-          {formatImportHistoryText(copy.importedAt, { time: dateFormatter.format(record.importedAt) })}
+          {formatImportHistoryText(record.kind === "manual-save" ? copy.savedAt : copy.importedAt, {
+            time: dateFormatter.format(record.importedAt)
+          })}
         </time>
         {missing ? (
           <p className="status-warning rounded-lg border px-3 py-2 text-xs" role="status">{copy.fileMissing}</p>
@@ -438,12 +451,14 @@ function HistoryCard({
         ) : null}
         <ActionButton
           size="sm"
-          icon={<RotateCcw className="h-4 w-4" />}
+          icon={<ReplayIcon className="h-4 w-4" />}
           data-testid={`history-replay-${record.id}`}
           loading={busy}
           onClick={onReplay}
         >
-          {busy ? copy.reimporting : copy.reimport}
+          {record.kind === "manual-save"
+            ? busy ? copy.loadingManualSave : copy.loadManualSave
+            : busy ? copy.reimporting : copy.reimport}
         </ActionButton>
         <ActionButton
           size="sm"
@@ -474,5 +489,6 @@ function sourceLabelForKind(kind: ImportHistoryKind, locale: Locale) {
   if (kind === "link") return copy.sourceLink;
   if (kind === "search") return copy.sourceSearch;
   if (kind === "local-audio") return copy.sourceLocalAudio;
-  return copy.sourceManualCover;
+  if (kind === "manual-cover") return copy.sourceManualCover;
+  return copy.sourceManualSave;
 }
