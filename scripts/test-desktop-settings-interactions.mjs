@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { _electron as electron } from "playwright";
+import { closeElectronApplication } from "./electron-test-lifecycle.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const executablePath = path.join(root, "release", "win-unpacked", "Lyrics Card Generator.exe");
@@ -3943,6 +3944,6 @@ try {
   }
   throw error;
 } finally {
-  await electronApp?.close().catch(() => {});
+  await closeElectronApplication(electronApp, { label: "desktop-regression" });
   await rm(userDataDirectory, { recursive: true, force: true }).catch(() => {});
 }

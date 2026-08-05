@@ -4,11 +4,13 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { _electron as electron } from "playwright";
+import { closeElectronApplication } from "./electron-test-lifecycle.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const executablePath = process.env.LYRICS_CARD_TEST_EXECUTABLE
   ? path.resolve(process.env.LYRICS_CARD_TEST_EXECUTABLE)
   : path.join(root, "release", "win-unpacked", "Lyrics Card Generator.exe");
+const reportDirectory = path.join(root, "playwright-report", "desktop");
 const userDataDirectory = await mkdtemp(path.join(tmpdir(), "lyrics-card-history-desktop-test-"));
 const fixtureDirectory = path.join(userDataDirectory, "fixtures");
 const audioPath = path.join(fixtureDirectory, "history-audio.mp3");
@@ -35,6 +37,7 @@ const dialogMessages = [];
 const routeCounts = { parseSong: 0, resolveSearch: 0, localAudio: 0, imageProxy: 0, remoteCover: 0 };
 
 await mkdir(fixtureDirectory, { recursive: true });
+await mkdir(reportDirectory, { recursive: true });
 await writeFile(audioPath, Buffer.from("initial desktop audio fixture"));
 await writeFile(coverPath, tinyPng);
 await writeFile(coverOnlyPath, tinyPng);
@@ -224,7 +227,7 @@ async function closeThroughDesktopApi() {
   const closed = page.waitForEvent("close", { timeout: 15_000 });
   await page.evaluate(() => window.lyricsCardDesktop?.confirmWindowClose()).catch(() => {});
   await closed.catch(() => {});
-  await electronApp?.close().catch(() => {});
+  await closeElectronApplication(electronApp, { label: "desktop-history-regression" });
   electronApp = undefined;
   page = undefined;
 }
@@ -302,18 +305,58 @@ async function currentSongTitle() {
   return (await page.getByTestId("song-info-summary").locator("dd").first().textContent())?.trim() ?? "";
 }
 
+async function waitForHistoryCards(expected, timeout = 30_000) {
+  try {
+    await page.waitForFunction((expectedCount) => {
+      const surface = document.querySelector('[data-testid="history-surface"]');
+      return surface?.getAttribute("data-surface-state") === "open"
+        && !surface.querySelector('[data-testid="history-loading"]')
+        && !surface.querySelector('[data-testid="history-error"]')
+        && surface.querySelectorAll("[data-history-kind]").length === expectedCount;
+    }, expected, { timeout });
+  } catch (error) {
+    const diagnostics = await page.evaluate(async () => {
+      const surface = document.querySelector('[data-testid="history-surface"]');
+      let apiTotal = null;
+      let apiError = "";
+      try {
+        apiTotal = (await window.lyricsCardDesktop?.getImportHistoryStats())?.total ?? null;
+      } catch (statsError) {
+        apiError = statsError instanceof Error ? statsError.message : String(statsError);
+      }
+      return {
+        surfaceState: surface?.getAttribute("data-surface-state") ?? null,
+        cardCount: surface?.querySelectorAll("[data-history-kind]").length ?? 0,
+        loading: Boolean(surface?.querySelector('[data-testid="history-loading"]')),
+        empty: Boolean(surface?.querySelector('[data-testid="history-empty"]')),
+        error: surface?.querySelector('[data-testid="history-error"]')?.textContent?.trim() ?? "",
+        resultCount: surface?.querySelector('[aria-live="polite"]')?.textContent?.trim() ?? "",
+        query: surface?.querySelector('[data-testid="history-search"]')?.value ?? "",
+        source: surface?.querySelector('[data-testid="history-source-filter"]')?.value ?? "",
+        apiTotal,
+        apiError
+      };
+    }).catch((diagnosticError) => ({ diagnosticError: diagnosticError instanceof Error
+      ? diagnosticError.message
+      : String(diagnosticError) }));
+    await page.screenshot({
+      path: path.join(reportDirectory, `history-cards-${expected}-failure.png`),
+      fullPage: false
+    }).catch(() => {});
+    const original = error instanceof Error ? error.message : String(error);
+    throw new Error(
+      `History surface did not settle at ${expected} visible card(s) within ${timeout}ms: ${JSON.stringify(diagnostics)}; ${original}`
+    );
+  }
+}
+
 async function openHistory(expectedVisibleCards = null) {
   await page.locator('[data-testid="editor-surface"] [data-testid="history-button"]').click();
   const surface = page.getByTestId("history-surface");
   await surface.waitFor({ state: "visible", timeout: 15_000 });
   await page.waitForTimeout(80);
-  await page.waitForFunction(() => (
-    !document.querySelector('[data-testid="history-loading"]')
-  ), null, { timeout: 15_000 });
   if (expectedVisibleCards !== null) {
-    await page.waitForFunction((expected) => (
-      document.querySelectorAll('[data-testid="history-surface"] [data-history-kind]').length === expected
-    ), expectedVisibleCards, { timeout: 15_000 });
+    await waitForHistoryCards(expectedVisibleCards);
   }
   return surface;
 }
@@ -1651,6 +1694,6 @@ try {
   process.stderr.write(`[desktop-history-regression] ${error instanceof Error ? error.stack || error.message : String(error)}\n`);
   throw error;
 } finally {
-  await electronApp?.close().catch(() => {});
+  await closeElectronApplication(electronApp, { label: "desktop-history-regression" });
   await rm(userDataDirectory, { recursive: true, force: true }).catch(() => {});
 }
