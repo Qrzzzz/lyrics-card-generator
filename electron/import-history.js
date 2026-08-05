@@ -1,6 +1,7 @@
 const crypto = require("node:crypto");
 const defaultFs = require("node:fs/promises");
 const defaultPath = require("node:path");
+const { types: utilTypes } = require("node:util");
 
 const IMPORT_HISTORY_SCHEMA_VERSION = 2;
 const LEGACY_IMPORT_HISTORY_SCHEMA_VERSION = 1;
@@ -559,7 +560,7 @@ function normalizeManualSaveDisplay(snapshot) {
 }
 
 function manualSaveSnapshotFieldsFit(input) {
-  if (!isObject(input)) return false;
+  if (!jsonLikeTreeFitsWithinByteLimit(input, MAX_RECORD_BYTES) || !isObject(input)) return false;
   const limits = {
     title: 512,
     artist: 512,
@@ -575,12 +576,114 @@ function manualSaveSnapshotFieldsFit(input) {
   const fieldsFit = Object.entries(limits).every(([field, limit]) => (
     input[field] === undefined || (typeof input[field] === "string" && input[field].length <= limit)
   ));
-  if (!fieldsFit) return false;
+  return fieldsFit;
+}
+
+function jsonLikeTreeFitsWithinByteLimit(root, maximumBytes) {
+  if (!Number.isSafeInteger(maximumBytes) || maximumBytes < 0) return false;
+  let remainingBytes = maximumBytes;
+  const pending = [root];
+  const seen = new WeakSet();
+  const consume = (bytes) => {
+    if (!Number.isSafeInteger(bytes) || bytes < 0 || bytes > remainingBytes) return false;
+    remainingBytes -= bytes;
+    return true;
+  };
+
   try {
-    return Buffer.byteLength(JSON.stringify(input), "utf8") <= MAX_RECORD_BYTES;
+    while (pending.length > 0) {
+      const value = pending.pop();
+      if (value === null) {
+        if (!consume(4)) return false;
+        continue;
+      }
+
+      const valueType = typeof value;
+      if (valueType === "string") {
+        if (!consumeJsonStringUtf8Bytes(value, consume)) return false;
+        continue;
+      }
+      if (valueType === "boolean") {
+        if (!consume(value ? 4 : 5)) return false;
+        continue;
+      }
+      if (valueType === "number") {
+        if (!Number.isFinite(value) || !consume(String(value).length)) return false;
+        continue;
+      }
+      if (valueType !== "object" || utilTypes.isProxy(value) || seen.has(value)) return false;
+      seen.add(value);
+
+      if (Array.isArray(value)) {
+        if (Object.getPrototypeOf(value) !== Array.prototype) return false;
+        const length = value.length;
+        if (!consume(2 + Math.max(0, length - 1))) return false;
+        const ownKeys = Reflect.ownKeys(value);
+        if (ownKeys.length !== length + 1 || !ownKeys.includes("length")) return false;
+        for (let index = length - 1; index >= 0; index -= 1) {
+          const descriptor = Object.getOwnPropertyDescriptor(value, String(index));
+          if (!isEnumerableDataProperty(descriptor)) return false;
+          pending.push(descriptor.value);
+        }
+        continue;
+      }
+
+      const prototype = Object.getPrototypeOf(value);
+      if (prototype !== Object.prototype && prototype !== null) return false;
+      const ownKeys = Reflect.ownKeys(value);
+      if (!consume(2 + Math.max(0, ownKeys.length - 1))) return false;
+      for (const key of ownKeys) {
+        if (typeof key !== "string") return false;
+        const descriptor = Object.getOwnPropertyDescriptor(value, key);
+        if (!isEnumerableDataProperty(descriptor)) return false;
+        if (!consumeJsonStringUtf8Bytes(key, consume) || !consume(1)) return false;
+        pending.push(descriptor.value);
+      }
+    }
   } catch {
     return false;
   }
+  return true;
+}
+
+function isEnumerableDataProperty(descriptor) {
+  return Boolean(
+    descriptor?.enumerable &&
+    Object.prototype.hasOwnProperty.call(descriptor, "value")
+  );
+}
+
+function consumeJsonStringUtf8Bytes(value, consume) {
+  if (!consume(2)) return false;
+  for (let index = 0; index < value.length; index += 1) {
+    const codeUnit = value.charCodeAt(index);
+    let bytes;
+    if (codeUnit === 0x22 || codeUnit === 0x5c) {
+      bytes = 2;
+    } else if (codeUnit <= 0x1f) {
+      bytes = codeUnit === 0x08 || codeUnit === 0x09 || codeUnit === 0x0a || codeUnit === 0x0c || codeUnit === 0x0d
+        ? 2
+        : 6;
+    } else if (codeUnit <= 0x7f) {
+      bytes = 1;
+    } else if (codeUnit <= 0x7ff) {
+      bytes = 2;
+    } else if (codeUnit >= 0xd800 && codeUnit <= 0xdbff) {
+      const next = value.charCodeAt(index + 1);
+      if (next >= 0xdc00 && next <= 0xdfff) {
+        bytes = 4;
+        index += 1;
+      } else {
+        bytes = 6;
+      }
+    } else if (codeUnit >= 0xdc00 && codeUnit <= 0xdfff) {
+      bytes = 6;
+    } else {
+      bytes = 3;
+    }
+    if (!consume(bytes)) return false;
+  }
+  return true;
 }
 
 function isMeaningfulManualSaveSnapshot(snapshot) {

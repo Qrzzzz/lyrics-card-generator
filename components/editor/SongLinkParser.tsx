@@ -31,7 +31,8 @@ export function SongLinkParser({
   beginImport,
   onParsed,
   t,
-  autoParseOnMount = false
+  autoParseOnMount = false,
+  suppressAutoParseOnMount = false
 }: {
   url: string;
   onUrlChange: (url: string) => void;
@@ -39,12 +40,14 @@ export function SongLinkParser({
   onParsed: (song: ParsedSongData, intent: DocumentImportIntent, context: LinkImportHistoryContext) => boolean;
   t: ReturnType<typeof createT>;
   autoParseOnMount?: boolean;
+  suppressAutoParseOnMount?: boolean;
 }) {
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const inputId = useId();
   const statusId = useId();
   const [message, setMessage] = useState<string>(t("parseIdle"));
   const autoParsed = useRef(false);
+  const autoParseSuppressedAtMount = useRef(suppressAutoParseOnMount);
   const activeIntentRef = useRef<DocumentImportIntent | null>(null);
 
   useEffect(() => () => activeIntentRef.current?.cancel(), []);
@@ -56,7 +59,7 @@ export function SongLinkParser({
   }, [status, t]);
 
   useEffect(() => {
-    if (!autoParseOnMount || autoParsed.current || !url.trim()) {
+    if (!autoParseOnMount || autoParseSuppressedAtMount.current || autoParsed.current || !url.trim()) {
       return;
     }
 

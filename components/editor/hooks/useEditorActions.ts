@@ -82,6 +82,11 @@ type ManualSaveBinding = {
   savedRevision: number;
 };
 
+type ManualReplayProvenance = {
+  kind: "manual-save";
+  recordId: string;
+};
+
 type HistorySongParseResponse =
   | { ok: true; data: ParsedSongData }
   | { ok: false; error?: string };
@@ -124,6 +129,8 @@ export function useEditorActions({
   const trackedDocumentIntentRef = useRef<number | null>(null);
   const [manualSaveBinding, setManualSaveBinding] = useState<ManualSaveBinding | null>(null);
   const manualSaveBindingRef = useRef<ManualSaveBinding | null>(null);
+  const [manualReplayProvenance, setManualReplayProvenance] = useState<ManualReplayProvenance | null>(null);
+  const manualReplayProvenanceRef = useRef<ManualReplayProvenance | null>(null);
   const manualSaveSessionRef = useRef(0);
   const manualSavePendingRef = useRef(false);
   const [isManualSaveSaving, setIsManualSaveSaving] = useState(false);
@@ -173,14 +180,21 @@ export function useEditorActions({
     setManualSaveBinding(binding);
   }
 
+  function replaceManualReplayProvenance(provenance: ManualReplayProvenance | null) {
+    manualReplayProvenanceRef.current = provenance;
+    setManualReplayProvenance(provenance);
+  }
+
   function startNewManualSaveSession() {
     manualSaveSessionRef.current += 1;
     if (manualSaveBindingRef.current) replaceManualSaveBinding(null);
+    if (manualReplayProvenanceRef.current) replaceManualReplayProvenance(null);
   }
 
   function bindLoadedManualSave(recordId: string, savedRevision: number) {
     manualSaveSessionRef.current += 1;
     replaceManualSaveBinding({ recordId, savedRevision });
+    replaceManualReplayProvenance({ kind: "manual-save", recordId });
   }
 
   function applyDocumentMutation(mutation: EditorDocumentStateMutation) {
@@ -399,6 +413,7 @@ export function useEditorActions({
   }
 
   function setUrl(url: string) {
+    if (manualReplayProvenanceRef.current) replaceManualReplayProvenance(null);
     applyDocumentMutation((current) => ({ ...current, url }));
   }
 
@@ -808,6 +823,11 @@ export function useEditorActions({
     return { revision };
   }
 
+  const suppressSongLinkAutoParse = Boolean(
+    manualReplayProvenance &&
+    manualSaveBinding &&
+    manualReplayProvenance.recordId === manualSaveBinding.recordId
+  );
   const manualSaveButtonState: ManualSaveButtonState = isManualSaveSaving
     ? "saving"
     : !hasClearableLyricContent(parsedState)
@@ -824,6 +844,7 @@ export function useEditorActions({
     documentRevision,
     isDocumentTransactionPending,
     manualSaveButtonState,
+    suppressSongLinkAutoParse,
     beginSongImport,
     clearAllContent,
     handleStyleChange,

@@ -536,6 +536,65 @@ try {
   await waitForPreferenceLimit("unlimited");
   await closeSettings();
 
+  const ipcSnapshotValidation = await page.evaluate(async (maximumBytes) => {
+    const api = window.lyricsCardDesktop;
+    const snapshotFor = (label) => ({
+      source: "unknown",
+      title: `IPC snapshot ${label}`,
+      artist: "Structured clone regression",
+      album: "",
+      explicit: false,
+      originalCoverUrl: "",
+      coverUrl: "",
+      originalUrl: "",
+      finalUrl: "",
+      parseMethod: "manual-save-ipc-test",
+      lyrics: "Safe lyrics",
+      translationText: "",
+      translationEnabled: false
+    });
+    const cycle = {};
+    cycle.self = cycle;
+    const rejectedValues = [
+      ["ArrayBuffer", new ArrayBuffer(2 * 1024 * 1024)],
+      ["Uint8Array", new Uint8Array([1, 2, 3, 4])],
+      ["Map", new Map([["secret", "value"]])],
+      ["Set", new Set(["secret"])],
+      ["Date", new Date(0)],
+      ["RegExp", /secret/u],
+      ["cycle", cycle],
+      ["oversized unknown string", "x".repeat(maximumBytes)]
+    ];
+    const rejected = [];
+    for (const [label, value] of rejectedValues) {
+      const snapshot = snapshotFor(label);
+      snapshot.unknownValue = value;
+      try {
+        rejected.push({ label, result: await api.createManualSave({ snapshot }) });
+      } catch (error) {
+        rejected.push({ label, result: { threw: true, message: String(error) } });
+      }
+    }
+
+    const boundarySnapshot = snapshotFor("legal byte boundary");
+    boundarySnapshot.unknownPadding = "";
+    const encoder = new TextEncoder();
+    const boundaryBaseBytes = encoder.encode(JSON.stringify(boundarySnapshot)).byteLength;
+    boundarySnapshot.unknownPadding = "x".repeat(maximumBytes - boundaryBaseBytes);
+    const boundaryBytes = encoder.encode(JSON.stringify(boundarySnapshot)).byteLength;
+    const legal = await api.createManualSave({ snapshot: boundarySnapshot });
+    const removed = legal.ok ? await api.removeImportHistory(legal.record.id) : false;
+    const total = (await api.getImportHistoryStats()).total;
+    return { rejected, boundaryBytes, legal, removed, total };
+  }, 512 * 1024);
+  for (const { label, result } of ipcSnapshotValidation.rejected) {
+    assert.deepEqual(result, { ok: false, code: "invalid_snapshot" }, `${label} returns a stable IPC domain error`);
+  }
+  assert.equal(ipcSnapshotValidation.boundaryBytes, 512 * 1024);
+  assert.equal(ipcSnapshotValidation.legal.ok, true, "an exact-limit plain JSON-like snapshot crosses IPC successfully");
+  assert.equal(ipcSnapshotValidation.removed, true);
+  assert.equal(ipcSnapshotValidation.total, 0, "rejected IPC snapshots never mutate history");
+
   for (let index = 0; index < 10; index += 1) {
     const ordered = await page.evaluate(async (sequence) => {
       const api = window.lyricsCardDesktop;
@@ -682,8 +741,80 @@ try {
   assert.equal(await currentSongTitle(), "Manual archive updated");
   await waitForManualSaveState("current");
 
-  const titleBeforeImportFailures = await currentSongTitle();
   const linkInput = page.getByLabel("Music URL");
+  const replayUrl = await linkInput.inputValue();
+  assert.ok(replayUrl.startsWith("https://music.163.com/song"), "manual replay retains its sanitized URL semantics");
+  await editManualSong({ title: "Manual replay local edit" });
+  await waitForManualSaveState("update");
+  const routeCountsBeforeManualReplayRemount = { ...routeCounts };
+  for (let roundTrip = 1; roundTrip <= 2; roundTrip += 1) {
+    await page.getByTestId("stepper-next-button").click();
+    const replayLyrics = page.getByTestId("lyrics-editor-original");
+    await replayLyrics.waitFor({ state: "visible", timeout: 15_000 });
+    assert.equal(
+      await replayLyrics.inputValue(),
+      "manual replay line one\nmanual replay line two",
+      `manual replay lyrics survive song-import remount ${roundTrip}`
+    );
+    await page.getByTestId("stepper-back-button").click();
+    await linkInput.waitFor({ state: "visible", timeout: 15_000 });
+    await page.waitForTimeout(350);
+    assert.deepEqual(
+      routeCounts,
+      routeCountsBeforeManualReplayRemount,
+      `manual replay remains local across song-import remount ${roundTrip}`
+    );
+    assert.equal(await currentSongTitle(), "Manual replay local edit", `manual replay document survives remount ${roundTrip}`);
+    assert.equal(await linkInput.inputValue(), replayUrl, `manual replay URL survives remount ${roundTrip}`);
+    await waitForManualSaveState("update");
+  }
+  manualRecords = await manualSaveRecords();
+  assert.equal(manualRecords.length, 1);
+  assert.equal(manualRecords[0].id, firstManualId, "manual replay remount retains the original update binding");
+
+  const routeCountsBeforeExplicitUrlImport = { ...routeCounts };
+  await linkInput.fill("https://music.163.com/song?id=79992");
+  assert.deepEqual(routeCounts, routeCountsBeforeExplicitUrlImport, "editing the replay URL alone performs no request");
+  await page.getByTestId("stepper-next-button").click();
+  await page.getByTestId("lyrics-editor-original").waitFor({ state: "visible", timeout: 15_000 });
+  await page.getByTestId("stepper-back-button").click();
+  await linkInput.waitFor({ state: "visible", timeout: 15_000 });
+  await page.waitForFunction(() => (
+    document.querySelector('[data-testid="song-info-summary"]')?.textContent?.includes("History Artist 79992")
+  ), null, { timeout: 15_000 });
+  assert.deepEqual(
+    routeCounts,
+    { ...routeCountsBeforeExplicitUrlImport, parseSong: routeCountsBeforeExplicitUrlImport.parseSong + 1 },
+    "an explicit URL edit restores exactly one normal auto-parse request on the next mount"
+  );
+  assert.notEqual(await currentSongTitle(), "Manual replay local edit", "the explicit URL import may replace the replayed snapshot");
+  await waitForManualSaveState("create");
+  manualRecords = await manualSaveRecords();
+  assert.equal(manualRecords.length, 1);
+  assert.equal(manualRecords[0].id, firstManualId, "the explicit import detaches without rewriting the archived record");
+  await waitForHistoryTotal(2);
+  const [explicitLinkRecord] = await page.evaluate(async () => (await window.lyricsCardDesktop.listImportHistory({
+    offset: 0,
+    limit: 10,
+    source: "link"
+  })).records);
+  assert.ok(explicitLinkRecord?.id, "the explicit URL import records a normal link history entry");
+  assert.equal(await page.evaluate(
+    (recordId) => window.lyricsCardDesktop.removeImportHistory(recordId),
+    explicitLinkRecord.id
+  ), true);
+  await waitForHistoryTotal(1);
+
+  const reboundManualSurface = await openHistory(1);
+  const routeCountsBeforeManualRebind = { ...routeCounts };
+  await replayCard("manual-save");
+  await reboundManualSurface.waitFor({ state: "hidden", timeout: 15_000 });
+  await page.waitForTimeout(350);
+  assert.deepEqual(routeCounts, routeCountsBeforeManualRebind, "replaying the archive again restores local-only provenance");
+  assert.equal(await currentSongTitle(), "Manual archive updated");
+  await waitForManualSaveState("current");
+
+  const titleBeforeImportFailures = await currentSongTitle();
   const linkSection = linkInput.locator("xpath=ancestor::section[1]");
   parseSongShouldFail = true;
   await linkInput.fill("https://music.163.com/song?id=79991");
@@ -1056,10 +1187,51 @@ try {
   });
   await waitForManualSaveState("update");
   await rm(historyPath, { recursive: true, force: true });
-  await page.locator('[data-step-id="lyrics"]').click();
   const pendingCloseLyrics = "pending close archive line\n".repeat(4_000);
-  await page.getByTestId("lyrics-editor-original").fill(pendingCloseLyrics);
+  const pendingCloseSeed = await page.evaluate(async ({ recordId, lyrics }) => (
+    window.lyricsCardDesktop.updateManualSave(recordId, {
+      snapshot: {
+        source: "unknown",
+        title: "Manual update pending close",
+        artist: "Pending Close Artist",
+        album: "",
+        explicit: false,
+        originalCoverUrl: "",
+        coverUrl: "",
+        originalUrl: "",
+        finalUrl: "",
+        parseMethod: "manual-save-pending-close-fixture",
+        lyrics,
+        translationText: "",
+        translationEnabled: false
+      }
+    })
+  ), { recordId: pendingCloseManual.id, lyrics: pendingCloseLyrics });
+  assert.equal(pendingCloseSeed.ok, true, "the real preload/store path seeds a 4,000-line pending-close archive");
+  assert.equal(pendingCloseSeed.record.id, pendingCloseManual.id);
+  const pendingCloseSurface = await openHistory(2);
+  await replayCard("manual-save");
+  await pendingCloseSurface.waitFor({ state: "hidden", timeout: 15_000 });
+  await waitForManualSaveState("current");
+  await page.locator('[data-step-id="lyrics"]').click();
+  const pendingCloseEditor = page.getByTestId("lyrics-editor-original");
+  await pendingCloseEditor.waitFor({ state: "visible", timeout: 15_000 });
+  assert.equal(await pendingCloseEditor.inputValue(), pendingCloseLyrics, "UI replay restores all 4,000 seeded lyric lines");
+  const pendingCloseEdit = "pending close DOM edit";
+  const durablePendingCloseLyrics = `${pendingCloseLyrics}${pendingCloseEdit}`;
+  await pendingCloseEditor.evaluate((node, suffix) => {
+    const valueSetter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, "value")?.set;
+    if (!valueSetter) throw new Error("native textarea value setter is unavailable");
+    valueSetter.call(node, `${node.value}${suffix}`);
+    node.dispatchEvent(new InputEvent("input", { bubbles: true, inputType: "insertText", data: suffix }));
+    node.dispatchEvent(new Event("change", { bubbles: true }));
+  }, pendingCloseEdit);
   await waitForManualSaveState("update");
+  assert.equal(
+    await pendingCloseEditor.inputValue(),
+    durablePendingCloseLyrics,
+    "the small native DOM edit settles through the real React document transaction"
+  );
   await clickManualSave();
   await closeThroughDesktopApi();
   const pendingCloseHistory = JSON.parse(await readFile(historyPath, "utf8"));
@@ -1067,8 +1239,8 @@ try {
   assert.equal(durablePendingCloseRecord?.snapshot?.title, "Manual update pending close");
   assert.equal(
     durablePendingCloseRecord?.snapshot?.lyrics,
-    pendingCloseLyrics,
-    "window close drains the in-flight manual-save update before shutdown"
+    durablePendingCloseLyrics,
+    "window close drains the in-flight 4,000-line manual-save update before shutdown"
   );
 
   process.stdout.write(`${JSON.stringify({
@@ -1084,9 +1256,9 @@ try {
       "local changed, missing, rejected relocate, and committed relocate",
       "cover-only/manual cover and ordinary-edit exclusion",
       "manual create/update/no-op, ordered clear boundaries, binding deletion/clear/not-found",
-      "manual replay without any network, exact empty-translation roundtrip",
+      "manual replay without any network across repeated remounts, explicit URL release, exact empty-translation roundtrip",
       "link/search/local failure intent settlement, ordinary replay creates a distinct save",
-      "manual create/update failures, saved-revision retry, and pending-close drain",
+      "manual create/update failures, saved-revision retry, and 4,000-line pending-close drain",
       "remote failure and write-failure non-rollback"
     ]
   }, null, 2)}\n`);

@@ -56,6 +56,8 @@ function trustedFixture(frameUrl = `${localUrl}/`, frameIsMain = true) {
 }
 
 const mainSource = readFileSync("electron/main.js", "utf8");
+const importHistorySource = readFileSync("electron/import-history.js", "utf8");
+const desktopHistoryInteractionSource = readFileSync("scripts/test-desktop-import-history-interactions.mjs", "utf8");
 const replayPayloadSource = mainSource.slice(
   mainSource.indexOf("async function createImportHistoryReplayPayload"),
   mainSource.indexOf("function mimeTypeForHistoryFile")
@@ -163,6 +165,36 @@ assert.doesNotMatch(
   mainSource,
   /unable to (?:create|update) manual save[\s\S]{0,260}typeof error\?\.code/,
   "manual save IPC never forwards EACCES, EPERM, or another raw platform code"
+);
+const manualSnapshotValidationSource = importHistorySource.slice(
+  importHistorySource.indexOf("function manualSaveSnapshotFieldsFit"),
+  importHistorySource.indexOf("function isMeaningfulManualSaveSnapshot")
+);
+assert.doesNotMatch(
+  manualSnapshotValidationSource,
+  /JSON\.stringify/,
+  "pre-projection snapshot limits never estimate opaque structured-clone objects through JSON.stringify"
+);
+assert.match(
+  manualSnapshotValidationSource,
+  /jsonLikeTreeFitsWithinByteLimit[\s\S]*?utilTypes\.isProxy[\s\S]*?seen\.has[\s\S]*?Object\.getPrototypeOf/,
+  "manual snapshots require an acyclic, non-proxy, plain JSON-like data tree before projection"
+);
+for (const valueType of ["ArrayBuffer", "Uint8Array", "Map", "Set", "Date", "RegExp", "cycle"]) {
+  assert.ok(
+    desktopHistoryInteractionSource.includes(`["${valueType}"`),
+    `desktop IPC regression covers ${valueType}`
+  );
+}
+assert.match(
+  desktopHistoryInteractionSource,
+  /oversized unknown string[\s\S]*?invalid_snapshot[\s\S]*?stable IPC domain error/,
+  "desktop IPC rejects pre-projection structured-clone payloads with a stable domain error"
+);
+assert.match(
+  desktopHistoryInteractionSource,
+  /boundaryBytes[\s\S]*?512 \* 1024[\s\S]*?exact-limit plain JSON-like snapshot crosses IPC successfully/,
+  "desktop IPC preserves an exact-limit legal JSON-like snapshot"
 );
 const manualReplayStart = replayPayloadSource.indexOf('record.kind === "manual-save"');
 const manualReplayEnd = replayPayloadSource.indexOf("try {", manualReplayStart);

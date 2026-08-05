@@ -14,6 +14,8 @@ const {
   withHistoryLimit
 } = require("../electron/import-history");
 
+const MAX_MANUAL_SNAPSHOT_BYTES = 512 * 1024;
+
 async function main() {
   assert.equal(normalizeImportHistoryLimit(undefined), 10);
   assert.equal(normalizeImportHistoryLimit(5), 5);
@@ -289,6 +291,60 @@ async function main() {
       }, 10),
       (error) => error?.code === "invalid_snapshot",
       "large unknown snapshot objects are rejected before whitelist projection"
+    );
+
+    const cyclicValue = {};
+    cyclicValue.self = cyclicValue;
+    const rejectedStructuredCloneValues = [
+      ["ArrayBuffer", new ArrayBuffer(2 * 1024 * 1024)],
+      ["Uint8Array", new Uint8Array([1, 2, 3, 4])],
+      ["DataView", new DataView(new ArrayBuffer(8))],
+      ["Map", new Map([["secret", "value"]])],
+      ["Set", new Set(["secret"])],
+      ["Date", new Date(0)],
+      ["RegExp", /secret/u],
+      ["Error", new Error("secret")],
+      ["cycle", cyclicValue]
+    ];
+    if (typeof SharedArrayBuffer === "function") {
+      rejectedStructuredCloneValues.push(["SharedArrayBuffer", new SharedArrayBuffer(16)]);
+    }
+    for (const [label, value] of rejectedStructuredCloneValues) {
+      const candidate = manualSaveCandidate(`Reject ${label}`, "Safe lyrics");
+      candidate.snapshot.unknownValue = value;
+      await assert.rejects(
+        manualStore.createManualSave(candidate, "unlimited"),
+        (error) => error?.code === "invalid_snapshot",
+        `${label} is rejected before snapshot field projection`
+      );
+    }
+
+    const boundaryCandidate = manualSaveCandidate("JSON-like byte boundary", "Safe lyrics");
+    boundaryCandidate.snapshot.unknownTree = {
+      list: [null, true, false, 0, "界", "line\nbreak"]
+    };
+    boundaryCandidate.snapshot.unknownPadding = "";
+    const boundaryBaseBytes = Buffer.byteLength(JSON.stringify(boundaryCandidate.snapshot), "utf8");
+    boundaryCandidate.snapshot.unknownPadding = "x".repeat(MAX_MANUAL_SNAPSHOT_BYTES - boundaryBaseBytes);
+    assert.equal(
+      Buffer.byteLength(JSON.stringify(boundaryCandidate.snapshot), "utf8"),
+      MAX_MANUAL_SNAPSHOT_BYTES,
+      "the legal JSON-like fixture is exactly the pre-projection byte ceiling"
+    );
+    const boundaryRecord = await manualStore.createManualSave(boundaryCandidate, "unlimited");
+    assert.equal("unknownPadding" in (await manualStore.get(boundaryRecord.id)).snapshot, false);
+    assert.equal("unknownTree" in (await manualStore.get(boundaryRecord.id)).snapshot, false);
+
+    const oversizedUnknownString = manualSaveCandidate("Oversized unknown string", "Safe lyrics");
+    oversizedUnknownString.snapshot.unknownPadding = "";
+    const oversizedBaseBytes = Buffer.byteLength(JSON.stringify(oversizedUnknownString.snapshot), "utf8");
+    oversizedUnknownString.snapshot.unknownPadding = "x".repeat(
+      MAX_MANUAL_SNAPSHOT_BYTES - oversizedBaseBytes + 1
+    );
+    await assert.rejects(
+      manualStore.createManualSave(oversizedUnknownString, "unlimited"),
+      (error) => error?.code === "invalid_snapshot",
+      "a JSON-like unknown string one byte over the pre-projection ceiling is rejected"
     );
 
     const sanitizedManual = await manualStore.createManualSave({

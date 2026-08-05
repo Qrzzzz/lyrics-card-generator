@@ -183,6 +183,7 @@ export function LyricEditor() {
     documentRevision,
     isDocumentTransactionPending,
     manualSaveButtonState,
+    suppressSongLinkAutoParse,
     beginSongImport,
     clearAllContent,
     handleStyleChange,
@@ -382,6 +383,7 @@ export function LyricEditor() {
       lineStatus: exportReadiness.lineStatus
     },
     documentRevision,
+    suppressSongLinkAutoParse,
     ai: {
       isOpen: isAITranslateOpen,
       isTranslating: isAITranslating,

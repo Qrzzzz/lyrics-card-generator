@@ -96,6 +96,7 @@ type UseEditorStepsInput = {
     lineStatus: ExportLyricLineStatus;
   };
   documentRevision: number;
+  suppressSongLinkAutoParse: boolean;
   ai: EditorStepsAiState;
   handlers: EditorStepHandlers;
 };
@@ -111,6 +112,7 @@ export function useEditorSteps({
   exportQuality,
   lyricsLayout,
   documentRevision,
+  suppressSongLinkAutoParse,
   ai,
   handlers
 }: UseEditorStepsInput): SettingsStep[] {
@@ -232,6 +234,7 @@ export function useEditorSteps({
               onParsed={handlers.onSongParsed}
               t={t}
               autoParseOnMount
+              suppressAutoParseOnMount={suppressSongLinkAutoParse}
             />
             <LocalAudioParser
               t={t}

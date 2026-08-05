@@ -7,6 +7,7 @@ const lyricEditor = read("components/editor/LyricEditor.tsx");
 const editorHeader = read("components/editor/EditorHeader.tsx");
 const historyFloor = read("components/editor/HistoryFloor.tsx");
 const editorActions = read("components/editor/hooks/useEditorActions.ts");
+const editorSteps = read("components/editor/useEditorSteps.tsx");
 const editorPreferences = read("components/editor/hooks/useEditorPreferences.ts");
 const songLinkParser = read("components/editor/SongLinkParser.tsx");
 const songSearchParser = read("components/editor/SongSearchParser.tsx");
@@ -16,6 +17,7 @@ const webLiteApp = read("web-lite/WebLiteEditor.tsx");
 const webLiteHeader = read("web-lite/WebLiteHeader.tsx");
 const webLiteEntry = read("web-lite/entry.tsx");
 const globals = read("app/globals.css");
+const desktopHistoryInteractions = read("scripts/test-desktop-import-history-interactions.mjs");
 
 assert.match(lyricEditor, /\{isDesktopShell \? \(\s*<HistoryFloor/);
 assert.match(lyricEditor, /onOpenHistory=\{isDesktopShell \? \(\) => setActiveSurface\("history"\) : undefined\}/);
@@ -88,6 +90,54 @@ const manualReplayBranch = editorActions.slice(
 assert.doesNotMatch(manualReplayBranch, /fetch\(/, "manual-save replay commits its stored snapshot without network parsing");
 assert.match(manualReplayBranch, /coverUrl: ""/, "manual-save replay cannot reactivate a remote cover URL");
 assert.match(editorActions, /const translationEnabled = snapshot\.translationEnabled;/);
+assert.match(editorActions, /type ManualReplayProvenance = \{[\s\S]*?recordId: string;[\s\S]*?\};/);
+assert.match(
+  editorActions,
+  /function bindLoadedManualSave[\s\S]*?replaceManualReplayProvenance\(\{[\s\S]*?recordId[\s\S]*?\}\)/,
+  "manual-save replay binding records explicit provenance"
+);
+assert.match(
+  editorActions,
+  /function setUrl\(url: string\)[\s\S]*?replaceManualReplayProvenance\(null\)[\s\S]*?applyDocumentMutation/,
+  "an explicit URL edit releases manual-replay auto-parse suppression"
+);
+assert.match(
+  editorActions,
+  /suppressSongLinkAutoParse = Boolean\([\s\S]*?manualReplayProvenance &&[\s\S]*?manualSaveBinding &&[\s\S]*?manualReplayProvenance\.recordId === manualSaveBinding\.recordId/,
+  "auto-parse suppression is scoped to the currently bound replay record"
+);
+assert.match(songLinkParser, /const autoParseSuppressedAtMount = useRef\(suppressAutoParseOnMount\)/);
+assert.match(
+  songLinkParser,
+  /autoParseSuppressedAtMount\.current[\s\S]*?void parseUrl\(\)/,
+  "only automatic parsing at component mount is suppressed; explicit parsing remains available"
+);
+assert.match(editorSteps, /suppressAutoParseOnMount=\{suppressSongLinkAutoParse\}/);
+assert.match(
+  desktopHistoryInteractions,
+  /routeCountsBeforeManualReplayRemount[\s\S]*?roundTrip <= 2[\s\S]*?manual replay remains local across song-import remount/,
+  "desktop regression covers repeated component remounts after a URL-bearing manual replay"
+);
+assert.match(
+  desktopHistoryInteractions,
+  /routeCountsBeforeExplicitUrlImport[\s\S]*?editing the replay URL alone performs no request[\s\S]*?explicit URL edit restores exactly one normal auto-parse request on the next mount[\s\S]*?waitForManualSaveState\("create"\)/,
+  "desktop regression covers explicit URL release and detachment from the prior manual save"
+);
+assert.match(
+  desktopHistoryInteractions,
+  /pendingCloseLyrics = [^\n]+\.repeat\(4_000\)[\s\S]*?updateManualSave\(recordId[\s\S]*?UI replay restores all 4,000 seeded lyric lines/,
+  "pending-close regression seeds and replays the large archive through the real preload/store/UI path"
+);
+assert.match(
+  desktopHistoryInteractions,
+  /Object\.getOwnPropertyDescriptor\(HTMLTextAreaElement\.prototype, "value"\)[\s\S]*?new InputEvent\("input"[\s\S]*?new Event\("change"[\s\S]*?real React document transaction/,
+  "pending-close regression uses a bounded native edit while retaining the real React transaction"
+);
+assert.doesNotMatch(
+  desktopHistoryInteractions,
+  /fill\(pendingCloseLyrics\)/,
+  "the 4,000-line pending-close fixture cannot regress to Playwright's per-character fill path"
+);
 for (const [name, source] of [
   ["link", songLinkParser],
   ["search", songSearchParser],
@@ -119,4 +169,4 @@ assert.match(
   "narrow icon-only adaptation remains scoped to the desktop shell"
 );
 
-console.log(JSON.stringify({ ok: true, importHistoryUiContracts: 55 }, null, 2));
+console.log(JSON.stringify({ ok: true, importHistoryUiContracts: 67 }, null, 2));
