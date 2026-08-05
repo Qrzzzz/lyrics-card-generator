@@ -680,6 +680,52 @@ try {
     "invalid product/bridge calls cause no history file side effect"
   );
 
+  const ipcCanonicalContract = await page.evaluate(async () => {
+    const api = window.lyricsCardDesktop;
+    const snapshot = {
+      source: "unknown",
+      title: "Exact canonical IPC contract",
+      artist: "Canonical envelope regression",
+      album: "",
+      explicit: false,
+      originalCoverUrl: "",
+      coverUrl: "",
+      originalUrl: "",
+      finalUrl: "",
+      parseMethod: "manual-save-ipc-test",
+      lyrics: "Safe lyrics",
+      translationText: "",
+      translationEnabled: false
+    };
+    const unknownField = { ...snapshot, unsupported: "must reject" };
+    const missingArtist = { ...snapshot };
+    delete missingArtist.artist;
+    const invalidSource = { ...snapshot, source: "attacker-source" };
+    const results = [];
+    for (const [label, candidate] of [
+      ["unknown snapshot field", unknownField],
+      ["missing required artist", missingArtist],
+      ["unsupported source enum", invalidSource]
+    ]) {
+      results.push({
+        label,
+        create: await api.createManualSave(JSON.stringify({ version: 1, snapshot: candidate })),
+        update: await api.updateManualSave("missing-record", JSON.stringify({ version: 1, snapshot: candidate }))
+      });
+    }
+    return { results, total: (await api.getImportHistoryStats()).total };
+  });
+  for (const { label, create, update } of ipcCanonicalContract.results) {
+    assert.deepEqual(create, { ok: false, code: "invalid_snapshot" }, `${label} create is rejected`);
+    assert.deepEqual(update, { ok: false, code: "invalid_snapshot" }, `${label} update is rejected before lookup`);
+  }
+  assert.equal(ipcCanonicalContract.total, 0, "non-canonical envelopes create no in-memory record");
+  await assert.rejects(
+    readFile(historyPath, "utf8"),
+    (error) => error?.code === "ENOENT",
+    "non-canonical envelopes create no history file"
+  );
+
   const ipcSnapshotValidation = await page.evaluate(async (maximumBytes) => {
     const api = window.lyricsCardDesktop;
     const snapshotFor = (label) => ({
@@ -698,24 +744,34 @@ try {
       translationEnabled: false
     });
     const envelopeFor = (snapshot) => JSON.stringify({ version: 1, snapshot });
-    const boundarySnapshot = snapshotFor("legal byte boundary");
-    boundarySnapshot.unknownPadding = "";
     const encoder = new TextEncoder();
-    const boundaryBaseBytes = encoder.encode(JSON.stringify(boundarySnapshot)).byteLength;
-    boundarySnapshot.unknownPadding = "x".repeat(maximumBytes - boundaryBaseBytes);
+    const boundarySnapshot = snapshotFor("legal byte boundary");
+    boundarySnapshot.lyrics = "";
+    boundarySnapshot.translationText = "";
+    let remaining = maximumBytes - encoder.encode(JSON.stringify(boundarySnapshot)).byteLength;
+    for (const field of ["lyrics", "translationText"]) {
+      const threeByteCharacters = Math.min(120_000, Math.floor(remaining / 3));
+      boundarySnapshot[field] = "界".repeat(threeByteCharacters);
+      remaining -= threeByteCharacters * 3;
+    }
+    if (remaining > 0 && boundarySnapshot.translationText.length + remaining <= 120_000) {
+      boundarySnapshot.translationText += "x".repeat(remaining);
+      remaining = 0;
+    }
     const boundaryBytes = encoder.encode(JSON.stringify(boundarySnapshot)).byteLength;
     const legal = await api.createManualSave(envelopeFor(boundarySnapshot));
-    boundarySnapshot.unknownPadding += "x";
+    boundarySnapshot.translationText += "x";
     const oversized = await api.createManualSave(envelopeFor(boundarySnapshot));
     const deepValue = `${'{"next":'.repeat(1_000)}null${"}".repeat(1_000)}`;
     const deepEnvelope = `{"version":1,"snapshot":{"source":"unknown","title":"Deep input","artist":"","album":"","explicit":false,"originalCoverUrl":"","coverUrl":"","originalUrl":"","finalUrl":"","parseMethod":"","lyrics":"Safe lyrics","translationText":"","translationEnabled":false,"unknownDeep":${deepValue}}}`;
     const deep = await api.createManualSave(deepEnvelope);
     const removed = legal.ok ? await api.removeImportHistory(legal.record.id) : false;
     const total = (await api.getImportHistoryStats()).total;
-    return { boundaryBytes, legal, oversized, deep, removed, total };
+    return { remaining, boundaryBytes, legal, oversized, deep, removed, total };
   }, 512 * 1024);
+  assert.equal(ipcSnapshotValidation.remaining, 0);
   assert.equal(ipcSnapshotValidation.boundaryBytes, 512 * 1024);
-  assert.equal(ipcSnapshotValidation.legal.ok, true, "an exact-limit plain JSON-like snapshot crosses IPC successfully");
+  assert.equal(ipcSnapshotValidation.legal.ok, true, "an exact-limit complete legal snapshot crosses IPC successfully");
   assert.deepEqual(
     ipcSnapshotValidation.oversized,
     { ok: false, code: "invalid_snapshot" },
@@ -732,6 +788,21 @@ try {
   const routeCountsBeforeIdentityIpc = { ...routeCounts };
   const identityIpc = await page.evaluate(async () => {
     const api = window.lyricsCardDesktop;
+    const snapshotFor = (source, originalUrl, finalUrl = originalUrl) => ({
+      source,
+      title: `${source} identity archive`,
+      artist: "Identity regression",
+      album: "",
+      explicit: false,
+      originalCoverUrl: "",
+      coverUrl: "",
+      originalUrl,
+      finalUrl,
+      parseMethod: "manual-save-identity-test",
+      lyrics: "Safe lyrics",
+      translationText: "",
+      translationEnabled: false
+    });
     const cases = [
       [
         "netease",
@@ -757,34 +828,48 @@ try {
         "spotify",
         "https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC?si=SECRET&utm_source=tracker#private",
         "https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC"
+      ],
+      [
+        "netease",
+        "https://music.163.com/song?id=70001&id=70002",
+        "https://music.163.com/song"
+      ],
+      [
+        "netease",
+        "https://music.163.com/song?id=70001&%69d=70002",
+        "https://music.163.com/song"
+      ],
+      [
+        "netease",
+        "https://music.163.com:8443/song?id=70001",
+        "https://music.163.com:8443/song"
+      ],
+      [
+        "netease",
+        "https://unexpected.music.163.com/song?id=70001",
+        "https://unexpected.music.163.com/song"
       ]
     ];
     const results = [];
     for (const [source, inputUrl, expected] of cases) {
       const envelope = JSON.stringify({
         version: 1,
-        snapshot: {
-          source,
-          title: `${source} identity archive`,
-          artist: "Identity regression",
-          album: "",
-          explicit: false,
-          originalCoverUrl: "",
-          coverUrl: "",
-          originalUrl: inputUrl,
-          finalUrl: inputUrl,
-          parseMethod: "manual-save-identity-test",
-          lyrics: "Safe lyrics",
-          translationText: "",
-          translationEnabled: false
-        }
+        snapshot: snapshotFor(source, inputUrl)
       });
       const created = await api.createManualSave(envelope);
       const replay = created.ok ? await api.replayImportHistory(created.record.id) : created;
       const removed = created.ok ? await api.removeImportHistory(created.record.id) : false;
       results.push({ source, expected, created, replay, removed });
     }
-    return { results, total: (await api.getImportHistoryStats()).total };
+    const conflict = await api.createManualSave(JSON.stringify({
+      version: 1,
+      snapshot: snapshotFor(
+        "netease",
+        "https://music.163.com/song?id=70001",
+        "https://music.163.com/song?id=70002"
+      )
+    }));
+    return { results, conflict, total: (await api.getImportHistoryStats()).total };
   });
   for (const { source, expected, created, replay, removed } of identityIpc.results) {
     assert.equal(created.ok, true, `${source} identity fixture is accepted through the product API`);
@@ -794,6 +879,11 @@ try {
     assert.doesNotMatch(JSON.stringify(replay.snapshot), /SECRET|token=|api_key=|auth=|signature=|utm_|#|\bsi=/i);
     assert.equal(removed, true);
   }
+  assert.deepEqual(
+    identityIpc.conflict,
+    { ok: false, code: "invalid_snapshot" },
+    "packaged IPC rejects conflicting original/final song identities"
+  );
   assert.equal(identityIpc.total, 0);
   assert.deepEqual(routeCounts, routeCountsBeforeIdentityIpc, "identity-only IPC replay performs no network request");
 
@@ -807,6 +897,12 @@ try {
           title: `Ordered create ${sequence}`,
           artist: "Queue regression",
           album: "",
+          explicit: false,
+          originalCoverUrl: "",
+          coverUrl: "",
+          originalUrl: "",
+          finalUrl: "",
+          parseMethod: "manual-save-ordering-test",
           lyrics: `ordered create ${sequence}`,
           translationText: "",
           translationEnabled: false
@@ -830,6 +926,12 @@ try {
         title: "Ordered update seed",
         artist: "Queue regression",
         album: "",
+        explicit: false,
+        originalCoverUrl: "",
+        coverUrl: "",
+        originalUrl: "",
+        finalUrl: "",
+        parseMethod: "manual-save-ordering-test",
         lyrics: "before ordered update",
         translationText: "",
         translationEnabled: false
@@ -843,6 +945,12 @@ try {
         title: "Ordered update committed",
         artist: "Queue regression",
         album: "",
+        explicit: false,
+        originalCoverUrl: "",
+        coverUrl: "",
+        originalUrl: "",
+        finalUrl: "",
+        parseMethod: "manual-save-ordering-test",
         lyrics: "after ordered update",
         translationText: "",
         translationEnabled: false
@@ -910,7 +1018,7 @@ try {
         explicit: true,
         originalCoverUrl: "https://covers.example/manual-replay.png?token=DO_NOT_PERSIST",
         coverUrl: "https://covers.example/manual-replay.png?api_key=DO_NOT_PERSIST",
-        originalUrl: "https://music.163.com/song?id=70001&token=DO_NOT_PERSIST",
+        originalUrl: "https://music.163.com/#/song?id=70001&token=DO_NOT_PERSIST",
         finalUrl: "https://music.163.com/song?id=70001&api_key=DO_NOT_PERSIST",
         parseMethod: "manual-save-replay-fixture",
         lyrics: "manual replay line one\nmanual replay line two",
@@ -932,7 +1040,7 @@ try {
   assert.equal(
     replayFixtureInternal.snapshot.finalUrl,
     "https://music.163.com/song?id=70001",
-    "original/final URL sanitization preserves identical song semantics"
+    "different representations of one song collapse to identical replay provenance"
   );
   assert.doesNotMatch(JSON.stringify(replayFixtureInternal.snapshot), /DO_NOT_PERSIST|token=|api_key=/);
 

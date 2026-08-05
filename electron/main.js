@@ -26,6 +26,7 @@ const {
   validateImportFileDescriptor
 } = require("./import-history");
 const { resolveLocalAppUrl } = require("./local-app-url");
+const { createManualSaveIpcHandlers } = require("./manual-save-ipc");
 const { isAllowedLocalNavigation, parseAllowedExternalUrl } = require("./url-policy");
 
 const HOST = "127.0.0.1";
@@ -625,25 +626,14 @@ function registerDesktopIpc() {
     }
   }));
 
-  handle("lyrics-card:manual-save-create", (_event, envelope) => trackImportHistoryMutation(async () => {
-    try {
-      const record = await importHistoryStore.createManualSave(envelope, await readImportHistoryLimit());
-      return { ok: true, record };
-    } catch (error) {
-      console.error("[import-history] unable to create manual save", error instanceof Error ? error.message : "unknown error");
-      return { ok: false, code: importHistoryErrorCode(error) };
-    }
-  }));
-
-  handle("lyrics-card:manual-save-update", (_event, recordId, envelope) => trackImportHistoryMutation(async () => {
-    try {
-      const record = await importHistoryStore.updateManualSave(recordId, envelope, await readImportHistoryLimit());
-      return { ok: true, record };
-    } catch (error) {
-      console.error("[import-history] unable to update manual save", error instanceof Error ? error.message : "unknown error");
-      return { ok: false, code: importHistoryErrorCode(error) };
-    }
-  }));
+  const manualSaveHandlers = createManualSaveIpcHandlers({
+    trackMutation: trackImportHistoryMutation,
+    readLimit: readImportHistoryLimit,
+    store: importHistoryStore,
+    errorCode: importHistoryErrorCode
+  });
+  handle("lyrics-card:manual-save-create", manualSaveHandlers.create);
+  handle("lyrics-card:manual-save-update", manualSaveHandlers.update);
 
   handle("lyrics-card:import-history-remove", (_event, recordId) => trackImportHistoryMutation(
     () => importHistoryStore.remove(recordId)

@@ -336,10 +336,19 @@ async function main() {
     assert.equal(nestedGetterCalls, 0, "the Store never executes a nested accessor");
 
     const canonicalSnapshot = manualSaveCandidate("Canonical schema", "Safe lyrics").snapshot;
+    const unknownFieldSnapshot = { ...canonicalSnapshot, unsupported: "must reject" };
+    const missingArtistSnapshot = { ...canonicalSnapshot };
+    delete missingArtistSnapshot.artist;
+    const invalidSourceSnapshot = { ...canonicalSnapshot, source: "attacker-source" };
+    const oversizedUnknownFieldSnapshot = { ...canonicalSnapshot, unknownPadding: "x".repeat(600_000) };
     for (const [label, invalidEnvelope] of [
       ["missing envelope version", JSON.stringify({ snapshot: canonicalSnapshot })],
       ["unknown outer field", JSON.stringify({ version: 1, snapshot: canonicalSnapshot, extra: true })],
       ["wrong envelope version", JSON.stringify({ version: 2, snapshot: canonicalSnapshot })],
+      ["unknown snapshot field", manualSaveEnvelope({ snapshot: unknownFieldSnapshot })],
+      ["missing required artist", manualSaveEnvelope({ snapshot: missingArtistSnapshot })],
+      ["unsupported source enum", manualSaveEnvelope({ snapshot: invalidSourceSnapshot })],
+      ["oversized unknown string", manualSaveEnvelope({ snapshot: oversizedUnknownFieldSnapshot })],
       ["non-canonical whitespace", ` ${manualSaveEnvelope({ snapshot: canonicalSnapshot })}`],
       ["malformed JSON", '{"version":1,"snapshot":']
     ]) {
@@ -409,6 +418,17 @@ async function main() {
     assert.ok(updatedInternal.lastUsedAt > firstCreatedAt, "manual save updates advance lastUsedAt");
     assert.equal(updatedList.records[0].id, firstManual.id, "updated manual saves move to the top");
     assert.equal(updatedList.total, 2, "manual save updates do not change the total");
+
+    const invalidUpdate = manualSaveCandidate("Must not project", "Unsafe update");
+    invalidUpdate.snapshot.unsupported = "must reject";
+    const beforeInvalidUpdateDisk = await fs.readFile(manualTarget, "utf8");
+    await assert.rejects(
+      manualStore.updateManualSave(firstManual.id, manualSaveEnvelope(invalidUpdate), "unlimited"),
+      (error) => error?.code === "invalid_snapshot",
+      "update enforces the same exact canonical snapshot contract as create"
+    );
+    assert.equal((await manualStore.get(firstManual.id)).snapshot.title, "Updated title");
+    assert.equal(await fs.readFile(manualTarget, "utf8"), beforeInvalidUpdateDisk);
 
     await assert.rejects(
       manualStore.updateManualSave(
@@ -492,32 +512,21 @@ async function main() {
       );
     }
 
-    const boundaryCandidate = manualSaveCandidate("JSON-like byte boundary", "Safe lyrics");
-    boundaryCandidate.snapshot.unknownTree = {
-      list: [null, true, false, 0, "界", "line\nbreak"]
-    };
-    boundaryCandidate.snapshot.unknownPadding = "";
-    const boundaryBaseBytes = Buffer.byteLength(JSON.stringify(boundaryCandidate.snapshot), "utf8");
-    boundaryCandidate.snapshot.unknownPadding = "x".repeat(MAX_MANUAL_SNAPSHOT_BYTES - boundaryBaseBytes);
+    const boundaryCandidate = { snapshot: manualSnapshotAtUtf8Bytes(MAX_MANUAL_SNAPSHOT_BYTES) };
     assert.equal(
       Buffer.byteLength(JSON.stringify(boundaryCandidate.snapshot), "utf8"),
       MAX_MANUAL_SNAPSHOT_BYTES,
-      "the legal JSON-like fixture is exactly the pre-projection byte ceiling"
+      "the complete legal snapshot is exactly the pre-normalization byte ceiling"
     );
     const boundaryRecord = await manualStore.createManualSave(manualSaveEnvelope(boundaryCandidate), "unlimited");
-    assert.equal("unknownPadding" in (await manualStore.get(boundaryRecord.id)).snapshot, false);
-    assert.equal("unknownTree" in (await manualStore.get(boundaryRecord.id)).snapshot, false);
+    assert.equal((await manualStore.get(boundaryRecord.id)).snapshot.lyrics.length, 120_000);
 
-    const oversizedUnknownString = manualSaveCandidate("Oversized unknown string", "Safe lyrics");
-    oversizedUnknownString.snapshot.unknownPadding = "";
-    const oversizedBaseBytes = Buffer.byteLength(JSON.stringify(oversizedUnknownString.snapshot), "utf8");
-    oversizedUnknownString.snapshot.unknownPadding = "x".repeat(
-      MAX_MANUAL_SNAPSHOT_BYTES - oversizedBaseBytes + 1
-    );
+    const oversizedLegalSnapshot = structuredClone(boundaryCandidate.snapshot);
+    oversizedLegalSnapshot.translationText += "x";
     await assert.rejects(
-      manualStore.createManualSave(manualSaveEnvelope(oversizedUnknownString), "unlimited"),
+      manualStore.createManualSave(manualSaveEnvelope({ snapshot: oversizedLegalSnapshot }), "unlimited"),
       (error) => error?.code === "invalid_snapshot",
-      "a JSON-like unknown string one byte over the pre-projection ceiling is rejected"
+      "a complete legal-field snapshot one byte over the ceiling is rejected"
     );
 
     const sanitizedManual = await manualStore.createManualSave(manualSaveEnvelope({
@@ -529,22 +538,18 @@ async function main() {
         coverUrl: "https://covers.example/fallback.jpg?api_key=SECRET_API_KEY",
         originalUrl: "https://music.163.com/song?id=42&token=SECRET_TOKEN",
         finalUrl: "https://user:password@example.com/private",
-        parseMethod: "C:/Users/private/parser",
-        proxiedCoverUrl: "https://proxy.invalid/private",
-        apiKey: "SECRET_API_KEY",
-        localPath: "C:\\Users\\private\\song.mp3",
-        style: { backgroundImage: "data:image/png;base64,SECRET_STYLE" }
+        parseMethod: "C:/Users/private/parser"
       }
     }), "unlimited");
     const sanitizedSnapshot = (await manualStore.get(sanitizedManual.id)).snapshot;
     assert.equal(sanitizedSnapshot.originalCoverUrl, "https://covers.example/manual.jpg");
     assert.equal(sanitizedSnapshot.coverUrl, "https://covers.example/fallback.jpg");
     assert.equal(sanitizedSnapshot.originalUrl, "https://music.163.com/song?id=42");
-    assert.equal(sanitizedSnapshot.finalUrl, "");
+    assert.equal(sanitizedSnapshot.finalUrl, "https://music.163.com/song?id=42");
     assert.equal(sanitizedSnapshot.parseMethod, "");
     assert.doesNotMatch(
       JSON.stringify(await manualStore.get(sanitizedManual.id)),
-      /SECRET_|blob:|data:image|file:\/\/|C:\\\\Users|proxiedCoverUrl|apiKey|localPath|backgroundImage/
+      /SECRET_|blob:|data:image|file:\/\/|C:\\\\Users/
     );
     const backslashMethod = await manualStore.createManualSave(manualSaveEnvelope({
       snapshot: {
@@ -582,9 +587,19 @@ async function main() {
         expected: "https://music.apple.com/us/album/example/123456?i=654321"
       },
       {
+        label: "Apple Music song path identity",
+        input: "https://music.apple.com/us/song/example/654322?token=SECRET#private",
+        expected: "https://music.apple.com/us/song/example/654322"
+      },
+      {
         label: "QQ Music songmid identity",
         input: "https://y.qq.com/portal/player.html?songmid=003OUlho2HcRHC&auth=SECRET&utm_campaign=tracker#private",
         expected: "https://y.qq.com/portal/player.html?songmid=003OUlho2HcRHC"
+      },
+      {
+        label: "QQ Music path identity",
+        input: "https://y.qq.com/n/ryqq/songDetail/003OUlho2HcRHC?auth=SECRET#private",
+        expected: "https://y.qq.com/n/ryqq/songDetail/003OUlho2HcRHC"
       },
       {
         label: "QQ Music non-song path",
@@ -616,6 +631,75 @@ async function main() {
         `${label} removes credentials, fragments, signatures, and tracking`
       );
     }
+
+    const ambiguousIdentityUrlCases = [
+      {
+        label: "duplicate NetEase identity",
+        input: "https://music.163.com/song?id=70001&id=70002",
+        expected: "https://music.163.com/song"
+      },
+      {
+        label: "encoded duplicate NetEase identity",
+        input: "https://music.163.com/song?id=70001&%69d=70002",
+        expected: "https://music.163.com/song"
+      },
+      {
+        label: "NetEase alternate HTTPS port",
+        input: "https://music.163.com:8443/song?id=70001",
+        expected: "https://music.163.com:8443/song"
+      },
+      {
+        label: "unlisted NetEase subdomain",
+        input: "https://unexpected.music.163.com/song?id=70001",
+        expected: "https://unexpected.music.163.com/song"
+      },
+      {
+        label: "QQ path and parameter ambiguity",
+        input: "https://y.qq.com/n/ryqq/songDetail/003OUlho2HcRHC?songmid=OTHERID",
+        expected: "https://y.qq.com/n/ryqq/songDetail/003OUlho2HcRHC"
+      },
+      {
+        label: "Apple song path and parameter ambiguity",
+        input: "https://music.apple.com/us/song/example/654322?i=654323",
+        expected: "https://music.apple.com/us/song/example/654322"
+      }
+    ];
+    for (const { label, input, expected } of ambiguousIdentityUrlCases) {
+      const candidate = manualSaveCandidate(label, "Safe lyrics");
+      candidate.snapshot.originalUrl = input;
+      candidate.snapshot.finalUrl = input;
+      const saved = await manualStore.createManualSave(manualSaveEnvelope(candidate), "unlimited");
+      const stored = (await manualStore.get(saved.id)).snapshot;
+      assert.equal(stored.originalUrl, expected, `${label} has no retained identity parameter`);
+      assert.equal(stored.finalUrl, expected, `${label} has one unambiguous replay provenance URL`);
+    }
+
+    const sameIdentityRepresentations = manualSaveCandidate("Same identity representations", "Safe lyrics");
+    sameIdentityRepresentations.snapshot.originalUrl = "https://music.163.com/#/song?id=70001&token=SECRET";
+    sameIdentityRepresentations.snapshot.finalUrl = "https://music.163.com/song?id=70001&utm_source=tracker";
+    const sameIdentityRecord = await manualStore.createManualSave(
+      manualSaveEnvelope(sameIdentityRepresentations),
+      "unlimited"
+    );
+    const sameIdentitySnapshot = (await manualStore.get(sameIdentityRecord.id)).snapshot;
+    assert.deepEqual(
+      [sameIdentitySnapshot.originalUrl, sameIdentitySnapshot.finalUrl],
+      ["https://music.163.com/song?id=70001", "https://music.163.com/song?id=70001"],
+      "equivalent URL representations collapse to one normalized replay provenance"
+    );
+
+    const conflictingIdentity = manualSaveCandidate("Conflicting identity", "Safe lyrics");
+    conflictingIdentity.snapshot.originalUrl = "https://music.163.com/song?id=70001";
+    conflictingIdentity.snapshot.finalUrl = "https://music.163.com/song?id=70002";
+    const beforeConflictTotal = (await manualStore.stats()).total;
+    const beforeConflictDisk = await fs.readFile(manualTarget, "utf8");
+    await assert.rejects(
+      manualStore.createManualSave(manualSaveEnvelope(conflictingIdentity), "unlimited"),
+      (error) => error?.code === "invalid_snapshot",
+      "different original/final song identities are rejected"
+    );
+    assert.equal((await manualStore.stats()).total, beforeConflictTotal);
+    assert.equal(await fs.readFile(manualTarget, "utf8"), beforeConflictDisk);
 
     for (const limit of [5, 10, "unlimited"]) {
       const limitTarget = path.join(root, "app-data", `manual-limit-${limit}.json`);
@@ -995,6 +1079,27 @@ function manualSaveCandidate(title, lyrics) {
       translationEnabled: true
     }
   };
+}
+
+function manualSnapshotAtUtf8Bytes(targetBytes) {
+  const snapshot = {
+    ...emptyManualSnapshot(),
+    title: "Exact legal byte boundary",
+    artist: "Boundary fixture"
+  };
+  let remaining = targetBytes - Buffer.byteLength(JSON.stringify(snapshot), "utf8");
+  for (const field of ["lyrics", "translationText"]) {
+    const threeByteCharacters = Math.min(120_000, Math.floor(remaining / 3));
+    snapshot[field] = "界".repeat(threeByteCharacters);
+    remaining -= threeByteCharacters * 3;
+  }
+  if (remaining > 0 && snapshot.translationText.length + remaining <= 120_000) {
+    snapshot.translationText += "x".repeat(remaining);
+    remaining = 0;
+  }
+  assert.equal(remaining, 0, "the legal string fields can represent the requested UTF-8 boundary");
+  assert.equal(Buffer.byteLength(JSON.stringify(snapshot), "utf8"), targetBytes);
+  return snapshot;
 }
 
 function manualSaveEnvelope(candidate) {

@@ -12,6 +12,40 @@ const MAX_MANUAL_SAVE_JSON_DEPTH = 128;
 const MANUAL_SAVE_ENVELOPE_VERSION = 1;
 const MANUAL_SAVE_ENVELOPE_PREFIX = `{"version":${MANUAL_SAVE_ENVELOPE_VERSION},"snapshot":`;
 const MAX_MANUAL_SAVE_ENVELOPE_BYTES = MAX_RECORD_BYTES + Buffer.byteLength(`${MANUAL_SAVE_ENVELOPE_PREFIX}}`, "utf8");
+// The snapshot itself remains capped at 512 KiB. A stored manual-save record
+// additionally repeats bounded display metadata and main-process ID/timestamps.
+const MAX_MANUAL_SAVE_RECORD_BYTES = MAX_RECORD_BYTES + (32 * 1024);
+const MANUAL_SAVE_SNAPSHOT_FIELDS = Object.freeze([
+  "source",
+  "title",
+  "artist",
+  "album",
+  "explicit",
+  "originalCoverUrl",
+  "coverUrl",
+  "originalUrl",
+  "finalUrl",
+  "parseMethod",
+  "lyrics",
+  "translationText",
+  "translationEnabled"
+]);
+const MANUAL_SAVE_STRING_LIMITS = Object.freeze({
+  title: 512,
+  artist: 512,
+  album: 512,
+  originalCoverUrl: 8192,
+  coverUrl: 8192,
+  originalUrl: 8192,
+  finalUrl: 8192,
+  parseMethod: 128,
+  lyrics: 120_000,
+  translationText: 120_000
+});
+const NETEASE_MANUAL_IDENTITY_HOSTS = new Set(["music.163.com", "y.music.163.com"]);
+const APPLE_MANUAL_IDENTITY_HOSTS = new Set(["music.apple.com"]);
+const QQ_MANUAL_IDENTITY_HOSTS = new Set(["y.qq.com"]);
+const SPOTIFY_MANUAL_IDENTITY_HOSTS = new Set(["open.spotify.com", "play.spotify.com"]);
 const MAX_AUDIO_BYTES = 100 * 1024 * 1024;
 const MAX_IMAGE_BYTES = 20 * 1024 * 1024;
 const MAX_TIMESTAMP_MS = 8_640_000_000_000_000;
@@ -458,7 +492,8 @@ function normalizeImportHistoryRecord(input, path = defaultPath) {
   } else if (input.kind === "manual-save") {
     record.snapshot = snapshot;
   }
-  return Buffer.byteLength(JSON.stringify(record), "utf8") <= MAX_RECORD_BYTES ? record : null;
+  const maximumRecordBytes = input.kind === "manual-save" ? MAX_MANUAL_SAVE_RECORD_BYTES : MAX_RECORD_BYTES;
+  return Buffer.byteLength(JSON.stringify(record), "utf8") <= maximumRecordBytes ? record : null;
 }
 
 function normalizeDisplay(input, kind) {
@@ -525,13 +560,19 @@ function normalizeManualSnapshot(input, kind = "manual-cover") {
   const title = boundedString(input.title, 512);
   const artist = boundedString(input.artist, 512);
   const source = SONG_SOURCES.has(input.source) ? input.source : "unknown";
+  const originalUrl = normalizeManualHttpUrlDetails(input.originalUrl);
+  const finalUrl = normalizeManualHttpUrlDetails(input.finalUrl);
+  const songUrls = kind === "manual-save"
+    ? normalizeManualSongUrls(originalUrl, finalUrl)
+    : { originalUrl: originalUrl.url, finalUrl: finalUrl.url };
+  if (!songUrls) return null;
   const snapshot = {
     title,
     artist,
     album: boundedString(input.album, 512),
     source,
-    originalUrl: normalizeManualHttpUrl(input.originalUrl),
-    finalUrl: normalizeManualHttpUrl(input.finalUrl),
+    originalUrl: songUrls.originalUrl,
+    finalUrl: songUrls.finalUrl,
     lyrics: boundedString(input.lyrics, 120_000, false),
     translationText: boundedString(input.translationText, 120_000, false),
     translationEnabled: input.translationEnabled === true
@@ -599,7 +640,9 @@ function parseManualSaveEnvelope(value) {
   }
 
   try {
-    return JSON.stringify(envelope) === value ? snapshot.value : null;
+    return JSON.stringify(envelope) === value
+      ? normalizeManualSnapshot(snapshot.value, "manual-save")
+      : null;
   } catch {
     return null;
   }
@@ -612,21 +655,16 @@ function manualSaveSnapshotFieldsFit(input) {
   ) {
     return false;
   }
-  const limits = {
-    title: 512,
-    artist: 512,
-    album: 512,
-    originalCoverUrl: 8192,
-    coverUrl: 8192,
-    originalUrl: 8192,
-    finalUrl: 8192,
-    parseMethod: 128,
-    lyrics: 120_000,
-    translationText: 120_000
-  };
-  const fieldsFit = Object.entries(limits).every(([field, limit]) => {
+  const keys = Reflect.ownKeys(input);
+  if (
+    keys.length !== MANUAL_SAVE_SNAPSHOT_FIELDS.length ||
+    keys.some((key) => typeof key !== "string" || !MANUAL_SAVE_SNAPSHOT_FIELDS.includes(key))
+  ) {
+    return false;
+  }
+  const fieldsFit = Object.entries(MANUAL_SAVE_STRING_LIMITS).every(([field, limit]) => {
     const descriptor = Object.getOwnPropertyDescriptor(input, field);
-    return !descriptor || (
+    return (
       isEnumerableDataProperty(descriptor) &&
       typeof descriptor.value === "string" &&
       descriptor.value.length <= limit
@@ -637,12 +675,14 @@ function manualSaveSnapshotFieldsFit(input) {
   const explicit = Object.getOwnPropertyDescriptor(input, "explicit");
   const translationEnabled = Object.getOwnPropertyDescriptor(input, "translationEnabled");
   return (
-    (!source || (isEnumerableDataProperty(source) && typeof source.value === "string")) &&
-    (!explicit || (isEnumerableDataProperty(explicit) && typeof explicit.value === "boolean")) &&
-    (!translationEnabled || (
+    isEnumerableDataProperty(source) &&
+    SONG_SOURCES.has(source.value) &&
+    isEnumerableDataProperty(explicit) &&
+    typeof explicit.value === "boolean" &&
+    (
       isEnumerableDataProperty(translationEnabled) &&
       typeof translationEnabled.value === "boolean"
-    ))
+    )
   );
 }
 
@@ -1015,8 +1055,12 @@ function normalizeHttpUrl(value) {
 }
 
 function normalizeManualHttpUrl(value) {
+  return normalizeManualHttpUrlDetails(value).url;
+}
+
+function normalizeManualHttpUrlDetails(value) {
   const normalized = normalizeHttpUrl(value);
-  if (!normalized) return "";
+  if (!normalized) return { url: "", identityKey: "" };
   const url = new URL(normalized);
   const identity = manualUrlIdentity(value, url);
   url.search = "";
@@ -1024,15 +1068,43 @@ function normalizeManualHttpUrl(value) {
     url.searchParams.set(key, identityValue);
   }
   if (identity.pathname) url.pathname = identity.pathname;
-  return url.toString();
+  const sanitized = url.toString();
+  return sanitized.length <= MANUAL_SAVE_STRING_LIMITS.originalUrl
+    ? { url: sanitized, identityKey: identity.key }
+    : { url: "", identityKey: "" };
+}
+
+function normalizeManualSongUrls(original, final) {
+  if (original.identityKey && final.identityKey && original.identityKey !== final.identityKey) {
+    return null;
+  }
+  const selected = original.identityKey
+    ? original
+    : final.identityKey
+      ? final
+      : original.url
+        ? original
+        : final;
+  const provenanceUrl = selected.url;
+  return { originalUrl: provenanceUrl, finalUrl: provenanceUrl };
 }
 
 function manualUrlIdentity(value, normalizedUrl) {
+  const noIdentity = { key: "", parameters: [], pathname: "" };
   let original;
   try {
     original = new URL(boundedString(value, 8192));
   } catch {
-    return { parameters: [], pathname: "" };
+    return noIdentity;
+  }
+
+  if (
+    original.protocol !== "https:" ||
+    original.port ||
+    normalizedUrl.protocol !== "https:" ||
+    normalizedUrl.port
+  ) {
+    return noIdentity;
   }
 
   const host = normalizedUrl.hostname.toLowerCase();
@@ -1041,42 +1113,83 @@ function manualUrlIdentity(value, normalizedUrl) {
   const hashQueryIndex = hashRoute.indexOf("?");
   const hashPath = hashQueryIndex >= 0 ? hashRoute.slice(0, hashQueryIndex) : hashRoute;
   const hashParameters = new URLSearchParams(hashQueryIndex >= 0 ? hashRoute.slice(hashQueryIndex + 1) : "");
-  const parameter = (name) => original.searchParams.get(name) || hashParameters.get(name) || "";
+  const parameters = (names) => names.flatMap((name) => [
+    ...original.searchParams.getAll(name).map((parameterValue) => ({ name, value: parameterValue })),
+    ...hashParameters.getAll(name).map((parameterValue) => ({ name, value: parameterValue }))
+  ]);
+  const exactPath = (candidate, expected) => candidate.replace(/\/+$/u, "") === expected;
 
   if (
-    (host === "music.163.com" || host.endsWith(".music.163.com")) &&
-    (/\/(?:song)(?:\/|$)/i.test(originalPath) || /\/(?:song)(?:\/|$)/i.test(hashPath))
+    NETEASE_MANUAL_IDENTITY_HOSTS.has(host) &&
+    (exactPath(originalPath, "/song") || exactPath(hashPath, "/song"))
   ) {
-    const id = parameter("id");
-    if (/^\d{1,32}$/.test(id)) {
+    const identityParameters = parameters(["id"]);
+    if (identityParameters.length === 1 && /^\d{1,32}$/.test(identityParameters[0].value)) {
+      const id = identityParameters[0].value;
       return {
+        key: `netease:${id}`,
         parameters: [["id", id]],
-        pathname: /\/(?:song)(?:\/|$)/i.test(originalPath) ? "" : "/song"
+        pathname: exactPath(originalPath, "/song") ? "" : "/song"
       };
+    }
+    return noIdentity;
+  }
+
+  if (APPLE_MANUAL_IDENTITY_HOSTS.has(host)) {
+    const trackParameters = parameters(["i"]);
+    const albumMatch = originalPath.match(/^\/[a-z]{2}\/album\/[^/]+\/\d+\/?$/iu);
+    if (albumMatch) {
+      if (trackParameters.length === 1 && /^\d{1,32}$/.test(trackParameters[0].value)) {
+        const id = trackParameters[0].value;
+        return { key: `apple:${id}`, parameters: [["i", id]], pathname: "" };
+      }
+      return noIdentity;
+    }
+    const songMatch = originalPath.match(/^\/[a-z]{2}\/song\/[^/]+\/(\d{1,32})\/?$/iu);
+    if (songMatch) {
+      return trackParameters.length === 0
+        ? { key: `apple:${songMatch[1]}`, parameters: [], pathname: "" }
+        : noIdentity;
     }
   }
 
-  if (
-    (host === "music.apple.com" || host.endsWith(".music.apple.com")) &&
-    /\/album\//i.test(originalPath)
-  ) {
-    const id = parameter("i");
-    if (/^\d{1,32}$/.test(id)) return { parameters: [["i", id]], pathname: "" };
+  if (QQ_MANUAL_IDENTITY_HOSTS.has(host)) {
+    const identityParameters = parameters(["songid", "songmid"]);
+    const pathCandidate = hashPath || originalPath;
+    const pathMatch = pathCandidate.match(/^\/(?:n\/ryqq\/)?songDetail\/([A-Za-z0-9]{1,64})\/?$/iu);
+    if (pathMatch) {
+      if (identityParameters.length !== 0) return noIdentity;
+      const id = pathMatch[1];
+      const kind = /^\d+$/u.test(id) ? "songid" : "songmid";
+      return {
+        key: `qq:${kind}:${id}`,
+        parameters: [],
+        pathname: hashPath ? pathCandidate : ""
+      };
+    }
+    const permitsQueryIdentity = ["/song", "/portal/player.html", "/player"].some((candidate) => (
+      exactPath(originalPath, candidate) || exactPath(hashPath, candidate)
+    ));
+    if (permitsQueryIdentity && identityParameters.length === 1) {
+      const { name, value: id } = identityParameters[0];
+      const valid = name === "songid" ? /^\d{1,32}$/u.test(id) : /^[A-Za-z0-9]{1,64}$/u.test(id);
+      if (valid) {
+        return {
+          key: `qq:${name}:${id}`,
+          parameters: [[name, id]],
+          pathname: !exactPath(originalPath, pathCandidate) && hashPath ? pathCandidate : ""
+        };
+      }
+    }
+    if (permitsQueryIdentity) return noIdentity;
   }
 
-  if (
-    (host === "y.qq.com" || host.endsWith(".y.qq.com")) &&
-    [originalPath, hashPath].some((candidatePath) => (
-      /(?:^|\/)(?:song|songdetail|player)(?:\/|\.html$|$)/i.test(candidatePath)
-    ))
-  ) {
-    const songId = parameter("songid");
-    if (/^\d{1,32}$/.test(songId)) return { parameters: [["songid", songId]], pathname: "" };
-    const songMid = parameter("songmid");
-    if (/^[A-Za-z0-9]{1,64}$/.test(songMid)) return { parameters: [["songmid", songMid]], pathname: "" };
+  if (SPOTIFY_MANUAL_IDENTITY_HOSTS.has(host)) {
+    const track = originalPath.match(/^\/track\/([A-Za-z0-9]{1,64})\/?$/u)?.[1];
+    if (track) return { key: `spotify:${track}`, parameters: [], pathname: "" };
   }
 
-  return { parameters: [], pathname: "" };
+  return noIdentity;
 }
 
 function extractHttpUrl(value) {

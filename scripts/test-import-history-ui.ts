@@ -10,6 +10,7 @@ const editorActions = read("components/editor/hooks/useEditorActions.ts");
 const editorSteps = read("components/editor/useEditorSteps.tsx");
 const desktopApi = read("lib/desktop-api.ts");
 const importHistoryTypes = read("lib/import-history.ts");
+const importHistoryStore = read("electron/import-history.js");
 const editorPreferences = read("components/editor/hooks/useEditorPreferences.ts");
 const songLinkParser = read("components/editor/SongLinkParser.tsx");
 const songSearchParser = read("components/editor/SongSearchParser.tsx");
@@ -89,6 +90,16 @@ assert.match(
   "the renderer serializer constructs only the whitelisted semantic snapshot"
 );
 assert.match(
+  importHistoryStore,
+  /MANUAL_SAVE_SNAPSHOT_FIELDS = Object\.freeze\(\[[\s\S]*?"translationEnabled"[\s\S]*?keys\.length !== MANUAL_SAVE_SNAPSHOT_FIELDS\.length[\s\S]*?SONG_SOURCES\.has\(source\.value\)/,
+  "the Store requires every canonical field, rejects extras, and enforces the source enum"
+);
+assert.match(
+  importHistoryStore,
+  /function normalizeManualSongUrls\(original, final\)[\s\S]*?original\.identityKey !== final\.identityKey[\s\S]*?return null[\s\S]*?originalUrl: provenanceUrl, finalUrl: provenanceUrl/,
+  "manual archives reject conflicting identities and expose one replay provenance URL"
+);
+assert.match(
   desktopApi,
   /typeof value === "string"[\s\S]*?createManualSave: [\s\S]*?isManualSaveEnvelope\(envelope\)[\s\S]*?bridge\.createManualSaveEnvelope\(envelope\)/,
   "the public renderer service rejects object inputs before contextBridge"
@@ -166,6 +177,16 @@ assert.match(
 );
 assert.match(
   desktopHistoryInteractions,
+  /ipcCanonicalContract[\s\S]*?unknown snapshot field[\s\S]*?missing required artist[\s\S]*?unsupported source enum[\s\S]*?non-canonical envelopes create no history file/,
+  "packaged IPC regression rejects parse-and-project candidates without persistence"
+);
+assert.match(
+  desktopHistoryInteractions,
+  /packaged IPC rejects conflicting original\/final song identities[\s\S]*?originalUrl: "https:\/\/music\.163\.com\/#\/song\?id=70001[\s\S]*?roundTrip <= 2[\s\S]*?manual replay remount retains the original update binding/,
+  "packaged replay regression covers equivalent URL representations, repeated remounts, and retained binding"
+);
+assert.match(
+  desktopHistoryInteractions,
   /pendingCloseLyrics = [^\n]+\.repeat\(4_000\)[\s\S]*?updateManualSave\(recordId[\s\S]*?UI replay restores all 4,000 seeded lyric lines/,
   "pending-close regression seeds and replays the large archive through the real preload/store/UI path"
 );
@@ -210,4 +231,4 @@ assert.match(
   "narrow icon-only adaptation remains scoped to the desktop shell"
 );
 
-console.log(JSON.stringify({ ok: true, importHistoryUiContracts: 72 }, null, 2));
+console.log(JSON.stringify({ ok: true, importHistoryUiContracts: 76 }, null, 2));

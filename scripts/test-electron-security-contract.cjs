@@ -2,6 +2,7 @@ const assert = require("node:assert/strict");
 const { readFileSync } = require("node:fs");
 const { isTrustedIpcEvent } = require("../electron/ipc-security");
 const { normalizeLoopbackHttpUrl, resolveLocalAppUrl } = require("../electron/local-app-url");
+const { createManualSaveIpcHandlers } = require("../electron/manual-save-ipc");
 const { isAllowedLocalNavigation, parseAllowedExternalUrl } = require("../electron/url-policy");
 
 const localUrl = "http://127.0.0.1:43123";
@@ -57,6 +58,7 @@ function trustedFixture(frameUrl = `${localUrl}/`, frameIsMain = true) {
 
 const mainSource = readFileSync("electron/main.js", "utf8");
 const importHistorySource = readFileSync("electron/import-history.js", "utf8");
+const manualSaveIpcSource = readFileSync("electron/manual-save-ipc.js", "utf8");
 const desktopApiSource = readFileSync("lib/desktop-api.ts", "utf8");
 const desktopHistoryInteractionSource = readFileSync("scripts/test-desktop-import-history-interactions.mjs", "utf8");
 const replayPayloadSource = mainSource.slice(
@@ -82,6 +84,12 @@ assert.match(
   prepareElectronSource,
   /path\.join\(projectRoot, "electron", "import-history\.js"\)[\s\S]*?path\.join\(electronOutputDir, "import-history\.js"\)/,
   "desktop preparation copies the import history store into the minimal app"
+);
+assert.match(prepareElectronSource, /"electron\/manual-save-ipc\.js"/, "packaged desktop bundles the manual-save IPC boundary");
+assert.match(
+  prepareElectronSource,
+  /path\.join\(projectRoot, "electron", "manual-save-ipc\.js"\)[\s\S]*?path\.join\(electronOutputDir, "manual-save-ipc\.js"\)/,
+  "desktop preparation copies the real manual-save IPC handlers into the minimal app"
 );
 
 const preloadSource = readFileSync("electron/preload.js", "utf8");
@@ -159,13 +167,23 @@ assert.match(
 );
 assert.match(
   mainSource,
-  /handle\("lyrics-card:manual-save-create", \(_event, envelope\) => trackImportHistoryMutation\([\s\S]*?importHistoryStore\.createManualSave\(envelope/,
-  "manual save creation participates in ordered shutdown-drained mutations"
+  /createManualSaveIpcHandlers\([\s\S]*?trackMutation: trackImportHistoryMutation[\s\S]*?readLimit: readImportHistoryLimit[\s\S]*?store: importHistoryStore[\s\S]*?handle\("lyrics-card:manual-save-create", manualSaveHandlers\.create\)/,
+  "manual save creation uses the independently tested early-rejection handler and ordered mutation queue"
 );
 assert.match(
   mainSource,
-  /handle\("lyrics-card:manual-save-update", \(_event, recordId, envelope\) => trackImportHistoryMutation\([\s\S]*?importHistoryStore\.updateManualSave\(recordId, envelope/,
-  "manual save updates participate in ordered shutdown-drained mutations"
+  /handle\("lyrics-card:manual-save-update", manualSaveHandlers\.update\)/,
+  "manual save updates use the same independently tested early-rejection boundary"
+);
+assert.match(
+  manualSaveIpcSource,
+  /const create = \(_event, envelope\) => \{\s*if \(typeof envelope !== "string"\) return \{ ok: false, code: "invalid_snapshot" \};\s*return trackMutation/,
+  "create rejects non-primitive envelopes before queue, preferences, or Store access"
+);
+assert.match(
+  manualSaveIpcSource,
+  /const update = \(_event, recordId, envelope\) => \{\s*if \(typeof envelope !== "string"\) return \{ ok: false, code: "invalid_snapshot" \};\s*return trackMutation/,
+  "update rejects non-primitive envelopes before queue, preferences, or Store access"
 );
 assert.match(
   mainSource,
@@ -205,6 +223,11 @@ assert.match(
   /typeof value !== "string"[\s\S]*?JSON\.parse\(value\)[\s\S]*?manualSaveSnapshotFieldsFit[\s\S]*?JSON\.stringify\(envelope\) === value/,
   "the Store independently parses and validates an exact canonical string envelope before mutation"
 );
+assert.match(
+  manualSnapshotValidationSource,
+  /keys\.length !== MANUAL_SAVE_SNAPSHOT_FIELDS\.length[\s\S]*?MANUAL_SAVE_SNAPSHOT_FIELDS\.includes\(key\)[\s\S]*?SONG_SOURCES\.has\(source\.value\)/,
+  "canonical snapshots require the complete exact field set and a supported source enum"
+);
 for (const valueType of [
   "accessor/getter",
   "Proxy",
@@ -235,13 +258,13 @@ assert.match(
 );
 assert.match(
   desktopHistoryInteractionSource,
-  /boundaryBytes[\s\S]*?512 \* 1024[\s\S]*?exact-limit plain JSON-like snapshot crosses IPC successfully/,
-  "desktop IPC preserves an exact-limit legal JSON-like snapshot"
+  /boundaryBytes[\s\S]*?512 \* 1024[\s\S]*?exact-limit complete legal snapshot crosses IPC successfully/,
+  "desktop IPC preserves an exact-limit snapshot made only from the canonical legal fields"
 );
 assert.match(
   importHistorySource,
-  /function manualUrlIdentity[\s\S]*?music\.163\.com[\s\S]*?\[\["id", id\]\][\s\S]*?music\.apple\.com[\s\S]*?\[\["i", id\]\][\s\S]*?y\.qq\.com[\s\S]*?songmid/,
-  "manual URL sanitization uses an auditable host/path identity-parameter allowlist"
+  /NETEASE_MANUAL_IDENTITY_HOSTS = new Set\(\["music\.163\.com", "y\.music\.163\.com"\]\)[\s\S]*?APPLE_MANUAL_IDENTITY_HOSTS = new Set\(\["music\.apple\.com"\]\)[\s\S]*?QQ_MANUAL_IDENTITY_HOSTS = new Set\(\["y\.qq\.com"\]\)[\s\S]*?function manualUrlIdentity[\s\S]*?getAll\(name\)[\s\S]*?identityParameters\.length === 1/,
+  "manual URL identity uses explicit hosts, unique decoded parameters, and exact path rules"
 );
 assert.match(
   desktopHistoryInteractionSource,
@@ -272,6 +295,70 @@ for (const directive of ["default-src 'self'", "script-src", "style-src", "img-s
   assert.ok(nextConfig.includes(directive), directive);
 }
 assert.match(nextConfig, /Permissions-Policy/);
+
+async function testManualSaveIpcEarlyRejection() {
+  const calls = { queue: 0, preferences: 0, create: 0, update: 0, logs: 0 };
+  const handlers = createManualSaveIpcHandlers({
+    trackMutation: async (operation) => {
+      calls.queue += 1;
+      return operation();
+    },
+    readLimit: async () => {
+      calls.preferences += 1;
+      return 10;
+    },
+    store: {
+      createManualSave: async (envelope, limit) => {
+        calls.create += 1;
+        return { id: "created", envelope, limit };
+      },
+      updateManualSave: async (recordId, envelope, limit) => {
+        calls.update += 1;
+        return { id: recordId, envelope, limit };
+      }
+    },
+    errorCode: () => "history_write_failed",
+    logger: { error: () => { calls.logs += 1; } }
+  });
+
+  const rejected = [
+    ["plain object", {}],
+    ["array", []],
+    ["String object", new String("canonical")],
+    ["ArrayBuffer", new ArrayBuffer(16)]
+  ];
+  for (const [label, value] of rejected) {
+    assert.deepEqual(
+      await handlers.create(null, value),
+      { ok: false, code: "invalid_snapshot" },
+      `${label} is rejected by the real create handler`
+    );
+    assert.deepEqual(
+      await handlers.update(null, "record-id", value),
+      { ok: false, code: "invalid_snapshot" },
+      `${label} is rejected by the real update handler`
+    );
+  }
+  assert.deepEqual(
+    calls,
+    { queue: 0, preferences: 0, create: 0, update: 0, logs: 0 },
+    "non-primitive envelopes perform zero queue, preference I/O, Store, and logging work"
+  );
+
+  assert.deepEqual(
+    await handlers.create(null, "canonical-create"),
+    { ok: true, record: { id: "created", envelope: "canonical-create", limit: 10 } }
+  );
+  assert.deepEqual(
+    await handlers.update(null, "record-id", "canonical-update"),
+    { ok: true, record: { id: "record-id", envelope: "canonical-update", limit: 10 } }
+  );
+  assert.deepEqual(
+    calls,
+    { queue: 2, preferences: 2, create: 1, update: 1, logs: 0 },
+    "primitive strings enter the real queue and Store path exactly once"
+  );
+}
 
 async function testLocalAppUrlSelection() {
   assert.equal(normalizeLoopbackHttpUrl("http://localhost:3000"), "http://localhost:3000/");
@@ -330,7 +417,7 @@ async function testLocalAppUrlSelection() {
   assert.equal(localServerStarts, 2, "development without an override starts the embedded server");
 }
 
-testLocalAppUrlSelection()
+Promise.all([testManualSaveIpcEarlyRejection(), testLocalAppUrlSelection()])
   .then(() => console.log("Electron security contract tests passed"))
   .catch((error) => {
     console.error(error);
