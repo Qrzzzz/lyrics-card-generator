@@ -195,7 +195,7 @@ async function attachRoutes(targetPage) {
   });
 }
 
-async function launchApp({ expectFirstLaunch = false, expectedHistoryLimit = null } = {}) {
+async function launchApp({ expectFirstLaunch = false, expectedLocale = null, expectedHistoryLimit = null } = {}) {
   electronApp = await electron.launch({
     executablePath,
     env: { ...process.env, LYRICS_CARD_TEST_USER_DATA: userDataDirectory },
@@ -220,13 +220,13 @@ async function launchApp({ expectFirstLaunch = false, expectedHistoryLimit = nul
     state: "visible",
     timeout: 30_000
   });
-  if (expectedHistoryLimit !== null) {
-    await page.waitForFunction(async (expected) => {
+  if (expectedLocale !== null && expectedHistoryLimit !== null) {
+    await page.waitForFunction(async ({ locale, historyLimit }) => {
       const preferences = await window.lyricsCardDesktop?.loadAppPreferences();
-      const rendererPreferencesLoaded = document.body.dataset.reduceMotion === "false";
-      return rendererPreferencesLoaded
-        && preferences?.userSettings?.importHistoryLimit === expected;
-    }, String(expectedHistoryLimit), { timeout: 30_000 });
+      return document.documentElement.lang === locale
+        && preferences?.locale === locale
+        && preferences.userSettings?.importHistoryLimit === historyLimit;
+    }, { locale: expectedLocale, historyLimit: expectedHistoryLimit }, { timeout: 30_000 });
   }
 }
 
@@ -358,7 +358,21 @@ async function waitForHistoryCards(expected, timeout = 30_000) {
   }
 }
 
+async function waitForHistoryListPage(expected, timeout = 15_000) {
+  await page.waitForFunction(async (expectedCount) => {
+    const api = window.lyricsCardDesktop;
+    const query = document.querySelector('[data-testid="history-search"]')?.value ?? "";
+    const source = document.querySelector('[data-testid="history-source-filter"]')?.value ?? "all";
+    if (!api) return false;
+    const result = await api.listImportHistory({ offset: 0, limit: 24, query, source });
+    return result.records.length === expectedCount;
+  }, expected, { polling: 100, timeout });
+}
+
 async function openHistory(expectedVisibleCards = null) {
+  if (expectedVisibleCards !== null) {
+    await waitForHistoryListPage(expectedVisibleCards);
+  }
   await page.locator('[data-testid="editor-surface"] [data-testid="history-button"]').click();
   const surface = page.getByTestId("history-surface");
   await surface.waitFor({ state: "visible", timeout: 15_000 });
@@ -1151,7 +1165,7 @@ try {
   assert.doesNotMatch(JSON.stringify(replayFixtureInternal.snapshot), /DO_NOT_PERSIST|token=|api_key=/);
 
   await closeThroughDesktopApi();
-  await launchApp({ expectedHistoryLimit: "unlimited" });
+  await launchApp({ expectedLocale: "en", expectedHistoryLimit: "unlimited" });
   await waitForHistoryTotal(1);
   const manualRestartSurface = await openHistory(1);
   const restartedManualCard = manualRestartSurface.locator('[data-history-kind="manual-save"]');
@@ -1512,7 +1526,7 @@ try {
   assert.equal(persistedBeforeRestart.records.length, 1);
   await closeThroughDesktopApi();
 
-  await launchApp({ expectedHistoryLimit: "unlimited" });
+  await launchApp({ expectedLocale: "en", expectedHistoryLimit: "unlimited" });
   await waitForHistoryTotal(1);
   const persistedSurface = await openHistory(1);
   assert.match(await persistedSurface.textContent(), /restart persistence/i, "history survives a desktop restart");
