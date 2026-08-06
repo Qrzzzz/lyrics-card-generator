@@ -195,7 +195,7 @@ async function attachRoutes(targetPage) {
   });
 }
 
-async function launchApp() {
+async function launchApp({ expectFirstLaunch = false, expectedHistoryLimit = null } = {}) {
   electronApp = await electron.launch({
     executablePath,
     env: { ...process.env, LYRICS_CARD_TEST_USER_DATA: userDataDirectory },
@@ -211,8 +211,8 @@ async function launchApp() {
   await attachRoutes(page);
 
   const firstLaunch = page.getByTestId("first-launch-language-dialog");
-  await firstLaunch.waitFor({ state: "visible", timeout: 5_000 }).catch(() => {});
-  if (await firstLaunch.isVisible()) {
+  if (expectFirstLaunch) {
+    await firstLaunch.waitFor({ state: "visible", timeout: 30_000 });
     await page.locator('[data-testid="first-launch-language"][data-locale="en"]').click();
     await firstLaunch.waitFor({ state: "hidden", timeout: 15_000 });
   }
@@ -220,6 +220,14 @@ async function launchApp() {
     state: "visible",
     timeout: 30_000
   });
+  if (expectedHistoryLimit !== null) {
+    await page.waitForFunction(async (expected) => {
+      const preferences = await window.lyricsCardDesktop?.loadAppPreferences();
+      const rendererPreferencesLoaded = document.body.dataset.reduceMotion === "false";
+      return rendererPreferencesLoaded
+        && preferences?.userSettings?.importHistoryLimit === expected;
+    }, String(expectedHistoryLimit), { timeout: 30_000 });
+  }
 }
 
 async function closeThroughDesktopApi() {
@@ -475,7 +483,7 @@ async function editManualSong({
 }
 
 try {
-  await launchApp();
+  await launchApp({ expectFirstLaunch: true });
 
   const actionIds = await page.locator('[data-testid="editor-header-actions"] > button').evaluateAll(
     (nodes) => nodes.map((node) => node.getAttribute("data-testid"))
@@ -1143,7 +1151,7 @@ try {
   assert.doesNotMatch(JSON.stringify(replayFixtureInternal.snapshot), /DO_NOT_PERSIST|token=|api_key=/);
 
   await closeThroughDesktopApi();
-  await launchApp();
+  await launchApp({ expectedHistoryLimit: "unlimited" });
   await waitForHistoryTotal(1);
   const manualRestartSurface = await openHistory(1);
   const restartedManualCard = manualRestartSurface.locator('[data-history-kind="manual-save"]');
@@ -1504,7 +1512,7 @@ try {
   assert.equal(persistedBeforeRestart.records.length, 1);
   await closeThroughDesktopApi();
 
-  await launchApp();
+  await launchApp({ expectedHistoryLimit: "unlimited" });
   await waitForHistoryTotal(1);
   const persistedSurface = await openHistory(1);
   assert.match(await persistedSurface.textContent(), /restart persistence/i, "history survives a desktop restart");
