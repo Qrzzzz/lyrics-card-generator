@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v5.9.1.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v5.9.2.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="#développement-local">Développement local</a> ·
@@ -51,23 +51,23 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 Téléchargez la dernière version depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
 
-* Installateur recommandé : `Lyrics Card Generator Setup 5.9.1.exe`
-* Version portable : `Lyrics Card Generator-5.9.1-portable.exe`
+* Installateur recommandé : `Lyrics Card Generator Setup 5.9.2.exe`
+* Version portable : `Lyrics Card Generator-5.9.2-portable.exe`
 
 L'installateur est recommandé pour une utilisation régulière. La version portable convient aux essais, à une utilisation temporaire ou à un disque amovible.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### Points forts de la v5.9.1
+### Points forts de la v5.9.2
 
-* L’en-tête de l’application Windows propose désormais une action d’enregistrement manuel. Le premier enregistrement crée une archive ; les suivants, après modification, mettent à jour cette même entrée.
-* Les sauvegardes manuelles peuvent être filtrées et chargées depuis l’historique. Seul le contenu sémantique du morceau et des paroles est conservé, jamais les styles, réglages, exports, chemins locaux ni configurations sensibles.
-* L’enregistrement reste toujours explicite : aucun enregistrement automatique ni nouveau raccourci `Ctrl+S`. Web Lite conserve son interface et son comportement actuels.
+* Corrige l’absence de pochette après le chargement d’une sauvegarde manuelle depuis l’historique.
+* Le chargement restaure uniquement l’URL de pochette assainie et utilise le proxy d’image et l’extraction de palette existants ; il ne réanalyse pas le lien du morceau et n’écrase ni les paroles, ni les traductions, ni les informations archivées.
+* Les anciennes sauvegardes sans URL de pochette restent sans pochette. L’interface et le comportement de Web Lite restent inchangés.
 
 ## 🌐 Notes de publication multilingues
 
 Par défaut, GitHub Release affiche un résumé en chinois simplifié. Consultez les notes complètes :
-[简体中文](./docs/releases/v5.9.1.zh-CN.md) · [繁體中文](./docs/releases/v5.9.1.zh-TW.md) · [English](./docs/releases/v5.9.1.en.md) · [Français](./docs/releases/v5.9.1.fr.md) · [日本語](./docs/releases/v5.9.1.ja.md) · [Español](./docs/releases/v5.9.1.es.md)
+[简体中文](./docs/releases/v5.9.2.zh-CN.md) · [繁體中文](./docs/releases/v5.9.2.zh-TW.md) · [English](./docs/releases/v5.9.2.en.md) · [Français](./docs/releases/v5.9.2.fr.md) · [日本語](./docs/releases/v5.9.2.ja.md) · [Español](./docs/releases/v5.9.2.es.md)
 
 <a id="fonctionnalités-principales"></a>
 
