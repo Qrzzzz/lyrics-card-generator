@@ -251,6 +251,22 @@ async function waitForHistoryTotal(expected, timeout = 15_000) {
   }, expected, { timeout });
 }
 
+async function waitForPersistedHistoryTotal(expected, timeout = 15_000) {
+  const deadline = Date.now() + timeout;
+  let observed = "unreadable";
+  while (Date.now() < deadline) {
+    try {
+      const document = JSON.parse(await readFile(historyPath, "utf8"));
+      observed = Array.isArray(document.records) ? document.records.length : "invalid";
+      if (observed === expected) return document;
+    } catch (error) {
+      observed = error instanceof Error ? error.message : String(error);
+    }
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
+  throw new Error(`History file did not persist ${expected} record(s) within ${timeout}ms; observed=${observed}`);
+}
+
 async function waitForLeadingHistoryKind(expected) {
   await page.waitForFunction(async (kind) => {
     const result = await window.lyricsCardDesktop?.listImportHistory({
@@ -1521,7 +1537,7 @@ try {
   await closeHistoryWithEscape();
 
   await performSearch("restart persistence", { waitForTotal: 1 });
-  const persistedBeforeRestart = JSON.parse(await readFile(historyPath, "utf8"));
+  const persistedBeforeRestart = await waitForPersistedHistoryTotal(1);
   assert.equal(persistedBeforeRestart.schemaVersion, 2);
   assert.equal(persistedBeforeRestart.records.length, 1);
   await closeThroughDesktopApi();
