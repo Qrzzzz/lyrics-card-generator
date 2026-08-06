@@ -41,6 +41,13 @@ const DEFAULT_TEST_CASES: LiveParseCase[] = [
     title: /^晴天$/,
     artist: /^(周杰伦|周杰倫|Jay Chou)$/,
     parseMethod: /^(spotify-oembed|spotify-og)$/
+  },
+  {
+    input: "https://open.spotify.com/track/4u7EnebtmKWzUH433cf5Qv",
+    source: "spotify",
+    title: /^Bohemian Rhapsody - Remastered 2011$/,
+    artist: /^Queen$/,
+    parseMethod: /^(spotify-oembed|spotify-og)$/
   }
 ];
 

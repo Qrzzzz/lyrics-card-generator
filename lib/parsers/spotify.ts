@@ -3,8 +3,7 @@ import {
   buildSongInfo,
   extractMeta,
   fetchHtml,
-  fetchJson,
-  splitTitleAndArtist
+  fetchJson
 } from "@/lib/parsers/shared";
 
 type SpotifyOEmbedResponse = {
@@ -36,13 +35,13 @@ async function parseSpotifyOEmbed(finalUrl: string, originalUrl: string) {
     throw new Error("Spotify oEmbed did not return usable metadata.");
   }
 
-  const parsed = splitSpotifyOEmbedTitle(rawTitle);
-  const artist = parsed.artist || (await fetchSpotifyMetaArtist(finalUrl, parsed.title));
+  const html = await fetchSpotifyMetadataHtml(finalUrl);
+  const parsed = resolveSpotifyMetadata(rawTitle, html);
 
   return buildSongInfo({
     source: "spotify",
     title: parsed.title,
-    artist,
+    artist: parsed.artist,
     coverUrl,
     originalUrl,
     finalUrl,
@@ -53,8 +52,7 @@ async function parseSpotifyOEmbed(finalUrl: string, originalUrl: string) {
 async function parseSpotifyOpenGraph(finalUrl: string, originalUrl: string) {
   const { html, finalUrl: fetchedFinalUrl } = await fetchSpotifyHtml(finalUrl);
   const meta = extractMeta(html, fetchedFinalUrl || finalUrl);
-  const parsed = splitTitleAndArtist(meta.rawTitle, "spotify");
-  const artist = parsed.artist || extractSpotifyArtistFromHtml(html, parsed.title) || extractSpotifyArtistFromDescription(meta.description);
+  const parsed = resolveSpotifyMetadata(meta.rawTitle, html);
 
   if (!parsed.title && !meta.image) {
     throw new Error("No usable song metadata was found.");
@@ -63,7 +61,7 @@ async function parseSpotifyOpenGraph(finalUrl: string, originalUrl: string) {
   return buildSongInfo({
     source: "spotify",
     title: parsed.title,
-    artist,
+    artist: parsed.artist,
     coverUrl: meta.image,
     originalUrl,
     finalUrl: fetchedFinalUrl || finalUrl,
@@ -71,11 +69,10 @@ async function parseSpotifyOpenGraph(finalUrl: string, originalUrl: string) {
   });
 }
 
-async function fetchSpotifyMetaArtist(finalUrl: string, title: string) {
+async function fetchSpotifyMetadataHtml(finalUrl: string) {
   try {
-    const { html, finalUrl: fetchedFinalUrl } = await fetchSpotifyHtml(finalUrl);
-    const meta = extractMeta(html, fetchedFinalUrl || finalUrl);
-    return extractSpotifyArtistFromHtml(html, title) || extractSpotifyArtistFromDescription(meta.description);
+    const { html } = await fetchSpotifyHtml(finalUrl);
+    return html;
   } catch {
     return "";
   }
@@ -91,6 +88,10 @@ async function fetchSpotifyHtml(url: string) {
 }
 
 function extractSpotifyArtistFromHtml(html: string, title: string) {
+  if (!html) {
+    return "";
+  }
+
   const $ = cheerio.load(html);
   const musicianDescription = cleanSpotifyArtist($('meta[name="music:musician_description"]').attr("content") || "");
   if (musicianDescription) {
@@ -108,6 +109,29 @@ function extractSpotifyArtistFromHtml(html: string, title: string) {
     const listenMatch = description.match(new RegExp(`^Listen to ${titlePrefix} on Spotify\\.\\s+Song\\s+·\\s+(.+?)\\s+·`, "i"));
     if (listenMatch?.[1]) {
       return cleanSpotifyArtist(listenMatch[1]);
+    }
+  }
+
+  const summaryDescriptions = [
+    $('meta[property="og:description"]').attr("content") || "",
+    $('meta[name="twitter:description"]').attr("content") || ""
+  ];
+  for (const summary of summaryDescriptions) {
+    const artist = extractSpotifyArtistFromDescription(summary);
+    if (artist) {
+      return artist;
+    }
+  }
+
+  const titleCandidates = [
+    $("title").first().text(),
+    $('meta[property="og:title"]').attr("content") || "",
+    $('meta[name="twitter:title"]').attr("content") || ""
+  ];
+  for (const candidate of titleCandidates) {
+    const artist = splitExplicitSpotifyTitle(candidate).artist;
+    if (artist) {
+      return artist;
     }
   }
 
@@ -150,7 +174,17 @@ function isSpotifyTrackId(value: string) {
   return /^[A-Za-z0-9]{22}$/.test(value);
 }
 
-function splitSpotifyOEmbedTitle(rawTitle: string) {
+export function resolveSpotifyMetadata(rawTitle: string, html = "") {
+  const parsed = splitExplicitSpotifyTitle(rawTitle);
+  const artist = extractSpotifyArtistFromHtml(html, parsed.title) || parsed.artist;
+
+  return {
+    title: stripConfirmedArtistSuffix(parsed.title, artist),
+    artist
+  };
+}
+
+function splitExplicitSpotifyTitle(rawTitle: string) {
   const cleaned = rawTitle.replace(/\s+/g, " ").trim();
   const withoutTail = cleaned
     .replace(/\s*\|\s*Spotify\s*$/i, "")
@@ -173,19 +207,30 @@ function splitSpotifyOEmbedTitle(rawTitle: string) {
     };
   }
 
-  const byMatch = withoutTail.match(/^(.+?)\s+by\s+(.+)$/i);
-  if (byMatch) {
-    return {
-      title: byMatch[1].trim(),
-      artist: byMatch[2].trim()
-    };
+  return {
+    title: withoutTail,
+    artist: ""
+  };
+}
+
+function stripConfirmedArtistSuffix(title: string, artist: string) {
+  if (!title || !artist) {
+    return title;
   }
 
-  const parsed = splitTitleAndArtist(withoutTail, "spotify");
-  return {
-    title: parsed.title,
-    artist: parsed.artist
-  };
+  for (const separator of [" - ", " by "]) {
+    const separatorIndex = title.toLowerCase().lastIndexOf(separator);
+    if (separatorIndex <= 0) {
+      continue;
+    }
+
+    const suffix = title.slice(separatorIndex + separator.length);
+    if (normalizeForCompare(suffix) === normalizeForCompare(artist)) {
+      return title.slice(0, separatorIndex).trim();
+    }
+  }
+
+  return title;
 }
 
 function normalizeForCompare(value: string) {
