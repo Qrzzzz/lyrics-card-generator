@@ -57,6 +57,8 @@ function trustedFixture(frameUrl = `${localUrl}/`, frameIsMain = true) {
 }
 
 const mainSource = readFileSync("electron/main.js", "utf8");
+const packagedServerReadinessSource = readFileSync("electron/packaged-server-readiness.js", "utf8");
+const desktopReadyRouteSource = readFileSync("app/api/desktop-ready/route.ts", "utf8");
 const importHistorySource = readFileSync("electron/import-history.js", "utf8");
 const manualSaveIpcSource = readFileSync("electron/manual-save-ipc.js", "utf8");
 const desktopApiSource = readFileSync("lib/desktop-api.ts", "utf8");
@@ -71,6 +73,29 @@ assert.match(mainSource, /setPermissionCheckHandler\(\(\) => false\)/);
 assert.match(mainSource, /parseAllowedExternalUrl\(url\)/);
 assert.match(mainSource, /isAllowedLocalNavigation\(url, localAppUrl\)/);
 assert.match(mainSource, /resolveLocalAppUrl\(\{/);
+assert.doesNotMatch(mainSource, /function waitForHttpReady\(/, "packaged startup no longer accepts arbitrary HTTP responses");
+assert.match(mainSource, /\[STARTUP_SECRET_ENV\]: startupSecret/, "the per-launch secret reaches only the child environment");
+assert.match(mainSource, /waitForPackagedServerReady\(\{[\s\S]*?child: spawnedServer,[\s\S]*?startupSecret/);
+assert.match(
+  mainSource,
+  /if \(!resolvedAppUrl\.waitForReady && !isChildProcessAlive\(nextServerProcess\)\)[\s\S]*?localAppUrl = resolvedAppUrl\.url/,
+  "the intended child is rechecked immediately before publishing the trusted renderer origin"
+);
+assert.match(
+  mainSource,
+  /function handleNextServerExit[\s\S]*?localAppUrl = null;[\s\S]*?mainWindow\.destroy\(\);[\s\S]*?app\.quit\(\)/,
+  "an unexpected bundled server exit revokes the renderer origin and closes the desktop shell"
+);
+assert.doesNotMatch(mainSource, /console\.(?:log|error)\([^\n]*startupSecret/, "the startup secret is never logged");
+assert.match(packagedServerReadinessSource, /response\.statusCode \?\? 0[\s\S]*?statusCode !== 200/);
+assert.match(packagedServerReadinessSource, /isChildProcessAlive\(child\)[\s\S]*?identity-proof/);
+assert.match(packagedServerReadinessSource, /timingSafeEqual/);
+assert.doesNotMatch(packagedServerReadinessSource, /console\./, "startup secrets and challenges are never logged");
+assert.match(desktopReadyRouteSource, /createHmac\("sha256", startupSecret\)\.update\(challenge\)/);
+assert.match(desktopReadyRouteSource, /"LYRICS_CARD_SERVER_STARTUP_SECRET"/);
+assert.match(desktopReadyRouteSource, /"x-lyrics-card-startup-challenge"/);
+assert.match(desktopReadyRouteSource, /status: 404/, "the readiness route is unavailable without the child secret and challenge");
+assert.match(desktopReadyRouteSource, /"Cache-Control": "no-store"/);
 
 const prepareElectronSource = readFileSync("scripts/prepare-electron-dist.mjs", "utf8");
 assert.match(prepareElectronSource, /"electron\/local-app-url\.js"/, "packaged desktop bundles the local URL policy helper");
@@ -80,6 +105,16 @@ assert.match(
   "desktop preparation copies the local URL policy helper into the minimal app"
 );
 assert.match(prepareElectronSource, /"electron\/import-history\.js"/, "packaged desktop bundles the import history store");
+assert.match(
+  prepareElectronSource,
+  /"electron\/packaged-server-readiness\.js"/,
+  "packaged desktop bundles the authenticated startup helper"
+);
+assert.match(
+  prepareElectronSource,
+  /path\.join\(projectRoot, "electron", "packaged-server-readiness\.js"\)[\s\S]*?path\.join\(electronOutputDir, "packaged-server-readiness\.js"\)/,
+  "desktop preparation copies the authenticated startup helper into the minimal app"
+);
 assert.match(
   prepareElectronSource,
   /path\.join\(projectRoot, "electron", "import-history\.js"\)[\s\S]*?path\.join\(electronOutputDir, "import-history\.js"\)/,

@@ -27,6 +27,12 @@ const {
 } = require("./import-history");
 const { resolveLocalAppUrl } = require("./local-app-url");
 const { createManualSaveIpcHandlers } = require("./manual-save-ipc");
+const {
+  STARTUP_SECRET_ENV,
+  createPackagedServerStartupSecret,
+  isChildProcessAlive,
+  waitForPackagedServerReady
+} = require("./packaged-server-readiness");
 const { isAllowedLocalNavigation, parseAllowedExternalUrl } = require("./url-policy");
 
 const HOST = "127.0.0.1";
@@ -95,14 +101,23 @@ function getAvailablePort() {
   });
 }
 
-function waitForHttpReady(url, timeoutMs = START_TIMEOUT_MS) {
+function waitForDevelopmentServer(url, timeoutMs = START_TIMEOUT_MS) {
   const startedAt = Date.now();
 
   return new Promise((resolve, reject) => {
     const check = () => {
       const request = http.get(url, (response) => {
         response.resume();
-        resolve();
+        if (response.statusCode && response.statusCode >= 200 && response.statusCode < 400) {
+          resolve();
+          return;
+        }
+
+        if (Date.now() - startedAt > timeoutMs) {
+          reject(new Error(`Timed out waiting for local development service at ${url}`));
+          return;
+        }
+        setTimeout(check, 300);
       });
 
       request.on("error", () => {
@@ -145,8 +160,9 @@ async function startPackagedNextServer() {
   const standaloneNodeModules = path.join(serverDirectory, "_node_modules");
   const port = await getAvailablePort();
   const url = `http://${HOST}:${port}`;
+  const startupSecret = createPackagedServerStartupSecret();
 
-  nextServerProcess = spawn(process.execPath, [serverEntry], {
+  const spawnedServer = spawn(process.execPath, [serverEntry], {
     cwd: serverDirectory,
     env: {
       ...process.env,
@@ -156,28 +172,40 @@ async function startPackagedNextServer() {
         ? `${standaloneNodeModules}${path.delimiter}${process.env.NODE_PATH}`
         : standaloneNodeModules,
       NODE_ENV: "production",
-      PORT: String(port)
+      PORT: String(port),
+      [STARTUP_SECRET_ENV]: startupSecret
     },
     stdio: ["ignore", "pipe", "pipe"],
     windowsHide: true
   });
 
-  nextServerProcess.stdout?.on("data", (chunk) => {
+  nextServerProcess = spawnedServer;
+
+  spawnedServer.stdout?.on("data", (chunk) => {
     console.log(`[next] ${chunk.toString().trimEnd()}`);
   });
 
-  nextServerProcess.stderr?.on("data", (chunk) => {
+  spawnedServer.stderr?.on("data", (chunk) => {
     console.error(`[next] ${chunk.toString().trimEnd()}`);
   });
 
-  nextServerProcess.once("exit", (code, signal) => {
-    if (nextServerProcess) {
-      console.error(`[next] exited code=${code} signal=${signal}`);
-    }
-  });
+  spawnedServer.once("exit", (code, signal) => handleNextServerExit(spawnedServer, code, signal));
 
-  await waitForHttpReady(url);
-  return url;
+  try {
+    await waitForPackagedServerReady({
+      url,
+      child: spawnedServer,
+      startupSecret,
+      timeoutMs: START_TIMEOUT_MS
+    });
+    if (nextServerProcess !== spawnedServer || !isChildProcessAlive(spawnedServer)) {
+      throw new Error("Bundled Next service exited before the renderer could be trusted.");
+    }
+    return url;
+  } catch (error) {
+    if (nextServerProcess === spawnedServer) stopNextServer();
+    throw error;
+  }
 }
 
 function createWindow() {
@@ -369,12 +397,17 @@ function applyWindowMaterial(theme) {
 }
 
 function stopNextServer() {
-  if (!nextServerProcess || nextServerProcess.killed) {
+  if (!nextServerProcess) {
     return;
   }
 
-  const pid = nextServerProcess.pid;
+  const serverProcess = nextServerProcess;
   nextServerProcess = null;
+  if (!isChildProcessAlive(serverProcess)) {
+    return;
+  }
+
+  const pid = serverProcess.pid;
 
   if (!pid) {
     return;
@@ -395,6 +428,18 @@ function stopNextServer() {
   }
 }
 
+function handleNextServerExit(serverProcess, code, signal) {
+  if (nextServerProcess !== serverProcess) return;
+  console.error(`[next] exited code=${code} signal=${signal}`);
+  nextServerProcess = null;
+  if (!localAppUrl && !mainWindow) return;
+
+  localAppUrl = null;
+  allowWindowClose = true;
+  if (mainWindow && !mainWindow.isDestroyed()) mainWindow.destroy();
+  app.quit();
+}
+
 async function boot() {
   try {
     await importHistoryStore.initialize().catch((error) => {
@@ -405,9 +450,12 @@ async function boot() {
       devServerUrl: process.env.ELECTRON_DEV_SERVER_URL,
       startLocalServer: startPackagedNextServer
     });
+    if (!resolvedAppUrl.waitForReady && !isChildProcessAlive(nextServerProcess)) {
+      throw new Error("Bundled Next service exited before the renderer could be trusted.");
+    }
     localAppUrl = resolvedAppUrl.url;
     if (resolvedAppUrl.waitForReady) {
-      await waitForHttpReady(localAppUrl);
+      await waitForDevelopmentServer(localAppUrl);
     }
     createWindow();
   } catch (error) {
