@@ -19,7 +19,7 @@
 <p>
   <strong>Navegación</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Descargar la última versión</a> ·
-  <a href="./docs/releases/v5.9.2.es.md">Notas de la versión</a> ·
+  <a href="./docs/releases/v5.9.3.es.md">Notas de la versión</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en línea</a> ·
   <a href="#funciones-principales">Funciones principales</a> ·
   <a href="#desarrollo-local">Desarrollo local</a> ·
@@ -49,25 +49,26 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 ## 📦 Descarga e instalación
 
-Descarga la versión más reciente desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
+Consulta [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) para las compilaciones disponibles públicamente. El empaquetado local de la versión candidata v5.9.3 usa estos nombres:
 
-* Instalador recomendado: `Lyrics Card Generator Setup 5.9.2.exe`
-* Versión portable: `Lyrics Card Generator-5.9.2-portable.exe`
+* Instalador: `Lyrics Card Generator Setup 5.9.3.exe`
+* Versión portable: `Lyrics Card Generator-5.9.3-portable.exe`
 
 El instalador se recomienda para uso habitual. La versión portable es útil para pruebas, uso temporal o ejecución desde una unidad extraíble.
 
 > La compilación actual no está firmada. Windows puede mostrar una advertencia de SmartScreen, algo habitual en aplicaciones personales sin firma.
 
-### Novedades de v5.9.2
+### Novedades de v5.9.3 (versión candidata local)
 
-* Corrige la ausencia de la portada guardada al cargar un archivo manual desde el historial.
-* La carga restaura únicamente la URL de portada saneada y utiliza el proxy de imágenes y la extracción de paleta existentes; no vuelve a analizar el enlace de la canción ni sobrescribe la letra, la traducción o los datos archivados.
-* Los archivos antiguos sin URL de portada siguen cargándose sin portada. Web Lite mantiene su interfaz y comportamiento actuales.
+* Refuerza el arranque empaquetado de Windows con una prueba HMAC distinta en cada ejecución, gestión de cierre seguro ante fallos de inicio, salida temprana y conflictos de puerto, y un único propietario para la ventana, el servidor local y la escritura del historial.
+* Aplica un límite de streaming de 100 MiB a los MP3 / FLAC y, antes de expandir Base64 / JSON, presupuestos de 8 MiB para portadas incrustadas y 256 Ki de caracteres para letras. El análisis de acceso aleatorio conserva las etiquetas APEv2 finales sin crear una segunda copia completa.
+* Mejora la extracción de artistas de Spotify y la clasificación de candidatos de NetEase, conservando sufijos legítimos de remasterización, mezcla y directo y priorizando coincidencias exactas de título / artista.
+* Actualiza a Next.js 15.5.21, desactiva la entrada del optimizador de imágenes que no se usa y completa las dependencias standalone del escritorio. Estos metadatos describen una versión candidata local; la disponibilidad pública depende de la página activa de GitHub Releases.
 
 ## 🌐 Notas de publicación multilingües
 
 GitHub Release muestra de forma predeterminada un resumen en chino simplificado. Consulta las notas completas:
-[简体中文](./docs/releases/v5.9.2.zh-CN.md) · [繁體中文](./docs/releases/v5.9.2.zh-TW.md) · [English](./docs/releases/v5.9.2.en.md) · [Français](./docs/releases/v5.9.2.fr.md) · [日本語](./docs/releases/v5.9.2.ja.md) · [Español](./docs/releases/v5.9.2.es.md)
+[简体中文](./docs/releases/v5.9.3.zh-CN.md) · [繁體中文](./docs/releases/v5.9.3.zh-TW.md) · [English](./docs/releases/v5.9.3.en.md) · [Français](./docs/releases/v5.9.3.fr.md) · [日本語](./docs/releases/v5.9.3.ja.md) · [Español](./docs/releases/v5.9.3.es.md)
 
 <a id="funciones-principales"></a>
 
