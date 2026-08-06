@@ -1158,8 +1158,29 @@ try {
   const routeCountsBeforeManualReplay = { ...routeCounts };
   await replayCard("manual-save");
   await manualRestartSurface.waitFor({ state: "hidden", timeout: 15_000 });
-  await page.waitForTimeout(350);
-  assert.deepEqual(routeCounts, routeCountsBeforeManualReplay, "manual-save replay performs no parse/network request");
+  const replayedCover = page.getByTestId("song-import-cover").locator("img");
+  await replayedCover.waitFor({ state: "visible", timeout: 15_000 });
+  await page.waitForFunction(() => {
+    const image = document.querySelector('[data-testid="song-import-cover"] img');
+    return image instanceof HTMLImageElement && image.complete && image.naturalWidth > 0;
+  }, null, { timeout: 15_000 });
+  const replayedCoverSrc = await replayedCover.getAttribute("src");
+  assert.ok(replayedCoverSrc, "manual-save replay renders a cover image");
+  const restoredCoverUrl = new URL(replayedCoverSrc, "http://localhost").searchParams.get("url");
+  assert.ok(restoredCoverUrl, "manual-save replay routes the archived cover through the image proxy");
+  const restoredCover = new URL(restoredCoverUrl);
+  assert.equal(
+    `${restoredCover.origin}${restoredCover.pathname}`,
+    "https://covers.example/manual-replay.png",
+    "manual-save replay restores the sanitized archived cover origin and path"
+  );
+  assert.equal(restoredCover.searchParams.get("param"), "1000y1000", "manual-save replay applies the existing high-resolution cover normalization");
+  assert.equal(restoredCover.searchParams.has("token"), false, "manual-save replay does not restore stripped cover tokens");
+  assert.equal(restoredCover.searchParams.has("api_key"), false, "manual-save replay does not restore stripped cover API keys");
+  assert.equal(routeCounts.parseSong, routeCountsBeforeManualReplay.parseSong, "manual-save cover restoration does not reparse the song URL");
+  assert.equal(routeCounts.resolveSearch, routeCountsBeforeManualReplay.resolveSearch, "manual-save cover restoration does not resolve search again");
+  assert.equal(routeCounts.localAudio, routeCountsBeforeManualReplay.localAudio, "manual-save cover restoration does not parse local audio again");
+  assert.equal(routeCounts.remoteCover, routeCountsBeforeManualReplay.remoteCover, "manual-save cover restoration never requests the remote cover directly");
   assert.equal(await currentSongTitle(), "Manual archive updated");
   await waitForManualSaveState("current");
 
@@ -1185,11 +1206,10 @@ try {
     await page.getByTestId("stepper-back-button").click();
     await linkInput.waitFor({ state: "visible", timeout: 15_000 });
     await page.waitForTimeout(350);
-    assert.deepEqual(
-      routeCounts,
-      routeCountsBeforeManualReplayRemount,
-      `manual replay remains local across song-import remount ${roundTrip}`
-    );
+    assert.equal(routeCounts.parseSong, routeCountsBeforeManualReplayRemount.parseSong, `manual replay does not reparse the song across remount ${roundTrip}`);
+    assert.equal(routeCounts.resolveSearch, routeCountsBeforeManualReplayRemount.resolveSearch, `manual replay does not resolve search across remount ${roundTrip}`);
+    assert.equal(routeCounts.localAudio, routeCountsBeforeManualReplayRemount.localAudio, `manual replay does not parse local audio across remount ${roundTrip}`);
+    assert.equal(routeCounts.remoteCover, routeCountsBeforeManualReplayRemount.remoteCover, `manual replay keeps cover remounts behind the image proxy ${roundTrip}`);
     assert.equal(await currentSongTitle(), "Manual replay local edit", `manual replay document survives remount ${roundTrip}`);
     assert.equal(await linkInput.inputValue(), replayUrl, `manual replay URL survives remount ${roundTrip}`);
     await waitForManualSaveState("update");
@@ -1208,11 +1228,14 @@ try {
   await page.waitForFunction(() => (
     document.querySelector('[data-testid="song-info-summary"]')?.textContent?.includes("History Artist 79992")
   ), null, { timeout: 15_000 });
-  assert.deepEqual(
-    routeCounts,
-    { ...routeCountsBeforeExplicitUrlImport, parseSong: routeCountsBeforeExplicitUrlImport.parseSong + 1 },
+  assert.equal(
+    routeCounts.parseSong,
+    routeCountsBeforeExplicitUrlImport.parseSong + 1,
     "an explicit URL edit restores exactly one normal auto-parse request on the next mount"
   );
+  assert.equal(routeCounts.resolveSearch, routeCountsBeforeExplicitUrlImport.resolveSearch, "the explicit URL import does not resolve search");
+  assert.equal(routeCounts.localAudio, routeCountsBeforeExplicitUrlImport.localAudio, "the explicit URL import does not parse local audio");
+  assert.equal(routeCounts.remoteCover, routeCountsBeforeExplicitUrlImport.remoteCover, "the explicit URL import does not request the archived cover directly");
   assert.notEqual(await currentSongTitle(), "Manual replay local edit", "the explicit URL import may replace the replayed snapshot");
   await waitForManualSaveState("create");
   manualRecords = await manualSaveRecords();
@@ -1236,7 +1259,10 @@ try {
   await replayCard("manual-save");
   await reboundManualSurface.waitFor({ state: "hidden", timeout: 15_000 });
   await page.waitForTimeout(350);
-  assert.deepEqual(routeCounts, routeCountsBeforeManualRebind, "replaying the archive again restores local-only provenance");
+  assert.equal(routeCounts.parseSong, routeCountsBeforeManualRebind.parseSong, "replaying the archive again restores provenance without reparsing the song");
+  assert.equal(routeCounts.resolveSearch, routeCountsBeforeManualRebind.resolveSearch, "replaying the archive again does not resolve search");
+  assert.equal(routeCounts.localAudio, routeCountsBeforeManualRebind.localAudio, "replaying the archive again does not parse local audio");
+  assert.equal(routeCounts.remoteCover, routeCountsBeforeManualRebind.remoteCover, "replaying the archive again keeps the cover behind the image proxy");
   assert.equal(await currentSongTitle(), "Manual archive updated");
   await waitForManualSaveState("current");
 
@@ -1684,7 +1710,7 @@ try {
       "local changed, missing, rejected relocate, and committed relocate",
       "cover-only/manual cover and ordinary-edit exclusion",
       "manual create/update/no-op, ordered clear boundaries, binding deletion/clear/not-found",
-      "manual replay without any network across repeated remounts, explicit URL release, exact empty-translation roundtrip",
+    "manual replay cover restoration through the image proxy without song reparse, explicit URL release, exact empty-translation roundtrip",
       "link/search/local failure intent settlement, ordinary replay creates a distinct save",
       "manual create/update failures, saved-revision retry, and 4,000-line pending-close drain",
       "remote failure and write-failure non-rollback"

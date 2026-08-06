@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v5.9.1.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v5.9.2.en.md">Release Notes</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
   <a href="#features">Features</a> ·
   <a href="#local-development">Local Development</a> ·
@@ -51,23 +51,23 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 Download the latest version from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Recommended installer: `Lyrics Card Generator Setup 5.9.1.exe`
-* Portable version: `Lyrics Card Generator-5.9.1-portable.exe`
+* Recommended installer: `Lyrics Card Generator Setup 5.9.2.exe`
+* Portable version: `Lyrics Card Generator-5.9.2-portable.exe`
 
 The installer is recommended for regular use. The portable version is useful for temporary use, testing, or running from a removable drive.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v5.9.1 Highlights
+### v5.9.2 Highlights
 
-* The Windows desktop header now has a manual Save action. The first save creates an archive entry; later saves after editing update that same entry.
-* Manual saves can be filtered and loaded from History. They retain semantic song and lyric content only—never styles, settings, exports, local paths, or sensitive configuration.
-* Saving is always explicit: there is no autosave and no new `Ctrl+S` shortcut. Web Lite keeps its existing interface and behavior.
+* Fixes an issue where loading a manual archive from History did not restore its saved album cover.
+* Loading restores only the sanitized cover URL and uses the existing image proxy and palette flow; it does not reparse the song link or overwrite archived lyrics, translations, or song metadata.
+* Older archives without a cover URL remain coverless. Web Lite keeps its existing interface and behavior.
 
 ## 🌐 Multilingual Release Notes
 
 GitHub Release displays a Simplified Chinese summary by default. See the full release notes:
-[简体中文](./docs/releases/v5.9.1.zh-CN.md) · [繁體中文](./docs/releases/v5.9.1.zh-TW.md) · [English](./docs/releases/v5.9.1.en.md) · [Français](./docs/releases/v5.9.1.fr.md) · [日本語](./docs/releases/v5.9.1.ja.md) · [Español](./docs/releases/v5.9.1.es.md)
+[简体中文](./docs/releases/v5.9.2.zh-CN.md) · [繁體中文](./docs/releases/v5.9.2.zh-TW.md) · [English](./docs/releases/v5.9.2.en.md) · [Français](./docs/releases/v5.9.2.fr.md) · [日本語](./docs/releases/v5.9.2.ja.md) · [Español](./docs/releases/v5.9.2.es.md)
 
 <a id="features"></a>
 

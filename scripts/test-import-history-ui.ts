@@ -119,7 +119,11 @@ const manualReplayBranch = editorActions.slice(
   editorActions.indexOf("const coverUrl = URL.createObjectURL")
 );
 assert.doesNotMatch(manualReplayBranch, /fetch\(/, "manual-save replay commits its stored snapshot without network parsing");
-assert.match(manualReplayBranch, /coverUrl: ""/, "manual-save replay cannot reactivate a remote cover URL");
+assert.match(
+  manualReplayBranch,
+  /coverUrl: snapshot\.coverUrl \|\| snapshot\.originalCoverUrl \|\| ""/,
+  "manual-save replay restores its sanitized cover URL so the normal image proxy and palette flow can run"
+);
 assert.match(editorActions, /const translationEnabled = snapshot\.translationEnabled;/);
 assert.match(
   editorActions,
@@ -157,8 +161,8 @@ assert.match(
 );
 assert.match(
   desktopHistoryInteractions,
-  /routeCountsBeforeManualReplayRemount[\s\S]*?roundTrip <= 2[\s\S]*?manual replay remains local across song-import remount/,
-  "desktop regression covers repeated component remounts after a URL-bearing manual replay"
+  /replayedCover[\s\S]*?manual-save replay routes the archived cover through the image proxy[\s\S]*?manual-save replay does not restore stripped cover tokens[\s\S]*?routeCountsBeforeManualReplayRemount[\s\S]*?roundTrip <= 2[\s\S]*?manual replay does not reparse the song across remount/,
+  "desktop regression covers restored cover loading and repeated component remounts after a URL-bearing manual replay"
 );
 assert.match(
   desktopHistoryInteractions,
@@ -172,8 +176,8 @@ assert.match(
 );
 assert.match(
   desktopHistoryInteractions,
-  /NetEase song identity while removing credentials[\s\S]*?manual replay retains its exact sanitized song identity[\s\S]*?manual replay remains local across song-import remount/,
-  "packaged replay keeps the allowlisted song ID with zero remount network activity"
+  /NetEase song identity while removing credentials[\s\S]*?manual replay retains its exact sanitized song identity[\s\S]*?manual replay does not reparse the song across remount/,
+  "packaged replay keeps the allowlisted song ID without reparsing it across remounts"
 );
 assert.match(
   desktopHistoryInteractions,

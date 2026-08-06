@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v5.9.1.zh-TW.md">發布說明</a> ·
+  <a href="./docs/releases/v5.9.2.zh-TW.md">發布說明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">線上 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="#本機開發">本機開發</a> ·
@@ -48,23 +48,23 @@
 
 請前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載最新版：
 
-* 建議一般使用者下載安裝版：`Lyrics Card Generator Setup 5.9.1.exe`
-* 不想安裝時可下載可攜版：`Lyrics Card Generator-5.9.1-portable.exe`
+* 建議一般使用者下載安裝版：`Lyrics Card Generator Setup 5.9.2.exe`
+* 不想安裝時可下載可攜版：`Lyrics Card Generator-5.9.2-portable.exe`
 
 安裝版適合長期使用；可攜版適合臨時執行、測試或放在隨身碟中使用。
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v5.9.1 更新重點
+### v5.9.2 更新重點
 
-* Windows 桌面版頂端新增手動存檔按鈕；第一次儲存會建立一筆存檔，繼續編輯後再次儲存則更新同一筆記錄。
-* 手動存檔可在歷史頁篩選並載入，只保存歌詞、翻譯和歌曲文字等語義內容，不保存樣式、設定、匯出圖片、本機路徑或敏感設定。
-* 這是明確觸發的手動儲存，不是自動儲存，也不新增 `Ctrl+S` 快捷鍵。Web Lite 維持原有介面與行為。
+* 修正從歷史記錄載入手動存檔後，已儲存的專輯封面不會恢復的問題。
+* 載入時只恢復經過安全清理的封面 URL，並透過既有圖片代理載入與取色；不會重新解析歌曲連結或覆寫存檔中的歌詞、翻譯和歌曲資訊。
+* 沒有封面 URL 的舊存檔仍維持無封面狀態；Web Lite 的介面與行為不變。
 
 ## 🌐 多語言發佈說明
 
 GitHub Release 預設顯示簡體中文摘要，完整說明請見：
-[简体中文](./docs/releases/v5.9.1.zh-CN.md) · [繁體中文](./docs/releases/v5.9.1.zh-TW.md) · [English](./docs/releases/v5.9.1.en.md) · [Français](./docs/releases/v5.9.1.fr.md) · [日本語](./docs/releases/v5.9.1.ja.md) · [Español](./docs/releases/v5.9.1.es.md)
+[简体中文](./docs/releases/v5.9.2.zh-CN.md) · [繁體中文](./docs/releases/v5.9.2.zh-TW.md) · [English](./docs/releases/v5.9.2.en.md) · [Français](./docs/releases/v5.9.2.fr.md) · [日本語](./docs/releases/v5.9.2.ja.md) · [Español](./docs/releases/v5.9.2.es.md)
 
 ## ✨ 主要功能
 

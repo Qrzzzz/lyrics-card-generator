@@ -821,10 +821,10 @@ export function useEditorActions({
         snapshot.finalUrl || snapshot.originalUrl || ""
       );
       setState((current) => replaceWithHistorySnapshot(current, snapshot, {
-        // Manual archives must replay from their persisted semantic snapshot only.
-        // Keeping the remote reference as provenance while leaving coverUrl empty
-        // prevents the normal editor cover-proxy/palette effects from issuing a request.
-        coverUrl: "",
+        // Manual archives replay their persisted semantic snapshot without reparsing
+        // the song. Restoring only the sanitized cover URL lets the existing image
+        // proxy and palette flow load the archived cover safely.
+        coverUrl: snapshot.coverUrl || snapshot.originalCoverUrl || "",
         originalCoverUrl: snapshot.originalCoverUrl || snapshot.coverUrl || "",
         parseMethod: snapshot.parseMethod || "import-history-manual-save"
       }));
