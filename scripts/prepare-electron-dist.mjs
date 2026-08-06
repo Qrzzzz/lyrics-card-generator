@@ -90,6 +90,7 @@ async function prepareMinimalElectronApp() {
         "electron/local-app-url.js",
         "electron/manual-save-ipc.js",
         "electron/packaged-server-readiness.js",
+        "electron/single-instance-ownership.js",
         "electron/url-policy.js",
         "electron/user-preferences.js",
         "package.json"
@@ -144,6 +145,10 @@ async function prepareMinimalElectronApp() {
   await cp(
     path.join(projectRoot, "electron", "packaged-server-readiness.js"),
     path.join(electronOutputDir, "packaged-server-readiness.js")
+  );
+  await cp(
+    path.join(projectRoot, "electron", "single-instance-ownership.js"),
+    path.join(electronOutputDir, "single-instance-ownership.js")
   );
   await cp(path.join(projectRoot, "electron", "url-policy.js"), path.join(electronOutputDir, "url-policy.js"));
   await cp(path.join(projectRoot, "electron", "user-preferences.js"), path.join(electronOutputDir, "user-preferences.js"));

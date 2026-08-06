@@ -58,6 +58,7 @@ function trustedFixture(frameUrl = `${localUrl}/`, frameIsMain = true) {
 
 const mainSource = readFileSync("electron/main.js", "utf8");
 const packagedServerReadinessSource = readFileSync("electron/packaged-server-readiness.js", "utf8");
+const singleInstanceOwnershipSource = readFileSync("electron/single-instance-ownership.js", "utf8");
 const desktopReadyRouteSource = readFileSync("app/api/desktop-ready/route.ts", "utf8");
 const importHistorySource = readFileSync("electron/import-history.js", "utf8");
 const manualSaveIpcSource = readFileSync("electron/manual-save-ipc.js", "utf8");
@@ -73,6 +74,23 @@ assert.match(mainSource, /setPermissionCheckHandler\(\(\) => false\)/);
 assert.match(mainSource, /parseAllowedExternalUrl\(url\)/);
 assert.match(mainSource, /isAllowedLocalNavigation\(url, localAppUrl\)/);
 assert.match(mainSource, /resolveLocalAppUrl\(\{/);
+const ownershipAcquisitionIndex = mainSource.indexOf("const singleInstanceOwnership = acquireSingleInstanceOwnership");
+const privilegedIpcRegistrationIndex = mainSource.indexOf("registerDesktopIpc();");
+const bootRegistrationIndex = mainSource.indexOf("app.whenReady().then(boot);");
+assert.ok(ownershipAcquisitionIndex >= 0, "the Electron entry acquires explicit single-instance ownership");
+assert.ok(
+  ownershipAcquisitionIndex < privilegedIpcRegistrationIndex && ownershipAcquisitionIndex < bootRegistrationIndex,
+  "single-instance ownership is decided before privileged IPC registration and boot"
+);
+assert.match(
+  mainSource,
+  /if \(singleInstanceOwnership\.hasLock\) \{\s*initializePrimaryInstance\(\);\s*\}/,
+  "only the owning process enters the primary lifecycle"
+);
+assert.match(singleInstanceOwnershipSource, /const hasLock = app\.requestSingleInstanceLock\(\)/);
+assert.match(singleInstanceOwnershipSource, /if \(!hasLock\) \{\s*app\.quit\(\)/);
+assert.match(singleInstanceOwnershipSource, /app\.on\("second-instance", requestPrimaryWindowFocus\)/);
+assert.match(singleInstanceOwnershipSource, /isMinimized\(\)[\s\S]*?restore\(\)[\s\S]*?isVisible\(\)[\s\S]*?show\(\)[\s\S]*?focus\(\)/);
 assert.doesNotMatch(mainSource, /function waitForHttpReady\(/, "packaged startup no longer accepts arbitrary HTTP responses");
 assert.match(mainSource, /\[STARTUP_SECRET_ENV\]: startupSecret/, "the per-launch secret reaches only the child environment");
 assert.match(mainSource, /waitForPackagedServerReady\(\{[\s\S]*?child: spawnedServer,[\s\S]*?startupSecret/);
@@ -114,6 +132,12 @@ assert.match(
   prepareElectronSource,
   /path\.join\(projectRoot, "electron", "packaged-server-readiness\.js"\)[\s\S]*?path\.join\(electronOutputDir, "packaged-server-readiness\.js"\)/,
   "desktop preparation copies the authenticated startup helper into the minimal app"
+);
+assert.match(prepareElectronSource, /"electron\/single-instance-ownership\.js"/, "packaged desktop bundles the ownership helper");
+assert.match(
+  prepareElectronSource,
+  /path\.join\(projectRoot, "electron", "single-instance-ownership\.js"\)[\s\S]*?path\.join\(electronOutputDir, "single-instance-ownership\.js"\)/,
+  "desktop preparation copies the single-instance ownership helper into the minimal app"
 );
 assert.match(
   prepareElectronSource,

@@ -33,6 +33,7 @@ const {
   isChildProcessAlive,
   waitForPackagedServerReady
 } = require("./packaged-server-readiness");
+const { acquireSingleInstanceOwnership } = require("./single-instance-ownership");
 const { isAllowedLocalNavigation, parseAllowedExternalUrl } = require("./url-policy");
 
 const HOST = "127.0.0.1";
@@ -44,11 +45,6 @@ const IMPORT_FILE_REGISTRATION_TTL_MS = 30 * 60 * 1000;
 if (process.env.LYRICS_CARD_TEST_USER_DATA) {
   app.setPath("userData", path.resolve(process.env.LYRICS_CARD_TEST_USER_DATA));
 }
-
-app.commandLine.appendSwitch(
-  "enable-features",
-  "OverlayScrollbar,OverlayScrollbarFlashAfterAnyScrollUpdate,OverlayScrollbarFlashWhenMouseEnter"
-);
 
 let mainWindow = null;
 let nextServerProcess = null;
@@ -64,8 +60,11 @@ const aiTranslationRequests = new AIRequestRegistry();
 const importFileRegistrations = new Map();
 const importHistoryRelocations = new Map();
 const importHistoryOperations = new Set();
-const importHistoryStore = new ImportHistoryStore({
-  filePath: path.join(app.getPath("userData"), "app-data", "import-history.json")
+let importHistoryStore = null;
+const singleInstanceOwnership = acquireSingleInstanceOwnership({
+  app,
+  getMainWindow: () => mainWindow,
+  isWindowClosing: () => allowWindowClose
 });
 
 const DEFAULT_AI_SETTINGS = {
@@ -230,6 +229,7 @@ function createWindow() {
       preload: path.join(__dirname, "preload.js")
     }
   });
+  const createdWindow = mainWindow;
   normalWindowBounds = mainWindow.getBounds();
   windowMaximized = false;
   lastEmittedWindowState = null;
@@ -274,7 +274,9 @@ function createWindow() {
     });
 
   mainWindow.once("ready-to-show", () => {
-    mainWindow?.show();
+    if (mainWindow !== createdWindow || createdWindow.isDestroyed()) return;
+    createdWindow.show();
+    singleInstanceOwnership.markWindowReady(createdWindow);
   });
   const desktopSession = mainWindow.webContents.session;
   desktopSession.setPermissionRequestHandler((_webContents, _permission, callback) => callback(false));
@@ -289,9 +291,10 @@ function createWindow() {
     requestRendererClose();
   });
   mainWindow.on("closed", () => {
+    singleInstanceOwnership.markWindowClosed(createdWindow);
     importFileRegistrations.clear();
     importHistoryRelocations.clear();
-    mainWindow = null;
+    if (mainWindow === createdWindow) mainWindow = null;
   });
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
@@ -436,6 +439,7 @@ function handleNextServerExit(serverProcess, code, signal) {
 
   localAppUrl = null;
   allowWindowClose = true;
+  singleInstanceOwnership.markQuitting();
   if (mainWindow && !mainWindow.isDestroyed()) mainWindow.destroy();
   app.quit();
 }
@@ -461,36 +465,52 @@ async function boot() {
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     dialog.showErrorBox("Lyrics Card Generator", `Unable to start the local desktop service.\n\n${message}`);
+    singleInstanceOwnership.markQuitting();
     app.quit();
   }
 }
 
-app.setAppUserModelId(APP_ID);
-Menu.setApplicationMenu(null);
-registerDesktopIpc();
-app.whenReady().then(boot);
+function initializePrimaryInstance() {
+  importHistoryStore = new ImportHistoryStore({
+    filePath: path.join(app.getPath("userData"), "app-data", "import-history.json")
+  });
+  app.commandLine.appendSwitch(
+    "enable-features",
+    "OverlayScrollbar,OverlayScrollbarFlashAfterAnyScrollUpdate,OverlayScrollbarFlashWhenMouseEnter"
+  );
+  app.setAppUserModelId(APP_ID);
+  Menu.setApplicationMenu(null);
+  registerDesktopIpc();
+  app.whenReady().then(boot);
 
-app.on("before-quit", (event) => {
-  if (mainWindow && !mainWindow.isDestroyed() && !allowWindowClose) {
-    event.preventDefault();
-    requestRendererClose();
-    return;
-  }
-  stopNextServer();
-});
+  app.on("before-quit", (event) => {
+    if (mainWindow && !mainWindow.isDestroyed() && !allowWindowClose) {
+      event.preventDefault();
+      requestRendererClose();
+      return;
+    }
+    singleInstanceOwnership.markQuitting();
+    stopNextServer();
+  });
 
-app.on("window-all-closed", () => {
-  stopNextServer();
-  if (process.platform !== "darwin") {
-    app.quit();
-  }
-});
+  app.on("window-all-closed", () => {
+    stopNextServer();
+    if (process.platform !== "darwin") {
+      singleInstanceOwnership.markQuitting();
+      app.quit();
+    }
+  });
 
-app.on("activate", () => {
-  if (BrowserWindow.getAllWindows().length === 0 && localAppUrl) {
-    createWindow();
-  }
-});
+  app.on("activate", () => {
+    if (BrowserWindow.getAllWindows().length === 0 && localAppUrl) {
+      createWindow();
+    }
+  });
+}
+
+if (singleInstanceOwnership.hasLock) {
+  initializePrimaryInstance();
+}
 
 function registerDesktopIpc() {
   const handle = (channel, handler) => ipcMain.handle(channel, (event, ...args) => {
