@@ -1,4 +1,5 @@
-import { parseWebStream } from "music-metadata";
+import { parseFromTokenizer } from "music-metadata";
+import { fromBlob } from "strtok3/core";
 import { appApiErrorResponse } from "@/lib/app-api-errors";
 import { appMutationRejectionResponse, validateAppMutationRequest } from "@/lib/app-request";
 import {
@@ -42,11 +43,15 @@ export async function POST(req: Request) {
   }
 
   try {
-    const metadata = await parseWebStream(file.stream(), {
-      mimeType: mimeType || mimeTypeFromExtension(extension),
-      path: file.name,
-      size: file.size
-    });
+    // Preserve the previous parser precedence: a recognized browser MIME type
+    // wins over a conflicting filename extension, while extension-only uploads
+    // still retain their original path hint.
+    const parserPath = mimeType === "audio/flac" || mimeType === "audio/x-flac"
+      ? "upload.flac"
+      : mimeType === "audio/mpeg" || mimeType === "audio/mp3"
+        ? "upload.mp3"
+        : file.name;
+    const metadata = await parseLocalAudioMetadata(file, parserPath);
     const picture = metadata.common.picture?.[0];
     const rawLyrics = extractLyrics(metadata);
     const metadataSizeRejection = localAudioMetadataSizeRejection(metadata.common.picture, rawLyrics);
@@ -81,7 +86,16 @@ export async function POST(req: Request) {
   }
 }
 
-function extractLyrics(metadata: Awaited<ReturnType<typeof parseWebStream>>) {
+async function parseLocalAudioMetadata(file: Blob, parserPath: string) {
+  const tokenizer = fromBlob(file, { fileInfo: { path: parserPath } });
+  try {
+    return await parseFromTokenizer(tokenizer, {});
+  } finally {
+    await tokenizer.close();
+  }
+}
+
+function extractLyrics(metadata: Awaited<ReturnType<typeof parseFromTokenizer>>) {
   const commonLyrics = firstLyricsValue(metadata.common.lyrics);
   if (commonLyrics) {
     return commonLyrics;
@@ -160,8 +174,4 @@ function getFileExtension(fileName: string) {
 
 function stripAudioExtension(fileName: string) {
   return fileName.replace(/\.(mp3|flac)$/i, "");
-}
-
-function mimeTypeFromExtension(extension: string) {
-  return extension === ".flac" ? "audio/flac" : "audio/mpeg";
 }

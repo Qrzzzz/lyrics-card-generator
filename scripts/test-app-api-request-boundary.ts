@@ -372,12 +372,51 @@ async function assertLocalAudioUploadLimits() {
   assert.equal(parsedPayload.data?.album, "Fixture Album");
   assert.equal(parsedPayload.data?.lyrics, "Fixture lyric");
 
+  const mismatchedExtensionAudio = new FormData();
+  mismatchedExtensionAudio.set(
+    "file",
+    new File([createId3AudioFixture()], "mislabeled.flac", { type: "audio/mpeg" })
+  );
+  const parsedMismatchedExtensionAudio = await parseLocalAudio(
+    formRequest(mismatchedExtensionAudio, APP_ORIGIN)
+  );
+  assert.equal(
+    parsedMismatchedExtensionAudio.status,
+    200,
+    "a recognized MIME type retains precedence over a conflicting extension"
+  );
+  const parsedMismatchedExtensionPayload = await parsedMismatchedExtensionAudio.json() as {
+    ok: boolean;
+    data?: { title?: string; lyrics?: string };
+  };
+  assert.equal(parsedMismatchedExtensionPayload.ok, true);
+  assert.equal(parsedMismatchedExtensionPayload.data?.title, "Fixture Title");
+  assert.equal(parsedMismatchedExtensionPayload.data?.lyrics, "Fixture lyric");
+
+  const apeAudio = new FormData();
+  apeAudio.set("file", new File([createApeV2AudioFixture()], "ape-fixture.mp3", { type: "audio/mpeg" }));
+  const parsedApeAudio = await parseLocalAudio(formRequest(apeAudio, APP_ORIGIN));
+  assert.equal(parsedApeAudio.status, 200, "an MP3 with trailing APEv2 metadata still parses");
+  const parsedApePayload = await parsedApeAudio.json() as {
+    ok: boolean;
+    data?: { title?: string; lyrics?: string };
+  };
+  assert.equal(parsedApePayload.ok, true);
+  assert.equal(parsedApePayload.data?.title, "APE Fixture");
+  assert.equal(parsedApePayload.data?.lyrics, "APE lyric");
+
   const routeSource = readFileSync("app/api/parse-local-audio/route.ts", "utf8");
   assert.match(
     routeSource,
-    /parseWebStream\(file\.stream\(\), \{\s*mimeType:[\s\S]*?path: file\.name,\s*size: file\.size\s*\}\)/,
-    "music-metadata receives the stream with MIME type, path, and exact size hints"
+    /fromBlob\(file, \{ fileInfo: \{ path: parserPath \} \}\)/,
+    "music-metadata uses bounded random-access Blob reads with a stable parser hint"
   );
+  assert.match(
+    routeSource,
+    /parseFromTokenizer\(tokenizer, \{\}\)/,
+    "the random-access tokenizer retains one options object for trailing-tag discovery"
+  );
+  assert.doesNotMatch(routeSource, /parseWebStream\(/, "non-seekable parsing cannot silently skip trailing APEv2 tags");
   assert.doesNotMatch(routeSource, /file\.arrayBuffer\(\)/, "metadata parsing does not materialize a second full file copy");
   const metadataGuardIndex = routeSource.indexOf("const metadataSizeRejection = localAudioMetadataSizeRejection");
   const coverEncodingIndex = routeSource.indexOf("pictureDataToBase64(picture.data)");
@@ -573,4 +612,52 @@ function createId3AudioFixture() {
     fixture.set([0xff, 0xfb, 0x90, 0x64], frameOffset);
   }
   return fixture;
+}
+
+function createApeV2AudioFixture() {
+  const encoder = new TextEncoder();
+  const item = (key: string, value: string) => {
+    const encodedValue = encoder.encode(value);
+    return concatBytes(
+      uint32Le(encodedValue.byteLength),
+      uint32Le(0),
+      encoder.encode(key),
+      new Uint8Array([0]),
+      encodedValue
+    );
+  };
+  const audioFrames = new Uint8Array(417 * 3);
+  for (let offset = 0; offset < audioFrames.byteLength; offset += 417) {
+    audioFrames.set([0xff, 0xfb, 0x90, 0x64], offset);
+  }
+  const items = [
+    item("Title", "APE Fixture"),
+    item("Lyrics", "[00:01.00]APE lyric")
+  ];
+  const itemBytes = items.reduce((total, value) => total + value.byteLength, 0);
+  const footer = concatBytes(
+    encoder.encode("APETAGEX"),
+    uint32Le(2000),
+    uint32Le(itemBytes + 32),
+    uint32Le(items.length),
+    uint32Le(0),
+    new Uint8Array(8)
+  );
+  return concatBytes(audioFrames, ...items, footer);
+}
+
+function uint32Le(value: number) {
+  const bytes = new Uint8Array(4);
+  new DataView(bytes.buffer).setUint32(0, value, true);
+  return bytes;
+}
+
+function concatBytes(...parts: Uint8Array[]) {
+  const result = new Uint8Array(parts.reduce((total, value) => total + value.byteLength, 0));
+  let offset = 0;
+  for (const part of parts) {
+    result.set(part, offset);
+    offset += part.byteLength;
+  }
+  return result;
 }
