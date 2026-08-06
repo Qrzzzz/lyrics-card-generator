@@ -2,6 +2,8 @@ import { appApiErrorResponse } from "@/lib/app-api-errors";
 import {
   isLocalAudioFileTooLarge,
   MAX_LOCAL_AUDIO_BYTES,
+  MAX_LOCAL_AUDIO_EMBEDDED_COVER_BYTES,
+  MAX_LOCAL_AUDIO_LYRICS_CHARACTERS,
   MAX_LOCAL_AUDIO_REQUEST_BYTES
 } from "@/lib/local-audio-limits";
 import {
@@ -52,4 +54,30 @@ export function localAudioFileSizeRejection(
   return isLocalAudioFileTooLarge(file, maxFileBytes)
     ? appApiErrorResponse("local_audio_too_large", 413)
     : null;
+}
+
+export function localAudioMetadataSizeRejection(
+  pictures: ReadonlyArray<{ data: { byteLength: number } }> | undefined,
+  rawLyrics: string,
+  maxCoverBytes = MAX_LOCAL_AUDIO_EMBEDDED_COVER_BYTES,
+  maxLyricsCharacters = MAX_LOCAL_AUDIO_LYRICS_CHARACTERS
+) {
+  if (rawLyrics.length > maxLyricsCharacters) {
+    return appApiErrorResponse("local_audio_too_large", 413);
+  }
+
+  let totalCoverBytes = 0;
+  for (const picture of pictures ?? []) {
+    const byteLength = picture?.data?.byteLength;
+    if (
+      !Number.isSafeInteger(byteLength)
+      || byteLength < 0
+      || byteLength > maxCoverBytes - totalCoverBytes
+    ) {
+      return appApiErrorResponse("local_audio_too_large", 413);
+    }
+    totalCoverBytes += byteLength;
+  }
+
+  return null;
 }

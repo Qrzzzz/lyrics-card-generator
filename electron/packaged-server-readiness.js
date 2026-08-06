@@ -27,6 +27,16 @@ function isChildProcessAlive(child) {
   );
 }
 
+function isChildProcessSpawnPending(child) {
+  return Boolean(
+    child
+    && (child.pid === undefined || child.pid === null)
+    && child.exitCode === null
+    && child.signalCode === null
+    && !child.killed
+  );
+}
+
 function childExitError(child, code = child?.exitCode, signal = child?.signalCode) {
   const exitCode = code === null || code === undefined ? "none" : String(code);
   const exitSignal = signal === null || signal === undefined ? "none" : String(signal);
@@ -75,7 +85,8 @@ function waitForPackagedServerReady({
   if (!HEX_256_PATTERN.test(startupSecret)) {
     return Promise.reject(new Error("Bundled Next startup secret is invalid."));
   }
-  if (!isChildProcessAlive(child)) {
+  const spawnPending = isChildProcessSpawnPending(child);
+  if (!isChildProcessAlive(child) && !spawnPending) {
     return Promise.reject(childExitError(child));
   }
 
@@ -242,7 +253,10 @@ function waitForPackagedServerReady({
     deadlineTimer = setTimeout(() => {
       finish(new Error(`Timed out waiting for authenticated bundled Next service at ${parsedUrl.origin}.`));
     }, timeoutMs);
-    check();
+    // A failed spawn has no pid before Node emits its asynchronous `error`
+    // event. Keep the listener installed so that failure is reported through
+    // the normal startup path instead of becoming an uncaught process error.
+    if (!spawnPending) check();
   });
 }
 

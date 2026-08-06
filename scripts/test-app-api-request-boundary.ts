@@ -14,10 +14,16 @@ import {
 import {
   LOCAL_AUDIO_MULTIPART_OVERHEAD_BYTES,
   MAX_LOCAL_AUDIO_BYTES,
+  MAX_LOCAL_AUDIO_EMBEDDED_COVER_BYTES,
+  MAX_LOCAL_AUDIO_LYRICS_CHARACTERS,
   MAX_LOCAL_AUDIO_REQUEST_BYTES,
   isLocalAudioFileTooLarge
 } from "../lib/local-audio-limits";
-import { localAudioFileSizeRejection, readLocalAudioMultipart } from "../lib/local-audio-request";
+import {
+  localAudioFileSizeRejection,
+  localAudioMetadataSizeRejection,
+  readLocalAudioMultipart
+} from "../lib/local-audio-request";
 
 const APP_ORIGIN = "http://127.0.0.1:3210";
 const CROSS_SITE_ORIGIN = "https://example.invalid";
@@ -113,6 +119,13 @@ try {
   assert.equal((await acceptedForm.json() as { code?: string }).code, "local_audio_missing_file");
 
   await assertLocalAudioUploadLimits();
+
+  const nextConfigSource = readFileSync("next.config.mjs", "utf8");
+  assert.match(
+    nextConfigSource,
+    /images:\s*\{\s*unoptimized:\s*true\s*\}/,
+    "Next image optimization stays disabled so image-proxy cannot reach sharp with untrusted bytes"
+  );
 
   const missingMarker = new Request(`${APP_ORIGIN}/api/parse-song`, {
     method: "POST",
@@ -366,9 +379,56 @@ async function assertLocalAudioUploadLimits() {
     "music-metadata receives the stream with MIME type, path, and exact size hints"
   );
   assert.doesNotMatch(routeSource, /file\.arrayBuffer\(\)/, "metadata parsing does not materialize a second full file copy");
+  const metadataGuardIndex = routeSource.indexOf("const metadataSizeRejection = localAudioMetadataSizeRejection");
+  const coverEncodingIndex = routeSource.indexOf("pictureDataToBase64(picture.data)");
+  const lyricExpansionIndex = routeSource.indexOf("stripLrcTimestamps(rawLyrics)");
+  assert.ok(
+    metadataGuardIndex >= 0
+      && metadataGuardIndex < coverEncodingIndex
+      && metadataGuardIndex < lyricExpansionIndex,
+    "embedded metadata budgets are checked before base64 and lyric expansion"
+  );
+  assert.match(
+    routeSource,
+    /Buffer\.from\(data\.buffer, data\.byteOffset, data\.byteLength\)\.toString\("base64"\)/,
+    "accepted cover encoding reuses the parser buffer instead of copying it"
+  );
 
   assert.equal(isLocalAudioFileTooLarge({ size: MAX_LOCAL_AUDIO_BYTES }), false);
   assert.equal(isLocalAudioFileTooLarge({ size: MAX_LOCAL_AUDIO_BYTES + 1 }), true);
+  assert.equal(MAX_LOCAL_AUDIO_EMBEDDED_COVER_BYTES, 8 * 1024 * 1024);
+  assert.equal(MAX_LOCAL_AUDIO_LYRICS_CHARACTERS, 256 * 1024);
+  assert.equal(
+    localAudioMetadataSizeRejection(
+      [{ data: { byteLength: 40 } }, { data: { byteLength: 60 } }],
+      "x".repeat(100),
+      100,
+      100
+    ),
+    null,
+    "exact aggregate cover and lyrics budgets remain valid"
+  );
+  const oversizedCoverMetadata = localAudioMetadataSizeRejection(
+    [{ data: { byteLength: 41 } }, { data: { byteLength: 60 } }],
+    "",
+    100,
+    100
+  );
+  assert.ok(oversizedCoverMetadata);
+  await assertStandardRejection(
+    oversizedCoverMetadata,
+    413,
+    "local_audio_too_large",
+    "aggregate embedded-cover budget"
+  );
+  const oversizedLyricsMetadata = localAudioMetadataSizeRejection([], "x".repeat(101), 100, 100);
+  assert.ok(oversizedLyricsMetadata);
+  await assertStandardRejection(
+    oversizedLyricsMetadata,
+    413,
+    "local_audio_too_large",
+    "embedded-lyrics budget"
+  );
   const clientSource = readFileSync("components/editor/LocalAudioParser.tsx", "utf8");
   const clientGuardIndex = clientSource.indexOf("isLocalAudioFileTooLarge(file)");
   const beginImportIndex = clientSource.indexOf("const intent = beginImport()", clientGuardIndex);

@@ -198,6 +198,24 @@ async function testEarlyChildExitRejectsImmediately() {
   }
 }
 
+async function testSpawnFailureRejectsThroughReadiness() {
+  const missingExecutable = `lyrics-card-missing-executable-${process.pid}-${Date.now()}`;
+  const child = spawn(missingExecutable, [], {
+    stdio: "ignore",
+    windowsHide: true
+  });
+
+  await assert.rejects(
+    waitForPackagedServerReady(readinessOptions(
+      `http://${HOST}:3210`,
+      child,
+      createPackagedServerStartupSecret()
+    )),
+    /Unable to start bundled Next service:.*ENOENT/
+  );
+  assert.equal(child.listenerCount("error"), 0, "spawn-failure listeners are cleaned after rejection");
+}
+
 async function testPortCompetitionAndDecoyFailClosed() {
   const decoy = http.createServer((_request, response) => {
     response.writeHead(503, { "content-type": "text/plain" });
@@ -243,6 +261,7 @@ async function run() {
   await testAuthenticatedNormalStartup();
   await testWrongStatusFailsClosed();
   await testWrongProofFailsClosed();
+  await testSpawnFailureRejectsThroughReadiness();
   await testEarlyChildExitRejectsImmediately();
   await testPortCompetitionAndDecoyFailClosed();
   console.log("Electron packaged server startup tests passed");

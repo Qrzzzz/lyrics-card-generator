@@ -1,7 +1,11 @@
 import { parseWebStream } from "music-metadata";
 import { appApiErrorResponse } from "@/lib/app-api-errors";
 import { appMutationRejectionResponse, validateAppMutationRequest } from "@/lib/app-request";
-import { localAudioFileSizeRejection, readLocalAudioMultipart } from "@/lib/local-audio-request";
+import {
+  localAudioFileSizeRejection,
+  localAudioMetadataSizeRejection,
+  readLocalAudioMultipart
+} from "@/lib/local-audio-request";
 import type { ParsedSongData } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -44,10 +48,15 @@ export async function POST(req: Request) {
       size: file.size
     });
     const picture = metadata.common.picture?.[0];
+    const rawLyrics = extractLyrics(metadata);
+    const metadataSizeRejection = localAudioMetadataSizeRejection(metadata.common.picture, rawLyrics);
+    if (metadataSizeRejection) {
+      return metadataSizeRejection;
+    }
     const coverUrl = picture
-      ? `data:${picture.format || "image/jpeg"};base64,${Buffer.from(picture.data).toString("base64")}`
+      ? `data:${picture.format || "image/jpeg"};base64,${pictureDataToBase64(picture.data)}`
       : "";
-    const lyrics = stripLrcTimestamps(extractLyrics(metadata));
+    const lyrics = stripLrcTimestamps(rawLyrics);
     const data: ParsedSongData = {
       source: "unknown",
       title: metadata.common.title?.trim() || stripAudioExtension(file.name),
@@ -73,8 +82,10 @@ export async function POST(req: Request) {
 }
 
 function extractLyrics(metadata: Awaited<ReturnType<typeof parseWebStream>>) {
-  const candidates: string[] = [];
-  addLyricsValue(candidates, metadata.common.lyrics);
+  const commonLyrics = firstLyricsValue(metadata.common.lyrics);
+  if (commonLyrics) {
+    return commonLyrics;
+  }
 
   for (const tags of Object.values(metadata.native)) {
     for (const tag of tags as NativeTag[]) {
@@ -87,35 +98,46 @@ function extractLyrics(metadata: Awaited<ReturnType<typeof parseWebStream>>) {
         id === "SYLT" ||
         id.includes("LYRIC")
       ) {
-        addLyricsValue(candidates, tag.value);
+        const lyrics = firstLyricsValue(tag.value);
+        if (lyrics) {
+          return lyrics;
+        }
       }
     }
   }
 
-  return candidates.map((candidate) => candidate.trim()).find(Boolean) ?? "";
+  return "";
 }
 
-function addLyricsValue(candidates: string[], value: unknown) {
+function firstLyricsValue(value: unknown): string {
   if (!value) {
-    return;
+    return "";
   }
 
   if (typeof value === "string") {
-    candidates.push(value);
-    return;
+    return /\S/u.test(value) ? value : "";
   }
 
   if (Array.isArray(value)) {
     for (const item of value) {
-      addLyricsValue(candidates, item);
+      const lyrics = firstLyricsValue(item);
+      if (lyrics) {
+        return lyrics;
+      }
     }
-    return;
+    return "";
   }
 
   if (typeof value === "object") {
     const record = value as Record<string, unknown>;
-    addLyricsValue(candidates, record.text ?? record.lyrics ?? record.value);
+    return firstLyricsValue(record.text ?? record.lyrics ?? record.value);
   }
+
+  return "";
+}
+
+function pictureDataToBase64(data: Uint8Array) {
+  return Buffer.from(data.buffer, data.byteOffset, data.byteLength).toString("base64");
 }
 
 function stripLrcTimestamps(text: string) {
