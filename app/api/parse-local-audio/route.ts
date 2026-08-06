@@ -1,11 +1,11 @@
-import { parseBuffer } from "music-metadata";
+import { parseWebStream } from "music-metadata";
 import { appApiErrorResponse } from "@/lib/app-api-errors";
 import { appMutationRejectionResponse, validateAppMutationRequest } from "@/lib/app-request";
+import { localAudioFileSizeRejection, readLocalAudioMultipart } from "@/lib/local-audio-request";
 import type { ParsedSongData } from "@/lib/types";
 
 export const runtime = "nodejs";
 
-const MAX_AUDIO_BYTES = 100 * 1024 * 1024;
 const ACCEPTED_EXTENSIONS = new Set([".mp3", ".flac"]);
 const ACCEPTED_MIME_TYPES = new Set(["audio/mpeg", "audio/mp3", "audio/flac", "audio/x-flac"]);
 
@@ -20,18 +20,11 @@ export async function POST(req: Request) {
     return appMutationRejectionResponse(rejection);
   }
 
-  let formData: FormData;
-
-  try {
-    formData = await req.formData();
-  } catch {
-    return appApiErrorResponse("local_audio_invalid_multipart", 400);
+  const multipart = await readLocalAudioMultipart(req);
+  if (!multipart.ok) {
+    return multipart.response;
   }
-
-  const file = formData.get("file");
-  if (!(file instanceof File)) {
-    return appApiErrorResponse("local_audio_missing_file", 400);
-  }
+  const { file } = multipart;
 
   const extension = getFileExtension(file.name);
   const mimeType = file.type.toLowerCase();
@@ -39,13 +32,17 @@ export async function POST(req: Request) {
     return appApiErrorResponse("local_audio_unsupported_type", 415);
   }
 
-  if (file.size > MAX_AUDIO_BYTES) {
-    return appApiErrorResponse("local_audio_too_large", 413);
+  const sizeRejection = localAudioFileSizeRejection(file);
+  if (sizeRejection) {
+    return sizeRejection;
   }
 
   try {
-    const bytes = Buffer.from(await file.arrayBuffer());
-    const metadata = await parseBuffer(bytes, { mimeType: mimeType || mimeTypeFromExtension(extension), path: file.name });
+    const metadata = await parseWebStream(file.stream(), {
+      mimeType: mimeType || mimeTypeFromExtension(extension),
+      path: file.name,
+      size: file.size
+    });
     const picture = metadata.common.picture?.[0];
     const coverUrl = picture
       ? `data:${picture.format || "image/jpeg"};base64,${Buffer.from(picture.data).toString("base64")}`
@@ -75,7 +72,7 @@ export async function POST(req: Request) {
   }
 }
 
-function extractLyrics(metadata: Awaited<ReturnType<typeof parseBuffer>>) {
+function extractLyrics(metadata: Awaited<ReturnType<typeof parseWebStream>>) {
   const candidates: string[] = [];
   addLyricsValue(candidates, metadata.common.lyrics);
 

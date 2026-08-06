@@ -7,6 +7,7 @@ import { createAppRequestHeaders } from "@/lib/app-request";
 import { getLyricsCardDesktopApi } from "@/lib/desktop-api";
 import { getLocalizedAppApiError, type AppApiErrorCode } from "@/lib/app-api-errors";
 import type { createT } from "@/lib/i18n";
+import { isLocalAudioFileTooLarge } from "@/lib/local-audio-limits";
 import type { ParsedSongData } from "@/lib/types";
 import type { DocumentImportIntent } from "@/lib/editor/document-transactions";
 import type { LocalAudioImportHistoryContext } from "@/lib/import-history";
@@ -47,6 +48,13 @@ export function LocalAudioParser({
 
   async function parseFile(file?: File) {
     if (!file) {
+      return;
+    }
+    if (isLocalAudioFileTooLarge(file)) {
+      setFileName(file.name);
+      setStatus("error");
+      setMessage(getLocalizedAppApiError("local_audio_too_large", t, ""));
+      if (inputRef.current) inputRef.current.value = "";
       return;
     }
     const intent = beginImport();
