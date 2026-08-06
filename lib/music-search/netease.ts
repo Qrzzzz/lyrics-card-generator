@@ -6,6 +6,8 @@ import type { ResolvedSongSearchResult, SongSearchResult } from "@/lib/music-sea
 const SEARCH_ENDPOINT = "https://music.163.com/api/search/get/web";
 const DETAIL_ENDPOINT = "https://music.163.com/api/song/detail";
 const LYRIC_ENDPOINT = "https://music.163.com/api/song/lyric";
+const SEARCH_CANDIDATE_LIMIT = 100;
+const STRONG_MATCH_RANK = 450;
 
 const NETEASE_HEADERS = {
   ...REQUEST_HEADERS,
@@ -32,7 +34,7 @@ export function buildNeteaseSongUrl(id: string) {
 export async function searchNeteaseSongs(keyword: string, limit = 8): Promise<SongSearchResult[]> {
   const form = new URLSearchParams();
   form.set("s", keyword);
-  form.set("limit", String(limit));
+  form.set("limit", String(SEARCH_CANDIDATE_LIMIT));
   form.set("type", "1");
   form.set("offset", "0");
 
@@ -51,7 +53,7 @@ export async function searchNeteaseSongs(keyword: string, limit = 8): Promise<So
     throw new Error(`NetEase search returned HTTP ${response.status}.`);
   }
 
-  return normalizeNeteaseSearchSongs(await response.json(), limit);
+  return normalizeNeteaseSearchSongs(await response.json(), limit, keyword);
 }
 
 export async function resolveNeteaseSong(id: string): Promise<ResolvedSongSearchResult> {
@@ -72,15 +74,96 @@ export async function resolveNeteaseSong(id: string): Promise<ResolvedSongSearch
   };
 }
 
-export function normalizeNeteaseSearchSongs(input: unknown, limit: number): SongSearchResult[] {
+export function normalizeNeteaseSearchSongs(
+  input: unknown,
+  limit: number,
+  keyword = ""
+): SongSearchResult[] {
   const record = asRecord(input);
   const result = asRecord(record.result);
   const songs = Array.isArray(result.songs) ? result.songs : [];
 
-  return songs
+  const normalized = songs
     .map((song) => toSearchResult(song))
-    .filter((song): song is SongSearchResult => song !== null)
-    .slice(0, limit);
+    .filter((song): song is SongSearchResult => song !== null);
+
+  return rankNeteaseSearchResults(normalized, keyword).slice(0, limit);
+}
+
+function rankNeteaseSearchResults(songs: SongSearchResult[], keyword: string) {
+  const query = normalizeSemanticText(keyword);
+  if (!query) {
+    return songs;
+  }
+
+  const ranked = songs.map((song, index) => ({
+    song,
+    index,
+    rank: getSemanticMatchRank(song, query)
+  }));
+
+  if (!ranked.some((item) => item.rank >= STRONG_MATCH_RANK)) {
+    return songs;
+  }
+
+  return ranked
+    .sort((left, right) => right.rank - left.rank || left.index - right.index)
+    .map((item) => item.song);
+}
+
+function getSemanticMatchRank(song: SongSearchResult, query: string) {
+  const title = normalizeSemanticText(song.title);
+  const artists = song.artists.map(normalizeSemanticText).filter(Boolean);
+  const titleMentioned = Boolean(title) && query.includes(title);
+  const mentionedArtistCount = artists.filter((artist) => query.includes(artist)).length;
+
+  if (artists.length > 0 && coversSemanticParts(query, [title, ...artists])) {
+    return 700;
+  }
+
+  if (query === title || (artists.length > 0 && coversSemanticParts(query, artists))) {
+    return 600;
+  }
+
+  if (artists.some((artist) => query === artist)) {
+    return 550;
+  }
+
+  if (titleMentioned && mentionedArtistCount === artists.length && artists.length > 0) {
+    return 500;
+  }
+
+  if (titleMentioned && mentionedArtistCount > 0) {
+    return 450;
+  }
+
+  if (titleMentioned) {
+    return 300;
+  }
+
+  return mentionedArtistCount > 0 ? 250 : 0;
+}
+
+function coversSemanticParts(query: string, parts: string[]) {
+  const normalizedParts = parts.filter(Boolean).sort((left, right) => right.length - left.length);
+  if (normalizedParts.length !== parts.length || normalizedParts.length === 0) {
+    return false;
+  }
+
+  let remainder = query;
+  for (const part of normalizedParts) {
+    const index = remainder.indexOf(part);
+    if (index < 0) {
+      return false;
+    }
+    remainder = remainder.slice(0, index) + remainder.slice(index + part.length);
+  }
+
+  return /^[\p{P}\p{S}]*$/u.test(remainder);
+}
+
+function normalizeSemanticText(value: string) {
+  return value.normalize("NFKC").toLowerCase().replace(/\s+/gu, "");
 }
 
 export function normalizeNeteaseDetail(input: unknown, id: string): ParsedSongData {
