@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
-import { ExportPanel } from "@/components/editor/ExportPanel";
+import { lazy, Suspense, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import { LocalAudioParser } from "@/components/editor/LocalAudioParser";
 import { LyricsFetchPanel } from "@/components/editor/LyricsFetchPanel";
 import { LyricsWorkspace } from "@/components/editor/LyricsWorkspace";
@@ -15,7 +15,7 @@ import {
   LayoutSettingsPanel,
   VisualSettingsPanel
 } from "@/components/editor/StylePanel";
-import { AiTranslatePanel } from "@/components/lyrics/AiTranslatePanel";
+import { useStableEvent } from "@/components/editor/hooks/useStableEvent";
 import type { ExportFormatId, ExportQualityId } from "@/lib/settings/types";
 import type { ExportLyricLineStatus } from "@/lib/lyrics-document";
 import type { ExportCardReadinessStore } from "@/components/editor/hooks/export-card-readiness-store";
@@ -38,6 +38,16 @@ import type {
   ParsedSongData,
   SongInfo
 } from "@/lib/types";
+
+const LazyAiTranslatePanel = lazy(async () => {
+  const imported = await import("@/components/lyrics/AiTranslatePanel");
+  return { default: imported.AiTranslatePanel };
+});
+
+const LazyExportPanel = lazy(async () => {
+  const imported = await import("@/components/editor/ExportPanel");
+  return { default: imported.ExportPanel };
+});
 
 export type EditorStepsAiState = {
   isOpen: boolean;
@@ -182,12 +192,41 @@ export function useEditorSteps({
       return;
     }
 
-    handlers.onSaveSongInfo({ ...songInfoDraft }, manualCoverContextRef.current);
+    onSaveSongInfo({ ...songInfoDraft }, manualCoverContextRef.current);
     manualCoverContextRef.current = { uploaded: false };
     setSongInfoEditRevision(null);
     setSongInfoExpanded(false);
     restoreSongInfoToggleFocus();
   }
+
+  const onUrlChange = useStableEvent(handlers.onUrlChange);
+  const onBeginSongImport = useStableEvent(handlers.onBeginSongImport);
+  const onSearchedSongResolved = useStableEvent(handlers.onSearchedSongResolved);
+  const onSongParsed = useStableEvent(handlers.onSongParsed);
+  const onLocalAudioParsed = useStableEvent(handlers.onLocalAudioParsed);
+  const onSaveSongInfo = useStableEvent(handlers.onSaveSongInfo);
+  const onSongChange = useStableEvent(handlers.onSongChange);
+  const onUseFetchedLyrics = useStableEvent(handlers.onUseFetchedLyrics);
+  const onLyricsChange = useStableEvent(handlers.onLyricsChange);
+  const onTranslationEnabledChange = useStableEvent(handlers.onTranslationEnabledChange);
+  const onTranslationTextChange = useStableEvent(handlers.onTranslationTextChange);
+  const onLyricsDocumentChange = useStableEvent(handlers.onLyricsDocumentChange);
+  const onOpenAiTranslate = useStableEvent(handlers.onOpenAiTranslate);
+  const onCloseAiTranslate = useStableEvent(handlers.onCloseAiTranslate);
+  const onCancelAiTranslate = useStableEvent(handlers.onCancelAiTranslate);
+  const onConfirmAiTranslate = useStableEvent(handlers.onConfirmAiTranslate);
+  const onStyleChange = useStableEvent(handlers.onStyleChange);
+  const onFontSchemePreviewChange = useStableEvent(handlers.onFontSchemePreviewChange);
+  const onExportFormatChange = useStableEvent(handlers.onExportFormatChange);
+  const onExportQualityChange = useStableEvent(handlers.onExportQualityChange);
+  const onExport = useStableEvent(handlers.onExport);
+  const toggleSongInfoEditorEvent = useStableEvent(toggleSongInfoEditor);
+  const updateSongInfoDraftEvent = useStableEvent(updateSongInfoDraft);
+  const saveSongInfoEditorEvent = useStableEvent(saveSongInfoEditor);
+  const closeSongInfoEditorEvent = useStableEvent(closeSongInfoEditor);
+  const onManualCoverChange = useStableEvent((context: ManualCoverImportHistoryContext) => {
+    manualCoverContextRef.current = context;
+  });
 
   useEffect(() => {
     if (!songInfoExpanded) {
@@ -207,8 +246,7 @@ export function useEditorSteps({
     window.requestAnimationFrame(() => songInfoToggleRef.current?.focus({ preventScroll: true }));
   }, [documentRevision, songInfoEditRevision, songInfoExpanded, state.song]);
 
-  return [
-    {
+  const linkStep = useMemo<SettingsStep>(() => ({
       id: "link",
       title: t("step.chooseSong"),
       description: t("songSearchDescription"),
@@ -216,7 +254,7 @@ export function useEditorSteps({
       isComplete: Boolean(state.url.trim() || state.song.title.trim() || state.song.artist.trim() || state.song.coverUrl?.trim()),
       secondaryAction: {
         label: t("manualOverride"),
-        onClick: toggleSongInfoEditor,
+        onClick: toggleSongInfoEditorEvent,
         expanded: songInfoExpanded,
         controls: songInfoRegionId,
         testId: "song-info-toggle",
@@ -226,8 +264,8 @@ export function useEditorSteps({
         <div className="song-import-primary grid gap-4" data-testid="song-search-primary">
           <SongSearchParser
             t={t}
-            beginImport={() => handlers.onBeginSongImport("search")}
-            onResolved={handlers.onSearchedSongResolved}
+            beginImport={() => onBeginSongImport("search")}
+            onResolved={onSearchedSongResolved}
           />
           <div
             className="song-import-primary__alternates grid min-w-0 gap-4 min-[1180px]:grid-cols-2 [&>section]:min-w-0"
@@ -235,17 +273,17 @@ export function useEditorSteps({
           >
             <SongLinkParser
               url={state.url}
-              onUrlChange={handlers.onUrlChange}
-              beginImport={() => handlers.onBeginSongImport("link")}
-              onParsed={handlers.onSongParsed}
+              onUrlChange={onUrlChange}
+              beginImport={() => onBeginSongImport("link")}
+              onParsed={onSongParsed}
               t={t}
               autoParseOnMount
               autoParseVisitIntent={songLinkAutoParseVisitIntent}
             />
             <LocalAudioParser
               t={t}
-              beginImport={() => handlers.onBeginSongImport("local-audio")}
-              onParsed={handlers.onLocalAudioParsed}
+              beginImport={() => onBeginSongImport("local-audio")}
+              onParsed={onLocalAudioParsed}
             />
           </div>
         </div>
@@ -258,10 +296,8 @@ export function useEditorSteps({
           manualForm={(
             <SongInfoForm
               song={songInfoDraft}
-              onSongChange={updateSongInfoDraft}
-              onManualCoverChange={(context) => {
-                manualCoverContextRef.current = context;
-              }}
+              onSongChange={updateSongInfoDraftEvent}
+              onManualCoverChange={onManualCoverChange}
               onManualCoverPendingChange={setManualCoverPending}
               t={t}
               showToggle={false}
@@ -271,12 +307,33 @@ export function useEditorSteps({
           manualExpanded={songInfoExpanded}
           manualRegionId={songInfoRegionId}
           manualSavePending={manualCoverPending}
-          onSave={saveSongInfoEditor}
-          onCancel={closeSongInfoEditor}
+          onSave={saveSongInfoEditorEvent}
+          onCancel={closeSongInfoEditorEvent}
         />
       )
-    },
-    {
+  }), [
+    closeSongInfoEditorEvent,
+    manualCoverPending,
+    onBeginSongImport,
+    onLocalAudioParsed,
+    onManualCoverChange,
+    onSearchedSongResolved,
+    onSongParsed,
+    onUrlChange,
+    saveSongInfoEditorEvent,
+    songInfoDraft,
+    songInfoExpanded,
+    songInfoRegionId,
+    songLinkAutoParseVisitIntent,
+    state.locale,
+    state.song,
+    state.url,
+    t,
+    toggleSongInfoEditorEvent,
+    updateSongInfoDraftEvent
+  ]);
+
+  const lyricsStep = useMemo<SettingsStep>(() => ({
       id: "lyrics",
       title: t("step.lyrics"),
       description: t("manualText"),
@@ -290,39 +347,41 @@ export function useEditorSteps({
             lineStatus={lyricsLayout.lineStatus}
             sidebarTab={lyricsSidebarTab}
             onSidebarTabChange={setLyricsSidebarTab}
-            onLyricsChange={handlers.onLyricsChange}
+            onLyricsChange={onLyricsChange}
             translationEnabled={state.style.translationEnabled}
             translationText={state.style.translationText}
-            onTranslationEnabledChange={handlers.onTranslationEnabledChange}
-            onTranslationTextChange={handlers.onTranslationTextChange}
-            onLyricsDocumentChange={handlers.onLyricsDocumentChange}
-            onAITranslate={handlers.onOpenAiTranslate}
-            onCloseAITranslate={handlers.onCloseAiTranslate}
-            onCancelAITranslate={handlers.onCancelAiTranslate}
+            onTranslationEnabledChange={onTranslationEnabledChange}
+            onTranslationTextChange={onTranslationTextChange}
+            onLyricsDocumentChange={onLyricsDocumentChange}
+            onAITranslate={onOpenAiTranslate}
+            onCloseAITranslate={onCloseAiTranslate}
+            onCancelAITranslate={onCancelAiTranslate}
             isAITranslating={ai.isTranslating}
             aiPanel={ai.isOpen ? (
-              <AiTranslatePanel
-                locale={state.locale}
-                initialStyle={ai.defaultStyle}
-                initialReasoning={ai.reasoningEnabled}
-                promptLibrary={ai.promptLibrary}
-                loading={ai.isTranslating}
-                streamingText={ai.streamingText}
-                reasoningText={ai.reasoningText}
-                phase={ai.phase}
-                themeColor={themeColor}
-                error={ai.error}
-                onClose={handlers.onCloseAiTranslate}
-                onCancel={handlers.onCancelAiTranslate}
-                onConfirm={handlers.onConfirmAiTranslate}
-              />
+              <Suspense fallback={<DeferredAiPanelFallback backLabel={t("step.back")} onClose={onCloseAiTranslate} />}>
+                <LazyAiTranslatePanel
+                  locale={state.locale}
+                  initialStyle={ai.defaultStyle}
+                  initialReasoning={ai.reasoningEnabled}
+                  promptLibrary={ai.promptLibrary}
+                  loading={ai.isTranslating}
+                  streamingText={ai.streamingText}
+                  reasoningText={ai.reasoningText}
+                  phase={ai.phase}
+                  themeColor={themeColor}
+                  error={ai.error}
+                  onClose={onCloseAiTranslate}
+                  onCancel={onCancelAiTranslate}
+                  onConfirm={onConfirmAiTranslate}
+                />
+              </Suspense>
             ) : null}
             lyricsFetchPanel={(
               <LyricsFetchPanel
                 song={state.song}
                 available={canFetchLyrics}
                 documentRevision={documentRevision}
-                onUseLyrics={handlers.onUseFetchedLyrics}
+                onUseLyrics={onUseFetchedLyrics}
                 t={t}
               />
             )}
@@ -333,8 +392,40 @@ export function useEditorSteps({
           />
         </div>
       )
-    },
-    {
+  }), [
+    ai.defaultStyle,
+    ai.error,
+    ai.isOpen,
+    ai.isTranslating,
+    ai.phase,
+    ai.promptLibrary,
+    ai.reasoningEnabled,
+    ai.reasoningText,
+    ai.streamingText,
+    canFetchLyrics,
+    documentRevision,
+    lyricsLayout.lineStatus,
+    lyricsSidebarTab,
+    onCancelAiTranslate,
+    onCloseAiTranslate,
+    onConfirmAiTranslate,
+    onLyricsChange,
+    onLyricsDocumentChange,
+    onOpenAiTranslate,
+    onTranslationEnabledChange,
+    onTranslationTextChange,
+    onUseFetchedLyrics,
+    state.locale,
+    state.lyrics,
+    state.song,
+    state.style.contentMode,
+    state.style.translationEnabled,
+    state.style.translationText,
+    t,
+    themeColor
+  ]);
+
+  const layoutStep = useMemo<SettingsStep>(() => ({
       id: "layout",
       title: t("step.layout"),
       description: t("layoutCompatibility"),
@@ -343,12 +434,13 @@ export function useEditorSteps({
       content: (
         <LayoutSettingsPanel
           style={state.style}
-          onStyleChange={handlers.onStyleChange}
+          onStyleChange={onStyleChange}
           t={t}
         />
       )
-    },
-    {
+  }), [onStyleChange, state.style, t]);
+
+  const fontStep = useMemo<SettingsStep>(() => ({
       id: "font",
       title: t("step.fontScheme"),
       description: t("fontSchemeDescription"),
@@ -357,13 +449,14 @@ export function useEditorSteps({
       content: (
         <FontSchemeSettingsPanel
           style={state.style}
-          onStyleChange={handlers.onStyleChange}
-          onFontSchemePreviewChange={handlers.onFontSchemePreviewChange}
+          onStyleChange={onStyleChange}
+          onFontSchemePreviewChange={onFontSchemePreviewChange}
           t={t}
         />
       )
-    },
-    {
+  }), [onFontSchemePreviewChange, onStyleChange, state.style, t]);
+
+  const visualStep = useMemo<SettingsStep>(() => ({
       id: "visual",
       title: t("step.visual"),
       description: t("background"),
@@ -372,36 +465,103 @@ export function useEditorSteps({
       content: (
         <VisualSettingsPanel
           style={state.style}
-          onStyleChange={handlers.onStyleChange}
+          onStyleChange={onStyleChange}
           song={state.song}
-          onSongChange={handlers.onSongChange}
+          onSongChange={onSongChange}
           t={t}
         />
       )
-    },
-    {
+  }), [onSongChange, onStyleChange, state.song, state.style, t]);
+
+  const exportStep = useMemo<SettingsStep>(() => ({
       id: "export",
       title: t("step.export"),
       presentation: "preview-workbench",
       isComplete: true,
       primaryAction: {
         label: t("step.complete"),
-        onClick: handlers.onExport,
+        onClick: onExport,
         disabled: isExporting,
         readinessStore: exportReadinessStore
       },
       content: (
-        <ExportPanel
-          t={t}
-          accentColor={themeColor}
-          exportFormat={exportFormat}
-          onExportFormatChange={handlers.onExportFormatChange}
-          exportQuality={exportQuality}
-          onExportQualityChange={handlers.onExportQualityChange}
-          isExporting={isExporting}
-          readinessStore={exportReadinessStore}
-        />
+        <Suspense fallback={<DeferredExportPanelFallback label={t("step.export")} />}>
+          <LazyExportPanel
+            t={t}
+            accentColor={themeColor}
+            exportFormat={exportFormat}
+            onExportFormatChange={onExportFormatChange}
+            exportQuality={exportQuality}
+            onExportQualityChange={onExportQualityChange}
+            isExporting={isExporting}
+            readinessStore={exportReadinessStore}
+          />
+        </Suspense>
       )
-    }
-  ];
+  }), [
+    exportFormat,
+    exportQuality,
+    exportReadinessStore,
+    isExporting,
+    onExport,
+    onExportFormatChange,
+    onExportQualityChange,
+    t,
+    themeColor
+  ]);
+
+  return useMemo(
+    () => [linkStep, lyricsStep, layoutStep, fontStep, visualStep, exportStep],
+    [exportStep, fontStep, layoutStep, linkStep, lyricsStep, visualStep]
+  );
+}
+
+function DeferredAiPanelFallback({
+  backLabel,
+  onClose
+}: {
+  backLabel: string;
+  onClose: () => void;
+}) {
+  const backButtonRef = useRef<HTMLButtonElement | null>(null);
+
+  useLayoutEffect(() => {
+    const fallbackBackButton = backButtonRef.current;
+    return () => {
+      if (document.activeElement !== fallbackBackButton) return;
+      window.requestAnimationFrame(() => {
+        document.querySelector<HTMLButtonElement>(
+          '[data-testid="lyrics-translation-ai-page"][data-page-active="true"] [data-testid="ai-translate-panel"] [data-testid="lyrics-ai-page-back"]'
+        )?.focus({ preventScroll: true });
+      });
+    };
+  }, []);
+
+  return (
+    <section className="flex h-full min-h-0 flex-col" data-testid="ai-translate-panel-loading" aria-busy="true">
+      <div className="flex shrink-0 items-center border-b border-[rgb(var(--panel-border))] p-3">
+        <button
+          ref={backButtonRef}
+          type="button"
+          data-testid="lyrics-ai-page-back"
+          aria-label={backLabel}
+          onClick={onClose}
+          className="control-focus app-button inline-flex size-9 items-center justify-center rounded-lg"
+        >
+          <ArrowLeft className="size-4" aria-hidden="true" />
+        </button>
+      </div>
+      <div className="grid min-h-0 flex-1 place-items-center" role="status" aria-label={backLabel}>
+        <Loader2 className="app-text-subtle size-5 animate-spin" aria-hidden="true" />
+      </div>
+    </section>
+  );
+}
+
+function DeferredExportPanelFallback({ label }: { label: string }) {
+  return (
+    <div className="settings-panel-card grid min-h-56 place-items-center" role="status" aria-label={label} aria-busy="true">
+      <Loader2 className="app-text-subtle size-5 animate-spin" aria-hidden="true" />
+    </div>
+  );
 }

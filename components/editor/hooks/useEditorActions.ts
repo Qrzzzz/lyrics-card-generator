@@ -10,7 +10,6 @@ import {
   applyEditorStyleChange,
   isDocumentSemanticStyleChange
 } from "@/lib/editor/apply-style-change";
-import { exportNodeAsImage } from "@/lib/export-image";
 import { createExportSnapshot, type ExportSnapshot } from "@/lib/export-snapshot";
 import {
   ExportTransactionMutex,
@@ -584,15 +583,18 @@ export function useEditorActions({
         return waitForExportSnapshotNode(() => cardRef.current, mountedSnapshot.id, signal);
       },
       validateSnapshot: (mountedSnapshot) => getExportBlockMessage?.(mountedSnapshot) ?? null,
-      captureSnapshot: (mountedSnapshot, node, signal) => exportNodeAsImage(
-        node,
-        mountedSnapshot.fileName,
-        mountedSnapshot.format,
-        mountedSnapshot.width,
-        mountedSnapshot.height,
-        mountedSnapshot.pixelRatio,
-        signal
-      ),
+      captureSnapshot: async (mountedSnapshot, node, signal) => {
+        const { exportNodeAsImage } = await import("@/lib/export-image");
+        return exportNodeAsImage(
+          node,
+          mountedSnapshot.fileName,
+          mountedSnapshot.format,
+          mountedSnapshot.width,
+          mountedSnapshot.height,
+          mountedSnapshot.pixelRatio,
+          signal
+        );
+      },
       unmountSnapshot: () => {
         setActiveExportSnapshot(null);
         setIsCompleteExporting(false);

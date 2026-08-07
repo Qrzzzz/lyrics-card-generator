@@ -43,7 +43,7 @@ assert.doesNotMatch(lyricEditor, /if \(!isEditorSurfaceActive\) return/);
 assert.match(editorHeader, /ref=\{settingsButtonRef\}[\s\S]*data-testid="settings-button"[\s\S]*onClick=\{\(\) => onOpenSettings\(\)\}/);
 assert.match(editorHeader, /ref=\{examplesButtonRef\}[\s\S]*data-testid="examples-button"/);
 assert.match(editorHeader, /\{onOpenHistory \? \([\s\S]*data-testid="history-button"/);
-assert.match(lyricEditor, /onOpenHistory=\{isDesktopShell \? \(\) => setActiveSurface\("history"\) : undefined\}/);
+assert.match(lyricEditor, /onOpenHistory=\{isDesktopShell \? openHistory : undefined\}/);
 assert.doesNotMatch(editorHeader, /app-icon\.png"[\s\S]*?border border-\[rgb\(var\(--panel-border\)\)\]/);
 assert.doesNotMatch(aboutSettings, /app-icon\.png"[\s\S]*?border border-white\/15/);
 assert.match(settingsSurface, /data-testid="settings-surface"/);

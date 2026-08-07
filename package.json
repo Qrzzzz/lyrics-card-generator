@@ -24,6 +24,7 @@
     "web-lite:build": "node scripts/build-web-lite.mjs",
     "web-lite:check": "node scripts/check-web-lite.mjs",
     "web-lite:smoke": "playwright test --config=playwright.web-lite.config.ts",
+    "render-boundaries:test": "next build && node scripts/prepare-render-boundary-server.mjs && node scripts/run-render-boundary-tests.mjs",
     "a11y:test": "playwright test --config=playwright.web-lite.config.ts --grep axe",
     "stability:test": "tsx scripts/test-app-preferences-reconciliation.ts && tsx scripts/test-app-preferences-behavior.ts && tsx scripts/test-shutdown-coordinator.ts && tsx scripts/test-ai-error-localization.ts && tsx scripts/test-locale-completeness.ts && node scripts/test-electron-ai-request-lifecycle.cjs && node scripts/test-electron-security-contract.cjs && node scripts/test-electron-packaged-server-startup.cjs && node scripts/test-electron-single-instance.cjs && node scripts/test-release-workflow.cjs && node scripts/test-ci-workflow.cjs",
     "coverage": "c8 --include=lib/settings/app-preferences-reconciliation.ts --include=lib/ai/error-copy.ts --check-coverage --lines 85 --functions 85 --branches 80 --statements 85 tsx scripts/test-stability-coverage.ts",

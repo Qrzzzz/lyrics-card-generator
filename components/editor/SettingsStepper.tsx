@@ -26,6 +26,7 @@ import {
   workbenchStepPanelVariants
 } from "@/lib/motion/tokens";
 import { cn } from "@/lib/utils";
+import { recordRenderBoundary } from "@/components/editor/render-boundary-diagnostics";
 
 export type SettingsStepPresentation = "focus" | "lyrics-workspace" | "preview-workbench";
 
@@ -198,6 +199,7 @@ export function SettingsStepper({
   companionAside,
   workbenchResizeLabel = "Resize settings and preview panes"
 }: SettingsStepperProps) {
+  recordRenderBoundary("Stepper");
   const reduceMotion = useAppReducedMotion();
   const previousStepRef = useRef(currentStep);
   const previousStep = previousStepRef.current;

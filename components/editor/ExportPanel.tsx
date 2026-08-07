@@ -11,6 +11,7 @@ import { FieldLabel, Section, SegmentedControl } from "@/components/ui/controls"
 import { resolveExportSafetyMessage } from "@/lib/export-safety";
 import { EXPORT_FORMAT_OPTIONS, type ExportFormatId, type ExportQualityId } from "@/lib/settings/types";
 import type { createT } from "@/lib/i18n";
+import { recordRenderBoundary } from "@/components/editor/render-boundary-diagnostics";
 
 export function ExportPanel({
   t,
@@ -37,6 +38,7 @@ export function ExportPanel({
   qualityOptions?: readonly ExportQualityId[];
   qualityLabels?: Partial<Record<ExportQualityId, string>>;
 }) {
+  recordRenderBoundary("ExportPanel");
   const readiness = useOptionalExportCardReadinessSnapshot(readinessStore);
   const resolvedBlockingMessage = blockingMessage ?? (
     readiness?.blockingReason

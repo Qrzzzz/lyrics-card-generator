@@ -4,6 +4,7 @@ import { resolve } from "node:path";
 
 const read = (file: string) => readFileSync(resolve(file), "utf8");
 const lyricEditor = read("components/editor/LyricEditor.tsx");
+const deferredEditorSurfaces = read("components/editor/DeferredEditorSurfaces.tsx");
 const editorHeader = read("components/editor/EditorHeader.tsx");
 const historyFloor = read("components/editor/HistoryFloor.tsx");
 const editorActions = read("components/editor/hooks/useEditorActions.ts");
@@ -24,8 +25,18 @@ const desktopHistoryInteractions = read("scripts/test-desktop-import-history-int
 
 // These integration contracts ensure History remains desktop-only and that its
 // UI wiring reaches the same persistence and transaction layers tested below.
-assert.match(lyricEditor, /\{isDesktopShell \? \(\s*<HistoryFloor/);
-assert.match(lyricEditor, /onOpenHistory=\{isDesktopShell \? \(\) => setActiveSurface\("history"\) : undefined\}/);
+assert.match(
+  lyricEditor,
+  /\{isDesktopShell \? \(\s*<DeferredHistorySurface[\s\S]*?mounted=\{mountedSurfaces\.history\}/,
+  "History remains desktop-only and is mounted only after first use"
+);
+assert.match(lyricEditor, /const openHistory = useCallback\(\(\) => openSurface\("history"\)/);
+assert.match(lyricEditor, /onOpenHistory=\{isDesktopShell \? openHistory : undefined\}/);
+assert.match(
+  deferredEditorSurfaces,
+  /const LazyHistoryFloor = lazy\([\s\S]*?import\("@\/components\/editor\/HistoryFloor"\)/,
+  "the desktop history floor remains a separately loaded module"
+);
 assert.doesNotMatch(
   [webLiteApp, webLiteHeader, webLiteEntry].join("\n"),
   /HistoryFloor|import-history|history-button|manual-save|manualSave|createManualSave|updateManualSave/,
