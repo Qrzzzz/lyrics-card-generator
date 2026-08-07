@@ -6,6 +6,10 @@ import type { ReactNode, RefObject } from "react";
 import { useRef } from "react";
 import { useBalancedStepperLayout } from "@/components/editor/hooks/useBalancedStepperLayout";
 import {
+  useOptionalExportCardReadinessSnapshot,
+  type ExportCardReadinessStore
+} from "@/components/editor/hooks/export-card-readiness-store";
+import {
   resolvePreviewWorkbenchTrack,
   usePreviewWorkbenchSplit
 } from "@/components/editor/hooks/usePreviewWorkbenchSplit";
@@ -53,6 +57,7 @@ export type SettingsStep = {
     label: ReactNode;
     onClick: () => void | Promise<void>;
     disabled?: boolean;
+    readinessStore?: ExportCardReadinessStore;
   };
 };
 
@@ -98,6 +103,10 @@ function StepActions({
   const isLastStep = stepIndex >= stepCount - 1;
   const secondaryAction = step.secondaryAction;
   const primaryAction = step.primaryAction;
+  const primaryReadiness = useOptionalExportCardReadinessSnapshot(primaryAction?.readinessStore);
+  const isPrimaryActionDisabled = Boolean(
+    primaryAction?.disabled || (primaryReadiness && !primaryReadiness.isReady)
+  );
 
   function goToStep(nextStep: number) {
     onStepChange(Math.min(Math.max(nextStep, 0), stepCount - 1));
@@ -144,7 +153,7 @@ function StepActions({
             color={themeColor}
             speed="7.2s"
             onClick={() => void primaryAction.onClick()}
-            disabled={primaryAction.disabled}
+            disabled={isPrimaryActionDisabled}
             className="complete-export-button transition hover:scale-[1.006] disabled:cursor-default disabled:opacity-70"
             style={{
               minHeight: 44,

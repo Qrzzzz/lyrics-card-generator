@@ -16,7 +16,6 @@ import {
   DEFAULT_INSTRUMENTAL_TEXT,
   defaultState
 } from "@/components/editor/editor-defaults";
-import { useMeasuredAutoCanvasHeight } from "@/components/editor/hooks/useMeasuredAutoCanvasHeight";
 import { useMeasuredAutoCanvasWidth } from "@/components/editor/hooks/useMeasuredAutoCanvasWidth";
 import {
   getLiveExportCardValidation,
@@ -125,7 +124,6 @@ export function WebLiteEditor() {
   useCoverPalette(activeCover, setState);
   useResolvedTextColor(state, setState);
   const autoWidthReadiness = useMeasuredAutoCanvasWidth(state, setState, autoWidthMeasurementRef);
-  useMeasuredAutoCanvasHeight(state, setState, exportCardRef, autoWidthReadiness.isStable);
 
   const parsedState = useMemo(
     () => ({
@@ -143,14 +141,12 @@ export function WebLiteEditor() {
     previousExportStateRef.current = parsedState;
     exportRevisionRef.current += 1;
   }
-  const exportReadiness = useExportCardReadiness({
+  const { store: exportReadinessStore } = useExportCardReadiness({
     state: parsedState,
+    setState,
     exportCardRef,
     isAutoWidthStable: autoWidthReadiness.isStable
   });
-  const exportBlockingMessage = exportReadiness.blockingReason
-    ? resolveExportSafetyMessage(exportReadiness.blockingReason, exportReadiness.lineStatus.totalLineCount, t)
-    : undefined;
   const accentColor = resolveUiAccentColor({
     settings: WEB_LITE_SETTINGS,
     palette: state.palette
@@ -351,7 +347,12 @@ export function WebLiteEditor() {
     );
     const liveBlockingMessage = liveValidation.blockingReason
       ? resolveExportSafetyMessage(liveValidation.blockingReason, liveValidation.lineStatus.totalLineCount, t)
-      : exportBlockingMessage;
+      : (() => {
+          const readiness = exportReadinessStore.getSnapshot();
+          return readiness.blockingReason
+            ? resolveExportSafetyMessage(readiness.blockingReason, readiness.lineStatus.totalLineCount, t)
+            : undefined;
+        })();
     if (liveBlockingMessage) {
       showToast(liveBlockingMessage);
       return;
@@ -498,7 +499,8 @@ export function WebLiteEditor() {
       primaryAction: {
         label: t("step.complete"),
         onClick: completeAndExport,
-        disabled: isExporting
+        disabled: isExporting,
+        readinessStore: exportReadinessStore
       },
       content: (
         <ExportPanel
@@ -515,7 +517,7 @@ export function WebLiteEditor() {
           qualityOptions={EXPORT_QUALITY_OPTIONS}
           qualityLabels={{ medium: copy.exportStandard, high: copy.exportHigh }}
           isExporting={isExporting}
-          blockingMessage={exportBlockingMessage}
+          readinessStore={exportReadinessStore}
         />
       )
     }

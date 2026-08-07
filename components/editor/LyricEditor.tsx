@@ -36,7 +36,6 @@ import {
   useSyncedCoverProxy
 } from "@/components/editor/hooks/useLyricEditorEffects";
 import { resolveEditorThemeTokens } from "@/components/editor/resolveEditorThemeTokens";
-import { useMeasuredAutoCanvasHeight } from "@/components/editor/hooks/useMeasuredAutoCanvasHeight";
 import { useMeasuredAutoCanvasWidth } from "@/components/editor/hooks/useMeasuredAutoCanvasWidth";
 import {
   getLiveExportCardValidation,
@@ -131,15 +130,15 @@ export function LyricEditor() {
   useCoverPalette(coverForPalette, setState);
   useResolvedTextColor(state, setState);
   const autoWidthReadiness = useMeasuredAutoCanvasWidth(state, setState, autoWidthMeasurementRef);
-  useMeasuredAutoCanvasHeight(state, setState, exportCardRef, autoWidthReadiness.isStable);
-  const exportReadiness = useExportCardReadiness({
+  const {
+    store: exportReadinessStore,
+    lineStatus: exportLineStatus
+  } = useExportCardReadiness({
     state: parsedState,
+    setState,
     exportCardRef,
     isAutoWidthStable: autoWidthReadiness.isStable
   });
-  const exportBlockMessage = exportReadiness.blockingReason
-    ? resolveExportSafetyMessage(exportReadiness.blockingReason, exportReadiness.lineStatus.totalLineCount, t)
-    : undefined;
   const {
     userSettings,
     backgroundImageUrl,
@@ -223,7 +222,6 @@ export function LyricEditor() {
     cardRef: captureCardRef,
     exportPixelRatio,
     exportFormat,
-    exportBlockMessage,
     getExportBlockMessage: (snapshot) => {
       const validationState = snapshot ? snapshotAsAppState(snapshot, parsedState) : parsedState;
       const validation = getLiveExportCardValidation(
@@ -393,11 +391,11 @@ export function LyricEditor() {
     canFetchLyrics,
     themeColor: resolvedAccentColor,
     isExporting: isCompleteExporting,
-    exportBlockingMessage: exportBlockMessage,
+    exportReadinessStore,
     exportFormat,
     exportQuality,
     lyricsLayout: {
-      lineStatus: exportReadiness.lineStatus
+      lineStatus: exportLineStatus
     },
     documentRevision,
     songLinkAutoParseVisitIntent,

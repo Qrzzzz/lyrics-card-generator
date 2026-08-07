@@ -3,7 +3,12 @@
 import { AlertTriangle, ImageDown } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useAppReducedMotion } from "@/components/motion/AppMotionProvider";
+import {
+  useOptionalExportCardReadinessSnapshot,
+  type ExportCardReadinessStore
+} from "@/components/editor/hooks/export-card-readiness-store";
 import { FieldLabel, Section, SegmentedControl } from "@/components/ui/controls";
+import { resolveExportSafetyMessage } from "@/lib/export-safety";
 import { EXPORT_FORMAT_OPTIONS, type ExportFormatId, type ExportQualityId } from "@/lib/settings/types";
 import type { createT } from "@/lib/i18n";
 
@@ -16,6 +21,7 @@ export function ExportPanel({
   onExportQualityChange,
   isExporting,
   blockingMessage,
+  readinessStore,
   qualityOptions = ["low", "medium", "high"],
   qualityLabels
 }: {
@@ -27,9 +33,16 @@ export function ExportPanel({
   onExportQualityChange: (quality: ExportQualityId) => void;
   isExporting: boolean;
   blockingMessage?: string;
+  readinessStore?: ExportCardReadinessStore;
   qualityOptions?: readonly ExportQualityId[];
   qualityLabels?: Partial<Record<ExportQualityId, string>>;
 }) {
+  const readiness = useOptionalExportCardReadinessSnapshot(readinessStore);
+  const resolvedBlockingMessage = blockingMessage ?? (
+    readiness?.blockingReason
+      ? resolveExportSafetyMessage(readiness.blockingReason, readiness.lineStatus.totalLineCount, t)
+      : undefined
+  );
   const resolvedQualityLabels: Record<ExportQualityId, string> = {
     low: qualityLabels?.low ?? t("qualityLow"),
     medium: qualityLabels?.medium ?? t("qualityMedium"),
@@ -45,13 +58,13 @@ export function ExportPanel({
       contentClassName="gap-4"
     >
       <div aria-busy={isExporting} className="grid gap-4">
-        {blockingMessage ? (
+        {resolvedBlockingMessage ? (
           <div
             role="alert"
             className="status-warning flex items-start gap-3 rounded-lg border px-3 py-3 text-sm leading-relaxed"
           >
             <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-            <span>{blockingMessage}</span>
+            <span>{resolvedBlockingMessage}</span>
           </div>
         ) : null}
         <FieldLabel label={t("exportFormat")} className="gap-3">

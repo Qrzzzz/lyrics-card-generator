@@ -18,6 +18,7 @@ import {
 import { AiTranslatePanel } from "@/components/lyrics/AiTranslatePanel";
 import type { ExportFormatId, ExportQualityId } from "@/lib/settings/types";
 import type { ExportLyricLineStatus } from "@/lib/lyrics-document";
+import type { ExportCardReadinessStore } from "@/components/editor/hooks/export-card-readiness-store";
 import type { AISettingsSummary, AITranslationPhase } from "@/lib/ai/types";
 import type { createT } from "@/lib/i18n";
 import { revokeReplacedBlobUrl } from "@/lib/object-url-lifecycle";
@@ -90,7 +91,7 @@ type UseEditorStepsInput = {
   canFetchLyrics: boolean;
   themeColor: string;
   isExporting: boolean;
-  exportBlockingMessage?: string;
+  exportReadinessStore: ExportCardReadinessStore;
   exportFormat: ExportFormatId;
   exportQuality: ExportQualityId;
   lyricsLayout: {
@@ -108,7 +109,7 @@ export function useEditorSteps({
   canFetchLyrics,
   themeColor,
   isExporting,
-  exportBlockingMessage,
+  exportReadinessStore,
   exportFormat,
   exportQuality,
   lyricsLayout,
@@ -386,7 +387,8 @@ export function useEditorSteps({
       primaryAction: {
         label: t("step.complete"),
         onClick: handlers.onExport,
-        disabled: isExporting || Boolean(exportBlockingMessage)
+        disabled: isExporting,
+        readinessStore: exportReadinessStore
       },
       content: (
         <ExportPanel
@@ -397,7 +399,7 @@ export function useEditorSteps({
           exportQuality={exportQuality}
           onExportQualityChange={handlers.onExportQualityChange}
           isExporting={isExporting}
-          blockingMessage={exportBlockingMessage}
+          readinessStore={exportReadinessStore}
         />
       )
     }
