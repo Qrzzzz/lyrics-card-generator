@@ -7,7 +7,7 @@ const net = require("node:net");
 const path = require("node:path");
 const { getBackgroundImageMime, safeBackgroundPathForUserData } = require("./background-images");
 const { normalizePromptLibrary } = require("./ai-prompt-settings");
-const { normalizeFontOptions } = require("./font-options");
+const { createWindowsFontDirectoryService } = require("./font-directory-service");
 const {
   buildChatCompletionsRequestBody: buildProviderChatCompletionsRequestBody,
   getChatCompletionMessage,
@@ -63,6 +63,7 @@ const importFileRegistrations = new Map();
 const importHistoryRelocations = new Map();
 const importHistoryOperations = new Set();
 let importHistoryStore = null;
+let systemFontDirectoryService = null;
 // Ownership is decided before IPC registration, service startup, or BrowserWindow creation.
 const singleInstanceOwnership = acquireSingleInstanceOwnership({
   app,
@@ -441,6 +442,11 @@ function stopNextServer() {
   }
 }
 
+function disposeSystemFontDirectoryService() {
+  systemFontDirectoryService?.dispose();
+  systemFontDirectoryService = null;
+}
+
 function handleNextServerExit(serverProcess, code, signal) {
   // Ignore stale or deliberately stopped children; only the active service owns renderer viability.
   if (nextServerProcess !== serverProcess) return;
@@ -486,6 +492,9 @@ function initializePrimaryInstance() {
   importHistoryStore = new ImportHistoryStore({
     filePath: path.join(app.getPath("userData"), "app-data", "import-history.json")
   });
+  systemFontDirectoryService = createWindowsFontDirectoryService({
+    onError: (error) => console.error("[fonts] unable to list Windows fonts", error)
+  });
   app.commandLine.appendSwitch(
     "enable-features",
     "OverlayScrollbar,OverlayScrollbarFlashAfterAnyScrollUpdate,OverlayScrollbarFlashWhenMouseEnter"
@@ -503,8 +512,11 @@ function initializePrimaryInstance() {
       return;
     }
     singleInstanceOwnership.markQuitting();
+    disposeSystemFontDirectoryService();
     stopNextServer();
   });
+
+  app.on("will-quit", disposeSystemFontDirectoryService);
 
   app.on("window-all-closed", () => {
     stopNextServer();
@@ -617,11 +629,11 @@ function registerDesktopIpc() {
       return [];
     }
 
-    return listWindowsFontOptions();
+    return systemFontDirectoryService.list();
   });
 
   handle("lyrics-card:pick-font", async () => {
-    const fonts = process.platform === "win32" ? await listWindowsFontOptions() : [];
+    const fonts = process.platform === "win32" ? await systemFontDirectoryService.list() : [];
     return fonts[0]?.family || null;
   });
 
@@ -1310,98 +1322,4 @@ function isValidAIRequestId(value) {
 
 function createAIError(code, diagnostic) {
   return new Error(`AI_ERROR:${code}${diagnostic ? `:${String(diagnostic).slice(0, 500)}` : ""}`);
-}
-
-async function listWindowsFontOptions() {
-  const script = [
-    "$ErrorActionPreference = 'Stop';",
-    "[Console]::OutputEncoding = [Text.UTF8Encoding]::new();",
-    "Add-Type -AssemblyName System.Drawing;",
-    "$paths = @(",
-    "  'HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Fonts',",
-    "  'HKCU:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Fonts'",
-    ");",
-    "$fontOptions = [Collections.Generic.List[object]]::new();",
-    "foreach ($path in $paths) {",
-    "  if (Test-Path $path) {",
-    "    $item = Get-ItemProperty -Path $path;",
-    "    foreach ($property in ($item.PSObject.Properties | Where-Object { $_.Name -notlike 'PS*' })) {",
-    "      $label = $property.Name -replace '\\s*\\((TrueType|OpenType|Type 1|Raster|All res)\\)\\s*$', '';",
-    "      foreach ($fileValue in @($property.Value)) {",
-    "        try {",
-    "          $fontPath = if ([IO.Path]::IsPathRooted([string]$fileValue)) { [string]$fileValue } else { Join-Path $env:WINDIR ('Fonts\\' + $fileValue) };",
-    "          if (-not (Test-Path -LiteralPath $fontPath)) { continue };",
-    "          $privateFonts = [Drawing.Text.PrivateFontCollection]::new();",
-    "          try {",
-    "            $privateFonts.AddFontFile($fontPath);",
-    "            $weight = if ($label -match '(?i)(Extra|Ultra)[ -]*Light|特细|超细') { 200 } elseif ($label -match '(?i)(Extra|Ultra)[ -]*Bold|特粗|超粗') { 800 } elseif ($label -match '(?i)(Semi|Demi)[ -]*Bold|中粗') { 600 } elseif ($label -match '(?i)\\b(Heavy|Black)\\b') { 900 } elseif ($label -match '(?i)\\bBold\\b|粗体') { 700 } elseif ($label -match '(?i)\\bMedium\\b|中等') { 500 } elseif ($label -match '(?i)\\bLight\\b|细体') { 300 } else { 400 };",
-    "            $fontStyle = if ($label -match '(?i)\\b(Italic|Oblique)\\b|斜体|倾斜') { 'italic' } else { 'normal' };",
-    "            foreach ($family in $privateFonts.Families) {",
-    "              $fontOptions.Add([pscustomobject]@{ label = $label.Trim(); family = $family.GetName(0x0409).Trim(); fontWeight = $weight; fontStyle = $fontStyle });",
-    "            }",
-    "          } finally { $privateFonts.Dispose() }",
-    "        } catch { continue }",
-    "      }",
-    "    }",
-    "  }",
-    "}",
-    "$installedFonts = [Drawing.Text.InstalledFontCollection]::new();",
-    "foreach ($family in $installedFonts.Families) {",
-    "  $englishFamily = $family.GetName(0x0409).Trim();",
-    "  $fontOptions.Add([pscustomobject]@{ label = $englishFamily; family = $englishFamily; fontWeight = 400; fontStyle = 'normal' });",
-    "}",
-    "$fontOptions | ConvertTo-Json -Compress -Depth 3"
-  ].join(" ");
-
-  try {
-    const output = await runProcess("powershell.exe", [
-      "-NoProfile",
-      "-ExecutionPolicy",
-      "Bypass",
-      "-Command",
-      script
-    ]);
-    const parsed = JSON.parse(output || "[]");
-    return normalizeFontOptions(Array.isArray(parsed) ? parsed : [parsed]);
-  } catch (error) {
-    console.error("[fonts] unable to list Windows fonts", error);
-    return normalizeFontOptions([
-      "Arial",
-      "Calibri",
-      "Microsoft YaHei",
-      "Microsoft JhengHei",
-      "Segoe UI",
-      "SimSun",
-      "SimHei"
-    ]);
-  }
-}
-
-function runProcess(command, args) {
-  return new Promise((resolve, reject) => {
-    const child = spawn(command, args, {
-      stdio: ["ignore", "pipe", "pipe"],
-      windowsHide: true
-    });
-    let stdout = "";
-    let stderr = "";
-
-    child.stdout?.on("data", (chunk) => {
-      stdout += chunk.toString();
-    });
-
-    child.stderr?.on("data", (chunk) => {
-      stderr += chunk.toString();
-    });
-
-    child.once("error", reject);
-    child.once("exit", (code) => {
-      if (code === 0) {
-        resolve(stdout.trim());
-        return;
-      }
-
-      reject(new Error(stderr.trim() || `${command} exited with code ${code}`));
-    });
-  });
 }

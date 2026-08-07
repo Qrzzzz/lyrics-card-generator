@@ -1680,6 +1680,40 @@ async function assertFontPickerBehavior() {
   await latinDialog.waitFor({ state: "hidden" });
   await page.waitForFunction(() => document.activeElement?.getAttribute("data-testid") === "choose-latin-font");
 
+  const currentSummary = page.getByTestId("font-scheme-panel").locator("dl").first();
+  assert.doesNotMatch(await currentSummary.textContent() ?? "", /Microsoft YaHei/, "the fresh font page starts from the saved preset");
+  await cjkTrigger.click();
+  await cjkDialog.waitFor({ state: "visible" });
+  await page.getByTestId("font-picker-search").fill("Microsoft YaHei");
+  await cjkDialog.getByText("Microsoft YaHei", { exact: true }).first().click();
+  await cjkDialog.waitFor({ state: "hidden" });
+  await page.waitForFunction(() => document.querySelector('[data-testid="choose-cjk-font"]')?.textContent?.includes("Microsoft YaHei"));
+  assert.doesNotMatch(await currentSummary.textContent() ?? "", /Microsoft YaHei/, "font selection updates only the draft before save");
+  await page.waitForFunction(() => {
+    const card = document.querySelector('[data-testid="lyric-card-preview"] article[data-export-card="true"]');
+    return card instanceof HTMLElement && getComputedStyle(card).fontFamily.includes("Microsoft YaHei");
+  });
+  const draftPreviewFamily = await page.locator('[data-testid="lyric-card-preview"] article[data-export-card="true"]').evaluate((card) => (
+    getComputedStyle(card).fontFamily
+  ));
+  assert.match(draftPreviewFamily, /Microsoft YaHei/, "font selection reaches the live card preview before save");
+
+  await page.getByTestId("save-custom-font-scheme").click();
+  await page.waitForFunction(() => (
+    document.querySelector('[data-testid="font-scheme-panel"] dl')?.textContent?.includes("Microsoft YaHei")
+  ));
+  assert.match(await currentSummary.textContent() ?? "", /Microsoft YaHei/, "saving commits the selected system font");
+
+  await page.locator('button[data-step-id="link"]').click();
+  await page.locator('button[data-step-id="font"]').click();
+  await page.getByTestId("font-scheme-panel").waitFor({ state: "visible" });
+  assert.match(
+    await page.getByTestId("font-scheme-panel").locator("dl").first().textContent() ?? "",
+    /Microsoft YaHei/,
+    "reopening the font page preserves the saved selection"
+  );
+  assert.match(await page.getByTestId("choose-cjk-font").textContent() ?? "", /Microsoft YaHei/);
+
   await page.locator('button[data-step-id="link"]').click();
 }
 

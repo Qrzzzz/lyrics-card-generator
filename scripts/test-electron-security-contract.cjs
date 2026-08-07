@@ -118,6 +118,12 @@ assert.match(desktopReadyRouteSource, /status: 404/, "the readiness route is una
 assert.match(desktopReadyRouteSource, /"Cache-Control": "no-store"/);
 
 const prepareElectronSource = readFileSync("scripts/prepare-electron-dist.mjs", "utf8");
+assert.match(prepareElectronSource, /"electron\/font-directory-service\.js"/, "packaged desktop bundles the font directory service");
+assert.match(
+  prepareElectronSource,
+  /path\.join\(projectRoot, "electron", "font-directory-service\.js"\)[\s\S]*?path\.join\(electronOutputDir, "font-directory-service\.js"\)/,
+  "desktop preparation copies the font directory service into the minimal app"
+);
 assert.match(prepareElectronSource, /"electron\/local-app-url\.js"/, "packaged desktop bundles the local URL policy helper");
 assert.match(
   prepareElectronSource,
