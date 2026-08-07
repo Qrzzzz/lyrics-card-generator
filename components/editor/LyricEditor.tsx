@@ -107,6 +107,7 @@ export function LyricEditor() {
   const autoWidthMeasurementRef = useRef<HTMLDivElement | null>(null);
   const captureCardRef = useRef<HTMLElement | null>(null);
   const previewCardRef = useRef<HTMLElement | null>(null);
+  const editorSurfaceRef = useRef<HTMLDivElement | null>(null);
   const toastIdRef = useRef(0);
   const examplesButtonRef = useRef<HTMLButtonElement | null>(null);
   const historyButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -209,7 +210,6 @@ export function LyricEditor() {
   });
   const {
     userSettings,
-    backgroundImageUrl,
     isDesktopShell,
     isFirstLaunchOpen,
     preferencesLoaded,
@@ -491,7 +491,7 @@ export function LyricEditor() {
         } as unknown as React.CSSProperties}
       >
       <DesktopTitleBar locale={state.locale} />
-      <DynamicAppBackground palette={state.palette} settings={userSettings} imageUrl={backgroundImageUrl} />
+      <DynamicAppBackground palette={state.palette} settings={userSettings} />
       <ClickSpark enabled={userSettings.sparkCursorEnabled} themeColor={resolvedAccentColor}>
         <main className="app-main-content lyric-editor-main relative z-10 min-h-screen px-4 py-5 sm:px-6 lg:px-8">
           <div className="lyric-editor-stage relative mx-auto min-w-0 max-w-[1520px] overflow-clip">
@@ -519,7 +519,9 @@ export function LyricEditor() {
             ) : null}
 
             <motion.div
+              ref={editorSurfaceRef}
               data-testid="editor-surface"
+              data-surface-work="running"
               aria-hidden={!isEditorSurfaceActive}
               className={cn(
                 "relative z-10 h-full min-h-0",
@@ -535,10 +537,18 @@ export function LyricEditor() {
               initial={false}
               inert={!isEditorSurfaceActive ? true : undefined}
               transition={activeSurfaceTransition}
+              onAnimationStart={() => {
+                editorSurfaceRef.current?.setAttribute("data-surface-work", "running");
+              }}
               onAnimationComplete={() => {
                 if (isEditorSurfaceActive) {
+                  editorSurfaceRef.current?.setAttribute("data-surface-work", "running");
                   // A returning preview must remeasure after its sliding surface reaches final geometry.
                   setPreviewMeasurementKey((key) => key + 1);
+                } else {
+                  // Decorative work is paused only after the editor is fully offscreen,
+                  // so the existing exit pixels and timing remain unchanged.
+                  editorSurfaceRef.current?.setAttribute("data-surface-work", "paused");
                 }
               }}
             >

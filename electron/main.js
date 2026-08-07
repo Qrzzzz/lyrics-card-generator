@@ -18,6 +18,7 @@ const { normalizeStoredPreferences } = require("./user-preferences");
 const { AIRequestRegistry } = require("./ai-request-registry");
 const { assertTrustedIpcEvent } = require("./ipc-security");
 const {
+  ImportHistoryFileStreamRegistry,
   ImportHistoryStore,
   normalizeImportHistoryLimit,
   readValidatedImportFile,
@@ -74,6 +75,7 @@ const aiTranslationRequests = new AIRequestRegistry();
 const importFileRegistrations = new Map();
 const importHistoryRelocations = new Map();
 const importHistoryOperations = new Set();
+let importHistoryFileStreams = null;
 let importHistoryStore = null;
 let systemFontDirectoryService = null;
 // Ownership is decided before IPC registration, service startup, or BrowserWindow creation.
@@ -305,6 +307,7 @@ function createWindow(targetUrl = localAppUrl) {
     }
   });
   const createdWindow = mainWindow;
+  const createdRendererId = createdWindow.webContents.id;
   startupTrace.mark("window-created");
   normalWindowBounds = mainWindow.getBounds();
   windowMaximized = false;
@@ -376,6 +379,7 @@ function createWindow(targetUrl = localAppUrl) {
     singleInstanceOwnership.markWindowClosed(createdWindow);
     importFileRegistrations.clear();
     importHistoryRelocations.clear();
+    void importHistoryFileStreams.releaseSender(createdRendererId);
     if (mainWindow === createdWindow) mainWindow = null;
   });
 
@@ -623,6 +627,7 @@ async function boot() {
 
 function initializePrimaryInstance() {
   startupTrace.mark("primary-initialize-start");
+  importHistoryFileStreams = new ImportHistoryFileStreamRegistry();
   importHistoryStore = new ImportHistoryStore({
     filePath: path.join(app.getPath("userData"), "app-data", "import-history.json")
   });
@@ -656,6 +661,9 @@ function initializePrimaryInstance() {
   });
 
   app.on("will-quit", disposeSystemFontDirectoryService);
+  app.on("will-quit", () => {
+    void importHistoryFileStreams.closeAll();
+  });
 
   app.on("window-all-closed", () => {
     void stopNextServer();
@@ -881,11 +889,19 @@ function registerDesktopIpc() {
     () => importHistoryStore.clear()
   ));
 
-  handle("lyrics-card:import-history-replay", async (_event, recordId) => {
+  handle("lyrics-card:import-history-replay", async (event, recordId) => {
     const record = await importHistoryStore.get(recordId);
     if (!record) return { ok: false, code: "not_found" };
-    return createImportHistoryReplayPayload(record);
+    return createImportHistoryReplayPayload(record, undefined, event.sender.id);
   });
+
+  handle("lyrics-card:import-history-file-read", (event, streamToken) => (
+    importHistoryFileStreams.read(event.sender.id, streamToken)
+  ));
+
+  handle("lyrics-card:import-history-file-release", (event, streamToken) => (
+    importHistoryFileStreams.release(event.sender.id, streamToken)
+  ));
 
   handle("lyrics-card:import-history-relocate", async (event, recordId) => {
     const record = await importHistoryStore.get(recordId);
@@ -900,8 +916,13 @@ function registerDesktopIpc() {
     });
     if (result.canceled || !result.filePaths[0]) return { ok: false, code: "cancelled" };
     const filePath = result.filePaths[0];
-    const prepared = await readValidatedImportFile(record.kind, filePath);
-    if (!prepared.ok) return { ...prepared, canRelocate: true };
+    const prepared = record.kind === "local-audio"
+      ? { path: filePath }
+      : await readValidatedImportFile(record.kind, filePath);
+    if (prepared.ok === false) return { ...prepared, canRelocate: true };
+
+    const replay = await createImportHistoryReplayPayload(record, prepared, event.sender.id);
+    if (!replay.ok) return replay;
 
     pruneImportHistoryRelocations();
     const relocationToken = crypto.randomUUID();
@@ -911,14 +932,13 @@ function registerDesktopIpc() {
       recordId: record.id,
       expiresAt: Date.now() + IMPORT_FILE_REGISTRATION_TTL_MS,
       file: {
-        path: prepared.path,
-        fileName: path.basename(prepared.path),
-        size: prepared.size,
-        mtimeMs: prepared.mtimeMs
+        path: path.resolve(filePath),
+        fileName: path.basename(filePath),
+        size: replay.file.size,
+        mtimeMs: replay.file.mtimeMs
       }
     });
-    const replay = await createImportHistoryReplayPayload(record, prepared);
-    return replay.ok ? { ...replay, relocationToken } : replay;
+    return { ...replay, relocationToken };
   });
 
   handle("lyrics-card:import-history-replay-commit", (event, recordId, relocationToken) => trackImportHistoryMutation(async () => {
@@ -1103,7 +1123,7 @@ async function readImportHistoryLimit() {
   return normalizeImportHistoryLimit(preferences?.userSettings?.importHistoryLimit);
 }
 
-async function createImportHistoryReplayPayload(record, preparedFile) {
+async function createImportHistoryReplayPayload(record, preparedFile, senderId) {
   if (record.kind === "link") {
     return {
       ok: true,
@@ -1133,6 +1153,27 @@ async function createImportHistoryReplayPayload(record, preparedFile) {
   }
 
   try {
+    if (record.kind === "local-audio") {
+      const stream = await importHistoryFileStreams.open(
+        senderId,
+        "local-audio",
+        preparedFile?.path ?? record.source.path
+      );
+      if (!stream.ok) return { ok: false, code: stream.code, canRelocate: true };
+      return {
+        ok: true,
+        kind: "local-audio",
+        record: toPublicImportHistoryRecord(record),
+        file: {
+          streamToken: stream.streamToken,
+          fileName: path.basename(stream.path),
+          size: stream.size,
+          mtimeMs: stream.mtimeMs,
+          mimeType: mimeTypeForHistoryFile(stream.extension),
+          changed: stream.size !== record.source.size || Math.abs(stream.mtimeMs - record.source.mtimeMs) > 1
+        }
+      };
+    }
     const validated = preparedFile ?? await readValidatedImportFile(record.kind, record.source.path);
     if (!validated.ok) return { ok: false, code: validated.code, canRelocate: true };
     const changed = validated.size !== record.source.size || Math.abs(validated.mtimeMs - record.source.mtimeMs) > 1;
@@ -1154,12 +1195,7 @@ async function createImportHistoryReplayPayload(record, preparedFile) {
         snapshot: record.snapshot
       };
     }
-    return {
-      ok: true,
-      kind: "local-audio",
-      record: toPublicImportHistoryRecord(record),
-      file
-    };
+    return { ok: false, code: "unsupported_file_kind", canRelocate: true };
   } catch (error) {
     return {
       ok: false,

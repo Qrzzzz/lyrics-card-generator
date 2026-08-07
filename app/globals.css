@@ -2883,6 +2883,20 @@ body[data-reduce-motion="true"] .examples-close-button:focus-visible .examples-c
   }
 }
 
+/* The editor remains mounted for instant surface return. Once its existing
+   exit transition has completed, pause only continuous visual work that cannot
+   contribute to the current frame. */
+[data-surface-work="paused"] .star-border-container::before,
+[data-surface-work="paused"] .star-border-container::after,
+[data-surface-work="paused"] .ai-translate-trigger__icon,
+[data-surface-work="paused"] .ai-translate-trigger__pulse,
+[data-surface-work="paused"] .ai-stream-progress,
+[data-surface-work="paused"] .translation-border-gradient,
+[data-surface-work="paused"] .animate-spin,
+[data-surface-work="paused"] .animate-pulse {
+  animation-play-state: paused !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .star-border-container::before,
   .star-border-container::after {

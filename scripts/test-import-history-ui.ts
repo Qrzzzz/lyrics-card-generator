@@ -22,6 +22,10 @@ const webLiteHeader = read("web-lite/WebLiteHeader.tsx");
 const webLiteEntry = read("web-lite/entry.tsx");
 const globals = read("app/globals.css");
 const desktopHistoryInteractions = read("scripts/test-desktop-import-history-interactions.mjs");
+const localAudioReplayActions = editorActions.slice(
+  editorActions.indexOf('if (replay.kind === "local-audio")'),
+  editorActions.indexOf('if (replay.kind === "manual-save")')
+);
 
 // These integration contracts ensure History remains desktop-only and that its
 // UI wiring reaches the same persistence and transaction layers tested below.
@@ -89,6 +93,16 @@ assert.match(editorActions, /if \(!replay\.ok\) \{[\s\S]*?intent\.cancel\(\)/);
 assert.match(editorActions, /const committed = await commitHistoryReplay\(replay, intent\)/);
 assert.match(editorActions, /if \(!committed\) return \{ status: "cancelled" \}/);
 assert.match(editorActions, /desktop\.commitImportHistoryReplay\(/);
+assert.match(editorActions, /readReplayAudioFile\(desktop, replay\.file, intent\.signal\)/);
+assert.match(editorActions, /desktop\.readImportHistoryFileChunk\(file\.streamToken\)/);
+assert.match(editorActions, /length > MAX_IMPORT_HISTORY_AUDIO_CHUNK_BYTES/);
+assert.match(editorActions, /signal\.addEventListener\("abort", abortStream/);
+assert.match(editorActions, /finally \{[\s\S]*?desktop\.releaseImportHistoryFile\(file\.streamToken\)/);
+assert.doesNotMatch(
+  localAudioReplayActions,
+  /replay\.file\.bytes/,
+  "local-audio replay never receives the complete file as one IPC value"
+);
 assert.match(editorActions, /"relocationToken" in replay \? replay\.relocationToken : undefined/);
 assert.match(editorActions, /historySaveFailed/);
 assert.match(editorActions, /bindingAtStart\?\.savedRevision === revision[\s\S]*?manualSaveUnchanged[\s\S]*?return/);
