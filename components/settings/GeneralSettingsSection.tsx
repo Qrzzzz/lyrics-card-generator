@@ -38,6 +38,7 @@ export function GeneralSettingsSection({
       const desktop = getLyricsCardDesktopApi();
       if (desktop) {
         try {
+          // The confirmed store version prevents trimming records changed after this prompt.
           const { total, version } = await desktop.getImportHistoryStats();
           const trimmed = Math.max(0, total - next);
           if (trimmed > 0 && !window.confirm(formatImportHistoryText(historyCopy.limitTrimConfirm, {

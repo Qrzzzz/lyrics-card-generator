@@ -28,6 +28,7 @@ export function AppMotionProvider({
 export function useAppReducedMotion() {
   const appPreference = useContext(AppMotionContext).reduceMotion;
   const systemPreference = useReducedMotion() ?? false;
+  // Either preference may reduce motion, so an app setting never overrides platform accessibility.
   return appPreference || systemPreference;
 }
 

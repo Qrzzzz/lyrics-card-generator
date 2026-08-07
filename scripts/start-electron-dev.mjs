@@ -42,6 +42,8 @@ function spawnChild(command, args, env = {}) {
   return child;
 }
 
+// Allocate a fresh loopback port so parallel worktrees do not collide on a
+// shared development server address.
 const port = await getAvailablePort();
 const url = `http://${host}:${port}`;
 const nextCommand = process.execPath;
@@ -57,6 +59,7 @@ const electron = spawnChild(electronCommand, ["."], {
 });
 
 function shutdown() {
+  // The launcher owns both children; neither should survive a terminal signal.
   nextDev.kill();
   electron.kill();
 }

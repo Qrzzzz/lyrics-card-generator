@@ -102,6 +102,8 @@ function rankNeteaseSearchResults(songs: SongSearchResult[], keyword: string) {
     rank: getSemanticMatchRank(song, query)
   }));
 
+  // Reorder only when at least one strong semantic match exists. Otherwise the
+  // upstream relevance order is safer than weak substring evidence.
   if (!ranked.some((item) => item.rank >= STRONG_MATCH_RANK)) {
     return songs;
   }
@@ -145,6 +147,8 @@ function getSemanticMatchRank(song: SongSearchResult, query: string) {
 }
 
 function coversSemanticParts(query: string, parts: string[]) {
+  // Consume longer parts first so a short artist/title substring cannot steal
+  // characters that belong to a more specific semantic component.
   const normalizedParts = parts.filter(Boolean).sort((left, right) => right.length - left.length);
   if (normalizedParts.length !== parts.length || normalizedParts.length === 0) {
     return false;

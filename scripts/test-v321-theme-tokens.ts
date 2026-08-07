@@ -20,6 +20,8 @@ const allowed = new Set([
   "components/editor/font-scheme/FontSchemePanel.tsx:border-white/10"
 ]);
 
+// Hard-coded colors require an explicit allowlist entry documenting a deliberate
+// contrast or content-rendering exception to the shared theme tokens.
 const violations: string[] = [];
 for (const file of files) {
   const source = readFileSync(resolve(file), "utf8");

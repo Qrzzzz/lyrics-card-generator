@@ -11,6 +11,8 @@ import { revokeReplacedBlobUrl } from "../lib/object-url-lifecycle";
 
 const { chooseStepperLayout } = __internalStepperLayout;
 
+// The stepper chooses whole balanced rows instead of shrinking every label to
+// fit an arbitrary column count.
 assert.deepEqual(
   chooseStepperLayout({
     containerWidth: 960,
@@ -99,6 +101,8 @@ assert.ok(
   "the smallest side-by-side window caps settings before the preview becomes too narrow"
 );
 
+// Source contracts ensure both desktop and Web Lite consume the tested layout
+// helpers rather than reintroducing independent breakpoint logic.
 const stepperSource = readFileSync(resolve("components/editor/SettingsStepper.tsx"), "utf8");
 const webLiteEditorSource = readFileSync(resolve("web-lite/WebLiteEditor.tsx"), "utf8");
 assert.ok(

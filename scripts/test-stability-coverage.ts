@@ -16,6 +16,8 @@ const makeRecord = (revision: number, updatedAt: number): AppPreferencesRecord =
   locale: "en",
   userSettings: structuredClone(DEFAULT_USER_SETTINGS)
 });
+// Keep direct branch coverage for the tie-breaking and null-source paths that
+// broader behavior tests reach only incidentally.
 assert.equal(compareAppPreferences(makeRecord(2, 1), makeRecord(1, 99)) > 0, true);
 assert.equal(compareAppPreferences(makeRecord(1, 2), makeRecord(1, 1)), 1);
 assert.equal(selectNewerAppPreferences(null, makeRecord(1, 1)).source, "desktop");

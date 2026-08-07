@@ -52,6 +52,7 @@ export function LyricsReviewMenu({
 
   function locate(editor: LyricsWorkbenchEditor, line: number) {
     setOpen(false);
+    // Let popup focus/scroll cleanup finish before selecting and revealing the issue line.
     window.requestAnimationFrame(() => onLocate(editor, line));
   }
 

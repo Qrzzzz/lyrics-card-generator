@@ -50,6 +50,7 @@ export function WebLiteSongInfo({
   }, [song.coverUrl]);
 
   useEffect(() => {
+    // Report unsaved input/status state so a global clear can reset more than committed song data.
     onTransientStateChange(Boolean(remoteCoverInput.trim() || status || isChecking));
   }, [isChecking, onTransientStateChange, remoteCoverInput, status]);
 
@@ -92,6 +93,7 @@ export function WebLiteSongInfo({
 
   async function applyRemoteCover() {
     const candidate = remoteCoverInput.trim();
+    // A monotonically increasing generation rejects stale async image checks.
     const requestId = validationGenerationRef.current + 1;
     validationGenerationRef.current = requestId;
     let parsed: URL;
@@ -276,6 +278,7 @@ function validateExportSafeImage(src: string) {
         if (!context) {
           throw new Error("Canvas is unavailable.");
         }
+        // Reading one pixel proves CORS will not taint the canvas used by image export.
         context.drawImage(image, 0, 0, 1, 1);
         context.getImageData(0, 0, 1, 1);
         resolve();

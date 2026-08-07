@@ -29,6 +29,7 @@ export function LyricsBlock({
   const lyricLines = splitUsefulLines(lyrics);
   const translationLines = splitUsefulLines(translationText ?? "");
   const lines = lyricLines.length > 0 ? lyricLines : ["Type your lyrics here..."];
+  // The longer column defines row count so lyric and translation indices remain aligned.
   const displayLineCount = Math.max(lines.length, translationEnabled ? translationLines.length : 0);
   const rows = Array.from({ length: displayLineCount }, (_, index) => ({
     hasLyric: index < lines.length,

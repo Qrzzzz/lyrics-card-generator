@@ -66,12 +66,14 @@ export function FontSchemePanel({ style, onStyleChange, onPreviewSchemeChange, s
   }));
   const [pickerCategory, setPickerCategory] = useState<FontCategory | null>(null);
   const [pickerQuery, setPickerQuery] = useState("");
+  // Retain the category while the dialog exits so its rendered content remains well-defined.
   const lastPickerCategoryRef = useRef<FontCategory>("cjk");
   if (pickerCategory) lastPickerCategoryRef.current = pickerCategory;
   const [systemFonts, setSystemFonts] = useState<SystemFontOption[]>([]);
   const [systemFontStatus, setSystemFontStatus] = useState("");
 
   useEffect(() => {
+    // System font discovery is desktop-only and ignores completions after unmount.
     let active = true;
 
     if (!desktopApi) {
@@ -138,6 +140,7 @@ export function FontSchemePanel({ style, onStyleChange, onPreviewSchemeChange, s
         ? { cjkFontFamily: font.family }
         : { latinFontFamily: font.family })
     };
+    // Picker selection updates only the draft preview; applyScheme performs the durable commit.
     setCustomDraft(nextDraft);
     onPreviewSchemeChange?.(nextDraft);
     setPickerCategory(null);
@@ -444,6 +447,7 @@ function buildFontOptions(category: FontCategory, systemFonts: SystemFontOption[
       category,
       preview: category === "cjk" ? "共に歩んだ旅路を辿れば" : "tomoni ayunda tabiji wo tadoreba"
     }));
+  // Recommended and discovered fonts can refer to the same family under different labels.
   const seen = new Set<string>();
   return [...recommended, ...discovered].filter((font) => {
     const key = font.family.toLocaleLowerCase();

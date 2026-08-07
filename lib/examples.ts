@@ -462,6 +462,8 @@ export function resolveExampleTranslation(
   example: ExampleSong,
   locale: Locale
 ): ExampleTranslationSample {
+  // Do not present the original language as a translation, including the
+  // mutually intelligible Simplified/Traditional Chinese pair.
   if (example.originalLanguage === locale) {
     return {
       language: locale,
@@ -484,6 +486,7 @@ export function resolveExampleTranslation(
     };
   }
 
+  // Curated examples define their first translation as the final fallback.
   return example.translations[0];
 }
 

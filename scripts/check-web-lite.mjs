@@ -7,6 +7,8 @@ import { buildWebLite } from "./build-web-lite.mjs";
 
 const scriptsDirectory = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(scriptsDirectory, "..");
+// Build into an isolated directory so verification never repairs the committed
+// artifact as a side effect.
 const temporaryDirectory = await mkdtemp(path.join(os.tmpdir(), "lyrics-card-web-lite-"));
 const temporaryOutput = path.join(temporaryDirectory, "index.html");
 
@@ -81,6 +83,8 @@ try {
     );
   }
 
+  // These source-level contracts guard deliberate desktop/Web Lite capability
+  // differences that can disappear while the generated page still compiles.
   const sourceContracts = [
     [lyricsWorkspaceSource, "showAiTranslate = true", "LyricsWorkspace must keep AI visible by default."],
     [visualPanelSource, "showPlatformBadgeControl = true", "VisualSettingsPanel must keep the platform control by default."],

@@ -8,6 +8,8 @@ import {
 } from "../lib/settings/app-preferences-reconciliation";
 import { DEFAULT_USER_SETTINGS } from "../lib/settings/types";
 
+// Revisions dominate timestamps; timestamps only break ties while the desktop
+// copy remains the deterministic final fallback.
 function record(revision: number, updatedAt: number, locale: AppPreferencesRecord["locale"]): AppPreferencesRecord {
   return {
     schemaVersion: APP_PREFERENCES_SCHEMA_VERSION,

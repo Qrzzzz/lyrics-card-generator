@@ -72,6 +72,7 @@ export function LocalAudioParser({
     setMessage(t("localAudioParsing"));
     let fileToken: string | undefined;
     const desktop = getLyricsCardDesktopApi();
+    // File registration enriches replay history but must not block local parsing when unavailable.
     if (desktop) {
       try {
         fileToken = (await desktop.registerImportFile(file, "local-audio"))?.token;

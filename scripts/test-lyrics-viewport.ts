@@ -10,6 +10,8 @@ const {
   resolveMappedTextAnchorRatio
 } = __internalLyricsViewportSession;
 
+// Viewport restoration uses text and paragraph anchors rather than raw pixels so
+// edits and responsive resizing can preserve the reader's semantic position.
 const minimumDesktopMetrics = calculateViewportMetrics(398);
 assert.deepEqual(minimumDesktopMetrics, {
   maxHeight: 398

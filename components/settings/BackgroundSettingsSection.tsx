@@ -29,10 +29,12 @@ export function BackgroundSettingsSection({
     setBusy(true);
     setMessage("");
     try {
+      // Desktop selection uses a placeholder File, then reads the accepted stored asset for color extraction.
       const result = await storeBackgroundImage(file ?? new File([], "desktop-image"));
       if (!result) return;
       const source = file?.size ? file : await fetch(result.imageUrl).then((response) => response.blob());
       const extractedColor = await extractAverageColor(source).catch(() => UI_ACCENT_PRESETS.purple);
+      // Persist/accept the asset before settings begin referencing its identifier.
       if (!await onImageStored(result)) return;
       update({
         imageId: result.imageId,

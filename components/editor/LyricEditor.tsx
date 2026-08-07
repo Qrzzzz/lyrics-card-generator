@@ -101,6 +101,7 @@ export function LyricEditor() {
   const historyButtonRef = useRef<HTMLButtonElement | null>(null);
   const settingsButtonRef = useRef<HTMLButtonElement | null>(null);
   const surfaceReturnFocusRef = useRef<HTMLButtonElement | null>(null);
+  // Ref bridges let document actions consult AI lifecycle state without creating hook-order cycles.
   const aiTranslationBusyRef = useRef(false);
   const invalidateDocumentAsyncRef = useRef<(
     reason?: "document" | "ai-start"
@@ -112,6 +113,7 @@ export function LyricEditor() {
   const isSettingsSurfaceOpen = activeSurface === "settings";
   const isEditorSurfaceActive = activeSurface === "editor";
 
+  // Inject the resolved palette into render/export state without mutating the editable document.
   const parsedState = useMemo(
     () => ({
       ...state,
@@ -316,6 +318,7 @@ export function LyricEditor() {
 
   useEffect(() => {
     if (!isEditorSurfaceActive || !surfaceReturnFocusRef.current) return;
+    // Return focus only after the editor surface is interactive again.
     const returnFocus = surfaceReturnFocusRef.current;
     surfaceReturnFocusRef.current = null;
     setRequestedSettingsTab(undefined);
@@ -502,6 +505,7 @@ export function LyricEditor() {
               transition={activeSurfaceTransition}
               onAnimationComplete={() => {
                 if (isEditorSurfaceActive) {
+                  // A returning preview must remeasure after its sliding surface reaches final geometry.
                   setPreviewMeasurementKey((key) => key + 1);
                 }
               }}
@@ -580,6 +584,7 @@ export function LyricEditor() {
               locale={parsedState.locale}
             />
             <AutoWidthMeasurementHost state={state} hostRef={autoWidthMeasurementRef} />
+            {/* Snapshot capture is isolated from both the visible preview and live readiness host. */}
             {activeExportSnapshot ? (
               <ExportCardHost
                 song={activeExportSnapshot.song as AppState["song"]}

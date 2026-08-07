@@ -1,3 +1,8 @@
+/**
+ * Acquires process ownership before primary-instance initialization begins.
+ * Secondary launches request focus, but focus is deferred until the current window is ready
+ * and suppressed once close or quit has started.
+ */
 function acquireSingleInstanceOwnership({
   app,
   getMainWindow,
@@ -11,6 +16,7 @@ function acquireSingleInstanceOwnership({
   }
 
   let readyWindow = null;
+  // Keep readiness separate from getMainWindow() so a hidden or stale BrowserWindow is never focused.
   let focusPending = false;
   let quitting = false;
 

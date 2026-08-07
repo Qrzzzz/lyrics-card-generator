@@ -45,6 +45,11 @@ export function similarity(a: string, b: string) {
   return union > 0 ? intersection / union : 0;
 }
 
+/**
+ * Scores LRCLIB identity independently of lyric availability. Title carries
+ * most of the weight, while artist evidence prevents common-title mismatches;
+ * candidates below the conservative floor are never exposed to the caller.
+ */
 export function rankLyricsCandidate(
   candidate: { trackName?: string; artistName?: string; plainLyrics?: string | null; syncedLyrics?: string | null },
   title: string,

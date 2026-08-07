@@ -76,6 +76,7 @@ export function SongLinkParser({
       return;
     }
 
+    // Replacing the active intent aborts a parse that no longer owns the document revision.
     const intent = beginImport();
     if (!intent) return;
     activeIntentRef.current?.cancel();

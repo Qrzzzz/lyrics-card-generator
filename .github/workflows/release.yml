@@ -11,6 +11,7 @@ on:
         required: true
         type: string
 
+# Serialize by tag so retries cannot create competing drafts for one release.
 concurrency:
   group: release-${{ inputs.tag || github.ref_name }}
   cancel-in-progress: false
@@ -35,6 +36,8 @@ jobs:
 
     steps:
       - name: Checkout exact tag SHA
+        # Release validation must inspect the immutable tag target rather than
+        # whichever commit happens to be at the branch tip.
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           ref: ${{ env.RELEASE_TAG }}

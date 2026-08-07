@@ -15,6 +15,7 @@ import type { AppState } from "@/lib/types";
 type AppStateSetter = Dispatch<SetStateAction<AppState>>;
 
 export function useSongCoverObjectUrlLifecycle(coverUrl?: string, preservedCoverUrl?: string) {
+  // A retired live cover remains valid while an active export snapshot still references it.
   const retirementStateRef = useRef<ReturnType<typeof createBlobUrlRetirementState> | null>(null);
   if (!retirementStateRef.current) {
     retirementStateRef.current = createBlobUrlRetirementState(coverUrl);
@@ -31,6 +32,7 @@ export function useSongCoverObjectUrlLifecycle(coverUrl?: string, preservedCover
 
 export function useSyncedCoverProxy(state: AppState, setState: AppStateSetter) {
   useEffect(() => {
+    // Keep the derived proxy URL synchronized without making it editable document input.
     const nextProxiedCoverUrl = proxiedImageUrl(state.song.coverUrl);
     if (nextProxiedCoverUrl === state.song.proxiedCoverUrl) {
       return;
@@ -51,6 +53,7 @@ export function useCoverPalette(coverForPalette: string, setState: AppStateSette
     let active = true;
 
     extractPaletteFromImage(coverForPalette).then((palette) => {
+      // Ignore palette extraction that resolves after the cover dependency changes.
       if (!active) {
         return;
       }

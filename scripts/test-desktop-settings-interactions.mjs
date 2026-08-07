@@ -11,6 +11,8 @@ const executablePath = path.join(root, "release", "win-unpacked", "Lyrics Card G
 const reportDirectory = path.join(root, "playwright-report", "desktop");
 const userDataDirectory = await mkdtemp(path.join(tmpdir(), "lyrics-card-desktop-test-"));
 const exportOverflowTolerance = 4;
+// Visual metrics are diagnostic-only unless explicitly requested; behavioral
+// assertions remain deterministic in the default regression run.
 const runVisualDiagnostics = process.argv.includes("--visual-diagnostics");
 const builtInAutoWidthCases = [
   { id: "opalite", lyricLines: 4, translationLines: 4, min: 1360, max: 1400 },
@@ -30,6 +32,8 @@ const resolveRequests = [];
 const titlebarVisualMetrics = [];
 let titlebarPerformanceComparison = null;
 
+// This suite deliberately reuses one packaged application so navigation,
+// persistence, focus, and layout transitions are exercised as a continuous flow.
 async function waitForVisible(testId) {
   const locator = page.getByTestId(testId);
   await locator.waitFor({ state: "visible", timeout: 15_000 });
@@ -2136,6 +2140,8 @@ async function assertLyricsWorkspace(width, height) {
 }
 
 async function assertLyricsWorkbenchOperations(originalLyrics, translationLyrics, originalFixture, translationFixture) {
+  // Operate through real selections and keyboard events so undo history and
+  // sidebar commands are validated at the same boundary users exercise.
   await setWindowSize(1280, 900);
   await page.getByTestId("lyrics-sidebar").waitFor({ state: "visible" });
   await page.getByTestId("lyrics-sidebar-tab-cleanup").click();

@@ -8,6 +8,11 @@ const HEX_256_PATTERN = /^[a-f0-9]{64}$/;
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
+/**
+ * Proves that the process answering on the selected port owns the startup
+ * secret. A plain health check cannot distinguish the desktop service from an
+ * unrelated local server that happened to bind the same port.
+ */
 export function GET(request: Request) {
   const startupSecret = process.env[STARTUP_SECRET_ENV] ?? "";
   const challenge = request.headers.get(CHALLENGE_HEADER) ?? "";
@@ -18,6 +23,8 @@ export function GET(request: Request) {
     });
   }
 
+  // The caller supplies a fresh challenge, preventing a captured proof from
+  // being reused as readiness evidence for a later startup.
   const proof = createHmac("sha256", startupSecret).update(challenge).digest("hex");
   return Response.json(
     { service: SERVICE_ID, proof },

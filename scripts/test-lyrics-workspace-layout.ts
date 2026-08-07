@@ -14,6 +14,8 @@ const {
   MIN_SIDE_BY_SIDE_WIDTH
 } = __internalLyricsWorkspaceLayout;
 
+// Numeric layout tests cover the pure splitter, while later source contracts
+// ensure components and CSS continue to consume the same fixed-column model.
 const defaultSplit = resolveLyricsWorkspaceSplit(1220);
 assert.equal(defaultSplit.usableWidth, 1212);
 assert.equal(defaultSplit.editorWidth, 808, "the lyrics editor keeps two thirds of the usable width");

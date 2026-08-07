@@ -47,6 +47,7 @@ export function LyricCardPreview({
   const z = useSpring(zTarget, spring);
   const pressureScale = useSpring(scaleTarget, { stiffness: 420, damping: 34, mass: 0.48 });
   const size = getCardSize(style);
+  // This scaled card is presentation-only; exports render a separate full-size DOM tree.
   const widthScale = Math.max(width, 120) / size.width;
   const heightScale = Math.max(availableHeight, 120) / size.height;
   const scale = Math.min(widthScale, heightScale, 0.52);
@@ -60,6 +61,7 @@ export function LyricCardPreview({
       window.cancelAnimationFrame(frame);
       frame = window.requestAnimationFrame(() => {
         const rect = shell.getBoundingClientRect();
+        // Ignore collapsed/offscreen shells so a transient zero geometry cannot shrink the preview.
         if (rect.width <= 0 || rect.height <= 0 || rect.bottom <= 0 || rect.top >= window.innerHeight) {
           return;
         }
@@ -98,6 +100,7 @@ export function LyricCardPreview({
   }
 
   function handlePointerMove(event: React.PointerEvent<HTMLDivElement>) {
+    // Touch and reduced-motion paths deliberately bypass decorative pressure transforms.
     if (!pressureFeedbackEnabled || event.pointerType === "touch") return;
     const rect = event.currentTarget.getBoundingClientRect();
     if (rect.width <= 0 || rect.height <= 0) return;

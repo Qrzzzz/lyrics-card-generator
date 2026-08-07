@@ -14,6 +14,8 @@ const {
 const HOST = "127.0.0.1";
 const TEST_TIMEOUT_MS = 2500;
 
+// Spawn a real child HTTP service so readiness tests cover child-process
+// exit/error signals, challenge-response authentication, and port decoys together.
 const fixtureSource = String.raw`
 const crypto = require("node:crypto");
 const http = require("node:http");
@@ -217,6 +219,8 @@ async function testSpawnFailureRejectsThroughReadiness() {
 }
 
 async function testPortCompetitionAndDecoyFailClosed() {
+  // A healthy but unauthenticated listener on the chosen port must never be
+  // mistaken for the child process that Electron launched.
   const decoy = http.createServer((_request, response) => {
     response.writeHead(503, { "content-type": "text/plain" });
     response.end("decoy-service");

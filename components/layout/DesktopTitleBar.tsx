@@ -61,9 +61,11 @@ export function DesktopTitleBar({ locale }: DesktopTitleBarProps) {
     if (!desktop) return undefined;
     const handleCloseRequest = async () => {
       try {
+        // Treat closing as a handshake: persist pending state before granting the native close.
         await shutdownCoordinator.flushAll();
         await desktop.confirmWindowClose();
       } catch {
+        // A failed flush deliberately leaves the window open rather than discarding unsaved state.
         window.alert(closeFailureMessages[locale]);
       }
     };

@@ -32,6 +32,8 @@ const aiTranslateButton = readFileSync(resolve("components/lyrics/AiTranslateBut
 const webLiteLyricInput = readFileSync(resolve("web-lite/WebLiteLyricInput.tsx"), "utf8");
 const globals = readFileSync(resolve("app/globals.css"), "utf8");
 
+// This source-level integration suite pins focus restoration, inert/hidden
+// semantics, routing history, and desktop-only settings wiring across modules.
 assert.match(lyricEditor, /type ActiveSurface = "editor" \| "examples" \| "history" \| "settings"/);
 assert.match(lyricEditor, /x: isSettingsSurfaceOpen \? "-100%" : "0%"/);
 assert.match(lyricEditor, /onRequireSettings: \(\) => openSettings\("ai"\)/);

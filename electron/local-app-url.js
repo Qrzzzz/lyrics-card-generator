@@ -23,6 +23,7 @@ function normalizeLoopbackHttpUrl(value) {
 }
 
 async function resolveLocalAppUrl({ isPackaged, devServerUrl, startLocalServer }) {
+  // Development may reuse an explicit loopback server; every other launch owns a newly started local service.
   if (!isPackaged && devServerUrl) {
     return {
       url: normalizeLoopbackHttpUrl(devServerUrl),

@@ -31,6 +31,8 @@ let electronApp;
 let page;
 
 try {
+  // Use real packaged processes here; unit fakes cannot prove that a secondary
+  // executable exits before spawning another bundled server or registering IPC.
   await access(executablePath);
   await access(serverEntry);
   await mkdir(reportDirectory, { recursive: true });
@@ -256,6 +258,7 @@ function assertSecondaryExited(result, label) {
 }
 
 async function assertPrimaryOwnershipRemains(primaryPid, primaryServerPid) {
+  // Ownership includes both the Electron window and its authenticated Next child.
   const state = await electronApp.evaluate(({ app, BrowserWindow }) => ({
     pid: process.pid,
     ownsLock: app.hasSingleInstanceLock(),

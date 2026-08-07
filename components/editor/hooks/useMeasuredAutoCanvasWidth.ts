@@ -36,6 +36,7 @@ export function useMeasuredAutoCanvasWidth(
   const enabled = isAutoWidthMeasurementEnabled(state);
   const signature = useMemo(() => autoWidthMeasurementSignature(state), [state]);
   const [evaluation, setEvaluation] = useState<AutoWidthEvaluation | null>(null);
+  // Anchor the input width per semantic signature to prevent measurement feedback loops.
   const anchorRef = useRef({ signature, width: state.style.width });
   if (anchorRef.current.signature !== signature) {
     anchorRef.current = { signature, width: state.style.width };
@@ -54,6 +55,7 @@ export function useMeasuredAutoCanvasWidth(
         if (typeof document !== "undefined" && document.fonts) {
           await document.fonts.ready;
         }
+        // Two frames allow font metrics and the hidden measurement host to finish layout.
         await nextAnimationFrame();
         await nextAnimationFrame();
         if (!active) return;
@@ -65,6 +67,7 @@ export function useMeasuredAutoCanvasWidth(
         }
 
         const decision = chooseAutoWidth(measureAutoWidthCandidates(host), anchorWidth);
+        // Low-confidence candidates are reported but never mutate the canvas width.
         const shouldApply = decision.confidence === "high" &&
           Math.abs(decision.width - anchorWidth) > AUTO_WIDTH_SETTLE_TOLERANCE;
         const recommendedWidth = shouldApply ? decision.width : anchorWidth;
@@ -111,6 +114,7 @@ export function useMeasuredAutoCanvasWidth(
     };
   }
 
+  // A completed measurement is ready only for the exact document/style signature it evaluated.
   const isCurrentEvaluation = evaluation?.signature === signature;
   const isStable = Boolean(
     isCurrentEvaluation &&

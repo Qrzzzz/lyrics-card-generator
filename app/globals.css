@@ -2,6 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Global font registration and theme-token defaults shared by desktop and Web Lite. */
 :root {
   color-scheme: dark;
   --font-source-han-sans-heavy: "Source Han Sans Heavy Local";
@@ -211,6 +212,7 @@ body[data-desktop-shell="true"]::after {
   display: none;
 }
 
+/* The Electron shell owns the viewport and clips it to the native window shape. */
 .app-shell[data-desktop-shell="true"] {
   position: relative;
   height: 100vh;
@@ -262,6 +264,7 @@ body[data-window-maximized="true"] .app-shell[data-desktop-shell="true"] {
   overflow: hidden;
 }
 
+/* Desktop chrome, draggable titlebar regions, and window controls. */
 .desktop-titlebar,
 .examples-floor,
 .history-floor {
@@ -508,6 +511,7 @@ body[data-window-maximized="true"] .app-shell[data-desktop-shell="true"] {
   --traffic-light-color: #28c840;
 }
 
+/* Shared semantic text, surface, and interactive-control primitives. */
 .app-text-primary {
   color: var(--app-text-primary, rgb(var(--app-fg)));
 }
@@ -974,6 +978,7 @@ button {
   background: transparent;
 }
 
+/* Import surfaces and ranked search-result presentation. */
 .glass-panel {
   border: 1px solid rgb(var(--panel-border));
   background: rgb(var(--panel-bg));
@@ -1134,6 +1139,7 @@ button {
   grid-template-columns: minmax(0, 1fr);
 }
 
+/* Lyrics workbench layout, command bar, cleanup tools, and responsive drawer. */
 .lyrics-workspace-surface {
   background: transparent;
 }
@@ -1460,6 +1466,7 @@ button {
   }
 }
 
+/* Preview depth effects and the resizable preview/settings workbench. */
 .preview-pressure-stage {
   --preview-pressure-x: 50%;
   --preview-pressure-y: 50%;
@@ -1831,6 +1838,7 @@ button {
   opacity: 0.42;
 }
 
+/* Settings surface tokens and accessibility-focused input states. */
 .settings-surface {
   --control-focus-border: color-mix(in srgb, var(--ai-accent, #7de1ff) 64%, #ffffff);
   --control-focus-ring: color-mix(in srgb, var(--ai-accent, #7de1ff) 16%, transparent);
@@ -1965,6 +1973,7 @@ body[data-reduce-motion="true"] .examples-close-button:focus-visible .examples-c
   }
 }
 
+/* Full-height settings, examples, and history wings share this navigation shell. */
 .app-shell .settings-surface.settings-wing {
   border: 0;
   background: transparent;
@@ -2330,6 +2339,7 @@ body[data-reduce-motion="true"] .examples-close-button:focus-visible .examples-c
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.055);
 }
 
+/* AI settings use destination rows instead of the compact general-settings grid. */
 .ai-workspace-root {
   max-width: 48rem;
 }
@@ -2428,6 +2438,7 @@ body[data-reduce-motion="true"] .examples-close-button:focus-visible .examples-c
   background: rgb(var(--button-bg));
 }
 
+/* Examples and history cards keep independent responsive grid contracts. */
 .examples-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -2604,6 +2615,7 @@ body[data-reduce-motion="true"] .examples-close-button:focus-visible .examples-c
   color: rgb(var(--app-muted));
 }
 
+/* Card-rendering font classes must remain stable because preview and export measurement read them. */
 .card-font-sans-heavy {
   font-family: var(--font-source-han-sans-heavy), ui-sans-serif, system-ui, sans-serif;
 }

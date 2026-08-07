@@ -21,6 +21,8 @@ import {
   type LyricsHistoryEntry
 } from "../lib/lyrics-workbench";
 
+// Selection-based transforms operate on complete logical lines, even when the
+// browser selection begins or ends in the middle of a line.
 const selectedMiddle = resolveLyricsTextScope(
   "first\nsecond\nthird\nfourth",
   { start: 8, end: 14 }

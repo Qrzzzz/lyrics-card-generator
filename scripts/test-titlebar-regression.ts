@@ -5,6 +5,8 @@ import { messages } from "../lib/i18n";
 
 const appLocales = ["zh", "zh-TW", "en", "fr", "ja", "es"] as const;
 
+// The titlebar spans renderer, preload, main-process, CSS, and localization
+// boundaries, so this suite pins their wiring together as one contract.
 for (const locale of appLocales) {
   assert.ok(messages[locale]["titleBar.minimize"], `${locale} minimize copy`);
   assert.ok(messages[locale]["titleBar.maximize"], `${locale} maximize copy`);

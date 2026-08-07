@@ -235,6 +235,8 @@ function findSongObject(value: unknown): QQEmbeddedSong | null {
     return record as QQEmbeddedSong;
   }
 
+  // QQ has moved the song payload between nested hydration objects over time;
+  // traverse the unknown tree and stop at the first record with song markers.
   for (const child of Object.values(record)) {
     if (Array.isArray(child)) {
       for (const item of child) {

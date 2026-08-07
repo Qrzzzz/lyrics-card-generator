@@ -58,12 +58,16 @@ export function buildChatCompletionsRequestBody({
     stream: true
   };
 
+  // Providers expose incompatible reasoning switches. DeepSeek uses thinking,
+  // while other compatible endpoints conventionally accept reasoning_effort.
   if (usesDeepSeekThinking(baseUrl, model)) {
     requestBody.thinking = { type: reasoning ? "enabled" : "disabled" };
   } else if (reasoning) {
     requestBody.reasoning_effort = "medium";
   }
 
+  // Some reasoning models reject or ignore temperature, so omit it entirely
+  // instead of sending a potentially conflicting generation parameter.
   if (!reasoning) {
     requestBody.temperature = temperature;
   }

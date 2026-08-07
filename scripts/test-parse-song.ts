@@ -10,6 +10,8 @@ type LiveParseCase = {
   parseMethod: RegExp;
 };
 
+// These are live provider probes rather than hermetic CI fixtures; each case
+// validates stable semantic fields while allowing localized metadata variants.
 const DEFAULT_TEST_CASES: LiveParseCase[] = [
   {
     input: "https://y.qq.com/n/ryqq/songDetail/577816187",

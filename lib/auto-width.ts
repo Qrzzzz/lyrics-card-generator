@@ -56,6 +56,11 @@ export function getAutoWidthCandidates() {
   return candidates;
 }
 
+/**
+ * Chooses a width from a complete measurement grid. Incomplete or statistically
+ * unstable samples deliberately retain the nearest current width instead of
+ * producing a visually surprising low-confidence adjustment.
+ */
 export function chooseAutoWidth(
   candidates: AutoWidthCandidateMetrics[],
   fallbackWidthHint: number
@@ -116,6 +121,8 @@ export function selectCoreLineKeys(lines: AutoWidthLineMetrics[]) {
     return new Set(useful.map((line) => line.key));
   }
 
+  // Score representative lines around the median so one unusually short or
+  // long lyric cannot dominate the width chosen for the whole document.
   const lengths = useful.map((line) => line.logicalUnitCount).sort((left, right) => left - right);
   const center = median(lengths);
   const lower = Math.max(3, center * 0.45);
@@ -136,6 +143,8 @@ export function scoreCandidate(
   lyricCore: ReadonlySet<string>,
   translationCore: ReadonlySet<string>
 ) {
+  // Overflow and severe orphans dominate the aesthetic fill/wrap penalties;
+  // a compact candidate must never win by clipping readable content.
   let score = 0;
   const lyricCoreFills: number[] = [];
   const translationCoreFills: number[] = [];

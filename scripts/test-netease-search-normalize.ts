@@ -16,6 +16,8 @@ function rawSearchSong(id: number, name: string, artists: string[]) {
   };
 }
 
+// Keep legacy and current upstream payload shapes covered because NetEase has
+// shipped both field conventions in otherwise successful responses.
 const legacyShape = normalizeNeteaseSearchSongs(
   {
     result: {
@@ -247,6 +249,8 @@ assert.equal(detail.finalUrl, buildNeteaseSongUrl("186016"));
 assert.equal(detail.parseMethod, "netease-search");
 
 async function testCandidatePool() {
+  // Ranking may promote a strong canonical match, but weak matches must preserve
+  // the provider's original order.
   const originalFetch = globalThis.fetch;
   let fetchCalls = 0;
   let requestedLimit = "";

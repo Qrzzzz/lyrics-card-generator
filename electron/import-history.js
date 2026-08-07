@@ -54,6 +54,11 @@ const IMAGE_EXTENSIONS = new Set([".png", ".jpg", ".jpeg", ".webp", ".gif"]);
 const HISTORY_KINDS = new Set(["link", "search", "local-audio", "manual-cover", "manual-save"]);
 const SONG_SOURCES = new Set(["qq", "netease", "apple", "spotify", "unknown"]);
 
+/**
+ * Persists import history behind a single serialized queue.
+ * Reads and mutations therefore observe one ordered document, while each write uses
+ * a restricted temporary file plus rename before the in-memory document is advanced.
+ */
 class ImportHistoryStore {
   constructor({
     filePath,
@@ -87,6 +92,7 @@ class ImportHistoryStore {
         if (source !== "all" && record.kind !== source) return false;
         return !query || historySearchText(record).includes(query);
       });
+      // Recovery is surfaced once, after the replacement document is safe to read.
       const notice = this.notice;
       this.notice = null;
       return {
@@ -141,6 +147,7 @@ class ImportHistoryStore {
       }
       const key = importHistoryDedupeKey(normalized, this.path);
       const duplicate = document.records.find((record) => importHistoryDedupeKey(record, this.path) === key);
+      // Reimports retain stable identity and creation time while refreshing content and recency.
       const record = duplicate
         ? { ...normalized, id: duplicate.id, createdAt: duplicate.createdAt, lastUsedAt: timestamp }
         : normalized;
@@ -155,6 +162,7 @@ class ImportHistoryStore {
     });
   }
 
+  // Parse outside the queue so an invalid transport envelope cannot trigger load or persistence side effects.
   createManualSave(envelope, limit = DEFAULT_IMPORT_HISTORY_LIMIT) {
     const snapshot = parseManualSaveEnvelope(envelope);
     if (!snapshot) return Promise.reject(historyError("invalid_snapshot"));
@@ -248,6 +256,7 @@ class ImportHistoryStore {
   }
 
   commitReplay(recordId, { limit = DEFAULT_IMPORT_HISTORY_LIMIT, file } = {}) {
+    // The renderer calls this only after document commit, making relocation, touch, and dedupe one mutation.
     return this.#mutate((document) => {
       const id = normalizeId(recordId);
       const existing = id ? document.records.find((record) => record.id === id) : null;
@@ -293,6 +302,7 @@ class ImportHistoryStore {
       const next = withHistoryLimit(current, limit);
       const trimmed = current.records.length - next.records.length;
       if (trimmed > 0) {
+        // Bind destructive confirmation to the exact document and trim count the user reviewed.
         const expectedVersion = boundedString(confirmation?.expectedVersion, 128);
         const confirmedTrimCount = Number(confirmation?.confirmedTrimCount);
         if (
@@ -309,6 +319,7 @@ class ImportHistoryStore {
           this.document = next;
           return { trimmed, persisted };
         } catch (error) {
+          // Preference persistence and history trimming form one logical transaction.
           try {
             await this.#writeDocument(current);
           } catch (rollbackError) {
@@ -329,6 +340,7 @@ class ImportHistoryStore {
   }
 
   #enqueue(operation) {
+    // Continue the same chain after failures so a rejected operation never opens a parallel mutation lane.
     const result = this.writeQueue
       .catch(() => undefined)
       .then(operation);
@@ -349,6 +361,7 @@ class ImportHistoryStore {
 
   #ensureLoaded() {
     if (this.document) return Promise.resolve(this.document);
+    // Concurrent first-use operations share migration/recovery instead of racing independent reads.
     if (!this.loadPromise) {
       this.loadPromise = this.#readDocument().finally(() => {
         this.loadPromise = null;
@@ -379,6 +392,7 @@ class ImportHistoryStore {
 
     const normalized = normalizeImportHistoryDocument(parsed, this.path);
     if (!normalized) return this.#recoverCorruptDocument();
+    // Persist schema migration and privacy normalization before exposing the document to callers.
     if (JSON.stringify(parsed) !== JSON.stringify(normalized)) {
       try {
         await this.#writeDocument(normalized);
@@ -414,6 +428,7 @@ class ImportHistoryStore {
     const temporary = `${this.filePath}.tmp-${process.pid}-${crypto.randomBytes(6).toString("hex")}`;
     await this.fs.mkdir(directory, { recursive: true });
     try {
+      // Rename publishes a complete restricted file; a failed write leaves the previous document intact.
       await this.fs.writeFile(temporary, `${JSON.stringify(document, null, 2)}\n`, {
         encoding: "utf8",
         mode: 0o600
@@ -442,6 +457,7 @@ function normalizeImportHistoryDocument(input, path = defaultPath) {
   const records = [];
   const recordIds = new Set();
   for (const candidate of input.records) {
+    // Schema 1 predates trusted manual snapshots, so such records are never migrated forward.
     if (input.schemaVersion === LEGACY_IMPORT_HISTORY_SCHEMA_VERSION && candidate?.kind === "manual-save") continue;
     const record = normalizeImportHistoryRecord(candidate, path);
     if (!record) continue;
@@ -607,6 +623,7 @@ function normalizeManualSaveDisplay(snapshot) {
   }, "manual-save");
 }
 
+// Require one canonical JSON representation so preload and main validate the same bounded data protocol.
 function parseManualSaveEnvelope(value) {
   if (
     typeof value !== "string" ||
@@ -690,6 +707,11 @@ function manualSaveSnapshotFieldsFit(input) {
   );
 }
 
+/**
+ * Measures JSON-like input without invoking accessors or JSON serialization hooks.
+ * Iterative descriptor checks reject proxies, cycles, sparse arrays, exotic prototypes,
+ * symbol keys, and over-deep structures before any untrusted tree can be persisted.
+ */
 function jsonLikeTreeFitsWithinByteLimit(root, maximumBytes, maximumDepth) {
   if (
     !Number.isSafeInteger(maximumBytes) ||
@@ -835,6 +857,7 @@ function importHistoryDedupeKey(record, path = defaultPath) {
   }
   if (record.kind === "link") {
     const url = record.source.finalUrl || record.source.normalizedUrl;
+    // Prefer a platform song identity so tracking/query variants collapse to the same history record.
     return platformSongKey(record.display.source, url) || `url:${normalizeHttpUrl(url).toLowerCase()}`;
   }
   const normalizedPath = normalizeAbsolutePath(record.source.path, path);
@@ -882,6 +905,7 @@ function withHistoryLimit(document, limit) {
 }
 
 function importHistoryDocumentVersion(document) {
+  // The digest binds destructive trim confirmation to record content and ordering without exposing it.
   return crypto
     .createHash("sha256")
     .update(JSON.stringify(document.records))
@@ -936,6 +960,10 @@ function validateImportFileDescriptor(kind, filePath, stat, path = defaultPath) 
   return { ok: true, path: normalizedPath, extension, size, mtimeMs };
 }
 
+/**
+ * Reads through one file handle and validates metadata both before and after the byte stream.
+ * This closes the path-replacement race and rejects files that change during replay preparation.
+ */
 async function readValidatedImportFile(kind, filePath, {
   fs = defaultFs,
   path = defaultPath,
@@ -1070,6 +1098,7 @@ function normalizeManualHttpUrlDetails(value) {
   if (identity.state === "ambiguous") {
     return { url: "", identityKey: "", identityState: "ambiguous" };
   }
+  // Drop arbitrary query/hash data, then restore only provider-specific identity fields.
   url.search = "";
   for (const [key, identityValue] of identity.parameters) {
     url.searchParams.set(key, identityValue);
@@ -1088,6 +1117,7 @@ function normalizeManualSongUrls(original, final) {
   if (original.identityKey && final.identityKey && original.identityKey !== final.identityKey) {
     return null;
   }
+  // Store one sanitized provenance URL; conflicting original/final song identities are rejected above.
   const selected = original.identityState === "unique"
     ? original
     : final.identityState === "unique"
@@ -1099,6 +1129,7 @@ function normalizeManualSongUrls(original, final) {
   return { originalUrl: provenanceUrl, finalUrl: provenanceUrl };
 }
 
+// Recognize identities only on exact provider hosts/routes and canonical, non-duplicated parameters.
 function manualUrlIdentity(value, normalizedUrl) {
   const absentIdentity = { state: "absent", key: "", parameters: [], pathname: "" };
   const ambiguousIdentity = { state: "ambiguous", key: "", parameters: [], pathname: "" };

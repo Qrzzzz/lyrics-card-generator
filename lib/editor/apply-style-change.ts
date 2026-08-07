@@ -40,6 +40,8 @@ const validRatiosByMode: Record<CardLayoutMode, ReadonlySet<CardRatio>> = {
   landscape: new Set<CardRatio>(["16:9", "21:9", "3:2", "custom"])
 };
 
+// Persisted size snapshots are mode-specific; invalid cross-mode ratios fall
+// back before automatic-sizing flags are restored.
 function restoreSize(
   layoutMode: CardLayoutMode,
   savedSize: CardSizeSnapshot | undefined
@@ -61,6 +63,8 @@ export function applyEditorStyleChange(current: AppState, nextStyle: CardStyle):
   const currentMode = current.style.layoutMode ?? "portrait";
   const nextMode = normalizedNextStyle.layoutMode ?? "portrait";
 
+  // Entering instrumental mode saves the lyric layout that will be restored
+  // when the user returns to an authored lyric document.
   if (normalizedNextStyle.contentMode === "instrumental") {
     return applyCanonicalStyleState(current, normalizedNextStyle, {
       lastLandscapeSize: currentMode === "landscape" ? sizeSnapshot(current.style) : current.lastLandscapeSize,
@@ -73,6 +77,8 @@ export function applyEditorStyleChange(current: AppState, nextStyle: CardStyle):
     });
   }
 
+  // Instrumental mode is always square portrait, so leaving it restores the
+  // last valid portrait snapshot before applying the remaining style changes.
   if (current.style.contentMode === "instrumental") {
     const restored = restoreSize("portrait", current.lastPortraitSize);
     const canonicalStyle: CardStyle = {

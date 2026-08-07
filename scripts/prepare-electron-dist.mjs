@@ -46,6 +46,8 @@ await mkdir(electronOutputDir, { recursive: true });
 
 await cp(standaloneDir, serverOutputDir, { recursive: true });
 if (existsSync(path.join(serverOutputDir, "node_modules"))) {
+  // Keep the standalone server dependency tree out of electron-builder's app
+  // dependency traversal; the desktop launcher restores lookup through NODE_PATH.
   await rename(path.join(serverOutputDir, "node_modules"), path.join(serverOutputDir, "_node_modules"));
 }
 await cp(nextStaticDir, path.join(serverOutputDir, ".next", "static"), { recursive: true });
@@ -60,6 +62,8 @@ async function prepareMinimalElectronApp() {
   const rootPackage = JSON.parse(await readFile(path.join(projectRoot, "package.json"), "utf8"));
   const electronVersion = await getElectronVersion(rootPackage);
   const localElectronDist = getLocalElectronDist();
+  // Generate a packaging-only manifest so the shipped shell contains neither
+  // development scripts nor the root project's full dependency graph.
   const desktopPackage = {
     name: rootPackage.name,
     version: rootPackage.version,
@@ -185,6 +189,8 @@ function getLocalElectronDist() {
 }
 
 async function cleanServerOutput() {
+  // Remove only artifacts excluded from runtime resolution. The standalone
+  // dependency closure itself remains authoritative and is never re-derived here.
   const cleanupResults = [];
 
   cleanupResults.push(await removePath(path.join(serverOutputDir, ".next", "cache"), ".next cache"));
@@ -265,6 +271,7 @@ async function collectMatchingFiles(targetPath, predicate, matches) {
   }
 
   if (info.isSymbolicLink()) {
+    // Do not cross dependency links while pruning or measuring the staged tree.
     return;
   }
 

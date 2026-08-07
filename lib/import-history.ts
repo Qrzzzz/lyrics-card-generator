@@ -118,6 +118,11 @@ export type ImportHistoryManualSaveEnvelope = string & {
 
 const MANUAL_SAVE_SOURCES = new Set<SongSource>(["qq", "netease", "apple", "spotify", "unknown"]);
 
+/**
+ * Validates and serializes a manual snapshot before it crosses the desktop IPC
+ * boundary. The branded result prevents ordinary strings from reaching the
+ * privileged persistence methods through the typed renderer API.
+ */
 export function serializeImportHistoryManualSave(
   input: ImportHistoryManualSaveInput
 ): ImportHistoryManualSaveEnvelope | null {

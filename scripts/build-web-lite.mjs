@@ -9,6 +9,7 @@ import tailwindcss from "tailwindcss";
 const scriptsDirectory = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(scriptsDirectory, "..");
 
+/** Builds Web Lite with application CSS and JavaScript inlined into one HTML file. */
 export async function buildWebLite(outputFile = path.join(projectRoot, "index.html")) {
   const [template, inputCss, packageJsonText] = await Promise.all([
     readFile(path.join(projectRoot, "web-lite", "index.template.html"), "utf8"),
@@ -24,6 +25,8 @@ export async function buildWebLite(outputFile = path.join(projectRoot, "index.ht
     from: path.join(projectRoot, "app", "globals.css"),
     map: false
   });
+  // The static page is served from the repository root rather than Next.js, so
+  // absolute application font URLs must become artifact-relative URLs.
   const staticCss = cssResult.css
     .replaceAll('url("/fonts/', 'url("./public/fonts/')
     .replaceAll("url('/fonts/", "url('./public/fonts/");
@@ -47,6 +50,8 @@ export async function buildWebLite(outputFile = path.join(projectRoot, "index.ht
     sourcemap: false,
     legalComments: "none",
     tsconfig: path.join(projectRoot, "tsconfig.json"),
+    // Replace runtime-only modules with browser-safe implementations at the
+    // bundle boundary instead of branching inside shared UI components.
     alias: {
       "@/lib/image-utils": path.join(projectRoot, "web-lite", "static-image-utils.ts"),
       "@/components/preview/PlatformBadge": path.join(projectRoot, "web-lite", "StaticPlatformBadge.tsx")
@@ -64,6 +69,8 @@ export async function buildWebLite(outputFile = path.join(projectRoot, "index.ht
 
   const html = template
     .replace("/* WEB_LITE_STYLES */", () => minifiedCss.code.trim())
+    // Escaping a literal closing script tag prevents bundled strings from
+    // terminating the inline script element early.
     .replace("/* WEB_LITE_SCRIPT */", () => javascript.trim().replace(/<\/script/gi, "<\\/script"));
 
   await mkdir(path.dirname(outputFile), { recursive: true });

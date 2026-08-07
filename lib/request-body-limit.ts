@@ -15,6 +15,8 @@ type StreamingRequestInit = RequestInit & { duplex: "half" };
 
 export function contentLengthExceedsLimit(request: Request, limitBytes: number) {
   assertByteLimit(limitBytes);
+  // Compare normalized decimal strings so a hostile Content-Length cannot
+  // overflow Number before the early-rejection decision is made.
   const rawLength = request.headers.get("content-length")?.trim();
   if (!rawLength || !/^\d+$/.test(rawLength)) {
     return false;
@@ -74,6 +76,8 @@ export function limitRequestBody(request: Request, limitBytes: number): LimitedR
     }
   }
 
+  // Enforce the limit while the multipart parser pulls data; Content-Length is
+  // only an optimization because clients may omit or falsify it.
   const limitedBody = new ReadableStream<Uint8Array>({
     async pull(controller) {
       try {

@@ -12,6 +12,8 @@ import { detectWebLiteLocale, webLiteCopy } from "../web-lite/copy";
 const locales: Locale[] = ["zh", "zh-TW", "en", "fr", "ja", "es"];
 const translatedLocales: Locale[] = ["fr", "ja", "es"];
 
+// Catalog checks enforce key and placeholder parity while allowing a small set
+// of protocol labels and product terms to remain intentionally shared.
 assertCatalog("main", messages, new Set([
   "chinese", "english", "songSearchSourceNetease", "album", "auto", "gridDense",
   "lyricsSource", "qualityLow"

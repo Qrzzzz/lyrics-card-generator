@@ -18,6 +18,10 @@ function getBackgroundImageMime(imagePath) {
   return BACKGROUND_IMAGE_MIME[path.extname(imagePath).toLowerCase()];
 }
 
+/**
+ * Resolves only application-generated image IDs beneath the user-data directory.
+ * The basename, ID pattern, and relative-path checks jointly reject traversal and arbitrary files.
+ */
 function safeBackgroundPathForUserData(userDataPath, imageId) {
   if (typeof imageId !== "string" || imageId.length === 0) {
     return null;

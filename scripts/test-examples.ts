@@ -13,6 +13,8 @@ const locales: Locale[] = ["zh", "zh-TW", "en", "fr", "ja", "es"];
 const forbiddenSizeKeys = ["height", "width", "cardHeight", "canvasHeight", "autoHeight", "ratio"] as const;
 const hexColorPattern = /^#[0-9A-F]{6}$/i;
 
+// Examples carry content and palette intent only; responsive card dimensions
+// must remain derived by the live layout engine.
 function effectiveLineCount(value: string) {
   return value.split(/\r?\n/).filter((line) => line.trim().length > 0).length;
 }

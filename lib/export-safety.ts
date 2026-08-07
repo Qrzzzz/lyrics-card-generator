@@ -39,6 +39,8 @@ function resolveBlockingReason(
   lineStatus: ExportLyricLineStatus,
   readiness: ExportDomSafety
 ): ExportSafetyBlockingReason | null {
+  // The order is user-facing precedence: document policy first, then readiness,
+  // measurement stability, and finally content geometry.
   if (!lineStatus.canExport) return "lyrics-limit";
   if (!readiness.isCardMounted) return "card-unavailable";
   if (!readiness.areFontsReady) return "fonts-loading";

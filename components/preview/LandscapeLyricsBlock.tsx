@@ -64,6 +64,7 @@ export function LandscapeLyricsBlock({
       return;
     }
 
+    // Each frame reduces only enough to remove measured overflow, stopping at the readability floor.
     let cancelled = false;
     const fit = () => {
       if (cancelled) {

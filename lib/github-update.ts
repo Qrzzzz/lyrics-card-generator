@@ -123,6 +123,8 @@ export function buildUpdateResult(release: GitHubRelease, currentVersion = APP_V
 }
 
 export function findInstallerUrl(assets: ReleaseAsset[]) {
+  // Asset selection is intentionally name-based because GitHub Releases does
+  // not expose semantic installer/portable roles.
   return assets.find((asset) => {
     const name = asset.name.toLowerCase();
     return name.includes("setup") && /\.(exe|msi)$/i.test(asset.name);

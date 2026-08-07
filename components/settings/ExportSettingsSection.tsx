@@ -62,6 +62,7 @@ export function ExportSettingsSection({
           value={settings.defaultExportQuality}
           ariaLabel={copy.exportQuality}
           onChange={(quality) => {
+            // Quality and pixel ratio are persisted as one compatibility invariant.
             const option = EXPORT_QUALITY_OPTIONS.find((item) => item.id === quality)!;
             onChange({
               ...settings,

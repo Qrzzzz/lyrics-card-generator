@@ -18,6 +18,8 @@ import {
   MAX_EXPORT_LYRIC_LINES
 } from "../lib/lyrics-document";
 
+// The logical-line policy is independent from visual wrapping; actual DOM
+// overflow is validated separately with the export-card fixture below.
 assert.equal(MAX_EXPORT_LYRIC_LINES, 36);
 assert.equal(countNonEmptyLogicalLines(""), 0);
 assert.equal(countNonEmptyLogicalLines("one\n\n two \n\t\nthree"), 3);

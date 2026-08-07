@@ -119,6 +119,7 @@ export function useEditorSteps({
 }: UseEditorStepsInput): SettingsStep[] {
   const [songInfoExpanded, setSongInfoExpanded] = useState(false);
   const [lyricsSidebarTab, setLyricsSidebarTab] = useState<LyricsSidebarTab>("cleanup");
+  // Manual song info is a document-revision-bound draft until the user explicitly saves it.
   const [songInfoDraft, setSongInfoDraft] = useState<SongInfo>(() => ({ ...state.song }));
   const [songInfoEditRevision, setSongInfoEditRevision] = useState<number | null>(null);
   const [manualCoverPending, setManualCoverPending] = useState(false);
@@ -132,6 +133,7 @@ export function useEditorSteps({
   }
 
   function discardSongInfoDraft() {
+    // Draft-only blob URLs must be retired without revoking the cover owned by live state.
     revokeReplacedBlobUrl(songInfoDraftCoverRef.current, state.song.coverUrl);
   }
 
@@ -173,6 +175,7 @@ export function useEditorSteps({
   }
 
   function saveSongInfoEditor() {
+    // Never apply a draft opened against a document that has since been replaced.
     if (songInfoEditRevision !== documentRevision) {
       closeSongInfoEditor();
       return;
@@ -195,6 +198,7 @@ export function useEditorSteps({
       return;
     }
 
+    // External document changes invalidate the draft and any pending cover registration.
     discardSongInfoDraft();
     syncSongInfoDraft(state.song);
     setSongInfoEditRevision(null);

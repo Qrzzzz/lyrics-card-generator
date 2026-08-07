@@ -12,6 +12,8 @@ import { DEFAULT_FONT_SCHEME } from "../lib/font-schemes";
 import { DEFAULT_PALETTE } from "../lib/palette-background";
 import { normalizeUserSettings } from "../lib/settings/user-settings";
 
+// These smoke assertions pin the defaults and theme projections shared across
+// the editor modules that were separated by the refactor.
 assert.equal(defaultState.locale, "zh");
 assert.equal(defaultState.style.instrumentalText, DEFAULT_INSTRUMENTAL_TEXT.zh);
 assert.equal(defaultState.style.fontScheme?.presetId, DEFAULT_FONT_SCHEME.presetId);

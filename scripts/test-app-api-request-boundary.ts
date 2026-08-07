@@ -39,6 +39,8 @@ const jsonRoutes = [
 
 async function main() {
 try {
+  // Replace outbound provider traffic so a boundary rejection is observable as
+  // both an HTTP result and the absence of any upstream call.
   globalThis.fetch = async (input, init) => {
     providerCalls += 1;
     const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
@@ -244,6 +246,8 @@ async function assertStandardRejection(
 }
 
 async function assertLocalAudioUploadLimits() {
+  // Exercise declared, missing, and deceptive content lengths because only the
+  // streaming counter can enforce the latter two cases safely.
   assert.equal(MAX_LOCAL_AUDIO_BYTES, 100 * 1024 * 1024, "the exact file limit remains 100 MiB");
   assert.equal(
     MAX_LOCAL_AUDIO_REQUEST_BYTES,

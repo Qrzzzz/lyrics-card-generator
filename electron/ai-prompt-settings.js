@@ -15,11 +15,13 @@ function normalizePromptLibrary(input) {
     const normalized = normalizeLocalePromptOverrides(rawLocaleOverrides[locale]);
     if (normalized.styleOverrides.length) localeOverrides[locale] = normalized;
   }
+  // Legacy libraries had no locale key, so migrate that shape only into the original Chinese slot.
   if (!localeOverrides.zh && source.styleOverrides) {
     const legacy = normalizeLocalePromptOverrides(source);
     if (legacy.styleOverrides.length) localeOverrides.zh = legacy;
   }
   const custom = new Map();
+  // Preset IDs are persistent identities: later valid duplicates win before the two-preset cap is applied.
   for (const item of Array.isArray(source.customPresets) ? source.customPresets : []) {
     if (!item || typeof item.id !== "string" || !CUSTOM_PRESET_ID.test(item.id)) continue;
     const title = cleanText(item.title, 60);

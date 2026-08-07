@@ -28,6 +28,8 @@ type ElectronProviderModule = {
 };
 
 const require = createRequire(import.meta.url);
+// The renderer and Electron implementations must normalize the same provider
+// payloads so moving a request across the IPC boundary cannot change semantics.
 const electronProvider = require("../electron/provider-response.js") as ElectronProviderModule;
 
 async function read(body: BodyInit | null, init?: ResponseInit) {

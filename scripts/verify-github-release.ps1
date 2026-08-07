@@ -19,6 +19,8 @@ param(
 $ErrorActionPreference = "Stop"
 $PSNativeCommandUseErrorActionPreference = $true
 
+# Resolve by immutable numeric id so a same-tag draft or stale name cannot be
+# substituted between upload, verification, and publication.
 if ($ReleaseId -le 0) { throw "Invalid release id: $ReleaseId" }
 if ($Repository -notmatch '^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$') { throw "Invalid repository: $Repository" }
 if ($Tag -notmatch '^v\d+\.\d+\.\d+(?:-rc\.\d+)?$') { throw "Invalid release tag: $Tag" }
@@ -47,6 +49,7 @@ $expectedAssetNames = @(
   "SHA256SUMS"
 ) | Sort-Object
 
+# Refuse to mix newly downloaded evidence with files from a previous run.
 if (Test-Path -LiteralPath $OutputDirectory) {
   $existing = @(Get-ChildItem -LiteralPath $OutputDirectory -Force)
   if ($existing.Count -gt 0) { throw "Verification output directory is not empty: $OutputDirectory" }
@@ -68,6 +71,7 @@ $headers = @{
   Invoke-WebRequest -Uri $asset.url -Headers $headers -OutFile (Join-Path $OutputDirectory $asset.name)
 }
 
+# Exact set equality rejects both missing deliverables and unexpected extras.
 $assets = @(Get-ChildItem -LiteralPath $OutputDirectory -File)
 $actualNames = @($assets.Name | Sort-Object)
 if (($actualNames -join "`n") -ne ($expectedAssetNames -join "`n")) {
@@ -84,6 +88,8 @@ if ($sbom.Count -ne 1) { throw "Expected exactly one SPDX SBOM, found $($sbom.Co
 if ($checksums.Count -ne 1) { throw "Expected exactly one SHA256SUMS file, found $($checksums.Count)." }
 
 $checksummedNames = @()
+# Parse a deliberately narrow checksum format and keep every referenced path
+# inside the verified output directory.
 Get-Content -LiteralPath $checksums[0].FullName | ForEach-Object {
   if ($_ -notmatch '^([0-9a-f]{64}) \*(.+)$') { throw "Invalid checksum line: $_" }
   $expectedDigest = $Matches[1]
@@ -104,6 +110,7 @@ if (($actualChecksummedNames -join "`n") -ne ($expectedChecksummedNames -join "`
 }
 
 $assets | ForEach-Object {
+  # Every published asset, including the manifest, must carry a valid attestation.
   gh attestation verify $_.FullName --repo $Repository
 }
 

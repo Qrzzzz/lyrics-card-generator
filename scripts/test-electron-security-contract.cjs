@@ -64,6 +64,8 @@ const importHistorySource = readFileSync("electron/import-history.js", "utf8");
 const manualSaveIpcSource = readFileSync("electron/manual-save-ipc.js", "utf8");
 const desktopApiSource = readFileSync("lib/desktop-api.ts", "utf8");
 const desktopHistoryInteractionSource = readFileSync("scripts/test-desktop-import-history-interactions.mjs", "utf8");
+// Source contracts complement unit behavior checks by proving that the hardened
+// helpers are actually wired into the privileged Electron entry point.
 const replayPayloadSource = mainSource.slice(
   mainSource.indexOf("async function createImportHistoryReplayPayload"),
   mainSource.indexOf("function mimeTypeForHistoryFile")
@@ -361,6 +363,7 @@ for (const directive of ["default-src 'self'", "script-src", "style-src", "img-s
 assert.match(nextConfig, /Permissions-Policy/);
 
 async function testManualSaveIpcEarlyRejection() {
+  // Rejected events must fail before queued persistence, file reads, or store writes.
   const calls = { queue: 0, preferences: 0, create: 0, update: 0, historyFilesystem: 0, logs: 0 };
   const handlers = createManualSaveIpcHandlers({
     trackMutation: async (operation) => {

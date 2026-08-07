@@ -45,6 +45,7 @@ export function UpdateButton({ t }: UpdateButtonProps) {
 
   async function openLink(url: string) {
     const desktopApi = getLyricsCardDesktopApi();
+    // Prefer the desktop shell's controlled opener; browsers use an isolated tab fallback.
     if (desktopApi) {
       await desktopApi.openExternal(url);
       return;

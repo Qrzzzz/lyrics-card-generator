@@ -93,6 +93,8 @@ function normalizeImportHistoryLimit(value: unknown): ImportHistoryLimit {
 }
 
 export function normalizeUserSettings(input: unknown): UserSettings {
+  // Persisted settings may come from older schemas or manual edits. Derive
+  // dependent values here so callers always receive one canonical shape.
   const source = input && typeof input === "object" ? input as UserSettingsInput : {};
   const uiThemeMode = normalizeThemeMode(source);
   const customAccentColor = normalizeHexColor(
@@ -119,6 +121,7 @@ export function normalizeUserSettings(input: unknown): UserSettings {
       : DEFAULT_USER_SETTINGS.defaultSharedByText,
     defaultExportFormat: normalizeExportFormat(source.defaultExportFormat),
     defaultExportQuality: quality,
+    // Pixel ratio is derived from the quality id and never trusted independently.
     defaultExportPixelRatio: getExportPixelRatio(quality),
     importHistoryLimit: normalizeImportHistoryLimit(source.importHistoryLimit),
     firstLaunchLanguageSelected: source.firstLaunchLanguageSelected === true

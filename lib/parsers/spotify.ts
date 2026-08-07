@@ -175,6 +175,8 @@ function isSpotifyTrackId(value: string) {
 }
 
 export function resolveSpotifyMetadata(rawTitle: string, html = "") {
+  // Structured HTML evidence outranks title-derived artist text. A suffix is
+  // removed from the title only when it exactly matches that confirmed artist.
   const parsed = splitExplicitSpotifyTitle(rawTitle);
   const artist = extractSpotifyArtistFromHtml(html, parsed.title) || parsed.artist;
 

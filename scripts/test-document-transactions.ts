@@ -27,6 +27,8 @@ const songB: ParsedSongData = {
   originalUrl: "https://music.example/b"
 };
 
+// Later intents own the commit slot even when an earlier asynchronous import
+// resolves first.
 {
   const controller = new DocumentTransactionController();
   const a = controller.begin("link");
@@ -37,6 +39,7 @@ const songB: ParsedSongData = {
 }
 
 {
+  // Synchronous document mutations invalidate pending imports immediately.
   const controller = new DocumentTransactionController();
   const pending = controller.begin("local-audio");
   assert.equal(controller.mutate(), 1, "clear/manual replacement advances the document revision");

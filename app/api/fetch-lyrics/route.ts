@@ -57,6 +57,8 @@ export async function POST(req: Request) {
     }
 
     const records = (await res.json()) as LrclibRecord[];
+    // LRCLIB results are untrusted search candidates; discard weak identity
+    // matches before selecting the highest-confidence lyric payload.
     const candidates = records
       .map((record) => rankLyricsCandidate(record, parsed.data.title, parsed.data.artist))
       .filter((candidate) => candidate !== null)

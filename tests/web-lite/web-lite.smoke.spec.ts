@@ -19,6 +19,8 @@ const expectedExampleAutoWidths: Record<string, { min: number; max: number }> = 
   honeybee: { min: 860, max: 900 },
   lies: { min: 900, max: 940 }
 };
+// Chromium refuses several otherwise valid TCP ports. Retry allocation rather
+// than treating a browser policy failure as an application regression.
 const unsafeBrowserPorts = new Set([
   1, 7, 9, 11, 13, 15, 17, 19, 20, 21, 22, 23, 25, 37, 42, 43, 53, 69, 77, 79, 87, 95,
   101, 102, 103, 104, 109, 110, 111, 113, 115, 117, 119, 123, 135, 137, 139, 143, 161, 179,
@@ -61,6 +63,8 @@ test.afterAll(async () => {
 
 test.beforeEach(async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
+  // Count only the 1x1 pixel reads used by export safety validation, leaving
+  // normal canvas rendering behavior intact.
   await page.addInitScript(() => {
     const validationWindow = window as typeof window & { __webLiteValidationReads?: number };
     validationWindow.__webLiteValidationReads = 0;
@@ -537,6 +541,7 @@ test("keeps a successful remote URL when the song step remounts", async ({ page 
 });
 
 test("ignores a remote cover that completes after clear", async ({ page }) => {
+  // Delay the response to make the stale validation race deterministic.
   const gate = await installRemoteCoverRoute(page, true);
   await openWebLite(page);
 

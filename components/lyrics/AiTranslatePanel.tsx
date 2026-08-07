@@ -126,6 +126,7 @@ export function AiTranslatePanel({
 
   useLayoutEffect(() => {
     if (!stageChanged) return;
+    // Preserve each subpage's scroll and park focus on the neutral viewport during the swap.
     const previousRunPageOpen = previousRunPageOpenRef.current;
     const leavingPage = previousRunPageOpen ? runPageRef.current : setupPageRef.current;
     if (leavingPage) {
@@ -418,6 +419,7 @@ function AiSidebarSubpage({
   testId: string;
   onEntered: () => void;
 }) {
+  // Framer keeps an exiting subpage mounted, so presence also controls accessibility and input.
   const isPresent = useIsPresent();
 
   return (

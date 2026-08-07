@@ -7,6 +7,7 @@ function invalidManualSaveResult() {
 }
 
 function invokeManualSave(channel, recordId, envelope) {
+  // Reject obviously invalid payloads before structured clone; the main process repeats canonical validation.
   if (typeof envelope !== "string" || envelope.length > MAX_MANUAL_SAVE_ENVELOPE_CODE_UNITS) {
     return invalidManualSaveResult();
   }
@@ -41,6 +42,7 @@ contextBridge.exposeInMainWorld("lyricsCardDesktopBridge", {
   readBackgroundImage: (imageId) => ipcRenderer.invoke("lyrics-card:background-read", imageId),
   removeBackgroundImage: (imageId) => ipcRenderer.invoke("lyrics-card:background-remove", imageId),
   registerImportFile: (file, kind) => {
+    // Resolve the native path only in preload; main converts it into a sender-bound, one-use token.
     const filePath = webUtils.getPathForFile(file);
     if (!filePath) return Promise.resolve(null);
     return ipcRenderer.invoke("lyrics-card:import-file-register", {

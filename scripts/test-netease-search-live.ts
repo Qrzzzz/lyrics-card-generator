@@ -17,6 +17,8 @@ class LiveEnvironmentFailure extends Error {
   }
 }
 
+// Distinguish network/provider availability from deterministic ranking failures
+// so live diagnostics do not mislabel an environment outage as a product defect.
 class LiveLogicFailure extends Error {
   constructor(
     readonly code: string,

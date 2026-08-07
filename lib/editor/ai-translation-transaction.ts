@@ -6,6 +6,7 @@ export type AITranslationDocumentIntent<T> = {
   hasWrittenPartial: boolean;
 };
 
+/** Tracks the single AI intent allowed to write a specific document revision. */
 export class AITranslationTransactionController<T> {
   private nextIntentId = 0;
   private activeIntentId: number | null = null;

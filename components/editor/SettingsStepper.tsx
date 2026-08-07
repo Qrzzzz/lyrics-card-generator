@@ -192,6 +192,7 @@ export function SettingsStepper({
   const reduceMotion = useAppReducedMotion();
   const previousStepRef = useRef(currentStep);
   const previousStep = previousStepRef.current;
+  // Visited is presentation history only; readiness remains the step's independent completion signal.
   const visitedStepsRef = useRef(new Set([currentStep]));
   visitedStepsRef.current.add(currentStep);
   const stepsGridRef = useRef<HTMLDivElement | null>(null);
@@ -210,6 +211,7 @@ export function SettingsStepper({
   const isWorkbenchPanelTransition = previousStep !== currentStep && (isExportWorkbench || wasExportWorkbench);
   const workbenchTrack = resolvePreviewWorkbenchTrack(workbenchSplit.geometry, isExportWorkbench);
   const balancedWorkbenchPanelWidth = workbenchSplit.geometry.usableWidth / 2;
+  // Retain the last preview settings panel while the export panel slides into its track position.
   const lastPreviewSettingsStepRef = useRef<SettingsStep | null>(null);
   if (isPreviewWorkbench && !isExportWorkbench) {
     lastPreviewSettingsStepRef.current = activeStep;
@@ -379,6 +381,7 @@ export function SettingsStepper({
           })}
         </div>
 
+        {/* This invisible rail measures natural labels without inheriting the active grid's truncation. */}
         <div
           ref={stepsMeasureRef}
           aria-hidden="true"
@@ -430,6 +433,7 @@ export function SettingsStepper({
               gridTemplateColumns: workbenchLayoutTransition
             }}
           >
+            {/* Offscreen track panels stay mounted for motion continuity but must remain inert. */}
             <div
               id="preview-workbench-settings-panel"
               className="preview-workbench-panel preview-workbench-editor flex min-w-0 flex-col gap-4"

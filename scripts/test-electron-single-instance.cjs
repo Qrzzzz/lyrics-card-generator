@@ -7,6 +7,8 @@ const { acquireSingleInstanceOwnership } = require("../electron/single-instance-
 
 const MAIN_GATE_FIXTURE = "--main-gate-fixture";
 
+// Fake windows make every restore/show/focus transition observable without a
+// graphical session; the separate main-gate fixture covers entry-point ordering.
 function testSecondaryQuitsWithoutOwnership() {
   const app = new FakeApp(false);
   const controller = acquireSingleInstanceOwnership({
@@ -112,6 +114,8 @@ function testClosingAndQuittingWindowsAreNotRevived() {
 }
 
 function testMainEntryOwnershipGate() {
+  // Load the real entry point with a stubbed Electron module to prove ownership
+  // is decided before privileged setup, not merely inside the helper unit.
   const secondary = runMainGateScenario(false);
   assert.equal(secondary.lockRequests, 1);
   assert.equal(secondary.quitCalls, 1);

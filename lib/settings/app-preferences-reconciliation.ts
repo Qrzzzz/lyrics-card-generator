@@ -33,6 +33,7 @@ export function selectNewerAppPreferences(
 }
 
 export function nextAppPreferencesRevision(current: AppPreferencesRecord | null, now = Date.now()) {
+  // Keep both fields monotonic even if the system clock moves backwards.
   return {
     revision: Math.max(0, current?.revision ?? 0) + 1,
     updatedAt: Math.max(now, (current?.updatedAt ?? 0) + 1)

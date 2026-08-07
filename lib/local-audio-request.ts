@@ -21,6 +21,8 @@ export async function readLocalAudioMultipart(
   request: Request,
   maxRequestBytes = MAX_LOCAL_AUDIO_REQUEST_BYTES
 ): Promise<LocalAudioMultipartResult> {
+  // Reject trustworthy oversized declarations early, then keep the streaming
+  // limiter active to cover missing or dishonest Content-Length headers.
   if (contentLengthExceedsLimit(request, maxRequestBytes)) {
     cancelRequestBody(request, new RequestBodyLimitExceededError(maxRequestBytes));
     return { ok: false, response: appApiErrorResponse("local_audio_too_large", 413) };
@@ -69,6 +71,8 @@ export function localAudioMetadataSizeRejection(
   let totalCoverBytes = 0;
   for (const picture of pictures ?? []) {
     const byteLength = picture?.data?.byteLength;
+    // Subtraction-based comparison avoids overflowing an accumulated total
+    // when malformed parser output reports an unsafe integer size.
     if (
       !Number.isSafeInteger(byteLength)
       || byteLength < 0

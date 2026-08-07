@@ -59,6 +59,7 @@ function timingSafeProofMatches(actual, expected) {
 
 function validateReadyUrl(value) {
   const parsed = new URL(value);
+  // Use a numeric loopback address and explicit port so readiness cannot drift through DNS or a default port.
   if (
     parsed.protocol !== "http:"
     || parsed.hostname !== "127.0.0.1"
@@ -71,6 +72,11 @@ function validateReadyUrl(value) {
   return parsed;
 }
 
+/**
+ * Waits for the spawned Next process to prove ownership of its loopback endpoint.
+ * A live HTTP listener is not sufficient: every probe carries a fresh challenge whose
+ * HMAC can be produced only by the child that inherited the per-launch startup secret.
+ */
 function waitForPackagedServerReady({
   url,
   child,
@@ -110,6 +116,7 @@ function waitForPackagedServerReady({
     const finish = (error) => {
       if (settled) return;
       settled = true;
+      // Settle once and detach child/timer observers before resolving or rejecting startup.
       cleanup();
       if (error) {
         activeRequest?.destroy();
@@ -177,6 +184,7 @@ function waitForPackagedServerReady({
         responseStarted = true;
         const statusCode = response.statusCode ?? 0;
         const contentType = String(response.headers["content-type"] ?? "").split(";", 1)[0].trim().toLowerCase();
+        // A responding service with the wrong protocol shape is untrusted, not a transient startup miss.
         if (statusCode !== 200) {
           response.resume();
           finish(untrustedResponseError(`status=${statusCode}`));
@@ -190,6 +198,7 @@ function waitForPackagedServerReady({
 
         const chunks = [];
         let byteLength = 0;
+        // Bound an unauthenticated response before buffering or parsing it.
         response.on("data", (chunk) => {
           if (settled) return;
           const bytes = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
@@ -240,6 +249,7 @@ function waitForPackagedServerReady({
       activeRequest = currentRequest;
       currentRequest.once("error", () => {
         if (activeRequest === currentRequest) activeRequest = null;
+        // Connection failures before headers are expected while the owned child is still booting.
         if (!responseStarted) retryProbe();
       });
       currentRequest.setTimeout(Math.min(requestTimeoutMs, remainingMs), () => {

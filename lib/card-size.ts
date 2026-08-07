@@ -72,6 +72,8 @@ export function estimateCardHeight(params: {
   showSharedBy: boolean;
   sharedByText?: string;
 }) {
+  // This is a pre-layout estimate used to seed auto-height. Final export safety
+  // still relies on measured DOM geometry rather than these character ratios.
   const lyricLines = params.lyrics.split(/\r?\n/).filter((line) => line.trim().length > 0);
   const translationLines = params.translationEnabled
     ? (params.translationText ?? "").split(/\r?\n/).filter((line) => line.trim().length > 0)

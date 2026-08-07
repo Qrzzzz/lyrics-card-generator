@@ -33,6 +33,8 @@ export function reconcileBlobUrlRetirement(
   nextUrl?: string,
   preservedUrl?: string
 ) {
+  // Replaced URLs enter a retirement set first so a separately preserved
+  // preview/export reference can delay revocation until a later reconciliation.
   const next = nextUrl ?? "";
   if (state.currentUrl.startsWith("blob:") && state.currentUrl !== next) {
     state.retiredUrls.add(state.currentUrl);

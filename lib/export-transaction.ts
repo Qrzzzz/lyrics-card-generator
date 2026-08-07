@@ -94,6 +94,8 @@ export async function waitForExportSnapshotNode(
       throwIfAborted(controller.signal);
       const node = getNode();
       if (node?.dataset.exportSnapshotId === snapshotId) {
+        // Font readiness plus two paint frames lets React commit the isolated
+        // snapshot and the browser resolve its final layout before capture.
         if ("fonts" in document) {
           await raceWithAbort(document.fonts.ready, controller.signal);
         }

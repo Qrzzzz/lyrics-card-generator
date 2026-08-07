@@ -14,6 +14,8 @@ const readmes = [
 ] as const;
 const releaseVersion = packageJson.version;
 const escapedReleaseVersion = releaseVersion.replaceAll(".", "\\.");
+// Candidate notes use localized unpublished markers; published releases must
+// replace them consistently across all six README surfaces.
 const unpublishedStatusMarkers: Record<(typeof releaseLocales)[number], string> = {
   "zh-CN": "尚未发布",
   "zh-TW": "尚未發布",

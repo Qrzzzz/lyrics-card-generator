@@ -87,6 +87,10 @@ const LRC_METADATA_PATTERN = /^\s*\[(?:ar|ti|al|by|offset|re|ve|length|tool|au):
 const LRC_TIMESTAMP_PREFIX_PATTERN = /^(?:\s*\[\d{1,3}:\d{2}(?:[.:]\d{1,3})?\])+/u;
 const HISTORY_LIMIT = 20;
 
+/**
+ * Expands a non-empty selection to complete logical lines. With no selection,
+ * workbench commands intentionally target the entire editor document.
+ */
 export function resolveLyricsTextScope(
   text: string,
   selection: LyricsTextSelection
@@ -301,6 +305,8 @@ export function cleanSynchronizedBlankRows(params: {
 }) {
   const originalLines = normalizeNewlines(params.lyrics).split("\n");
   const translationLines = normalizeNewlines(params.translationText).split("\n");
+  // Only the paired prefix is eligible: an unpaired tail in either column must
+  // never shift because the other column has no corresponding row.
   const pairedCount = Math.min(originalLines.length, translationLines.length);
   const startIndex = clamp((params.lineRange?.startLine ?? 1) - 1, 0, pairedCount);
   const endIndex = clamp(params.lineRange?.endLine ?? pairedCount, startIndex, pairedCount);
@@ -401,6 +407,8 @@ export function recordLyricsOperation(
   history: LyricsOperationHistory,
   entry: LyricsHistoryEntry
 ): LyricsOperationHistory {
+  // A new edit invalidates redo history and retains only the newest bounded
+  // snapshots to keep large lyric documents from growing memory without limit.
   return {
     past: [...history.past, entry].slice(-HISTORY_LIMIT),
     future: []
@@ -455,6 +463,8 @@ function applyScopedTransform(
   const scope = resolveLyricsTextScope(text, selection);
   const result = transform(scope.text, scope);
   const nextText = `${text.slice(0, scope.start)}${result.text}${text.slice(scope.end)}`;
+  // Preserve transformed range selection for scoped commands; whole-document
+  // commands collapse the caret at its original bounded start position.
   const nextSelection = scope.hasSelection
     ? { start: scope.start, end: scope.start + result.text.length }
     : {

@@ -5,6 +5,8 @@ const workflow = readFileSync(".github/workflows/ci.yml", "utf8");
 const packageJson = JSON.parse(readFileSync("package.json", "utf8"));
 const interactionTest = readFileSync("scripts/test-desktop-settings-interactions.mjs", "utf8");
 
+// Assert workflow intent as source contracts so renamed or reordered CI steps do
+// not silently weaken the packaged regression gate.
 assert.match(workflow, /^\s{2}desktop-packaged-regression:/m, "the Windows job describes the full packaged regression scope");
 assert.doesNotMatch(workflow, /^\s{2}desktop-final-artifact-smoke:/m, "the final-artifact command is not misrepresented as the whole job");
 assert.ok(

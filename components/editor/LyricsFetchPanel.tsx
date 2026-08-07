@@ -39,6 +39,7 @@ export function LyricsFetchPanel({
   const identity = songDocumentIdentity(song);
 
   useEffect(() => {
+    // Candidates belong to both a document revision and song identity; either change invalidates them.
     activeRequestRef.current?.abort();
     activeRequestRef.current = null;
     setCandidate(null);
@@ -72,6 +73,7 @@ export function LyricsFetchPanel({
     activeRequestRef.current?.abort();
     const controller = new AbortController();
     activeRequestRef.current = controller;
+    // Preserve the request's ownership tokens for a second validation when the user applies it.
     const requestRevision = documentRevision;
     const requestIdentity = identity;
     setOpen(true);

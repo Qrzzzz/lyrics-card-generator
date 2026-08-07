@@ -14,6 +14,7 @@ import type {
 const BROWSER_SETTINGS_KEY = "lyric-card-generator-ai-settings";
 
 type BrowserStoredSettings = AISettings;
+// Browser preview keys are session-only; persistent settings never contain the secret.
 let browserSessionApiKey = "";
 
 export class AITranslationError extends Error {
@@ -109,6 +110,8 @@ async function streamFromDesktop(
   desktop: NonNullable<ReturnType<typeof getLyricsCardDesktopApi>>,
   params: AITranslationStreamParams
 ) {
+  // The request id correlates shared IPC events and prevents chunks from an
+  // older or concurrently cancelled request from entering this generation.
   const requestId = crypto.randomUUID();
   let aborted = Boolean(params.signal?.aborted);
   let accumulated = "";
@@ -186,6 +189,8 @@ async function consumeOpenAIStream(
 
   const reader = response.body.getReader();
   const decoder = new TextDecoder();
+  // Network chunks do not align with SSE event boundaries, so retain the final
+  // incomplete event until a later read supplies its blank-line delimiter.
   let buffer = "";
   let accumulated = "";
   let accumulatedReasoning = "";

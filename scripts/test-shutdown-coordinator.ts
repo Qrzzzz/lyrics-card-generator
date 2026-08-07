@@ -24,6 +24,8 @@ async function reportsFailureWithoutInfiniteWait() {
     error instanceof ShutdownPersistenceError && error.failures[0]?.id === "failed"
   );
 
+  // A non-settling persistence source must be reported without trapping the
+  // application in shutdown forever.
   const hanging = new ShutdownCoordinator();
   hanging.register("hanging", async () => new Promise(() => undefined));
   const startedAt = Date.now();

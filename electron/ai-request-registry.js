@@ -1,3 +1,8 @@
+/**
+ * Owns cancellable AI requests per renderer sender.
+ * Sender scoping prevents cross-window cancellation, while short-lived tombstones
+ * preserve cancellations that arrive before asynchronous request startup completes.
+ */
 class AIRequestRegistry {
   constructor({ tombstoneTtlMs = 30_000, now = () => Date.now() } = {}) {
     this.tombstoneTtlMs = tombstoneTtlMs;
@@ -15,6 +20,7 @@ class AIRequestRegistry {
 
     const controller = new AbortController();
     requests.set(requestId, controller);
+    // Cancellation may race ahead of begin() while settings are still being loaded.
     if (this.#hasTombstone(sender, requestId)) {
       controller.abort(new Error("AI translation request was cancelled before startup completed."));
     }
@@ -40,6 +46,7 @@ class AIRequestRegistry {
 
   finish(sender, requestId, controller) {
     const requests = this.requestsBySender.get(sender);
+    // A superseded request must not remove the newer controller that reused its ID.
     if (requests?.get(requestId) !== controller) return false;
     requests.delete(requestId);
     if (requests.size === 0) this.requestsBySender.delete(sender);
@@ -70,6 +77,7 @@ class AIRequestRegistry {
   #observeSender(sender) {
     if (this.observedSenders.has(sender)) return;
     this.observedSenders.add(sender);
+    // Renderer destruction is the ownership boundary for both active work and tombstones.
     sender.once("destroyed", () => this.clearSender(sender));
   }
 

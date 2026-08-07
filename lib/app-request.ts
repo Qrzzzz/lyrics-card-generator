@@ -21,6 +21,11 @@ export function createAppRequestHeaders(initial?: HeadersInit) {
   return headers;
 }
 
+/**
+ * Applies the local app's CSRF-style mutation gate: exact external origin,
+ * explicit renderer marker, and an exact media type must all agree. This is a
+ * request provenance check, not a substitute for validating the body schema.
+ */
 export function validateAppMutationRequest(
   request: Request,
   expectedMediaType: AppMutationMediaType
@@ -64,6 +69,8 @@ function hasAllowedRequestOrigin(request: Request) {
 
 function getExternalRequestOrigin(request: Request) {
   const requestUrl = new URL(request.url);
+  // The first forwarded value represents the client-facing hop when the local
+  // Next.js service is reached through its trusted desktop proxy.
   const forwardedHost = firstForwardedValue(request.headers.get("x-forwarded-host"));
   const host = forwardedHost || request.headers.get("host")?.trim();
   const forwardedProto = firstForwardedValue(request.headers.get("x-forwarded-proto")).toLowerCase();

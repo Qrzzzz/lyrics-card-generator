@@ -46,6 +46,7 @@ export function ExamplesFloor({ isActive, locale, onLoad, onClose, transition }:
 
   useEffect(() => {
     if (!isActive) return;
+    // Wait for the surface to become interactive before moving focus into it.
     const frame = window.requestAnimationFrame(() => closeButtonRef.current?.focus({ preventScroll: true }));
     return () => window.cancelAnimationFrame(frame);
   }, [isActive]);

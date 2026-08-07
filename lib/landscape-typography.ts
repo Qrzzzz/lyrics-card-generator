@@ -17,6 +17,7 @@ export type LandscapeTypography = {
   pairGap: number;
 };
 
+/** Fits lyric/translation pairs into the measured landscape lyrics region. */
 export function getLandscapeTypography({
   width,
   height,
@@ -43,6 +44,8 @@ export function getLandscapeTypography({
     lyricFontSize *= 0.88;
   }
 
+  // A translated row consumes less than two full lyric lines because its font
+  // is smaller, but still needs an explicit inter-pair gap.
   const pairWeight = hasTranslation ? 1.55 : 1;
   const estimatedHeight = activeLineCount * lyricFontSize * lineHeight * pairWeight;
 

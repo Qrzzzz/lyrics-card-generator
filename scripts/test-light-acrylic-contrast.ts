@@ -15,6 +15,8 @@ const backdropMatrix = [
   { name: "light", color: "#E2E8F0" }
 ] as const;
 
+// Acrylic surfaces are composited against representative desktop backdrops
+// before contrast is measured; checking token colors alone would overstate it.
 for (const backdrop of backdropMatrix) {
   const windowBase = compositeHexColors(
     LIGHT_ACRYLIC_CONTRAST_FLOOR.windowBase.color,

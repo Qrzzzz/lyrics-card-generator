@@ -9,6 +9,8 @@ function deferred<T>() {
   return { promise, resolve };
 }
 
+// Model the desktop provider settling after cancellation to prove that late IPC
+// chunks and the final result cannot mutate the renderer transaction.
 async function lateDesktopDataIsRejectedAfterAbort() {
   const final = deferred<string>();
   let listener: ((event: DesktopAIStreamEvent) => void) | undefined;
@@ -52,6 +54,7 @@ async function lateDesktopDataIsRejectedAfterAbort() {
 }
 
 async function alreadyAbortedSignalNeverStartsProvider() {
+  // A pre-aborted signal must be rejected before any privileged desktop call.
   let starts = 0;
   let cancels = 0;
   const desktop = {

@@ -23,6 +23,8 @@ import type { AppState, ParsedSongData } from "../lib/types";
 type TranslationValue = { text: string; enabled: boolean };
 type Phase = "connecting" | "streaming" | "idle";
 
+// The harness exposes provider events independently from promise settlement so
+// document mutations can be interleaved with realistic late stream activity.
 function deferredStream(onAbort?: () => void) {
   let events!: AITranslationStreamEvents<Phase>;
   let signal!: AbortSignal;

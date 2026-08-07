@@ -88,6 +88,7 @@ export function LyricsWorkspace({
   const lyricsRef = useRef<HTMLTextAreaElement>(null);
   const translationRef = useRef<HTMLTextAreaElement>(null);
   const sidebarToggleRef = useRef<HTMLButtonElement>(null);
+  // Unmount cleanup reads the latest AI lifecycle without resubscribing the effect.
   const aiLifecycleRef = useRef({
     open: Boolean(aiPanel),
     translating: isAITranslating,
@@ -136,6 +137,7 @@ export function LyricsWorkspace({
     if (editors.length === 0) return;
     for (const editor of editors) editor.style.height = "auto";
     const viewportFloor = Math.max(280, (scrollRef.current?.clientHeight ?? 0) - 24);
+    // Equal heights make both lyric columns share one scroll coordinate system.
     const commonHeight = Math.max(viewportFloor, ...editors.map((editor) => editor.scrollHeight));
     for (const editor of editors) editor.style.height = `${commonHeight}px`;
   }, [showTranslation]);
@@ -174,6 +176,7 @@ export function LyricsWorkspace({
   }, [resizeEditors, viewport.restoreAnchor]);
 
   function openTab(tab: LyricsSidebarTab, intent?: LyricsCommandIntent) {
+    // Capture semantic position before the sidebar changes the editor's available width.
     viewport.captureAnchor();
     onSidebarTabChange(tab);
     if (!sideBySide) {
@@ -263,6 +266,7 @@ export function LyricsWorkspace({
         data-editor-ratio={split.geometry.ratio.toFixed(4)}
         data-testid="lyrics-workspace-split"
       >
+        {/* The covered editor must leave the mobile drawer's focus and accessibility tree. */}
         <section
           id="lyrics-workspace-editor"
           className="lyrics-document-column flex min-h-0 min-w-0 flex-col overflow-hidden"

@@ -91,11 +91,14 @@ async function parseLocalAudioMetadata(file: Blob, parserPath: string) {
   try {
     return await parseFromTokenizer(tokenizer, {});
   } finally {
+    // Parser failures must not retain the Blob-backed tokenizer or its buffers.
     await tokenizer.close();
   }
 }
 
 function extractLyrics(metadata: Awaited<ReturnType<typeof parseFromTokenizer>>) {
+  // Prefer the library's normalized field, then tolerate vendor-specific tag
+  // shapes because MP3 and FLAC writers encode embedded lyrics inconsistently.
   const commonLyrics = firstLyricsValue(metadata.common.lyrics);
   if (commonLyrics) {
     return commonLyrics;
@@ -143,6 +146,7 @@ function firstLyricsValue(value: unknown): string {
   }
 
   if (typeof value === "object") {
+    // Native tag readers may wrap the same payload under any of these keys.
     const record = value as Record<string, unknown>;
     return firstLyricsValue(record.text ?? record.lyrics ?? record.value);
   }

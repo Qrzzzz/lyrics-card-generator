@@ -4,6 +4,7 @@ function normalizeStoredPreferences(input) {
   if (!input || typeof input !== "object" || Array.isArray(input)) return null;
   if (!SUPPORTED_LOCALES.has(input.locale)) return null;
   if (!input.userSettings || typeof input.userSettings !== "object" || Array.isArray(input.userSettings)) return null;
+  // Rebuild the persisted envelope so callers never retain unknown top-level metadata.
   return {
     schemaVersion: 2,
     revision: Number.isSafeInteger(input.revision) && input.revision >= 0 ? input.revision : 0,

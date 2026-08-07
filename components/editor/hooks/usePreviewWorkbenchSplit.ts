@@ -73,6 +73,7 @@ export function resolvePreviewWorkbenchTrack(
     };
   }
 
+  // Export slides a three-panel track; equal widths keep the preview centered during the transition.
   const balancedPanelWidth = split.usableWidth / 2;
   return {
     editorWidth: balancedPanelWidth,

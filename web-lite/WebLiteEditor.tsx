@@ -66,6 +66,7 @@ import {
 
 const PREFERENCES_KEY = "lyrics-card-web-lite-preferences-v1";
 const EXPORT_QUALITY_OPTIONS = ["medium", "high"] as const;
+// Web Lite intentionally pins desktop-only capabilities to a portable browser-safe subset.
 const WEB_LITE_SETTINGS: UserSettings = {
   ...DEFAULT_USER_SETTINGS,
   sparkCursorEnabled: false,
@@ -110,6 +111,7 @@ export function WebLiteEditor() {
   const autoWidthMeasurementRef = useRef<HTMLDivElement | null>(null);
   const captureCardRef = useRef<HTMLElement | null>(null);
   const exportMutexRef = useRef(new ExportTransactionMutex());
+  // Refs keep the export transaction isolated from subsequent live-editor renders.
   const exportRevisionRef = useRef(0);
   const previousExportStateRef = useRef<AppState | null>(null);
   const toastIdRef = useRef(0);
@@ -136,6 +138,7 @@ export function WebLiteEditor() {
     }),
     [state]
   );
+  // The revision follows semantic state identity without scheduling another render.
   if (previousExportStateRef.current !== parsedState) {
     previousExportStateRef.current = parsedState;
     exportRevisionRef.current += 1;
@@ -207,6 +210,7 @@ export function WebLiteEditor() {
 
   function applyLocale(nextLocale: WebLiteLocale) {
     setState((current) => {
+      // Preserve user-authored instrumental copy while translating untouched defaults.
       const shouldUpdateInstrumentalText = Object.values(DEFAULT_INSTRUMENTAL_TEXT).includes(
         current.style.instrumentalText
       );
@@ -272,6 +276,7 @@ export function WebLiteEditor() {
   }
 
   function applyRemoteCover(url: string, requestId: number) {
+    // Ignore validation that completed after the input, cover, or editor was reset.
     if (coverValidationGenerationRef.current !== requestId) {
       return false;
     }
@@ -308,6 +313,7 @@ export function WebLiteEditor() {
   }
 
   function setTranslationEnabled(enabled: boolean) {
+    // AppState and CardStyle retain mirrored translation fields for desktop compatibility.
     setState((current) => ({
       ...current,
       translationEnabled: enabled,
@@ -351,12 +357,14 @@ export function WebLiteEditor() {
       return;
     }
 
+    // Capture an immutable document revision before mounting the offscreen export card.
     const snapshot = createExportSnapshot(
       parsedState,
       getExportPixelRatio(exportQuality),
       exportRevisionRef.current,
       exportFormat
     );
+    // The mutex serializes mount, validation, capture, and guaranteed unmount as one transaction.
     const result = await runExportTransaction({
       mutex: exportMutexRef.current,
       snapshot,
@@ -577,6 +585,7 @@ export function WebLiteEditor() {
         locale={parsedState.locale}
       />
       <AutoWidthMeasurementHost state={state} hostRef={autoWidthMeasurementRef} />
+      {/* Snapshot exports use a separate DOM tree so live preview changes cannot alter capture pixels. */}
       {activeExportSnapshot ? (
         <ExportCardHost
           song={activeExportSnapshot.song as SongInfo}
@@ -594,6 +603,7 @@ export function WebLiteEditor() {
 }
 
 function createInitialState(locale: WebLiteLocale): AppState {
+  // Clone the nested song, style, size, and palette objects that Web Lite mutates during a session.
   return {
     ...defaultState,
     locale,
@@ -622,6 +632,7 @@ function readPreferences(): WebLitePreferences {
     exportQuality: "high"
   };
 
+  // Server rendering and unavailable storage both fall back to detected, validated defaults.
   if (typeof window === "undefined") {
     return fallback;
   }

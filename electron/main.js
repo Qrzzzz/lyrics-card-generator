@@ -55,12 +55,15 @@ let windowRestoring = false;
 let lastEmittedWindowState = null;
 let appPreferencesWriteQueue = Promise.resolve();
 let importHistoryMutationQueue = Promise.resolve();
+// Window closure is a renderer-confirmed handshake so pending persistence can drain first.
 let allowWindowClose = false;
 const aiTranslationRequests = new AIRequestRegistry();
+// Renderer-supplied paths become sender-bound, expiring, one-use capabilities before later mutations.
 const importFileRegistrations = new Map();
 const importHistoryRelocations = new Map();
 const importHistoryOperations = new Set();
 let importHistoryStore = null;
+// Ownership is decided before IPC registration, service startup, or BrowserWindow creation.
 const singleInstanceOwnership = acquireSingleInstanceOwnership({
   app,
   getMainWindow: () => mainWindow,
@@ -161,6 +164,7 @@ async function startPackagedNextServer() {
   const url = `http://${HOST}:${port}`;
   const startupSecret = createPackagedServerStartupSecret();
 
+  // The per-launch secret is inherited only by this child and authenticates readiness on the released port.
   const spawnedServer = spawn(process.execPath, [serverEntry], {
     cwd: serverDirectory,
     env: {
@@ -209,6 +213,7 @@ async function startPackagedNextServer() {
 
 function createWindow() {
   allowWindowClose = false;
+  // Keep renderer privileges behind the preload bridge; the window remains hidden until its first safe paint.
   mainWindow = new BrowserWindow({
     title: "Lyrics Card Generator",
     width: 1280,
@@ -274,11 +279,13 @@ function createWindow() {
     });
 
   mainWindow.once("ready-to-show", () => {
+    // Ignore readiness from a window that was replaced or destroyed during asynchronous startup.
     if (mainWindow !== createdWindow || createdWindow.isDestroyed()) return;
     createdWindow.show();
     singleInstanceOwnership.markWindowReady(createdWindow);
   });
   const desktopSession = mainWindow.webContents.session;
+  // The desktop renderer does not require browser permission grants or device access.
   desktopSession.setPermissionRequestHandler((_webContents, _permission, callback) => callback(false));
   desktopSession.setPermissionCheckHandler(() => false);
   if (typeof desktopSession.setDevicePermissionHandler === "function") {
@@ -287,6 +294,7 @@ function createWindow() {
 
   mainWindow.on("close", (event) => {
     if (allowWindowClose) return;
+    // Give the renderer a chance to persist its latest document and acknowledge close explicitly.
     event.preventDefault();
     requestRendererClose();
   });
@@ -298,6 +306,7 @@ function createWindow() {
   });
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    // Same-origin app navigation stays internal; only allowlisted HTTPS destinations leave the app.
     if (isAllowedLocalNavigation(url, localAppUrl)) {
       return { action: "allow" };
     }
@@ -405,6 +414,7 @@ function stopNextServer() {
   }
 
   const serverProcess = nextServerProcess;
+  // Clear ownership before termination so the child's exit callback is treated as intentional shutdown.
   nextServerProcess = null;
   if (!isChildProcessAlive(serverProcess)) {
     return;
@@ -432,6 +442,7 @@ function stopNextServer() {
 }
 
 function handleNextServerExit(serverProcess, code, signal) {
+  // Ignore stale or deliberately stopped children; only the active service owns renderer viability.
   if (nextServerProcess !== serverProcess) return;
   console.error(`[next] exited code=${code} signal=${signal}`);
   nextServerProcess = null;
@@ -454,6 +465,7 @@ async function boot() {
       devServerUrl: process.env.ELECTRON_DEV_SERVER_URL,
       startLocalServer: startPackagedNextServer
     });
+    // Authenticated readiness is valid only while the same owned child remains alive.
     if (!resolvedAppUrl.waitForReady && !isChildProcessAlive(nextServerProcess)) {
       throw new Error("Bundled Next service exited before the renderer could be trusted.");
     }
@@ -485,6 +497,7 @@ function initializePrimaryInstance() {
 
   app.on("before-quit", (event) => {
     if (mainWindow && !mainWindow.isDestroyed() && !allowWindowClose) {
+      // Route operating-system quit through the same renderer persistence handshake as the close button.
       event.preventDefault();
       requestRendererClose();
       return;
@@ -513,6 +526,7 @@ if (singleInstanceOwnership.hasLock) {
 }
 
 function registerDesktopIpc() {
+  // Every desktop channel shares one top-frame, current-window, same-origin trust boundary.
   const handle = (channel, handler) => ipcMain.handle(channel, (event, ...args) => {
     assertTrustedIpcEvent(event, mainWindow, localAppUrl);
     return handler(event, ...args);
@@ -562,6 +576,7 @@ function registerDesktopIpc() {
   });
   handle("lyrics-card:window-close-confirm", async () => {
     if (!mainWindow || mainWindow.isDestroyed()) return false;
+    // Drain preferences first, then all history work, before allowing the native close event through.
     await appPreferencesWriteQueue;
     await flushImportHistoryOperations();
     allowWindowClose = true;
@@ -577,6 +592,7 @@ function registerDesktopIpc() {
     const preferences = normalizeStoredPreferences(input);
     if (!preferences) return false;
     const limit = normalizeImportHistoryLimit(preferences.userSettings?.importHistoryLimit);
+    // Limit trimming and preference persistence share the history queue and rollback contract.
     await importHistoryStore.applyLimitTransaction(
       limit,
       options?.importHistoryTrimConfirmation,
@@ -644,6 +660,7 @@ function registerDesktopIpc() {
     const filePath = typeof input?.path === "string" ? input.path : "";
     if (!kind || !filePath || !path.isAbsolute(filePath)) return null;
     try {
+      // Renderer metadata is only a consistency hint; main re-stats and validates the native file itself.
       const stat = await fs.stat(filePath);
       const validated = validateImportFileDescriptor(kind, filePath, stat);
       if (!validated.ok) return null;
@@ -651,6 +668,7 @@ function registerDesktopIpc() {
       if (Number.isSafeInteger(rendererSize) && rendererSize >= 0 && rendererSize !== validated.size) return null;
       pruneImportFileRegistrations();
       const token = crypto.randomUUID();
+      // Bind the capability to its sender so another renderer cannot claim the registered path.
       importFileRegistrations.set(token, {
         kind,
         senderId: event.sender.id,
@@ -681,6 +699,7 @@ function registerDesktopIpc() {
     try {
       let candidate = input;
       if (input?.kind === "local-audio" || input?.kind === "manual-cover") {
+        // Consuming the capability once prevents replaying a previously approved native path.
         const file = takeImportFileRegistration(event.sender.id, input?.fileToken, input.kind);
         if (!file) return { ok: false, code: "file_reference_expired" };
         candidate = { ...input, file };
@@ -735,6 +754,7 @@ function registerDesktopIpc() {
 
     pruneImportHistoryRelocations();
     const relocationToken = crypto.randomUUID();
+    // Keep relocation provisional until the renderer successfully parses and commits the document.
     importHistoryRelocations.set(relocationToken, {
       senderId: event.sender.id,
       recordId: record.id,
@@ -752,6 +772,7 @@ function registerDesktopIpc() {
 
   handle("lyrics-card:import-history-replay-commit", (event, recordId, relocationToken) => trackImportHistoryMutation(async () => {
     try {
+      // Only this post-renderer-commit step may persist a replacement path and refresh recency.
       const file = relocationToken === undefined
         ? undefined
         : takeImportHistoryRelocation(event.sender.id, recordId, relocationToken);
@@ -781,6 +802,7 @@ function registerDesktopIpc() {
     const nextApiKey = typeof input?.apiKey === "string" ? input.apiKey.trim() : "";
 
     if (nextApiKey) {
+      // Never persist plaintext credentials; unsupported or plaintext-only OS backends are rejected below.
       ensureSecureStorageAvailable();
       encryptedApiKey = safeStorage.encryptString(nextApiKey).toString("base64");
     }
@@ -803,6 +825,7 @@ function registerDesktopIpc() {
     }
 
     const sender = event.sender;
+    // Registry ownership ties cancellation and streamed output to this exact renderer and request generation.
     const controller = aiTranslationRequests.begin(sender, requestId);
 
     try {
@@ -816,6 +839,7 @@ function registerDesktopIpc() {
         prompt: request.prompt,
         reasoning: Boolean(request.reasoning),
         signal: controller.signal,
+        // Each callback rechecks ownership so replaced, cancelled, or destroyed senders receive no stale chunks.
         onStatus: (phase) => {
           if (aiTranslationRequests.isActive(sender, requestId, controller)) {
             sender.send("lyrics-card:ai-translate-chunk", { requestId, kind: "status", phase });
@@ -844,6 +868,7 @@ function registerDesktopIpc() {
 }
 
 function trackImportHistoryMutation(operation) {
+  // Preference reads occur inside this chain, preserving order across create, update, clear, trim, and remove.
   const pending = importHistoryMutationQueue.then(operation, operation);
   importHistoryMutationQueue = pending.then(() => undefined, () => undefined);
   return trackImportHistoryPromise(pending);
@@ -858,6 +883,7 @@ function trackImportHistoryPromise(pending) {
 }
 
 async function flushImportHistoryOperations() {
+  // Loop because a settling operation may expose additional tracked work before shutdown completes.
   while (importHistoryOperations.size > 0) {
     await Promise.allSettled([...importHistoryOperations]);
   }
@@ -901,6 +927,7 @@ function takeImportFileRegistration(senderId, token, kind) {
   if (typeof token !== "string") return null;
   const registration = importFileRegistrations.get(token);
   if (!registration || registration.senderId !== senderId || registration.kind !== kind) return null;
+  // Delete before returning so even a later mutation failure cannot reuse the capability.
   importFileRegistrations.delete(token);
   return {
     path: registration.path,
@@ -915,6 +942,7 @@ function takeImportHistoryRelocation(senderId, recordId, token) {
   if (typeof token !== "string" || typeof recordId !== "string") return null;
   const relocation = importHistoryRelocations.get(token);
   if (!relocation || relocation.senderId !== senderId || relocation.recordId !== recordId) return null;
+  // Relocation tokens are bound to both sender and record and are consumed exactly once.
   importHistoryRelocations.delete(token);
   return relocation.file;
 }
@@ -958,6 +986,7 @@ async function createImportHistoryReplayPayload(record, preparedFile) {
     if (!validated.ok) return { ok: false, code: validated.code, canRelocate: true };
     const changed = validated.size !== record.source.size || Math.abs(validated.mtimeMs - record.source.mtimeMs) > 1;
     const file = {
+      // Bytes are returned for this replay only; history persists metadata and path, never file contents.
       bytes: validated.bytes,
       fileName: path.basename(validated.path),
       size: validated.size,
@@ -1026,6 +1055,7 @@ function getAppPreferencesPath() {
 async function writeAppPreferences(preferences) {
   try {
     const current = normalizeStoredPreferences(JSON.parse(await fs.readFile(getAppPreferencesPath(), "utf8")));
+    // A delayed writer must not overwrite a newer revision already present on disk.
     if (current && (
       current.revision > preferences.revision ||
       (current.revision === preferences.revision && current.updatedAt > preferences.updatedAt)
@@ -1038,6 +1068,7 @@ async function writeAppPreferences(preferences) {
   await fs.mkdir(app.getPath("userData"), { recursive: true });
   const target = getAppPreferencesPath();
   const temporary = `${target}.tmp`;
+  // Publish complete preference documents atomically and keep their permissions user-only.
   await fs.writeFile(temporary, JSON.stringify(preferences, null, 2), { encoding: "utf8", mode: 0o600 });
   await fs.rename(temporary, target);
   await fs.chmod(getAppPreferencesPath(), 0o600).catch(() => undefined);
@@ -1149,6 +1180,7 @@ function ensureSecureStorageAvailable() {
     && typeof safeStorage.getSelectedStorageBackend === "function"
     && safeStorage.getSelectedStorageBackend() === "basic_text"
   ) {
+    // Electron's Linux basic_text backend is obfuscation, not acceptable credential encryption.
     throw createAIError("secure_storage_unavailable");
   }
 }
@@ -1223,6 +1255,7 @@ async function streamAITranslationInMain({ settings, apiKey, prompt, reasoning, 
 
   const reader = response.body.getReader();
   const decoder = new TextDecoder();
+  // Retain the incomplete tail because both UTF-8 code points and SSE events may span chunks.
   let buffer = "";
   let receivedContent = "";
 
