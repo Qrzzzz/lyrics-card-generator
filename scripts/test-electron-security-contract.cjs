@@ -58,6 +58,9 @@ function trustedFixture(frameUrl = `${localUrl}/`, frameIsMain = true) {
 
 const mainSource = readFileSync("electron/main.js", "utf8");
 const packagedServerReadinessSource = readFileSync("electron/packaged-server-readiness.js", "utf8");
+const localServerOriginSource = readFileSync("electron/local-server-origin.js", "utf8");
+const packagedNextLauncherSource = readFileSync("electron/packaged-next-server.js", "utf8");
+const startupTraceSource = readFileSync("electron/startup-trace.js", "utf8");
 const singleInstanceOwnershipSource = readFileSync("electron/single-instance-ownership.js", "utf8");
 const desktopReadyRouteSource = readFileSync("app/api/desktop-ready/route.ts", "utf8");
 const importHistorySource = readFileSync("electron/import-history.js", "utf8");
@@ -116,6 +119,16 @@ assert.match(desktopReadyRouteSource, /"LYRICS_CARD_SERVER_STARTUP_SECRET"/);
 assert.match(desktopReadyRouteSource, /"x-lyrics-card-startup-challenge"/);
 assert.match(desktopReadyRouteSource, /status: 404/, "the readiness route is unavailable without the child secret and challenge");
 assert.match(desktopReadyRouteSource, /"Cache-Control": "no-store"/);
+assert.match(localServerOriginSource, /const LOOPBACK_HOST = "127\.0\.0\.1"/);
+assert.match(localServerOriginSource, /host !== LOOPBACK_HOST/);
+assert.match(localServerOriginSource, /JSON\.stringify\(\{ version: ORIGIN_STATE_VERSION, port \}\)/);
+assert.doesNotMatch(localServerOriginSource, /STARTUP_SECRET|startupSecret|challenge|proof/i, "origin state never handles launch secrets");
+assert.match(mainSource, /await startPackagedNextServerOnPort\(port, source, onProcessLaunchStarted\)[\s\S]*?writeCachedLoopbackPort/);
+assert.match(mainSource, /stdio: \["ignore", "pipe", "pipe", "ipc"\]/);
+assert.match(packagedNextLauncherSource, /process\.once\("disconnect", \(\) => process\.exit\(0\)\)/);
+assert.match(packagedNextLauncherSource, /lyrics-card:shutdown-server/);
+assert.match(startupTraceSource, /Main-process only diagnostics/);
+assert.doesNotMatch(startupTraceSource, /ipcMain|contextBridge|webContents/, "startup trace has no renderer transport");
 
 const prepareElectronSource = readFileSync("scripts/prepare-electron-dist.mjs", "utf8");
 assert.match(prepareElectronSource, /"electron\/font-directory-service\.js"/, "packaged desktop bundles the font directory service");
@@ -125,6 +138,8 @@ assert.match(
   "desktop preparation copies the font directory service into the minimal app"
 );
 assert.match(prepareElectronSource, /"electron\/local-app-url\.js"/, "packaged desktop bundles the local URL policy helper");
+assert.match(prepareElectronSource, /"electron\/local-server-origin\.js"/, "packaged desktop bundles stable origin selection");
+assert.match(prepareElectronSource, /desktop-server-launcher\.cjs/, "packaged desktop bundles the parent-lifetime launcher");
 assert.match(
   prepareElectronSource,
   /path\.join\(projectRoot, "electron", "local-app-url\.js"\)[\s\S]*?path\.join\(electronOutputDir, "local-app-url\.js"\)/,

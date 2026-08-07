@@ -3,7 +3,6 @@ const { spawn } = require("node:child_process");
 const crypto = require("node:crypto");
 const fs = require("node:fs/promises");
 const http = require("node:http");
-const net = require("node:net");
 const path = require("node:path");
 const { getBackgroundImageMime, safeBackgroundPathForUserData } = require("./background-images");
 const { normalizePromptLibrary } = require("./ai-prompt-settings");
@@ -26,6 +25,14 @@ const {
   validateImportFileDescriptor
 } = require("./import-history");
 const { resolveLocalAppUrl } = require("./local-app-url");
+const {
+  LOOPBACK_HOST,
+  findAvailableLoopbackPort,
+  getOriginStatePath,
+  isPortUnavailableError,
+  selectLoopbackPort,
+  writeCachedLoopbackPort
+} = require("./local-server-origin");
 const { createManualSaveIpcHandlers } = require("./manual-save-ipc");
 const {
   STARTUP_SECRET_ENV,
@@ -34,13 +41,17 @@ const {
   waitForPackagedServerReady
 } = require("./packaged-server-readiness");
 const { acquireSingleInstanceOwnership } = require("./single-instance-ownership");
+const { createStartupTrace } = require("./startup-trace");
+const { prepareDesktopStartup } = require("./startup-orchestration");
 const { isAllowedLocalNavigation, parseAllowedExternalUrl } = require("./url-policy");
 
-const HOST = "127.0.0.1";
+const HOST = LOOPBACK_HOST;
 const APP_ID = "com.lyriccard.generator";
 const START_TIMEOUT_MS = 45000;
 const WINDOW_BACKGROUND_COLOR = "#20242D";
 const IMPORT_FILE_REGISTRATION_TTL_MS = 30 * 60 * 1000;
+const startupTrace = createStartupTrace();
+startupTrace.mark("module-loaded");
 
 if (process.env.LYRICS_CARD_TEST_USER_DATA) {
   app.setPath("userData", path.resolve(process.env.LYRICS_CARD_TEST_USER_DATA));
@@ -49,6 +60,7 @@ if (process.env.LYRICS_CARD_TEST_USER_DATA) {
 let mainWindow = null;
 let nextServerProcess = null;
 let localAppUrl = null;
+let appBooting = false;
 let normalWindowBounds = null;
 let windowMaximized = false;
 let windowRestoring = false;
@@ -70,6 +82,7 @@ const singleInstanceOwnership = acquireSingleInstanceOwnership({
   getMainWindow: () => mainWindow,
   isWindowClosing: () => allowWindowClose
 });
+startupTrace.mark("single-instance-ownership", { hasLock: singleInstanceOwnership.hasLock });
 
 const DEFAULT_AI_SETTINGS = {
   baseUrl: "https://api.openai.com/v1",
@@ -84,25 +97,6 @@ const DEFAULT_AI_SETTINGS = {
   }
 };
 const TRANSLATION_STYLES = new Set(["lyrical", "faithful", "spoken", "imagistic", "restrained", "recommended"]);
-
-function getAvailablePort() {
-  return new Promise((resolve, reject) => {
-    const server = net.createServer();
-
-    server.once("error", reject);
-    server.listen(0, HOST, () => {
-      const address = server.address();
-      server.close(() => {
-        if (address && typeof address === "object") {
-          resolve(address.port);
-          return;
-        }
-
-        reject(new Error("Unable to allocate a local port."));
-      });
-    });
-  });
-}
 
 function waitForDevelopmentServer(url, timeoutMs = START_TIMEOUT_MS) {
   const startedAt = Date.now();
@@ -157,16 +151,63 @@ function getAppIconPath() {
   return path.join(app.getAppPath(), "build", "icon.ico");
 }
 
-async function startPackagedNextServer() {
+async function startPackagedNextServer(onProcessLaunchStarted = () => undefined) {
+  startupTrace.mark("next-port-selection-start");
+  const userDataPath = app.getPath("userData");
+  const originStatePath = getOriginStatePath(userDataPath);
+  const selection = await selectLoopbackPort({
+    stateFilePath: originStatePath,
+    profileSeed: userDataPath
+  });
+  startupTrace.mark("next-port-selected", { port: selection.port, source: selection.source });
+
+  try {
+    return await startAndCachePackagedNextServer(
+      selection.port,
+      selection.source,
+      originStatePath,
+      onProcessLaunchStarted
+    );
+  } catch (error) {
+    if (!isPortUnavailableError(error)) throw error;
+    // The availability probe is advisory. If another process wins the bind race,
+    // authenticated readiness still fails closed before an ephemeral fallback is tried.
+    const fallbackPort = await findAvailableLoopbackPort({ host: HOST, port: 0 });
+    startupTrace.mark("next-port-race-fallback", { port: fallbackPort });
+    return startAndCachePackagedNextServer(
+      fallbackPort,
+      "race-fallback",
+      originStatePath,
+      onProcessLaunchStarted
+    );
+  }
+}
+
+async function startAndCachePackagedNextServer(port, source, originStatePath, onProcessLaunchStarted) {
+  const url = await startPackagedNextServerOnPort(port, source, onProcessLaunchStarted);
+  // Persist only the non-sensitive port, and only after this launch's HMAC proof succeeds.
+  // The atomic metadata write is not a renderer-readiness prerequisite.
+  void writeCachedLoopbackPort(originStatePath, port)
+    .then(() => startupTrace.mark("next-port-cached", { port }))
+    .catch((error) => {
+      console.error("[next] unable to persist the cache origin", error instanceof Error ? error.message : String(error));
+      startupTrace.mark("next-port-cache-failed", { port });
+    });
+  return url;
+}
+
+async function startPackagedNextServerOnPort(port, source, onProcessLaunchStarted) {
   const serverDirectory = getPackagedServerDirectory();
   const serverEntry = path.join(serverDirectory, "server.js");
+  const serverLauncher = path.join(serverDirectory, "desktop-server-launcher.cjs");
   const standaloneNodeModules = path.join(serverDirectory, "_node_modules");
-  const port = await getAvailablePort();
   const url = `http://${HOST}:${port}`;
   const startupSecret = createPackagedServerStartupSecret();
+  let startupOutput = "";
+  startupTrace.mark("next-process-spawn-start", { port, source });
 
   // The per-launch secret is inherited only by this child and authenticates readiness on the released port.
-  const spawnedServer = spawn(process.execPath, [serverEntry], {
+  const spawnedServer = spawn(process.execPath, [serverLauncher, serverEntry], {
     cwd: serverDirectory,
     env: {
       ...process.env,
@@ -179,18 +220,24 @@ async function startPackagedNextServer() {
       PORT: String(port),
       [STARTUP_SECRET_ENV]: startupSecret
     },
-    stdio: ["ignore", "pipe", "pipe"],
+    stdio: ["ignore", "pipe", "pipe", "ipc"],
     windowsHide: true
   });
 
   nextServerProcess = spawnedServer;
+  onProcessLaunchStarted();
+  spawnedServer.once("spawn", () => startupTrace.mark("next-process-spawned", { pid: spawnedServer.pid, port }));
 
   spawnedServer.stdout?.on("data", (chunk) => {
-    console.log(`[next] ${chunk.toString().trimEnd()}`);
+    const text = chunk.toString();
+    startupOutput = `${startupOutput}${text}`.slice(-12_000);
+    console.log(`[next] ${text.trimEnd()}`);
   });
 
   spawnedServer.stderr?.on("data", (chunk) => {
-    console.error(`[next] ${chunk.toString().trimEnd()}`);
+    const text = chunk.toString();
+    startupOutput = `${startupOutput}${text}`.slice(-12_000);
+    console.error(`[next] ${text.trimEnd()}`);
   });
 
   spawnedServer.once("exit", (code, signal) => handleNextServerExit(spawnedServer, code, signal));
@@ -202,17 +249,39 @@ async function startPackagedNextServer() {
       startupSecret,
       timeoutMs: START_TIMEOUT_MS
     });
+    startupTrace.mark("next-authenticated-ready", { pid: spawnedServer.pid, port });
     if (nextServerProcess !== spawnedServer || !isChildProcessAlive(spawnedServer)) {
       throw new Error("Bundled Next service exited before the renderer could be trusted.");
     }
     return url;
   } catch (error) {
-    if (nextServerProcess === spawnedServer) stopNextServer();
+    await waitForChildExitBriefly(spawnedServer);
+    if (/\bEADDRINUSE\b/.test(startupOutput) && error && typeof error === "object") {
+      error.code = "EADDRINUSE";
+    }
+    if (nextServerProcess === spawnedServer) await stopNextServer();
     throw error;
   }
 }
 
-function createWindow() {
+async function waitForChildExitBriefly(child, timeoutMs = 300) {
+  if (!isChildProcessAlive(child)) return;
+  await new Promise((resolve) => {
+    let settled = false;
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      child.removeListener("exit", finish);
+      resolve();
+    };
+    const timer = setTimeout(finish, timeoutMs);
+    child.once("exit", finish);
+  });
+}
+
+function createWindow(targetUrl = localAppUrl) {
+  startupTrace.mark("window-create-start");
   allowWindowClose = false;
   // Keep renderer privileges behind the preload bridge; the window remains hidden until its first safe paint.
   mainWindow = new BrowserWindow({
@@ -236,6 +305,7 @@ function createWindow() {
     }
   });
   const createdWindow = mainWindow;
+  startupTrace.mark("window-created");
   normalWindowBounds = mainWindow.getBounds();
   windowMaximized = false;
   lastEmittedWindowState = null;
@@ -283,8 +353,11 @@ function createWindow() {
     // Ignore readiness from a window that was replaced or destroyed during asynchronous startup.
     if (mainWindow !== createdWindow || createdWindow.isDestroyed()) return;
     createdWindow.show();
+    startupTrace.mark("window-visible");
     singleInstanceOwnership.markWindowReady(createdWindow);
   });
+  mainWindow.webContents.once("dom-ready", () => startupTrace.mark("renderer-dom-ready"));
+  mainWindow.webContents.once("did-finish-load", () => startupTrace.mark("renderer-load-finished"));
   const desktopSession = mainWindow.webContents.session;
   // The desktop renderer does not require browser permission grants or device access.
   desktopSession.setPermissionRequestHandler((_webContents, _permission, callback) => callback(false));
@@ -326,7 +399,16 @@ function createWindow() {
     if (external) void shell.openExternal(external.toString());
   });
 
-  mainWindow.loadURL(localAppUrl);
+  if (targetUrl) loadMainWindow(createdWindow, targetUrl);
+  return createdWindow;
+}
+
+function loadMainWindow(window, targetUrl) {
+  if (!window || window.isDestroyed() || window !== mainWindow) {
+    throw new Error("The startup window is unavailable before renderer navigation.");
+  }
+  startupTrace.mark("window-load-url");
+  void window.loadURL(targetUrl);
 }
 
 function getWindowState() {
@@ -411,12 +493,16 @@ function applyWindowMaterial(theme) {
 
 function stopNextServer() {
   if (!nextServerProcess) {
-    return;
+    return Promise.resolve();
   }
 
   const serverProcess = nextServerProcess;
   // Clear ownership before termination so the child's exit callback is treated as intentional shutdown.
   nextServerProcess = null;
+  return terminateNextServerProcess(serverProcess);
+}
+
+async function terminateNextServerProcess(serverProcess) {
   if (!isChildProcessAlive(serverProcess)) {
     return;
   }
@@ -427,12 +513,33 @@ function stopNextServer() {
     return;
   }
 
+  if (serverProcess.connected) {
+    try {
+      serverProcess.send({ type: "lyrics-card:shutdown-server" }, () => undefined);
+    } catch {
+      // The IPC channel may close between the connected check and send.
+    }
+    await waitForChildExitBriefly(serverProcess, 1_000);
+    if (!isChildProcessAlive(serverProcess)) return;
+  }
+
   if (process.platform === "win32") {
-    spawn("taskkill", ["/pid", String(pid), "/T", "/F"], {
-      stdio: "ignore",
-      windowsHide: true
+    return new Promise((resolve) => {
+      const killer = spawn("taskkill", ["/pid", String(pid), "/T", "/F"], {
+        stdio: "ignore",
+        windowsHide: true
+      });
+      let settled = false;
+      const finish = () => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        resolve();
+      };
+      const timer = setTimeout(finish, 5_000);
+      killer.once("error", finish);
+      killer.once("exit", finish);
     });
-    return;
   }
 
   try {
@@ -452,7 +559,8 @@ function handleNextServerExit(serverProcess, code, signal) {
   if (nextServerProcess !== serverProcess) return;
   console.error(`[next] exited code=${code} signal=${signal}`);
   nextServerProcess = null;
-  if (!localAppUrl && !mainWindow) return;
+  // During startup the readiness promise owns failure and optional safe fallback.
+  if (!localAppUrl) return;
 
   localAppUrl = null;
   allowWindowClose = true;
@@ -462,33 +570,59 @@ function handleNextServerExit(serverProcess, code, signal) {
 }
 
 async function boot() {
+  startupTrace.mark("app-ready-boot-start");
+  appBooting = true;
+  let serverLaunchStarted = false;
+  let resolveServerLaunchStarted;
+  const serverLaunchStartedPromise = new Promise((resolve) => {
+    resolveServerLaunchStarted = resolve;
+  });
+  const markServerLaunchStarted = () => {
+    if (serverLaunchStarted) return;
+    serverLaunchStarted = true;
+    resolveServerLaunchStarted();
+  };
   try {
-    await importHistoryStore.initialize().catch((error) => {
-      console.error("[import-history] unable to initialize history", error instanceof Error ? error.message : "unknown error");
-    });
-    const resolvedAppUrl = await resolveLocalAppUrl({
-      isPackaged: app.isPackaged,
-      devServerUrl: process.env.ELECTRON_DEV_SERVER_URL,
-      startLocalServer: startPackagedNextServer
+    const { resolvedAppUrl, window: startupWindow } = await prepareDesktopStartup({
+      initializeHistory: async () => {
+        startupTrace.mark("history-initialize-start");
+        await importHistoryStore.initialize().catch((error) => {
+          console.error("[import-history] unable to initialize history", error instanceof Error ? error.message : "unknown error");
+        });
+        startupTrace.mark("history-initialize-end");
+      },
+      resolveAppUrl: () => resolveLocalAppUrl({
+        isPackaged: app.isPackaged,
+        devServerUrl: process.env.ELECTRON_DEV_SERVER_URL,
+        startLocalServer: () => startPackagedNextServer(markServerLaunchStarted).finally(markServerLaunchStarted)
+      }),
+      waitForDevelopmentServer,
+      waitForBackgroundStart: () => (app.isPackaged ? serverLaunchStartedPromise : Promise.resolve()),
+      createHiddenWindow: () => createWindow(null)
     });
     // Authenticated readiness is valid only while the same owned child remains alive.
     if (!resolvedAppUrl.waitForReady && !isChildProcessAlive(nextServerProcess)) {
       throw new Error("Bundled Next service exited before the renderer could be trusted.");
     }
     localAppUrl = resolvedAppUrl.url;
-    if (resolvedAppUrl.waitForReady) {
-      await waitForDevelopmentServer(localAppUrl);
-    }
-    createWindow();
+    loadMainWindow(startupWindow, localAppUrl);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
+    startupTrace.mark("boot-failed");
+    localAppUrl = null;
+    allowWindowClose = true;
+    if (mainWindow && !mainWindow.isDestroyed()) mainWindow.destroy();
+    await stopNextServer();
     dialog.showErrorBox("Lyrics Card Generator", `Unable to start the local desktop service.\n\n${message}`);
     singleInstanceOwnership.markQuitting();
     app.quit();
+  } finally {
+    appBooting = false;
   }
 }
 
 function initializePrimaryInstance() {
+  startupTrace.mark("primary-initialize-start");
   importHistoryStore = new ImportHistoryStore({
     filePath: path.join(app.getPath("userData"), "app-data", "import-history.json")
   });
@@ -502,10 +636,15 @@ function initializePrimaryInstance() {
   app.setAppUserModelId(APP_ID);
   Menu.setApplicationMenu(null);
   registerDesktopIpc();
+  startupTrace.mark("primary-initialize-end");
   app.whenReady().then(boot);
 
   app.on("before-quit", (event) => {
-    if (mainWindow && !mainWindow.isDestroyed() && !allowWindowClose) {
+    if (appBooting && mainWindow && !mainWindow.isDestroyed()) {
+      // No renderer has been trusted yet, so the normal persistence handshake is unavailable.
+      allowWindowClose = true;
+      mainWindow.destroy();
+    } else if (mainWindow && !mainWindow.isDestroyed() && !allowWindowClose) {
       // Route operating-system quit through the same renderer persistence handshake as the close button.
       event.preventDefault();
       requestRendererClose();
@@ -513,13 +652,13 @@ function initializePrimaryInstance() {
     }
     singleInstanceOwnership.markQuitting();
     disposeSystemFontDirectoryService();
-    stopNextServer();
+    void stopNextServer();
   });
 
   app.on("will-quit", disposeSystemFontDirectoryService);
 
   app.on("window-all-closed", () => {
-    stopNextServer();
+    void stopNextServer();
     if (process.platform !== "darwin") {
       singleInstanceOwnership.markQuitting();
       app.quit();
