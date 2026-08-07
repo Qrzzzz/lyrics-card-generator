@@ -17,6 +17,8 @@ import { segmentTextUnits } from "../lib/auto-width-dom";
 import { normalizeCardStyle } from "../lib/card-style-normalize";
 import { applyEditorStyleChange } from "../lib/editor/apply-style-change";
 
+// Candidate widths form a bounded discrete search; settling tolerance must not
+// hide a complete step or make the chosen width depend on transient jitter.
 const widths = getAutoWidthCandidates();
 assert.equal(widths[0], AUTO_WIDTH_MIN);
 assert.equal(widths.at(-1), AUTO_WIDTH_MAX);

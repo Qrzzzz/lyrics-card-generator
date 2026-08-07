@@ -155,6 +155,8 @@ export function songInfoFromMeta({
   originalUrl: string;
   parseMethod: string;
 }) {
+  // Page titles usually carry stronger title/artist structure; descriptions
+  // are used only to fill an artist that the title did not identify.
   const meta = extractMeta(html, url);
   const parsedTitle = splitTitleAndArtist(meta.rawTitle, source);
   const descriptionArtist = extractArtistFromDescription(meta.description);
@@ -175,6 +177,8 @@ export function songInfoFromMeta({
 }
 
 export function splitTitleAndArtist(rawTitle: string, source: SongSource) {
+  // Strip known platform/release tails before testing explicit title/artist
+  // separators. Ambiguous text without a separator remains title-only.
   const cleaned = removePlatformSuffix(stripPlatformTail(cleanTitle(rawTitle), source));
 
   const byMatch = cleaned.match(/^(.+?)\s+by\s+(.+)$/i);

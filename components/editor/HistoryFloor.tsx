@@ -66,6 +66,7 @@ export function HistoryFloor({
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState("");
+  // One busy identifier serializes replay, relocation, and destructive history operations.
   const [busyId, setBusyId] = useState("");
   const [missingIds, setMissingIds] = useState<Set<string>>(() => new Set());
   const [exitingVisible, setExitingVisible] = useState(false);
@@ -94,6 +95,7 @@ export function HistoryFloor({
 
   useEffect(() => {
     if (!isActive) return;
+    // Request generations reject late results from prior filters and debounced searches.
     const requestId = requestIdRef.current + 1;
     requestIdRef.current = requestId;
     setLoading(true);
@@ -154,6 +156,7 @@ export function HistoryFloor({
       });
       if (requestId !== requestIdRef.current) return;
       setRecords((current) => {
+        // De-duplicate records if persistence changes while a later page is loading.
         const known = new Set(current.map((record) => record.id));
         return [...current, ...result.records.filter((record) => !known.has(record.id))];
       });
@@ -228,6 +231,7 @@ export function HistoryFloor({
 
   const emptyMessage = query.trim() || source !== "all" ? copy.emptyFiltered : copy.empty;
 
+  // Keep the surface visible through its exit animation while inert prevents interaction.
   return (
     <motion.section
       data-testid="history-surface"

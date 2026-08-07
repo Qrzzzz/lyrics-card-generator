@@ -1,3 +1,4 @@
+/** Extracts the first HTTP(S) URL from pasted share text and normalizes known legacy routes. */
 export function extractFirstUrl(input: string): string {
   const normalized = input.replace(/&amp;/gi, "&").trim();
   const match = normalized.match(/https?:\/\/[^\s<>"']+/i);

@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v5.9.2.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v5.9.3.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="#ローカル開発">ローカル開発</a> ·
@@ -49,25 +49,26 @@
 
 ## 📦 ダウンロードとインストール
 
-最新版は [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) からダウンロードできます。
+一般公開されているビルドは [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) で確認できます。ローカルの v5.9.3 リリース候補は次のファイル名でパッケージ化されます。
 
-* 推奨インストーラー：`Lyrics Card Generator Setup 5.9.2.exe`
-* ポータブル版：`Lyrics Card Generator-5.9.2-portable.exe`
+* インストーラー：`Lyrics Card Generator Setup 5.9.3.exe`
+* ポータブル版：`Lyrics Card Generator-5.9.3-portable.exe`
 
 通常利用にはインストーラーを推奨します。ポータブル版は一時利用、検証、リムーバブルドライブでの利用に向いています。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v5.9.2 の主な更新
+### v5.9.3 の主な更新（ローカルリリース候補）
 
-* 履歴から手動保存を読み込んだ際に、保存済みのアルバムカバーが復元されない問題を修正しました。
-* 読み込み時は安全化済みのカバー URL のみを復元し、既存の画像プロキシとパレット抽出を利用します。曲リンクの再解析や、保存済みの歌詞・翻訳・曲情報の上書きは行いません。
-* カバー URL を持たない古い保存は、引き続きカバーなしで読み込まれます。Web Lite の画面と動作は変更しません。
+* Windows パッケージ版の起動を強化しました。起動ごとの HMAC 準備完了証明、起動失敗・早期終了・ポート競合時のフェイルクローズ処理に加え、アプリウィンドウ、ローカルサーバー、履歴ライターを単一インスタンスに限定します。
+* MP3 / FLAC アップロードに 100 MiB のストリーミング上限を設け、Base64 / JSON 展開前に埋め込みカバーを 8 MiB、歌詞を 256 Ki 文字に制限します。ランダムアクセス解析により末尾の APEv2 タグを保持し、ファイル全体の二重コピーを作りません。
+* Spotify のアーティスト抽出と NetEase の候補順位を改善し、リマスター、ミックス、ライブなど正当なタイトル接尾辞を保ったまま、曲名とアーティストが完全一致する結果を優先します。
+* Next.js 15.5.21 へ更新し、未使用の画像最適化入口を無効化してデスクトップ standalone の依存関係を補完しました。ここに記載するのはローカルのリリース候補であり、一般公開状況は実際の GitHub Releases ページに従います。
 
 ## 🌐 多言語リリースノート
 
 GitHub Release ではデフォルトで簡体字中国語の概要が表示されます。完全なリリースノートはこちら：
-[简体中文](./docs/releases/v5.9.2.zh-CN.md) · [繁體中文](./docs/releases/v5.9.2.zh-TW.md) · [English](./docs/releases/v5.9.2.en.md) · [Français](./docs/releases/v5.9.2.fr.md) · [日本語](./docs/releases/v5.9.2.ja.md) · [Español](./docs/releases/v5.9.2.es.md)
+[简体中文](./docs/releases/v5.9.3.zh-CN.md) · [繁體中文](./docs/releases/v5.9.3.zh-TW.md) · [English](./docs/releases/v5.9.3.en.md) · [Français](./docs/releases/v5.9.3.fr.md) · [日本語](./docs/releases/v5.9.3.ja.md) · [Español](./docs/releases/v5.9.3.es.md)
 
 <a id="主な機能"></a>
 

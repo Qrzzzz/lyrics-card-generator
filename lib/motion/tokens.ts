@@ -134,6 +134,8 @@ const directionalSidebarPageVariants: Variants = {
 };
 
 export function sidebarPageVariants(reducedMotion = false): Variants {
+  // Reduced motion removes spatial travel entirely while preserving an opaque
+  // page throughout the swap to avoid a distracting flash.
   return reducedMotion ? reducedMotionSidebarPageVariants : directionalSidebarPageVariants;
 }
 

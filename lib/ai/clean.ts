@@ -1,3 +1,7 @@
+/**
+ * Removes common provider wrappers while preserving the translated body. This
+ * is deliberately conservative: it strips only known fences and preambles.
+ */
 export function cleanAITranslation(text: string) {
   return text
     .trim()

@@ -114,6 +114,7 @@ export function SettingsSurface({
         entries[current.index] = normalized;
         return { entries, index: current.index };
       }
+      // New navigation truncates the forward branch just like browser history.
       const entries = [...current.entries.slice(0, current.index + 1), normalized];
       return { entries, index: entries.length - 1 };
     });
@@ -128,6 +129,7 @@ export function SettingsSurface({
 
   useEffect(() => {
     if (!isActive) return;
+    // Each settings opening starts a fresh, discoverable local navigation session.
     const tab = requestedTab ?? workspace.activeTab;
     setHistory({ entries: [createSettingsDestination(tab)], index: 0 });
   }, [isActive]);
@@ -231,6 +233,7 @@ export function SettingsSurface({
             {tabs.map((tab) => {
               const selected = tab.id === destination.section;
               const TabIcon = tab.icon;
+              // Keep tab state mounted, but remove inactive panels from interaction and accessibility.
               return (
               <motion.div
                 key={tab.id}

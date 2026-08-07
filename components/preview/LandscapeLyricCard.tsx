@@ -35,6 +35,7 @@ export function LandscapeLyricCard({
   const contentMode = style.contentMode ?? "lyrics";
 
   useEffect(() => {
+    // A replacement URL receives a fresh load attempt after a prior cover failure.
     setCoverFailed(false);
   }, [cover]);
 

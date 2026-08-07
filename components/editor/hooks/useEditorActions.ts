@@ -143,6 +143,7 @@ export function useEditorActions({
   const [isManualSaveSaving, setIsManualSaveSaving] = useState(false);
   const currentDocumentRef = useRef(parsedState);
   currentDocumentRef.current = parsedState;
+  // The adapter is stable for the editor lifetime and always reads the latest controlled document.
   const documentStateAdapterRef = useRef<EditorDocumentStateAdapter | null>(null);
   if (!documentStateAdapterRef.current) {
     documentStateAdapterRef.current = new EditorDocumentStateAdapter(
@@ -163,6 +164,7 @@ export function useEditorActions({
   }
 
   function trackDocumentIntent(intent: DocumentImportIntent): DocumentImportIntent {
+    // Wrap cancellation so pending UI state settles for both success and abort paths.
     trackedDocumentIntentRef.current = intent.id;
     setIsDocumentTransactionPending(true);
     const cancel = intent.cancel;
@@ -220,6 +222,7 @@ export function useEditorActions({
   }
 
   function applyDocumentMutation(mutation: EditorDocumentStateMutation) {
+    // Every document mutation invalidates stale AI work and advances the shared revision gate.
     settleTrackedDocumentIntent();
     const rollback = onInvalidateDocument();
     const projected = documentStateAdapter.projectDocumentMutation(rollback, mutation);
@@ -262,6 +265,7 @@ export function useEditorActions({
   function queueImportHistoryRecord(candidate: ImportHistoryWriteCandidate) {
     const desktop = getLyricsCardDesktopApi();
     if (!desktop) return;
+    // History persistence is best effort and must not roll back an already committed import.
     void desktop.recordImportHistory(candidate)
       .then((result) => {
         if (!result.ok) {
@@ -326,6 +330,7 @@ export function useEditorActions({
       return;
     }
 
+    // The session token prevents a late save from rebinding a document opened in the meantime.
     const sessionAtStart = manualSaveSessionRef.current;
     const input = currentManualSaveInput();
     const envelope = serializeImportHistoryManualSave(input);
@@ -432,6 +437,7 @@ export function useEditorActions({
   }
 
   function handleStyleChange(nextStyle: CardStyle) {
+    // Semantic style fields participate in document revisioning; purely visual fields do not.
     if (isDocumentSemanticStyleChange(currentDocumentRef.current.style, nextStyle)) {
       applyDocumentMutation((current) => applyEditorStyleChange(current, nextStyle));
       return;
@@ -566,6 +572,7 @@ export function useEditorActions({
       return;
     }
 
+    // Export owns an immutable snapshot; the clear version suppresses stale completion effects.
     const clearVersion = clearVersionRef.current;
     const snapshot = createExportSnapshot(parsedState, exportPixelRatio, exportRevisionRef.current, exportFormat);
     const result = await runExportTransaction({
@@ -720,6 +727,7 @@ export function useEditorActions({
       if (!committed) return { status: "cancelled" };
       onCloseHistory();
 
+      // UI replay commits first; file relocation metadata is persisted as a second best-effort phase.
       let replayCommit: ImportHistoryReplayCommitResult = { ok: false };
       try {
         replayCommit = await desktop.commitImportHistoryReplay(
@@ -930,6 +938,7 @@ function replaceWithHistorySnapshot(
 }
 
 function copyReplayBytes(bytes: Uint8Array) {
+  // Own the ArrayBuffer passed to browser File/Blob constructors instead of sharing IPC memory.
   const copy = new Uint8Array(bytes.byteLength);
   copy.set(bytes);
   return copy.buffer;

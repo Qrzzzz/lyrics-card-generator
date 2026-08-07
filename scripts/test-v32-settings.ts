@@ -11,6 +11,8 @@ import {
 } from "../lib/settings/user-settings";
 import type { AppState } from "../lib/types";
 
+// Normalization tests intentionally mix legacy, invalid, and current fields to
+// prove migrations preserve valid preferences while clamping unsafe values.
 const defaults = normalizeUserSettings(undefined);
 assert.equal(defaults.uiThemeMode, DEFAULT_USER_SETTINGS.uiThemeMode);
 assert.equal(defaults.uiAcrylicEnabled, false);

@@ -36,6 +36,8 @@ const songsById = new Map();
 const dialogMessages = [];
 const routeCounts = { parseSong: 0, resolveSearch: 0, localAudio: 0, imageProxy: 0, remoteCover: 0 };
 
+// Fixtures live under the isolated Electron user-data root so replay, relocation,
+// restart, and deletion tests never read or mutate a real user history.
 await mkdir(fixtureDirectory, { recursive: true });
 await mkdir(reportDirectory, { recursive: true });
 await writeFile(audioPath, Buffer.from("initial desktop audio fixture"));
@@ -58,6 +60,8 @@ function songFor(id, fallbackTitle = `History song ${id}`) {
 }
 
 async function attachRoutes(targetPage) {
+  // Route doubles retain stable identities across application restarts, allowing
+  // persisted records to be replayed without live music-provider dependencies.
   await targetPage.route("**/api/search-song", async (route) => {
     const body = route.request().postDataJSON();
     const keyword = String(body.keyword ?? "").trim();
@@ -196,6 +200,8 @@ async function attachRoutes(targetPage) {
 }
 
 async function launchApp({ expectFirstLaunch = false, expectedLocale = null, expectedHistoryLimit = null } = {}) {
+  // Re-launching against the same user-data directory is part of the assertion:
+  // the on-disk document, not renderer memory, must remain authoritative.
   electronApp = await electron.launch({
     executablePath,
     env: { ...process.env, LYRICS_CARD_TEST_USER_DATA: userDataDirectory },

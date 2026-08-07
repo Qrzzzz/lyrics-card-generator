@@ -32,6 +32,10 @@ export function measureAutoWidthCandidates(host: HTMLElement): AutoWidthCandidat
     .sort((left, right) => left.canvasWidth - right.canvasWidth);
 }
 
+/**
+ * Uses Range rectangles for grapheme/word units so visual wraps are measured
+ * from browser layout rather than estimated from character counts.
+ */
 export function measureAutoWidthLine(element: HTMLElement): AutoWidthLineMetrics | null {
   const kind = element.dataset.autoWidthLine as AutoWidthLineKind | undefined;
   const index = element.dataset.autoWidthLineIndex;
@@ -128,6 +132,8 @@ export function segmentTextUnits(text: string): TextUnit[] {
       continue;
     }
     flushWord();
+    // Punctuation belongs to the preceding unit for orphan detection; whitespace
+    // remains only a browser wrap opportunity and is not scored as content.
     if (!/^\s+$/u.test(grapheme.segment) && units.length > 0) {
       const previous = units[units.length - 1];
       previous.end = grapheme.index + grapheme.segment.length;
@@ -155,6 +161,7 @@ function getGraphemes(text: string) {
 
 function groupVisualLines(fragments: UnitFragment[]) {
   const lines: Array<{ top: number; left: number; right: number; fragments: UnitFragment[] }> = [];
+  // Subpixel font rendering can shift rect tops slightly within one visual row.
   for (const fragment of [...fragments].sort((left, right) => left.top - right.top || left.left - right.left)) {
     const line = lines.find((candidate) => Math.abs(candidate.top - fragment.top) <= 2);
     if (line) {

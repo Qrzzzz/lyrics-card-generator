@@ -40,6 +40,7 @@ export function useLyricsWorkspaceSplit() {
   }, []);
 
   const geometry = resolveLyricsWorkspaceSplit(viewportWidth);
+  // Both CSS intent and measured minimum width must agree before enabling side-by-side editors.
   const isDesktop = matchesDesktopQuery && viewportWidth >= __internalLyricsWorkspaceLayout.MIN_SIDE_BY_SIDE_WIDTH;
 
   return {

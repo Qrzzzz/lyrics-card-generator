@@ -16,6 +16,11 @@ type TranslateBody = {
   settings?: SaveAISettingsInput & { apiKey?: string };
 };
 
+/**
+ * Browser-preview transport boundary for provider requests. The renderer must
+ * pass the same-app mutation checks, and client cancellation is forwarded to
+ * the provider through the original request signal.
+ */
 export async function POST(request: Request) {
   const rejection = validateAppMutationRequest(request, "application/json");
   if (rejection) {
@@ -87,6 +92,8 @@ export async function POST(request: Request) {
       return errorResponse("invalid_response", 502, getProviderErrorMessage(body, 502));
     }
 
+    // Relay SSE bytes unchanged so provider event framing and backpressure are
+    // preserved instead of buffering the full completion in this process.
     return new Response(response.body, {
       status: 200,
       headers: {

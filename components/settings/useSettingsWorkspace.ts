@@ -67,6 +67,7 @@ export function useSettingsWorkspace({
   const aiSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const aiSettingsLoadedRef = useRef(false);
   const isClearingApiKeyRef = useRef(false);
+  // Serialize saves and key deletion so independent desktop writes cannot race.
   const aiWriteQueueRef = useRef<Promise<void>>(Promise.resolve());
   const latestLifecycleRef = useRef({ locale, onSaved });
   latestLifecycleRef.current = { locale, onSaved };
@@ -81,6 +82,7 @@ export function useSettingsWorkspace({
   }
 
   if (!saveControllerRef.current) {
+    // A stable latest-save controller collapses rapid edits while preserving durable ordering.
     saveControllerRef.current = createLatestSaveController<AISaveValue, AISettingsSummary>({
       persist: ({ value }) => runSerializedAIWrite(() =>
         saveAISettings({
@@ -128,6 +130,7 @@ export function useSettingsWorkspace({
     }
   }
 
+  // Desktop shutdown waits for debounce, controller, and serialized write queues to drain.
   useEffect(() => shutdownCoordinator.register("ai-settings", flushPendingAISettings), [error]);
 
   useEffect(() => {
@@ -143,6 +146,7 @@ export function useSettingsWorkspace({
     let active = true;
     const saveController = saveControllerRef.current!;
     setSaveState(saveController.getState().status);
+    // Load only after prior saves settle, avoiding stale storage overwriting newer edits.
     void saveController.whenIdle()
       .then(() => {
         if (!active) return undefined;
@@ -216,6 +220,7 @@ export function useSettingsWorkspace({
     void Promise.resolve(onUserSettingsChange(next, options))
       .then(() => queueSavedNotification())
       .catch((saveError) => {
+        // Roll back only if the failed optimistic snapshot is still the visible draft.
         setDraft((current) => current === next ? previous : current);
         setError(normalizeAIErrorMessage(saveError, locale, aiCopy.settingsSaveFailed));
         setSyncErrorKind("save");
@@ -248,6 +253,7 @@ export function useSettingsWorkspace({
   }
 
   async function handleClearApiKey() {
+    // Reconcile pending/failed saves before and after key removal to avoid resurrecting the key.
     const saveController = saveControllerRef.current!;
     const desiredAfterClear = createAISaveSnapshot(settings, "");
     const controllerState = saveController.getState();

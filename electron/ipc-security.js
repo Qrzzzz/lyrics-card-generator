@@ -1,3 +1,7 @@
+/**
+ * Trusts IPC only from the current window's top-level frame at the owned app origin.
+ * Origin equality alone is insufficient because subframes and unrelated WebContents can also send IPC.
+ */
 function isTrustedIpcEvent(event, mainWindow, localAppUrl) {
   if (!mainWindow || mainWindow.isDestroyed() || !localAppUrl) return false;
   const sender = event?.sender;

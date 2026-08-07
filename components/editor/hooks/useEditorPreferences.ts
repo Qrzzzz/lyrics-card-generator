@@ -42,6 +42,7 @@ export function useEditorPreferences({ currentLocale, applyLocale }: UseEditorPr
     userSettings: DEFAULT_USER_SETTINGS
   });
   const persistenceErrorRef = useRef<unknown>(null);
+  // One lifetime-stable controller preserves latest-write ordering across renders.
   const preferenceSaveControllerRef = useRef<ReturnType<typeof createLatestSaveController<PreferenceSaveValue, unknown>> | null>(null);
   if (!preferenceSaveControllerRef.current) {
     preferenceSaveControllerRef.current = createLatestSaveController<PreferenceSaveValue, unknown>({
@@ -76,6 +77,7 @@ export function useEditorPreferences({ currentLocale, applyLocale }: UseEditorPr
     try {
       await flushPreferenceSave();
     } catch (error) {
+      // Roll the optimistic preview back to the last durable settings snapshot.
       const committed = committedUserSettingsRef.current;
       const fallback = { locale: currentLocaleRef.current, userSettings: committed };
       latestPreferencesRef.current = fallback;
@@ -131,6 +133,7 @@ export function useEditorPreferences({ currentLocale, applyLocale }: UseEditorPr
     }
   }
 
+  // Desktop close waits for the latest queued preference snapshot to become durable.
   useEffect(() => shutdownCoordinator.register("app-preferences", flushPreferenceSave), []);
 
   useEffect(() => {
@@ -143,6 +146,7 @@ export function useEditorPreferences({ currentLocale, applyLocale }: UseEditorPr
     document.body.dataset.desktopShell = desktopShell ? "true" : "false";
     let active = true;
 
+    // Ignore a late load after unmount so it cannot revive stale preferences.
     void loadAppPreferences()
       .then((storedPreferences) => {
         if (!active) {
@@ -194,6 +198,7 @@ export function useEditorPreferences({ currentLocale, applyLocale }: UseEditorPr
     let active = true;
     let objectUrl: string | undefined;
 
+    // Any Blob URL created while loading the background belongs to this effect lifetime.
     loadBackgroundImage(userSettings.appBackground.imageId, userSettings.appBackground.imageUrl)
       .then((url) => {
         if (!active) {

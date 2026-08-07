@@ -165,6 +165,8 @@ type ValidatedAddressAttempt = Omit<SafeFetchTransportRequest, "address"> & {
 
 async function tryValidatedAddresses(request: ValidatedAddressAttempt) {
   const failures: SafeFetchCandidateFailure[] = [];
+  // Preserve the resolver's preferred family while alternating fallbacks, so
+  // a broken IPv6 or IPv4 route does not starve every address of the other family.
   for (const address of interleaveAddressFamilies(request.addresses)) {
     if (request.signal.aborted) {
       throw abortError(request.timedOut());
@@ -230,6 +232,8 @@ export function interleaveAddressFamilies(addresses: ResolvedAddress[]) {
 export async function nodeTransport(request: SafeFetchTransportRequest): Promise<SafeFetchTransportResponse> {
   return new Promise((resolve, reject) => {
     const headers = Object.fromEntries(request.headers.entries());
+    // Connect to the validated IP, but retain the original authority for HTTP
+    // virtual hosting and TLS certificate/SNI verification.
     headers.host = request.url.host;
     const requestOptions: https.RequestOptions = {
       protocol: request.url.protocol,

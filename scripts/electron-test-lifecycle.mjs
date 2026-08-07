@@ -36,6 +36,10 @@ async function waitForProcessExit(childProcess, label, timeoutMs = 5_000) {
   });
 }
 
+/**
+ * Closes an Electron Playwright application and escalates cleanup only when the
+ * normal application shutdown path cannot terminate the child process tree.
+ */
 export async function closeElectronApplication(app, {
   label = "desktop-regression",
   timeoutMs = 15_000

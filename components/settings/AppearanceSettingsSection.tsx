@@ -51,6 +51,7 @@ export function AppearanceSettingsSection({
   }, [settings.uiCustomAccentColor]);
 
   function updateThemeMode(uiThemeMode: UiThemeMode) {
+    // Album-dynamic composition and acrylic material are mutually exclusive.
     onChange({
       ...settings,
       uiThemeMode,
@@ -67,6 +68,7 @@ export function AppearanceSettingsSection({
   }
 
   function updateCustomAccent(value: string) {
+    // Keep invalid text local for editing; persist only a normalized complete color.
     setCustomAccentInput(value);
     const normalized = normalizeHexColor(value, "");
     if (normalized) {

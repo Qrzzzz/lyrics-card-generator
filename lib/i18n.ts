@@ -1871,6 +1871,8 @@ function toTraditionalMessages(source: MessageMap): MessageMap {
 function toTraditionalText(value: string) {
   let converted = Array.from(value, (character) => traditionalCharacterMap[character] ?? character).join("");
 
+  // Phrase replacements run after character conversion because contextual
+  // Traditional Chinese wording cannot be represented by one-to-one mapping.
   for (const [pattern, replacement] of traditionalPhraseMap) {
     converted = converted.replace(pattern, replacement);
   }
@@ -1946,6 +1948,8 @@ export const messages: Record<Locale, MessageMap> = {
 
 export function createT(locale: Locale) {
   return function t(key: MessageKey, values?: Record<string, string | number>) {
+    // Missing locale entries fall back to English, then to the key itself so UI
+    // rendering remains deterministic even with an incomplete message catalog.
     let message: string = messages[locale][key] ?? messages.en[key] ?? key;
 
     if (values) {

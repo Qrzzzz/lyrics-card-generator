@@ -59,6 +59,8 @@ export function normalizeVersion(version: string) {
 }
 
 function comparePrerelease(left: string[], right: string[]) {
+  // SemVer precedence: a stable release outranks prereleases, numeric
+  // identifiers sort before text, and a shorter equal prefix sorts first.
   if (left.length === 0 && right.length === 0) {
     return 0;
   }

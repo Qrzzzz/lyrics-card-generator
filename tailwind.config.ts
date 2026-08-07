@@ -1,6 +1,8 @@
 import type { Config } from "tailwindcss";
 
 const config: Config = {
+  // Web Lite reuses application components, so its classes must participate in
+  // the same Tailwind reachability scan as the desktop-rendered Next.js app.
   content: [
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",

@@ -27,6 +27,8 @@ export function hasClearableLyricContent(current: AppState) {
 }
 
 export function clearLyricContent(current: AppState): AppState {
+  // Song content is duplicated in top-level and style fields; reset both in one
+  // state transition while leaving layout and user preferences intact.
   return {
     ...current,
     url: "",

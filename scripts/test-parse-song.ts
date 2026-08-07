@@ -10,6 +10,8 @@ type LiveParseCase = {
   parseMethod: RegExp;
 };
 
+// These are live provider probes rather than hermetic CI fixtures; each case
+// validates stable semantic fields while allowing localized metadata variants.
 const DEFAULT_TEST_CASES: LiveParseCase[] = [
   {
     input: "https://y.qq.com/n/ryqq/songDetail/577816187",
@@ -40,6 +42,13 @@ const DEFAULT_TEST_CASES: LiveParseCase[] = [
     source: "spotify",
     title: /^晴天$/,
     artist: /^(周杰伦|周杰倫|Jay Chou)$/,
+    parseMethod: /^(spotify-oembed|spotify-og)$/
+  },
+  {
+    input: "https://open.spotify.com/track/4u7EnebtmKWzUH433cf5Qv",
+    source: "spotify",
+    title: /^Bohemian Rhapsody - Remastered 2011$/,
+    artist: /^Queen$/,
     parseMethod: /^(spotify-oembed|spotify-og)$/
   }
 ];

@@ -23,6 +23,7 @@ export function PaletteBackground({
   const rawPrimary = activePalette.primary;
   const rawSecondary = activePalette.secondary ?? activePalette.muted ?? rawPrimary;
   const rawAccent = activePalette.accent ?? rawSecondary;
+  // Neutral palettes use a luminance-appropriate base instead of inventing stronger chroma.
   const neutralBase = activePalette.averageLuminance > 0.5 ? activePalette.light : activePalette.dark;
   const primarySource = isColorful ? rawPrimary : neutralBase;
   const secondarySource = isColorful ? rawSecondary : activePalette.muted;

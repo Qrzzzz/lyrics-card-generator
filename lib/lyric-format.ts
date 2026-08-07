@@ -123,6 +123,8 @@ const latinLanguageMarkers: Record<LatinLocale, Set<string>> = {
 };
 
 export function splitAlternatingLyrics(text: string, translationLocale: Locale = "zh"): SplitAlternatingLyricsResult {
+  // This is a language heuristic, not positional pairing: each non-empty line
+  // is classified independently and original ordering is retained per column.
   const lines = text
     .split(/\r?\n/)
     .map((line) => line.trim())
@@ -208,6 +210,8 @@ function isLatinTranslationLine(line: string, translationLocale: LatinLocale) {
     return false;
   }
 
+  // Require both positive target evidence and a strict win over the other
+  // supported Latin languages to avoid moving ambiguous lyric lines.
   const scores: Record<LatinLocale, number> = {
     en: scoreLatinLine(tokens, "en", trimmed),
     fr: scoreLatinLine(tokens, "fr", trimmed),

@@ -114,6 +114,8 @@ export async function validatePublicHttpUrl(
   if (addresses.length === 0) {
     return { ok: false, error: "Unable to resolve the URL host." };
   }
+  // Deny mixed public/private answers rather than choosing only a convenient
+  // public address; every address remains a possible connection target.
   if (addresses.some(({ address }) => !isPublicIpAddress(address))) {
     return { ok: false, error: "The URL resolves to a private, local, or reserved network address." };
   }

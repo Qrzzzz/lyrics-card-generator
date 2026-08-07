@@ -69,6 +69,7 @@ export function useLyricsSidebarNavigation({
   const visibleTransitionFrom = transitionFrom ?? pageChangingFrom;
 
   if (aiPanel) retainedAiPanelRef.current = aiPanel;
+  // Retain the outgoing AI subtree until its exit completes so streaming is not unmounted mid-transition.
   const renderedAiPanel = aiPanel ?? (
     pageChangingFrom === "ai" || transitionFrom === "ai"
       ? retainedAiPanelRef.current
@@ -140,6 +141,7 @@ export function useLyricsSidebarNavigation({
       activeElement.closest("[data-lyrics-sidebar-page]")
     );
     if (contentHadFocus) {
+      // Stage focus on a neutral viewport while the old page becomes inert and the new page enters.
       pendingFocusRef.current = activePage === "ai"
         ? "ai"
         : activePage === "translation"
@@ -163,6 +165,7 @@ export function useLyricsSidebarNavigation({
   }, [activePage, focusAiPagePrimary, focusIntent, onIntentHandled]);
 
   useEffect(() => {
+    // Reduced motion may not emit a useful animation completion callback, so settle focus explicitly.
     if (!reducedMotion || !transitionFrom) return;
     const frame = window.requestAnimationFrame(() => focusEnteredPage(activePage));
     return () => window.cancelAnimationFrame(frame);
@@ -171,6 +174,7 @@ export function useLyricsSidebarNavigation({
   function onDrawerKeyDown(event: KeyboardEvent<HTMLElement>) {
     if (!mobileDrawer) return;
     if (event.key === "Escape") {
+      // Escape unwinds the nested run page, AI page, and drawer in that order.
       event.preventDefault();
       event.stopPropagation();
       const activeRunPageBack = event.currentTarget.querySelector<HTMLButtonElement>(
@@ -190,6 +194,7 @@ export function useLyricsSidebarNavigation({
     }
     if (event.key !== "Tab") return;
 
+    // This custom modal drawer implements its own focus loop instead of using AccessibleDialog.
     const focusable = [...event.currentTarget.querySelectorAll<HTMLElement>(
       'button:not(:disabled), input:not(:disabled), textarea:not(:disabled), select:not(:disabled), [href], [tabindex]:not([tabindex="-1"])'
     )].filter((node) => (

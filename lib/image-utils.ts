@@ -3,6 +3,8 @@ export function proxiedImageUrl(url?: string) {
     return "";
   }
 
+  // Preserve the URL prefixes this renderer path treats as directly loadable.
+  // Inputs outside this compatibility allowlist are encoded for the proxy route.
   if (
     url.startsWith("blob:") ||
     url.startsWith("data:") ||

@@ -5,6 +5,7 @@ import type { CardStyle } from "@/lib/types";
 export const FIXED_COVER_CROP_SCALE = 1;
 export const FIXED_WHITE_TEXT_COLOR = "#FFFFFF";
 
+/** Restores persisted style data to the currently supported visual invariants. */
 export function normalizeCardStyle(style: CardStyle): CardStyle {
   const normalizedStyle: CardStyle =
     style.textColorMode === "custom"
@@ -45,6 +46,8 @@ export function normalizeInstrumentalLayout(style: CardStyle): CardStyle {
     return style;
   }
 
+  // Instrumental cards are a fixed square mode and cannot carry translation or
+  // automatic lyric sizing state from the previously edited lyrics document.
   const squareSize = PRESET_CARD_SIZES["1:1"];
 
   return {

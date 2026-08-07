@@ -19,6 +19,7 @@ const readyDom: ExportDomSafety = {
   hasContentOverflow: false
 };
 
+// Snapshots must detach export work from every subsequent live-editor mutation.
 {
   const live: AppState = {
     ...defaultState,
@@ -60,6 +61,7 @@ const readyDom: ExportDomSafety = {
 }
 
 async function concurrencyTest() {
+  // Same-turn attempts contend for one mutex before either operation can await.
   const mutex = new ExportTransactionMutex();
   const snapshot = createExportSnapshot(defaultState, 1, 1);
   let releaseCapture!: () => void;

@@ -15,6 +15,8 @@ on:
         default: false
         type: boolean
 
+# Supersede stale runs for the same branch or pull request while keeping
+# unrelated validation independent.
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
@@ -58,6 +60,8 @@ jobs:
         run: npm run build
 
   web-lite-smoke:
+    # Browser tests remain isolated from the fast verification job so Chromium
+    # setup and artifact evidence cannot delay type and contract feedback.
     runs-on: ubuntu-latest
     timeout-minutes: 15
 

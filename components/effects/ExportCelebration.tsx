@@ -46,6 +46,7 @@ export function ExportCelebration({ burstKey, accentColor = "#7C3AED" }: { burst
       return;
     }
 
+    // Consume each successful export key exactly once, even if this effect reruns.
     const isNewBurst = burstKey !== consumedBurstKeyRef.current;
     if (isNewBurst) consumedBurstKeyRef.current = burstKey;
 
@@ -73,6 +74,7 @@ export function ExportCelebration({ burstKey, accentColor = "#7C3AED" }: { burst
     const palette = [accentColorRef.current, ...COLORS];
 
     function resize() {
+      // Keep drawing coordinates in CSS pixels while the backing canvas follows device pixel ratio.
       const dpr = window.devicePixelRatio || 1;
       canvas.width = Math.ceil(window.innerWidth * dpr);
       canvas.height = Math.ceil(window.innerHeight * dpr);
@@ -124,6 +126,7 @@ export function ExportCelebration({ burstKey, accentColor = "#7C3AED" }: { burst
     }
 
     function tick(now: number) {
+      // Cap elapsed time so a background-tab stall cannot teleport particles.
       const delta = Math.min(0.032, (now - lastTime) / 1000);
       lastTime = now;
 

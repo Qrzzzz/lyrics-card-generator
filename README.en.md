@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v5.9.2.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v5.9.3.en.md">Release Notes</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
   <a href="#features">Features</a> ·
   <a href="#local-development">Local Development</a> ·
@@ -49,25 +49,26 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 ## 📦 Download and Installation
 
-Download the latest version from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
+Use [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) for publicly available builds. Local v5.9.3 release-candidate packaging uses these filenames:
 
-* Recommended installer: `Lyrics Card Generator Setup 5.9.2.exe`
-* Portable version: `Lyrics Card Generator-5.9.2-portable.exe`
+* Installer: `Lyrics Card Generator Setup 5.9.3.exe`
+* Portable build: `Lyrics Card Generator-5.9.3-portable.exe`
 
 The installer is recommended for regular use. The portable version is useful for temporary use, testing, or running from a removable drive.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v5.9.2 Highlights
+### v5.9.3 Highlights (local release candidate)
 
-* Fixes an issue where loading a manual archive from History did not restore its saved album cover.
-* Loading restores only the sanitized cover URL and uses the existing image proxy and palette flow; it does not reparse the song link or overwrite archived lyrics, translations, or song metadata.
-* Older archives without a cover URL remain coverless. Web Lite keeps its existing interface and behavior.
+* Hardens packaged Windows startup with a per-launch HMAC readiness proof, fail-closed spawn/exit and port-competition handling, and single ownership of the app window, bundled server, and history writer.
+* Enforces a streaming 100 MiB MP3 / FLAC upload limit plus pre-Base64/JSON budgets of 8 MiB for embedded covers and 256 Ki characters for lyrics. Random-access parsing retains trailing APEv2 tags without creating a second whole-file copy.
+* Improves Spotify artist extraction and NetEase candidate ranking while preserving legitimate remaster, mix, and live title suffixes and promoting exact title/artist matches.
+* Upgrades to Next.js 15.5.21, disables the unused image optimizer entry point, and completes the desktop standalone dependency set. This metadata describes a local release candidate; public availability is determined by the live GitHub Releases page.
 
 ## 🌐 Multilingual Release Notes
 
 GitHub Release displays a Simplified Chinese summary by default. See the full release notes:
-[简体中文](./docs/releases/v5.9.2.zh-CN.md) · [繁體中文](./docs/releases/v5.9.2.zh-TW.md) · [English](./docs/releases/v5.9.2.en.md) · [Français](./docs/releases/v5.9.2.fr.md) · [日本語](./docs/releases/v5.9.2.ja.md) · [Español](./docs/releases/v5.9.2.es.md)
+[简体中文](./docs/releases/v5.9.3.zh-CN.md) · [繁體中文](./docs/releases/v5.9.3.zh-TW.md) · [English](./docs/releases/v5.9.3.en.md) · [Français](./docs/releases/v5.9.3.fr.md) · [日本語](./docs/releases/v5.9.3.ja.md) · [Español](./docs/releases/v5.9.3.es.md)
 
 <a id="features"></a>
 

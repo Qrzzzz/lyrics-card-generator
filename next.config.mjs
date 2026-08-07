@@ -1,6 +1,12 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: "standalone",
+  // Cover art is rendered directly and the app does not use next/image. Keep
+  // the optimizer route disabled so image-proxy cannot feed untrusted bytes
+  // into the native sharp/libvips decoder bundled by Next.js.
+  images: {
+    unoptimized: true
+  },
   async headers() {
     const contentSecurityPolicy = [
       "default-src 'self'",

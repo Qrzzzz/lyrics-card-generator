@@ -40,6 +40,7 @@ export function useResizableSplit({
   const [viewportWidth, setViewportWidth] = useState(0);
   const [matchesDesktopQuery, setMatchesDesktopQuery] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  // Geometry may clamp the effective ratio without overwriting the user's requested ratio.
   const geometry = resolveResizableSplit({
     viewportWidth,
     requestedRatio,
@@ -65,6 +66,7 @@ export function useResizableSplit({
     let frame = 0;
     const mediaQuery = window.matchMedia(desktopQuery);
     const update = () => {
+      // Coalesce ResizeObserver and media-query changes into one geometry update per frame.
       window.cancelAnimationFrame(frame);
       frame = window.requestAnimationFrame(() => {
         setViewportWidth(viewport.getBoundingClientRect().width);
@@ -108,6 +110,7 @@ export function useResizableSplit({
 
     event.preventDefault();
     activePointerIdRef.current = event.pointerId;
+    // Pointer capture keeps the drag continuous after the pointer leaves the narrow separator.
     event.currentTarget.setPointerCapture(event.pointerId);
     setIsDragging(true);
     updateRatioFromPointer(event.clientX);

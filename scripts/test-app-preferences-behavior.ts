@@ -35,6 +35,8 @@ function record(revision: number, updatedAt: number, locale: AppPreferencesRecor
   };
 }
 
+// Install renderer and desktop persistence doubles together so reconciliation
+// tests observe the same two-copy contract as the packaged application.
 function installWindow(
   localStorage: MemoryStorage,
   desktopRecord: AppPreferencesRecord | null,

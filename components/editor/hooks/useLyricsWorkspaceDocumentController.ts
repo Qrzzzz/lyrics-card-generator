@@ -106,8 +106,10 @@ export function useLyricsWorkspaceDocumentController({
   const selectionsRef = useRef(selections);
   selectionsRef.current = selections;
   const [feedback, setFeedback] = useState<OperationFeedback | null>(null);
+  // History lives in a ref; this revision exists only to expose ref mutations to rendering.
   const [historyRevision, setHistoryRevision] = useState(0);
   const historyRef = useRef(createLyricsOperationHistory());
+  // Expected snapshots distinguish controller commits from unrelated controlled-value updates.
   const expectedSnapshotRef = useRef<LyricsDocumentSnapshot | null>(null);
   const previousSnapshotRef = useRef(documentSnapshot);
   const pendingSelectionRef = useRef<LyricsSelectionSnapshot | null>(null);
@@ -139,6 +141,7 @@ export function useLyricsWorkspaceDocumentController({
     const editor = getEditor(pending.editor);
     if (!editor) return;
     const selection = clampSelection(pending, editor.value.length);
+    // Restore selection after React updates the textarea value, then restore its semantic viewport anchor.
     editor.setSelectionRange(selection.start, selection.end);
     editor.focus({ preventScroll: true });
     activeEditorRef.current = pending.editor;
@@ -157,6 +160,7 @@ export function useLyricsWorkspaceDocumentController({
       expectedSnapshotRef.current = null;
       return;
     }
+    // Manual typing and external imports start a new local operation-history branch.
     historyRef.current = createLyricsOperationHistory();
     setHistoryRevision((value) => value + 1);
     setFeedback(null);
@@ -221,6 +225,7 @@ export function useLyricsWorkspaceDocumentController({
       return false;
     }
     captureViewportAnchor(params.afterSelection.editor);
+    // Store document, selection, and viewport intent together so undo restores the editing context.
     const entry: LyricsHistoryEntry = {
       label: params.label,
       before: documentSnapshot,

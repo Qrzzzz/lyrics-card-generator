@@ -17,6 +17,7 @@ export function useMeasuredAutoCanvasHeight(
   isAutoWidthStable = true
 ) {
   useEffect(() => {
+    // Width must settle first because wrapping couples the two automatic dimensions.
     if (!isPortraitCustomAutoHeight(state) || !isAutoWidthStable) {
       return;
     }
@@ -31,6 +32,7 @@ export function useMeasuredAutoCanvasHeight(
         return;
       }
 
+      // Coalesce font, resize, and mutation notifications into one layout read per frame.
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(() => {
         const nextHeight = measureAutoCanvasHeight(state, cardRef.current);
@@ -190,6 +192,7 @@ export function measureAutoCanvasHeight(
   const lyricsHeight = lyrics.scrollHeight;
   const headerGap = headerHeight > 0 ? Math.max(24, Math.round(size.height * 0.022)) : 0;
   const footerGap = footerHeight > 0 ? Math.max(18, Math.round(size.height * 0.014)) : 0;
+  // Reconstruct the safe content height, then add the layout engine's non-content chrome.
   const requiredSafeHeight =
     contentPadding + headerHeight + headerGap + viewportPadding + lyricsHeight + footerGap + footerHeight;
   const chromeHeight = size.height - layout.safeRect.height;

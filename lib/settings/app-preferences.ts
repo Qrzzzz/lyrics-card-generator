@@ -33,6 +33,8 @@ export async function loadAppPreferences(): Promise<AppPreferencesRecord> {
 
   try {
     const stored = normalizeAppPreferencesRecord(await desktop.loadAppPreferences());
+    // Reconcile the renderer cache with durable desktop JSON by monotonic
+    // revision, then repair whichever side did not supply the selected record.
     const selected = selectNewerAppPreferences(local, stored);
     const record = ensureMigratedRecord(selected.record ?? local);
     writeLocalAppPreferences(record);
@@ -52,6 +54,8 @@ export function saveAppPreferences(
   userSettings: UserSettings,
   options?: AppPreferencesPersistenceOptions
 ) {
+  // Serialize writes so each operation derives its revision from the result of
+  // the previous one instead of racing on the same local snapshot.
   const operation = appPreferencesSaveQueue.then(() => persistAppPreferences(locale, userSettings, options));
   appPreferencesSaveQueue = operation.then(() => undefined, () => undefined);
   return operation;
@@ -134,6 +138,8 @@ function writeLocalAppPreferences(record: AppPreferencesRecord) {
 }
 
 function toDesktopRecord(record: AppPreferencesRecord): AppPreferencesRecord {
+  // Blob URLs are renderer-session handles. Once an image has a durable id,
+  // never copy its transient object URL into desktop JSON.
   const userSettings = record.userSettings.appBackground.imageId
     ? { ...record.userSettings, appBackground: { ...record.userSettings.appBackground, imageUrl: undefined } }
     : record.userSettings;

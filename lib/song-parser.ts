@@ -26,6 +26,11 @@ export class SongParseError extends Error {
   }
 }
 
+/**
+ * Resolves share redirects, prefers a source-specific adapter, and finally
+ * falls back to generic Open Graph metadata while retaining attempted methods
+ * for diagnostics.
+ */
 export async function parseSong(input: string): Promise<SongInfo> {
   const triedMethods: string[] = [];
   const rawUrl = extractFirstUrl(input);
@@ -44,6 +49,8 @@ export async function parseSong(input: string): Promise<SongInfo> {
     triedMethods.push("resolve-redirect");
     finalUrl = await resolveRedirect(finalUrl);
   } catch (error) {
+    // Unsafe targets are terminal. Ordinary redirect failures can still leave
+    // a direct platform URL that a source adapter is able to parse safely.
     if (error instanceof SafeFetchError && error.code === "UNSAFE_URL") {
       throw new SongParseError(error.message, details);
     }
@@ -134,6 +141,8 @@ export async function resolveRedirect(
   url: string,
   networkOverrides: Pick<SafeFetchOptions, "resolver" | "transport"> = {}
 ) {
+  // A zero-byte discarded body turns this into redirect discovery without
+  // downloading an arbitrary song page twice.
   const response = await safeFetch(url, {
     headers: REQUEST_HEADERS,
     method: "GET",

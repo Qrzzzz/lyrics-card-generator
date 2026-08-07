@@ -19,6 +19,10 @@ export type ExportSnapshot = Readonly<{
 
 let nextSnapshotId = 0;
 
+/**
+ * Clones and freezes all render inputs so edits made while an asynchronous
+ * export is mounting cannot change the pixels or filename mid-transaction.
+ */
 export function createExportSnapshot(
   state: AppState,
   pixelRatio: number,
@@ -58,6 +62,8 @@ export function snapshotAsAppState(snapshot: ExportSnapshot, fallback: AppState)
 
 function deepFreeze<T>(value: T): T {
   if (!value || typeof value !== "object" || Object.isFrozen(value)) return value;
+  // The snapshot is cloned before reaching this helper, so recursive freezing
+  // cannot mutate live editor state; already-frozen nodes also terminate cycles.
   Object.freeze(value);
   for (const child of Object.values(value as Record<string, unknown>)) deepFreeze(child);
   return value;

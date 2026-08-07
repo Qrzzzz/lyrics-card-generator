@@ -265,6 +265,7 @@ function SidebarDeckPage({
 }) {
   const active = page === activePage;
   const exiting = page === transitionFrom;
+  // Active and outgoing pages remain visible during transitions; other mounted pages stay hidden.
   const visible = active || exiting;
   const pageOffset = SIDEBAR_PAGE_INDEX[page] - SIDEBAR_PAGE_INDEX[activePage];
 

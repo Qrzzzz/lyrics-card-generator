@@ -7,6 +7,7 @@ import { createAppRequestHeaders } from "@/lib/app-request";
 import { getLyricsCardDesktopApi } from "@/lib/desktop-api";
 import { getLocalizedAppApiError, type AppApiErrorCode } from "@/lib/app-api-errors";
 import type { createT } from "@/lib/i18n";
+import { isLocalAudioFileTooLarge } from "@/lib/local-audio-limits";
 import type { ParsedSongData } from "@/lib/types";
 import type { DocumentImportIntent } from "@/lib/editor/document-transactions";
 import type { LocalAudioImportHistoryContext } from "@/lib/import-history";
@@ -49,6 +50,13 @@ export function LocalAudioParser({
     if (!file) {
       return;
     }
+    if (isLocalAudioFileTooLarge(file)) {
+      setFileName(file.name);
+      setStatus("error");
+      setMessage(getLocalizedAppApiError("local_audio_too_large", t, ""));
+      if (inputRef.current) inputRef.current.value = "";
+      return;
+    }
     const intent = beginImport();
     if (!intent) {
       // Selecting the same file does not fire another change event unless the
@@ -64,6 +72,7 @@ export function LocalAudioParser({
     setMessage(t("localAudioParsing"));
     let fileToken: string | undefined;
     const desktop = getLyricsCardDesktopApi();
+    // File registration enriches replay history but must not block local parsing when unavailable.
     if (desktop) {
       try {
         fileToken = (await desktop.registerImportFile(file, "local-audio"))?.token;

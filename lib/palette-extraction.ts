@@ -24,6 +24,11 @@ const EDGE_IGNORE_RATIO = 0.07;
 const CLUSTER_COUNT = 6;
 const ITERATIONS = 10;
 
+/**
+ * Downsamples artwork and derives a stable, weighted palette. Decorative edge
+ * pixels, transparency, near-white backgrounds, and near-black borders are
+ * discounted so the result reflects the cover's visual subject.
+ */
 export async function extractPaletteFromImage(imageUrl: string): Promise<ExtractedPalette> {
   if (!imageUrl) {
     return DEFAULT_PALETTE;
@@ -85,6 +90,8 @@ function collectWeightedPixels(data: Uint8ClampedArray) {
       const luminance = relativeLuminance({ r, g, b });
       const channelSpread = (Math.max(r, g, b) - Math.min(r, g, b)) / 255;
       const distanceFromCenter = Math.hypot(x - center, y - center) / maxDistance;
+      // Central saturated pixels usually describe the artwork better than
+      // framing, whitespace, or neutral typography near the edges.
       const centerWeight = 1.12 - distanceFromCenter * 0.28;
       const saturationWeight = 0.42 + hsl.s * 1.45;
       const grayPenalty = channelSpread < 0.08 ? 0.42 : 1;
@@ -140,6 +147,7 @@ function seedCenters(pixels: WeightedPixel[], count: number): Cluster[] {
   const sorted = [...pixels].sort((a, b) => b.weight - a.weight);
   const centers: Cluster[] = [];
 
+  // Deterministic, well-separated seeds avoid palette flicker between runs.
   for (const pixel of sorted) {
     if (centers.length >= count) {
       break;
@@ -296,6 +304,8 @@ function weightedHueVariance(pixels: WeightedPixel[]) {
   let y = 0;
   let totalWeight = 0;
 
+  // Hue is circular, so variance is derived from the weighted unit-vector
+  // resultant; low-saturation pixels have no meaningful hue and are skipped.
   for (const pixel of pixels) {
     const hsl = rgbToHsl(pixel);
 

@@ -61,6 +61,7 @@ export function useEditorAiTranslation({
   const [aiTranslationPhase, setAITranslationPhase] = useState<AITranslationPhase>("idle");
   const [aiFailure, setAIFailure] = useState<unknown>(null);
   const [aiSettings, setAISettings] = useState<AISettingsSummary>({ ...DEFAULT_AI_SETTINGS, hasApiKey: false });
+  // The orchestrator owns cancellation, partial rollback, and revision/song-identity guards.
   const aiOrchestratorRef = useRef(new AITranslationOrchestrator<TranslationValue, AITranslationPhase>());
   const aiCopy = useMemo(() => getAIUiCopy(locale), [locale]);
   const aiError = useMemo(
@@ -125,6 +126,7 @@ export function useEditorAiTranslation({
         setAITranslationPhase("connecting");
       },
       onStatus: setAITranslationPhase,
+      // Bound diagnostic reasoning retained in React state while preserving the newest context.
       onReasoning: (accumulated) => setAIReasoningText(accumulated.slice(-12000)),
       onStreaming: setAIStreamingText,
       onSuccess: () => {
@@ -149,6 +151,7 @@ export function useEditorAiTranslation({
         setAITranslationPhase("idle");
       },
       stream: async (signal, events) => {
+        // Build from the intent snapshot, never from lyrics that may change during streaming.
         const prompt = buildLyricsTranslationPrompt({
           lyrics: intent.lyrics,
           presetId,

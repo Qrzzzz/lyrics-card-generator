@@ -23,6 +23,7 @@ type TextAnchor = {
   lineRatio: number;
 };
 
+// Semantic text coordinates survive column swaps and layout-driven scroll-height changes.
 type EditorSnapshot = TextAnchor & {
   editor: LyricsEditorKey;
   selectionStart: number;
@@ -97,6 +98,7 @@ export function useLyricsViewportSession({
       const editorRect = editor.getBoundingClientRect();
       const editorContentTop = editorRect.top - scrollRect.top + scrollNode.scrollTop;
       const existingSnapshot = editors[editorKey];
+      // A replacement textarea inherits the prior selection instead of its default zero selection.
       const preservedSnapshot = editorNodesRef.current[editorKey] !== editor
         ? existingSnapshot
         : undefined;
@@ -148,6 +150,7 @@ export function useLyricsViewportSession({
     restorationPendingRef.current = true;
     window.cancelAnimationFrame(restoreFrameRef.current);
     window.cancelAnimationFrame(restoreSettleFrameRef.current);
+    // Defer until layout commits, then keep capture suppressed for one settling frame.
     restoreFrameRef.current = window.requestAnimationFrame(() => {
       const finishRestore = () => {
         restoreSettleFrameRef.current = window.requestAnimationFrame(() => {
@@ -237,6 +240,7 @@ export function useLyricsViewportSession({
       return;
     }
 
+    // Respect the nearest editor shell boundary rather than assuming the browser viewport is available.
     const bounds = workspace.closest<HTMLElement>('[data-lyrics-viewport-bounds="true"]');
     const workspaceRect = workspace.getBoundingClientRect();
     const workspaceTop = Math.max(0, workspaceRect.top);
@@ -280,6 +284,7 @@ export function useLyricsViewportSession({
     }
 
     const onScroll = () => {
+      // Programmatic restoration must not overwrite the snapshot it is still consuming.
       if (!restorationPendingRef.current) {
         captureAnchor();
       }
@@ -341,6 +346,7 @@ function resolveMappedTextAnchorRatio(anchor: TextAnchor, targetValue: string) {
     return lineRatioForIndex(anchor.lineIndex, targetLines.length);
   }
 
+  // When line counts diverge, map the same paragraph and relative line before falling back.
   const targetParagraphs = getParagraphLineRanges(targetLines);
   const targetParagraph = anchor.paragraphIndex >= 0
     ? targetParagraphs[anchor.paragraphIndex]
@@ -392,6 +398,7 @@ function resolveAnchoredScrollTop({
   scrollRatio: number;
   allowCenterFallback: boolean;
 }) {
+  // Prefer exact visual offset, then viewport center, and finally proportional scroll position.
   const offsetTarget = anchorPosition - viewportOffset;
   if (!allowCenterFallback || (offsetTarget >= 0 && offsetTarget <= maxScroll)) {
     return clamp(offsetTarget, 0, maxScroll);

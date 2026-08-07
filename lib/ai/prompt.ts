@@ -181,6 +181,8 @@ export function buildLyricsTranslationPrompt(params: {
   targetLocale: Locale;
   promptLibrary?: AIPromptLibrary;
 }) {
+  // User-editable presets replace only the style module. Identity, principles,
+  // and the non-editable output contract remain present for every request.
   const bundle = PROMPT_BUNDLES[params.targetLocale];
   const presetId = params.presetId ?? params.style ?? "recommended";
   const library = params.promptLibrary;

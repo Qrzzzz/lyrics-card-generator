@@ -55,6 +55,8 @@ export function getLandscapeSlots(
   });
 }
 
+// Scale the 1920x1080 reference composition into arbitrary output bounds while
+// keeping square elements on the smaller axis scale to avoid distortion.
 function getLandscapeSlotsForBounds(
   width: number,
   height: number,

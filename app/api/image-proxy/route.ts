@@ -4,6 +4,11 @@ export const runtime = "nodejs";
 
 const IMAGE_LIMIT = 8 * 1024 * 1024;
 
+/**
+ * Proxies remote artwork through the SSRF-safe fetch path. Every redirect is
+ * revalidated, the connection is pinned to validated DNS results, and both
+ * media type and response size are bounded before bytes reach the renderer.
+ */
 export async function GET(req: Request) {
   const requestUrl = new URL(req.url);
   const imageUrl = requestUrl.searchParams.get("url") || "";

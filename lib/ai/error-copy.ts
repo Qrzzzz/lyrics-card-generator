@@ -36,6 +36,8 @@ export function getAIErrorMessage(locale: Locale, code: AIErrorCode, diagnostic?
 }
 
 export function parseSerializedAIError(message: string) {
+  // Electron may prepend IPC and Error wrappers; remove only those envelopes
+  // before recovering the stable application error code and diagnostic.
   const normalized = message.replace(/^Error invoking remote method '[^']+':\s*/i, "").replace(/^Error:\s*/i, "");
   const match = normalized.match(/^AI_ERROR:([a-z_]+)(?::([\s\S]*))?$/);
   return match ? { code: match[1] as AIErrorCode, diagnostic: match[2]?.trim() || undefined } : { code: "unknown" as const, diagnostic: undefined };

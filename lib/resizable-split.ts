@@ -43,6 +43,7 @@ export function clampSplitRatio(value: number, minimum: number, maximum: number)
   return Math.min(Math.max(value, minimum), maximum);
 }
 
+/** Resolves ratio limits together with the minimum pixel widths of both panes. */
 export function resolveResizableSplit({
   viewportWidth,
   requestedRatio,
@@ -73,6 +74,8 @@ export function resolveResizableSplit({
   const widthConstrainedMaximum = 1 - minTrailingWidth / usableWidth;
   const resolvedMinimum = Math.max(minRatio, widthConstrainedMinimum);
   const resolvedMaximum = Math.min(maxRatio, widthConstrainedMaximum);
+  // If the viewport cannot satisfy both pixel minima, collapse to the declared
+  // minimum ratio so callers receive deterministic, non-inverted geometry.
   const constraintsFit = resolvedMinimum <= resolvedMaximum;
   const effectiveMinimum = constraintsFit ? resolvedMinimum : minRatio;
   const effectiveMaximum = constraintsFit ? resolvedMaximum : minRatio;

@@ -14,6 +14,7 @@ function openDatabase() {
   });
 }
 
+/** Stores the image in the desktop file store or the browser's IndexedDB fallback. */
 export async function storeBackgroundImage(file: File) {
   const desktop = getLyricsCardDesktopApi();
   if (desktop?.saveBackgroundImage) return desktop.saveBackgroundImage();
@@ -31,6 +32,8 @@ export async function storeBackgroundImage(file: File) {
 }
 
 export async function loadBackgroundImage(imageId?: string, imageUrl?: string) {
+  // A missing id denotes an already-resolved URL. Desktop returns a data URL;
+  // the browser fallback creates a Blob URL whose lifecycle belongs to the caller.
   if (!imageId) return imageUrl;
   const desktop = getLyricsCardDesktopApi();
   if (desktop?.readBackgroundImage) return desktop.readBackgroundImage(imageId);
@@ -71,6 +74,7 @@ export async function extractAverageColor(file: Blob) {
   context.drawImage(bitmap, 0, 0, 24, 24);
   const pixels = context.getImageData(0, 0, 24, 24).data;
   let red = 0, green = 0, blue = 0, count = 0;
+  // Sample every fourth pixel; the 24x24 thumbnail makes denser reads unnecessary.
   for (let index = 0; index < pixels.length; index += 16) {
     if (pixels[index + 3] < 128) continue;
     red += pixels[index]; green += pixels[index + 1]; blue += pixels[index + 2]; count += 1;

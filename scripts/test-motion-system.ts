@@ -8,6 +8,8 @@ const exportSensitiveFiles = [
   "components/preview/PaletteBackground.tsx"
 ] as const;
 
+// Export DOM must stay free of motion wrappers because animated transforms can
+// leak intermediate geometry into raster capture.
 for (const file of exportSensitiveFiles) {
   const source = readFileSync(resolve(file), "utf8");
   assert.equal(source.includes("framer-motion"), false, `${file} must not import framer-motion`);

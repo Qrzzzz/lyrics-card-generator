@@ -25,6 +25,7 @@ export function MotionPanel({
   const reducedMotion = useAppReducedMotion();
   const motionReady = useAppMotionReady();
 
+  // Hold the initial state until persisted motion preferences load to avoid a startup animation flash.
   return (
     <motion.div
       initial={motionReady ? initial : false}

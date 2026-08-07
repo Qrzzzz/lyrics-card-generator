@@ -97,6 +97,7 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
 
   function updateContentMode(contentMode: ContentMode) {
     if (contentMode === "instrumental") {
+      // Instrumental rendering owns a fixed square portrait geometry and has no translation column.
       const squareSize = PRESET_CARD_SIZES["1:1"];
       onStyleChange({
         ...style,
@@ -139,6 +140,7 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
       return;
     }
 
+    // A preset atomically owns dimensions and disables both automatic sizing modes.
     const preset = PRESET_CARD_SIZES[ratio];
     onStyleChange({ ...style, ratio, width: preset.width, height: preset.height, autoWidth: false, autoHeight: false });
   }
@@ -353,6 +355,7 @@ export function VisualSettingsPanel({
   }
 
   function updateGeneratedWatermark(enabled: boolean) {
+    // Preserve the legacy watermark field while the newer renderer reads the explicit field.
     onStyleChange({ ...style, showGeneratedWatermark: enabled, showWatermark: enabled });
   }
 

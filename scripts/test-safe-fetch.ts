@@ -12,6 +12,8 @@ import { detectSource, resolveRedirect } from "../lib/song-parser";
 import { isPublicIpAddress, type PublicUrlResolver } from "../lib/url-safety";
 
 const publicAddress = { address: "93.184.216.34", family: 4 as const };
+// Use a deterministic public answer so tests cover validation and connection
+// pinning without relying on live DNS.
 const publicResolver: PublicUrlResolver = async () => [publicAddress];
 
 function response(status: number, headers: Record<string, string> = {}, body: string | Uint8Array = "") {
@@ -27,6 +29,8 @@ async function expectCode(promise: Promise<unknown>, code: SafeFetchError["code"
 }
 
 async function main() {
+// Reserved, documentation, transition, and IPv4-mapped ranges all remain
+// blocked even when their textual representation looks globally routable.
 assert.equal(isPublicIpAddress("8.8.8.8"), true);
 for (const address of [
   "127.0.0.1",

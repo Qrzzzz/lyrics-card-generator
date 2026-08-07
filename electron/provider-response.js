@@ -1,5 +1,6 @@
 async function readProviderResponseBody(response) {
   try {
+    // Parse a clone so the original body remains available for a useful text fallback.
     return { kind: "json", data: await response.clone().json() };
   } catch {
     try {
@@ -41,6 +42,7 @@ function buildChatCompletionsRequestBody({ baseUrl, model, prompt, reasoning = f
     stream: true
   };
 
+  // DeepSeek uses a provider-specific switch; compatible APIs use reasoning_effort instead.
   if (usesDeepSeekThinking(baseUrl, model)) {
     requestBody.thinking = { type: reasoning ? "enabled" : "disabled" };
   } else if (reasoning) {

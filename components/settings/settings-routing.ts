@@ -28,6 +28,7 @@ export function normalizeSettingsDestination(destination: SettingsDestination): 
   const adapter = sectionRouteAdapters[destination.section];
   return {
     section: destination.section,
+    // Sections without nested routing intentionally discard stale path segments.
     path: adapter ? adapter.normalizePath(destination.path) : []
   };
 }

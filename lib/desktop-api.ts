@@ -110,6 +110,8 @@ function invalidManualSaveResult(): Promise<ImportHistoryWriteResult> {
 }
 
 function createDesktopApi(bridge: LyricsCardDesktopBridge): LyricsCardDesktopApi {
+  // Wrap the preload bridge with renderer-side envelope validation, then freeze
+  // the public facade so page code cannot replace privileged methods.
   const api = Object.create(bridge) as LyricsCardDesktopApi;
   Object.defineProperties(api, {
     createManualSave: {
@@ -137,6 +139,7 @@ export function getLyricsCardDesktopApi() {
     return undefined;
   }
 
+  // Cache one immutable facade for stable method identity and listener cleanup.
   if (window.lyricsCardDesktop) return window.lyricsCardDesktop;
   if (!window.lyricsCardDesktopBridge) return undefined;
   const api = createDesktopApi(window.lyricsCardDesktopBridge);

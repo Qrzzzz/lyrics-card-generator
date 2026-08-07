@@ -55,6 +55,7 @@ export function AccessibleDialog({
         ? panelRef.current?.querySelector<HTMLElement>(initialFocusSelector)
         : firstFocusable(panelRef.current);
       (target ?? panelRef.current)?.focus({ preventScroll: true });
+      // Acquire inert only after the portal root exists, excluding the dialog itself from targets.
       if (overlayRef.current && !releaseInertRef.current) {
         releaseInertRef.current = acquireBackgroundInert(overlayRef.current);
       }
@@ -72,6 +73,7 @@ export function AccessibleDialog({
   return createPortal(
     <AnimatePresence
       onExitComplete={() => {
+        // Keep the background inaccessible until the visible exit animation has finished.
         releaseInertRef.current?.();
         releaseInertRef.current = null;
         const target = returnFocusSelector
@@ -137,6 +139,7 @@ function firstFocusable(root: HTMLElement | null) {
 }
 
 function trapTabKey(event: React.KeyboardEvent, root: HTMLElement | null) {
+  // Modal focus wraps across only the currently enabled, visible controls.
   const focusable = focusableElements(root);
   if (focusable.length === 0) {
     event.preventDefault();
@@ -162,9 +165,11 @@ function acquireBackgroundInert(dialogRoot: HTMLElement) {
   targets.forEach((element) => {
     const state = inertStates.get(element);
     if (state) {
+      // Reference counting supports nested dialogs without prematurely restoring the background.
       state.count += 1;
       return;
     }
+    // Preserve pre-existing accessibility state for exact restoration on final release.
     inertStates.set(element, {
       count: 1,
       inert: element.inert,

@@ -23,6 +23,11 @@ type ActiveIntent = {
   controller: AbortController;
 };
 
+/**
+ * Grants one optimistic import intent at a time. Both token identity and the
+ * base document revision must still match at commit, preventing late network
+ * results from replacing edits made after an import began.
+ */
 export class DocumentTransactionController {
   private revision = 0;
   private nextIntentId = 0;
@@ -111,6 +116,8 @@ export function hasAuthoredDocument(state: AppState) {
 
 export function replaceSongDocument(current: AppState, parsed: ParsedSongData, lyrics = ""): AppState {
   const song = canonicalSongInfo(parsed);
+  // Translation and palette state belong to the previous song and must be
+  // cleared atomically with the document replacement.
   return {
     ...current,
     url: song.originalUrl ?? "",
@@ -148,6 +155,8 @@ export function canonicalSongInfo(parsed: ParsedSongData | SongInfo): SongInfo {
 }
 
 export function songDocumentIdentity(song: SongInfo) {
+  // A non-printing separator avoids ambiguous concatenation without changing
+  // or normalizing user-authored title and artist text.
   return [song.source, song.originalUrl ?? "", song.finalUrl ?? "", song.title, song.artist].join("\u001f");
 }
 

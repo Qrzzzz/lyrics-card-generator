@@ -59,6 +59,8 @@ export async function analyzeImageLuminance(imageUrl: string): Promise<Backgroun
       return DEFAULT_BACKGROUND_ANALYSIS;
     }
 
+    // A small uniform sample is sufficient for the coarse overlay/text choice
+    // and keeps repeated cover changes inexpensive.
     context.drawImage(image, 0, 0, 32, 32);
     const { data } = context.getImageData(0, 0, 32, 32);
     let total = 0;

@@ -17,6 +17,8 @@ const {
 const MAX_MANUAL_SNAPSHOT_BYTES = 512 * 1024;
 
 async function main() {
+  // Begin with normalization and deduplication contracts before exercising the
+  // same records through the asynchronous on-disk store.
   assert.equal(normalizeImportHistoryLimit(undefined), 10);
   assert.equal(normalizeImportHistoryLimit(5), 5);
   assert.equal(normalizeImportHistoryLimit(10), 10);

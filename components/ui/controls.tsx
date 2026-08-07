@@ -90,6 +90,7 @@ export function FieldLabel({
   const resolvedFieldId = labelableChild
     ? labelableChild.props.id ?? htmlFor ?? generatedFieldId
     : htmlFor;
+  // Enhance only the first labelable child and merge, rather than replace, its helper references.
   const resolvedChildren = labelableChild
     ? childArray.map((child, index) => {
         if (index !== labelableIndex || !isLabelableField(child)) {
@@ -567,6 +568,7 @@ export function OptionCardGroup({
       return;
     }
 
+    // Roving selection wraps through enabled cards and moves focus with activation.
     if (options?.length && resolvedOnChange) {
       event.preventDefault();
       const enabledOptions = options.filter((option) => !option.disabled);
@@ -689,6 +691,7 @@ export function SegmentedControl<T extends string = string>({
       return;
     }
 
+    // Radio-style arrow navigation skips disabled segments and maintains one tab stop.
     event.preventDefault();
     const enabledOptions = options.filter((option) => !option.disabled);
     if (enabledOptions.length === 0 || !resolvedOnChange) {

@@ -24,6 +24,8 @@ assert.ok(artifacts.includes(portableName), `${portableName} is missing`);
 assert.ok(artifacts.includes(setupName), `${setupName} is missing`);
 
 const results = [];
+// Exercise the portable binary first, then validate the installer through an
+// isolated silent install so neither path depends on the developer profile.
 await smokeExecutable(path.join(releaseDirectory, portableName), "portable", results);
 
 const installDirectory = await mkdtemp(path.join(tmpdir(), "lyrics-card-setup-"));
@@ -60,6 +62,8 @@ async function smokeExecutable(executablePath, label, results) {
   launched.stdout?.on("data", (chunk) => { output = `${output}${chunk}`.slice(-12_000); });
   launched.stderr?.on("data", (chunk) => { output = `${output}${chunk}`.slice(-12_000); });
   try {
+    // CDP verifies the packaged renderer without injecting test-only code into
+    // the application bundle.
     browser = await connectToElectron(debuggingPort, 90_000);
     const page = await waitForApplicationPage(browser, 90_000);
     await page.getByTestId("editor-surface").waitFor({ state: "visible", timeout: 60_000 });
@@ -81,6 +85,8 @@ async function smokeExecutable(executablePath, label, results) {
     await page?.screenshot({ path: path.join(reportDirectory, `${label}-failure.png`) }).catch(() => undefined);
     throw new Error(`${label} final-artifact smoke failed. ${output}`, { cause: error });
   } finally {
+    // Always terminate the complete process tree because a failed renderer can
+    // leave the packaged Next.js child alive after Electron disconnects.
     await browser?.close().catch(() => undefined);
     if (!processExited) await terminateProcessTree(launched.pid);
     await rm(userDataDirectory, { recursive: true, force: true }).catch(() => undefined);

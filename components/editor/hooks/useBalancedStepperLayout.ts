@@ -46,6 +46,7 @@ function chooseStepperLayout({
     return DEFAULT_LAYOUT;
   }
 
+  // The widest natural label determines whether a row can remain untruncated.
   const maxMeasuredItemWidth = Math.ceil(Math.max(...itemWidths));
   const fullLabelMinimum = Math.max(maxMeasuredItemWidth, comfortableMinItemWidth);
 
@@ -101,6 +102,7 @@ export function useBalancedStepperLayout({
       window.cancelAnimationFrame(frame);
       frame = window.requestAnimationFrame(() => {
         const containerWidth = Math.floor(containerEl.getBoundingClientRect().width);
+        // The hidden rail exposes natural label widths independently of the selected grid.
         const itemWidths = Array.from(measureEl.children).map((child) =>
           Math.ceil(child.getBoundingClientRect().width)
         );
@@ -128,6 +130,7 @@ export function useBalancedStepperLayout({
     observer.observe(containerEl);
     observer.observe(measureEl);
 
+    // Font substitution can change the chosen column count after the first layout pass.
     document.fonts?.ready.then(update).catch(() => undefined);
 
     return () => {

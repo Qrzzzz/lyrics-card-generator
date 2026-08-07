@@ -98,6 +98,7 @@ export function useExportCardReadiness({
       frame = requestAnimationFrame(evaluate);
     };
 
+    // Observe the independent export tree because fonts, content, and sizing settle asynchronously.
     const root = findExportCard(exportCardRef.current);
     if (root) {
       const targets = [
@@ -135,6 +136,7 @@ export function useExportCardReadiness({
     };
   }, [exportCardRef, isAutoWidthStable, state]);
 
+  // Never reuse DOM readiness measured for a previous state identity.
   const isCurrentState = domReadiness.evaluatedState === state;
   const currentDomReadiness = isCurrentState
     ? domReadiness
@@ -178,6 +180,7 @@ function evaluateExportCardDom(
   const root = findExportCard(container);
   const isCardMounted = Boolean(root);
   const areFontsReady = typeof document !== "undefined" && document.fonts.status === "loaded";
+  // Semantic safety and physical DOM readiness form separate export gates.
   const expectedSize = getCardSize(state.style);
   const isCardSizeStable = Boolean(
     root &&

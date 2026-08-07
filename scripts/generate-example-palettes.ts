@@ -27,6 +27,8 @@ async function main() {
   await mkdir(coversDir, { recursive: true });
   await mkdir(generatorTmpDir, { recursive: true });
 
+  // Cover resolution runs in Node, while palette extraction runs in Electron to
+  // match the browser canvas behavior used by the product.
   const paletteInput = await collectPaletteInput();
   const port = await findFreePort();
   const server = startNextServer(port);
@@ -146,6 +148,8 @@ async function runElectronPaletteExtractor(url: string, items: PaletteInput[]): 
 }
 
 async function syncExamplePaletteMetadata(results: PaletteResult[]) {
+  // Update only the generated palette field inside each stable example block;
+  // titles, lyrics, and hand-authored metadata remain untouched.
   validatePaletteResults(results);
   const examplesPath = resolve(projectRoot, "lib/examples.ts");
   let source = await readFile(examplesPath, "utf8");

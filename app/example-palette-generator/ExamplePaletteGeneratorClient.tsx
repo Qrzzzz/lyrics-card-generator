@@ -22,6 +22,8 @@ declare global {
 
 export function ExamplePaletteGeneratorClient() {
   useEffect(() => {
+    // Expose the production palette extractor to the development-only automation
+    // script so generated example metadata follows the same browser code path.
     window.extractExamplePalettes = async (items) => {
       const results: PaletteResult[] = [];
 
@@ -53,6 +55,7 @@ export function ExamplePaletteGeneratorClient() {
 }
 
 function selectGalleryColors(palette: ExtractedPalette) {
+  // Preserve the extractor's semantic priority while removing duplicate swatches.
   return [...new Set([
     ...palette.colors,
     palette.primary,

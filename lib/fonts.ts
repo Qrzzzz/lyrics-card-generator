@@ -75,6 +75,8 @@ export function getActiveFontMode(style: CardStyle): "preset" | "custom" {
 }
 
 export function getEffectiveFontScheme(style: CardStyle) {
+  // Prefer the current two-family scheme, then bridge legacy single-font fields
+  // so old documents render identically after loading.
   if (style.fontScheme) {
     return normalizeFontScheme(style.fontScheme);
   }

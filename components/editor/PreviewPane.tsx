@@ -42,7 +42,9 @@ export function PreviewPane({
 }: PreviewPaneProps) {
   const reduceMotion = useAppReducedMotion();
   const [isDesktopPreview, setIsDesktopPreview] = useState(false);
+  // Desktop forces the preview open without overwriting the user's mobile collapse preference.
   const previewExpanded = isPreviewVisible || isDesktopPreview;
+  // Font hover/focus preview never mutates the saved card style.
   const previewStyle = fontSchemePreview ? { ...style, fontScheme: fontSchemePreview } : style;
 
   useEffect(() => {
@@ -90,6 +92,7 @@ export function PreviewPane({
         <div>
           <div className="relative min-w-0" data-testid="preview-clear-transition">
             <MotionPresence mode="popLayout">
+              {/* Only the visible preview remounts to animate a clear; export hosts remain stable. */}
               <motion.div
                 key={`preview-clear-${clearTransitionKey}`}
                 data-clear-transition-key={clearTransitionKey}

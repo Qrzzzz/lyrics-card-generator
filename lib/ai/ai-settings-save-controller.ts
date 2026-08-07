@@ -28,6 +28,11 @@ export type LatestSaveController<T> = {
   getState: () => SaveControllerState;
 };
 
+/**
+ * Serializes persistence while coalescing edits to the latest desired
+ * snapshot. An older save may finish, but the drain continues until durable
+ * state matches the newest signature observed by the controller.
+ */
 export function createLatestSaveController<T, R>({
   persist,
   onStateChange,
@@ -85,6 +90,8 @@ export function createLatestSaveController<T, R>({
   }
 
   async function drainLatest() {
+    // Re-read desiredSnapshot after every await so intermediate edits can be
+    // skipped without allowing an older completion to become the final state.
     while (desiredSnapshot && desiredSnapshot.signature !== persistedSignature) {
       const snapshot = desiredSnapshot;
       inFlightSignature = snapshot.signature;

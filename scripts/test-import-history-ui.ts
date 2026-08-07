@@ -22,6 +22,8 @@ const webLiteEntry = read("web-lite/entry.tsx");
 const globals = read("app/globals.css");
 const desktopHistoryInteractions = read("scripts/test-desktop-import-history-interactions.mjs");
 
+// These integration contracts ensure History remains desktop-only and that its
+// UI wiring reaches the same persistence and transaction layers tested below.
 assert.match(lyricEditor, /\{isDesktopShell \? \(\s*<HistoryFloor/);
 assert.match(lyricEditor, /onOpenHistory=\{isDesktopShell \? \(\) => setActiveSurface\("history"\) : undefined\}/);
 assert.doesNotMatch(

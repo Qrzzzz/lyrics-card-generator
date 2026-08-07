@@ -24,6 +24,8 @@ const sizeTargets = [
 ];
 
 const scanRoots = [".next", "dist-desktop", "public", "release"];
+// Collect one traversal and reuse its totals for both directory and largest-file
+// reports so overlapping targets are measured consistently.
 const files = [];
 const directorySizes = new Map();
 

@@ -51,6 +51,7 @@ export function SongSearchParser({
   useEffect(() => () => activeResolveRef.current?.cancel(), []);
 
   useEffect(() => {
+    // Selecting a resolved song updates the display query without starting another search.
     if (skipNextSearchRef.current) {
       skipNextSearchRef.current = false;
       latestRequestRef.current += 1;
@@ -61,6 +62,7 @@ export function SongSearchParser({
 
     const keyword = query.trim();
 
+    // Do not search incomplete IME composition text.
     if (isComposing) {
       latestRequestRef.current += 1;
       setSuggestions([]);
@@ -86,6 +88,7 @@ export function SongSearchParser({
       return;
     }
 
+    // Abort handles transport; the generation also rejects stale cache/network completions.
     const requestId = latestRequestRef.current + 1;
     latestRequestRef.current = requestId;
     const controller = new AbortController();
@@ -166,6 +169,7 @@ export function SongSearchParser({
       return;
     }
 
+    // Resolving a suggestion is a document import intent, separate from suggestion lookup.
     const intent = beginImport();
     if (!intent) return;
     activeResolveRef.current?.cancel();
@@ -344,6 +348,7 @@ export function SongSearchParser({
                 className="song-search-results__list overscroll-contain"
                 data-testid="song-search-listbox"
               >
+                {/* Pointer selection keeps combobox focus stable until the click commits the option. */}
                 {suggestions.map((song, index) => (
                   <button
                     key={song.id}

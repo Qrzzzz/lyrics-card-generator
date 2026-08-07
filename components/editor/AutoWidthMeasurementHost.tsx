@@ -7,6 +7,7 @@ import { getAutoWidthCandidates, isAutoWidthMeasurementEnabled } from "@/lib/aut
 import { cardFontStyle, fontClassName } from "@/lib/fonts";
 import type { AppState } from "@/lib/types";
 
+/** Renders inert, full-fidelity lyric candidates for DOM-based auto-width measurement. */
 export function AutoWidthMeasurementHost({
   state,
   hostRef

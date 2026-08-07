@@ -30,11 +30,13 @@ export function LyricCard({
   style: CardStyle;
   locale?: Locale;
 }) {
+  // Normalization gives portrait and landscape renderers one stable compatibility contract.
   const style = normalizeCardStyle(rawStyle);
   const cover = song.proxiedCoverUrl || proxiedImageUrl(song.coverUrl);
   const [coverFailed, setCoverFailed] = useState(false);
 
   useEffect(() => {
+    // A new URL gets its own load attempt even if the previous cover failed.
     setCoverFailed(false);
   }, [cover]);
 
@@ -50,6 +52,7 @@ export function LyricCard({
   const showGeneratedWatermark = style.showGeneratedWatermark ?? style.showWatermark;
   const layout = getPortraitLayout(size, style, song);
 
+  // Measurement and export-readiness hooks treat the card data attributes as a DOM contract.
   return (
     <article
       className={cn("relative isolate overflow-hidden bg-[#111216] text-white", fontClassName(style.font))}

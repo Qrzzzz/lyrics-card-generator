@@ -47,6 +47,7 @@ export function SettingsNavigation({
   useEffect(() => {
     if (!mobileMenuOpen) return;
 
+    // Capture Escape so the outer settings surface does not close in the same key event.
     const closeMobileMenu = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
       event.preventDefault();

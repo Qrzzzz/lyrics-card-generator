@@ -10,6 +10,8 @@ import type { WebLiteCopy } from "@/web-lite/copy";
 
 type WebLiteFontId = "source-han-sans" | "source-han-serif" | "system-sans" | "system-serif";
 
+// Browser builds expose bundled or broadly available families so preview and
+// export use the same font within the current browser.
 const SYSTEM_SANS_SCHEME: FontScheme = {
   mode: "custom",
   cjkFontFamily: "system-ui",
@@ -54,6 +56,7 @@ export function WebLiteFontPanel({
 
   function applyFont(id: WebLiteFontId, scheme: FontScheme) {
     const isBundled = id === "source-han-sans" || id === "source-han-serif";
+    // Keep the modern scheme and legacy font fields synchronized for shared renderers.
     onStyleChange({
       ...style,
       fontScheme: { ...scheme },
@@ -71,6 +74,7 @@ export function WebLiteFontPanel({
       customFontWeight: 400,
       customFontStyle: "normal"
     });
+    // Hover/focus previews are transient; committing always clears the preview override.
     onPreviewSchemeChange(null);
   }
 

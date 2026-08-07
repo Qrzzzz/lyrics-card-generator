@@ -5,6 +5,10 @@ import type { Locale } from "@/lib/types";
 const CUSTOM_PRESET_ID = /^custom:[a-z0-9-]{1,64}$/i;
 const LOCALES: Locale[] = ["zh", "zh-TW", "en", "fr", "ja", "es"];
 
+/**
+ * Treats persisted prompt data as untrusted input, migrates the legacy shape,
+ * deduplicates identifiers, and enforces the UI's text and preset limits.
+ */
 export function normalizePromptLibrary(input: unknown): AIPromptLibrary {
   const source = input && typeof input === "object" ? input as Record<string, unknown> : {};
   const hiddenStyleIds = Array.from(new Set(
@@ -66,6 +70,7 @@ export function normalizeAISettings(input: Partial<SaveAISettingsInput>): AISett
   const temperature = Number(input.temperature);
   const promptLibrary = normalizePromptLibrary(input.promptLibrary);
   const requestedDefault = typeof input.defaultStyle === "string" ? input.defaultStyle : "";
+  // A hidden built-in or missing custom preset cannot remain the active default.
   const builtInAvailable = isTranslationStyle(requestedDefault)
     && (requestedDefault === "recommended" || !promptLibrary.hiddenStyleIds.includes(requestedDefault));
   const customAvailable = promptLibrary.customPresets.some((preset) => preset.id === requestedDefault);

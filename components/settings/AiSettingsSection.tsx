@@ -72,6 +72,7 @@ export function AiSettingsSection({
   }, [open]);
 
   useEffect(() => {
+    // Replace invalid deep links instead of adding an unusable page to navigation history.
     if (isExistingPage(page, settings, draftPreset)) return;
     onNavigate(getAISettingsPath("library"), { replace: true });
   }, [draftPreset, onNavigate, page, settings]);
@@ -372,6 +373,7 @@ function PresetEditorPage({ presetId, settings, locale, copy, cancelLabel, onSet
   function updatePreset(nextTitle: string, nextPrompt: string) {
     if (protectedPreset) return;
     if (editableBuiltIn) {
+      // Built-in edits are locale overrides and persist immediately; custom edits remain drafts.
       const nextOverride = { id: presetId, title: nextTitle, prompt: nextPrompt };
       updateLibrary(settings, onSettingsChange, setLocalePromptOverrides(settings.promptLibrary, locale, {
         ...localeOverrides,
@@ -414,6 +416,7 @@ function PresetEditorPage({ presetId, settings, locale, copy, cancelLabel, onSet
   function confirmDeletePreset() {
     if (protectedPreset) return;
     if (editableBuiltIn) {
+      // Hiding a built-in also removes its overrides from every locale to prevent orphaned data.
       updateLibrary(settings, onSettingsChange, {
         ...removeStyleOverrideFromAllLocales(settings.promptLibrary, presetId),
         hiddenStyleIds: [...new Set([...settings.promptLibrary.hiddenStyleIds, presetId])]
@@ -484,6 +487,7 @@ function ExplorerCard({ icon, title, description, action, badge, testId, variant
 }
 
 function updateLibrary(settings: AISettings, onSettingsChange: (settings: AISettings) => void, promptLibrary: AIPromptLibrary, removedDefaultId?: string) {
+  // A deleted default always falls back to the protected recommended preset.
   onSettingsChange({ ...settings, defaultStyle: removedDefaultId === settings.defaultStyle ? "recommended" : settings.defaultStyle, promptLibrary });
 }
 

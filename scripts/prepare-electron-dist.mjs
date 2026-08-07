@@ -46,6 +46,8 @@ await mkdir(electronOutputDir, { recursive: true });
 
 await cp(standaloneDir, serverOutputDir, { recursive: true });
 if (existsSync(path.join(serverOutputDir, "node_modules"))) {
+  // Keep the standalone server dependency tree out of electron-builder's app
+  // dependency traversal; the desktop launcher restores lookup through NODE_PATH.
   await rename(path.join(serverOutputDir, "node_modules"), path.join(serverOutputDir, "_node_modules"));
 }
 await cp(nextStaticDir, path.join(serverOutputDir, ".next", "static"), { recursive: true });
@@ -60,6 +62,8 @@ async function prepareMinimalElectronApp() {
   const rootPackage = JSON.parse(await readFile(path.join(projectRoot, "package.json"), "utf8"));
   const electronVersion = await getElectronVersion(rootPackage);
   const localElectronDist = getLocalElectronDist();
+  // Generate a packaging-only manifest so the shipped shell contains neither
+  // development scripts nor the root project's full dependency graph.
   const desktopPackage = {
     name: rootPackage.name,
     version: rootPackage.version,
@@ -89,6 +93,8 @@ async function prepareMinimalElectronApp() {
         "electron/ipc-security.js",
         "electron/local-app-url.js",
         "electron/manual-save-ipc.js",
+        "electron/packaged-server-readiness.js",
+        "electron/single-instance-ownership.js",
         "electron/url-policy.js",
         "electron/user-preferences.js",
         "package.json"
@@ -140,6 +146,14 @@ async function prepareMinimalElectronApp() {
   await cp(path.join(projectRoot, "electron", "ipc-security.js"), path.join(electronOutputDir, "ipc-security.js"));
   await cp(path.join(projectRoot, "electron", "local-app-url.js"), path.join(electronOutputDir, "local-app-url.js"));
   await cp(path.join(projectRoot, "electron", "manual-save-ipc.js"), path.join(electronOutputDir, "manual-save-ipc.js"));
+  await cp(
+    path.join(projectRoot, "electron", "packaged-server-readiness.js"),
+    path.join(electronOutputDir, "packaged-server-readiness.js")
+  );
+  await cp(
+    path.join(projectRoot, "electron", "single-instance-ownership.js"),
+    path.join(electronOutputDir, "single-instance-ownership.js")
+  );
   await cp(path.join(projectRoot, "electron", "url-policy.js"), path.join(electronOutputDir, "url-policy.js"));
   await cp(path.join(projectRoot, "electron", "user-preferences.js"), path.join(electronOutputDir, "user-preferences.js"));
   await writeFile(path.join(appOutputDir, "package.json"), `${JSON.stringify(desktopPackage, null, 2)}\n`);
@@ -175,6 +189,8 @@ function getLocalElectronDist() {
 }
 
 async function cleanServerOutput() {
+  // Remove only artifacts excluded from runtime resolution. The standalone
+  // dependency closure itself remains authoritative and is never re-derived here.
   const cleanupResults = [];
 
   cleanupResults.push(await removePath(path.join(serverOutputDir, ".next", "cache"), ".next cache"));
@@ -255,6 +271,7 @@ async function collectMatchingFiles(targetPath, predicate, matches) {
   }
 
   if (info.isSymbolicLink()) {
+    // Do not cross dependency links while pruning or measuring the staged tree.
     return;
   }
 

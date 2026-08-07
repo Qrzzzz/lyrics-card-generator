@@ -1,11 +1,16 @@
-import { parseBuffer } from "music-metadata";
+import { parseFromTokenizer } from "music-metadata";
+import { fromBlob } from "strtok3/core";
 import { appApiErrorResponse } from "@/lib/app-api-errors";
 import { appMutationRejectionResponse, validateAppMutationRequest } from "@/lib/app-request";
+import {
+  localAudioFileSizeRejection,
+  localAudioMetadataSizeRejection,
+  readLocalAudioMultipart
+} from "@/lib/local-audio-request";
 import type { ParsedSongData } from "@/lib/types";
 
 export const runtime = "nodejs";
 
-const MAX_AUDIO_BYTES = 100 * 1024 * 1024;
 const ACCEPTED_EXTENSIONS = new Set([".mp3", ".flac"]);
 const ACCEPTED_MIME_TYPES = new Set(["audio/mpeg", "audio/mp3", "audio/flac", "audio/x-flac"]);
 
@@ -20,18 +25,11 @@ export async function POST(req: Request) {
     return appMutationRejectionResponse(rejection);
   }
 
-  let formData: FormData;
-
-  try {
-    formData = await req.formData();
-  } catch {
-    return appApiErrorResponse("local_audio_invalid_multipart", 400);
+  const multipart = await readLocalAudioMultipart(req);
+  if (!multipart.ok) {
+    return multipart.response;
   }
-
-  const file = formData.get("file");
-  if (!(file instanceof File)) {
-    return appApiErrorResponse("local_audio_missing_file", 400);
-  }
+  const { file } = multipart;
 
   const extension = getFileExtension(file.name);
   const mimeType = file.type.toLowerCase();
@@ -39,18 +37,31 @@ export async function POST(req: Request) {
     return appApiErrorResponse("local_audio_unsupported_type", 415);
   }
 
-  if (file.size > MAX_AUDIO_BYTES) {
-    return appApiErrorResponse("local_audio_too_large", 413);
+  const sizeRejection = localAudioFileSizeRejection(file);
+  if (sizeRejection) {
+    return sizeRejection;
   }
 
   try {
-    const bytes = Buffer.from(await file.arrayBuffer());
-    const metadata = await parseBuffer(bytes, { mimeType: mimeType || mimeTypeFromExtension(extension), path: file.name });
+    // Preserve the previous parser precedence: a recognized browser MIME type
+    // wins over a conflicting filename extension, while extension-only uploads
+    // still retain their original path hint.
+    const parserPath = mimeType === "audio/flac" || mimeType === "audio/x-flac"
+      ? "upload.flac"
+      : mimeType === "audio/mpeg" || mimeType === "audio/mp3"
+        ? "upload.mp3"
+        : file.name;
+    const metadata = await parseLocalAudioMetadata(file, parserPath);
     const picture = metadata.common.picture?.[0];
+    const rawLyrics = extractLyrics(metadata);
+    const metadataSizeRejection = localAudioMetadataSizeRejection(metadata.common.picture, rawLyrics);
+    if (metadataSizeRejection) {
+      return metadataSizeRejection;
+    }
     const coverUrl = picture
-      ? `data:${picture.format || "image/jpeg"};base64,${Buffer.from(picture.data).toString("base64")}`
+      ? `data:${picture.format || "image/jpeg"};base64,${pictureDataToBase64(picture.data)}`
       : "";
-    const lyrics = stripLrcTimestamps(extractLyrics(metadata));
+    const lyrics = stripLrcTimestamps(rawLyrics);
     const data: ParsedSongData = {
       source: "unknown",
       title: metadata.common.title?.trim() || stripAudioExtension(file.name),
@@ -75,9 +86,23 @@ export async function POST(req: Request) {
   }
 }
 
-function extractLyrics(metadata: Awaited<ReturnType<typeof parseBuffer>>) {
-  const candidates: string[] = [];
-  addLyricsValue(candidates, metadata.common.lyrics);
+async function parseLocalAudioMetadata(file: Blob, parserPath: string) {
+  const tokenizer = fromBlob(file, { fileInfo: { path: parserPath } });
+  try {
+    return await parseFromTokenizer(tokenizer, {});
+  } finally {
+    // Parser failures must not retain the Blob-backed tokenizer or its buffers.
+    await tokenizer.close();
+  }
+}
+
+function extractLyrics(metadata: Awaited<ReturnType<typeof parseFromTokenizer>>) {
+  // Prefer the library's normalized field, then tolerate vendor-specific tag
+  // shapes because MP3 and FLAC writers encode embedded lyrics inconsistently.
+  const commonLyrics = firstLyricsValue(metadata.common.lyrics);
+  if (commonLyrics) {
+    return commonLyrics;
+  }
 
   for (const tags of Object.values(metadata.native)) {
     for (const tag of tags as NativeTag[]) {
@@ -90,35 +115,47 @@ function extractLyrics(metadata: Awaited<ReturnType<typeof parseBuffer>>) {
         id === "SYLT" ||
         id.includes("LYRIC")
       ) {
-        addLyricsValue(candidates, tag.value);
+        const lyrics = firstLyricsValue(tag.value);
+        if (lyrics) {
+          return lyrics;
+        }
       }
     }
   }
 
-  return candidates.map((candidate) => candidate.trim()).find(Boolean) ?? "";
+  return "";
 }
 
-function addLyricsValue(candidates: string[], value: unknown) {
+function firstLyricsValue(value: unknown): string {
   if (!value) {
-    return;
+    return "";
   }
 
   if (typeof value === "string") {
-    candidates.push(value);
-    return;
+    return /\S/u.test(value) ? value : "";
   }
 
   if (Array.isArray(value)) {
     for (const item of value) {
-      addLyricsValue(candidates, item);
+      const lyrics = firstLyricsValue(item);
+      if (lyrics) {
+        return lyrics;
+      }
     }
-    return;
+    return "";
   }
 
   if (typeof value === "object") {
+    // Native tag readers may wrap the same payload under any of these keys.
     const record = value as Record<string, unknown>;
-    addLyricsValue(candidates, record.text ?? record.lyrics ?? record.value);
+    return firstLyricsValue(record.text ?? record.lyrics ?? record.value);
   }
+
+  return "";
+}
+
+function pictureDataToBase64(data: Uint8Array) {
+  return Buffer.from(data.buffer, data.byteOffset, data.byteLength).toString("base64");
 }
 
 function stripLrcTimestamps(text: string) {
@@ -141,8 +178,4 @@ function getFileExtension(fileName: string) {
 
 function stripAudioExtension(fileName: string) {
   return fileName.replace(/\.(mp3|flac)$/i, "");
-}
-
-function mimeTypeFromExtension(extension: string) {
-  return extension === ".flac" ? "audio/flac" : "audio/mpeg";
 }

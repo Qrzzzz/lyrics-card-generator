@@ -31,6 +31,7 @@ export type LandscapeLayout = {
 
 type LayoutSongContext = SongSource | Pick<SongInfo, "source" | "album">;
 
+/** Computes bounded portrait regions while reserving only currently visible chrome. */
 export function getPortraitLayout(size: CardSize, style: CardStyle, songContext: LayoutSongContext = "unknown"): PortraitLayout {
   const source = getLayoutSource(songContext);
   const hasAlbumName = hasVisibleAlbumName(style, songContext);
@@ -104,6 +105,8 @@ export function getLandscapeLayout(size: CardSize, style: CardStyle, songContext
   const usableBottom = safeRect.y + safeRect.height - footerHeight - footerGap;
   const gap = clamp(Math.round(safeRect.width * 0.035), 42, 88);
   const showCover = style.showCover && contentMode === "lyrics";
+  // Narrow landscape cards cap the square cover more aggressively so the text
+  // column retains useful width after the fixed inter-column gap.
   const maxCoverByHeight = safeRect.height * (size.width / size.height < 1.55 ? 0.6 : 0.74);
   const maxCoverByWidth = safeRect.width * 0.42;
   const coverSize = showCover ? clamp(Math.round(Math.min(maxCoverByHeight, maxCoverByWidth)), 260, 760) : 0;

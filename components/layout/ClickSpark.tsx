@@ -45,6 +45,7 @@ export function ClickSpark({
 
     function resizeCanvas() {
       const rect = targetRoot.getBoundingClientRect();
+      // Scale the backing buffer for sharp rendering while preserving CSS-pixel coordinates.
       const ratio = window.devicePixelRatio || 1;
       targetCanvas.width = Math.max(1, Math.round(rect.width * ratio));
       targetCanvas.height = Math.max(1, Math.round(rect.height * ratio));
@@ -140,6 +141,7 @@ export function ClickSpark({
       lengthScale: index % 2 === 0 ? 1.2 : 0.82
     }));
 
+    // Bound retained sparks so bursty input cannot increase animation work without limit.
     sparksRef.current = [...sparksRef.current, ...nextSparks].slice(-84);
   }
 

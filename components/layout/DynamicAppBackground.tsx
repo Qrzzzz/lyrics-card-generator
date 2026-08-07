@@ -33,6 +33,8 @@ export function DynamicAppBackground({
   const isDark = effectiveTheme === "dark";
   const isLight = effectiveTheme === "light";
 
+  // The native compositor supplies acrylic; renderer overlays add contrast and shine,
+  // with a stronger contrast floor for the light variant.
   if (isAcrylicTheme) {
     const isLight = effectiveTheme === "light-acrylic";
 

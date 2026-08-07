@@ -46,6 +46,7 @@ export function SongInfoForm({
     if (!file) {
       return;
     }
+    // Show the local blob immediately while the desktop replay token registers asynchronously.
     const requestId = coverRegistrationRequestRef.current + 1;
     coverRegistrationRequestRef.current = requestId;
     onManualCoverPendingChange?.(true);
@@ -60,6 +61,7 @@ export function SongInfoForm({
     } catch {
       fileToken = undefined;
     } finally {
+      // A newer upload or URL edit owns the form and must not receive this token.
       if (requestId !== coverRegistrationRequestRef.current) return;
       onManualCoverChange?.({ uploaded: true, fileToken });
       onManualCoverPendingChange?.(false);

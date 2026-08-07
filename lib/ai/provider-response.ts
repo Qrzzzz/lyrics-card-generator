@@ -5,6 +5,7 @@ export type ProviderResponseBody =
 
 export async function readProviderResponseBody(response: Response): Promise<ProviderResponseBody> {
   try {
+    // Parse a clone first so a non-JSON response remains readable as text.
     return { kind: "json", data: await response.clone().json() };
   } catch {
     try {

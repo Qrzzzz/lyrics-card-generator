@@ -108,6 +108,7 @@ export function LyricsCleanupPanel({
     : formatLyricsWorkspaceCopy(copy.activeColumnScope, {
         label: `${copy.original}/${copy.translation}`
       });
+  // Preview synchronized cleanup against the same line range in both columns without mutating either.
   const removeAllCount = synchronizedActive
     ? cleanSynchronizedBlankRows({
         lyrics,

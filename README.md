@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v5.9.2.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v5.9.3.zh-CN.md">发布说明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">在线 Web Lite 版</a> ·
   <a href="./docs/desktop.md">桌面维护文档</a> ·
   <a href="#主要功能">主要功能</a> ·
@@ -47,25 +47,26 @@
 
 ## 📦 下载与安装
 
-请前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下载最新版：
+已公开构建请从 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 获取；本地 v5.9.3 发布候选打包使用以下文件名：
 
-* 推荐普通用户下载安装版：`Lyrics Card Generator Setup 5.9.2.exe`
-* 不想安装时可下载便携版：`Lyrics Card Generator-5.9.2-portable.exe`
+* 安装版：`Lyrics Card Generator Setup 5.9.3.exe`
+* 便携版：`Lyrics Card Generator-5.9.3-portable.exe`
 
 安装版适合长期使用；便携版适合临时运行、测试或放在移动硬盘中使用。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v5.9.2 更新重点
+### v5.9.3 更新重点（本地发布候选）
 
-* 修复从历史记录载入手动存档后，已保存的专辑封面不会恢复的问题。
-* 载入时只恢复经过安全清洗的封面 URL，并通过现有图片代理加载与取色；不会重新解析歌曲链接或覆盖存档中的歌词、译文和歌曲信息。
-* 没有封面 URL 的旧存档继续保持无封面状态；Web Lite 的界面与行为不变。
+* 加固 Windows 打包版的本地服务启动：使用每次启动独立的 HMAC 就绪证明，正确处理启动失败、服务提前退出与端口竞争，并确保只有一个应用实例、一个本地服务和一个历史记录写入者。
+* 本地 MP3 / FLAC 上传采用 100 MiB 流式上限，并在 Base64 和 JSON 扩展前限制 8 MiB 内嵌封面与 256 Ki 字符歌词；随机访问解析保留尾部 APEv2 标签，且不再创建第二份完整文件副本。
+* 改进 Spotify 艺人提取与网易云音乐候选排序，在保留混音、现场版等标题后缀的同时，优先显示与歌名／艺人语义完全匹配的结果。
+* 升级至 Next.js 15.5.21，关闭未使用的图片优化入口并补齐桌面 standalone 依赖。这里记录的是本地发布候选；公开下载状态以 GitHub Releases 实际页面为准。
 
 ## 🌐 多语言发布说明
 
 GitHub Release 默认展示简体中文摘要，完整说明见：
-[简体中文](./docs/releases/v5.9.2.zh-CN.md) · [繁體中文](./docs/releases/v5.9.2.zh-TW.md) · [English](./docs/releases/v5.9.2.en.md) · [Français](./docs/releases/v5.9.2.fr.md) · [日本語](./docs/releases/v5.9.2.ja.md) · [Español](./docs/releases/v5.9.2.es.md)
+[简体中文](./docs/releases/v5.9.3.zh-CN.md) · [繁體中文](./docs/releases/v5.9.3.zh-TW.md) · [English](./docs/releases/v5.9.3.en.md) · [Français](./docs/releases/v5.9.3.fr.md) · [日本語](./docs/releases/v5.9.3.ja.md) · [Español](./docs/releases/v5.9.3.es.md)
 
 <a id="主要功能"></a>
 

@@ -31,6 +31,8 @@ function snapshot(signature: string): SaveSnapshot<string> {
 }
 
 function createHarness(initialSignature = "B") {
+  // Deferred persistence lets each test choose completion order and reproduce
+  // stale-success and stale-failure races deterministically.
   const requests: SaveRequest[] = [];
   const states: SaveState[] = [];
   const persistedCallbacks: Array<{ signature: string; isLatest: boolean }> = [];

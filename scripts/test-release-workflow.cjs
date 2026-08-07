@@ -3,6 +3,8 @@ const { readFileSync, readdirSync } = require("node:fs");
 
 const workflow = readFileSync(".github/workflows/release.yml", "utf8");
 const verifier = readFileSync("scripts/verify-github-release.ps1", "utf8");
+// Release orchestration is intentionally centralized; version-specific workflow
+// copies would drift away from the exact-asset verification contract.
 const versionSpecificWorkflows = readdirSync(".github/workflows")
   .filter((name) => /^release-\d+\.\d+\.\d+\.yml$/.test(name));
 
@@ -29,6 +31,8 @@ const publishVerified = workflow.indexOf("- name: Publish verified GitHub releas
 const normalizeAssets = workflow.indexOf("- name: Normalize release asset filenames");
 const generateChecksums = workflow.indexOf("- name: Generate SHA256SUMS");
 
+// Ordering is part of the safety contract: unverified assets must never become
+// public, even if each individual workflow step still exists.
 assert.ok(createDraft >= 0, "release workflow creates a draft release");
 assert.ok(verifyDraft > createDraft, "draft assets are verified after upload");
 assert.ok(publishVerified > verifyDraft, "release is published only after exact draft verification");

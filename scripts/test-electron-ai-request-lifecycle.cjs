@@ -18,6 +18,8 @@ class Sender extends EventEmitter {
   }
 }
 
+// A cancellation tombstone closes the race where cancel IPC arrives before the
+// corresponding privileged request has finished initializing.
 {
   const registry = new AIRequestRegistry();
   const sender = new Sender();
@@ -29,6 +31,7 @@ class Sender extends EventEmitter {
 }
 
 {
+  // Request identifiers are renderer-local and must never cancel another window.
   const registry = new AIRequestRegistry();
   const firstWindow = new Sender();
   const secondWindow = new Sender();
