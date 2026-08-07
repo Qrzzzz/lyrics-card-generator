@@ -40,6 +40,12 @@ type AnchorSnapshot = {
   scrollRatio: number;
 };
 
+type SelectionOverride = {
+  editor: LyricsEditorKey;
+  start: number;
+  end: number;
+};
+
 type UseLyricsViewportSessionOptions = {
   workspaceRef: RefObject<HTMLElement | null>;
   scrollRef: RefObject<HTMLElement | null>;
@@ -65,6 +71,8 @@ export function useLyricsViewportSession({
   const restoreSnapshotRef = useRef<AnchorSnapshot | null>(null);
   const restoreFrameRef = useRef(0);
   const restoreSettleFrameRef = useRef(0);
+  const scrollCaptureFrameRef = useRef(0);
+  const restoreSelectionRef = useRef<SelectionOverride | null>(null);
   const restorationPendingRef = useRef(false);
   const activeEditorKeyGetterRef = useRef(getActiveEditorKey);
   const editorGetterRef = useRef(getEditor);
@@ -74,6 +82,8 @@ export function useLyricsViewportSession({
   editorGetterRef.current = getEditor;
 
   const captureAnchor = useCallback((preferredEditor?: LyricsEditorKey) => {
+    window.cancelAnimationFrame(scrollCaptureFrameRef.current);
+    scrollCaptureFrameRef.current = 0;
     const scrollNode = scrollRef.current;
     const workspace = workspaceRef.current;
     if (!scrollNode || !workspace) {
@@ -89,7 +99,13 @@ export function useLyricsViewportSession({
     };
     let viewportCenterRatio: number | null = previous?.viewportCenterRatio ?? null;
 
-    for (const editorKey of EDITOR_KEYS) {
+    const activeEditor = preferredEditor ?? activeEditorKeyGetterRef.current?.() ?? previous?.activeEditor ?? "lyrics";
+    const fallbackEditor = activeEditorKeyGetterRef.current?.() ?? previous?.activeEditor ?? "lyrics";
+    const editorCandidates = activeEditor === fallbackEditor
+      ? [activeEditor]
+      : [activeEditor, fallbackEditor];
+
+    for (const editorKey of editorCandidates) {
       const editor = editorGetterRef.current?.(editorKey) ?? null;
       if (!isConnectedEditorInWorkspace(editor, workspace, scrollNode)) {
         continue;
@@ -134,18 +150,29 @@ export function useLyricsViewportSession({
         viewportCenterRatio = centerRatio;
       }
       editorNodesRef.current[editorKey] = editor;
+      // One active semantic snapshot is sufficient for shared-scroll restoration.
+      break;
     }
 
-    const activeEditor = preferredEditor ?? activeEditorKeyGetterRef.current?.() ?? previous?.activeEditor ?? "lyrics";
     anchorRef.current = { activeEditor, editors, viewportCenterRatio, scrollRatio };
     if (restorationPendingRef.current) {
       restoreSnapshotRef.current = anchorRef.current;
     }
   }, [scrollRef, workspaceRef]);
 
-  const restoreAnchor = useCallback(() => {
+  const restoreAnchor = useCallback((selectionOverride?: SelectionOverride) => {
+    // A resize can race the scroll RAF; flush that one pending sample before
+    // consuming the snapshot so restoration never rolls back a fresh user scroll.
+    if (scrollCaptureFrameRef.current) {
+      window.cancelAnimationFrame(scrollCaptureFrameRef.current);
+      scrollCaptureFrameRef.current = 0;
+      captureAnchor();
+    }
     if (!restorationPendingRef.current) {
       restoreSnapshotRef.current = anchorRef.current;
+      restoreSelectionRef.current = selectionOverride ?? null;
+    } else if (selectionOverride) {
+      restoreSelectionRef.current = selectionOverride;
     }
     restorationPendingRef.current = true;
     window.cancelAnimationFrame(restoreFrameRef.current);
@@ -156,6 +183,7 @@ export function useLyricsViewportSession({
         restoreSettleFrameRef.current = window.requestAnimationFrame(() => {
           restorationPendingRef.current = false;
           restoreSnapshotRef.current = null;
+          restoreSelectionRef.current = null;
           captureAnchor();
         });
       };
@@ -165,6 +193,7 @@ export function useLyricsViewportSession({
       if (!scrollNode || !workspace || !snapshot) {
         restorationPendingRef.current = false;
         restoreSnapshotRef.current = null;
+        restoreSelectionRef.current = null;
         return;
       }
 
@@ -179,11 +208,22 @@ export function useLyricsViewportSession({
       for (const editorKey of EDITOR_KEYS) {
         const editor = connectedEditors[editorKey];
         const editorSnapshot = snapshot.editors[editorKey];
-        if (!editor || !editorSnapshot) {
+        const selection = restoreSelectionRef.current?.editor === editorKey
+          ? restoreSelectionRef.current
+          : editorSnapshot;
+        if (!editor || !selection) {
           continue;
         }
-        const selectionStart = clamp(editorSnapshot.selectionStart, 0, editor.value.length);
-        const selectionEnd = clamp(editorSnapshot.selectionEnd, selectionStart, editor.value.length);
+        const selectionStart = clamp(
+          "selectionStart" in selection ? selection.selectionStart : selection.start,
+          0,
+          editor.value.length
+        );
+        const selectionEnd = clamp(
+          "selectionEnd" in selection ? selection.selectionEnd : selection.end,
+          selectionStart,
+          editor.value.length
+        );
         editor.setSelectionRange(selectionStart, selectionEnd);
         editorNodesRef.current[editorKey] = editor;
       }
@@ -285,9 +325,11 @@ export function useLyricsViewportSession({
 
     const onScroll = () => {
       // Programmatic restoration must not overwrite the snapshot it is still consuming.
-      if (!restorationPendingRef.current) {
-        captureAnchor();
-      }
+      if (restorationPendingRef.current || scrollCaptureFrameRef.current) return;
+      scrollCaptureFrameRef.current = window.requestAnimationFrame(() => {
+        scrollCaptureFrameRef.current = 0;
+        if (!restorationPendingRef.current) captureAnchor();
+      });
     };
     scrollNode.addEventListener("scroll", onScroll, { passive: true });
     return () => scrollNode.removeEventListener("scroll", onScroll);
@@ -295,15 +337,13 @@ export function useLyricsViewportSession({
 
   const viewportHeight = metrics.maxHeight;
 
-  useLayoutEffect(() => {
-    restoreAnchor();
-  }, [restoreAnchor, viewportHeight]);
-
   useEffect(() => () => {
     window.cancelAnimationFrame(restoreFrameRef.current);
     window.cancelAnimationFrame(restoreSettleFrameRef.current);
+    window.cancelAnimationFrame(scrollCaptureFrameRef.current);
     restorationPendingRef.current = false;
     restoreSnapshotRef.current = null;
+    restoreSelectionRef.current = null;
   }, []);
 
   return {
