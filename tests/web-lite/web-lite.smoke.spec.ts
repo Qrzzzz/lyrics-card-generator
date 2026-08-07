@@ -19,6 +19,194 @@ const expectedExampleAutoWidths: Record<string, { min: number; max: number }> = 
   honeybee: { min: 860, max: 900 },
   lies: { min: 900, max: 940 }
 };
+
+type AutoWidthEquivalenceFixture = {
+  id: string;
+  lyrics: string;
+  translationText?: string;
+  translationEnabled: boolean;
+  fontPreset: "source-han-sans" | "source-han-serif";
+  lyricFontSize: number;
+  translationScale: number;
+  lineHeight: number;
+  align: "left" | "center";
+  anchorWidth: number;
+  expected: { width: number; height: number };
+};
+
+const autoWidthEquivalenceFixtures: AutoWidthEquivalenceFixture[] = [
+  {
+    id: "english-punctuation",
+    lyrics: [
+      "Don't let the morning steal this away.",
+      "Stay—just a little longer, won't you?",
+      "We re-enter the half-lit room together.",
+      "Every comma, pause, and promise remains.",
+      "I know now: the ending wasn't ours.",
+      "Still, we'll carry on until sunrise."
+    ].join("\n"),
+    translationEnabled: false,
+    fontPreset: "source-han-sans",
+    lyricFontSize: 60,
+    translationScale: 0.75,
+    lineHeight: 1.8,
+    align: "left",
+    anchorWidth: 720,
+    expected: { width: 1300, height: 1620 }
+  },
+  {
+    id: "simplified-chinese-empty-lines",
+    lyrics: "今夜的风穿过安静街巷\n灯火把影子慢慢拉长\n\n我们在旧站台等一场雨\n也等一句没有说完的话\n天亮以前请不要遗忘",
+    translationEnabled: false,
+    fontPreset: "source-han-serif",
+    lyricFontSize: 48,
+    translationScale: 0.75,
+    lineHeight: 1.6,
+    align: "center",
+    anchorWidth: 1440,
+    expected: { width: 920, height: 920 }
+  },
+  {
+    id: "japanese-with-translation",
+    lyrics: [
+      "夜明け前のホームで待っている",
+      "遠い汽笛が静けさをほどく",
+      "忘れたはずの名前を呼べば",
+      "春の匂いが窓辺に戻る",
+      "もう一度だけ同じ空を見よう"
+    ].join("\n"),
+    translationText: [
+      "Waiting on the platform before dawn",
+      "A distant whistle loosens the silence",
+      "When I call the name I meant to forget",
+      "The scent of spring returns to the window",
+      "Let us look at the same sky once more"
+    ].join("\n"),
+    translationEnabled: true,
+    fontPreset: "source-han-sans",
+    lyricFontSize: 56,
+    translationScale: 0.7,
+    lineHeight: 1.9,
+    align: "center",
+    anchorWidth: 920,
+    expected: { width: 1320, height: 1420 }
+  },
+  {
+    id: "korean-with-chinese-translation",
+    lyrics: [
+      "새벽빛이 창문 위로 번져 오면",
+      "우리의 오래된 노래를 기억해",
+      "멀리 돌아온 계절의 끝에서도",
+      "말하지 못한 마음은 남아 있어",
+      "오늘만큼은 천천히 걸어가자"
+    ].join("\n"),
+    translationText: [
+      "当晨光漫过窗沿",
+      "请记得我们古老的歌",
+      "即使走到辗转季节的尽头",
+      "未能说出的心意仍在",
+      "至少今天让我们慢慢走"
+    ].join("\n"),
+    translationEnabled: true,
+    fontPreset: "source-han-serif",
+    lyricFontSize: 64,
+    translationScale: 0.82,
+    lineHeight: 2.05,
+    align: "left",
+    anchorWidth: 1280,
+    expected: { width: 920, height: 2140 }
+  },
+  {
+    id: "long-english-words",
+    lyrics: [
+      "pneumonoultramicroscopicsilicovolcanoconiosis keeps echoing after midnight",
+      "antidisestablishmentarianism refuses every convenient little line break",
+      "electroencephalographically written memories circle through the room",
+      "counterrevolutionaries whisper incomprehensibilities into the rain"
+    ].join("\n"),
+    translationEnabled: false,
+    fontPreset: "source-han-sans",
+    lyricFontSize: 72,
+    translationScale: 0.75,
+    lineHeight: 1.5,
+    align: "left",
+    anchorWidth: 1040,
+    expected: { width: 1440, height: 1820 }
+  },
+  {
+    id: "mixed-cjk-latin-punctuation",
+    lyrics: [
+      "今夜 stay with me，直到最後一班 train。",
+      "東京の雨、Seoul の灯、都落在眼底。",
+      "괜찮아—我们还会再见, someday.",
+      "把 unfinished story 写成新的序章。",
+      "また明日；明天见；see you tomorrow."
+    ].join("\n"),
+    translationText: [
+      "Stay until the last train tonight.",
+      "Tokyo rain and Seoul lights fill our eyes.",
+      "It is all right—we will meet again.",
+      "Turn the unfinished story into a beginning.",
+      "See you again tomorrow."
+    ].join("\n"),
+    translationEnabled: true,
+    fontPreset: "source-han-serif",
+    lyricFontSize: 52,
+    translationScale: 0.9,
+    lineHeight: 1.75,
+    align: "center",
+    anchorWidth: 1160,
+    expected: { width: 960, height: 1900 }
+  },
+  {
+    id: "translation-disabled-but-populated",
+    lyrics: "First visible line\n\nSecond visible line\nThird visible line\nFourth visible line",
+    translationText: "不会显示的译文一\n不会显示的译文二\n不会显示的译文三\n不会显示的译文四",
+    translationEnabled: false,
+    fontPreset: "source-han-sans",
+    lyricFontSize: 44,
+    translationScale: 0.88,
+    lineHeight: 2.1,
+    align: "left",
+    anchorWidth: 1340,
+    expected: { width: 740, height: 880 }
+  },
+  {
+    id: "minimum-candidate-boundary",
+    lyrics: "Hi\nGo\nNo",
+    translationEnabled: false,
+    fontPreset: "source-han-sans",
+    lyricFontSize: 36,
+    translationScale: 0.75,
+    lineHeight: 1.5,
+    align: "center",
+    anchorWidth: 1440,
+    expected: { width: 720, height: 640 }
+  },
+  {
+    id: "maximum-candidate-boundary",
+    lyrics: [
+      "pneumonoultramicroscopicsilicovolcanoconiosispneumonoultramicroscopicsilicovolcanoconiosis",
+      "antidisestablishmentarianismantidisestablishmentarianismantidisestablishmentarianism",
+      "electroencephalographicallyelectroencephalographicallyelectroencephalographically"
+    ].join("\n"),
+    translationEnabled: false,
+    fontPreset: "source-han-serif",
+    lyricFontSize: 72,
+    translationScale: 0.75,
+    lineHeight: 1.5,
+    align: "left",
+    anchorWidth: 720,
+    expected: { width: 1340, height: 1580 }
+  }
+];
+// Captured from the verified 7d7b3fbc legacy implementation before replacing
+// its 37 persistent LyricsBlock trees and per-unit Range sweep.
+const legacyAutoWidth80LineCost = {
+  candidateDomCount: 37,
+  lineDomCount: 2_960,
+  rangeQueries: 20_720
+} as const;
 // Chromium refuses several otherwise valid TCP ports. Retry allocation rather
 // than treating a browser policy failure as an application regression.
 const unsafeBrowserPorts = new Set([
@@ -516,6 +704,99 @@ test("auto width calibrates every built-in example independently of the starting
   }
 });
 
+test("auto width preserves the legacy choice for multilingual typography fixtures", async ({ page }) => {
+  test.setTimeout(180_000);
+
+  for (const fixture of autoWidthEquivalenceFixtures) {
+    await test.step(fixture.id, async () => {
+      await openWebLite(page);
+      const result = await applyAutoWidthEquivalenceFixture(page, fixture);
+      expect(result, `${fixture.id} matches the legacy width and height`).toEqual(fixture.expected);
+    });
+  }
+});
+
+test("auto width retains the anchor until fonts are ready and then matches the legacy choice", async ({ page }) => {
+  await page.addInitScript(() => {
+    let releaseFontReady!: () => void;
+    const controlledReady = new Promise<void>((resolve) => {
+      releaseFontReady = resolve;
+    });
+    Object.defineProperty(document.fonts, "ready", {
+      configurable: true,
+      get: () => controlledReady
+    });
+    (window as typeof window & { __releaseAutoWidthFontReady?: () => void }).__releaseAutoWidthFontReady =
+      releaseFontReady;
+  });
+  await openWebLite(page);
+
+  const fixture = autoWidthEquivalenceFixtures.find(({ id }) => id === "japanese-with-translation");
+  if (!fixture) throw new Error("Font readiness fixture is missing.");
+  const controls = await prepareAutoWidthEquivalenceFixture(page, fixture);
+  await controls.autoWidth.click();
+  await page.waitForTimeout(700);
+  await expect(controls.width).toHaveValue(String(fixture.anchorWidth));
+
+  await page.evaluate(() => {
+    (window as typeof window & { __releaseAutoWidthFontReady?: () => void }).__releaseAutoWidthFontReady?.();
+  });
+  const result = await readSettledAutoWidthResult(controls.width, controls.height);
+  expect(result).toEqual(fixture.expected);
+});
+
+test("auto width reuses one candidate DOM and bounds geometry-query cost for 80 lines", async ({ page }) => {
+  await page.addInitScript(() => {
+    const measuredWindow = window as typeof window & { __autoWidthRangeQueries?: number };
+    measuredWindow.__autoWidthRangeQueries = 0;
+    const originalGetClientRects = Range.prototype.getClientRects;
+    Range.prototype.getClientRects = function () {
+      measuredWindow.__autoWidthRangeQueries = (measuredWindow.__autoWidthRangeQueries ?? 0) + 1;
+      return originalGetClientRects.call(this);
+    };
+  });
+  await openWebLite(page);
+
+  await page.locator('[data-step-id="lyrics"]').click();
+  await page.getByLabel("Lyric Text", { exact: true }).fill(
+    Array.from({ length: 80 }, (_, index) => `${index + 1} Stay close until morning finds us`).join("\n")
+  );
+  const host = page.locator("[data-auto-width-measurement-host]");
+  await expect(host.locator("[data-auto-width-candidate]")).toHaveCount(1);
+  await expect(host.locator("[data-auto-width-line]")).toHaveCount(80);
+
+  await page.locator('[data-step-id="layout"]').click();
+  const autoWidth = page.getByRole("switch", { name: "Auto Width", exact: true });
+  if (await autoWidth.getAttribute("aria-checked") === "true") {
+    await autoWidth.click();
+  }
+  await expect(host).toHaveCount(0);
+  await page.evaluate(() => {
+    (window as typeof window & { __autoWidthRangeQueries?: number }).__autoWidthRangeQueries = 0;
+  });
+
+  await autoWidth.click();
+  await expect(host).toHaveCount(1);
+  await expect(host.locator("[data-auto-width-candidate]")).toHaveCount(1);
+  await expect(host.locator("[data-auto-width-line]")).toHaveCount(80);
+  const settledWidth = await waitForStableSliderValue(page.getByLabel("Width", { exact: true }), 700, 30_000);
+  const rangeQueries = await page.evaluate(
+    () => (window as typeof window & { __autoWidthRangeQueries?: number }).__autoWidthRangeQueries ?? 0
+  );
+  const optimizedCost = {
+    candidateDomCount: await host.locator("[data-auto-width-candidate]").count(),
+    lineDomCount: await host.locator("[data-auto-width-line]").count(),
+    rangeQueries
+  };
+  console.log(JSON.stringify({
+    autoWidthPerformance: { legacy: legacyAutoWidth80LineCost, optimized: optimizedCost, settledWidth }
+  }));
+  expect(settledWidth).toBe(940);
+  expect(optimizedCost.candidateDomCount).toBeLessThan(legacyAutoWidth80LineCost.candidateDomCount);
+  expect(optimizedCost.lineDomCount).toBeLessThan(legacyAutoWidth80LineCost.lineDomCount);
+  expect(rangeQueries).toBeLessThan(legacyAutoWidth80LineCost.rangeQueries / 3);
+});
+
 test("clears remote input and status after a successful remote cover", async ({ page }) => {
   await installRemoteCoverRoute(page);
   await openWebLite(page);
@@ -772,6 +1053,72 @@ async function measureAutoWidthWrapMetrics(page: Page) {
       };
     }).filter((metric): metric is NonNullable<typeof metric> => metric !== null);
   });
+}
+
+async function applyAutoWidthEquivalenceFixture(page: Page, fixture: AutoWidthEquivalenceFixture) {
+  const controls = await prepareAutoWidthEquivalenceFixture(page, fixture);
+  await controls.autoWidth.click();
+  return readSettledAutoWidthResult(controls.width, controls.height);
+}
+
+async function prepareAutoWidthEquivalenceFixture(page: Page, fixture: AutoWidthEquivalenceFixture) {
+  const lyricsStep = page.locator('[data-step-id="lyrics"]');
+  const layoutStep = page.locator('[data-step-id="layout"]');
+  const fontStep = page.locator('[data-step-id="font"]');
+
+  await layoutStep.click();
+  const autoWidth = page.getByRole("switch", { name: "Auto Width", exact: true });
+  if (await autoWidth.getAttribute("aria-checked") === "true") {
+    await autoWidth.click();
+  }
+  const width = page.getByLabel("Width", { exact: true });
+  const height = page.getByLabel("Height", { exact: true });
+  await setRangeValue(width, fixture.anchorWidth);
+  await setRangeValue(page.getByLabel("Font Size", { exact: true }), fixture.lyricFontSize);
+  await setRangeValue(page.getByLabel("Line Height", { exact: true }), fixture.lineHeight);
+  await page
+    .getByRole("radiogroup", { name: "Alignment", exact: true })
+    .getByRole("radio", { name: fixture.align === "center" ? "Center" : "Left", exact: true })
+    .click();
+
+  await fontStep.click();
+  await page.locator(`[data-font-id="${fixture.fontPreset}"]`).click();
+
+  await lyricsStep.click();
+  await page.getByLabel("Lyric Text", { exact: true }).fill(fixture.lyrics);
+  const translationToggle = page.getByRole("switch", { name: "Enable Translation", exact: true });
+  if (fixture.translationText) {
+    if (await translationToggle.getAttribute("aria-checked") !== "true") {
+      await translationToggle.click();
+    }
+    await page.getByLabel("Translation", { exact: true }).fill(fixture.translationText);
+  }
+  if ((await translationToggle.getAttribute("aria-checked") === "true") !== fixture.translationEnabled) {
+    await translationToggle.click();
+  }
+
+  await layoutStep.click();
+  if (fixture.translationEnabled) {
+    await setRangeValue(page.getByLabel("Translation Scale", { exact: true }), fixture.translationScale);
+  }
+  return { autoWidth, width, height };
+}
+
+async function readSettledAutoWidthResult(width: Locator, height: Locator) {
+  const settledWidth = await waitForStableSliderValue(width, 700, 20_000);
+  const settledHeight = await waitForStableSliderValue(height, 700, 20_000);
+  return { width: settledWidth, height: settledHeight };
+}
+
+async function setRangeValue(locator: Locator, value: number) {
+  await locator.evaluate((element, nextValue) => {
+    const input = element as HTMLInputElement;
+    const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
+    setter?.call(input, String(nextValue));
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+  }, value);
+  await expect(locator).toHaveValue(String(value));
 }
 
 function effectiveLineCount(value: string) {

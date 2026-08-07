@@ -7,7 +7,7 @@ import { getAutoWidthCandidates, isAutoWidthMeasurementEnabled } from "@/lib/aut
 import { cardFontStyle, fontClassName } from "@/lib/fonts";
 import type { AppState } from "@/lib/types";
 
-/** Renders inert, full-fidelity lyric candidates for DOM-based auto-width measurement. */
+/** Renders one inert, full-fidelity lyric tree that is reused across candidate widths. */
 export function AutoWidthMeasurementHost({
   state,
   hostRef
@@ -19,12 +19,25 @@ export function AutoWidthMeasurementHost({
     return null;
   }
 
+  const measurementGrid = getAutoWidthCandidates().map((canvasWidth) => {
+    const candidateStyle = { ...state.style, width: canvasWidth };
+    const layout = getPortraitLayout(
+      { width: canvasWidth, height: state.style.height },
+      candidateStyle,
+      state.song
+    );
+    return { canvasWidth, contentWidth: layout.lyricsRect.width };
+  });
+  const initialCandidate = measurementGrid[0];
+  if (!initialCandidate) return null;
+
   return (
     <div
       ref={hostRef}
       aria-hidden="true"
       inert
       data-auto-width-measurement-host
+      data-auto-width-measurement-grid={JSON.stringify(measurementGrid)}
       style={{
         position: "fixed",
         left: "-100000px",
@@ -35,39 +48,27 @@ export function AutoWidthMeasurementHost({
         pointerEvents: "none"
       }}
     >
-      {getAutoWidthCandidates().map((canvasWidth) => {
-        const candidateStyle = { ...state.style, width: canvasWidth };
-        const layout = getPortraitLayout(
-          { width: canvasWidth, height: state.style.height },
-          candidateStyle,
-          state.song
-        );
-
-        return (
-          <div
-            key={canvasWidth}
-            data-auto-width-candidate={canvasWidth}
-            className={fontClassName(state.style.font)}
-            style={{
-              ...cardFontStyle(state.style),
-              width: layout.lyricsRect.width
-            }}
-          >
-            <LyricsBlock
-              lyrics={state.lyrics}
-              translationText={state.style.translationText}
-              translationEnabled={state.style.translationEnabled}
-              lyricFontSize={state.style.lyricFontSize}
-              translationScale={state.style.translationScale}
-              lineHeight={state.style.lineHeight}
-              textColor={state.style.resolvedTextColor || "#FFFFFF"}
-              align={state.style.align}
-              isDarkText={false}
-              autoWidth
-            />
-          </div>
-        );
-      })}
+      <div
+        data-auto-width-candidate={initialCandidate.canvasWidth}
+        className={fontClassName(state.style.font)}
+        style={{
+          ...cardFontStyle(state.style),
+          width: initialCandidate.contentWidth
+        }}
+      >
+        <LyricsBlock
+          lyrics={state.lyrics}
+          translationText={state.style.translationText}
+          translationEnabled={state.style.translationEnabled}
+          lyricFontSize={state.style.lyricFontSize}
+          translationScale={state.style.translationScale}
+          lineHeight={state.style.lineHeight}
+          textColor={state.style.resolvedTextColor || "#FFFFFF"}
+          align={state.style.align}
+          isDarkText={false}
+          autoWidth
+        />
+      </div>
     </div>
   );
 }
