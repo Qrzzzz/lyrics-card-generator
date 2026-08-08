@@ -10,10 +10,10 @@ const expected = {
   sans: "4a8b2ee4f041fa56c7a5561f36e13ed6780eec66161c30274fc90b0c5ba7cea2",
   serif: "d033af54f96530476faed924ab5d5e9e6ef0833495670fd57bab9a7758398048",
   platformIcons: {
-    "apple-music.svg": "9e30c6faf50ad655bef28208c671276e2b817bda772ba9bc2ecc1d59307a3e2e",
-    "netease-music.svg": "c9b9a593aedd797e17ba6c8a21c1cdfc3dd3730c60a88e3b78e418d81c159fa7",
+    "apple-music.svg": "e17c3c7ad50b7a0b2b7dbade1493518338c76766c0513abd84f615d1c5048153",
+    "netease-music.svg": "2b878041ce7199d04cb63085db36c639a688b3dac20d8f6313583d9abe56f038",
     "qq-music.svg": "d3272cc18a0a25217d4026923b67198b6a68c4ed9a1a691dd3b42a2d7d53f1b5",
-    "spotify.svg": "05ac0e0e8cc7ce903cd92f597de74bac182af6450652f1a5a4a477d889dc02fc"
+    "spotify.svg": "ef13ffe390971bc3508b9abb6f1f35ca0185fd9253a87ed4d0911c0af04a1b40"
   }
 };
 
@@ -52,8 +52,17 @@ async function run() {
     evidence[font.name] = { bytes: bytes.length, sha256: font.sha256, numGlyphs, localeSamples };
   }
 
+  assert.equal(
+    hashNormalizedText(Buffer.from("<svg>\r\n</svg>\r\n")),
+    hashNormalizedText(Buffer.from("<svg>\n</svg>\n")),
+    "SVG fingerprints ignore Git working-tree line endings"
+  );
   for (const [name, sha256] of Object.entries(expected.platformIcons)) {
-    assert.equal(hash(fs.readFileSync(path.join("public", "platform-icons", name))), sha256, `${name} remains byte-identical`);
+    assert.equal(
+      hashNormalizedText(fs.readFileSync(path.join("public", "platform-icons", name))),
+      sha256,
+      `${name} remains content-identical across Git line-ending conversion`
+    );
   }
 
   const packagedPublic = path.join("release", "win-unpacked", "resources", "server", "public");
@@ -77,6 +86,10 @@ async function run() {
 
 function hash(bytes) {
   return crypto.createHash("sha256").update(bytes).digest("hex");
+}
+
+function hashNormalizedText(bytes) {
+  return hash(Buffer.from(bytes.toString("utf8").replaceAll("\r\n", "\n"), "utf8"));
 }
 
 function getTable(font, tag) {
