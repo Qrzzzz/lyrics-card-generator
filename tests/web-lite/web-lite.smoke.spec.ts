@@ -706,15 +706,32 @@ test("auto width calibrates every built-in example independently of the starting
   }
 });
 
-test("auto width preserves the legacy choice for multilingual typography fixtures", async ({ page }) => {
+test("auto width preserves the legacy choice for multilingual typography fixtures", async ({ browser }) => {
   test.setTimeout(180_000);
 
   for (const fixture of autoWidthEquivalenceFixtures) {
     await test.step(fixture.id, async () => {
-      await openWebLiteWithFreshPreferences(page);
-      const result = await applyAutoWidthEquivalenceFixture(page, fixture);
-      const expected = fixture.expectedByPlatform?.[process.platform] ?? fixture.expected;
-      expect(result, `${fixture.id} matches the ${process.platform} legacy width and height`).toEqual(expected);
+      const context = await browser.newContext({ reducedMotion: "reduce" });
+      await context.addInitScript(
+        ({ key }) => {
+          if (window.location.origin !== "null") {
+            window.localStorage.setItem(
+              key,
+              JSON.stringify({ version: 1, locale: "en", exportQuality: "high" })
+            );
+          }
+        },
+        { key: preferencesKey }
+      );
+      const fixturePage = await context.newPage();
+      try {
+        await openWebLite(fixturePage);
+        const result = await applyAutoWidthEquivalenceFixture(fixturePage, fixture);
+        const expected = fixture.expectedByPlatform?.[process.platform] ?? fixture.expected;
+        expect(result, `${fixture.id} matches the ${process.platform} legacy width and height`).toEqual(expected);
+      } finally {
+        await context.close();
+      }
     });
   }
 });
@@ -1131,18 +1148,6 @@ function effectiveLineCount(value: string) {
 async function openWebLite(page: Page, viewport = { width: 1280, height: 900 }) {
   await page.setViewportSize(viewport);
   await page.goto(`${baseUrl}/index.html`, { waitUntil: "networkidle" });
-  await expect(page.getByTestId("web-lite-editor-surface")).toBeVisible();
-}
-
-async function openWebLiteWithFreshPreferences(page: Page, viewport = { width: 1280, height: 900 }) {
-  await openWebLite(page, viewport);
-  await page.evaluate(
-    ({ key }) => {
-      window.localStorage.setItem(key, JSON.stringify({ version: 1, locale: "en", exportQuality: "high" }));
-    },
-    { key: preferencesKey }
-  );
-  await page.reload({ waitUntil: "networkidle" });
   await expect(page.getByTestId("web-lite-editor-surface")).toBeVisible();
 }
 
