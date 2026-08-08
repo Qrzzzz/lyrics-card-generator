@@ -2378,28 +2378,31 @@ async function assertLyricsWorkspaceSplitInteractions() {
   for (const tab of ["cleanup", "translation"]) {
     await page.getByTestId(`lyrics-sidebar-tab-${tab}`).waitFor({ state: "visible" });
   }
-  await page.getByTestId("lyrics-sidebar-tab-translation").click();
-  const tabSlide = await page.waitForFunction(() => {
-    const viewport = document.querySelector('[data-testid="lyrics-translation-page-viewport"]');
-    const cleanup = document.querySelector('[data-testid="lyrics-sidebar-panel-cleanup"]');
-    const translation = document.querySelector('[data-testid="lyrics-translation-home-page"]');
-    if (
-      viewport?.getAttribute("data-sidebar-page") !== "translation" ||
-      !(cleanup instanceof HTMLElement) ||
-      !(translation instanceof HTMLElement) ||
-      cleanup.hidden ||
-      translation.hidden
-    ) {
-      return false;
-    }
-    return {
-      cleanupAriaHidden: cleanup.getAttribute("aria-hidden"),
-      cleanupInert: cleanup.hasAttribute("inert"),
-      cleanupPointerEvents: getComputedStyle(cleanup).pointerEvents,
-      translationAriaHidden: translation.getAttribute("aria-hidden"),
-      translationInert: translation.hasAttribute("inert")
-    };
-  });
+  // Observe the transient overlap before triggering it so fast animation completion cannot hide the outgoing page first.
+  const [tabSlide] = await Promise.all([
+    page.waitForFunction(() => {
+      const viewport = document.querySelector('[data-testid="lyrics-translation-page-viewport"]');
+      const cleanup = document.querySelector('[data-testid="lyrics-sidebar-panel-cleanup"]');
+      const translation = document.querySelector('[data-testid="lyrics-translation-home-page"]');
+      if (
+        viewport?.getAttribute("data-sidebar-page") !== "translation" ||
+        !(cleanup instanceof HTMLElement) ||
+        !(translation instanceof HTMLElement) ||
+        cleanup.hidden ||
+        translation.hidden
+      ) {
+        return false;
+      }
+      return {
+        cleanupAriaHidden: cleanup.getAttribute("aria-hidden"),
+        cleanupInert: cleanup.hasAttribute("inert"),
+        cleanupPointerEvents: getComputedStyle(cleanup).pointerEvents,
+        translationAriaHidden: translation.getAttribute("aria-hidden"),
+        translationInert: translation.hasAttribute("inert")
+      };
+    }),
+    page.getByTestId("lyrics-sidebar-tab-translation").click()
+  ]);
   assert.deepEqual(
     await tabSlide.jsonValue(),
     {
@@ -2442,30 +2445,32 @@ async function assertLyricsWorkspaceSplitInteractions() {
       tabs: tabs ? { left: tabs.left, top: tabs.top, width: tabs.width } : null
     };
   });
-  await page.getByTestId("lyrics-command-ai").click();
-  const concurrentPages = await page.waitForFunction(() => {
-    const viewport = document.querySelector('[data-testid="lyrics-translation-page-viewport"]');
-    const cleanup = document.querySelector('[data-testid="lyrics-sidebar-panel-cleanup"]');
-    const home = document.querySelector('[data-testid="lyrics-translation-home-page"]');
-    const ai = document.querySelector('[data-testid="lyrics-translation-ai-page"]');
-    if (
-      viewport?.getAttribute("data-sidebar-page") !== "ai" ||
-      !(cleanup instanceof HTMLElement) ||
-      !(home instanceof HTMLElement) ||
-      !(ai instanceof HTMLElement) ||
-      cleanup.hidden ||
-      ai.hidden
-    ) {
-      return false;
-    }
-    return {
-      cleanupAriaHidden: cleanup.getAttribute("aria-hidden"),
-      cleanupInert: cleanup.hasAttribute("inert"),
-      cleanupPointerEvents: getComputedStyle(cleanup).pointerEvents,
-      intermediateHomeHidden: home.hidden,
-      aiAriaHidden: ai.getAttribute("aria-hidden")
-    };
-  });
+  const [concurrentPages] = await Promise.all([
+    page.waitForFunction(() => {
+      const viewport = document.querySelector('[data-testid="lyrics-translation-page-viewport"]');
+      const cleanup = document.querySelector('[data-testid="lyrics-sidebar-panel-cleanup"]');
+      const home = document.querySelector('[data-testid="lyrics-translation-home-page"]');
+      const ai = document.querySelector('[data-testid="lyrics-translation-ai-page"]');
+      if (
+        viewport?.getAttribute("data-sidebar-page") !== "ai" ||
+        !(cleanup instanceof HTMLElement) ||
+        !(home instanceof HTMLElement) ||
+        !(ai instanceof HTMLElement) ||
+        cleanup.hidden ||
+        ai.hidden
+      ) {
+        return false;
+      }
+      return {
+        cleanupAriaHidden: cleanup.getAttribute("aria-hidden"),
+        cleanupInert: cleanup.hasAttribute("inert"),
+        cleanupPointerEvents: getComputedStyle(cleanup).pointerEvents,
+        intermediateHomeHidden: home.hidden,
+        aiAriaHidden: ai.getAttribute("aria-hidden")
+      };
+    }),
+    page.getByTestId("lyrics-command-ai").click()
+  ]);
   assert.deepEqual(
     await concurrentPages.jsonValue(),
     {
@@ -3775,8 +3780,10 @@ try {
   const fontOverride = await page.evaluate(() => {
     const toastAudit = [];
     const recordToast = () => {
-      const text = document.querySelector('[data-testid="app-toast"]')?.textContent?.trim();
-      if (text && toastAudit.at(-1) !== text) toastAudit.push(text);
+      for (const toast of document.querySelectorAll('[data-testid="app-toast"]')) {
+        const text = toast.textContent?.trim();
+        if (text && !toastAudit.includes(text)) toastAudit.push(text);
+      }
     };
     const toastObserver = new MutationObserver(recordToast);
     toastObserver.observe(document.body, {
