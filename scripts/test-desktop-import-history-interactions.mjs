@@ -237,10 +237,10 @@ async function launchApp({ expectFirstLaunch = false, expectedLocale = null, exp
 }
 
 async function closeThroughDesktopApi() {
-  if (!page || page.isClosed()) return;
-  const closed = page.waitForEvent("close", { timeout: 15_000 });
-  await page.evaluate(() => window.lyricsCardDesktop?.confirmWindowClose()).catch(() => {});
-  await closed.catch(() => {});
+  if (!electronApp) return;
+  // Let Playwright request one normal application close. The main process then
+  // asks the renderer to flush and confirm; issuing confirm first leaves a
+  // second close call racing an application that is already shutting down.
   await closeElectronApplication(electronApp, { label: "desktop-history-regression" });
   electronApp = undefined;
   page = undefined;
