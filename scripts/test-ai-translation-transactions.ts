@@ -49,32 +49,9 @@ function deferredStream(onAbort?: () => void) {
     emitReasoning(value: string) {
       events.onReasoningDelta(value, value);
     },
-    emitStatus(value: Phase) {
-      events.onStatus(value);
-    },
     resolve,
     reject,
     get signal() { return signal; }
-  };
-}
-
-function createManualFrameScheduler() {
-  let nextId = 0;
-  const callbacks = new Map<number, () => void>();
-  return {
-    schedule(flush: () => void) {
-      const id = ++nextId;
-      callbacks.set(id, flush);
-      return () => callbacks.delete(id);
-    },
-    flushFrame() {
-      const pending = [...callbacks.values()];
-      callbacks.clear();
-      pending.forEach((flush) => flush());
-    },
-    get pendingCount() {
-      return callbacks.size;
-    }
   };
 }
 
@@ -790,101 +767,6 @@ async function replacementCommitsRollbackBeforeAbortTest() {
   assert.equal(harness.ui.settlements, 1, "only the current generation settles the shared UI");
 }
 
-async function streamFrameCoalescingAndUrgentTerminalTest() {
-  const baseline = {
-    contentChunks: 240,
-    reasoningChunks: 120,
-    partialCommits: 240,
-    streamingStateSubmissions: 240,
-    reasoningStateSubmissions: 120
-  };
-  const frames = createManualFrameScheduler();
-  const harness = createHarness();
-  const stream = deferredStream();
-  const options = harness.options(stream);
-  options.scheduleStreamFlush = frames.schedule;
-  const running = harness.orchestrator.run(options);
-
-  stream.emitStatus("connecting");
-  let reasoning = "";
-  for (let index = 1; index <= baseline.reasoningChunks; index += 1) {
-    reasoning += "思";
-    stream.emitReasoning(reasoning);
-    if (index < baseline.reasoningChunks && index % 30 === 0) frames.flushFrame();
-  }
-  assert.equal(harness.events.reasoning.length, 3, "only completed frames submit intermediate reasoning state");
-
-  // A phase transition flushes the preceding kind before the new phase is visible.
-  stream.emitStatus("streaming");
-  assert.equal(harness.events.reasoning.length, 4);
-  assert.equal(harness.events.reasoning.at(-1), reasoning);
-
-  let finalText = "";
-  for (let index = 1; index <= baseline.contentChunks; index += 1) {
-    finalText += "译";
-    stream.emitPartial(finalText);
-    if (index < baseline.contentChunks && index % 30 === 0) frames.flushFrame();
-  }
-  assert.equal(harness.events.streaming.length, 7, "the final pending frame has not run yet");
-  assert.equal(frames.pendingCount, 1);
-
-  stream.resolve(finalText);
-  await running;
-  assert.equal(frames.pendingCount, 0, "terminal settlement cancels the scheduled frame");
-  assert.equal(harness.events.streaming.length, 8, "240 content chunks submit at most once per deterministic frame");
-  assert.equal(harness.events.streaming.at(-1), finalText, "the final streamed text is byte-for-byte identical");
-  assert.equal(harness.events.reasoning.at(-1), reasoning, "the final reasoning text is byte-for-byte identical");
-  assert.equal(harness.translation.text, finalText, "the terminal document text is byte-for-byte identical");
-  assert.equal(harness.writes.length, 9, "eight partial document commits plus one terminal commit");
-  assert.equal(harness.events.successes, 1);
-  assert.equal(harness.events.settlements, 1);
-
-  const failureFrames = createManualFrameScheduler();
-  const failureHarness = createHarness();
-  const failureStream = deferredStream();
-  const failureOptions = failureHarness.options(failureStream);
-  failureOptions.scheduleStreamFlush = failureFrames.schedule;
-  const failed = failureHarness.orchestrator.run(failureOptions);
-  failureStream.emitPartial("latest before failure");
-  failureStream.reject(new Error("provider failed"));
-  await failed;
-  assert.equal(failureFrames.pendingCount, 0);
-  assert.deepEqual(failureHarness.events.streaming, ["latest before failure"]);
-  assert.deepEqual(failureHarness.writes, ["latest before failure", "old A"]);
-  assert.equal(failureHarness.events.failures, 1, "errors settle without waiting for a frame");
-  assert.equal(failureHarness.events.settlements, 1);
-
-  const cancelFrames = createManualFrameScheduler();
-  const cancelHarness = createHarness();
-  const cancelStream = deferredStream();
-  const cancelOptions = cancelHarness.options(cancelStream);
-  cancelOptions.scheduleStreamFlush = cancelFrames.schedule;
-  const cancelled = cancelHarness.orchestrator.run(cancelOptions);
-  cancelStream.emitPartial("latest before cancel");
-  assert.equal(cancelHarness.orchestrator.cancel(), true);
-  assert.equal(cancelFrames.pendingCount, 0);
-  assert.deepEqual(cancelHarness.events.streaming, ["latest before cancel"]);
-  assert.deepEqual(cancelHarness.writes, ["latest before cancel", "old A"]);
-  assert.equal(cancelHarness.events.cancellations, 1, "cancellation settles synchronously without a frame");
-  assert.equal(cancelHarness.events.settlements, 0, "the existing cancellation contract uses onCancelled as its terminal callback");
-  cancelStream.resolve("late final after cancel");
-  await cancelled;
-  assert.equal(cancelHarness.translation.text, "old A", "late completion cannot escape cancellation rollback");
-
-  console.log(JSON.stringify({
-    aiStreamPerformance: {
-      before: baseline,
-      after: {
-        contentChunks: baseline.contentChunks,
-        reasoningChunks: baseline.reasoningChunks,
-        partialCommits: 8,
-        streamingStateSubmissions: 8,
-        reasoningStateSubmissions: 4
-      }
-    }
-  }));
-}
-
 function productionAdapterWiringTest() {
   const source = readFileSync("components/editor/hooks/useEditorActions.ts", "utf8");
   assert.match(source, /documentStateAdapter\.queueDocumentMutation\(rollback, mutation\)/);
@@ -956,7 +838,6 @@ void (async () => {
   await aiStartSupersedesPendingDocumentIntentsTest();
   await terminalCommitPrecedesLaterDocumentMutationsTest();
   await replacementCommitsRollbackBeforeAbortTest();
-  await streamFrameCoalescingAndUrgentTerminalTest();
   await providerFailureRestoresCurrentDocumentTest();
   await newerGenerationWinsTest();
   styleMutationClassificationTest();

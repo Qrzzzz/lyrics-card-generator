@@ -40,8 +40,7 @@ const routeCounts = { parseSong: 0, resolveSearch: 0, localAudio: 0, imageProxy:
 // restart, and deletion tests never read or mutate a real user history.
 await mkdir(fixtureDirectory, { recursive: true });
 await mkdir(reportDirectory, { recursive: true });
-const largeAudioFixtureBytes = 3 * 1024 * 1024 + 17;
-await writeFile(audioPath, Buffer.alloc(largeAudioFixtureBytes, 0x5a));
+await writeFile(audioPath, Buffer.from("initial desktop audio fixture"));
 await writeFile(coverPath, tinyPng);
 await writeFile(coverOnlyPath, tinyPng);
 
@@ -1377,7 +1376,7 @@ try {
   await waitForHistoryTotal(0);
   await editManualSong({ title: "Stale binding recovery" });
   await clickManualSave();
-  await page.getByTestId("app-toast").filter({ hasText: "no longer exists" }).waitFor({
+  await page.getByTestId("app-toast").filter({ hasText: "Original save missing" }).waitFor({
     state: "visible",
     timeout: 15_000
   });
@@ -1556,7 +1555,7 @@ try {
   resolveShouldFail = true;
   const blankBeforeRemoteFailure = await currentSongTitle();
   await replayCard("search");
-  await page.getByTestId("app-toast").filter({ hasText: "current document was not changed" }).waitFor({
+  await page.getByTestId("app-toast").filter({ hasText: "current document unchanged" }).waitFor({
     state: "visible",
     timeout: 15_000
   });
@@ -1571,46 +1570,12 @@ try {
   ), null, { timeout: 15_000 });
   await waitForHistoryTotal(2);
 
-  const packagedStreamMetrics = await page.evaluate(async () => {
-    const api = window.lyricsCardDesktop;
-    const history = await api.listImportHistory({ offset: 0, limit: 24, source: "local-audio" });
-    const replay = await api.replayImportHistory(history.records[0].id);
-    if (!replay.ok || replay.kind !== "local-audio") return { ok: false };
-    let total = 0;
-    let chunks = 0;
-    let maximumPayload = 0;
-    while (true) {
-      const chunk = await api.readImportHistoryFileChunk(replay.file.streamToken);
-      if (!chunk.ok) return { ok: false, code: chunk.code };
-      total += chunk.bytes.byteLength;
-      chunks += 1;
-      maximumPayload = Math.max(maximumPayload, chunk.bytes.byteLength);
-      if (chunk.done) break;
-    }
-    return {
-      ok: true,
-      metadataHasBytes: "bytes" in replay.file,
-      declaredSize: replay.file.size,
-      total,
-      chunks,
-      maximumPayload
-    };
-  });
-  assert.deepEqual(packagedStreamMetrics, {
-    ok: true,
-    metadataHasBytes: false,
-    declaredSize: largeAudioFixtureBytes,
-    total: largeAudioFixtureBytes,
-    chunks: 4,
-    maximumPayload: 1024 * 1024
-  }, "packaged replay bounds every IPC payload while preserving every source byte");
-
   await new Promise((resolve) => setTimeout(resolve, 25));
   await writeFile(audioPath, Buffer.from("changed desktop audio fixture with a different size"));
   const localSurface = await openHistory(2);
   await replayCard("local-audio");
   await localSurface.waitFor({ state: "hidden", timeout: 15_000 });
-  await page.getByTestId("app-toast").filter({ hasText: "file has changed" }).waitFor({ state: "visible", timeout: 15_000 });
+  await page.getByTestId("app-toast").filter({ hasText: "Original file changed" }).waitFor({ state: "visible", timeout: 15_000 });
 
   await rm(audioPath, { force: true });
   const missingSurface = await openHistory(2);
@@ -1626,7 +1591,7 @@ try {
   }, rejectedRelocatedAudioPath);
   localAudioShouldFail = true;
   await replayCard("local-audio", { relocate: true });
-  await page.getByTestId("app-toast").filter({ hasText: "current document was not changed" }).waitFor({
+  await page.getByTestId("app-toast").filter({ hasText: "current document unchanged" }).waitFor({
     state: "visible",
     timeout: 15_000
   });
@@ -1687,7 +1652,7 @@ try {
 
   await waitForManualSaveState("create");
   await clickManualSave();
-  await page.getByTestId("app-toast").filter({ hasText: "manual save could not be written" }).waitFor({
+  await page.getByTestId("app-toast").filter({ hasText: "Manual save could not be written" }).waitFor({
     state: "visible",
     timeout: 15_000
   });
@@ -1695,7 +1660,7 @@ try {
   assert.equal(await historyTotal(), 0, "a failed manual-save create does not bind or advance the saved revision");
 
   await performSearch("history write failure");
-  await page.getByTestId("app-toast").filter({ hasText: "history could not be saved" }).waitFor({
+  await page.getByTestId("app-toast").filter({ hasText: "history was not updated" }).waitFor({
     state: "visible",
     timeout: 15_000
   });
@@ -1713,7 +1678,7 @@ try {
   await rm(historyPath, { force: true });
   await mkdir(historyPath);
   await clickManualSave();
-  await page.getByTestId("app-toast").filter({ hasText: "manual save could not be written" }).waitFor({
+  await page.getByTestId("app-toast").filter({ hasText: "Manual save could not be written" }).waitFor({
     state: "visible",
     timeout: 15_000
   });

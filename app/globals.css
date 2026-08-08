@@ -10,25 +10,25 @@
 }
 @font-face {
   font-family: "Source Han Sans Heavy Local";
-  src: url("/fonts/SourceHanSansSC-Heavy.otf?v=4a8b2ee4f041fa56") format("opentype");
+  src: url("/fonts/SourceHanSansSC-Heavy.otf") format("opentype");
   font-display: swap;
 }
 
 @font-face {
   font-family: "Source Han Sans SC";
-  src: url("/fonts/SourceHanSansSC-Heavy.otf?v=4a8b2ee4f041fa56") format("opentype");
+  src: url("/fonts/SourceHanSansSC-Heavy.otf") format("opentype");
   font-display: swap;
 }
 
 @font-face {
   font-family: "Source Han Serif Heavy Local";
-  src: url("/fonts/SourceHanSerifSC-Heavy.otf?v=d033af54f9653047") format("opentype");
+  src: url("/fonts/SourceHanSerifSC-Heavy.otf") format("opentype");
   font-display: swap;
 }
 
 @font-face {
   font-family: "Source Han Serif SC";
-  src: url("/fonts/SourceHanSerifSC-Heavy.otf?v=d033af54f9653047") format("opentype");
+  src: url("/fonts/SourceHanSerifSC-Heavy.otf") format("opentype");
   font-display: swap;
 }
 
@@ -833,6 +833,24 @@ body[data-window-maximized="true"] .app-shell[data-desktop-shell="true"] {
   border-color: rgb(var(--status-info-border));
   background: rgb(var(--status-info-bg));
   color: rgb(var(--status-info-fg));
+}
+
+.app-toast[data-tone="success"] {
+  border-color: rgb(74 222 128 / 0.62);
+  background: rgb(21 128 61 / 0.92);
+  color: #f0fdf4;
+}
+
+.app-toast[data-tone="warning"] {
+  border-color: rgb(253 230 138 / 0.72);
+  background: rgb(250 204 21 / 0.94);
+  color: #422006;
+}
+
+.app-toast[data-tone="error"] {
+  border-color: rgb(248 113 113 / 0.68);
+  background: rgb(185 28 28 / 0.92);
+  color: #fff1f2;
 }
 
 .status-idle {
@@ -2881,20 +2899,6 @@ body[data-reduce-motion="true"] .examples-close-button:focus-visible .examples-c
     background-position: 150% 0, 0 0;
     opacity: 0;
   }
-}
-
-/* The editor remains mounted for instant surface return. Once its existing
-   exit transition has completed, pause only continuous visual work that cannot
-   contribute to the current frame. */
-[data-surface-work="paused"] .star-border-container::before,
-[data-surface-work="paused"] .star-border-container::after,
-[data-surface-work="paused"] .ai-translate-trigger__icon,
-[data-surface-work="paused"] .ai-translate-trigger__pulse,
-[data-surface-work="paused"] .ai-stream-progress,
-[data-surface-work="paused"] .translation-border-gradient,
-[data-surface-work="paused"] .animate-spin,
-[data-surface-work="paused"] .animate-pulse {
-  animation-play-state: paused !important;
 }
 
 @media (prefers-reduced-motion: reduce) {

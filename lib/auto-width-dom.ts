@@ -11,74 +11,53 @@ type TextUnit = {
   text: string;
 };
 
-type RectFragment = {
+type UnitFragment = TextUnit & {
   top: number;
   left: number;
   right: number;
 };
 
-type UnitSpanFragment = RectFragment & {
-  firstUnit: number;
-  lastUnit: number;
-};
-
-type AutoWidthMeasurementTarget = {
-  canvasWidth: number;
-  contentWidth: number;
-};
-
 export function measureAutoWidthCandidates(host: HTMLElement): AutoWidthCandidateMetrics[] {
-  const candidate = host.querySelector<HTMLElement>("[data-auto-width-candidate]");
-  const targets = readMeasurementTargets(host);
-  if (!candidate || targets.length === 0) return [];
-
-  const lineElements = Array.from(candidate.querySelectorAll<HTMLElement>("[data-auto-width-line]"));
-  const unitCache = new Map<string, TextUnit[]>();
-  return targets.map(({ canvasWidth, contentWidth }) => {
-    // Reusing this one lyric tree removes 36 complete React subtrees. The first
-    // geometry read below synchronously lays out only this candidate width.
-    candidate.dataset.autoWidthCandidate = String(canvasWidth);
-    candidate.style.width = `${contentWidth}px`;
-
-    return {
-      canvasWidth,
-      lines: lineElements
-        .map((line) => {
-          const textNode = findTextNode(line);
-          const text = textNode?.data ?? line.textContent ?? "";
-          let units = unitCache.get(text);
-          if (!units) {
-            units = segmentTextUnits(text);
-            unitCache.set(text, units);
-          }
-          return measureAutoWidthLine(line, units);
-        })
-        .filter((line): line is AutoWidthLineMetrics => line !== null)
-    };
-  });
+  return Array.from(host.querySelectorAll<HTMLElement>("[data-auto-width-candidate]"))
+    .map((candidate) => {
+      const canvasWidth = Number(candidate.dataset.autoWidthCandidate);
+      return {
+        canvasWidth,
+        lines: Array.from(candidate.querySelectorAll<HTMLElement>("[data-auto-width-line]"))
+          .map((line) => measureAutoWidthLine(line))
+          .filter((line): line is AutoWidthLineMetrics => line !== null)
+      };
+    })
+    .filter((candidate) => Number.isFinite(candidate.canvasWidth))
+    .sort((left, right) => left.canvasWidth - right.canvasWidth);
 }
 
 /**
- * Recursively measures contiguous unit spans. Spans that fit on one visual row
- * are resolved by one Range query, while only spans crossing a wrap are split.
- * This preserves the legacy per-unit geometry exactly without querying every
- * grapheme/word separately.
+ * Uses Range rectangles for grapheme/word units so visual wraps are measured
+ * from browser layout rather than estimated from character counts.
  */
-export function measureAutoWidthLine(
-  element: HTMLElement,
-  presegmentedUnits?: TextUnit[]
-): AutoWidthLineMetrics | null {
+export function measureAutoWidthLine(element: HTMLElement): AutoWidthLineMetrics | null {
   const kind = element.dataset.autoWidthLine as AutoWidthLineKind | undefined;
   const index = element.dataset.autoWidthLineIndex;
-  const textNode = findTextNode(element);
+  const textNode = Array.from(element.childNodes).find((node): node is Text => node.nodeType === Node.TEXT_NODE);
   const text = textNode?.data ?? element.textContent ?? "";
   if (!kind || index === undefined || !textNode || !text.trim()) {
     return null;
   }
 
-  const units = presegmentedUnits ?? segmentTextUnits(text);
+  const units = segmentTextUnits(text);
   if (units.length === 0) return null;
-  const fragments = measureUnitSpans(textNode, units);
+  const fragments: UnitFragment[] = [];
+  const range = document.createRange();
+  for (const unit of units) {
+    range.setStart(textNode, unit.start);
+    range.setEnd(textNode, unit.end);
+    for (const rect of Array.from(range.getClientRects())) {
+      if (rect.width <= 0 || rect.height <= 0) continue;
+      fragments.push({ ...unit, top: rect.top, left: rect.left, right: rect.right });
+    }
+  }
+  range.detach();
   if (fragments.length === 0) return null;
 
   const visualLines = groupVisualLines(fragments);
@@ -86,9 +65,7 @@ export function measureAutoWidthLine(
   const fills = visualLines.map((line) => Math.min(1.5, (line.right - line.left) / availableWidth));
   const lastLine = visualLines[visualLines.length - 1];
   const lastLineFill = fills[fills.length - 1] ?? 0;
-  const lastUnits = Array.from(lastLine.unitIndexes)
-    .sort((left, right) => left - right)
-    .map((unitIndex) => units[unitIndex]);
+  const lastUnits = dedupeUnits(lastLine.fragments);
   const cjkCount = lastUnits.filter((unit) => unit.kind === "cjk").length;
   const wordUnits = lastUnits.filter((unit) => unit.kind === "word");
   const wordCharacterCount = wordUnits.reduce((total, unit) => total + unit.text.replace(/[^\p{L}\p{N}]/gu, "").length, 0);
@@ -112,71 +89,6 @@ export function measureAutoWidthLine(
     severeOrphan,
     horizontalOverflow
   };
-}
-
-function readMeasurementTargets(host: HTMLElement): AutoWidthMeasurementTarget[] {
-  const serialized = host.dataset.autoWidthMeasurementGrid;
-  if (!serialized) return [];
-  try {
-    const parsed = JSON.parse(serialized) as unknown;
-    if (!Array.isArray(parsed)) return [];
-    return parsed
-      .filter((target): target is AutoWidthMeasurementTarget => {
-        if (!target || typeof target !== "object") return false;
-        const candidate = target as Partial<AutoWidthMeasurementTarget>;
-        return Number.isFinite(candidate.canvasWidth) &&
-          Number.isFinite(candidate.contentWidth) &&
-          Number(candidate.contentWidth) > 0;
-      })
-      .map(({ canvasWidth, contentWidth }) => ({
-        canvasWidth: Number(canvasWidth),
-        contentWidth: Number(contentWidth)
-      }))
-      .sort((left, right) => left.canvasWidth - right.canvasWidth);
-  } catch {
-    return [];
-  }
-}
-
-function findTextNode(element: HTMLElement) {
-  return Array.from(element.childNodes).find((node): node is Text => node.nodeType === Node.TEXT_NODE);
-}
-
-function measureUnitSpans(textNode: Text, units: TextUnit[]) {
-  const range = document.createRange();
-  const fragments: UnitSpanFragment[] = [];
-
-  const measureSpan = (firstUnit: number, lastUnit: number) => {
-    range.setStart(textNode, units[firstUnit].start);
-    range.setEnd(textNode, units[lastUnit].end);
-    const rects = Array.from(range.getClientRects())
-      .filter((rect) => rect.width > 0 && rect.height > 0)
-      .map(({ top, left, right }) => ({ top, left, right }));
-    if (rects.length === 0) return;
-
-    if (firstUnit === lastUnit || countVisualRows(rects) === 1) {
-      fragments.push(...rects.map((rect) => ({ ...rect, firstUnit, lastUnit })));
-      return;
-    }
-
-    const middle = Math.floor((firstUnit + lastUnit) / 2);
-    measureSpan(firstUnit, middle);
-    measureSpan(middle + 1, lastUnit);
-  };
-
-  measureSpan(0, units.length - 1);
-  range.detach();
-  return fragments;
-}
-
-function countVisualRows(fragments: RectFragment[]) {
-  const tops: number[] = [];
-  for (const fragment of fragments) {
-    if (!tops.some((top) => Math.abs(top - fragment.top) <= 2)) {
-      tops.push(fragment.top);
-    }
-  }
-  return tops.length;
 }
 
 export function segmentTextUnits(text: string): TextUnit[] {
@@ -247,28 +159,30 @@ function getGraphemes(text: string) {
   return graphemes;
 }
 
-function groupVisualLines(fragments: UnitSpanFragment[]) {
-  const lines: Array<RectFragment & { unitIndexes: Set<number> }> = [];
+function groupVisualLines(fragments: UnitFragment[]) {
+  const lines: Array<{ top: number; left: number; right: number; fragments: UnitFragment[] }> = [];
   // Subpixel font rendering can shift rect tops slightly within one visual row.
   for (const fragment of [...fragments].sort((left, right) => left.top - right.top || left.left - right.left)) {
     const line = lines.find((candidate) => Math.abs(candidate.top - fragment.top) <= 2);
     if (line) {
       line.left = Math.min(line.left, fragment.left);
       line.right = Math.max(line.right, fragment.right);
-      addUnitSpan(line.unitIndexes, fragment.firstUnit, fragment.lastUnit);
+      line.fragments.push(fragment);
     } else {
-      const unitIndexes = new Set<number>();
-      addUnitSpan(unitIndexes, fragment.firstUnit, fragment.lastUnit);
-      lines.push({ top: fragment.top, left: fragment.left, right: fragment.right, unitIndexes });
+      lines.push({ top: fragment.top, left: fragment.left, right: fragment.right, fragments: [fragment] });
     }
   }
   return lines;
 }
 
-function addUnitSpan(unitIndexes: Set<number>, firstUnit: number, lastUnit: number) {
-  for (let index = firstUnit; index <= lastUnit; index += 1) {
-    unitIndexes.add(index);
-  }
+function dedupeUnits(fragments: UnitFragment[]): TextUnit[] {
+  const seen = new Set<string>();
+  return fragments.filter((fragment) => {
+    const key = `${fragment.start}:${fragment.end}:${fragment.kind}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 function isCjk(value: string) {

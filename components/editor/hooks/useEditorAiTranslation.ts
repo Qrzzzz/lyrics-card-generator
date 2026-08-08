@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { normalizeAIErrorMessage } from "@/components/editor/utils/normalizeAIErrorMessage";
+import type { ToastNotifier } from "@/components/feedback/AppToast";
 import { cleanAITranslation } from "@/lib/ai/clean";
 import {
   AITranslationError,
@@ -38,7 +39,7 @@ type UseEditorAiTranslationInput = {
     expectedRevision: number,
     expectedSongIdentity: string
   ) => boolean;
-  onNotify: (message: string) => void;
+  onNotify: ToastNotifier;
   onRequireSettings: () => void;
   confirmOverwrite?: (message: string) => boolean;
 };
@@ -81,14 +82,14 @@ export function useEditorAiTranslation({
     if (isAITranslateOpen) return;
 
     if (!lyrics.trim()) {
-      onNotify(aiCopy.lyricsEmpty);
+      onNotify(aiCopy.lyricsEmpty, "warning");
       return;
     }
 
     try {
       validateConfiguredSettings(aiSettings);
     } catch (error) {
-      onNotify(normalizeAIErrorMessage(error, locale));
+      onNotify(normalizeAIErrorMessage(error, locale), "warning");
       onRequireSettings();
       return;
     }
@@ -131,7 +132,7 @@ export function useEditorAiTranslation({
       onStreaming: setAIStreamingText,
       onSuccess: () => {
         setAISettings((current) => ({ ...current, defaultStyle: presetId, reasoningEnabled: reasoning }));
-        onNotify(aiCopy.translated);
+        onNotify(aiCopy.translated, "success");
       },
       onFailure: setAIFailure,
       onCancelled: () => {
@@ -150,7 +151,6 @@ export function useEditorAiTranslation({
         setIsAITranslating(false);
         setAITranslationPhase("idle");
       },
-      scheduleStreamFlush: scheduleAIStreamFrame,
       stream: async (signal, events) => {
         // Build from the intent snapshot, never from lyrics that may change during streaming.
         const prompt = buildLyricsTranslationPrompt({
@@ -206,9 +206,4 @@ export function useEditorAiTranslation({
     setAISettings,
     refreshAISettings
   };
-}
-
-function scheduleAIStreamFrame(flush: () => void) {
-  const frame = window.requestAnimationFrame(flush);
-  return () => window.cancelAnimationFrame(frame);
 }

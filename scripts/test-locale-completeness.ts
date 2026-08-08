@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import { AI_ERROR_CODES, getAIErrorMessage } from "../lib/ai/error-copy";
 import { getAIPromptUiCopy } from "../lib/ai/prompt-ui-copy";
 import { getAIUiCopy } from "../lib/ai/ui-copy";
-import { deferredSurfaceCopy } from "../lib/deferred-surface-copy";
 import { messages } from "../lib/i18n";
 import { importHistoryCopy } from "../lib/import-history-copy";
 import { LOCALE_BCP47 } from "../lib/locale-language";
@@ -23,7 +22,6 @@ assertCatalog("settings", settingsCopy, new Set([
   "ai", "general", "export", "image", "source", "low", "accentOrange", "accentCustomPlaceholder", "version"
 ]));
 assertCatalog("import history", importHistoryCopy, new Set(["filterLabel"]));
-assertCatalog("deferred surfaces", deferredSurfaceCopy, new Set());
 assertCatalog("AI UI", fromGetter((locale) => getAIUiCopy(locale) as unknown as Record<string, string>), new Set([
   "temperature"
 ]));
@@ -72,6 +70,55 @@ assert.equal(detectWebLiteLocale("fr-CA"), "fr");
 assert.equal(detectWebLiteLocale("ja-JP"), "ja");
 assert.equal(detectWebLiteLocale("es-MX"), "es");
 assert.equal(detectWebLiteLocale("de-DE"), "en");
+
+for (const locale of locales) {
+  const ai = getAIUiCopy(locale);
+  const history = importHistoryCopy[locale];
+  const toastCopy = {
+    settingsSaved: ai.settingsSaved,
+    apiKeyCleared: ai.apiKeyCleared,
+    lyricsEmpty: ai.lyricsEmpty,
+    translated: ai.translated,
+    missingApiKey: getAIErrorMessage(locale, "missing_api_key"),
+    missingModel: getAIErrorMessage(locale, "missing_model"),
+    missingBaseUrl: getAIErrorMessage(locale, "missing_base_url"),
+    exampleLoaded: settingsCopy[locale].exampleLoaded,
+    clearAlreadyEmpty: settingsCopy[locale].clearAlreadyEmpty,
+    lyricsLineLimitExceeded: messages[locale].lyricsLineLimitExceeded,
+    exportCardUnavailable: messages[locale].exportCardUnavailable,
+    exportFontsLoading: messages[locale].exportFontsLoading,
+    exportCardMeasuring: messages[locale].exportCardMeasuring,
+    exportContentOverflow: messages[locale].exportContentOverflow,
+    exportFailed: messages[locale].exportFailed,
+    exportBusy: messages[locale].exportBusy,
+    historyRemoved: history.removed,
+    historyCleared: history.cleared,
+    historySaveFailed: history.historySaveFailed,
+    replayFailed: history.replayFailed,
+    replaySucceeded: history.replaySucceeded,
+    fileMissing: history.fileMissing,
+    fileChanged: history.fileChanged,
+    relocateFailed: history.relocateFailed,
+    corruptRecovered: history.corruptRecovered,
+    manualSaveCreated: history.manualSaveCreated,
+    manualSaveUpdated: history.manualSaveUpdated,
+    manualSaveUnchanged: history.manualSaveUnchanged,
+    manualSaveUnavailable: history.manualSaveUnavailable,
+    manualSaveNotFound: history.manualSaveNotFound,
+    manualSaveFailed: history.manualSaveFailed,
+    manualSaveLoaded: history.manualSaveLoaded,
+    webLiteClearAlreadyEmpty: webLiteCopy[locale].clearAlreadyEmpty,
+    webLiteExportReady: webLiteCopy[locale].exportReady,
+    webLiteExportFailed: webLiteCopy[locale].exportFailed
+  };
+
+  for (const [key, value] of Object.entries(toastCopy)) {
+    assert.doesNotMatch(value, /[.!。！？!?；;：:]$/u, `toast copy must omit terminal punctuation: ${locale}.${key}`);
+  }
+
+  assert.deepEqual(placeholders(messages[locale].exportFailed), [], `${locale}.exportFailed hides diagnostics`);
+  assert.deepEqual(placeholders(history.corruptRecovered), [], `${locale}.corruptRecovered hides backup filename`);
+}
 
 console.log("six-locale main, settings, AI, error, and Web Lite completeness tests passed");
 

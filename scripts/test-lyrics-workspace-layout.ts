@@ -41,7 +41,6 @@ const sidebarSource = readFileSync(resolve("components/editor/LyricsSidebar.tsx"
 const sidebarPanelsSource = readFileSync(resolve("components/editor/LyricsSidebarPanels.tsx"), "utf8");
 const sidebarNavigationSource = readFileSync(resolve("components/editor/hooks/useLyricsSidebarNavigation.ts"), "utf8");
 const documentControllerSource = readFileSync(resolve("components/editor/hooks/useLyricsWorkspaceDocumentController.ts"), "utf8");
-const viewportSessionSource = readFileSync(resolve("components/editor/hooks/useLyricsViewportSession.ts"), "utf8");
 const aiTranslatePanelSource = readFileSync(resolve("components/lyrics/AiTranslatePanel.tsx"), "utf8");
 const copySource = readFileSync(resolve("components/editor/lyrics-workspace-copy.ts"), "utf8");
 const motionTokensSource = readFileSync(resolve("lib/motion/tokens.ts"), "utf8");
@@ -269,39 +268,9 @@ assert.ok(
   "workspace document transforms, history, and selection restoration live in one dedicated controller"
 );
 assert.ok(
-  !workspaceSource.includes('editor.style.height = "auto"') &&
-    workspaceSource.includes('entries.map(({ measure }) => measure.scrollHeight)') &&
-    workspaceSource.includes('data-lyrics-editor-measure="true"') &&
-    workspaceSource.indexOf("const commonHeight") < workspaceSource.indexOf("for (const { editor } of entries)"),
-  "textarea auto-height reads isolated mirrors in one batch before writing final live heights"
-);
-assert.ok(
-  documentControllerSource.includes('updateCursor(event, "lyrics", true)') &&
-    documentControllerSource.includes('updateCursor(event, "translation", true)') &&
-    documentControllerSource.includes("forceAnchorCapture || selectionChanged || activeEditorChanged") &&
-    documentControllerSource.includes("textSelectionsEqual(previousSelection, selection)") &&
-    documentControllerSource.includes("restoreViewportAnchor(pending)") &&
-    viewportSessionSource.includes("restoreSelectionRef.current?.editor === editorKey") &&
-    documentControllerSource.indexOf("selectionsRef.current = nextSelections") <
-      documentControllerSource.indexOf("editor.setSelectionRange(selection.start, selection.end)"),
-  "restored selections publish synchronous refs and override only DOM selection while semantic scroll anchors remain stable"
-);
-assert.ok(
-  documentControllerSource.includes("historyRef.current.past.length > 0 || historyRef.current.future.length > 0") &&
-    documentControllerSource.includes("setFeedback((current) => current === null ? current : null)"),
-  "external document changes only publish a history revision when undo or redo availability actually changes"
-);
-assert.ok(
-  viewportSessionSource.includes("const editorCandidates = activeEditor === fallbackEditor") &&
-    viewportSessionSource.includes("One active semantic snapshot is sufficient") &&
-    viewportSessionSource.includes("scrollCaptureFrameRef.current = window.requestAnimationFrame") &&
-    viewportSessionSource.includes("if (restorationPendingRef.current || scrollCaptureFrameRef.current) return"),
-  "viewport capture reads one active editor and coalesces scroll events to one capture per animation frame"
-);
-assert.ok(
   !stepperSource.includes("useLyricsWorkspaceSplit") &&
     !stepperSource.includes("lyrics-workspace-resizer"),
   "the step-two split stays inside LyricsWorkspace and leaves the shared Stepper structure unchanged"
 );
 
-console.log(JSON.stringify({ ok: true, lyricsWorkspaceLayoutTests: 61 }, null, 2));
+console.log(JSON.stringify({ ok: true, lyricsWorkspaceLayoutTests: 57 }, null, 2));

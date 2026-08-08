@@ -185,13 +185,6 @@ function runMainGateFixture(lockResult) {
     updateManualSave() {}
   }
 
-  class FixtureImportHistoryFileStreamRegistry {
-    read() { return { ok: false, code: "file_reference_expired" }; }
-    release() { return false; }
-    releaseSender() { return 0; }
-    closeAll() {}
-  }
-
   const electronFixture = {
     app,
     BrowserWindow: FixtureBrowserWindow,
@@ -207,7 +200,6 @@ function runMainGateFixture(lockResult) {
     shell: {}
   };
   const importHistoryFixture = {
-    ImportHistoryFileStreamRegistry: FixtureImportHistoryFileStreamRegistry,
     ImportHistoryStore: FixtureImportHistoryStore,
     isCanonicalManualSaveEnvelope: () => true,
     normalizeImportHistoryLimit: () => 10,

@@ -1,15 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
-import type { Dispatch, RefObject, SetStateAction } from "react";
-import { ExportCardDomCoordinator } from "@/components/editor/hooks/export-card-dom-coordinator";
-import {
-  ExportCardReadinessStore,
-  type ExportCardReadiness
-} from "@/components/editor/hooks/export-card-readiness-store";
+import { useEffect, useState } from "react";
+import type { RefObject } from "react";
 import {
   AUTO_HEIGHT_SETTLE_TOLERANCE,
-  autoCanvasHeightMeasurementSignature,
   findExportCard,
   isPortraitCustomAutoHeight,
   measureAutoCanvasHeight
@@ -19,14 +13,8 @@ import {
   evaluateMinimumExportSafety,
   type ExportSafetyBlockingReason
 } from "@/lib/export-safety";
-import {
-  getExportLyricLineStatus,
-  type ExportLyricLineStatus
-} from "@/lib/lyrics-document";
+import type { ExportLyricLineStatus } from "@/lib/lyrics-document";
 import type { AppState } from "@/lib/types";
-
-export type { ExportCardReadiness } from "@/components/editor/hooks/export-card-readiness-store";
-export { ExportCardReadinessStore } from "@/components/editor/hooks/export-card-readiness-store";
 
 export type ExportCardBlockingReason = ExportSafetyBlockingReason;
 
@@ -34,16 +22,23 @@ export type ExportCardBlockingReason = ExportSafetyBlockingReason;
 // when the intrinsic lyrics block is fully contained by its viewport.
 export const EXPORT_CARD_OVERFLOW_TOLERANCE = 4;
 
-export type UseExportCardReadinessInput = {
-  state: AppState;
-  setState: Dispatch<SetStateAction<AppState>>;
-  exportCardRef: RefObject<HTMLElement | null>;
-  isAutoWidthStable?: boolean;
+export type ExportCardReadiness = {
+  isReady: boolean;
+  blockingReason: ExportCardBlockingReason | null;
+  lineStatus: ExportLyricLineStatus;
+  isCardMounted: boolean;
+  areFontsReady: boolean;
+  isCardSizeStable: boolean;
+  isAutoWidthStable: boolean;
+  isAutoHeightStable: boolean;
+  measuredAutoHeight: number | null;
+  hasContentOverflow: boolean;
 };
 
-export type UseExportCardReadinessResult = {
-  store: ExportCardReadinessStore;
-  lineStatus: ExportLyricLineStatus;
+export type UseExportCardReadinessInput = {
+  state: AppState;
+  exportCardRef: RefObject<HTMLElement | null>;
+  isAutoWidthStable?: boolean;
 };
 
 export type LiveExportCardValidation = {
@@ -51,16 +46,12 @@ export type LiveExportCardValidation = {
   lineStatus: ExportLyricLineStatus;
 };
 
-type DomReadiness = Omit<ExportCardReadiness, "isReady" | "blockingReason" | "lineStatus">;
-
-type CurrentMeasurementInput = {
-  state: AppState;
-  signature: string;
-  autoHeightSignature: string;
-  isAutoWidthStable: boolean;
+type DomReadiness = Omit<ExportCardReadiness, "isReady" | "blockingReason" | "lineStatus"> & {
+  evaluatedState: AppState | null;
 };
 
 const initialDomReadiness: DomReadiness = {
+  evaluatedState: null,
   isCardMounted: false,
   areFontsReady: false,
   isCardSizeStable: false,
@@ -71,91 +62,102 @@ const initialDomReadiness: DomReadiness = {
 };
 
 /**
- * Coordinates the independent export DOM without subscribing LyricEditor to
- * every settled readiness publication. Existing child CTA/panel consumers use
- * the returned store, while logical-line status stays in the document render.
+ * Reports whether the independent export DOM is safe to capture. Callers can
+ * use `blockingReason` for localized UI and must still enforce `isReady` in the
+ * export action itself.
  */
 export function useExportCardReadiness({
   state,
-  setState,
   exportCardRef,
   isAutoWidthStable = true
-}: UseExportCardReadinessInput): UseExportCardReadinessResult {
-  const signature = createExportCardMeasurementSignature(state, isAutoWidthStable);
-  const autoHeightSignature = autoCanvasHeightMeasurementSignature(state);
-  const lineStatus = useMemo(() => getExportLyricLineStatus({
-    lyrics: state.lyrics,
-    translationText: state.style.translationText,
-    translationEnabled: state.style.translationEnabled,
-    contentMode: state.style.contentMode
-  }), [
-    state.lyrics,
-    state.style.contentMode,
-    state.style.translationEnabled,
-    state.style.translationText
-  ]);
-  const storeRef = useRef<ExportCardReadinessStore | null>(null);
-  if (!storeRef.current) {
-    storeRef.current = new ExportCardReadinessStore(
-      createExportCardReadiness(state, initialDomReadiness)
-    );
-  }
-  const store = storeRef.current;
-  // This invalidation rides the document/style render already in progress. It
-  // changes the CTA timing immediately without scheduling another root render.
-  store.prepareInput(
-    signature,
-    () => createExportCardReadiness(state, initialDomReadiness)
-  );
-
-  const inputRef = useRef<CurrentMeasurementInput>({
-    state,
-    signature,
-    autoHeightSignature,
-    isAutoWidthStable
-  });
-  inputRef.current = {
-    state,
-    signature,
-    autoHeightSignature,
-    isAutoWidthStable
-  };
-  const coordinatorRef = useRef<ExportCardDomCoordinator | null>(null);
-
+}: UseExportCardReadinessInput): ExportCardReadiness {
+  const [domReadiness, setDomReadiness] = useState<DomReadiness>(initialDomReadiness);
   useEffect(() => {
-    const coordinator = new ExportCardDomCoordinator({
-      getContainer: () => exportCardRef.current,
-      evaluate: (container) => {
-        const input = inputRef.current;
-        const domReadiness = evaluateExportCardDom(
-          input.state,
-          container,
-          input.isAutoWidthStable
-        );
-        applyMeasuredAutoCanvasHeight(setState, input, domReadiness.measuredAutoHeight);
-        store.publish(
-          input.signature,
-          createExportCardReadiness(input.state, domReadiness)
-        );
+    let active = true;
+    let frame = 0;
+    const resizeObservers: ResizeObserver[] = [];
+    let mutationObserver: MutationObserver | undefined;
+    const fonts = document.fonts;
+
+    const evaluate = () => {
+      if (!active) {
+        return;
       }
-    });
-    coordinatorRef.current = coordinator;
-    coordinator.start();
+
+      const next = evaluateExportCardDom(state, exportCardRef.current, isAutoWidthStable);
+
+      setDomReadiness((current) => sameDomReadiness(current, next) ? current : next);
+    };
+
+    const scheduleEvaluate = () => {
+      if (!active) {
+        return;
+      }
+
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(evaluate);
+    };
+
+    // Observe the independent export tree because fonts, content, and sizing settle asynchronously.
+    const root = findExportCard(exportCardRef.current);
+    if (root) {
+      const targets = [
+        root,
+        root.querySelector<HTMLElement>("[data-card-lyrics-viewport]"),
+        root.querySelector<HTMLElement>("[data-card-lyrics]")
+      ].filter(Boolean) as HTMLElement[];
+
+      for (const target of targets) {
+        const observer = new ResizeObserver(scheduleEvaluate);
+        observer.observe(target);
+        resizeObservers.push(observer);
+      }
+
+      mutationObserver = new MutationObserver(scheduleEvaluate);
+      mutationObserver.observe(root, {
+        attributes: true,
+        attributeFilter: ["class", "style"],
+        childList: true,
+        characterData: true,
+        subtree: true
+      });
+    }
+
+    if (fonts.status !== "loaded") {
+      void fonts.ready.then(scheduleEvaluate);
+    }
+    scheduleEvaluate();
 
     return () => {
-      if (coordinatorRef.current === coordinator) coordinatorRef.current = null;
-      coordinator.stop();
+      active = false;
+      cancelAnimationFrame(frame);
+      resizeObservers.forEach((observer) => observer.disconnect());
+      mutationObserver?.disconnect();
     };
-  }, [exportCardRef, setState, store]);
+  }, [exportCardRef, isAutoWidthStable, state]);
 
-  useEffect(() => {
-    coordinatorRef.current?.requestEvaluation();
-  }, [signature]);
+  // Never reuse DOM readiness measured for a previous state identity.
+  const isCurrentState = domReadiness.evaluatedState === state;
+  const currentDomReadiness = isCurrentState
+    ? domReadiness
+    : initialDomReadiness;
+  const { lineStatus, blockingReason } = evaluateMinimumExportSafety(state, currentDomReadiness);
 
-  return { store, lineStatus };
+  return {
+    isReady: blockingReason === null,
+    blockingReason,
+    lineStatus,
+    isCardMounted: currentDomReadiness.isCardMounted,
+    areFontsReady: currentDomReadiness.areFontsReady,
+    isCardSizeStable: currentDomReadiness.isCardSizeStable,
+    isAutoWidthStable: currentDomReadiness.isAutoWidthStable,
+    isAutoHeightStable: currentDomReadiness.isAutoHeightStable,
+    measuredAutoHeight: currentDomReadiness.measuredAutoHeight,
+    hasContentOverflow: currentDomReadiness.hasContentOverflow
+  };
 }
 
-/** Re-evaluates the DOM immediately at export time instead of trusting store state. */
+/** Re-evaluates the DOM immediately at export time instead of trusting hook state. */
 export function getLiveExportCardValidation(
   state: AppState,
   container: HTMLElement | null,
@@ -170,21 +172,7 @@ export function getLiveExportCardValidation(
   };
 }
 
-/** Any value rendered by ExportCardHost participates; unrelated AppState does not. */
-export function createExportCardMeasurementSignature(
-  state: AppState,
-  isAutoWidthStable = true
-) {
-  return JSON.stringify({
-    lyrics: state.lyrics,
-    locale: state.locale,
-    song: state.song,
-    style: state.style,
-    isAutoWidthStable
-  });
-}
-
-export function evaluateExportCardDom(
+function evaluateExportCardDom(
   state: AppState,
   container: HTMLElement | null,
   isAutoWidthStable: boolean
@@ -199,7 +187,6 @@ export function evaluateExportCardDom(
     Math.abs(root.offsetWidth - expectedSize.width) <= 1 &&
     Math.abs(root.offsetHeight - expectedSize.height) <= 1
   );
-  // This one measurement is shared by auto-height convergence and readiness.
   const measuredAutoHeight = root ? measureAutoCanvasHeight(state, container) : null;
   const isAutoHeightStable = !isPortraitCustomAutoHeight(state) || Boolean(
     measuredAutoHeight !== null &&
@@ -207,6 +194,7 @@ export function evaluateExportCardDom(
   );
 
   return {
+    evaluatedState: state,
     isCardMounted,
     areFontsReady,
     isCardSizeStable,
@@ -233,46 +221,15 @@ export function detectExportCardOverflow(root: HTMLElement, tolerance = EXPORT_C
   );
 }
 
-function createExportCardReadiness(state: AppState, dom: DomReadiness): ExportCardReadiness {
-  const { lineStatus, blockingReason } = evaluateMinimumExportSafety(state, dom);
-  return {
-    isReady: blockingReason === null,
-    blockingReason,
-    lineStatus,
-    ...dom
-  };
-}
-
-function applyMeasuredAutoCanvasHeight(
-  setState: Dispatch<SetStateAction<AppState>>,
-  input: CurrentMeasurementInput,
-  nextHeight: number | null
-) {
-  // Width must settle first because wrapping couples the two automatic dimensions.
-  if (
-    nextHeight === null ||
-    !input.isAutoWidthStable ||
-    !isPortraitCustomAutoHeight(input.state) ||
-    Math.abs(input.state.style.height - nextHeight) <= AUTO_HEIGHT_SETTLE_TOLERANCE
-  ) {
-    return;
-  }
-
-  setState((current) => {
-    if (
-      !isPortraitCustomAutoHeight(current) ||
-      autoCanvasHeightMeasurementSignature(current) !== input.autoHeightSignature ||
-      Math.abs(current.style.height - nextHeight) <= AUTO_HEIGHT_SETTLE_TOLERANCE
-    ) {
-      return current;
-    }
-
-    return {
-      ...current,
-      style: {
-        ...current.style,
-        height: nextHeight
-      }
-    };
-  });
+function sameDomReadiness(left: DomReadiness, right: DomReadiness) {
+  return (
+    left.evaluatedState === right.evaluatedState &&
+    left.isCardMounted === right.isCardMounted &&
+    left.areFontsReady === right.areFontsReady &&
+    left.isCardSizeStable === right.isCardSizeStable &&
+    left.isAutoWidthStable === right.isAutoWidthStable &&
+    left.isAutoHeightStable === right.isAutoHeightStable &&
+    left.measuredAutoHeight === right.measuredAutoHeight &&
+    left.hasContentOverflow === right.hasContentOverflow
+  );
 }

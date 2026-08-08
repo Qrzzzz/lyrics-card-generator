@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { SettingsTabId } from "@/components/settings/settings-model";
 import { normalizeAIErrorMessage } from "@/components/editor/utils/normalizeAIErrorMessage";
+import type { ToastNotifier } from "@/components/feedback/AppToast";
 import {
   createLatestSaveController,
   type LatestSaveController,
@@ -37,7 +38,7 @@ type SettingsWorkspaceInput = {
   onUserSettingsChange: (settings: UserSettings, options?: AppPreferencesPersistenceOptions) => void | Promise<void>;
   onClose: () => void;
   onSaved: (settings: AISettingsSummary, message?: string) => void;
-  onNotify: (message: string) => void;
+  onNotify: ToastNotifier;
 };
 
 export function useSettingsWorkspace({
@@ -302,7 +303,7 @@ export function useSettingsWorkspace({
           setSettings(nextSettings);
           onSaved(cleared, aiCopy.apiKeyCleared);
         } else {
-          onNotify(aiCopy.apiKeyCleared);
+          onNotify(aiCopy.apiKeyCleared, "success");
         }
       } else {
         setSettings(nextSettings);
@@ -322,7 +323,7 @@ export function useSettingsWorkspace({
 
   function queueSavedNotification(message = aiCopy.settingsSaved) {
     if (notifyTimerRef.current) clearTimeout(notifyTimerRef.current);
-    notifyTimerRef.current = setTimeout(() => onNotify(message), 420);
+    notifyTimerRef.current = setTimeout(() => onNotify(message, "success"), 420);
   }
 
   return {

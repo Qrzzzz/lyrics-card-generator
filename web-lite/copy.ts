@@ -8,7 +8,7 @@ const zh = {
   headerDesktop: "下载桌面版",
   headerRepository: "GitHub 仓库",
   clearAll: "清空内容",
-  clearAlreadyEmpty: "卡片已经是空的。",
+  clearAlreadyEmpty: "卡片已为空",
   language: "界面语言",
   songStep: "歌曲信息",
   songStepDescription: "手动填写歌曲信息并添加可导出的封面。",
@@ -36,8 +36,8 @@ const zh = {
   selected: "已选择",
   exportStandard: "标准",
   exportHigh: "高清",
-  exportReady: "图片已开始下载。",
-  exportFailed: "图片导出失败。请检查封面后重试。",
+  exportReady: "图片下载已开始",
+  exportFailed: "图片导出失败，请检查封面后重试",
   remoteCoverApplyFailed: "封面检查失败，请改为上传本地图片。"
 };
 
@@ -51,7 +51,7 @@ export const webLiteCopy: Record<WebLiteLocale, WebLiteCopyShape> = {
     headerDesktop: "下載桌面版",
     headerRepository: "GitHub 專案",
     clearAll: "清除內容",
-    clearAlreadyEmpty: "卡片已經是空的。",
+    clearAlreadyEmpty: "卡片已為空",
     language: "介面語言",
     songStep: "歌曲資訊",
     songStepDescription: "手動填寫歌曲資訊，並加入可匯出的封面。",
@@ -79,8 +79,8 @@ export const webLiteCopy: Record<WebLiteLocale, WebLiteCopyShape> = {
     selected: "已選取",
     exportStandard: "標準",
     exportHigh: "高畫質",
-    exportReady: "圖片已開始下載。",
-    exportFailed: "圖片匯出失敗。請檢查封面後再試一次。",
+    exportReady: "圖片下載已開始",
+    exportFailed: "圖片匯出失敗，請檢查封面後再試",
     remoteCoverApplyFailed: "封面檢查失敗，請改為上傳本機圖片。"
   },
   en: {
@@ -89,7 +89,7 @@ export const webLiteCopy: Record<WebLiteLocale, WebLiteCopyShape> = {
     headerDesktop: "Download desktop app",
     headerRepository: "GitHub repository",
     clearAll: "Clear content",
-    clearAlreadyEmpty: "The card is already empty.",
+    clearAlreadyEmpty: "The card is already empty",
     language: "Interface language",
     songStep: "Song info",
     songStepDescription: "Enter song details and add a cover that can be exported.",
@@ -117,8 +117,8 @@ export const webLiteCopy: Record<WebLiteLocale, WebLiteCopyShape> = {
     selected: "Selected",
     exportStandard: "Standard",
     exportHigh: "High",
-    exportReady: "Image download started.",
-    exportFailed: "Image export failed. Check the cover and try again.",
+    exportReady: "Image download started",
+    exportFailed: "Image export failed; check the cover and try again",
     remoteCoverApplyFailed: "The cover check failed. Upload the image locally instead."
   },
   fr: {
@@ -127,7 +127,7 @@ export const webLiteCopy: Record<WebLiteLocale, WebLiteCopyShape> = {
     headerDesktop: "Télécharger l’application",
     headerRepository: "Dépôt GitHub",
     clearAll: "Effacer le contenu",
-    clearAlreadyEmpty: "La carte est déjà vide.",
+    clearAlreadyEmpty: "La carte est déjà vide",
     language: "Langue de l’interface",
     songStep: "Informations sur le morceau",
     songStepDescription: "Saisissez les informations du morceau et ajoutez une pochette exportable.",
@@ -155,8 +155,8 @@ export const webLiteCopy: Record<WebLiteLocale, WebLiteCopyShape> = {
     selected: "Sélectionnée",
     exportStandard: "Standard",
     exportHigh: "Élevée",
-    exportReady: "Le téléchargement de l’image a commencé.",
-    exportFailed: "Échec de l’export de l’image. Vérifiez la pochette et réessayez.",
+    exportReady: "Téléchargement de l’image lancé",
+    exportFailed: "Échec de l’export de l’image ; vérifiez la pochette et réessayez",
     remoteCoverApplyFailed: "La vérification de la pochette a échoué. Importez plutôt une image locale."
   },
   ja: {
@@ -165,7 +165,7 @@ export const webLiteCopy: Record<WebLiteLocale, WebLiteCopyShape> = {
     headerDesktop: "デスクトップ版をダウンロード",
     headerRepository: "GitHub リポジトリ",
     clearAll: "内容を消去",
-    clearAlreadyEmpty: "カードはすでに空です。",
+    clearAlreadyEmpty: "カードはすでに空です",
     language: "表示言語",
     songStep: "曲の情報",
     songStepDescription: "曲の情報を入力し、書き出し可能なジャケット画像を追加します。",
@@ -193,8 +193,8 @@ export const webLiteCopy: Record<WebLiteLocale, WebLiteCopyShape> = {
     selected: "選択中",
     exportStandard: "標準",
     exportHigh: "高画質",
-    exportReady: "画像のダウンロードを開始しました。",
-    exportFailed: "画像の書き出しに失敗しました。画像を確認して、もう一度お試しください。",
+    exportReady: "画像のダウンロードを開始しました",
+    exportFailed: "画像の書き出しに失敗しました。カバーを確認して再試行してください",
     remoteCoverApplyFailed: "画像の確認に失敗しました。端末からアップロードしてください。"
   },
   es: {
@@ -203,7 +203,7 @@ export const webLiteCopy: Record<WebLiteLocale, WebLiteCopyShape> = {
     headerDesktop: "Descargar aplicación",
     headerRepository: "Repositorio de GitHub",
     clearAll: "Borrar contenido",
-    clearAlreadyEmpty: "La tarjeta ya está vacía.",
+    clearAlreadyEmpty: "La tarjeta ya está vacía",
     language: "Idioma de la interfaz",
     songStep: "Información de la canción",
     songStepDescription: "Escribe los datos de la canción y añade una portada que se pueda exportar.",
@@ -231,8 +231,8 @@ export const webLiteCopy: Record<WebLiteLocale, WebLiteCopyShape> = {
     selected: "Seleccionada",
     exportStandard: "Estándar",
     exportHigh: "Alta",
-    exportReady: "Se inició la descarga de la imagen.",
-    exportFailed: "No se pudo exportar la imagen. Revisa la portada e inténtalo de nuevo.",
+    exportReady: "Se inició la descarga de la imagen",
+    exportFailed: "Error al exportar la imagen; revisa la portada e inténtalo de nuevo",
     remoteCoverApplyFailed: "No se pudo comprobar la portada. Súbela desde el dispositivo."
   }
 };

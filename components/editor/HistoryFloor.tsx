@@ -15,7 +15,7 @@ import {
   Trash2
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { recordRenderBoundary } from "@/components/editor/render-boundary-diagnostics";
+import type { ToastNotifier } from "@/components/feedback/AppToast";
 import { SurfaceCloseButton } from "@/components/layout/SurfaceCloseButton";
 import { ActionButton, SelectField, TextInput } from "@/components/ui/controls";
 import { getLyricsCardDesktopApi } from "@/lib/desktop-api";
@@ -41,7 +41,7 @@ type HistoryFloorProps = {
   reduceMotion: boolean;
   onClose: () => void;
   onReplay: (recordId: string, relocate?: boolean) => Promise<ImportHistoryReplayUiResult>;
-  onNotify: (message: string) => void;
+  onNotify: ToastNotifier;
   onRecordRemoved: (recordId: string) => void;
   onHistoryCleared: () => void;
 };
@@ -57,7 +57,6 @@ export function HistoryFloor({
   onRecordRemoved,
   onHistoryCleared
 }: HistoryFloorProps) {
-  recordRenderBoundary("History");
   const copy = importHistoryCopy[locale];
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
   const requestIdRef = useRef(0);
@@ -131,9 +130,7 @@ export function HistoryFloor({
       setTotal(result.total);
       setMissingIds(new Set());
       if (result.notice?.code === "corrupt_recovered") {
-        onNotify(formatImportHistoryText(copy.corruptRecovered, {
-          file: result.notice.backupFileName || "import-history.corrupt.json"
-        }));
+        onNotify(copy.corruptRecovered, "warning");
       }
     } catch {
       if (requestId === requestIdRef.current) {
@@ -202,7 +199,7 @@ export function HistoryFloor({
           next.delete(recordId);
           return next;
         });
-        onNotify(copy.removed);
+        onNotify(copy.removed, "success");
         onRecordRemoved(recordId);
         if (nextRecords.length === 0 && total > 1) void loadFirstPage();
       }
@@ -222,7 +219,7 @@ export function HistoryFloor({
       setRecords([]);
       setTotal(0);
       setMissingIds(new Set());
-      onNotify(copy.cleared);
+      onNotify(copy.cleared, "success");
       onHistoryCleared();
     } catch {
       setError(copy.loadFailed);

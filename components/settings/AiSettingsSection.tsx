@@ -16,7 +16,6 @@ import {
   Trash2
 } from "lucide-react";
 import { useEffect, useId, useState } from "react";
-import { recordRenderBoundary } from "@/components/editor/render-boundary-diagnostics";
 import {
   ActionButton,
   FieldLabel,
@@ -63,7 +62,6 @@ export function AiSettingsSection({
   onClearApiKey: () => void;
   onNavigate: (path: string[], options?: { replace?: boolean }) => void;
 }) {
-  recordRenderBoundary("SettingsAi");
   const promptCopy = getAIPromptUiCopy(locale);
   const [draftPreset, setDraftPreset] = useState<AICustomPreset | null>(null);
   const page = resolveAISettingsPage(path);

@@ -5,6 +5,7 @@ import { createLatestSaveController, type SaveSnapshot } from "@/lib/ai/ai-setti
 import { getLyricsCardDesktopApi } from "@/lib/desktop-api";
 import { documentLanguageForLocale } from "@/lib/locale-language";
 import { shutdownCoordinator } from "@/lib/persistence/shutdown-coordinator";
+import { loadBackgroundImage } from "@/lib/settings/background-storage";
 import {
   isSupportedLocale,
   loadAppPreferences,
@@ -29,6 +30,7 @@ type PreferenceSaveValue = {
 
 export function useEditorPreferences({ currentLocale, applyLocale }: UseEditorPreferencesInput) {
   const [userSettings, setUserSettings] = useState<UserSettings>(DEFAULT_USER_SETTINGS);
+  const [backgroundImageUrl, setBackgroundImageUrl] = useState<string>();
   const [isDesktopShell, setIsDesktopShell] = useState(false);
   const [isFirstLaunchOpen, setIsFirstLaunchOpen] = useState(false);
   const [preferencesLoaded, setPreferencesLoaded] = useState(false);
@@ -192,8 +194,40 @@ export function useEditorPreferences({ currentLocale, applyLocale }: UseEditorPr
     };
   }, [preferencesLoaded, userSettings.reduceMotionEnabled]);
 
+  useEffect(() => {
+    let active = true;
+    let objectUrl: string | undefined;
+
+    // Any Blob URL created while loading the background belongs to this effect lifetime.
+    loadBackgroundImage(userSettings.appBackground.imageId, userSettings.appBackground.imageUrl)
+      .then((url) => {
+        if (!active) {
+          if (url?.startsWith("blob:")) {
+            URL.revokeObjectURL(url);
+          }
+          return;
+        }
+
+        objectUrl = url?.startsWith("blob:") ? url : undefined;
+        setBackgroundImageUrl(url);
+      })
+      .catch(() => {
+        if (active) {
+          setBackgroundImageUrl(undefined);
+        }
+      });
+
+    return () => {
+      active = false;
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
+    };
+  }, [userSettings.appBackground.imageId, userSettings.appBackground.imageUrl]);
+
   return {
     userSettings,
+    backgroundImageUrl,
     isDesktopShell,
     isFirstLaunchOpen,
     preferencesLoaded,

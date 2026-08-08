@@ -4,8 +4,6 @@ import { resolve } from "node:path";
 
 const read = (file: string) => readFileSync(resolve(file), "utf8");
 const lyricEditor = read("components/editor/LyricEditor.tsx");
-const deferredEditorSurfaces = read("components/editor/DeferredEditorSurfaces.tsx");
-const retryableLazySurface = read("components/editor/RetryableLazySurface.tsx");
 const editorHeader = read("components/editor/EditorHeader.tsx");
 const historyFloor = read("components/editor/HistoryFloor.tsx");
 const editorActions = read("components/editor/hooks/useEditorActions.ts");
@@ -23,32 +21,11 @@ const webLiteHeader = read("web-lite/WebLiteHeader.tsx");
 const webLiteEntry = read("web-lite/entry.tsx");
 const globals = read("app/globals.css");
 const desktopHistoryInteractions = read("scripts/test-desktop-import-history-interactions.mjs");
-const localAudioReplayActions = editorActions.slice(
-  editorActions.indexOf('if (replay.kind === "local-audio")'),
-  editorActions.indexOf('if (replay.kind === "manual-save")')
-);
 
 // These integration contracts ensure History remains desktop-only and that its
 // UI wiring reaches the same persistence and transaction layers tested below.
-assert.match(
-  lyricEditor,
-  /\{isDesktopShell \? \(\s*<DeferredHistorySurface[\s\S]*?mounted=\{mountedSurfaces\.history\}/,
-  "History remains desktop-only and is mounted only after first use"
-);
-assert.match(lyricEditor, /const openHistory = useCallback\(\(\) => openSurface\("history"\)/);
-assert.match(lyricEditor, /onOpenHistory=\{isDesktopShell \? openHistory : undefined\}/);
-assert.match(
-  deferredEditorSurfaces,
-  /const loadHistoryFloor:[\s\S]*?import\("@\/components\/editor\/HistoryFloor"\)/,
-  "the desktop history floor remains a separately loaded module"
-);
-assert.match(
-  deferredEditorSurfaces,
-  /<RetryableLazySurface[\s\S]*?loadComponent=\{loadComponent\}[\s\S]*?testId="history-surface-loading"[\s\S]*?testId="history-surface-error"/,
-  "the delayed history module owns loading and failure UI inside one local retry boundary"
-);
-assert.match(retryableLazySurface, /\(\) => lazy\(loadComponent\)[\s\S]*?\[generation, loadComponent\]/);
-assert.match(retryableLazySurface, /key=\{generation\}[\s\S]*?renderError=\{\(error\) => renderError\(error, retry\)\}/);
+assert.match(lyricEditor, /\{isDesktopShell \? \(\s*<HistoryFloor/);
+assert.match(lyricEditor, /onOpenHistory=\{isDesktopShell \? \(\) => setActiveSurface\("history"\) : undefined\}/);
 assert.doesNotMatch(
   [webLiteApp, webLiteHeader, webLiteEntry].join("\n"),
   /HistoryFloor|import-history|history-button|manual-save|manualSave|createManualSave|updateManualSave/,
@@ -101,16 +78,6 @@ assert.match(editorActions, /if \(!replay\.ok\) \{[\s\S]*?intent\.cancel\(\)/);
 assert.match(editorActions, /const committed = await commitHistoryReplay\(replay, intent\)/);
 assert.match(editorActions, /if \(!committed\) return \{ status: "cancelled" \}/);
 assert.match(editorActions, /desktop\.commitImportHistoryReplay\(/);
-assert.match(editorActions, /readReplayAudioFile\(desktop, replay\.file, intent\.signal\)/);
-assert.match(editorActions, /desktop\.readImportHistoryFileChunk\(file\.streamToken\)/);
-assert.match(editorActions, /length > MAX_IMPORT_HISTORY_AUDIO_CHUNK_BYTES/);
-assert.match(editorActions, /signal\.addEventListener\("abort", abortStream/);
-assert.match(editorActions, /finally \{[\s\S]*?desktop\.releaseImportHistoryFile\(file\.streamToken\)/);
-assert.doesNotMatch(
-  localAudioReplayActions,
-  /replay\.file\.bytes/,
-  "local-audio replay never receives the complete file as one IPC value"
-);
 assert.match(editorActions, /"relocationToken" in replay \? replay\.relocationToken : undefined/);
 assert.match(editorActions, /historySaveFailed/);
 assert.match(editorActions, /bindingAtStart\?\.savedRevision === revision[\s\S]*?manualSaveUnchanged[\s\S]*?return/);
@@ -270,4 +237,4 @@ assert.match(
   "narrow icon-only adaptation remains scoped to the desktop shell"
 );
 
-console.log(JSON.stringify({ ok: true, importHistoryUiContracts: 79 }, null, 2));
+console.log(JSON.stringify({ ok: true, importHistoryUiContracts: 76 }, null, 2));

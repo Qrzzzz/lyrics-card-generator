@@ -65,14 +65,6 @@ contextBridge.exposeInMainWorld("lyricsCardDesktopBridge", {
   clearImportHistory: () => ipcRenderer.invoke("lyrics-card:import-history-clear"),
   replayImportHistory: (recordId) => ipcRenderer.invoke("lyrics-card:import-history-replay", recordId),
   relocateImportHistory: (recordId) => ipcRenderer.invoke("lyrics-card:import-history-relocate", recordId),
-  readImportHistoryFileChunk: (streamToken) => ipcRenderer.invoke(
-    "lyrics-card:import-history-file-read",
-    streamToken
-  ),
-  releaseImportHistoryFile: (streamToken) => ipcRenderer.invoke(
-    "lyrics-card:import-history-file-release",
-    streamToken
-  ),
   commitImportHistoryReplay: (recordId, relocationToken) => ipcRenderer.invoke(
     "lyrics-card:import-history-replay-commit",
     recordId,
