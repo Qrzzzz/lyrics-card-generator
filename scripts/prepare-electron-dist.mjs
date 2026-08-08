@@ -52,7 +52,6 @@ if (existsSync(path.join(serverOutputDir, "node_modules"))) {
 }
 await cp(nextStaticDir, path.join(serverOutputDir, ".next", "static"), { recursive: true });
 await cp(publicDir, path.join(serverOutputDir, "public"), { recursive: true });
-await cp(path.join(projectRoot, "electron", "packaged-next-server.js"), path.join(serverOutputDir, "desktop-server-launcher.cjs"));
 await cleanServerOutput();
 await prepareMinimalElectronApp();
 
@@ -87,19 +86,15 @@ async function prepareMinimalElectronApp() {
         "electron/ai-request-registry.js",
         "electron/ai-prompt-settings.js",
         "electron/background-images.js",
-        "electron/font-directory-service.js",
         "electron/font-options.js",
         "electron/import-history.js",
         "electron/provider-response.js",
         "electron/preload.js",
         "electron/ipc-security.js",
         "electron/local-app-url.js",
-        "electron/local-server-origin.js",
         "electron/manual-save-ipc.js",
         "electron/packaged-server-readiness.js",
         "electron/single-instance-ownership.js",
-        "electron/startup-trace.js",
-        "electron/startup-orchestration.js",
         "electron/url-policy.js",
         "electron/user-preferences.js",
         "package.json"
@@ -144,17 +139,12 @@ async function prepareMinimalElectronApp() {
   await cp(path.join(projectRoot, "electron", "ai-request-registry.js"), path.join(electronOutputDir, "ai-request-registry.js"));
   await cp(path.join(projectRoot, "electron", "ai-prompt-settings.js"), path.join(electronOutputDir, "ai-prompt-settings.js"));
   await cp(path.join(projectRoot, "electron", "background-images.js"), path.join(electronOutputDir, "background-images.js"));
-  await cp(
-    path.join(projectRoot, "electron", "font-directory-service.js"),
-    path.join(electronOutputDir, "font-directory-service.js")
-  );
   await cp(path.join(projectRoot, "electron", "font-options.js"), path.join(electronOutputDir, "font-options.js"));
   await cp(path.join(projectRoot, "electron", "import-history.js"), path.join(electronOutputDir, "import-history.js"));
   await cp(path.join(projectRoot, "electron", "provider-response.js"), path.join(electronOutputDir, "provider-response.js"));
   await cp(path.join(projectRoot, "electron", "preload.js"), path.join(electronOutputDir, "preload.js"));
   await cp(path.join(projectRoot, "electron", "ipc-security.js"), path.join(electronOutputDir, "ipc-security.js"));
   await cp(path.join(projectRoot, "electron", "local-app-url.js"), path.join(electronOutputDir, "local-app-url.js"));
-  await cp(path.join(projectRoot, "electron", "local-server-origin.js"), path.join(electronOutputDir, "local-server-origin.js"));
   await cp(path.join(projectRoot, "electron", "manual-save-ipc.js"), path.join(electronOutputDir, "manual-save-ipc.js"));
   await cp(
     path.join(projectRoot, "electron", "packaged-server-readiness.js"),
@@ -164,8 +154,6 @@ async function prepareMinimalElectronApp() {
     path.join(projectRoot, "electron", "single-instance-ownership.js"),
     path.join(electronOutputDir, "single-instance-ownership.js")
   );
-  await cp(path.join(projectRoot, "electron", "startup-trace.js"), path.join(electronOutputDir, "startup-trace.js"));
-  await cp(path.join(projectRoot, "electron", "startup-orchestration.js"), path.join(electronOutputDir, "startup-orchestration.js"));
   await cp(path.join(projectRoot, "electron", "url-policy.js"), path.join(electronOutputDir, "url-policy.js"));
   await cp(path.join(projectRoot, "electron", "user-preferences.js"), path.join(electronOutputDir, "user-preferences.js"));
   await writeFile(path.join(appOutputDir, "package.json"), `${JSON.stringify(desktopPackage, null, 2)}\n`);

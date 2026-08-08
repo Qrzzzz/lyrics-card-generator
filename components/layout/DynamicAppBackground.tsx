@@ -16,6 +16,7 @@ export function DynamicAppBackground({
 }: {
   palette?: ExtractedPalette;
   settings: UserSettings;
+  imageUrl?: string;
 }) {
   const activePalette = palette ?? DEFAULT_PALETTE;
   const isColorful = activePalette.kind === "colorful";

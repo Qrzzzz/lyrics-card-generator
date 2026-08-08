@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v5.9.4.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v5.9.5.en.md">Release Notes</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
   <a href="#features">Features</a> ·
   <a href="#local-development">Local Development</a> ·
@@ -49,26 +49,26 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 ## 📦 Download and Installation
 
-Download v5.9.4 from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
+Download v5.9.5 from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Installer: `Lyrics Card Generator Setup 5.9.4.exe`
-* Portable build: `Lyrics Card Generator-5.9.4-portable.exe`
+* Installer: `Lyrics Card Generator Setup 5.9.5.exe`
+* Portable build: `Lyrics Card Generator-5.9.5-portable.exe`
 
 The installer is recommended for regular use. The portable version is useful for temporary use, testing, or running from a removable drive.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v5.9.4 Highlights
+### v5.9.5 Highlights
 
-* Streamlines desktop startup, renderer-origin validation, and static-asset caching to remove repeated probing and unnecessary launch work while preserving the existing security boundary.
-* Stops the idle ClickSpark animation loop, reuses the auto-width measurement host, and narrows lyrics-input, asynchronous-data, and inactive-surface rendering work.
-* Coalesces export-readiness measurements, defers the Examples, History, Settings, AI, and Export surfaces, and caches system-font discovery so hot requests launch no new scanner process.
-* Adds local failure isolation with true chunk retries for deferred surfaces and bounds registry-only system-font cache staleness to five minutes.
+* Rolls back the v5.9.4 performance implementation and returns the affected startup, resource-loading, editor, export-measurement, and system-font paths to the accepted v5.9.3 architecture.
+* Examples, History, Settings, AI translation, and Export again use the established loading and error-handling paths; ClickSpark, auto width, and render boundaries also return to their verified implementations.
+* Uses green success, yellow warning, and red error feedback across the app, with shorter six-language Desktop and Web Lite copy; reduced motion keeps the transition opacity-only.
+* Does not change document, import-history, or manual-save formats. The v5.9.3 network boundaries, audio parsing, multi-platform imports, and PNG/WebP/JPG export remain available.
 
 ## 🌐 Multilingual Release Notes
 
 GitHub Release displays a Simplified Chinese summary by default. See the full release notes:
-[简体中文](./docs/releases/v5.9.4.zh-CN.md) · [繁體中文](./docs/releases/v5.9.4.zh-TW.md) · [English](./docs/releases/v5.9.4.en.md) · [Français](./docs/releases/v5.9.4.fr.md) · [日本語](./docs/releases/v5.9.4.ja.md) · [Español](./docs/releases/v5.9.4.es.md)
+[简体中文](./docs/releases/v5.9.5.zh-CN.md) · [繁體中文](./docs/releases/v5.9.5.zh-TW.md) · [English](./docs/releases/v5.9.5.en.md) · [Français](./docs/releases/v5.9.5.fr.md) · [日本語](./docs/releases/v5.9.5.ja.md) · [Español](./docs/releases/v5.9.5.es.md)
 
 <a id="features"></a>
 

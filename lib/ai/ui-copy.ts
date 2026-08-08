@@ -123,11 +123,11 @@ const AI_UI_COPY: Record<Locale, AIUiCopy> = {
     translating: "正在翻译...",
     stop: "停止",
     streamPreview: "流式译文",
-    lyricsEmpty: "歌词为空，请先输入歌词。",
+    lyricsEmpty: "歌词为空，请先输入歌词",
     configureFirst: "AI 设置不完整，请先配置 API Key 和模型。",
     overwriteConfirm: "歌词翻译文本框已有内容。继续会覆盖现有译文，确定继续吗？",
     emptyResponse: "AI 返回为空，请重试或更换模型。",
-    translated: "AI 翻译已写入歌词翻译文本框。",
+    translated: "AI 译文已写入翻译栏",
     cancelled: "AI 翻译已取消。"
   },
   "zh-TW": {
@@ -187,11 +187,11 @@ const AI_UI_COPY: Record<Locale, AIUiCopy> = {
     translating: "翻譯中...",
     stop: "停止",
     streamPreview: "串流譯文",
-    lyricsEmpty: "歌詞為空，請先輸入歌詞。",
+    lyricsEmpty: "歌詞為空，請先輸入歌詞",
     configureFirst: "AI 設定不完整，請先設定 API Key 與模型。",
     overwriteConfirm: "歌詞翻譯欄位已有內容。繼續操作將覆蓋現有譯文，確定要繼續嗎？",
     emptyResponse: "AI 回傳內容為空，請重試或更換模型。",
-    translated: "AI 譯文已寫入現有的歌詞翻譯欄位。",
+    translated: "AI 譯文已寫入翻譯欄",
     cancelled: "AI 翻譯已取消。"
   },
   en: {
@@ -251,11 +251,11 @@ const AI_UI_COPY: Record<Locale, AIUiCopy> = {
     translating: "Translating...",
     stop: "Stop",
     streamPreview: "Streaming Translation",
-    lyricsEmpty: "Lyrics are empty. Enter lyrics first.",
+    lyricsEmpty: "Lyrics are empty; enter lyrics first",
     configureFirst: "AI settings are incomplete. Configure an API key and model first.",
     overwriteConfirm: "The translation field already contains text. Continue and overwrite it?",
     emptyResponse: "The AI returned an empty response. Retry or choose another model.",
-    translated: "AI translation was written to the existing translation field.",
+    translated: "AI translation added to the translation field",
     cancelled: "AI translation cancelled."
   },
   fr: {
@@ -315,11 +315,11 @@ const AI_UI_COPY: Record<Locale, AIUiCopy> = {
     translating: "Traduction...",
     stop: "Arrêter",
     streamPreview: "Traduction en direct",
-    lyricsEmpty: "Les paroles sont vides. Saisissez d’abord des paroles.",
+    lyricsEmpty: "Les paroles sont vides ; saisissez-en d’abord",
     configureFirst: "Les paramètres de l’IA sont incomplets. Configurez d’abord une clé API et un modèle.",
     overwriteConfirm: "Le champ de traduction contient déjà du texte. Voulez-vous continuer et le remplacer ?",
     emptyResponse: "L’IA a renvoyé une réponse vide. Réessayez ou choisissez un autre modèle.",
-    translated: "La traduction de l’IA a été insérée dans le champ de traduction existant.",
+    translated: "Traduction IA ajoutée au champ de traduction",
     cancelled: "Traduction par IA annulée."
   },
   ja: {
@@ -379,11 +379,11 @@ const AI_UI_COPY: Record<Locale, AIUiCopy> = {
     translating: "翻訳中...",
     stop: "停止",
     streamPreview: "ストリーミング訳詞",
-    lyricsEmpty: "歌詞が空です。先に歌詞を入力してください。",
+    lyricsEmpty: "歌詞が空です。先に入力してください",
     configureFirst: "AI 設定が不足しています。先に API キーとモデルを設定してください。",
     overwriteConfirm: "翻訳欄にはすでに内容があります。既存の訳詞を上書きして続行しますか？",
     emptyResponse: "AI から空の応答が返されました。再試行するか、別のモデルを選択してください。",
-    translated: "AI の訳詞を既存の翻訳欄に入力しました。",
+    translated: "AI の訳詞を翻訳欄に入力しました",
     cancelled: "AI 翻訳をキャンセルしました。"
   },
   es: {
@@ -443,11 +443,11 @@ const AI_UI_COPY: Record<Locale, AIUiCopy> = {
     translating: "Traduciendo...",
     stop: "Detener",
     streamPreview: "Traducción en directo",
-    lyricsEmpty: "La letra está vacía. Introduce primero la letra.",
+    lyricsEmpty: "La letra está vacía; introdúcela primero",
     configureFirst: "La configuración de IA está incompleta. Configura primero una clave API y un modelo.",
     overwriteConfirm: "El campo de traducción ya contiene texto. ¿Quieres continuar y sobrescribirlo?",
     emptyResponse: "La IA devolvió una respuesta vacía. Vuelve a intentarlo o elige otro modelo.",
-    translated: "La traducción de IA se ha escrito en el campo de traducción existente.",
+    translated: "Traducción de IA añadida al campo de traducción",
     cancelled: "Traducción con IA cancelada."
   }
 };

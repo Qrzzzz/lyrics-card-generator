@@ -3,10 +3,11 @@ const { spawn } = require("node:child_process");
 const crypto = require("node:crypto");
 const fs = require("node:fs/promises");
 const http = require("node:http");
+const net = require("node:net");
 const path = require("node:path");
 const { getBackgroundImageMime, safeBackgroundPathForUserData } = require("./background-images");
 const { normalizePromptLibrary } = require("./ai-prompt-settings");
-const { createWindowsFontDirectoryService } = require("./font-directory-service");
+const { normalizeFontOptions } = require("./font-options");
 const {
   buildChatCompletionsRequestBody: buildProviderChatCompletionsRequestBody,
   getChatCompletionMessage,
@@ -18,7 +19,6 @@ const { normalizeStoredPreferences } = require("./user-preferences");
 const { AIRequestRegistry } = require("./ai-request-registry");
 const { assertTrustedIpcEvent } = require("./ipc-security");
 const {
-  ImportHistoryFileStreamRegistry,
   ImportHistoryStore,
   normalizeImportHistoryLimit,
   readValidatedImportFile,
@@ -26,14 +26,6 @@ const {
   validateImportFileDescriptor
 } = require("./import-history");
 const { resolveLocalAppUrl } = require("./local-app-url");
-const {
-  LOOPBACK_HOST,
-  findAvailableLoopbackPort,
-  getOriginStatePath,
-  isPortUnavailableError,
-  selectLoopbackPort,
-  writeCachedLoopbackPort
-} = require("./local-server-origin");
 const { createManualSaveIpcHandlers } = require("./manual-save-ipc");
 const {
   STARTUP_SECRET_ENV,
@@ -42,17 +34,13 @@ const {
   waitForPackagedServerReady
 } = require("./packaged-server-readiness");
 const { acquireSingleInstanceOwnership } = require("./single-instance-ownership");
-const { createStartupTrace } = require("./startup-trace");
-const { prepareDesktopStartup } = require("./startup-orchestration");
 const { isAllowedLocalNavigation, parseAllowedExternalUrl } = require("./url-policy");
 
-const HOST = LOOPBACK_HOST;
+const HOST = "127.0.0.1";
 const APP_ID = "com.lyriccard.generator";
 const START_TIMEOUT_MS = 45000;
 const WINDOW_BACKGROUND_COLOR = "#20242D";
 const IMPORT_FILE_REGISTRATION_TTL_MS = 30 * 60 * 1000;
-const startupTrace = createStartupTrace();
-startupTrace.mark("module-loaded");
 
 if (process.env.LYRICS_CARD_TEST_USER_DATA) {
   app.setPath("userData", path.resolve(process.env.LYRICS_CARD_TEST_USER_DATA));
@@ -61,7 +49,6 @@ if (process.env.LYRICS_CARD_TEST_USER_DATA) {
 let mainWindow = null;
 let nextServerProcess = null;
 let localAppUrl = null;
-let appBooting = false;
 let normalWindowBounds = null;
 let windowMaximized = false;
 let windowRestoring = false;
@@ -75,16 +62,13 @@ const aiTranslationRequests = new AIRequestRegistry();
 const importFileRegistrations = new Map();
 const importHistoryRelocations = new Map();
 const importHistoryOperations = new Set();
-let importHistoryFileStreams = null;
 let importHistoryStore = null;
-let systemFontDirectoryService = null;
 // Ownership is decided before IPC registration, service startup, or BrowserWindow creation.
 const singleInstanceOwnership = acquireSingleInstanceOwnership({
   app,
   getMainWindow: () => mainWindow,
   isWindowClosing: () => allowWindowClose
 });
-startupTrace.mark("single-instance-ownership", { hasLock: singleInstanceOwnership.hasLock });
 
 const DEFAULT_AI_SETTINGS = {
   baseUrl: "https://api.openai.com/v1",
@@ -99,6 +83,25 @@ const DEFAULT_AI_SETTINGS = {
   }
 };
 const TRANSLATION_STYLES = new Set(["lyrical", "faithful", "spoken", "imagistic", "restrained", "recommended"]);
+
+function getAvailablePort() {
+  return new Promise((resolve, reject) => {
+    const server = net.createServer();
+
+    server.once("error", reject);
+    server.listen(0, HOST, () => {
+      const address = server.address();
+      server.close(() => {
+        if (address && typeof address === "object") {
+          resolve(address.port);
+          return;
+        }
+
+        reject(new Error("Unable to allocate a local port."));
+      });
+    });
+  });
+}
 
 function waitForDevelopmentServer(url, timeoutMs = START_TIMEOUT_MS) {
   const startedAt = Date.now();
@@ -153,63 +156,16 @@ function getAppIconPath() {
   return path.join(app.getAppPath(), "build", "icon.ico");
 }
 
-async function startPackagedNextServer(onProcessLaunchStarted = () => undefined) {
-  startupTrace.mark("next-port-selection-start");
-  const userDataPath = app.getPath("userData");
-  const originStatePath = getOriginStatePath(userDataPath);
-  const selection = await selectLoopbackPort({
-    stateFilePath: originStatePath,
-    profileSeed: userDataPath
-  });
-  startupTrace.mark("next-port-selected", { port: selection.port, source: selection.source });
-
-  try {
-    return await startAndCachePackagedNextServer(
-      selection.port,
-      selection.source,
-      originStatePath,
-      onProcessLaunchStarted
-    );
-  } catch (error) {
-    if (!isPortUnavailableError(error)) throw error;
-    // The availability probe is advisory. If another process wins the bind race,
-    // authenticated readiness still fails closed before an ephemeral fallback is tried.
-    const fallbackPort = await findAvailableLoopbackPort({ host: HOST, port: 0 });
-    startupTrace.mark("next-port-race-fallback", { port: fallbackPort });
-    return startAndCachePackagedNextServer(
-      fallbackPort,
-      "race-fallback",
-      originStatePath,
-      onProcessLaunchStarted
-    );
-  }
-}
-
-async function startAndCachePackagedNextServer(port, source, originStatePath, onProcessLaunchStarted) {
-  const url = await startPackagedNextServerOnPort(port, source, onProcessLaunchStarted);
-  // Persist only the non-sensitive port, and only after this launch's HMAC proof succeeds.
-  // The atomic metadata write is not a renderer-readiness prerequisite.
-  void writeCachedLoopbackPort(originStatePath, port)
-    .then(() => startupTrace.mark("next-port-cached", { port }))
-    .catch((error) => {
-      console.error("[next] unable to persist the cache origin", error instanceof Error ? error.message : String(error));
-      startupTrace.mark("next-port-cache-failed", { port });
-    });
-  return url;
-}
-
-async function startPackagedNextServerOnPort(port, source, onProcessLaunchStarted) {
+async function startPackagedNextServer() {
   const serverDirectory = getPackagedServerDirectory();
   const serverEntry = path.join(serverDirectory, "server.js");
-  const serverLauncher = path.join(serverDirectory, "desktop-server-launcher.cjs");
   const standaloneNodeModules = path.join(serverDirectory, "_node_modules");
+  const port = await getAvailablePort();
   const url = `http://${HOST}:${port}`;
   const startupSecret = createPackagedServerStartupSecret();
-  let startupOutput = "";
-  startupTrace.mark("next-process-spawn-start", { port, source });
 
   // The per-launch secret is inherited only by this child and authenticates readiness on the released port.
-  const spawnedServer = spawn(process.execPath, [serverLauncher, serverEntry], {
+  const spawnedServer = spawn(process.execPath, [serverEntry], {
     cwd: serverDirectory,
     env: {
       ...process.env,
@@ -222,24 +178,18 @@ async function startPackagedNextServerOnPort(port, source, onProcessLaunchStarte
       PORT: String(port),
       [STARTUP_SECRET_ENV]: startupSecret
     },
-    stdio: ["ignore", "pipe", "pipe", "ipc"],
+    stdio: ["ignore", "pipe", "pipe"],
     windowsHide: true
   });
 
   nextServerProcess = spawnedServer;
-  onProcessLaunchStarted();
-  spawnedServer.once("spawn", () => startupTrace.mark("next-process-spawned", { pid: spawnedServer.pid, port }));
 
   spawnedServer.stdout?.on("data", (chunk) => {
-    const text = chunk.toString();
-    startupOutput = `${startupOutput}${text}`.slice(-12_000);
-    console.log(`[next] ${text.trimEnd()}`);
+    console.log(`[next] ${chunk.toString().trimEnd()}`);
   });
 
   spawnedServer.stderr?.on("data", (chunk) => {
-    const text = chunk.toString();
-    startupOutput = `${startupOutput}${text}`.slice(-12_000);
-    console.error(`[next] ${text.trimEnd()}`);
+    console.error(`[next] ${chunk.toString().trimEnd()}`);
   });
 
   spawnedServer.once("exit", (code, signal) => handleNextServerExit(spawnedServer, code, signal));
@@ -251,39 +201,17 @@ async function startPackagedNextServerOnPort(port, source, onProcessLaunchStarte
       startupSecret,
       timeoutMs: START_TIMEOUT_MS
     });
-    startupTrace.mark("next-authenticated-ready", { pid: spawnedServer.pid, port });
     if (nextServerProcess !== spawnedServer || !isChildProcessAlive(spawnedServer)) {
       throw new Error("Bundled Next service exited before the renderer could be trusted.");
     }
     return url;
   } catch (error) {
-    await waitForChildExitBriefly(spawnedServer);
-    if (/\bEADDRINUSE\b/.test(startupOutput) && error && typeof error === "object") {
-      error.code = "EADDRINUSE";
-    }
-    if (nextServerProcess === spawnedServer) await stopNextServer();
+    if (nextServerProcess === spawnedServer) stopNextServer();
     throw error;
   }
 }
 
-async function waitForChildExitBriefly(child, timeoutMs = 300) {
-  if (!isChildProcessAlive(child)) return;
-  await new Promise((resolve) => {
-    let settled = false;
-    const finish = () => {
-      if (settled) return;
-      settled = true;
-      clearTimeout(timer);
-      child.removeListener("exit", finish);
-      resolve();
-    };
-    const timer = setTimeout(finish, timeoutMs);
-    child.once("exit", finish);
-  });
-}
-
-function createWindow(targetUrl = localAppUrl) {
-  startupTrace.mark("window-create-start");
+function createWindow() {
   allowWindowClose = false;
   // Keep renderer privileges behind the preload bridge; the window remains hidden until its first safe paint.
   mainWindow = new BrowserWindow({
@@ -307,8 +235,6 @@ function createWindow(targetUrl = localAppUrl) {
     }
   });
   const createdWindow = mainWindow;
-  const createdRendererId = createdWindow.webContents.id;
-  startupTrace.mark("window-created");
   normalWindowBounds = mainWindow.getBounds();
   windowMaximized = false;
   lastEmittedWindowState = null;
@@ -356,11 +282,8 @@ function createWindow(targetUrl = localAppUrl) {
     // Ignore readiness from a window that was replaced or destroyed during asynchronous startup.
     if (mainWindow !== createdWindow || createdWindow.isDestroyed()) return;
     createdWindow.show();
-    startupTrace.mark("window-visible");
     singleInstanceOwnership.markWindowReady(createdWindow);
   });
-  mainWindow.webContents.once("dom-ready", () => startupTrace.mark("renderer-dom-ready"));
-  mainWindow.webContents.once("did-finish-load", () => startupTrace.mark("renderer-load-finished"));
   const desktopSession = mainWindow.webContents.session;
   // The desktop renderer does not require browser permission grants or device access.
   desktopSession.setPermissionRequestHandler((_webContents, _permission, callback) => callback(false));
@@ -379,7 +302,6 @@ function createWindow(targetUrl = localAppUrl) {
     singleInstanceOwnership.markWindowClosed(createdWindow);
     importFileRegistrations.clear();
     importHistoryRelocations.clear();
-    void importHistoryFileStreams.releaseSender(createdRendererId);
     if (mainWindow === createdWindow) mainWindow = null;
   });
 
@@ -403,16 +325,7 @@ function createWindow(targetUrl = localAppUrl) {
     if (external) void shell.openExternal(external.toString());
   });
 
-  if (targetUrl) loadMainWindow(createdWindow, targetUrl);
-  return createdWindow;
-}
-
-function loadMainWindow(window, targetUrl) {
-  if (!window || window.isDestroyed() || window !== mainWindow) {
-    throw new Error("The startup window is unavailable before renderer navigation.");
-  }
-  startupTrace.mark("window-load-url");
-  void window.loadURL(targetUrl);
+  mainWindow.loadURL(localAppUrl);
 }
 
 function getWindowState() {
@@ -497,16 +410,12 @@ function applyWindowMaterial(theme) {
 
 function stopNextServer() {
   if (!nextServerProcess) {
-    return Promise.resolve();
+    return;
   }
 
   const serverProcess = nextServerProcess;
   // Clear ownership before termination so the child's exit callback is treated as intentional shutdown.
   nextServerProcess = null;
-  return terminateNextServerProcess(serverProcess);
-}
-
-async function terminateNextServerProcess(serverProcess) {
   if (!isChildProcessAlive(serverProcess)) {
     return;
   }
@@ -517,33 +426,12 @@ async function terminateNextServerProcess(serverProcess) {
     return;
   }
 
-  if (serverProcess.connected) {
-    try {
-      serverProcess.send({ type: "lyrics-card:shutdown-server" }, () => undefined);
-    } catch {
-      // The IPC channel may close between the connected check and send.
-    }
-    await waitForChildExitBriefly(serverProcess, 1_000);
-    if (!isChildProcessAlive(serverProcess)) return;
-  }
-
   if (process.platform === "win32") {
-    return new Promise((resolve) => {
-      const killer = spawn("taskkill", ["/pid", String(pid), "/T", "/F"], {
-        stdio: "ignore",
-        windowsHide: true
-      });
-      let settled = false;
-      const finish = () => {
-        if (settled) return;
-        settled = true;
-        clearTimeout(timer);
-        resolve();
-      };
-      const timer = setTimeout(finish, 5_000);
-      killer.once("error", finish);
-      killer.once("exit", finish);
+    spawn("taskkill", ["/pid", String(pid), "/T", "/F"], {
+      stdio: "ignore",
+      windowsHide: true
     });
+    return;
   }
 
   try {
@@ -553,18 +441,12 @@ async function terminateNextServerProcess(serverProcess) {
   }
 }
 
-function disposeSystemFontDirectoryService() {
-  systemFontDirectoryService?.dispose();
-  systemFontDirectoryService = null;
-}
-
 function handleNextServerExit(serverProcess, code, signal) {
   // Ignore stale or deliberately stopped children; only the active service owns renderer viability.
   if (nextServerProcess !== serverProcess) return;
   console.error(`[next] exited code=${code} signal=${signal}`);
   nextServerProcess = null;
-  // During startup the readiness promise owns failure and optional safe fallback.
-  if (!localAppUrl) return;
+  if (!localAppUrl && !mainWindow) return;
 
   localAppUrl = null;
   allowWindowClose = true;
@@ -574,65 +456,35 @@ function handleNextServerExit(serverProcess, code, signal) {
 }
 
 async function boot() {
-  startupTrace.mark("app-ready-boot-start");
-  appBooting = true;
-  let serverLaunchStarted = false;
-  let resolveServerLaunchStarted;
-  const serverLaunchStartedPromise = new Promise((resolve) => {
-    resolveServerLaunchStarted = resolve;
-  });
-  const markServerLaunchStarted = () => {
-    if (serverLaunchStarted) return;
-    serverLaunchStarted = true;
-    resolveServerLaunchStarted();
-  };
   try {
-    const { resolvedAppUrl, window: startupWindow } = await prepareDesktopStartup({
-      initializeHistory: async () => {
-        startupTrace.mark("history-initialize-start");
-        await importHistoryStore.initialize().catch((error) => {
-          console.error("[import-history] unable to initialize history", error instanceof Error ? error.message : "unknown error");
-        });
-        startupTrace.mark("history-initialize-end");
-      },
-      resolveAppUrl: () => resolveLocalAppUrl({
-        isPackaged: app.isPackaged,
-        devServerUrl: process.env.ELECTRON_DEV_SERVER_URL,
-        startLocalServer: () => startPackagedNextServer(markServerLaunchStarted).finally(markServerLaunchStarted)
-      }),
-      waitForDevelopmentServer,
-      waitForBackgroundStart: () => (app.isPackaged ? serverLaunchStartedPromise : Promise.resolve()),
-      createHiddenWindow: () => createWindow(null)
+    await importHistoryStore.initialize().catch((error) => {
+      console.error("[import-history] unable to initialize history", error instanceof Error ? error.message : "unknown error");
+    });
+    const resolvedAppUrl = await resolveLocalAppUrl({
+      isPackaged: app.isPackaged,
+      devServerUrl: process.env.ELECTRON_DEV_SERVER_URL,
+      startLocalServer: startPackagedNextServer
     });
     // Authenticated readiness is valid only while the same owned child remains alive.
     if (!resolvedAppUrl.waitForReady && !isChildProcessAlive(nextServerProcess)) {
       throw new Error("Bundled Next service exited before the renderer could be trusted.");
     }
     localAppUrl = resolvedAppUrl.url;
-    loadMainWindow(startupWindow, localAppUrl);
+    if (resolvedAppUrl.waitForReady) {
+      await waitForDevelopmentServer(localAppUrl);
+    }
+    createWindow();
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    startupTrace.mark("boot-failed");
-    localAppUrl = null;
-    allowWindowClose = true;
-    if (mainWindow && !mainWindow.isDestroyed()) mainWindow.destroy();
-    await stopNextServer();
     dialog.showErrorBox("Lyrics Card Generator", `Unable to start the local desktop service.\n\n${message}`);
     singleInstanceOwnership.markQuitting();
     app.quit();
-  } finally {
-    appBooting = false;
   }
 }
 
 function initializePrimaryInstance() {
-  startupTrace.mark("primary-initialize-start");
-  importHistoryFileStreams = new ImportHistoryFileStreamRegistry();
   importHistoryStore = new ImportHistoryStore({
     filePath: path.join(app.getPath("userData"), "app-data", "import-history.json")
-  });
-  systemFontDirectoryService = createWindowsFontDirectoryService({
-    onError: (error) => console.error("[fonts] unable to list Windows fonts", error)
   });
   app.commandLine.appendSwitch(
     "enable-features",
@@ -641,32 +493,21 @@ function initializePrimaryInstance() {
   app.setAppUserModelId(APP_ID);
   Menu.setApplicationMenu(null);
   registerDesktopIpc();
-  startupTrace.mark("primary-initialize-end");
   app.whenReady().then(boot);
 
   app.on("before-quit", (event) => {
-    if (appBooting && mainWindow && !mainWindow.isDestroyed()) {
-      // No renderer has been trusted yet, so the normal persistence handshake is unavailable.
-      allowWindowClose = true;
-      mainWindow.destroy();
-    } else if (mainWindow && !mainWindow.isDestroyed() && !allowWindowClose) {
+    if (mainWindow && !mainWindow.isDestroyed() && !allowWindowClose) {
       // Route operating-system quit through the same renderer persistence handshake as the close button.
       event.preventDefault();
       requestRendererClose();
       return;
     }
     singleInstanceOwnership.markQuitting();
-    disposeSystemFontDirectoryService();
-    void stopNextServer();
-  });
-
-  app.on("will-quit", disposeSystemFontDirectoryService);
-  app.on("will-quit", () => {
-    void importHistoryFileStreams.closeAll();
+    stopNextServer();
   });
 
   app.on("window-all-closed", () => {
-    void stopNextServer();
+    stopNextServer();
     if (process.platform !== "darwin") {
       singleInstanceOwnership.markQuitting();
       app.quit();
@@ -776,11 +617,11 @@ function registerDesktopIpc() {
       return [];
     }
 
-    return systemFontDirectoryService.list();
+    return listWindowsFontOptions();
   });
 
   handle("lyrics-card:pick-font", async () => {
-    const fonts = process.platform === "win32" ? await systemFontDirectoryService.list() : [];
+    const fonts = process.platform === "win32" ? await listWindowsFontOptions() : [];
     return fonts[0]?.family || null;
   });
 
@@ -889,19 +730,11 @@ function registerDesktopIpc() {
     () => importHistoryStore.clear()
   ));
 
-  handle("lyrics-card:import-history-replay", async (event, recordId) => {
+  handle("lyrics-card:import-history-replay", async (_event, recordId) => {
     const record = await importHistoryStore.get(recordId);
     if (!record) return { ok: false, code: "not_found" };
-    return createImportHistoryReplayPayload(record, undefined, event.sender.id);
+    return createImportHistoryReplayPayload(record);
   });
-
-  handle("lyrics-card:import-history-file-read", (event, streamToken) => (
-    importHistoryFileStreams.read(event.sender.id, streamToken)
-  ));
-
-  handle("lyrics-card:import-history-file-release", (event, streamToken) => (
-    importHistoryFileStreams.release(event.sender.id, streamToken)
-  ));
 
   handle("lyrics-card:import-history-relocate", async (event, recordId) => {
     const record = await importHistoryStore.get(recordId);
@@ -916,13 +749,8 @@ function registerDesktopIpc() {
     });
     if (result.canceled || !result.filePaths[0]) return { ok: false, code: "cancelled" };
     const filePath = result.filePaths[0];
-    const prepared = record.kind === "local-audio"
-      ? { path: filePath }
-      : await readValidatedImportFile(record.kind, filePath);
-    if (prepared.ok === false) return { ...prepared, canRelocate: true };
-
-    const replay = await createImportHistoryReplayPayload(record, prepared, event.sender.id);
-    if (!replay.ok) return replay;
+    const prepared = await readValidatedImportFile(record.kind, filePath);
+    if (!prepared.ok) return { ...prepared, canRelocate: true };
 
     pruneImportHistoryRelocations();
     const relocationToken = crypto.randomUUID();
@@ -932,13 +760,14 @@ function registerDesktopIpc() {
       recordId: record.id,
       expiresAt: Date.now() + IMPORT_FILE_REGISTRATION_TTL_MS,
       file: {
-        path: path.resolve(filePath),
-        fileName: path.basename(filePath),
-        size: replay.file.size,
-        mtimeMs: replay.file.mtimeMs
+        path: prepared.path,
+        fileName: path.basename(prepared.path),
+        size: prepared.size,
+        mtimeMs: prepared.mtimeMs
       }
     });
-    return { ...replay, relocationToken };
+    const replay = await createImportHistoryReplayPayload(record, prepared);
+    return replay.ok ? { ...replay, relocationToken } : replay;
   });
 
   handle("lyrics-card:import-history-replay-commit", (event, recordId, relocationToken) => trackImportHistoryMutation(async () => {
@@ -1123,7 +952,7 @@ async function readImportHistoryLimit() {
   return normalizeImportHistoryLimit(preferences?.userSettings?.importHistoryLimit);
 }
 
-async function createImportHistoryReplayPayload(record, preparedFile, senderId) {
+async function createImportHistoryReplayPayload(record, preparedFile) {
   if (record.kind === "link") {
     return {
       ok: true,
@@ -1153,27 +982,6 @@ async function createImportHistoryReplayPayload(record, preparedFile, senderId) 
   }
 
   try {
-    if (record.kind === "local-audio") {
-      const stream = await importHistoryFileStreams.open(
-        senderId,
-        "local-audio",
-        preparedFile?.path ?? record.source.path
-      );
-      if (!stream.ok) return { ok: false, code: stream.code, canRelocate: true };
-      return {
-        ok: true,
-        kind: "local-audio",
-        record: toPublicImportHistoryRecord(record),
-        file: {
-          streamToken: stream.streamToken,
-          fileName: path.basename(stream.path),
-          size: stream.size,
-          mtimeMs: stream.mtimeMs,
-          mimeType: mimeTypeForHistoryFile(stream.extension),
-          changed: stream.size !== record.source.size || Math.abs(stream.mtimeMs - record.source.mtimeMs) > 1
-        }
-      };
-    }
     const validated = preparedFile ?? await readValidatedImportFile(record.kind, record.source.path);
     if (!validated.ok) return { ok: false, code: validated.code, canRelocate: true };
     const changed = validated.size !== record.source.size || Math.abs(validated.mtimeMs - record.source.mtimeMs) > 1;
@@ -1195,7 +1003,12 @@ async function createImportHistoryReplayPayload(record, preparedFile, senderId) 
         snapshot: record.snapshot
       };
     }
-    return { ok: false, code: "unsupported_file_kind", canRelocate: true };
+    return {
+      ok: true,
+      kind: "local-audio",
+      record: toPublicImportHistoryRecord(record),
+      file
+    };
   } catch (error) {
     return {
       ok: false,
@@ -1497,4 +1310,98 @@ function isValidAIRequestId(value) {
 
 function createAIError(code, diagnostic) {
   return new Error(`AI_ERROR:${code}${diagnostic ? `:${String(diagnostic).slice(0, 500)}` : ""}`);
+}
+
+async function listWindowsFontOptions() {
+  const script = [
+    "$ErrorActionPreference = 'Stop';",
+    "[Console]::OutputEncoding = [Text.UTF8Encoding]::new();",
+    "Add-Type -AssemblyName System.Drawing;",
+    "$paths = @(",
+    "  'HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Fonts',",
+    "  'HKCU:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Fonts'",
+    ");",
+    "$fontOptions = [Collections.Generic.List[object]]::new();",
+    "foreach ($path in $paths) {",
+    "  if (Test-Path $path) {",
+    "    $item = Get-ItemProperty -Path $path;",
+    "    foreach ($property in ($item.PSObject.Properties | Where-Object { $_.Name -notlike 'PS*' })) {",
+    "      $label = $property.Name -replace '\\s*\\((TrueType|OpenType|Type 1|Raster|All res)\\)\\s*$', '';",
+    "      foreach ($fileValue in @($property.Value)) {",
+    "        try {",
+    "          $fontPath = if ([IO.Path]::IsPathRooted([string]$fileValue)) { [string]$fileValue } else { Join-Path $env:WINDIR ('Fonts\\' + $fileValue) };",
+    "          if (-not (Test-Path -LiteralPath $fontPath)) { continue };",
+    "          $privateFonts = [Drawing.Text.PrivateFontCollection]::new();",
+    "          try {",
+    "            $privateFonts.AddFontFile($fontPath);",
+    "            $weight = if ($label -match '(?i)(Extra|Ultra)[ -]*Light|特细|超细') { 200 } elseif ($label -match '(?i)(Extra|Ultra)[ -]*Bold|特粗|超粗') { 800 } elseif ($label -match '(?i)(Semi|Demi)[ -]*Bold|中粗') { 600 } elseif ($label -match '(?i)\\b(Heavy|Black)\\b') { 900 } elseif ($label -match '(?i)\\bBold\\b|粗体') { 700 } elseif ($label -match '(?i)\\bMedium\\b|中等') { 500 } elseif ($label -match '(?i)\\bLight\\b|细体') { 300 } else { 400 };",
+    "            $fontStyle = if ($label -match '(?i)\\b(Italic|Oblique)\\b|斜体|倾斜') { 'italic' } else { 'normal' };",
+    "            foreach ($family in $privateFonts.Families) {",
+    "              $fontOptions.Add([pscustomobject]@{ label = $label.Trim(); family = $family.GetName(0x0409).Trim(); fontWeight = $weight; fontStyle = $fontStyle });",
+    "            }",
+    "          } finally { $privateFonts.Dispose() }",
+    "        } catch { continue }",
+    "      }",
+    "    }",
+    "  }",
+    "}",
+    "$installedFonts = [Drawing.Text.InstalledFontCollection]::new();",
+    "foreach ($family in $installedFonts.Families) {",
+    "  $englishFamily = $family.GetName(0x0409).Trim();",
+    "  $fontOptions.Add([pscustomobject]@{ label = $englishFamily; family = $englishFamily; fontWeight = 400; fontStyle = 'normal' });",
+    "}",
+    "$fontOptions | ConvertTo-Json -Compress -Depth 3"
+  ].join(" ");
+
+  try {
+    const output = await runProcess("powershell.exe", [
+      "-NoProfile",
+      "-ExecutionPolicy",
+      "Bypass",
+      "-Command",
+      script
+    ]);
+    const parsed = JSON.parse(output || "[]");
+    return normalizeFontOptions(Array.isArray(parsed) ? parsed : [parsed]);
+  } catch (error) {
+    console.error("[fonts] unable to list Windows fonts", error);
+    return normalizeFontOptions([
+      "Arial",
+      "Calibri",
+      "Microsoft YaHei",
+      "Microsoft JhengHei",
+      "Segoe UI",
+      "SimSun",
+      "SimHei"
+    ]);
+  }
+}
+
+function runProcess(command, args) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(command, args, {
+      stdio: ["ignore", "pipe", "pipe"],
+      windowsHide: true
+    });
+    let stdout = "";
+    let stderr = "";
+
+    child.stdout?.on("data", (chunk) => {
+      stdout += chunk.toString();
+    });
+
+    child.stderr?.on("data", (chunk) => {
+      stderr += chunk.toString();
+    });
+
+    child.once("error", reject);
+    child.once("exit", (code) => {
+      if (code === 0) {
+        resolve(stdout.trim());
+        return;
+      }
+
+      reject(new Error(stderr.trim() || `${command} exited with code ${code}`));
+    });
+  });
 }

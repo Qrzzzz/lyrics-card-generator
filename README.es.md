@@ -19,7 +19,7 @@
 <p>
   <strong>Navegación</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Descargar la última versión</a> ·
-  <a href="./docs/releases/v5.9.4.es.md">Notas de la versión</a> ·
+  <a href="./docs/releases/v5.9.5.es.md">Notas de la versión</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en línea</a> ·
   <a href="#funciones-principales">Funciones principales</a> ·
   <a href="#desarrollo-local">Desarrollo local</a> ·
@@ -49,26 +49,26 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 ## 📦 Descarga e instalación
 
-Descarga v5.9.4 desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
+Descarga v5.9.5 desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Instalador: `Lyrics Card Generator Setup 5.9.4.exe`
-* Versión portable: `Lyrics Card Generator-5.9.4-portable.exe`
+* Instalador: `Lyrics Card Generator Setup 5.9.5.exe`
+* Versión portable: `Lyrics Card Generator-5.9.5-portable.exe`
 
 El instalador se recomienda para uso habitual. La versión portable es útil para pruebas, uso temporal o ejecución desde una unidad extraíble.
 
 > La compilación actual no está firmada. Windows puede mostrar una advertencia de SmartScreen, algo habitual en aplicaciones personales sin firma.
 
-### Novedades de v5.9.4
+### Novedades de v5.9.5
 
-* Agiliza el inicio del escritorio, la validación del origen del renderer y la caché de recursos estáticos para evitar comprobaciones repetidas y trabajo innecesario al arrancar, sin alterar los límites de seguridad existentes.
-* Detiene el bucle de animación ClickSpark cuando está inactivo, reutiliza el host de medición de ancho automático y reduce los renderizados de la entrada de letras, los datos asíncronos y las superficies inactivas.
-* Agrupa las mediciones de preparación de la exportación, carga de forma diferida las superficies de Ejemplos, Historial, Ajustes, IA y Exportación, y guarda en caché la detección de fuentes del sistema para que las solicitudes en caliente no inicien otro proceso de análisis.
-* Aísla localmente los fallos de las superficies diferidas con un reintento real del chunk y limita a cinco minutos la antigüedad de la caché de fuentes cuando solo cambia el Registro.
+* Revierte la implementación de rendimiento de v5.9.4 y devuelve las rutas afectadas de inicio, carga de recursos, editor, medición de exportación y fuentes del sistema a la arquitectura validada de v5.9.3.
+* Ejemplos, Historial, Ajustes, traducción con IA y Exportación vuelven a las rutas estables de carga y gestión de errores; ClickSpark, el ancho automático y los límites de renderizado también recuperan sus implementaciones verificadas.
+* Usa avisos verdes para el éxito, amarillos para las advertencias y rojos para los errores, con textos más breves en los seis idiomas de Desktop y Web Lite; el modo de movimiento reducido conserva una transición solo de opacidad.
+* No cambia los formatos de documentos, historial de importación ni guardados manuales. Se mantienen los límites de red, el análisis de audio, las importaciones multiplataforma y la exportación PNG/WebP/JPG de v5.9.3.
 
 ## 🌐 Notas de publicación multilingües
 
 GitHub Release muestra de forma predeterminada un resumen en chino simplificado. Consulta las notas completas:
-[简体中文](./docs/releases/v5.9.4.zh-CN.md) · [繁體中文](./docs/releases/v5.9.4.zh-TW.md) · [English](./docs/releases/v5.9.4.en.md) · [Français](./docs/releases/v5.9.4.fr.md) · [日本語](./docs/releases/v5.9.4.ja.md) · [Español](./docs/releases/v5.9.4.es.md)
+[简体中文](./docs/releases/v5.9.5.zh-CN.md) · [繁體中文](./docs/releases/v5.9.5.zh-TW.md) · [English](./docs/releases/v5.9.5.en.md) · [Français](./docs/releases/v5.9.5.fr.md) · [日本語](./docs/releases/v5.9.5.ja.md) · [Español](./docs/releases/v5.9.5.es.md)
 
 <a id="funciones-principales"></a>
 

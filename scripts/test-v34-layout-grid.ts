@@ -380,7 +380,6 @@ const previewPaneSource = readFileSync(resolve("components/editor/PreviewPane.ts
 const lyricCardPreviewSource = readFileSync(resolve("components/preview/LyricCardPreview.tsx"), "utf8");
 const lyricCardSource = readFileSync(resolve("components/preview/LyricCard.tsx"), "utf8");
 const autoHeightSource = readFileSync(resolve("components/editor/hooks/useMeasuredAutoCanvasHeight.ts"), "utf8");
-const exportCoordinatorSource = readFileSync(resolve("components/editor/hooks/export-card-dom-coordinator.ts"), "utf8");
 const landscapeCardSource = readFileSync(resolve("components/preview/LandscapeLyricCard.tsx"), "utf8");
 const instrumentalBlockSource = readFileSync(resolve("components/preview/InstrumentalBlock.tsx"), "utf8");
 const fontPanelSource = stylePanelSource.slice(
@@ -415,12 +414,7 @@ assert.ok(instrumentalBlockSource.includes("mt-7"), "instrumental title and arti
 assert.ok(instrumentalBlockSource.includes('allowTwoLineTitle ? "two-line-title" : "truncate"'), "instrumental titles honor the two-line setting");
 assert.ok(lyricCardSource.includes("allowTwoLineTitle={style.allowTwoLineTitle}"), "instrumental rendering receives the two-line title setting");
 assert.ok(lyricCardSource.includes('pt-8 pb-4'), "lyrics keep a smaller but non-zero bottom breathing room");
-assert.ok(
-  exportCoordinatorSource.includes("createMutationObserver") &&
-    exportCoordinatorSource.includes("characterData: true") &&
-    exportCoordinatorSource.includes("childList: true"),
-  "arbitrary content mutations trigger coordinated auto-height measurement"
-);
+assert.ok(autoHeightSource.includes("new MutationObserver(scheduleMeasure)"), "arbitrary content mutations trigger auto-height measurement");
 assert.ok(autoHeightSource.includes("state.song.title"), "song title changes trigger auto-height measurement");
 assert.ok(autoHeightSource.includes("state.translationText"), "translation changes trigger auto-height measurement");
 assert.ok(autoHeightSource.includes("Math.max(AUTO_HEIGHT_MIN, nextHeight)"), "auto-height uses the compact lower bound");

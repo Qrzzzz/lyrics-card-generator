@@ -126,12 +126,15 @@ assert.match(lyricCardPreview, /event\.pointerType === "touch" \|\| !event\.isPr
 assert.match(lyricCardPreview, /const isPointerInside =[\s\S]*?resetPressureFeedback\(\);/);
 assert.match(lyricEditor, /onAnimationComplete=\{\(\) => \{[\s\S]*?setPreviewMeasurementKey/);
 assert.match(lyricEditor, /pressureEnabled=\{currentStep >= 2\}/);
-assert.match(editorActions, /if \(!hasClearableLyricContent\(parsedState\)\)[\s\S]*?onNotify\(clearAlreadyEmptyMessage\);[\s\S]*?return;[\s\S]*?setClearTransitionKey/);
+assert.match(editorActions, /if \(!hasClearableLyricContent\(parsedState\)\)[\s\S]*?onNotify\(clearAlreadyEmptyMessage, "success"\);[\s\S]*?return;[\s\S]*?setClearTransitionKey/);
 assert.match(appToast, /role="status"/);
 assert.match(appToast, /aria-live="polite"/);
 assert.match(appToast, /data-testid="app-toast"/);
 assert.match(appToast, /useAppReducedMotion/);
-assert.match(appToast, /scaleX: 0/);
+assert.match(appToast, /data-tone=\{notice\.tone\}/);
+assert.match(appToast, /initial=\{reduceMotion \? \{ opacity: 0 \} : \{ opacity: 0, y: 32, scale: 0\.8 \}\}/);
+assert.match(appToast, /exit=\{reduceMotion \? \{ opacity: 0 \} : \{ opacity: 0, y: 32, scale: 0\.8 \}\}/);
+assert.doesNotMatch(appToast, /lucide-react|<Info|scaleX|accentColor/);
 
 const globals = readFileSync(resolve("app/globals.css"), "utf8");
 assert.match(globals, /@media \(prefers-reduced-motion: reduce\)/);
@@ -144,5 +147,8 @@ assert.match(globals, /not\(\.traffic-light\):not\(\.example-song-card\):hover/)
 assert.match(globals, /not\(\.traffic-light\):not\(\.example-song-card\):hover:active/);
 assert.match(globals, /\.preview-pressure-stage/);
 assert.match(globals, /\.app-shell\[data-reduce-motion="true"\] \.preview-pressure-card/);
+assert.match(globals, /\.app-toast\[data-tone="success"\][\s\S]*?background: rgb\(21 128 61 \/ 0\.92\)/);
+assert.match(globals, /\.app-toast\[data-tone="warning"\][\s\S]*?background: rgb\(250 204 21 \/ 0\.94\)/);
+assert.match(globals, /\.app-toast\[data-tone="error"\][\s\S]*?background: rgb\(185 28 28 \/ 0\.92\)/);
 
-console.log(JSON.stringify({ ok: true, motionSystemRegressionChecks: 79 }, null, 2));
+console.log(JSON.stringify({ ok: true, motionSystemRegressionChecks: 87 }, null, 2));

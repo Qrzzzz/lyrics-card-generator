@@ -2,14 +2,16 @@
 
 import { useRef, useState } from "react";
 import { flushSync } from "react-dom";
+import type { ToastNotifier } from "@/components/feedback/AppToast";
 import { createAppRequestHeaders } from "@/lib/app-request";
-import { getLyricsCardDesktopApi, type LyricsCardDesktopApi } from "@/lib/desktop-api";
+import { getLyricsCardDesktopApi } from "@/lib/desktop-api";
 import { normalizeCardStyle } from "@/lib/card-style-normalize";
 import { clearLyricContent, hasClearableLyricContent } from "@/lib/clear-content";
 import {
   applyEditorStyleChange,
   isDocumentSemanticStyleChange
 } from "@/lib/editor/apply-style-change";
+import { exportNodeAsImage } from "@/lib/export-image";
 import { createExportSnapshot, type ExportSnapshot } from "@/lib/export-snapshot";
 import {
   ExportTransactionMutex,
@@ -36,7 +38,6 @@ import {
   type ImportHistoryDisplayInput,
   type ImportHistoryManualSnapshot,
   type ImportHistoryManualSaveInput,
-  type ImportHistoryReplayAudioFile,
   type ImportHistoryReplayCommitResult,
   type ImportHistoryReplayResult,
   type ImportHistoryReplayUiResult,
@@ -49,7 +50,6 @@ import {
   serializeImportHistoryManualSave
 } from "@/lib/import-history";
 import { importHistoryCopy } from "@/lib/import-history-copy";
-import { MAX_LOCAL_AUDIO_BYTES } from "@/lib/local-audio-limits";
 import type {
   AppState,
   CardStyle,
@@ -67,11 +67,11 @@ type UseEditorActionsInput = {
   exportBlockMessage?: string;
   getExportBlockMessage?: (snapshot?: ExportSnapshot) => string | undefined;
   exportBusyMessage: string;
-  exportFailedMessage: (detail: string) => string;
+  exportFailedMessage: string;
   exampleLoadedMessage: string;
   clearAlreadyEmptyMessage: string;
   confirmReplaceDocument: () => boolean;
-  onNotify: (message: string) => void;
+  onNotify: ToastNotifier;
   onCloseExamples: () => void;
   onCloseHistory: () => void;
   onClearTransientState: () => void;
@@ -270,11 +270,11 @@ export function useEditorActions({
     void desktop.recordImportHistory(candidate)
       .then((result) => {
         if (!result.ok) {
-          onNotify(importHistoryCopy[currentDocumentRef.current.locale].historySaveFailed);
+          onNotify(importHistoryCopy[currentDocumentRef.current.locale].historySaveFailed, "warning");
         }
       })
       .catch(() => {
-        onNotify(importHistoryCopy[currentDocumentRef.current.locale].historySaveFailed);
+        onNotify(importHistoryCopy[currentDocumentRef.current.locale].historySaveFailed, "warning");
       });
   }
 
@@ -320,14 +320,14 @@ export function useEditorActions({
       documentControllerRef.current.hasActiveIntent ||
       !hasClearableLyricContent(currentDocumentRef.current)
     ) {
-      onNotify(copy.manualSaveUnavailable);
+      onNotify(copy.manualSaveUnavailable, "warning");
       return;
     }
 
     const revision = documentControllerRef.current.currentRevision;
     const bindingAtStart = manualSaveBindingRef.current;
     if (bindingAtStart?.savedRevision === revision) {
-      onNotify(copy.manualSaveUnchanged);
+      onNotify(copy.manualSaveUnchanged, "success");
       return;
     }
 
@@ -336,7 +336,7 @@ export function useEditorActions({
     const input = currentManualSaveInput();
     const envelope = serializeImportHistoryManualSave(input);
     if (!envelope) {
-      onNotify(copy.manualSaveUnavailable);
+      onNotify(copy.manualSaveUnavailable, "warning");
       return;
     }
     manualSavePendingRef.current = true;
@@ -350,11 +350,11 @@ export function useEditorActions({
           if (manualSaveBindingRef.current?.recordId === bindingAtStart.recordId) {
             startNewManualSaveSession();
           }
-          onNotify(copy.manualSaveNotFound);
+          onNotify(copy.manualSaveNotFound, "warning");
         } else if (result.code === "invalid_snapshot") {
-          onNotify(copy.manualSaveUnavailable);
+          onNotify(copy.manualSaveUnavailable, "warning");
         } else {
-          onNotify(copy.manualSaveFailed);
+          onNotify(copy.manualSaveFailed, "error");
         }
         return;
       }
@@ -366,9 +366,9 @@ export function useEditorActions({
           replaceManualSaveBinding({ recordId: result.record.id, savedRevision: revision });
         }
       }
-      onNotify(bindingAtStart ? copy.manualSaveUpdated : copy.manualSaveCreated);
+      onNotify(bindingAtStart ? copy.manualSaveUpdated : copy.manualSaveCreated, "success");
     } catch {
-      onNotify(copy.manualSaveFailed);
+      onNotify(copy.manualSaveFailed, "error");
     } finally {
       manualSavePendingRef.current = false;
       setIsManualSaveSaving(false);
@@ -425,7 +425,7 @@ export function useEditorActions({
 
   function clearAllContent() {
     if (!hasClearableLyricContent(parsedState)) {
-      onNotify(clearAlreadyEmptyMessage);
+      onNotify(clearAlreadyEmptyMessage, "success");
       return;
     }
 
@@ -569,7 +569,7 @@ export function useEditorActions({
   async function completeAndExport() {
     const initialBlockMessage = getExportBlockMessage?.() ?? exportBlockMessage;
     if (initialBlockMessage) {
-      onNotify(initialBlockMessage);
+      onNotify(initialBlockMessage, "warning");
       return;
     }
 
@@ -585,18 +585,15 @@ export function useEditorActions({
         return waitForExportSnapshotNode(() => cardRef.current, mountedSnapshot.id, signal);
       },
       validateSnapshot: (mountedSnapshot) => getExportBlockMessage?.(mountedSnapshot) ?? null,
-      captureSnapshot: async (mountedSnapshot, node, signal) => {
-        const { exportNodeAsImage } = await import("@/lib/export-image");
-        return exportNodeAsImage(
-          node,
-          mountedSnapshot.fileName,
-          mountedSnapshot.format,
-          mountedSnapshot.width,
-          mountedSnapshot.height,
-          mountedSnapshot.pixelRatio,
-          signal
-        );
-      },
+      captureSnapshot: (mountedSnapshot, node, signal) => exportNodeAsImage(
+        node,
+        mountedSnapshot.fileName,
+        mountedSnapshot.format,
+        mountedSnapshot.width,
+        mountedSnapshot.height,
+        mountedSnapshot.pixelRatio,
+        signal
+      ),
       unmountSnapshot: () => {
         setActiveExportSnapshot(null);
         setIsCompleteExporting(false);
@@ -610,12 +607,12 @@ export function useEditorActions({
       return;
     }
     if (result.kind === "busy") {
-      onNotify(exportBusyMessage);
+      onNotify(exportBusyMessage, "warning");
     } else if (result.kind === "blocked") {
-      onNotify(result.reason);
+      onNotify(result.reason, "warning");
     } else {
       console.error("[Lyric Card Generator] complete export failed", result.error);
-      onNotify(exportFailedMessage(result.error instanceof Error ? result.error.message : "Unknown error"));
+      onNotify(exportFailedMessage, "error");
     }
   }
 
@@ -655,7 +652,7 @@ export function useEditorActions({
       };
     });
     onCloseExamples();
-    onNotify(exampleLoadedMessage);
+    onNotify(exampleLoadedMessage, "success");
 
     const enrichmentIntent = trackDocumentIntent(documentControllerRef.current.begin("example-enrichment"));
     try {
@@ -702,7 +699,7 @@ export function useEditorActions({
     const desktop = getLyricsCardDesktopApi();
     const copy = importHistoryCopy[currentDocumentRef.current.locale];
     if (!desktop) {
-      onNotify(copy.replayFailed);
+      onNotify(copy.replayFailed, "error");
       return { status: "error" };
     }
     const intent = beginSongImport("history-replay");
@@ -716,14 +713,17 @@ export function useEditorActions({
         intent.cancel();
         if (replay.code === "cancelled") return { status: "cancelled" };
         if (relocate) {
-          onNotify(copy.relocateFailed);
+          onNotify(copy.relocateFailed, "error");
           return { status: "missing" };
         }
         if (replay.canRelocate) {
-          onNotify(replay.code === "file_missing" ? copy.fileMissing : copy.relocateFailed);
+          onNotify(
+            replay.code === "file_missing" ? copy.fileMissing : copy.relocateFailed,
+            replay.code === "file_missing" ? "warning" : "error"
+          );
           return { status: "missing" };
         }
-        onNotify(copy.replayFailed);
+        onNotify(copy.replayFailed, "error");
         return { status: "error" };
       }
 
@@ -749,20 +749,20 @@ export function useEditorActions({
         ) {
           startNewManualSaveSession();
         }
-        onNotify(copy.historySaveFailed);
+        onNotify(copy.historySaveFailed, "warning");
       } else if ("file" in replay && replay.file.changed) {
-        onNotify(copy.fileChanged);
+        onNotify(copy.fileChanged, "warning");
       } else if (replay.kind === "manual-save") {
-        onNotify(copy.manualSaveLoaded);
+        onNotify(copy.manualSaveLoaded, "success");
       } else {
-        onNotify(copy.replaySucceeded);
+        onNotify(copy.replaySucceeded, "success");
       }
       return { status: "success" };
     } catch {
       const wasAborted = intent.signal.aborted;
       intent.cancel();
       if (wasAborted) return { status: "cancelled" };
-      onNotify(copy.replayFailed);
+      onNotify(copy.replayFailed, "error");
       return { status: "error" };
     }
   }
@@ -797,9 +797,11 @@ export function useEditorActions({
     }
 
     if (replay.kind === "local-audio") {
-      const desktop = getLyricsCardDesktopApi();
-      if (!desktop) throw new Error("history_local_audio_replay_failed");
-      const file = await readReplayAudioFile(desktop, replay.file, intent.signal);
+      const file = new File(
+        [copyReplayBytes(replay.file.bytes)],
+        replay.file.fileName,
+        { type: replay.file.mimeType, lastModified: replay.file.mtimeMs }
+      );
       const formData = new FormData();
       formData.set("file", file);
       const response = await fetch("/api/parse-local-audio", {
@@ -944,50 +946,4 @@ function copyReplayBytes(bytes: Uint8Array) {
   const copy = new Uint8Array(bytes.byteLength);
   copy.set(bytes);
   return copy.buffer;
-}
-
-const MAX_IMPORT_HISTORY_AUDIO_CHUNK_BYTES = 1024 * 1024;
-
-async function readReplayAudioFile(
-  desktop: LyricsCardDesktopApi,
-  file: ImportHistoryReplayAudioFile,
-  signal: AbortSignal
-) {
-  if (!Number.isSafeInteger(file.size) || file.size < 0 || file.size > MAX_LOCAL_AUDIO_BYTES) {
-    throw new Error("history_local_audio_replay_failed");
-  }
-  const chunks: ArrayBuffer[] = [];
-  let total = 0;
-  const abortStream = () => {
-    void desktop.releaseImportHistoryFile(file.streamToken).catch(() => undefined);
-  };
-  signal.addEventListener("abort", abortStream, { once: true });
-  try {
-    while (true) {
-      if (signal.aborted) throw new DOMException("Aborted", "AbortError");
-      const result = await desktop.readImportHistoryFileChunk(file.streamToken);
-      if (signal.aborted) throw new DOMException("Aborted", "AbortError");
-      if (!result.ok) throw new Error(result.code);
-      if (!(result.bytes instanceof Uint8Array)) throw new Error("invalid_file_chunk");
-      const length = result.bytes.byteLength;
-      if (
-        length > MAX_IMPORT_HISTORY_AUDIO_CHUNK_BYTES ||
-        total + length > file.size ||
-        (!result.done && length === 0)
-      ) {
-        throw new Error("invalid_file_chunk");
-      }
-      if (length > 0) chunks.push(copyReplayBytes(result.bytes));
-      total += length;
-      if (!result.done) continue;
-      if (total !== file.size) throw new Error("invalid_file_chunk");
-      return new File(chunks, file.fileName, {
-        type: file.mimeType,
-        lastModified: file.mtimeMs
-      });
-    }
-  } finally {
-    signal.removeEventListener("abort", abortStream);
-    await desktop.releaseImportHistoryFile(file.streamToken).catch(() => false);
-  }
 }

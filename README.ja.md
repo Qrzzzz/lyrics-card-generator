@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v5.9.4.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v5.9.5.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="#ローカル開発">ローカル開発</a> ·
@@ -49,26 +49,26 @@
 
 ## 📦 ダウンロードとインストール
 
-[GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) から v5.9.4 をダウンロードできます。
+[GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) から v5.9.5 をダウンロードできます。
 
-* インストーラー：`Lyrics Card Generator Setup 5.9.4.exe`
-* ポータブル版：`Lyrics Card Generator-5.9.4-portable.exe`
+* インストーラー：`Lyrics Card Generator Setup 5.9.5.exe`
+* ポータブル版：`Lyrics Card Generator-5.9.5-portable.exe`
 
 通常利用にはインストーラーを推奨します。ポータブル版は一時利用、検証、リムーバブルドライブでの利用に向いています。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v5.9.4 の主な更新
+### v5.9.5 の主な更新
 
-* デスクトップ起動、renderer のオリジン確認、静的アセットのキャッシュを効率化し、既存のセキュリティ境界を維持したまま重複確認と不要な起動処理を減らしました。
-* 待機中の ClickSpark アニメーションループを停止し、自動幅の計測ホストを再利用して、歌詞入力、非同期データ、非アクティブな画面に伴う再描画を抑えました。
-* エクスポート準備完了の計測をまとめ、例・履歴・設定・AI・エクスポート画面を遅延読み込みし、システムフォント探索をキャッシュしてホットリクエストではスキャンプロセスを再起動しないようにしました。
-* 遅延画面の失敗を局所化し、chunk を実際に再取得する再試行を追加しました。また、レジストリだけが変更された場合のシステムフォントキャッシュの最大陳腐化時間を 5 分に制限しました。
+* v5.9.4 のパフォーマンス実装を取り下げ、起動、リソース読み込み、エディター、エクスポート計測、システムフォントの各経路を、検証済みの v5.9.3 アーキテクチャへ戻しました。
+* 例、履歴、設定、AI 翻訳、エクスポート画面は実績のある読み込みとエラー処理に戻り、ClickSpark、自動幅、描画境界も検証済みの実装へ戻りました。
+* アプリ全体の結果表示を成功は緑、警告は黄、エラーは赤に分け、Desktop と Web Lite の六言語メッセージを短く統一しました。視差効果を減らす設定では透明度だけで切り替わります。
+* ドキュメント、インポート履歴、手動保存の形式は変更しません。v5.9.3 のネットワーク境界、音声解析、複数サービスからの取り込み、PNG/WebP/JPG 書き出しは維持されます。
 
 ## 🌐 多言語リリースノート
 
 GitHub Release ではデフォルトで簡体字中国語の概要が表示されます。完全なリリースノートはこちら：
-[简体中文](./docs/releases/v5.9.4.zh-CN.md) · [繁體中文](./docs/releases/v5.9.4.zh-TW.md) · [English](./docs/releases/v5.9.4.en.md) · [Français](./docs/releases/v5.9.4.fr.md) · [日本語](./docs/releases/v5.9.4.ja.md) · [Español](./docs/releases/v5.9.4.es.md)
+[简体中文](./docs/releases/v5.9.5.zh-CN.md) · [繁體中文](./docs/releases/v5.9.5.zh-TW.md) · [English](./docs/releases/v5.9.5.en.md) · [Français](./docs/releases/v5.9.5.fr.md) · [日本語](./docs/releases/v5.9.5.ja.md) · [Español](./docs/releases/v5.9.5.es.md)
 
 <a id="主な機能"></a>
 

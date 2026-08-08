@@ -8,7 +8,6 @@ import type { EffectiveUiThemeId } from "@/lib/settings/types";
 import type { AppPreferencesRecord } from "@/lib/settings/app-preferences-reconciliation";
 import type {
   ImportHistoryFileKind,
-  ImportHistoryFileChunkResult,
   ImportHistoryFileRegistration,
   ImportHistoryKind,
   ImportHistoryListResult,
@@ -74,8 +73,6 @@ export type LyricsCardDesktopApi = {
   clearImportHistory: () => Promise<number>;
   replayImportHistory: (recordId: string) => Promise<ImportHistoryReplayResult>;
   relocateImportHistory: (recordId: string) => Promise<ImportHistoryReplayResult>;
-  readImportHistoryFileChunk: (streamToken: string) => Promise<ImportHistoryFileChunkResult>;
-  releaseImportHistoryFile: (streamToken: string) => Promise<boolean>;
   commitImportHistoryReplay: (recordId: string, relocationToken?: string) => Promise<ImportHistoryReplayCommitResult>;
   loadAISettings: () => Promise<AISettingsSummary>;
   saveAISettings: (settings: SaveAISettingsInput) => Promise<AISettingsSummary>;

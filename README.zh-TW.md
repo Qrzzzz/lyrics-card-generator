@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v5.9.4.zh-TW.md">發布說明</a> ·
+  <a href="./docs/releases/v5.9.5.zh-TW.md">發布說明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">線上 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="#本機開發">本機開發</a> ·
@@ -46,26 +46,26 @@
 
 ## 📦 下載與安裝
 
-請從 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載 v5.9.4：
+請從 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載 v5.9.5：
 
-* 安裝版：`Lyrics Card Generator Setup 5.9.4.exe`
-* 可攜版：`Lyrics Card Generator-5.9.4-portable.exe`
+* 安裝版：`Lyrics Card Generator Setup 5.9.5.exe`
+* 可攜版：`Lyrics Card Generator-5.9.5-portable.exe`
 
 安裝版適合長期使用；可攜版適合臨時執行、測試或放在隨身碟中使用。
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v5.9.4 更新重點
+### v5.9.5 更新重點
 
-* 最佳化桌面啟動流程、renderer 來源確認與靜態資源快取，減少重複探測及不必要的啟動工作，同時維持既有安全邊界。
-* 停止閒置時的 ClickSpark 動畫影格迴圈，重用自動寬度量測宿主，並縮小歌詞輸入、非同步資料及非作用中介面的重新渲染範圍。
-* 合併匯出就緒量測、延後載入範例／歷史／設定／AI／匯出介面，並快取系統字型掃描；熱快取不會重複啟動字型掃描程序。
-* 為延遲介面加入局部失敗隔離與真正可重試的分塊載入，並將僅登錄檔變更時的系統字型快取最長陳舊時間限制為 5 分鐘。
+* 作為穩定性回退版本，撤回 v5.9.4 的效能最佳化實作，將相關啟動、資源載入、編輯器、匯出量測與系統字型路徑恢復為 v5.9.3 已驗收的架構。
+* 範例、歷史、設定、AI 翻譯與匯出重新沿用穩定的既有載入與錯誤處理路徑，ClickSpark、自動寬度與渲染邊界也回到已驗證實作。
+* 全域結果提示改用綠色成功、黃色警告、紅色錯誤三種狀態，並同步精簡六語言 Desktop／Web Lite 文案；減少動態設定時仍只使用透明度切換。
+* 不變更匯入歷史、手動存檔或文件格式；v5.9.3 的網路邊界、音訊解析、多平台匯入與 PNG／WebP／JPG 匯出仍保留。
 
 ## 🌐 多語言發佈說明
 
 GitHub Release 預設顯示簡體中文摘要，完整說明請見：
-[简体中文](./docs/releases/v5.9.4.zh-CN.md) · [繁體中文](./docs/releases/v5.9.4.zh-TW.md) · [English](./docs/releases/v5.9.4.en.md) · [Français](./docs/releases/v5.9.4.fr.md) · [日本語](./docs/releases/v5.9.4.ja.md) · [Español](./docs/releases/v5.9.4.es.md)
+[简体中文](./docs/releases/v5.9.5.zh-CN.md) · [繁體中文](./docs/releases/v5.9.5.zh-TW.md) · [English](./docs/releases/v5.9.5.en.md) · [Français](./docs/releases/v5.9.5.fr.md) · [日本語](./docs/releases/v5.9.5.ja.md) · [Español](./docs/releases/v5.9.5.es.md)
 
 ## ✨ 主要功能
 

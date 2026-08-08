@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { ExportPanel } from "@/components/editor/ExportPanel";
 import { ExportCardHost } from "@/components/editor/ExportCardHost";
 import { AutoWidthMeasurementHost } from "@/components/editor/AutoWidthMeasurementHost";
-import { AppToast, type ToastNotice } from "@/components/feedback/AppToast";
+import { AppToast, type ToastNotice, type ToastTone } from "@/components/feedback/AppToast";
 import { MotionPanel } from "@/components/motion/MotionPanel";
 import { PreviewPane } from "@/components/editor/PreviewPane";
 import { SettingsStepper, type SettingsStep } from "@/components/editor/SettingsStepper";
@@ -16,6 +16,7 @@ import {
   DEFAULT_INSTRUMENTAL_TEXT,
   defaultState
 } from "@/components/editor/editor-defaults";
+import { useMeasuredAutoCanvasHeight } from "@/components/editor/hooks/useMeasuredAutoCanvasHeight";
 import { useMeasuredAutoCanvasWidth } from "@/components/editor/hooks/useMeasuredAutoCanvasWidth";
 import {
   getLiveExportCardValidation,
@@ -124,6 +125,7 @@ export function WebLiteEditor() {
   useCoverPalette(activeCover, setState);
   useResolvedTextColor(state, setState);
   const autoWidthReadiness = useMeasuredAutoCanvasWidth(state, setState, autoWidthMeasurementRef);
+  useMeasuredAutoCanvasHeight(state, setState, exportCardRef, autoWidthReadiness.isStable);
 
   const parsedState = useMemo(
     () => ({
@@ -141,12 +143,14 @@ export function WebLiteEditor() {
     previousExportStateRef.current = parsedState;
     exportRevisionRef.current += 1;
   }
-  const { store: exportReadinessStore } = useExportCardReadiness({
+  const exportReadiness = useExportCardReadiness({
     state: parsedState,
-    setState,
     exportCardRef,
     isAutoWidthStable: autoWidthReadiness.isStable
   });
+  const exportBlockingMessage = exportReadiness.blockingReason
+    ? resolveExportSafetyMessage(exportReadiness.blockingReason, exportReadiness.lineStatus.totalLineCount, t)
+    : undefined;
   const accentColor = resolveUiAccentColor({
     settings: WEB_LITE_SETTINGS,
     palette: state.palette
@@ -224,14 +228,14 @@ export function WebLiteEditor() {
     });
   }
 
-  function showToast(message: string) {
+  function showToast(message: string, tone: ToastTone) {
     toastIdRef.current += 1;
-    setToast({ id: toastIdRef.current, message });
+    setToast({ id: toastIdRef.current, message, tone });
   }
 
   function clearAllContent() {
     if (!hasClearableLyricContent(state) && !hasPendingSongInput) {
-      showToast(copy.clearAlreadyEmpty);
+      showToast(copy.clearAlreadyEmpty, "success");
       return;
     }
 
@@ -347,14 +351,9 @@ export function WebLiteEditor() {
     );
     const liveBlockingMessage = liveValidation.blockingReason
       ? resolveExportSafetyMessage(liveValidation.blockingReason, liveValidation.lineStatus.totalLineCount, t)
-      : (() => {
-          const readiness = exportReadinessStore.getSnapshot();
-          return readiness.blockingReason
-            ? resolveExportSafetyMessage(readiness.blockingReason, readiness.lineStatus.totalLineCount, t)
-            : undefined;
-        })();
+      : exportBlockingMessage;
     if (liveBlockingMessage) {
-      showToast(liveBlockingMessage);
+      showToast(liveBlockingMessage, "warning");
       return;
     }
 
@@ -397,14 +396,14 @@ export function WebLiteEditor() {
     });
 
     if (result.ok) {
-      showToast(copy.exportReady);
+      showToast(copy.exportReady, "success");
     } else if (result.kind === "busy") {
-      showToast(t("exportBusy"));
+      showToast(t("exportBusy"), "warning");
     } else if (result.kind === "blocked") {
-      showToast(result.reason);
+      showToast(result.reason, "warning");
     } else {
       console.error("[Lyrics Card Generator Web Lite] export failed", result.error);
-      showToast(copy.exportFailed);
+      showToast(copy.exportFailed, "error");
     }
   }
 
@@ -499,8 +498,7 @@ export function WebLiteEditor() {
       primaryAction: {
         label: t("step.complete"),
         onClick: completeAndExport,
-        disabled: isExporting,
-        readinessStore: exportReadinessStore
+        disabled: isExporting
       },
       content: (
         <ExportPanel
@@ -517,7 +515,7 @@ export function WebLiteEditor() {
           qualityOptions={EXPORT_QUALITY_OPTIONS}
           qualityLabels={{ medium: copy.exportStandard, high: copy.exportHigh }}
           isExporting={isExporting}
-          readinessStore={exportReadinessStore}
+          blockingMessage={exportBlockingMessage}
         />
       )
     }
@@ -599,7 +597,7 @@ export function WebLiteEditor() {
         />
       ) : null}
 
-      <AppToast notice={toast} accentColor={accentColor} />
+      <AppToast notice={toast} />
     </div>
   );
 }

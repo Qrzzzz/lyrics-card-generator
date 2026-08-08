@@ -48,9 +48,6 @@ const QQ_MANUAL_IDENTITY_HOSTS = new Set(["y.qq.com"]);
 const SPOTIFY_MANUAL_IDENTITY_HOSTS = new Set(["open.spotify.com", "play.spotify.com"]);
 const MAX_AUDIO_BYTES = 100 * 1024 * 1024;
 const MAX_IMAGE_BYTES = 20 * 1024 * 1024;
-const DEFAULT_IMPORT_FILE_STREAM_CHUNK_BYTES = 1024 * 1024;
-const DEFAULT_IMPORT_FILE_STREAM_TTL_MS = 2 * 60 * 1000;
-const DEFAULT_IMPORT_FILE_STREAMS_PER_SENDER = 4;
 const MAX_TIMESTAMP_MS = 8_640_000_000_000_000;
 const AUDIO_EXTENSIONS = new Set([".mp3", ".flac"]);
 const IMAGE_EXTENSIONS = new Set([".png", ".jpg", ".jpeg", ".webp", ".gif"]);
@@ -68,8 +65,7 @@ class ImportHistoryStore {
     fs = defaultFs,
     path = defaultPath,
     now = () => Date.now(),
-    createId = () => crypto.randomUUID(),
-    performanceObserver = null
+    createId = () => crypto.randomUUID()
   }) {
     if (typeof filePath !== "string" || !path.isAbsolute(filePath)) {
       throw new TypeError("Import history requires an absolute file path.");
@@ -79,16 +75,10 @@ class ImportHistoryStore {
     this.path = path;
     this.now = now;
     this.createId = createId;
-    this.performanceObserver = typeof performanceObserver === "function" ? performanceObserver : null;
     this.document = null;
     this.loadPromise = null;
     this.writeQueue = Promise.resolve();
     this.notice = null;
-    // Normalized records are immutable within a document snapshot. Derived
-    // search and identity strings can therefore be retained without changing
-    // ordering, pagination, filtering, or dedupe semantics.
-    this.searchTextCache = new WeakMap();
-    this.dedupeKeyCache = new WeakMap();
   }
 
   list(options = {}) {
@@ -100,7 +90,7 @@ class ImportHistoryStore {
       const source = HISTORY_KINDS.has(options.source) ? options.source : "all";
       const filtered = document.records.filter((record) => {
         if (source !== "all" && record.kind !== source) return false;
-        return !query || this.#searchText(record).includes(query);
+        return !query || historySearchText(record).includes(query);
       });
       // Recovery is surfaced once, after the replacement document is safe to read.
       const notice = this.notice;
@@ -155,15 +145,15 @@ class ImportHistoryStore {
       if (!normalized) {
         throw historyError("invalid_record");
       }
-      const key = this.#dedupeKey(normalized);
-      const duplicate = document.records.find((record) => this.#dedupeKey(record) === key);
+      const key = importHistoryDedupeKey(normalized, this.path);
+      const duplicate = document.records.find((record) => importHistoryDedupeKey(record, this.path) === key);
       // Reimports retain stable identity and creation time while refreshing content and recency.
       const record = duplicate
         ? { ...normalized, id: duplicate.id, createdAt: duplicate.createdAt, lastUsedAt: timestamp }
         : normalized;
       const records = [
         record,
-        ...document.records.filter((existing) => existing.id !== record.id && this.#dedupeKey(existing) !== key)
+        ...document.records.filter((existing) => existing.id !== record.id && importHistoryDedupeKey(existing, this.path) !== key)
       ];
       return {
         document: withHistoryLimit({ schemaVersion: IMPORT_HISTORY_SCHEMA_VERSION, records }, limit),
@@ -289,11 +279,11 @@ class ImportHistoryStore {
         lastUsedAt: this.now()
       }, this.path);
       if (!updated) throw historyError("invalid_record");
-      const key = this.#dedupeKey(updated);
+      const key = importHistoryDedupeKey(updated, this.path);
       const records = [
         updated,
         ...document.records.filter((record) => (
-          record.id !== id && this.#dedupeKey(record) !== key
+          record.id !== id && importHistoryDedupeKey(record, this.path) !== key
         ))
       ];
       return {
@@ -349,32 +339,6 @@ class ImportHistoryStore {
     if (this.loadPromise) await this.loadPromise;
   }
 
-  #observePerformance(name, detail = {}) {
-    try {
-      this.performanceObserver?.({ name, ...detail });
-    } catch {
-      // Diagnostics must never affect history durability or user operations.
-    }
-  }
-
-  #searchText(record) {
-    const cached = this.searchTextCache.get(record);
-    if (cached !== undefined) return cached;
-    const value = historySearchText(record);
-    this.searchTextCache.set(record, value);
-    this.#observePerformance("search-index-build");
-    return value;
-  }
-
-  #dedupeKey(record) {
-    const cached = this.dedupeKeyCache.get(record);
-    if (cached !== undefined) return cached;
-    const value = importHistoryDedupeKey(record, this.path);
-    this.dedupeKeyCache.set(record, value);
-    this.#observePerformance("dedupe-index-build");
-    return value;
-  }
-
   #enqueue(operation) {
     // Continue the same chain after failures so a rejected operation never opens a parallel mutation lane.
     const result = this.writeQueue
@@ -415,7 +379,6 @@ class ImportHistoryStore {
 
     let parsed;
     try {
-      this.#observePerformance("read");
       parsed = JSON.parse(await this.fs.readFile(this.filePath, "utf8"));
     } catch (error) {
       if (error?.code === "ENOENT") {
@@ -465,12 +428,8 @@ class ImportHistoryStore {
     const temporary = `${this.filePath}.tmp-${process.pid}-${crypto.randomBytes(6).toString("hex")}`;
     await this.fs.mkdir(directory, { recursive: true });
     try {
-      const serialized = `${JSON.stringify(document, null, 2)}\n`;
-      const serializedBytes = Buffer.byteLength(serialized, "utf8");
-      this.#observePerformance("serialize", { bytes: serializedBytes });
       // Rename publishes a complete restricted file; a failed write leaves the previous document intact.
-      this.#observePerformance("write", { bytes: serializedBytes });
-      await this.fs.writeFile(temporary, serialized, {
+      await this.fs.writeFile(temporary, `${JSON.stringify(document, null, 2)}\n`, {
         encoding: "utf8",
         mode: 0o600
       });
@@ -1067,262 +1026,6 @@ async function readValidatedImportFile(kind, filePath, {
   }
 }
 
-/**
- * Sender-bound sequential file capabilities keep native paths in main while
- * bounding every renderer IPC payload. A single stable handle is validated
- * before and after streaming, and every terminal path closes it.
- */
-class ImportHistoryFileStreamRegistry {
-  constructor({
-    fs = defaultFs,
-    path = defaultPath,
-    now = () => Date.now(),
-    createToken = () => crypto.randomUUID(),
-    chunkSize = DEFAULT_IMPORT_FILE_STREAM_CHUNK_BYTES,
-    ttlMs = DEFAULT_IMPORT_FILE_STREAM_TTL_MS,
-    maxStreamsPerSender = DEFAULT_IMPORT_FILE_STREAMS_PER_SENDER,
-    scheduleExpiry = defaultStreamExpiryScheduler
-  } = {}) {
-    this.fs = fs;
-    this.path = path;
-    this.now = now;
-    this.createToken = createToken;
-    this.chunkSize = boundedInteger(chunkSize, 64 * 1024, DEFAULT_IMPORT_FILE_STREAM_CHUNK_BYTES, DEFAULT_IMPORT_FILE_STREAM_CHUNK_BYTES);
-    this.ttlMs = boundedInteger(ttlMs, 10, 30 * 60 * 1000, DEFAULT_IMPORT_FILE_STREAM_TTL_MS);
-    this.maxStreamsPerSender = boundedInteger(maxStreamsPerSender, 1, 16, DEFAULT_IMPORT_FILE_STREAMS_PER_SENDER);
-    this.scheduleExpiry = scheduleExpiry;
-    this.entries = new Map();
-  }
-
-  get activeCount() {
-    return this.entries.size;
-  }
-
-  async open(senderId, kind, filePath) {
-    if (!isValidStreamSender(senderId) || kind !== "local-audio") {
-      return { ok: false, code: "unsupported_file_kind" };
-    }
-    const normalizedPath = normalizeAbsolutePath(filePath, this.path);
-    if (!normalizedPath) return { ok: false, code: "invalid_path" };
-    await this.pruneExpired();
-    let senderStreams = 0;
-    for (const entry of this.entries.values()) {
-      if (entry.senderId === senderId) senderStreams += 1;
-    }
-    if (senderStreams >= this.maxStreamsPerSender) {
-      return { ok: false, code: "too_many_open_files" };
-    }
-
-    let handle;
-    let retained = false;
-    try {
-      handle = await this.fs.open(normalizedPath, "r");
-      const before = await handle.stat();
-      const validated = validateImportFileDescriptor(kind, normalizedPath, before, this.path);
-      if (!validated.ok) return validated;
-      let token = "";
-      for (let attempt = 0; attempt < 8; attempt += 1) {
-        const candidate = this.createToken();
-        if (isValidStreamToken(candidate) && !this.entries.has(candidate)) {
-          token = candidate;
-          break;
-        }
-      }
-      if (!token) return { ok: false, code: "file_invalid" };
-      senderStreams = 0;
-      for (const current of this.entries.values()) {
-        if (current.senderId === senderId) senderStreams += 1;
-      }
-      if (senderStreams >= this.maxStreamsPerSender) {
-        return { ok: false, code: "too_many_open_files" };
-      }
-      const entry = {
-        token,
-        senderId,
-        handle,
-        path: validated.path,
-        extension: validated.extension,
-        size: validated.size,
-        mtimeMs: validated.mtimeMs,
-        ctimeMs: Number(before.ctimeMs),
-        position: 0,
-        queue: Promise.resolve(),
-        readPending: false,
-        cancelled: false,
-        closed: false,
-        cancelExpiry: null,
-        expiresAt: 0
-      };
-      this.entries.set(token, entry);
-      this.#refreshExpiry(entry);
-      retained = true;
-      return {
-        ok: true,
-        streamToken: token,
-        path: validated.path,
-        extension: validated.extension,
-        size: validated.size,
-        mtimeMs: validated.mtimeMs
-      };
-    } catch (error) {
-      return {
-        ok: false,
-        code: error?.code === "ENOENT" ? "file_missing" : "file_invalid"
-      };
-    } finally {
-      if (!retained) await handle?.close().catch(() => undefined);
-    }
-  }
-
-  read(senderId, token) {
-    const entry = isValidStreamToken(token) ? this.entries.get(token) : null;
-    if (!entry || entry.senderId !== senderId || entry.cancelled) {
-      return Promise.resolve({ ok: false, code: "file_reference_expired" });
-    }
-    if (entry.readPending) return Promise.resolve({ ok: false, code: "read_in_progress" });
-    entry.readPending = true;
-    this.#refreshExpiry(entry);
-    const operation = entry.queue.then(() => this.#readEntry(entry));
-    entry.queue = operation.then(
-      () => { entry.readPending = false; },
-      () => { entry.readPending = false; }
-    );
-    return operation;
-  }
-
-  async release(senderId, token) {
-    const entry = isValidStreamToken(token) ? this.entries.get(token) : null;
-    if (!entry || entry.senderId !== senderId) return false;
-    entry.cancelled = true;
-    this.#detach(entry);
-    await entry.queue;
-    await this.#close(entry);
-    return true;
-  }
-
-  async releaseSender(senderId) {
-    const matching = [...this.entries.values()].filter((entry) => entry.senderId === senderId);
-    await Promise.all(matching.map((entry) => this.release(senderId, entry.token)));
-    return matching.length;
-  }
-
-  async closeAll() {
-    const entries = [...this.entries.values()];
-    for (const entry of entries) {
-      entry.cancelled = true;
-      this.#detach(entry);
-    }
-    await Promise.all(entries.map(async (entry) => {
-      await entry.queue;
-      await this.#close(entry);
-    }));
-  }
-
-  async pruneExpired() {
-    const expired = [...this.entries.values()].filter((entry) => entry.expiresAt <= this.now());
-    await Promise.all(expired.map((entry) => this.release(entry.senderId, entry.token)));
-    return expired.length;
-  }
-
-  async #readEntry(entry) {
-    if (entry.cancelled || this.entries.get(entry.token) !== entry) {
-      return { ok: false, code: "cancelled" };
-    }
-    try {
-      const remaining = entry.size - entry.position;
-      const expected = Math.min(this.chunkSize, Math.max(0, remaining));
-      const buffer = Buffer.allocUnsafe(expected);
-      let total = 0;
-      while (total < expected) {
-        const { bytesRead } = await entry.handle.read(
-          buffer,
-          total,
-          expected - total,
-          entry.position + total
-        );
-        if (bytesRead === 0) break;
-        total += bytesRead;
-      }
-      if (entry.cancelled) return { ok: false, code: "cancelled" };
-      entry.position += total;
-      const done = entry.position >= entry.size;
-      if (total !== expected || done) {
-        const after = await entry.handle.stat();
-        const revalidated = validateImportFileDescriptor("local-audio", entry.path, after, this.path);
-        const afterCtimeMs = Number(after.ctimeMs);
-        const ctimeChanged = Number.isFinite(entry.ctimeMs) && Number.isFinite(afterCtimeMs) &&
-          Math.abs(entry.ctimeMs - afterCtimeMs) > 1;
-        if (
-          !revalidated.ok ||
-          revalidated.size !== entry.size ||
-          Math.abs(revalidated.mtimeMs - entry.mtimeMs) > 1 ||
-          ctimeChanged ||
-          total !== expected
-        ) {
-          await this.#finishWithError(entry);
-          return { ok: false, code: "file_changed_during_read" };
-        }
-      }
-      if (done) {
-        this.#detach(entry);
-        await this.#close(entry);
-      }
-      return { ok: true, bytes: buffer.subarray(0, total), done };
-    } catch (error) {
-      await this.#finishWithError(entry);
-      return {
-        ok: false,
-        code: error?.code === "ENOENT" ? "file_missing" : "file_invalid"
-      };
-    }
-  }
-
-  #refreshExpiry(entry) {
-    entry.cancelExpiry?.();
-    entry.expiresAt = this.now() + this.ttlMs;
-    entry.cancelExpiry = this.scheduleExpiry(() => {
-      if (this.entries.get(entry.token) !== entry) return;
-      if (entry.expiresAt > this.now()) {
-        this.#refreshExpiry(entry);
-        return;
-      }
-      void this.release(entry.senderId, entry.token);
-    }, this.ttlMs);
-  }
-
-  #detach(entry) {
-    if (this.entries.get(entry.token) === entry) this.entries.delete(entry.token);
-    entry.cancelExpiry?.();
-    entry.cancelExpiry = null;
-  }
-
-  async #finishWithError(entry) {
-    entry.cancelled = true;
-    this.#detach(entry);
-    await this.#close(entry);
-  }
-
-  async #close(entry) {
-    if (entry.closed) return;
-    entry.closed = true;
-    await entry.handle.close().catch(() => undefined);
-  }
-}
-
-function defaultStreamExpiryScheduler(callback, delayMs) {
-  const timer = setTimeout(callback, delayMs);
-  timer.unref?.();
-  return () => clearTimeout(timer);
-}
-
-function isValidStreamSender(senderId) {
-  return Number.isSafeInteger(senderId) && senderId > 0;
-}
-
-function isValidStreamToken(token) {
-  return typeof token === "string" && /^[A-Za-z0-9][A-Za-z0-9-]{7,127}$/.test(token);
-}
-
 async function cleanupImportHistoryTemporaryFiles({ filePath, fs = defaultFs, path = defaultPath }) {
   const directory = path.dirname(filePath);
   const prefix = `${path.basename(filePath)}.tmp-`;
@@ -1639,11 +1342,9 @@ function historyError(code) {
 
 module.exports = {
   AUDIO_EXTENSIONS,
-  DEFAULT_IMPORT_FILE_STREAM_CHUNK_BYTES,
   DEFAULT_IMPORT_HISTORY_LIMIT,
   IMAGE_EXTENSIONS,
   IMPORT_HISTORY_SCHEMA_VERSION,
-  ImportHistoryFileStreamRegistry,
   ImportHistoryStore,
   MAX_AUDIO_BYTES,
   MAX_IMAGE_BYTES,

@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { messages } from "../lib/i18n";
-import { APP_ICON_URL } from "../lib/static-assets";
 
 const appLocales = ["zh", "zh-TW", "en", "fr", "ja", "es"] as const;
 
@@ -30,9 +29,7 @@ assert.match(titlebarSource, /traffic-light--maximize/);
 assert.match(titlebarSource, /desktop-titlebar__traffic-lights[^"\n]*gap-0/);
 assert.match(titlebarSource, /windowMaximized/);
 assert.match(titlebarSource, /desktop-titlebar__icon/);
-assert.match(titlebarSource, /import\s+\{\s*APP_ICON_URL\s*\}\s+from\s+"@\/lib\/static-assets"/);
-assert.match(titlebarSource, /src=\{APP_ICON_URL\}/);
-assert.equal(APP_ICON_URL, "/app-icon.png?v=b3e613afa7695f7f");
+assert.match(titlebarSource, /src="\/app-icon\.png"/);
 assert.match(titlebarSource, /<TitlebarGradualBlur \/>/);
 assert.doesNotMatch(titlebarSource, /aria-label="(?:Minimize|Maximize|Close)"/);
 assert.doesNotMatch(titlebarSource, /import\s+\{[^}]*\b(?:Minus|Square|Copy|X)\b[^}]*\}\s+from\s+"lucide-react"/);
@@ -91,4 +88,4 @@ assert.match(globalsSource, /\.desktop-titlebar > :not\(\.desktop-titlebar__grad
 const dynamicBackgroundSource = readFileSync(resolve("components/layout/DynamicAppBackground.tsx"), "utf8");
 assert.doesNotMatch(dynamicBackgroundSource, /className="[^"]*\bfixed\s+inset-0[^"]*"/);
 
-console.log(JSON.stringify({ ok: true, titlebarRegressionTests: 61 }, null, 2));
+console.log(JSON.stringify({ ok: true, titlebarRegressionTests: 59 }, null, 2));

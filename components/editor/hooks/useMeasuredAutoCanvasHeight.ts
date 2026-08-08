@@ -1,10 +1,145 @@
 "use client";
 
+import { useEffect } from "react";
+import type { Dispatch, RefObject, SetStateAction } from "react";
 import { AUTO_HEIGHT_MAX, AUTO_HEIGHT_MIN, getCardSize } from "@/lib/card-size";
 import { getPortraitLayout } from "@/lib/card-layout-engine";
 import type { AppState } from "@/lib/types";
 
+type AppStateSetter = Dispatch<SetStateAction<AppState>>;
+
 export const AUTO_HEIGHT_SETTLE_TOLERANCE = 2;
+
+export function useMeasuredAutoCanvasHeight(
+  state: AppState,
+  setState: AppStateSetter,
+  cardRef: RefObject<HTMLElement | null>,
+  isAutoWidthStable = true
+) {
+  useEffect(() => {
+    // Width must settle first because wrapping couples the two automatic dimensions.
+    if (!isPortraitCustomAutoHeight(state) || !isAutoWidthStable) {
+      return;
+    }
+
+    let active = true;
+    let frame = 0;
+    const observers: ResizeObserver[] = [];
+    let contentObserver: MutationObserver | undefined;
+
+    const scheduleMeasure = () => {
+      if (!active) {
+        return;
+      }
+
+      // Coalesce font, resize, and mutation notifications into one layout read per frame.
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        const nextHeight = measureAutoCanvasHeight(state, cardRef.current);
+        if (nextHeight === null) {
+          return;
+        }
+
+        setState((current) => {
+          if (!isPortraitCustomAutoHeight(current) || !isAutoWidthStable) {
+            return current;
+          }
+
+          if (Math.abs(current.style.height - nextHeight) <= AUTO_HEIGHT_SETTLE_TOLERANCE) {
+            return current;
+          }
+
+          return {
+            ...current,
+            style: {
+              ...current.style,
+              height: nextHeight
+            }
+          };
+        });
+      });
+    };
+
+    const attachObservers = () => {
+      const root = findExportCard(cardRef.current);
+      if (!root) {
+        scheduleMeasure();
+        return;
+      }
+
+      const targets = [
+        root,
+        root.querySelector<HTMLElement>("[data-card-content]"),
+        root.querySelector<HTMLElement>("[data-card-header]"),
+        root.querySelector<HTMLElement>("[data-card-lyrics]"),
+        root.querySelector<HTMLElement>("[data-card-footer]")
+      ].filter(Boolean) as HTMLElement[];
+
+      for (const target of targets) {
+        const observer = new ResizeObserver(scheduleMeasure);
+        observer.observe(target);
+        observers.push(observer);
+      }
+
+      contentObserver = new MutationObserver(scheduleMeasure);
+      contentObserver.observe(root, {
+        childList: true,
+        characterData: true,
+        subtree: true
+      });
+
+      scheduleMeasure();
+    };
+
+    void document.fonts?.ready.then(scheduleMeasure);
+    attachObservers();
+
+    return () => {
+      active = false;
+      cancelAnimationFrame(frame);
+      observers.forEach((observer) => observer.disconnect());
+      contentObserver?.disconnect();
+    };
+  }, [
+    cardRef,
+    isAutoWidthStable,
+    setState,
+    state.lyrics,
+    state.locale,
+    state.song.album,
+    state.song.artist,
+    state.song.explicit,
+    state.song.source,
+    state.song.title,
+    state.translationEnabled,
+    state.translationText,
+    state.style.align,
+    state.style.allowTwoLineTitle,
+    state.style.autoHeight,
+    state.style.contentMode,
+    state.style.customFontEnabled,
+    state.style.customFontFamily,
+    state.style.customFontWeight,
+    state.style.customFontStyle,
+    state.style.font,
+    state.style.height,
+    state.style.layoutMode,
+    state.style.lineHeight,
+    state.style.lyricFontSize,
+    state.style.ratio,
+    state.style.sharedByText,
+    state.style.showCover,
+    state.style.showGeneratedWatermark,
+    state.style.showAlbumName,
+    state.style.showPlatformBadge,
+    state.style.showSharedBy,
+    state.style.showSongInfo,
+    state.style.translationEnabled,
+    state.style.translationScale,
+    state.style.translationText,
+    state.style.width
+  ]);
+}
 
 export function isPortraitCustomAutoHeight(state: AppState) {
   return (
@@ -12,51 +147,6 @@ export function isPortraitCustomAutoHeight(state: AppState) {
     state.style.ratio === "custom" &&
     state.style.autoHeight
   );
-}
-
-/** Guards auto-height writes against measurements from superseded content. */
-export function autoCanvasHeightMeasurementSignature(state: AppState) {
-  return JSON.stringify({
-    lyrics: state.lyrics,
-    locale: state.locale,
-    song: {
-      album: state.song.album,
-      artist: state.song.artist,
-      explicit: state.song.explicit,
-      source: state.song.source,
-      title: state.song.title
-    },
-    translationEnabled: state.translationEnabled,
-    translationText: state.translationText,
-    style: {
-      align: state.style.align,
-      allowTwoLineTitle: state.style.allowTwoLineTitle,
-      autoHeight: state.style.autoHeight,
-      contentMode: state.style.contentMode,
-      customFontEnabled: state.style.customFontEnabled,
-      customFontFamily: state.style.customFontFamily,
-      customFontWeight: state.style.customFontWeight,
-      customFontStyle: state.style.customFontStyle,
-      font: state.style.font,
-      fontScheme: state.style.fontScheme,
-      height: state.style.height,
-      layoutMode: state.style.layoutMode,
-      lineHeight: state.style.lineHeight,
-      lyricFontSize: state.style.lyricFontSize,
-      ratio: state.style.ratio,
-      sharedByText: state.style.sharedByText,
-      showCover: state.style.showCover,
-      showGeneratedWatermark: state.style.showGeneratedWatermark,
-      showAlbumName: state.style.showAlbumName,
-      showPlatformBadge: state.style.showPlatformBadge,
-      showSharedBy: state.style.showSharedBy,
-      showSongInfo: state.style.showSongInfo,
-      translationEnabled: state.style.translationEnabled,
-      translationScale: state.style.translationScale,
-      translationText: state.style.translationText,
-      width: state.style.width
-    }
-  });
 }
 
 export function findExportCard(container: HTMLElement | null) {
