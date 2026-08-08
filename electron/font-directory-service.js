@@ -5,6 +5,7 @@ const { normalizeFontOptions } = require("./font-options");
 
 const DEFAULT_SCAN_TIMEOUT_MS = 30_000;
 const DEFAULT_REFRESH_INTERVAL_MS = 30_000;
+const DEFAULT_REGISTRY_REFRESH_INTERVAL_MS = 5 * 60_000;
 const FONT_SCAN_CANCELLED = "font_scan_cancelled";
 const FONT_SCAN_TIMEOUT = "font_scan_timeout";
 const defaultFontSourceWatcher = createFontSourceWatcher();
@@ -25,6 +26,7 @@ class FontDirectoryService {
     fallbackOptions = FALLBACK_FONT_OPTIONS,
     watch = defaultFontSourceWatcher,
     refreshIntervalMs = DEFAULT_REFRESH_INTERVAL_MS,
+    registryRefreshIntervalMs = DEFAULT_REGISTRY_REFRESH_INTERVAL_MS,
     setTimer = setTimeout,
     clearTimer = clearTimeout,
     onError = () => {}
@@ -35,6 +37,7 @@ class FontDirectoryService {
     this.fallbackOptions = freezeFontOptions(normalizeFontOptions(fallbackOptions));
     this.watch = watch;
     this.refreshIntervalMs = refreshIntervalMs;
+    this.registryRefreshIntervalMs = registryRefreshIntervalMs;
     this.setTimer = setTimer;
     this.clearTimer = clearTimer;
     this.onError = onError;
@@ -44,6 +47,7 @@ class FontDirectoryService {
     this.disposed = false;
     this.generation = 0;
     this.refreshTimer = null;
+    this.refreshDelayMs = null;
     this.watchers = new Map();
     this.diagnostics = {
       requests: 0,
@@ -143,12 +147,21 @@ class FontDirectoryService {
 
   scheduleConservativeRefresh(watcherCoverageComplete) {
     this.clearRefreshTimer();
-    if (watcherCoverageComplete) return;
-    if (!Number.isFinite(this.refreshIntervalMs) || this.refreshIntervalMs <= 0) return;
+    // Directory watchers cannot observe HKLM/HKCU-only registrations, label
+    // changes, or removals. Keep the existing 30-second fallback when directory
+    // coverage is incomplete, and bound registry-only staleness to five minutes
+    // when every directory is watched. The timer only marks the cache dirty;
+    // the next real request performs the scan, so an idle app starts no process.
+    const refreshDelayMs = watcherCoverageComplete
+      ? this.registryRefreshIntervalMs
+      : this.refreshIntervalMs;
+    if (!Number.isFinite(refreshDelayMs) || refreshDelayMs <= 0) return;
+    this.refreshDelayMs = refreshDelayMs;
     this.refreshTimer = this.setTimer(() => {
       this.refreshTimer = null;
+      this.refreshDelayMs = null;
       this.invalidate();
-    }, this.refreshIntervalMs);
+    }, refreshDelayMs);
     this.refreshTimer?.unref?.();
   }
 
@@ -156,6 +169,7 @@ class FontDirectoryService {
     if (this.refreshTimer === null) return;
     this.clearTimer(this.refreshTimer);
     this.refreshTimer = null;
+    this.refreshDelayMs = null;
   }
 
   closeWatchers() {
@@ -188,6 +202,7 @@ class FontDirectoryService {
       hasInFlightScan: Boolean(this.inFlight),
       watcherCount: this.watchers.size,
       hasRefreshTimer: this.refreshTimer !== null,
+      refreshDelayMs: this.refreshDelayMs,
       disposed: this.disposed
     };
   }
@@ -201,6 +216,7 @@ function createWindowsFontDirectoryService(options = {}) {
     fallbackOptions: options.fallbackOptions,
     watch: options.watch,
     refreshIntervalMs: options.refreshIntervalMs,
+    registryRefreshIntervalMs: options.registryRefreshIntervalMs,
     setTimer: options.setTimer,
     clearTimer: options.clearTimer,
     onError: options.onError
@@ -488,6 +504,7 @@ function isFontScanCancellation(error) {
 }
 
 module.exports = {
+  DEFAULT_REGISTRY_REFRESH_INTERVAL_MS,
   DEFAULT_REFRESH_INTERVAL_MS,
   DEFAULT_SCAN_TIMEOUT_MS,
   FALLBACK_FONT_OPTIONS,

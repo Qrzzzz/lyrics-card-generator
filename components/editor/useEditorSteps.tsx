@@ -1,7 +1,10 @@
 "use client";
 
-import { lazy, Suspense, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
+import {
+  DeferredAiTranslatePanel,
+  DeferredExportPanel
+} from "@/components/editor/DeferredEditorStepPanels";
 import { LocalAudioParser } from "@/components/editor/LocalAudioParser";
 import { LyricsFetchPanel } from "@/components/editor/LyricsFetchPanel";
 import { LyricsWorkspace } from "@/components/editor/LyricsWorkspace";
@@ -38,16 +41,6 @@ import type {
   ParsedSongData,
   SongInfo
 } from "@/lib/types";
-
-const LazyAiTranslatePanel = lazy(async () => {
-  const imported = await import("@/components/lyrics/AiTranslatePanel");
-  return { default: imported.AiTranslatePanel };
-});
-
-const LazyExportPanel = lazy(async () => {
-  const imported = await import("@/components/editor/ExportPanel");
-  return { default: imported.ExportPanel };
-});
 
 export type EditorStepsAiState = {
   isOpen: boolean;
@@ -358,23 +351,22 @@ export function useEditorSteps({
             onCancelAITranslate={onCancelAiTranslate}
             isAITranslating={ai.isTranslating}
             aiPanel={ai.isOpen ? (
-              <Suspense fallback={<DeferredAiPanelFallback backLabel={t("step.back")} onClose={onCloseAiTranslate} />}>
-                <LazyAiTranslatePanel
-                  locale={state.locale}
-                  initialStyle={ai.defaultStyle}
-                  initialReasoning={ai.reasoningEnabled}
-                  promptLibrary={ai.promptLibrary}
-                  loading={ai.isTranslating}
-                  streamingText={ai.streamingText}
-                  reasoningText={ai.reasoningText}
-                  phase={ai.phase}
-                  themeColor={themeColor}
-                  error={ai.error}
-                  onClose={onCloseAiTranslate}
-                  onCancel={onCancelAiTranslate}
-                  onConfirm={onConfirmAiTranslate}
-                />
-              </Suspense>
+              <DeferredAiTranslatePanel
+                backLabel={t("step.back")}
+                locale={state.locale}
+                initialStyle={ai.defaultStyle}
+                initialReasoning={ai.reasoningEnabled}
+                promptLibrary={ai.promptLibrary}
+                loading={ai.isTranslating}
+                streamingText={ai.streamingText}
+                reasoningText={ai.reasoningText}
+                phase={ai.phase}
+                themeColor={themeColor}
+                error={ai.error}
+                onClose={onCloseAiTranslate}
+                onCancel={onCancelAiTranslate}
+                onConfirm={onConfirmAiTranslate}
+              />
             ) : null}
             lyricsFetchPanel={(
               <LyricsFetchPanel
@@ -485,18 +477,18 @@ export function useEditorSteps({
         readinessStore: exportReadinessStore
       },
       content: (
-        <Suspense fallback={<DeferredExportPanelFallback label={t("step.export")} />}>
-          <LazyExportPanel
-            t={t}
-            accentColor={themeColor}
-            exportFormat={exportFormat}
-            onExportFormatChange={onExportFormatChange}
-            exportQuality={exportQuality}
-            onExportQualityChange={onExportQualityChange}
-            isExporting={isExporting}
-            readinessStore={exportReadinessStore}
-          />
-        </Suspense>
+        <DeferredExportPanel
+          label={t("step.export")}
+          locale={state.locale}
+          t={t}
+          accentColor={themeColor}
+          exportFormat={exportFormat}
+          onExportFormatChange={onExportFormatChange}
+          exportQuality={exportQuality}
+          onExportQualityChange={onExportQualityChange}
+          isExporting={isExporting}
+          readinessStore={exportReadinessStore}
+        />
       )
   }), [
     exportFormat,
@@ -506,6 +498,7 @@ export function useEditorSteps({
     onExport,
     onExportFormatChange,
     onExportQualityChange,
+    state.locale,
     t,
     themeColor
   ]);
@@ -513,55 +506,5 @@ export function useEditorSteps({
   return useMemo(
     () => [linkStep, lyricsStep, layoutStep, fontStep, visualStep, exportStep],
     [exportStep, fontStep, layoutStep, linkStep, lyricsStep, visualStep]
-  );
-}
-
-function DeferredAiPanelFallback({
-  backLabel,
-  onClose
-}: {
-  backLabel: string;
-  onClose: () => void;
-}) {
-  const backButtonRef = useRef<HTMLButtonElement | null>(null);
-
-  useLayoutEffect(() => {
-    const fallbackBackButton = backButtonRef.current;
-    return () => {
-      if (document.activeElement !== fallbackBackButton) return;
-      window.requestAnimationFrame(() => {
-        document.querySelector<HTMLButtonElement>(
-          '[data-testid="lyrics-translation-ai-page"][data-page-active="true"] [data-testid="ai-translate-panel"] [data-testid="lyrics-ai-page-back"]'
-        )?.focus({ preventScroll: true });
-      });
-    };
-  }, []);
-
-  return (
-    <section className="flex h-full min-h-0 flex-col" data-testid="ai-translate-panel-loading" aria-busy="true">
-      <div className="flex shrink-0 items-center border-b border-[rgb(var(--panel-border))] p-3">
-        <button
-          ref={backButtonRef}
-          type="button"
-          data-testid="lyrics-ai-page-back"
-          aria-label={backLabel}
-          onClick={onClose}
-          className="control-focus app-button inline-flex size-9 items-center justify-center rounded-lg"
-        >
-          <ArrowLeft className="size-4" aria-hidden="true" />
-        </button>
-      </div>
-      <div className="grid min-h-0 flex-1 place-items-center" role="status" aria-label={backLabel}>
-        <Loader2 className="app-text-subtle size-5 animate-spin" aria-hidden="true" />
-      </div>
-    </section>
-  );
-}
-
-function DeferredExportPanelFallback({ label }: { label: string }) {
-  return (
-    <div className="settings-panel-card grid min-h-56 place-items-center" role="status" aria-label={label} aria-busy="true">
-      <Loader2 className="app-text-subtle size-5 animate-spin" aria-hidden="true" />
-    </div>
   );
 }

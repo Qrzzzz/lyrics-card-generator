@@ -5,6 +5,7 @@ import { resolve } from "node:path";
 const read = (file: string) => readFileSync(resolve(file), "utf8");
 const lyricEditor = read("components/editor/LyricEditor.tsx");
 const deferredEditorSurfaces = read("components/editor/DeferredEditorSurfaces.tsx");
+const retryableLazySurface = read("components/editor/RetryableLazySurface.tsx");
 const editorHeader = read("components/editor/EditorHeader.tsx");
 const historyFloor = read("components/editor/HistoryFloor.tsx");
 const editorActions = read("components/editor/hooks/useEditorActions.ts");
@@ -38,9 +39,16 @@ assert.match(lyricEditor, /const openHistory = useCallback\(\(\) => openSurface\
 assert.match(lyricEditor, /onOpenHistory=\{isDesktopShell \? openHistory : undefined\}/);
 assert.match(
   deferredEditorSurfaces,
-  /const LazyHistoryFloor = lazy\([\s\S]*?import\("@\/components\/editor\/HistoryFloor"\)/,
+  /const loadHistoryFloor:[\s\S]*?import\("@\/components\/editor\/HistoryFloor"\)/,
   "the desktop history floor remains a separately loaded module"
 );
+assert.match(
+  deferredEditorSurfaces,
+  /<RetryableLazySurface[\s\S]*?loadComponent=\{loadComponent\}[\s\S]*?testId="history-surface-loading"[\s\S]*?testId="history-surface-error"/,
+  "the delayed history module owns loading and failure UI inside one local retry boundary"
+);
+assert.match(retryableLazySurface, /\(\) => lazy\(loadComponent\)[\s\S]*?\[generation, loadComponent\]/);
+assert.match(retryableLazySurface, /key=\{generation\}[\s\S]*?renderError=\{\(error\) => renderError\(error, retry\)\}/);
 assert.doesNotMatch(
   [webLiteApp, webLiteHeader, webLiteEntry].join("\n"),
   /HistoryFloor|import-history|history-button|manual-save|manualSave|createManualSave|updateManualSave/,
@@ -262,4 +270,4 @@ assert.match(
   "narrow icon-only adaptation remains scoped to the desktop shell"
 );
 
-console.log(JSON.stringify({ ok: true, importHistoryUiContracts: 76 }, null, 2));
+console.log(JSON.stringify({ ok: true, importHistoryUiContracts: 79 }, null, 2));

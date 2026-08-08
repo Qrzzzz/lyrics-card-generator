@@ -2,6 +2,7 @@ const assert = require("node:assert/strict");
 const { EventEmitter } = require("node:events");
 const { readFileSync } = require("node:fs");
 const {
+  DEFAULT_REGISTRY_REFRESH_INTERVAL_MS,
   FONT_SCAN_CANCELLED,
   FONT_SCAN_TIMEOUT,
   FontDirectoryService,
@@ -31,6 +32,7 @@ const secondScan = {
   await testConcurrentFailureAndRetry();
   await testInvalidationAndFailedRefresh();
   await testInvalidationDuringScan();
+  await testRegistryOnlyRefreshWithCompleteWatchers();
   await testConservativeRefreshWithoutWatchers();
   await testCancellation();
   await testScannerTimeoutAndCleanup();
@@ -38,7 +40,7 @@ const secondScan = {
   testMissingSourceParentWatcher();
   testPowerShellSourceContract();
   testMainProcessWiring();
-  console.log(JSON.stringify({ ok: true, electronFontDirectoryService: 12 }, null, 2));
+  console.log(JSON.stringify({ ok: true, electronFontDirectoryService: 13 }, null, 2));
 })().catch((error) => {
   console.error(error);
   process.exitCode = 1;
@@ -53,7 +55,8 @@ async function testColdAndRepeatedRequests() {
       return firstScan;
     },
     watch: watchers.watch,
-    refreshIntervalMs: 0
+    refreshIntervalMs: 0,
+    registryRefreshIntervalMs: 0
   });
 
   const cold = await service.list();
@@ -62,7 +65,7 @@ async function testColdAndRepeatedRequests() {
   assert.ok(repeated.every((fonts) => fonts === cold), "hot requests reuse the normalized successful snapshot");
   assert.deepEqual(cold.map((font) => font.label), ["方正舒体", "Arial"], "the existing zh-CN sort order is preserved");
   assert.equal(watchers.open.size, 1, "the successful source directory is watched once");
-  assert.equal(service.getDiagnostics().hasRefreshTimer, false, "complete watcher coverage avoids periodic rescans");
+  assert.equal(service.getDiagnostics().hasRefreshTimer, false, "the test can explicitly disable both refresh deadlines");
   service.dispose();
   assert.equal(watchers.closed, 1, "dispose closes the active source watcher");
 }
@@ -196,6 +199,93 @@ async function testInvalidationDuringScan() {
   assert.equal((await service.list()).length, 3, "the next request rescans after an in-flight invalidation");
   assert.equal(scans, 2);
   service.dispose();
+}
+
+async function testRegistryOnlyRefreshWithCompleteWatchers() {
+  let scans = 0;
+  const watchers = createWatcherHarness();
+  const timers = createTimerHarness();
+  const registeredScan = {
+    options: [
+      ...firstScan.options,
+      { label: "Registry Existing File", family: "Registry Existing File", fontWeight: 400, fontStyle: "normal" }
+    ],
+    sourceDirectories: firstScan.sourceDirectories
+  };
+  const styledScan = {
+    options: [
+      firstScan.options[0],
+      { label: "Arial Display Italic", family: "Arial", fontWeight: 500, fontStyle: "italic" }
+    ],
+    sourceDirectories: firstScan.sourceDirectories
+  };
+  const recoveredScan = {
+    options: [
+      ...styledScan.options,
+      { label: "Registry Recovery", family: "Registry Recovery", fontWeight: 400, fontStyle: "normal" }
+    ],
+    sourceDirectories: firstScan.sourceDirectories
+  };
+  const service = new FontDirectoryService({
+    scan: async () => {
+      scans += 1;
+      if (scans === 1) return firstScan;
+      if (scans === 2) return registeredScan;
+      if (scans === 3) return firstScan;
+      if (scans === 4) return styledScan;
+      if (scans === 5) throw new Error("transient registry refresh failure");
+      return recoveredScan;
+    },
+    watch: watchers.watch,
+    refreshIntervalMs: 25,
+    registryRefreshIntervalMs: 300,
+    setTimer: timers.setTimer,
+    clearTimer: timers.clearTimer
+  });
+
+  const initial = await service.list();
+  const repeated = await Promise.all(Array.from({ length: 5 }, () => service.list()));
+  assert.equal(scans, 1, "short repeated requests perform no extra full scan");
+  assert.ok(repeated.every((fonts) => fonts === initial), "the hot registry window reuses one snapshot");
+  assert.equal(watchers.open.size, 1, "all reported directories are watched");
+  assert.equal(timers.pending.size, 1, "complete directory watchers still retain a registry refresh deadline");
+  assert.equal(timers.nextDelay(), 300, "registry-only staleness is bounded by the configured deadline");
+  assert.equal(timers.unrefCalls, 1, "the registry deadline never keeps the app alive");
+
+  timers.fireNext();
+  const registeredBatch = await Promise.all(Array.from({ length: 4 }, () => service.list()));
+  assert.equal(scans, 2, "four requests after registry invalidation share one scan process");
+  assert.ok(registeredBatch.every((fonts) => fonts === registeredBatch[0]));
+  assert.ok(registeredBatch[0].some((font) => font.family === "Registry Existing File"), "registering an existing watched file becomes visible without a file event");
+
+  timers.fireNext();
+  const unregistered = await service.list();
+  assert.equal(scans, 3);
+  assert.equal(unregistered.some((font) => font.family === "Registry Existing File"), false, "registry-only unregistration removes the option");
+
+  timers.fireNext();
+  const relabeled = await service.list();
+  assert.equal(scans, 4);
+  assert.deepEqual(
+    relabeled.find((font) => font.family === "Arial"),
+    { label: "Arial Display Italic", family: "Arial", fontWeight: 500, fontStyle: "italic" },
+    "display-name, weight, and style registry changes replace the cached metadata"
+  );
+
+  timers.fireNext();
+  const failedRefresh = await service.list();
+  assert.equal(scans, 5);
+  assert.strictEqual(failedRefresh, relabeled, "a failed registry refresh returns last-known-good without publishing it as clean");
+  assert.equal(service.getDiagnostics().dirty, true);
+  const recovered = await service.list();
+  assert.equal(scans, 6, "the request after a failed registry refresh retries immediately");
+  assert.ok(recovered.some((font) => font.family === "Registry Recovery"));
+  assert.equal(service.getDiagnostics().refreshDelayMs, 300);
+  assert.equal(DEFAULT_REGISTRY_REFRESH_INTERVAL_MS, 300_000, "the production maximum registry cache age is five minutes");
+
+  service.dispose();
+  assert.equal(timers.pending.size, 0, "dispose clears the registry refresh deadline");
+  assert.equal(watchers.open.size, 0, "dispose closes fully covered directory watchers");
 }
 
 async function testCancellation() {
@@ -339,12 +429,14 @@ function createWatcherHarness() {
 
 function createTimerHarness() {
   let nextId = 1;
+  let unrefCalls = 0;
   const pending = new Map();
   return {
     pending,
-    setTimer(callback) {
-      const timer = { id: nextId++, unref() {} };
-      pending.set(timer.id, { timer, callback });
+    get unrefCalls() { return unrefCalls; },
+    setTimer(callback, delayMs) {
+      const timer = { id: nextId++, unref() { unrefCalls += 1; } };
+      pending.set(timer.id, { timer, callback, delayMs });
       return timer;
     },
     clearTimer(timer) {
@@ -355,6 +447,9 @@ function createTimerHarness() {
       assert.ok(entry, "expected a pending timer");
       pending.delete(entry.timer.id);
       entry.callback();
+    },
+    nextDelay() {
+      return pending.values().next().value?.delayMs ?? null;
     }
   };
 }

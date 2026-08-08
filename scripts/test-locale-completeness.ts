@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { AI_ERROR_CODES, getAIErrorMessage } from "../lib/ai/error-copy";
 import { getAIPromptUiCopy } from "../lib/ai/prompt-ui-copy";
 import { getAIUiCopy } from "../lib/ai/ui-copy";
+import { deferredSurfaceCopy } from "../lib/deferred-surface-copy";
 import { messages } from "../lib/i18n";
 import { importHistoryCopy } from "../lib/import-history-copy";
 import { LOCALE_BCP47 } from "../lib/locale-language";
@@ -22,6 +23,7 @@ assertCatalog("settings", settingsCopy, new Set([
   "ai", "general", "export", "image", "source", "low", "accentOrange", "accentCustomPlaceholder", "version"
 ]));
 assertCatalog("import history", importHistoryCopy, new Set(["filterLabel"]));
+assertCatalog("deferred surfaces", deferredSurfaceCopy, new Set());
 assertCatalog("AI UI", fromGetter((locale) => getAIUiCopy(locale) as unknown as Record<string, string>), new Set([
   "temperature"
 ]));

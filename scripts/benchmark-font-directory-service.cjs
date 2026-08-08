@@ -161,7 +161,8 @@ async function measure(label, service, scanner, requestCount, concurrent) {
     resultHash: digest(results[0] || []),
     exactBaselineMatches: results.length,
     watcherCount: serviceDiagnostics.watcherCount,
-    conservativeRefreshScheduled: serviceDiagnostics.hasRefreshTimer
+    conservativeRefreshScheduled: serviceDiagnostics.hasRefreshTimer,
+    refreshDelayMs: serviceDiagnostics.refreshDelayMs
   };
 }
 
