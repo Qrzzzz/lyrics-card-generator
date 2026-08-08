@@ -49,7 +49,7 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 ## 📦 Téléchargement et installation
 
-Consultez [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) pour les builds disponibles publiquement. Le packaging local de la version candidate v5.9.4 utilise les noms suivants :
+Téléchargez la v5.9.4 depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
 
 * Installateur : `Lyrics Card Generator Setup 5.9.4.exe`
 * Version portable : `Lyrics Card Generator-5.9.4-portable.exe`
@@ -58,12 +58,12 @@ L'installateur est recommandé pour une utilisation régulière. La version port
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### Points forts de la v5.9.4 (version candidate locale)
+### Points forts de la v5.9.4
 
 * Simplifie le démarrage du bureau, la validation de l’origine du renderer et le cache des ressources statiques afin d’éviter les vérifications répétées et le travail inutile au lancement, sans modifier les limites de sécurité existantes.
 * Arrête la boucle d’animation ClickSpark lorsqu’elle est inactive, réutilise l’hôte de mesure de largeur automatique et réduit les rendus liés à la saisie des paroles, aux données asynchrones et aux surfaces inactives.
 * Regroupe les mesures de disponibilité de l’export, charge à la demande les surfaces Exemples, Historique, Paramètres, IA et Export, et met en cache la découverte des polices système afin qu’une requête à chaud ne relance aucun processus d’analyse.
-* Isole localement les échecs des surfaces différées avec une nouvelle tentative réelle du chunk et limite à cinq minutes l’ancienneté du cache des polices lors d’un changement du Registre uniquement. Ces métadonnées décrivent une version candidate locale ; la disponibilité publique dépend de la page GitHub Releases en ligne.
+* Isole localement les échecs des surfaces différées avec une nouvelle tentative réelle du chunk et limite à cinq minutes l’ancienneté du cache des polices lors d’un changement du Registre uniquement.
 
 ## 🌐 Notes de publication multilingues
 

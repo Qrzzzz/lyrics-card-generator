@@ -49,7 +49,7 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 ## 📦 Download and Installation
 
-Use [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) for publicly available builds. Local v5.9.4 release-candidate packaging uses these filenames:
+Download v5.9.4 from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
 * Installer: `Lyrics Card Generator Setup 5.9.4.exe`
 * Portable build: `Lyrics Card Generator-5.9.4-portable.exe`
@@ -58,12 +58,12 @@ The installer is recommended for regular use. The portable version is useful for
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v5.9.4 Highlights (local release candidate)
+### v5.9.4 Highlights
 
 * Streamlines desktop startup, renderer-origin validation, and static-asset caching to remove repeated probing and unnecessary launch work while preserving the existing security boundary.
 * Stops the idle ClickSpark animation loop, reuses the auto-width measurement host, and narrows lyrics-input, asynchronous-data, and inactive-surface rendering work.
 * Coalesces export-readiness measurements, defers the Examples, History, Settings, AI, and Export surfaces, and caches system-font discovery so hot requests launch no new scanner process.
-* Adds local failure isolation with true chunk retries for deferred surfaces and bounds registry-only system-font cache staleness to five minutes. This metadata describes a local release candidate; public availability is determined by the live GitHub Releases page.
+* Adds local failure isolation with true chunk retries for deferred surfaces and bounds registry-only system-font cache staleness to five minutes.
 
 ## 🌐 Multilingual Release Notes
 

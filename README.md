@@ -47,7 +47,7 @@
 
 ## 📦 下载与安装
 
-已公开构建请从 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 获取；本地 v5.9.4 发布候选打包使用以下文件名：
+请从 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下载 v5.9.4：
 
 * 安装版：`Lyrics Card Generator Setup 5.9.4.exe`
 * 便携版：`Lyrics Card Generator-5.9.4-portable.exe`
@@ -56,12 +56,12 @@
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v5.9.4 更新重点（本地发布候选）
+### v5.9.4 更新重点
 
 * 优化桌面启动链路、renderer 来源确认与静态资源缓存，减少重复探测和不必要的启动工作，同时保持原有安全边界。
 * 停止空闲时的 ClickSpark 动画帧循环，复用自动宽度测量宿主，并收紧歌词输入、异步数据和非活动界面的渲染范围。
 * 合并导出就绪测量、延后加载示例／历史／设置／AI／导出界面，并缓存系统字体扫描；热缓存不会重复启动字体扫描进程。
-* 为延迟界面加入局部失败隔离和真正可重试的分块加载，并为仅注册表发生变化的系统字体设置 5 分钟最大缓存陈旧时间。这里记录的是本地发布候选；公开下载状态以 GitHub Releases 实际页面为准。
+* 为延迟界面加入局部失败隔离和真正可重试的分块加载，并为仅注册表发生变化的系统字体设置 5 分钟最大缓存陈旧时间。
 
 ## 🌐 多语言发布说明
 

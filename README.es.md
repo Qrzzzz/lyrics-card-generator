@@ -49,7 +49,7 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 ## 📦 Descarga e instalación
 
-Consulta [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) para las compilaciones disponibles públicamente. El empaquetado local de la versión candidata v5.9.4 usa estos nombres:
+Descarga v5.9.4 desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
 * Instalador: `Lyrics Card Generator Setup 5.9.4.exe`
 * Versión portable: `Lyrics Card Generator-5.9.4-portable.exe`
@@ -58,12 +58,12 @@ El instalador se recomienda para uso habitual. La versión portable es útil par
 
 > La compilación actual no está firmada. Windows puede mostrar una advertencia de SmartScreen, algo habitual en aplicaciones personales sin firma.
 
-### Novedades de v5.9.4 (versión candidata local)
+### Novedades de v5.9.4
 
 * Agiliza el inicio del escritorio, la validación del origen del renderer y la caché de recursos estáticos para evitar comprobaciones repetidas y trabajo innecesario al arrancar, sin alterar los límites de seguridad existentes.
 * Detiene el bucle de animación ClickSpark cuando está inactivo, reutiliza el host de medición de ancho automático y reduce los renderizados de la entrada de letras, los datos asíncronos y las superficies inactivas.
 * Agrupa las mediciones de preparación de la exportación, carga de forma diferida las superficies de Ejemplos, Historial, Ajustes, IA y Exportación, y guarda en caché la detección de fuentes del sistema para que las solicitudes en caliente no inicien otro proceso de análisis.
-* Aísla localmente los fallos de las superficies diferidas con un reintento real del chunk y limita a cinco minutos la antigüedad de la caché de fuentes cuando solo cambia el Registro. Estos metadatos describen una versión candidata local; la disponibilidad pública depende de la página activa de GitHub Releases.
+* Aísla localmente los fallos de las superficies diferidas con un reintento real del chunk y limita a cinco minutos la antigüedad de la caché de fuentes cuando solo cambia el Registro.
 
 ## 🌐 Notas de publicación multilingües
 

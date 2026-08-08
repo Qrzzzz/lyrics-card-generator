@@ -46,7 +46,7 @@
 
 ## 📦 下載與安裝
 
-已公開的建置版本請從 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 取得；本機 v5.9.4 發佈候選打包使用以下檔名：
+請從 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載 v5.9.4：
 
 * 安裝版：`Lyrics Card Generator Setup 5.9.4.exe`
 * 可攜版：`Lyrics Card Generator-5.9.4-portable.exe`
@@ -55,12 +55,12 @@
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v5.9.4 更新重點（本機發佈候選）
+### v5.9.4 更新重點
 
 * 最佳化桌面啟動流程、renderer 來源確認與靜態資源快取，減少重複探測及不必要的啟動工作，同時維持既有安全邊界。
 * 停止閒置時的 ClickSpark 動畫影格迴圈，重用自動寬度量測宿主，並縮小歌詞輸入、非同步資料及非作用中介面的重新渲染範圍。
 * 合併匯出就緒量測、延後載入範例／歷史／設定／AI／匯出介面，並快取系統字型掃描；熱快取不會重複啟動字型掃描程序。
-* 為延遲介面加入局部失敗隔離與真正可重試的分塊載入，並將僅登錄檔變更時的系統字型快取最長陳舊時間限制為 5 分鐘。此處記錄的是本機發佈候選；公開下載狀態以 GitHub Releases 實際頁面為準。
+* 為延遲介面加入局部失敗隔離與真正可重試的分塊載入，並將僅登錄檔變更時的系統字型快取最長陳舊時間限制為 5 分鐘。
 
 ## 🌐 多語言發佈說明
 
