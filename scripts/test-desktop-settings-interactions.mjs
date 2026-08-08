@@ -3897,7 +3897,7 @@ try {
   assert.equal(squareCard?.hasOverflow, true, `1:1 fixed ratio exposes real overflow: ${JSON.stringify(squareCard)}`);
   await page.locator('button[data-step-id="export"]').click();
   assert.equal(await page.getByTestId("complete-export-button").isDisabled(), true, "1:1 overflow disables export");
-  const squareAlert = page.getByRole("alert").filter({ hasText: "当前版式无法完整容纳歌词" });
+  const squareAlert = page.getByRole("alert").filter({ hasText: "当前版式无法容纳全部歌词" });
   await squareAlert.waitFor({ state: "visible" });
   assert.match(await squareAlert.innerText(), /无法容纳|自动高度|调整排版/, "1:1 overflow shows an explicit alert");
 
@@ -3918,7 +3918,7 @@ try {
   assert.equal(landscapeCard?.hasOverflow, true, `16:9 fixed ratio exposes real overflow: ${JSON.stringify(landscapeCard)}`);
   await page.locator('button[data-step-id="export"]').click();
   assert.equal(await page.getByTestId("complete-export-button").isDisabled(), true, "16:9 overflow disables export");
-  const landscapeAlert = page.getByRole("alert").filter({ hasText: "当前版式无法完整容纳歌词" });
+  const landscapeAlert = page.getByRole("alert").filter({ hasText: "当前版式无法容纳全部歌词" });
   await landscapeAlert.waitFor({ state: "visible" });
   assert.match(await landscapeAlert.innerText(), /无法容纳|自动高度|调整排版/, "16:9 overflow shows an explicit alert");
 
