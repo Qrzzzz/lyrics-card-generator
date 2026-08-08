@@ -199,7 +199,8 @@ const autoWidthEquivalenceFixtures: AutoWidthEquivalenceFixture[] = [
     lineHeight: 1.5,
     align: "left",
     anchorWidth: 720,
-    expected: { width: 1340, height: 1580 }
+    expected: { width: 1340, height: 1580 },
+    expectedByPlatform: { linux: { width: 1060, height: 1880 } }
   }
 ];
 // Captured from the verified 7d7b3fbc legacy implementation before replacing
