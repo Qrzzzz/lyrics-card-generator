@@ -1,6 +1,7 @@
 "use client";
 
 import { LanguageSettingsSection } from "@/components/settings/LanguageSettingsSection";
+import { recordRenderBoundary } from "@/components/editor/render-boundary-diagnostics";
 import { FieldLabel, SelectField, ToggleRow } from "@/components/ui/controls";
 import { getLyricsCardDesktopApi } from "@/lib/desktop-api";
 import {
@@ -28,6 +29,7 @@ export function GeneralSettingsSection({
   onLocaleChange: (locale: Locale) => void;
   onChange: (settings: UserSettings, options?: AppPreferencesPersistenceOptions) => void;
 }) {
+  recordRenderBoundary("SettingsGeneral");
   const historyCopy = importHistoryCopy[locale];
 
   async function changeImportHistoryLimit(next: ImportHistoryLimit) {

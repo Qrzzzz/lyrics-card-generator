@@ -348,6 +348,365 @@ async function selectLyricsRange(editor, start, end, scrollRatio = null) {
   }, { start, end, scrollRatio });
 }
 
+async function measureLyricsInputChangeStructure(editor) {
+  return editor.evaluate(async (node) => {
+    const scroll = node.closest('[data-testid="lyrics-shared-scroll"]');
+    const workspace = node.closest('[data-testid="lyrics-workspace"]');
+    if (!(scroll instanceof HTMLElement) || !(workspace instanceof HTMLElement)) {
+      throw new Error("lyrics input performance fixture is unavailable");
+    }
+
+    const editors = Array.from(workspace.querySelectorAll('[data-testid^="lyrics-editor-"]'))
+      .filter((candidate) => candidate instanceof HTMLTextAreaElement);
+    const mirrors = Array.from(workspace.querySelectorAll('[data-lyrics-editor-measure="true"]'))
+      .filter((candidate) => candidate instanceof HTMLTextAreaElement);
+    const heightParity = mirrors.length === editors.length
+      ? (() => {
+          const referenceContentHeights = editors.map((textarea) => {
+            const clone = textarea.cloneNode(false);
+            clone.removeAttribute("id");
+            clone.removeAttribute("data-testid");
+            clone.setAttribute("aria-hidden", "true");
+            clone.tabIndex = -1;
+            clone.value = textarea.value;
+            Object.assign(clone.style, {
+              position: "absolute",
+              inset: "0 auto auto 0",
+              width: "100%",
+              height: "auto",
+              maxHeight: "none",
+              visibility: "hidden",
+              pointerEvents: "none"
+            });
+            textarea.parentElement?.append(clone);
+            const height = clone.scrollHeight;
+            clone.remove();
+            return height;
+          });
+          const viewportFloor = Math.max(280, scroll.clientHeight - 24);
+          return {
+            referenceCommonHeight: Math.max(viewportFloor, ...referenceContentHeights),
+            mirrorCommonHeight: Math.max(viewportFloor, ...mirrors.map((mirror) => mirror.scrollHeight)),
+            liveStyleHeights: editors.map((textarea) => Number.parseFloat(textarea.style.height))
+          };
+        })()
+      : null;
+    const counts = {
+      sharedScrollRectReads: 0,
+      editorRectReads: 0,
+      editorScrollHeightReads: 0,
+      mirrorScrollHeightReads: 0,
+      liveEditorHeightWrites: 0
+    };
+    const restorers = [];
+    const patchMethod = (target, property, counter) => {
+      const ownDescriptor = Object.getOwnPropertyDescriptor(target, property);
+      const original = target[property].bind(target);
+      Object.defineProperty(target, property, {
+        configurable: true,
+        value: (...args) => {
+          counts[counter] += 1;
+          return original(...args);
+        }
+      });
+      restorers.push(() => {
+        if (ownDescriptor) Object.defineProperty(target, property, ownDescriptor);
+        else delete target[property];
+      });
+    };
+    const patchGetter = (target, property, counter) => {
+      let prototype = target;
+      let descriptor;
+      while (prototype && !descriptor) {
+        descriptor = Object.getOwnPropertyDescriptor(prototype, property);
+        prototype = Object.getPrototypeOf(prototype);
+      }
+      if (!descriptor?.get) throw new Error(`${property} getter is unavailable`);
+      const ownDescriptor = Object.getOwnPropertyDescriptor(target, property);
+      Object.defineProperty(target, property, {
+        configurable: true,
+        get: () => {
+          counts[counter] += 1;
+          return descriptor.get.call(target);
+        }
+      });
+      restorers.push(() => {
+        if (ownDescriptor) Object.defineProperty(target, property, ownDescriptor);
+        else delete target[property];
+      });
+    };
+    const readAnchorContext = () => {
+      const value = node.value;
+      const lineCount = Math.max(1, value.split(/\r?\n/).length);
+      const lineIndex = value.slice(0, node.selectionStart).split(/\r?\n/).length - 1;
+      const scrollRect = HTMLElement.prototype.getBoundingClientRect.call(scroll);
+      const editorRect = HTMLElement.prototype.getBoundingClientRect.call(node);
+      const editorContentTop = editorRect.top - scrollRect.top + scroll.scrollTop;
+      const lineRatio = lineCount > 1 ? lineIndex / (lineCount - 1) : 0;
+      const scrollHeightDescriptor = Object.getOwnPropertyDescriptor(Element.prototype, "scrollHeight");
+      const editorScrollHeight = scrollHeightDescriptor?.get?.call(node) ?? node.scrollHeight;
+      return {
+        selectionStart: node.selectionStart,
+        selectionEnd: node.selectionEnd,
+        lineIndex,
+        scrollTop: scroll.scrollTop,
+        anchorOffset: editorContentTop + editorScrollHeight * lineRatio - scroll.scrollTop,
+        focused: document.activeElement === node
+      };
+    };
+
+    const insertionPoint = node.value.indexOf("performance line 41");
+    if (insertionPoint < 0) throw new Error("80-line performance fixture is missing");
+    node.focus();
+    node.setSelectionRange(insertionPoint, insertionPoint);
+    scroll.scrollTop = Math.round((scroll.scrollHeight - scroll.clientHeight) * 0.5);
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+
+    patchMethod(scroll, "getBoundingClientRect", "sharedScrollRectReads");
+    for (const textarea of editors) {
+      patchMethod(textarea, "getBoundingClientRect", "editorRectReads");
+      patchGetter(textarea, "scrollHeight", "editorScrollHeightReads");
+    }
+    for (const mirror of mirrors) patchGetter(mirror, "scrollHeight", "mirrorScrollHeightReads");
+
+    const heightObserver = new MutationObserver((records) => {
+      counts.liveEditorHeightWrites += records.filter((record) => (
+        record.type === "attributes" &&
+        record.attributeName === "style" &&
+        editors.includes(record.target)
+      )).length;
+    });
+    for (const textarea of editors) {
+      heightObserver.observe(textarea, { attributes: true, attributeFilter: ["style"] });
+    }
+
+    try {
+      const insertedText = "inserted performance line\n";
+      const nextValue = `${node.value.slice(0, insertionPoint)}${insertedText}${node.value.slice(insertionPoint)}`;
+      const valueSetter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, "value")?.set;
+      if (!valueSetter) throw new Error("textarea value setter is unavailable");
+      valueSetter.call(node, nextValue);
+      const nextCaret = insertionPoint + insertedText.length;
+      node.setSelectionRange(nextCaret, nextCaret);
+      const beforeDispatch = readAnchorContext();
+      node.dispatchEvent(new InputEvent("input", {
+        bubbles: true,
+        data: insertedText,
+        inputType: "insertText"
+      }));
+      counts.liveEditorHeightWrites += heightObserver.takeRecords().length;
+      const synchronous = { ...counts };
+      await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+      counts.liveEditorHeightWrites += heightObserver.takeRecords().length;
+      const settled = readAnchorContext();
+      return {
+        editorCount: editors.length,
+        mirrorCount: mirrors.length,
+        heightParity,
+        synchronous,
+        settled: { ...counts },
+        behavior: {
+          beforeDispatch,
+          settled,
+          valueApplied: node.value === nextValue
+        }
+      };
+    } finally {
+      heightObserver.disconnect();
+      for (const restore of restorers.reverse()) restore();
+    }
+  });
+}
+
+async function assertLyricsInputEditingSemantics(originalLyrics, translationLyrics) {
+  const originalFixture = Array.from(
+    { length: 80 },
+    (_, index) => `input line ${String(index + 1).padStart(2, "0")} original cadence`
+  ).join("\n");
+  const translationFixture = Array.from(
+    { length: 80 },
+    (_, index) => `input line ${String(index + 1).padStart(2, "0")} translated cadence`
+  ).join("\n");
+  await fillExact(originalLyrics, originalFixture);
+  await fillExact(translationLyrics, translationFixture);
+  await waitForLayoutStable(page.getByTestId("lyrics-workspace"));
+
+  const scrollCases = [
+    { label: "top", line: 1, ratio: 0 },
+    { label: "middle", line: 41, ratio: 0.5 },
+    { label: "bottom", line: 80, ratio: 1 }
+  ];
+  for (const testCase of scrollCases) {
+    await fillExact(originalLyrics, originalFixture);
+    const marker = `input line ${String(testCase.line).padStart(2, "0")}`;
+    const caret = originalFixture.indexOf(marker) + marker.length;
+    await selectLyricsRange(originalLyrics, caret, caret, testCase.ratio);
+    await page.waitForTimeout(80);
+    const before = await getLyricsContext(originalLyrics);
+    await originalLyrics.pressSequentially("x");
+    await page.waitForFunction(
+      ({ expected, testId }) => document.querySelector(`[data-testid="${testId}"]`)?.value === expected,
+      {
+        expected: `${originalFixture.slice(0, caret)}x${originalFixture.slice(caret)}`,
+        testId: "lyrics-editor-original"
+      }
+    );
+    const after = await getLyricsContext(originalLyrics);
+    assert.equal(after.start, caret + 1, `${testCase.label} typing advances the caret once`);
+    assert.equal(after.end, caret + 1, `${testCase.label} typing keeps a collapsed caret`);
+    assert.equal(after.focused, true, `${testCase.label} typing preserves focus`);
+    assert.ok(
+      Math.abs(after.scrollTop - before.scrollTop) <= 1,
+      `${testCase.label} typing preserves shared scroll: ${JSON.stringify({ before, after })}`
+    );
+
+    if (testCase.label === "middle") {
+      await originalLyrics.press("ArrowLeft");
+      let directional = await getLyricsContext(originalLyrics);
+      assert.deepEqual(
+        { start: directional.start, end: directional.end },
+        { start: caret, end: caret },
+        "ArrowLeft moves the controlled caret without changing text"
+      );
+      await originalLyrics.press("Shift+ArrowRight");
+      directional = await getLyricsContext(originalLyrics);
+      assert.deepEqual(
+        { start: directional.start, end: directional.end, selectedText: directional.selectedText },
+        { start: caret, end: caret + 1, selectedText: "x" },
+        "Shift+ArrowRight preserves the native selection range"
+      );
+      await originalLyrics.evaluate((node) => {
+        node.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      });
+      const clicked = await getLyricsContext(originalLyrics);
+      assert.deepEqual(
+        { start: clicked.start, end: clicked.end, selectedText: clicked.selectedText },
+        { start: caret, end: caret + 1, selectedText: "x" },
+        "click notification does not stale or collapse the current selection"
+      );
+    }
+  }
+
+  await fillExact(originalLyrics, originalFixture);
+  const imeMarker = "input line 41";
+  const imeCaret = originalFixture.indexOf(imeMarker) + imeMarker.length;
+  const imeResult = await originalLyrics.evaluate(async (node, caret) => {
+    const lifecycle = [];
+    const onCompositionStart = () => lifecycle.push("compositionstart");
+    const onCompositionUpdate = () => lifecycle.push("compositionupdate");
+    const onCompositionEnd = () => lifecycle.push("compositionend");
+    const onInput = (event) => lifecycle.push(`input:${event.isComposing ? "composing" : "committed"}`);
+    node.addEventListener("compositionstart", onCompositionStart);
+    node.addEventListener("compositionupdate", onCompositionUpdate);
+    node.addEventListener("compositionend", onCompositionEnd);
+    node.addEventListener("input", onInput);
+    try {
+      node.focus();
+      node.setSelectionRange(caret, caret);
+      node.dispatchEvent(new CompositionEvent("compositionstart", { bubbles: true, data: "" }));
+      const insertedText = "中文";
+      const expected = `${node.value.slice(0, caret)}${insertedText}${node.value.slice(caret)}`;
+      const valueSetter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, "value")?.set;
+      if (!valueSetter) throw new Error("textarea value setter is unavailable");
+      valueSetter.call(node, expected);
+      node.setSelectionRange(caret + insertedText.length, caret + insertedText.length);
+      node.dispatchEvent(new CompositionEvent("compositionupdate", { bubbles: true, data: insertedText }));
+      node.dispatchEvent(new InputEvent("input", {
+        bubbles: true,
+        data: insertedText,
+        inputType: "insertCompositionText",
+        isComposing: true
+      }));
+      node.dispatchEvent(new CompositionEvent("compositionend", { bubbles: true, data: insertedText }));
+      node.dispatchEvent(new InputEvent("input", {
+        bubbles: true,
+        data: insertedText,
+        inputType: "insertText",
+        isComposing: false
+      }));
+      await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      return {
+        lifecycle,
+        valueApplied: node.value === expected,
+        selectionStart: node.selectionStart,
+        selectionEnd: node.selectionEnd,
+        focused: document.activeElement === node,
+        expectedCaret: caret + insertedText.length
+      };
+    } finally {
+      node.removeEventListener("compositionstart", onCompositionStart);
+      node.removeEventListener("compositionupdate", onCompositionUpdate);
+      node.removeEventListener("compositionend", onCompositionEnd);
+      node.removeEventListener("input", onInput);
+    }
+  }, imeCaret);
+  assert.deepEqual(
+    imeResult.lifecycle,
+    ["compositionstart", "compositionupdate", "input:composing", "compositionend", "input:committed"],
+    "Chinese IME keeps its native composition lifecycle"
+  );
+  assert.equal(imeResult.valueApplied, true, "Chinese IME commits its controlled value");
+  assert.deepEqual(
+    { start: imeResult.selectionStart, end: imeResult.selectionEnd, focused: imeResult.focused },
+    { start: imeResult.expectedCaret, end: imeResult.expectedCaret, focused: true },
+    "Chinese IME preserves the committed caret and focus"
+  );
+
+  const undoFixture = "undo alpha\nundo beta";
+  await fillExact(originalLyrics, undoFixture);
+  const undoCaret = "undo alpha".length;
+  await selectLyricsRange(originalLyrics, undoCaret, undoCaret);
+  await page.keyboard.insertText("Z");
+  const redoValue = "undo alphaZ\nundo beta";
+  await page.waitForFunction(
+    (expected) => document.querySelector('[data-testid="lyrics-editor-original"]')?.value === expected,
+    redoValue
+  );
+  await page.keyboard.press("Control+Z");
+  await page.waitForFunction(
+    (expected) => document.querySelector('[data-testid="lyrics-editor-original"]')?.value === expected,
+    undoFixture
+  );
+  await page.keyboard.press("Control+Y");
+  await page.waitForFunction(
+    (expected) => document.querySelector('[data-testid="lyrics-editor-original"]')?.value === expected,
+    redoValue
+  );
+  assert.equal(await originalLyrics.evaluate((node) => document.activeElement === node), true, "native undo and redo preserve editor focus");
+
+  await fillExact(originalLyrics, originalFixture);
+  await fillExact(translationLyrics, translationFixture);
+  const translationMarker = "input line 41";
+  const translationCaret = translationFixture.indexOf(translationMarker) + translationMarker.length;
+  await selectLyricsRange(translationLyrics, translationCaret, translationCaret, 0.5);
+  await page.keyboard.insertText("T");
+  assert.equal(
+    await translationLyrics.inputValue(),
+    `${translationFixture.slice(0, translationCaret)}T${translationFixture.slice(translationCaret)}`,
+    "translation-column typing updates only the active translated document"
+  );
+  assert.equal(await originalLyrics.inputValue(), originalFixture, "translation-column typing leaves original lyrics unchanged");
+  assert.equal(await translationLyrics.evaluate((node) => document.activeElement === node), true, "translation-column typing preserves focus");
+
+  const replacementFixture = "alpha  \nbeta";
+  await fillExact(originalLyrics, replacementFixture);
+  await selectLyricsRange(originalLyrics, 0, "alpha  ".length, 0);
+  await page.waitForFunction(() => /原文第 1.*1 行/.test(
+    document.querySelector('[data-testid="lyrics-cleanup-scope-summary"]')?.textContent ?? ""
+  ));
+  await page.getByTestId("lyrics-command-clean-paste").click();
+  await page.waitForFunction(
+    () => document.querySelector('[data-testid="lyrics-editor-original"]')?.value === "alpha\nbeta"
+  );
+  const replacementContext = await getLyricsContext(originalLyrics);
+  assert.equal(replacementContext.focused, true, "programmatic document replacement restores editor focus");
+  assert.deepEqual(
+    { start: replacementContext.start, end: replacementContext.end, selectedText: replacementContext.selectedText },
+    { start: 0, end: "alpha".length, selectedText: "alpha" },
+    "programmatic document replacement restores the transformed selection"
+  );
+}
+
 async function measureExportCard() {
   return page.evaluate((overflowTolerance) => {
     const root = document.querySelector("[data-export-card-host] [data-export-card]");
@@ -1321,6 +1680,40 @@ async function assertFontPickerBehavior() {
   await latinDialog.waitFor({ state: "hidden" });
   await page.waitForFunction(() => document.activeElement?.getAttribute("data-testid") === "choose-latin-font");
 
+  const currentSummary = page.getByTestId("font-scheme-panel").locator("dl").first();
+  assert.doesNotMatch(await currentSummary.textContent() ?? "", /Microsoft YaHei/, "the fresh font page starts from the saved preset");
+  await cjkTrigger.click();
+  await cjkDialog.waitFor({ state: "visible" });
+  await page.getByTestId("font-picker-search").fill("Microsoft YaHei");
+  await cjkDialog.getByText("Microsoft YaHei", { exact: true }).first().click();
+  await cjkDialog.waitFor({ state: "hidden" });
+  await page.waitForFunction(() => document.querySelector('[data-testid="choose-cjk-font"]')?.textContent?.includes("Microsoft YaHei"));
+  assert.doesNotMatch(await currentSummary.textContent() ?? "", /Microsoft YaHei/, "font selection updates only the draft before save");
+  await page.waitForFunction(() => {
+    const card = document.querySelector('[data-testid="lyric-card-preview"] article[data-export-card="true"]');
+    return card instanceof HTMLElement && getComputedStyle(card).fontFamily.includes("Microsoft YaHei");
+  });
+  const draftPreviewFamily = await page.locator('[data-testid="lyric-card-preview"] article[data-export-card="true"]').evaluate((card) => (
+    getComputedStyle(card).fontFamily
+  ));
+  assert.match(draftPreviewFamily, /Microsoft YaHei/, "font selection reaches the live card preview before save");
+
+  await page.getByTestId("save-custom-font-scheme").click();
+  await page.waitForFunction(() => (
+    document.querySelector('[data-testid="font-scheme-panel"] dl')?.textContent?.includes("Microsoft YaHei")
+  ));
+  assert.match(await currentSummary.textContent() ?? "", /Microsoft YaHei/, "saving commits the selected system font");
+
+  await page.locator('button[data-step-id="link"]').click();
+  await page.locator('button[data-step-id="font"]').click();
+  await page.getByTestId("font-scheme-panel").waitFor({ state: "visible" });
+  assert.match(
+    await page.getByTestId("font-scheme-panel").locator("dl").first().textContent() ?? "",
+    /Microsoft YaHei/,
+    "reopening the font page preserves the saved selection"
+  );
+  assert.match(await page.getByTestId("choose-cjk-font").textContent() ?? "", /Microsoft YaHei/);
+
   await page.locator('button[data-step-id="link"]').click();
 }
 
@@ -1892,7 +2285,7 @@ async function assertLyricsWorkspace(width, height) {
     const headerActions = heading?.querySelector('[data-testid="editor-header-actions"]');
     const railRect = rail?.getBoundingClientRect();
     const headerActionsRect = headerActions?.getBoundingClientRect();
-    const textareas = [...document.querySelectorAll('[data-testid="lyrics-shared-scroll"] textarea')];
+    const textareas = [...document.querySelectorAll('[data-testid="lyrics-shared-scroll"] textarea:not([data-lyrics-editor-measure="true"])')];
     const rect = (element) => {
       const value = element?.getBoundingClientRect();
       return value ? { x: value.x, y: value.y, width: value.width, height: value.height, right: value.right, bottom: value.bottom } : null;
@@ -2754,7 +3147,7 @@ async function assertLyricsWorkspaceContentPressure(originalLyrics, translationL
       editorWidth: editorRect?.width ?? 0,
       leftGap: viewportRect ? columnsRect.left - viewportRect.left : 0,
       rightGap: viewportRect ? viewportRect.right - columnsRect.right : 0,
-      textareaCount: columns.querySelectorAll("textarea").length
+      textareaCount: columns.querySelectorAll('textarea:not([data-lyrics-editor-measure="true"])').length
     };
   });
   assert.equal(singleColumn.bilingual, "false", "single-language editing uses one canvas");
@@ -2777,7 +3170,7 @@ async function assertLyricsWorkspaceContentPressure(originalLyrics, translationL
     const textarea = workspace.querySelector("textarea");
     const shared = workspace.querySelector('[data-testid="lyrics-shared-scroll"]');
     return {
-      textareaCount: workspace.querySelectorAll("textarea").length,
+      textareaCount: workspace.querySelectorAll('textarea:not([data-lyrics-editor-measure="true"])').length,
       textareaScrollWidth: textarea?.scrollWidth ?? 0,
       textareaClientWidth: textarea?.clientWidth ?? 0,
       sharedOverflowX: shared ? getComputedStyle(shared).overflowX : null,
@@ -3012,7 +3405,8 @@ async function assertLyricsWorkspaceNarrowBehavior(originalLyrics, translationLy
     await setWindowSize(610, 720);
     await waitForLayoutStable(page.getByTestId("lyrics-workspace"));
     const stacked = await page.getByTestId("lyrics-editor-columns").evaluate((columns) => {
-      const editors = [...columns.querySelectorAll("textarea")].map((node) => node.getBoundingClientRect());
+      const editors = [...columns.querySelectorAll('textarea:not([data-lyrics-editor-measure="true"])')]
+        .map((node) => node.getBoundingClientRect());
       return {
         count: editors.length,
         original: editors[0] ? { top: editors[0].top, bottom: editors[0].bottom, width: editors[0].width } : null,
@@ -3602,6 +3996,81 @@ try {
     originalEighteen,
     translationEighteen
   );
+  await assertLyricsInputEditingSemantics(originalLyrics, translationLyrics);
+  const performanceEightyOriginal = Array.from(
+    { length: 80 },
+    (_, index) => `performance line ${String(index + 1).padStart(2, "0")} original cadence`
+  ).join("\n");
+  const performanceEightyTranslation = Array.from(
+    { length: 80 },
+    (_, index) => `performance line ${String(index + 1).padStart(2, "0")} translated cadence`
+  ).join("\n");
+  await fillExact(originalLyrics, performanceEightyOriginal);
+  await fillExact(translationLyrics, performanceEightyTranslation);
+  await waitForLayoutStable(page.getByTestId("lyrics-workspace"));
+  const lyricsInputPerformance = await measureLyricsInputChangeStructure(originalLyrics);
+  assert.equal(lyricsInputPerformance.editorCount, 2, "the 80-line input metric runs with both lyric columns mounted");
+  assert.equal(lyricsInputPerformance.mirrorCount, 2, "each visible lyric column has one isolated measurement mirror");
+  assert.ok(lyricsInputPerformance.heightParity, "the 80-line fixture exposes resize parity metrics");
+  assert.equal(
+    lyricsInputPerformance.heightParity.mirrorCommonHeight,
+    lyricsInputPerformance.heightParity.referenceCommonHeight,
+    "isolated mirrors match the former height:auto scrollHeight reference pixel-for-pixel"
+  );
+  assert.ok(
+    lyricsInputPerformance.heightParity.liveStyleHeights.every((height) => (
+      Math.abs(height - lyricsInputPerformance.heightParity.referenceCommonHeight) <= 0.5
+    )),
+    `both live columns use the reference common height: ${JSON.stringify(lyricsInputPerformance.heightParity)}`
+  );
+  assert.deepEqual(
+    lyricsInputPerformance.synchronous,
+    {
+      sharedScrollRectReads: 1,
+      editorRectReads: 1,
+      editorScrollHeightReads: 2,
+      mirrorScrollHeightReads: 2,
+      liveEditorHeightWrites: 2
+    },
+    "one 80-line change captures one active anchor and applies only final live heights"
+  );
+  assert.ok(
+    lyricsInputPerformance.settled.sharedScrollRectReads <= 3 &&
+      lyricsInputPerformance.settled.editorRectReads <= 3 &&
+      lyricsInputPerformance.settled.editorScrollHeightReads <= 5 &&
+      lyricsInputPerformance.settled.mirrorScrollHeightReads === 2 &&
+      lyricsInputPerformance.settled.liveEditorHeightWrites <= 2,
+    `the settled 80-line change stays within the structural read/write budget: ${JSON.stringify(lyricsInputPerformance.settled)}`
+  );
+  assert.equal(lyricsInputPerformance.behavior.valueApplied, true, "the instrumented 80-line change reaches controlled state");
+  assert.equal(lyricsInputPerformance.behavior.settled.focused, true, "the instrumented change preserves editor focus");
+  assert.deepEqual(
+    {
+      start: lyricsInputPerformance.behavior.settled.selectionStart,
+      end: lyricsInputPerformance.behavior.settled.selectionEnd,
+      line: lyricsInputPerformance.behavior.settled.lineIndex
+    },
+    {
+      start: lyricsInputPerformance.behavior.beforeDispatch.selectionStart,
+      end: lyricsInputPerformance.behavior.beforeDispatch.selectionEnd,
+      line: lyricsInputPerformance.behavior.beforeDispatch.lineIndex
+    },
+    "the instrumented change preserves the post-input caret and logical line"
+  );
+  assert.ok(
+    Math.abs(
+      lyricsInputPerformance.behavior.settled.anchorOffset -
+      lyricsInputPerformance.behavior.beforeDispatch.anchorOffset
+    ) <= 0.5,
+    `the instrumented height change preserves its visual anchor: ${JSON.stringify(lyricsInputPerformance.behavior)}`
+  );
+  assert.equal(
+    await page.locator('[data-lyrics-editor-measure="true"][aria-hidden="true"][tabindex="-1"]').count(),
+    2,
+    "measurement mirrors stay outside the accessibility and keyboard interaction tree"
+  );
+  await fillExact(originalLyrics, originalEighteen);
+  await fillExact(translationLyrics, translationEighteen);
   for (const size of lyricsWorkspaceSizes) {
     await assertLyricsWorkspace(size.width, size.height);
   }
@@ -3935,6 +4404,7 @@ try {
     visualDiagnostics: runVisualDiagnostics,
     titlebarVisualMetrics,
     titlebarPerformanceComparison,
+    lyricsInputPerformance,
     exportCards: {
       autoHeight: autoHeightCard,
       autoWidth: { width: settledAutoWidth, wrapMetrics: autoWidthWrapMetrics },

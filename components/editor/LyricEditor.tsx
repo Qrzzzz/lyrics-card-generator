@@ -1,10 +1,13 @@
 "use client";
 
 import { motion, useReducedMotion, type Transition } from "framer-motion";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { EditorHeaderActions } from "@/components/editor/EditorHeader";
-import { ExamplesFloor } from "@/components/editor/ExamplesFloor";
-import { HistoryFloor } from "@/components/editor/HistoryFloor";
+import {
+  DeferredExamplesSurface,
+  DeferredHistorySurface,
+  DeferredSettingsSurface
+} from "@/components/editor/DeferredEditorSurfaces";
 import { ExportCelebration } from "@/components/effects/ExportCelebration";
 import { AppToast, type ToastNotice } from "@/components/feedback/AppToast";
 import {
@@ -26,7 +29,6 @@ import { PreviewPane } from "@/components/editor/PreviewPane";
 import { ExportCardHost } from "@/components/editor/ExportCardHost";
 import { AutoWidthMeasurementHost } from "@/components/editor/AutoWidthMeasurementHost";
 import { SettingsStepper, type SettingsStep } from "@/components/editor/SettingsStepper";
-import { SettingsSurface } from "@/components/settings/SettingsSurface";
 import type { SettingsTabId } from "@/components/settings/settings-model";
 import { FirstLaunchLanguageDialog } from "@/components/settings/FirstLaunchLanguageDialog";
 import {
@@ -36,7 +38,6 @@ import {
   useSyncedCoverProxy
 } from "@/components/editor/hooks/useLyricEditorEffects";
 import { resolveEditorThemeTokens } from "@/components/editor/resolveEditorThemeTokens";
-import { useMeasuredAutoCanvasHeight } from "@/components/editor/hooks/useMeasuredAutoCanvasHeight";
 import { useMeasuredAutoCanvasWidth } from "@/components/editor/hooks/useMeasuredAutoCanvasWidth";
 import {
   getLiveExportCardValidation,
@@ -62,8 +63,12 @@ import { cn } from "@/lib/utils";
 import { snapshotAsAppState } from "@/lib/export-snapshot";
 import { resolveExportSafetyMessage } from "@/lib/export-safety";
 import type { TranslationValue } from "@/lib/editor/editor-document-state-adapter";
+import { useStableEvent } from "@/components/editor/hooks/useStableEvent";
+import type { AISettingsSummary } from "@/lib/ai/types";
+import { recordRenderBoundary } from "@/components/editor/render-boundary-diagnostics";
 
 type ActiveSurface = "editor" | "examples" | "history" | "settings";
+type DeferredSurface = Exclude<ActiveSurface, "editor">;
 
 const surfaceTransition: Transition = {
   type: "spring",
@@ -78,6 +83,7 @@ const reducedSurfaceTransition: Transition = {
 };
 
 export function LyricEditor() {
+  recordRenderBoundary("LyricEditor");
   const [state, setState] = useState<AppState>(defaultState);
   const [currentStep, setCurrentStep] = useState(0);
   const [songLinkAutoParseVisitIntent, setSongLinkAutoParseVisitIntent] = useState<SongLinkAutoParseVisitIntent>({
@@ -87,6 +93,11 @@ export function LyricEditor() {
   const [fontSchemePreview, setFontSchemePreview] = useState<FontScheme | null>(null);
   const [isPreviewVisible, setIsPreviewVisible] = useState(true);
   const [activeSurface, setActiveSurface] = useState<ActiveSurface>("editor");
+  const [mountedSurfaces, setMountedSurfaces] = useState<Record<DeferredSurface, boolean>>({
+    examples: false,
+    history: false,
+    settings: false
+  });
   const [requestedSettingsTab, setRequestedSettingsTab] = useState<SettingsTabId>();
   const [previewMeasurementKey, setPreviewMeasurementKey] = useState(0);
   const [exportFormat, setExportFormat] = useState<ExportFormatId>(DEFAULT_USER_SETTINGS.defaultExportFormat);
@@ -96,6 +107,7 @@ export function LyricEditor() {
   const autoWidthMeasurementRef = useRef<HTMLDivElement | null>(null);
   const captureCardRef = useRef<HTMLElement | null>(null);
   const previewCardRef = useRef<HTMLElement | null>(null);
+  const editorSurfaceRef = useRef<HTMLDivElement | null>(null);
   const toastIdRef = useRef(0);
   const examplesButtonRef = useRef<HTMLButtonElement | null>(null);
   const historyButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -127,22 +139,77 @@ export function LyricEditor() {
   const coverForPalette = state.song.proxiedCoverUrl || proxiedImageUrl(state.song.coverUrl);
   const canFetchLyrics = Boolean(state.song.originalUrl && state.song.title.trim());
 
+  const applyLocale = useCallback((locale: Locale) => {
+    setState((current) => {
+      const previousDefaultInstrumentalTexts = Object.values(DEFAULT_INSTRUMENTAL_TEXT);
+      const shouldUpdateInstrumentalText = previousDefaultInstrumentalTexts.includes(current.style.instrumentalText);
+
+      return {
+        ...current,
+        locale,
+        style: {
+          ...current.style,
+          instrumentalText: shouldUpdateInstrumentalText ? DEFAULT_INSTRUMENTAL_TEXT[locale] : current.style.instrumentalText
+        }
+      };
+    });
+  }, []);
+
+  const showToast = useCallback((message: string) => {
+    const normalizedMessage = message.trim();
+    if (!normalizedMessage) {
+      setToast(null);
+      return;
+    }
+
+    toastIdRef.current += 1;
+    setToast({ id: toastIdRef.current, message: normalizedMessage });
+  }, []);
+
+  const openSurface = useCallback((surface: DeferredSurface) => {
+    setMountedSurfaces((current) => current[surface]
+      ? current
+      : { ...current, [surface]: true });
+    setActiveSurface(surface);
+  }, []);
+
+  const openExamples = useCallback(() => openSurface("examples"), [openSurface]);
+  const openHistory = useCallback(() => openSurface("history"), [openSurface]);
+  const openSettings = useCallback((tab?: SettingsTabId) => {
+    setRequestedSettingsTab(tab);
+    openSurface("settings");
+  }, [openSurface]);
+
+  const closeExamples = useCallback(() => {
+    surfaceReturnFocusRef.current = examplesButtonRef.current;
+    setActiveSurface("editor");
+  }, []);
+
+  const closeHistory = useCallback(() => {
+    surfaceReturnFocusRef.current = historyButtonRef.current;
+    setActiveSurface("editor");
+  }, []);
+
+  const closeSettings = useCallback(() => {
+    surfaceReturnFocusRef.current = settingsButtonRef.current;
+    setActiveSurface("editor");
+  }, []);
+
   useSyncedCoverProxy(state, setState);
   useCoverPalette(coverForPalette, setState);
   useResolvedTextColor(state, setState);
   const autoWidthReadiness = useMeasuredAutoCanvasWidth(state, setState, autoWidthMeasurementRef);
-  useMeasuredAutoCanvasHeight(state, setState, exportCardRef, autoWidthReadiness.isStable);
-  const exportReadiness = useExportCardReadiness({
+  const {
+    store: exportReadinessStore,
+    lineStatus: exportLineStatus
+  } = useExportCardReadiness({
     state: parsedState,
+    setState,
     exportCardRef,
     isAutoWidthStable: autoWidthReadiness.isStable
   });
-  const exportBlockMessage = exportReadiness.blockingReason
-    ? resolveExportSafetyMessage(exportReadiness.blockingReason, exportReadiness.lineStatus.totalLineCount, t)
-    : undefined;
   const {
     userSettings,
-    backgroundImageUrl,
     isDesktopShell,
     isFirstLaunchOpen,
     preferencesLoaded,
@@ -162,27 +229,6 @@ export function LyricEditor() {
   });
   const effectiveUiThemeId = resolveEffectiveUiThemeId(userSettings);
   const exportPixelRatio = getExportPixelRatio(exportQuality);
-
-  function showToast(message: string) {
-    const normalizedMessage = message.trim();
-    if (!normalizedMessage) {
-      setToast(null);
-      return;
-    }
-
-    toastIdRef.current += 1;
-    setToast({ id: toastIdRef.current, message: normalizedMessage });
-  }
-
-  function closeExamples() {
-    surfaceReturnFocusRef.current = examplesButtonRef.current;
-    setActiveSurface("editor");
-  }
-
-  function closeHistory() {
-    surfaceReturnFocusRef.current = historyButtonRef.current;
-    setActiveSurface("editor");
-  }
 
   const {
     celebrationKey,
@@ -223,7 +269,6 @@ export function LyricEditor() {
     cardRef: captureCardRef,
     exportPixelRatio,
     exportFormat,
-    exportBlockMessage,
     getExportBlockMessage: (snapshot) => {
       const validationState = snapshot ? snapshotAsAppState(snapshot, parsedState) : parsedState;
       const validation = getLiveExportCardValidation(
@@ -354,32 +399,6 @@ export function LyricEditor() {
   aiTranslationBusyRef.current = isAITranslating;
   invalidateDocumentAsyncRef.current = invalidateAITranslation;
 
-  function openSettings(tab?: SettingsTabId) {
-    setRequestedSettingsTab(tab);
-    setActiveSurface("settings");
-  }
-
-  function closeSettings() {
-    surfaceReturnFocusRef.current = settingsButtonRef.current;
-    setActiveSurface("editor");
-  }
-
-  function applyLocale(locale: Locale) {
-    setState((current) => {
-      const previousDefaultInstrumentalTexts = Object.values(DEFAULT_INSTRUMENTAL_TEXT);
-      const shouldUpdateInstrumentalText = previousDefaultInstrumentalTexts.includes(current.style.instrumentalText);
-
-      return {
-        ...current,
-        locale,
-        style: {
-          ...current.style,
-          instrumentalText: shouldUpdateInstrumentalText ? DEFAULT_INSTRUMENTAL_TEXT[locale] : current.style.instrumentalText
-        }
-      };
-    });
-  }
-
   function changeEditorStep(nextStep: number) {
     if (nextStep === 0 && currentStep !== 0) {
       setSongLinkAutoParseVisitIntent(createSongLinkAutoParseVisitIntent());
@@ -393,11 +412,11 @@ export function LyricEditor() {
     canFetchLyrics,
     themeColor: resolvedAccentColor,
     isExporting: isCompleteExporting,
-    exportBlockingMessage: exportBlockMessage,
+    exportReadinessStore,
     exportFormat,
     exportQuality,
     lyricsLayout: {
-      lineStatus: exportReadiness.lineStatus
+      lineStatus: exportLineStatus
     },
     documentRevision,
     songLinkAutoParseVisitIntent,
@@ -436,6 +455,17 @@ export function LyricEditor() {
       onExport: completeAndExport
     }
   });
+  const loadExampleEvent = useStableEvent(loadExample);
+  const reimportHistoryEvent = useStableEvent(reimportHistory);
+  const recordRemovedEvent = useStableEvent(handleHistoryRecordRemoved);
+  const historyClearedEvent = useStableEvent(handleHistoryCleared);
+  const localeChangeEvent = useStableEvent(setLocale);
+  const settingsPreviewEvent = useStableEvent(previewUserSettings);
+  const settingsChangeEvent = useStableEvent(updateUserSettings);
+  const settingsSavedEvent = useStableEvent((settings: AISettingsSummary, message?: string) => {
+    setAISettings(settings);
+    showToast(message || aiCopy.settingsSaved);
+  });
   const activeSettingsStep = settingsSteps[currentStep] ?? settingsSteps[0];
   const activePresentation = activeSettingsStep?.presentation ?? "preview-workbench";
   const isLyricsWorkspace = activePresentation === "lyrics-workspace";
@@ -461,33 +491,37 @@ export function LyricEditor() {
         } as unknown as React.CSSProperties}
       >
       <DesktopTitleBar locale={state.locale} />
-      <DynamicAppBackground palette={state.palette} settings={userSettings} imageUrl={backgroundImageUrl} />
+      <DynamicAppBackground palette={state.palette} settings={userSettings} />
       <ClickSpark enabled={userSettings.sparkCursorEnabled} themeColor={resolvedAccentColor}>
         <main className="app-main-content lyric-editor-main relative z-10 min-h-screen px-4 py-5 sm:px-6 lg:px-8">
           <div className="lyric-editor-stage relative mx-auto min-w-0 max-w-[1520px] overflow-clip">
-            <ExamplesFloor
+            <DeferredExamplesSurface
+              mounted={mountedSurfaces.examples}
               isActive={isExamplesSurfaceOpen}
               locale={state.locale}
-              onLoad={loadExample}
+              onLoad={loadExampleEvent}
               onClose={closeExamples}
               transition={activeSurfaceTransition}
             />
             {isDesktopShell ? (
-              <HistoryFloor
+              <DeferredHistorySurface
+                mounted={mountedSurfaces.history}
                 isActive={isHistorySurfaceOpen}
                 locale={state.locale}
                 transition={activeSurfaceTransition}
                 reduceMotion={shouldReduceMotion}
                 onClose={closeHistory}
-                onReplay={reimportHistory}
+                onReplay={reimportHistoryEvent}
                 onNotify={showToast}
-                onRecordRemoved={handleHistoryRecordRemoved}
-                onHistoryCleared={handleHistoryCleared}
+                onRecordRemoved={recordRemovedEvent}
+                onHistoryCleared={historyClearedEvent}
               />
             ) : null}
 
             <motion.div
+              ref={editorSurfaceRef}
               data-testid="editor-surface"
+              data-surface-work="running"
               aria-hidden={!isEditorSurfaceActive}
               className={cn(
                 "relative z-10 h-full min-h-0",
@@ -503,10 +537,18 @@ export function LyricEditor() {
               initial={false}
               inert={!isEditorSurfaceActive ? true : undefined}
               transition={activeSurfaceTransition}
+              onAnimationStart={() => {
+                editorSurfaceRef.current?.setAttribute("data-surface-work", "running");
+              }}
               onAnimationComplete={() => {
                 if (isEditorSurfaceActive) {
+                  editorSurfaceRef.current?.setAttribute("data-surface-work", "running");
                   // A returning preview must remeasure after its sliding surface reaches final geometry.
                   setPreviewMeasurementKey((key) => key + 1);
+                } else {
+                  // Decorative work is paused only after the editor is fully offscreen,
+                  // so the existing exit pixels and timing remain unchanged.
+                  editorSurfaceRef.current?.setAttribute("data-surface-work", "paused");
                 }
               }}
             >
@@ -540,8 +582,8 @@ export function LyricEditor() {
                           locale={state.locale}
                           density="compact"
                           placement="stepper"
-                          onOpenExamples={() => setActiveSurface("examples")}
-                          onOpenHistory={isDesktopShell ? () => setActiveSurface("history") : undefined}
+                          onOpenExamples={openExamples}
+                          onOpenHistory={isDesktopShell ? openHistory : undefined}
                           onManualSave={isDesktopShell ? () => void saveManualArchive() : undefined}
                           manualSaveState={manualSaveButtonState}
                           manualSaveDisabled={isAITranslating || isDocumentTransactionPending}
@@ -596,21 +638,19 @@ export function LyricEditor() {
               />
             ) : null}
 
-            <SettingsSurface
+            <DeferredSettingsSurface
+              mounted={mountedSurfaces.settings}
               isActive={isSettingsSurfaceOpen}
               requestedTab={requestedSettingsTab}
               locale={state.locale}
               userSettings={userSettings}
               isDesktopShell={isDesktopShell}
               transition={activeSurfaceTransition}
-              onLocaleChange={setLocale}
-              onUserSettingsPreview={previewUserSettings}
-              onUserSettingsChange={updateUserSettings}
+              onLocaleChange={localeChangeEvent}
+              onUserSettingsPreview={settingsPreviewEvent}
+              onUserSettingsChange={settingsChangeEvent}
               onClose={closeSettings}
-              onSaved={(settings, message) => {
-                setAISettings(settings);
-                showToast(message || aiCopy.settingsSaved);
-              }}
+              onSaved={settingsSavedEvent}
               onNotify={showToast}
             />
           </div>

@@ -15,6 +15,7 @@ import {
   Trash2
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { recordRenderBoundary } from "@/components/editor/render-boundary-diagnostics";
 import { SurfaceCloseButton } from "@/components/layout/SurfaceCloseButton";
 import { ActionButton, SelectField, TextInput } from "@/components/ui/controls";
 import { getLyricsCardDesktopApi } from "@/lib/desktop-api";
@@ -56,6 +57,7 @@ export function HistoryFloor({
   onRecordRemoved,
   onHistoryCleared
 }: HistoryFloorProps) {
+  recordRenderBoundary("History");
   const copy = importHistoryCopy[locale];
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
   const requestIdRef = useRef(0);

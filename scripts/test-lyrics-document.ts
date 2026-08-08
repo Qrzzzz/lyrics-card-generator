@@ -164,7 +164,7 @@ assert.ok(
   "landscape export renders translation-only tail rows instead of dropping them"
 );
 
-const readinessSource = readFileSync(resolve("components/editor/hooks/useExportCardReadiness.ts"), "utf8");
+const readinessSource = readFileSync(resolve("components/editor/hooks/export-card-dom-coordinator.ts"), "utf8");
 assert.ok(
   readinessSource.includes("attributes: true") && readinessSource.includes('attributeFilter: ["class", "style"]'),
   "readiness rechecks overflow after landscape font fitting changes inline styles"

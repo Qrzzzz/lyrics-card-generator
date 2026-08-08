@@ -150,6 +150,7 @@ export function useEditorAiTranslation({
         setIsAITranslating(false);
         setAITranslationPhase("idle");
       },
+      scheduleStreamFlush: scheduleAIStreamFrame,
       stream: async (signal, events) => {
         // Build from the intent snapshot, never from lyrics that may change during streaming.
         const prompt = buildLyricsTranslationPrompt({
@@ -205,4 +206,9 @@ export function useEditorAiTranslation({
     setAISettings,
     refreshAISettings
   };
+}
+
+function scheduleAIStreamFrame(flush: () => void) {
+  const frame = window.requestAnimationFrame(flush);
+  return () => window.cancelAnimationFrame(frame);
 }
