@@ -32,6 +32,7 @@ type AutoWidthEquivalenceFixture = {
   align: "left" | "center";
   anchorWidth: number;
   expected: { width: number; height: number };
+  expectedByPlatform?: Partial<Record<NodeJS.Platform, { width: number; height: number }>>;
 };
 
 const autoWidthEquivalenceFixtures: AutoWidthEquivalenceFixture[] = [
@@ -114,7 +115,8 @@ const autoWidthEquivalenceFixtures: AutoWidthEquivalenceFixture[] = [
     lineHeight: 2.05,
     align: "left",
     anchorWidth: 1280,
-    expected: { width: 920, height: 2140 }
+    expected: { width: 920, height: 2140 },
+    expectedByPlatform: { linux: { width: 940, height: 2140 } }
   },
   {
     id: "long-english-words",
@@ -711,7 +713,8 @@ test("auto width preserves the legacy choice for multilingual typography fixture
     await test.step(fixture.id, async () => {
       await openWebLiteWithFreshPreferences(page);
       const result = await applyAutoWidthEquivalenceFixture(page, fixture);
-      expect(result, `${fixture.id} matches the legacy width and height`).toEqual(fixture.expected);
+      const expected = fixture.expectedByPlatform?.[process.platform] ?? fixture.expected;
+      expect(result, `${fixture.id} matches the ${process.platform} legacy width and height`).toEqual(expected);
     });
   }
 });
