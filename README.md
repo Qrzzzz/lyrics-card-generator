@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v5.9.3.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v5.9.4.zh-CN.md">发布说明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">在线 Web Lite 版</a> ·
   <a href="./docs/desktop.md">桌面维护文档</a> ·
   <a href="#主要功能">主要功能</a> ·
@@ -47,26 +47,26 @@
 
 ## 📦 下载与安装
 
-已公开构建请从 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 获取；本地 v5.9.3 发布候选打包使用以下文件名：
+已公开构建请从 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 获取；本地 v5.9.4 发布候选打包使用以下文件名：
 
-* 安装版：`Lyrics Card Generator Setup 5.9.3.exe`
-* 便携版：`Lyrics Card Generator-5.9.3-portable.exe`
+* 安装版：`Lyrics Card Generator Setup 5.9.4.exe`
+* 便携版：`Lyrics Card Generator-5.9.4-portable.exe`
 
 安装版适合长期使用；便携版适合临时运行、测试或放在移动硬盘中使用。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v5.9.3 更新重点（本地发布候选）
+### v5.9.4 更新重点（本地发布候选）
 
-* 加固 Windows 打包版的本地服务启动：使用每次启动独立的 HMAC 就绪证明，正确处理启动失败、服务提前退出与端口竞争，并确保只有一个应用实例、一个本地服务和一个历史记录写入者。
-* 本地 MP3 / FLAC 上传采用 100 MiB 流式上限，并在 Base64 和 JSON 扩展前限制 8 MiB 内嵌封面与 256 Ki 字符歌词；随机访问解析保留尾部 APEv2 标签，且不再创建第二份完整文件副本。
-* 改进 Spotify 艺人提取与网易云音乐候选排序，在保留混音、现场版等标题后缀的同时，优先显示与歌名／艺人语义完全匹配的结果。
-* 升级至 Next.js 15.5.21，关闭未使用的图片优化入口并补齐桌面 standalone 依赖。这里记录的是本地发布候选；公开下载状态以 GitHub Releases 实际页面为准。
+* 优化桌面启动链路、renderer 来源确认与静态资源缓存，减少重复探测和不必要的启动工作，同时保持原有安全边界。
+* 停止空闲时的 ClickSpark 动画帧循环，复用自动宽度测量宿主，并收紧歌词输入、异步数据和非活动界面的渲染范围。
+* 合并导出就绪测量、延后加载示例／历史／设置／AI／导出界面，并缓存系统字体扫描；热缓存不会重复启动字体扫描进程。
+* 为延迟界面加入局部失败隔离和真正可重试的分块加载，并为仅注册表发生变化的系统字体设置 5 分钟最大缓存陈旧时间。这里记录的是本地发布候选；公开下载状态以 GitHub Releases 实际页面为准。
 
 ## 🌐 多语言发布说明
 
 GitHub Release 默认展示简体中文摘要，完整说明见：
-[简体中文](./docs/releases/v5.9.3.zh-CN.md) · [繁體中文](./docs/releases/v5.9.3.zh-TW.md) · [English](./docs/releases/v5.9.3.en.md) · [Français](./docs/releases/v5.9.3.fr.md) · [日本語](./docs/releases/v5.9.3.ja.md) · [Español](./docs/releases/v5.9.3.es.md)
+[简体中文](./docs/releases/v5.9.4.zh-CN.md) · [繁體中文](./docs/releases/v5.9.4.zh-TW.md) · [English](./docs/releases/v5.9.4.en.md) · [Français](./docs/releases/v5.9.4.fr.md) · [日本語](./docs/releases/v5.9.4.ja.md) · [Español](./docs/releases/v5.9.4.es.md)
 
 <a id="主要功能"></a>
 

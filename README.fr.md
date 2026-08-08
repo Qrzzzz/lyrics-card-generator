@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v5.9.3.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v5.9.4.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="#développement-local">Développement local</a> ·
@@ -49,26 +49,26 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 ## 📦 Téléchargement et installation
 
-Consultez [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) pour les builds disponibles publiquement. Le packaging local de la version candidate v5.9.3 utilise les noms suivants :
+Consultez [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) pour les builds disponibles publiquement. Le packaging local de la version candidate v5.9.4 utilise les noms suivants :
 
-* Installateur : `Lyrics Card Generator Setup 5.9.3.exe`
-* Version portable : `Lyrics Card Generator-5.9.3-portable.exe`
+* Installateur : `Lyrics Card Generator Setup 5.9.4.exe`
+* Version portable : `Lyrics Card Generator-5.9.4-portable.exe`
 
 L'installateur est recommandé pour une utilisation régulière. La version portable convient aux essais, à une utilisation temporaire ou à un disque amovible.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### Points forts de la v5.9.3 (version candidate locale)
+### Points forts de la v5.9.4 (version candidate locale)
 
-* Renforce le démarrage Windows empaqueté avec une preuve HMAC propre à chaque lancement, une gestion fermée des échecs de démarrage, des arrêts prématurés et des conflits de port, ainsi qu’un seul propriétaire pour la fenêtre, le serveur local et l’écriture de l’historique.
-* Impose une limite de streaming de 100 MiB aux MP3 / FLAC et, avant l’expansion Base64 / JSON, des budgets de 8 MiB pour les pochettes intégrées et de 256 Kio de caractères pour les paroles. L’analyse à accès aléatoire conserve les tags APEv2 de fin de fichier sans seconde copie complète.
-* Améliore l’extraction des artistes Spotify et le classement des résultats NetEase, tout en conservant les suffixes légitimes de remaster, mix et concert et en privilégiant les correspondances exactes titre / artiste.
-* Passe à Next.js 15.5.21, désactive l’entrée inutilisée de l’optimiseur d’images et complète les dépendances standalone du bureau. Ces métadonnées décrivent une version candidate locale ; la disponibilité publique dépend de la page GitHub Releases en ligne.
+* Simplifie le démarrage du bureau, la validation de l’origine du renderer et le cache des ressources statiques afin d’éviter les vérifications répétées et le travail inutile au lancement, sans modifier les limites de sécurité existantes.
+* Arrête la boucle d’animation ClickSpark lorsqu’elle est inactive, réutilise l’hôte de mesure de largeur automatique et réduit les rendus liés à la saisie des paroles, aux données asynchrones et aux surfaces inactives.
+* Regroupe les mesures de disponibilité de l’export, charge à la demande les surfaces Exemples, Historique, Paramètres, IA et Export, et met en cache la découverte des polices système afin qu’une requête à chaud ne relance aucun processus d’analyse.
+* Isole localement les échecs des surfaces différées avec une nouvelle tentative réelle du chunk et limite à cinq minutes l’ancienneté du cache des polices lors d’un changement du Registre uniquement. Ces métadonnées décrivent une version candidate locale ; la disponibilité publique dépend de la page GitHub Releases en ligne.
 
 ## 🌐 Notes de publication multilingues
 
 Par défaut, GitHub Release affiche un résumé en chinois simplifié. Consultez les notes complètes :
-[简体中文](./docs/releases/v5.9.3.zh-CN.md) · [繁體中文](./docs/releases/v5.9.3.zh-TW.md) · [English](./docs/releases/v5.9.3.en.md) · [Français](./docs/releases/v5.9.3.fr.md) · [日本語](./docs/releases/v5.9.3.ja.md) · [Español](./docs/releases/v5.9.3.es.md)
+[简体中文](./docs/releases/v5.9.4.zh-CN.md) · [繁體中文](./docs/releases/v5.9.4.zh-TW.md) · [English](./docs/releases/v5.9.4.en.md) · [Français](./docs/releases/v5.9.4.fr.md) · [日本語](./docs/releases/v5.9.4.ja.md) · [Español](./docs/releases/v5.9.4.es.md)
 
 <a id="fonctionnalités-principales"></a>
 
