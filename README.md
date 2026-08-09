@@ -38,7 +38,19 @@
 
 ---
 
-## ✨ 成品示例
+<details>
+<summary><strong>🖥️ 软件界面</strong></summary>
+
+<table>
+  <tr>
+    <td align="center" valign="top"><img src="./docs/readme-assets/screenshots/step-3.zh-CN.webp" alt="中文界面的第三步布局设置与歌词卡片实时预览" width="100%" /><br/><sub><b>第三步：布局 · 专辑封面动态取色</b></sub></td>
+  </tr>
+</table>
+
+</details>
+
+<details>
+<summary><strong>✨ 成品示例</strong></summary>
 
 <table>
   <tr>
@@ -48,6 +60,8 @@
 </table>
 
 两张图片均由应用直接导出；画布采用自动宽度、自动高度，行高为 1.7。
+
+</details>
 
 <img
   align="right"

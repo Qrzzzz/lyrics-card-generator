@@ -37,7 +37,19 @@
 
 ---
 
-## ✨ Exemples de rendu
+<details>
+<summary><strong>🖥️ Interface de l’application</strong></summary>
+
+<table>
+  <tr>
+    <td align="center" valign="top"><img src="./docs/readme-assets/screenshots/step-3.fr.webp" alt="Réglages de mise en page à l’étape 3 et aperçu en direct de la carte dans l’interface française" width="100%" /><br/><sub><b>Étape 3 : Mise en page · Couleurs dynamiques extraites de la pochette</b></sub></td>
+  </tr>
+</table>
+
+</details>
+
+<details>
+<summary><strong>✨ Exemples de rendu</strong></summary>
 
 <table>
   <tr>
@@ -47,6 +59,8 @@
 </table>
 
 Les deux images ont été exportées directement depuis l’application, avec largeur et hauteur automatiques et un interligne de 1,7.
+
+</details>
 
 <img
   align="right"

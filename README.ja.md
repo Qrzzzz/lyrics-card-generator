@@ -37,7 +37,19 @@
 
 ---
 
-## ✨ 生成例
+<details>
+<summary><strong>🖥️ アプリ画面</strong></summary>
+
+<table>
+  <tr>
+    <td align="center" valign="top"><img src="./docs/readme-assets/screenshots/step-3.ja.webp" alt="日本語インターフェースのステップ3レイアウト設定と歌詞カードのライブプレビュー" width="100%" /><br/><sub><b>ステップ 3：レイアウト · アルバムカバーから抽出したダイナミックカラー</b></sub></td>
+  </tr>
+</table>
+
+</details>
+
+<details>
+<summary><strong>✨ 生成例</strong></summary>
 
 <table>
   <tr>
@@ -47,6 +59,8 @@
 </table>
 
 どちらもアプリから直接書き出した画像です。キャンバスは幅・高さともに自動、行間は 1.7 に設定しています。
+
+</details>
 
 <img
   align="right"
