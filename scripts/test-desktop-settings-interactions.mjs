@@ -11,6 +11,8 @@ const executablePath = path.join(root, "release", "win-unpacked", "Lyrics Card G
 const reportDirectory = path.join(root, "playwright-report", "desktop");
 const userDataDirectory = await mkdtemp(path.join(tmpdir(), "lyrics-card-desktop-test-"));
 const exportOverflowTolerance = 4;
+const activeSongInfoToggleSelector = '[data-stepper-presentation="focus"] [data-testid="song-info-toggle"]';
+const activeCompleteExportButtonSelector = '[data-testid="export-settings-panel"][data-active="true"] [data-testid="complete-export-button"]';
 // Visual metrics are diagnostic-only unless explicitly requested; behavioral
 // assertions remain deterministic in the default regression run.
 const runVisualDiagnostics = process.argv.includes("--visual-diagnostics");
@@ -195,14 +197,15 @@ async function waitForLyricsLineBudget(expected, timeout = 5_000) {
 
 async function waitForCompleteExportEnabled(timeout = 15_000) {
   try {
-    await page.waitForFunction(() => {
-      const button = document.querySelector('[data-testid="complete-export-button"]');
+    await page.waitForFunction((buttonSelector) => {
+      const button = document.querySelector(buttonSelector);
       return button instanceof HTMLButtonElement && !button.disabled;
-    }, undefined, { timeout });
+    }, activeCompleteExportButtonSelector, { timeout });
   } catch (error) {
-    const diagnostics = await page.evaluate(() => {
-      const button = document.querySelector('[data-testid="complete-export-button"]');
-      const alert = document.querySelector('[role="alert"]');
+    const diagnostics = await page.evaluate((buttonSelector) => {
+      const button = document.querySelector(buttonSelector);
+      const activePanel = button?.closest('[data-testid="export-settings-panel"][data-active="true"]');
+      const alert = activePanel?.querySelector('[role="alert"]') ?? document.querySelector('[role="alert"]');
       const root = document.querySelector('[data-export-card]');
       const lyrics = root?.querySelector('[data-card-lyrics]');
       const viewport = root?.querySelector('[data-card-lyrics-viewport]');
@@ -228,7 +231,7 @@ async function waitForCompleteExportEnabled(timeout = 15_000) {
           scrollWidth: viewport.scrollWidth
         } : null
       };
-    });
+    }, activeCompleteExportButtonSelector);
     throw new Error(`complete export did not become ready: ${JSON.stringify(diagnostics)}`, { cause: error });
   }
 }
@@ -1064,13 +1067,13 @@ async function assertSongImportAsideBehavior() {
   await guardedEditor.locator('input:not([type="file"])').first().fill("Stale manual title");
   const linkInput = page.locator('[data-testid="song-import-alternates"] input:not([type="file"])').first();
   await linkInput.fill("https://example.com/revision-guard");
-  await page.waitForFunction(() => {
-    const toggle = document.querySelector('[data-testid="song-info-toggle"]');
+  await page.waitForFunction((toggleSelector) => {
+    const toggle = document.querySelector(toggleSelector);
     const regionId = toggle?.getAttribute("aria-controls");
     const region = regionId ? document.getElementById(regionId) : null;
     return toggle?.getAttribute("aria-expanded") === "false" &&
       region?.getAttribute("data-song-info-view") === "summary";
-  });
+  }, activeSongInfoToggleSelector);
   const guardedSummary = aside.getByTestId("song-info-summary");
   await guardedSummary.waitFor({ state: "visible" });
   assert.equal(
@@ -4246,7 +4249,10 @@ try {
   assert.ok(autoWidthWrapMetrics && autoWidthWrapMetrics.measuredLines === 36, `auto-width metrics cover original and translated lines: ${JSON.stringify(autoWidthWrapMetrics)}`);
   assert.equal(autoWidthWrapMetrics.severeOrphans, 0, `auto width leaves no severe body or translation orphan: ${JSON.stringify(autoWidthWrapMetrics)}`);
 
-  const fontOverride = await page.evaluate(() => {
+  const fontOverrideHandle = await page.waitForFunction((buttonSelector) => {
+    const button = document.querySelector(buttonSelector);
+    if (!(button instanceof HTMLButtonElement) || button.disabled) return false;
+
     const toastAudit = [];
     const recordToast = () => {
       for (const toast of document.querySelectorAll('[data-testid="app-toast"]')) {
@@ -4266,26 +4272,23 @@ try {
 
     try {
       Object.defineProperty(document.fonts, "status", { configurable: true, get: () => "loading" });
-      const button = document.querySelector('[data-testid="complete-export-button"]');
-      if (!(button instanceof HTMLButtonElement)) {
-        throw new Error("complete export button is unavailable");
-      }
       const status = document.fonts.status;
-      button.removeAttribute("disabled");
       button.click();
-      return { supported: status === "loading", status };
+      return { supported: status === "loading", status, buttonDisabled: button.disabled };
     } catch {
       delete document.fonts.status;
       toastObserver.disconnect();
       delete window.__desktopExportToastAudit;
       delete window.__desktopExportToastObserver;
-      return { supported: false, status: document.fonts.status };
+      return { supported: false, status: document.fonts.status, buttonDisabled: button.disabled };
     }
-  });
+  }, activeCompleteExportButtonSelector, { timeout: 15_000 });
+  const fontOverride = await fontOverrideHandle.jsonValue();
+  await fontOverrideHandle.dispose();
   assert.deepEqual(
     fontOverride,
-    { supported: true, status: "loading" },
-    "test shell can simulate fonts-loading readiness"
+    { supported: true, status: "loading", buttonDisabled: false },
+    "test shell can simulate fonts-loading readiness on the real enabled React control"
   );
   try {
     await page.waitForFunction(
@@ -4307,16 +4310,22 @@ try {
     });
   }
 
-  await page.evaluate(() => {
+  const liveMeasurementGuardHandle = await page.waitForFunction((buttonSelector) => {
     const root = document.querySelector('[data-export-card-host] [data-export-card]');
-    const button = document.querySelector('[data-testid="complete-export-button"]');
-    if (!(root instanceof HTMLElement) || !(button instanceof HTMLButtonElement)) throw new Error("export DOM unavailable");
+    const button = document.querySelector(buttonSelector);
+    if (!(root instanceof HTMLElement) || !(button instanceof HTMLButtonElement) || button.disabled) return false;
     const previousWidth = root.style.width;
     root.style.width = "1px";
-    button.removeAttribute("disabled");
-    button.click();
-    root.style.width = previousWidth;
-  });
+    try {
+      button.click();
+      return { clicked: true, measuredWidth: root.getBoundingClientRect().width };
+    } finally {
+      root.style.width = previousWidth;
+    }
+  }, activeCompleteExportButtonSelector, { timeout: 15_000 });
+  const liveMeasurementGuard = await liveMeasurementGuardHandle.jsonValue();
+  await liveMeasurementGuardHandle.dispose();
+  assert.deepEqual(liveMeasurementGuard, { clicked: true, measuredWidth: 1 }, "live measurement guard uses the active enabled export control");
   await page.waitForFunction(() => /计算|高度|稍候/.test(document.querySelector('[data-testid="app-toast"]')?.textContent ?? ""));
 
   await page.locator('button[data-step-id="lyrics"]').click();
