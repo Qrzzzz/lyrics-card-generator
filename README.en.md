@@ -37,7 +37,19 @@
 
 ---
 
-## ✨ Output examples
+<details>
+<summary><strong>🖥️ App interface</strong></summary>
+
+<table>
+  <tr>
+    <td align="center" valign="top"><img src="./docs/readme-assets/screenshots/step-3.en.webp" alt="Step 3 layout settings and live lyric card preview in the English interface" width="100%" /><br/><sub><b>Step 3: Layout · Dynamic colors from the album cover</b></sub></td>
+  </tr>
+</table>
+
+</details>
+
+<details>
+<summary><strong>✨ Output examples</strong></summary>
 
 <table>
   <tr>
@@ -47,6 +59,8 @@
 </table>
 
 Both images were exported directly from the app with automatic width, automatic height, and a 1.7 line height.
+
+</details>
 
 <img
   align="right"

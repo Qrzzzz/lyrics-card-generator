@@ -37,7 +37,19 @@
 
 ---
 
-## ✨ 成品範例
+<details>
+<summary><strong>🖥️ 軟體介面</strong></summary>
+
+<table>
+  <tr>
+    <td align="center" valign="top"><img src="./docs/readme-assets/screenshots/step-3.zh-TW.webp" alt="繁體中文介面的第三步版面設定與歌詞卡片即時預覽" width="100%" /><br/><sub><b>第三步：版面 · 專輯封面動態取色</b></sub></td>
+  </tr>
+</table>
+
+</details>
+
+<details>
+<summary><strong>✨ 成品範例</strong></summary>
 
 <table>
   <tr>
@@ -47,6 +59,8 @@
 </table>
 
 兩張圖片皆由應用程式直接匯出；畫布採用自動寬度、自動高度，行高為 1.7。
+
+</details>
 
 <img
   align="right"

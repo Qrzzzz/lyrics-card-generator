@@ -37,7 +37,19 @@
 
 ---
 
-## ✨ Ejemplos de salida
+<details>
+<summary><strong>🖥️ Interfaz de la aplicación</strong></summary>
+
+<table>
+  <tr>
+    <td align="center" valign="top"><img src="./docs/readme-assets/screenshots/step-3.es.webp" alt="Ajustes de diseño del paso 3 y vista previa en vivo de la tarjeta en la interfaz en español" width="100%" /><br/><sub><b>Paso 3: Diseño · Colores dinámicos extraídos de la portada</b></sub></td>
+  </tr>
+</table>
+
+</details>
+
+<details>
+<summary><strong>✨ Ejemplos de salida</strong></summary>
 
 <table>
   <tr>
@@ -47,6 +59,8 @@
 </table>
 
 Ambas imágenes se exportaron directamente desde la aplicación con anchura y altura automáticas y un interlineado de 1,7.
+
+</details>
 
 <img
   align="right"
