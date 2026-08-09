@@ -58,6 +58,9 @@ function trustedFixture(frameUrl = `${localUrl}/`, frameIsMain = true) {
 
 const mainSource = readFileSync("electron/main.js", "utf8");
 const packagedServerReadinessSource = readFileSync("electron/packaged-server-readiness.js", "utf8");
+const localServerOriginSource = readFileSync("electron/local-server-origin.js", "utf8");
+const packagedNextLauncherSource = readFileSync("electron/packaged-next-server.js", "utf8");
+const startupTraceSource = readFileSync("electron/startup-trace.js", "utf8");
 const singleInstanceOwnershipSource = readFileSync("electron/single-instance-ownership.js", "utf8");
 const desktopReadyRouteSource = readFileSync("app/api/desktop-ready/route.ts", "utf8");
 const importHistorySource = readFileSync("electron/import-history.js", "utf8");
@@ -69,6 +72,10 @@ const desktopHistoryInteractionSource = readFileSync("scripts/test-desktop-impor
 const replayPayloadSource = mainSource.slice(
   mainSource.indexOf("async function createImportHistoryReplayPayload"),
   mainSource.indexOf("function mimeTypeForHistoryFile")
+);
+const localAudioReplaySource = replayPayloadSource.slice(
+  replayPayloadSource.indexOf('if (record.kind === "local-audio")'),
+  replayPayloadSource.indexOf("const validated = preparedFile")
 );
 assert.equal((mainSource.match(/ipcMain\.handle\(/g) || []).length, 1, "every privileged IPC handler uses the trusted wrapper");
 assert.match(mainSource, /setPermissionRequestHandler[\s\S]*?callback\(false\)/);
@@ -116,9 +123,27 @@ assert.match(desktopReadyRouteSource, /"LYRICS_CARD_SERVER_STARTUP_SECRET"/);
 assert.match(desktopReadyRouteSource, /"x-lyrics-card-startup-challenge"/);
 assert.match(desktopReadyRouteSource, /status: 404/, "the readiness route is unavailable without the child secret and challenge");
 assert.match(desktopReadyRouteSource, /"Cache-Control": "no-store"/);
+assert.match(localServerOriginSource, /const LOOPBACK_HOST = "127\.0\.0\.1"/);
+assert.match(localServerOriginSource, /host !== LOOPBACK_HOST/);
+assert.match(localServerOriginSource, /JSON\.stringify\(\{ version: ORIGIN_STATE_VERSION, port \}\)/);
+assert.doesNotMatch(localServerOriginSource, /STARTUP_SECRET|startupSecret|challenge|proof/i, "origin state never handles launch secrets");
+assert.match(mainSource, /await startPackagedNextServerOnPort\(port, source, onProcessLaunchStarted\)[\s\S]*?writeCachedLoopbackPort/);
+assert.match(mainSource, /stdio: \["ignore", "pipe", "pipe", "ipc"\]/);
+assert.match(packagedNextLauncherSource, /process\.once\("disconnect", \(\) => process\.exit\(0\)\)/);
+assert.match(packagedNextLauncherSource, /lyrics-card:shutdown-server/);
+assert.match(startupTraceSource, /Main-process only diagnostics/);
+assert.doesNotMatch(startupTraceSource, /ipcMain|contextBridge|webContents/, "startup trace has no renderer transport");
 
 const prepareElectronSource = readFileSync("scripts/prepare-electron-dist.mjs", "utf8");
+assert.match(prepareElectronSource, /"electron\/font-directory-service\.js"/, "packaged desktop bundles the font directory service");
+assert.match(
+  prepareElectronSource,
+  /path\.join\(projectRoot, "electron", "font-directory-service\.js"\)[\s\S]*?path\.join\(electronOutputDir, "font-directory-service\.js"\)/,
+  "desktop preparation copies the font directory service into the minimal app"
+);
 assert.match(prepareElectronSource, /"electron\/local-app-url\.js"/, "packaged desktop bundles the local URL policy helper");
+assert.match(prepareElectronSource, /"electron\/local-server-origin\.js"/, "packaged desktop bundles stable origin selection");
+assert.match(prepareElectronSource, /desktop-server-launcher\.cjs/, "packaged desktop bundles the parent-lifetime launcher");
 assert.match(
   prepareElectronSource,
   /path\.join\(projectRoot, "electron", "local-app-url\.js"\)[\s\S]*?path\.join\(electronOutputDir, "local-app-url\.js"\)/,
@@ -161,6 +186,21 @@ assert.match(preloadSource, /replayImportHistory: \(recordId\)[\s\S]*?invoke\("l
 assert.doesNotMatch(preloadSource, /replayImportHistory: \([^)]*path/, "history replay exposes only an opaque record id");
 assert.match(
   preloadSource,
+  /readImportHistoryFileChunk: \(streamToken\)[\s\S]*?"lyrics-card:import-history-file-read"[\s\S]*?streamToken/,
+  "bounded audio reads expose only a main-created opaque capability"
+);
+assert.match(
+  preloadSource,
+  /releaseImportHistoryFile: \(streamToken\)[\s\S]*?"lyrics-card:import-history-file-release"[\s\S]*?streamToken/,
+  "renderer cancellation can explicitly release a partial audio stream"
+);
+assert.doesNotMatch(
+  preloadSource,
+  /(?:readImportHistoryFileChunk|releaseImportHistoryFile): \([^)]*(?:path|offset|size)/,
+  "renderer cannot select an arbitrary path, offset, or payload size"
+);
+assert.match(
+  preloadSource,
   /commitImportHistoryReplay: \(recordId, relocationToken\)[\s\S]*?"lyrics-card:import-history-replay-commit"[\s\S]*?recordId,[\s\S]*?relocationToken/,
   "relocation finalization exposes only a record id and opaque main-process token"
 );
@@ -197,7 +237,7 @@ assert.match(
 );
 assert.match(
   mainSource,
-  /handle\("lyrics-card:import-history-replay", async \(_event, recordId\)[\s\S]*?importHistoryStore\.get\(recordId\)[\s\S]*?createImportHistoryReplayPayload\(record\)/,
+  /handle\("lyrics-card:import-history-replay", async \(event, recordId\)[\s\S]*?importHistoryStore\.get\(recordId\)[\s\S]*?createImportHistoryReplayPayload\(record, undefined, event\.sender\.id\)/,
   "history replay resolves its source only from a validated stored record"
 );
 assert.match(mainSource, /readValidatedImportFile\(record\.kind, record\.source\.path\)/);
@@ -205,6 +245,26 @@ assert.doesNotMatch(
   replayPayloadSource,
   /await fs\.readFile\(/,
   "history replay never validates one path object and reopens another by path"
+);
+assert.match(
+  replayPayloadSource,
+  /importHistoryFileStreams\.open\([\s\S]*?senderId,[\s\S]*?"local-audio"[\s\S]*?record\.source\.path/,
+  "local-audio replay opens a sender-bound stable-handle stream from stored metadata"
+);
+assert.doesNotMatch(
+  localAudioReplaySource,
+  /\bbytes:/,
+  "local-audio replay metadata never carries the complete native file through IPC"
+);
+assert.match(
+  mainSource,
+  /handle\("lyrics-card:import-history-file-read", \(event, streamToken\)[\s\S]*?importHistoryFileStreams\.read\(event\.sender\.id, streamToken\)/,
+  "every bounded read rechecks sender ownership"
+);
+assert.match(
+  mainSource,
+  /mainWindow\.on\("closed"[\s\S]*?importHistoryFileStreams\.releaseSender\(createdRendererId\)/,
+  "destroying a renderer releases all of its remaining stable file handles"
 );
 assert.match(
   mainSource,

@@ -14,6 +14,8 @@ export type AITranslationStreamEvents<Phase> = {
   onDelta: (delta: string, accumulated: string) => void;
 };
 
+export type AITranslationStreamFlushScheduler = (flush: () => void) => () => void;
+
 export type AITranslationRunOptions<Value, Phase> = AITranslationDocument & {
   previousTranslation: Value;
   getCurrentDocument: () => AITranslationDocument;
@@ -32,12 +34,20 @@ export type AITranslationRunOptions<Value, Phase> = AITranslationDocument & {
   onCancelled: () => void;
   onInvalidated: () => void;
   onSettled: () => void;
+  /**
+   * Coalesces consecutive stream updates at the renderer boundary. The
+   * scheduler must defer the callback and return a synchronous cancellation
+   * function. Omitting it retains the immediate behavior used by non-renderer
+   * callers and transaction tests.
+   */
+  scheduleStreamFlush?: AITranslationStreamFlushScheduler;
 };
 
 type ActiveRun<Value, Phase> = {
   intent: AITranslationDocumentIntent<Value>;
   controller: AbortController;
   options: AITranslationRunOptions<Value, Phase>;
+  flushPending: () => void;
 };
 
 /**
@@ -60,7 +70,8 @@ export class AITranslationOrchestrator<Value, Phase> {
     const active: ActiveRun<Value, Phase> = {
       intent,
       controller: new AbortController(),
-      options
+      options,
+      flushPending: () => undefined
     };
     this.active = active;
     options.onStart();
@@ -76,24 +87,72 @@ export class AITranslationOrchestrator<Value, Phase> {
       intent.revision,
       intent.songIdentity
     );
+    type PendingStreamUpdate = {
+      kind: "reasoning" | "content";
+      accumulated: string;
+    };
+    let pendingUpdate: PendingStreamUpdate | null = null;
+    let cancelScheduledFlush: (() => void) | null = null;
+
+    const deliverPending = () => {
+      const update = pendingUpdate;
+      pendingUpdate = null;
+      if (!update || !isCurrent()) return;
+      if (update.kind === "reasoning") {
+        options.onReasoning(update.accumulated);
+        return;
+      }
+      const cleaned = options.clean(update.accumulated);
+      options.onStreaming(cleaned || update.accumulated.trim());
+      if (cleaned && writePartial(options.toValue(cleaned))) {
+        intent.hasWrittenPartial = true;
+      }
+    };
+    const flushPending = () => {
+      const cancel = cancelScheduledFlush;
+      cancelScheduledFlush = null;
+      cancel?.();
+      deliverPending();
+    };
+    const queueUpdate = (update: PendingStreamUpdate) => {
+      if (!options.scheduleStreamFlush) {
+        pendingUpdate = update;
+        deliverPending();
+        return;
+      }
+      // Only consecutive updates of the same kind may merge. Providers that
+      // interleave reasoning and content retain their original callback order.
+      if (pendingUpdate && pendingUpdate.kind !== update.kind) {
+        flushPending();
+      }
+      pendingUpdate = update;
+      if (cancelScheduledFlush) return;
+      cancelScheduledFlush = options.scheduleStreamFlush(() => {
+        cancelScheduledFlush = null;
+        deliverPending();
+      });
+    };
+    active.flushPending = flushPending;
 
     try {
       const raw = await options.stream(active.controller.signal, {
         onStatus: (phase) => {
-          if (isCurrent()) options.onStatus(phase);
+          if (!isCurrent()) return;
+          // A status event that follows an undelivered chunk is an ordering
+          // boundary even when the provider repeats the same phase.
+          if (pendingUpdate) flushPending();
+          options.onStatus(phase);
         },
         onReasoningDelta: (_delta, accumulated) => {
-          if (isCurrent()) options.onReasoning(accumulated);
+          if (isCurrent()) queueUpdate({ kind: "reasoning", accumulated });
         },
         onDelta: (_delta, accumulated) => {
-          if (!isCurrent()) return;
-          const cleaned = options.clean(accumulated);
-          options.onStreaming(cleaned || accumulated.trim());
-          if (cleaned && writePartial(options.toValue(cleaned))) {
-            intent.hasWrittenPartial = true;
-          }
+          if (isCurrent()) queueUpdate({ kind: "content", accumulated });
         }
       });
+      // A terminal result must synchronously publish the newest accumulated
+      // text even when the next animation frame has not arrived.
+      flushPending();
       const cleaned = options.clean(raw);
       if (!cleaned) throw options.createEmptyResponseError();
       if (!commitTerminal(options.toValue(cleaned))) {
@@ -107,6 +166,9 @@ export class AITranslationOrchestrator<Value, Phase> {
         options.onSettled();
       }
     } catch (error) {
+      // Error UI and rollback remain synchronous with the rejected stream; no
+      // queued frame is allowed to publish after the terminal path.
+      flushPending();
       if (!isCurrent()) return;
       if (intent.hasWrittenPartial) commitTerminal(intent.previousTranslation);
       if (!this.finish(active)) return;
@@ -121,6 +183,9 @@ export class AITranslationOrchestrator<Value, Phase> {
   cancel() {
     const active = this.active;
     if (!active) return false;
+    // Preserve the last received text before the existing synchronous rollback
+    // and cancellation callbacks, while cancelling the queued frame itself.
+    active.flushPending();
     const current = this.isCurrent(active);
     if (current && active.intent.hasWrittenPartial) {
       active.options.commitTerminal(
@@ -147,6 +212,7 @@ export class AITranslationOrchestrator<Value, Phase> {
   private stopActive(reason: "replace" | "invalidate") {
     const active = this.active;
     if (!active) return null;
+    active.flushPending();
     const current = this.isCurrent(active);
     let previous: Value | undefined;
     if (current && active.intent.hasWrittenPartial) {

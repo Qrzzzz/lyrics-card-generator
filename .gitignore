@@ -12,5 +12,6 @@ coverage/
 tmp/example-covers/
 tmp/example-previews/
 tmp/example-palette-generator/
+tmp/font-performance/
 *.log
 *.tsbuildinfo

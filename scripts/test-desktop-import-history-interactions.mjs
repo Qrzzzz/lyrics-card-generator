@@ -40,7 +40,8 @@ const routeCounts = { parseSong: 0, resolveSearch: 0, localAudio: 0, imageProxy:
 // restart, and deletion tests never read or mutate a real user history.
 await mkdir(fixtureDirectory, { recursive: true });
 await mkdir(reportDirectory, { recursive: true });
-await writeFile(audioPath, Buffer.from("initial desktop audio fixture"));
+const largeAudioFixtureBytes = 3 * 1024 * 1024 + 17;
+await writeFile(audioPath, Buffer.alloc(largeAudioFixtureBytes, 0x5a));
 await writeFile(coverPath, tinyPng);
 await writeFile(coverOnlyPath, tinyPng);
 
@@ -1569,6 +1570,40 @@ try {
     document.querySelector('[data-testid="song-info-summary"]')?.textContent?.includes("Local history fixture")
   ), null, { timeout: 15_000 });
   await waitForHistoryTotal(2);
+
+  const packagedStreamMetrics = await page.evaluate(async () => {
+    const api = window.lyricsCardDesktop;
+    const history = await api.listImportHistory({ offset: 0, limit: 24, source: "local-audio" });
+    const replay = await api.replayImportHistory(history.records[0].id);
+    if (!replay.ok || replay.kind !== "local-audio") return { ok: false };
+    let total = 0;
+    let chunks = 0;
+    let maximumPayload = 0;
+    while (true) {
+      const chunk = await api.readImportHistoryFileChunk(replay.file.streamToken);
+      if (!chunk.ok) return { ok: false, code: chunk.code };
+      total += chunk.bytes.byteLength;
+      chunks += 1;
+      maximumPayload = Math.max(maximumPayload, chunk.bytes.byteLength);
+      if (chunk.done) break;
+    }
+    return {
+      ok: true,
+      metadataHasBytes: "bytes" in replay.file,
+      declaredSize: replay.file.size,
+      total,
+      chunks,
+      maximumPayload
+    };
+  });
+  assert.deepEqual(packagedStreamMetrics, {
+    ok: true,
+    metadataHasBytes: false,
+    declaredSize: largeAudioFixtureBytes,
+    total: largeAudioFixtureBytes,
+    chunks: 4,
+    maximumPayload: 1024 * 1024
+  }, "packaged replay bounds every IPC payload while preserving every source byte");
 
   await new Promise((resolve) => setTimeout(resolve, 25));
   await writeFile(audioPath, Buffer.from("changed desktop audio fixture with a different size"));

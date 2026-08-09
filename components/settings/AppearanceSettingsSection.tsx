@@ -2,6 +2,7 @@
 
 import { Check } from "lucide-react";
 import { useEffect, useState } from "react";
+import { recordRenderBoundary } from "@/components/editor/render-boundary-diagnostics";
 import { FieldLabel, SegmentedControl, TextInput, ToggleRow } from "@/components/ui/controls";
 import { getReadableForegroundColor } from "@/lib/contrast-color";
 import { normalizeHexColor, UI_ACCENT_PRESETS } from "@/lib/settings/accent";
@@ -40,6 +41,7 @@ export function AppearanceSettingsSection({
   copy: typeof settingsCopy[Locale];
   onChange: (settings: UserSettings) => void;
 }) {
+  recordRenderBoundary("SettingsAppearance");
   const [customAccentInput, setCustomAccentInput] = useState(settings.uiCustomAccentColor);
   const normalizedCustomAccent = normalizeHexColor(customAccentInput, "");
   const customAccentIsValid = normalizedCustomAccent !== "";

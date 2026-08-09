@@ -263,8 +263,10 @@ assert.ok(
 );
 assert.ok(
   editorStepsSource.includes("useState<SongInfo>") &&
-    editorStepsSource.includes("onSongChange={updateSongInfoDraft}") &&
-    editorStepsSource.includes("handlers.onSaveSongInfo({ ...songInfoDraft }, manualCoverContextRef.current)") &&
+    editorStepsSource.includes("const updateSongInfoDraftEvent = useStableEvent(updateSongInfoDraft)") &&
+    editorStepsSource.includes("onSongChange={updateSongInfoDraftEvent}") &&
+    editorStepsSource.includes("const onSaveSongInfo = useStableEvent(handlers.onSaveSongInfo)") &&
+    editorStepsSource.includes("onSaveSongInfo({ ...songInfoDraft }, manualCoverContextRef.current)") &&
     editorStepsSource.includes("songInfoEditRevision !== documentRevision") &&
     editorStepsSource.includes("songInfoDraftCoverRef") &&
     editorStepsSource.includes("revokeReplacedBlobUrl"),

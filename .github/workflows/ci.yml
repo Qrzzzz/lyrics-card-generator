@@ -87,6 +87,9 @@ jobs:
       - name: Run Web Lite browser smoke tests
         run: npm run web-lite:smoke
 
+      - name: Run deferred editor surface recovery tests
+        run: npm run deferred-surfaces:test
+
       - name: Upload Web Lite browser evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
