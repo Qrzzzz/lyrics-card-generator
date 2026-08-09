@@ -23,6 +23,8 @@
     "startup-assets:test": "node scripts/test-electron-startup-orchestration.cjs && node scripts/test-electron-local-server-origin.cjs && node scripts/test-static-cache-policy.mjs && node scripts/test-static-asset-equivalence.cjs",
     "p0:test": "npm run security:test && npm run request-boundary:test && npm run transactions:test && npm run export:test && npm run export-readiness:test",
     "examples:generate-palettes": "tsx scripts/generate-example-palettes.ts",
+    "readme:media": "npm run build && node scripts/generate-readme-media.mjs",
+    "readme:media:check": "node scripts/test-readme-media.mjs",
     "web-lite:build": "node scripts/build-web-lite.mjs",
     "web-lite:check": "node scripts/check-web-lite.mjs",
     "web-lite:smoke": "playwright test --config=playwright.web-lite.config.ts",

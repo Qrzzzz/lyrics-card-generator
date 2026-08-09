@@ -37,6 +37,17 @@
 
 ---
 
+## ✨ 生成例
+
+<table>
+  <tr>
+    <td width="50%" align="center" valign="top"><img src="./docs/readme-assets/cards/ja.single.webp" alt="翻訳なしの日本語歌詞カード" width="100%" /><br/><sub><b>翻訳なし · 日本語</b></sub></td>
+    <td width="50%" align="center" valign="top"><img src="./docs/readme-assets/cards/ja.bilingual.webp" alt="英語原文と日本語訳を組み合わせた歌詞カード" width="100%" /><br/><sub><b>翻訳あり · 英語原文 + 日本語訳</b></sub></td>
+  </tr>
+</table>
+
+どちらもアプリから直接書き出した画像です。キャンバスは幅・高さともに自動、行間は 1.7 に設定しています。
+
 <img
   align="right"
   src="./public/app-icon.png"

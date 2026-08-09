@@ -37,6 +37,17 @@
 
 ---
 
+## ✨ 成品範例
+
+<table>
+  <tr>
+    <td width="50%" align="center" valign="top"><img src="./docs/readme-assets/cards/zh-TW.single.webp" alt="繁體中文單語歌詞卡片成品" width="100%" /><br/><sub><b>無翻譯 · 繁體中文</b></sub></td>
+    <td width="50%" align="center" valign="top"><img src="./docs/readme-assets/cards/zh-TW.bilingual.webp" alt="英文原文與繁體中文翻譯歌詞卡片成品" width="100%" /><br/><sub><b>有翻譯 · 英文原文 + 繁體中文譯文</b></sub></td>
+  </tr>
+</table>
+
+兩張圖片皆由應用程式直接匯出；畫布採用自動寬度、自動高度，行高為 1.7。
+
 <img
   align="right"
   src="./public/app-icon.png"

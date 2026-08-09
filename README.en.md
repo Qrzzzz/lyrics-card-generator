@@ -37,6 +37,17 @@
 
 ---
 
+## ✨ Output examples
+
+<table>
+  <tr>
+    <td width="50%" align="center" valign="top"><img src="./docs/readme-assets/cards/en.single.webp" alt="English lyrics card without a translation" width="100%" /><br/><sub><b>Without translation · English</b></sub></td>
+    <td width="50%" align="center" valign="top"><img src="./docs/readme-assets/cards/en.bilingual.webp" alt="Japanese lyrics card with an English translation" width="100%" /><br/><sub><b>With translation · Japanese original + English translation</b></sub></td>
+  </tr>
+</table>
+
+Both images were exported directly from the app with automatic width, automatic height, and a 1.7 line height.
+
 <img
   align="right"
   src="./public/app-icon.png"
