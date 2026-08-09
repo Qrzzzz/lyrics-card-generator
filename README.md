@@ -47,7 +47,7 @@
 
 ## 📦 下载与安装
 
-v5.9.6 候选产物将使用以下文件名；公开下载将在完整验证和人工验收后提供：
+请从 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下载 v5.9.6：
 
 * 安装版：`Lyrics Card Generator Setup 5.9.6.exe`
 * 便携版：`Lyrics Card Generator-5.9.6-portable.exe`

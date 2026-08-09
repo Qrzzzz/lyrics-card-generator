@@ -49,7 +49,7 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 ## 📦 Download and Installation
 
-The v5.9.6 candidate artifacts use the following names; public downloads will follow full validation and manual acceptance:
+Download v5.9.6 from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
 * Installer: `Lyrics Card Generator Setup 5.9.6.exe`
 * Portable build: `Lyrics Card Generator-5.9.6-portable.exe`
