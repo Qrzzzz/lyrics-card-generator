@@ -37,6 +37,17 @@
 
 ---
 
+## ✨ Exemples de rendu
+
+<table>
+  <tr>
+    <td width="50%" align="center" valign="top"><img src="./docs/readme-assets/cards/fr.single.webp" alt="Carte de paroles en français sans traduction" width="100%" /><br/><sub><b>Sans traduction · Français</b></sub></td>
+    <td width="50%" align="center" valign="top"><img src="./docs/readme-assets/cards/fr.bilingual.webp" alt="Carte de paroles en anglais avec traduction française" width="100%" /><br/><sub><b>Avec traduction · Texte anglais + traduction française</b></sub></td>
+  </tr>
+</table>
+
+Les deux images ont été exportées directement depuis l’application, avec largeur et hauteur automatiques et un interligne de 1,7.
+
 <img
   align="right"
   src="./public/app-icon.png"

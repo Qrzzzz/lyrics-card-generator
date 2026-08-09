@@ -37,6 +37,17 @@
 
 ---
 
+## ✨ Ejemplos de salida
+
+<table>
+  <tr>
+    <td width="50%" align="center" valign="top"><img src="./docs/readme-assets/cards/es.single.webp" alt="Tarjeta de letras en español sin traducción" width="100%" /><br/><sub><b>Sin traducción · Español</b></sub></td>
+    <td width="50%" align="center" valign="top"><img src="./docs/readme-assets/cards/es.bilingual.webp" alt="Tarjeta de letras en inglés con traducción al español" width="100%" /><br/><sub><b>Con traducción · Texto en inglés + traducción al español</b></sub></td>
+  </tr>
+</table>
+
+Ambas imágenes se exportaron directamente desde la aplicación con anchura y altura automáticas y un interlineado de 1,7.
+
 <img
   align="right"
   src="./public/app-icon.png"
