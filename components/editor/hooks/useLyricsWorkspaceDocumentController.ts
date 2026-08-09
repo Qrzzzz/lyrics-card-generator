@@ -53,7 +53,7 @@ type UseLyricsWorkspaceDocumentControllerOptions = {
   activeEditorRef: MutableRefObject<LyricsWorkbenchEditor>;
   getEditor: (editor: LyricsEditorKey) => HTMLTextAreaElement | null;
   captureViewportAnchor: (preferredEditor?: LyricsEditorKey) => void;
-  restoreViewportAnchor: () => void;
+  restoreViewportAnchor: (selectionOverride?: LyricsSelectionSnapshot) => void;
   onLyricsChange: (lyrics: string) => void;
   onTranslationEnabledChange: (enabled: boolean) => void;
   onTranslationTextChange: (translation: string) => void;
@@ -99,6 +99,8 @@ export function useLyricsWorkspaceDocumentController({
     line: 1,
     totalLines: Math.max(1, lyricsStats.lines)
   });
+  const cursorRef = useRef(cursor);
+  cursorRef.current = cursor;
   const [selections, setSelections] = useState<Record<LyricsWorkbenchEditor, LyricsTextSelection>>({
     lyrics: { start: 0, end: 0 },
     translation: { start: 0, end: 0 }
@@ -141,15 +143,24 @@ export function useLyricsWorkspaceDocumentController({
     const editor = getEditor(pending.editor);
     if (!editor) return;
     const selection = clampSelection(pending, editor.value.length);
+    const selectionChanged = !textSelectionsEqual(selectionsRef.current[pending.editor], selection);
+    const nextSelections = selectionChanged
+      ? { ...selectionsRef.current, [pending.editor]: selection }
+      : selectionsRef.current;
+    const nextCursor = cursorForSelection(pending.editor, editor.value, selection.start);
+    const cursorChanged = !cursorPositionsEqual(cursorRef.current, nextCursor);
+    // Publish refs before native selection/focus events fire so those notifications
+    // observe the restored state instead of capturing a stale intermediate anchor.
+    selectionsRef.current = nextSelections;
+    cursorRef.current = nextCursor;
+    activeEditorRef.current = pending.editor;
     // Restore selection after React updates the textarea value, then restore its semantic viewport anchor.
     editor.setSelectionRange(selection.start, selection.end);
     editor.focus({ preventScroll: true });
-    activeEditorRef.current = pending.editor;
-    const nextCursor = cursorForSelection(pending.editor, editor.value, selection.start);
-    setSelections((current) => ({ ...current, [pending.editor]: selection }));
-    setCursor(nextCursor);
+    if (selectionChanged) setSelections(nextSelections);
+    if (cursorChanged) setCursor(nextCursor);
     pendingSelectionRef.current = null;
-    restoreViewportAnchor();
+    restoreViewportAnchor(pending);
   }, [activeEditorRef, getEditor, lyrics, restoreViewportAnchor, translationEnabled, translationText]);
 
   useEffect(() => {
@@ -161,9 +172,11 @@ export function useLyricsWorkspaceDocumentController({
       return;
     }
     // Manual typing and external imports start a new local operation-history branch.
-    historyRef.current = createLyricsOperationHistory();
-    setHistoryRevision((value) => value + 1);
-    setFeedback(null);
+    if (historyRef.current.past.length > 0 || historyRef.current.future.length > 0) {
+      historyRef.current = createLyricsOperationHistory();
+      setHistoryRevision((value) => value + 1);
+    }
+    setFeedback((current) => current === null ? current : null);
   }, [documentSnapshot]);
 
   function clearOperationHistory() {
@@ -173,16 +186,33 @@ export function useLyricsWorkspaceDocumentController({
     setFeedback(null);
   }
 
-  function updateCursor(event: SyntheticEvent<HTMLTextAreaElement>, editor: LyricsWorkbenchEditor) {
+  function updateCursor(
+    event: SyntheticEvent<HTMLTextAreaElement>,
+    editor: LyricsWorkbenchEditor,
+    forceAnchorCapture = false
+  ) {
     const node = event.currentTarget;
-    activeEditorRef.current = editor;
-    captureViewportAnchor(editor);
     const selection = {
       start: node.selectionStart ?? 0,
       end: node.selectionEnd ?? node.selectionStart ?? 0
     };
-    setSelections((current) => ({ ...current, [editor]: selection }));
-    setCursor(cursorForSelection(editor, node.value, selection.start));
+    const previousSelection = selectionsRef.current[editor];
+    const selectionChanged = !textSelectionsEqual(previousSelection, selection);
+    const activeEditorChanged = activeEditorRef.current !== editor;
+    if (forceAnchorCapture || selectionChanged || activeEditorChanged) {
+      captureViewportAnchor(editor);
+    }
+    activeEditorRef.current = editor;
+    if (selectionChanged) {
+      const nextSelections = { ...selectionsRef.current, [editor]: selection };
+      selectionsRef.current = nextSelections;
+      setSelections(nextSelections);
+    }
+    const nextCursor = cursorForSelection(editor, node.value, selection.start);
+    if (!cursorPositionsEqual(cursorRef.current, nextCursor)) {
+      cursorRef.current = nextCursor;
+      setCursor(nextCursor);
+    }
   }
 
   function onEditorFocus(event: FocusEvent<HTMLTextAreaElement>, editor: LyricsWorkbenchEditor) {
@@ -191,17 +221,13 @@ export function useLyricsWorkspaceDocumentController({
 
   function onLyricsEditorChange(event: ChangeEvent<HTMLTextAreaElement>) {
     clearOperationHistory();
-    activeEditorRef.current = "lyrics";
-    captureViewportAnchor("lyrics");
-    updateCursor(event, "lyrics");
+    updateCursor(event, "lyrics", true);
     onLyricsChange(event.currentTarget.value);
   }
 
   function onTranslationEditorChange(event: ChangeEvent<HTMLTextAreaElement>) {
     clearOperationHistory();
-    activeEditorRef.current = "translation";
-    captureViewportAnchor("translation");
-    updateCursor(event, "translation");
+    updateCursor(event, "translation", true);
     onTranslationTextChange(event.currentTarget.value);
   }
 
@@ -507,4 +533,12 @@ function clampSelection(
   const start = Math.min(textLength, Math.max(0, selection.start));
   const end = Math.min(textLength, Math.max(start, selection.end));
   return { start, end };
+}
+
+function textSelectionsEqual(left: LyricsTextSelection, right: LyricsTextSelection) {
+  return left.start === right.start && left.end === right.end;
+}
+
+function cursorPositionsEqual(left: CursorPosition, right: CursorPosition) {
+  return left.editor === right.editor && left.line === right.line && left.totalLines === right.totalLines;
 }

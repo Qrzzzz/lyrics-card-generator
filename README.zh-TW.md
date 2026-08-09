@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v5.9.5.zh-TW.md">發布說明</a> ·
+  <a href="./docs/releases/v5.9.6.zh-TW.md">發布說明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">線上 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="#本機開發">本機開發</a> ·
@@ -46,26 +46,26 @@
 
 ## 📦 下載與安裝
 
-請從 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載 v5.9.5：
+請從 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載 v5.9.6：
 
-* 安裝版：`Lyrics Card Generator Setup 5.9.5.exe`
-* 可攜版：`Lyrics Card Generator-5.9.5-portable.exe`
+* 安裝版：`Lyrics Card Generator Setup 5.9.6.exe`
+* 可攜版：`Lyrics Card Generator-5.9.6-portable.exe`
 
 安裝版適合長期使用；可攜版適合臨時執行、測試或放在隨身碟中使用。
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v5.9.5 更新重點
+### v5.9.6 更新重點
 
-* 作為穩定性回退版本，撤回 v5.9.4 的效能最佳化實作，將相關啟動、資源載入、編輯器、匯出量測與系統字型路徑恢復為 v5.9.3 已驗收的架構。
-* 範例、歷史、設定、AI 翻譯與匯出重新沿用穩定的既有載入與錯誤處理路徑，ClickSpark、自動寬度與渲染邊界也回到已驗證實作。
-* 全域結果提示改用綠色成功、黃色警告、紅色錯誤三種狀態，並同步精簡六語言 Desktop／Web Lite 文案；減少動態設定時仍只使用透明度切換。
-* 不變更匯入歷史、手動存檔或文件格式；v5.9.3 的網路邊界、音訊解析、多平台匯入與 PNG／WebP／JPG 匯出仍保留。
+* 在 v5.9.5 基礎上恢復 v5.9.4 最終版的桌面啟動、renderer 來源確認與靜態資源快取最佳化，同時維持既有安全邊界。
+* 恢復閒置 ClickSpark、自動寬度、歌詞輸入與渲染邊界、匯出就緒量測等效能實作，減少無效動畫、版面讀取與無關區域提交。
+* 恢復延遲介面失敗隔離、真正可重試的分塊載入及系統字型掃描快取，並保留登錄檔字型變更最長 5 分鐘的重新整理邊界。
+* 完整保留 v5.9.5 的綠／黃／紅三級輕提示、精簡六語文案、反向退出動畫與桌面關閉生命週期修正。
 
 ## 🌐 多語言發佈說明
 
 GitHub Release 預設顯示簡體中文摘要，完整說明請見：
-[简体中文](./docs/releases/v5.9.5.zh-CN.md) · [繁體中文](./docs/releases/v5.9.5.zh-TW.md) · [English](./docs/releases/v5.9.5.en.md) · [Français](./docs/releases/v5.9.5.fr.md) · [日本語](./docs/releases/v5.9.5.ja.md) · [Español](./docs/releases/v5.9.5.es.md)
+[简体中文](./docs/releases/v5.9.6.zh-CN.md) · [繁體中文](./docs/releases/v5.9.6.zh-TW.md) · [English](./docs/releases/v5.9.6.en.md) · [Français](./docs/releases/v5.9.6.fr.md) · [日本語](./docs/releases/v5.9.6.ja.md) · [Español](./docs/releases/v5.9.6.es.md)
 
 ## ✨ 主要功能
 

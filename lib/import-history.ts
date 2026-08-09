@@ -173,14 +173,25 @@ export type ImportHistoryFileRegistration = {
   token: string;
 };
 
-export type ImportHistoryReplayFile = {
-  bytes: Uint8Array;
+export type ImportHistoryReplayFileMetadata = {
   fileName: string;
   size: number;
   mtimeMs: number;
   mimeType: string;
   changed: boolean;
 };
+
+export type ImportHistoryReplayAudioFile = ImportHistoryReplayFileMetadata & {
+  streamToken: string;
+};
+
+export type ImportHistoryReplayBytesFile = ImportHistoryReplayFileMetadata & {
+  bytes: Uint8Array;
+};
+
+export type ImportHistoryFileChunkResult =
+  | { ok: true; bytes: Uint8Array; done: boolean }
+  | { ok: false; code: string };
 
 export type ImportHistoryReplayResult =
   | {
@@ -202,14 +213,14 @@ export type ImportHistoryReplayResult =
       ok: true;
       kind: "local-audio";
       record: ImportHistoryRecord;
-      file: ImportHistoryReplayFile;
+      file: ImportHistoryReplayAudioFile;
       relocationToken?: string;
     }
   | {
       ok: true;
       kind: "manual-cover";
       record: ImportHistoryRecord;
-      file: ImportHistoryReplayFile;
+      file: ImportHistoryReplayBytesFile;
       snapshot: ImportHistoryManualSnapshot;
       relocationToken?: string;
     }

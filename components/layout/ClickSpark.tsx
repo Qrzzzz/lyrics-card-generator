@@ -3,6 +3,10 @@
 import { useEffect, useRef } from "react";
 import type { PointerEvent, ReactNode } from "react";
 import { useAppReducedMotion } from "@/components/motion/AppMotionProvider";
+import {
+  createClickSparkAnimationLoop,
+  type ClickSparkAnimationLoop
+} from "@/components/layout/click-spark-animation-loop";
 
 type Spark = {
   x: number;
@@ -25,12 +29,10 @@ export function ClickSpark({
   const rootRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const sparksRef = useRef<Spark[]>([]);
-  const animationRef = useRef<number | null>(null);
+  const animationLoopRef = useRef<ClickSparkAnimationLoop | null>(null);
   const reduceMotion = useAppReducedMotion();
-
-  useEffect(() => {
-    if (reduceMotion) sparksRef.current = [];
-  }, [reduceMotion]);
+  const motionAllowedRef = useRef(enabled && !reduceMotion);
+  motionAllowedRef.current = enabled && !reduceMotion;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -70,7 +72,14 @@ export function ClickSpark({
       return;
     }
 
-    const draw = (timestamp: number) => {
+    const resetFrame = () => {
+      sparksRef.current = [];
+      const width = canvas.width / (window.devicePixelRatio || 1);
+      const height = canvas.height / (window.devicePixelRatio || 1);
+      context.clearRect(0, 0, width, height);
+    };
+
+    const drawFrame = (timestamp: number) => {
       const width = canvas.width / (window.devicePixelRatio || 1);
       const height = canvas.height / (window.devicePixelRatio || 1);
       context.clearRect(0, 0, width, height);
@@ -108,17 +117,37 @@ export function ClickSpark({
         return true;
       });
 
-      animationRef.current = requestAnimationFrame(draw);
+      return sparksRef.current.length > 0;
     };
 
-    animationRef.current = requestAnimationFrame(draw);
+    const animationLoop = createClickSparkAnimationLoop({
+      requestFrame: (callback) => window.requestAnimationFrame(callback),
+      cancelFrame: (frameId) => window.cancelAnimationFrame(frameId),
+      canAnimate: () => motionAllowedRef.current,
+      drawFrame,
+      resetFrame
+    });
+    animationLoopRef.current = animationLoop;
+
+    // A pointer event can arrive immediately after hydration, before passive effects settle.
+    if (sparksRef.current.length > 0) {
+      animationLoop.start();
+    }
 
     return () => {
-      if (animationRef.current !== null) {
-        cancelAnimationFrame(animationRef.current);
+      animationLoop.dispose();
+      if (animationLoopRef.current === animationLoop) {
+        animationLoopRef.current = null;
       }
     };
   }, []);
+
+  useEffect(() => {
+    if (!enabled || reduceMotion) {
+      sparksRef.current = [];
+      animationLoopRef.current?.stop(true);
+    }
+  }, [enabled, reduceMotion]);
 
   function handlePointerDown(event: PointerEvent<HTMLDivElement>) {
     const canvas = canvasRef.current;
@@ -143,6 +172,7 @@ export function ClickSpark({
 
     // Bound retained sparks so bursty input cannot increase animation work without limit.
     sparksRef.current = [...sparksRef.current, ...nextSparks].slice(-84);
+    animationLoopRef.current?.start();
   }
 
   return (

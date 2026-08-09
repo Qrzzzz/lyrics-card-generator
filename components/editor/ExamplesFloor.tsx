@@ -3,6 +3,7 @@
 import { motion, type Transition } from "framer-motion";
 import { ArrowRight, Music2 } from "lucide-react";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { recordRenderBoundary } from "@/components/editor/render-boundary-diagnostics";
 import { SurfaceCloseButton } from "@/components/layout/SurfaceCloseButton";
 import { resolveReadableTextTokens } from "@/lib/color/contrast";
 import {
@@ -38,6 +39,7 @@ type ExampleCardStyle = CSSProperties & {
 };
 
 export function ExamplesFloor({ isActive, locale, onLoad, onClose, transition }: ExamplesFloorProps) {
+  recordRenderBoundary("Examples");
   const copy = settingsCopy[locale];
   const intro = getExamplesIntro(locale);
   const [importTranslation, setImportTranslation] = useState(true);

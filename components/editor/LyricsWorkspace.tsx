@@ -87,6 +87,8 @@ export function LyricsWorkspace({
   const scrollRef = useRef<HTMLDivElement>(null);
   const lyricsRef = useRef<HTMLTextAreaElement>(null);
   const translationRef = useRef<HTMLTextAreaElement>(null);
+  const lyricsMeasureRef = useRef<HTMLTextAreaElement>(null);
+  const translationMeasureRef = useRef<HTMLTextAreaElement>(null);
   const sidebarToggleRef = useRef<HTMLButtonElement>(null);
   // Unmount cleanup reads the latest AI lifecycle without resubscribing the effect.
   const aiLifecycleRef = useRef({
@@ -133,18 +135,40 @@ export function LyricsWorkspace({
   }, []);
 
   const resizeEditors = useCallback(() => {
-    const editors = [lyricsRef.current, showTranslation ? translationRef.current : null].filter(Boolean) as HTMLTextAreaElement[];
-    if (editors.length === 0) return;
-    for (const editor of editors) editor.style.height = "auto";
+    const entries = [
+      { editor: lyricsRef.current, measure: lyricsMeasureRef.current },
+      showTranslation
+        ? { editor: translationRef.current, measure: translationMeasureRef.current }
+        : null
+    ].filter((entry): entry is { editor: HTMLTextAreaElement; measure: HTMLTextAreaElement } => (
+      Boolean(entry?.editor && entry.measure)
+    ));
+    if (entries.length === 0) return false;
     const viewportFloor = Math.max(280, (scrollRef.current?.clientHeight ?? 0) - 24);
     // Equal heights make both lyric columns share one scroll coordinate system.
-    const commonHeight = Math.max(viewportFloor, ...editors.map((editor) => editor.scrollHeight));
-    for (const editor of editors) editor.style.height = `${commonHeight}px`;
+    // React has already committed mirror values, so this phase batches every read
+    // before writing the final height to either live textarea.
+    const commonHeight = Math.max(viewportFloor, ...entries.map(({ measure }) => measure.scrollHeight));
+    const nextHeight = `${commonHeight}px`;
+    let changed = false;
+    for (const { editor } of entries) {
+      if (editor.style.height === nextHeight) continue;
+      editor.style.height = nextHeight;
+      changed = true;
+    }
+    return changed;
   }, [showTranslation]);
 
+  const previousViewportHeightRef = useRef(viewport.viewportHeight);
+  const previousShowTranslationRef = useRef(showTranslation);
   useLayoutEffect(() => {
-    viewport.restoreAnchor();
-    resizeEditors();
+    const viewportChanged = previousViewportHeightRef.current !== viewport.viewportHeight;
+    const translationLayoutChanged = previousShowTranslationRef.current !== showTranslation;
+    previousViewportHeightRef.current = viewport.viewportHeight;
+    previousShowTranslationRef.current = showTranslation;
+    if (resizeEditors() || viewportChanged || translationLayoutChanged) {
+      viewport.restoreAnchor();
+    }
   }, [lyrics, resizeEditors, translationText, viewport.restoreAnchor, viewport.viewportHeight]);
 
   const documentController = useLyricsWorkspaceDocumentController({
@@ -168,8 +192,8 @@ export function LyricsWorkspace({
     const container = scrollRef.current;
     if (!container || typeof ResizeObserver === "undefined") return;
     const observer = new ResizeObserver(() => {
-      viewport.restoreAnchor();
       resizeEditors();
+      viewport.restoreAnchor();
     });
     observer.observe(container);
     return () => observer.disconnect();
@@ -290,20 +314,27 @@ export function LyricsWorkspace({
               data-bilingual={showTranslation ? "true" : "false"}
             >
               <EditorColumn label={copy.original} htmlFor={lyricsId}>
-                <textarea
-                  ref={lyricsRef}
-                  id={lyricsId}
-                  value={lyrics}
-                  onChange={documentController.onLyricsEditorChange}
-                  onFocus={(event) => documentController.onEditorFocus(event, "lyrics")}
-                  onSelect={(event) => documentController.updateCursor(event, "lyrics")}
-                  onKeyUp={(event) => documentController.updateCursor(event, "lyrics")}
-                  onClick={(event) => documentController.updateCursor(event, "lyrics")}
-                  wrap="soft"
-                  placeholder={t("lyricPlaceholder")}
-                  className="field-shell lyrics-document-editor control-focus block min-h-[280px] min-w-0 w-full resize-none overflow-x-hidden overflow-y-hidden rounded-lg px-3 py-3 text-sm leading-[1.75]"
-                  data-testid="lyrics-editor-original"
-                />
+                <div className="relative min-w-0">
+                  <textarea
+                    ref={lyricsRef}
+                    id={lyricsId}
+                    value={lyrics}
+                    onChange={documentController.onLyricsEditorChange}
+                    onFocus={(event) => documentController.onEditorFocus(event, "lyrics")}
+                    onSelect={(event) => documentController.updateCursor(event, "lyrics")}
+                    onKeyUp={(event) => documentController.updateCursor(event, "lyrics")}
+                    onClick={(event) => documentController.updateCursor(event, "lyrics")}
+                    wrap="soft"
+                    placeholder={t("lyricPlaceholder")}
+                    className="field-shell lyrics-document-editor control-focus block min-h-[280px] min-w-0 w-full resize-none overflow-x-hidden overflow-y-hidden rounded-lg px-3 py-3 text-sm leading-[1.75]"
+                    data-testid="lyrics-editor-original"
+                  />
+                  <EditorMeasurementMirror
+                    measureRef={lyricsMeasureRef}
+                    value={lyrics}
+                    className="field-shell lyrics-document-editor block min-h-[280px] min-w-0 w-full resize-none overflow-x-hidden overflow-y-hidden rounded-lg px-3 py-3 text-sm leading-[1.75]"
+                  />
+                </div>
               </EditorColumn>
               {showTranslation ? (
                 <EditorColumn label={copy.translation} htmlFor={translationId}>
@@ -311,20 +342,27 @@ export function LyricsWorkspace({
                     className="lyrics-translation-editor-shell rounded-[10px] p-px"
                     style={{ background: `color-mix(in srgb, ${themeColor} 24%, rgb(var(--input-border)))` }}
                   >
-                    <textarea
-                      ref={translationRef}
-                      id={translationId}
-                      value={translationText}
-                      onChange={documentController.onTranslationEditorChange}
-                      onFocus={(event) => documentController.onEditorFocus(event, "translation")}
-                      onSelect={(event) => documentController.updateCursor(event, "translation")}
-                      onKeyUp={(event) => documentController.updateCursor(event, "translation")}
-                      onClick={(event) => documentController.updateCursor(event, "translation")}
-                      wrap="soft"
-                      placeholder={t("translationPlaceholder")}
-                      className="field-shell lyrics-document-editor control-focus block min-h-[280px] min-w-0 w-full resize-none overflow-x-hidden overflow-y-hidden rounded-[9px] border-transparent px-3 py-3 text-sm leading-[1.75]"
-                      data-testid="lyrics-editor-translation"
-                    />
+                    <div className="relative min-w-0">
+                      <textarea
+                        ref={translationRef}
+                        id={translationId}
+                        value={translationText}
+                        onChange={documentController.onTranslationEditorChange}
+                        onFocus={(event) => documentController.onEditorFocus(event, "translation")}
+                        onSelect={(event) => documentController.updateCursor(event, "translation")}
+                        onKeyUp={(event) => documentController.updateCursor(event, "translation")}
+                        onClick={(event) => documentController.updateCursor(event, "translation")}
+                        wrap="soft"
+                        placeholder={t("translationPlaceholder")}
+                        className="field-shell lyrics-document-editor control-focus block min-h-[280px] min-w-0 w-full resize-none overflow-x-hidden overflow-y-hidden rounded-[9px] border-transparent px-3 py-3 text-sm leading-[1.75]"
+                        data-testid="lyrics-editor-translation"
+                      />
+                      <EditorMeasurementMirror
+                        measureRef={translationMeasureRef}
+                        value={translationText}
+                        className="field-shell lyrics-document-editor block min-h-[280px] min-w-0 w-full resize-none overflow-x-hidden overflow-y-hidden rounded-[9px] border-transparent px-3 py-3 text-sm leading-[1.75]"
+                      />
+                    </div>
                   </div>
                 </EditorColumn>
               ) : null}
@@ -381,6 +419,40 @@ export function LyricsWorkspace({
         />
       </div>
     </div>
+  );
+}
+
+function EditorMeasurementMirror({
+  measureRef,
+  value,
+  className
+}: {
+  measureRef: React.RefObject<HTMLTextAreaElement | null>;
+  value: string;
+  className: string;
+}) {
+  return (
+    <textarea
+      ref={measureRef}
+      value={value}
+      readOnly
+      tabIndex={-1}
+      aria-hidden="true"
+      wrap="soft"
+      className={className}
+      data-lyrics-editor-measure="true"
+      style={{
+        position: "absolute",
+        inset: "0 auto auto 0",
+        width: "100%",
+        height: "0px",
+        minHeight: "0px",
+        maxHeight: "none",
+        visibility: "hidden",
+        pointerEvents: "none",
+        contain: "layout paint"
+      }}
+    />
   );
 }
 

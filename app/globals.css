@@ -10,25 +10,25 @@
 }
 @font-face {
   font-family: "Source Han Sans Heavy Local";
-  src: url("/fonts/SourceHanSansSC-Heavy.otf") format("opentype");
+  src: url("/fonts/SourceHanSansSC-Heavy.otf?v=4a8b2ee4f041fa56") format("opentype");
   font-display: swap;
 }
 
 @font-face {
   font-family: "Source Han Sans SC";
-  src: url("/fonts/SourceHanSansSC-Heavy.otf") format("opentype");
+  src: url("/fonts/SourceHanSansSC-Heavy.otf?v=4a8b2ee4f041fa56") format("opentype");
   font-display: swap;
 }
 
 @font-face {
   font-family: "Source Han Serif Heavy Local";
-  src: url("/fonts/SourceHanSerifSC-Heavy.otf") format("opentype");
+  src: url("/fonts/SourceHanSerifSC-Heavy.otf?v=d033af54f9653047") format("opentype");
   font-display: swap;
 }
 
 @font-face {
   font-family: "Source Han Serif SC";
-  src: url("/fonts/SourceHanSerifSC-Heavy.otf") format("opentype");
+  src: url("/fonts/SourceHanSerifSC-Heavy.otf?v=d033af54f9653047") format("opentype");
   font-display: swap;
 }
 
@@ -2899,6 +2899,20 @@ body[data-reduce-motion="true"] .examples-close-button:focus-visible .examples-c
     background-position: 150% 0, 0 0;
     opacity: 0;
   }
+}
+
+/* The editor remains mounted for instant surface return. Once its existing
+   exit transition has completed, pause only continuous visual work that cannot
+   contribute to the current frame. */
+[data-surface-work="paused"] .star-border-container::before,
+[data-surface-work="paused"] .star-border-container::after,
+[data-surface-work="paused"] .ai-translate-trigger__icon,
+[data-surface-work="paused"] .ai-translate-trigger__pulse,
+[data-surface-work="paused"] .ai-stream-progress,
+[data-surface-work="paused"] .translation-border-gradient,
+[data-surface-work="paused"] .animate-spin,
+[data-surface-work="paused"] .animate-pulse {
+  animation-play-state: paused !important;
 }
 
 @media (prefers-reduced-motion: reduce) {

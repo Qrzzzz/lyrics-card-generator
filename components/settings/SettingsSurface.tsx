@@ -3,6 +3,7 @@
 import { motion, type Transition } from "framer-motion";
 import { Loader2, Settings } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { recordRenderBoundary } from "@/components/editor/render-boundary-diagnostics";
 import type { ToastNotifier } from "@/components/feedback/AppToast";
 import { SurfaceCloseButton } from "@/components/layout/SurfaceCloseButton";
 import { AboutSettingsSection } from "@/components/settings/AboutSettingsSection";
@@ -61,6 +62,7 @@ export function SettingsSurface({
   onSaved,
   onNotify
 }: SettingsSurfaceProps) {
+  recordRenderBoundary("Settings");
   const copy = settingsCopy[locale];
   const aiCopy = getAIUiCopy(locale);
   const t = useMemo(() => createT(locale), [locale]);

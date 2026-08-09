@@ -1,4 +1,5 @@
 import { FieldLabel, SegmentedControl, TextInput, ToggleRow } from "@/components/ui/controls";
+import { recordRenderBoundary } from "@/components/editor/render-boundary-diagnostics";
 import { EXPORT_FORMAT_OPTIONS, EXPORT_QUALITY_OPTIONS, type UserSettings } from "@/lib/settings/types";
 import type { Locale } from "@/lib/types";
 import type { settingsCopy } from "@/lib/settings/copy";
@@ -12,6 +13,7 @@ export function ExportSettingsSection({
   copy: typeof settingsCopy[Locale];
   onChange: (settings: UserSettings) => void;
 }) {
+  recordRenderBoundary("SettingsExport");
   const labels = { low: copy.low, medium: copy.medium, high: copy.high };
 
   return (

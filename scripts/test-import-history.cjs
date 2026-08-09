@@ -1,9 +1,13 @@
 const assert = require("node:assert/strict");
+const crypto = require("node:crypto");
 const fs = require("node:fs/promises");
 const os = require("node:os");
 const path = require("node:path");
+const { performance } = require("node:perf_hooks");
 const {
+  DEFAULT_IMPORT_FILE_STREAM_CHUNK_BYTES,
   IMPORT_HISTORY_SCHEMA_VERSION,
+  ImportHistoryFileStreamRegistry,
   ImportHistoryStore,
   importHistoryDedupeKey,
   normalizeImportHistoryDocument,
@@ -918,6 +922,128 @@ async function main() {
     await assert.rejects(fs.stat(staleTemporary), (error) => error?.code === "ENOENT");
     assert.equal((await fs.stat(unrelatedTemporary)).isFile(), true, "startup cleanup only removes owned temp files");
 
+    const streamedAudioPath = path.join(root, "streamed-large.mp3");
+    const streamedAudioBytes = Buffer.alloc(32 * 1024 * 1024);
+    for (let index = 0; index < streamedAudioBytes.length; index += 1) {
+      streamedAudioBytes[index] = index % 251;
+    }
+    await fs.writeFile(streamedAudioPath, streamedAudioBytes);
+    let streamTokenId = 0;
+    const streamRegistry = new ImportHistoryFileStreamRegistry({
+      createToken: () => `stream-token-${String(++streamTokenId).padStart(4, "0")}`
+    });
+    const openedStream = await streamRegistry.open(41, "local-audio", streamedAudioPath);
+    assert.equal(openedStream.ok, true);
+    assert.equal("bytes" in openedStream, false, "opening a replay never returns the whole file payload");
+    assert.equal(openedStream.size, streamedAudioBytes.length);
+    assert.deepEqual(
+      await streamRegistry.read(42, openedStream.streamToken),
+      { ok: false, code: "file_reference_expired" },
+      "a stream token is bound to its originating renderer"
+    );
+    const streamedHash = crypto.createHash("sha256");
+    let streamedTotal = 0;
+    let streamedChunks = 0;
+    let maximumPayload = 0;
+    const firstChunkPromise = streamRegistry.read(41, openedStream.streamToken);
+    assert.deepEqual(
+      await streamRegistry.read(41, openedStream.streamToken),
+      { ok: false, code: "read_in_progress" },
+      "one capability cannot queue unbounded concurrent IPC payloads"
+    );
+    let nextChunk = await firstChunkPromise;
+    while (true) {
+      const chunk = nextChunk;
+      assert.equal(chunk.ok, true);
+      assert.ok(chunk.bytes.byteLength <= DEFAULT_IMPORT_FILE_STREAM_CHUNK_BYTES);
+      maximumPayload = Math.max(maximumPayload, chunk.bytes.byteLength);
+      streamedTotal += chunk.bytes.byteLength;
+      streamedChunks += 1;
+      streamedHash.update(chunk.bytes);
+      if (chunk.done) break;
+      nextChunk = await streamRegistry.read(41, openedStream.streamToken);
+    }
+    assert.equal(streamedTotal, streamedAudioBytes.length);
+    assert.equal(streamedChunks, 32);
+    assert.equal(maximumPayload, DEFAULT_IMPORT_FILE_STREAM_CHUNK_BYTES);
+    assert.equal(streamedHash.digest("hex"), crypto.createHash("sha256").update(streamedAudioBytes).digest("hex"));
+    assert.equal(streamRegistry.activeCount, 0, "successful completion closes and removes the stable handle");
+    assert.equal(await streamRegistry.release(41, openedStream.streamToken), false);
+    console.log(JSON.stringify({
+      localAudioStreamPerformance: {
+        fileBytes: streamedAudioBytes.length,
+        totalIpcBytes: streamedTotal,
+        maximumIpcPayloadBytes: maximumPayload,
+        mainWholeFileBuffers: 0,
+        mainActiveReadBufferUpperBoundBytes: DEFAULT_IMPORT_FILE_STREAM_CHUNK_BYTES
+      }
+    }));
+
+    const cancelledStream = await streamRegistry.open(41, "local-audio", streamedAudioPath);
+    assert.equal(cancelledStream.ok, true);
+    assert.equal((await streamRegistry.read(41, cancelledStream.streamToken)).ok, true);
+    assert.equal(await streamRegistry.release(41, cancelledStream.streamToken), true);
+    assert.equal(streamRegistry.activeCount, 0, "cancel or parse failure cleanup releases a partial stream");
+    assert.deepEqual(
+      await streamRegistry.read(41, cancelledStream.streamToken),
+      { ok: false, code: "file_reference_expired" }
+    );
+
+    const changingAudioPath = path.join(root, "changing.mp3");
+    await fs.writeFile(changingAudioPath, Buffer.alloc(DEFAULT_IMPORT_FILE_STREAM_CHUNK_BYTES + 1, 7));
+    const changingStream = await streamRegistry.open(41, "local-audio", changingAudioPath);
+    assert.equal(changingStream.ok, true);
+    assert.equal((await streamRegistry.read(41, changingStream.streamToken)).ok, true);
+    await fs.appendFile(changingAudioPath, Buffer.from([8]));
+    assert.deepEqual(
+      await streamRegistry.read(41, changingStream.streamToken),
+      { ok: false, code: "file_changed_during_read" },
+      "metadata changes on the stable handle fail before renderer parsing"
+    );
+    assert.equal(streamRegistry.activeCount, 0);
+
+    assert.deepEqual(
+      await streamRegistry.open(41, "local-audio", "relative.mp3"),
+      { ok: false, code: "invalid_path" },
+      "renderer input can never turn a relative or traversal path into a stream"
+    );
+    assert.deepEqual(
+      await streamRegistry.open(41, "manual-cover", streamedAudioPath),
+      { ok: false, code: "unsupported_file_kind" },
+      "the bounded stream surface is restricted to local audio"
+    );
+
+    const senderStreamOne = await streamRegistry.open(41, "local-audio", streamedAudioPath);
+    const senderStreamTwo = await streamRegistry.open(41, "local-audio", streamedAudioPath);
+    assert.equal(senderStreamOne.ok && senderStreamTwo.ok, true);
+    assert.equal(await streamRegistry.releaseSender(41), 2);
+    assert.equal(streamRegistry.activeCount, 0, "renderer destruction cleans every sender-owned handle");
+
+    let boundedTokenId = 0;
+    const boundedRegistry = new ImportHistoryFileStreamRegistry({
+      maxStreamsPerSender: 1,
+      createToken: () => `bounded-stream-${++boundedTokenId}`
+    });
+    assert.equal((await boundedRegistry.open(9, "local-audio", streamedAudioPath)).ok, true);
+    assert.deepEqual(
+      await boundedRegistry.open(9, "local-audio", streamedAudioPath),
+      { ok: false, code: "too_many_open_files" }
+    );
+    assert.equal(await boundedRegistry.releaseSender(9), 1);
+
+    let expiryNow = 1_000;
+    const expiringRegistry = new ImportHistoryFileStreamRegistry({
+      now: () => expiryNow,
+      ttlMs: 10,
+      createToken: () => "expiring-stream-token",
+      scheduleExpiry: () => () => undefined
+    });
+    const expiringStream = await expiringRegistry.open(7, "local-audio", streamedAudioPath);
+    assert.equal(expiringStream.ok, true);
+    expiryNow += 11;
+    assert.equal(await expiringRegistry.pruneExpired(), 1);
+    assert.equal(expiringRegistry.activeCount, 0, "abandoned stream capabilities expire and close their handles");
+
     const stableAudioPath = path.join(root, "stable.mp3");
     await fs.writeFile(stableAudioPath, Buffer.from([1, 2, 3, 4]));
     const stableRead = await readValidatedImportFile("local-audio", stableAudioPath);
@@ -1041,6 +1167,89 @@ async function main() {
     );
     assert.equal(wrotePreferencesAfterHistoryFailure, false, "preferences are not saved when history trim fails");
     assert.equal(JSON.parse(await fs.readFile(failingTransactionTarget, "utf8")).records.length, 6);
+
+    const largeHistoryTarget = path.join(root, "app-data", "large-performance-history.json");
+    const largeRecordCount = 20_000;
+    const largeRecords = Array.from({ length: largeRecordCount }, (_, index) => normalizeImportHistoryRecord({
+      ...linkCandidate(20_000 + index),
+      id: `large-${index}`,
+      createdAt: timestamp + index,
+      lastUsedAt: timestamp + index
+    }));
+    assert.equal(largeRecords.every(Boolean), true);
+    await fs.writeFile(
+      largeHistoryTarget,
+      `${JSON.stringify({ schemaVersion: IMPORT_HISTORY_SCHEMA_VERSION, records: largeRecords }, null, 2)}\n`,
+      "utf8"
+    );
+    const performanceCounts = new Map();
+    const observePerformance = ({ name }) => {
+      performanceCounts.set(name, (performanceCounts.get(name) ?? 0) + 1);
+    };
+    let largeNow = timestamp + largeRecordCount;
+    let largeId = 0;
+    const largeStore = new ImportHistoryStore({
+      filePath: largeHistoryTarget,
+      now: () => ++largeNow,
+      createId: () => `large-new-${++largeId}`,
+      performanceObserver: observePerformance
+    });
+    const firstSearchStartedAt = performance.now();
+    const firstLargeSearch = await largeStore.list({ offset: 0, limit: 24, query: "Song 39999" });
+    const firstSearchMs = performance.now() - firstSearchStartedAt;
+    const searchBuildsAfterFirst = performanceCounts.get("search-index-build") ?? 0;
+    const repeatSearchStartedAt = performance.now();
+    const repeatedLargeSearch = await largeStore.list({ offset: 0, limit: 24, query: "Song 39999" });
+    const repeatSearchMs = performance.now() - repeatSearchStartedAt;
+    assert.deepEqual(repeatedLargeSearch, firstLargeSearch, "cached search indexes preserve byte-equivalent public results");
+    assert.equal(firstLargeSearch.total, 1);
+    assert.equal(searchBuildsAfterFirst, largeRecordCount);
+    assert.equal(
+      performanceCounts.get("search-index-build"),
+      searchBuildsAfterFirst,
+      "repeated search performs zero duplicate per-record serialization"
+    );
+    assert.equal(performanceCounts.get("read"), 1, "concurrent store use shares one history read");
+    assert.equal(performanceCounts.get("write") ?? 0, 0);
+    assert.equal(performanceCounts.get("serialize") ?? 0, 0);
+
+    const largeCrudStartedAt = performance.now();
+    const insertedLargeRecords = await Promise.all([
+      largeStore.upsert(linkCandidate(90_001), "unlimited"),
+      largeStore.upsert(linkCandidate(90_002), "unlimited"),
+      largeStore.upsert(linkCandidate(90_003), "unlimited")
+    ]);
+    assert.equal(await largeStore.remove(insertedLargeRecords[1].id), true);
+    const largeCrudMs = performance.now() - largeCrudStartedAt;
+    assert.equal((await largeStore.stats()).total, largeRecordCount + 2);
+    assert.equal(performanceCounts.get("serialize"), 4, "each awaited mutation retains one durable serialization");
+    assert.equal(performanceCounts.get("write"), 4, "each awaited mutation retains one atomic temp-file write");
+    assert.equal(performanceCounts.get("dedupe-index-build"), largeRecordCount + 3);
+    const durableLargeHistory = await fs.readFile(largeHistoryTarget, "utf8");
+    const restartedLargeStore = new ImportHistoryStore({ filePath: largeHistoryTarget });
+    const restartedLargeSearch = await restartedLargeStore.list({ offset: 0, limit: 24, query: "Song 39999" });
+    assert.deepEqual(restartedLargeSearch, firstLargeSearch, "large-history search and order survive restart");
+    assert.equal((await restartedLargeStore.stats()).total, largeRecordCount + 2);
+    assert.equal(
+      await fs.readFile(largeHistoryTarget, "utf8"),
+      durableLargeHistory,
+      "read-only restart does not rewrite or reformat the compatible JSON document"
+    );
+    console.log(JSON.stringify({
+      importHistoryPerformance: {
+        records: largeRecordCount,
+        reads: performanceCounts.get("read"),
+        serializations: performanceCounts.get("serialize"),
+        writes: performanceCounts.get("write"),
+        crudMs: Number(largeCrudMs.toFixed(2)),
+        firstSearchMs: Number(firstSearchMs.toFixed(2)),
+        repeatSearchMs: Number(repeatSearchMs.toFixed(2)),
+        repeatedSearchIndexBuildsBefore: largeRecordCount,
+        repeatedSearchIndexBuildsAfter: 0,
+        threeUpsertDedupeBuildsBefore: 6 * largeRecordCount + 9,
+        threeUpsertDedupeBuildsAfter: performanceCounts.get("dedupe-index-build")
+      }
+    }));
 
     const stable = new ImportHistoryStore({ filePath: target, now: () => ++now, createId: () => `stable-${++nextId}` });
     const stableRecord = await stable.upsert(linkCandidate(99), 10);

@@ -4,14 +4,13 @@ import { useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import type { ToastNotifier } from "@/components/feedback/AppToast";
 import { createAppRequestHeaders } from "@/lib/app-request";
-import { getLyricsCardDesktopApi } from "@/lib/desktop-api";
+import { getLyricsCardDesktopApi, type LyricsCardDesktopApi } from "@/lib/desktop-api";
 import { normalizeCardStyle } from "@/lib/card-style-normalize";
 import { clearLyricContent, hasClearableLyricContent } from "@/lib/clear-content";
 import {
   applyEditorStyleChange,
   isDocumentSemanticStyleChange
 } from "@/lib/editor/apply-style-change";
-import { exportNodeAsImage } from "@/lib/export-image";
 import { createExportSnapshot, type ExportSnapshot } from "@/lib/export-snapshot";
 import {
   ExportTransactionMutex,
@@ -38,6 +37,7 @@ import {
   type ImportHistoryDisplayInput,
   type ImportHistoryManualSnapshot,
   type ImportHistoryManualSaveInput,
+  type ImportHistoryReplayAudioFile,
   type ImportHistoryReplayCommitResult,
   type ImportHistoryReplayResult,
   type ImportHistoryReplayUiResult,
@@ -50,6 +50,7 @@ import {
   serializeImportHistoryManualSave
 } from "@/lib/import-history";
 import { importHistoryCopy } from "@/lib/import-history-copy";
+import { MAX_LOCAL_AUDIO_BYTES } from "@/lib/local-audio-limits";
 import type {
   AppState,
   CardStyle,
@@ -585,15 +586,18 @@ export function useEditorActions({
         return waitForExportSnapshotNode(() => cardRef.current, mountedSnapshot.id, signal);
       },
       validateSnapshot: (mountedSnapshot) => getExportBlockMessage?.(mountedSnapshot) ?? null,
-      captureSnapshot: (mountedSnapshot, node, signal) => exportNodeAsImage(
-        node,
-        mountedSnapshot.fileName,
-        mountedSnapshot.format,
-        mountedSnapshot.width,
-        mountedSnapshot.height,
-        mountedSnapshot.pixelRatio,
-        signal
-      ),
+      captureSnapshot: async (mountedSnapshot, node, signal) => {
+        const { exportNodeAsImage } = await import("@/lib/export-image");
+        return exportNodeAsImage(
+          node,
+          mountedSnapshot.fileName,
+          mountedSnapshot.format,
+          mountedSnapshot.width,
+          mountedSnapshot.height,
+          mountedSnapshot.pixelRatio,
+          signal
+        );
+      },
       unmountSnapshot: () => {
         setActiveExportSnapshot(null);
         setIsCompleteExporting(false);
@@ -797,11 +801,9 @@ export function useEditorActions({
     }
 
     if (replay.kind === "local-audio") {
-      const file = new File(
-        [copyReplayBytes(replay.file.bytes)],
-        replay.file.fileName,
-        { type: replay.file.mimeType, lastModified: replay.file.mtimeMs }
-      );
+      const desktop = getLyricsCardDesktopApi();
+      if (!desktop) throw new Error("history_local_audio_replay_failed");
+      const file = await readReplayAudioFile(desktop, replay.file, intent.signal);
       const formData = new FormData();
       formData.set("file", file);
       const response = await fetch("/api/parse-local-audio", {
@@ -946,4 +948,50 @@ function copyReplayBytes(bytes: Uint8Array) {
   const copy = new Uint8Array(bytes.byteLength);
   copy.set(bytes);
   return copy.buffer;
+}
+
+const MAX_IMPORT_HISTORY_AUDIO_CHUNK_BYTES = 1024 * 1024;
+
+async function readReplayAudioFile(
+  desktop: LyricsCardDesktopApi,
+  file: ImportHistoryReplayAudioFile,
+  signal: AbortSignal
+) {
+  if (!Number.isSafeInteger(file.size) || file.size < 0 || file.size > MAX_LOCAL_AUDIO_BYTES) {
+    throw new Error("history_local_audio_replay_failed");
+  }
+  const chunks: ArrayBuffer[] = [];
+  let total = 0;
+  const abortStream = () => {
+    void desktop.releaseImportHistoryFile(file.streamToken).catch(() => undefined);
+  };
+  signal.addEventListener("abort", abortStream, { once: true });
+  try {
+    while (true) {
+      if (signal.aborted) throw new DOMException("Aborted", "AbortError");
+      const result = await desktop.readImportHistoryFileChunk(file.streamToken);
+      if (signal.aborted) throw new DOMException("Aborted", "AbortError");
+      if (!result.ok) throw new Error(result.code);
+      if (!(result.bytes instanceof Uint8Array)) throw new Error("invalid_file_chunk");
+      const length = result.bytes.byteLength;
+      if (
+        length > MAX_IMPORT_HISTORY_AUDIO_CHUNK_BYTES ||
+        total + length > file.size ||
+        (!result.done && length === 0)
+      ) {
+        throw new Error("invalid_file_chunk");
+      }
+      if (length > 0) chunks.push(copyReplayBytes(result.bytes));
+      total += length;
+      if (!result.done) continue;
+      if (total !== file.size) throw new Error("invalid_file_chunk");
+      return new File(chunks, file.fileName, {
+        type: file.mimeType,
+        lastModified: file.mtimeMs
+      });
+    }
+  } finally {
+    signal.removeEventListener("abort", abortStream);
+    await desktop.releaseImportHistoryFile(file.streamToken).catch(() => false);
+  }
 }

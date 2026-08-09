@@ -19,7 +19,7 @@
 <p>
   <strong>Navegación</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Descargar la última versión</a> ·
-  <a href="./docs/releases/v5.9.5.es.md">Notas de la versión</a> ·
+  <a href="./docs/releases/v5.9.6.es.md">Notas de la versión</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en línea</a> ·
   <a href="#funciones-principales">Funciones principales</a> ·
   <a href="#desarrollo-local">Desarrollo local</a> ·
@@ -49,26 +49,26 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 ## 📦 Descarga e instalación
 
-Descarga v5.9.5 desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
+Descarga v5.9.6 desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Instalador: `Lyrics Card Generator Setup 5.9.5.exe`
-* Versión portable: `Lyrics Card Generator-5.9.5-portable.exe`
+* Instalador: `Lyrics Card Generator Setup 5.9.6.exe`
+* Versión portable: `Lyrics Card Generator-5.9.6-portable.exe`
 
 El instalador se recomienda para uso habitual. La versión portable es útil para pruebas, uso temporal o ejecución desde una unidad extraíble.
 
 > La compilación actual no está firmada. Windows puede mostrar una advertencia de SmartScreen, algo habitual en aplicaciones personales sin firma.
 
-### Novedades de v5.9.5
+### Novedades de v5.9.6
 
-* Revierte la implementación de rendimiento de v5.9.4 y devuelve las rutas afectadas de inicio, carga de recursos, editor, medición de exportación y fuentes del sistema a la arquitectura validada de v5.9.3.
-* Ejemplos, Historial, Ajustes, traducción con IA y Exportación vuelven a las rutas estables de carga y gestión de errores; ClickSpark, el ancho automático y los límites de renderizado también recuperan sus implementaciones verificadas.
-* Usa avisos verdes para el éxito, amarillos para las advertencias y rojos para los errores, con textos más breves en los seis idiomas de Desktop y Web Lite; el modo de movimiento reducido conserva una transición solo de opacidad.
-* No cambia los formatos de documentos, historial de importación ni guardados manuales. Se mantienen los límites de red, el análisis de audio, las importaciones multiplataforma y la exportación PNG/WebP/JPG de v5.9.3.
+* Restaura sobre la base v5.9.5 las optimizaciones finales de v5.9.4 para el inicio, el origen del renderer y la caché de recursos estáticos, manteniendo los límites de seguridad existentes.
+* Restaura las optimizaciones de ClickSpark inactivo, ancho automático, entrada y límites de renderizado, y medición de preparación de la exportación.
+* Restaura el aislamiento de superficies diferidas, la recarga real de chunks y la caché de fuentes del sistema, manteniendo el límite de cinco minutos para cambios exclusivos del Registro.
+* Conserva por completo las notificaciones verdes, amarillas y rojas de v5.9.5, los textos concisos en seis idiomas, la animación de salida inversa y la corrección del ciclo de cierre del escritorio.
 
 ## 🌐 Notas de publicación multilingües
 
 GitHub Release muestra de forma predeterminada un resumen en chino simplificado. Consulta las notas completas:
-[简体中文](./docs/releases/v5.9.5.zh-CN.md) · [繁體中文](./docs/releases/v5.9.5.zh-TW.md) · [English](./docs/releases/v5.9.5.en.md) · [Français](./docs/releases/v5.9.5.fr.md) · [日本語](./docs/releases/v5.9.5.ja.md) · [Español](./docs/releases/v5.9.5.es.md)
+[简体中文](./docs/releases/v5.9.6.zh-CN.md) · [繁體中文](./docs/releases/v5.9.6.zh-TW.md) · [English](./docs/releases/v5.9.6.en.md) · [Français](./docs/releases/v5.9.6.fr.md) · [日本語](./docs/releases/v5.9.6.ja.md) · [Español](./docs/releases/v5.9.6.es.md)
 
 <a id="funciones-principales"></a>
 

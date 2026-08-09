@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v5.9.5.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v5.9.6.zh-CN.md">发布说明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">在线 Web Lite 版</a> ·
   <a href="./docs/desktop.md">桌面维护文档</a> ·
   <a href="#主要功能">主要功能</a> ·
@@ -47,26 +47,26 @@
 
 ## 📦 下载与安装
 
-请从 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下载 v5.9.5：
+请从 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下载 v5.9.6：
 
-* 安装版：`Lyrics Card Generator Setup 5.9.5.exe`
-* 便携版：`Lyrics Card Generator-5.9.5-portable.exe`
+* 安装版：`Lyrics Card Generator Setup 5.9.6.exe`
+* 便携版：`Lyrics Card Generator-5.9.6-portable.exe`
 
 安装版适合长期使用；便携版适合临时运行、测试或放在移动硬盘中使用。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v5.9.5 更新重点
+### v5.9.6 更新重点
 
-* 作为稳定性回退版本，撤回 v5.9.4 的性能优化实现，将相关启动、资源加载、编辑器、导出测量与系统字体路径恢复到 v5.9.3 的已验收架构。
-* 示例、历史、设置、AI 翻译与导出重新沿用稳定的既有加载和错误处理路径，ClickSpark、自适应宽度与渲染边界也回到已验证实现。
-* 全局结果提示改用绿色成功、黄色警告、红色错误三种状态，并同步精简六语言 Desktop／Web Lite 文案；减少动态设置时仍仅使用透明度切换。
-* 不改变导入历史、手动存档或文档格式；v5.9.3 的网络边界、音频解析、多平台导入与 PNG／WebP／JPG 导出仍保留。
+* 在 v5.9.5 基线上恢复 v5.9.4 最终版的桌面启动、renderer 来源确认与静态资源缓存优化，同时保持原有安全边界。
+* 恢复空闲 ClickSpark、自动宽度、歌词输入与渲染边界、导出就绪测量等性能实现，减少无效动画、布局读取和无关区域提交。
+* 恢复延迟界面失败隔离、真正可重试的分块加载及系统字体扫描缓存，并保留注册表字体变化的最长 5 分钟刷新边界。
+* 完整保留 v5.9.5 的绿／黄／红三级轻提示、精简六语言文案、反向退出动画与桌面关闭生命周期修复。
 
 ## 🌐 多语言发布说明
 
 GitHub Release 默认展示简体中文摘要，完整说明见：
-[简体中文](./docs/releases/v5.9.5.zh-CN.md) · [繁體中文](./docs/releases/v5.9.5.zh-TW.md) · [English](./docs/releases/v5.9.5.en.md) · [Français](./docs/releases/v5.9.5.fr.md) · [日本語](./docs/releases/v5.9.5.ja.md) · [Español](./docs/releases/v5.9.5.es.md)
+[简体中文](./docs/releases/v5.9.6.zh-CN.md) · [繁體中文](./docs/releases/v5.9.6.zh-TW.md) · [English](./docs/releases/v5.9.6.en.md) · [Français](./docs/releases/v5.9.6.fr.md) · [日本語](./docs/releases/v5.9.6.ja.md) · [Español](./docs/releases/v5.9.6.es.md)
 
 <a id="主要功能"></a>
 

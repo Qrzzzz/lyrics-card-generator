@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v5.9.5.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v5.9.6.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="#ローカル開発">ローカル開発</a> ·
@@ -49,26 +49,26 @@
 
 ## 📦 ダウンロードとインストール
 
-[GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) から v5.9.5 をダウンロードできます。
+[GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) から v5.9.6 をダウンロードできます。
 
-* インストーラー：`Lyrics Card Generator Setup 5.9.5.exe`
-* ポータブル版：`Lyrics Card Generator-5.9.5-portable.exe`
+* インストーラー：`Lyrics Card Generator Setup 5.9.6.exe`
+* ポータブル版：`Lyrics Card Generator-5.9.6-portable.exe`
 
 通常利用にはインストーラーを推奨します。ポータブル版は一時利用、検証、リムーバブルドライブでの利用に向いています。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v5.9.5 の主な更新
+### v5.9.6 の主な更新
 
-* v5.9.4 のパフォーマンス実装を取り下げ、起動、リソース読み込み、エディター、エクスポート計測、システムフォントの各経路を、検証済みの v5.9.3 アーキテクチャへ戻しました。
-* 例、履歴、設定、AI 翻訳、エクスポート画面は実績のある読み込みとエラー処理に戻り、ClickSpark、自動幅、描画境界も検証済みの実装へ戻りました。
-* アプリ全体の結果表示を成功は緑、警告は黄、エラーは赤に分け、Desktop と Web Lite の六言語メッセージを短く統一しました。視差効果を減らす設定では透明度だけで切り替わります。
-* ドキュメント、インポート履歴、手動保存の形式は変更しません。v5.9.3 のネットワーク境界、音声解析、複数サービスからの取り込み、PNG/WebP/JPG 書き出しは維持されます。
+* v5.9.5 を基盤に、v5.9.4 最終版のデスクトップ起動、renderer オリジン確認、静的アセットキャッシュの最適化を復元し、既存のセキュリティ境界を維持します。
+* 待機中の ClickSpark、自動幅、歌詞入力とレンダー境界、エクスポート準備計測の最適化を復元し、不要なアニメーション、レイアウト読み取り、無関係な更新を減らします。
+* 遅延画面の失敗隔離、chunk の実再取得、システムフォント探索キャッシュを復元し、レジストリのみの変更に対する 5 分の上限を維持します。
+* v5.9.5 の緑／黄／赤の通知、簡潔な 6 言語文言、反転した終了アニメーション、デスクトップ終了ライフサイクル修正をそのまま保持します。
 
 ## 🌐 多言語リリースノート
 
 GitHub Release ではデフォルトで簡体字中国語の概要が表示されます。完全なリリースノートはこちら：
-[简体中文](./docs/releases/v5.9.5.zh-CN.md) · [繁體中文](./docs/releases/v5.9.5.zh-TW.md) · [English](./docs/releases/v5.9.5.en.md) · [Français](./docs/releases/v5.9.5.fr.md) · [日本語](./docs/releases/v5.9.5.ja.md) · [Español](./docs/releases/v5.9.5.es.md)
+[简体中文](./docs/releases/v5.9.6.zh-CN.md) · [繁體中文](./docs/releases/v5.9.6.zh-TW.md) · [English](./docs/releases/v5.9.6.en.md) · [Français](./docs/releases/v5.9.6.fr.md) · [日本語](./docs/releases/v5.9.6.ja.md) · [Español](./docs/releases/v5.9.6.es.md)
 
 <a id="主な機能"></a>
 

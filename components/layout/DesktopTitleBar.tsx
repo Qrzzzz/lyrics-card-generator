@@ -5,6 +5,7 @@ import { APP_VERSION } from "@/lib/app-version";
 import { getLyricsCardDesktopApi, type LyricsCardDesktopApi } from "@/lib/desktop-api";
 import { createT } from "@/lib/i18n";
 import { shutdownCoordinator } from "@/lib/persistence/shutdown-coordinator";
+import { APP_ICON_URL } from "@/lib/static-assets";
 import type { Locale } from "@/lib/types";
 import { TitlebarGradualBlur } from "@/components/layout/TitlebarGradualBlur";
 
@@ -113,7 +114,7 @@ export function DesktopTitleBar({ locale }: DesktopTitleBarProps) {
       </div>
       <div className="desktop-titlebar__brand flex min-w-0 items-center gap-2">
         <img
-          src="/app-icon.png"
+          src={APP_ICON_URL}
           alt=""
           aria-hidden="true"
           draggable={false}

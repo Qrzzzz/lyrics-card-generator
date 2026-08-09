@@ -27,6 +27,7 @@ import {
   type StepDirection
 } from "@/lib/motion/tokens";
 import type { Locale } from "@/lib/types";
+import { recordRenderBoundary } from "@/components/editor/render-boundary-diagnostics";
 
 export function AiTranslatePanel({
   locale,
@@ -57,6 +58,7 @@ export function AiTranslatePanel({
   onCancel: () => void;
   onConfirm: (presetId: string, reasoning: boolean) => void;
 }) {
+  recordRenderBoundary("AiPanel");
   const copy = getAIUiCopy(locale);
   const promptCopy = getAIPromptUiCopy(locale);
   const reduceMotion = useAppReducedMotion();
