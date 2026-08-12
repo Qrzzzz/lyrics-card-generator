@@ -54,8 +54,8 @@
 
 <table>
   <tr>
-    <td width="50%" align="center" valign="top"><img src="./docs/readme-assets/cards/zh-CN.single.webp" alt="中文单语歌词卡片成品" width="100%" /><br/><sub><b>无翻译 · 中文</b></sub></td>
-    <td width="50%" align="center" valign="top"><img src="./docs/readme-assets/cards/zh-CN.bilingual.webp" alt="英文原文与中文翻译歌词卡片成品" width="100%" /><br/><sub><b>有翻译 · 英文原文 + 中文译文</b></sub></td>
+    <td width="50%" align="center" valign="top"><sub><b>无翻译 · 中文</b></sub><br/><img src="./docs/readme-assets/cards/zh-CN.single.webp" alt="中文单语歌词卡片成品" width="100%" /></td>
+    <td width="50%" align="center" valign="top"><sub><b>有翻译 · 英文原文 + 中文译文</b></sub><br/><img src="./docs/readme-assets/cards/zh-CN.bilingual.webp" alt="英文原文与中文翻译歌词卡片成品" width="100%" /></td>
   </tr>
 </table>
 

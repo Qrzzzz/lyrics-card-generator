@@ -53,8 +53,8 @@
 
 <table>
   <tr>
-    <td width="50%" align="center" valign="top"><img src="./docs/readme-assets/cards/es.single.webp" alt="Tarjeta de letras en español sin traducción" width="100%" /><br/><sub><b>Sin traducción · Español</b></sub></td>
-    <td width="50%" align="center" valign="top"><img src="./docs/readme-assets/cards/es.bilingual.webp" alt="Tarjeta de letras en inglés con traducción al español" width="100%" /><br/><sub><b>Con traducción · Texto en inglés + traducción al español</b></sub></td>
+    <td width="50%" align="center" valign="top"><sub><b>Sin traducción · Español</b></sub><br/><img src="./docs/readme-assets/cards/es.single.webp" alt="Tarjeta de letras en español sin traducción" width="100%" /></td>
+    <td width="50%" align="center" valign="top"><sub><b>Con traducción · Texto en inglés + traducción al español</b></sub><br/><img src="./docs/readme-assets/cards/es.bilingual.webp" alt="Tarjeta de letras en inglés con traducción al español" width="100%" /></td>
   </tr>
 </table>
 

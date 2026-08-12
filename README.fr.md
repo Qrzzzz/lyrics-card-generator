@@ -53,8 +53,8 @@
 
 <table>
   <tr>
-    <td width="50%" align="center" valign="top"><img src="./docs/readme-assets/cards/fr.single.webp" alt="Carte de paroles en français sans traduction" width="100%" /><br/><sub><b>Sans traduction · Français</b></sub></td>
-    <td width="50%" align="center" valign="top"><img src="./docs/readme-assets/cards/fr.bilingual.webp" alt="Carte de paroles en anglais avec traduction française" width="100%" /><br/><sub><b>Avec traduction · Texte anglais + traduction française</b></sub></td>
+    <td width="50%" align="center" valign="top"><sub><b>Sans traduction · Français</b></sub><br/><img src="./docs/readme-assets/cards/fr.single.webp" alt="Carte de paroles en français sans traduction" width="100%" /></td>
+    <td width="50%" align="center" valign="top"><sub><b>Avec traduction · Texte anglais + traduction française</b></sub><br/><img src="./docs/readme-assets/cards/fr.bilingual.webp" alt="Carte de paroles en anglais avec traduction française" width="100%" /></td>
   </tr>
 </table>
 

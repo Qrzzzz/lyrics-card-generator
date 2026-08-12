@@ -53,8 +53,8 @@
 
 <table>
   <tr>
-    <td width="50%" align="center" valign="top"><img src="./docs/readme-assets/cards/zh-TW.single.webp" alt="繁體中文單語歌詞卡片成品" width="100%" /><br/><sub><b>無翻譯 · 繁體中文</b></sub></td>
-    <td width="50%" align="center" valign="top"><img src="./docs/readme-assets/cards/zh-TW.bilingual.webp" alt="英文原文與繁體中文翻譯歌詞卡片成品" width="100%" /><br/><sub><b>有翻譯 · 英文原文 + 繁體中文譯文</b></sub></td>
+    <td width="50%" align="center" valign="top"><sub><b>無翻譯 · 繁體中文</b></sub><br/><img src="./docs/readme-assets/cards/zh-TW.single.webp" alt="繁體中文單語歌詞卡片成品" width="100%" /></td>
+    <td width="50%" align="center" valign="top"><sub><b>有翻譯 · 英文原文 + 繁體中文譯文</b></sub><br/><img src="./docs/readme-assets/cards/zh-TW.bilingual.webp" alt="英文原文與繁體中文翻譯歌詞卡片成品" width="100%" /></td>
   </tr>
 </table>
 

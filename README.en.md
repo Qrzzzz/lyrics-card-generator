@@ -53,8 +53,8 @@
 
 <table>
   <tr>
-    <td width="50%" align="center" valign="top"><img src="./docs/readme-assets/cards/en.single.webp" alt="English lyrics card without a translation" width="100%" /><br/><sub><b>Without translation · English</b></sub></td>
-    <td width="50%" align="center" valign="top"><img src="./docs/readme-assets/cards/en.bilingual.webp" alt="Japanese lyrics card with an English translation" width="100%" /><br/><sub><b>With translation · Japanese original + English translation</b></sub></td>
+    <td width="50%" align="center" valign="top"><sub><b>Without translation · English</b></sub><br/><img src="./docs/readme-assets/cards/en.single.webp" alt="English lyrics card without a translation" width="100%" /></td>
+    <td width="50%" align="center" valign="top"><sub><b>With translation · Japanese original + English translation</b></sub><br/><img src="./docs/readme-assets/cards/en.bilingual.webp" alt="Japanese lyrics card with an English translation" width="100%" /></td>
   </tr>
 </table>
 
