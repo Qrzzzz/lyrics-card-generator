@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v5.9.6.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v5.9.7.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="#développement-local">Développement local</a> ·
@@ -74,26 +74,26 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 ## 📦 Téléchargement et installation
 
-Téléchargez la v5.9.6 depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
+Utilisez [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) pour les versions publiques. La version candidate locale v5.9.7 emploie les noms suivants :
 
-* Installateur : `Lyrics Card Generator Setup 5.9.6.exe`
-* Version portable : `Lyrics Card Generator-5.9.6-portable.exe`
+* Installateur : `Lyrics Card Generator Setup 5.9.7.exe`
+* Version portable : `Lyrics Card Generator-5.9.7-portable.exe`
 
 L'installateur est recommandé pour une utilisation régulière. La version portable convient aux essais, à une utilisation temporaire ou à un disque amovible.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### Points forts de la v5.9.6
+### Points forts de la v5.9.7 (version candidate locale)
 
-* Restaure sur la base v5.9.5 les optimisations finales de v5.9.4 pour le démarrage, l’origine du renderer et le cache des ressources statiques, sans modifier les limites de sécurité existantes.
-* Restaure les optimisations de ClickSpark au repos, de largeur automatique, de saisie et de frontières de rendu, ainsi que des mesures de préparation à l’export.
-* Restaure l’isolation des surfaces différées, le véritable rechargement des chunks et le cache des polices système, avec une limite de cinq minutes pour les changements limités au Registre.
-* Conserve intégralement les notifications vertes, jaunes et rouges de v5.9.5, les textes concis en six langues, l’animation de sortie inversée et le correctif du cycle de fermeture du bureau.
+* Une pochette horizontale conserve la hauteur standard d’une pochette carrée et s’élargit selon son ratio naturel ; une pochette verticale conserve la largeur standard et s’allonge verticalement.
+* Les pochettes 1:1 gardent exactement leur taille et leur mise en page. Les ratios extrêmes ne sont réduits proportionnellement qu’aux limites physiques du canevas, sans recadrage ni étirement.
+* Les PNG et WebP transparents n’ont plus de fond carré : leurs pixels transparents révèlent directement le fond de la carte, avec des ombres adaptées à l’alpha.
+* L’aperçu, l’export non redimensionné, les cartes instrumentales, Web Lite et les miniatures partagent les mêmes règles. La v5.9.7 n’est pas encore publiée (pas encore publié) ; GitHub Releases fait foi.
 
 ## 🌐 Notes de publication multilingues
 
 Par défaut, GitHub Release affiche un résumé en chinois simplifié. Consultez les notes complètes :
-[简体中文](./docs/releases/v5.9.6.zh-CN.md) · [繁體中文](./docs/releases/v5.9.6.zh-TW.md) · [English](./docs/releases/v5.9.6.en.md) · [Français](./docs/releases/v5.9.6.fr.md) · [日本語](./docs/releases/v5.9.6.ja.md) · [Español](./docs/releases/v5.9.6.es.md)
+[简体中文](./docs/releases/v5.9.7.zh-CN.md) · [繁體中文](./docs/releases/v5.9.7.zh-TW.md) · [English](./docs/releases/v5.9.7.en.md) · [Français](./docs/releases/v5.9.7.fr.md) · [日本語](./docs/releases/v5.9.7.ja.md) · [Español](./docs/releases/v5.9.7.es.md)
 
 <a id="fonctionnalités-principales"></a>
 

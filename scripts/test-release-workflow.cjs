@@ -24,6 +24,11 @@ assert.match(workflow, /docs\/releases\/v\$version\.\$_\.md/, "all six release-n
 assert.match(workflow, /if: needs\.resolve\.outputs\.published != 'true'/, "an already-published release is an idempotent no-op");
 assert.match(workflow, /ExpectedState published/, "an existing published release is verified before the no-op succeeds");
 assert.match(workflow, /published=\$\(\$published\.ToString\(\)\.ToLowerInvariant\(\)\)/, "published state is passed between jobs");
+assert.match(
+  workflow,
+  /REQUIRE_PUBLISHED_RELEASE_NOTES:\s*["']1["']/,
+  "tag release quality gates reject candidate wording before publication"
+);
 
 const createDraft = workflow.indexOf("- name: Create draft GitHub release");
 const verifyDraft = workflow.indexOf("- name: Re-download and verify exact draft release");

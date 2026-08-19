@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v5.9.6.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v5.9.7.en.md">Release Notes</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
   <a href="#features">Features</a> ·
   <a href="#local-development">Local Development</a> ·
@@ -74,26 +74,26 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 ## 📦 Download and Installation
 
-Download v5.9.6 from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
+Use [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) for public builds. Local v5.9.7 release-candidate packaging uses these filenames:
 
-* Installer: `Lyrics Card Generator Setup 5.9.6.exe`
-* Portable build: `Lyrics Card Generator-5.9.6-portable.exe`
+* Installer: `Lyrics Card Generator Setup 5.9.7.exe`
+* Portable build: `Lyrics Card Generator-5.9.7-portable.exe`
 
 The installer is recommended for regular use. The portable version is useful for temporary use, testing, or running from a removable drive.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v5.9.6 Highlights
+### v5.9.7 Highlights (local release candidate)
 
-* Restores the final v5.9.4 desktop-startup, renderer-origin, and static-asset caching improvements on the v5.9.5 baseline while preserving the existing security boundary.
-* Restores the idle ClickSpark, auto-width, lyrics-input and render-boundary, and export-readiness optimizations to reduce unnecessary animation, layout reads, and unrelated commits.
-* Restores deferred-surface failure isolation, true chunk retries, and system-font scan caching while retaining the five-minute bound for registry-only font changes.
-* Fully preserves v5.9.5's green/yellow/red toast feedback, concise six-language copy, reversed exit animation, and desktop close-lifecycle fix.
+* Horizontal artwork keeps the standard square-cover height and expands sideways at its natural ratio; vertical artwork keeps the standard width and expands vertically.
+* 1:1 artwork keeps exactly the same size and layout. Extreme ratios scale down proportionally only at physical canvas bounds, without cropping or stretching.
+* Transparent PNG and WebP artwork no longer receives a square backing plate, so transparent pixels reveal the card background with alpha-friendly shadows.
+* Editor preview, unscaled export, instrumental cards, Web Lite, and import/search/history thumbnails share the same ratio rules. v5.9.7 is not yet released; public availability is determined by GitHub Releases.
 
 ## 🌐 Multilingual Release Notes
 
 GitHub Release displays a Simplified Chinese summary by default. See the full release notes:
-[简体中文](./docs/releases/v5.9.6.zh-CN.md) · [繁體中文](./docs/releases/v5.9.6.zh-TW.md) · [English](./docs/releases/v5.9.6.en.md) · [Français](./docs/releases/v5.9.6.fr.md) · [日本語](./docs/releases/v5.9.6.ja.md) · [Español](./docs/releases/v5.9.6.es.md)
+[简体中文](./docs/releases/v5.9.7.zh-CN.md) · [繁體中文](./docs/releases/v5.9.7.zh-TW.md) · [English](./docs/releases/v5.9.7.en.md) · [Français](./docs/releases/v5.9.7.fr.md) · [日本語](./docs/releases/v5.9.7.ja.md) · [Español](./docs/releases/v5.9.7.es.md)
 
 <a id="features"></a>
 

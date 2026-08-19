@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v5.9.6.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v5.9.7.zh-CN.md">发布说明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">在线 Web Lite 版</a> ·
   <a href="./docs/desktop.md">桌面维护文档</a> ·
   <a href="#主要功能">主要功能</a> ·
@@ -72,26 +72,26 @@
 
 ## 📦 下载与安装
 
-请从 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下载 v5.9.6：
+已公开构建请从 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 获取；本地 v5.9.7 发布候选打包使用以下文件名：
 
-* 安装版：`Lyrics Card Generator Setup 5.9.6.exe`
-* 便携版：`Lyrics Card Generator-5.9.6-portable.exe`
+* 安装版：`Lyrics Card Generator Setup 5.9.7.exe`
+* 便携版：`Lyrics Card Generator-5.9.7-portable.exe`
 
 安装版适合长期使用；便携版适合临时运行、测试或放在移动硬盘中使用。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v5.9.6 更新重点
+### v5.9.7 更新重点（本地发布候选）
 
-* 在 v5.9.5 基线上恢复 v5.9.4 最终版的桌面启动、renderer 来源确认与静态资源缓存优化，同时保持原有安全边界。
-* 恢复空闲 ClickSpark、自动宽度、歌词输入与渲染边界、导出就绪测量等性能实现，减少无效动画、布局读取和无关区域提交。
-* 恢复延迟界面失败隔离、真正可重试的分块加载及系统字体扫描缓存，并保留注册表字体变化的最长 5 分钟刷新边界。
-* 完整保留 v5.9.5 的绿／黄／红三级轻提示、精简六语言文案、反向退出动画与桌面关闭生命周期修复。
+* 横版封面保持原正方形封面的标准高度并按原始比例向两侧扩展；竖版封面保持标准宽度并按比例向上下扩展。
+* 1:1 封面的尺寸与布局保持不变；极端长宽比只在触及画布安全边界时整体等比缩小，不裁切、不拉伸。
+* 透明 PNG／WebP 不再铺设方形底板，透明区域直接显示卡片背景，并使用适合透明边缘的阴影方式。
+* 编辑预览、未缩放导出、纯音乐卡、Web Lite 及导入／搜索／历史缩略图共用同一比例规则；此版本尚未发布，公开状态以 GitHub Releases 为准。
 
 ## 🌐 多语言发布说明
 
 GitHub Release 默认展示简体中文摘要，完整说明见：
-[简体中文](./docs/releases/v5.9.6.zh-CN.md) · [繁體中文](./docs/releases/v5.9.6.zh-TW.md) · [English](./docs/releases/v5.9.6.en.md) · [Français](./docs/releases/v5.9.6.fr.md) · [日本語](./docs/releases/v5.9.6.ja.md) · [Español](./docs/releases/v5.9.6.es.md)
+[简体中文](./docs/releases/v5.9.7.zh-CN.md) · [繁體中文](./docs/releases/v5.9.7.zh-TW.md) · [English](./docs/releases/v5.9.7.en.md) · [Français](./docs/releases/v5.9.7.fr.md) · [日本語](./docs/releases/v5.9.7.ja.md) · [Español](./docs/releases/v5.9.7.es.md)
 
 <a id="主要功能"></a>
 

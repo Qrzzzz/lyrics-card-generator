@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v5.9.6.zh-TW.md">發布說明</a> ·
+  <a href="./docs/releases/v5.9.7.zh-TW.md">發布說明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">線上 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="#本機開發">本機開發</a> ·
@@ -71,26 +71,26 @@
 
 ## 📦 下載與安裝
 
-請從 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載 v5.9.6：
+已公開版本請從 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 取得；本機 v5.9.7 發布候選使用以下檔名：
 
-* 安裝版：`Lyrics Card Generator Setup 5.9.6.exe`
-* 可攜版：`Lyrics Card Generator-5.9.6-portable.exe`
+* 安裝版：`Lyrics Card Generator Setup 5.9.7.exe`
+* 可攜版：`Lyrics Card Generator-5.9.7-portable.exe`
 
 安裝版適合長期使用；可攜版適合臨時執行、測試或放在隨身碟中使用。
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v5.9.6 更新重點
+### v5.9.7 更新重點（本機發布候選）
 
-* 在 v5.9.5 基礎上恢復 v5.9.4 最終版的桌面啟動、renderer 來源確認與靜態資源快取最佳化，同時維持既有安全邊界。
-* 恢復閒置 ClickSpark、自動寬度、歌詞輸入與渲染邊界、匯出就緒量測等效能實作，減少無效動畫、版面讀取與無關區域提交。
-* 恢復延遲介面失敗隔離、真正可重試的分塊載入及系統字型掃描快取，並保留登錄檔字型變更最長 5 分鐘的重新整理邊界。
-* 完整保留 v5.9.5 的綠／黃／紅三級輕提示、精簡六語文案、反向退出動畫與桌面關閉生命週期修正。
+* 橫式封面保留原正方形封面的標準高度並依原始比例向兩側延伸；直式封面保留標準寬度並依比例向上下延伸。
+* 1:1 封面的尺寸與版面完全不變；極端長寬比只有碰到畫布安全邊界時才整體等比縮小，不裁切也不拉伸。
+* 透明 PNG／WebP 不再鋪設方形底板，透明區域直接顯示卡片背景，並改用適合透明邊緣的陰影。
+* 編輯預覽、未縮放匯出、純音樂卡、Web Lite 與匯入／搜尋／歷史縮圖共用同一比例規則；此版本尚未發布，公開狀態以 GitHub Releases 為準。
 
 ## 🌐 多語言發佈說明
 
 GitHub Release 預設顯示簡體中文摘要，完整說明請見：
-[简体中文](./docs/releases/v5.9.6.zh-CN.md) · [繁體中文](./docs/releases/v5.9.6.zh-TW.md) · [English](./docs/releases/v5.9.6.en.md) · [Français](./docs/releases/v5.9.6.fr.md) · [日本語](./docs/releases/v5.9.6.ja.md) · [Español](./docs/releases/v5.9.6.es.md)
+[简体中文](./docs/releases/v5.9.7.zh-CN.md) · [繁體中文](./docs/releases/v5.9.7.zh-TW.md) · [English](./docs/releases/v5.9.7.en.md) · [Français](./docs/releases/v5.9.7.fr.md) · [日本語](./docs/releases/v5.9.7.ja.md) · [Español](./docs/releases/v5.9.7.es.md)
 
 ## ✨ 主要功能
 

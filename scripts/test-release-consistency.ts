@@ -29,6 +29,26 @@ const packageLock = JSON.parse(readFileSync(resolve("package-lock.json"), "utf8"
 assert.equal(packageLock.version, releaseVersion);
 assert.equal(packageLock.packages[""].version, releaseVersion);
 
+const releaseNoteSources = releaseLocales.map((locale) =>
+  readFileSync(resolve(`docs/releases/v${releaseVersion}.${locale}.md`), "utf8")
+);
+const candidateMarkerCount = releaseNoteSources.filter((source, index) =>
+  source.includes(unpublishedStatusMarkers[releaseLocales[index]])
+).length;
+const requirePublishedReleaseNotes = process.env.REQUIRE_PUBLISHED_RELEASE_NOTES === "1";
+assert.ok(
+  candidateMarkerCount === 0 || candidateMarkerCount === releaseLocales.length,
+  "all six release-note locales must agree on published or candidate status"
+);
+if (requirePublishedReleaseNotes) {
+  assert.equal(
+    candidateMarkerCount,
+    0,
+    "tag release quality gates require published wording in all six release-note locales"
+  );
+}
+const isReleaseCandidate = candidateMarkerCount === releaseLocales.length;
+
 const installerNamePattern = new RegExp(`Lyrics Card Generator Setup ${escapedReleaseVersion}\\.exe`);
 const portableNamePattern = new RegExp(`Lyrics Card Generator-${escapedReleaseVersion}-portable\\.exe`);
 
@@ -49,7 +69,11 @@ for (const [file, locale] of readmes) {
   assert.match(source, installerNamePattern, `${file} installer name`);
   assert.match(source, portableNamePattern, `${file} portable name`);
   assertReadmeHeaderReleaseLink(source, file, locale);
-  assert.ok(!source.includes(unpublishedStatusMarkers[locale]), `${file} must not label v${releaseVersion} as unpublished`);
+  if (isReleaseCandidate) {
+    assert.ok(source.includes(unpublishedStatusMarkers[locale]), `${file} must label the local v${releaseVersion} candidate accurately`);
+  } else {
+    assert.ok(!source.includes(unpublishedStatusMarkers[locale]), `${file} must not label published v${releaseVersion} as unpublished`);
+  }
   assert.match(
     source,
     new RegExp(`docs/releases/v${escapedReleaseVersion}\\.${locale}\\.md`),
@@ -97,6 +121,6 @@ assert.match(prepareSource, /artifactName: "\$\{productName\}-\$\{version\}-port
 console.log(JSON.stringify({
   ok: true,
   releaseCandidateVersion: releaseVersion,
-  latestPublishedVersion: releaseVersion,
+  releaseStatus: isReleaseCandidate ? "local-candidate" : "published",
   releaseConsistencyLocales: releaseLocales.length
 }, null, 2));

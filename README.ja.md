@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v5.9.6.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v5.9.7.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="#ローカル開発">ローカル開発</a> ·
@@ -74,26 +74,26 @@
 
 ## 📦 ダウンロードとインストール
 
-[GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) から v5.9.6 をダウンロードできます。
+公開済みビルドは [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) から取得できます。ローカルの v5.9.7 リリース候補では次のファイル名を使用します。
 
-* インストーラー：`Lyrics Card Generator Setup 5.9.6.exe`
-* ポータブル版：`Lyrics Card Generator-5.9.6-portable.exe`
+* インストーラー：`Lyrics Card Generator Setup 5.9.7.exe`
+* ポータブル版：`Lyrics Card Generator-5.9.7-portable.exe`
 
 通常利用にはインストーラーを推奨します。ポータブル版は一時利用、検証、リムーバブルドライブでの利用に向いています。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v5.9.6 の主な更新
+### v5.9.7 の主な更新（ローカルリリース候補）
 
-* v5.9.5 を基盤に、v5.9.4 最終版のデスクトップ起動、renderer オリジン確認、静的アセットキャッシュの最適化を復元し、既存のセキュリティ境界を維持します。
-* 待機中の ClickSpark、自動幅、歌詞入力とレンダー境界、エクスポート準備計測の最適化を復元し、不要なアニメーション、レイアウト読み取り、無関係な更新を減らします。
-* 遅延画面の失敗隔離、chunk の実再取得、システムフォント探索キャッシュを復元し、レジストリのみの変更に対する 5 分の上限を維持します。
-* v5.9.5 の緑／黄／赤の通知、簡潔な 6 言語文言、反転した終了アニメーション、デスクトップ終了ライフサイクル修正をそのまま保持します。
+* 横長アートワークは正方形カバーの標準高さを保ったまま自然比率で左右に広がり、縦長アートワークは標準幅を保って上下に伸びます。
+* 1:1 カバーのサイズとレイアウトは完全に変わりません。極端な比率だけがキャンバスの物理境界で等比縮小され、切り抜きや引き伸ばしは行いません。
+* 透明 PNG／WebP には正方形の下地を敷かず、透明部分からカード背景が見えるようにし、透明輪郭に適した影を使用します。
+* 編集プレビュー、等倍エクスポート、インストゥルメンタルカード、Web Lite、各種サムネイルで同じ比率規則を共有します。v5.9.7 は未公開で、公開状況は GitHub Releases が基準です。
 
 ## 🌐 多言語リリースノート
 
 GitHub Release ではデフォルトで簡体字中国語の概要が表示されます。完全なリリースノートはこちら：
-[简体中文](./docs/releases/v5.9.6.zh-CN.md) · [繁體中文](./docs/releases/v5.9.6.zh-TW.md) · [English](./docs/releases/v5.9.6.en.md) · [Français](./docs/releases/v5.9.6.fr.md) · [日本語](./docs/releases/v5.9.6.ja.md) · [Español](./docs/releases/v5.9.6.es.md)
+[简体中文](./docs/releases/v5.9.7.zh-CN.md) · [繁體中文](./docs/releases/v5.9.7.zh-TW.md) · [English](./docs/releases/v5.9.7.en.md) · [Français](./docs/releases/v5.9.7.fr.md) · [日本語](./docs/releases/v5.9.7.ja.md) · [Español](./docs/releases/v5.9.7.es.md)
 
 <a id="主な機能"></a>
 
