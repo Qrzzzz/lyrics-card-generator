@@ -1,5 +1,6 @@
 import { getCardSize } from "@/lib/card-size";
-import type { CardStyle, SongInfo, SongSource } from "@/lib/types";
+import { getArtworkAspectRatio, resolveAdaptiveArtworkSize } from "@/lib/artwork-geometry";
+import type { CardStyle, CoverArtworkAnalysis, SongInfo, SongSource } from "@/lib/types";
 
 export type Rect = {
   x: number;
@@ -16,6 +17,7 @@ export type CardSize = {
 export type PortraitLayout = {
   safeRect: Rect;
   headerRect?: Rect;
+  coverRect?: Rect;
   lyricsRect: Rect;
   footerRect?: Rect;
 };
@@ -30,9 +32,18 @@ export type LandscapeLayout = {
 };
 
 type LayoutSongContext = SongSource | Pick<SongInfo, "source" | "album">;
+export type LayoutArtworkContext = {
+  sourceUrl?: string;
+  analysis?: CoverArtworkAnalysis;
+};
 
 /** Computes bounded portrait regions while reserving only currently visible chrome. */
-export function getPortraitLayout(size: CardSize, style: CardStyle, songContext: LayoutSongContext = "unknown"): PortraitLayout {
+export function getPortraitLayout(
+  size: CardSize,
+  style: CardStyle,
+  songContext: LayoutSongContext = "unknown",
+  artworkContext: LayoutArtworkContext = {}
+): PortraitLayout {
   const source = getLayoutSource(songContext);
   const hasAlbumName = hasVisibleAlbumName(style, songContext);
   const outerPadding = clamp(Math.round(size.width * 0.042), 28, 54);
@@ -50,10 +61,31 @@ export function getPortraitLayout(size: CardSize, style: CardStyle, songContext:
   const hasHeader = contentMode === "lyrics" && (style.showCover || style.showSongInfo);
   const hasFooter = hasVisibleFooter(style, source);
   const headerScale = style.showSongInfo && hasAlbumName ? 0.205 : 0.16;
-  const headerHeight = hasHeader ? clamp(Math.round(size.width * headerScale), 130, hasAlbumName ? 284 : 214) : 0;
+  const baseHeaderHeight = hasHeader ? clamp(Math.round(size.width * headerScale), 130, hasAlbumName ? 284 : 214) : 0;
   const footerHeight = hasFooter ? clamp(Math.round(size.width * 0.08), 74, 126) : 0;
   const headerGap = hasHeader ? clamp(Math.round(size.height * 0.03), 26, 52) : 0;
   const footerGap = hasFooter ? clamp(Math.round(size.height * 0.018), 18, 34) : 0;
+  const coverGap = 40;
+  const innerHorizontalPadding = 36;
+  const minimumSongInfoWidth = Math.min(360, Math.max(248, safeRect.width * 0.3));
+  const maximumCoverWidth = style.showSongInfo
+    ? Math.max(196, safeRect.width - innerHorizontalPadding - coverGap - minimumSongInfoWidth)
+    : Math.max(196, safeRect.width - innerHorizontalPadding);
+  const maximumCoverHeight = Math.max(
+    196,
+    safeRect.height - headerGap - footerHeight - footerGap - 160
+  );
+  const coverSize = style.showCover && contentMode === "lyrics"
+    ? resolveAdaptiveArtworkSize({
+        baseSize: 196,
+        aspectRatio: getArtworkAspectRatio(artworkContext.sourceUrl, artworkContext.analysis),
+        maxWidth: maximumCoverWidth,
+        maxHeight: maximumCoverHeight
+      })
+    : undefined;
+  const headerHeight = hasHeader
+    ? Math.max(baseHeaderHeight, coverSize?.height ?? 0)
+    : 0;
   const lyricsY = safeRect.y + headerHeight + headerGap;
   const lyricsHeight = Math.max(160, safeRect.height - headerHeight - headerGap - footerHeight - footerGap);
   const lyricsWidth = clamp(Math.round(safeRect.width * 0.96), Math.min(520, safeRect.width), safeRect.width);
@@ -67,6 +99,14 @@ export function getPortraitLayout(size: CardSize, style: CardStyle, songContext:
           y: safeRect.y,
           width: safeRect.width,
           height: headerHeight
+        }
+      : undefined,
+    coverRect: coverSize
+      ? {
+          x: safeRect.x,
+          y: safeRect.y,
+          width: coverSize.width,
+          height: coverSize.height
         }
       : undefined,
     lyricsRect: {
@@ -86,7 +126,12 @@ export function getPortraitLayout(size: CardSize, style: CardStyle, songContext:
   };
 }
 
-export function getLandscapeLayout(size: CardSize, style: CardStyle, songContext: LayoutSongContext = "unknown"): LandscapeLayout {
+export function getLandscapeLayout(
+  size: CardSize,
+  style: CardStyle,
+  songContext: LayoutSongContext = "unknown",
+  artworkContext: LayoutArtworkContext = {}
+): LandscapeLayout {
   const source = getLayoutSource(songContext);
   const hasAlbumName = hasVisibleAlbumName(style, songContext);
   const shortSide = Math.min(size.width, size.height);
@@ -110,12 +155,28 @@ export function getLandscapeLayout(size: CardSize, style: CardStyle, songContext
   const maxCoverByHeight = safeRect.height * (size.width / size.height < 1.55 ? 0.6 : 0.74);
   const maxCoverByWidth = safeRect.width * 0.42;
   const coverSize = showCover ? clamp(Math.round(Math.min(maxCoverByHeight, maxCoverByWidth)), 260, 760) : 0;
+  const minimumContentWidth = Math.min(680, Math.max(360, safeRect.width * 0.3));
+  const adaptiveCoverSize = showCover
+    ? resolveAdaptiveArtworkSize({
+        baseSize: coverSize,
+        aspectRatio: getArtworkAspectRatio(artworkContext.sourceUrl, artworkContext.analysis),
+        maxWidth: Math.max(coverSize, safeRect.width - gap - minimumContentWidth),
+        // A tall cover may use the footer's horizontal band because the footer
+        // can move into the text column. Keep at least 48px of canvas margin.
+        maxHeight: Math.max(coverSize, size.height - 96)
+      })
+    : undefined;
+  const coverUsesFooterBand = Boolean(
+    adaptiveCoverSize && adaptiveCoverSize.height > usableBottom - safeRect.y
+  );
   const coverRect = showCover
     ? {
         x: safeRect.x,
-        y: safeRect.y + Math.max(0, (usableBottom - safeRect.y - coverSize) / 2),
-        width: coverSize,
-        height: coverSize
+        y: coverUsesFooterBand
+          ? (size.height - adaptiveCoverSize!.height) / 2
+          : safeRect.y + Math.max(0, (usableBottom - safeRect.y - adaptiveCoverSize!.height) / 2),
+        width: adaptiveCoverSize!.width,
+        height: adaptiveCoverSize!.height
       }
     : undefined;
   const rawContentX = coverRect ? coverRect.x + coverRect.width + gap : safeRect.x;
@@ -155,9 +216,9 @@ export function getLandscapeLayout(size: CardSize, style: CardStyle, songContext
     },
     footerRect: hasFooter
       ? {
-          x: safeRect.x,
+          x: coverUsesFooterBand ? contentX : safeRect.x,
           y: safeRect.y + safeRect.height - footerHeight,
-          width: safeRect.width,
+          width: coverUsesFooterBand ? contentWidth : safeRect.width,
           height: footerHeight
         }
       : undefined

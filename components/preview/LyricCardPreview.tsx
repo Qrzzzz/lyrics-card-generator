@@ -5,12 +5,13 @@ import { useEffect, useRef, useState } from "react";
 import { useAppReducedMotion } from "@/components/motion/AppMotionProvider";
 import { LyricCard, getCardSize } from "@/components/preview/LyricCard";
 import type { createT } from "@/lib/i18n";
-import type { CardStyle, Locale, SongInfo } from "@/lib/types";
+import type { CardStyle, CoverArtworkAnalysis, Locale, SongInfo } from "@/lib/types";
 
 export function LyricCardPreview({
   song,
   lyrics,
   style,
+  coverArtwork,
   cardRef,
   t,
   sticky = true,
@@ -21,6 +22,7 @@ export function LyricCardPreview({
   song: SongInfo;
   lyrics: string;
   style: CardStyle;
+  coverArtwork?: CoverArtworkAnalysis;
   cardRef: React.RefObject<HTMLElement | null>;
   t: ReturnType<typeof createT>;
   sticky?: boolean;
@@ -204,7 +206,7 @@ export function LyricCardPreview({
                 transformOrigin: "top left"
               }}
             >
-              <LyricCard song={song} lyrics={lyrics} style={style} locale={locale} />
+              <LyricCard song={song} lyrics={lyrics} style={style} coverArtwork={coverArtwork} locale={locale} />
             </div>
             <span className="preview-pressure-highlight pointer-events-none absolute inset-0" aria-hidden="true" />
           </motion.div>

@@ -3,6 +3,7 @@
 import { Download, ExternalLink, Upload } from "lucide-react";
 import type { MutableRefObject } from "react";
 import { useEffect, useRef, useState } from "react";
+import { AdaptiveAlbumArtwork } from "@/components/preview/AdaptiveAlbumArtwork";
 import {
   ActionButton,
   FieldLabel,
@@ -204,17 +205,19 @@ export function WebLiteSongInfo({
             }}
           />
           <div className="flex min-w-0 items-center gap-3">
-            <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-[rgb(var(--panel-border))] bg-black/10">
-              {activeCover ? (
-                <img
-                  data-testid="web-lite-active-cover"
-                  src={activeCover}
-                  alt=""
-                  crossOrigin="anonymous"
-                  className="absolute inset-0 h-full w-full object-cover"
-                />
-              ) : null}
-            </div>
+            {activeCover ? (
+              <AdaptiveAlbumArtwork
+                sourceUrl={activeCover}
+                baseSize={56}
+                maxWidth={84}
+                maxHeight={84}
+                borderRadius={8}
+                className="border border-[rgb(var(--panel-border))]"
+                imageTestId="web-lite-active-cover"
+              />
+            ) : (
+              <div className="h-14 w-14 shrink-0 rounded-lg border border-[rgb(var(--panel-border))] bg-black/10" />
+            )}
             <p className="app-text-subtle min-w-0 text-sm">{copy.coverHint}</p>
           </div>
         </div>

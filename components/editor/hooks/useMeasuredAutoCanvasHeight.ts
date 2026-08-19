@@ -2,6 +2,7 @@
 
 import { AUTO_HEIGHT_MAX, AUTO_HEIGHT_MIN, getCardSize } from "@/lib/card-size";
 import { getPortraitLayout } from "@/lib/card-layout-engine";
+import { proxiedImageUrl } from "@/lib/image-utils";
 import type { AppState } from "@/lib/types";
 
 export const AUTO_HEIGHT_SETTLE_TOLERANCE = 2;
@@ -23,9 +24,12 @@ export function autoCanvasHeightMeasurementSignature(state: AppState) {
       album: state.song.album,
       artist: state.song.artist,
       explicit: state.song.explicit,
+      coverUrl: state.song.coverUrl,
+      proxiedCoverUrl: state.song.proxiedCoverUrl,
       source: state.song.source,
       title: state.song.title
     },
+    coverArtwork: state.coverArtwork,
     translationEnabled: state.translationEnabled,
     translationText: state.translationText,
     style: {
@@ -85,7 +89,11 @@ export function measureAutoCanvasHeight(
   }
 
   const size = getCardSize(currentState.style);
-  const layout = getPortraitLayout(size, currentState.style, currentState.song);
+  const coverSourceUrl = currentState.song.proxiedCoverUrl || proxiedImageUrl(currentState.song.coverUrl);
+  const layout = getPortraitLayout(size, currentState.style, currentState.song, {
+    sourceUrl: coverSourceUrl,
+    analysis: currentState.coverArtwork
+  });
   const contentStyle = window.getComputedStyle(content);
   const viewport = root.querySelector<HTMLElement>("[data-card-lyrics-viewport]");
   const viewportStyle = viewport ? window.getComputedStyle(viewport) : null;

@@ -132,7 +132,8 @@ export function replaceSongDocument(current: AppState, parsed: ParsedSongData, l
       extractedPalette: undefined
     },
     palette: undefined,
-    paletteWarning: ""
+    paletteWarning: "",
+    coverArtwork: undefined
   };
 }
 

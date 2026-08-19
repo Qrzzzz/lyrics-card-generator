@@ -2,6 +2,7 @@
 
 import { Upload } from "lucide-react";
 import { useRef, useState } from "react";
+import { AdaptiveAlbumArtwork } from "@/components/preview/AdaptiveAlbumArtwork";
 import {
   ActionButton,
   FieldLabel,
@@ -115,15 +116,13 @@ export function SongInfoForm({
             />
             <div className="flex items-center gap-3">
               {song.coverUrl ? (
-                <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-white/10">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={proxiedImageUrl(song.coverUrl)}
-                    alt=""
-                    className="absolute inset-0 h-full w-full object-cover"
-                    crossOrigin="anonymous"
-                  />
-                </div>
+                <AdaptiveAlbumArtwork
+                  sourceUrl={proxiedImageUrl(song.coverUrl)}
+                  baseSize={56}
+                  maxWidth={84}
+                  maxHeight={84}
+                  borderRadius={8}
+                />
               ) : (
                 <div className="h-14 w-14 rounded-lg border border-white/14 bg-white/10" />
               )}

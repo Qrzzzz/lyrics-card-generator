@@ -47,6 +47,7 @@ export function clearLyricContent(current: AppState): AppState {
     translationEnabled: false,
     palette: DEFAULT_PALETTE,
     paletteWarning: "",
+    coverArtwork: undefined,
     style: {
       ...current.style,
       extractedPalette: DEFAULT_PALETTE,

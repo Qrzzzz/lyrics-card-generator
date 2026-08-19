@@ -1,6 +1,6 @@
 import { getCardSize } from "@/lib/card-size";
 import { EXPORT_FORMAT_OPTIONS, type ExportFormatId } from "@/lib/settings/types";
-import type { AppState, CardStyle, Locale, SongInfo } from "@/lib/types";
+import type { AppState, CardStyle, CoverArtworkAnalysis, Locale, SongInfo } from "@/lib/types";
 import { sanitizeFilePart } from "@/lib/utils";
 
 export type ExportSnapshot = Readonly<{
@@ -9,6 +9,7 @@ export type ExportSnapshot = Readonly<{
   song: Readonly<SongInfo>;
   lyrics: string;
   style: Readonly<CardStyle>;
+  coverArtwork?: Readonly<CoverArtworkAnalysis>;
   locale: Locale;
   pixelRatio: number;
   format: ExportFormatId;
@@ -31,6 +32,7 @@ export function createExportSnapshot(
 ): ExportSnapshot {
   const song = structuredClone(state.song);
   const style = structuredClone(state.style);
+  const coverArtwork = state.coverArtwork ? structuredClone(state.coverArtwork) : undefined;
   const size = getCardSize(style);
   const extension = EXPORT_FORMAT_OPTIONS.find((option) => option.id === format)?.extension ?? "png";
   return deepFreeze({
@@ -39,6 +41,7 @@ export function createExportSnapshot(
     song,
     lyrics: state.lyrics,
     style,
+    coverArtwork,
     locale: state.locale,
     pixelRatio,
     format,
@@ -56,7 +59,8 @@ export function snapshotAsAppState(snapshot: ExportSnapshot, fallback: AppState)
     lyrics: snapshot.lyrics,
     translationText: snapshot.style.translationText,
     translationEnabled: snapshot.style.translationEnabled,
-    style: snapshot.style as CardStyle
+    style: snapshot.style as CardStyle,
+    coverArtwork: snapshot.coverArtwork as CoverArtworkAnalysis | undefined
   };
 }
 

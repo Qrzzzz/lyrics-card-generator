@@ -18,6 +18,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { recordRenderBoundary } from "@/components/editor/render-boundary-diagnostics";
 import type { ToastNotifier } from "@/components/feedback/AppToast";
 import { SurfaceCloseButton } from "@/components/layout/SurfaceCloseButton";
+import { AdaptiveAlbumArtwork } from "@/components/preview/AdaptiveAlbumArtwork";
 import { ActionButton, SelectField, TextInput } from "@/components/ui/controls";
 import { getLyricsCardDesktopApi } from "@/lib/desktop-api";
 import {
@@ -418,8 +419,16 @@ function HistoryCard({
             {record.album ? <p className="app-text-subtle mt-1 truncate text-xs">{record.album}</p> : null}
           </div>
           {record.remoteCoverUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img className="history-card__cover h-12 w-12 shrink-0 rounded-lg object-cover" src={record.remoteCoverUrl} alt="" />
+            <AdaptiveAlbumArtwork
+              sourceUrl={record.remoteCoverUrl}
+              baseSize={48}
+              maxWidth={72}
+              maxHeight={72}
+              borderRadius={8}
+              className="history-card__cover"
+              crossOrigin={false}
+              loading="lazy"
+            />
           ) : null}
         </div>
         <dl className="grid min-w-0 gap-2 text-xs">

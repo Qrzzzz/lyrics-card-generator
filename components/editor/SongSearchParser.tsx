@@ -2,6 +2,7 @@
 
 import { Search, Music2 } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
+import { AdaptiveAlbumArtwork } from "@/components/preview/AdaptiveAlbumArtwork";
 import { ActionButton, Input, Label, Section } from "@/components/ui/controls";
 import { createAppRequestHeaders } from "@/lib/app-request";
 import { getLocalizedAppApiError } from "@/lib/app-api-errors";
@@ -367,11 +368,13 @@ export function SongSearchParser({
                     )}
                   >
                     {song.coverUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={song.coverUrl}
-                        alt=""
-                        className="size-12 shrink-0 rounded-md object-cover"
+                      <AdaptiveAlbumArtwork
+                        sourceUrl={song.coverUrl}
+                        baseSize={48}
+                        maxWidth={72}
+                        maxHeight={72}
+                        borderRadius={6}
+                        crossOrigin={false}
                         loading="lazy"
                       />
                     ) : (

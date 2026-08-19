@@ -2,9 +2,10 @@
 
 import { motion } from "framer-motion";
 import { Music2, Save } from "lucide-react";
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { MotionPresence } from "@/components/motion/MotionPresence";
 import { useAppReducedMotion } from "@/components/motion/AppMotionProvider";
+import { AdaptiveAlbumArtwork } from "@/components/preview/AdaptiveAlbumArtwork";
 import { proxiedImageUrl } from "@/lib/image-utils";
 import type { createT } from "@/lib/i18n";
 import {
@@ -45,6 +46,8 @@ export function SongImportAside({
 }: SongImportAsideProps) {
   const reduceMotion = useAppReducedMotion();
   const manualEditorRef = useRef<HTMLFormElement | null>(null);
+  const coverPreviewHostRef = useRef<HTMLDivElement | null>(null);
+  const [coverPreviewBaseSize, setCoverPreviewBaseSize] = useState(320);
   const copy = settingsCopy[locale];
   const coverUrl = song.proxiedCoverUrl || (song.coverUrl ? proxiedImageUrl(song.coverUrl) : "");
   const transition = reduceMotion
@@ -60,6 +63,16 @@ export function SongImportAside({
     });
     return () => window.cancelAnimationFrame(frame);
   }, [manualExpanded]);
+
+  useEffect(() => {
+    const host = coverPreviewHostRef.current;
+    if (!host) return;
+    const measure = () => setCoverPreviewBaseSize(Math.max(1, Math.round(host.clientWidth)));
+    const observer = new ResizeObserver(measure);
+    observer.observe(host);
+    measure();
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <aside
@@ -135,19 +148,27 @@ export function SongImportAside({
               </div>
 
               <div
-                className="control-surface relative mx-auto flex aspect-square w-full max-w-80 items-center justify-center overflow-hidden rounded-lg min-[960px]:max-w-none"
-                data-testid="song-import-cover"
+                ref={coverPreviewHostRef}
+                className="mx-auto flex w-full max-w-80 items-center justify-center min-[960px]:max-w-none"
               >
                 {coverUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={coverUrl}
-                    alt=""
-                    className="absolute inset-0 size-full object-cover"
-                    crossOrigin="anonymous"
+                  <AdaptiveAlbumArtwork
+                    sourceUrl={coverUrl}
+                    baseSize={coverPreviewBaseSize}
+                    maxWidth={coverPreviewBaseSize}
+                    maxHeight={coverPreviewBaseSize}
+                    borderRadius={8}
+                    className="control-surface"
+                    testId="song-import-cover"
                   />
                 ) : (
+                  <div
+                    className="control-surface flex items-center justify-center rounded-lg"
+                    data-testid="song-import-cover"
+                    style={{ width: coverPreviewBaseSize, height: coverPreviewBaseSize }}
+                  >
                   <Music2 className="app-text-subtle size-10" aria-hidden="true" />
+                  </div>
                 )}
               </div>
 

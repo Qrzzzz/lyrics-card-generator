@@ -1,64 +1,87 @@
 "use client";
 
-import type { SongInfo } from "@/lib/types";
+import { AdaptiveAlbumArtwork } from "@/components/preview/AdaptiveAlbumArtwork";
+import { getArtworkAspectRatio, resolveAdaptiveArtworkSize } from "@/lib/artwork-geometry";
+import type { CoverArtworkAnalysis, SongInfo } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 export function InstrumentalBlock({
   song,
   coverUrl,
-  cropScale,
+  coverArtwork,
   onCoverError,
   textColor,
   isDarkText,
   showAlbumName,
-  allowTwoLineTitle
+  allowTwoLineTitle,
+  availableWidth,
+  availableHeight
 }: {
   song: SongInfo;
   coverUrl?: string;
-  cropScale: number;
+  coverArtwork?: CoverArtworkAnalysis;
   onCoverError: () => void;
   textColor: string;
   isDarkText: boolean;
   showAlbumName: boolean;
   allowTwoLineTitle: boolean;
+  availableWidth: number;
+  availableHeight: number;
 }) {
+  const baseSize = allowTwoLineTitle ? 500 : 568;
+  const aspectRatio = getArtworkAspectRatio(coverUrl, coverArtwork);
+  const isVerticalArtwork = aspectRatio < 1;
+  const sideBySideGap = 52;
+  const minimumSongInfoWidth = 248;
+  const songInfoHeight = showAlbumName ? 230 : 188;
+  const artworkSize = resolveAdaptiveArtworkSize({
+    baseSize,
+    aspectRatio,
+    maxWidth: isVerticalArtwork
+      ? Math.max(1, availableWidth - sideBySideGap - minimumSongInfoWidth)
+      : availableWidth,
+    maxHeight: isVerticalArtwork
+      ? availableHeight
+      : Math.max(baseSize, availableHeight - songInfoHeight)
+  });
+
   return (
     <div
-      className="flex w-full flex-col items-center justify-center text-center"
+      className={cn(
+        "flex w-full items-center justify-center",
+        isVerticalArtwork ? "flex-row gap-[52px] text-left" : "flex-col text-center"
+      )}
+      data-instrumental-artwork-layout={isVerticalArtwork ? "side-by-side" : "stacked"}
       style={{
         color: textColor,
         textShadow: isDarkText ? "none" : "0 12px 34px rgba(0,0,0,0.34)"
       }}
     >
-      <div
-        className={cn(
-          "relative aspect-square shrink-0 overflow-hidden rounded-[48px] bg-black/12 shadow-[0_34px_90px_rgba(0,0,0,0.30)]",
-          allowTwoLineTitle ? "w-[500px] max-w-[74%]" : "w-[568px] max-w-[82%]"
-        )}
-      >
-        {coverUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={coverUrl}
-            alt=""
-            crossOrigin="anonymous"
-            onError={onCoverError}
-            className="absolute inset-0 h-full w-full object-cover"
-            style={{ transform: `scale(${cropScale})` }}
-            draggable={false}
-          />
-        ) : (
-          <div className="absolute inset-0 bg-white/8" />
-        )}
-      </div>
+      <AdaptiveAlbumArtwork
+        sourceUrl={coverUrl}
+        analysis={coverArtwork}
+        resolvedSize={artworkSize}
+        borderRadius={48}
+        dropShadow="drop-shadow(0 34px 45px rgba(0,0,0,0.30))"
+        boxShadow="0 34px 90px rgba(0,0,0,0.30)"
+        onError={onCoverError}
+        placeholderClassName="bg-white/8"
+        testId="instrumental-album-artwork"
+      />
 
       <div
-        className={cn("grid w-full max-w-[860px] justify-items-center", allowTwoLineTitle ? "mt-12" : "mt-14")}
+        className={cn(
+          "grid min-w-0",
+          isVerticalArtwork
+            ? "flex-1 justify-items-start"
+            : cn("w-full max-w-[860px] justify-items-center", allowTwoLineTitle ? "mt-12" : "mt-14")
+        )}
         data-instrumental-song-info
       >
         <h2
           className={cn(
-            "w-full text-[64px] font-black leading-[1.18] tracking-normal",
+            "w-full font-black leading-[1.18] tracking-normal",
+            isVerticalArtwork ? "text-[52px]" : "text-[64px]",
             allowTwoLineTitle ? "two-line-title" : "truncate"
           )}
           data-allow-two-line-title={allowTwoLineTitle ? "true" : "false"}

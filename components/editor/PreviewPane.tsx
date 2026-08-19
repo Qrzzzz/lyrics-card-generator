@@ -9,7 +9,7 @@ import { MotionPresence } from "@/components/motion/MotionPresence";
 import { LyricCardPreview } from "@/components/preview/LyricCardPreview";
 import type { createT } from "@/lib/i18n";
 import { motionDurations, motionEasings, reducedMotionTransition } from "@/lib/motion/tokens";
-import type { CardStyle, FontScheme, Locale, SongInfo } from "@/lib/types";
+import type { CardStyle, CoverArtworkAnalysis, FontScheme, Locale, SongInfo } from "@/lib/types";
 
 type PreviewPaneProps = {
   isPreviewVisible: boolean;
@@ -17,6 +17,7 @@ type PreviewPaneProps = {
   song: SongInfo;
   lyrics: string;
   style: CardStyle;
+  coverArtwork?: CoverArtworkAnalysis;
   cardRef: RefObject<HTMLElement | null>;
   fontSchemePreview: FontScheme | null;
   clearTransitionKey: number;
@@ -32,6 +33,7 @@ export function PreviewPane({
   song,
   lyrics,
   style,
+  coverArtwork,
   cardRef,
   fontSchemePreview,
   clearTransitionKey,
@@ -109,6 +111,7 @@ export function PreviewPane({
                   song={song}
                   lyrics={lyrics}
                   style={previewStyle}
+                  coverArtwork={coverArtwork}
                   cardRef={cardRef}
                   locale={locale}
                   sticky={false}

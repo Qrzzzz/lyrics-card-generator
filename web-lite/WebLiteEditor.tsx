@@ -563,6 +563,7 @@ export function WebLiteEditor() {
                         song={parsedState.song}
                         lyrics={parsedState.lyrics}
                         style={parsedState.style}
+                        coverArtwork={parsedState.coverArtwork}
                         cardRef={cardRef}
                         fontSchemePreview={fontSchemePreview}
                         clearTransitionKey={clearTransitionKey}
@@ -583,6 +584,7 @@ export function WebLiteEditor() {
         song={parsedState.song}
         lyrics={parsedState.lyrics}
         style={parsedState.style}
+        coverArtwork={parsedState.coverArtwork}
         exportCardRef={exportCardRef}
         locale={parsedState.locale}
       />
@@ -593,6 +595,7 @@ export function WebLiteEditor() {
           song={activeExportSnapshot.song as SongInfo}
           lyrics={activeExportSnapshot.lyrics}
           style={activeExportSnapshot.style as CardStyle}
+          coverArtwork={activeExportSnapshot.coverArtwork as AppState["coverArtwork"]}
           exportCardRef={captureCardRef}
           locale={activeExportSnapshot.locale}
           snapshotId={activeExportSnapshot.id}

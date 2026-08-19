@@ -9,7 +9,7 @@ import {
   createBlobUrlRetirementState,
   reconcileBlobUrlRetirement
 } from "@/lib/object-url-lifecycle";
-import { extractPaletteFromImage } from "@/lib/palette-extraction";
+import { analyzeCoverImage } from "@/lib/palette-extraction";
 import type { AppState } from "@/lib/types";
 
 type AppStateSetter = Dispatch<SetStateAction<AppState>>;
@@ -52,8 +52,8 @@ export function useCoverPalette(coverForPalette: string, setState: AppStateSette
   useEffect(() => {
     let active = true;
 
-    extractPaletteFromImage(coverForPalette).then((palette) => {
-      // Ignore palette extraction that resolves after the cover dependency changes.
+    analyzeCoverImage(coverForPalette).then(({ palette, artwork }) => {
+      // Ignore analysis that resolves after the cover dependency changes.
       if (!active) {
         return;
       }
@@ -62,6 +62,7 @@ export function useCoverPalette(coverForPalette: string, setState: AppStateSette
         ...current,
         palette,
         paletteWarning: "",
+        coverArtwork: artwork,
         style: {
           ...current.style,
           extractedPalette: palette

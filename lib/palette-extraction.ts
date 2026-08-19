@@ -1,6 +1,6 @@
 "use client";
 
-import type { ExtractedPalette } from "@/lib/types";
+import type { CoverArtworkAnalysis, ExtractedPalette } from "@/lib/types";
 import {
   DEFAULT_PALETTE,
   adjustLightness,
@@ -23,34 +23,71 @@ const SAMPLE_SIZE = 80;
 const EDGE_IGNORE_RATIO = 0.07;
 const CLUSTER_COUNT = 6;
 const ITERATIONS = 10;
+export const COVER_IMAGE_ANALYSIS_TIMEOUT_MS = 8000;
 
-/**
- * Downsamples artwork and derives a stable, weighted palette. Decorative edge
- * pixels, transparency, near-white backgrounds, and near-black borders are
- * discounted so the result reflects the cover's visual subject.
- */
-export async function extractPaletteFromImage(imageUrl: string): Promise<ExtractedPalette> {
+export type CoverImageAnalysisResult = {
+  palette: ExtractedPalette;
+  artwork?: CoverArtworkAnalysis;
+};
+
+/** Decodes geometry, alpha, and palette together so every renderer shares one source of truth. */
+export async function analyzeCoverImage(imageUrl: string): Promise<CoverImageAnalysisResult> {
   if (!imageUrl) {
-    return DEFAULT_PALETTE;
+    return { palette: DEFAULT_PALETTE };
   }
 
+  let image: HTMLImageElement;
   try {
-    const image = await loadImage(imageUrl);
+    image = await loadImage(imageUrl);
+  } catch (error) {
+    console.warn("Cover analysis failed. Falling back to square artwork geometry.", error);
+    return {
+      palette: DEFAULT_PALETTE,
+      artwork: {
+        sourceUrl: imageUrl,
+        naturalWidth: 0,
+        naturalHeight: 0,
+        aspectRatio: 1,
+        hasTransparency: false,
+        status: "error"
+      }
+    };
+  }
+
+  const naturalWidth = image.naturalWidth || image.width;
+  const naturalHeight = image.naturalHeight || image.height;
+  const aspectRatio = naturalWidth > 0 && naturalHeight > 0 ? naturalWidth / naturalHeight : 1;
+  const artworkBase = {
+    sourceUrl: imageUrl,
+    naturalWidth,
+    naturalHeight,
+    aspectRatio,
+    status: "ready" as const
+  };
+
+  try {
     const canvas = document.createElement("canvas");
     canvas.width = SAMPLE_SIZE;
     canvas.height = SAMPLE_SIZE;
     const context = canvas.getContext("2d", { willReadFrequently: true });
 
     if (!context) {
-      return DEFAULT_PALETTE;
+      return {
+        palette: DEFAULT_PALETTE,
+        artwork: { ...artworkBase, hasTransparency: false }
+      };
     }
 
     context.drawImage(image, 0, 0, SAMPLE_SIZE, SAMPLE_SIZE);
     const { data } = context.getImageData(0, 0, SAMPLE_SIZE, SAMPLE_SIZE);
     const pixels = collectWeightedPixels(data);
+    const hasTransparency = containsTransparency(data);
 
     if (pixels.length < 12) {
-      return DEFAULT_PALETTE;
+      return {
+        palette: DEFAULT_PALETTE,
+        artwork: { ...artworkBase, hasTransparency }
+      };
     }
 
     const clusters = mergeNearbyClusters(runKMeans(pixels));
@@ -59,14 +96,37 @@ export async function extractPaletteFromImage(imageUrl: string): Promise<Extract
     const averageSaturation = weightedAverageSaturation(pixels);
     const hueVariance = weightedHueVariance(pixels);
 
-    return buildPalette(colors, averageLuminance, averageSaturation, hueVariance);
+    return {
+      palette: buildPalette(colors, averageLuminance, averageSaturation, hueVariance),
+      artwork: { ...artworkBase, hasTransparency }
+    };
   } catch (error) {
-    console.warn("Palette extraction failed. Falling back to the default palette.", error);
-    return DEFAULT_PALETTE;
+    // Natural dimensions remain trustworthy even when CORS blocks canvas pixels.
+    console.warn("Palette extraction failed. Keeping artwork geometry with the default palette.", error);
+    return {
+      palette: DEFAULT_PALETTE,
+      artwork: { ...artworkBase, hasTransparency: false }
+    };
   }
 }
 
+/**
+ * Downsamples artwork and derives a stable, weighted palette. Decorative edge
+ * pixels, transparency, near-white backgrounds, and near-black borders are
+ * discounted so the result reflects the cover's visual subject.
+ */
+export async function extractPaletteFromImage(imageUrl: string): Promise<ExtractedPalette> {
+  return (await analyzeCoverImage(imageUrl)).palette;
+}
+
 export { DEFAULT_PALETTE };
+
+function containsTransparency(data: Uint8ClampedArray) {
+  for (let index = 3; index < data.length; index += 4) {
+    if (data[index] < 254) return true;
+  }
+  return false;
+}
 
 function collectWeightedPixels(data: Uint8ClampedArray) {
   const pixels: WeightedPixel[] = [];
@@ -360,12 +420,29 @@ function hexToRgbLike(hex: string): RgbColor {
   };
 }
 
-function loadImage(src: string) {
+function loadImage(src: string, timeoutMs = COVER_IMAGE_ANALYSIS_TIMEOUT_MS) {
   return new Promise<HTMLImageElement>((resolve, reject) => {
     const image = new Image();
+    const timeout = setTimeout(() => {
+      cleanup();
+      image.src = "data:,";
+      reject(new Error("Cover image analysis timed out."));
+    }, timeoutMs);
+    const cleanup = () => {
+      clearTimeout(timeout);
+      image.onload = null;
+      image.onerror = null;
+    };
+
     image.crossOrigin = "anonymous";
-    image.onload = () => resolve(image);
-    image.onerror = () => reject(new Error("Unable to load cover image for palette extraction."));
+    image.onload = () => {
+      cleanup();
+      resolve(image);
+    };
+    image.onerror = () => {
+      cleanup();
+      reject(new Error("Unable to load cover image for palette extraction."));
+    };
     image.src = src;
   });
 }

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { SyntheticEvent } from "react";
+import { AdaptiveAlbumArtwork } from "@/components/preview/AdaptiveAlbumArtwork";
 import { InstrumentalBlock } from "@/components/preview/InstrumentalBlock";
 import { LandscapeLyricCard } from "@/components/preview/LandscapeLyricCard";
 import { LyricsBlock } from "@/components/preview/LyricsBlock";
@@ -10,10 +11,10 @@ import { PortraitFooter } from "@/components/preview/PortraitFooter";
 import { ExplicitBadge } from "@/components/preview/ExplicitBadge";
 import { getCardSize as resolveCardSize } from "@/lib/card-size";
 import { getPortraitLayout } from "@/lib/card-layout-engine";
-import { FIXED_COVER_CROP_SCALE, normalizeCardStyle } from "@/lib/card-style-normalize";
+import { normalizeCardStyle } from "@/lib/card-style-normalize";
 import { cardFontStyle, fontClassName } from "@/lib/fonts";
 import { proxiedImageUrl } from "@/lib/image-utils";
-import type { CardStyle, Locale, SongInfo } from "@/lib/types";
+import type { CardStyle, CoverArtworkAnalysis, Locale, SongInfo } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 export function getCardSize(style: CardStyle) {
@@ -23,11 +24,13 @@ export function getCardSize(style: CardStyle) {
 export function LyricCard({
   song,
   lyrics,
-  style: rawStyle
+  style: rawStyle,
+  coverArtwork
 }: {
   song: SongInfo;
   lyrics: string;
   style: CardStyle;
+  coverArtwork?: CoverArtworkAnalysis;
   locale?: Locale;
 }) {
   // Normalization gives portrait and landscape renderers one stable compatibility contract.
@@ -41,7 +44,7 @@ export function LyricCard({
   }, [cover]);
 
   if ((style.layoutMode ?? "portrait") === "landscape") {
-    return <LandscapeLyricCard song={song} lyrics={lyrics} style={style} />;
+    return <LandscapeLyricCard song={song} lyrics={lyrics} style={style} coverArtwork={coverArtwork} />;
   }
 
   const size = getCardSize(style);
@@ -50,7 +53,10 @@ export function LyricCard({
   const isDarkText = isColorDark(textColor);
   const contentMode = style.contentMode ?? "lyrics";
   const showGeneratedWatermark = style.showGeneratedWatermark ?? style.showWatermark;
-  const layout = getPortraitLayout(size, style, song);
+  const layout = getPortraitLayout(size, style, song, {
+    sourceUrl: activeCover,
+    analysis: coverArtwork
+  });
 
   // Measurement and export-readiness hooks treat the card data attributes as a DOM contract.
   return (
@@ -93,7 +99,9 @@ export function LyricCard({
                   originalCoverUrl={song.originalCoverUrl}
                   normalizedCoverUrl={song.coverUrl}
                   proxiedCoverUrl={song.proxiedCoverUrl}
-                  cropScale={FIXED_COVER_CROP_SCALE}
+                  analysis={coverArtwork}
+                  width={layout.coverRect?.width ?? 196}
+                  height={layout.coverRect?.height ?? 196}
                   onError={() => setCoverFailed(true)}
                 />
               ) : null}
@@ -147,12 +155,14 @@ export function LyricCard({
               <InstrumentalBlock
                 song={song}
                 coverUrl={activeCover}
-                cropScale={FIXED_COVER_CROP_SCALE}
+                coverArtwork={coverArtwork}
                 onCoverError={() => setCoverFailed(true)}
                 textColor={textColor}
                 isDarkText={isDarkText}
                 showAlbumName={style.showAlbumName}
                 allowTwoLineTitle={style.allowTwoLineTitle}
+                availableWidth={layout.lyricsRect.width}
+                availableHeight={layout.lyricsRect.height}
               />
             ) : (
               <LyricsBlock
@@ -191,18 +201,20 @@ function AlbumCover({
   originalCoverUrl,
   normalizedCoverUrl,
   proxiedCoverUrl,
-  cropScale,
+  analysis,
+  width,
+  height,
   onError
 }: {
   coverUrl?: string;
   originalCoverUrl?: string;
   normalizedCoverUrl?: string;
   proxiedCoverUrl?: string;
-  cropScale: number;
+  analysis?: CoverArtworkAnalysis;
+  width: number;
+  height: number;
   onError: () => void;
 }) {
-  const className = "relative h-[196px] w-[196px] shrink-0 overflow-hidden rounded-[44px] bg-black/10";
-
   function onLoad(event: SyntheticEvent<HTMLImageElement>) {
     if (process.env.NODE_ENV !== "development") {
       return;
@@ -216,28 +228,23 @@ function AlbumCover({
       displayedCoverUrl: coverUrl,
       naturalWidth: image.naturalWidth,
       naturalHeight: image.naturalHeight,
-      containerClassName: className
+      renderedWidth: width,
+      renderedHeight: height
     });
   }
 
   return (
-    <div className={className}>
-      {coverUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={coverUrl}
-          alt=""
-          crossOrigin="anonymous"
-          onLoad={onLoad}
-          onError={onError}
-          className="absolute inset-0 h-full w-full object-cover"
-          style={{ transform: `scale(${cropScale})` }}
-          draggable={false}
-        />
-      ) : (
-        <div className="absolute inset-0 bg-black/10" />
-      )}
-    </div>
+    <AdaptiveAlbumArtwork
+      sourceUrl={coverUrl}
+      analysis={analysis}
+      resolvedSize={{ width, height }}
+      borderRadius={44}
+      dropShadow="drop-shadow(0 18px 24px rgba(0,0,0,0.24))"
+      onLoad={onLoad}
+      onError={onError}
+      placeholderClassName="bg-black/10"
+      testId="portrait-album-artwork"
+    />
   );
 }
 

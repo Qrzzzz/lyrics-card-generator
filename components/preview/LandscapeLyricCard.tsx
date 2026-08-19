@@ -9,23 +9,23 @@ import { LandscapeSongInfo } from "@/components/preview/LandscapeSongInfo";
 import { PaletteBackground } from "@/components/preview/PaletteBackground";
 import { getCardSize } from "@/lib/card-size";
 import { getLandscapeLayout } from "@/lib/card-layout-engine";
-import { FIXED_COVER_CROP_SCALE } from "@/lib/card-style-normalize";
 import { cardFontStyle, fontClassName } from "@/lib/fonts";
 import { proxiedImageUrl } from "@/lib/image-utils";
-import type { CardStyle, SongInfo } from "@/lib/types";
+import type { CardStyle, CoverArtworkAnalysis, SongInfo } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 export function LandscapeLyricCard({
   song,
   lyrics,
-  style
+  style,
+  coverArtwork
 }: {
   song: SongInfo;
   lyrics: string;
   style: CardStyle;
+  coverArtwork?: CoverArtworkAnalysis;
 }) {
   const size = getCardSize(style);
-  const layout = getLandscapeLayout(size, style, song);
   const cover = song.proxiedCoverUrl || proxiedImageUrl(song.coverUrl);
   const [coverFailed, setCoverFailed] = useState(false);
   const activeCover = coverFailed ? "" : cover;
@@ -33,6 +33,10 @@ export function LandscapeLyricCard({
   const isDarkText = isColorDark(textColor);
   const showGeneratedWatermark = style.showGeneratedWatermark ?? style.showWatermark;
   const contentMode = style.contentMode ?? "lyrics";
+  const layout = getLandscapeLayout(size, style, song, {
+    sourceUrl: activeCover,
+    analysis: coverArtwork
+  });
 
   useEffect(() => {
     // A replacement URL receives a fresh load attempt after a prior cover failure.
@@ -68,10 +72,11 @@ export function LandscapeLyricCard({
           <LandscapeAlbumCover
             song={song}
             coverUrl={activeCover}
-            cropScale={FIXED_COVER_CROP_SCALE}
+            analysis={coverArtwork}
             left={layout.coverRect.x}
             top={layout.coverRect.y}
-            size={layout.coverRect.width}
+            width={layout.coverRect.width}
+            height={layout.coverRect.height}
             onError={() => setCoverFailed(true)}
           />
         ) : null}

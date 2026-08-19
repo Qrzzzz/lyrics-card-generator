@@ -1,23 +1,26 @@
 "use client";
 
 import type { SyntheticEvent } from "react";
-import type { SongInfo } from "@/lib/types";
+import { AdaptiveAlbumArtwork } from "@/components/preview/AdaptiveAlbumArtwork";
+import type { CoverArtworkAnalysis, SongInfo } from "@/lib/types";
 
 export function LandscapeAlbumCover({
   song,
   coverUrl,
-  cropScale,
+  analysis,
   left,
   top,
-  size,
+  width,
+  height,
   onError
 }: {
   song: SongInfo;
   coverUrl?: string;
-  cropScale: number;
+  analysis?: CoverArtworkAnalysis;
   left: number;
   top: number;
-  size: number;
+  width: number;
+  height: number;
   onError: () => void;
 }) {
   function onLoad(event: SyntheticEvent<HTMLImageElement>) {
@@ -37,30 +40,19 @@ export function LandscapeAlbumCover({
   }
 
   return (
-    <div
-      className="absolute z-10 overflow-hidden rounded-[28px] bg-black/10 shadow-[0_34px_90px_rgba(0,0,0,0.30)]"
-      style={{
-        left,
-        top,
-        width: size,
-        height: size
-      }}
-    >
-      {coverUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={coverUrl}
-          alt=""
-          crossOrigin="anonymous"
-          onLoad={onLoad}
-          onError={onError}
-          className="h-full w-full object-cover"
-          style={{ transform: `scale(${cropScale})` }}
-          draggable={false}
-        />
-      ) : (
-        <div className="absolute inset-0 bg-black/10" />
-      )}
-    </div>
+    <AdaptiveAlbumArtwork
+      sourceUrl={coverUrl}
+      analysis={analysis}
+      resolvedSize={{ width, height }}
+      borderRadius={28}
+      className="absolute z-10"
+      style={{ left, top }}
+      dropShadow="drop-shadow(0 34px 45px rgba(0,0,0,0.30))"
+      boxShadow="0 34px 90px rgba(0,0,0,0.30)"
+      onLoad={onLoad}
+      onError={onError}
+      placeholderClassName="bg-black/10"
+      testId="landscape-album-artwork"
+    />
   );
 }

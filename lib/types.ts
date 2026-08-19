@@ -58,6 +58,15 @@ export type ExtractedPalette = {
   kind: PaletteKind;
 };
 
+export type CoverArtworkAnalysis = {
+  sourceUrl: string;
+  naturalWidth: number;
+  naturalHeight: number;
+  aspectRatio: number;
+  hasTransparency: boolean;
+  status: "ready" | "error";
+};
+
 export type CardStyle = {
   backgroundMode: "palette" | "gradient";
   extractedPalette?: ExtractedPalette;
@@ -126,6 +135,7 @@ export type AppState = {
   lastLandscapeSize?: CardSizeSnapshot;
   palette?: ExtractedPalette;
   paletteWarning?: string;
+  coverArtwork?: CoverArtworkAnalysis;
 };
 
 export type ParsedSongData = SongInfo & {

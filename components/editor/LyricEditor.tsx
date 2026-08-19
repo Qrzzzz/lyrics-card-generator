@@ -602,6 +602,7 @@ export function LyricEditor() {
                             song={parsedState.song}
                             lyrics={parsedState.lyrics}
                             style={parsedState.style}
+                            coverArtwork={parsedState.coverArtwork}
                             cardRef={previewCardRef}
                             fontSchemePreview={fontSchemePreview}
                             clearTransitionKey={clearTransitionKey}
@@ -622,6 +623,7 @@ export function LyricEditor() {
               song={parsedState.song}
               lyrics={parsedState.lyrics}
               style={parsedState.style}
+              coverArtwork={parsedState.coverArtwork}
               exportCardRef={exportCardRef}
               locale={parsedState.locale}
             />
@@ -632,6 +634,7 @@ export function LyricEditor() {
                 song={activeExportSnapshot.song as AppState["song"]}
                 lyrics={activeExportSnapshot.lyrics}
                 style={activeExportSnapshot.style as AppState["style"]}
+                coverArtwork={activeExportSnapshot.coverArtwork as AppState["coverArtwork"]}
                 exportCardRef={captureCardRef}
                 locale={activeExportSnapshot.locale}
                 snapshotId={activeExportSnapshot.id}

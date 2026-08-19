@@ -3,12 +3,13 @@
 import type { RefObject } from "react";
 import { LyricCard } from "@/components/preview/LyricCard";
 import { getCardSize } from "@/lib/card-size";
-import type { CardStyle, Locale, SongInfo } from "@/lib/types";
+import type { CardStyle, CoverArtworkAnalysis, Locale, SongInfo } from "@/lib/types";
 
 export type ExportCardHostProps = {
   song: SongInfo;
   lyrics: string;
   style: CardStyle;
+  coverArtwork?: CoverArtworkAnalysis;
   exportCardRef: RefObject<HTMLElement | null>;
   locale?: Locale;
   snapshotId?: string;
@@ -23,6 +24,7 @@ export function ExportCardHost({
   song,
   lyrics,
   style,
+  coverArtwork,
   exportCardRef,
   locale = "en",
   snapshotId
@@ -49,7 +51,7 @@ export function ExportCardHost({
         data-export-snapshot-id={snapshotId}
         style={{ width: size.width, height: size.height }}
       >
-        <LyricCard song={song} lyrics={lyrics} style={style} locale={locale} />
+        <LyricCard song={song} lyrics={lyrics} style={style} coverArtwork={coverArtwork} locale={locale} />
       </div>
     </div>
   );
