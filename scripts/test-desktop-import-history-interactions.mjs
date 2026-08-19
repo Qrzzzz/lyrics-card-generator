@@ -350,8 +350,10 @@ async function waitForHistoryCards(expected, timeout = 30_000) {
       const surface = document.querySelector('[data-testid="history-surface"]');
       let apiTotal = null;
       let apiError = "";
+      let preferenceLimit = null;
       try {
         apiTotal = (await window.lyricsCardDesktop?.getImportHistoryStats())?.total ?? null;
+        preferenceLimit = (await window.lyricsCardDesktop?.loadAppPreferences())?.userSettings?.importHistoryLimit ?? null;
       } catch (statsError) {
         apiError = statsError instanceof Error ? statsError.message : String(statsError);
       }
@@ -365,6 +367,7 @@ async function waitForHistoryCards(expected, timeout = 30_000) {
         query: surface?.querySelector('[data-testid="history-search"]')?.value ?? "",
         source: surface?.querySelector('[data-testid="history-source-filter"]')?.value ?? "",
         apiTotal,
+        preferenceLimit,
         apiError
       };
     }).catch((diagnosticError) => ({ diagnosticError: diagnosticError instanceof Error

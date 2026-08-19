@@ -67,6 +67,7 @@ let windowMaximized = false;
 let windowRestoring = false;
 let lastEmittedWindowState = null;
 let appPreferencesWriteQueue = Promise.resolve();
+let lastKnownAppPreferences = null;
 let importHistoryMutationQueue = Promise.resolve();
 // Window closure is a renderer-confirmed handshake so pending persistence can drain first.
 let allowWindowClose = false;
@@ -1271,20 +1272,31 @@ function requestRendererClose() {
 function enqueueAppPreferencesWrite(preferences) {
   const operation = appPreferencesWriteQueue
     .catch(() => undefined)
-    .then(() => writeAppPreferences(preferences));
+    .then(() => writeAppPreferences(preferences))
+    .then((persisted) => {
+      if (persisted) lastKnownAppPreferences = persisted;
+      return persisted;
+    });
   appPreferencesWriteQueue = operation;
   return operation;
 }
 
 async function readAppPreferences() {
+  // A history mutation must never interpret the brief publication window of a
+  // preferences write as "use the default limit" and destructively trim an
+  // unlimited history. Drain the writer, then retain the last validated value
+  // as a fallback for transient filesystem read failures.
+  await appPreferencesWriteQueue.catch(() => undefined);
   try {
     const parsed = JSON.parse(await fs.readFile(getAppPreferencesPath(), "utf8"));
-    return normalizeStoredPreferences(parsed);
+    const preferences = normalizeStoredPreferences(parsed);
+    if (preferences) lastKnownAppPreferences = preferences;
+    return preferences ?? lastKnownAppPreferences;
   } catch (error) {
     if (error?.code !== "ENOENT") {
       console.error("[app-preferences] unable to read preferences", error instanceof Error ? error.message : "unknown error");
     }
-    return null;
+    return lastKnownAppPreferences;
   }
 }
 

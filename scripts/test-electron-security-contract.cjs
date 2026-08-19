@@ -237,6 +237,11 @@ assert.match(
 );
 assert.match(
   mainSource,
+  /let lastKnownAppPreferences = null;[\s\S]*?async function readAppPreferences\(\) \{[\s\S]*?await appPreferencesWriteQueue\.catch\(\(\) => undefined\);[\s\S]*?return lastKnownAppPreferences;/,
+  "history-limit reads drain preference writes and retain the last validated value instead of destructively defaulting during a transient read failure"
+);
+assert.match(
+  mainSource,
   /handle\("lyrics-card:import-history-replay", async \(event, recordId\)[\s\S]*?importHistoryStore\.get\(recordId\)[\s\S]*?createImportHistoryReplayPayload\(record, undefined, event\.sender\.id\)/,
   "history replay resolves its source only from a validated stored record"
 );
