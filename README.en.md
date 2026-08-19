@@ -74,7 +74,7 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 ## 📦 Download and Installation
 
-Use [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) for public builds. Local v5.9.7 release-candidate packaging uses these filenames:
+Download v5.9.7 from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
 * Installer: `Lyrics Card Generator Setup 5.9.7.exe`
 * Portable build: `Lyrics Card Generator-5.9.7-portable.exe`
@@ -83,12 +83,12 @@ The installer is recommended for regular use. The portable version is useful for
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v5.9.7 Highlights (local release candidate)
+### v5.9.7 Highlights
 
 * Horizontal artwork keeps the standard square-cover height and expands sideways at its natural ratio; vertical artwork keeps the standard width and expands vertically.
 * 1:1 artwork keeps exactly the same size and layout. Extreme ratios scale down proportionally only at physical canvas bounds, without cropping or stretching.
 * Transparent PNG and WebP artwork no longer receives a square backing plate, so transparent pixels reveal the card background with alpha-friendly shadows.
-* Editor preview, unscaled export, instrumental cards, Web Lite, and import/search/history thumbnails share the same ratio rules. v5.9.7 is not yet released; public availability is determined by GitHub Releases.
+* Editor preview, unscaled export, instrumental cards, Web Lite, and import/search/history thumbnails share the same ratio rules.
 
 ## 🌐 Multilingual Release Notes
 

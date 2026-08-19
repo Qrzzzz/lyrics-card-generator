@@ -74,7 +74,7 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 ## 📦 Téléchargement et installation
 
-Utilisez [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) pour les versions publiques. La version candidate locale v5.9.7 emploie les noms suivants :
+Téléchargez la v5.9.7 depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
 
 * Installateur : `Lyrics Card Generator Setup 5.9.7.exe`
 * Version portable : `Lyrics Card Generator-5.9.7-portable.exe`
@@ -83,12 +83,12 @@ L'installateur est recommandé pour une utilisation régulière. La version port
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### Points forts de la v5.9.7 (version candidate locale)
+### Points forts de la v5.9.7
 
 * Une pochette horizontale conserve la hauteur standard d’une pochette carrée et s’élargit selon son ratio naturel ; une pochette verticale conserve la largeur standard et s’allonge verticalement.
 * Les pochettes 1:1 gardent exactement leur taille et leur mise en page. Les ratios extrêmes ne sont réduits proportionnellement qu’aux limites physiques du canevas, sans recadrage ni étirement.
 * Les PNG et WebP transparents n’ont plus de fond carré : leurs pixels transparents révèlent directement le fond de la carte, avec des ombres adaptées à l’alpha.
-* L’aperçu, l’export non redimensionné, les cartes instrumentales, Web Lite et les miniatures partagent les mêmes règles. La v5.9.7 n’est pas encore publiée (pas encore publié) ; GitHub Releases fait foi.
+* L’aperçu, l’export non redimensionné, les cartes instrumentales, Web Lite et les miniatures partagent les mêmes règles.
 
 ## 🌐 Notes de publication multilingues
 

@@ -72,7 +72,7 @@
 
 ## 📦 下载与安装
 
-已公开构建请从 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 获取；本地 v5.9.7 发布候选打包使用以下文件名：
+请从 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下载 v5.9.7：
 
 * 安装版：`Lyrics Card Generator Setup 5.9.7.exe`
 * 便携版：`Lyrics Card Generator-5.9.7-portable.exe`
@@ -81,12 +81,12 @@
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v5.9.7 更新重点（本地发布候选）
+### v5.9.7 更新重点
 
 * 横版封面保持原正方形封面的标准高度并按原始比例向两侧扩展；竖版封面保持标准宽度并按比例向上下扩展。
 * 1:1 封面的尺寸与布局保持不变；极端长宽比只在触及画布安全边界时整体等比缩小，不裁切、不拉伸。
 * 透明 PNG／WebP 不再铺设方形底板，透明区域直接显示卡片背景，并使用适合透明边缘的阴影方式。
-* 编辑预览、未缩放导出、纯音乐卡、Web Lite 及导入／搜索／历史缩略图共用同一比例规则；此版本尚未发布，公开状态以 GitHub Releases 为准。
+* 编辑预览、未缩放导出、纯音乐卡、Web Lite 及导入／搜索／历史缩略图共用同一比例规则。
 
 ## 🌐 多语言发布说明
 

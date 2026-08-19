@@ -74,7 +74,7 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 ## 📦 Descarga e instalación
 
-Usa [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) para las versiones públicas. La candidata local v5.9.7 utiliza estos nombres de archivo:
+Descarga v5.9.7 desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
 * Instalador: `Lyrics Card Generator Setup 5.9.7.exe`
 * Versión portable: `Lyrics Card Generator-5.9.7-portable.exe`
@@ -83,12 +83,12 @@ El instalador se recomienda para uso habitual. La versión portable es útil par
 
 > La compilación actual no está firmada. Windows puede mostrar una advertencia de SmartScreen, algo habitual en aplicaciones personales sin firma.
 
-### Novedades de v5.9.7 (candidata local)
+### Novedades de v5.9.7
 
 * Una portada horizontal conserva la altura estándar de la portada cuadrada y se ensancha según su proporción natural; una vertical conserva el ancho estándar y crece hacia arriba y abajo.
 * Las portadas 1:1 mantienen exactamente su tamaño y diseño. Las proporciones extremas solo se reducen proporcionalmente al tocar los límites físicos del lienzo, sin recorte ni deformación.
 * Los PNG y WebP transparentes ya no reciben una base cuadrada: sus píxeles transparentes muestran el fondo de la tarjeta con sombras compatibles con alfa.
-* La vista previa, la exportación sin escalar, las tarjetas instrumentales, Web Lite y las miniaturas comparten las mismas reglas. v5.9.7 aún no publicado (aún no publicado); GitHub Releases determina la disponibilidad pública.
+* La vista previa, la exportación sin escalar, las tarjetas instrumentales, Web Lite y las miniaturas comparten las mismas reglas.
 
 ## 🌐 Notas de publicación multilingües
 
