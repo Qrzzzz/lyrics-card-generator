@@ -14,6 +14,7 @@ const readyDom: ExportDomSafety = {
   isCardMounted: true,
   areFontsReady: true,
   isCardSizeStable: true,
+  isArtworkReady: true,
   isAutoWidthStable: true,
   isAutoHeightStable: true,
   hasContentOverflow: false
@@ -57,6 +58,7 @@ const readyDom: ExportDomSafety = {
   assert.equal(evaluateMinimumExportSafety(state37, readyDom).blockingReason, "lyrics-limit");
   assert.equal(evaluateMinimumExportSafety(state36, { ...readyDom, areFontsReady: false }).blockingReason, "fonts-loading");
   assert.equal(evaluateMinimumExportSafety(state36, { ...readyDom, isCardSizeStable: false }).blockingReason, "card-measuring");
+  assert.equal(evaluateMinimumExportSafety(state36, { ...readyDom, isArtworkReady: false }).blockingReason, "card-measuring");
   assert.equal(evaluateMinimumExportSafety(state36, { ...readyDom, hasContentOverflow: true }).blockingReason, "content-overflow");
 }
 
@@ -313,6 +315,26 @@ async function exportImageAbortGuardTest() {
     }
   );
   assert.deepEqual(commits[2], { dataUrl: "data:image/jpeg;base64,OK", fileName: "normal.jpg" });
+
+  const blobImageNode = {
+    querySelectorAll: () => [{ currentSrc: "blob:https://example.test/local-cover", src: "blob:https://example.test/local-cover" }]
+  } as unknown as HTMLElement;
+  await exportNodeAsPng(
+    blobImageNode,
+    "local-cover.png",
+    640,
+    960,
+    1,
+    undefined,
+    {
+      renderNode: async (_node, _format, options) => {
+        assert.equal(options.cacheBust, false, "blob artwork must retain its exact local URL");
+        return "data:image/png;base64,LOCAL";
+      },
+      commitDownload: (dataUrl, fileName) => { commits.push({ dataUrl, fileName }); }
+    }
+  );
+  assert.deepEqual(commits[3], { dataUrl: "data:image/png;base64,LOCAL", fileName: "local-cover.png" });
 
   await assert.rejects(
     exportNodeAsImage(

@@ -904,6 +904,48 @@ test("keeps a local cover when an older remote validation completes", async ({ p
   expect(blobStillReadable).toBe(true);
 });
 
+test("renders square, horizontal, vertical, and transparent artwork at their natural ratios", async ({ page }) => {
+  test.setTimeout(180_000);
+  await openWebLite(page, { width: 1440, height: 1000 });
+  const artwork = page.locator('[data-export-card-host] [data-testid="portrait-album-artwork"]').first();
+
+  await uploadGeneratedCover(page, "square.png", 1200, 1200, false);
+  await expectArtworkGeometry(artwork, { width: 196, height: 196, transparent: false });
+
+  await uploadGeneratedCover(page, "horizontal.png", 1200, 802, false);
+  await expectArtworkGeometry(artwork, { width: 293, height: 196, transparent: false });
+
+  await uploadGeneratedCover(page, "vertical.png", 879, 1200, false);
+  await expectArtworkGeometry(artwork, { width: 196, height: 268, transparent: false });
+
+  await page.locator('[data-step-id="layout"]').click();
+  await page.locator('[data-segment-value="instrumental"]').click();
+  const instrumentalArtwork = page.locator('[data-export-card-host] [data-testid="instrumental-album-artwork"]').first();
+  await expectArtworkGeometry(instrumentalArtwork, { width: 568, height: 775, transparent: false });
+  await page.locator('[data-segment-value="lyrics"]').click();
+  await page.locator('[data-step-id="song-info"]').click();
+
+  await uploadGeneratedCover(page, "transparent.png", 1200, 802, true);
+  await expectArtworkGeometry(artwork, { width: 293, height: 196, transparent: true });
+  await expect(artwork.locator("img")).toHaveCSS("object-fit", "contain");
+  await expect(artwork).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+
+  await uploadGeneratedCover(page, "transparent.webp", 1200, 802, true, "image/webp");
+  await expectArtworkGeometry(artwork, { width: 293, height: 196, transparent: true });
+
+  await page.locator('[data-step-id="export"]').click();
+  const cardSize = await page.locator('[data-export-card-host] [data-export-card="true"]').first().evaluate((card) => ({
+    width: (card as HTMLElement).offsetWidth,
+    height: (card as HTMLElement).offsetHeight
+  }));
+  await exportAndExpectDimensions(
+    page,
+    "medium",
+    Math.round(cardSize.width * 1.4),
+    Math.round(cardSize.height * 1.4)
+  );
+});
+
 test("exports a CORS-safe remote cover at standard and high pixel ratios", async ({ page }) => {
   test.setTimeout(120_000);
   await installRemoteCoverRoute(page);
@@ -1155,6 +1197,51 @@ async function openWebLite(page: Page, viewport = { width: 1280, height: 900 }) 
 async function applyRemoteCover(page: Page) {
   await page.getByTestId("web-lite-remote-cover-input").fill(remoteCoverUrl);
   await page.getByTestId("web-lite-apply-remote-cover").click();
+}
+
+async function uploadGeneratedCover(
+  page: Page,
+  name: string,
+  width: number,
+  height: number,
+  transparent: boolean,
+  mimeType: "image/png" | "image/webp" = "image/png"
+) {
+  const dataUrl = await page.evaluate(({ width, height, transparent, mimeType }) => {
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("Canvas context is unavailable.");
+
+    if (!transparent) {
+      context.fillStyle = "#20304a";
+      context.fillRect(0, 0, width, height);
+    }
+    context.fillStyle = "#f0a44b";
+    context.beginPath();
+    context.ellipse(width / 2, height / 2, width * 0.32, height * 0.32, 0, 0, Math.PI * 2);
+    context.fill();
+    return canvas.toDataURL(mimeType);
+  }, { width, height, transparent, mimeType });
+  expect(dataUrl).toMatch(new RegExp(`^data:${mimeType};base64,`));
+
+  await page.getByTestId("web-lite-local-cover-input").setInputFiles({
+    name,
+    mimeType,
+    buffer: Buffer.from(dataUrl.split(",")[1], "base64")
+  });
+}
+
+async function expectArtworkGeometry(
+  artwork: Locator,
+  expected: { width: number; height: number; transparent: boolean }
+) {
+  await expect.poll(async () => artwork.evaluate((element) => ({
+    width: (element as HTMLElement).offsetWidth,
+    height: (element as HTMLElement).offsetHeight,
+    transparent: element.getAttribute("data-artwork-transparent") === "true"
+  }))).toEqual(expected);
 }
 
 async function expectEmptyCoverState(page: Page) {

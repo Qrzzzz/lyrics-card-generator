@@ -161,6 +161,45 @@ try {
   fontStatus = "loaded";
   assert.equal(getLiveExportCardValidation(readyState, null).blockingReason, "card-unavailable");
 
+  const coverSourceUrl = "https://example.test/irregular-cover.png";
+  const artworkPendingState = fixedState({
+    lyrics: "artwork readiness",
+    song: {
+      ...defaultState.song,
+      coverUrl: coverSourceUrl,
+      proxiedCoverUrl: coverSourceUrl
+    }
+  });
+  assert.equal(
+    getLiveExportCardValidation(artworkPendingState, createFixedCard(artworkPendingState)).blockingReason,
+    "card-measuring",
+    "a visible cover waits for natural dimensions before export"
+  );
+  const artworkReadyState = {
+    ...artworkPendingState,
+    coverArtwork: {
+      sourceUrl: coverSourceUrl,
+      naturalWidth: 1200,
+      naturalHeight: 802,
+      aspectRatio: 1200 / 802,
+      hasTransparency: false,
+      status: "ready" as const
+    }
+  };
+  assert.equal(
+    getLiveExportCardValidation(artworkReadyState, createFixedCard(artworkReadyState)).blockingReason,
+    null,
+    "matching artwork dimensions release the export gate"
+  );
+  assert.equal(
+    getLiveExportCardValidation(
+      { ...artworkReadyState, song: { ...artworkReadyState.song, proxiedCoverUrl: "https://example.test/new.png" } },
+      createFixedCard(artworkReadyState)
+    ).blockingReason,
+    "card-measuring",
+    "stale dimensions cannot resize or release a replacement cover"
+  );
+
   const autoHeightState = fixedState({
     lyrics: "auto height",
     song: { ...defaultState.song, title: "", artist: "", album: "" },
@@ -256,6 +295,17 @@ try {
     ["song artist", { ...base, song: { ...base.song, artist: "Changed artist" } }],
     ["song album", { ...base, song: { ...base.song, album: "Changed album" } }],
     ["cover", { ...base, song: { ...base.song, coverUrl: "blob:changed-cover" } }],
+    ["cover analysis", {
+      ...base,
+      coverArtwork: {
+        sourceUrl: "blob:cover",
+        naturalWidth: 879,
+        naturalHeight: 1200,
+        aspectRatio: 879 / 1200,
+        hasTransparency: true,
+        status: "ready"
+      }
+    }],
     ["font", { ...base, style: { ...base.style, font: "serif-heavy" } }],
     ["custom font", {
       ...base,
@@ -303,6 +353,7 @@ try {
     isCardMounted: true,
     areFontsReady: true,
     isCardSizeStable: true,
+    isArtworkReady: true,
     isAutoWidthStable: true,
     isAutoHeightStable: true
   };

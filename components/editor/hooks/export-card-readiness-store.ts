@@ -14,6 +14,7 @@ export type ExportCardReadiness = {
   isCardMounted: boolean;
   areFontsReady: boolean;
   isCardSizeStable: boolean;
+  isArtworkReady: boolean;
   isAutoWidthStable: boolean;
   isAutoHeightStable: boolean;
   measuredAutoHeight: number | null;
@@ -30,6 +31,7 @@ export const INITIAL_EXPORT_CARD_READINESS: ExportCardReadiness = {
   isCardMounted: false,
   areFontsReady: false,
   isCardSizeStable: false,
+  isArtworkReady: false,
   isAutoWidthStable: false,
   isAutoHeightStable: false,
   measuredAutoHeight: null,
@@ -118,6 +120,7 @@ function sameExportCardReadiness(left: ExportCardReadiness, right: ExportCardRea
     left.isCardMounted === right.isCardMounted &&
     left.areFontsReady === right.areFontsReady &&
     left.isCardSizeStable === right.isCardSizeStable &&
+    left.isArtworkReady === right.isArtworkReady &&
     left.isAutoWidthStable === right.isAutoWidthStable &&
     left.isAutoHeightStable === right.isAutoHeightStable &&
     left.measuredAutoHeight === right.measuredAutoHeight &&

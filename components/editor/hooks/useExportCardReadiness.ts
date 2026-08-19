@@ -15,6 +15,7 @@ import {
   measureAutoCanvasHeight
 } from "@/components/editor/hooks/useMeasuredAutoCanvasHeight";
 import { getCardSize } from "@/lib/card-size";
+import { isArtworkAnalysisSettled } from "@/lib/artwork-geometry";
 import {
   evaluateMinimumExportSafety,
   type ExportSafetyBlockingReason
@@ -24,6 +25,7 @@ import {
   type ExportLyricLineStatus
 } from "@/lib/lyrics-document";
 import type { AppState } from "@/lib/types";
+import { proxiedImageUrl } from "@/lib/image-utils";
 
 export type { ExportCardReadiness } from "@/components/editor/hooks/export-card-readiness-store";
 export { ExportCardReadinessStore } from "@/components/editor/hooks/export-card-readiness-store";
@@ -64,6 +66,7 @@ const initialDomReadiness: DomReadiness = {
   isCardMounted: false,
   areFontsReady: false,
   isCardSizeStable: false,
+  isArtworkReady: false,
   isAutoWidthStable: false,
   isAutoHeightStable: false,
   measuredAutoHeight: null,
@@ -179,6 +182,7 @@ export function createExportCardMeasurementSignature(
     lyrics: state.lyrics,
     locale: state.locale,
     song: state.song,
+    coverArtwork: state.coverArtwork,
     style: state.style,
     isAutoWidthStable
   });
@@ -199,6 +203,12 @@ export function evaluateExportCardDom(
     Math.abs(root.offsetWidth - expectedSize.width) <= 1 &&
     Math.abs(root.offsetHeight - expectedSize.height) <= 1
   );
+  const coverSourceUrl = state.song.proxiedCoverUrl || proxiedImageUrl(state.song.coverUrl);
+  const artworkParticipates = Boolean(
+    coverSourceUrl &&
+    ((state.style.contentMode ?? "lyrics") === "instrumental" || state.style.showCover)
+  );
+  const isArtworkReady = !artworkParticipates || isArtworkAnalysisSettled(coverSourceUrl, state.coverArtwork);
   // This one measurement is shared by auto-height convergence and readiness.
   const measuredAutoHeight = root ? measureAutoCanvasHeight(state, container) : null;
   const isAutoHeightStable = !isPortraitCustomAutoHeight(state) || Boolean(
@@ -210,6 +220,7 @@ export function evaluateExportCardDom(
     isCardMounted,
     areFontsReady,
     isCardSizeStable,
+    isArtworkReady,
     isAutoWidthStable,
     isAutoHeightStable,
     measuredAutoHeight,

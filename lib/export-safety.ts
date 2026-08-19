@@ -17,6 +17,7 @@ export type ExportDomSafety = {
   isCardMounted: boolean;
   areFontsReady: boolean;
   isCardSizeStable: boolean;
+  isArtworkReady: boolean;
   isAutoWidthStable: boolean;
   isAutoHeightStable: boolean;
   hasContentOverflow: boolean;
@@ -44,7 +45,7 @@ function resolveBlockingReason(
   if (!lineStatus.canExport) return "lyrics-limit";
   if (!readiness.isCardMounted) return "card-unavailable";
   if (!readiness.areFontsReady) return "fonts-loading";
-  if (!readiness.isCardSizeStable || !readiness.isAutoWidthStable || !readiness.isAutoHeightStable) return "card-measuring";
+  if (!readiness.isCardSizeStable || !readiness.isArtworkReady || !readiness.isAutoWidthStable || !readiness.isAutoHeightStable) return "card-measuring";
   if (readiness.hasContentOverflow) return "content-overflow";
   return null;
 }

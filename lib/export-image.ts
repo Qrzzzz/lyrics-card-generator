@@ -49,7 +49,9 @@ export async function exportNodeAsImage(
   throwIfAborted(signal);
 
   const dataUrl = await dependencies.renderNode(node, format, {
-    cacheBust: true,
+    // html-to-image appends a query string when cacheBust is enabled. That is
+    // valid for HTTP images but invalidates local blob: URLs completely.
+    cacheBust: shouldCacheBust(node),
     pixelRatio,
     width,
     height,
@@ -70,6 +72,12 @@ export async function exportNodeAsImage(
   throwIfAborted(signal);
 
   dependencies.commitDownload(dataUrl, fileName);
+}
+
+function shouldCacheBust(node: HTMLElement) {
+  if (typeof node.querySelectorAll !== "function") return true;
+  const images = Array.from(node.querySelectorAll<HTMLImageElement>("img"));
+  return !images.some((image) => image.currentSrc.startsWith("blob:") || image.src.startsWith("blob:"));
 }
 
 export function exportNodeAsPng(

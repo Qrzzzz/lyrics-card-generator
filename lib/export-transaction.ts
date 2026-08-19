@@ -99,6 +99,7 @@ export async function waitForExportSnapshotNode(
         if ("fonts" in document) {
           await raceWithAbort(document.fonts.ready, controller.signal);
         }
+        await waitForSnapshotImages(node, controller.signal);
         await raceWithAbort(nextAnimationFrame(), controller.signal);
         await raceWithAbort(nextAnimationFrame(), controller.signal);
         throwIfAborted(controller.signal);
@@ -110,6 +111,29 @@ export async function waitForExportSnapshotNode(
     clearTimeout(timeout);
     signal?.removeEventListener("abort", forwardAbort);
   }
+}
+
+async function waitForSnapshotImages(node: HTMLElement, signal: AbortSignal) {
+  if (typeof node.querySelectorAll !== "function") return;
+  const images = Array.from(node.querySelectorAll<HTMLImageElement>("img"));
+
+  await Promise.all(images.map(async (image) => {
+    if (!image.complete) {
+      await raceWithAbort(new Promise<void>((resolve) => {
+        const settle = () => {
+          image.removeEventListener("load", settle);
+          image.removeEventListener("error", settle);
+          resolve();
+        };
+        image.addEventListener("load", settle, { once: true });
+        image.addEventListener("error", settle, { once: true });
+      }), signal);
+    }
+
+    if (typeof image.decode === "function" && image.naturalWidth > 0) {
+      await raceWithAbort(image.decode().catch(() => undefined), signal);
+    }
+  }));
 }
 
 function nextAnimationFrame() {
