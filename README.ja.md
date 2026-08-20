@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v5.10.1.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v5.10.2.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="#ローカル開発">ローカル開発</a> ·
@@ -74,26 +74,25 @@
 
 ## 📦 ダウンロードとインストール
 
-[GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) から v5.10.1 をダウンロードできます。
+[GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) から v5.10.2 をダウンロードできます。
 
-* インストーラー：`Lyrics Card Generator Setup 5.10.1.exe`
-* ポータブル版：`Lyrics Card Generator-5.10.1-portable.exe`
+* インストーラー：`Lyrics Card Generator Setup 5.10.2.exe`
+* ポータブル版：`Lyrics Card Generator-5.10.2-portable.exe`
 
 通常利用にはインストーラーを推奨します。ポータブル版は一時利用、検証、リムーバブルドライブでの利用に向いています。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v5.10.1 の主な更新
+### v5.10.2 の主な更新
 
-* 色系統ごとのアンカー数と総エネルギーをカバーの可視面積に合わせ、主要色を維持します。
-* 小さな高彩度ハイライトに明確な拡張上限を設け、背景の寒色／暖色バランスの反転を防ぎます。
-* 4 辺のアンカーにもカバー由来の色系統を割り当て、色差の最適化を配分内に限定します。
-* 同じアスペクト比で色の役割を維持し、編集プレビュー、エクスポート、Web Lite は修正済みの決定的レンダラーを共有します。
+* 成功、警告、エラーのトーストを、それぞれの意味色に対応する暗い背景へ統一しました。
+* 明るい緑、黄、赤の枠線と文字により、各状態を判別しやすくしました。
+* レイアウト、アニメーション、動作は変更せず、コントラストと回帰テストで確認しています。
 
 ## 🌐 多言語リリースノート
 
 GitHub Release ではデフォルトで簡体字中国語の概要が表示されます。完全なリリースノートはこちら：
-[简体中文](./docs/releases/v5.10.1.zh-CN.md) · [繁體中文](./docs/releases/v5.10.1.zh-TW.md) · [English](./docs/releases/v5.10.1.en.md) · [Français](./docs/releases/v5.10.1.fr.md) · [日本語](./docs/releases/v5.10.1.ja.md) · [Español](./docs/releases/v5.10.1.es.md)
+[简体中文](./docs/releases/v5.10.2.zh-CN.md) · [繁體中文](./docs/releases/v5.10.2.zh-TW.md) · [English](./docs/releases/v5.10.2.en.md) · [Français](./docs/releases/v5.10.2.fr.md) · [日本語](./docs/releases/v5.10.2.ja.md) · [Español](./docs/releases/v5.10.2.es.md)
 
 <a id="主な機能"></a>
 
