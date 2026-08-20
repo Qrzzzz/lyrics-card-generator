@@ -362,4 +362,3 @@ function mix(left: RgbSample, right: RgbSample, amount: number): RgbSample {
 function round(value: number) {
   return Math.round(value * 10_000) / 10_000;
 }
-

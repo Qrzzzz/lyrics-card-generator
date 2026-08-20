@@ -112,4 +112,3 @@ function fixture(width: number, height: number, pixel: (x: number, y: number) =>
   }
   return data;
 }
-

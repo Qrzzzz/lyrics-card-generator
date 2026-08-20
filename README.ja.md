@@ -74,7 +74,7 @@
 
 ## 📦 ダウンロードとインストール
 
-v5.10.0 はローカル候補版（未公開）です。検証完了後、[GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) から提供します。
+[GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) から v5.10.0 をダウンロードできます。
 
 * インストーラー：`Lyrics Card Generator Setup 5.10.0.exe`
 * ポータブル版：`Lyrics Card Generator-5.10.0-portable.exe`

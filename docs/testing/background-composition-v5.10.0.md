@@ -83,4 +83,3 @@ Human review remains required for:
 
 Manual approval must name the exact commit, generated Web Lite file, browser,
 OS, and fixture set. It must not be inferred from numeric tests alone.
-

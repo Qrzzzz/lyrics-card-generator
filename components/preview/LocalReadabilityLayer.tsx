@@ -45,4 +45,3 @@ export function LocalReadabilityLayer({ plan }: { plan: CardReadabilityPlan }) {
     </div>
   );
 }
-
