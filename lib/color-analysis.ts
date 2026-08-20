@@ -1,6 +1,7 @@
 "use client";
 
 import type { BackgroundAnalysis, TextColorPreset } from "@/lib/types";
+import { relativeLuminance } from "@/lib/palette-background";
 
 export const TEXT_COLOR_PRESETS: Record<TextColorPreset, { label: string; value: string }> = {
   white: { label: "Pure white", value: "#FFFFFF" },
@@ -13,18 +14,18 @@ export const TEXT_COLOR_PRESETS: Record<TextColorPreset, { label: string; value:
 };
 
 export const DEFAULT_BACKGROUND_ANALYSIS: BackgroundAnalysis = {
-  luminance: 0.32,
+  luminance: 0.09,
   isLight: false,
   suggestedTextColor: "#FFFFFF",
   overlayOpacity: 0.48
 };
 
 export function getReadableTextColorFromLuminance(luminance: number) {
-  if (luminance > 0.62) {
+  if (luminance > 0.34) {
     return "#111111";
   }
 
-  if (luminance > 0.48) {
+  if (luminance > 0.2) {
     return "#F8F4EA";
   }
 
@@ -32,11 +33,11 @@ export function getReadableTextColorFromLuminance(luminance: number) {
 }
 
 export function getOverlayOpacityFromLuminance(luminance: number) {
-  if (luminance > 0.62) {
+  if (luminance > 0.34) {
     return 0.24;
   }
 
-  if (luminance > 0.48) {
+  if (luminance > 0.2) {
     return 0.42;
   }
 
@@ -64,7 +65,7 @@ export async function analyzeImageLuminance(imageUrl: string): Promise<Backgroun
     context.drawImage(image, 0, 0, 32, 32);
     const { data } = context.getImageData(0, 0, 32, 32);
     let total = 0;
-    let count = 0;
+    let totalAlpha = 0;
 
     for (let index = 0; index < data.length; index += 4) {
       const alpha = data[index + 3] / 255;
@@ -72,17 +73,15 @@ export async function analyzeImageLuminance(imageUrl: string): Promise<Backgroun
         continue;
       }
 
-      const luminance =
-        (0.2126 * data[index] + 0.7152 * data[index + 1] + 0.0722 * data[index + 2]) / 255;
-      total += luminance;
-      count += 1;
+      total += relativeLuminance({ r: data[index], g: data[index + 1], b: data[index + 2] }) * alpha;
+      totalAlpha += alpha;
     }
 
-    const luminance = count > 0 ? total / count : DEFAULT_BACKGROUND_ANALYSIS.luminance;
+    const luminance = totalAlpha > 0 ? total / totalAlpha : DEFAULT_BACKGROUND_ANALYSIS.luminance;
 
     return {
       luminance,
-      isLight: luminance > 0.62,
+      isLight: luminance > 0.34,
       suggestedTextColor: getReadableTextColorFromLuminance(luminance),
       overlayOpacity: getOverlayOpacityFromLuminance(luminance)
     };

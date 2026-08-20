@@ -5,10 +5,13 @@ import { LandscapeAlbumCover } from "@/components/preview/LandscapeAlbumCover";
 import { LandscapeFooter } from "@/components/preview/LandscapeFooter";
 import { LandscapeInstrumentalBlock } from "@/components/preview/LandscapeInstrumentalBlock";
 import { LandscapeLyricsBlock } from "@/components/preview/LandscapeLyricsBlock";
+import { LocalReadabilityLayer } from "@/components/preview/LocalReadabilityLayer";
 import { LandscapeSongInfo } from "@/components/preview/LandscapeSongInfo";
 import { PaletteBackground } from "@/components/preview/PaletteBackground";
 import { getCardSize } from "@/lib/card-size";
 import { getLandscapeLayout } from "@/lib/card-layout-engine";
+import { createCardReadabilityPlan } from "@/lib/background-composition-constraints";
+import { DEFAULT_PALETTE } from "@/lib/palette-background";
 import { cardFontStyle, fontClassName } from "@/lib/fonts";
 import { proxiedImageUrl } from "@/lib/image-utils";
 import type { CardStyle, CoverArtworkAnalysis, SongInfo } from "@/lib/types";
@@ -37,6 +40,12 @@ export function LandscapeLyricCard({
     sourceUrl: activeCover,
     analysis: coverArtwork
   });
+  const readabilityPlan = createCardReadabilityPlan({
+    canvas: size,
+    style,
+    palette: style.extractedPalette ?? DEFAULT_PALETTE,
+    layout
+  });
 
   useEffect(() => {
     // A replacement URL receives a fresh load attempt after a prior cover failure.
@@ -51,11 +60,12 @@ export function LandscapeLyricCard({
     >
       <PaletteBackground
         palette={style.extractedPalette}
+        width={size.width}
+        height={size.height}
         showFineGrid={style.showFineGrid === true}
         fineGridDensity={style.fineGridDensity ?? "medium"}
       />
-      <div className="absolute inset-0 bg-black/12" />
-      <div className="absolute inset-0 bg-[linear-gradient(115deg,rgba(255,255,255,0.13),transparent_38%,rgba(0,0,0,0.24))]" />
+      <LocalReadabilityLayer plan={readabilityPlan} />
 
       <div
         data-card-safe

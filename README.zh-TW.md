@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v5.9.7.zh-TW.md">發布說明</a> ·
+  <a href="./docs/releases/v5.10.0.zh-TW.md">發布說明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">線上 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="#本機開發">本機開發</a> ·
@@ -71,26 +71,26 @@
 
 ## 📦 下載與安裝
 
-請從 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載 v5.9.7：
+請從 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載 v5.10.0：
 
-* 安裝版：`Lyrics Card Generator Setup 5.9.7.exe`
-* 可攜版：`Lyrics Card Generator-5.9.7-portable.exe`
+* 安裝版：`Lyrics Card Generator Setup 5.10.0.exe`
+* 可攜版：`Lyrics Card Generator-5.10.0-portable.exe`
 
 安裝版適合長期使用；可攜版適合臨時執行、測試或放在隨身碟中使用。
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v5.9.7 更新重點
+### v5.10.0 更新重點
 
-* 橫式封面保留原正方形封面的標準高度並依原始比例向兩側延伸；直式封面保留標準寬度並依比例向上下延伸。
-* 1:1 封面的尺寸與版面完全不變；極端長寬比只有碰到畫布安全邊界時才整體等比縮小，不裁切也不拉伸。
-* 透明 PNG／WebP 不再鋪設方形底板，透明區域直接顯示卡片背景，並改用適合透明邊緣的陰影。
-* 編輯預覽、未縮放匯出、純音樂卡、Web Lite 與匯入／搜尋／歷史縮圖共用同一比例規則。
+* 從整張封面擷取感知調色盤，同時保留色彩的位置、面積、明暗、顯著度與穩定種子。
+* 依卡片比例重排空間錨點並融合為連續柔性色場，移除固定 S 輪廓、平行色帶與一般徑向色塊感。
+* 歌詞區域採用局部明度與對比度約束，不再替整張卡片統一加黑。
+* 編輯預覽、匯出與 Web Lite 共用確定性渲染流程，同一封面可穩定重現並適配直式、橫式與超長卡片。
 
 ## 🌐 多語言發佈說明
 
 GitHub Release 預設顯示簡體中文摘要，完整說明請見：
-[简体中文](./docs/releases/v5.9.7.zh-CN.md) · [繁體中文](./docs/releases/v5.9.7.zh-TW.md) · [English](./docs/releases/v5.9.7.en.md) · [Français](./docs/releases/v5.9.7.fr.md) · [日本語](./docs/releases/v5.9.7.ja.md) · [Español](./docs/releases/v5.9.7.es.md)
+[简体中文](./docs/releases/v5.10.0.zh-CN.md) · [繁體中文](./docs/releases/v5.10.0.zh-TW.md) · [English](./docs/releases/v5.10.0.en.md) · [Français](./docs/releases/v5.10.0.fr.md) · [日本語](./docs/releases/v5.10.0.ja.md) · [Español](./docs/releases/v5.10.0.es.md)
 
 ## ✨ 主要功能
 
