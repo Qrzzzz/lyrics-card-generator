@@ -11,7 +11,7 @@ import {
   type ColorFieldPlan,
   type SpatialPaletteContract
 } from "../lib/spatial-color-field";
-import { relativeLuminance } from "../lib/palette-background";
+import { hexToRgb, relativeLuminance, rgbToHsl } from "../lib/palette-background";
 import type { ExtractedPalette } from "../lib/types";
 
 const oceanPalette: ExtractedPalette = {
@@ -51,6 +51,34 @@ const oceanSpatial: SpatialPaletteContract = {
   ]
 };
 
+// Checked-in equivalent of the issue #112 failure shape: a cover with 88%
+// cool blue mass and a small, high-chroma peach/orange accent.
+const dominantBluePalette: ExtractedPalette = {
+  colors: ["#456B9B", "#8CA8CC", "#F0A27D", "#1D3157", "#F6C4A8", "#243A62"],
+  primary: "#456B9B",
+  secondary: "#8CA8CC",
+  accent: "#F0A27D",
+  dark: "#172844",
+  light: "#DCE7F5",
+  muted: "#657A98",
+  averageLuminance: 0.39,
+  averageSaturation: 0.42,
+  hueVariance: 0.21,
+  isLightCover: false,
+  kind: "colorful"
+};
+const dominantBlueSpatial: SpatialPaletteContract = {
+  version: 1,
+  coverSignature: "fixture:issue-112:dominant-blue-small-warm-accent",
+  regions: [
+    { color: "#456B9B", weight: 0.54, centroid: { x: 0.46, y: 0.5 }, spread: { x: 0.82, y: 0.86 } },
+    { color: "#1D3157", weight: 0.22, centroid: { x: 0.2, y: 0.44 }, spread: { x: 0.38, y: 0.72 } },
+    { color: "#8CA8CC", weight: 0.12, centroid: { x: 0.7, y: 0.7 }, spread: { x: 0.46, y: 0.42 } },
+    { color: "#F0A27D", weight: 0.08, centroid: { x: 0.74, y: 0.28 }, spread: { x: 0.2, y: 0.18 } },
+    { color: "#F6C4A8", weight: 0.04, centroid: { x: 0.82, y: 0.2 }, spread: { x: 0.1, y: 0.08 } }
+  ]
+};
+
 const cases = [
   ["1:1", 1080, 1080, "square"],
   ["4:5", 1080, 1350, "portrait"],
@@ -81,6 +109,34 @@ const normalizedLayouts = [...plans.values()].map((plan) =>
   plan.anchors.map((anchor) => `${anchor.x.toFixed(3)},${anchor.y.toFixed(3)}`).join("|")
 );
 assert.equal(new Set(normalizedLayouts).size, cases.length, "ratios are recomposed instead of stretching one template");
+
+const dominantBlueResults = cases.slice(0, 5).map(([name, width, height]) => {
+  const plan = createColorFieldPlan({ width, height, palette: dominantBluePalette, spatialPalette: dominantBlueSpatial });
+  assertFamilyBudgets(plan, name);
+  const shares = sampleHueFamilyShares(plan, 96);
+  const sourceWarmShare = plan.families.find((family) => family.id.endsWith("-warm"))?.weight ?? 0;
+  assert.ok(shares.cool > shares.warm, `${name} keeps the dominant cool family ahead of the warm accent (${JSON.stringify(shares)})`);
+  assert.ok(
+    shares.warm <= sourceWarmShare * 2.25,
+    `${name} caps the ${sourceWarmShare.toFixed(3)} warm accent expansion (${shares.warm.toFixed(3)})`
+  );
+  return { name, plan, shares };
+});
+const warmShares = dominantBlueResults.map(({ shares }) => shares.warm);
+assert.ok(
+  Math.max(...warmShares) - Math.min(...warmShares) <= 0.12,
+  `source-family roles stay stable across preset ratios (${warmShares.map((share) => share.toFixed(3)).join(", ")})`
+);
+const dominantBlueSquare = dominantBlueResults[0].plan;
+const dominantBlueSquare2x = createColorFieldPlan({
+  width: 2160,
+  height: 2160,
+  palette: dominantBluePalette,
+  spatialPalette: dominantBlueSpatial
+});
+assert.equal(dominantBlueSquare.seed, dominantBlueSquare2x.seed, "same-ratio resolutions share one semantic seed");
+assert.deepEqual(dominantBlueSquare.families, dominantBlueSquare2x.families, "same-ratio resolutions preserve family budgets");
+assert.deepEqual(dominantBlueSquare.anchors, dominantBlueSquare2x.anchors, "same-ratio resolutions preserve anchor roles and geometry");
 
 const oceanSquare = plans.get("1:1")!;
 const emberSquare = createColorFieldPlan({ width: 1080, height: 1080, palette: emberPalette });
@@ -189,7 +245,7 @@ for (let index = 0; index < 24; index += 1) {
 const benchmarkMs = performance.now() - benchmarkStart;
 assert.ok(benchmarkMs < 5000, `pure field planning remains bounded (${benchmarkMs.toFixed(1)}ms)`);
 console.log(
-  `Spatial color field tests passed: ${cases.length} geometries, ${generatedCellCount} benchmark cells in ${benchmarkMs.toFixed(1)}ms.`
+  `Spatial color field tests passed: ${cases.length} geometries, issue #112 warm shares ${warmShares.map((share) => share.toFixed(3)).join("/")}, ${generatedCellCount} benchmark cells in ${benchmarkMs.toFixed(1)}ms.`
 );
 
 function assertPlanConstraints(plan: ColorFieldPlan, name: string) {
@@ -213,7 +269,7 @@ function assertPlanConstraints(plan: ColorFieldPlan, name: string) {
       if (otherIndex > index && distance < 1.45) {
         nearbyPairs += 1;
         if (angleDistance(anchor.angle, other.angle) < 12) nearParallelPairs += 1;
-        if (distance < 0.82) {
+        if (distance < 0.82 && (anchor.familyId === null || other.familyId === null || anchor.familyId !== other.familyId)) {
           const colorDistance = colorDistanceOklab(anchor.color, other.color);
           assert.ok(
             colorDistance > 0.025,
@@ -248,6 +304,51 @@ function assertPlanConstraints(plan: ColorFieldPlan, name: string) {
     previousSign = sign;
   }
   assert.ok(longestAlternatingRun < 3, `${name} breaks repeated S-curve alternation`);
+}
+
+function assertFamilyBudgets(plan: ColorFieldPlan, name: string) {
+  assert.ok(plan.families.length >= 2, `${name} exposes source-derived color families`);
+  for (const family of plan.families) {
+    const anchors = plan.anchors.filter((anchor) => anchor.familyId === family.id);
+    const countShare = anchors.length / plan.anchors.length;
+    const energyShare = anchors.reduce((sum, anchor) => sum + anchor.energy, 0);
+    assert.ok(
+      Math.abs(countShare - family.weight) <= 1 / plan.anchors.length + 1e-12,
+      `${name}/${family.id} keeps anchor count within one slot of source share`
+    );
+    assert.ok(
+      Math.abs(energyShare - family.weight) < 1e-12,
+      `${name}/${family.id} preserves exact represented source energy`
+    );
+  }
+  assert.ok(
+    plan.anchors.filter((anchor) => anchor.edge !== null).every((anchor) => anchor.familyId !== null),
+    `${name} gives every edge anchor a source-derived family preference`
+  );
+}
+
+function sampleHueFamilyShares(plan: ColorFieldPlan, resolution: number) {
+  const counts = { cool: 0, warm: 0, neutral: 0, green: 0 };
+  for (let row = 0; row < resolution; row += 1) {
+    for (let column = 0; column < resolution; column += 1) {
+      const { h, s } = rgbToHsl(hexToRgb(sampleColorField(
+        plan,
+        (column + 0.5) / resolution,
+        (row + 0.5) / resolution
+      )));
+      if (s < 0.12) counts.neutral += 1;
+      else if (h < 100 || h >= 300) counts.warm += 1;
+      else if (h >= 150 && h < 300) counts.cool += 1;
+      else counts.green += 1;
+    }
+  }
+  const total = resolution * resolution;
+  return {
+    cool: counts.cool / total,
+    warm: counts.warm / total,
+    neutral: counts.neutral / total,
+    green: counts.green / total
+  };
 }
 
 function assertContinuousSampling(plan: ColorFieldPlan, name: string) {

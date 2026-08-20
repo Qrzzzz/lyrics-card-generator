@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v5.10.0.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v5.10.1.en.md">Release Notes</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
   <a href="#features">Features</a> ·
   <a href="#local-development">Local Development</a> ·
@@ -74,26 +74,26 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 ## 📦 Download and Installation
 
-Download v5.10.0 from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
+Download v5.10.1 from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Installer: `Lyrics Card Generator Setup 5.10.0.exe`
-* Portable build: `Lyrics Card Generator-5.10.0-portable.exe`
+* Installer: `Lyrics Card Generator Setup 5.10.1.exe`
+* Portable build: `Lyrics Card Generator-5.10.1-portable.exe`
 
 The installer is recommended for regular use. The portable version is useful for temporary use, testing, or running from a removable drive.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v5.10.0 Highlights
+### v5.10.1 Highlights
 
-* A perceptual palette now samples the full cover while retaining each color's position, area, luminance, salience, and stable seed.
-* Aspect-aware spatial anchors blend into a continuous soft field, replacing fixed S contours, parallel bands, and ordinary radial color blocks.
-* Lyric areas receive local luminance and contrast control instead of a uniform dark veil over the whole card.
-* Editor preview, export, and Web Lite share one deterministic renderer that reproduces each cover consistently across portrait, landscape, and extra-long cards.
+* Source-family anchor counts and total energy now follow visible cover area, preserving the dominant color family.
+* Small high-chroma highlights have an explicit expansion cap and can no longer invert the background's warm/cool balance.
+* Edge anchors also use cover-derived families, with color separation optimized only inside allocated budgets.
+* Equal aspect ratios preserve color roles; editor preview, export, and Web Lite share the corrected deterministic renderer.
 
 ## 🌐 Multilingual Release Notes
 
 GitHub Release displays a Simplified Chinese summary by default. See the full release notes:
-[简体中文](./docs/releases/v5.10.0.zh-CN.md) · [繁體中文](./docs/releases/v5.10.0.zh-TW.md) · [English](./docs/releases/v5.10.0.en.md) · [Français](./docs/releases/v5.10.0.fr.md) · [日本語](./docs/releases/v5.10.0.ja.md) · [Español](./docs/releases/v5.10.0.es.md)
+[简体中文](./docs/releases/v5.10.1.zh-CN.md) · [繁體中文](./docs/releases/v5.10.1.zh-TW.md) · [English](./docs/releases/v5.10.1.en.md) · [Français](./docs/releases/v5.10.1.fr.md) · [日本語](./docs/releases/v5.10.1.ja.md) · [Español](./docs/releases/v5.10.1.es.md)
 
 <a id="features"></a>
 

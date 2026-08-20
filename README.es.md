@@ -19,7 +19,7 @@
 <p>
   <strong>Navegación</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Descargar la última versión</a> ·
-  <a href="./docs/releases/v5.10.0.es.md">Notas de la versión</a> ·
+  <a href="./docs/releases/v5.10.1.es.md">Notas de la versión</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en línea</a> ·
   <a href="#funciones-principales">Funciones principales</a> ·
   <a href="#desarrollo-local">Desarrollo local</a> ·
@@ -74,26 +74,26 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 ## 📦 Descarga e instalación
 
-Descarga v5.10.0 desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
+Descarga v5.10.1 desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Instalador: `Lyrics Card Generator Setup 5.10.0.exe`
-* Versión portable: `Lyrics Card Generator-5.10.0-portable.exe`
+* Instalador: `Lyrics Card Generator Setup 5.10.1.exe`
+* Versión portable: `Lyrics Card Generator-5.10.1-portable.exe`
 
 El instalador se recomienda para uso habitual. La versión portable es útil para pruebas, uso temporal o ejecución desde una unidad extraíble.
 
 > La compilación actual no está firmada. Windows puede mostrar una advertencia de SmartScreen, algo habitual en aplicaciones personales sin firma.
 
-### Novedades de v5.10.0
+### Novedades de v5.10.1
 
-* Una paleta perceptual analiza toda la portada y conserva la posición, el área, la luminosidad, la relevancia y una semilla estable de cada color.
-* Las anclas espaciales adaptadas a la proporción se fusionan en un campo suave y continuo, sin contornos S fijos, bandas paralelas ni simples manchas radiales.
-* Las zonas de letras reciben control local de luminosidad y contraste en vez de un velo oscuro uniforme sobre toda la tarjeta.
-* La vista previa, la exportación y Web Lite comparten un renderizador determinista que recompone cada portada de forma estable en tarjetas verticales, horizontales y ultralargas.
+* El número de anclas y la energía total de cada familia siguen el área visible de la portada y conservan el color dominante.
+* Los pequeños realces de alta saturación tienen un límite de expansión explícito y ya no pueden invertir el equilibrio cálido/frío del fondo.
+* Las anclas de borde también usan familias de la portada; la separación se optimiza solo dentro del presupuesto asignado.
+* Una misma proporción conserva los papeles cromáticos; la vista previa, la exportación y Web Lite comparten el renderizador determinista corregido.
 
 ## 🌐 Notas de publicación multilingües
 
 GitHub Release muestra de forma predeterminada un resumen en chino simplificado. Consulta las notas completas:
-[简体中文](./docs/releases/v5.10.0.zh-CN.md) · [繁體中文](./docs/releases/v5.10.0.zh-TW.md) · [English](./docs/releases/v5.10.0.en.md) · [Français](./docs/releases/v5.10.0.fr.md) · [日本語](./docs/releases/v5.10.0.ja.md) · [Español](./docs/releases/v5.10.0.es.md)
+[简体中文](./docs/releases/v5.10.1.zh-CN.md) · [繁體中文](./docs/releases/v5.10.1.zh-TW.md) · [English](./docs/releases/v5.10.1.en.md) · [Français](./docs/releases/v5.10.1.fr.md) · [日本語](./docs/releases/v5.10.1.ja.md) · [Español](./docs/releases/v5.10.1.es.md)
 
 <a id="funciones-principales"></a>
 
