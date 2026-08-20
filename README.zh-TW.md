@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v5.10.0.zh-TW.md">發布說明</a> ·
+  <a href="./docs/releases/v5.10.1.zh-TW.md">發布說明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">線上 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="#本機開發">本機開發</a> ·
@@ -71,26 +71,26 @@
 
 ## 📦 下載與安裝
 
-請從 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載 v5.10.0：
+請從 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載 v5.10.1：
 
-* 安裝版：`Lyrics Card Generator Setup 5.10.0.exe`
-* 可攜版：`Lyrics Card Generator-5.10.0-portable.exe`
+* 安裝版：`Lyrics Card Generator Setup 5.10.1.exe`
+* 可攜版：`Lyrics Card Generator-5.10.1-portable.exe`
 
 安裝版適合長期使用；可攜版適合臨時執行、測試或放在隨身碟中使用。
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v5.10.0 更新重點
+### v5.10.1 更新重點
 
-* 從整張封面擷取感知調色盤，同時保留色彩的位置、面積、明暗、顯著度與穩定種子。
-* 依卡片比例重排空間錨點並融合為連續柔性色場，移除固定 S 輪廓、平行色帶與一般徑向色塊感。
-* 歌詞區域採用局部明度與對比度約束，不再替整張卡片統一加黑。
-* 編輯預覽、匯出與 Web Lite 共用確定性渲染流程，同一封面可穩定重現並適配直式、橫式與超長卡片。
+* 依封面可見面積約束色彩家族的錨點數量與總能量，維持主導色系。
+* 為小面積高飽和高光設定明確擴張上限，避免反轉整張背景的冷暖關係。
+* 邊緣錨點也使用封面來源家族，色差最佳化只在已分配預算內進行。
+* 相同長寬比維持一致色彩角色；編輯預覽、匯出與 Web Lite 共用修正後的確定性渲染流程。
 
 ## 🌐 多語言發佈說明
 
 GitHub Release 預設顯示簡體中文摘要，完整說明請見：
-[简体中文](./docs/releases/v5.10.0.zh-CN.md) · [繁體中文](./docs/releases/v5.10.0.zh-TW.md) · [English](./docs/releases/v5.10.0.en.md) · [Français](./docs/releases/v5.10.0.fr.md) · [日本語](./docs/releases/v5.10.0.ja.md) · [Español](./docs/releases/v5.10.0.es.md)
+[简体中文](./docs/releases/v5.10.1.zh-CN.md) · [繁體中文](./docs/releases/v5.10.1.zh-TW.md) · [English](./docs/releases/v5.10.1.en.md) · [Français](./docs/releases/v5.10.1.fr.md) · [日本語](./docs/releases/v5.10.1.ja.md) · [Español](./docs/releases/v5.10.1.es.md)
 
 ## ✨ 主要功能
 

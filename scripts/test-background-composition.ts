@@ -11,6 +11,7 @@ import { getCardSize } from "../lib/card-size";
 import { normalizeCardStyle } from "../lib/card-style-normalize";
 import { defaultState } from "../components/editor/editor-defaults";
 import { DEFAULT_PALETTE } from "../lib/palette-background";
+import { createColorFieldPlan, sampleColorField } from "../lib/spatial-color-field";
 import type { CardRatio, CardStyle, CoverArtworkAnalysis, ExtractedPalette } from "../lib/types";
 
 type RatioFixture = {
@@ -114,7 +115,7 @@ const song = {
   source: "apple" as const,
   title: "Readability Fixture",
   artist: "Constraint Matrix",
-  album: "v5.10.0",
+  album: "v5.10.1",
   explicit: false,
   originalCoverUrl: "fixture://cover",
   coverUrl: "fixture://cover",
@@ -151,7 +152,7 @@ for (const paletteFixture of paletteFixtures) {
         maximumZoneCoverage = Math.max(maximumZoneCoverage, coverage);
         assert.ok(coverage < 0.82, `${caseId()} must not become a whole-card overlay (${coverage.toFixed(3)})`);
 
-        const field = createSmoothFixtureGrid(paletteFixture.palette, 72, 72);
+        const field = createProductionColorFieldGrid(paletteFixture.palette, size, 72, 72);
         const adjusted = applyReadabilityPlanToGrid(field, plan);
         const evaluation = evaluateBackgroundComposition(adjusted, plan);
         minimumAdjustedContrast = Math.min(minimumAdjustedContrast, evaluation.metrics.minimumTextContrast);
@@ -276,20 +277,20 @@ function createStyle(
   });
 }
 
-function createSmoothFixtureGrid(extractedPalette: ExtractedPalette, width: number, height: number): CompositionSampleGrid {
-  const primary = hex(extractedPalette.primary);
-  const secondary = hex(extractedPalette.secondary ?? extractedPalette.muted);
-  const accent = hex(extractedPalette.accent ?? extractedPalette.primary);
-  const dark = hex(extractedPalette.dark);
-  return patternedGrid(width, height, (x, y) => {
-    const nx = x / Math.max(1, width - 1);
-    const ny = y / Math.max(1, height - 1);
-    const wave = 0.5 + 0.5 * Math.sin(nx * Math.PI * 1.35 + ny * Math.PI * 0.72);
-    const base = mix(mix(primary, secondary, wave), dark, 0.48);
-    const hotDistance = Math.hypot(nx - 0.72, ny - 0.28);
-    const hotWeight = Math.max(0, 1 - hotDistance / 0.34) ** 2 * 0.38;
-    return mix(base, accent, hotWeight);
-  });
+function createProductionColorFieldGrid(
+  extractedPalette: ExtractedPalette,
+  canvas: { width: number; height: number },
+  width: number,
+  height: number
+): CompositionSampleGrid {
+  const fieldPlan = createColorFieldPlan({ width: canvas.width, height: canvas.height, palette: extractedPalette });
+  return patternedGrid(width, height, (x, y) =>
+    hex(sampleColorField(
+      fieldPlan,
+      (x + 0.5) / width,
+      (y + 0.5) / height
+    ))
+  );
 }
 
 function patternedGrid(
@@ -348,14 +349,6 @@ function hex(value: string) {
     r: Number.parseInt(normalized.slice(0, 2), 16),
     g: Number.parseInt(normalized.slice(2, 4), 16),
     b: Number.parseInt(normalized.slice(4, 6), 16)
-  };
-}
-
-function mix(left: RgbSample, right: RgbSample, amount: number): RgbSample {
-  return {
-    r: left.r + (right.r - left.r) * amount,
-    g: left.g + (right.g - left.g) * amount,
-    b: left.b + (right.b - left.b) * amount
   };
 }
 

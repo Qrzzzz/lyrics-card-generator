@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v5.10.0.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v5.10.1.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="#ローカル開発">ローカル開発</a> ·
@@ -74,26 +74,26 @@
 
 ## 📦 ダウンロードとインストール
 
-[GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) から v5.10.0 をダウンロードできます。
+[GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) から v5.10.1 をダウンロードできます。
 
-* インストーラー：`Lyrics Card Generator Setup 5.10.0.exe`
-* ポータブル版：`Lyrics Card Generator-5.10.0-portable.exe`
+* インストーラー：`Lyrics Card Generator Setup 5.10.1.exe`
+* ポータブル版：`Lyrics Card Generator-5.10.1-portable.exe`
 
 通常利用にはインストーラーを推奨します。ポータブル版は一時利用、検証、リムーバブルドライブでの利用に向いています。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v5.10.0 の主な更新
+### v5.10.1 の主な更新
 
-* カバー全体から知覚的なパレットを抽出し、色の位置、面積、明暗、顕著性、安定したシードを保持します。
-* カード比率に応じた空間アンカーを連続した柔らかな色場へ融合し、固定 S 輪郭、平行な色帯、単純な放射状の色塊を排除しました。
-* カード全体を一様に暗くせず、歌詞領域だけを局所的な明度・コントラスト制約で読みやすくします。
-* 編集プレビュー、エクスポート、Web Lite は同じ決定的レンダラーを使用し、縦長・横長・超長尺でも同じカバーを安定して再現します。
+* 色系統ごとのアンカー数と総エネルギーをカバーの可視面積に合わせ、主要色を維持します。
+* 小さな高彩度ハイライトに明確な拡張上限を設け、背景の寒色／暖色バランスの反転を防ぎます。
+* 4 辺のアンカーにもカバー由来の色系統を割り当て、色差の最適化を配分内に限定します。
+* 同じアスペクト比で色の役割を維持し、編集プレビュー、エクスポート、Web Lite は修正済みの決定的レンダラーを共有します。
 
 ## 🌐 多言語リリースノート
 
 GitHub Release ではデフォルトで簡体字中国語の概要が表示されます。完全なリリースノートはこちら：
-[简体中文](./docs/releases/v5.10.0.zh-CN.md) · [繁體中文](./docs/releases/v5.10.0.zh-TW.md) · [English](./docs/releases/v5.10.0.en.md) · [Français](./docs/releases/v5.10.0.fr.md) · [日本語](./docs/releases/v5.10.0.ja.md) · [Español](./docs/releases/v5.10.0.es.md)
+[简体中文](./docs/releases/v5.10.1.zh-CN.md) · [繁體中文](./docs/releases/v5.10.1.zh-TW.md) · [English](./docs/releases/v5.10.1.en.md) · [Français](./docs/releases/v5.10.1.fr.md) · [日本語](./docs/releases/v5.10.1.ja.md) · [Español](./docs/releases/v5.10.1.es.md)
 
 <a id="主な機能"></a>
 
