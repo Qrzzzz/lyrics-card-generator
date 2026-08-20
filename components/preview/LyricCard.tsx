@@ -5,15 +5,18 @@ import type { SyntheticEvent } from "react";
 import { AdaptiveAlbumArtwork } from "@/components/preview/AdaptiveAlbumArtwork";
 import { InstrumentalBlock } from "@/components/preview/InstrumentalBlock";
 import { LandscapeLyricCard } from "@/components/preview/LandscapeLyricCard";
+import { LocalReadabilityLayer } from "@/components/preview/LocalReadabilityLayer";
 import { LyricsBlock } from "@/components/preview/LyricsBlock";
 import { PaletteBackground } from "@/components/preview/PaletteBackground";
 import { PortraitFooter } from "@/components/preview/PortraitFooter";
 import { ExplicitBadge } from "@/components/preview/ExplicitBadge";
 import { getCardSize as resolveCardSize } from "@/lib/card-size";
 import { getPortraitLayout } from "@/lib/card-layout-engine";
+import { createCardReadabilityPlan } from "@/lib/background-composition-constraints";
 import { normalizeCardStyle } from "@/lib/card-style-normalize";
 import { cardFontStyle, fontClassName } from "@/lib/fonts";
 import { proxiedImageUrl } from "@/lib/image-utils";
+import { DEFAULT_PALETTE } from "@/lib/palette-background";
 import type { CardStyle, CoverArtworkAnalysis, Locale, SongInfo } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -57,6 +60,12 @@ export function LyricCard({
     sourceUrl: activeCover,
     analysis: coverArtwork
   });
+  const readabilityPlan = createCardReadabilityPlan({
+    canvas: size,
+    style,
+    palette: style.extractedPalette ?? DEFAULT_PALETTE,
+    layout
+  });
 
   // Measurement and export-readiness hooks treat the card data attributes as a DOM contract.
   return (
@@ -67,11 +76,12 @@ export function LyricCard({
     >
       <PaletteBackground
         palette={style.extractedPalette}
+        width={size.width}
+        height={size.height}
         showFineGrid={style.showFineGrid === true}
         fineGridDensity={style.fineGridDensity ?? "medium"}
       />
-      <div className="absolute inset-0 bg-black/14" />
-      <div className="absolute inset-0 bg-[linear-gradient(145deg,rgba(255,255,255,0.14),transparent_42%,rgba(0,0,0,0.22))]" />
+      <LocalReadabilityLayer plan={readabilityPlan} />
 
       <div
         data-card-safe

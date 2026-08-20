@@ -19,7 +19,7 @@
 <p>
   <strong>Navegación</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Descargar la última versión</a> ·
-  <a href="./docs/releases/v5.9.7.es.md">Notas de la versión</a> ·
+  <a href="./docs/releases/v5.10.0.es.md">Notas de la versión</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en línea</a> ·
   <a href="#funciones-principales">Funciones principales</a> ·
   <a href="#desarrollo-local">Desarrollo local</a> ·
@@ -74,26 +74,26 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 ## 📦 Descarga e instalación
 
-Descarga v5.9.7 desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
+v5.10.0 es una versión candidata local (aún no publicado). Tras la aceptación estará disponible en [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Instalador: `Lyrics Card Generator Setup 5.9.7.exe`
-* Versión portable: `Lyrics Card Generator-5.9.7-portable.exe`
+* Instalador: `Lyrics Card Generator Setup 5.10.0.exe`
+* Versión portable: `Lyrics Card Generator-5.10.0-portable.exe`
 
 El instalador se recomienda para uso habitual. La versión portable es útil para pruebas, uso temporal o ejecución desde una unidad extraíble.
 
 > La compilación actual no está firmada. Windows puede mostrar una advertencia de SmartScreen, algo habitual en aplicaciones personales sin firma.
 
-### Novedades de v5.9.7
+### Novedades de v5.10.0
 
-* Una portada horizontal conserva la altura estándar de la portada cuadrada y se ensancha según su proporción natural; una vertical conserva el ancho estándar y crece hacia arriba y abajo.
-* Las portadas 1:1 mantienen exactamente su tamaño y diseño. Las proporciones extremas solo se reducen proporcionalmente al tocar los límites físicos del lienzo, sin recorte ni deformación.
-* Los PNG y WebP transparentes ya no reciben una base cuadrada: sus píxeles transparentes muestran el fondo de la tarjeta con sombras compatibles con alfa.
-* La vista previa, la exportación sin escalar, las tarjetas instrumentales, Web Lite y las miniaturas comparten las mismas reglas.
+* Una paleta perceptual analiza toda la portada y conserva la posición, el área, la luminosidad, la relevancia y una semilla estable de cada color.
+* Las anclas espaciales adaptadas a la proporción se fusionan en un campo suave y continuo, sin contornos S fijos, bandas paralelas ni simples manchas radiales.
+* Las zonas de letras reciben control local de luminosidad y contraste en vez de un velo oscuro uniforme sobre toda la tarjeta.
+* La vista previa, la exportación y Web Lite comparten un renderizador determinista que recompone cada portada de forma estable en tarjetas verticales, horizontales y ultralargas.
 
 ## 🌐 Notas de publicación multilingües
 
 GitHub Release muestra de forma predeterminada un resumen en chino simplificado. Consulta las notas completas:
-[简体中文](./docs/releases/v5.9.7.zh-CN.md) · [繁體中文](./docs/releases/v5.9.7.zh-TW.md) · [English](./docs/releases/v5.9.7.en.md) · [Français](./docs/releases/v5.9.7.fr.md) · [日本語](./docs/releases/v5.9.7.ja.md) · [Español](./docs/releases/v5.9.7.es.md)
+[简体中文](./docs/releases/v5.10.0.zh-CN.md) · [繁體中文](./docs/releases/v5.10.0.zh-TW.md) · [English](./docs/releases/v5.10.0.en.md) · [Français](./docs/releases/v5.10.0.fr.md) · [日本語](./docs/releases/v5.10.0.ja.md) · [Español](./docs/releases/v5.10.0.es.md)
 
 <a id="funciones-principales"></a>
 

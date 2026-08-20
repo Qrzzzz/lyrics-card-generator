@@ -593,6 +593,48 @@ test("restores portrait custom size and auto height after landscape round trips"
   }
 });
 
+test("keeps local readability fields identical in preview and ExportCardHost", async ({ page }) => {
+  test.setTimeout(120_000);
+  await openWebLite(page, { width: 1440, height: 1000 });
+  await page.getByLabel("Song Title", { exact: true }).fill("The Night We Kept");
+  await page.getByLabel("Artist", { exact: true }).fill("Composition Fixture");
+  await page.getByLabel("Album", { exact: true }).fill("Local Light");
+  await page.locator('[data-step-id="lyrics"]').click();
+  await page.getByLabel("Lyric Text", { exact: true }).fill([
+    "Hold the light where the words remain",
+    "Let every color breathe beyond the frame",
+    "No single veil should cover up the sky",
+    "Only quiet shadows where the letters lie"
+  ].join("\n"));
+  await page.locator('[data-step-id="layout"]').click();
+  const sizeMode = page.getByRole("radiogroup", { name: "Size Mode", exact: true });
+  await sizeMode.getByRole("radio", { name: "1:1 Square", exact: true }).click();
+
+  const previewCard = page.getByTestId("lyric-card-preview").locator('[data-export-card="true"]');
+  const exportCard = page.locator('[data-export-card-host] [data-export-card="true"]').first();
+  await expect(previewCard).toBeVisible();
+  await expectReadabilityParity(previewCard, exportCard);
+  await expect(previewCard.locator('[data-local-readability-layer="true"]')).toHaveAttribute("data-readability-zone-count", "2");
+  await expect(previewCard).toHaveScreenshot("readability-portrait-1x1.png", {
+    animations: "disabled",
+    maxDiffPixelRatio: 0.01
+  });
+
+  await page.locator('[data-segment-value="landscape"]').click();
+  await sizeMode.getByRole("radio", { name: "21:9 Ultrawide", exact: true }).click();
+  await expectReadabilityParity(previewCard, exportCard);
+  await expect(previewCard).toHaveScreenshot("readability-landscape-21x9.png", {
+    animations: "disabled",
+    maxDiffPixelRatio: 0.01
+  });
+
+  await page.locator('[data-step-id="visual"]').click();
+  await page.getByRole("switch", { name: "Background Grid", exact: true }).click();
+  await expect(previewCard.locator('[data-card-fine-grid="true"]')).toHaveCount(1);
+  await expect(exportCard.locator('[data-card-fine-grid="true"]')).toHaveCount(1);
+  await expectReadabilityParity(previewCard, exportCard);
+});
+
 test("auto width measures bilingual wrapping and settles on a comfortable portrait width", async ({ page }) => {
   await openWebLite(page);
   await page.locator('[data-step-id="lyrics"]').click();
@@ -976,6 +1018,55 @@ test("exports WebP and JPG with matching filenames and file signatures", async (
   await exportAndExpectFormat(page, "jpg");
 });
 
+test("@background-composition-benchmark exports a super-long 2x card within the transaction budget", async ({ page }) => {
+  test.skip(!process.env.RUN_BACKGROUND_COMPOSITION_BENCHMARK, "opt-in large-canvas benchmark");
+  test.setTimeout(180_000);
+  await openWebLite(page, { width: 1440, height: 1000 });
+  await page.locator('[data-step-id="lyrics"]').click();
+  await page.getByLabel("Lyric Text", { exact: true }).fill(
+    Array.from({ length: 26 }, (_, index) => `Line ${index + 1}: local light`).join("\n")
+  );
+  await page.locator('[data-step-id="layout"]').click();
+  const autoWidth = page.getByRole("switch", { name: "Auto Width", exact: true });
+  if (await autoWidth.getAttribute("aria-checked") === "true") await autoWidth.click();
+  const width = page.getByLabel("Width", { exact: true });
+  await width.focus();
+  await width.press("Home");
+  for (let step = 0; step < 18; step += 1) await width.press("ArrowRight");
+  await expect(width).toHaveValue("1080");
+  await page.locator('[data-step-id="export"]').click();
+  const exportCard = page.locator('[data-export-card-host] [data-export-card="true"]').first();
+  const logicalSize = await exportCard.evaluate((card) => ({
+    width: (card as HTMLElement).offsetWidth,
+    height: (card as HTMLElement).offsetHeight
+  }));
+  expect(logicalSize.height).toBeGreaterThan(3000);
+
+  const exportButton = page.getByTestId("complete-export-button");
+  await expect(exportButton).toBeEnabled({ timeout: 15_000 });
+  const startedAt = Date.now();
+  const [download] = await Promise.all([page.waitForEvent("download"), exportButton.click()]);
+  const elapsedMs = Date.now() - startedAt;
+  const dimensions = await pngDimensions(download);
+  const downloadPath = await download.path();
+  if (!downloadPath) throw new Error("Playwright did not expose the super-long PNG path.");
+  const outputBytes = (await stat(downloadPath)).size;
+  const rgbaSurfaceMiB = dimensions.width * dimensions.height * 4 / (1024 * 1024);
+
+  expect(dimensions).toEqual({ width: logicalSize.width * 2, height: logicalSize.height * 2 });
+  expect(elapsedMs).toBeLessThan(60_000);
+  console.log(JSON.stringify({
+    backgroundCompositionBenchmark: {
+      logicalSize,
+      pixelRatio: 2,
+      dimensions,
+      rgbaSurfaceMiB: Math.round(rgbaSurfaceMiB * 10) / 10,
+      outputBytes,
+      elapsedMs
+    }
+  }));
+});
+
 test("shares the 36/37 logical-line export boundary with desktop", async ({ page }) => {
   await openWebLite(page, { width: 1280, height: 900 });
   await page.locator('[data-step-id="lyrics"]').click();
@@ -1357,6 +1448,35 @@ async function exportAndExpectDimensions(page: Page, quality: "medium" | "high",
   const [download] = await Promise.all([page.waitForEvent("download"), exportButton.click()]);
   expect(await pngDimensions(download)).toEqual({ width, height });
   await expect(exportButton).toBeEnabled();
+}
+
+async function readabilityDomContract(card: Locator) {
+  return card.evaluate((element) => {
+    const layer = element.querySelector<HTMLElement>('[data-local-readability-layer="true"]');
+    if (!layer) return null;
+    return {
+      overlay: layer.dataset.readabilityOverlay,
+      opacity: layer.dataset.readabilityOpacity,
+      count: layer.dataset.readabilityZoneCount,
+      zones: Array.from(layer.querySelectorAll<HTMLElement>("[data-readability-zone]")).map((zone) => ({
+        role: zone.dataset.readabilityZone,
+        targetContrast: zone.dataset.readabilityTargetContrast,
+        feather: zone.dataset.readabilityFeather,
+        x: zone.dataset.readabilityX,
+        y: zone.dataset.readabilityY,
+        width: zone.dataset.readabilityWidth,
+        height: zone.dataset.readabilityHeight,
+        background: zone.style.background
+      }))
+    };
+  });
+}
+
+async function expectReadabilityParity(previewCard: Locator, exportCard: Locator) {
+  await expect.poll(async () => JSON.stringify(await readabilityDomContract(previewCard)) ===
+    JSON.stringify(await readabilityDomContract(exportCard))).toBe(true);
+  await expect.poll(async () => await previewCard.evaluate((card) => card.outerHTML) ===
+    await exportCard.evaluate((card) => card.outerHTML)).toBe(true);
 }
 
 async function exportAndExpectFormat(page: Page, format: "webp" | "jpg") {

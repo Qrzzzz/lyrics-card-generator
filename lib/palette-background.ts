@@ -1,4 +1,11 @@
 import type { ExtractedPalette } from "@/lib/types";
+import {
+  mixOklab,
+  relativeLuminanceLinear,
+  type RgbColor
+} from "@/lib/color/oklab";
+
+export type { RgbColor } from "@/lib/color/oklab";
 
 export const DEFAULT_PALETTE: ExtractedPalette = {
   colors: ["#7C3AED", "#2563EB", "#F97316", "#111827", "#F8F4EA", "#64748B"],
@@ -8,17 +15,11 @@ export const DEFAULT_PALETTE: ExtractedPalette = {
   dark: "#111827",
   light: "#F8F4EA",
   muted: "#64748B",
-  averageLuminance: 0.35,
+  averageLuminance: 0.18,
   averageSaturation: 0.58,
   hueVariance: 0.32,
   isLightCover: false,
   kind: "colorful"
-};
-
-export type RgbColor = {
-  r: number;
-  g: number;
-  b: number;
 };
 
 export type HslColor = {
@@ -131,7 +132,7 @@ export function scaleSaturation(color: string, amount: number) {
 
 export function relativeLuminance(color: string | RgbColor) {
   const rgb = typeof color === "string" ? hexToRgb(color) : color;
-  return (0.2126 * rgb.r + 0.7152 * rgb.g + 0.0722 * rgb.b) / 255;
+  return relativeLuminanceLinear(rgb);
 }
 
 export function mixColors(color: string, target: string, amount: number) {
@@ -139,11 +140,7 @@ export function mixColors(color: string, target: string, amount: number) {
   const to = hexToRgb(target);
   const weight = clamp01(amount);
 
-  return rgbToHex({
-    r: from.r + (to.r - from.r) * weight,
-    g: from.g + (to.g - from.g) * weight,
-    b: from.b + (to.b - from.b) * weight
-  });
+  return rgbToHex(mixOklab(from, to, weight));
 }
 
 export function withAlpha(color: string, alpha: number) {

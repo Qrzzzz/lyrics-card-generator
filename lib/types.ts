@@ -30,6 +30,7 @@ export type TextColorPreset =
   | "softGold";
 
 export type PaletteKind = "colorful" | "monochrome" | "neutral" | "low-variance";
+export type PaletteRole = "base" | "subject" | "transition" | "highlight";
 export type ContentMode = "lyrics" | "instrumental";
 export type BackgroundGridDensity = "sparse" | "medium" | "dense";
 
@@ -56,6 +57,67 @@ export type ExtractedPalette = {
   hueVariance: number;
   isLightCover: boolean;
   kind: PaletteKind;
+  /** Optional v5.10+ spatial metadata; legacy consumers can ignore it. */
+  analysis?: CoverPaletteAnalysis;
+};
+
+export type NormalizedPalettePoint = {
+  x: number;
+  y: number;
+};
+
+export type PaletteSpatialCell = NormalizedPalettePoint & {
+  width: number;
+  height: number;
+  /** Share of the cover's total effective alpha assigned to this region in this cell. */
+  coverage: number;
+};
+
+export type PaletteRegionAnalysis = {
+  id: string;
+  color: string;
+  /** Assigned sample count divided by all samples, including transparent samples. */
+  area: number;
+  /** Alpha-weighted coverage divided by the image's total effective-alpha coverage. */
+  visibleShare: number;
+  meanAlpha: number;
+  relativeLuminance: number;
+  perceptualLightness: number;
+  chroma: number;
+  hue: number | null;
+  salience: number;
+  centroid: NormalizedPalettePoint;
+  bounds: NormalizedPalettePoint & { width: number; height: number };
+  cells: PaletteSpatialCell[];
+};
+
+export type PaletteRoleReference = {
+  role: PaletteRole;
+  color: string;
+  regionId?: string;
+  source: "region" | "perceptual-mix";
+  anchor: NormalizedPalettePoint;
+};
+
+export type CoverPaletteAnalysis = {
+  version: 1;
+  /** FNV-1a hash of dimensions plus canonical RGBA samples. */
+  seed: string;
+  sourceWidth: number;
+  sourceHeight: number;
+  sampleWidth: number;
+  sampleHeight: number;
+  /** Fraction of sampled positions with non-zero effective alpha. */
+  visibleCoverage: number;
+  /** Mean alpha across the complete sampled cover, including transparent positions. */
+  meanAlpha: number;
+  regions: PaletteRegionAnalysis[];
+  roles: {
+    base: PaletteRoleReference;
+    subject: PaletteRoleReference;
+    transition: PaletteRoleReference;
+    highlights: PaletteRoleReference[];
+  };
 };
 
 export type CoverArtworkAnalysis = {
