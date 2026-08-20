@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v5.10.1.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v5.10.2.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="#développement-local">Développement local</a> ·
@@ -74,26 +74,25 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 ## 📦 Téléchargement et installation
 
-Téléchargez la v5.10.1 depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
+Téléchargez la v5.10.2 depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
 
-* Installateur : `Lyrics Card Generator Setup 5.10.1.exe`
-* Version portable : `Lyrics Card Generator-5.10.1-portable.exe`
+* Installateur : `Lyrics Card Generator Setup 5.10.2.exe`
+* Version portable : `Lyrics Card Generator-5.10.2-portable.exe`
 
 L'installateur est recommandé pour une utilisation régulière. La version portable convient aux essais, à une utilisation temporaire ou à un disque amovible.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### Points forts de la v5.10.1
+### Points forts de la v5.10.2
 
-* Le nombre d’ancres et leur énergie totale suivent désormais la surface visible de chaque famille source, afin de conserver la couleur dominante.
-* Les petites zones très saturées disposent d’une limite d’expansion explicite et ne peuvent plus inverser l’équilibre chaud/froid du fond.
-* Les ancres de bord utilisent aussi des familles issues de la pochette ; la séparation reste limitée au budget attribué.
-* Un même format conserve les rôles colorés ; l’aperçu, l’export et Web Lite partagent le rendu déterministe corrigé.
+* Les notifications de succès, d’avertissement et d’erreur utilisent désormais un fond sombre de leur famille sémantique.
+* Des bordures et du texte verts, jaunes ou rouges plus vifs facilitent l’identification de chaque état.
+* La disposition, les animations et le comportement restent inchangés, avec des contrôles de contraste et de régression.
 
 ## 🌐 Notes de publication multilingues
 
 Par défaut, GitHub Release affiche un résumé en chinois simplifié. Consultez les notes complètes :
-[简体中文](./docs/releases/v5.10.1.zh-CN.md) · [繁體中文](./docs/releases/v5.10.1.zh-TW.md) · [English](./docs/releases/v5.10.1.en.md) · [Français](./docs/releases/v5.10.1.fr.md) · [日本語](./docs/releases/v5.10.1.ja.md) · [Español](./docs/releases/v5.10.1.es.md)
+[简体中文](./docs/releases/v5.10.2.zh-CN.md) · [繁體中文](./docs/releases/v5.10.2.zh-TW.md) · [English](./docs/releases/v5.10.2.en.md) · [Français](./docs/releases/v5.10.2.fr.md) · [日本語](./docs/releases/v5.10.2.ja.md) · [Español](./docs/releases/v5.10.2.es.md)
 
 <a id="fonctionnalités-principales"></a>
 

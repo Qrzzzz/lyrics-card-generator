@@ -836,21 +836,21 @@ body[data-window-maximized="true"] .app-shell[data-desktop-shell="true"] {
 }
 
 .app-toast[data-tone="success"] {
-  border-color: rgb(74 222 128 / 0.62);
-  background: rgb(21 128 61 / 0.92);
-  color: #f0fdf4;
+  border-color: rgb(74 222 128 / 0.72);
+  background: rgb(20 83 45 / 0.94);
+  color: rgb(74 222 128);
 }
 
 .app-toast[data-tone="warning"] {
-  border-color: rgb(253 230 138 / 0.72);
-  background: rgb(250 204 21 / 0.94);
-  color: #422006;
+  border-color: rgb(250 204 21 / 0.78);
+  background: rgb(66 32 6 / 0.94);
+  color: rgb(250 204 21);
 }
 
 .app-toast[data-tone="error"] {
-  border-color: rgb(248 113 113 / 0.68);
-  background: rgb(185 28 28 / 0.92);
-  color: #fff1f2;
+  border-color: rgb(248 113 113 / 0.76);
+  background: rgb(69 10 10 / 0.94);
+  color: rgb(248 113 113);
 }
 
 .status-idle {

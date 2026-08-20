@@ -19,7 +19,7 @@
 <p>
   <strong>Navegación</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Descargar la última versión</a> ·
-  <a href="./docs/releases/v5.10.1.es.md">Notas de la versión</a> ·
+  <a href="./docs/releases/v5.10.2.es.md">Notas de la versión</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en línea</a> ·
   <a href="#funciones-principales">Funciones principales</a> ·
   <a href="#desarrollo-local">Desarrollo local</a> ·
@@ -74,26 +74,25 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 ## 📦 Descarga e instalación
 
-Descarga v5.10.1 desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
+Descarga v5.10.2 desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Instalador: `Lyrics Card Generator Setup 5.10.1.exe`
-* Versión portable: `Lyrics Card Generator-5.10.1-portable.exe`
+* Instalador: `Lyrics Card Generator Setup 5.10.2.exe`
+* Versión portable: `Lyrics Card Generator-5.10.2-portable.exe`
 
 El instalador se recomienda para uso habitual. La versión portable es útil para pruebas, uso temporal o ejecución desde una unidad extraíble.
 
 > La compilación actual no está firmada. Windows puede mostrar una advertencia de SmartScreen, algo habitual en aplicaciones personales sin firma.
 
-### Novedades de v5.10.1
+### Novedades de v5.10.2
 
-* El número de anclas y la energía total de cada familia siguen el área visible de la portada y conservan el color dominante.
-* Los pequeños realces de alta saturación tienen un límite de expansión explícito y ya no pueden invertir el equilibrio cálido/frío del fondo.
-* Las anclas de borde también usan familias de la portada; la separación se optimiza solo dentro del presupuesto asignado.
-* Una misma proporción conserva los papeles cromáticos; la vista previa, la exportación y Web Lite comparten el renderizador determinista corregido.
+* Los avisos de éxito, advertencia y error usan ahora fondos oscuros de sus familias de color semánticas.
+* Los bordes y el texto verdes, amarillos y rojos más vivos facilitan distinguir cada estado.
+* El diseño, las animaciones y el comportamiento se mantienen, con comprobaciones de contraste y regresión.
 
 ## 🌐 Notas de publicación multilingües
 
 GitHub Release muestra de forma predeterminada un resumen en chino simplificado. Consulta las notas completas:
-[简体中文](./docs/releases/v5.10.1.zh-CN.md) · [繁體中文](./docs/releases/v5.10.1.zh-TW.md) · [English](./docs/releases/v5.10.1.en.md) · [Français](./docs/releases/v5.10.1.fr.md) · [日本語](./docs/releases/v5.10.1.ja.md) · [Español](./docs/releases/v5.10.1.es.md)
+[简体中文](./docs/releases/v5.10.2.zh-CN.md) · [繁體中文](./docs/releases/v5.10.2.zh-TW.md) · [English](./docs/releases/v5.10.2.en.md) · [Français](./docs/releases/v5.10.2.fr.md) · [日本語](./docs/releases/v5.10.2.ja.md) · [Español](./docs/releases/v5.10.2.es.md)
 
 <a id="funciones-principales"></a>
 

@@ -147,8 +147,8 @@ assert.match(globals, /not\(\.traffic-light\):not\(\.example-song-card\):hover/)
 assert.match(globals, /not\(\.traffic-light\):not\(\.example-song-card\):hover:active/);
 assert.match(globals, /\.preview-pressure-stage/);
 assert.match(globals, /\.app-shell\[data-reduce-motion="true"\] \.preview-pressure-card/);
-assert.match(globals, /\.app-toast\[data-tone="success"\][\s\S]*?background: rgb\(21 128 61 \/ 0\.92\)/);
-assert.match(globals, /\.app-toast\[data-tone="warning"\][\s\S]*?background: rgb\(250 204 21 \/ 0\.94\)/);
-assert.match(globals, /\.app-toast\[data-tone="error"\][\s\S]*?background: rgb\(185 28 28 \/ 0\.92\)/);
+assert.match(globals, /\.app-toast\[data-tone="success"\][\s\S]*?border-color: rgb\(74 222 128 \/ 0\.72\)[\s\S]*?background: rgb\(20 83 45 \/ 0\.94\)[\s\S]*?color: rgb\(74 222 128\)/);
+assert.match(globals, /\.app-toast\[data-tone="warning"\][\s\S]*?border-color: rgb\(250 204 21 \/ 0\.78\)[\s\S]*?background: rgb\(66 32 6 \/ 0\.94\)[\s\S]*?color: rgb\(250 204 21\)/);
+assert.match(globals, /\.app-toast\[data-tone="error"\][\s\S]*?border-color: rgb\(248 113 113 \/ 0\.76\)[\s\S]*?background: rgb\(69 10 10 \/ 0\.94\)[\s\S]*?color: rgb\(248 113 113\)/);
 
 console.log(JSON.stringify({ ok: true, motionSystemRegressionChecks: 87 }, null, 2));
