@@ -11,6 +11,11 @@ const remoteCoverUrl = "https://covers.test/cover.png";
 const remoteCoverRequestPattern = /^https:\/\/covers\.test\/cover\.png(?:\?.*)?$/;
 const preferencesKey = "lyrics-card-web-lite-preferences-v1";
 const stepIds = ["song-info", "lyrics", "layout", "font", "visual", "export"] as const;
+const blockingModerateAxeRuleIds = new Set([
+  "landmark-main-is-top-level",
+  "landmark-no-duplicate-main",
+  "landmark-unique"
+]);
 const expectedExampleAutoWidths: Record<string, { min: number; max: number }> = {
   opalite: { min: 1360, max: 1400 },
   opposite: { min: 820, max: 860 },
@@ -288,11 +293,20 @@ test.beforeEach(async ({ page }) => {
   );
 });
 
-test("axe reports no serious accessibility violations", async ({ page }) => {
+test("axe reports no serious or landmark accessibility violations", async ({ page }) => {
   await openWebLite(page, { width: 1280, height: 900 });
   const results = await new AxeBuilder({ page }).analyze();
-  const serious = results.violations.filter(({ impact }) => impact === "serious" || impact === "critical");
-  expect(serious).toEqual([]);
+  const blocking = results.violations.filter(
+    ({ id, impact }) =>
+      impact === "serious" || impact === "critical" || blockingModerateAxeRuleIds.has(id)
+  );
+  expect(blocking).toEqual([]);
+
+  await expect(page.locator('main, [role="main"]')).toHaveCount(1);
+  await expect(page.locator("main.app-main-content")).toHaveCount(1);
+  await expect(page.getByTestId("lyric-card-preview").locator('main, [role="main"]')).toHaveCount(0);
+  await expect(page.getByTestId("lyric-card-preview-pressure").locator('main, [role="main"]')).toHaveCount(0);
+  await expect(page.locator('[data-export-card-host] main, [data-export-card-host] [role="main"]')).toHaveCount(0);
 });
 
 test("stays responsive at 360px, 768px, and 1440px", async ({ page }) => {
