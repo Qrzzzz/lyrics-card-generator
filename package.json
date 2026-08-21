@@ -40,6 +40,7 @@
     "font-license:test": "node scripts/test-font-license-distribution.mjs",
     "pages:prepare": "node scripts/prepare-pages-site.mjs --out=_site",
     "web-lite:smoke": "playwright test --config=playwright.web-lite.config.ts",
+    "web-lite:cross-browser-smoke": "playwright test --config=playwright.web-lite-cross-browser.config.ts",
     "render-boundaries:test": "next build && node scripts/prepare-render-boundary-server.mjs && node scripts/run-render-boundary-tests.mjs",
     "a11y:test": "playwright test --config=playwright.web-lite.config.ts --grep axe",
     "stability:test": "tsx scripts/test-app-preferences-reconciliation.ts && tsx scripts/test-app-preferences-behavior.ts && tsx scripts/test-shutdown-coordinator.ts && tsx scripts/test-ai-error-localization.ts && tsx scripts/test-locale-completeness.ts && node scripts/test-electron-static-analysis.cjs && node scripts/test-electron-single-instance.cjs && node scripts/test-release-workflow.cjs && node scripts/test-ci-workflow.cjs",

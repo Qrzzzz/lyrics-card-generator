@@ -6,6 +6,9 @@ const benchmarkWorkflow = readFileSync(".github/workflows/background-composition
 const packageJson = JSON.parse(readFileSync("package.json", "utf8"));
 const interactionTest = readFileSync("scripts/test-desktop-settings-interactions.mjs", "utf8");
 const backgroundCompositionBenchmark = readFileSync("tests/web-lite/web-lite.smoke.spec.ts", "utf8");
+const crossBrowserConfig = readFileSync("playwright.web-lite-cross-browser.config.ts", "utf8");
+const crossBrowserSmoke = readFileSync("tests/web-lite-cross-browser/web-lite.cross-browser.smoke.spec.ts", "utf8");
+const browserSupport = readFileSync("docs/web-lite-browser-support.md", "utf8");
 
 // Assert workflow intent as source contracts so renamed or reordered CI steps do
 // not silently weaken the packaged regression gate.
@@ -76,6 +79,66 @@ assert.match(
   /^next build && node scripts\/prepare-render-boundary-server\.mjs && node scripts\/run-render-boundary-tests\.mjs$/,
   "render-boundary CI exercises the production Next.js build and standalone server"
 );
+
+const chromiumJobStart = workflow.indexOf("\n  web-lite-smoke:");
+const crossBrowserJobStart = workflow.indexOf("\n  web-lite-cross-browser-smoke:", chromiumJobStart);
+const crossBrowserJobEnd = workflow.indexOf("\n  security-locale-a11y-gates:", crossBrowserJobStart);
+assert.ok(
+  chromiumJobStart >= 0 && crossBrowserJobStart > chromiumJobStart && crossBrowserJobEnd > crossBrowserJobStart,
+  "CI keeps the full Chromium and minimal cross-browser jobs separate"
+);
+const chromiumJob = workflow.slice(chromiumJobStart, crossBrowserJobStart);
+const crossBrowserJob = workflow.slice(crossBrowserJobStart, crossBrowserJobEnd);
+assert.match(chromiumJob, /npx playwright install --with-deps chromium/, "the existing full Web Lite job installs Chromium");
+assert.match(chromiumJob, /npm run web-lite:smoke/, "the existing full Chromium Web Lite suite remains continuous");
+assert.doesNotMatch(chromiumJob, /firefox|webkit/i, "the full suite is not tripled across browser engines");
+assert.match(crossBrowserJob, /timeout-minutes: 15/, "the cross-browser job has a bounded timeout");
+assert.match(crossBrowserJob, /fail-fast: false/, "one browser failure does not suppress the other browser result");
+assert.match(crossBrowserJob, /browser:\r?\n\s+- firefox\r?\n\s+- webkit/, "Firefox and WebKit are the exact compatibility matrix");
+assert.match(crossBrowserJob, /npx playwright install --with-deps \$\{\{ matrix\.browser \}\}/, "each matrix leg installs only its browser");
+const artifactCheck = crossBrowserJob.indexOf("npm run web-lite:check");
+const artifactStage = crossBrowserJob.indexOf("npm run pages:prepare");
+const browserCommand = crossBrowserJob.indexOf("npm run web-lite:cross-browser-smoke");
+assert.ok(
+  artifactCheck >= 0 && artifactCheck < artifactStage && artifactStage < browserCommand,
+  "cross-browser smoke uses the verified production Pages artifact"
+);
+assert.match(crossBrowserJob, /WEB_LITE_BROWSER: \$\{\{ matrix\.browser \}\}/, "report directories bind to the browser matrix leg");
+assert.match(crossBrowserJob, /Upload \$\{\{ matrix\.browser \}\} Web Lite diagnostics[\s\S]+if: always\(\)/, "per-browser evidence survives failures");
+assert.match(crossBrowserJob, /playwright-report\/web-lite-cross-browser\/\$\{\{ matrix\.browser \}\}\/\*\*/, "per-browser HTML reports are retained");
+assert.match(crossBrowserJob, /test-results\/web-lite-cross-browser\/\$\{\{ matrix\.browser \}\}\/\*\*/, "per-browser traces, screenshots, and video are retained");
+assert.doesNotMatch(crossBrowserJob, /continue-on-error:/, "Firefox and WebKit failures remain release-blocking");
+for (const action of ["actions/checkout", "actions/setup-node", "actions/upload-artifact"]) {
+  assert.match(crossBrowserJob, new RegExp(`${action.replace("/", "\\/")}@[0-9a-f]{40}`), `${action} remains commit-pinned`);
+}
+assert.equal(
+  packageJson.scripts["web-lite:cross-browser-smoke"],
+  "playwright test --config=playwright.web-lite-cross-browser.config.ts",
+  "the cross-browser subset has one explicit command"
+);
+assert.match(crossBrowserConfig, /\["firefox", "webkit"\]/, "the Playwright config defines only Firefox and WebKit");
+assert.match(crossBrowserConfig, /trace: "retain-on-failure"/, "cross-browser traces survive failures");
+assert.match(crossBrowserConfig, /video: "retain-on-failure"/, "cross-browser videos survive failures");
+for (const criticalPath of [
+  "web-lite-editor-surface",
+  "Lyric Text",
+  "lyric-card-preview",
+  "SourceHanSansSC-Heavy.otf",
+  "SourceHanSerifSC-Heavy.otf",
+  "web-lite-local-cover-input",
+  "complete-export-button",
+  "waitForEvent(\"download\")"
+]) {
+  assert.ok(crossBrowserSmoke.includes(criticalPath), `cross-browser smoke retains ${criticalPath}`);
+}
+for (const supportedFamily of ["Google Chrome and Microsoft Edge", "Mozilla Firefox", "Apple Safari on macOS"]) {
+  assert.ok(browserSupport.includes(supportedFamily), `browser support policy retains ${supportedFamily}`);
+}
+assert.match(browserSupport, /Playwright `1\.61\.1`/, "the policy binds automation to the locked Playwright version");
+for (const lockedEngine of ["Chromium `149.0.7827.55`", "Firefox `151.0`", "WebKit `26.5`"]) {
+  assert.ok(browserSupport.includes(lockedEngine), `browser support policy records ${lockedEngine}`);
+}
+assert.match(browserSupport, /Mobile browsers[\s\S]+best effort/, "the non-blocking mobile boundary is explicit");
 
 assert.match(benchmarkWorkflow, /^\s{2}schedule:/m, "the heavy benchmark has a scheduled trigger");
 assert.match(benchmarkWorkflow, /^\s{2}workflow_dispatch:/m, "the heavy benchmark can be run on demand");
