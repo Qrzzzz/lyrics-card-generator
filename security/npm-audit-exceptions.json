@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "exceptions": [
+    {
+      "advisory": "GHSA-f88m-g3jw-g9cj",
+      "source": 1124066,
+      "package": "sharp",
+      "severity": "high",
+      "affectedRange": "<0.35.0",
+      "expires": "2026-11-20",
+      "owner": "@Qrzzzz",
+      "trackingIssue": "https://github.com/Qrzzzz/lyrics-card-generator/issues/117",
+      "reason": "Next 15.5.23 declares sharp ^0.34.3 and npm only offers a breaking Next 16 upgrade; forcing sharp 0.35 outside Next's supported range is not a safe patch for this repair.",
+      "reachability": "Sharp is present in the packaged Next standalone runtime, but next/image is disabled and application/runtime code has no direct sharp import or call site. Build/test scripts use Sharp for repository-controlled media and asset checks; no product runtime libvips decode path has been identified."
+    }
+  ]
+}

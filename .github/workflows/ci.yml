@@ -38,6 +38,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Enforce production dependency advisory policy
+        run: npm run dependency-audit:gate
+
       - name: Verify Web Lite artifact
         run: npm run web-lite:check
 
