@@ -127,6 +127,7 @@ jobs:
           REQUIRE_PUBLISHED_RELEASE_NOTES: "1"
         run: |
           npm run web-lite:check
+          npm run font-license:test
           npm run typecheck
           npm run lint
           npm run stability:test
@@ -137,6 +138,9 @@ jobs:
       - name: Build Setup and portable from tag SHA
         id: desktop_build
         run: npm run desktop:build
+
+      - name: Verify staged and packaged desktop assets
+        run: npm run desktop:packaged-assets-test
 
       - name: Run deterministic packaged interaction regression
         run: npm run desktop:interaction-test

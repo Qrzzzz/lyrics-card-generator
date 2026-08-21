@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import crypto from "node:crypto";
 import { execFile, spawn } from "node:child_process";
 import { mkdtemp, mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -22,6 +23,19 @@ const portableName = `Lyrics Card Generator-${packageJson.version}-portable.exe`
 const setupName = `Lyrics Card Generator Setup ${packageJson.version}.exe`;
 assert.ok(artifacts.includes(portableName), `${portableName} is missing`);
 assert.ok(artifacts.includes(setupName), `${setupName} is missing`);
+
+const fontLicenseContracts = [
+  {
+    fontUrl: "/fonts/SourceHanSansSC-Heavy.otf",
+    licenseUrl: "/fonts/LICENSE-SourceHanSans.txt",
+    licenseSha256: "f55c2d43dd905011515f5e46ba78d180027e314ef8ccaaf53a9e88fe316767cd"
+  },
+  {
+    fontUrl: "/fonts/SourceHanSerifSC-Heavy.otf",
+    licenseUrl: "/fonts/LICENSE-SourceHanSerif.txt",
+    licenseSha256: "9ff5bb567e1b92c801fc1069e5fbf992ff8efccacb9db94e5959a5b3ba9bb903"
+  }
+];
 
 const results = [];
 // Exercise the portable binary first, then validate the installer through an
@@ -75,11 +89,12 @@ async function smokeExecutable(executablePath, label, results) {
     await search.waitFor({ state: "visible" });
     await search.fill("final artifact smoke");
     assert.equal(await search.inputValue(), "final artifact smoke");
+    await assertPackagedFontLicenses(page, label);
 
     const closed = new Promise((resolve) => browser.once("disconnected", resolve));
     await page.evaluate(() => window.lyricsCardDesktop?.closeWindow());
     await withTimeout(closed, 30_000, `${label} did not exit cleanly`);
-    results.push({ label, executable: path.basename(executablePath), interaction: true, cleanExit: true });
+    results.push({ label, executable: path.basename(executablePath), interaction: true, fontLicenses: true, cleanExit: true });
   } catch (error) {
     const page = browser?.contexts().flatMap((context) => context.pages())[0];
     await page?.screenshot({ path: path.join(reportDirectory, `${label}-failure.png`) }).catch(() => undefined);
@@ -90,6 +105,31 @@ async function smokeExecutable(executablePath, label, results) {
     await browser?.close().catch(() => undefined);
     if (!processExited) await terminateProcessTree(launched.pid);
     await rm(userDataDirectory, { recursive: true, force: true }).catch(() => undefined);
+  }
+}
+
+async function assertPackagedFontLicenses(page, label) {
+  const responses = await page.evaluate(async (contracts) => Promise.all(contracts.map(async (contract) => {
+    const fontResponse = await fetch(contract.fontUrl, { method: "HEAD", cache: "no-store" });
+    const licenseResponse = await fetch(contract.licenseUrl, { cache: "no-store" });
+    return {
+      ...contract,
+      fontOk: fontResponse.ok,
+      fontStatus: fontResponse.status,
+      licenseOk: licenseResponse.ok,
+      licenseStatus: licenseResponse.status,
+      licenseText: licenseResponse.ok ? await licenseResponse.text() : ""
+    };
+  })), fontLicenseContracts);
+
+  for (const response of responses) {
+    assert.equal(response.fontOk, true, `${label} is missing ${response.fontUrl} (HTTP ${response.fontStatus})`);
+    assert.equal(response.licenseOk, true, `${label} is missing ${response.licenseUrl} (HTTP ${response.licenseStatus})`);
+    assert.equal(
+      crypto.createHash("sha256").update(response.licenseText, "utf8").digest("hex"),
+      response.licenseSha256,
+      `${label} serves reviewed upstream bytes for ${response.licenseUrl}`
+    );
   }
 }
 

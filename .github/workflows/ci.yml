@@ -44,6 +44,9 @@ jobs:
       - name: Verify Web Lite artifact
         run: npm run web-lite:check
 
+      - name: Verify font license distribution contracts
+        run: npm run font-license:test
+
       - name: Typecheck
         run: npm run typecheck
 
@@ -154,6 +157,9 @@ jobs:
       - name: Build Windows desktop artifacts
         id: desktop_build
         run: npm run desktop:build
+
+      - name: Verify staged and packaged desktop assets
+        run: npm run desktop:packaged-assets-test
 
       - name: Run packaged desktop interaction regression
         run: npm run desktop:interaction-test

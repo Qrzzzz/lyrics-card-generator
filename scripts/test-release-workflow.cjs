@@ -30,6 +30,12 @@ assert.match(
   "tag release quality gates reject candidate wording before publication"
 );
 assert.match(workflow, /Enforce production dependency advisory policy[\s\S]+npm run dependency-audit:gate/, "release blocks unapproved production high and critical advisories");
+assert.match(workflow, /Run release quality gates[\s\S]+npm run font-license:test/, "release verifies Source Han license distribution");
+const packagedAssets = workflow.indexOf("npm run desktop:packaged-assets-test");
+assert.ok(
+  packagedAssets >= 0 && packagedAssets < workflow.indexOf("Run deterministic packaged interaction regression"),
+  "release verifies staged and packaged font license assets before desktop interactions"
+);
 assert.match(workflow, /Prepare packaged runtime SBOM input[\s\S]+npm run sbom:prepare/, "release prepares a scanner-compatible copy of final packaged bytes");
 assert.match(workflow, /path: dist-desktop\/sbom-runtime/, "release SBOM scans the normalized packaged runtime instead of the source tree");
 assert.match(workflow, /config: security\/syft-release\.yaml/, "release enables the JavaScript package cataloger for the normalized runtime closure");

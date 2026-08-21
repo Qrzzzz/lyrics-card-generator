@@ -9,6 +9,8 @@ const expected = {
   appIconPixels: "6bbb6bd7114354e31fd4bff7138337ce0eae09ceaaa8d3aeaba19c17526d9870",
   sans: "4a8b2ee4f041fa56c7a5561f36e13ed6780eec66161c30274fc90b0c5ba7cea2",
   serif: "d033af54f96530476faed924ab5d5e9e6ef0833495670fd57bab9a7758398048",
+  sansLicense: "f55c2d43dd905011515f5e46ba78d180027e314ef8ccaaf53a9e88fe316767cd",
+  serifLicense: "9ff5bb567e1b92c801fc1069e5fbf992ff8efccacb9db94e5959a5b3ba9bb903",
   platformIcons: {
     "apple-music.svg": "e17c3c7ad50b7a0b2b7dbade1493518338c76766c0513abd84f615d1c5048153",
     "netease-music.svg": "2b878041ce7199d04cb63085db36c639a688b3dac20d8f6313583d9abe56f038",
@@ -27,8 +29,20 @@ async function run() {
   assert.equal(hash(pixels), expected.appIconPixels, "lossless PNG recompression preserves every decoded RGBA pixel");
 
   const fonts = [
-    { name: "sans", path: "public/fonts/SourceHanSansSC-Heavy.otf", sha256: expected.sans },
-    { name: "serif", path: "public/fonts/SourceHanSerifSC-Heavy.otf", sha256: expected.serif }
+    {
+      name: "sans",
+      path: "public/fonts/SourceHanSansSC-Heavy.otf",
+      sha256: expected.sans,
+      licensePath: "public/fonts/LICENSE-SourceHanSans.txt",
+      licenseSha256: expected.sansLicense
+    },
+    {
+      name: "serif",
+      path: "public/fonts/SourceHanSerifSC-Heavy.otf",
+      sha256: expected.serif,
+      licensePath: "public/fonts/LICENSE-SourceHanSerif.txt",
+      licenseSha256: expected.serifLicense
+    }
   ];
   const localeSamples = {
     zh: "歌词分享图片",
@@ -43,6 +57,12 @@ async function run() {
   for (const font of fonts) {
     const bytes = fs.readFileSync(font.path);
     assert.equal(hash(bytes), font.sha256, `${font.name} font bytes stay identical to the six-locale baseline`);
+    assert.ok(fs.existsSync(font.licensePath), `${font.path} requires ${font.licensePath}`);
+    assert.equal(
+      hash(fs.readFileSync(font.licensePath)),
+      font.licenseSha256,
+      `${font.name} font license matches the reviewed upstream bytes`
+    );
     const numGlyphs = readNumGlyphs(bytes);
     for (const [locale, sample] of Object.entries(localeSamples)) {
       for (const character of sample.replaceAll(" ", "")) {
@@ -65,23 +85,37 @@ async function run() {
     );
   }
 
+  const distributionFiles = [
+    "app-icon.png",
+    "fonts/SourceHanSansSC-Heavy.otf",
+    "fonts/LICENSE-SourceHanSans.txt",
+    "fonts/SourceHanSerifSC-Heavy.otf",
+    "fonts/LICENSE-SourceHanSerif.txt",
+    ...Object.keys(expected.platformIcons).map((name) => `platform-icons/${name}`)
+  ];
+  const stagedPublic = path.join("dist-desktop", "server", "public");
+  if (process.argv.includes("--staged") || process.argv.includes("--packaged")) {
+    assertDistributionMatchesSource(stagedPublic, "staged", distributionFiles);
+  }
+
   const packagedPublic = path.join("release", "win-unpacked", "resources", "server", "public");
   if (process.argv.includes("--packaged")) {
-    assert.ok(fs.existsSync(packagedPublic), "packaged public assets must exist for --packaged verification");
-    for (const relativePath of [
-      "app-icon.png",
-      "fonts/SourceHanSansSC-Heavy.otf",
-      "fonts/SourceHanSerifSC-Heavy.otf",
-      ...Object.keys(expected.platformIcons).map((name) => `platform-icons/${name}`)
-    ]) {
-      assert.ok(
-        fs.readFileSync(path.join(packagedPublic, ...relativePath.split("/"))).equals(fs.readFileSync(path.join("public", ...relativePath.split("/")))),
-        `packaged ${relativePath} matches the reviewed source bytes`
-      );
-    }
+    assertDistributionMatchesSource(packagedPublic, "packaged", distributionFiles);
   }
 
   console.log(JSON.stringify({ ok: true, appIconBytes: publicIcon.length, appIconPixelSha256: expected.appIconPixels, fonts: evidence }, null, 2));
+}
+
+function assertDistributionMatchesSource(distributionPublic, label, relativePaths) {
+  assert.ok(fs.existsSync(distributionPublic), `${label} public assets must exist`);
+  for (const relativePath of relativePaths) {
+    assert.ok(
+      fs.readFileSync(path.join(distributionPublic, ...relativePath.split("/"))).equals(
+        fs.readFileSync(path.join("public", ...relativePath.split("/")))
+      ),
+      `${label} ${relativePath} matches the reviewed source bytes`
+    );
+  }
 }
 
 function hash(bytes) {

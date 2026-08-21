@@ -21,6 +21,12 @@ assert.match(
 assert.match(workflow, /Run opt-in desktop visual and frame-timing diagnostics[\s\S]+continue-on-error: true/, "runner-sensitive diagnostics are explicitly non-blocking");
 assert.match(workflow, /playwright-report\/desktop-final-artifacts\/\*\*/, "final-artifact failure evidence is retained");
 assert.match(workflow, /Enforce production dependency advisory policy[\s\S]+npm run dependency-audit:gate/, "CI blocks unapproved production high and critical advisories");
+assert.match(workflow, /Verify font license distribution contracts[\s\S]+npm run font-license:test/, "CI verifies Source Han license distribution");
+const packagedAssets = workflow.indexOf("npm run desktop:packaged-assets-test");
+assert.ok(
+  packagedAssets >= 0 && packagedAssets < workflow.indexOf("Run packaged desktop interaction regression"),
+  "staged and packaged font license assets are verified before desktop interactions"
+);
 assert.equal(
   packageJson.scripts["desktop:visual-diagnostic"],
   "node scripts/test-desktop-settings-interactions.mjs --visual-diagnostics",

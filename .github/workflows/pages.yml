@@ -12,13 +12,18 @@ on:
       - app/globals.css
       - scripts/build-web-lite.mjs
       - scripts/check-web-lite.mjs
+      - scripts/prepare-pages-site.mjs
+      - scripts/test-font-license-distribution.mjs
       - tailwind.config.ts
       - package.json
       - package-lock.json
       - tsconfig.json
       - public/app-icon.png
       - public/fonts/SourceHanSansSC-Heavy.otf
+      - public/fonts/LICENSE-SourceHanSans.txt
       - public/fonts/SourceHanSerifSC-Heavy.otf
+      - public/fonts/LICENSE-SourceHanSerif.txt
+      - .gitattributes
       - .github/workflows/pages.yml
   workflow_dispatch:
 
@@ -56,25 +61,14 @@ jobs:
         # Verification catches stale committed output before rebuilding the
         # exact artifact that will be copied into the Pages bundle.
         run: |
+          npm run font-license:test
           npm run web-lite:check
           npm run web-lite:build
 
       - name: Prepare static site
         # Keep the deployment allowlist explicit so no desktop or repository
         # files can leak into the public Pages artifact.
-        run: |
-          rm -rf _site
-          mkdir -p _site/public/fonts
-          cp index.html _site/index.html
-          cp public/app-icon.png _site/public/app-icon.png
-          cp public/fonts/SourceHanSansSC-Heavy.otf _site/public/fonts/SourceHanSansSC-Heavy.otf
-          cp public/fonts/SourceHanSerifSC-Heavy.otf _site/public/fonts/SourceHanSerifSC-Heavy.otf
-          touch _site/.nojekyll
-          test -f _site/index.html
-          test -f _site/public/app-icon.png
-          test -f _site/public/fonts/SourceHanSansSC-Heavy.otf
-          test -f _site/public/fonts/SourceHanSerifSC-Heavy.otf
-          test -f _site/.nojekyll
+        run: node scripts/prepare-pages-site.mjs --out=_site
 
       - name: Configure Pages
         uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
