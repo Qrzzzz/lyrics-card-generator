@@ -65,6 +65,46 @@ jobs:
       - name: Build
         run: npm run build
 
+  render-boundary-regression:
+    # Keep production renderer/export geometry coverage independent from the
+    # fast type, lint, and source-contract feedback in the verify job.
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run production render-boundary regressions
+        shell: bash
+        run: |
+          mkdir -p artifacts/render-boundaries
+          npm run render-boundaries:test 2>&1 | tee artifacts/render-boundaries/command.log
+
+      - name: Upload render-boundary diagnostics
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: render-boundary-diagnostics-${{ github.run_attempt }}
+          path: |
+            artifacts/render-boundaries/**
+            playwright-report/render-boundaries/**
+            test-results/render-boundaries/**
+          if-no-files-found: error
+          retention-days: 14
+
   web-lite-smoke:
     # Browser tests remain isolated from the fast verification job so Chromium
     # setup and artifact evidence cannot delay type and contract feedback.
