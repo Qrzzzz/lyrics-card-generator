@@ -265,6 +265,10 @@ class ImportHistoryStore {
     });
   }
 
+  /**
+   * @param {string} recordId
+   * @param {{ limit?: number, file?: unknown }} [options]
+   */
   commitReplay(recordId, { limit = DEFAULT_IMPORT_HISTORY_LIMIT, file } = {}) {
     // The renderer calls this only after document commit, making relocation, touch, and dedupe one mutation.
     return this.#mutate((document) => {
@@ -534,21 +538,19 @@ function normalizeImportHistoryRecord(input, path = defaultPath) {
   }
   if (input.kind !== "manual-save" && !source) return null;
 
+  if (input.kind === "manual-cover") {
+    snapshot = normalizeManualSnapshot(input.snapshot, "manual-cover");
+    if (!snapshot) return null;
+  }
   const record = {
     id,
     kind: input.kind,
     createdAt,
     lastUsedAt: Math.max(createdAt, lastUsedAt),
     display,
-    ...(source ? { source } : {})
+    ...(source ? { source } : {}),
+    ...(snapshot ? { snapshot } : {})
   };
-  if (input.kind === "manual-cover") {
-    snapshot = normalizeManualSnapshot(input.snapshot, "manual-cover");
-    if (!snapshot) return null;
-    record.snapshot = snapshot;
-  } else if (input.kind === "manual-save") {
-    record.snapshot = snapshot;
-  }
   const maximumRecordBytes = input.kind === "manual-save" ? MAX_MANUAL_SAVE_RECORD_BYTES : MAX_RECORD_BYTES;
   return Buffer.byteLength(JSON.stringify(record), "utf8") <= maximumRecordBytes ? record : null;
 }
@@ -1632,6 +1634,7 @@ function isObject(value) {
 }
 
 function historyError(code) {
+  /** @type {NodeJS.ErrnoException} */
   const error = new Error(code);
   error.code = code;
   return error;

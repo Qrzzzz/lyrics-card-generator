@@ -31,6 +31,12 @@ assert.match(
 );
 assert.match(workflow, /Enforce production dependency advisory policy[\s\S]+npm run dependency-audit:gate/, "release blocks unapproved production high and critical advisories");
 assert.match(workflow, /Run release quality gates[\s\S]+npm run font-license:test/, "release verifies Source Han license distribution");
+assert.match(workflow, /Run release quality gates[\s\S]+npm run electron-runtime:coverage/, "release blocks on measured Electron runtime coverage");
+assert.equal(
+  (workflow.match(/npm run electron-runtime:coverage/g) || []).length,
+  1,
+  "release executes the Electron runtime coverage suite once"
+);
 const packagedAssets = workflow.indexOf("npm run desktop:packaged-assets-test");
 assert.ok(
   packagedAssets >= 0 && packagedAssets < workflow.indexOf("Run deterministic packaged interaction regression"),

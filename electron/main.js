@@ -762,6 +762,7 @@ function registerDesktopIpc() {
           persisted?.revision !== preferences.revision ||
           persisted?.updatedAt !== preferences.updatedAt
         ) {
+          /** @type {NodeJS.ErrnoException} */
           const error = new Error("stale_app_preferences");
           error.code = "stale_app_preferences";
           throw error;

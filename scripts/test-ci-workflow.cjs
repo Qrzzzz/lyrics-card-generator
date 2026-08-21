@@ -26,6 +26,23 @@ assert.match(workflow, /Run opt-in desktop visual and frame-timing diagnostics[\
 assert.match(workflow, /playwright-report\/desktop-final-artifacts\/\*\*/, "final-artifact failure evidence is retained");
 assert.match(workflow, /Enforce production dependency advisory policy[\s\S]+npm run dependency-audit:gate/, "CI blocks unapproved production high and critical advisories");
 assert.match(workflow, /Verify font license distribution contracts[\s\S]+npm run font-license:test/, "CI verifies Source Han license distribution");
+assert.match(
+  workflow,
+  /Electron runtime risk-boundary coverage thresholds[\s\S]+npm run electron-runtime:coverage/,
+  "CI measures the high-risk Electron runtime in a dedicated blocking gate"
+);
+assert.equal(
+  (workflow.match(/npm run electron-runtime:coverage/g) || []).length,
+  1,
+  "CI executes the Electron runtime coverage suite once"
+);
+for (const scriptName of ["stability:test", "core:test", "startup-assets:test"]) {
+  assert.doesNotMatch(
+    packageJson.scripts[scriptName],
+    /test-electron-(?:ai-request-lifecycle|security-contract|packaged-server-startup|local-server-origin)|test-import-history\.cjs/,
+    `${scriptName} leaves measured Electron runtime execution to its coverage gate`
+  );
+}
 const packagedAssets = workflow.indexOf("npm run desktop:packaged-assets-test");
 assert.ok(
   packagedAssets >= 0 && packagedAssets < workflow.indexOf("Run packaged desktop interaction regression"),

@@ -29,7 +29,7 @@ class FontDirectoryService {
     registryRefreshIntervalMs = DEFAULT_REGISTRY_REFRESH_INTERVAL_MS,
     setTimer = setTimeout,
     clearTimer = clearTimeout,
-    onError = () => {}
+    onError = /** @type {(error: unknown) => void} */ (() => {})
   }) {
     if (typeof scan !== "function") throw new TypeError("FontDirectoryService requires a scan function.");
     this.scan = scan;
@@ -240,7 +240,7 @@ function createWindowsFontScanner({
   scanTimeoutMs = DEFAULT_SCAN_TIMEOUT_MS,
   setTimer = setTimeout,
   clearTimer = clearTimeout,
-  onSubprocessStart = () => {}
+  onSubprocessStart = /** @type {(child: import("node:child_process").ChildProcess) => void} */ (() => {})
 } = {}) {
   let disposed = false;
   const activeRuns = new Set();
@@ -448,6 +448,7 @@ function createFontSourceWatcher({ exists = existsSync, watch = watchDirectory }
     while (!exists(watchedDirectory)) {
       const parentDirectory = pathApi.dirname(watchedDirectory);
       if (parentDirectory === watchedDirectory) {
+        /** @type {NodeJS.ErrnoException} */
         const error = new Error(`No watchable parent exists for font source: ${directory}`);
         error.code = "ENOENT";
         throw error;
@@ -494,6 +495,7 @@ function terminateChild(child) {
 }
 
 function createFontScanError(code, message, cause) {
+  /** @type {NodeJS.ErrnoException} */
   const error = new Error(message, cause ? { cause } : undefined);
   error.code = code;
   return error;

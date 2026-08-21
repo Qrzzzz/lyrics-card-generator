@@ -132,6 +132,7 @@ jobs:
           npm run lint
           npm run stability:test
           npm run coverage
+          npm run electron-runtime:coverage
           npm run core:test
           npm run build
 
