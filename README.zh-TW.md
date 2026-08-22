@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v5.10.2.zh-TW.md">發布說明</a> ·
+  <a href="./docs/releases/v5.10.3.zh-TW.md">發布說明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">線上 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="#本機開發">本機開發</a> ·
@@ -71,25 +71,26 @@
 
 ## 📦 下載與安裝
 
-請從 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載 v5.10.2：
+請從 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載 v5.10.3：
 
-* 安裝版：`Lyrics Card Generator Setup 5.10.2.exe`
-* 可攜版：`Lyrics Card Generator-5.10.2-portable.exe`
+* 安裝版：`Lyrics Card Generator Setup 5.10.3.exe`
+* 可攜版：`Lyrics Card Generator-5.10.3-portable.exe`
 
 安裝版適合長期使用；可攜版適合臨時執行、測試或放在隨身碟中使用。
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v5.10.2 更新重點
+### v5.10.3 更新重點
 
-* 將成功、警告和錯誤輕提示統一為對應語意色的深色底。
-* 使用更鮮明的綠、黃、紅色邊框與文字，提升狀態辨識度。
-* 保持提示版面、動效和行為不變，並通過對比度與回歸檢查。
+* 修正 Web Lite 重複／巢狀主地標，並加強 axe 無障礙門禁。
+* 更新相依套件，加入限時例外、SBOM 與 CI／Release 生產相依稽核策略。
+* 在所有字型散布面附帶 Source Han OFL 文字，並驗證最終 Windows 成品。
+* 新增持續渲染回歸、排程長卡基準、Electron 靜態分析與覆蓋率，以及 Firefox／WebKit 冒煙門禁。
 
 ## 🌐 多語言發佈說明
 
 GitHub Release 預設顯示簡體中文摘要，完整說明請見：
-[简体中文](./docs/releases/v5.10.2.zh-CN.md) · [繁體中文](./docs/releases/v5.10.2.zh-TW.md) · [English](./docs/releases/v5.10.2.en.md) · [Français](./docs/releases/v5.10.2.fr.md) · [日本語](./docs/releases/v5.10.2.ja.md) · [Español](./docs/releases/v5.10.2.es.md)
+[简体中文](./docs/releases/v5.10.3.zh-CN.md) · [繁體中文](./docs/releases/v5.10.3.zh-TW.md) · [English](./docs/releases/v5.10.3.en.md) · [Français](./docs/releases/v5.10.3.fr.md) · [日本語](./docs/releases/v5.10.3.ja.md) · [Español](./docs/releases/v5.10.3.es.md)
 
 ## ✨ 主要功能
 
