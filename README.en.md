@@ -19,8 +19,9 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v5.10.2.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v5.10.3.en.md">Release Notes</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
+  <a href="./docs/web-lite-browser-support.md">Web Lite Browser Support</a> ·
   <a href="#features">Features</a> ·
   <a href="#local-development">Local Development</a> ·
   <a href="./LICENSE">License</a>
@@ -74,25 +75,26 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 ## 📦 Download and Installation
 
-Download v5.10.2 from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
+Download v5.10.3 from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Installer: `Lyrics Card Generator Setup 5.10.2.exe`
-* Portable build: `Lyrics Card Generator-5.10.2-portable.exe`
+* Installer: `Lyrics Card Generator Setup 5.10.3.exe`
+* Portable build: `Lyrics Card Generator-5.10.3-portable.exe`
 
 The installer is recommended for regular use. The portable version is useful for temporary use, testing, or running from a removable drive.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v5.10.2 Highlights
+### v5.10.3 Highlights
 
-* Success, warning, and error toasts now use dark backgrounds from their semantic color families.
-* Brighter matching green, yellow, and red borders and text make each state easier to identify.
-* Toast layout, motion, and behavior remain unchanged, with contrast and regression checks covering the update.
+* Fixes duplicate and nested main landmarks in Web Lite and strengthens the axe accessibility gate.
+* Updates dependencies and adds an auditable production advisory policy with time-bounded exceptions and release SBOM checks.
+* Ships the Source Han OFL text on every font distribution surface, including final Windows artifacts.
+* Adds continuous render regressions, a scheduled long-card benchmark, Electron static analysis and coverage, plus Firefox and WebKit smoke gates.
 
 ## 🌐 Multilingual Release Notes
 
 GitHub Release displays a Simplified Chinese summary by default. See the full release notes:
-[简体中文](./docs/releases/v5.10.2.zh-CN.md) · [繁體中文](./docs/releases/v5.10.2.zh-TW.md) · [English](./docs/releases/v5.10.2.en.md) · [Français](./docs/releases/v5.10.2.fr.md) · [日本語](./docs/releases/v5.10.2.ja.md) · [Español](./docs/releases/v5.10.2.es.md)
+[简体中文](./docs/releases/v5.10.3.zh-CN.md) · [繁體中文](./docs/releases/v5.10.3.zh-TW.md) · [English](./docs/releases/v5.10.3.en.md) · [Français](./docs/releases/v5.10.3.fr.md) · [日本語](./docs/releases/v5.10.3.ja.md) · [Español](./docs/releases/v5.10.3.es.md)
 
 <a id="features"></a>
 

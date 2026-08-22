@@ -148,7 +148,7 @@ export function LyricCard({
             </header>
           ) : null}
 
-          <main
+          <div
             data-card-lyrics-viewport
             className={cn(
               "flex min-h-0 flex-1 items-center",
@@ -188,7 +188,7 @@ export function LyricCard({
                 autoWidth={style.autoWidth === true}
               />
             )}
-          </main>
+          </div>
 
           <div data-card-footer>
             <PortraitFooter

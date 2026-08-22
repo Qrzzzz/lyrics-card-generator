@@ -1,5 +1,5 @@
 import { createServer, type Server } from "node:http";
-import { readFile, stat } from "node:fs/promises";
+import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { expect, test, type Download, type Locator, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
@@ -11,6 +11,11 @@ const remoteCoverUrl = "https://covers.test/cover.png";
 const remoteCoverRequestPattern = /^https:\/\/covers\.test\/cover\.png(?:\?.*)?$/;
 const preferencesKey = "lyrics-card-web-lite-preferences-v1";
 const stepIds = ["song-info", "lyrics", "layout", "font", "visual", "export"] as const;
+const blockingModerateAxeRuleIds = new Set([
+  "landmark-main-is-top-level",
+  "landmark-no-duplicate-main",
+  "landmark-unique"
+]);
 const expectedExampleAutoWidths: Record<string, { min: number; max: number }> = {
   opalite: { min: 1360, max: 1400 },
   opposite: { min: 820, max: 860 },
@@ -288,11 +293,20 @@ test.beforeEach(async ({ page }) => {
   );
 });
 
-test("axe reports no serious accessibility violations", async ({ page }) => {
+test("axe reports no serious or landmark accessibility violations", async ({ page }) => {
   await openWebLite(page, { width: 1280, height: 900 });
   const results = await new AxeBuilder({ page }).analyze();
-  const serious = results.violations.filter(({ impact }) => impact === "serious" || impact === "critical");
-  expect(serious).toEqual([]);
+  const blocking = results.violations.filter(
+    ({ id, impact }) =>
+      impact === "serious" || impact === "critical" || blockingModerateAxeRuleIds.has(id)
+  );
+  expect(blocking).toEqual([]);
+
+  await expect(page.locator('main, [role="main"]')).toHaveCount(1);
+  await expect(page.locator("main.app-main-content")).toHaveCount(1);
+  await expect(page.getByTestId("lyric-card-preview").locator('main, [role="main"]')).toHaveCount(0);
+  await expect(page.getByTestId("lyric-card-preview-pressure").locator('main, [role="main"]')).toHaveCount(0);
+  await expect(page.locator('[data-export-card-host] main, [data-export-card-host] [role="main"]')).toHaveCount(0);
 });
 
 test("stays responsive at 360px, 768px, and 1440px", async ({ page }) => {
@@ -1020,7 +1034,10 @@ test("exports WebP and JPG with matching filenames and file signatures", async (
 
 test("@background-composition-benchmark exports a super-long 2x card within the transaction budget", async ({ page }) => {
   test.skip(!process.env.RUN_BACKGROUND_COMPOSITION_BENCHMARK, "opt-in large-canvas benchmark");
-  test.setTimeout(180_000);
+  const maximumExportMs = positiveIntegerEnvironment("BACKGROUND_COMPOSITION_MAX_EXPORT_MS", 60_000);
+  const minimumLogicalHeight = positiveIntegerEnvironment("BACKGROUND_COMPOSITION_MIN_LOGICAL_HEIGHT", 3_000);
+  const testTimeoutMs = positiveIntegerEnvironment("BACKGROUND_COMPOSITION_TEST_TIMEOUT_MS", 180_000);
+  test.setTimeout(testTimeoutMs);
   await openWebLite(page, { width: 1440, height: 1000 });
   await page.locator('[data-step-id="lyrics"]').click();
   await page.getByLabel("Lyric Text", { exact: true }).fill(
@@ -1040,8 +1057,6 @@ test("@background-composition-benchmark exports a super-long 2x card within the 
     width: (card as HTMLElement).offsetWidth,
     height: (card as HTMLElement).offsetHeight
   }));
-  expect(logicalSize.height).toBeGreaterThan(3000);
-
   const exportButton = page.getByTestId("complete-export-button");
   await expect(exportButton).toBeEnabled({ timeout: 15_000 });
   const startedAt = Date.now();
@@ -1052,19 +1067,37 @@ test("@background-composition-benchmark exports a super-long 2x card within the 
   if (!downloadPath) throw new Error("Playwright did not expose the super-long PNG path.");
   const outputBytes = (await stat(downloadPath)).size;
   const rgbaSurfaceMiB = dimensions.width * dimensions.height * 4 / (1024 * 1024);
-
-  expect(dimensions).toEqual({ width: logicalSize.width * 2, height: logicalSize.height * 2 });
-  expect(elapsedMs).toBeLessThan(60_000);
-  console.log(JSON.stringify({
+  const benchmarkResult = {
     backgroundCompositionBenchmark: {
       logicalSize,
       pixelRatio: 2,
       dimensions,
       rgbaSurfaceMiB: Math.round(rgbaSurfaceMiB * 10) / 10,
       outputBytes,
-      elapsedMs
+      elapsedMs,
+      thresholds: {
+        minimumLogicalHeightExclusive: minimumLogicalHeight,
+        maximumExportMsExclusive: maximumExportMs,
+        testTimeoutMs
+      }
     }
-  }));
+  };
+  const outputDirectory = process.env.BACKGROUND_COMPOSITION_BENCHMARK_OUTPUT_DIR;
+  if (outputDirectory) {
+    const resolvedOutputDirectory = path.resolve(projectRoot, outputDirectory);
+    await mkdir(resolvedOutputDirectory, { recursive: true });
+    await download.saveAs(path.join(resolvedOutputDirectory, "super-long-2x.png"));
+    await writeFile(
+      path.join(resolvedOutputDirectory, "metrics.json"),
+      `${JSON.stringify(benchmarkResult, null, 2)}\n`,
+      "utf8"
+    );
+  }
+
+  console.log(JSON.stringify(benchmarkResult));
+  expect(logicalSize.height).toBeGreaterThan(minimumLogicalHeight);
+  expect(dimensions).toEqual({ width: logicalSize.width * 2, height: logicalSize.height * 2 });
+  expect(elapsedMs).toBeLessThan(maximumExportMs);
 });
 
 test("shares the 36/37 logical-line export boundary with desktop", async ({ page }) => {
@@ -1277,6 +1310,16 @@ async function setRangeValue(locator: Locator, value: number) {
 
 function effectiveLineCount(value: string) {
   return value.split(/\r?\n/).filter((line) => line.trim().length > 0).length;
+}
+
+function positiveIntegerEnvironment(name: string, fallback: number) {
+  const rawValue = process.env[name];
+  if (!rawValue) return fallback;
+  const value = Number(rawValue);
+  if (!Number.isSafeInteger(value) || value <= 0) {
+    throw new Error(`${name} must be a positive integer; received ${rawValue}.`);
+  }
+  return value;
 }
 
 async function openWebLite(page: Page, viewport = { width: 1280, height: 900 }) {

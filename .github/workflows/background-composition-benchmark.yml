@@ -1,0 +1,63 @@
+name: Background Composition Benchmark
+
+on:
+  schedule:
+    - cron: "17 3 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: background-composition-benchmark-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      CI: "true"
+      RUN_BACKGROUND_COMPOSITION_BENCHMARK: "1"
+      BACKGROUND_COMPOSITION_MAX_EXPORT_MS: "60000"
+      BACKGROUND_COMPOSITION_MIN_LOGICAL_HEIGHT: "3000"
+      BACKGROUND_COMPOSITION_TEST_TIMEOUT_MS: "180000"
+      BACKGROUND_COMPOSITION_BENCHMARK_OUTPUT_DIR: artifacts/background-composition
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Build the production Web Lite artifact
+        shell: bash
+        run: |
+          mkdir -p artifacts/background-composition
+          npm run web-lite:build 2>&1 | tee artifacts/background-composition/production-build.log
+
+      - name: Run the large-canvas background composition benchmark
+        shell: bash
+        run: npm run background-composition:benchmark 2>&1 | tee artifacts/background-composition/command.log
+
+      - name: Upload benchmark metrics and diagnostics
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: background-composition-benchmark-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            artifacts/background-composition/**
+            playwright-report/web-lite/**
+            test-results/web-lite/**
+          if-no-files-found: error
+          retention-days: 30

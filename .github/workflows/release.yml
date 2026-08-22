@@ -118,22 +118,30 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Enforce production dependency advisory policy
+        run: npm run dependency-audit:gate
+
       - name: Run release quality gates
         shell: pwsh
         env:
           REQUIRE_PUBLISHED_RELEASE_NOTES: "1"
         run: |
           npm run web-lite:check
+          npm run font-license:test
           npm run typecheck
           npm run lint
           npm run stability:test
           npm run coverage
+          npm run electron-runtime:coverage
           npm run core:test
           npm run build
 
       - name: Build Setup and portable from tag SHA
         id: desktop_build
         run: npm run desktop:build
+
+      - name: Verify staged and packaged desktop assets
+        run: npm run desktop:packaged-assets-test
 
       - name: Run deterministic packaged interaction regression
         run: npm run desktop:interaction-test
@@ -158,13 +166,21 @@ jobs:
           $remainingSpaces = @(Get-ChildItem release -File -Filter '*.exe' | Where-Object { $_.Name.Contains(' ') })
           if ($remainingSpaces.Count -gt 0) { throw "Release asset normalization left names with spaces: $($remainingSpaces.Name -join ', ')" }
 
+      - name: Prepare packaged runtime SBOM input
+        run: npm run sbom:prepare
+
       - name: Generate SPDX SBOM
         uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0
         with:
-          path: .
+          path: dist-desktop/sbom-runtime
+          config: security/syft-release.yaml
+          syft-version: v1.51.0
           format: spdx-json
           output-file: release/lyrics-card-generator-${{ needs.resolve.outputs.version }}.spdx.json
           upload-artifact: false
+
+      - name: Inspect packaged runtime SPDX SBOM
+        run: npm run sbom:inspect -- release/lyrics-card-generator-${{ needs.resolve.outputs.version }}.spdx.json
 
       - name: Generate SHA256SUMS
         shell: pwsh

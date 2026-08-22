@@ -9,7 +9,10 @@ export default defineConfig({
   expect: {
     timeout: 12_000
   },
-  reporter: "line",
+  reporter: [
+    ["line"],
+    ["html", { outputFolder: "playwright-report/render-boundaries", open: "never" }]
+  ],
   outputDir: "test-results/render-boundaries",
   use: {
     acceptDownloads: true,

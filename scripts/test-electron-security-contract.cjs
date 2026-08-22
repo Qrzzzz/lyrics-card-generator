@@ -1,6 +1,6 @@
 const assert = require("node:assert/strict");
 const { readFileSync } = require("node:fs");
-const { isTrustedIpcEvent } = require("../electron/ipc-security");
+const { assertTrustedIpcEvent, isTrustedIpcEvent } = require("../electron/ipc-security");
 const { normalizeLoopbackHttpUrl, resolveLocalAppUrl } = require("../electron/local-app-url");
 const { createManualSaveIpcHandlers } = require("../electron/manual-save-ipc");
 const { isAllowedLocalNavigation, parseAllowedExternalUrl } = require("../electron/url-policy");
@@ -36,6 +36,7 @@ function trustedFixture(frameUrl = `${localUrl}/`, frameIsMain = true) {
 {
   const { event, mainWindow } = trustedFixture();
   assert.equal(isTrustedIpcEvent(event, mainWindow, localUrl), true);
+  assert.doesNotThrow(() => assertTrustedIpcEvent(event, mainWindow, localUrl));
 }
 {
   const { event, mainWindow } = trustedFixture(`${localUrl}/iframe`, false);
@@ -54,7 +55,14 @@ function trustedFixture(frameUrl = `${localUrl}/`, frameIsMain = true) {
   const { event, mainWindow } = trustedFixture();
   mainWindow.isDestroyed = () => true;
   assert.equal(isTrustedIpcEvent(event, mainWindow, localUrl), false, "destroyed windows are rejected");
+  assert.throws(
+    () => assertTrustedIpcEvent(event, mainWindow, localUrl),
+    /IPC sender rejected/,
+    "the throwing guard fails closed before privileged IPC work"
+  );
 }
+assert.equal(isTrustedIpcEvent({}, null, localUrl), false, "missing window ownership is rejected");
+assert.equal(isTrustedIpcEvent({}, trustedFixture().mainWindow, "not a URL"), false, "invalid owned origins are rejected");
 
 const mainSource = readFileSync("electron/main.js", "utf8");
 const packagedServerReadinessSource = readFileSync("electron/packaged-server-readiness.js", "utf8");

@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v5.10.2.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v5.10.3.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="#développement-local">Développement local</a> ·
@@ -74,25 +74,26 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 ## 📦 Téléchargement et installation
 
-Téléchargez la v5.10.2 depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
+Téléchargez la v5.10.3 depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
 
-* Installateur : `Lyrics Card Generator Setup 5.10.2.exe`
-* Version portable : `Lyrics Card Generator-5.10.2-portable.exe`
+* Installateur : `Lyrics Card Generator Setup 5.10.3.exe`
+* Version portable : `Lyrics Card Generator-5.10.3-portable.exe`
 
 L'installateur est recommandé pour une utilisation régulière. La version portable convient aux essais, à une utilisation temporaire ou à un disque amovible.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### Points forts de la v5.10.2
+### Points forts de la v5.10.3
 
-* Les notifications de succès, d’avertissement et d’erreur utilisent désormais un fond sombre de leur famille sémantique.
-* Des bordures et du texte verts, jaunes ou rouges plus vifs facilitent l’identification de chaque état.
-* La disposition, les animations et le comportement restent inchangés, avec des contrôles de contraste et de régression.
+* Corrige les repères `main` dupliqués ou imbriqués dans Web Lite et renforce le contrôle d’accessibilité axe.
+* Met à jour les dépendances et ajoute une politique d’avis de sécurité auditable avec exceptions temporaires et contrôle du SBOM de publication.
+* Distribue le texte de l’OFL de Source Han sur toutes les surfaces, y compris dans les artefacts Windows finaux.
+* Ajoute les régressions de rendu continues, un benchmark planifié des longues cartes, l’analyse statique et la couverture d’Electron, ainsi que des tests Firefox et WebKit.
 
 ## 🌐 Notes de publication multilingues
 
 Par défaut, GitHub Release affiche un résumé en chinois simplifié. Consultez les notes complètes :
-[简体中文](./docs/releases/v5.10.2.zh-CN.md) · [繁體中文](./docs/releases/v5.10.2.zh-TW.md) · [English](./docs/releases/v5.10.2.en.md) · [Français](./docs/releases/v5.10.2.fr.md) · [日本語](./docs/releases/v5.10.2.ja.md) · [Español](./docs/releases/v5.10.2.es.md)
+[简体中文](./docs/releases/v5.10.3.zh-CN.md) · [繁體中文](./docs/releases/v5.10.3.zh-TW.md) · [English](./docs/releases/v5.10.3.en.md) · [Français](./docs/releases/v5.10.3.fr.md) · [日本語](./docs/releases/v5.10.3.ja.md) · [Español](./docs/releases/v5.10.3.es.md)
 
 <a id="fonctionnalités-principales"></a>
 

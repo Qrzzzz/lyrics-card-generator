@@ -21,7 +21,9 @@ try {
     webLiteLyricInputSource,
     visualPanelSource,
     exportPanelSource,
-    webLiteEditorSource
+    webLiteEditorSource,
+    sourceHanSansLicense,
+    sourceHanSerifLicense
   ] = await Promise.all([
     readFile(temporaryOutput, "utf8"),
     readFile(path.join(projectRoot, "index.html"), "utf8"),
@@ -29,7 +31,9 @@ try {
     readFile(path.join(projectRoot, "web-lite", "WebLiteLyricInput.tsx"), "utf8"),
     readFile(path.join(projectRoot, "components", "editor", "StylePanel.tsx"), "utf8"),
     readFile(path.join(projectRoot, "components", "editor", "ExportPanel.tsx"), "utf8"),
-    readFile(path.join(projectRoot, "web-lite", "WebLiteEditor.tsx"), "utf8")
+    readFile(path.join(projectRoot, "web-lite", "WebLiteEditor.tsx"), "utf8"),
+    readFile(path.join(projectRoot, "public", "fonts", "LICENSE-SourceHanSans.txt"), "utf8"),
+    readFile(path.join(projectRoot, "public", "fonts", "LICENSE-SourceHanSerif.txt"), "utf8")
   ]);
 
   if (normalizeLineEndings(generated) !== normalizeLineEndings(committed)) {
@@ -46,6 +50,20 @@ try {
   for (const fragment of requiredFragments) {
     if (!generated.includes(fragment)) {
       throw new Error(`Generated Web Lite HTML is missing required fragment: ${fragment}`);
+    }
+  }
+
+  const fontLicenses = [
+    [sourceHanSansLicense, "Copyright 2014-2021 Adobe", "Source Han Sans"],
+    [sourceHanSerifLicense, "Copyright 2017-2022 Adobe", "Source Han Serif"]
+  ];
+  for (const [license, copyright, fontName] of fontLicenses) {
+    if (
+      !license.includes(copyright) ||
+      !/Reserved Font\r?\nName 'Source'/.test(license) ||
+      !license.includes("SIL OPEN FONT LICENSE Version 1.1 - 26 February 2007")
+    ) {
+      throw new Error(`${fontName} Web Lite asset is missing its matching copyright, Reserved Font Name, or OFL text.`);
     }
   }
 

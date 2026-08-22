@@ -9,6 +9,7 @@ output/playwright/
 playwright-report/
 test-results/
 coverage/
+_site/
 tmp/example-covers/
 tmp/example-previews/
 tmp/example-palette-generator/

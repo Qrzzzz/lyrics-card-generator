@@ -9,7 +9,12 @@ if (typeof serverEntry !== "string" || !path.isAbsolute(serverEntry)) {
 // closes automatically on a crash, preventing an orphaned loopback server.
 process.once("disconnect", () => process.exit(0));
 process.on("message", (message) => {
-  if (message?.type === "lyrics-card:shutdown-server") process.exit(0);
+  if (
+    message
+    && typeof message === "object"
+    && "type" in message
+    && message.type === "lyrics-card:shutdown-server"
+  ) process.exit(0);
 });
 
 require(serverEntry);
