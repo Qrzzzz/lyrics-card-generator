@@ -71,7 +71,7 @@
 
 ## 📦 下載與安裝
 
-v5.11.0 尚未發布；發布後可從 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載：
+請從 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載 v5.11.0：
 
 * 安裝版：`Lyrics Card Generator Setup 5.11.0.exe`
 * 可攜版：`Lyrics Card Generator-5.11.0-portable.exe`

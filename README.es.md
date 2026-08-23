@@ -74,7 +74,7 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 ## 📦 Descarga e instalación
 
-Estado de v5.11.0: aún no publicado. Cuando esté disponible, descárgala desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
+Descarga v5.11.0 desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
 * Instalador: `Lyrics Card Generator Setup 5.11.0.exe`
 * Versión portable: `Lyrics Card Generator-5.11.0-portable.exe`
