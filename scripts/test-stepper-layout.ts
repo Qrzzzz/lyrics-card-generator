@@ -118,6 +118,11 @@ assert.ok(
   "step navigation uses the same borderless shell on every step"
 );
 assert.ok(
+  stepperSource.includes('className="mt-auto"') &&
+    !stepperSource.match(/step=\{exportStep\}[\s\S]*?className="mt-auto"/),
+  "preview-setting navigation may stay bottom-aligned while export actions follow the export options"
+);
+assert.ok(
   stepperSource.includes("!isFirstStep ? (") &&
     stepperSource.includes('data-testid="stepper-back-button"') &&
     stepperSource.includes('data-testid="stepper-next-button"'),

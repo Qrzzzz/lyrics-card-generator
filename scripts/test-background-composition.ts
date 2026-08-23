@@ -6,8 +6,10 @@ import {
   type CompositionSampleGrid,
   type RgbSample
 } from "../lib/background-composition-constraints";
-import { getLandscapeLayout, getPortraitLayout } from "../lib/card-layout-engine";
+import { getPortraitLayout } from "../lib/card-layout-engine";
 import { getCardSize } from "../lib/card-size";
+import { createLandscapeLayoutPlan } from "../lib/landscape-plan";
+import { resolveAdaptiveArtworkSize } from "../lib/artwork-geometry";
 import { normalizeCardStyle } from "../lib/card-style-normalize";
 import { defaultState } from "../components/editor/editor-defaults";
 import { DEFAULT_PALETTE } from "../lib/palette-background";
@@ -131,11 +133,26 @@ for (const paletteFixture of paletteFixtures) {
   for (const ratioFixture of ratioFixtures) {
     for (const contentMode of ["lyrics", "instrumental"] as const) {
       for (const showFineGrid of [false, true]) {
-        const style = createStyle(ratioFixture, paletteFixture.palette, contentMode, showFineGrid);
+        let style = createStyle(ratioFixture, paletteFixture.palette, contentMode, showFineGrid);
+        const landscapePlan = style.layoutMode === "landscape"
+          ? createLandscapeLayoutPlan({
+              measurementKey: `${ratioFixture.id}-${contentMode}-${showFineGrid}`,
+              settings: { autoLyricsWidth: false, lyricsWidth: ratioFixture.width > 2000 ? 1200 : 880, autoHeight: false, requestedHeight: ratioFixture.height },
+              left: {
+                ...resolveAdaptiveArtworkSize({ baseSize: 480, aspectRatio: paletteFixture.artwork.aspectRatio, maxWidth: 480, maxHeight: 480 }),
+                coverWidth: 480,
+                coverHeight: 480,
+                metadataWidth: 480,
+                metadataHeight: 250,
+                accessoriesWidth: 480,
+                accessoriesHeight: 72
+              },
+              lyricsCandidates: [{ lyricsWidth: ratioFixture.width > 2000 ? 1200 : 880, naturalHeight: 680, lines: [{ key: "lyric:0", kind: "lyric", visualLineCount: 1, lastLineFill: 0.7, averageLineFill: 0.7, severeOrphan: false, horizontalOverflow: false }] }]
+            })
+          : null;
+        if (landscapePlan) style = { ...style, ratio: "custom", landscapePlan };
         const size = getCardSize(style);
-        const layout = style.layoutMode === "landscape"
-          ? getLandscapeLayout(size, style, song, { sourceUrl: song.coverUrl, analysis: paletteFixture.artwork })
-          : getPortraitLayout(size, style, song, { sourceUrl: song.coverUrl, analysis: paletteFixture.artwork });
+        const layout = landscapePlan ?? getPortraitLayout(size, style, song, { sourceUrl: song.coverUrl, analysis: paletteFixture.artwork });
         const plan = createCardReadabilityPlan({ canvas: size, style, palette: paletteFixture.palette, layout });
         const repeated = createCardReadabilityPlan({ canvas: size, style, palette: paletteFixture.palette, layout });
 

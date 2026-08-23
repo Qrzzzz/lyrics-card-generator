@@ -7,7 +7,8 @@ import {
   isArtworkAnalysisSettled,
   resolveAdaptiveArtworkSize
 } from "../lib/artwork-geometry";
-import { getLandscapeLayout, getPortraitLayout } from "../lib/card-layout-engine";
+import { getPortraitLayout } from "../lib/card-layout-engine";
+import { createLandscapeLayoutPlan } from "../lib/landscape-plan";
 import { COVER_IMAGE_ANALYSIS_TIMEOUT_MS } from "../lib/palette-extraction";
 import type { CoverArtworkAnalysis } from "../lib/types";
 
@@ -96,47 +97,14 @@ assert.deepEqual(dimensions(portraitVertical.coverRect), { width: 196, height: 2
 assert.ok(portraitVertical.headerRect!.height >= portraitVertical.coverRect!.height);
 assert.ok(portraitVertical.lyricsRect.y > portraitVertical.coverRect!.y + portraitVertical.coverRect!.height);
 
-const landscapeStyle = {
-  ...portraitStyle,
-  layoutMode: "landscape" as const,
-  ratio: "16:9" as const,
-  autoWidth: false,
-  autoHeight: false
-};
-const landscapeSize = { width: 1920, height: 1080 };
-const landscapeSquare = getLandscapeLayout(landscapeSize, landscapeStyle, defaultState.song, {
-  sourceUrl,
-  analysis: square
-});
-const landscapeHorizontal = getLandscapeLayout(landscapeSize, landscapeStyle, defaultState.song, {
-  sourceUrl,
-  analysis: horizontal
-});
-const landscapeVertical = getLandscapeLayout(landscapeSize, landscapeStyle, defaultState.song, {
-  sourceUrl,
-  analysis: vertical
-});
-assert.equal(landscapeSquare.coverRect!.width, landscapeSquare.coverRect!.height);
-assert.equal(landscapeHorizontal.coverRect!.height, landscapeSquare.coverRect!.height);
-assert.ok(landscapeHorizontal.coverRect!.width > landscapeSquare.coverRect!.width);
-assert.ok(landscapeVertical.coverRect!.height > landscapeSquare.coverRect!.height);
-assert.equal(landscapeVertical.coverRect!.width, landscapeSquare.coverRect!.width);
-assert.ok(landscapeHorizontal.contentRect.x > landscapeHorizontal.coverRect!.x + landscapeHorizontal.coverRect!.width);
-assert.ok(landscapeVertical.coverRect!.height <= landscapeSize.height - 96);
-
-const landscapeVerticalWithFooter = getLandscapeLayout(
-  landscapeSize,
-  { ...landscapeStyle, showPlatformBadge: true },
-  { ...defaultState.song, source: "apple" },
-  { sourceUrl, analysis: vertical }
-);
-assert.equal(landscapeVerticalWithFooter.coverRect!.width, landscapeSquare.coverRect!.width);
-assert.ok(landscapeVerticalWithFooter.footerRect!.x >= landscapeVerticalWithFooter.contentRect.x);
-assert.ok(
-  landscapeVerticalWithFooter.footerRect!.x >=
-    landscapeVerticalWithFooter.coverRect!.x + landscapeVerticalWithFooter.coverRect!.width,
-  "a tall cover may use the footer band only when the footer moves into the text column"
-);
+const landscapeSquare = landscapePlan(resolveAdaptiveArtworkSize({ baseSize: 480, aspectRatio: 1, maxWidth: 480, maxHeight: 480 }));
+const landscapeHorizontal = landscapePlan(resolveAdaptiveArtworkSize({ baseSize: 480, aspectRatio: horizontal.aspectRatio, maxWidth: 480, maxHeight: 480 }));
+const landscapeVertical = landscapePlan(resolveAdaptiveArtworkSize({ baseSize: 480, aspectRatio: vertical.aspectRatio, maxWidth: 480, maxHeight: 480 }));
+assert.equal(landscapeSquare.coverRect.width, landscapeSquare.coverRect.height);
+assert.ok(landscapeHorizontal.coverRect.width > landscapeHorizontal.coverRect.height);
+assert.ok(landscapeVertical.coverRect.height > landscapeVertical.coverRect.width);
+assert.ok(landscapeHorizontal.lyricsRect.x > landscapeHorizontal.coverRect.x + landscapeHorizontal.coverRect.width);
+assert.ok(landscapeVertical.canvas.height >= landscapeVertical.coverRect.height + 168);
 
 const adaptiveArtworkSource = readFileSync(resolve("components/preview/AdaptiveAlbumArtwork.tsx"), "utf8");
 const paletteSource = readFileSync(resolve("lib/palette-extraction.ts"), "utf8");
@@ -163,4 +131,15 @@ function artwork(naturalWidth: number, naturalHeight: number): CoverArtworkAnaly
 function dimensions(rect: { width: number; height: number } | undefined) {
   assert.ok(rect);
   return { width: rect.width, height: rect.height };
+}
+
+function landscapePlan(cover: { width: number; height: number }) {
+  const plan = createLandscapeLayoutPlan({
+    measurementKey: `cover-${cover.width}x${cover.height}`,
+    settings: { autoLyricsWidth: false, lyricsWidth: 880, autoHeight: true, requestedHeight: 1080 },
+    left: { coverWidth: cover.width, coverHeight: cover.height, metadataWidth: 480, metadataHeight: 220, accessoriesWidth: 480, accessoriesHeight: 0 },
+    lyricsCandidates: [{ lyricsWidth: 880, naturalHeight: 720, lines: [{ key: "lyric:0", kind: "lyric", visualLineCount: 1, lastLineFill: 0.7, averageLineFill: 0.7, severeOrphan: false, horizontalOverflow: false }] }]
+  });
+  assert.ok(plan);
+  return plan;
 }

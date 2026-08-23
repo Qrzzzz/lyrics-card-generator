@@ -2,6 +2,7 @@ import { getCardSize } from "@/lib/card-size";
 import { EXPORT_FORMAT_OPTIONS, type ExportFormatId } from "@/lib/settings/types";
 import type { AppState, CardStyle, CoverArtworkAnalysis, Locale, SongInfo } from "@/lib/types";
 import { sanitizeFilePart } from "@/lib/utils";
+import { createLandscapeMeasurementKey } from "@/lib/landscape-measurement-key";
 
 export type ExportSnapshot = Readonly<{
   id: string;
@@ -16,6 +17,7 @@ export type ExportSnapshot = Readonly<{
   width: number;
   height: number;
   fileName: string;
+  landscapeMeasurementKey?: string;
 }>;
 
 let nextSnapshotId = 0;
@@ -33,6 +35,12 @@ export function createExportSnapshot(
   const song = structuredClone(state.song);
   const style = structuredClone(state.style);
   const coverArtwork = state.coverArtwork ? structuredClone(state.coverArtwork) : undefined;
+  const landscapeMeasurementKey = (style.layoutMode ?? "portrait") === "landscape"
+    ? createLandscapeMeasurementKey(state)
+    : undefined;
+  if (landscapeMeasurementKey && style.landscapePlan?.measurementKey !== landscapeMeasurementKey) {
+    throw new Error("Landscape layout measurement is stale.");
+  }
   const size = getCardSize(style);
   const extension = EXPORT_FORMAT_OPTIONS.find((option) => option.id === format)?.extension ?? "png";
   return deepFreeze({
@@ -47,7 +55,8 @@ export function createExportSnapshot(
     format,
     width: size.width,
     height: size.height,
-    fileName: `lyric-card-${sanitizeFilePart(song.title)}.${extension}`
+    fileName: `lyric-card-${sanitizeFilePart(song.title)}.${extension}`,
+    landscapeMeasurementKey
   });
 }
 

@@ -1,6 +1,7 @@
-import type { ContentMode } from "@/lib/types";
+import type { CardLayoutMode, ContentMode } from "@/lib/types";
 
 export const MAX_EXPORT_LYRIC_LINES = 36;
+export const MAX_LANDSCAPE_LYRIC_LINES = 12;
 
 export type ExportLyricLineStatus = {
   originalLineCount: number;
@@ -19,6 +20,7 @@ export type ExportLyricLineStatusInput = {
   translationText?: string;
   translationEnabled: boolean;
   contentMode?: ContentMode;
+  layoutMode?: CardLayoutMode;
 };
 
 /**
@@ -36,7 +38,8 @@ export function getExportLyricLineStatus({
   lyrics,
   translationText = "",
   translationEnabled,
-  contentMode = "lyrics"
+  contentMode = "lyrics",
+  layoutMode = "portrait"
 }: ExportLyricLineStatusInput): ExportLyricLineStatus {
   const originalLineCount = countNonEmptyLogicalLines(lyrics);
   const translationLineCount = translationEnabled
@@ -44,19 +47,22 @@ export function getExportLyricLineStatus({
     : 0;
   const totalLineCount = originalLineCount + translationLineCount;
   const isExempt = contentMode === "instrumental";
+  const maxLineCount = layoutMode === "landscape"
+    ? MAX_LANDSCAPE_LYRIC_LINES
+    : MAX_EXPORT_LYRIC_LINES;
   const exceededLineCount = isExempt
     ? 0
-    : Math.max(0, totalLineCount - MAX_EXPORT_LYRIC_LINES);
+    : Math.max(0, totalLineCount - maxLineCount);
   const isOverLimit = exceededLineCount > 0;
 
   return {
     originalLineCount,
     translationLineCount,
     totalLineCount,
-    maxLineCount: MAX_EXPORT_LYRIC_LINES,
+    maxLineCount,
     remainingLineCount: isExempt
-      ? MAX_EXPORT_LYRIC_LINES
-      : Math.max(0, MAX_EXPORT_LYRIC_LINES - totalLineCount),
+      ? maxLineCount
+      : Math.max(0, maxLineCount - totalLineCount),
     exceededLineCount,
     isExempt,
     isOverLimit,

@@ -19,7 +19,7 @@
 <p>
   <strong>Navegación</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Descargar la última versión</a> ·
-  <a href="./docs/releases/v5.10.3.es.md">Notas de la versión</a> ·
+  <a href="./docs/releases/v5.11.0.es.md">Notas de la versión</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en línea</a> ·
   <a href="#funciones-principales">Funciones principales</a> ·
   <a href="#desarrollo-local">Desarrollo local</a> ·
@@ -74,26 +74,25 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 ## 📦 Descarga e instalación
 
-Descarga v5.10.3 desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
+Descarga v5.11.0 desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Instalador: `Lyrics Card Generator Setup 5.10.3.exe`
-* Versión portable: `Lyrics Card Generator-5.10.3-portable.exe`
+* Instalador: `Lyrics Card Generator Setup 5.11.0.exe`
+* Versión portable: `Lyrics Card Generator-5.11.0-portable.exe`
 
 El instalador se recomienda para uso habitual. La versión portable es útil para pruebas, uso temporal o ejecución desde una unidad extraíble.
 
 > La compilación actual no está firmada. Windows puede mostrar una advertencia de SmartScreen, algo habitual en aplicaciones personales sin firma.
 
-### Novedades de v5.10.3
+### Novedades de v5.11.0
 
-* Corrige los puntos de referencia `main` duplicados o anidados en Web Lite y refuerza la puerta de accesibilidad de axe.
-* Actualiza las dependencias y añade una política auditable de avisos de producción con excepciones temporales y comprobaciones del SBOM de la versión.
-* Distribuye el texto OFL de Source Han en todas las superficies, incluidos los artefactos finales de Windows.
-* Añade regresiones continuas de renderizado, un benchmark programado de tarjetas largas, análisis estático y cobertura de Electron, y pruebas de humo en Firefox y WebKit.
+* Reconstruye las tarjetas horizontales como una composición libre de dos columnas elegida mediante mediciones DOM completas.
+* Escala de forma uniforme la portada, los metadatos y las marcas opcionales de la columna izquierda, conservando la proporción real de la imagen.
+* Aumenta la altura sin recortar ni reducir las letras y devuelve los documentos de más de 12 líneas lógicas al editor con una indicación clara.
 
 ## 🌐 Notas de publicación multilingües
 
 GitHub Release muestra de forma predeterminada un resumen en chino simplificado. Consulta las notas completas:
-[简体中文](./docs/releases/v5.10.3.zh-CN.md) · [繁體中文](./docs/releases/v5.10.3.zh-TW.md) · [English](./docs/releases/v5.10.3.en.md) · [Français](./docs/releases/v5.10.3.fr.md) · [日本語](./docs/releases/v5.10.3.ja.md) · [Español](./docs/releases/v5.10.3.es.md)
+[简体中文](./docs/releases/v5.11.0.zh-CN.md) · [繁體中文](./docs/releases/v5.11.0.zh-TW.md) · [English](./docs/releases/v5.11.0.en.md) · [Français](./docs/releases/v5.11.0.fr.md) · [日本語](./docs/releases/v5.11.0.ja.md) · [Español](./docs/releases/v5.11.0.es.md)
 
 <a id="funciones-principales"></a>
 
@@ -102,8 +101,8 @@ GitHub Release muestra de forma predeterminada un resumen en chino simplificado.
 ### 🎨 Generación de imágenes y diseño del lienzo
 
 * Genera imágenes de letras con acabado pulido
-* Tamaños verticales, horizontales y de lienzo personalizado
-* Diseño horizontal reconstruido con áreas seguras, columna de portada, columna de contenido y regiones de pie
+* Modos de tamaño vertical y tarjetas horizontales de proporción libre, con ancho de la región de letras y altura solicitada automáticos o manuales
+* Planificación horizontal guiada por el contenido para la columna izquierda de portada/metadatos y la columna derecha solo de letras, sin recortar letras ni portada
 * Ancho y altura automáticos medidos para lienzos verticales personalizados
 * Exportación PNG, WebP y JPG de alta resolución
 

@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v5.10.3.zh-TW.md">發布說明</a> ·
+  <a href="./docs/releases/v5.11.0.zh-TW.md">發布說明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">線上 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="#本機開發">本機開發</a> ·
@@ -71,34 +71,33 @@
 
 ## 📦 下載與安裝
 
-請從 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載 v5.10.3：
+請從 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載 v5.11.0：
 
-* 安裝版：`Lyrics Card Generator Setup 5.10.3.exe`
-* 可攜版：`Lyrics Card Generator-5.10.3-portable.exe`
+* 安裝版：`Lyrics Card Generator Setup 5.11.0.exe`
+* 可攜版：`Lyrics Card Generator-5.11.0-portable.exe`
 
 安裝版適合長期使用；可攜版適合臨時執行、測試或放在隨身碟中使用。
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v5.10.3 更新重點
+### v5.11.0 更新重點
 
-* 修正 Web Lite 重複／巢狀主地標，並加強 axe 無障礙門禁。
-* 更新相依套件，加入限時例外、SBOM 與 CI／Release 生產相依稽核策略。
-* 在所有字型散布面附帶 Source Han OFL 文字，並驗證最終 Windows 成品。
-* 新增持續渲染回歸、排程長卡基準、Electron 靜態分析與覆蓋率，以及 Firefox／WebKit 冒煙門禁。
+* 將橫式卡片完全重寫為自由比例雙欄版面，並以完整 DOM 測量自動選擇歌詞區域寬度。
+* 封面、歌曲資訊與附屬標誌形成統一縮放的左欄，封面始終依真實比例完整顯示。
+* 橫式高度會延伸而不裁切或縮小歌詞；超過 12 個邏輯行時會返回歌詞編輯並提示處理方式。
 
 ## 🌐 多語言發佈說明
 
 GitHub Release 預設顯示簡體中文摘要，完整說明請見：
-[简体中文](./docs/releases/v5.10.3.zh-CN.md) · [繁體中文](./docs/releases/v5.10.3.zh-TW.md) · [English](./docs/releases/v5.10.3.en.md) · [Français](./docs/releases/v5.10.3.fr.md) · [日本語](./docs/releases/v5.10.3.ja.md) · [Español](./docs/releases/v5.10.3.es.md)
+[简体中文](./docs/releases/v5.11.0.zh-CN.md) · [繁體中文](./docs/releases/v5.11.0.zh-TW.md) · [English](./docs/releases/v5.11.0.en.md) · [Français](./docs/releases/v5.11.0.fr.md) · [日本語](./docs/releases/v5.11.0.ja.md) · [Español](./docs/releases/v5.11.0.es.md)
 
 ## ✨ 主要功能
 
 ### 🎨 圖片生成與畫布版面
 
 * 生成高質感歌詞分享圖片
-* 支援直式、橫式和自訂畫布尺寸
-* 橫式版面基於安全區域重構，封面欄、內容欄和底部資訊更穩定
+* 支援直式尺寸模式，以及可自動或手動設定歌詞區域寬度與請求高度的自由比例橫式卡片
+* 橫式卡片依真實內容求解封面／歌曲資訊左欄與歌詞右欄，不裁切歌詞或封面
 * 直式自訂尺寸支援基於真實 DOM 測量的自動寬度與自動高度
 * 支援匯出高解析 PNG、WebP 與 JPG 圖片
 

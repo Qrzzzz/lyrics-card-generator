@@ -170,11 +170,50 @@ export type CardStyle = {
   fineGridDensity: BackgroundGridDensity;
   coverCropScale: number;
   watermark: string;
+  /** Independent free-ratio landscape settings; legacy width/height remain portrait-only. */
+  landscapeLayout?: LandscapeLayoutSettings;
+  /** DOM-measured immutable geometry used by preview and export. */
+  landscapePlan?: LandscapeLayoutPlan;
 };
 
 export type CardSizeSnapshot = Pick<CardStyle, "ratio" | "width" | "height"> & {
   autoWidth?: boolean;
   autoHeight?: boolean;
+};
+
+/**
+ * Landscape sizing is deliberately separate from CardStyle.width/height.
+ * Those legacy fields continue to describe the portrait canvas only.
+ */
+export type LandscapeLayoutSettings = {
+  autoLyricsWidth: boolean;
+  lyricsWidth: number;
+  autoHeight: boolean;
+  requestedHeight: number;
+};
+
+export type LayoutRect = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+
+/** Immutable geometry shared by visible preview and every export host. */
+export type LandscapeLayoutPlan = {
+  version: 1;
+  measurementKey: string;
+  canvas: { width: number; height: number };
+  safeRect: LayoutRect;
+  leftColumnRect: LayoutRect;
+  coverRect: LayoutRect;
+  metadataRect: LayoutRect;
+  accessoriesRect?: LayoutRect;
+  lyricsRect: LayoutRect;
+  lyricsNaturalHeight: number;
+  leftScale: number;
+  flexibleGap: number;
+  score: number;
 };
 
 export type BackgroundAnalysis = {

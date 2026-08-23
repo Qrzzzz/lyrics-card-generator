@@ -512,7 +512,6 @@ export function SettingsStepper({
                 themeColor={themeColor}
                 markerForegroundColor={markerForegroundColor}
                 compactChrome={compactChrome}
-                className="mt-auto"
               />
             </div>
           </motion.div>

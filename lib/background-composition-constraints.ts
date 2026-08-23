@@ -1,5 +1,5 @@
-import type { LandscapeLayout, PortraitLayout, Rect } from "@/lib/card-layout-engine";
-import type { CardStyle, ExtractedPalette } from "@/lib/types";
+import type { PortraitLayout, Rect } from "@/lib/card-layout-engine";
+import type { CardStyle, ExtractedPalette, LandscapeLayoutPlan } from "@/lib/types";
 
 export type ReadabilityZoneRole = "title-metadata" | "lyrics" | "instrumental" | "footer";
 
@@ -97,7 +97,7 @@ export function createCardReadabilityPlan({
   canvas: { width: number; height: number };
   style: CardStyle;
   palette: ExtractedPalette;
-  layout: PortraitLayout | LandscapeLayout;
+  layout: PortraitLayout | LandscapeLayoutPlan;
 }): CardReadabilityPlan {
   const textColor = style.resolvedTextColor || "#FFFFFF";
   const textLuminance = relativeLuminance(parseHexColor(textColor));
@@ -111,7 +111,7 @@ export function createCardReadabilityPlan({
   );
   const feather = clamp(Math.round(Math.min(canvas.width, canvas.height) * 0.055), 34, 104);
   const zones = (style.layoutMode ?? "portrait") === "landscape"
-    ? createLandscapeZones(canvas, style, layout as LandscapeLayout, feather, targetContrast)
+    ? createLandscapeZones(canvas, layout as LandscapeLayoutPlan, feather, targetContrast)
     : createPortraitZones(canvas, style, layout as PortraitLayout, feather, targetContrast);
 
   return {
@@ -247,27 +247,16 @@ function createPortraitZones(
 
 function createLandscapeZones(
   canvas: { width: number; height: number },
-  style: CardStyle,
-  layout: LandscapeLayout,
+  layout: LandscapeLayoutPlan,
   feather: number,
   targetContrast: number
 ) {
   const zones: ReadabilityZone[] = [];
-  const contentMode = style.contentMode ?? "lyrics";
-  if (contentMode === "instrumental") {
-    zones.push(zone("instrumental", {
-      x: layout.contentRect.x,
-      y: layout.contentRect.y + layout.contentRect.height * 0.14,
-      width: layout.contentRect.width,
-      height: layout.contentRect.height * 0.58
-    }, feather * 1.12, targetContrast, 1));
-  } else {
-    if (style.showSongInfo && layout.songInfoRect) {
-      zones.push(zone("title-metadata", layout.songInfoRect, feather, targetContrast, 0.96));
-    }
-    zones.push(zone("lyrics", layout.lyricsRect, feather * 1.08, targetContrast, 1));
+  zones.push(zone("title-metadata", layout.metadataRect, feather, targetContrast, 0.96));
+  zones.push(zone("lyrics", layout.lyricsRect, feather * 1.08, targetContrast, 1));
+  if (layout.accessoriesRect) {
+    zones.push(zone("footer", layout.accessoriesRect, feather * 0.82, targetContrast, 0.9));
   }
-  if (layout.footerRect) zones.push(zone("footer", layout.footerRect, feather * 0.82, targetContrast, 0.9));
   return zones.map((item) => ({ ...item, rect: clampRect(item.rect, canvas) }));
 }
 

@@ -17,7 +17,9 @@ import { normalizeUserSettings } from "../lib/settings/user-settings";
 assert.equal(defaultState.locale, "zh");
 assert.equal(defaultState.style.instrumentalText, DEFAULT_INSTRUMENTAL_TEXT.zh);
 assert.equal(defaultState.style.fontScheme?.presetId, DEFAULT_FONT_SCHEME.presetId);
-assert.equal(defaultState.lastLandscapeSize?.ratio, "16:9");
+assert.equal(defaultState.lastLandscapeSize?.ratio, "custom");
+assert.equal(defaultState.style.landscapeLayout?.autoLyricsWidth, true);
+assert.equal(defaultState.style.landscapeLayout?.autoHeight, true);
 assert.equal(defaultState.lastPortraitSize?.ratio, "custom");
 assert.equal(defaultState.palette?.primary, DEFAULT_PALETTE.primary);
 assert.equal(DEFAULT_LYRICS.split("\n").length, 4);
@@ -29,6 +31,7 @@ assert.deepEqual(sizeSnapshot(defaultState.style), {
   ratio: "custom",
   width: 1040,
   height: 1080,
+  autoWidth: true,
   autoHeight: true
 });
 
@@ -75,4 +78,4 @@ assert.equal(darkTokens.themeAccent, DEFAULT_PALETTE.primary);
 assert.equal(darkTokens.uiBackgroundColor, "#08090C");
 assert.equal(darkTokens.uiTextTokens.primary, "#FFFFFF");
 
-console.log(JSON.stringify({ ok: true, editorRefactorTests: 20 }, null, 2));
+console.log(JSON.stringify({ ok: true, editorRefactorTests: 22 }, null, 2));

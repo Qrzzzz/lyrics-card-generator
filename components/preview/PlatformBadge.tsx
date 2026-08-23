@@ -10,10 +10,12 @@ const PLATFORM_ICONS: Partial<Record<SongSource, string>> = {
 
 export function PlatformBadge({
   source,
-  size = "normal"
+  size = "normal",
+  scale = 1
 }: {
   source: SongSource;
   size?: "normal" | "large";
+  scale?: number;
 }) {
   const icon = PLATFORM_ICONS[source];
 
@@ -27,7 +29,12 @@ export function PlatformBadge({
       <img
         src={icon}
         alt=""
-        className={size === "large" ? "h-[52px] w-[52px] shrink-0 object-contain opacity-90 drop-shadow-md" : "h-16 w-16 shrink-0 scale-110 object-contain opacity-95 drop-shadow-md"}
+        className="shrink-0 object-contain opacity-90 drop-shadow-md"
+        style={{
+          width: (size === "large" ? 52 : 64) * scale,
+          height: (size === "large" ? 52 : 64) * scale,
+          transform: size === "large" ? undefined : "scale(1.1)"
+        }}
         draggable={false}
       />
     </div>
