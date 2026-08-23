@@ -442,6 +442,16 @@ test("pans the shared preview workbench in both directions and degrades pressure
       ? Math.abs(after.preview.width - (after.viewport.width - resizerBox.width) / 2)
       : Number.POSITIVE_INFINITY
   ).toBeLessThanOrEqual(2);
+  const activeExportPanel = page.locator('[data-testid="export-settings-panel"][data-active="true"]');
+  const [qualityBox, backBox, exportButtonBox] = await Promise.all([
+    activeExportPanel.locator('[role="radiogroup"]').nth(1).boundingBox(),
+    activeExportPanel.getByTestId("stepper-back-button").boundingBox(),
+    activeExportPanel.getByTestId("complete-export-button").boundingBox()
+  ]);
+  if (!qualityBox || !backBox || !exportButtonBox) throw new Error("Export action geometry is unavailable.");
+  expect(backBox.y - (qualityBox.y + qualityBox.height)).toBeGreaterThanOrEqual(0);
+  expect(backBox.y - (qualityBox.y + qualityBox.height)).toBeLessThanOrEqual(40);
+  expect(Math.abs(backBox.y - exportButtonBox.y)).toBeLessThanOrEqual(2);
 
   await page.locator('[data-step-id="visual"]').click();
   await expect(page.getByTestId("preview-workbench-viewport")).toHaveAttribute("data-export-active", "false");
