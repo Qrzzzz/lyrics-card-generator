@@ -1,6 +1,7 @@
 import { PRESET_CARD_SIZES } from "@/lib/card-size";
 import { normalizeCardStyle } from "@/lib/card-style-normalize";
 import { sizeSnapshot } from "@/lib/editor/size-snapshot";
+import { normalizeLandscapeLayoutSettings } from "@/lib/landscape-plan";
 import type { AppState, CardLayoutMode, CardRatio, CardSizeSnapshot, CardStyle } from "@/lib/types";
 
 export const DEFAULT_PORTRAIT_SIZE: Required<CardSizeSnapshot> = {
@@ -12,11 +13,11 @@ export const DEFAULT_PORTRAIT_SIZE: Required<CardSizeSnapshot> = {
 };
 
 export const DEFAULT_LANDSCAPE_SIZE: Required<CardSizeSnapshot> = {
-  ratio: "16:9",
+  ratio: "custom",
   width: PRESET_CARD_SIZES["16:9"].width,
   height: PRESET_CARD_SIZES["16:9"].height,
   autoWidth: false,
-  autoHeight: false
+  autoHeight: true
 };
 
 export function isDocumentSemanticStyleChange(currentStyle: CardStyle, nextStyle: CardStyle) {
@@ -37,7 +38,7 @@ function applyCanonicalStyleState(current: AppState, style: CardStyle, fields: P
 
 const validRatiosByMode: Record<CardLayoutMode, ReadonlySet<CardRatio>> = {
   portrait: new Set<CardRatio>(["1:1", "custom"]),
-  landscape: new Set<CardRatio>(["16:9", "21:9", "3:2", "custom"])
+  landscape: new Set<CardRatio>(["custom"])
 };
 
 // Persisted size snapshots are mode-specific; invalid cross-mode ratios fall
@@ -59,7 +60,10 @@ function restoreSize(
 }
 
 export function applyEditorStyleChange(current: AppState, nextStyle: CardStyle): AppState {
-  const normalizedNextStyle = normalizeCardStyle(nextStyle);
+  const normalizedNextStyle = normalizeCardStyle({
+    ...nextStyle,
+    landscapeLayout: normalizeLandscapeLayoutSettings(nextStyle.landscapeLayout, current.lastLandscapeSize)
+  });
   const currentMode = current.style.layoutMode ?? "portrait";
   const nextMode = normalizedNextStyle.layoutMode ?? "portrait";
 

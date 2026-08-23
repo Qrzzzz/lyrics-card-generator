@@ -37,7 +37,7 @@ export function LyricCard({
   locale?: Locale;
 }) {
   // Normalization gives portrait and landscape renderers one stable compatibility contract.
-  const style = normalizeCardStyle(rawStyle);
+  const style = normalizeCardStyle(rawStyle, { preserveDerivedLandscapePlan: true });
   const cover = song.proxiedCoverUrl || proxiedImageUrl(song.coverUrl);
   const [coverFailed, setCoverFailed] = useState(false);
 

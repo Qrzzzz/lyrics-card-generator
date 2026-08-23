@@ -90,10 +90,12 @@ export function useExportCardReadiness({
     lyrics: state.lyrics,
     translationText: state.style.translationText,
     translationEnabled: state.style.translationEnabled,
-    contentMode: state.style.contentMode
+    contentMode: state.style.contentMode,
+    layoutMode: state.style.layoutMode
   }), [
     state.lyrics,
     state.style.contentMode,
+    state.style.layoutMode,
     state.style.translationEnabled,
     state.style.translationText
   ]);

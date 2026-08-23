@@ -1,12 +1,17 @@
 import { PRESET_CARD_SIZES } from "@/lib/card-size";
 import { normalizeLyricLineHeight } from "@/lib/lyric-typography";
+import { normalizeLandscapeLayoutSettings } from "@/lib/landscape-plan";
 import type { CardStyle } from "@/lib/types";
 
 export const FIXED_COVER_CROP_SCALE = 1;
 export const FIXED_WHITE_TEXT_COLOR = "#FFFFFF";
 
 /** Restores persisted style data to the currently supported visual invariants. */
-export function normalizeCardStyle(style: CardStyle): CardStyle {
+export function normalizeCardStyle(
+  style: CardStyle,
+  options: { preserveDerivedLandscapePlan?: boolean } = {}
+): CardStyle {
+  const layoutMode = style.layoutMode ?? "portrait";
   const normalizedStyle: CardStyle =
     style.textColorMode === "custom"
       ? {
@@ -24,6 +29,13 @@ export function normalizeCardStyle(style: CardStyle): CardStyle {
 
   return normalizeAutomaticSizing(normalizeInstrumentalLayout({
     ...normalizedStyle,
+    ratio: layoutMode === "landscape" ? "custom" : normalizedStyle.ratio,
+    showSongInfo: true,
+    showCover: layoutMode === "landscape" ? true : normalizedStyle.showCover,
+    landscapeLayout: normalizeLandscapeLayoutSettings(normalizedStyle.landscapeLayout),
+    // A plan is derived from live DOM/font/artwork measurements. Persisted or
+    // imported plans are never trusted; only render/export paths may retain one.
+    landscapePlan: options.preserveDerivedLandscapePlan ? normalizedStyle.landscapePlan : undefined,
     lineHeight: normalizeLyricLineHeight(normalizedStyle.lineHeight)
   }));
 }

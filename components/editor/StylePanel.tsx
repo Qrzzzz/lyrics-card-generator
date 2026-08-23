@@ -13,6 +13,13 @@ import {
   ToggleRow
 } from "@/components/ui/controls";
 import { AUTO_HEIGHT_MIN, PRESET_CARD_SIZES } from "@/lib/card-size";
+import {
+  LANDSCAPE_LYRICS_WIDTH_MAX,
+  LANDSCAPE_LYRICS_WIDTH_MIN,
+  LANDSCAPE_REQUESTED_HEIGHT_MAX,
+  LANDSCAPE_REQUESTED_HEIGHT_MIN,
+  normalizeLandscapeLayoutSettings
+} from "@/lib/landscape-plan";
 import type { createT } from "@/lib/i18n";
 import {
   LYRIC_LINE_HEIGHT_MAX,
@@ -78,18 +85,11 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
   const layoutMode = isInstrumental ? "portrait" : style.layoutMode ?? "portrait";
   const instrumentalLayoutLockedHint = t("instrumentalLayoutLockedHint");
   const [instrumentalModeTitle, instrumentalModeQualifier] = t("instrumentalMode").split(/\s*\/\s*/, 2);
-  const sizeModeOptions =
-    layoutMode === "landscape"
-      ? [
-          { value: "16:9", label: t("sixteenNine") },
-          { value: "21:9", label: t("twentyOneNine") },
-          { value: "3:2", label: t("threeTwo") },
-          { value: "custom", label: t("custom") }
-        ]
-      : [
-          { value: "1:1", label: t("square") },
-          { value: "custom", label: t("custom") }
-        ];
+  const sizeModeOptions = [
+    { value: "1:1", label: t("square") },
+    { value: "custom", label: t("custom") }
+  ];
+  const landscapeSettings = normalizeLandscapeLayoutSettings(style.landscapeLayout);
 
   function update<K extends keyof CardStyle>(key: K, value: CardStyle[K]) {
     onStyleChange({ ...style, [key]: value });
@@ -175,6 +175,14 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
     });
   }
 
+  function updateLandscape<K extends keyof typeof landscapeSettings>(key: K, value: (typeof landscapeSettings)[K]) {
+    onStyleChange({
+      ...style,
+      landscapeLayout: { ...landscapeSettings, [key]: value },
+      landscapePlan: undefined
+    });
+  }
+
   return (
     <Section title={t("layout")} eyebrow={t("style")} variant="plain" contentClassName="gap-0">
       <AdaptiveSettingsGrid kind="rows" data-testid="layout-settings-grid">
@@ -222,12 +230,12 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
         />
       </SettingRow>
 
-      <SettingRow label={t("sizeMode")} description={isInstrumental ? t("instrumentalSizeLockedHint") : undefined}>
+      {layoutMode === "portrait" ? <SettingRow label={t("sizeMode")} description={isInstrumental ? t("instrumentalSizeLockedHint") : undefined}>
         <SegmentedControl<CardRatio>
           aria-label={t("sizeMode")}
           value={isInstrumental ? "1:1" : style.ratio}
           onChange={updateRatio}
-          columns={layoutMode === "landscape" ? 4 : 2}
+          columns={2}
           size="sm"
           options={sizeModeOptions.map((option) => ({ ...option, disabled: isInstrumental })) as Array<{
             value: CardRatio;
@@ -235,9 +243,9 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
             disabled: boolean;
           }>}
         />
-      </SettingRow>
+      </SettingRow> : null}
 
-      {!isInstrumental && style.ratio === "custom" ? (
+      {!isInstrumental && layoutMode === "portrait" && style.ratio === "custom" ? (
         <div className="settings-adaptive-span-all my-3 grid gap-4 rounded-md border border-[rgb(var(--panel-border))] bg-[rgb(var(--panel-bg))] p-3">
           <div className="app-text-subtle flex items-center justify-between gap-3 text-sm">
             <span>{t("customCanvas")}</span>
@@ -249,8 +257,8 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
             <FieldLabel label={t("width")} hint={style.autoWidth ? `${t("auto")} · ${style.width}px` : `${style.width}px`}>
               <RangeSlider
                 aria-label={t("width")}
-                min={layoutMode === "landscape" ? 1080 : 720}
-                max={layoutMode === "landscape" ? 3000 : 1440}
+                min={720}
+                max={1440}
                 step={20}
                 value={style.width}
                 disabled={style.autoWidth}
@@ -261,7 +269,7 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
               <RangeSlider
                 aria-label={t("height")}
                 min={style.autoHeight ? AUTO_HEIGHT_MIN : 720}
-                max={layoutMode === "landscape" ? 1600 : 3200}
+                max={3200}
                 step={20}
                 value={style.height}
                 disabled={style.autoHeight}
@@ -269,10 +277,56 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
               />
             </FieldLabel>
           </AdaptiveSettingsGrid>
-          {layoutMode === "portrait" && style.contentMode === "lyrics" ? (
+          {style.contentMode === "lyrics" ? (
             <ToggleRow label={t("autoWidth")} checked={style.autoWidth === true} onChange={updateAutoWidth} />
           ) : null}
           <ToggleRow label={t("autoHeight")} checked={style.autoHeight} onChange={updateAutoHeight} />
+        </div>
+      ) : null}
+
+      {!isInstrumental && layoutMode === "landscape" ? (
+        <div className="settings-adaptive-span-all my-3 grid gap-4 rounded-md border border-[rgb(var(--panel-border))] bg-[rgb(var(--panel-bg))] p-3">
+          <div className="app-text-subtle flex items-center justify-between gap-3 text-sm">
+            <span>{t("landscapeLayoutSettings")}</span>
+            <span className="app-text-primary font-semibold">
+              {style.landscapePlan ? `${style.landscapePlan.canvas.width} x ${style.landscapePlan.canvas.height}` : t("auto")}
+            </span>
+          </div>
+          <ToggleRow
+            label={t("autoWidth")}
+            checked={landscapeSettings.autoLyricsWidth}
+            onChange={(checked) => updateLandscape("autoLyricsWidth", checked)}
+          />
+          {!landscapeSettings.autoLyricsWidth ? (
+            <FieldLabel label={t("landscapeLyricsWidth")} hint={`${landscapeSettings.lyricsWidth}px`}>
+              <RangeSlider
+                aria-label={t("landscapeLyricsWidth")}
+                min={LANDSCAPE_LYRICS_WIDTH_MIN}
+                max={LANDSCAPE_LYRICS_WIDTH_MAX}
+                step={20}
+                value={landscapeSettings.lyricsWidth}
+                onChange={(event) => updateLandscape("lyricsWidth", Number(event.target.value))}
+              />
+            </FieldLabel>
+          ) : null}
+          <ToggleRow
+            label={t("autoHeight")}
+            checked={landscapeSettings.autoHeight}
+            onChange={(checked) => updateLandscape("autoHeight", checked)}
+          />
+          {!landscapeSettings.autoHeight ? (
+            <FieldLabel label={t("landscapeRequestedHeight")} hint={`${landscapeSettings.requestedHeight}px`}>
+              <RangeSlider
+                aria-label={t("landscapeRequestedHeight")}
+                min={LANDSCAPE_REQUESTED_HEIGHT_MIN}
+                max={LANDSCAPE_REQUESTED_HEIGHT_MAX}
+                step={20}
+                value={landscapeSettings.requestedHeight}
+                onChange={(event) => updateLandscape("requestedHeight", Number(event.target.value))}
+              />
+            </FieldLabel>
+          ) : null}
+          <p className="app-text-subtle text-xs leading-relaxed">{t("landscapeHeightFloorHint")}</p>
         </div>
       ) : null}
 
@@ -324,19 +378,6 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
         </SettingRow>
       ) : null}
 
-      {style.contentMode === "lyrics" && layoutMode === "landscape" ? (
-        <div className="settings-adaptive-span-all my-3 grid gap-3 rounded-md border border-[rgb(var(--panel-border))] bg-[rgb(var(--panel-bg))] p-3">
-          <p className="app-text-primary text-sm font-semibold">{t("landscapeLayoutSettings")}</p>
-          <AdaptiveSettingsGrid kind="pairs" className="gap-4">
-            <FieldLabel label={t("landscapeCoverSize")} hint="auto">
-              <TextInput value="520px base" readOnly />
-            </FieldLabel>
-            <FieldLabel label={t("landscapeContentWidth")} hint="auto">
-              <TextInput value="920px base" readOnly />
-            </FieldLabel>
-          </AdaptiveSettingsGrid>
-        </div>
-      ) : null}
       </AdaptiveSettingsGrid>
     </Section>
   );
@@ -393,11 +434,14 @@ export function VisualSettingsPanel({
 
       <Section title={t("step.visual")} variant="plain" contentClassName="gap-0">
         <AdaptiveSettingsGrid kind="toggles" data-testid="visual-toggle-grid">
-        <ToggleRow label={t("cover")} checked={style.showCover} onChange={(checked) => update("showCover", checked)} />
-        <ToggleRow label={t("showSongInfo")} checked={style.showSongInfo} onChange={(checked) => update("showSongInfo", checked)} />
+        {(style.layoutMode ?? "portrait") === "portrait" ? (
+          <ToggleRow label={t("cover")} checked={style.showCover} onChange={(checked) => update("showCover", checked)} />
+        ) : null}
         <ToggleRow label={t("explicitBadge")} checked={song?.explicit === true} onChange={updateExplicitBadge} />
         <ToggleRow label={t("showAlbumName")} checked={style.showAlbumName} onChange={(checked) => update("showAlbumName", checked)} />
-        <ToggleRow label={t("allowTwoLineTitle")} checked={style.allowTwoLineTitle} onChange={(checked) => update("allowTwoLineTitle", checked)} />
+        {(style.layoutMode ?? "portrait") === "portrait" ? (
+          <ToggleRow label={t("allowTwoLineTitle")} checked={style.allowTwoLineTitle} onChange={(checked) => update("allowTwoLineTitle", checked)} />
+        ) : null}
         <ToggleRow label={t("showGeneratedWatermark")} checked={style.showGeneratedWatermark} onChange={updateGeneratedWatermark} />
         {showPlatformBadgeControl ? (
           <ToggleRow

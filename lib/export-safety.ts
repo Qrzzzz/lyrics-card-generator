@@ -28,7 +28,8 @@ export function evaluateMinimumExportSafety(state: AppState, dom: ExportDomSafet
     lyrics: state.lyrics,
     translationText: state.style.translationText,
     translationEnabled: state.style.translationEnabled,
-    contentMode: state.style.contentMode
+    contentMode: state.style.contentMode,
+    layoutMode: state.style.layoutMode
   });
   return {
     lineStatus,
@@ -53,11 +54,12 @@ function resolveBlockingReason(
 export function resolveExportSafetyMessage(
   reason: ExportSafetyBlockingReason,
   totalLineCount: number,
-  t: ReturnType<typeof createT>
+  t: ReturnType<typeof createT>,
+  maxLineCount = MAX_EXPORT_LYRIC_LINES
 ) {
   switch (reason) {
     case "lyrics-limit":
-      return t("lyricsLineLimitExceeded", { total: totalLineCount, max: MAX_EXPORT_LYRIC_LINES });
+      return t("lyricsLineLimitExceeded", { total: totalLineCount, max: maxLineCount });
     case "fonts-loading":
       return t("exportFontsLoading");
     case "card-measuring":

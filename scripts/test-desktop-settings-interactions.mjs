@@ -4399,23 +4399,36 @@ try {
   await page.locator('button[data-step-id="layout"]').click();
   const landscapeMode = page.locator('[role="radiogroup"][aria-label="布局模式"] [data-segment-value="landscape"]');
   await landscapeMode.click();
-  await page.waitForFunction(() => document.querySelector('[data-segment-value="landscape"]')?.getAttribute("aria-checked") === "true");
-  const sixteenNine = page.locator('[role="radiogroup"][aria-label="尺寸模式"] [data-segment-value="16:9"]');
-  await sixteenNine.click();
-  await page.waitForFunction(() => document.querySelector('[data-segment-value="16:9"]')?.getAttribute("aria-checked") === "true");
-  await page.waitForTimeout(300);
-  const landscapeCard = await measureExportCard();
-  assert.deepEqual(
-    { width: landscapeCard?.width, height: landscapeCard?.height },
-    { width: 1920, height: 1080 },
-    `16:9 uses the fixed export pixel size: ${JSON.stringify(landscapeCard)}`
+  await page.waitForFunction(() => document.querySelector('button[data-step-id="lyrics"]')?.getAttribute("aria-current") === "step");
+  assert.equal(
+    await page.locator('[data-segment-value="landscape"][aria-checked="true"]').count(),
+    0,
+    "36 logical lines cannot switch into landscape"
   );
-  assert.equal(landscapeCard?.hasOverflow, true, `16:9 fixed ratio exposes real overflow: ${JSON.stringify(landscapeCard)}`);
+  assert.equal(await originalLyrics.evaluate((node) => document.activeElement === node), true, "blocked landscape switch restores lyric focus");
+  const landscapeLimitToast = page.getByTestId("app-toast");
+  await landscapeLimitToast.waitFor({ state: "visible" });
+  assert.match(await landscapeLimitToast.innerText(), /横版最多容纳 12 个非空逻辑行.*当前为 36 行/s);
+
+  const originalSix = originalEighteen.split("\n").slice(0, 6).join("\n");
+  const translationSix = translationEighteen.split("\n").slice(0, 6).join("\n");
+  await fillExact(originalLyrics, originalSix);
+  await fillExact(translationLyrics, translationSix);
+  await waitForLyricsLineBudget("6 + 6 = 12 / 36");
+  await page.locator('button[data-step-id="layout"]').click();
+  await landscapeMode.click();
+  await page.waitForFunction(() => document.querySelector('[data-segment-value="landscape"]')?.getAttribute("aria-checked") === "true");
+  assert.equal(
+    await page.locator('[role="radiogroup"][aria-label="尺寸模式"]').count(),
+    0,
+    "free landscape exposes no obsolete ratio presets"
+  );
+  await page.locator('[data-export-card-host] [data-export-card][data-landscape-plan="ready"]').waitFor({ state: "attached" });
+  const landscapeCard = await measureExportCard();
+  assert.ok(landscapeCard?.width > landscapeCard?.height, `free landscape composes a horizontal canvas: ${JSON.stringify(landscapeCard)}`);
+  assert.equal(landscapeCard?.hasOverflow, false, `content-measured landscape remains overflow-free: ${JSON.stringify(landscapeCard)}`);
   await page.locator('button[data-step-id="export"]').click();
-  assert.equal(await page.getByTestId("complete-export-button").isDisabled(), true, "16:9 overflow disables export");
-  const landscapeAlert = page.getByRole("alert").filter({ hasText: "当前版式无法容纳全部歌词" });
-  await landscapeAlert.waitFor({ state: "visible" });
-  assert.match(await landscapeAlert.innerText(), /无法容纳|自动高度|调整排版/, "16:9 overflow shows an explicit alert");
+  assert.equal(await page.getByTestId("complete-export-button").isDisabled(), false, "12-line free landscape can export");
 
   await assertAcrylicVisuals();
 

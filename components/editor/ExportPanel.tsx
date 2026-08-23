@@ -42,7 +42,7 @@ export function ExportPanel({
   const readiness = useOptionalExportCardReadinessSnapshot(readinessStore);
   const resolvedBlockingMessage = blockingMessage ?? (
     readiness?.blockingReason
-      ? resolveExportSafetyMessage(readiness.blockingReason, readiness.lineStatus.totalLineCount, t)
+      ? resolveExportSafetyMessage(readiness.blockingReason, readiness.lineStatus.totalLineCount, t, readiness.lineStatus.maxLineCount)
       : undefined
   );
   const resolvedQualityLabels: Record<ExportQualityId, string> = {

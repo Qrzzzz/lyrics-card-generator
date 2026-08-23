@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { ExportPanel } from "@/components/editor/ExportPanel";
 import { ExportCardHost } from "@/components/editor/ExportCardHost";
 import { AutoWidthMeasurementHost } from "@/components/editor/AutoWidthMeasurementHost";
+import { LandscapeLayoutMeasurementHost } from "@/components/editor/LandscapeLayoutMeasurementHost";
 import { AppToast, type ToastNotice, type ToastTone } from "@/components/feedback/AppToast";
 import { MotionPanel } from "@/components/motion/MotionPanel";
 import { PreviewPane } from "@/components/editor/PreviewPane";
@@ -17,6 +18,7 @@ import {
   defaultState
 } from "@/components/editor/editor-defaults";
 import { useMeasuredAutoCanvasWidth } from "@/components/editor/hooks/useMeasuredAutoCanvasWidth";
+import { useMeasuredLandscapeLayout } from "@/components/editor/hooks/useMeasuredLandscapeLayout";
 import {
   getLiveExportCardValidation,
   useExportCardReadiness
@@ -30,6 +32,8 @@ import { applyEditorStyleChange } from "@/lib/editor/apply-style-change";
 import { exportNodeAsImage } from "@/lib/export-image";
 import { createExportSnapshot, snapshotAsAppState, type ExportSnapshot } from "@/lib/export-snapshot";
 import { resolveExportSafetyMessage } from "@/lib/export-safety";
+import { getExportLyricLineStatus } from "@/lib/lyrics-document";
+import { hasCurrentLandscapePlan } from "@/lib/landscape-measurement-key";
 import {
   ExportTransactionMutex,
   runExportTransaction,
@@ -108,6 +112,7 @@ export function WebLiteEditor() {
   const cardRef = useRef<HTMLElement | null>(null);
   const exportCardRef = useRef<HTMLElement | null>(null);
   const autoWidthMeasurementRef = useRef<HTMLDivElement | null>(null);
+  const landscapeMeasurementRef = useRef<HTMLDivElement | null>(null);
   const captureCardRef = useRef<HTMLElement | null>(null);
   const exportMutexRef = useRef(new ExportTransactionMutex());
   // Refs keep the export transaction isolated from subsequent live-editor renders.
@@ -124,12 +129,14 @@ export function WebLiteEditor() {
   useCoverPalette(activeCover, setState);
   useResolvedTextColor(state, setState);
   const autoWidthReadiness = useMeasuredAutoCanvasWidth(state, setState, autoWidthMeasurementRef);
+  const landscapeLayoutReadiness = useMeasuredLandscapeLayout(state, setState, landscapeMeasurementRef);
 
   const parsedState = useMemo(
     () => ({
       ...state,
       style: {
         ...state.style,
+        landscapePlan: hasCurrentLandscapePlan(state) ? state.style.landscapePlan : undefined,
         showPlatformBadge: false,
         extractedPalette: state.palette ?? DEFAULT_PALETTE
       }
@@ -145,7 +152,7 @@ export function WebLiteEditor() {
     state: parsedState,
     setState,
     exportCardRef,
-    isAutoWidthStable: autoWidthReadiness.isStable
+    isAutoWidthStable: autoWidthReadiness.isStable && landscapeLayoutReadiness.isStable
   });
   const accentColor = resolveUiAccentColor({
     settings: WEB_LITE_SETTINGS,
@@ -296,6 +303,26 @@ export function WebLiteEditor() {
   }
 
   function handleStyleChange(nextStyle: CardStyle) {
+    if (
+      (state.style.layoutMode ?? "portrait") !== "landscape" &&
+      (nextStyle.layoutMode ?? "portrait") === "landscape"
+    ) {
+      const landscapeStatus = getExportLyricLineStatus({
+        lyrics: state.lyrics,
+        translationText: nextStyle.translationText,
+        translationEnabled: nextStyle.translationEnabled,
+        contentMode: nextStyle.contentMode,
+        layoutMode: "landscape"
+      });
+      if (!landscapeStatus.canExport) {
+        showToast(t("landscapeLineLimitExceeded", { total: landscapeStatus.totalLineCount }), "warning");
+        setCurrentStep(1);
+        window.requestAnimationFrame(() => {
+          document.querySelector<HTMLTextAreaElement>("[data-testid='web-lite-lyrics-original']")?.focus({ preventScroll: true });
+        });
+        return;
+      }
+    }
     setState((current) =>
       applyEditorStyleChange(current, {
         ...nextStyle,
@@ -343,14 +370,14 @@ export function WebLiteEditor() {
     const liveValidation = getLiveExportCardValidation(
       parsedState,
       exportCardRef.current,
-      autoWidthReadiness.isStable
+      autoWidthReadiness.isStable && landscapeLayoutReadiness.isStable
     );
     const liveBlockingMessage = liveValidation.blockingReason
-      ? resolveExportSafetyMessage(liveValidation.blockingReason, liveValidation.lineStatus.totalLineCount, t)
+      ? resolveExportSafetyMessage(liveValidation.blockingReason, liveValidation.lineStatus.totalLineCount, t, liveValidation.lineStatus.maxLineCount)
       : (() => {
           const readiness = exportReadinessStore.getSnapshot();
           return readiness.blockingReason
-            ? resolveExportSafetyMessage(readiness.blockingReason, readiness.lineStatus.totalLineCount, t)
+            ? resolveExportSafetyMessage(readiness.blockingReason, readiness.lineStatus.totalLineCount, t, readiness.lineStatus.maxLineCount)
             : undefined;
         })();
     if (liveBlockingMessage) {
@@ -378,7 +405,7 @@ export function WebLiteEditor() {
         const snapshotState = snapshotAsAppState(mountedSnapshot, parsedState);
         const validation = getLiveExportCardValidation(snapshotState, captureCardRef.current);
         return validation.blockingReason
-          ? resolveExportSafetyMessage(validation.blockingReason, validation.lineStatus.totalLineCount, t)
+          ? resolveExportSafetyMessage(validation.blockingReason, validation.lineStatus.totalLineCount, t, validation.lineStatus.maxLineCount)
           : null;
       },
       captureSnapshot: (mountedSnapshot, node, signal) => exportNodeAsImage(
@@ -589,6 +616,7 @@ export function WebLiteEditor() {
         locale={parsedState.locale}
       />
       <AutoWidthMeasurementHost state={state} hostRef={autoWidthMeasurementRef} />
+      <LandscapeLayoutMeasurementHost state={state} hostRef={landscapeMeasurementRef} />
       {/* Snapshot exports use a separate DOM tree so live preview changes cannot alter capture pixels. */}
       {activeExportSnapshot ? (
         <ExportCardHost
@@ -616,11 +644,17 @@ function createInitialState(locale: WebLiteLocale): AppState {
     style: {
       ...defaultState.style,
       fontScheme: defaultState.style.fontScheme ? { ...defaultState.style.fontScheme } : undefined,
+      landscapeLayout: defaultState.style.landscapeLayout
+        ? { ...defaultState.style.landscapeLayout }
+        : undefined,
       instrumentalText: DEFAULT_INSTRUMENTAL_TEXT[locale],
       showPlatformBadge: false,
       extractedPalette: { ...DEFAULT_PALETTE, colors: [...DEFAULT_PALETTE.colors] }
     },
     lastPortraitSize: defaultState.lastPortraitSize ? { ...defaultState.lastPortraitSize } : undefined,
+    lastPortraitCustomSize: defaultState.lastPortraitCustomSize
+      ? { ...defaultState.lastPortraitCustomSize }
+      : undefined,
     lastLandscapeSize: defaultState.lastLandscapeSize ? { ...defaultState.lastLandscapeSize } : undefined,
     palette: { ...DEFAULT_PALETTE, colors: [...DEFAULT_PALETTE.colors] }
   };

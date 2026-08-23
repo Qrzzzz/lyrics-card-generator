@@ -1,4 +1,5 @@
-import { getLandscapeLayout, getPortraitLayout } from "../lib/card-layout-engine";
+import { getPortraitLayout } from "../lib/card-layout-engine";
+import { createLandscapeLayoutPlan } from "../lib/landscape-plan";
 import { cleanAITranslation } from "../lib/ai/clean";
 import { validateConfiguredSettings } from "../lib/ai/client";
 import { buildLyricsTranslationPrompt, getDefaultFormatRules, getDefaultStylePrompt, PROMPT_OUTPUT_RULES } from "../lib/ai/prompt";
@@ -296,25 +297,16 @@ function testLayoutEngine() {
     "portrait reserves album height only when album text exists"
   );
 
-  const landscape = getLandscapeLayout(
-    { width: 2520, height: 1080 },
-    { ...baseStyle, layoutMode: "landscape", ratio: "21:9", autoHeight: false },
-    { source: "apple", album: "Album" }
-  );
-  const landscapeWithoutAlbum = getLandscapeLayout(
-    { width: 2520, height: 1080 },
-    { ...baseStyle, layoutMode: "landscape", ratio: "21:9", autoHeight: false },
-    { source: "apple", album: "" }
-  );
-  assert(landscape.coverRect && landscape.coverRect.width <= landscape.safeRect.height * 0.74 + 1, "landscape cover height bound");
-  assert(landscape.contentRect.width <= 1180, "landscape content max width");
-  assert(landscape.lyricsRect.height > 170, "landscape lyrics has usable height");
-  assert(
-    landscape.songInfoRect &&
-      landscapeWithoutAlbum.songInfoRect &&
-      landscape.songInfoRect.height > landscapeWithoutAlbum.songInfoRect.height,
-    "landscape reserves album height only when album text exists"
-  );
+  const landscape = createLandscapeLayoutPlan({
+    measurementKey: "v2-core",
+    settings: { autoLyricsWidth: false, lyricsWidth: 880, autoHeight: true, requestedHeight: 1080 },
+    left: { coverWidth: 480, coverHeight: 480, metadataWidth: 480, metadataHeight: 260, accessoriesWidth: 480, accessoriesHeight: 72 },
+    lyricsCandidates: [{ lyricsWidth: 880, naturalHeight: 760, lines: [{ key: "lyric:0", kind: "lyric", visualLineCount: 1, lastLineFill: 0.7, averageLineFill: 0.7, severeOrphan: false, horizontalOverflow: false }] }]
+  });
+  assert(landscape, "landscape plan resolves");
+  assert(landscape.lyricsRect.x > landscape.coverRect.x + landscape.coverRect.width, "landscape columns do not overlap");
+  assert(landscape.lyricsRect.height === 760, "landscape preserves measured natural lyrics height");
+  assert(landscape.canvas.height >= landscape.coverRect.height + landscape.metadataRect.height + 168, "landscape contains the complete left unit");
 }
 
 function testImageProxy() {

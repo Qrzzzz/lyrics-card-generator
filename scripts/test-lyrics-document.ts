@@ -15,12 +15,14 @@ import {
 import {
   countNonEmptyLogicalLines,
   getExportLyricLineStatus,
-  MAX_EXPORT_LYRIC_LINES
+  MAX_EXPORT_LYRIC_LINES,
+  MAX_LANDSCAPE_LYRIC_LINES
 } from "../lib/lyrics-document";
 
 // The logical-line policy is independent from visual wrapping; actual DOM
 // overflow is validated separately with the export-card fixture below.
 assert.equal(MAX_EXPORT_LYRIC_LINES, 36);
+assert.equal(MAX_LANDSCAPE_LYRIC_LINES, 12);
 assert.equal(countNonEmptyLogicalLines(""), 0);
 assert.equal(countNonEmptyLogicalLines("one\n\n two \n\t\nthree"), 3);
 assert.equal(countNonEmptyLogicalLines("one\r\ntwo\rthree"), 3);
@@ -89,6 +91,24 @@ assert.equal(overLimit.exceededLineCount, 1);
 assert.equal(overLimit.isOverLimit, true);
 assert.equal(overLimit.canExport, false);
 
+const landscapeBoundary = getExportLyricLineStatus({
+  lyrics: Array.from({ length: 6 }, (_, index) => `original ${index + 1}`).join("\n"),
+  translationText: Array.from({ length: 6 }, (_, index) => `translation ${index + 1}`).join("\n"),
+  translationEnabled: true,
+  layoutMode: "landscape"
+});
+assert.equal(landscapeBoundary.totalLineCount, 12);
+assert.equal(landscapeBoundary.canExport, true);
+const landscapeExceeded = getExportLyricLineStatus({
+  lyrics: `${landscapeBoundary.originalLineCount ? Array.from({ length: 7 }, (_, index) => `original ${index + 1}`).join("\n") : ""}`,
+  translationText: Array.from({ length: 6 }, (_, index) => `translation ${index + 1}`).join("\n"),
+  translationEnabled: true,
+  layoutMode: "landscape"
+});
+assert.equal(landscapeExceeded.totalLineCount, 13);
+assert.equal(landscapeExceeded.exceededLineCount, 1);
+assert.equal(landscapeExceeded.canExport, false);
+
 const instrumental = getExportLyricLineStatus({
   lyrics: Array.from({ length: 60 }, (_, index) => `line ${index + 1}`).join("\n"),
   translationText: Array.from({ length: 60 }, (_, index) => `translation ${index + 1}`).join("\n"),
@@ -123,8 +143,8 @@ assert.equal(
     layoutMode: "landscape",
     autoHeight: true
   }).height,
-  1600,
-  "landscape keeps its existing maximum even if legacy state says auto height"
+  1080,
+  "landscape waits on its derived plan instead of treating legacy height as a crop boundary"
 );
 
 const longAutoHeightEstimate = estimateCardHeight({
@@ -154,20 +174,20 @@ assert.ok(exportHostSource.indexOf("data-export-card-host") < exportHostSource.i
 assert.doesNotMatch(exportHostSource, /\b(?:display|visibility|opacity)\s*:/);
 
 const portraitLyricsSource = readFileSync(resolve("components/preview/LyricsBlock.tsx"), "utf8");
-const landscapeLyricsSource = readFileSync(resolve("components/preview/LandscapeLyricsBlock.tsx"), "utf8");
+const landscapeLyricsSource = readFileSync(resolve("components/preview/LandscapeLyricsContent.tsx"), "utf8");
 assert.ok(
   portraitLyricsSource.includes("Math.max(lines.length, translationEnabled ? translationLines.length : 0)"),
   "portrait export renders translation-only tail rows instead of dropping them"
 );
 assert.ok(
-  landscapeLyricsSource.includes("Math.max(lines.length, translationEnabled ? translationLines.length : 0)"),
+  landscapeLyricsSource.includes("Math.max(visibleLyrics.length, translationEnabled ? translationLines.length : 0)"),
   "landscape export renders translation-only tail rows instead of dropping them"
 );
 
 const readinessSource = readFileSync(resolve("components/editor/hooks/export-card-dom-coordinator.ts"), "utf8");
 assert.ok(
   readinessSource.includes("attributes: true") && readinessSource.includes('attributeFilter: ["class", "style"]'),
-  "readiness rechecks overflow after landscape font fitting changes inline styles"
+  "readiness rechecks overflow after measured geometry changes inline styles"
 );
 const editorActionsSource = readFileSync(resolve("components/editor/hooks/useEditorActions.ts"), "utf8");
 assert.ok(

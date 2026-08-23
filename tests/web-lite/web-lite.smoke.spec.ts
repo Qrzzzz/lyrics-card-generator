@@ -530,8 +530,7 @@ test("supports bilingual splitting, layout modes, instrumental mode, and visual 
   const landscape = page.locator('[data-segment-value="landscape"]');
   await landscape.click();
   await expect(landscape).toHaveAttribute("aria-checked", "true");
-  const sizeMode = page.getByRole("radiogroup", { name: "Size Mode", exact: true });
-  await sizeMode.getByRole("radio", { name: "Custom", exact: true }).click();
+  await expect(page.getByRole("radiogroup", { name: "Size Mode", exact: true })).toHaveCount(0);
   const autoHeight = page.getByRole("switch", { name: "Auto Height", exact: true });
   await expect(autoHeight).toHaveAttribute("aria-checked", "true");
   await autoHeight.click();
@@ -541,6 +540,7 @@ test("supports bilingual splitting, layout modes, instrumental mode, and visual 
   await instrumental.click();
   await expect(instrumental).toHaveAttribute("aria-checked", "true");
   await expect(landscape).toBeDisabled();
+  const sizeMode = page.getByRole("radiogroup", { name: "Size Mode", exact: true });
   await expect(sizeMode.getByRole("radio", { name: "1:1 Square", exact: true })).toBeDisabled();
   await expect(sizeMode.getByRole("radio", { name: "Custom", exact: true })).toBeDisabled();
 
@@ -554,15 +554,14 @@ test("supports bilingual splitting, layout modes, instrumental mode, and visual 
   await expect(page.getByRole("switch", { name: "Show Platform Logo", exact: true })).toHaveCount(0);
 });
 
-test("restores portrait custom size and auto height after landscape round trips", async ({ page }) => {
+test("restores independent portrait and free-landscape sizing after round trips", async ({ page }) => {
   await openWebLite(page);
   await page.locator('[data-step-id="layout"]').click();
 
   const portrait = page.locator('[data-segment-value="portrait"]');
   const landscape = page.locator('[data-segment-value="landscape"]');
   const sizeMode = page.getByRole("radiogroup", { name: "Size Mode", exact: true });
-  const autoWidth = page.getByRole("switch", { name: "Auto Width", exact: true });
-  const autoHeight = page.getByRole("switch", { name: "Auto Height", exact: true });
+  let autoWidth = page.getByRole("switch", { name: "Auto Width", exact: true });
   const width = page.getByLabel("Width", { exact: true });
   const previewSection = page
     .getByRole("heading", { name: "Export Card Only", exact: true })
@@ -575,7 +574,6 @@ test("restores portrait custom size and auto height after landscape round trips"
   await expect(autoWidth).toHaveAttribute("aria-checked", "true");
   await autoWidth.click();
   await expect(autoWidth).toHaveAttribute("aria-checked", "false");
-  await expect(autoHeight).toHaveAttribute("aria-checked", "true");
   await expect(width).toHaveValue("1040");
   await width.focus();
   for (let step = 0; step < 8; step += 1) {
@@ -583,34 +581,37 @@ test("restores portrait custom size and auto height after landscape round trips"
   }
   await expect(width).toHaveValue("1200");
 
-  for (const landscapeRatio of ["16:9", "21:9"]) {
-    await landscape.click();
-    await expect(landscape).toHaveAttribute("aria-checked", "true");
-    const ratioLabel = landscapeRatio === "16:9" ? "16:9 Landscape" : "21:9 Ultrawide";
-    const ratioOption = sizeMode.getByRole("radio", { name: ratioLabel, exact: true });
-    await ratioOption.click();
-    await expect(ratioOption).toHaveAttribute("aria-checked", "true");
+  await landscape.click();
+  await expect(landscape).toHaveAttribute("aria-checked", "true");
+  await expect(page.getByRole("radiogroup", { name: "Size Mode", exact: true })).toHaveCount(0);
+  autoWidth = page.getByRole("switch", { name: "Auto Width", exact: true });
+  await expect(autoWidth).toHaveAttribute("aria-checked", "true");
+  await autoWidth.click();
+  const lyricsWidth = page.getByLabel("Lyrics Region Width", { exact: true });
+  await setRangeValue(lyricsWidth, 760);
+  const landscapeAutoHeight = page.getByRole("switch", { name: "Auto Height", exact: true });
+  await landscapeAutoHeight.click();
+  await setRangeValue(page.getByLabel("Requested Height", { exact: true }), 900);
+  await expect(exportCard).toHaveAttribute("data-landscape-plan", "ready");
 
-    await portrait.click();
-    await expect(portrait).toHaveAttribute("aria-checked", "true");
-    await expect(sizeMode.getByRole("radio", { name: "Custom", exact: true })).toHaveAttribute("aria-checked", "true");
-    await expect(autoHeight).toHaveAttribute("aria-checked", "true");
-    await expect(width).toHaveValue("1200");
-    await expect(previewSize).toHaveText(/^1200x\d+$/);
-    await expect(previewSize).not.toHaveText("1080x1350");
+  await portrait.click();
+  await expect(sizeMode.getByRole("radio", { name: "Custom", exact: true })).toHaveAttribute("aria-checked", "true");
+  await expect(width).toHaveValue("1200");
+  await expect(previewSize).toHaveText(/^1200x\d+$/);
 
-    const [previewWidth, previewHeight] = (await previewSize.innerText()).split("x").map(Number);
-    expect(previewWidth).toBe(1200);
-    await expect(exportCard).toHaveCSS("width", `${previewWidth}px`);
-    await expect(exportCard).toHaveCSS("height", `${previewHeight}px`);
-    await expect(page.getByText(`${previewWidth} x ${previewHeight}`, { exact: true })).toBeVisible();
-  }
+  await landscape.click();
+  await expect(page.getByRole("switch", { name: "Auto Width", exact: true })).toHaveAttribute("aria-checked", "false");
+  await expect(page.getByLabel("Lyrics Region Width", { exact: true })).toHaveValue("760");
+  await expect(page.getByRole("switch", { name: "Auto Height", exact: true })).toHaveAttribute("aria-checked", "false");
+  await expect(page.getByLabel("Requested Height", { exact: true })).toHaveValue("900");
 });
 
 test("keeps local readability fields identical in preview and ExportCardHost", async ({ page }) => {
   test.setTimeout(120_000);
   await openWebLite(page, { width: 1440, height: 1000 });
-  await page.getByLabel("Song Title", { exact: true }).fill("The Night We Kept");
+  await page.getByLabel("Song Title", { exact: true }).fill(
+    "The Night We Kept All the Lights Alive Beyond the Last Train Home"
+  );
   await page.getByLabel("Artist", { exact: true }).fill("Composition Fixture");
   await page.getByLabel("Album", { exact: true }).fill("Local Light");
   await page.locator('[data-step-id="lyrics"]').click();
@@ -635,18 +636,44 @@ test("keeps local readability fields identical in preview and ExportCardHost", a
   });
 
   await page.locator('[data-segment-value="landscape"]').click();
-  await sizeMode.getByRole("radio", { name: "21:9 Ultrawide", exact: true }).click();
+  await expect(previewCard).toHaveAttribute("data-landscape-plan", "ready");
+  const title = previewCard.locator("[data-landscape-song-metadata] h1");
+  await expect(title).toBeVisible();
+  expect(await title.evaluate((node) => (node as HTMLElement).scrollHeight)).toBeGreaterThan(100);
   await expectReadabilityParity(previewCard, exportCard);
-  await expect(previewCard).toHaveScreenshot("readability-landscape-21x9.png", {
+  await expect(previewCard).toHaveScreenshot("readability-landscape-free.png", {
     animations: "disabled",
     maxDiffPixelRatio: 0.01
   });
 
   await page.locator('[data-step-id="visual"]').click();
+  await page.getByRole("switch", { name: "Show Generated Watermark", exact: true }).click();
+  await page.getByRole("switch", { name: "Show Shared By", exact: true }).click();
+  await page.getByPlaceholder("e.g. Shared by Cherry", { exact: true }).fill("A listener who kept every word");
+  await expect(previewCard.locator("[data-landscape-accessories]")).toBeVisible();
   await page.getByRole("switch", { name: "Background Grid", exact: true }).click();
   await expect(previewCard.locator('[data-card-fine-grid="true"]')).toHaveCount(1);
   await expect(exportCard.locator('[data-card-fine-grid="true"]')).toHaveCount(1);
   await expectReadabilityParity(previewCard, exportCard);
+});
+
+test("blocks a 13-line landscape switch, returns to lyrics, and allows the 12-line boundary", async ({ page }) => {
+  await openWebLite(page);
+  await page.locator('[data-step-id="lyrics"]').click();
+  const lyrics = page.getByLabel("Lyric Text", { exact: true });
+  await lyrics.fill(Array.from({ length: 13 }, (_, index) => `Line ${index + 1}`).join("\n"));
+  await page.locator('[data-step-id="layout"]').click();
+  const landscape = page.locator('[data-segment-value="landscape"]');
+  await landscape.click();
+  await expect(page.locator('[data-step-id="lyrics"]')).toHaveAttribute("aria-current", "step");
+  await expect(lyrics).toBeFocused();
+  await expect(page.getByText(/Landscape supports at most 12 non-empty logical lines/)).toBeVisible();
+  await lyrics.fill(Array.from({ length: 12 }, (_, index) => `Line ${index + 1}`).join("\n"));
+  await page.locator('[data-step-id="layout"]').click();
+  await expect(landscape).not.toHaveAttribute("aria-checked", "true");
+  await landscape.click();
+  await expect(landscape).toHaveAttribute("aria-checked", "true");
+  await expect(page.locator('[data-export-card-host] [data-export-card="true"]').first()).toHaveAttribute("data-landscape-plan", "ready");
 });
 
 test("auto width measures bilingual wrapping and settles on a comfortable portrait width", async ({ page }) => {
@@ -975,6 +1002,10 @@ test("renders square, horizontal, vertical, and transparent artwork at their nat
   await expectArtworkGeometry(artwork, { width: 196, height: 268, transparent: false });
 
   await page.locator('[data-step-id="layout"]').click();
+  await page.locator('[data-segment-value="landscape"]').click();
+  const landscapeArtwork = page.locator('[data-export-card-host] [data-testid="landscape-album-artwork"]').first();
+  await expectArtworkAspectRatio(landscapeArtwork, 879 / 1200, false);
+  await page.locator('[data-segment-value="portrait"]').click();
   await page.locator('[data-segment-value="instrumental"]').click();
   const instrumentalArtwork = page.locator('[data-export-card-host] [data-testid="instrumental-album-artwork"]').first();
   await expectArtworkGeometry(instrumentalArtwork, { width: 568, height: 775, transparent: false });
@@ -989,6 +1020,11 @@ test("renders square, horizontal, vertical, and transparent artwork at their nat
   await uploadGeneratedCover(page, "transparent.webp", 1200, 802, true, "image/webp");
   await expectArtworkGeometry(artwork, { width: 293, height: 196, transparent: true });
 
+  await page.locator('[data-step-id="layout"]').click();
+  await page.locator('[data-segment-value="landscape"]').click();
+  await expectArtworkAspectRatio(landscapeArtwork, 1200 / 802, true);
+  await expect(landscapeArtwork.locator("img")).toHaveCSS("object-fit", "contain");
+
   await page.locator('[data-step-id="export"]').click();
   const cardSize = await page.locator('[data-export-card-host] [data-export-card="true"]').first().evaluate((card) => ({
     width: (card as HTMLElement).offsetWidth,
@@ -997,8 +1033,8 @@ test("renders square, horizontal, vertical, and transparent artwork at their nat
   await exportAndExpectDimensions(
     page,
     "medium",
-    Math.round(cardSize.width * 1.4),
-    Math.round(cardSize.height * 1.4)
+    Math.floor(cardSize.width * 1.4),
+    Math.floor(cardSize.height * 1.4)
   );
 });
 
@@ -1376,6 +1412,25 @@ async function expectArtworkGeometry(
     height: (element as HTMLElement).offsetHeight,
     transparent: element.getAttribute("data-artwork-transparent") === "true"
   }))).toEqual(expected);
+}
+
+async function expectArtworkAspectRatio(
+  artwork: Locator,
+  expectedRatio: number,
+  transparent: boolean
+) {
+  await expect.poll(async () => artwork.evaluate((element) => ({
+    width: (element as HTMLElement).offsetWidth,
+    height: (element as HTMLElement).offsetHeight,
+    transparent: element.getAttribute("data-artwork-transparent") === "true"
+  }))).toMatchObject({ transparent });
+  const geometry = await artwork.evaluate((element) => ({
+    width: (element as HTMLElement).offsetWidth,
+    height: (element as HTMLElement).offsetHeight
+  }));
+  expect(geometry.width).toBeGreaterThan(0);
+  expect(geometry.height).toBeGreaterThan(0);
+  expect(Math.abs(geometry.width / geometry.height - expectedRatio)).toBeLessThan(0.006);
 }
 
 async function expectEmptyCoverState(page: Page) {

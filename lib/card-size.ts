@@ -1,5 +1,5 @@
 import type { CardRatio, CardStyle, ContentMode } from "@/lib/types";
-import { landscapeLayoutConfig, portraitLayoutConfig } from "@/lib/card-layout-config";
+import { portraitLayoutConfig } from "@/lib/card-layout-config";
 
 export const PRESET_CARD_SIZES: Record<Exclude<CardRatio, "custom">, { width: number; height: number }> = {
   "1:1": { width: 1080, height: 1080 },
@@ -19,18 +19,9 @@ export function clamp(value: number, min: number, max: number) {
 
 export function getCardSize(style: CardStyle) {
   if ((style.layoutMode ?? "portrait") === "landscape") {
-    if (style.ratio !== "custom" && (style.ratio === "16:9" || style.ratio === "21:9" || style.ratio === "3:2")) {
-      return PRESET_CARD_SIZES[style.ratio];
-    }
-
-    if (style.ratio !== "custom") {
-      return PRESET_CARD_SIZES["16:9"];
-    }
-
-    return {
-      width: clamp(Math.round(style.width), landscapeLayoutConfig.canvas.minWidth, landscapeLayoutConfig.canvas.maxWidth),
-      height: clamp(Math.round(style.height), landscapeLayoutConfig.canvas.minHeight, landscapeLayoutConfig.canvas.maxHeight)
-    };
+    if (style.landscapePlan) return style.landscapePlan.canvas;
+    // Temporary measurement canvas only; exports remain blocked until a plan settles.
+    return PRESET_CARD_SIZES["16:9"];
   }
 
   if (style.ratio !== "custom") {

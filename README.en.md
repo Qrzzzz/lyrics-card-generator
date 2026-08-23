@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v5.10.3.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v5.11.0.en.md">Release Notes</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
   <a href="./docs/web-lite-browser-support.md">Web Lite Browser Support</a> ·
   <a href="#features">Features</a> ·
@@ -75,26 +75,25 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 ## 📦 Download and Installation
 
-Download v5.10.3 from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
+v5.11.0 is not yet released. Once published, download it from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Installer: `Lyrics Card Generator Setup 5.10.3.exe`
-* Portable build: `Lyrics Card Generator-5.10.3-portable.exe`
+* Installer: `Lyrics Card Generator Setup 5.11.0.exe`
+* Portable build: `Lyrics Card Generator-5.11.0-portable.exe`
 
 The installer is recommended for regular use. The portable version is useful for temporary use, testing, or running from a removable drive.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v5.10.3 Highlights
+### v5.11.0 Highlights
 
-* Fixes duplicate and nested main landmarks in Web Lite and strengthens the axe accessibility gate.
-* Updates dependencies and adds an auditable production advisory policy with time-bounded exceptions and release SBOM checks.
-* Ships the Source Han OFL text on every font distribution surface, including final Windows artifacts.
-* Adds continuous render regressions, a scheduled long-card benchmark, Electron static analysis and coverage, plus Firefox and WebKit smoke gates.
+* Rebuilds landscape cards as a free-ratio two-column composition chosen from complete DOM measurements.
+* Treats the cover, song metadata, and optional marks as one uniformly scaled left-column design unit while preserving the artwork's real ratio.
+* Grows landscape height instead of clipping or shrinking lyrics, and returns 13+ logical-line documents to the lyrics editor with guidance.
 
 ## 🌐 Multilingual Release Notes
 
 GitHub Release displays a Simplified Chinese summary by default. See the full release notes:
-[简体中文](./docs/releases/v5.10.3.zh-CN.md) · [繁體中文](./docs/releases/v5.10.3.zh-TW.md) · [English](./docs/releases/v5.10.3.en.md) · [Français](./docs/releases/v5.10.3.fr.md) · [日本語](./docs/releases/v5.10.3.ja.md) · [Español](./docs/releases/v5.10.3.es.md)
+[简体中文](./docs/releases/v5.11.0.zh-CN.md) · [繁體中文](./docs/releases/v5.11.0.zh-TW.md) · [English](./docs/releases/v5.11.0.en.md) · [Français](./docs/releases/v5.11.0.fr.md) · [日本語](./docs/releases/v5.11.0.ja.md) · [Español](./docs/releases/v5.11.0.es.md)
 
 <a id="features"></a>
 
@@ -103,8 +102,8 @@ GitHub Release displays a Simplified Chinese summary by default. See the full re
 ### 🎨 Image Generation & Canvas Layout
 
 * Generate high-polish lyric sharing images
-* Portrait, landscape, and custom canvas sizes
-* Rebuilt landscape layout based on safe areas, cover column, content column, and footer regions
+* Portrait size modes plus free-ratio landscape cards with automatic or manual lyrics-region width and requested height
+* Content-driven landscape planning for the cover/metadata left column and lyrics-only right column, without cropping lyrics or artwork
 * Measured auto width and auto height for portrait custom canvases
 * High-resolution PNG, WebP, and JPG export
 

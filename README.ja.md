@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v5.10.3.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v5.11.0.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="#ローカル開発">ローカル開発</a> ·
@@ -74,26 +74,25 @@
 
 ## 📦 ダウンロードとインストール
 
-[GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) から v5.10.3 をダウンロードできます。
+v5.11.0 は未公開です。公開後は [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) からダウンロードできます。
 
-* インストーラー：`Lyrics Card Generator Setup 5.10.3.exe`
-* ポータブル版：`Lyrics Card Generator-5.10.3-portable.exe`
+* インストーラー：`Lyrics Card Generator Setup 5.11.0.exe`
+* ポータブル版：`Lyrics Card Generator-5.11.0-portable.exe`
 
 通常利用にはインストーラーを推奨します。ポータブル版は一時利用、検証、リムーバブルドライブでの利用に向いています。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v5.10.3 の主な更新
+### v5.11.0 の主な更新
 
-* Web Lite の重複・入れ子になった `main` ランドマークを修正し、axe アクセシビリティゲートを強化しました。
-* 依存関係を更新し、期限付き例外とリリース SBOM 検査を備えた監査可能な本番依存関係ポリシーを追加しました。
-* Source Han の OFL 本文を最終 Windows 成果物を含むすべてのフォント配布面に同梱しました。
-* 継続的なレンダリング回帰、定期実行の長大カードベンチマーク、Electron の静的解析とカバレッジ、Firefox／WebKit スモークゲートを追加しました。
+* 横向きカードを自由比率の 2 カラム構成として全面的に再設計し、完全な DOM 計測から歌詞領域の幅を選びます。
+* カバー、曲情報、任意のマークを左カラムの一体化したデザイン単位として拡大縮小し、画像の実際の比率を保ちます。
+* 歌詞を切り取ったり縮小したりせず高さを延長し、13 行以上の論理行は案内付きで歌詞編集へ戻します。
 
 ## 🌐 多言語リリースノート
 
 GitHub Release ではデフォルトで簡体字中国語の概要が表示されます。完全なリリースノートはこちら：
-[简体中文](./docs/releases/v5.10.3.zh-CN.md) · [繁體中文](./docs/releases/v5.10.3.zh-TW.md) · [English](./docs/releases/v5.10.3.en.md) · [Français](./docs/releases/v5.10.3.fr.md) · [日本語](./docs/releases/v5.10.3.ja.md) · [Español](./docs/releases/v5.10.3.es.md)
+[简体中文](./docs/releases/v5.11.0.zh-CN.md) · [繁體中文](./docs/releases/v5.11.0.zh-TW.md) · [English](./docs/releases/v5.11.0.en.md) · [Français](./docs/releases/v5.11.0.fr.md) · [日本語](./docs/releases/v5.11.0.ja.md) · [Español](./docs/releases/v5.11.0.es.md)
 
 <a id="主な機能"></a>
 
@@ -102,8 +101,8 @@ GitHub Release ではデフォルトで簡体字中国語の概要が表示さ�
 ### 🎨 画像生成とキャンバスレイアウト
 
 * 高品質な歌詞共有画像を生成
-* 縦向き、横向き、カスタムキャンバスサイズに対応
-* 安全領域、カバー列、コンテンツ列、フッター領域に基づく安定した横向きレイアウト
+* 縦向きのサイズモードと、歌詞領域幅・要求高さを自動または手動で設定できる自由比率の横向きカード
+* カバー／曲情報の左列と歌詞専用の右列を実コンテンツから求解し、歌詞やカバーを切り抜かない横向きレイアウト
 * 縦向きカスタムキャンバスで実測に基づく自動幅と自動高さ
 * 高解像度 PNG、WebP、JPG 書き出し
 

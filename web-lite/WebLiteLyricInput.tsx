@@ -43,6 +43,7 @@ export function WebLiteLyricInput({
         <>
           <FieldLabel label={t("lyricText")} hint={t("lineCount", { lines, chars: lyrics.length })}>
             <TextareaField
+              data-testid="web-lite-lyrics-original"
               value={lyrics}
               onChange={(event) => onLyricsChange(event.target.value)}
               placeholder={t("lyricPlaceholder")}

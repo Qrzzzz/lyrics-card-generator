@@ -28,6 +28,7 @@ import { MotionPanel } from "@/components/motion/MotionPanel";
 import { PreviewPane } from "@/components/editor/PreviewPane";
 import { ExportCardHost } from "@/components/editor/ExportCardHost";
 import { AutoWidthMeasurementHost } from "@/components/editor/AutoWidthMeasurementHost";
+import { LandscapeLayoutMeasurementHost } from "@/components/editor/LandscapeLayoutMeasurementHost";
 import { SettingsStepper, type SettingsStep } from "@/components/editor/SettingsStepper";
 import type { SettingsTabId } from "@/components/settings/settings-model";
 import { FirstLaunchLanguageDialog } from "@/components/settings/FirstLaunchLanguageDialog";
@@ -39,6 +40,7 @@ import {
 } from "@/components/editor/hooks/useLyricEditorEffects";
 import { resolveEditorThemeTokens } from "@/components/editor/resolveEditorThemeTokens";
 import { useMeasuredAutoCanvasWidth } from "@/components/editor/hooks/useMeasuredAutoCanvasWidth";
+import { useMeasuredLandscapeLayout } from "@/components/editor/hooks/useMeasuredLandscapeLayout";
 import {
   getLiveExportCardValidation,
   useExportCardReadiness,
@@ -62,6 +64,8 @@ import type { AppState, FontScheme, Locale } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { snapshotAsAppState } from "@/lib/export-snapshot";
 import { resolveExportSafetyMessage } from "@/lib/export-safety";
+import { getExportLyricLineStatus } from "@/lib/lyrics-document";
+import { hasCurrentLandscapePlan } from "@/lib/landscape-measurement-key";
 import type { TranslationValue } from "@/lib/editor/editor-document-state-adapter";
 import { useStableEvent } from "@/components/editor/hooks/useStableEvent";
 import type { AISettingsSummary } from "@/lib/ai/types";
@@ -105,6 +109,7 @@ export function LyricEditor() {
   const [toast, setToast] = useState<ToastNotice | null>(null);
   const exportCardRef = useRef<HTMLElement | null>(null);
   const autoWidthMeasurementRef = useRef<HTMLDivElement | null>(null);
+  const landscapeMeasurementRef = useRef<HTMLDivElement | null>(null);
   const captureCardRef = useRef<HTMLElement | null>(null);
   const previewCardRef = useRef<HTMLElement | null>(null);
   const editorSurfaceRef = useRef<HTMLDivElement | null>(null);
@@ -131,6 +136,7 @@ export function LyricEditor() {
       ...state,
       style: {
         ...state.style,
+        landscapePlan: hasCurrentLandscapePlan(state) ? state.style.landscapePlan : undefined,
         extractedPalette: state.palette ?? DEFAULT_PALETTE
       }
     }),
@@ -199,6 +205,7 @@ export function LyricEditor() {
   useCoverPalette(coverForPalette, setState);
   useResolvedTextColor(state, setState);
   const autoWidthReadiness = useMeasuredAutoCanvasWidth(state, setState, autoWidthMeasurementRef);
+  const landscapeLayoutReadiness = useMeasuredLandscapeLayout(state, setState, landscapeMeasurementRef);
   const {
     store: exportReadinessStore,
     lineStatus: exportLineStatus
@@ -206,7 +213,7 @@ export function LyricEditor() {
     state: parsedState,
     setState,
     exportCardRef,
-    isAutoWidthStable: autoWidthReadiness.isStable
+    isAutoWidthStable: autoWidthReadiness.isStable && landscapeLayoutReadiness.isStable
   });
   const {
     userSettings,
@@ -241,7 +248,7 @@ export function LyricEditor() {
     createSongLinkAutoParseVisitIntent,
     beginSongImport,
     clearAllContent,
-    handleStyleChange,
+    handleStyleChange: applyStyleChange,
     beginAITranslation,
     getCurrentDocumentSnapshot,
     applyAIPartial,
@@ -274,10 +281,10 @@ export function LyricEditor() {
       const validation = getLiveExportCardValidation(
         validationState,
         snapshot ? captureCardRef.current : exportCardRef.current,
-        snapshot ? true : autoWidthReadiness.isStable
+        snapshot ? true : autoWidthReadiness.isStable && landscapeLayoutReadiness.isStable
       );
       return validation.blockingReason
-        ? resolveExportSafetyMessage(validation.blockingReason, validation.lineStatus.totalLineCount, t)
+        ? resolveExportSafetyMessage(validation.blockingReason, validation.lineStatus.totalLineCount, t, validation.lineStatus.maxLineCount)
         : undefined;
     },
     exampleLoadedMessage: settingsCopy[state.locale].exampleLoaded,
@@ -398,6 +405,30 @@ export function LyricEditor() {
   });
   aiTranslationBusyRef.current = isAITranslating;
   invalidateDocumentAsyncRef.current = invalidateAITranslation;
+
+  function handleStyleChange(nextStyle: AppState["style"]) {
+    if (
+      (state.style.layoutMode ?? "portrait") !== "landscape" &&
+      (nextStyle.layoutMode ?? "portrait") === "landscape"
+    ) {
+      const landscapeStatus = getExportLyricLineStatus({
+        lyrics: state.lyrics,
+        translationText: nextStyle.translationText,
+        translationEnabled: nextStyle.translationEnabled,
+        contentMode: nextStyle.contentMode,
+        layoutMode: "landscape"
+      });
+      if (!landscapeStatus.canExport) {
+        showToast(t("landscapeLineLimitExceeded", { total: landscapeStatus.totalLineCount }), "warning");
+        setCurrentStep(1);
+        window.requestAnimationFrame(() => {
+          document.querySelector<HTMLTextAreaElement>("[data-testid='lyrics-editor-original']")?.focus({ preventScroll: true });
+        });
+        return;
+      }
+    }
+    applyStyleChange(nextStyle);
+  }
 
   function changeEditorStep(nextStep: number) {
     if (nextStep === 0 && currentStep !== 0) {
@@ -628,6 +659,7 @@ export function LyricEditor() {
               locale={parsedState.locale}
             />
             <AutoWidthMeasurementHost state={state} hostRef={autoWidthMeasurementRef} />
+            <LandscapeLayoutMeasurementHost state={state} hostRef={landscapeMeasurementRef} />
             {/* Snapshot capture is isolated from both the visible preview and live readiness host. */}
             {activeExportSnapshot ? (
               <ExportCardHost

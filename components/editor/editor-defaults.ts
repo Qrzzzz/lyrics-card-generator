@@ -2,6 +2,7 @@ import { PRESET_CARD_SIZES } from "@/lib/card-size";
 import { DEFAULT_FONT_SCHEME } from "@/lib/font-schemes";
 import { messages } from "@/lib/i18n";
 import { DEFAULT_LYRIC_LINE_HEIGHT } from "@/lib/lyric-typography";
+import { DEFAULT_LANDSCAPE_LAYOUT_SETTINGS } from "@/lib/landscape-plan";
 import { DEFAULT_PALETTE } from "@/lib/palette-background";
 import type { AppState, Locale } from "@/lib/types";
 
@@ -85,7 +86,8 @@ export const defaultState: AppState = {
     showFineGrid: false,
     fineGridDensity: "medium",
     coverCropScale: 1,
-    watermark: messages.zh.madeWith
+    watermark: messages.zh.madeWith,
+    landscapeLayout: { ...DEFAULT_LANDSCAPE_LAYOUT_SETTINGS }
   },
   lastPortraitSize: {
     ratio: "custom",
@@ -102,11 +104,11 @@ export const defaultState: AppState = {
     autoHeight: true
   },
   lastLandscapeSize: {
-    ratio: "16:9",
+    ratio: "custom",
     width: PRESET_CARD_SIZES["16:9"].width,
     height: PRESET_CARD_SIZES["16:9"].height,
     autoWidth: false,
-    autoHeight: false
+    autoHeight: true
   },
   palette: DEFAULT_PALETTE,
   paletteWarning: ""

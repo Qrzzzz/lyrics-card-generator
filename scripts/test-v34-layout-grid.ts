@@ -11,7 +11,9 @@ import {
   normalizeInstrumentalLayout
 } from "../lib/card-style-normalize";
 import { applyEditorStyleChange } from "../lib/editor/apply-style-change";
+import { createExportSnapshot } from "../lib/export-snapshot";
 import { messages } from "../lib/i18n";
+import { hasCurrentLandscapePlan } from "../lib/landscape-measurement-key";
 import {
   DEFAULT_LYRIC_LINE_HEIGHT,
   LYRIC_LINE_HEIGHT_MAX,
@@ -101,6 +103,8 @@ assert.equal(defaultState.style.layoutMode, "portrait");
 assert.equal(defaultState.style.ratio, "custom");
 assert.equal(defaultState.style.autoWidth, true, "new portrait custom cards enable automatic width");
 assert.equal(defaultState.style.autoHeight, true);
+assert.equal(defaultState.style.landscapeLayout?.autoLyricsWidth, true);
+assert.equal(defaultState.style.landscapeLayout?.autoHeight, true);
 assert.equal(defaultState.lastPortraitSize?.autoWidth, true, "new portrait history keeps automatic width enabled");
 assert.equal(defaultState.lastPortraitCustomSize?.autoWidth, true, "new custom history keeps automatic width enabled");
 assert.equal(defaultState.style.textColorMode, "preset");
@@ -140,10 +144,10 @@ assert.deepEqual(
   },
   {
     layoutMode: "landscape",
-    ratio: "16:9",
+    ratio: "custom",
     width: PRESET_CARD_SIZES["16:9"].width,
     height: PRESET_CARD_SIZES["16:9"].height,
-    autoHeight: false
+    autoHeight: true
   }
 );
 
@@ -174,7 +178,7 @@ const landscapeRestored = applyEditorStyleChange(portraitRestored, {
   ...portraitRestored.style,
   layoutMode: "landscape"
 });
-assert.equal(landscapeRestored.style.ratio, "16:9");
+assert.equal(landscapeRestored.style.ratio, "custom");
 assert.deepEqual(getCardSize(landscapeRestored.style), PRESET_CARD_SIZES["16:9"]);
 
 const landscapeWide = applyEditorStyleChange(landscapeRestored, {
@@ -192,22 +196,9 @@ const landscapeWideRestored = applyEditorStyleChange(portraitAfterWide, {
   ...portraitAfterWide.style,
   layoutMode: "landscape"
 });
-assert.deepEqual(
-  {
-    layoutMode: landscapeWideRestored.style.layoutMode,
-    ratio: landscapeWideRestored.style.ratio,
-    width: landscapeWideRestored.style.width,
-    height: landscapeWideRestored.style.height,
-    autoHeight: landscapeWideRestored.style.autoHeight
-  },
-  {
-    layoutMode: "landscape",
-    ratio: "21:9",
-    width: PRESET_CARD_SIZES["21:9"].width,
-    height: PRESET_CARD_SIZES["21:9"].height,
-    autoHeight: false
-  }
-);
+assert.equal(landscapeWideRestored.style.layoutMode, "landscape");
+assert.equal(landscapeWideRestored.style.ratio, "custom", "obsolete landscape presets normalize to free layout");
+assert.equal(landscapeWideRestored.style.landscapeLayout?.autoLyricsWidth, true);
 
 const portraitWithoutHistory = applyEditorStyleChange(
   { ...landscapeWide, lastPortraitSize: undefined },
@@ -333,6 +324,66 @@ assert.equal(normalizedCustomColor.textColorMode, "custom");
 assert.equal(normalizedCustomColor.customTextColor, "#AABBCC");
 assert.equal(normalizedCustomColor.resolvedTextColor, "#AABBCC");
 assert.equal(normalizedCustomColor.coverCropScale, FIXED_COVER_CROP_SCALE);
+
+const staleLandscapePlan = {
+  version: 1 as const,
+  measurementKey: "stale-persisted-measurement",
+  canvas: { width: 10, height: 10 },
+  safeRect: { x: 0, y: 0, width: 10, height: 10 },
+  leftColumnRect: { x: 0, y: 0, width: 4, height: 10 },
+  coverRect: { x: 0, y: 0, width: 4, height: 4 },
+  metadataRect: { x: 0, y: 4, width: 4, height: 2 },
+  lyricsRect: { x: 6, y: 0, width: 4, height: 10 },
+  lyricsNaturalHeight: 10,
+  leftScale: 1,
+  flexibleGap: 0,
+  score: 0
+};
+const migratedLegacyLandscape = normalizeCardStyle({
+  ...baseStyle,
+  layoutMode: "landscape",
+  ratio: "21:9",
+  showCover: false,
+  showSongInfo: false,
+  landscapePlan: staleLandscapePlan
+});
+assert.equal(migratedLegacyLandscape.ratio, "custom", "legacy landscape ratios migrate to free layout");
+assert.equal(migratedLegacyLandscape.showCover, true, "landscape cover is mandatory after migration");
+assert.equal(migratedLegacyLandscape.showSongInfo, true, "song information is mandatory after migration");
+assert.equal(migratedLegacyLandscape.landscapePlan, undefined, "persisted derived plans are discarded");
+assert.equal(
+  normalizeCardStyle({ ...baseStyle, showSongInfo: false }).showSongInfo,
+  true,
+  "portrait legacy state also migrates hidden song information to visible"
+);
+assert.equal(
+  normalizeCardStyle({ ...baseStyle, showCover: false }).showCover,
+  false,
+  "portrait retains its independent cover visibility setting"
+);
+assert.equal(
+  normalizeCardStyle(
+    { ...baseStyle, layoutMode: "landscape", landscapePlan: staleLandscapePlan },
+    { preserveDerivedLandscapePlan: true }
+  ).landscapePlan?.measurementKey,
+  staleLandscapePlan.measurementKey,
+  "only the live render path may explicitly retain a derived plan"
+);
+const rawStalePlanState: AppState = {
+  ...defaultState,
+  style: {
+    ...defaultState.style,
+    layoutMode: "landscape",
+    ratio: "custom",
+    landscapePlan: staleLandscapePlan
+  }
+};
+assert.equal(hasCurrentLandscapePlan(rawStalePlanState), false, "stale plans never reach preview/export render state");
+assert.throws(
+  () => createExportSnapshot(rawStalePlanState, 2, 1),
+  /measurement is stale/,
+  "immutable export snapshots reject a plan from different content"
+);
 
 assert.equal(defaultState.style.lineHeight, DEFAULT_LYRIC_LINE_HEIGHT, "new documents use the 1.8 line-height default");
 assert.equal(LYRIC_LINE_HEIGHT_MIN, 1.5);
