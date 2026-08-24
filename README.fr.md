@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v5.11.0.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v5.11.1.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="#développement-local">Développement local</a> ·
@@ -74,25 +74,25 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 ## 📦 Téléchargement et installation
 
-Téléchargez la v5.11.0 depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
+Téléchargez la v5.11.1 depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
 
-* Installateur : `Lyrics Card Generator Setup 5.11.0.exe`
-* Version portable : `Lyrics Card Generator-5.11.0-portable.exe`
+* Installateur : `Lyrics Card Generator Setup 5.11.1.exe`
+* Version portable : `Lyrics Card Generator-5.11.1-portable.exe`
 
 L'installateur est recommandé pour une utilisation régulière. La version portable convient aux essais, à une utilisation temporaire ou à un disque amovible.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### Points forts de la v5.11.0
+### Points forts de la v5.11.1
 
-* Reconstruit les cartes paysage en composition libre à deux colonnes, choisie par des mesures DOM complètes.
-* Met à l’échelle uniformément la pochette, les métadonnées et les marques de la colonne gauche tout en conservant le vrai ratio de l’image.
-* Allonge la carte sans rogner ni réduire les paroles et renvoie les documents de plus de 12 lignes logiques vers l’éditeur avec une indication claire.
+* Empêche le texte continu « Partagé par » d’être silencieusement rogné dans le pied des cartes portrait et étend les contrôles de débordement à tout le contenu.
+* Bloque clairement les images haute qualité trop grandes à la limite de pixels du navigateur, au lieu de réduire silencieusement le résultat.
+* Applique le même contrôle exact des pixels à PNG, WebP, JPG, à la version de bureau et à Web Lite.
 
 ## 🌐 Notes de publication multilingues
 
 Par défaut, GitHub Release affiche un résumé en chinois simplifié. Consultez les notes complètes :
-[简体中文](./docs/releases/v5.11.0.zh-CN.md) · [繁體中文](./docs/releases/v5.11.0.zh-TW.md) · [English](./docs/releases/v5.11.0.en.md) · [Français](./docs/releases/v5.11.0.fr.md) · [日本語](./docs/releases/v5.11.0.ja.md) · [Español](./docs/releases/v5.11.0.es.md)
+[简体中文](./docs/releases/v5.11.1.zh-CN.md) · [繁體中文](./docs/releases/v5.11.1.zh-TW.md) · [English](./docs/releases/v5.11.1.en.md) · [Français](./docs/releases/v5.11.1.fr.md) · [日本語](./docs/releases/v5.11.1.ja.md) · [Español](./docs/releases/v5.11.1.es.md)
 
 <a id="fonctionnalités-principales"></a>
 

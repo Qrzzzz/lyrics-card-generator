@@ -231,19 +231,23 @@ export function evaluateExportCardDom(
 }
 
 export function detectExportCardOverflow(root: HTMLElement, tolerance = EXPORT_CARD_OVERFLOW_TOLERANCE) {
-  const lyrics = root.querySelector<HTMLElement>("[data-card-lyrics]");
-  const viewport = root.querySelector<HTMLElement>("[data-card-lyrics-viewport]");
+  const selectors = [
+    "[data-card-safe]",
+    "[data-card-content]",
+    "[data-card-header]",
+    "[data-card-lyrics-viewport]",
+    "[data-card-lyrics]",
+    "[data-card-footer]",
+    "[data-card-accessories]"
+  ] as const;
 
-  return Boolean(
-    (lyrics && (
-      lyrics.scrollHeight > lyrics.clientHeight + tolerance ||
-      lyrics.scrollWidth > lyrics.clientWidth + tolerance
-    )) ||
-    (viewport && (
-      viewport.scrollHeight > viewport.clientHeight + tolerance ||
-      viewport.scrollWidth > viewport.clientWidth + tolerance
-    ))
-  );
+  return selectors.some((selector) => {
+    const element = root.querySelector<HTMLElement>(selector);
+    return Boolean(element && (
+      element.scrollHeight > element.clientHeight + tolerance ||
+      element.scrollWidth > element.clientWidth + tolerance
+    ));
+  });
 }
 
 function createExportCardReadiness(state: AppState, dom: DomReadiness): ExportCardReadiness {

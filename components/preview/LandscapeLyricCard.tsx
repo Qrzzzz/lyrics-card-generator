@@ -74,7 +74,7 @@ export function LandscapeLyricCard({
               height: plan.safeRect.height
             }}
           />
-          <div data-card-content>
+          <div data-card-content className="absolute inset-0">
             <AdaptiveAlbumArtwork
               sourceUrl={activeCover}
               analysis={coverArtwork}
@@ -90,6 +90,7 @@ export function LandscapeLyricCard({
             />
 
             <div
+              data-card-header
               className="absolute z-10"
               style={{
                 left: plan.metadataRect.x,
@@ -108,6 +109,7 @@ export function LandscapeLyricCard({
 
             {plan.accessoriesRect ? (
               <div
+                data-card-accessories
                 className="absolute z-20"
                 style={{
                   left: plan.accessoriesRect.x,

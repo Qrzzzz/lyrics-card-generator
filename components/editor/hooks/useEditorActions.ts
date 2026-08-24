@@ -12,6 +12,7 @@ import {
   isDocumentSemanticStyleChange
 } from "@/lib/editor/apply-style-change";
 import { createExportSnapshot, type ExportSnapshot } from "@/lib/export-snapshot";
+import { getExportRasterSizeIssue } from "@/lib/export-dimensions";
 import {
   ExportTransactionMutex,
   runExportTransaction,
@@ -69,6 +70,7 @@ type UseEditorActionsInput = {
   getExportBlockMessage?: (snapshot?: ExportSnapshot) => string | undefined;
   exportBusyMessage: string;
   exportFailedMessage: string;
+  exportImageTooLargeMessage: string;
   exampleLoadedMessage: string;
   clearAlreadyEmptyMessage: string;
   confirmReplaceDocument: () => boolean;
@@ -118,6 +120,7 @@ export function useEditorActions({
   getExportBlockMessage,
   exportBusyMessage,
   exportFailedMessage,
+  exportImageTooLargeMessage,
   exampleLoadedMessage,
   clearAlreadyEmptyMessage,
   confirmReplaceDocument,
@@ -577,6 +580,10 @@ export function useEditorActions({
     // Export owns an immutable snapshot; the clear version suppresses stale completion effects.
     const clearVersion = clearVersionRef.current;
     const snapshot = createExportSnapshot(parsedState, exportPixelRatio, exportRevisionRef.current, exportFormat);
+    if (getExportRasterSizeIssue(snapshot.width, snapshot.height, snapshot.pixelRatio)) {
+      onNotify(exportImageTooLargeMessage, "warning");
+      return;
+    }
     const result = await runExportTransaction({
       mutex: exportMutexRef.current,
       snapshot,
@@ -585,7 +592,12 @@ export function useEditorActions({
         setActiveExportSnapshot(mountedSnapshot);
         return waitForExportSnapshotNode(() => cardRef.current, mountedSnapshot.id, signal);
       },
-      validateSnapshot: (mountedSnapshot) => getExportBlockMessage?.(mountedSnapshot) ?? null,
+      validateSnapshot: (mountedSnapshot) => {
+        if (getExportRasterSizeIssue(mountedSnapshot.width, mountedSnapshot.height, mountedSnapshot.pixelRatio)) {
+          return exportImageTooLargeMessage;
+        }
+        return getExportBlockMessage?.(mountedSnapshot) ?? null;
+      },
       captureSnapshot: async (mountedSnapshot, node, signal) => {
         const { exportNodeAsImage } = await import("@/lib/export-image");
         return exportNodeAsImage(

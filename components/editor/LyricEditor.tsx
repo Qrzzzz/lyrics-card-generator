@@ -291,6 +291,7 @@ export function LyricEditor() {
     clearAlreadyEmptyMessage: settingsCopy[state.locale].clearAlreadyEmpty,
     exportBusyMessage: t("exportBusy"),
     exportFailedMessage: t("exportFailed"),
+    exportImageTooLargeMessage: t("exportImageTooLarge"),
     confirmReplaceDocument: () => window.confirm(t("replaceDocumentConfirm")),
     onNotify: showToast,
     onCloseExamples: closeExamples,

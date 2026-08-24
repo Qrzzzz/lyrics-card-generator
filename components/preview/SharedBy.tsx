@@ -5,10 +5,11 @@ export function SharedBy({ text, color, variant = "portrait" }: { text: string; 
     <div
       className={
         variant === "landscape"
-          ? "line-clamp-2 max-w-[520px] text-right text-[22px] font-semibold leading-[1.25] opacity-[0.82] drop-shadow-sm"
-          : "max-w-[520px] text-right text-[24px] font-bold tracking-wide opacity-90 drop-shadow-sm"
+          ? "line-clamp-2 min-w-0 max-w-[520px] [overflow-wrap:anywhere] text-right text-[22px] font-semibold leading-[1.25] opacity-[0.82] drop-shadow-sm"
+          : "min-w-0 max-w-[520px] [overflow-wrap:anywhere] text-right text-[24px] font-bold tracking-wide opacity-90 drop-shadow-sm"
       }
       style={{ color }}
+      data-card-shared-by
     >
       {text}
     </div>

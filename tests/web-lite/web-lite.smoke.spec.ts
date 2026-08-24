@@ -1177,6 +1177,72 @@ test("blocks real overflow on a fixed 1:1 export canvas", async ({ page }) => {
   await expect(page.getByText(/cannot fit all lyrics/i)).toBeVisible();
 });
 
+test("wraps unbroken shared-by text and exports the complete portrait footer", async ({ page }) => {
+  test.setTimeout(120_000);
+  await openWebLite(page, { width: 1280, height: 900 });
+  await page.locator('[data-step-id="lyrics"]').click();
+  await page.getByLabel("Lyric Text", { exact: true }).fill("A stable line\nA second stable line");
+  await page.locator('[data-step-id="visual"]').click();
+  await page.getByRole("switch", { name: "Show Shared By", exact: true }).click();
+  await page.getByPlaceholder("e.g. Shared by Cherry", { exact: true }).fill("W".repeat(120));
+
+  const exportCard = page.locator('[data-export-card-host] [data-export-card="true"]').first();
+  const sharedBy = exportCard.locator("[data-card-shared-by]");
+  const footer = exportCard.locator("[data-card-footer]");
+  await expect(sharedBy).toBeVisible();
+  await expect.poll(async () => sharedBy.evaluate((node) => (
+    (node as HTMLElement).clientWidth > 0 &&
+    (node as HTMLElement).scrollWidth <= (node as HTMLElement).clientWidth + 1
+  ))).toBe(true);
+  await expect.poll(async () => footer.evaluate((node) => (
+    (node as HTMLElement).scrollWidth <= (node as HTMLElement).clientWidth + 1
+  ))).toBe(true);
+
+  await page.locator('[data-step-id="export"]').click();
+  const highQuality = page.locator('[data-segment-value="high"]');
+  await highQuality.click();
+  await expect(highQuality).toHaveAttribute("aria-checked", "true");
+  const exportButton = page.getByTestId("complete-export-button");
+  await expect(exportButton).toBeEnabled();
+  const logicalSize = await exportCard.evaluate((card) => ({
+    width: (card as HTMLElement).offsetWidth,
+    height: (card as HTMLElement).offsetHeight
+  }));
+  const [download] = await Promise.all([page.waitForEvent("download"), exportButton.click()]);
+  expect(await pngDimensions(download)).toEqual({
+    width: logicalSize.width * 2,
+    height: logicalSize.height * 2
+  });
+});
+
+test("blocks oversized high-quality landscape exports instead of silently scaling them", async ({ page }) => {
+  test.setTimeout(120_000);
+  await openWebLite(page, { width: 1440, height: 1000 });
+  await page.locator('[data-step-id="lyrics"]').click();
+  await page.getByLabel("Lyric Text", { exact: true }).fill(
+    Array.from({ length: 12 }, (_, index) => `${index + 1} ${"W".repeat(120)}`).join("\n")
+  );
+  await page.locator('[data-step-id="layout"]').click();
+  await page.locator('[data-segment-value="landscape"]').click();
+  const autoWidth = page.getByRole("switch", { name: "Auto Width", exact: true });
+  if (await autoWidth.getAttribute("aria-checked") === "true") await autoWidth.click();
+  await setRangeValue(page.getByLabel("Lyrics Region Width", { exact: true }), 520);
+
+  const exportCard = page.locator('[data-export-card-host] [data-export-card="true"]').first();
+  await expect(exportCard).toHaveAttribute("data-landscape-plan", "ready", { timeout: 20_000 });
+  await expect.poll(async () => exportCard.evaluate((card) => (card as HTMLElement).offsetHeight)).toBeGreaterThan(8192);
+  await page.locator('[data-step-id="export"]').click();
+  await page.locator('[data-segment-value="high"]').click();
+  const exportButton = page.getByTestId("complete-export-button");
+  await expect(exportButton).toBeEnabled();
+  let downloadCount = 0;
+  page.on("download", () => { downloadCount += 1; });
+  await exportButton.click();
+  await expect(page.getByText(/pixel-size limit/i)).toBeVisible();
+  await page.waitForTimeout(500);
+  expect(downloadCount).toBe(0);
+});
+
 test("exports from the independent host while the visible preview is collapsed", async ({ page }) => {
   test.setTimeout(120_000);
   await openWebLite(page, { width: 768, height: 1024 });

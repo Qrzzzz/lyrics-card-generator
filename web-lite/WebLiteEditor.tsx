@@ -30,6 +30,7 @@ import {
 import { clearLyricContent, hasClearableLyricContent } from "@/lib/clear-content";
 import { applyEditorStyleChange } from "@/lib/editor/apply-style-change";
 import { exportNodeAsImage } from "@/lib/export-image";
+import { getExportRasterSizeIssue } from "@/lib/export-dimensions";
 import { createExportSnapshot, snapshotAsAppState, type ExportSnapshot } from "@/lib/export-snapshot";
 import { resolveExportSafetyMessage } from "@/lib/export-safety";
 import { getExportLyricLineStatus } from "@/lib/lyrics-document";
@@ -392,6 +393,10 @@ export function WebLiteEditor() {
       exportRevisionRef.current,
       exportFormat
     );
+    if (getExportRasterSizeIssue(snapshot.width, snapshot.height, snapshot.pixelRatio)) {
+      showToast(t("exportImageTooLarge"), "warning");
+      return;
+    }
     // The mutex serializes mount, validation, capture, and guaranteed unmount as one transaction.
     const result = await runExportTransaction({
       mutex: exportMutexRef.current,
@@ -402,6 +407,9 @@ export function WebLiteEditor() {
         return waitForExportSnapshotNode(() => captureCardRef.current, mountedSnapshot.id, signal);
       },
       validateSnapshot: (mountedSnapshot) => {
+        if (getExportRasterSizeIssue(mountedSnapshot.width, mountedSnapshot.height, mountedSnapshot.pixelRatio)) {
+          return t("exportImageTooLarge");
+        }
         const snapshotState = snapshotAsAppState(mountedSnapshot, parsedState);
         const validation = getLiveExportCardValidation(snapshotState, captureCardRef.current);
         return validation.blockingReason
