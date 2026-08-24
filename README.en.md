@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v5.11.0.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v5.11.1.en.md">Release Notes</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
   <a href="./docs/web-lite-browser-support.md">Web Lite Browser Support</a> ·
   <a href="#features">Features</a> ·
@@ -75,25 +75,25 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 ## 📦 Download and Installation
 
-Download v5.11.0 from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
+Download v5.11.1 from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Installer: `Lyrics Card Generator Setup 5.11.0.exe`
-* Portable build: `Lyrics Card Generator-5.11.0-portable.exe`
+* Installer: `Lyrics Card Generator Setup 5.11.1.exe`
+* Portable build: `Lyrics Card Generator-5.11.1-portable.exe`
 
 The installer is recommended for regular use. The portable version is useful for temporary use, testing, or running from a removable drive.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v5.11.0 Highlights
+### v5.11.1 Highlights
 
-* Rebuilds landscape cards as a free-ratio two-column composition chosen from complete DOM measurements.
-* Treats the cover, song metadata, and optional marks as one uniformly scaled left-column design unit while preserving the artwork's real ratio.
-* Grows landscape height instead of clipping or shrinking lyrics, and returns 13+ logical-line documents to the lyrics editor with guidance.
+* Prevents unbroken “Shared by” text from being silently clipped in portrait footers and includes the complete content area in export overflow checks.
+* Explicitly blocks oversized high-quality images at the browser pixel limit instead of silently scaling the output and reporting success.
+* Gives PNG, WebP, JPG, Desktop, and Web Lite the same exact rendered-pixel gate.
 
 ## 🌐 Multilingual Release Notes
 
 GitHub Release displays a Simplified Chinese summary by default. See the full release notes:
-[简体中文](./docs/releases/v5.11.0.zh-CN.md) · [繁體中文](./docs/releases/v5.11.0.zh-TW.md) · [English](./docs/releases/v5.11.0.en.md) · [Français](./docs/releases/v5.11.0.fr.md) · [日本語](./docs/releases/v5.11.0.ja.md) · [Español](./docs/releases/v5.11.0.es.md)
+[简体中文](./docs/releases/v5.11.1.zh-CN.md) · [繁體中文](./docs/releases/v5.11.1.zh-TW.md) · [English](./docs/releases/v5.11.1.en.md) · [Français](./docs/releases/v5.11.1.fr.md) · [日本語](./docs/releases/v5.11.1.ja.md) · [Español](./docs/releases/v5.11.1.es.md)
 
 <a id="features"></a>
 

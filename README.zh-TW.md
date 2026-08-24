@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v5.11.0.zh-TW.md">發布說明</a> ·
+  <a href="./docs/releases/v5.11.1.zh-TW.md">發布說明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">線上 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="#本機開發">本機開發</a> ·
@@ -71,25 +71,25 @@
 
 ## 📦 下載與安裝
 
-請從 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載 v5.11.0：
+請從 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載 v5.11.1：
 
-* 安裝版：`Lyrics Card Generator Setup 5.11.0.exe`
-* 可攜版：`Lyrics Card Generator-5.11.0-portable.exe`
+* 安裝版：`Lyrics Card Generator Setup 5.11.1.exe`
+* 可攜版：`Lyrics Card Generator-5.11.1-portable.exe`
 
 安裝版適合長期使用；可攜版適合臨時執行、測試或放在隨身碟中使用。
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v5.11.0 更新重點
+### v5.11.1 更新重點
 
-* 將橫式卡片完全重寫為自由比例雙欄版面，並以完整 DOM 測量自動選擇歌詞區域寬度。
-* 封面、歌曲資訊與附屬標誌形成統一縮放的左欄，封面始終依真實比例完整顯示。
-* 橫式高度會延伸而不裁切或縮小歌詞；超過 12 個邏輯行時會返回歌詞編輯並提示處理方式。
+* 修正連續分享者文字在直式頁尾中被靜默裁切的問題，並將完整內容區納入匯出溢位檢查。
+* 超長高品質圖片超過瀏覽器像素限制時會明確阻止匯出，不再暗中縮小成品後回報成功。
+* PNG、WebP、JPG 以及桌面版、Web Lite 現在共用同一套像素尺寸硬門檻。
 
 ## 🌐 多語言發佈說明
 
 GitHub Release 預設顯示簡體中文摘要，完整說明請見：
-[简体中文](./docs/releases/v5.11.0.zh-CN.md) · [繁體中文](./docs/releases/v5.11.0.zh-TW.md) · [English](./docs/releases/v5.11.0.en.md) · [Français](./docs/releases/v5.11.0.fr.md) · [日本語](./docs/releases/v5.11.0.ja.md) · [Español](./docs/releases/v5.11.0.es.md)
+[简体中文](./docs/releases/v5.11.1.zh-CN.md) · [繁體中文](./docs/releases/v5.11.1.zh-TW.md) · [English](./docs/releases/v5.11.1.en.md) · [Français](./docs/releases/v5.11.1.fr.md) · [日本語](./docs/releases/v5.11.1.ja.md) · [Español](./docs/releases/v5.11.1.es.md)
 
 ## ✨ 主要功能
 

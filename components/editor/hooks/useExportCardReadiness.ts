@@ -231,19 +231,26 @@ export function evaluateExportCardDom(
 }
 
 export function detectExportCardOverflow(root: HTMLElement, tolerance = EXPORT_CARD_OVERFLOW_TOLERANCE) {
-  const lyrics = root.querySelector<HTMLElement>("[data-card-lyrics]");
-  const viewport = root.querySelector<HTMLElement>("[data-card-lyrics-viewport]");
+  const contracts = [
+    { selector: "[data-card-safe]", checkInline: true },
+    // Portrait content intentionally places its fixed-width lyrics viewport
+    // inside horizontal padding. Descendant contracts own inline clipping;
+    // this aggregate container owns only the full vertical content extent.
+    { selector: "[data-card-content]", checkInline: false },
+    { selector: "[data-card-header]", checkInline: true },
+    { selector: "[data-card-lyrics-viewport]", checkInline: true },
+    { selector: "[data-card-lyrics]", checkInline: true },
+    { selector: "[data-card-footer]", checkInline: true },
+    { selector: "[data-card-accessories]", checkInline: true }
+  ] as const;
 
-  return Boolean(
-    (lyrics && (
-      lyrics.scrollHeight > lyrics.clientHeight + tolerance ||
-      lyrics.scrollWidth > lyrics.clientWidth + tolerance
-    )) ||
-    (viewport && (
-      viewport.scrollHeight > viewport.clientHeight + tolerance ||
-      viewport.scrollWidth > viewport.clientWidth + tolerance
-    ))
-  );
+  return contracts.some(({ selector, checkInline }) => {
+    const element = root.querySelector<HTMLElement>(selector);
+    return Boolean(element && (
+      element.scrollHeight > element.clientHeight + tolerance ||
+      (checkInline && element.scrollWidth > element.clientWidth + tolerance)
+    ));
+  });
 }
 
 function createExportCardReadiness(state: AppState, dom: DomReadiness): ExportCardReadiness {

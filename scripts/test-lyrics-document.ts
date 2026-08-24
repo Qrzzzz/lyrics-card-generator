@@ -42,7 +42,23 @@ function mockExportCard(overflowPixels: number) {
     scrollWidth: 100
   } as HTMLElement;
   return {
-    querySelector: (selector: string) => selector === "[data-card-lyrics]" ? lyrics : viewport
+    querySelector: (selector: string) => {
+      if (selector === "[data-card-lyrics]") return lyrics;
+      if (selector === "[data-card-lyrics-viewport]") return viewport;
+      return null;
+    }
+  } as unknown as HTMLElement;
+}
+
+function mockContractOverflow(selectorWithOverflow: string, overflowPixels: number) {
+  const element = {
+    clientHeight: 100,
+    clientWidth: 100,
+    scrollHeight: 100,
+    scrollWidth: 100 + overflowPixels
+  } as HTMLElement;
+  return {
+    querySelector: (selector: string) => selector === selectorWithOverflow ? element : null
   } as unknown as HTMLElement;
 }
 
@@ -55,6 +71,39 @@ assert.equal(
   detectExportCardOverflow(mockExportCard(EXPORT_CARD_OVERFLOW_TOLERANCE + 1)),
   true,
   "overflow beyond the shared settle tolerance remains blocking"
+);
+assert.equal(
+  detectExportCardOverflow(mockContractOverflow("[data-card-footer]", EXPORT_CARD_OVERFLOW_TOLERANCE)),
+  false,
+  "footer font rounding at the shared tolerance remains exportable"
+);
+assert.equal(
+  detectExportCardOverflow(mockContractOverflow("[data-card-footer]", EXPORT_CARD_OVERFLOW_TOLERANCE + 1)),
+  true,
+  "footer overflow beyond the tolerance blocks portrait export"
+);
+assert.equal(
+  detectExportCardOverflow(mockContractOverflow("[data-card-accessories]", EXPORT_CARD_OVERFLOW_TOLERANCE + 1)),
+  true,
+  "landscape accessory overflow participates in the shared export contract"
+);
+assert.equal(
+  detectExportCardOverflow(mockContractOverflow("[data-card-content]", EXPORT_CARD_OVERFLOW_TOLERANCE + 1)),
+  false,
+  "the portrait aggregate content contract leaves intentional inline geometry to its descendants"
+);
+const verticallyOverflowingContent = {
+  clientHeight: 100,
+  clientWidth: 100,
+  scrollHeight: 100 + EXPORT_CARD_OVERFLOW_TOLERANCE + 1,
+  scrollWidth: 100
+} as HTMLElement;
+assert.equal(
+  detectExportCardOverflow({
+    querySelector: (selector: string) => selector === "[data-card-content]" ? verticallyOverflowingContent : null
+  } as unknown as HTMLElement),
+  true,
+  "the aggregate content contract still blocks vertical clipping"
 );
 const translationDisabled = getExportLyricLineStatus({
   lyrics: "one\ntwo",

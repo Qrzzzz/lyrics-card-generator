@@ -19,7 +19,7 @@
 <p>
   <strong>Navegación</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Descargar la última versión</a> ·
-  <a href="./docs/releases/v5.11.0.es.md">Notas de la versión</a> ·
+  <a href="./docs/releases/v5.11.1.es.md">Notas de la versión</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en línea</a> ·
   <a href="#funciones-principales">Funciones principales</a> ·
   <a href="#desarrollo-local">Desarrollo local</a> ·
@@ -74,25 +74,25 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 ## 📦 Descarga e instalación
 
-Descarga v5.11.0 desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
+Descarga v5.11.1 desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Instalador: `Lyrics Card Generator Setup 5.11.0.exe`
-* Versión portable: `Lyrics Card Generator-5.11.0-portable.exe`
+* Instalador: `Lyrics Card Generator Setup 5.11.1.exe`
+* Versión portable: `Lyrics Card Generator-5.11.1-portable.exe`
 
 El instalador se recomienda para uso habitual. La versión portable es útil para pruebas, uso temporal o ejecución desde una unidad extraíble.
 
 > La compilación actual no está firmada. Windows puede mostrar una advertencia de SmartScreen, algo habitual en aplicaciones personales sin firma.
 
-### Novedades de v5.11.0
+### Novedades de v5.11.1
 
-* Reconstruye las tarjetas horizontales como una composición libre de dos columnas elegida mediante mediciones DOM completas.
-* Escala de forma uniforme la portada, los metadatos y las marcas opcionales de la columna izquierda, conservando la proporción real de la imagen.
-* Aumenta la altura sin recortar ni reducir las letras y devuelve los documentos de más de 12 líneas lógicas al editor con una indicación clara.
+* Evita que el texto continuo de «Compartido por» se recorte silenciosamente en el pie de las tarjetas verticales e incluye todo el contenido en las comprobaciones de desbordamiento.
+* Bloquea claramente las imágenes de alta calidad demasiado grandes al alcanzar el límite de píxeles del navegador, en vez de reducir el resultado en silencio.
+* Aplica la misma comprobación exacta de píxeles a PNG, WebP, JPG, la aplicación de escritorio y Web Lite.
 
 ## 🌐 Notas de publicación multilingües
 
 GitHub Release muestra de forma predeterminada un resumen en chino simplificado. Consulta las notas completas:
-[简体中文](./docs/releases/v5.11.0.zh-CN.md) · [繁體中文](./docs/releases/v5.11.0.zh-TW.md) · [English](./docs/releases/v5.11.0.en.md) · [Français](./docs/releases/v5.11.0.fr.md) · [日本語](./docs/releases/v5.11.0.ja.md) · [Español](./docs/releases/v5.11.0.es.md)
+[简体中文](./docs/releases/v5.11.1.zh-CN.md) · [繁體中文](./docs/releases/v5.11.1.zh-TW.md) · [English](./docs/releases/v5.11.1.en.md) · [Français](./docs/releases/v5.11.1.fr.md) · [日本語](./docs/releases/v5.11.1.ja.md) · [Español](./docs/releases/v5.11.1.es.md)
 
 <a id="funciones-principales"></a>
 

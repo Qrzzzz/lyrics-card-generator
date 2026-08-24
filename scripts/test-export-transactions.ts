@@ -2,6 +2,13 @@ import assert from "node:assert/strict";
 import { defaultState } from "../components/editor/editor-defaults";
 import { evaluateMinimumExportSafety, type ExportDomSafety } from "../lib/export-safety";
 import { exportNodeAsImage, exportNodeAsPng, type ExportImageDependencies } from "../lib/export-image";
+import {
+  EXPORT_CANVAS_DIMENSION_LIMIT,
+  ExportRasterSizeLimitError,
+  ExportRasterSizeMismatchError,
+  getExpectedExportRasterSize,
+  getExportRasterSizeIssue
+} from "../lib/export-dimensions";
 import { createExportSnapshot } from "../lib/export-snapshot";
 import { ExportTransactionMutex, runExportTransaction, waitForExportSnapshotNode } from "../lib/export-transaction";
 import {
@@ -220,10 +227,12 @@ async function fontReadinessTimeoutTest() {
 }
 
 function deferredRender() {
-  let resolve!: (value: string) => void;
+  let resolve!: (value: { dataUrl: string; width: number; height: number }) => void;
   let startedResolve!: () => void;
   const started = new Promise<void>((resolvePromise) => { startedResolve = resolvePromise; });
-  const promise = new Promise<string>((resolvePromise) => { resolve = resolvePromise; });
+  const promise = new Promise<{ dataUrl: string; width: number; height: number }>((resolvePromise) => {
+    resolve = resolvePromise;
+  });
   return {
     renderNode: async () => {
       startedResolve();
@@ -253,7 +262,7 @@ async function exportImageAbortGuardTest() {
   );
   await render.started;
   controller.abort(new Error("cancelled during render"));
-  render.resolve("data:image/png;base64,LATE");
+  render.resolve({ dataUrl: "data:image/png;base64,LATE", width: 2400, height: 3600 });
   await assert.rejects(exporting, /cancelled during render/);
   assert.equal(commits.length, 0, "an aborted production export must never reach link.click/commit");
 
@@ -271,7 +280,7 @@ async function exportImageAbortGuardTest() {
         assert.equal(format, "png");
         assert.equal(options.width, 640);
         assert.equal(options.height, 960);
-        return "data:image/png;base64,OK";
+        return { dataUrl: "data:image/png;base64,OK", width: 640, height: 960 };
       },
       commitDownload: (dataUrl, fileName) => { commits.push({ dataUrl, fileName }); }
     }
@@ -291,7 +300,7 @@ async function exportImageAbortGuardTest() {
       renderNode: async (_node, format, options) => {
         assert.equal(format, "webp");
         assert.equal(options.pixelRatio, 1.4);
-        return "data:image/webp;base64,OK";
+        return { dataUrl: "data:image/webp;base64,OK", width: 896, height: 1344 };
       },
       commitDownload: (dataUrl, fileName) => { commits.push({ dataUrl, fileName }); }
     }
@@ -309,7 +318,7 @@ async function exportImageAbortGuardTest() {
     {
       renderNode: async (_node, format) => {
         assert.equal(format, "jpg");
-        return "data:image/jpeg;base64,OK";
+        return { dataUrl: "data:image/jpeg;base64,OK", width: 1280, height: 1920 };
       },
       commitDownload: (dataUrl, fileName) => { commits.push({ dataUrl, fileName }); }
     }
@@ -329,7 +338,7 @@ async function exportImageAbortGuardTest() {
     {
       renderNode: async (_node, _format, options) => {
         assert.equal(options.cacheBust, false, "blob artwork must retain its exact local URL");
-        return "data:image/png;base64,LOCAL";
+        return { dataUrl: "data:image/png;base64,LOCAL", width: 640, height: 960 };
       },
       commitDownload: (dataUrl, fileName) => { commits.push({ dataUrl, fileName }); }
     }
@@ -346,11 +355,98 @@ async function exportImageAbortGuardTest() {
       1,
       undefined,
       {
-        renderNode: async () => "data:image/png;base64,WRONG",
+        renderNode: async () => ({ dataUrl: "data:image/png;base64,WRONG", width: 640, height: 960 }),
         commitDownload: () => assert.fail("a MIME mismatch must not commit a download")
       }
     ),
     /does not match the requested JPG format/
+  );
+
+  for (const collision of [
+    { format: "png" as const, mimeType: "image/png-fake" },
+    { format: "webp" as const, mimeType: "image/webp-fake" },
+    { format: "jpg" as const, mimeType: "image/jpeg-fake" }
+  ]) {
+    await assert.rejects(
+      exportNodeAsImage(
+        {} as HTMLElement,
+        `prefix-collision.${collision.format}`,
+        collision.format,
+        640,
+        960,
+        1,
+        undefined,
+        {
+          renderNode: async () => ({
+            dataUrl: `data:${collision.mimeType};base64,WRONG`,
+            width: 640,
+            height: 960
+          }),
+          commitDownload: () => assert.fail("a MIME prefix collision must not commit a download")
+        }
+      ),
+      new RegExp(`does not match the requested ${collision.format.toUpperCase()} format`)
+    );
+  }
+
+  assert.deepEqual(getExpectedExportRasterSize(1387, 9399, 1.4), { width: 1941, height: 13158 });
+  assert.equal(getExportRasterSizeIssue(1387, 8191, 2), null);
+  assert.equal(getExportRasterSizeIssue(1387, 8192, 2), null);
+  assert.notEqual(getExportRasterSizeIssue(1387, 8192, Number.NaN), null);
+  for (const [width, height, pixelRatio] of [
+    [-640, -960, -1],
+    [0, 960, 1],
+    [640, 0, 1],
+    [640, 960, 0],
+    [Number.NaN, 960, 1],
+    [640, Number.POSITIVE_INFINITY, 1],
+    [640, 960, Number.NEGATIVE_INFINITY]
+  ]) {
+    assert.notEqual(
+      getExportRasterSizeIssue(width, height, pixelRatio),
+      null,
+      `invalid raster inputs must be rejected: ${width} x ${height} @ ${pixelRatio}`
+    );
+  }
+  assert.deepEqual(getExportRasterSizeIssue(1387, 8193, 2), {
+    expected: { width: 2774, height: 16386 },
+    limit: EXPORT_CANVAS_DIMENSION_LIMIT
+  });
+
+  await assert.rejects(
+    exportNodeAsPng(
+      {} as HTMLElement,
+      "too-tall.png",
+      1387,
+      8193,
+      2,
+      undefined,
+      {
+        renderNode: async () => assert.fail("an oversized export must fail before rendering"),
+        commitDownload: () => assert.fail("an oversized export must not commit a download")
+      }
+    ),
+    ExportRasterSizeLimitError
+  );
+
+  await assert.rejects(
+    exportNodeAsPng(
+      {} as HTMLElement,
+      "silently-scaled.png",
+      1387,
+      8192,
+      2,
+      undefined,
+      {
+        renderNode: async () => ({
+          dataUrl: "data:image/png;base64,SCALED",
+          width: 1387,
+          height: 8192
+        }),
+        commitDownload: () => assert.fail("a silently scaled image must not commit a download")
+      }
+    ),
+    ExportRasterSizeMismatchError
   );
 }
 
@@ -383,7 +479,7 @@ async function transactionTimeoutBlocksLateExportCommitTest() {
   const result = await resultPromise;
   assert.equal(result.ok, false);
   assert.equal(result.ok ? null : result.kind, "error");
-  render.resolve("data:image/png;base64,LATE");
+  render.resolve({ dataUrl: "data:image/png;base64,LATE", width: 2080, height: 2912 });
   await new Promise((resolve) => setTimeout(resolve, 0));
   assert.equal(commitCount, 0, "a transaction timeout must block a late html-to-image result from downloading");
 }

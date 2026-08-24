@@ -1,6 +1,12 @@
 "use client";
 
-import { toCanvas, toJpeg, toPng } from "html-to-image";
+import { toCanvas } from "html-to-image";
+import {
+  ExportRasterSizeLimitError,
+  ExportRasterSizeMismatchError,
+  getExpectedExportRasterSize,
+  getExportRasterSizeIssue
+} from "@/lib/export-dimensions";
 import { EXPORT_FORMAT_OPTIONS, type ExportFormatId } from "@/lib/settings/types";
 
 export type ExportImageRenderOptions = {
@@ -12,21 +18,24 @@ export type ExportImageRenderOptions = {
 };
 
 export type ExportImageDependencies = {
-  renderNode: (node: HTMLElement, format: ExportFormatId, options: ExportImageRenderOptions) => Promise<string>;
+  renderNode: (
+    node: HTMLElement,
+    format: ExportFormatId,
+    options: ExportImageRenderOptions
+  ) => Promise<{ dataUrl: string; width: number; height: number }>;
   commitDownload: (dataUrl: string, fileName: string) => void;
 };
 
 const defaultDependencies: ExportImageDependencies = {
   renderNode: async (node, format, options) => {
-    if (format === "png") return toPng(node, options);
-    if (format === "jpg") return toJpeg(node, { ...options, quality: 0.94 });
-
     const canvas = await toCanvas(node, options);
-    const dataUrl = canvas.toDataURL("image/webp", 0.94);
-    if (!dataUrl.startsWith("data:image/webp")) {
+    const formatOption = EXPORT_FORMAT_OPTIONS.find((option) => option.id === format);
+    if (!formatOption) throw new Error(`Unsupported export format: ${format}`);
+    const dataUrl = canvas.toDataURL(formatOption.mimeType, format === "png" ? undefined : 0.94);
+    if (format === "webp" && getDataUrlMediaType(dataUrl) !== "image/webp") {
       throw new Error("WebP export is not supported by this browser.");
     }
-    return dataUrl;
+    return { dataUrl, width: canvas.width, height: canvas.height };
   },
   commitDownload: (dataUrl, fileName) => {
     const link = document.createElement("a");
@@ -48,7 +57,11 @@ export async function exportNodeAsImage(
 ) {
   throwIfAborted(signal);
 
-  const dataUrl = await dependencies.renderNode(node, format, {
+  const sizeIssue = getExportRasterSizeIssue(width, height, pixelRatio);
+  if (sizeIssue) throw new ExportRasterSizeLimitError(sizeIssue);
+  const expectedSize = getExpectedExportRasterSize(width, height, pixelRatio);
+
+  const rendered = await dependencies.renderNode(node, format, {
     // html-to-image appends a query string when cacheBust is enabled. That is
     // valid for HTTP images but invalidates local blob: URLs completely.
     cacheBust: shouldCacheBust(node),
@@ -62,8 +75,15 @@ export async function exportNodeAsImage(
     }
   });
 
+  if (rendered.width !== expectedSize.width || rendered.height !== expectedSize.height) {
+    throw new ExportRasterSizeMismatchError(expectedSize, {
+      width: rendered.width,
+      height: rendered.height
+    });
+  }
+
   const formatOption = EXPORT_FORMAT_OPTIONS.find((option) => option.id === format);
-  if (!formatOption || !dataUrl.startsWith(`data:${formatOption.mimeType}`)) {
+  if (!formatOption || getDataUrlMediaType(rendered.dataUrl) !== formatOption.mimeType) {
     throw new Error(`The rendered image does not match the requested ${format.toUpperCase()} format.`);
   }
 
@@ -71,7 +91,12 @@ export async function exportNodeAsImage(
   // irreversible download if the transaction timed out while it was running.
   throwIfAborted(signal);
 
-  dependencies.commitDownload(dataUrl, fileName);
+  dependencies.commitDownload(rendered.dataUrl, fileName);
+}
+
+function getDataUrlMediaType(dataUrl: string) {
+  const match = /^data:([^;,]+)(?:;[^,]*)?,/i.exec(dataUrl);
+  return match?.[1]?.trim().toLowerCase() ?? null;
 }
 
 function shouldCacheBust(node: HTMLElement) {
