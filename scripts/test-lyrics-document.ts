@@ -87,6 +87,24 @@ assert.equal(
   true,
   "landscape accessory overflow participates in the shared export contract"
 );
+assert.equal(
+  detectExportCardOverflow(mockContractOverflow("[data-card-content]", EXPORT_CARD_OVERFLOW_TOLERANCE + 1)),
+  false,
+  "the portrait aggregate content contract leaves intentional inline geometry to its descendants"
+);
+const verticallyOverflowingContent = {
+  clientHeight: 100,
+  clientWidth: 100,
+  scrollHeight: 100 + EXPORT_CARD_OVERFLOW_TOLERANCE + 1,
+  scrollWidth: 100
+} as HTMLElement;
+assert.equal(
+  detectExportCardOverflow({
+    querySelector: (selector: string) => selector === "[data-card-content]" ? verticallyOverflowingContent : null
+  } as unknown as HTMLElement),
+  true,
+  "the aggregate content contract still blocks vertical clipping"
+);
 const translationDisabled = getExportLyricLineStatus({
   lyrics: "one\ntwo",
   translationText: "uno\ndos\ntres",
