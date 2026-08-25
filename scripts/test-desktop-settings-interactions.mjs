@@ -2551,6 +2551,70 @@ async function assertLyricsWorkbenchOperations(originalLyrics, translationLyrics
   await setWindowSize(1280, 900);
   await page.getByTestId("lyrics-sidebar").waitFor({ state: "visible" });
   await page.getByTestId("lyrics-sidebar-tab-cleanup").click();
+  const firstCommand = page.getByTestId("lyrics-command-bar").locator("button").first();
+  assert.equal(
+    await firstCommand.getAttribute("data-testid"),
+    "lyrics-command-keep-selection",
+    "keep-selection is the first command in the top toolbar"
+  );
+  assert.match(
+    await firstCommand.getAttribute("class") ?? "",
+    /lyrics-command-button--accent/u,
+    "keep-selection uses the lightweight accent treatment"
+  );
+
+  const keepFixture = "before line\nkeep this exact text\nafter line";
+  await fillExact(originalLyrics, keepFixture);
+  await selectLyricsRange(originalLyrics, 0, 0);
+  assert.equal(
+    await page.getByTestId("lyrics-command-keep-selection").isDisabled(),
+    true,
+    "keep-selection is unavailable without an explicit selection"
+  );
+  const keepStart = keepFixture.indexOf("this exact");
+  await selectLyricsRange(originalLyrics, keepStart, keepStart + "this exact".length);
+  assert.equal(
+    await page.getByTestId("lyrics-command-keep-selection").isEnabled(),
+    true,
+    "an explicit selection enables keep-selection"
+  );
+  await page.getByTestId("lyrics-command-keep-selection").click();
+  assert.equal(
+    await originalLyrics.inputValue(),
+    "this exact",
+    "keep-selection removes every character outside the exact browser selection"
+  );
+  assert.deepEqual(
+    await originalLyrics.evaluate((node) => ({ start: node.selectionStart, end: node.selectionEnd })),
+    { start: 0, end: "this exact".length },
+    "keep-selection restores the retained range as the active selection"
+  );
+  await page.getByTestId("lyrics-command-undo").click();
+  assert.equal(await originalLyrics.inputValue(), keepFixture, "keep-selection participates in operation-level undo");
+  await page.getByTestId("lyrics-command-redo").click();
+  assert.equal(await originalLyrics.inputValue(), "this exact", "redo reapplies keep-selection");
+  await page.getByTestId("lyrics-command-undo").click();
+
+  const translationKeepFixture = "avant\ngarder exactement ceci\naprès";
+  await fillExact(translationLyrics, translationKeepFixture);
+  const translationKeepStart = translationKeepFixture.indexOf("exactement");
+  await selectLyricsRange(
+    translationLyrics,
+    translationKeepStart,
+    translationKeepStart + "exactement".length
+  );
+  await page.getByTestId("lyrics-command-keep-selection").click();
+  assert.equal(
+    await translationLyrics.inputValue(),
+    "exactement",
+    "keep-selection applies to the active translation column"
+  );
+  assert.equal(
+    await originalLyrics.inputValue(),
+    keepFixture,
+    "keeping a translation selection leaves the original column untouched"
+  );
+  await page.getByTestId("lyrics-command-undo").click();
 
   const scopedFixture = "alpha  \nkeep\u200B\nomega  ";
   await fillExact(originalLyrics, scopedFixture);
@@ -3255,7 +3319,7 @@ async function assertLyricsWorkspaceNarrowBehavior(originalLyrics, translationLy
     await page.getByTestId("lyrics-sidebar-close-drawer").click();
     await page.getByTestId("lyrics-sidebar").waitFor({ state: "hidden" });
     assert.equal(await page.getByTestId("lyrics-command-find").count(), 0, "narrow command bar does not expose low-value find/replace");
-    for (const command of ["clean-paste", "collapse-blanks", "strip-lrc", "ai"]) {
+    for (const command of ["keep-selection", "clean-paste", "collapse-blanks", "strip-lrc", "ai"]) {
       await page.getByTestId(`lyrics-command-${command}`).waitFor({ state: "visible" });
     }
     for (const command of ["fetch", "review"]) {

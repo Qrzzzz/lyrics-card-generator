@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v5.12.0.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v5.12.1.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="./docs/development.en.md">ローカル開発</a> ·
@@ -74,25 +74,25 @@
 
 ## 📦 ダウンロードとインストール
 
-v5.12.0 は [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) からダウンロードできます。
+v5.12.1 は [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) からダウンロードできます。
 
-* インストーラー：`Lyrics Card Generator Setup 5.12.0.exe`
-* ポータブル版：`Lyrics Card Generator-5.12.0-portable.exe`
+* インストーラー：`Lyrics Card Generator Setup 5.12.1.exe`
+* ポータブル版：`Lyrics Card Generator-5.12.1-portable.exe`
 
 通常利用にはインストーラーを推奨します。ポータブル版は一時利用、検証、リムーバブルドライブでの利用に向いています。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v5.12.0 の主な更新
+### v5.12.1 の主な更新
 
-* ローカル音声のアップロードで MP3 と FLAC に加えて M4A に対応し、タイトル、アーティスト、アルバム、アートワーク、埋め込み歌詞を読み取ります。歌詞がない場合も取得した曲情報は保持されます。
-* `audio/mp4`、`audio/m4a`、`audio/x-m4a` に対応し、既存の 100 MB 上限、制限付き multipart 読み取り、解析失敗時の保護を維持します。
-* Windows デスクトップ版の読み込み履歴は、正常に確定した M4A ファイルを音声データそのものは保存せずに再読み込み、再指定できます。
+* ステップ2の上部ツールバーの先頭に、軽いアクセント表示の「選択範囲のみ残す」コマンドを追加しました。テキストが選択されていない間は無効です。
+* 原文または翻訳の列で選択した文字を正確に残し、現在の列にあるそれ以外の内容を削除します。もう一方の列は変更しません。
+* 選択範囲の復元と元に戻す／やり直しに対応し、続けて編集したり、すぐに元に戻したりできます。
 
 ## 🌐 多言語リリースノート
 
 GitHub Release ではデフォルトで簡体字中国語の概要が表示されます。完全なリリースノートはこちら：
-[简体中文](./docs/releases/v5.12.0.zh-CN.md) · [繁體中文](./docs/releases/v5.12.0.zh-TW.md) · [English](./docs/releases/v5.12.0.en.md) · [Français](./docs/releases/v5.12.0.fr.md) · [日本語](./docs/releases/v5.12.0.ja.md) · [Español](./docs/releases/v5.12.0.es.md)
+[简体中文](./docs/releases/v5.12.1.zh-CN.md) · [繁體中文](./docs/releases/v5.12.1.zh-TW.md) · [English](./docs/releases/v5.12.1.en.md) · [Français](./docs/releases/v5.12.1.fr.md) · [日本語](./docs/releases/v5.12.1.ja.md) · [Español](./docs/releases/v5.12.1.es.md)
 
 <a id="主な機能"></a>
 
@@ -109,6 +109,7 @@ GitHub Release ではデフォルトで簡体字中国語の概要が表示さ�
 ### 📝 歌詞のレイアウトと翻訳
 
 * 原文歌詞と翻訳のレイアウト
+* 原文または翻訳の列で選択した範囲だけを残し、元に戻す／やり直しに対応
 * 簡体字中国語、繁体字中国語、英語、フランス語、日本語、スペイン語の目標言語検出による原文 / 翻訳の自動分割
 * OpenAI 互換 Chat Completions API を使う AI 歌詞翻訳。プロバイダー URL、モデル、API キー、6 件の既定プリセット、最大 2 件のカスタムプリセット、Reasoning、ストリーミング出力を設定可能
 

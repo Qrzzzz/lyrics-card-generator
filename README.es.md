@@ -19,7 +19,7 @@
 <p>
   <strong>Navegación</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Descargar la última versión</a> ·
-  <a href="./docs/releases/v5.12.0.es.md">Notas de la versión</a> ·
+  <a href="./docs/releases/v5.12.1.es.md">Notas de la versión</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en línea</a> ·
   <a href="#funciones-principales">Funciones principales</a> ·
   <a href="./docs/development.en.md">Desarrollo local</a> ·
@@ -74,25 +74,25 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 ## 📦 Descarga e instalación
 
-Descarga v5.12.0 desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
+Descarga v5.12.1 desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Instalador: `Lyrics Card Generator Setup 5.12.0.exe`
-* Versión portable: `Lyrics Card Generator-5.12.0-portable.exe`
+* Instalador: `Lyrics Card Generator Setup 5.12.1.exe`
+* Versión portable: `Lyrics Card Generator-5.12.1-portable.exe`
 
 El instalador se recomienda para uso habitual. La versión portable es útil para pruebas, uso temporal o ejecución desde una unidad extraíble.
 
 > La compilación actual no está firmada. Windows puede mostrar una advertencia de SmartScreen, algo habitual en aplicaciones personales sin firma.
 
-### Novedades de v5.12.0
+### Novedades de v5.12.1
 
-* La carga de audio local ahora admite M4A además de MP3 y FLAC, y lee el título, el artista, el álbum, la portada y las letras incrustadas, conservando la información detectada cuando no hay letras.
-* Admite `audio/mp4`, `audio/m4a` y `audio/x-m4a`, manteniendo el límite de 100 MB, la lectura multipart acotada y las protecciones ante errores de análisis.
-* El historial de la versión de escritorio para Windows puede volver a importar y reubicar archivos M4A confirmados sin guardar su contenido de audio.
+* El primer elemento de la barra de herramientas del paso 2 es ahora el comando «Conservar selección», con un énfasis visual ligero; permanece desactivado hasta que se selecciona texto.
+* Conserva exactamente los caracteres seleccionados en la columna original o traducida, elimina el resto de la columna activa y deja la otra columna sin cambios.
+* La operación admite la restauración de selección y el historial de deshacer y rehacer, para seguir editando o deshacerla de inmediato.
 
 ## 🌐 Notas de publicación multilingües
 
 GitHub Release muestra de forma predeterminada un resumen en chino simplificado. Consulta las notas completas:
-[简体中文](./docs/releases/v5.12.0.zh-CN.md) · [繁體中文](./docs/releases/v5.12.0.zh-TW.md) · [English](./docs/releases/v5.12.0.en.md) · [Français](./docs/releases/v5.12.0.fr.md) · [日本語](./docs/releases/v5.12.0.ja.md) · [Español](./docs/releases/v5.12.0.es.md)
+[简体中文](./docs/releases/v5.12.1.zh-CN.md) · [繁體中文](./docs/releases/v5.12.1.zh-TW.md) · [English](./docs/releases/v5.12.1.en.md) · [Français](./docs/releases/v5.12.1.fr.md) · [日本語](./docs/releases/v5.12.1.ja.md) · [Español](./docs/releases/v5.12.1.es.md)
 
 <a id="funciones-principales"></a>
 
@@ -109,6 +109,7 @@ GitHub Release muestra de forma predeterminada un resumen en chino simplificado.
 ### 📝 Diseño y traducción de letras
 
 * Diseño de letra original y traducción
+* Conservación de una selección exacta en cualquiera de las columnas, con deshacer y rehacer
 * Separación automática de líneas original / traducción con detección de chino simplificado, chino tradicional, inglés, francés, japonés y español
 * Traducción de letras con IA mediante API Chat Completions compatibles con OpenAI, con URL del proveedor, modelo, clave API, seis preajustes predeterminados, hasta dos personalizados, Reasoning y salida en streaming configurables
 

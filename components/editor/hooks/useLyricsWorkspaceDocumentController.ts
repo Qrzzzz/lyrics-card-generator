@@ -23,6 +23,7 @@ import {
   collapseConsecutiveBlankLines,
   createLyricsOperationHistory,
   getLyricsLineSelection,
+  keepSelectedLyricsText,
   mergeSelectedLyricsLines,
   recordLyricsOperation,
   redoLyricsOperation,
@@ -354,6 +355,11 @@ export function useLyricsWorkspaceDocumentController({
     );
   }
 
+  function keepSelection() {
+    const result = keepSelectedLyricsText(activeText, activeSelection);
+    applyActiveTransform(copy.keepSelection, result, copy.keptSelectionResult);
+  }
+
   function cleanLrc() {
     const result = stripLrcTimeline(activeText, activeSelection);
     applyActiveTransform(
@@ -497,6 +503,7 @@ export function useLyricsWorkspaceDocumentController({
     feedback,
     formatTranslation,
     handleTranslationEnabledChange,
+    keepSelection,
     locateIssue,
     mergeLines,
     onEditorFocus,

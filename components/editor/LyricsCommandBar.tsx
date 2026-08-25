@@ -7,6 +7,7 @@ import {
   PanelRightClose,
   PanelRightOpen,
   Redo2,
+  TextSelect,
   TimerOff,
   Undo2
 } from "lucide-react";
@@ -20,6 +21,7 @@ export type LyricsCommandIntent = "ai";
 export function LyricsCommandBar({
   copy,
   activeTab,
+  canKeepSelection,
   canUndo,
   canRedo,
   isAITranslating,
@@ -33,6 +35,7 @@ export function LyricsCommandBar({
   sidebarToggleRef,
   onUndo,
   onRedo,
+  onKeepSelection,
   onCleanPaste,
   onCollapseBlankLines,
   onStripLrc,
@@ -41,6 +44,7 @@ export function LyricsCommandBar({
 }: {
   copy: LyricsWorkspaceCopy;
   activeTab: LyricsSidebarTab;
+  canKeepSelection: boolean;
   canUndo: boolean;
   canRedo: boolean;
   isAITranslating: boolean;
@@ -54,6 +58,7 @@ export function LyricsCommandBar({
   sidebarToggleRef?: Ref<HTMLButtonElement>;
   onUndo: () => void;
   onRedo: () => void;
+  onKeepSelection: () => void;
   onCleanPaste: () => void;
   onCollapseBlankLines: () => void;
   onStripLrc: () => void;
@@ -69,6 +74,15 @@ export function LyricsCommandBar({
       data-active-tab={activeTab}
     >
       <div className="lyrics-command-group flex min-w-0 items-center gap-1 overflow-hidden">
+        <CommandShortcut
+          label={copy.keepSelection}
+          testId="lyrics-command-keep-selection"
+          onClick={onKeepSelection}
+          disabled={!canKeepSelection}
+          icon={<TextSelect className="size-3.5" />}
+          emphasis
+        />
+        <span className="lyrics-command-separator mx-0.5 h-5 w-px" aria-hidden="true" />
         <CommandIconButton
           label={copy.undo}
           testId="lyrics-command-undo"
@@ -200,18 +214,23 @@ function CommandShortcut({
   icon,
   testId,
   onClick,
-  disabled = false
+  disabled = false,
+  emphasis = false
 }: {
   label: string;
   icon: React.ReactNode;
   testId: string;
   onClick: () => void;
   disabled?: boolean;
+  emphasis?: boolean;
 }) {
   return (
     <button
       type="button"
-      className="app-button lyrics-command-button control-focus flex h-8 items-center gap-1.5 rounded-md px-2 text-[10px] font-semibold disabled:cursor-wait disabled:opacity-45"
+      className={cn(
+        "app-button lyrics-command-button control-focus flex h-8 items-center gap-1.5 rounded-md px-2 text-[10px] font-semibold disabled:cursor-wait disabled:opacity-45",
+        emphasis && "lyrics-command-button--accent"
+      )}
       onClick={onClick}
       disabled={disabled}
       title={label}
