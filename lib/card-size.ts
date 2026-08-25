@@ -54,10 +54,11 @@ export function estimateCardHeight(params: {
   lyricFontSize: number;
   lineHeight: number;
   contentMode: ContentMode;
+  title: string;
   showCover: boolean;
   showSongInfo: boolean;
   hasAlbumName: boolean;
-  allowTwoLineTitle: boolean;
+  allowMultiLineTitle: boolean;
   showGeneratedWatermark: boolean;
   showPlatformBadge: boolean;
   showSharedBy: boolean;
@@ -79,7 +80,17 @@ export function estimateCardHeight(params: {
     lyricLineCount,
     Math.ceil(lyricCharacterCount / averageCharsPerLine)
   );
-  const topArea = params.showSongInfo || params.showCover ? (params.hasAlbumName ? 340 : 280) : 80;
+  const titleUnits = Array.from(params.title.trim() || "Untitled").reduce((total, character) => (
+    total + (/\p{Script=Han}|\p{Script=Hiragana}|\p{Script=Katakana}|\p{Extended_Pictographic}/u.test(character) ? 1 : 0.58)
+  ), 0);
+  const songInfoWidth = params.showCover ? params.width * 0.55 : params.width * 0.82;
+  const titleLines = params.showSongInfo && params.allowMultiLineTitle
+    ? Math.max(1, Math.ceil((titleUnits * 51) / Math.max(1, songInfoWidth)))
+    : 1;
+  const titleOverflowHeight = (titleLines - 1) * 51 * 1.48;
+  const topArea = params.showSongInfo || params.showCover
+    ? (params.hasAlbumName ? 340 : 280) + titleOverflowHeight
+    : 80;
   const hasFooter = params.showGeneratedWatermark || params.showPlatformBadge || params.showSharedBy;
   const bottomArea = hasFooter ? 120 : 40;
   const lyricArea = wrappedLines * params.lyricFontSize * params.lineHeight;

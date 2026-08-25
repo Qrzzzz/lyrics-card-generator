@@ -196,7 +196,7 @@ assert.equal(
   "landscape waits on its derived plan instead of treating legacy height as a crop boundary"
 );
 
-const longAutoHeightEstimate = estimateCardHeight({
+const autoHeightEstimateParams: Parameters<typeof estimateCardHeight>[0] = {
   width: 720,
   lyrics: Array.from({ length: 36 }, () => "a deliberately long authored lyric line for wrapping").join("\n"),
   translationEnabled: false,
@@ -204,16 +204,30 @@ const longAutoHeightEstimate = estimateCardHeight({
   lyricFontSize: 72,
   lineHeight: 1.8,
   contentMode: "lyrics",
+  title: "A title that may wrap onto several lines",
   showCover: true,
   showSongInfo: true,
   hasAlbumName: true,
-  allowTwoLineTitle: true,
+  allowMultiLineTitle: true,
   showGeneratedWatermark: true,
   showPlatformBadge: true,
   showSharedBy: true
-});
+};
+const longAutoHeightEstimate = estimateCardHeight(autoHeightEstimateParams);
 assert.ok(longAutoHeightEstimate > 3200);
 assert.ok(longAutoHeightEstimate <= AUTO_HEIGHT_MAX);
+assert.ok(
+  estimateCardHeight({
+    ...autoHeightEstimateParams,
+    lyrics: "one short lyric",
+    title: "A deliberately extended song title that must continue wrapping beyond its second rendered line"
+  }) > estimateCardHeight({
+    ...autoHeightEstimateParams,
+    lyrics: "one short lyric",
+    title: "Short title"
+  }),
+  "multi-line song titles reserve additional automatic canvas height"
+);
 
 const exportHostSource = readFileSync(resolve("components/editor/ExportCardHost.tsx"), "utf8");
 assert.ok(exportHostSource.includes('aria-hidden="true"'));

@@ -2650,11 +2650,10 @@ body[data-reduce-motion="true"] .examples-close-button:focus-visible .examples-c
   font-family: ui-serif, Georgia, "Times New Roman", serif;
 }
 
-.two-line-title {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+.multi-line-title {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .star-border-container {

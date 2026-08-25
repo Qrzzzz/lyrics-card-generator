@@ -120,14 +120,22 @@ export function LyricCard({
                   <h1
                     className={cn(
                       "text-[51px] font-black leading-[1.48] tracking-normal",
-                      style.allowTwoLineTitle ? "two-line-title" : "truncate"
+                      style.allowMultiLineTitle ? "multi-line-title" : "truncate"
                     )}
                     style={{ color: textColor }}
+                    data-allow-multi-line-title={style.allowMultiLineTitle ? "true" : "false"}
                   >
-                    <span className="inline-flex max-w-full min-w-0 items-center gap-[0.22em] align-middle">
-                      <span className={style.allowTwoLineTitle ? "min-w-0" : "min-w-0 truncate"}>{song.title || "Untitled"}</span>
-                      <ExplicitBadge show={song.explicit} textColor={textColor} />
-                    </span>
+                    {style.allowMultiLineTitle ? (
+                      <>
+                        <span>{song.title || "Untitled"}</span>{" "}
+                        <ExplicitBadge show={song.explicit} textColor={textColor} />
+                      </>
+                    ) : (
+                      <span className="inline-flex max-w-full min-w-0 items-center gap-[0.22em] align-middle">
+                        <span className="min-w-0 truncate">{song.title || "Untitled"}</span>
+                        <ExplicitBadge show={song.explicit} textColor={textColor} />
+                      </span>
+                    )}
                   </h1>
                   <p
                     className="mt-4 truncate text-[35px] font-semibold leading-[1.5]"
@@ -170,7 +178,7 @@ export function LyricCard({
                 textColor={textColor}
                 isDarkText={isDarkText}
                 showAlbumName={style.showAlbumName}
-                allowTwoLineTitle={style.allowTwoLineTitle}
+                allowMultiLineTitle={style.allowMultiLineTitle}
                 availableWidth={layout.lyricsRect.width}
                 availableHeight={layout.lyricsRect.height}
               />

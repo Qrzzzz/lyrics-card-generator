@@ -667,6 +667,40 @@ test("keeps local readability fields identical in preview and ExportCardHost", a
   await expectReadabilityParity(previewCard, exportCard);
 });
 
+test("renders enabled song titles beyond two lines without clipping portrait or instrumental metadata", async ({ page }) => {
+  test.setTimeout(120_000);
+  await openWebLite(page, { width: 1440, height: 1000 });
+  const longTitle = "The Song Title That Refused to End Because Every Memory Kept Returning After Midnight Beneath the City Lights and Beyond the Last Train Home";
+
+  await page.getByLabel("Song Title", { exact: true }).fill(longTitle);
+  await page.locator('[data-step-id="lyrics"]').click();
+  await page.getByLabel("Lyric Text", { exact: true }).fill("Hold every word\nKeep every light");
+  await page.locator('[data-step-id="visual"]').click();
+  const multiLineToggle = page.getByRole("switch", { name: "Allow Multi-line Title", exact: true });
+  await expect(multiLineToggle).toBeVisible();
+  await multiLineToggle.click();
+
+  const exportCard = page.locator('[data-export-card-host] [data-export-card="true"]').first();
+  const portraitTitle = exportCard.locator('[data-card-header] h1[data-allow-multi-line-title="true"]');
+  await expect(portraitTitle).toContainText(longTitle);
+  await expect.poll(() => readRenderedLineCount(portraitTitle)).toBeGreaterThan(2.5);
+  const portraitGeometry = await readContainedGeometry(portraitTitle, exportCard.locator("[data-card-header]"));
+  expect(portraitGeometry.childScrollHeight).toBeLessThanOrEqual(portraitGeometry.childClientHeight + 1);
+  expect(portraitGeometry.childBottom).toBeLessThanOrEqual(portraitGeometry.parentBottom + 1);
+
+  await page.locator('[data-step-id="layout"]').click();
+  await page.locator('[data-segment-value="instrumental"]').click();
+  const instrumentalTitle = exportCard.locator('h2[data-allow-multi-line-title="true"]');
+  const instrumentalInfo = exportCard.locator("[data-instrumental-song-info]");
+  const instrumentalViewport = exportCard.locator("[data-card-lyrics-viewport]");
+  await expect(instrumentalTitle).toContainText(longTitle);
+  await expect.poll(() => readRenderedLineCount(instrumentalTitle)).toBeGreaterThan(2.5);
+  const instrumentalGeometry = await readContainedGeometry(instrumentalInfo, instrumentalViewport);
+  expect(instrumentalGeometry.childBottom).toBeLessThanOrEqual(instrumentalGeometry.parentBottom + 1);
+  expect(instrumentalGeometry.childTop).toBeGreaterThanOrEqual(instrumentalGeometry.parentTop - 1);
+  await expect(exportCard.locator('[data-testid="instrumental-album-artwork"]')).toHaveAttribute("data-artwork-constrained", "true");
+});
+
 test("blocks a 13-line landscape switch, returns to lyrics, and allows the 12-line boundary", async ({ page }) => {
   await openWebLite(page);
   await page.locator('[data-step-id="lyrics"]').click();
@@ -1651,6 +1685,40 @@ async function expectReadabilityParity(previewCard: Locator, exportCard: Locator
     JSON.stringify(await readabilityDomContract(exportCard))).toBe(true);
   await expect.poll(async () => await previewCard.evaluate((card) => card.outerHTML) ===
     await exportCard.evaluate((card) => card.outerHTML)).toBe(true);
+}
+
+async function readRenderedLineCount(locator: Locator) {
+  return locator.evaluate((element) => {
+    const lineHeight = Number.parseFloat(getComputedStyle(element).lineHeight);
+    return lineHeight > 0 ? element.scrollHeight / lineHeight : 0;
+  });
+}
+
+async function readContainedGeometry(child: Locator, parent: Locator) {
+  const [childGeometry, parentGeometry] = await Promise.all([
+    child.evaluate((element) => {
+      const rect = element.getBoundingClientRect();
+      return {
+        top: rect.top,
+        bottom: rect.bottom,
+        clientHeight: element.clientHeight,
+        scrollHeight: element.scrollHeight
+      };
+    }),
+    parent.evaluate((element) => {
+      const rect = element.getBoundingClientRect();
+      return { top: rect.top, bottom: rect.bottom };
+    })
+  ]);
+
+  return {
+    childTop: childGeometry.top,
+    childBottom: childGeometry.bottom,
+    childClientHeight: childGeometry.clientHeight,
+    childScrollHeight: childGeometry.scrollHeight,
+    parentTop: parentGeometry.top,
+    parentBottom: parentGeometry.bottom
+  };
 }
 
 async function exportAndExpectFormat(page: Page, format: "webp" | "jpg") {

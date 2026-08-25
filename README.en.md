@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v5.11.1.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v5.11.2.en.md">Release Notes</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
   <a href="./docs/web-lite-browser-support.md">Web Lite Browser Support</a> ·
   <a href="#features">Features</a> ·
@@ -75,25 +75,25 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 ## 📦 Download and Installation
 
-Download v5.11.1 from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
+Download v5.11.2 from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Installer: `Lyrics Card Generator Setup 5.11.1.exe`
-* Portable build: `Lyrics Card Generator-5.11.1-portable.exe`
+* Installer: `Lyrics Card Generator Setup 5.11.2.exe`
+* Portable build: `Lyrics Card Generator-5.11.2-portable.exe`
 
 The installer is recommended for regular use. The portable version is useful for temporary use, testing, or running from a removable drive.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v5.11.1 Highlights
+### v5.11.2 Highlights
 
-* Prevents unbroken “Shared by” text from being silently clipped in portrait footers and includes the complete content area in export overflow checks.
-* Explicitly blocks oversized high-quality images at the browser pixel limit instead of silently scaling the output and reporting success.
-* Gives PNG, WebP, JPG, Desktop, and Web Lite the same exact rendered-pixel gate.
+* Renames the former “Allow two-line title” option to “Allow multi-line title” across all six interface languages and lets portrait lyric and instrumental cards display titles beyond two lines.
+* Portrait auto-height now accounts for title lines; fixed 1:1 instrumental cards reserve multi-line metadata space and shrink the artwork when necessary to prevent clipping or overflow.
+* Landscape cards retain their measured multi-line layout; Desktop and Web Lite behave consistently, while disabling the option keeps single-line truncation.
 
 ## 🌐 Multilingual Release Notes
 
 GitHub Release displays a Simplified Chinese summary by default. See the full release notes:
-[简体中文](./docs/releases/v5.11.1.zh-CN.md) · [繁體中文](./docs/releases/v5.11.1.zh-TW.md) · [English](./docs/releases/v5.11.1.en.md) · [Français](./docs/releases/v5.11.1.fr.md) · [日本語](./docs/releases/v5.11.1.ja.md) · [Español](./docs/releases/v5.11.1.es.md)
+[简体中文](./docs/releases/v5.11.2.zh-CN.md) · [繁體中文](./docs/releases/v5.11.2.zh-TW.md) · [English](./docs/releases/v5.11.2.en.md) · [Français](./docs/releases/v5.11.2.fr.md) · [日本語](./docs/releases/v5.11.2.ja.md) · [Español](./docs/releases/v5.11.2.es.md)
 
 <a id="features"></a>
 

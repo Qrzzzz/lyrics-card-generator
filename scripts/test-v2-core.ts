@@ -56,7 +56,7 @@ const baseStyle: CardStyle = {
   translationEnabled: true,
   translationText: "翻译",
   translationScale: 0.75,
-  allowTwoLineTitle: false,
+  allowMultiLineTitle: false,
   contentMode: "lyrics",
   instrumentalText: "Instrumental Track",
   showCover: true,

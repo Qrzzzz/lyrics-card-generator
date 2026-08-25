@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v5.11.1.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v5.11.2.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="#ローカル開発">ローカル開発</a> ·
@@ -74,25 +74,25 @@
 
 ## 📦 ダウンロードとインストール
 
-v5.11.1 は [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) からダウンロードできます。
+v5.11.2 は [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) からダウンロードできます。
 
-* インストーラー：`Lyrics Card Generator Setup 5.11.1.exe`
-* ポータブル版：`Lyrics Card Generator-5.11.1-portable.exe`
+* インストーラー：`Lyrics Card Generator Setup 5.11.2.exe`
+* ポータブル版：`Lyrics Card Generator-5.11.2-portable.exe`
 
 通常利用にはインストーラーを推奨します。ポータブル版は一時利用、検証、リムーバブルドライブでの利用に向いています。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v5.11.1 の主な更新
+### v5.11.2 の主な更新
 
-* 縦向きカードの区切りのない共有者テキストが気付かないまま切れないようにし、コンテンツ全体をはみ出し検査の対象にします。
-* 高品質画像がブラウザーのピクセル上限を超える場合は明確に停止し、結果をひそかに縮小して成功扱いにしません。
-* PNG、WebP、JPG、デスクトップ版、Web Lite に同じ厳密なピクセル寸法チェックを適用します。
+* 旧「タイトルを2行まで許可」を6言語すべてで「タイトルの複数行表示を許可」に改め、縦向きの歌詞カードとインストゥルメンタルカードで3行以上のタイトルも表示します。
+* 縦向きの自動高さがタイトル行数を考慮し、固定1:1のインストゥルメンタルカードは複数行の曲情報用スペースを確保して必要に応じてアートワークを縮小し、切れやはみ出しを防ぎます。
+* 横向きカードは実測レイアウトによる複数行対応を維持します。デスクトップ版と Web Lite の動作は共通で、無効時は従来どおり1行で省略します。
 
 ## 🌐 多言語リリースノート
 
 GitHub Release ではデフォルトで簡体字中国語の概要が表示されます。完全なリリースノートはこちら：
-[简体中文](./docs/releases/v5.11.1.zh-CN.md) · [繁體中文](./docs/releases/v5.11.1.zh-TW.md) · [English](./docs/releases/v5.11.1.en.md) · [Français](./docs/releases/v5.11.1.fr.md) · [日本語](./docs/releases/v5.11.1.ja.md) · [Español](./docs/releases/v5.11.1.es.md)
+[简体中文](./docs/releases/v5.11.2.zh-CN.md) · [繁體中文](./docs/releases/v5.11.2.zh-TW.md) · [English](./docs/releases/v5.11.2.en.md) · [Français](./docs/releases/v5.11.2.fr.md) · [日本語](./docs/releases/v5.11.2.ja.md) · [Español](./docs/releases/v5.11.2.es.md)
 
 <a id="主な機能"></a>
 

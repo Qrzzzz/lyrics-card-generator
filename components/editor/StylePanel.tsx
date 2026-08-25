@@ -440,7 +440,7 @@ export function VisualSettingsPanel({
         <ToggleRow label={t("explicitBadge")} checked={song?.explicit === true} onChange={updateExplicitBadge} />
         <ToggleRow label={t("showAlbumName")} checked={style.showAlbumName} onChange={(checked) => update("showAlbumName", checked)} />
         {(style.layoutMode ?? "portrait") === "portrait" ? (
-          <ToggleRow label={t("allowTwoLineTitle")} checked={style.allowTwoLineTitle} onChange={(checked) => update("allowTwoLineTitle", checked)} />
+          <ToggleRow label={t("allowMultiLineTitle")} checked={style.allowMultiLineTitle} onChange={(checked) => update("allowMultiLineTitle", checked)} />
         ) : null}
         <ToggleRow label={t("showGeneratedWatermark")} checked={style.showGeneratedWatermark} onChange={updateGeneratedWatermark} />
         {showPlatformBadgeControl ? (

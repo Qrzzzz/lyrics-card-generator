@@ -43,7 +43,7 @@ const baseStyle: CardStyle = {
   translationEnabled: true,
   translationText: "translation",
   translationScale: 0.75,
-  allowTwoLineTitle: false,
+  allowMultiLineTitle: false,
   contentMode: "lyrics",
   instrumentalText: "Instrumental Track",
   showCover: true,
@@ -386,6 +386,7 @@ assert.throws(
 );
 
 assert.equal(defaultState.style.lineHeight, DEFAULT_LYRIC_LINE_HEIGHT, "new documents use the 1.8 line-height default");
+assert.equal(defaultState.style.allowMultiLineTitle, false, "new documents keep title wrapping opt-in");
 assert.equal(LYRIC_LINE_HEIGHT_MIN, 1.5);
 assert.equal(LYRIC_LINE_HEIGHT_MAX, 2.1);
 assert.equal(LYRIC_LINE_HEIGHT_STEP, 0.05);
@@ -463,8 +464,9 @@ assert.ok(instrumentalBlockSource.includes("data-instrumental-song-info"), "inst
 assert.ok(instrumentalBlockSource.includes("song.album?.trim()"), "instrumental album ignores blank metadata");
 assert.ok(instrumentalBlockSource.includes("data-instrumental-album"), "instrumental cards render album metadata when enabled");
 assert.ok(instrumentalBlockSource.includes("mt-7"), "instrumental title and artist use relaxed spacing");
-assert.ok(instrumentalBlockSource.includes('allowTwoLineTitle ? "two-line-title" : "truncate"'), "instrumental titles honor the two-line setting");
-assert.ok(lyricCardSource.includes("allowTwoLineTitle={style.allowTwoLineTitle}"), "instrumental rendering receives the two-line title setting");
+assert.ok(instrumentalBlockSource.includes('allowMultiLineTitle ? "multi-line-title" : "truncate"'), "instrumental titles honor the multi-line setting");
+assert.ok(lyricCardSource.includes("allowMultiLineTitle={style.allowMultiLineTitle}"), "instrumental rendering receives the multi-line title setting");
+assert.ok(instrumentalBlockSource.includes("stackedSongInfoHeight"), "instrumental artwork reserves measured multi-line metadata height");
 assert.ok(lyricCardSource.includes('pt-8 pb-4'), "lyrics keep a smaller but non-zero bottom breathing room");
 assert.ok(
   exportCoordinatorSource.includes("createMutationObserver") &&

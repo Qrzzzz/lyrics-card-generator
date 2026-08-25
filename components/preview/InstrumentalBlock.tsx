@@ -13,7 +13,7 @@ export function InstrumentalBlock({
   textColor,
   isDarkText,
   showAlbumName,
-  allowTwoLineTitle,
+  allowMultiLineTitle,
   availableWidth,
   availableHeight
 }: {
@@ -24,16 +24,29 @@ export function InstrumentalBlock({
   textColor: string;
   isDarkText: boolean;
   showAlbumName: boolean;
-  allowTwoLineTitle: boolean;
+  allowMultiLineTitle: boolean;
   availableWidth: number;
   availableHeight: number;
 }) {
-  const baseSize = allowTwoLineTitle ? 500 : 568;
   const aspectRatio = getArtworkAspectRatio(coverUrl, coverArtwork);
   const isVerticalArtwork = aspectRatio < 1;
   const sideBySideGap = 52;
-  const minimumSongInfoWidth = 248;
-  const songInfoHeight = showAlbumName ? 230 : 188;
+  const minimumSongInfoWidth = allowMultiLineTitle
+    ? Math.min(480, Math.max(320, availableWidth * 0.42))
+    : 248;
+  const titleFontSize = isVerticalArtwork ? 52 : 64;
+  const titleWidth = isVerticalArtwork
+    ? minimumSongInfoWidth
+    : Math.min(860, availableWidth);
+  const titleLineCount = allowMultiLineTitle
+    ? estimateWrappedTitleLines(song.title || "Untitled", titleWidth, titleFontSize)
+    : 1;
+  const titleHeight = titleLineCount * titleFontSize * 1.18;
+  const artistHeight = 28 + 32 * 1.34;
+  const albumHeight = showAlbumName && song.album?.trim() ? 20 + 24 * 1.34 : 0;
+  const multiLineWrapSafety = allowMultiLineTitle ? titleFontSize * 1.6 : 0;
+  const stackedSongInfoHeight = (allowMultiLineTitle ? 48 : 56) + titleHeight + artistHeight + albumHeight + multiLineWrapSafety;
+  const baseSize = allowMultiLineTitle ? 500 : 568;
   const artworkSize = resolveAdaptiveArtworkSize({
     baseSize,
     aspectRatio,
@@ -42,7 +55,7 @@ export function InstrumentalBlock({
       : availableWidth,
     maxHeight: isVerticalArtwork
       ? availableHeight
-      : Math.max(baseSize, availableHeight - songInfoHeight)
+      : Math.max(1, availableHeight - stackedSongInfoHeight)
   });
 
   return (
@@ -74,7 +87,7 @@ export function InstrumentalBlock({
           "grid min-w-0",
           isVerticalArtwork
             ? "flex-1 justify-items-start"
-            : cn("w-full max-w-[860px] justify-items-center", allowTwoLineTitle ? "mt-12" : "mt-14")
+            : cn("w-full max-w-[860px] justify-items-center", allowMultiLineTitle ? "mt-12" : "mt-14")
         )}
         data-instrumental-song-info
       >
@@ -82,9 +95,9 @@ export function InstrumentalBlock({
           className={cn(
             "w-full font-black leading-[1.18] tracking-normal",
             isVerticalArtwork ? "text-[52px]" : "text-[64px]",
-            allowTwoLineTitle ? "two-line-title" : "truncate"
+            allowMultiLineTitle ? "multi-line-title" : "truncate"
           )}
-          data-allow-two-line-title={allowTwoLineTitle ? "true" : "false"}
+          data-allow-multi-line-title={allowMultiLineTitle ? "true" : "false"}
         >
           {song.title || "Untitled"}
         </h2>
@@ -99,4 +112,20 @@ export function InstrumentalBlock({
       </div>
     </div>
   );
+}
+
+function estimateWrappedTitleLines(title: string, width: number, fontSize: number) {
+  const textUnits = Array.from(title.trim()).reduce((total, character) => {
+    if (/\s/u.test(character)) return total + 0.34;
+    if (/\p{Script=Han}|\p{Script=Hiragana}|\p{Script=Katakana}|\p{Extended_Pictographic}/u.test(character)) {
+      return total + 1;
+    }
+    if (/\p{Punctuation}/u.test(character)) return total + 0.45;
+    // Heavy display fonts and word-boundary wrapping both consume more width
+    // than a continuous average-glyph estimate. Reserve conservatively so the
+    // fixed 1:1 instrumental canvas shrinks artwork before metadata can clip.
+    return total + 0.76;
+  }, 0);
+  const estimatedTextWidth = Math.max(fontSize, textUnits * fontSize);
+  return Math.max(1, Math.ceil(estimatedTextWidth / Math.max(1, width)));
 }
