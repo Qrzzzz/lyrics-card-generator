@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v5.12.0.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v5.12.1.zh-CN.md">发布说明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">在线 Web Lite 版</a> ·
   <a href="./docs/web-lite-browser-support.md">Web Lite 浏览器支持</a> ·
   <a href="./docs/desktop.md">桌面维护文档</a> ·
@@ -73,25 +73,25 @@
 
 ## 📦 下载与安装
 
-请从 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下载 v5.12.0：
+请从 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下载 v5.12.1：
 
-* 安装版：`Lyrics Card Generator Setup 5.12.0.exe`
-* 便携版：`Lyrics Card Generator-5.12.0-portable.exe`
+* 安装版：`Lyrics Card Generator Setup 5.12.1.exe`
+* 便携版：`Lyrics Card Generator-5.12.1-portable.exe`
 
 安装版适合长期使用；便携版适合临时运行、测试或放在移动硬盘中使用。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v5.12.0 更新重点
+### v5.12.1 更新重点
 
-* 本地音频上传新增 M4A 支持，可读取标题、歌手、专辑、封面与内嵌歌词；没有内嵌歌词时仍保留已读取的歌曲信息供手动编辑。
-* 兼容 `audio/mp4`、`audio/m4a` 与 `audio/x-m4a`，并沿用 100 MB 上限、受限 multipart 读取和解析失败保护。
-* Windows 桌面版导入历史支持成功提交的 M4A 文件重新导入与重新定位，且不会将音频内容写入历史。
+* 第二步顶部工具栏首位新增轻量强调的“仅保留选中”，没有选中文本时保持禁用。
+* 可精确保留原文或译文栏中的所选字符，删除当前栏其余内容，并保持另一栏不变。
+* 操作支持选区恢复与撤销／重做，处理后可继续编辑或立即撤销。
 
 ## 🌐 多语言发布说明
 
 GitHub Release 默认展示简体中文摘要，完整说明见：
-[简体中文](./docs/releases/v5.12.0.zh-CN.md) · [繁體中文](./docs/releases/v5.12.0.zh-TW.md) · [English](./docs/releases/v5.12.0.en.md) · [Français](./docs/releases/v5.12.0.fr.md) · [日本語](./docs/releases/v5.12.0.ja.md) · [Español](./docs/releases/v5.12.0.es.md)
+[简体中文](./docs/releases/v5.12.1.zh-CN.md) · [繁體中文](./docs/releases/v5.12.1.zh-TW.md) · [English](./docs/releases/v5.12.1.en.md) · [Français](./docs/releases/v5.12.1.fr.md) · [日本語](./docs/releases/v5.12.1.ja.md) · [Español](./docs/releases/v5.12.1.es.md)
 
 <a id="主要功能"></a>
 
@@ -108,6 +108,7 @@ GitHub Release 默认展示简体中文摘要，完整说明见：
 ### 📝 歌词排版与翻译
 
 * 支持歌词原文与翻译并排排版
+* 支持仅保留原文或译文栏中的精确选区，并可撤销／重做
 * 支持按当前界面语言拆分原文 / 译文，包括简体中文、繁体中文、英文、法语、日语、西班牙语目标译文
 * 支持兼容 OpenAI Chat Completions 的 AI 歌词翻译，可配置厂商 Base URL、模型、API Key、6 个默认预设、最多 2 个自定义预设、Reasoning 和流式输出
 

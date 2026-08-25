@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v5.12.0.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v5.12.1.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="./docs/development.en.md">Développement local</a> ·
@@ -74,25 +74,25 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 ## 📦 Téléchargement et installation
 
-Téléchargez la v5.12.0 depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
+Téléchargez la v5.12.1 depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
 
-* Installateur : `Lyrics Card Generator Setup 5.12.0.exe`
-* Version portable : `Lyrics Card Generator-5.12.0-portable.exe`
+* Installateur : `Lyrics Card Generator Setup 5.12.1.exe`
+* Version portable : `Lyrics Card Generator-5.12.1-portable.exe`
 
 L'installateur est recommandé pour une utilisation régulière. La version portable convient aux essais, à une utilisation temporaire ou à un disque amovible.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### Points forts de la v5.12.0
+### Points forts de la v5.12.1
 
-* L’import audio local prend désormais en charge le format M4A en plus des formats MP3 et FLAC, et lit le titre, l’artiste, l’album, la pochette et les paroles intégrées tout en conservant les informations détectées si les paroles sont absentes.
-* Prend en charge `audio/mp4`, `audio/m4a` et `audio/x-m4a` tout en maintenant la limite de 100 Mo, la lecture multipart bornée et les protections en cas d’échec d’analyse.
-* L’historique de la version Windows peut réimporter et relocaliser les fichiers M4A validés sans enregistrer leur contenu audio.
+* Une nouvelle commande « Garder la sélection », légèrement mise en évidence, apparaît en premier dans la barre d’outils de l’étape 2 et reste désactivée tant qu’aucun texte n’est sélectionné.
+* Elle conserve exactement les caractères sélectionnés dans la colonne originale ou traduite, supprime le reste de la colonne active et laisse l’autre colonne inchangée.
+* L’opération prend en charge la restauration de sélection ainsi que l’annulation et le rétablissement, afin de poursuivre l’édition ou d’annuler immédiatement.
 
 ## 🌐 Notes de publication multilingues
 
 Par défaut, GitHub Release affiche un résumé en chinois simplifié. Consultez les notes complètes :
-[简体中文](./docs/releases/v5.12.0.zh-CN.md) · [繁體中文](./docs/releases/v5.12.0.zh-TW.md) · [English](./docs/releases/v5.12.0.en.md) · [Français](./docs/releases/v5.12.0.fr.md) · [日本語](./docs/releases/v5.12.0.ja.md) · [Español](./docs/releases/v5.12.0.es.md)
+[简体中文](./docs/releases/v5.12.1.zh-CN.md) · [繁體中文](./docs/releases/v5.12.1.zh-TW.md) · [English](./docs/releases/v5.12.1.en.md) · [Français](./docs/releases/v5.12.1.fr.md) · [日本語](./docs/releases/v5.12.1.ja.md) · [Español](./docs/releases/v5.12.1.es.md)
 
 <a id="fonctionnalités-principales"></a>
 
@@ -109,6 +109,7 @@ Par défaut, GitHub Release affiche un résumé en chinois simplifié. Consultez
 ### 📝 Mise en page et traduction des paroles
 
 * Mise en page originale des paroles et des traductions
+* Conservation d’une sélection exacte dans l’une ou l’autre colonne, avec annulation et rétablissement
 * Séparation automatique des lignes original / traduction avec détection du chinois simplifié, chinois traditionnel, anglais, français, japonais et espagnol
 * Traduction de paroles par IA via les API Chat Completions compatibles OpenAI, avec URL du fournisseur, modèle, clé API, six préréglages par défaut, deux préréglages personnalisés, Reasoning et sortie en streaming configurables
 

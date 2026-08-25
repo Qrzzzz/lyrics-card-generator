@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v5.12.0.zh-TW.md">發布說明</a> ·
+  <a href="./docs/releases/v5.12.1.zh-TW.md">發布說明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">線上 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="./docs/development.zh-CN.md">本機開發</a> ·
@@ -71,25 +71,25 @@
 
 ## 📦 下載與安裝
 
-請從 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載 v5.12.0：
+請從 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載 v5.12.1：
 
-* 安裝版：`Lyrics Card Generator Setup 5.12.0.exe`
-* 可攜版：`Lyrics Card Generator-5.12.0-portable.exe`
+* 安裝版：`Lyrics Card Generator Setup 5.12.1.exe`
+* 可攜版：`Lyrics Card Generator-5.12.1-portable.exe`
 
 安裝版適合長期使用；可攜版適合臨時執行、測試或放在隨身碟中使用。
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v5.12.0 更新重點
+### v5.12.1 更新重點
 
-* 本機音訊上傳新增 M4A 支援，可讀取標題、藝人、專輯、封面與內嵌歌詞；沒有內嵌歌詞時仍保留已讀取的歌曲資訊供手動編輯。
-* 相容 `audio/mp4`、`audio/m4a` 與 `audio/x-m4a`，並沿用 100 MB 上限、有界 multipart 讀取和解析失敗保護。
-* Windows 桌面版匯入歷史支援成功提交的 M4A 檔案重新匯入與重新定位，而且不會將音訊內容寫入歷史。
+* 第二步頂端工具列首位新增輕量強調的「僅保留所選內容」，未選取文字時維持停用。
+* 可精確保留原文或譯文欄中的所選字元，刪除目前欄的其餘內容，並保持另一欄不變。
+* 操作支援選取範圍還原與復原／重做，處理後可繼續編輯或立即復原。
 
 ## 🌐 多語言發佈說明
 
 GitHub Release 預設顯示簡體中文摘要，完整說明請見：
-[简体中文](./docs/releases/v5.12.0.zh-CN.md) · [繁體中文](./docs/releases/v5.12.0.zh-TW.md) · [English](./docs/releases/v5.12.0.en.md) · [Français](./docs/releases/v5.12.0.fr.md) · [日本語](./docs/releases/v5.12.0.ja.md) · [Español](./docs/releases/v5.12.0.es.md)
+[简体中文](./docs/releases/v5.12.1.zh-CN.md) · [繁體中文](./docs/releases/v5.12.1.zh-TW.md) · [English](./docs/releases/v5.12.1.en.md) · [Français](./docs/releases/v5.12.1.fr.md) · [日本語](./docs/releases/v5.12.1.ja.md) · [Español](./docs/releases/v5.12.1.es.md)
 
 ## ✨ 主要功能
 
@@ -104,6 +104,7 @@ GitHub Release 預設顯示簡體中文摘要，完整說明請見：
 ### 📝 歌詞排版與翻譯
 
 * 支援歌詞原文與翻譯並排排版
+* 支援僅保留原文或譯文欄中的精確選取範圍，並可復原／重做
 * 支援按目前介面語言拆分原文 / 譯文，包括簡體中文、繁體中文、英文、法文、日文、西班牙文目標譯文
 * 支援相容 OpenAI Chat Completions 的 AI 歌詞翻譯，可設定服務商 Base URL、模型、API Key、6 個預設、最多 2 個自訂預設、Reasoning 與串流輸出
 

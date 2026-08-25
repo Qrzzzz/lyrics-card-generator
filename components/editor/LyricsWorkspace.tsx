@@ -254,6 +254,7 @@ export function LyricsWorkspace({
       <LyricsCommandBar
         copy={copy}
         activeTab={sidebarTab}
+        canKeepSelection={documentController.activeSelection.end > documentController.activeSelection.start}
         canUndo={documentController.canUndo}
         canRedo={documentController.canRedo}
         isAITranslating={isAITranslating}
@@ -274,6 +275,7 @@ export function LyricsWorkspace({
         sidebarToggleRef={sidebarToggleRef}
         onUndo={documentController.undoOperation}
         onRedo={documentController.redoOperation}
+        onKeepSelection={documentController.keepSelection}
         onCleanPaste={documentController.cleanPaste}
         onCollapseBlankLines={() => documentController.blankCleanup("collapse", false)}
         onStripLrc={documentController.cleanLrc}

@@ -6,6 +6,7 @@ import {
   collapseConsecutiveBlankLines,
   createLyricsOperationHistory,
   getLyricsLineSelection,
+  keepSelectedLyricsText,
   mergeSelectedLyricsLines,
   previewParagraphTags,
   recordLyricsOperation,
@@ -79,6 +80,26 @@ assert.equal(
   cleanPastedLyrics("one\r\ntwo", { start: 0, end: 3 }).text,
   "one\r\ntwo",
   "selected cleanup does not duplicate the LF half of a CRLF terminator"
+);
+
+const exactSelectionSource = "before first\nkeep this exact text\nafter last";
+const exactSelectionStart = exactSelectionSource.indexOf("this exact");
+const keptSelection = keepSelectedLyricsText(exactSelectionSource, {
+  start: exactSelectionStart,
+  end: exactSelectionStart + "this exact".length
+});
+assert.equal(keptSelection.text, "this exact", "keep-selection preserves the exact character range");
+assert.deepEqual(keptSelection.selection, { start: 0, end: "this exact".length });
+assert.equal(keptSelection.stats.removedCharacters, exactSelectionSource.length - "this exact".length);
+assert.equal(
+  keepSelectedLyricsText(exactSelectionSource, { start: 4, end: 4 }).changed,
+  false,
+  "keep-selection requires a non-empty selection"
+);
+assert.equal(
+  keepSelectedLyricsText(exactSelectionSource, { start: 0, end: exactSelectionSource.length }).changed,
+  false,
+  "keeping the complete document is a no-op"
 );
 
 const trimmed = trimBoundaryBlankLines(
@@ -277,4 +298,4 @@ assert.equal(history.future.length, 0, "a new operation clears redo history");
 assert.equal(snapshotsEqual(before, { ...before }), true);
 assert.equal(snapshotsEqual(before, after), false);
 
-console.log(JSON.stringify({ ok: true, lyricsWorkbenchTests: 63 }, null, 2));
+console.log(JSON.stringify({ ok: true, lyricsWorkbenchTests: 68 }, null, 2));

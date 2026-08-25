@@ -171,6 +171,10 @@ assert.ok(
 );
 assert.ok(
   commandBarSource.includes('role="toolbar"') &&
+    commandBarSource.includes('testId="lyrics-command-keep-selection"') &&
+    commandBarSource.indexOf('testId="lyrics-command-keep-selection"') <
+      commandBarSource.indexOf('testId="lyrics-command-undo"') &&
+    commandBarSource.includes('emphasis && "lyrics-command-button--accent"') &&
     commandBarSource.includes('testId="lyrics-command-undo"') &&
     commandBarSource.includes('testId="lyrics-command-redo"') &&
     commandBarSource.includes('testId="lyrics-command-clean-paste"') &&

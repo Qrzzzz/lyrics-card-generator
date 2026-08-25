@@ -128,6 +128,37 @@ export function resolveLyricsTextScope(
   };
 }
 
+/** Keeps the exact browser selection and removes everything outside it. */
+export function keepSelectedLyricsText(
+  text: string,
+  selection: LyricsTextSelection
+): LyricsScopedTransform {
+  const start = clamp(Math.min(selection.start, selection.end), 0, text.length);
+  const end = clamp(Math.max(selection.start, selection.end), start, text.length);
+  const hasSelection = end > start;
+  if (!hasSelection) {
+    const scope = resolveLyricsTextScope(text, { start, end });
+    return unchangedScopedTransform(text, { start, end }, scope, { removedCharacters: 0 });
+  }
+
+  const selectedText = text.slice(start, end);
+  const scope: LyricsTextScope = {
+    start,
+    end,
+    startLine: lineNumberAt(text, start),
+    endLine: lineNumberAt(text, Math.max(start, end - 1)),
+    hasSelection: true,
+    text: selectedText
+  };
+  return {
+    text: selectedText,
+    changed: start > 0 || end < text.length,
+    selection: { start: 0, end: selectedText.length },
+    scope,
+    stats: { removedCharacters: text.length - selectedText.length }
+  };
+}
+
 export function trimBoundaryBlankLines(
   text: string,
   selection: LyricsTextSelection

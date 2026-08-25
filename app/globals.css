@@ -1206,6 +1206,16 @@ button {
   background: var(--control-selected-bg);
 }
 
+.lyrics-command-button--accent {
+  border-color: color-mix(in srgb, var(--app-accent) 28%, transparent);
+  background: color-mix(in srgb, var(--app-accent) 9%, transparent);
+}
+
+.lyrics-command-button--accent:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--app-accent) 38%, rgb(var(--panel-border)));
+  background: color-mix(in srgb, var(--app-accent) 16%, rgb(var(--button-bg-hover)));
+}
+
 .lyrics-command-button--prominent {
   border-color: color-mix(in srgb, rgb(var(--panel-border)) 76%, transparent);
   background: color-mix(in srgb, rgb(var(--button-bg)) 72%, transparent);

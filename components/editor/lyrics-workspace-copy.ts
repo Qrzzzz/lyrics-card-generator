@@ -19,6 +19,8 @@ export type LyricsWorkspaceCopy = {
   undo: string;
   redo: string;
   undoNow: string;
+  keepSelection: string;
+  keptSelectionResult: string;
   aiShortcut: string;
   stripLrcShortcut: string;
   cleanupHeading: string;
@@ -103,6 +105,8 @@ const COPY: Record<Locale, LyricsWorkspaceCopy> = {
     undo: "撤销上次整理",
     redo: "重做上次整理",
     undoNow: "立即撤销",
+    keepSelection: "仅保留选中",
+    keptSelectionResult: "已仅保留所选文本。",
     aiShortcut: "AI 翻译",
     stripLrcShortcut: "移除 LRC 时间轴",
     cleanupHeading: "确定性文本整理",
@@ -185,6 +189,8 @@ const COPY: Record<Locale, LyricsWorkspaceCopy> = {
     undo: "復原上次整理",
     redo: "重做上次整理",
     undoNow: "立即復原",
+    keepSelection: "僅保留所選內容",
+    keptSelectionResult: "已僅保留所選文字。",
     aiShortcut: "AI 翻譯",
     stripLrcShortcut: "移除 LRC 時間軸",
     cleanupHeading: "確定性文字整理",
@@ -267,6 +273,8 @@ const COPY: Record<Locale, LyricsWorkspaceCopy> = {
     undo: "Undo last cleanup",
     redo: "Redo last cleanup",
     undoNow: "Undo now",
+    keepSelection: "Keep selection",
+    keptSelectionResult: "Kept only the selected text.",
     aiShortcut: "AI translate",
     stripLrcShortcut: "Remove LRC timing",
     cleanupHeading: "Deterministic text cleanup",
@@ -349,6 +357,8 @@ const COPY: Record<Locale, LyricsWorkspaceCopy> = {
     undo: "Annuler le dernier nettoyage",
     redo: "Rétablir le dernier nettoyage",
     undoNow: "Annuler",
+    keepSelection: "Garder la sélection",
+    keptSelectionResult: "Seul le texte sélectionné a été conservé.",
     aiShortcut: "Traduction IA",
     stripLrcShortcut: "Retirer le minutage LRC",
     cleanupHeading: "Nettoyage déterministe du texte",
@@ -431,6 +441,8 @@ const COPY: Record<Locale, LyricsWorkspaceCopy> = {
     undo: "直前の整理を元に戻す",
     redo: "直前の整理をやり直す",
     undoNow: "今すぐ元に戻す",
+    keepSelection: "選択範囲のみ残す",
+    keptSelectionResult: "選択したテキストだけを残しました。",
     aiShortcut: "AI 翻訳",
     stripLrcShortcut: "LRC タイムコードを削除",
     cleanupHeading: "確定的なテキスト整理",
@@ -513,6 +525,8 @@ const COPY: Record<Locale, LyricsWorkspaceCopy> = {
     undo: "Deshacer la última limpieza",
     redo: "Rehacer la última limpieza",
     undoNow: "Deshacer ahora",
+    keepSelection: "Conservar selección",
+    keptSelectionResult: "Se conservó solo el texto seleccionado.",
     aiShortcut: "Traducción IA",
     stripLrcShortcut: "Quitar tiempos LRC",
     cleanupHeading: "Limpieza determinista de texto",

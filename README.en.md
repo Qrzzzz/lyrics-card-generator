@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v5.12.0.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v5.12.1.en.md">Release Notes</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
   <a href="./docs/web-lite-browser-support.md">Web Lite Browser Support</a> ·
   <a href="#features">Features</a> ·
@@ -75,25 +75,25 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 ## 📦 Download and Installation
 
-Download v5.12.0 from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
+Download v5.12.1 from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Installer: `Lyrics Card Generator Setup 5.12.0.exe`
-* Portable build: `Lyrics Card Generator-5.12.0-portable.exe`
+* Installer: `Lyrics Card Generator Setup 5.12.1.exe`
+* Portable build: `Lyrics Card Generator-5.12.1-portable.exe`
 
 The installer is recommended for regular use. The portable version is useful for temporary use, testing, or running from a removable drive.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v5.12.0 Highlights
+### v5.12.1 Highlights
 
-* Local audio upload now supports M4A alongside MP3 and FLAC, reading the title, artist, album, artwork, and embedded lyrics while retaining parsed song information when lyrics are absent.
-* Supports `audio/mp4`, `audio/m4a`, and `audio/x-m4a` while preserving the 100 MB limit, bounded multipart reads, and parse-failure safeguards.
-* Windows Desktop import history can reimport and relocate successfully committed M4A files without storing their audio content in history.
+* A new lightly accented “Keep selection” command now appears first in the Step 2 toolbar and remains disabled until text is selected.
+* It keeps the exact selected characters in either the original or translation column, removes the rest of the active column, and leaves the other column unchanged.
+* The operation supports selection restoration and undo/redo, so the retained text is ready for further editing or an immediate undo.
 
 ## 🌐 Multilingual Release Notes
 
 GitHub Release displays a Simplified Chinese summary by default. See the full release notes:
-[简体中文](./docs/releases/v5.12.0.zh-CN.md) · [繁體中文](./docs/releases/v5.12.0.zh-TW.md) · [English](./docs/releases/v5.12.0.en.md) · [Français](./docs/releases/v5.12.0.fr.md) · [日本語](./docs/releases/v5.12.0.ja.md) · [Español](./docs/releases/v5.12.0.es.md)
+[简体中文](./docs/releases/v5.12.1.zh-CN.md) · [繁體中文](./docs/releases/v5.12.1.zh-TW.md) · [English](./docs/releases/v5.12.1.en.md) · [Français](./docs/releases/v5.12.1.fr.md) · [日本語](./docs/releases/v5.12.1.ja.md) · [Español](./docs/releases/v5.12.1.es.md)
 
 <a id="features"></a>
 
@@ -110,6 +110,7 @@ GitHub Release displays a Simplified Chinese summary by default. See the full re
 ### 📝 Lyrics Layout & Translation
 
 * Original lyric and translation layout
+* Keep only an exact selection from either column, with undo and redo support
 * Split alternating original / translated lyrics with Simplified Chinese, Traditional Chinese, English, French, Japanese, and Spanish target-language detection
 * AI lyric translation through OpenAI-compatible Chat Completions APIs, with configurable provider URL, model, API key, six default presets, up to two custom presets, reasoning, and streaming output
 
