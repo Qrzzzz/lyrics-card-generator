@@ -1,91 +1,142 @@
-# Desktop Maintenance Guide
+# Windows desktop maintenance guide
 
-This document is the long-term maintainer guide for the Windows desktop build. It replaces the old one-off desktop PR summary, migration checklist, runbook, and known-issues files.
+[Documentation index](./README.md) · [Development guide](./development.en.md)
+
+This document defines the durable architecture, security boundaries, generated outputs, and verification expectations for the Windows x64 desktop app. Version-specific user changes belong in `docs/releases/`; active defects belong in GitHub Issues.
 
 ## Architecture
 
-The desktop app keeps the existing Next.js WebUI and wraps it with Electron.
+The desktop app packages three layers:
 
-In production, the Windows executable starts a bundled Next standalone service on `127.0.0.1` using an available local port, then opens that local address in an Electron window.
+1. The shared Next.js UI and local API routes.
+2. A cleaned Next.js standalone service bundled under the app resources.
+3. An Electron shell responsible for the window, local-service lifecycle, native persistence, file selection, system fonts, and restricted IPC.
 
-The existing Next API routes continue to run locally inside the packaged app. Music platform parsing, remote covers, LRCLIB lyrics, AI translation, and GitHub release checks are external data-source dependencies only; they are not deployment dependencies for starting the desktop shell.
+In development, `scripts/start-electron-dev.mjs` allocates an available loopback port and starts Next.js plus Electron. In a packaged build, Electron starts the bundled service on a dynamic `127.0.0.1` port, waits for its readiness contract, and then opens only the app's validated local origin.
 
-## Runtime Boundaries
+The local HTTP service is an implementation detail, not a LAN service or a remote deployment. Changes to host binding, readiness, origin validation, navigation policy, IPC, or startup secrets are security-sensitive and require their focused tests.
 
-The app can start offline because the UI and local API server are bundled into the desktop package.
+## Runtime boundaries
+
+The app can start without internet access because the UI, local API server, fonts, and icon are packaged together.
 
 Offline-supported paths:
 
 - Manual song, artist, album, lyric, and translation editing.
 - Local cover upload.
-- Local MP3 / FLAC / M4A metadata parsing when the required metadata is embedded in the file.
-- Style adjustment.
-- PNG export through the existing DOM-to-PNG path.
+- Local MP3 / FLAC / M4A metadata, artwork, and embedded-lyric parsing when present in the file.
+- Canvas, typography, color, layout, watermark, and other style controls.
+- PNG, WebP, and JPG preview and export.
+- Desktop import history and manual saves that do not require a missing local file to be relocated.
 
 Online-dependent paths:
 
 - Spotify, Apple Music, NetEase Cloud Music, and QQ Music link parsing.
 - NetEase Cloud Music search and lyric retrieval.
-- Remote cover loading.
-- LRCLIB lyric fetching.
-- AI lyric translation through configured compatible providers.
+- Remote cover and LRCLIB lyric fetching.
+- AI translation through a configured compatible provider.
 - GitHub Releases update checks.
 
-## Development Commands
+An offline-capable shell does not imply that previously referenced remote covers, deleted local audio files, or uncached network data can be recovered offline.
 
-Install dependencies:
+## Native data and privacy
 
-```bash
-npm install
+- Electron stores preferences and desktop history under its per-user application-data directory, not in the installation directory.
+- Import history stores a validated reference and parsed state, not the audio file bytes. A moved or deleted source may require relocation.
+- Manual saves are explicit. They must not be described as automatic document backup.
+- AI API keys use the desktop secure-storage path when available. Never add keys to logs, exported documents, history records, or repository fixtures.
+- Clear/reset and shutdown behavior are covered by lifecycle and persistence tests; changes must preserve cancellation and write-order semantics.
+
+## Build pipeline and outputs
+
+The canonical commands and environment setup are documented in the [development guide](./development.en.md). The desktop pipeline is:
+
+```text
+npm run typecheck
+        ↓
+npm run build
+        ↓
+npm run desktop:prepare
+        ↓
+electron-builder
 ```
 
-Run the original WebUI:
+Generated locations:
+
+| Path | Contents |
+| --- | --- |
+| `.next/standalone/` | Next.js standalone build before desktop cleanup |
+| `dist-desktop/server/` | Bundled local server and approved runtime closure |
+| `dist-desktop/app/` | Minimal Electron app, copied main-process modules, and generated packaging manifest |
+| `release/win-unpacked/` | Inspectable unpacked Windows app |
+| `release/*.exe` | NSIS installer and portable x64 executable |
+
+Do not patch generated files in `dist-desktop/` or `release/`. Fix their source or preparation script and rebuild.
+
+## Verification matrix
+
+### Source and runtime contracts
 
 ```bash
-npm run dev
+npm run typecheck
+npm run lint
+npm run stability:test
+npm run electron-runtime:coverage
+npm run core:test
 ```
 
-Run desktop development mode:
+These gates cover Electron static policy, single-instance ownership, settings and history behavior, shutdown coordination, IPC/runtime boundaries, and shared product contracts.
 
-```bash
-npm run desktop:dev
-```
-
-Build an unpacked desktop output for inspection:
+### Packaged directory
 
 ```bash
 npm run desktop:pack
+npm run desktop:packaged-assets-test
+npm run desktop:interaction-test
 ```
 
-Build the Windows installer and portable executable:
+The interaction suite expects a current unpacked build and covers single-instance behavior, startup origin, settings, and import/history flows. Rebuild before interpreting a failure against source changes.
+
+### Final installer and portable bytes
 
 ```bash
 npm run desktop:build
+npm run desktop:final-artifact-smoke
+npm run desktop:size
 ```
 
-Desktop artifacts are written to `release/`.
+Final-artifact smoke is distinct from testing `win-unpacked`: it exercises the actual installer and portable outputs. The Windows CI job also records diagnostics and validates the expected artifact set.
 
-The packaged Next standalone service is prepared under:
+Optional diagnostics:
 
-```text
-dist-desktop/server
+```bash
+npm run desktop:startup-test
+npm run desktop:startup-benchmark
+npm run desktop:visual-diagnostic
 ```
 
-## Release Checks
+Use performance and visual diagnostics for evidence, not as substitutes for deterministic pass/fail gates.
 
-Before publishing a desktop release, verify at minimum:
+## Release acceptance
 
-- `npm run typecheck` passes.
-- `npm run build` passes.
-- `npm run desktop:pack` produces an unpacked desktop app.
-- `npm run desktop:build` produces installer and portable outputs in `release/`.
-- The unpacked executable starts the bundled local server and exits without orphaned app processes.
-- The portable executable starts the bundled local server and exits without orphaned app processes.
-- Web development mode still starts with `npm run dev`.
-- Representative platform parsing, cover proxying, lyric fetching, language switching, persistence, and PNG export paths still work.
+Before publishing a desktop release, bind results to the exact tag commit and verify all of the following:
 
-## User-Facing Notes
+- The standard CI, browser, accessibility, and render-boundary jobs pass.
+- The production dependency advisory gate and font-license gate pass.
+- Setup and portable outputs are produced from the tag commit.
+- Packaged assets, desktop interactions, and final-artifact smoke pass on those outputs.
+- The unpacked app, installer, and portable app exit without orphaned product processes.
+- Required hashes, SBOM, attestations, and release assets are generated and verified by the release workflow.
+- User-facing release notes match the delivered behavior and six-language release-note structure.
 
-The Windows build is currently unsigned. Windows SmartScreen may warn on first launch; this is expected for an unsigned personal application.
+Building locally does not authorize a tag or GitHub Release and is not proof that the published remote assets match local files.
 
-Keep version-specific release details in `docs/releases/`. Keep active defects in GitHub Issues instead of adding temporary known-issue snapshots to this file.
+## Troubleshooting order
+
+1. Confirm the source commit and whether `release/` was built from that commit.
+2. Delete stale generated output through the normal build scripts, then rebuild; do not hand-edit it.
+3. Run the narrow startup, static-asset, IPC, settings, or history test that matches the symptom.
+4. Distinguish a product failure from missing Playwright browsers, locked files, antivirus interference, or a stale unpacked directory.
+5. Preserve logs and process evidence before changing the environment when the failure will be used as release evidence.
+
+The Windows build is currently unsigned, so SmartScreen may warn on first launch. That user-facing warning is not itself a startup-test failure.

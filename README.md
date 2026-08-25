@@ -24,7 +24,7 @@
   <a href="./docs/web-lite-browser-support.md">Web Lite 浏览器支持</a> ·
   <a href="./docs/desktop.md">桌面维护文档</a> ·
   <a href="#主要功能">主要功能</a> ·
-  <a href="#本地开发">本地开发</a> ·
+  <a href="./docs/development.zh-CN.md">本地开发</a> ·
   <a href="./LICENSE">许可证</a>
 </p>
 
@@ -137,109 +137,12 @@ GitHub Release 默认展示简体中文摘要，完整说明见：
 
 * 支持从 GitHub Releases 检查新版本
 
-## 🪟 Windows 桌面版说明
+### 🪟 Windows 桌面版
 
-桌面版保留了原本的 Next.js Web 界面和 API 路由，并通过 Electron 包装为本地应用。
-
-运行 EXE 后，应用会在本机启动一个本地 Next 服务，并在桌面窗口中打开它。普通用户只需要双击 EXE 使用，不需要了解 Node.js、npm 或本地开发环境。
-
-桌面版可以离线启动。以下功能在离线状态下仍可使用：
-
-* 手动编辑歌曲信息
-* 手动编辑歌词和翻译
-* 上传本地封面
-* 解析本地 MP3 / FLAC / M4A 文件中的元数据和内嵌歌词
-* 调整样式
-* 生成并导出 PNG、WebP 和 JPG 图片
-
-以下功能需要联网：
-
-* 音乐平台链接解析
-* 网易云音乐搜索与歌词获取
-* 远程封面加载
-* 自动歌词获取
-* AI 歌词翻译
-* GitHub 检查更新
-
-## 🚀 使用方式
-
-1. 启动应用。
-2. 在“搜索网易云音乐”中输入歌名、歌手或专辑关键词，选择候选歌曲后自动填入歌曲信息、封面和歌词。
-3. 也可以粘贴 Spotify、Apple Music、网易云音乐或 QQ 音乐链接，或上传本地 MP3 / FLAC / M4A 读取元数据。
-4. 编辑歌词和翻译；可使用 AI 翻译，也可将原文 / 译文交替行按当前界面语言自动拆分。
-5. 调整画布比例、字体方案（中日韩 / 西文）、字号、颜色、边框、水印等样式。
-6. 在右侧预览卡片。
-7. 选择 PNG、WebP 或 JPG，点击“完成并导出”保存图片。
-
-## 🔄 检查更新
-
-应用内提供“检查更新”按钮。
-它会通过本地 Next API 路由请求本项目的 GitHub Releases，比较当前版本和最新发布版本，并优先识别安装版和便携版下载资产。
-该功能只负责检查更新并打开下载页面，不会静默下载安装包，也不会自动替换当前程序。
-
-<a id="本地开发"></a>
-
-## 🛠️ 本地开发
-
-需要 Node.js 和 npm。
-
-```bash
-npm install
-npm run dev
-```
-
-启动后访问：
-
-```text
-http://localhost:3000
-```
-
-## 🖥️ 桌面版开发与打包
-
-开发桌面版：
-
-```bash
-npm run desktop:dev
-```
-
-构建可检查的 unpacked 桌面目录：
-
-```bash
-npm run desktop:pack
-```
-
-构建 Windows 安装版和便携版：
-
-```bash
-npm run desktop:build
-```
-
-构建产物会输出到：
-
-```text
-release/
-```
-
-桌面版所需的 Next standalone 服务会被整理到：
-
-```text
-dist-desktop/server
-```
-
-维护者可参考 [桌面维护文档](./docs/desktop.md) 查看架构、运行边界和发布前检查项。
-
-## 📜 常用脚本
-
-```bash
-npm run dev             # 启动 Web 开发服务器
-npm run build           # 构建 Next.js 应用
-npm run typecheck       # TypeScript 类型检查
-npm run desktop:dev     # 启动 Electron 开发模式
-npm run desktop:pack    # 构建 unpacked 桌面目录
-npm run desktop:build   # 构建 Windows 安装版和便携版
-npm run parse:test      # 测试歌曲链接解析
-npm run core:test       # 测试 3.0 核心纯函数
-```
+* 通过 Electron 封装 Next.js 界面与本地 API；启动 EXE 时会在 `127.0.0.1` 的动态端口运行随包附带的本地服务，无需用户安装 Node.js
+* 支持离线启动；手动编辑、本地封面、本地 MP3 / FLAC / M4A 解析、样式调整与 PNG / WebP / JPG 导出均可离线使用
+* 音乐平台链接、网易云音乐搜索、远程封面与歌词、AI 翻译及 GitHub 更新检查需要联网
+* 维护者可查看[桌面维护文档](./docs/desktop.md)；环境搭建、测试与打包命令见[开发指南](./docs/development.zh-CN.md)
 
 ## 🙏 致谢
 

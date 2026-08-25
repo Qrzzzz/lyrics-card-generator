@@ -22,7 +22,7 @@
   <a href="./docs/releases/v5.12.0.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
-  <a href="#ローカル開発">ローカル開発</a> ·
+  <a href="./docs/development.en.md">ローカル開発</a> ·
   <a href="./LICENSE">ライセンス</a>
 </p>
 
@@ -138,134 +138,12 @@ GitHub Release ではデフォルトで簡体字中国語の概要が表示さ�
 
 * GitHub Releases によるアップデート確認
 
-## 🪟 Windows デスクトップ版
+### 🪟 Windows デスクトップ版
 
-デスクトップ版は既存の Next.js Web UI と API ルートを保持し、Electron でラップしています。
-
-EXE を起動すると、ユーザーのマシン上でローカル Next サービスを立ち上げ、デスクトップウィンドウで開きます。通常のユーザーは EXE をダブルクリックするだけで使えます。Node.js、npm、ローカル開発サーバーの知識は不要です。
-
-デスクトップアプリはオフラインでも起動できます。以下の機能はインターネットなしで利用できます。
-
-* 曲情報の手動編集
-* 歌詞と翻訳の手動編集
-* ローカルカバーのアップロード
-* ローカル MP3 / FLAC / M4A のメタデータと埋め込み歌詞の解析
-* スタイル調整
-* PNG、WebP、JPG の生成と書き出し
-
-以下の機能にはインターネット接続が必要です。
-
-* 音楽プラットフォームリンクの解析
-* NetEase Cloud Music 検索と歌詞取得
-* リモートカバーの読み込み
-* 歌詞の自動取得
-* AI 歌詞翻訳
-* GitHub Releases によるアップデート確認
-
-## 🚀 使い方
-
-1. アプリを起動します。
-2. NetEase Cloud Music で曲名、アーティスト、アルバムを検索し、候補を選択して楽曲情報、カバー、歌詞を取り込みます。
-3. Spotify、Apple Music、NetEase Cloud Music、QQ Music のリンク貼り付けや、ローカル MP3 / FLAC / M4A のアップロードも利用できます。
-4. 歌詞と翻訳を編集します。AI 翻訳を使うか、選択中の UI 言語に応じて原文 / 翻訳の交互行を自動分割できます。
-5. キャンバス比率、CJK / 欧文フォント構成、色、フレーム、ウォーターマークなどのスタイルを調整します。
-6. 右側でカードをプレビューします。
-7. PNG、WebP、JPG のいずれかを選び、「完了して書き出し」で画像を保存します。
-
-## 🔄 アップデート確認
-
-アプリには「アップデートを確認」ボタンがあります。
-ローカル Next API ルート経由でこのプロジェクトの GitHub Releases を取得し、現在のバージョンと最新リリースを比較して、利用可能な場合はインストーラー / ポータブル版のアセットを優先します。
-
-この機能はアップデートを確認してダウンロードページを開くだけです。インストーラーを自動でダウンロードしたり、現在のアプリを自動で置き換えたりはしません。
-
-<a id="ローカル開発"></a>
-
-## 🛠️ ローカル開発
-
-Node.js と npm が必要です。
-
-```bash
-npm install
-npm run dev
-```
-
-その後、以下を開きます。
-
-```text
-http://localhost:3000
-```
-
-## 🖥️ デスクトップ開発とパッケージング
-
-デスクトップアプリを開発モードで実行します。
-
-```bash
-npm run desktop:dev
-```
-
-確認用の unpacked デスクトップディレクトリをビルドします。
-
-```bash
-npm run desktop:pack
-```
-
-Windows インストーラーとポータブル EXE の両方をビルドします。
-
-```bash
-npm run desktop:build
-```
-
-ビルド成果物は以下に出力されます。
-
-```text
-release/
-```
-
-バンドルされた Next standalone サービスは以下に準備されます。
-
-```text
-dist-desktop/server
-```
-
-## 📜 Scripts
-
-```bash
-npm run dev             # Web 開発サーバーを起動
-npm run build           # Next.js アプリをビルド
-npm run typecheck       # TypeScript 型チェックを実行
-npm run desktop:dev     # Electron 開発モードを起動
-npm run desktop:pack    # unpacked デスクトップディレクトリをビルド
-npm run desktop:build   # Windows インストーラーとポータブル EXE をビルド
-npm run parse:test      # 曲リンク解析をテスト
-npm run core:test       # 3.0 コア純粋関数をテスト
-```
-
-## 🧩 技術スタック
-
-* Next.js
-* React
-* TypeScript
-* Tailwind CSS
-* Electron
-* electron-builder
-* html-to-image
-* Framer Motion
-* Lucide React
-* Cheerio
-* Zod
-* ReactBits 由来の UI インスピレーション
-
-## 🔤 フォント
-
-このプロジェクトでは以下を使用しています。
-
-* Source Han Sans
-* Source Han Serif
-
-中国語歌詞カードに適した、強く明瞭で信頼性の高いタイポグラフィ基盤を提供します。
-
-3.1.0 では源ノ角ゴシックと源ノ明朝の2つの構成を用意し、CJK フォントと欧文フォントを個別に選択できます。「フォント」は歌詞、レイアウト、ビジュアル詳細と並ぶ独立した手順になりました。デスクトップ版は Windows システムフォントを列挙でき、Web 版でもおすすめフォントと内蔵プリセットを利用できます。完全なフォントプレビューは右列の実際のカード下に表示され、同じ背景アルゴリズムへ深海ブルー、コバルトブルー、インディゴブルー、ナイトブルーの4色を固定入力します。実際のカード背景や書き出す PNG には影響しません。
+* Electron が Next.js の画面とローカル API をまとめます。EXE は同梱サービスを `127.0.0.1` の動的ポートで起動するため、利用者による Node.js の導入は不要です
+* オフライン起動では、手動編集、ローカルカバー、ローカル MP3 / FLAC / M4A 解析、スタイル調整、PNG / WebP / JPG 書き出しを利用できます
+* 音楽サービスのリンク、NetEase Cloud Music 検索、リモートのカバーと歌詞、AI 翻訳、GitHub の更新確認にはネットワーク接続が必要です
+* 保守担当者向け情報は[デスクトップ保守ガイド](./docs/desktop.md)と[英語の開発ガイド](./docs/development.en.md)にあります
 
 ## 🙏 謝辞
 

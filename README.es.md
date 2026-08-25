@@ -22,7 +22,7 @@
   <a href="./docs/releases/v5.12.0.es.md">Notas de la versión</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en línea</a> ·
   <a href="#funciones-principales">Funciones principales</a> ·
-  <a href="#desarrollo-local">Desarrollo local</a> ·
+  <a href="./docs/development.en.md">Desarrollo local</a> ·
   <a href="./LICENSE">Licencia</a>
 </p>
 
@@ -138,134 +138,12 @@ GitHub Release muestra de forma predeterminada un resumen en chino simplificado.
 
 * Búsqueda de actualizaciones en GitHub Releases
 
-## 🪟 Versión de escritorio para Windows
+### 🪟 Versión de escritorio para Windows
 
-La versión de escritorio conserva la interfaz Web de Next.js y las rutas API originales, y las envuelve con Electron.
-
-Al iniciar el EXE, se lanza un servicio Next local en la máquina del usuario y se abre en una ventana de escritorio. Los usuarios normales solo tienen que hacer doble clic en el EXE. No necesitan conocer Node.js, npm ni servidores locales de desarrollo.
-
-La aplicación de escritorio puede iniciarse sin conexión. Estas funciones siguen disponibles sin internet:
-
-* Edición manual de información de la canción
-* Edición manual de letras y traducciones
-* Subida de portada local
-* Análisis de metadatos y letras incrustadas en MP3 / FLAC / M4A locales
-* Personalización visual
-* Generación y exportación PNG, WebP y JPG
-
-Estas funciones requieren internet:
-
-* Análisis de enlaces de plataformas musicales
-* Búsqueda en NetEase Cloud Music y obtención de letras
-* Carga de portadas remotas
-* Obtención automática de letras
-* Traducción de letras con IA
-* Búsqueda de actualizaciones en GitHub Releases
-
-## 🚀 Uso
-
-1. Inicia la aplicación.
-2. Busca en NetEase Cloud Music por título, artista o álbum y elige un candidato para importar metadatos, portada y letras.
-3. También puedes pegar un enlace de Spotify, Apple Music, NetEase Cloud Music o QQ Music, o subir un MP3 / FLAC / M4A local.
-4. Edita letras y traducciones; usa traducción con IA o separa texto original / traducido alternado según el idioma de interfaz seleccionado.
-5. Ajusta proporción del lienzo, combinaciones CJK / latinas, colores, marcos, marcas de agua y otros estilos.
-6. Previsualiza la tarjeta a la derecha.
-7. Elige PNG, WebP o JPG y usa “Completar y exportar” para guardar la imagen.
-
-## 🔄 Búsqueda de actualizaciones
-
-La aplicación incluye un botón “Buscar actualizaciones”.
-Solicita las GitHub Releases de este proyecto a través de una ruta API local de Next, compara la versión actual con la última publicada y prioriza los recursos de instalador / portable cuando están disponibles.
-
-Esta función solo busca actualizaciones y abre la página de descarga. No descarga instaladores en silencio ni sustituye automáticamente la aplicación actual.
-
-<a id="desarrollo-local"></a>
-
-## 🛠️ Desarrollo local
-
-Se requieren Node.js y npm.
-
-```bash
-npm install
-npm run dev
-```
-
-Después abre:
-
-```text
-http://localhost:3000
-```
-
-## 🖥️ Desarrollo de escritorio y empaquetado
-
-Ejecuta la aplicación de escritorio en modo desarrollo:
-
-```bash
-npm run desktop:dev
-```
-
-Construye un directorio de escritorio unpacked para inspección:
-
-```bash
-npm run desktop:pack
-```
-
-Construye tanto el instalador de Windows como el EXE portable:
-
-```bash
-npm run desktop:build
-```
-
-Los artefactos de compilación se escriben en:
-
-```text
-release/
-```
-
-El servicio Next standalone empaquetado se prepara en:
-
-```text
-dist-desktop/server
-```
-
-## 📜 Scripts
-
-```bash
-npm run dev             # Inicia el servidor de desarrollo Web
-npm run build           # Compila la aplicación Next.js
-npm run typecheck       # Ejecuta la comprobación de tipos TypeScript
-npm run desktop:dev     # Inicia el modo de desarrollo de Electron
-npm run desktop:pack    # Construye un directorio de escritorio unpacked
-npm run desktop:build   # Construye el instalador de Windows y el EXE portable
-npm run parse:test      # Prueba el análisis de enlaces de canciones
-npm run core:test       # Prueba las funciones puras del núcleo 3.0
-```
-
-## 🧩 Stack tecnológico
-
-* Next.js
-* React
-* TypeScript
-* Tailwind CSS
-* Electron
-* electron-builder
-* html-to-image
-* Framer Motion
-* Lucide React
-* Cheerio
-* Zod
-* Inspiración UI de ReactBits
-
-## 🔤 Fuentes
-
-El proyecto usa:
-
-* Source Han Sans
-* Source Han Serif
-
-Aportan una base tipográfica sólida, clara y fiable para tarjetas de letras en chino.
-
-La versión 3.1.0 ofrece combinaciones Source Han Sans y Source Han Serif y permite elegir por separado las fuentes CJK y latinas. Fuentes ahora es un paso independiente junto a Letras, Diseño y Detalles visuales. La aplicación de escritorio puede enumerar fuentes del sistema Windows; las versiones Web conservan las fuentes recomendadas y los presets integrados. La vista previa completa aparece debajo de la tarjeta real en la columna derecha y usa su mismo algoritmo de fondo con Azul abisal, Cobalto, Índigo y Azul nocturno como entradas fijas; no modifica el fondo real de la tarjeta ni se incluye en el PNG exportado.
+* Electron integra la interfaz Next.js y la API local; el EXE inicia el servicio incluido en un puerto dinámico de `127.0.0.1`, sin que el usuario tenga que instalar Node.js
+* El modo sin conexión cubre la edición manual, portadas locales, análisis de MP3 / FLAC / M4A locales, estilos y exportación PNG / WebP / JPG
+* Los enlaces musicales, la búsqueda en NetEase Cloud Music, las portadas y letras remotas, la traducción con IA y las actualizaciones de GitHub requieren conexión
+* Los mantenedores pueden consultar la [guía de mantenimiento de escritorio](./docs/desktop.md) y la [guía de desarrollo en inglés](./docs/development.en.md)
 
 ## 🙏 Agradecimientos
 
