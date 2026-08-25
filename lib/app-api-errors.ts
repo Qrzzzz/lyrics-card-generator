@@ -28,7 +28,7 @@ const defaultErrors: Record<AppApiErrorCode, string> = {
   song_parse_failed: "Could not parse this link automatically. You can still enter the title, artist, and cover manually.",
   local_audio_invalid_multipart: "Invalid multipart form-data request.",
   local_audio_missing_file: "No audio file was provided.",
-  local_audio_unsupported_type: "Only MP3 and FLAC files are supported.",
+  local_audio_unsupported_type: "Only MP3, FLAC, and M4A files are supported.",
   local_audio_too_large: "The audio file is larger than the 100 MB limit.",
   local_audio_parse_failed: "Unable to parse this audio file."
 };

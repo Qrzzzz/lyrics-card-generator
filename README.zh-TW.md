@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v5.11.2.zh-TW.md">發布說明</a> ·
+  <a href="./docs/releases/v5.12.0.zh-TW.md">發布說明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">線上 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="#本機開發">本機開發</a> ·
@@ -71,25 +71,25 @@
 
 ## 📦 下載與安裝
 
-請從 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載 v5.11.2：
+請從 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載 v5.12.0：
 
-* 安裝版：`Lyrics Card Generator Setup 5.11.2.exe`
-* 可攜版：`Lyrics Card Generator-5.11.2-portable.exe`
+* 安裝版：`Lyrics Card Generator Setup 5.12.0.exe`
+* 可攜版：`Lyrics Card Generator-5.12.0-portable.exe`
 
 安裝版適合長期使用；可攜版適合臨時執行、測試或放在隨身碟中使用。
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v5.11.2 更新重點
+### v5.12.0 更新重點
 
-* 將原本「標題允許兩行」選項統一升級為「標題允許多行」，直式歌詞卡與純音樂卡都能完整換行顯示三行以上標題。
-* 直式自動高度會計入標題行數；固定 1:1 的純音樂卡會為多行歌曲資訊預留空間並動態縮小封面，避免裁切或越界。
-* 橫式版面繼續透過實測配置支援多行；桌面版與 Web Lite 行為一致，關閉選項時仍維持單行省略。
+* 本機音訊上傳新增 M4A 支援，可讀取標題、藝人、專輯、封面與內嵌歌詞；沒有內嵌歌詞時仍保留已讀取的歌曲資訊供手動編輯。
+* 相容 `audio/mp4`、`audio/m4a` 與 `audio/x-m4a`，並沿用 100 MB 上限、有界 multipart 讀取和解析失敗保護。
+* Windows 桌面版匯入歷史支援成功提交的 M4A 檔案重新匯入與重新定位，而且不會將音訊內容寫入歷史。
 
 ## 🌐 多語言發佈說明
 
 GitHub Release 預設顯示簡體中文摘要，完整說明請見：
-[简体中文](./docs/releases/v5.11.2.zh-CN.md) · [繁體中文](./docs/releases/v5.11.2.zh-TW.md) · [English](./docs/releases/v5.11.2.en.md) · [Français](./docs/releases/v5.11.2.fr.md) · [日本語](./docs/releases/v5.11.2.ja.md) · [Español](./docs/releases/v5.11.2.es.md)
+[简体中文](./docs/releases/v5.12.0.zh-CN.md) · [繁體中文](./docs/releases/v5.12.0.zh-TW.md) · [English](./docs/releases/v5.12.0.en.md) · [Français](./docs/releases/v5.12.0.fr.md) · [日本語](./docs/releases/v5.12.0.ja.md) · [Español](./docs/releases/v5.12.0.es.md)
 
 ## ✨ 主要功能
 
@@ -111,7 +111,7 @@ GitHub Release 預設顯示簡體中文摘要，完整說明請見：
 
 * 支援透過網易雲音樂搜尋歌名、歌手或專輯，並從候選結果匯入歌曲資訊與歌詞
 * 支援 Spotify、Apple Music、網易雲音樂、QQ 音樂連結解析
-* 支援本機 MP3 / FLAC 中繼資料解析，嘗試讀取標題、藝人、專輯、封面和內嵌歌詞
+* 支援本機 MP3 / FLAC / M4A 中繼資料解析，嘗試讀取標題、藝人、專輯、封面和內嵌歌詞
 
 ### ✍️ 手動編輯與素材上傳
 
@@ -144,7 +144,7 @@ GitHub Release 預設顯示簡體中文摘要，完整說明請見：
 * 手動編輯歌曲資訊
 * 手動編輯歌詞和翻譯
 * 上傳本機封面
-* 解析本機 MP3 / FLAC 檔案中的中繼資料和內嵌歌詞
+* 解析本機 MP3 / FLAC / M4A 檔案中的中繼資料和內嵌歌詞
 * 調整樣式
 * 生成並匯出 PNG、WebP 與 JPG 圖片
 
@@ -161,7 +161,7 @@ GitHub Release 預設顯示簡體中文摘要，完整說明請見：
 
 1. 啟動應用。
 2. 在「搜尋網易雲音樂」中輸入歌名、歌手或專輯關鍵字，選擇候選歌曲後自動填入歌曲資訊、封面和歌詞。
-3. 也可以貼上 Spotify、Apple Music、網易雲音樂或 QQ 音樂連結，或上傳本機 MP3 / FLAC 讀取中繼資料。
+3. 也可以貼上 Spotify、Apple Music、網易雲音樂或 QQ 音樂連結，或上傳本機 MP3 / FLAC / M4A 讀取中繼資料。
 4. 編輯歌詞和翻譯；可使用 AI 翻譯，也可將原文 / 譯文交替行依目前介面語言自動拆分。
 5. 調整畫布比例、字型方案（中日韓 / 西文）、字號、顏色、邊框、浮水印等樣式。
 6. 在右側預覽卡片。

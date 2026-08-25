@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v5.11.2.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v5.12.0.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="#développement-local">Développement local</a> ·
@@ -74,25 +74,25 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 ## 📦 Téléchargement et installation
 
-Téléchargez la v5.11.2 depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
+Téléchargez la v5.12.0 depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
 
-* Installateur : `Lyrics Card Generator Setup 5.11.2.exe`
-* Version portable : `Lyrics Card Generator-5.11.2-portable.exe`
+* Installateur : `Lyrics Card Generator Setup 5.12.0.exe`
+* Version portable : `Lyrics Card Generator-5.12.0-portable.exe`
 
 L'installateur est recommandé pour une utilisation régulière. La version portable convient aux essais, à une utilisation temporaire ou à un disque amovible.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### Points forts de la v5.11.2
+### Points forts de la v5.12.0
 
-* Renomme l’ancienne option « Autoriser un titre sur deux lignes » en « Autoriser un titre sur plusieurs lignes » dans les six langues et permet aux cartes portrait avec ou sans paroles d’afficher plus de deux lignes.
-* La hauteur automatique en portrait tient désormais compte des lignes du titre ; les cartes instrumentales fixes en 1:1 réservent l’espace des métadonnées et réduisent la pochette si nécessaire pour éviter toute coupure.
-* Les cartes paysage conservent leur mise en page multiligne mesurée ; la version de bureau et Web Lite ont le même comportement, tandis que l’option désactivée maintient l’ellipse sur une ligne.
+* L’import audio local prend désormais en charge le format M4A en plus des formats MP3 et FLAC, et lit le titre, l’artiste, l’album, la pochette et les paroles intégrées tout en conservant les informations détectées si les paroles sont absentes.
+* Prend en charge `audio/mp4`, `audio/m4a` et `audio/x-m4a` tout en maintenant la limite de 100 Mo, la lecture multipart bornée et les protections en cas d’échec d’analyse.
+* L’historique de la version Windows peut réimporter et relocaliser les fichiers M4A validés sans enregistrer leur contenu audio.
 
 ## 🌐 Notes de publication multilingues
 
 Par défaut, GitHub Release affiche un résumé en chinois simplifié. Consultez les notes complètes :
-[简体中文](./docs/releases/v5.11.2.zh-CN.md) · [繁體中文](./docs/releases/v5.11.2.zh-TW.md) · [English](./docs/releases/v5.11.2.en.md) · [Français](./docs/releases/v5.11.2.fr.md) · [日本語](./docs/releases/v5.11.2.ja.md) · [Español](./docs/releases/v5.11.2.es.md)
+[简体中文](./docs/releases/v5.12.0.zh-CN.md) · [繁體中文](./docs/releases/v5.12.0.zh-TW.md) · [English](./docs/releases/v5.12.0.en.md) · [Français](./docs/releases/v5.12.0.fr.md) · [日本語](./docs/releases/v5.12.0.ja.md) · [Español](./docs/releases/v5.12.0.es.md)
 
 <a id="fonctionnalités-principales"></a>
 
@@ -116,7 +116,7 @@ Par défaut, GitHub Release affiche un résumé en chinois simplifié. Consultez
 
 * Recherche NetEase Cloud Music par titre, artiste ou album, puis import des métadonnées et paroles du résultat choisi
 * Analyse de liens Spotify, Apple Music, NetEase Cloud Music et QQ Music
-* Analyse de métadonnées MP3 / FLAC locales : titre, artiste, album, pochette et paroles intégrées
+* Analyse de métadonnées MP3 / FLAC / M4A locales : titre, artiste, album, pochette et paroles intégrées
 
 ### ✍️ Édition manuelle et import de matériel
 
@@ -149,7 +149,7 @@ L'application peut démarrer hors ligne. Les fonctions suivantes restent disponi
 * Édition manuelle des informations du morceau
 * Édition manuelle des paroles et traductions
 * Import de pochette locale
-* Analyse des métadonnées et paroles intégrées de fichiers MP3 / FLAC
+* Analyse des métadonnées et paroles intégrées de fichiers MP3 / FLAC / M4A
 * Personnalisation visuelle
 * Génération et export PNG, WebP et JPG
 
@@ -166,7 +166,7 @@ Ces fonctions nécessitent Internet :
 
 1. Lancez l'application.
 2. Recherchez NetEase Cloud Music par titre, artiste ou album, puis choisissez un résultat pour importer les métadonnées, la pochette et les paroles.
-3. Vous pouvez aussi coller un lien Spotify, Apple Music, NetEase Cloud Music ou QQ Music, ou importer un fichier local MP3 / FLAC.
+3. Vous pouvez aussi coller un lien Spotify, Apple Music, NetEase Cloud Music ou QQ Music, ou importer un fichier local MP3 / FLAC / M4A.
 4. Modifiez les paroles et traductions ; utilisez la traduction IA ou séparez automatiquement les lignes original / traduction selon la langue de l'interface.
 5. Ajustez le ratio de toile, les jeux de polices CJK / latines, les couleurs, cadres, filigranes et autres styles.
 6. Prévisualisez la carte à droite.

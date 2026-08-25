@@ -11,8 +11,17 @@ import type { ParsedSongData } from "@/lib/types";
 
 export const runtime = "nodejs";
 
-const ACCEPTED_EXTENSIONS = new Set([".mp3", ".flac"]);
-const ACCEPTED_MIME_TYPES = new Set(["audio/mpeg", "audio/mp3", "audio/flac", "audio/x-flac"]);
+const ACCEPTED_EXTENSIONS = new Set([".mp3", ".flac", ".m4a"]);
+const PARSER_PATH_BY_MIME_TYPE = new Map([
+  ["audio/mpeg", "upload.mp3"],
+  ["audio/mp3", "upload.mp3"],
+  ["audio/flac", "upload.flac"],
+  ["audio/x-flac", "upload.flac"],
+  ["audio/mp4", "upload.m4a"],
+  ["audio/m4a", "upload.m4a"],
+  ["audio/x-m4a", "upload.m4a"]
+]);
+const ACCEPTED_MIME_TYPES = new Set(PARSER_PATH_BY_MIME_TYPE.keys());
 
 type NativeTag = {
   id?: string;
@@ -46,11 +55,7 @@ export async function POST(req: Request) {
     // Preserve the previous parser precedence: a recognized browser MIME type
     // wins over a conflicting filename extension, while extension-only uploads
     // still retain their original path hint.
-    const parserPath = mimeType === "audio/flac" || mimeType === "audio/x-flac"
-      ? "upload.flac"
-      : mimeType === "audio/mpeg" || mimeType === "audio/mp3"
-        ? "upload.mp3"
-        : file.name;
+    const parserPath = PARSER_PATH_BY_MIME_TYPE.get(mimeType) ?? file.name;
     const metadata = await parseLocalAudioMetadata(file, parserPath);
     const picture = metadata.common.picture?.[0];
     const rawLyrics = extractLyrics(metadata);
@@ -98,7 +103,7 @@ async function parseLocalAudioMetadata(file: Blob, parserPath: string) {
 
 function extractLyrics(metadata: Awaited<ReturnType<typeof parseFromTokenizer>>) {
   // Prefer the library's normalized field, then tolerate vendor-specific tag
-  // shapes because MP3 and FLAC writers encode embedded lyrics inconsistently.
+  // shapes because MP3, FLAC, and M4A writers encode embedded lyrics inconsistently.
   const commonLyrics = firstLyricsValue(metadata.common.lyrics);
   if (commonLyrics) {
     return commonLyrics;
@@ -177,5 +182,5 @@ function getFileExtension(fileName: string) {
 }
 
 function stripAudioExtension(fileName: string) {
-  return fileName.replace(/\.(mp3|flac)$/i, "");
+  return fileName.replace(/\.(mp3|flac|m4a)$/i, "");
 }

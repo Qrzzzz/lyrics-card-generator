@@ -124,6 +124,11 @@ async function main() {
     path.resolve("C:\\Music\\song.mp3"),
     { size: 1024, mtimeMs: 123, isFile: true }
   ).ok, true);
+  assert.deepEqual(validateImportFileDescriptor(
+    "local-audio",
+    path.resolve("C:\\Music\\song.m4a"),
+    { size: 1024, mtimeMs: 123, isFile: true }
+  ).ok, true);
   assert.equal(validateImportFileDescriptor(
     "local-audio",
     path.resolve("C:\\Music\\song.exe"),
