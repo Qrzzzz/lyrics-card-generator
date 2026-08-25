@@ -13,7 +13,7 @@ const executablePath = process.env.LYRICS_CARD_TEST_EXECUTABLE
 const reportDirectory = path.join(root, "playwright-report", "desktop");
 const userDataDirectory = await mkdtemp(path.join(tmpdir(), "lyrics-card-history-desktop-test-"));
 const fixtureDirectory = path.join(userDataDirectory, "fixtures");
-const audioPath = path.join(fixtureDirectory, "history-audio.mp3");
+const audioPath = path.join(fixtureDirectory, "history-audio.m4a");
 const relocatedAudioPath = path.join(fixtureDirectory, "history-audio-relocated.mp3");
 const rejectedRelocatedAudioPath = path.join(fixtureDirectory, "history-audio-rejected.mp3");
 const coverPath = path.join(fixtureDirectory, "history-cover.png");
@@ -1352,7 +1352,7 @@ try {
   assert.equal(await currentSongTitle(), titleBeforeImportFailures);
 
   localAudioShouldFail = true;
-  const failedLocalInput = page.locator('input[accept*=".mp3"]');
+  const failedLocalInput = page.locator('input[accept*=".m4a"]');
   const failedLocalSection = failedLocalInput.locator("xpath=ancestor::section[1]");
   await failedLocalInput.setInputFiles(audioPath);
   await failedLocalSection.locator('[role="status"].status-danger').waitFor({ state: "visible", timeout: 15_000 });
@@ -1568,7 +1568,7 @@ try {
   resolveShouldFail = false;
   await closeHistoryWithEscape();
 
-  await page.locator('input[accept*=".mp3"]').setInputFiles(audioPath);
+  await page.locator('input[accept*=".m4a"]').setInputFiles(audioPath);
   await page.waitForFunction(() => (
     document.querySelector('[data-testid="song-info-summary"]')?.textContent?.includes("Local history fixture")
   ), null, { timeout: 15_000 });

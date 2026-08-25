@@ -13,6 +13,7 @@ const editorSteps = read("components/editor/useEditorSteps.tsx");
 const desktopApi = read("lib/desktop-api.ts");
 const importHistoryTypes = read("lib/import-history.ts");
 const importHistoryStore = read("electron/import-history.js");
+const desktopMain = read("electron/main.js");
 const editorPreferences = read("components/editor/hooks/useEditorPreferences.ts");
 const songLinkParser = read("components/editor/SongLinkParser.tsx");
 const songSearchParser = read("components/editor/SongSearchParser.tsx");
@@ -250,6 +251,21 @@ for (const [name, source] of [
     `${name} failure settles its document intent`
   );
 }
+assert.match(
+  localAudioParser,
+  /accept="[^"]*\.m4a[^"]*audio\/mp4[^"]*audio\/m4a[^"]*audio\/x-m4a[^"]*"/,
+  "the local-audio picker exposes M4A extensions and browser MIME variants"
+);
+assert.match(
+  importHistoryStore,
+  /AUDIO_EXTENSIONS = new Set\(\["\.mp3", "\.flac", "\.m4a"\]\)/,
+  "desktop history accepts M4A files for registration and replay"
+);
+assert.match(
+  desktopMain,
+  /extensions: \["mp3", "flac", "m4a"\][\s\S]*?if \(extension === "\.m4a"\) return "audio\/mp4"/,
+  "desktop relocation and replay preserve M4A selection and MIME identity"
+);
 assert.doesNotMatch(editorActions, /loadExample[\s\S]{0,500}queueImportHistoryRecord/, "built-in examples are not recorded");
 assert.match(
   editorPreferences,
@@ -270,4 +286,4 @@ assert.match(
   "narrow icon-only adaptation remains scoped to the desktop shell"
 );
 
-console.log(JSON.stringify({ ok: true, importHistoryUiContracts: 79 }, null, 2));
+console.log(JSON.stringify({ ok: true, importHistoryUiContracts: 82 }, null, 2));

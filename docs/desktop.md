@@ -18,7 +18,7 @@ Offline-supported paths:
 
 - Manual song, artist, album, lyric, and translation editing.
 - Local cover upload.
-- Local MP3 / FLAC metadata parsing when the required metadata is embedded in the file.
+- Local MP3 / FLAC / M4A metadata parsing when the required metadata is embedded in the file.
 - Style adjustment.
 - PNG export through the existing DOM-to-PNG path.
 

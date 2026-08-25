@@ -19,7 +19,7 @@
 <p>
   <strong>Navegación</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Descargar la última versión</a> ·
-  <a href="./docs/releases/v5.11.2.es.md">Notas de la versión</a> ·
+  <a href="./docs/releases/v5.12.0.es.md">Notas de la versión</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en línea</a> ·
   <a href="#funciones-principales">Funciones principales</a> ·
   <a href="#desarrollo-local">Desarrollo local</a> ·
@@ -74,25 +74,25 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 ## 📦 Descarga e instalación
 
-Descarga v5.11.2 desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
+Descarga v5.12.0 desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Instalador: `Lyrics Card Generator Setup 5.11.2.exe`
-* Versión portable: `Lyrics Card Generator-5.11.2-portable.exe`
+* Instalador: `Lyrics Card Generator Setup 5.12.0.exe`
+* Versión portable: `Lyrics Card Generator-5.12.0-portable.exe`
 
 El instalador se recomienda para uso habitual. La versión portable es útil para pruebas, uso temporal o ejecución desde una unidad extraíble.
 
 > La compilación actual no está firmada. Windows puede mostrar una advertencia de SmartScreen, algo habitual en aplicaciones personales sin firma.
 
-### Novedades de v5.11.2
+### Novedades de v5.12.0
 
-* Cambia la antigua opción «Permitir título de dos líneas» por «Permitir título multilínea» en los seis idiomas y permite que las tarjetas verticales con letras o instrumentales muestren títulos de más de dos líneas.
-* La altura automática vertical ahora considera las líneas del título; las tarjetas instrumentales fijas de 1:1 reservan espacio para metadatos multilínea y reducen la portada cuando hace falta para evitar recortes o desbordamientos.
-* Las tarjetas horizontales conservan su diseño multilínea medido; Escritorio y Web Lite se comportan igual, mientras que desactivar la opción mantiene el truncado en una sola línea.
+* La carga de audio local ahora admite M4A además de MP3 y FLAC, y lee el título, el artista, el álbum, la portada y las letras incrustadas, conservando la información detectada cuando no hay letras.
+* Admite `audio/mp4`, `audio/m4a` y `audio/x-m4a`, manteniendo el límite de 100 MB, la lectura multipart acotada y las protecciones ante errores de análisis.
+* El historial de la versión de escritorio para Windows puede volver a importar y reubicar archivos M4A confirmados sin guardar su contenido de audio.
 
 ## 🌐 Notas de publicación multilingües
 
 GitHub Release muestra de forma predeterminada un resumen en chino simplificado. Consulta las notas completas:
-[简体中文](./docs/releases/v5.11.2.zh-CN.md) · [繁體中文](./docs/releases/v5.11.2.zh-TW.md) · [English](./docs/releases/v5.11.2.en.md) · [Français](./docs/releases/v5.11.2.fr.md) · [日本語](./docs/releases/v5.11.2.ja.md) · [Español](./docs/releases/v5.11.2.es.md)
+[简体中文](./docs/releases/v5.12.0.zh-CN.md) · [繁體中文](./docs/releases/v5.12.0.zh-TW.md) · [English](./docs/releases/v5.12.0.en.md) · [Français](./docs/releases/v5.12.0.fr.md) · [日本語](./docs/releases/v5.12.0.ja.md) · [Español](./docs/releases/v5.12.0.es.md)
 
 <a id="funciones-principales"></a>
 
@@ -116,7 +116,7 @@ GitHub Release muestra de forma predeterminada un resumen en chino simplificado.
 
 * Busca en NetEase Cloud Music por título, artista o álbum e importa metadatos y letras desde el resultado elegido
 * Análisis de enlaces de Spotify, Apple Music, NetEase Cloud Music y QQ Music
-* Análisis de metadatos MP3 / FLAC locales para título, artista, álbum, portada y letras incrustadas
+* Análisis de metadatos MP3 / FLAC / M4A locales para título, artista, álbum, portada y letras incrustadas
 
 ### ✍️ Edición manual y subida de material
 
@@ -149,7 +149,7 @@ La aplicación de escritorio puede iniciarse sin conexión. Estas funciones sigu
 * Edición manual de información de la canción
 * Edición manual de letras y traducciones
 * Subida de portada local
-* Análisis de metadatos y letras incrustadas en MP3 / FLAC locales
+* Análisis de metadatos y letras incrustadas en MP3 / FLAC / M4A locales
 * Personalización visual
 * Generación y exportación PNG, WebP y JPG
 
@@ -166,7 +166,7 @@ Estas funciones requieren internet:
 
 1. Inicia la aplicación.
 2. Busca en NetEase Cloud Music por título, artista o álbum y elige un candidato para importar metadatos, portada y letras.
-3. También puedes pegar un enlace de Spotify, Apple Music, NetEase Cloud Music o QQ Music, o subir un MP3 / FLAC local.
+3. También puedes pegar un enlace de Spotify, Apple Music, NetEase Cloud Music o QQ Music, o subir un MP3 / FLAC / M4A local.
 4. Edita letras y traducciones; usa traducción con IA o separa texto original / traducido alternado según el idioma de interfaz seleccionado.
 5. Ajusta proporción del lienzo, combinaciones CJK / latinas, colores, marcos, marcas de agua y otros estilos.
 6. Previsualiza la tarjeta a la derecha.

@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v5.11.2.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v5.12.0.zh-CN.md">发布说明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">在线 Web Lite 版</a> ·
   <a href="./docs/web-lite-browser-support.md">Web Lite 浏览器支持</a> ·
   <a href="./docs/desktop.md">桌面维护文档</a> ·
@@ -73,25 +73,25 @@
 
 ## 📦 下载与安装
 
-请从 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下载 v5.11.2：
+请从 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下载 v5.12.0：
 
-* 安装版：`Lyrics Card Generator Setup 5.11.2.exe`
-* 便携版：`Lyrics Card Generator-5.11.2-portable.exe`
+* 安装版：`Lyrics Card Generator Setup 5.12.0.exe`
+* 便携版：`Lyrics Card Generator-5.12.0-portable.exe`
 
 安装版适合长期使用；便携版适合临时运行、测试或放在移动硬盘中使用。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v5.11.2 更新重点
+### v5.12.0 更新重点
 
-* 将原“标题允许两行”选项统一升级为“标题允许多行”，竖版歌词卡和纯音乐卡均可完整换行显示三行以上标题。
-* 竖版自动高度会计入标题行数；固定 1:1 的纯音乐卡会为多行歌曲信息预留空间并动态缩小封面，避免裁切或越界。
-* 横版继续使用实测布局支持多行；桌面版与 Web Lite 行为一致，关闭该选项时仍保持单行省略。
+* 本地音频上传新增 M4A 支持，可读取标题、歌手、专辑、封面与内嵌歌词；没有内嵌歌词时仍保留已读取的歌曲信息供手动编辑。
+* 兼容 `audio/mp4`、`audio/m4a` 与 `audio/x-m4a`，并沿用 100 MB 上限、受限 multipart 读取和解析失败保护。
+* Windows 桌面版导入历史支持成功提交的 M4A 文件重新导入与重新定位，且不会将音频内容写入历史。
 
 ## 🌐 多语言发布说明
 
 GitHub Release 默认展示简体中文摘要，完整说明见：
-[简体中文](./docs/releases/v5.11.2.zh-CN.md) · [繁體中文](./docs/releases/v5.11.2.zh-TW.md) · [English](./docs/releases/v5.11.2.en.md) · [Français](./docs/releases/v5.11.2.fr.md) · [日本語](./docs/releases/v5.11.2.ja.md) · [Español](./docs/releases/v5.11.2.es.md)
+[简体中文](./docs/releases/v5.12.0.zh-CN.md) · [繁體中文](./docs/releases/v5.12.0.zh-TW.md) · [English](./docs/releases/v5.12.0.en.md) · [Français](./docs/releases/v5.12.0.fr.md) · [日本語](./docs/releases/v5.12.0.ja.md) · [Español](./docs/releases/v5.12.0.es.md)
 
 <a id="主要功能"></a>
 
@@ -115,7 +115,7 @@ GitHub Release 默认展示简体中文摘要，完整说明见：
 
 * 支持通过网易云音乐搜索歌名、歌手或专辑，并从候选结果导入歌曲信息与歌词
 * 支持 Spotify、Apple Music、网易云音乐、QQ 音乐链接解析
-* 支持本地 MP3 / FLAC 元数据解析，尝试读取标题、艺人、专辑、封面和内嵌歌词
+* 支持本地 MP3 / FLAC / M4A 元数据解析，尝试读取标题、艺人、专辑、封面和内嵌歌词
 
 ### ✍️ 手动编辑与素材上传
 
@@ -148,7 +148,7 @@ GitHub Release 默认展示简体中文摘要，完整说明见：
 * 手动编辑歌曲信息
 * 手动编辑歌词和翻译
 * 上传本地封面
-* 解析本地 MP3 / FLAC 文件中的元数据和内嵌歌词
+* 解析本地 MP3 / FLAC / M4A 文件中的元数据和内嵌歌词
 * 调整样式
 * 生成并导出 PNG、WebP 和 JPG 图片
 
@@ -165,7 +165,7 @@ GitHub Release 默认展示简体中文摘要，完整说明见：
 
 1. 启动应用。
 2. 在“搜索网易云音乐”中输入歌名、歌手或专辑关键词，选择候选歌曲后自动填入歌曲信息、封面和歌词。
-3. 也可以粘贴 Spotify、Apple Music、网易云音乐或 QQ 音乐链接，或上传本地 MP3 / FLAC 读取元数据。
+3. 也可以粘贴 Spotify、Apple Music、网易云音乐或 QQ 音乐链接，或上传本地 MP3 / FLAC / M4A 读取元数据。
 4. 编辑歌词和翻译；可使用 AI 翻译，也可将原文 / 译文交替行按当前界面语言自动拆分。
 5. 调整画布比例、字体方案（中日韩 / 西文）、字号、颜色、边框、水印等样式。
 6. 在右侧预览卡片。

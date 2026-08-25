@@ -140,7 +140,7 @@ export function LocalAudioParser({
         <input
           ref={inputRef}
           type="file"
-          accept=".mp3,.flac,audio/mpeg,audio/flac"
+          accept=".mp3,.flac,.m4a,audio/mpeg,audio/flac,audio/mp4,audio/m4a,audio/x-m4a"
           className="hidden"
           onChange={(event) => void parseFile(event.target.files?.[0])}
         />

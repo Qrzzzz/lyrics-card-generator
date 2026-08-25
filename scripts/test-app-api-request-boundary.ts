@@ -376,6 +376,21 @@ async function assertLocalAudioUploadLimits() {
   assert.equal(parsedPayload.data?.album, "Fixture Album");
   assert.equal(parsedPayload.data?.lyrics, "Fixture lyric");
 
+  const validM4aAudio = new FormData();
+  validM4aAudio.set("file", new File([createM4aAudioFixture()], "fixture.m4a", { type: "audio/mp4" }));
+  const parsedM4aAudio = await parseLocalAudio(formRequest(validM4aAudio, APP_ORIGIN));
+  assert.equal(parsedM4aAudio.status, 200, "a valid M4A multipart request parses iTunes metadata");
+  const parsedM4aPayload = await parsedM4aAudio.json() as {
+    ok: boolean;
+    data?: { title?: string; artist?: string; album?: string; lyrics?: string; originalUrl?: string };
+  };
+  assert.equal(parsedM4aPayload.ok, true);
+  assert.equal(parsedM4aPayload.data?.title, "Fixture M4A Title");
+  assert.equal(parsedM4aPayload.data?.artist, "Fixture M4A Artist");
+  assert.equal(parsedM4aPayload.data?.album, "Fixture M4A Album");
+  assert.equal(parsedM4aPayload.data?.lyrics, "Fixture M4A lyric");
+  assert.equal(parsedM4aPayload.data?.originalUrl, "fixture.m4a");
+
   const mismatchedExtensionAudio = new FormData();
   mismatchedExtensionAudio.set(
     "file",
@@ -648,6 +663,45 @@ function createApeV2AudioFixture() {
     new Uint8Array(8)
   );
   return concatBytes(audioFrames, ...items, footer);
+}
+
+function createM4aAudioFixture() {
+  const encoder = new TextEncoder();
+  const atom = (type: string, ...payloads: Uint8Array[]) => {
+    const payload = concatBytes(...payloads);
+    const header = new Uint8Array(8);
+    new DataView(header.buffer).setUint32(0, header.byteLength + payload.byteLength);
+    header.set(Array.from(type, (character) => character.charCodeAt(0)), 4);
+    return concatBytes(header, payload);
+  };
+  const textAtom = (type: string, value: string) => atom(
+    type,
+    atom("data", new Uint8Array([0, 0, 0, 1, 0, 0, 0, 0]), encoder.encode(value))
+  );
+
+  return concatBytes(
+    atom(
+      "ftyp",
+      new Uint8Array([0x4d, 0x34, 0x41, 0x20, 0, 0, 0, 0, 0x69, 0x73, 0x6f, 0x6d, 0x6d, 0x70, 0x34, 0x32])
+    ),
+    atom(
+      "moov",
+      atom(
+        "udta",
+        atom(
+          "meta",
+          new Uint8Array(4),
+          atom(
+            "ilst",
+            textAtom("©nam", "Fixture M4A Title"),
+            textAtom("©ART", "Fixture M4A Artist"),
+            textAtom("©alb", "Fixture M4A Album"),
+            textAtom("©lyr", "[00:01.00]Fixture M4A lyric")
+          )
+        )
+      )
+    )
+  );
 }
 
 function uint32Le(value: number) {

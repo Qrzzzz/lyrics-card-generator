@@ -913,7 +913,7 @@ function registerDesktopIpc() {
     const result = await dialog.showOpenDialog(mainWindow, {
       properties: ["openFile"],
       filters: record.kind === "local-audio"
-        ? [{ name: "Audio", extensions: ["mp3", "flac"] }]
+        ? [{ name: "Audio", extensions: ["mp3", "flac", "m4a"] }]
         : [{ name: "Images", extensions: ["png", "jpg", "jpeg", "webp", "gif"] }]
     });
     if (result.canceled || !result.filePaths[0]) return { ok: false, code: "cancelled" };
@@ -1210,6 +1210,7 @@ async function createImportHistoryReplayPayload(record, preparedFile, senderId) 
 function mimeTypeForHistoryFile(extension) {
   if (extension === ".mp3") return "audio/mpeg";
   if (extension === ".flac") return "audio/flac";
+  if (extension === ".m4a") return "audio/mp4";
   if (extension === ".png") return "image/png";
   if (extension === ".webp") return "image/webp";
   if (extension === ".gif") return "image/gif";

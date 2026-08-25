@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v5.11.2.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v5.12.0.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="#ローカル開発">ローカル開発</a> ·
@@ -74,25 +74,25 @@
 
 ## 📦 ダウンロードとインストール
 
-v5.11.2 は [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) からダウンロードできます。
+v5.12.0 は [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) からダウンロードできます。
 
-* インストーラー：`Lyrics Card Generator Setup 5.11.2.exe`
-* ポータブル版：`Lyrics Card Generator-5.11.2-portable.exe`
+* インストーラー：`Lyrics Card Generator Setup 5.12.0.exe`
+* ポータブル版：`Lyrics Card Generator-5.12.0-portable.exe`
 
 通常利用にはインストーラーを推奨します。ポータブル版は一時利用、検証、リムーバブルドライブでの利用に向いています。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v5.11.2 の主な更新
+### v5.12.0 の主な更新
 
-* 旧「タイトルを2行まで許可」を6言語すべてで「タイトルの複数行表示を許可」に改め、縦向きの歌詞カードとインストゥルメンタルカードで3行以上のタイトルも表示します。
-* 縦向きの自動高さがタイトル行数を考慮し、固定1:1のインストゥルメンタルカードは複数行の曲情報用スペースを確保して必要に応じてアートワークを縮小し、切れやはみ出しを防ぎます。
-* 横向きカードは実測レイアウトによる複数行対応を維持します。デスクトップ版と Web Lite の動作は共通で、無効時は従来どおり1行で省略します。
+* ローカル音声のアップロードで MP3 と FLAC に加えて M4A に対応し、タイトル、アーティスト、アルバム、アートワーク、埋め込み歌詞を読み取ります。歌詞がない場合も取得した曲情報は保持されます。
+* `audio/mp4`、`audio/m4a`、`audio/x-m4a` に対応し、既存の 100 MB 上限、制限付き multipart 読み取り、解析失敗時の保護を維持します。
+* Windows デスクトップ版の読み込み履歴は、正常に確定した M4A ファイルを音声データそのものは保存せずに再読み込み、再指定できます。
 
 ## 🌐 多言語リリースノート
 
 GitHub Release ではデフォルトで簡体字中国語の概要が表示されます。完全なリリースノートはこちら：
-[简体中文](./docs/releases/v5.11.2.zh-CN.md) · [繁體中文](./docs/releases/v5.11.2.zh-TW.md) · [English](./docs/releases/v5.11.2.en.md) · [Français](./docs/releases/v5.11.2.fr.md) · [日本語](./docs/releases/v5.11.2.ja.md) · [Español](./docs/releases/v5.11.2.es.md)
+[简体中文](./docs/releases/v5.12.0.zh-CN.md) · [繁體中文](./docs/releases/v5.12.0.zh-TW.md) · [English](./docs/releases/v5.12.0.en.md) · [Français](./docs/releases/v5.12.0.fr.md) · [日本語](./docs/releases/v5.12.0.ja.md) · [Español](./docs/releases/v5.12.0.es.md)
 
 <a id="主な機能"></a>
 
@@ -116,7 +116,7 @@ GitHub Release ではデフォルトで簡体字中国語の概要が表示さ�
 
 * NetEase Cloud Music で曲名、アーティスト、アルバムを検索し、選択した結果から楽曲情報と歌詞を取り込めます
 * Spotify、Apple Music、NetEase Cloud Music、QQ Music のリンク解析
-* ローカル MP3 / FLAC からタイトル、アーティスト、アルバム、カバー、埋め込み歌詞を解析
+* ローカル MP3 / FLAC / M4A からタイトル、アーティスト、アルバム、カバー、埋め込み歌詞を解析
 
 ### ✍️ 手動編集と素材アップロード
 
@@ -149,7 +149,7 @@ EXE を起動すると、ユーザーのマシン上でローカル Next サー�
 * 曲情報の手動編集
 * 歌詞と翻訳の手動編集
 * ローカルカバーのアップロード
-* ローカル MP3 / FLAC のメタデータと埋め込み歌詞の解析
+* ローカル MP3 / FLAC / M4A のメタデータと埋め込み歌詞の解析
 * スタイル調整
 * PNG、WebP、JPG の生成と書き出し
 
@@ -166,7 +166,7 @@ EXE を起動すると、ユーザーのマシン上でローカル Next サー�
 
 1. アプリを起動します。
 2. NetEase Cloud Music で曲名、アーティスト、アルバムを検索し、候補を選択して楽曲情報、カバー、歌詞を取り込みます。
-3. Spotify、Apple Music、NetEase Cloud Music、QQ Music のリンク貼り付けや、ローカル MP3 / FLAC のアップロードも利用できます。
+3. Spotify、Apple Music、NetEase Cloud Music、QQ Music のリンク貼り付けや、ローカル MP3 / FLAC / M4A のアップロードも利用できます。
 4. 歌詞と翻訳を編集します。AI 翻訳を使うか、選択中の UI 言語に応じて原文 / 翻訳の交互行を自動分割できます。
 5. キャンバス比率、CJK / 欧文フォント構成、色、フレーム、ウォーターマークなどのスタイルを調整します。
 6. 右側でカードをプレビューします。
