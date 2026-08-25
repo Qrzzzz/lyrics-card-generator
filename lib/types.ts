@@ -155,7 +155,7 @@ export type CardStyle = {
   translationEnabled: boolean;
   translationText: string;
   translationScale: number;
-  allowTwoLineTitle: boolean;
+  allowMultiLineTitle: boolean;
   contentMode: ContentMode;
   instrumentalText: string;
   showCover: boolean;

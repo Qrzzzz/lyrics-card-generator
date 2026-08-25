@@ -34,7 +34,7 @@ export function autoCanvasHeightMeasurementSignature(state: AppState) {
     translationText: state.translationText,
     style: {
       align: state.style.align,
-      allowTwoLineTitle: state.style.allowTwoLineTitle,
+      allowMultiLineTitle: state.style.allowMultiLineTitle,
       autoHeight: state.style.autoHeight,
       contentMode: state.style.contentMode,
       customFontEnabled: state.style.customFontEnabled,

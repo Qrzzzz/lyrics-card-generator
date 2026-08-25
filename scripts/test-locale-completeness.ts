@@ -45,6 +45,9 @@ assert.notEqual(getAIUiCopy("fr").close, getAIUiCopy("fr").cancel, "AI panel dis
 assert.equal(messages.zh.songSearchImportedNoLyrics, "已导入歌曲信息，但没有找到歌词；歌词区已清空。");
 assert.equal(messages["zh-TW"].songSearchImportedNoLyrics, "已匯入歌曲資訊，但沒有找到歌詞；歌詞欄位已清空。");
 assert.equal(messages.en.songSearchImportedNoLyrics, "Song details imported, but no lyrics were found. The lyrics field was cleared.");
+assert.equal(messages.zh.allowMultiLineTitle, "标题允许多行");
+assert.equal(messages["zh-TW"].allowMultiLineTitle, "標題允許多行");
+assert.equal(messages.en.allowMultiLineTitle, "Allow Multi-line Title");
 
 assert.equal(messages["zh-TW"].appSubtitle, "製作 Apple Music 風格的歌詞分享圖片");
 assert.equal(messages["zh-TW"].songSearchDescription, "輸入歌名、演出者或專輯，選取結果後匯入歌曲資訊與歌詞。");

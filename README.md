@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v5.11.1.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v5.11.2.zh-CN.md">发布说明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">在线 Web Lite 版</a> ·
   <a href="./docs/web-lite-browser-support.md">Web Lite 浏览器支持</a> ·
   <a href="./docs/desktop.md">桌面维护文档</a> ·
@@ -73,25 +73,25 @@
 
 ## 📦 下载与安装
 
-请从 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下载 v5.11.1：
+请从 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下载 v5.11.2：
 
-* 安装版：`Lyrics Card Generator Setup 5.11.1.exe`
-* 便携版：`Lyrics Card Generator-5.11.1-portable.exe`
+* 安装版：`Lyrics Card Generator Setup 5.11.2.exe`
+* 便携版：`Lyrics Card Generator-5.11.2-portable.exe`
 
 安装版适合长期使用；便携版适合临时运行、测试或放在移动硬盘中使用。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v5.11.1 更新重点
+### v5.11.2 更新重点
 
-* 修复连续分享者文本在竖版页脚中被静默裁切的问题，并将完整内容区纳入导出溢出检查。
-* 超长高质量图片超过浏览器像素限制时会明确阻止导出，不再暗中缩小成品后报告成功。
-* PNG、WebP、JPG 及桌面版、Web Lite 现在共用同一套像素尺寸硬门禁。
+* 将原“标题允许两行”选项统一升级为“标题允许多行”，竖版歌词卡和纯音乐卡均可完整换行显示三行以上标题。
+* 竖版自动高度会计入标题行数；固定 1:1 的纯音乐卡会为多行歌曲信息预留空间并动态缩小封面，避免裁切或越界。
+* 横版继续使用实测布局支持多行；桌面版与 Web Lite 行为一致，关闭该选项时仍保持单行省略。
 
 ## 🌐 多语言发布说明
 
 GitHub Release 默认展示简体中文摘要，完整说明见：
-[简体中文](./docs/releases/v5.11.1.zh-CN.md) · [繁體中文](./docs/releases/v5.11.1.zh-TW.md) · [English](./docs/releases/v5.11.1.en.md) · [Français](./docs/releases/v5.11.1.fr.md) · [日本語](./docs/releases/v5.11.1.ja.md) · [Español](./docs/releases/v5.11.1.es.md)
+[简体中文](./docs/releases/v5.11.2.zh-CN.md) · [繁體中文](./docs/releases/v5.11.2.zh-TW.md) · [English](./docs/releases/v5.11.2.en.md) · [Français](./docs/releases/v5.11.2.fr.md) · [日本語](./docs/releases/v5.11.2.ja.md) · [Español](./docs/releases/v5.11.2.es.md)
 
 <a id="主要功能"></a>
 
