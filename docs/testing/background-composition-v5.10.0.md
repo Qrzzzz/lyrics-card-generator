@@ -1,8 +1,12 @@
-# Background composition acceptance contract (v5.10.0 candidate)
+# Background composition acceptance contract
 
-This contract covers the local readability layer and the adapter that a later
-palette/color-field implementation can use. It does not replace palette
-extraction or define new color-field anchors.
+[Documentation index](../README.md) · [Development guide](../development.en.md)
+
+This contract was introduced with the v5.10.0 background system and remains the
+regression contract for the current implementation. It covers the local
+readability layer and the adapter between palette extraction, the spatial color
+field, preview rendering, and export. It does not redefine palette extraction or
+color-field anchors.
 
 ## Automatic gates
 
@@ -62,9 +66,29 @@ super-long cases:
    72.6 MiB for one RGBA surface before browser/encoder copies); classify
    timeout or allocation failure separately from a composition failure.
 
-The browser-format matrix is an integration gate. It should be run after the
-upstream v5.10.0 color field is present and after generated Web Lite output has
-been rebuilt.
+The browser-format matrix is an integration gate. Rebuild the generated Web Lite
+artifact before running it whenever shared composition or export code changes.
+
+## Maintainer commands
+
+```bash
+npm run palette:test
+npm run color-field:test
+npm run background-composition:test
+npm run web-lite:build
+npm run web-lite:check
+npm run web-lite:smoke
+```
+
+The opt-in large-canvas benchmark is separate because it records timing and
+allocation diagnostics rather than acting as a fast deterministic unit gate:
+
+```bash
+npm run background-composition:benchmark
+```
+
+Changes to numeric thresholds require new negative fixtures and visual evidence.
+Do not relax a threshold solely to make an existing failure disappear.
 
 ## Manual visual acceptance
 

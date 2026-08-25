@@ -23,7 +23,7 @@
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
   <a href="./docs/web-lite-browser-support.md">Web Lite Browser Support</a> ·
   <a href="#features">Features</a> ·
-  <a href="#local-development">Local Development</a> ·
+  <a href="./docs/development.en.md">Local Development</a> ·
   <a href="./LICENSE">License</a>
 </p>
 
@@ -139,134 +139,12 @@ GitHub Release displays a Simplified Chinese summary by default. See the full re
 
 * GitHub Releases update checking
 
-## 🪟 Windows Desktop Version
+### 🪟 Windows Desktop
 
-The desktop version keeps the original Next.js Web UI and API routes, then wraps them with Electron.
-
-When the EXE starts, it launches a local Next service on the user’s machine and opens it in a desktop window. Normal users only need to double-click the EXE. They do not need to understand Node.js, npm, or local development servers.
-
-The desktop app can start offline. These features remain available without internet access:
-
-* Manual song information editing
-* Manual lyric and translation editing
-* Local cover upload
-* Local MP3 / FLAC / M4A metadata and embedded lyric parsing
-* Style customization
-* PNG, WebP, and JPG generation and export
-
-These features require internet access:
-
-* Music platform link parsing
-* NetEase Cloud Music search and lyric fetching
-* Remote cover loading
-* Automatic lyric fetching
-* AI lyric translation
-* GitHub update checking
-
-## 🚀 How to Use
-
-1. Start the app.
-2. Search NetEase Cloud Music by title, artist, or album, then choose a candidate to import metadata, cover art, and lyrics.
-3. You can also paste a Spotify, Apple Music, NetEase Cloud Music, or QQ Music link, or upload a local MP3 / FLAC / M4A file.
-4. Edit lyrics and translations; use AI translation or split alternating original / translated text according to the selected interface language.
-5. Adjust canvas ratio, CJK / Latin font schemes, colors, frames, watermarks, and other styles.
-6. Preview the card on the right.
-7. Choose PNG, WebP, or JPG, then use “Complete & Export” to save the image.
-
-## 🔄 Update Checking
-
-The app provides a “Check for updates” button.
-It requests this project’s GitHub Releases through a local Next API route, compares the current version with the latest published release, and prefers installer / portable assets when available.
-
-This feature only checks for updates and opens the download page. It does not silently download installers or replace the current app automatically.
-
-<a id="local-development"></a>
-
-## 🛠️ Local Development
-
-Node.js and npm are required.
-
-```bash
-npm install
-npm run dev
-```
-
-Then open:
-
-```text
-http://localhost:3000
-```
-
-## 🖥️ Desktop Development and Packaging
-
-Run the desktop app in development mode:
-
-```bash
-npm run desktop:dev
-```
-
-Build an unpacked desktop directory for inspection:
-
-```bash
-npm run desktop:pack
-```
-
-Build both the Windows installer and portable EXE:
-
-```bash
-npm run desktop:build
-```
-
-Build artifacts are written to:
-
-```text
-release/
-```
-
-The bundled Next standalone service is prepared in:
-
-```text
-dist-desktop/server
-```
-
-## 📜 Scripts
-
-```bash
-npm run dev             # Start the Web development server
-npm run build           # Build the Next.js app
-npm run typecheck       # Run TypeScript type checking
-npm run desktop:dev     # Start Electron development mode
-npm run desktop:pack    # Build an unpacked desktop directory
-npm run desktop:build   # Build the Windows installer and portable EXE
-npm run parse:test      # Test song link parsing
-npm run core:test       # Test 3.0 core pure functions
-```
-
-## 🧩 Tech Stack
-
-* Next.js
-* React
-* TypeScript
-* Tailwind CSS
-* Electron
-* electron-builder
-* html-to-image
-* Framer Motion
-* Lucide React
-* Cheerio
-* Zod
-* UI inspiration from ReactBits
-
-## 🔤 Fonts
-
-The project uses:
-
-* Source Han Sans
-* Source Han Serif
-
-They provide a strong, clear, and reliable typographic foundation for Chinese lyric cards.
-
-Version 3.1.0 provides Source Han Sans and Source Han Serif schemes and lets CJK and Latin fonts be selected independently. Font Schemes is now a dedicated workflow step alongside Lyrics, Layout, and Visual Details. The desktop app can enumerate Windows system fonts, while Web builds retain recommended fonts and bundled presets. The full font preview sits below the real card in the right column and uses the real card background algorithm with fixed Deep Sea, Cobalt, Indigo, and Nightfall color inputs; it does not change the actual card background or enter the exported PNG.
+* Electron wraps the Next.js interface and local API. The EXE starts its bundled service on a dynamic `127.0.0.1` port, so users do not need Node.js
+* Offline startup supports manual editing, local covers, local MP3 / FLAC / M4A parsing, styling, and PNG / WebP / JPG export
+* Music-platform links, NetEase Cloud Music search, remote covers and lyrics, AI translation, and GitHub update checks require a network connection
+* Maintainers can use the [desktop maintenance guide](./docs/desktop.md); setup, testing, and packaging commands are in the [development guide](./docs/development.en.md)
 
 ## 🙏 Acknowledgements
 

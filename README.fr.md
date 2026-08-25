@@ -22,7 +22,7 @@
   <a href="./docs/releases/v5.12.0.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
-  <a href="#développement-local">Développement local</a> ·
+  <a href="./docs/development.en.md">Développement local</a> ·
   <a href="./LICENSE">Licence</a>
 </p>
 
@@ -138,134 +138,12 @@ Par défaut, GitHub Release affiche un résumé en chinois simplifié. Consultez
 
 * Vérification des mises à jour via GitHub Releases
 
-## 🪟 Version Windows
+### 🪟 Version Windows
 
-La version de bureau conserve l'interface Web Next.js et les routes API, puis les emballe avec Electron.
-
-Au lancement de l'EXE, l'application démarre un service Next local sur la machine et l'ouvre dans une fenêtre de bureau. Les utilisateurs n'ont pas besoin de connaître Node.js, npm ou les serveurs de développement locaux.
-
-L'application peut démarrer hors ligne. Les fonctions suivantes restent disponibles sans connexion :
-
-* Édition manuelle des informations du morceau
-* Édition manuelle des paroles et traductions
-* Import de pochette locale
-* Analyse des métadonnées et paroles intégrées de fichiers MP3 / FLAC / M4A
-* Personnalisation visuelle
-* Génération et export PNG, WebP et JPG
-
-Ces fonctions nécessitent Internet :
-
-* Analyse de liens de plateformes musicales
-* Recherche NetEase Cloud Music et récupération de paroles
-* Chargement de pochettes distantes
-* Récupération automatique des paroles
-* Traduction de paroles par IA
-* Vérification des mises à jour via GitHub Releases
-
-## 🚀 Utilisation
-
-1. Lancez l'application.
-2. Recherchez NetEase Cloud Music par titre, artiste ou album, puis choisissez un résultat pour importer les métadonnées, la pochette et les paroles.
-3. Vous pouvez aussi coller un lien Spotify, Apple Music, NetEase Cloud Music ou QQ Music, ou importer un fichier local MP3 / FLAC / M4A.
-4. Modifiez les paroles et traductions ; utilisez la traduction IA ou séparez automatiquement les lignes original / traduction selon la langue de l'interface.
-5. Ajustez le ratio de toile, les jeux de polices CJK / latines, les couleurs, cadres, filigranes et autres styles.
-6. Prévisualisez la carte à droite.
-7. Choisissez PNG, WebP ou JPG, puis utilisez « Terminer et exporter » pour enregistrer l’image.
-
-## 🔄 Vérification des mises à jour
-
-L'application propose un bouton « Vérifier les mises à jour ».
-Il interroge les GitHub Releases du projet via une route API locale Next, compare la version actuelle avec la dernière version publiée et privilégie les assets installateur / portable lorsqu'ils sont disponibles.
-
-Cette fonction vérifie seulement les mises à jour et ouvre la page de téléchargement. Elle ne télécharge pas silencieusement d'installateur et ne remplace pas automatiquement l'application actuelle.
-
-<a id="développement-local"></a>
-
-## 🛠️ Développement local
-
-Node.js et npm sont requis.
-
-```bash
-npm install
-npm run dev
-```
-
-Puis ouvrez :
-
-```text
-http://localhost:3000
-```
-
-## 🖥️ Développement bureau et packaging
-
-Lancez l'application de bureau en mode développement :
-
-```bash
-npm run desktop:dev
-```
-
-Construisez un dossier de bureau unpacked pour inspection :
-
-```bash
-npm run desktop:pack
-```
-
-Construisez l'installateur Windows et l'EXE portable :
-
-```bash
-npm run desktop:build
-```
-
-Les artefacts de build sont écrits dans :
-
-```text
-release/
-```
-
-Le service Next standalone empaqueté est préparé dans :
-
-```text
-dist-desktop/server
-```
-
-## 📜 Scripts
-
-```bash
-npm run dev             # Démarre le serveur de développement Web
-npm run build           # Compile l'application Next.js
-npm run typecheck       # Lance la vérification TypeScript
-npm run desktop:dev     # Démarre le mode développement Electron
-npm run desktop:pack    # Construit un dossier de bureau unpacked
-npm run desktop:build   # Construit l'installateur Windows et l'EXE portable
-npm run parse:test      # Teste l'analyse des liens de chansons
-npm run core:test       # Teste les fonctions pures du noyau 3.0
-```
-
-## 🧩 Stack technique
-
-* Next.js
-* React
-* TypeScript
-* Tailwind CSS
-* Electron
-* electron-builder
-* html-to-image
-* Framer Motion
-* Lucide React
-* Cheerio
-* Zod
-* Inspirations UI de ReactBits
-
-## 🔤 Polices
-
-Le projet utilise :
-
-* Source Han Sans
-* Source Han Serif
-
-Elles fournissent une base typographique solide, claire et fiable pour les cartes de paroles en chinois.
-
-La version 3.1.0 propose les jeux Source Han Sans et Source Han Serif et permet de choisir séparément les polices CJK et latines. Les polices disposent désormais d’une étape dédiée, au même niveau que les paroles, la mise en page et les détails visuels. L'application de bureau peut énumérer les polices système Windows ; les builds Web conservent les polices recommandées et les préréglages intégrés. L'aperçu complet se trouve sous la vraie carte dans la colonne de droite et utilise le même algorithme de fond avec les couleurs fixes Bleu abyssal, Cobalt, Indigo et Bleu nocturne ; il ne modifie pas le fond réel de la carte et n'entre pas dans le PNG exporté.
+* Electron encapsule l’interface Next.js et l’API locale ; l’EXE lance le service embarqué sur un port dynamique de `127.0.0.1`, sans installation de Node.js pour l’utilisateur
+* Le démarrage hors ligne couvre l’édition manuelle, les pochettes locales, l’analyse MP3 / FLAC / M4A locale, les styles et l’export PNG / WebP / JPG
+* Les liens musicaux, la recherche NetEase Cloud Music, les pochettes et paroles distantes, la traduction IA et la vérification GitHub nécessitent une connexion
+* Les mainteneurs peuvent consulter le [guide de maintenance bureau](./docs/desktop.md) et le [guide de développement en anglais](./docs/development.en.md)
 
 ## 🙏 Remerciements
 

@@ -22,7 +22,7 @@
   <a href="./docs/releases/v5.12.0.zh-TW.md">發布說明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">線上 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
-  <a href="#本機開發">本機開發</a> ·
+  <a href="./docs/development.zh-CN.md">本機開發</a> ·
   <a href="./LICENSE">授權條款</a>
 </p>
 
@@ -133,134 +133,12 @@ GitHub Release 預設顯示簡體中文摘要，完整說明請見：
 
 * 支援從 GitHub Releases 檢查新版本
 
-## 🪟 Windows 桌面版說明
+### 🪟 Windows 桌面版
 
-桌面版保留原本的 Next.js Web 介面和 API 路由，並透過 Electron 包裝為本機應用。
-
-執行 EXE 後，應用會在本機啟動一個本機 Next 服務，並在桌面視窗中開啟。一般使用者只需要雙擊 EXE 使用，不需要了解 Node.js、npm 或本機開發環境。
-
-桌面版可以離線啟動。以下功能在離線狀態下仍可使用：
-
-* 手動編輯歌曲資訊
-* 手動編輯歌詞和翻譯
-* 上傳本機封面
-* 解析本機 MP3 / FLAC / M4A 檔案中的中繼資料和內嵌歌詞
-* 調整樣式
-* 生成並匯出 PNG、WebP 與 JPG 圖片
-
-以下功能需要連線：
-
-* 音樂平台連結解析
-* 網易雲音樂搜尋與歌詞取得
-* 遠端封面載入
-* 自動歌詞擷取
-* AI 歌詞翻譯
-* GitHub 檢查更新
-
-## 🚀 使用方式
-
-1. 啟動應用。
-2. 在「搜尋網易雲音樂」中輸入歌名、歌手或專輯關鍵字，選擇候選歌曲後自動填入歌曲資訊、封面和歌詞。
-3. 也可以貼上 Spotify、Apple Music、網易雲音樂或 QQ 音樂連結，或上傳本機 MP3 / FLAC / M4A 讀取中繼資料。
-4. 編輯歌詞和翻譯；可使用 AI 翻譯，也可將原文 / 譯文交替行依目前介面語言自動拆分。
-5. 調整畫布比例、字型方案（中日韓 / 西文）、字號、顏色、邊框、浮水印等樣式。
-6. 在右側預覽卡片。
-7. 選擇 PNG、WebP 或 JPG，再點擊「完成並匯出」儲存圖片。
-
-## 🔄 檢查更新
-
-應用內提供「檢查更新」按鈕。
-它會透過本機 Next API 路由請求本專案的 GitHub Releases，比較目前版本和最新發布版本，並優先識別安裝版和可攜版下載資產。
-
-此功能只負責檢查更新並開啟下載頁面，不會靜默下載安裝包，也不會自動取代目前程式。
-
-<a id="本機開發"></a>
-
-## 🛠️ 本機開發
-
-需要 Node.js 和 npm。
-
-```bash
-npm install
-npm run dev
-```
-
-啟動後造訪：
-
-```text
-http://localhost:3000
-```
-
-## 🖥️ 桌面版開發與打包
-
-開發桌面版：
-
-```bash
-npm run desktop:dev
-```
-
-建構可檢查的 unpacked 桌面目錄：
-
-```bash
-npm run desktop:pack
-```
-
-建構 Windows 安裝版和可攜版：
-
-```bash
-npm run desktop:build
-```
-
-建構產物會輸出到：
-
-```text
-release/
-```
-
-桌面版所需的 Next standalone 服務會被整理到：
-
-```text
-dist-desktop/server
-```
-
-## 📜 常用指令
-
-```bash
-npm run dev             # 啟動 Web 開發伺服器
-npm run build           # 建構 Next.js 應用
-npm run typecheck       # TypeScript 型別檢查
-npm run desktop:dev     # 啟動 Electron 開發模式
-npm run desktop:pack    # 建構 unpacked 桌面目錄
-npm run desktop:build   # 建構 Windows 安裝版和可攜版
-npm run parse:test      # 測試歌曲連結解析
-npm run core:test       # 測試 3.0 核心純函式
-```
-
-## 🧩 技術棧
-
-* Next.js
-* React
-* TypeScript
-* Tailwind CSS
-* Electron
-* electron-builder
-* html-to-image
-* Framer Motion
-* Lucide React
-* Cheerio
-* Zod
-* ReactBits 風格 UI 靈感
-
-## 🔤 字型
-
-專案使用：
-
-* 思源黑體
-* 思源宋體
-
-它們為卡片提供厚重、清晰、適合中文歌詞排版的字型基礎。
-
-3.1.0 提供思源黑體與思源宋體兩套預設方案，並可分別設定中日韓字型與西文字型。「字型方案」成為與歌詞、版面配置和視覺細節並列的獨立步驟；桌面版可從 Windows 系統字型清單中選擇，Web 版仍可使用推薦字型與內建預設。完整字型預覽位於右側真實卡片下方，使用與真實卡片相同的背景演算法，並固定以深海藍、鈷藍、靛藍、夜幕藍取色；它不會修改實際卡片背景，也不會進入最終 PNG。
+* Electron 封裝 Next.js 介面與本機 API；EXE 會在 `127.0.0.1` 的動態連接埠啟動隨包附帶的本機服務，使用者不必安裝 Node.js
+* 可離線啟動；手動編輯、本機封面、本機 MP3 / FLAC / M4A 解析、樣式調整與 PNG / WebP / JPG 匯出均可離線使用
+* 音樂平台連結、網易雲音樂搜尋、遠端封面與歌詞、AI 翻譯及 GitHub 更新檢查需要連線
+* 維護者可查看[桌面維護文件](./docs/desktop.md)；環境建置、測試與打包指令請參閱[簡體中文開發指南](./docs/development.zh-CN.md)
 
 ## 🙏 致謝
 
