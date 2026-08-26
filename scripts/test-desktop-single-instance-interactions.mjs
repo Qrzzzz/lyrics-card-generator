@@ -294,7 +294,9 @@ async function listBundledServers() {
   ].join("; ");
   const { stdout } = await execFileAsync("powershell.exe", ["-NoProfile", "-Command", script], {
     encoding: "utf8",
-    timeout: 10_000,
+    // A cold GitHub-hosted Windows runner can spend more than ten seconds
+    // initializing the CIM provider before returning this small process list.
+    timeout: 30_000,
     windowsHide: true
   });
   const parsed = JSON.parse(stdout.trim() || "[]");

@@ -26,6 +26,7 @@ const {
   validateImportFileDescriptor
 } = require("./import-history");
 const { resolveLocalAppUrl } = require("./local-app-url");
+const { showWindowsFontDialog } = require("./native-font-dialog");
 const {
   LOOPBACK_HOST,
   findAvailableLoopbackPort,
@@ -67,6 +68,7 @@ let mainWindow = null;
 let fontPickerWindow = null;
 let fontPickerContext = null;
 let resolveFontPickerResult = null;
+let nativeFontDialogPromise = null;
 let nextServerProcess = null;
 let localAppUrl = null;
 let appBooting = false;
@@ -458,8 +460,29 @@ function finishNativeFontPicker(result, closeWindow = true) {
   if (resolve) resolve(result);
 }
 
-function openNativeFontPicker(context) {
+async function openNativeFontPicker(context) {
   if (!mainWindow || mainWindow.isDestroyed() || !localAppUrl) return Promise.resolve(null);
+  if (process.platform === "win32") {
+    if (nativeFontDialogPromise) return null;
+    const testState = globalThis.__lyricsCardNativeFontDialogTest;
+    if (testState) {
+      testState.calls.push({ ...context });
+      const result = testState.nextResult;
+      testState.nextResult = null;
+      return isNativeFontFamily(result) ? result.trim() : null;
+    }
+
+    const ownerHandle = nativeWindowHandleAsDecimal(mainWindow);
+    if (!ownerHandle) return null;
+    nativeFontDialogPromise = showWindowsFontDialog({ ownerHandle, selectedFamily: context.selectedFamily });
+    try {
+      const result = await nativeFontDialogPromise;
+      return isNativeFontFamily(result) ? result.trim() : null;
+    } finally {
+      nativeFontDialogPromise = null;
+      if (mainWindow && !mainWindow.isDestroyed()) mainWindow.focus();
+    }
+  }
   if (fontPickerWindow && !fontPickerWindow.isDestroyed()) {
     fontPickerWindow.focus();
     return Promise.resolve(null);
@@ -513,6 +536,16 @@ function openNativeFontPicker(context) {
     resolveFontPickerResult = resolve;
     void picker.loadURL(targetUrl).catch(() => finishNativeFontPicker(null));
   });
+}
+
+function nativeWindowHandleAsDecimal(window) {
+  try {
+    const handle = window.getNativeWindowHandle();
+    if (!Buffer.isBuffer(handle) || handle.length < 4) return null;
+    return handle.length >= 8 ? handle.readBigUInt64LE(0).toString() : String(handle.readUInt32LE(0));
+  } catch {
+    return null;
+  }
 }
 
 function assertTrustedFontPickerEvent(event) {
