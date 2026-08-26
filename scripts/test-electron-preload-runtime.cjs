@@ -60,6 +60,10 @@ async function run() {
     ["saveAppPreferences", [{ revision: 1 }, { importHistoryTrimConfirmation: true }]],
     ["listSystemFonts", []],
     ["pickFont", []],
+    ["openNativeFontPickerWindow", ["cjk", "Microsoft YaHei", "zh", "dark", "选择中日韩文字体"]],
+    ["getNativeFontPickerContext", []],
+    ["selectNativeFontPicker", ["Microsoft YaHei"]],
+    ["closeNativeFontPicker", []],
     ["openExternal", ["https://github.com/"]],
     ["saveBackgroundImage", []],
     ["readBackgroundImage", ["image-id"]],
@@ -92,6 +96,18 @@ async function run() {
     false
   );
   assert.equal(invocations.length, invocationCountBeforeInvalidDialogs, "invalid native dialogs never cross IPC");
+
+  const invocationCountBeforeInvalidFontPicker = invocations.length;
+  assert.equal(
+    await exposedBridge.openNativeFontPickerWindow("unknown", "Arial", "en", "dark", "Choose a font"),
+    null
+  );
+  assert.equal(await exposedBridge.selectNativeFontPicker("Bad\nFont"), false);
+  assert.equal(
+    invocations.length,
+    invocationCountBeforeInvalidFontPicker,
+    "invalid native font-picker values never cross IPC"
+  );
 
   assert.equal(await exposedBridge.registerImportFile({ nativePath: "", size: 0, lastModified: 0 }, "local-audio"), null);
   await exposedBridge.registerImportFile(
@@ -155,6 +171,16 @@ async function run() {
       && args[4] === "Close"
     )),
     "native alert forwards only validated primitive fields"
+  );
+  assert.ok(
+    invocations.some(({ channel, args }) => (
+      channel === "lyrics-card:native-font-picker-open"
+      && args.length === 5
+      && args.every((value) => typeof value === "string")
+      && args[0] === "cjk"
+      && args[1] === "Microsoft YaHei"
+    )),
+    "native font picker opens with bounded primitive context"
   );
   assert.equal(listeners.size, 0, "all preload event subscriptions are removable");
   console.log("Electron preload runtime contract tests passed");

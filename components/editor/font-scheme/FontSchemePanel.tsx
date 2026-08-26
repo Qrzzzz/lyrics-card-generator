@@ -1,10 +1,16 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useAppReducedMotion } from "@/components/motion/AppMotionProvider";
 import { AccessibleDialog } from "@/components/ui/AccessibleDialog";
 import { AdaptiveSettingsGrid } from "@/components/ui/controls";
 import { getLyricsCardDesktopApi, type SystemFontOption } from "@/lib/desktop-api";
+import {
+  buildFontOptions,
+  RECOMMENDED_FONTS,
+  type FontCategory,
+  type FontFamilyOption
+} from "@/lib/font-picker-options";
 import {
   FONT_SCHEME_PRESETS,
   identifyFontPreset,
@@ -12,48 +18,25 @@ import {
 } from "@/lib/font-schemes";
 import { getEffectiveFontScheme, quoteSingleFontFamily } from "@/lib/fonts";
 import type { createT } from "@/lib/i18n";
+import type { EffectiveUiThemeId } from "@/lib/settings/types";
 import type {
   CardStyle,
   FontPresetId,
-  FontScheme
+  FontScheme,
+  Locale
 } from "@/lib/types";
 import { cn } from "@/lib/utils";
-
-type FontCategory = "cjk" | "latin";
-
-type FontFamilyOption = {
-  id: string;
-  family: string;
-  label: string;
-  category: FontCategory;
-  preview: string;
-  fallback?: string[];
-};
 
 type FontSchemePanelProps = {
   style: CardStyle;
   onStyleChange: (style: CardStyle) => void;
   onPreviewSchemeChange?: (scheme: FontScheme | null) => void;
   showHeader?: boolean;
+  locale: Locale;
   t: ReturnType<typeof createT>;
 };
 
-const RECOMMENDED_FONTS: FontFamilyOption[] = [
-  cjkFont("source-han-sans", "Source Han Sans SC"),
-  cjkFont("source-han-serif", "Source Han Serif SC"),
-  cjkFont("microsoft-yahei", "Microsoft YaHei"),
-  cjkFont("simsun", "SimSun"),
-  latinFont("source-han-sans-latin", "Source Han Sans SC"),
-  latinFont("source-han-serif-latin", "Source Han Serif SC"),
-  latinFont("inter", "Inter"),
-  latinFont("source-sans-3", "Source Sans 3"),
-  latinFont("source-serif-4", "Source Serif 4"),
-  latinFont("arial", "Arial"),
-  latinFont("georgia", "Georgia"),
-  latinFont("maple-mono", "Maple Mono")
-];
-
-export function FontSchemePanel({ style, onStyleChange, onPreviewSchemeChange, showHeader = true, t }: FontSchemePanelProps) {
+export function FontSchemePanel({ style, onStyleChange, onPreviewSchemeChange, showHeader = true, locale, t }: FontSchemePanelProps) {
   const reduceMotion = useAppReducedMotion();
   const desktopApi = getLyricsCardDesktopApi();
   const currentScheme = getEffectiveFontScheme(style);
@@ -66,39 +49,10 @@ export function FontSchemePanel({ style, onStyleChange, onPreviewSchemeChange, s
   }));
   const [pickerCategory, setPickerCategory] = useState<FontCategory | null>(null);
   const [pickerQuery, setPickerQuery] = useState("");
+  const [nativePickerCategory, setNativePickerCategory] = useState<FontCategory | null>(null);
   // Retain the category while the dialog exits so its rendered content remains well-defined.
   const lastPickerCategoryRef = useRef<FontCategory>("cjk");
   if (pickerCategory) lastPickerCategoryRef.current = pickerCategory;
-  const [systemFonts, setSystemFonts] = useState<SystemFontOption[]>([]);
-  const [systemFontStatus, setSystemFontStatus] = useState("");
-
-  useEffect(() => {
-    // System font discovery is desktop-only and ignores completions after unmount.
-    let active = true;
-
-    if (!desktopApi) {
-      setSystemFontStatus(t("systemFontDesktopOnly"));
-      return;
-    }
-
-    setSystemFontStatus(t("systemFontLoading"));
-    desktopApi
-      .listSystemFonts()
-      .then((fonts) => {
-        if (!active) return;
-        setSystemFonts(fonts);
-        setSystemFontStatus(fonts.length > 0 ? "" : t("systemFontEmpty"));
-      })
-      .catch(() => {
-        if (!active) return;
-        setSystemFontStatus(t("systemFontFailed"));
-      });
-
-    return () => {
-      active = false;
-    };
-  }, [desktopApi, t]);
-
   function applyScheme(nextScheme: FontScheme) {
     const normalized = normalizeFontScheme(nextScheme);
     const presetId = identifyFontPreset(normalized);
@@ -126,12 +80,33 @@ export function FontSchemePanel({ style, onStyleChange, onPreviewSchemeChange, s
     requestAnimationFrame(() => customSectionRef.current?.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "center" }));
   }
 
-  function openFontPicker(category: FontCategory) {
+  async function openFontPicker(category: FontCategory) {
     setPickerQuery("");
-    setPickerCategory(category);
+    if (!desktopApi) {
+      setPickerCategory(category);
+      return;
+    }
+
+    setNativePickerCategory(category);
+    const selectedFamily = category === "cjk" ? customDraft.cjkFontFamily : customDraft.latinFontFamily;
+    const family = await desktopApi.openNativeFontPicker({
+      category,
+      selectedFamily,
+      locale,
+      theme: currentUiTheme(),
+      title: t(category === "cjk" ? "fontSchemeChooseCjk" : "fontSchemeChooseLatin")
+    }).catch(() => null);
+    setNativePickerCategory(null);
+    if (family) selectCustomFont({ category, family });
+    requestAnimationFrame(() => {
+      const trigger = document.querySelector<HTMLElement>(
+        `[data-testid="${category === "cjk" ? "choose-cjk-font" : "choose-latin-font"}"]`
+      );
+      trigger?.focus();
+    });
   }
 
-  function selectCustomFont(font: FontFamilyOption) {
+  function selectCustomFont(font: Pick<FontFamilyOption, "category" | "family">) {
     const nextDraft: FontScheme = {
       ...customDraft,
       mode: "custom",
@@ -216,6 +191,7 @@ export function FontSchemePanel({ style, onStyleChange, onPreviewSchemeChange, s
             label={t("fontSchemeCjkFont")}
             value={customDraft.cjkFontFamily}
             onChoose={() => openFontPicker("cjk")}
+            disabled={nativePickerCategory !== null}
             chooseLabel={t("fontSchemeChoose")}
           />
           <FontChoice
@@ -223,6 +199,7 @@ export function FontSchemePanel({ style, onStyleChange, onPreviewSchemeChange, s
             label={t("fontSchemeLatinFont")}
             value={customDraft.latinFontFamily}
             onChoose={() => openFontPicker("latin")}
+            disabled={nativePickerCategory !== null}
             chooseLabel={t("fontSchemeChoose")}
           />
         </AdaptiveSettingsGrid>
@@ -241,8 +218,8 @@ export function FontSchemePanel({ style, onStyleChange, onPreviewSchemeChange, s
         category={lastPickerCategoryRef.current}
         query={pickerQuery}
         selectedFamily={pickerCategory === "cjk" ? customDraft.cjkFontFamily : customDraft.latinFontFamily}
-        systemFonts={systemFonts}
-        status={systemFontStatus}
+        systemFonts={[]}
+        status={t("systemFontDesktopOnly")}
         onQueryChange={setPickerQuery}
         onSelect={selectCustomFont}
         onClose={() => setPickerCategory(null)}
@@ -293,13 +270,15 @@ function FontChoice({
   label,
   value,
   chooseLabel,
-  onChoose
+  onChoose,
+  disabled = false
 }: {
   testId: string;
   label: string;
   value: string;
   chooseLabel: string;
   onChoose: () => void;
+  disabled?: boolean;
 }) {
   return (
     <div className="grid gap-2">
@@ -308,7 +287,9 @@ function FontChoice({
         type="button"
         data-testid={testId}
         onClick={onChoose}
-        className="app-button flex min-h-11 items-center justify-between gap-3 rounded-lg px-3 py-2 text-left text-sm"
+        disabled={disabled}
+        aria-busy={disabled}
+        className="app-button flex min-h-11 items-center justify-between gap-3 rounded-lg px-3 py-2 text-left text-sm disabled:cursor-wait disabled:opacity-60"
       >
         <span className="min-w-0 break-words">{value}</span>
         <span className="shrink-0 text-xs text-cyan-100">{chooseLabel}</span>
@@ -436,39 +417,18 @@ function FontOptionGroup({
   );
 }
 
-function buildFontOptions(category: FontCategory, systemFonts: SystemFontOption[]) {
-  const recommended = RECOMMENDED_FONTS.filter((font) => font.category === category);
-  const discovered = systemFonts
-    .filter((font) => (category === "cjk" ? isCjkFont(font) : !isCjkFont(font)))
-    .map((font, index): FontFamilyOption => ({
-      id: `system-${category}-${font.family}-${index}`,
-      family: font.family,
-      label: font.label,
-      category,
-      preview: category === "cjk" ? "共に歩んだ旅路を辿れば" : "tomoni ayunda tabiji wo tadoreba"
-    }));
-  // Recommended and discovered fonts can refer to the same family under different labels.
-  const seen = new Set<string>();
-  return [...recommended, ...discovered].filter((font) => {
-    const key = font.family.toLocaleLowerCase();
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
-}
-
-function isCjkFont(font: Pick<SystemFontOption, "family" | "label">) {
-  return /(han|cjk|yahei|simsun|simhei|fangsong|kaiti|jhenghei|mingliu|meiryo|gothic|mincho|malgun|gulim|batang|宋|黑|楷|仿宋|圆|明朝|ゴシック|명조|고딕)/i.test(
-    `${font.family} ${font.label}`
-  );
-}
-
-function cjkFont(id: string, family: string): FontFamilyOption {
-  return { id, family, label: family, category: "cjk", preview: "共に歩んだ旅路を辿れば" };
-}
-
-function latinFont(id: string, family: string): FontFamilyOption {
-  return { id, family, label: family, category: "latin", preview: "tomoni ayunda tabiji wo tadoreba" };
+function currentUiTheme(): EffectiveUiThemeId {
+  const theme = document.body.dataset.uiTheme;
+  if (
+    theme === "album-dynamic" ||
+    theme === "dark" ||
+    theme === "light" ||
+    theme === "dark-acrylic" ||
+    theme === "light-acrylic"
+  ) {
+    return theme;
+  }
+  return "dark";
 }
 
 function presetName(presetId: FontPresetId, t: ReturnType<typeof createT>) {

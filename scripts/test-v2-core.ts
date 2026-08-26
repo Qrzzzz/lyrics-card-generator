@@ -26,6 +26,7 @@ import {
   quoteSingleFontFamily,
   sanitizeCssFontFamilyName
 } from "../lib/fonts";
+import { buildFontOptions, previewTextForCategory } from "../lib/font-picker-options";
 import { formatChineseTranslation, splitAlternatingLyrics } from "../lib/lyric-format";
 import type { CardStyle } from "../lib/types";
 import { compareVersionStrings } from "../lib/version-compare";
@@ -82,12 +83,13 @@ function main() {
   testLayoutEngine();
   testImageProxy();
   testFontResolution();
+  testFontPickerOptions();
   testFontSchemeTranslations();
   testAITranslationPrompt();
   testClearLyricContent();
   testSongLinkExtraction();
   testSpotifyMetadataFixtures();
-  console.log(JSON.stringify({ ok: true, tests: 11 }, null, 2));
+  console.log(JSON.stringify({ ok: true, tests: 12 }, null, 2));
 }
 
 function testSongLinkExtraction() {
@@ -371,6 +373,21 @@ function testFontResolution() {
     "source-han-sans",
     "custom fields that exactly match a preset normalize to that preset"
   );
+}
+
+function testFontPickerOptions() {
+  const fonts = [
+    { label: "微软雅黑", family: "Microsoft YaHei", fontWeight: 400, fontStyle: "normal" as const },
+    { label: "Arial", family: "Arial", fontWeight: 400, fontStyle: "normal" as const },
+    { label: "游ゴシック", family: "Yu Gothic", fontWeight: 400, fontStyle: "normal" as const }
+  ];
+  const cjk = buildFontOptions("cjk", fonts);
+  const latin = buildFontOptions("latin", fonts);
+  assertEqual(cjk.filter((font) => font.family === "Microsoft YaHei").length, 1, "recommended and discovered CJK fonts deduplicate by family");
+  assert(cjk.some((font) => font.family === "Yu Gothic"), "CJK discovery remains available in the native window");
+  assert(latin.some((font) => font.family === "Arial"), "Latin discovery remains available in the native window");
+  assertEqual(previewTextForCategory("cjk"), "共に歩んだ旅路を辿れば", "CJK picker keeps its multilingual preview sample");
+  assertEqual(previewTextForCategory("latin"), "tomoni ayunda tabiji wo tadoreba", "Latin picker keeps its preview sample");
 }
 
 function testFontSchemeTranslations() {

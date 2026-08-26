@@ -74,6 +74,8 @@ const desktopReadyRouteSource = readFileSync("app/api/desktop-ready/route.ts", "
 const importHistorySource = readFileSync("electron/import-history.js", "utf8");
 const manualSaveIpcSource = readFileSync("electron/manual-save-ipc.js", "utf8");
 const desktopApiSource = readFileSync("lib/desktop-api.ts", "utf8");
+const fontSchemePanelSource = readFileSync("components/editor/font-scheme/FontSchemePanel.tsx", "utf8");
+const nativeFontPickerSource = readFileSync("components/editor/font-scheme/NativeFontPickerWindow.tsx", "utf8");
 const desktopHistoryInteractionSource = readFileSync("scripts/test-desktop-import-history-interactions.mjs", "utf8");
 // Source contracts complement unit behavior checks by proving that the hardened
 // helpers are actually wired into the privileged Electron entry point.
@@ -205,6 +207,32 @@ assert.match(
   /function invokeNativeDialog\(channel, type, title, message, detail, primaryLabel, cancelLabel\)[\s\S]*?NATIVE_DIALOG_TYPES\.has\(type\)[\s\S]*?ipcRenderer\.invoke/,
   "preload validates native dialog bounds before IPC"
 );
+assert.match(
+  preloadSource,
+  /function openNativeFontPickerWindow\(category, selectedFamily, locale, theme, title\)[\s\S]*?FONT_PICKER_CATEGORIES\.has\(category\)[\s\S]*?isFontFamily\(selectedFamily\)[\s\S]*?"lyrics-card:native-font-picker-open"/,
+  "preload bounds every primitive used to create the native font window"
+);
+assert.match(
+  mainSource,
+  /new BrowserWindow\(\{[\s\S]*?parent: mainWindow,[\s\S]*?modal: true,[\s\S]*?frame: true,[\s\S]*?contextIsolation: true,[\s\S]*?nodeIntegration: false,[\s\S]*?sandbox: true/,
+  "font selection runs in an operating-system modal window with the hardened preload boundary"
+);
+assert.match(
+  mainSource,
+  /function assertTrustedFontPickerEvent\(event\)[\s\S]*?assertTrustedIpcEvent\(event, fontPickerWindow, localAppUrl\)/,
+  "font-picker IPC is bound to the picker window instead of inheriting main-window authority"
+);
+assert.match(
+  mainSource,
+  /handleFontPicker\("lyrics-card:native-font-picker-context"[\s\S]*?handleFontPicker\("lyrics-card:native-font-picker-select"[\s\S]*?handleFontPicker\("lyrics-card:native-font-picker-close"/,
+  "only the picker window can read its bounded context, select a family, or close itself"
+);
+assert.match(
+  fontSchemePanelSource,
+  /desktopApi\.openNativeFontPicker\([\s\S]*?if \(family\) selectCustomFont[\s\S]*?onPreviewSchemeChange\?\.\(nextDraft\)/,
+  "the native window returns a draft selection to the existing live card preview contract"
+);
+assert.match(nativeFontPickerSource, /data-testid="font-picker-live-preview"/);
 assert.doesNotMatch(
   preloadSource,
   /showNative(?:Confirm|Alert)Dialog: \(options\)/,

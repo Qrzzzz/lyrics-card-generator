@@ -16,7 +16,7 @@ const {
 } = require("./provider-response");
 const { normalizeStoredPreferences } = require("./user-preferences");
 const { AIRequestRegistry } = require("./ai-request-registry");
-const { assertTrustedIpcEvent } = require("./ipc-security");
+const { assertTrustedIpcEvent, isTrustedIpcEvent } = require("./ipc-security");
 const {
   ImportHistoryFileStreamRegistry,
   ImportHistoryStore,
@@ -50,6 +50,11 @@ const HOST = LOOPBACK_HOST;
 const APP_ID = "com.lyriccard.generator";
 const START_TIMEOUT_MS = 45000;
 const WINDOW_BACKGROUND_COLOR = "#20242D";
+const FONT_PICKER_DARK_BACKGROUND_COLOR = "#08090C";
+const FONT_PICKER_LIGHT_BACKGROUND_COLOR = "#FFFFFF";
+const FONT_PICKER_CATEGORIES = new Set(["cjk", "latin"]);
+const FONT_PICKER_LOCALES = new Set(["zh", "zh-TW", "en", "fr", "ja", "es"]);
+const FONT_PICKER_THEMES = new Set(["album-dynamic", "dark", "light", "dark-acrylic", "light-acrylic"]);
 const IMPORT_FILE_REGISTRATION_TTL_MS = 30 * 60 * 1000;
 const startupTrace = createStartupTrace();
 startupTrace.mark("module-loaded");
@@ -59,6 +64,9 @@ if (process.env.LYRICS_CARD_TEST_USER_DATA) {
 }
 
 let mainWindow = null;
+let fontPickerWindow = null;
+let fontPickerContext = null;
+let resolveFontPickerResult = null;
 let nextServerProcess = null;
 let localAppUrl = null;
 let appBooting = false;
@@ -416,6 +424,110 @@ function loadMainWindow(window, targetUrl) {
   void window.loadURL(targetUrl);
 }
 
+function normalizeNativeFontPickerContext(category, selectedFamily, locale, theme, title) {
+  const validFamily = typeof selectedFamily === "string" &&
+    selectedFamily.trim().length > 0 &&
+    selectedFamily.length <= 256 &&
+    !/[\r\n\0]/u.test(selectedFamily);
+  const validTitle = typeof title === "string" && title.trim().length > 0 && title.length <= 160;
+  if (
+    !FONT_PICKER_CATEGORIES.has(category) ||
+    !validFamily ||
+    !FONT_PICKER_LOCALES.has(locale) ||
+    !FONT_PICKER_THEMES.has(theme) ||
+    !validTitle
+  ) {
+    return null;
+  }
+  return { category, selectedFamily: selectedFamily.trim(), locale, theme, title: title.trim() };
+}
+
+function isNativeFontFamily(value) {
+  return typeof value === "string" &&
+    value.trim().length > 0 &&
+    value.length <= 256 &&
+    !/[\r\n\0]/u.test(value);
+}
+
+function finishNativeFontPicker(result, closeWindow = true) {
+  const resolve = resolveFontPickerResult;
+  const picker = fontPickerWindow;
+  resolveFontPickerResult = null;
+  fontPickerContext = null;
+  if (closeWindow && picker && !picker.isDestroyed()) picker.close();
+  if (resolve) resolve(result);
+}
+
+function openNativeFontPicker(context) {
+  if (!mainWindow || mainWindow.isDestroyed() || !localAppUrl) return Promise.resolve(null);
+  if (fontPickerWindow && !fontPickerWindow.isDestroyed()) {
+    fontPickerWindow.focus();
+    return Promise.resolve(null);
+  }
+
+  const targetUrl = new URL("/font-picker", localAppUrl).toString();
+  const backgroundColor = context.theme === "light" || context.theme === "light-acrylic"
+    ? FONT_PICKER_LIGHT_BACKGROUND_COLOR
+    : FONT_PICKER_DARK_BACKGROUND_COLOR;
+  const picker = new BrowserWindow({
+    parent: mainWindow,
+    modal: true,
+    title: context.title,
+    width: 860,
+    height: 760,
+    minWidth: 640,
+    minHeight: 520,
+    show: false,
+    frame: true,
+    autoHideMenuBar: true,
+    backgroundColor,
+    icon: getAppIconPath(),
+    webPreferences: {
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: true,
+      preload: path.join(__dirname, "preload.js")
+    }
+  });
+  fontPickerWindow = picker;
+  fontPickerContext = Object.freeze({ ...context });
+  picker.removeMenu();
+  picker.setMenuBarVisibility(false);
+  picker.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
+  picker.webContents.on("will-navigate", (event, url) => {
+    if (url === targetUrl) return;
+    event.preventDefault();
+  });
+  picker.webContents.on("will-attach-webview", (event) => event.preventDefault());
+  picker.once("ready-to-show", () => {
+    if (fontPickerWindow === picker && !picker.isDestroyed()) picker.show();
+  });
+  picker.on("closed", () => {
+    if (fontPickerWindow === picker) fontPickerWindow = null;
+    finishNativeFontPicker(null, false);
+    if (mainWindow && !mainWindow.isDestroyed()) mainWindow.focus();
+  });
+  picker.webContents.once("render-process-gone", () => finishNativeFontPicker(null));
+
+  return new Promise((resolve) => {
+    resolveFontPickerResult = resolve;
+    void picker.loadURL(targetUrl).catch(() => finishNativeFontPicker(null));
+  });
+}
+
+function assertTrustedFontPickerEvent(event) {
+  assertTrustedIpcEvent(event, fontPickerWindow, localAppUrl);
+}
+
+function assertTrustedOwnedFontEvent(event) {
+  if (
+    !isTrustedIpcEvent(event, mainWindow, localAppUrl) &&
+    !isTrustedIpcEvent(event, fontPickerWindow, localAppUrl)
+  ) {
+    throw new Error("IPC sender rejected by the desktop security policy.");
+  }
+}
+
 function getWindowState() {
   if (!mainWindow || mainWindow.isDestroyed()) {
     return { maximized: false };
@@ -686,11 +798,18 @@ if (singleInstanceOwnership.hasLock) {
 }
 
 function registerDesktopIpc() {
-  // Every desktop channel shares one top-frame, current-window, same-origin trust boundary.
-  const handle = (channel, handler) => ipcMain.handle(channel, (event, ...args) => {
-    assertTrustedIpcEvent(event, mainWindow, localAppUrl);
+  const registerHandle = (channel, assertEvent, handler) => ipcMain.handle(channel, (event, ...args) => {
+    assertEvent(event);
     return handler(event, ...args);
   });
+  // Main-window channels share one top-frame, current-window, same-origin trust boundary.
+  const handle = (channel, handler) => registerHandle(
+    channel,
+    (event) => assertTrustedIpcEvent(event, mainWindow, localAppUrl),
+    handler
+  );
+  const handleFontPicker = (channel, handler) => registerHandle(channel, assertTrustedFontPickerEvent, handler);
+  const handleOwnedFontWindow = (channel, handler) => registerHandle(channel, assertTrustedOwnedFontEvent, handler);
   handle("lyrics-card:set-window-material", (_event, theme) => applyWindowMaterial(theme));
   handle("lyrics-card:window-minimize", () => {
     if (!mainWindow || mainWindow.isDestroyed()) return false;
@@ -799,6 +918,23 @@ function registerDesktopIpc() {
     return true;
   });
 
+  handle("lyrics-card:native-font-picker-open", (_event, category, selectedFamily, locale, theme, title) => {
+    const context = normalizeNativeFontPickerContext(category, selectedFamily, locale, theme, title);
+    return context ? openNativeFontPicker(context) : null;
+  });
+  handleFontPicker("lyrics-card:native-font-picker-context", () => {
+    return fontPickerContext ? { ...fontPickerContext } : null;
+  });
+  handleFontPicker("lyrics-card:native-font-picker-select", (_event, family) => {
+    if (!isNativeFontFamily(family) || !fontPickerContext) return false;
+    finishNativeFontPicker(family.trim());
+    return true;
+  });
+  handleFontPicker("lyrics-card:native-font-picker-close", () => {
+    finishNativeFontPicker(null);
+    return true;
+  });
+
   handle("lyrics-card:app-preferences-load", () => readAppPreferences());
   handle("lyrics-card:app-preferences-save", (_event, input, options) => trackImportHistoryMutation(async () => {
     const preferences = normalizeStoredPreferences(input);
@@ -825,7 +961,7 @@ function registerDesktopIpc() {
     return true;
   }));
 
-  handle("lyrics-card:list-system-fonts", async () => {
+  handleOwnedFontWindow("lyrics-card:list-system-fonts", async () => {
     if (process.platform !== "win32") {
       return [];
     }

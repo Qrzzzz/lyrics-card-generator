@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v6.0.1.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v6.1.0.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="./docs/development.en.md">ローカル開発</a> ·
@@ -74,25 +74,25 @@
 
 ## 📦 ダウンロードとインストール
 
-v6.0.1 は [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) からダウンロードできます。
+v6.1.0 は [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) からダウンロードできます。
 
-* インストーラー：`Lyrics Card Generator Setup 6.0.1.exe`
-* ポータブル版：`Lyrics Card Generator-6.0.1-portable.exe`
+* インストーラー：`Lyrics Card Generator Setup 6.1.0.exe`
+* ポータブル版：`Lyrics Card Generator-6.1.0-portable.exe`
 
 通常利用にはインストーラーを推奨します。ポータブル版は一時利用、検証、リムーバブルドライブでの利用に向いています。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v6.0.1 の主な更新
+### v6.1.0 の主な更新
 
-* Windows デスクトップ版の 6 つの確認・エラー表示を Electron ネイティブのシステムダイアログに統一し、OS の警告／エラーアイコンを使用します。
-* 曲や翻訳の置き換え、履歴の消去・縮小では「キャンセル」を既定にし、ダイアログを閉じた場合も操作を実行しません。
-* タイトル、詳細、ボタンは既存の 6 言語に対応し、Web Lite ではブラウザー互換のフォールバックを維持します。
+* カスタムフォント選択をアプリ内オーバーレイから、OS のタイトルバーを持つ Electron 子ウィンドウへ移しました。
+* 検索、おすすめ、システムフォント一覧、プレビューを維持し、選択結果は実際の歌詞カードへ引き続き即時反映されます。
+* フォントウィンドウは独立した最小権限 IPC を使用し、Web Lite ではブラウザー互換のフォールバックを維持します。
 
 ## 🌐 多言語リリースノート
 
 GitHub Release ではデフォルトで簡体字中国語の概要が表示されます。完全なリリースノートはこちら：
-[简体中文](./docs/releases/v6.0.1.zh-CN.md) · [繁體中文](./docs/releases/v6.0.1.zh-TW.md) · [English](./docs/releases/v6.0.1.en.md) · [Français](./docs/releases/v6.0.1.fr.md) · [日本語](./docs/releases/v6.0.1.ja.md) · [Español](./docs/releases/v6.0.1.es.md)
+[简体中文](./docs/releases/v6.1.0.zh-CN.md) · [繁體中文](./docs/releases/v6.1.0.zh-TW.md) · [English](./docs/releases/v6.1.0.en.md) · [Français](./docs/releases/v6.1.0.fr.md) · [日本語](./docs/releases/v6.1.0.ja.md) · [Español](./docs/releases/v6.1.0.es.md)
 
 <a id="主な機能"></a>
 

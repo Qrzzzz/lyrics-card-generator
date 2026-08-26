@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v6.0.1.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v6.1.0.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="./docs/development.en.md">Développement local</a> ·
@@ -74,25 +74,25 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 ## 📦 Téléchargement et installation
 
-Téléchargez la v6.0.1 depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
+Téléchargez la v6.1.0 depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
 
-* Installateur : `Lyrics Card Generator Setup 6.0.1.exe`
-* Version portable : `Lyrics Card Generator-6.0.1-portable.exe`
+* Installateur : `Lyrics Card Generator Setup 6.1.0.exe`
+* Version portable : `Lyrics Card Generator-6.1.0-portable.exe`
 
 L'installateur est recommandé pour une utilisation régulière. La version portable convient aux essais, à une utilisation temporaire ou à un disque amovible.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### Points forts de la v6.0.1
+### Points forts de la v6.1.0
 
-* L’application Windows présente désormais les six confirmations et erreurs dans des boîtes de dialogue système Electron natives, avec les icônes d’avertissement ou d’erreur du système.
-* Le remplacement d’un morceau ou d’une traduction et la suppression ou réduction de l’historique sélectionnent Annuler par défaut ; fermer la boîte annule également l’opération.
-* Les titres, détails et boutons sont disponibles dans les six langues de l’interface, tandis que Web Lite conserve un repli compatible avec le navigateur.
+* Le choix d'une police personnalisée s'ouvre dans une fenêtre enfant Electron avec barre de titre système, au lieu d'une surcouche dans l'interface principale.
+* La recherche, les recommandations, la liste complète des polices et les aperçus sont conservés ; le choix actualise toujours immédiatement la vraie carte de paroles.
+* La fenêtre utilise une identité IPC minimale séparée ; Web Lite conserve un repli compatible avec le navigateur.
 
 ## 🌐 Notes de publication multilingues
 
 Par défaut, GitHub Release affiche un résumé en chinois simplifié. Consultez les notes complètes :
-[简体中文](./docs/releases/v6.0.1.zh-CN.md) · [繁體中文](./docs/releases/v6.0.1.zh-TW.md) · [English](./docs/releases/v6.0.1.en.md) · [Français](./docs/releases/v6.0.1.fr.md) · [日本語](./docs/releases/v6.0.1.ja.md) · [Español](./docs/releases/v6.0.1.es.md)
+[简体中文](./docs/releases/v6.1.0.zh-CN.md) · [繁體中文](./docs/releases/v6.1.0.zh-TW.md) · [English](./docs/releases/v6.1.0.en.md) · [Français](./docs/releases/v6.1.0.fr.md) · [日本語](./docs/releases/v6.1.0.ja.md) · [Español](./docs/releases/v6.1.0.es.md)
 
 <a id="fonctionnalités-principales"></a>
 

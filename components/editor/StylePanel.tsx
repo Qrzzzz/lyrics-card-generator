@@ -33,6 +33,7 @@ import type {
   CardStyle,
   ContentMode,
   FontScheme,
+  Locale,
   SongInfo
 } from "@/lib/types";
 
@@ -42,6 +43,7 @@ type StylePanelProps = {
   song?: SongInfo;
   onSongChange?: (song: SongInfo) => void;
   onFontSchemePreviewChange?: (scheme: FontScheme | null) => void;
+  locale: Locale;
   t: ReturnType<typeof createT>;
 };
 
@@ -55,7 +57,7 @@ export function StylePanel(props: StylePanelProps) {
   );
 }
 
-export function FontSchemeSettingsPanel({ style, onStyleChange, onFontSchemePreviewChange, t }: StylePanelProps) {
+export function FontSchemeSettingsPanel({ style, onStyleChange, onFontSchemePreviewChange, locale, t }: StylePanelProps) {
   return (
     <div className="grid gap-5">
       <Section
@@ -69,6 +71,7 @@ export function FontSchemeSettingsPanel({ style, onStyleChange, onFontSchemePrev
           onStyleChange={onStyleChange}
           onPreviewSchemeChange={onFontSchemePreviewChange}
           showHeader={false}
+          locale={locale}
           t={t}
         />
       </Section>
