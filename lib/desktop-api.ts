@@ -101,12 +101,14 @@ const MAX_LEGACY_MANUAL_SAVE_ENVELOPE_CODE_UNITS = 512 * 1024 + 64;
 const MAX_MANUAL_SAVE_ENVELOPE_CODE_UNITS = 2 * 1024 * 1024 + 64;
 
 function isManualSaveEnvelope(value: unknown): value is ImportHistoryManualSaveEnvelope {
-  if (typeof value !== "string" || !value.endsWith("}")) return false;
-  if (value.startsWith('{"version":2,"snapshot":')) {
-    return value.length <= MAX_MANUAL_SAVE_ENVELOPE_CODE_UNITS;
+  if (typeof value === "string" && value.endsWith("}")) {
+    if (value.startsWith('{"version":2,"snapshot":')) {
+      return value.length <= MAX_MANUAL_SAVE_ENVELOPE_CODE_UNITS;
+    }
+    return value.startsWith('{"version":1,"snapshot":') &&
+      value.length <= MAX_LEGACY_MANUAL_SAVE_ENVELOPE_CODE_UNITS;
   }
-  return value.startsWith('{"version":1,"snapshot":') &&
-    value.length <= MAX_LEGACY_MANUAL_SAVE_ENVELOPE_CODE_UNITS;
+  return false;
 }
 
 function invalidManualSaveResult(): Promise<ImportHistoryWriteResult> {
