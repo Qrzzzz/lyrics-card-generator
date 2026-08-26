@@ -88,7 +88,7 @@ async function run() {
 
   assert.deepEqual(await exposedBridge.createManualSaveEnvelope(null), { ok: false, code: "invalid_snapshot" });
   assert.deepEqual(
-    await exposedBridge.createManualSaveEnvelope("x".repeat(512 * 1024 + 65)),
+    await exposedBridge.createManualSaveEnvelope("x".repeat(2 * 1024 * 1024 + 65)),
     { ok: false, code: "invalid_snapshot" }
   );
   await exposedBridge.createManualSaveEnvelope("{\"schemaVersion\":1}");
