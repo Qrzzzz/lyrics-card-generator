@@ -489,7 +489,7 @@ async function assertLocalAudioUploadLimits() {
   );
   const clientSource = readFileSync("components/editor/LocalAudioParser.tsx", "utf8");
   const clientGuardIndex = clientSource.indexOf("isLocalAudioFileTooLarge(file)");
-  const beginImportIndex = clientSource.indexOf("const intent = beginImport()", clientGuardIndex);
+  const beginImportIndex = clientSource.indexOf("const intent = await beginImport()", clientGuardIndex);
   const formDataIndex = clientSource.indexOf("new FormData()", clientGuardIndex);
   const fetchIndex = clientSource.indexOf('fetch("/api/parse-local-audio"', clientGuardIndex);
   assert.ok(clientGuardIndex >= 0, "the local-audio picker uses the shared size guard");

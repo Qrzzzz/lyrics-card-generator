@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { normalizeAIErrorMessage } from "@/components/editor/utils/normalizeAIErrorMessage";
 import type { ToastNotifier } from "@/components/feedback/AppToast";
+import { systemDialogCopy } from "@/lib/system-dialog-copy";
+import { showSystemConfirm } from "@/lib/system-dialog";
 import { cleanStructuredAITranslation } from "@/lib/ai/clean";
 import {
   AITranslationError,
@@ -46,7 +48,7 @@ type UseEditorAiTranslationInput = {
   ) => boolean;
   onNotify: ToastNotifier;
   onRequireSettings: () => void;
-  confirmOverwrite?: (message: string) => boolean;
+  confirmOverwrite?: (message: string) => Promise<boolean>;
 };
 
 export function useEditorAiTranslation({
@@ -58,7 +60,17 @@ export function useEditorAiTranslation({
   commitTerminal,
   onNotify,
   onRequireSettings,
-  confirmOverwrite = (message) => window.confirm(message)
+  confirmOverwrite = (detail) => {
+    const dialogCopy = systemDialogCopy[locale];
+    return showSystemConfirm({
+      type: "warning",
+      title: dialogCopy.appTitle,
+      message: dialogCopy.overwriteTranslationTitle,
+      detail,
+      confirmLabel: dialogCopy.overwrite,
+      cancelLabel: dialogCopy.cancel
+    });
+  }
 }: UseEditorAiTranslationInput) {
   const [isAITranslateOpen, setIsAITranslateOpen] = useState(false);
   const [isAITranslating, setIsAITranslating] = useState(false);
@@ -109,7 +121,7 @@ export function useEditorAiTranslation({
   async function translateWithAI(presetId: string, reasoning: boolean) {
     const currentDocument = getCurrentDocumentSnapshot();
     const previousTranslation = currentDocument.translation.text;
-    if (previousTranslation.trim() && !confirmOverwrite(aiCopy.overwriteConfirm)) {
+    if (previousTranslation.trim() && !(await confirmOverwrite(aiCopy.overwriteConfirm))) {
       return;
     }
     const intent = beginAITranslation();

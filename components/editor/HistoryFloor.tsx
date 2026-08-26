@@ -32,6 +32,8 @@ import type {
 } from "@/lib/import-history";
 import { LOCALE_BCP47 } from "@/lib/locale-language";
 import { settingsCopy } from "@/lib/settings/copy";
+import { systemDialogCopy } from "@/lib/system-dialog-copy";
+import { showSystemConfirm } from "@/lib/system-dialog";
 import type { Locale } from "@/lib/types";
 
 const PAGE_SIZE = 24;
@@ -215,7 +217,17 @@ export function HistoryFloor({
 
   async function clearHistory() {
     const desktop = getLyricsCardDesktopApi();
-    if (!desktop || busyId || total === 0 || !window.confirm(copy.clearConfirm)) return;
+    if (!desktop || busyId || total === 0) return;
+    const dialogCopy = systemDialogCopy[locale];
+    const confirmed = await showSystemConfirm({
+      type: "warning",
+      title: dialogCopy.appTitle,
+      message: dialogCopy.clearHistoryTitle,
+      detail: copy.clearConfirm,
+      confirmLabel: dialogCopy.remove,
+      cancelLabel: dialogCopy.cancel
+    });
+    if (!confirmed) return;
     setBusyId("__all__");
     try {
       await desktop.clearImportHistory();

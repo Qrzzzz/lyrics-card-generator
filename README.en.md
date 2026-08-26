@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v6.0.0.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v6.0.1.en.md">Release Notes</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
   <a href="./docs/web-lite-browser-support.md">Web Lite Browser Support</a> ·
   <a href="#features">Features</a> ·
@@ -75,25 +75,25 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 ## 📦 Download and Installation
 
-Download v6.0.0 from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
+Download v6.0.1 from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Installer: `Lyrics Card Generator Setup 6.0.0.exe`
-* Portable build: `Lyrics Card Generator-6.0.0-portable.exe`
+* Installer: `Lyrics Card Generator Setup 6.0.1.exe`
+* Portable build: `Lyrics Card Generator-6.0.1-portable.exe`
 
 The installer is recommended for regular use. The portable version is useful for temporary use, testing, or running from a removable drive.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v6.0.0 Highlights
+### v6.0.1 Highlights
 
-* The lyric pipeline now runs on `LyricDocumentV2`, with stable Block and Unit IDs plus document revisions, while keeping the familiar text editor.
-* Import, editing, translation, history, preview, layout, and export consume one document; the legacy strings are derived compatibility projections only.
-* AI translation returns Unit-ID-addressed structured results and uses revision guards to prevent misalignment and late-response overwrites.
+* The Windows desktop app now presents all six confirmation and error prompts as native Electron system dialogs with operating-system warning or error icons.
+* Replacing a song, overwriting a translation, and clearing or trimming history default to the safe Cancel action; closing the dialog also cancels the operation.
+* Dialog titles, details, and buttons support all six interface languages, while Web Lite retains a browser-compatible fallback.
 
 ## 🌐 Multilingual Release Notes
 
 GitHub Release displays a Simplified Chinese summary by default. See the full release notes:
-[简体中文](./docs/releases/v6.0.0.zh-CN.md) · [繁體中文](./docs/releases/v6.0.0.zh-TW.md) · [English](./docs/releases/v6.0.0.en.md) · [Français](./docs/releases/v6.0.0.fr.md) · [日本語](./docs/releases/v6.0.0.ja.md) · [Español](./docs/releases/v6.0.0.es.md)
+[简体中文](./docs/releases/v6.0.1.zh-CN.md) · [繁體中文](./docs/releases/v6.0.1.zh-TW.md) · [English](./docs/releases/v6.0.1.en.md) · [Français](./docs/releases/v6.0.1.fr.md) · [日本語](./docs/releases/v6.0.1.ja.md) · [Español](./docs/releases/v6.0.1.es.md)
 
 <a id="features"></a>
 

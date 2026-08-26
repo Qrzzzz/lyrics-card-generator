@@ -52,6 +52,8 @@ import { createT } from "@/lib/i18n";
 import { proxiedImageUrl } from "@/lib/image-utils";
 import { DEFAULT_PALETTE } from "@/lib/palette-background";
 import { settingsCopy } from "@/lib/settings/copy";
+import { systemDialogCopy } from "@/lib/system-dialog-copy";
+import { showSystemConfirm } from "@/lib/system-dialog";
 import { resolveUiAccentColor } from "@/lib/settings/accent";
 import {
   DEFAULT_USER_SETTINGS,
@@ -296,7 +298,17 @@ export function LyricEditor() {
     exportBusyMessage: t("exportBusy"),
     exportFailedMessage: t("exportFailed"),
     exportImageTooLargeMessage: t("exportImageTooLarge"),
-    confirmReplaceDocument: () => window.confirm(t("replaceDocumentConfirm")),
+    confirmReplaceDocument: () => {
+      const dialogCopy = systemDialogCopy[state.locale];
+      return showSystemConfirm({
+        type: "warning",
+        title: dialogCopy.appTitle,
+        message: dialogCopy.replaceDocumentTitle,
+        detail: t("replaceDocumentConfirm"),
+        confirmLabel: dialogCopy.replace,
+        cancelLabel: dialogCopy.cancel
+      });
+    },
     onNotify: showToast,
     onCloseExamples: closeExamples,
     onCloseHistory: closeHistory,

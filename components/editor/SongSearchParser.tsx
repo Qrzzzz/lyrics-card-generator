@@ -24,7 +24,7 @@ export function SongSearchParser({
   beginImport,
   t
 }: {
-  beginImport: () => DocumentImportIntent | null;
+  beginImport: () => Promise<DocumentImportIntent | null>;
   onResolved: (
     song: ParsedSongData,
     lyrics: string | undefined,
@@ -171,7 +171,7 @@ export function SongSearchParser({
     }
 
     // Resolving a suggestion is a document import intent, separate from suggestion lookup.
-    const intent = beginImport();
+    const intent = await beginImport();
     if (!intent) return;
     activeResolveRef.current?.cancel();
     activeResolveRef.current = intent;

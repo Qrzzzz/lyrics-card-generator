@@ -54,6 +54,8 @@ async function run() {
     ["closeWindow", []],
     ["confirmWindowClose", []],
     ["getWindowState", []],
+    ["showNativeConfirmDialog", ["warning", "Confirm", "Replace document", "Unsaved changes", "Continue", "Cancel"]],
+    ["showNativeAlertDialog", ["error", "Error", "Save failed", "Try again", "Close"]],
     ["loadAppPreferences", []],
     ["saveAppPreferences", [{ revision: 1 }, { importHistoryTrimConfirmation: true }]],
     ["listSystemFonts", []],
@@ -79,6 +81,17 @@ async function run() {
     ["cancelAITranslation", ["request-id"]]
   ];
   for (const [method, args] of directCalls) await exposedBridge[method](...args);
+
+  const invocationCountBeforeInvalidDialogs = invocations.length;
+  assert.equal(
+    await exposedBridge.showNativeConfirmDialog("invalid", "Confirm", "Message", "Detail", "Continue", "Cancel"),
+    false
+  );
+  assert.equal(
+    await exposedBridge.showNativeAlertDialog("error", "Error", "x".repeat(321), "Detail", "Close"),
+    false
+  );
+  assert.equal(invocations.length, invocationCountBeforeInvalidDialogs, "invalid native dialogs never cross IPC");
 
   assert.equal(await exposedBridge.registerImportFile({ nativePath: "", size: 0, lastModified: 0 }, "local-audio"), null);
   await exposedBridge.registerImportFile(
@@ -123,6 +136,25 @@ async function run() {
   assert.ok(
     invocations.some(({ channel, args }) => channel === "lyrics-card:manual-save-update" && args[0] === "record-id"),
     "manual-save updates retain the opaque record id"
+  );
+  assert.ok(
+    invocations.some(({ channel, args }) => (
+      channel === "lyrics-card:native-confirm"
+      && args.every((value) => typeof value === "string")
+      && args[0] === "warning"
+      && args[4] === "Continue"
+      && args[5] === "Cancel"
+    )),
+    "native confirmation forwards only validated primitive fields"
+  );
+  assert.ok(
+    invocations.some(({ channel, args }) => (
+      channel === "lyrics-card:native-alert"
+      && args.every((value) => typeof value === "string")
+      && args[0] === "error"
+      && args[4] === "Close"
+    )),
+    "native alert forwards only validated primitive fields"
   );
   assert.equal(listeners.size, 0, "all preload event subscriptions are removable");
   console.log("Electron preload runtime contract tests passed");

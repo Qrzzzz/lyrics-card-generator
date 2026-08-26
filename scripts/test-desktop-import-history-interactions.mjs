@@ -33,7 +33,8 @@ let localAudioShouldFail = false;
 let nextSongId = 71_000;
 const keywordIds = new Map([["same platform song", "70001"]]);
 const songsById = new Map();
-const dialogMessages = [];
+const rendererDialogs = [];
+const nativeDialogs = [];
 const routeCounts = { parseSong: 0, resolveSearch: 0, localAudio: 0, imageProxy: 0, remoteCover: 0 };
 
 // Fixtures live under the isolated Electron user-data root so replay, relocation,
@@ -208,12 +209,33 @@ async function launchApp({ expectFirstLaunch = false, expectedLocale = null, exp
     env: { ...process.env, LYRICS_CARD_TEST_USER_DATA: userDataDirectory },
     timeout: 60_000
   });
+  await electronApp.evaluate(({ dialog }, initialDecision) => {
+    globalThis.__lyricsCardNativeDialogTest = { defaultDecision: initialDecision, nextDecision: null, calls: [] };
+    dialog.showMessageBox = async (_browserWindow, options) => {
+      const state = globalThis.__lyricsCardNativeDialogTest;
+      const decision = state.nextDecision ?? state.defaultDecision;
+      state.nextDecision = null;
+      state.calls.push({
+        type: options.type,
+        title: options.title,
+        message: options.message,
+        detail: options.detail,
+        buttons: options.buttons,
+        defaultId: options.defaultId,
+        cancelId: options.cancelId,
+        noLink: options.noLink
+      });
+      return {
+        response: decision === "accept" ? 0 : (options.cancelId ?? 0),
+        checkboxChecked: false
+      };
+    };
+  }, dialogDecision);
   page = await electronApp.firstWindow({ timeout: 60_000 });
   page.on("pageerror", (error) => process.stderr.write(`[history-renderer] ${error.stack || error.message}\n`));
   page.on("dialog", async (dialog) => {
-    dialogMessages.push(dialog.message());
-    if (dialogDecision === "accept") await dialog.accept();
-    else await dialog.dismiss();
+    rendererDialogs.push({ type: dialog.type(), message: dialog.message() });
+    await dialog.dismiss();
   });
   await attachRoutes(page);
 
@@ -237,11 +259,24 @@ async function launchApp({ expectFirstLaunch = false, expectedLocale = null, exp
   }
 }
 
+async function setNativeDialogDecision(decision) {
+  if (!electronApp) return;
+  await electronApp.evaluate((_electron, nextDecision) => {
+    globalThis.__lyricsCardNativeDialogTest.nextDecision = nextDecision;
+  }, decision);
+}
+
+async function readCurrentNativeDialogs() {
+  if (!electronApp) return [];
+  return electronApp.evaluate(() => globalThis.__lyricsCardNativeDialogTest.calls);
+}
+
 async function closeThroughDesktopApi() {
   if (!electronApp) return;
   // Let Playwright request one normal application close. The main process then
   // asks the renderer to flush and confirm; issuing confirm first leaves a
   // second close call racing an application that is already shutting down.
+  nativeDialogs.push(...await readCurrentNativeDialogs());
   await closeElectronApplication(electronApp, { label: "desktop-history-regression" });
   electronApp = undefined;
   page = undefined;
@@ -1492,9 +1527,8 @@ try {
 
   const replaySurface = await openHistory(1);
   const beforeCancelledReplay = await currentSongTitle();
-  dialogDecision = "dismiss";
+  await setNativeDialogDecision("dismiss");
   await replayCard("search");
-  dialogDecision = "accept";
   await page.waitForFunction(() => {
     const button = document.querySelector('[data-testid="history-surface"] [data-testid^="history-replay-"]');
     return button instanceof HTMLButtonElement && !button.disabled;
@@ -1516,21 +1550,21 @@ try {
   ));
   await closeHistoryWithEscape();
 
-  dialogDecision = "dismiss";
+  await setNativeDialogDecision("dismiss");
   await openGeneralSettings();
   await page.getByTestId("import-history-limit").selectOption("10");
   await page.waitForTimeout(300);
   assert.equal(await page.getByTestId("import-history-limit").inputValue(), "unlimited");
   assert.equal(await historyTotal(), 26, "cancelling a destructive limit change preserves all records");
-  dialogDecision = "accept";
   await closeSettings();
 
   await changeHistoryLimit(10, 10);
   await changeHistoryLimit(5, 5);
   assert.ok(
-    dialogMessages.some((message) => /delete|remove|删除|刪除/i.test(message)),
+    (await readCurrentNativeDialogs()).some(({ message, detail }) => /delete|remove|删除|刪除/i.test(`${message} ${detail}`)),
     "lowering a history limit shows an explicit destructive confirmation"
   );
+  assert.deepEqual(rendererDialogs, [], `history interactions must not use renderer dialogs: ${JSON.stringify(rendererDialogs)}`);
   await changeHistoryLimit("unlimited", 5);
   await performSearch("unlimited extra one", { waitForTotal: 6 });
   await performSearch("unlimited extra two", { waitForTotal: 7 });
@@ -1782,7 +1816,8 @@ try {
   process.stdout.write(`${JSON.stringify({
     ok: true,
     historyVersion: 2,
-    dialogs: dialogMessages.length,
+    dialogs: nativeDialogs.length,
+    rendererDialogs,
     covered: [
       "desktop-only entry and surface focus",
       "Escape, inert, pointer isolation, reduced motion, narrow layout",

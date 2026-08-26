@@ -42,6 +42,24 @@ export type DesktopWindowState = {
   maximized: boolean;
 };
 
+export type NativeMessageBoxType = "info" | "warning" | "error" | "question";
+
+type NativeDialogOptions = {
+  type: NativeMessageBoxType;
+  title: string;
+  message: string;
+  detail: string;
+};
+
+export type NativeConfirmDialogOptions = NativeDialogOptions & {
+  confirmLabel: string;
+  cancelLabel: string;
+};
+
+export type NativeAlertDialogOptions = NativeDialogOptions & {
+  closeLabel: string;
+};
+
 export type LyricsCardDesktopApi = {
   setWindowMaterial: (theme: EffectiveUiThemeId) => Promise<WindowMaterialResult>;
   minimizeWindow: () => Promise<boolean>;
@@ -51,6 +69,8 @@ export type LyricsCardDesktopApi = {
   getWindowState: () => Promise<DesktopWindowState>;
   onWindowStateChanged: (callback: (state: DesktopWindowState) => void) => () => void;
   onWindowCloseRequested: (callback: () => void) => () => void;
+  showNativeConfirm: (options: NativeConfirmDialogOptions) => Promise<boolean>;
+  showNativeAlert: (options: NativeAlertDialogOptions) => Promise<boolean>;
   loadAppPreferences: () => Promise<AppPreferencesRecord | null>;
   saveAppPreferences: (preferences: AppPreferencesRecord, options?: AppPreferencesSaveOptions) => Promise<boolean>;
   listSystemFonts: () => Promise<SystemFontOption[]>;
@@ -92,7 +112,25 @@ declare global {
   }
 }
 
-type LyricsCardDesktopBridge = Omit<LyricsCardDesktopApi, "createManualSave" | "updateManualSave"> & {
+type LyricsCardDesktopBridge = Omit<
+  LyricsCardDesktopApi,
+  "createManualSave" | "updateManualSave" | "showNativeConfirm" | "showNativeAlert"
+> & {
+  showNativeConfirmDialog: (
+    type: NativeMessageBoxType,
+    title: string,
+    message: string,
+    detail: string,
+    confirmLabel: string,
+    cancelLabel: string
+  ) => Promise<boolean>;
+  showNativeAlertDialog: (
+    type: NativeMessageBoxType,
+    title: string,
+    message: string,
+    detail: string,
+    closeLabel: string
+  ) => Promise<boolean>;
   createManualSaveEnvelope: (envelope: string) => Promise<ImportHistoryWriteResult>;
   updateManualSaveEnvelope: (recordId: string, envelope: string) => Promise<ImportHistoryWriteResult>;
 };
@@ -115,6 +153,23 @@ function invalidManualSaveResult(): Promise<ImportHistoryWriteResult> {
   return Promise.resolve({ ok: false, code: "invalid_snapshot" });
 }
 
+const NATIVE_DIALOG_TYPES = new Set<NativeMessageBoxType>(["info", "warning", "error", "question"]);
+
+function isDialogText(value: unknown, maximumLength: number) {
+  return typeof value === "string" && value.trim().length > 0 && value.length <= maximumLength;
+}
+
+function isNativeDialogOptions(value: unknown): value is NativeDialogOptions {
+  if (!value || typeof value !== "object") return false;
+  const options = value as Partial<NativeDialogOptions>;
+  return Boolean(
+    options.type && NATIVE_DIALOG_TYPES.has(options.type) &&
+    isDialogText(options.title, 160) &&
+    isDialogText(options.message, 320) &&
+    typeof options.detail === "string" && options.detail.length <= 2_048
+  );
+}
+
 function createDesktopApi(bridge: LyricsCardDesktopBridge): LyricsCardDesktopApi {
   // Wrap the preload bridge with renderer-side envelope validation, then freeze
   // the public facade so page code cannot replace privileged methods.
@@ -134,6 +189,38 @@ function createDesktopApi(bridge: LyricsCardDesktopBridge): LyricsCardDesktopApi
         isManualSaveEnvelope(envelope)
           ? bridge.updateManualSaveEnvelope(recordId, envelope)
           : invalidManualSaveResult()
+      )
+    },
+    showNativeConfirm: {
+      enumerable: true,
+      value: (options: unknown) => (
+        isNativeDialogOptions(options) &&
+        isDialogText((options as NativeConfirmDialogOptions).confirmLabel, 80) &&
+        isDialogText((options as NativeConfirmDialogOptions).cancelLabel, 80)
+          ? bridge.showNativeConfirmDialog(
+              options.type,
+              options.title,
+              options.message,
+              options.detail,
+              (options as NativeConfirmDialogOptions).confirmLabel,
+              (options as NativeConfirmDialogOptions).cancelLabel
+            )
+          : Promise.resolve(false)
+      )
+    },
+    showNativeAlert: {
+      enumerable: true,
+      value: (options: unknown) => (
+        isNativeDialogOptions(options) &&
+        isDialogText((options as NativeAlertDialogOptions).closeLabel, 80)
+          ? bridge.showNativeAlertDialog(
+              options.type,
+              options.title,
+              options.message,
+              options.detail,
+              (options as NativeAlertDialogOptions).closeLabel
+            )
+          : Promise.resolve(false)
       )
     }
   });

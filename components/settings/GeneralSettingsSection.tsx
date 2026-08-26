@@ -11,6 +11,8 @@ import {
 import type { ImportHistoryLimit } from "@/lib/import-history";
 import type { AppPreferencesPersistenceOptions } from "@/lib/settings/app-preferences";
 import type { UserSettings } from "@/lib/settings/types";
+import { systemDialogCopy } from "@/lib/system-dialog-copy";
+import { showSystemAlert, showSystemConfirm } from "@/lib/system-dialog";
 import type { Locale } from "@/lib/types";
 import type { settingsCopy } from "@/lib/settings/copy";
 
@@ -43,11 +45,20 @@ export function GeneralSettingsSection({
           // The confirmed store version prevents trimming records changed after this prompt.
           const { total, version } = await desktop.getImportHistoryStats();
           const trimmed = Math.max(0, total - next);
-          if (trimmed > 0 && !window.confirm(formatImportHistoryText(historyCopy.limitTrimConfirm, {
-            limit: next,
-            count: trimmed
-          }))) {
-            return;
+          if (trimmed > 0) {
+            const dialogCopy = systemDialogCopy[locale];
+            const confirmed = await showSystemConfirm({
+              type: "warning",
+              title: dialogCopy.appTitle,
+              message: dialogCopy.trimHistoryTitle,
+              detail: formatImportHistoryText(historyCopy.limitTrimConfirm, {
+                limit: next,
+                count: trimmed
+              }),
+              confirmLabel: dialogCopy.continue,
+              cancelLabel: dialogCopy.cancel
+            });
+            if (!confirmed) return;
           }
           if (trimmed > 0) {
             options = {
@@ -58,7 +69,14 @@ export function GeneralSettingsSection({
             };
           }
         } catch {
-          window.alert(historyCopy.limitStatsFailed);
+          const dialogCopy = systemDialogCopy[locale];
+          await showSystemAlert({
+            type: "error",
+            title: dialogCopy.appTitle,
+            message: dialogCopy.historyCheckFailedTitle,
+            detail: historyCopy.limitStatsFailed,
+            closeLabel: dialogCopy.close
+          });
           return;
         }
       }

@@ -6,6 +6,8 @@ import { getLyricsCardDesktopApi, type LyricsCardDesktopApi } from "@/lib/deskto
 import { createT } from "@/lib/i18n";
 import { shutdownCoordinator } from "@/lib/persistence/shutdown-coordinator";
 import { APP_ICON_URL } from "@/lib/static-assets";
+import { systemDialogCopy } from "@/lib/system-dialog-copy";
+import { showSystemAlert } from "@/lib/system-dialog";
 import type { Locale } from "@/lib/types";
 import { TitlebarGradualBlur } from "@/components/layout/TitlebarGradualBlur";
 
@@ -67,7 +69,14 @@ export function DesktopTitleBar({ locale }: DesktopTitleBarProps) {
         await desktop.confirmWindowClose();
       } catch {
         // A failed flush deliberately leaves the window open rather than discarding unsaved state.
-        window.alert(closeFailureMessages[locale]);
+        const dialogCopy = systemDialogCopy[locale];
+        await showSystemAlert({
+          type: "error",
+          title: dialogCopy.appTitle,
+          message: dialogCopy.closeSaveFailedTitle,
+          detail: closeFailureMessages[locale],
+          closeLabel: dialogCopy.close
+        });
       }
     };
     return desktop.onWindowCloseRequested(() => void handleCloseRequest());
