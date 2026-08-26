@@ -76,6 +76,7 @@ const manualSaveIpcSource = readFileSync("electron/manual-save-ipc.js", "utf8");
 const desktopApiSource = readFileSync("lib/desktop-api.ts", "utf8");
 const fontSchemePanelSource = readFileSync("components/editor/font-scheme/FontSchemePanel.tsx", "utf8");
 const nativeFontPickerSource = readFileSync("components/editor/font-scheme/NativeFontPickerWindow.tsx", "utf8");
+const nativeFontDialogSource = readFileSync("electron/native-font-dialog.js", "utf8");
 const desktopHistoryInteractionSource = readFileSync("scripts/test-desktop-import-history-interactions.mjs", "utf8");
 // Source contracts complement unit behavior checks by proving that the hardened
 // helpers are actually wired into the privileged Electron entry point.
@@ -214,8 +215,16 @@ assert.match(
 );
 assert.match(
   mainSource,
+  /process\.platform === "win32"[\s\S]*?nativeWindowHandleAsDecimal\(mainWindow\)[\s\S]*?showWindowsFontDialog\(\{ ownerHandle, selectedFamily: context\.selectedFamily \}\)/,
+  "Windows font selection calls the OS-owned font dialog with the Electron parent HWND"
+);
+assert.match(nativeFontDialogSource, /System\.Windows\.Forms\.FontDialog/);
+assert.match(nativeFontDialogSource, /ShowDialog\(\$owner\)/);
+assert.match(nativeFontDialogSource, /windowsHide: true[\s\S]*?shell: false/);
+assert.match(
+  mainSource,
   /new BrowserWindow\(\{[\s\S]*?parent: mainWindow,[\s\S]*?modal: true,[\s\S]*?frame: true,[\s\S]*?contextIsolation: true,[\s\S]*?nodeIntegration: false,[\s\S]*?sandbox: true/,
-  "font selection runs in an operating-system modal window with the hardened preload boundary"
+  "non-Windows font selection retains the hardened renderer fallback"
 );
 assert.match(
   mainSource,

@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v6.1.0.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v6.1.1.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="./docs/development.en.md">ローカル開発</a> ·
@@ -74,25 +74,25 @@
 
 ## 📦 ダウンロードとインストール
 
-v6.1.0 は [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) からダウンロードできます。
+v6.1.1 は [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) からダウンロードできます。
 
-* インストーラー：`Lyrics Card Generator Setup 6.1.0.exe`
-* ポータブル版：`Lyrics Card Generator-6.1.0-portable.exe`
+* インストーラー：`Lyrics Card Generator Setup 6.1.1.exe`
+* ポータブル版：`Lyrics Card Generator-6.1.1-portable.exe`
 
 通常利用にはインストーラーを推奨します。ポータブル版は一時利用、検証、リムーバブルドライブでの利用に向いています。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v6.1.0 の主な更新
+### v6.1.1 の主な更新
 
-* カスタムフォント選択をアプリ内オーバーレイから、OS のタイトルバーを持つ Electron 子ウィンドウへ移しました。
-* 検索、おすすめ、システムフォント一覧、プレビューを維持し、選択結果は実際の歌詞カードへ引き続き即時反映されます。
-* フォントウィンドウは独立した最小権限 IPC を使用し、Web Lite ではブラウザー互換のフォールバックを維持します。
+* Windows デスクトップ版は、Electron や HTML で描画した選択画面ではなく、OS 標準のフォントダイアログを直接開くようになりました。
+* システムダイアログはメインウィンドウのハンドルに所有され、真の Windows モーダルとして動作し、確定・キャンセル後にフォーカスを正しく戻します。
+* 選択は「現在の構成として保存」まで下書きと実際のカードプレビューだけを更新し、Windows 以外とブラウザーでは互換フォールバックを維持します。
 
 ## 🌐 多言語リリースノート
 
 GitHub Release ではデフォルトで簡体字中国語の概要が表示されます。完全なリリースノートはこちら：
-[简体中文](./docs/releases/v6.1.0.zh-CN.md) · [繁體中文](./docs/releases/v6.1.0.zh-TW.md) · [English](./docs/releases/v6.1.0.en.md) · [Français](./docs/releases/v6.1.0.fr.md) · [日本語](./docs/releases/v6.1.0.ja.md) · [Español](./docs/releases/v6.1.0.es.md)
+[简体中文](./docs/releases/v6.1.1.zh-CN.md) · [繁體中文](./docs/releases/v6.1.1.zh-TW.md) · [English](./docs/releases/v6.1.1.en.md) · [Français](./docs/releases/v6.1.1.fr.md) · [日本語](./docs/releases/v6.1.1.ja.md) · [Español](./docs/releases/v6.1.1.es.md)
 
 <a id="主な機能"></a>
 

@@ -7,7 +7,9 @@ import { _electron as electron } from "playwright";
 import { closeElectronApplication } from "./electron-test-lifecycle.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const executablePath = path.join(root, "release", "win-unpacked", "Lyrics Card Generator.exe");
+const executablePath = process.env.LYRICS_CARD_TEST_EXECUTABLE?.trim()
+  ? path.resolve(process.env.LYRICS_CARD_TEST_EXECUTABLE)
+  : path.join(root, "release", "win-unpacked", "Lyrics Card Generator.exe");
 const reportDirectory = path.join(root, "playwright-report", "desktop");
 const userDataDirectory = await mkdtemp(path.join(tmpdir(), "lyrics-card-desktop-test-"));
 const exportOverflowTolerance = 4;
@@ -1642,71 +1644,33 @@ async function assertFontPickerBehavior() {
 
   const cjkTrigger = page.getByTestId("choose-cjk-font");
   const latinTrigger = page.getByTestId("choose-latin-font");
-  const openPicker = async (trigger, category) => {
-    const pickerPagePromise = electronApp.waitForEvent("window");
-    await trigger.click();
-    const pickerPage = await pickerPagePromise;
-    await pickerPage.waitForLoadState("domcontentloaded");
-    await pickerPage.getByTestId(`font-picker-${category}`).waitFor({ state: "visible" });
-    await pickerPage.waitForFunction(() => document.activeElement?.getAttribute("data-testid") === "font-picker-search");
-    return pickerPage;
-  };
-  const closePicker = async (pickerPage, triggerTestId) => {
-    const closed = pickerPage.waitForEvent("close");
-    await pickerPage.getByRole("button", { name: "关闭", exact: true }).click();
-    await closed;
-    await page.waitForFunction((testId) => document.activeElement?.getAttribute("data-testid") === testId, triggerTestId);
-  };
+  const setNativeFontResult = (result) => electronApp.evaluate((_electron, nextResult) => {
+    globalThis.__lyricsCardNativeFontDialogTest.nextResult = nextResult;
+  }, result);
+  const nativeFontCalls = () => electronApp.evaluate(() => globalThis.__lyricsCardNativeFontDialogTest.calls);
 
-  let pickerPage = await openPicker(cjkTrigger, "cjk");
-  const nativeWindowState = await electronApp.evaluate(({ BrowserWindow }) => {
-    const windows = BrowserWindow.getAllWindows();
-    const picker = windows.find((window) => window.getParentWindow());
-    return {
-      count: windows.length,
-      modal: picker?.isModal() ?? false,
-      parented: Boolean(picker?.getParentWindow())
-    };
-  });
+  await setNativeFontResult(null);
+  await cjkTrigger.click();
+  await page.waitForTimeout(100);
   assert.deepEqual(
-    nativeWindowState,
-    { count: 2, modal: true, parented: true },
-    "custom font selection uses a framed native child window instead of an in-app overlay"
+    await electronApp.evaluate(({ BrowserWindow }) => ({ count: BrowserWindow.getAllWindows().length })),
+    { count: 1 },
+    "Windows font selection delegates to the OS dialog instead of creating a renderer window"
   );
-  assert.equal(await page.getByTestId("font-picker-cjk").count(), 0, "the main renderer contains no desktop font-picker overlay");
-  const cjkPicker = pickerPage.getByTestId("font-picker-cjk");
-  const search = pickerPage.getByTestId("font-picker-search");
-  assert.equal(await search.inputValue(), "", "font picker starts with an empty query");
-  assert.equal(await cjkPicker.getByRole("listbox").count(), 0, "font groups use native button semantics");
-  assert.equal(await cjkPicker.getByRole("option").count(), 0, "font groups do not claim an incomplete option model");
-  assert.ok(await cjkPicker.locator('section[aria-labelledby] button[aria-pressed]').count() > 0, "font groups expose labelled selection buttons");
-  await search.fill("Microsoft YaHei");
-  const yaheiButton = cjkPicker.getByText("Microsoft YaHei", { exact: true }).first().locator("..");
-  await yaheiButton.waitFor({ state: "visible" });
-  await yaheiButton.hover();
-  assert.match(
-    await pickerPage.getByTestId("font-picker-live-preview").evaluate((preview) => getComputedStyle(preview).fontFamily),
-    /Microsoft YaHei/,
-    "the native window retains a live font preview"
-  );
-  await closePicker(pickerPage, "choose-cjk-font");
+  assert.equal(await page.getByTestId("font-picker-cjk").count(), 0, "the main renderer contains no font-picker overlay");
 
-  pickerPage = await openPicker(cjkTrigger, "cjk");
-  assert.equal(await pickerPage.getByTestId("font-picker-search").inputValue(), "", "reopening the same font category clears the previous query");
-  await closePicker(pickerPage, "choose-cjk-font");
-
-  pickerPage = await openPicker(latinTrigger, "latin");
-  assert.equal(await pickerPage.getByTestId("font-picker-search").inputValue(), "", "switching font categories starts with a fresh query");
-  assert.equal(await pickerPage.getByTestId("font-picker-latin").getByRole("listbox").count(), 0, "Latin font groups use button semantics");
-  await closePicker(pickerPage, "choose-latin-font");
+  await setNativeFontResult(null);
+  await latinTrigger.click();
+  await page.waitForTimeout(100);
+  const cancelledCalls = await nativeFontCalls();
+  assert.deepEqual(cancelledCalls.map(({ category }) => category), ["cjk", "latin"]);
+  assert.equal(cancelledCalls[0].selectedFamily, "Source Han Sans SC");
+  assert.equal(cancelledCalls[1].selectedFamily, "Source Han Sans SC");
 
   const currentSummary = page.getByTestId("font-scheme-panel").locator("dl").first();
   assert.doesNotMatch(await currentSummary.textContent() ?? "", /Microsoft YaHei/, "the fresh font page starts from the saved preset");
-  pickerPage = await openPicker(cjkTrigger, "cjk");
-  await pickerPage.getByTestId("font-picker-search").fill("Microsoft YaHei");
-  const selected = pickerPage.waitForEvent("close");
-  await pickerPage.getByTestId("font-picker-cjk").getByText("Microsoft YaHei", { exact: true }).first().click();
-  await selected;
+  await setNativeFontResult("Microsoft YaHei");
+  await cjkTrigger.click();
   await page.waitForFunction(() => document.querySelector('[data-testid="choose-cjk-font"]')?.textContent?.includes("Microsoft YaHei"));
   assert.doesNotMatch(await currentSummary.textContent() ?? "", /Microsoft YaHei/, "font selection updates only the draft before save");
   await page.waitForFunction(() => {
@@ -3815,6 +3779,7 @@ try {
   });
   await electronApp.evaluate(({ dialog }) => {
     globalThis.__lyricsCardNativeDialogTest = { defaultDecision: "dismiss", nextDecision: null, calls: [] };
+    globalThis.__lyricsCardNativeFontDialogTest = { nextResult: null, calls: [] };
     dialog.showMessageBox = async (_browserWindow, options) => {
       const state = globalThis.__lyricsCardNativeDialogTest;
       const decision = state.nextDecision ?? state.defaultDecision;
