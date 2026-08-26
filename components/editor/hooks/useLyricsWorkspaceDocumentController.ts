@@ -255,11 +255,21 @@ export function useLyricsWorkspaceDocumentController({
     afterSelection: LyricsSelectionSnapshot;
     message: string;
   }) {
-    const nextDocument = params.next.lyricDocument ?? reconcileLyricDocumentV2(
-      documentSnapshot.lyricDocument,
-      params.next.lyrics,
-      params.next.translationText
-    );
+    const suppliedDocumentText = params.next.lyricDocument
+      ? serializeLyricDocument(params.next.lyricDocument)
+      : null;
+    const suppliedDocumentMatchesText = suppliedDocumentText?.source === params.next.lyrics &&
+      suppliedDocumentText.translation === params.next.translationText;
+    // Text transforms often spread the current snapshot before replacing one
+    // compatibility projection. Never let that stale structured document win
+    // over the changed text; reconcile it while preserving stable IDs instead.
+    const nextDocument = params.next.lyricDocument && suppliedDocumentMatchesText
+      ? params.next.lyricDocument
+      : reconcileLyricDocumentV2(
+          documentSnapshot.lyricDocument,
+          params.next.lyrics,
+          params.next.translationText
+        );
     const text = serializeLyricDocument(nextDocument);
     const next: LyricsDocumentSnapshot = {
       lyricDocument: nextDocument,
