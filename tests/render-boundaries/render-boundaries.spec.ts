@@ -211,7 +211,7 @@ test("bounds React commits for a deterministic 360-chunk AI stream", async ({ pa
   });
   await page.getByTestId("confirm-ai-translate").click();
   await expect(page.getByTestId("ai-run-back-to-setup")).toBeVisible();
-  await expect(page.getByTestId("ai-translation-stream")).toHaveText("译".repeat(240));
+  await expect(page.getByTestId("ai-translation-stream")).toHaveText(`${"译".repeat(120)}\n${"译".repeat(120)}`);
   const metrics = await page.evaluate(() => ({
     rootCommits: (window as typeof window & { __ROOT_COMMIT_COUNT__?: number }).__ROOT_COMMIT_COUNT__ ?? 0,
     lyricEditorRenders: (window as typeof window & { __LYRIC_CARD_RENDER_COUNTS__?: Record<string, number> })
@@ -348,8 +348,15 @@ async function installDesktopFixture(page: Page) {
       loadAISettings: async () => aiSettings,
       saveAISettings: async (settings: object) => ({ ...settings, hasApiKey: true }),
       clearAISettingsApiKey: async () => ({ ...aiSettings, hasApiKey: false }),
-      startAITranslation: async (requestId: string) => {
-        let finalText = "";
+      startAITranslation: async (requestId: string, payload: { prompt: string }) => {
+        const unitsMarker = "Structured lyric units:\n";
+        const unitsOffset = payload.prompt.lastIndexOf(unitsMarker);
+        if (unitsOffset < 0) throw new Error("structured lyric units missing from fixture prompt");
+        const units = JSON.parse(payload.prompt.slice(unitsOffset + unitsMarker.length)) as Array<{ id: string }>;
+        const finalText = JSON.stringify(units.map((unit) => ({
+          id: unit.id,
+          translation: ["译".repeat(120)]
+        })));
         aiChunkListener?.({ requestId, kind: "status", phase: "reasoning" });
         for (let index = 1; index <= 120; index += 1) {
           aiChunkListener?.({ requestId, kind: "reasoning", delta: "思" });
@@ -358,10 +365,11 @@ async function installDesktopFixture(page: Page) {
           }
         }
         aiChunkListener?.({ requestId, kind: "status", phase: "translating" });
-        for (let index = 1; index <= 240; index += 1) {
-          finalText += "译";
-          aiChunkListener?.({ requestId, kind: "content", delta: "译" });
-          if (index % 30 === 0) {
+        for (let index = 0; index < 240; index += 1) {
+          const start = Math.floor(index * finalText.length / 240);
+          const end = Math.floor((index + 1) * finalText.length / 240);
+          aiChunkListener?.({ requestId, kind: "content", delta: finalText.slice(start, end) });
+          if ((index + 1) % 30 === 0) {
             await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
           }
         }
