@@ -27,12 +27,21 @@ const builtInAutoWidthCases = [
 
 let electronApp;
 let page;
-const nativeDialogs = [];
-let acceptDocumentReplacementDialogs = false;
+const rendererDialogs = [];
 const searchRequests = [];
 const resolveRequests = [];
 const titlebarVisualMetrics = [];
 let titlebarPerformanceComparison = null;
+
+async function setNativeDialogDecision(decision) {
+  await electronApp.evaluate((_electron, nextDecision) => {
+    globalThis.__lyricsCardNativeDialogTest.nextDecision = nextDecision;
+  }, decision);
+}
+
+async function readNativeDialogs() {
+  return electronApp.evaluate(() => globalThis.__lyricsCardNativeDialogTest.calls);
+}
 
 // This suite deliberately reuses one packaged application so navigation,
 // persistence, focus, and layout transitions are exercised as a continuous flow.
@@ -918,10 +927,11 @@ async function assertSongSearchBehavior() {
   const activeId = await combobox.getAttribute("aria-activedescendant");
   const activeIndex = Number(activeId?.match(/option-(\d+)$/)?.[1]);
   assert.ok(Number.isInteger(activeIndex), `active descendant exposes an option index: ${activeId}`);
-  acceptDocumentReplacementDialogs = true;
+  await setNativeDialogDecision("accept");
   await combobox.press("Enter");
-  acceptDocumentReplacementDialogs = false;
-  await page.waitForFunction(() => !document.querySelector('[role="combobox"]')?.hasAttribute("disabled"));
+  await page.waitForFunction((expectedIndex) => (
+    document.querySelector('[role="combobox"]')?.value === `Resolved result ${expectedIndex + 1} - Mock Artist ${expectedIndex + 1}`
+  ), activeIndex);
   assert.match(
     await combobox.inputValue(),
     new RegExp(`Resolved result ${activeIndex + 1} - Mock Artist ${activeIndex + 1}`),
@@ -2992,9 +3002,8 @@ async function assertLyricsWorkspaceSplitInteractions() {
     "setup",
     "AI opens on the preset and reasoning setup page"
   );
-  acceptDocumentReplacementDialogs = true;
+  await setNativeDialogDecision("accept");
   await page.getByTestId("confirm-ai-translate").click();
-  acceptDocumentReplacementDialogs = false;
   const runPageTransition = await page.waitForFunction(() => {
     const viewport = document.querySelector('[data-testid="ai-translate-stage-viewport"]');
     const setup = document.querySelector('[data-testid="ai-translate-setup-page"]');
@@ -3370,12 +3379,11 @@ async function assertLyricsWorkspaceNarrowBehavior(originalLyrics, translationLy
         Math.abs(setupScrollBeforeRun.actual - setupScrollBeforeRun.target) <= 1,
       `the narrow AI setup page has an independently scrollable position: ${JSON.stringify(setupScrollBeforeRun)}`
     );
-    acceptDocumentReplacementDialogs = true;
+    await setNativeDialogDecision("accept");
     await page.getByTestId("confirm-ai-translate").evaluate((node) => {
       if (!(node instanceof HTMLButtonElement)) throw new Error("AI confirm control is not a button");
       node.click();
     });
-    acceptDocumentReplacementDialogs = false;
     await page.waitForFunction(
       () => document.querySelector('[data-testid="ai-translate-stage-viewport"]')?.getAttribute("data-ai-stage") === "run"
         && document.activeElement?.getAttribute("data-testid") === "lyrics-ai-run-page-back",
@@ -3616,9 +3624,8 @@ async function assertExampleImportRemeasuresPreview() {
 
   await page.getByTestId("editor-surface").getByTestId("examples-button").click();
   await page.getByTestId("load-example-opalite").waitFor({ state: "visible" });
-  acceptDocumentReplacementDialogs = true;
+  await setNativeDialogDecision("accept");
   await page.getByTestId("load-example-opalite").click();
-  acceptDocumentReplacementDialogs = false;
 
   await waitForLayoutStable(page.getByTestId("editor-surface"), 10_000);
   await waitForLayoutStable(page.getByTestId("preview-workbench-track"), 10_000);
@@ -3707,9 +3714,8 @@ async function assertBuiltInExamplesAutoWidth() {
       );
     }
 
-    acceptDocumentReplacementDialogs = true;
+    await setNativeDialogDecision("accept");
     await page.getByTestId(`load-example-${example.id}`).click();
-    acceptDocumentReplacementDialogs = false;
     await page.locator('button[data-step-id="layout"][aria-current="step"]').waitFor({ state: "visible" });
 
     await page.locator('button[data-step-id="lyrics"]').click();
@@ -3810,14 +3816,32 @@ try {
     env: { ...process.env, LYRICS_CARD_TEST_USER_DATA: userDataDirectory },
     timeout: 60_000
   });
+  await electronApp.evaluate(({ dialog }) => {
+    globalThis.__lyricsCardNativeDialogTest = { defaultDecision: "dismiss", nextDecision: null, calls: [] };
+    dialog.showMessageBox = async (_browserWindow, options) => {
+      const state = globalThis.__lyricsCardNativeDialogTest;
+      const decision = state.nextDecision ?? state.defaultDecision;
+      state.nextDecision = null;
+      state.calls.push({
+        type: options.type,
+        title: options.title,
+        message: options.message,
+        detail: options.detail,
+        buttons: options.buttons,
+        defaultId: options.defaultId,
+        cancelId: options.cancelId,
+        noLink: options.noLink
+      });
+      return {
+        response: decision === "accept" ? 0 : (options.cancelId ?? 0),
+        checkboxChecked: false
+      };
+    };
+  });
   page = await electronApp.firstWindow({ timeout: 60_000 });
   page.on("dialog", async (dialog) => {
-    nativeDialogs.push({ type: dialog.type(), message: dialog.message() });
-    if (acceptDocumentReplacementDialogs && dialog.type() === "confirm") {
-      await dialog.accept();
-    } else {
-      await dialog.dismiss();
-    }
+    rendererDialogs.push({ type: dialog.type(), message: dialog.message() });
+    await dialog.dismiss();
   });
   page.on("pageerror", (error) => process.stderr.write(`[renderer] ${error.stack || error.message}\n`));
   await page.route("**/api/search-song", async (route) => {
@@ -3938,7 +3962,7 @@ try {
   await waitForVisible("settings-confirm-overlay");
   await page.getByTestId("confirm-delete-preset").click();
   await waitForVisible("preset-create");
-  assert.deepEqual(nativeDialogs, [], `settings interactions must not open native dialogs: ${JSON.stringify(nativeDialogs)}`);
+  assert.deepEqual(rendererDialogs, [], `settings interactions must not open renderer dialogs: ${JSON.stringify(rendererDialogs)}`);
 
   await selectSettingsSection("export");
   const settingsExportPanel = page.locator('[data-settings-panel="export"]:not([hidden])');
@@ -4497,9 +4521,16 @@ try {
   await assertAcrylicVisuals();
 
   await page.screenshot({ path: path.join(reportDirectory, "settings-interaction.png"), fullPage: false });
+  const nativeDialogs = await readNativeDialogs();
+  assert.ok(nativeDialogs.length >= 1, "document replacement and translation use Electron native dialogs");
+  assert.ok(
+    nativeDialogs.every((entry) => entry.type === "warning" && entry.defaultId === 1 && entry.cancelId === 1 && entry.noLink === true),
+    `native confirmations retain warning icons and safe defaults: ${JSON.stringify(nativeDialogs)}`
+  );
   process.stdout.write(`${JSON.stringify({
     ok: true,
     nativeDialogs,
+    rendererDialogs,
     searchMock: { searches: searchRequests.length, resolves: resolveRequests.length },
     focusedViewports: focusedSizes.map(({ width, height }) => `${width}x${height}`),
     lyricsWorkspaceViewports: lyricsWorkspaceSizes.map(({ width, height }) => `${width}x${height}`),

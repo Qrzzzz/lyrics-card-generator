@@ -190,6 +190,36 @@ const preloadSource = readFileSync("electron/preload.js", "utf8");
 assert.match(preloadSource, /const \{ contextBridge, ipcRenderer, webUtils \} = require\("electron"\)/);
 assert.match(preloadSource, /webUtils\.getPathForFile\(file\)/, "local file paths come from Electron 42 webUtils");
 assert.doesNotMatch(preloadSource, /\bfile\.path\b/, "the removed File.path API is never used");
+assert.match(
+  preloadSource,
+  /showNativeConfirmDialog: \(type, title, message, detail, confirmLabel, cancelLabel\)[\s\S]*?"lyrics-card:native-confirm"[\s\S]*?confirmLabel,[\s\S]*?cancelLabel/,
+  "native confirmation crosses contextBridge as validated primitive fields"
+);
+assert.match(
+  preloadSource,
+  /showNativeAlertDialog: \(type, title, message, detail, closeLabel\)[\s\S]*?"lyrics-card:native-alert"[\s\S]*?closeLabel/,
+  "native alert crosses contextBridge as validated primitive fields"
+);
+assert.match(
+  preloadSource,
+  /function invokeNativeDialog\(channel, type, title, message, detail, primaryLabel, cancelLabel\)[\s\S]*?NATIVE_DIALOG_TYPES\.has\(type\)[\s\S]*?ipcRenderer\.invoke/,
+  "preload validates native dialog bounds before IPC"
+);
+assert.doesNotMatch(
+  preloadSource,
+  /showNative(?:Confirm|Alert)Dialog: \(options\)/,
+  "native dialog bridge does not accept an object-shaped request"
+);
+assert.match(
+  mainSource,
+  /handle\("lyrics-card:native-confirm"[\s\S]*?normalizeNativeDialogInput\([\s\S]*?dialog\.showMessageBox\(mainWindow,[\s\S]*?defaultId: 1,[\s\S]*?cancelId: 1,[\s\S]*?noLink: true/,
+  "main process owns the native confirmation and defaults to the safe cancel action"
+);
+assert.match(
+  mainSource,
+  /handle\("lyrics-card:native-alert"[\s\S]*?normalizeNativeDialogInput\([\s\S]*?dialog\.showMessageBox\(mainWindow,[\s\S]*?defaultId: 0,[\s\S]*?cancelId: 0/,
+  "main process owns native alerts and uses the Electron message box"
+);
 assert.match(preloadSource, /replayImportHistory: \(recordId\)[\s\S]*?invoke\("lyrics-card:import-history-replay", recordId\)/);
 assert.doesNotMatch(preloadSource, /replayImportHistory: \([^)]*path/, "history replay exposes only an opaque record id");
 assert.match(

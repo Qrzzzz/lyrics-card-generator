@@ -1,6 +1,29 @@
 const { contextBridge, ipcRenderer, webUtils } = require("electron");
 
 const MAX_MANUAL_SAVE_ENVELOPE_CODE_UNITS = 2 * 1024 * 1024 + 64;
+const NATIVE_DIALOG_TYPES = new Set(["info", "warning", "error", "question"]);
+
+function isDialogText(value, maximumLength, allowEmpty = false) {
+  return typeof value === "string" &&
+    value.length <= maximumLength &&
+    (allowEmpty || value.trim().length > 0);
+}
+
+function invokeNativeDialog(channel, type, title, message, detail, primaryLabel, cancelLabel) {
+  if (
+    !NATIVE_DIALOG_TYPES.has(type) ||
+    !isDialogText(title, 160) ||
+    !isDialogText(message, 320) ||
+    !isDialogText(detail, 2_048, true) ||
+    !isDialogText(primaryLabel, 80) ||
+    (cancelLabel !== undefined && !isDialogText(cancelLabel, 80))
+  ) {
+    return Promise.resolve(false);
+  }
+  return cancelLabel === undefined
+    ? ipcRenderer.invoke(channel, type, title, message, detail, primaryLabel)
+    : ipcRenderer.invoke(channel, type, title, message, detail, primaryLabel, cancelLabel);
+}
 
 function invalidManualSaveResult() {
   return Promise.resolve({ ok: false, code: "invalid_snapshot" });
@@ -33,6 +56,23 @@ contextBridge.exposeInMainWorld("lyricsCardDesktopBridge", {
     ipcRenderer.on("lyrics-card:window-close-requested", listener);
     return () => ipcRenderer.removeListener("lyrics-card:window-close-requested", listener);
   },
+  showNativeConfirmDialog: (type, title, message, detail, confirmLabel, cancelLabel) => invokeNativeDialog(
+    "lyrics-card:native-confirm",
+    type,
+    title,
+    message,
+    detail,
+    confirmLabel,
+    cancelLabel
+  ),
+  showNativeAlertDialog: (type, title, message, detail, closeLabel) => invokeNativeDialog(
+    "lyrics-card:native-alert",
+    type,
+    title,
+    message,
+    detail,
+    closeLabel
+  ),
   loadAppPreferences: () => ipcRenderer.invoke("lyrics-card:app-preferences-load"),
   saveAppPreferences: (preferences, options) => ipcRenderer.invoke("lyrics-card:app-preferences-save", preferences, options),
   listSystemFonts: () => ipcRenderer.invoke("lyrics-card:list-system-fonts"),

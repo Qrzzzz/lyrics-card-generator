@@ -36,7 +36,7 @@ export function SongLinkParser({
 }: {
   url: string;
   onUrlChange: (url: string) => void;
-  beginImport: () => DocumentImportIntent | null;
+  beginImport: () => Promise<DocumentImportIntent | null>;
   onParsed: (song: ParsedSongData, intent: DocumentImportIntent, context: LinkImportHistoryContext) => boolean;
   t: ReturnType<typeof createT>;
   autoParseOnMount?: boolean;
@@ -77,7 +77,7 @@ export function SongLinkParser({
     }
 
     // Replacing the active intent aborts a parse that no longer owns the document revision.
-    const intent = beginImport();
+    const intent = await beginImport();
     if (!intent) return;
     activeIntentRef.current?.cancel();
     activeIntentRef.current = intent;

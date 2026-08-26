@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v6.0.0.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v6.0.1.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="./docs/development.en.md">ローカル開発</a> ·
@@ -74,25 +74,25 @@
 
 ## 📦 ダウンロードとインストール
 
-v6.0.0 は [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) からダウンロードできます。
+v6.0.1 は [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) からダウンロードできます。
 
-* インストーラー：`Lyrics Card Generator Setup 6.0.0.exe`
-* ポータブル版：`Lyrics Card Generator-6.0.0-portable.exe`
+* インストーラー：`Lyrics Card Generator Setup 6.0.1.exe`
+* ポータブル版：`Lyrics Card Generator-6.0.1-portable.exe`
 
 通常利用にはインストーラーを推奨します。ポータブル版は一時利用、検証、リムーバブルドライブでの利用に向いています。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v6.0.0 の主な更新
+### v6.0.1 の主な更新
 
-* 歌詞パイプラインを、安定した Block／Unit ID と revision を持つ `LyricDocumentV2` に移行しました。従来のテキスト編集操作は変わりません。
-* インポート、編集、翻訳、履歴、プレビュー、レイアウト、書き出しが同じ文書を利用し、旧文字列は互換用の派生値のみになりました。
-* AI 翻訳は Unit ID ごとの構造化結果を返し、revision 検証により対応ずれや遅延応答による上書きを防ぎます。
+* Windows デスクトップ版の 6 つの確認・エラー表示を Electron ネイティブのシステムダイアログに統一し、OS の警告／エラーアイコンを使用します。
+* 曲や翻訳の置き換え、履歴の消去・縮小では「キャンセル」を既定にし、ダイアログを閉じた場合も操作を実行しません。
+* タイトル、詳細、ボタンは既存の 6 言語に対応し、Web Lite ではブラウザー互換のフォールバックを維持します。
 
 ## 🌐 多言語リリースノート
 
 GitHub Release ではデフォルトで簡体字中国語の概要が表示されます。完全なリリースノートはこちら：
-[简体中文](./docs/releases/v6.0.0.zh-CN.md) · [繁體中文](./docs/releases/v6.0.0.zh-TW.md) · [English](./docs/releases/v6.0.0.en.md) · [Français](./docs/releases/v6.0.0.fr.md) · [日本語](./docs/releases/v6.0.0.ja.md) · [Español](./docs/releases/v6.0.0.es.md)
+[简体中文](./docs/releases/v6.0.1.zh-CN.md) · [繁體中文](./docs/releases/v6.0.1.zh-TW.md) · [English](./docs/releases/v6.0.1.en.md) · [Français](./docs/releases/v6.0.1.fr.md) · [日本語](./docs/releases/v6.0.1.ja.md) · [Español](./docs/releases/v6.0.1.es.md)
 
 <a id="主な機能"></a>
 

@@ -747,6 +747,58 @@ function registerDesktopIpc() {
     return getWindowState();
   });
 
+  handle("lyrics-card:native-confirm", async (
+    _event,
+    type,
+    title,
+    message,
+    detail,
+    confirmLabel,
+    cancelLabel
+  ) => {
+    const input = normalizeNativeDialogInput({
+      type,
+      title,
+      message,
+      detail,
+      primaryLabel: confirmLabel,
+      cancelLabel
+    });
+    if (!input || !mainWindow || mainWindow.isDestroyed()) return false;
+    const result = await dialog.showMessageBox(mainWindow, {
+      type: input.type,
+      title: input.title,
+      message: input.message,
+      detail: input.detail,
+      buttons: [input.primaryLabel, input.cancelLabel],
+      defaultId: 1,
+      cancelId: 1,
+      noLink: true
+    });
+    return result.response === 0;
+  });
+  handle("lyrics-card:native-alert", async (_event, type, title, message, detail, closeLabel) => {
+    const input = normalizeNativeDialogInput({
+      type,
+      title,
+      message,
+      detail,
+      primaryLabel: closeLabel
+    });
+    if (!input || !mainWindow || mainWindow.isDestroyed()) return false;
+    await dialog.showMessageBox(mainWindow, {
+      type: input.type,
+      title: input.title,
+      message: input.message,
+      detail: input.detail,
+      buttons: [input.primaryLabel],
+      defaultId: 0,
+      cancelId: 0,
+      noLink: true
+    });
+    return true;
+  });
+
   handle("lyrics-card:app-preferences-load", () => readAppPreferences());
   handle("lyrics-card:app-preferences-save", (_event, input, options) => trackImportHistoryMutation(async () => {
     const preferences = normalizeStoredPreferences(input);
@@ -1269,6 +1321,22 @@ function requestRendererClose() {
   if (!mainWindow || mainWindow.isDestroyed() || mainWindow.webContents.isDestroyed()) return false;
   mainWindow.webContents.send("lyrics-card:window-close-requested");
   return true;
+}
+
+const NATIVE_DIALOG_TYPES = new Set(["info", "warning", "error", "question"]);
+
+function normalizeNativeDialogInput(input) {
+  if (!input || typeof input !== "object" || !NATIVE_DIALOG_TYPES.has(input.type)) return null;
+  if (!isNativeDialogText(input.title, 160) || !isNativeDialogText(input.message, 320)) return null;
+  if (!isNativeDialogText(input.detail, 2_048, true) || !isNativeDialogText(input.primaryLabel, 80)) return null;
+  if (input.cancelLabel !== undefined && !isNativeDialogText(input.cancelLabel, 80)) return null;
+  return input;
+}
+
+function isNativeDialogText(value, maximumLength, allowEmpty = false) {
+  return typeof value === "string" &&
+    value.length <= maximumLength &&
+    (allowEmpty || value.trim().length > 0);
 }
 
 function enqueueAppPreferencesWrite(preferences) {

@@ -22,8 +22,8 @@ import {
   canApplyLyricsCandidate,
   canonicalSongInfo,
   DocumentTransactionController,
+  hasAuthoredDocument,
   replaceSongDocument,
-  requestDocumentImport,
   type DocumentImportIntent,
   type DocumentImportKind
 } from "@/lib/editor/document-transactions";
@@ -81,7 +81,7 @@ type UseEditorActionsInput = {
   exportImageTooLargeMessage: string;
   exampleLoadedMessage: string;
   clearAlreadyEmptyMessage: string;
-  confirmReplaceDocument: () => boolean;
+  confirmReplaceDocument: () => Promise<boolean>;
   onNotify: ToastNotifier;
   onCloseExamples: () => void;
   onCloseHistory: () => void;
@@ -243,13 +243,11 @@ export function useEditorActions({
     return projected;
   }
 
-  function beginSongImport(kind: DocumentImportKind) {
-    const intent = requestDocumentImport(
-      documentControllerRef.current,
-      parsedState,
-      kind,
-      confirmReplaceDocument
-    );
+  async function beginSongImport(kind: DocumentImportKind) {
+    if (hasAuthoredDocument(currentDocumentRef.current) && !(await confirmReplaceDocument())) {
+      return null;
+    }
+    const intent = documentControllerRef.current.begin(kind);
     if (intent && kind !== "history-replay") {
       documentStateAdapter.queueRollback(onInvalidateDocument());
     }
@@ -630,7 +628,7 @@ export function useEditorActions({
 
   async function loadExample(payload: ExampleLoadPayload) {
     const { example, translation, importTranslation = true } = payload;
-    const intent = beginSongImport("example");
+    const intent = await beginSongImport("example");
     if (!intent) return;
     clearVersionRef.current += 1;
     const revision = documentControllerRef.current.tryCommit(intent);
@@ -702,7 +700,7 @@ export function useEditorActions({
       onNotify(copy.replayFailed, "error");
       return { status: "error" };
     }
-    const intent = beginSongImport("history-replay");
+    const intent = await beginSongImport("history-replay");
     if (!intent) return { status: "cancelled" };
 
     try {

@@ -56,7 +56,7 @@ export type EditorStepsAiState = {
 
 export type EditorStepHandlers = {
   onUrlChange: (url: string) => void;
-  onBeginSongImport: (kind: DocumentImportKind) => DocumentImportIntent | null;
+  onBeginSongImport: (kind: DocumentImportKind) => Promise<DocumentImportIntent | null>;
   onSearchedSongResolved: (
     song: ParsedSongData,
     lyrics: string | undefined,

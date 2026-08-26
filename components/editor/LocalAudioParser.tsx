@@ -31,7 +31,7 @@ export function LocalAudioParser({
   beginImport,
   t
 }: {
-  beginImport: () => DocumentImportIntent | null;
+  beginImport: () => Promise<DocumentImportIntent | null>;
   onParsed: (
     song: ParsedSongData,
     lyrics: string | undefined,
@@ -57,7 +57,7 @@ export function LocalAudioParser({
       if (inputRef.current) inputRef.current.value = "";
       return;
     }
-    const intent = beginImport();
+    const intent = await beginImport();
     if (!intent) {
       // Selecting the same file does not fire another change event unless the
       // native input is reset, including when replacement confirmation is cancelled.

@@ -19,7 +19,7 @@
 <p>
   <strong>Navegación</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Descargar la última versión</a> ·
-  <a href="./docs/releases/v6.0.0.es.md">Notas de la versión</a> ·
+  <a href="./docs/releases/v6.0.1.es.md">Notas de la versión</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en línea</a> ·
   <a href="#funciones-principales">Funciones principales</a> ·
   <a href="./docs/development.en.md">Desarrollo local</a> ·
@@ -74,25 +74,25 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 ## 📦 Descarga e instalación
 
-Descarga v6.0.0 desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
+Descarga v6.0.1 desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Instalador: `Lyrics Card Generator Setup 6.0.0.exe`
-* Versión portable: `Lyrics Card Generator-6.0.0-portable.exe`
+* Instalador: `Lyrics Card Generator Setup 6.0.1.exe`
+* Versión portable: `Lyrics Card Generator-6.0.1-portable.exe`
 
 El instalador se recomienda para uso habitual. La versión portable es útil para pruebas, uso temporal o ejecución desde una unidad extraíble.
 
 > La compilación actual no está firmada. Windows puede mostrar una advertencia de SmartScreen, algo habitual en aplicaciones personales sin firma.
 
-### Novedades de v6.0.0
+### Novedades de v6.0.1
 
-* El flujo de letras usa ahora `LyricDocumentV2`, con identificadores Block y Unit estables y revisiones de documento, sin cambiar el editor de texto habitual.
-* Importación, edición, traducción, historial, vista previa, diseño y exportación consumen un único documento; las cadenas antiguas son solo proyecciones de compatibilidad.
-* La traducción con IA devuelve resultados estructurados por Unit ID y valida la revisión para impedir desalineaciones y sobrescrituras tardías.
+* La aplicación de escritorio para Windows muestra ahora las seis confirmaciones y alertas de error como cuadros de diálogo nativos de Electron, con iconos de advertencia o error del sistema.
+* Reemplazar una canción o traducción y borrar o reducir el historial seleccionan Cancelar de forma predeterminada; cerrar el cuadro también cancela la operación.
+* Los títulos, detalles y botones están disponibles en los seis idiomas de la interfaz, mientras que Web Lite conserva una alternativa compatible con el navegador.
 
 ## 🌐 Notas de publicación multilingües
 
 GitHub Release muestra de forma predeterminada un resumen en chino simplificado. Consulta las notas completas:
-[简体中文](./docs/releases/v6.0.0.zh-CN.md) · [繁體中文](./docs/releases/v6.0.0.zh-TW.md) · [English](./docs/releases/v6.0.0.en.md) · [Français](./docs/releases/v6.0.0.fr.md) · [日本語](./docs/releases/v6.0.0.ja.md) · [Español](./docs/releases/v6.0.0.es.md)
+[简体中文](./docs/releases/v6.0.1.zh-CN.md) · [繁體中文](./docs/releases/v6.0.1.zh-TW.md) · [English](./docs/releases/v6.0.1.en.md) · [Français](./docs/releases/v6.0.1.fr.md) · [日本語](./docs/releases/v6.0.1.ja.md) · [Español](./docs/releases/v6.0.1.es.md)
 
 <a id="funciones-principales"></a>
 
