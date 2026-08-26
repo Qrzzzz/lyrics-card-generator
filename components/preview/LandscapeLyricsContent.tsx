@@ -1,11 +1,11 @@
 "use client";
 
 import { withAlpha } from "@/lib/palette-background";
+import { getLyricDocumentRows, type LyricDocumentV2 } from "@/lib/lyrics-document-v2";
 import { cn } from "@/lib/utils";
 
 export function LandscapeLyricsContent({
-  lyrics,
-  translationText,
+  lyricDocument,
   translationEnabled,
   lyricFontSize,
   translationScale,
@@ -15,8 +15,7 @@ export function LandscapeLyricsContent({
   isDarkText,
   measurement = false
 }: {
-  lyrics: string;
-  translationText?: string;
+  lyricDocument: LyricDocumentV2;
   translationEnabled: boolean;
   lyricFontSize: number;
   translationScale: number;
@@ -26,13 +25,18 @@ export function LandscapeLyricsContent({
   isDarkText: boolean;
   measurement?: boolean;
 }) {
-  // Keep internal blank rows so bilingual documents retain their authored
-  // alignment. Only leading/trailing empty rows are presentation noise; the
-  // logical-line safety gate still counts non-empty lines independently.
-  const lyricLines = splitUsefulLines(lyrics);
-  const translationLines = splitUsefulLines(translationText ?? "");
-  const visibleLyrics = lyricLines.length > 0 ? lyricLines : ["Type your lyrics here..."];
-  const rowCount = Math.max(visibleLyrics.length, translationEnabled ? translationLines.length : 0);
+  const documentRows = getLyricDocumentRows(lyricDocument);
+  const rows = documentRows.length > 0
+    ? documentRows
+    : [{
+        blockId: "placeholder",
+        unitId: "placeholder",
+        source: ["Type your lyrics here..."],
+        translation: [],
+        isBlockStart: true,
+        sourceGapBeforeLines: 0,
+        translationGapBeforeLines: 0
+      }];
   const translationFontSize = lyricFontSize * translationScale;
   const translationGap = lyricFontSize * 0.16;
   const rowGap = lyricFontSize * (translationEnabled ? 0.34 : 0.24);
@@ -49,11 +53,21 @@ export function LandscapeLyricsContent({
         textShadow: isDarkText || measurement ? "none" : "0 10px 32px rgba(0,0,0,0.34)"
       }}
     >
-      {Array.from({ length: rowCount }, (_, index) => {
-        const lyric = visibleLyrics[index] ?? "";
-        const translation = translationEnabled ? translationLines[index] ?? "" : "";
+      {rows.map((row, index) => {
+        const lyric = row.source.join("\n");
+        const translation = translationEnabled ? row.translation.join("\n") : "";
+        const gapBeforeLines = row.isBlockStart
+          ? Math.max(row.sourceGapBeforeLines, translationEnabled ? row.translationGapBeforeLines : 0)
+          : 0;
         return (
-          <div key={`${index}:${lyric}:${translation}`} style={{ marginBottom: index === rowCount - 1 ? 0 : rowGap }}>
+          <div
+            key={row.unitId}
+            data-lyric-unit-id={row.unitId === "placeholder" ? undefined : row.unitId}
+            style={{
+              marginTop: index > 0 ? gapBeforeLines * rowGap : 0,
+              marginBottom: index === rows.length - 1 ? 0 : rowGap
+            }}
+          >
             {lyric ? (
               <p
                 data-landscape-line="lyric"
@@ -88,6 +102,7 @@ export function LandscapeLyricsContent({
   );
 }
 
+/** @deprecated Compatibility helper retained for layout regression tests. */
 export function splitUsefulLines(text: string) {
   const lines = text.split(/\r\n?|\n/).map((line) => line.trimEnd());
   while (lines.length > 0 && lines[0]?.trim().length === 0) lines.shift();

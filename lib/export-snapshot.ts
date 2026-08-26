@@ -1,13 +1,22 @@
 import { getCardSize } from "@/lib/card-size";
 import { EXPORT_FORMAT_OPTIONS, type ExportFormatId } from "@/lib/settings/types";
 import type { AppState, CardStyle, CoverArtworkAnalysis, Locale, SongInfo } from "@/lib/types";
+import {
+  cloneLyricDocument,
+  serializeLyricDocumentSource,
+  type LyricDocumentV2
+} from "@/lib/lyrics-document-v2";
+import { withLyricDocument } from "@/lib/lyrics-document-state";
 import { sanitizeFilePart } from "@/lib/utils";
 import { createLandscapeMeasurementKey } from "@/lib/landscape-measurement-key";
 
 export type ExportSnapshot = Readonly<{
   id: string;
   revision: number;
+  documentRevision: number;
   song: Readonly<SongInfo>;
+  lyricDocument: Readonly<LyricDocumentV2>;
+  /** @deprecated Compatibility projection; renderers consume lyricDocument. */
   lyrics: string;
   style: Readonly<CardStyle>;
   coverArtwork?: Readonly<CoverArtworkAnalysis>;
@@ -33,6 +42,7 @@ export function createExportSnapshot(
   format: ExportFormatId = "png"
 ): ExportSnapshot {
   const song = structuredClone(state.song);
+  const lyricDocument = cloneLyricDocument(state.lyricDocument);
   const style = structuredClone(state.style);
   const coverArtwork = state.coverArtwork ? structuredClone(state.coverArtwork) : undefined;
   const landscapeMeasurementKey = (style.layoutMode ?? "portrait") === "landscape"
@@ -46,8 +56,10 @@ export function createExportSnapshot(
   return deepFreeze({
     id: `export-${++nextSnapshotId}`,
     revision,
+    documentRevision: lyricDocument.revision,
     song,
-    lyrics: state.lyrics,
+    lyricDocument,
+    lyrics: serializeLyricDocumentSource(lyricDocument),
     style,
     coverArtwork,
     locale: state.locale,
@@ -61,16 +73,13 @@ export function createExportSnapshot(
 }
 
 export function snapshotAsAppState(snapshot: ExportSnapshot, fallback: AppState): AppState {
-  return {
+  return withLyricDocument({
     ...fallback,
     locale: snapshot.locale,
     song: snapshot.song as SongInfo,
-    lyrics: snapshot.lyrics,
-    translationText: snapshot.style.translationText,
-    translationEnabled: snapshot.style.translationEnabled,
     style: snapshot.style as CardStyle,
     coverArtwork: snapshot.coverArtwork as CoverArtworkAnalysis | undefined
-  };
+  }, snapshot.lyricDocument as LyricDocumentV2, snapshot.style.translationEnabled);
 }
 
 function deepFreeze<T>(value: T): T {

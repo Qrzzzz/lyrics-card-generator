@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v5.12.1.zh-TW.md">發布說明</a> ·
+  <a href="./docs/releases/v6.0.0.zh-TW.md">發布說明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">線上 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="./docs/development.zh-CN.md">本機開發</a> ·
@@ -71,25 +71,25 @@
 
 ## 📦 下載與安裝
 
-請從 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載 v5.12.1：
+請從 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載 v6.0.0：
 
-* 安裝版：`Lyrics Card Generator Setup 5.12.1.exe`
-* 可攜版：`Lyrics Card Generator-5.12.1-portable.exe`
+* 安裝版：`Lyrics Card Generator Setup 6.0.0.exe`
+* 可攜版：`Lyrics Card Generator-6.0.0-portable.exe`
 
 安裝版適合長期使用；可攜版適合臨時執行、測試或放在隨身碟中使用。
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v5.12.1 更新重點
+### v6.0.0 更新重點
 
-* 第二步頂端工具列首位新增輕量強調的「僅保留所選內容」，未選取文字時維持停用。
-* 可精確保留原文或譯文欄中的所選字元，刪除目前欄的其餘內容，並保持另一欄不變。
-* 操作支援選取範圍還原與復原／重做，處理後可繼續編輯或立即復原。
+* 歌詞主流程升級為具穩定 Block／Unit ID 與 revision 的 `LyricDocumentV2`，文字輸入方式維持不變。
+* 匯入、編輯、翻譯、歷史、預覽、版面與匯出統一使用同一份文件；舊雙字串僅作為衍生相容投影。
+* AI 翻譯依 Unit ID 回傳結構化結果，並以文件 revision 防止錯位或延遲回應覆蓋新內容。
 
 ## 🌐 多語言發佈說明
 
 GitHub Release 預設顯示簡體中文摘要，完整說明請見：
-[简体中文](./docs/releases/v5.12.1.zh-CN.md) · [繁體中文](./docs/releases/v5.12.1.zh-TW.md) · [English](./docs/releases/v5.12.1.en.md) · [Français](./docs/releases/v5.12.1.fr.md) · [日本語](./docs/releases/v5.12.1.ja.md) · [Español](./docs/releases/v5.12.1.es.md)
+[简体中文](./docs/releases/v6.0.0.zh-CN.md) · [繁體中文](./docs/releases/v6.0.0.zh-TW.md) · [English](./docs/releases/v6.0.0.en.md) · [Français](./docs/releases/v6.0.0.fr.md) · [日本語](./docs/releases/v6.0.0.ja.md) · [Español](./docs/releases/v6.0.0.es.md)
 
 ## ✨ 主要功能
 

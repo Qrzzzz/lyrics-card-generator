@@ -3,10 +3,13 @@ import {
   songDocumentIdentity
 } from "@/lib/editor/document-transactions";
 import type { AppState } from "@/lib/types";
+import { withLyricDocument } from "@/lib/lyrics-document-state";
+import type { LyricDocumentV2 } from "@/lib/lyrics-document-v2";
 
 export type TranslationValue = {
   text: string;
   enabled: boolean;
+  document: LyricDocumentV2;
 };
 
 export type EditorDocumentStateMutation = (current: AppState) => AppState;
@@ -16,22 +19,14 @@ type CommitStateUpdate = (updater: EditorDocumentStateMutation) => void;
 
 export type EditorDocumentSnapshot = {
   revision: number;
+  lyricDocument: LyricDocumentV2;
   songIdentity: string;
   lyrics: string;
   translation: TranslationValue;
 };
 
 function applyTranslationValue(current: AppState, value: TranslationValue): AppState {
-  return {
-    ...current,
-    translationText: value.text,
-    translationEnabled: value.enabled,
-    style: {
-      ...current.style,
-      translationText: value.text,
-      translationEnabled: value.enabled
-    }
-  };
+  return withLyricDocument(current, value.document, value.enabled);
 }
 
 /**
@@ -54,11 +49,13 @@ export class EditorDocumentStateAdapter {
     const current = this.getCurrentState();
     return {
       revision: this.controller.currentRevision,
+      lyricDocument: current.lyricDocument,
       songIdentity: songDocumentIdentity(current.song),
       lyrics: current.lyrics,
       translation: {
         text: current.style.translationText,
-        enabled: current.style.translationEnabled
+        enabled: current.style.translationEnabled,
+        document: current.lyricDocument
       }
     };
   }
@@ -76,11 +73,13 @@ export class EditorDocumentStateAdapter {
     const current = this.getCurrentState();
     return {
       revision,
+      lyricDocument: current.lyricDocument,
       songIdentity: songDocumentIdentity(current.song),
       lyrics: current.lyrics,
       translation: {
         text: current.style.translationText,
-        enabled: current.style.translationEnabled
+        enabled: current.style.translationEnabled,
+        document: current.lyricDocument
       }
     };
   }

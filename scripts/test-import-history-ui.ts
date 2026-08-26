@@ -122,13 +122,13 @@ assert.match(
 );
 assert.match(
   importHistoryTypes,
-  /serializeImportHistoryManualSave[\s\S]*?version: 1[\s\S]*?snapshot: \{\s*source: snapshot\.source,\s*title: snapshot\.title,\s*artist: snapshot\.artist,\s*album: snapshot\.album \?\? "",\s*explicit: snapshot\.explicit === true,\s*originalCoverUrl: snapshot\.originalCoverUrl \?\? "",\s*coverUrl: snapshot\.coverUrl \?\? "",\s*originalUrl: snapshot\.originalUrl \?\? "",\s*finalUrl: snapshot\.finalUrl \?\? "",\s*parseMethod: snapshot\.parseMethod \?\? "",\s*lyrics: snapshot\.lyrics,\s*translationText: snapshot\.translationText,\s*translationEnabled: snapshot\.translationEnabled/,
-  "the renderer serializer emits the one canonical ordered semantic snapshot"
+  /serializeImportHistoryManualSave[\s\S]*?version: 2[\s\S]*?snapshot: \{\s*source: snapshot\.source,\s*title: snapshot\.title,\s*artist: snapshot\.artist,\s*album: snapshot\.album \?\? "",\s*explicit: snapshot\.explicit === true,\s*originalCoverUrl: snapshot\.originalCoverUrl \?\? "",\s*coverUrl: snapshot\.coverUrl \?\? "",\s*originalUrl: snapshot\.originalUrl \?\? "",\s*finalUrl: snapshot\.finalUrl \?\? "",\s*parseMethod: snapshot\.parseMethod \?\? "",\s*lyrics: text\.source,\s*translationText: text\.translation,\s*translationEnabled: snapshot\.translationEnabled,\s*lyricDocument/,
+  "the renderer serializer emits the canonical ordered v2 document snapshot"
 );
 assert.match(
   importHistoryStore,
-  /MANUAL_SAVE_SNAPSHOT_FIELDS = Object\.freeze\(\[[\s\S]*?"translationEnabled"[\s\S]*?keys\.length !== MANUAL_SAVE_SNAPSHOT_FIELDS\.length[\s\S]*?key !== MANUAL_SAVE_SNAPSHOT_FIELDS\[index\][\s\S]*?SONG_SOURCES\.has\(source\.value\)/,
-  "the Store requires the one canonical field order, rejects extras, and enforces the source enum"
+  /MANUAL_SAVE_SNAPSHOT_FIELDS = Object\.freeze\(\[[\s\S]*?"lyricDocument"[\s\S]*?keys\.length !== expectedFields\.length[\s\S]*?key !== expectedFields\[index\][\s\S]*?SONG_SOURCES\.has\(source\.value\)[\s\S]*?lyricDocumentV2FieldsFit/,
+  "the Store requires canonical legacy or v2 fields and validates the structured document"
 );
 assert.match(
   importHistoryStore,
@@ -160,7 +160,11 @@ assert.match(
   /coverUrl: snapshot\.coverUrl \|\| snapshot\.originalCoverUrl \|\| ""/,
   "manual-save replay restores its sanitized cover URL so the normal image proxy and palette flow can run"
 );
-assert.match(editorActions, /const translationEnabled = snapshot\.translationEnabled;/);
+assert.match(
+  editorActions,
+  /migrateLyricDocumentV2\(snapshot\.lyricDocument, snapshot\)[\s\S]*?withLyricDocument\(replaced, lyricDocument, snapshot\.translationEnabled\)/,
+  "manual replay restores v2 identity and migrates legacy text snapshots"
+);
 assert.match(
   editorActions,
   /type ManualReplayProvenance = \{[\s\S]*?recordId: string;[\s\S]*?replayUrl: string;[\s\S]*?\};/

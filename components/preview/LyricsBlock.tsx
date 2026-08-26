@@ -1,11 +1,11 @@
 "use client";
 
 import { withAlpha } from "@/lib/palette-background";
+import { getLyricDocumentRows, type LyricDocumentV2 } from "@/lib/lyrics-document-v2";
 import { cn } from "@/lib/utils";
 
 export function LyricsBlock({
-  lyrics,
-  translationText,
+  lyricDocument,
   translationEnabled,
   lyricFontSize,
   translationScale,
@@ -15,8 +15,7 @@ export function LyricsBlock({
   isDarkText,
   autoWidth = false
 }: {
-  lyrics: string;
-  translationText?: string;
+  lyricDocument: LyricDocumentV2;
   translationEnabled: boolean;
   lyricFontSize: number;
   translationScale: number;
@@ -26,17 +25,20 @@ export function LyricsBlock({
   isDarkText: boolean;
   autoWidth?: boolean;
 }) {
-  const lyricLines = splitUsefulLines(lyrics);
-  const translationLines = splitUsefulLines(translationText ?? "");
-  const lines = lyricLines.length > 0 ? lyricLines : ["Type your lyrics here..."];
-  // The longer column defines row count so lyric and translation indices remain aligned.
-  const displayLineCount = Math.max(lines.length, translationEnabled ? translationLines.length : 0);
-  const rows = Array.from({ length: displayLineCount }, (_, index) => ({
-    hasLyric: index < lines.length,
-    lyric: lines[index] ?? "",
-    translation: translationEnabled ? translationLines[index] ?? "" : ""
-  }));
-  const activeLyricSize = Math.max(34, Math.min(lyricFontSize, rows.length > 10 ? lyricFontSize - 6 : lyricFontSize));
+  const documentRows = getLyricDocumentRows(lyricDocument);
+  const rows = documentRows.length > 0
+    ? documentRows.map((row) => ({
+        key: row.unitId,
+        hasLyric: row.source.length > 0,
+        lyric: row.source.join("\n"),
+        translation: translationEnabled ? row.translation.join("\n") : "",
+        gapBeforeLines: row.isBlockStart
+          ? Math.max(row.sourceGapBeforeLines, translationEnabled ? row.translationGapBeforeLines : 0)
+          : 0
+      }))
+    : [{ key: "placeholder", hasLyric: true, lyric: "Type your lyrics here...", translation: "", gapBeforeLines: 0 }];
+  const visualRowCount = rows.length + rows.reduce((total, row) => total + row.gapBeforeLines, 0);
+  const activeLyricSize = Math.max(34, Math.min(lyricFontSize, visualRowCount > 10 ? lyricFontSize - 6 : lyricFontSize));
   const activeTranslationSize = Math.round(activeLyricSize * translationScale);
   const pairMargin = activeLyricSize * (translationEnabled ? 0.42 : 0.18);
 
@@ -52,9 +54,18 @@ export function LyricsBlock({
         textShadow: isDarkText ? "none" : "0 8px 28px rgba(0,0,0,0.34)"
       }}
     >
-      {rows.map(({ hasLyric, lyric, translation }, index) => {
+      {rows.map(({ key, hasLyric, lyric, translation, gapBeforeLines }, index) => {
         return (
-          <div key={`${lyric}-${translation}-${index}`} style={{ marginBottom: index === rows.length - 1 ? 0 : pairMargin }}>
+          <div
+            key={key}
+            data-lyric-unit-id={key === "placeholder" ? undefined : key}
+            style={{
+              marginTop: index > 0
+                ? gapBeforeLines * ((activeLyricSize * lineHeight) + (pairMargin * 2))
+                : 0,
+              marginBottom: index === rows.length - 1 ? 0 : pairMargin
+            }}
+          >
             {hasLyric ? (
               <p
                 data-auto-width-line="lyric"
@@ -89,11 +100,4 @@ export function LyricsBlock({
       })}
     </div>
   );
-}
-
-function splitUsefulLines(text: string) {
-  return text
-    .split(/\r?\n/)
-    .map((line) => line.trimEnd())
-    .filter((line, index, lines) => line.trim().length > 0 || (index > 0 && index < lines.length - 1));
 }

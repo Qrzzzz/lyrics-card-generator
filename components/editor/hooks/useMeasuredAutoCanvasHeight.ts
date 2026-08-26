@@ -18,7 +18,10 @@ export function isPortraitCustomAutoHeight(state: AppState) {
 /** Guards auto-height writes against measurements from superseded content. */
 export function autoCanvasHeightMeasurementSignature(state: AppState) {
   return JSON.stringify({
-    lyrics: state.lyrics,
+    lyricDocument: {
+      id: state.lyricDocument.id,
+      revision: state.lyricDocument.revision
+    },
     locale: state.locale,
     song: {
       album: state.song.album,
@@ -31,7 +34,6 @@ export function autoCanvasHeightMeasurementSignature(state: AppState) {
     },
     coverArtwork: state.coverArtwork,
     translationEnabled: state.translationEnabled,
-    translationText: state.translationText,
     style: {
       align: state.style.align,
       allowMultiLineTitle: state.style.allowMultiLineTitle,
@@ -57,7 +59,6 @@ export function autoCanvasHeightMeasurementSignature(state: AppState) {
       showSongInfo: state.style.showSongInfo,
       translationEnabled: state.style.translationEnabled,
       translationScale: state.style.translationScale,
-      translationText: state.style.translationText,
       width: state.style.width
     }
   });

@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v5.12.1.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v6.0.0.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="./docs/development.en.md">Développement local</a> ·
@@ -74,25 +74,25 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 ## 📦 Téléchargement et installation
 
-Téléchargez la v5.12.1 depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
+Téléchargez la v6.0.0 depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
 
-* Installateur : `Lyrics Card Generator Setup 5.12.1.exe`
-* Version portable : `Lyrics Card Generator-5.12.1-portable.exe`
+* Installateur : `Lyrics Card Generator Setup 6.0.0.exe`
+* Version portable : `Lyrics Card Generator-6.0.0-portable.exe`
 
 L'installateur est recommandé pour une utilisation régulière. La version portable convient aux essais, à une utilisation temporaire ou à un disque amovible.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### Points forts de la v5.12.1
+### Points forts de la v6.0.0
 
-* Une nouvelle commande « Garder la sélection », légèrement mise en évidence, apparaît en premier dans la barre d’outils de l’étape 2 et reste désactivée tant qu’aucun texte n’est sélectionné.
-* Elle conserve exactement les caractères sélectionnés dans la colonne originale ou traduite, supprime le reste de la colonne active et laisse l’autre colonne inchangée.
-* L’opération prend en charge la restauration de sélection ainsi que l’annulation et le rétablissement, afin de poursuivre l’édition ou d’annuler immédiatement.
+* Le pipeline des paroles repose désormais sur `LyricDocumentV2`, avec des identifiants Block et Unit stables et des révisions de document, sans modifier l’éditeur texte habituel.
+* Importation, édition, traduction, historique, aperçu, mise en page et export utilisent un document unique ; les anciennes chaînes ne sont plus que des projections de compatibilité.
+* La traduction IA renvoie des résultats structurés adressés par Unit ID et vérifie la révision pour éviter les décalages et les réponses tardives.
 
 ## 🌐 Notes de publication multilingues
 
 Par défaut, GitHub Release affiche un résumé en chinois simplifié. Consultez les notes complètes :
-[简体中文](./docs/releases/v5.12.1.zh-CN.md) · [繁體中文](./docs/releases/v5.12.1.zh-TW.md) · [English](./docs/releases/v5.12.1.en.md) · [Français](./docs/releases/v5.12.1.fr.md) · [日本語](./docs/releases/v5.12.1.ja.md) · [Español](./docs/releases/v5.12.1.es.md)
+[简体中文](./docs/releases/v6.0.0.zh-CN.md) · [繁體中文](./docs/releases/v6.0.0.zh-TW.md) · [English](./docs/releases/v6.0.0.en.md) · [Français](./docs/releases/v6.0.0.fr.md) · [日本語](./docs/releases/v6.0.0.ja.md) · [Español](./docs/releases/v6.0.0.es.md)
 
 <a id="fonctionnalités-principales"></a>
 

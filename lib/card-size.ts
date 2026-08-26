@@ -1,4 +1,5 @@
 import type { CardRatio, CardStyle, ContentMode } from "@/lib/types";
+import { getLyricDocumentRows, type LyricDocumentV2 } from "@/lib/lyrics-document-v2";
 import { portraitLayoutConfig } from "@/lib/card-layout-config";
 
 export const PRESET_CARD_SIZES: Record<Exclude<CardRatio, "custom">, { width: number; height: number }> = {
@@ -47,7 +48,8 @@ export function getCardSize(style: CardStyle) {
 
 export function estimateCardHeight(params: {
   width: number;
-  lyrics: string;
+  lyricDocument?: LyricDocumentV2;
+  lyrics?: string;
   translationText?: string;
   translationEnabled: boolean;
   translationScale: number;
@@ -66,9 +68,14 @@ export function estimateCardHeight(params: {
 }) {
   // This is a pre-layout estimate used to seed auto-height. Final export safety
   // still relies on measured DOM geometry rather than these character ratios.
-  const lyricLines = params.lyrics.split(/\r?\n/).filter((line) => line.trim().length > 0);
+  const documentRows = params.lyricDocument ? getLyricDocumentRows(params.lyricDocument) : null;
+  const lyricLines = documentRows
+    ? documentRows.flatMap((row) => row.source).filter((line) => line.trim().length > 0)
+    : (params.lyrics ?? "").split(/\r?\n/).filter((line) => line.trim().length > 0);
   const translationLines = params.translationEnabled
-    ? (params.translationText ?? "").split(/\r?\n/).filter((line) => line.trim().length > 0)
+    ? documentRows
+      ? documentRows.flatMap((row) => row.translation).filter((line) => line.trim().length > 0)
+      : (params.translationText ?? "").split(/\r?\n/).filter((line) => line.trim().length > 0)
     : [];
   const lyricLineCount = params.contentMode === "lyrics" ? Math.max(1, lyricLines.length + translationLines.length) : 5;
   const lyricCharacterCount =

@@ -7,7 +7,10 @@ import {
   type AITranslationRunOptions,
   type AITranslationStreamEvents
 } from "../lib/editor/ai-translation-orchestrator";
-import { EditorDocumentStateAdapter } from "../lib/editor/editor-document-state-adapter";
+import {
+  EditorDocumentStateAdapter,
+  type TranslationValue as DocumentTranslationValue
+} from "../lib/editor/editor-document-state-adapter";
 import {
   applyEditorStyleChange,
   isDocumentSemanticStyleChange
@@ -19,6 +22,11 @@ import {
   songDocumentIdentity
 } from "../lib/editor/document-transactions";
 import type { AppState, ParsedSongData } from "../lib/types";
+import {
+  createLyricDocumentV2,
+  reconcileLyricDocumentV2,
+  serializeLyricDocumentTranslation
+} from "../lib/lyrics-document-v2";
 
 type TranslationValue = { text: string; enabled: boolean };
 type Phase = "connecting" | "streaming" | "idle";
@@ -141,6 +149,7 @@ function createHarness() {
 
 function createDeferredEditorHarness() {
   const controller = new DocumentTransactionController();
+  const lyricDocument = createLyricDocumentV2("lyrics A", "old A");
   let state: AppState = {
     ...defaultState,
     url: "https://music.example/song-a",
@@ -154,6 +163,7 @@ function createDeferredEditorHarness() {
     lyrics: "lyrics A",
     translationText: "old A",
     translationEnabled: true,
+    lyricDocument,
     style: {
       ...defaultState.style,
       translationText: "old A",
@@ -178,7 +188,7 @@ function createDeferredEditorHarness() {
     state = updater(state);
   };
   const adapter = new EditorDocumentStateAdapter(controller, enqueue, commitSynchronously, () => state);
-  const orchestrator = new AITranslationOrchestrator<TranslationValue, Phase>();
+  const orchestrator = new AITranslationOrchestrator<DocumentTranslationValue, Phase>();
   const ui = {
     translating: false,
     starts: 0,
@@ -191,13 +201,14 @@ function createDeferredEditorHarness() {
     translationAtSettlement: ""
   };
 
-  function options(stream: ReturnType<typeof deferredStream>): AITranslationRunOptions<TranslationValue, Phase> {
+  function options(stream: ReturnType<typeof deferredStream>): AITranslationRunOptions<DocumentTranslationValue, Phase> {
     return {
       revision: controller.currentRevision,
       songIdentity: songDocumentIdentity(state.song),
       previousTranslation: {
         text: state.style.translationText,
-        enabled: state.style.translationEnabled
+        enabled: state.style.translationEnabled,
+        document: state.lyricDocument
       },
       getCurrentDocument: () => ({
         revision: controller.currentRevision,
@@ -215,7 +226,11 @@ function createDeferredEditorHarness() {
       ),
       stream: stream.run,
       clean: (value) => value.trim(),
-      toValue: (text) => ({ text, enabled: true }),
+      toValue: (text) => ({
+        text,
+        enabled: true,
+        document: reconcileLyricDocumentV2(state.lyricDocument, state.lyrics, text)
+      }),
       createEmptyResponseError: () => new Error("empty"),
       onStart: () => {
         ui.translating = true;
@@ -431,7 +446,12 @@ async function deferredReactMutationRollbackTest() {
     assert.equal(harness.state.translationText, "partial A");
 
     const rollback = harness.orchestrator.invalidate();
-    assert.deepEqual(rollback, { text: "old A", enabled: true });
+    assert.equal(rollback?.text, "old A");
+    assert.equal(rollback?.enabled, true);
+    assert.equal(
+      rollback && serializeLyricDocumentTranslation(rollback.document),
+      "old A"
+    );
     const revision = harness.adapter.queueDocumentMutation(rollback, testCase.mutation);
     assert.equal(revision, 1);
     assert.equal(

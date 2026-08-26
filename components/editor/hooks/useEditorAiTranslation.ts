@@ -3,14 +3,19 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { normalizeAIErrorMessage } from "@/components/editor/utils/normalizeAIErrorMessage";
 import type { ToastNotifier } from "@/components/feedback/AppToast";
-import { cleanAITranslation } from "@/lib/ai/clean";
+import { cleanStructuredAITranslation } from "@/lib/ai/clean";
 import {
   AITranslationError,
   loadAISettings,
   streamAITranslation,
   validateConfiguredSettings
 } from "@/lib/ai/client";
-import { buildLyricsTranslationPrompt } from "@/lib/ai/prompt";
+import { buildStructuredLyricsTranslationPrompt } from "@/lib/ai/prompt";
+import {
+  parseStructuredTranslation,
+  redactStructuredTranslationDiagnostics,
+  tryParseStructuredTranslation
+} from "@/lib/ai/structured-translation";
 import {
   DEFAULT_AI_SETTINGS,
   type AISettingsSummary,
@@ -116,8 +121,19 @@ export function useEditorAiTranslation({
       getCurrentDocument: () => getCurrentDocumentSnapshot(),
       applyPartial,
       commitTerminal,
-      clean: cleanAITranslation,
-      toValue: (text) => ({ text, enabled: true }),
+      clean: cleanStructuredAITranslation,
+      toValue: (text) => {
+        try {
+          const result = parseStructuredTranslation(text, intent.lyricDocument);
+          return { text: result.text, enabled: true, document: result.document };
+        } catch {
+          throw new AITranslationError("Invalid structured translation response.", "invalid_response");
+        }
+      },
+      toPartialValue: (text) => {
+        const result = tryParseStructuredTranslation(text, intent.lyricDocument);
+        return result ? { text: result.text, enabled: true, document: result.document } : null;
+      },
       createEmptyResponseError: () => new AITranslationError(aiCopy.emptyResponse, "empty_response"),
       onStart: () => {
         setIsAITranslating(true);
@@ -128,8 +144,14 @@ export function useEditorAiTranslation({
       },
       onStatus: setAITranslationPhase,
       // Bound diagnostic reasoning retained in React state while preserving the newest context.
-      onReasoning: (accumulated) => setAIReasoningText(accumulated.slice(-12000)),
-      onStreaming: setAIStreamingText,
+      onReasoning: (accumulated) => setAIReasoningText(
+        redactStructuredTranslationDiagnostics(accumulated, intent.lyricDocument).slice(-12000)
+      ),
+      // Never expose document IDs or the transport JSON in the user-facing preview.
+      onStreaming: (text) => {
+        const result = tryParseStructuredTranslation(text, intent.lyricDocument);
+        if (result) setAIStreamingText(result.text);
+      },
       onSuccess: () => {
         setAISettings((current) => ({ ...current, defaultStyle: presetId, reasoningEnabled: reasoning }));
         onNotify(aiCopy.translated, "success");
@@ -154,8 +176,8 @@ export function useEditorAiTranslation({
       scheduleStreamFlush: scheduleAIStreamFrame,
       stream: async (signal, events) => {
         // Build from the intent snapshot, never from lyrics that may change during streaming.
-        const prompt = buildLyricsTranslationPrompt({
-          lyrics: intent.lyrics,
+        const prompt = buildStructuredLyricsTranslationPrompt({
+          document: intent.lyricDocument,
           presetId,
           targetLocale: locale,
           promptLibrary: aiSettings.promptLibrary

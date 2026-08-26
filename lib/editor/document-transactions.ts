@@ -1,5 +1,7 @@
 import { getHighResolutionCoverUrl } from "@/lib/cover-url";
 import { proxiedImageUrl } from "@/lib/image-utils";
+import { createLyricDocumentV2, hasAuthoredLyrics } from "@/lib/lyrics-document-v2";
+import { withLyricDocument } from "@/lib/lyrics-document-state";
 import type { AppState, ParsedSongData, SongInfo } from "@/lib/types";
 
 export type DocumentImportKind =
@@ -109,8 +111,7 @@ export function hasAuthoredDocument(state: AppState) {
     state.song.artist.trim() ||
     state.song.album?.trim() ||
     state.song.coverUrl?.trim() ||
-    state.lyrics.trim() ||
-    state.translationText.trim()
+    hasAuthoredLyrics(state.lyricDocument)
   );
 }
 
@@ -118,13 +119,10 @@ export function replaceSongDocument(current: AppState, parsed: ParsedSongData, l
   const song = canonicalSongInfo(parsed);
   // Translation and palette state belong to the previous song and must be
   // cleared atomically with the document replacement.
-  return {
+  return withLyricDocument({
     ...current,
     url: song.originalUrl ?? "",
     song,
-    lyrics,
-    translationText: "",
-    translationEnabled: false,
     style: {
       ...current.style,
       translationText: "",
@@ -134,7 +132,7 @@ export function replaceSongDocument(current: AppState, parsed: ParsedSongData, l
     palette: undefined,
     paletteWarning: "",
     coverArtwork: undefined
-  };
+  }, createLyricDocumentV2(lyrics, ""), false);
 }
 
 export function canonicalSongInfo(parsed: ParsedSongData | SongInfo): SongInfo {

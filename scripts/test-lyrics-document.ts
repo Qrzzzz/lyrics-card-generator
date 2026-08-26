@@ -239,12 +239,14 @@ assert.doesNotMatch(exportHostSource, /\b(?:display|visibility|opacity)\s*:/);
 const portraitLyricsSource = readFileSync(resolve("components/preview/LyricsBlock.tsx"), "utf8");
 const landscapeLyricsSource = readFileSync(resolve("components/preview/LandscapeLyricsContent.tsx"), "utf8");
 assert.ok(
-  portraitLyricsSource.includes("Math.max(lines.length, translationEnabled ? translationLines.length : 0)"),
-  "portrait export renders translation-only tail rows instead of dropping them"
+  portraitLyricsSource.includes("getLyricDocumentRows(lyricDocument)") &&
+    portraitLyricsSource.includes("documentRows.map"),
+  "portrait export renders every structured unit, including translation-only tail units"
 );
 assert.ok(
-  landscapeLyricsSource.includes("Math.max(visibleLyrics.length, translationEnabled ? translationLines.length : 0)"),
-  "landscape export renders translation-only tail rows instead of dropping them"
+  landscapeLyricsSource.includes("getLyricDocumentRows(lyricDocument)") &&
+    landscapeLyricsSource.includes("rows.map"),
+  "landscape export renders every structured unit, including translation-only tail units"
 );
 
 const readinessSource = readFileSync(resolve("components/editor/hooks/export-card-dom-coordinator.ts"), "utf8");

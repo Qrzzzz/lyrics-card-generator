@@ -21,6 +21,7 @@ import {
   undoLyricsOperation,
   type LyricsHistoryEntry
 } from "../lib/lyrics-workbench";
+import { createLyricDocumentV2 } from "../lib/lyrics-document-v2";
 
 // Selection-based transforms operate on complete logical lines, even when the
 // browser selection begins or ends in the middle of a line.
@@ -225,16 +226,17 @@ assert.equal(
   "synchronized cleanup never deletes a row that is non-empty in either column"
 );
 
+const swapDocument = createLyricDocumentV2("original", "translation");
 const swapped = swapLyricsColumns({
+  lyricDocument: swapDocument,
   lyrics: "original",
   translationText: "translation",
   translationEnabled: false
 });
-assert.deepEqual(swapped, {
-  lyrics: "translation",
-  translationText: "original",
-  translationEnabled: true
-});
+assert.equal(swapped.lyrics, "translation");
+assert.equal(swapped.translationText, "original");
+assert.equal(swapped.translationEnabled, true);
+assert.equal(swapped.lyricDocument.blocks[0]?.units[0]?.id, swapDocument.blocks[0]?.units[0]?.id);
 
 const analysis = analyzeLyricsDocument({
   lyrics: `short\n${"long ".repeat(20).trim()}\nrepeat\nrepeat\nzero\u200Bwidth`,
@@ -267,8 +269,18 @@ assert.equal(
 assert.deepEqual(getLyricsLineSelection("one\ntwo\nthree", 2), { start: 4, end: 7 });
 assert.deepEqual(getLyricsLineSelection("one\ntwo\nthree", 8), { start: 13, end: 13 });
 
-const before = { lyrics: "before", translationText: "avant", translationEnabled: true };
-const after = { lyrics: "after", translationText: "après", translationEnabled: true };
+const before = {
+  lyricDocument: createLyricDocumentV2("before", "avant"),
+  lyrics: "before",
+  translationText: "avant",
+  translationEnabled: true
+};
+const after = {
+  lyricDocument: createLyricDocumentV2("after", "après"),
+  lyrics: "after",
+  translationText: "après",
+  translationEnabled: true
+};
 const historyEntry: LyricsHistoryEntry = {
   label: "cleanup",
   before,
@@ -292,7 +304,11 @@ assert.equal(redo.history.future.length, 0);
 history = recordLyricsOperation(undo.history, {
   ...historyEntry,
   label: "new cleanup",
-  after: { ...after, lyrics: "new branch" }
+  after: {
+    ...after,
+    lyricDocument: createLyricDocumentV2("new branch", "après"),
+    lyrics: "new branch"
+  }
 });
 assert.equal(history.future.length, 0, "a new operation clears redo history");
 assert.equal(snapshotsEqual(before, { ...before }), true);

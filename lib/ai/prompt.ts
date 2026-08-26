@@ -1,6 +1,7 @@
 import type { AIPromptLibrary, TranslationStyle } from "@/lib/ai/types";
 import { isTranslationStyle } from "@/lib/ai/styles";
 import type { Locale } from "@/lib/types";
+import { getLyricDocumentRows, type LyricDocumentV2 } from "@/lib/lyrics-document-v2";
 
 type PromptBundle = {
   identity: string;
@@ -203,4 +204,51 @@ export function buildLyricsTranslationPrompt(params: {
     bundle.outputRules,
     `${bundle.lyricsLead}\n\n${params.lyrics.trim()}`
   ].join("\n\n");
+}
+
+export function buildStructuredLyricsTranslationPrompt(params: {
+  document: LyricDocumentV2;
+  style?: TranslationStyle;
+  presetId?: string;
+  targetLocale: Locale;
+  promptLibrary?: AIPromptLibrary;
+}) {
+  const bundle = PROMPT_BUNDLES[params.targetLocale];
+  const stylePrompt = resolveStylePrompt(params, bundle);
+  const units = getLyricDocumentRows(params.document)
+    .filter((row) => row.source.some((line) => line.trim().length > 0))
+    .map((row) => ({ id: row.unitId, source: row.source }));
+  return [
+    bundle.identity,
+    bundle.principles,
+    stylePrompt,
+    `OUTPUT CONTRACT — highest priority:
+Return only one valid JSON array. Do not use Markdown or code fences.
+Return exactly one object for every supplied unit, in the same order.
+Each object must have this shape: {"id":"the unchanged unit id","translation":["translated line"]}.
+The translation value must be an array of one or more strings. Preserve multi-line meaning inside that unit.
+Do not add, omit, duplicate, rename, or reorder IDs. Do not include source text, explanations, or extra keys.`,
+    `Structured lyric units:\n${JSON.stringify(units)}`
+  ].join("\n\n");
+}
+
+function resolveStylePrompt(
+  params: {
+    style?: TranslationStyle;
+    presetId?: string;
+    targetLocale: Locale;
+    promptLibrary?: AIPromptLibrary;
+  },
+  bundle: PromptBundle
+) {
+  const presetId = params.presetId ?? params.style ?? "recommended";
+  const library = params.promptLibrary;
+  const localeOverrides = library?.localeOverrides[params.targetLocale];
+  if (isTranslationStyle(presetId)) {
+    const override = presetId === "recommended"
+      ? undefined
+      : localeOverrides?.styleOverrides.find((item) => item.id === presetId);
+    return override?.prompt.trim() || bundle.styles[presetId];
+  }
+  return library?.customPresets.find((item) => item.id === presetId)?.prompt.trim() || bundle.styles.recommended;
 }

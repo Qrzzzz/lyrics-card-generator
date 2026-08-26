@@ -227,7 +227,11 @@ export type AppState = {
   locale: Locale;
   url: string;
   song: SongInfo;
+  /** v6 content source of truth. Legacy text fields below are derived projections. */
+  lyricDocument: import("@/lib/lyrics-document-v2").LyricDocumentV2;
+  /** @deprecated Read-only compatibility projection of lyricDocument. */
   lyrics: string;
+  /** @deprecated Read-only compatibility projection of lyricDocument. */
   translationText: string;
   translationEnabled: boolean;
   style: CardStyle;

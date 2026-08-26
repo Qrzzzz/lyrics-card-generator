@@ -359,8 +359,8 @@ assert.match(
 );
 assert.match(
   manualSnapshotValidationSource,
-  /keys\.length !== MANUAL_SAVE_SNAPSHOT_FIELDS\.length[\s\S]*?key !== MANUAL_SAVE_SNAPSHOT_FIELDS\[index\][\s\S]*?SONG_SOURCES\.has\(source\.value\)/,
-  "canonical snapshots require the complete exact ordered field sequence and a supported source enum"
+  /expectedFields = version === LEGACY_MANUAL_SAVE_ENVELOPE_VERSION[\s\S]*?keys\.length !== expectedFields\.length[\s\S]*?key !== expectedFields\[index\][\s\S]*?SONG_SOURCES\.has\(source\.value\)[\s\S]*?lyricDocumentV2FieldsFit/,
+  "canonical legacy and v2 snapshots require their exact ordered fields, source enum, and structured document"
 );
 for (const valueType of [
   "accessor/getter",

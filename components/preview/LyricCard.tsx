@@ -17,6 +17,7 @@ import { normalizeCardStyle } from "@/lib/card-style-normalize";
 import { cardFontStyle, fontClassName } from "@/lib/fonts";
 import { proxiedImageUrl } from "@/lib/image-utils";
 import { DEFAULT_PALETTE } from "@/lib/palette-background";
+import type { LyricDocumentV2 } from "@/lib/lyrics-document-v2";
 import type { CardStyle, CoverArtworkAnalysis, Locale, SongInfo } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -26,12 +27,12 @@ export function getCardSize(style: CardStyle) {
 
 export function LyricCard({
   song,
-  lyrics,
+  lyricDocument,
   style: rawStyle,
   coverArtwork
 }: {
   song: SongInfo;
-  lyrics: string;
+  lyricDocument: LyricDocumentV2;
   style: CardStyle;
   coverArtwork?: CoverArtworkAnalysis;
   locale?: Locale;
@@ -47,7 +48,7 @@ export function LyricCard({
   }, [cover]);
 
   if ((style.layoutMode ?? "portrait") === "landscape") {
-    return <LandscapeLyricCard song={song} lyrics={lyrics} style={style} coverArtwork={coverArtwork} />;
+    return <LandscapeLyricCard song={song} lyricDocument={lyricDocument} style={style} coverArtwork={coverArtwork} />;
   }
 
   const size = getCardSize(style);
@@ -184,8 +185,7 @@ export function LyricCard({
               />
             ) : (
               <LyricsBlock
-                lyrics={lyrics}
-                translationText={style.translationText}
+                lyricDocument={lyricDocument}
                 translationEnabled={style.translationEnabled}
                 lyricFontSize={style.lyricFontSize}
                 translationScale={style.translationScale}

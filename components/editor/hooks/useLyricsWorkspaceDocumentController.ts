@@ -43,9 +43,15 @@ import {
   type LyricsTextSelection,
   type LyricsWorkbenchEditor
 } from "@/lib/lyrics-workbench";
+import {
+  reconcileLyricDocumentV2,
+  serializeLyricDocument,
+  type LyricDocumentV2
+} from "@/lib/lyrics-document-v2";
 
 type UseLyricsWorkspaceDocumentControllerOptions = {
   copy: LyricsWorkspaceCopy;
+  lyricDocument: LyricDocumentV2;
   lyrics: string;
   translationText: string;
   translationEnabled: boolean;
@@ -74,6 +80,7 @@ type OperationFeedback = {
 
 export function useLyricsWorkspaceDocumentController({
   copy,
+  lyricDocument,
   lyrics,
   translationText,
   translationEnabled,
@@ -91,10 +98,11 @@ export function useLyricsWorkspaceDocumentController({
   const lyricsStats = useMemo(() => getTextStats(lyrics), [lyrics]);
   const translationStats = useMemo(() => getTextStats(translationText), [translationText]);
   const documentSnapshot = useMemo<LyricsDocumentSnapshot>(() => ({
+    lyricDocument,
     lyrics,
     translationText,
     translationEnabled
-  }), [lyrics, translationEnabled, translationText]);
+  }), [lyricDocument, lyrics, translationEnabled, translationText]);
   const [cursor, setCursor] = useState<CursorPosition>({
     editor: "lyrics",
     line: 1,
@@ -243,11 +251,23 @@ export function useLyricsWorkspaceDocumentController({
 
   function commitOperation(params: {
     label: string;
-    next: LyricsDocumentSnapshot;
+    next: Omit<LyricsDocumentSnapshot, "lyricDocument"> & { lyricDocument?: LyricDocumentV2 };
     afterSelection: LyricsSelectionSnapshot;
     message: string;
   }) {
-    if (snapshotsEqual(documentSnapshot, params.next)) {
+    const nextDocument = params.next.lyricDocument ?? reconcileLyricDocumentV2(
+      documentSnapshot.lyricDocument,
+      params.next.lyrics,
+      params.next.translationText
+    );
+    const text = serializeLyricDocument(nextDocument);
+    const next: LyricsDocumentSnapshot = {
+      lyricDocument: nextDocument,
+      lyrics: text.source,
+      translationText: text.translation,
+      translationEnabled: params.next.translationEnabled
+    };
+    if (snapshotsEqual(documentSnapshot, next)) {
       setFeedback({ message: copy.noChanges, canUndo: false });
       return false;
     }
@@ -256,16 +276,16 @@ export function useLyricsWorkspaceDocumentController({
     const entry: LyricsHistoryEntry = {
       label: params.label,
       before: documentSnapshot,
-      after: params.next,
+      after: next,
       beforeSelection: captureCurrentSelection(),
       afterSelection: params.afterSelection
     };
     historyRef.current = recordLyricsOperation(historyRef.current, entry);
-    expectedSnapshotRef.current = params.next;
+    expectedSnapshotRef.current = next;
     pendingSelectionRef.current = params.afterSelection;
     setHistoryRevision((value) => value + 1);
     setFeedback({ message: params.message, canUndo: true });
-    onLyricsDocumentChange(params.next);
+    onLyricsDocumentChange(next);
     return true;
   }
 

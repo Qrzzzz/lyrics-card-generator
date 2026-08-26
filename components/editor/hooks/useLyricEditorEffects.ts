@@ -109,8 +109,7 @@ export function useAutoCanvasHeight(state: AppState, setState: AppStateSetter) {
 
     const nextHeight = estimateCardHeight({
       width: state.style.width,
-      lyrics: state.lyrics,
-      translationText: state.style.translationText,
+      lyricDocument: state.lyricDocument,
       translationEnabled: state.style.translationEnabled && state.style.contentMode === "lyrics",
       translationScale: state.style.translationScale,
       lyricFontSize: state.style.lyricFontSize,
@@ -140,7 +139,7 @@ export function useAutoCanvasHeight(state: AppState, setState: AppStateSetter) {
     }));
   }, [
     setState,
-    state.lyrics,
+    state.lyricDocument,
     state.song.album,
     state.song.source,
     state.song.title,

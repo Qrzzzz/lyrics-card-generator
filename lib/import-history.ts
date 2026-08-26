@@ -1,4 +1,10 @@
 import type { SongSource } from "@/lib/types";
+import {
+  cloneLyricDocument,
+  migrateLyricDocumentV2,
+  serializeLyricDocument,
+  type LyricDocumentV2
+} from "@/lib/lyrics-document-v2";
 
 export type ImportHistoryKind = "link" | "search" | "local-audio" | "manual-cover" | "manual-save";
 export type ImportHistoryFileKind = Extract<ImportHistoryKind, "local-audio" | "manual-cover">;
@@ -106,6 +112,8 @@ export type ImportHistoryManualSnapshot = {
   lyrics: string;
   translationText: string;
   translationEnabled: boolean;
+  /** v2 snapshots persist stable block/unit identities; absent values are migrated from legacy text. */
+  lyricDocument?: LyricDocumentV2;
 };
 
 export type ImportHistoryManualSaveInput = {
@@ -145,8 +153,11 @@ export function serializeImportHistoryManualSave(
     return null;
   }
 
+  const lyricDocument = cloneLyricDocument(migrateLyricDocumentV2(snapshot.lyricDocument, snapshot));
+  const text = serializeLyricDocument(lyricDocument);
+
   return JSON.stringify({
-    version: 1,
+    version: 2,
     snapshot: {
       source: snapshot.source,
       title: snapshot.title,
@@ -158,9 +169,10 @@ export function serializeImportHistoryManualSave(
       originalUrl: snapshot.originalUrl ?? "",
       finalUrl: snapshot.finalUrl ?? "",
       parseMethod: snapshot.parseMethod ?? "",
-      lyrics: snapshot.lyrics,
-      translationText: snapshot.translationText,
-      translationEnabled: snapshot.translationEnabled
+      lyrics: text.source,
+      translationText: text.translation,
+      translationEnabled: snapshot.translationEnabled,
+      lyricDocument
     }
   }) as ImportHistoryManualSaveEnvelope;
 }
