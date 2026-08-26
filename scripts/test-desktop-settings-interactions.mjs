@@ -1642,74 +1642,71 @@ async function assertFontPickerBehavior() {
 
   const cjkTrigger = page.getByTestId("choose-cjk-font");
   const latinTrigger = page.getByTestId("choose-latin-font");
-  await cjkTrigger.click();
+  const openPicker = async (trigger, category) => {
+    const pickerPagePromise = electronApp.waitForEvent("window");
+    await trigger.click();
+    const pickerPage = await pickerPagePromise;
+    await pickerPage.waitForLoadState("domcontentloaded");
+    await pickerPage.getByTestId(`font-picker-${category}`).waitFor({ state: "visible" });
+    await pickerPage.waitForFunction(() => document.activeElement?.getAttribute("data-testid") === "font-picker-search");
+    return pickerPage;
+  };
+  const closePicker = async (pickerPage, triggerTestId) => {
+    const closed = pickerPage.waitForEvent("close");
+    await pickerPage.getByRole("button", { name: "关闭", exact: true }).click();
+    await closed;
+    await page.waitForFunction((testId) => document.activeElement?.getAttribute("data-testid") === testId, triggerTestId);
+  };
 
-  const cjkDialog = page.getByTestId("font-picker-cjk");
-  await cjkDialog.waitFor({ state: "visible" });
-  const search = page.getByTestId("font-picker-search");
-  await page.waitForFunction(() => document.activeElement?.getAttribute("data-testid") === "font-picker-search");
-  assert.equal(await search.inputValue(), "", "font picker starts with an empty query");
-  assert.equal(await cjkDialog.getByRole("listbox").count(), 0, "font groups do not claim an incomplete listbox interaction model");
-  assert.equal(await cjkDialog.getByRole("option").count(), 0, "native font buttons do not claim option semantics");
-  assert.ok(await cjkDialog.locator('section[aria-labelledby] button[aria-pressed]').count() > 0, "font groups expose labelled native selection buttons");
-
-  await search.fill("Microsoft YaHei");
-  await cjkDialog.getByRole("button", { name: /Microsoft YaHei/ }).waitFor({ state: "visible" });
-  await cjkDialog.getByRole("button", { name: "关闭", exact: true }).click();
-  await cjkDialog.waitFor({ state: "hidden" });
-  await page.waitForFunction(() => document.activeElement?.getAttribute("data-testid") === "choose-cjk-font");
-
-  await cjkTrigger.click();
-  await cjkDialog.waitFor({ state: "visible" });
-  await page.waitForFunction(() => (
-    document.querySelector('[data-testid="font-picker-search"]')?.value === ""
-  ));
-  await page.waitForFunction(() => document.activeElement?.getAttribute("data-testid") === "font-picker-search");
-  assert.equal(await search.inputValue(), "", "reopening the same font category clears the previous query");
-
-  const closeButton = cjkDialog.getByRole("button", { name: "关闭", exact: true });
-  await closeButton.focus();
-  await closeButton.press("Shift+Tab");
-  const reverseTabFocus = await cjkDialog.evaluate((dialog) => {
-    const expected = dialog.querySelectorAll('section[aria-labelledby] button[aria-pressed]');
-    const active = document.activeElement;
+  let pickerPage = await openPicker(cjkTrigger, "cjk");
+  const nativeWindowState = await electronApp.evaluate(({ BrowserWindow }) => {
+    const windows = BrowserWindow.getAllWindows();
+    const picker = windows.find((window) => window.getParentWindow());
     return {
-      matchesExpected: active === expected.item(expected.length - 1),
-      activeTag: active?.tagName ?? null,
-      activeTestId: active?.getAttribute("data-testid") ?? null,
-      activeText: active?.textContent?.trim().slice(0, 120) ?? null,
-      expectedText: expected.item(expected.length - 1)?.textContent?.trim().slice(0, 120) ?? null,
-      expectedCount: expected.length
+      count: windows.length,
+      modal: picker?.isModal() ?? false,
+      parented: Boolean(picker?.getParentWindow())
     };
   });
-  assert.equal(
-    reverseTabFocus.matchesExpected,
-    true,
-    `font dialog traps reverse Tab on the native button list: ${JSON.stringify(reverseTabFocus)}`
+  assert.deepEqual(
+    nativeWindowState,
+    { count: 2, modal: true, parented: true },
+    "custom font selection uses a framed native child window instead of an in-app overlay"
   );
-  await closeButton.click();
-  await cjkDialog.waitFor({ state: "hidden" });
-  await page.waitForFunction(() => document.activeElement?.getAttribute("data-testid") === "choose-cjk-font");
+  assert.equal(await page.getByTestId("font-picker-cjk").count(), 0, "the main renderer contains no desktop font-picker overlay");
+  const cjkPicker = pickerPage.getByTestId("font-picker-cjk");
+  const search = pickerPage.getByTestId("font-picker-search");
+  assert.equal(await search.inputValue(), "", "font picker starts with an empty query");
+  assert.equal(await cjkPicker.getByRole("listbox").count(), 0, "font groups use native button semantics");
+  assert.equal(await cjkPicker.getByRole("option").count(), 0, "font groups do not claim an incomplete option model");
+  assert.ok(await cjkPicker.locator('section[aria-labelledby] button[aria-pressed]').count() > 0, "font groups expose labelled selection buttons");
+  await search.fill("Microsoft YaHei");
+  const yaheiButton = cjkPicker.getByText("Microsoft YaHei", { exact: true }).first().locator("..");
+  await yaheiButton.waitFor({ state: "visible" });
+  await yaheiButton.hover();
+  assert.match(
+    await pickerPage.getByTestId("font-picker-live-preview").evaluate((preview) => getComputedStyle(preview).fontFamily),
+    /Microsoft YaHei/,
+    "the native window retains a live font preview"
+  );
+  await closePicker(pickerPage, "choose-cjk-font");
 
-  await latinTrigger.click();
-  const latinDialog = page.getByTestId("font-picker-latin");
-  await latinDialog.waitFor({ state: "visible" });
-  await page.waitForFunction(() => (
-    document.querySelector('[data-testid="font-picker-search"]')?.value === ""
-  ));
-  assert.equal(await page.getByTestId("font-picker-search").inputValue(), "", "switching font categories does not retain the previous query");
-  assert.equal(await latinDialog.getByRole("listbox").count(), 0, "Latin font groups also use native button semantics");
-  await latinDialog.getByRole("button", { name: "关闭", exact: true }).click();
-  await latinDialog.waitFor({ state: "hidden" });
-  await page.waitForFunction(() => document.activeElement?.getAttribute("data-testid") === "choose-latin-font");
+  pickerPage = await openPicker(cjkTrigger, "cjk");
+  assert.equal(await pickerPage.getByTestId("font-picker-search").inputValue(), "", "reopening the same font category clears the previous query");
+  await closePicker(pickerPage, "choose-cjk-font");
+
+  pickerPage = await openPicker(latinTrigger, "latin");
+  assert.equal(await pickerPage.getByTestId("font-picker-search").inputValue(), "", "switching font categories starts with a fresh query");
+  assert.equal(await pickerPage.getByTestId("font-picker-latin").getByRole("listbox").count(), 0, "Latin font groups use button semantics");
+  await closePicker(pickerPage, "choose-latin-font");
 
   const currentSummary = page.getByTestId("font-scheme-panel").locator("dl").first();
   assert.doesNotMatch(await currentSummary.textContent() ?? "", /Microsoft YaHei/, "the fresh font page starts from the saved preset");
-  await cjkTrigger.click();
-  await cjkDialog.waitFor({ state: "visible" });
-  await page.getByTestId("font-picker-search").fill("Microsoft YaHei");
-  await cjkDialog.getByText("Microsoft YaHei", { exact: true }).first().click();
-  await cjkDialog.waitFor({ state: "hidden" });
+  pickerPage = await openPicker(cjkTrigger, "cjk");
+  await pickerPage.getByTestId("font-picker-search").fill("Microsoft YaHei");
+  const selected = pickerPage.waitForEvent("close");
+  await pickerPage.getByTestId("font-picker-cjk").getByText("Microsoft YaHei", { exact: true }).first().click();
+  await selected;
   await page.waitForFunction(() => document.querySelector('[data-testid="choose-cjk-font"]')?.textContent?.includes("Microsoft YaHei"));
   assert.doesNotMatch(await currentSummary.textContent() ?? "", /Microsoft YaHei/, "font selection updates only the draft before save");
   await page.waitForFunction(() => {

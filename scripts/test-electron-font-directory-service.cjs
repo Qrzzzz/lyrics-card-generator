@@ -392,8 +392,8 @@ function testMainProcessWiring() {
   assert.match(mainSource, /createWindowsFontDirectoryService\(\{/);
   assert.match(
     mainSource,
-    /handle\("lyrics-card:list-system-fonts"[\s\S]*?systemFontDirectoryService\.list\(\)/,
-    "font enumeration IPC uses the one main-process directory service"
+    /handleOwnedFontWindow\("lyrics-card:list-system-fonts"[\s\S]*?systemFontDirectoryService\.list\(\)/,
+    "main and native picker renderers share the one guarded main-process directory service"
   );
   assert.match(
     mainSource,

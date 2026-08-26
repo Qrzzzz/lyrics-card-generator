@@ -485,7 +485,7 @@ export function WebLiteEditor() {
       title: t("step.layout"),
       description: t("layoutCompatibility"),
       isComplete: true,
-      content: <LayoutSettingsPanel style={state.style} onStyleChange={handleStyleChange} t={t} />
+      content: <LayoutSettingsPanel style={state.style} onStyleChange={handleStyleChange} locale={locale} t={t} />
     },
     {
       id: "font",
@@ -511,6 +511,7 @@ export function WebLiteEditor() {
         <VisualSettingsPanel
           style={state.style}
           onStyleChange={handleStyleChange}
+          locale={locale}
           song={state.song}
           onSongChange={setSong}
           t={t}

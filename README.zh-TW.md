@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v6.0.1.zh-TW.md">發布說明</a> ·
+  <a href="./docs/releases/v6.1.0.zh-TW.md">發布說明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">線上 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="./docs/development.zh-CN.md">本機開發</a> ·
@@ -71,25 +71,25 @@
 
 ## 📦 下載與安裝
 
-請從 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載 v6.0.1：
+請從 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載 v6.1.0：
 
-* 安裝版：`Lyrics Card Generator Setup 6.0.1.exe`
-* 可攜版：`Lyrics Card Generator-6.0.1-portable.exe`
+* 安裝版：`Lyrics Card Generator Setup 6.1.0.exe`
+* 可攜版：`Lyrics Card Generator-6.1.0-portable.exe`
 
 安裝版適合長期使用；可攜版適合臨時執行、測試或放在隨身碟中使用。
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v6.0.1 更新重點
+### v6.1.0 更新重點
 
-* Windows 桌面版將 6 處確認與錯誤提示統一為 Electron 原生系統對話框，並直接使用系統警告／錯誤圖示。
-* 取代歌曲、覆寫譯文、清除或裁剪歷史記錄時，危險操作預設聚焦「取消」，關閉對話框也不會繼續執行。
-* 對話框標題、內容與按鈕完整支援現有六種介面語言；Web Lite 保留瀏覽器相容回退。
+* Windows 桌面版將自訂字體選擇移至帶系統標題列的 Electron 原生子視窗，不再疊加於主介面內。
+* 搜尋、推薦、完整系統字體清單與字體預覽全部保留；選擇結果仍即時顯示於右側真實歌詞卡預覽。
+* 字體視窗使用獨立的最小權限 IPC；Web Lite 保留瀏覽器相容回退。
 
 ## 🌐 多語言發佈說明
 
 GitHub Release 預設顯示簡體中文摘要，完整說明請見：
-[简体中文](./docs/releases/v6.0.1.zh-CN.md) · [繁體中文](./docs/releases/v6.0.1.zh-TW.md) · [English](./docs/releases/v6.0.1.en.md) · [Français](./docs/releases/v6.0.1.fr.md) · [日本語](./docs/releases/v6.0.1.ja.md) · [Español](./docs/releases/v6.0.1.es.md)
+[简体中文](./docs/releases/v6.1.0.zh-CN.md) · [繁體中文](./docs/releases/v6.1.0.zh-TW.md) · [English](./docs/releases/v6.1.0.en.md) · [Français](./docs/releases/v6.1.0.fr.md) · [日本語](./docs/releases/v6.1.0.ja.md) · [Español](./docs/releases/v6.1.0.es.md)
 
 ## ✨ 主要功能
 

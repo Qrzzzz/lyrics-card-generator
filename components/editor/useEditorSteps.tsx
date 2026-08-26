@@ -428,10 +428,11 @@ export function useEditorSteps({
         <LayoutSettingsPanel
           style={state.style}
           onStyleChange={onStyleChange}
+          locale={state.locale}
           t={t}
         />
       )
-  }), [onStyleChange, state.style, t]);
+  }), [onStyleChange, state.locale, state.style, t]);
 
   const fontStep = useMemo<SettingsStep>(() => ({
       id: "font",
@@ -444,10 +445,11 @@ export function useEditorSteps({
           style={state.style}
           onStyleChange={onStyleChange}
           onFontSchemePreviewChange={onFontSchemePreviewChange}
+          locale={state.locale}
           t={t}
         />
       )
-  }), [onFontSchemePreviewChange, onStyleChange, state.style, t]);
+  }), [onFontSchemePreviewChange, onStyleChange, state.locale, state.style, t]);
 
   const visualStep = useMemo<SettingsStep>(() => ({
       id: "visual",
@@ -459,12 +461,13 @@ export function useEditorSteps({
         <VisualSettingsPanel
           style={state.style}
           onStyleChange={onStyleChange}
+          locale={state.locale}
           song={state.song}
           onSongChange={onSongChange}
           t={t}
         />
       )
-  }), [onSongChange, onStyleChange, state.song, state.style, t]);
+  }), [onSongChange, onStyleChange, state.locale, state.song, state.style, t]);
 
   const exportStep = useMemo<SettingsStep>(() => ({
       id: "export",
