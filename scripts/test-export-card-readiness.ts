@@ -24,6 +24,7 @@ import {
 import { getPortraitLayout } from "../lib/card-layout-engine";
 import { getCardSize } from "../lib/card-size";
 import type { AppState } from "../lib/types";
+import { withLyricPlainText, withLyricSource } from "../lib/lyrics-document-state";
 
 type FakeElement = HTMLElement & {
   childrenBySelector: Map<string, HTMLElement | null>;
@@ -47,7 +48,7 @@ function createElement(
 }
 
 function fixedState(overrides: Partial<AppState> = {}): AppState {
-  return {
+  const state: AppState = {
     ...defaultState,
     ...overrides,
     song: { ...defaultState.song, ...overrides.song },
@@ -58,6 +59,12 @@ function fixedState(overrides: Partial<AppState> = {}): AppState {
       ...overrides.style
     }
   };
+  return withLyricPlainText(
+    state,
+    overrides.lyrics ?? state.lyrics,
+    overrides.translationText ?? overrides.style?.translationText ?? state.translationText,
+    overrides.translationEnabled ?? overrides.style?.translationEnabled ?? state.translationEnabled
+  );
 }
 
 function createFixedCard(state: AppState, overflow = 0) {
@@ -286,11 +293,8 @@ try {
   );
 
   const renderedChanges: Array<[string, AppState]> = [
-    ["lyrics", { ...base, lyrics: "changed lyrics" }],
-    ["translation", {
-      ...base,
-      style: { ...base.style, translationEnabled: true, translationText: "translated" }
-    }],
+    ["lyrics", withLyricSource(base, "changed lyrics")],
+    ["translation", withLyricPlainText(base, base.lyrics, "translated", true)],
     ["song title", { ...base, song: { ...base.song, title: "Changed title" } }],
     ["song artist", { ...base, song: { ...base.song, artist: "Changed artist" } }],
     ["song album", { ...base, song: { ...base.song, album: "Changed album" } }],

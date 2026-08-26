@@ -1,4 +1,6 @@
 import { DEFAULT_PALETTE } from "@/lib/palette-background";
+import { createEmptyLyricDocument, hasAuthoredLyrics } from "@/lib/lyrics-document-v2";
+import { withLyricDocument } from "@/lib/lyrics-document-state";
 import type { AppState } from "@/lib/types";
 
 export function hasClearableLyricContent(current: AppState) {
@@ -6,8 +8,7 @@ export function hasClearableLyricContent(current: AppState) {
 
   return Boolean(
     current.url.trim() ||
-      current.lyrics.trim() ||
-      current.translationText.trim() ||
+      hasAuthoredLyrics(current.lyricDocument) ||
       current.translationEnabled ||
       current.paletteWarning?.trim() ||
       current.style.translationText.trim() ||
@@ -29,7 +30,7 @@ export function hasClearableLyricContent(current: AppState) {
 export function clearLyricContent(current: AppState): AppState {
   // Song content is duplicated in top-level and style fields; reset both in one
   // state transition while leaving layout and user preferences intact.
-  return {
+  return withLyricDocument({
     ...current,
     url: "",
     song: {
@@ -42,9 +43,6 @@ export function clearLyricContent(current: AppState): AppState {
       proxiedCoverUrl: "",
       originalUrl: ""
     },
-    lyrics: "",
-    translationText: "",
-    translationEnabled: false,
     palette: DEFAULT_PALETTE,
     paletteWarning: "",
     coverArtwork: undefined,
@@ -54,5 +52,5 @@ export function clearLyricContent(current: AppState): AppState {
       translationEnabled: false,
       translationText: ""
     }
-  };
+  }, createEmptyLyricDocument(), false);
 }

@@ -336,6 +336,7 @@ export function useEditorSteps({
       content: (
         <div className="h-full min-h-0">
           <LyricsWorkspace
+            lyricDocument={state.lyricDocument}
             lyrics={state.lyrics}
             lineStatus={lyricsLayout.lineStatus}
             sidebarTab={lyricsSidebarTab}

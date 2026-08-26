@@ -33,6 +33,14 @@ import {
   type TranslationValue
 } from "@/lib/editor/editor-document-state-adapter";
 import type { LyricsDocumentSnapshot } from "@/lib/lyrics-workbench";
+import {
+  withLyricDocument,
+  withLyricPlainText,
+  withLyricSource,
+  withLyricTranslation,
+  withTranslationEnabled
+} from "@/lib/lyrics-document-state";
+import { migrateLyricDocumentV2 } from "@/lib/lyrics-document-v2";
 import type { ExampleLoadPayload } from "@/lib/examples";
 import {
   type ImportHistoryDisplayInput,
@@ -310,7 +318,8 @@ export function useEditorActions({
         parseMethod: current.song.parseMethod,
         lyrics: current.lyrics,
         translationText: current.translationText,
-        translationEnabled: current.translationEnabled
+        translationEnabled: current.translationEnabled,
+        lyricDocument: current.lyricDocument
       }
     };
   }
@@ -404,24 +413,24 @@ export function useEditorActions({
   }
 
   function applyAIPartial(
-    { text, enabled }: TranslationValue,
+    value: TranslationValue,
     expectedRevision: number,
     expectedSongIdentity: string
   ) {
     return documentStateAdapter.applyAIPartial(
-      { text, enabled },
+      value,
       expectedRevision,
       expectedSongIdentity
     );
   }
 
   function commitAITranslation(
-    { text, enabled }: TranslationValue,
+    value: TranslationValue,
     expectedRevision: number,
     expectedSongIdentity: string
   ) {
     return documentStateAdapter.commitAITranslation(
-      { text, enabled },
+      value,
       expectedRevision,
       expectedSongIdentity
     );
@@ -531,43 +540,30 @@ export function useEditorActions({
         finalUrl: song.finalUrl,
         lyrics: savedDocument.lyrics,
         translationText: savedDocument.translationText,
-        translationEnabled: savedDocument.translationEnabled
+        translationEnabled: savedDocument.translationEnabled,
+        lyricDocument: savedDocument.lyricDocument
       }
     });
   }
 
   function setLyrics(lyrics: string) {
-    applyDocumentMutation((current) => ({ ...current, lyrics }));
+    applyDocumentMutation((current) => withLyricSource(current, lyrics));
   }
 
   function setTranslationEnabled(translationEnabled: boolean) {
-    applyDocumentMutation((current) => ({
-      ...current,
-      translationEnabled,
-      style: { ...current.style, translationEnabled }
-    }));
+    applyDocumentMutation((current) => withTranslationEnabled(current, translationEnabled));
   }
 
   function setTranslationText(translationText: string) {
-    applyDocumentMutation((current) => ({
-      ...current,
-      translationText,
-      style: { ...current.style, translationText }
-    }));
+    applyDocumentMutation((current) => withLyricTranslation(current, translationText));
   }
 
   function setLyricsDocument(snapshot: LyricsDocumentSnapshot) {
-    applyDocumentMutation((current) => ({
-      ...current,
-      lyrics: snapshot.lyrics,
-      translationText: snapshot.translationText,
-      translationEnabled: snapshot.translationEnabled,
-      style: {
-        ...current.style,
-        translationText: snapshot.translationText,
-        translationEnabled: snapshot.translationEnabled
-      }
-    }));
+    applyDocumentMutation((current) => withLyricDocument(
+      current,
+      snapshot.lyricDocument,
+      snapshot.translationEnabled
+    ));
   }
 
   async function completeAndExport() {
@@ -656,16 +652,10 @@ export function useEditorActions({
         originalUrl: example.url
       }, example.lyrics);
 
-      return {
+      return withLyricPlainText({
         ...replaced,
-        translationText,
-        translationEnabled,
-        style: {
-          ...normalizeCardStyle(replaced.style),
-          translationText,
-          translationEnabled
-        }
-      };
+        style: normalizeCardStyle(replaced.style)
+      }, example.lyrics, translationText, translationEnabled);
     });
     onCloseExamples();
     onNotify(exampleLoadedMessage, "success");
@@ -701,13 +691,7 @@ export function useEditorActions({
       expectedSongIdentity,
       currentSong: parsedState.song
     })) return false;
-    applyDocumentMutation((current) => ({
-      ...current,
-      lyrics,
-      translationText: "",
-      translationEnabled: false,
-      style: { ...current.style, translationText: "", translationEnabled: false }
-    }));
+    applyDocumentMutation((current) => withLyricPlainText(current, lyrics, "", false));
     return true;
   }
 
@@ -942,17 +926,8 @@ function replaceWithHistorySnapshot(
     finalUrl: snapshot.finalUrl ?? "",
     parseMethod: cover.parseMethod
   }, snapshot.lyrics);
-  const translationEnabled = snapshot.translationEnabled;
-  return {
-    ...replaced,
-    translationText: snapshot.translationText,
-    translationEnabled,
-    style: {
-      ...replaced.style,
-      translationText: snapshot.translationText,
-      translationEnabled
-    }
-  };
+  const lyricDocument = migrateLyricDocumentV2(snapshot.lyricDocument, snapshot);
+  return withLyricDocument(replaced, lyricDocument, snapshot.translationEnabled);
 }
 
 function copyReplayBytes(bytes: Uint8Array) {

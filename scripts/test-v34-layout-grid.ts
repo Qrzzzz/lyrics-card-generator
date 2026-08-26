@@ -475,7 +475,10 @@ assert.ok(
   "arbitrary content mutations trigger coordinated auto-height measurement"
 );
 assert.ok(autoHeightSource.includes("state.song.title"), "song title changes trigger auto-height measurement");
-assert.ok(autoHeightSource.includes("state.translationText"), "translation changes trigger auto-height measurement");
+assert.ok(
+  autoHeightSource.includes("state.lyricDocument.revision"),
+  "structured lyric revisions trigger auto-height measurement"
+);
 assert.ok(autoHeightSource.includes("Math.max(AUTO_HEIGHT_MIN, nextHeight)"), "auto-height uses the compact lower bound");
 
 assert.deepEqual(BACKGROUND_GRID_SIZE_BY_DENSITY, {

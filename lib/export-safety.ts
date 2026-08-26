@@ -25,8 +25,7 @@ export type ExportDomSafety = {
 
 export function evaluateMinimumExportSafety(state: AppState, dom: ExportDomSafety) {
   const lineStatus = getExportLyricLineStatus({
-    lyrics: state.lyrics,
-    translationText: state.style.translationText,
+    lyricDocument: state.lyricDocument,
     translationEnabled: state.style.translationEnabled,
     contentMode: state.style.contentMode,
     layoutMode: state.style.layoutMode

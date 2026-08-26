@@ -12,17 +12,18 @@ import { getCardSize } from "@/lib/card-size";
 import { cardFontStyle, fontClassName } from "@/lib/fonts";
 import { proxiedImageUrl } from "@/lib/image-utils";
 import { DEFAULT_PALETTE } from "@/lib/palette-background";
+import type { LyricDocumentV2 } from "@/lib/lyrics-document-v2";
 import type { CardStyle, CoverArtworkAnalysis, SongInfo } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 export function LandscapeLyricCard({
   song,
-  lyrics,
+  lyricDocument,
   style,
   coverArtwork
 }: {
   song: SongInfo;
-  lyrics: string;
+  lyricDocument: LyricDocumentV2;
   style: CardStyle;
   coverArtwork?: CoverArtworkAnalysis;
 }) {
@@ -141,8 +142,7 @@ export function LandscapeLyricCard({
               }}
             >
               <LandscapeLyricsContent
-                lyrics={lyrics}
-                translationText={style.translationText}
+                lyricDocument={lyricDocument}
                 translationEnabled={style.translationEnabled}
                 lyricFontSize={style.lyricFontSize}
                 translationScale={style.translationScale}

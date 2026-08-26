@@ -114,10 +114,18 @@ async function main() {
       source: "unknown",
       lyrics: "",
       translationText: "",
-      translationEnabled: false
+      translationEnabled: false,
+      lyricDocument: {
+        schemaVersion: 2,
+        id: "document-cover-only",
+        revision: 0,
+        blocks: [],
+        formatting: { sourcePrefix: "", translationPrefix: "" }
+      }
     }
   });
   assert.ok(coverOnly, "a successfully saved cover-only document is valid history");
+  assert.equal(coverOnly.snapshot.lyricDocument.id, "document-cover-only");
 
   assert.deepEqual(validateImportFileDescriptor(
     "local-audio",

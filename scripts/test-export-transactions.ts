@@ -16,6 +16,7 @@ import {
   reconcileBlobUrlRetirement
 } from "../lib/object-url-lifecycle";
 import type { AppState } from "../lib/types";
+import { withLyricSource } from "../lib/lyrics-document-state";
 
 const readyDom: ExportDomSafety = {
   isCardMounted: true,
@@ -29,15 +30,14 @@ const readyDom: ExportDomSafety = {
 
 // Snapshots must detach export work from every subsequent live-editor mutation.
 {
-  const live: AppState = {
+  let live: AppState = withLyricSource({
     ...defaultState,
     song: { ...defaultState.song, title: "Snapshot Song", artist: "Before" },
-    lyrics: "old lyrics",
     style: { ...defaultState.style, width: 1200, height: 1800 }
-  };
+  }, "old lyrics");
   const snapshot = createExportSnapshot(live, 2, 42);
   live.song.title = "Mutated Song";
-  live.lyrics = "new lyrics";
+  live = withLyricSource(live, "new lyrics");
   live.style.width = 640;
   assert.equal(snapshot.song.title, "Snapshot Song");
   assert.equal(snapshot.lyrics, "old lyrics");
@@ -48,6 +48,7 @@ const readyDom: ExportDomSafety = {
   assert.equal(Object.isFrozen(snapshot), true);
   assert.equal(Object.isFrozen(snapshot.song), true);
   assert.equal(Object.isFrozen(snapshot.style), true);
+  assert.equal(Object.isFrozen(snapshot.lyricDocument), true);
 
   const webpSnapshot = createExportSnapshot(live, 1.4, 43, "webp");
   const jpgSnapshot = createExportSnapshot(live, 1, 44, "jpg");
@@ -59,8 +60,8 @@ const readyDom: ExportDomSafety = {
 
 {
   const lines = (count: number) => Array.from({ length: count }, (_, index) => `line ${index + 1}`).join("\n");
-  const state36 = { ...defaultState, lyrics: lines(36), style: { ...defaultState.style } };
-  const state37 = { ...state36, lyrics: lines(37) };
+  const state36 = withLyricSource({ ...defaultState, style: { ...defaultState.style } }, lines(36));
+  const state37 = withLyricSource(state36, lines(37));
   assert.equal(evaluateMinimumExportSafety(state36, readyDom).blockingReason, null);
   assert.equal(evaluateMinimumExportSafety(state37, readyDom).blockingReason, "lyrics-limit");
   assert.equal(evaluateMinimumExportSafety(state36, { ...readyDom, areFontsReady: false }).blockingReason, "fonts-loading");

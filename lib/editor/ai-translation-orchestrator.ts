@@ -24,6 +24,8 @@ export type AITranslationRunOptions<Value, Phase> = AITranslationDocument & {
   stream: (signal: AbortSignal, events: AITranslationStreamEvents<Phase>) => Promise<string>;
   clean: (value: string) => string;
   toValue: (cleaned: string) => Value;
+  /** Structured streams may be incomplete until the terminal JSON closes. */
+  toPartialValue?: (cleaned: string) => Value | null;
   createEmptyResponseError: () => unknown;
   onStart: () => void;
   onStatus: (phase: Phase) => void;
@@ -104,7 +106,12 @@ export class AITranslationOrchestrator<Value, Phase> {
       }
       const cleaned = options.clean(update.accumulated);
       options.onStreaming(cleaned || update.accumulated.trim());
-      if (cleaned && writePartial(options.toValue(cleaned))) {
+      const partialValue = cleaned
+        ? options.toPartialValue
+          ? options.toPartialValue(cleaned)
+          : options.toValue(cleaned)
+        : null;
+      if (partialValue && writePartial(partialValue)) {
         intent.hasWrittenPartial = true;
       }
     };

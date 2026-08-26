@@ -2,6 +2,7 @@ import { PRESET_CARD_SIZES } from "@/lib/card-size";
 import { normalizeCardStyle } from "@/lib/card-style-normalize";
 import { sizeSnapshot } from "@/lib/editor/size-snapshot";
 import { normalizeLandscapeLayoutSettings } from "@/lib/landscape-plan";
+import { withLyricDocument, withLyricPlainText } from "@/lib/lyrics-document-state";
 import type { AppState, CardLayoutMode, CardRatio, CardSizeSnapshot, CardStyle } from "@/lib/types";
 
 export const DEFAULT_PORTRAIT_SIZE: Required<CardSizeSnapshot> = {
@@ -27,13 +28,14 @@ export function isDocumentSemanticStyleChange(currentStyle: CardStyle, nextStyle
 }
 
 function applyCanonicalStyleState(current: AppState, style: CardStyle, fields: Partial<AppState> = {}): AppState {
-  return {
+  const next = {
     ...current,
     ...fields,
-    translationText: style.translationText,
-    translationEnabled: style.translationEnabled,
     style
   };
+  return style.translationText === current.translationText
+    ? withLyricDocument(next, current.lyricDocument, style.translationEnabled)
+    : withLyricPlainText(next, current.lyrics, style.translationText, style.translationEnabled);
 }
 
 const validRatiosByMode: Record<CardLayoutMode, ReadonlySet<CardRatio>> = {

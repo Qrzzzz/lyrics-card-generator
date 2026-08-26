@@ -97,15 +97,18 @@ type LyricsCardDesktopBridge = Omit<LyricsCardDesktopApi, "createManualSave" | "
   updateManualSaveEnvelope: (recordId: string, envelope: string) => Promise<ImportHistoryWriteResult>;
 };
 
-const MAX_MANUAL_SAVE_ENVELOPE_CODE_UNITS = 512 * 1024 + 64;
+const MAX_LEGACY_MANUAL_SAVE_ENVELOPE_CODE_UNITS = 512 * 1024 + 64;
+const MAX_MANUAL_SAVE_ENVELOPE_CODE_UNITS = 2 * 1024 * 1024 + 64;
 
 function isManualSaveEnvelope(value: unknown): value is ImportHistoryManualSaveEnvelope {
-  return (
-    typeof value === "string" &&
-    value.length <= MAX_MANUAL_SAVE_ENVELOPE_CODE_UNITS &&
-    value.startsWith('{"version":1,"snapshot":') &&
-    value.endsWith("}")
-  );
+  if (typeof value === "string" && value.endsWith("}")) {
+    if (value.startsWith('{"version":2,"snapshot":')) {
+      return value.length <= MAX_MANUAL_SAVE_ENVELOPE_CODE_UNITS;
+    }
+    return value.startsWith('{"version":1,"snapshot":') &&
+      value.length <= MAX_LEGACY_MANUAL_SAVE_ENVELOPE_CODE_UNITS;
+  }
+  return false;
 }
 
 function invalidManualSaveResult(): Promise<ImportHistoryWriteResult> {

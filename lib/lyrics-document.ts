@@ -1,4 +1,5 @@
 import type { CardLayoutMode, ContentMode } from "@/lib/types";
+import { countLyricDocumentLines, type LyricDocumentV2 } from "@/lib/lyrics-document-v2";
 
 export const MAX_EXPORT_LYRIC_LINES = 36;
 export const MAX_LANDSCAPE_LYRIC_LINES = 12;
@@ -16,7 +17,8 @@ export type ExportLyricLineStatus = {
 };
 
 export type ExportLyricLineStatusInput = {
-  lyrics: string;
+  lyricDocument?: LyricDocumentV2;
+  lyrics?: string;
   translationText?: string;
   translationEnabled: boolean;
   contentMode?: ContentMode;
@@ -35,16 +37,20 @@ export function countNonEmptyLogicalLines(text: string) {
 }
 
 export function getExportLyricLineStatus({
-  lyrics,
+  lyricDocument,
+  lyrics = "",
   translationText = "",
   translationEnabled,
   contentMode = "lyrics",
   layoutMode = "portrait"
 }: ExportLyricLineStatusInput): ExportLyricLineStatus {
-  const originalLineCount = countNonEmptyLogicalLines(lyrics);
-  const translationLineCount = translationEnabled
+  const documentCounts = lyricDocument
+    ? countLyricDocumentLines(lyricDocument, translationEnabled)
+    : null;
+  const originalLineCount = documentCounts?.source ?? countNonEmptyLogicalLines(lyrics);
+  const translationLineCount = documentCounts?.translation ?? (translationEnabled
     ? countNonEmptyLogicalLines(translationText)
-    : 0;
+    : 0);
   const totalLineCount = originalLineCount + translationLineCount;
   const isExempt = contentMode === "instrumental";
   const maxLineCount = layoutMode === "landscape"

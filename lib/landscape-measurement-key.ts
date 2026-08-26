@@ -8,9 +8,11 @@ export function createLandscapeMeasurementKey(state: AppState) {
     version: 1,
     layoutMode: style.layoutMode ?? "portrait",
     contentMode: style.contentMode,
-    lyrics: state.lyrics,
+    lyricDocument: {
+      id: state.lyricDocument.id,
+      revision: state.lyricDocument.revision
+    },
     translationEnabled: style.translationEnabled,
-    translationText: style.translationText,
     font: style.font,
     fontScheme: style.fontScheme,
     customFontEnabled: style.customFontEnabled,

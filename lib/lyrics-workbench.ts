@@ -1,3 +1,9 @@
+import {
+  serializeLyricDocument,
+  swapLyricDocumentColumns,
+  type LyricDocumentV2
+} from "@/lib/lyrics-document-v2";
+
 export type LyricsWorkbenchEditor = "lyrics" | "translation";
 export type LyricsSidebarTab = "cleanup" | "translation";
 
@@ -40,6 +46,7 @@ export type LyricsScopedTransform = {
 export type LyricsBlankMode = "trim" | "collapse" | "all";
 
 export type LyricsDocumentSnapshot = {
+  lyricDocument: LyricDocumentV2;
   lyrics: string;
   translationText: string;
   translationEnabled: boolean;
@@ -379,9 +386,12 @@ export function cleanSynchronizedBlankRows(params: {
 }
 
 export function swapLyricsColumns(snapshot: LyricsDocumentSnapshot): LyricsDocumentSnapshot {
+  const lyricDocument = swapLyricDocumentColumns(snapshot.lyricDocument);
+  const text = serializeLyricDocument(lyricDocument);
   return {
-    lyrics: snapshot.translationText,
-    translationText: snapshot.lyrics,
+    lyricDocument,
+    lyrics: text.source,
+    translationText: text.translation,
     translationEnabled: true
   };
 }
@@ -480,7 +490,9 @@ export function snapshotsEqual(
 ) {
   return left.lyrics === right.lyrics &&
     left.translationText === right.translationText &&
-    left.translationEnabled === right.translationEnabled;
+    left.translationEnabled === right.translationEnabled &&
+    left.lyricDocument.id === right.lyricDocument.id &&
+    left.lyricDocument.revision === right.lyricDocument.revision;
 }
 
 function applyScopedTransform(

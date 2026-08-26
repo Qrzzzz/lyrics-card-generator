@@ -65,6 +65,7 @@ import { cn } from "@/lib/utils";
 import { snapshotAsAppState } from "@/lib/export-snapshot";
 import { resolveExportSafetyMessage } from "@/lib/export-safety";
 import { getExportLyricLineStatus } from "@/lib/lyrics-document";
+import { cloneLyricDocument, reconcileLyricDocumentV2 } from "@/lib/lyrics-document-v2";
 import { hasCurrentLandscapePlan } from "@/lib/landscape-measurement-key";
 import type { TranslationValue } from "@/lib/editor/editor-document-state-adapter";
 import { useStableEvent } from "@/components/editor/hooks/useStableEvent";
@@ -88,7 +89,10 @@ const reducedSurfaceTransition: Transition = {
 
 export function LyricEditor() {
   recordRenderBoundary("LyricEditor");
-  const [state, setState] = useState<AppState>(defaultState);
+  const [state, setState] = useState<AppState>(() => ({
+    ...defaultState,
+    lyricDocument: cloneLyricDocument(defaultState.lyricDocument)
+  }));
   const [currentStep, setCurrentStep] = useState(0);
   const [songLinkAutoParseVisitIntent, setSongLinkAutoParseVisitIntent] = useState<SongLinkAutoParseVisitIntent>({
     id: 0,
@@ -413,8 +417,11 @@ export function LyricEditor() {
       (nextStyle.layoutMode ?? "portrait") === "landscape"
     ) {
       const landscapeStatus = getExportLyricLineStatus({
-        lyrics: state.lyrics,
-        translationText: nextStyle.translationText,
+        lyricDocument: reconcileLyricDocumentV2(
+          state.lyricDocument,
+          state.lyrics,
+          nextStyle.translationText
+        ),
         translationEnabled: nextStyle.translationEnabled,
         contentMode: nextStyle.contentMode,
         layoutMode: "landscape"
@@ -632,7 +639,7 @@ export function LyricEditor() {
                             isPreviewVisible={isPreviewVisible}
                             onPreviewVisibleChange={setIsPreviewVisible}
                             song={parsedState.song}
-                            lyrics={parsedState.lyrics}
+                            lyricDocument={parsedState.lyricDocument}
                             style={parsedState.style}
                             coverArtwork={parsedState.coverArtwork}
                             cardRef={previewCardRef}
@@ -653,7 +660,7 @@ export function LyricEditor() {
 
             <ExportCardHost
               song={parsedState.song}
-              lyrics={parsedState.lyrics}
+              lyricDocument={parsedState.lyricDocument}
               style={parsedState.style}
               coverArtwork={parsedState.coverArtwork}
               exportCardRef={exportCardRef}
@@ -665,7 +672,7 @@ export function LyricEditor() {
             {activeExportSnapshot ? (
               <ExportCardHost
                 song={activeExportSnapshot.song as AppState["song"]}
-                lyrics={activeExportSnapshot.lyrics}
+                lyricDocument={activeExportSnapshot.lyricDocument}
                 style={activeExportSnapshot.style as AppState["style"]}
                 coverArtwork={activeExportSnapshot.coverArtwork as AppState["coverArtwork"]}
                 exportCardRef={captureCardRef}

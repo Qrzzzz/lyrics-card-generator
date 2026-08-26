@@ -8,14 +8,17 @@ const LEGACY_IMPORT_HISTORY_SCHEMA_VERSION = 1;
 const DEFAULT_IMPORT_HISTORY_LIMIT = 10;
 const IMPORT_HISTORY_LIMITS = new Set([5, 10, "unlimited"]);
 const MAX_RECORD_BYTES = 512 * 1024;
+const MAX_MANUAL_SAVE_V2_BYTES = 2 * 1024 * 1024;
 const MAX_MANUAL_SAVE_JSON_DEPTH = 128;
-const MANUAL_SAVE_ENVELOPE_VERSION = 1;
+const LEGACY_MANUAL_SAVE_ENVELOPE_VERSION = 1;
+const MANUAL_SAVE_ENVELOPE_VERSION = 2;
 const MANUAL_SAVE_ENVELOPE_PREFIX = `{"version":${MANUAL_SAVE_ENVELOPE_VERSION},"snapshot":`;
-const MAX_MANUAL_SAVE_ENVELOPE_BYTES = MAX_RECORD_BYTES + Buffer.byteLength(`${MANUAL_SAVE_ENVELOPE_PREFIX}}`, "utf8");
-// The snapshot itself remains capped at 512 KiB. A stored manual-save record
-// additionally repeats bounded display metadata and main-process ID/timestamps.
-const MAX_MANUAL_SAVE_RECORD_BYTES = MAX_RECORD_BYTES + (32 * 1024);
-const MANUAL_SAVE_SNAPSHOT_FIELDS = Object.freeze([
+const LEGACY_MANUAL_SAVE_ENVELOPE_PREFIX = `{"version":${LEGACY_MANUAL_SAVE_ENVELOPE_VERSION},"snapshot":`;
+const MAX_MANUAL_SAVE_ENVELOPE_BYTES = MAX_MANUAL_SAVE_V2_BYTES + Buffer.byteLength(`${MANUAL_SAVE_ENVELOPE_PREFIX}}`, "utf8");
+// Structured v2 snapshots may repeat text alongside stable IDs, so they use a
+// separate 2 MiB cap. Stored records additionally repeat bounded display metadata.
+const MAX_MANUAL_SAVE_RECORD_BYTES = MAX_MANUAL_SAVE_V2_BYTES + (32 * 1024);
+const LEGACY_MANUAL_SAVE_SNAPSHOT_FIELDS = Object.freeze([
   "source",
   "title",
   "artist",
@@ -29,6 +32,10 @@ const MANUAL_SAVE_SNAPSHOT_FIELDS = Object.freeze([
   "lyrics",
   "translationText",
   "translationEnabled"
+]);
+const MANUAL_SAVE_SNAPSHOT_FIELDS = Object.freeze([
+  ...LEGACY_MANUAL_SAVE_SNAPSHOT_FIELDS,
+  "lyricDocument"
 ]);
 const MANUAL_SAVE_STRING_LIMITS = Object.freeze({
   title: 512,
@@ -551,7 +558,9 @@ function normalizeImportHistoryRecord(input, path = defaultPath) {
     ...(source ? { source } : {}),
     ...(snapshot ? { snapshot } : {})
   };
-  const maximumRecordBytes = input.kind === "manual-save" ? MAX_MANUAL_SAVE_RECORD_BYTES : MAX_RECORD_BYTES;
+  const maximumRecordBytes = input.kind === "manual-save" || snapshot?.lyricDocument
+    ? MAX_MANUAL_SAVE_RECORD_BYTES
+    : MAX_RECORD_BYTES;
   return Buffer.byteLength(JSON.stringify(record), "utf8") <= maximumRecordBytes ? record : null;
 }
 
@@ -636,6 +645,13 @@ function normalizeManualSnapshot(input, kind = "manual-cover") {
     translationText: boundedString(input.translationText, 120_000, false),
     translationEnabled: input.translationEnabled === true
   };
+  const lyricDocument = normalizeManualLyricDocument(
+    input.lyricDocument,
+    snapshot.lyrics,
+    snapshot.translationText
+  );
+  if (lyricDocument) snapshot.lyricDocument = lyricDocument;
+  else if (input.lyricDocument !== undefined) return null;
   if (kind === "manual-save") {
     snapshot.explicit = input.explicit === true;
     snapshot.originalCoverUrl = normalizeManualHttpUrl(input.originalCoverUrl);
@@ -672,7 +688,8 @@ function parseManualSaveEnvelope(value) {
     typeof value !== "string" ||
     value.length > MAX_MANUAL_SAVE_ENVELOPE_BYTES ||
     Buffer.byteLength(value, "utf8") > MAX_MANUAL_SAVE_ENVELOPE_BYTES ||
-    !value.startsWith(MANUAL_SAVE_ENVELOPE_PREFIX) ||
+    (!value.startsWith(MANUAL_SAVE_ENVELOPE_PREFIX) &&
+      !value.startsWith(LEGACY_MANUAL_SAVE_ENVELOPE_PREFIX)) ||
     !value.endsWith("}")
   ) {
     return null;
@@ -692,9 +709,10 @@ function parseManualSaveEnvelope(value) {
   const snapshot = Object.getOwnPropertyDescriptor(envelope, "snapshot");
   if (
     !isEnumerableDataProperty(version) ||
-    version.value !== MANUAL_SAVE_ENVELOPE_VERSION ||
+    (version.value !== MANUAL_SAVE_ENVELOPE_VERSION &&
+      version.value !== LEGACY_MANUAL_SAVE_ENVELOPE_VERSION) ||
     !isEnumerableDataProperty(snapshot) ||
-    !manualSaveSnapshotFieldsFit(snapshot.value)
+    !manualSaveSnapshotFieldsFit(snapshot.value, version.value)
   ) {
     return null;
   }
@@ -712,17 +730,23 @@ function isCanonicalManualSaveEnvelope(value) {
   return parseManualSaveEnvelope(value) !== null;
 }
 
-function manualSaveSnapshotFieldsFit(input) {
+function manualSaveSnapshotFieldsFit(input, version = MANUAL_SAVE_ENVELOPE_VERSION) {
+  const maximumBytes = version === LEGACY_MANUAL_SAVE_ENVELOPE_VERSION
+    ? MAX_RECORD_BYTES
+    : MAX_MANUAL_SAVE_V2_BYTES;
+  const expectedFields = version === LEGACY_MANUAL_SAVE_ENVELOPE_VERSION
+    ? LEGACY_MANUAL_SAVE_SNAPSHOT_FIELDS
+    : MANUAL_SAVE_SNAPSHOT_FIELDS;
   if (
-    !jsonLikeTreeFitsWithinByteLimit(input, MAX_RECORD_BYTES, MAX_MANUAL_SAVE_JSON_DEPTH) ||
+    !jsonLikeTreeFitsWithinByteLimit(input, maximumBytes, MAX_MANUAL_SAVE_JSON_DEPTH) ||
     !isObject(input)
   ) {
     return false;
   }
   const keys = Reflect.ownKeys(input);
   if (
-    keys.length !== MANUAL_SAVE_SNAPSHOT_FIELDS.length ||
-    keys.some((key, index) => key !== MANUAL_SAVE_SNAPSHOT_FIELDS[index])
+    keys.length !== expectedFields.length ||
+    keys.some((key, index) => key !== expectedFields[index])
   ) {
     return false;
   }
@@ -738,7 +762,7 @@ function manualSaveSnapshotFieldsFit(input) {
   const source = Object.getOwnPropertyDescriptor(input, "source");
   const explicit = Object.getOwnPropertyDescriptor(input, "explicit");
   const translationEnabled = Object.getOwnPropertyDescriptor(input, "translationEnabled");
-  return (
+  const scalarFieldsFit = (
     isEnumerableDataProperty(source) &&
     SONG_SOURCES.has(source.value) &&
     isEnumerableDataProperty(explicit) &&
@@ -748,6 +772,144 @@ function manualSaveSnapshotFieldsFit(input) {
       typeof translationEnabled.value === "boolean"
     )
   );
+  if (!scalarFieldsFit) return false;
+  if (version === LEGACY_MANUAL_SAVE_ENVELOPE_VERSION) return true;
+  const lyricDocument = Object.getOwnPropertyDescriptor(input, "lyricDocument");
+  return isEnumerableDataProperty(lyricDocument) &&
+    lyricDocumentV2FieldsFit(lyricDocument.value) &&
+    serializeManualLyricDocumentTrack(lyricDocument.value, "source") === input.lyrics &&
+    serializeManualLyricDocumentTrack(lyricDocument.value, "translation") === input.translationText;
+}
+
+function lyricDocumentV2FieldsFit(input) {
+  if (!isObject(input) || Object.getPrototypeOf(input) !== Object.prototype) return false;
+  const keys = Reflect.ownKeys(input);
+  const hasFormatting = keys.includes("formatting");
+  const validKeyOrder = hasFormatting
+    ? [
+        ["schemaVersion", "id", "revision", "formatting", "blocks"],
+        ["schemaVersion", "id", "revision", "blocks", "formatting"]
+      ].some((expected) => keys.length === expected.length && keys.every((key, index) => key === expected[index]))
+    : keys.length === 4 && keys.every((key, index) => key === ["schemaVersion", "id", "revision", "blocks"][index]);
+  if (!validKeyOrder) return false;
+  if (input.schemaVersion !== 2 || !boundedLyricId(input.id) || !Number.isSafeInteger(input.revision) || input.revision < 0) return false;
+  if (hasFormatting && !lyricDocumentFormattingFits(input.formatting)) return false;
+  if (!Array.isArray(input.blocks) || input.blocks.length > 20_000) return false;
+  const ids = new Set([input.id]);
+  for (const block of input.blocks) {
+    if (!lyricBlockV2FieldsFit(block, ids)) return false;
+  }
+  return true;
+}
+
+function lyricBlockV2FieldsFit(block, ids) {
+  if (!isObject(block) || Object.getPrototypeOf(block) !== Object.prototype) return false;
+  const keys = Reflect.ownKeys(block);
+  const hasFormatting = keys.includes("formatting");
+  const expectedKeys = hasFormatting ? ["id", "formatting", "units"] : ["id", "units"];
+  if (keys.length !== expectedKeys.length || keys.some((key, index) => key !== expectedKeys[index])) return false;
+  if (!boundedLyricId(block.id) || ids.has(block.id)) return false;
+  ids.add(block.id);
+  if (hasFormatting && !lyricBlockFormattingFits(block.formatting)) return false;
+  if (!Array.isArray(block.units) || block.units.length === 0 || block.units.length > 20_000) return false;
+  return block.units.every((unit) => lyricUnitV2FieldsFit(unit, ids));
+}
+
+function lyricUnitV2FieldsFit(unit, ids) {
+  if (!isObject(unit) || Object.getPrototypeOf(unit) !== Object.prototype) return false;
+  const keys = Reflect.ownKeys(unit);
+  const hasTranslation = keys.includes("translation");
+  const expectedKeys = hasTranslation ? ["id", "source", "translation"] : ["id", "source"];
+  if (keys.length !== expectedKeys.length || keys.some((key, index) => key !== expectedKeys[index])) return false;
+  if (!boundedLyricId(unit.id) || ids.has(unit.id)) return false;
+  ids.add(unit.id);
+  return lyricLineArrayFits(unit.source) && (!hasTranslation || lyricLineArrayFits(unit.translation));
+}
+
+function lyricDocumentFormattingFits(formatting) {
+  return exactPlainObjectKeys(formatting, ["sourcePrefix", "translationPrefix"]) &&
+    blankFormattingTextFits(formatting.sourcePrefix) &&
+    blankFormattingTextFits(formatting.translationPrefix);
+}
+
+function lyricBlockFormattingFits(formatting) {
+  return exactPlainObjectKeys(formatting, [
+    "sourcePresent",
+    "translationPresent",
+    "sourceSeparatorAfter",
+    "translationSeparatorAfter"
+  ]) &&
+    typeof formatting.sourcePresent === "boolean" &&
+    typeof formatting.translationPresent === "boolean" &&
+    blankFormattingTextFits(formatting.sourceSeparatorAfter) &&
+    blankFormattingTextFits(formatting.translationSeparatorAfter);
+}
+
+function exactPlainObjectKeys(value, expectedKeys) {
+  if (!isObject(value) || Object.getPrototypeOf(value) !== Object.prototype) return false;
+  const keys = Reflect.ownKeys(value);
+  return keys.length === expectedKeys.length && keys.every((key, index) => key === expectedKeys[index]);
+}
+
+function boundedLyricId(value) {
+  return typeof value === "string" && value.length > 0 && value.length <= 256;
+}
+
+function lyricLineArrayFits(value) {
+  return Array.isArray(value) && value.length <= 20_000 && value.every((line) => (
+    typeof line === "string" && line.length <= 120_000 && !line.includes("\n") && !line.includes("\r")
+  ));
+}
+
+function blankFormattingTextFits(value) {
+  return typeof value === "string" && value.length <= 120_000 && !/[^\t \n]/u.test(value);
+}
+
+function serializeManualLyricDocumentTrack(document, track) {
+  let value = track === "source"
+    ? document.formatting?.sourcePrefix ?? ""
+    : document.formatting?.translationPrefix ?? "";
+  for (const block of document.blocks) {
+    const formatting = block.formatting ?? {
+      sourcePresent: block.units.some((unit) => unit.source.length > 0),
+      translationPresent: block.units.some((unit) => (unit.translation?.length ?? 0) > 0),
+      sourceSeparatorAfter: "",
+      translationSeparatorAfter: ""
+    };
+    const present = track === "source" ? formatting.sourcePresent : formatting.translationPresent;
+    if (!present) continue;
+    const lines = track === "source"
+      ? block.units.flatMap((unit) => unit.source)
+      : block.units.flatMap((unit) => unit.translation ?? []);
+    value += lines.join("\n");
+    value += track === "source" ? formatting.sourceSeparatorAfter : formatting.translationSeparatorAfter;
+  }
+  return value;
+}
+
+function normalizeManualLyricDocument(value, lyrics, translationText) {
+  if (value === undefined) return null;
+  if (
+    !jsonLikeTreeFitsWithinByteLimit(value, MAX_MANUAL_SAVE_V2_BYTES, MAX_MANUAL_SAVE_JSON_DEPTH) ||
+    !lyricDocumentV2FieldsFit(value) ||
+    serializeManualLyricDocumentTrack(value, "source") !== lyrics ||
+    serializeManualLyricDocumentTrack(value, "translation") !== translationText
+  ) return null;
+  return {
+    schemaVersion: 2,
+    id: value.id,
+    revision: value.revision,
+    ...(value.formatting ? { formatting: { ...value.formatting } } : {}),
+    blocks: value.blocks.map((block) => ({
+      id: block.id,
+      ...(block.formatting ? { formatting: { ...block.formatting } } : {}),
+      units: block.units.map((unit) => ({
+        id: unit.id,
+        source: [...unit.source],
+        ...(unit.translation ? { translation: [...unit.translation] } : {})
+      }))
+    }))
+  };
 }
 
 /**

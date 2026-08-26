@@ -87,13 +87,12 @@ export function useExportCardReadiness({
   const signature = createExportCardMeasurementSignature(state, isAutoWidthStable);
   const autoHeightSignature = autoCanvasHeightMeasurementSignature(state);
   const lineStatus = useMemo(() => getExportLyricLineStatus({
-    lyrics: state.lyrics,
-    translationText: state.style.translationText,
+    lyricDocument: state.lyricDocument,
     translationEnabled: state.style.translationEnabled,
     contentMode: state.style.contentMode,
     layoutMode: state.style.layoutMode
   }), [
-    state.lyrics,
+    state.lyricDocument,
     state.style.contentMode,
     state.style.layoutMode,
     state.style.translationEnabled,
@@ -181,7 +180,10 @@ export function createExportCardMeasurementSignature(
   isAutoWidthStable = true
 ) {
   return JSON.stringify({
-    lyrics: state.lyrics,
+    lyricDocument: {
+      id: state.lyricDocument.id,
+      revision: state.lyricDocument.revision
+    },
     locale: state.locale,
     song: state.song,
     coverArtwork: state.coverArtwork,

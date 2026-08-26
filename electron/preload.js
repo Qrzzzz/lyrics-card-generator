@@ -1,6 +1,6 @@
 const { contextBridge, ipcRenderer, webUtils } = require("electron");
 
-const MAX_MANUAL_SAVE_ENVELOPE_CODE_UNITS = 512 * 1024 + 64;
+const MAX_MANUAL_SAVE_ENVELOPE_CODE_UNITS = 2 * 1024 * 1024 + 64;
 
 function invalidManualSaveResult() {
   return Promise.resolve({ ok: false, code: "invalid_snapshot" });

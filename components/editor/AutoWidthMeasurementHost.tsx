@@ -57,8 +57,7 @@ export function AutoWidthMeasurementHost({
         }}
       >
         <LyricsBlock
-          lyrics={state.lyrics}
-          translationText={state.style.translationText}
+          lyricDocument={state.lyricDocument}
           translationEnabled={state.style.translationEnabled}
           lyricFontSize={state.style.lyricFontSize}
           translationScale={state.style.translationScale}

@@ -8,6 +8,7 @@ import { MotionPanel } from "@/components/motion/MotionPanel";
 import { MotionPresence } from "@/components/motion/MotionPresence";
 import { LyricCardPreview } from "@/components/preview/LyricCardPreview";
 import type { createT } from "@/lib/i18n";
+import type { LyricDocumentV2 } from "@/lib/lyrics-document-v2";
 import { motionDurations, motionEasings, reducedMotionTransition } from "@/lib/motion/tokens";
 import type { CardStyle, CoverArtworkAnalysis, FontScheme, Locale, SongInfo } from "@/lib/types";
 
@@ -15,7 +16,7 @@ type PreviewPaneProps = {
   isPreviewVisible: boolean;
   onPreviewVisibleChange: (updater: (visible: boolean) => boolean) => void;
   song: SongInfo;
-  lyrics: string;
+  lyricDocument: LyricDocumentV2;
   style: CardStyle;
   coverArtwork?: CoverArtworkAnalysis;
   cardRef: RefObject<HTMLElement | null>;
@@ -31,7 +32,7 @@ export function PreviewPane({
   isPreviewVisible,
   onPreviewVisibleChange,
   song,
-  lyrics,
+  lyricDocument,
   style,
   coverArtwork,
   cardRef,
@@ -109,7 +110,7 @@ export function PreviewPane({
               >
                 <LyricCardPreview
                   song={song}
-                  lyrics={lyrics}
+                  lyricDocument={lyricDocument}
                   style={previewStyle}
                   coverArtwork={coverArtwork}
                   cardRef={cardRef}

@@ -137,9 +137,11 @@ export function autoWidthMeasurementSignature(state: AppState) {
     layoutMode: style.layoutMode ?? "portrait",
     ratio: style.ratio,
     contentMode: style.contentMode,
-    lyrics: state.lyrics,
+    lyricDocument: {
+      id: state.lyricDocument.id,
+      revision: state.lyricDocument.revision
+    },
     translationEnabled: style.translationEnabled,
-    translationText: style.translationText,
     font: style.font,
     fontScheme: style.fontScheme,
     customFontEnabled: style.customFontEnabled,

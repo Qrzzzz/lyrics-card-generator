@@ -33,9 +33,11 @@ import {
   type LyricsWorkbenchEditor
 } from "@/lib/lyrics-workbench";
 import type { ContentMode, Locale } from "@/lib/types";
+import type { LyricDocumentV2 } from "@/lib/lyrics-document-v2";
 import { cn } from "@/lib/utils";
 
 type LyricsWorkspaceProps = {
+  lyricDocument: LyricDocumentV2;
   lyrics: string;
   lineStatus: ExportLyricLineStatus;
   sidebarTab: LyricsSidebarTab;
@@ -60,6 +62,7 @@ type LyricsWorkspaceProps = {
 };
 
 export function LyricsWorkspace({
+  lyricDocument,
   lyrics,
   lineStatus,
   sidebarTab,
@@ -173,6 +176,7 @@ export function LyricsWorkspace({
 
   const documentController = useLyricsWorkspaceDocumentController({
     copy,
+    lyricDocument,
     lyrics,
     translationText,
     translationEnabled,

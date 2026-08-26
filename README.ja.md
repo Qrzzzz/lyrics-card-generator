@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v5.12.1.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v6.0.0.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="./docs/development.en.md">ローカル開発</a> ·
@@ -74,25 +74,25 @@
 
 ## 📦 ダウンロードとインストール
 
-v5.12.1 は [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) からダウンロードできます。
+v6.0.0 は [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) からダウンロードできます。
 
-* インストーラー：`Lyrics Card Generator Setup 5.12.1.exe`
-* ポータブル版：`Lyrics Card Generator-5.12.1-portable.exe`
+* インストーラー：`Lyrics Card Generator Setup 6.0.0.exe`
+* ポータブル版：`Lyrics Card Generator-6.0.0-portable.exe`
 
 通常利用にはインストーラーを推奨します。ポータブル版は一時利用、検証、リムーバブルドライブでの利用に向いています。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v5.12.1 の主な更新
+### v6.0.0 の主な更新
 
-* ステップ2の上部ツールバーの先頭に、軽いアクセント表示の「選択範囲のみ残す」コマンドを追加しました。テキストが選択されていない間は無効です。
-* 原文または翻訳の列で選択した文字を正確に残し、現在の列にあるそれ以外の内容を削除します。もう一方の列は変更しません。
-* 選択範囲の復元と元に戻す／やり直しに対応し、続けて編集したり、すぐに元に戻したりできます。
+* 歌詞パイプラインを、安定した Block／Unit ID と revision を持つ `LyricDocumentV2` に移行しました。従来のテキスト編集操作は変わりません。
+* インポート、編集、翻訳、履歴、プレビュー、レイアウト、書き出しが同じ文書を利用し、旧文字列は互換用の派生値のみになりました。
+* AI 翻訳は Unit ID ごとの構造化結果を返し、revision 検証により対応ずれや遅延応答による上書きを防ぎます。
 
 ## 🌐 多言語リリースノート
 
 GitHub Release ではデフォルトで簡体字中国語の概要が表示されます。完全なリリースノートはこちら：
-[简体中文](./docs/releases/v5.12.1.zh-CN.md) · [繁體中文](./docs/releases/v5.12.1.zh-TW.md) · [English](./docs/releases/v5.12.1.en.md) · [Français](./docs/releases/v5.12.1.fr.md) · [日本語](./docs/releases/v5.12.1.ja.md) · [Español](./docs/releases/v5.12.1.es.md)
+[简体中文](./docs/releases/v6.0.0.zh-CN.md) · [繁體中文](./docs/releases/v6.0.0.zh-TW.md) · [English](./docs/releases/v6.0.0.en.md) · [Français](./docs/releases/v6.0.0.fr.md) · [日本語](./docs/releases/v6.0.0.ja.md) · [Español](./docs/releases/v6.0.0.es.md)
 
 <a id="主な機能"></a>
 

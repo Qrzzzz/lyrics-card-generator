@@ -34,6 +34,13 @@ import { getExportRasterSizeIssue } from "@/lib/export-dimensions";
 import { createExportSnapshot, snapshotAsAppState, type ExportSnapshot } from "@/lib/export-snapshot";
 import { resolveExportSafetyMessage } from "@/lib/export-safety";
 import { getExportLyricLineStatus } from "@/lib/lyrics-document";
+import { cloneLyricDocument, reconcileLyricDocumentV2 } from "@/lib/lyrics-document-v2";
+import {
+  withLyricPlainText,
+  withLyricSource,
+  withLyricTranslation,
+  withTranslationEnabled
+} from "@/lib/lyrics-document-state";
 import { hasCurrentLandscapePlan } from "@/lib/landscape-measurement-key";
 import {
   ExportTransactionMutex,
@@ -309,8 +316,11 @@ export function WebLiteEditor() {
       (nextStyle.layoutMode ?? "portrait") === "landscape"
     ) {
       const landscapeStatus = getExportLyricLineStatus({
-        lyrics: state.lyrics,
-        translationText: nextStyle.translationText,
+        lyricDocument: reconcileLyricDocumentV2(
+          state.lyricDocument,
+          state.lyrics,
+          nextStyle.translationText
+        ),
         translationEnabled: nextStyle.translationEnabled,
         contentMode: nextStyle.contentMode,
         layoutMode: "landscape"
@@ -333,38 +343,19 @@ export function WebLiteEditor() {
   }
 
   function setLyrics(lyrics: string) {
-    setState((current) => ({ ...current, lyrics }));
+    setState((current) => withLyricSource(current, lyrics));
   }
 
   function setTranslationEnabled(enabled: boolean) {
-    // AppState and CardStyle retain mirrored translation fields for desktop compatibility.
-    setState((current) => ({
-      ...current,
-      translationEnabled: enabled,
-      style: { ...current.style, translationEnabled: enabled }
-    }));
+    setState((current) => withTranslationEnabled(current, enabled));
   }
 
   function setTranslationText(translationText: string) {
-    setState((current) => ({
-      ...current,
-      translationText,
-      style: { ...current.style, translationText }
-    }));
+    setState((current) => withLyricTranslation(current, translationText));
   }
 
   function splitAlternatingLyrics(lyrics: string, translationText: string) {
-    setState((current) => ({
-      ...current,
-      lyrics,
-      translationText,
-      translationEnabled: true,
-      style: {
-        ...current.style,
-        translationText,
-        translationEnabled: true
-      }
-    }));
+    setState((current) => withLyricPlainText(current, lyrics, translationText, true));
   }
 
   async function completeAndExport() {
@@ -596,7 +587,7 @@ export function WebLiteEditor() {
                         isPreviewVisible={isPreviewVisible}
                         onPreviewVisibleChange={setIsPreviewVisible}
                         song={parsedState.song}
-                        lyrics={parsedState.lyrics}
+                        lyricDocument={parsedState.lyricDocument}
                         style={parsedState.style}
                         coverArtwork={parsedState.coverArtwork}
                         cardRef={cardRef}
@@ -617,7 +608,7 @@ export function WebLiteEditor() {
 
       <ExportCardHost
         song={parsedState.song}
-        lyrics={parsedState.lyrics}
+        lyricDocument={parsedState.lyricDocument}
         style={parsedState.style}
         coverArtwork={parsedState.coverArtwork}
         exportCardRef={exportCardRef}
@@ -629,7 +620,7 @@ export function WebLiteEditor() {
       {activeExportSnapshot ? (
         <ExportCardHost
           song={activeExportSnapshot.song as SongInfo}
-          lyrics={activeExportSnapshot.lyrics}
+          lyricDocument={activeExportSnapshot.lyricDocument}
           style={activeExportSnapshot.style as CardStyle}
           coverArtwork={activeExportSnapshot.coverArtwork as AppState["coverArtwork"]}
           exportCardRef={captureCardRef}
@@ -648,6 +639,7 @@ function createInitialState(locale: WebLiteLocale): AppState {
   return {
     ...defaultState,
     locale,
+    lyricDocument: cloneLyricDocument(defaultState.lyricDocument),
     song: { ...defaultState.song, source: "unknown" },
     style: {
       ...defaultState.style,

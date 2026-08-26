@@ -14,3 +14,11 @@ export function cleanAITranslation(text: string) {
     .replace(/^好的.*?[:：]\s*/i, "")
     .trim();
 }
+
+export function cleanStructuredAITranslation(text: string) {
+  return text
+    .trim()
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/```\s*$/i, "")
+    .trim();
+}
