@@ -12,15 +12,34 @@ const {
 assert.match(NATIVE_FONT_SCHEME_DIALOG_SCRIPT, /\[System\.Windows\.Forms\.Form\]::new\(\)/);
 assert.equal(
   (NATIVE_FONT_SCHEME_DIALOG_SCRIPT.match(/\[System\.Windows\.Forms\.FontDialog\]::new\(\)/g) ?? []).length,
-  2,
-  "the native scheme form opens one system FontDialog for each font role"
+  0,
+  "the native scheme form keeps both font choices inside one window"
 );
-assert.match(NATIVE_FONT_SCHEME_DIALOG_SCRIPT, /ShowDialog\(\$form\)/);
+assert.equal(
+  (NATIVE_FONT_SCHEME_DIALOG_SCRIPT.match(/\[System\.Windows\.Forms\.ComboBox\]::new\(\)/g) ?? []).length,
+  2,
+  "the native scheme form exposes one installed-font selector for each font role"
+);
+assert.match(NATIVE_FONT_SCHEME_DIALOG_SCRIPT, /InstalledFontCollection\]::new\(\)/);
+assert.match(NATIVE_FONT_SCHEME_DIALOG_SCRIPT, /Initialize-FontCombo \$cjkCombo \$fontNames \$script:cjkFamily/);
+assert.match(NATIVE_FONT_SCHEME_DIALOG_SCRIPT, /Initialize-FontCombo \$latinCombo \$fontNames \$script:latinFamily/);
+assert.match(NATIVE_FONT_SCHEME_DIALOG_SCRIPT, /\$cjkCombo\.Add_SelectedIndexChanged/);
+assert.match(NATIVE_FONT_SCHEME_DIALOG_SCRIPT, /\$latinCombo\.Add_SelectedIndexChanged/);
 assert.match(NATIVE_FONT_SCHEME_DIALOG_SCRIPT, /\$form\.ShowDialog\(\$owner\)/);
 assert.match(NATIVE_FONT_SCHEME_DIALOG_SCRIPT, /DialogResult\]::Cancel/);
 assert.match(NATIVE_FONT_SCHEME_DIALOG_SCRIPT, /DialogResult\]::OK/);
 assert.match(NATIVE_FONT_SCHEME_DIALOG_SCRIPT, /LyricsCardWindowOwner/);
 assert.match(NATIVE_FONT_SCHEME_DIALOG_SCRIPT, /EnableVisualStyles/);
+assert.match(NATIVE_FONT_SCHEME_DIALOG_SCRIPT, /SetCompatibleTextRenderingDefault\(\$false\)/);
+assert.match(NATIVE_FONT_SCHEME_DIALOG_SCRIPT, /SetProcessDpiAwarenessContext/);
+assert.match(NATIVE_FONT_SCHEME_DIALOG_SCRIPT, /\[LyricsCardDpi\]::EnablePerMonitorV2\(\)/);
+assert.match(NATIVE_FONT_SCHEME_DIALOG_SCRIPT, /\[LyricsCardDpi\]::DpiForWindow\(\$owner\.Handle\)/);
+assert.match(NATIVE_FONT_SCHEME_DIALOG_SCRIPT, /\$form\.Scale\(\[System\.Drawing\.SizeF\]::new\(\$layoutScale, \$layoutScale\)\)/);
+assert.ok(
+  NATIVE_FONT_SCHEME_DIALOG_SCRIPT.indexOf("[LyricsCardDpi]::EnablePerMonitorV2()") <
+    NATIVE_FONT_SCHEME_DIALOG_SCRIPT.indexOf("Add-Type -AssemblyName System.Windows.Forms"),
+  "Per-Monitor V2 awareness is enabled before loading WinForms UI"
+);
 
 const encoded = (value) => Buffer.from(value, "utf8").toString("base64");
 assert.deepEqual(
@@ -69,6 +88,7 @@ async function testSuccessfulSelection() {
   assert.equal(decodeEnvironment(invocation, "LYRICS_CARD_CJK_FONT_B64"), "Microsoft YaHei");
   assert.equal(decodeEnvironment(invocation, "LYRICS_CARD_LATIN_FONT_B64"), "Arial");
   assert.equal(decodeEnvironment(invocation, "LYRICS_CARD_FONT_TITLE_B64"), "自定义字体方案");
+  assert.equal("LYRICS_CARD_FONT_CHOOSE_LABEL_B64" in invocation.options.env, false);
   assert.equal(
     decodeEnvironment(invocation, "LYRICS_CARD_FONT_DESCRIPTION_B64"),
     NATIVE_FONT_SCHEME_COPY.zh.description

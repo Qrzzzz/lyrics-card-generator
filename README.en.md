@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v6.1.2.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v6.1.3.en.md">Release Notes</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
   <a href="./docs/web-lite-browser-support.md">Web Lite Browser Support</a> ·
   <a href="#features">Features</a> ·
@@ -75,25 +75,25 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 ## 📦 Download and Installation
 
-Download v6.1.2 from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
+Download v6.1.3 from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Installer: `Lyrics Card Generator Setup 6.1.2.exe`
-* Portable build: `Lyrics Card Generator-6.1.2-portable.exe`
+* Installer: `Lyrics Card Generator Setup 6.1.3.exe`
+* Portable build: `Lyrics Card Generator-6.1.3-portable.exe`
 
 The installer is recommended for regular use. The portable version is useful for temporary use, testing, or running from a removable drive.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v6.1.2 Highlights
+### v6.1.3 Highlights
 
-* One native WinForms scheme window replaces the separate CJK and Latin custom-font entries and applies both choices together.
-* Its two Windows selection buttons each invoke the system `FontDialog`; no Electron or HTML-drawn font picker is created on Windows.
-* Whole-scheme cancel, one-time commit, and focus restoration remain intact; non-Windows desktop and browser fallbacks keep the atomic two-font flow.
+* The native Windows WinForms scheme window now contains CJK and Latin font lists directly, without opening two secondary system `FontDialog` windows.
+* Both roles expose the complete installed-font list, current selection, and live preview while preserving whole-scheme cancel and one-time commit semantics.
+* The native helper enables Per-Monitor V2 DPI awareness and scales to the main window's display, eliminating bitmap-stretched text at high display scaling.
 
 ## 🌐 Multilingual Release Notes
 
 GitHub Release displays a Simplified Chinese summary by default. See the full release notes:
-[简体中文](./docs/releases/v6.1.2.zh-CN.md) · [繁體中文](./docs/releases/v6.1.2.zh-TW.md) · [English](./docs/releases/v6.1.2.en.md) · [Français](./docs/releases/v6.1.2.fr.md) · [日本語](./docs/releases/v6.1.2.ja.md) · [Español](./docs/releases/v6.1.2.es.md)
+[简体中文](./docs/releases/v6.1.3.zh-CN.md) · [繁體中文](./docs/releases/v6.1.3.zh-TW.md) · [English](./docs/releases/v6.1.3.en.md) · [Français](./docs/releases/v6.1.3.fr.md) · [日本語](./docs/releases/v6.1.3.ja.md) · [Español](./docs/releases/v6.1.3.es.md)
 
 <a id="features"></a>
 
