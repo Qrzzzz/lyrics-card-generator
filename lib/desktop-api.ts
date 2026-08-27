@@ -34,14 +34,19 @@ export type SystemFontOption = {
 };
 
 export type NativeFontPickerContext = {
-  category: "cjk" | "latin";
-  selectedFamily: string;
+  cjkFontFamily: string;
+  latinFontFamily: string;
   locale: Locale;
   theme: EffectiveUiThemeId;
   title: string;
 };
 
 export type NativeFontPickerOptions = NativeFontPickerContext;
+
+export type NativeFontPickerResult = Pick<
+  NativeFontPickerContext,
+  "cjkFontFamily" | "latinFontFamily"
+>;
 
 export type WindowMaterialResult = {
   ok: boolean;
@@ -86,9 +91,9 @@ export type LyricsCardDesktopApi = {
   saveAppPreferences: (preferences: AppPreferencesRecord, options?: AppPreferencesSaveOptions) => Promise<boolean>;
   listSystemFonts: () => Promise<SystemFontOption[]>;
   pickFont: () => Promise<string | null>;
-  openNativeFontPicker: (options: NativeFontPickerOptions) => Promise<string | null>;
+  openNativeFontPicker: (options: NativeFontPickerOptions) => Promise<NativeFontPickerResult | null>;
   getNativeFontPickerContext: () => Promise<NativeFontPickerContext | null>;
-  selectNativeFontPicker: (family: string) => Promise<boolean>;
+  applyNativeFontPicker: (result: NativeFontPickerResult) => Promise<boolean>;
   closeNativeFontPicker: () => Promise<boolean>;
   openExternal: (url: string) => Promise<boolean>;
   saveBackgroundImage: () => Promise<{ imageId: string; imageUrl: string } | null>;
@@ -129,7 +134,7 @@ declare global {
 
 type LyricsCardDesktopBridge = Omit<
   LyricsCardDesktopApi,
-  "createManualSave" | "updateManualSave" | "showNativeConfirm" | "showNativeAlert" | "openNativeFontPicker"
+  "createManualSave" | "updateManualSave" | "showNativeConfirm" | "showNativeAlert" | "openNativeFontPicker" | "applyNativeFontPicker"
 > & {
   showNativeConfirmDialog: (
     type: NativeMessageBoxType,
@@ -147,12 +152,13 @@ type LyricsCardDesktopBridge = Omit<
     closeLabel: string
   ) => Promise<boolean>;
   openNativeFontPickerWindow: (
-    category: "cjk" | "latin",
-    selectedFamily: string,
+    cjkFontFamily: string,
+    latinFontFamily: string,
     locale: Locale,
     theme: EffectiveUiThemeId,
     title: string
-  ) => Promise<string | null>;
+  ) => Promise<NativeFontPickerResult | null>;
+  applyNativeFontPickerFamilies: (cjkFontFamily: string, latinFontFamily: string) => Promise<boolean>;
   createManualSaveEnvelope: (envelope: string) => Promise<ImportHistoryWriteResult>;
   updateManualSaveEnvelope: (recordId: string, envelope: string) => Promise<ImportHistoryWriteResult>;
 };
@@ -176,7 +182,6 @@ function invalidManualSaveResult(): Promise<ImportHistoryWriteResult> {
 }
 
 const NATIVE_DIALOG_TYPES = new Set<NativeMessageBoxType>(["info", "warning", "error", "question"]);
-const FONT_PICKER_CATEGORIES = new Set(["cjk", "latin"]);
 const FONT_PICKER_THEMES = new Set<EffectiveUiThemeId>([
   "album-dynamic",
   "dark",
@@ -186,8 +191,12 @@ const FONT_PICKER_THEMES = new Set<EffectiveUiThemeId>([
 ]);
 const FONT_PICKER_LOCALES = new Set<Locale>(["zh", "zh-TW", "en", "fr", "ja", "es"]);
 
-function isDialogText(value: unknown, maximumLength: number) {
+function isDialogText(value: unknown, maximumLength: number): value is string {
   return typeof value === "string" && value.trim().length > 0 && value.length <= maximumLength;
+}
+
+function isFontFamily(value: unknown): value is string {
+  return typeof value === "string" && isDialogText(value, 256) && !/[\r\n\0]/u.test(value);
 }
 
 function isNativeDialogOptions(value: unknown): value is NativeDialogOptions {
@@ -205,13 +214,12 @@ function isNativeFontPickerOptions(value: unknown): value is NativeFontPickerOpt
   if (!value || typeof value !== "object") return false;
   const options = value as Partial<NativeFontPickerOptions>;
   return Boolean(
-    options.category && FONT_PICKER_CATEGORIES.has(options.category) &&
-    typeof options.selectedFamily === "string" &&
-    options.selectedFamily.trim().length > 0 &&
-    options.selectedFamily.length <= 256 &&
+    isFontFamily(options.cjkFontFamily) &&
+    isFontFamily(options.latinFontFamily) &&
     options.locale && FONT_PICKER_LOCALES.has(options.locale) &&
     options.theme && FONT_PICKER_THEMES.has(options.theme) &&
-    isDialogText(options.title, 160)
+    isDialogText(options.title, 160) &&
+    !/[\r\n\0]/u.test(options.title)
   );
 }
 
@@ -273,14 +281,24 @@ function createDesktopApi(bridge: LyricsCardDesktopBridge): LyricsCardDesktopApi
       value: (options: unknown) => (
         isNativeFontPickerOptions(options)
           ? bridge.openNativeFontPickerWindow(
-              options.category,
-              options.selectedFamily,
+              options.cjkFontFamily,
+              options.latinFontFamily,
               options.locale,
               options.theme,
               options.title
             )
           : Promise.resolve(null)
       )
+    },
+    applyNativeFontPicker: {
+      enumerable: true,
+      value: (result: unknown) => {
+        if (!result || typeof result !== "object") return Promise.resolve(false);
+        const candidate = result as Partial<NativeFontPickerResult>;
+        return isFontFamily(candidate.cjkFontFamily) && isFontFamily(candidate.latinFontFamily)
+          ? bridge.applyNativeFontPickerFamilies(candidate.cjkFontFamily.trim(), candidate.latinFontFamily.trim())
+          : Promise.resolve(false);
+      }
     }
   });
   return Object.freeze(api);

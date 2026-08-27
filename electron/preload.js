@@ -2,7 +2,6 @@ const { contextBridge, ipcRenderer, webUtils } = require("electron");
 
 const MAX_MANUAL_SAVE_ENVELOPE_CODE_UNITS = 2 * 1024 * 1024 + 64;
 const NATIVE_DIALOG_TYPES = new Set(["info", "warning", "error", "question"]);
-const FONT_PICKER_CATEGORIES = new Set(["cjk", "latin"]);
 const FONT_PICKER_LOCALES = new Set(["zh", "zh-TW", "en", "fr", "ja", "es"]);
 const FONT_PICKER_THEMES = new Set(["album-dynamic", "dark", "light", "dark-acrylic", "light-acrylic"]);
 
@@ -32,20 +31,21 @@ function isFontFamily(value) {
   return typeof value === "string" && value.trim().length > 0 && value.length <= 256 && !/[\r\n\0]/u.test(value);
 }
 
-function openNativeFontPickerWindow(category, selectedFamily, locale, theme, title) {
+function openNativeFontPickerWindow(cjkFontFamily, latinFontFamily, locale, theme, title) {
   if (
-    !FONT_PICKER_CATEGORIES.has(category) ||
-    !isFontFamily(selectedFamily) ||
+    !isFontFamily(cjkFontFamily) ||
+    !isFontFamily(latinFontFamily) ||
     !FONT_PICKER_LOCALES.has(locale) ||
     !FONT_PICKER_THEMES.has(theme) ||
-    !isDialogText(title, 160)
+    !isDialogText(title, 160) ||
+    /[\r\n\0]/u.test(title)
   ) {
     return Promise.resolve(null);
   }
   return ipcRenderer.invoke(
     "lyrics-card:native-font-picker-open",
-    category,
-    selectedFamily,
+    cjkFontFamily.trim(),
+    latinFontFamily.trim(),
     locale,
     theme,
     title
@@ -106,9 +106,9 @@ contextBridge.exposeInMainWorld("lyricsCardDesktopBridge", {
   pickFont: () => ipcRenderer.invoke("lyrics-card:pick-font"),
   openNativeFontPickerWindow,
   getNativeFontPickerContext: () => ipcRenderer.invoke("lyrics-card:native-font-picker-context"),
-  selectNativeFontPicker: (family) => (
-    isFontFamily(family)
-      ? ipcRenderer.invoke("lyrics-card:native-font-picker-select", family)
+  applyNativeFontPickerFamilies: (cjkFontFamily, latinFontFamily) => (
+    isFontFamily(cjkFontFamily) && isFontFamily(latinFontFamily)
+      ? ipcRenderer.invoke("lyrics-card:native-font-picker-apply", cjkFontFamily.trim(), latinFontFamily.trim())
       : Promise.resolve(false)
   ),
   closeNativeFontPicker: () => ipcRenderer.invoke("lyrics-card:native-font-picker-close"),

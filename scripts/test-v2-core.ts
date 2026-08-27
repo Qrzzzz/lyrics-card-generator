@@ -386,6 +386,8 @@ function testFontPickerOptions() {
   assertEqual(cjk.filter((font) => font.family === "Microsoft YaHei").length, 1, "recommended and discovered CJK fonts deduplicate by family");
   assert(cjk.some((font) => font.family === "Yu Gothic"), "CJK discovery remains available in the native window");
   assert(latin.some((font) => font.family === "Arial"), "Latin discovery remains available in the native window");
+  assert(cjk.some((font) => font.family === "Arial"), "font-name heuristics never hide a system font from the CJK role");
+  assert(latin.some((font) => font.family === "Yu Gothic"), "font-name heuristics never hide a system font from the Latin role");
   assertEqual(previewTextForCategory("cjk"), "共に歩んだ旅路を辿れば", "CJK picker keeps its multilingual preview sample");
   assertEqual(previewTextForCategory("latin"), "tomoni ayunda tabiji wo tadoreba", "Latin picker keeps its preview sample");
 }

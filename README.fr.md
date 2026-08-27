@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v6.1.1.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v6.1.2.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="./docs/development.en.md">Développement local</a> ·
@@ -74,25 +74,25 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 ## 📦 Téléchargement et installation
 
-Téléchargez la v6.1.1 depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
+Téléchargez la v6.1.2 depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
 
-* Installateur : `Lyrics Card Generator Setup 6.1.1.exe`
-* Version portable : `Lyrics Card Generator-6.1.1-portable.exe`
+* Installateur : `Lyrics Card Generator Setup 6.1.2.exe`
+* Version portable : `Lyrics Card Generator-6.1.2-portable.exe`
 
 L'installateur est recommandé pour une utilisation régulière. La version portable convient aux essais, à une utilisation temporaire ou à un disque amovible.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### Points forts de la v6.1.1
+### Points forts de la v6.1.2
 
-* L'application Windows ouvre désormais directement la boîte de dialogue des polices du système, sans sélecteur dessiné par Electron ou HTML.
-* La boîte de dialogue appartient au handle de la fenêtre principale, fonctionne comme une vraie fenêtre modale Windows et restitue correctement le focus après validation ou annulation.
-* Le choix ne modifie toujours que le brouillon et l'aperçu réel jusqu'à l'enregistrement du jeu ; les environnements non Windows et les navigateurs conservent le repli compatible.
+* Une fenêtre de jeu WinForms native remplace les entrées CJK et latine séparées et applique les deux choix ensemble.
+* Sous Windows, ses deux boutons de sélection appellent chacun le `FontDialog` du système ; aucun sélecteur Electron ou HTML redessiné n’est créé.
+* L’annulation globale, la validation unique et la restitution du focus sont conservées ; les replis pour bureau non Windows et navigateur gardent le flux atomique à deux polices.
 
 ## 🌐 Notes de publication multilingues
 
 Par défaut, GitHub Release affiche un résumé en chinois simplifié. Consultez les notes complètes :
-[简体中文](./docs/releases/v6.1.1.zh-CN.md) · [繁體中文](./docs/releases/v6.1.1.zh-TW.md) · [English](./docs/releases/v6.1.1.en.md) · [Français](./docs/releases/v6.1.1.fr.md) · [日本語](./docs/releases/v6.1.1.ja.md) · [Español](./docs/releases/v6.1.1.es.md)
+[简体中文](./docs/releases/v6.1.2.zh-CN.md) · [繁體中文](./docs/releases/v6.1.2.zh-TW.md) · [English](./docs/releases/v6.1.2.en.md) · [Français](./docs/releases/v6.1.2.fr.md) · [日本語](./docs/releases/v6.1.2.ja.md) · [Español](./docs/releases/v6.1.2.es.md)
 
 <a id="fonctionnalités-principales"></a>
 

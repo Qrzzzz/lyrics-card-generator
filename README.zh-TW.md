@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v6.1.1.zh-TW.md">發布說明</a> ·
+  <a href="./docs/releases/v6.1.2.zh-TW.md">發布說明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">線上 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="./docs/development.zh-CN.md">本機開發</a> ·
@@ -71,25 +71,25 @@
 
 ## 📦 下載與安裝
 
-請從 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載 v6.1.1：
+請從 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載 v6.1.2：
 
-* 安裝版：`Lyrics Card Generator Setup 6.1.1.exe`
-* 可攜版：`Lyrics Card Generator-6.1.1-portable.exe`
+* 安裝版：`Lyrics Card Generator Setup 6.1.2.exe`
+* 可攜版：`Lyrics Card Generator-6.1.2-portable.exe`
 
 安裝版適合長期使用；可攜版適合臨時執行、測試或放在隨身碟中使用。
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v6.1.1 更新重點
+### v6.1.2 更新重點
 
-* Windows 桌面版現在直接呼叫系統內建字型對話方塊，不再使用 Electron 或 HTML 自繪字型視窗。
-* 系統對話方塊由主視窗控制代碼擁有，以真正的 Windows 模態視窗開啟，並在選取或取消後正確恢復主視窗焦點。
-* 字型選擇仍只更新自訂方案草稿與真實卡片預覽，由「儲存為目前方案」提交；非 Windows 與瀏覽器環境繼續使用相容回退。
+* 自訂方案將中日韓與西文字體入口合併為一個原生 WinForms 方案視窗，兩種字體一次確認並提交。
+* Windows 方案視窗的兩個選擇按鈕分別呼叫系統 `FontDialog`，不再建立 Electron 或 HTML 自繪字體選擇視窗。
+* 整體取消、一次提交與焦點還原保持完整；非 Windows 桌面版與瀏覽器保留雙字體原子提交回退。
 
 ## 🌐 多語言發佈說明
 
 GitHub Release 預設顯示簡體中文摘要，完整說明請見：
-[简体中文](./docs/releases/v6.1.1.zh-CN.md) · [繁體中文](./docs/releases/v6.1.1.zh-TW.md) · [English](./docs/releases/v6.1.1.en.md) · [Français](./docs/releases/v6.1.1.fr.md) · [日本語](./docs/releases/v6.1.1.ja.md) · [Español](./docs/releases/v6.1.1.es.md)
+[简体中文](./docs/releases/v6.1.2.zh-CN.md) · [繁體中文](./docs/releases/v6.1.2.zh-TW.md) · [English](./docs/releases/v6.1.2.en.md) · [Français](./docs/releases/v6.1.2.fr.md) · [日本語](./docs/releases/v6.1.2.ja.md) · [Español](./docs/releases/v6.1.2.es.md)
 
 ## ✨ 主要功能
 
