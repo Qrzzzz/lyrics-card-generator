@@ -9,7 +9,6 @@ const NATIVE_FONT_SCHEME_COPY = Object.freeze({
     description: "分别选择中日韩文字体与西文字体，应用后会同时更新当前方案。",
     cjkLabel: "中日韩文字体",
     latinLabel: "西文字体",
-    chooseLabel: "选择…",
     applyLabel: "应用字体方案",
     cancelLabel: "取消"
   },
@@ -17,7 +16,6 @@ const NATIVE_FONT_SCHEME_COPY = Object.freeze({
     description: "分別選擇中日韓文字體與西文字體，套用後會同時更新目前方案。",
     cjkLabel: "中日韓文字體",
     latinLabel: "西文字體",
-    chooseLabel: "選擇…",
     applyLabel: "套用字體方案",
     cancelLabel: "取消"
   },
@@ -25,7 +23,6 @@ const NATIVE_FONT_SCHEME_COPY = Object.freeze({
     description: "Choose CJK and Latin fonts separately, then apply both to the current scheme.",
     cjkLabel: "CJK Font",
     latinLabel: "Latin Font",
-    chooseLabel: "Choose…",
     applyLabel: "Apply Font Scheme",
     cancelLabel: "Cancel"
   },
@@ -33,7 +30,6 @@ const NATIVE_FONT_SCHEME_COPY = Object.freeze({
     description: "Choisissez séparément les polices CJK et latine, puis appliquez-les au jeu actuel.",
     cjkLabel: "Police CJK",
     latinLabel: "Police latine",
-    chooseLabel: "Choisir…",
     applyLabel: "Appliquer le jeu",
     cancelLabel: "Annuler"
   },
@@ -41,7 +37,6 @@ const NATIVE_FONT_SCHEME_COPY = Object.freeze({
     description: "CJK 用と欧文用のフォントを個別に選び、現在の構成へまとめて適用します。",
     cjkLabel: "CJK フォント",
     latinLabel: "欧文フォント",
-    chooseLabel: "選択…",
     applyLabel: "フォント構成を適用",
     cancelLabel: "キャンセル"
   },
@@ -49,7 +44,6 @@ const NATIVE_FONT_SCHEME_COPY = Object.freeze({
     description: "Elige por separado las fuentes CJK y latina y aplica ambas a la combinación actual.",
     cjkLabel: "Fuente CJK",
     latinLabel: "Fuente latina",
-    chooseLabel: "Elegir…",
     applyLabel: "Aplicar combinación",
     cancelLabel: "Cancelar"
   }
@@ -57,6 +51,73 @@ const NATIVE_FONT_SCHEME_COPY = Object.freeze({
 
 const NATIVE_FONT_SCHEME_DIALOG_SCRIPT = String.raw`
 $ErrorActionPreference = 'Stop'
+
+Add-Type -TypeDefinition @'
+using System;
+using System.Runtime.InteropServices;
+
+public static class LyricsCardDpi
+{
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern bool SetProcessDpiAwarenessContext(IntPtr value);
+
+    [DllImport("shcore.dll")]
+    private static extern int SetProcessDpiAwareness(int value);
+
+    [DllImport("user32.dll")]
+    private static extern bool SetProcessDPIAware();
+
+    [DllImport("user32.dll")]
+    private static extern uint GetDpiForWindow(IntPtr window);
+
+    [DllImport("user32.dll")]
+    private static extern uint GetDpiForSystem();
+
+    public static void EnablePerMonitorV2()
+    {
+        try
+        {
+            if (SetProcessDpiAwarenessContext(new IntPtr(-4))) return;
+        }
+        catch (EntryPointNotFoundException) {}
+        catch (DllNotFoundException) {}
+
+        try
+        {
+            if (SetProcessDpiAwareness(2) == 0) return;
+        }
+        catch (EntryPointNotFoundException) {}
+        catch (DllNotFoundException) {}
+
+        try { SetProcessDPIAware(); }
+        catch (EntryPointNotFoundException) {}
+        catch (DllNotFoundException) {}
+    }
+
+    public static uint DpiForWindow(IntPtr window)
+    {
+        try
+        {
+            uint dpi = GetDpiForWindow(window);
+            if (dpi > 0) return dpi;
+        }
+        catch (EntryPointNotFoundException) {}
+        catch (DllNotFoundException) {}
+
+        try
+        {
+            uint dpi = GetDpiForSystem();
+            if (dpi > 0) return dpi;
+        }
+        catch (EntryPointNotFoundException) {}
+        catch (DllNotFoundException) {}
+
+        return 96;
+    }
+}
+'@
+
+[LyricsCardDpi]::EnablePerMonitorV2()
 Add-Type -AssemblyName System.Drawing
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -TypeDefinition @'
@@ -75,42 +136,78 @@ function Read-EncodedText([string]$name) {
 }
 
 function New-PreviewFont([string]$family) {
-    try {
-        return [System.Drawing.Font]::new($family, 15.0, [System.Drawing.FontStyle]::Regular, [System.Drawing.GraphicsUnit]::Point)
-    } catch {
-        $fallback = [System.Drawing.SystemFonts]::MessageBoxFont
-        return [System.Drawing.Font]::new($fallback.FontFamily, 15.0, [System.Drawing.FontStyle]::Regular, [System.Drawing.GraphicsUnit]::Point)
+    foreach ($style in @(
+        [System.Drawing.FontStyle]::Regular,
+        [System.Drawing.FontStyle]::Bold,
+        [System.Drawing.FontStyle]::Italic,
+        [System.Drawing.FontStyle]([int][System.Drawing.FontStyle]::Bold -bor [int][System.Drawing.FontStyle]::Italic)
+    )) {
+        $candidate = $null
+        try {
+            $candidate = [System.Drawing.Font]::new($family, 15.0, $style, [System.Drawing.GraphicsUnit]::Point)
+            if ($candidate.FontFamily.Name -ieq $family) { return $candidate }
+        } catch {}
+        if ($null -ne $candidate) { $candidate.Dispose() }
     }
+
+    $fallback = [System.Drawing.SystemFonts]::MessageBoxFont
+    return [System.Drawing.Font]::new($fallback.FontFamily, 15.0, [System.Drawing.FontStyle]::Regular, [System.Drawing.GraphicsUnit]::Point)
+}
+
+function Initialize-FontCombo(
+    [System.Windows.Forms.ComboBox]$combo,
+    [string[]]$fontNames,
+    [string]$currentFamily
+) {
+    foreach ($fontName in $fontNames) { [void]$combo.Items.Add($fontName) }
+    $selectedIndex = $combo.FindStringExact($currentFamily)
+    if ($selectedIndex -lt 0) {
+        [void]$combo.Items.Insert(0, $currentFamily)
+        $selectedIndex = 0
+    }
+    $combo.SelectedIndex = $selectedIndex
 }
 
 [System.Windows.Forms.Application]::EnableVisualStyles()
+[System.Windows.Forms.Application]::SetCompatibleTextRenderingDefault($false)
 $ownerValue = [Int64]::Parse($env:LYRICS_CARD_FONT_OWNER)
 $owner = [LyricsCardWindowOwner]::new([IntPtr]::new($ownerValue))
+$targetDpi = [LyricsCardDpi]::DpiForWindow($owner.Handle)
+$layoutScale = [Math]::Max(1.0, [double]$targetDpi / 96.0)
 $script:cjkFamily = Read-EncodedText 'LYRICS_CARD_CJK_FONT_B64'
 $script:latinFamily = Read-EncodedText 'LYRICS_CARD_LATIN_FONT_B64'
 $title = Read-EncodedText 'LYRICS_CARD_FONT_TITLE_B64'
 $descriptionText = Read-EncodedText 'LYRICS_CARD_FONT_DESCRIPTION_B64'
 $cjkLabelText = Read-EncodedText 'LYRICS_CARD_FONT_CJK_LABEL_B64'
 $latinLabelText = Read-EncodedText 'LYRICS_CARD_FONT_LATIN_LABEL_B64'
-$chooseLabel = Read-EncodedText 'LYRICS_CARD_FONT_CHOOSE_LABEL_B64'
 $applyLabel = Read-EncodedText 'LYRICS_CARD_FONT_APPLY_LABEL_B64'
 $cancelLabel = Read-EncodedText 'LYRICS_CARD_FONT_CANCEL_LABEL_B64'
 $script:formFont = $null
 $script:cjkPreviewFont = $null
 $script:latinPreviewFont = $null
+$fontCollection = $null
 
 $form = [System.Windows.Forms.Form]::new()
 try {
+    $form.SuspendLayout()
     $form.Text = $title
     $form.StartPosition = [System.Windows.Forms.FormStartPosition]::CenterParent
     $form.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::FixedDialog
     $form.MaximizeBox = $false
     $form.MinimizeBox = $false
     $form.ShowInTaskbar = $false
-    $form.AutoScaleMode = [System.Windows.Forms.AutoScaleMode]::Dpi
+    $form.AutoScaleMode = [System.Windows.Forms.AutoScaleMode]::None
     $form.ClientSize = [System.Drawing.Size]::new(680, 390)
     $script:formFont = [System.Drawing.Font]::new('Segoe UI', 9.0)
     $form.Font = $script:formFont
+
+    $fontCollection = [System.Drawing.Text.InstalledFontCollection]::new()
+    $fontNames = @(
+        $fontCollection.Families |
+            ForEach-Object { $_.Name } |
+            Where-Object { -not [string]::IsNullOrWhiteSpace($_) -and -not $_.StartsWith('@') } |
+            Sort-Object -Unique
+    )
 
     $description = [System.Windows.Forms.Label]::new()
     $description.Location = [System.Drawing.Point]::new(24, 20)
@@ -124,25 +221,23 @@ try {
     $cjkGroup.Text = $cjkLabelText
     $form.Controls.Add($cjkGroup)
 
-    $cjkFamilyLabel = [System.Windows.Forms.Label]::new()
-    $cjkFamilyLabel.Location = [System.Drawing.Point]::new(18, 25)
-    $cjkFamilyLabel.Size = [System.Drawing.Size]::new(440, 22)
-    $cjkFamilyLabel.Text = $script:cjkFamily
-    $cjkGroup.Controls.Add($cjkFamilyLabel)
+    $cjkCombo = [System.Windows.Forms.ComboBox]::new()
+    $cjkCombo.Location = [System.Drawing.Point]::new(18, 25)
+    $cjkCombo.Size = [System.Drawing.Size]::new(586, 28)
+    $cjkCombo.DropDownStyle = [System.Windows.Forms.ComboBoxStyle]::DropDownList
+    $cjkCombo.MaxDropDownItems = 18
+    $cjkCombo.AccessibleName = $cjkLabelText
+    $cjkCombo.TabIndex = 0
+    Initialize-FontCombo $cjkCombo $fontNames $script:cjkFamily
+    $cjkGroup.Controls.Add($cjkCombo)
 
     $cjkPreview = [System.Windows.Forms.Label]::new()
-    $cjkPreview.Location = [System.Drawing.Point]::new(18, 53)
-    $cjkPreview.Size = [System.Drawing.Size]::new(440, 38)
+    $cjkPreview.Location = [System.Drawing.Point]::new(18, 58)
+    $cjkPreview.Size = [System.Drawing.Size]::new(586, 33)
     $cjkPreview.Text = '共に歩んだ旅路を辿れば'
     $script:cjkPreviewFont = New-PreviewFont $script:cjkFamily
     $cjkPreview.Font = $script:cjkPreviewFont
     $cjkGroup.Controls.Add($cjkPreview)
-
-    $cjkButton = [System.Windows.Forms.Button]::new()
-    $cjkButton.Location = [System.Drawing.Point]::new(486, 37)
-    $cjkButton.Size = [System.Drawing.Size]::new(118, 34)
-    $cjkButton.Text = $chooseLabel
-    $cjkGroup.Controls.Add($cjkButton)
 
     $latinGroup = [System.Windows.Forms.GroupBox]::new()
     $latinGroup.Location = [System.Drawing.Point]::new(24, 184)
@@ -150,31 +245,30 @@ try {
     $latinGroup.Text = $latinLabelText
     $form.Controls.Add($latinGroup)
 
-    $latinFamilyLabel = [System.Windows.Forms.Label]::new()
-    $latinFamilyLabel.Location = [System.Drawing.Point]::new(18, 25)
-    $latinFamilyLabel.Size = [System.Drawing.Size]::new(440, 22)
-    $latinFamilyLabel.Text = $script:latinFamily
-    $latinGroup.Controls.Add($latinFamilyLabel)
+    $latinCombo = [System.Windows.Forms.ComboBox]::new()
+    $latinCombo.Location = [System.Drawing.Point]::new(18, 25)
+    $latinCombo.Size = [System.Drawing.Size]::new(586, 28)
+    $latinCombo.DropDownStyle = [System.Windows.Forms.ComboBoxStyle]::DropDownList
+    $latinCombo.MaxDropDownItems = 18
+    $latinCombo.AccessibleName = $latinLabelText
+    $latinCombo.TabIndex = 1
+    Initialize-FontCombo $latinCombo $fontNames $script:latinFamily
+    $latinGroup.Controls.Add($latinCombo)
 
     $latinPreview = [System.Windows.Forms.Label]::new()
-    $latinPreview.Location = [System.Drawing.Point]::new(18, 53)
-    $latinPreview.Size = [System.Drawing.Size]::new(440, 38)
+    $latinPreview.Location = [System.Drawing.Point]::new(18, 58)
+    $latinPreview.Size = [System.Drawing.Size]::new(586, 33)
     $latinPreview.Text = 'tomoni ayunda tabiji wo tadoreba'
     $script:latinPreviewFont = New-PreviewFont $script:latinFamily
     $latinPreview.Font = $script:latinPreviewFont
     $latinGroup.Controls.Add($latinPreview)
-
-    $latinButton = [System.Windows.Forms.Button]::new()
-    $latinButton.Location = [System.Drawing.Point]::new(486, 37)
-    $latinButton.Size = [System.Drawing.Size]::new(118, 34)
-    $latinButton.Text = $chooseLabel
-    $latinGroup.Controls.Add($latinButton)
 
     $cancelButton = [System.Windows.Forms.Button]::new()
     $cancelButton.Location = [System.Drawing.Point]::new(410, 326)
     $cancelButton.Size = [System.Drawing.Size]::new(112, 36)
     $cancelButton.Text = $cancelLabel
     $cancelButton.DialogResult = [System.Windows.Forms.DialogResult]::Cancel
+    $cancelButton.TabIndex = 2
     $form.Controls.Add($cancelButton)
 
     $applyButton = [System.Windows.Forms.Button]::new()
@@ -182,61 +276,35 @@ try {
     $applyButton.Size = [System.Drawing.Size]::new(124, 36)
     $applyButton.Text = $applyLabel
     $applyButton.DialogResult = [System.Windows.Forms.DialogResult]::OK
+    $applyButton.TabIndex = 3
     $form.Controls.Add($applyButton)
     $form.AcceptButton = $applyButton
     $form.CancelButton = $cancelButton
 
-    $cjkButton.Add_Click({
-        $dialog = [System.Windows.Forms.FontDialog]::new()
-        $initialFont = $null
-        try {
-            $dialog.FontMustExist = $true
-            $dialog.ShowEffects = $false
-            $dialog.ShowHelp = $false
-            $dialog.AllowVerticalFonts = $false
-            try {
-                $initialFont = [System.Drawing.Font]::new($script:cjkFamily, 10.0)
-                $dialog.Font = $initialFont
-            } catch {}
-            if ($dialog.ShowDialog($form) -eq [System.Windows.Forms.DialogResult]::OK) {
-                $script:cjkFamily = $dialog.Font.FontFamily.Name
-                $cjkFamilyLabel.Text = $script:cjkFamily
-                $nextPreviewFont = New-PreviewFont $script:cjkFamily
-                $cjkPreview.Font = $nextPreviewFont
-                $script:cjkPreviewFont.Dispose()
-                $script:cjkPreviewFont = $nextPreviewFont
-            }
-        } finally {
-            $dialog.Dispose()
-            if ($null -ne $initialFont) { $initialFont.Dispose() }
-        }
+    $cjkCombo.Add_SelectedIndexChanged({
+        $nextFamily = [string]$cjkCombo.SelectedItem
+        if ([string]::IsNullOrWhiteSpace($nextFamily) -or $nextFamily -eq $script:cjkFamily) { return }
+        $script:cjkFamily = $nextFamily
+        $nextPreviewFont = New-PreviewFont $script:cjkFamily
+        $cjkPreview.Font = $nextPreviewFont
+        $script:cjkPreviewFont.Dispose()
+        $script:cjkPreviewFont = $nextPreviewFont
     })
 
-    $latinButton.Add_Click({
-        $dialog = [System.Windows.Forms.FontDialog]::new()
-        $initialFont = $null
-        try {
-            $dialog.FontMustExist = $true
-            $dialog.ShowEffects = $false
-            $dialog.ShowHelp = $false
-            $dialog.AllowVerticalFonts = $false
-            try {
-                $initialFont = [System.Drawing.Font]::new($script:latinFamily, 10.0)
-                $dialog.Font = $initialFont
-            } catch {}
-            if ($dialog.ShowDialog($form) -eq [System.Windows.Forms.DialogResult]::OK) {
-                $script:latinFamily = $dialog.Font.FontFamily.Name
-                $latinFamilyLabel.Text = $script:latinFamily
-                $nextPreviewFont = New-PreviewFont $script:latinFamily
-                $latinPreview.Font = $nextPreviewFont
-                $script:latinPreviewFont.Dispose()
-                $script:latinPreviewFont = $nextPreviewFont
-            }
-        } finally {
-            $dialog.Dispose()
-            if ($null -ne $initialFont) { $initialFont.Dispose() }
-        }
+    $latinCombo.Add_SelectedIndexChanged({
+        $nextFamily = [string]$latinCombo.SelectedItem
+        if ([string]::IsNullOrWhiteSpace($nextFamily) -or $nextFamily -eq $script:latinFamily) { return }
+        $script:latinFamily = $nextFamily
+        $nextPreviewFont = New-PreviewFont $script:latinFamily
+        $latinPreview.Font = $nextPreviewFont
+        $script:latinPreviewFont.Dispose()
+        $script:latinPreviewFont = $nextPreviewFont
     })
+
+    $form.Scale([System.Drawing.SizeF]::new($layoutScale, $layoutScale))
+    $form.AutoScaleDimensions = [System.Drawing.SizeF]::new([single]$targetDpi, [single]$targetDpi)
+    $form.AutoScaleMode = [System.Windows.Forms.AutoScaleMode]::Dpi
+    $form.ResumeLayout($false)
 
     if ($form.ShowDialog($owner) -eq [System.Windows.Forms.DialogResult]::OK) {
         $cjkEncoded = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($script:cjkFamily))
@@ -250,6 +318,7 @@ try {
     if ($null -ne $script:cjkPreviewFont) { $script:cjkPreviewFont.Dispose() }
     if ($null -ne $script:latinPreviewFont) { $script:latinPreviewFont.Dispose() }
     if ($null -ne $script:formFont) { $script:formFont.Dispose() }
+    if ($null -ne $fontCollection) { $fontCollection.Dispose() }
 }
 `;
 
@@ -290,7 +359,6 @@ function showWindowsFontSchemeDialog({
           LYRICS_CARD_FONT_DESCRIPTION_B64: encodeText(copy.description),
           LYRICS_CARD_FONT_CJK_LABEL_B64: encodeText(copy.cjkLabel),
           LYRICS_CARD_FONT_LATIN_LABEL_B64: encodeText(copy.latinLabel),
-          LYRICS_CARD_FONT_CHOOSE_LABEL_B64: encodeText(copy.chooseLabel),
           LYRICS_CARD_FONT_APPLY_LABEL_B64: encodeText(copy.applyLabel),
           LYRICS_CARD_FONT_CANCEL_LABEL_B64: encodeText(copy.cancelLabel)
         }

@@ -227,10 +227,17 @@ assert.match(
 assert.match(nativeFontDialogSource, /\[System\.Windows\.Forms\.Form\]::new\(\)/);
 assert.equal(
   (nativeFontDialogSource.match(/\[System\.Windows\.Forms\.FontDialog\]::new\(\)/g) ?? []).length,
-  2,
-  "the native Windows scheme dialog delegates both font choices to system FontDialog"
+  0,
+  "the native Windows scheme dialog does not create secondary font windows"
 );
-assert.match(nativeFontDialogSource, /ShowDialog\(\$form\)/);
+assert.equal(
+  (nativeFontDialogSource.match(/\[System\.Windows\.Forms\.ComboBox\]::new\(\)/g) ?? []).length,
+  2,
+  "the native Windows scheme dialog keeps both font selectors in its owned form"
+);
+assert.match(nativeFontDialogSource, /InstalledFontCollection\]::new\(\)/);
+assert.match(nativeFontDialogSource, /SetProcessDpiAwarenessContext/);
+assert.match(nativeFontDialogSource, /\[LyricsCardDpi\]::EnablePerMonitorV2\(\)/);
 assert.match(nativeFontDialogSource, /\$form\.ShowDialog\(\$owner\)/);
 assert.match(nativeFontDialogSource, /windowsHide: true/);
 assert.match(nativeFontDialogSource, /shell: false/);

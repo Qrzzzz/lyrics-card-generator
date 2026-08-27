@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v6.1.2.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v6.1.3.zh-CN.md">发布说明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">在线 Web Lite 版</a> ·
   <a href="./docs/web-lite-browser-support.md">Web Lite 浏览器支持</a> ·
   <a href="./docs/desktop.md">桌面维护文档</a> ·
@@ -73,25 +73,25 @@
 
 ## 📦 下载与安装
 
-请从 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下载 v6.1.2：
+请从 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下载 v6.1.3：
 
-* 安装版：`Lyrics Card Generator Setup 6.1.2.exe`
-* 便携版：`Lyrics Card Generator-6.1.2-portable.exe`
+* 安装版：`Lyrics Card Generator Setup 6.1.3.exe`
+* 便携版：`Lyrics Card Generator-6.1.3-portable.exe`
 
 安装版适合长期使用；便携版适合临时运行、测试或放在移动硬盘中使用。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v6.1.2 更新重点
+### v6.1.3 更新重点
 
-* 自定义方案将中日韩与西文字体入口合并为一个原生 WinForms 方案窗口，两种字体一次确认并提交。
-* Windows 方案窗口的两个选择按钮分别调用系统 `FontDialog`，不再创建 Electron 或 HTML 自绘字体选择窗口。
-* 整体取消、一次提交与焦点恢复保持完整；非 Windows 桌面版和浏览器保留双字体原子提交回退。
+* Windows 原生 WinForms 方案窗口现在直接内置中日韩与西文字体下拉列表，不再弹出两个系统 `FontDialog`。
+* 两个字体角色均展示完整的已安装字体列表、当前选择和实时预览，取消与一次提交语义保持不变。
+* 原生辅助进程启用 Per-Monitor V2 DPI 感知，并按主窗口所在显示器缩放，解决高缩放比下的整窗位图拉伸与文字模糊。
 
 ## 🌐 多语言发布说明
 
 GitHub Release 默认展示简体中文摘要，完整说明见：
-[简体中文](./docs/releases/v6.1.2.zh-CN.md) · [繁體中文](./docs/releases/v6.1.2.zh-TW.md) · [English](./docs/releases/v6.1.2.en.md) · [Français](./docs/releases/v6.1.2.fr.md) · [日本語](./docs/releases/v6.1.2.ja.md) · [Español](./docs/releases/v6.1.2.es.md)
+[简体中文](./docs/releases/v6.1.3.zh-CN.md) · [繁體中文](./docs/releases/v6.1.3.zh-TW.md) · [English](./docs/releases/v6.1.3.en.md) · [Français](./docs/releases/v6.1.3.fr.md) · [日本語](./docs/releases/v6.1.3.ja.md) · [Español](./docs/releases/v6.1.3.es.md)
 
 <a id="主要功能"></a>
 
