@@ -28,7 +28,6 @@ export const RECOMMENDED_FONTS: FontFamilyOption[] = [
 export function buildFontOptions(category: FontCategory, systemFonts: SystemFontOption[]) {
   const recommended = RECOMMENDED_FONTS.filter((font) => font.category === category);
   const discovered = systemFonts
-    .filter((font) => (category === "cjk" ? isCjkFont(font) : !isCjkFont(font)))
     .map((font, index): FontFamilyOption => ({
       id: `system-${category}-${font.family}-${index}`,
       family: font.family,
@@ -37,7 +36,9 @@ export function buildFontOptions(category: FontCategory, systemFonts: SystemFont
       preview: previewTextForCategory(category)
     }));
 
-  // Recommended and discovered fonts can refer to the same family under different labels.
+  // Font names are not a reliable signal for script coverage. Keep every
+  // discovered family available in both roles and use categories only to
+  // tailor recommendations and preview text.
   const seen = new Set<string>();
   return [...recommended, ...discovered].filter((font) => {
     const key = font.family.toLocaleLowerCase();
@@ -49,12 +50,6 @@ export function buildFontOptions(category: FontCategory, systemFonts: SystemFont
 
 export function previewTextForCategory(category: FontCategory) {
   return category === "cjk" ? "共に歩んだ旅路を辿れば" : "tomoni ayunda tabiji wo tadoreba";
-}
-
-export function isCjkFont(font: Pick<SystemFontOption, "family" | "label">) {
-  return /(han|cjk|yahei|simsun|simhei|fangsong|kaiti|jhenghei|mingliu|meiryo|gothic|mincho|malgun|gulim|batang|宋|黑|楷|仿宋|圆|明朝|ゴシック|명조|고딕)/i.test(
-    `${font.family} ${font.label}`
-  );
 }
 
 function cjkFont(id: string, family: string): FontFamilyOption {

@@ -1,11 +1,17 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { getLyricsCardDesktopApi, type NativeFontPickerContext, type SystemFontOption } from "@/lib/desktop-api";
+import {
+  getLyricsCardDesktopApi,
+  type NativeFontPickerContext,
+  type NativeFontPickerResult,
+  type SystemFontOption
+} from "@/lib/desktop-api";
 import {
   buildFontOptions,
   previewTextForCategory,
   RECOMMENDED_FONTS,
+  type FontCategory,
   type FontFamilyOption
 } from "@/lib/font-picker-options";
 import { quoteSingleFontFamily } from "@/lib/fonts";
@@ -14,26 +20,29 @@ import type { Locale } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const fallbackContext: NativeFontPickerContext = {
-  category: "cjk",
-  selectedFamily: "Source Han Sans SC",
+  cjkFontFamily: "Source Han Sans SC",
+  latinFontFamily: "Source Han Sans SC",
   locale: "en",
   theme: "dark",
-  title: "Choose a font"
+  title: "Custom Font Scheme"
 };
 
 export function NativeFontPickerWindow() {
   const desktopApi = getLyricsCardDesktopApi();
   const searchRef = useRef<HTMLInputElement>(null);
   const [context, setContext] = useState<NativeFontPickerContext | null>(null);
+  const [draft, setDraft] = useState<NativeFontPickerResult>(() => schemeFromContext(fallbackContext));
+  const [activeCategory, setActiveCategory] = useState<FontCategory>("cjk");
   const [systemFonts, setSystemFonts] = useState<SystemFontOption[]>([]);
   const [query, setQuery] = useState("");
   const [previewFamily, setPreviewFamily] = useState("");
   const [status, setStatus] = useState<"loading" | "ready" | "empty" | "failed">("loading");
-  const [selecting, setSelecting] = useState(false);
+  const [applying, setApplying] = useState(false);
 
   useEffect(() => {
     if (!desktopApi) {
       setContext(fallbackContext);
+      setDraft(schemeFromContext(fallbackContext));
       setStatus("failed");
       return;
     }
@@ -48,7 +57,7 @@ export function NativeFontPickerWindow() {
           return;
         }
         setContext(nextContext);
-        setPreviewFamily(nextContext.selectedFamily);
+        setDraft(schemeFromContext(nextContext));
         document.documentElement.lang = documentLanguage(nextContext.locale);
         document.title = nextContext.title;
         requestAnimationFrame(() => searchRef.current?.focus());
@@ -83,8 +92,8 @@ export function NativeFontPickerWindow() {
   const activeContext = context ?? fallbackContext;
   const t = createT(activeContext.locale);
   const options = useMemo(
-    () => buildFontOptions(activeContext.category, systemFonts),
-    [activeContext.category, systemFonts]
+    () => buildFontOptions(activeCategory, systemFonts),
+    [activeCategory, systemFonts]
   );
   const filtered = useMemo(() => {
     const normalized = query.trim().toLocaleLowerCase();
@@ -93,49 +102,97 @@ export function NativeFontPickerWindow() {
       : options;
   }, [options, query]);
   const recommendedIds = new Set(
-    RECOMMENDED_FONTS.filter((font) => font.category === activeContext.category).map((font) => font.id)
+    RECOMMENDED_FONTS.filter((font) => font.category === activeCategory).map((font) => font.id)
   );
   const recommended = filtered.filter((font) => recommendedIds.has(font.id));
   const allFonts = filtered.filter((font) => !recommendedIds.has(font.id));
-  const sampleFamily = previewFamily || activeContext.selectedFamily;
+  const selectedFamily = familyForCategory(draft, activeCategory);
 
-  async function selectFont(font: FontFamilyOption) {
-    if (!desktopApi || selecting) return;
-    setSelecting(true);
-    const accepted = await desktopApi.selectNativeFontPicker(font.family).catch(() => false);
-    if (!accepted) setSelecting(false);
+  function activateCategory(category: FontCategory) {
+    setActiveCategory(category);
+    setQuery("");
+    setPreviewFamily("");
+    requestAnimationFrame(() => searchRef.current?.focus());
+  }
+
+  function selectFont(font: FontFamilyOption) {
+    setDraft((current) => withFamily(current, activeCategory, font.family));
+    setPreviewFamily(font.family);
+  }
+
+  async function applyScheme() {
+    if (!desktopApi || applying) return;
+    setApplying(true);
+    const accepted = await desktopApi.applyNativeFontPicker(draft).catch(() => false);
+    if (!accepted) {
+      setApplying(false);
+      return;
+    }
+    const closed = await desktopApi.closeNativeFontPicker().catch(() => false);
+    if (!closed) setApplying(false);
   }
 
   return (
     <main
       className="app-shell min-h-screen bg-[var(--app-bg)] p-4 text-[rgb(var(--app-fg))] sm:p-5"
       data-ui-theme={activeContext.theme}
-      data-testid={`font-picker-${activeContext.category}`}
+      data-testid="font-picker-scheme"
     >
       <div className="mx-auto grid max-w-4xl gap-4">
         <header className="grid gap-1">
-          <h1 className="app-text-primary text-xl font-bold">
-            {activeContext.category === "cjk" ? t("fontSchemeChooseCjk") : t("fontSchemeChooseLatin")}
-          </h1>
-          <p className="app-text-subtle text-sm">
-            {t(activeContext.category === "cjk" ? "fontSchemeCjkUsage" : "fontSchemeLatinUsage")}
-          </p>
+          <h1 className="app-text-primary text-xl font-bold">{t("fontSchemePickerTitle")}</h1>
+          <p className="app-text-subtle text-sm">{t("fontSchemePickerDescription")}</p>
         </header>
+
+        <div className="grid gap-3 sm:grid-cols-2" aria-label={t("fontSchemePickerTitle")}>
+          {(["cjk", "latin"] as FontCategory[]).map((category) => {
+            const active = activeCategory === category;
+            const family = familyForCategory(draft, category);
+            return (
+              <button
+                key={category}
+                type="button"
+                data-testid={`font-picker-category-${category}`}
+                aria-pressed={active}
+                onClick={() => activateCategory(category)}
+                className={cn(
+                  "control-focus grid gap-1 rounded-xl border p-4 text-left transition",
+                  active
+                    ? "border-cyan-200/60 bg-cyan-300/10"
+                    : "border-[rgb(var(--panel-border))] bg-[rgb(var(--panel-bg))] hover:bg-[rgb(var(--button-bg-hover))]"
+                )}
+              >
+                <span className="app-text-subtle text-xs">
+                  {t(category === "cjk" ? "fontSchemeCjkFont" : "fontSchemeLatinFont")}
+                </span>
+                <span className="app-text-primary min-w-0 break-words text-base font-semibold">{family}</span>
+              </button>
+            );
+          })}
+        </div>
 
         <section className="settings-surface grid gap-3 rounded-xl border p-4" aria-labelledby="font-picker-preview-heading">
           <div className="flex items-center justify-between gap-3">
             <h2 id="font-picker-preview-heading" className="app-text-primary text-sm font-semibold">
               {t("fontSchemePreviewTitle")}
             </h2>
-            <span className="app-text-subtle min-w-0 truncate text-xs">{sampleFamily}</span>
+            <span className="app-text-subtle min-w-0 truncate text-xs">{previewFamily || selectedFamily}</span>
           </div>
-          <p
-            className="app-text-primary break-words text-2xl leading-relaxed"
-            data-testid="font-picker-live-preview"
-            style={{ fontFamily: `${quoteSingleFontFamily(sampleFamily)}, sans-serif` }}
-          >
-            {previewTextForCategory(activeContext.category)}
-          </p>
+          {(["cjk", "latin"] as FontCategory[]).map((category) => {
+            const family = activeCategory === category && previewFamily
+              ? previewFamily
+              : familyForCategory(draft, category);
+            return (
+              <p
+                key={category}
+                className="app-text-primary break-words text-xl leading-relaxed"
+                data-testid={`font-picker-live-preview-${category}`}
+                style={{ fontFamily: `${quoteSingleFontFamily(family)}, sans-serif` }}
+              >
+                {previewTextForCategory(category)}
+              </p>
+            );
+          })}
         </section>
 
         <input
@@ -148,14 +205,14 @@ export function NativeFontPickerWindow() {
           className="field-shell h-11 w-full rounded-lg px-3 text-sm"
         />
 
-        <div className="grid max-h-[calc(100vh-17rem)] min-h-48 gap-4 overflow-y-auto pr-1">
+        <div className="grid max-h-[calc(100vh-25rem)] min-h-48 gap-4 overflow-y-auto pr-1">
           {recommended.length > 0 ? (
             <FontOptionGroup
               headingId="font-picker-recommended-heading"
               title={t("fontSchemeRecommendedFonts")}
               fonts={recommended}
-              selectedFamily={activeContext.selectedFamily}
-              disabled={selecting}
+              selectedFamily={selectedFamily}
+              disabled={applying}
               onPreview={setPreviewFamily}
               onSelect={selectFont}
             />
@@ -165,8 +222,8 @@ export function NativeFontPickerWindow() {
               headingId="font-picker-all-heading"
               title={t("fontSchemeAllFonts")}
               fonts={allFonts}
-              selectedFamily={activeContext.selectedFamily}
-              disabled={selecting}
+              selectedFamily={selectedFamily}
+              disabled={applying}
               onPreview={setPreviewFamily}
               onSelect={selectFont}
             />
@@ -181,13 +238,23 @@ export function NativeFontPickerWindow() {
           {status === "failed" ? <p className="app-text-subtle text-sm">{t("systemFontFailed")}</p> : null}
         </div>
 
-        <footer className="flex justify-end border-t border-[rgb(var(--panel-border))] pt-3">
+        <footer className="flex justify-end gap-3 border-t border-[rgb(var(--panel-border))] pt-3">
           <button
             type="button"
             className="app-button h-10 rounded-lg px-4 text-sm font-semibold"
+            disabled={applying}
             onClick={() => void desktopApi?.closeNativeFontPicker()}
           >
-            {t("fontSchemeClose")}
+            {t("fontSchemePickerCancel")}
+          </button>
+          <button
+            type="button"
+            data-testid="font-picker-apply"
+            className="h-10 rounded-lg bg-cyan-200 px-4 text-sm font-bold text-slate-950 transition hover:bg-cyan-100 disabled:cursor-wait disabled:opacity-60"
+            disabled={!desktopApi || applying}
+            onClick={() => void applyScheme()}
+          >
+            {t("fontSchemePickerApply")}
           </button>
         </footer>
       </div>
@@ -228,13 +295,13 @@ function FontOptionGroup({
               onFocus={() => onPreview(font.family)}
               onClick={() => onSelect(font)}
               className={cn(
-                "grid gap-2 rounded-xl border p-3 text-left transition disabled:opacity-60",
+                "grid gap-2 rounded-xl border p-3 text-left transition",
                 selected
                   ? "border-[var(--app-accent)] bg-[rgb(var(--button-bg-hover))]"
                   : "border-[rgb(var(--panel-border))] bg-[rgb(var(--button-bg))] hover:bg-[rgb(var(--button-bg-hover))]"
               )}
             >
-              <span className="app-text-primary truncate text-sm font-semibold">{font.label}</span>
+              <span className="app-text-primary min-w-0 truncate text-sm font-semibold">{font.label}</span>
               <span
                 className="app-text-muted block truncate text-sm"
                 style={{ fontFamily: `${quoteSingleFontFamily(font.family)}, sans-serif` }}
@@ -249,7 +316,25 @@ function FontOptionGroup({
   );
 }
 
+function schemeFromContext(context: NativeFontPickerContext): NativeFontPickerResult {
+  return {
+    cjkFontFamily: context.cjkFontFamily,
+    latinFontFamily: context.latinFontFamily
+  };
+}
+
+function familyForCategory(scheme: NativeFontPickerResult, category: FontCategory) {
+  return category === "cjk" ? scheme.cjkFontFamily : scheme.latinFontFamily;
+}
+
+function withFamily(scheme: NativeFontPickerResult, category: FontCategory, family: string): NativeFontPickerResult {
+  return category === "cjk"
+    ? { ...scheme, cjkFontFamily: family }
+    : { ...scheme, latinFontFamily: family };
+}
+
 function documentLanguage(locale: Locale) {
   if (locale === "zh") return "zh-CN";
+  if (locale === "zh-TW") return "zh-TW";
   return locale;
 }

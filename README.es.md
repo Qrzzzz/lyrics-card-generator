@@ -19,7 +19,7 @@
 <p>
   <strong>Navegación</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Descargar la última versión</a> ·
-  <a href="./docs/releases/v6.1.1.es.md">Notas de la versión</a> ·
+  <a href="./docs/releases/v6.1.2.es.md">Notas de la versión</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en línea</a> ·
   <a href="#funciones-principales">Funciones principales</a> ·
   <a href="./docs/development.en.md">Desarrollo local</a> ·
@@ -74,25 +74,25 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 ## 📦 Descarga e instalación
 
-Descarga v6.1.1 desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
+Descarga v6.1.2 desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Instalador: `Lyrics Card Generator Setup 6.1.1.exe`
-* Versión portable: `Lyrics Card Generator-6.1.1-portable.exe`
+* Instalador: `Lyrics Card Generator Setup 6.1.2.exe`
+* Versión portable: `Lyrics Card Generator-6.1.2-portable.exe`
 
 El instalador se recomienda para uso habitual. La versión portable es útil para pruebas, uso temporal o ejecución desde una unidad extraíble.
 
 > La compilación actual no está firmada. Windows puede mostrar una advertencia de SmartScreen, algo habitual en aplicaciones personales sin firma.
 
-### Novedades de v6.1.1
+### Novedades de v6.1.2
 
-* La aplicación de Windows ahora abre directamente el diálogo de fuentes del sistema, sin usar un selector dibujado por Electron o HTML.
-* El diálogo pertenece al identificador de la ventana principal, funciona como una ventana modal real de Windows y devuelve correctamente el foco tras aceptar o cancelar.
-* La elección sigue modificando solo el borrador y la vista previa real hasta Guardar como combinación actual; los entornos no Windows y los navegadores conservan la alternativa compatible.
+* Una ventana WinForms nativa sustituye las entradas CJK y latina separadas y aplica ambas selecciones juntas.
+* En Windows, sus dos botones de selección invocan por separado el `FontDialog` del sistema; no se crea un selector dibujado con Electron o HTML.
+* Se conservan la cancelación global, la confirmación única y la restauración del foco; las alternativas para escritorio no Windows y navegador mantienen el flujo atómico de dos fuentes.
 
 ## 🌐 Notas de publicación multilingües
 
 GitHub Release muestra de forma predeterminada un resumen en chino simplificado. Consulta las notas completas:
-[简体中文](./docs/releases/v6.1.1.zh-CN.md) · [繁體中文](./docs/releases/v6.1.1.zh-TW.md) · [English](./docs/releases/v6.1.1.en.md) · [Français](./docs/releases/v6.1.1.fr.md) · [日本語](./docs/releases/v6.1.1.ja.md) · [Español](./docs/releases/v6.1.1.es.md)
+[简体中文](./docs/releases/v6.1.2.zh-CN.md) · [繁體中文](./docs/releases/v6.1.2.zh-TW.md) · [English](./docs/releases/v6.1.2.en.md) · [Français](./docs/releases/v6.1.2.fr.md) · [日本語](./docs/releases/v6.1.2.ja.md) · [Español](./docs/releases/v6.1.2.es.md)
 
 <a id="funciones-principales"></a>
 

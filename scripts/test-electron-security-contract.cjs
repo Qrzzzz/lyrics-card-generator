@@ -73,10 +73,10 @@ const singleInstanceOwnershipSource = readFileSync("electron/single-instance-own
 const desktopReadyRouteSource = readFileSync("app/api/desktop-ready/route.ts", "utf8");
 const importHistorySource = readFileSync("electron/import-history.js", "utf8");
 const manualSaveIpcSource = readFileSync("electron/manual-save-ipc.js", "utf8");
+const nativeFontDialogSource = readFileSync("electron/native-font-dialog.js", "utf8");
 const desktopApiSource = readFileSync("lib/desktop-api.ts", "utf8");
 const fontSchemePanelSource = readFileSync("components/editor/font-scheme/FontSchemePanel.tsx", "utf8");
 const nativeFontPickerSource = readFileSync("components/editor/font-scheme/NativeFontPickerWindow.tsx", "utf8");
-const nativeFontDialogSource = readFileSync("electron/native-font-dialog.js", "utf8");
 const desktopHistoryInteractionSource = readFileSync("scripts/test-desktop-import-history-interactions.mjs", "utf8");
 // Source contracts complement unit behavior checks by proving that the hardened
 // helpers are actually wired into the privileged Electron entry point.
@@ -147,10 +147,16 @@ assert.doesNotMatch(startupTraceSource, /ipcMain|contextBridge|webContents/, "st
 
 const prepareElectronSource = readFileSync("scripts/prepare-electron-dist.mjs", "utf8");
 assert.match(prepareElectronSource, /"electron\/font-directory-service\.js"/, "packaged desktop bundles the font directory service");
+assert.match(prepareElectronSource, /"electron\/native-font-dialog\.js"/, "packaged desktop bundles the native Windows font scheme dialog");
 assert.match(
   prepareElectronSource,
   /path\.join\(projectRoot, "electron", "font-directory-service\.js"\)[\s\S]*?path\.join\(electronOutputDir, "font-directory-service\.js"\)/,
   "desktop preparation copies the font directory service into the minimal app"
+);
+assert.match(
+  prepareElectronSource,
+  /path\.join\(projectRoot, "electron", "native-font-dialog\.js"\)[\s\S]*?path\.join\(electronOutputDir, "native-font-dialog\.js"\)/,
+  "desktop preparation copies the native Windows font scheme dialog into the minimal app"
 );
 assert.match(prepareElectronSource, /"electron\/local-app-url\.js"/, "packaged desktop bundles the local URL policy helper");
 assert.match(prepareElectronSource, /"electron\/local-server-origin\.js"/, "packaged desktop bundles stable origin selection");
@@ -210,21 +216,28 @@ assert.match(
 );
 assert.match(
   preloadSource,
-  /function openNativeFontPickerWindow\(category, selectedFamily, locale, theme, title\)[\s\S]*?FONT_PICKER_CATEGORIES\.has\(category\)[\s\S]*?isFontFamily\(selectedFamily\)[\s\S]*?"lyrics-card:native-font-picker-open"/,
-  "preload bounds every primitive used to create the native font window"
+  /function openNativeFontPickerWindow\(cjkFontFamily, latinFontFamily, locale, theme, title\)[\s\S]*?isFontFamily\(cjkFontFamily\)[\s\S]*?isFontFamily\(latinFontFamily\)[\s\S]*?"lyrics-card:native-font-picker-open"/,
+  "preload bounds both font families before opening the font-scheme window"
 );
 assert.match(
   mainSource,
-  /process\.platform === "win32"[\s\S]*?nativeWindowHandleAsDecimal\(mainWindow\)[\s\S]*?showWindowsFontDialog\(\{ ownerHandle, selectedFamily: context\.selectedFamily \}\)/,
-  "Windows font selection calls the OS-owned font dialog with the Electron parent HWND"
+  /if \(process\.platform === "win32"\)[\s\S]*?nativeWindowHandleAsDecimal\(mainWindow\)[\s\S]*?showWindowsFontSchemeDialog\(\{/,
+  "Windows opens the native WinForms scheme dialog against the Electron owner handle"
 );
-assert.match(nativeFontDialogSource, /System\.Windows\.Forms\.FontDialog/);
-assert.match(nativeFontDialogSource, /ShowDialog\(\$owner\)/);
-assert.match(nativeFontDialogSource, /windowsHide: true[\s\S]*?shell: false/);
+assert.match(nativeFontDialogSource, /\[System\.Windows\.Forms\.Form\]::new\(\)/);
+assert.equal(
+  (nativeFontDialogSource.match(/\[System\.Windows\.Forms\.FontDialog\]::new\(\)/g) ?? []).length,
+  2,
+  "the native Windows scheme dialog delegates both font choices to system FontDialog"
+);
+assert.match(nativeFontDialogSource, /ShowDialog\(\$form\)/);
+assert.match(nativeFontDialogSource, /\$form\.ShowDialog\(\$owner\)/);
+assert.match(nativeFontDialogSource, /windowsHide: true/);
+assert.match(nativeFontDialogSource, /shell: false/);
 assert.match(
   mainSource,
   /new BrowserWindow\(\{[\s\S]*?parent: mainWindow,[\s\S]*?modal: true,[\s\S]*?frame: true,[\s\S]*?contextIsolation: true,[\s\S]*?nodeIntegration: false,[\s\S]*?sandbox: true/,
-  "non-Windows font selection retains the hardened renderer fallback"
+  "the non-Windows font-scheme fallback uses a hardened modal child window"
 );
 assert.match(
   mainSource,
@@ -233,15 +246,22 @@ assert.match(
 );
 assert.match(
   mainSource,
-  /handleFontPicker\("lyrics-card:native-font-picker-context"[\s\S]*?handleFontPicker\("lyrics-card:native-font-picker-select"[\s\S]*?handleFontPicker\("lyrics-card:native-font-picker-close"/,
-  "only the picker window can read its bounded context, select a family, or close itself"
+  /picker\.on\("closed", \(\) => \{[\s\S]*?if \(fontPickerWindow !== picker\) return;[\s\S]*?finishNativeFontPicker\(null, false\)/,
+  "a stale picker close event cannot clear a newer picker session"
+);
+assert.match(
+  mainSource,
+  /handleFontPicker\("lyrics-card:native-font-picker-context"[\s\S]*?handleFontPicker\("lyrics-card:native-font-picker-apply"[\s\S]*?handleFontPicker\("lyrics-card:native-font-picker-close"/,
+  "only the picker window can read its bounded context, apply both families, or close itself"
 );
 assert.match(
   fontSchemePanelSource,
-  /desktopApi\.openNativeFontPicker\([\s\S]*?if \(family\) selectCustomFont[\s\S]*?onPreviewSchemeChange\?\.\(nextDraft\)/,
-  "the native window returns a draft selection to the existing live card preview contract"
+  /desktopApi\.openNativeFontPicker\([\s\S]*?cjkFontFamily: result\.cjkFontFamily,[\s\S]*?latinFontFamily: result\.latinFontFamily[\s\S]*?applyScheme/,
+  "the modal window returns both families for one atomic scheme commit"
 );
-assert.match(nativeFontPickerSource, /data-testid="font-picker-live-preview"/);
+assert.match(nativeFontPickerSource, /font-picker-live-preview-/);
+assert.match(nativeFontPickerSource, /applyNativeFontPicker\(draft\)[\s\S]*?closeNativeFontPicker/);
+assert.match(mainSource, /native-font-picker-apply[\s\S]*?finishNativeFontPicker\(\{[\s\S]*?\}, false\)/);
 assert.doesNotMatch(
   preloadSource,
   /showNative(?:Confirm|Alert)Dialog: \(options\)/,

@@ -26,7 +26,7 @@ const {
   validateImportFileDescriptor
 } = require("./import-history");
 const { resolveLocalAppUrl } = require("./local-app-url");
-const { showWindowsFontDialog } = require("./native-font-dialog");
+const { showWindowsFontSchemeDialog } = require("./native-font-dialog");
 const {
   LOOPBACK_HOST,
   findAvailableLoopbackPort,
@@ -53,7 +53,6 @@ const START_TIMEOUT_MS = 45000;
 const WINDOW_BACKGROUND_COLOR = "#20242D";
 const FONT_PICKER_DARK_BACKGROUND_COLOR = "#08090C";
 const FONT_PICKER_LIGHT_BACKGROUND_COLOR = "#FFFFFF";
-const FONT_PICKER_CATEGORIES = new Set(["cjk", "latin"]);
 const FONT_PICKER_LOCALES = new Set(["zh", "zh-TW", "en", "fr", "ja", "es"]);
 const FONT_PICKER_THEMES = new Set(["album-dynamic", "dark", "light", "dark-acrylic", "light-acrylic"]);
 const IMPORT_FILE_REGISTRATION_TTL_MS = 30 * 60 * 1000;
@@ -426,22 +425,27 @@ function loadMainWindow(window, targetUrl) {
   void window.loadURL(targetUrl);
 }
 
-function normalizeNativeFontPickerContext(category, selectedFamily, locale, theme, title) {
-  const validFamily = typeof selectedFamily === "string" &&
-    selectedFamily.trim().length > 0 &&
-    selectedFamily.length <= 256 &&
-    !/[\r\n\0]/u.test(selectedFamily);
-  const validTitle = typeof title === "string" && title.trim().length > 0 && title.length <= 160;
+function normalizeNativeFontPickerContext(cjkFontFamily, latinFontFamily, locale, theme, title) {
+  const validTitle = typeof title === "string" &&
+    title.trim().length > 0 &&
+    title.length <= 160 &&
+    !/[\r\n\0]/u.test(title);
   if (
-    !FONT_PICKER_CATEGORIES.has(category) ||
-    !validFamily ||
+    !isNativeFontFamily(cjkFontFamily) ||
+    !isNativeFontFamily(latinFontFamily) ||
     !FONT_PICKER_LOCALES.has(locale) ||
     !FONT_PICKER_THEMES.has(theme) ||
     !validTitle
   ) {
     return null;
   }
-  return { category, selectedFamily: selectedFamily.trim(), locale, theme, title: title.trim() };
+  return {
+    cjkFontFamily: cjkFontFamily.trim(),
+    latinFontFamily: latinFontFamily.trim(),
+    locale,
+    theme,
+    title: title.trim()
+  };
 }
 
 function isNativeFontFamily(value) {
@@ -449,6 +453,15 @@ function isNativeFontFamily(value) {
     value.trim().length > 0 &&
     value.length <= 256 &&
     !/[\r\n\0]/u.test(value);
+}
+
+function isNativeFontSchemeResult(value) {
+  return Boolean(
+    value &&
+    typeof value === "object" &&
+    isNativeFontFamily(value.cjkFontFamily) &&
+    isNativeFontFamily(value.latinFontFamily)
+  );
 }
 
 function finishNativeFontPicker(result, closeWindow = true) {
@@ -469,15 +482,31 @@ async function openNativeFontPicker(context) {
       testState.calls.push({ ...context });
       const result = testState.nextResult;
       testState.nextResult = null;
-      return isNativeFontFamily(result) ? result.trim() : null;
+      return isNativeFontSchemeResult(result)
+        ? {
+            cjkFontFamily: result.cjkFontFamily.trim(),
+            latinFontFamily: result.latinFontFamily.trim()
+          }
+        : null;
     }
 
     const ownerHandle = nativeWindowHandleAsDecimal(mainWindow);
     if (!ownerHandle) return null;
-    nativeFontDialogPromise = showWindowsFontDialog({ ownerHandle, selectedFamily: context.selectedFamily });
+    nativeFontDialogPromise = showWindowsFontSchemeDialog({
+      ownerHandle,
+      cjkFontFamily: context.cjkFontFamily,
+      latinFontFamily: context.latinFontFamily,
+      locale: context.locale,
+      title: context.title
+    });
     try {
       const result = await nativeFontDialogPromise;
-      return isNativeFontFamily(result) ? result.trim() : null;
+      return isNativeFontSchemeResult(result)
+        ? {
+            cjkFontFamily: result.cjkFontFamily.trim(),
+            latinFontFamily: result.latinFontFamily.trim()
+          }
+        : null;
     } finally {
       nativeFontDialogPromise = null;
       if (mainWindow && !mainWindow.isDestroyed()) mainWindow.focus();
@@ -526,15 +555,20 @@ async function openNativeFontPicker(context) {
     if (fontPickerWindow === picker && !picker.isDestroyed()) picker.show();
   });
   picker.on("closed", () => {
-    if (fontPickerWindow === picker) fontPickerWindow = null;
+    if (fontPickerWindow !== picker) return;
+    fontPickerWindow = null;
     finishNativeFontPicker(null, false);
     if (mainWindow && !mainWindow.isDestroyed()) mainWindow.focus();
   });
-  picker.webContents.once("render-process-gone", () => finishNativeFontPicker(null));
+  picker.webContents.once("render-process-gone", () => {
+    if (fontPickerWindow === picker) finishNativeFontPicker(null);
+  });
 
   return new Promise((resolve) => {
     resolveFontPickerResult = resolve;
-    void picker.loadURL(targetUrl).catch(() => finishNativeFontPicker(null));
+    void picker.loadURL(targetUrl).catch(() => {
+      if (fontPickerWindow === picker) finishNativeFontPicker(null);
+    });
   });
 }
 
@@ -951,16 +985,19 @@ function registerDesktopIpc() {
     return true;
   });
 
-  handle("lyrics-card:native-font-picker-open", (_event, category, selectedFamily, locale, theme, title) => {
-    const context = normalizeNativeFontPickerContext(category, selectedFamily, locale, theme, title);
+  handle("lyrics-card:native-font-picker-open", (_event, cjkFontFamily, latinFontFamily, locale, theme, title) => {
+    const context = normalizeNativeFontPickerContext(cjkFontFamily, latinFontFamily, locale, theme, title);
     return context ? openNativeFontPicker(context) : null;
   });
   handleFontPicker("lyrics-card:native-font-picker-context", () => {
     return fontPickerContext ? { ...fontPickerContext } : null;
   });
-  handleFontPicker("lyrics-card:native-font-picker-select", (_event, family) => {
-    if (!isNativeFontFamily(family) || !fontPickerContext) return false;
-    finishNativeFontPicker(family.trim());
+  handleFontPicker("lyrics-card:native-font-picker-apply", (_event, cjkFontFamily, latinFontFamily) => {
+    if (!isNativeFontFamily(cjkFontFamily) || !isNativeFontFamily(latinFontFamily) || !fontPickerContext) return false;
+    finishNativeFontPicker({
+      cjkFontFamily: cjkFontFamily.trim(),
+      latinFontFamily: latinFontFamily.trim()
+    }, false);
     return true;
   });
   handleFontPicker("lyrics-card:native-font-picker-close", () => {
