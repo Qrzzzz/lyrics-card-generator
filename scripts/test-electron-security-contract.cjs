@@ -232,15 +232,23 @@ assert.equal(
 );
 assert.equal(
   (nativeFontDialogSource.match(/\[System\.Windows\.Forms\.ComboBox\]::new\(\)/g) ?? []).length,
-  2,
-  "the native Windows scheme dialog keeps both font selectors in its owned form"
+  0,
+  "the native Windows scheme dialog does not duplicate system fonts in separate combo boxes"
 );
 assert.match(nativeFontDialogSource, /InstalledFontCollection\]::new\(\)/);
+assert.equal(
+  (nativeFontDialogSource.match(/\[LyricsCardFontListBox\]::new\(\)/g) ?? []).length,
+  1,
+  "the two roles share one owner-drawn font browser inside the owned form"
+);
+assert.match(nativeFontDialogSource, /\$searchBox\.Add_TextChanged\(\{ Update-FontList \}\)/);
 assert.match(nativeFontDialogSource, /SetProcessDpiAwarenessContext/);
 assert.match(nativeFontDialogSource, /\[LyricsCardDpi\]::EnablePerMonitorV2\(\)/);
 assert.match(nativeFontDialogSource, /\$form\.ShowDialog\(\$owner\)/);
 assert.match(nativeFontDialogSource, /windowsHide: true/);
 assert.match(nativeFontDialogSource, /shell: false/);
+assert.match(nativeFontDialogSource, /stdio: \["pipe", "pipe", "pipe"\]/);
+assert.match(nativeFontDialogSource, /child\.stdin\.end\(encodedCommand, "ascii"\)/);
 assert.match(
   mainSource,
   /new BrowserWindow\(\{[\s\S]*?parent: mainWindow,[\s\S]*?modal: true,[\s\S]*?frame: true,[\s\S]*?contextIsolation: true,[\s\S]*?nodeIntegration: false,[\s\S]*?sandbox: true/,
