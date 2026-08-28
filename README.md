@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v6.1.3.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v6.1.4.zh-CN.md">发布说明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">在线 Web Lite 版</a> ·
   <a href="./docs/web-lite-browser-support.md">Web Lite 浏览器支持</a> ·
   <a href="./docs/desktop.md">桌面维护文档</a> ·
@@ -73,25 +73,25 @@
 
 ## 📦 下载与安装
 
-请从 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下载 v6.1.3：
+请从 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下载 v6.1.4：
 
-* 安装版：`Lyrics Card Generator Setup 6.1.3.exe`
-* 便携版：`Lyrics Card Generator-6.1.3-portable.exe`
+* 安装版：`Lyrics Card Generator Setup 6.1.4.exe`
+* 便携版：`Lyrics Card Generator-6.1.4-portable.exe`
 
 安装版适合长期使用；便携版适合临时运行、测试或放在移动硬盘中使用。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v6.1.3 更新重点
+### v6.1.4 更新重点
 
-* Windows 原生 WinForms 方案窗口现在直接内置中日韩与西文字体下拉列表，不再弹出两个系统 `FontDialog`。
-* 两个字体角色均展示完整的已安装字体列表、当前选择和实时预览，取消与一次提交语义保持不变。
-* 原生辅助进程启用 Per-Monitor V2 DPI 感知，并按主窗口所在显示器缩放，解决高缩放比下的整窗位图拉伸与文字模糊。
+* Windows 原生字体方案窗口改为中日韩与西文字体共用一个可搜索的系统字体浏览器，并直接显示每种字体的字形预览。
+* 可在两个字体角色间切换或一键交换，并可恢复打开窗口时的原始方案；只有提交后的选择才会写入当前方案。
+* 原生辅助脚本改由标准输入传递，避免复杂窗口脚本触及 Windows 命令行长度限制，同时保留模态归属与严格结果校验。
 
 ## 🌐 多语言发布说明
 
 GitHub Release 默认展示简体中文摘要，完整说明见：
-[简体中文](./docs/releases/v6.1.3.zh-CN.md) · [繁體中文](./docs/releases/v6.1.3.zh-TW.md) · [English](./docs/releases/v6.1.3.en.md) · [Français](./docs/releases/v6.1.3.fr.md) · [日本語](./docs/releases/v6.1.3.ja.md) · [Español](./docs/releases/v6.1.3.es.md)
+[简体中文](./docs/releases/v6.1.4.zh-CN.md) · [繁體中文](./docs/releases/v6.1.4.zh-TW.md) · [English](./docs/releases/v6.1.4.en.md) · [Français](./docs/releases/v6.1.4.fr.md) · [日本語](./docs/releases/v6.1.4.ja.md) · [Español](./docs/releases/v6.1.4.es.md)
 
 <a id="主要功能"></a>
 
