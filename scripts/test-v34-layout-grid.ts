@@ -459,7 +459,13 @@ assert.ok(!fontSchemePanelSource.includes('className="settings-surface'), "the i
 assert.ok(fontSchemePanelSource.includes('data-testid="font-scheme-draft-status"'), "the editor exposes applied-versus-draft status");
 assert.ok(colorControlsSource.includes('{ value: "white", label: t("pureWhite") }'), "white mode is exposed");
 assert.ok(!colorControlsSource.includes("TEXT_COLOR_PRESETS"), "legacy color presets are not exposed");
-assert.ok(previewPaneSource.includes("fontSchemePreview ? { ...style, fontScheme: fontSchemePreview } : style"), "font draft previews use the real card");
+assert.ok(!previewPaneSource.includes("fontSchemePreview ? { ...style, fontScheme: fontSchemePreview } : style"), "font drafts no longer render through the offstage real card");
+assert.ok(
+  previewPaneSource.includes('data-testid="preview-pane-view-transition"') &&
+    previewPaneSource.includes('key="lyric-card-preview-page"') &&
+    previewPaneSource.includes('key="font-scheme-preview"'),
+  "the real card and font specimen share one mutually exclusive preview track"
+);
 assert.ok(previewPaneSource.includes("lg:sticky lg:top-0 lg:z-20"), "the right preview pane stays pinned above scrolling controls");
 assert.ok(
   previewPaneSource.includes('fontSchemePreview?.mode === "custom"') &&
@@ -500,4 +506,4 @@ assert.deepEqual(BACKGROUND_GRID_SIZE_BY_DENSITY, {
 assert.equal(resolveBackgroundGridDensity(undefined), "medium");
 assert.equal(resolveBackgroundGridDensity("sparse"), "sparse");
 
-console.log(JSON.stringify({ ok: true, v34LayoutGridTests: 80 }, null, 2));
+console.log(JSON.stringify({ ok: true, v34LayoutGridTests: 81 }, null, 2));
