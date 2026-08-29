@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v6.1.4.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v6.1.5.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="./docs/development.en.md">Développement local</a> ·
@@ -74,25 +74,25 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 ## 📦 Téléchargement et installation
 
-Téléchargez la v6.1.4 depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
+Téléchargez la v6.1.5 depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
 
-* Installateur : `Lyrics Card Generator Setup 6.1.4.exe`
-* Version portable : `Lyrics Card Generator-6.1.4-portable.exe`
+* Installateur : `Lyrics Card Generator Setup 6.1.5.exe`
+* Version portable : `Lyrics Card Generator-6.1.5-portable.exe`
 
 L'installateur est recommandé pour une utilisation régulière. La version portable convient aux essais, à une utilisation temporaire ou à un disque amovible.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### Points forts de la v6.1.4
+### Points forts de la v6.1.5
 
-* La fenêtre native de jeu de polices Windows propose désormais aux rôles CJK et latin un navigateur commun de polices système, avec recherche et aperçu des glyphes pour chaque famille.
-* Vous pouvez changer de rôle, permuter les deux polices ou rétablir le jeu initial ; seules les sélections validées sont appliquées au jeu actuel.
-* Le script auxiliaire natif est désormais transmis par l’entrée standard, évitant la limite de longueur de la ligne de commande Windows tout en conservant la modalité et la validation stricte du résultat.
+* Le choix de polices personnalisées reste désormais dans l’application. Un atelier à deux polices, cohérent avec l’interface existante, remplace la fenêtre WinForms séparée tout en conservant recherche, recommandations et liste complète des polices système.
+* Le survol ou la navigation au clavier met à jour la véritable carte de paroles. L’ancienne carte d’exemple est restaurée sous l’aperçu et ne s’affiche que pendant l’édition d’un jeu personnalisé.
+* Les polices CJK et latine peuvent être permutées, restaurées, annulées ou appliquées ensemble. La suppression de la fenêtre native et du canal IPC redondants ne modifie ni l’export ni la détection protégée des polices système.
 
 ## 🌐 Notes de publication multilingues
 
 Par défaut, GitHub Release affiche un résumé en chinois simplifié. Consultez les notes complètes :
-[简体中文](./docs/releases/v6.1.4.zh-CN.md) · [繁體中文](./docs/releases/v6.1.4.zh-TW.md) · [English](./docs/releases/v6.1.4.en.md) · [Français](./docs/releases/v6.1.4.fr.md) · [日本語](./docs/releases/v6.1.4.ja.md) · [Español](./docs/releases/v6.1.4.es.md)
+[简体中文](./docs/releases/v6.1.5.zh-CN.md) · [繁體中文](./docs/releases/v6.1.5.zh-TW.md) · [English](./docs/releases/v6.1.5.en.md) · [Français](./docs/releases/v6.1.5.fr.md) · [日本語](./docs/releases/v6.1.5.ja.md) · [Español](./docs/releases/v6.1.5.es.md)
 
 <a id="fonctionnalités-principales"></a>
 

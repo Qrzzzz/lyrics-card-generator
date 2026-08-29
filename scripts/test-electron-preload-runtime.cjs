@@ -59,11 +59,6 @@ async function run() {
     ["loadAppPreferences", []],
     ["saveAppPreferences", [{ revision: 1 }, { importHistoryTrimConfirmation: true }]],
     ["listSystemFonts", []],
-    ["pickFont", []],
-    ["openNativeFontPickerWindow", ["Microsoft YaHei", "Inter", "zh", "dark", "自定义字体方案"]],
-    ["getNativeFontPickerContext", []],
-    ["applyNativeFontPickerFamilies", ["Microsoft YaHei", "Inter"]],
-    ["closeNativeFontPicker", []],
     ["openExternal", ["https://github.com/"]],
     ["saveBackgroundImage", []],
     ["readBackgroundImage", ["image-id"]],
@@ -96,22 +91,6 @@ async function run() {
     false
   );
   assert.equal(invocations.length, invocationCountBeforeInvalidDialogs, "invalid native dialogs never cross IPC");
-
-  const invocationCountBeforeInvalidFontPicker = invocations.length;
-  assert.equal(
-    await exposedBridge.openNativeFontPickerWindow("Bad\nFont", "Arial", "en", "dark", "Custom Font Scheme"),
-    null
-  );
-  assert.equal(
-    await exposedBridge.openNativeFontPickerWindow("Microsoft YaHei", "Arial", "en", "dark", "Bad\nTitle"),
-    null
-  );
-  assert.equal(await exposedBridge.applyNativeFontPickerFamilies("Arial", "Bad\nFont"), false);
-  assert.equal(
-    invocations.length,
-    invocationCountBeforeInvalidFontPicker,
-    "invalid native font-picker values never cross IPC"
-  );
 
   assert.equal(await exposedBridge.registerImportFile({ nativePath: "", size: 0, lastModified: 0 }, "local-audio"), null);
   await exposedBridge.registerImportFile(
@@ -175,16 +154,6 @@ async function run() {
       && args[4] === "Close"
     )),
     "native alert forwards only validated primitive fields"
-  );
-  assert.ok(
-    invocations.some(({ channel, args }) => (
-      channel === "lyrics-card:native-font-picker-open"
-      && args.length === 5
-      && args.every((value) => typeof value === "string")
-      && args[0] === "Microsoft YaHei"
-      && args[1] === "Inter"
-    )),
-    "font-scheme picker opens with both bounded font families"
   );
   assert.equal(listeners.size, 0, "all preload event subscriptions are removable");
   console.log("Electron preload runtime contract tests passed");

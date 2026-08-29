@@ -73,10 +73,9 @@ const singleInstanceOwnershipSource = readFileSync("electron/single-instance-own
 const desktopReadyRouteSource = readFileSync("app/api/desktop-ready/route.ts", "utf8");
 const importHistorySource = readFileSync("electron/import-history.js", "utf8");
 const manualSaveIpcSource = readFileSync("electron/manual-save-ipc.js", "utf8");
-const nativeFontDialogSource = readFileSync("electron/native-font-dialog.js", "utf8");
 const desktopApiSource = readFileSync("lib/desktop-api.ts", "utf8");
 const fontSchemePanelSource = readFileSync("components/editor/font-scheme/FontSchemePanel.tsx", "utf8");
-const nativeFontPickerSource = readFileSync("components/editor/font-scheme/NativeFontPickerWindow.tsx", "utf8");
+const fontSchemePreviewSource = readFileSync("components/editor/font-scheme/FontSchemePreviewPanel.tsx", "utf8");
 const desktopHistoryInteractionSource = readFileSync("scripts/test-desktop-import-history-interactions.mjs", "utf8");
 // Source contracts complement unit behavior checks by proving that the hardened
 // helpers are actually wired into the privileged Electron entry point.
@@ -147,16 +146,11 @@ assert.doesNotMatch(startupTraceSource, /ipcMain|contextBridge|webContents/, "st
 
 const prepareElectronSource = readFileSync("scripts/prepare-electron-dist.mjs", "utf8");
 assert.match(prepareElectronSource, /"electron\/font-directory-service\.js"/, "packaged desktop bundles the font directory service");
-assert.match(prepareElectronSource, /"electron\/native-font-dialog\.js"/, "packaged desktop bundles the native Windows font scheme dialog");
+assert.doesNotMatch(prepareElectronSource, /native-font-dialog/, "packaged desktop no longer bundles a separate font UI runtime");
 assert.match(
   prepareElectronSource,
   /path\.join\(projectRoot, "electron", "font-directory-service\.js"\)[\s\S]*?path\.join\(electronOutputDir, "font-directory-service\.js"\)/,
   "desktop preparation copies the font directory service into the minimal app"
-);
-assert.match(
-  prepareElectronSource,
-  /path\.join\(projectRoot, "electron", "native-font-dialog\.js"\)[\s\S]*?path\.join\(electronOutputDir, "native-font-dialog\.js"\)/,
-  "desktop preparation copies the native Windows font scheme dialog into the minimal app"
 );
 assert.match(prepareElectronSource, /"electron\/local-app-url\.js"/, "packaged desktop bundles the local URL policy helper");
 assert.match(prepareElectronSource, /"electron\/local-server-origin\.js"/, "packaged desktop bundles stable origin selection");
@@ -214,69 +208,19 @@ assert.match(
   /function invokeNativeDialog\(channel, type, title, message, detail, primaryLabel, cancelLabel\)[\s\S]*?NATIVE_DIALOG_TYPES\.has\(type\)[\s\S]*?ipcRenderer\.invoke/,
   "preload validates native dialog bounds before IPC"
 );
-assert.match(
-  preloadSource,
-  /function openNativeFontPickerWindow\(cjkFontFamily, latinFontFamily, locale, theme, title\)[\s\S]*?isFontFamily\(cjkFontFamily\)[\s\S]*?isFontFamily\(latinFontFamily\)[\s\S]*?"lyrics-card:native-font-picker-open"/,
-  "preload bounds both font families before opening the font-scheme window"
-);
+assert.doesNotMatch(mainSource, /native-font-picker|fontPickerWindow|showWindowsFontSchemeDialog/);
+assert.doesNotMatch(preloadSource, /native-font-picker|openNativeFontPickerWindow|applyNativeFontPickerFamilies/);
 assert.match(
   mainSource,
-  /if \(process\.platform === "win32"\)[\s\S]*?nativeWindowHandleAsDecimal\(mainWindow\)[\s\S]*?showWindowsFontSchemeDialog\(\{/,
-  "Windows opens the native WinForms scheme dialog against the Electron owner handle"
+  /handle\("lyrics-card:list-system-fonts", async \(\) => \{[\s\S]*?systemFontDirectoryService\.list\(\)/,
+  "the main renderer can request the bounded system-font directory directly"
 );
-assert.match(nativeFontDialogSource, /\[System\.Windows\.Forms\.Form\]::new\(\)/);
-assert.equal(
-  (nativeFontDialogSource.match(/\[System\.Windows\.Forms\.FontDialog\]::new\(\)/g) ?? []).length,
-  0,
-  "the native Windows scheme dialog does not create secondary font windows"
-);
-assert.equal(
-  (nativeFontDialogSource.match(/\[System\.Windows\.Forms\.ComboBox\]::new\(\)/g) ?? []).length,
-  0,
-  "the native Windows scheme dialog does not duplicate system fonts in separate combo boxes"
-);
-assert.match(nativeFontDialogSource, /InstalledFontCollection\]::new\(\)/);
-assert.equal(
-  (nativeFontDialogSource.match(/\[LyricsCardFontListBox\]::new\(\)/g) ?? []).length,
-  1,
-  "the two roles share one owner-drawn font browser inside the owned form"
-);
-assert.match(nativeFontDialogSource, /\$searchBox\.Add_TextChanged\(\{ Update-FontList \}\)/);
-assert.match(nativeFontDialogSource, /SetProcessDpiAwarenessContext/);
-assert.match(nativeFontDialogSource, /\[LyricsCardDpi\]::EnablePerMonitorV2\(\)/);
-assert.match(nativeFontDialogSource, /\$form\.ShowDialog\(\$owner\)/);
-assert.match(nativeFontDialogSource, /windowsHide: true/);
-assert.match(nativeFontDialogSource, /shell: false/);
-assert.match(nativeFontDialogSource, /stdio: \["pipe", "pipe", "pipe"\]/);
-assert.match(nativeFontDialogSource, /child\.stdin\.end\(encodedCommand, "ascii"\)/);
-assert.match(
-  mainSource,
-  /new BrowserWindow\(\{[\s\S]*?parent: mainWindow,[\s\S]*?modal: true,[\s\S]*?frame: true,[\s\S]*?contextIsolation: true,[\s\S]*?nodeIntegration: false,[\s\S]*?sandbox: true/,
-  "the non-Windows font-scheme fallback uses a hardened modal child window"
-);
-assert.match(
-  mainSource,
-  /function assertTrustedFontPickerEvent\(event\)[\s\S]*?assertTrustedIpcEvent\(event, fontPickerWindow, localAppUrl\)/,
-  "font-picker IPC is bound to the picker window instead of inheriting main-window authority"
-);
-assert.match(
-  mainSource,
-  /picker\.on\("closed", \(\) => \{[\s\S]*?if \(fontPickerWindow !== picker\) return;[\s\S]*?finishNativeFontPicker\(null, false\)/,
-  "a stale picker close event cannot clear a newer picker session"
-);
-assert.match(
-  mainSource,
-  /handleFontPicker\("lyrics-card:native-font-picker-context"[\s\S]*?handleFontPicker\("lyrics-card:native-font-picker-apply"[\s\S]*?handleFontPicker\("lyrics-card:native-font-picker-close"/,
-  "only the picker window can read its bounded context, apply both families, or close itself"
-);
-assert.match(
-  fontSchemePanelSource,
-  /desktopApi\.openNativeFontPicker\([\s\S]*?cjkFontFamily: result\.cjkFontFamily,[\s\S]*?latinFontFamily: result\.latinFontFamily[\s\S]*?applyScheme/,
-  "the modal window returns both families for one atomic scheme commit"
-);
-assert.match(nativeFontPickerSource, /font-picker-live-preview-/);
-assert.match(nativeFontPickerSource, /applyNativeFontPicker\(draft\)[\s\S]*?closeNativeFontPicker/);
-assert.match(mainSource, /native-font-picker-apply[\s\S]*?finishNativeFontPicker\(\{[\s\S]*?\}, false\)/);
+assert.match(fontSchemePanelSource, /desktopApi\.listSystemFonts\(\)/);
+assert.match(fontSchemePanelSource, /data-testid="font-picker-scheme"/);
+assert.match(fontSchemePanelSource, /onPreviewSchemeChange\?\.\(nextDraft\)/);
+assert.match(fontSchemePanelSource, /applyScheme\(customDraft\)[\s\S]*?closeCustomPicker\(\)/);
+assert.match(fontSchemePreviewSource, /FONT_PANEL_PREVIEW_LYRIC\.lines\.map/);
+assert.match(fontSchemePreviewSource, /data-testid="font-scheme-preview-panel"/);
 assert.doesNotMatch(
   preloadSource,
   /showNative(?:Confirm|Alert)Dialog: \(options\)/,

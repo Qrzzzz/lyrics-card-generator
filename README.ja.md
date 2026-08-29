@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v6.1.4.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v6.1.5.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="./docs/development.en.md">ローカル開発</a> ·
@@ -74,25 +74,25 @@
 
 ## 📦 ダウンロードとインストール
 
-v6.1.4 は [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) からダウンロードできます。
+v6.1.5 は [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) からダウンロードできます。
 
-* インストーラー：`Lyrics Card Generator Setup 6.1.4.exe`
-* ポータブル版：`Lyrics Card Generator-6.1.4-portable.exe`
+* インストーラー：`Lyrics Card Generator Setup 6.1.5.exe`
+* ポータブル版：`Lyrics Card Generator-6.1.5-portable.exe`
 
 通常利用にはインストーラーを推奨します。ポータブル版は一時利用、検証、リムーバブルドライブでの利用に向いています。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v6.1.4 の主な更新
+### v6.1.5 の主な更新
 
-* Windows のネイティブフォント構成ウィンドウで、CJK 用と欧文用の役割が、検索と各ファミリーの字形プレビューを備えた 1 つのシステムフォントブラウザーを共有するようになりました。
-* 役割の切り替え、2 つのフォントの交換、ウィンドウを開いた時の構成への復元ができ、確定した選択だけが現在の構成へ反映されます。
-* ネイティブ補助スクリプトを標準入力経由で渡すことで、Windows のコマンドライン長制限を回避しつつ、モーダル所有関係と厳密な結果検証を維持します。
+* カスタムフォントの選択をアプリ内に戻しました。既存 UI に合わせた 2 フォント用ワークベンチが独立した WinForms ウィンドウに代わり、検索、おすすめ、システムフォントの全一覧を利用できます。
+* フォントをホバーするかキーボードで移動すると、実際の歌詞カードへ即座に反映されます。以前のサンプル歌詞カードもプレビュー下に復元され、カスタム構成の編集中だけ表示されます。
+* CJK 用と欧文用フォントは、交換、復元、キャンセル、一括適用が可能です。不要なネイティブウィンドウと IPC 経路を削除しても、書き出し規則と保護されたシステムフォント取得は変わりません。
 
 ## 🌐 多言語リリースノート
 
 GitHub Release ではデフォルトで簡体字中国語の概要が表示されます。完全なリリースノートはこちら：
-[简体中文](./docs/releases/v6.1.4.zh-CN.md) · [繁體中文](./docs/releases/v6.1.4.zh-TW.md) · [English](./docs/releases/v6.1.4.en.md) · [Français](./docs/releases/v6.1.4.fr.md) · [日本語](./docs/releases/v6.1.4.ja.md) · [Español](./docs/releases/v6.1.4.es.md)
+[简体中文](./docs/releases/v6.1.5.zh-CN.md) · [繁體中文](./docs/releases/v6.1.5.zh-TW.md) · [English](./docs/releases/v6.1.5.en.md) · [Français](./docs/releases/v6.1.5.fr.md) · [日本語](./docs/releases/v6.1.5.ja.md) · [Español](./docs/releases/v6.1.5.es.md)
 
 <a id="主な機能"></a>
 

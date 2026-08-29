@@ -3,10 +3,12 @@
 import { motion } from "framer-motion";
 import type { RefObject } from "react";
 import { useEffect, useState } from "react";
+import { FontSchemePreviewPanel } from "@/components/editor/font-scheme/FontSchemePreviewPanel";
 import { useAppReducedMotion } from "@/components/motion/AppMotionProvider";
 import { MotionPanel } from "@/components/motion/MotionPanel";
 import { MotionPresence } from "@/components/motion/MotionPresence";
 import { LyricCardPreview } from "@/components/preview/LyricCardPreview";
+import { FIXED_WHITE_TEXT_COLOR } from "@/lib/card-style-normalize";
 import type { createT } from "@/lib/i18n";
 import type { LyricDocumentV2 } from "@/lib/lyrics-document-v2";
 import { motionDurations, motionEasings, reducedMotionTransition } from "@/lib/motion/tokens";
@@ -49,6 +51,7 @@ export function PreviewPane({
   const previewExpanded = isPreviewVisible || isDesktopPreview;
   // Font hover/focus preview never mutates the saved card style.
   const previewStyle = fontSchemePreview ? { ...style, fontScheme: fontSchemePreview } : style;
+  const customFontPreview = fontSchemePreview?.mode === "custom" ? fontSchemePreview : null;
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(min-width: 1024px)");
@@ -92,7 +95,7 @@ export function PreviewPane({
         }
         aria-hidden={!previewExpanded}
       >
-        <div>
+        <div className="grid gap-5">
           <div className="relative min-w-0" data-testid="preview-clear-transition">
             <MotionPresence mode="popLayout">
               {/* Only the visible preview remounts to animate a clear; export hosts remain stable. */}
@@ -123,6 +126,13 @@ export function PreviewPane({
               </motion.div>
             </MotionPresence>
           </div>
+          {customFontPreview ? (
+            <FontSchemePreviewPanel
+              scheme={customFontPreview}
+              textColor={style.textColorMode === "custom" ? style.customTextColor : FIXED_WHITE_TEXT_COLOR}
+              t={t}
+            />
+          ) : null}
         </div>
       </motion.div>
     </MotionPanel>

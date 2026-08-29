@@ -392,13 +392,8 @@ function testMainProcessWiring() {
   assert.match(mainSource, /createWindowsFontDirectoryService\(\{/);
   assert.match(
     mainSource,
-    /handleOwnedFontWindow\("lyrics-card:list-system-fonts"[\s\S]*?systemFontDirectoryService\.list\(\)/,
-    "main and native picker renderers share the one guarded main-process directory service"
-  );
-  assert.match(
-    mainSource,
-    /handle\("lyrics-card:pick-font"[\s\S]*?systemFontDirectoryService\.list\(\)/,
-    "the related picker IPC shares the same directory service"
+    /handle\("lyrics-card:list-system-fonts"[\s\S]*?systemFontDirectoryService\.list\(\)/,
+    "the inline picker reaches the guarded directory service only through the main renderer"
   );
   assert.doesNotMatch(mainSource, /listWindowsFontOptions|powershell\.exe/i, "components and IPC handlers cannot bypass the service scanner");
   assert.match(mainSource, /app\.on\("will-quit", disposeSystemFontDirectoryService\)/);

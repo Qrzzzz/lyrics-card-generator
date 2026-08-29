@@ -454,7 +454,11 @@ assert.ok(colorControlsSource.includes('{ value: "white", label: t("pureWhite") 
 assert.ok(!colorControlsSource.includes("TEXT_COLOR_PRESETS"), "legacy color presets are not exposed");
 assert.ok(previewPaneSource.includes("fontSchemePreview ? { ...style, fontScheme: fontSchemePreview } : style"), "font draft previews use the real card");
 assert.ok(previewPaneSource.includes("lg:sticky lg:top-0 lg:z-20"), "the right preview pane stays pinned above scrolling controls");
-assert.ok(!previewPaneSource.includes("FontSchemePreviewPanel"), "the dedicated font preview card is removed");
+assert.ok(
+  previewPaneSource.includes('fontSchemePreview?.mode === "custom"') &&
+    previewPaneSource.includes("<FontSchemePreviewPanel"),
+  "the dedicated font sample card returns only while a custom scheme is being previewed"
+);
 assert.ok(lyricCardPreviewSource.includes("self-start"), "live preview panel follows its own content height");
 assert.ok(!lyricCardPreviewSource.includes("min-h-[520px]"), "live preview canvas no longer reserves empty vertical space");
 assert.ok(!lyricCardPreviewSource.includes("min-h-[calc(100vh-48px)]"), "live preview border no longer stretches to the viewport");
