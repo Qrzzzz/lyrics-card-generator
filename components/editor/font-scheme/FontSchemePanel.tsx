@@ -53,6 +53,7 @@ export function FontSchemePanel({ style, onStyleChange, onPreviewSchemeChange, s
   const [systemFonts, setSystemFonts] = useState<SystemFontOption[]>([]);
   const [systemFontStatus, setSystemFontStatus] = useState<SystemFontStatus>("idle");
   const customSchemeTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const pickerOpenRef = useRef(false);
 
   useEffect(() => {
     if (!pickerOpen) return;
@@ -82,6 +83,7 @@ export function FontSchemePanel({ style, onStyleChange, onPreviewSchemeChange, s
   }, [desktopApi, pickerOpen]);
 
   useEffect(() => () => {
+    pickerOpenRef.current = false;
     onPreviewSchemeChange?.(null);
   }, [onPreviewSchemeChange]);
 
@@ -103,6 +105,7 @@ export function FontSchemePanel({ style, onStyleChange, onPreviewSchemeChange, s
   }
 
   function applyPreset(preset: FontScheme) {
+    pickerOpenRef.current = false;
     setPickerOpen(false);
     setPickerQuery("");
     applyScheme(preset);
@@ -115,6 +118,7 @@ export function FontSchemePanel({ style, onStyleChange, onPreviewSchemeChange, s
     const startingScheme = customScheme(currentScheme);
     setOpeningDraft(startingScheme);
     setCustomDraft(startingScheme);
+    pickerOpenRef.current = true;
     setPickerOpen(true);
     onPreviewSchemeChange?.(startingScheme);
   }
@@ -122,15 +126,17 @@ export function FontSchemePanel({ style, onStyleChange, onPreviewSchemeChange, s
   function selectCustomFont(font: FontFamilyOption) {
     const nextDraft = withFamily(customDraft, font.category, font.family);
     setCustomDraft(nextDraft);
-    onPreviewSchemeChange?.(nextDraft);
+    if (pickerOpenRef.current) onPreviewSchemeChange?.(nextDraft);
   }
 
   function previewCustomFont(font: FontFamilyOption) {
-    onPreviewSchemeChange?.(withFamily(customDraft, font.category, font.family));
+    if (pickerOpenRef.current) {
+      onPreviewSchemeChange?.(withFamily(customDraft, font.category, font.family));
+    }
   }
 
   function restoreCustomDraftPreview() {
-    onPreviewSchemeChange?.(customDraft);
+    if (pickerOpenRef.current) onPreviewSchemeChange?.(customDraft);
   }
 
   function swapCustomFonts() {
@@ -140,15 +146,16 @@ export function FontSchemePanel({ style, onStyleChange, onPreviewSchemeChange, s
       latinFontFamily: customDraft.cjkFontFamily
     };
     setCustomDraft(nextDraft);
-    onPreviewSchemeChange?.(nextDraft);
+    if (pickerOpenRef.current) onPreviewSchemeChange?.(nextDraft);
   }
 
   function restoreOpeningDraft() {
     setCustomDraft(openingDraft);
-    onPreviewSchemeChange?.(openingDraft);
+    if (pickerOpenRef.current) onPreviewSchemeChange?.(openingDraft);
   }
 
   function closeCustomPicker({ restoreFocus = true }: { restoreFocus?: boolean } = {}) {
+    pickerOpenRef.current = false;
     setPickerOpen(false);
     setPickerQuery("");
     onPreviewSchemeChange?.(null);

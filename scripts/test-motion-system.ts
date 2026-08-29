@@ -114,6 +114,15 @@ assert.match(
   fontSchemePanel,
   /key="font-scheme-overview-page"[\s\S]*?initial=\{reduceMotion \? \{ opacity: 0, x: 0 \} : \{ opacity: 0, x: -72 \}\}[\s\S]*?exit=\{reduceMotion \? \{ opacity: 0, x: 0 \} : \{ opacity: 0, x: -72 \}\}/
 );
+assert.match(fontSchemePanel, /const pickerOpenRef = useRef\(false\)/);
+assert.match(
+  fontSchemePanel,
+  /function restoreCustomDraftPreview\(\)[\s\S]*?if \(pickerOpenRef\.current\) onPreviewSchemeChange\?\.\(customDraft\)/
+);
+assert.match(
+  fontSchemePanel,
+  /function closeCustomPicker[\s\S]*?pickerOpenRef\.current = false;[\s\S]*?onPreviewSchemeChange\?\.\(null\)/
+);
 assert.match(settingsStepper, /data-testid="preview-workbench-settings-transition"/);
 assert.match(settingsStepper, /<MotionPresence custom=\{stepDirection\} mode="popLayout">/);
 assert.match(settingsStepper, /variants=\{workbenchStepVariants\}/);
