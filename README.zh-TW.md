@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v6.1.4.zh-TW.md">發布說明</a> ·
+  <a href="./docs/releases/v6.1.5.zh-TW.md">發布說明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">線上 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="./docs/development.zh-CN.md">本機開發</a> ·
@@ -71,25 +71,25 @@
 
 ## 📦 下載與安裝
 
-請從 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載 v6.1.4：
+請從 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載 v6.1.5：
 
-* 安裝版：`Lyrics Card Generator Setup 6.1.4.exe`
-* 可攜版：`Lyrics Card Generator-6.1.4-portable.exe`
+* 安裝版：`Lyrics Card Generator Setup 6.1.5.exe`
+* 可攜版：`Lyrics Card Generator-6.1.5-portable.exe`
 
 安裝版適合長期使用；可攜版適合臨時執行、測試或放在隨身碟中使用。
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v6.1.4 更新重點
+### v6.1.5 更新重點
 
-* Windows 原生字體方案視窗改為中日韓與西文字體共用一個可搜尋的系統字體瀏覽器，並直接顯示每種字體的字形預覽。
-* 可在兩個字體角色間切換或一鍵交換，亦可還原開啟視窗時的原始方案；只有提交後的選擇才會寫入目前方案。
-* 原生輔助指令碼改由標準輸入傳遞，避免複雜視窗指令碼觸及 Windows 命令列長度限制，同時保留模態歸屬與嚴格結果驗證。
+* 自訂字體選擇回到應用程式內，以貼合現有介面的雙字體工作台取代獨立 WinForms 視窗，並保留搜尋、推薦字體及完整系統字體清單。
+* 懸停或以鍵盤瀏覽字體時會連動真實歌詞卡；舊版範例歌詞卡亦已還原至預覽下方，且只會在自訂字體編輯期間顯示。
+* 中日韓／西文字體支援交換、還原、取消與一次套用；移除多餘的原生視窗及 IPC 鏈路後，匯出規則與系統字體讀取能力維持不變。
 
 ## 🌐 多語言發佈說明
 
 GitHub Release 預設顯示簡體中文摘要，完整說明請見：
-[简体中文](./docs/releases/v6.1.4.zh-CN.md) · [繁體中文](./docs/releases/v6.1.4.zh-TW.md) · [English](./docs/releases/v6.1.4.en.md) · [Français](./docs/releases/v6.1.4.fr.md) · [日本語](./docs/releases/v6.1.4.ja.md) · [Español](./docs/releases/v6.1.4.es.md)
+[简体中文](./docs/releases/v6.1.5.zh-CN.md) · [繁體中文](./docs/releases/v6.1.5.zh-TW.md) · [English](./docs/releases/v6.1.5.en.md) · [Français](./docs/releases/v6.1.5.fr.md) · [日本語](./docs/releases/v6.1.5.ja.md) · [Español](./docs/releases/v6.1.5.es.md)
 
 ## ✨ 主要功能
 

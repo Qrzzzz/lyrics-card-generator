@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v6.1.4.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v6.1.5.en.md">Release Notes</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
   <a href="./docs/web-lite-browser-support.md">Web Lite Browser Support</a> ·
   <a href="#features">Features</a> ·
@@ -75,25 +75,25 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 ## 📦 Download and Installation
 
-Download v6.1.4 from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
+Download v6.1.5 from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Installer: `Lyrics Card Generator Setup 6.1.4.exe`
-* Portable build: `Lyrics Card Generator-6.1.4-portable.exe`
+* Installer: `Lyrics Card Generator Setup 6.1.5.exe`
+* Portable build: `Lyrics Card Generator-6.1.5-portable.exe`
 
 The installer is recommended for regular use. The portable version is useful for temporary use, testing, or running from a removable drive.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v6.1.4 Highlights
+### v6.1.5 Highlights
 
-* The native Windows font-scheme window now gives CJK and Latin roles one searchable system-font browser with an inline glyph preview for every family.
-* You can switch roles, swap both fonts, or restore the opening scheme; only committed selections are written back to the current scheme.
-* The native helper script is now delivered through standard input, avoiding the Windows command-line length limit while retaining modal ownership and strict result validation.
+* Custom font selection now stays inside the app. A two-font workbench matching the existing interface replaces the separate WinForms window while retaining search, recommendations, and the full system-font list.
+* Hovering or navigating fonts by keyboard updates the real lyric card. The earlier sample-lyrics card is restored below the preview and appears only while editing a custom font scheme.
+* CJK and Latin fonts can be swapped, restored, canceled, or applied together. Removing the redundant native window and IPC path does not change exports or guarded system-font discovery.
 
 ## 🌐 Multilingual Release Notes
 
 GitHub Release displays a Simplified Chinese summary by default. See the full release notes:
-[简体中文](./docs/releases/v6.1.4.zh-CN.md) · [繁體中文](./docs/releases/v6.1.4.zh-TW.md) · [English](./docs/releases/v6.1.4.en.md) · [Français](./docs/releases/v6.1.4.fr.md) · [日本語](./docs/releases/v6.1.4.ja.md) · [Español](./docs/releases/v6.1.4.es.md)
+[简体中文](./docs/releases/v6.1.5.zh-CN.md) · [繁體中文](./docs/releases/v6.1.5.zh-TW.md) · [English](./docs/releases/v6.1.5.en.md) · [Français](./docs/releases/v6.1.5.fr.md) · [日本語](./docs/releases/v6.1.5.ja.md) · [Español](./docs/releases/v6.1.5.es.md)
 
 <a id="features"></a>
 

@@ -19,7 +19,7 @@
 <p>
   <strong>Navegación</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Descargar la última versión</a> ·
-  <a href="./docs/releases/v6.1.4.es.md">Notas de la versión</a> ·
+  <a href="./docs/releases/v6.1.5.es.md">Notas de la versión</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en línea</a> ·
   <a href="#funciones-principales">Funciones principales</a> ·
   <a href="./docs/development.en.md">Desarrollo local</a> ·
@@ -74,25 +74,25 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 ## 📦 Descarga e instalación
 
-Descarga v6.1.4 desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
+Descarga v6.1.5 desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Instalador: `Lyrics Card Generator Setup 6.1.4.exe`
-* Versión portable: `Lyrics Card Generator-6.1.4-portable.exe`
+* Instalador: `Lyrics Card Generator Setup 6.1.5.exe`
+* Versión portable: `Lyrics Card Generator-6.1.5-portable.exe`
 
 El instalador se recomienda para uso habitual. La versión portable es útil para pruebas, uso temporal o ejecución desde una unidad extraíble.
 
 > La compilación actual no está firmada. Windows puede mostrar una advertencia de SmartScreen, algo habitual en aplicaciones personales sin firma.
 
-### Novedades de v6.1.4
+### Novedades de v6.1.5
 
-* La ventana nativa de fuentes de Windows ofrece ahora a los roles CJK y latino un único navegador de fuentes del sistema con búsqueda y vista previa de glifos para cada familia.
-* Se puede cambiar de rol, intercambiar ambas fuentes o restaurar la combinación inicial; solo las selecciones confirmadas se aplican al esquema actual.
-* El script auxiliar nativo se transmite ahora por la entrada estándar, evitando el límite de longitud de la línea de comandos de Windows y conservando la propiedad modal y la validación estricta del resultado.
+* La selección de fuentes personalizadas permanece ahora dentro de la aplicación. Un panel para dos fuentes, acorde con la interfaz existente, sustituye la ventana WinForms independiente y conserva la búsqueda, las recomendaciones y la lista completa de fuentes del sistema.
+* Al pasar el puntero o navegar con el teclado, la tarjeta real de letras se actualiza. También se recupera la antigua tarjeta de ejemplo bajo la vista previa, visible solo mientras se edita un esquema personalizado.
+* Las fuentes CJK y latina pueden intercambiarse, restaurarse, cancelarse o aplicarse juntas. Eliminar la ventana nativa y la ruta IPC redundantes no cambia la exportación ni la detección protegida de fuentes del sistema.
 
 ## 🌐 Notas de publicación multilingües
 
 GitHub Release muestra de forma predeterminada un resumen en chino simplificado. Consulta las notas completas:
-[简体中文](./docs/releases/v6.1.4.zh-CN.md) · [繁體中文](./docs/releases/v6.1.4.zh-TW.md) · [English](./docs/releases/v6.1.4.en.md) · [Français](./docs/releases/v6.1.4.fr.md) · [日本語](./docs/releases/v6.1.4.ja.md) · [Español](./docs/releases/v6.1.4.es.md)
+[简体中文](./docs/releases/v6.1.5.zh-CN.md) · [繁體中文](./docs/releases/v6.1.5.zh-TW.md) · [English](./docs/releases/v6.1.5.en.md) · [Français](./docs/releases/v6.1.5.fr.md) · [日本語](./docs/releases/v6.1.5.ja.md) · [Español](./docs/releases/v6.1.5.es.md)
 
 <a id="funciones-principales"></a>
 

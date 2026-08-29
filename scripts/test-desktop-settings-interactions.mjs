@@ -45,16 +45,6 @@ async function readNativeDialogs() {
   return electronApp.evaluate(() => globalThis.__lyricsCardNativeDialogTest.calls);
 }
 
-async function setNativeFontSchemeResult(result) {
-  await electronApp.evaluate((_electron, nextResult) => {
-    globalThis.__lyricsCardNativeFontDialogTest.nextResult = nextResult;
-  }, result);
-}
-
-async function readNativeFontSchemeCalls() {
-  return electronApp.evaluate(() => globalThis.__lyricsCardNativeFontDialogTest.calls);
-}
-
 // This suite deliberately reuses one packaged application so navigation,
 // persistence, focus, and layout transitions are exercised as a continuous flow.
 async function waitForVisible(testId) {
@@ -1652,66 +1642,88 @@ async function assertFontPickerBehavior() {
     "the Source Han Serif card renders the entire button in its own font stack"
   );
 
-  const schemeTrigger = page.getByTestId("edit-custom-font-scheme");
-  assert.equal(await page.getByTestId("choose-cjk-font").count(), 0, "the two category-specific triggers are removed");
-  assert.equal(await page.getByTestId("choose-latin-font").count(), 0, "the Latin category has no separate main-panel trigger");
-  assert.equal(await page.getByTestId("save-custom-font-scheme").count(), 0, "the native scheme dialog owns the only apply action");
-
+  const cjkTrigger = page.getByTestId("choose-cjk-font");
+  const latinTrigger = page.getByTestId("choose-latin-font");
+  const picker = page.getByTestId("font-picker-scheme");
+  const historicalPreview = page.getByTestId("font-scheme-preview-panel");
+  const realPreview = page.locator('[data-testid="lyric-card-preview"] article[data-export-card="true"]');
   const currentSummary = page.getByTestId("font-scheme-panel").locator("dl").first();
+  assert.equal(await cjkTrigger.count(), 1, "custom font editing exposes a dedicated CJK role card");
+  assert.equal(await latinTrigger.count(), 1, "custom font editing exposes a dedicated Latin role card");
+  assert.equal(await picker.count(), 0, "the inline workbench stays collapsed before custom editing starts");
+  assert.equal(await historicalPreview.count(), 0, "the historical sample card is absent outside custom editing");
   assert.doesNotMatch(await currentSummary.textContent() ?? "", /Microsoft YaHei/, "the fresh font page starts from the saved preset");
 
-  await setNativeFontSchemeResult(null);
-  await schemeTrigger.click();
-  await page.waitForFunction(() => document.activeElement?.getAttribute("data-testid") === "edit-custom-font-scheme");
-  const windowsAfterCancel = await electronApp.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().length);
-  assert.equal(windowsAfterCancel, 1, "Windows font-scheme selection does not create an Electron or HTML child window");
-  assert.equal(await page.getByTestId("font-picker-scheme").count(), 0, "the main renderer contains no desktop font-picker overlay");
-  assert.doesNotMatch(await currentSummary.textContent() ?? "", /Microsoft YaHei/, "cancelling discards the entire two-font draft");
-  assert.equal(await schemeTrigger.evaluate((node) => document.activeElement === node), true, "native scheme cancellation restores focus to the merged entry");
-
-  await setNativeFontSchemeResult({ cjkFontFamily: "Microsoft YaHei", latinFontFamily: "Arial" });
-  await schemeTrigger.click();
-  await page.waitForFunction(() => (
-    document.querySelector('[data-testid="font-scheme-panel"] dl')?.textContent?.includes("Microsoft YaHei") &&
-    document.querySelector('[data-testid="font-scheme-panel"] dl')?.textContent?.includes("Arial")
-  ));
-  await page.waitForFunction(() => document.activeElement?.getAttribute("data-testid") === "edit-custom-font-scheme");
-  const nativeFontSchemeCalls = await readNativeFontSchemeCalls();
-  assert.equal(nativeFontSchemeCalls.length, 2, "cancel and apply each invoke the single native scheme entry once");
-  assert.deepEqual(
-    nativeFontSchemeCalls.map((call) => ({
-      cjkFontFamily: call.cjkFontFamily,
-      latinFontFamily: call.latinFontFamily,
-      locale: call.locale,
-      theme: call.theme,
-      title: call.title
-    })),
-    [
-      {
-        cjkFontFamily: "Source Han Sans SC",
-        latinFontFamily: "Source Han Sans SC",
-        locale: "zh",
-        theme: "album-dynamic",
-        title: "自定义字体方案"
-      },
-      {
-        cjkFontFamily: "Source Han Sans SC",
-        latinFontFamily: "Source Han Sans SC",
-        locale: "zh",
-        theme: "album-dynamic",
-        title: "自定义字体方案"
-      }
-    ],
-    "the native WinForms bridge receives both starting families and bounded presentation context"
+  await cjkTrigger.click();
+  await picker.waitFor({ state: "visible" });
+  await historicalPreview.waitFor({ state: "visible" });
+  await page.waitForFunction(() => document.activeElement?.getAttribute("data-testid") === "font-picker-search");
+  const windowsDuringEdit = await electronApp.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().length);
+  assert.equal(windowsDuringEdit, 1, "font editing remains inside the main application window");
+  const previewPlacement = await page.evaluate(() => {
+    const real = document.querySelector('[data-testid="lyric-card-preview"]');
+    const sample = document.querySelector('[data-testid="font-scheme-preview-panel"]');
+    if (!(real instanceof HTMLElement) || !(sample instanceof HTMLElement)) return null;
+    return { realBottom: real.getBoundingClientRect().bottom, sampleTop: sample.getBoundingClientRect().top };
+  });
+  assert.ok(
+    previewPlacement && previewPlacement.sampleTop >= previewPlacement.realBottom,
+    "the restored historical sample card sits below the real lyric-card preview"
   );
+
+  const firstCjkOption = picker.locator('[data-font-family="Microsoft YaHei"]').first();
+  await firstCjkOption.hover();
+  await page.waitForFunction(() => (
+    getComputedStyle(document.querySelector('[data-testid="lyric-card-preview"] article[data-export-card="true"]')).fontFamily
+      .includes("Microsoft YaHei")
+  ));
+  assert.doesNotMatch(
+    await currentSummary.textContent() ?? "",
+    /Microsoft YaHei/,
+    "hover preview does not mutate the saved font summary"
+  );
+  await firstCjkOption.click();
+  assert.equal(await page.getByTestId("save-custom-font-scheme").isEnabled(), true, "changing either role enables atomic apply");
+  assert.match(
+    await page.getByTestId("font-lyric-preview").locator("p").first().evaluate((node) => node.style.fontFamily),
+    /Microsoft YaHei/,
+    "the restored sample card follows the CJK draft"
+  );
+  await page.getByTestId("cancel-custom-font-scheme").click();
+  await picker.waitFor({ state: "detached" });
+  assert.equal(await historicalPreview.count(), 0, "cancelling custom editing hides the historical sample card");
+  assert.doesNotMatch(await currentSummary.textContent() ?? "", /Microsoft YaHei/, "cancelling discards the entire two-font draft");
+  assert.equal(await cjkTrigger.evaluate((node) => document.activeElement === node), true, "cancelling restores focus to the role that opened the picker");
+
+  await cjkTrigger.click();
+  await picker.waitFor({ state: "visible" });
+  await picker.locator('[data-font-family="Microsoft YaHei"]').first().click();
+  await latinTrigger.click();
+  await page.waitForFunction(() => document.activeElement?.getAttribute("data-testid") === "font-picker-search");
+  await picker.locator('[data-font-family="Arial"]').first().click();
+  assert.match(await cjkTrigger.textContent() ?? "", /Microsoft YaHei/, "the CJK role card reflects its draft selection");
+  assert.match(await latinTrigger.textContent() ?? "", /Arial/, "the Latin role card reflects its draft selection");
+  assert.doesNotMatch(await currentSummary.textContent() ?? "", /Microsoft YaHei|Arial/, "the saved summary stays unchanged until apply");
+  const draftPreviewFamily = await realPreview.evaluate((card) => getComputedStyle(card).fontFamily);
+  assert.match(draftPreviewFamily, /Microsoft YaHei/, "the real card previews the CJK draft before apply");
+  assert.match(draftPreviewFamily, /Arial/, "the real card previews the Latin draft before apply");
+  assert.match(
+    await page.getByTestId("font-lyric-preview").locator("p").nth(1).evaluate((node) => node.style.fontFamily),
+    /Arial/,
+    "the restored sample card follows the Latin draft"
+  );
+  await picker.screenshot({ path: path.join(reportDirectory, "inline-font-picker-panel.png") });
+  await historicalPreview.screenshot({ path: path.join(reportDirectory, "font-scheme-sample-card.png") });
+  await page.screenshot({ path: path.join(reportDirectory, "inline-font-picker-with-sample-card.png"), fullPage: false });
+  await page.getByTestId("save-custom-font-scheme").click();
+  await picker.waitFor({ state: "detached" });
   assert.match(await currentSummary.textContent() ?? "", /Microsoft YaHei/, "applying commits the selected CJK font");
   assert.match(await currentSummary.textContent() ?? "", /Arial/, "the same apply action commits the selected Latin font");
-  const appliedPreviewFamily = await page.locator('[data-testid="lyric-card-preview"] article[data-export-card="true"]').evaluate((card) => (
-    getComputedStyle(card).fontFamily
-  ));
+  const appliedPreviewFamily = await realPreview.evaluate((card) => getComputedStyle(card).fontFamily);
   assert.match(appliedPreviewFamily, /Microsoft YaHei/, "the committed pair reaches the real lyric-card preview");
   assert.match(appliedPreviewFamily, /Arial/, "the real lyric-card preview receives the Latin family too");
-  assert.equal(await schemeTrigger.evaluate((node) => document.activeElement === node), true, "native scheme apply restores focus to the merged entry");
+  assert.equal(await historicalPreview.count(), 0, "applying custom fonts hides the editing-only sample card");
+  assert.equal(await latinTrigger.evaluate((node) => document.activeElement === node), true, "apply restores focus to the last active font role");
 
   await page.locator('button[data-step-id="link"]').click();
   await page.locator('button[data-step-id="font"]').click();
@@ -1721,8 +1733,8 @@ async function assertFontPickerBehavior() {
     /Microsoft YaHei/,
     "reopening the font page preserves the saved selection"
   );
-  assert.match(await page.getByTestId("edit-custom-font-scheme").textContent() ?? "", /Microsoft YaHei/);
-  assert.match(await page.getByTestId("edit-custom-font-scheme").textContent() ?? "", /Arial/);
+  assert.match(await page.getByTestId("choose-cjk-font").textContent() ?? "", /Microsoft YaHei/);
+  assert.match(await page.getByTestId("choose-latin-font").textContent() ?? "", /Arial/);
 
   await page.getByTestId("apply-font-preset-source-han-sans").click();
   await page.waitForFunction(() => {
@@ -3811,7 +3823,6 @@ try {
   });
   await electronApp.evaluate(({ dialog }) => {
     globalThis.__lyricsCardNativeDialogTest = { defaultDecision: "dismiss", nextDecision: null, calls: [] };
-    globalThis.__lyricsCardNativeFontDialogTest = { nextResult: null, calls: [] };
     dialog.showMessageBox = async (_browserWindow, options) => {
       const state = globalThis.__lyricsCardNativeDialogTest;
       const decision = state.nextDecision ?? state.defaultDecision;

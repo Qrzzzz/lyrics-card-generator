@@ -1,12 +1,11 @@
 "use client";
 
+import { ArrowLeftRight, Check, RotateCcw, Search, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AccessibleDialog } from "@/components/ui/AccessibleDialog";
 import { AdaptiveSettingsGrid } from "@/components/ui/controls";
 import { getLyricsCardDesktopApi, type SystemFontOption } from "@/lib/desktop-api";
 import {
   buildFontOptions,
-  previewTextForCategory,
   RECOMMENDED_FONTS,
   type FontCategory,
   type FontFamilyOption
@@ -18,7 +17,6 @@ import {
 } from "@/lib/font-schemes";
 import { getEffectiveFontScheme, quoteSingleFontFamily } from "@/lib/fonts";
 import type { createT } from "@/lib/i18n";
-import type { EffectiveUiThemeId } from "@/lib/settings/types";
 import type {
   CardStyle,
   FontPresetId,
@@ -36,21 +34,51 @@ type FontSchemePanelProps = {
   t: ReturnType<typeof createT>;
 };
 
-export function FontSchemePanel({ style, onStyleChange, onPreviewSchemeChange, showHeader = true, locale, t }: FontSchemePanelProps) {
+type SystemFontStatus = "idle" | "loading" | "ready" | "empty" | "failed" | "unavailable";
+
+export function FontSchemePanel({ style, onStyleChange, onPreviewSchemeChange, showHeader = true, t }: FontSchemePanelProps) {
   const desktopApi = getLyricsCardDesktopApi();
   const currentScheme = getEffectiveFontScheme(style);
   const currentPresetId = identifyFontPreset(currentScheme);
-  const [fallbackPickerOpen, setFallbackPickerOpen] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
   const [pickerCategory, setPickerCategory] = useState<FontCategory>("cjk");
   const [pickerQuery, setPickerQuery] = useState("");
-  const [fallbackDraft, setFallbackDraft] = useState<FontScheme>(() => customScheme(currentScheme));
-  const [nativePickerOpen, setNativePickerOpen] = useState(false);
-  const [nativeFocusRestoreVersion, setNativeFocusRestoreVersion] = useState(0);
-  const customSchemeTriggerRef = useRef<HTMLButtonElement>(null);
+  const [customDraft, setCustomDraft] = useState<FontScheme>(() => customScheme(currentScheme));
+  const [openingDraft, setOpeningDraft] = useState<FontScheme>(() => customScheme(currentScheme));
+  const [systemFonts, setSystemFonts] = useState<SystemFontOption[]>([]);
+  const [systemFontStatus, setSystemFontStatus] = useState<SystemFontStatus>("idle");
+  const lastCustomTriggerRef = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => {
-    if (nativeFocusRestoreVersion > 0) customSchemeTriggerRef.current?.focus();
-  }, [nativeFocusRestoreVersion]);
+    if (!pickerOpen) return;
+    if (!desktopApi) {
+      setSystemFonts([]);
+      setSystemFontStatus("unavailable");
+      return;
+    }
+
+    let active = true;
+    setSystemFontStatus("loading");
+    void desktopApi.listSystemFonts()
+      .then((fonts) => {
+        if (!active) return;
+        setSystemFonts(fonts);
+        setSystemFontStatus(fonts.length > 0 ? "ready" : "empty");
+      })
+      .catch(() => {
+        if (!active) return;
+        setSystemFonts([]);
+        setSystemFontStatus("failed");
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [desktopApi, pickerOpen]);
+
+  useEffect(() => () => {
+    onPreviewSchemeChange?.(null);
+  }, [onPreviewSchemeChange]);
 
   function applyScheme(nextScheme: FontScheme) {
     const normalized = normalizeFontScheme(nextScheme);
@@ -69,43 +97,74 @@ export function FontSchemePanel({ style, onStyleChange, onPreviewSchemeChange, s
     onPreviewSchemeChange?.(null);
   }
 
-  async function openFontSchemePicker() {
+  function applyPreset(preset: FontScheme) {
+    setPickerOpen(false);
     setPickerQuery("");
-    const startingScheme = customScheme(currentScheme);
-    if (!desktopApi) {
-      setFallbackDraft(startingScheme);
-      setPickerCategory("cjk");
-      setFallbackPickerOpen(true);
+    applyScheme(preset);
+  }
+
+  function openFontSchemePicker(category: FontCategory, trigger: HTMLButtonElement) {
+    lastCustomTriggerRef.current = trigger;
+    setPickerCategory(category);
+    setPickerQuery("");
+
+    if (pickerOpen) {
+      onPreviewSchemeChange?.(customDraft);
       return;
     }
 
-    setNativePickerOpen(true);
-    const result = await desktopApi.openNativeFontPicker({
-      cjkFontFamily: startingScheme.cjkFontFamily,
-      latinFontFamily: startingScheme.latinFontFamily,
-      locale,
-      theme: currentUiTheme(),
-      title: t("fontSchemePickerTitle")
-    }).catch(() => null);
-    setNativePickerOpen(false);
-    if (result) {
-      applyScheme({
-        mode: "custom",
-        cjkFontFamily: result.cjkFontFamily,
-        latinFontFamily: result.latinFontFamily
-      });
+    const startingScheme = customScheme(currentScheme);
+    setOpeningDraft(startingScheme);
+    setCustomDraft(startingScheme);
+    setPickerOpen(true);
+    onPreviewSchemeChange?.(startingScheme);
+  }
+
+  function selectCustomFont(font: FontFamilyOption) {
+    const nextDraft = withFamily(customDraft, font.category, font.family);
+    setCustomDraft(nextDraft);
+    onPreviewSchemeChange?.(nextDraft);
+  }
+
+  function previewCustomFont(font: FontFamilyOption) {
+    onPreviewSchemeChange?.(withFamily(customDraft, font.category, font.family));
+  }
+
+  function restoreCustomDraftPreview() {
+    onPreviewSchemeChange?.(customDraft);
+  }
+
+  function swapCustomFonts() {
+    const nextDraft: FontScheme = {
+      mode: "custom",
+      cjkFontFamily: customDraft.latinFontFamily,
+      latinFontFamily: customDraft.cjkFontFamily
+    };
+    setCustomDraft(nextDraft);
+    onPreviewSchemeChange?.(nextDraft);
+  }
+
+  function restoreOpeningDraft() {
+    setCustomDraft(openingDraft);
+    onPreviewSchemeChange?.(openingDraft);
+  }
+
+  function closeCustomPicker({ restoreFocus = true }: { restoreFocus?: boolean } = {}) {
+    setPickerOpen(false);
+    setPickerQuery("");
+    onPreviewSchemeChange?.(null);
+    if (restoreFocus) {
+      requestAnimationFrame(() => lastCustomTriggerRef.current?.focus({ preventScroll: true }));
     }
-    setNativeFocusRestoreVersion((version) => version + 1);
   }
 
-  function selectFallbackFont(font: Pick<FontFamilyOption, "category" | "family">) {
-    setFallbackDraft((draft) => withFamily(draft, font.category, font.family));
+  function applyCustomScheme() {
+    applyScheme(customDraft);
+    closeCustomPicker();
   }
 
-  function applyFallbackScheme() {
-    applyScheme(fallbackDraft);
-    setFallbackPickerOpen(false);
-  }
+  const visibleScheme = pickerOpen ? customDraft : currentScheme;
+  const customDraftDirty = !sameFamilies(customDraft, openingDraft);
 
   return (
     <section className="grid gap-5" data-testid="font-scheme-panel">
@@ -140,7 +199,7 @@ export function FontSchemePanel({ style, onStyleChange, onPreviewSchemeChange, s
                 key={presetId}
                 data-testid={`apply-font-preset-${presetId}`}
                 aria-pressed={active}
-                onClick={() => applyScheme(preset)}
+                onClick={() => applyPreset(preset)}
                 style={{ fontFamily: `${quoteSingleFontFamily(preset.cjkFontFamily)}, ${genericFallback}` }}
                 className={cn(
                   "control-focus rounded-xl border p-4 text-left transition",
@@ -166,40 +225,63 @@ export function FontSchemePanel({ style, onStyleChange, onPreviewSchemeChange, s
       </PanelBlock>
 
       <PanelBlock title={t("fontSchemeCustomTitle")}>
-        <button
-          ref={customSchemeTriggerRef}
-          type="button"
-          data-testid="edit-custom-font-scheme"
-          onClick={() => void openFontSchemePicker()}
-          disabled={nativePickerOpen}
-          aria-busy={nativePickerOpen}
-          className="app-button control-focus grid min-h-24 w-full gap-3 rounded-xl px-4 py-3 text-left disabled:cursor-wait disabled:opacity-60 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"
-        >
-          <dl className="grid min-w-0 gap-2 text-sm">
-            <FontSummaryRow label={t("fontSchemeCjkFont")} value={currentScheme.cjkFontFamily} />
-            <FontSummaryRow label={t("fontSchemeLatinFont")} value={currentScheme.latinFontFamily} />
-          </dl>
-          <span className="shrink-0 text-sm font-semibold text-cyan-100">{t("fontSchemeEdit")}</span>
-        </button>
-      </PanelBlock>
+        <div className="grid gap-2">
+          {(["cjk", "latin"] as FontCategory[]).map((category) => {
+            const active = pickerOpen && pickerCategory === category;
+            const family = familyForCategory(visibleScheme, category);
+            const label = t(category === "cjk" ? "fontSchemeCjkFont" : "fontSchemeLatinFont");
+            const usage = t(category === "cjk" ? "fontSchemeCjkUsage" : "fontSchemeLatinUsage");
+            return (
+              <button
+                key={category}
+                type="button"
+                data-testid={category === "cjk" ? "choose-cjk-font" : "choose-latin-font"}
+                aria-expanded={active}
+                aria-controls="custom-font-picker-workbench"
+                onClick={(event) => openFontSchemePicker(category, event.currentTarget)}
+                className={cn(
+                  "control-focus grid min-h-20 w-full gap-1 rounded-xl border px-4 py-3 text-left transition",
+                  active
+                    ? "border-[var(--app-accent)] bg-[var(--control-selected-bg-strong)] shadow-[0_0_0_3px_var(--control-focus-ring)]"
+                    : "border-[rgb(var(--panel-border))] bg-[rgb(var(--button-bg))] hover:bg-[rgb(var(--button-bg-hover))]"
+                )}
+              >
+                <span className="flex items-center justify-between gap-3">
+                  <span className="app-text-subtle text-xs font-semibold">{label}</span>
+                  <span className="shrink-0 text-xs font-semibold text-[var(--app-accent)]">{t("fontSchemeChoose")}</span>
+                </span>
+                <span className="app-text-primary min-w-0 break-words text-sm font-semibold">{family}</span>
+                <span className="app-text-subtle text-xs leading-relaxed">{usage}</span>
+              </button>
+            );
+          })}
+        </div>
 
-      <FontSchemePickerDialog
-        open={fallbackPickerOpen}
-        category={pickerCategory}
-        draft={fallbackDraft}
-        query={pickerQuery}
-        systemFonts={[]}
-        status={t("systemFontDesktopOnly")}
-        onCategoryChange={(category) => {
-          setPickerCategory(category);
-          setPickerQuery("");
-        }}
-        onQueryChange={setPickerQuery}
-        onSelect={selectFallbackFont}
-        onApply={applyFallbackScheme}
-        onClose={() => setFallbackPickerOpen(false)}
-        t={t}
-      />
+        {pickerOpen ? (
+          <InlineFontPicker
+            category={pickerCategory}
+            draft={customDraft}
+            query={pickerQuery}
+            systemFonts={systemFonts}
+            systemFontStatus={systemFontStatus}
+            dirty={customDraftDirty}
+            onCategoryChange={(category) => {
+              setPickerCategory(category);
+              setPickerQuery("");
+              onPreviewSchemeChange?.(customDraft);
+            }}
+            onQueryChange={setPickerQuery}
+            onPreview={previewCustomFont}
+            onPreviewEnd={restoreCustomDraftPreview}
+            onSelect={selectCustomFont}
+            onSwap={swapCustomFonts}
+            onRestore={restoreOpeningDraft}
+            onApply={applyCustomScheme}
+            onClose={() => closeCustomPicker()}
+            t={t}
+          />
+        ) : null}
+      </PanelBlock>
     </section>
   );
 }
@@ -237,33 +319,42 @@ function FontSummaryRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-function FontSchemePickerDialog({
-  open,
+function InlineFontPicker({
   category,
   draft,
   query,
   systemFonts,
-  status,
+  systemFontStatus,
+  dirty,
   onCategoryChange,
   onQueryChange,
+  onPreview,
+  onPreviewEnd,
   onSelect,
+  onSwap,
+  onRestore,
   onApply,
   onClose,
   t
 }: {
-  open: boolean;
   category: FontCategory;
   draft: FontScheme;
   query: string;
   systemFonts: SystemFontOption[];
-  status: string;
+  systemFontStatus: SystemFontStatus;
+  dirty: boolean;
   onCategoryChange: (category: FontCategory) => void;
   onQueryChange: (query: string) => void;
+  onPreview: (font: FontFamilyOption) => void;
+  onPreviewEnd: () => void;
   onSelect: (font: FontFamilyOption) => void;
+  onSwap: () => void;
+  onRestore: () => void;
   onApply: () => void;
   onClose: () => void;
   t: ReturnType<typeof createT>;
 }) {
+  const searchRef = useRef<HTMLInputElement>(null);
   const options = useMemo(() => buildFontOptions(category, systemFonts), [category, systemFonts]);
   const filtered = useMemo(() => {
     const normalized = query.trim().toLocaleLowerCase();
@@ -271,88 +362,177 @@ function FontSchemePickerDialog({
       ? options.filter((font) => `${font.label} ${font.family}`.toLocaleLowerCase().includes(normalized))
       : options;
   }, [options, query]);
-  const recommendedIds = new Set(RECOMMENDED_FONTS.filter((font) => font.category === category).map((font) => font.id));
+  const recommendedIds = new Set(
+    RECOMMENDED_FONTS.filter((font) => font.category === category).map((font) => font.id)
+  );
   const recommended = filtered.filter((font) => recommendedIds.has(font.id));
   const allFonts = filtered.filter((font) => !recommendedIds.has(font.id));
   const selectedFamily = familyForCategory(draft, category);
 
+  useEffect(() => {
+    searchRef.current?.focus({ preventScroll: true });
+  }, [category]);
+
   return (
-    <AccessibleDialog
-      open={open}
-      labelledBy="font-picker-title"
-      onClose={onClose}
-      initialFocusSelector='[data-testid="font-picker-search"]'
-      overlayClassName="z-[160] bg-black/70"
-      panelClassName="settings-surface flex max-h-[90vh] max-w-3xl flex-col overflow-hidden rounded-2xl border"
+    <section
+      id="custom-font-picker-workbench"
+      data-testid="font-picker-scheme"
+      aria-labelledby="font-picker-title"
+      className="settings-surface relative z-10 overflow-hidden rounded-xl border shadow-[0_24px_80px_rgba(0,0,0,0.26)]"
     >
-      <section data-testid="font-picker-scheme" className="flex min-h-0 flex-1 flex-col">
-        <header className="border-b border-[rgb(var(--panel-border))] p-5">
-          <h2 id="font-picker-title" className="app-text-primary text-lg font-bold">{t("fontSchemePickerTitle")}</h2>
-          <p className="app-text-subtle mt-1 text-sm">{t("fontSchemePickerDescription")}</p>
-        </header>
-        <div className="grid min-h-0 gap-4 overflow-y-auto p-5">
-          <div className="grid gap-3 sm:grid-cols-2">
-            {(["cjk", "latin"] as FontCategory[]).map((optionCategory) => (
-              <button
-                key={optionCategory}
-                type="button"
-                data-testid={`font-picker-category-${optionCategory}`}
-                aria-pressed={category === optionCategory}
-                onClick={() => onCategoryChange(optionCategory)}
-                className={cn(
-                  "control-focus grid gap-1 rounded-xl border p-3 text-left",
-                  category === optionCategory
-                    ? "border-cyan-200/60 bg-cyan-300/10"
-                    : "border-[rgb(var(--panel-border))] bg-[rgb(var(--button-bg))]"
-                )}
-              >
-                <span className="app-text-subtle text-xs">
-                  {t(optionCategory === "cjk" ? "fontSchemeCjkFont" : "fontSchemeLatinFont")}
-                </span>
-                <span className="app-text-primary break-words text-sm font-semibold">
-                  {familyForCategory(draft, optionCategory)}
-                </span>
-              </button>
-            ))}
+      <header className="grid gap-2.5 border-b border-[rgb(var(--panel-border))] p-4">
+        <div className="flex items-start justify-between gap-3">
+          <h5 id="font-picker-title" className="app-text-primary text-base font-bold">{t("fontSchemePickerTitle")}</h5>
+          <div className="flex shrink-0 items-center gap-1">
+            <button
+              type="button"
+              className="app-button control-focus grid size-9 place-items-center rounded-lg"
+              aria-label={t("fontSchemeSwap")}
+              title={t("fontSchemeSwap")}
+              onClick={onSwap}
+            >
+              <ArrowLeftRight className="size-4" aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              className="app-button control-focus grid size-9 place-items-center rounded-lg"
+              aria-label={t("fontSchemeRestore")}
+              title={t("fontSchemeRestore")}
+              disabled={!dirty}
+              onClick={onRestore}
+            >
+              <RotateCcw className="size-4" aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              className="app-button control-focus grid size-9 place-items-center rounded-lg"
+              aria-label={t("fontSchemePickerCancel")}
+              title={t("fontSchemePickerCancel")}
+              onClick={onClose}
+            >
+              <X className="size-4" aria-hidden="true" />
+            </button>
           </div>
-          <section className="grid gap-2 rounded-xl border border-[rgb(var(--panel-border))] p-3" aria-label={t("fontSchemePreviewTitle")}>
-            {(["cjk", "latin"] as FontCategory[]).map((previewCategory) => (
-              <p
-                key={previewCategory}
-                className="app-text-primary break-words text-lg leading-relaxed"
-                style={{ fontFamily: `${quoteSingleFontFamily(familyForCategory(draft, previewCategory))}, sans-serif` }}
-              >
-                {previewTextForCategory(previewCategory)}
-              </p>
-            ))}
-          </section>
+        </div>
+        <p className="app-text-subtle text-xs leading-relaxed">{t("fontSchemePickerDescription")}</p>
+      </header>
+
+      <div className="grid gap-3 border-b border-[rgb(var(--panel-border))] p-4">
+        <div className="grid grid-cols-2 gap-2" role="group" aria-label={t("fontSchemePickerTitle")}>
+          {(["cjk", "latin"] as FontCategory[]).map((optionCategory) => (
+            <button
+              key={optionCategory}
+              type="button"
+              data-testid={`font-picker-category-${optionCategory}`}
+              aria-pressed={category === optionCategory}
+              onClick={() => onCategoryChange(optionCategory)}
+              className={cn(
+                "control-focus min-w-0 rounded-lg border px-3 py-2 text-left transition",
+                category === optionCategory
+                  ? "border-[var(--app-accent)] bg-[var(--control-selected-bg)]"
+                  : "border-[rgb(var(--panel-border))] bg-[rgb(var(--button-bg))] hover:bg-[rgb(var(--button-bg-hover))]"
+              )}
+            >
+              <span className="app-text-subtle block text-[11px] font-semibold">
+                {t(optionCategory === "cjk" ? "fontSchemeCjkFont" : "fontSchemeLatinFont")}
+              </span>
+              <span className="app-text-primary mt-0.5 block truncate text-xs font-semibold">
+                {familyForCategory(draft, optionCategory)}
+              </span>
+            </button>
+          ))}
+        </div>
+
+        <div className="field-shell control-focus flex h-11 items-center gap-2 rounded-lg px-3">
+          <Search className="app-text-subtle size-4 shrink-0" aria-hidden="true" />
           <input
+            ref={searchRef}
             data-testid="font-picker-search"
             aria-label={t("fontSchemeSearchPlaceholder")}
             value={query}
             onChange={(event) => onQueryChange(event.target.value)}
             placeholder={t("fontSchemeSearchPlaceholder")}
-            className="field-shell h-11 w-full rounded-lg px-3 text-sm"
+            className="app-text-primary min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-[rgb(var(--app-subtle))]"
           />
-          {recommended.length > 0 ? (
-            <FontOptionGroup headingId="font-picker-recommended-heading" title={t("fontSchemeRecommendedFonts")} fonts={recommended} selectedFamily={selectedFamily} onSelect={onSelect} />
+          {query ? (
+            <button
+              type="button"
+              className="control-focus app-text-subtle grid size-7 place-items-center rounded-md hover:bg-[rgb(var(--button-bg-hover))]"
+              aria-label={t("fontSchemeClose")}
+              onClick={() => {
+                onQueryChange("");
+                searchRef.current?.focus();
+              }}
+            >
+              <X className="size-3.5" aria-hidden="true" />
+            </button>
           ) : null}
-          {allFonts.length > 0 ? (
-            <FontOptionGroup headingId="font-picker-all-heading" title={t("fontSchemeAllFonts")} fonts={allFonts} selectedFamily={selectedFamily} onSelect={onSelect} />
-          ) : null}
-          {filtered.length === 0 ? <p className="app-text-muted rounded-lg border border-[rgb(var(--panel-border))] p-4 text-sm">{t("customFontNoResults")}</p> : null}
-          {status ? <p className="app-text-subtle text-sm">{status}</p> : null}
         </div>
-        <footer className="flex justify-end gap-3 border-t border-[rgb(var(--panel-border))] p-4">
-          <button type="button" className="app-button h-10 rounded-lg px-4 text-sm font-semibold" onClick={onClose}>
+      </div>
+
+      <div
+        className="grid max-h-[min(28rem,56vh)] gap-4 overflow-y-auto p-4"
+        data-testid="font-picker-results"
+        onMouseLeave={onPreviewEnd}
+      >
+        {recommended.length > 0 ? (
+          <FontOptionGroup
+            headingId="font-picker-recommended-heading"
+            title={t("fontSchemeRecommendedFonts")}
+            fonts={recommended}
+            selectedFamily={selectedFamily}
+            onPreview={onPreview}
+            onPreviewEnd={onPreviewEnd}
+            onSelect={onSelect}
+          />
+        ) : null}
+        {allFonts.length > 0 ? (
+          <FontOptionGroup
+            headingId="font-picker-all-heading"
+            title={t("fontSchemeAllFonts")}
+            fonts={allFonts}
+            selectedFamily={selectedFamily}
+            onPreview={onPreview}
+            onPreviewEnd={onPreviewEnd}
+            onSelect={onSelect}
+          />
+        ) : null}
+        {filtered.length === 0 && systemFontStatus !== "loading" ? (
+          <p className="app-text-muted rounded-lg border border-[rgb(var(--panel-border))] p-4 text-sm">
+            {t("customFontNoResults")}
+          </p>
+        ) : null}
+        {systemFontStatus === "loading" ? <p className="app-text-subtle text-xs">{t("systemFontLoading")}</p> : null}
+        {systemFontStatus === "empty" ? <p className="app-text-subtle text-xs">{t("systemFontEmpty")}</p> : null}
+        {systemFontStatus === "failed" ? <p className="app-text-subtle text-xs">{t("systemFontFailed")}</p> : null}
+        {systemFontStatus === "unavailable" ? <p className="app-text-subtle text-xs">{t("systemFontDesktopOnly")}</p> : null}
+      </div>
+
+      <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-[rgb(var(--panel-border))] p-4">
+        <span className="app-text-subtle text-xs">
+          {t("customFontResultCount", { shown: filtered.length, total: options.length })}
+        </span>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            data-testid="cancel-custom-font-scheme"
+            className="app-button control-focus h-10 rounded-lg px-4 text-sm font-semibold"
+            onClick={onClose}
+          >
             {t("fontSchemePickerCancel")}
           </button>
-          <button type="button" data-testid="font-picker-apply" className="h-10 rounded-lg bg-cyan-200 px-4 text-sm font-bold text-slate-950" onClick={onApply}>
+          <button
+            type="button"
+            data-testid="save-custom-font-scheme"
+            className="control-focus h-10 rounded-lg border border-[var(--app-accent)] bg-[rgb(var(--app-fg))] px-4 text-sm font-bold text-[var(--app-bg)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-45"
+            disabled={!dirty}
+            onClick={onApply}
+          >
             {t("fontSchemePickerApply")}
           </button>
-        </footer>
-      </section>
-    </AccessibleDialog>
+        </div>
+      </footer>
+    </section>
   );
 }
 
@@ -361,36 +541,50 @@ function FontOptionGroup({
   title,
   fonts,
   selectedFamily,
+  onPreview,
+  onPreviewEnd,
   onSelect
 }: {
   headingId: string;
   title: string;
   fonts: FontFamilyOption[];
   selectedFamily: string;
+  onPreview: (font: FontFamilyOption) => void;
+  onPreviewEnd: () => void;
   onSelect: (font: FontFamilyOption) => void;
 }) {
   return (
     <section className="grid gap-2" aria-labelledby={headingId}>
-      <h3 id={headingId} className="app-text-primary text-sm font-semibold">{title}</h3>
-      <div className="grid gap-2">
+      <h6 id={headingId} className="app-text-primary text-xs font-semibold">{title}</h6>
+      <div className="grid gap-1.5">
         {fonts.map((font) => {
           const selected = selectedFamily === font.family;
           return (
             <button
               key={font.id}
               type="button"
+              data-font-family={font.family}
               aria-pressed={selected}
+              onMouseEnter={() => onPreview(font)}
+              onFocus={() => onPreview(font)}
+              onBlur={onPreviewEnd}
               onClick={() => onSelect(font)}
               className={cn(
-                "grid gap-2 rounded-xl border p-3 text-left transition sm:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] sm:items-center",
+                "control-focus grid min-h-14 grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)_1.25rem] items-center gap-3 rounded-lg border px-3 py-2 text-left transition",
                 selected
-                  ? "border-[var(--app-accent)] bg-[rgb(var(--button-bg-hover))]"
+                  ? "border-[var(--app-accent)] bg-[var(--control-selected-bg)]"
                   : "border-[rgb(var(--panel-border))] bg-[rgb(var(--button-bg))] hover:bg-[rgb(var(--button-bg-hover))]"
               )}
             >
-              <span className="app-text-primary block text-sm font-semibold">{font.label}</span>
-              <span className="app-text-muted block truncate text-sm" style={{ fontFamily: `${quoteSingleFontFamily(font.family)}, sans-serif` }}>
+              <span className="app-text-primary min-w-0 truncate text-xs font-semibold">{font.label}</span>
+              <span
+                className="app-text-muted min-w-0 truncate text-sm"
+                style={{ fontFamily: `${quoteSingleFontFamily(font.family)}, sans-serif` }}
+              >
                 {font.preview}
+              </span>
+              <span className={cn("grid size-5 place-items-center rounded-full border", selected ? "border-[rgb(var(--app-fg))] bg-[rgb(var(--app-fg))] text-[var(--app-bg)]" : "border-[rgb(var(--control-border))]")}>
+                {selected ? <Check className="size-3" aria-hidden="true" /> : null}
               </span>
             </button>
           );
@@ -408,7 +602,7 @@ function customScheme(scheme: FontScheme): FontScheme {
   };
 }
 
-function familyForCategory(scheme: FontScheme, category: FontCategory) {
+function familyForCategory(scheme: Pick<FontScheme, "cjkFontFamily" | "latinFontFamily">, category: FontCategory) {
   return category === "cjk" ? scheme.cjkFontFamily : scheme.latinFontFamily;
 }
 
@@ -418,18 +612,8 @@ function withFamily(scheme: FontScheme, category: FontCategory, family: string):
     : { ...scheme, mode: "custom", presetId: undefined, latinFontFamily: family };
 }
 
-function currentUiTheme(): EffectiveUiThemeId {
-  const theme = document.body.dataset.uiTheme;
-  if (
-    theme === "album-dynamic" ||
-    theme === "dark" ||
-    theme === "light" ||
-    theme === "dark-acrylic" ||
-    theme === "light-acrylic"
-  ) {
-    return theme;
-  }
-  return "dark";
+function sameFamilies(first: FontScheme, second: FontScheme) {
+  return first.cjkFontFamily === second.cjkFontFamily && first.latinFontFamily === second.latinFontFamily;
 }
 
 function presetName(presetId: FontPresetId, t: ReturnType<typeof createT>) {
