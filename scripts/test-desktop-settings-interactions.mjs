@@ -1686,6 +1686,7 @@ async function assertFontPickerBehavior() {
   await picker.waitFor({ state: "detached" });
   await overview.waitFor({ state: "visible" });
   await realPreview.waitFor({ state: "visible" });
+  await historicalPreview.waitFor({ state: "detached" });
   assert.equal(await historicalPreview.count(), 0, "cancelling custom editing hides the historical sample card");
   assert.doesNotMatch(await customTrigger.textContent() ?? "", /Microsoft YaHei/, "cancelling discards the entire two-font draft");
   assert.equal(await customTrigger.evaluate((node) => document.activeElement === node), true, "cancelling restores focus to the single custom-scheme entry");
@@ -1713,6 +1714,7 @@ async function assertFontPickerBehavior() {
   await picker.waitFor({ state: "detached" });
   await overview.waitFor({ state: "visible" });
   await realPreview.waitFor({ state: "visible" });
+  await historicalPreview.waitFor({ state: "detached" });
   assert.match(await customTrigger.textContent() ?? "", /Microsoft YaHei/, "applying commits the selected CJK font");
   assert.match(await customTrigger.textContent() ?? "", /Arial/, "the same apply action commits the selected Latin font");
   const appliedPreviewFamily = await realPreview.evaluate((card) => getComputedStyle(card).fontFamily);
