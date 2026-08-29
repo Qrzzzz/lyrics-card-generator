@@ -126,13 +126,28 @@ export function PreviewPane({
               </motion.div>
             </MotionPresence>
           </div>
-          {customFontPreview ? (
-            <FontSchemePreviewPanel
-              scheme={customFontPreview}
-              textColor={style.textColorMode === "custom" ? style.customTextColor : FIXED_WHITE_TEXT_COLOR}
-              t={t}
-            />
-          ) : null}
+          <MotionPresence initial={false} mode="popLayout">
+            {customFontPreview ? (
+              <motion.div
+                key="font-scheme-preview"
+                data-testid="font-scheme-preview-transition"
+                initial={reduceMotion ? { opacity: 0, x: 0 } : { opacity: 0, x: 72 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={reduceMotion ? { opacity: 0, x: 0 } : { opacity: 0, x: 72 }}
+                transition={
+                  reduceMotion
+                    ? reducedMotionTransition
+                    : { duration: motionDurations.slow, ease: motionEasings.emphasized }
+                }
+              >
+                <FontSchemePreviewPanel
+                  scheme={customFontPreview}
+                  textColor={style.textColorMode === "custom" ? style.customTextColor : FIXED_WHITE_TEXT_COLOR}
+                  t={t}
+                />
+              </motion.div>
+            ) : null}
+          </MotionPresence>
         </div>
       </motion.div>
     </MotionPanel>

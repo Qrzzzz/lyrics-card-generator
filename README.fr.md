@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v6.1.5.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v6.1.6.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="./docs/development.en.md">Développement local</a> ·
@@ -74,25 +74,26 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 ## 📦 Téléchargement et installation
 
-Téléchargez la v6.1.5 depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
+Téléchargez la v6.1.6 depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
 
-* Installateur : `Lyrics Card Generator Setup 6.1.5.exe`
-* Version portable : `Lyrics Card Generator-6.1.5-portable.exe`
+* Installateur : `Lyrics Card Generator Setup 6.1.6.exe`
+* Version portable : `Lyrics Card Generator-6.1.6-portable.exe`
 
 L'installateur est recommandé pour une utilisation régulière. La version portable convient aux essais, à une utilisation temporaire ou à un disque amovible.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### Points forts de la v6.1.5
+### Points forts de la v6.1.6
 
-* Le choix de polices personnalisées reste désormais dans l’application. Un atelier à deux polices, cohérent avec l’interface existante, remplace la fenêtre WinForms séparée tout en conservant recherche, recommandations et liste complète des polices système.
-* Le survol ou la navigation au clavier met à jour la véritable carte de paroles. L’ancienne carte d’exemple est restaurée sous l’aperçu et ne s’affiche que pendant l’édition d’un jeu personnalisé.
-* Les polices CJK et latine peuvent être permutées, restaurées, annulées ou appliquées ensemble. La suppression de la fenêtre native et du canal IPC redondants ne modifie ni l’export ni la détection protégée des polices système.
+* Design du texte présente désormais les jeux prédéfinis et un seul accès personnalisé, sans résumé actuel ni cartes de rôles externes répétés.
+* L’édition personnalisée remplace l’aperçu de gauche sur place. Les rôles CJK et latin n’apparaissent qu’une fois et le jeu appliqué se distingue clairement du brouillon non appliqué.
+* L’aperçu et l’éditeur de gauche s’enchaînent désormais par un glissement directionnel avec fondu. Le spécimen fixe entre séparément à droite tandis que la vraie carte reste stable, dans le respect de la préférence de réduction des animations.
+* Permuter, Rétablir et Annuler sont plus explicites, tandis que la vraie prévisualisation, le spécimen fixe et l’application atomique des deux polices restent inchangés.
 
 ## 🌐 Notes de publication multilingues
 
 Par défaut, GitHub Release affiche un résumé en chinois simplifié. Consultez les notes complètes :
-[简体中文](./docs/releases/v6.1.5.zh-CN.md) · [繁體中文](./docs/releases/v6.1.5.zh-TW.md) · [English](./docs/releases/v6.1.5.en.md) · [Français](./docs/releases/v6.1.5.fr.md) · [日本語](./docs/releases/v6.1.5.ja.md) · [Español](./docs/releases/v6.1.5.es.md)
+[简体中文](./docs/releases/v6.1.6.zh-CN.md) · [繁體中文](./docs/releases/v6.1.6.zh-TW.md) · [English](./docs/releases/v6.1.6.en.md) · [Français](./docs/releases/v6.1.6.fr.md) · [日本語](./docs/releases/v6.1.6.ja.md) · [Español](./docs/releases/v6.1.6.es.md)
 
 <a id="fonctionnalités-principales"></a>
 

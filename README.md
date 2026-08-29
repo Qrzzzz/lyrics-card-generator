@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v6.1.5.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v6.1.6.zh-CN.md">发布说明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">在线 Web Lite 版</a> ·
   <a href="./docs/web-lite-browser-support.md">Web Lite 浏览器支持</a> ·
   <a href="./docs/desktop.md">桌面维护文档</a> ·
@@ -73,25 +73,26 @@
 
 ## 📦 下载与安装
 
-请从 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下载 v6.1.5：
+请从 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下载 v6.1.6：
 
-* 安装版：`Lyrics Card Generator Setup 6.1.5.exe`
-* 便携版：`Lyrics Card Generator-6.1.5-portable.exe`
+* 安装版：`Lyrics Card Generator Setup 6.1.6.exe`
+* 便携版：`Lyrics Card Generator-6.1.6-portable.exe`
 
 安装版适合长期使用；便携版适合临时运行、测试或放在移动硬盘中使用。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v6.1.5 更新重点
+### v6.1.6 更新重点
 
-* 自定义字体选择回归应用内部，以贴合现有界面的双字体工作台取代独立 WinForms 窗口，并保留搜索、推荐字体与完整系统字体列表。
-* 悬停或键盘浏览字体时会联动真实歌词卡；旧版示例歌词卡也已恢复到预览下方，并且只在自定义字体编辑期间出现。
-* 中日韩／西文字体支持交换、恢复、取消与一次性应用；移除多余的原生窗口和 IPC 链路后，导出规则与系统字体读取能力保持不变。
+* 字体设计页收敛为预设方案与一个自定义入口，移除重复的当前摘要和外层角色选择卡。
+* 自定义编辑会原位接管左侧区域，中日韩／西文角色只出现一次，并明确区分当前方案与尚未应用的草稿。
+* 左侧概览与自定义编辑现在以双向滑动和渐显渐隐自然衔接；右侧固定字形样张独立进退场，真实歌词卡保持稳定，并遵循减少动态效果设置。
+* 交换、还原与取消操作更加清楚，同时保留实时歌词卡预览、固定字形样张和两种字体一次应用的既有规则。
 
 ## 🌐 多语言发布说明
 
 GitHub Release 默认展示简体中文摘要，完整说明见：
-[简体中文](./docs/releases/v6.1.5.zh-CN.md) · [繁體中文](./docs/releases/v6.1.5.zh-TW.md) · [English](./docs/releases/v6.1.5.en.md) · [Français](./docs/releases/v6.1.5.fr.md) · [日本語](./docs/releases/v6.1.5.ja.md) · [Español](./docs/releases/v6.1.5.es.md)
+[简体中文](./docs/releases/v6.1.6.zh-CN.md) · [繁體中文](./docs/releases/v6.1.6.zh-TW.md) · [English](./docs/releases/v6.1.6.en.md) · [Français](./docs/releases/v6.1.6.fr.md) · [日本語](./docs/releases/v6.1.6.ja.md) · [Español](./docs/releases/v6.1.6.es.md)
 
 <a id="主要功能"></a>
 

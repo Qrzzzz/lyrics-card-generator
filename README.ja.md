@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v6.1.5.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v6.1.6.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="./docs/development.en.md">ローカル開発</a> ·
@@ -74,25 +74,26 @@
 
 ## 📦 ダウンロードとインストール
 
-v6.1.5 は [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) からダウンロードできます。
+v6.1.6 は [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) からダウンロードできます。
 
-* インストーラー：`Lyrics Card Generator Setup 6.1.5.exe`
-* ポータブル版：`Lyrics Card Generator-6.1.5-portable.exe`
+* インストーラー：`Lyrics Card Generator Setup 6.1.6.exe`
+* ポータブル版：`Lyrics Card Generator-6.1.6-portable.exe`
 
 通常利用にはインストーラーを推奨します。ポータブル版は一時利用、検証、リムーバブルドライブでの利用に向いています。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v6.1.5 の主な更新
+### v6.1.6 の主な更新
 
-* カスタムフォントの選択をアプリ内に戻しました。既存 UI に合わせた 2 フォント用ワークベンチが独立した WinForms ウィンドウに代わり、検索、おすすめ、システムフォントの全一覧を利用できます。
-* フォントをホバーするかキーボードで移動すると、実際の歌詞カードへ即座に反映されます。以前のサンプル歌詞カードもプレビュー下に復元され、カスタム構成の編集中だけ表示されます。
-* CJK 用と欧文用フォントは、交換、復元、キャンセル、一括適用が可能です。不要なネイティブウィンドウと IPC 経路を削除しても、書き出し規則と保護されたシステムフォント取得は変わりません。
+* 文字デザインをプリセットと1つのカスタム入口へ整理し、現在の構成と外側の役割カードの重複表示を削除しました。
+* カスタム編集は左側の概要をその場で置き換えます。CJK と欧文の役割は一度だけ表示され、適用済み構成と未適用の下書きを明確に区別します。
+* 左側の概要とカスタム編集は、方向性のあるスライドとフェードで自然に切り替わります。右側の固定書体見本は独立して出入りし、実際の歌詞カードは安定したままで、動きを減らす設定にも対応します。
+* 入れ替え、復元、キャンセルを分かりやすくしつつ、実カードのプレビュー、固定書体見本、2フォントの一括適用は維持しています。
 
 ## 🌐 多言語リリースノート
 
 GitHub Release ではデフォルトで簡体字中国語の概要が表示されます。完全なリリースノートはこちら：
-[简体中文](./docs/releases/v6.1.5.zh-CN.md) · [繁體中文](./docs/releases/v6.1.5.zh-TW.md) · [English](./docs/releases/v6.1.5.en.md) · [Français](./docs/releases/v6.1.5.fr.md) · [日本語](./docs/releases/v6.1.5.ja.md) · [Español](./docs/releases/v6.1.5.es.md)
+[简体中文](./docs/releases/v6.1.6.zh-CN.md) · [繁體中文](./docs/releases/v6.1.6.zh-TW.md) · [English](./docs/releases/v6.1.6.en.md) · [Français](./docs/releases/v6.1.6.fr.md) · [日本語](./docs/releases/v6.1.6.ja.md) · [Español](./docs/releases/v6.1.6.es.md)
 
 <a id="主な機能"></a>
 

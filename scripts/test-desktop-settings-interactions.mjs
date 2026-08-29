@@ -1642,22 +1642,28 @@ async function assertFontPickerBehavior() {
     "the Source Han Serif card renders the entire button in its own font stack"
   );
 
-  const cjkTrigger = page.getByTestId("choose-cjk-font");
-  const latinTrigger = page.getByTestId("choose-latin-font");
+  const overview = page.getByTestId("font-scheme-overview");
+  const customTrigger = page.getByTestId("edit-custom-font-scheme");
   const picker = page.getByTestId("font-picker-scheme");
+  const cjkRole = page.getByTestId("font-picker-category-cjk");
+  const latinRole = page.getByTestId("font-picker-category-latin");
   const historicalPreview = page.getByTestId("font-scheme-preview-panel");
   const realPreview = page.locator('[data-testid="lyric-card-preview"] article[data-export-card="true"]');
-  const currentSummary = page.getByTestId("font-scheme-panel").locator("dl").first();
-  assert.equal(await cjkTrigger.count(), 1, "custom font editing exposes a dedicated CJK role card");
-  assert.equal(await latinTrigger.count(), 1, "custom font editing exposes a dedicated Latin role card");
+  assert.equal(await overview.count(), 1, "the font page starts in its compact overview");
+  assert.equal(await customTrigger.count(), 1, "custom font editing has one overview entry point");
+  assert.equal(await cjkRole.count(), 0, "role selection is not duplicated outside the editor subview");
+  assert.equal(await latinRole.count(), 0, "the Latin role selector is also absent from the overview");
   assert.equal(await picker.count(), 0, "the inline workbench stays collapsed before custom editing starts");
   assert.equal(await historicalPreview.count(), 0, "the historical sample card is absent outside custom editing");
-  assert.doesNotMatch(await currentSummary.textContent() ?? "", /Microsoft YaHei/, "the fresh font page starts from the saved preset");
+  assert.equal(await page.getByTestId("apply-font-preset-source-han-sans").getAttribute("aria-pressed"), "true", "the fresh font page marks the saved preset in place");
 
-  await cjkTrigger.click();
+  await customTrigger.click();
   await picker.waitFor({ state: "visible" });
+  await overview.waitFor({ state: "detached" });
   await historicalPreview.waitFor({ state: "visible" });
   await page.waitForFunction(() => document.activeElement?.getAttribute("data-testid") === "font-picker-search");
+  assert.equal(await cjkRole.count(), 1, "the editor subview exposes one CJK role selector");
+  assert.equal(await latinRole.count(), 1, "the editor subview exposes one Latin role selector");
   const windowsDuringEdit = await electronApp.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().length);
   assert.equal(windowsDuringEdit, 1, "font editing remains inside the main application window");
   const previewPlacement = await page.evaluate(() => {
@@ -1677,11 +1683,7 @@ async function assertFontPickerBehavior() {
     getComputedStyle(document.querySelector('[data-testid="lyric-card-preview"] article[data-export-card="true"]')).fontFamily
       .includes("Microsoft YaHei")
   ));
-  assert.doesNotMatch(
-    await currentSummary.textContent() ?? "",
-    /Microsoft YaHei/,
-    "hover preview does not mutate the saved font summary"
-  );
+  assert.equal(await picker.getAttribute("data-dirty"), "false", "hover preview does not mutate the font draft");
   await firstCjkOption.click();
   assert.equal(await page.getByTestId("save-custom-font-scheme").isEnabled(), true, "changing either role enables atomic apply");
   assert.match(
@@ -1691,19 +1693,21 @@ async function assertFontPickerBehavior() {
   );
   await page.getByTestId("cancel-custom-font-scheme").click();
   await picker.waitFor({ state: "detached" });
+  await overview.waitFor({ state: "visible" });
   assert.equal(await historicalPreview.count(), 0, "cancelling custom editing hides the historical sample card");
-  assert.doesNotMatch(await currentSummary.textContent() ?? "", /Microsoft YaHei/, "cancelling discards the entire two-font draft");
-  assert.equal(await cjkTrigger.evaluate((node) => document.activeElement === node), true, "cancelling restores focus to the role that opened the picker");
+  assert.doesNotMatch(await customTrigger.textContent() ?? "", /Microsoft YaHei/, "cancelling discards the entire two-font draft");
+  assert.equal(await customTrigger.evaluate((node) => document.activeElement === node), true, "cancelling restores focus to the single custom-scheme entry");
 
-  await cjkTrigger.click();
+  await customTrigger.click();
   await picker.waitFor({ state: "visible" });
   await picker.locator('[data-font-family="Microsoft YaHei"]').first().click();
-  await latinTrigger.click();
+  await latinRole.click();
   await page.waitForFunction(() => document.activeElement?.getAttribute("data-testid") === "font-picker-search");
   await picker.locator('[data-font-family="Arial"]').first().click();
-  assert.match(await cjkTrigger.textContent() ?? "", /Microsoft YaHei/, "the CJK role card reflects its draft selection");
-  assert.match(await latinTrigger.textContent() ?? "", /Arial/, "the Latin role card reflects its draft selection");
-  assert.doesNotMatch(await currentSummary.textContent() ?? "", /Microsoft YaHei|Arial/, "the saved summary stays unchanged until apply");
+  assert.match(await cjkRole.textContent() ?? "", /Microsoft YaHei/, "the sole CJK role selector reflects its draft selection");
+  assert.match(await latinRole.textContent() ?? "", /Arial/, "the sole Latin role selector reflects its draft selection");
+  assert.equal(await picker.getAttribute("data-dirty"), "true", "selected draft fonts remain explicitly unapplied");
+  assert.match(await page.getByTestId("font-scheme-draft-status").textContent() ?? "", /尚未应用|not yet applied/i, "the editor distinguishes its draft from the applied scheme");
   const draftPreviewFamily = await realPreview.evaluate((card) => getComputedStyle(card).fontFamily);
   assert.match(draftPreviewFamily, /Microsoft YaHei/, "the real card previews the CJK draft before apply");
   assert.match(draftPreviewFamily, /Arial/, "the real card previews the Latin draft before apply");
@@ -1717,29 +1721,26 @@ async function assertFontPickerBehavior() {
   await page.screenshot({ path: path.join(reportDirectory, "inline-font-picker-with-sample-card.png"), fullPage: false });
   await page.getByTestId("save-custom-font-scheme").click();
   await picker.waitFor({ state: "detached" });
-  assert.match(await currentSummary.textContent() ?? "", /Microsoft YaHei/, "applying commits the selected CJK font");
-  assert.match(await currentSummary.textContent() ?? "", /Arial/, "the same apply action commits the selected Latin font");
+  await overview.waitFor({ state: "visible" });
+  assert.match(await customTrigger.textContent() ?? "", /Microsoft YaHei/, "applying commits the selected CJK font");
+  assert.match(await customTrigger.textContent() ?? "", /Arial/, "the same apply action commits the selected Latin font");
   const appliedPreviewFamily = await realPreview.evaluate((card) => getComputedStyle(card).fontFamily);
   assert.match(appliedPreviewFamily, /Microsoft YaHei/, "the committed pair reaches the real lyric-card preview");
   assert.match(appliedPreviewFamily, /Arial/, "the real lyric-card preview receives the Latin family too");
   assert.equal(await historicalPreview.count(), 0, "applying custom fonts hides the editing-only sample card");
-  assert.equal(await latinTrigger.evaluate((node) => document.activeElement === node), true, "apply restores focus to the last active font role");
+  assert.equal(await customTrigger.evaluate((node) => document.activeElement === node), true, "apply restores focus to the single custom-scheme entry");
 
   await page.locator('button[data-step-id="link"]').click();
   await page.locator('button[data-step-id="font"]').click();
   await page.getByTestId("font-scheme-panel").waitFor({ state: "visible" });
-  assert.match(
-    await page.getByTestId("font-scheme-panel").locator("dl").first().textContent() ?? "",
-    /Microsoft YaHei/,
-    "reopening the font page preserves the saved selection"
-  );
-  assert.match(await page.getByTestId("choose-cjk-font").textContent() ?? "", /Microsoft YaHei/);
-  assert.match(await page.getByTestId("choose-latin-font").textContent() ?? "", /Arial/);
+  assert.match(await page.getByTestId("edit-custom-font-scheme").textContent() ?? "", /Microsoft YaHei/, "reopening the font page preserves the saved CJK selection");
+  assert.match(await page.getByTestId("edit-custom-font-scheme").textContent() ?? "", /Arial/, "reopening the font page preserves the saved Latin selection");
 
   await page.getByTestId("apply-font-preset-source-han-sans").click();
   await page.waitForFunction(() => {
-    const summary = document.querySelector('[data-testid="font-scheme-panel"] dl')?.textContent ?? "";
-    return summary.includes("Source Han Sans SC") && !summary.includes("Microsoft YaHei") && !summary.includes("Arial");
+    const preset = document.querySelector('[data-testid="apply-font-preset-source-han-sans"]');
+    const custom = document.querySelector('[data-testid="edit-custom-font-scheme"]')?.textContent ?? "";
+    return preset?.getAttribute("aria-pressed") === "true" && !custom.includes("Microsoft YaHei") && !custom.includes("Arial");
   });
 
   await page.locator('button[data-step-id="link"]').click();

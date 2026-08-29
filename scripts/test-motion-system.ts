@@ -68,6 +68,7 @@ assert.match(exportCelebration, /reduceMotion \|\| !isNewBurst/);
 
 const exportPanel = readFileSync(resolve("components/editor/ExportPanel.tsx"), "utf8");
 const previewPane = readFileSync(resolve("components/editor/PreviewPane.tsx"), "utf8");
+const fontSchemePanel = readFileSync(resolve("components/editor/font-scheme/FontSchemePanel.tsx"), "utf8");
 const songImportAside = readFileSync(resolve("components/editor/SongImportAside.tsx"), "utf8");
 const lyricCardPreview = readFileSync(resolve("components/preview/LyricCardPreview.tsx"), "utf8");
 const lyricEditor = readFileSync(resolve("components/editor/LyricEditor.tsx"), "utf8");
@@ -92,6 +93,21 @@ assert.match(previewPane, /mode="popLayout"/);
 assert.match(previewPane, /initial=\{reduceMotion \? false : \{ opacity: 0, x: 72 \}\}/);
 assert.match(previewPane, /exit=\{reduceMotion \? \{ opacity: 0, x: 0 \} : \{ opacity: 0, x: -72 \}\}/);
 assert.match(previewPane, /measurementKey=\{measurementKey\}/);
+assert.match(previewPane, /data-testid="font-scheme-preview-transition"/);
+assert.match(
+  previewPane,
+  /key="font-scheme-preview"[\s\S]*?initial=\{reduceMotion \? \{ opacity: 0, x: 0 \} : \{ opacity: 0, x: 72 \}\}[\s\S]*?exit=\{reduceMotion \? \{ opacity: 0, x: 0 \} : \{ opacity: 0, x: 72 \}\}/
+);
+assert.match(fontSchemePanel, /useAppReducedMotion/);
+assert.match(fontSchemePanel, /<MotionPresence initial=\{false\} mode="popLayout">/);
+assert.match(
+  fontSchemePanel,
+  /key="font-scheme-editor-page"[\s\S]*?initial=\{reduceMotion \? \{ opacity: 0, x: 0 \} : \{ opacity: 0, x: 72 \}\}[\s\S]*?exit=\{reduceMotion \? \{ opacity: 0, x: 0 \} : \{ opacity: 0, x: 72 \}\}/
+);
+assert.match(
+  fontSchemePanel,
+  /key="font-scheme-overview-page"[\s\S]*?initial=\{reduceMotion \? \{ opacity: 0, x: 0 \} : \{ opacity: 0, x: -72 \}\}[\s\S]*?exit=\{reduceMotion \? \{ opacity: 0, x: 0 \} : \{ opacity: 0, x: -72 \}\}/
+);
 assert.match(settingsStepper, /data-testid="preview-workbench-settings-transition"/);
 assert.match(settingsStepper, /<MotionPresence custom=\{stepDirection\} mode="popLayout">/);
 assert.match(settingsStepper, /variants=\{workbenchStepVariants\}/);
@@ -151,4 +167,4 @@ assert.match(globals, /\.app-toast\[data-tone="success"\][\s\S]*?border-color: r
 assert.match(globals, /\.app-toast\[data-tone="warning"\][\s\S]*?border-color: rgb\(250 204 21 \/ 0\.78\)[\s\S]*?background: rgb\(66 32 6 \/ 0\.94\)[\s\S]*?color: rgb\(250 204 21\)/);
 assert.match(globals, /\.app-toast\[data-tone="error"\][\s\S]*?border-color: rgb\(248 113 113 \/ 0\.76\)[\s\S]*?background: rgb\(69 10 10 \/ 0\.94\)[\s\S]*?color: rgb\(248 113 113\)/);
 
-console.log(JSON.stringify({ ok: true, motionSystemRegressionChecks: 87 }, null, 2));
+console.log(JSON.stringify({ ok: true, motionSystemRegressionChecks: 93 }, null, 2));

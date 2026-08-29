@@ -427,6 +427,7 @@ for (const [locale, title] of Object.entries(expectedTextDesignTitles) as Array<
 
 // Source checks pin the UI wiring that pure normalization tests cannot observe.
 const stylePanelSource = readFileSync(resolve("components/editor/StylePanel.tsx"), "utf8");
+const fontSchemePanelSource = readFileSync(resolve("components/editor/font-scheme/FontSchemePanel.tsx"), "utf8");
 const colorControlsSource = readFileSync(resolve("components/editor/style-panel/ColorControls.tsx"), "utf8");
 const previewPaneSource = readFileSync(resolve("components/editor/PreviewPane.tsx"), "utf8");
 const lyricCardPreviewSource = readFileSync(resolve("components/preview/LyricCardPreview.tsx"), "utf8");
@@ -450,6 +451,12 @@ assert.ok(stylePanelSource.includes("<SegmentedControl<CardAlign>"), "alignment 
 assert.ok(stylePanelSource.includes("<SegmentedControl<CardRatio>"), "size mode uses a segmented slider");
 assert.ok(stylePanelSource.includes("<RangeSlider"), "layout range inputs use the shared polished slider");
 assert.ok(!stylePanelSource.includes('label={t("coverCrop")}'), "cover crop control is removed");
+assert.ok(fontSchemePanelSource.includes('data-testid="font-scheme-overview"'), "font schemes start in a dedicated overview");
+assert.ok(fontSchemePanelSource.includes('data-testid="edit-custom-font-scheme"'), "custom font editing has one overview entry point");
+assert.ok(!fontSchemePanelSource.includes('data-testid="choose-cjk-font"'), "the overview does not duplicate the CJK role selector");
+assert.ok(!fontSchemePanelSource.includes('data-testid="choose-latin-font"'), "the overview does not duplicate the Latin role selector");
+assert.ok(!fontSchemePanelSource.includes('className="settings-surface'), "the inline font editor does not nest another elevated settings surface");
+assert.ok(fontSchemePanelSource.includes('data-testid="font-scheme-draft-status"'), "the editor exposes applied-versus-draft status");
 assert.ok(colorControlsSource.includes('{ value: "white", label: t("pureWhite") }'), "white mode is exposed");
 assert.ok(!colorControlsSource.includes("TEXT_COLOR_PRESETS"), "legacy color presets are not exposed");
 assert.ok(previewPaneSource.includes("fontSchemePreview ? { ...style, fontScheme: fontSchemePreview } : style"), "font draft previews use the real card");
