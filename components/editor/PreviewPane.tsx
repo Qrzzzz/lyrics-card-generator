@@ -49,9 +49,10 @@ export function PreviewPane({
   const [isDesktopPreview, setIsDesktopPreview] = useState(false);
   // Desktop forces the preview open without overwriting the user's mobile collapse preference.
   const previewExpanded = isPreviewVisible || isDesktopPreview;
-  // Font hover/focus preview never mutates the saved card style.
-  const previewStyle = fontSchemePreview ? { ...style, fontScheme: fontSchemePreview } : style;
   const customFontPreview = fontSchemePreview?.mode === "custom" ? fontSchemePreview : null;
+  const previewPageTransition = reduceMotion
+    ? reducedMotionTransition
+    : { duration: motionDurations.slow, ease: motionEasings.emphasized };
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(min-width: 1024px)");
@@ -95,37 +96,7 @@ export function PreviewPane({
         }
         aria-hidden={!previewExpanded}
       >
-        <div className="grid gap-5">
-          <div className="relative min-w-0" data-testid="preview-clear-transition">
-            <MotionPresence mode="popLayout">
-              {/* Only the visible preview remounts to animate a clear; export hosts remain stable. */}
-              <motion.div
-                key={`preview-clear-${clearTransitionKey}`}
-                data-clear-transition-key={clearTransitionKey}
-                initial={reduceMotion ? false : { opacity: 0, x: 72 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={reduceMotion ? { opacity: 0, x: 0 } : { opacity: 0, x: -72 }}
-                transition={
-                  reduceMotion
-                    ? reducedMotionTransition
-                    : { duration: motionDurations.slow, ease: motionEasings.emphasized }
-                }
-              >
-                <LyricCardPreview
-                  song={song}
-                  lyricDocument={lyricDocument}
-                  style={previewStyle}
-                  coverArtwork={coverArtwork}
-                  cardRef={cardRef}
-                  locale={locale}
-                  sticky={false}
-                  t={t}
-                  measurementKey={measurementKey}
-                  pressureEnabled={pressureEnabled}
-                />
-              </motion.div>
-            </MotionPresence>
-          </div>
+        <div className="relative min-w-0 overflow-hidden" data-testid="preview-pane-view-transition">
           <MotionPresence initial={false} mode="popLayout">
             {customFontPreview ? (
               <motion.div
@@ -134,11 +105,7 @@ export function PreviewPane({
                 initial={reduceMotion ? { opacity: 0, x: 0 } : { opacity: 0, x: 72 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={reduceMotion ? { opacity: 0, x: 0 } : { opacity: 0, x: 72 }}
-                transition={
-                  reduceMotion
-                    ? reducedMotionTransition
-                    : { duration: motionDurations.slow, ease: motionEasings.emphasized }
-                }
+                transition={previewPageTransition}
               >
                 <FontSchemePreviewPanel
                   scheme={customFontPreview}
@@ -146,7 +113,43 @@ export function PreviewPane({
                   t={t}
                 />
               </motion.div>
-            ) : null}
+            ) : (
+              <motion.div
+                key="lyric-card-preview-page"
+                data-testid="lyric-card-preview-transition"
+                initial={reduceMotion ? { opacity: 0, x: 0 } : { opacity: 0, x: -72 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={reduceMotion ? { opacity: 0, x: 0 } : { opacity: 0, x: -72 }}
+                transition={previewPageTransition}
+              >
+                <div className="relative min-w-0" data-testid="preview-clear-transition">
+                  <MotionPresence mode="popLayout">
+                    {/* Only the visible preview remounts to animate a clear; export hosts remain stable. */}
+                    <motion.div
+                      key={`preview-clear-${clearTransitionKey}`}
+                      data-clear-transition-key={clearTransitionKey}
+                      initial={reduceMotion ? false : { opacity: 0, x: 72 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={reduceMotion ? { opacity: 0, x: 0 } : { opacity: 0, x: -72 }}
+                      transition={previewPageTransition}
+                    >
+                      <LyricCardPreview
+                        song={song}
+                        lyricDocument={lyricDocument}
+                        style={style}
+                        coverArtwork={coverArtwork}
+                        cardRef={cardRef}
+                        locale={locale}
+                        sticky={false}
+                        t={t}
+                        measurementKey={measurementKey}
+                        pressureEnabled={pressureEnabled}
+                      />
+                    </motion.div>
+                  </MotionPresence>
+                </div>
+              </motion.div>
+            )}
           </MotionPresence>
         </div>
       </motion.div>

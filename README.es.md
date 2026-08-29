@@ -19,7 +19,7 @@
 <p>
   <strong>Navegación</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Descargar la última versión</a> ·
-  <a href="./docs/releases/v6.1.6.es.md">Notas de la versión</a> ·
+  <a href="./docs/releases/v6.1.7.es.md">Notas de la versión</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en línea</a> ·
   <a href="#funciones-principales">Funciones principales</a> ·
   <a href="./docs/development.en.md">Desarrollo local</a> ·
@@ -74,26 +74,25 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 ## 📦 Descarga e instalación
 
-Descarga v6.1.6 desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
+Descarga v6.1.7 desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Instalador: `Lyrics Card Generator Setup 6.1.6.exe`
-* Versión portable: `Lyrics Card Generator-6.1.6-portable.exe`
+* Instalador: `Lyrics Card Generator Setup 6.1.7.exe`
+* Versión portable: `Lyrics Card Generator-6.1.7-portable.exe`
 
 El instalador se recomienda para uso habitual. La versión portable es útil para pruebas, uso temporal o ejecución desde una unidad extraíble.
 
 > La compilación actual no está firmada. Windows puede mostrar una advertencia de SmartScreen, algo habitual en aplicaciones personales sin firma.
 
-### Novedades de v6.1.6
+### Novedades de v6.1.7
 
-* Diseño del texto reúne las combinaciones predefinidas y una sola entrada personalizada, sin repetir el resumen actual ni las tarjetas externas de roles.
-* La edición personalizada sustituye la vista general izquierda. Los roles CJK y latino aparecen una vez y se distingue claramente la combinación aplicada del borrador sin aplicar.
-* La vista general y el editor de la izquierda se enlazan ahora mediante un deslizamiento direccional con fundido. La muestra tipográfica fija entra por separado a la derecha mientras la tarjeta real permanece estable, respetando la preferencia de movimiento reducido.
-* Intercambiar, Restaurar y Cancelar son más claros, mientras se mantienen la vista previa real, la muestra tipográfica fija y la aplicación atómica de ambas fuentes.
+* Al abrir una combinación de fuentes personalizada, la tarjeta real sale hacia la izquierda y la muestra tipográfica fija entra desde la derecha para ocupar el mismo espacio de vista previa.
+* Cancelar o Aplicar reproduce exactamente la transición inversa: la tarjeta real y la muestra ya no se apilan en el panel derecho, y el ritmo coincide con el del primer paso.
+* Se conservan la vista previa de fuentes con puntero y teclado, el borrador y la aplicación atómica, Movimiento reducido, la animación de borrado y la exportación final.
 
 ## 🌐 Notas de publicación multilingües
 
 GitHub Release muestra de forma predeterminada un resumen en chino simplificado. Consulta las notas completas:
-[简体中文](./docs/releases/v6.1.6.zh-CN.md) · [繁體中文](./docs/releases/v6.1.6.zh-TW.md) · [English](./docs/releases/v6.1.6.en.md) · [Français](./docs/releases/v6.1.6.fr.md) · [日本語](./docs/releases/v6.1.6.ja.md) · [Español](./docs/releases/v6.1.6.es.md)
+[简体中文](./docs/releases/v6.1.7.zh-CN.md) · [繁體中文](./docs/releases/v6.1.7.zh-TW.md) · [English](./docs/releases/v6.1.7.en.md) · [Français](./docs/releases/v6.1.7.fr.md) · [日本語](./docs/releases/v6.1.7.ja.md) · [Español](./docs/releases/v6.1.7.es.md)
 
 <a id="funciones-principales"></a>
 

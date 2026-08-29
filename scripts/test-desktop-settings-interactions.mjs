@@ -1661,27 +1661,18 @@ async function assertFontPickerBehavior() {
   await picker.waitFor({ state: "visible" });
   await overview.waitFor({ state: "detached" });
   await historicalPreview.waitFor({ state: "visible" });
+  await realPreview.waitFor({ state: "detached" });
   await page.waitForFunction(() => document.activeElement?.getAttribute("data-testid") === "font-picker-search");
   assert.equal(await cjkRole.count(), 1, "the editor subview exposes one CJK role selector");
   assert.equal(await latinRole.count(), 1, "the editor subview exposes one Latin role selector");
   const windowsDuringEdit = await electronApp.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().length);
   assert.equal(windowsDuringEdit, 1, "font editing remains inside the main application window");
-  const previewPlacement = await page.evaluate(() => {
-    const real = document.querySelector('[data-testid="lyric-card-preview"]');
-    const sample = document.querySelector('[data-testid="font-scheme-preview-panel"]');
-    if (!(real instanceof HTMLElement) || !(sample instanceof HTMLElement)) return null;
-    return { realBottom: real.getBoundingClientRect().bottom, sampleTop: sample.getBoundingClientRect().top };
-  });
-  assert.ok(
-    previewPlacement && previewPlacement.sampleTop >= previewPlacement.realBottom,
-    "the restored historical sample card sits below the real lyric-card preview"
-  );
+  assert.equal(await historicalPreview.count(), 1, "the font specimen replaces the real lyric card in the right pane");
 
   const firstCjkOption = picker.locator('[data-font-family="Microsoft YaHei"]').first();
   await firstCjkOption.hover();
   await page.waitForFunction(() => (
-    getComputedStyle(document.querySelector('[data-testid="lyric-card-preview"] article[data-export-card="true"]')).fontFamily
-      .includes("Microsoft YaHei")
+    document.querySelector('[data-testid="font-lyric-preview"] p')?.getAttribute("style")?.includes("Microsoft YaHei")
   ));
   assert.equal(await picker.getAttribute("data-dirty"), "false", "hover preview does not mutate the font draft");
   await firstCjkOption.click();
@@ -1694,6 +1685,7 @@ async function assertFontPickerBehavior() {
   await page.getByTestId("cancel-custom-font-scheme").click();
   await picker.waitFor({ state: "detached" });
   await overview.waitFor({ state: "visible" });
+  await realPreview.waitFor({ state: "visible" });
   assert.equal(await historicalPreview.count(), 0, "cancelling custom editing hides the historical sample card");
   assert.doesNotMatch(await customTrigger.textContent() ?? "", /Microsoft YaHei/, "cancelling discards the entire two-font draft");
   assert.equal(await customTrigger.evaluate((node) => document.activeElement === node), true, "cancelling restores focus to the single custom-scheme entry");
@@ -1708,9 +1700,7 @@ async function assertFontPickerBehavior() {
   assert.match(await latinRole.textContent() ?? "", /Arial/, "the sole Latin role selector reflects its draft selection");
   assert.equal(await picker.getAttribute("data-dirty"), "true", "selected draft fonts remain explicitly unapplied");
   assert.match(await page.getByTestId("font-scheme-draft-status").textContent() ?? "", /尚未应用|not yet applied/i, "the editor distinguishes its draft from the applied scheme");
-  const draftPreviewFamily = await realPreview.evaluate((card) => getComputedStyle(card).fontFamily);
-  assert.match(draftPreviewFamily, /Microsoft YaHei/, "the real card previews the CJK draft before apply");
-  assert.match(draftPreviewFamily, /Arial/, "the real card previews the Latin draft before apply");
+  assert.equal(await realPreview.count(), 0, "the real lyric card stays offstage while the draft specimen is active");
   assert.match(
     await page.getByTestId("font-lyric-preview").locator("p").nth(1).evaluate((node) => node.style.fontFamily),
     /Arial/,
@@ -1722,6 +1712,7 @@ async function assertFontPickerBehavior() {
   await page.getByTestId("save-custom-font-scheme").click();
   await picker.waitFor({ state: "detached" });
   await overview.waitFor({ state: "visible" });
+  await realPreview.waitFor({ state: "visible" });
   assert.match(await customTrigger.textContent() ?? "", /Microsoft YaHei/, "applying commits the selected CJK font");
   assert.match(await customTrigger.textContent() ?? "", /Arial/, "the same apply action commits the selected Latin font");
   const appliedPreviewFamily = await realPreview.evaluate((card) => getComputedStyle(card).fontFamily);

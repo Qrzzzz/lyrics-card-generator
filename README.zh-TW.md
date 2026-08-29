@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v6.1.6.zh-TW.md">發布說明</a> ·
+  <a href="./docs/releases/v6.1.7.zh-TW.md">發布說明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">線上 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="./docs/development.zh-CN.md">本機開發</a> ·
@@ -71,26 +71,25 @@
 
 ## 📦 下載與安裝
 
-請從 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載 v6.1.6：
+請從 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載 v6.1.7：
 
-* 安裝版：`Lyrics Card Generator Setup 6.1.6.exe`
-* 可攜版：`Lyrics Card Generator-6.1.6-portable.exe`
+* 安裝版：`Lyrics Card Generator Setup 6.1.7.exe`
+* 可攜版：`Lyrics Card Generator-6.1.7-portable.exe`
 
 安裝版適合長期使用；可攜版適合臨時執行、測試或放在隨身碟中使用。
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v6.1.6 更新重點
+### v6.1.7 更新重點
 
-* 文字設計頁收斂為預設方案與一個自訂入口，移除重複的目前摘要和外層角色選擇卡。
-* 自訂編輯會原位接管左側區域，CJK／西文角色只出現一次，並明確區分目前方案與尚未套用的草稿。
-* 左側概覽與自訂編輯現在以雙向滑動和淡入淡出自然銜接；右側固定字形樣張獨立進退場，真實歌詞卡保持穩定，並遵循減少動態效果設定。
-* 交換、還原與取消操作更清楚，同時保留即時歌詞卡預覽、固定字形樣張及兩種字型一次套用的既有規則。
+* 開啟自訂字型方案時，右側真實歌詞卡會向左退場，固定字形樣張從右側推入並接管同一預覽位置。
+* 取消或套用時會嚴格反向切換，不再把真實歌詞卡與示例卡上下同時顯示，節奏與第一步一致。
+* 游標懸停／鍵盤字型預覽、草稿與一次套用語意、減少動態效果、清空動畫及最終匯出均維持原有規則。
 
 ## 🌐 多語言發佈說明
 
 GitHub Release 預設顯示簡體中文摘要，完整說明請見：
-[简体中文](./docs/releases/v6.1.6.zh-CN.md) · [繁體中文](./docs/releases/v6.1.6.zh-TW.md) · [English](./docs/releases/v6.1.6.en.md) · [Français](./docs/releases/v6.1.6.fr.md) · [日本語](./docs/releases/v6.1.6.ja.md) · [Español](./docs/releases/v6.1.6.es.md)
+[简体中文](./docs/releases/v6.1.7.zh-CN.md) · [繁體中文](./docs/releases/v6.1.7.zh-TW.md) · [English](./docs/releases/v6.1.7.en.md) · [Français](./docs/releases/v6.1.7.fr.md) · [日本語](./docs/releases/v6.1.7.ja.md) · [Español](./docs/releases/v6.1.7.es.md)
 
 ## ✨ 主要功能
 
