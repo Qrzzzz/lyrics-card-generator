@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v6.1.5.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v6.1.6.en.md">Release Notes</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
   <a href="./docs/web-lite-browser-support.md">Web Lite Browser Support</a> ·
   <a href="#features">Features</a> ·
@@ -75,25 +75,26 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 ## 📦 Download and Installation
 
-Download v6.1.5 from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
+Download v6.1.6 from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Installer: `Lyrics Card Generator Setup 6.1.5.exe`
-* Portable build: `Lyrics Card Generator-6.1.5-portable.exe`
+* Installer: `Lyrics Card Generator Setup 6.1.6.exe`
+* Portable build: `Lyrics Card Generator-6.1.6-portable.exe`
 
 The installer is recommended for regular use. The portable version is useful for temporary use, testing, or running from a removable drive.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v6.1.5 Highlights
+### v6.1.6 Highlights
 
-* Custom font selection now stays inside the app. A two-font workbench matching the existing interface replaces the separate WinForms window while retaining search, recommendations, and the full system-font list.
-* Hovering or navigating fonts by keyboard updates the real lyric card. The earlier sample-lyrics card is restored below the preview and appears only while editing a custom font scheme.
-* CJK and Latin fonts can be swapped, restored, canceled, or applied together. Removing the redundant native window and IPC path does not change exports or guarded system-font discovery.
+* Text Design now presents presets and one custom entry point, removing the repeated current summary and outer role-selection cards.
+* Custom editing replaces the left-side overview in place. CJK and Latin roles appear once, with a clear distinction between the applied scheme and an unapplied draft.
+* The left overview and custom editor now connect through directional slide-and-fade transitions. The fixed type specimen enters independently on the right while the real lyric card stays stable, with reduced-motion preferences respected.
+* Swap, restore, and cancel are easier to understand while real-card preview, the fixed type specimen, and atomic two-font apply behavior remain intact.
 
 ## 🌐 Multilingual Release Notes
 
 GitHub Release displays a Simplified Chinese summary by default. See the full release notes:
-[简体中文](./docs/releases/v6.1.5.zh-CN.md) · [繁體中文](./docs/releases/v6.1.5.zh-TW.md) · [English](./docs/releases/v6.1.5.en.md) · [Français](./docs/releases/v6.1.5.fr.md) · [日本語](./docs/releases/v6.1.5.ja.md) · [Español](./docs/releases/v6.1.5.es.md)
+[简体中文](./docs/releases/v6.1.6.zh-CN.md) · [繁體中文](./docs/releases/v6.1.6.zh-TW.md) · [English](./docs/releases/v6.1.6.en.md) · [Français](./docs/releases/v6.1.6.fr.md) · [日本語](./docs/releases/v6.1.6.ja.md) · [Español](./docs/releases/v6.1.6.es.md)
 
 <a id="features"></a>
 
