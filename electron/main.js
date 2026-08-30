@@ -52,6 +52,7 @@ const {
   waitForPackagedServerReady
 } = require("./packaged-server-readiness");
 const { acquireSingleInstanceOwnership } = require("./single-instance-ownership");
+const { createClipboardImageWriter } = require("./clipboard-image");
 const { createStartupTrace } = require("./startup-trace");
 const { prepareDesktopStartup } = require("./startup-orchestration");
 const { isAllowedLocalNavigation, parseAllowedExternalUrl } = require("./url-policy");
@@ -63,8 +64,6 @@ const APP_ID = "com.lyriccard.generator";
 const START_TIMEOUT_MS = 45000;
 const WINDOW_BACKGROUND_COLOR = "#20242D";
 const IMPORT_FILE_REGISTRATION_TTL_MS = 30 * 60 * 1000;
-const MAX_CLIPBOARD_IMAGE_DATA_URL_CODE_UNITS = 64 * 1024 * 1024;
-const PNG_DATA_URL_PREFIX = "data:image/png;base64,";
 const startupTrace = createStartupTrace();
 startupTrace.mark("module-loaded");
 
@@ -872,27 +871,7 @@ function registerDesktopIpc() {
     return true;
   });
 
-  handle("lyrics-card:clipboard-write-image", (_event, dataUrl) => {
-    if (
-      typeof dataUrl !== "string" ||
-      dataUrl.length <= PNG_DATA_URL_PREFIX.length ||
-      dataUrl.length > MAX_CLIPBOARD_IMAGE_DATA_URL_CODE_UNITS ||
-      !dataUrl.startsWith(PNG_DATA_URL_PREFIX)
-    ) {
-      return false;
-    }
-    try {
-      const image = nativeImage.createFromDataURL(dataUrl);
-      const size = image.getSize();
-      if (image.isEmpty() || size.width <= 0 || size.height <= 0 || size.width > 16_384 || size.height > 16_384) {
-        return false;
-      }
-      clipboard.writeImage(image);
-      return true;
-    } catch {
-      return false;
-    }
-  });
+  handle("lyrics-card:clipboard-write-image", createClipboardImageWriter(nativeImage, clipboard));
 
   handle("lyrics-card:background-save", async () => {
     const result = await dialog.showOpenDialog(mainWindow, {

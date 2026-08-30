@@ -50,6 +50,8 @@
     "stability:test": "tsx scripts/test-app-preferences-reconciliation.ts && tsx scripts/test-app-preferences-behavior.ts && npm run app-preference-save:test && tsx scripts/test-shutdown-coordinator.ts && tsx scripts/test-ai-error-localization.ts && tsx scripts/test-locale-completeness.ts && node scripts/test-electron-static-analysis.cjs && node scripts/test-electron-single-instance.cjs && npm run release-source:test && node scripts/test-release-workflow.cjs && node scripts/test-ci-workflow.cjs",
     "coverage": "c8 --include=lib/settings/app-preferences-reconciliation.ts --include=lib/ai/error-copy.ts --check-coverage --lines 85 --functions 85 --branches 80 --statements 85 tsx scripts/test-stability-coverage.ts",
     "electron-runtime:test": "node scripts/test-electron-runtime-coverage.cjs",
+    "clipboard-image:test": "node scripts/test-electron-clipboard-image.cjs",
+    "clipboard-image-native:test": "electron scripts/test-electron-clipboard-native.cjs",
     "ai-settings-store:test": "node scripts/test-electron-ai-settings-store.cjs",
     "electron-runtime:coverage": "c8 --clean --all --include=electron/preload.js --include=electron/ipc-security.js --include=electron/url-policy.js --include=electron/local-app-url.js --include=electron/local-server-origin.js --include=electron/manual-save-ipc.js --include=electron/import-history.js --include=electron/packaged-server-readiness.js --include=electron/ai-request-registry.js --check-coverage --per-file --lines 70 --functions 75 --branches 60 --statements 70 node scripts/test-electron-runtime-coverage.cjs",
     "click-spark:test": "tsx scripts/test-click-spark-animation.ts",

@@ -1,15 +1,11 @@
 const { contextBridge, ipcRenderer, webUtils } = require("electron");
+const { getClipboardPngEncodedByteLength } = require("./clipboard-image");
 
 const MAX_MANUAL_SAVE_ENVELOPE_CODE_UNITS = 2 * 1024 * 1024 + 64;
-const MAX_CLIPBOARD_IMAGE_DATA_URL_CODE_UNITS = 64 * 1024 * 1024;
-const PNG_DATA_URL_PREFIX = "data:image/png;base64,";
 const NATIVE_DIALOG_TYPES = new Set(["info", "warning", "error", "question"]);
 
 function isClipboardPngDataUrl(value) {
-  return typeof value === "string" &&
-    value.length > PNG_DATA_URL_PREFIX.length &&
-    value.length <= MAX_CLIPBOARD_IMAGE_DATA_URL_CODE_UNITS &&
-    value.startsWith(PNG_DATA_URL_PREFIX);
+  return getClipboardPngEncodedByteLength(value) !== null;
 }
 
 function isDialogText(value, maximumLength, allowEmpty = false) {

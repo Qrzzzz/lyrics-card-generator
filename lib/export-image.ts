@@ -2,8 +2,10 @@
 
 import { toCanvas } from "html-to-image";
 import {
+  ClipboardRasterSizeLimitError,
   ExportRasterSizeLimitError,
   ExportRasterSizeMismatchError,
+  getClipboardRasterSizeIssue,
   getExpectedExportRasterSize,
   getExportRasterSizeIssue
 } from "@/lib/export-dimensions";
@@ -91,6 +93,8 @@ export async function copyNodeAsPng(
   signal?: AbortSignal,
   dependencies: CopyImageDependencies = defaultCopyDependencies
 ) {
+  const clipboardSizeIssue = getClipboardRasterSizeIssue(width, height, pixelRatio);
+  if (clipboardSizeIssue) throw new ClipboardRasterSizeLimitError(clipboardSizeIssue);
   const dataUrl = await renderNodeAsImageData(
     node,
     "png",

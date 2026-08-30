@@ -37,5 +37,11 @@
     "albumCharacters": 512,
     "parserTokenBytes": 8912896,
     "parserTotalReadBytes": 33554432
+  },
+  "clipboardImage": {
+    "encodedBytes": 167772160,
+    "maxDimension": 16384,
+    "decodedPixels": 48000000,
+    "decodedRgbaBytes": 192000000
   }
 }

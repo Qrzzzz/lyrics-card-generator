@@ -65,6 +65,7 @@ assert.equal(isTrustedIpcEvent({}, null, localUrl), false, "missing window owner
 assert.equal(isTrustedIpcEvent({}, trustedFixture().mainWindow, "not a URL"), false, "invalid owned origins are rejected");
 
 const mainSource = readFileSync("electron/main.js", "utf8");
+const clipboardImageSource = readFileSync("electron/clipboard-image.js", "utf8");
 const packagedServerReadinessSource = readFileSync("electron/packaged-server-readiness.js", "utf8");
 const localServerOriginSource = readFileSync("electron/local-server-origin.js", "utf8");
 const packagedNextLauncherSource = readFileSync("electron/packaged-next-server.js", "utf8");
@@ -183,6 +184,7 @@ assert.match(
   "desktop preparation copies the import history store into the minimal app"
 );
 assert.match(prepareElectronSource, /"electron\/manual-save-ipc\.js"/, "packaged desktop bundles the manual-save IPC boundary");
+assert.match(prepareElectronSource, /"electron\/clipboard-image\.js"/, "packaged desktop bundles the clipboard image boundary");
 assert.match(
   prepareElectronSource,
   /path\.join\(projectRoot, "electron", "manual-save-ipc\.js"\)[\s\S]*?path\.join\(electronOutputDir, "manual-save-ipc\.js"\)/,
@@ -210,14 +212,20 @@ assert.match(
 );
 assert.match(
   preloadSource,
-  /function isClipboardPngDataUrl\(value\)[\s\S]*?MAX_CLIPBOARD_IMAGE_DATA_URL_CODE_UNITS[\s\S]*?startsWith\(PNG_DATA_URL_PREFIX\)/,
-  "preload bounds native clipboard payloads before IPC"
+  /getClipboardPngEncodedByteLength\(value\) !== null/,
+  "preload validates the PNG envelope and encoded-byte budget before IPC"
 );
 assert.match(
   mainSource,
-  /handle\("lyrics-card:clipboard-write-image"[\s\S]*?nativeImage\.createFromDataURL\(dataUrl\)[\s\S]*?image\.isEmpty\(\)[\s\S]*?clipboard\.writeImage\(image\)/,
-  "the trusted main process validates and writes a decoded native image"
+  /handle\("lyrics-card:clipboard-write-image", createClipboardImageWriter\(nativeImage, clipboard\)\)/,
+  "the trusted main process delegates clipboard decoding to the bounded writer"
 );
+assert.match(
+  clipboardImageSource,
+  /decodeAndInspectClipboardPngDataUrl\(dataUrl\)[\s\S]*?nativeImage\.createFromBuffer\(inspected\.buffer\)[\s\S]*?size\.width !== inspected\.width[\s\S]*?clipboard\.writeImage\(image\)/,
+  "PNG structure and dimensions are checked before and after the native decode"
+);
+assert.doesNotMatch(mainSource, /createFromDataURL/, "main never sends an unchecked data URL to a native decoder");
 assert.doesNotMatch(mainSource, /native-font-picker|fontPickerWindow|showWindowsFontSchemeDialog/);
 assert.doesNotMatch(preloadSource, /native-font-picker|openNativeFontPickerWindow|applyNativeFontPickerFamilies/);
 assert.match(
