@@ -9,6 +9,7 @@ import {
 import { LocalAudioParser } from "@/components/editor/LocalAudioParser";
 import { LyricsFetchPanel } from "@/components/editor/LyricsFetchPanel";
 import { LyricsWorkspace } from "@/components/editor/LyricsWorkspace";
+import type { LandscapeLineLimitNotice } from "@/components/editor/LandscapeLineLimitAlert";
 import { SettingsStep } from "@/components/editor/SettingsStepper";
 import { SongImportAside } from "@/components/editor/SongImportAside";
 import { SongInfoForm } from "@/components/editor/SongInfoForm";
@@ -102,6 +103,8 @@ type UseEditorStepsInput = {
   exportQuality: ExportQualityId;
   lyricsLayout: {
     lineStatus: ExportLyricLineStatus;
+    landscapeLineLimitNotice: LandscapeLineLimitNotice | null;
+    onDismissLandscapeLineLimitNotice: () => void;
   };
   documentRevision: number;
   songLinkAutoParseVisitIntent: SongLinkAutoParseVisitIntent;
@@ -345,6 +348,8 @@ export function useEditorSteps({
             lyricDocument={state.lyricDocument}
             lyrics={state.lyrics}
             lineStatus={lyricsLayout.lineStatus}
+            landscapeLineLimitNotice={lyricsLayout.landscapeLineLimitNotice}
+            onDismissLandscapeLineLimitNotice={lyricsLayout.onDismissLandscapeLineLimitNotice}
             sidebarTab={lyricsSidebarTab}
             onSidebarTabChange={setLyricsSidebarTab}
             onLyricsChange={onLyricsChange}
@@ -404,6 +409,8 @@ export function useEditorSteps({
     canFetchLyrics,
     documentRevision,
     lyricsLayout.lineStatus,
+    lyricsLayout.landscapeLineLimitNotice,
+    lyricsLayout.onDismissLandscapeLineLimitNotice,
     lyricsSidebarTab,
     onCancelAiTranslate,
     onCloseAiTranslate,

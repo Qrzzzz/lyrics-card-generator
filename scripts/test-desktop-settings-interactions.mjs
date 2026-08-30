@@ -34,10 +34,10 @@ const resolveRequests = [];
 const titlebarVisualMetrics = [];
 let titlebarPerformanceComparison = null;
 
-async function setNativeDialogDecision(decision) {
+async function setNativeDialogDecision(decision, expectedMessage) {
   await electronApp.evaluate((_electron, nextDecision) => {
     globalThis.__lyricsCardNativeDialogTest.nextDecision = nextDecision;
-  }, decision);
+  }, { decision, expectedMessage });
 }
 
 async function readNativeDialogs() {
@@ -928,7 +928,7 @@ async function assertSongSearchBehavior() {
   const activeId = await combobox.getAttribute("aria-activedescendant");
   const activeIndex = Number(activeId?.match(/option-(\d+)$/)?.[1]);
   assert.ok(Number.isInteger(activeIndex), `active descendant exposes an option index: ${activeId}`);
-  await setNativeDialogDecision("accept");
+  await setNativeDialogDecision("accept", "替换当前歌曲？");
   await combobox.press("Enter");
   await page.waitForFunction((expectedIndex) => (
     document.querySelector('[role="combobox"]')?.value === `Resolved result ${expectedIndex + 1} - Mock Artist ${expectedIndex + 1}`
@@ -1009,7 +1009,7 @@ async function assertSongImportAsideBehavior() {
     "an unresolved manual draft blocks forward step navigation"
   );
   assert.match(
-    await page.getByTestId("app-toast").textContent() ?? "",
+    await page.getByTestId("app-toast").filter({ hasText: /保存或取消手动调整/ }).textContent() ?? "",
     /保存或取消手动调整/,
     "blocked navigation explains how to resolve the manual draft"
   );
@@ -1099,8 +1099,11 @@ async function assertSongImportAsideBehavior() {
   const guardedEditor = aside.getByTestId("song-info-editor");
   await guardedEditor.waitFor({ state: "visible" });
   await guardedEditor.locator('input:not([type="file"])').first().fill("Stale manual title");
-  const linkInput = page.locator('[data-testid="song-import-alternates"] input:not([type="file"])').first();
-  await linkInput.fill("https://example.com/revision-guard");
+  const linkInput = page.locator('input[aria-label="音乐链接"]');
+  assert.equal(await linkInput.count(), 1, "the link revision guard targets the unique explicit music URL input");
+  const revisionGuardUrl = "https://example.com/revision-guard";
+  await linkInput.fill(revisionGuardUrl);
+  assert.equal(await linkInput.inputValue(), revisionGuardUrl, "the external revision is written to the music URL input");
   await page.waitForFunction((regionId) => (
     document.getElementById(regionId)?.getAttribute("data-song-info-view") === "summary"
   ), manualRegionId);
@@ -1699,12 +1702,12 @@ async function assertFontPickerBehavior() {
     document.querySelector('[data-stepper-presentation="preview-workbench"]')?.getAttribute("data-navigation-guard-active") === "true"
   ));
   await page.locator('button[data-step-id="visual"]').click();
-  await page.waitForFunction(() => /应用或取消自定义字体方案/.test(
-    document.querySelector('[data-testid="app-toast"]')?.textContent ?? ""
-  ));
+  await page.waitForFunction(() => Array.from(document.querySelectorAll('[data-testid="app-toast"]')).some((toast) => (
+    /应用或取消自定义字体方案/.test(toast.textContent ?? "")
+  )));
   assert.equal(await page.locator('[aria-current="step"]').getAttribute("data-step-id"), "font", "an unresolved font draft blocks step navigation");
   assert.match(
-    await page.getByTestId("app-toast").textContent() ?? "",
+    await page.getByTestId("app-toast").filter({ hasText: /应用或取消自定义字体方案/ }).textContent() ?? "",
     /应用或取消自定义字体方案/,
     "blocked navigation explains how to resolve the custom font draft"
   );
@@ -3053,8 +3056,10 @@ async function assertLyricsWorkspaceSplitInteractions() {
     "setup",
     "AI opens on the preset and reasoning setup page"
   );
-  await setNativeDialogDecision("accept");
-  await page.getByTestId("confirm-ai-translate").click();
+  await setNativeDialogDecision("accept", "覆盖现有译文？");
+  const confirmAITranslate = page.getByTestId("confirm-ai-translate");
+  await confirmAITranslate.focus();
+  await confirmAITranslate.press("Enter");
   const runPageTransition = await page.waitForFunction(() => {
     const viewport = document.querySelector('[data-testid="ai-translate-stage-viewport"]');
     const setup = document.querySelector('[data-testid="ai-translate-setup-page"]');
@@ -3430,7 +3435,7 @@ async function assertLyricsWorkspaceNarrowBehavior(originalLyrics, translationLy
         Math.abs(setupScrollBeforeRun.actual - setupScrollBeforeRun.target) <= 1,
       `the narrow AI setup page has an independently scrollable position: ${JSON.stringify(setupScrollBeforeRun)}`
     );
-    await setNativeDialogDecision("accept");
+    await setNativeDialogDecision("accept", "覆盖现有译文？");
     await page.getByTestId("confirm-ai-translate").evaluate((node) => {
       if (!(node instanceof HTMLButtonElement)) throw new Error("AI confirm control is not a button");
       node.click();
@@ -3675,7 +3680,7 @@ async function assertExampleImportRemeasuresPreview() {
 
   await page.getByTestId("editor-surface").getByTestId("examples-button").click();
   await page.getByTestId("load-example-opalite").waitFor({ state: "visible" });
-  await setNativeDialogDecision("accept");
+  await setNativeDialogDecision("accept", "替换当前歌曲？");
   await page.getByTestId("load-example-opalite").click();
 
   await waitForLayoutStable(page.getByTestId("editor-surface"), 10_000);
@@ -3765,7 +3770,7 @@ async function assertBuiltInExamplesAutoWidth() {
       );
     }
 
-    await setNativeDialogDecision("accept");
+    await setNativeDialogDecision("accept", "替换当前歌曲？");
     await page.getByTestId(`load-example-${example.id}`).click();
     await page.locator('button[data-step-id="layout"][aria-current="step"]').waitFor({ state: "visible" });
 
@@ -3871,8 +3876,12 @@ try {
     globalThis.__lyricsCardNativeDialogTest = { defaultDecision: "dismiss", nextDecision: null, calls: [] };
     dialog.showMessageBox = async (_browserWindow, options) => {
       const state = globalThis.__lyricsCardNativeDialogTest;
-      const decision = state.nextDecision ?? state.defaultDecision;
-      state.nextDecision = null;
+      const pendingDecision = state.nextDecision;
+      const matchesExpectedDialog = pendingDecision && (
+        !pendingDecision.expectedMessage || pendingDecision.expectedMessage === options.message
+      );
+      const decision = matchesExpectedDialog ? pendingDecision.decision : state.defaultDecision;
+      if (matchesExpectedDialog) state.nextDecision = null;
       state.calls.push({
         type: options.type,
         title: options.title,
@@ -3881,7 +3890,10 @@ try {
         buttons: options.buttons,
         defaultId: options.defaultId,
         cancelId: options.cancelId,
-        noLink: options.noLink
+        noLink: options.noLink,
+        testDecision: decision,
+        matchedExpectedDialog: Boolean(matchesExpectedDialog),
+        pendingExpectedMessage: pendingDecision?.expectedMessage ?? null
       });
       return {
         response: decision === "accept" ? 0 : (options.cancelId ?? 0),
@@ -4480,7 +4492,9 @@ try {
   const liveMeasurementGuard = await liveMeasurementGuardHandle.jsonValue();
   await liveMeasurementGuardHandle.dispose();
   assert.deepEqual(liveMeasurementGuard, { clicked: true, measuredWidth: 1 }, "live measurement guard uses the active enabled export control");
-  await page.waitForFunction(() => /计算|高度|稍候/.test(document.querySelector('[data-testid="app-toast"]')?.textContent ?? ""));
+  await page.waitForFunction(() => Array.from(document.querySelectorAll('[data-testid="app-toast"]')).some((toast) => (
+    /计算|高度|稍候/.test(toast.textContent ?? "")
+  )));
 
   await page.locator('button[data-step-id="lyrics"]').click();
   await fillExact(originalLyrics, `${originalEighteen}\nline 19`);
@@ -4550,15 +4564,21 @@ try {
     "36 logical lines cannot switch into landscape"
   );
   assert.equal(await originalLyrics.evaluate((node) => document.activeElement === node), true, "blocked landscape switch restores lyric focus");
-  const landscapeLimitToast = page.getByTestId("app-toast");
-  await landscapeLimitToast.waitFor({ state: "visible" });
-  assert.match(await landscapeLimitToast.innerText(), /横版最多容纳 12 个非空逻辑行.*当前为 36 行/s);
+  const landscapeLimitAlert = page.getByTestId("landscape-line-limit-alert");
+  await landscapeLimitAlert.waitFor({ state: "visible" });
+  assert.match(await landscapeLimitAlert.innerText(), /横版最多支持 12 个非空逻辑行.*当前为 36 行/s);
+  assert.equal(
+    await page.getByTestId("app-toast").filter({ hasText: /横版最多/ }).count(),
+    0,
+    "the actionable landscape limit stays in the lyrics UI instead of the transient toast stack"
+  );
 
   const originalSix = originalEighteen.split("\n").slice(0, 6).join("\n");
   const translationSix = translationEighteen.split("\n").slice(0, 6).join("\n");
   await fillExact(originalLyrics, originalSix);
   await fillExact(translationLyrics, translationSix);
   await waitForLyricsLineBudget("6 + 6 = 12 / 36");
+  await landscapeLimitAlert.waitFor({ state: "detached" });
   await page.locator('button[data-step-id="layout"]').click();
   await landscapeMode.click();
   await page.waitForFunction(() => document.querySelector('[data-segment-value="landscape"]')?.getAttribute("aria-checked") === "true");
@@ -4605,6 +4625,10 @@ try {
   }, null, 2)}\n`);
 } catch (error) {
   process.stderr.write(`[desktop-regression] ${error instanceof Error ? error.stack || error.message : String(error)}\n`);
+  if (electronApp) {
+    const nativeDialogState = await electronApp.evaluate(() => globalThis.__lyricsCardNativeDialogTest).catch(() => null);
+    process.stderr.write(`[desktop-regression-dialogs] ${JSON.stringify({ nativeDialogState, rendererDialogs })}\n`);
+  }
   if (page) {
     await page.screenshot({ path: path.join(reportDirectory, "settings-interaction-failure.png"), fullPage: false }).catch(() => {});
   }

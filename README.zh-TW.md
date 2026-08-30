@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v6.2.0.zh-TW.md">發布說明</a> ·
+  <a href="./docs/releases/v6.2.1.zh-TW.md">發布說明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">線上 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="./docs/development.zh-CN.md">本機開發</a> ·
@@ -71,26 +71,26 @@
 
 ## 📦 下載與安裝
 
-v6.2.0 已發布，可從 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載：
+v6.2.1 已發布，可從 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載：
 
-* 安裝版：`Lyrics Card Generator Setup 6.2.0.exe`
-* 可攜版：`Lyrics Card Generator-6.2.0-portable.exe`
+* 安裝版：`Lyrics Card Generator Setup 6.2.1.exe`
+* 可攜版：`Lyrics Card Generator-6.2.1-portable.exe`
 
 安裝版適合長期使用；可攜版適合臨時執行、測試或放在隨身碟中使用。
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v6.2.0 更新重點
+### v6.2.1 更新重點
 
-* 「完成並匯出」旁新增「複製圖片」，可將目前成品直接寫入系統剪貼簿。
-* 剪貼簿統一使用 PNG，並沿用目前匯出清晰度；複製不會變更 PNG、WebP 或 JPG 的下載格式選擇。
-* 桌面版使用受信任的 Electron 原生剪貼簿橋接，Web Lite 在瀏覽器支援圖片剪貼簿時提供相同入口。
-* 複製與下載共用不可變快照、就緒檢查、像素上限與互斥交易，避免複製過期、溢出或尚未完成的畫面。
+* 多則輕量提示會從底部依序堆疊，不再互相覆蓋，並依類型與內容長度使用獨立顯示時間。
+* 任一提示退場後，其餘提示會平順補位；頁面進入背景時暫停計時，避免提示在不可見時耗盡。
+* 完全相同的提示會在原位重新整理：舊面板向右平移並淡出，新面板從左側向右進入並淡入。
+* 橫式 12 行限制改為歌詞步驟內的警示，自動聚焦問題內容，並在修正後自動移除。
 
 ## 🌐 多語言發佈說明
 
 GitHub Release 預設顯示簡體中文摘要，完整說明請見：
-[简体中文](./docs/releases/v6.2.0.zh-CN.md) · [繁體中文](./docs/releases/v6.2.0.zh-TW.md) · [English](./docs/releases/v6.2.0.en.md) · [Français](./docs/releases/v6.2.0.fr.md) · [日本語](./docs/releases/v6.2.0.ja.md) · [Español](./docs/releases/v6.2.0.es.md)
+[简体中文](./docs/releases/v6.2.1.zh-CN.md) · [繁體中文](./docs/releases/v6.2.1.zh-TW.md) · [English](./docs/releases/v6.2.1.en.md) · [Français](./docs/releases/v6.2.1.fr.md) · [日本語](./docs/releases/v6.2.1.ja.md) · [Español](./docs/releases/v6.2.1.es.md)
 
 ## ✨ 主要功能
 

@@ -3,6 +3,10 @@
 import { Languages, SplitSquareVertical } from "lucide-react";
 import { useId } from "react";
 import { TranslationFieldBorder } from "@/components/lyrics/TranslationFieldBorder";
+import {
+  LandscapeLineLimitAlert,
+  type LandscapeLineLimitNotice
+} from "@/components/editor/LandscapeLineLimitAlert";
 import { ActionButton, FieldLabel, Section, TextareaField, ToggleRow } from "@/components/ui/controls";
 import type { createT } from "@/lib/i18n";
 import { formatChineseTranslation, splitAlternatingLyrics } from "@/lib/lyric-format";
@@ -19,7 +23,9 @@ export function WebLiteLyricInput({
   themeColor,
   contentMode,
   locale,
-  t
+  t,
+  landscapeLineLimitNotice,
+  onDismissLandscapeLineLimitNotice
 }: {
   lyrics: string;
   onLyricsChange: (lyrics: string) => void;
@@ -32,6 +38,8 @@ export function WebLiteLyricInput({
   contentMode: ContentMode;
   locale: Locale;
   t: ReturnType<typeof createT>;
+  landscapeLineLimitNotice: LandscapeLineLimitNotice | null;
+  onDismissLandscapeLineLimitNotice: () => void;
 }) {
   const translationFieldId = useId();
   const lines = lyrics ? lyrics.split(/\r?\n/).length : 0;
@@ -41,6 +49,11 @@ export function WebLiteLyricInput({
     <Section title={t("lyrics")} eyebrow={t("manualText")}>
       {contentMode === "lyrics" ? (
         <>
+          <LandscapeLineLimitAlert
+            notice={landscapeLineLimitNotice}
+            onDismiss={onDismissLandscapeLineLimitNotice}
+            t={t}
+          />
           <FieldLabel label={t("lyricText")} hint={t("lineCount", { lines, chars: lyrics.length })}>
             <TextareaField
               data-testid="web-lite-lyrics-original"

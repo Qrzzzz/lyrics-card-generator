@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v6.2.0.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v6.2.1.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="./docs/development.en.md">ローカル開発</a> ·
@@ -74,26 +74,26 @@
 
 ## 📦 ダウンロードとインストール
 
-v6.2.0 は公開済みです。[GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) から次のファイルを入手できます。
+v6.2.1 は公開済みです。[GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) から次のファイルを入手できます。
 
-* インストーラー：`Lyrics Card Generator Setup 6.2.0.exe`
-* ポータブル版：`Lyrics Card Generator-6.2.0-portable.exe`
+* インストーラー：`Lyrics Card Generator Setup 6.2.1.exe`
+* ポータブル版：`Lyrics Card Generator-6.2.1-portable.exe`
 
 通常利用にはインストーラーを推奨します。ポータブル版は一時利用、検証、リムーバブルドライブでの利用に向いています。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v6.2.0 の主な更新
+### v6.2.1 の主な更新
 
-* 「完了して書き出し」の隣に「画像をコピー」を追加し、完成したカードをシステムのクリップボードへ直接書き込めるようにしました。
-* クリップボードには常に PNG を使用し、現在の書き出し品質を引き継ぎます。コピーしても PNG、WebP、JPG の保存形式は変わりません。
-* デスクトップ版は信頼済みの Electron ネイティブ橋渡しを使用し、Web Lite でもブラウザーが画像コピーに対応している場合は同じ操作を利用できます。
-* コピーと保存は、固定スナップショット、準備状態の検証、ピクセル上限、排他トランザクションを共有します。
+* 軽量通知が互いを上書きせず、下から上へ積み重なるようになり、種類と文字数に応じた個別の表示時間を使用します。
+* いずれかの通知が終了すると残りが滑らかに詰め直され、ページがバックグラウンドに移るとタイマーを一時停止します。
+* 同一通知は同じ位置で更新され、古いパネルが右へ移動しながら消え、新しいパネルが左から入りながら現れます。
+* 横長カードの 12 行制限を歌詞ステップ内の警告へ変更し、対象内容へフォーカスを戻して、修正後は自動的に消えるようにしました。
 
 ## 🌐 多言語リリースノート
 
 GitHub Release ではデフォルトで簡体字中国語の概要が表示されます。完全なリリースノートはこちら：
-[简体中文](./docs/releases/v6.2.0.zh-CN.md) · [繁體中文](./docs/releases/v6.2.0.zh-TW.md) · [English](./docs/releases/v6.2.0.en.md) · [Français](./docs/releases/v6.2.0.fr.md) · [日本語](./docs/releases/v6.2.0.ja.md) · [Español](./docs/releases/v6.2.0.es.md)
+[简体中文](./docs/releases/v6.2.1.zh-CN.md) · [繁體中文](./docs/releases/v6.2.1.zh-TW.md) · [English](./docs/releases/v6.2.1.en.md) · [Français](./docs/releases/v6.2.1.fr.md) · [日本語](./docs/releases/v6.2.1.ja.md) · [Español](./docs/releases/v6.2.1.es.md)
 
 <a id="主な機能"></a>
 

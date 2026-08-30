@@ -73,6 +73,9 @@ const songImportAside = readFileSync(resolve("components/editor/SongImportAside.
 const lyricCardPreview = readFileSync(resolve("components/preview/LyricCardPreview.tsx"), "utf8");
 const lyricEditor = readFileSync(resolve("components/editor/LyricEditor.tsx"), "utf8");
 const appToast = readFileSync(resolve("components/feedback/AppToast.tsx"), "utf8");
+const toastQueue = readFileSync(resolve("components/feedback/toast-queue.ts"), "utf8");
+const useToastQueue = readFileSync(resolve("components/feedback/useToastQueue.ts"), "utf8");
+const landscapeLineLimitAlert = readFileSync(resolve("components/editor/LandscapeLineLimitAlert.tsx"), "utf8");
 const editorActions = readFileSync(resolve("components/editor/hooks/useEditorActions.ts"), "utf8");
 const editorSteps = readFileSync(resolve("components/editor/useEditorSteps.tsx"), "utf8");
 const settingsStepper = readFileSync(resolve("components/editor/SettingsStepper.tsx"), "utf8");
@@ -162,11 +165,28 @@ assert.match(editorActions, /if \(!hasClearableLyricContent\(parsedState\)\)[\s\
 assert.match(appToast, /role="status"/);
 assert.match(appToast, /aria-live="polite"/);
 assert.match(appToast, /data-testid="app-toast"/);
+assert.match(appToast, /data-testid="app-toast-stack"/);
 assert.match(appToast, /useAppReducedMotion/);
 assert.match(appToast, /data-tone=\{notice\.tone\}/);
+assert.match(appToast, /<MotionPresence initial=\{false\} mode="popLayout">/);
+assert.match(appToast, /layout=\{reduceMotion \? false : "position"\}/);
+assert.match(appToast, /key=\{`\$\{notice\.id\}:\$\{notice\.revision\}`\}/);
+assert.match(appToast, /data-toast-surface-revision=\{notice\.revision\}/);
+assert.match(appToast, /initial=\{[\s\S]*?\{ x: -24, opacity: 0 \}[\s\S]*?\}/);
+assert.match(appToast, /exit=\{reduceMotion \? \{ opacity: 0 \} : \{ x: 24, opacity: 0 \}\}/);
+assert.doesNotMatch(appToast, /clipPath/);
 assert.match(appToast, /initial=\{reduceMotion \? \{ opacity: 0 \} : \{ opacity: 0, y: 32, scale: 0\.8 \}\}/);
 assert.match(appToast, /exit=\{reduceMotion \? \{ opacity: 0 \} : \{ opacity: 0, y: 32, scale: 0\.8 \}\}/);
 assert.doesNotMatch(appToast, /lucide-react|<Info|scaleX|accentColor/);
+assert.match(toastQueue, /stage: "visible" \| "pending"/);
+assert.match(toastQueue, /existing\.revision \+ 1/);
+assert.match(toastQueue, /expiresAt: existing\.stage === "visible" && input\.running \? input\.now \+ durationMs : null/);
+assert.match(toastQueue, /promotePendingToastNotices/);
+assert.match(useToastQueue, /document\.visibilityState !== "hidden"/);
+assert.match(useToastQueue, /TOAST_STACK_CAPACITY_NARROW/);
+assert.match(landscapeLineLimitAlert, /role="alert"/);
+assert.match(landscapeLineLimitAlert, /data-testid="landscape-line-limit-alert"/);
+assert.doesNotMatch(lyricEditor, /landscapeLineLimitExceeded|showToast\(t\("landscapeLineLimit/);
 
 const globals = readFileSync(resolve("app/globals.css"), "utf8");
 assert.match(globals, /@media \(prefers-reduced-motion: reduce\)/);
@@ -183,4 +203,4 @@ assert.match(globals, /\.app-toast\[data-tone="success"\][\s\S]*?border-color: r
 assert.match(globals, /\.app-toast\[data-tone="warning"\][\s\S]*?border-color: rgb\(250 204 21 \/ 0\.78\)[\s\S]*?background: rgb\(66 32 6 \/ 0\.94\)[\s\S]*?color: rgb\(250 204 21\)/);
 assert.match(globals, /\.app-toast\[data-tone="error"\][\s\S]*?border-color: rgb\(248 113 113 \/ 0\.76\)[\s\S]*?background: rgb\(69 10 10 \/ 0\.94\)[\s\S]*?color: rgb\(248 113 113\)/);
 
-console.log(JSON.stringify({ ok: true, motionSystemRegressionChecks: 96 }, null, 2));
+console.log(JSON.stringify({ ok: true, motionSystemRegressionChecks: 113 }, null, 2));
