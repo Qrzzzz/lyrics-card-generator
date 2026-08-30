@@ -3059,26 +3059,30 @@ async function assertLyricsWorkspaceSplitInteractions() {
   await setNativeDialogDecision("accept", "覆盖现有译文？");
   const confirmAITranslate = page.getByTestId("confirm-ai-translate");
   await confirmAITranslate.focus();
-  await confirmAITranslate.press("Enter");
-  const runPageTransition = await page.waitForFunction(() => {
-    const viewport = document.querySelector('[data-testid="ai-translate-stage-viewport"]');
-    const setup = document.querySelector('[data-testid="ai-translate-setup-page"]');
-    const run = document.querySelector('[data-testid="ai-translate-run-page"]');
-    if (
-      viewport?.getAttribute("data-ai-stage") !== "run" ||
-      !(setup instanceof HTMLElement) ||
-      !(run instanceof HTMLElement)
-    ) {
-      return false;
-    }
-    return {
-      setupAriaHidden: setup.getAttribute("aria-hidden"),
-      setupInert: setup.hasAttribute("inert"),
-      setupPointerEvents: getComputedStyle(setup).pointerEvents,
-      runAriaHidden: run.getAttribute("aria-hidden"),
-      runInert: run.hasAttribute("inert")
-    };
-  });
+  // Begin observing before activation so a fast runner cannot complete the
+  // transient overlap before Playwright starts polling for both pages.
+  const [runPageTransition] = await Promise.all([
+    page.waitForFunction(() => {
+      const viewport = document.querySelector('[data-testid="ai-translate-stage-viewport"]');
+      const setup = document.querySelector('[data-testid="ai-translate-setup-page"]');
+      const run = document.querySelector('[data-testid="ai-translate-run-page"]');
+      if (
+        viewport?.getAttribute("data-ai-stage") !== "run" ||
+        !(setup instanceof HTMLElement) ||
+        !(run instanceof HTMLElement)
+      ) {
+        return false;
+      }
+      return {
+        setupAriaHidden: setup.getAttribute("aria-hidden"),
+        setupInert: setup.hasAttribute("inert"),
+        setupPointerEvents: getComputedStyle(setup).pointerEvents,
+        runAriaHidden: run.getAttribute("aria-hidden"),
+        runInert: run.hasAttribute("inert")
+      };
+    }),
+    confirmAITranslate.press("Enter")
+  ]);
   assert.deepEqual(
     await runPageTransition.jsonValue(),
     {
