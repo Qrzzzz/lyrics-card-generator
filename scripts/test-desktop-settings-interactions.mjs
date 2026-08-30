@@ -3887,7 +3887,10 @@ try {
         buttons: options.buttons,
         defaultId: options.defaultId,
         cancelId: options.cancelId,
-        noLink: options.noLink
+        noLink: options.noLink,
+        testDecision: decision,
+        matchedExpectedDialog: Boolean(matchesExpectedDialog),
+        pendingExpectedMessage: pendingDecision?.expectedMessage ?? null
       });
       return {
         response: decision === "accept" ? 0 : (options.cancelId ?? 0),
@@ -4619,6 +4622,10 @@ try {
   }, null, 2)}\n`);
 } catch (error) {
   process.stderr.write(`[desktop-regression] ${error instanceof Error ? error.stack || error.message : String(error)}\n`);
+  if (electronApp) {
+    const nativeDialogState = await electronApp.evaluate(() => globalThis.__lyricsCardNativeDialogTest).catch(() => null);
+    process.stderr.write(`[desktop-regression-dialogs] ${JSON.stringify({ nativeDialogState, rendererDialogs })}\n`);
+  }
   if (page) {
     await page.screenshot({ path: path.join(reportDirectory, "settings-interaction-failure.png"), fullPage: false }).catch(() => {});
   }
