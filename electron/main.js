@@ -49,6 +49,8 @@ const { prepareDesktopStartup } = require("./startup-orchestration");
 const { isAllowedLocalNavigation, parseAllowedExternalUrl } = require("./url-policy");
 
 const HOST = LOOPBACK_HOST;
+const APP_CANONICAL_ORIGIN_ENV = "LYRICS_CARD_APP_ORIGIN";
+const APP_TRUST_PROXY_ENV = "LYRICS_CARD_TRUST_PROXY";
 const APP_ID = "com.lyriccard.generator";
 const START_TIMEOUT_MS = 45000;
 const WINDOW_BACKGROUND_COLOR = "#20242D";
@@ -225,6 +227,8 @@ async function startPackagedNextServerOnPort(port, source, onProcessLaunchStarte
         : standaloneNodeModules,
       NODE_ENV: "production",
       PORT: String(port),
+      [APP_CANONICAL_ORIGIN_ENV]: url,
+      [APP_TRUST_PROXY_ENV]: "0",
       [STARTUP_SECRET_ENV]: startupSecret
     },
     stdio: ["ignore", "pipe", "pipe", "ipc"],

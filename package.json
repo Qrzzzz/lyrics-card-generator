@@ -4,9 +4,9 @@
   "private": true,
   "main": "electron/main.js",
   "scripts": {
-    "dev": "next dev",
+    "dev": "cross-env LYRICS_CARD_APP_ORIGIN=http://localhost:3000 LYRICS_CARD_TRUST_PROXY=0 next dev",
     "clean:next": "node scripts/clean-next-cache.mjs",
-    "dev:clean": "npm run clean:next && next dev",
+    "dev:clean": "npm run clean:next && npm run dev",
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit && npm run electron:typecheck",

@@ -43,7 +43,7 @@ npm run dev
 npm run dev:clean
 ```
 
-这套 Web 开发界面包含 Next.js API 路由，不等同于静态 Web Lite。
+这套 Web 开发界面包含 Next.js API 路由，不等同于静态 Web Lite。受支持的 `npm run dev` 会把 mutation 门禁固定到 `http://localhost:3000`；不要把该开发服务器暴露为生产部署。
 
 ### Electron 桌面界面
 
@@ -52,6 +52,25 @@ npm run desktop:dev
 ```
 
 启动器会为当前工作区分配一个可用的 `127.0.0.1` 端口，同时启动 Next.js 与 Electron，并在桌面窗口退出时清理子进程。不要另行硬编码开发端口。
+
+### Canonical origin 与反向代理
+
+任何提供 mutation API 的运行时都必须确定唯一的浏览器 canonical origin。受支持的浏览器开发与 Electron 启动器会自动注入该值。production standalone 在执行 `npm run start` 前必须把 `LYRICS_CARD_APP_ORIGIN` 设为精确的 HTTP(S) origin；若缺失，mutation routes 会 fail-closed，并返回 HTTP 503 与 `app_origin_configuration_error`。
+
+Canonical 值只能包含协议、主机与必要的非默认端口：应写作 `https://lyrics.example.com`，不能带末尾斜杠、路径、凭据、显式 `:443` 或非规范 IP 写法。直接部署时不设置 `LYRICS_CARD_TRUST_PROXY`，或将其设为 `0`。客户端提交的 `Host`、`X-Forwarded-Host` 与 `X-Forwarded-Proto` 永远不能决定 canonical origin。
+
+只有反向代理是后端唯一入口时，才能设置 `LYRICS_CARD_TRUST_PROXY=1`。代理必须覆盖而不是追加 `X-Forwarded-Host` 与 `X-Forwarded-Proto`，且每个头只传一个 canonical 值。转交的协议与主机必须精确还原预先配置的 `LYRICS_CARD_APP_ORIGIN`；缺失、多值、替代写法或不匹配都会被拒绝。若 Next 后端仍可被直接访问，不得启用此模式。
+
+代理终止 TLS 的 production 部署 PowerShell 示例：
+
+```powershell
+npm run build
+$env:LYRICS_CARD_APP_ORIGIN = "https://lyrics.example.com"
+$env:LYRICS_CARD_TRUST_PROXY = "1"
+npm run start
+```
+
+这两个变量只控制应用 mutation origin。AI provider Base URL 策略保持独立，仍在应用设置中配置。
 
 ## 仓库结构
 

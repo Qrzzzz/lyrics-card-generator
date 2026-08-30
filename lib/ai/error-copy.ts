@@ -1,15 +1,15 @@
 import type { Locale } from "@/lib/types";
 
-export type AIErrorCode = "missing_api_key" | "missing_model" | "missing_base_url" | "invalid_base_url" | "insecure_base_url" | "invalid_request" | "empty_prompt" | "network" | "timeout" | "provider_error" | "empty_stream" | "invalid_response" | "empty_response" | "cancelled" | "request_failed" | "api_key_read_failed" | "secure_storage_unavailable" | "cross_origin_request" | "missing_app_request_marker" | "unsupported_media_type" | "unknown";
+export type AIErrorCode = "missing_api_key" | "missing_model" | "missing_base_url" | "invalid_base_url" | "insecure_base_url" | "invalid_request" | "empty_prompt" | "network" | "timeout" | "provider_error" | "empty_stream" | "invalid_response" | "empty_response" | "cancelled" | "request_failed" | "api_key_read_failed" | "secure_storage_unavailable" | "app_origin_configuration_error" | "cross_origin_request" | "missing_app_request_marker" | "unsupported_media_type" | "unknown";
 
 export const AI_ERROR_CODES: readonly AIErrorCode[] = [
   "missing_api_key", "missing_model", "missing_base_url", "invalid_base_url", "insecure_base_url", "invalid_request",
   "empty_prompt", "network", "timeout", "provider_error", "empty_stream", "invalid_response",
   "empty_response", "cancelled", "request_failed", "api_key_read_failed", "secure_storage_unavailable",
-  "cross_origin_request", "missing_app_request_marker", "unsupported_media_type", "unknown"
+  "app_origin_configuration_error", "cross_origin_request", "missing_app_request_marker", "unsupported_media_type", "unknown"
 ];
 
-const copy: Record<Locale, Record<AIErrorCode, string>> = {
+const copy: Record<Locale, Record<Exclude<AIErrorCode, "app_origin_configuration_error">, string>> = {
   zh: {
     missing_api_key: "请先在设置中配置 API Key", missing_model: "请先在设置中配置模型", missing_base_url: "请先在设置中配置 Base URL", invalid_base_url: "Base URL 无效，请检查设置。", insecure_base_url: "远程 AI Base URL 必须使用 HTTPS。HTTP 仅支持 localhost 或回环 IP 地址。", invalid_request: "AI 翻译请求无效。", empty_prompt: "歌词为空，请先输入歌词。", network: "网络请求失败，请检查 Base URL、网络连接和服务状态。", timeout: "AI 请求超时，请稍后重试。", provider_error: "AI 服务返回错误。", empty_stream: "AI 服务未返回可读取的数据流。", invalid_response: "AI 服务返回了无法解析的响应。", empty_response: "AI 返回为空，请重试或更换模型。", cancelled: "AI 翻译已取消。", request_failed: "AI 翻译请求失败。", api_key_read_failed: "无法读取已保存的 API Key，请重新输入。", secure_storage_unavailable: "系统安全存储不可用，无法安全保存 API Key。", cross_origin_request: "该请求不是来自当前应用页面。", missing_app_request_marker: "该请求缺少应用标记。", unsupported_media_type: "该请求的内容格式不受支持。", unknown: "AI 翻译请求失败，请检查网络和接口设置。"
   },
@@ -30,8 +30,19 @@ const copy: Record<Locale, Record<AIErrorCode, string>> = {
   }
 };
 
+const appOriginConfigurationCopy: Record<Locale, string> = {
+  zh: "应用来源策略配置错误，请检查服务器部署设置。",
+  "zh-TW": "應用程式來源原則設定錯誤，請檢查伺服器部署設定。",
+  en: "The app origin policy is misconfigured. Check the server deployment settings.",
+  fr: "La politique d’origine de l’application est mal configurée. Vérifiez le déploiement du serveur.",
+  ja: "アプリのオリジンポリシー設定が無効です。サーバーのデプロイ設定を確認してください。",
+  es: "La política de origen de la aplicación está mal configurada. Revisa el despliegue del servidor."
+};
+
 export function getAIErrorMessage(locale: Locale, code: AIErrorCode, diagnostic?: string) {
-  const primary = copy[locale][code] ?? copy[locale].unknown;
+  const primary = code === "app_origin_configuration_error"
+    ? appOriginConfigurationCopy[locale]
+    : copy[locale][code] ?? copy[locale].unknown;
   return diagnostic && code === "provider_error" ? `${primary} (${diagnostic.slice(0, 300)})` : primary;
 }
 

@@ -43,7 +43,7 @@ Open `http://localhost:3000`. If the `.next` cache appears stale or damaged, use
 npm run dev:clean
 ```
 
-This Web development surface includes Next.js API routes; it is not the static Web Lite artifact.
+This Web development surface includes Next.js API routes; it is not the static Web Lite artifact. The supported `npm run dev` command pins the mutation boundary to `http://localhost:3000`; do not expose this development server as a production deployment.
 
 ### Electron desktop interface
 
@@ -52,6 +52,25 @@ npm run desktop:dev
 ```
 
 The launcher allocates an available `127.0.0.1` port for the checkout, starts Next.js and Electron together, and cleans up its children when the desktop window exits. Do not hard-code a development port around this launcher.
+
+### Canonical origin and reverse proxies
+
+Every runtime that serves the mutation API must establish one canonical browser origin. The supported browser-development and Electron launchers inject it automatically. A production standalone server must set `LYRICS_CARD_APP_ORIGIN` to the exact serialized HTTP(S) origin before `npm run start`; without it, mutation routes fail closed with HTTP 503 and `app_origin_configuration_error`.
+
+Canonical values contain only scheme, host, and a non-default port when needed: use `https://lyrics.example.com`, not a trailing slash, path, credentials, an explicit `:443`, or a non-canonical IP spelling. For a direct deployment, leave `LYRICS_CARD_TRUST_PROXY` unset or set it to `0`. Client `Host`, `X-Forwarded-Host`, and `X-Forwarded-Proto` values never select the canonical origin.
+
+Set `LYRICS_CARD_TRUST_PROXY=1` only when a reverse proxy is the backend's exclusive ingress. The proxy must replace, rather than append, `X-Forwarded-Host` and `X-Forwarded-Proto` with one canonical value each. The forwarded scheme and host must reconstruct the already configured `LYRICS_CARD_APP_ORIGIN` exactly; missing, multiple, alternate, or mismatched values are rejected. Do not enable this mode while the Next backend remains directly reachable.
+
+PowerShell example for a proxy-terminated production deployment:
+
+```powershell
+npm run build
+$env:LYRICS_CARD_APP_ORIGIN = "https://lyrics.example.com"
+$env:LYRICS_CARD_TRUST_PROXY = "1"
+npm run start
+```
+
+These variables govern only the app mutation origin. AI provider Base URL policy remains independent and continues to be configured in the app.
 
 ## Repository map
 

@@ -1,6 +1,7 @@
 import type { createT, MessageKey } from "@/lib/i18n";
 
 export type AppApiErrorCode =
+  | "app_origin_configuration_error"
   | "cross_origin_request"
   | "missing_app_request_marker"
   | "unsupported_media_type"
@@ -17,6 +18,7 @@ export type AppApiErrorCode =
   | "local_audio_parse_failed";
 
 const defaultErrors: Record<AppApiErrorCode, string> = {
+  app_origin_configuration_error: "The app origin policy is not configured correctly.",
   cross_origin_request: "Cross-origin requests are not allowed.",
   missing_app_request_marker: "This request did not come from the app.",
   unsupported_media_type: "This request uses an unsupported media type.",
@@ -34,6 +36,7 @@ const defaultErrors: Record<AppApiErrorCode, string> = {
 };
 
 const localizedKeys: Record<AppApiErrorCode, MessageKey> = {
+  app_origin_configuration_error: "requestRejected",
   cross_origin_request: "requestRejected",
   missing_app_request_marker: "requestRejected",
   unsupported_media_type: "requestFormatUnsupported",

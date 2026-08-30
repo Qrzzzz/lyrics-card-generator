@@ -12,7 +12,7 @@ The desktop app packages three layers:
 2. A cleaned Next.js standalone service bundled under the app resources.
 3. An Electron shell responsible for the window, local-service lifecycle, native persistence, file selection, system fonts, and restricted IPC.
 
-In development, `scripts/start-electron-dev.mjs` allocates an available loopback port and starts Next.js plus Electron. In a packaged build, Electron starts the bundled service on a dynamic `127.0.0.1` port, waits for its readiness contract, and then opens only the app's validated local origin.
+In development, `scripts/start-electron-dev.mjs` allocates an available loopback port and starts Next.js plus Electron. In a packaged build, Electron starts the bundled service on a dynamic `127.0.0.1` port, waits for its readiness contract, and then opens only the app's validated local origin. Both launch paths inject that exact dynamic URL as the mutation API's canonical origin and explicitly disable proxy-header trust in the child server.
 
 The local HTTP service is an implementation detail, not a LAN service or a remote deployment. Changes to host binding, readiness, origin validation, navigation policy, IPC, or startup secrets are security-sensitive and require their focused tests.
 
