@@ -10,6 +10,36 @@ import {
 const fixtureUrl = (name) => new URL(`./fixtures/release-source/${name}`, import.meta.url);
 const readFixture = (name) => JSON.parse(readFileSync(fixtureUrl(name), "utf8"));
 const clone = (value) => JSON.parse(JSON.stringify(value));
+const FINAL_PR_HEAD = "cccccccccccccccccccccccccccccccccccccccc";
+
+function review({
+  id,
+  login,
+  state = "APPROVED",
+  commitId = FINAL_PR_HEAD,
+  submittedAt,
+  accountType = "User"
+}) {
+  return {
+    id,
+    state,
+    submitted_at: submittedAt,
+    commit_id: commitId,
+    user: { login, type: accountType }
+  };
+}
+
+function configureReviewer(fixture, login, { permission = "write", accountType = "User" } = {}) {
+  fixture.reviewerPermissions[login.toLowerCase()] = {
+    permission,
+    role_name: permission,
+    user: { login, type: accountType }
+  };
+}
+
+function approvalPolicy({ requiredApprovals = 1, trustedReviewers = [{ login: "trusted-reviewer" }] } = {}) {
+  return { ...releaseSourcePolicy, requiredApprovals, trustedReviewers };
+}
 
 function applyScenario(base, scenario) {
   const fixture = clone(base);
@@ -39,6 +69,14 @@ function createFixtureClient(fixture) {
     if (/\/commits\/[0-9a-f]{40}\/pulls/.test(path)) return fixture.pullRequests;
     const reviews = path.match(/\/pulls\/(\d+)\/reviews/);
     if (reviews) return fixture.reviews[reviews[1]];
+    const reviewerPermission = path.match(/\/collaborators\/([^/]+)\/permission$/);
+    if (reviewerPermission) {
+      const login = decodeURIComponent(reviewerPermission[1]).toLowerCase();
+      if (fixture.reviewerPermissionErrors.includes(login)) throw new Error(`Permission lookup failed for ${login}`);
+      const payload = fixture.reviewerPermissions[login];
+      if (!payload) throw new Error(`Missing fixture permission for ${login}`);
+      return payload;
+    }
     if (path.includes("/actions/workflows/ci.yml/runs?")) return fixture.workflowRuns;
     const jobs = path.match(/\/actions\/runs\/(\d+)\/attempts\/\d+\/jobs/);
     if (jobs) return fixture.jobs[jobs[1]];
@@ -54,13 +92,14 @@ function createFixtureClient(fixture) {
   };
 }
 
-async function authorizeFixture(fixture) {
+async function authorizeFixture(fixture, policy = releaseSourcePolicy) {
   const client = createFixtureClient(fixture);
   const evidence = await authorizeReleaseSource({
     client,
     repository: "Qrzzzz/lyrics-card-generator",
     tag: "v6.2.2",
-    expectedSha: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    expectedSha: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    policy
   });
   return { client, evidence };
 }
@@ -74,7 +113,11 @@ assert.notEqual(
   evidence.reviewedPullRequest.headSha,
   "squash/rebase review evidence is associated with, not mistaken for, the final main commit"
 );
-assert.equal(evidence.reviewedPullRequest.approvals.length, 1);
+assert.equal(evidence.reviewedPullRequest.approvals.length, 0, "the current zero-approval policy accepts a merged PR with no reviews");
+assert.ok(
+  !client.requests.some((request) => request.includes("/reviews") || request.includes("/collaborators/")),
+  "zero required approvals do not make review or reviewer-permission requests"
+);
 assert.equal(evidence.ci.runId, 9001, "a successful rerun supersedes an earlier failed run for the same SHA");
 assert.deepEqual(evidence.ci.checks.map((check) => check.name), releaseSourcePolicy.requiredChecks);
 assert.ok(
@@ -100,13 +143,154 @@ await assert.rejects(
   "a moved annotated tag cannot reuse authorization for old bytes"
 );
 
-const staleApproval = clone(eligible);
-staleApproval.reviews["200"][0].commit_id = "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee";
+const authorSelfApproval = clone(eligible);
+configureReviewer(authorSelfApproval, "author");
+authorSelfApproval.reviews["200"] = [review({
+  id: 300,
+  login: "author",
+  submittedAt: "2026-08-30T11:00:00Z"
+})];
 await assert.rejects(
-  authorizeFixture(staleApproval),
+  authorizeFixture(authorSelfApproval, approvalPolicy({ trustedReviewers: [{ login: "author" }] })),
   (error) => error instanceof ReleaseSourceError && error.code === "current_approval_missing",
-  "approval must apply to the pull request's final head commit"
+  "the pull request author's approval never counts"
 );
+
+const missingAuthorIdentity = clone(authorSelfApproval);
+delete missingAuthorIdentity.pullRequests[0].user;
+await assert.rejects(
+  authorizeFixture(missingAuthorIdentity, approvalPolicy({ trustedReviewers: [{ login: "author" }] })),
+  (error) => error instanceof ReleaseSourceError && error.code === "review_identity_unavailable",
+  "missing pull request author identity fails closed"
+);
+
+const untrustedExternalApproval = clone(eligible);
+configureReviewer(untrustedExternalApproval, "trusted-reviewer");
+untrustedExternalApproval.reviews["200"] = [review({
+  id: 301,
+  login: "external-reviewer",
+  submittedAt: "2026-08-30T11:00:00Z"
+})];
+await assert.rejects(
+  authorizeFixture(untrustedExternalApproval, approvalPolicy()),
+  (error) => error instanceof ReleaseSourceError && error.code === "current_approval_missing",
+  "an approval from an account outside the explicit trusted allowlist never counts"
+);
+
+const staleApproval = clone(eligible);
+configureReviewer(staleApproval, "trusted-reviewer");
+staleApproval.reviews["200"] = [review({
+  id: 302,
+  login: "trusted-reviewer",
+  commitId: "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+  submittedAt: "2026-08-30T11:00:00Z"
+})];
+await assert.rejects(
+  authorizeFixture(staleApproval, approvalPolicy()),
+  (error) => error instanceof ReleaseSourceError && error.code === "current_approval_missing",
+  "a trusted approval must apply to the pull request's final head commit"
+);
+
+const trustedFinalHeadApproval = clone(eligible);
+configureReviewer(trustedFinalHeadApproval, "trusted-reviewer");
+trustedFinalHeadApproval.reviews["200"] = [review({
+  id: 303,
+  login: "trusted-reviewer",
+  submittedAt: "2026-08-30T11:00:00Z"
+})];
+const trustedEvidence = (await authorizeFixture(trustedFinalHeadApproval, approvalPolicy())).evidence;
+assert.deepEqual(trustedEvidence.reviewedPullRequest.approvals, [{
+  reviewer: "trusted-reviewer",
+  reviewId: 303,
+  commitSha: FINAL_PR_HEAD,
+  permission: "write",
+  accountType: "User"
+}], "an explicitly trusted current writer's final-head approval counts");
+
+for (const [state, id] of [["CHANGES_REQUESTED", 305], ["DISMISSED", 307]]) {
+  const supersededApproval = clone(eligible);
+  configureReviewer(supersededApproval, "trusted-reviewer");
+  supersededApproval.reviews["200"] = [
+    review({ id: id - 1, login: "trusted-reviewer", submittedAt: "2026-08-30T11:00:00Z" }),
+    review({ id, login: "trusted-reviewer", state, submittedAt: "2026-08-30T11:05:00Z" })
+  ];
+  await assert.rejects(
+    authorizeFixture(supersededApproval, approvalPolicy()),
+    (error) => error instanceof ReleaseSourceError && error.code === "current_approval_missing",
+    `a later ${state} decision supersedes the reviewer's approval`
+  );
+}
+
+const duplicateReviewer = clone(eligible);
+configureReviewer(duplicateReviewer, "trusted-reviewer");
+configureReviewer(duplicateReviewer, "second-trusted-reviewer");
+duplicateReviewer.reviews["200"] = [
+  review({ id: 308, login: "trusted-reviewer", submittedAt: "2026-08-30T11:00:00Z" }),
+  review({ id: 309, login: "TRUSTED-REVIEWER", submittedAt: "2026-08-30T11:05:00Z" })
+];
+await assert.rejects(
+  authorizeFixture(duplicateReviewer, approvalPolicy({
+    requiredApprovals: 2,
+    trustedReviewers: [{ login: "trusted-reviewer" }, { login: "second-trusted-reviewer" }]
+  })),
+  (error) => error instanceof ReleaseSourceError
+    && error.code === "current_approval_missing"
+    && error.details.approvals.length === 1,
+  "multiple approvals from the same reviewer count only once, case-insensitively"
+);
+
+await assert.rejects(
+  authorizeFixture(clone(eligible), approvalPolicy({
+    requiredApprovals: 2,
+    trustedReviewers: [{ login: "trusted-reviewer" }]
+  })),
+  (error) => error instanceof ReleaseSourceError && error.code === "trusted_reviewer_capacity",
+  "required approvals cannot exceed the explicit trusted reviewer population"
+);
+
+const permissionLookupFailure = clone(eligible);
+permissionLookupFailure.reviewerPermissionErrors.push("trusted-reviewer");
+permissionLookupFailure.reviews["200"] = [review({
+  id: 310,
+  login: "trusted-reviewer",
+  submittedAt: "2026-08-30T11:00:00Z"
+})];
+await assert.rejects(
+  authorizeFixture(permissionLookupFailure, approvalPolicy()),
+  (error) => error instanceof ReleaseSourceError && error.code === "reviewer_permission_unavailable",
+  "a reviewer permission query failure blocks authorization"
+);
+
+const insufficientPermission = clone(eligible);
+configureReviewer(insufficientPermission, "trusted-reviewer", { permission: "read" });
+insufficientPermission.reviews["200"] = [review({
+  id: 311,
+  login: "trusted-reviewer",
+  submittedAt: "2026-08-30T11:00:00Z"
+})];
+await assert.rejects(
+  authorizeFixture(insufficientPermission, approvalPolicy()),
+  (error) => error instanceof ReleaseSourceError && error.code === "trusted_reviewer_capacity",
+  "an allowlisted reviewer without current write permission cannot satisfy the policy"
+);
+
+const botApproval = clone(eligible);
+configureReviewer(botApproval, "release-reviewer[bot]", { accountType: "Bot" });
+botApproval.reviews["200"] = [review({
+  id: 312,
+  login: "release-reviewer[bot]",
+  accountType: "Bot",
+  submittedAt: "2026-08-30T11:00:00Z"
+})];
+await assert.rejects(
+  authorizeFixture(botApproval, approvalPolicy({ trustedReviewers: [{ login: "release-reviewer[bot]" }] })),
+  (error) => error instanceof ReleaseSourceError && error.code === "trusted_reviewer_capacity",
+  "an allowlisted bot still requires explicit allowBot authorization"
+);
+const trustedBotEvidence = (await authorizeFixture(botApproval, approvalPolicy({
+  trustedReviewers: [{ login: "release-reviewer[bot]", allowBot: true }]
+}))).evidence;
+assert.equal(trustedBotEvidence.reviewedPullRequest.approvals.length, 1, "an explicitly allowed trusted bot can count");
 
 const newestRunFailed = clone(eligible);
 const failedRun = clone(newestRunFailed.workflowRuns.workflow_runs.find((run) => run.id === 9001));

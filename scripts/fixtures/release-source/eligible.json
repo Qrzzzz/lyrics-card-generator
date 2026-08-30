@@ -46,18 +46,10 @@
     }
   ],
   "reviews": {
-    "200": [
-      {
-        "id": 300,
-        "state": "APPROVED",
-        "submitted_at": "2026-08-30T11:00:00Z",
-        "commit_id": "cccccccccccccccccccccccccccccccccccccccc",
-        "user": {
-          "login": "reviewer"
-        }
-      }
-    ]
+    "200": []
   },
+  "reviewerPermissions": {},
+  "reviewerPermissionErrors": [],
   "workflowRuns": {
     "workflow_runs": [
       {

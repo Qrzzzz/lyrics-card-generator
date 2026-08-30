@@ -3,7 +3,8 @@
   "ciWorkflow": "ci.yml",
   "ciWorkflowName": "CI",
   "ciWorkflowPath": ".github/workflows/ci.yml",
-  "requiredApprovals": 1,
+  "requiredApprovals": 0,
+  "trustedReviewers": [],
   "requiredChecks": [
     "verify",
     "render-boundary-regression",

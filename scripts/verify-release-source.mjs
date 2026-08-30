@@ -7,6 +7,7 @@ const SHA_PATTERN = /^[0-9a-f]{40}$/;
 const REPOSITORY_PATTERN = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
 const TAG_PATTERN = /^v\d+\.\d+\.\d+(?:-rc\.\d+)?$/;
 const DECISIVE_REVIEW_STATES = new Set(["APPROVED", "CHANGES_REQUESTED", "DISMISSED"]);
+const REVIEWER_WRITE_PERMISSIONS = new Set(["admin", "write"]);
 
 export const releaseSourcePolicy = Object.freeze(
   JSON.parse(readFileSync(new URL("../security/release-source-policy.json", import.meta.url), "utf8"))
@@ -120,7 +121,114 @@ function selectReviewedPullRequest({ pullRequests, releaseSha, baseBranch }) {
   return eligible[0];
 }
 
-function selectCurrentApprovals({ reviews, pullRequest, requiredApprovals }) {
+function validateApprovalPolicy(policy) {
+  if (!Number.isInteger(policy.requiredApprovals) || policy.requiredApprovals < 0) {
+    reject("invalid_approval_policy", "requiredApprovals must be a non-negative integer.");
+  }
+  if (!Array.isArray(policy.trustedReviewers)) {
+    reject("invalid_approval_policy", "trustedReviewers must be an explicit array.");
+  }
+
+  const trustedReviewers = [];
+  const seenLogins = new Set();
+  for (const entry of policy.trustedReviewers) {
+    if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
+      reject("invalid_approval_policy", "Each trustedReviewers entry must be an object.");
+    }
+    const login = String(entry.login || "").trim();
+    if (!login || login.length > 100 || login.includes("/")) {
+      reject("invalid_approval_policy", "Each trusted reviewer must have a valid explicit login.");
+    }
+    if (entry.allowBot !== undefined && typeof entry.allowBot !== "boolean") {
+      reject("invalid_approval_policy", `allowBot for ${login} must be a boolean when present.`);
+    }
+    const normalizedLogin = login.toLowerCase();
+    if (seenLogins.has(normalizedLogin)) {
+      reject("invalid_approval_policy", `Trusted reviewer ${login} is listed more than once.`);
+    }
+    seenLogins.add(normalizedLogin);
+    trustedReviewers.push({ login, normalizedLogin, allowBot: entry.allowBot === true });
+  }
+
+  if (policy.requiredApprovals > trustedReviewers.length) {
+    reject(
+      "trusted_reviewer_capacity",
+      `Approval policy requires ${policy.requiredApprovals} reviewer(s), but only ${trustedReviewers.length} explicit trusted reviewer(s) are configured.`,
+      { requiredApprovals: policy.requiredApprovals, configuredTrustedReviewers: trustedReviewers.map((entry) => entry.login) }
+    );
+  }
+  return { requiredApprovals: policy.requiredApprovals, trustedReviewers };
+}
+
+async function resolveCurrentlyTrustedReviewers({ client, repositoryPath, approvalPolicy }) {
+  const eligible = new Map();
+  for (const reviewer of approvalPolicy.trustedReviewers) {
+    let payload;
+    try {
+      payload = await client.get(
+        `/repos/${repositoryPath}/collaborators/${encodeURIComponent(reviewer.login)}/permission`
+      );
+    } catch (error) {
+      reject(
+        "reviewer_permission_unavailable",
+        `Could not verify current repository permission for trusted reviewer ${reviewer.login}.`,
+        {
+          reviewer: reviewer.login,
+          causeCode: error instanceof ReleaseSourceError ? error.code : "unexpected_error"
+        }
+      );
+    }
+
+    const responseLogin = String(payload?.user?.login || "");
+    const accountType = String(payload?.user?.type || "");
+    const permission = String(payload?.permission || "").toLowerCase();
+    if (!responseLogin || responseLogin.toLowerCase() !== reviewer.normalizedLogin || !accountType || !permission) {
+      reject(
+        "reviewer_permission_unavailable",
+        `GitHub returned incomplete or mismatched permission evidence for trusted reviewer ${reviewer.login}.`,
+        { reviewer: reviewer.login }
+      );
+    }
+
+    const isBot = accountType.toLowerCase() === "bot" || reviewer.normalizedLogin.endsWith("[bot]");
+    const accountTypeAllowed = isBot ? reviewer.allowBot : accountType.toLowerCase() === "user";
+    if (accountTypeAllowed && REVIEWER_WRITE_PERMISSIONS.has(permission)) {
+      eligible.set(reviewer.normalizedLogin, {
+        login: responseLogin,
+        accountType,
+        permission
+      });
+    }
+  }
+
+  if (eligible.size < approvalPolicy.requiredApprovals) {
+    reject(
+      "trusted_reviewer_capacity",
+      `Approval policy requires ${approvalPolicy.requiredApprovals} reviewer(s), but only ${eligible.size} explicitly trusted reviewer(s) currently have write access.`,
+      {
+        requiredApprovals: approvalPolicy.requiredApprovals,
+        currentlyTrustedReviewers: [...eligible.values()].map((reviewer) => reviewer.login)
+      }
+    );
+  }
+  return eligible;
+}
+
+async function selectCurrentApprovals({ client, repositoryPath, reviews, pullRequest, approvalPolicy }) {
+  const pullRequestHead = normalizeSha(pullRequest.head?.sha, `Pull request #${pullRequest.number} head SHA`);
+  const authorLogin = String(pullRequest.user?.login || "").trim();
+  if (!authorLogin) {
+    reject(
+      "review_identity_unavailable",
+      `Pull request #${pullRequest.number} has no author identity for the non-author approval check.`
+    );
+  }
+  const author = authorLogin.toLowerCase();
+  const currentlyTrustedReviewers = await resolveCurrentlyTrustedReviewers({
+    client,
+    repositoryPath,
+    approvalPolicy
+  });
   const latestDecisionByReviewer = new Map();
   const orderedReviews = [...reviews].sort((left, right) => {
     const timeDelta = (Date.parse(left.submitted_at || "") || 0) - (Date.parse(right.submitted_at || "") || 0);
@@ -128,22 +236,29 @@ function selectCurrentApprovals({ reviews, pullRequest, requiredApprovals }) {
   });
   for (const review of orderedReviews) {
     const state = String(review.state || "").toUpperCase();
-    const reviewer = review.user?.login;
-    if (reviewer && DECISIVE_REVIEW_STATES.has(state)) latestDecisionByReviewer.set(reviewer, review);
+    const reviewer = String(review.user?.login || "");
+    if (reviewer && DECISIVE_REVIEW_STATES.has(state)) {
+      latestDecisionByReviewer.set(reviewer.toLowerCase(), { reviewer, review });
+    }
   }
 
-  const pullRequestHead = normalizeSha(pullRequest.head?.sha, `Pull request #${pullRequest.number} head SHA`);
-  const author = pullRequest.user?.login;
   const approvals = [...latestDecisionByReviewer.entries()]
-    .filter(([reviewer, review]) => reviewer !== author
+    .filter(([normalizedReviewer, { review }]) => normalizedReviewer !== author
+      && currentlyTrustedReviewers.has(normalizedReviewer)
       && String(review.state || "").toUpperCase() === "APPROVED"
       && String(review.commit_id || "").toLowerCase() === pullRequestHead)
-    .map(([reviewer, review]) => ({ reviewer, reviewId: review.id, commitSha: pullRequestHead }));
+    .map(([normalizedReviewer, { reviewer, review }]) => ({
+      reviewer,
+      reviewId: review.id,
+      commitSha: pullRequestHead,
+      permission: currentlyTrustedReviewers.get(normalizedReviewer).permission,
+      accountType: currentlyTrustedReviewers.get(normalizedReviewer).accountType
+    }));
 
-  if (approvals.length < requiredApprovals) {
+  if (approvals.length < approvalPolicy.requiredApprovals) {
     reject(
       "current_approval_missing",
-      `Pull request #${pullRequest.number} needs ${requiredApprovals} independent approval(s) on final head ${pullRequestHead}; found ${approvals.length}.`,
+      `Pull request #${pullRequest.number} needs ${approvalPolicy.requiredApprovals} trusted non-author approval(s) on final head ${pullRequestHead}; found ${approvals.length}.`,
       { pullRequest: pullRequest.number, pullRequestHead, approvals }
     );
   }
@@ -231,6 +346,7 @@ export async function authorizeReleaseSource({
 }) {
   const releaseSha = validateInputs({ repository, tag, expectedSha });
   const repositoryPath = encodeRepository(repository);
+  const approvalPolicy = validateApprovalPolicy(policy);
   const remoteTagSha = await resolvePeeledTagSha(client, repositoryPath, tag);
   if (remoteTagSha !== releaseSha) {
     reject("tag_sha_mismatch", `Remote tag ${tag} peels to ${remoteTagSha}, expected ${releaseSha}.`);
@@ -250,8 +366,17 @@ export async function authorizeReleaseSource({
 
   const pullRequests = await client.getAll(`/repos/${repositoryPath}/commits/${releaseSha}/pulls`);
   const pullRequest = selectReviewedPullRequest({ pullRequests, releaseSha, baseBranch: policy.baseBranch });
-  const reviews = await client.getAll(`/repos/${repositoryPath}/pulls/${pullRequest.number}/reviews`);
-  const approvals = selectCurrentApprovals({ reviews, pullRequest, requiredApprovals: policy.requiredApprovals });
+  let approvals = [];
+  if (approvalPolicy.requiredApprovals > 0) {
+    const reviews = await client.getAll(`/repos/${repositoryPath}/pulls/${pullRequest.number}/reviews`);
+    approvals = await selectCurrentApprovals({
+      client,
+      repositoryPath,
+      reviews,
+      pullRequest,
+      approvalPolicy
+    });
+  }
   const ci = await selectSuccessfulCiRun({ client, repositoryPath, releaseSha, policy });
 
   return {

@@ -111,10 +111,14 @@ assert.deepEqual(sourcePolicy.requiredChecks, [
 ]);
 assert.equal(sourcePolicy.baseBranch, "main");
 assert.equal(sourcePolicy.ciWorkflowPath, ".github/workflows/ci.yml");
+assert.equal(sourcePolicy.requiredApprovals, 0, "the single-collaborator repository does not require an impossible independent approval");
+assert.deepEqual(sourcePolicy.trustedReviewers, [], "reviewers must be added through an explicit future allowlist");
 assert.ok(!sourcePolicy.requiredChecks.some((name) => /release/i.test(name)), "Release workflow checks never depend on themselves");
 assert.match(sourceVerifier, /compare\/\$\{releaseSha\}\.\.\.\$\{mainSha\}/, "authorization proves main ancestry through the exact remote SHAs");
 assert.match(sourceVerifier, /merge_commit_sha/, "the final main commit is associated with its merged pull request");
 assert.match(sourceVerifier, /pullRequest\.head\?\.sha/, "review approval is bound to the PR's final head even when squash or rebase changes the main SHA");
+assert.match(sourceVerifier, /collaborators\/\$\{encodeURIComponent\(reviewer\.login\)\}\/permission/, "future approvals require a current effective repository-permission lookup");
+assert.match(sourceVerifier, /REVIEWER_WRITE_PERMISSIONS\.has\(permission\)/, "only current repository writers can count as trusted reviewers");
 assert.match(sourceVerifier, /head_sha: releaseSha/, "CI workflow lookup is bound to the exact final release SHA");
 assert.match(sourceVerifier, /event: "push"/, "only the final main-push CI run can authorize publication");
 assert.match(sourceVerifier, /job\.status !== "completed" \|\| job\.conclusion !== "success"/, "missing, pending, skipped, neutral, and failed checks fail closed");
@@ -122,6 +126,8 @@ assert.match(powershellSyntaxTest, /Parser\]::ParseInput/, "every inline release
 assert.match(sourcePolicyDocs, /Protect `main`:[\s\S]+require pull requests/, "remote main protection is documented without being mutated by the workflow");
 assert.match(sourcePolicyDocs, /Protect `v\*\.\*\.\*` tags:[\s\S]+creation, update, and deletion/, "remote tag immutability rules are documented");
 assert.match(sourcePolicyDocs, /squash and rebase merges[\s\S]+different PR head/, "review and final-SHA binding is documented for the repository's merge strategies");
+assert.match(sourcePolicyDocs, /current repository policy deliberately sets `requiredApprovals` to `0`/, "documentation states the current zero-approval policy");
+assert.match(sourcePolicyDocs, /Codex[\s\S]+is not a GitHub[\s\S]+approval/, "offline Codex acceptance is not presented as GitHub review evidence");
 
 assert.match(verifier, /releases\/\$ReleaseId/, "verification resolves a release by exact numeric id");
 assert.match(verifier, /Invoke-WebRequest -Uri \$asset\.url/, "verification downloads exact asset API URLs");
