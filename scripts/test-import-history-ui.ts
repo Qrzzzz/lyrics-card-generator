@@ -276,13 +276,13 @@ assert.match(
 assert.doesNotMatch(editorActions, /loadExample[\s\S]{0,500}queueImportHistoryRecord/, "built-in examples are not recorded");
 assert.match(
   editorPreferences,
-  /onPersisted: \(_result, snapshot\) => \{\s*committedUserSettingsRef\.current = snapshot\.value\.userSettings/,
-  "the committed settings snapshot advances after each durable save"
+  /preferenceSaveCoordinatorRef\.current!\.queueLocale\(locale\)/,
+  "locale persistence delegates composition to the latest-intent coordinator"
 );
 assert.doesNotMatch(
   editorPreferences,
-  /await flushPreferenceSave\(\);\s*committedUserSettingsRef\.current = normalized/,
-  "an older caller cannot overwrite a newer durable settings snapshot after a shared flush"
+  /function previewUserSettings[\s\S]{0,220}queueUserSettings/,
+  "preview-only settings do not enter the persisted preference intent"
 );
 
 assert.match(globals, /\.history-grid/);

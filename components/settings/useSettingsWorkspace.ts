@@ -15,6 +15,7 @@ import { DEFAULT_AI_SETTINGS, type AISettings, type AISettingsSummary } from "@/
 import { getAIUiCopy } from "@/lib/ai/ui-copy";
 import { shutdownCoordinator } from "@/lib/persistence/shutdown-coordinator";
 import { removeBackgroundImage } from "@/lib/settings/background-storage";
+import { runFireAndForgetSave } from "@/lib/settings/fire-and-forget-save";
 import type { AppPreferencesPersistenceOptions } from "@/lib/settings/app-preferences";
 import type { UserSettings } from "@/lib/settings/types";
 import type { Locale } from "@/lib/types";
@@ -218,25 +219,33 @@ export function useSettingsWorkspace({
       return next;
     });
     onUserSettingsPreview(next);
-    void Promise.resolve(onUserSettingsChange(next, options))
-      .then(() => queueSavedNotification())
-      .catch((saveError) => {
-        // Roll back only if the failed optimistic snapshot is still the visible draft.
-        setDraft((current) => current === next ? previous : current);
-        setError(normalizeAIErrorMessage(saveError, locale, aiCopy.settingsSaveFailed));
-        setSyncErrorKind("save");
-        setSaveState("error");
-      });
+    runFireAndForgetSave(
+      () => onUserSettingsChange(next, options),
+      {
+        onSuccess: () => queueSavedNotification(),
+        onError: (saveError) => {
+          // Roll back only if the failed optimistic snapshot is still the visible draft.
+          setDraft((current) => current === next ? previous : current);
+          setError(normalizeAIErrorMessage(saveError, locale, aiCopy.settingsSaveFailed));
+          setSyncErrorKind("save");
+          setSaveState("error");
+        }
+      }
+    );
   }
 
   function handleLocaleChange(nextLocale: Locale) {
-    void Promise.resolve(onLocaleChange(nextLocale))
-      .then(() => queueSavedNotification(getAIUiCopy(nextLocale).settingsSaved))
-      .catch((saveError) => {
-        setError(normalizeAIErrorMessage(saveError, nextLocale, getAIUiCopy(nextLocale).settingsSaveFailed));
-        setSyncErrorKind("save");
-        setSaveState("error");
-      });
+    runFireAndForgetSave(
+      () => onLocaleChange(nextLocale),
+      {
+        onSuccess: () => queueSavedNotification(getAIUiCopy(nextLocale).settingsSaved),
+        onError: (saveError) => {
+          setError(normalizeAIErrorMessage(saveError, nextLocale, getAIUiCopy(nextLocale).settingsSaveFailed));
+          setSyncErrorKind("save");
+          setSaveState("error");
+        }
+      }
+    );
   }
 
   function closeWorkspace() {
