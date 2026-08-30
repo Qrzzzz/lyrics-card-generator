@@ -19,7 +19,7 @@
 <p>
   <strong>Navegación</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Descargar la última versión</a> ·
-  <a href="./docs/releases/v6.2.0.es.md">Notas de la versión</a> ·
+  <a href="./docs/releases/v6.2.1.es.md">Notas de la versión</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en línea</a> ·
   <a href="#funciones-principales">Funciones principales</a> ·
   <a href="./docs/development.en.md">Desarrollo local</a> ·
@@ -74,26 +74,26 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 ## 📦 Descarga e instalación
 
-La v6.2.0 está publicada y disponible en [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
+La v6.2.1 está publicada y disponible en [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Instalador: `Lyrics Card Generator Setup 6.2.0.exe`
-* Versión portable: `Lyrics Card Generator-6.2.0-portable.exe`
+* Instalador: `Lyrics Card Generator Setup 6.2.1.exe`
+* Versión portable: `Lyrics Card Generator-6.2.1-portable.exe`
 
 El instalador se recomienda para uso habitual. La versión portable es útil para pruebas, uso temporal o ejecución desde una unidad extraíble.
 
 > La compilación actual no está firmada. Windows puede mostrar una advertencia de SmartScreen, algo habitual en aplicaciones personales sin firma.
 
-### Novedades de v6.2.0
+### Novedades de v6.2.1
 
-* La nueva acción Copiar imagen, junto a Completar y exportar, coloca la tarjeta terminada directamente en el portapapeles del sistema.
-* El portapapeles siempre recibe un PNG con la calidad de exportación actual; copiar no cambia el formato de descarga PNG, WebP o JPG seleccionado.
-* La aplicación de escritorio usa un puente nativo y de confianza de Electron; Web Lite muestra la misma acción cuando el navegador admite imágenes en el portapapeles.
-* La copia y la descarga comparten la instantánea inmutable, las comprobaciones de disponibilidad, los límites de píxeles y el mutex de la transacción.
+* Los avisos ligeros se apilan desde la parte inferior en vez de sustituirse y usan duraciones independientes según su tipo y la longitud del texto.
+* Cuando desaparece cualquier aviso, los demás ocupan su lugar con suavidad; los temporizadores se detienen mientras la página está en segundo plano.
+* Un aviso idéntico se actualiza en su posición: el panel anterior se desplaza a la derecha y desaparece, mientras el nuevo entra desde la izquierda y aparece.
+* El límite horizontal de 12 líneas ahora es una advertencia integrada en el paso Letras, enfoca el contenido afectado y desaparece automáticamente tras corregirlo.
 
 ## 🌐 Notas de publicación multilingües
 
 GitHub Release muestra de forma predeterminada un resumen en chino simplificado. Consulta las notas completas:
-[简体中文](./docs/releases/v6.2.0.zh-CN.md) · [繁體中文](./docs/releases/v6.2.0.zh-TW.md) · [English](./docs/releases/v6.2.0.en.md) · [Français](./docs/releases/v6.2.0.fr.md) · [日本語](./docs/releases/v6.2.0.ja.md) · [Español](./docs/releases/v6.2.0.es.md)
+[简体中文](./docs/releases/v6.2.1.zh-CN.md) · [繁體中文](./docs/releases/v6.2.1.zh-TW.md) · [English](./docs/releases/v6.2.1.en.md) · [Français](./docs/releases/v6.2.1.fr.md) · [日本語](./docs/releases/v6.2.1.ja.md) · [Español](./docs/releases/v6.2.1.es.md)
 
 <a id="funciones-principales"></a>
 

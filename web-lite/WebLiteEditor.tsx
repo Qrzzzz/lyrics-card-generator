@@ -6,7 +6,8 @@ import { ExportPanel } from "@/components/editor/ExportPanel";
 import { ExportCardHost } from "@/components/editor/ExportCardHost";
 import { AutoWidthMeasurementHost } from "@/components/editor/AutoWidthMeasurementHost";
 import { LandscapeLayoutMeasurementHost } from "@/components/editor/LandscapeLayoutMeasurementHost";
-import { AppToast, type ToastNotice, type ToastTone } from "@/components/feedback/AppToast";
+import { AppToast } from "@/components/feedback/AppToast";
+import { useToastQueue } from "@/components/feedback/useToastQueue";
 import { MotionPanel } from "@/components/motion/MotionPanel";
 import { PreviewPane } from "@/components/editor/PreviewPane";
 import { SettingsStepper, type SettingsStep } from "@/components/editor/SettingsStepper";
@@ -106,6 +107,7 @@ export function WebLiteEditor() {
   const initialPreferences = useMemo(readPreferences, []);
   const [state, setState] = useState<AppState>(() => createInitialState(initialPreferences.locale));
   const [currentStep, setCurrentStep] = useState(0);
+  const [landscapeLineLimitNoticeRevision, setLandscapeLineLimitNoticeRevision] = useState<number | null>(null);
   const [fontSchemePreview, setFontSchemePreview] = useState<FontScheme | null>(null);
   const [isPreviewVisible, setIsPreviewVisible] = useState(true);
   const [exportFormat, setExportFormat] = useState<ExportFormatId>(initialPreferences.exportFormat);
@@ -115,7 +117,11 @@ export function WebLiteEditor() {
   const [activeOutputAction, setActiveOutputAction] = useState<"export" | "copy" | null>(null);
   const isExporting = activeOutputAction !== null;
   const [activeExportSnapshot, setActiveExportSnapshot] = useState<ExportSnapshot | null>(null);
-  const [toast, setToast] = useState<ToastNotice | null>(null);
+  const {
+    notices: toastNotices,
+    announcement: toastAnnouncement,
+    notify: showToast
+  } = useToastQueue();
   const [clearTransitionKey, setClearTransitionKey] = useState(0);
   const [hasPendingSongInput, setHasPendingSongInput] = useState(false);
   const [coverResetGeneration, setCoverResetGeneration] = useState(0);
@@ -128,7 +134,6 @@ export function WebLiteEditor() {
   // Refs keep the export transaction isolated from subsequent live-editor renders.
   const exportRevisionRef = useRef(0);
   const previousExportStateRef = useRef<AppState | null>(null);
-  const toastIdRef = useRef(0);
   const localCoverObjectUrlRef = useRef<string | undefined>(undefined);
   const coverValidationGenerationRef = useRef(0);
   const locale: WebLiteLocale = state.locale;
@@ -153,6 +158,31 @@ export function WebLiteEditor() {
     }),
     [state]
   );
+  const landscapeCandidateLineStatus = useMemo(() => getExportLyricLineStatus({
+    lyricDocument: reconcileLyricDocumentV2(
+      state.lyricDocument,
+      state.lyrics,
+      state.style.translationText
+    ),
+    translationEnabled: state.style.translationEnabled,
+    contentMode: state.style.contentMode,
+    layoutMode: "landscape"
+  }), [
+    state.lyricDocument,
+    state.lyrics,
+    state.style.contentMode,
+    state.style.translationEnabled,
+    state.style.translationText
+  ]);
+  const landscapeLineLimitNotice = useMemo(() => (
+    landscapeLineLimitNoticeRevision === null || landscapeCandidateLineStatus.canExport
+      ? null
+      : {
+          revision: landscapeLineLimitNoticeRevision,
+          total: landscapeCandidateLineStatus.totalLineCount,
+          max: landscapeCandidateLineStatus.maxLineCount
+        }
+  ), [landscapeCandidateLineStatus, landscapeLineLimitNoticeRevision]);
   // The revision follows semantic state identity without scheduling another render.
   if (previousExportStateRef.current !== parsedState) {
     previousExportStateRef.current = parsedState;
@@ -197,13 +227,10 @@ export function WebLiteEditor() {
   }, [exportFormat, exportQuality, locale]);
 
   useEffect(() => {
-    if (!toast) {
-      return;
+    if (landscapeLineLimitNoticeRevision !== null && landscapeCandidateLineStatus.canExport) {
+      setLandscapeLineLimitNoticeRevision(null);
     }
-
-    const timeout = window.setTimeout(() => setToast(null), 3600);
-    return () => window.clearTimeout(timeout);
-  }, [toast]);
+  }, [landscapeCandidateLineStatus.canExport, landscapeLineLimitNoticeRevision]);
 
   useEffect(
     () => () => {
@@ -239,11 +266,6 @@ export function WebLiteEditor() {
         }
       };
     });
-  }
-
-  function showToast(message: string, tone: ToastTone) {
-    toastIdRef.current += 1;
-    setToast({ id: toastIdRef.current, message, tone });
   }
 
   function clearAllContent() {
@@ -317,7 +339,7 @@ export function WebLiteEditor() {
       (state.style.layoutMode ?? "portrait") !== "landscape" &&
       (nextStyle.layoutMode ?? "portrait") === "landscape"
     ) {
-      const landscapeStatus = getExportLyricLineStatus({
+      const nextLandscapeStatus = getExportLyricLineStatus({
         lyricDocument: reconcileLyricDocumentV2(
           state.lyricDocument,
           state.lyrics,
@@ -327,8 +349,8 @@ export function WebLiteEditor() {
         contentMode: nextStyle.contentMode,
         layoutMode: "landscape"
       });
-      if (!landscapeStatus.canExport) {
-        showToast(t("landscapeLineLimitExceeded", { total: landscapeStatus.totalLineCount }), "warning");
+      if (!nextLandscapeStatus.canExport) {
+        setLandscapeLineLimitNoticeRevision((current) => (current ?? 0) + 1);
         setCurrentStep(1);
         window.requestAnimationFrame(() => {
           document.querySelector<HTMLTextAreaElement>("[data-testid='web-lite-lyrics-original']")?.focus({ preventScroll: true });
@@ -495,6 +517,8 @@ export function WebLiteEditor() {
           contentMode={state.style.contentMode}
           locale={locale}
           t={t}
+          landscapeLineLimitNotice={landscapeLineLimitNotice}
+          onDismissLandscapeLineLimitNotice={() => setLandscapeLineLimitNoticeRevision(null)}
         />
       )
     },
@@ -661,7 +685,7 @@ export function WebLiteEditor() {
         />
       ) : null}
 
-      <AppToast notice={toast} />
+      <AppToast notices={toastNotices} announcement={toastAnnouncement} />
     </div>
   );
 }

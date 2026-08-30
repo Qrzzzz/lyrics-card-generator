@@ -9,7 +9,8 @@ import {
   DeferredSettingsSurface
 } from "@/components/editor/DeferredEditorSurfaces";
 import { ExportCelebration } from "@/components/effects/ExportCelebration";
-import { AppToast, type ToastNotice, type ToastTone } from "@/components/feedback/AppToast";
+import { AppToast } from "@/components/feedback/AppToast";
+import { useToastQueue } from "@/components/feedback/useToastQueue";
 import {
   DEFAULT_INSTRUMENTAL_TEXT,
   defaultState
@@ -96,6 +97,7 @@ export function LyricEditor() {
     lyricDocument: cloneLyricDocument(defaultState.lyricDocument)
   }));
   const [currentStep, setCurrentStep] = useState(0);
+  const [landscapeLineLimitNoticeRevision, setLandscapeLineLimitNoticeRevision] = useState<number | null>(null);
   const [songLinkAutoParseVisitIntent, setSongLinkAutoParseVisitIntent] = useState<SongLinkAutoParseVisitIntent>({
     id: 0,
     allowAutoParse: true
@@ -112,14 +114,17 @@ export function LyricEditor() {
   const [previewMeasurementKey, setPreviewMeasurementKey] = useState(0);
   const [exportFormat, setExportFormat] = useState<ExportFormatId>(DEFAULT_USER_SETTINGS.defaultExportFormat);
   const [exportQuality, setExportQuality] = useState<ExportQualityId>(DEFAULT_USER_SETTINGS.defaultExportQuality);
-  const [toast, setToast] = useState<ToastNotice | null>(null);
+  const {
+    notices: toastNotices,
+    announcement: toastAnnouncement,
+    notify: showToast
+  } = useToastQueue();
   const exportCardRef = useRef<HTMLElement | null>(null);
   const autoWidthMeasurementRef = useRef<HTMLDivElement | null>(null);
   const landscapeMeasurementRef = useRef<HTMLDivElement | null>(null);
   const captureCardRef = useRef<HTMLElement | null>(null);
   const previewCardRef = useRef<HTMLElement | null>(null);
   const editorSurfaceRef = useRef<HTMLDivElement | null>(null);
-  const toastIdRef = useRef(0);
   const examplesButtonRef = useRef<HTMLButtonElement | null>(null);
   const historyButtonRef = useRef<HTMLButtonElement | null>(null);
   const settingsButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -148,6 +153,31 @@ export function LyricEditor() {
     }),
     [state]
   );
+  const landscapeCandidateLineStatus = useMemo(() => getExportLyricLineStatus({
+    lyricDocument: reconcileLyricDocumentV2(
+      state.lyricDocument,
+      state.lyrics,
+      state.style.translationText
+    ),
+    translationEnabled: state.style.translationEnabled,
+    contentMode: state.style.contentMode,
+    layoutMode: "landscape"
+  }), [
+    state.lyricDocument,
+    state.lyrics,
+    state.style.contentMode,
+    state.style.translationEnabled,
+    state.style.translationText
+  ]);
+  const landscapeLineLimitNotice = useMemo(() => (
+    landscapeLineLimitNoticeRevision === null || landscapeCandidateLineStatus.canExport
+      ? null
+      : {
+          revision: landscapeLineLimitNoticeRevision,
+          total: landscapeCandidateLineStatus.totalLineCount,
+          max: landscapeCandidateLineStatus.maxLineCount
+        }
+  ), [landscapeCandidateLineStatus, landscapeLineLimitNoticeRevision]);
   const coverForPalette = state.song.proxiedCoverUrl || proxiedImageUrl(state.song.coverUrl);
   const canFetchLyrics = Boolean(state.song.originalUrl && state.song.title.trim());
 
@@ -165,17 +195,6 @@ export function LyricEditor() {
         }
       };
     });
-  }, []);
-
-  const showToast = useCallback((message: string, tone: ToastTone) => {
-    const normalizedMessage = message.trim();
-    if (!normalizedMessage) {
-      setToast(null);
-      return;
-    }
-
-    toastIdRef.current += 1;
-    setToast({ id: toastIdRef.current, message: normalizedMessage, tone });
   }, []);
 
   const openSurface = useCallback((surface: DeferredSurface) => {
@@ -206,6 +225,9 @@ export function LyricEditor() {
     surfaceReturnFocusRef.current = settingsButtonRef.current;
     setActiveSurface("editor");
   }, []);
+  const dismissLandscapeLineLimitNotice = useCallback(() => {
+    setLandscapeLineLimitNoticeRevision(null);
+  }, []);
 
   useSyncedCoverProxy(state, setState);
   useCoverPalette(coverForPalette, setState);
@@ -221,6 +243,11 @@ export function LyricEditor() {
     exportCardRef,
     isAutoWidthStable: autoWidthReadiness.isStable && landscapeLayoutReadiness.isStable
   });
+  useEffect(() => {
+    if (landscapeLineLimitNoticeRevision !== null && landscapeCandidateLineStatus.canExport) {
+      setLandscapeLineLimitNoticeRevision(null);
+    }
+  }, [landscapeCandidateLineStatus.canExport, landscapeLineLimitNoticeRevision]);
   const {
     userSettings,
     isDesktopShell,
@@ -327,14 +354,6 @@ export function LyricEditor() {
   );
 
   useEffect(() => {
-    if (!toast) {
-      return;
-    }
-    const timeout = window.setTimeout(() => setToast(null), 3600);
-    return () => window.clearTimeout(timeout);
-  }, [toast]);
-
-  useEffect(() => {
     setExportFormat(userSettings.defaultExportFormat);
   }, [userSettings.defaultExportFormat]);
 
@@ -432,7 +451,7 @@ export function LyricEditor() {
       (state.style.layoutMode ?? "portrait") !== "landscape" &&
       (nextStyle.layoutMode ?? "portrait") === "landscape"
     ) {
-      const landscapeStatus = getExportLyricLineStatus({
+      const nextLandscapeStatus = getExportLyricLineStatus({
         lyricDocument: reconcileLyricDocumentV2(
           state.lyricDocument,
           state.lyrics,
@@ -442,8 +461,8 @@ export function LyricEditor() {
         contentMode: nextStyle.contentMode,
         layoutMode: "landscape"
       });
-      if (!landscapeStatus.canExport) {
-        showToast(t("landscapeLineLimitExceeded", { total: landscapeStatus.totalLineCount }), "warning");
+      if (!nextLandscapeStatus.canExport) {
+        setLandscapeLineLimitNoticeRevision((current) => (current ?? 0) + 1);
         setCurrentStep(1);
         window.requestAnimationFrame(() => {
           document.querySelector<HTMLTextAreaElement>("[data-testid='lyrics-editor-original']")?.focus({ preventScroll: true });
@@ -472,7 +491,9 @@ export function LyricEditor() {
     exportFormat,
     exportQuality,
     lyricsLayout: {
-      lineStatus: exportLineStatus
+      lineStatus: exportLineStatus,
+      landscapeLineLimitNotice,
+      onDismissLandscapeLineLimitNotice: dismissLandscapeLineLimitNotice
     },
     documentRevision,
     songLinkAutoParseVisitIntent,
@@ -719,7 +740,7 @@ export function LyricEditor() {
         </main>
       </ClickSpark>
       <FirstLaunchLanguageDialog open={isFirstLaunchOpen} locale={state.locale} onChoose={chooseFirstLaunchLanguage} />
-      <AppToast notice={toast} />
+      <AppToast notices={toastNotices} announcement={toastAnnouncement} />
         <ExportCelebration burstKey={celebrationKey} accentColor={resolvedAccentColor} />
       </div>
     </AppMotionProvider>

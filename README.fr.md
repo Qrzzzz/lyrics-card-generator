@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v6.2.0.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v6.2.1.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="./docs/development.en.md">Développement local</a> ·
@@ -74,26 +74,26 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 ## 📦 Téléchargement et installation
 
-La v6.2.0 est publiée et disponible dans [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
+La v6.2.1 est publiée et disponible dans [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
 
-* Installateur : `Lyrics Card Generator Setup 6.2.0.exe`
-* Version portable : `Lyrics Card Generator-6.2.0-portable.exe`
+* Installateur : `Lyrics Card Generator Setup 6.2.1.exe`
+* Version portable : `Lyrics Card Generator-6.2.1-portable.exe`
 
 L'installateur est recommandé pour une utilisation régulière. La version portable convient aux essais, à une utilisation temporaire ou à un disque amovible.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### Points forts de la v6.2.0
+### Points forts de la v6.2.1
 
-* Une nouvelle action « Copier l’image », à côté de « Terminer et exporter », place directement la carte finale dans le presse-papiers système.
-* Le presse-papiers reçoit toujours un PNG avec la qualité d’export actuelle ; la copie ne modifie pas le format de téléchargement PNG, WebP ou JPG sélectionné.
-* L’application de bureau utilise un pont Electron natif et fiable ; Web Lite propose la même action lorsque le navigateur accepte les images dans le presse-papiers.
-* Copie et téléchargement partagent le même instantané immuable, les contrôles de disponibilité, les limites de pixels et le verrou de transaction.
+* Les notifications légères s’empilent désormais depuis le bas au lieu de se remplacer, avec une durée indépendante selon leur type et la longueur du texte.
+* Lorsqu’une notification disparaît, les autres se replacent en douceur ; les minuteries se mettent en pause lorsque la page passe en arrière-plan.
+* Une notification identique se renouvelle sur place : l’ancien panneau glisse vers la droite en disparaissant, tandis que le nouveau arrive de la gauche en apparaissant.
+* La limite de 12 lignes en format horizontal devient un avertissement intégré à l’étape Paroles, recentre le contenu concerné et disparaît automatiquement après correction.
 
 ## 🌐 Notes de publication multilingues
 
 Par défaut, GitHub Release affiche un résumé en chinois simplifié. Consultez les notes complètes :
-[简体中文](./docs/releases/v6.2.0.zh-CN.md) · [繁體中文](./docs/releases/v6.2.0.zh-TW.md) · [English](./docs/releases/v6.2.0.en.md) · [Français](./docs/releases/v6.2.0.fr.md) · [日本語](./docs/releases/v6.2.0.ja.md) · [Español](./docs/releases/v6.2.0.es.md)
+[简体中文](./docs/releases/v6.2.1.zh-CN.md) · [繁體中文](./docs/releases/v6.2.1.zh-TW.md) · [English](./docs/releases/v6.2.1.en.md) · [Français](./docs/releases/v6.2.1.fr.md) · [日本語](./docs/releases/v6.2.1.ja.md) · [Español](./docs/releases/v6.2.1.es.md)
 
 <a id="fonctionnalités-principales"></a>
 

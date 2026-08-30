@@ -371,6 +371,66 @@ test("stays responsive at 360px, 768px, and 1440px", async ({ page }) => {
   }
 });
 
+test("stacks distinct notices and refreshes an exact repeat in place", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await openWebLite(page, { width: 1280, height: 900 });
+  const clearButton = page.getByTestId("web-lite-clear-all-button");
+
+  await clearButton.click();
+  const englishNotice = page.getByTestId("app-toast").filter({ hasText: "The card is already empty" });
+  await expect(englishNotice).toBeVisible();
+
+  await page.getByRole("radio", { name: "Français", exact: true }).click();
+  await clearButton.click();
+  const frenchNotice = page.getByTestId("app-toast").filter({ hasText: "La carte est déjà vide" });
+  await expect(frenchNotice).toBeVisible();
+
+  await page.getByRole("radio", { name: "日本語", exact: true }).click();
+  await clearButton.click();
+  const japaneseNotice = page.getByTestId("app-toast").filter({ hasText: "カードはすでに空です" });
+  await expect(japaneseNotice).toBeVisible();
+
+  const stackItems = page.getByTestId("app-toast");
+  await expect(stackItems).toHaveCount(3);
+  const stack = await stackItems.evaluateAll((items) => items.map((item) => ({
+    text: item.textContent?.trim(),
+    top: item.getBoundingClientRect().top,
+    duration: Number(item.getAttribute("data-duration-ms"))
+  })));
+  expect(stack.map(({ text }) => text)).toEqual([
+    "The card is already empty",
+    "La carte est déjà vide",
+    "カードはすでに空です"
+  ]);
+  expect(stack[0].top).toBeLessThan(stack[1].top);
+  expect(stack[1].top).toBeLessThan(stack[2].top);
+  expect(new Set(stack.map(({ duration }) => duration)).size).toBeGreaterThan(1);
+
+  await clearButton.click();
+  await expect.poll(async () => {
+    const layers = await japaneseNotice.locator("[data-toast-surface-revision]").evaluateAll((elements) => (
+      elements.map((element) => {
+        const style = getComputedStyle(element);
+        const matrix = new DOMMatrixReadOnly(style.transform);
+        return {
+          revision: Number(element.getAttribute("data-toast-surface-revision")),
+          opacity: Number(style.opacity),
+          x: matrix.m41
+        };
+      })
+    ));
+    const outgoing = layers.find(({ revision }) => revision === 0);
+    const incoming = layers.find(({ revision }) => revision === 1);
+    return Boolean(
+      outgoing && incoming &&
+      outgoing.x > 0 && outgoing.opacity < 1 &&
+      incoming.x < 0 && incoming.opacity > 0
+    );
+  }, { intervals: [16, 16, 16, 16, 16, 16], timeout: 1_000 }).toBe(true);
+  await expect(japaneseNotice).toHaveAttribute("data-repeat-revision", "1");
+  await expect(stackItems).toHaveCount(3);
+});
+
 test("pans the shared preview workbench in both directions and degrades pressure feedback", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await openWebLite(page, { width: 1280, height: 900 });
@@ -711,8 +771,12 @@ test("blocks a 13-line landscape switch, returns to lyrics, and allows the 12-li
   await landscape.click();
   await expect(page.locator('[data-step-id="lyrics"]')).toHaveAttribute("aria-current", "step");
   await expect(lyrics).toBeFocused();
-  await expect(page.getByText(/Landscape supports at most 12 non-empty logical lines/)).toBeVisible();
+  const landscapeLimitAlert = page.getByTestId("landscape-line-limit-alert");
+  await expect(landscapeLimitAlert).toContainText("Landscape supports up to 12 non-empty logical lines");
+  await expect(landscapeLimitAlert).toContainText("This document has 13");
+  await expect(page.getByTestId("app-toast").filter({ hasText: /Landscape supports/ })).toHaveCount(0);
   await lyrics.fill(Array.from({ length: 12 }, (_, index) => `Line ${index + 1}`).join("\n"));
+  await expect(landscapeLimitAlert).toHaveCount(0);
   await page.locator('[data-step-id="layout"]').click();
   await expect(landscape).not.toHaveAttribute("aria-checked", "true");
   await landscape.click();
@@ -1169,7 +1233,7 @@ test("copies a high-quality PNG without changing the selected download format", 
   await expect(copyButton).toHaveText(/Copy Image/);
   await expect(copyButton).toBeEnabled({ timeout: 15_000 });
   await copyButton.click();
-  await expect(page.getByTestId("app-toast")).toContainText("Image copied to clipboard", { timeout: 15_000 });
+  await expect(page.getByTestId("app-toast").filter({ hasText: "Image copied to clipboard" })).toBeVisible({ timeout: 15_000 });
 
   const copiedImage = await page.evaluate(() => (
     window as typeof window & { __copiedImage?: { type: string; size: number; writes: number } }
@@ -1342,7 +1406,7 @@ test("blocks oversized high-quality landscape exports instead of silently scalin
   let downloadCount = 0;
   page.on("download", () => { downloadCount += 1; });
   await exportButton.click();
-  await expect(page.getByText(/pixel-size limit/i)).toBeVisible();
+  await expect(page.getByTestId("app-toast").filter({ hasText: /pixel-size limit/i })).toBeVisible();
   await page.waitForTimeout(500);
   expect(downloadCount).toBe(0);
 });

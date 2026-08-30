@@ -81,7 +81,9 @@ try {
   await electronApp.evaluate(({ clipboard }) => clipboard.clear());
   await copyImageButton.click();
   await page.waitForFunction(() => (
-    document.querySelector('[data-testid="app-toast"]')?.textContent?.trim() === "图片已复制到剪贴板"
+    Array.from(document.querySelectorAll('[data-testid="app-toast"]')).some((toast) => (
+      toast.textContent?.trim() === "图片已复制到剪贴板"
+    ))
   ), undefined, { timeout: 15_000 });
 
   const clipboardImage = await electronApp.evaluate(({ clipboard }) => {

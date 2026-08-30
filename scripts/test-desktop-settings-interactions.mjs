@@ -1009,7 +1009,7 @@ async function assertSongImportAsideBehavior() {
     "an unresolved manual draft blocks forward step navigation"
   );
   assert.match(
-    await page.getByTestId("app-toast").textContent() ?? "",
+    await page.getByTestId("app-toast").filter({ hasText: /保存或取消手动调整/ }).textContent() ?? "",
     /保存或取消手动调整/,
     "blocked navigation explains how to resolve the manual draft"
   );
@@ -1699,12 +1699,12 @@ async function assertFontPickerBehavior() {
     document.querySelector('[data-stepper-presentation="preview-workbench"]')?.getAttribute("data-navigation-guard-active") === "true"
   ));
   await page.locator('button[data-step-id="visual"]').click();
-  await page.waitForFunction(() => /应用或取消自定义字体方案/.test(
-    document.querySelector('[data-testid="app-toast"]')?.textContent ?? ""
-  ));
+  await page.waitForFunction(() => Array.from(document.querySelectorAll('[data-testid="app-toast"]')).some((toast) => (
+    /应用或取消自定义字体方案/.test(toast.textContent ?? "")
+  )));
   assert.equal(await page.locator('[aria-current="step"]').getAttribute("data-step-id"), "font", "an unresolved font draft blocks step navigation");
   assert.match(
-    await page.getByTestId("app-toast").textContent() ?? "",
+    await page.getByTestId("app-toast").filter({ hasText: /应用或取消自定义字体方案/ }).textContent() ?? "",
     /应用或取消自定义字体方案/,
     "blocked navigation explains how to resolve the custom font draft"
   );
@@ -4480,7 +4480,9 @@ try {
   const liveMeasurementGuard = await liveMeasurementGuardHandle.jsonValue();
   await liveMeasurementGuardHandle.dispose();
   assert.deepEqual(liveMeasurementGuard, { clicked: true, measuredWidth: 1 }, "live measurement guard uses the active enabled export control");
-  await page.waitForFunction(() => /计算|高度|稍候/.test(document.querySelector('[data-testid="app-toast"]')?.textContent ?? ""));
+  await page.waitForFunction(() => Array.from(document.querySelectorAll('[data-testid="app-toast"]')).some((toast) => (
+    /计算|高度|稍候/.test(toast.textContent ?? "")
+  )));
 
   await page.locator('button[data-step-id="lyrics"]').click();
   await fillExact(originalLyrics, `${originalEighteen}\nline 19`);
@@ -4550,15 +4552,21 @@ try {
     "36 logical lines cannot switch into landscape"
   );
   assert.equal(await originalLyrics.evaluate((node) => document.activeElement === node), true, "blocked landscape switch restores lyric focus");
-  const landscapeLimitToast = page.getByTestId("app-toast");
-  await landscapeLimitToast.waitFor({ state: "visible" });
-  assert.match(await landscapeLimitToast.innerText(), /横版最多容纳 12 个非空逻辑行.*当前为 36 行/s);
+  const landscapeLimitAlert = page.getByTestId("landscape-line-limit-alert");
+  await landscapeLimitAlert.waitFor({ state: "visible" });
+  assert.match(await landscapeLimitAlert.innerText(), /横版最多支持 12 个非空逻辑行.*当前为 36 行/s);
+  assert.equal(
+    await page.getByTestId("app-toast").filter({ hasText: /横版最多/ }).count(),
+    0,
+    "the actionable landscape limit stays in the lyrics UI instead of the transient toast stack"
+  );
 
   const originalSix = originalEighteen.split("\n").slice(0, 6).join("\n");
   const translationSix = translationEighteen.split("\n").slice(0, 6).join("\n");
   await fillExact(originalLyrics, originalSix);
   await fillExact(translationLyrics, translationSix);
   await waitForLyricsLineBudget("6 + 6 = 12 / 36");
+  await landscapeLimitAlert.waitFor({ state: "detached" });
   await page.locator('button[data-step-id="layout"]').click();
   await landscapeMode.click();
   await page.waitForFunction(() => document.querySelector('[data-segment-value="landscape"]')?.getAttribute("aria-checked") === "true");

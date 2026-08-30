@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v6.2.0.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v6.2.1.en.md">Release Notes</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
   <a href="./docs/web-lite-browser-support.md">Web Lite Browser Support</a> ·
   <a href="#features">Features</a> ·
@@ -75,26 +75,26 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 ## 📦 Download and Installation
 
-v6.2.0 is released and available from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
+v6.2.1 is released and available from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Installer: `Lyrics Card Generator Setup 6.2.0.exe`
-* Portable build: `Lyrics Card Generator-6.2.0-portable.exe`
+* Installer: `Lyrics Card Generator Setup 6.2.1.exe`
+* Portable build: `Lyrics Card Generator-6.2.1-portable.exe`
 
 The installer is recommended for regular use. The portable version is useful for temporary use, testing, or running from a removable drive.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v6.2.0 Highlights
+### v6.2.1 Highlights
 
-* A new Copy Image action beside Complete & Export writes the finished card directly to the system clipboard.
-* Clipboard output is always PNG and keeps the current export quality; copying does not change the selected PNG, WebP, or JPG download format.
-* Desktop uses a trusted native Electron clipboard bridge, while Web Lite exposes the same action when the browser supports image clipboard writes.
-* Copy and download share the immutable snapshot, readiness checks, pixel limits, and transaction mutex, preventing stale, overflowing, or unsettled output.
+* Lightweight notices now stack upward from the bottom instead of replacing one another, with independent timing based on tone and text length.
+* When any notice exits, the remaining stack settles smoothly; timers pause while the page is in the background.
+* An identical notice refreshes in place as the old surface moves right and fades out while the new surface enters from the left and fades in.
+* The 12-line landscape limit is now an inline warning in the Lyrics step, focuses the affected content, and clears automatically after correction.
 
 ## 🌐 Multilingual Release Notes
 
 GitHub Release displays a Simplified Chinese summary by default. See the full release notes:
-[简体中文](./docs/releases/v6.2.0.zh-CN.md) · [繁體中文](./docs/releases/v6.2.0.zh-TW.md) · [English](./docs/releases/v6.2.0.en.md) · [Français](./docs/releases/v6.2.0.fr.md) · [日本語](./docs/releases/v6.2.0.ja.md) · [Español](./docs/releases/v6.2.0.es.md)
+[简体中文](./docs/releases/v6.2.1.zh-CN.md) · [繁體中文](./docs/releases/v6.2.1.zh-TW.md) · [English](./docs/releases/v6.2.1.en.md) · [Français](./docs/releases/v6.2.1.fr.md) · [日本語](./docs/releases/v6.2.1.ja.md) · [Español](./docs/releases/v6.2.1.es.md)
 
 <a id="features"></a>
 

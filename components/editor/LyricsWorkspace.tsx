@@ -16,6 +16,10 @@ import {
 } from "@/components/editor/LyricsCommandBar";
 import { LyricsReviewMenu } from "@/components/editor/LyricsReviewMenu";
 import { LyricsSidebar } from "@/components/editor/LyricsSidebar";
+import {
+  LandscapeLineLimitAlert,
+  type LandscapeLineLimitNotice
+} from "@/components/editor/LandscapeLineLimitAlert";
 import { getLyricsWorkspaceCopy } from "@/components/editor/lyrics-workspace-copy";
 import { useLyricsWorkspaceDocumentController } from "@/components/editor/hooks/useLyricsWorkspaceDocumentController";
 import { useLyricsWorkspaceSplit } from "@/components/editor/hooks/useLyricsWorkspaceSplit";
@@ -40,6 +44,8 @@ type LyricsWorkspaceProps = {
   lyricDocument: LyricDocumentV2;
   lyrics: string;
   lineStatus: ExportLyricLineStatus;
+  landscapeLineLimitNotice: LandscapeLineLimitNotice | null;
+  onDismissLandscapeLineLimitNotice: () => void;
   sidebarTab: LyricsSidebarTab;
   onSidebarTabChange: (tab: LyricsSidebarTab) => void;
   onLyricsChange: (lyrics: string) => void;
@@ -65,6 +71,8 @@ export function LyricsWorkspace({
   lyricDocument,
   lyrics,
   lineStatus,
+  landscapeLineLimitNotice,
+  onDismissLandscapeLineLimitNotice,
   sidebarTab,
   onSidebarTabChange,
   onLyricsChange,
@@ -285,6 +293,12 @@ export function LyricsWorkspace({
         onStripLrc={documentController.cleanLrc}
         onAITranslate={() => openTab("translation", "ai")}
         onToggleSidebar={toggleSidebar}
+      />
+
+      <LandscapeLineLimitAlert
+        notice={landscapeLineLimitNotice}
+        onDismiss={onDismissLandscapeLineLimitNotice}
+        t={t}
       />
 
       <div
