@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu, dialog, ipcMain, safeStorage, shell } = require("electron");
+const { app, BrowserWindow, Menu, clipboard, dialog, ipcMain, nativeImage, safeStorage, shell } = require("electron");
 const { spawn } = require("node:child_process");
 const crypto = require("node:crypto");
 const fs = require("node:fs/promises");
@@ -51,6 +51,8 @@ const APP_ID = "com.lyriccard.generator";
 const START_TIMEOUT_MS = 45000;
 const WINDOW_BACKGROUND_COLOR = "#20242D";
 const IMPORT_FILE_REGISTRATION_TTL_MS = 30 * 60 * 1000;
+const MAX_CLIPBOARD_IMAGE_DATA_URL_CODE_UNITS = 64 * 1024 * 1024;
+const PNG_DATA_URL_PREFIX = "data:image/png;base64,";
 const startupTrace = createStartupTrace();
 startupTrace.mark("module-loaded");
 
@@ -843,6 +845,28 @@ function registerDesktopIpc() {
     if (!parsed) return false;
     await shell.openExternal(parsed.toString());
     return true;
+  });
+
+  handle("lyrics-card:clipboard-write-image", (_event, dataUrl) => {
+    if (
+      typeof dataUrl !== "string" ||
+      dataUrl.length <= PNG_DATA_URL_PREFIX.length ||
+      dataUrl.length > MAX_CLIPBOARD_IMAGE_DATA_URL_CODE_UNITS ||
+      !dataUrl.startsWith(PNG_DATA_URL_PREFIX)
+    ) {
+      return false;
+    }
+    try {
+      const image = nativeImage.createFromDataURL(dataUrl);
+      const size = image.getSize();
+      if (image.isEmpty() || size.width <= 0 || size.height <= 0 || size.width > 16_384 || size.height > 16_384) {
+        return false;
+      }
+      clipboard.writeImage(image);
+      return true;
+    } catch {
+      return false;
+    }
   });
 
   handle("lyrics-card:background-save", async () => {

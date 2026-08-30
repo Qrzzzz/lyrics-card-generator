@@ -51,12 +51,13 @@ export type SettingsStep = {
   };
   secondaryAction?: {
     label: ReactNode;
-    onClick: () => void;
+    onClick: () => void | Promise<void>;
     pressed?: boolean;
     expanded?: boolean;
     controls?: string;
     testId?: string;
     disabled?: boolean;
+    readinessStore?: ExportCardReadinessStore;
     buttonRef?: RefObject<HTMLButtonElement | null>;
   };
   primaryAction?: {
@@ -110,7 +111,11 @@ function StepActions({
   const isLastStep = stepIndex >= stepCount - 1;
   const secondaryAction = step.secondaryAction;
   const primaryAction = step.primaryAction;
+  const secondaryReadiness = useOptionalExportCardReadinessSnapshot(secondaryAction?.readinessStore);
   const primaryReadiness = useOptionalExportCardReadinessSnapshot(primaryAction?.readinessStore);
+  const isSecondaryActionDisabled = Boolean(
+    secondaryAction?.disabled || (secondaryReadiness && !secondaryReadiness.isReady)
+  );
   const isPrimaryActionDisabled = Boolean(
     primaryAction?.disabled || (primaryReadiness && !primaryReadiness.isReady)
   );
@@ -140,8 +145,8 @@ function StepActions({
             ref={secondaryAction.buttonRef}
             type="button"
             data-testid={secondaryAction.testId}
-            onClick={secondaryAction.onClick}
-            disabled={secondaryAction.disabled}
+            onClick={() => void secondaryAction.onClick()}
+            disabled={isSecondaryActionDisabled}
             aria-pressed={secondaryAction.pressed}
             aria-expanded={secondaryAction.expanded}
             aria-controls={secondaryAction.controls}

@@ -19,7 +19,7 @@
 <p>
   <strong>Navegación</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Descargar la última versión</a> ·
-  <a href="./docs/releases/v6.1.8.es.md">Notas de la versión</a> ·
+  <a href="./docs/releases/v6.2.0.es.md">Notas de la versión</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en línea</a> ·
   <a href="#funciones-principales">Funciones principales</a> ·
   <a href="./docs/development.en.md">Desarrollo local</a> ·
@@ -74,26 +74,26 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 ## 📦 Descarga e instalación
 
-Descarga v6.1.8 desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
+La v6.2.0 está publicada y disponible en [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Instalador: `Lyrics Card Generator Setup 6.1.8.exe`
-* Versión portable: `Lyrics Card Generator-6.1.8-portable.exe`
+* Instalador: `Lyrics Card Generator Setup 6.2.0.exe`
+* Versión portable: `Lyrics Card Generator-6.2.0-portable.exe`
 
 El instalador se recomienda para uso habitual. La versión portable es útil para pruebas, uso temporal o ejecución desde una unidad extraíble.
 
 > La compilación actual no está firmada. Windows puede mostrar una advertencia de SmartScreen, algo habitual en aplicaciones personales sin firma.
 
-### Novedades de v6.1.8
+### Novedades de v6.2.0
 
-* En el primer paso, Ajuste manual se sitúa ahora en la esquina inferior derecha del panel de información de la canción, junto al contenido que modifica.
-* La información manual y la combinación tipográfica personalizada bloquean el cambio de paso hasta guardar/aplicar o cancelar sus borradores, con un aviso claro al intentar navegar.
-* Las fuentes personalizadas usan el mismo cian fijo de los ajustes predefinidos para indicar la selección, con marcas más claras y un botón Aplicar legible incluso desactivado.
-* La muestra tipográfica elimina la explicación del algoritmo de fondo y las cuatro franjas de color; el botón Traducción IA del segundo paso elimina su punto pulsante final.
+* La nueva acción Copiar imagen, junto a Completar y exportar, coloca la tarjeta terminada directamente en el portapapeles del sistema.
+* El portapapeles siempre recibe un PNG con la calidad de exportación actual; copiar no cambia el formato de descarga PNG, WebP o JPG seleccionado.
+* La aplicación de escritorio usa un puente nativo y de confianza de Electron; Web Lite muestra la misma acción cuando el navegador admite imágenes en el portapapeles.
+* La copia y la descarga comparten la instantánea inmutable, las comprobaciones de disponibilidad, los límites de píxeles y el mutex de la transacción.
 
 ## 🌐 Notas de publicación multilingües
 
 GitHub Release muestra de forma predeterminada un resumen en chino simplificado. Consulta las notas completas:
-[简体中文](./docs/releases/v6.1.8.zh-CN.md) · [繁體中文](./docs/releases/v6.1.8.zh-TW.md) · [English](./docs/releases/v6.1.8.en.md) · [Français](./docs/releases/v6.1.8.fr.md) · [日本語](./docs/releases/v6.1.8.ja.md) · [Español](./docs/releases/v6.1.8.es.md)
+[简体中文](./docs/releases/v6.2.0.zh-CN.md) · [繁體中文](./docs/releases/v6.2.0.zh-TW.md) · [English](./docs/releases/v6.2.0.en.md) · [Français](./docs/releases/v6.2.0.fr.md) · [日本語](./docs/releases/v6.2.0.ja.md) · [Español](./docs/releases/v6.2.0.es.md)
 
 <a id="funciones-principales"></a>
 
@@ -106,6 +106,7 @@ GitHub Release muestra de forma predeterminada un resumen en chino simplificado.
 * Planificación horizontal guiada por el contenido para la columna izquierda de portada/metadatos y la columna derecha solo de letras, sin recortar letras ni portada
 * Ancho y altura automáticos medidos para lienzos verticales personalizados
 * Exportación PNG, WebP y JPG de alta resolución
+* Copia directa de un PNG de alta calidad al portapapeles del sistema
 
 ### 📝 Diseño y traducción de letras
 

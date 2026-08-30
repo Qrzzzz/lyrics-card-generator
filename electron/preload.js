@@ -1,7 +1,16 @@
 const { contextBridge, ipcRenderer, webUtils } = require("electron");
 
 const MAX_MANUAL_SAVE_ENVELOPE_CODE_UNITS = 2 * 1024 * 1024 + 64;
+const MAX_CLIPBOARD_IMAGE_DATA_URL_CODE_UNITS = 64 * 1024 * 1024;
+const PNG_DATA_URL_PREFIX = "data:image/png;base64,";
 const NATIVE_DIALOG_TYPES = new Set(["info", "warning", "error", "question"]);
+
+function isClipboardPngDataUrl(value) {
+  return typeof value === "string" &&
+    value.length > PNG_DATA_URL_PREFIX.length &&
+    value.length <= MAX_CLIPBOARD_IMAGE_DATA_URL_CODE_UNITS &&
+    value.startsWith(PNG_DATA_URL_PREFIX);
+}
 
 function isDialogText(value, maximumLength, allowEmpty = false) {
   return typeof value === "string" &&
@@ -77,6 +86,9 @@ contextBridge.exposeInMainWorld("lyricsCardDesktopBridge", {
   saveAppPreferences: (preferences, options) => ipcRenderer.invoke("lyrics-card:app-preferences-save", preferences, options),
   listSystemFonts: () => ipcRenderer.invoke("lyrics-card:list-system-fonts"),
   openExternal: (url) => ipcRenderer.invoke("lyrics-card:open-external", url),
+  copyImageToClipboard: (dataUrl) => isClipboardPngDataUrl(dataUrl)
+    ? ipcRenderer.invoke("lyrics-card:clipboard-write-image", dataUrl)
+    : Promise.resolve(false),
   saveBackgroundImage: () => ipcRenderer.invoke("lyrics-card:background-save"),
   readBackgroundImage: (imageId) => ipcRenderer.invoke("lyrics-card:background-read", imageId),
   removeBackgroundImage: (imageId) => ipcRenderer.invoke("lyrics-card:background-remove", imageId),

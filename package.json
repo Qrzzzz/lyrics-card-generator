@@ -1,6 +1,6 @@
 {
   "name": "lyric-card-generator",
-  "version": "6.1.8",
+  "version": "6.2.0",
   "private": true,
   "main": "electron/main.js",
   "scripts": {
@@ -60,8 +60,9 @@
     "font-directory:test": "node scripts/test-electron-font-directory-service.cjs",
     "desktop:single-instance-test": "node scripts/test-desktop-single-instance-interactions.mjs",
     "desktop:startup-origin-test": "node scripts/test-desktop-startup-origin-interactions.mjs",
+    "desktop:clipboard-test": "node scripts/test-desktop-clipboard-interactions.mjs",
     "desktop:prepare": "node scripts/prepare-electron-dist.mjs",
-    "desktop:interaction-test": "node scripts/test-desktop-single-instance-interactions.mjs && node scripts/test-desktop-startup-origin-interactions.mjs && node scripts/test-desktop-settings-interactions.mjs && node scripts/test-desktop-import-history-interactions.mjs",
+    "desktop:interaction-test": "node scripts/test-desktop-single-instance-interactions.mjs && node scripts/test-desktop-startup-origin-interactions.mjs && node scripts/test-desktop-clipboard-interactions.mjs && node scripts/test-desktop-settings-interactions.mjs && node scripts/test-desktop-import-history-interactions.mjs",
     "desktop:visual-diagnostic": "node scripts/test-desktop-settings-interactions.mjs --visual-diagnostics",
     "desktop:final-artifact-smoke": "node scripts/smoke-final-windows-artifacts.mjs",
     "desktop:size": "node scripts/audit-desktop-size.mjs",

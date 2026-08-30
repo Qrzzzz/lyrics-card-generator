@@ -1,7 +1,13 @@
 import assert from "node:assert/strict";
 import { defaultState } from "../components/editor/editor-defaults";
 import { evaluateMinimumExportSafety, type ExportDomSafety } from "../lib/export-safety";
-import { exportNodeAsImage, exportNodeAsPng, type ExportImageDependencies } from "../lib/export-image";
+import {
+  copyNodeAsPng,
+  exportNodeAsImage,
+  exportNodeAsPng,
+  type CopyImageDependencies,
+  type ExportImageDependencies
+} from "../lib/export-image";
 import {
   EXPORT_CANVAS_DIMENSION_LIMIT,
   ExportRasterSizeLimitError,
@@ -288,6 +294,48 @@ async function exportImageAbortGuardTest() {
   );
   assert.equal(normalRenderCount, 1);
   assert.deepEqual(commits, [{ dataUrl: "data:image/png;base64,OK", fileName: "normal.png" }]);
+
+  const clipboardCommits: string[] = [];
+  const clipboardDependencies: CopyImageDependencies = {
+    renderNode: async (_node, format, options) => {
+      assert.equal(format, "png", "clipboard capture always renders the interoperable PNG format");
+      assert.equal(options.pixelRatio, 1.4, "clipboard capture keeps the selected export quality");
+      return { dataUrl: "data:image/png;base64,CLIPBOARD", width: 896, height: 1344 };
+    },
+    commitClipboard: (dataUrl) => { clipboardCommits.push(dataUrl); }
+  };
+  await copyNodeAsPng(
+    {} as HTMLElement,
+    640,
+    960,
+    1.4,
+    undefined,
+    clipboardDependencies
+  );
+  assert.deepEqual(clipboardCommits, ["data:image/png;base64,CLIPBOARD"]);
+
+  const lateClipboardRender = deferredRender();
+  const lateClipboardController = new AbortController();
+  const lateClipboardCopy = copyNodeAsPng(
+    {} as HTMLElement,
+    640,
+    960,
+    1,
+    lateClipboardController.signal,
+    {
+      renderNode: lateClipboardRender.renderNode,
+      commitClipboard: (dataUrl) => { clipboardCommits.push(dataUrl); }
+    }
+  );
+  await lateClipboardRender.started;
+  lateClipboardController.abort(new Error("cancelled before clipboard commit"));
+  lateClipboardRender.resolve({ dataUrl: "data:image/png;base64,LATE", width: 640, height: 960 });
+  await assert.rejects(lateClipboardCopy, /cancelled before clipboard commit/);
+  assert.deepEqual(
+    clipboardCommits,
+    ["data:image/png;base64,CLIPBOARD"],
+    "a cancelled render must never replace the clipboard"
+  );
 
   await exportNodeAsImage(
     {} as HTMLElement,

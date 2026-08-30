@@ -1112,6 +1112,76 @@ test("exports WebP and JPG with matching filenames and file signatures", async (
   await exportAndExpectFormat(page, "jpg");
 });
 
+test("copies a high-quality PNG without changing the selected download format", async ({ page }) => {
+  test.setTimeout(120_000);
+  await page.addInitScript(() => {
+    const clipboardWindow = window as typeof window & {
+      __copiedImage?: { type: string; size: number; writes: number };
+    };
+
+    class TestClipboardItem {
+      static supports(type: string) {
+        return type === "image/png";
+      }
+
+      readonly types: string[];
+      readonly items: Record<string, string | Blob | PromiseLike<string | Blob>>;
+
+      constructor(items: Record<string, string | Blob | PromiseLike<string | Blob>>) {
+        this.items = items;
+        this.types = Object.keys(items);
+      }
+
+      async getType(type: string) {
+        const value = await this.items[type];
+        if (!(value instanceof Blob)) throw new Error("Clipboard payload was not a Blob.");
+        return value;
+      }
+    }
+
+    Object.defineProperty(globalThis, "ClipboardItem", {
+      configurable: true,
+      value: TestClipboardItem
+    });
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: {
+        write: async (items: TestClipboardItem[]) => {
+          const blob = await items[0]?.getType("image/png");
+          if (!blob) throw new Error("Clipboard image was missing.");
+          clipboardWindow.__copiedImage = {
+            type: blob.type,
+            size: blob.size,
+            writes: (clipboardWindow.__copiedImage?.writes ?? 0) + 1
+          };
+        }
+      }
+    });
+  });
+
+  await openWebLite(page, { width: 1280, height: 900 });
+  await page.locator('[data-step-id="export"]').click();
+  await page
+    .locator('[data-testid="export-settings-panel"][data-active="true"] [data-segment-value="webp"]')
+    .click();
+
+  const copyButton = page.getByTestId("copy-image-button");
+  await expect(copyButton).toHaveText(/Copy Image/);
+  await expect(copyButton).toBeEnabled({ timeout: 15_000 });
+  await copyButton.click();
+  await expect(page.getByTestId("app-toast")).toContainText("Image copied to clipboard", { timeout: 15_000 });
+
+  const copiedImage = await page.evaluate(() => (
+    window as typeof window & { __copiedImage?: { type: string; size: number; writes: number } }
+  ).__copiedImage);
+  expect(copiedImage?.type).toBe("image/png");
+  expect(copiedImage?.size).toBeGreaterThan(1_000);
+  expect(copiedImage?.writes).toBe(1);
+  await expect(
+    page.locator('[data-testid="export-settings-panel"][data-active="true"] [data-segment-value="webp"]')
+  ).toHaveAttribute("aria-checked", "true");
+});
+
 test("@background-composition-benchmark exports a super-long 2x card within the transaction budget", async ({ page }) => {
   test.skip(!process.env.RUN_BACKGROUND_COMPOSITION_BENCHMARK, "opt-in large-canvas benchmark");
   const maximumExportMs = positiveIntegerEnvironment("BACKGROUND_COMPOSITION_MAX_EXPORT_MS", 60_000);

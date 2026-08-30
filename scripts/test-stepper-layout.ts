@@ -294,6 +294,13 @@ assert.ok(
   "secondary action remains before Next and wraps safely in a narrow action row"
 );
 assert.ok(
+  stepperSource.includes("secondaryAction?.readinessStore") &&
+    editorStepsSource.includes('testId: "copy-image-button"') &&
+    editorStepsSource.includes('t("step.copyImage")') &&
+    webLiteEditorSource.includes('testId: "copy-image-button"'),
+  "desktop and Web Lite place the clipboard action beside export under the same readiness gate"
+);
+assert.ok(
   songImportAsideSource.includes('data-song-import-panel="true"') &&
     songImportAsideSource.match(/className="glass-panel/g)?.length === 1,
   "cover, song metadata, and manual editing share one companion panel"

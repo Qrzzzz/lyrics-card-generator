@@ -7,6 +7,7 @@ import {
   getExpectedExportRasterSize,
   getExportRasterSizeIssue
 } from "@/lib/export-dimensions";
+import { writePngDataUrlToClipboard } from "@/lib/image-clipboard";
 import { EXPORT_FORMAT_OPTIONS, type ExportFormatId } from "@/lib/settings/types";
 
 export type ExportImageRenderOptions = {
@@ -24,6 +25,11 @@ export type ExportImageDependencies = {
     options: ExportImageRenderOptions
   ) => Promise<{ dataUrl: string; width: number; height: number }>;
   commitDownload: (dataUrl: string, fileName: string) => void;
+};
+
+export type CopyImageDependencies = {
+  renderNode: ExportImageDependencies["renderNode"];
+  commitClipboard: (dataUrl: string) => void | Promise<void>;
 };
 
 const defaultDependencies: ExportImageDependencies = {
@@ -45,6 +51,11 @@ const defaultDependencies: ExportImageDependencies = {
   }
 };
 
+const defaultCopyDependencies: CopyImageDependencies = {
+  renderNode: defaultDependencies.renderNode,
+  commitClipboard: writePngDataUrlToClipboard
+};
+
 export async function exportNodeAsImage(
   node: HTMLElement,
   fileName: string,
@@ -54,6 +65,56 @@ export async function exportNodeAsImage(
   pixelRatio = 2,
   signal?: AbortSignal,
   dependencies: ExportImageDependencies = defaultDependencies
+) {
+  const dataUrl = await renderNodeAsImageData(
+    node,
+    format,
+    width,
+    height,
+    pixelRatio,
+    signal,
+    dependencies
+  );
+
+  // html-to-image cannot cancel an in-flight render. Never perform the
+  // irreversible download if the transaction timed out while it was running.
+  throwIfAborted(signal);
+
+  dependencies.commitDownload(dataUrl, fileName);
+}
+
+export async function copyNodeAsPng(
+  node: HTMLElement,
+  width: number,
+  height: number,
+  pixelRatio = 2,
+  signal?: AbortSignal,
+  dependencies: CopyImageDependencies = defaultCopyDependencies
+) {
+  const dataUrl = await renderNodeAsImageData(
+    node,
+    "png",
+    width,
+    height,
+    pixelRatio,
+    signal,
+    dependencies
+  );
+
+  // Clipboard writes are irreversible just like downloads, so a render that
+  // finishes after cancellation must never replace the user's clipboard.
+  throwIfAborted(signal);
+  await dependencies.commitClipboard(dataUrl);
+}
+
+async function renderNodeAsImageData(
+  node: HTMLElement,
+  format: ExportFormatId,
+  width: number,
+  height: number,
+  pixelRatio: number,
+  signal: AbortSignal | undefined,
+  dependencies: Pick<ExportImageDependencies, "renderNode">
 ) {
   throwIfAborted(signal);
 
@@ -87,11 +148,8 @@ export async function exportNodeAsImage(
     throw new Error(`The rendered image does not match the requested ${format.toUpperCase()} format.`);
   }
 
-  // html-to-image cannot cancel an in-flight render. Never perform the
-  // irreversible download if the transaction timed out while it was running.
   throwIfAborted(signal);
-
-  dependencies.commitDownload(rendered.dataUrl, fileName);
+  return rendered.dataUrl;
 }
 
 function getDataUrlMediaType(dataUrl: string) {

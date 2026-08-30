@@ -86,6 +86,7 @@ assert.match(exportPanel, /aria-atomic="true"/);
 assert.match(exportPanel, /aria-busy=\{isExporting\}/);
 assert.match(exportPanel, /<SegmentedControl/);
 assert.match(exportPanel, /preparingImage/);
+assert.match(exportPanel, /preparingCopy/);
 assert.doesNotMatch(exportPanel, /previewMessage|FileImage|exportHint/);
 assert.doesNotMatch(editorSteps, /description: t\("exportHint"\)|cardRef=\{cardRef\}/);
 assert.match(previewPane, /data-testid="preview-clear-transition"/);

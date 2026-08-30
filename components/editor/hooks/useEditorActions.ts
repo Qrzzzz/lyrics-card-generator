@@ -78,6 +78,8 @@ type UseEditorActionsInput = {
   getExportBlockMessage?: (snapshot?: ExportSnapshot) => string | undefined;
   exportBusyMessage: string;
   exportFailedMessage: string;
+  copyImageSuccessMessage: string;
+  copyImageFailedMessage: string;
   exportImageTooLargeMessage: string;
   exampleLoadedMessage: string;
   clearAlreadyEmptyMessage: string;
@@ -100,6 +102,8 @@ type ManualReplayProvenance = {
   recordId: string;
   replayUrl: string;
 };
+
+type ImageOutputAction = "export" | "copy";
 
 export type SongLinkAutoParseVisitIntent = Readonly<{
   id: number;
@@ -128,6 +132,8 @@ export function useEditorActions({
   getExportBlockMessage,
   exportBusyMessage,
   exportFailedMessage,
+  copyImageSuccessMessage,
+  copyImageFailedMessage,
   exportImageTooLargeMessage,
   exampleLoadedMessage,
   clearAlreadyEmptyMessage,
@@ -140,7 +146,8 @@ export function useEditorActions({
   isManualSaveBlocked
 }: UseEditorActionsInput) {
   const [celebrationKey, setCelebrationKey] = useState(0);
-  const [isCompleteExporting, setIsCompleteExporting] = useState(false);
+  const [activeOutputAction, setActiveOutputAction] = useState<ImageOutputAction | null>(null);
+  const isCompleteExporting = activeOutputAction !== null;
   const [clearTransitionKey, setClearTransitionKey] = useState(0);
   const clearVersionRef = useRef(0);
   const documentControllerRef = useRef(new DocumentTransactionController());
@@ -564,7 +571,7 @@ export function useEditorActions({
     ));
   }
 
-  async function completeAndExport() {
+  async function runImageOutput(action: ImageOutputAction) {
     const initialBlockMessage = getExportBlockMessage?.() ?? exportBlockMessage;
     if (initialBlockMessage) {
       onNotify(initialBlockMessage, "warning");
@@ -573,7 +580,12 @@ export function useEditorActions({
 
     // Export owns an immutable snapshot; the clear version suppresses stale completion effects.
     const clearVersion = clearVersionRef.current;
-    const snapshot = createExportSnapshot(parsedState, exportPixelRatio, exportRevisionRef.current, exportFormat);
+    const snapshot = createExportSnapshot(
+      parsedState,
+      exportPixelRatio,
+      exportRevisionRef.current,
+      action === "copy" ? "png" : exportFormat
+    );
     if (getExportRasterSizeIssue(snapshot.width, snapshot.height, snapshot.pixelRatio)) {
       onNotify(exportImageTooLargeMessage, "warning");
       return;
@@ -582,7 +594,7 @@ export function useEditorActions({
       mutex: exportMutexRef.current,
       snapshot,
       mountSnapshot: async (mountedSnapshot, signal) => {
-        setIsCompleteExporting(true);
+        setActiveOutputAction(action);
         setActiveExportSnapshot(mountedSnapshot);
         return waitForExportSnapshotNode(() => cardRef.current, mountedSnapshot.id, signal);
       },
@@ -593,26 +605,37 @@ export function useEditorActions({
         return getExportBlockMessage?.(mountedSnapshot) ?? null;
       },
       captureSnapshot: async (mountedSnapshot, node, signal) => {
-        const { exportNodeAsImage } = await import("@/lib/export-image");
-        return exportNodeAsImage(
-          node,
-          mountedSnapshot.fileName,
-          mountedSnapshot.format,
-          mountedSnapshot.width,
-          mountedSnapshot.height,
-          mountedSnapshot.pixelRatio,
-          signal
-        );
+        const { copyNodeAsPng, exportNodeAsImage } = await import("@/lib/export-image");
+        return action === "copy"
+          ? copyNodeAsPng(
+              node,
+              mountedSnapshot.width,
+              mountedSnapshot.height,
+              mountedSnapshot.pixelRatio,
+              signal
+            )
+          : exportNodeAsImage(
+              node,
+              mountedSnapshot.fileName,
+              mountedSnapshot.format,
+              mountedSnapshot.width,
+              mountedSnapshot.height,
+              mountedSnapshot.pixelRatio,
+              signal
+            );
       },
       unmountSnapshot: () => {
         setActiveExportSnapshot(null);
-        setIsCompleteExporting(false);
+        setActiveOutputAction(null);
       }
     });
 
     if (result.ok) {
       if (clearVersion === clearVersionRef.current) {
         setCelebrationKey((key) => key + 1);
+      }
+      if (action === "copy") {
+        onNotify(copyImageSuccessMessage, "success");
       }
       return;
     }
@@ -621,9 +644,17 @@ export function useEditorActions({
     } else if (result.kind === "blocked") {
       onNotify(result.reason, "warning");
     } else {
-      console.error("[Lyric Card Generator] complete export failed", result.error);
-      onNotify(exportFailedMessage, "error");
+      console.error(`[Lyric Card Generator] ${action} image output failed`, result.error);
+      onNotify(action === "copy" ? copyImageFailedMessage : exportFailedMessage, "error");
     }
+  }
+
+  function completeAndExport() {
+    return runImageOutput("export");
+  }
+
+  function copyImageToClipboard() {
+    return runImageOutput("copy");
   }
 
   async function loadExample(payload: ExampleLoadPayload) {
@@ -873,6 +904,7 @@ export function useEditorActions({
   return {
     celebrationKey,
     isCompleteExporting,
+    activeOutputAction,
     clearTransitionKey,
     activeExportSnapshot,
     documentRevision,
@@ -902,7 +934,8 @@ export function useEditorActions({
     saveManualArchive,
     handleHistoryRecordRemoved,
     handleHistoryCleared,
-    completeAndExport
+    completeAndExport,
+    copyImageToClipboard
   };
 }
 

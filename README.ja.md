@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v6.1.8.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v6.2.0.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="./docs/development.en.md">ローカル開発</a> ·
@@ -74,26 +74,26 @@
 
 ## 📦 ダウンロードとインストール
 
-v6.1.8 は [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) からダウンロードできます。
+v6.2.0 は公開済みです。[GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) から次のファイルを入手できます。
 
-* インストーラー：`Lyrics Card Generator Setup 6.1.8.exe`
-* ポータブル版：`Lyrics Card Generator-6.1.8-portable.exe`
+* インストーラー：`Lyrics Card Generator Setup 6.2.0.exe`
+* ポータブル版：`Lyrics Card Generator-6.2.0-portable.exe`
 
 通常利用にはインストーラーを推奨します。ポータブル版は一時利用、検証、リムーバブルドライブでの利用に向いています。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v6.1.8 の主な更新
+### v6.2.0 の主な更新
 
-* 最初のステップの「手動調整」を曲情報パネル右下へ移し、編集対象と入口を同じ文脈にまとめました。
-* 手動の曲情報とカスタムフォント構成は、下書きを保存／適用またはキャンセルするまでステップ移動を止め、移動操作時に明確な案内を表示します。
-* カスタムフォントの選択表示をプリセットと同じ固定シアンに統一し、チェック表示と無効状態の適用ボタンも読みやすくしました。
-* 書体見本から背景アルゴリズム説明と4本の色見本を削除し、ステップ2の AI 翻訳ボタンから末尾の脈動点を削除しました。
+* 「完了して書き出し」の隣に「画像をコピー」を追加し、完成したカードをシステムのクリップボードへ直接書き込めるようにしました。
+* クリップボードには常に PNG を使用し、現在の書き出し品質を引き継ぎます。コピーしても PNG、WebP、JPG の保存形式は変わりません。
+* デスクトップ版は信頼済みの Electron ネイティブ橋渡しを使用し、Web Lite でもブラウザーが画像コピーに対応している場合は同じ操作を利用できます。
+* コピーと保存は、固定スナップショット、準備状態の検証、ピクセル上限、排他トランザクションを共有します。
 
 ## 🌐 多言語リリースノート
 
 GitHub Release ではデフォルトで簡体字中国語の概要が表示されます。完全なリリースノートはこちら：
-[简体中文](./docs/releases/v6.1.8.zh-CN.md) · [繁體中文](./docs/releases/v6.1.8.zh-TW.md) · [English](./docs/releases/v6.1.8.en.md) · [Français](./docs/releases/v6.1.8.fr.md) · [日本語](./docs/releases/v6.1.8.ja.md) · [Español](./docs/releases/v6.1.8.es.md)
+[简体中文](./docs/releases/v6.2.0.zh-CN.md) · [繁體中文](./docs/releases/v6.2.0.zh-TW.md) · [English](./docs/releases/v6.2.0.en.md) · [Français](./docs/releases/v6.2.0.fr.md) · [日本語](./docs/releases/v6.2.0.ja.md) · [Español](./docs/releases/v6.2.0.es.md)
 
 <a id="主な機能"></a>
 
@@ -106,6 +106,7 @@ GitHub Release ではデフォルトで簡体字中国語の概要が表示さ�
 * カバー／曲情報の左列と歌詞専用の右列を実コンテンツから求解し、歌詞やカバーを切り抜かない横向きレイアウト
 * 縦向きカスタムキャンバスで実測に基づく自動幅と自動高さ
 * 高解像度 PNG、WebP、JPG 書き出し
+* 高品質 PNG をシステムのクリップボードへ直接コピー
 
 ### 📝 歌詞のレイアウトと翻訳
 

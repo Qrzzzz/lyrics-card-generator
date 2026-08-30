@@ -75,6 +75,7 @@ export type LyricsCardDesktopApi = {
   saveAppPreferences: (preferences: AppPreferencesRecord, options?: AppPreferencesSaveOptions) => Promise<boolean>;
   listSystemFonts: () => Promise<SystemFontOption[]>;
   openExternal: (url: string) => Promise<boolean>;
+  copyImageToClipboard: (dataUrl: string) => Promise<boolean>;
   saveBackgroundImage: () => Promise<{ imageId: string; imageUrl: string } | null>;
   readBackgroundImage: (imageId: string) => Promise<string | undefined>;
   removeBackgroundImage: (imageId: string) => Promise<boolean>;

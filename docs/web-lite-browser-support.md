@@ -29,6 +29,7 @@ The full Chromium suite covers the broad Web Lite contract, including:
 - production artifact startup and approved static resources;
 - render boundaries, long canvases, and remote-cover races;
 - PNG, WebP, and JPG signatures and decoded dimensions;
+- PNG clipboard capture with the selected quality where the browser exposes image clipboard writes;
 - performance and background-composition benchmarks where enabled.
 
 Firefox and WebKit smoke cover the supported critical path:
@@ -43,7 +44,7 @@ A release is blocked when the required Chromium suite or either cross-browser sm
 
 ## Capability boundaries
 
-Web Lite supports manual content editing, local cover selection, shared layout/style controls, live preview, and browser-side PNG/WebP/JPG export. It deliberately has no `/api/` runtime, so server-backed music search, music-platform parsing, remote proxying, desktop secure storage, desktop import history, and AI translation are outside its contract.
+Web Lite supports manual content editing, local cover selection, shared layout/style controls, live preview, browser-side PNG/WebP/JPG export, and PNG clipboard copy when `ClipboardItem` plus asynchronous clipboard image writes are available. Clipboard support also depends on a secure context, the active browser permission policy, and the operating-system clipboard; a denied or unsupported write reports an error without changing editor content. It deliberately has no `/api/` runtime, so server-backed music search, music-platform parsing, remote proxying, desktop secure storage, desktop import history, and AI translation are outside its contract.
 
 Remote images used directly by a browser must permit CORS access. Browser extensions, private-mode storage restrictions, enterprise download policies, and exact native download prompts are outside the product support contract.
 

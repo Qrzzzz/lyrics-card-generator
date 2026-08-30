@@ -2246,6 +2246,7 @@ async function assertPreviewWorkbenchPan() {
     ],
     "step six inherits the WebP default selected in settings"
   );
+  await waitForCompleteExportEnabled();
   assert.ok(
     after.viewport && after.editor && after.preview && after.exportPanel && before.viewport &&
       after.editor.right <= after.viewport.left + 1.5 &&
@@ -3892,6 +3893,11 @@ try {
   page.on("dialog", async (dialog) => {
     rendererDialogs.push({ type: dialog.type(), message: dialog.message() });
     await dialog.dismiss();
+  });
+  page.on("console", (message) => {
+    if (message.type() === "error") {
+      process.stderr.write(`[renderer-console] ${message.text()}\n`);
+    }
   });
   page.on("pageerror", (error) => process.stderr.write(`[renderer] ${error.stack || error.message}\n`));
   await page.route("**/api/search-song", async (route) => {
