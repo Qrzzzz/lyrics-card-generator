@@ -6,6 +6,7 @@ const http = require("node:http");
 const path = require("node:path");
 const { getBackgroundImageMime, safeBackgroundPathForUserData } = require("./background-images");
 const { normalizePromptLibrary } = require("./ai-prompt-settings");
+const { AISettingsStore } = require("./ai-settings-store");
 const { createWindowsFontDirectoryService } = require("./font-directory-service");
 const {
   INVALID_BASE_URL_ERROR_CODE,
@@ -81,6 +82,7 @@ let windowRestoring = false;
 let lastEmittedWindowState = null;
 let appPreferencesWriteQueue = Promise.resolve();
 let lastKnownAppPreferences = null;
+let aiSettingsStore = null;
 let importHistoryMutationQueue = Promise.resolve();
 // Window closure is a renderer-confirmed handshake so pending persistence can drain first.
 let allowWindowClose = false;
@@ -643,6 +645,15 @@ async function boot() {
 
 function initializePrimaryInstance() {
   startupTrace.mark("primary-initialize-start");
+  aiSettingsStore = new AISettingsStore({
+    filePath: getAISettingsPath(),
+    defaultSettings: DEFAULT_AI_SETTINGS,
+    normalizeStored: normalizeStoredAISettings,
+    onDiagnostic: ({ event, errorCode }) => {
+      // Diagnostics deliberately expose neither document contents nor credential material.
+      console.error("[ai-settings] persistence diagnostic", event, errorCode ?? "");
+    }
+  });
   importHistoryFileStreams = new ImportHistoryFileStreamRegistry();
   importHistoryStore = new ImportHistoryStore({
     filePath: path.join(app.getPath("userData"), "app-data", "import-history.json")
@@ -756,8 +767,9 @@ function registerDesktopIpc() {
   });
   handle("lyrics-card:window-close-confirm", async () => {
     if (!mainWindow || mainWindow.isDestroyed()) return false;
-    // Drain preferences first, then all history work, before allowing the native close event through.
+    // Drain all main-process persistence before allowing the native close event through.
     await appPreferencesWriteQueue;
+    await aiSettingsStore.flush();
     await flushImportHistoryOperations();
     allowWindowClose = true;
     mainWindow.close();
@@ -1058,10 +1070,9 @@ function registerDesktopIpc() {
   });
 
   handle("lyrics-card:ai-settings-save", async (_event, input) => {
-    const current = await readAISettings();
     const normalized = normalizeAISettings(input);
-    let encryptedApiKey = current.encryptedApiKey || "";
     const nextApiKey = typeof input?.apiKey === "string" ? input.apiKey.trim() : "";
+    let encryptedApiKey;
 
     if (nextApiKey) {
       // Never persist plaintext credentials; unsupported or plaintext-only OS backends are rejected below.
@@ -1069,15 +1080,19 @@ function registerDesktopIpc() {
       encryptedApiKey = safeStorage.encryptString(nextApiKey).toString("base64");
     }
 
-    const stored = { ...normalized, encryptedApiKey };
-    await writeAISettings(stored);
+    // Credential preservation is decided inside the serialized store mutation,
+    // after every older save has completed, so an old read cannot drop a newer key.
+    const stored = await aiSettingsStore.save(normalized, {
+      credentialAction: nextApiKey ? "set" : "preserve",
+      encryptedApiKey
+    });
     return toAISettingsSummary(stored);
   });
 
   handle("lyrics-card:ai-settings-api-key-clear", async () => {
-    const current = await readAISettings();
-    const stored = { ...normalizeAISettings(current), encryptedApiKey: "" };
-    await writeAISettings(stored);
+    // Clear is an explicit credential action and remains available even when a
+    // corrupt primary and backup make preservation unsafe.
+    const stored = await aiSettingsStore.save(null, { credentialAction: "clear" });
     return toAISettingsSummary(stored);
   });
 
@@ -1410,31 +1425,17 @@ async function readAppPreferences() {
   }
 }
 
-async function writeAISettings(settings) {
-  const stored = {
-    ...normalizeAISettings(settings),
-    encryptedApiKey: typeof settings?.encryptedApiKey === "string" ? settings.encryptedApiKey : ""
-  };
-  const settingsPath = getAISettingsPath();
-  await fs.mkdir(app.getPath("userData"), { recursive: true });
-  await fs.writeFile(settingsPath, JSON.stringify(stored, null, 2), { encoding: "utf8", mode: 0o600 });
-  await fs.chmod(settingsPath, 0o600).catch(() => undefined);
+async function readAISettings() {
+  return aiSettingsStore.read();
 }
 
-async function readAISettings() {
-  try {
-    const raw = await fs.readFile(getAISettingsPath(), "utf8");
-    const parsed = JSON.parse(raw);
-    return {
-      ...normalizeAISettings(parsed),
-      encryptedApiKey: typeof parsed.encryptedApiKey === "string" ? parsed.encryptedApiKey : ""
-    };
-  } catch (error) {
-    if (error?.code !== "ENOENT") {
-      console.error("[ai-settings] unable to read settings", error instanceof Error ? error.message : "unknown error");
-    }
-    return { ...DEFAULT_AI_SETTINGS, encryptedApiKey: "" };
-  }
+function normalizeStoredAISettings(input) {
+  if (!input || typeof input !== "object" || Array.isArray(input)) return null;
+  // Missing credential metadata is not equivalent to an explicit empty key.
+  // This is the boundary that prevents a syntactically valid partial JSON
+  // document from silently becoming a durable credential clear.
+  if (typeof input.encryptedApiKey !== "string") return null;
+  return { ...normalizeAISettings(input), encryptedApiKey: input.encryptedApiKey };
 }
 
 function normalizeAISettings(input) {
