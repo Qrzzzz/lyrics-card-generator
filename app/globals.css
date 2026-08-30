@@ -2854,23 +2854,9 @@ body[data-reduce-motion="true"] .examples-close-button:focus-visible .examples-c
   animation: ai-icon-glint 1.8s ease-in-out infinite;
 }
 
-.ai-translate-trigger__pulse {
-  width: 4px;
-  height: 4px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--star-border-color) 74%, white);
-  box-shadow: 0 0 0 0 color-mix(in srgb, var(--star-border-color) 54%, transparent);
-  animation: ai-pulse-ring 1.7s ease-out infinite;
-}
-
 @keyframes ai-icon-glint {
   0%, 100% { transform: rotate(-8deg) scale(0.94); opacity: 0.78; }
   50% { transform: rotate(10deg) scale(1.15); opacity: 1; }
-}
-
-@keyframes ai-pulse-ring {
-  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--star-border-color) 58%, transparent); }
-  75%, 100% { box-shadow: 0 0 0 9px transparent; }
 }
 
 .ai-stream-progress {
@@ -2916,7 +2902,6 @@ body[data-reduce-motion="true"] .examples-close-button:focus-visible .examples-c
 [data-surface-work="paused"] .star-border-container::before,
 [data-surface-work="paused"] .star-border-container::after,
 [data-surface-work="paused"] .ai-translate-trigger__icon,
-[data-surface-work="paused"] .ai-translate-trigger__pulse,
 [data-surface-work="paused"] .ai-stream-progress,
 [data-surface-work="paused"] .translation-border-gradient,
 [data-surface-work="paused"] .animate-spin,
@@ -2931,7 +2916,6 @@ body[data-reduce-motion="true"] .examples-close-button:focus-visible .examples-c
   }
 
   .ai-translate-trigger__icon,
-  .ai-translate-trigger__pulse,
   .ai-stream-progress,
   .translation-border-gradient {
     animation: none;

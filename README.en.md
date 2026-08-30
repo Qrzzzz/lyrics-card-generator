@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v6.1.7.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v6.1.8.en.md">Release Notes</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
   <a href="./docs/web-lite-browser-support.md">Web Lite Browser Support</a> ·
   <a href="#features">Features</a> ·
@@ -75,25 +75,26 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 ## 📦 Download and Installation
 
-Download v6.1.7 from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
+Download v6.1.8 from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Installer: `Lyrics Card Generator Setup 6.1.7.exe`
-* Portable build: `Lyrics Card Generator-6.1.7-portable.exe`
+* Installer: `Lyrics Card Generator Setup 6.1.8.exe`
+* Portable build: `Lyrics Card Generator-6.1.8-portable.exe`
 
 The installer is recommended for regular use. The portable version is useful for temporary use, testing, or running from a removable drive.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v6.1.7 Highlights
+### v6.1.8 Highlights
 
-* Opening a custom font scheme now moves the real lyric card out to the left while the fixed type specimen enters from the right and takes over the same preview slot.
-* Cancel or Apply runs the exact reverse transition, so the real card and specimen are no longer stacked in the right pane and the rhythm matches the first step.
-* Pointer and keyboard font preview, draft and atomic-apply semantics, Reduced Motion, clear animation, and final export behavior remain unchanged.
+* Step one's Manual Adjustment action now sits at the lower right of the song-information panel, beside the content it edits.
+* Manual song information and custom font schemes now block step changes until their drafts are saved/applied or cancelled, with a clear warning when navigation is attempted.
+* Custom fonts use the same fixed cyan selection language as the presets, with clearer check indicators and a legible disabled Apply button.
+* The type specimen drops the background-algorithm explanation and four swatches, while the step-two AI Translate button drops its trailing pulse dot.
 
 ## 🌐 Multilingual Release Notes
 
 GitHub Release displays a Simplified Chinese summary by default. See the full release notes:
-[简体中文](./docs/releases/v6.1.7.zh-CN.md) · [繁體中文](./docs/releases/v6.1.7.zh-TW.md) · [English](./docs/releases/v6.1.7.en.md) · [Français](./docs/releases/v6.1.7.fr.md) · [日本語](./docs/releases/v6.1.7.ja.md) · [Español](./docs/releases/v6.1.7.es.md)
+[简体中文](./docs/releases/v6.1.8.zh-CN.md) · [繁體中文](./docs/releases/v6.1.8.zh-TW.md) · [English](./docs/releases/v6.1.8.en.md) · [Français](./docs/releases/v6.1.8.fr.md) · [日本語](./docs/releases/v6.1.8.ja.md) · [Español](./docs/releases/v6.1.8.es.md)
 
 <a id="features"></a>
 

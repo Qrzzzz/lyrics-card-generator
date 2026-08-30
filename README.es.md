@@ -19,7 +19,7 @@
 <p>
   <strong>Navegación</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Descargar la última versión</a> ·
-  <a href="./docs/releases/v6.1.7.es.md">Notas de la versión</a> ·
+  <a href="./docs/releases/v6.1.8.es.md">Notas de la versión</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en línea</a> ·
   <a href="#funciones-principales">Funciones principales</a> ·
   <a href="./docs/development.en.md">Desarrollo local</a> ·
@@ -74,25 +74,26 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 ## 📦 Descarga e instalación
 
-Descarga v6.1.7 desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
+Descarga v6.1.8 desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Instalador: `Lyrics Card Generator Setup 6.1.7.exe`
-* Versión portable: `Lyrics Card Generator-6.1.7-portable.exe`
+* Instalador: `Lyrics Card Generator Setup 6.1.8.exe`
+* Versión portable: `Lyrics Card Generator-6.1.8-portable.exe`
 
 El instalador se recomienda para uso habitual. La versión portable es útil para pruebas, uso temporal o ejecución desde una unidad extraíble.
 
 > La compilación actual no está firmada. Windows puede mostrar una advertencia de SmartScreen, algo habitual en aplicaciones personales sin firma.
 
-### Novedades de v6.1.7
+### Novedades de v6.1.8
 
-* Al abrir una combinación de fuentes personalizada, la tarjeta real sale hacia la izquierda y la muestra tipográfica fija entra desde la derecha para ocupar el mismo espacio de vista previa.
-* Cancelar o Aplicar reproduce exactamente la transición inversa: la tarjeta real y la muestra ya no se apilan en el panel derecho, y el ritmo coincide con el del primer paso.
-* Se conservan la vista previa de fuentes con puntero y teclado, el borrador y la aplicación atómica, Movimiento reducido, la animación de borrado y la exportación final.
+* En el primer paso, Ajuste manual se sitúa ahora en la esquina inferior derecha del panel de información de la canción, junto al contenido que modifica.
+* La información manual y la combinación tipográfica personalizada bloquean el cambio de paso hasta guardar/aplicar o cancelar sus borradores, con un aviso claro al intentar navegar.
+* Las fuentes personalizadas usan el mismo cian fijo de los ajustes predefinidos para indicar la selección, con marcas más claras y un botón Aplicar legible incluso desactivado.
+* La muestra tipográfica elimina la explicación del algoritmo de fondo y las cuatro franjas de color; el botón Traducción IA del segundo paso elimina su punto pulsante final.
 
 ## 🌐 Notas de publicación multilingües
 
 GitHub Release muestra de forma predeterminada un resumen en chino simplificado. Consulta las notas completas:
-[简体中文](./docs/releases/v6.1.7.zh-CN.md) · [繁體中文](./docs/releases/v6.1.7.zh-TW.md) · [English](./docs/releases/v6.1.7.en.md) · [Français](./docs/releases/v6.1.7.fr.md) · [日本語](./docs/releases/v6.1.7.ja.md) · [Español](./docs/releases/v6.1.7.es.md)
+[简体中文](./docs/releases/v6.1.8.zh-CN.md) · [繁體中文](./docs/releases/v6.1.8.zh-TW.md) · [English](./docs/releases/v6.1.8.en.md) · [Français](./docs/releases/v6.1.8.fr.md) · [日本語](./docs/releases/v6.1.8.ja.md) · [Español](./docs/releases/v6.1.8.es.md)
 
 <a id="funciones-principales"></a>
 

@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v6.1.7.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v6.1.8.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="./docs/development.en.md">ローカル開発</a> ·
@@ -74,25 +74,26 @@
 
 ## 📦 ダウンロードとインストール
 
-v6.1.7 は [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) からダウンロードできます。
+v6.1.8 は [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) からダウンロードできます。
 
-* インストーラー：`Lyrics Card Generator Setup 6.1.7.exe`
-* ポータブル版：`Lyrics Card Generator-6.1.7-portable.exe`
+* インストーラー：`Lyrics Card Generator Setup 6.1.8.exe`
+* ポータブル版：`Lyrics Card Generator-6.1.8-portable.exe`
 
 通常利用にはインストーラーを推奨します。ポータブル版は一時利用、検証、リムーバブルドライブでの利用に向いています。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v6.1.7 の主な更新
+### v6.1.8 の主な更新
 
-* カスタムフォント構成を開くと、右側の実際の歌詞カードが左へ退場し、固定書体見本が右から入って同じプレビュー位置を引き継ぎます。
-* キャンセルまたは適用では正確に逆向きへ切り替わり、右ペインで実カードと見本が上下に並ぶことはなくなりました。動きのリズムは最初のステップと揃えています。
-* ポインター／キーボードでのフォントプレビュー、下書きと一括適用の規則、動きを減らす設定、消去アニメーション、最終書き出しは従来どおりです。
+* 最初のステップの「手動調整」を曲情報パネル右下へ移し、編集対象と入口を同じ文脈にまとめました。
+* 手動の曲情報とカスタムフォント構成は、下書きを保存／適用またはキャンセルするまでステップ移動を止め、移動操作時に明確な案内を表示します。
+* カスタムフォントの選択表示をプリセットと同じ固定シアンに統一し、チェック表示と無効状態の適用ボタンも読みやすくしました。
+* 書体見本から背景アルゴリズム説明と4本の色見本を削除し、ステップ2の AI 翻訳ボタンから末尾の脈動点を削除しました。
 
 ## 🌐 多言語リリースノート
 
 GitHub Release ではデフォルトで簡体字中国語の概要が表示されます。完全なリリースノートはこちら：
-[简体中文](./docs/releases/v6.1.7.zh-CN.md) · [繁體中文](./docs/releases/v6.1.7.zh-TW.md) · [English](./docs/releases/v6.1.7.en.md) · [Français](./docs/releases/v6.1.7.fr.md) · [日本語](./docs/releases/v6.1.7.ja.md) · [Español](./docs/releases/v6.1.7.es.md)
+[简体中文](./docs/releases/v6.1.8.zh-CN.md) · [繁體中文](./docs/releases/v6.1.8.zh-TW.md) · [English](./docs/releases/v6.1.8.en.md) · [Français](./docs/releases/v6.1.8.fr.md) · [日本語](./docs/releases/v6.1.8.ja.md) · [Español](./docs/releases/v6.1.8.es.md)
 
 <a id="主な機能"></a>
 

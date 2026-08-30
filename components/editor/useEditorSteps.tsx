@@ -122,6 +122,7 @@ export function useEditorSteps({
   handlers
 }: UseEditorStepsInput): SettingsStep[] {
   const [songInfoExpanded, setSongInfoExpanded] = useState(false);
+  const [fontSchemeEditing, setFontSchemeEditing] = useState(false);
   const [lyricsSidebarTab, setLyricsSidebarTab] = useState<LyricsSidebarTab>("cleanup");
   // Manual song info is a document-revision-bound draft until the user explicitly saves it.
   const [songInfoDraft, setSongInfoDraft] = useState<SongInfo>(() => ({ ...state.song }));
@@ -217,6 +218,7 @@ export function useEditorSteps({
   const updateSongInfoDraftEvent = useStableEvent(updateSongInfoDraft);
   const saveSongInfoEditorEvent = useStableEvent(saveSongInfoEditor);
   const closeSongInfoEditorEvent = useStableEvent(closeSongInfoEditor);
+  const onFontSchemeEditingChange = useStableEvent(setFontSchemeEditing);
   const onManualCoverChange = useStableEvent((context: ManualCoverImportHistoryContext) => {
     manualCoverContextRef.current = context;
   });
@@ -245,13 +247,10 @@ export function useEditorSteps({
       description: t("songSearchDescription"),
       presentation: "focus",
       isComplete: Boolean(state.url.trim() || state.song.title.trim() || state.song.artist.trim() || state.song.coverUrl?.trim()),
-      secondaryAction: {
-        label: t("manualOverride"),
-        onClick: toggleSongInfoEditorEvent,
-        expanded: songInfoExpanded,
-        controls: songInfoRegionId,
-        testId: "song-info-toggle",
-        buttonRef: songInfoToggleRef
+      navigationGuard: {
+        active: songInfoExpanded,
+        message: t("songInfoNavigationBlocked"),
+        focusTarget: "[data-testid='song-info-cancel']"
       },
       content: (
         <div className="song-import-primary grid gap-4" data-testid="song-search-primary">
@@ -299,7 +298,9 @@ export function useEditorSteps({
           )}
           manualExpanded={songInfoExpanded}
           manualRegionId={songInfoRegionId}
+          manualButtonRef={songInfoToggleRef}
           manualSavePending={manualCoverPending}
+          onEdit={toggleSongInfoEditorEvent}
           onSave={saveSongInfoEditorEvent}
           onCancel={closeSongInfoEditorEvent}
         />
@@ -440,16 +441,22 @@ export function useEditorSteps({
       description: t("fontSchemeDescription"),
       presentation: "preview-workbench",
       isComplete: true,
+      navigationGuard: {
+        active: fontSchemeEditing,
+        message: t("fontSchemeNavigationBlocked"),
+        focusTarget: "[data-testid='cancel-custom-font-scheme']"
+      },
       content: (
         <FontSchemeSettingsPanel
           style={state.style}
           onStyleChange={onStyleChange}
           onFontSchemePreviewChange={onFontSchemePreviewChange}
+          onFontSchemeEditingChange={onFontSchemeEditingChange}
           locale={state.locale}
           t={t}
         />
       )
-  }), [onFontSchemePreviewChange, onStyleChange, state.locale, state.style, t]);
+  }), [fontSchemeEditing, onFontSchemeEditingChange, onFontSchemePreviewChange, onStyleChange, state.locale, state.style, t]);
 
   const visualStep = useMemo<SettingsStep>(() => ({
       id: "visual",

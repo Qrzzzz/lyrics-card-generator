@@ -415,7 +415,7 @@ async function historyQueryCount(page: Page) {
 async function continuousEditorAnimationWork(page: Page) {
   return page.getByTestId("editor-surface").evaluate((surface) => {
     const decorations = Array.from(surface.querySelectorAll(
-      ".ai-translate-trigger__icon, .ai-translate-trigger__pulse"
+      ".ai-translate-trigger__icon"
     ));
     const decorationStyles = decorations.map((element) => getComputedStyle(element));
     return {

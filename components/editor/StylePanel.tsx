@@ -43,6 +43,7 @@ type StylePanelProps = {
   song?: SongInfo;
   onSongChange?: (song: SongInfo) => void;
   onFontSchemePreviewChange?: (scheme: FontScheme | null) => void;
+  onFontSchemeEditingChange?: (editing: boolean) => void;
   locale: Locale;
   t: ReturnType<typeof createT>;
 };
@@ -57,7 +58,14 @@ export function StylePanel(props: StylePanelProps) {
   );
 }
 
-export function FontSchemeSettingsPanel({ style, onStyleChange, onFontSchemePreviewChange, locale, t }: StylePanelProps) {
+export function FontSchemeSettingsPanel({
+  style,
+  onStyleChange,
+  onFontSchemePreviewChange,
+  onFontSchemeEditingChange,
+  locale,
+  t
+}: StylePanelProps) {
   return (
     <div className="grid gap-5">
       <Section
@@ -70,6 +78,7 @@ export function FontSchemeSettingsPanel({ style, onStyleChange, onFontSchemePrev
           style={style}
           onStyleChange={onStyleChange}
           onPreviewSchemeChange={onFontSchemePreviewChange}
+          onEditingChange={onFontSchemeEditingChange}
           showHeader={false}
           locale={locale}
           t={t}
