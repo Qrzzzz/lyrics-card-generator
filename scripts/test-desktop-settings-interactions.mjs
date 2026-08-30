@@ -34,10 +34,10 @@ const resolveRequests = [];
 const titlebarVisualMetrics = [];
 let titlebarPerformanceComparison = null;
 
-async function setNativeDialogDecision(decision) {
+async function setNativeDialogDecision(decision, expectedMessage) {
   await electronApp.evaluate((_electron, nextDecision) => {
     globalThis.__lyricsCardNativeDialogTest.nextDecision = nextDecision;
-  }, decision);
+  }, { decision, expectedMessage });
 }
 
 async function readNativeDialogs() {
@@ -928,7 +928,7 @@ async function assertSongSearchBehavior() {
   const activeId = await combobox.getAttribute("aria-activedescendant");
   const activeIndex = Number(activeId?.match(/option-(\d+)$/)?.[1]);
   assert.ok(Number.isInteger(activeIndex), `active descendant exposes an option index: ${activeId}`);
-  await setNativeDialogDecision("accept");
+  await setNativeDialogDecision("accept", "替换当前歌曲？");
   await combobox.press("Enter");
   await page.waitForFunction((expectedIndex) => (
     document.querySelector('[role="combobox"]')?.value === `Resolved result ${expectedIndex + 1} - Mock Artist ${expectedIndex + 1}`
@@ -3053,8 +3053,10 @@ async function assertLyricsWorkspaceSplitInteractions() {
     "setup",
     "AI opens on the preset and reasoning setup page"
   );
-  await setNativeDialogDecision("accept");
-  await page.getByTestId("confirm-ai-translate").click();
+  await setNativeDialogDecision("accept", "覆盖现有译文？");
+  const confirmAITranslate = page.getByTestId("confirm-ai-translate");
+  await confirmAITranslate.focus();
+  await confirmAITranslate.press("Enter");
   const runPageTransition = await page.waitForFunction(() => {
     const viewport = document.querySelector('[data-testid="ai-translate-stage-viewport"]');
     const setup = document.querySelector('[data-testid="ai-translate-setup-page"]');
@@ -3430,7 +3432,7 @@ async function assertLyricsWorkspaceNarrowBehavior(originalLyrics, translationLy
         Math.abs(setupScrollBeforeRun.actual - setupScrollBeforeRun.target) <= 1,
       `the narrow AI setup page has an independently scrollable position: ${JSON.stringify(setupScrollBeforeRun)}`
     );
-    await setNativeDialogDecision("accept");
+    await setNativeDialogDecision("accept", "覆盖现有译文？");
     await page.getByTestId("confirm-ai-translate").evaluate((node) => {
       if (!(node instanceof HTMLButtonElement)) throw new Error("AI confirm control is not a button");
       node.click();
@@ -3675,7 +3677,7 @@ async function assertExampleImportRemeasuresPreview() {
 
   await page.getByTestId("editor-surface").getByTestId("examples-button").click();
   await page.getByTestId("load-example-opalite").waitFor({ state: "visible" });
-  await setNativeDialogDecision("accept");
+  await setNativeDialogDecision("accept", "替换当前歌曲？");
   await page.getByTestId("load-example-opalite").click();
 
   await waitForLayoutStable(page.getByTestId("editor-surface"), 10_000);
@@ -3765,7 +3767,7 @@ async function assertBuiltInExamplesAutoWidth() {
       );
     }
 
-    await setNativeDialogDecision("accept");
+    await setNativeDialogDecision("accept", "替换当前歌曲？");
     await page.getByTestId(`load-example-${example.id}`).click();
     await page.locator('button[data-step-id="layout"][aria-current="step"]').waitFor({ state: "visible" });
 
@@ -3871,8 +3873,12 @@ try {
     globalThis.__lyricsCardNativeDialogTest = { defaultDecision: "dismiss", nextDecision: null, calls: [] };
     dialog.showMessageBox = async (_browserWindow, options) => {
       const state = globalThis.__lyricsCardNativeDialogTest;
-      const decision = state.nextDecision ?? state.defaultDecision;
-      state.nextDecision = null;
+      const pendingDecision = state.nextDecision;
+      const matchesExpectedDialog = pendingDecision && (
+        !pendingDecision.expectedMessage || pendingDecision.expectedMessage === options.message
+      );
+      const decision = matchesExpectedDialog ? pendingDecision.decision : state.defaultDecision;
+      if (matchesExpectedDialog) state.nextDecision = null;
       state.calls.push({
         type: options.type,
         title: options.title,
