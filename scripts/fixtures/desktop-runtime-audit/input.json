@@ -1,0 +1,102 @@
+{
+  "rootPackage": {
+    "name": "fixture-app",
+    "version": "1.0.0",
+    "dependencies": {
+      "next": "15.5.24"
+    },
+    "devDependencies": {
+      "electron": "42.9.3",
+      "test-only": "9.0.0"
+    }
+  },
+  "rootLock": {
+    "name": "fixture-app",
+    "version": "1.0.0",
+    "lockfileVersion": 3,
+    "requires": true,
+    "packages": {
+      "": {
+        "name": "fixture-app",
+        "version": "1.0.0",
+        "dependencies": {
+          "next": "15.5.24"
+        },
+        "devDependencies": {
+          "electron": "42.9.3",
+          "test-only": "9.0.0"
+        }
+      },
+      "node_modules/electron": {
+        "version": "42.9.3",
+        "resolved": "https://registry.npmjs.org/electron/-/electron-42.9.3.tgz",
+        "integrity": "sha512-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+        "dev": true,
+        "dependencies": {
+          "runtime-helper": "^1.2.0"
+        },
+        "optionalDependencies": {
+          "runtime-optional": "^2.0.0"
+        }
+      },
+      "node_modules/runtime-helper": {
+        "version": "1.2.3",
+        "resolved": "https://registry.npmjs.org/runtime-helper/-/runtime-helper-1.2.3.tgz",
+        "integrity": "sha512-BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB==",
+        "dev": true,
+        "dependencies": {
+          "runtime-nested": "3.0.0"
+        }
+      },
+      "node_modules/runtime-nested": {
+        "version": "3.0.0",
+        "resolved": "https://registry.npmjs.org/runtime-nested/-/runtime-nested-3.0.0.tgz",
+        "integrity": "sha512-CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC==",
+        "dev": true
+      },
+      "node_modules/runtime-optional": {
+        "version": "2.0.1",
+        "resolved": "https://registry.npmjs.org/runtime-optional/-/runtime-optional-2.0.1.tgz",
+        "integrity": "sha512-DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD==",
+        "dev": true,
+        "optional": true
+      },
+      "node_modules/next": {
+        "version": "15.5.24",
+        "resolved": "https://registry.npmjs.org/next/-/next-15.5.24.tgz",
+        "integrity": "sha512-EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE=="
+      },
+      "node_modules/test-only": {
+        "version": "9.0.0",
+        "resolved": "https://registry.npmjs.org/test-only/-/test-only-9.0.0.tgz",
+        "integrity": "sha512-FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF==",
+        "dev": true,
+        "dependencies": {
+          "test-helper": "1.0.0"
+        }
+      },
+      "node_modules/test-helper": {
+        "version": "1.0.0",
+        "resolved": "https://registry.npmjs.org/test-helper/-/test-helper-1.0.0.tgz",
+        "integrity": "sha512-GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG==",
+        "dev": true
+      }
+    }
+  },
+  "policy": {
+    "schemaVersion": 1,
+    "runtimeRoots": [
+      {
+        "name": "electron",
+        "manifestSection": "devDependencies"
+      }
+    ],
+    "exceptions": []
+  },
+  "expectedClosure": [
+    "electron@42.9.3",
+    "runtime-helper@1.2.3",
+    "runtime-nested@3.0.0",
+    "runtime-optional@2.0.1"
+  ]
+}

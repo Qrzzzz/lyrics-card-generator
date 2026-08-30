@@ -1,0 +1,305 @@
+{
+  "auditPackage": {
+    "name": "fixture-app-desktop-runtime-audit",
+    "version": "6.2.1",
+    "private": true,
+    "dependencies": {
+      "electron": "42.9.3"
+    }
+  },
+  "auditLock": {
+    "name": "fixture-app-desktop-runtime-audit",
+    "version": "6.2.1",
+    "lockfileVersion": 3,
+    "requires": true,
+    "packages": {
+      "": {
+        "name": "fixture-app-desktop-runtime-audit",
+        "version": "6.2.1",
+        "dependencies": {
+          "electron": "42.9.3"
+        }
+      },
+      "node_modules/electron": {
+        "version": "42.9.3",
+        "resolved": "https://registry.npmjs.org/electron/-/electron-42.9.3.tgz",
+        "integrity": "sha512-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+      }
+    }
+  },
+  "auditReport": {
+    "auditReportVersion": 2,
+    "vulnerabilities": {},
+    "metadata": {
+      "vulnerabilities": {
+        "info": 0,
+        "low": 0,
+        "moderate": 0,
+        "high": 0,
+        "critical": 0,
+        "total": 0
+      },
+      "dependencies": {
+        "prod": 1,
+        "dev": 0,
+        "optional": 0,
+        "peer": 0,
+        "peerOptional": 0,
+        "total": 1
+      }
+    }
+  },
+  "inventory": {
+    "schemaVersion": 1,
+    "application": {
+      "name": "lyric-card-generator",
+      "version": "6.2.1",
+      "productName": "Lyrics Card Generator"
+    },
+    "auditInput": {
+      "packageJsonSha256": "COMPUTED_BY_TEST",
+      "packageLockSha256": "COMPUTED_BY_TEST",
+      "roots": [
+        {
+          "name": "electron",
+          "manifestSection": "devDependencies",
+          "version": "42.9.3",
+          "purl": "pkg:npm/electron@42.9.3",
+          "lockPath": "node_modules/electron",
+          "resolved": "https://registry.npmjs.org/electron/-/electron-42.9.3.tgz",
+          "integrity": "sha512-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+        }
+      ],
+      "closure": [
+        {
+          "name": "electron",
+          "version": "42.9.3",
+          "purl": "pkg:npm/electron@42.9.3",
+          "lockPath": "node_modules/electron",
+          "resolved": "https://registry.npmjs.org/electron/-/electron-42.9.3.tgz",
+          "integrity": "sha512-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+          "optional": false
+        }
+      ]
+    },
+    "desktopRuntime": {
+      "name": "electron",
+      "version": "42.9.3",
+      "purl": "pkg:npm/electron@42.9.3",
+      "manifestSection": "devDependencies",
+      "lockPath": "node_modules/electron",
+      "resolved": "https://registry.npmjs.org/electron/-/electron-42.9.3.tgz",
+      "integrity": "sha512-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+      "licenseDeclared": "MIT",
+      "binaryArtifact": {
+        "fileName": "electron-v42.9.3-win32-x64.zip",
+        "downloadLocation": "https://github.com/electron/electron/releases/download/v42.9.3/electron-v42.9.3-win32-x64.zip",
+        "sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+      },
+      "installedPackageVersion": "42.9.3",
+      "distributionSource": "local-electron-dist",
+      "electronDistVersion": "42.9.3",
+      "stagedElectronDist": "../../node_modules/electron/dist",
+      "stagedManifestVersion": "42.9.3",
+      "packagedExecutable": {
+        "relativePath": "release/win-unpacked/Lyrics Card Generator.exe",
+        "sbomRelativePath": "Lyrics Card Generator.exe",
+        "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "reportedElectronVersion": "42.9.3"
+      },
+      "finalArtifacts": [
+        {
+          "fileName": "Lyrics.Card.Generator-6.2.1-portable.exe",
+          "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "smokeLabel": "portable",
+          "reportedElectronVersion": "42.9.3",
+          "versionEvidence": "renderer-user-agent"
+        },
+        {
+          "fileName": "Lyrics.Card.Generator.Setup.6.2.1.exe",
+          "sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "smokeLabel": "setup",
+          "reportedElectronVersion": "42.9.3",
+          "versionEvidence": "process.versions.electron+renderer-user-agent"
+        }
+      ]
+    },
+    "productionRuntime": {
+      "packages": [
+        {
+          "name": "next",
+          "version": "15.5.24",
+          "purl": "pkg:npm/next@15.5.24",
+          "relativeManifestPath": "release/win-unpacked/resources/server/_node_modules/next/package.json",
+          "manifestSha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+        },
+        {
+          "name": "sharp",
+          "version": "0.35.4",
+          "purl": "pkg:npm/sharp@0.35.4",
+          "relativeManifestPath": "release/win-unpacked/resources/server/_node_modules/sharp/package.json",
+          "manifestSha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+        }
+      ]
+    },
+    "auditResult": {
+      "reportSha256": "COMPUTED_BY_TEST",
+      "vulnerabilityCounts": {
+        "info": 0,
+        "low": 0,
+        "moderate": 0,
+        "high": 0,
+        "critical": 0,
+        "total": 0
+      },
+      "dependencyCounts": {
+        "prod": 1,
+        "dev": 0,
+        "optional": 0,
+        "peer": 0,
+        "peerOptional": 0,
+        "total": 1
+      }
+    }
+  },
+  "baseSbom": {
+    "spdxVersion": "SPDX-2.3",
+    "dataLicense": "CC0-1.0",
+    "SPDXID": "SPDXRef-DOCUMENT",
+    "name": "dist-desktop/sbom-runtime",
+    "documentNamespace": "https://example.invalid/spdx/fixture",
+    "creationInfo": {
+      "creators": [
+        "Tool: fixture"
+      ],
+      "created": "2026-08-31T00:00:00Z"
+    },
+    "packages": [
+      {
+        "name": "dist-desktop/sbom-runtime",
+        "SPDXID": "SPDXRef-DocumentRoot-Directory-dist-desktop-sbom-runtime",
+        "supplier": "NOASSERTION",
+        "downloadLocation": "NOASSERTION",
+        "filesAnalyzed": false,
+        "licenseConcluded": "NOASSERTION",
+        "licenseDeclared": "NOASSERTION",
+        "copyrightText": "NOASSERTION",
+        "primaryPackagePurpose": "FILE"
+      },
+      {
+        "name": "Lyrics Card Generator",
+        "SPDXID": "SPDXRef-Package-binary-Lyrics-Card-Generator",
+        "versionInfo": "6.2.1.0",
+        "supplier": "NOASSERTION",
+        "downloadLocation": "NOASSERTION",
+        "filesAnalyzed": false,
+        "licenseConcluded": "NOASSERTION",
+        "licenseDeclared": "NOASSERTION",
+        "copyrightText": "NOASSERTION"
+      },
+      {
+        "name": "next",
+        "SPDXID": "SPDXRef-Package-npm-next",
+        "versionInfo": "15.5.24",
+        "downloadLocation": "NOASSERTION",
+        "filesAnalyzed": false,
+        "licenseConcluded": "NOASSERTION",
+        "licenseDeclared": "MIT",
+        "copyrightText": "NOASSERTION",
+        "externalRefs": [
+          {
+            "referenceCategory": "PACKAGE-MANAGER",
+            "referenceType": "purl",
+            "referenceLocator": "pkg:npm/next@15.5.24"
+          }
+        ]
+      },
+      {
+        "name": "sharp",
+        "SPDXID": "SPDXRef-Package-npm-sharp",
+        "versionInfo": "0.35.4",
+        "downloadLocation": "NOASSERTION",
+        "filesAnalyzed": false,
+        "licenseConcluded": "NOASSERTION",
+        "licenseDeclared": "Apache-2.0",
+        "copyrightText": "NOASSERTION",
+        "externalRefs": [
+          {
+            "referenceCategory": "PACKAGE-MANAGER",
+            "referenceType": "purl",
+            "referenceLocator": "pkg:npm/sharp@0.35.4"
+          }
+        ]
+      }
+    ],
+    "files": [
+      {
+        "fileName": "\\Lyrics Card Generator.exe",
+        "SPDXID": "SPDXRef-File-Lyrics-Card-Generator-exe",
+        "checksums": [
+          {
+            "algorithm": "SHA256",
+            "checksumValue": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          }
+        ],
+        "licenseConcluded": "NOASSERTION",
+        "copyrightText": "NOASSERTION"
+      }
+    ],
+    "relationships": [
+      {
+        "spdxElementId": "SPDXRef-DocumentRoot-Directory-dist-desktop-sbom-runtime",
+        "relatedSpdxElement": "SPDXRef-Package-binary-Lyrics-Card-Generator",
+        "relationshipType": "CONTAINS"
+      },
+      {
+        "spdxElementId": "SPDXRef-DocumentRoot-Directory-dist-desktop-sbom-runtime",
+        "relatedSpdxElement": "SPDXRef-Package-npm-next",
+        "relationshipType": "CONTAINS"
+      },
+      {
+        "spdxElementId": "SPDXRef-DocumentRoot-Directory-dist-desktop-sbom-runtime",
+        "relatedSpdxElement": "SPDXRef-Package-npm-sharp",
+        "relationshipType": "CONTAINS"
+      },
+      {
+        "spdxElementId": "SPDXRef-Package-binary-Lyrics-Card-Generator",
+        "relatedSpdxElement": "SPDXRef-File-Lyrics-Card-Generator-exe",
+        "relationshipType": "OTHER",
+        "comment": "evident-by: indicates the package's existence is evident by the given file"
+      }
+    ]
+  },
+  "invalidCases": [
+    {
+      "name": "missing Electron",
+      "mutation": "missing-electron",
+      "expected": "exactly one Electron"
+    },
+    {
+      "name": "wrong Electron version",
+      "mutation": "wrong-electron-version",
+      "expected": "Electron version must match"
+    },
+    {
+      "name": "broken application relationship",
+      "mutation": "broken-relationship",
+      "expected": "application must depend on Electron"
+    },
+    {
+      "name": "NOASSERTION-only fake component",
+      "mutation": "noassertion-component",
+      "expected": "downloadLocation must identify"
+    },
+    {
+      "name": "production-only inventory mismatch",
+      "mutation": "desktop-inventory-mismatch",
+      "expected": "desktop audit package must have only Electron"
+    },
+    {
+      "name": "wrong packaged Sharp version",
+      "mutation": "wrong-production-version",
+      "expected": "packaged sharp@0.35.4"
+    }
+  ]
+}

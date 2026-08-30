@@ -7,6 +7,8 @@ const sourceVerifier = readFileSync("scripts/verify-release-source.mjs", "utf8")
 const powershellSyntaxTest = readFileSync("scripts/test-release-powershell-syntax.cjs", "utf8");
 const sourcePolicy = JSON.parse(readFileSync("security/release-source-policy.json", "utf8"));
 const sourcePolicyDocs = readFileSync("docs/release-source-policy.md", "utf8");
+const packageJson = JSON.parse(readFileSync("package.json", "utf8"));
+const desktopRuntimePolicy = JSON.parse(readFileSync("security/desktop-runtime-audit.json", "utf8"));
 const versionSpecificWorkflows = readdirSync(".github/workflows")
   .filter((name) => /^release-\d+\.\d+\.\d+\.yml$/.test(name));
 
@@ -63,9 +65,29 @@ assert.equal((buildJob.match(/npm run electron-runtime:coverage/g) || []).length
 assert.match(buildJob, /REQUIRE_PUBLISHED_RELEASE_NOTES:\s*["']1["']/, "release quality gates reject candidate wording");
 assert.match(buildJob, /Enforce production dependency advisory policy[\s\S]+npm run dependency-audit:gate/, "release blocks unapproved production advisories");
 assert.match(buildJob, /Run release quality gates[\s\S]+npm run font-license:test/, "release verifies font license distribution");
+assert.match(buildJob, /Run release quality gates[\s\S]+npm run sbom:test/, "release runs adversarial SPDX inventory fixtures");
 const packagedAssets = buildJob.indexOf("npm run desktop:packaged-assets-test");
 assert.ok(packagedAssets >= 0 && packagedAssets < buildJob.indexOf("Run deterministic packaged interaction regression"), "packaged assets are verified before desktop interactions");
+const finalArtifactSmoke = buildJob.indexOf("npm run desktop:final-artifact-smoke");
+const normalizedAssets = buildJob.indexOf("Normalize release asset filenames");
+const desktopRuntimeAudit = buildJob.indexOf("npm run desktop-runtime-audit:gate");
+const prepareSbom = buildJob.indexOf("npm run sbom:prepare");
+const generateSbom = buildJob.indexOf("anchore/sbom-action@");
+const finalizeSbom = buildJob.indexOf("npm run sbom:finalize");
+const inspectSbom = buildJob.indexOf("npm run sbom:inspect");
+assert.ok(finalArtifactSmoke >= 0 && finalArtifactSmoke < normalizedAssets, "final Setup and portable bytes are smoked before normalization");
+assert.ok(normalizedAssets < desktopRuntimeAudit, "desktop runtime audit binds normalized downloadable asset bytes");
+assert.ok(desktopRuntimeAudit < prepareSbom, "the Electron npm closure is audited before SBOM input preparation");
+assert.ok(prepareSbom < generateSbom && generateSbom < finalizeSbom && finalizeSbom < inspectSbom, "Syft output is enriched and then adversarially inspected");
 assert.match(buildJob, /name: lyrics-card-generator-\$\{\{ env\.RELEASE_TAG \}\}-\$\{\{ needs\.authorize\.outputs\.release_sha \}\}-tested/, "the transferred bundle name is bound to tag and SHA");
+
+assert.equal(packageJson.dependencies.electron, undefined, "Electron does not pollute the Next production dependency graph");
+assert.match(packageJson.devDependencies.electron, /^\d+\.\d+\.\d+$/, "Electron remains exactly pinned as build tooling and packaged runtime");
+assert.deepEqual(desktopRuntimePolicy, {
+  schemaVersion: 1,
+  runtimeRoots: [{ name: "electron", manifestSection: "devDependencies" }],
+  exceptions: []
+}, "the desktop audit policy has one explicit, exception-free Electron runtime root");
 
 assert.match(publishJob, /needs:[\s\S]+- authorize[\s\S]+- build/, "publication needs both authorization and tested assets");
 assert.match(publishJob, /contents: write/, "only the publication phase can mutate Release state");
