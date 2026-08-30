@@ -3,6 +3,8 @@ import { createRequire } from "node:module";
 import {
   buildChatCompletionsRequestBody,
   getChatCompletionsUrl,
+  INSECURE_BASE_URL_ERROR_CODE,
+  INVALID_BASE_URL_ERROR_CODE,
   readProviderError,
   usesDeepSeekThinking
 } from "../lib/ai/provider-request";
@@ -72,6 +74,36 @@ async function main() {
   assert.equal(getChatCompletionsUrl(openAiEndpoint), "https://api.openai.com/v1/chat/completions");
   assert.equal(getChatCompletionsUrl(openAiEndpoint), electronProvider.getChatCompletionsUrl(openAiEndpoint));
 
+  const acceptedHttpLoopbackUrls = [
+    ["http://localhost:11434/v1", "http://localhost:11434/v1/chat/completions"],
+    ["http://localhost.:11434/v1", "http://localhost.:11434/v1/chat/completions"],
+    ["http://127.255.255.254:11434/v1", "http://127.255.255.254:11434/v1/chat/completions"],
+    ["http://127.1:11434/v1", "http://127.0.0.1:11434/v1/chat/completions"],
+    ["http://[0:0:0:0:0:0:0:1]:11434/v1", "http://[::1]:11434/v1/chat/completions"]
+  ] as const;
+  for (const [baseUrl, expected] of acceptedHttpLoopbackUrls) {
+    assert.equal(getChatCompletionsUrl(baseUrl), expected, `${baseUrl} is normalized as loopback`);
+    assert.equal(electronProvider.getChatCompletionsUrl(baseUrl), expected, `${baseUrl} matches Electron`);
+  }
+
+  const rejectedRemoteHttpUrls = [
+    "http://api.example.com/v1",
+    "http://192.168.1.20:11434/v1",
+    "http://localhost.evil.example/v1",
+    "http://127.0.0.1.example/v1",
+    "http://127.0.0.1@evil.example/v1",
+    "http://128.0.0.1/v1",
+    "http://[::ffff:127.0.0.1]/v1"
+  ];
+  for (const baseUrl of rejectedRemoteHttpUrls) {
+    assert.equal(captureThrownMessage(() => getChatCompletionsUrl(baseUrl)), INSECURE_BASE_URL_ERROR_CODE);
+    assert.equal(
+      captureThrownMessage(() => electronProvider.getChatCompletionsUrl(baseUrl)),
+      INSECURE_BASE_URL_ERROR_CODE,
+      `${baseUrl} matches Electron rejection`
+    );
+  }
+
   const openAiReasoningRequest = {
     baseUrl: openAiEndpoint,
     model: "gpt-4.1-mini",
@@ -112,12 +144,16 @@ async function main() {
   }));
   assert.equal(webProviderError, electronProviderError);
 
+  assert.equal(captureThrownMessage(() => getChatCompletionsUrl("mailto:test")), INVALID_BASE_URL_ERROR_CODE);
   assert.equal(
-    captureThrownMessage(() => getChatCompletionsUrl("mailto:test")),
-    captureThrownMessage(() => electronProvider.getChatCompletionsUrl("mailto:test"))
+    captureThrownMessage(() => electronProvider.getChatCompletionsUrl("mailto:test")),
+    INVALID_BASE_URL_ERROR_CODE
   );
 
-  console.log(JSON.stringify({ ok: true, aiProviderResponseTests: 11 }, null, 2));
+  console.log(JSON.stringify({
+    ok: true,
+    transportPolicyCases: acceptedHttpLoopbackUrls.length + rejectedRemoteHttpUrls.length + 2
+  }, null, 2));
 }
 
 void main();

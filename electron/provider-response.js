@@ -1,3 +1,6 @@
+const INVALID_BASE_URL_ERROR_CODE = "invalid_base_url";
+const INSECURE_BASE_URL_ERROR_CODE = "insecure_base_url";
+
 async function readProviderResponseBody(response) {
   try {
     // Parse a clone so the original body remains available for a useful text fallback.
@@ -13,17 +16,45 @@ async function readProviderResponseBody(response) {
 }
 
 function getChatCompletionsUrl(baseUrl) {
-  const normalized = String(baseUrl || "").trim().replace(/\/+$/, "");
   let parsed;
   try {
-    parsed = new URL(normalized);
+    parsed = new URL(String(baseUrl || "").trim());
   } catch {
-    throw new Error("invalid_base_url");
+    throw new Error(INVALID_BASE_URL_ERROR_CODE);
   }
   if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
-    throw new Error("invalid_base_url");
+    throw new Error(INVALID_BASE_URL_ERROR_CODE);
   }
-  return normalized.endsWith("/chat/completions") ? normalized : `${normalized}/chat/completions`;
+  if (parsed.protocol === "http:" && !isLoopbackProviderHostname(parsed.hostname)) {
+    throw new Error(INSECURE_BASE_URL_ERROR_CODE);
+  }
+
+  const normalizedPathname = parsed.pathname.replace(/\/+$/, "");
+  parsed.pathname = normalizedPathname.endsWith("/chat/completions")
+    ? normalizedPathname
+    : `${normalizedPathname}/chat/completions`;
+  return parsed.toString();
+}
+
+function isLoopbackProviderHostname(hostname) {
+  let normalized = String(hostname || "").trim().toLowerCase();
+  if (normalized.startsWith("[") && normalized.endsWith("]")) {
+    normalized = normalized.slice(1, -1);
+  }
+  if (normalized.endsWith(".")) {
+    normalized = normalized.slice(0, -1);
+  }
+
+  if (normalized === "localhost" || normalized === "::1") {
+    return true;
+  }
+
+  // Keep classification deterministic across validation and fetch. DNS names
+  // that happen to resolve to loopback are not safe plaintext provider URLs.
+  const octets = normalized.split(".");
+  return octets.length === 4
+    && octets[0] === "127"
+    && octets.every((octet) => /^(?:0|[1-9]\d{0,2})$/.test(octet) && Number(octet) <= 255);
 }
 
 function usesDeepSeekThinking(baseUrl, model) {
@@ -99,10 +130,13 @@ async function readProviderError(response) {
 }
 
 module.exports = {
+  INVALID_BASE_URL_ERROR_CODE,
+  INSECURE_BASE_URL_ERROR_CODE,
   buildChatCompletionsRequestBody,
   getChatCompletionMessage,
   getChatCompletionsUrl,
   getProviderErrorMessage,
+  isLoopbackProviderHostname,
   readProviderError,
   readProviderResponseBody,
   usesDeepSeekThinking

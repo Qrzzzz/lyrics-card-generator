@@ -8,6 +8,8 @@ const { getBackgroundImageMime, safeBackgroundPathForUserData } = require("./bac
 const { normalizePromptLibrary } = require("./ai-prompt-settings");
 const { createWindowsFontDirectoryService } = require("./font-directory-service");
 const {
+  INVALID_BASE_URL_ERROR_CODE,
+  INSECURE_BASE_URL_ERROR_CODE,
   buildChatCompletionsRequestBody: buildProviderChatCompletionsRequestBody,
   getChatCompletionMessage,
   getChatCompletionsUrl: resolveProviderChatCompletionsUrl,
@@ -1486,15 +1488,22 @@ function validateAISettings(settings, apiKey) {
     throw createAIError("missing_model");
   }
   if (!settings.baseUrl?.trim()) throw createAIError("missing_base_url");
+  resolveAIProviderEndpoint(settings.baseUrl);
+}
+
+function resolveAIProviderEndpoint(baseUrl) {
   try {
-    resolveProviderChatCompletionsUrl(settings.baseUrl);
-  } catch {
-    throw createAIError("invalid_base_url");
+    return resolveProviderChatCompletionsUrl(baseUrl);
+  } catch (error) {
+    const code = error instanceof Error && error.message === INSECURE_BASE_URL_ERROR_CODE
+      ? INSECURE_BASE_URL_ERROR_CODE
+      : INVALID_BASE_URL_ERROR_CODE;
+    throw createAIError(code);
   }
 }
 
 async function streamAITranslationInMain({ settings, apiKey, prompt, reasoning, signal, onStatus, onReasoningDelta, onDelta }) {
-  const endpoint = resolveProviderChatCompletionsUrl(settings.baseUrl);
+  const endpoint = resolveAIProviderEndpoint(settings.baseUrl);
   const requestBody = buildProviderChatCompletionsRequestBody({
     baseUrl: settings.baseUrl,
     model: settings.model,

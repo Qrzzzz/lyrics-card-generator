@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import {
   buildChatCompletionsRequestBody,
   getChatCompletionsUrl,
+  INSECURE_BASE_URL_ERROR_CODE,
+  INVALID_BASE_URL_ERROR_CODE,
   readProviderError
 } from "@/lib/ai/provider-request";
 import { getProviderErrorMessage, readProviderResponseBody } from "@/lib/ai/provider-response";
@@ -51,8 +53,11 @@ export async function POST(request: Request) {
   let endpoint: string;
   try {
     endpoint = getChatCompletionsUrl(settings.baseUrl);
-  } catch {
-    return errorResponse("invalid_base_url", 400);
+  } catch (error) {
+    const code = error instanceof Error && error.message === INSECURE_BASE_URL_ERROR_CODE
+      ? INSECURE_BASE_URL_ERROR_CODE
+      : INVALID_BASE_URL_ERROR_CODE;
+    return errorResponse(code, 400);
   }
 
   const requestBody = buildChatCompletionsRequestBody({

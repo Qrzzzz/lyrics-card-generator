@@ -44,7 +44,11 @@ try {
   globalThis.fetch = async (input, init) => {
     providerCalls += 1;
     const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
-    assert.match(url, /^http:\/\/(?:127\.0\.0\.1|localhost|\[::1\]):11434\/v1\/chat\/completions$/);
+    const providerUrl = new URL(url);
+    const isExpectedHttpsProvider = providerUrl.protocol === "https:" && providerUrl.hostname === "api.example.com";
+    const isExpectedLoopbackProvider = providerUrl.protocol === "http:"
+      && ["127.0.0.1", "localhost", "[::1]"].includes(providerUrl.hostname);
+    assert.ok(isExpectedHttpsProvider || isExpectedLoopbackProvider, `unexpected provider target: ${url}`);
     assert.equal(new Headers(init?.headers).get("authorization"), "Bearer local-key");
     return Response.json({ choices: [{ message: { content: "translated" } }] });
   };
@@ -65,6 +69,21 @@ try {
   assert.equal(providerCalls, 0, "rejected AI requests must not contact a provider");
 
   for (const baseUrl of [
+    "http://api.example.com/v1",
+    "http://192.168.1.20:11434/v1",
+    "http://localhost.evil.example/v1"
+  ]) {
+    const response = await translate(jsonRequest("/api/ai/translate", aiBody(baseUrl)));
+    assert.equal(response.status, 400, `${baseUrl} is rejected before provider fetch`);
+    assert.equal((await response.json() as { error: { code: string } }).error.code, "insecure_base_url");
+  }
+  assert.equal(providerCalls, 0, "remote HTTP rejection sends no credential or prompt bytes");
+
+  const remoteHttps = await translate(jsonRequest("/api/ai/translate", aiBody("https://api.example.com/v1")));
+  assert.equal(remoteHttps.status, 200, "remote HTTPS remains supported");
+  assert.deepEqual(await remoteHttps.json(), { choices: [{ message: { content: "translated" } }] });
+
+  for (const baseUrl of [
     "http://127.0.0.1:11434/v1",
     "http://localhost:11434/v1",
     "http://[::1]:11434/v1"
@@ -73,7 +92,7 @@ try {
     assert.equal(response.status, 200, `${baseUrl} remains available as a custom provider`);
     assert.deepEqual(await response.json(), { choices: [{ message: { content: "translated" } }] });
   }
-  assert.equal(providerCalls, 3);
+  assert.equal(providerCalls, 4);
 
   for (const [name, route] of jsonRoutes) {
     const providerCallsBefore: number = providerCalls;

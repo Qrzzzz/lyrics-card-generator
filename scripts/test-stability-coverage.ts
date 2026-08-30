@@ -28,7 +28,7 @@ assert.deepEqual(nextAppPreferencesRevision(null, 10), { revision: 1, updatedAt:
 assert.deepEqual(nextAppPreferencesRevision(makeRecord(4, 20), 10), { revision: 5, updatedAt: 21 });
 
 const locales: Locale[] = ["zh", "zh-TW", "en", "fr", "ja", "es"];
-const codes: AIErrorCode[] = ["missing_api_key", "missing_model", "missing_base_url", "invalid_base_url", "invalid_request", "empty_prompt", "network", "timeout", "provider_error", "empty_stream", "invalid_response", "empty_response", "cancelled", "request_failed", "unknown"];
+const codes: AIErrorCode[] = ["missing_api_key", "missing_model", "missing_base_url", "invalid_base_url", "insecure_base_url", "invalid_request", "empty_prompt", "network", "timeout", "provider_error", "empty_stream", "invalid_response", "empty_response", "cancelled", "request_failed", "unknown"];
 for (const locale of locales) for (const code of codes) assert.ok(getAIErrorMessage(locale, code));
 assert.match(getAIErrorMessage("en", "provider_error", "detail"), /detail/);
 assert.equal(getAIErrorMessage("en", "network", "hidden detail").includes("hidden detail"), false);

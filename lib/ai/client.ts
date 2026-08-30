@@ -3,7 +3,7 @@ import { createAppRequestHeaders } from "@/lib/app-request";
 import { getChatCompletionMessage, getProviderErrorMessage, readProviderResponseBody } from "@/lib/ai/provider-response";
 import { DEFAULT_AI_SETTINGS } from "@/lib/ai/types";
 import { normalizeAISettings } from "@/lib/ai/settings-normalize";
-import type { AIErrorCode } from "@/lib/ai/error-copy";
+import { parseSerializedAIError, type AIErrorCode } from "@/lib/ai/error-copy";
 import type {
   AISettings,
   AISettingsSummary,
@@ -267,6 +267,10 @@ function normalizeError(error: unknown) {
     return error;
   }
   const message = error instanceof Error ? error.message : "AI translation request failed.";
+  const serialized = parseSerializedAIError(message);
+  if (serialized.code === "insecure_base_url") {
+    return new AITranslationError(message, serialized.code);
+  }
   if (/timeout/i.test(message)) return new AITranslationError(message, "timeout");
   if (/network|fetch/i.test(message)) return new AITranslationError(message, "network");
   return new AITranslationError(message, "request_failed");
