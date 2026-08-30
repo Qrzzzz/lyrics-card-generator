@@ -4,6 +4,7 @@ const { readFileSync, readdirSync } = require("node:fs");
 const workflow = readFileSync(".github/workflows/release.yml", "utf8");
 const verifier = readFileSync("scripts/verify-github-release.ps1", "utf8");
 const sourceVerifier = readFileSync("scripts/verify-release-source.mjs", "utf8");
+const releaseStateResolver = readFileSync("scripts/resolve-github-release.mjs", "utf8");
 const powershellSyntaxTest = readFileSync("scripts/test-release-powershell-syntax.cjs", "utf8");
 const sourcePolicy = JSON.parse(readFileSync("security/release-source-policy.json", "utf8"));
 const sourcePolicyDocs = readFileSync("docs/release-source-policy.md", "utf8");
@@ -15,6 +16,7 @@ const versionSpecificWorkflows = readdirSync(".github/workflows")
 assert.deepEqual(versionSpecificWorkflows, [], "one tag-driven release workflow replaces version-specific copies");
 assert.match(workflow, /^concurrency:\s+group: release-/m, "release runs for one tag are serialized");
 assert.match(workflow, /- "v\*\.\*\.\*"/, "stable and RC version tags enter the generic release workflow");
+assert.match(workflow, /RELEASE_TAG: \$\{\{ inputs\.tag \|\| github\.ref_name \}\}/, "workflow_dispatch and tag pushes share the exact tag resolver input");
 assert.match(workflow, /^permissions: \{\}$/m, "the workflow has no ambient write permission");
 assert.match(
   workflow,
@@ -52,7 +54,7 @@ assert.ok(
   "even an already-published no-op must pass source authorization first"
 );
 assert.match(authorizeJob, /ExpectedState published/, "an existing published release is verified before the no-op succeeds");
-assert.match(authorizeJob, /published=\$\(\$published\.ToString\(\)\.ToLowerInvariant\(\)\)/, "published state is passed between jobs");
+assert.match(authorizeJob, /resolve-github-release\.mjs[\s\S]+--github-output \$env:GITHUB_OUTPUT/, "the exact paginated state is passed between jobs");
 
 assert.match(buildJob, /needs: authorize/, "asset construction cannot start before source authorization");
 assert.match(buildJob, /if: needs\.authorize\.outputs\.published != 'true'/, "an already-published release skips rebuilding");
@@ -113,14 +115,26 @@ const verifySection = workflow.slice(verifyDraft, finalAuthorization);
 const publishSection = workflow.slice(publishVerified);
 assert.match(createSection, /gh release create[^\r\n]+--draft\b/, "release creation remains draft-only");
 assert.match(createSection, /--verify-tag\b/, "release creation verifies that the remote tag still exists");
-assert.match(createSection, /gh api --method DELETE[^\r\n]+\$\(\$_\.id\)/, "reruns remove only stale matching drafts");
+assert.match(createSection, /--target \$env:EXPECTED_RELEASE_SHA\b/, "new drafts are explicitly targeted at the authorized SHA");
+assert.doesNotMatch(createSection, /--method DELETE|gh release delete/, "reruns never delete a draft or published Release");
+assert.match(createSection, /state -eq 'draft'[\s\S]+Reusing exact draft release/, "an exact pre-existing draft is reused without replacement");
 assert.match(createSection, /RELEASE_ID=/, "the exact draft release id is persisted");
 assert.match(createSection, /for \(\$attempt = 1; \$attempt -le 10; \$attempt\+\+\)/, "draft discovery uses a finite retry loop");
 assert.match(createSection, /Start-Sleep -Seconds 2/, "draft discovery tolerates GitHub API propagation delay");
 assert.match(createSection, /\$null -eq \$draft/, "draft discovery fails closed after bounded retries");
+assert.match(createSection, /\$createExitCode -ne 0[\s\S]+no exact release became visible/, "duplicate-create and API failures are re-resolved and fail closed when no exact draft exists");
 assert.match(verifySection, /verify-github-release\.ps1/, "draft verification uses the shared exact-release verifier");
 assert.match(verifySection, /ExpectedState draft/, "draft verification rejects an unexpectedly published release");
+assert.match(verifySection, /ExpectedAssetDirectory release/, "a reused or concurrently-created draft must byte-match this run's tested bundle");
 assert.match(publishSection, /gh api --method PATCH[^\r\n]+repos\/\$env:GITHUB_REPOSITORY\/releases\/\$env:RELEASE_ID/, "the verified draft is published by exact release id");
+
+assert.doesNotMatch(workflow, /releases\?per_page=100/, "release state never depends on an unpaginated first page");
+assert.equal((workflow.match(/resolve-github-release\.mjs/g) || []).length, 2, "authorization and publication use the same exact release resolver");
+assert.match(releaseStateResolver, /MAX_RELEASE_PAGES = 10_000/, "release pagination has an auditable fail-closed bound beyond 100 pages");
+assert.match(releaseStateResolver, /parseNextLink/, "the resolver follows validated GitHub pagination links");
+assert.match(releaseStateResolver, /pageItems\.length === 0/, "the resolver terminates on an explicit empty page");
+assert.match(releaseStateResolver, /matching\.length > 1[\s\S]+release_conflict/, "same-tag draft or published collisions fail closed");
+assert.match(releaseStateResolver, /remoteTagSha !== normalizedExpectedSha/, "release state is independently bound to the authorized tag SHA");
 
 assert.deepEqual(sourcePolicy.requiredChecks, [
   "verify",
@@ -156,8 +170,9 @@ assert.match(verifier, /Invoke-WebRequest -Uri \$asset\.url/, "verification down
 assert.match(verifier, /Unexpected release asset set/, "unexpected downloaded assets fail verification");
 assert.match(verifier, /Unexpected checksum coverage/, "checksum coverage must match expected assets");
 assert.match(verifier, /gh attestation verify \$_\.FullName/, "every downloaded release asset is attestation-verified");
+assert.match(verifier, /Draft asset does not match the tested bundle/, "reused drafts must match the newly tested artifact bytes");
 
 const nativeFailureGuards = workflow.match(/\$PSNativeCommandUseErrorActionPreference = \$true/g) || [];
-assert.equal(nativeFailureGuards.length, 4, "each inline native-command mutation or metadata section treats failures as fatal");
+assert.equal(nativeFailureGuards.length, 5, "each inline native-command boundary is fatal, including restoration after duplicate-create inspection");
 
 console.log("Reviewed-main exact-CI release workflow contract tests passed");

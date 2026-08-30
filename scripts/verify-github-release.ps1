@@ -13,7 +13,9 @@ param(
   [string]$ExpectedState,
 
   [Parameter(Mandatory = $true)]
-  [string]$OutputDirectory
+  [string]$OutputDirectory,
+
+  [string]$ExpectedAssetDirectory = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -76,6 +78,24 @@ $assets = @(Get-ChildItem -LiteralPath $OutputDirectory -File)
 $actualNames = @($assets.Name | Sort-Object)
 if (($actualNames -join "`n") -ne ($expectedAssetNames -join "`n")) {
   throw "Unexpected release asset set: $($actualNames -join ', ')"
+}
+if (-not [string]::IsNullOrWhiteSpace($ExpectedAssetDirectory)) {
+  if (-not (Test-Path -LiteralPath $ExpectedAssetDirectory -PathType Container)) {
+    throw "Expected asset directory does not exist: $ExpectedAssetDirectory"
+  }
+  $expectedAssets = @(Get-ChildItem -LiteralPath $ExpectedAssetDirectory -File)
+  $expectedNames = @($expectedAssets.Name | Sort-Object)
+  if (($expectedNames -join "`n") -ne ($actualNames -join "`n")) {
+    throw "Draft asset names do not match the tested bundle: $($expectedNames -join ', ')"
+  }
+  $assets | ForEach-Object {
+    $expectedPath = Join-Path $ExpectedAssetDirectory $_.Name
+    $expectedDigest = (Get-FileHash -LiteralPath $expectedPath -Algorithm SHA256).Hash
+    $actualDigest = (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash
+    if ($actualDigest -ne $expectedDigest) {
+      throw "Draft asset does not match the tested bundle: $($_.Name)"
+    }
+  }
 }
 $setup = @($assets | Where-Object { $_.Name -match '(?i)setup.*\.exe$' })
 $portable = @($assets | Where-Object { $_.Name -match '(?i)-portable\.exe$' })

@@ -100,30 +100,27 @@ jobs:
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
+          EXPECTED_RELEASE_SHA: ${{ steps.metadata.outputs.release_sha }}
         run: |
           $ErrorActionPreference = 'Stop'
           $PSNativeCommandUseErrorActionPreference = $true
 
-          $releases = @(gh api "repos/$env:GITHUB_REPOSITORY/releases?per_page=100" | ConvertFrom-Json)
-          $matching = @($releases | Where-Object { $_.tag_name -eq $env:RELEASE_TAG })
-          if ($matching.Count -gt 1) {
-            throw "Found multiple GitHub releases for $env:RELEASE_TAG."
-          }
-
-          $published = $matching.Count -eq 1 -and -not $matching[0].draft
-          $releaseId = if ($published) { [long]$matching[0].id } else { 0 }
-          if ($published) {
+          node ./scripts/resolve-github-release.mjs `
+            --repository $env:GITHUB_REPOSITORY `
+            --tag $env:RELEASE_TAG `
+            --expected-sha $env:EXPECTED_RELEASE_SHA `
+            --output existing-release-state.json `
+            --github-output $env:GITHUB_OUTPUT
+          $releaseState = Get-Content -LiteralPath existing-release-state.json -Raw | ConvertFrom-Json
+          if ($releaseState.state -eq 'published') {
             ./scripts/verify-github-release.ps1 `
-              -ReleaseId $releaseId `
+              -ReleaseId $releaseState.release.id `
               -Repository $env:GITHUB_REPOSITORY `
               -Tag $env:RELEASE_TAG `
               -ExpectedState published `
               -OutputDirectory published-existing
             Write-Host "Release $env:RELEASE_TAG is already published and verified; publication is an idempotent no-op."
           }
-
-          "published=$($published.ToString().ToLowerInvariant())" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
-          "release_id=$releaseId" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
 
   build:
     name: build-and-verify-release-assets
@@ -333,35 +330,48 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           $PSNativeCommandUseErrorActionPreference = $true
-          $releases = @(gh api "repos/$env:GITHUB_REPOSITORY/releases?per_page=100" | ConvertFrom-Json)
-          $matching = @($releases | Where-Object { $_.tag_name -eq $env:RELEASE_TAG })
-          $published = @($matching | Where-Object { -not $_.draft })
-          if ($published.Count -gt 0) {
+
+          function Resolve-ExactRelease([string]$OutputPath) {
+            node ./scripts/resolve-github-release.mjs `
+              --repository $env:GITHUB_REPOSITORY `
+              --tag $env:RELEASE_TAG `
+              --expected-sha $env:EXPECTED_RELEASE_SHA `
+              --output $OutputPath | Out-Host
+            return Get-Content -LiteralPath $OutputPath -Raw | ConvertFrom-Json
+          }
+
+          $releaseState = Resolve-ExactRelease 'pre-draft-release-state.json'
+          if ($releaseState.state -eq 'published') {
             throw "Release $env:RELEASE_TAG became published after state resolution; rerun to verify it idempotently."
           }
-          @($matching | Where-Object { $_.draft }) | ForEach-Object {
-            gh api --method DELETE "repos/$env:GITHUB_REPOSITORY/releases/$($_.id)"
-          }
-
-          $flags = @()
-          if ($env:RELEASE_TAG -like '*-rc.*') { $flags += '--prerelease' }
-          gh release create $env:RELEASE_TAG release/*.exe release/SHA256SUMS release/*.spdx.json --draft --verify-tag --title "Lyrics Card Generator $env:RELEASE_TAG" --notes-file "docs/releases/v$env:PACKAGE_VERSION.zh-CN.md" @flags
 
           $draft = $null
-          for ($attempt = 1; $attempt -le 10; $attempt++) {
-            $releases = @(gh api "repos/$env:GITHUB_REPOSITORY/releases?per_page=100" | ConvertFrom-Json)
-            $matching = @($releases | Where-Object { $_.tag_name -eq $env:RELEASE_TAG })
-            if ($matching.Count -gt 1) {
-              throw "Found multiple GitHub releases for $env:RELEASE_TAG after draft creation."
+          if ($releaseState.state -eq 'draft') {
+            $draft = $releaseState.release
+            Write-Host "Reusing exact draft release $($draft.id); its assets must match the tested bundle before publication."
+          } else {
+            $flags = @()
+            if ($env:RELEASE_TAG -like '*-rc.*') { $flags += '--prerelease' }
+            $PSNativeCommandUseErrorActionPreference = $false
+            $createOutput = @(& gh release create $env:RELEASE_TAG release/*.exe release/SHA256SUMS release/*.spdx.json --draft --verify-tag --target $env:EXPECTED_RELEASE_SHA --title "Lyrics Card Generator $env:RELEASE_TAG" --notes-file "docs/releases/v$env:PACKAGE_VERSION.zh-CN.md" @flags 2>&1)
+            $createExitCode = $LASTEXITCODE
+            $PSNativeCommandUseErrorActionPreference = $true
+            if ($createOutput.Count -gt 0) { $createOutput | ForEach-Object { Write-Host $_ } }
+
+            for ($attempt = 1; $attempt -le 10; $attempt++) {
+              $releaseState = Resolve-ExactRelease 'post-create-release-state.json'
+              if ($releaseState.state -eq 'published') {
+                throw "Release $env:RELEASE_TAG became published before draft verification."
+              }
+              if ($releaseState.state -eq 'draft') {
+                $draft = $releaseState.release
+                break
+              }
+              if ($attempt -lt 10) { Start-Sleep -Seconds 2 }
             }
-            if ($matching.Count -eq 1 -and -not $matching[0].draft) {
-              throw "Release $env:RELEASE_TAG became published before draft verification."
+            if ($null -eq $draft -and $createExitCode -ne 0) {
+              throw "Draft creation failed and no exact release became visible: $($createOutput -join [Environment]::NewLine)"
             }
-            if ($matching.Count -eq 1) {
-              $draft = $matching[0]
-              break
-            }
-            if ($attempt -lt 10) { Start-Sleep -Seconds 2 }
           }
           if ($null -eq $draft) {
             throw "Draft release for $env:RELEASE_TAG was not visible after 10 bounded attempts."
@@ -378,7 +388,8 @@ jobs:
             -Repository $env:GITHUB_REPOSITORY `
             -Tag $env:RELEASE_TAG `
             -ExpectedState draft `
-            -OutputDirectory published-draft
+            -OutputDirectory published-draft `
+            -ExpectedAssetDirectory release
 
       - name: Reauthorize source immediately before publication
         shell: pwsh
