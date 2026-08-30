@@ -12,17 +12,18 @@ type AppleLookupResponse = {
   }>;
 };
 
-export async function parseAppleMusic(finalUrl: string, originalUrl: string) {
+export async function parseAppleMusic(finalUrl: string, originalUrl: string, signal?: AbortSignal) {
   const lookupId = extractAppleTrackId(originalUrl) || extractAppleTrackId(finalUrl);
   if (lookupId) {
     try {
-      return await parseAppleLookup(lookupId.id, lookupId.country, finalUrl, originalUrl);
+      return await parseAppleLookup(lookupId.id, lookupId.country, finalUrl, originalUrl, signal);
     } catch {
+      if (signal?.aborted) throw signal.reason;
       // Continue to OG fallback below.
     }
   }
 
-  const { html, finalUrl: fetchedFinalUrl } = await fetchHtml(finalUrl);
+  const { html, finalUrl: fetchedFinalUrl } = await fetchHtml(finalUrl, { signal });
 
   return songInfoFromMeta({
     source: "apple",
@@ -48,9 +49,16 @@ export function extractAppleTrackId(inputUrl: string) {
   }
 }
 
-async function parseAppleLookup(id: string, country: string, finalUrl: string, originalUrl: string) {
+async function parseAppleLookup(
+  id: string,
+  country: string,
+  finalUrl: string,
+  originalUrl: string,
+  signal?: AbortSignal
+) {
   const data = await fetchJson<AppleLookupResponse>(
-    `https://itunes.apple.com/lookup?id=${encodeURIComponent(id)}&entity=song&country=${encodeURIComponent(country)}`
+    `https://itunes.apple.com/lookup?id=${encodeURIComponent(id)}&entity=song&country=${encodeURIComponent(country)}`,
+    { signal }
   );
   const song = data.results?.[0];
 

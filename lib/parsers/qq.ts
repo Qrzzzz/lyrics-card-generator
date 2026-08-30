@@ -39,17 +39,18 @@ type QQApiResponse = {
   data?: QQApiSong[];
 };
 
-export async function parseQQMusic(finalUrl: string, originalUrl: string) {
+export async function parseQQMusic(finalUrl: string, originalUrl: string, signal?: AbortSignal) {
   const songId = extractQQSongId(finalUrl) || extractQQSongId(originalUrl);
   if (songId) {
     try {
-      return await parseQQApi(songId, finalUrl, originalUrl);
+      return await parseQQApi(songId, finalUrl, originalUrl, signal);
     } catch {
+      if (signal?.aborted) throw signal.reason;
       // Continue to HTML/OG fallback below.
     }
   }
 
-  const { html, finalUrl: fetchedFinalUrl } = await fetchHtml(finalUrl);
+  const { html, finalUrl: fetchedFinalUrl } = await fetchHtml(finalUrl, { signal });
   const url = fetchedFinalUrl || finalUrl;
   const embedded = extractEmbeddedSong(html);
   const meta = extractMeta(html, url);
@@ -102,7 +103,8 @@ export async function parseQQMusic(finalUrl: string, originalUrl: string) {
 async function parseQQApi(
   songId: NonNullable<ReturnType<typeof extractQQSongId>>,
   finalUrl: string,
-  originalUrl: string
+  originalUrl: string,
+  signal?: AbortSignal
 ) {
   const queryKey = songId.type === "songid" ? "songid" : "songmid";
   const apiUrl = `https://c.y.qq.com/v8/fcg-bin/fcg_play_single_song.fcg?${queryKey}=${encodeURIComponent(
@@ -117,7 +119,8 @@ async function parseQQApi(
     timeoutMs: 10000,
     maxRedirects: 5,
     maxResponseBytes: 2 * 1024 * 1024,
-    allowedContentTypes: ["application/json", "text/plain", "application/javascript"]
+    allowedContentTypes: ["application/json", "text/plain", "application/javascript"],
+    signal
   });
 
   if (!res.ok) {

@@ -16,6 +16,13 @@ const {
   readProviderError: readNormalizedProviderError,
   readProviderResponseBody
 } = require("./provider-response");
+const {
+  AIStreamError,
+  assertAICompletionBudgets,
+  consumeOpenAICompatibleSSE,
+  createAIStreamDeadline,
+  resourceBudgets
+} = require("./ai-stream");
 const { normalizeStoredPreferences } = require("./user-preferences");
 const { AIRequestRegistry } = require("./ai-request-registry");
 const { assertTrustedIpcEvent } = require("./ipc-security");
@@ -1078,6 +1085,9 @@ function registerDesktopIpc() {
     if (!isValidAIRequestId(requestId) || typeof request?.prompt !== "string" || !request.prompt.trim()) {
       throw createAIError("invalid_request");
     }
+    if (Buffer.byteLength(request.prompt, "utf8") > resourceBudgets.jsonRequestBytes.aiTranslate) {
+      throw createAIError("request_too_large");
+    }
 
     const sender = event.sender;
     // Registry ownership ties cancellation and streamed output to this exact renderer and request generation.
@@ -1507,107 +1517,78 @@ function resolveAIProviderEndpoint(baseUrl) {
 }
 
 async function streamAITranslationInMain({ settings, apiKey, prompt, reasoning, signal, onStatus, onReasoningDelta, onDelta }) {
-  const endpoint = resolveAIProviderEndpoint(settings.baseUrl);
-  const requestBody = buildProviderChatCompletionsRequestBody({
-    baseUrl: settings.baseUrl,
-    model: settings.model,
-    prompt,
-    reasoning,
-    temperature: settings.temperature
-  });
-
-  let response;
+  const deadline = createAIStreamDeadline(signal);
   try {
-    response = await fetch(endpoint, {
+    const endpoint = resolveAIProviderEndpoint(settings.baseUrl);
+    const requestBody = buildProviderChatCompletionsRequestBody({
+      baseUrl: settings.baseUrl,
+      model: settings.model,
+      prompt,
+      reasoning,
+      temperature: settings.temperature
+    });
+    const response = await fetch(endpoint, {
       method: "POST",
       headers: {
         authorization: `Bearer ${apiKey}`,
         "content-type": "application/json"
       },
       body: JSON.stringify(requestBody),
-      signal
+      signal: deadline.signal
     });
-  } catch (error) {
-    if (error?.name === "AbortError") {
-      throw createAIError("cancelled");
+
+    if (!response.ok) {
+      throw createAIError(
+        "provider_error",
+        await readNormalizedProviderError(response, deadline.signal)
+      );
     }
-    throw createAIError("network");
-  }
+    onStatus("connected");
 
-  if (!response.ok) {
-    throw createAIError("provider_error", await readNormalizedProviderError(response));
-  }
-  onStatus("connected");
-
-  const contentType = response.headers.get("content-type") || "";
-  if (!contentType.includes("text/event-stream")) {
-    const body = await readProviderResponseBody(response);
-    const { content, reasoningContent } = getChatCompletionMessage(body);
-    if (reasoningContent) {
-      onStatus("reasoning");
-      onReasoningDelta(reasoningContent);
-    }
-    if (!content) {
-      throw createAIError("empty_response");
-    }
-    onStatus("translating");
-    onDelta(content);
-    return content;
-  }
-
-  if (!response.body) {
-    throw createAIError("empty_stream");
-  }
-
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder();
-  // Retain the incomplete tail because both UTF-8 code points and SSE events may span chunks.
-  let buffer = "";
-  let receivedContent = "";
-
-  while (true) {
-    const { done, value } = await reader.read();
-    buffer += decoder.decode(value, { stream: !done });
-    const events = buffer.split(/\r?\n\r?\n/);
-    buffer = events.pop() || "";
-
-    for (const event of events) {
-      for (const line of event.split(/\r?\n/)) {
-        if (!line.startsWith("data:")) {
-          continue;
-        }
-        const payload = line.slice(5).trim();
-        if (!payload || payload === "[DONE]") {
-          continue;
-        }
-        try {
-          const data = JSON.parse(payload);
-          const reasoningDelta = data?.choices?.[0]?.delta?.reasoning_content;
-          if (reasoningDelta) {
-            onStatus("reasoning");
-            onReasoningDelta(reasoningDelta);
-          }
-          const delta = data?.choices?.[0]?.delta?.content;
-          if (delta) {
-            receivedContent += delta;
-            onStatus("translating");
-            onDelta(delta);
-          }
-        } catch {
-          // Ignore malformed or provider-specific SSE metadata lines.
-        }
+    const contentType = response.headers.get("content-type") || "";
+    if (!contentType.includes("text/event-stream")) {
+      const body = await readProviderResponseBody(response, deadline.signal);
+      const { content, reasoningContent } = getChatCompletionMessage(body);
+      assertAICompletionBudgets(content, reasoningContent);
+      if (reasoningContent) {
+        onStatus("reasoning");
+        onReasoningDelta(reasoningContent);
       }
+      if (!content) throw createAIError("empty_response");
+      onStatus("translating");
+      onDelta(content);
+      return content;
     }
 
-    if (done) {
-      break;
+    if (!response.body) throw createAIError("empty_stream");
+    const result = await consumeOpenAICompatibleSSE(
+      response,
+      {
+        onReasoningDelta(delta) {
+          onStatus("reasoning");
+          onReasoningDelta(delta);
+        },
+        onDelta(delta) {
+          onStatus("translating");
+          onDelta(delta);
+        }
+      },
+      { signal: deadline.signal, deadlineAt: deadline.deadlineAt }
+    );
+    if (!result.content.trim()) throw createAIError("empty_response");
+    return result.content;
+  } catch (error) {
+    if (error instanceof Error && error.message.includes("AI_ERROR:")) throw error;
+    if (signal.aborted) throw createAIError("cancelled");
+    if (deadline.signal.reason instanceof AIStreamError) {
+      throw createAIError(deadline.signal.reason.code);
     }
+    if (error instanceof AIStreamError) throw createAIError(error.code);
+    if (error?.code === "response_too_large") throw createAIError("response_too_large");
+    throw createAIError("network");
+  } finally {
+    deadline.dispose();
   }
-
-  if (!receivedContent.trim()) {
-    throw createAIError("empty_response");
-  }
-  return receivedContent;
 }
 
 function isValidAIRequestId(value) {

@@ -105,6 +105,6 @@ export function buildChatCompletionsRequestBody({
   return requestBody;
 }
 
-export async function readProviderError(response: Response) {
-  return getProviderErrorMessage(await readProviderResponseBody(response), response.status);
+export async function readProviderError(response: Response, signal?: AbortSignal) {
+  return getProviderErrorMessage(await readProviderResponseBody(response, signal), response.status);
 }

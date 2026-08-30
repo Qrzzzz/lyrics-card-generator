@@ -1,6 +1,10 @@
 import { rankLyricsCandidate } from "@/lib/lyrics";
-import { appApiErrorResponse } from "@/lib/app-api-errors";
+import { appApiErrorResponse, appLimitedJsonErrorResponse, appUpstreamErrorResponse } from "@/lib/app-api-errors";
 import { appMutationRejectionResponse, validateAppMutationRequest } from "@/lib/app-request";
+import { readLimitedJson } from "@/lib/json-request";
+import { readResponseJsonBounded } from "@/lib/bounded-response";
+import { withUpstreamDeadline } from "@/lib/upstream-control";
+import resourceBudgets from "@/electron/resource-budgets.json";
 import { z } from "zod";
 
 export const runtime = "nodejs";
@@ -27,15 +31,10 @@ export async function POST(req: Request) {
     return appMutationRejectionResponse(rejection);
   }
 
-  let body: unknown;
+  const bodyResult = await readLimitedJson<unknown>(req, resourceBudgets.jsonRequestBytes.fetchLyrics);
+  if (!bodyResult.ok) return appLimitedJsonErrorResponse(bodyResult.reason);
 
-  try {
-    body = await req.json();
-  } catch {
-    return appApiErrorResponse("invalid_json", 400);
-  }
-
-  const parsed = schema.safeParse(body);
+  const parsed = schema.safeParse(bodyResult.value);
   if (!parsed.success) {
     return appApiErrorResponse("invalid_request", 400);
   }
@@ -45,18 +44,24 @@ export async function POST(req: Request) {
     if (parsed.data.artist.trim()) {
       params.set("artist_name", parsed.data.artist);
     }
-    const res = await fetch(`https://lrclib.net/api/search?${params.toString()}`, {
-      headers: {
-        "user-agent": "LyricsCardGenerator/2.0.0 (local desktop app)"
-      },
-      signal: AbortSignal.timeout(8000)
-    });
-
-    if (!res.ok) {
-      return appApiErrorResponse("lyrics_fetch_failed", 502);
-    }
-
-    const records = (await res.json()) as LrclibRecord[];
+    const records = await withUpstreamDeadline(
+      req.signal,
+      resourceBudgets.upstreamTimeoutMs.lrclib,
+      async (signal) => {
+        const res = await fetch(`https://lrclib.net/api/search?${params.toString()}`, {
+          headers: {
+            "user-agent": "LyricsCardGenerator/2.0.0 (local desktop app)"
+          },
+          signal
+        });
+        if (!res.ok) throw new Error(`LRCLIB returned HTTP ${res.status}.`);
+        return readResponseJsonBounded<LrclibRecord[]>(
+          res,
+          resourceBudgets.upstreamResponseBytes.lrclibSearch,
+          signal
+        );
+      }
+    );
     // LRCLIB results are untrusted search candidates; discard weak identity
     // matches before selecting the highest-confidence lyric payload.
     const candidates = records
@@ -70,7 +75,7 @@ export async function POST(req: Request) {
     }
 
     return Response.json({ ok: true, data: best });
-  } catch {
-    return appApiErrorResponse("lyrics_fetch_failed", 502);
+  } catch (error) {
+    return appUpstreamErrorResponse(error, "lyrics_fetch_failed");
   }
 }

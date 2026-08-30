@@ -1,18 +1,103 @@
 const INVALID_BASE_URL_ERROR_CODE = "invalid_base_url";
 const INSECURE_BASE_URL_ERROR_CODE = "insecure_base_url";
+const resourceBudgets = require("./resource-budgets.json");
 
-async function readProviderResponseBody(response) {
+class ProviderResponseLimitError extends Error {
+  constructor(limitBytes) {
+    super(`Provider response exceeded the ${limitBytes}-byte limit.`);
+    this.name = "ProviderResponseLimitError";
+    this.code = "response_too_large";
+  }
+}
+
+async function readProviderResponseBody(response, signal) {
+  const text = await readResponseTextBounded(
+    response,
+    resourceBudgets.upstreamResponseBytes.aiProviderBody,
+    signal
+  );
+  if (!text.trim()) return { kind: "empty" };
   try {
-    // Parse a clone so the original body remains available for a useful text fallback.
-    return { kind: "json", data: await response.clone().json() };
+    return { kind: "json", data: JSON.parse(text) };
   } catch {
-    try {
-      const text = await response.text();
-      return text.trim() ? { kind: "text", text: text.trim() } : { kind: "empty" };
-    } catch {
-      return { kind: "empty" };
+    return { kind: "text", text: text.trim() };
+  }
+}
+
+async function readResponseTextBounded(response, limitBytes, signal) {
+  const rawLength = response.headers.get("content-length")?.trim();
+  if (rawLength && /^\d+$/.test(rawLength)) {
+    const normalized = rawLength.replace(/^0+(?=\d)/, "");
+    const limit = String(limitBytes);
+    if (normalized.length > limit.length || (normalized.length === limit.length && normalized > limit)) {
+      const error = new ProviderResponseLimitError(limitBytes);
+      await response.body?.cancel(error).catch(() => {});
+      throw error;
     }
   }
+  if (!response.body) return "";
+
+  const reader = response.body.getReader();
+  const chunks = [];
+  let total = 0;
+  try {
+    while (true) {
+      const { done, value } = await readWithSignal(reader, signal);
+      if (done) break;
+      // Node fetch exposes transparently decompressed bytes through this stream.
+      total += value.byteLength;
+      if (total > limitBytes) {
+        const error = new ProviderResponseLimitError(limitBytes);
+        await reader.cancel(error).catch(() => {});
+        throw error;
+      }
+      chunks.push(value);
+    }
+  } finally {
+    try {
+      reader.releaseLock();
+    } catch {
+      // Cancellation already released the response transport.
+    }
+  }
+  const bytes = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return new TextDecoder().decode(bytes);
+}
+
+function readWithSignal(reader, signal) {
+  if (!signal) return reader.read();
+  if (signal.aborted) return Promise.reject(abortReason(signal));
+
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    const finish = (complete) => {
+      if (settled) return;
+      settled = true;
+      signal.removeEventListener("abort", onAbort);
+      complete();
+    };
+    const onAbort = () => {
+      const reason = abortReason(signal);
+      void reader.cancel(reason).catch(() => {});
+      finish(() => reject(reason));
+    };
+    signal.addEventListener("abort", onAbort, { once: true });
+    void reader.read().then(
+      (result) => finish(() => resolve(result)),
+      (error) => finish(() => reject(error))
+    );
+  });
+}
+
+function abortReason(signal) {
+  return signal.reason instanceof Error
+    ? signal.reason
+    : new DOMException("The provider response read was aborted.", "AbortError");
 }
 
 function getChatCompletionsUrl(baseUrl) {
@@ -125,13 +210,14 @@ function getProviderErrorMessage(body, status) {
   return `AI 接口请求失败（HTTP ${status}）。`;
 }
 
-async function readProviderError(response) {
-  return getProviderErrorMessage(await readProviderResponseBody(response), response.status);
+async function readProviderError(response, signal) {
+  return getProviderErrorMessage(await readProviderResponseBody(response, signal), response.status);
 }
 
 module.exports = {
   INVALID_BASE_URL_ERROR_CODE,
   INSECURE_BASE_URL_ERROR_CODE,
+  ProviderResponseLimitError,
   buildChatCompletionsRequestBody,
   getChatCompletionMessage,
   getChatCompletionsUrl,

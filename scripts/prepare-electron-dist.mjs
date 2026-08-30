@@ -84,6 +84,8 @@ async function prepareMinimalElectronApp() {
       },
       files: [
         "electron/main.js",
+        "electron/ai-stream.js",
+        "electron/resource-budgets.json",
         "electron/ai-request-registry.js",
         "electron/ai-prompt-settings.js",
         "electron/background-images.js",
@@ -141,6 +143,11 @@ async function prepareMinimalElectronApp() {
   };
 
   await cp(path.join(projectRoot, "electron", "main.js"), path.join(electronOutputDir, "main.js"));
+  await cp(path.join(projectRoot, "electron", "ai-stream.js"), path.join(electronOutputDir, "ai-stream.js"));
+  await cp(
+    path.join(projectRoot, "electron", "resource-budgets.json"),
+    path.join(electronOutputDir, "resource-budgets.json")
+  );
   await cp(path.join(projectRoot, "electron", "ai-request-registry.js"), path.join(electronOutputDir, "ai-request-registry.js"));
   await cp(path.join(projectRoot, "electron", "ai-prompt-settings.js"), path.join(electronOutputDir, "ai-prompt-settings.js"));
   await cp(path.join(projectRoot, "electron", "background-images.js"), path.join(electronOutputDir, "background-images.js"));

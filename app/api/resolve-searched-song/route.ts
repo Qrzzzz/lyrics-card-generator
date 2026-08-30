@@ -1,6 +1,8 @@
 import { resolveNeteaseSong } from "@/lib/music-search/netease";
-import { appApiErrorResponse } from "@/lib/app-api-errors";
+import { appApiErrorResponse, appLimitedJsonErrorResponse, appUpstreamErrorResponse } from "@/lib/app-api-errors";
 import { appMutationRejectionResponse, validateAppMutationRequest } from "@/lib/app-request";
+import { readLimitedJson } from "@/lib/json-request";
+import resourceBudgets from "@/electron/resource-budgets.json";
 import { z } from "zod";
 
 export const runtime = "nodejs";
@@ -16,22 +18,18 @@ export async function POST(req: Request) {
     return appMutationRejectionResponse(rejection);
   }
 
-  let body: unknown;
-  try {
-    body = await req.json();
-  } catch {
-    return appApiErrorResponse("invalid_json", 400);
-  }
+  const bodyResult = await readLimitedJson<unknown>(req, resourceBudgets.jsonRequestBytes.resolveSearchedSong);
+  if (!bodyResult.ok) return appLimitedJsonErrorResponse(bodyResult.reason);
 
-  const parsed = schema.safeParse(body);
+  const parsed = schema.safeParse(bodyResult.value);
   if (!parsed.success) {
     return appApiErrorResponse("invalid_request", 400);
   }
 
   try {
-    const data = await resolveNeteaseSong(parsed.data.id);
+    const data = await resolveNeteaseSong(parsed.data.id, { signal: req.signal });
     return Response.json({ ok: true, data });
-  } catch {
-    return appApiErrorResponse("song_resolve_failed", 502);
+  } catch (error) {
+    return appUpstreamErrorResponse(error, "song_resolve_failed");
   }
 }

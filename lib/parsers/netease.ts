@@ -26,18 +26,19 @@ type NeteaseApiResponse = {
   songs?: NeteaseApiSong[];
 };
 
-export async function parseNetease(finalUrl: string, originalUrl: string) {
+export async function parseNetease(finalUrl: string, originalUrl: string, signal?: AbortSignal) {
   const songId = extractNeteaseSongId(finalUrl) || extractNeteaseSongId(originalUrl);
 
   if (songId) {
     try {
-      return await parseNeteaseApi(songId, finalUrl, originalUrl);
+      return await parseNeteaseApi(songId, finalUrl, originalUrl, signal);
     } catch {
+      if (signal?.aborted) throw signal.reason;
       // Continue to OG fallback below.
     }
   }
 
-  return parseNeteaseOg(finalUrl, originalUrl);
+  return parseNeteaseOg(finalUrl, originalUrl, signal);
 }
 
 export function extractNeteaseSongId(inputUrl: string) {
@@ -63,13 +64,14 @@ export function extractNeteaseSongId(inputUrl: string) {
   return normalized.match(/[?&]id=(\d+)/)?.[1] || "";
 }
 
-async function parseNeteaseApi(songId: string, finalUrl: string, originalUrl: string) {
+async function parseNeteaseApi(songId: string, finalUrl: string, originalUrl: string, signal?: AbortSignal) {
   const data = await fetchJson<NeteaseApiResponse>(
     `https://music.163.com/api/song/detail?ids=[${encodeURIComponent(songId)}]`,
     {
       headers: {
         referer: "https://music.163.com/"
-      }
+      },
+      signal
     }
   );
   const song = data.songs?.[0];
@@ -94,8 +96,8 @@ async function parseNeteaseApi(songId: string, finalUrl: string, originalUrl: st
   });
 }
 
-async function parseNeteaseOg(finalUrl: string, originalUrl: string) {
-  const { html, finalUrl: fetchedFinalUrl } = await fetchHtml(finalUrl);
+async function parseNeteaseOg(finalUrl: string, originalUrl: string, signal?: AbortSignal) {
+  const { html, finalUrl: fetchedFinalUrl } = await fetchHtml(finalUrl, { signal });
   const url = fetchedFinalUrl || finalUrl;
 
   try {

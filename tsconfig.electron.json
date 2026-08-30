@@ -6,6 +6,7 @@
     "module": "Node16",
     "moduleResolution": "Node16",
     "noEmit": true,
+    "resolveJsonModule": true,
     "skipLibCheck": true,
     "target": "ES2022",
     "types": ["node", "electron"]

@@ -2,9 +2,12 @@ import { appApiErrorResponse } from "@/lib/app-api-errors";
 import {
   isLocalAudioFileTooLarge,
   MAX_LOCAL_AUDIO_BYTES,
+  MAX_LOCAL_AUDIO_ALBUM_CHARACTERS,
+  MAX_LOCAL_AUDIO_ARTIST_CHARACTERS,
   MAX_LOCAL_AUDIO_EMBEDDED_COVER_BYTES,
   MAX_LOCAL_AUDIO_LYRICS_CHARACTERS,
-  MAX_LOCAL_AUDIO_REQUEST_BYTES
+  MAX_LOCAL_AUDIO_REQUEST_BYTES,
+  MAX_LOCAL_AUDIO_TITLE_CHARACTERS
 } from "@/lib/local-audio-limits";
 import {
   cancelRequestBody,
@@ -62,10 +65,16 @@ export function localAudioMetadataSizeRejection(
   pictures: ReadonlyArray<{ data: { byteLength: number } }> | undefined,
   rawLyrics: string,
   maxCoverBytes = MAX_LOCAL_AUDIO_EMBEDDED_COVER_BYTES,
-  maxLyricsCharacters = MAX_LOCAL_AUDIO_LYRICS_CHARACTERS
+  maxLyricsCharacters = MAX_LOCAL_AUDIO_LYRICS_CHARACTERS,
+  text: { title?: string; artist?: string; album?: string } = {}
 ) {
-  if (rawLyrics.length > maxLyricsCharacters) {
-    return appApiErrorResponse("local_audio_too_large", 413);
+  if (
+    rawLyrics.length > maxLyricsCharacters
+    || (text.title?.length ?? 0) > MAX_LOCAL_AUDIO_TITLE_CHARACTERS
+    || (text.artist?.length ?? 0) > MAX_LOCAL_AUDIO_ARTIST_CHARACTERS
+    || (text.album?.length ?? 0) > MAX_LOCAL_AUDIO_ALBUM_CHARACTERS
+  ) {
+    return appApiErrorResponse("local_audio_metadata_too_large", 413);
   }
 
   let totalCoverBytes = 0;
@@ -78,7 +87,7 @@ export function localAudioMetadataSizeRejection(
       || byteLength < 0
       || byteLength > maxCoverBytes - totalCoverBytes
     ) {
-      return appApiErrorResponse("local_audio_too_large", 413);
+      return appApiErrorResponse("local_audio_metadata_too_large", 413);
     }
     totalCoverBytes += byteLength;
   }

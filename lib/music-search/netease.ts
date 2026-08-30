@@ -2,6 +2,13 @@ import { getHighResolutionCoverUrl } from "@/lib/cover-url";
 import { REQUEST_HEADERS } from "@/lib/parsers/shared";
 import type { ParsedSongData } from "@/lib/types";
 import type { ResolvedSongSearchResult, SongSearchResult } from "@/lib/music-search/types";
+import { readResponseJsonBounded, ResponseBodyLimitExceededError } from "@/lib/bounded-response";
+import {
+  ClientRequestCancelledError,
+  UpstreamTimeoutError,
+  withUpstreamDeadline
+} from "@/lib/upstream-control";
+import resourceBudgets from "@/electron/resource-budgets.json";
 
 const SEARCH_ENDPOINT = "https://music.163.com/api/search/get/web";
 const DETAIL_ENDPOINT = "https://music.163.com/api/song/detail";
@@ -31,38 +38,48 @@ export function buildNeteaseSongUrl(id: string) {
   return `https://music.163.com/song?id=${encodeURIComponent(id)}`;
 }
 
-export async function searchNeteaseSongs(keyword: string, limit = 8): Promise<SongSearchResult[]> {
+type NeteaseRequestOptions = { signal?: AbortSignal };
+
+export async function searchNeteaseSongs(
+  keyword: string,
+  limit = 8,
+  options: NeteaseRequestOptions = {}
+): Promise<SongSearchResult[]> {
   const form = new URLSearchParams();
   form.set("s", keyword);
   form.set("limit", String(SEARCH_CANDIDATE_LIMIT));
   form.set("type", "1");
   form.set("offset", "0");
 
-  const response = await fetch(SEARCH_ENDPOINT, {
-    method: "POST",
-    headers: {
-      ...NETEASE_HEADERS,
-      "content-type": "application/x-www-form-urlencoded;charset=UTF-8",
-      cookie: "appver=2.0.2"
+  const data = await fetchNeteaseJson(
+    SEARCH_ENDPOINT,
+    {
+      method: "POST",
+      headers: {
+        ...NETEASE_HEADERS,
+        "content-type": "application/x-www-form-urlencoded;charset=UTF-8",
+        cookie: "appver=2.0.2"
+      },
+      body: form
     },
-    body: form,
-    signal: AbortSignal.timeout(8000)
-  });
-
-  if (!response.ok) {
-    throw new Error(`NetEase search returned HTTP ${response.status}.`);
-  }
-
-  return normalizeNeteaseSearchSongs(await response.json(), limit, keyword);
+    resourceBudgets.upstreamResponseBytes.neteaseSearch,
+    options.signal,
+    "search"
+  );
+  return normalizeNeteaseSearchSongs(data, limit, keyword);
 }
 
-export async function resolveNeteaseSong(id: string): Promise<ResolvedSongSearchResult> {
-  const song = await fetchNeteaseSongDetail(id);
+export async function resolveNeteaseSong(
+  id: string,
+  options: NeteaseRequestOptions = {}
+): Promise<ResolvedSongSearchResult> {
+  const song = await fetchNeteaseSongDetail(id, options.signal);
   let lyrics = "";
 
   try {
-    lyrics = await fetchNeteaseLyrics(id);
-  } catch {
+    lyrics = await fetchNeteaseLyrics(id, options.signal);
+  } catch (error) {
+    if (isResourceControlError(error)) throw error;
     lyrics = "";
   }
 
@@ -211,20 +228,18 @@ export function normalizeNeteaseLyrics(input: unknown) {
   return stripLrcTimestamps(raw);
 }
 
-async function fetchNeteaseSongDetail(id: string): Promise<ParsedSongData> {
-  const response = await fetch(`${DETAIL_ENDPOINT}?ids=[${encodeURIComponent(id)}]`, {
-    headers: NETEASE_HEADERS,
-    signal: AbortSignal.timeout(8000)
-  });
-
-  if (!response.ok) {
-    throw new Error(`NetEase detail returned HTTP ${response.status}.`);
-  }
-
-  return normalizeNeteaseDetail(await response.json(), id);
+async function fetchNeteaseSongDetail(id: string, clientSignal?: AbortSignal): Promise<ParsedSongData> {
+  const data = await fetchNeteaseJson(
+    `${DETAIL_ENDPOINT}?ids=[${encodeURIComponent(id)}]`,
+    { headers: NETEASE_HEADERS },
+    resourceBudgets.upstreamResponseBytes.neteaseDetail,
+    clientSignal,
+    "detail"
+  );
+  return normalizeNeteaseDetail(data, id);
 }
 
-async function fetchNeteaseLyrics(id: string) {
+async function fetchNeteaseLyrics(id: string, clientSignal?: AbortSignal) {
   const params = new URLSearchParams({
     id,
     lv: "1",
@@ -232,16 +247,40 @@ async function fetchNeteaseLyrics(id: string) {
     tv: "-1"
   });
 
-  const response = await fetch(`${LYRIC_ENDPOINT}?${params.toString()}`, {
-    headers: NETEASE_HEADERS,
-    signal: AbortSignal.timeout(8000)
-  });
+  const data = await fetchNeteaseJson(
+    `${LYRIC_ENDPOINT}?${params.toString()}`,
+    { headers: NETEASE_HEADERS },
+    resourceBudgets.upstreamResponseBytes.neteaseLyrics,
+    clientSignal,
+    "lyric"
+  );
+  return normalizeNeteaseLyrics(data);
+}
 
-  if (!response.ok) {
-    throw new Error(`NetEase lyric returned HTTP ${response.status}.`);
-  }
+async function fetchNeteaseJson(
+  url: string,
+  init: RequestInit,
+  maxResponseBytes: number,
+  clientSignal: AbortSignal | undefined,
+  label: string
+) {
+  return withUpstreamDeadline(
+    clientSignal,
+    resourceBudgets.upstreamTimeoutMs.netease,
+    async (signal) => {
+      const response = await fetch(url, { ...init, signal });
+      if (!response.ok) {
+        throw new Error(`NetEase ${label} returned HTTP ${response.status}.`);
+      }
+      return readResponseJsonBounded<unknown>(response, maxResponseBytes, signal);
+    }
+  );
+}
 
-  return normalizeNeteaseLyrics(await response.json());
+function isResourceControlError(error: unknown) {
+  return error instanceof ClientRequestCancelledError
+    || error instanceof UpstreamTimeoutError
+    || error instanceof ResponseBodyLimitExceededError;
 }
 
 function toSearchResult(input: unknown): SongSearchResult | null {

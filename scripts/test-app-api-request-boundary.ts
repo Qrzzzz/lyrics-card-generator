@@ -703,8 +703,13 @@ async function assertLocalAudioUploadLimits() {
   );
   assert.match(
     routeSource,
-    /parseFromTokenizer\(tokenizer, \{\}\)/,
-    "the random-access tokenizer retains one options object for trailing-tag discovery"
+    /limitLocalAudioMetadataTokenizer\(tokenizer\)/,
+    "token lengths are checked before music-metadata can allocate them"
+  );
+  assert.match(
+    routeSource,
+    /parseFromTokenizer\(limitedTokenizer, \{ observer: createLocalAudioMetadataObserver\(\) \}\)/,
+    "the random-access tokenizer retains trailing-tag discovery with observer early-stop guards"
   );
   assert.doesNotMatch(routeSource, /parseWebStream\(/, "non-seekable parsing cannot silently skip trailing APEv2 tags");
   assert.doesNotMatch(routeSource, /file\.arrayBuffer\(\)/, "metadata parsing does not materialize a second full file copy");
@@ -747,7 +752,7 @@ async function assertLocalAudioUploadLimits() {
   await assertStandardRejection(
     oversizedCoverMetadata,
     413,
-    "local_audio_too_large",
+    "local_audio_metadata_too_large",
     "aggregate embedded-cover budget"
   );
   const oversizedLyricsMetadata = localAudioMetadataSizeRejection([], "x".repeat(101), 100, 100);
@@ -755,7 +760,7 @@ async function assertLocalAudioUploadLimits() {
   await assertStandardRejection(
     oversizedLyricsMetadata,
     413,
-    "local_audio_too_large",
+    "local_audio_metadata_too_large",
     "embedded-lyrics budget"
   );
   const clientSource = readFileSync("components/editor/LocalAudioParser.tsx", "utf8");
