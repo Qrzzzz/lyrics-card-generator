@@ -83,6 +83,31 @@ export function inspectReleaseSbom({
     packagePurls(electronPackage).includes(runtime.purl),
     `Electron must expose the exact PACKAGE-MANAGER purl ${runtime.purl}`
   );
+  const electronCpeReferences = (electronPackage.externalRefs ?? []).filter((reference) =>
+    reference?.referenceType === "cpe23Type" ||
+    (typeof reference?.referenceLocator === "string" && reference.referenceLocator.toLowerCase().startsWith("cpe:"))
+  );
+  assert.equal(
+    electronCpeReferences.length,
+    1,
+    "Electron must expose exactly one SECURITY cpe23Type external reference"
+  );
+  const [electronCpeReference] = electronCpeReferences;
+  assert.equal(
+    electronCpeReference.referenceCategory,
+    "SECURITY",
+    "Electron cpe23Type referenceCategory must be SECURITY"
+  );
+  assert.equal(
+    electronCpeReference.referenceType,
+    "cpe23Type",
+    "Electron SECURITY external referenceType must be cpe23Type"
+  );
+  assert.equal(
+    electronCpeReference.referenceLocator,
+    electronCpe23Locator(runtime.version),
+    `Electron cpe23Type referenceLocator must identify electronjs:electron:${runtime.version}`
+  );
   assert.equal(
     electronPackage.checksums?.find((entry) => entry.algorithm === "SHA256")?.checksumValue?.toLowerCase(),
     runtime.binaryArtifact.sha256,
@@ -329,10 +354,14 @@ function createElectronPackage(inventory) {
       {
         referenceCategory: "SECURITY",
         referenceType: "cpe23Type",
-        referenceLocator: `cpe:2.3:a:electronjs:electron:${runtime.version}:*:*:*:*:*:*:*`
+        referenceLocator: electronCpe23Locator(runtime.version)
       }
     ]
   };
+}
+
+function electronCpe23Locator(version) {
+  return `cpe:2.3:a:electronjs:electron:${version}:*:*:*:*:*:*:*`;
 }
 
 function electronSourceInfo(inventory) {

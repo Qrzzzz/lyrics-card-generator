@@ -270,6 +270,11 @@
       }
     ]
   },
+  "additionalLegalElectronReference": {
+    "referenceCategory": "PACKAGE-MANAGER",
+    "referenceType": "purl",
+    "referenceLocator": "pkg:github/electron/electron@v42.9.3"
+  },
   "invalidCases": [
     {
       "name": "missing Electron",
@@ -290,6 +295,51 @@
       "name": "NOASSERTION-only fake component",
       "mutation": "noassertion-component",
       "expected": "downloadLocation must identify"
+    },
+    {
+      "name": "missing Electron CPE",
+      "mutation": "missing-electron-cpe",
+      "expected": "exactly one SECURITY cpe23Type"
+    },
+    {
+      "name": "duplicate exact Electron CPE",
+      "mutation": "duplicate-electron-cpe",
+      "expected": "exactly one SECURITY cpe23Type"
+    },
+    {
+      "name": "extra forged Electron CPE",
+      "mutation": "extra-electron-cpe",
+      "expected": "exactly one SECURITY cpe23Type"
+    },
+    {
+      "name": "NOASSERTION Electron CPE",
+      "mutation": "noassertion-electron-cpe",
+      "expected": "cpe23Type referenceLocator"
+    },
+    {
+      "name": "wrong Electron CPE category",
+      "mutation": "wrong-electron-cpe-category",
+      "expected": "referenceCategory must be SECURITY"
+    },
+    {
+      "name": "wrong Electron CPE type",
+      "mutation": "wrong-electron-cpe-type",
+      "expected": "referenceType must be cpe23Type"
+    },
+    {
+      "name": "forged Electron CPE vendor",
+      "mutation": "forged-electron-cpe-vendor",
+      "expected": "cpe23Type referenceLocator"
+    },
+    {
+      "name": "forged Electron CPE product",
+      "mutation": "forged-electron-cpe-product",
+      "expected": "cpe23Type referenceLocator"
+    },
+    {
+      "name": "wrong Electron CPE version",
+      "mutation": "wrong-electron-cpe-version",
+      "expected": "cpe23Type referenceLocator"
     },
     {
       "name": "production-only inventory mismatch",

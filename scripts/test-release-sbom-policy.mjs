@@ -14,6 +14,14 @@ assert.deepEqual(summary.relationships, {
   applicationDependsOnElectron: true,
   executableEvidence: true
 });
+const enrichedWithAdditionalLegalReference = structuredClone(enriched);
+enrichedWithAdditionalLegalReference.packages
+  .find((entry) => entry.name === "electron")
+  .externalRefs.push(structuredClone(fixture.additionalLegalElectronReference));
+assert.doesNotThrow(
+  () => inspectReleaseSbom({ ...bundle, sbom: enrichedWithAdditionalLegalReference }),
+  "a legal non-CPE Electron external reference must not be rejected"
+);
 
 for (const invalidCase of fixture.invalidCases) {
   const invalid = { ...bundle, sbom: structuredClone(enriched), inventory: structuredClone(bundle.inventory) };
@@ -46,6 +54,7 @@ function materialize(source) {
 
 function applyMutation(mutation, bundle) {
   const electron = () => bundle.sbom.packages.find((entry) => entry.name === "electron");
+  const electronCpe = () => electron().externalRefs.find((entry) => entry.referenceType === "cpe23Type");
   if (mutation === "missing-electron") {
     bundle.sbom.packages = bundle.sbom.packages.filter((entry) => entry.name !== "electron");
     return;
@@ -64,6 +73,46 @@ function applyMutation(mutation, bundle) {
     electron().downloadLocation = "NOASSERTION";
     electron().licenseDeclared = "NOASSERTION";
     electron().sourceInfo = "NOASSERTION";
+    return;
+  }
+  if (mutation === "missing-electron-cpe") {
+    electron().externalRefs = electron().externalRefs.filter((entry) => entry.referenceType !== "cpe23Type");
+    return;
+  }
+  if (mutation === "duplicate-electron-cpe") {
+    electron().externalRefs.push(structuredClone(electronCpe()));
+    return;
+  }
+  if (mutation === "extra-electron-cpe") {
+    electron().externalRefs.push({
+      referenceCategory: "SECURITY",
+      referenceType: "cpe23Type",
+      referenceLocator: "cpe:2.3:a:forged:runtime:42.9.3:*:*:*:*:*:*:*"
+    });
+    return;
+  }
+  if (mutation === "noassertion-electron-cpe") {
+    electronCpe().referenceLocator = "NOASSERTION";
+    return;
+  }
+  if (mutation === "wrong-electron-cpe-category") {
+    electronCpe().referenceCategory = "OTHER";
+    return;
+  }
+  if (mutation === "wrong-electron-cpe-type") {
+    electronCpe().referenceType = "purl";
+    return;
+  }
+  if (mutation === "forged-electron-cpe-vendor") {
+    electronCpe().referenceLocator = electronCpe().referenceLocator.replace(":electronjs:", ":forged:");
+    return;
+  }
+  if (mutation === "forged-electron-cpe-product") {
+    electronCpe().referenceLocator = electronCpe().referenceLocator.replace(":electron:", ":not-electron:");
+    return;
+  }
+  if (mutation === "wrong-electron-cpe-version") {
+    electronCpe().referenceLocator = electronCpe().referenceLocator.replace(":42.9.3:", ":42.9.2:");
     return;
   }
   if (mutation === "desktop-inventory-mismatch") {
