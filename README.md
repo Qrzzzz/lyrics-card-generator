@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v6.1.7.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v6.1.8.zh-CN.md">发布说明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">在线 Web Lite 版</a> ·
   <a href="./docs/web-lite-browser-support.md">Web Lite 浏览器支持</a> ·
   <a href="./docs/desktop.md">桌面维护文档</a> ·
@@ -73,25 +73,26 @@
 
 ## 📦 下载与安装
 
-请从 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下载 v6.1.7：
+请从 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下载 v6.1.8：
 
-* 安装版：`Lyrics Card Generator Setup 6.1.7.exe`
-* 便携版：`Lyrics Card Generator-6.1.7-portable.exe`
+* 安装版：`Lyrics Card Generator Setup 6.1.8.exe`
+* 便携版：`Lyrics Card Generator-6.1.8-portable.exe`
 
 安装版适合长期使用；便携版适合临时运行、测试或放在移动硬盘中使用。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v6.1.7 更新重点
+### v6.1.8 更新重点
 
-* 打开自定义字体方案时，右侧真实歌词卡会向左退场，固定字形样张从右侧推入并接管同一预览位置。
-* 取消或应用时会严格反向切换，不再把真实歌词卡与示例卡上下同时显示，节奏与第一步保持一致。
-* 悬停／键盘字体预览、草稿与一次应用语义、减少动态效果、清空动画及最终导出均保持原有规则。
+* 第一步“手动调整”移入右侧歌曲信息框的右下角，入口与所编辑内容保持在同一上下文中。
+* 手动歌曲信息与自定义字体方案均加入离步门禁；保存／应用或取消前无法切换步骤，并会收到明确提示。
+* 自定义字体统一使用与预设相同的青色选中语义，字体勾选框与禁用状态下的应用按钮也更清晰。
+* 字体样张移除背景算法说明与四色条，第二步 AI 翻译按钮移除右侧脉冲点。
 
 ## 🌐 多语言发布说明
 
 GitHub Release 默认展示简体中文摘要，完整说明见：
-[简体中文](./docs/releases/v6.1.7.zh-CN.md) · [繁體中文](./docs/releases/v6.1.7.zh-TW.md) · [English](./docs/releases/v6.1.7.en.md) · [Français](./docs/releases/v6.1.7.fr.md) · [日本語](./docs/releases/v6.1.7.ja.md) · [Español](./docs/releases/v6.1.7.es.md)
+[简体中文](./docs/releases/v6.1.8.zh-CN.md) · [繁體中文](./docs/releases/v6.1.8.zh-TW.md) · [English](./docs/releases/v6.1.8.en.md) · [Français](./docs/releases/v6.1.8.fr.md) · [日本語](./docs/releases/v6.1.8.ja.md) · [Español](./docs/releases/v6.1.8.es.md)
 
 <a id="主要功能"></a>
 

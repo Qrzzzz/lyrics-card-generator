@@ -1,7 +1,7 @@
 "use client";
 
 import { PaletteBackground } from "@/components/preview/PaletteBackground";
-import { FONT_PANEL_PREVIEW_LYRIC, FONT_PREVIEW_COLORS, FONT_PREVIEW_PALETTE } from "@/lib/font-schemes";
+import { FONT_PANEL_PREVIEW_LYRIC, FONT_PREVIEW_PALETTE } from "@/lib/font-schemes";
 import { quoteSingleFontFamily } from "@/lib/fonts";
 import type { createT } from "@/lib/i18n";
 import { withAlpha } from "@/lib/palette-background";
@@ -21,12 +21,6 @@ export function FontSchemePreviewPanel({
       <div className="mb-5">
         <p className="app-text-subtle text-[11px] uppercase tracking-[0.16em]">{t("fontSchemePreviewBackground")}</p>
         <h2 className="app-text-primary text-base font-semibold">{t("fontSchemePreviewTitle")}</h2>
-        <p className="app-text-subtle mt-2 text-xs leading-relaxed">{t("fontSchemePreviewBackgroundDescription")}</p>
-        <div className="mt-3 flex gap-2" aria-hidden="true" data-testid="font-preview-palette">
-          {FONT_PREVIEW_COLORS.map((color) => (
-            <span key={color} className="h-2 flex-1 rounded-full border border-white/15" style={{ backgroundColor: color }} />
-          ))}
-        </div>
       </div>
 
       <div className="mx-auto w-full max-w-[390px]">

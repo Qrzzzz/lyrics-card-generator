@@ -31,7 +31,6 @@ export function AiTranslateButton({
       <span className="ai-translate-trigger__content">
         {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="ai-translate-trigger__icon h-4 w-4" />}
         <span>{label}</span>
-        {!loading ? <span aria-hidden="true" className="ai-translate-trigger__pulse" /> : null}
       </span>
     </StarBorder>
   );

@@ -158,6 +158,7 @@ assert.match(lyricEditor, /userSettings\.defaultSharedByText/);
 assert.match(lyricEditor, /ready=\{preferencesLoaded\}/);
 assert.match(lyricEditor, /!preferencesLoaded \|\| shouldReduceMotion/);
 assert.match(aiTranslateButton, /ai-translate-trigger h-11/);
+assert.doesNotMatch(aiTranslateButton, /ai-translate-trigger__pulse/);
 assert.match(webLiteLyricInput, /<ActionButton\s+size="md"\s+icon=\{<SplitSquareVertical/);
 assert.match(settingsWorkspace, /createLatestSaveController/);
 assert.match(settingsWorkspace, /saveController\.setDesired\(createAISaveSnapshot\(settings, apiKey\)\)/);

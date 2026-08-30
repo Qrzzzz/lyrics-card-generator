@@ -44,6 +44,11 @@ export type SettingsStep = {
   presentation?: SettingsStepPresentation;
   aside?: ReactNode;
   managesOwnScroll?: boolean;
+  navigationGuard?: {
+    active: boolean;
+    message: string;
+    focusTarget?: string;
+  };
   secondaryAction?: {
     label: ReactNode;
     onClick: () => void;
@@ -73,6 +78,7 @@ export type SettingsStepperProps = {
   headerActions?: ReactNode;
   companionAside?: ReactNode;
   workbenchResizeLabel?: string;
+  onNavigationBlocked?: (message: string) => void;
 };
 
 type StepActionsProps = {
@@ -197,7 +203,8 @@ export function SettingsStepper({
   compactChrome = false,
   headerActions,
   companionAside,
-  workbenchResizeLabel = "Resize settings and preview panes"
+  workbenchResizeLabel = "Resize settings and preview panes",
+  onNavigationBlocked
 }: SettingsStepperProps) {
   recordRenderBoundary("Stepper");
   const reduceMotion = useAppReducedMotion();
@@ -259,13 +266,29 @@ export function SettingsStepper({
   previousStepRef.current = currentStep;
 
   function goToStep(step: number) {
-    onStepChange(Math.min(Math.max(step, 0), steps.length - 1));
+    const nextStep = Math.min(Math.max(step, 0), steps.length - 1);
+    if (nextStep === currentStep) return;
+
+    const guard = activeStep?.navigationGuard;
+    if (guard?.active) {
+      onNavigationBlocked?.(guard.message);
+      const focusTarget = guard.focusTarget;
+      if (focusTarget) {
+        window.requestAnimationFrame(() => {
+          document.querySelector<HTMLElement>(focusTarget)?.focus({ preventScroll: true });
+        });
+      }
+      return;
+    }
+
+    onStepChange(nextStep);
   }
 
   return (
     <section
       data-stepper-presentation={activePresentation}
       data-stepper-compact-chrome={compactChrome ? "true" : "false"}
+      data-navigation-guard-active={activeStep?.navigationGuard?.active ? "true" : "false"}
       className={cn(
         "grid min-w-0 gap-4",
         isLyricsWorkspace
@@ -474,7 +497,7 @@ export function SettingsStepper({
                 step={workbenchSettingsStep}
                 stepIndex={workbenchSettingsStepIndex}
                 stepCount={steps.length}
-                onStepChange={onStepChange}
+                onStepChange={goToStep}
                 nextText={nextText}
                 backText={backText}
                 themeColor={themeColor}
@@ -506,7 +529,7 @@ export function SettingsStepper({
                 step={exportStep}
                 stepIndex={steps.length - 1}
                 stepCount={steps.length}
-                onStepChange={onStepChange}
+                onStepChange={goToStep}
                 nextText={nextText}
                 backText={backText}
                 themeColor={themeColor}
@@ -588,7 +611,7 @@ export function SettingsStepper({
             step={activeStep}
             stepIndex={currentStep}
             stepCount={steps.length}
-            onStepChange={onStepChange}
+            onStepChange={goToStep}
             nextText={nextText}
             backText={backText}
             themeColor={themeColor}

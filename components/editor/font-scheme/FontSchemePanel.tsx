@@ -33,6 +33,7 @@ type FontSchemePanelProps = {
   style: CardStyle;
   onStyleChange: (style: CardStyle) => void;
   onPreviewSchemeChange?: (scheme: FontScheme | null) => void;
+  onEditingChange?: (editing: boolean) => void;
   showHeader?: boolean;
   locale: Locale;
   t: ReturnType<typeof createT>;
@@ -40,7 +41,14 @@ type FontSchemePanelProps = {
 
 type SystemFontStatus = "idle" | "loading" | "ready" | "empty" | "failed" | "unavailable";
 
-export function FontSchemePanel({ style, onStyleChange, onPreviewSchemeChange, showHeader = true, t }: FontSchemePanelProps) {
+export function FontSchemePanel({
+  style,
+  onStyleChange,
+  onPreviewSchemeChange,
+  onEditingChange,
+  showHeader = true,
+  t
+}: FontSchemePanelProps) {
   const desktopApi = getLyricsCardDesktopApi();
   const reduceMotion = useAppReducedMotion();
   const currentScheme = getEffectiveFontScheme(style);
@@ -85,7 +93,8 @@ export function FontSchemePanel({ style, onStyleChange, onPreviewSchemeChange, s
   useEffect(() => () => {
     pickerOpenRef.current = false;
     onPreviewSchemeChange?.(null);
-  }, [onPreviewSchemeChange]);
+    onEditingChange?.(false);
+  }, [onEditingChange, onPreviewSchemeChange]);
 
   function applyScheme(nextScheme: FontScheme) {
     const normalized = normalizeFontScheme(nextScheme);
@@ -121,6 +130,7 @@ export function FontSchemePanel({ style, onStyleChange, onPreviewSchemeChange, s
     pickerOpenRef.current = true;
     setPickerOpen(true);
     onPreviewSchemeChange?.(startingScheme);
+    onEditingChange?.(true);
   }
 
   function selectCustomFont(font: FontFamilyOption) {
@@ -159,6 +169,7 @@ export function FontSchemePanel({ style, onStyleChange, onPreviewSchemeChange, s
     setPickerOpen(false);
     setPickerQuery("");
     onPreviewSchemeChange?.(null);
+    onEditingChange?.(false);
     if (restoreFocus) {
       requestAnimationFrame(() => customSchemeTriggerRef.current?.focus({ preventScroll: true }));
     }
@@ -271,14 +282,19 @@ export function FontSchemePanel({ style, onStyleChange, onPreviewSchemeChange, s
               data-testid="edit-custom-font-scheme"
               aria-controls="custom-font-picker-workbench"
               onClick={openFontSchemePicker}
-              className="control-focus grid w-full gap-4 rounded-xl border border-[rgb(var(--panel-border))] bg-[rgb(var(--button-bg))] px-4 py-4 text-left transition hover:bg-[rgb(var(--button-bg-hover))]"
+              className={cn(
+                "control-focus grid w-full gap-4 rounded-xl border px-4 py-4 text-left transition",
+                currentPresetId
+                  ? "border-[rgb(var(--panel-border))] bg-[rgb(var(--button-bg))] hover:bg-[rgb(var(--button-bg-hover))]"
+                  : "border-cyan-200/55 bg-cyan-300/10"
+              )}
             >
               <span className="flex items-start justify-between gap-4">
                 <span className="min-w-0">
                   <span className="app-text-primary block text-sm font-semibold">{t("fontSchemeCustomName")}</span>
                   <span className="app-text-subtle mt-1 block text-xs leading-relaxed">{t("fontSchemePickerDescription")}</span>
                 </span>
-                <span className="flex shrink-0 items-center gap-1.5 text-xs font-semibold text-[var(--app-accent)]">
+                <span className="app-text-primary flex shrink-0 items-center gap-1.5 text-xs font-semibold">
                   {t("fontSchemeEdit")}
                   <ChevronRight className="size-4" aria-hidden="true" />
                 </span>
@@ -330,7 +346,7 @@ function PanelBlock({
 
 function SelectedBadge({ label }: { label: string }) {
   return (
-    <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[var(--control-selected-bg)] px-2 py-1 text-[11px] font-semibold text-[var(--app-accent)]">
+    <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-cyan-200/15 px-2 py-1 text-[11px] font-semibold text-cyan-100">
       <Check className="size-3" aria-hidden="true" />
       {label}
     </span>
@@ -450,11 +466,11 @@ function InlineFontPicker({
                 className={cn(
                   "control-focus relative min-w-0 overflow-hidden rounded-lg border px-3 py-2.5 text-left transition",
                   active
-                    ? "border-[var(--app-accent)] bg-[var(--control-selected-bg)]"
+                    ? "border-cyan-200/55 bg-cyan-300/10"
                     : "border-[rgb(var(--panel-border))] bg-[rgb(var(--button-bg))] hover:bg-[rgb(var(--button-bg-hover))]"
                 )}
               >
-                {active ? <span className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-[var(--app-accent)]" aria-hidden="true" /> : null}
+                {active ? <span className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-cyan-200" aria-hidden="true" /> : null}
                 <span className="app-text-subtle block text-[11px] font-semibold">
                   {t(optionCategory === "cjk" ? "fontSchemeCjkFont" : "fontSchemeLatinFont")}
                 </span>
@@ -541,7 +557,7 @@ function InlineFontPicker({
             {t("customFontResultCount", { shown: filtered.length, total: options.length })}
           </span>
           <span
-            className={dirty ? "font-semibold text-[var(--app-accent)]" : "app-text-subtle"}
+            className={dirty ? "font-semibold text-cyan-100" : "app-text-subtle"}
             data-testid="font-scheme-draft-status"
             aria-live="polite"
           >
@@ -560,7 +576,7 @@ function InlineFontPicker({
           <button
             type="button"
             data-testid="save-custom-font-scheme"
-            className="control-focus h-10 rounded-lg border border-[var(--app-accent)] bg-[rgb(var(--app-fg))] px-4 text-sm font-bold text-[var(--app-bg)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-45"
+            className="control-focus h-10 min-w-36 rounded-lg border border-cyan-100/70 bg-cyan-100 px-4 text-sm font-bold text-slate-950 transition hover:brightness-105 disabled:cursor-not-allowed disabled:border-[rgb(var(--panel-border))] disabled:bg-[rgb(var(--button-bg-hover))] disabled:text-[rgb(var(--app-muted))] disabled:opacity-100"
             disabled={!dirty}
             onClick={onApply}
           >
@@ -606,9 +622,9 @@ function FontOptionGroup({
               onBlur={onPreviewEnd}
               onClick={() => onSelect(font)}
               className={cn(
-                "control-focus grid min-h-14 grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)_1.25rem] items-center gap-3 rounded-lg border px-3 py-2 text-left transition",
+                "control-focus grid min-h-14 grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)_1.5rem] items-center gap-3 rounded-lg border px-3 py-2 text-left transition",
                 selected
-                  ? "border-[var(--app-accent)] bg-[var(--control-selected-bg)]"
+                  ? "border-cyan-200/55 bg-cyan-300/10"
                   : "border-[rgb(var(--panel-border))] bg-[rgb(var(--button-bg))] hover:bg-[rgb(var(--button-bg-hover))]"
               )}
             >
@@ -619,7 +635,17 @@ function FontOptionGroup({
               >
                 {font.preview}
               </span>
-              <span className={cn("grid size-5 place-items-center rounded-full border", selected ? "border-[rgb(var(--app-fg))] bg-[rgb(var(--app-fg))] text-[var(--app-bg)]" : "border-[rgb(var(--control-border))]")}>
+              <span
+                aria-hidden="true"
+                data-font-selection-indicator="true"
+                data-selected={selected ? "true" : "false"}
+                className={cn(
+                  "grid size-6 place-items-center rounded-md border transition",
+                  selected
+                    ? "border-cyan-100/75 bg-cyan-100/15 text-cyan-100"
+                    : "border-[rgb(var(--control-border))] bg-black/5"
+                )}
+              >
                 {selected ? <Check className="size-3" aria-hidden="true" /> : null}
               </span>
             </button>

@@ -13,7 +13,6 @@ const executablePath = process.env.LYRICS_CARD_TEST_EXECUTABLE?.trim()
 const reportDirectory = path.join(root, "playwright-report", "desktop");
 const userDataDirectory = await mkdtemp(path.join(tmpdir(), "lyrics-card-desktop-test-"));
 const exportOverflowTolerance = 4;
-const activeSongInfoToggleSelector = '[data-stepper-presentation="focus"] [data-testid="song-info-toggle"]';
 const activeCompleteExportButtonSelector = '[data-testid="export-settings-panel"][data-active="true"] [data-testid="complete-export-button"]';
 // Visual metrics are diagnostic-only unless explicitly requested; behavioral
 // assertions remain deterministic in the default regression run.
@@ -951,7 +950,7 @@ async function assertSongSearchBehavior() {
 async function assertSongImportAsideBehavior() {
   const aside = page.getByTestId("song-import-aside");
   const stepper = page.locator('[data-stepper-presentation="focus"]');
-  const manualToggle = stepper.getByTestId("song-info-toggle");
+  const manualToggle = aside.getByTestId("song-info-toggle");
   const nextButton = stepper.getByTestId("stepper-next-button");
   const tinyPng = Buffer.from(
     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
@@ -980,10 +979,13 @@ async function assertSongImportAsideBehavior() {
     await stepper.locator('.lyrics-stepper-actions button').evaluateAll((buttons) => (
       buttons.map((button) => button.getAttribute('data-testid'))
     )),
-    ["song-info-toggle", "stepper-next-button"],
-    "manual adjustment stays immediately before Next"
+    ["stepper-next-button"],
+    "the navigation row no longer duplicates the manual adjustment entry"
   );
   assert.equal(await manualToggle.getAttribute("aria-expanded"), "false", "manual song details start collapsed");
+  const manualRegionId = await manualToggle.getAttribute("aria-controls");
+  assert.ok(manualRegionId, "manual song details expose a controlled region id");
+  const manualRegion = page.locator(`#${manualRegionId}`);
   const originalTitle = (await aside.getByTestId("song-info-summary").locator("dd").first().textContent())?.trim() ?? "";
 
   await manualToggle.focus();
@@ -991,17 +993,27 @@ async function assertSongImportAsideBehavior() {
   const manualEditor = aside.getByTestId("song-info-editor");
   await manualEditor.waitFor({ state: "visible" });
   await page.waitForFunction(() => Boolean(document.activeElement?.closest('[data-testid="song-info-editor"]')));
-  assert.equal(await manualToggle.getAttribute("aria-expanded"), "true", "manual song details open from the keyboard");
+  await manualToggle.waitFor({ state: "detached" });
+  assert.equal(await manualToggle.count(), 0, "the summary-only manual entry leaves with the incoming editor");
   assert.equal(
     await manualEditor.evaluate((node) => node.contains(document.activeElement)),
     true,
     "opening manual song details moves focus into the incoming editor"
   );
 
-  const manualRegionId = await manualToggle.getAttribute("aria-controls");
-  assert.ok(manualRegionId, "manual song details expose a controlled region id");
-  const manualRegion = page.locator(`#${manualRegionId}`);
   assert.equal(await manualRegion.getAttribute("data-song-info-view"), "editor", "the controlled panel swaps to the editor view");
+  await nextButton.click();
+  assert.equal(
+    await page.locator('[aria-current="step"]').getAttribute("data-step-id"),
+    "link",
+    "an unresolved manual draft blocks forward step navigation"
+  );
+  assert.match(
+    await page.getByTestId("app-toast").textContent() ?? "",
+    /保存或取消手动调整/,
+    "blocked navigation explains how to resolve the manual draft"
+  );
+  await page.waitForFunction(() => document.activeElement?.getAttribute("data-testid") === "song-info-cancel");
   const titleInput = manualEditor.locator('input:not([type="file"])').first();
   await titleInput.fill("Discarded manual title");
   const draftCoverInput = manualEditor.locator('input[type="file"]');
@@ -1089,15 +1101,12 @@ async function assertSongImportAsideBehavior() {
   await guardedEditor.locator('input:not([type="file"])').first().fill("Stale manual title");
   const linkInput = page.locator('[data-testid="song-import-alternates"] input:not([type="file"])').first();
   await linkInput.fill("https://example.com/revision-guard");
-  await page.waitForFunction((toggleSelector) => {
-    const toggle = document.querySelector(toggleSelector);
-    const regionId = toggle?.getAttribute("aria-controls");
-    const region = regionId ? document.getElementById(regionId) : null;
-    return toggle?.getAttribute("aria-expanded") === "false" &&
-      region?.getAttribute("data-song-info-view") === "summary";
-  }, activeSongInfoToggleSelector);
+  await page.waitForFunction((regionId) => (
+    document.getElementById(regionId)?.getAttribute("data-song-info-view") === "summary"
+  ), manualRegionId);
   const guardedSummary = aside.getByTestId("song-info-summary");
   await guardedSummary.waitFor({ state: "visible" });
+  await guardedEditor.waitFor({ state: "detached" });
   assert.equal(
     (await guardedSummary.locator("dd").first().textContent())?.trim(),
     "Saved manual title",
@@ -1109,10 +1118,15 @@ async function assertSongImportAsideBehavior() {
   await manualToggle.focus();
 
   await manualToggle.press("Tab");
+  const activeElementAfterManualTab = await page.evaluate(() => ({
+    tagName: document.activeElement?.tagName ?? null,
+    testId: document.activeElement?.getAttribute("data-testid") ?? null,
+    text: document.activeElement?.textContent?.trim() ?? null
+  }));
   assert.equal(
-    await nextButton.evaluate((node) => document.activeElement === node),
-    true,
-    "the collapsed action row keeps manual adjustment immediately before Next"
+    activeElementAfterManualTab.testId,
+    "stepper-next-button",
+    `the summary footer places manual adjustment immediately before Next in keyboard order; received ${JSON.stringify(activeElementAfterManualTab)}`
   );
   await page.evaluate(() => {
     window.__restoreSongCoverObjectUrlAudit?.();
@@ -1656,6 +1670,10 @@ async function assertFontPickerBehavior() {
   assert.equal(await picker.count(), 0, "the inline workbench stays collapsed before custom editing starts");
   assert.equal(await historicalPreview.count(), 0, "the historical sample card is absent outside custom editing");
   assert.equal(await page.getByTestId("apply-font-preset-source-han-sans").getAttribute("aria-pressed"), "true", "the fresh font page marks the saved preset in place");
+  const presetSelectionColors = await page.getByTestId("apply-font-preset-source-han-sans").evaluate((node) => {
+    const style = getComputedStyle(node);
+    return { border: style.borderTopColor, background: style.backgroundColor };
+  });
 
   await customTrigger.click();
   await picker.waitFor({ state: "visible" });
@@ -1668,6 +1686,29 @@ async function assertFontPickerBehavior() {
   const windowsDuringEdit = await electronApp.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().length);
   assert.equal(windowsDuringEdit, 1, "font editing remains inside the main application window");
   assert.equal(await historicalPreview.count(), 1, "the font specimen replaces the real lyric card in the right pane");
+  assert.equal(await page.getByTestId("font-preview-palette").count(), 0, "the specimen no longer repeats the fixed four-color legend");
+  assert.doesNotMatch(
+    await historicalPreview.textContent() ?? "",
+    /真实歌词卡片相同的背景算法|same background algorithm/i,
+    "the removed background-algorithm explanation stays out of the specimen"
+  );
+  const applyButton = page.getByTestId("save-custom-font-scheme");
+  assert.equal(await applyButton.isEnabled(), false, "an unchanged font draft cannot be applied");
+  assert.match(await applyButton.textContent() ?? "", /应用字体方案|Apply Font Scheme/i, "the disabled apply button keeps a visible label");
+  await page.waitForFunction(() => (
+    document.querySelector('[data-stepper-presentation="preview-workbench"]')?.getAttribute("data-navigation-guard-active") === "true"
+  ));
+  await page.locator('button[data-step-id="visual"]').click();
+  await page.waitForFunction(() => /应用或取消自定义字体方案/.test(
+    document.querySelector('[data-testid="app-toast"]')?.textContent ?? ""
+  ));
+  assert.equal(await page.locator('[aria-current="step"]').getAttribute("data-step-id"), "font", "an unresolved font draft blocks step navigation");
+  assert.match(
+    await page.getByTestId("app-toast").textContent() ?? "",
+    /应用或取消自定义字体方案/,
+    "blocked navigation explains how to resolve the custom font draft"
+  );
+  await page.waitForFunction(() => document.activeElement?.getAttribute("data-testid") === "cancel-custom-font-scheme");
 
   const firstCjkOption = picker.locator('[data-font-family="Microsoft YaHei"]').first();
   await firstCjkOption.hover();
@@ -1677,6 +1718,11 @@ async function assertFontPickerBehavior() {
   assert.equal(await picker.getAttribute("data-dirty"), "false", "hover preview does not mutate the font draft");
   await firstCjkOption.click();
   assert.equal(await page.getByTestId("save-custom-font-scheme").isEnabled(), true, "changing either role enables atomic apply");
+  assert.equal(
+    await firstCjkOption.locator('[data-font-selection-indicator="true"]').getAttribute("data-selected"),
+    "true",
+    "the selected font uses an explicit checked indicator"
+  );
   assert.match(
     await page.getByTestId("font-lyric-preview").locator("p").first().evaluate((node) => node.style.fontFamily),
     /Microsoft YaHei/,
@@ -1717,6 +1763,11 @@ async function assertFontPickerBehavior() {
   await historicalPreview.waitFor({ state: "detached" });
   assert.match(await customTrigger.textContent() ?? "", /Microsoft YaHei/, "applying commits the selected CJK font");
   assert.match(await customTrigger.textContent() ?? "", /Arial/, "the same apply action commits the selected Latin font");
+  const customSelectionColors = await customTrigger.evaluate((node) => {
+    const style = getComputedStyle(node);
+    return { border: style.borderTopColor, background: style.backgroundColor };
+  });
+  assert.deepEqual(customSelectionColors, presetSelectionColors, "the custom scheme uses the same fixed selection colors as the presets");
   const appliedPreviewFamily = await realPreview.evaluate((card) => getComputedStyle(card).fontFamily);
   assert.match(appliedPreviewFamily, /Microsoft YaHei/, "the committed pair reaches the real lyric-card preview");
   assert.match(appliedPreviewFamily, /Arial/, "the real lyric-card preview receives the Latin family too");
@@ -1784,8 +1835,8 @@ async function assertFocusedPresentation(width, height) {
         linkEntry && localEntry &&
         Math.abs(linkEntry.closest('section')?.getBoundingClientRect().top - localEntry.closest('section')?.getBoundingClientRect().top) <= 1
       ),
-      hasManualEntry: Boolean(stepper?.querySelector('[data-testid="song-info-toggle"][aria-controls][aria-expanded]')),
-      hasDuplicateManualEntry: Boolean(aside?.querySelector('button[aria-controls][aria-expanded]')),
+      hasManualEntry: Boolean(aside?.querySelector('[data-testid="song-info-toggle"][aria-controls][aria-expanded]')),
+      hasManualEntryInActions: Boolean(stepper?.querySelector('.lyrics-stepper-actions [data-testid="song-info-toggle"]')),
       navigationButtonIds: stepper
         ? [...stepper.querySelectorAll('.lyrics-stepper-actions button')].map((button) => button.getAttribute('data-testid'))
         : [],
@@ -1826,11 +1877,11 @@ async function assertFocusedPresentation(width, height) {
     `${width}x${height} places alternate imports side by side when the left column is wide enough`
   );
   assert.equal(result.hasManualEntry, true, `${width}x${height} preserves manual metadata entry`);
-  assert.equal(result.hasDuplicateManualEntry, false, `${width}x${height} has no duplicate manual metadata button in the aside`);
+  assert.equal(result.hasManualEntryInActions, false, `${width}x${height} removes the old manual metadata action beside Next`);
   assert.deepEqual(
     result.navigationButtonIds,
-    ["song-info-toggle", "stepper-next-button"],
-    `${width}x${height} keeps manual adjustment before Next`
+    ["stepper-next-button"],
+    `${width}x${height} keeps the navigation row focused on Next`
   );
   assert.ok(result.navigationOverflow !== null && result.navigationOverflow <= 1, `${width}x${height} keeps navigation actions inside their row`);
   assert.equal(result.hasLargeCover, true, `${width}x${height} keeps the album cover in the metadata column`);

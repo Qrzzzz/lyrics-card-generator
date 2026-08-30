@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v6.1.7.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v6.1.8.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="./docs/development.en.md">Développement local</a> ·
@@ -74,25 +74,26 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 ## 📦 Téléchargement et installation
 
-Téléchargez la v6.1.7 depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
+Téléchargez la v6.1.8 depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
 
-* Installateur : `Lyrics Card Generator Setup 6.1.7.exe`
-* Version portable : `Lyrics Card Generator-6.1.7-portable.exe`
+* Installateur : `Lyrics Card Generator Setup 6.1.8.exe`
+* Version portable : `Lyrics Card Generator-6.1.8-portable.exe`
 
 L'installateur est recommandé pour une utilisation régulière. La version portable convient aux essais, à une utilisation temporaire ou à un disque amovible.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### Points forts de la v6.1.7
+### Points forts de la v6.1.8
 
-* L’ouverture d’un jeu de polices personnalisé fait désormais sortir la vraie carte vers la gauche, tandis que le spécimen fixe entre depuis la droite et prend sa place dans la même zone d’aperçu.
-* Annuler ou Appliquer joue exactement la transition inverse : la vraie carte et le spécimen ne sont plus empilés dans le volet droit, et le rythme correspond à celui de la première étape.
-* La prévisualisation au pointeur et au clavier, le brouillon et l’application atomique, la réduction des animations, l’animation d’effacement et l’export final conservent leurs règles actuelles.
+* À la première étape, « Réglage manuel » se trouve désormais en bas à droite du panneau d’informations du morceau, près du contenu qu’il modifie.
+* Les informations manuelles et le jeu de polices personnalisé bloquent maintenant tout changement d’étape tant que leur brouillon n’est pas enregistré/appliqué ou annulé, avec un avertissement explicite.
+* Les polices personnalisées reprennent le cyan fixe des préréglages pour signaler la sélection, avec des coches plus nettes et un bouton Appliquer lisible même désactivé.
+* Le spécimen typographique retire l’explication de l’algorithme de fond et les quatre nuances ; le bouton Traduction IA de la deuxième étape perd son point pulsant final.
 
 ## 🌐 Notes de publication multilingues
 
 Par défaut, GitHub Release affiche un résumé en chinois simplifié. Consultez les notes complètes :
-[简体中文](./docs/releases/v6.1.7.zh-CN.md) · [繁體中文](./docs/releases/v6.1.7.zh-TW.md) · [English](./docs/releases/v6.1.7.en.md) · [Français](./docs/releases/v6.1.7.fr.md) · [日本語](./docs/releases/v6.1.7.ja.md) · [Español](./docs/releases/v6.1.7.es.md)
+[简体中文](./docs/releases/v6.1.8.zh-CN.md) · [繁體中文](./docs/releases/v6.1.8.zh-TW.md) · [English](./docs/releases/v6.1.8.en.md) · [Français](./docs/releases/v6.1.8.fr.md) · [日本語](./docs/releases/v6.1.8.ja.md) · [Español](./docs/releases/v6.1.8.es.md)
 
 <a id="fonctionnalités-principales"></a>
 

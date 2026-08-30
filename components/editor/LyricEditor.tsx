@@ -628,6 +628,7 @@ export function LyricEditor() {
                       themeColor={resolvedAccentColor}
                       compactChrome
                       workbenchResizeLabel={t("step.resizeWorkbench")}
+                      onNavigationBlocked={(message) => showToast(message, "warning")}
                       headerActions={
                         <EditorHeaderActions
                           locale={state.locale}

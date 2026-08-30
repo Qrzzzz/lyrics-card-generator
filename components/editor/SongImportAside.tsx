@@ -1,8 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Music2, Save } from "lucide-react";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { Music2, PencilLine, Save } from "lucide-react";
+import { useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
 import { MotionPresence } from "@/components/motion/MotionPresence";
 import { useAppReducedMotion } from "@/components/motion/AppMotionProvider";
 import { AdaptiveAlbumArtwork } from "@/components/preview/AdaptiveAlbumArtwork";
@@ -22,8 +22,10 @@ export type SongImportAsideProps = {
   manualForm: ReactNode;
   manualExpanded: boolean;
   manualRegionId: string;
+  manualButtonRef: RefObject<HTMLButtonElement | null>;
   t: ReturnType<typeof createT>;
   manualSavePending?: boolean;
+  onEdit: () => void;
   onSave: () => void;
   onCancel: () => void;
 };
@@ -39,8 +41,10 @@ export function SongImportAside({
   manualForm,
   manualExpanded,
   manualRegionId,
+  manualButtonRef,
   t,
   manualSavePending = false,
+  onEdit,
   onSave,
   onCancel
 }: SongImportAsideProps) {
@@ -130,7 +134,7 @@ export function SongImportAside({
             <motion.div
               key="song-info-summary"
               data-testid="song-info-summary"
-              className="grid h-full min-w-0 content-start p-4"
+              className="flex h-full min-w-0 flex-col p-4"
               initial={reduceMotion ? { opacity: 0, x: 0 } : { opacity: 0, x: -72 }}
               animate={{ opacity: 1, x: 0 }}
               exit={reduceMotion ? { opacity: 0, x: 0 } : { opacity: 0, x: -72 }}
@@ -195,6 +199,21 @@ export function SongImportAside({
                   </dd>
                 </div>
               </dl>
+
+              <div className="mt-auto flex justify-end border-t border-[rgb(var(--panel-border))] pt-4">
+                <button
+                  ref={manualButtonRef}
+                  type="button"
+                  data-testid="song-info-toggle"
+                  aria-expanded="false"
+                  aria-controls={manualRegionId}
+                  onClick={onEdit}
+                  className="app-button control-focus inline-flex h-10 items-center justify-center gap-2 rounded-lg px-4 text-sm font-semibold"
+                >
+                  <PencilLine className="size-4" aria-hidden="true" />
+                  {t("manualOverride")}
+                </button>
+              </div>
             </motion.div>
           )}
         </MotionPresence>

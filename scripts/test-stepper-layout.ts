@@ -244,13 +244,11 @@ assert.ok(
   "the large song cover stays bounded when the companion column stacks on narrow screens"
 );
 assert.ok(
-  editorStepsSource.includes('testId: "song-info-toggle"') &&
-    editorStepsSource.includes("expanded: songInfoExpanded") &&
-    editorStepsSource.includes("controls: songInfoRegionId") &&
-    editorStepsSource.includes("buttonRef: songInfoToggleRef") &&
-    stepperSource.includes("ref={secondaryAction.buttonRef}") &&
-    stepperSource.includes("aria-controls={secondaryAction.controls}"),
-  "manual song metadata disclosure exposes its state, controlled region, and return-focus target"
+  songImportAsideSource.includes('data-testid="song-info-toggle"') &&
+    songImportAsideSource.includes("ref={manualButtonRef}") &&
+    songImportAsideSource.includes("aria-controls={manualRegionId}") &&
+    editorStepsSource.includes("manualButtonRef={songInfoToggleRef}"),
+  "the song-information footer owns the manual disclosure and its return-focus target"
 );
 assert.ok(
     songImportAsideSource.includes('role="region"') &&
@@ -276,6 +274,13 @@ assert.ok(
     editorStepsSource.includes("songInfoDraftCoverRef") &&
     editorStepsSource.includes("revokeReplacedBlobUrl"),
   "manual song metadata stays in a guarded draft until one explicit save transaction"
+);
+assert.ok(
+  stepperSource.includes("navigationGuard?:") &&
+    stepperSource.includes("onNavigationBlocked?.(guard.message)") &&
+    editorStepsSource.includes('message: t("songInfoNavigationBlocked")') &&
+    /id: "font"[\s\S]*?navigationGuard: \{[\s\S]*?message: t\("fontSchemeNavigationBlocked"\)/.test(editorStepsSource),
+  "manual metadata and custom fonts block step navigation until their draft is explicitly resolved"
 );
 assert.ok(
   editorEffectsSource.includes("useSongCoverObjectUrlLifecycle") &&
