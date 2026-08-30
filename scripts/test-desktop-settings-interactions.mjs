@@ -1099,8 +1099,11 @@ async function assertSongImportAsideBehavior() {
   const guardedEditor = aside.getByTestId("song-info-editor");
   await guardedEditor.waitFor({ state: "visible" });
   await guardedEditor.locator('input:not([type="file"])').first().fill("Stale manual title");
-  const linkInput = page.getByRole("textbox", { name: "音乐链接", exact: true });
-  await linkInput.fill("https://example.com/revision-guard");
+  const linkInput = page.locator('input[aria-label="音乐链接"]');
+  assert.equal(await linkInput.count(), 1, "the link revision guard targets the unique explicit music URL input");
+  const revisionGuardUrl = "https://example.com/revision-guard";
+  await linkInput.fill(revisionGuardUrl);
+  assert.equal(await linkInput.inputValue(), revisionGuardUrl, "the external revision is written to the music URL input");
   await page.waitForFunction((regionId) => (
     document.getElementById(regionId)?.getAttribute("data-song-info-view") === "summary"
   ), manualRegionId);
