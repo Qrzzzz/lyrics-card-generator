@@ -23,6 +23,7 @@ concurrency:
 
 jobs:
   verify:
+    name: verify
     runs-on: ubuntu-latest
 
     steps:
@@ -69,6 +70,7 @@ jobs:
         run: npm run build
 
   render-boundary-regression:
+    name: render-boundary-regression
     # Keep production renderer/export geometry coverage independent from the
     # fast type, lint, and source-contract feedback in the verify job.
     runs-on: ubuntu-latest
@@ -109,6 +111,7 @@ jobs:
           retention-days: 14
 
   web-lite-smoke:
+    name: web-lite-smoke
     # Browser tests remain isolated from the fast verification job so Chromium
     # setup and artifact evidence cannot delay type and contract feedback.
     runs-on: ubuntu-latest
@@ -148,6 +151,7 @@ jobs:
           if-no-files-found: ignore
 
   web-lite-cross-browser-smoke:
+    name: web-lite-cross-browser-smoke (${{ matrix.browser }})
     # Keep the release-blocking compatibility subset small: detailed geometry,
     # axe, format, render-boundary, and benchmark coverage stays Chromium-only.
     runs-on: ubuntu-latest
@@ -226,7 +230,10 @@ jobs:
 
   desktop-packaged-regression:
     name: desktop-packaged-regression
-    if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.desktop_visual_diagnostics)
+    # A release consumes checks for the final main-push SHA. Keeping this job
+    # PR-only would leave the packaged Windows result bound to a different PR
+    # head or synthetic merge SHA after squash/rebase.
+    if: github.event_name == 'push' || github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.desktop_visual_diagnostics)
     runs-on: windows-latest
     timeout-minutes: 60
     env:

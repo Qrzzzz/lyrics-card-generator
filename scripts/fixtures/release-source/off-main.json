@@ -1,0 +1,9 @@
+{
+  "comparison": {
+    "status": "diverged",
+    "merge_base_commit": {
+      "sha": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+    }
+  },
+  "expectedError": "off_main"
+}

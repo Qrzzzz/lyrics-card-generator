@@ -9,6 +9,7 @@ const backgroundCompositionBenchmark = readFileSync("tests/web-lite/web-lite.smo
 const crossBrowserConfig = readFileSync("playwright.web-lite-cross-browser.config.ts", "utf8");
 const crossBrowserSmoke = readFileSync("tests/web-lite-cross-browser/web-lite.cross-browser.smoke.spec.ts", "utf8");
 const browserSupport = readFileSync("docs/web-lite-browser-support.md", "utf8");
+const releaseSourcePolicy = JSON.parse(readFileSync("security/release-source-policy.json", "utf8"));
 
 // Assert workflow intent as source contracts so renamed or reordered CI steps do
 // not silently weaken the packaged regression gate.
@@ -16,6 +17,32 @@ assert.match(workflow, /^\s{2}push:/m, "CI retains its continuous main-push trig
 assert.match(workflow, /^\s{2}pull_request:/m, "CI retains its continuous pull-request trigger");
 assert.match(workflow, /^\s{2}desktop-packaged-regression:/m, "the Windows job describes the full packaged regression scope");
 assert.doesNotMatch(workflow, /^\s{2}desktop-final-artifact-smoke:/m, "the final-artifact command is not misrepresented as the whole job");
+for (const checkName of ["verify", "render-boundary-regression", "web-lite-smoke", "security/locale/a11y gates", "desktop-packaged-regression"]) {
+  assert.match(workflow, new RegExp(`name: ${checkName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`), `${checkName} has a stable GitHub check name`);
+}
+assert.match(
+  workflow,
+  /name: web-lite-cross-browser-smoke \(\$\{\{ matrix\.browser \}\}\)/,
+  "Firefox and WebKit checks have stable matrix-qualified names"
+);
+assert.match(
+  workflow,
+  /desktop-packaged-regression:[\s\S]+if: github\.event_name == 'push' \|\| github\.event_name == 'pull_request'/,
+  "packaged desktop validation runs on the final main-push SHA as well as the PR"
+);
+assert.deepEqual(
+  releaseSourcePolicy.requiredChecks,
+  [
+    "verify",
+    "render-boundary-regression",
+    "web-lite-smoke",
+    "web-lite-cross-browser-smoke (firefox)",
+    "web-lite-cross-browser-smoke (webkit)",
+    "security/locale/a11y gates",
+    "desktop-packaged-regression"
+  ],
+  "release authorization consumes every independent release-blocking CI check"
+);
 assert.ok(
   workflow.indexOf("Run packaged desktop interaction regression") < workflow.indexOf("Run Setup and portable final-artifact smoke"),
   "interaction and final-artifact checks remain distinct steps"

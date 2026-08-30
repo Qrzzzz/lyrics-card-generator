@@ -16,38 +16,44 @@ concurrency:
   group: release-${{ inputs.tag || github.ref_name }}
   cancel-in-progress: false
 
-permissions:
-  contents: write
-  id-token: write
-  attestations: write
+# Every job opts into only the permissions needed for its phase. In
+# particular, source authorization cannot mutate repository or Release state.
+permissions: {}
 
 env:
   RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
 
 jobs:
-  resolve:
-    name: resolve-release-state
+  authorize:
+    name: authorize-release-source
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    permissions:
+      actions: read
+      attestations: read
+      contents: read
+      pull-requests: read
     outputs:
-      version: ${{ steps.release_state.outputs.version }}
+      version: ${{ steps.metadata.outputs.version }}
+      release_sha: ${{ steps.metadata.outputs.release_sha }}
+      main_sha: ${{ steps.source.outputs.main_sha }}
+      reviewed_pr: ${{ steps.source.outputs.reviewed_pr }}
+      ci_run_id: ${{ steps.source.outputs.ci_run_id }}
+      ci_run_attempt: ${{ steps.source.outputs.ci_run_attempt }}
       published: ${{ steps.release_state.outputs.published }}
       release_id: ${{ steps.release_state.outputs.release_id }}
 
     steps:
-      - name: Checkout exact tag SHA
-        # Release validation must inspect the immutable tag target rather than
-        # whichever commit happens to be at the branch tip.
+      - name: Checkout exact tag ref
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
-          ref: ${{ env.RELEASE_TAG }}
+          ref: refs/tags/${{ env.RELEASE_TAG }}
           fetch-depth: 0
+          persist-credentials: false
 
-      - name: Validate tag and resolve existing release
-        id: release_state
+      - name: Validate tag metadata and bind local commit
+        id: metadata
         shell: pwsh
-        env:
-          GH_TOKEN: ${{ github.token }}
         run: |
           $ErrorActionPreference = 'Stop'
           $PSNativeCommandUseErrorActionPreference = $true
@@ -59,15 +65,44 @@ jobs:
             throw "Tag $env:RELEASE_TAG does not match package version $version."
           }
 
+          $tagRef = "refs/tags/$env:RELEASE_TAG"
+          git show-ref --verify $tagRef | Out-Null
           $head = git rev-parse HEAD
-          $tagHead = git rev-list -n 1 $env:RELEASE_TAG
-          if ($head -ne $tagHead) { throw "Checkout SHA $head does not match tag SHA $tagHead" }
+          $tagHead = git rev-parse "$tagRef^{commit}"
+          if ($head -ne $tagHead) { throw "Checkout SHA $head does not match peeled tag SHA $tagHead" }
 
           @('en','es','fr','ja','zh-CN','zh-TW') | ForEach-Object {
             if (-not (Test-Path "docs/releases/v$version.$_.md")) {
               throw "Missing docs/releases/v$version.$_.md"
             }
           }
+
+          "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          "release_sha=$tagHead" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+
+      - name: Authorize reviewed main ancestry and exact CI
+        id: source
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EXPECTED_RELEASE_SHA: ${{ steps.metadata.outputs.release_sha }}
+        run: |
+          node ./scripts/verify-release-source.mjs `
+            --repository $env:GITHUB_REPOSITORY `
+            --tag $env:RELEASE_TAG `
+            --expected-sha $env:EXPECTED_RELEASE_SHA `
+            --output release-source-evidence.json `
+            --github-output $env:GITHUB_OUTPUT
+          Get-Content -LiteralPath release-source-evidence.json
+
+      - name: Resolve and verify existing release state
+        id: release_state
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $PSNativeCommandUseErrorActionPreference = $true
 
           $releases = @(gh api "repos/$env:GITHUB_REPOSITORY/releases?per_page=100" | ConvertFrom-Json)
           $matching = @($releases | Where-Object { $_.tag_name -eq $env:RELEASE_TAG })
@@ -87,27 +122,41 @@ jobs:
             Write-Host "Release $env:RELEASE_TAG is already published and verified; publication is an idempotent no-op."
           }
 
-          "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
           "published=$($published.ToString().ToLowerInvariant())" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
           "release_id=$releaseId" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
 
-  release:
-    name: build-verify-publish
-    needs: resolve
-    if: needs.resolve.outputs.published != 'true'
+  build:
+    name: build-and-verify-release-assets
+    needs: authorize
+    if: needs.authorize.outputs.published != 'true'
     runs-on: windows-latest
     timeout-minutes: 90
+    permissions:
+      attestations: write
+      contents: read
+      id-token: write
     env:
       CI: "true"
       CSC_IDENTITY_AUTO_DISCOVERY: "false"
-      PACKAGE_VERSION: ${{ needs.resolve.outputs.version }}
+      PACKAGE_VERSION: ${{ needs.authorize.outputs.version }}
+      EXPECTED_RELEASE_SHA: ${{ needs.authorize.outputs.release_sha }}
 
     steps:
-      - name: Checkout exact tag SHA
+      - name: Checkout authorized tag SHA
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
-          ref: ${{ env.RELEASE_TAG }}
+          ref: refs/tags/${{ env.RELEASE_TAG }}
           fetch-depth: 0
+          persist-credentials: false
+
+      - name: Confirm build checkout matches authorization
+        shell: pwsh
+        run: |
+          $head = git rev-parse HEAD
+          $tagHead = git rev-parse "refs/tags/$env:RELEASE_TAG^{commit}"
+          if ($head -ne $env:EXPECTED_RELEASE_SHA -or $tagHead -ne $env:EXPECTED_RELEASE_SHA) {
+            throw "Build checkout/tag moved: head=$head tag=$tagHead authorized=$env:EXPECTED_RELEASE_SHA"
+          }
 
       - name: Setup Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
@@ -136,7 +185,7 @@ jobs:
           npm run core:test
           npm run build
 
-      - name: Build Setup and portable from tag SHA
+      - name: Build Setup and portable from authorized SHA
         id: desktop_build
         run: npm run desktop:build
 
@@ -176,11 +225,11 @@ jobs:
           config: security/syft-release.yaml
           syft-version: v1.51.0
           format: spdx-json
-          output-file: release/lyrics-card-generator-${{ needs.resolve.outputs.version }}.spdx.json
+          output-file: release/lyrics-card-generator-${{ needs.authorize.outputs.version }}.spdx.json
           upload-artifact: false
 
       - name: Inspect packaged runtime SPDX SBOM
-        run: npm run sbom:inspect -- release/lyrics-card-generator-${{ needs.resolve.outputs.version }}.spdx.json
+        run: npm run sbom:inspect -- release/lyrics-card-generator-${{ needs.authorize.outputs.version }}.spdx.json
 
       - name: Generate SHA256SUMS
         shell: pwsh
@@ -201,14 +250,74 @@ jobs:
       - name: Upload tested release bundle
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: lyrics-card-generator-${{ env.RELEASE_TAG }}-tested
+          name: lyrics-card-generator-${{ env.RELEASE_TAG }}-${{ needs.authorize.outputs.release_sha }}-tested
           path: |
             release/*.exe
             release/SHA256SUMS
             release/*.spdx.json
+          if-no-files-found: error
+
+      - name: Upload release test evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: release-test-evidence-${{ env.RELEASE_TAG }}-${{ github.run_attempt }}
+          path: |
             playwright-report/desktop/**
             playwright-report/desktop-final-artifacts/**
-          if-no-files-found: error
+          if-no-files-found: ignore
+
+  publish:
+    name: publish-verified-release
+    needs:
+      - authorize
+      - build
+    if: needs.authorize.outputs.published != 'true'
+    runs-on: windows-latest
+    timeout-minutes: 30
+    permissions:
+      actions: read
+      attestations: read
+      contents: write
+      pull-requests: read
+    env:
+      PACKAGE_VERSION: ${{ needs.authorize.outputs.version }}
+      EXPECTED_RELEASE_SHA: ${{ needs.authorize.outputs.release_sha }}
+
+    steps:
+      - name: Checkout authorized tag SHA
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          ref: refs/tags/${{ env.RELEASE_TAG }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Reauthorize source before Release mutation
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $head = git rev-parse HEAD
+          if ($head -ne $env:EXPECTED_RELEASE_SHA) {
+            throw "Publication checkout $head does not match authorized SHA $env:EXPECTED_RELEASE_SHA"
+          }
+          node ./scripts/verify-release-source.mjs `
+            --repository $env:GITHUB_REPOSITORY `
+            --tag $env:RELEASE_TAG `
+            --expected-sha $env:EXPECTED_RELEASE_SHA `
+            --output publication-source-evidence.json
+
+      - name: Download tested release bundle
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: lyrics-card-generator-${{ env.RELEASE_TAG }}-${{ needs.authorize.outputs.release_sha }}-tested
+          path: release
 
       - name: Create draft GitHub release
         shell: pwsh
@@ -263,6 +372,17 @@ jobs:
             -Tag $env:RELEASE_TAG `
             -ExpectedState draft `
             -OutputDirectory published-draft
+
+      - name: Reauthorize source immediately before publication
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          node ./scripts/verify-release-source.mjs `
+            --repository $env:GITHUB_REPOSITORY `
+            --tag $env:RELEASE_TAG `
+            --expected-sha $env:EXPECTED_RELEASE_SHA `
+            --output final-publication-source-evidence.json
 
       - name: Publish verified GitHub release
         shell: pwsh
