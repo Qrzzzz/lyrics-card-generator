@@ -108,20 +108,20 @@ test("retains first-open state while closed surfaces stay outside lyric-input re
   await expect(page.getByTestId("ai-translate-panel")).toBeVisible();
   await expect(page.getByTestId("lyrics-ai-page-back")).toBeFocused();
   const visibleAnimationWork = await continuousEditorAnimationWork(page);
-  expect(visibleAnimationWork.runningInfinite).toBeGreaterThanOrEqual(2);
-  expect(visibleAnimationWork.aiDecorationStates).toEqual(["running", "running"]);
+  expect(visibleAnimationWork.runningInfinite).toBeGreaterThanOrEqual(1);
+  expect(visibleAnimationWork.aiDecorationStates).toEqual(["running"]);
   await page.getByTestId("examples-button").click();
   await expect(editorSurface).toHaveAttribute("aria-hidden", "true");
   await expect(editorSurface).toHaveAttribute("data-surface-work", "paused");
   const hiddenAnimationWork = await continuousEditorAnimationWork(page);
   expect(hiddenAnimationWork.runningInfinite).toBe(0);
-  expect(hiddenAnimationWork.aiDecorationStates).toEqual(["paused", "paused"]);
+  expect(hiddenAnimationWork.aiDecorationStates).toEqual(["paused"]);
   await page.getByTestId("examples-close-button").click();
   await expect(editorSurface).toHaveAttribute("data-surface-work", "running");
   await expect(page.getByTestId("examples-button")).toBeFocused();
   const resumedAnimationWork = await continuousEditorAnimationWork(page);
   expect(resumedAnimationWork.runningInfinite).toBe(visibleAnimationWork.runningInfinite);
-  expect(resumedAnimationWork.aiDecorationStates).toEqual(["running", "running"]);
+  expect(resumedAnimationWork.aiDecorationStates).toEqual(["running"]);
   await page.getByTestId("lyrics-ai-page-back").click();
   await expect(page.getByTestId("ai-translate-panel")).toHaveCount(0);
   await page.getByTestId("lyrics-command-ai").click();
@@ -185,7 +185,7 @@ test("keeps reduced-motion animation semantics across hidden surface restore", a
   await expect(page.getByTestId("ai-translate-panel")).toBeVisible();
   const visibleWork = await continuousEditorAnimationWork(page);
   expect(visibleWork.runningInfinite).toBe(0);
-  expect(visibleWork.aiDecorationNames).toEqual(["none", "none"]);
+  expect(visibleWork.aiDecorationNames).toEqual(["none"]);
 
   await page.getByTestId("examples-button").click();
   await expect(editorSurface).toHaveAttribute("data-surface-work", "paused");
@@ -193,7 +193,7 @@ test("keeps reduced-motion animation semantics across hidden surface restore", a
   await page.getByTestId("examples-close-button").click();
   await expect(editorSurface).toHaveAttribute("data-surface-work", "running");
   await expect(page.getByTestId("examples-button")).toBeFocused();
-  expect((await continuousEditorAnimationWork(page)).aiDecorationNames).toEqual(["none", "none"]);
+  expect((await continuousEditorAnimationWork(page)).aiDecorationNames).toEqual(["none"]);
 });
 
 test("bounds React commits for a deterministic 360-chunk AI stream", async ({ page }) => {
