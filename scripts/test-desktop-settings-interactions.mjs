@@ -1099,7 +1099,7 @@ async function assertSongImportAsideBehavior() {
   const guardedEditor = aside.getByTestId("song-info-editor");
   await guardedEditor.waitFor({ state: "visible" });
   await guardedEditor.locator('input:not([type="file"])').first().fill("Stale manual title");
-  const linkInput = page.locator('[data-testid="song-import-alternates"] input:not([type="file"])').first();
+  const linkInput = page.getByRole("textbox", { name: "音乐链接", exact: true });
   await linkInput.fill("https://example.com/revision-guard");
   await page.waitForFunction((regionId) => (
     document.getElementById(regionId)?.getAttribute("data-song-info-view") === "summary"
