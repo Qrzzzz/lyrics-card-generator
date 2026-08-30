@@ -52,6 +52,7 @@
     "electron-runtime:test": "node scripts/test-electron-runtime-coverage.cjs",
     "clipboard-image:test": "node scripts/test-electron-clipboard-image.cjs",
     "clipboard-image-native:test": "electron scripts/test-electron-clipboard-native.cjs",
+    "packaged-sandbox-preload:test": "node scripts/test-packaged-sandbox-preload.mjs",
     "ai-settings-store:test": "node scripts/test-electron-ai-settings-store.cjs",
     "electron-runtime:coverage": "c8 --clean --all --include=electron/preload.js --include=electron/ipc-security.js --include=electron/url-policy.js --include=electron/local-app-url.js --include=electron/local-server-origin.js --include=electron/manual-save-ipc.js --include=electron/import-history.js --include=electron/packaged-server-readiness.js --include=electron/ai-request-registry.js --check-coverage --per-file --lines 70 --functions 75 --branches 60 --statements 70 node scripts/test-electron-runtime-coverage.cjs",
     "click-spark:test": "tsx scripts/test-click-spark-animation.ts",

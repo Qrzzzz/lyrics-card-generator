@@ -1,4 +1,5 @@
 const assert = require("node:assert/strict");
+const { readFileSync } = require("node:fs");
 const { deflateSync } = require("node:zlib");
 const {
   ClipboardImageValidationError,
@@ -27,6 +28,14 @@ assert.deepEqual(clipboardImageBudget, {
   decodedPixels: 48_000_000,
   decodedRgbaBytes: 192_000_000
 });
+const preloadSource = readFileSync("electron/preload.js", "utf8");
+const preloadEncodedBudget = preloadSource.match(/const MAX_CLIPBOARD_IMAGE_ENCODED_BYTES = (\d+);/);
+assert.ok(preloadEncodedBudget, "preload declares its sandbox-safe encoded-byte budget as a plain integer");
+assert.equal(
+  Number(preloadEncodedBudget[1]),
+  clipboardImageBudget.encodedBytes,
+  "the sandbox-safe preload duplicate cannot drift from the centralized main-process budget"
+);
 
 const legalBoundary = createPng(2_880, 12_800, deflateSync(Buffer.from([0])));
 assert.deepEqual(

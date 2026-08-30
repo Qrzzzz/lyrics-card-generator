@@ -1,11 +1,52 @@
 const { contextBridge, ipcRenderer, webUtils } = require("electron");
-const { getClipboardPngEncodedByteLength } = require("./clipboard-image");
 
 const MAX_MANUAL_SAVE_ENVELOPE_CODE_UNITS = 2 * 1024 * 1024 + 64;
+// Keep this sandbox-safe duplicate synchronized with
+// resource-budgets.json#clipboardImage.encodedBytes. Sandboxed preloads cannot
+// require local CommonJS modules; main remains the authoritative PNG parser.
+const MAX_CLIPBOARD_IMAGE_ENCODED_BYTES = 167772160;
+const PNG_DATA_URL_PREFIX = "data:image/png;base64,";
 const NATIVE_DIALOG_TYPES = new Set(["info", "warning", "error", "question"]);
 
 function isClipboardPngDataUrl(value) {
   return getClipboardPngEncodedByteLength(value) !== null;
+}
+
+function getClipboardPngEncodedByteLength(value) {
+  if (typeof value !== "string" || !value.startsWith(PNG_DATA_URL_PREFIX)) return null;
+  const payloadStart = PNG_DATA_URL_PREFIX.length;
+  const payloadLength = value.length - payloadStart;
+  if (payloadLength === 0 || payloadLength % 4 !== 0) return null;
+
+  let padding = 0;
+  if (value.endsWith("==")) padding = 2;
+  else if (value.endsWith("=")) padding = 1;
+  const decodedBytes = (payloadLength / 4) * 3 - padding;
+  if (
+    !Number.isSafeInteger(decodedBytes) ||
+    decodedBytes <= 0 ||
+    decodedBytes > MAX_CLIPBOARD_IMAGE_ENCODED_BYTES
+  ) return null;
+
+  const dataEnd = value.length - padding;
+  for (let index = payloadStart; index < dataEnd; index += 1) {
+    if (base64Sextet(value.charCodeAt(index)) < 0) return null;
+  }
+  for (let index = dataEnd; index < value.length; index += 1) {
+    if (value.charCodeAt(index) !== 61) return null;
+  }
+  if (padding === 2 && (base64Sextet(value.charCodeAt(dataEnd - 1)) & 0x0f) !== 0) return null;
+  if (padding === 1 && (base64Sextet(value.charCodeAt(dataEnd - 1)) & 0x03) !== 0) return null;
+  return decodedBytes;
+}
+
+function base64Sextet(code) {
+  if (code >= 65 && code <= 90) return code - 65;
+  if (code >= 97 && code <= 122) return code - 71;
+  if (code >= 48 && code <= 57) return code + 4;
+  if (code === 43) return 62;
+  if (code === 47) return 63;
+  return -1;
 }
 
 function isDialogText(value, maximumLength, allowEmpty = false) {

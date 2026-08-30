@@ -212,8 +212,13 @@ assert.match(
 );
 assert.match(
   preloadSource,
-  /getClipboardPngEncodedByteLength\(value\) !== null/,
+  /MAX_CLIPBOARD_IMAGE_ENCODED_BYTES = 167772160[\s\S]*?getClipboardPngEncodedByteLength\(value\) !== null/,
   "preload validates the PNG envelope and encoded-byte budget before IPC"
+);
+assert.doesNotMatch(
+  preloadSource,
+  /require\(["']\.\//,
+  "the sandboxed preload never requires a local CommonJS module"
 );
 assert.match(
   mainSource,

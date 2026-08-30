@@ -2,6 +2,7 @@ const { spawnSync } = require("node:child_process");
 
 const tests = [
   "scripts/test-electron-clipboard-image.cjs",
+  "scripts/test-electron-sandbox-preload-contract.cjs",
   "scripts/test-electron-preload-runtime.cjs",
   "scripts/test-electron-security-contract.cjs",
   "scripts/test-electron-local-server-origin.cjs",

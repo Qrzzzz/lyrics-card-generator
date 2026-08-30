@@ -31,6 +31,18 @@ for (const relativePath of stagedElectronFiles) {
   assert.deepEqual(packagedBytes, sourceBytes, `${relativePath} differs inside app.asar`);
 }
 
+const packagedPreloadSource = asar.extractFile(packagedAsarPath, "electron/preload.js").toString("utf8");
+assert.doesNotMatch(
+  packagedPreloadSource,
+  /require\(["']\.\//,
+  "the packaged sandboxed preload cannot depend on a local CommonJS module"
+);
+assert.match(
+  packagedPreloadSource,
+  /contextBridge\.exposeInMainWorld\("lyricsCardDesktopBridge"/,
+  "the packaged preload retains the desktop bridge exposure"
+);
+
 const stagedPackage = JSON.parse(fs.readFileSync(path.join(stagedAppRoot, "package.json"), "utf8"));
 const packagedPackage = JSON.parse(asar.extractFile(packagedAsarPath, "package.json").toString("utf8"));
 for (const key of ["name", "version", "private", "main", "productName"]) {
