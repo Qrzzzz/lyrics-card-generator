@@ -246,6 +246,7 @@ export function LyricEditor() {
   const {
     celebrationKey,
     isCompleteExporting,
+    activeOutputAction,
     clearTransitionKey,
     activeExportSnapshot,
     documentRevision,
@@ -275,7 +276,8 @@ export function LyricEditor() {
     saveManualArchive,
     handleHistoryRecordRemoved,
     handleHistoryCleared,
-    completeAndExport
+    completeAndExport,
+    copyImageToClipboard
   } = useEditorActions({
     parsedState,
     setState,
@@ -297,6 +299,8 @@ export function LyricEditor() {
     clearAlreadyEmptyMessage: settingsCopy[state.locale].clearAlreadyEmpty,
     exportBusyMessage: t("exportBusy"),
     exportFailedMessage: t("exportFailed"),
+    copyImageSuccessMessage: t("imageCopied"),
+    copyImageFailedMessage: t("copyImageFailed"),
     exportImageTooLargeMessage: t("exportImageTooLarge"),
     confirmReplaceDocument: () => {
       const dialogCopy = systemDialogCopy[state.locale];
@@ -463,6 +467,7 @@ export function LyricEditor() {
     canFetchLyrics,
     themeColor: resolvedAccentColor,
     isExporting: isCompleteExporting,
+    activeOutputAction,
     exportReadinessStore,
     exportFormat,
     exportQuality,
@@ -503,7 +508,8 @@ export function LyricEditor() {
       onFontSchemePreviewChange: setFontSchemePreview,
       onExportFormatChange: setExportFormat,
       onExportQualityChange: setExportQuality,
-      onExport: completeAndExport
+      onExport: completeAndExport,
+      onCopyImage: copyImageToClipboard
     }
   });
   const loadExampleEvent = useStableEvent(loadExample);

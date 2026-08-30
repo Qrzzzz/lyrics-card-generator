@@ -208,6 +208,16 @@ assert.match(
   /function invokeNativeDialog\(channel, type, title, message, detail, primaryLabel, cancelLabel\)[\s\S]*?NATIVE_DIALOG_TYPES\.has\(type\)[\s\S]*?ipcRenderer\.invoke/,
   "preload validates native dialog bounds before IPC"
 );
+assert.match(
+  preloadSource,
+  /function isClipboardPngDataUrl\(value\)[\s\S]*?MAX_CLIPBOARD_IMAGE_DATA_URL_CODE_UNITS[\s\S]*?startsWith\(PNG_DATA_URL_PREFIX\)/,
+  "preload bounds native clipboard payloads before IPC"
+);
+assert.match(
+  mainSource,
+  /handle\("lyrics-card:clipboard-write-image"[\s\S]*?nativeImage\.createFromDataURL\(dataUrl\)[\s\S]*?image\.isEmpty\(\)[\s\S]*?clipboard\.writeImage\(image\)/,
+  "the trusted main process validates and writes a decoded native image"
+);
 assert.doesNotMatch(mainSource, /native-font-picker|fontPickerWindow|showWindowsFontSchemeDialog/);
 assert.doesNotMatch(preloadSource, /native-font-picker|openNativeFontPickerWindow|applyNativeFontPickerFamilies/);
 assert.match(
@@ -479,6 +489,7 @@ const nextConfig = readFileSync("next.config.mjs", "utf8");
 for (const directive of ["default-src 'self'", "script-src", "style-src", "img-src", "font-src", "connect-src", "object-src 'none'", "frame-ancestors 'none'"]) {
   assert.ok(nextConfig.includes(directive), directive);
 }
+assert.match(nextConfig, /connect-src 'self' blob: https:/, "same-origin object URL covers remain available to image export");
 assert.match(nextConfig, /Permissions-Policy/);
 
 async function testManualSaveIpcEarlyRejection() {

@@ -9,8 +9,10 @@ const immutable = "public, max-age=31536000, immutable";
 for (const source of ["/_next/static/:path*", "/fonts/:path*", "/app-icon.png"]) {
   assert.equal(bySource.get(source)?.get("Cache-Control"), immutable, `${source} is content-addressed and immutable`);
 }
-assert.match(bySource.get("/:path*")?.get("Content-Security-Policy") ?? "", /default-src 'self'/);
-assert.match(bySource.get("/:path*")?.get("Content-Security-Policy") ?? "", /object-src 'none'/);
+const contentSecurityPolicy = bySource.get("/:path*")?.get("Content-Security-Policy") ?? "";
+assert.match(contentSecurityPolicy, /default-src 'self'/);
+assert.match(contentSecurityPolicy, /connect-src 'self' blob: https:/, "local object URLs remain exportable under CSP");
+assert.match(contentSecurityPolicy, /object-src 'none'/);
 
 const [globalsSource, staticAssetsSource, readinessSource] = await Promise.all([
   readFile("app/globals.css", "utf8"),

@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v6.1.8.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v6.2.0.zh-CN.md">发布说明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">在线 Web Lite 版</a> ·
   <a href="./docs/web-lite-browser-support.md">Web Lite 浏览器支持</a> ·
   <a href="./docs/desktop.md">桌面维护文档</a> ·
@@ -73,26 +73,26 @@
 
 ## 📦 下载与安装
 
-请从 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下载 v6.1.8：
+v6.2.0 已发布，可从 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下载：
 
-* 安装版：`Lyrics Card Generator Setup 6.1.8.exe`
-* 便携版：`Lyrics Card Generator-6.1.8-portable.exe`
+* 安装版：`Lyrics Card Generator Setup 6.2.0.exe`
+* 便携版：`Lyrics Card Generator-6.2.0-portable.exe`
 
 安装版适合长期使用；便携版适合临时运行、测试或放在移动硬盘中使用。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v6.1.8 更新重点
+### v6.2.0 更新重点
 
-* 第一步“手动调整”移入右侧歌曲信息框的右下角，入口与所编辑内容保持在同一上下文中。
-* 手动歌曲信息与自定义字体方案均加入离步门禁；保存／应用或取消前无法切换步骤，并会收到明确提示。
-* 自定义字体统一使用与预设相同的青色选中语义，字体勾选框与禁用状态下的应用按钮也更清晰。
-* 字体样张移除背景算法说明与四色条，第二步 AI 翻译按钮移除右侧脉冲点。
+* “完成并导出”旁新增“复制图片”，可将当前成品直接写入系统剪贴板。
+* 剪贴板统一使用 PNG，并继承当前导出清晰度；复制不会改变 PNG、WebP 或 JPG 的下载格式选择。
+* 桌面版使用受信任的 Electron 原生剪贴板桥接，Web Lite 在浏览器支持图片剪贴板时提供同一入口。
+* 复制与下载共用不可变快照、就绪校验、像素上限和互斥事务，避免复制到过期、溢出或尚未完成的画面。
 
 ## 🌐 多语言发布说明
 
 GitHub Release 默认展示简体中文摘要，完整说明见：
-[简体中文](./docs/releases/v6.1.8.zh-CN.md) · [繁體中文](./docs/releases/v6.1.8.zh-TW.md) · [English](./docs/releases/v6.1.8.en.md) · [Français](./docs/releases/v6.1.8.fr.md) · [日本語](./docs/releases/v6.1.8.ja.md) · [Español](./docs/releases/v6.1.8.es.md)
+[简体中文](./docs/releases/v6.2.0.zh-CN.md) · [繁體中文](./docs/releases/v6.2.0.zh-TW.md) · [English](./docs/releases/v6.2.0.en.md) · [Français](./docs/releases/v6.2.0.fr.md) · [日本語](./docs/releases/v6.2.0.ja.md) · [Español](./docs/releases/v6.2.0.es.md)
 
 <a id="主要功能"></a>
 
@@ -105,6 +105,7 @@ GitHub Release 默认展示简体中文摘要，完整说明见：
 * 横版按真实内容求解封面／歌曲信息左列与歌词右列，不裁切歌词或封面
 * 竖版自定义尺寸支持基于真实 DOM 测量的自动宽度与自动高度
 * 支持导出高清 PNG、WebP 和 JPG 图片
+* 支持将高质量 PNG 成品直接复制到系统剪贴板
 
 ### 📝 歌词排版与翻译
 

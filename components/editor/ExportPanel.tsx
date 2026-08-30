@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, ImageDown } from "lucide-react";
+import { AlertTriangle, ClipboardCopy, ImageDown } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useAppReducedMotion } from "@/components/motion/AppMotionProvider";
 import {
@@ -21,6 +21,7 @@ export function ExportPanel({
   exportQuality,
   onExportQualityChange,
   isExporting,
+  isCopying = false,
   blockingMessage,
   readinessStore,
   qualityOptions = ["low", "medium", "high"],
@@ -33,6 +34,7 @@ export function ExportPanel({
   exportQuality: ExportQualityId;
   onExportQualityChange: (quality: ExportQualityId) => void;
   isExporting: boolean;
+  isCopying?: boolean;
   blockingMessage?: string;
   readinessStore?: ExportCardReadinessStore;
   qualityOptions?: readonly ExportQualityId[];
@@ -118,12 +120,18 @@ export function ExportPanel({
                           : { duration: 1.35, repeat: Number.POSITIVE_INFINITY, ease: "linear" }
                       }
                     />
-                    <ImageDown className="size-4" style={{ color: accentColor }} strokeWidth={2} />
+                    {isCopying ? (
+                      <ClipboardCopy className="size-4" style={{ color: accentColor }} strokeWidth={2} />
+                    ) : (
+                      <ImageDown className="size-4" style={{ color: accentColor }} strokeWidth={2} />
+                    )}
                   </div>
 
                   <div className="min-w-0 flex-1">
                     <p className="app-text-primary text-sm font-semibold">
-                      {t("preparingImage", { format: exportFormat === "webp" ? "WebP" : exportFormat.toUpperCase() })}
+                      {isCopying
+                        ? t("preparingCopy")
+                        : t("preparingImage", { format: exportFormat === "webp" ? "WebP" : exportFormat.toUpperCase() })}
                     </p>
                     <div
                       aria-hidden="true"

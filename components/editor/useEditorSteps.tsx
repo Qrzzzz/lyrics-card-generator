@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { ClipboardCopy } from "lucide-react";
 import {
   DeferredAiTranslatePanel,
   DeferredExportPanel
@@ -86,6 +87,7 @@ export type EditorStepHandlers = {
   onExportFormatChange: (format: ExportFormatId) => void;
   onExportQualityChange: (quality: ExportQualityId) => void;
   onExport: () => void | Promise<void>;
+  onCopyImage: () => void | Promise<void>;
 };
 
 type UseEditorStepsInput = {
@@ -94,6 +96,7 @@ type UseEditorStepsInput = {
   canFetchLyrics: boolean;
   themeColor: string;
   isExporting: boolean;
+  activeOutputAction: "export" | "copy" | null;
   exportReadinessStore: ExportCardReadinessStore;
   exportFormat: ExportFormatId;
   exportQuality: ExportQualityId;
@@ -112,6 +115,7 @@ export function useEditorSteps({
   canFetchLyrics,
   themeColor,
   isExporting,
+  activeOutputAction,
   exportReadinessStore,
   exportFormat,
   exportQuality,
@@ -214,6 +218,7 @@ export function useEditorSteps({
   const onExportFormatChange = useStableEvent(handlers.onExportFormatChange);
   const onExportQualityChange = useStableEvent(handlers.onExportQualityChange);
   const onExport = useStableEvent(handlers.onExport);
+  const onCopyImage = useStableEvent(handlers.onCopyImage);
   const toggleSongInfoEditorEvent = useStableEvent(toggleSongInfoEditor);
   const updateSongInfoDraftEvent = useStableEvent(updateSongInfoDraft);
   const saveSongInfoEditorEvent = useStableEvent(saveSongInfoEditor);
@@ -481,6 +486,18 @@ export function useEditorSteps({
       title: t("step.export"),
       presentation: "preview-workbench",
       isComplete: true,
+      secondaryAction: {
+        label: (
+          <span className="inline-flex items-center justify-center gap-2 whitespace-nowrap">
+            <ClipboardCopy className="h-4 w-4 shrink-0" aria-hidden="true" />
+            <span>{t("step.copyImage")}</span>
+          </span>
+        ),
+        onClick: onCopyImage,
+        testId: "copy-image-button",
+        disabled: isExporting,
+        readinessStore: exportReadinessStore
+      },
       primaryAction: {
         label: t("step.complete"),
         onClick: onExport,
@@ -498,14 +515,17 @@ export function useEditorSteps({
           exportQuality={exportQuality}
           onExportQualityChange={onExportQualityChange}
           isExporting={isExporting}
+          isCopying={activeOutputAction === "copy"}
           readinessStore={exportReadinessStore}
         />
       )
   }), [
+    activeOutputAction,
     exportFormat,
     exportQuality,
     exportReadinessStore,
     isExporting,
+    onCopyImage,
     onExport,
     onExportFormatChange,
     onExportQualityChange,

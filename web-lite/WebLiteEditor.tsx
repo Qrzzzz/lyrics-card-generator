@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { ClipboardCopy } from "lucide-react";
 import { ExportPanel } from "@/components/editor/ExportPanel";
 import { ExportCardHost } from "@/components/editor/ExportCardHost";
 import { AutoWidthMeasurementHost } from "@/components/editor/AutoWidthMeasurementHost";
@@ -29,7 +30,7 @@ import {
 } from "@/components/editor/hooks/useLyricEditorEffects";
 import { clearLyricContent, hasClearableLyricContent } from "@/lib/clear-content";
 import { applyEditorStyleChange } from "@/lib/editor/apply-style-change";
-import { exportNodeAsImage } from "@/lib/export-image";
+import { copyNodeAsPng, exportNodeAsImage } from "@/lib/export-image";
 import { getExportRasterSizeIssue } from "@/lib/export-dimensions";
 import { createExportSnapshot, snapshotAsAppState, type ExportSnapshot } from "@/lib/export-snapshot";
 import { resolveExportSafetyMessage } from "@/lib/export-safety";
@@ -111,7 +112,8 @@ export function WebLiteEditor() {
   const [exportQuality, setExportQuality] = useState<Extract<ExportQualityId, "medium" | "high">>(
     initialPreferences.exportQuality
   );
-  const [isExporting, setIsExporting] = useState(false);
+  const [activeOutputAction, setActiveOutputAction] = useState<"export" | "copy" | null>(null);
+  const isExporting = activeOutputAction !== null;
   const [activeExportSnapshot, setActiveExportSnapshot] = useState<ExportSnapshot | null>(null);
   const [toast, setToast] = useState<ToastNotice | null>(null);
   const [clearTransitionKey, setClearTransitionKey] = useState(0);
@@ -358,7 +360,7 @@ export function WebLiteEditor() {
     setState((current) => withLyricPlainText(current, lyrics, translationText, true));
   }
 
-  async function completeAndExport() {
+  async function runImageOutput(action: "export" | "copy") {
     const liveValidation = getLiveExportCardValidation(
       parsedState,
       exportCardRef.current,
@@ -382,7 +384,7 @@ export function WebLiteEditor() {
       parsedState,
       getExportPixelRatio(exportQuality),
       exportRevisionRef.current,
-      exportFormat
+      action === "copy" ? "png" : exportFormat
     );
     if (getExportRasterSizeIssue(snapshot.width, snapshot.height, snapshot.pixelRatio)) {
       showToast(t("exportImageTooLarge"), "warning");
@@ -393,7 +395,7 @@ export function WebLiteEditor() {
       mutex: exportMutexRef.current,
       snapshot,
       mountSnapshot: async (mountedSnapshot, signal) => {
-        setIsExporting(true);
+        setActiveOutputAction(action);
         setActiveExportSnapshot(mountedSnapshot);
         return waitForExportSnapshotNode(() => captureCardRef.current, mountedSnapshot.id, signal);
       },
@@ -407,31 +409,47 @@ export function WebLiteEditor() {
           ? resolveExportSafetyMessage(validation.blockingReason, validation.lineStatus.totalLineCount, t, validation.lineStatus.maxLineCount)
           : null;
       },
-      captureSnapshot: (mountedSnapshot, node, signal) => exportNodeAsImage(
-        node,
-        mountedSnapshot.fileName,
-        mountedSnapshot.format,
-        mountedSnapshot.width,
-        mountedSnapshot.height,
-        mountedSnapshot.pixelRatio,
-        signal
-      ),
+      captureSnapshot: (mountedSnapshot, node, signal) => action === "copy"
+        ? copyNodeAsPng(
+            node,
+            mountedSnapshot.width,
+            mountedSnapshot.height,
+            mountedSnapshot.pixelRatio,
+            signal
+          )
+        : exportNodeAsImage(
+            node,
+            mountedSnapshot.fileName,
+            mountedSnapshot.format,
+            mountedSnapshot.width,
+            mountedSnapshot.height,
+            mountedSnapshot.pixelRatio,
+            signal
+          ),
       unmountSnapshot: () => {
         setActiveExportSnapshot(null);
-        setIsExporting(false);
+        setActiveOutputAction(null);
       }
     });
 
     if (result.ok) {
-      showToast(copy.exportReady, "success");
+      showToast(action === "copy" ? t("imageCopied") : copy.exportReady, "success");
     } else if (result.kind === "busy") {
       showToast(t("exportBusy"), "warning");
     } else if (result.kind === "blocked") {
       showToast(result.reason, "warning");
     } else {
-      console.error("[Lyrics Card Generator Web Lite] export failed", result.error);
-      showToast(copy.exportFailed, "error");
+      console.error(`[Lyrics Card Generator Web Lite] ${action} image output failed`, result.error);
+      showToast(action === "copy" ? t("copyImageFailed") : copy.exportFailed, "error");
     }
+  }
+
+  function completeAndExport() {
+    return runImageOutput("export");
+  }
+
+  function copyImageToClipboard() {
+    return runImageOutput("copy");
   }
 
   const steps: SettingsStep[] = [
@@ -523,6 +541,18 @@ export function WebLiteEditor() {
       id: "export",
       title: t("step.export"),
       isComplete: true,
+      secondaryAction: {
+        label: (
+          <span className="inline-flex items-center justify-center gap-2 whitespace-nowrap">
+            <ClipboardCopy className="h-4 w-4 shrink-0" aria-hidden="true" />
+            <span>{t("step.copyImage")}</span>
+          </span>
+        ),
+        onClick: copyImageToClipboard,
+        testId: "copy-image-button",
+        disabled: isExporting,
+        readinessStore: exportReadinessStore
+      },
       primaryAction: {
         label: t("step.complete"),
         onClick: completeAndExport,
@@ -544,6 +574,7 @@ export function WebLiteEditor() {
           qualityOptions={EXPORT_QUALITY_OPTIONS}
           qualityLabels={{ medium: copy.exportStandard, high: copy.exportHigh }}
           isExporting={isExporting}
+          isCopying={activeOutputAction === "copy"}
           readinessStore={exportReadinessStore}
         />
       )

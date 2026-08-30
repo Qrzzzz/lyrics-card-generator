@@ -14,7 +14,9 @@ const nextConfig = {
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https:",
       "font-src 'self' data:",
-      "connect-src 'self' https:",
+      // html-to-image fetches same-origin object URLs while embedding locally
+      // uploaded cover art into the isolated export snapshot.
+      "connect-src 'self' blob: https:",
       "object-src 'none'",
       "base-uri 'self'",
       "frame-ancestors 'none'",

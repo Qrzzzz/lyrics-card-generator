@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v6.1.8.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v6.2.0.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="./docs/development.en.md">Développement local</a> ·
@@ -74,26 +74,26 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 ## 📦 Téléchargement et installation
 
-Téléchargez la v6.1.8 depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
+La v6.2.0 est publiée et disponible dans [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
 
-* Installateur : `Lyrics Card Generator Setup 6.1.8.exe`
-* Version portable : `Lyrics Card Generator-6.1.8-portable.exe`
+* Installateur : `Lyrics Card Generator Setup 6.2.0.exe`
+* Version portable : `Lyrics Card Generator-6.2.0-portable.exe`
 
 L'installateur est recommandé pour une utilisation régulière. La version portable convient aux essais, à une utilisation temporaire ou à un disque amovible.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### Points forts de la v6.1.8
+### Points forts de la v6.2.0
 
-* À la première étape, « Réglage manuel » se trouve désormais en bas à droite du panneau d’informations du morceau, près du contenu qu’il modifie.
-* Les informations manuelles et le jeu de polices personnalisé bloquent maintenant tout changement d’étape tant que leur brouillon n’est pas enregistré/appliqué ou annulé, avec un avertissement explicite.
-* Les polices personnalisées reprennent le cyan fixe des préréglages pour signaler la sélection, avec des coches plus nettes et un bouton Appliquer lisible même désactivé.
-* Le spécimen typographique retire l’explication de l’algorithme de fond et les quatre nuances ; le bouton Traduction IA de la deuxième étape perd son point pulsant final.
+* Une nouvelle action « Copier l’image », à côté de « Terminer et exporter », place directement la carte finale dans le presse-papiers système.
+* Le presse-papiers reçoit toujours un PNG avec la qualité d’export actuelle ; la copie ne modifie pas le format de téléchargement PNG, WebP ou JPG sélectionné.
+* L’application de bureau utilise un pont Electron natif et fiable ; Web Lite propose la même action lorsque le navigateur accepte les images dans le presse-papiers.
+* Copie et téléchargement partagent le même instantané immuable, les contrôles de disponibilité, les limites de pixels et le verrou de transaction.
 
 ## 🌐 Notes de publication multilingues
 
 Par défaut, GitHub Release affiche un résumé en chinois simplifié. Consultez les notes complètes :
-[简体中文](./docs/releases/v6.1.8.zh-CN.md) · [繁體中文](./docs/releases/v6.1.8.zh-TW.md) · [English](./docs/releases/v6.1.8.en.md) · [Français](./docs/releases/v6.1.8.fr.md) · [日本語](./docs/releases/v6.1.8.ja.md) · [Español](./docs/releases/v6.1.8.es.md)
+[简体中文](./docs/releases/v6.2.0.zh-CN.md) · [繁體中文](./docs/releases/v6.2.0.zh-TW.md) · [English](./docs/releases/v6.2.0.en.md) · [Français](./docs/releases/v6.2.0.fr.md) · [日本語](./docs/releases/v6.2.0.ja.md) · [Español](./docs/releases/v6.2.0.es.md)
 
 <a id="fonctionnalités-principales"></a>
 
@@ -106,6 +106,7 @@ Par défaut, GitHub Release affiche un résumé en chinois simplifié. Consultez
 * Planification paysage guidée par le contenu pour la colonne pochette/métadonnées et la colonne de paroles, sans recadrer les paroles ni la pochette
 * Largeur et hauteur automatiques mesurées pour les toiles portrait personnalisées
 * Export PNG, WebP et JPG haute résolution
+* Copie directe d’un PNG haute qualité dans le presse-papiers système
 
 ### 📝 Mise en page et traduction des paroles
 

@@ -60,6 +60,7 @@ async function run() {
     ["saveAppPreferences", [{ revision: 1 }, { importHistoryTrimConfirmation: true }]],
     ["listSystemFonts", []],
     ["openExternal", ["https://github.com/"]],
+    ["copyImageToClipboard", ["data:image/png;base64,iVBORw0KGgo="]],
     ["saveBackgroundImage", []],
     ["readBackgroundImage", ["image-id"]],
     ["removeBackgroundImage", ["image-id"]],
@@ -80,6 +81,15 @@ async function run() {
     ["cancelAITranslation", ["request-id"]]
   ];
   for (const [method, args] of directCalls) await exposedBridge[method](...args);
+
+  const invocationCountBeforeInvalidClipboardImages = invocations.length;
+  assert.equal(await exposedBridge.copyImageToClipboard("data:image/jpeg;base64,AAAA"), false);
+  assert.equal(await exposedBridge.copyImageToClipboard("data:image/png;base64,"), false);
+  assert.equal(
+    invocations.length,
+    invocationCountBeforeInvalidClipboardImages,
+    "invalid clipboard payloads never cross IPC"
+  );
 
   const invocationCountBeforeInvalidDialogs = invocations.length;
   assert.equal(
@@ -124,6 +134,14 @@ async function run() {
   assert.equal(aiChunk.delta, "done");
   removeAIChunk();
 
+  assert.ok(
+    invocations.some(({ channel, args }) => (
+      channel === "lyrics-card:clipboard-write-image"
+      && args.length === 1
+      && args[0].startsWith("data:image/png;base64,")
+    )),
+    "preload forwards only a bounded PNG data URL to the native clipboard"
+  );
   assert.ok(
     invocations.some(({ channel, args }) => (
       channel === "lyrics-card:import-file-register"

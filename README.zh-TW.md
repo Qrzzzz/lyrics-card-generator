@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v6.1.8.zh-TW.md">發布說明</a> ·
+  <a href="./docs/releases/v6.2.0.zh-TW.md">發布說明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">線上 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="./docs/development.zh-CN.md">本機開發</a> ·
@@ -71,26 +71,26 @@
 
 ## 📦 下載與安裝
 
-請從 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載 v6.1.8：
+v6.2.0 已發布，可從 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載：
 
-* 安裝版：`Lyrics Card Generator Setup 6.1.8.exe`
-* 可攜版：`Lyrics Card Generator-6.1.8-portable.exe`
+* 安裝版：`Lyrics Card Generator Setup 6.2.0.exe`
+* 可攜版：`Lyrics Card Generator-6.2.0-portable.exe`
 
 安裝版適合長期使用；可攜版適合臨時執行、測試或放在隨身碟中使用。
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v6.1.8 更新重點
+### v6.2.0 更新重點
 
-* 第一步「手動調整」移入右側歌曲資訊框的右下角，入口與所編輯內容維持在同一脈絡中。
-* 手動歌曲資訊與自訂字型方案均加入離步門禁；儲存／套用或取消前無法切換步驟，並會收到明確提示。
-* 自訂字型統一使用與預設相同的青色選取語意，字型勾選框與停用狀態下的套用按鈕也更清楚。
-* 字型樣張移除背景演算法說明與四色條，第二步 AI 翻譯按鈕移除右側脈衝點。
+* 「完成並匯出」旁新增「複製圖片」，可將目前成品直接寫入系統剪貼簿。
+* 剪貼簿統一使用 PNG，並沿用目前匯出清晰度；複製不會變更 PNG、WebP 或 JPG 的下載格式選擇。
+* 桌面版使用受信任的 Electron 原生剪貼簿橋接，Web Lite 在瀏覽器支援圖片剪貼簿時提供相同入口。
+* 複製與下載共用不可變快照、就緒檢查、像素上限與互斥交易，避免複製過期、溢出或尚未完成的畫面。
 
 ## 🌐 多語言發佈說明
 
 GitHub Release 預設顯示簡體中文摘要，完整說明請見：
-[简体中文](./docs/releases/v6.1.8.zh-CN.md) · [繁體中文](./docs/releases/v6.1.8.zh-TW.md) · [English](./docs/releases/v6.1.8.en.md) · [Français](./docs/releases/v6.1.8.fr.md) · [日本語](./docs/releases/v6.1.8.ja.md) · [Español](./docs/releases/v6.1.8.es.md)
+[简体中文](./docs/releases/v6.2.0.zh-CN.md) · [繁體中文](./docs/releases/v6.2.0.zh-TW.md) · [English](./docs/releases/v6.2.0.en.md) · [Français](./docs/releases/v6.2.0.fr.md) · [日本語](./docs/releases/v6.2.0.ja.md) · [Español](./docs/releases/v6.2.0.es.md)
 
 ## ✨ 主要功能
 
@@ -101,6 +101,7 @@ GitHub Release 預設顯示簡體中文摘要，完整說明請見：
 * 橫式卡片依真實內容求解封面／歌曲資訊左欄與歌詞右欄，不裁切歌詞或封面
 * 直式自訂尺寸支援基於真實 DOM 測量的自動寬度與自動高度
 * 支援匯出高解析 PNG、WebP 與 JPG 圖片
+* 支援將高品質 PNG 成品直接複製到系統剪貼簿
 
 ### 📝 歌詞排版與翻譯
 
