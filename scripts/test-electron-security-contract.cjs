@@ -489,8 +489,8 @@ assert.match(
 );
 assert.match(
   mainSource,
-  /await appPreferencesWriteQueue;\s*await flushImportHistoryOperations\(\);\s*allowWindowClose = true/,
-  "window close is allowed only after preferences and import history are durable"
+  /await appPreferencesWriteQueue;\s*await aiSettingsStore\.flush\(\);\s*await flushImportHistoryOperations\(\);\s*allowWindowClose = true/,
+  "window close is allowed only after preferences, AI settings, and import history are durable"
 );
 
 const nextConfig = readFileSync("next.config.mjs", "utf8");
