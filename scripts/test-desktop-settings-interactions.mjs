@@ -4025,7 +4025,13 @@ try {
   await cancelConfirmation.press("Shift+Tab");
   assert.equal(await page.getByTestId("confirm-clear-api-key").evaluate((node) => document.activeElement === node), true, "confirm dialog traps reverse Tab");
   await page.getByTestId("confirm-clear-api-key").click();
-  await page.getByTestId("ai-api-key-input").waitFor({ state: "visible" });
+  const apiKeyInput = page.getByTestId("ai-api-key-input");
+  await apiKeyInput.waitFor({ state: "visible" });
+  await page.waitForFunction(() => {
+    const input = document.querySelector('[data-testid="ai-api-key-input"]');
+    return input instanceof HTMLInputElement && !input.disabled;
+  }, undefined, { timeout: 15_000 });
+  assert.equal(await apiKeyInput.inputValue(), "", "API key clear completes before the prompt-library scenario begins");
   await page.getByTestId("settings-history-back").click();
   await waitForVisible("ai-open-library");
   await page.getByTestId("settings-history-forward").click();
