@@ -88,7 +88,7 @@ export function createReleaseStateClient({
   return { baseUrl, get };
 }
 
-function parseNextLink({ link, currentUrl, baseUrl, releasesPath, currentPage }) {
+function parseNextLink({ link, currentUrl, baseUrl, allowedReleasePaths, currentPage }) {
   if (!link) return null;
   const candidates = [];
   for (const entry of link.split(/,(?=\s*<)/)) {
@@ -105,9 +105,15 @@ function parseNextLink({ link, currentUrl, baseUrl, releasesPath, currentPage })
   const pageValues = nextUrl.searchParams.getAll("page");
   const perPageValues = nextUrl.searchParams.getAll("per_page");
   const nextPage = Number(pageValues[0]);
+  const unexpectedQueryKey = [...nextUrl.searchParams.keys()]
+    .find((key) => key !== "page" && key !== "per_page");
   if (
     nextUrl.origin !== baseUrl.origin
-    || nextUrl.pathname !== releasesPath
+    || nextUrl.username !== ""
+    || nextUrl.password !== ""
+    || nextUrl.hash !== ""
+    || !allowedReleasePaths.has(nextUrl.pathname)
+    || unexpectedQueryKey !== undefined
     || pageValues.length !== 1
     || perPageValues.length !== 1
     || perPageValues[0] !== String(PAGE_SIZE)
@@ -141,6 +147,14 @@ function inspectReleasePage(payload, page) {
 
 export async function listAllReleases({ client, repositoryPath }) {
   const releasesPath = `/repos/${repositoryPath}/releases`;
+  const repository = (await client.get(`/repos/${repositoryPath}`)).payload;
+  if (!Number.isSafeInteger(repository?.id) || repository.id <= 0) {
+    reject("github_api_shape", "GitHub repository metadata is missing a valid numeric ID.");
+  }
+  const allowedReleasePaths = new Set([
+    releasesPath,
+    `/repositories/${repository.id}/releases`
+  ]);
   const releases = [];
   const visited = new Set();
   let page = 1;
@@ -156,7 +170,7 @@ export async function listAllReleases({ client, repositoryPath }) {
       link: response.link,
       currentUrl: response.url,
       baseUrl: client.baseUrl,
-      releasesPath,
+      allowedReleasePaths,
       currentPage: page
     });
     if (pageItems.length === 0) {

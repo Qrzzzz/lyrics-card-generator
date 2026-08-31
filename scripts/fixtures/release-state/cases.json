@@ -1,5 +1,6 @@
 {
   "repository": "Qrzzzz/lyrics-card-generator",
+  "repositoryId": 1264614726,
   "tag": "v6.2.1",
   "expectedSha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
   "annotatedTagSha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
@@ -20,6 +21,7 @@
       "targetPage": 2,
       "targetState": "draft",
       "pagination": "link",
+      "linkRepositoryId": 1264614726,
       "expectedState": "draft"
     },
     {
