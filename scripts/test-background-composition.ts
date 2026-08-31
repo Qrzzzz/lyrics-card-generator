@@ -159,6 +159,10 @@ for (const paletteFixture of paletteFixtures) {
         assert.deepEqual(plan, repeated, `${caseId()} is deterministic`);
         assert.ok(plan.zones.length >= 1 && plan.zones.length <= 3, `${caseId()} has bounded local zones`);
         assert.ok(plan.overlayOpacity >= 0.18 && plan.overlayOpacity <= 0.52, `${caseId()} has bounded tone adjustment`);
+        assert.ok(
+          plan.zones.every((zone) => zone.opacityScale === 1),
+          `${caseId()} gives metadata, lyrics, and footer the same shadow depth`
+        );
         for (const zone of plan.zones) {
           assert.ok(zone.rect.x >= 0 && zone.rect.y >= 0, `${caseId()} starts inside the canvas`);
           assert.ok(zone.rect.x + zone.rect.width <= size.width + 0.001, `${caseId()} fits horizontally`);
@@ -196,6 +200,7 @@ for (const paletteFixture of paletteFixtures) {
 }
 
 baselineContrastFailureIsExplained();
+overlappingZonesShareOneOpacityCeiling();
 metricDetectorsRejectKnownArtifacts();
 invalidGridIsRejected();
 
@@ -230,6 +235,27 @@ function baselineContrastFailureIsExplained() {
   const adjusted = evaluateBackgroundComposition(applyReadabilityPlanToGrid(unprotected, plan), plan);
   assert.ok(baseline.failures.includes("minimumTextContrast"), "the v5.9.7-style unprotected field explains its contrast failure");
   assert.ok(adjusted.metrics.minimumTextContrast >= 4.5, "local tone control repairs the same field");
+}
+
+function overlappingZonesShareOneOpacityCeiling() {
+  const adjusted = applyReadabilityPlanToGrid(solidGrid(1, 1, { r: 200, g: 160, b: 120 }), {
+    canvas: { width: 100, height: 100 },
+    textColor: "#FFFFFF",
+    overlayColor: "#000000",
+    overlayOpacity: 0.5,
+    assumedBackgroundLuminance: 0.3,
+    alignment: "left",
+    zones: [
+      { id: "lyrics", role: "lyrics", rect: { x: 0, y: 0, width: 100, height: 100 }, feather: 20, targetContrast: 4.65, opacityScale: 1 },
+      { id: "footer", role: "footer", rect: { x: 0, y: 0, width: 100, height: 100 }, feather: 20, targetContrast: 4.65, opacityScale: 1 }
+    ]
+  });
+
+  assert.deepEqual(
+    adjusted.samples[0],
+    { r: 100, g: 80, b: 60, a: undefined },
+    "overlapping readability zones share one overlay-opacity ceiling instead of stacking the shadow"
+  );
 }
 
 function metricDetectorsRejectKnownArtifacts() {

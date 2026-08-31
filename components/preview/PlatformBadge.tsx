@@ -29,7 +29,7 @@ export function PlatformBadge({
       <img
         src={icon}
         alt=""
-        className="shrink-0 object-contain opacity-90 drop-shadow-md"
+        className="shrink-0 object-contain opacity-90"
         style={{
           width: (size === "large" ? 52 : 64) * scale,
           height: (size === "large" ? 52 : 64) * scale,

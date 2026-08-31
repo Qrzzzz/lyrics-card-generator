@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v6.2.2.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v6.2.3.en.md">Release Notes</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
   <a href="./docs/web-lite-browser-support.md">Web Lite Browser Support</a> ·
   <a href="#features">Features</a> ·
@@ -75,25 +75,24 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 ## 📦 Download and Installation
 
-v6.2.2 is released and available from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
+v6.2.3 is released and available from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Windows x64 installer: `Lyrics.Card.Generator.Setup.6.2.2.exe`
+* Windows x64 installer: `Lyrics.Card.Generator.Setup.6.2.3.exe`
 
 Starting with v6.2.2, Windows x64 Setup is the only distributed desktop package.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v6.2.2 Highlights
+### v6.2.3 Highlights
 
-* Non-loopback AI service URLs must use HTTPS, and application mutations bind origin checks to a trusted host so proxy deployments cannot bypass the gate.
-* Requests, upstream responses, streams, and cancellation now share bounded budgets; AI settings persistence, concurrent preference saves, and clipboard image decoding are also hardened.
-* Releases must descend from reviewed main and pass exact-commit CI; release lookup is fully paginated, and the packaged Electron runtime is covered by the audit and SPDX SBOM.
-* The stale Sharp audit exception is removed. This release retires the standalone package and ships Setup only, while update checks from older builds still open the latest download page.
+* Song metadata, lyrics, and footer accessories now use the same local-readability shadow depth.
+* Regional gradients are merged into one alpha mask, so overlaps cannot darken twice or form conspicuous header and footer bands.
+* Extra shadows were removed from the platform logo, shared-by label, and generated watermark, keeping preview and export output consistent.
 
 ## 🌐 Multilingual Release Notes
 
 GitHub Release displays a Simplified Chinese summary by default. See the full release notes:
-[简体中文](./docs/releases/v6.2.2.zh-CN.md) · [繁體中文](./docs/releases/v6.2.2.zh-TW.md) · [English](./docs/releases/v6.2.2.en.md) · [Français](./docs/releases/v6.2.2.fr.md) · [日本語](./docs/releases/v6.2.2.ja.md) · [Español](./docs/releases/v6.2.2.es.md)
+[简体中文](./docs/releases/v6.2.3.zh-CN.md) · [繁體中文](./docs/releases/v6.2.3.zh-TW.md) · [English](./docs/releases/v6.2.3.en.md) · [Français](./docs/releases/v6.2.3.fr.md) · [日本語](./docs/releases/v6.2.3.ja.md) · [Español](./docs/releases/v6.2.3.es.md)
 
 <a id="features"></a>
 

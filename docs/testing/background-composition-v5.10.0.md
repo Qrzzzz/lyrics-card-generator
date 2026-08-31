@@ -33,6 +33,11 @@ The p95 gates describe field-wide smoothness while the maximum gates catch an
 isolated hard seam. Cover, text, and fine-grid pixels must therefore be removed
 before evaluation so their intentional edges cannot create false failures.
 
+Title/metadata, lyrics, and footer protection use the same depth and are merged
+into one alpha mask before the overlay color is applied. Their feathered areas
+may overlap spatially, but overlap must never apply the overlay opacity more
+than once or create a darker header/footer band.
+
 ## Regression matrix
 
 `npm run background-composition:test` evaluates 120 deterministic combinations:
@@ -45,6 +50,7 @@ before evaluation so their intentional edges cannot create false failures.
 - fine grid: off and on.
 
 Every case asserts deterministic output, bounded zones, no whole-card overlay,
+equal zone depth, a single overlay-opacity ceiling for overlapping zones,
 minimum local contrast, p95 color-difference, and p95 luminance-transition
 limits. Dedicated negative fixtures prove that the pre-protection medium-grey
 baseline fails contrast and that abrupt splits, closed bright contours, and

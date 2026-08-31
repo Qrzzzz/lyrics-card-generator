@@ -134,21 +134,21 @@ export function applyReadabilityPlanToGrid(
   const samples = grid.samples.map((sample, index) => {
     const x = ((index % grid.width) + 0.5) / grid.width * plan.canvas.width;
     const y = (Math.floor(index / grid.width) + 0.5) / grid.height * plan.canvas.height;
-    let result = { ...sample };
+    let combinedMaskAlpha = 0;
 
     for (const zone of plan.zones) {
       const weight = zoneWeight(x, y, zone.rect, zone.feather);
-      const alpha = plan.overlayOpacity * zone.opacityScale * weight;
-      if (alpha <= 0) continue;
-      result = {
-        r: mixChannel(result.r, overlay.r, alpha),
-        g: mixChannel(result.g, overlay.g, alpha),
-        b: mixChannel(result.b, overlay.b, alpha),
-        a: result.a
-      };
+      const zoneMaskAlpha = clamp(zone.opacityScale * weight, 0, 1);
+      combinedMaskAlpha = combinedMaskAlpha + zoneMaskAlpha * (1 - combinedMaskAlpha);
     }
 
-    return result;
+    const alpha = plan.overlayOpacity * combinedMaskAlpha;
+    return {
+      r: mixChannel(sample.r, overlay.r, alpha),
+      g: mixChannel(sample.g, overlay.g, alpha),
+      b: mixChannel(sample.b, overlay.b, alpha),
+      a: sample.a
+    };
   });
 
   return { ...grid, samples };
@@ -237,11 +237,11 @@ function createPortraitZones(
         y: layout.headerRect.y,
         width: Math.max(1, layout.safeRect.width - coverOffset),
         height: layout.headerRect.height
-      }, feather, targetContrast, 0.96));
+      }, feather, targetContrast, 1));
     }
     zones.push(zone("lyrics", layout.lyricsRect, feather * 1.08, targetContrast, 1));
   }
-  if (layout.footerRect) zones.push(zone("footer", layout.footerRect, feather * 0.82, targetContrast, 0.9));
+  if (layout.footerRect) zones.push(zone("footer", layout.footerRect, feather * 0.82, targetContrast, 1));
   return zones.map((item) => ({ ...item, rect: clampRect(item.rect, canvas) }));
 }
 
@@ -252,10 +252,10 @@ function createLandscapeZones(
   targetContrast: number
 ) {
   const zones: ReadabilityZone[] = [];
-  zones.push(zone("title-metadata", layout.metadataRect, feather, targetContrast, 0.96));
+  zones.push(zone("title-metadata", layout.metadataRect, feather, targetContrast, 1));
   zones.push(zone("lyrics", layout.lyricsRect, feather * 1.08, targetContrast, 1));
   if (layout.accessoriesRect) {
-    zones.push(zone("footer", layout.accessoriesRect, feather * 0.82, targetContrast, 0.9));
+    zones.push(zone("footer", layout.accessoriesRect, feather * 0.82, targetContrast, 1));
   }
   return zones.map((item) => ({ ...item, rect: clampRect(item.rect, canvas) }));
 }

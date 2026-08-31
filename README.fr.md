@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v6.2.2.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v6.2.3.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="./docs/development.en.md">Développement local</a> ·
@@ -74,25 +74,24 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 ## 📦 Téléchargement et installation
 
-La v6.2.2 est publiée et disponible dans [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
+La v6.2.3 est publiée et disponible dans [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
 
-* Programme d’installation Windows x64 : `Lyrics.Card.Generator.Setup.6.2.2.exe`
+* Programme d’installation Windows x64 : `Lyrics.Card.Generator.Setup.6.2.3.exe`
 
 À partir de la v6.2.2, le programme Setup Windows x64 est le seul paquet distribué.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### Points forts de la v6.2.2
+### Points forts de la v6.2.3
 
-* Les URL de services IA hors boucle locale doivent utiliser HTTPS, et les mutations de l’application lient le contrôle d’origine à un hôte de confiance.
-* Les requêtes, réponses amont, flux et annulations disposent de budgets bornés ; la sauvegarde des réglages IA et des préférences concurrentes ainsi que le décodage du presse-papiers sont renforcés.
-* Les versions doivent descendre de main après revue et réussir la CI du commit exact ; la recherche des versions est paginée et Electron est inclus dans l’audit et le SBOM SPDX.
-* L’exception Sharp obsolète est supprimée. Cette version abandonne le paquet autonome et ne fournit que Setup, tandis que les anciennes versions peuvent toujours ouvrir la page du dernier téléchargement.
+* Les métadonnées du morceau, les paroles et les accessoires du pied utilisent désormais la même profondeur d’ombre de lisibilité locale.
+* Les dégradés régionaux sont réunis dans un masque alpha unique : leur chevauchement ne peut plus assombrir deux fois ni former de bande sombre en haut ou en bas.
+* Les ombres supplémentaires du logo de plateforme, de la mention de partage et du filigrane généré ont été retirées afin d’aligner l’aperçu et l’export.
 
 ## 🌐 Notes de publication multilingues
 
 Par défaut, GitHub Release affiche un résumé en chinois simplifié. Consultez les notes complètes :
-[简体中文](./docs/releases/v6.2.2.zh-CN.md) · [繁體中文](./docs/releases/v6.2.2.zh-TW.md) · [English](./docs/releases/v6.2.2.en.md) · [Français](./docs/releases/v6.2.2.fr.md) · [日本語](./docs/releases/v6.2.2.ja.md) · [Español](./docs/releases/v6.2.2.es.md)
+[简体中文](./docs/releases/v6.2.3.zh-CN.md) · [繁體中文](./docs/releases/v6.2.3.zh-TW.md) · [English](./docs/releases/v6.2.3.en.md) · [Français](./docs/releases/v6.2.3.fr.md) · [日本語](./docs/releases/v6.2.3.ja.md) · [Español](./docs/releases/v6.2.3.es.md)
 
 <a id="fonctionnalités-principales"></a>
 

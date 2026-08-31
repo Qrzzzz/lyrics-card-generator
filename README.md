@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v6.2.2.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v6.2.3.zh-CN.md">发布说明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">在线 Web Lite 版</a> ·
   <a href="./docs/web-lite-browser-support.md">Web Lite 浏览器支持</a> ·
   <a href="./docs/desktop.md">桌面维护文档</a> ·
@@ -73,25 +73,24 @@
 
 ## 📦 下载与安装
 
-v6.2.2 已发布，可从 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下载：
+v6.2.3 已发布，可从 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下载：
 
-* Windows x64 安装版：`Lyrics.Card.Generator.Setup.6.2.2.exe`
+* Windows x64 安装版：`Lyrics.Card.Generator.Setup.6.2.3.exe`
 
 从 v6.2.2 起只提供 Windows x64 Setup 安装包。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v6.2.2 更新重点
+### v6.2.3 更新重点
 
-* 非回环 AI 服务地址必须使用 HTTPS；应用写请求绑定可信主机，避免代理部署下绕过来源门禁。
-* 为请求、上游响应、流式输出和取消传播加入统一预算，并强化 AI 设置原子保存、并发偏好保存和剪贴板图像解码上限。
-* 发布必须来自已审查的 main 祖先并通过精确提交 CI；发布查找支持完整分页，Electron 运行时纳入审计与 SPDX SBOM。
-* 移除已过期的 Sharp 审计例外，并从本版本起停止发布免安装包、仅提供 Setup；旧版用户的更新入口仍可打开最新版下载页。
+* 歌曲信息、歌词与底部附件区域现在使用相同的局部可读性阴影深度。
+* 各区域的渐变先合并为单一透明度遮罩，交叠处不再重复加深，消除页头或页脚突兀的深色带。
+* 移除平台 Logo、分享人和生成水印自身的额外投影，让实时预览与最终导出保持一致。
 
 ## 🌐 多语言发布说明
 
 GitHub Release 默认展示简体中文摘要，完整说明见：
-[简体中文](./docs/releases/v6.2.2.zh-CN.md) · [繁體中文](./docs/releases/v6.2.2.zh-TW.md) · [English](./docs/releases/v6.2.2.en.md) · [Français](./docs/releases/v6.2.2.fr.md) · [日本語](./docs/releases/v6.2.2.ja.md) · [Español](./docs/releases/v6.2.2.es.md)
+[简体中文](./docs/releases/v6.2.3.zh-CN.md) · [繁體中文](./docs/releases/v6.2.3.zh-TW.md) · [English](./docs/releases/v6.2.3.en.md) · [Français](./docs/releases/v6.2.3.fr.md) · [日本語](./docs/releases/v6.2.3.ja.md) · [Español](./docs/releases/v6.2.3.es.md)
 
 <a id="主要功能"></a>
 
