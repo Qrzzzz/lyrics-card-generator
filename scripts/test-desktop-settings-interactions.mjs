@@ -1102,8 +1102,8 @@ async function assertSongImportAsideBehavior() {
   const linkInput = page.locator('input[aria-label="音乐链接"]');
   assert.equal(await linkInput.count(), 1, "the link revision guard targets the unique explicit music URL input");
   const revisionGuardUrl = "https://example.com/revision-guard";
-  // Observe the committed URL and guarded editor transition before triggering
-  // the controlled input update so fast React commits cannot race the assertion.
+  // Observe the final controlled state while dispatching a focus-independent
+  // native input update. Manual-editor autofocus must not redirect the trigger.
   await Promise.all([
     page.waitForFunction(({ regionId, expectedUrl }) => {
       const inputs = document.querySelectorAll('input[aria-label="音乐链接"]');
@@ -1112,7 +1112,16 @@ async function assertSongImportAsideBehavior() {
         && inputs[0].value === expectedUrl
         && document.getElementById(regionId)?.getAttribute("data-song-info-view") === "summary";
     }, { regionId: manualRegionId, expectedUrl: revisionGuardUrl }),
-    linkInput.fill(revisionGuardUrl)
+    page.evaluate((expectedUrl) => {
+      const inputs = document.querySelectorAll('input[aria-label="音乐链接"]');
+      if (inputs.length !== 1 || !(inputs[0] instanceof HTMLInputElement)) {
+        throw new Error(`Expected one music URL input, found ${inputs.length}`);
+      }
+      const nativeValueSetter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
+      if (!nativeValueSetter) throw new Error("Native HTMLInputElement value setter is unavailable");
+      nativeValueSetter.call(inputs[0], expectedUrl);
+      inputs[0].dispatchEvent(new Event("input", { bubbles: true }));
+    }, revisionGuardUrl)
   ]);
   assert.equal(await linkInput.inputValue(), revisionGuardUrl, "the external revision is written to the music URL input");
   const guardedSummary = aside.getByTestId("song-info-summary");
