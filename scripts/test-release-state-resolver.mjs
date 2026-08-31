@@ -54,6 +54,9 @@ function scenarioFetch(scenario, phaseState = undefined) {
     if (parsed.pathname.endsWith(`/git/tags/${fixture.annotatedTagSha}`)) {
       return response({ object: { type: "commit", sha: fixture.expectedSha } });
     }
+    if (parsed.pathname === `/repos/${fixture.repository}`) {
+      return response({ id: fixture.repositoryId, full_name: fixture.repository });
+    }
     if (!parsed.pathname.endsWith("/releases")) return response("unexpected fixture route", { status: 404 });
 
     const page = Number(parsed.searchParams.get("page"));
@@ -76,8 +79,11 @@ function scenarioFetch(scenario, phaseState = undefined) {
     const isLastPage = page === scenario.pages;
     const items = Array.from({ length: isLastPage ? 1 : 100 }, (_, index) => filler(page, index));
     if (page === scenario.targetPage) items[0] = release(900, fixture.tag, scenario.targetState);
+    const linkedReleasesPath = scenario.linkRepositoryId
+      ? `/repositories/${scenario.linkRepositoryId}/releases`
+      : `/repos/${fixture.repository}/releases`;
     const link = !isLastPage
-      ? `<https://api.github.test/repos/${fixture.repository}/releases?per_page=100&page=${page + 1}>; rel="next"`
+      ? `<https://api.github.test${linkedReleasesPath}?per_page=100&page=${page + 1}>; rel="next"`
       : "";
     return response(items, { link });
   };
@@ -149,6 +155,16 @@ await assert.rejects(
   }),
   (error) => error instanceof ReleaseStateError && error.code === "tag_sha_mismatch",
   "a moved tag cannot reuse a release resolved for the authorized SHA"
+);
+
+const wrongCanonicalRepository = {
+  ...fixture.scenarios.find((scenario) => scenario.linkRepositoryId),
+  linkRepositoryId: fixture.repositoryId + 1
+};
+await assert.rejects(
+  resolveScenario(wrongCanonicalRepository),
+  (error) => error instanceof ReleaseStateError && error.code === "github_api_link",
+  "a canonical numeric pagination path for another repository fails closed"
 );
 
 console.log(`Release state resolver fixture tests passed (${fixture.scenarios.length} scenarios)`);
