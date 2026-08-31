@@ -14,10 +14,14 @@ export type LimitedRequestBody = {
 type StreamingRequestInit = RequestInit & { duplex: "half" };
 
 export function contentLengthExceedsLimit(request: Request, limitBytes: number) {
+  return contentLengthHeaderExceedsLimit(request.headers, limitBytes);
+}
+
+export function contentLengthHeaderExceedsLimit(headers: Headers, limitBytes: number) {
   assertByteLimit(limitBytes);
   // Compare normalized decimal strings so a hostile Content-Length cannot
   // overflow Number before the early-rejection decision is made.
-  const rawLength = request.headers.get("content-length")?.trim();
+  const rawLength = headers.get("content-length")?.trim();
   if (!rawLength || !/^\d+$/.test(rawLength)) {
     return false;
   }

@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v6.2.1.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v6.2.2.en.md">Release Notes</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
   <a href="./docs/web-lite-browser-support.md">Web Lite Browser Support</a> ·
   <a href="#features">Features</a> ·
@@ -75,26 +75,25 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 ## 📦 Download and Installation
 
-v6.2.1 is released and available from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
+v6.2.2 is released and available from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Installer: `Lyrics Card Generator Setup 6.2.1.exe`
-* Portable build: `Lyrics Card Generator-6.2.1-portable.exe`
+* Windows x64 installer: `Lyrics.Card.Generator.Setup.6.2.2.exe`
 
-The installer is recommended for regular use. The portable version is useful for temporary use, testing, or running from a removable drive.
+Starting with v6.2.2, Windows x64 Setup is the only distributed desktop package.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v6.2.1 Highlights
+### v6.2.2 Highlights
 
-* Lightweight notices now stack upward from the bottom instead of replacing one another, with independent timing based on tone and text length.
-* When any notice exits, the remaining stack settles smoothly; timers pause while the page is in the background.
-* An identical notice refreshes in place as the old surface moves right and fades out while the new surface enters from the left and fades in.
-* The 12-line landscape limit is now an inline warning in the Lyrics step, focuses the affected content, and clears automatically after correction.
+* Non-loopback AI service URLs must use HTTPS, and application mutations bind origin checks to a trusted host so proxy deployments cannot bypass the gate.
+* Requests, upstream responses, streams, and cancellation now share bounded budgets; AI settings persistence, concurrent preference saves, and clipboard image decoding are also hardened.
+* Releases must descend from reviewed main and pass exact-commit CI; release lookup is fully paginated, and the packaged Electron runtime is covered by the audit and SPDX SBOM.
+* The stale Sharp audit exception is removed. This release retires the standalone package and ships Setup only, while update checks from older builds still open the latest download page.
 
 ## 🌐 Multilingual Release Notes
 
 GitHub Release displays a Simplified Chinese summary by default. See the full release notes:
-[简体中文](./docs/releases/v6.2.1.zh-CN.md) · [繁體中文](./docs/releases/v6.2.1.zh-TW.md) · [English](./docs/releases/v6.2.1.en.md) · [Français](./docs/releases/v6.2.1.fr.md) · [日本語](./docs/releases/v6.2.1.ja.md) · [Español](./docs/releases/v6.2.1.es.md)
+[简体中文](./docs/releases/v6.2.2.zh-CN.md) · [繁體中文](./docs/releases/v6.2.2.zh-TW.md) · [English](./docs/releases/v6.2.2.en.md) · [Français](./docs/releases/v6.2.2.fr.md) · [日本語](./docs/releases/v6.2.2.ja.md) · [Español](./docs/releases/v6.2.2.es.md)
 
 <a id="features"></a>
 

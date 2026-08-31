@@ -1,6 +1,9 @@
 import { parseSong, SongParseError } from "@/lib/song-parser";
-import { appApiErrorResponse } from "@/lib/app-api-errors";
+import { appApiErrorResponse, appLimitedJsonErrorResponse } from "@/lib/app-api-errors";
 import { appMutationRejectionResponse, validateAppMutationRequest } from "@/lib/app-request";
+import { readLimitedJson } from "@/lib/json-request";
+import { SafeFetchError } from "@/lib/safe-fetch";
+import resourceBudgets from "@/electron/resource-budgets.json";
 import { z } from "zod";
 
 export const runtime = "nodejs";
@@ -15,23 +18,32 @@ export async function POST(req: Request) {
     return appMutationRejectionResponse(rejection);
   }
 
-  let body: unknown;
+  const bodyResult = await readLimitedJson<unknown>(req, resourceBudgets.jsonRequestBytes.parseSong);
+  if (!bodyResult.ok) return appLimitedJsonErrorResponse(bodyResult.reason);
 
-  try {
-    body = await req.json();
-  } catch {
-    return appApiErrorResponse("invalid_json", 400);
-  }
-
-  const parsed = schema.safeParse(body);
+  const parsed = schema.safeParse(bodyResult.value);
   if (!parsed.success) {
     return appApiErrorResponse("invalid_request", 400);
   }
 
   try {
-    const data = await parseSong(parsed.data.url);
+    const data = await parseSong(parsed.data.url, { signal: req.signal });
     return Response.json({ ok: true, data });
   } catch (error) {
+    if (req.signal.aborted) {
+      return appApiErrorResponse("client_cancelled", 499);
+    }
+    const safeFetchError = error instanceof SafeFetchError
+      ? error
+      : error instanceof SongParseError && error.cause instanceof SafeFetchError
+        ? error.cause
+        : null;
+    if (safeFetchError?.code === "TIMEOUT") {
+      return appApiErrorResponse("upstream_timeout", 504);
+    }
+    if (safeFetchError?.code === "BODY_TOO_LARGE") {
+      return appApiErrorResponse("upstream_response_too_large", 502);
+    }
     if (error instanceof SongParseError) {
       return appApiErrorResponse("song_parse_failed", 502, { details: error.details });
     }

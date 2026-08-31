@@ -12,7 +12,7 @@ import {
   isDocumentSemanticStyleChange
 } from "@/lib/editor/apply-style-change";
 import { createExportSnapshot, type ExportSnapshot } from "@/lib/export-snapshot";
-import { getExportRasterSizeIssue } from "@/lib/export-dimensions";
+import { getClipboardRasterSizeIssue, getExportRasterSizeIssue } from "@/lib/export-dimensions";
 import {
   ExportTransactionMutex,
   runExportTransaction,
@@ -586,7 +586,8 @@ export function useEditorActions({
       exportRevisionRef.current,
       action === "copy" ? "png" : exportFormat
     );
-    if (getExportRasterSizeIssue(snapshot.width, snapshot.height, snapshot.pixelRatio)) {
+    const getOutputRasterSizeIssue = action === "copy" ? getClipboardRasterSizeIssue : getExportRasterSizeIssue;
+    if (getOutputRasterSizeIssue(snapshot.width, snapshot.height, snapshot.pixelRatio)) {
       onNotify(exportImageTooLargeMessage, "warning");
       return;
     }
@@ -599,7 +600,7 @@ export function useEditorActions({
         return waitForExportSnapshotNode(() => cardRef.current, mountedSnapshot.id, signal);
       },
       validateSnapshot: (mountedSnapshot) => {
-        if (getExportRasterSizeIssue(mountedSnapshot.width, mountedSnapshot.height, mountedSnapshot.pixelRatio)) {
+        if (getOutputRasterSizeIssue(mountedSnapshot.width, mountedSnapshot.height, mountedSnapshot.pixelRatio)) {
           return exportImageTooLargeMessage;
         }
         return getExportBlockMessage?.(mountedSnapshot) ?? null;
@@ -643,6 +644,8 @@ export function useEditorActions({
       onNotify(exportBusyMessage, "warning");
     } else if (result.kind === "blocked") {
       onNotify(result.reason, "warning");
+    } else if (action === "copy" && result.error instanceof Error && result.error.name === "ImageClipboardSizeLimitError") {
+      onNotify(exportImageTooLargeMessage, "warning");
     } else {
       console.error(`[Lyric Card Generator] ${action} image output failed`, result.error);
       onNotify(action === "copy" ? copyImageFailedMessage : exportFailedMessage, "error");

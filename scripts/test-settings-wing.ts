@@ -73,6 +73,16 @@ assert.match(settingsSurface, /testId="settings-close-button"/);
 assert.match(surfaceCloseButton, /examples-close-button/);
 assert.match(surfaceCloseButton, /examples-close-button__icon/);
 assert.match(settingsWorkspace, /setTimeout\(\(\) => onNotify\(message, "success"\), 420\)/);
+assert.equal(
+  (settingsWorkspace.match(/runFireAndForgetSave\(/g) || []).length,
+  2,
+  "settings and locale persistence both use the rejection-consuming UI boundary"
+);
+assert.match(
+  settingsWorkspace,
+  /onError: \(saveError\) => \{[\s\S]{0,260}setError\(normalizeAIErrorMessage[\s\S]{0,180}setSyncErrorKind\("save"\);[\s\S]{0,80}setSaveState\("error"\)/,
+  "fire-and-forget persistence keeps the visible save-error state"
+);
 assert.match(lyricEditor, /useToastQueue\(\)/);
 assert.match(lyricEditor, /<AppToast notices=\{toastNotices\} announcement=\{toastAnnouncement\} \/>/);
 assert.doesNotMatch(lyricEditor, /toastIdRef|setTimeout\(\(\) => setToast\(null\), 3600\)/);
@@ -259,4 +269,4 @@ for (const locale of ["zh", "zh-TW", "en", "fr", "ja", "es"] satisfies Locale[])
   }
 }
 
-console.log(JSON.stringify({ ok: true, settingsWingTests: 96 }, null, 2));
+console.log(JSON.stringify({ ok: true, settingsWingTests: 98 }, null, 2));

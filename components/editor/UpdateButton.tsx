@@ -1,7 +1,7 @@
 "use client";
 
 import { ExternalLink, RefreshCw } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getLyricsCardDesktopApi } from "@/lib/desktop-api";
 import type { UpdateResult } from "@/lib/github-update";
 import type { createT } from "@/lib/i18n";
@@ -14,6 +14,13 @@ type UpdateButtonProps = {
 export function UpdateButton({ t }: UpdateButtonProps) {
   const [result, setResult] = useState<UpdateResult | null>(null);
   const [isChecking, setIsChecking] = useState(false);
+  const activeRequestRef = useRef<AbortController | null>(null);
+
+  useEffect(() => () => {
+    const activeRequest = activeRequestRef.current;
+    activeRequestRef.current = null;
+    activeRequest?.abort();
+  }, []);
 
   async function checkForUpdates() {
     if (isChecking) {
@@ -22,12 +29,15 @@ export function UpdateButton({ t }: UpdateButtonProps) {
 
     setIsChecking(true);
     setResult(null);
+    const controller = new AbortController();
+    activeRequestRef.current = controller;
 
     try {
-      const response = await fetch("/api/check-update", { method: "GET" });
+      const response = await fetch("/api/check-update", { method: "GET", signal: controller.signal });
       const payload = (await response.json()) as UpdateResult;
       setResult(payload);
     } catch (error) {
+      if (controller.signal.aborted) return;
       setResult({
         status: "error",
         code: "network_error",
@@ -36,7 +46,10 @@ export function UpdateButton({ t }: UpdateButtonProps) {
         details: error instanceof Error ? error.message : String(error)
       });
     } finally {
-      setIsChecking(false);
+      if (activeRequestRef.current === controller) {
+        activeRequestRef.current = null;
+        setIsChecking(false);
+      }
     }
   }
 

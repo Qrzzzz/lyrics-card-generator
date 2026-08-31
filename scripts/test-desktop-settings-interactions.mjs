@@ -1102,11 +1102,19 @@ async function assertSongImportAsideBehavior() {
   const linkInput = page.locator('input[aria-label="音乐链接"]');
   assert.equal(await linkInput.count(), 1, "the link revision guard targets the unique explicit music URL input");
   const revisionGuardUrl = "https://example.com/revision-guard";
-  await linkInput.fill(revisionGuardUrl);
+  // Observe the committed URL and guarded editor transition before triggering
+  // the controlled input update so fast React commits cannot race the assertion.
+  await Promise.all([
+    page.waitForFunction(({ regionId, expectedUrl }) => {
+      const inputs = document.querySelectorAll('input[aria-label="音乐链接"]');
+      return inputs.length === 1
+        && inputs[0] instanceof HTMLInputElement
+        && inputs[0].value === expectedUrl
+        && document.getElementById(regionId)?.getAttribute("data-song-info-view") === "summary";
+    }, { regionId: manualRegionId, expectedUrl: revisionGuardUrl }),
+    linkInput.fill(revisionGuardUrl)
+  ]);
   assert.equal(await linkInput.inputValue(), revisionGuardUrl, "the external revision is written to the music URL input");
-  await page.waitForFunction((regionId) => (
-    document.getElementById(regionId)?.getAttribute("data-song-info-view") === "summary"
-  ), manualRegionId);
   const guardedSummary = aside.getByTestId("song-info-summary");
   await guardedSummary.waitFor({ state: "visible" });
   await guardedEditor.waitFor({ state: "detached" });
@@ -4017,7 +4025,13 @@ try {
   await cancelConfirmation.press("Shift+Tab");
   assert.equal(await page.getByTestId("confirm-clear-api-key").evaluate((node) => document.activeElement === node), true, "confirm dialog traps reverse Tab");
   await page.getByTestId("confirm-clear-api-key").click();
-  await page.getByTestId("ai-api-key-input").waitFor({ state: "visible" });
+  const apiKeyInput = page.getByTestId("ai-api-key-input");
+  await apiKeyInput.waitFor({ state: "visible" });
+  await page.waitForFunction(() => {
+    const input = document.querySelector('[data-testid="ai-api-key-input"]');
+    return input instanceof HTMLInputElement && !input.disabled;
+  }, undefined, { timeout: 15_000 });
+  assert.equal(await apiKeyInput.inputValue(), "", "API key clear completes before the prompt-library scenario begins");
   await page.getByTestId("settings-history-back").click();
   await waitForVisible("ai-open-library");
   await page.getByTestId("settings-history-forward").click();

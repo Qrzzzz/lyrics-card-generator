@@ -270,12 +270,8 @@ function testUpdateResult() {
       html_url: "https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v2.0.0",
       assets: [
         {
-          name: "Lyrics Card Generator Setup 2.0.0.exe",
+          name: "Lyrics.Card.Generator.Setup.2.0.0.exe",
           browser_download_url: "https://example.com/setup.exe"
-        },
-        {
-          name: "Lyrics Card Generator-2.0.0-portable.exe",
-          browser_download_url: "https://example.com/portable.exe"
         }
       ]
     },
@@ -284,8 +280,30 @@ function testUpdateResult() {
   assert(result.status === "update-available", "update available");
   if (result.status === "update-available") {
     assertEqual(result.installerUrl, "https://example.com/setup.exe", "installer URL");
-    assertEqual(result.portableUrl, "https://example.com/portable.exe", "portable URL");
     assertEqual(getUpdateLink(result), "https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v2.0.0", "update link opens release page");
+  }
+
+  const historicalPortableUser = buildUpdateResult(
+    {
+      tag_name: "v2.0.0",
+      html_url: "https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v2.0.0",
+      assets: [
+        {
+          name: "Lyrics.Card.Generator.Setup.2.0.0.exe",
+          browser_download_url: "https://example.com/setup.exe"
+        },
+        {
+          name: "Lyrics.Card.Generator-2.0.0-portable.exe",
+          browser_download_url: "https://example.com/legacy-portable.exe"
+        }
+      ]
+    },
+    "1.1.0"
+  );
+  assert(historicalPortableUser.status === "update-available", "historical portable users still receive an update");
+  if (historicalPortableUser.status === "update-available") {
+    assertEqual(historicalPortableUser.installerUrl, "https://example.com/setup.exe", "historical portable users are directed to Setup");
+    assertEqual(getUpdateLink(historicalPortableUser), historicalPortableUser.releaseUrl, "historical portable users can open the Setup-only release page");
   }
 }
 

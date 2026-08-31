@@ -1,0 +1,11 @@
+{
+  "overrideCheck": {
+    "name": "security/locale/a11y gates",
+    "status": "completed",
+    "conclusion": "failure"
+  },
+  "overrideRun": {
+    "conclusion": "failure"
+  },
+  "expectedError": "required_ci_not_successful"
+}

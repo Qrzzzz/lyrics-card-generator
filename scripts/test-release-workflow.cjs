@@ -3,98 +3,185 @@ const { readFileSync, readdirSync } = require("node:fs");
 
 const workflow = readFileSync(".github/workflows/release.yml", "utf8");
 const verifier = readFileSync("scripts/verify-github-release.ps1", "utf8");
-// Release orchestration is intentionally centralized; version-specific workflow
-// copies would drift away from the exact-asset verification contract.
+const sourceVerifier = readFileSync("scripts/verify-release-source.mjs", "utf8");
+const releaseStateResolver = readFileSync("scripts/resolve-github-release.mjs", "utf8");
+const powershellSyntaxTest = readFileSync("scripts/test-release-powershell-syntax.cjs", "utf8");
+const sourcePolicy = JSON.parse(readFileSync("security/release-source-policy.json", "utf8"));
+const sourcePolicyDocs = readFileSync("docs/release-source-policy.md", "utf8");
+const packageJson = JSON.parse(readFileSync("package.json", "utf8"));
+const desktopRuntimePolicy = JSON.parse(readFileSync("security/desktop-runtime-audit.json", "utf8"));
 const versionSpecificWorkflows = readdirSync(".github/workflows")
   .filter((name) => /^release-\d+\.\d+\.\d+\.yml$/.test(name));
 
-assert.deepEqual(
-  versionSpecificWorkflows,
-  [],
-  "one tag-driven release workflow replaces version-specific copies"
-);
+assert.deepEqual(versionSpecificWorkflows, [], "one tag-driven release workflow replaces version-specific copies");
 assert.match(workflow, /^concurrency:\s+group: release-/m, "release runs for one tag are serialized");
 assert.match(workflow, /- "v\*\.\*\.\*"/, "stable and RC version tags enter the generic release workflow");
+assert.match(workflow, /RELEASE_TAG: \$\{\{ inputs\.tag \|\| github\.ref_name \}\}/, "workflow_dispatch and tag pushes share the exact tag resolver input");
+assert.match(workflow, /^permissions: \{\}$/m, "the workflow has no ambient write permission");
 assert.match(
   workflow,
   /\^v\$escapedVersion\(\?:-rc\\\.\[0-9\]\+\)\?\$/,
   "the checked-out package version strictly validates the requested tag"
 );
-assert.match(workflow, /docs\/releases\/v\$version\.\$_\.md/, "all six release-note locales are derived from package.json");
-assert.match(workflow, /if: needs\.resolve\.outputs\.published != 'true'/, "an already-published release is an idempotent no-op");
-assert.match(workflow, /ExpectedState published/, "an existing published release is verified before the no-op succeeds");
-assert.match(workflow, /published=\$\(\$published\.ToString\(\)\.ToLowerInvariant\(\)\)/, "published state is passed between jobs");
-assert.match(
-  workflow,
-  /REQUIRE_PUBLISHED_RELEASE_NOTES:\s*["']1["']/,
-  "tag release quality gates reject candidate wording before publication"
-);
-assert.match(workflow, /Enforce production dependency advisory policy[\s\S]+npm run dependency-audit:gate/, "release blocks unapproved production high and critical advisories");
-assert.match(workflow, /Run release quality gates[\s\S]+npm run font-license:test/, "release verifies Source Han license distribution");
-assert.match(workflow, /Run release quality gates[\s\S]+npm run electron-runtime:coverage/, "release blocks on measured Electron runtime coverage");
+assert.match(workflow, /git rev-parse "\$tagRef\^\{commit\}"/, "annotated and lightweight tags are peeled to commits");
 assert.equal(
-  (workflow.match(/npm run electron-runtime:coverage/g) || []).length,
-  1,
-  "release executes the Electron runtime coverage suite once"
+  (workflow.match(/ref: refs\/tags\/\$\{\{ env\.RELEASE_TAG \}\}/g) || []).length,
+  3,
+  "authorization, build, and publication check out an explicit tag ref"
 );
-const packagedAssets = workflow.indexOf("npm run desktop:packaged-assets-test");
+assert.equal(
+  (workflow.match(/persist-credentials: false/g) || []).length,
+  3,
+  "checkout never leaves a repository write credential behind"
+);
+assert.match(workflow, /docs\/releases\/v\$version\.\$_\.md/, "all six release-note locales are derived from package.json");
+
+const authorizeStart = workflow.indexOf("\n  authorize:");
+const buildStart = workflow.indexOf("\n  build:", authorizeStart);
+const publishStart = workflow.indexOf("\n  publish:", buildStart);
+assert.ok(authorizeStart >= 0 && buildStart > authorizeStart && publishStart > buildStart, "release phases are split into authorize, build, and publish jobs");
+const authorizeJob = workflow.slice(authorizeStart, buildStart);
+const buildJob = workflow.slice(buildStart, publishStart);
+const publishJob = workflow.slice(publishStart);
+
+assert.match(authorizeJob, /actions: read/, "source authorization can inspect exact workflow runs");
+assert.match(authorizeJob, /contents: read/, "source authorization can inspect refs and existing Releases");
+assert.match(authorizeJob, /pull-requests: read/, "source authorization can inspect merge and review evidence");
+assert.doesNotMatch(authorizeJob, /(?:contents|actions|pull-requests): write/, "source authorization cannot mutate repository state");
+assert.match(authorizeJob, /Authorize reviewed main ancestry and exact CI[\s\S]+verify-release-source\.mjs/, "the read-only helper runs before release state resolution");
 assert.ok(
-  packagedAssets >= 0 && packagedAssets < workflow.indexOf("Run deterministic packaged interaction regression"),
-  "release verifies staged and packaged font license assets before desktop interactions"
+  authorizeJob.indexOf("Authorize reviewed main ancestry and exact CI") < authorizeJob.indexOf("Resolve and verify existing release state"),
+  "even an already-published no-op must pass source authorization first"
 );
-assert.match(workflow, /Prepare packaged runtime SBOM input[\s\S]+npm run sbom:prepare/, "release prepares a scanner-compatible copy of final packaged bytes");
-assert.match(workflow, /path: dist-desktop\/sbom-runtime/, "release SBOM scans the normalized packaged runtime instead of the source tree");
-assert.match(workflow, /config: security\/syft-release\.yaml/, "release enables the JavaScript package cataloger for the normalized runtime closure");
-assert.match(workflow, /syft-version: v1\.51\.0/, "release pins the locally validated Syft version");
-assert.match(workflow, /Inspect packaged runtime SPDX SBOM[\s\S]+npm run sbom:inspect/, "release inspects the packaged runtime SBOM before checksums and publication");
+assert.match(authorizeJob, /ExpectedState published/, "an existing published release is verified before the no-op succeeds");
+assert.match(authorizeJob, /resolve-github-release\.mjs[\s\S]+--github-output \$env:GITHUB_OUTPUT/, "the exact paginated state is passed between jobs");
+
+assert.match(buildJob, /needs: authorize/, "asset construction cannot start before source authorization");
+assert.match(buildJob, /if: needs\.authorize\.outputs\.published != 'true'/, "an already-published release skips rebuilding");
+assert.match(buildJob, /contents: read/, "the build phase has read-only repository access");
+assert.match(buildJob, /attestations: write[\s\S]+id-token: write/, "only the build phase can create provenance attestations");
+assert.doesNotMatch(buildJob, /contents: write/, "the long-running build phase cannot mutate Releases");
+assert.match(buildJob, /EXPECTED_RELEASE_SHA: \$\{\{ needs\.authorize\.outputs\.release_sha \}\}/, "the build checkout is pinned to the authorized SHA");
+assert.match(buildJob, /Run release quality gates[\s\S]+npm run electron-runtime:coverage/, "release still blocks on measured Electron runtime coverage");
+assert.equal((buildJob.match(/npm run electron-runtime:coverage/g) || []).length, 1, "release executes Electron runtime coverage once");
+assert.match(packageJson.scripts["desktop:build"], /electron-builder --publish never --projectDir dist-desktop\/app$/, "artifact construction cannot implicitly publish through electron-builder");
+assert.match(buildJob, /REQUIRE_PUBLISHED_RELEASE_NOTES:\s*["']1["']/, "release quality gates reject candidate wording");
+assert.match(buildJob, /Enforce production dependency advisory policy[\s\S]+npm run dependency-audit:gate/, "release blocks unapproved production advisories");
+assert.match(buildJob, /Run release quality gates[\s\S]+npm run font-license:test/, "release verifies font license distribution");
+assert.match(buildJob, /Run release quality gates[\s\S]+npm run sbom:test/, "release runs adversarial SPDX inventory fixtures");
+const packagedAssets = buildJob.indexOf("npm run desktop:packaged-assets-test");
+assert.ok(packagedAssets >= 0 && packagedAssets < buildJob.indexOf("Run deterministic packaged interaction regression"), "packaged assets are verified before desktop interactions");
+const finalArtifactSmoke = buildJob.indexOf("npm run desktop:final-artifact-smoke");
+const normalizedAssets = buildJob.indexOf("Normalize release asset filenames");
+const desktopRuntimeAudit = buildJob.indexOf("npm run desktop-runtime-audit:gate");
+const prepareSbom = buildJob.indexOf("npm run sbom:prepare");
+const generateSbom = buildJob.indexOf("anchore/sbom-action@");
+const finalizeSbom = buildJob.indexOf("npm run sbom:finalize");
+const inspectSbom = buildJob.indexOf("npm run sbom:inspect");
+assert.ok(finalArtifactSmoke >= 0 && finalArtifactSmoke < normalizedAssets, "final Setup bytes are smoked before normalization");
+assert.ok(normalizedAssets < desktopRuntimeAudit, "desktop runtime audit binds normalized downloadable asset bytes");
+assert.ok(desktopRuntimeAudit < prepareSbom, "the Electron npm closure is audited before SBOM input preparation");
+assert.ok(prepareSbom < generateSbom && generateSbom < finalizeSbom && finalizeSbom < inspectSbom, "Syft output is enriched and then adversarially inspected");
+assert.match(buildJob, /name: lyrics-card-generator-\$\{\{ env\.RELEASE_TAG \}\}-\$\{\{ needs\.authorize\.outputs\.release_sha \}\}-tested/, "the transferred bundle name is bound to tag and SHA");
+
+assert.equal(packageJson.dependencies.electron, undefined, "Electron does not pollute the Next production dependency graph");
+assert.match(packageJson.devDependencies.electron, /^\d+\.\d+\.\d+$/, "Electron remains exactly pinned as build tooling and packaged runtime");
+assert.deepEqual(desktopRuntimePolicy, {
+  schemaVersion: 1,
+  runtimeRoots: [{ name: "electron", manifestSection: "devDependencies" }],
+  exceptions: []
+}, "the desktop audit policy has one explicit, exception-free Electron runtime root");
+
+assert.match(publishJob, /needs:[\s\S]+- authorize[\s\S]+- build/, "publication needs both authorization and tested assets");
+assert.match(publishJob, /contents: write/, "only the publication phase can mutate Release state");
+assert.match(publishJob, /actions: read/, "publication can download only the tested workflow artifact");
+assert.equal((workflow.match(/verify-release-source\.mjs/g) || []).length, 3, "source is reauthorized before mutation and immediately before publication");
+assert.match(publishJob, /actions\/download-artifact@[0-9a-f]{40}/, "tested assets are downloaded through a commit-pinned action");
+assert.doesNotMatch(workflow, /branches\/[^\s"']+\/protection|repos\/[^\s"']+\/rulesets/, "the workflow does not mutate remote branch or tag rules");
 
 const createDraft = workflow.indexOf("- name: Create draft GitHub release");
 const verifyDraft = workflow.indexOf("- name: Re-download and verify exact draft release");
+const finalAuthorization = workflow.indexOf("- name: Reauthorize source immediately before publication");
 const publishVerified = workflow.indexOf("- name: Publish verified GitHub release");
 const normalizeAssets = workflow.indexOf("- name: Normalize release asset filenames");
 const generateChecksums = workflow.indexOf("- name: Generate SHA256SUMS");
-
-// Ordering is part of the safety contract: unverified assets must never become
-// public, even if each individual workflow step still exists.
 assert.ok(createDraft >= 0, "release workflow creates a draft release");
 assert.ok(verifyDraft > createDraft, "draft assets are verified after upload");
-assert.ok(publishVerified > verifyDraft, "release is published only after exact draft verification");
+assert.ok(finalAuthorization > verifyDraft, "tag, ancestry, review, and CI are checked again after draft verification");
+assert.ok(publishVerified > finalAuthorization, "publication follows the final source authorization");
 assert.ok(normalizeAssets >= 0 && normalizeAssets < generateChecksums, "executable names are normalized before checksums");
+assert.match(buildJob, /Expected exactly one Setup executable/, "release build rejects portable or extra executables");
+assert.match(buildJob, /Unexpected checksum subject set/, "checksum generation requires exactly Setup and the SPDX SBOM");
+assert.equal((buildJob.match(/release\/Lyrics\.Card\.Generator\.Setup\.\$\{\{ needs\.authorize\.outputs\.version \}\}\.exe/g) || []).length, 2, "attestation and transfer use the exact Setup asset path");
+assert.equal((buildJob.match(/release\/lyrics-card-generator-\$\{\{ needs\.authorize\.outputs\.version \}\}\.spdx\.json/g) || []).length, 5, "SBOM generation, finalization, inspection, attestation, and transfer bind the exact versioned path");
+assert.doesNotMatch(buildJob, /release\/\*\.exe|release\/\*\.spdx\.json/, "release asset provenance and transfer do not use broad globs");
 
 const createSection = workflow.slice(createDraft, verifyDraft);
-const verifySection = workflow.slice(verifyDraft, publishVerified);
+const verifySection = workflow.slice(verifyDraft, finalAuthorization);
 const publishSection = workflow.slice(publishVerified);
-
 assert.match(createSection, /gh release create[^\r\n]+--draft\b/, "release creation remains draft-only");
-assert.match(createSection, /--verify-tag\b/, "release creation verifies the tag");
-assert.match(createSection, /gh api --method DELETE[^\r\n]+\$\(\$_\.id\)/, "reruns remove only stale matching drafts");
+assert.match(createSection, /\$setupAsset release\/SHA256SUMS \$sbomAsset/, "draft creation uploads exactly Setup, SHA256SUMS, and the SPDX SBOM");
+assert.doesNotMatch(createSection, /release\/\*\.exe|portable/i, "draft creation cannot upload a portable or wildcard executable");
+assert.match(createSection, /--verify-tag\b/, "release creation verifies that the remote tag still exists");
+assert.match(createSection, /--target \$env:EXPECTED_RELEASE_SHA\b/, "new drafts are explicitly targeted at the authorized SHA");
+assert.doesNotMatch(createSection, /--method DELETE|gh release delete/, "reruns never delete a draft or published Release");
+assert.match(createSection, /state -eq 'draft'[\s\S]+Reusing exact draft release/, "an exact pre-existing draft is reused without replacement");
 assert.match(createSection, /RELEASE_ID=/, "the exact draft release id is persisted");
 assert.match(createSection, /for \(\$attempt = 1; \$attempt -le 10; \$attempt\+\+\)/, "draft discovery uses a finite retry loop");
 assert.match(createSection, /Start-Sleep -Seconds 2/, "draft discovery tolerates GitHub API propagation delay");
 assert.match(createSection, /\$null -eq \$draft/, "draft discovery fails closed after bounded retries");
+assert.match(createSection, /\$createExitCode -ne 0[\s\S]+no exact release became visible/, "duplicate-create and API failures are re-resolved and fail closed when no exact draft exists");
 assert.match(verifySection, /verify-github-release\.ps1/, "draft verification uses the shared exact-release verifier");
 assert.match(verifySection, /ExpectedState draft/, "draft verification rejects an unexpectedly published release");
-assert.match(
-  publishSection,
-  /gh api --method PATCH[^\r\n]+repos\/\$env:GITHUB_REPOSITORY\/releases\/\$env:RELEASE_ID/,
-  "the verified draft is published by exact release id"
-);
+assert.match(verifySection, /ExpectedAssetDirectory release/, "a reused or concurrently-created draft must byte-match this run's tested bundle");
+assert.match(publishSection, /gh api --method PATCH[^\r\n]+repos\/\$env:GITHUB_REPOSITORY\/releases\/\$env:RELEASE_ID/, "the verified draft is published by exact release id");
+
+assert.doesNotMatch(workflow, /releases\?per_page=100/, "release state never depends on an unpaginated first page");
+assert.equal((workflow.match(/resolve-github-release\.mjs/g) || []).length, 2, "authorization and publication use the same exact release resolver");
+assert.match(releaseStateResolver, /MAX_RELEASE_PAGES = 10_000/, "release pagination has an auditable fail-closed bound beyond 100 pages");
+assert.match(releaseStateResolver, /parseNextLink/, "the resolver follows validated GitHub pagination links");
+assert.match(releaseStateResolver, /pageItems\.length === 0/, "the resolver terminates on an explicit empty page");
+assert.match(releaseStateResolver, /matching\.length > 1[\s\S]+release_conflict/, "same-tag draft or published collisions fail closed");
+assert.match(releaseStateResolver, /remoteTagSha !== normalizedExpectedSha/, "release state is independently bound to the authorized tag SHA");
+
+assert.deepEqual(sourcePolicy.requiredChecks, [
+  "verify",
+  "render-boundary-regression",
+  "web-lite-smoke",
+  "web-lite-cross-browser-smoke (firefox)",
+  "web-lite-cross-browser-smoke (webkit)",
+  "security/locale/a11y gates",
+  "desktop-packaged-regression"
+]);
+assert.equal(sourcePolicy.baseBranch, "main");
+assert.equal(sourcePolicy.ciWorkflowPath, ".github/workflows/ci.yml");
+assert.equal(sourcePolicy.requiredApprovals, 0, "the single-collaborator repository does not require an impossible independent approval");
+assert.deepEqual(sourcePolicy.trustedReviewers, [], "reviewers must be added through an explicit future allowlist");
+assert.ok(!sourcePolicy.requiredChecks.some((name) => /release/i.test(name)), "Release workflow checks never depend on themselves");
+assert.match(sourceVerifier, /compare\/\$\{releaseSha\}\.\.\.\$\{mainSha\}/, "authorization proves main ancestry through the exact remote SHAs");
+assert.match(sourceVerifier, /merge_commit_sha/, "the final main commit is associated with its merged pull request");
+assert.match(sourceVerifier, /pullRequest\.head\?\.sha/, "review approval is bound to the PR's final head even when squash or rebase changes the main SHA");
+assert.match(sourceVerifier, /collaborators\/\$\{encodeURIComponent\(reviewer\.login\)\}\/permission/, "future approvals require a current effective repository-permission lookup");
+assert.match(sourceVerifier, /REVIEWER_WRITE_PERMISSIONS\.has\(permission\)/, "only current repository writers can count as trusted reviewers");
+assert.match(sourceVerifier, /head_sha: releaseSha/, "CI workflow lookup is bound to the exact final release SHA");
+assert.match(sourceVerifier, /event: "push"/, "only the final main-push CI run can authorize publication");
+assert.match(sourceVerifier, /job\.status !== "completed" \|\| job\.conclusion !== "success"/, "missing, pending, skipped, neutral, and failed checks fail closed");
+assert.match(powershellSyntaxTest, /Parser\]::ParseInput/, "every inline release PowerShell block has a parser-backed syntax test");
+assert.match(sourcePolicyDocs, /Protect `main`:[\s\S]+require pull requests/, "remote main protection is documented without being mutated by the workflow");
+assert.match(sourcePolicyDocs, /Protect `v\*\.\*\.\*` tags:[\s\S]+creation, update, and deletion/, "remote tag immutability rules are documented");
+assert.match(sourcePolicyDocs, /squash and rebase merges[\s\S]+different PR head/, "review and final-SHA binding is documented for the repository's merge strategies");
+assert.match(sourcePolicyDocs, /current repository policy deliberately sets `requiredApprovals` to `0`/, "documentation states the current zero-approval policy");
+assert.match(sourcePolicyDocs, /Codex[\s\S]+is not a GitHub[\s\S]+approval/, "offline Codex acceptance is not presented as GitHub review evidence");
 
 assert.match(verifier, /releases\/\$ReleaseId/, "verification resolves a release by exact numeric id");
 assert.match(verifier, /Invoke-WebRequest -Uri \$asset\.url/, "verification downloads exact asset API URLs");
-assert.match(verifier, /\$setup\.Count -ne 1/, "exactly one Setup artifact is required");
-assert.match(verifier, /\$portable\.Count -ne 1/, "exactly one portable artifact is required");
-assert.match(verifier, /\$sbom\.Count -ne 1/, "exactly one SBOM is required");
-assert.match(verifier, /\$checksums\.Count -ne 1/, "exactly one checksum manifest is required");
 assert.match(verifier, /Unexpected release asset set/, "unexpected downloaded assets fail verification");
-assert.match(verifier, /Lyrics\.Card\.Generator\.Setup\.\$version\.exe/, "the exact versioned Setup filename is required");
-assert.match(verifier, /Lyrics\.Card\.Generator-\$version-portable\.exe/, "the exact versioned portable filename is required");
-assert.match(verifier, /lyrics-card-generator-\$version\.spdx\.json/, "the exact versioned SBOM filename is required");
-assert.match(verifier, /prerelease state does not match tag/, "stable and RC tags enforce matching prerelease state");
-assert.match(verifier, /Unexpected checksum coverage/, "checksum coverage must match the expected assets");
+assert.match(verifier, /Unexpected checksum coverage/, "checksum coverage must match expected assets");
+assert.doesNotMatch(verifier, /-portable\.exe|Expected exactly one portable/, "the shared verifier rejects the retired portable asset contract");
 assert.match(verifier, /gh attestation verify \$_\.FullName/, "every downloaded release asset is attestation-verified");
+assert.match(verifier, /Draft asset does not match the tested bundle/, "reused drafts must match the newly tested artifact bytes");
 
 const nativeFailureGuards = workflow.match(/\$PSNativeCommandUseErrorActionPreference = \$true/g) || [];
-assert.equal(nativeFailureGuards.length, 3, "each inline gh section treats native command failures as fatal");
+assert.equal(nativeFailureGuards.length, 5, "each inline native-command boundary is fatal, including restoration after duplicate-create inspection");
 
-console.log("Generic idempotent release workflow contract tests passed");
+console.log("Reviewed-main exact-CI release workflow contract tests passed");

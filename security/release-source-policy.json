@@ -1,0 +1,17 @@
+{
+  "baseBranch": "main",
+  "ciWorkflow": "ci.yml",
+  "ciWorkflowName": "CI",
+  "ciWorkflowPath": ".github/workflows/ci.yml",
+  "requiredApprovals": 0,
+  "trustedReviewers": [],
+  "requiredChecks": [
+    "verify",
+    "render-boundary-regression",
+    "web-lite-smoke",
+    "web-lite-cross-browser-smoke (firefox)",
+    "web-lite-cross-browser-smoke (webkit)",
+    "security/locale/a11y gates",
+    "desktop-packaged-regression"
+  ]
+}

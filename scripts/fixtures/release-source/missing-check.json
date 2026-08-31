@@ -1,0 +1,4 @@
+{
+  "removeCheck": "desktop-packaged-regression",
+  "expectedError": "required_ci_not_successful"
+}

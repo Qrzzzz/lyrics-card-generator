@@ -6,14 +6,24 @@ const http = require("node:http");
 const path = require("node:path");
 const { getBackgroundImageMime, safeBackgroundPathForUserData } = require("./background-images");
 const { normalizePromptLibrary } = require("./ai-prompt-settings");
+const { AISettingsStore } = require("./ai-settings-store");
 const { createWindowsFontDirectoryService } = require("./font-directory-service");
 const {
+  INVALID_BASE_URL_ERROR_CODE,
+  INSECURE_BASE_URL_ERROR_CODE,
   buildChatCompletionsRequestBody: buildProviderChatCompletionsRequestBody,
   getChatCompletionMessage,
   getChatCompletionsUrl: resolveProviderChatCompletionsUrl,
   readProviderError: readNormalizedProviderError,
   readProviderResponseBody
 } = require("./provider-response");
+const {
+  AIStreamError,
+  assertAICompletionBudgets,
+  consumeOpenAICompatibleSSE,
+  createAIStreamDeadline,
+  resourceBudgets
+} = require("./ai-stream");
 const { normalizeStoredPreferences } = require("./user-preferences");
 const { AIRequestRegistry } = require("./ai-request-registry");
 const { assertTrustedIpcEvent } = require("./ipc-security");
@@ -42,17 +52,18 @@ const {
   waitForPackagedServerReady
 } = require("./packaged-server-readiness");
 const { acquireSingleInstanceOwnership } = require("./single-instance-ownership");
+const { createClipboardImageWriter } = require("./clipboard-image");
 const { createStartupTrace } = require("./startup-trace");
 const { prepareDesktopStartup } = require("./startup-orchestration");
 const { isAllowedLocalNavigation, parseAllowedExternalUrl } = require("./url-policy");
 
 const HOST = LOOPBACK_HOST;
+const APP_CANONICAL_ORIGIN_ENV = "LYRICS_CARD_APP_ORIGIN";
+const APP_TRUST_PROXY_ENV = "LYRICS_CARD_TRUST_PROXY";
 const APP_ID = "com.lyriccard.generator";
 const START_TIMEOUT_MS = 45000;
 const WINDOW_BACKGROUND_COLOR = "#20242D";
 const IMPORT_FILE_REGISTRATION_TTL_MS = 30 * 60 * 1000;
-const MAX_CLIPBOARD_IMAGE_DATA_URL_CODE_UNITS = 64 * 1024 * 1024;
-const PNG_DATA_URL_PREFIX = "data:image/png;base64,";
 const startupTrace = createStartupTrace();
 startupTrace.mark("module-loaded");
 
@@ -70,6 +81,7 @@ let windowRestoring = false;
 let lastEmittedWindowState = null;
 let appPreferencesWriteQueue = Promise.resolve();
 let lastKnownAppPreferences = null;
+let aiSettingsStore = null;
 let importHistoryMutationQueue = Promise.resolve();
 // Window closure is a renderer-confirmed handshake so pending persistence can drain first.
 let allowWindowClose = false;
@@ -223,6 +235,8 @@ async function startPackagedNextServerOnPort(port, source, onProcessLaunchStarte
         : standaloneNodeModules,
       NODE_ENV: "production",
       PORT: String(port),
+      [APP_CANONICAL_ORIGIN_ENV]: url,
+      [APP_TRUST_PROXY_ENV]: "0",
       [STARTUP_SECRET_ENV]: startupSecret
     },
     stdio: ["ignore", "pipe", "pipe", "ipc"],
@@ -630,6 +644,15 @@ async function boot() {
 
 function initializePrimaryInstance() {
   startupTrace.mark("primary-initialize-start");
+  aiSettingsStore = new AISettingsStore({
+    filePath: getAISettingsPath(),
+    defaultSettings: DEFAULT_AI_SETTINGS,
+    normalizeStored: normalizeStoredAISettings,
+    onDiagnostic: ({ event, errorCode }) => {
+      // Diagnostics deliberately expose neither document contents nor credential material.
+      console.error("[ai-settings] persistence diagnostic", event, errorCode ?? "");
+    }
+  });
   importHistoryFileStreams = new ImportHistoryFileStreamRegistry();
   importHistoryStore = new ImportHistoryStore({
     filePath: path.join(app.getPath("userData"), "app-data", "import-history.json")
@@ -743,8 +766,9 @@ function registerDesktopIpc() {
   });
   handle("lyrics-card:window-close-confirm", async () => {
     if (!mainWindow || mainWindow.isDestroyed()) return false;
-    // Drain preferences first, then all history work, before allowing the native close event through.
+    // Drain all main-process persistence before allowing the native close event through.
     await appPreferencesWriteQueue;
+    await aiSettingsStore.flush();
     await flushImportHistoryOperations();
     allowWindowClose = true;
     mainWindow.close();
@@ -847,27 +871,7 @@ function registerDesktopIpc() {
     return true;
   });
 
-  handle("lyrics-card:clipboard-write-image", (_event, dataUrl) => {
-    if (
-      typeof dataUrl !== "string" ||
-      dataUrl.length <= PNG_DATA_URL_PREFIX.length ||
-      dataUrl.length > MAX_CLIPBOARD_IMAGE_DATA_URL_CODE_UNITS ||
-      !dataUrl.startsWith(PNG_DATA_URL_PREFIX)
-    ) {
-      return false;
-    }
-    try {
-      const image = nativeImage.createFromDataURL(dataUrl);
-      const size = image.getSize();
-      if (image.isEmpty() || size.width <= 0 || size.height <= 0 || size.width > 16_384 || size.height > 16_384) {
-        return false;
-      }
-      clipboard.writeImage(image);
-      return true;
-    } catch {
-      return false;
-    }
-  });
+  handle("lyrics-card:clipboard-write-image", createClipboardImageWriter(nativeImage, clipboard));
 
   handle("lyrics-card:background-save", async () => {
     const result = await dialog.showOpenDialog(mainWindow, {
@@ -1045,10 +1049,9 @@ function registerDesktopIpc() {
   });
 
   handle("lyrics-card:ai-settings-save", async (_event, input) => {
-    const current = await readAISettings();
     const normalized = normalizeAISettings(input);
-    let encryptedApiKey = current.encryptedApiKey || "";
     const nextApiKey = typeof input?.apiKey === "string" ? input.apiKey.trim() : "";
+    let encryptedApiKey;
 
     if (nextApiKey) {
       // Never persist plaintext credentials; unsupported or plaintext-only OS backends are rejected below.
@@ -1056,21 +1059,28 @@ function registerDesktopIpc() {
       encryptedApiKey = safeStorage.encryptString(nextApiKey).toString("base64");
     }
 
-    const stored = { ...normalized, encryptedApiKey };
-    await writeAISettings(stored);
+    // Credential preservation is decided inside the serialized store mutation,
+    // after every older save has completed, so an old read cannot drop a newer key.
+    const stored = await aiSettingsStore.save(normalized, {
+      credentialAction: nextApiKey ? "set" : "preserve",
+      encryptedApiKey
+    });
     return toAISettingsSummary(stored);
   });
 
   handle("lyrics-card:ai-settings-api-key-clear", async () => {
-    const current = await readAISettings();
-    const stored = { ...normalizeAISettings(current), encryptedApiKey: "" };
-    await writeAISettings(stored);
+    // Clear is an explicit credential action and remains available even when a
+    // corrupt primary and backup make preservation unsafe.
+    const stored = await aiSettingsStore.save(null, { credentialAction: "clear" });
     return toAISettingsSummary(stored);
   });
 
   handle("lyrics-card:ai-translate", async (event, requestId, request) => {
     if (!isValidAIRequestId(requestId) || typeof request?.prompt !== "string" || !request.prompt.trim()) {
       throw createAIError("invalid_request");
+    }
+    if (Buffer.byteLength(request.prompt, "utf8") > resourceBudgets.jsonRequestBytes.aiTranslate) {
+      throw createAIError("request_too_large");
     }
 
     const sender = event.sender;
@@ -1394,31 +1404,17 @@ async function readAppPreferences() {
   }
 }
 
-async function writeAISettings(settings) {
-  const stored = {
-    ...normalizeAISettings(settings),
-    encryptedApiKey: typeof settings?.encryptedApiKey === "string" ? settings.encryptedApiKey : ""
-  };
-  const settingsPath = getAISettingsPath();
-  await fs.mkdir(app.getPath("userData"), { recursive: true });
-  await fs.writeFile(settingsPath, JSON.stringify(stored, null, 2), { encoding: "utf8", mode: 0o600 });
-  await fs.chmod(settingsPath, 0o600).catch(() => undefined);
+async function readAISettings() {
+  return aiSettingsStore.read();
 }
 
-async function readAISettings() {
-  try {
-    const raw = await fs.readFile(getAISettingsPath(), "utf8");
-    const parsed = JSON.parse(raw);
-    return {
-      ...normalizeAISettings(parsed),
-      encryptedApiKey: typeof parsed.encryptedApiKey === "string" ? parsed.encryptedApiKey : ""
-    };
-  } catch (error) {
-    if (error?.code !== "ENOENT") {
-      console.error("[ai-settings] unable to read settings", error instanceof Error ? error.message : "unknown error");
-    }
-    return { ...DEFAULT_AI_SETTINGS, encryptedApiKey: "" };
-  }
+function normalizeStoredAISettings(input) {
+  if (!input || typeof input !== "object" || Array.isArray(input)) return null;
+  // Missing credential metadata is not equivalent to an explicit empty key.
+  // This is the boundary that prevents a syntactically valid partial JSON
+  // document from silently becoming a durable credential clear.
+  if (typeof input.encryptedApiKey !== "string") return null;
+  return { ...normalizeAISettings(input), encryptedApiKey: input.encryptedApiKey };
 }
 
 function normalizeAISettings(input) {
@@ -1486,115 +1482,93 @@ function validateAISettings(settings, apiKey) {
     throw createAIError("missing_model");
   }
   if (!settings.baseUrl?.trim()) throw createAIError("missing_base_url");
+  resolveAIProviderEndpoint(settings.baseUrl);
+}
+
+function resolveAIProviderEndpoint(baseUrl) {
   try {
-    resolveProviderChatCompletionsUrl(settings.baseUrl);
-  } catch {
-    throw createAIError("invalid_base_url");
+    return resolveProviderChatCompletionsUrl(baseUrl);
+  } catch (error) {
+    const code = error instanceof Error && error.message === INSECURE_BASE_URL_ERROR_CODE
+      ? INSECURE_BASE_URL_ERROR_CODE
+      : INVALID_BASE_URL_ERROR_CODE;
+    throw createAIError(code);
   }
 }
 
 async function streamAITranslationInMain({ settings, apiKey, prompt, reasoning, signal, onStatus, onReasoningDelta, onDelta }) {
-  const endpoint = resolveProviderChatCompletionsUrl(settings.baseUrl);
-  const requestBody = buildProviderChatCompletionsRequestBody({
-    baseUrl: settings.baseUrl,
-    model: settings.model,
-    prompt,
-    reasoning,
-    temperature: settings.temperature
-  });
-
-  let response;
+  const deadline = createAIStreamDeadline(signal);
   try {
-    response = await fetch(endpoint, {
+    const endpoint = resolveAIProviderEndpoint(settings.baseUrl);
+    const requestBody = buildProviderChatCompletionsRequestBody({
+      baseUrl: settings.baseUrl,
+      model: settings.model,
+      prompt,
+      reasoning,
+      temperature: settings.temperature
+    });
+    const response = await fetch(endpoint, {
       method: "POST",
       headers: {
         authorization: `Bearer ${apiKey}`,
         "content-type": "application/json"
       },
       body: JSON.stringify(requestBody),
-      signal
+      signal: deadline.signal
     });
-  } catch (error) {
-    if (error?.name === "AbortError") {
-      throw createAIError("cancelled");
+
+    if (!response.ok) {
+      throw createAIError(
+        "provider_error",
+        await readNormalizedProviderError(response, deadline.signal)
+      );
     }
-    throw createAIError("network");
-  }
+    onStatus("connected");
 
-  if (!response.ok) {
-    throw createAIError("provider_error", await readNormalizedProviderError(response));
-  }
-  onStatus("connected");
-
-  const contentType = response.headers.get("content-type") || "";
-  if (!contentType.includes("text/event-stream")) {
-    const body = await readProviderResponseBody(response);
-    const { content, reasoningContent } = getChatCompletionMessage(body);
-    if (reasoningContent) {
-      onStatus("reasoning");
-      onReasoningDelta(reasoningContent);
-    }
-    if (!content) {
-      throw createAIError("empty_response");
-    }
-    onStatus("translating");
-    onDelta(content);
-    return content;
-  }
-
-  if (!response.body) {
-    throw createAIError("empty_stream");
-  }
-
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder();
-  // Retain the incomplete tail because both UTF-8 code points and SSE events may span chunks.
-  let buffer = "";
-  let receivedContent = "";
-
-  while (true) {
-    const { done, value } = await reader.read();
-    buffer += decoder.decode(value, { stream: !done });
-    const events = buffer.split(/\r?\n\r?\n/);
-    buffer = events.pop() || "";
-
-    for (const event of events) {
-      for (const line of event.split(/\r?\n/)) {
-        if (!line.startsWith("data:")) {
-          continue;
-        }
-        const payload = line.slice(5).trim();
-        if (!payload || payload === "[DONE]") {
-          continue;
-        }
-        try {
-          const data = JSON.parse(payload);
-          const reasoningDelta = data?.choices?.[0]?.delta?.reasoning_content;
-          if (reasoningDelta) {
-            onStatus("reasoning");
-            onReasoningDelta(reasoningDelta);
-          }
-          const delta = data?.choices?.[0]?.delta?.content;
-          if (delta) {
-            receivedContent += delta;
-            onStatus("translating");
-            onDelta(delta);
-          }
-        } catch {
-          // Ignore malformed or provider-specific SSE metadata lines.
-        }
+    const contentType = response.headers.get("content-type") || "";
+    if (!contentType.includes("text/event-stream")) {
+      const body = await readProviderResponseBody(response, deadline.signal);
+      const { content, reasoningContent } = getChatCompletionMessage(body);
+      assertAICompletionBudgets(content, reasoningContent);
+      if (reasoningContent) {
+        onStatus("reasoning");
+        onReasoningDelta(reasoningContent);
       }
+      if (!content) throw createAIError("empty_response");
+      onStatus("translating");
+      onDelta(content);
+      return content;
     }
 
-    if (done) {
-      break;
+    if (!response.body) throw createAIError("empty_stream");
+    const result = await consumeOpenAICompatibleSSE(
+      response,
+      {
+        onReasoningDelta(delta) {
+          onStatus("reasoning");
+          onReasoningDelta(delta);
+        },
+        onDelta(delta) {
+          onStatus("translating");
+          onDelta(delta);
+        }
+      },
+      { signal: deadline.signal, deadlineAt: deadline.deadlineAt }
+    );
+    if (!result.content.trim()) throw createAIError("empty_response");
+    return result.content;
+  } catch (error) {
+    if (error instanceof Error && error.message.includes("AI_ERROR:")) throw error;
+    if (signal.aborted) throw createAIError("cancelled");
+    if (deadline.signal.reason instanceof AIStreamError) {
+      throw createAIError(deadline.signal.reason.code);
     }
+    if (error instanceof AIStreamError) throw createAIError(error.code);
+    if (error?.code === "response_too_large") throw createAIError("response_too_large");
+    throw createAIError("network");
+  } finally {
+    deadline.dispose();
   }
-
-  if (!receivedContent.trim()) {
-    throw createAIError("empty_response");
-  }
-  return receivedContent;
 }
 
 function isValidAIRequestId(value) {

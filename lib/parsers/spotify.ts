@@ -11,23 +11,24 @@ type SpotifyOEmbedResponse = {
   thumbnail_url?: string | null;
 };
 
-export async function parseSpotify(finalUrl: string, originalUrl: string) {
+export async function parseSpotify(finalUrl: string, originalUrl: string, signal?: AbortSignal) {
   const metadataUrl = toSpotifyTrackUrl(finalUrl) || finalUrl;
 
   try {
-    return await parseSpotifyOEmbed(metadataUrl, originalUrl);
+    return await parseSpotifyOEmbed(metadataUrl, originalUrl, signal);
   } catch {
+    if (signal?.aborted) throw signal.reason;
     // Continue to Open Graph fallback below.
   }
 
-  return parseSpotifyOpenGraph(metadataUrl, originalUrl);
+  return parseSpotifyOpenGraph(metadataUrl, originalUrl, signal);
 }
 
-async function parseSpotifyOEmbed(finalUrl: string, originalUrl: string) {
+async function parseSpotifyOEmbed(finalUrl: string, originalUrl: string, signal?: AbortSignal) {
   const endpoint = new URL("https://open.spotify.com/oembed");
   endpoint.searchParams.set("url", finalUrl);
 
-  const data = await fetchJson<SpotifyOEmbedResponse>(endpoint.toString());
+  const data = await fetchJson<SpotifyOEmbedResponse>(endpoint.toString(), { signal });
   const rawTitle = data.title?.trim() || "";
   const coverUrl = data.thumbnail_url?.trim() || "";
 
@@ -35,7 +36,7 @@ async function parseSpotifyOEmbed(finalUrl: string, originalUrl: string) {
     throw new Error("Spotify oEmbed did not return usable metadata.");
   }
 
-  const html = await fetchSpotifyMetadataHtml(finalUrl);
+  const html = await fetchSpotifyMetadataHtml(finalUrl, signal);
   const parsed = resolveSpotifyMetadata(rawTitle, html);
 
   return buildSongInfo({
@@ -49,8 +50,8 @@ async function parseSpotifyOEmbed(finalUrl: string, originalUrl: string) {
   });
 }
 
-async function parseSpotifyOpenGraph(finalUrl: string, originalUrl: string) {
-  const { html, finalUrl: fetchedFinalUrl } = await fetchSpotifyHtml(finalUrl);
+async function parseSpotifyOpenGraph(finalUrl: string, originalUrl: string, signal?: AbortSignal) {
+  const { html, finalUrl: fetchedFinalUrl } = await fetchSpotifyHtml(finalUrl, signal);
   const meta = extractMeta(html, fetchedFinalUrl || finalUrl);
   const parsed = resolveSpotifyMetadata(meta.rawTitle, html);
 
@@ -69,21 +70,23 @@ async function parseSpotifyOpenGraph(finalUrl: string, originalUrl: string) {
   });
 }
 
-async function fetchSpotifyMetadataHtml(finalUrl: string) {
+async function fetchSpotifyMetadataHtml(finalUrl: string, signal?: AbortSignal) {
   try {
-    const { html } = await fetchSpotifyHtml(finalUrl);
+    const { html } = await fetchSpotifyHtml(finalUrl, signal);
     return html;
   } catch {
+    if (signal?.aborted) throw signal.reason;
     return "";
   }
 }
 
-async function fetchSpotifyHtml(url: string) {
+async function fetchSpotifyHtml(url: string, signal?: AbortSignal) {
   return fetchHtml(url, {
     headers: {
       "user-agent": "Mozilla/5.0",
       accept: "text/html,*/*;q=0.8"
-    }
+    },
+    signal
   });
 }
 

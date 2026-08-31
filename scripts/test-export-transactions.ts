@@ -9,13 +9,21 @@ import {
   type ExportImageDependencies
 } from "../lib/export-image";
 import {
+  CLIPBOARD_IMAGE_PIXEL_LIMIT,
   EXPORT_CANVAS_DIMENSION_LIMIT,
+  ClipboardRasterSizeLimitError,
   ExportRasterSizeLimitError,
   ExportRasterSizeMismatchError,
+  getClipboardRasterSizeIssue,
   getExpectedExportRasterSize,
   getExportRasterSizeIssue
 } from "../lib/export-dimensions";
 import { createExportSnapshot } from "../lib/export-snapshot";
+import {
+  ImageClipboardUnavailableError,
+  getPngDataUrlEncodedByteLength,
+  writePngDataUrlToClipboard
+} from "../lib/image-clipboard";
 import { ExportTransactionMutex, runExportTransaction, waitForExportSnapshotNode } from "../lib/export-transaction";
 import {
   createBlobUrlRetirementState,
@@ -439,6 +447,13 @@ async function exportImageAbortGuardTest() {
   }
 
   assert.deepEqual(getExpectedExportRasterSize(1387, 9399, 1.4), { width: 1941, height: 13158 });
+  assert.equal(getClipboardRasterSizeIssue(1440, 6400, 2), null);
+  assert.deepEqual(getClipboardRasterSizeIssue(7000, 7000, 1), {
+    expected: { width: 7000, height: 7000 },
+    dimensionLimit: EXPORT_CANVAS_DIMENSION_LIMIT,
+    pixelLimit: CLIPBOARD_IMAGE_PIXEL_LIMIT,
+    reason: "area"
+  });
   assert.equal(getExportRasterSizeIssue(1387, 8191, 2), null);
   assert.equal(getExportRasterSizeIssue(1387, 8192, 2), null);
   assert.notEqual(getExportRasterSizeIssue(1387, 8192, Number.NaN), null);
@@ -476,6 +491,39 @@ async function exportImageAbortGuardTest() {
       }
     ),
     ExportRasterSizeLimitError
+  );
+
+  let boundaryClipboardCommits = 0;
+  await copyNodeAsPng(
+    {} as HTMLElement,
+    1440,
+    6400,
+    2,
+    undefined,
+    {
+      renderNode: async () => ({
+        dataUrl: "data:image/png;base64,CONTROLLED_BOUNDARY_FIXTURE",
+        width: 2880,
+        height: 12800
+      }),
+      commitClipboard: () => { boundaryClipboardCommits += 1; }
+    }
+  );
+  assert.equal(boundaryClipboardCommits, 1, "the legal 2880 x 12800 clipboard path remains reachable");
+
+  await assert.rejects(
+    copyNodeAsPng(
+      {} as HTMLElement,
+      7000,
+      7000,
+      1,
+      undefined,
+      {
+        renderNode: async () => assert.fail("an over-area clipboard image must fail before rendering"),
+        commitClipboard: () => assert.fail("an over-area clipboard image must not commit")
+      }
+    ),
+    ClipboardRasterSizeLimitError
   );
 
   await assert.rejects(
@@ -533,6 +581,25 @@ async function transactionTimeoutBlocksLateExportCommitTest() {
   assert.equal(commitCount, 0, "a transaction timeout must block a late html-to-image result from downloading");
 }
 
+async function clipboardIpcErrorPropagationTest() {
+  const testWindow = {
+    lyricsCardDesktopBridge: {
+      copyImageToClipboard: async () => false
+    }
+  };
+  Object.defineProperty(globalThis, "window", { configurable: true, value: testWindow });
+  try {
+    assert.equal(getPngDataUrlEncodedByteLength("data:image/png;base64,AAAA"), 3);
+    await assert.rejects(
+      writePngDataUrlToClipboard("data:image/png;base64,AAAA"),
+      ImageClipboardUnavailableError,
+      "a stable false IPC result propagates as the renderer clipboard failure"
+    );
+  } finally {
+    Reflect.deleteProperty(globalThis, "window");
+  }
+}
+
 void (async () => {
   exportSnapshotProtectsBlobUrlTest();
   await concurrencyTest();
@@ -540,6 +607,7 @@ void (async () => {
   await postSettleRevalidationTest();
   await fontReadinessTimeoutTest();
   await exportImageAbortGuardTest();
+  await clipboardIpcErrorPropagationTest();
   await transactionTimeoutBlocksLateExportCommitTest();
 })().then(() => {
   console.log("export snapshot and concurrency tests passed");

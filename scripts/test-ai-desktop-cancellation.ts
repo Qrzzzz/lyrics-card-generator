@@ -84,9 +84,31 @@ async function alreadyAbortedSignalNeverStartsProvider() {
   assert.equal(cancels, 1);
 }
 
+async function desktopTransportPolicyErrorIsPreserved() {
+  const desktop = {
+    startAITranslation: async () => {
+      throw new Error(
+        "Error invoking remote method 'lyrics-card:ai-translate': Error: AI_ERROR:insecure_base_url"
+      );
+    },
+    cancelAITranslation: async () => ({ cancelled: false, active: false }),
+    onAITranslationChunk: () => () => undefined
+  } as Pick<LyricsCardDesktopApi, "startAITranslation" | "cancelAITranslation" | "onAITranslationChunk">;
+  Object.defineProperty(globalThis, "window", {
+    configurable: true,
+    value: { lyricsCardDesktop: desktop as LyricsCardDesktopApi }
+  });
+
+  await assert.rejects(
+    streamAITranslation({ prompt: "translate", reasoning: false }),
+    (error: unknown) => error instanceof Error && error.message === "AI_ERROR:insecure_base_url"
+  );
+}
+
 void (async () => {
   await lateDesktopDataIsRejectedAfterAbort();
   await alreadyAbortedSignalNeverStartsProvider();
+  await desktopTransportPolicyErrorIsPreserved();
   console.log("AI desktop cancellation behavior tests passed");
 })().catch((error) => {
   console.error(error);

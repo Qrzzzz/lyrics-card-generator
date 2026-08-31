@@ -1,0 +1,59 @@
+{
+  "repository": "Qrzzzz/lyrics-card-generator",
+  "tag": "v6.2.1",
+  "expectedSha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "annotatedTagSha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "scenarios": [
+    {
+      "name": "historical-published-after-100-pages",
+      "event": "push",
+      "pages": 101,
+      "targetPage": 101,
+      "targetState": "published",
+      "pagination": "link",
+      "expectedState": "published"
+    },
+    {
+      "name": "workflow-dispatch-old-draft-on-later-page",
+      "event": "workflow_dispatch",
+      "pages": 2,
+      "targetPage": 2,
+      "targetState": "draft",
+      "pagination": "link",
+      "expectedState": "draft"
+    },
+    {
+      "name": "no-match-full-page-then-empty-page",
+      "event": "workflow_dispatch",
+      "fullPages": 2,
+      "pagination": "empty-probe",
+      "expectedState": "none"
+    },
+    {
+      "name": "draft-published-same-tag-collision",
+      "event": "push",
+      "matches": ["draft", "published"],
+      "expectedError": "release_conflict"
+    },
+    {
+      "name": "api-error-on-later-page",
+      "event": "workflow_dispatch",
+      "fullPages": 1,
+      "errorPage": 2,
+      "expectedError": "github_api_error"
+    },
+    {
+      "name": "malformed-later-page-response",
+      "event": "push",
+      "fullPages": 1,
+      "malformedPage": 2,
+      "expectedError": "github_api_shape"
+    },
+    {
+      "name": "duplicate-create-conflict-resolves-to-exact-draft",
+      "event": "workflow_dispatch",
+      "phases": ["none", "draft"],
+      "expectedActions": ["create_draft", "reuse_draft"]
+    }
+  ]
+}

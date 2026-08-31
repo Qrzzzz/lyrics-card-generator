@@ -7,6 +7,11 @@ import {
   localAudioMetadataSizeRejection,
   readLocalAudioMultipart
 } from "@/lib/local-audio-request";
+import {
+  createLocalAudioMetadataObserver,
+  limitLocalAudioMetadataTokenizer,
+  LocalAudioMetadataLimitExceededError
+} from "@/lib/local-audio-metadata-budget";
 import type { ParsedSongData } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -59,7 +64,16 @@ export async function POST(req: Request) {
     const metadata = await parseLocalAudioMetadata(file, parserPath);
     const picture = metadata.common.picture?.[0];
     const rawLyrics = extractLyrics(metadata);
-    const metadataSizeRejection = localAudioMetadataSizeRejection(metadata.common.picture, rawLyrics);
+    const title = metadata.common.title?.trim() || stripAudioExtension(file.name);
+    const artist = firstValue(metadata.common.artists) || metadata.common.artist?.trim() || "";
+    const album = metadata.common.album?.trim() || "";
+    const metadataSizeRejection = localAudioMetadataSizeRejection(
+      metadata.common.picture,
+      rawLyrics,
+      undefined,
+      undefined,
+      { title, artist, album }
+    );
     if (metadataSizeRejection) {
       return metadataSizeRejection;
     }
@@ -69,9 +83,9 @@ export async function POST(req: Request) {
     const lyrics = stripLrcTimestamps(rawLyrics);
     const data: ParsedSongData = {
       source: "unknown",
-      title: metadata.common.title?.trim() || stripAudioExtension(file.name),
-      artist: firstValue(metadata.common.artists) || metadata.common.artist?.trim() || "",
-      album: metadata.common.album?.trim() || "",
+      title,
+      artist,
+      album,
       coverUrl,
       originalCoverUrl: "",
       proxiedCoverUrl: "",
@@ -86,7 +100,10 @@ export async function POST(req: Request) {
       status: lyrics ? "success" : "no-lyrics",
       message: lyrics ? "Parsed metadata and embedded lyrics." : "Parsed metadata, but no embedded lyrics were found."
     });
-  } catch {
+  } catch (error) {
+    if (error instanceof LocalAudioMetadataLimitExceededError) {
+      return appApiErrorResponse("local_audio_metadata_too_large", 413);
+    }
     return appApiErrorResponse("local_audio_parse_failed", 422);
   }
 }
@@ -94,7 +111,8 @@ export async function POST(req: Request) {
 async function parseLocalAudioMetadata(file: Blob, parserPath: string) {
   const tokenizer = fromBlob(file, { fileInfo: { path: parserPath } });
   try {
-    return await parseFromTokenizer(tokenizer, {});
+    const limitedTokenizer = limitLocalAudioMetadataTokenizer(tokenizer);
+    return await parseFromTokenizer(limitedTokenizer, { observer: createLocalAudioMetadataObserver() });
   } finally {
     // Parser failures must not retain the Blob-backed tokenizer or its buffers.
     await tokenizer.close();

@@ -18,11 +18,13 @@ export type ParseDebugDetails = {
 
 export class SongParseError extends Error {
   details: ParseDebugDetails;
+  readonly cause?: unknown;
 
-  constructor(message: string, details: ParseDebugDetails) {
+  constructor(message: string, details: ParseDebugDetails, cause?: unknown) {
     super(message);
     this.name = "SongParseError";
     this.details = details;
+    this.cause = cause;
   }
 }
 
@@ -31,7 +33,10 @@ export class SongParseError extends Error {
  * falls back to generic Open Graph metadata while retaining attempted methods
  * for diagnostics.
  */
-export async function parseSong(input: string): Promise<SongInfo> {
+export async function parseSong(
+  input: string,
+  options: Pick<SafeFetchOptions, "signal"> = {}
+): Promise<SongInfo> {
   const triedMethods: string[] = [];
   const rawUrl = extractFirstUrl(input);
   const details: ParseDebugDetails = {
@@ -44,16 +49,19 @@ export async function parseSong(input: string): Promise<SongInfo> {
     throw new SongParseError("No URL was found in the input.", details);
   }
 
+  let resourceControlFailure: SafeFetchError | undefined;
   let finalUrl = rawUrl;
   try {
     triedMethods.push("resolve-redirect");
-    finalUrl = await resolveRedirect(finalUrl);
+    finalUrl = await resolveRedirect(finalUrl, { signal: options.signal });
   } catch (error) {
+    throwIfCallerAborted(options.signal);
     // Unsafe targets are terminal. Ordinary redirect failures can still leave
     // a direct platform URL that a source adapter is able to parse safely.
     if (error instanceof SafeFetchError && error.code === "UNSAFE_URL") {
-      throw new SongParseError(error.message, details);
+      throw new SongParseError(error.message, details, error);
     }
+    if (isSafeFetchResourceControlError(error)) resourceControlFailure = error;
     details.error = error instanceof Error ? error.message : "Unable to resolve redirects.";
   }
   const source = detectSource(finalUrl) !== "unknown" ? detectSource(finalUrl) : detectSource(rawUrl);
@@ -63,33 +71,37 @@ export async function parseSong(input: string): Promise<SongInfo> {
   try {
     if (source === "netease") {
       triedMethods.push("netease-adapter");
-      return await parseNetease(finalUrl, rawUrl);
+      return await parseNetease(finalUrl, rawUrl, options.signal);
     }
 
     if (source === "qq") {
       triedMethods.push("qq-adapter");
-      return await parseQQMusic(finalUrl, rawUrl);
+      return await parseQQMusic(finalUrl, rawUrl, options.signal);
     }
 
     if (source === "apple") {
       triedMethods.push("apple-adapter");
-      return await parseAppleMusic(finalUrl, rawUrl);
+      return await parseAppleMusic(finalUrl, rawUrl, options.signal);
     }
 
     if (source === "spotify") {
       triedMethods.push("spotify-adapter");
-      return await parseSpotify(finalUrl, rawUrl);
+      return await parseSpotify(finalUrl, rawUrl, options.signal);
     }
   } catch (error) {
+    throwIfCallerAborted(options.signal);
+    if (isSafeFetchResourceControlError(error)) resourceControlFailure = error;
     details.error = error instanceof Error ? error.message : "Platform parser failed.";
   }
 
   try {
     triedMethods.push("generic-og");
-    return await parseGenericOpenGraph(finalUrl, rawUrl);
+    return await parseGenericOpenGraph(finalUrl, rawUrl, options.signal);
   } catch (error) {
+    throwIfCallerAborted(options.signal);
     const message = error instanceof Error ? error.message : "Unable to parse this link.";
-    throw new SongParseError(message, { ...details, error: message });
+    const cause = error instanceof SafeFetchError ? error : resourceControlFailure ?? error;
+    throw new SongParseError(message, { ...details, error: message }, cause);
   }
 }
 
@@ -139,7 +151,7 @@ export function detectSource(inputUrl: string): SongSource {
 
 export async function resolveRedirect(
   url: string,
-  networkOverrides: Pick<SafeFetchOptions, "resolver" | "transport"> = {}
+  networkOverrides: Pick<SafeFetchOptions, "resolver" | "transport" | "signal"> = {}
 ) {
   // A zero-byte discarded body turns this into redirect discovery without
   // downloading an arbitrary song page twice.
@@ -155,9 +167,13 @@ export async function resolveRedirect(
   return response.url || url;
 }
 
-export async function parseGenericOpenGraph(finalUrl: string, originalUrl = finalUrl) {
+export async function parseGenericOpenGraph(
+  finalUrl: string,
+  originalUrl = finalUrl,
+  signal?: AbortSignal
+) {
   const source = detectSource(finalUrl);
-  const { html, finalUrl: fetchedFinalUrl } = await fetchHtml(finalUrl);
+  const { html, finalUrl: fetchedFinalUrl } = await fetchHtml(finalUrl, { signal });
 
   return songInfoFromMeta({
     source,
@@ -176,4 +192,15 @@ function safeHost(inputUrl: string) {
   } catch {
     return "";
   }
+}
+
+function throwIfCallerAborted(signal?: AbortSignal): void {
+  if (!signal?.aborted) return;
+  throw signal.reason instanceof Error
+    ? signal.reason
+    : new DOMException("The song parse request was cancelled.", "AbortError");
+}
+
+function isSafeFetchResourceControlError(error: unknown): error is SafeFetchError {
+  return error instanceof SafeFetchError && (error.code === "TIMEOUT" || error.code === "BODY_TOO_LARGE");
 }

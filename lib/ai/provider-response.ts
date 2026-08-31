@@ -1,19 +1,25 @@
+import resourceBudgets from "@/electron/resource-budgets.json";
+import { readResponseTextBounded } from "@/lib/bounded-response";
+
 export type ProviderResponseBody =
   | { kind: "json"; data: unknown }
   | { kind: "text"; text: string }
   | { kind: "empty" };
 
-export async function readProviderResponseBody(response: Response): Promise<ProviderResponseBody> {
+export async function readProviderResponseBody(
+  response: Response,
+  signal?: AbortSignal
+): Promise<ProviderResponseBody> {
+  const text = await readResponseTextBounded(
+    response,
+    resourceBudgets.upstreamResponseBytes.aiProviderBody,
+    signal
+  );
+  if (!text.trim()) return { kind: "empty" };
   try {
-    // Parse a clone first so a non-JSON response remains readable as text.
-    return { kind: "json", data: await response.clone().json() };
+    return { kind: "json", data: JSON.parse(text) };
   } catch {
-    try {
-      const text = await response.text();
-      return text.trim() ? { kind: "text", text: text.trim() } : { kind: "empty" };
-    } catch {
-      return { kind: "empty" };
-    }
+    return { kind: "text", text: text.trim() };
   }
 }
 

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { createLatestSaveController, type SaveSnapshot } from "@/lib/ai/ai-settings-save-controller";
 import { getLyricsCardDesktopApi } from "@/lib/desktop-api";
 import { documentLanguageForLocale } from "@/lib/locale-language";
 import { shutdownCoordinator } from "@/lib/persistence/shutdown-coordinator";
@@ -12,6 +11,10 @@ import {
   shouldShowFirstLaunchLanguage,
   type AppPreferencesPersistenceOptions
 } from "@/lib/settings/app-preferences";
+import {
+  createAppPreferenceSaveCoordinator,
+  type AppPreferenceSaveCoordinator
+} from "@/lib/settings/app-preference-save-coordinator";
 import { DEFAULT_USER_SETTINGS, type UserSettings } from "@/lib/settings/types";
 import { normalizeUserSettings, resolveEffectiveUiThemeId, saveUserSettings } from "@/lib/settings/user-settings";
 import type { Locale } from "@/lib/types";
@@ -21,35 +24,20 @@ type UseEditorPreferencesInput = {
   applyLocale: (locale: Locale) => void;
 };
 
-type PreferenceSaveValue = {
-  locale: Locale;
-  userSettings: UserSettings;
-  options?: AppPreferencesPersistenceOptions;
-};
-
 export function useEditorPreferences({ currentLocale, applyLocale }: UseEditorPreferencesInput) {
   const [userSettings, setUserSettings] = useState<UserSettings>(DEFAULT_USER_SETTINGS);
   const [isDesktopShell, setIsDesktopShell] = useState(false);
   const [isFirstLaunchOpen, setIsFirstLaunchOpen] = useState(false);
   const [preferencesLoaded, setPreferencesLoaded] = useState(false);
-  const committedUserSettingsRef = useRef<UserSettings>(DEFAULT_USER_SETTINGS);
   const currentLocaleRef = useRef(currentLocale);
   currentLocaleRef.current = currentLocale;
-  const latestPreferencesRef = useRef<PreferenceSaveValue>({
-    locale: currentLocale,
-    userSettings: DEFAULT_USER_SETTINGS
-  });
-  const persistenceErrorRef = useRef<unknown>(null);
-  // One lifetime-stable controller preserves latest-write ordering across renders.
-  const preferenceSaveControllerRef = useRef<ReturnType<typeof createLatestSaveController<PreferenceSaveValue, unknown>> | null>(null);
-  if (!preferenceSaveControllerRef.current) {
-    preferenceSaveControllerRef.current = createLatestSaveController<PreferenceSaveValue, unknown>({
-      persist: ({ value }) => saveAppPreferences(value.locale, value.userSettings, value.options),
-      onPersisted: (_result, snapshot) => {
-        committedUserSettingsRef.current = snapshot.value.userSettings;
-        persistenceErrorRef.current = null;
-      },
-      onError: (error) => { persistenceErrorRef.current = error; }
+  // One lifetime-stable coordinator preserves both latest-intent composition
+  // and the last truly durable value used for failure rollback.
+  const preferenceSaveCoordinatorRef = useRef<AppPreferenceSaveCoordinator | null>(null);
+  if (!preferenceSaveCoordinatorRef.current) {
+    preferenceSaveCoordinatorRef.current = createAppPreferenceSaveCoordinator({
+      initialValue: { locale: currentLocale, userSettings: DEFAULT_USER_SETTINGS },
+      persist: (value) => saveAppPreferences(value.locale, value.userSettings, value.options)
     });
   }
   const applyLocaleRef = useRef(applyLocale);
@@ -71,18 +59,18 @@ export function useEditorPreferences({ currentLocale, applyLocale }: UseEditorPr
     const normalized = normalizeUserSettings(next);
     setUserSettings(normalized);
     syncWindowMaterial(normalized);
-    queuePreferenceSave(currentLocaleRef.current, normalized, options);
+    preferenceSaveCoordinatorRef.current!.queueUserSettings(
+      currentLocaleRef.current,
+      normalized,
+      options
+    );
     try {
       await flushPreferenceSave();
     } catch (error) {
       // Roll the optimistic preview back to the last durable settings snapshot.
-      const committed = committedUserSettingsRef.current;
-      const fallback = { locale: currentLocaleRef.current, userSettings: committed };
-      latestPreferencesRef.current = fallback;
-      preferenceSaveControllerRef.current!.resetPersisted(createPreferenceSaveSnapshot(fallback));
-      persistenceErrorRef.current = null;
-      setUserSettings(committed);
-      syncWindowMaterial(committed);
+      const fallback = preferenceSaveCoordinatorRef.current!.rollbackDesiredToPersisted();
+      setUserSettings(fallback.userSettings);
+      syncWindowMaterial(fallback.userSettings);
       throw error;
     }
   }
@@ -91,44 +79,25 @@ export function useEditorPreferences({ currentLocale, applyLocale }: UseEditorPr
     currentLocaleRef.current = locale;
     applyLocale(locale);
     // Locale changes persist immediately, matching the rest of the settings dialog.
-    queuePreferenceSave(locale, committedUserSettingsRef.current);
+    preferenceSaveCoordinatorRef.current!.queueLocale(locale);
     return flushPreferenceSave();
   }
 
   async function chooseFirstLaunchLanguage(locale: Locale) {
     const saved = saveUserSettings({
-      ...committedUserSettingsRef.current,
+      ...preferenceSaveCoordinatorRef.current!.getDesired().userSettings,
       firstLaunchLanguageSelected: true
     });
-    committedUserSettingsRef.current = saved;
     currentLocaleRef.current = locale;
     applyLocale(locale);
     setUserSettings(saved);
-    queuePreferenceSave(locale, saved);
+    preferenceSaveCoordinatorRef.current!.queueUserSettings(locale, saved);
     await flushPreferenceSave();
     setIsFirstLaunchOpen(false);
   }
 
-  function queuePreferenceSave(
-    locale: Locale,
-    settings: UserSettings,
-    options?: AppPreferencesPersistenceOptions
-  ) {
-    const value = { locale, userSettings: settings, options };
-    latestPreferencesRef.current = value;
-    const controller = preferenceSaveControllerRef.current!;
-    controller.setDesired(createPreferenceSaveSnapshot(value));
-    void controller.flushLatest();
-  }
-
   async function flushPreferenceSave() {
-    const controller = preferenceSaveControllerRef.current!;
-    controller.setDesired(createPreferenceSaveSnapshot(latestPreferencesRef.current));
-    await controller.flushLatest();
-    await controller.whenIdle();
-    if (controller.getState().status === "error") {
-      throw persistenceErrorRef.current ?? new Error("Unable to save application preferences.");
-    }
+    await preferenceSaveCoordinatorRef.current!.flush();
   }
 
   // Desktop close waits for the latest queued preference snapshot to become durable.
@@ -153,12 +122,11 @@ export function useEditorPreferences({ currentLocale, applyLocale }: UseEditorPr
 
         const { locale: storedLocale, userSettings: loadedSettings } = storedPreferences;
 
-        committedUserSettingsRef.current = loadedSettings;
         currentLocaleRef.current = storedLocale;
-        latestPreferencesRef.current = { locale: storedLocale, userSettings: loadedSettings };
-        preferenceSaveControllerRef.current!.resetPersisted(
-          createPreferenceSaveSnapshot(latestPreferencesRef.current)
-        );
+        preferenceSaveCoordinatorRef.current!.resetPersisted({
+          locale: storedLocale,
+          userSettings: loadedSettings
+        });
         setUserSettings(loadedSettings);
         syncWindowMaterial(loadedSettings);
         if (isSupportedLocale(storedLocale)) {
@@ -201,12 +169,5 @@ export function useEditorPreferences({ currentLocale, applyLocale }: UseEditorPr
     commitUserSettings,
     setLocale,
     chooseFirstLaunchLanguage
-  };
-}
-
-function createPreferenceSaveSnapshot(value: PreferenceSaveValue): SaveSnapshot<PreferenceSaveValue> {
-  return {
-    signature: JSON.stringify(value),
-    value
   };
 }

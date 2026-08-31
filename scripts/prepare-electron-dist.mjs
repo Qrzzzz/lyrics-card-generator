@@ -84,8 +84,12 @@ async function prepareMinimalElectronApp() {
       },
       files: [
         "electron/main.js",
+        "electron/clipboard-image.js",
+        "electron/ai-stream.js",
+        "electron/resource-budgets.json",
         "electron/ai-request-registry.js",
         "electron/ai-prompt-settings.js",
+        "electron/ai-settings-store.js",
         "electron/background-images.js",
         "electron/font-directory-service.js",
         "electron/font-options.js",
@@ -121,10 +125,6 @@ async function prepareMinimalElectronApp() {
           {
             target: "nsis",
             arch: ["x64"]
-          },
-          {
-            target: "portable",
-            arch: ["x64"]
           }
         ]
       },
@@ -132,17 +132,22 @@ async function prepareMinimalElectronApp() {
         oneClick: false,
         allowToChangeInstallationDirectory: true,
         installerIcon: "../../build/icon.ico",
-        uninstallerIcon: "../../build/icon.ico"
-      },
-      portable: {
-        artifactName: "${productName}-${version}-portable.${ext}"
+        uninstallerIcon: "../../build/icon.ico",
+        artifactName: "Lyrics.Card.Generator.Setup.${version}.${ext}"
       }
     }
   };
 
   await cp(path.join(projectRoot, "electron", "main.js"), path.join(electronOutputDir, "main.js"));
+  await cp(path.join(projectRoot, "electron", "clipboard-image.js"), path.join(electronOutputDir, "clipboard-image.js"));
+  await cp(path.join(projectRoot, "electron", "ai-stream.js"), path.join(electronOutputDir, "ai-stream.js"));
+  await cp(
+    path.join(projectRoot, "electron", "resource-budgets.json"),
+    path.join(electronOutputDir, "resource-budgets.json")
+  );
   await cp(path.join(projectRoot, "electron", "ai-request-registry.js"), path.join(electronOutputDir, "ai-request-registry.js"));
   await cp(path.join(projectRoot, "electron", "ai-prompt-settings.js"), path.join(electronOutputDir, "ai-prompt-settings.js"));
+  await cp(path.join(projectRoot, "electron", "ai-settings-store.js"), path.join(electronOutputDir, "ai-settings-store.js"));
   await cp(path.join(projectRoot, "electron", "background-images.js"), path.join(electronOutputDir, "background-images.js"));
   await cp(
     path.join(projectRoot, "electron", "font-directory-service.js"),

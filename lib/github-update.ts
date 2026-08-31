@@ -1,5 +1,12 @@
 import { APP_VERSION } from "@/lib/app-version";
 import { compareVersionStrings, normalizeVersion } from "@/lib/version-compare";
+import { readResponseJsonBounded, ResponseBodyLimitExceededError } from "@/lib/bounded-response";
+import {
+  ClientRequestCancelledError,
+  UpstreamTimeoutError,
+  withUpstreamDeadline
+} from "@/lib/upstream-control";
+import resourceBudgets from "@/electron/resource-budgets.json";
 
 const LATEST_RELEASE_URL = "https://api.github.com/repos/Qrzzzz/lyrics-card-generator/releases/latest";
 
@@ -14,7 +21,14 @@ export type GitHubRelease = {
   assets?: ReleaseAsset[];
 };
 
-export type UpdateErrorCode = "no_release" | "http_error" | "network_error" | "invalid_release_version";
+export type UpdateErrorCode =
+  | "no_release"
+  | "http_error"
+  | "network_error"
+  | "invalid_release_version"
+  | "cancelled"
+  | "timeout"
+  | "response_too_large";
 
 export type UpdateResult =
   | {
@@ -29,7 +43,6 @@ export type UpdateResult =
       latestVersion: string;
       releaseUrl: string;
       installerUrl?: string;
-      portableUrl?: string;
     }
   | {
       status: "no-release";
@@ -46,42 +59,69 @@ export type UpdateResult =
       details?: string;
     };
 
-export async function checkGitHubUpdate(currentVersion = APP_VERSION): Promise<UpdateResult> {
+export async function checkGitHubUpdate(
+  currentVersion = APP_VERSION,
+  clientSignal?: AbortSignal
+): Promise<UpdateResult> {
   try {
-    const response = await fetch(LATEST_RELEASE_URL, {
-      headers: {
-        accept: "application/vnd.github+json",
-        "user-agent": `LyricsCardGenerator/${currentVersion} (https://github.com/Qrzzzz/lyrics-card-generator)`
-      },
-      signal: AbortSignal.timeout(10000)
-    });
+    return await withUpstreamDeadline(
+      clientSignal,
+      resourceBudgets.upstreamTimeoutMs.github,
+      async (signal) => {
+        const response = await fetch(LATEST_RELEASE_URL, {
+          headers: {
+            accept: "application/vnd.github+json",
+            "user-agent": `LyricsCardGenerator/${currentVersion} (https://github.com/Qrzzzz/lyrics-card-generator)`
+          },
+          signal
+        });
 
-    if (response.status === 404) {
-      return {
-        status: "no-release",
-        code: "no_release",
-        currentVersion,
-        message: "No GitHub Release was found for this project."
-      };
-    }
+        if (response.status === 404) {
+          return {
+            status: "no-release",
+            code: "no_release",
+            currentVersion,
+            message: "No GitHub Release was found for this project."
+          };
+        }
 
-    if (!response.ok) {
-      return {
-        status: "error",
-        code: "http_error",
-        currentVersion,
-        message: `GitHub Releases returned HTTP ${response.status}.`,
-        details: response.statusText
-      };
-    }
+        if (!response.ok) {
+          return {
+            status: "error",
+            code: "http_error",
+            currentVersion,
+            message: `GitHub Releases returned HTTP ${response.status}.`,
+            details: response.statusText
+          };
+        }
 
-    return buildUpdateResult((await response.json()) as GitHubRelease, currentVersion);
+        const release = await readResponseJsonBounded<GitHubRelease>(
+          response,
+          resourceBudgets.upstreamResponseBytes.githubRelease,
+          signal
+        );
+        return buildUpdateResult(release, currentVersion);
+      }
+    );
   } catch (error) {
+    const code = error instanceof ClientRequestCancelledError
+      ? "cancelled"
+      : error instanceof UpstreamTimeoutError
+        ? "timeout"
+        : error instanceof ResponseBodyLimitExceededError
+          ? "response_too_large"
+          : "network_error";
     return {
       status: "error",
-      code: "network_error",
+      code,
       currentVersion,
-      message: "Unable to check GitHub Releases.",
+      message: code === "timeout"
+        ? "GitHub Releases timed out."
+        : code === "response_too_large"
+          ? "GitHub Releases returned too much data."
+          : code === "cancelled"
+            ? "The update check was cancelled."
+            : "Unable to check GitHub Releases.",
       details: error instanceof Error ? error.message : String(error)
     };
   }
@@ -117,23 +157,15 @@ export function buildUpdateResult(release: GitHubRelease, currentVersion = APP_V
     currentVersion,
     latestVersion,
     releaseUrl: release.html_url,
-    installerUrl: findInstallerUrl(assets),
-    portableUrl: findPortableUrl(assets)
+    installerUrl: findInstallerUrl(assets)
   };
 }
 
 export function findInstallerUrl(assets: ReleaseAsset[]) {
   // Asset selection is intentionally name-based because GitHub Releases does
-  // not expose semantic installer/portable roles.
+  // not expose a semantic installer role.
   return assets.find((asset) => {
     const name = asset.name.toLowerCase();
     return name.includes("setup") && /\.(exe|msi)$/i.test(asset.name);
-  })?.browser_download_url;
-}
-
-export function findPortableUrl(assets: ReleaseAsset[]) {
-  return assets.find((asset) => {
-    const name = asset.name.toLowerCase();
-    return name.includes("portable") && /\.exe$/i.test(asset.name);
   })?.browser_download_url;
 }

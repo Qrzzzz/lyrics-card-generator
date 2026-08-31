@@ -1,0 +1,47 @@
+{
+  "jsonRequestBytes": {
+    "parseSong": 16384,
+    "fetchLyrics": 16384,
+    "searchSong": 8192,
+    "resolveSearchedSong": 4096,
+    "aiTranslate": 1048576
+  },
+  "upstreamResponseBytes": {
+    "lrclibSearch": 4194304,
+    "neteaseSearch": 1048576,
+    "neteaseDetail": 524288,
+    "neteaseLyrics": 2097152,
+    "githubRelease": 524288,
+    "aiProviderBody": 8388608
+  },
+  "upstreamTimeoutMs": {
+    "lrclib": 8000,
+    "netease": 8000,
+    "github": 10000
+  },
+  "aiStream": {
+    "singleEventBytes": 262144,
+    "bufferBytes": 524288,
+    "outputBytes": 2097152,
+    "reasoningBytes": 4194304,
+    "idleTimeoutMs": 30000,
+    "totalDeadlineMs": 300000
+  },
+  "localAudio": {
+    "fileBytes": 104857600,
+    "multipartOverheadBytes": 65536,
+    "embeddedCoverBytes": 8388608,
+    "lyricsCharacters": 262144,
+    "titleCharacters": 512,
+    "artistCharacters": 1024,
+    "albumCharacters": 512,
+    "parserTokenBytes": 8912896,
+    "parserTotalReadBytes": 33554432
+  },
+  "clipboardImage": {
+    "encodedBytes": 167772160,
+    "maxDimension": 16384,
+    "decodedPixels": 48000000,
+    "decodedRgbaBytes": 192000000
+  }
+}

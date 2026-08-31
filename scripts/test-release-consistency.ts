@@ -49,8 +49,7 @@ if (requirePublishedReleaseNotes) {
 }
 const isReleaseCandidate = candidateMarkerCount === releaseLocales.length;
 
-const installerNamePattern = new RegExp(`Lyrics Card Generator Setup ${escapedReleaseVersion}\\.exe`);
-const portableNamePattern = new RegExp(`Lyrics Card Generator-${escapedReleaseVersion}-portable\\.exe`);
+const installerNamePattern = new RegExp(`Lyrics\\.Card\\.Generator\\.Setup\\.${escapedReleaseVersion}\\.exe`);
 
 function readmeHeader(source: string) {
   return source.split(/\r?\n/u).slice(0, 30).join("\n");
@@ -67,7 +66,7 @@ function assertReadmeHeaderReleaseLink(source: string, file: string, locale: str
 for (const [file, locale] of readmes) {
   const source = readFileSync(resolve(file), "utf8");
   assert.match(source, installerNamePattern, `${file} installer name`);
-  assert.match(source, portableNamePattern, `${file} portable name`);
+  assert.doesNotMatch(source, /portable|便携|可攜|ポータブル/iu, `${file} current release guidance must be Setup-only`);
   assertReadmeHeaderReleaseLink(source, file, locale);
   if (isReleaseCandidate) {
     assert.ok(source.includes(unpublishedStatusMarkers[locale]), `${file} must label the local v${releaseVersion} candidate accurately`);
@@ -116,7 +115,9 @@ for (const locale of releaseLocales) {
 
 const prepareSource = readFileSync(resolve("scripts/prepare-electron-dist.mjs"), "utf8");
 assert.match(prepareSource, /productName: desktopProductName/);
-assert.match(prepareSource, /artifactName: "\$\{productName\}-\$\{version\}-portable\.\$\{ext\}"/);
+assert.match(prepareSource, /target: "nsis"/);
+assert.match(prepareSource, /artifactName: "Lyrics\.Card\.Generator\.Setup\.\$\{version\}\.\$\{ext\}"/);
+assert.doesNotMatch(prepareSource, /target: "portable"|\bportable:/, "desktop packaging must not build portable artifacts");
 
 console.log(JSON.stringify({
   ok: true,

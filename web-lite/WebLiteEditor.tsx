@@ -32,7 +32,7 @@ import {
 import { clearLyricContent, hasClearableLyricContent } from "@/lib/clear-content";
 import { applyEditorStyleChange } from "@/lib/editor/apply-style-change";
 import { copyNodeAsPng, exportNodeAsImage } from "@/lib/export-image";
-import { getExportRasterSizeIssue } from "@/lib/export-dimensions";
+import { getClipboardRasterSizeIssue, getExportRasterSizeIssue } from "@/lib/export-dimensions";
 import { createExportSnapshot, snapshotAsAppState, type ExportSnapshot } from "@/lib/export-snapshot";
 import { resolveExportSafetyMessage } from "@/lib/export-safety";
 import { getExportLyricLineStatus } from "@/lib/lyrics-document";
@@ -408,7 +408,8 @@ export function WebLiteEditor() {
       exportRevisionRef.current,
       action === "copy" ? "png" : exportFormat
     );
-    if (getExportRasterSizeIssue(snapshot.width, snapshot.height, snapshot.pixelRatio)) {
+    const getOutputRasterSizeIssue = action === "copy" ? getClipboardRasterSizeIssue : getExportRasterSizeIssue;
+    if (getOutputRasterSizeIssue(snapshot.width, snapshot.height, snapshot.pixelRatio)) {
       showToast(t("exportImageTooLarge"), "warning");
       return;
     }
@@ -422,7 +423,7 @@ export function WebLiteEditor() {
         return waitForExportSnapshotNode(() => captureCardRef.current, mountedSnapshot.id, signal);
       },
       validateSnapshot: (mountedSnapshot) => {
-        if (getExportRasterSizeIssue(mountedSnapshot.width, mountedSnapshot.height, mountedSnapshot.pixelRatio)) {
+        if (getOutputRasterSizeIssue(mountedSnapshot.width, mountedSnapshot.height, mountedSnapshot.pixelRatio)) {
           return t("exportImageTooLarge");
         }
         const snapshotState = snapshotAsAppState(mountedSnapshot, parsedState);
@@ -460,6 +461,8 @@ export function WebLiteEditor() {
       showToast(t("exportBusy"), "warning");
     } else if (result.kind === "blocked") {
       showToast(result.reason, "warning");
+    } else if (action === "copy" && result.error instanceof Error && result.error.name === "ImageClipboardSizeLimitError") {
+      showToast(t("exportImageTooLarge"), "warning");
     } else {
       console.error(`[Lyrics Card Generator Web Lite] ${action} image output failed`, result.error);
       showToast(action === "copy" ? t("copyImageFailed") : copy.exportFailed, "error");

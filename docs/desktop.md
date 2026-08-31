@@ -12,7 +12,7 @@ The desktop app packages three layers:
 2. A cleaned Next.js standalone service bundled under the app resources.
 3. An Electron shell responsible for the window, local-service lifecycle, native persistence, file selection, system fonts, and restricted IPC.
 
-In development, `scripts/start-electron-dev.mjs` allocates an available loopback port and starts Next.js plus Electron. In a packaged build, Electron starts the bundled service on a dynamic `127.0.0.1` port, waits for its readiness contract, and then opens only the app's validated local origin.
+In development, `scripts/start-electron-dev.mjs` allocates an available loopback port and starts Next.js plus Electron. In a packaged build, Electron starts the bundled service on a dynamic `127.0.0.1` port, waits for its readiness contract, and then opens only the app's validated local origin. Both launch paths inject that exact dynamic URL as the mutation API's canonical origin and explicitly disable proxy-header trust in the child server.
 
 The local HTTP service is an implementation detail, not a LAN service or a remote deployment. Changes to host binding, readiness, origin validation, navigation policy, IPC, or startup secrets are security-sensitive and require their focused tests.
 
@@ -69,7 +69,7 @@ Generated locations:
 | `dist-desktop/server/` | Bundled local server and approved runtime closure |
 | `dist-desktop/app/` | Minimal Electron app, copied main-process modules, and generated packaging manifest |
 | `release/win-unpacked/` | Inspectable unpacked Windows app |
-| `release/*.exe` | NSIS installer and portable x64 executable |
+| `release/Lyrics.Card.Generator.Setup.<version>.exe` | Sole public Windows x64 NSIS Setup artifact |
 
 Do not patch generated files in `dist-desktop/` or `release/`. Fix their source or preparation script and rebuild.
 
@@ -97,7 +97,7 @@ npm run desktop:interaction-test
 
 The interaction suite expects a current unpacked build and covers single-instance behavior, startup origin, settings, and import/history flows. Rebuild before interpreting a failure against source changes.
 
-### Final installer and portable bytes
+### Final Setup bytes
 
 ```bash
 npm run desktop:build
@@ -105,7 +105,7 @@ npm run desktop:final-artifact-smoke
 npm run desktop:size
 ```
 
-Final-artifact smoke is distinct from testing `win-unpacked`: it exercises the actual installer and portable outputs. The Windows CI job also records diagnostics and validates the expected artifact set.
+Final-artifact smoke is distinct from testing `win-unpacked`: it silently installs the actual Setup bytes, launches the installed app, verifies the packaged Electron/runtime and font-license contracts, closes it, and uninstalls it. The Windows CI job records diagnostics and rejects any extra executable, including a portable build.
 
 Optional diagnostics:
 
@@ -123,9 +123,9 @@ Before publishing a desktop release, bind results to the exact tag commit and ve
 
 - The standard CI, browser, accessibility, and render-boundary jobs pass.
 - The production dependency advisory gate and font-license gate pass.
-- Setup and portable outputs are produced from the tag commit.
+- The sole Windows x64 Setup output is produced from the tag commit.
 - Packaged assets, desktop interactions, and final-artifact smoke pass on those outputs.
-- The unpacked app, installer, and portable app exit without orphaned product processes.
+- The unpacked app and installed Setup app exit without orphaned product processes, and silent uninstall succeeds.
 - Required hashes, SBOM, attestations, and release assets are generated and verified by the release workflow.
 - User-facing release notes match the delivered behavior and six-language release-note structure.
 

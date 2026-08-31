@@ -52,7 +52,10 @@ const electronCommand = process.platform === "win32"
   ? path.join(projectRoot, "node_modules", "electron", "dist", "electron.exe")
   : path.join(projectRoot, "node_modules", "electron", "dist", "electron");
 
-const nextDev = spawnChild(nextCommand, [nextBin, "dev", "-H", host, "-p", String(port)]);
+const nextDev = spawnChild(nextCommand, [nextBin, "dev", "-H", host, "-p", String(port)], {
+  LYRICS_CARD_APP_ORIGIN: url,
+  LYRICS_CARD_TRUST_PROXY: "0"
+});
 
 const electron = spawnChild(electronCommand, ["."], {
   ELECTRON_DEV_SERVER_URL: url

@@ -85,6 +85,9 @@ async function run() {
   const invocationCountBeforeInvalidClipboardImages = invocations.length;
   assert.equal(await exposedBridge.copyImageToClipboard("data:image/jpeg;base64,AAAA"), false);
   assert.equal(await exposedBridge.copyImageToClipboard("data:image/png;base64,"), false);
+  assert.equal(await exposedBridge.copyImageToClipboard("data:image/png;base64,A==="), false);
+  assert.equal(await exposedBridge.copyImageToClipboard("data:image/png;base64,AB=="), false);
+  assert.equal(await exposedBridge.copyImageToClipboard("data:image/png;base64,AAA?"), false);
   assert.equal(
     invocations.length,
     invocationCountBeforeInvalidClipboardImages,

@@ -119,6 +119,7 @@ docs/releases/vX.Y.Z.es.md
 - `v6.1.8`：细化手动歌曲信息与自定义字体流程，将入口归位到歌曲信息框、加入未决草稿离步门禁，并统一字体选择视觉、精简样张和 AI 翻译按钮装饰。
 - `v6.2.0`：在“完成并导出”旁加入共享导出快照与清晰度的 PNG 剪贴板复制，并为桌面原生桥接和 Web Lite 图片剪贴板补齐权限、尺寸与事务防线。
 - `v6.2.1`：将轻量提示升级为独立计时的可变时长堆叠队列，为重复提示加入向右平移的渐显渐隐刷新，并把横版行数限制改为歌词步骤内联引导。
+- `v6.2.2`：修复后端安全与可靠性审计确认的问题，强化发布来源和依赖证据，并从本版本起仅提供 Windows x64 Setup。
 旧的 `docs/release-notes-v*.md` 单文件发布说明已迁移到本目录，避免同一版本存在多套入口。
 
 ## GitHub Release 正文写法
@@ -145,5 +146,5 @@ Release 正文只写简体中文短版。Release 页面不在仓库目录中，�
 2. 复制 `.github/RELEASE_TEMPLATE.md`，准备简体中文短版正文，并在 `docs/releases/` 下补齐同结构、同信息量的 6 个语言文件。
 3. 按[开发指南](../development.zh-CN.md)运行标准门禁；共享 UI 影响 Web Lite 时必须重建并提交根目录 `index.html`。
 4. 通过 PR 合并后，只在已验证的 `main` 提交上创建版本 tag。不要从含未提交修改的工作区或不同提交构建发布制品。
-5. `release.yml` 从 tag 提交重新安装依赖、执行质量门禁、构建安装版与便携版、验证最终制品，并生成哈希、SBOM 与 attestation 后发布 GitHub Release。
+5. `release.yml` 从 tag 提交重新安装依赖、执行质量门禁、仅构建并验证 Windows x64 Setup，并生成哈希、SBOM 与 attestation 后发布 GitHub Release；从 v6.2.2 起不得出现 portable 资产。
 6. 发布后按唯一 Release ID 核对公开状态、tag、全部附件与哈希，并检查应用内更新识别及 GitHub Pages / Web Lite 状态。

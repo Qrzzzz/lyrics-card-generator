@@ -3,7 +3,14 @@ import { createAppRequestHeaders } from "@/lib/app-request";
 import { getChatCompletionMessage, getProviderErrorMessage, readProviderResponseBody } from "@/lib/ai/provider-response";
 import { DEFAULT_AI_SETTINGS } from "@/lib/ai/types";
 import { normalizeAISettings } from "@/lib/ai/settings-normalize";
-import type { AIErrorCode } from "@/lib/ai/error-copy";
+import { parseSerializedAIError, type AIErrorCode } from "@/lib/ai/error-copy";
+import { ResponseBodyLimitExceededError } from "@/lib/bounded-response";
+import {
+  AIStreamError,
+  assertAICompletionBudgets,
+  consumeOpenAICompatibleSSE,
+  createAIStreamDeadline
+} from "@/electron/ai-stream";
 import type {
   AISettings,
   AISettingsSummary,
@@ -75,23 +82,33 @@ export async function streamAITranslation(params: AITranslationStreamParams) {
   const settings = readBrowserSettings();
   validateConfiguredSettings({ ...settings, hasApiKey: Boolean(browserSessionApiKey) });
 
-  const response = await fetch("/api/ai/translate", {
-    method: "POST",
-    headers: createAppRequestHeaders({ "content-type": "application/json" }),
-    body: JSON.stringify({
-      prompt: params.prompt,
-      reasoning: params.reasoning,
-      settings: { ...settings, apiKey: browserSessionApiKey }
-    }),
-    signal: params.signal
-  });
+  const deadline = createAIStreamDeadline(params.signal);
+  try {
+    const response = await fetch("/api/ai/translate", {
+      method: "POST",
+      headers: createAppRequestHeaders({ "content-type": "application/json" }),
+      body: JSON.stringify({
+        prompt: params.prompt,
+        reasoning: params.reasoning,
+        settings: { ...settings, apiKey: browserSessionApiKey }
+      }),
+      signal: deadline.signal
+    });
 
-  if (!response.ok) {
-    throw await readAIError(response);
+    if (!response.ok) {
+      throw await readAIError(response, deadline.signal);
+    }
+
+    params.onStatus?.("connected");
+    return await consumeOpenAIStream(response, params, deadline);
+  } catch (error) {
+    if (deadline.signal.reason instanceof AIStreamError) {
+      throw new AITranslationError("AI stream budget ended the request.", deadline.signal.reason.code);
+    }
+    throw normalizeError(error);
+  } finally {
+    deadline.dispose();
   }
-
-  params.onStatus?.("connected");
-  return consumeOpenAIStream(response, params);
 }
 
 export function validateConfiguredSettings(settings: AISettingsSummary) {
@@ -164,11 +181,13 @@ function createAbortError() {
 
 async function consumeOpenAIStream(
   response: Response,
-  params: Pick<AITranslationStreamParams, "onDelta" | "onReasoningDelta" | "onStatus">
+  params: Pick<AITranslationStreamParams, "onDelta" | "onReasoningDelta" | "onStatus">,
+  deadline: ReturnType<typeof createAIStreamDeadline>
 ) {
   if (!(response.headers.get("content-type") || "").includes("text/event-stream")) {
-    const body = await readProviderResponseBody(response);
+    const body = await readProviderResponseBody(response, deadline.signal);
     const { content, reasoningContent } = getChatCompletionMessage(body);
+    assertAICompletionBudgets(content, reasoningContent);
     if (reasoningContent) {
       params.onStatus?.("reasoning");
       params.onReasoningDelta?.(reasoningContent, reasoningContent);
@@ -183,60 +202,21 @@ async function consumeOpenAIStream(
     return content;
   }
 
-  if (!response.body) {
-    throw new AITranslationError("Empty provider stream.", "empty_stream");
-  }
-
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder();
-  // Network chunks do not align with SSE event boundaries, so retain the final
-  // incomplete event until a later read supplies its blank-line delimiter.
-  let buffer = "";
-  let accumulated = "";
-  let accumulatedReasoning = "";
-
-  while (true) {
-    const { done, value } = await reader.read();
-    buffer += decoder.decode(value, { stream: !done });
-    const events = buffer.split(/\r?\n\r?\n/);
-    buffer = events.pop() ?? "";
-
-    for (const event of events) {
-      for (const line of event.split(/\r?\n/)) {
-        if (!line.startsWith("data:")) {
-          continue;
-        }
-        const data = line.slice(5).trim();
-        if (!data || data === "[DONE]") {
-          continue;
-        }
-        let parsed: { choices?: Array<{ delta?: { content?: string; reasoning_content?: string } }> };
-        try {
-          parsed = JSON.parse(data);
-        } catch {
-          continue;
-        }
-        const reasoningDelta = parsed.choices?.[0]?.delta?.reasoning_content;
-        if (reasoningDelta) {
-          accumulatedReasoning += reasoningDelta;
-          params.onStatus?.("reasoning");
-          params.onReasoningDelta?.(reasoningDelta, accumulatedReasoning);
-        }
-        const delta = parsed.choices?.[0]?.delta?.content;
-        if (delta) {
-          accumulated += delta;
-          params.onStatus?.("translating");
-          params.onDelta?.(delta, accumulated);
-        }
+  const result = await consumeOpenAICompatibleSSE(
+    response,
+    {
+      onReasoningDelta(delta, accumulated) {
+        params.onStatus?.("reasoning");
+        params.onReasoningDelta?.(delta, accumulated);
+      },
+      onDelta(delta, accumulated) {
+        params.onStatus?.("translating");
+        params.onDelta?.(delta, accumulated);
       }
-    }
-
-    if (done) {
-      break;
-    }
-  }
-
-  return accumulated;
+    },
+    { signal: deadline.signal, deadlineAt: deadline.deadlineAt }
+  );
+  return result.content;
 }
 
 function readBrowserSettings(): BrowserStoredSettings {
@@ -266,14 +246,24 @@ function normalizeError(error: unknown) {
   if (error instanceof AITranslationError || (error instanceof DOMException && error.name === "AbortError")) {
     return error;
   }
+  if (error instanceof AIStreamError) {
+    return new AITranslationError(error.message, error.code);
+  }
+  if (error instanceof ResponseBodyLimitExceededError) {
+    return new AITranslationError(error.message, "response_too_large");
+  }
   const message = error instanceof Error ? error.message : "AI translation request failed.";
+  const serialized = parseSerializedAIError(message);
+  if (serialized.code === "insecure_base_url") {
+    return new AITranslationError(message, serialized.code);
+  }
   if (/timeout/i.test(message)) return new AITranslationError(message, "timeout");
   if (/network|fetch/i.test(message)) return new AITranslationError(message, "network");
   return new AITranslationError(message, "request_failed");
 }
 
-async function readAIError(response: Response) {
-  const body = await readProviderResponseBody(response);
+async function readAIError(response: Response, signal?: AbortSignal) {
+  const body = await readProviderResponseBody(response, signal);
   if (body.kind === "json" && body.data && typeof body.data === "object") {
     const error = (body.data as { error?: { code?: unknown; diagnostic?: unknown } }).error;
     if (error && typeof error.code === "string") {

@@ -1,7 +1,8 @@
 import { getProviderErrorMessage, readProviderResponseBody } from "./provider-response";
 import type { AISettings } from "./types";
 
-const INVALID_BASE_URL_MESSAGE = "invalid_base_url";
+export const INVALID_BASE_URL_ERROR_CODE = "invalid_base_url";
+export const INSECURE_BASE_URL_ERROR_CODE = "insecure_base_url";
 
 type BuildChatCompletionsRequestBodyOptions = Pick<AISettings, "baseUrl" | "model" | "temperature"> & {
   prompt: string;
@@ -23,17 +24,46 @@ export type ChatCompletionsRequestBody = {
 };
 
 export function getChatCompletionsUrl(baseUrl: string) {
-  const normalized = baseUrl.trim().replace(/\/+$/, "");
   let parsed: URL;
   try {
-    parsed = new URL(normalized);
+    parsed = new URL(baseUrl.trim());
   } catch {
-    throw new Error(INVALID_BASE_URL_MESSAGE);
+    throw new Error(INVALID_BASE_URL_ERROR_CODE);
   }
   if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
-    throw new Error(INVALID_BASE_URL_MESSAGE);
+    throw new Error(INVALID_BASE_URL_ERROR_CODE);
   }
-  return normalized.endsWith("/chat/completions") ? normalized : `${normalized}/chat/completions`;
+  if (parsed.protocol === "http:" && !isLoopbackProviderHostname(parsed.hostname)) {
+    throw new Error(INSECURE_BASE_URL_ERROR_CODE);
+  }
+
+  const normalizedPathname = parsed.pathname.replace(/\/+$/, "");
+  parsed.pathname = normalizedPathname.endsWith("/chat/completions")
+    ? normalizedPathname
+    : `${normalizedPathname}/chat/completions`;
+  return parsed.toString();
+}
+
+export function isLoopbackProviderHostname(hostname: string) {
+  let normalized = hostname.trim().toLowerCase();
+  if (normalized.startsWith("[") && normalized.endsWith("]")) {
+    normalized = normalized.slice(1, -1);
+  }
+  if (normalized.endsWith(".")) {
+    normalized = normalized.slice(0, -1);
+  }
+
+  if (normalized === "localhost" || normalized === "::1") {
+    return true;
+  }
+
+  // Classify only canonical IP literals from the URL parser. Resolving an
+  // arbitrary hostname here would create a validation/fetch DNS race and would
+  // still allow plaintext provider traffic to leave the machine.
+  const octets = normalized.split(".");
+  return octets.length === 4
+    && octets[0] === "127"
+    && octets.every((octet) => /^(?:0|[1-9]\d{0,2})$/.test(octet) && Number(octet) <= 255);
 }
 
 export function usesDeepSeekThinking(baseUrl: string, model: string) {
@@ -75,6 +105,6 @@ export function buildChatCompletionsRequestBody({
   return requestBody;
 }
 
-export async function readProviderError(response: Response) {
-  return getProviderErrorMessage(await readProviderResponseBody(response), response.status);
+export async function readProviderError(response: Response, signal?: AbortSignal) {
+  return getProviderErrorMessage(await readProviderResponseBody(response, signal), response.status);
 }

@@ -1,12 +1,14 @@
 import assert from "node:assert/strict";
 import crypto from "node:crypto";
 import { execFile, spawn } from "node:child_process";
+import { createReadStream } from "node:fs";
 import { mkdtemp, mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import net from "node:net";
 import { promisify } from "node:util";
 import { chromium } from "playwright";
+import { validateDesktopRuntimePolicy } from "./desktop-runtime-dependency-policy.mjs";
 
 if (process.platform !== "win32") throw new Error("Final Windows artifact smoke must run on Windows.");
 
@@ -18,11 +20,16 @@ await mkdir(reportDirectory, { recursive: true });
 
 const packageJson = JSON.parse(await readFile(path.join(root, "package.json"), "utf8"));
 assert.match(packageJson.version, /^\d+\.\d+\.\d+$/, "package version must be a stable semantic version");
+const runtimePolicy = JSON.parse(await readFile(path.join(root, "security", "desktop-runtime-audit.json"), "utf8"));
+const runtimeRoots = validateDesktopRuntimePolicy(runtimePolicy);
+assert.deepEqual(runtimeRoots.map((entry) => entry.name), ["electron"], "final artifact smoke expects Electron as the desktop runtime root");
+const electronRoot = runtimeRoots[0];
+const expectedElectronVersion = packageJson[electronRoot.manifestSection]?.[electronRoot.name];
+assert.match(expectedElectronVersion ?? "", /^\d+\.\d+\.\d+$/, "the final artifact Electron version must be pinned exactly");
 const artifacts = await readdir(releaseDirectory);
-const portableName = `Lyrics Card Generator-${packageJson.version}-portable.exe`;
-const setupName = `Lyrics Card Generator Setup ${packageJson.version}.exe`;
-assert.ok(artifacts.includes(portableName), `${portableName} is missing`);
-assert.ok(artifacts.includes(setupName), `${setupName} is missing`);
+const setupName = `Lyrics.Card.Generator.Setup.${packageJson.version}.exe`;
+const releaseExecutables = artifacts.filter((name) => name.toLowerCase().endsWith(".exe"));
+assert.deepEqual(releaseExecutables, [setupName], "the final Windows artifact set must contain only the x64 Setup executable");
 
 const fontLicenseContracts = [
   {
@@ -38,19 +45,18 @@ const fontLicenseContracts = [
 ];
 
 const results = [];
-// Exercise the portable binary first, then validate the installer through an
-// isolated silent install so neither path depends on the developer profile.
-await smokeExecutable(path.join(releaseDirectory, portableName), "portable", results);
-
+// Validate the distributable Setup bytes through an isolated silent install so
+// the smoke does not depend on the developer profile.
+const setupPath = path.join(releaseDirectory, setupName);
 const installDirectory = await mkdtemp(path.join(tmpdir(), "lyrics-card-setup-"));
 try {
-  await execFileAsync(path.join(releaseDirectory, setupName), ["/S", `/D=${installDirectory}`], {
+  await execFileAsync(setupPath, ["/S", `/D=${installDirectory}`], {
     timeout: 180_000,
     windowsHide: true
   });
   const installedExecutable = await findNamedFile(installDirectory, "Lyrics Card Generator.exe");
   assert.ok(installedExecutable, "Setup did not install the application executable");
-  await smokeExecutable(installedExecutable, "setup", results);
+  await smokeExecutable(installedExecutable, "setup", results, setupPath);
   const uninstaller = await findFileMatching(installDirectory, /^Uninstall.*\.exe$/i);
   assert.ok(uninstaller, "Setup did not install an uninstaller");
   await execFileAsync(uninstaller, ["/S"], { timeout: 180_000, windowsHide: true });
@@ -59,9 +65,16 @@ try {
 }
 
 await writeFile(path.join(reportDirectory, "results.json"), JSON.stringify({ ok: true, results }, null, 2));
-console.log("Setup and portable final-artifact smoke tests passed");
+console.log("Setup-only final-artifact smoke tests passed");
 
-async function smokeExecutable(executablePath, label, results) {
+async function smokeExecutable(executablePath, label, results, sourceArtifactPath) {
+  const processElectronVersion = await probeElectronVersion(executablePath);
+  assert.equal(
+    processElectronVersion,
+    expectedElectronVersion,
+    `${label} process.versions.electron is ${processElectronVersion}, expected ${expectedElectronVersion}`
+  );
+  const artifactSha256 = await sha256File(sourceArtifactPath);
   const userDataDirectory = await mkdtemp(path.join(tmpdir(), `lyrics-card-${label}-user-data-`));
   const debuggingPort = await getAvailablePort();
   let browser;
@@ -81,6 +94,14 @@ async function smokeExecutable(executablePath, label, results) {
     browser = await connectToElectron(debuggingPort, 90_000);
     const page = await waitForApplicationPage(browser, 90_000);
     await page.getByTestId("editor-surface").waitFor({ state: "visible", timeout: 60_000 });
+    const userAgent = await page.evaluate(() => navigator.userAgent);
+    const electronVersion = /\bElectron\/(\d+\.\d+\.\d+)\b/u.exec(userAgent)?.[1];
+    assert.equal(
+      electronVersion,
+      expectedElectronVersion,
+      `${label} renderer user agent does not report Electron ${expectedElectronVersion}: ${userAgent}`
+    );
+    assert.equal(electronVersion, processElectronVersion, `${label} renderer and process Electron versions must agree`);
     const languageDialog = page.getByTestId("first-launch-language-dialog");
     await languageDialog.waitFor({ state: "visible", timeout: 30_000 });
     await page.locator('[data-testid="first-launch-language"][data-locale="en"]').click();
@@ -94,7 +115,17 @@ async function smokeExecutable(executablePath, label, results) {
     const closed = new Promise((resolve) => browser.once("disconnected", resolve));
     await page.evaluate(() => window.lyricsCardDesktop?.closeWindow());
     await withTimeout(closed, 30_000, `${label} did not exit cleanly`);
-    results.push({ label, executable: path.basename(executablePath), interaction: true, fontLicenses: true, cleanExit: true });
+    results.push({
+      label,
+      artifact: path.basename(sourceArtifactPath),
+      artifactSha256,
+      executable: path.basename(executablePath),
+      electronVersion,
+      electronVersionEvidence: "process.versions.electron+renderer-user-agent",
+      interaction: true,
+      fontLicenses: true,
+      cleanExit: true
+    });
   } catch (error) {
     const page = browser?.contexts().flatMap((context) => context.pages())[0];
     await page?.screenshot({ path: path.join(reportDirectory, `${label}-failure.png`) }).catch(() => undefined);
@@ -106,6 +137,28 @@ async function smokeExecutable(executablePath, label, results) {
     if (!processExited) await terminateProcessTree(launched.pid);
     await rm(userDataDirectory, { recursive: true, force: true }).catch(() => undefined);
   }
+}
+
+async function probeElectronVersion(executablePath) {
+  const { stdout } = await execFileAsync(executablePath, ["-p", "process.versions.electron"], {
+    env: { ...process.env, ELECTRON_RUN_AS_NODE: "1" },
+    timeout: 90_000,
+    windowsHide: true,
+    maxBuffer: 1024 * 1024
+  });
+  const version = stdout.trim();
+  assert.match(version, /^\d+\.\d+\.\d+$/, `${path.basename(executablePath)} did not report process.versions.electron`);
+  return version;
+}
+
+function sha256File(filePath) {
+  return new Promise((resolve, reject) => {
+    const hash = crypto.createHash("sha256");
+    const input = createReadStream(filePath);
+    input.on("error", reject);
+    input.on("data", (chunk) => hash.update(chunk));
+    input.on("end", () => resolve(hash.digest("hex")));
+  });
 }
 
 async function assertPackagedFontLicenses(page, label) {

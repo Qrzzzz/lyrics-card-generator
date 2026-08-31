@@ -510,6 +510,16 @@ async function setReducedMotion() {
 }
 
 async function replayCard(kind, { relocate = false } = {}) {
+  await page.waitForFunction(({ historyKind, useRelocate }) => {
+    const card = document.querySelector(
+      `[data-testid="history-surface"] [data-history-kind="${historyKind}"]`
+    );
+    const selector = useRelocate
+      ? '[data-testid^="history-relocate-"]'
+      : '[data-testid^="history-replay-"]';
+    const action = card?.querySelector(selector);
+    return action instanceof HTMLButtonElement && action.isConnected && !action.disabled;
+  }, { historyKind: kind, useRelocate: relocate }, { timeout: 15_000 });
   const card = page.locator(`[data-testid="history-surface"] [data-history-kind="${kind}"]`).first();
   const action = relocate
     ? card.locator('[data-testid^="history-relocate-"]')

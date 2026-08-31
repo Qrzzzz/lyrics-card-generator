@@ -7,8 +7,10 @@ import { POST as parseSong } from "../app/api/parse-song/route";
 import { POST as resolveSearchedSong } from "../app/api/resolve-searched-song/route";
 import { POST as searchSong } from "../app/api/search-song/route";
 import {
+  APP_CANONICAL_ORIGIN_ENV,
   APP_REQUEST_HEADER_NAME,
   APP_REQUEST_HEADER_VALUE,
+  APP_TRUST_PROXY_ENV,
   createAppRequestHeaders
 } from "../lib/app-request";
 import {
@@ -28,6 +30,9 @@ import {
 const APP_ORIGIN = "http://127.0.0.1:3210";
 const CROSS_SITE_ORIGIN = "https://example.invalid";
 const originalFetch = globalThis.fetch;
+const originalAppOrigin = process.env[APP_CANONICAL_ORIGIN_ENV];
+const originalTrustProxy = process.env[APP_TRUST_PROXY_ENV];
+const originalNodeEnv = process.env.NODE_ENV;
 let providerCalls = 0;
 
 const jsonRoutes = [
@@ -39,12 +44,17 @@ const jsonRoutes = [
 
 async function main() {
 try {
+  setAppOriginEnvironment(APP_ORIGIN, "0");
   // Replace outbound provider traffic so a boundary rejection is observable as
   // both an HTTP result and the absence of any upstream call.
   globalThis.fetch = async (input, init) => {
     providerCalls += 1;
     const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
-    assert.match(url, /^http:\/\/(?:127\.0\.0\.1|localhost|\[::1\]):11434\/v1\/chat\/completions$/);
+    const providerUrl = new URL(url);
+    const isExpectedHttpsProvider = providerUrl.protocol === "https:" && providerUrl.hostname === "api.example.com";
+    const isExpectedLoopbackProvider = providerUrl.protocol === "http:"
+      && ["127.0.0.1", "localhost", "[::1]"].includes(providerUrl.hostname);
+    assert.ok(isExpectedHttpsProvider || isExpectedLoopbackProvider, `unexpected provider target: ${url}`);
     assert.equal(new Headers(init?.headers).get("authorization"), "Bearer local-key");
     return Response.json({ choices: [{ message: { content: "translated" } }] });
   };
@@ -65,6 +75,21 @@ try {
   assert.equal(providerCalls, 0, "rejected AI requests must not contact a provider");
 
   for (const baseUrl of [
+    "http://api.example.com/v1",
+    "http://192.168.1.20:11434/v1",
+    "http://localhost.evil.example/v1"
+  ]) {
+    const response = await translate(jsonRequest("/api/ai/translate", aiBody(baseUrl)));
+    assert.equal(response.status, 400, `${baseUrl} is rejected before provider fetch`);
+    assert.equal((await response.json() as { error: { code: string } }).error.code, "insecure_base_url");
+  }
+  assert.equal(providerCalls, 0, "remote HTTP rejection sends no credential or prompt bytes");
+
+  const remoteHttps = await translate(jsonRequest("/api/ai/translate", aiBody("https://api.example.com/v1")));
+  assert.equal(remoteHttps.status, 200, "remote HTTPS remains supported");
+  assert.deepEqual(await remoteHttps.json(), { choices: [{ message: { content: "translated" } }] });
+
+  for (const baseUrl of [
     "http://127.0.0.1:11434/v1",
     "http://localhost:11434/v1",
     "http://[::1]:11434/v1"
@@ -73,7 +98,7 @@ try {
     assert.equal(response.status, 200, `${baseUrl} remains available as a custom provider`);
     assert.deepEqual(await response.json(), { choices: [{ message: { content: "translated" } }] });
   }
-  assert.equal(providerCalls, 3);
+  assert.equal(providerCalls, 4);
 
   for (const [name, route] of jsonRoutes) {
     const providerCallsBefore: number = providerCalls;
@@ -90,24 +115,7 @@ try {
     assert.equal(providerCalls, providerCallsBefore, `${name} boundary cases do not contact an upstream service`);
   }
 
-  const normalizedLoopbackRequest = new Request(`http://localhost:3210/api/parse-song`, {
-    method: "POST",
-    headers: createAppRequestHeaders({
-      origin: APP_ORIGIN,
-      host: "127.0.0.1:3210",
-      "x-forwarded-host": "127.0.0.1:3210",
-      "x-forwarded-proto": "http",
-      "content-type": "application/json"
-    }),
-    body: "{}"
-  });
-  const acceptedNormalizedLoopback = await parseSong(normalizedLoopbackRequest);
-  assert.equal(
-    acceptedNormalizedLoopback.status,
-    400,
-    "Next localhost-normalized request URL accepts the external 127.0.0.1 origin"
-  );
-  assert.equal((await acceptedNormalizedLoopback.json() as { code?: string }).code, "invalid_request");
+  await assertAppOriginBoundary();
 
   const crossSiteForm = new FormData();
   const rejectedCrossSiteForm = await parseLocalAudio(formRequest(crossSiteForm, CROSS_SITE_ORIGIN));
@@ -183,6 +191,9 @@ try {
   console.log("app API same-origin and media-type boundary tests passed");
 } finally {
   globalThis.fetch = originalFetch;
+  restoreEnvironment(APP_CANONICAL_ORIGIN_ENV, originalAppOrigin);
+  restoreEnvironment(APP_TRUST_PROXY_ENV, originalTrustProxy);
+  restoreEnvironment("NODE_ENV", originalNodeEnv);
 }
 }
 
@@ -199,6 +210,266 @@ function aiBody(baseUrl: string) {
       temperature: 0.2
     }
   };
+}
+
+async function assertAppOriginBoundary() {
+  setAppOriginEnvironment(APP_ORIGIN, "0");
+
+  await assertBoundaryAccepted(
+    await parseSong(originBoundaryRequest({
+      requestUrl: "http://localhost:3210/api/parse-song",
+      origin: APP_ORIGIN,
+      host: "attacker.invalid",
+      forwardedHost: "attacker.invalid",
+      forwardedProto: "https"
+    })),
+    "packaged Electron accepts its injected dynamic origin without trusting Host or forwarded headers"
+  );
+
+  const browserOrigin = "http://localhost:3000";
+  setAppOriginEnvironment(browserOrigin, "0");
+  await assertBoundaryAccepted(
+    await parseSong(originBoundaryRequest({
+      requestUrl: `${browserOrigin}/api/parse-song`,
+      origin: browserOrigin
+    })),
+    "configured direct browser origin is accepted"
+  );
+
+  const ignoredForwarded = await parseSong(originBoundaryRequest({
+    requestUrl: `${browserOrigin}/api/parse-song`,
+    origin: browserOrigin,
+    host: "127.0.0.1:3000",
+    forwardedHost: "evil.example",
+    forwardedProto: "https"
+  }));
+  await assertBoundaryAccepted(ignoredForwarded, "untrusted forwarded headers are ignored");
+
+  await assertStandardRejection(
+    await parseSong(originBoundaryRequest({
+      requestUrl: `${browserOrigin}/api/parse-song`,
+      origin: "https://evil.example",
+      host: "evil.example",
+      forwardedHost: "evil.example",
+      forwardedProto: "https"
+    })),
+    403,
+    "cross_origin_request",
+    "forged Host, forwarded host, Origin, and static marker cannot replace the configured origin"
+  );
+
+  delete process.env[APP_CANONICAL_ORIGIN_ENV];
+  process.env[APP_TRUST_PROXY_ENV] = "0";
+  setEnvironment("NODE_ENV", "production");
+  await assertStandardRejection(
+    await parseSong(originBoundaryRequest({
+      requestUrl: `${APP_ORIGIN}/api/parse-song`,
+      origin: APP_ORIGIN,
+      host: "127.0.0.1:3210",
+      forwardedHost: "127.0.0.1:3210",
+      forwardedProto: "http"
+    })),
+    503,
+    "app_origin_configuration_error",
+    "production does not treat a loopback-looking request URL, Host, matching Origin, or marker as configuration"
+  );
+
+  const providerCallsBeforeConfigurationFailure = providerCalls;
+  const aiConfigurationFailure = await translate(jsonRequest(
+    "/api/ai/translate",
+    aiBody("http://127.0.0.1:11434/v1")
+  ));
+  assert.equal(aiConfigurationFailure.status, 503, "AI route reports the shared origin configuration failure");
+  assert.equal(
+    (await aiConfigurationFailure.json() as { error: { code: string } }).error.code,
+    "app_origin_configuration_error"
+  );
+  assert.equal(providerCalls, providerCallsBeforeConfigurationFailure, "origin configuration failures never reach AI providers");
+
+  const proxyOrigin = "https://lyrics.example.com";
+  setAppOriginEnvironment(proxyOrigin, "1");
+  await assertBoundaryAccepted(
+    await parseSong(originBoundaryRequest({
+      requestUrl: "http://127.0.0.1:3000/api/parse-song",
+      origin: proxyOrigin,
+      host: "internal.invalid:3000",
+      forwardedHost: "lyrics.example.com",
+      forwardedProto: "https"
+    })),
+    "trusted proxy accepts the exact configured canonical origin"
+  );
+
+  for (const [label, options] of [
+    ["forwarded host mismatch", { origin: proxyOrigin, forwardedHost: "evil.example", forwardedProto: "https" }],
+    ["forwarded protocol mismatch", { origin: proxyOrigin, forwardedHost: "lyrics.example.com", forwardedProto: "http" }],
+    ["origin mismatch", { origin: "https://evil.example", forwardedHost: "lyrics.example.com", forwardedProto: "https" }],
+    ["missing forwarded host", { origin: proxyOrigin, forwardedProto: "https" }],
+    ["missing forwarded protocol", { origin: proxyOrigin, forwardedHost: "lyrics.example.com" }],
+    ["multiple forwarded hosts", { origin: proxyOrigin, forwardedHost: "lyrics.example.com, evil.example", forwardedProto: "https" }],
+    ["multiple forwarded protocols", { origin: proxyOrigin, forwardedHost: "lyrics.example.com", forwardedProto: "https, http" }]
+  ] as const) {
+    await assertStandardRejection(
+      await parseSong(originBoundaryRequest({
+        requestUrl: "http://127.0.0.1:3000/api/parse-song",
+        host: "internal.invalid:3000",
+        ...options
+      })),
+      403,
+      "cross_origin_request",
+      `trusted proxy ${label}`
+    );
+  }
+
+  for (const [label, canonicalOrigin, forwardedHost, forwardedProto] of [
+    ["IPv4 port mismatch", "http://127.0.0.1:4321", "127.0.0.1:4322", "http"],
+    ["IPv4 alternate spelling", "http://127.0.0.1:4321", "127.1:4321", "http"],
+    ["IPv6 alternate spelling", "http://[::1]:4321", "[0:0:0:0:0:0:0:1]:4321", "http"],
+    ["default HTTPS port spelling", proxyOrigin, "lyrics.example.com:443", "https"],
+    ["protocol mismatch", proxyOrigin, "lyrics.example.com", "http"]
+  ] as const) {
+    setAppOriginEnvironment(canonicalOrigin, "1");
+    await assertStandardRejection(
+      await parseSong(originBoundaryRequest({
+        origin: canonicalOrigin,
+        forwardedHost,
+        forwardedProto
+      })),
+      403,
+      "cross_origin_request",
+      label
+    );
+  }
+
+  for (const [canonicalOrigin, forwardedHost] of [
+    ["http://127.0.0.1:4321", "127.0.0.1:4321"],
+    ["http://[::1]:4321", "[::1]:4321"]
+  ] as const) {
+    setAppOriginEnvironment(canonicalOrigin, "1");
+    await assertBoundaryAccepted(
+      await parseSong(originBoundaryRequest({
+        origin: canonicalOrigin,
+        forwardedHost,
+        forwardedProto: "http"
+      })),
+      `${canonicalOrigin} remains supported through an exact trusted proxy origin`
+    );
+  }
+
+  for (const [label, canonicalOrigin, suppliedOrigin, forwardedHost] of [
+    ["origin default port spelling", proxyOrigin, "https://lyrics.example.com:443", "lyrics.example.com"],
+    ["origin IPv4 alternate spelling", "http://127.0.0.1:4321", "http://127.1:4321", "127.0.0.1:4321"],
+    ["origin IPv6 alternate spelling", "http://[::1]:4321", "http://[0:0:0:0:0:0:0:1]:4321", "[::1]:4321"]
+  ] as const) {
+    setAppOriginEnvironment(canonicalOrigin, "1");
+    await assertStandardRejection(
+      await parseSong(originBoundaryRequest({
+        origin: suppliedOrigin,
+        forwardedHost,
+        forwardedProto: canonicalOrigin.startsWith("https:") ? "https" : "http"
+      })),
+      403,
+      "cross_origin_request",
+      label
+    );
+  }
+
+  for (const invalidOrigin of [
+    "",
+    " https://lyrics.example.com",
+    "HTTPS://lyrics.example.com",
+    "https://lyrics.example.com/",
+    "https://lyrics.example.com:443",
+    "https://user@lyrics.example.com",
+    "ftp://lyrics.example.com"
+  ]) {
+    setAppOriginEnvironment(invalidOrigin, "0");
+    await assertStandardRejection(
+      await parseSong(originBoundaryRequest({ origin: proxyOrigin })),
+      503,
+      "app_origin_configuration_error",
+      `invalid canonical origin ${JSON.stringify(invalidOrigin)}`
+    );
+  }
+
+  setAppOriginEnvironment(proxyOrigin, "true");
+  await assertStandardRejection(
+    await parseSong(originBoundaryRequest({ origin: proxyOrigin })),
+    503,
+    "app_origin_configuration_error",
+    "invalid trusted proxy setting"
+  );
+
+  delete process.env[APP_CANONICAL_ORIGIN_ENV];
+  process.env[APP_TRUST_PROXY_ENV] = "1";
+  await assertStandardRejection(
+    await parseSong(originBoundaryRequest({
+      origin: proxyOrigin,
+      forwardedHost: "lyrics.example.com",
+      forwardedProto: "https"
+    })),
+    503,
+    "app_origin_configuration_error",
+    "trusted proxy mode requires an explicit canonical origin"
+  );
+
+  const appRequestSource = readFileSync("lib/app-request.ts", "utf8");
+  assert.doesNotMatch(appRequestSource, /headers\.get\(["']host["']\)/, "client Host never authorizes app mutations");
+  assert.doesNotMatch(appRequestSource, /request\.url/, "request URL never becomes the canonical origin");
+
+  const electronMainSource = readFileSync("electron/main.js", "utf8");
+  assert.match(electronMainSource, /\[APP_CANONICAL_ORIGIN_ENV\]: url/);
+  assert.match(electronMainSource, /\[APP_TRUST_PROXY_ENV\]: "0"/);
+  const electronDevSource = readFileSync("scripts/start-electron-dev.mjs", "utf8");
+  assert.match(electronDevSource, /LYRICS_CARD_APP_ORIGIN: url/);
+  assert.match(electronDevSource, /LYRICS_CARD_TRUST_PROXY: "0"/);
+  const packageJson = JSON.parse(readFileSync("package.json", "utf8")) as {
+    scripts?: { dev?: string; "dev:clean"?: string };
+  };
+  assert.match(packageJson.scripts?.dev ?? "", /LYRICS_CARD_APP_ORIGIN=http:\/\/localhost:3000/);
+  assert.match(packageJson.scripts?.dev ?? "", /LYRICS_CARD_TRUST_PROXY=0/);
+  assert.match(packageJson.scripts?.["dev:clean"] ?? "", /npm run dev/, "clean development reuses the pinned origin");
+
+  setAppOriginEnvironment(APP_ORIGIN, "0");
+}
+
+function originBoundaryRequest(options: {
+  origin: string;
+  requestUrl?: string;
+  host?: string;
+  forwardedHost?: string;
+  forwardedProto?: string;
+}) {
+  const headers = createAppRequestHeaders({
+    origin: options.origin,
+    "content-type": "application/json"
+  });
+  if (options.host !== undefined) headers.set("host", options.host);
+  if (options.forwardedHost !== undefined) headers.set("x-forwarded-host", options.forwardedHost);
+  if (options.forwardedProto !== undefined) headers.set("x-forwarded-proto", options.forwardedProto);
+  return new Request(options.requestUrl ?? "http://next.internal:3000/api/parse-song", {
+    method: "POST",
+    headers,
+    body: "{}"
+  });
+}
+
+async function assertBoundaryAccepted(response: Response, label: string) {
+  assert.equal(response.status, 400, label);
+  assert.equal((await response.json() as { code?: string }).code, "invalid_request", label);
+}
+
+function setAppOriginEnvironment(origin: string, trustProxy: string) {
+  process.env[APP_CANONICAL_ORIGIN_ENV] = origin;
+  process.env[APP_TRUST_PROXY_ENV] = trustProxy;
+}
+
+function setEnvironment(name: string, value: string) {
+  process.env[name] = value;
+}
+
+function restoreEnvironment(name: string, value: string | undefined) {
+  if (value === undefined) delete process.env[name];
+  else process.env[name] = value;
 }
 
 function jsonRequest(
@@ -432,8 +703,13 @@ async function assertLocalAudioUploadLimits() {
   );
   assert.match(
     routeSource,
-    /parseFromTokenizer\(tokenizer, \{\}\)/,
-    "the random-access tokenizer retains one options object for trailing-tag discovery"
+    /limitLocalAudioMetadataTokenizer\(tokenizer\)/,
+    "token lengths are checked before music-metadata can allocate them"
+  );
+  assert.match(
+    routeSource,
+    /parseFromTokenizer\(limitedTokenizer, \{ observer: createLocalAudioMetadataObserver\(\) \}\)/,
+    "the random-access tokenizer retains trailing-tag discovery with observer early-stop guards"
   );
   assert.doesNotMatch(routeSource, /parseWebStream\(/, "non-seekable parsing cannot silently skip trailing APEv2 tags");
   assert.doesNotMatch(routeSource, /file\.arrayBuffer\(\)/, "metadata parsing does not materialize a second full file copy");
@@ -476,7 +752,7 @@ async function assertLocalAudioUploadLimits() {
   await assertStandardRejection(
     oversizedCoverMetadata,
     413,
-    "local_audio_too_large",
+    "local_audio_metadata_too_large",
     "aggregate embedded-cover budget"
   );
   const oversizedLyricsMetadata = localAudioMetadataSizeRejection([], "x".repeat(101), 100, 100);
@@ -484,7 +760,7 @@ async function assertLocalAudioUploadLimits() {
   await assertStandardRejection(
     oversizedLyricsMetadata,
     413,
-    "local_audio_too_large",
+    "local_audio_metadata_too_large",
     "embedded-lyrics budget"
   );
   const clientSource = readFileSync("components/editor/LocalAudioParser.tsx", "utf8");
