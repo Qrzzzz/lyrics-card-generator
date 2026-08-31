@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v6.2.2.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v6.2.3.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="./docs/development.en.md">ローカル開発</a> ·
@@ -74,25 +74,24 @@
 
 ## 📦 ダウンロードとインストール
 
-v6.2.2 は公開済みです。[GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) から次のファイルを入手できます。
+v6.2.3 は公開済みです。[GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) から次のファイルを入手できます。
 
-* Windows x64 インストーラー：`Lyrics.Card.Generator.Setup.6.2.2.exe`
+* Windows x64 インストーラー：`Lyrics.Card.Generator.Setup.6.2.3.exe`
 
 v6.2.2 以降、配布するデスクトップパッケージは Windows x64 Setup のみです。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v6.2.2 の主な更新
+### v6.2.3 の主な更新
 
-* ループバック以外の AI サービス URL は HTTPS 必須となり、アプリの変更要求は信頼済みホストにオリジン検査を結び付けます。
-* リクエスト、上流応答、ストリーム、キャンセルに共通の上限を設け、AI 設定の原子的保存、同時設定保存、クリップボード画像のデコード上限も強化しました。
-* リリースはレビュー済み main の子孫かつ同一コミットの CI 合格が必須です。リリース検索を完全にページングし、同梱 Electron を監査と SPDX SBOM に含めました。
-* 古い Sharp 監査例外を削除しました。本版から単体実行版を廃止して Setup のみを提供し、旧版の更新確認からも最新ダウンロードページを開けます。
+* 曲情報、歌詞、フッター付属要素のローカル可読性シャドウを同じ深さに統一しました。
+* 各領域のグラデーションを単一のアルファマスクへ統合し、重なりによる二重の暗化や上下の濃い帯を防ぎます。
+* プラットフォームロゴ、共有者名、生成ウォーターマーク固有の追加シャドウを削除し、プレビューと書き出し結果を揃えました。
 
 ## 🌐 多言語リリースノート
 
 GitHub Release ではデフォルトで簡体字中国語の概要が表示されます。完全なリリースノートはこちら：
-[简体中文](./docs/releases/v6.2.2.zh-CN.md) · [繁體中文](./docs/releases/v6.2.2.zh-TW.md) · [English](./docs/releases/v6.2.2.en.md) · [Français](./docs/releases/v6.2.2.fr.md) · [日本語](./docs/releases/v6.2.2.ja.md) · [Español](./docs/releases/v6.2.2.es.md)
+[简体中文](./docs/releases/v6.2.3.zh-CN.md) · [繁體中文](./docs/releases/v6.2.3.zh-TW.md) · [English](./docs/releases/v6.2.3.en.md) · [Français](./docs/releases/v6.2.3.fr.md) · [日本語](./docs/releases/v6.2.3.ja.md) · [Español](./docs/releases/v6.2.3.es.md)
 
 <a id="主な機能"></a>
 
