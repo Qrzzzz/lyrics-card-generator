@@ -64,6 +64,7 @@ assert.doesNotMatch(buildJob, /contents: write/, "the long-running build phase c
 assert.match(buildJob, /EXPECTED_RELEASE_SHA: \$\{\{ needs\.authorize\.outputs\.release_sha \}\}/, "the build checkout is pinned to the authorized SHA");
 assert.match(buildJob, /Run release quality gates[\s\S]+npm run electron-runtime:coverage/, "release still blocks on measured Electron runtime coverage");
 assert.equal((buildJob.match(/npm run electron-runtime:coverage/g) || []).length, 1, "release executes Electron runtime coverage once");
+assert.match(packageJson.scripts["desktop:build"], /electron-builder --publish never --projectDir dist-desktop\/app$/, "artifact construction cannot implicitly publish through electron-builder");
 assert.match(buildJob, /REQUIRE_PUBLISHED_RELEASE_NOTES:\s*["']1["']/, "release quality gates reject candidate wording");
 assert.match(buildJob, /Enforce production dependency advisory policy[\s\S]+npm run dependency-audit:gate/, "release blocks unapproved production advisories");
 assert.match(buildJob, /Run release quality gates[\s\S]+npm run font-license:test/, "release verifies font license distribution");
@@ -77,7 +78,7 @@ const prepareSbom = buildJob.indexOf("npm run sbom:prepare");
 const generateSbom = buildJob.indexOf("anchore/sbom-action@");
 const finalizeSbom = buildJob.indexOf("npm run sbom:finalize");
 const inspectSbom = buildJob.indexOf("npm run sbom:inspect");
-assert.ok(finalArtifactSmoke >= 0 && finalArtifactSmoke < normalizedAssets, "final Setup and portable bytes are smoked before normalization");
+assert.ok(finalArtifactSmoke >= 0 && finalArtifactSmoke < normalizedAssets, "final Setup bytes are smoked before normalization");
 assert.ok(normalizedAssets < desktopRuntimeAudit, "desktop runtime audit binds normalized downloadable asset bytes");
 assert.ok(desktopRuntimeAudit < prepareSbom, "the Electron npm closure is audited before SBOM input preparation");
 assert.ok(prepareSbom < generateSbom && generateSbom < finalizeSbom && finalizeSbom < inspectSbom, "Syft output is enriched and then adversarially inspected");
@@ -109,11 +110,18 @@ assert.ok(verifyDraft > createDraft, "draft assets are verified after upload");
 assert.ok(finalAuthorization > verifyDraft, "tag, ancestry, review, and CI are checked again after draft verification");
 assert.ok(publishVerified > finalAuthorization, "publication follows the final source authorization");
 assert.ok(normalizeAssets >= 0 && normalizeAssets < generateChecksums, "executable names are normalized before checksums");
+assert.match(buildJob, /Expected exactly one Setup executable/, "release build rejects portable or extra executables");
+assert.match(buildJob, /Unexpected checksum subject set/, "checksum generation requires exactly Setup and the SPDX SBOM");
+assert.equal((buildJob.match(/release\/Lyrics\.Card\.Generator\.Setup\.\$\{\{ needs\.authorize\.outputs\.version \}\}\.exe/g) || []).length, 2, "attestation and transfer use the exact Setup asset path");
+assert.equal((buildJob.match(/release\/lyrics-card-generator-\$\{\{ needs\.authorize\.outputs\.version \}\}\.spdx\.json/g) || []).length, 5, "SBOM generation, finalization, inspection, attestation, and transfer bind the exact versioned path");
+assert.doesNotMatch(buildJob, /release\/\*\.exe|release\/\*\.spdx\.json/, "release asset provenance and transfer do not use broad globs");
 
 const createSection = workflow.slice(createDraft, verifyDraft);
 const verifySection = workflow.slice(verifyDraft, finalAuthorization);
 const publishSection = workflow.slice(publishVerified);
 assert.match(createSection, /gh release create[^\r\n]+--draft\b/, "release creation remains draft-only");
+assert.match(createSection, /\$setupAsset release\/SHA256SUMS \$sbomAsset/, "draft creation uploads exactly Setup, SHA256SUMS, and the SPDX SBOM");
+assert.doesNotMatch(createSection, /release\/\*\.exe|portable/i, "draft creation cannot upload a portable or wildcard executable");
 assert.match(createSection, /--verify-tag\b/, "release creation verifies that the remote tag still exists");
 assert.match(createSection, /--target \$env:EXPECTED_RELEASE_SHA\b/, "new drafts are explicitly targeted at the authorized SHA");
 assert.doesNotMatch(createSection, /--method DELETE|gh release delete/, "reruns never delete a draft or published Release");
@@ -169,6 +177,7 @@ assert.match(verifier, /releases\/\$ReleaseId/, "verification resolves a release
 assert.match(verifier, /Invoke-WebRequest -Uri \$asset\.url/, "verification downloads exact asset API URLs");
 assert.match(verifier, /Unexpected release asset set/, "unexpected downloaded assets fail verification");
 assert.match(verifier, /Unexpected checksum coverage/, "checksum coverage must match expected assets");
+assert.doesNotMatch(verifier, /-portable\.exe|Expected exactly one portable/, "the shared verifier rejects the retired portable asset contract");
 assert.match(verifier, /gh attestation verify \$_\.FullName/, "every downloaded release asset is attestation-verified");
 assert.match(verifier, /Draft asset does not match the tested bundle/, "reused drafts must match the newly tested artifact bytes");
 

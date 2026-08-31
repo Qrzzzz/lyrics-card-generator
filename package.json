@@ -1,6 +1,6 @@
 {
   "name": "lyric-card-generator",
-  "version": "6.2.1",
+  "version": "6.2.2",
   "private": true,
   "main": "electron/main.js",
   "scripts": {
@@ -81,7 +81,7 @@
     "desktop:final-artifact-smoke": "node scripts/smoke-final-windows-artifacts.mjs",
     "desktop:size": "node scripts/audit-desktop-size.mjs",
     "desktop:pack": "npm run typecheck && npm run build && npm run desktop:prepare && electron-builder --dir --projectDir dist-desktop/app",
-    "desktop:build": "npm run typecheck && npm run build && npm run desktop:prepare && electron-builder --projectDir dist-desktop/app"
+    "desktop:build": "npm run typecheck && npm run build && npm run desktop:prepare && electron-builder --publish never --projectDir dist-desktop/app"
   },
   "dependencies": {
     "cheerio": "^1.0.0",

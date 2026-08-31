@@ -147,7 +147,7 @@ This command typechecks, builds Next.js, prepares the desktop distribution, and 
 npm run desktop:build
 ```
 
-This creates the x64 NSIS installer and portable EXE under `release/`. Intermediate outputs are:
+This creates the sole Windows x64 NSIS Setup artifact, `release/Lyrics.Card.Generator.Setup.<version>.exe`. Portable builds are not produced from v6.2.2 onward. Intermediate outputs are:
 
 - `.next/standalone/`: original Next.js standalone output.
 - `dist-desktop/server/`: cleaned bundled local service.
@@ -204,7 +204,7 @@ Treat `dist-desktop/` and `release/` as generated output, not source. See the [d
 | Command | Purpose |
 | --- | --- |
 | `npm run desktop:interaction-test` | Packaged single-instance, startup-origin, settings, and import-history regressions |
-| `npm run desktop:final-artifact-smoke` | Verify final installer and portable bytes |
+| `npm run desktop:final-artifact-smoke` | Install, launch, verify, close, and uninstall the final Setup bytes; reject extra executables |
 | `npm run desktop:packaged-assets-test` | Verify packaged static assets and the runtime manifest |
 | `npm run desktop:startup-test` / `desktop:startup-benchmark` | Test or measure packaged-server startup |
 | `npm run desktop:size` | Audit desktop artifact size |

@@ -19,7 +19,7 @@
 <p>
   <strong>Navegación</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Descargar la última versión</a> ·
-  <a href="./docs/releases/v6.2.1.es.md">Notas de la versión</a> ·
+  <a href="./docs/releases/v6.2.2.es.md">Notas de la versión</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en línea</a> ·
   <a href="#funciones-principales">Funciones principales</a> ·
   <a href="./docs/development.en.md">Desarrollo local</a> ·
@@ -74,26 +74,25 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 ## 📦 Descarga e instalación
 
-La v6.2.1 está publicada y disponible en [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
+La v6.2.2 está publicada y disponible en [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
 
-* Instalador: `Lyrics Card Generator Setup 6.2.1.exe`
-* Versión portable: `Lyrics Card Generator-6.2.1-portable.exe`
+* Instalador de Windows x64: `Lyrics.Card.Generator.Setup.6.2.2.exe`
 
-El instalador se recomienda para uso habitual. La versión portable es útil para pruebas, uso temporal o ejecución desde una unidad extraíble.
+A partir de v6.2.2, Setup para Windows x64 es el único paquete de escritorio distribuido.
 
 > La compilación actual no está firmada. Windows puede mostrar una advertencia de SmartScreen, algo habitual en aplicaciones personales sin firma.
 
-### Novedades de v6.2.1
+### Novedades de v6.2.2
 
-* Los avisos ligeros se apilan desde la parte inferior en vez de sustituirse y usan duraciones independientes según su tipo y la longitud del texto.
-* Cuando desaparece cualquier aviso, los demás ocupan su lugar con suavidad; los temporizadores se detienen mientras la página está en segundo plano.
-* Un aviso idéntico se actualiza en su posición: el panel anterior se desplaza a la derecha y desaparece, mientras el nuevo entra desde la izquierda y aparece.
-* El límite horizontal de 12 líneas ahora es una advertencia integrada en el paso Letras, enfoca el contenido afectado y desaparece automáticamente tras corregirlo.
+* Las URL de servicios de IA fuera de loopback deben usar HTTPS, y las mutaciones de la aplicación vinculan la comprobación de origen a un host de confianza.
+* Las solicitudes, respuestas ascendentes, transmisiones y cancelaciones tienen presupuestos acotados; también se refuerzan el guardado atómico de IA, las preferencias concurrentes y el límite de decodificación del portapapeles.
+* Las versiones deben descender de main revisado y superar la CI del commit exacto; la consulta de versiones pagina todo el historial y Electron se incluye en la auditoría y el SBOM SPDX.
+* Se elimina la excepción obsoleta de Sharp. Esta versión retira el paquete autónomo y entrega solo Setup; las versiones anteriores aún pueden abrir la página de la última descarga.
 
 ## 🌐 Notas de publicación multilingües
 
 GitHub Release muestra de forma predeterminada un resumen en chino simplificado. Consulta las notas completas:
-[简体中文](./docs/releases/v6.2.1.zh-CN.md) · [繁體中文](./docs/releases/v6.2.1.zh-TW.md) · [English](./docs/releases/v6.2.1.en.md) · [Français](./docs/releases/v6.2.1.fr.md) · [日本語](./docs/releases/v6.2.1.ja.md) · [Español](./docs/releases/v6.2.1.es.md)
+[简体中文](./docs/releases/v6.2.2.zh-CN.md) · [繁體中文](./docs/releases/v6.2.2.zh-TW.md) · [English](./docs/releases/v6.2.2.en.md) · [Français](./docs/releases/v6.2.2.fr.md) · [日本語](./docs/releases/v6.2.2.ja.md) · [Español](./docs/releases/v6.2.2.es.md)
 
 <a id="funciones-principales"></a>
 

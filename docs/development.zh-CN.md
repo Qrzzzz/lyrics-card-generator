@@ -147,7 +147,7 @@ npm run desktop:pack
 npm run desktop:build
 ```
 
-该命令生成 x64 NSIS 安装版与便携版 EXE，输出到 `release/`。中间目录包括：
+该命令只生成 Windows x64 NSIS Setup：`release/Lyrics.Card.Generator.Setup.<version>.exe`。从 v6.2.2 起不再生成免安装版本。中间目录包括：
 
 - `.next/standalone/`：Next.js standalone 原始输出。
 - `dist-desktop/server/`：清理后的随包本地服务。
@@ -204,7 +204,7 @@ npm run desktop:build
 | 命令 | 用途 |
 | --- | --- |
 | `npm run desktop:interaction-test` | 运行已打包桌面的单实例、启动来源、设置与导入历史回归 |
-| `npm run desktop:final-artifact-smoke` | 验证安装版与便携版最终字节 |
+| `npm run desktop:final-artifact-smoke` | 对最终 Setup 字节执行安装、启动、验证、关闭与卸载，并拒绝额外 EXE |
 | `npm run desktop:packaged-assets-test` | 验证已打包静态资源与运行时清单 |
 | `npm run desktop:startup-test` / `desktop:startup-benchmark` | 测试或测量打包服务启动 |
 | `npm run desktop:size` | 审计桌面制品体积 |

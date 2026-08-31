@@ -125,10 +125,6 @@ async function prepareMinimalElectronApp() {
           {
             target: "nsis",
             arch: ["x64"]
-          },
-          {
-            target: "portable",
-            arch: ["x64"]
           }
         ]
       },
@@ -136,10 +132,8 @@ async function prepareMinimalElectronApp() {
         oneClick: false,
         allowToChangeInstallationDirectory: true,
         installerIcon: "../../build/icon.ico",
-        uninstallerIcon: "../../build/icon.ico"
-      },
-      portable: {
-        artifactName: "${productName}-${version}-portable.${ext}"
+        uninstallerIcon: "../../build/icon.ico",
+        artifactName: "Lyrics.Card.Generator.Setup.${version}.${ext}"
       }
     }
   };

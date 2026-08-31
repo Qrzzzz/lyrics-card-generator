@@ -27,10 +27,9 @@ const electronRoot = runtimeRoots[0];
 const expectedElectronVersion = packageJson[electronRoot.manifestSection]?.[electronRoot.name];
 assert.match(expectedElectronVersion ?? "", /^\d+\.\d+\.\d+$/, "the final artifact Electron version must be pinned exactly");
 const artifacts = await readdir(releaseDirectory);
-const portableName = `Lyrics Card Generator-${packageJson.version}-portable.exe`;
-const setupName = `Lyrics Card Generator Setup ${packageJson.version}.exe`;
-assert.ok(artifacts.includes(portableName), `${portableName} is missing`);
-assert.ok(artifacts.includes(setupName), `${setupName} is missing`);
+const setupName = `Lyrics.Card.Generator.Setup.${packageJson.version}.exe`;
+const releaseExecutables = artifacts.filter((name) => name.toLowerCase().endsWith(".exe"));
+assert.deepEqual(releaseExecutables, [setupName], "the final Windows artifact set must contain only the x64 Setup executable");
 
 const fontLicenseContracts = [
   {
@@ -46,12 +45,9 @@ const fontLicenseContracts = [
 ];
 
 const results = [];
-// Exercise the portable binary first, then validate the installer through an
-// isolated silent install so neither path depends on the developer profile.
-const portablePath = path.join(releaseDirectory, portableName);
+// Validate the distributable Setup bytes through an isolated silent install so
+// the smoke does not depend on the developer profile.
 const setupPath = path.join(releaseDirectory, setupName);
-await smokeExecutable(portablePath, "portable", results, portablePath);
-
 const installDirectory = await mkdtemp(path.join(tmpdir(), "lyrics-card-setup-"));
 try {
   await execFileAsync(setupPath, ["/S", `/D=${installDirectory}`], {
@@ -69,20 +65,15 @@ try {
 }
 
 await writeFile(path.join(reportDirectory, "results.json"), JSON.stringify({ ok: true, results }, null, 2));
-console.log("Setup and portable final-artifact smoke tests passed");
+console.log("Setup-only final-artifact smoke tests passed");
 
 async function smokeExecutable(executablePath, label, results, sourceArtifactPath) {
-  // The NSIS portable launcher does not forward stdout from its extracted
-  // Electron child. The installed executable can be probed directly; both
-  // final forms are independently checked again through their renderer UA.
-  const processElectronVersion = label === "setup" ? await probeElectronVersion(executablePath) : null;
-  if (processElectronVersion) {
-    assert.equal(
-      processElectronVersion,
-      expectedElectronVersion,
-      `${label} process.versions.electron is ${processElectronVersion}, expected ${expectedElectronVersion}`
-    );
-  }
+  const processElectronVersion = await probeElectronVersion(executablePath);
+  assert.equal(
+    processElectronVersion,
+    expectedElectronVersion,
+    `${label} process.versions.electron is ${processElectronVersion}, expected ${expectedElectronVersion}`
+  );
   const artifactSha256 = await sha256File(sourceArtifactPath);
   const userDataDirectory = await mkdtemp(path.join(tmpdir(), `lyrics-card-${label}-user-data-`));
   const debuggingPort = await getAvailablePort();
@@ -110,9 +101,7 @@ async function smokeExecutable(executablePath, label, results, sourceArtifactPat
       expectedElectronVersion,
       `${label} renderer user agent does not report Electron ${expectedElectronVersion}: ${userAgent}`
     );
-    if (processElectronVersion) {
-      assert.equal(electronVersion, processElectronVersion, `${label} renderer and process Electron versions must agree`);
-    }
+    assert.equal(electronVersion, processElectronVersion, `${label} renderer and process Electron versions must agree`);
     const languageDialog = page.getByTestId("first-launch-language-dialog");
     await languageDialog.waitFor({ state: "visible", timeout: 30_000 });
     await page.locator('[data-testid="first-launch-language"][data-locale="en"]').click();
@@ -132,9 +121,7 @@ async function smokeExecutable(executablePath, label, results, sourceArtifactPat
       artifactSha256,
       executable: path.basename(executablePath),
       electronVersion,
-      electronVersionEvidence: processElectronVersion
-        ? "process.versions.electron+renderer-user-agent"
-        : "renderer-user-agent",
+      electronVersionEvidence: "process.versions.electron+renderer-user-agent",
       interaction: true,
       fontLicenses: true,
       cleanExit: true

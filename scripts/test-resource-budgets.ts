@@ -226,7 +226,7 @@ async function assertDirectUpstreamBudgetsAndCancellation() {
     globalThis.fetch = async () => oversizedStreamedJsonResponse(
       resourceBudgets.upstreamResponseBytes.githubRelease
     );
-    const update = await checkGitHubUpdate("6.2.1");
+    const update = await checkGitHubUpdate("6.2.2");
     assert.equal(update.status, "error");
     if (update.status === "error") assert.equal(update.code, "response_too_large");
 

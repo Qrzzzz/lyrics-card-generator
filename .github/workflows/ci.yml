@@ -263,7 +263,7 @@ jobs:
       - name: Run packaged desktop interaction regression
         run: npm run desktop:interaction-test
 
-      - name: Run Setup and portable final-artifact smoke
+      - name: Run Setup-only final-artifact smoke
         if: ${{ always() && steps.desktop_build.outcome == 'success' }}
         run: npm run desktop:final-artifact-smoke
 
@@ -276,12 +276,12 @@ jobs:
         if: ${{ always() && steps.desktop_build.outcome == 'success' }}
         shell: pwsh
         run: |
-          $setup = @(Get-ChildItem release -File -Filter "Lyrics Card Generator Setup *.exe")
-          $portable = @(Get-ChildItem release -File -Filter "Lyrics Card Generator-*-portable.exe")
-          if ($setup.Count -lt 1 -or $portable.Count -lt 1) {
-            throw "Expected both NSIS and portable Windows artifacts."
+          $expectedName = "Lyrics.Card.Generator.Setup.$((Get-Content package.json -Raw | ConvertFrom-Json).version).exe"
+          $executables = @(Get-ChildItem release -File -Filter '*.exe')
+          if ($executables.Count -ne 1 -or $executables[0].Name -ne $expectedName) {
+            throw "Expected the sole Windows artifact to be $expectedName; found $($executables.Name -join ', ')."
           }
-          @($setup + $portable) | Select-Object Name, Length
+          $executables | Select-Object Name, Length
 
       - name: Upload desktop regression evidence
         if: always()

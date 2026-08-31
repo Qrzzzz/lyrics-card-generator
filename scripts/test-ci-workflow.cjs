@@ -44,14 +44,16 @@ assert.deepEqual(
   "release authorization consumes every independent release-blocking CI check"
 );
 assert.ok(
-  workflow.indexOf("Run packaged desktop interaction regression") < workflow.indexOf("Run Setup and portable final-artifact smoke"),
+  workflow.indexOf("Run packaged desktop interaction regression") < workflow.indexOf("Run Setup-only final-artifact smoke"),
   "interaction and final-artifact checks remain distinct steps"
 );
 assert.match(
   workflow,
-  /Run Setup and portable final-artifact smoke[\s\S]+always\(\) && steps\.desktop_build\.outcome == 'success'/,
+  /Run Setup-only final-artifact smoke[\s\S]+always\(\) && steps\.desktop_build\.outcome == 'success'/,
   "final artifact smoke still runs when an earlier interaction assertion fails"
 );
+assert.match(workflow, /Expected the sole Windows artifact to be/, "CI rejects portable or other unexpected Windows executables");
+assert.doesNotMatch(workflow, /Lyrics Card Generator-\*-portable|Expected both NSIS and portable/, "CI does not require a portable build");
 assert.match(workflow, /Run opt-in desktop visual and frame-timing diagnostics[\s\S]+continue-on-error: true/, "runner-sensitive diagnostics are explicitly non-blocking");
 assert.match(workflow, /playwright-report\/desktop-final-artifacts\/\*\*/, "final-artifact failure evidence is retained");
 assert.match(workflow, /Enforce production dependency advisory policy[\s\S]+npm run dependency-audit:gate/, "CI blocks unapproved production high and critical advisories");

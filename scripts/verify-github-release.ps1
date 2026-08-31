@@ -46,7 +46,6 @@ if ([bool]$release.prerelease -ne $expectsPrerelease) {
 $version = $Tag -replace '^v', '' -replace '-rc\.[0-9]+$', ''
 $expectedAssetNames = @(
   "Lyrics.Card.Generator.Setup.$version.exe",
-  "Lyrics.Card.Generator-$version-portable.exe",
   "lyrics-card-generator-$version.spdx.json",
   "SHA256SUMS"
 ) | Sort-Object
@@ -98,12 +97,10 @@ if (-not [string]::IsNullOrWhiteSpace($ExpectedAssetDirectory)) {
   }
 }
 $setup = @($assets | Where-Object { $_.Name -match '(?i)setup.*\.exe$' })
-$portable = @($assets | Where-Object { $_.Name -match '(?i)-portable\.exe$' })
 $sbom = @($assets | Where-Object { $_.Name -like '*.spdx.json' })
 $checksums = @($assets | Where-Object { $_.Name -eq 'SHA256SUMS' })
 
 if ($setup.Count -ne 1) { throw "Expected exactly one Setup executable, found $($setup.Count)." }
-if ($portable.Count -ne 1) { throw "Expected exactly one portable executable, found $($portable.Count)." }
 if ($sbom.Count -ne 1) { throw "Expected exactly one SPDX SBOM, found $($sbom.Count)." }
 if ($checksums.Count -ne 1) { throw "Expected exactly one SHA256SUMS file, found $($checksums.Count)." }
 
@@ -123,7 +120,7 @@ Get-Content -LiteralPath $checksums[0].FullName | ForEach-Object {
   $checksummedNames += $assetName
 }
 
-$expectedChecksummedNames = @($setup[0].Name, $portable[0].Name, $sbom[0].Name) | Sort-Object
+$expectedChecksummedNames = @($setup[0].Name, $sbom[0].Name) | Sort-Object
 $actualChecksummedNames = @($checksummedNames | Sort-Object)
 if (($actualChecksummedNames -join "`n") -ne ($expectedChecksummedNames -join "`n")) {
   throw "Unexpected checksum coverage: $($actualChecksummedNames -join ', ')"

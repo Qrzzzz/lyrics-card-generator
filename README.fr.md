@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v6.2.1.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v6.2.2.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="./docs/development.en.md">Développement local</a> ·
@@ -74,26 +74,25 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 ## 📦 Téléchargement et installation
 
-La v6.2.1 est publiée et disponible dans [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
+La v6.2.2 est publiée et disponible dans [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
 
-* Installateur : `Lyrics Card Generator Setup 6.2.1.exe`
-* Version portable : `Lyrics Card Generator-6.2.1-portable.exe`
+* Programme d’installation Windows x64 : `Lyrics.Card.Generator.Setup.6.2.2.exe`
 
-L'installateur est recommandé pour une utilisation régulière. La version portable convient aux essais, à une utilisation temporaire ou à un disque amovible.
+À partir de la v6.2.2, le programme Setup Windows x64 est le seul paquet distribué.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### Points forts de la v6.2.1
+### Points forts de la v6.2.2
 
-* Les notifications légères s’empilent désormais depuis le bas au lieu de se remplacer, avec une durée indépendante selon leur type et la longueur du texte.
-* Lorsqu’une notification disparaît, les autres se replacent en douceur ; les minuteries se mettent en pause lorsque la page passe en arrière-plan.
-* Une notification identique se renouvelle sur place : l’ancien panneau glisse vers la droite en disparaissant, tandis que le nouveau arrive de la gauche en apparaissant.
-* La limite de 12 lignes en format horizontal devient un avertissement intégré à l’étape Paroles, recentre le contenu concerné et disparaît automatiquement après correction.
+* Les URL de services IA hors boucle locale doivent utiliser HTTPS, et les mutations de l’application lient le contrôle d’origine à un hôte de confiance.
+* Les requêtes, réponses amont, flux et annulations disposent de budgets bornés ; la sauvegarde des réglages IA et des préférences concurrentes ainsi que le décodage du presse-papiers sont renforcés.
+* Les versions doivent descendre de main après revue et réussir la CI du commit exact ; la recherche des versions est paginée et Electron est inclus dans l’audit et le SBOM SPDX.
+* L’exception Sharp obsolète est supprimée. Cette version abandonne le paquet autonome et ne fournit que Setup, tandis que les anciennes versions peuvent toujours ouvrir la page du dernier téléchargement.
 
 ## 🌐 Notes de publication multilingues
 
 Par défaut, GitHub Release affiche un résumé en chinois simplifié. Consultez les notes complètes :
-[简体中文](./docs/releases/v6.2.1.zh-CN.md) · [繁體中文](./docs/releases/v6.2.1.zh-TW.md) · [English](./docs/releases/v6.2.1.en.md) · [Français](./docs/releases/v6.2.1.fr.md) · [日本語](./docs/releases/v6.2.1.ja.md) · [Español](./docs/releases/v6.2.1.es.md)
+[简体中文](./docs/releases/v6.2.2.zh-CN.md) · [繁體中文](./docs/releases/v6.2.2.zh-TW.md) · [English](./docs/releases/v6.2.2.en.md) · [Français](./docs/releases/v6.2.2.fr.md) · [日本語](./docs/releases/v6.2.2.ja.md) · [Español](./docs/releases/v6.2.2.es.md)
 
 <a id="fonctionnalités-principales"></a>
 

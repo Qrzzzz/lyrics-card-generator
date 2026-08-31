@@ -1,7 +1,7 @@
 {
   "auditPackage": {
     "name": "fixture-app-desktop-runtime-audit",
-    "version": "6.2.1",
+    "version": "6.2.2",
     "private": true,
     "dependencies": {
       "electron": "42.9.3"
@@ -9,13 +9,13 @@
   },
   "auditLock": {
     "name": "fixture-app-desktop-runtime-audit",
-    "version": "6.2.1",
+    "version": "6.2.2",
     "lockfileVersion": 3,
     "requires": true,
     "packages": {
       "": {
         "name": "fixture-app-desktop-runtime-audit",
-        "version": "6.2.1",
+        "version": "6.2.2",
         "dependencies": {
           "electron": "42.9.3"
         }
@@ -53,7 +53,7 @@
     "schemaVersion": 1,
     "application": {
       "name": "lyric-card-generator",
-      "version": "6.2.1",
+      "version": "6.2.2",
       "productName": "Lyrics Card Generator"
     },
     "auditInput": {
@@ -109,14 +109,7 @@
       },
       "finalArtifacts": [
         {
-          "fileName": "Lyrics.Card.Generator-6.2.1-portable.exe",
-          "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
-          "smokeLabel": "portable",
-          "reportedElectronVersion": "42.9.3",
-          "versionEvidence": "renderer-user-agent"
-        },
-        {
-          "fileName": "Lyrics.Card.Generator.Setup.6.2.1.exe",
+          "fileName": "Lyrics.Card.Generator.Setup.6.2.2.exe",
           "sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
           "smokeLabel": "setup",
           "reportedElectronVersion": "42.9.3",
@@ -189,7 +182,7 @@
       {
         "name": "Lyrics Card Generator",
         "SPDXID": "SPDXRef-Package-binary-Lyrics-Card-Generator",
-        "versionInfo": "6.2.1.0",
+        "versionInfo": "6.2.2.0",
         "supplier": "NOASSERTION",
         "downloadLocation": "NOASSERTION",
         "filesAnalyzed": false,
@@ -345,6 +338,11 @@
       "name": "production-only inventory mismatch",
       "mutation": "desktop-inventory-mismatch",
       "expected": "desktop audit package must have only Electron"
+    },
+    {
+      "name": "retired portable artifact",
+      "mutation": "unexpected-portable-artifact",
+      "expected": "final artifact inventory must cover only Setup"
     },
     {
       "name": "wrong packaged Sharp version",

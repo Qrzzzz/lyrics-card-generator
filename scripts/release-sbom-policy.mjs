@@ -253,8 +253,8 @@ export function validateReleaseEvidence({ inventory, auditPackageText, auditLock
   assert.ok(Array.isArray(runtime.finalArtifacts), "desktop runtime finalArtifacts must be an array");
   assert.deepEqual(
     runtime.finalArtifacts.map((entry) => entry.smokeLabel).sort(),
-    ["portable", "setup"],
-    "final artifact inventory must cover portable and Setup"
+    ["setup"],
+    "final artifact inventory must cover only Setup"
   );
   for (const artifact of runtime.finalArtifacts) {
     assert.match(artifact.sha256 ?? "", SHA256_PATTERN, `${artifact.fileName} needs a SHA-256 digest`);

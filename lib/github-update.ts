@@ -43,7 +43,6 @@ export type UpdateResult =
       latestVersion: string;
       releaseUrl: string;
       installerUrl?: string;
-      portableUrl?: string;
     }
   | {
       status: "no-release";
@@ -158,23 +157,15 @@ export function buildUpdateResult(release: GitHubRelease, currentVersion = APP_V
     currentVersion,
     latestVersion,
     releaseUrl: release.html_url,
-    installerUrl: findInstallerUrl(assets),
-    portableUrl: findPortableUrl(assets)
+    installerUrl: findInstallerUrl(assets)
   };
 }
 
 export function findInstallerUrl(assets: ReleaseAsset[]) {
   // Asset selection is intentionally name-based because GitHub Releases does
-  // not expose semantic installer/portable roles.
+  // not expose a semantic installer role.
   return assets.find((asset) => {
     const name = asset.name.toLowerCase();
     return name.includes("setup") && /\.(exe|msi)$/i.test(asset.name);
-  })?.browser_download_url;
-}
-
-export function findPortableUrl(assets: ReleaseAsset[]) {
-  return assets.find((asset) => {
-    const name = asset.name.toLowerCase();
-    return name.includes("portable") && /\.exe$/i.test(asset.name);
   })?.browser_download_url;
 }

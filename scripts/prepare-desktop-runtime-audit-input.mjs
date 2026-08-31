@@ -78,11 +78,11 @@ const productionPackages = await Promise.all(
 
 const smokeResultsPath = path.join(projectRoot, "playwright-report", "desktop-final-artifacts", "results.json");
 const smokeEvidence = await readJson(smokeResultsPath);
-assert.equal(smokeEvidence.ok, true, "final Setup and portable smoke evidence must pass before runtime audit preparation");
+assert.equal(smokeEvidence.ok, true, "final Setup smoke evidence must pass before runtime audit preparation");
 assert.deepEqual(
   [...new Set(smokeEvidence.results?.map((entry) => entry.label))].sort(),
-  ["portable", "setup"],
-  "final artifact evidence must cover Setup and portable"
+  ["setup"],
+  "final artifact evidence must cover the Setup distribution"
 );
 
 const releaseEntries = await readdir(path.join(projectRoot, "release"), { withFileTypes: true });
@@ -92,11 +92,8 @@ const finalArtifactNames = releaseEntries
   .sort((left, right) => left.localeCompare(right, "en"));
 assert.deepEqual(
   finalArtifactNames,
-  [
-    `Lyrics.Card.Generator-${rootPackage.version}-portable.exe`,
-    `Lyrics.Card.Generator.Setup.${rootPackage.version}.exe`
-  ].sort((left, right) => left.localeCompare(right, "en")),
-  "runtime audit preparation must bind the two normalized downloadable Windows assets"
+  [`Lyrics.Card.Generator.Setup.${rootPackage.version}.exe`],
+  "runtime audit preparation must bind the sole downloadable Windows Setup asset"
 );
 const finalArtifacts = [];
 for (const fileName of finalArtifactNames) {

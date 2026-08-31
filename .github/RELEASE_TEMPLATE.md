@@ -15,10 +15,9 @@
 
 ## 推荐下载
 
-- 安装版：`Lyrics Card Generator Setup X.Y.Z.exe`
-- 便携版：`Lyrics Card Generator-X.Y.Z-portable.exe`
+- Windows x64 安装版：`Lyrics.Card.Generator.Setup.X.Y.Z.exe`
 
-普通用户建议下载安装版；只想临时试用、测试或放到移动硬盘时，可以下载便携版。
+从 v6.2.2 起只发布 Windows x64 Setup，不再提供 portable 版本。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
@@ -31,7 +30,8 @@
 ## 升级注意事项
 
 - 从旧版本升级通常不需要卸载。
-- 如果遇到启动异常，可先关闭旧进程，再重新启动安装版或便携版。
+- v6.2.1 及更早的 portable 用户可通过应用内更新入口打开最新版 Release，并运行 Setup 完成升级。
+- 如果遇到启动异常，可先关闭旧进程，再重新启动安装版。
 
 ## 已知限制
 

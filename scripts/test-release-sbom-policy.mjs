@@ -128,6 +128,16 @@ function applyMutation(mutation, bundle) {
     for (const artifact of runtime.finalArtifacts) artifact.reportedElectronVersion = "42.9.2";
     return;
   }
+  if (mutation === "unexpected-portable-artifact") {
+    bundle.inventory.desktopRuntime.finalArtifacts.push({
+      fileName: "Lyrics.Card.Generator-6.2.2-portable.exe",
+      sha256: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      smokeLabel: "portable",
+      reportedElectronVersion: "42.9.3",
+      versionEvidence: "renderer-user-agent"
+    });
+    return;
+  }
   if (mutation === "wrong-production-version") {
     const sharp = bundle.sbom.packages.find((entry) => entry.name === "sharp");
     sharp.versionInfo = "0.35.3";

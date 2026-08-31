@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v6.2.1.zh-TW.md">發布說明</a> ·
+  <a href="./docs/releases/v6.2.2.zh-TW.md">發布說明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">線上 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="./docs/development.zh-CN.md">本機開發</a> ·
@@ -71,26 +71,25 @@
 
 ## 📦 下載與安裝
 
-v6.2.1 已發布，可從 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載：
+v6.2.2 已發布，可從 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下載：
 
-* 安裝版：`Lyrics Card Generator Setup 6.2.1.exe`
-* 可攜版：`Lyrics Card Generator-6.2.1-portable.exe`
+* Windows x64 安裝版：`Lyrics.Card.Generator.Setup.6.2.2.exe`
 
-安裝版適合長期使用；可攜版適合臨時執行、測試或放在隨身碟中使用。
+從 v6.2.2 起僅提供 Windows x64 Setup 安裝程式。
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v6.2.1 更新重點
+### v6.2.2 更新重點
 
-* 多則輕量提示會從底部依序堆疊，不再互相覆蓋，並依類型與內容長度使用獨立顯示時間。
-* 任一提示退場後，其餘提示會平順補位；頁面進入背景時暫停計時，避免提示在不可見時耗盡。
-* 完全相同的提示會在原位重新整理：舊面板向右平移並淡出，新面板從左側向右進入並淡入。
-* 橫式 12 行限制改為歌詞步驟內的警示，自動聚焦問題內容，並在修正後自動移除。
+* 非回環 AI 服務位址必須使用 HTTPS；應用程式寫入請求會綁定可信任主機，避免代理部署繞過來源閘門。
+* 請求、上游回應、串流輸出與取消傳遞採用統一預算，並強化 AI 設定原子儲存、並行偏好儲存與剪貼簿影像解碼上限。
+* 發布必須來自已審查的 main 祖先並通過精確提交 CI；發布查詢支援完整分頁，Electron 執行階段納入稽核與 SPDX SBOM。
+* 移除過期的 Sharp 稽核例外，並從本版本起停止提供免安裝版本、僅保留 Setup；舊版使用者的更新入口仍可開啟最新版下載頁。
 
 ## 🌐 多語言發佈說明
 
 GitHub Release 預設顯示簡體中文摘要，完整說明請見：
-[简体中文](./docs/releases/v6.2.1.zh-CN.md) · [繁體中文](./docs/releases/v6.2.1.zh-TW.md) · [English](./docs/releases/v6.2.1.en.md) · [Français](./docs/releases/v6.2.1.fr.md) · [日本語](./docs/releases/v6.2.1.ja.md) · [Español](./docs/releases/v6.2.1.es.md)
+[简体中文](./docs/releases/v6.2.2.zh-CN.md) · [繁體中文](./docs/releases/v6.2.2.zh-TW.md) · [English](./docs/releases/v6.2.2.en.md) · [Français](./docs/releases/v6.2.2.fr.md) · [日本語](./docs/releases/v6.2.2.ja.md) · [Español](./docs/releases/v6.2.2.es.md)
 
 ## ✨ 主要功能
 
