@@ -73,6 +73,41 @@ export async function clearAISettingsApiKey(): Promise<AISettingsSummary> {
   return { ...settings, hasApiKey: false };
 }
 
+export async function testAIConnection({ signal }: { signal?: AbortSignal } = {}) {
+  const desktop = getLyricsCardDesktopApi();
+  if (desktop) {
+    const requestId = crypto.randomUUID();
+    const abort = () => { void desktop.cancelAIConnectionTest(requestId); };
+    if (signal?.aborted) abort();
+    else signal?.addEventListener("abort", abort, { once: true });
+    try {
+      if (signal?.aborted) throw createAbortError();
+      const result = await desktop.startAIConnectionTest(requestId);
+      if (signal?.aborted) throw createAbortError();
+      return result;
+    } catch (error) {
+      throw normalizeError(error);
+    } finally {
+      signal?.removeEventListener("abort", abort);
+    }
+  }
+
+  const settings = readBrowserSettings();
+  validateConfiguredSettings({ ...settings, hasApiKey: Boolean(browserSessionApiKey) });
+  try {
+    const response = await fetch("/api/ai/test-connection", {
+      method: "POST",
+      headers: createAppRequestHeaders({ "content-type": "application/json" }),
+      body: JSON.stringify({ settings: { ...settings, apiKey: browserSessionApiKey } }),
+      signal
+    });
+    if (!response.ok) throw await readAIError(response, signal);
+    return true;
+  } catch (error) {
+    throw normalizeError(error);
+  }
+}
+
 export async function streamAITranslation(params: AITranslationStreamParams) {
   const desktop = getLyricsCardDesktopApi();
   if (desktop) {

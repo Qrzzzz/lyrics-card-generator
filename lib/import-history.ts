@@ -8,7 +8,7 @@ import {
 
 export type ImportHistoryKind = "link" | "search" | "local-audio" | "manual-cover" | "manual-save";
 export type ImportHistoryFileKind = Extract<ImportHistoryKind, "local-audio" | "manual-cover">;
-export type ImportHistoryLimit = 5 | 10 | "unlimited";
+export type ImportHistoryLimit = "none" | 5 | 10 | "unlimited";
 export type ManualSaveButtonState = "create" | "update" | "current" | "saving" | "unavailable";
 
 export type ImportHistoryRecord = {
@@ -34,6 +34,8 @@ export type ImportHistoryListResult = {
 
 export type ImportHistoryStats = {
   total: number;
+  automaticTotal: number;
+  manualTotal: number;
   version: string;
 };
 

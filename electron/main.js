@@ -4,7 +4,6 @@ const crypto = require("node:crypto");
 const fs = require("node:fs/promises");
 const http = require("node:http");
 const path = require("node:path");
-const { getBackgroundImageMime, safeBackgroundPathForUserData } = require("./background-images");
 const { normalizePromptLibrary } = require("./ai-prompt-settings");
 const { AISettingsStore } = require("./ai-settings-store");
 const { createWindowsFontDirectoryService } = require("./font-directory-service");
@@ -15,7 +14,8 @@ const {
   getChatCompletionMessage,
   getChatCompletionsUrl: resolveProviderChatCompletionsUrl,
   readProviderError: readNormalizedProviderError,
-  readProviderResponseBody
+  readProviderResponseBody,
+  testProviderConnection
 } = require("./provider-response");
 const {
   AIStreamError,
@@ -86,6 +86,7 @@ let importHistoryMutationQueue = Promise.resolve();
 // Window closure is a renderer-confirmed handshake so pending persistence can drain first.
 let allowWindowClose = false;
 const aiTranslationRequests = new AIRequestRegistry();
+const aiConnectionTests = new AIRequestRegistry();
 // Renderer-supplied paths become sender-bound, expiring, one-use capabilities before later mutations.
 const importFileRegistrations = new Map();
 const importHistoryRelocations = new Map();
@@ -873,29 +874,6 @@ function registerDesktopIpc() {
 
   handle("lyrics-card:clipboard-write-image", createClipboardImageWriter(nativeImage, clipboard));
 
-  handle("lyrics-card:background-save", async () => {
-    const result = await dialog.showOpenDialog(mainWindow, {
-      properties: ["openFile"],
-      filters: [{ name: "Images", extensions: ["png", "jpg", "jpeg", "webp", "gif"] }]
-    });
-    if (result.canceled || !result.filePaths[0]) return null;
-    const source = result.filePaths[0];
-    const extension = path.extname(source).toLowerCase();
-    const imageId = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}${extension}`;
-    const directory = path.join(app.getPath("userData"), "backgrounds");
-    await fs.mkdir(directory, { recursive: true });
-    await fs.copyFile(source, path.join(directory, imageId));
-    return { imageId, imageUrl: await readBackgroundDataUrl(imageId) };
-  });
-
-  handle("lyrics-card:background-read", (_event, imageId) => readBackgroundDataUrl(imageId));
-  handle("lyrics-card:background-remove", async (_event, imageId) => {
-    const target = safeBackgroundPath(imageId);
-    if (!target) return false;
-    await fs.rm(target, { force: true });
-    return true;
-  });
-
   handle("lyrics-card:import-file-register", async (event, input) => {
     const kind = input?.kind === "local-audio" || input?.kind === "manual-cover" ? input.kind : "";
     const filePath = typeof input?.path === "string" ? input.path : "";
@@ -1073,6 +1051,38 @@ function registerDesktopIpc() {
     // corrupt primary and backup make preservation unsafe.
     const stored = await aiSettingsStore.save(null, { credentialAction: "clear" });
     return toAISettingsSummary(stored);
+  });
+
+  handle("lyrics-card:ai-connection-test", async (event, requestId) => {
+    if (!isValidAIRequestId(requestId)) throw createAIError("invalid_request");
+    const sender = event.sender;
+    const controller = aiConnectionTests.begin(sender, requestId);
+    try {
+      const settings = await readAISettings();
+      if (controller.signal.aborted) throw controller.signal.reason;
+      const apiKey = decryptStoredApiKey(settings.encryptedApiKey);
+      validateAISettings(settings, apiKey);
+      await testProviderConnection({
+        baseUrl: settings.baseUrl,
+        model: settings.model,
+        apiKey,
+        signal: controller.signal
+      });
+      return true;
+    } catch (error) {
+      if (error instanceof Error && error.message.includes("AI_ERROR:")) throw error;
+      if (controller.signal.aborted) throw createAIError("cancelled");
+      if (error?.code === "response_too_large") throw createAIError("response_too_large");
+      if (error?.connectionTestCode) throw createAIError(error.connectionTestCode, error.diagnostic);
+      throw createAIError("network");
+    } finally {
+      aiConnectionTests.finish(sender, requestId, controller);
+    }
+  });
+
+  handle("lyrics-card:ai-connection-test-cancel", (event, requestId) => {
+    if (!isValidAIRequestId(requestId)) return { cancelled: false, active: false };
+    return aiConnectionTests.cancel(event.sender, requestId);
   });
 
   handle("lyrics-card:ai-translate", async (event, requestId, request) => {
@@ -1301,23 +1311,6 @@ function mimeTypeForHistoryFile(extension) {
   if (extension === ".webp") return "image/webp";
   if (extension === ".gif") return "image/gif";
   return "image/jpeg";
-}
-
-function safeBackgroundPath(imageId) {
-  return safeBackgroundPathForUserData(app.getPath("userData"), imageId);
-}
-
-async function readBackgroundDataUrl(imageId) {
-  const target = safeBackgroundPath(imageId);
-  if (!target) return undefined;
-  try {
-    const data = await fs.readFile(target);
-    const mime = getBackgroundImageMime(target);
-    if (!mime) return undefined;
-    return `data:${mime};base64,${data.toString("base64")}`;
-  } catch {
-    return undefined;
-  }
 }
 
 function getAISettingsPath() {

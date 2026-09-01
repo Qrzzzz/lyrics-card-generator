@@ -6,6 +6,7 @@ import type { Locale } from "@/lib/types";
 export type AIPage =
   | "root"
   | "api"
+  | "defaults"
   | "library"
   | "format"
   | `preset:${string}`
@@ -18,6 +19,7 @@ export function normalizeAISettingsPath(path: string[]): string[] {
 export function resolveAISettingsPage(path: string[]): AIPage {
   if (path.length === 0) return "root";
   if (path.length === 1 && path[0] === "api") return "api";
+  if (path.length === 1 && path[0] === "defaults") return "defaults";
   if (path[0] !== "library") return "root";
   if (path.length === 1) return "library";
   if (path.length === 2 && path[1] === "format") return "format";
@@ -29,6 +31,7 @@ export function resolveAISettingsPage(path: string[]): AIPage {
 export function getAISettingsPath(page: AIPage): string[] {
   if (page === "root") return [];
   if (page === "api") return ["api"];
+  if (page === "defaults") return ["defaults"];
   if (page === "library") return ["library"];
   if (page === "format") return ["library", "format"];
   if (page.startsWith("draft:")) return ["library", "draft", page.slice("draft:".length)];
@@ -41,6 +44,8 @@ export function getAISettingsRouteBreadcrumbs(path: string[], { locale, settings
   const items: Array<{ page: AIPage; label: string }> = [{ page: "root", label: copy.workspace }];
   if (page === "api") {
     items.push({ page: "api", label: copy.apiConfiguration });
+  } else if (page === "defaults") {
+    items.push({ page: "defaults", label: copy.translationDefaults });
   } else if (page !== "root") {
     items.push({ page: "library", label: copy.promptLibrary });
     if (page === "format") {

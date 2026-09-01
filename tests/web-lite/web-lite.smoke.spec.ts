@@ -309,6 +309,30 @@ test("axe reports no serious or landmark accessibility violations", async ({ pag
   await expect(page.locator('[data-export-card-host] main, [data-export-card-host] [role="main"]')).toHaveCount(0);
 });
 
+test("bundles readable app and third-party license entries for offline use", async ({ page }) => {
+  await openWebLite(page, { width: 1280, height: 900 });
+  const appLicense = page.getByTestId("web-lite-app-license-link");
+  const thirdPartyNotices = page.getByTestId("web-lite-third-party-notices-link");
+  await expect(appLicense).toBeVisible();
+  await expect(appLicense).toHaveAttribute("href", "./public/licenses/LICENSE-Lyrics-Card-Generator.txt");
+  await expect(thirdPartyNotices).toBeVisible();
+  await expect(thirdPartyNotices).toHaveAttribute("href", "./public/licenses/THIRD-PARTY-NOTICES.txt");
+
+  const texts = await page.evaluate(async () => await Promise.all([
+    fetch("./public/licenses/LICENSE-Lyrics-Card-Generator.txt").then(async (response) => {
+      if (!response.ok) throw new Error(`app license HTTP ${response.status}`);
+      return await response.text();
+    }),
+    fetch("./public/licenses/THIRD-PARTY-NOTICES.txt").then(async (response) => {
+      if (!response.ok) throw new Error(`third-party notices HTTP ${response.status}`);
+      return await response.text();
+    })
+  ]));
+  expect(texts[0]).toContain("Lyrics Card Generator Source Available License");
+  expect(texts[1]).toContain("Source Han Sans SC Heavy");
+  expect(texts[1]).toContain("Source Han Serif SC Heavy");
+});
+
 test("stays responsive at 360px, 768px, and 1440px", async ({ page }) => {
   const viewports = [
     { width: 360, height: 800 },

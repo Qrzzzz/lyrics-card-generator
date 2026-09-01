@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { POST as translate } from "../app/api/ai/translate/route";
+import { POST as testConnection } from "../app/api/ai/test-connection/route";
 import { POST as fetchLyrics } from "../app/api/fetch-lyrics/route";
 import { POST as parseLocalAudio } from "../app/api/parse-local-audio/route";
 import { POST as parseSong } from "../app/api/parse-song/route";
@@ -99,6 +100,38 @@ try {
     assert.deepEqual(await response.json(), { choices: [{ message: { content: "translated" } }] });
   }
   assert.equal(providerCalls, 4);
+
+  const connectionCallsBefore = providerCalls;
+  const rejectedConnectionOrigin = await testConnection(jsonRequest(
+    "/api/ai/test-connection",
+    connectionBody("https://api.example.com/v1"),
+    { origin: CROSS_SITE_ORIGIN }
+  ));
+  assert.equal(rejectedConnectionOrigin.status, 403);
+  assert.equal(
+    (await rejectedConnectionOrigin.json() as { error: { code: string } }).error.code,
+    "cross_origin_request"
+  );
+  for (const baseUrl of [
+    "http://api.example.com/v1",
+    "http://localhost.evil.example/v1"
+  ]) {
+    const response = await testConnection(jsonRequest(
+      "/api/ai/test-connection",
+      connectionBody(baseUrl)
+    ));
+    assert.equal(response.status, 400, `${baseUrl} connection test is rejected before provider fetch`);
+    assert.equal((await response.json() as { error: { code: string } }).error.code, "insecure_base_url");
+  }
+  assert.equal(providerCalls, connectionCallsBefore, "unsafe connection tests have zero upstream effects");
+
+  const successfulConnection = await testConnection(jsonRequest(
+    "/api/ai/test-connection",
+    connectionBody("https://api.example.com/v1")
+  ));
+  assert.equal(successfulConnection.status, 200);
+  assert.deepEqual(await successfulConnection.json(), { ok: true });
+  assert.equal(providerCalls, connectionCallsBefore + 1);
 
   for (const [name, route] of jsonRoutes) {
     const providerCallsBefore: number = providerCalls;
@@ -208,6 +241,16 @@ function aiBody(baseUrl: string) {
       model: "local-model",
       apiKey: "local-key",
       temperature: 0.2
+    }
+  };
+}
+
+function connectionBody(baseUrl: string) {
+  return {
+    settings: {
+      baseUrl,
+      model: "local-model",
+      apiKey: "local-key"
     }
   };
 }

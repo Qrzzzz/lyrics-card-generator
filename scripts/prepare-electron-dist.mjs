@@ -90,7 +90,6 @@ async function prepareMinimalElectronApp() {
         "electron/ai-request-registry.js",
         "electron/ai-prompt-settings.js",
         "electron/ai-settings-store.js",
-        "electron/background-images.js",
         "electron/font-directory-service.js",
         "electron/font-options.js",
         "electron/import-history.js",
@@ -148,7 +147,6 @@ async function prepareMinimalElectronApp() {
   await cp(path.join(projectRoot, "electron", "ai-request-registry.js"), path.join(electronOutputDir, "ai-request-registry.js"));
   await cp(path.join(projectRoot, "electron", "ai-prompt-settings.js"), path.join(electronOutputDir, "ai-prompt-settings.js"));
   await cp(path.join(projectRoot, "electron", "ai-settings-store.js"), path.join(electronOutputDir, "ai-settings-store.js"));
-  await cp(path.join(projectRoot, "electron", "background-images.js"), path.join(electronOutputDir, "background-images.js"));
   await cp(
     path.join(projectRoot, "electron", "font-directory-service.js"),
     path.join(electronOutputDir, "font-directory-service.js")

@@ -1,5 +1,7 @@
 import { getProviderErrorMessage, readProviderResponseBody } from "./provider-response";
 import type { AISettings } from "./types";
+import resourceBudgets from "@/electron/resource-budgets.json";
+import { ResponseBodyLimitExceededError } from "@/lib/bounded-response";
 
 export const INVALID_BASE_URL_ERROR_CODE = "invalid_base_url";
 export const INSECURE_BASE_URL_ERROR_CODE = "insecure_base_url";
@@ -22,6 +24,35 @@ export type ChatCompletionsRequestBody = {
   reasoning_effort?: "medium";
   temperature?: number;
 };
+
+export type ConnectionTestRequestBody = {
+  model: string;
+  messages: [{ role: "user"; content: string }];
+  stream: false;
+  temperature: 0;
+  max_tokens: 1;
+};
+
+export type AIProviderConnectionErrorCode =
+  | "missing_api_key"
+  | "missing_model"
+  | "missing_base_url"
+  | "invalid_base_url"
+  | "insecure_base_url"
+  | "provider_error"
+  | "timeout"
+  | "cancelled"
+  | "response_too_large"
+  | "network";
+
+export class AIProviderConnectionError extends Error {
+  constructor(readonly code: AIProviderConnectionErrorCode, readonly diagnostic?: string) {
+    super(code);
+    this.name = "AIProviderConnectionError";
+  }
+}
+
+const CONNECTION_TEST_PROMPT = "Reply with exactly OK.";
 
 export function getChatCompletionsUrl(baseUrl: string) {
   let parsed: URL;
@@ -103,6 +134,96 @@ export function buildChatCompletionsRequestBody({
   }
 
   return requestBody;
+}
+
+export function buildConnectionTestRequestBody(model: string): ConnectionTestRequestBody {
+  return {
+    model: model.trim(),
+    messages: [{ role: "user", content: CONNECTION_TEST_PROMPT }],
+    stream: false,
+    temperature: 0,
+    max_tokens: 1
+  };
+}
+
+export async function testAIProviderConnection({
+  baseUrl,
+  model,
+  apiKey,
+  signal,
+  fetchImpl = fetch,
+  timeoutMs = resourceBudgets.upstreamTimeoutMs.aiConnectionTest
+}: Pick<AISettings, "baseUrl" | "model"> & {
+  apiKey: string;
+  signal?: AbortSignal;
+  fetchImpl?: typeof fetch;
+  timeoutMs?: number;
+}) {
+  if (!apiKey.trim()) throw new AIProviderConnectionError("missing_api_key");
+  if (!model.trim()) throw new AIProviderConnectionError("missing_model");
+  if (!baseUrl.trim()) throw new AIProviderConnectionError("missing_base_url");
+
+  // Resolve the authoritative endpoint before fetch so rejected URLs have zero upstream effects.
+  let endpoint: string;
+  try {
+    endpoint = getChatCompletionsUrl(baseUrl);
+  } catch (error) {
+    const code = error instanceof Error && error.message === INSECURE_BASE_URL_ERROR_CODE
+      ? "insecure_base_url"
+      : "invalid_base_url";
+    throw new AIProviderConnectionError(code);
+  }
+
+  const controller = new AbortController();
+  let timedOut = false;
+  const abortFromParent = () => controller.abort(signal?.reason);
+  if (signal?.aborted) abortFromParent();
+  else signal?.addEventListener("abort", abortFromParent, { once: true });
+  const timer = setTimeout(() => {
+    timedOut = true;
+    controller.abort(new Error("timeout"));
+  }, timeoutMs);
+
+  try {
+    const response = await fetchImpl(endpoint, {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${apiKey.trim()}`,
+        "content-type": "application/json"
+      },
+      body: JSON.stringify(buildConnectionTestRequestBody(model)),
+      signal: controller.signal,
+      cache: "no-store"
+    });
+    const body = await readProviderResponseBody(
+      response,
+      controller.signal,
+      resourceBudgets.upstreamResponseBytes.aiConnectionTest
+    );
+    if (!response.ok) {
+      throw new AIProviderConnectionError(
+        "provider_error",
+        redactConnectionSecret(getProviderErrorMessage(body, response.status), apiKey)
+      );
+    }
+    return true;
+  } catch (error) {
+    if (error instanceof AIProviderConnectionError) throw error;
+    if (timedOut) throw new AIProviderConnectionError("timeout");
+    if (signal?.aborted) throw new AIProviderConnectionError("cancelled");
+    if (error instanceof ResponseBodyLimitExceededError) {
+      throw new AIProviderConnectionError("response_too_large");
+    }
+    throw new AIProviderConnectionError("network");
+  } finally {
+    clearTimeout(timer);
+    signal?.removeEventListener("abort", abortFromParent);
+  }
+}
+
+function redactConnectionSecret(message: string, apiKey: string) {
+  const secret = apiKey.trim();
+  return secret ? message.split(secret).join("[redacted]") : message;
 }
 
 export async function readProviderError(response: Response, signal?: AbortSignal) {

@@ -1,9 +1,13 @@
 "use client";
 
-import { Download, Github, Trash2 } from "lucide-react";
+import { Download, FileText, Github, Trash2 } from "lucide-react";
 import { APP_VERSION } from "@/lib/app-version";
 import type { createT } from "@/lib/i18n";
-import { WEB_LITE_APP_ICON_URL } from "@/lib/static-assets";
+import {
+  WEB_LITE_APP_ICON_URL,
+  WEB_LITE_APP_LICENSE_URL,
+  WEB_LITE_THIRD_PARTY_NOTICES_URL
+} from "@/lib/static-assets";
 import type { WebLiteCopy, WebLiteLocale } from "@/web-lite/copy";
 import { WEB_LITE_DESKTOP_URL, WEB_LITE_REPOSITORY_URL } from "@/web-lite/links";
 
@@ -45,6 +49,16 @@ export function WebLiteHeader({
             </span>
           </div>
           <p className="app-text-subtle mt-1 truncate text-sm">{t("appSubtitle")}</p>
+          <div className="app-text-subtle mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs">
+            <a data-testid="web-lite-app-license-link" href={WEB_LITE_APP_LICENSE_URL} target="_blank" rel="noopener noreferrer" className="control-focus inline-flex items-center gap-1 rounded hover:text-[rgb(var(--app-fg))]">
+              <FileText className="h-3.5 w-3.5" aria-hidden="true" />
+              {copy.sourceLicense}
+            </a>
+            <a data-testid="web-lite-third-party-notices-link" href={WEB_LITE_THIRD_PARTY_NOTICES_URL} target="_blank" rel="noopener noreferrer" className="control-focus inline-flex items-center gap-1 rounded hover:text-[rgb(var(--app-fg))]">
+              <FileText className="h-3.5 w-3.5" aria-hidden="true" />
+              {copy.thirdPartyNotices}
+            </a>
+          </div>
         </div>
       </div>
 

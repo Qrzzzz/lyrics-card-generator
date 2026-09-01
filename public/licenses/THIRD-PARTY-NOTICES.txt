@@ -1,0 +1,15 @@
+Lyrics Card Generator — Third-Party Notices
+
+The following font files are bundled for consistent lyric-card rendering. They remain governed by the SIL Open Font License 1.1 included with each family.
+
+Source Han Sans SC Heavy
+Copyright 2014-2021 Adobe (http://www.adobe.com/), with Reserved Font Name "Source".
+Font: ../fonts/SourceHanSansSC-Heavy.otf
+License: ../fonts/LICENSE-SourceHanSans.txt
+
+Source Han Serif SC Heavy
+Copyright 2017-2022 Adobe (http://www.adobe.com/), with Reserved Font Name "Source".
+Font: ../fonts/SourceHanSerifSC-Heavy.otf
+License: ../fonts/LICENSE-SourceHanSerif.txt
+
+Other third-party packages used by the application remain governed by their respective licenses in the source dependency manifests and installed package metadata.

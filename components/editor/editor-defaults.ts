@@ -6,6 +6,7 @@ import { createEmptyLyricDocument } from "@/lib/lyrics-document-v2";
 import { DEFAULT_LANDSCAPE_LAYOUT_SETTINGS } from "@/lib/landscape-plan";
 import { DEFAULT_PALETTE } from "@/lib/palette-background";
 import type { AppState, Locale } from "@/lib/types";
+import type { UserSettings } from "@/lib/settings/types";
 
 export const DEFAULT_LYRICS = [
   "And I know now",
@@ -115,3 +116,16 @@ export const defaultState: AppState = {
   palette: DEFAULT_PALETTE,
   paletteWarning: ""
 };
+
+export function applyNewCardFooterDefaults(state: AppState, settings: UserSettings): AppState {
+  return {
+    ...state,
+    style: {
+      ...state.style,
+      showGeneratedWatermark: settings.defaultShowGeneratedWatermark,
+      showWatermark: settings.defaultShowGeneratedWatermark,
+      showSharedBy: settings.defaultShowSharedBy,
+      sharedByText: settings.defaultSharedByText
+    }
+  };
+}

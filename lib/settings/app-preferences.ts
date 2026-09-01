@@ -138,10 +138,5 @@ function writeLocalAppPreferences(record: AppPreferencesRecord) {
 }
 
 function toDesktopRecord(record: AppPreferencesRecord): AppPreferencesRecord {
-  // Blob URLs are renderer-session handles. Once an image has a durable id,
-  // never copy its transient object URL into desktop JSON.
-  const userSettings = record.userSettings.appBackground.imageId
-    ? { ...record.userSettings, appBackground: { ...record.userSettings.appBackground, imageUrl: undefined } }
-    : record.userSettings;
-  return { ...record, userSettings };
+  return record;
 }

@@ -76,9 +76,6 @@ export type LyricsCardDesktopApi = {
   listSystemFonts: () => Promise<SystemFontOption[]>;
   openExternal: (url: string) => Promise<boolean>;
   copyImageToClipboard: (dataUrl: string) => Promise<boolean>;
-  saveBackgroundImage: () => Promise<{ imageId: string; imageUrl: string } | null>;
-  readBackgroundImage: (imageId: string) => Promise<string | undefined>;
-  removeBackgroundImage: (imageId: string) => Promise<boolean>;
   registerImportFile: (file: File, kind: ImportHistoryFileKind) => Promise<ImportHistoryFileRegistration | null>;
   listImportHistory: (options: {
     offset: number;
@@ -100,6 +97,8 @@ export type LyricsCardDesktopApi = {
   loadAISettings: () => Promise<AISettingsSummary>;
   saveAISettings: (settings: SaveAISettingsInput) => Promise<AISettingsSummary>;
   clearAISettingsApiKey: () => Promise<AISettingsSummary>;
+  startAIConnectionTest: (requestId: string) => Promise<boolean>;
+  cancelAIConnectionTest: (requestId: string) => Promise<{ cancelled: boolean; active: boolean }>;
   startAITranslation: (requestId: string, request: AITranslationRequest) => Promise<string>;
   cancelAITranslation: (requestId: string) => Promise<{ cancelled: boolean; active: boolean }>;
   onAITranslationChunk: (callback: (event: DesktopAIStreamEvent) => void) => () => void;

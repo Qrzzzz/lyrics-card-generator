@@ -1,11 +1,14 @@
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 import {
+  AIProviderConnectionError,
   buildChatCompletionsRequestBody,
+  buildConnectionTestRequestBody,
   getChatCompletionsUrl,
   INSECURE_BASE_URL_ERROR_CODE,
   INVALID_BASE_URL_ERROR_CODE,
   readProviderError,
+  testAIProviderConnection,
   usesDeepSeekThinking
 } from "../lib/ai/provider-request";
 import {
@@ -24,8 +27,17 @@ type ProviderRequestOptions = {
 
 type ElectronProviderModule = {
   buildChatCompletionsRequestBody: (options: ProviderRequestOptions) => unknown;
+  buildConnectionTestRequestBody: (model: string) => unknown;
   getChatCompletionsUrl: (baseUrl: string) => string;
   readProviderError: (response: Response) => Promise<string>;
+  testProviderConnection: (options: {
+    baseUrl: string;
+    model: string;
+    apiKey: string;
+    signal?: AbortSignal;
+    fetchImpl?: typeof fetch;
+    timeoutMs?: number;
+  }) => Promise<boolean>;
   usesDeepSeekThinking: (baseUrl: string, model: string) => boolean;
 };
 
@@ -150,9 +162,102 @@ async function main() {
     INVALID_BASE_URL_ERROR_CODE
   );
 
+  assert.deepEqual(
+    buildConnectionTestRequestBody("  test-model  "),
+    electronProvider.buildConnectionTestRequestBody("  test-model  "),
+    "web and Electron use the same content-free, one-token probe"
+  );
+
+  for (const testConnection of [
+    testAIProviderConnection,
+    electronProvider.testProviderConnection
+  ]) {
+    let upstreamCalls = 0;
+    await assert.rejects(
+      testConnection({
+        baseUrl: "http://attacker.example/v1",
+        model: "test-model",
+        apiKey: "test-key-never-log",
+        fetchImpl: async () => {
+          upstreamCalls += 1;
+          return Response.json({ ok: true });
+        }
+      }),
+      (error: unknown) => connectionErrorCode(error) === "insecure_base_url",
+      "an unsafe Base URL is rejected by the final request boundary"
+    );
+    assert.equal(upstreamCalls, 0, "unsafe Base URLs cannot reach the injected upstream transport");
+
+    let requestBody = "";
+    await testConnection({
+      baseUrl: "https://api.example.com/v1",
+      model: "test-model",
+      apiKey: "test-key-never-log",
+      fetchImpl: async (_input, init) => {
+        upstreamCalls += 1;
+        requestBody = String(init?.body ?? "");
+        assert.equal(new Headers(init?.headers).get("authorization"), "Bearer test-key-never-log");
+        return Response.json({ choices: [{ message: { content: "OK" } }] });
+      }
+    });
+    assert.deepEqual(JSON.parse(requestBody), {
+      model: "test-model",
+      messages: [{ role: "user", content: "Reply with exactly OK." }],
+      stream: false,
+      temperature: 0,
+      max_tokens: 1
+    });
+    assert.doesNotMatch(requestBody, /test-key-never-log|lyrics|歌词/i);
+    assert.equal(upstreamCalls, 1);
+
+    await assert.rejects(
+      testConnection({
+        baseUrl: "https://api.example.com/v1",
+        model: "test-model",
+        apiKey: "test-key-never-log",
+        fetchImpl: async () => Response.json({
+          error: { message: "provider echoed test-key-never-log" }
+        }, { status: 401 })
+      }),
+      (error: unknown) => {
+        const diagnostic = connectionErrorDiagnostic(error);
+        assert.doesNotMatch(diagnostic, /test-key-never-log/);
+        assert.match(diagnostic, /\[redacted\]/);
+        return connectionErrorCode(error) === "provider_error";
+      },
+      "provider diagnostics cannot reflect the API key into the UI"
+    );
+
+    await assert.rejects(
+      testConnection({
+        baseUrl: "https://api.example.com/v1",
+        model: "test-model",
+        apiKey: "test-key-never-log",
+        timeoutMs: 10,
+        fetchImpl: abortAwarePendingFetch
+      }),
+      (error: unknown) => connectionErrorCode(error) === "timeout",
+      "the connection probe has its own strict timeout"
+    );
+
+    const userController = new AbortController();
+    userController.abort(new Error("fixture cancellation"));
+    await assert.rejects(
+      testConnection({
+        baseUrl: "https://api.example.com/v1",
+        model: "test-model",
+        apiKey: "test-key-never-log",
+        signal: userController.signal,
+        fetchImpl: abortAwarePendingFetch
+      }),
+      (error: unknown) => connectionErrorCode(error) === "cancelled",
+      "user cancellation is distinct from timeout"
+    );
+  }
+
   console.log(JSON.stringify({
     ok: true,
-    transportPolicyCases: acceptedHttpLoopbackUrls.length + rejectedRemoteHttpUrls.length + 2
+    transportPolicyCases: acceptedHttpLoopbackUrls.length + rejectedRemoteHttpUrls.length + 6
   }, null, 2));
 }
 
@@ -166,3 +271,28 @@ function captureThrownMessage(fn: () => unknown) {
     return error instanceof Error ? error.message : String(error);
   }
 }
+
+function connectionErrorCode(error: unknown) {
+  if (error instanceof AIProviderConnectionError) return error.code;
+  if (error && typeof error === "object" && "connectionTestCode" in error) {
+    return String(error.connectionTestCode);
+  }
+  return "";
+}
+
+function connectionErrorDiagnostic(error: unknown) {
+  if (error instanceof AIProviderConnectionError) return error.diagnostic ?? "";
+  if (error && typeof error === "object" && "diagnostic" in error) {
+    return String(error.diagnostic ?? "");
+  }
+  return "";
+}
+
+const abortAwarePendingFetch: typeof fetch = async (_input, init) => await new Promise<Response>((_resolve, reject) => {
+  const signal = init?.signal;
+  if (signal?.aborted) {
+    reject(signal.reason);
+    return;
+  }
+  signal?.addEventListener("abort", () => reject(signal.reason), { once: true });
+});

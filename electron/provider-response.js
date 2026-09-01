@@ -10,10 +10,10 @@ class ProviderResponseLimitError extends Error {
   }
 }
 
-async function readProviderResponseBody(response, signal) {
+async function readProviderResponseBody(response, signal, limitBytes = resourceBudgets.upstreamResponseBytes.aiProviderBody) {
   const text = await readResponseTextBounded(
     response,
-    resourceBudgets.upstreamResponseBytes.aiProviderBody,
+    limitBytes,
     signal
   );
   if (!text.trim()) return { kind: "empty" };
@@ -172,6 +172,76 @@ function buildChatCompletionsRequestBody({ baseUrl, model, prompt, reasoning = f
   return requestBody;
 }
 
+function buildConnectionTestRequestBody(model) {
+  return {
+    model: String(model || "").trim(),
+    messages: [{ role: "user", content: "Reply with exactly OK." }],
+    stream: false,
+    temperature: 0,
+    max_tokens: 1
+  };
+}
+
+async function testProviderConnection({ baseUrl, model, apiKey, signal, fetchImpl = fetch, timeoutMs = resourceBudgets.upstreamTimeoutMs.aiConnectionTest }) {
+  if (!String(apiKey || "").trim()) throw connectionError("missing_api_key");
+  if (!String(model || "").trim()) throw connectionError("missing_model");
+  if (!String(baseUrl || "").trim()) throw connectionError("missing_base_url");
+
+  let endpoint;
+  try {
+    endpoint = getChatCompletionsUrl(baseUrl);
+  } catch (error) {
+    throw connectionError(error?.message === INSECURE_BASE_URL_ERROR_CODE ? "insecure_base_url" : "invalid_base_url");
+  }
+
+  const controller = new AbortController();
+  let timedOut = false;
+  const abortFromParent = () => controller.abort(signal?.reason);
+  if (signal?.aborted) abortFromParent();
+  else signal?.addEventListener("abort", abortFromParent, { once: true });
+  const timer = setTimeout(() => {
+    timedOut = true;
+    controller.abort(new Error("timeout"));
+  }, timeoutMs);
+  try {
+    const response = await fetchImpl(endpoint, {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${String(apiKey).trim()}`,
+        "content-type": "application/json"
+      },
+      body: JSON.stringify(buildConnectionTestRequestBody(model)),
+      signal: controller.signal
+    });
+    const body = await readProviderResponseBody(response, controller.signal, resourceBudgets.upstreamResponseBytes.aiConnectionTest);
+    if (!response.ok) {
+      throw connectionError(
+        "provider_error",
+        redactConnectionSecret(getProviderErrorMessage(body, response.status), apiKey)
+      );
+    }
+    return true;
+  } catch (error) {
+    if (error?.connectionTestCode) throw error;
+    if (timedOut) throw connectionError("timeout");
+    if (signal?.aborted) throw connectionError("cancelled");
+    if (error?.code === "response_too_large") throw error;
+    throw connectionError("network");
+  } finally {
+    clearTimeout(timer);
+    signal?.removeEventListener("abort", abortFromParent);
+  }
+}
+
+function redactConnectionSecret(message, apiKey) {
+  const secret = String(apiKey || "").trim();
+  return secret ? String(message).split(secret).join("[redacted]") : String(message);
+}
+
+function connectionError(code, diagnostic) {
+  return Object.assign(new Error(code), { connectionTestCode: code, diagnostic });
+}
+
 function getChatCompletionMessage(body) {
   if (body.kind !== "json" || !body.data || typeof body.data !== "object") {
     return { content: "", reasoningContent: "" };
@@ -219,11 +289,13 @@ module.exports = {
   INSECURE_BASE_URL_ERROR_CODE,
   ProviderResponseLimitError,
   buildChatCompletionsRequestBody,
+  buildConnectionTestRequestBody,
   getChatCompletionMessage,
   getChatCompletionsUrl,
   getProviderErrorMessage,
   isLoopbackProviderHostname,
   readProviderError,
   readProviderResponseBody,
+  testProviderConnection,
   usesDeepSeekThinking
 };

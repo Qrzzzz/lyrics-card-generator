@@ -10,6 +10,8 @@ import {
   withAlpha
 } from "@/lib/palette-background";
 
+const ALBUM_DYNAMIC_OVERLAY_OPACITY = 0.46;
+
 export function DynamicAppBackground({
   palette,
   settings
@@ -99,7 +101,7 @@ export function DynamicAppBackground({
       />
       <div
         className="absolute inset-0 transition-colors duration-700"
-        style={{ background: `rgba(0,0,0,${settings.appBackground.overlayOpacity})` }}
+        style={{ background: `rgba(0,0,0,${ALBUM_DYNAMIC_OVERLAY_OPACITY})` }}
       />
       <div className="absolute inset-0 bg-[linear-gradient(110deg,rgba(255,255,255,0.08),transparent_25%,rgba(255,255,255,0.04)_48%,transparent_72%)]" />
     </div>

@@ -11,6 +11,8 @@ import { settingsCopy } from "../lib/settings/copy";
 import type { Locale } from "../lib/types";
 
 const lyricEditor = readFileSync(resolve("components/editor/LyricEditor.tsx"), "utf8");
+const editorDefaults = readFileSync(resolve("components/editor/editor-defaults.ts"), "utf8");
+const persistenceNotice = readFileSync(resolve("components/feedback/SettingsPersistenceNotice.tsx"), "utf8");
 const settingsSurface = readFileSync(resolve("components/settings/SettingsSurface.tsx"), "utf8");
 const settingsHistoryBar = readFileSync(resolve("components/settings/SettingsHistoryBar.tsx"), "utf8");
 const settingsModel = readFileSync(resolve("components/settings/settings-model.ts"), "utf8");
@@ -80,16 +82,20 @@ assert.equal(
 );
 assert.match(
   settingsWorkspace,
-  /onError: \(saveError\) => \{[\s\S]{0,260}setError\(normalizeAIErrorMessage[\s\S]{0,180}setSyncErrorKind\("save"\);[\s\S]{0,80}setSaveState\("error"\)/,
-  "fire-and-forget persistence keeps the visible save-error state"
+  /publishPersistenceFailure\("preferences", message, \(\) => retryUserSettings/,
+  "preference failures retain an explicit retry action"
 );
 assert.match(lyricEditor, /useToastQueue\(\)/);
 assert.match(lyricEditor, /<AppToast notices=\{toastNotices\} announcement=\{toastAnnouncement\} \/>/);
+assert.match(lyricEditor, /<SettingsPersistenceNotice issues=\{settingsPersistenceIssues\} \/>/);
+assert.match(persistenceNotice, /role="alert"/);
+assert.match(persistenceNotice, /issue\.retry\(\)/);
 assert.doesNotMatch(lyricEditor, /toastIdRef|setTimeout\(\(\) => setToast\(null\), 3600\)/);
 assert.match(webLiteLyricInput, /<LandscapeLineLimitAlert/);
 assert.match(webLiteLyricInput, /notice=\{landscapeLineLimitNotice\}/);
 assert.match(settingsSurface, /isActive=\{isActive\}/);
 assert.match(settingsSurface, /<SettingsHistoryBar/);
+assert.match(settingsSurface, /showHistoryBar \? \(/);
 assert.match(settingsSurface, /SettingsHistoryState/);
 assert.match(settingsSurface, /navigateDestination/);
 assert.match(settingsSurface, /getSettingsRouteBreadcrumbs/);
@@ -110,6 +116,7 @@ assert.match(settingsNavigation, /setMobileMenuOpen\(false\)/);
 assert.match(settingsNavigation, /event\.stopPropagation\(\)/);
 assert.match(settingsNavigation, /mobileTriggerRef\.current\?\.focus\(\)/);
 assert.doesNotMatch(settingsNavigation, /role="menu(?:item)?"/);
+assert.match(settingsNavigation, /<motion\.nav[\s\S]*?id="settings-category-menu"/);
 assert.match(settingsNavigation, /settings-navigation__copy/);
 assert.match(settingsNavigation, /scaleX: 0/);
 assert.match(settingsNavigation, /transformOrigin: "left center"/);
@@ -135,7 +142,9 @@ assert.match(generalSettings, /copy\.reduceMotion/);
 assert.match(generalSettings, /settings\.reduceMotionEnabled/);
 assert.match(generalSettings, /data-testid|testId="reduce-motion-toggle"/);
 assert.match(generalSettings, /data-testid="import-history-limit"/);
-assert.match(generalSettings, /total - next/);
+assert.match(generalSettings, /automaticTotal - nextLimit/);
+assert.match(generalSettings, /value="none"/);
+assert.match(generalSettings, /resetUserSettings\(settings, \{ persist: false \}\)/);
 assert.match(generalSettings, /await showSystemConfirm\(/);
 assert.match(generalSettings, /message: dialogCopy\.trimHistoryTitle/);
 assert.match(generalSettings, /detail: formatImportHistoryText\(historyCopy\.limitTrimConfirm/);
@@ -144,11 +153,18 @@ assert.match(generalSettings, /message: dialogCopy\.historyCheckFailedTitle/);
 assert.doesNotMatch(generalSettings, /window\.(?:confirm|alert)/);
 assert.match(appearanceSettings, /label=\{copy\.spark\}/);
 assert.match(appearanceSettings, /settings\.sparkCursorEnabled/);
+assert.match(appearanceSettings, /ariaLabel=\{copy\.theme\}/);
+assert.match(appearanceSettings, /ariaLabel=\{copy\.accentColor\}/);
+assert.match(appearanceSettings, /error=\{!customAccentIsValid \? copy\.accentInvalid/);
+assert.match(appearanceSettings, /validateUiFontFamily/);
+assert.match(appearanceSettings, /restore-system-font/);
 assert.match(exportSettings, /<SegmentedControl/);
 assert.doesNotMatch(exportSettings, /<SelectField/);
 assert.match(exportSettings, /default-generated-watermark-toggle/);
 assert.match(exportSettings, /default-shared-by-toggle/);
 assert.match(exportSettings, /default-shared-by-text/);
+assert.match(exportSettings, /new-card-defaults-group/);
+assert.match(exportSettings, /file-export-defaults-group/);
 assert.match(exportSettings, /defaultExportFormat/);
 assert.match(exportSettings, /EXPORT_FORMAT_OPTIONS/);
 assert.match(exportSettings, /ariaLabel=\{copy\.exportFormat\}/);
@@ -165,9 +181,12 @@ assert.ok(
   exportSettings.indexOf("defaultExportFormat") < exportSettings.indexOf("defaultExportQuality"),
   "default export format appears before export quality"
 );
-assert.match(lyricEditor, /userSettings\.defaultShowGeneratedWatermark/);
-assert.match(lyricEditor, /userSettings\.defaultShowSharedBy/);
-assert.match(lyricEditor, /userSettings\.defaultSharedByText/);
+assert.match(editorDefaults, /applyNewCardFooterDefaults/);
+assert.match(editorDefaults, /settings\.defaultShowGeneratedWatermark/);
+assert.match(editorDefaults, /settings\.defaultShowSharedBy/);
+assert.match(editorDefaults, /settings\.defaultSharedByText/);
+assert.match(lyricEditor, /newCardDefaultsAppliedRef/);
+assert.match(lyricEditor, /hasAuthoredDocument\(current\)/);
 assert.match(lyricEditor, /ready=\{preferencesLoaded\}/);
 assert.match(lyricEditor, /!preferencesLoaded \|\| shouldReduceMotion/);
 assert.match(aiTranslateButton, /ai-translate-trigger h-11/);
@@ -177,6 +196,9 @@ assert.match(settingsWorkspace, /createLatestSaveController/);
 assert.match(settingsWorkspace, /saveController\.setDesired\(createAISaveSnapshot\(settings, apiKey\)\)/);
 assert.match(settingsWorkspace, /void saveController\.flushLatest\(\)/);
 assert.match(settingsWorkspace, /saveController\.whenIdle\(\)/);
+assert.match(settingsWorkspace, /if \(!loadAI \|\| aiSettingsLoadedRef\.current \|\| aiLoadStartedRef\.current\) return/);
+assert.doesNotMatch(settingsWorkspace, /aiSettingsLoadedRef\.current = false/);
+assert.match(settingsWorkspace, /await flushPendingAISettings\(\);[\s\S]*?await testAIConnection/);
 assert.match(settingsWorkspace, /setSaveState\(saveController\.getState\(\)\.status\)/);
 assert.match(settingsWorkspace, /saveController\.getState\(\)\.status === "error"/);
 assert.match(settingsWorkspace, /runSerializedAIWrite\(clearAISettingsApiKey\)/);
@@ -191,6 +213,12 @@ assert.match(aiSettingsSection, /disabled=\{!valid\}/);
 assert.match(aiSettingsSection, /copy\.resetAll/);
 assert.match(aiSettingsSection, /disabled=\{!canReset\}/);
 assert.match(aiSettingsSection, /value=\{defaultRules\} readOnly/);
+assert.match(aiSettingsSection, /ai-open-defaults/);
+assert.match(aiSettingsSection, /test-ai-connection/);
+assert.match(aiSettingsSection, /connectionTestNotice/);
+assert.doesNotMatch(aiSettingsSection, />1 \+ \{/);
+assert.match(aiSettingsSection, /defaultPresetSummary/);
+assert.match(aiSettingsSection, /customPresetSummary/);
 assert.doesNotMatch(aiSettingsSection, /UnlockKeyhole|requestUnlock|unlockRules|setUnlocked/);
 assert.doesNotMatch(aiSettingsSection, /window\.confirm\(copy\.reset/);
 assert.doesNotMatch(aiSettingsSection, /window\.confirm/);
@@ -210,11 +238,16 @@ assert.doesNotMatch(settingsWorkspace, /lastSavedAISettingsRef|queuedAISavesRef/
 assert.match(saveController, /while \(desiredSnapshot && desiredSnapshot\.signature !== persistedSignature\)/);
 assert.match(saveController, /persistedSignature = undefined/);
 assert.match(saveController, /onPersisted\?\.\(result, snapshot, isLatest\)/);
-assert.match(settingsWorkspace, /removeBackgroundImage\(previousImageId\)/);
+assert.doesNotMatch(settingsWorkspace, /removeBackgroundImage|appBackground/);
+assert.match(aboutSettings, /APP_LICENSE_URL/);
+assert.match(aboutSettings, /THIRD_PARTY_NOTICES_URL/);
+assert.match(aboutSettings, /SOURCE_HAN_SANS_LICENSE_URL/);
+assert.match(aboutSettings, /SOURCE_HAN_SERIF_LICENSE_URL/);
 assert.match(settingsLayout, /function SettingsSectionHeader/);
 assert.match(settingsLayout, /function SettingsPageHeading/);
 assert.match(settingsLayout, /function SettingsGroup/);
 assert.match(settingsLayout, /function SettingsRow/);
+assert.match(settingsLayout, /<h2 className="app-text-primary text-lg/);
 assert.doesNotMatch(preferences, /isSettingsOpen|openSettings|closeSettings/);
 
 const genericPresetDestination = createSettingsDestination("ai", ["library", "preset", "lyrical"]);

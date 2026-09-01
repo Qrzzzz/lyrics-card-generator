@@ -20,6 +20,12 @@ type AIUiCopy = {
   model: string;
   modelPlaceholder: string;
   modelTip: string;
+  testConnection: string;
+  testingConnection: string;
+  cancelConnectionTest: string;
+  connectionTestNotice: string;
+  connectionTestSucceeded: string;
+  connectionTestFailed: string;
   temperature: string;
   temperatureTip: string;
   defaultStyle: string;
@@ -86,6 +92,12 @@ const AI_UI_COPY: Record<Locale, AIUiCopy> = {
     model: "Model",
     modelPlaceholder: "输入厂商提供的模型标识符",
     modelTip: "必须准确填写 AI 厂商文档中的模型标识符；这不是显示名称，也不会由应用自动猜测或推荐。",
+    testConnection: "测试连接",
+    testingConnection: "正在测试连接…",
+    cancelConnectionTest: "取消测试",
+    connectionTestNotice: "将向服务商发送固定的最小测试请求，可能产生一次请求或少量用量；不会发送歌词或其他用户内容。",
+    connectionTestSucceeded: "连接测试成功",
+    connectionTestFailed: "连接测试失败。",
     temperature: "Temperature",
     temperatureTip: "控制表达随机度，范围 0–2，默认 0.7。数值越低越稳定；Reasoning 模式下部分厂商会忽略此项。",
     defaultStyle: "默认翻译风格",
@@ -150,6 +162,12 @@ const AI_UI_COPY: Record<Locale, AIUiCopy> = {
     model: "Model",
     modelPlaceholder: "輸入服務商提供的模型識別碼",
     modelTip: "必須準確填入 AI 服務商文件中的模型識別碼；這不是顯示名稱，應用程式也不會自動猜測或推薦。",
+    testConnection: "測試連線",
+    testingConnection: "正在測試連線…",
+    cancelConnectionTest: "取消測試",
+    connectionTestNotice: "將向服務商傳送固定的最小測試請求，可能產生一次請求或少量用量；不會傳送歌詞或其他使用者內容。",
+    connectionTestSucceeded: "連線測試成功",
+    connectionTestFailed: "連線測試失敗。",
     temperature: "Temperature",
     temperatureTip: "控制輸出的隨機程度，範圍為 0–2，預設值為 0.7。數值越低越穩定；Reasoning 模式下部分服務商可能忽略此項。",
     defaultStyle: "預設翻譯風格",
@@ -214,6 +232,12 @@ const AI_UI_COPY: Record<Locale, AIUiCopy> = {
     model: "Model",
     modelPlaceholder: "Enter the provider model identifier",
     modelTip: "Enter the exact model identifier from your provider documentation. This is not a display name and the app does not guess or recommend one.",
+    testConnection: "Test connection",
+    testingConnection: "Testing connection…",
+    cancelConnectionTest: "Cancel test",
+    connectionTestNotice: "Sends one fixed minimal request to the provider and may incur a request or small amount of usage. No lyrics or other user content is sent.",
+    connectionTestSucceeded: "Connection test succeeded",
+    connectionTestFailed: "Connection test failed.",
     temperature: "Temperature",
     temperatureTip: "Controls randomness from 0–2; the default is 0.7. Lower values are more stable. Some providers ignore this in reasoning mode.",
     defaultStyle: "Default Translation Style",
@@ -278,6 +302,12 @@ const AI_UI_COPY: Record<Locale, AIUiCopy> = {
     model: "Modèle",
     modelPlaceholder: "Saisissez l’identifiant du modèle fourni",
     modelTip: "Saisissez exactement l’identifiant indiqué dans la documentation du prestataire. Ce n’est pas un nom d’affichage et l’application ne le devine ni ne le recommande.",
+    testConnection: "Tester la connexion",
+    testingConnection: "Test de la connexion…",
+    cancelConnectionTest: "Annuler le test",
+    connectionTestNotice: "Envoie une requête minimale fixe au prestataire, pouvant entraîner une requête ou une faible consommation. Aucune parole ni autre donnée utilisateur n’est envoyée.",
+    connectionTestSucceeded: "Test de connexion réussi",
+    connectionTestFailed: "Échec du test de connexion.",
     temperature: "Température",
     temperatureTip: "Contrôle le degré d’aléatoire entre 0 et 2 ; la valeur par défaut est 0,7. Une valeur basse est plus stable. Certains prestataires ignorent ce réglage en mode Reasoning.",
     defaultStyle: "Style de traduction par défaut",
@@ -342,6 +372,12 @@ const AI_UI_COPY: Record<Locale, AIUiCopy> = {
     model: "モデル",
     modelPlaceholder: "プロバイダーのモデル識別子を入力",
     modelTip: "プロバイダーのドキュメントに記載された正確なモデル識別子を入力してください。表示名ではなく、アプリが推測または推奨することもありません。",
+    testConnection: "接続をテスト",
+    testingConnection: "接続をテスト中…",
+    cancelConnectionTest: "テストをキャンセル",
+    connectionTestNotice: "プロバイダーへ固定の最小テストリクエストを 1 回送信するため、少量の利用が発生する場合があります。歌詞やその他のユーザー内容は送信しません。",
+    connectionTestSucceeded: "接続テストに成功しました",
+    connectionTestFailed: "接続テストに失敗しました。",
     temperature: "Temperature",
     temperatureTip: "出力のランダム性を 0〜2 の範囲で調整します。初期値は 0.7 で、低いほど安定します。Reasoning モードでは無視される場合があります。",
     defaultStyle: "既定の翻訳スタイル",
@@ -406,6 +442,12 @@ const AI_UI_COPY: Record<Locale, AIUiCopy> = {
     model: "Modelo",
     modelPlaceholder: "Introduce el identificador del modelo",
     modelTip: "Introduce exactamente el identificador indicado en la documentación del proveedor. No es un nombre visible y la aplicación no lo adivina ni recomienda.",
+    testConnection: "Probar conexión",
+    testingConnection: "Probando conexión…",
+    cancelConnectionTest: "Cancelar prueba",
+    connectionTestNotice: "Envía una solicitud mínima fija al proveedor y puede generar una solicitud o un uso pequeño. No se envían letras ni otro contenido del usuario.",
+    connectionTestSucceeded: "Prueba de conexión correcta",
+    connectionTestFailed: "Falló la prueba de conexión.",
     temperature: "Temperatura",
     temperatureTip: "Controla la aleatoriedad entre 0 y 2; el valor predeterminado es 0,7. Los valores bajos son más estables. Algunos proveedores ignoran esta opción en modo Reasoning.",
     defaultStyle: "Estilo de traducción predeterminado",

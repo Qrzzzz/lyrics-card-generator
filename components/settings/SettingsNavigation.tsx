@@ -124,7 +124,7 @@ export function SettingsNavigation({
         </button>
         <AnimatePresence initial={false}>
           {mobileMenuOpen ? (
-            <motion.div
+            <motion.nav
               id="settings-category-menu"
               aria-label={ariaLabel}
               className="settings-navigation-mobile__menu"
@@ -145,7 +145,7 @@ export function SettingsNavigation({
                   <span className="truncate">{label}</span>
                 </button>
               ))}
-            </motion.div>
+            </motion.nav>
           ) : null}
         </AnimatePresence>
       </div>

@@ -171,6 +171,7 @@ async function main() {
   assert.equal(normalizeImportHistoryDocument({ schemaVersion: 99, records: [] }), null);
   assert.equal(withHistoryLimit({ schemaVersion: 1, records: Array(12).fill(link) }, 5).records.length, 5);
   assert.equal(withHistoryLimit({ schemaVersion: 1, records: Array(12).fill(link) }, 10).records.length, 10);
+  assert.equal(withHistoryLimit({ schemaVersion: 1, records: Array(12).fill(link) }, "none").records.length, 0);
   assert.equal(withHistoryLimit({ schemaVersion: 1, records: Array(12).fill(link) }, "unlimited").records.length, 12);
 
   const legacySecond = normalizeImportHistoryRecord({
@@ -793,7 +794,7 @@ async function main() {
     assert.equal((await manualStore.stats()).total, beforeConflictTotal);
     assert.equal(await fs.readFile(manualTarget, "utf8"), beforeConflictDisk);
 
-    for (const limit of [5, 10, "unlimited"]) {
+    for (const limit of ["none", 5, 10, "unlimited"]) {
       const limitTarget = path.join(root, "app-data", `manual-limit-${limit}.json`);
       let limitId = 0;
       let limitNow = timestamp + 1_000;
@@ -802,7 +803,6 @@ async function main() {
         now: () => ++limitNow,
         createId: () => `limit-${limit}-${++limitId}`
       });
-      const expectedTotal = limit === "unlimited" ? 12 : limit;
       const created = [];
       for (let index = 0; index < 12; index += 1) {
         created.push(await limitStore.createManualSave(
@@ -810,7 +810,27 @@ async function main() {
           limit
         ));
       }
-      assert.equal((await limitStore.stats()).total, expectedTotal, `${limit} trims manual save creates correctly`);
+      const manualStats = await limitStore.stats();
+      assert.deepEqual(
+        { total: manualStats.total, automaticTotal: manualStats.automaticTotal, manualTotal: manualStats.manualTotal },
+        { total: 12, automaticTotal: 0, manualTotal: 12 },
+        `${limit} never trims explicit manual archives`
+      );
+      const automaticResult = await limitStore.upsert(linkCandidate(8_000), limit);
+      const mixedStats = await limitStore.stats();
+      assert.deepEqual(
+        { total: mixedStats.total, automaticTotal: mixedStats.automaticTotal, manualTotal: mixedStats.manualTotal },
+        limit === "none"
+          ? { total: 12, automaticTotal: 0, manualTotal: 12 }
+          : { total: 13, automaticTotal: 1, manualTotal: 12 },
+        `${limit} applies only to automatic imports`
+      );
+      const retainedAutomatic = await limitStore.get(automaticResult.id);
+      assert.equal(
+        retainedAutomatic?.id ?? null,
+        limit === "none" ? null : automaticResult.id,
+        `${limit} returns the import result while honoring automatic retention`
+      );
       const retained = (await limitStore.list({ offset: 0, limit: 50 })).records.at(-1);
       const beforeUpdateTotal = (await limitStore.stats()).total;
       await limitStore.updateManualSave(
