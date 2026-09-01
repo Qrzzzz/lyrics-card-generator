@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v6.2.3.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v6.2.4.zh-CN.md">发布说明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">在线 Web Lite 版</a> ·
   <a href="./docs/web-lite-browser-support.md">Web Lite 浏览器支持</a> ·
   <a href="./docs/desktop.md">桌面维护文档</a> ·
@@ -73,24 +73,24 @@
 
 ## 📦 下载与安装
 
-v6.2.3 已发布，可从 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下载：
+v6.2.4 已发布，可从 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下载：
 
-* Windows x64 安装版：`Lyrics.Card.Generator.Setup.6.2.3.exe`
+* Windows x64 安装版：`Lyrics.Card.Generator.Setup.6.2.4.exe`
 
 从 v6.2.2 起只提供 Windows x64 Setup 安装包。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v6.2.3 更新重点
+### v6.2.4 更新重点
 
-* 歌曲信息、歌词与底部附件区域现在使用相同的局部可读性阴影深度。
-* 各区域的渐变先合并为单一透明度遮罩，交叠处不再重复加深，消除页头或页脚突兀的深色带。
-* 移除平台 Logo、分享人和生成水印自身的额外投影，让实时预览与最终导出保持一致。
+* 重构设置体系，将卡片页脚默认值、文件导出、AI 连接与翻译、历史和存储按真实作用域重新分组。
+* 设置与 AI 保存失败现在会在全局持续提示并支持重试；页脚默认值只影响新建卡片，不再覆盖当前文档。
+* 新增安全的 AI 连接测试、自动历史“不保留”、应用偏好重置、字体校验和离线许可入口，并补齐无障碍体验。
 
 ## 🌐 多语言发布说明
 
 GitHub Release 默认展示简体中文摘要，完整说明见：
-[简体中文](./docs/releases/v6.2.3.zh-CN.md) · [繁體中文](./docs/releases/v6.2.3.zh-TW.md) · [English](./docs/releases/v6.2.3.en.md) · [Français](./docs/releases/v6.2.3.fr.md) · [日本語](./docs/releases/v6.2.3.ja.md) · [Español](./docs/releases/v6.2.3.es.md)
+[简体中文](./docs/releases/v6.2.4.zh-CN.md) · [繁體中文](./docs/releases/v6.2.4.zh-TW.md) · [English](./docs/releases/v6.2.4.en.md) · [Français](./docs/releases/v6.2.4.fr.md) · [日本語](./docs/releases/v6.2.4.ja.md) · [Español](./docs/releases/v6.2.4.es.md)
 
 <a id="主要功能"></a>
 

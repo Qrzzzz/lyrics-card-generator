@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v6.2.3.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v6.2.4.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="./docs/development.en.md">Développement local</a> ·
@@ -74,24 +74,24 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 ## 📦 Téléchargement et installation
 
-La v6.2.3 est publiée et disponible dans [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
+La v6.2.4 est publiée et disponible dans [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
 
-* Programme d’installation Windows x64 : `Lyrics.Card.Generator.Setup.6.2.3.exe`
+* Programme d’installation Windows x64 : `Lyrics.Card.Generator.Setup.6.2.4.exe`
 
 À partir de la v6.2.2, le programme Setup Windows x64 est le seul paquet distribué.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### Points forts de la v6.2.3
+### Points forts de la v6.2.4
 
-* Les métadonnées du morceau, les paroles et les accessoires du pied utilisent désormais la même profondeur d’ombre de lisibilité locale.
-* Les dégradés régionaux sont réunis dans un masque alpha unique : leur chevauchement ne peut plus assombrir deux fois ni former de bande sombre en haut ou en bas.
-* Les ombres supplémentaires du logo de plateforme, de la mention de partage et du filigrane généré ont été retirées afin d’aligner l’aperçu et l’export.
+* Les réglages sont réorganisés selon leur portée réelle : valeurs par défaut du pied des nouvelles cartes, export de fichiers, connexion et traduction IA, historique et stockage.
+* Les échecs d’enregistrement des réglages et de l’IA restent désormais visibles globalement avec une option de nouvelle tentative ; les valeurs du pied ne modifient plus le document courant.
+* Cette version ajoute un test de connexion IA sécurisé, l’option de ne pas conserver l’historique automatique, une réinitialisation ciblée, la validation des polices, des licences hors ligne et des améliorations d’accessibilité.
 
 ## 🌐 Notes de publication multilingues
 
 Par défaut, GitHub Release affiche un résumé en chinois simplifié. Consultez les notes complètes :
-[简体中文](./docs/releases/v6.2.3.zh-CN.md) · [繁體中文](./docs/releases/v6.2.3.zh-TW.md) · [English](./docs/releases/v6.2.3.en.md) · [Français](./docs/releases/v6.2.3.fr.md) · [日本語](./docs/releases/v6.2.3.ja.md) · [Español](./docs/releases/v6.2.3.es.md)
+[简体中文](./docs/releases/v6.2.4.zh-CN.md) · [繁體中文](./docs/releases/v6.2.4.zh-TW.md) · [English](./docs/releases/v6.2.4.en.md) · [Français](./docs/releases/v6.2.4.fr.md) · [日本語](./docs/releases/v6.2.4.ja.md) · [Español](./docs/releases/v6.2.4.es.md)
 
 <a id="fonctionnalités-principales"></a>
 
