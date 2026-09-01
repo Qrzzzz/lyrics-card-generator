@@ -8,6 +8,8 @@ const projectRoot = path.resolve(scriptsDirectory, "..");
 export const pagesFiles = [
   "index.html",
   "public/app-icon.png",
+  "public/licenses/LICENSE-Lyrics-Card-Generator.txt",
+  "public/licenses/THIRD-PARTY-NOTICES.txt",
   "public/fonts/SourceHanSansSC-Heavy.otf",
   "public/fonts/LICENSE-SourceHanSans.txt",
   "public/fonts/SourceHanSerifSC-Heavy.otf",

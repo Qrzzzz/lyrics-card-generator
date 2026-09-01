@@ -4,7 +4,8 @@
     "fetchLyrics": 16384,
     "searchSong": 8192,
     "resolveSearchedSong": 4096,
-    "aiTranslate": 1048576
+    "aiTranslate": 1048576,
+    "aiConnectionTest": 32768
   },
   "upstreamResponseBytes": {
     "lrclibSearch": 4194304,
@@ -12,12 +13,14 @@
     "neteaseDetail": 524288,
     "neteaseLyrics": 2097152,
     "githubRelease": 524288,
-    "aiProviderBody": 8388608
+    "aiProviderBody": 8388608,
+    "aiConnectionTest": 65536
   },
   "upstreamTimeoutMs": {
     "lrclib": 8000,
     "netease": 8000,
-    "github": 10000
+    "github": 10000,
+    "aiConnectionTest": 10000
   },
   "aiStream": {
     "singleEventBytes": 262144,

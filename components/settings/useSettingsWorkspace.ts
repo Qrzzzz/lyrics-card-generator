@@ -10,14 +10,15 @@ import {
   type SaveSnapshot,
   type SaveState
 } from "@/lib/ai/ai-settings-save-controller";
-import { clearAISettingsApiKey, loadAISettings, saveAISettings } from "@/lib/ai/client";
+import { clearAISettingsApiKey, loadAISettings, saveAISettings, testAIConnection } from "@/lib/ai/client";
 import { DEFAULT_AI_SETTINGS, type AISettings, type AISettingsSummary } from "@/lib/ai/types";
 import { getAIUiCopy } from "@/lib/ai/ui-copy";
 import { shutdownCoordinator } from "@/lib/persistence/shutdown-coordinator";
-import { removeBackgroundImage } from "@/lib/settings/background-storage";
 import { runFireAndForgetSave } from "@/lib/settings/fire-and-forget-save";
 import type { AppPreferencesPersistenceOptions } from "@/lib/settings/app-preferences";
 import type { UserSettings } from "@/lib/settings/types";
+import { settingsCopy } from "@/lib/settings/copy";
+import type { SettingsPersistenceIssueChange, SettingsPersistenceSource } from "@/lib/settings/persistence-issue";
 import type { Locale } from "@/lib/types";
 
 export type { SaveState } from "@/lib/ai/ai-settings-save-controller";
@@ -31,6 +32,7 @@ type SyncErrorKind = "load" | "save" | null;
 
 type SettingsWorkspaceInput = {
   open: boolean;
+  loadAI: boolean;
   requestedTab?: SettingsTabId;
   locale: Locale;
   userSettings: UserSettings;
@@ -40,10 +42,12 @@ type SettingsWorkspaceInput = {
   onClose: () => void;
   onSaved: (settings: AISettingsSummary, message?: string) => void;
   onNotify: ToastNotifier;
+  onPersistenceIssueChange: SettingsPersistenceIssueChange;
 };
 
 export function useSettingsWorkspace({
   open,
+  loadAI,
   requestedTab,
   locale,
   userSettings,
@@ -52,7 +56,8 @@ export function useSettingsWorkspace({
   onUserSettingsChange,
   onClose,
   onSaved,
-  onNotify
+  onNotify,
+  onPersistenceIssueChange
 }: SettingsWorkspaceInput) {
   const aiCopy = getAIUiCopy(locale);
   const [activeTab, setActiveTab] = useState<SettingsTabId>("general");
@@ -61,6 +66,8 @@ export function useSettingsWorkspace({
   const [apiKey, setApiKey] = useState("");
   const [hasApiKey, setHasApiKey] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [aiInitialized, setAIInitialized] = useState(false);
+  const [aiLoadAttempt, setAILoadAttempt] = useState(0);
   const [saveState, setSaveState] = useState<SaveState>("saved");
   const [syncErrorKind, setSyncErrorKind] = useState<SyncErrorKind>(null);
   const [isClearingApiKey, setIsClearingApiKey] = useState(false);
@@ -68,11 +75,31 @@ export function useSettingsWorkspace({
   const notifyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const aiSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const aiSettingsLoadedRef = useRef(false);
+  const aiLoadStartedRef = useRef(false);
+  const lastAIErrorRef = useRef("");
   const isClearingApiKeyRef = useRef(false);
   // Serialize saves and key deletion so independent desktop writes cannot race.
   const aiWriteQueueRef = useRef<Promise<void>>(Promise.resolve());
-  const latestLifecycleRef = useRef({ locale, onSaved });
-  latestLifecycleRef.current = { locale, onSaved };
+  const latestLifecycleRef = useRef({
+    locale,
+    userSettings,
+    onSaved,
+    onNotify,
+    onPersistenceIssueChange,
+    onUserSettingsPreview,
+    onUserSettingsChange,
+    onLocaleChange
+  });
+  latestLifecycleRef.current = {
+    locale,
+    userSettings,
+    onSaved,
+    onNotify,
+    onPersistenceIssueChange,
+    onUserSettingsPreview,
+    onUserSettingsChange,
+    onLocaleChange
+  };
   const latestAISaveValueRef = useRef<AISaveValue>({ settings, apiKey });
   latestAISaveValueRef.current = { settings, apiKey };
   const saveControllerRef = useRef<LatestSaveController<AISaveValue> | null>(null);
@@ -81,6 +108,60 @@ export function useSettingsWorkspace({
     const result = aiWriteQueueRef.current.then(write);
     aiWriteQueueRef.current = result.then(() => undefined, () => undefined);
     return result;
+  }
+
+  function clearPersistenceIssue(source: SettingsPersistenceSource) {
+    latestLifecycleRef.current.onPersistenceIssueChange(source, null);
+  }
+
+  function publishPersistenceFailure(
+    source: SettingsPersistenceSource,
+    message: string,
+    retry: () => Promise<void>
+  ) {
+    const retryLabel = settingsCopy[latestLifecycleRef.current.locale].retrySave;
+    latestLifecycleRef.current.onPersistenceIssueChange(source, { message, retryLabel, retry });
+    latestLifecycleRef.current.onNotify(message, "error");
+  }
+
+  async function retryUserSettings(
+    next: UserSettings,
+    previous: UserSettings,
+    options?: AppPreferencesPersistenceOptions
+  ) {
+    const lifecycle = latestLifecycleRef.current;
+    setDraft(next);
+    lifecycle.onUserSettingsPreview(next);
+    try {
+      await lifecycle.onUserSettingsChange(next, options);
+      clearPersistenceIssue("preferences");
+      queueSavedNotification();
+    } catch (saveError) {
+      setDraft((current) => current === next ? previous : current);
+      const message = normalizeAIErrorMessage(
+        saveError,
+        lifecycle.locale,
+        settingsCopy[lifecycle.locale].preferenceSaveFailed
+      );
+      publishPersistenceFailure("preferences", message, () => retryUserSettings(next, previous, options));
+      throw saveError;
+    }
+  }
+
+  async function retryLocale(nextLocale: Locale) {
+    try {
+      await latestLifecycleRef.current.onLocaleChange(nextLocale);
+      clearPersistenceIssue("preferences");
+      queueSavedNotification(getAIUiCopy(nextLocale).settingsSaved);
+    } catch (saveError) {
+      const message = normalizeAIErrorMessage(
+        saveError,
+        nextLocale,
+        settingsCopy[nextLocale].preferenceSaveFailed
+      );
+      publishPersistenceFailure("preferences", message, () => retryLocale(nextLocale));
+      throw saveError;
+    }
   }
 
   if (!saveControllerRef.current) {
@@ -105,11 +186,16 @@ export function useSettingsWorkspace({
         setSettings(nextSettings);
         setHasApiKey(configured);
         latestLifecycleRef.current.onSaved(saved);
+        clearPersistenceIssue("ai");
+        lastAIErrorRef.current = "";
       },
       onError: (saveError) => {
         const currentLocale = latestLifecycleRef.current.locale;
-        setError(normalizeAIErrorMessage(saveError, currentLocale, getAIUiCopy(currentLocale).settingsSaveFailed));
+        const message = normalizeAIErrorMessage(saveError, currentLocale, getAIUiCopy(currentLocale).settingsSaveFailed);
+        lastAIErrorRef.current = message;
+        setError(message);
         setSyncErrorKind("save");
+        publishPersistenceFailure("ai", message, flushPendingAISettings);
       }
     });
   }
@@ -128,7 +214,7 @@ export function useSettingsWorkspace({
     await saveController.whenIdle();
     await aiWriteQueueRef.current;
     if (saveController.getState().status === "error") {
-      throw new Error(error || getAIUiCopy(latestLifecycleRef.current.locale).settingsSaveFailed);
+      throw new Error(lastAIErrorRef.current || getAIUiCopy(latestLifecycleRef.current.locale).settingsSaveFailed);
     }
   }
 
@@ -139,11 +225,14 @@ export function useSettingsWorkspace({
     if (!open) return;
     if (requestedTab) setActiveTab(requestedTab);
     setDraft(userSettings);
-    setApiKey("");
+  }, [open]);
+
+  useEffect(() => {
+    if (!loadAI || aiSettingsLoadedRef.current || aiLoadStartedRef.current) return;
+    aiLoadStartedRef.current = true;
     setError("");
     setSyncErrorKind(null);
     setIsLoading(true);
-    aiSettingsLoadedRef.current = false;
 
     let active = true;
     const saveController = saveControllerRef.current!;
@@ -161,6 +250,7 @@ export function useSettingsWorkspace({
         setHasApiKey(configured);
         saveController.resetPersisted(createAISaveSnapshot(next, ""));
         aiSettingsLoadedRef.current = true;
+        setAIInitialized(true);
       })
       .catch((loadError) => {
         if (active) {
@@ -170,13 +260,14 @@ export function useSettingsWorkspace({
         }
       })
       .finally(() => {
+        aiLoadStartedRef.current = false;
         if (active) setIsLoading(false);
       });
 
     return () => {
       active = false;
     };
-  }, [open]);
+  }, [aiLoadAttempt, loadAI]);
 
   useEffect(() => {
     if (!open || !requestedTab) return;
@@ -210,25 +301,23 @@ export function useSettingsWorkspace({
 
   function updateDraft(next: UserSettings, options?: AppPreferencesPersistenceOptions) {
     const previous = draft;
-    setDraft((current) => {
-      const previousImageId = current.appBackground.imageId;
-      const nextImageId = next.appBackground.imageId;
-      if (previousImageId && previousImageId !== nextImageId) {
-        void removeBackgroundImage(previousImageId).catch(() => undefined);
-      }
-      return next;
-    });
+    setDraft(next);
     onUserSettingsPreview(next);
     runFireAndForgetSave(
       () => onUserSettingsChange(next, options),
       {
-        onSuccess: () => queueSavedNotification(),
+        onSuccess: () => {
+          clearPersistenceIssue("preferences");
+          queueSavedNotification();
+        },
         onError: (saveError) => {
           // Roll back only if the failed optimistic snapshot is still the visible draft.
           setDraft((current) => current === next ? previous : current);
-          setError(normalizeAIErrorMessage(saveError, locale, aiCopy.settingsSaveFailed));
+          const message = normalizeAIErrorMessage(saveError, locale, settingsCopy[locale].preferenceSaveFailed);
+          setError(message);
           setSyncErrorKind("save");
           setSaveState("error");
+          publishPersistenceFailure("preferences", message, () => retryUserSettings(next, previous, options));
         }
       }
     );
@@ -238,11 +327,16 @@ export function useSettingsWorkspace({
     runFireAndForgetSave(
       () => onLocaleChange(nextLocale),
       {
-        onSuccess: () => queueSavedNotification(getAIUiCopy(nextLocale).settingsSaved),
+        onSuccess: () => {
+          clearPersistenceIssue("preferences");
+          queueSavedNotification(getAIUiCopy(nextLocale).settingsSaved);
+        },
         onError: (saveError) => {
-          setError(normalizeAIErrorMessage(saveError, nextLocale, getAIUiCopy(nextLocale).settingsSaveFailed));
+          const message = normalizeAIErrorMessage(saveError, nextLocale, settingsCopy[nextLocale].preferenceSaveFailed);
+          setError(message);
           setSyncErrorKind("save");
           setSaveState("error");
+          publishPersistenceFailure("preferences", message, () => retryLocale(nextLocale));
         }
       }
     );
@@ -257,7 +351,7 @@ export function useSettingsWorkspace({
     if (aiSettingsLoadedRef.current) {
       const saveController = saveControllerRef.current!;
       saveController.setDesired(createAISaveSnapshot(settings, apiKey));
-      void saveController.flushLatest();
+      void flushPendingAISettings().catch(() => undefined);
     }
     onClose();
   }
@@ -304,6 +398,7 @@ export function useSettingsWorkspace({
       setApiKey("");
       const clearedSnapshot = createAISaveSnapshot(nextSettings, "");
       saveController.resetPersisted(clearedSnapshot);
+      clearPersistenceIssue("ai");
 
       if (saveFailedBeforeClear) {
         saveController.setDesired(desiredAfterClear);
@@ -321,13 +416,28 @@ export function useSettingsWorkspace({
       }
     } catch (clearError) {
       setHasApiKey(true);
-      setError(normalizeAIErrorMessage(clearError, locale, aiCopy.apiKeyClearFailed));
+      const message = normalizeAIErrorMessage(clearError, locale, aiCopy.apiKeyClearFailed);
+      setError(message);
       setSyncErrorKind("save");
       setSaveState("error");
+      publishPersistenceFailure("ai", message, handleClearApiKey);
     } finally {
       isClearingApiKeyRef.current = false;
       setIsClearingApiKey(false);
     }
+  }
+
+  async function handleTestConnection(signal: AbortSignal) {
+    // The test reads durable settings. A failed save therefore prevents any provider request.
+    await flushPendingAISettings();
+    await testAIConnection({ signal });
+  }
+
+  function retryAISettingsLoad() {
+    if (aiSettingsLoadedRef.current) return;
+    setError("");
+    setSyncErrorKind(null);
+    setAILoadAttempt((attempt) => attempt + 1);
   }
 
   function queueSavedNotification(message = aiCopy.settingsSaved) {
@@ -349,6 +459,7 @@ export function useSettingsWorkspace({
       if (!isClearingApiKeyRef.current) setApiKey(nextApiKey);
     },
     hasApiKey,
+    aiInitialized,
     isLoading,
     isSaving: saveState === "saving",
     saveState,
@@ -357,6 +468,8 @@ export function useSettingsWorkspace({
     error,
     handleLocaleChange,
     handleClearApiKey,
+    handleTestConnection,
+    retryAISettingsLoad,
     closeWorkspace
   };
 }

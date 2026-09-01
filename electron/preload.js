@@ -126,9 +126,6 @@ contextBridge.exposeInMainWorld("lyricsCardDesktopBridge", {
   copyImageToClipboard: (dataUrl) => isClipboardPngDataUrl(dataUrl)
     ? ipcRenderer.invoke("lyrics-card:clipboard-write-image", dataUrl)
     : Promise.resolve(false),
-  saveBackgroundImage: () => ipcRenderer.invoke("lyrics-card:background-save"),
-  readBackgroundImage: (imageId) => ipcRenderer.invoke("lyrics-card:background-read", imageId),
-  removeBackgroundImage: (imageId) => ipcRenderer.invoke("lyrics-card:background-remove", imageId),
   registerImportFile: (file, kind) => {
     // Resolve the native path only in preload; main converts it into a sender-bound, one-use token.
     const filePath = webUtils.getPathForFile(file);
@@ -169,6 +166,8 @@ contextBridge.exposeInMainWorld("lyricsCardDesktopBridge", {
   loadAISettings: () => ipcRenderer.invoke("lyrics-card:ai-settings-load"),
   saveAISettings: (settings) => ipcRenderer.invoke("lyrics-card:ai-settings-save", settings),
   clearAISettingsApiKey: () => ipcRenderer.invoke("lyrics-card:ai-settings-api-key-clear"),
+  startAIConnectionTest: (requestId) => ipcRenderer.invoke("lyrics-card:ai-connection-test", requestId),
+  cancelAIConnectionTest: (requestId) => ipcRenderer.invoke("lyrics-card:ai-connection-test-cancel", requestId),
   startAITranslation: (requestId, request) => ipcRenderer.invoke("lyrics-card:ai-translate", requestId, request),
   cancelAITranslation: (requestId) => ipcRenderer.invoke("lyrics-card:ai-translate-cancel", requestId),
   onAITranslationChunk: (callback) => {

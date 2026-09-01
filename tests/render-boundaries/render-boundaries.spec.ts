@@ -236,12 +236,6 @@ async function installDesktopFixture(page: Page) {
       uiAccentMode: "album-dynamic",
       uiAccentPreset: "purple",
       uiCustomAccentColor: "#7C3AED",
-      appBackground: {
-        mode: "album-dynamic",
-        solidColor: "#080910",
-        overlayOpacity: 0.46,
-        blurAmount: 24
-      },
       defaultShowGeneratedWatermark: false,
       defaultShowSharedBy: false,
       defaultSharedByText: "",
@@ -326,9 +320,6 @@ async function installDesktopFixture(page: Page) {
       listSystemFonts: async () => [],
       pickFont: async () => null,
       openExternal: async () => true,
-      saveBackgroundImage: async () => null,
-      readBackgroundImage: async () => undefined,
-      removeBackgroundImage: async () => true,
       registerImportFile: async () => null,
       listImportHistory: async () => {
         fixtureWindow.__historyQueries = (fixtureWindow.__historyQueries ?? 0) + 1;

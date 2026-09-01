@@ -163,6 +163,7 @@ function DeferredSurfaceFixture({ controller }: { controller: LoaderController }
         onClose={() => closeSurface("settings")}
         onSaved={() => undefined}
         onNotify={() => undefined}
+        onPersistenceIssueChange={() => undefined}
       />
 
       <section

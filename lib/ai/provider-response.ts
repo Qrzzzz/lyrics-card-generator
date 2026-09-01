@@ -8,11 +8,12 @@ export type ProviderResponseBody =
 
 export async function readProviderResponseBody(
   response: Response,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  limitBytes = resourceBudgets.upstreamResponseBytes.aiProviderBody
 ): Promise<ProviderResponseBody> {
   const text = await readResponseTextBounded(
     response,
-    resourceBudgets.upstreamResponseBytes.aiProviderBody,
+    limitBytes,
     signal
   );
   if (!text.trim()) return { kind: "empty" };

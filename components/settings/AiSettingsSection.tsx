@@ -13,10 +13,12 @@ import {
   LockKeyhole,
   Plus,
   RotateCcw,
+  SlidersHorizontal,
   Trash2
 } from "lucide-react";
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { recordRenderBoundary } from "@/components/editor/render-boundary-diagnostics";
+import { normalizeAIErrorMessage } from "@/components/editor/utils/normalizeAIErrorMessage";
 import {
   ActionButton,
   FieldLabel,
@@ -29,7 +31,7 @@ import { SettingsConfirmDialog } from "@/components/settings/SettingsConfirmDial
 import { SettingsPageHeading } from "@/components/settings/SettingsLayout";
 import { getAISettingsPath, resolveAISettingsPage, type AIPage } from "@/components/settings/ai-settings-routing";
 import { getDefaultFormatRules, getDefaultStylePrompt } from "@/lib/ai/prompt";
-import { getAIPromptUiCopy } from "@/lib/ai/prompt-ui-copy";
+import { formatAIPromptUiText, getAIPromptUiCopy } from "@/lib/ai/prompt-ui-copy";
 import { getLocalePromptOverrides, isValidCustomPreset, setLocalePromptOverrides } from "@/lib/ai/settings-normalize";
 import { EDITABLE_STYLE_ORDER, getTranslationPresets, getTranslationStyles, isEditableTranslationStyle, isTranslationStyle } from "@/lib/ai/styles";
 import type { AICustomPreset, AIPromptLibrary, AISettings, EditableTranslationStyle } from "@/lib/ai/types";
@@ -48,6 +50,7 @@ export function AiSettingsSection({
   onSettingsChange,
   onApiKeyChange,
   onClearApiKey,
+  onTestConnection,
   onNavigate
 }: {
   open: boolean;
@@ -61,6 +64,7 @@ export function AiSettingsSection({
   onSettingsChange: (settings: AISettings) => void;
   onApiKeyChange: (apiKey: string) => void;
   onClearApiKey: () => void;
+  onTestConnection: (signal: AbortSignal) => Promise<void>;
   onNavigate: (path: string[], options?: { replace?: boolean }) => void;
 }) {
   recordRenderBoundary("SettingsAi");
@@ -128,6 +132,16 @@ export function AiSettingsSection({
           onSettingsChange={onSettingsChange}
           onApiKeyChange={onApiKeyChange}
           onClearApiKey={onClearApiKey}
+          onTestConnection={onTestConnection}
+        />
+      ) : page === "defaults" ? (
+        <TranslationDefaultsPage
+          settings={settings}
+          locale={locale}
+          copy={copy}
+          promptCopy={promptCopy}
+          isClearingApiKey={isClearingApiKey}
+          onSettingsChange={onSettingsChange}
         />
       ) : page === "library" ? (
         <PromptLibraryPage settings={settings} locale={locale} copy={promptCopy} onSettingsChange={onSettingsChange} onOpen={navigate} onCreateDraft={createDraft} />
@@ -161,23 +175,45 @@ function WorkspaceRoot({ copy, onOpen }: { copy: ReturnType<typeof getAIPromptUi
       />
       <div className="ai-workspace-destinations">
         <ExplorerCard variant="row" testId="ai-open-api" icon={<FileKey2 className="h-5 w-5" />} title={copy.apiConfiguration} description={copy.apiConfigurationDescription} action={copy.open} onClick={() => onOpen("api")} />
+        <ExplorerCard variant="row" testId="ai-open-defaults" icon={<SlidersHorizontal className="h-5 w-5" />} title={copy.translationDefaults} description={copy.translationDefaultsDescription} action={copy.open} onClick={() => onOpen("defaults")} />
         <ExplorerCard variant="row" testId="ai-open-library" icon={<FolderCog className="h-5 w-5" />} title={copy.promptLibrary} description={copy.promptLibraryDescription} action={copy.open} onClick={() => onOpen("library")} />
       </div>
     </div>
   );
 }
 
-function ApiConfigurationPage({ settings, apiKey, hasApiKey, locale, copy, promptCopy, isClearingApiKey, onSettingsChange, onApiKeyChange, onClearApiKey }: {
+function ApiConfigurationPage({ settings, apiKey, hasApiKey, locale, copy, promptCopy, isClearingApiKey, onSettingsChange, onApiKeyChange, onClearApiKey, onTestConnection }: {
   settings: AISettings; apiKey: string; hasApiKey: boolean; locale: Locale; copy: ReturnType<typeof getAIUiCopy>; promptCopy: ReturnType<typeof getAIPromptUiCopy>;
-  isClearingApiKey: boolean; onSettingsChange: (settings: AISettings) => void; onApiKeyChange: (value: string) => void; onClearApiKey: () => void;
+  isClearingApiKey: boolean; onSettingsChange: (settings: AISettings) => void; onApiKeyChange: (value: string) => void; onClearApiKey: () => void; onTestConnection: (signal: AbortSignal) => Promise<void>;
 }) {
   const baseUrlId = useId();
   const apiKeyId = useId();
   const modelId = useId();
-  const temperatureId = useId();
-  const defaultStyleId = useId();
-  const presets = getTranslationPresets(locale, settings.promptLibrary);
   const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
+  const [connectionState, setConnectionState] = useState<"idle" | "testing" | "success" | "error">("idle");
+  const [connectionError, setConnectionError] = useState("");
+  const connectionAbortRef = useRef<AbortController | null>(null);
+
+  useEffect(() => () => connectionAbortRef.current?.abort(), []);
+
+  async function runConnectionTest() {
+    connectionAbortRef.current?.abort();
+    const controller = new AbortController();
+    connectionAbortRef.current = controller;
+    setConnectionState("testing");
+    setConnectionError("");
+    try {
+      await onTestConnection(controller.signal);
+      if (!controller.signal.aborted) setConnectionState("success");
+    } catch (error) {
+      if (!controller.signal.aborted) {
+        setConnectionError(normalizeAIErrorMessage(error, locale, copy.connectionTestFailed));
+        setConnectionState("error");
+      }
+    } finally {
+      if (connectionAbortRef.current === controller) connectionAbortRef.current = null;
+    }
+  }
   return (
     <div className="grid gap-4">
       <SettingsPageHeading icon={<FileKey2 className="h-5 w-5" />} title={promptCopy.apiConfiguration} description={promptCopy.apiConfigurationDescription} />
@@ -198,20 +234,37 @@ function ApiConfigurationPage({ settings, apiKey, hasApiKey, locale, copy, promp
         <TextInput data-testid="ai-model-input" id={modelId} value={settings.model} disabled={isClearingApiKey} onChange={(event) => onSettingsChange({ ...settings, model: event.target.value })} placeholder={copy.modelPlaceholder} spellCheck={false} />
         <SettingTip>{copy.modelTip}</SettingTip>
       </FieldLabel>
-      <div className="grid gap-4 sm:grid-cols-2">
-        <FieldLabel label={copy.temperature} htmlFor={temperatureId}>
-          <TextInput data-testid="ai-temperature-input" id={temperatureId} type="number" min={0} max={2} step={0.1} value={settings.temperature} disabled={isClearingApiKey} onChange={(event) => onSettingsChange({ ...settings, temperature: Number(event.target.value) })} />
-          <SettingTip>{copy.temperatureTip}</SettingTip>
-        </FieldLabel>
-        <FieldLabel label={copy.defaultStyle} htmlFor={defaultStyleId}>
-          <SelectField data-testid="ai-default-style-select" id={defaultStyleId} value={settings.defaultStyle} disabled={isClearingApiKey} onChange={(event) => onSettingsChange({ ...settings, defaultStyle: event.target.value })}>
-            {presets.map((preset) => <option key={preset.id} value={preset.id}>{preset.name}</option>)}
-          </SelectField>
-          <SettingTip>{copy.defaultStyleTip}</SettingTip>
-        </FieldLabel>
+      <div className="settings-panel-card grid gap-3 p-4" data-testid="ai-connection-test-panel">
+        <SettingTip>{copy.connectionTestNotice}</SettingTip>
+        <div className="flex flex-wrap items-center gap-2">
+          <ActionButton
+            data-testid="test-ai-connection"
+            variant="primary"
+            loading={connectionState === "testing"}
+            disabled={isClearingApiKey}
+            onClick={() => void runConnectionTest()}
+          >
+            {connectionState === "testing" ? copy.testingConnection : copy.testConnection}
+          </ActionButton>
+          {connectionState === "testing" ? (
+            <ActionButton
+              data-testid="cancel-ai-connection-test"
+              onClick={() => {
+                connectionAbortRef.current?.abort();
+                setConnectionState("idle");
+              }}
+            >
+              {copy.cancelConnectionTest}
+            </ActionButton>
+          ) : null}
+        </div>
+        {connectionState === "success" ? (
+          <p role="status" className="status-success rounded-lg border px-3 py-2 text-sm">{copy.connectionTestSucceeded}</p>
+        ) : null}
+        {connectionState === "error" ? (
+          <p role="alert" className="status-danger rounded-lg border px-3 py-2 text-sm">{connectionError}</p>
+        ) : null}
       </div>
-      <ToggleRow label={copy.defaultReasoning} checked={settings.reasoningEnabled} disabled={isClearingApiKey} onChange={(reasoningEnabled) => onSettingsChange({ ...settings, reasoningEnabled })} />
-      <SettingTip>{copy.reasoningHint}</SettingTip>
       <SettingsConfirmDialog
         open={clearConfirmOpen}
         title={copy.clearApiKey}
@@ -225,6 +278,36 @@ function ApiConfigurationPage({ settings, apiKey, hasApiKey, locale, copy, promp
           onClearApiKey();
         }}
       />
+    </div>
+  );
+}
+
+function TranslationDefaultsPage({ settings, locale, copy, promptCopy, isClearingApiKey, onSettingsChange }: {
+  settings: AISettings;
+  locale: Locale;
+  copy: ReturnType<typeof getAIUiCopy>;
+  promptCopy: ReturnType<typeof getAIPromptUiCopy>;
+  isClearingApiKey: boolean;
+  onSettingsChange: (settings: AISettings) => void;
+}) {
+  const temperatureId = useId();
+  const defaultStyleId = useId();
+  const presets = getTranslationPresets(locale, settings.promptLibrary);
+  return (
+    <div className="grid gap-4">
+      <SettingsPageHeading icon={<SlidersHorizontal className="h-5 w-5" />} title={promptCopy.translationDefaults} description={promptCopy.translationDefaultsDescription} />
+      <FieldLabel label={copy.temperature} htmlFor={temperatureId}>
+        <TextInput data-testid="ai-temperature-input" id={temperatureId} type="number" min={0} max={2} step={0.1} value={settings.temperature} disabled={isClearingApiKey} onChange={(event) => onSettingsChange({ ...settings, temperature: Number(event.target.value) })} />
+        <SettingTip>{copy.temperatureTip}</SettingTip>
+      </FieldLabel>
+      <FieldLabel label={copy.defaultStyle} htmlFor={defaultStyleId}>
+        <SelectField data-testid="ai-default-style-select" id={defaultStyleId} value={settings.defaultStyle} disabled={isClearingApiKey} onChange={(event) => onSettingsChange({ ...settings, defaultStyle: event.target.value })}>
+          {presets.map((preset) => <option key={preset.id} value={preset.id}>{preset.name}</option>)}
+        </SelectField>
+        <SettingTip>{copy.defaultStyleTip}</SettingTip>
+      </FieldLabel>
+      <ToggleRow label={copy.defaultReasoning} checked={settings.reasoningEnabled} disabled={isClearingApiKey} onChange={(reasoningEnabled) => onSettingsChange({ ...settings, reasoningEnabled })} />
+      <SettingTip>{copy.reasoningHint}</SettingTip>
     </div>
   );
 }
@@ -260,7 +343,12 @@ function PromptLibraryPage({ settings, locale, copy, onSettingsChange, onOpen, o
 
       <div>
         <div className="mb-3 flex items-end justify-between gap-3">
-          <div><h4 className="app-text-primary text-sm font-semibold">{copy.defaultPresets}</h4><p className="app-text-muted mt-1 text-xs">1 + {5 - removed.length} / 6</p></div>
+          <div>
+            <h4 className="app-text-primary text-sm font-semibold">{copy.defaultPresets}</h4>
+            <p className="app-text-muted mt-1 text-xs">
+              {formatAIPromptUiText(copy.defaultPresetSummary, { visible: 6 - removed.length, removed: removed.length })}
+            </p>
+          </div>
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
           {presets.filter((preset) => preset.source !== "custom").map((preset) => (
@@ -282,7 +370,9 @@ function PromptLibraryPage({ settings, locale, copy, onSettingsChange, onOpen, o
       <div>
         <div className="mb-3 flex items-end justify-between gap-3">
           <div><h4 className="app-text-primary text-sm font-semibold">{copy.customPresets}</h4><p className="app-text-muted mt-1 text-xs">{copy.customPresetsDescription}</p></div>
-          <span className="app-text-subtle shrink-0 text-xs">{settings.promptLibrary.customPresets.length}/2</span>
+          <span className="app-text-subtle shrink-0 text-xs">
+            {formatAIPromptUiText(copy.customPresetSummary, { count: settings.promptLibrary.customPresets.length })}
+          </span>
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
           {settings.promptLibrary.customPresets.map((preset) => <ExplorerCard testId={`preset-card-${preset.id}`} key={preset.id} icon={<FilePenLine className="h-5 w-5" />} title={preset.title || copy.newPresetTitle} description={preset.prompt || copy.presetPromptPlaceholder} action={copy.open} badge={copy.customPreset} onClick={() => onOpen(`preset:${preset.id}`)} />)}
@@ -523,7 +613,7 @@ function removeStyleOverrideFromAllLocales(library: AIPromptLibrary, id: Editabl
 }
 
 export function isExistingPage(page: AIPage, settings: AISettings, draft: AICustomPreset | null) {
-  if (["root", "api", "library", "format"].includes(page)) return true;
+  if (["root", "api", "defaults", "library", "format"].includes(page)) return true;
   if (page.startsWith("draft:")) return draft?.id === page.slice("draft:".length);
   const id = page.slice("preset:".length);
   if (id === "recommended") return true;

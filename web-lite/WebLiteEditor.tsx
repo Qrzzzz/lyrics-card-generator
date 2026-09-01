@@ -86,11 +86,6 @@ const WEB_LITE_SETTINGS: UserSettings = {
   uiThemeMode: "dark",
   uiAcrylicEnabled: false,
   uiAccentMode: "album-dynamic",
-  appBackground: {
-    ...DEFAULT_USER_SETTINGS.appBackground,
-    mode: "solid",
-    solidColor: "#08090C"
-  },
   defaultExportQuality: "high",
   defaultExportPixelRatio: 2,
   firstLaunchLanguageSelected: true

@@ -6,7 +6,7 @@ const { types: utilTypes } = require("node:util");
 const IMPORT_HISTORY_SCHEMA_VERSION = 2;
 const LEGACY_IMPORT_HISTORY_SCHEMA_VERSION = 1;
 const DEFAULT_IMPORT_HISTORY_LIMIT = 10;
-const IMPORT_HISTORY_LIMITS = new Set([5, 10, "unlimited"]);
+const IMPORT_HISTORY_LIMITS = new Set(["none", 5, 10, "unlimited"]);
 const MAX_RECORD_BYTES = 512 * 1024;
 const MAX_MANUAL_SAVE_V2_BYTES = 2 * 1024 * 1024;
 const MAX_MANUAL_SAVE_JSON_DEPTH = 128;
@@ -123,8 +123,11 @@ class ImportHistoryStore {
   stats() {
     return this.#enqueue(async () => {
       const document = await this.#ensureLoaded();
+      const manualTotal = document.records.filter((record) => record.kind === "manual-save").length;
       return {
         total: document.records.length,
+        automaticTotal: document.records.length - manualTotal,
+        manualTotal,
         version: importHistoryDocumentVersion(document)
       };
     });
@@ -161,6 +164,9 @@ class ImportHistoryStore {
       }, this.path);
       if (!normalized) {
         throw historyError("invalid_record");
+      }
+      if (normalizeImportHistoryLimit(limit) === "none") {
+        return { document, result: toPublicImportHistoryRecord(normalized), write: false };
       }
       const key = this.#dedupeKey(normalized);
       const duplicate = document.records.find((record) => this.#dedupeKey(record) === key);
@@ -1103,9 +1109,18 @@ function platformSongKey(source, value) {
 
 function withHistoryLimit(document, limit) {
   const normalized = normalizeImportHistoryLimit(limit);
+  if (normalized === "unlimited") {
+    return { schemaVersion: IMPORT_HISTORY_SCHEMA_VERSION, records: [...document.records] };
+  }
+  const automaticLimit = normalized === "none" ? 0 : normalized;
+  let automaticCount = 0;
   return {
     schemaVersion: IMPORT_HISTORY_SCHEMA_VERSION,
-    records: normalized === "unlimited" ? [...document.records] : document.records.slice(0, normalized)
+    records: document.records.filter((record) => {
+      if (record.kind === "manual-save") return true;
+      automaticCount += 1;
+      return automaticCount <= automaticLimit;
+    })
   };
 }
 

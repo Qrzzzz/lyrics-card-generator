@@ -61,9 +61,6 @@ async function run() {
     ["listSystemFonts", []],
     ["openExternal", ["https://github.com/"]],
     ["copyImageToClipboard", ["data:image/png;base64,iVBORw0KGgo="]],
-    ["saveBackgroundImage", []],
-    ["readBackgroundImage", ["image-id"]],
-    ["removeBackgroundImage", ["image-id"]],
     ["listImportHistory", [{ limit: 10 }]],
     ["getImportHistoryStats", []],
     ["recordImportHistory", [{ kind: "link" }]],
@@ -77,6 +74,8 @@ async function run() {
     ["loadAISettings", []],
     ["saveAISettings", [{ provider: "openai" }]],
     ["clearAISettingsApiKey", []],
+    ["startAIConnectionTest", ["connection-test-id"]],
+    ["cancelAIConnectionTest", ["connection-test-id"]],
     ["startAITranslation", ["request-id", { prompt: "translate" }]],
     ["cancelAITranslation", ["request-id"]]
   ];

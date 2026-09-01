@@ -9,6 +9,7 @@ import { POST as fetchLyrics } from "../app/api/fetch-lyrics/route";
 import { POST as searchSong } from "../app/api/search-song/route";
 import { POST as resolveSong } from "../app/api/resolve-searched-song/route";
 import { POST as translate } from "../app/api/ai/translate/route";
+import { POST as testConnection } from "../app/api/ai/test-connection/route";
 import { POST as parseLocalAudio } from "../app/api/parse-local-audio/route";
 import { checkGitHubUpdate } from "../lib/github-update";
 import { readLimitedJson } from "../lib/json-request";
@@ -78,7 +79,8 @@ async function assertJsonRouteRequestBudgets() {
     ["/api/fetch-lyrics", resourceBudgets.jsonRequestBytes.fetchLyrics, fetchLyrics, false],
     ["/api/search-song", resourceBudgets.jsonRequestBytes.searchSong, searchSong, false],
     ["/api/resolve-searched-song", resourceBudgets.jsonRequestBytes.resolveSearchedSong, resolveSong, false],
-    ["/api/ai/translate", resourceBudgets.jsonRequestBytes.aiTranslate, translate, true]
+    ["/api/ai/translate", resourceBudgets.jsonRequestBytes.aiTranslate, translate, true],
+    ["/api/ai/test-connection", resourceBudgets.jsonRequestBytes.aiConnectionTest, testConnection, true]
   ] as const;
 
   for (const [path, limit, route, nestedError] of routes) {
@@ -243,6 +245,22 @@ async function assertDirectUpstreamBudgetsAndCancellation() {
     }));
     assert.equal(aiResponse.status, 502);
     assert.equal((await aiResponse.json() as { error: { code: string } }).error.code, "response_too_large");
+
+    globalThis.fetch = async () => oversizedStreamedJsonResponse(
+      resourceBudgets.upstreamResponseBytes.aiConnectionTest
+    );
+    const connectionResponse = await testConnection(jsonRequest("/api/ai/test-connection", {
+      settings: {
+        apiKey: "fixture-key",
+        baseUrl: "http://127.0.0.1:11434/v1",
+        model: "fixture-model"
+      }
+    }));
+    assert.equal(connectionResponse.status, 502);
+    assert.equal(
+      (await connectionResponse.json() as { error: { code: string } }).error.code,
+      "response_too_large"
+    );
 
     let relayPulls = 0;
     let relayCancelled = false;

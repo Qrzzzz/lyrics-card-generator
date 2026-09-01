@@ -10,6 +10,7 @@ import {
   type UserSettings
 } from "@/lib/settings/types";
 import { normalizeHexColor, UI_ACCENT_PRESETS } from "@/lib/settings/accent";
+import { normalizeUiFontFamily } from "@/lib/settings/font-family";
 import type { ImportHistoryLimit } from "@/lib/import-history";
 
 export const USER_SETTINGS_STORAGE_KEY = "lyric-card-generator-user-settings";
@@ -19,7 +20,7 @@ const ACCENT_MODES = new Set<UiAccentMode>(["album-dynamic", "preset", "custom"]
 const ACCENT_PRESETS = new Set<UiAccentPresetId>(["red", "orange", "yellow", "green", "blue", "purple"]);
 const QUALITIES = new Set<ExportQualityId>(["low", "medium", "high"]);
 const EXPORT_FORMATS = new Set<ExportFormatId>(["png", "webp", "jpg"]);
-const IMPORT_HISTORY_LIMITS = new Set<ImportHistoryLimit>([5, 10, "unlimited"]);
+const IMPORT_HISTORY_LIMITS = new Set<ImportHistoryLimit>(["none", 5, 10, "unlimited"]);
 
 type UserSettingsInput = Partial<UserSettings> & Record<string, unknown>;
 
@@ -109,11 +110,10 @@ export function normalizeUserSettings(input: unknown): UserSettings {
     reduceMotionEnabled: source.reduceMotionEnabled === true,
     uiThemeMode,
     uiAcrylicEnabled: normalizeAcrylicEnabled(source, uiThemeMode),
-    uiFontFamily: typeof source.uiFontFamily === "string" ? source.uiFontFamily.slice(0, 160) : "",
+    uiFontFamily: normalizeUiFontFamily(source.uiFontFamily),
     uiAccentMode: normalizeAccentMode(source, customAccentColor),
     uiAccentPreset: normalizeAccentPreset(source.uiAccentPreset),
     uiCustomAccentColor: customAccentColor,
-    appBackground: { ...DEFAULT_USER_SETTINGS.appBackground, mode: "album-dynamic" },
     defaultShowGeneratedWatermark: source.defaultShowGeneratedWatermark === true,
     defaultShowSharedBy: source.defaultShowSharedBy === true,
     defaultSharedByText: typeof source.defaultSharedByText === "string"
@@ -147,15 +147,30 @@ export function saveUserSettings(settings: UserSettings): UserSettings {
 
 export function mergeUserSettings(partial: Partial<UserSettings>): UserSettings {
   const current = loadUserSettings();
-  return saveUserSettings({
-    ...current,
-    ...partial,
-    appBackground: { ...current.appBackground, ...(partial.appBackground ?? {}) }
-  });
+  return saveUserSettings({ ...current, ...partial });
 }
 
-export function resetUserSettings(): UserSettings {
-  return saveUserSettings(structuredClone(DEFAULT_USER_SETTINGS));
+export function resetUserSettings(
+  current = loadUserSettings(),
+  options: { persist?: boolean } = {}
+): UserSettings {
+  const reset = normalizeUserSettings({
+    ...current,
+    sparkCursorEnabled: DEFAULT_USER_SETTINGS.sparkCursorEnabled,
+    reduceMotionEnabled: DEFAULT_USER_SETTINGS.reduceMotionEnabled,
+    uiThemeMode: DEFAULT_USER_SETTINGS.uiThemeMode,
+    uiAcrylicEnabled: DEFAULT_USER_SETTINGS.uiAcrylicEnabled,
+    uiFontFamily: DEFAULT_USER_SETTINGS.uiFontFamily,
+    uiAccentMode: DEFAULT_USER_SETTINGS.uiAccentMode,
+    uiAccentPreset: DEFAULT_USER_SETTINGS.uiAccentPreset,
+    uiCustomAccentColor: DEFAULT_USER_SETTINGS.uiCustomAccentColor,
+    defaultShowGeneratedWatermark: DEFAULT_USER_SETTINGS.defaultShowGeneratedWatermark,
+    defaultShowSharedBy: DEFAULT_USER_SETTINGS.defaultShowSharedBy,
+    defaultSharedByText: DEFAULT_USER_SETTINGS.defaultSharedByText,
+    defaultExportFormat: DEFAULT_USER_SETTINGS.defaultExportFormat,
+    defaultExportQuality: DEFAULT_USER_SETTINGS.defaultExportQuality
+  });
+  return options.persist === false ? reset : saveUserSettings(reset);
 }
 
 export function resolveEffectiveUiThemeId(settings: UserSettings): EffectiveUiThemeId {

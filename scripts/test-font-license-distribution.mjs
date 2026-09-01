@@ -23,6 +23,7 @@ const fontContracts = [
 ];
 
 await assertLicensedFontDirectory(path.join(projectRoot, "public", "fonts"), "repository/Web Lite");
+await assertApplicationLicenseAssets(projectRoot, "repository/Web Lite");
 
 const pagesWorkflow = await readFile(path.join(projectRoot, ".github", "workflows", "pages.yml"), "utf8");
 assert.match(
@@ -35,6 +36,13 @@ for (const { license } of fontContracts) {
   assert.ok(pagesWorkflow.includes(`public/fonts/${license}`), `Pages path filters must include ${license}`);
   assert.ok(pagesFiles.includes(`public/fonts/${license}`), `Pages allowlist must include ${license}`);
 }
+for (const asset of [
+  "public/licenses/LICENSE-Lyrics-Card-Generator.txt",
+  "public/licenses/THIRD-PARTY-NOTICES.txt"
+]) {
+  assert.ok(pagesWorkflow.includes(asset), `Pages path filters must include ${asset}`);
+  assert.ok(pagesFiles.includes(asset), `Pages allowlist must include ${asset}`);
+}
 
 const temporaryParent = path.join(projectRoot, "tmp");
 await mkdir(temporaryParent, { recursive: true });
@@ -43,6 +51,7 @@ try {
   const result = await preparePagesSite(temporarySite);
   assert.equal(result.files.length, pagesFiles.length + 1, "Pages manifest includes only the allowlist and .nojekyll");
   await assertLicensedFontDirectory(path.join(temporarySite, "public", "fonts"), "GitHub Pages artifact");
+  await assertApplicationLicenseAssets(temporarySite, "GitHub Pages artifact");
 } finally {
   await rm(temporarySite, { recursive: true, force: true });
 }
@@ -76,6 +85,31 @@ async function assertLicensedFontDirectory(fontDirectory, label) {
     assert.match(text, /Name 'Source'\./, `${label}: ${contract.license} keeps the Reserved Font Name`);
     assert.match(text, /SIL OPEN FONT LICENSE Version 1\.1 - 26 February 2007/, `${label}: ${contract.license} includes OFL 1.1`);
   }
+}
+
+async function assertApplicationLicenseAssets(root, label) {
+  const sourceLicense = await readFile(path.join(projectRoot, "LICENSE"), "utf8");
+  const bundledLicense = await readFile(
+    path.join(root, "public", "licenses", "LICENSE-Lyrics-Card-Generator.txt"),
+    "utf8"
+  );
+  assert.equal(
+    normalizeLines(bundledLicense),
+    normalizeLines(sourceLicense),
+    `${label}: bundled source-available license must match the repository license`
+  );
+  const notices = await readFile(
+    path.join(root, "public", "licenses", "THIRD-PARTY-NOTICES.txt"),
+    "utf8"
+  );
+  assert.match(notices, /Source Han Sans SC Heavy/);
+  assert.match(notices, /LICENSE-SourceHanSans\.txt/);
+  assert.match(notices, /Source Han Serif SC Heavy/);
+  assert.match(notices, /LICENSE-SourceHanSerif\.txt/);
+}
+
+function normalizeLines(value) {
+  return value.replace(/\r\n/gu, "\n").trimEnd();
 }
 
 function sha256(bytes) {

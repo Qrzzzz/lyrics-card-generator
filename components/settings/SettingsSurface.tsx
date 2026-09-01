@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, type Transition } from "framer-motion";
-import { Loader2, Settings } from "lucide-react";
+import { Loader2, RotateCcw, Settings } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { recordRenderBoundary } from "@/components/editor/render-boundary-diagnostics";
 import type { ToastNotifier } from "@/components/feedback/AppToast";
@@ -11,6 +11,7 @@ import { AiSettingsSection } from "@/components/settings/AiSettingsSection";
 import { AppearanceSettingsSection } from "@/components/settings/AppearanceSettingsSection";
 import { ExportSettingsSection } from "@/components/settings/ExportSettingsSection";
 import { GeneralSettingsSection } from "@/components/settings/GeneralSettingsSection";
+import { ActionButton } from "@/components/ui/controls";
 import { useAppReducedMotion } from "@/components/motion/AppMotionProvider";
 import { SettingsHistoryBar, type SettingsBreadcrumb } from "@/components/settings/SettingsHistoryBar";
 import { SettingsGroup, SettingsPageHeading } from "@/components/settings/SettingsLayout";
@@ -32,6 +33,7 @@ import { settingsCopy } from "@/lib/settings/copy";
 import type { AppPreferencesPersistenceOptions } from "@/lib/settings/app-preferences";
 import type { UserSettings } from "@/lib/settings/types";
 import type { Locale } from "@/lib/types";
+import type { SettingsPersistenceIssueChange } from "@/lib/settings/persistence-issue";
 
 type SettingsSurfaceProps = {
   isActive: boolean;
@@ -46,6 +48,7 @@ type SettingsSurfaceProps = {
   onClose: () => void;
   onSaved: (settings: AISettingsSummary, message?: string) => void;
   onNotify: ToastNotifier;
+  onPersistenceIssueChange: SettingsPersistenceIssueChange;
 };
 
 export function SettingsSurface({
@@ -60,7 +63,8 @@ export function SettingsSurface({
   onUserSettingsChange,
   onClose,
   onSaved,
-  onNotify
+  onNotify,
+  onPersistenceIssueChange
 }: SettingsSurfaceProps) {
   recordRenderBoundary("Settings");
   const copy = settingsCopy[locale];
@@ -68,13 +72,16 @@ export function SettingsSurface({
   const t = useMemo(() => createT(locale), [locale]);
   const reduceMotion = useAppReducedMotion();
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
+  const contentScrollRef = useRef<HTMLDivElement | null>(null);
   const tabs = useMemo(() => getSettingsTabs(copy), [copy]);
   const [history, setHistory] = useState<SettingsHistoryState>(() => ({
     entries: [createSettingsDestination(requestedTab ?? "general")],
     index: 0
   }));
+  const destination = history.entries[history.index] ?? createSettingsDestination("general");
   const workspace = useSettingsWorkspace({
     open: isActive,
+    loadAI: isActive && destination.section === "ai",
     requestedTab,
     locale,
     userSettings,
@@ -83,10 +90,11 @@ export function SettingsSurface({
     onUserSettingsChange,
     onClose,
     onSaved,
-    onNotify
+    onNotify,
+    onPersistenceIssueChange
   });
-  const destination = history.entries[history.index] ?? createSettingsDestination("general");
   const activeTab = tabs.find((tab) => tab.id === destination.section) ?? tabs[0];
+  const destinationScrollKey = `${destination.section}:${destination.path.join("/")}`;
   const promptCopy = getAIPromptUiCopy(locale);
   const breadcrumbs = useMemo<SettingsBreadcrumb[]>(() => {
     return getSettingsRouteBreadcrumbs(destination, activeTab.label, {
@@ -96,6 +104,7 @@ export function SettingsSurface({
   }, [activeTab.label, destination, locale, workspace.settings]);
   const tabVariants = tabPanelVariants(reduceMotion);
   const tabTransition = reduceMotion ? reducedMotionTransition : opacityTransition;
+  const showHistoryBar = history.entries.length > 1 || breadcrumbs.length > 1;
   const saveStatus = workspace.saveState === "saved"
     ? null
     : workspace.saveState === "pending"
@@ -160,6 +169,13 @@ export function SettingsSurface({
     return () => window.cancelAnimationFrame(frame);
   }, [isActive]);
 
+  useEffect(() => {
+    if (!isActive || !contentScrollRef.current) return;
+    // Pages stay mounted, but a newly selected destination should not inherit
+    // another page's scroll position and appear to open below its heading.
+    contentScrollRef.current.scrollTop = 0;
+  }, [destinationScrollKey, isActive]);
+
   return (
     <motion.section
       aria-hidden={!isActive}
@@ -186,7 +202,7 @@ export function SettingsSurface({
             </span>
             <div className="min-w-0">
               <h1 id="settings-surface-title" className="app-text-primary truncate text-xl font-black tracking-normal sm:text-3xl">{copy.settings}</h1>
-              <p className="app-text-subtle mt-1 hidden truncate text-sm md:block">{activeTab.description}</p>
+              <p className="app-text-subtle mt-1 hidden truncate text-sm md:block">{copy.description}</p>
             </div>
           </div>
         </div>
@@ -205,16 +221,18 @@ export function SettingsSurface({
             testId="settings-close-button"
           />
         </div>
-        <SettingsHistoryBar
-          backLabel={promptCopy.back}
-          forwardLabel={promptCopy.forward}
-          breadcrumbs={breadcrumbs}
-          canGoBack={history.index > 0}
-          canGoForward={history.index < history.entries.length - 1}
-          onBack={() => moveHistory(-1)}
-          onForward={() => moveHistory(1)}
-          onNavigate={navigateDestination}
-        />
+        {showHistoryBar ? (
+          <SettingsHistoryBar
+            backLabel={promptCopy.back}
+            forwardLabel={promptCopy.forward}
+            breadcrumbs={breadcrumbs}
+            canGoBack={history.index > 0}
+            canGoForward={history.index < history.entries.length - 1}
+            onBack={() => moveHistory(-1)}
+            onForward={() => moveHistory(1)}
+            onNavigate={navigateDestination}
+          />
+        ) : null}
       </header>
 
       <div className="settings-wing__body">
@@ -226,7 +244,7 @@ export function SettingsSurface({
           ariaLabel={copy.settings}
         />
 
-        <div className="settings-wing__content-scroll">
+        <div ref={contentScrollRef} className="settings-wing__content-scroll">
           <div
             className={[
               "settings-wing__content",
@@ -257,7 +275,7 @@ export function SettingsSurface({
                         <Loader2 className="h-4 w-4 animate-spin" />
                         {copy.ai}
                       </div>
-                    ) : (
+                    ) : workspace.aiInitialized ? (
                       <AiSettingsSection
                         open={isActive}
                         path={destination.path}
@@ -270,8 +288,18 @@ export function SettingsSurface({
                         onSettingsChange={workspace.setSettings}
                         onApiKeyChange={workspace.setApiKey}
                         onClearApiKey={workspace.handleClearApiKey}
+                        onTestConnection={workspace.handleTestConnection}
                         onNavigate={(path, options) => navigateDestination(createSettingsDestination("ai", path), options)}
                       />
+                    ) : workspace.syncErrorKind === "load" ? (
+                      <div className="status-danger grid gap-3 rounded-xl border p-4" role="alert">
+                        <p className="text-sm">{workspace.error || aiCopy.settingsLoadFailed}</p>
+                        <ActionButton size="sm" onClick={workspace.retryAISettingsLoad} leftIcon={<RotateCcw className="h-4 w-4" />}>
+                          {settingsCopy[locale].retryLoad}
+                        </ActionButton>
+                      </div>
+                    ) : (
+                      <div data-testid="ai-settings-not-loaded" />
                     )
                   ) : (
                     <>

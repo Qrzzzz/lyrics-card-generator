@@ -3,9 +3,10 @@
 import { Check } from "lucide-react";
 import { useEffect, useState } from "react";
 import { recordRenderBoundary } from "@/components/editor/render-boundary-diagnostics";
-import { FieldLabel, SegmentedControl, TextInput, ToggleRow } from "@/components/ui/controls";
+import { ActionButton, FieldLabel, SegmentedControl, TextInput, ToggleRow } from "@/components/ui/controls";
 import { getReadableForegroundColor } from "@/lib/contrast-color";
 import { normalizeHexColor, UI_ACCENT_PRESETS } from "@/lib/settings/accent";
+import { validateUiFontFamily } from "@/lib/settings/font-family";
 import type { UiAccentMode, UiAccentPresetId, UiThemeMode, UserSettings } from "@/lib/settings/types";
 import type { Locale } from "@/lib/types";
 import type { settingsCopy } from "@/lib/settings/copy";
@@ -43,14 +44,20 @@ export function AppearanceSettingsSection({
 }) {
   recordRenderBoundary("SettingsAppearance");
   const [customAccentInput, setCustomAccentInput] = useState(settings.uiCustomAccentColor);
+  const [uiFontInput, setUiFontInput] = useState(settings.uiFontFamily);
   const normalizedCustomAccent = normalizeHexColor(customAccentInput, "");
   const customAccentIsValid = normalizedCustomAccent !== "";
   const customAccentPreview = normalizeHexColor(customAccentInput, UI_ACCENT_PRESETS.purple);
   const acrylicDisabled = settings.uiThemeMode === "album-dynamic";
+  const uiFontValidation = validateUiFontFamily(uiFontInput);
 
   useEffect(() => {
     setCustomAccentInput(settings.uiCustomAccentColor);
   }, [settings.uiCustomAccentColor]);
+
+  useEffect(() => {
+    setUiFontInput(settings.uiFontFamily);
+  }, [settings.uiFontFamily]);
 
   function updateThemeMode(uiThemeMode: UiThemeMode) {
     // Album-dynamic composition and acrylic material are mutually exclusive.
@@ -87,6 +94,7 @@ export function AppearanceSettingsSection({
       <FieldLabel label={copy.theme}>
         <SegmentedControl<UiThemeMode>
           value={settings.uiThemeMode}
+          ariaLabel={copy.theme}
           onChange={updateThemeMode}
           columns={3}
           options={THEME_MODE_OPTIONS.map((option) => ({
@@ -108,6 +116,7 @@ export function AppearanceSettingsSection({
         <div className="grid gap-3">
           <SegmentedControl<UiAccentMode>
             value={settings.uiAccentMode}
+            ariaLabel={copy.accentColor}
             onChange={updateAccentMode}
             columns={3}
             options={ACCENT_MODE_OPTIONS.map((option) => ({
@@ -151,40 +160,60 @@ export function AppearanceSettingsSection({
           ) : null}
 
           {settings.uiAccentMode === "custom" ? (
-            <div className="grid gap-2">
-              <div className="flex items-center gap-2">
+            <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-2">
+              <FieldLabel
+                label={copy.accentCustom}
+                error={!customAccentIsValid ? copy.accentInvalid : undefined}
+              >
                 <TextInput
+                  data-testid="custom-accent-input"
                   value={customAccentInput}
                   onChange={(event) => updateCustomAccent(event.target.value)}
-                  onBlur={() => {
-                    if (!customAccentIsValid) {
-                      setCustomAccentInput(settings.uiCustomAccentColor);
-                    }
-                  }}
                   placeholder={copy.accentCustomPlaceholder}
                   aria-invalid={!customAccentIsValid}
                 />
-                <span
-                  className="h-11 w-11 shrink-0 rounded-lg border border-[rgb(var(--panel-border))]"
-                  style={{ backgroundColor: customAccentPreview }}
-                  aria-hidden="true"
-                />
-              </div>
-              {!customAccentIsValid ? (
-                <p className="text-xs leading-relaxed text-amber-200">{copy.accentInvalid}</p>
-              ) : null}
+              </FieldLabel>
+              <span
+                className="h-11 w-11 shrink-0 rounded-lg border border-[rgb(var(--panel-border))]"
+                style={{ backgroundColor: customAccentPreview }}
+                aria-hidden="true"
+              />
             </div>
           ) : null}
         </div>
       </FieldLabel>
 
-      <FieldLabel label={copy.uiFont} hint={copy.defaultFont}>
-        <TextInput
-          value={settings.uiFontFamily}
-          onChange={(event) => onChange({ ...settings, uiFontFamily: event.target.value })}
-          placeholder="Segoe UI, sans-serif"
-        />
-      </FieldLabel>
+      <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+        <FieldLabel
+          label={copy.uiFont}
+          hint={copy.defaultFont}
+          description={copy.uiFontDescription}
+          error={!uiFontValidation.valid ? copy.uiFontInvalid : undefined}
+        >
+          <TextInput
+            data-testid="ui-font-family-input"
+            value={uiFontInput}
+            aria-invalid={!uiFontValidation.valid}
+            onChange={(event) => {
+              const value = event.target.value;
+              setUiFontInput(value);
+              const validation = validateUiFontFamily(value);
+              if (validation.valid) onChange({ ...settings, uiFontFamily: validation.value });
+            }}
+            placeholder="Segoe UI, sans-serif"
+          />
+        </FieldLabel>
+        <ActionButton
+          variant="default"
+          data-testid="restore-system-font"
+          onClick={() => {
+            setUiFontInput("");
+            onChange({ ...settings, uiFontFamily: "" });
+          }}
+        >
+          {copy.restoreSystemFont}
+        </ActionButton>
+      </div>
 
       <ToggleRow
         label={copy.spark}

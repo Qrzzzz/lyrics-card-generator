@@ -10,9 +10,11 @@ import {
 } from "@/components/editor/DeferredEditorSurfaces";
 import { ExportCelebration } from "@/components/effects/ExportCelebration";
 import { AppToast } from "@/components/feedback/AppToast";
+import { SettingsPersistenceNotice } from "@/components/feedback/SettingsPersistenceNotice";
 import { useToastQueue } from "@/components/feedback/useToastQueue";
 import {
   DEFAULT_INSTRUMENTAL_TEXT,
+  applyNewCardFooterDefaults,
   defaultState
 } from "@/components/editor/editor-defaults";
 import { useEditorSteps } from "@/components/editor/useEditorSteps";
@@ -74,6 +76,11 @@ import type { TranslationValue } from "@/lib/editor/editor-document-state-adapte
 import { useStableEvent } from "@/components/editor/hooks/useStableEvent";
 import type { AISettingsSummary } from "@/lib/ai/types";
 import { recordRenderBoundary } from "@/components/editor/render-boundary-diagnostics";
+import { hasAuthoredDocument } from "@/lib/editor/document-transactions";
+import type {
+  SettingsPersistenceIssue,
+  SettingsPersistenceSource
+} from "@/lib/settings/persistence-issue";
 
 type ActiveSurface = "editor" | "examples" | "history" | "settings";
 type DeferredSurface = Exclude<ActiveSurface, "editor">;
@@ -96,6 +103,7 @@ export function LyricEditor() {
     ...defaultState,
     lyricDocument: cloneLyricDocument(defaultState.lyricDocument)
   }));
+  const newCardDefaultsAppliedRef = useRef(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [landscapeLineLimitNoticeRevision, setLandscapeLineLimitNoticeRevision] = useState<number | null>(null);
   const [songLinkAutoParseVisitIntent, setSongLinkAutoParseVisitIntent] = useState<SongLinkAutoParseVisitIntent>({
@@ -114,11 +122,26 @@ export function LyricEditor() {
   const [previewMeasurementKey, setPreviewMeasurementKey] = useState(0);
   const [exportFormat, setExportFormat] = useState<ExportFormatId>(DEFAULT_USER_SETTINGS.defaultExportFormat);
   const [exportQuality, setExportQuality] = useState<ExportQualityId>(DEFAULT_USER_SETTINGS.defaultExportQuality);
+  const [settingsPersistenceIssues, setSettingsPersistenceIssues] = useState<
+    Partial<Record<SettingsPersistenceSource, SettingsPersistenceIssue>>
+  >({});
   const {
     notices: toastNotices,
     announcement: toastAnnouncement,
     notify: showToast
   } = useToastQueue();
+  const handleSettingsPersistenceIssueChange = useCallback((
+    source: SettingsPersistenceSource,
+    issue: SettingsPersistenceIssue | null
+  ) => {
+    setSettingsPersistenceIssues((current) => {
+      if (issue) return { ...current, [source]: issue };
+      if (!(source in current)) return current;
+      const next = { ...current };
+      delete next[source];
+      return next;
+    });
+  }, []);
   const exportCardRef = useRef<HTMLElement | null>(null);
   const autoWidthMeasurementRef = useRef<HTMLDivElement | null>(null);
   const landscapeMeasurementRef = useRef<HTMLDivElement | null>(null);
@@ -270,6 +293,14 @@ export function LyricEditor() {
   const effectiveUiThemeId = resolveEffectiveUiThemeId(userSettings);
   const exportPixelRatio = getExportPixelRatio(exportQuality);
 
+  useEffect(() => {
+    if (!preferencesLoaded || newCardDefaultsAppliedRef.current) return;
+    newCardDefaultsAppliedRef.current = true;
+    setState((current) => hasAuthoredDocument(current)
+      ? current
+      : applyNewCardFooterDefaults(current, userSettings));
+  }, [preferencesLoaded, userSettings]);
+
   const {
     celebrationKey,
     isCompleteExporting,
@@ -360,37 +391,6 @@ export function LyricEditor() {
   useEffect(() => {
     setExportQuality(userSettings.defaultExportQuality);
   }, [userSettings.defaultExportQuality]);
-
-  useEffect(() => {
-    setState((current) => {
-      const showGeneratedWatermark = userSettings.defaultShowGeneratedWatermark;
-      const showSharedBy = userSettings.defaultShowSharedBy;
-      const sharedByText = userSettings.defaultSharedByText;
-      if (
-        current.style.showGeneratedWatermark === showGeneratedWatermark &&
-        current.style.showWatermark === showGeneratedWatermark &&
-        current.style.showSharedBy === showSharedBy &&
-        current.style.sharedByText === sharedByText
-      ) {
-        return current;
-      }
-
-      return {
-        ...current,
-        style: {
-          ...current.style,
-          showGeneratedWatermark,
-          showWatermark: showGeneratedWatermark,
-          showSharedBy,
-          sharedByText
-        }
-      };
-    });
-  }, [
-    userSettings.defaultShowGeneratedWatermark,
-    userSettings.defaultShowSharedBy,
-    userSettings.defaultSharedByText
-  ]);
 
   useEffect(() => {
     if (!isExamplesSurfaceOpen) {
@@ -735,11 +735,13 @@ export function LyricEditor() {
               onClose={closeSettings}
               onSaved={settingsSavedEvent}
               onNotify={showToast}
+              onPersistenceIssueChange={handleSettingsPersistenceIssueChange}
             />
           </div>
         </main>
       </ClickSpark>
       <FirstLaunchLanguageDialog open={isFirstLaunchOpen} locale={state.locale} onChoose={chooseFirstLaunchLanguage} />
+      <SettingsPersistenceNotice issues={settingsPersistenceIssues} />
       <AppToast notices={toastNotices} announcement={toastAnnouncement} />
         <ExportCelebration burstKey={celebrationKey} accentColor={resolvedAccentColor} />
       </div>

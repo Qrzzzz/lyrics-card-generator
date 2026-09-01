@@ -19,7 +19,7 @@ export function SettingsPageHeading({
         {icon}
       </span>
       <div className="min-w-0">
-        <h3 className="app-text-primary text-lg font-bold tracking-tight">{title}</h3>
+        <h2 className="app-text-primary text-lg font-bold tracking-tight">{title}</h2>
         <p className="app-text-muted mt-1 text-sm leading-relaxed">{description}</p>
       </div>
     </div>

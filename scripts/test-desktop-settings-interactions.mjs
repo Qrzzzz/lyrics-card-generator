@@ -188,6 +188,17 @@ async function waitForLayoutStable(locator, timeout = 5_000) {
   );
 }
 
+async function prepareSettingsScreenshot() {
+  await waitForLayoutStable(page.getByTestId("settings-surface"), 10_000);
+  // Preference saves may finish just after navigation. Give the queue time to
+  // publish its result, then wait until global transient feedback has cleared.
+  await page.waitForTimeout(500);
+  await page.waitForFunction(() => !Array.from(document.querySelectorAll('[data-testid="app-toast"]')).some((toast) => (
+    toast instanceof HTMLElement && toast.getClientRects().length > 0
+  )), undefined, { timeout: 10_000 });
+  await page.waitForTimeout(350);
+}
+
 async function waitForLyricsLineBudget(expected, timeout = 5_000) {
   const panel = page.getByTestId("lyrics-review-panel");
   if (!(await panel.isVisible().catch(() => false))) {
@@ -3991,10 +4002,26 @@ try {
 
   await page.locator('[data-testid="editor-surface"] [data-testid="settings-button"]').click();
   await waitForVisible("settings-surface");
+  assert.equal(await page.getByTestId("settings-history-bar").count(), 0, "a root settings category hides empty local history chrome");
+  assert.equal(await page.getByTestId("ai-settings-not-loaded").count(), 1, "AI data is still unloaded when settings first opens on General");
 
   await selectSettingsSection("ai");
+  await waitForVisible("ai-open-library");
+  assert.equal(await page.getByTestId("settings-history-bar").count(), 1, "the AI root keeps real cross-category back history");
+  assert.equal(await page.getByTestId("ai-settings-not-loaded").count(), 0, "the first AI visit initializes its retained workspace");
+  assert.deepEqual(
+    (await page.locator(".settings-history-bar__link").allTextContents()).map((label) => label.trim()),
+    ["AI 工作区"],
+    "the AI root breadcrumb omits the redundant AI category label"
+  );
+  await prepareSettingsScreenshot();
+  await page.screenshot({ path: path.join(reportDirectory, "settings-ai-root-audit.png"), fullPage: false });
   await (await waitForVisible("ai-open-library")).click();
   await (await waitForVisible("preset-card-lyrical")).click();
+  const nestedAIBreadcrumbs = (await page.locator(".settings-history-bar__link").allTextContents()).map((label) => label.trim());
+  assert.equal(nestedAIBreadcrumbs[0], "AI 工作区", "AI child history starts from the meaningful workspace root");
+  assert.equal(nestedAIBreadcrumbs.includes("AI"), false, "AI child history does not restore the redundant category crumb");
+  assert.ok(nestedAIBreadcrumbs.length >= 3, "AI child history retains the workspace, library, and preset levels");
   await assertSettingsHistoryBarChrome();
   const presetTitle = await waitForVisible("preset-title-input");
   const presetPrompt = await waitForVisible("preset-prompt-input");
@@ -4018,14 +4045,85 @@ try {
     const heading = page.getByTestId(`settings-page-heading-${section}`);
     await heading.waitFor({ state: "visible" });
     assert.ok((await heading.textContent())?.trim(), `${section} settings home includes a concise heading and description`);
+    assert.equal(await heading.locator("h2").count(), 1, `${section} page heading uses the h2 level below the settings h1`);
   }
+
+  await selectSettingsSection("appearance");
+  const appearancePanel = page.locator('[data-settings-panel="appearance"]:not([hidden])');
+  const appearanceRadioNames = await appearancePanel.locator('[role="radiogroup"]').evaluateAll((groups) => (
+    groups.map((group) => group.getAttribute("aria-label")?.trim() ?? "")
+  ));
+  assert.ok(appearanceRadioNames.length >= 2 && appearanceRadioNames.every(Boolean), `theme and accent radiogroups have accessible names: ${JSON.stringify(appearanceRadioNames)}`);
+  await appearancePanel.locator('[data-segment-value="custom"]').click();
+  const customAccent = page.getByTestId("custom-accent-input");
+  const customAccentId = await customAccent.getAttribute("id");
+  assert.ok(customAccentId, "custom accent receives a real input ID");
+  assert.equal(await appearancePanel.locator(`label[for="${customAccentId}"]`).count(), 1, "custom accent has a real associated label");
+  await customAccent.fill("not-a-color");
+  assert.equal(await customAccent.getAttribute("aria-invalid"), "true", "invalid custom accents remain visible and invalid");
+  const accentErrorId = await customAccent.getAttribute("aria-describedby");
+  assert.ok(
+    accentErrorId && await appearancePanel.evaluate((_panel, id) => {
+      const error = document.getElementById(id);
+      return Boolean(error && error.getClientRects().length > 0 && error.textContent?.trim());
+    }, accentErrorId),
+    "custom accent exposes its validation error through aria-describedby"
+  );
+  await customAccent.fill("#336699");
+  assert.equal(await customAccent.getAttribute("aria-invalid"), "false", "valid custom accents clear the error state");
+
+  const uiFontFamily = page.getByTestId("ui-font-family-input");
+  await uiFontFamily.fill("Segoe UI; color:red");
+  assert.equal(await uiFontFamily.getAttribute("aria-invalid"), "true", "unsafe font-family input is rejected accessibly");
+  await page.getByTestId("restore-system-font").click();
+  assert.equal(await uiFontFamily.inputValue(), "", "system-font restoration clears the raw CSS font-family value");
+  assert.equal(await uiFontFamily.getAttribute("aria-invalid"), "false", "system-font restoration returns to a valid state");
+  await prepareSettingsScreenshot();
+  await page.screenshot({ path: path.join(reportDirectory, "settings-appearance-audit.png"), fullPage: false });
+
+  const settingsContentScroll = page.locator(".settings-wing__content-scroll");
+  await settingsContentScroll.evaluate((element) => {
+    element.scrollTop = Math.min(320, Math.max(1, element.scrollHeight - element.clientHeight));
+  });
+  assert.ok(await settingsContentScroll.evaluate((element) => element.scrollTop) > 0, "appearance can establish a non-zero settings scroll position");
+  await selectSettingsSection("about");
+  await page.waitForFunction(() => document.querySelector(".settings-wing__content-scroll")?.scrollTop === 0);
+  assert.equal(await settingsContentScroll.evaluate((element) => element.scrollTop), 0, "a newly selected settings destination starts at its heading instead of inheriting another page's scroll");
+  const offlineLicenseLinks = page.getByTestId("offline-license-links").locator("a");
+  assert.deepEqual(await offlineLicenseLinks.evaluateAll((links) => links.map((link) => link.getAttribute("href"))), [
+    "/licenses/LICENSE-Lyrics-Card-Generator.txt",
+    "/licenses/THIRD-PARTY-NOTICES.txt",
+    "/fonts/LICENSE-SourceHanSans.txt",
+    "/fonts/LICENSE-SourceHanSerif.txt"
+  ], "desktop About exposes every bundled app and font license entry");
+  const packagedLicenseTexts = await page.evaluate(async () => await Promise.all([
+    fetch("/licenses/LICENSE-Lyrics-Card-Generator.txt").then(async (response) => response.ok ? await response.text() : `HTTP ${response.status}`),
+    fetch("/licenses/THIRD-PARTY-NOTICES.txt").then(async (response) => response.ok ? await response.text() : `HTTP ${response.status}`),
+    fetch("/fonts/LICENSE-SourceHanSans.txt").then(async (response) => response.ok ? await response.text() : `HTTP ${response.status}`),
+    fetch("/fonts/LICENSE-SourceHanSerif.txt").then(async (response) => response.ok ? await response.text() : `HTTP ${response.status}`)
+  ]));
+  assert.match(packagedLicenseTexts[0], /Source Available License/, "packaged desktop serves the app license offline");
+  assert.match(packagedLicenseTexts[1], /Source Han Sans SC Heavy[\s\S]*Source Han Serif SC Heavy/, "packaged desktop serves third-party notices offline");
+  assert.ok(packagedLicenseTexts.slice(2).every((text) => /SIL OPEN FONT LICENSE/i.test(text)), "packaged desktop serves both Source Han license texts offline");
+  await prepareSettingsScreenshot();
+  await page.screenshot({ path: path.join(reportDirectory, "settings-about-licenses-audit.png"), fullPage: false });
+  await offlineLicenseLinks.last().scrollIntoViewIfNeeded();
+  await prepareSettingsScreenshot();
+  await page.screenshot({ path: path.join(reportDirectory, "settings-about-license-entries-audit.png"), fullPage: false });
+
   await selectSettingsSection("ai");
   await (await waitForVisible("ai-open-api")).click();
-  await page.getByTestId("ai-base-url-input").fill("https://example.invalid/v1");
+  await page.getByTestId("ai-base-url-input").fill("http://attacker.example/v1");
   await page.getByTestId("ai-model-input").fill("desktop-regression-model");
-  await page.getByTestId("ai-temperature-input").fill("0.4");
-  await page.getByTestId("ai-default-style-select").selectOption("lyrical");
   await page.getByTestId("ai-api-key-input").fill("sk-desktop-regression");
+  await page.getByTestId("test-ai-connection").click();
+  const connectionFailure = page.getByTestId("ai-connection-test-panel").getByRole("alert");
+  await connectionFailure.waitFor({ state: "visible" });
+  assert.match(await connectionFailure.textContent(), /HTTPS/, "desktop connection test rejects an unsafe remote HTTP endpoint");
+  assert.doesNotMatch(await connectionFailure.textContent(), /sk-desktop-regression/, "connection errors never display the API key");
+  await prepareSettingsScreenshot();
+  await page.screenshot({ path: path.join(reportDirectory, "settings-ai-unsafe-connection-audit.png"), fullPage: false });
+  await page.getByTestId("ai-base-url-input").fill("https://example.invalid/v1");
   await page.getByTestId("clear-api-key").click();
   await waitForVisible("settings-confirm-overlay");
   const cancelConfirmation = page.getByTestId("settings-confirm-cancel");
@@ -4043,11 +4141,20 @@ try {
   assert.equal(await apiKeyInput.inputValue(), "", "API key clear completes before the prompt-library scenario begins");
   await page.getByTestId("settings-history-back").click();
   await waitForVisible("ai-open-library");
+  await (await waitForVisible("ai-open-defaults")).click();
+  await page.getByTestId("ai-temperature-input").fill("0.4");
+  await page.getByTestId("ai-default-style-select").selectOption("lyrical");
+  await page.getByTestId("settings-history-back").click();
+  await waitForVisible("ai-open-defaults");
   await page.getByTestId("settings-history-forward").click();
-  await waitForVisible("ai-base-url-input");
+  await waitForVisible("ai-temperature-input");
+  await page.getByTestId("settings-history-back").click();
+  await waitForVisible("ai-open-library");
 
   await selectSettingsSection("ai");
   await (await waitForVisible("ai-open-library")).click();
+  assert.match(await page.locator('[data-settings-panel="ai"]:not([hidden])').textContent(), /6 个默认预设：1 个受保护、5 个可编辑/, "prompt statistics explain protected and editable defaults");
+  assert.match(await page.locator('[data-settings-panel="ai"]:not([hidden])').textContent(), /2 个自定义名额：已使用 0 个/, "prompt statistics report custom usage separately");
   await page.getByTestId("preset-create").click();
   await page.getByTestId("preset-title-input").fill("Desktop custom preset");
   await page.getByTestId("preset-prompt-input").fill("Translate the lyrics for the packaged desktop regression test.");
@@ -4061,6 +4168,8 @@ try {
 
   await selectSettingsSection("export");
   const settingsExportPanel = page.locator('[data-settings-panel="export"]:not([hidden])');
+  assert.equal(await page.getByTestId("new-card-defaults-group").isVisible(), true, "new-card footer defaults have their own visible group");
+  assert.equal(await page.getByTestId("file-export-defaults-group").isVisible(), true, "file export defaults have their own visible group");
   const defaultFormatOptions = settingsExportPanel.locator('[data-segment-value="png"], [data-segment-value="webp"], [data-segment-value="jpg"]');
   assert.deepEqual(await defaultFormatOptions.allTextContents(), ["PNG", "WebP", "JPG"], "settings exposes PNG, WebP, and JPG defaults");
   assert.equal(await defaultFormatOptions.nth(0).getAttribute("aria-checked"), "true", "PNG remains the initial default export format");
@@ -4068,8 +4177,43 @@ try {
   await page.waitForFunction(() => (
     document.querySelector('[data-settings-panel="export"]:not([hidden]) [data-segment-value="webp"]')?.getAttribute('aria-checked') === 'true'
   ));
+  await page.getByTestId("default-generated-watermark-toggle").click();
+  assert.equal(await page.getByTestId("default-generated-watermark-toggle").getAttribute("aria-checked"), "true", "new-card watermark default can be changed independently");
+  await settingsContentScroll.evaluate((element) => { element.scrollTop = 0; });
+  await prepareSettingsScreenshot();
+  await page.screenshot({ path: path.join(reportDirectory, "settings-card-export-audit.png"), fullPage: false });
 
   await selectSettingsSection("general");
+  await page.getByTestId("import-history-limit").selectOption("none");
+  await page.waitForFunction(async () => (await window.lyricsCardDesktop?.loadAppPreferences())?.userSettings.importHistoryLimit === "none");
+
+  await selectSettingsSection("ai");
+  await (await waitForVisible("ai-open-api")).click();
+  await page.getByTestId("ai-api-key-input").fill("sk-reset-scope-regression");
+  await page.waitForFunction(async () => Boolean((await window.lyricsCardDesktop?.loadAISettings())?.hasApiKey));
+  await page.waitForTimeout(1_000);
+  assert.equal((await page.evaluate(() => window.lyricsCardDesktop?.loadAISettings()))?.hasApiKey, true, "the replacement API key is durably stable before preference reset");
+
+  await selectSettingsSection("general");
+  await setNativeDialogDecision("accept", "恢复应用偏好默认值？");
+  await page.getByTestId("restore-app-preferences").click();
+  await page.waitForFunction(async () => {
+    const preferences = await window.lyricsCardDesktop?.loadAppPreferences();
+    return preferences?.userSettings.defaultExportFormat === "png"
+      && preferences.userSettings.defaultShowGeneratedWatermark === false
+      && preferences.userSettings.uiFontFamily === ""
+      && preferences.userSettings.importHistoryLimit === "none";
+  });
+  assert.equal((await page.evaluate(() => window.lyricsCardDesktop?.loadAISettings()))?.hasApiKey, true, "restoring app preferences never clears the AI API key");
+
+  await selectSettingsSection("export");
+  assert.equal(await settingsExportPanel.locator('[data-segment-value="png"]').getAttribute("aria-checked"), "true", "restoring app preferences resets the file format default");
+  assert.equal(await page.getByTestId("default-generated-watermark-toggle").getAttribute("aria-checked"), "false", "restoring app preferences resets new-card footer defaults");
+  await settingsExportPanel.locator('[data-segment-value="webp"]').click();
+  await page.waitForFunction(() => (
+    document.querySelector('[data-settings-panel="export"]:not([hidden]) [data-segment-value="webp"]')?.getAttribute('aria-checked') === 'true'
+  ));
+
   await selectSettingsSection("ai");
   await page.getByTestId("settings-close-button").click();
   await page.locator('[data-testid="settings-surface"][data-surface-state="closed"]').waitFor({ state: "attached" });
