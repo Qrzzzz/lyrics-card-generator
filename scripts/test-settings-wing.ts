@@ -6,7 +6,11 @@ import { getAIPromptUiCopy } from "../lib/ai/prompt-ui-copy";
 import { DEFAULT_AI_SETTINGS } from "../lib/ai/types";
 import { isExistingPage, resetPromptLibraryToInitial } from "../components/settings/AiSettingsSection";
 import { resolveAISettingsPage } from "../components/settings/ai-settings-routing";
-import { createSettingsDestination, sameSettingsDestination } from "../components/settings/settings-routing";
+import {
+  createSettingsDestination,
+  getSettingsRouteBreadcrumbs,
+  sameSettingsDestination
+} from "../components/settings/settings-routing";
 import { settingsCopy } from "../lib/settings/copy";
 import type { Locale } from "../lib/types";
 
@@ -255,6 +259,17 @@ assert.deepEqual(genericPresetDestination, { section: "ai", path: ["library", "p
 assert.equal(resolveAISettingsPage(genericPresetDestination.path), "preset:lyrical");
 assert.equal(sameSettingsDestination(genericPresetDestination, createSettingsDestination("ai", ["library", "preset", "lyrical"])), true);
 assert.equal(sameSettingsDestination(genericPresetDestination, createSettingsDestination("ai", ["library"])), false);
+const routeContext = { locale: "zh" as const, settings: DEFAULT_AI_SETTINGS };
+assert.deepEqual(
+  getSettingsRouteBreadcrumbs(createSettingsDestination("ai"), settingsCopy.zh.ai, routeContext).map((item) => item.label),
+  [getAIPromptUiCopy("zh").workspace],
+  "the AI root omits the redundant sidebar category crumb"
+);
+assert.deepEqual(
+  getSettingsRouteBreadcrumbs(createSettingsDestination("ai", ["api"]), settingsCopy.zh.ai, routeContext).map((item) => item.label),
+  [getAIPromptUiCopy("zh").workspace, getAIPromptUiCopy("zh").apiConfiguration],
+  "AI child pages retain their complete internal breadcrumb path"
+);
 const hiddenSettings = {
   ...DEFAULT_AI_SETTINGS,
   promptLibrary: { ...DEFAULT_AI_SETTINGS.promptLibrary, hiddenStyleIds: ["lyrical" as const] }

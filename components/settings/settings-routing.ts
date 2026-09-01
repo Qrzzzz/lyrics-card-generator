@@ -45,14 +45,13 @@ export function getSettingsRouteBreadcrumbs(
   };
   const adapter = sectionRouteAdapters[destination.section];
   if (!adapter) return [root];
-  return [
-    root,
-    ...adapter.breadcrumbs(destination.path, context).map((item) => ({
-      key: `${destination.section}:${item.key}`,
-      label: item.label,
-      destination: createSettingsDestination(destination.section, item.path)
-    }))
-  ];
+  // Routed sections already define their own meaningful root. Repeating the
+  // sidebar category before that root produces labels such as "AI > AI Workspace".
+  return adapter.breadcrumbs(destination.path, context).map((item) => ({
+    key: `${destination.section}:${item.key}`,
+    label: item.label,
+    destination: createSettingsDestination(destination.section, item.path)
+  }));
 }
 
 export function sameSettingsDestination(left: SettingsDestination | undefined, right: SettingsDestination) {

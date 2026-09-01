@@ -4009,10 +4009,19 @@ try {
   await waitForVisible("ai-open-library");
   assert.equal(await page.getByTestId("settings-history-bar").count(), 1, "the AI root keeps real cross-category back history");
   assert.equal(await page.getByTestId("ai-settings-not-loaded").count(), 0, "the first AI visit initializes its retained workspace");
+  assert.deepEqual(
+    (await page.locator(".settings-history-bar__link").allTextContents()).map((label) => label.trim()),
+    ["AI 工作区"],
+    "the AI root breadcrumb omits the redundant AI category label"
+  );
   await prepareSettingsScreenshot();
   await page.screenshot({ path: path.join(reportDirectory, "settings-ai-root-audit.png"), fullPage: false });
   await (await waitForVisible("ai-open-library")).click();
   await (await waitForVisible("preset-card-lyrical")).click();
+  const nestedAIBreadcrumbs = (await page.locator(".settings-history-bar__link").allTextContents()).map((label) => label.trim());
+  assert.equal(nestedAIBreadcrumbs[0], "AI 工作区", "AI child history starts from the meaningful workspace root");
+  assert.equal(nestedAIBreadcrumbs.includes("AI"), false, "AI child history does not restore the redundant category crumb");
+  assert.ok(nestedAIBreadcrumbs.length >= 3, "AI child history retains the workspace, library, and preset levels");
   await assertSettingsHistoryBarChrome();
   const presetTitle = await waitForVisible("preset-title-input");
   const presetPrompt = await waitForVisible("preset-prompt-input");
