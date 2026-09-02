@@ -154,8 +154,9 @@ jobs:
     name: web-lite-cross-browser-smoke (${{ matrix.browser }})
     # Keep the release-blocking compatibility subset small: detailed geometry,
     # axe, format, render-boundary, and benchmark coverage stays Chromium-only.
+    # Leave bounded headroom for runner-level system dependency installation.
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     strategy:
       fail-fast: false
       matrix:

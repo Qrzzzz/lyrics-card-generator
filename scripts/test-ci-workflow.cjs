@@ -121,7 +121,7 @@ const crossBrowserJob = workflow.slice(crossBrowserJobStart, crossBrowserJobEnd)
 assert.match(chromiumJob, /npx playwright install --with-deps chromium/, "the existing full Web Lite job installs Chromium");
 assert.match(chromiumJob, /npm run web-lite:smoke/, "the existing full Chromium Web Lite suite remains continuous");
 assert.doesNotMatch(chromiumJob, /firefox|webkit/i, "the full suite is not tripled across browser engines");
-assert.match(crossBrowserJob, /timeout-minutes: 15/, "the cross-browser job has a bounded timeout");
+assert.match(crossBrowserJob, /timeout-minutes: 25/, "the cross-browser job has a bounded timeout with dependency-install headroom");
 assert.match(crossBrowserJob, /fail-fast: false/, "one browser failure does not suppress the other browser result");
 assert.match(crossBrowserJob, /browser:\r?\n\s+- firefox\r?\n\s+- webkit/, "Firefox and WebKit are the exact compatibility matrix");
 assert.match(crossBrowserJob, /npx playwright install --with-deps \$\{\{ matrix\.browser \}\}/, "each matrix leg installs only its browser");
