@@ -1,6 +1,6 @@
 "use client";
 
-import { GeneratedWatermark } from "@/components/preview/GeneratedWatermark";
+import { ProjectSignature } from "@/components/preview/ProjectSignature";
 import { PlatformBadge } from "@/components/preview/PlatformBadge";
 import type { SongSource } from "@/lib/types";
 import { withAlpha } from "@/lib/palette-background";
@@ -63,8 +63,8 @@ export function LandscapeAccessories({
         </div>
       ) : null}
       {showGeneratedWatermark ? (
-        <div style={{ marginTop: (showPlatform || sharedBy ? 24 : 0) * scale }}>
-          <GeneratedWatermark color={textColor} variant="landscape" scale={scale} />
+        <div style={{ marginTop: (showPlatform || sharedBy ? 16 : 0) * scale }}>
+          <ProjectSignature color={textColor} variant="landscape" scale={scale} />
         </div>
       ) : null}
     </footer>

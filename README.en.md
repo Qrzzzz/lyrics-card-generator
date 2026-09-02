@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v6.2.4.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v6.2.5.en.md">Release Notes</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
   <a href="./docs/web-lite-browser-support.md">Web Lite Browser Support</a> ·
   <a href="#features">Features</a> ·
@@ -75,24 +75,24 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 ## 📦 Download and Installation
 
-v6.2.4 is released and available from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
+Download the latest public version from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest). The Windows installer is:
 
-* Windows x64 installer: `Lyrics.Card.Generator.Setup.6.2.4.exe`
+* Windows x64 installer: `Lyrics.Card.Generator.Setup.6.2.5.exe`
 
 Starting with v6.2.2, Windows x64 Setup is the only distributed desktop package.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v6.2.4 Highlights
+### v6.2.5 Highlights
 
-* The settings system is reorganized by actual scope across new-card footer defaults, file export, AI connection and translation, history, and storage.
-* Settings and AI save failures now remain globally visible with retry support; footer defaults apply only to newly created cards instead of overwriting the current document.
-* This release adds a safe AI connection test, a no-retention option for automatic history, scoped preference reset, font validation, offline license links, and accessibility improvements.
+* The generator watermark becomes a single-line `Qrzzzz/lyrics-card-generator` project signature without divider lines.
+* A normal-width modern sans-serif, weight 400, a 26px portrait base, and a 30px landscape base keep the signature clearly readable in exported images.
+* Portrait and landscape footer spacing is tightened, the redundant landscape auto-growth hint is removed, and all six settings locales use project-signature wording while existing preference fields remain compatible.
 
 ## 🌐 Multilingual Release Notes
 
 GitHub Release displays a Simplified Chinese summary by default. See the full release notes:
-[简体中文](./docs/releases/v6.2.4.zh-CN.md) · [繁體中文](./docs/releases/v6.2.4.zh-TW.md) · [English](./docs/releases/v6.2.4.en.md) · [Français](./docs/releases/v6.2.4.fr.md) · [日本語](./docs/releases/v6.2.4.ja.md) · [Español](./docs/releases/v6.2.4.es.md)
+[简体中文](./docs/releases/v6.2.5.zh-CN.md) · [繁體中文](./docs/releases/v6.2.5.zh-TW.md) · [English](./docs/releases/v6.2.5.en.md) · [Français](./docs/releases/v6.2.5.fr.md) · [日本語](./docs/releases/v6.2.5.ja.md) · [Español](./docs/releases/v6.2.5.es.md)
 
 <a id="features"></a>
 

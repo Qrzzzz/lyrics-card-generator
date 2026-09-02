@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v6.2.4.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v6.2.5.zh-CN.md">发布说明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">在线 Web Lite 版</a> ·
   <a href="./docs/web-lite-browser-support.md">Web Lite 浏览器支持</a> ·
   <a href="./docs/desktop.md">桌面维护文档</a> ·
@@ -73,24 +73,24 @@
 
 ## 📦 下载与安装
 
-v6.2.4 已发布，可从 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 下载：
+最新公开版本请从 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 获取，Windows 安装包文件名为：
 
-* Windows x64 安装版：`Lyrics.Card.Generator.Setup.6.2.4.exe`
+* Windows x64 安装版：`Lyrics.Card.Generator.Setup.6.2.5.exe`
 
 从 v6.2.2 起只提供 Windows x64 Setup 安装包。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v6.2.4 更新重点
+### v6.2.5 更新重点
 
-* 重构设置体系，将卡片页脚默认值、文件导出、AI 连接与翻译、历史和存储按真实作用域重新分组。
-* 设置与 AI 保存失败现在会在全局持续提示并支持重试；页脚默认值只影响新建卡片，不再覆盖当前文档。
-* 新增安全的 AI 连接测试、自动历史“不保留”、应用偏好重置、字体校验和离线许可入口，并补齐无障碍体验。
+* 将导出卡片的生成器水印改为单行 `Qrzzzz/lyrics-card-generator` 项目署名，并取消两侧分隔线。
+* 使用正常字宽的现代无衬线字体、400 字重、26px 竖版基准与 30px 横版基准字号，让署名在导出图中保持清晰可读。
+* 收紧横竖版页脚间距、移除横版布局中的冗余自动延长说明，并同步六语言设置文案；现有配置字段保持兼容。
 
 ## 🌐 多语言发布说明
 
 GitHub Release 默认展示简体中文摘要，完整说明见：
-[简体中文](./docs/releases/v6.2.4.zh-CN.md) · [繁體中文](./docs/releases/v6.2.4.zh-TW.md) · [English](./docs/releases/v6.2.4.en.md) · [Français](./docs/releases/v6.2.4.fr.md) · [日本語](./docs/releases/v6.2.4.ja.md) · [Español](./docs/releases/v6.2.4.es.md)
+[简体中文](./docs/releases/v6.2.5.zh-CN.md) · [繁體中文](./docs/releases/v6.2.5.zh-TW.md) · [English](./docs/releases/v6.2.5.en.md) · [Français](./docs/releases/v6.2.5.fr.md) · [日本語](./docs/releases/v6.2.5.ja.md) · [Español](./docs/releases/v6.2.5.es.md)
 
 <a id="主要功能"></a>
 

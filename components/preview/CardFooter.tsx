@@ -1,6 +1,6 @@
 "use client";
 
-import { GeneratedWatermark } from "@/components/preview/GeneratedWatermark";
+import { ProjectSignature } from "@/components/preview/ProjectSignature";
 import { PlatformBadge } from "@/components/preview/PlatformBadge";
 import { SharedBy } from "@/components/preview/SharedBy";
 import type { SongSource } from "@/lib/types";
@@ -21,18 +21,18 @@ export function CardFooter({
   textColor: string;
 }) {
   const hasPlatform = showPlatformLogo && platformSource !== "unknown";
-  const hasGeneratedWatermark = showGeneratedWatermark;
+  const hasProjectSignature = showGeneratedWatermark;
   const trimmedSharedBy = sharedByText.trim();
   const hasSharedBy = showSharedBy && trimmedSharedBy.length > 0;
   const hasTopFooterRow = hasPlatform || hasSharedBy;
-  const hasFooter = hasTopFooterRow || hasGeneratedWatermark;
+  const hasFooter = hasTopFooterRow || hasProjectSignature;
 
   if (!hasFooter) {
     return null;
   }
 
   return (
-    <footer className="mt-auto flex shrink-0 flex-col gap-5">
+    <footer className="mt-auto flex shrink-0 flex-col gap-[14px]">
       {hasTopFooterRow ? (
         <div className="grid grid-cols-2 items-end">
           <div className="justify-self-start">
@@ -44,7 +44,7 @@ export function CardFooter({
         </div>
       ) : null}
 
-      {hasGeneratedWatermark ? <GeneratedWatermark color={textColor} /> : null}
+      {hasProjectSignature ? <ProjectSignature color={textColor} /> : null}
     </footer>
   );
 }

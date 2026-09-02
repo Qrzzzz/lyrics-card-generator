@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v6.2.4.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v6.2.5.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="./docs/development.en.md">ローカル開発</a> ·
@@ -74,24 +74,24 @@
 
 ## 📦 ダウンロードとインストール
 
-v6.2.4 は公開済みです。[GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) から次のファイルを入手できます。
+最新の公開版は [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) から入手できます。Windows インストーラー名は次のとおりです。
 
-* Windows x64 インストーラー：`Lyrics.Card.Generator.Setup.6.2.4.exe`
+* Windows x64 インストーラー：`Lyrics.Card.Generator.Setup.6.2.5.exe`
 
 v6.2.2 以降、配布するデスクトップパッケージは Windows x64 Setup のみです。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v6.2.4 の主な更新
+### v6.2.5 の主な更新
 
-* 新規カードのフッター既定値、ファイル書き出し、AI 接続と翻訳、履歴と保存領域を実際の適用範囲に沿って再編しました。
-* 設定と AI の保存失敗を画面全体で継続表示し、再試行できるようにしました。フッター既定値は新規カードだけに適用され、現在の文書を上書きしません。
-* 安全な AI 接続テスト、自動履歴を保持しない選択肢、対象を限定した設定リセット、フォント検証、オフラインライセンス入口、アクセシビリティ改善を追加しました。
+* 生成ツールの透かしを、区切り線のない 1 行の `Qrzzzz/lyrics-card-generator` プロジェクト署名に変更しました。
+* 標準字幅のモダンなサンセリフ、ウェイト 400、縦向き基準 26px、横向き基準 30px により、書き出し画像でも署名を明瞭に読めます。
+* 縦向き／横向きのフッター間隔を縮め、横向きレイアウトの冗長な自動拡張説明を削除し、設定の 6 言語をプロジェクト署名の表現に統一しました。既存フィールドとの互換性は維持します。
 
 ## 🌐 多言語リリースノート
 
 GitHub Release ではデフォルトで簡体字中国語の概要が表示されます。完全なリリースノートはこちら：
-[简体中文](./docs/releases/v6.2.4.zh-CN.md) · [繁體中文](./docs/releases/v6.2.4.zh-TW.md) · [English](./docs/releases/v6.2.4.en.md) · [Français](./docs/releases/v6.2.4.fr.md) · [日本語](./docs/releases/v6.2.4.ja.md) · [Español](./docs/releases/v6.2.4.es.md)
+[简体中文](./docs/releases/v6.2.5.zh-CN.md) · [繁體中文](./docs/releases/v6.2.5.zh-TW.md) · [English](./docs/releases/v6.2.5.en.md) · [Français](./docs/releases/v6.2.5.fr.md) · [日本語](./docs/releases/v6.2.5.ja.md) · [Español](./docs/releases/v6.2.5.es.md)
 
 <a id="主な機能"></a>
 
