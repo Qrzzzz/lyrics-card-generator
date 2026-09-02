@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v6.2.4.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v6.2.5.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="./docs/development.en.md">Développement local</a> ·
@@ -74,24 +74,24 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 ## 📦 Téléchargement et installation
 
-La v6.2.4 est publiée et disponible dans [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) :
+Téléchargez la dernière version publique depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest). Le programme d’installation Windows est :
 
-* Programme d’installation Windows x64 : `Lyrics.Card.Generator.Setup.6.2.4.exe`
+* Programme d’installation Windows x64 : `Lyrics.Card.Generator.Setup.6.2.5.exe`
 
 À partir de la v6.2.2, le programme Setup Windows x64 est le seul paquet distribué.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### Points forts de la v6.2.4
+### Points forts de la v6.2.5
 
-* Les réglages sont réorganisés selon leur portée réelle : valeurs par défaut du pied des nouvelles cartes, export de fichiers, connexion et traduction IA, historique et stockage.
-* Les échecs d’enregistrement des réglages et de l’IA restent désormais visibles globalement avec une option de nouvelle tentative ; les valeurs du pied ne modifient plus le document courant.
-* Cette version ajoute un test de connexion IA sécurisé, l’option de ne pas conserver l’historique automatique, une réinitialisation ciblée, la validation des polices, des licences hors ligne et des améliorations d’accessibilité.
+* Le filigrane du générateur devient une signature de projet `Qrzzzz/lyrics-card-generator` sur une seule ligne, sans lignes de séparation.
+* Une police sans sérif moderne de largeur normale, une graisse 400, une base de 26px en portrait et de 30px en paysage gardent la signature clairement lisible dans les images exportées.
+* L’espacement du pied est resserré en portrait et paysage, l’indication redondante d’agrandissement automatique est supprimée, et les six langues des réglages utilisent le vocabulaire de signature de projet tout en conservant les champs existants.
 
 ## 🌐 Notes de publication multilingues
 
 Par défaut, GitHub Release affiche un résumé en chinois simplifié. Consultez les notes complètes :
-[简体中文](./docs/releases/v6.2.4.zh-CN.md) · [繁體中文](./docs/releases/v6.2.4.zh-TW.md) · [English](./docs/releases/v6.2.4.en.md) · [Français](./docs/releases/v6.2.4.fr.md) · [日本語](./docs/releases/v6.2.4.ja.md) · [Español](./docs/releases/v6.2.4.es.md)
+[简体中文](./docs/releases/v6.2.5.zh-CN.md) · [繁體中文](./docs/releases/v6.2.5.zh-TW.md) · [English](./docs/releases/v6.2.5.en.md) · [Français](./docs/releases/v6.2.5.fr.md) · [日本語](./docs/releases/v6.2.5.ja.md) · [Español](./docs/releases/v6.2.5.es.md)
 
 <a id="fonctionnalités-principales"></a>
 

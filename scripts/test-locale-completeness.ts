@@ -17,7 +17,7 @@ const translatedLocales: Locale[] = ["fr", "ja", "es"];
 // of protocol labels and product terms to remain intentionally shared.
 assertCatalog("main", messages, new Set([
   "chinese", "english", "songSearchSourceNetease", "album", "auto", "gridDense",
-  "lyricsSource", "qualityLow"
+  "lyricsSource", "qualityLow", "generatedBy", "madeWith"
 ]));
 assertCatalog("settings", settingsCopy, new Set([
   "ai", "general", "export", "image", "source", "low", "accentOrange", "accentCustomPlaceholder", "version"
@@ -52,7 +52,7 @@ assert.equal(messages.en.allowMultiLineTitle, "Allow Multi-line Title");
 assert.equal(messages["zh-TW"].appSubtitle, "製作 Apple Music 風格的歌詞分享圖片");
 assert.equal(messages["zh-TW"].songSearchDescription, "輸入歌名、演出者或專輯，選取結果後匯入歌曲資訊與歌詞。");
 assert.equal(messages["zh-TW"].localAudioTitle, "上傳本機音訊檔");
-assert.equal(messages["zh-TW"].madeWith, "由 Lyric Card Generator 產生");
+assert.equal(messages["zh-TW"].madeWith, "Qrzzzz/lyrics-card-generator");
 
 const traditionalCatalog = Object.values(messages["zh-TW"]).join("\n");
 for (const simplifiedPhrase of ["设置", "关闭", "选择", "语言", "歌词", "图片", "网络", "错误", "保存", "加载", "导出", "简体", "音乐"]) {

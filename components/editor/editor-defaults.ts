@@ -1,10 +1,10 @@
 import { PRESET_CARD_SIZES } from "@/lib/card-size";
 import { DEFAULT_FONT_SCHEME } from "@/lib/font-schemes";
-import { messages } from "@/lib/i18n";
 import { DEFAULT_LYRIC_LINE_HEIGHT } from "@/lib/lyric-typography";
 import { createEmptyLyricDocument } from "@/lib/lyrics-document-v2";
 import { DEFAULT_LANDSCAPE_LAYOUT_SETTINGS } from "@/lib/landscape-plan";
 import { DEFAULT_PALETTE } from "@/lib/palette-background";
+import { PROJECT_SIGNATURE_TEXT } from "@/lib/project-signature";
 import type { AppState, Locale } from "@/lib/types";
 import type { UserSettings } from "@/lib/settings/types";
 
@@ -89,7 +89,7 @@ export const defaultState: AppState = {
     showFineGrid: false,
     fineGridDensity: "medium",
     coverCropScale: 1,
-    watermark: messages.zh.madeWith,
+    watermark: PROJECT_SIGNATURE_TEXT,
     landscapeLayout: { ...DEFAULT_LANDSCAPE_LAYOUT_SETTINGS }
   },
   lastPortraitSize: {

@@ -19,7 +19,7 @@
 <p>
   <strong>Navegación</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Descargar la última versión</a> ·
-  <a href="./docs/releases/v6.2.4.es.md">Notas de la versión</a> ·
+  <a href="./docs/releases/v6.2.5.es.md">Notas de la versión</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en línea</a> ·
   <a href="#funciones-principales">Funciones principales</a> ·
   <a href="./docs/development.en.md">Desarrollo local</a> ·
@@ -74,24 +74,24 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 ## 📦 Descarga e instalación
 
-La v6.2.4 está publicada y disponible en [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest):
+Descarga la última versión pública desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest). El instalador de Windows se llama:
 
-* Instalador de Windows x64: `Lyrics.Card.Generator.Setup.6.2.4.exe`
+* Instalador de Windows x64: `Lyrics.Card.Generator.Setup.6.2.5.exe`
 
 A partir de v6.2.2, Setup para Windows x64 es el único paquete de escritorio distribuido.
 
 > La compilación actual no está firmada. Windows puede mostrar una advertencia de SmartScreen, algo habitual en aplicaciones personales sin firma.
 
-### Novedades de v6.2.4
+### Novedades de v6.2.5
 
-* Los ajustes se reorganizan por su ámbito real: valores del pie para tarjetas nuevas, exportación de archivos, conexión y traducción con IA, historial y almacenamiento.
-* Los fallos al guardar ajustes y datos de IA ahora permanecen visibles globalmente y permiten reintentar; los valores del pie ya no sobrescriben el documento actual.
-* Se añaden una prueba segura de conexión de IA, la opción de no conservar el historial automático, un restablecimiento limitado, validación de fuentes, licencias sin conexión y mejoras de accesibilidad.
+* La marca de agua del generador se convierte en una firma de proyecto `Qrzzzz/lyrics-card-generator` de una sola línea y sin divisores.
+* Una sans serif moderna de ancho normal, peso 400, base vertical de 26px y base horizontal de 30px mantiene la firma claramente legible en las imágenes exportadas.
+* Se reduce el espacio del pie, se elimina la indicación redundante de crecimiento automático horizontal y los ajustes usan la terminología de firma del proyecto en los seis idiomas, manteniendo compatibles los campos existentes.
 
 ## 🌐 Notas de publicación multilingües
 
 GitHub Release muestra de forma predeterminada un resumen en chino simplificado. Consulta las notas completas:
-[简体中文](./docs/releases/v6.2.4.zh-CN.md) · [繁體中文](./docs/releases/v6.2.4.zh-TW.md) · [English](./docs/releases/v6.2.4.en.md) · [Français](./docs/releases/v6.2.4.fr.md) · [日本語](./docs/releases/v6.2.4.ja.md) · [Español](./docs/releases/v6.2.4.es.md)
+[简体中文](./docs/releases/v6.2.5.zh-CN.md) · [繁體中文](./docs/releases/v6.2.5.zh-TW.md) · [English](./docs/releases/v6.2.5.en.md) · [Français](./docs/releases/v6.2.5.fr.md) · [日本語](./docs/releases/v6.2.5.ja.md) · [Español](./docs/releases/v6.2.5.es.md)
 
 <a id="funciones-principales"></a>
 

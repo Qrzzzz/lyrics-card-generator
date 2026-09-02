@@ -741,7 +741,7 @@ test("keeps local readability fields identical in preview and ExportCardHost", a
   });
 
   await page.locator('[data-step-id="visual"]').click();
-  await page.getByRole("switch", { name: "Show Generated Watermark", exact: true }).click();
+  await page.getByRole("switch", { name: "Show project signature", exact: true }).click();
   await page.getByRole("switch", { name: "Show Shared By", exact: true }).click();
   await page.getByPlaceholder("e.g. Shared by Cherry", { exact: true }).fill("A listener who kept every word");
   await expect(previewCard.locator("[data-landscape-accessories]")).toBeVisible();

@@ -338,7 +338,6 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
               />
             </FieldLabel>
           ) : null}
-          <p className="app-text-subtle text-xs leading-relaxed">{t("landscapeHeightFloorHint")}</p>
         </div>
       ) : null}
 
@@ -407,7 +406,7 @@ export function VisualSettingsPanel({
     onStyleChange({ ...style, [key]: value });
   }
 
-  function updateGeneratedWatermark(enabled: boolean) {
+  function updateProjectSignature(enabled: boolean) {
     // Preserve the legacy watermark field while the newer renderer reads the explicit field.
     onStyleChange({ ...style, showGeneratedWatermark: enabled, showWatermark: enabled });
   }
@@ -454,7 +453,7 @@ export function VisualSettingsPanel({
         {(style.layoutMode ?? "portrait") === "portrait" ? (
           <ToggleRow label={t("allowMultiLineTitle")} checked={style.allowMultiLineTitle} onChange={(checked) => update("allowMultiLineTitle", checked)} />
         ) : null}
-        <ToggleRow label={t("showGeneratedWatermark")} checked={style.showGeneratedWatermark} onChange={updateGeneratedWatermark} />
+        <ToggleRow label={t("showGeneratedWatermark")} checked={style.showGeneratedWatermark} onChange={updateProjectSignature} />
         {showPlatformBadgeControl ? (
           <ToggleRow
             label={t("showPlatformLogo")}
