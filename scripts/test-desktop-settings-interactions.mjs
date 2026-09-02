@@ -3087,8 +3087,11 @@ async function assertLyricsWorkspaceSplitInteractions() {
   await setNativeDialogDecision("accept", "覆盖现有译文？");
   const confirmAITranslate = page.getByTestId("confirm-ai-translate");
   await confirmAITranslate.focus();
+  assert.equal(await confirmAITranslate.isEnabled(), true, "AI translation starts from the real enabled React control");
   // Begin observing before activation so a fast runner cannot complete the
-  // transient overlap before Playwright starts polling for both pages.
+  // transient overlap before Playwright starts polling for both pages. Invoke
+  // the focused button in the renderer so Playwright's synthetic key sequence
+  // does not remain open across the Electron native-confirm IPC round trip.
   const [runPageTransition] = await Promise.all([
     page.waitForFunction(() => {
       const viewport = document.querySelector('[data-testid="ai-translate-stage-viewport"]');
@@ -3109,7 +3112,10 @@ async function assertLyricsWorkspaceSplitInteractions() {
         runInert: run.hasAttribute("inert")
       };
     }),
-    confirmAITranslate.press("Enter")
+    confirmAITranslate.evaluate((node) => {
+      if (!(node instanceof HTMLButtonElement)) throw new Error("AI confirm control is not a button");
+      node.click();
+    })
   ]);
   assert.deepEqual(
     await runPageTransition.jsonValue(),
