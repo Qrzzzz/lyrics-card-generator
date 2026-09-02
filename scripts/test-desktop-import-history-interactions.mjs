@@ -276,7 +276,6 @@ async function closeThroughDesktopApi() {
   // Let Playwright request one normal application close. The main process then
   // asks the renderer to flush and confirm; issuing confirm first leaves a
   // second close call racing an application that is already shutting down.
-  nativeDialogs.push(...await readCurrentNativeDialogs());
   await closeElectronApplication(electronApp, { label: "desktop-history-regression" });
   electronApp = undefined;
   page = undefined;
@@ -369,6 +368,21 @@ async function waitForPreferenceLimit(expected) {
 
 async function currentSongTitle() {
   return (await page.getByTestId("song-info-summary").locator("dd").first().textContent())?.trim() ?? "";
+}
+
+async function currentToastRevision(message) {
+  const toast = page.getByTestId("app-toast").filter({ hasText: message });
+  if (await toast.count() === 0) return null;
+  return toast.first().getAttribute("data-repeat-revision");
+}
+
+async function waitForFreshToast(message, previousRevision) {
+  await page.waitForFunction(({ expectedMessage, previous }) => (
+    Array.from(document.querySelectorAll('[data-testid="app-toast"]')).some((node) => (
+      node.textContent?.includes(expectedMessage)
+        && node.getAttribute("data-repeat-revision") !== previous
+    ))
+  ), { expectedMessage: message, previous: previousRevision }, { timeout: 15_000 });
 }
 
 async function waitForHistoryCards(expected, timeout = 30_000) {
@@ -1235,6 +1249,7 @@ try {
   );
   assert.doesNotMatch(JSON.stringify(replayFixtureInternal.snapshot), /DO_NOT_PERSIST|token=|api_key=/);
 
+  nativeDialogs.push(...await readCurrentNativeDialogs());
   await closeThroughDesktopApi();
   await launchApp({ expectedLocale: "en", expectedHistoryLimit: "unlimited" });
   await waitForHistoryTotal(1);
@@ -1594,6 +1609,7 @@ try {
   const persistedBeforeRestart = await waitForPersistedHistoryTotal(1);
   assert.equal(persistedBeforeRestart.schemaVersion, 2);
   assert.equal(persistedBeforeRestart.records.length, 1);
+  nativeDialogs.push(...await readCurrentNativeDialogs());
   await closeThroughDesktopApi();
 
   await launchApp({ expectedLocale: "en", expectedHistoryLimit: "unlimited" });
@@ -1602,11 +1618,10 @@ try {
   assert.match(await persistedSurface.textContent(), /restart persistence/i, "history survives a desktop restart");
   resolveShouldFail = true;
   const blankBeforeRemoteFailure = await currentSongTitle();
+  const remoteFailureMessage = "current document unchanged";
+  const remoteFailureToastRevision = await currentToastRevision(remoteFailureMessage);
   await replayCard("search");
-  await page.getByTestId("app-toast").filter({ hasText: "current document unchanged" }).waitFor({
-    state: "visible",
-    timeout: 15_000
-  });
+  await waitForFreshToast(remoteFailureMessage, remoteFailureToastRevision);
   assert.equal(await persistedSurface.getAttribute("data-surface-state"), "open", "remote replay failure keeps history open");
   assert.equal(await currentSongTitle(), blankBeforeRemoteFailure, "remote replay failure preserves the current document");
   resolveShouldFail = false;
@@ -1672,11 +1687,10 @@ try {
     dialog.showOpenDialog = async () => ({ canceled: false, filePaths: [selectedPath] });
   }, rejectedRelocatedAudioPath);
   localAudioShouldFail = true;
+  const relocationFailureMessage = "current document unchanged";
+  const relocationFailureToastRevision = await currentToastRevision(relocationFailureMessage);
   await replayCard("local-audio", { relocate: true });
-  await page.getByTestId("app-toast").filter({ hasText: "current document unchanged" }).waitFor({
-    state: "visible",
-    timeout: 15_000
-  });
+  await waitForFreshToast(relocationFailureMessage, relocationFailureToastRevision);
   localAudioShouldFail = false;
   const historyAfterRejectedRelocation = JSON.parse(await readFile(historyPath, "utf8"));
   const localRecordAfterRejectedRelocation = historyAfterRejectedRelocation.records.find(
@@ -1812,6 +1826,9 @@ try {
     durablePendingCloseLyrics,
     "the small native DOM edit settles through the real React document transaction"
   );
+  // Snapshot diagnostics before starting the in-flight write so the close-path
+  // assertion remains exactly save -> normal close -> durable disk read.
+  nativeDialogs.push(...await readCurrentNativeDialogs());
   await clickManualSave();
   await closeThroughDesktopApi();
   const pendingCloseHistory = JSON.parse(await readFile(historyPath, "utf8"));
