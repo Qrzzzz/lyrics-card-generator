@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v6.2.5.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v6.2.6.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="./docs/development.en.md">ローカル開発</a> ·
@@ -76,22 +76,24 @@
 
 最新の公開版は [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) から入手できます。Windows インストーラー名は次のとおりです。
 
-* Windows x64 インストーラー：`Lyrics.Card.Generator.Setup.6.2.5.exe`
+* Windows x64 インストーラー：`Lyrics.Card.Generator.Setup.6.2.6.exe`
+
+> v6.2.6 は未公開です。現在のリポジトリ内容はローカル候補版です。
 
 v6.2.2 以降、配布するデスクトップパッケージは Windows x64 Setup のみです。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v6.2.5 の主な更新
+### v6.2.6 の主な更新
 
-* 生成ツールの透かしを、区切り線のない 1 行の `Qrzzzz/lyrics-card-generator` プロジェクト署名に変更しました。
-* 標準字幅のモダンなサンセリフ、ウェイト 400、縦向き基準 26px、横向き基準 30px により、書き出し画像でも署名を明瞭に読めます。
-* 縦向き／横向きのフッター間隔を縮め、横向きレイアウトの冗長な自動拡張説明を削除し、設定の 6 言語をプロジェクト署名の表現に統一しました。既存フィールドとの互換性は維持します。
+* 曲情報、歌詞、フッターの背後にあった広範囲の可読性マスクを削除し、内容領域に大きな暗い塊が生じないようにしました。
+* 文字には字形に沿う小さく薄い影だけを残し、カバーにも控えめな影を使って背景から軽く浮かせます。
+* カスタムフォント構成を 2 つのプリセットと同じ単層カードに変更し、入れ子の背景パネルを廃止しました。冗長な自動拡張説明は引き続き表示しません。
 
 ## 🌐 多言語リリースノート
 
 GitHub Release ではデフォルトで簡体字中国語の概要が表示されます。完全なリリースノートはこちら：
-[简体中文](./docs/releases/v6.2.5.zh-CN.md) · [繁體中文](./docs/releases/v6.2.5.zh-TW.md) · [English](./docs/releases/v6.2.5.en.md) · [Français](./docs/releases/v6.2.5.fr.md) · [日本語](./docs/releases/v6.2.5.ja.md) · [Español](./docs/releases/v6.2.5.es.md)
+[简体中文](./docs/releases/v6.2.6.zh-CN.md) · [繁體中文](./docs/releases/v6.2.6.zh-TW.md) · [English](./docs/releases/v6.2.6.en.md) · [Français](./docs/releases/v6.2.6.fr.md) · [日本語](./docs/releases/v6.2.6.ja.md) · [Español](./docs/releases/v6.2.6.es.md)
 
 <a id="主な機能"></a>
 

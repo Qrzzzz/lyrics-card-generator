@@ -22,7 +22,7 @@ export function LandscapeSongMetadata({
       data-landscape-song-metadata
       style={{
         color: textColor,
-        textShadow: measurement || isColorDark(textColor) ? "none" : "0 10px 32px rgba(0,0,0,0.34)"
+        textShadow: measurement ? "none" : undefined
       }}
     >
       <h1
@@ -48,13 +48,4 @@ export function LandscapeSongMetadata({
       ) : null}
     </header>
   );
-}
-
-function isColorDark(hex: string) {
-  const normalized = hex.replace("#", "");
-  if (normalized.length !== 6) return false;
-  const red = Number.parseInt(normalized.slice(0, 2), 16);
-  const green = Number.parseInt(normalized.slice(2, 4), 16);
-  const blue = Number.parseInt(normalized.slice(4, 6), 16);
-  return (0.2126 * red + 0.7152 * green + 0.0722 * blue) / 255 < 0.42;
 }

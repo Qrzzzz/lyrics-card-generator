@@ -5,13 +5,15 @@ import { AdaptiveAlbumArtwork } from "@/components/preview/AdaptiveAlbumArtwork"
 import { LandscapeAccessories } from "@/components/preview/LandscapeAccessories";
 import { LandscapeLyricsContent } from "@/components/preview/LandscapeLyricsContent";
 import { LandscapeSongMetadata } from "@/components/preview/LandscapeSongMetadata";
-import { LocalReadabilityLayer } from "@/components/preview/LocalReadabilityLayer";
 import { PaletteBackground } from "@/components/preview/PaletteBackground";
-import { createCardReadabilityPlan } from "@/lib/background-composition-constraints";
+import {
+  CARD_ARTWORK_BOX_SHADOW,
+  CARD_ARTWORK_DROP_SHADOW,
+  resolveCardContentTextShadow
+} from "@/lib/card-content-depth";
 import { getCardSize } from "@/lib/card-size";
 import { cardFontStyle, fontClassName } from "@/lib/fonts";
 import { proxiedImageUrl } from "@/lib/image-utils";
-import { DEFAULT_PALETTE } from "@/lib/palette-background";
 import type { LyricDocumentV2 } from "@/lib/lyrics-document-v2";
 import type { CardStyle, CoverArtworkAnalysis, SongInfo } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -37,15 +39,6 @@ export function LandscapeLyricCard({
 
   useEffect(() => setCoverFailed(false), [cover]);
 
-  const readabilityPlan = plan
-    ? createCardReadabilityPlan({
-        canvas: size,
-        style,
-        palette: style.extractedPalette ?? DEFAULT_PALETTE,
-        layout: plan
-      })
-    : null;
-
   return (
     <article
       className={cn("relative isolate overflow-hidden bg-[#111216] text-white", fontClassName(style.font))}
@@ -61,8 +54,6 @@ export function LandscapeLyricCard({
         showFineGrid={style.showFineGrid === true}
         fineGridDensity={style.fineGridDensity ?? "medium"}
       />
-      {readabilityPlan ? <LocalReadabilityLayer plan={readabilityPlan} /> : null}
-
       {plan ? (
         <>
           <div
@@ -75,7 +66,11 @@ export function LandscapeLyricCard({
               height: plan.safeRect.height
             }}
           />
-          <div data-card-content className="absolute inset-0">
+          <div
+            data-card-content
+            className="absolute inset-0"
+            style={{ textShadow: resolveCardContentTextShadow(textColor) }}
+          >
             <AdaptiveAlbumArtwork
               sourceUrl={activeCover}
               analysis={coverArtwork}
@@ -83,8 +78,8 @@ export function LandscapeLyricCard({
               borderRadius={28 * plan.leftScale}
               className="absolute z-10"
               style={{ left: plan.coverRect.x, top: plan.coverRect.y }}
-              dropShadow="drop-shadow(0 34px 45px rgba(0,0,0,0.30))"
-              boxShadow="0 34px 90px rgba(0,0,0,0.30)"
+              dropShadow={CARD_ARTWORK_DROP_SHADOW}
+              boxShadow={CARD_ARTWORK_BOX_SHADOW}
               onError={() => setCoverFailed(true)}
               placeholderClassName="bg-black/10"
               testId="landscape-album-artwork"
@@ -149,7 +144,6 @@ export function LandscapeLyricCard({
                 lineHeight={style.lineHeight}
                 textColor={textColor}
                 align={style.align}
-                isDarkText={isColorDark(textColor)}
               />
             </div>
           </div>
@@ -157,13 +151,4 @@ export function LandscapeLyricCard({
       ) : null}
     </article>
   );
-}
-
-function isColorDark(hex: string) {
-  const normalized = hex.replace("#", "");
-  if (normalized.length !== 6) return false;
-  const red = Number.parseInt(normalized.slice(0, 2), 16);
-  const green = Number.parseInt(normalized.slice(2, 4), 16);
-  const blue = Number.parseInt(normalized.slice(4, 6), 16);
-  return (0.2126 * red + 0.7152 * green + 0.0722 * blue) / 255 < 0.42;
 }

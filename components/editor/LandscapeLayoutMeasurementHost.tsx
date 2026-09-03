@@ -75,7 +75,6 @@ export function LandscapeLayoutMeasurementHost({
           lineHeight={state.style.lineHeight}
           textColor={state.style.resolvedTextColor || "#FFFFFF"}
           align={state.style.align}
-          isDarkText={false}
           measurement
         />
       </div>

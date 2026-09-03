@@ -5,18 +5,20 @@ import type { SyntheticEvent } from "react";
 import { AdaptiveAlbumArtwork } from "@/components/preview/AdaptiveAlbumArtwork";
 import { InstrumentalBlock } from "@/components/preview/InstrumentalBlock";
 import { LandscapeLyricCard } from "@/components/preview/LandscapeLyricCard";
-import { LocalReadabilityLayer } from "@/components/preview/LocalReadabilityLayer";
 import { LyricsBlock } from "@/components/preview/LyricsBlock";
 import { PaletteBackground } from "@/components/preview/PaletteBackground";
 import { PortraitFooter } from "@/components/preview/PortraitFooter";
 import { ExplicitBadge } from "@/components/preview/ExplicitBadge";
+import {
+  CARD_ARTWORK_BOX_SHADOW,
+  CARD_ARTWORK_DROP_SHADOW,
+  resolveCardContentTextShadow
+} from "@/lib/card-content-depth";
 import { getCardSize as resolveCardSize } from "@/lib/card-size";
 import { getPortraitLayout } from "@/lib/card-layout-engine";
-import { createCardReadabilityPlan } from "@/lib/background-composition-constraints";
 import { normalizeCardStyle } from "@/lib/card-style-normalize";
 import { cardFontStyle, fontClassName } from "@/lib/fonts";
 import { proxiedImageUrl } from "@/lib/image-utils";
-import { DEFAULT_PALETTE } from "@/lib/palette-background";
 import type { LyricDocumentV2 } from "@/lib/lyrics-document-v2";
 import type { CardStyle, CoverArtworkAnalysis, Locale, SongInfo } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -54,18 +56,11 @@ export function LyricCard({
   const size = getCardSize(style);
   const activeCover = coverFailed ? "" : cover;
   const textColor = style.resolvedTextColor || "#FFFFFF";
-  const isDarkText = isColorDark(textColor);
   const contentMode = style.contentMode ?? "lyrics";
   const showGeneratedWatermark = style.showGeneratedWatermark ?? style.showWatermark;
   const layout = getPortraitLayout(size, style, song, {
     sourceUrl: activeCover,
     analysis: coverArtwork
-  });
-  const readabilityPlan = createCardReadabilityPlan({
-    canvas: size,
-    style,
-    palette: style.extractedPalette ?? DEFAULT_PALETTE,
-    layout
   });
 
   // Measurement and export-readiness hooks treat the card data attributes as a DOM contract.
@@ -82,8 +77,6 @@ export function LyricCard({
         showFineGrid={style.showFineGrid === true}
         fineGridDensity={style.fineGridDensity ?? "medium"}
       />
-      <LocalReadabilityLayer plan={readabilityPlan} />
-
       <div
         data-card-safe
         className="absolute"
@@ -97,6 +90,7 @@ export function LyricCard({
         <div
           data-card-content
           className="relative flex h-full w-full flex-col overflow-hidden rounded-none border border-transparent bg-transparent px-[18px] pt-[18px] pb-[8px] backdrop-blur-0"
+          style={{ textShadow: resolveCardContentTextShadow(textColor) }}
         >
           {(style.showCover || style.showSongInfo) && contentMode !== "instrumental" && layout.headerRect ? (
             <header
@@ -177,7 +171,6 @@ export function LyricCard({
                 coverArtwork={coverArtwork}
                 onCoverError={() => setCoverFailed(true)}
                 textColor={textColor}
-                isDarkText={isDarkText}
                 showAlbumName={style.showAlbumName}
                 allowMultiLineTitle={style.allowMultiLineTitle}
                 availableWidth={layout.lyricsRect.width}
@@ -192,7 +185,6 @@ export function LyricCard({
                 lineHeight={style.lineHeight}
                 textColor={textColor}
                 align={style.align}
-                isDarkText={isDarkText}
                 autoWidth={style.autoWidth === true}
               />
             )}
@@ -257,27 +249,14 @@ function AlbumCover({
       analysis={analysis}
       resolvedSize={{ width, height }}
       borderRadius={44}
-      dropShadow="drop-shadow(0 18px 24px rgba(0,0,0,0.24))"
+      dropShadow={CARD_ARTWORK_DROP_SHADOW}
+      boxShadow={CARD_ARTWORK_BOX_SHADOW}
       onLoad={onLoad}
       onError={onError}
       placeholderClassName="bg-black/10"
       testId="portrait-album-artwork"
     />
   );
-}
-
-function isColorDark(hex: string) {
-  const normalized = hex.replace("#", "");
-  if (normalized.length !== 6) {
-    return false;
-  }
-
-  const red = Number.parseInt(normalized.slice(0, 2), 16);
-  const green = Number.parseInt(normalized.slice(2, 4), 16);
-  const blue = Number.parseInt(normalized.slice(4, 6), 16);
-  const luminance = (0.2126 * red + 0.7152 * green + 0.0722 * blue) / 255;
-
-  return luminance < 0.42;
 }
 
 function withAlpha(hex: string, alpha: number) {
