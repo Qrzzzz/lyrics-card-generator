@@ -2,6 +2,7 @@
 
 import { AdaptiveAlbumArtwork } from "@/components/preview/AdaptiveAlbumArtwork";
 import { getArtworkAspectRatio, resolveAdaptiveArtworkSize } from "@/lib/artwork-geometry";
+import { CARD_ARTWORK_BOX_SHADOW, CARD_ARTWORK_DROP_SHADOW } from "@/lib/card-content-depth";
 import type { CoverArtworkAnalysis, SongInfo } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -11,7 +12,6 @@ export function InstrumentalBlock({
   coverArtwork,
   onCoverError,
   textColor,
-  isDarkText,
   showAlbumName,
   allowMultiLineTitle,
   availableWidth,
@@ -22,7 +22,6 @@ export function InstrumentalBlock({
   coverArtwork?: CoverArtworkAnalysis;
   onCoverError: () => void;
   textColor: string;
-  isDarkText: boolean;
   showAlbumName: boolean;
   allowMultiLineTitle: boolean;
   availableWidth: number;
@@ -65,18 +64,15 @@ export function InstrumentalBlock({
         isVerticalArtwork ? "flex-row gap-[52px] text-left" : "flex-col text-center"
       )}
       data-instrumental-artwork-layout={isVerticalArtwork ? "side-by-side" : "stacked"}
-      style={{
-        color: textColor,
-        textShadow: isDarkText ? "none" : "0 12px 34px rgba(0,0,0,0.34)"
-      }}
+      style={{ color: textColor }}
     >
       <AdaptiveAlbumArtwork
         sourceUrl={coverUrl}
         analysis={coverArtwork}
         resolvedSize={artworkSize}
         borderRadius={48}
-        dropShadow="drop-shadow(0 34px 45px rgba(0,0,0,0.30))"
-        boxShadow="0 34px 90px rgba(0,0,0,0.30)"
+        dropShadow={CARD_ARTWORK_DROP_SHADOW}
+        boxShadow={CARD_ARTWORK_BOX_SHADOW}
         onError={onCoverError}
         placeholderClassName="bg-white/8"
         testId="instrumental-album-artwork"

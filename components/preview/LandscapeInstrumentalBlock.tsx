@@ -10,8 +10,7 @@ export function LandscapeInstrumentalBlock({
   showAlbumName,
   left,
   top,
-  width,
-  isDarkText
+  width
 }: {
   song: SongInfo;
   instrumentalText: string;
@@ -20,7 +19,6 @@ export function LandscapeInstrumentalBlock({
   left: number;
   top: number;
   width: number;
-  isDarkText: boolean;
 }) {
   return (
     <section
@@ -29,8 +27,7 @@ export function LandscapeInstrumentalBlock({
         left,
         top,
         width,
-        color: textColor,
-        textShadow: isDarkText ? "none" : "0 10px 32px rgba(0,0,0,0.34)"
+        color: textColor
       }}
     >
       <h2 className="text-[64px] font-black leading-[1.1] tracking-normal">{song.title || "Untitled"}</h2>

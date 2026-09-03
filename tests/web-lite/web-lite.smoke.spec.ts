@@ -700,7 +700,7 @@ test("restores independent portrait and free-landscape sizing after round trips"
   await expect(page.getByLabel("Requested Height", { exact: true })).toHaveValue("900");
 });
 
-test("keeps local readability fields identical in preview and ExportCardHost", async ({ page }) => {
+test("keeps restrained content depth identical in preview and ExportCardHost", async ({ page }) => {
   test.setTimeout(120_000);
   await openWebLite(page, { width: 1440, height: 1000 });
   await page.getByLabel("Song Title", { exact: true }).fill(
@@ -722,23 +722,14 @@ test("keeps local readability fields identical in preview and ExportCardHost", a
   const previewCard = page.getByTestId("lyric-card-preview").locator('[data-export-card="true"]');
   const exportCard = page.locator('[data-export-card-host] [data-export-card="true"]').first();
   await expect(previewCard).toBeVisible();
-  await expectReadabilityParity(previewCard, exportCard);
-  await expect(previewCard.locator('[data-local-readability-layer="true"]')).toHaveAttribute("data-readability-zone-count", "2");
-  await expect(previewCard).toHaveScreenshot("readability-portrait-1x1.png", {
-    animations: "disabled",
-    maxDiffPixelRatio: 0.01
-  });
+  await expectContentDepthParity(previewCard, exportCard);
 
   await page.locator('[data-segment-value="landscape"]').click();
   await expect(previewCard).toHaveAttribute("data-landscape-plan", "ready");
   const title = previewCard.locator("[data-landscape-song-metadata] h1");
   await expect(title).toBeVisible();
   expect(await title.evaluate((node) => (node as HTMLElement).scrollHeight)).toBeGreaterThan(100);
-  await expectReadabilityParity(previewCard, exportCard);
-  await expect(previewCard).toHaveScreenshot("readability-landscape-free.png", {
-    animations: "disabled",
-    maxDiffPixelRatio: 0.01
-  });
+  await expectContentDepthParity(previewCard, exportCard);
 
   await page.locator('[data-step-id="visual"]').click();
   await page.getByRole("switch", { name: "Show project signature", exact: true }).click();
@@ -748,7 +739,7 @@ test("keeps local readability fields identical in preview and ExportCardHost", a
   await page.getByRole("switch", { name: "Background Grid", exact: true }).click();
   await expect(previewCard.locator('[data-card-fine-grid="true"]')).toHaveCount(1);
   await expect(exportCard.locator('[data-card-fine-grid="true"]')).toHaveCount(1);
-  await expectReadabilityParity(previewCard, exportCard);
+  await expectContentDepthParity(previewCard, exportCard);
 });
 
 test("renders enabled song titles beyond two lines without clipping portrait or instrumental metadata", async ({ page }) => {
@@ -1816,31 +1807,28 @@ async function exportAndExpectDimensions(page: Page, quality: "medium" | "high",
   await expect(exportButton).toBeEnabled();
 }
 
-async function readabilityDomContract(card: Locator) {
+async function contentDepthDomContract(card: Locator) {
   return card.evaluate((element) => {
-    const layer = element.querySelector<HTMLElement>('[data-local-readability-layer="true"]');
-    if (!layer) return null;
+    const content = element.querySelector<HTMLElement>("[data-card-content]");
     return {
-      overlay: layer.dataset.readabilityOverlay,
-      opacity: layer.dataset.readabilityOpacity,
-      count: layer.dataset.readabilityZoneCount,
-      zones: Array.from(layer.querySelectorAll<HTMLElement>("[data-readability-zone]")).map((zone) => ({
-        role: zone.dataset.readabilityZone,
-        targetContrast: zone.dataset.readabilityTargetContrast,
-        feather: zone.dataset.readabilityFeather,
-        x: zone.dataset.readabilityX,
-        y: zone.dataset.readabilityY,
-        width: zone.dataset.readabilityWidth,
-        height: zone.dataset.readabilityHeight,
-        background: zone.style.background
+      readabilityLayerCount: element.querySelectorAll('[data-local-readability-layer="true"]').length,
+      textShadow: content?.style.textShadow ?? null,
+      artworkDepth: Array.from(element.querySelectorAll<HTMLElement>('[data-card-album-cover="true"]')).map((artwork) => ({
+        filter: artwork.style.filter,
+        boxShadow: artwork.style.boxShadow
       }))
     };
   });
 }
 
-async function expectReadabilityParity(previewCard: Locator, exportCard: Locator) {
-  await expect.poll(async () => JSON.stringify(await readabilityDomContract(previewCard)) ===
-    JSON.stringify(await readabilityDomContract(exportCard))).toBe(true);
+async function expectContentDepthParity(previewCard: Locator, exportCard: Locator) {
+  await expect.poll(async () => JSON.stringify(await contentDepthDomContract(previewCard)) ===
+    JSON.stringify(await contentDepthDomContract(exportCard))).toBe(true);
+  await expect.poll(async () => (await contentDepthDomContract(previewCard)).readabilityLayerCount).toBe(0);
+  await expect.poll(async () => (await contentDepthDomContract(previewCard)).textShadow).toContain("8px");
+  await expect.poll(async () => (await contentDepthDomContract(previewCard)).artworkDepth.some((artwork) => (
+    artwork.filter.includes("16px") || artwork.boxShadow.includes("24px")
+  ))).toBe(true);
   await expect.poll(async () => await previewCard.evaluate((card) => card.outerHTML) ===
     await exportCard.evaluate((card) => card.outerHTML)).toBe(true);
 }

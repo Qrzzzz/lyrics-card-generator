@@ -12,7 +12,6 @@ export function LandscapeLyricsContent({
   lineHeight,
   textColor,
   align,
-  isDarkText,
   measurement = false
 }: {
   lyricDocument: LyricDocumentV2;
@@ -22,7 +21,6 @@ export function LandscapeLyricsContent({
   lineHeight: number;
   textColor: string;
   align: "left" | "center";
-  isDarkText: boolean;
   measurement?: boolean;
 }) {
   const documentRows = getLyricDocumentRows(lyricDocument);
@@ -48,10 +46,7 @@ export function LandscapeLyricsContent({
         "whitespace-pre-wrap break-words",
         align === "center" ? "text-center" : "text-left"
       )}
-      style={{
-        color: textColor,
-        textShadow: isDarkText || measurement ? "none" : "0 10px 32px rgba(0,0,0,0.34)"
-      }}
+      style={{ color: textColor, textShadow: measurement ? "none" : undefined }}
     >
       {rows.map((row, index) => {
         const lyric = row.source.join("\n");

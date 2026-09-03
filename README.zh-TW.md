@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v6.2.5.zh-TW.md">發布說明</a> ·
+  <a href="./docs/releases/v6.2.6.zh-TW.md">發布說明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">線上 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="./docs/development.zh-CN.md">本機開發</a> ·
@@ -73,22 +73,24 @@
 
 最新公開版本請從 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 取得，Windows 安裝程式檔名為：
 
-* Windows x64 安裝版：`Lyrics.Card.Generator.Setup.6.2.5.exe`
+* Windows x64 安裝版：`Lyrics.Card.Generator.Setup.6.2.6.exe`
+
+> v6.2.6 尚未發布；目前儲存庫內容是本機候選版本。
 
 從 v6.2.2 起僅提供 Windows x64 Setup 安裝程式。
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v6.2.5 更新重點
+### v6.2.6 更新重點
 
-* 將匯出卡片的生成器浮水印改為單行 `Qrzzzz/lyrics-card-generator` 專案署名，並移除兩側分隔線。
-* 採用標準字寬的現代無襯線字體、400 字重、26px 直式基準與 30px 橫式基準字級，讓署名在匯出圖片中保持清楚可讀。
-* 收緊橫直式頁尾間距、移除橫式版面中的冗餘自動延長說明，並同步六語言設定文案；現有設定欄位維持相容。
+* 移除歌曲資訊、歌詞與頁尾後方的大範圍局部可讀性遮罩，避免內容區出現成片暗影。
+* 文字只保留貼近字形的輕微投影，封面改用更小且透明度更低的投影，讓內容輕輕浮在背景上。
+* 自訂字型方案改用與兩張預設方案一致的單層卡片，不再顯示巢狀底板；版面步驟的冗餘自動延長說明繼續保持移除。
 
 ## 🌐 多語言發佈說明
 
 GitHub Release 預設顯示簡體中文摘要，完整說明請見：
-[简体中文](./docs/releases/v6.2.5.zh-CN.md) · [繁體中文](./docs/releases/v6.2.5.zh-TW.md) · [English](./docs/releases/v6.2.5.en.md) · [Français](./docs/releases/v6.2.5.fr.md) · [日本語](./docs/releases/v6.2.5.ja.md) · [Español](./docs/releases/v6.2.5.es.md)
+[简体中文](./docs/releases/v6.2.6.zh-CN.md) · [繁體中文](./docs/releases/v6.2.6.zh-TW.md) · [English](./docs/releases/v6.2.6.en.md) · [Français](./docs/releases/v6.2.6.fr.md) · [日本語](./docs/releases/v6.2.6.ja.md) · [Español](./docs/releases/v6.2.6.es.md)
 
 ## ✨ 主要功能
 

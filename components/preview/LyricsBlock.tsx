@@ -12,7 +12,6 @@ export function LyricsBlock({
   lineHeight,
   textColor,
   align,
-  isDarkText,
   autoWidth = false
 }: {
   lyricDocument: LyricDocumentV2;
@@ -22,7 +21,6 @@ export function LyricsBlock({
   lineHeight: number;
   textColor: string;
   align: "left" | "center";
-  isDarkText: boolean;
   autoWidth?: boolean;
 }) {
   const documentRows = getLyricDocumentRows(lyricDocument);
@@ -49,10 +47,7 @@ export function LyricsBlock({
         "w-full max-h-full overflow-hidden whitespace-pre-wrap break-words",
         align === "center" ? "text-center" : "text-left"
       )}
-      style={{
-        color: textColor,
-        textShadow: isDarkText ? "none" : "0 8px 28px rgba(0,0,0,0.34)"
-      }}
+      style={{ color: textColor }}
     >
       {rows.map(({ key, hasLyric, lyric, translation, gapBeforeLines }, index) => {
         return (

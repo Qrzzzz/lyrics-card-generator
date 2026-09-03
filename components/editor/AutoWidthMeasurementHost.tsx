@@ -64,7 +64,6 @@ export function AutoWidthMeasurementHost({
           lineHeight={state.style.lineHeight}
           textColor={state.style.resolvedTextColor || "#FFFFFF"}
           align={state.style.align}
-          isDarkText={false}
           autoWidth
         />
       </div>

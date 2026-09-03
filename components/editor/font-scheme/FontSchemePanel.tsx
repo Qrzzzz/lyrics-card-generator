@@ -275,7 +275,7 @@ export function FontSchemePanel({
             </AdaptiveSettingsGrid>
           </PanelBlock>
 
-          <PanelBlock title={t("fontSchemeCustomTitle")}>
+          <PanelBlock title={t("fontSchemeCustomTitle")} tone="plain">
             <button
               ref={customSchemeTriggerRef}
               type="button"
@@ -283,9 +283,9 @@ export function FontSchemePanel({
               aria-controls="custom-font-picker-workbench"
               onClick={openFontSchemePicker}
               className={cn(
-                "control-focus grid w-full gap-4 rounded-xl border px-4 py-4 text-left transition",
+                "control-focus grid w-full gap-4 rounded-xl border p-4 text-left transition",
                 currentPresetId
-                  ? "border-[rgb(var(--panel-border))] bg-[rgb(var(--button-bg))] hover:bg-[rgb(var(--button-bg-hover))]"
+                  ? "app-border bg-black/10 hover:bg-[rgb(var(--button-bg-hover))]"
                   : "border-cyan-200/55 bg-cyan-300/10"
               )}
             >
