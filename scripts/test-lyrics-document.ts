@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { defaultState } from "../components/editor/editor-defaults";
+import { measureAutoCanvasHeight } from "../components/editor/hooks/useMeasuredAutoCanvasHeight";
 import {
   detectExportCardOverflow,
   EXPORT_CARD_OVERFLOW_TOLERANCE
@@ -9,7 +10,6 @@ import {
 import {
   AUTO_HEIGHT_MAX,
   AUTO_HEIGHT_MIN,
-  estimateCardHeight,
   getCardSize
 } from "../lib/card-size";
 import {
@@ -196,38 +196,43 @@ assert.equal(
   "landscape waits on its derived plan instead of treating legacy height as a crop boundary"
 );
 
-const autoHeightEstimateParams: Parameters<typeof estimateCardHeight>[0] = {
-  width: 720,
-  lyrics: Array.from({ length: 36 }, () => "a deliberately long authored lyric line for wrapping").join("\n"),
-  translationEnabled: false,
-  translationScale: 0.75,
-  lyricFontSize: 72,
-  lineHeight: 1.8,
-  contentMode: "lyrics",
-  title: "A title that may wrap onto several lines",
-  showCover: true,
-  showSongInfo: true,
-  hasAlbumName: true,
-  allowMultiLineTitle: true,
-  showGeneratedWatermark: true,
-  showPlatformBadge: true,
-  showSharedBy: true
-};
-const longAutoHeightEstimate = estimateCardHeight(autoHeightEstimateParams);
-assert.ok(longAutoHeightEstimate > 3200);
-assert.ok(longAutoHeightEstimate <= AUTO_HEIGHT_MAX);
-assert.ok(
-  estimateCardHeight({
-    ...autoHeightEstimateParams,
-    lyrics: "one short lyric",
-    title: "A deliberately extended song title that must continue wrapping beyond its second rendered line"
-  }) > estimateCardHeight({
-    ...autoHeightEstimateParams,
-    lyrics: "one short lyric",
-    title: "Short title"
-  }),
-  "multi-line song titles reserve additional automatic canvas height"
-);
+// Exercise the geometry used by export readiness, including wrapped lyrics and titles.
+const originalWindow = Object.getOwnPropertyDescriptor(globalThis, "window");
+Object.defineProperty(globalThis, "window", {
+  configurable: true,
+  value: { getComputedStyle: () => ({ paddingTop: "0px", paddingBottom: "0px" }) }
+});
+try {
+  const autoHeightState = {
+    ...defaultState,
+    style: { ...portraitAutoStyle, width: 720, height: 1480 }
+  };
+  const measuredLyrics = { scrollHeight: 3600 };
+  const measuredHeader = { scrollHeight: 100 };
+  const measuredCard = {
+    matches: (selector: string) => selector === "[data-export-card]",
+    querySelector: (selector: string) => {
+      if (selector === "[data-card-content]") return {};
+      if (selector === "[data-card-lyrics]") return measuredLyrics;
+      if (selector === "[data-card-header]") return measuredHeader;
+      return null;
+    }
+  } as unknown as HTMLElement;
+  const longAutoHeight = measureAutoCanvasHeight(autoHeightState, measuredCard);
+  assert.ok(longAutoHeight !== null && longAutoHeight > 3200 && longAutoHeight <= AUTO_HEIGHT_MAX);
+
+  measuredHeader.scrollHeight += 180;
+  assert.equal(
+    measureAutoCanvasHeight(autoHeightState, measuredCard),
+    longAutoHeight + 180,
+    "wrapped song titles contribute their measured height to the automatic canvas"
+  );
+  measuredLyrics.scrollHeight = AUTO_HEIGHT_MAX + 1;
+  assert.equal(measureAutoCanvasHeight(autoHeightState, measuredCard), AUTO_HEIGHT_MAX);
+} finally {
+  if (originalWindow) Object.defineProperty(globalThis, "window", originalWindow);
+  else Reflect.deleteProperty(globalThis, "window");
+}
 
 const exportHostSource = readFileSync(resolve("components/editor/ExportCardHost.tsx"), "utf8");
 assert.ok(exportHostSource.includes('aria-hidden="true"'));

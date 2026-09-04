@@ -14,6 +14,32 @@ const serverOutputDir = path.join(outputRoot, "server");
 const electronOutputDir = path.join(appOutputDir, "electron");
 const desktopProductName = "Lyrics Card Generator";
 const desktopAppId = "com.lyriccard.generator";
+// Use the same explicit runtime allowlist for staging and ASAR inclusion.
+const electronAppFiles = [
+  "electron/main.js",
+  "electron/clipboard-image.js",
+  "electron/ai-stream.js",
+  "electron/resource-budgets.json",
+  "electron/ai-request-registry.js",
+  "electron/ai-prompt-settings.js",
+  "electron/ai-settings-store.js",
+  "electron/font-directory-service.js",
+  "electron/font-options.js",
+  "electron/import-history.js",
+  "electron/editor-draft.js",
+  "electron/provider-response.js",
+  "electron/preload.js",
+  "electron/ipc-security.js",
+  "electron/local-app-url.js",
+  "electron/local-server-origin.js",
+  "electron/manual-save-ipc.js",
+  "electron/packaged-server-readiness.js",
+  "electron/single-instance-ownership.js",
+  "electron/startup-trace.js",
+  "electron/startup-orchestration.js",
+  "electron/url-policy.js",
+  "electron/user-preferences.js"
+];
 const serverResourceFilter = [
   "**/*",
   "!**/.next/cache/**",
@@ -82,32 +108,7 @@ async function prepareMinimalElectronApp() {
       directories: {
         output: "../../release"
       },
-      files: [
-        "electron/main.js",
-        "electron/clipboard-image.js",
-        "electron/ai-stream.js",
-        "electron/resource-budgets.json",
-        "electron/ai-request-registry.js",
-        "electron/ai-prompt-settings.js",
-        "electron/ai-settings-store.js",
-        "electron/font-directory-service.js",
-        "electron/font-options.js",
-        "electron/import-history.js",
-        "electron/editor-draft.js",
-        "electron/provider-response.js",
-        "electron/preload.js",
-        "electron/ipc-security.js",
-        "electron/local-app-url.js",
-        "electron/local-server-origin.js",
-        "electron/manual-save-ipc.js",
-        "electron/packaged-server-readiness.js",
-        "electron/single-instance-ownership.js",
-        "electron/startup-trace.js",
-        "electron/startup-orchestration.js",
-        "electron/url-policy.js",
-        "electron/user-preferences.js",
-        "package.json"
-      ],
+      files: [...electronAppFiles, "package.json"],
       extraResources: [
         {
           from: "../server",
@@ -138,41 +139,9 @@ async function prepareMinimalElectronApp() {
     }
   };
 
-  await cp(path.join(projectRoot, "electron", "main.js"), path.join(electronOutputDir, "main.js"));
-  await cp(path.join(projectRoot, "electron", "editor-draft.js"), path.join(electronOutputDir, "editor-draft.js"));
-  await cp(path.join(projectRoot, "electron", "clipboard-image.js"), path.join(electronOutputDir, "clipboard-image.js"));
-  await cp(path.join(projectRoot, "electron", "ai-stream.js"), path.join(electronOutputDir, "ai-stream.js"));
-  await cp(
-    path.join(projectRoot, "electron", "resource-budgets.json"),
-    path.join(electronOutputDir, "resource-budgets.json")
-  );
-  await cp(path.join(projectRoot, "electron", "ai-request-registry.js"), path.join(electronOutputDir, "ai-request-registry.js"));
-  await cp(path.join(projectRoot, "electron", "ai-prompt-settings.js"), path.join(electronOutputDir, "ai-prompt-settings.js"));
-  await cp(path.join(projectRoot, "electron", "ai-settings-store.js"), path.join(electronOutputDir, "ai-settings-store.js"));
-  await cp(
-    path.join(projectRoot, "electron", "font-directory-service.js"),
-    path.join(electronOutputDir, "font-directory-service.js")
-  );
-  await cp(path.join(projectRoot, "electron", "font-options.js"), path.join(electronOutputDir, "font-options.js"));
-  await cp(path.join(projectRoot, "electron", "import-history.js"), path.join(electronOutputDir, "import-history.js"));
-  await cp(path.join(projectRoot, "electron", "provider-response.js"), path.join(electronOutputDir, "provider-response.js"));
-  await cp(path.join(projectRoot, "electron", "preload.js"), path.join(electronOutputDir, "preload.js"));
-  await cp(path.join(projectRoot, "electron", "ipc-security.js"), path.join(electronOutputDir, "ipc-security.js"));
-  await cp(path.join(projectRoot, "electron", "local-app-url.js"), path.join(electronOutputDir, "local-app-url.js"));
-  await cp(path.join(projectRoot, "electron", "local-server-origin.js"), path.join(electronOutputDir, "local-server-origin.js"));
-  await cp(path.join(projectRoot, "electron", "manual-save-ipc.js"), path.join(electronOutputDir, "manual-save-ipc.js"));
-  await cp(
-    path.join(projectRoot, "electron", "packaged-server-readiness.js"),
-    path.join(electronOutputDir, "packaged-server-readiness.js")
-  );
-  await cp(
-    path.join(projectRoot, "electron", "single-instance-ownership.js"),
-    path.join(electronOutputDir, "single-instance-ownership.js")
-  );
-  await cp(path.join(projectRoot, "electron", "startup-trace.js"), path.join(electronOutputDir, "startup-trace.js"));
-  await cp(path.join(projectRoot, "electron", "startup-orchestration.js"), path.join(electronOutputDir, "startup-orchestration.js"));
-  await cp(path.join(projectRoot, "electron", "url-policy.js"), path.join(electronOutputDir, "url-policy.js"));
-  await cp(path.join(projectRoot, "electron", "user-preferences.js"), path.join(electronOutputDir, "user-preferences.js"));
+  for (const relativePath of electronAppFiles) {
+    await cp(path.join(projectRoot, relativePath), path.join(appOutputDir, relativePath));
+  }
   await writeFile(path.join(appOutputDir, "package.json"), `${JSON.stringify(desktopPackage, null, 2)}\n`);
 }
 

@@ -1,5 +1,4 @@
-import type { CardRatio, CardStyle, ContentMode } from "@/lib/types";
-import { getLyricDocumentRows, type LyricDocumentV2 } from "@/lib/lyrics-document-v2";
+import type { CardRatio, CardStyle } from "@/lib/types";
 import { portraitLayoutConfig } from "@/lib/card-layout-config";
 
 export const PRESET_CARD_SIZES: Record<Exclude<CardRatio, "custom">, { width: number; height: number }> = {
@@ -44,64 +43,4 @@ export function getCardSize(style: CardStyle) {
       style.autoHeight ? AUTO_HEIGHT_MAX : portraitLayoutConfig.canvas.maxHeight
     )
   };
-}
-
-export function estimateCardHeight(params: {
-  width: number;
-  lyricDocument?: LyricDocumentV2;
-  lyrics?: string;
-  translationText?: string;
-  translationEnabled: boolean;
-  translationScale: number;
-  lyricFontSize: number;
-  lineHeight: number;
-  contentMode: ContentMode;
-  title: string;
-  showCover: boolean;
-  showSongInfo: boolean;
-  hasAlbumName: boolean;
-  allowMultiLineTitle: boolean;
-  showGeneratedWatermark: boolean;
-  showPlatformBadge: boolean;
-  showSharedBy: boolean;
-  sharedByText?: string;
-}) {
-  // This is a pre-layout estimate used to seed auto-height. Final export safety
-  // still relies on measured DOM geometry rather than these character ratios.
-  const documentRows = params.lyricDocument ? getLyricDocumentRows(params.lyricDocument) : null;
-  const lyricLines = documentRows
-    ? documentRows.flatMap((row) => row.source).filter((line) => line.trim().length > 0)
-    : (params.lyrics ?? "").split(/\r?\n/).filter((line) => line.trim().length > 0);
-  const translationLines = params.translationEnabled
-    ? documentRows
-      ? documentRows.flatMap((row) => row.translation).filter((line) => line.trim().length > 0)
-      : (params.translationText ?? "").split(/\r?\n/).filter((line) => line.trim().length > 0)
-    : [];
-  const lyricLineCount = params.contentMode === "lyrics" ? Math.max(1, lyricLines.length + translationLines.length) : 5;
-  const lyricCharacterCount =
-    params.contentMode === "lyrics"
-      ? Math.max(1, lyricLines.join("").length + translationLines.join("").length)
-      : Math.max(1, (params.sharedByText ?? "Instrumental Track").length);
-  const averageCharsPerLine = Math.max(12, Math.floor(params.width / (params.lyricFontSize * 0.62)));
-  const wrappedLines = Math.max(
-    lyricLineCount,
-    Math.ceil(lyricCharacterCount / averageCharsPerLine)
-  );
-  const titleUnits = Array.from(params.title.trim() || "Untitled").reduce((total, character) => (
-    total + (/\p{Script=Han}|\p{Script=Hiragana}|\p{Script=Katakana}|\p{Extended_Pictographic}/u.test(character) ? 1 : 0.58)
-  ), 0);
-  const songInfoWidth = params.showCover ? params.width * 0.55 : params.width * 0.82;
-  const titleLines = params.showSongInfo && params.allowMultiLineTitle
-    ? Math.max(1, Math.ceil((titleUnits * 51) / Math.max(1, songInfoWidth)))
-    : 1;
-  const titleOverflowHeight = (titleLines - 1) * 51 * 1.48;
-  const topArea = params.showSongInfo || params.showCover
-    ? (params.hasAlbumName ? 340 : 280) + titleOverflowHeight
-    : 80;
-  const hasFooter = params.showGeneratedWatermark || params.showPlatformBadge || params.showSharedBy;
-  const bottomArea = hasFooter ? 120 : 40;
-  const lyricArea = wrappedLines * params.lyricFontSize * params.lineHeight;
-  const padding = 150;
-
-  return clamp(Math.round(topArea + lyricArea + bottomArea + padding), 1080, AUTO_HEIGHT_MAX);
 }

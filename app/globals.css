@@ -422,20 +422,6 @@ body[data-window-maximized="true"] .app-shell[data-desktop-shell="true"] {
   color: var(--app-text-primary, #fff);
 }
 
-.dynamic-app-background__image {
-  opacity: 1;
-  transform: scale(1);
-  transition:
-    opacity 520ms var(--motion-ease-standard),
-    filter 520ms var(--motion-ease-standard),
-    transform 700ms var(--motion-ease-emphasized);
-}
-
-.dynamic-app-background__image--previous {
-  opacity: 0;
-  transform: scale(1.012);
-}
-
 .desktop-titlebar__brand {
   min-width: 0;
   max-width: calc(50% - 230px);
@@ -459,10 +445,6 @@ body[data-window-maximized="true"] .app-shell[data-desktop-shell="true"] {
 
 .editor-header-actions--stepper .app-button {
   white-space: nowrap;
-}
-
-.editor-header-actions__icon-only {
-  flex: 0 0 auto;
 }
 
 @media (max-width: 1100px) {
@@ -2009,8 +1991,7 @@ body[data-reduce-motion="true"] .examples-close-button:focus-visible .examples-c
   .option-card,
   .option-card__indicator,
   .segmented-control__active-indicator,
-  .segmented-control__item,
-  .dynamic-app-background__image {
+  .segmented-control__item {
     transition-duration: 0ms;
   }
 
@@ -2254,10 +2235,6 @@ body[data-reduce-motion="true"] .examples-close-button:focus-visible .examples-c
 
 .settings-wing__content--wide {
   max-width: 64rem;
-}
-
-.settings-section-header {
-  padding-inline: 0.125rem;
 }
 
 .settings-group-card {

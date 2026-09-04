@@ -247,7 +247,6 @@ assert.match(aboutSettings, /APP_LICENSE_URL/);
 assert.match(aboutSettings, /THIRD_PARTY_NOTICES_URL/);
 assert.match(aboutSettings, /SOURCE_HAN_SANS_LICENSE_URL/);
 assert.match(aboutSettings, /SOURCE_HAN_SERIF_LICENSE_URL/);
-assert.match(settingsLayout, /function SettingsSectionHeader/);
 assert.match(settingsLayout, /function SettingsPageHeading/);
 assert.match(settingsLayout, /function SettingsGroup/);
 assert.match(settingsLayout, /function SettingsRow/);

@@ -19,7 +19,7 @@
 <p>
   <strong>Navegación</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Descargar la última versión</a> ·
-  <a href="./docs/releases/v6.2.8.es.md">Notas de la versión</a> ·
+  <a href="./docs/releases/v6.2.9.es.md">Notas de la versión</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en línea</a> ·
   <a href="#funciones-principales">Funciones principales</a> ·
   <a href="./docs/development.en.md">Desarrollo local</a> ·
@@ -76,22 +76,22 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 Descarga la última versión pública desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest). El instalador de Windows se llama:
 
-* Instalador de Windows x64: `Lyrics.Card.Generator.Setup.6.2.8.exe`
+* Instalador de Windows x64: `Lyrics.Card.Generator.Setup.6.2.9.exe`
 
 A partir de v6.2.2, Setup para Windows x64 es el único paquete de escritorio distribuido.
 
 > La compilación actual no está firmada. Windows puede mostrar una advertencia de SmartScreen, algo habitual en aplicaciones personales sin firma.
 
-### Novedades de v6.2.8
+### Novedades de v6.2.9
 
-* Se elimina el botón de archivo manual. Una línea centrada en la barra de título muestra el estado del guardado; el borrador se guarda tras 5 segundos sin cambios.
-* Los borradores conservan letra original, traducción, secciones y correspondencias, datos de la canción, estilo de tarjeta, opciones de exportación, paso actual y formulario de canción sin confirmar. Las portadas locales pueden recuperarse con el borrador.
-* El cierre normal o el cambio de documento guarda de inmediato los cambios pendientes; al volver a abrir se restaura el último borrador. Un fallo bloquea el cierre normal: pulsa el error de la barra de título para reintentar. El historial anterior y los archivos manuales siguen siendo legibles.
+* Se eliminan componentes sin uso, el antiguo análisis de colores, la estimación de altura por caracteres y estilos obsoletos, conservando la interfaz y las funciones actuales.
+* Se eliminan una dependencia de desarrollo sin uso, un archivo fuente de icono duplicado y funciones auxiliares de prueba nunca llamadas.
+* Se unifican la lista de archivos del paquete y el servidor de pruebas del navegador, manteniendo la compatibilidad del historial, los borradores automáticos, la exportación y las comprobaciones de seguridad.
 
 ## 🌐 Notas de publicación multilingües
 
 GitHub Release muestra de forma predeterminada un resumen en chino simplificado. Consulta las notas completas:
-[简体中文](./docs/releases/v6.2.8.zh-CN.md) · [繁體中文](./docs/releases/v6.2.8.zh-TW.md) · [English](./docs/releases/v6.2.8.en.md) · [Français](./docs/releases/v6.2.8.fr.md) · [日本語](./docs/releases/v6.2.8.ja.md) · [Español](./docs/releases/v6.2.8.es.md)
+[简体中文](./docs/releases/v6.2.9.zh-CN.md) · [繁體中文](./docs/releases/v6.2.9.zh-TW.md) · [English](./docs/releases/v6.2.9.en.md) · [Français](./docs/releases/v6.2.9.fr.md) · [日本語](./docs/releases/v6.2.9.ja.md) · [Español](./docs/releases/v6.2.9.es.md)
 
 <a id="funciones-principales"></a>
 

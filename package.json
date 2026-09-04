@@ -1,6 +1,6 @@
 {
   "name": "lyric-card-generator",
-  "version": "6.2.8",
+  "version": "6.2.9",
   "private": true,
   "main": "electron/main.js",
   "scripts": {
@@ -122,8 +122,7 @@
     "postcss": "8.5.26",
     "tailwindcss": "^3.4.17",
     "tsx": "^4.22.3",
-    "typescript": "^5.7.0",
-    "wait-on": "^9.0.10"
+    "typescript": "^5.7.0"
   },
   "overrides": {
     "postcss": "$postcss"

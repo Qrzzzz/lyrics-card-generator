@@ -146,49 +146,41 @@ assert.match(startupTraceSource, /Main-process only diagnostics/);
 assert.doesNotMatch(startupTraceSource, /ipcMain|contextBridge|webContents/, "startup trace has no renderer transport");
 
 const prepareElectronSource = readFileSync("scripts/prepare-electron-dist.mjs", "utf8");
-assert.match(prepareElectronSource, /"electron\/font-directory-service\.js"/, "packaged desktop bundles the font directory service");
+const electronAppFilesMatch = prepareElectronSource.match(/const electronAppFiles = (\[[\s\S]*?\]);/);
+assert.ok(electronAppFilesMatch, "desktop preparation declares an explicit runtime allowlist");
+const electronAppFiles = JSON.parse(electronAppFilesMatch[1]);
+assert.equal(new Set(electronAppFiles).size, electronAppFiles.length, "the runtime allowlist has no duplicate entries");
+for (const relativePath of electronAppFiles) {
+  assert.match(relativePath, /^electron\/[a-z-]+\.(?:js|json)$/, "runtime entries stay inside the Electron source directory");
+}
+for (const fileName of [
+  "font-directory-service.js",
+  "local-app-url.js",
+  "local-server-origin.js",
+  "import-history.js",
+  "packaged-server-readiness.js",
+  "single-instance-ownership.js",
+  "manual-save-ipc.js",
+  "clipboard-image.js"
+]) {
+  assert.ok(electronAppFiles.includes(`electron/${fileName}`), `packaged desktop bundles ${fileName}`);
+}
+assert.ok(!electronAppFiles.includes("electron/packaged-next-server.js"), "the server launcher remains outside the app ASAR");
 assert.doesNotMatch(prepareElectronSource, /native-font-dialog/, "packaged desktop no longer bundles a separate font UI runtime");
 assert.match(
   prepareElectronSource,
-  /path\.join\(projectRoot, "electron", "font-directory-service\.js"\)[\s\S]*?path\.join\(electronOutputDir, "font-directory-service\.js"\)/,
-  "desktop preparation copies the font directory service into the minimal app"
-);
-assert.match(prepareElectronSource, /"electron\/local-app-url\.js"/, "packaged desktop bundles the local URL policy helper");
-assert.match(prepareElectronSource, /"electron\/local-server-origin\.js"/, "packaged desktop bundles stable origin selection");
-assert.match(prepareElectronSource, /desktop-server-launcher\.cjs/, "packaged desktop bundles the parent-lifetime launcher");
-assert.match(
-  prepareElectronSource,
-  /path\.join\(projectRoot, "electron", "local-app-url\.js"\)[\s\S]*?path\.join\(electronOutputDir, "local-app-url\.js"\)/,
-  "desktop preparation copies the local URL policy helper into the minimal app"
-);
-assert.match(prepareElectronSource, /"electron\/import-history\.js"/, "packaged desktop bundles the import history store");
-assert.match(
-  prepareElectronSource,
-  /"electron\/packaged-server-readiness\.js"/,
-  "packaged desktop bundles the authenticated startup helper"
+  /files: \[\.\.\.electronAppFiles, "package\.json"\]/,
+  "ASAR inclusion uses the complete runtime allowlist and generated manifest"
 );
 assert.match(
   prepareElectronSource,
-  /path\.join\(projectRoot, "electron", "packaged-server-readiness\.js"\)[\s\S]*?path\.join\(electronOutputDir, "packaged-server-readiness\.js"\)/,
-  "desktop preparation copies the authenticated startup helper into the minimal app"
-);
-assert.match(prepareElectronSource, /"electron\/single-instance-ownership\.js"/, "packaged desktop bundles the ownership helper");
-assert.match(
-  prepareElectronSource,
-  /path\.join\(projectRoot, "electron", "single-instance-ownership\.js"\)[\s\S]*?path\.join\(electronOutputDir, "single-instance-ownership\.js"\)/,
-  "desktop preparation copies the single-instance ownership helper into the minimal app"
+  /for \(const relativePath of electronAppFiles\) \{\s*await cp\(path\.join\(projectRoot, relativePath\), path\.join\(appOutputDir, relativePath\)\);\s*\}/,
+  "desktop preparation copies every allowlisted file into the same relative app path"
 );
 assert.match(
   prepareElectronSource,
-  /path\.join\(projectRoot, "electron", "import-history\.js"\)[\s\S]*?path\.join\(electronOutputDir, "import-history\.js"\)/,
-  "desktop preparation copies the import history store into the minimal app"
-);
-assert.match(prepareElectronSource, /"electron\/manual-save-ipc\.js"/, "packaged desktop bundles the manual-save IPC boundary");
-assert.match(prepareElectronSource, /"electron\/clipboard-image\.js"/, "packaged desktop bundles the clipboard image boundary");
-assert.match(
-  prepareElectronSource,
-  /path\.join\(projectRoot, "electron", "manual-save-ipc\.js"\)[\s\S]*?path\.join\(electronOutputDir, "manual-save-ipc\.js"\)/,
-  "desktop preparation copies the real manual-save IPC handlers into the minimal app"
+  /await cp\(path\.join\(projectRoot, "electron", "packaged-next-server\.js"\), path\.join\(serverOutputDir, "desktop-server-launcher\.cjs"\)\)/,
+  "desktop preparation keeps the parent-lifetime launcher in the server resources"
 );
 
 const preloadSource = readFileSync("electron/preload.js", "utf8");

@@ -32,20 +32,19 @@ assert.match(motionTokens, /workbenchStepPanelVariants/);
 assert.match(motionTokens, /sidebarPageVariants/);
 assert.match(motionTokens, /sidebarPageTransition/);
 assert.match(motionTokens, /tabPanelVariants/);
-assert.match(motionTokens, /dialogPanelVariants/);
 assert.match(motionTokens, /direction > 0 \? 72 : -72/);
 assert.match(motionTokens, /direction > 0 \? -72 : 72/);
 
 for (const file of [
   "components/motion/MotionPanel.tsx",
-  "components/motion/MotionDialog.tsx",
+  "components/ui/AccessibleDialog.tsx",
   "components/editor/SettingsStepper.tsx",
   "components/editor/PreviewPane.tsx",
   "components/editor/SongImportAside.tsx",
   "components/editor/ExportPanel.tsx"
 ]) {
   const source = readFileSync(resolve(file), "utf8");
-  assert.match(source, /useAppReducedMotion|reducedMotion/, `${file} should wire reduced-motion behavior`);
+  assert.match(source, /useAppReducedMotion|useReducedMotion|reducedMotion/, `${file} should wire reduced-motion behavior`);
 }
 
 const appMotionProvider = readFileSync(resolve("components/motion/AppMotionProvider.tsx"), "utf8");

@@ -26,23 +26,6 @@ export function SettingsPageHeading({
   );
 }
 
-export function SettingsSectionHeader({
-  title,
-  description,
-  className
-}: {
-  title: string;
-  description: string;
-  className?: string;
-}) {
-  return (
-    <header className={cn("settings-section-header", className)}>
-      <h2 className="app-text-primary text-2xl font-black tracking-tight sm:text-3xl">{title}</h2>
-      <p className="app-text-subtle mt-2 max-w-3xl text-sm leading-6">{description}</p>
-    </header>
-  );
-}
-
 export function SettingsGroup({
   title,
   description,

@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v6.2.8.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v6.2.9.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="./docs/development.en.md">Développement local</a> ·
@@ -76,22 +76,22 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 Téléchargez la dernière version publique depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest). Le programme d’installation Windows est :
 
-* Programme d’installation Windows x64 : `Lyrics.Card.Generator.Setup.6.2.8.exe`
+* Programme d’installation Windows x64 : `Lyrics.Card.Generator.Setup.6.2.9.exe`
 
 À partir de la v6.2.2, le programme Setup Windows x64 est le seul paquet distribué.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### Points forts de la v6.2.8
+### Points forts de la v6.2.9
 
-* Le bouton d’archivage manuel est supprimé. Une ligne centrée dans la barre de titre affiche l’état de l’enregistrement ; le brouillon est enregistré après 5 secondes sans modification.
-* Les brouillons conservent paroles originales, traductions, sections et correspondances, informations du morceau, style de carte, réglages d’exportation, étape actuelle et formulaire du morceau non validé. Les pochettes locales peuvent être restaurées avec le brouillon.
-* Une fermeture normale ou un changement de document enregistre immédiatement les modifications en attente. Le prochain lancement restaure le dernier brouillon. Un échec bloque la fermeture normale ; cliquez sur l’erreur dans la barre de titre pour réessayer. Les anciens historiques et archives manuelles restent lisibles.
+* Suppression de composants inutilisés, de l’ancienne analyse des couleurs, de l’estimation de hauteur par caractères et de styles obsolètes, sans changer l’interface ni les fonctions.
+* Suppression d’une dépendance de développement inutilisée, d’une source d’icône en double et de fonctions auxiliaires de test jamais appelées.
+* Liste unique des fichiers de distribution et serveur de test partagé, en conservant la compatibilité de l’historique, les brouillons automatiques, l’exportation et les contrôles de sécurité.
 
 ## 🌐 Notes de publication multilingues
 
 Par défaut, GitHub Release affiche un résumé en chinois simplifié. Consultez les notes complètes :
-[简体中文](./docs/releases/v6.2.8.zh-CN.md) · [繁體中文](./docs/releases/v6.2.8.zh-TW.md) · [English](./docs/releases/v6.2.8.en.md) · [Français](./docs/releases/v6.2.8.fr.md) · [日本語](./docs/releases/v6.2.8.ja.md) · [Español](./docs/releases/v6.2.8.es.md)
+[简体中文](./docs/releases/v6.2.9.zh-CN.md) · [繁體中文](./docs/releases/v6.2.9.zh-TW.md) · [English](./docs/releases/v6.2.9.en.md) · [Français](./docs/releases/v6.2.9.fr.md) · [日本語](./docs/releases/v6.2.9.ja.md) · [Español](./docs/releases/v6.2.9.es.md)
 
 <a id="fonctionnalités-principales"></a>
 
