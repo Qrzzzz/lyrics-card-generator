@@ -21,7 +21,25 @@ export type ImportHistoryRecord = {
   importedAt: number;
   detail: string;
   remoteCoverUrl?: string;
+  hasLyricsSnapshot?: boolean;
 };
+
+export type RemoteLyricsSnapshot = {
+  lyrics: string;
+  translationText: string;
+  translationEnabled: boolean;
+  lyricDocument: LyricDocumentV2;
+};
+
+export type HistoryTransferPreview = {
+  version: string;
+  added: number;
+  duplicates: number;
+  trimmed: number;
+};
+
+export type HistoryTransferResult<T> = { ok: true; data: T } | { ok: false; code: string };
+export const MAX_HISTORY_TRANSFER_CHARACTERS = 16 * 1024 * 1024;
 
 export type ImportHistoryListResult = {
   records: ImportHistoryRecord[];
@@ -79,6 +97,7 @@ export type ImportHistoryWriteCandidate =
       normalizedUrl?: string;
       finalUrl?: string;
       display: ImportHistoryDisplayInput;
+      lyricsSnapshot?: RemoteLyricsSnapshot;
     }
   | {
       kind: "search";
@@ -87,6 +106,7 @@ export type ImportHistoryWriteCandidate =
       songId: string;
       pageUrl?: string;
       display: ImportHistoryDisplayInput;
+      lyricsSnapshot?: RemoteLyricsSnapshot;
     }
   | {
       kind: "local-audio";
@@ -213,6 +233,7 @@ export type ImportHistoryReplayResult =
       kind: "link";
       record: ImportHistoryRecord;
       url: string;
+      lyricsSnapshot?: RemoteLyricsSnapshot;
     }
   | {
       ok: true;
@@ -222,6 +243,7 @@ export type ImportHistoryReplayResult =
       platform: "netease";
       songId: string;
       pageUrl: string;
+      lyricsSnapshot?: RemoteLyricsSnapshot;
     }
   | {
       ok: true;

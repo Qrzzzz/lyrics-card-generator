@@ -1616,16 +1616,19 @@ try {
   await waitForHistoryTotal(1);
   const persistedSurface = await openHistory(1);
   assert.match(await persistedSurface.textContent(), /restart persistence/i, "history survives a desktop restart");
-  resolveShouldFail = true;
-  const blankBeforeRemoteFailure = await currentSongTitle();
-  const remoteFailureMessage = "current document unchanged";
+  parseSongShouldFail = true;
+  const remoteFailureMessage = "Lyrics restored; the cover could not be fetched";
   const remoteFailureToastRevision = await currentToastRevision(remoteFailureMessage);
   await replayCard("search");
   await waitForFreshToast(remoteFailureMessage, remoteFailureToastRevision);
-  assert.equal(await persistedSurface.getAttribute("data-surface-state"), "open", "remote replay failure keeps history open");
-  assert.equal(await currentSongTitle(), blankBeforeRemoteFailure, "remote replay failure preserves the current document");
-  resolveShouldFail = false;
-  await closeHistoryWithEscape();
+  await persistedSurface.waitFor({ state: "hidden", timeout: 15_000 });
+  assert.match(await currentSongTitle(), /restart persistence/, "remote cover failure still restores the saved song");
+  const restoredRemote = await page.evaluate(async () => {
+    const item = (await window.lyricsCardDesktop.listImportHistory({ offset: 0, limit: 1 })).records[0];
+    return window.lyricsCardDesktop.replayImportHistory(item.id);
+  });
+  assert.equal(restoredRemote.lyricsSnapshot.lyrics, persistedBeforeRestart.records[0].lyricsSnapshot.lyrics);
+  parseSongShouldFail = false;
 
   await page.locator('input[accept*=".m4a"]').setInputFiles(audioPath);
   await page.waitForFunction(() => (

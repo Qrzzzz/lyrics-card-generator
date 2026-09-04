@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v6.2.6.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v6.2.7.en.md">Release Notes</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
   <a href="./docs/web-lite-browser-support.md">Web Lite Browser Support</a> ·
   <a href="#features">Features</a> ·
@@ -77,24 +77,22 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 Download the latest public version from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest). The Windows installer is:
 
-* Windows x64 installer: `Lyrics.Card.Generator.Setup.6.2.6.exe`
-
-> v6.2.6 is not yet released; the current repository state is a local release candidate.
+* Windows x64 installer: `Lyrics.Card.Generator.Setup.6.2.7.exe`
 
 Starting with v6.2.2, Windows x64 Setup is the only distributed desktop package.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v6.2.6 Highlights
+### v6.2.7 Highlights
 
-* Broad local-readability masks behind song metadata, lyrics, and footer content are removed so content areas no longer sit on large dark patches.
-* Text keeps only a tight, low-opacity glyph shadow, while artwork uses a smaller and quieter shadow so content appears to float lightly above the background.
-* The custom font scheme now uses the same single-layer card treatment as both presets, without the nested backing panel; the redundant layout auto-growth hint remains removed.
+* Copy all remote history or one record as JSON, then paste, preview and merge it into history. Only remote link parsing and song-search records are included.
+* Unedited lyrics retain their imported form. Step-two edits, deletions and completed translations update the saved snapshot, preserving source text, translations, line breaks, blank lines, paragraphs and alignment.
+* JSON contains neither cover images nor direct cover URLs. Loading a record resolves its song link for a fresh cover without replacing saved lyrics. Lyrics remain available if the cover cannot be fetched.
 
 ## 🌐 Multilingual Release Notes
 
 GitHub Release displays a Simplified Chinese summary by default. See the full release notes:
-[简体中文](./docs/releases/v6.2.6.zh-CN.md) · [繁體中文](./docs/releases/v6.2.6.zh-TW.md) · [English](./docs/releases/v6.2.6.en.md) · [Français](./docs/releases/v6.2.6.fr.md) · [日本語](./docs/releases/v6.2.6.ja.md) · [Español](./docs/releases/v6.2.6.es.md)
+[简体中文](./docs/releases/v6.2.7.zh-CN.md) · [繁體中文](./docs/releases/v6.2.7.zh-TW.md) · [English](./docs/releases/v6.2.7.en.md) · [Français](./docs/releases/v6.2.7.fr.md) · [日本語](./docs/releases/v6.2.7.ja.md) · [Español](./docs/releases/v6.2.7.es.md)
 
 <a id="features"></a>
 

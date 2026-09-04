@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v6.2.6.zh-TW.md">發布說明</a> ·
+  <a href="./docs/releases/v6.2.7.zh-TW.md">發布說明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">線上 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="./docs/development.zh-CN.md">本機開發</a> ·
@@ -73,24 +73,22 @@
 
 最新公開版本請從 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 取得，Windows 安裝程式檔名為：
 
-* Windows x64 安裝版：`Lyrics.Card.Generator.Setup.6.2.6.exe`
-
-> v6.2.6 尚未發布；目前儲存庫內容是本機候選版本。
+* Windows x64 安裝版：`Lyrics.Card.Generator.Setup.6.2.7.exe`
 
 從 v6.2.2 起僅提供 Windows x64 Setup 安裝程式。
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v6.2.6 更新重點
+### v6.2.7 更新重點
 
-* 移除歌曲資訊、歌詞與頁尾後方的大範圍局部可讀性遮罩，避免內容區出現成片暗影。
-* 文字只保留貼近字形的輕微投影，封面改用更小且透明度更低的投影，讓內容輕輕浮在背景上。
-* 自訂字型方案改用與兩張預設方案一致的單層卡片，不再顯示巢狀底板；版面步驟的冗餘自動延長說明繼續保持移除。
+* 歷史頁支援複製全部遠端記錄、單筆複製 JSON，以及貼上預覽後合併匯入。僅包含遠端連結解析與歌曲搜尋記錄。
+* 歌詞未處理時保留匯入原貌；第二步編輯、刪減或翻譯後儲存最新結果，包括原文、譯文、換行、空行、分段與對應關係。
+* JSON 不含封面圖片或封面直連。載入記錄時透過歌曲連結即時解析封面，歌詞保留儲存時的形式；封面取得失敗仍能還原歌詞。
 
 ## 🌐 多語言發佈說明
 
 GitHub Release 預設顯示簡體中文摘要，完整說明請見：
-[简体中文](./docs/releases/v6.2.6.zh-CN.md) · [繁體中文](./docs/releases/v6.2.6.zh-TW.md) · [English](./docs/releases/v6.2.6.en.md) · [Français](./docs/releases/v6.2.6.fr.md) · [日本語](./docs/releases/v6.2.6.ja.md) · [Español](./docs/releases/v6.2.6.es.md)
+[简体中文](./docs/releases/v6.2.7.zh-CN.md) · [繁體中文](./docs/releases/v6.2.7.zh-TW.md) · [English](./docs/releases/v6.2.7.en.md) · [Français](./docs/releases/v6.2.7.fr.md) · [日本語](./docs/releases/v6.2.7.ja.md) · [Español](./docs/releases/v6.2.7.es.md)
 
 ## ✨ 主要功能
 

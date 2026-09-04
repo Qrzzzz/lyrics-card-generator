@@ -722,7 +722,8 @@ function isLyricLine(value: unknown): value is string {
 }
 
 function isBlankFormattingText(value: unknown): value is string {
-  return typeof value === "string" && !/[^\t \n]/u.test(value);
+  // Match isBlank's Unicode whitespace semantics after newline normalization.
+  return typeof value === "string" && !/\S/u.test(value) && !value.includes("\r");
 }
 
 function createLyricId(prefix: string) {

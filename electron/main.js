@@ -914,6 +914,29 @@ function registerDesktopIpc() {
 
   handle("lyrics-card:import-history-stats", () => importHistoryStore.stats());
 
+  handle("lyrics-card:remote-history-lyrics", (_event, recordId, snapshot) => trackImportHistoryMutation(async () => {
+    try { return { ok: true, record: await importHistoryStore.updateRemoteLyrics(recordId, snapshot) }; }
+    catch (error) { return { ok: false, code: importHistoryErrorCode(error) }; }
+  }));
+  handle("lyrics-card:remote-history-copy", async (_event, recordId) => {
+    try {
+      await importHistoryMutationQueue;
+      const { json, count, skipped } = await importHistoryStore.exportRemoteHistory(recordId);
+      clipboard.writeText(json);
+      return { ok: true, data: { count, skipped } };
+    } catch (error) { return { ok: false, code: importHistoryErrorCode(error) }; }
+  });
+  handle("lyrics-card:remote-history-preview", async (_event, json) => {
+    try {
+      await importHistoryMutationQueue;
+      return { ok: true, data: await importHistoryStore.previewRemoteHistory(json, await readImportHistoryLimit()) };
+    } catch (error) { return { ok: false, code: importHistoryErrorCode(error) }; }
+  });
+  handle("lyrics-card:remote-history-import", (_event, json, expectedVersion) => trackImportHistoryMutation(async () => {
+    try { return { ok: true, data: await importHistoryStore.importRemoteHistory(json, expectedVersion, await readImportHistoryLimit()) }; }
+    catch (error) { return { ok: false, code: importHistoryErrorCode(error) }; }
+  }));
+
   handle("lyrics-card:import-history-record", (event, input) => trackImportHistoryMutation(async () => {
     try {
       let candidate = input;
@@ -1161,6 +1184,7 @@ async function flushImportHistoryOperations() {
 }
 
 const IMPORT_HISTORY_DOMAIN_ERROR_CODES = new Set([
+  "invalid_transfer", "transfer_too_large", "missing_lyrics", "no_remote_history",
   "corrupt_backup_failed",
   "history_confirmation_stale",
   "history_migration_failed",
@@ -1227,6 +1251,7 @@ async function createImportHistoryReplayPayload(record, preparedFile, senderId) 
       ok: true,
       kind: "link",
       record: toPublicImportHistoryRecord(record),
+      ...(record.lyricsSnapshot ? { lyricsSnapshot: record.lyricsSnapshot } : {}),
       url: record.source.inputUrl || record.source.normalizedUrl || record.source.finalUrl
     };
   }
@@ -1235,6 +1260,7 @@ async function createImportHistoryReplayPayload(record, preparedFile, senderId) 
       ok: true,
       kind: "search",
       record: toPublicImportHistoryRecord(record),
+      ...(record.lyricsSnapshot ? { lyricsSnapshot: record.lyricsSnapshot } : {}),
       query: record.source.query,
       platform: record.source.platform,
       songId: record.source.songId,

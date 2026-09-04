@@ -8,7 +8,8 @@ const tests = [
   "scripts/test-electron-local-server-origin.cjs",
   "scripts/test-electron-packaged-server-startup.cjs",
   "scripts/test-electron-ai-request-lifecycle.cjs",
-  "scripts/test-import-history.cjs"
+  "scripts/test-import-history.cjs",
+  "scripts/test-remote-history.cjs"
 ];
 
 for (const test of tests) {

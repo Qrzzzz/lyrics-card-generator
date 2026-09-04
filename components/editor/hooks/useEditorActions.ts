@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import type { ToastNotifier } from "@/components/feedback/AppToast";
 import { createAppRequestHeaders } from "@/lib/app-request";
@@ -59,6 +59,10 @@ import {
   serializeImportHistoryManualSave
 } from "@/lib/import-history";
 import { importHistoryCopy } from "@/lib/import-history-copy";
+import { historyTransferCopy } from "@/lib/history-transfer-copy";
+import { RemoteHistorySession } from "@/lib/remote-history-session";
+import { shutdownCoordinator } from "@/lib/persistence/shutdown-coordinator";
+import type { RemoteLyricsSnapshot } from "@/lib/import-history";
 import { MAX_LOCAL_AUDIO_BYTES } from "@/lib/local-audio-limits";
 import type {
   AppState,
@@ -163,6 +167,18 @@ export function useEditorActions({
   const [isManualSaveSaving, setIsManualSaveSaving] = useState(false);
   const currentDocumentRef = useRef(parsedState);
   currentDocumentRef.current = parsedState;
+  const remoteHistoryRef = useRef<RemoteHistorySession | null>(null);
+  if (!remoteHistoryRef.current) {
+    remoteHistoryRef.current = new RemoteHistorySession(
+      async (id, snapshot) => {
+        const desktop = getLyricsCardDesktopApi();
+        return desktop ? desktop.updateRemoteHistoryLyrics(id, snapshot) : { ok: false, code: "unavailable" };
+      },
+      () => onNotify(importHistoryCopy[currentDocumentRef.current.locale].historySaveFailed, "warning")
+    );
+  }
+  const remoteHistory = remoteHistoryRef.current;
+  useEffect(() => shutdownCoordinator.register("remote-history", () => remoteHistory.flush({ ignoreUnrecordedFailures: true })), [remoteHistory]);
   // The adapter is stable for the editor lifetime and always reads the latest controlled document.
   const documentStateAdapterRef = useRef<EditorDocumentStateAdapter | null>(null);
   if (!documentStateAdapterRef.current) {
@@ -220,6 +236,7 @@ export function useEditorActions({
   }
 
   function bindLoadedManualSave(recordId: string, savedRevision: number, replayUrl: string) {
+    remoteHistory.detach();
     manualSaveSessionRef.current += 1;
     replaceManualSaveBinding({ recordId, savedRevision });
     replaceManualReplayProvenance({ kind: "manual-save", recordId, replayUrl });
@@ -237,7 +254,7 @@ export function useEditorActions({
     songLinkAutoParseVisitRef.current += 1;
     return {
       id: songLinkAutoParseVisitRef.current,
-      allowAutoParse: !replayStillOwnsCurrentUrl
+      allowAutoParse: !replayStillOwnsCurrentUrl && !remoteHistory.ownsUrl(currentDocumentRef.current.url)
     };
   }
 
@@ -247,6 +264,8 @@ export function useEditorActions({
     const rollback = onInvalidateDocument();
     const projected = documentStateAdapter.projectDocumentMutation(rollback, mutation);
     setDocumentRevision(documentStateAdapter.queueDocumentMutation(rollback, mutation));
+    currentDocumentRef.current = projected;
+    remoteHistory.update(remoteLyricsSnapshot(projected));
     return projected;
   }
 
@@ -264,7 +283,7 @@ export function useEditorActions({
   function commitSongImport(
     intent: DocumentImportIntent,
     song: ParsedSongData,
-    lyrics = "",
+    lyrics = song.lyrics ?? "",
     invalidateAIOnCommit = false
   ) {
     const revision = documentControllerRef.current.tryCommit(intent);
@@ -275,14 +294,21 @@ export function useEditorActions({
     }
     if (invalidateAIOnCommit) onInvalidateDocument();
     setDocumentRevision(revision);
+    remoteHistory.detach();
     startNewManualSaveSession();
-    setState((current) => replaceSongDocument(current, song, lyrics));
+    const imported = replaceSongDocument(currentDocumentRef.current, song, lyrics);
+    currentDocumentRef.current = imported;
+    setState(imported);
     return true;
   }
 
   function queueImportHistoryRecord(candidate: ImportHistoryWriteCandidate) {
     const desktop = getLyricsCardDesktopApi();
     if (!desktop) return;
+    if ((candidate.kind === "link" || candidate.kind === "search") && candidate.lyricsSnapshot) {
+      remoteHistory.bind(desktop.recordImportHistory(candidate), candidate.lyricsSnapshot, currentDocumentRef.current.url);
+      return;
+    }
     // History persistence is best effort and must not roll back an already committed import.
     void desktop.recordImportHistory(candidate)
       .then((result) => {
@@ -394,12 +420,14 @@ export function useEditorActions({
   }
 
   function handleHistoryRecordRemoved(recordId: string) {
+    remoteHistory.remove(recordId);
     if (manualSaveBindingRef.current?.recordId === recordId) {
       startNewManualSaveSession();
     }
   }
 
   function handleHistoryCleared() {
+    remoteHistory.remove();
     startNewManualSaveSession();
   }
 
@@ -434,11 +462,13 @@ export function useEditorActions({
     expectedRevision: number,
     expectedSongIdentity: string
   ) {
-    return documentStateAdapter.commitAITranslation(
+    const committed = documentStateAdapter.commitAITranslation(
       value,
       expectedRevision,
       expectedSongIdentity
     );
+    if (committed) remoteHistory.update(remoteLyricsSnapshot(currentDocumentRef.current));
+    return committed;
   }
 
   function clearAllContent() {
@@ -451,6 +481,7 @@ export function useEditorActions({
     setCelebrationKey(0);
     setClearTransitionKey((key) => key + 1);
     onClearTransientState();
+    remoteHistory.detach();
     applyDocumentMutation(clearLyricContent);
     startNewManualSaveSession();
   }
@@ -465,6 +496,7 @@ export function useEditorActions({
   }
 
   function setUrl(url: string) {
+    if (!remoteHistory.ownsUrl(url)) remoteHistory.detach();
     if (manualReplayProvenanceRef.current) replaceManualReplayProvenance(null);
     applyDocumentMutation((current) => ({ ...current, url }));
   }
@@ -481,7 +513,8 @@ export function useEditorActions({
         inputUrl: context.inputUrl,
         normalizedUrl: song.originalUrl,
         finalUrl: song.finalUrl,
-        display: historyDisplay(song)
+        display: historyDisplay(song),
+        lyricsSnapshot: remoteLyricsSnapshot(currentDocumentRef.current)
       });
     }
     return committed;
@@ -518,7 +551,8 @@ export function useEditorActions({
         platform: context.platform,
         songId: context.songId,
         pageUrl: context.pageUrl,
-        display: historyDisplay(song)
+        display: historyDisplay(song),
+        lyricsSnapshot: remoteLyricsSnapshot(currentDocumentRef.current)
       });
     }
     return committed;
@@ -531,6 +565,7 @@ export function useEditorActions({
   function saveSongInfo(song: SongInfo, context: ManualCoverImportHistoryContext) {
     const savedDocument = applyDocumentMutation((current) => ({ ...current, song: canonicalSongInfo(song) }));
     if (!context.uploaded) return;
+    remoteHistory.detach();
     startNewManualSaveSession();
     queueImportHistoryRecord({
       kind: "manual-cover",
@@ -672,6 +707,7 @@ export function useEditorActions({
       return;
     }
     setDocumentRevision(revision);
+    remoteHistory.detach();
     startNewManualSaveSession();
     setState((current) => {
       const translationText = importTranslation ? translation.text : "";
@@ -738,6 +774,7 @@ export function useEditorActions({
     if (!intent) return { status: "cancelled" };
 
     try {
+      await remoteHistory.flush({ ignoreUnrecordedFailures: true });
       const replay = relocate
         ? await desktop.relocateImportHistory(recordId)
         : await desktop.replayImportHistory(recordId);
@@ -786,6 +823,8 @@ export function useEditorActions({
         onNotify(copy.fileChanged, "warning");
       } else if (replay.kind === "manual-save") {
         onNotify(copy.manualSaveLoaded, "success");
+      } else if ("coverFailed" in committed && committed.coverFailed) {
+        onNotify(historyTransferCopy[currentDocumentRef.current.locale].coverFailed, "warning");
       } else {
         onNotify(copy.replaySucceeded, "success");
       }
@@ -800,6 +839,36 @@ export function useEditorActions({
   }
 
   async function commitHistoryReplay(replay: Extract<ImportHistoryReplayResult, { ok: true }>, intent: DocumentImportIntent) {
+    if ((replay.kind === "link" || replay.kind === "search") && replay.lyricsSnapshot) {
+      const url = replay.kind === "link" ? replay.url : replay.pageUrl || `https://music.163.com/song?id=${replay.songId}`;
+      let song: ParsedSongData = {
+        source: (["qq", "netease", "apple", "spotify"].includes(replay.record.source) ? replay.record.source : "unknown") as SongInfo["source"], title: replay.record.title,
+        artist: replay.record.artist, album: replay.record.album, originalUrl: url
+      };
+      let coverFailed = false;
+      try {
+        const response = await fetch("/api/parse-song", {
+          method: "POST", headers: createAppRequestHeaders({ "content-type": "application/json" }),
+          body: JSON.stringify({ url }), signal: intent.signal
+        });
+        const payload = await response.json() as HistorySongParseResponse;
+        if (!payload.ok) throw new Error("history_cover_parse_failed");
+        // Song identity/text are the saved history's; only the cover is refreshed remotely.
+        song = { ...song, coverUrl: payload.data.coverUrl, originalCoverUrl: payload.data.originalCoverUrl,
+          parseMethod: payload.data.parseMethod };
+        coverFailed = !song.coverUrl && !song.originalCoverUrl;
+      } catch {
+        if (intent.signal.aborted) return null;
+        coverFailed = true;
+      }
+      if (!commitSongImport(intent, song, "", true)) return null;
+      const restored = withLyricDocument(currentDocumentRef.current, replay.lyricsSnapshot.lyricDocument,
+        replay.lyricsSnapshot.translationEnabled);
+      currentDocumentRef.current = restored;
+      setState(restored);
+      remoteHistory.bind(Promise.resolve({ ok: true, record: replay.record }), replay.lyricsSnapshot, restored.url);
+      return { revision: documentControllerRef.current.currentRevision, coverFailed };
+    }
     if (replay.kind === "link") {
       const response = await fetch("/api/parse-song", {
         method: "POST",
@@ -809,9 +878,9 @@ export function useEditorActions({
       });
       const payload = await response.json() as HistorySongParseResponse;
       if (!payload.ok) throw new Error(payload.error || "history_link_replay_failed");
-      return commitSongImport(intent, payload.data, payload.data.lyrics ?? "", true)
-        ? { revision: documentControllerRef.current.currentRevision }
-        : null;
+      if (!commitSongImport(intent, payload.data, payload.data.lyrics ?? "", true)) return null;
+      bindLegacyRemoteReplay(replay.record.id);
+      return { revision: documentControllerRef.current.currentRevision };
     }
 
     if (replay.kind === "search") {
@@ -823,9 +892,9 @@ export function useEditorActions({
       });
       const payload = await response.json() as HistorySearchResolveResponse;
       if (!payload.ok) throw new Error(payload.error || "history_search_replay_failed");
-      return commitSongImport(intent, payload.data.song, payload.data.lyrics ?? "", true)
-        ? { revision: documentControllerRef.current.currentRevision }
-        : null;
+      if (!commitSongImport(intent, payload.data.song, payload.data.lyrics ?? "", true)) return null;
+      bindLegacyRemoteReplay(replay.record.id);
+      return { revision: documentControllerRef.current.currentRevision };
     }
 
     if (replay.kind === "local-audio") {
@@ -887,6 +956,7 @@ export function useEditorActions({
     onInvalidateDocument();
     const snapshot = replay.snapshot;
     setDocumentRevision(revision);
+    remoteHistory.detach();
     startNewManualSaveSession();
     setState((current) => replaceWithHistorySnapshot(current, snapshot, {
       coverUrl,
@@ -938,7 +1008,23 @@ export function useEditorActions({
     handleHistoryRecordRemoved,
     handleHistoryCleared,
     completeAndExport,
-    copyImageToClipboard
+    copyImageToClipboard,
+    flushRemoteHistory: () => remoteHistory.flush()
+  };
+
+  function bindLegacyRemoteReplay(id: string) {
+    const desktop = getLyricsCardDesktopApi();
+    if (!desktop) return;
+    const current = currentDocumentRef.current;
+    const snapshot = remoteLyricsSnapshot(current);
+    remoteHistory.bind(desktop.updateRemoteHistoryLyrics(id, snapshot), snapshot, current.url);
+  }
+}
+
+function remoteLyricsSnapshot(state: AppState): RemoteLyricsSnapshot {
+  return {
+    lyrics: state.lyrics, translationText: state.translationText,
+    translationEnabled: state.translationEnabled, lyricDocument: state.lyricDocument
   };
 }
 

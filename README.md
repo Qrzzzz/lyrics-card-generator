@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v6.2.6.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v6.2.7.zh-CN.md">发布说明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">在线 Web Lite 版</a> ·
   <a href="./docs/web-lite-browser-support.md">Web Lite 浏览器支持</a> ·
   <a href="./docs/desktop.md">桌面维护文档</a> ·
@@ -75,24 +75,22 @@
 
 最新公开版本请从 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 获取，Windows 安装包文件名为：
 
-* Windows x64 安装版：`Lyrics.Card.Generator.Setup.6.2.6.exe`
-
-> v6.2.6 尚未发布；当前仓库内容是本地候选版本。
+* Windows x64 安装版：`Lyrics.Card.Generator.Setup.6.2.7.exe`
 
 从 v6.2.2 起只提供 Windows x64 Setup 安装包。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v6.2.6 更新重点
+### v6.2.7 更新重点
 
-* 移除歌曲信息、歌词和页脚后方的大范围局部可读性遮罩，避免内容区出现成片暗影。
-* 文字仅保留贴近字形的轻微投影，封面使用更小、更低透明度的投影，让内容像轻轻浮在背景上。
-* 自定义字体方案改用与两张预设方案一致的单层卡片，不再显示截图中的嵌套底板；布局步骤的冗余自动延长说明继续保持移除。
+* 历史页支持复制全部远程记录、单条复制 JSON，以及粘贴预览后合并导入。仅包含远程链接解析和歌曲搜索记录。
+* 歌词未处理时保留导入原貌；第二步编辑、删减或翻译后保存最新结果，包括原文、译文、换行、空行、分段及对应关系。
+* JSON 不包含封面图片或封面直链。载入记录时通过歌曲链接现场解析封面，重新解析不会覆盖保存的歌词；封面获取失败仍能恢复歌词。
 
 ## 🌐 多语言发布说明
 
 GitHub Release 默认展示简体中文摘要，完整说明见：
-[简体中文](./docs/releases/v6.2.6.zh-CN.md) · [繁體中文](./docs/releases/v6.2.6.zh-TW.md) · [English](./docs/releases/v6.2.6.en.md) · [Français](./docs/releases/v6.2.6.fr.md) · [日本語](./docs/releases/v6.2.6.ja.md) · [Español](./docs/releases/v6.2.6.es.md)
+[简体中文](./docs/releases/v6.2.7.zh-CN.md) · [繁體中文](./docs/releases/v6.2.7.zh-TW.md) · [English](./docs/releases/v6.2.7.en.md) · [Français](./docs/releases/v6.2.7.fr.md) · [日本語](./docs/releases/v6.2.7.ja.md) · [Español](./docs/releases/v6.2.7.es.md)
 
 <a id="主要功能"></a>
 

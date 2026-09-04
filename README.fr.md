@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v6.2.6.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v6.2.7.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="./docs/development.en.md">Développement local</a> ·
@@ -76,24 +76,22 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 Téléchargez la dernière version publique depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest). Le programme d’installation Windows est :
 
-* Programme d’installation Windows x64 : `Lyrics.Card.Generator.Setup.6.2.6.exe`
-
-> La v6.2.6 n’est pas encore publiée (pas encore publié) ; l’état actuel du dépôt est un candidat local.
+* Programme d’installation Windows x64 : `Lyrics.Card.Generator.Setup.6.2.7.exe`
 
 À partir de la v6.2.2, le programme Setup Windows x64 est le seul paquet distribué.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### Points forts de la v6.2.6
+### Points forts de la v6.2.7
 
-* Les grands masques locaux de lisibilité derrière les informations, les paroles et le pied sont supprimés afin d’éviter de larges taches sombres.
-* Le texte ne conserve qu’une ombre serrée et discrète, tandis que la pochette reçoit une ombre plus petite et plus légère pour flotter doucement sur le fond.
-* Le jeu de polices personnalisé adopte la même carte à une seule couche que les deux préréglages, sans panneau imbriqué ; l’indication redondante d’agrandissement automatique reste supprimée.
+* Copiez tout l’historique distant ou un seul élément en JSON, puis collez, prévisualisez et fusionnez les données. Seuls les liens distants et les recherches de morceaux sont concernés.
+* Les paroles non modifiées gardent leur forme importée. Les modifications, suppressions et traductions terminées à la deuxième étape mettent à jour le texte, les sauts de ligne, les paragraphes et les correspondances.
+* Le JSON ne contient ni image de pochette ni URL directe de pochette. Le chargement récupère une nouvelle pochette via le lien du morceau sans remplacer les paroles, même si la pochette est indisponible.
 
 ## 🌐 Notes de publication multilingues
 
 Par défaut, GitHub Release affiche un résumé en chinois simplifié. Consultez les notes complètes :
-[简体中文](./docs/releases/v6.2.6.zh-CN.md) · [繁體中文](./docs/releases/v6.2.6.zh-TW.md) · [English](./docs/releases/v6.2.6.en.md) · [Français](./docs/releases/v6.2.6.fr.md) · [日本語](./docs/releases/v6.2.6.ja.md) · [Español](./docs/releases/v6.2.6.es.md)
+[简体中文](./docs/releases/v6.2.7.zh-CN.md) · [繁體中文](./docs/releases/v6.2.7.zh-TW.md) · [English](./docs/releases/v6.2.7.en.md) · [Français](./docs/releases/v6.2.7.fr.md) · [日本語](./docs/releases/v6.2.7.ja.md) · [Español](./docs/releases/v6.2.7.es.md)
 
 <a id="fonctionnalités-principales"></a>
 
