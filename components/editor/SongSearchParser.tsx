@@ -24,7 +24,7 @@ export function SongSearchParser({
   beginImport,
   t
 }: {
-  beginImport: () => Promise<DocumentImportIntent | null>;
+  beginImport: (signal?: AbortSignal) => Promise<DocumentImportIntent | null>;
   onResolved: (
     song: ParsedSongData,
     lyrics: string | undefined,
@@ -47,9 +47,13 @@ export function SongSearchParser({
   const skipNextSearchRef = useRef(false);
   const cacheRef = useRef(new Map<string, SongSearchResult[]>());
   const activeResolveRef = useRef<DocumentImportIntent | null>(null);
+  const preparationRef = useRef<AbortController | null>(null);
   const popupRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => () => activeResolveRef.current?.cancel(), []);
+  useEffect(() => () => {
+    preparationRef.current?.abort();
+    activeResolveRef.current?.cancel();
+  }, []);
 
   useEffect(() => {
     // Selecting a resolved song updates the display query without starting another search.
@@ -170,16 +174,24 @@ export function SongSearchParser({
       return;
     }
 
-    // Resolving a suggestion is a document import intent, separate from suggestion lookup.
-    const intent = await beginImport();
-    if (!intent) return;
+    preparationRef.current?.abort();
     activeResolveRef.current?.cancel();
-    activeResolveRef.current = intent;
+    const preparation = new AbortController();
+    preparationRef.current = preparation;
     setIsResolving(true);
     setStatus("loading");
     setMessage(t("songSearchResolving"));
 
+    let intent: DocumentImportIntent | null = null;
     try {
+      intent = await beginImport(preparation.signal);
+      if (preparation.signal.aborted) { intent?.cancel(); return; }
+      if (!intent || intent.signal.aborted) {
+        setStatus("idle");
+        setMessage(t("songSearchNeedMoreInput"));
+        return;
+      }
+      activeResolveRef.current = intent;
       const response = await fetch("/api/resolve-searched-song", {
         method: "POST",
         headers: createAppRequestHeaders({ "content-type": "application/json" }),
@@ -187,6 +199,7 @@ export function SongSearchParser({
         signal: intent.signal
       });
       const payload = (await response.json()) as ResolveSearchedSongResponse;
+      if (preparation.signal.aborted) return;
 
       if (!payload.ok) {
         throw new Error(getLocalizedAppApiError(payload.code, t, payload.error));
@@ -199,6 +212,8 @@ export function SongSearchParser({
         pageUrl: song.pageUrl
       })) {
         intent.cancel();
+        setStatus("idle");
+        setMessage(t("songSearchNeedMoreInput"));
         return;
       }
       skipNextSearchRef.current = true;
@@ -208,8 +223,9 @@ export function SongSearchParser({
       setStatus(payload.data.lyrics ? "success" : "partial");
       setMessage(payload.data.lyrics ? t("songSearchImportedWithLyrics") : t("songSearchImportedNoLyrics"));
     } catch (error) {
-      const wasAborted = intent.signal.aborted;
-      intent.cancel();
+      const wasAborted = intent?.signal.aborted;
+      intent?.cancel();
+      if (preparation.signal.aborted) return;
       if (wasAborted) {
         setStatus("idle");
         setMessage(t("songSearchNeedMoreInput"));
@@ -218,9 +234,10 @@ export function SongSearchParser({
       setStatus("error");
       setMessage(error instanceof Error ? error.message : t("songSearchResolveFailed"));
     } finally {
-      if (activeResolveRef.current?.id === intent.id) {
-        activeResolveRef.current = null;
-        setIsResolving(false);
+      if (intent && activeResolveRef.current?.id === intent.id) activeResolveRef.current = null;
+      if (preparationRef.current === preparation) {
+        preparationRef.current = null;
+        if (!preparation.signal.aborted) setIsResolving(false);
       }
     }
   }

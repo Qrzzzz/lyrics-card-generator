@@ -41,6 +41,8 @@ export type SafeFetchTransportRequest = {
   maxResponseBytes: number;
   allowedContentTypes: string[];
   discardResponseBody: boolean;
+  /** Release the candidate's first-response budget once headers arrive. */
+  onResponseStarted?: () => void;
 };
 
 export type SafeFetchTransportResponse = {
@@ -81,6 +83,7 @@ export class SafeFetchError extends Error {
  */
 export async function safeFetch(rawUrl: string, options: SafeFetchOptions = {}): Promise<SafeFetchResult> {
   const timeoutMs = options.timeoutMs ?? 10_000;
+  const deadlineAt = performance.now() + timeoutMs;
   const maxRedirects = options.maxRedirects ?? 5;
   const maxResponseBytes = options.maxResponseBytes ?? 2 * 1024 * 1024;
   const allowedContentTypes = (options.allowedContentTypes ?? []).map((value) => value.toLowerCase());
@@ -124,6 +127,7 @@ export async function safeFetch(rawUrl: string, options: SafeFetchOptions = {}):
         allowedContentTypes,
         discardResponseBody: options.discardResponseBody ?? false,
         transport: options.transport ?? nodeTransport,
+        deadlineAt,
         timedOut: () => timedOut
       });
 
@@ -160,6 +164,7 @@ export async function safeFetch(rawUrl: string, options: SafeFetchOptions = {}):
 type ValidatedAddressAttempt = Omit<SafeFetchTransportRequest, "address"> & {
   addresses: ResolvedAddress[];
   transport: SafeFetchTransport;
+  deadlineAt: number;
   timedOut: () => boolean;
 };
 
@@ -167,11 +172,25 @@ async function tryValidatedAddresses(request: ValidatedAddressAttempt) {
   const failures: SafeFetchCandidateFailure[] = [];
   // Preserve the resolver's preferred family while alternating fallbacks, so
   // a broken IPv6 or IPv4 route does not starve every address of the other family.
-  for (const address of interleaveAddressFamilies(request.addresses)) {
+  const addresses = interleaveAddressFamilies(request.addresses);
+  for (const [index, address] of addresses.entries()) {
     if (request.signal.aborted) {
       throw abortError(request.timedOut());
     }
 
+    const candidate = new AbortController();
+    const abortCandidate = () => candidate.abort(request.signal.reason);
+    request.signal.addEventListener("abort", abortCandidate, { once: true });
+    let candidateTimedOut = false;
+    // Share the remaining global deadline between untried candidates. A healthy
+    // slow body keeps the global budget once headers arrive; only silent
+    // connections are replaced. The final candidate uses all remaining time.
+    const remainingCandidates = addresses.length - index;
+    const candidateTimer = remainingCandidates > 1 ? setTimeout(() => {
+      candidateTimedOut = true;
+      candidate.abort(new Error("The address did not return response headers in time."));
+    }, Math.max(1, Math.min(2_500, (request.deadlineAt - performance.now()) / remainingCandidates))) : undefined;
+    const onResponseStarted = () => clearTimeout(candidateTimer);
     try {
       return await raceWithAbort(
         request.transport({
@@ -179,13 +198,16 @@ async function tryValidatedAddresses(request: ValidatedAddressAttempt) {
           address,
           method: request.method,
           headers: request.headers,
-          signal: request.signal,
+          signal: candidate.signal,
           maxResponseBytes: request.maxResponseBytes,
           allowedContentTypes: request.allowedContentTypes,
-          discardResponseBody: request.discardResponseBody
+          discardResponseBody: request.discardResponseBody,
+          onResponseStarted
         }),
-        request.signal,
-        () => abortError(request.timedOut())
+        candidate.signal,
+        () => candidateTimedOut
+          ? new SafeFetchError("The address did not return response headers in time.", "NETWORK")
+          : abortError(request.timedOut())
       );
     } catch (error: unknown) {
       if (request.signal.aborted) {
@@ -198,6 +220,11 @@ async function tryValidatedAddresses(request: ValidatedAddressAttempt) {
         ...address,
         message: error instanceof Error && error.message ? error.message : "The network request failed."
       });
+    } finally {
+      clearTimeout(candidateTimer);
+      request.signal.removeEventListener("abort", abortCandidate);
+      // Also close transports that ignore the raced rejection or complete late.
+      candidate.abort();
     }
   }
 
@@ -251,6 +278,7 @@ export async function nodeTransport(request: SafeFetchTransportRequest): Promise
 
     const client = request.url.protocol === "https:" ? https : http;
     const outgoing = client.request(requestOptions, (incoming) => {
+      request.onResponseStarted?.();
       const responseHeaders = toHeaders(incoming.headers);
       const status = incoming.statusCode ?? 0;
       if (REDIRECT_STATUSES.has(status) || request.method === "HEAD" || request.discardResponseBody) {

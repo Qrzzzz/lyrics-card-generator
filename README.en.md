@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v6.2.9.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v6.2.10.en.md">Release Notes</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
   <a href="./docs/web-lite-browser-support.md">Web Lite Browser Support</a> ·
   <a href="#features">Features</a> ·
@@ -75,24 +75,25 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 ## 📦 Download and Installation
 
-Download the latest public version from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest). The Windows installer is:
+Download v6.2.10 from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v6.2.10). The Windows installer is:
 
-* Windows x64 installer: `Lyrics.Card.Generator.Setup.6.2.9.exe`
+* Windows x64 installer: `Lyrics.Card.Generator.Setup.6.2.10.exe`
 
 Starting with v6.2.2, Windows x64 Setup is the only distributed desktop package.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v6.2.9 Highlights
+### v6.2.10 Highlights
 
-* Remove unused components, color analysis, character-based height estimation and obsolete styles while preserving the existing interface and features.
-* Remove an unused development dependency, a duplicate icon source and uncalled test helpers.
-* Use one desktop packaging file list and a shared browser test server while retaining history compatibility, automatic drafts, export and security checks.
+* Prevent an import awaiting replacement confirmation or draft persistence from overwriting a newer link, lyrics edit or document.
+* Reject HTTP redirects consistently for AI translation and connection tests, preventing request bodies from reaching an unauthorized next hop.
+* Reserve first-response time for validated fallback addresses so a silent preferred address cannot consume the entire request deadline.
+* Use the approved white rounded SVG with 50% opacity and a transparent E cutout for Explicit badges in card previews and exports.
 
 ## 🌐 Multilingual Release Notes
 
 GitHub Release displays a Simplified Chinese summary by default. See the full release notes:
-[简体中文](./docs/releases/v6.2.9.zh-CN.md) · [繁體中文](./docs/releases/v6.2.9.zh-TW.md) · [English](./docs/releases/v6.2.9.en.md) · [Français](./docs/releases/v6.2.9.fr.md) · [日本語](./docs/releases/v6.2.9.ja.md) · [Español](./docs/releases/v6.2.9.es.md)
+[简体中文](./docs/releases/v6.2.10.zh-CN.md) · [繁體中文](./docs/releases/v6.2.10.zh-TW.md) · [English](./docs/releases/v6.2.10.en.md) · [Français](./docs/releases/v6.2.10.fr.md) · [日本語](./docs/releases/v6.2.10.ja.md) · [Español](./docs/releases/v6.2.10.es.md)
 
 <a id="features"></a>
 

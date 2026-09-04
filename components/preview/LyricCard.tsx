@@ -123,12 +123,12 @@ export function LyricCard({
                     {style.allowMultiLineTitle ? (
                       <>
                         <span>{song.title || "Untitled"}</span>{" "}
-                        <ExplicitBadge show={song.explicit} textColor={textColor} />
+                        <ExplicitBadge show={song.explicit} />
                       </>
                     ) : (
                       <span className="inline-flex max-w-full min-w-0 items-center gap-[0.22em] align-middle">
                         <span className="min-w-0 truncate">{song.title || "Untitled"}</span>
-                        <ExplicitBadge show={song.explicit} textColor={textColor} />
+                        <ExplicitBadge show={song.explicit} />
                       </span>
                     )}
                   </h1>

@@ -195,6 +195,7 @@ async function main() {
       apiKey: "test-key-never-log",
       fetchImpl: async (_input, init) => {
         upstreamCalls += 1;
+        assert.equal(init?.redirect, "error", "direct HTTPS calls use the same no-redirect policy");
         requestBody = String(init?.body ?? "");
         assert.equal(new Headers(init?.headers).get("authorization"), "Bearer test-key-never-log");
         return Response.json({ choices: [{ message: { content: "OK" } }] });

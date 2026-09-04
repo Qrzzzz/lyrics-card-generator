@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v6.2.9.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v6.2.10.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="./docs/development.en.md">Développement local</a> ·
@@ -74,24 +74,25 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 ## 📦 Téléchargement et installation
 
-Téléchargez la dernière version publique depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest). Le programme d’installation Windows est :
+Téléchargez la v6.2.10 depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v6.2.10). Le programme d’installation Windows est :
 
-* Programme d’installation Windows x64 : `Lyrics.Card.Generator.Setup.6.2.9.exe`
+* Programme d’installation Windows x64 : `Lyrics.Card.Generator.Setup.6.2.10.exe`
 
 À partir de la v6.2.2, le programme Setup Windows x64 est le seul paquet distribué.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### Points forts de la v6.2.9
+### Points forts de la v6.2.10
 
-* Suppression de composants inutilisés, de l’ancienne analyse des couleurs, de l’estimation de hauteur par caractères et de styles obsolètes, sans changer l’interface ni les fonctions.
-* Suppression d’une dépendance de développement inutilisée, d’une source d’icône en double et de fonctions auxiliaires de test jamais appelées.
-* Liste unique des fichiers de distribution et serveur de test partagé, en conservant la compatibilité de l’historique, les brouillons automatiques, l’exportation et les contrôles de sécurité.
+* Empêche une importation en attente de confirmation ou de sauvegarde du brouillon d’écraser un lien, des paroles ou un document modifiés entre-temps.
+* Refuse les redirections HTTP pour la traduction IA et les tests de connexion afin de ne pas transmettre le corps des requêtes à une destination non autorisée.
+* Réserve un délai de première réponse aux adresses de secours validées afin qu’une première adresse silencieuse n’épuise pas le délai global.
+* Le badge Explicit utilise le SVG arrondi blanc validé, avec une opacité de 50 % et un E évidé transparent, dans l’aperçu et l’export.
 
 ## 🌐 Notes de publication multilingues
 
 Par défaut, GitHub Release affiche un résumé en chinois simplifié. Consultez les notes complètes :
-[简体中文](./docs/releases/v6.2.9.zh-CN.md) · [繁體中文](./docs/releases/v6.2.9.zh-TW.md) · [English](./docs/releases/v6.2.9.en.md) · [Français](./docs/releases/v6.2.9.fr.md) · [日本語](./docs/releases/v6.2.9.ja.md) · [Español](./docs/releases/v6.2.9.es.md)
+[简体中文](./docs/releases/v6.2.10.zh-CN.md) · [繁體中文](./docs/releases/v6.2.10.zh-TW.md) · [English](./docs/releases/v6.2.10.en.md) · [Français](./docs/releases/v6.2.10.fr.md) · [日本語](./docs/releases/v6.2.10.ja.md) · [Español](./docs/releases/v6.2.10.es.md)
 
 <a id="fonctionnalités-principales"></a>
 

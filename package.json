@@ -1,6 +1,6 @@
 {
   "name": "lyric-card-generator",
-  "version": "6.2.9",
+  "version": "6.2.10",
   "private": true,
   "main": "electron/main.js",
   "scripts": {
@@ -21,7 +21,7 @@
     "parse:test": "tsx scripts/test-parse-song.ts",
     "music-search:normalize-test": "tsx scripts/test-netease-search-normalize.ts",
     "music-search:test": "tsx scripts/test-netease-search-live.ts",
-    "security:test": "tsx scripts/test-safe-fetch.ts",
+    "security:test": "tsx scripts/test-safe-fetch.ts && tsx scripts/test-ai-provider-redirects.ts",
     "dependency-audit:test": "node scripts/test-production-audit-policy.mjs && npm run desktop-runtime-audit:test",
     "dependency-audit:check": "node scripts/check-production-audit.mjs",
     "dependency-audit:gate": "npm run dependency-audit:test && npm run dependency-audit:check",

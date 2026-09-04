@@ -1561,6 +1561,7 @@ async function streamAITranslationInMain({ settings, apiKey, prompt, reasoning, 
     });
     const response = await fetch(endpoint, {
       method: "POST",
+      redirect: "error",
       headers: {
         authorization: `Bearer ${apiKey}`,
         "content-type": "application/json"

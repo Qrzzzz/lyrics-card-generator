@@ -92,6 +92,7 @@ export async function POST(request: Request) {
   try {
     const response = await fetch(endpoint, {
       method: "POST",
+      redirect: "error",
       headers: {
         authorization: `Bearer ${apiKey}`,
         "content-type": "application/json"

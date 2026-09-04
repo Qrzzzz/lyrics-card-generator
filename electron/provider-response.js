@@ -206,6 +206,8 @@ async function testProviderConnection({ baseUrl, model, apiKey, signal, fetchImp
   try {
     const response = await fetchImpl(endpoint, {
       method: "POST",
+      // Provider URLs authorize this endpoint only, never a redirect target.
+      redirect: "error",
       headers: {
         authorization: `Bearer ${String(apiKey).trim()}`,
         "content-type": "application/json"
