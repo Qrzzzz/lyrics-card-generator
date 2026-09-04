@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { prepareEditorLanguage } from "./editor-language-test-helpers.mjs";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
@@ -56,8 +57,7 @@ async function launch(first = false) {
     source: "unknown", title: "Local Draft", artist: "Local Artist", originalUrl: "", lyrics: "embedded lyrics", coverUrl: png
   } } }));
   if (first) {
-    await page.getByTestId("first-launch-language-dialog").waitFor({ state: "visible", timeout: 30_000 });
-    await page.locator('[data-testid="first-launch-language"][data-locale="en"]').click();
+    await prepareEditorLanguage(page, "en");
   }
   await page.getByTestId("autosave-status").waitFor({ state: "visible", timeout: 30_000 });
   await page.waitForFunction(() => !document.querySelector('[data-testid="editor-surface"]')?.inert, null, { timeout: 30_000 });

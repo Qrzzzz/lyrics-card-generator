@@ -57,6 +57,7 @@ async function run() {
     ["showNativeConfirmDialog", ["warning", "Confirm", "Replace document", "Unsaved changes", "Continue", "Cancel"]],
     ["showNativeAlertDialog", ["error", "Error", "Save failed", "Try again", "Close"]],
     ["loadAppPreferences", []],
+    ["getPreferredSystemLanguages", []],
     ["saveAppPreferences", [{ revision: 1 }, { importHistoryTrimConfirmation: true }]],
     ["listSystemFonts", []],
     ["openExternal", ["https://github.com/"]],

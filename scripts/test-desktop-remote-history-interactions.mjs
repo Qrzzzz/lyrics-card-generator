@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { prepareEditorLanguage } from "./editor-language-test-helpers.mjs";
 import { mkdir, mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -52,8 +53,7 @@ async function launch(first = false) {
   await page.route("**/api/image-proxy**", (route) => route.fulfill({ contentType: "image/png", body: png }));
   await page.route("https://covers.example/**", (route) => route.fulfill({ contentType: "image/png", body: png }));
   if (first) {
-    await page.getByTestId("first-launch-language-dialog").waitFor({ state: "visible", timeout: 30_000 });
-    await page.locator('[data-testid="first-launch-language"][data-locale="en"]').click();
+    await prepareEditorLanguage(page, "en");
   }
   await page.locator('[data-testid="editor-surface"] [data-testid="history-button"]').waitFor({ state: "visible", timeout: 30_000 });
 }

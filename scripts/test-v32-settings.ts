@@ -5,7 +5,6 @@ import { getContrastRatio, resolveReadableTextColor, resolveReadableTextTokens }
 import { DEFAULT_USER_SETTINGS, EXPORT_FORMAT_OPTIONS, EXPORT_QUALITY_OPTIONS } from "../lib/settings/types";
 import { validateUiFontFamily } from "../lib/settings/font-family";
 import { UI_ACCENT_PRESETS, resolveUiAccentColor } from "../lib/settings/accent";
-import { shouldShowFirstLaunchLanguage } from "../lib/settings/app-preferences";
 import { hasAuthoredDocument } from "../lib/editor/document-transactions";
 import {
   normalizeUserSettings,
@@ -30,9 +29,6 @@ assert.equal(defaults.defaultShowGeneratedWatermark, false);
 assert.equal(defaults.defaultShowSharedBy, false);
 assert.equal(defaults.defaultSharedByText, "");
 assert.equal(defaults.importHistoryLimit, 10);
-assert.equal(shouldShowFirstLaunchLanguage(null, defaults), true);
-assert.equal(shouldShowFirstLaunchLanguage("zh", defaults), true);
-assert.equal(shouldShowFirstLaunchLanguage("zh", { ...defaults, firstLaunchLanguageSelected: true }), false);
 
 const migrated = normalizeUserSettings({
   sparkCursorEnabled: false,

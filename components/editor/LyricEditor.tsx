@@ -35,7 +35,6 @@ import { AutoWidthMeasurementHost } from "@/components/editor/AutoWidthMeasureme
 import { LandscapeLayoutMeasurementHost } from "@/components/editor/LandscapeLayoutMeasurementHost";
 import { SettingsStepper, type SettingsStep } from "@/components/editor/SettingsStepper";
 import type { SettingsTabId } from "@/components/settings/settings-model";
-import { FirstLaunchLanguageDialog } from "@/components/settings/FirstLaunchLanguageDialog";
 import {
   useCoverPalette,
   useResolvedTextColor,
@@ -102,6 +101,7 @@ export function LyricEditor() {
   recordRenderBoundary("LyricEditor");
   const [state, setState] = useState<AppState>(() => ({
     ...defaultState,
+    locale: "en",
     lyricDocument: cloneLyricDocument(defaultState.lyricDocument)
   }));
   const newCardDefaultsAppliedRef = useRef(false);
@@ -277,12 +277,10 @@ export function LyricEditor() {
   const {
     userSettings,
     isDesktopShell,
-    isFirstLaunchOpen,
     preferencesLoaded,
     previewUserSettings,
     commitUserSettings: updateUserSettings,
-    setLocale,
-    chooseFirstLaunchLanguage
+    setLocale
   } = useEditorPreferences({
     currentLocale: state.locale,
     applyLocale
@@ -580,10 +578,13 @@ export function LyricEditor() {
     <AppMotionProvider reduceMotion={userSettings.reduceMotionEnabled} ready={preferencesLoaded}>
       <div
         className="app-shell min-h-screen"
+        aria-busy={!preferencesLoaded}
+        data-preferences-loaded={preferencesLoaded ? "true" : "false"}
         data-ui-theme={effectiveUiThemeId}
         data-desktop-shell={isDesktopShell ? "true" : "false"}
         data-reduce-motion={!preferencesLoaded || shouldReduceMotion ? "true" : "false"}
         style={{
+          visibility: preferencesLoaded ? undefined : "hidden",
           "--app-font-family": userSettings.uiFontFamily || undefined,
           "--app-accent": resolvedAccentColor,
           ...resolvedThemeTokens,
@@ -761,7 +762,6 @@ export function LyricEditor() {
           </div>
         </main>
       </ClickSpark>
-      <FirstLaunchLanguageDialog open={isFirstLaunchOpen} locale={state.locale} onChoose={chooseFirstLaunchLanguage} />
       <SettingsPersistenceNotice issues={settingsPersistenceIssues} />
       <AppToast notices={toastNotices} announcement={toastAnnouncement} />
         <ExportCelebration burstKey={celebrationKey} accentColor={resolvedAccentColor} />

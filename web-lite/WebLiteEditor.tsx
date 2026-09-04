@@ -52,7 +52,7 @@ import {
 import { createT } from "@/lib/i18n";
 import { DEFAULT_PALETTE } from "@/lib/palette-background";
 import { resolveUiAccentColor } from "@/lib/settings/accent";
-import { documentLanguageForLocale } from "@/lib/locale-language";
+import { documentLanguageForLocale, readBrowserPreferredLocale } from "@/lib/locale-language";
 import {
   DEFAULT_USER_SETTINGS,
   getExportPixelRatio,
@@ -71,7 +71,6 @@ import { WebLiteHeader } from "@/web-lite/WebLiteHeader";
 import { WebLiteLyricInput } from "@/web-lite/WebLiteLyricInput";
 import { WebLiteSongInfo } from "@/web-lite/WebLiteSongInfo";
 import {
-  detectWebLiteLocale,
   isWebLiteLocale,
   webLiteCopy,
   type WebLiteLocale
@@ -715,9 +714,7 @@ function createInitialState(locale: WebLiteLocale): AppState {
 }
 
 function readPreferences(): WebLitePreferences {
-  const browserLocale = detectWebLiteLocale(
-    typeof navigator !== "undefined" ? navigator.languages?.[0] || navigator.language : "en"
-  );
+  const browserLocale = readBrowserPreferredLocale();
   const fallback: WebLitePreferences = {
     version: 1,
     locale: browserLocale,

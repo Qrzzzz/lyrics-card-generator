@@ -8,7 +8,6 @@ import {
   isSupportedLocale,
   loadAppPreferences,
   saveAppPreferences,
-  shouldShowFirstLaunchLanguage,
   type AppPreferencesPersistenceOptions
 } from "@/lib/settings/app-preferences";
 import {
@@ -16,7 +15,7 @@ import {
   type AppPreferenceSaveCoordinator
 } from "@/lib/settings/app-preference-save-coordinator";
 import { DEFAULT_USER_SETTINGS, type UserSettings } from "@/lib/settings/types";
-import { normalizeUserSettings, resolveEffectiveUiThemeId, saveUserSettings } from "@/lib/settings/user-settings";
+import { normalizeUserSettings, resolveEffectiveUiThemeId } from "@/lib/settings/user-settings";
 import type { Locale } from "@/lib/types";
 
 type UseEditorPreferencesInput = {
@@ -27,7 +26,6 @@ type UseEditorPreferencesInput = {
 export function useEditorPreferences({ currentLocale, applyLocale }: UseEditorPreferencesInput) {
   const [userSettings, setUserSettings] = useState<UserSettings>(DEFAULT_USER_SETTINGS);
   const [isDesktopShell, setIsDesktopShell] = useState(false);
-  const [isFirstLaunchOpen, setIsFirstLaunchOpen] = useState(false);
   const [preferencesLoaded, setPreferencesLoaded] = useState(false);
   const currentLocaleRef = useRef(currentLocale);
   currentLocaleRef.current = currentLocale;
@@ -83,19 +81,6 @@ export function useEditorPreferences({ currentLocale, applyLocale }: UseEditorPr
     return flushPreferenceSave();
   }
 
-  async function chooseFirstLaunchLanguage(locale: Locale) {
-    const saved = saveUserSettings({
-      ...preferenceSaveCoordinatorRef.current!.getDesired().userSettings,
-      firstLaunchLanguageSelected: true
-    });
-    currentLocaleRef.current = locale;
-    applyLocale(locale);
-    setUserSettings(saved);
-    preferenceSaveCoordinatorRef.current!.queueUserSettings(locale, saved);
-    await flushPreferenceSave();
-    setIsFirstLaunchOpen(false);
-  }
-
   async function flushPreferenceSave() {
     await preferenceSaveCoordinatorRef.current!.flush();
   }
@@ -132,7 +117,6 @@ export function useEditorPreferences({ currentLocale, applyLocale }: UseEditorPr
         if (isSupportedLocale(storedLocale)) {
           applyLocaleRef.current(storedLocale);
         }
-        setIsFirstLaunchOpen(shouldShowFirstLaunchLanguage(storedLocale, loadedSettings));
       })
       .catch(() => undefined)
       .finally(() => {
@@ -163,11 +147,9 @@ export function useEditorPreferences({ currentLocale, applyLocale }: UseEditorPr
   return {
     userSettings,
     isDesktopShell,
-    isFirstLaunchOpen,
     preferencesLoaded,
     previewUserSettings,
     commitUserSettings,
-    setLocale,
-    chooseFirstLaunchLanguage
+    setLocale
   };
 }

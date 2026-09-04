@@ -1,6 +1,7 @@
 import { getLyricsCardDesktopApi, type AppPreferencesSaveOptions } from "@/lib/desktop-api";
+import { readBrowserPreferredLocale, resolvePreferredLocale } from "@/lib/locale-language";
 import type { Locale } from "@/lib/types";
-import type { UserSettings } from "@/lib/settings/types";
+import { DEFAULT_USER_SETTINGS, type UserSettings } from "@/lib/settings/types";
 import { loadUserSettings, normalizeUserSettings, saveUserSettings } from "@/lib/settings/user-settings";
 import {
   APP_PREFERENCES_SCHEMA_VERSION,
@@ -20,33 +21,49 @@ export function isSupportedLocale(locale: string | null): locale is Locale {
   return Boolean(locale && SUPPORTED_LOCALES.includes(locale as Locale));
 }
 
-export function shouldShowFirstLaunchLanguage(locale: string | null, userSettings: UserSettings) {
-  return !isSupportedLocale(locale) || userSettings.firstLaunchLanguageSelected !== true;
-}
-
 export async function loadAppPreferences(): Promise<AppPreferencesRecord> {
-  const localLocale = window.localStorage.getItem(LOCALE_STORAGE_KEY);
-  const localSettings = loadUserSettings();
-  const local = readLocalAppPreferences(localLocale, localSettings);
   const desktop = getLyricsCardDesktopApi();
-  if (!desktop) return ensureMigratedRecord(local);
-
+  let fallbackLocale: Locale = "en";
   try {
-    const stored = normalizeAppPreferencesRecord(await desktop.loadAppPreferences());
-    // Reconcile the renderer cache with durable desktop JSON by monotonic
-    // revision, then repair whichever side did not supply the selected record.
-    const selected = selectNewerAppPreferences(local, stored);
-    const record = ensureMigratedRecord(selected.record ?? local);
-    writeLocalAppPreferences(record);
-    if (!stored || selected.source === "local" || stored.revision === 0) {
-      await desktop.saveAppPreferences(toDesktopRecord(record));
-    }
-    return record;
+    fallbackLocale = desktop
+      ? resolvePreferredLocale(await desktop.getPreferredSystemLanguages())
+      : readBrowserPreferredLocale();
   } catch {
-    const record = ensureMigratedRecord(local);
-    writeLocalAppPreferences(record);
-    return record;
+    // An unavailable OS language list uses English, independently of Chromium's locale.
   }
+  let localLocale: string | null = null;
+  let localSettings = DEFAULT_USER_SETTINGS;
+  try {
+    localLocale = window.localStorage.getItem(LOCALE_STORAGE_KEY);
+    localSettings = loadUserSettings();
+  } catch {
+    // A blocked renderer cache must not prevent language detection or desktop recovery.
+  }
+  const local = readLocalAppPreferences(localLocale, localSettings, fallbackLocale);
+  let stored: AppPreferencesRecord | null = null;
+  if (desktop) {
+    try {
+      stored = normalizeAppPreferencesRecord(await desktop.loadAppPreferences());
+    } catch {
+      // Continue with local preferences or the detected language.
+    }
+  }
+  // Saved preferences always take precedence over the detected fallback.
+  const selected = selectNewerAppPreferences(local, stored);
+  const record = ensureMigratedRecord(selected.record ?? local);
+  try {
+    writeLocalAppPreferences(record);
+  } catch {
+    // Startup remains usable even when the renderer cache cannot be repaired.
+  }
+  if (desktop && (!stored || selected.source === "local" || stored.revision === 0)) {
+    try {
+      await desktop.saveAppPreferences(toDesktopRecord(record));
+    } catch {
+      // Explicit settings saves still report persistence failures to the user.
+    }
+  }
+  return record;
 }
 
 export function saveAppPreferences(
@@ -91,21 +108,25 @@ async function persistAppPreferences(
   return record;
 }
 
-function readLocalAppPreferences(locale: string | null, userSettings: UserSettings): AppPreferencesRecord {
+function readLocalAppPreferences(
+  locale: string | null,
+  userSettings: UserSettings,
+  fallbackLocale: Locale = "en"
+): AppPreferencesRecord {
   try {
     const parsed = normalizeAppPreferencesRecord(JSON.parse(
       window.localStorage.getItem(APP_PREFERENCES_STORAGE_KEY) || "null"
     ));
     if (parsed) return parsed;
   } catch {
-    window.localStorage.removeItem(APP_PREFERENCES_STORAGE_KEY);
+    // Ignore corrupt or inaccessible storage; load repairs it when possible.
   }
 
   return {
     schemaVersion: APP_PREFERENCES_SCHEMA_VERSION,
     revision: 0,
     updatedAt: 0,
-    locale: isSupportedLocale(locale) ? locale : "zh",
+    locale: isSupportedLocale(locale) ? locale : fallbackLocale,
     userSettings: normalizeUserSettings(userSettings)
   };
 }

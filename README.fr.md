@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v6.2.10.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v6.2.11.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="./docs/development.en.md">Développement local</a> ·
@@ -74,25 +74,25 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 ## 📦 Téléchargement et installation
 
-Téléchargez la v6.2.10 depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v6.2.10). Le programme d’installation Windows est :
+Téléchargez la v6.2.11 depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v6.2.11). Le programme d’installation Windows est :
 
-* Programme d’installation Windows x64 : `Lyrics.Card.Generator.Setup.6.2.10.exe`
+* Programme d’installation Windows x64 : `Lyrics.Card.Generator.Setup.6.2.11.exe`
 
 À partir de la v6.2.2, le programme Setup Windows x64 est le seul paquet distribué.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### Points forts de la v6.2.10
+### Points forts de la v6.2.11
 
-* Empêche une importation en attente de confirmation ou de sauvegarde du brouillon d’écraser un lien, des paroles ou un document modifiés entre-temps.
-* Refuse les redirections HTTP pour la traduction IA et les tests de connexion afin de ne pas transmettre le corps des requêtes à une destination non autorisée.
-* Réserve un délai de première réponse aux adresses de secours validées afin qu’une première adresse silencieuse n’épuise pas le délai global.
-* Le badge Explicit utilise le SVG arrondi blanc validé, avec une opacité de 50 % et un E évidé transparent, dans l’aperçu et l’export.
+* Supprime la boîte de sélection de langue au premier lancement et ouvre directement l’éditeur.
+* Sans langue enregistrée, choisit parmi les six langues prises en charge selon l’ordre des préférences système ; utilise l’anglais si aucune ne correspond ou si la liste est inaccessible.
+* Reconnaît le chinois simplifié, le chinois traditionnel et les variantes régionales. Conserve la langue enregistrée, modifiable dans les paramètres.
+* Web Lite suit également l’ordre des langues du navigateur. L’éditeur de bureau s’affiche une fois les préférences de langue chargées.
 
 ## 🌐 Notes de publication multilingues
 
 Par défaut, GitHub Release affiche un résumé en chinois simplifié. Consultez les notes complètes :
-[简体中文](./docs/releases/v6.2.10.zh-CN.md) · [繁體中文](./docs/releases/v6.2.10.zh-TW.md) · [English](./docs/releases/v6.2.10.en.md) · [Français](./docs/releases/v6.2.10.fr.md) · [日本語](./docs/releases/v6.2.10.ja.md) · [Español](./docs/releases/v6.2.10.es.md)
+[简体中文](./docs/releases/v6.2.11.zh-CN.md) · [繁體中文](./docs/releases/v6.2.11.zh-TW.md) · [English](./docs/releases/v6.2.11.en.md) · [Français](./docs/releases/v6.2.11.fr.md) · [日本語](./docs/releases/v6.2.11.ja.md) · [Español](./docs/releases/v6.2.11.es.md)
 
 <a id="fonctionnalités-principales"></a>
 

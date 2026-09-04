@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { prepareEditorLanguage } from "./editor-language-test-helpers.mjs";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -30,10 +31,7 @@ try {
   });
   page.on("pageerror", (error) => rendererErrors.push(error.stack || error.message));
 
-  const firstLaunch = page.getByTestId("first-launch-language-dialog");
-  await firstLaunch.waitFor({ state: "visible", timeout: 60_000 });
-  await page.locator('[data-testid="first-launch-language"][data-locale="zh"]').click();
-  await firstLaunch.waitFor({ state: "hidden", timeout: 15_000 });
+  await prepareEditorLanguage(page, "zh");
 
   await electronApp.evaluate(({ BrowserWindow }) => {
     const window = BrowserWindow.getAllWindows()[0];

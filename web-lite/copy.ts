@@ -1,4 +1,5 @@
 import type { Locale } from "@/lib/types";
+import { resolvePreferredLocale } from "@/lib/locale-language";
 
 export type WebLiteLocale = Locale;
 
@@ -252,14 +253,7 @@ export const webLiteCopy: Record<WebLiteLocale, WebLiteCopyShape> = {
 export type WebLiteCopy = WebLiteCopyShape;
 
 export function detectWebLiteLocale(language: string): WebLiteLocale {
-  const normalized = language.trim().toLowerCase().replace(/_/g, "-");
-  if (/^zh-(tw|hk|mo|hant)(?:-|$)/.test(normalized)) return "zh-TW";
-  if (normalized === "zh-hant") return "zh-TW";
-  if (normalized.startsWith("zh")) return "zh";
-  if (normalized.startsWith("fr")) return "fr";
-  if (normalized.startsWith("ja")) return "ja";
-  if (normalized.startsWith("es")) return "es";
-  return "en";
+  return resolvePreferredLocale([language]);
 }
 
 export function isWebLiteLocale(value: unknown): value is WebLiteLocale {

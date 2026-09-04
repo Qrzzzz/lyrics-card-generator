@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { prepareEditorLanguage } from "./editor-language-test-helpers.mjs";
 import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -3993,19 +3994,8 @@ try {
     });
   });
 
-  const firstLaunch = page.getByTestId("first-launch-language-dialog");
-  await firstLaunch.waitFor({ state: "visible", timeout: 60_000 });
-  const firstLanguageButton = page.locator('[data-testid="first-launch-language"]').first();
-  const lastLanguageButton = page.locator('[data-testid="first-launch-language"]').last();
-  await page.waitForFunction(() => document.activeElement === document.querySelector('[data-testid="first-launch-language"]'));
-  assert.equal(await firstLanguageButton.evaluate((node) => document.activeElement === node), true, "language dialog sets initial focus");
-  assert.equal(await page.getByTestId("editor-surface").evaluate((node) => Boolean(node.closest('[inert]'))), true, "dialog makes the app background inert");
-  await firstLanguageButton.press("Shift+Tab");
-  assert.equal(await lastLanguageButton.evaluate((node) => document.activeElement === node), true, "Shift+Tab wraps inside the language dialog");
-  await page.locator('[data-testid="first-launch-language"][data-locale="zh"]').click();
-  await firstLaunch.waitFor({ state: "hidden", timeout: 15_000 });
-  assert.equal(await page.getByRole("combobox").first().evaluate((node) => document.activeElement === node), true, "language selection moves focus to song search");
-  assert.equal(await page.getByTestId("editor-surface").evaluate((node) => Boolean(node.closest('[inert]'))), false, "background inertness ends after dialog exit");
+  await prepareEditorLanguage(page, "zh");
+  assert.equal(await page.getByTestId("editor-surface").evaluate((node) => Boolean(node.closest('[inert]'))), false, "startup leaves the editor accessible");
   await assertTitlebarWindowInteractions();
 
   await page.locator('[data-testid="editor-surface"] [data-testid="settings-button"]').click();
