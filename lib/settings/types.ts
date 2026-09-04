@@ -34,6 +34,7 @@ export type UserSettings = {
   defaultExportQuality: ExportQualityId;
   defaultExportPixelRatio: number;
   importHistoryLimit: ImportHistoryLimit;
+  /** Legacy preference retained for compatibility; startup no longer shows a language dialog. */
   firstLaunchLanguageSelected: boolean;
 };
 

@@ -15,8 +15,12 @@ import { USER_SETTINGS_STORAGE_KEY } from "../lib/settings/user-settings";
 
 class MemoryStorage {
   private values = new Map<string, string>();
+  failReads = false;
   failWrites = false;
-  getItem(key: string) { return this.values.get(key) ?? null; }
+  getItem(key: string) {
+    if (this.failReads) throw new Error("renderer cache unavailable");
+    return this.values.get(key) ?? null;
+  }
   setItem(key: string, value: string) {
     if (this.failWrites) throw new Error("renderer cache unavailable");
     this.values.set(key, value);
@@ -42,9 +46,14 @@ function installWindow(
   desktopRecord: AppPreferencesRecord | null,
   saves: AppPreferencesRecord[],
   saveFailure?: Error,
-  saveOptions: Array<AppPreferencesSaveOptions | undefined> = []
+  saveOptions: Array<AppPreferencesSaveOptions | undefined> = [],
+  preferredLanguages: string[] | Error = []
 ) {
   const desktop = {
+    getPreferredSystemLanguages: async () => {
+      if (preferredLanguages instanceof Error) throw preferredLanguages;
+      return preferredLanguages;
+    },
     loadAppPreferences: async () => desktopRecord,
     saveAppPreferences: async (preferences: AppPreferencesRecord, options?: AppPreferencesSaveOptions) => {
       if (saveFailure) throw saveFailure;
@@ -52,11 +61,92 @@ function installWindow(
       saveOptions.push(structuredClone(options));
       return true;
     }
-  } as Pick<LyricsCardDesktopApi, "loadAppPreferences" | "saveAppPreferences">;
+  } as Pick<LyricsCardDesktopApi, "loadAppPreferences" | "saveAppPreferences" | "getPreferredSystemLanguages">;
   Object.defineProperty(globalThis, "window", {
     configurable: true,
     value: { localStorage, lyricsCardDesktop: desktop as LyricsCardDesktopApi }
   });
+}
+
+async function startupLanguagePreferences() {
+  // Deliberately differ from the native list: desktop startup must use OS preferences.
+  Object.defineProperty(globalThis, "navigator", {
+    configurable: true,
+    value: { languages: ["fr-CA"], language: "fr-CA" }
+  });
+  for (const [languages, expected] of [
+    [["de-DE", "ja-JP", "en-US"], "ja"],
+    [["zh-Hant-HK", "en-US"], "zh-TW"],
+    [["zh-Hans-TW"], "zh"],
+    [["es-MX"], "es"],
+    [["de-DE", "ko-KR"], "en"],
+    [[], "en"],
+    [new Error("OS language lookup unavailable"), "en"]
+  ] as Array<[string[] | Error, AppPreferencesRecord["locale"]]>) {
+    const storage = new MemoryStorage();
+    const saves: AppPreferencesRecord[] = [];
+    installWindow(storage, null, saves, undefined, [], languages);
+    const loaded = await loadAppPreferences();
+    assert.equal(loaded.locale, expected, "fresh desktop profile follows supported OS preferences or English");
+    assert.equal(saves.at(-1)?.locale, expected, "detected locale is persisted without a dialog");
+    assert.equal(storage.getItem(LOCALE_STORAGE_KEY), expected);
+  }
+
+  for (const legacyFlag of [false, true]) {
+    const storage = new MemoryStorage();
+    const existing = record(4, 40, "es");
+    existing.userSettings.firstLaunchLanguageSelected = legacyFlag;
+    existing.userSettings.defaultExportFormat = "jpg";
+    installWindow(storage, existing, [], undefined, [], ["ja-JP"]);
+    const loaded = await loadAppPreferences();
+    assert.deepEqual(loaded, existing, "upgrades preserve saved language and settings regardless of the old dialog flag");
+  }
+
+  {
+    const storage = new MemoryStorage();
+    storage.setItem(LOCALE_STORAGE_KEY, "zh-TW");
+    installWindow(storage, null, [], undefined, [], ["ja-JP"]);
+    assert.equal((await loadAppPreferences()).locale, "zh-TW", "legacy language overrides detection");
+    await saveAppPreferences("fr", DEFAULT_USER_SETTINGS);
+    installWindow(storage, null, [], undefined, [], ["en-US"]);
+    assert.equal((await loadAppPreferences()).locale, "fr", "manual language remains selected after restart");
+  }
+
+  {
+    const storage = new MemoryStorage();
+    storage.setItem(APP_PREFERENCES_STORAGE_KEY, "{broken");
+    storage.setItem(LOCALE_STORAGE_KEY, "de");
+    installWindow(storage, null, [], undefined, [], ["ja-JP"]);
+    assert.equal((await loadAppPreferences()).locale, "ja", "corrupt or unsupported saved language falls back to OS preferences");
+  }
+
+  {
+    const storage = new MemoryStorage();
+    storage.failReads = true;
+    storage.failWrites = true;
+    installWindow(storage, record(3, 30, "es"), [], undefined, [], ["ja-JP"]);
+    assert.equal((await loadAppPreferences()).locale, "es", "inaccessible cache cannot discard the saved desktop language");
+    installWindow(storage, null, [], new Error("disk unavailable"), [], ["ja-JP"]);
+    assert.equal((await loadAppPreferences()).locale, "ja", "startup still uses the OS language when all persistence is unavailable");
+  }
+
+  {
+    const storage = new MemoryStorage();
+    Object.defineProperty(globalThis, "window", { configurable: true, value: { localStorage: storage } });
+    Object.defineProperty(globalThis, "navigator", {
+      configurable: true,
+      value: { languages: ["de-DE", "es-MX"], language: "de-DE" }
+    });
+    assert.equal((await loadAppPreferences()).locale, "es", "browser startup checks the entire preference list");
+    await saveAppPreferences("ja", DEFAULT_USER_SETTINGS);
+    assert.equal((await loadAppPreferences()).locale, "ja", "browser saves override detected language");
+    storage.clear();
+    Object.defineProperty(globalThis, "navigator", { configurable: true, value: { languages: [], language: "fr-CA" } });
+    assert.equal((await loadAppPreferences()).locale, "fr", "browser language is used when the preference list is empty");
+    storage.clear();
+    Object.defineProperty(globalThis, "navigator", { configurable: true, value: undefined });
+    assert.equal((await loadAppPreferences()).locale, "en", "missing browser language falls back to English");
+  }
 }
 
 async function jsonAndLocalReconciliation() {
@@ -170,6 +260,7 @@ async function destructiveHistoryConfirmationIsForwarded() {
 }
 
 void (async () => {
+  await startupLanguagePreferences();
   await jsonAndLocalReconciliation();
   await migrationAndFailures();
   await rapidSavesAreMonotonic();

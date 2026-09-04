@@ -75,6 +75,7 @@ export type LyricsCardDesktopApi = {
   onWindowCloseRequested: (callback: () => void) => () => void;
   showNativeConfirm: (options: NativeConfirmDialogOptions) => Promise<boolean>;
   showNativeAlert: (options: NativeAlertDialogOptions) => Promise<boolean>;
+  getPreferredSystemLanguages: () => Promise<string[]>;
   loadAppPreferences: () => Promise<AppPreferencesRecord | null>;
   saveAppPreferences: (preferences: AppPreferencesRecord, options?: AppPreferencesSaveOptions) => Promise<boolean>;
   listSystemFonts: () => Promise<SystemFontOption[]>;

@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { prepareEditorLanguage } from "./editor-language-test-helpers.mjs";
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -200,7 +201,7 @@ async function attachRoutes(targetPage) {
   });
 }
 
-async function launchApp({ expectFirstLaunch = false, expectedLocale = null, expectedHistoryLimit = null } = {}) {
+async function launchApp({ initializeLanguage = false, expectedLocale = null, expectedHistoryLimit = null } = {}) {
   // Re-launching against the same user-data directory is part of the assertion:
   // the on-disk document, not renderer memory, must remain authoritative.
   electronApp = await electron.launch({
@@ -238,11 +239,8 @@ async function launchApp({ expectFirstLaunch = false, expectedLocale = null, exp
   });
   await attachRoutes(page);
 
-  const firstLaunch = page.getByTestId("first-launch-language-dialog");
-  if (expectFirstLaunch) {
-    await firstLaunch.waitFor({ state: "visible", timeout: 30_000 });
-    await page.locator('[data-testid="first-launch-language"][data-locale="en"]').click();
-    await firstLaunch.waitFor({ state: "hidden", timeout: 15_000 });
+  if (initializeLanguage) {
+    await prepareEditorLanguage(page, "en");
   }
   await page.locator('[data-testid="editor-surface"] [data-testid="history-button"]').waitFor({
     state: "visible",
@@ -407,7 +405,7 @@ async function setReducedMotion() {
 }
 
 try {
-  await launchApp({ expectFirstLaunch: true });
+  await launchApp({ initializeLanguage: true });
 
   const actionIds = await page.locator('[data-testid="editor-header-actions"] > button').evaluateAll(
     (nodes) => nodes.map((node) => node.getAttribute("data-testid"))

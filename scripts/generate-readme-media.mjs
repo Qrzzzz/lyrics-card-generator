@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { prepareEditorLanguage } from "./editor-language-test-helpers.mjs";
 import { spawn } from "node:child_process";
 import { once } from "node:events";
 import { readFile, mkdir, access } from "node:fs/promises";
@@ -166,10 +167,7 @@ async function renderCard(browser, baseUrl, coverBytes, fixture) {
 
   try {
     await page.goto(baseUrl, { waitUntil: "domcontentloaded", timeout: 60_000 });
-    const firstLaunch = page.getByTestId("first-launch-language-dialog");
-    await firstLaunch.waitFor({ state: "visible", timeout: 30_000 });
-    await page.locator('[data-testid="first-launch-language"][data-locale="zh"]').click();
-    await firstLaunch.waitFor({ state: "hidden", timeout: 15_000 });
+    await prepareEditorLanguage(page, "zh");
 
     await page.getByTestId("song-info-toggle").click();
     const editor = page.getByTestId("song-info-editor");

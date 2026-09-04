@@ -834,6 +834,7 @@ function registerDesktopIpc() {
     return true;
   });
 
+  handle("lyrics-card:preferred-system-languages", () => app.getPreferredSystemLanguages());
   handle("lyrics-card:app-preferences-load", () => readAppPreferences());
   handle("lyrics-card:app-preferences-save", (_event, input, options) => trackImportHistoryMutation(async () => {
     const preferences = normalizeStoredPreferences(input);

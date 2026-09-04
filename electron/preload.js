@@ -119,6 +119,7 @@ contextBridge.exposeInMainWorld("lyricsCardDesktopBridge", {
     detail,
     closeLabel
   ),
+  getPreferredSystemLanguages: () => ipcRenderer.invoke("lyrics-card:preferred-system-languages"),
   loadAppPreferences: () => ipcRenderer.invoke("lyrics-card:app-preferences-load"),
   saveAppPreferences: (preferences, options) => ipcRenderer.invoke("lyrics-card:app-preferences-save", preferences, options),
   listSystemFonts: () => ipcRenderer.invoke("lyrics-card:list-system-fonts"),

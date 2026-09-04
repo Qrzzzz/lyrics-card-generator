@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { prepareEditorLanguage } from "./editor-language-test-helpers.mjs";
 import crypto from "node:crypto";
 import { execFile, spawn } from "node:child_process";
 import { createReadStream } from "node:fs";
@@ -102,10 +103,7 @@ async function smokeExecutable(executablePath, label, results, sourceArtifactPat
       `${label} renderer user agent does not report Electron ${expectedElectronVersion}: ${userAgent}`
     );
     assert.equal(electronVersion, processElectronVersion, `${label} renderer and process Electron versions must agree`);
-    const languageDialog = page.getByTestId("first-launch-language-dialog");
-    await languageDialog.waitFor({ state: "visible", timeout: 30_000 });
-    await page.locator('[data-testid="first-launch-language"][data-locale="en"]').click();
-    await languageDialog.waitFor({ state: "hidden", timeout: 15_000 });
+    await prepareEditorLanguage(page, "en");
     const search = page.getByRole("combobox").first();
     await search.waitFor({ state: "visible" });
     await search.fill("final artifact smoke");

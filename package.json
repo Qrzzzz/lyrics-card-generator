@@ -1,6 +1,6 @@
 {
   "name": "lyric-card-generator",
-  "version": "6.2.10",
+  "version": "6.2.11",
   "private": true,
   "main": "electron/main.js",
   "scripts": {
@@ -76,9 +76,10 @@
     "font-directory:test": "node scripts/test-electron-font-directory-service.cjs",
     "desktop:single-instance-test": "node scripts/test-desktop-single-instance-interactions.mjs",
     "desktop:startup-origin-test": "node scripts/test-desktop-startup-origin-interactions.mjs",
+    "desktop:language-test": "tsx scripts/test-desktop-language-startup.mjs",
     "desktop:clipboard-test": "node scripts/test-desktop-clipboard-interactions.mjs",
     "desktop:prepare": "node scripts/prepare-electron-dist.mjs",
-    "desktop:interaction-test": "node scripts/test-desktop-single-instance-interactions.mjs && node scripts/test-desktop-startup-origin-interactions.mjs && node scripts/test-desktop-clipboard-interactions.mjs && node scripts/test-desktop-settings-interactions.mjs && node scripts/test-desktop-import-history-interactions.mjs && npm run desktop:autosave-test && npm run desktop:history-transfer-test",
+    "desktop:interaction-test": "node scripts/test-desktop-single-instance-interactions.mjs && node scripts/test-desktop-startup-origin-interactions.mjs && npm run desktop:language-test && node scripts/test-desktop-clipboard-interactions.mjs && node scripts/test-desktop-settings-interactions.mjs && node scripts/test-desktop-import-history-interactions.mjs && npm run desktop:autosave-test && npm run desktop:history-transfer-test",
     "desktop:visual-diagnostic": "node scripts/test-desktop-settings-interactions.mjs --visual-diagnostics",
     "desktop:final-artifact-smoke": "node scripts/smoke-final-windows-artifacts.mjs",
     "desktop:size": "node scripts/audit-desktop-size.mjs",

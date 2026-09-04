@@ -5,7 +5,7 @@ import { getAIUiCopy } from "../lib/ai/ui-copy";
 import { deferredSurfaceCopy } from "../lib/deferred-surface-copy";
 import { messages } from "../lib/i18n";
 import { importHistoryCopy } from "../lib/import-history-copy";
-import { LOCALE_BCP47 } from "../lib/locale-language";
+import { LOCALE_BCP47, resolvePreferredLocale } from "../lib/locale-language";
 import { settingsCopy } from "../lib/settings/copy";
 import type { Locale } from "../lib/types";
 import { detectWebLiteLocale, webLiteCopy } from "../web-lite/copy";
@@ -75,6 +75,23 @@ assert.equal(detectWebLiteLocale("fr-CA"), "fr");
 assert.equal(detectWebLiteLocale("ja-JP"), "ja");
 assert.equal(detectWebLiteLocale("es-MX"), "es");
 assert.equal(detectWebLiteLocale("de-DE"), "en");
+
+for (const [language, expected] of [
+  ["zh", "zh"], ["zh-CN", "zh"], ["zh-SG", "zh"], ["zh-Hans", "zh"],
+  ["zh-Hans-TW", "zh"], ["zh-Hans-HK", "zh"],
+  ["zh-TW", "zh-TW"], ["zh-HK", "zh-TW"], ["zh-MO", "zh-TW"],
+  ["zh-Hant", "zh-TW"], ["zh-Hant-CN", "zh-TW"], [" ZH_hant_HK ", "zh-TW"],
+  ["en-GB", "en"], ["fr-CA", "fr"], ["ja-JP", "ja"], ["es-419", "es"],
+  ["de-DE", "en"], ["french", "en"], ["japanese", "en"], ["", "en"]
+] as const) {
+  assert.equal(resolvePreferredLocale([language]), expected, `system language ${language}`);
+  assert.equal(detectWebLiteLocale(language), expected, `Web Lite language ${language}`);
+}
+assert.equal(resolvePreferredLocale(["de-DE", "ja-JP", "en-US"]), "ja");
+assert.equal(resolvePreferredLocale(["en-US", "fr-CA"]), "en");
+assert.equal(resolvePreferredLocale(["", "not a locale", "es-MX"]), "es");
+assert.equal(resolvePreferredLocale(["de-DE", "ko-KR"]), "en");
+assert.equal(resolvePreferredLocale([]), "en");
 
 for (const locale of locales) {
   const ai = getAIUiCopy(locale);
