@@ -2,7 +2,6 @@
 
 import { useEffect, useRef } from "react";
 import type { Dispatch, SetStateAction } from "react";
-import { estimateCardHeight } from "@/lib/card-size";
 import { FIXED_WHITE_TEXT_COLOR } from "@/lib/card-style-normalize";
 import { proxiedImageUrl } from "@/lib/image-utils";
 import {
@@ -98,69 +97,5 @@ export function useResolvedTextColor(state: AppState, setState: AppStateSetter) 
     state.style.customTextColor,
     state.style.resolvedTextColor,
     state.style.textColorMode
-  ]);
-}
-
-export function useAutoCanvasHeight(state: AppState, setState: AppStateSetter) {
-  useEffect(() => {
-    if ((state.style.layoutMode ?? "portrait") === "landscape" || state.style.ratio !== "custom" || !state.style.autoHeight) {
-      return;
-    }
-
-    const nextHeight = estimateCardHeight({
-      width: state.style.width,
-      lyricDocument: state.lyricDocument,
-      translationEnabled: state.style.translationEnabled && state.style.contentMode === "lyrics",
-      translationScale: state.style.translationScale,
-      lyricFontSize: state.style.lyricFontSize,
-      lineHeight: state.style.lineHeight,
-      contentMode: state.style.contentMode,
-      title: state.song.title,
-      showCover: state.style.showCover,
-      showSongInfo: state.style.showSongInfo,
-      hasAlbumName: state.style.showAlbumName && Boolean(state.song.album?.trim()),
-      allowMultiLineTitle: state.style.allowMultiLineTitle,
-      showGeneratedWatermark: state.style.showGeneratedWatermark,
-      showPlatformBadge: state.style.showPlatformBadge && state.song.source !== "unknown",
-      showSharedBy: state.style.showSharedBy && state.style.sharedByText.trim().length > 0,
-      sharedByText: state.style.sharedByText
-    });
-
-    if (nextHeight === state.style.height) {
-      return;
-    }
-
-    setState((current) => ({
-      ...current,
-      style: {
-        ...current.style,
-        height: nextHeight
-      }
-    }));
-  }, [
-    setState,
-    state.lyricDocument,
-    state.song.album,
-    state.song.source,
-    state.song.title,
-    state.style.allowMultiLineTitle,
-    state.style.autoHeight,
-    state.style.height,
-    state.style.layoutMode,
-    state.style.lineHeight,
-    state.style.lyricFontSize,
-    state.style.ratio,
-    state.style.contentMode,
-    state.style.sharedByText,
-    state.style.showCover,
-    state.style.showGeneratedWatermark,
-    state.style.showAlbumName,
-    state.style.showPlatformBadge,
-    state.style.showSharedBy,
-    state.style.showSongInfo,
-    state.style.translationEnabled,
-    state.style.translationScale,
-    state.style.translationText,
-    state.style.width
   ]);
 }

@@ -529,8 +529,10 @@ function assertDesktopWiring() {
   assert.match(main, /createAIStreamDeadline/);
   assert.match(client, /consumeOpenAICompatibleSSE/);
   assert.match(client, /createAIStreamDeadline/);
-  assert.match(prepare, /electron["'], ["']ai-stream\.js/);
-  assert.match(prepare, /electron["'], ["']resource-budgets\.json/);
+  const electronAppFiles = JSON.parse(prepare.match(/const electronAppFiles = (\[[\s\S]*?\]);/)?.[1] ?? "null") as string[] | null;
+  assert.ok(Array.isArray(electronAppFiles), "desktop packaging declares its runtime allowlist");
+  assert.ok(electronAppFiles.includes("electron/ai-stream.js"), "desktop packaging includes the bounded AI stream runtime");
+  assert.ok(electronAppFiles.includes("electron/resource-budgets.json"), "desktop packaging includes the shared resource limits");
 }
 
 function countingJsonRequest(

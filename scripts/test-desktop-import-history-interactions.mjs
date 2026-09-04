@@ -16,7 +16,6 @@ const userDataDirectory = await mkdtemp(path.join(tmpdir(), "lyrics-card-history
 const fixtureDirectory = path.join(userDataDirectory, "fixtures");
 const audioPath = path.join(fixtureDirectory, "history-audio.m4a");
 const relocatedAudioPath = path.join(fixtureDirectory, "history-audio-relocated.mp3");
-const rejectedRelocatedAudioPath = path.join(fixtureDirectory, "history-audio-rejected.mp3");
 const coverPath = path.join(fixtureDirectory, "history-cover.png");
 const coverOnlyPath = path.join(fixtureDirectory, "history-cover-only.png");
 const historyPath = path.join(userDataDirectory, "app-data", "import-history.json");
@@ -35,7 +34,6 @@ let nextSongId = 71_000;
 const keywordIds = new Map([["same platform song", "70001"]]);
 const songsById = new Map();
 const rendererDialogs = [];
-const nativeDialogs = [];
 const routeCounts = { parseSong: 0, resolveSearch: 0, localAudio: 0, imageProxy: 0, remoteCover: 0 };
 
 // Fixtures live under the isolated Electron user-data root so replay, relocation,
@@ -267,11 +265,6 @@ async function setNativeDialogDecision(decision) {
   }, decision);
 }
 
-async function readCurrentNativeDialogs() {
-  if (!electronApp) return [];
-  return electronApp.evaluate(() => globalThis.__lyricsCardNativeDialogTest.calls);
-}
-
 async function closeThroughDesktopApi() {
   if (!electronApp) return;
   // Let Playwright request one normal application close. The main process then
@@ -293,57 +286,11 @@ async function waitForHistoryTotal(expected, timeout = 15_000) {
   }, expected), { timeout }).toBe(true);
 }
 
-async function waitForPersistedHistoryTotal(expected, timeout = 15_000) {
-  const deadline = Date.now() + timeout;
-  let observed = "unreadable";
-  while (Date.now() < deadline) {
-    try {
-      const document = JSON.parse(await readFile(historyPath, "utf8"));
-      observed = Array.isArray(document.records) ? document.records.length : "invalid";
-      if (observed === expected) return document;
-    } catch (error) {
-      observed = error instanceof Error ? error.message : String(error);
-    }
-    await new Promise((resolve) => setTimeout(resolve, 50));
-  }
-  throw new Error(`History file did not persist ${expected} record(s) within ${timeout}ms; observed=${observed}`);
-}
-
-async function waitForLeadingHistoryKind(expected) {
-  await expect.poll(() => page.evaluate(async (kind) => {
-    const result = await window.lyricsCardDesktop?.listImportHistory({
-      offset: 0,
-      limit: 1,
-      source: "all"
-    });
-    return result?.records[0]?.kind === kind;
-  }, expected), { timeout: 15_000 }).toBe(true);
-}
-
 async function waitForPreferenceLimit(expected) {
   await expect.poll(() => page.evaluate(async (value) => {
     const preferences = await window.lyricsCardDesktop?.loadAppPreferences();
     return preferences?.userSettings?.importHistoryLimit === value;
   }, expected), { timeout: 15_000 }).toBe(true);
-}
-
-async function currentSongTitle() {
-  return (await page.getByTestId("song-info-summary").locator("dd").first().textContent())?.trim() ?? "";
-}
-
-async function currentToastRevision(message) {
-  const toast = page.getByTestId("app-toast").filter({ hasText: message });
-  if (await toast.count() === 0) return null;
-  return toast.first().getAttribute("data-repeat-revision");
-}
-
-async function waitForFreshToast(message, previousRevision) {
-  await page.waitForFunction(({ expectedMessage, previous }) => (
-    Array.from(document.querySelectorAll('[data-testid="app-toast"]')).some((node) => (
-      node.textContent?.includes(expectedMessage)
-        && node.getAttribute("data-repeat-revision") !== previous
-    ))
-  ), { expectedMessage: message, previous: previousRevision }, { timeout: 15_000 });
 }
 
 async function waitForHistoryCards(expected, timeout = 30_000) {
@@ -429,31 +376,6 @@ async function closeHistoryWithEscape() {
   await page.waitForFunction(() => document.activeElement?.getAttribute("data-testid") === "history-button");
 }
 
-async function parseLink(id = "70001") {
-  const input = page.getByLabel("Music URL");
-  await input.fill(`https://music.163.com/song?id=${id}`);
-  await input.press("Enter");
-  await page.waitForFunction((songId) => (
-    document.querySelector('[data-testid="song-info-summary"]')?.textContent?.includes(`History Artist ${songId}`)
-  ), id, { timeout: 15_000 });
-}
-
-async function performSearch(keyword, { waitForTotal } = {}) {
-  const combobox = page.getByTestId("song-search-primary").getByRole("combobox");
-  await combobox.fill(keyword);
-  const listbox = page.getByTestId("song-search-listbox");
-  await listbox.waitFor({ state: "visible", timeout: 10_000 });
-  const option = listbox.getByRole("option").first();
-  await option.waitFor({ state: "visible" });
-  const id = idForKeyword(keyword);
-  await option.click();
-  await page.waitForFunction((songId) => (
-    document.querySelector('[data-testid="song-info-summary"]')?.textContent?.includes(`History Artist ${songId}`)
-  ), id, { timeout: 15_000 });
-  if (waitForTotal !== undefined) await waitForHistoryTotal(waitForTotal);
-  return id;
-}
-
 async function openGeneralSettings() {
   await page.locator('[data-testid="editor-surface"] [data-testid="settings-button"]').click();
   await page.getByTestId("settings-surface").waitFor({ state: "visible", timeout: 15_000 });
@@ -482,64 +404,6 @@ async function setReducedMotion() {
   if (await toggle.getAttribute("aria-checked") !== "true") await toggle.click();
   await page.waitForFunction(() => document.body.getAttribute("data-reduce-motion") === "true");
   await closeSettings();
-}
-
-async function replayCard(kind, { relocate = false } = {}) {
-  await page.waitForFunction(({ historyKind, useRelocate }) => {
-    const card = document.querySelector(
-      `[data-testid="history-surface"] [data-history-kind="${historyKind}"]`
-    );
-    const selector = useRelocate
-      ? '[data-testid^="history-relocate-"]'
-      : '[data-testid^="history-replay-"]';
-    const action = card?.querySelector(selector);
-    return action instanceof HTMLButtonElement && action.isConnected && !action.disabled;
-  }, { historyKind: kind, useRelocate: relocate }, { timeout: 15_000 });
-  const card = page.locator(`[data-testid="history-surface"] [data-history-kind="${kind}"]`).first();
-  const action = relocate
-    ? card.locator('[data-testid^="history-relocate-"]')
-    : card.locator('[data-testid^="history-replay-"]');
-  await action.click();
-}
-
-async function editManualSong({
-  title,
-  artist = "Manual History Artist",
-  album = "Manual History Album",
-  uploadPath = null
-}) {
-  const aside = page.getByTestId("song-import-aside");
-  await page.getByTestId("song-info-toggle").click();
-  const editor = aside.getByTestId("song-info-editor");
-  await editor.waitFor({ state: "visible" });
-  const titleInput = editor.getByLabel("Title");
-  const artistInput = editor.getByLabel("Artist");
-  const albumInput = editor.getByLabel("Album");
-  await titleInput.fill(title);
-  await page.waitForTimeout(25);
-  await artistInput.fill(artist);
-  await page.waitForTimeout(25);
-  await albumInput.fill(album);
-  await page.waitForTimeout(25);
-  assert.deepEqual(
-    [await titleInput.inputValue(), await artistInput.inputValue(), await albumInput.inputValue()],
-    [title, artist, album],
-    "manual metadata inputs settle independently before commit"
-  );
-  if (uploadPath) {
-    await editor.locator('input[type="file"]').setInputFiles(uploadPath);
-    await page.waitForFunction(() => {
-      const save = document.querySelector('[data-testid="song-info-save"]');
-      return save instanceof HTMLButtonElement && !save.disabled;
-    });
-  }
-  await editor.getByTestId("song-info-save").click();
-  await aside.getByTestId("song-info-summary").waitFor({ state: "visible" });
-  if (title) {
-    await page.waitForFunction((expectedTitle) => (
-      document.querySelector('[data-testid="song-import-aside"] [data-testid="song-info-summary"] dd')?.textContent?.trim() === expectedTitle
-    ), title, { timeout: 15_000 });
-  }
 }
 
 try {

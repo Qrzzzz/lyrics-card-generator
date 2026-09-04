@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v6.2.8.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v6.2.9.zh-CN.md">发布说明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">在线 Web Lite 版</a> ·
   <a href="./docs/web-lite-browser-support.md">Web Lite 浏览器支持</a> ·
   <a href="./docs/desktop.md">桌面维护文档</a> ·
@@ -75,22 +75,22 @@
 
 最新公开版本请从 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 获取，Windows 安装包文件名为：
 
-* Windows x64 安装版：`Lyrics.Card.Generator.Setup.6.2.8.exe`
+* Windows x64 安装版：`Lyrics.Card.Generator.Setup.6.2.9.exe`
 
 从 v6.2.2 起只提供 Windows x64 Setup 安装包。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v6.2.8 更新重点
+### v6.2.9 更新重点
 
-* 移除手动存档按钮，标题栏正中以一行文字显示自动保存状态；停止修改 5 秒后保存当前草稿。
-* 草稿保存歌词原文、译文、分段与对应关系，以及歌曲信息、卡片样式、导出设置、当前步骤和未提交的歌曲信息表单；本地封面可随草稿恢复。
-* 正常关闭或切换文档前立即补存，下次启动恢复上次草稿。保存失败会阻止正常关闭，点击标题栏失败提示可重试；旧历史和手动存档保持可读。
+* 删除无生产调用的旧组件、颜色分析、字符高度估算及遗留样式，保留现有界面与功能。
+* 移除闲置开发依赖、重复图标源文件和未调用的测试辅助代码。
+* 统一桌面打包文件名单和浏览器测试服务器实现，保留历史兼容、自动草稿、导出及安全检查。
 
 ## 🌐 多语言发布说明
 
 GitHub Release 默认展示简体中文摘要，完整说明见：
-[简体中文](./docs/releases/v6.2.8.zh-CN.md) · [繁體中文](./docs/releases/v6.2.8.zh-TW.md) · [English](./docs/releases/v6.2.8.en.md) · [Français](./docs/releases/v6.2.8.fr.md) · [日本語](./docs/releases/v6.2.8.ja.md) · [Español](./docs/releases/v6.2.8.es.md)
+[简体中文](./docs/releases/v6.2.9.zh-CN.md) · [繁體中文](./docs/releases/v6.2.9.zh-TW.md) · [English](./docs/releases/v6.2.9.en.md) · [Français](./docs/releases/v6.2.9.fr.md) · [日本語](./docs/releases/v6.2.9.ja.md) · [Español](./docs/releases/v6.2.9.es.md)
 
 <a id="主要功能"></a>
 

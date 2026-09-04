@@ -49,30 +49,6 @@ export function panelVariants(reducedMotion = false): Variants {
   };
 }
 
-export function dialogOverlayVariants(): Variants {
-  return {
-    initial: { opacity: 0 },
-    animate: { opacity: 1 },
-    exit: { opacity: 0 }
-  };
-}
-
-export function dialogPanelVariants(reducedMotion = false): Variants {
-  if (reducedMotion) {
-    return {
-      initial: { opacity: 0, scale: 1, y: 0 },
-      animate: { opacity: 1, scale: 1, y: 0 },
-      exit: { opacity: 0, scale: 1, y: 0 }
-    };
-  }
-
-  return {
-    initial: { opacity: 0, scale: 0.97, y: 14 },
-    animate: { opacity: 1, scale: 1, y: 0 },
-    exit: { opacity: 0, scale: 0.985, y: 8 }
-  };
-}
-
 export function tabPanelVariants(reducedMotion = false): Variants {
   if (reducedMotion) {
     return {

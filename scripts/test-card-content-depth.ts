@@ -18,8 +18,7 @@ const previewSources = [
   instrumentalBlock,
   readFileSync(resolve("components/preview/LyricsBlock.tsx"), "utf8"),
   readFileSync(resolve("components/preview/LandscapeLyricsContent.tsx"), "utf8"),
-  readFileSync(resolve("components/preview/LandscapeSongMetadata.tsx"), "utf8"),
-  readFileSync(resolve("components/preview/LandscapeInstrumentalBlock.tsx"), "utf8")
+  readFileSync(resolve("components/preview/LandscapeSongMetadata.tsx"), "utf8")
 ].join("\n");
 
 assert.doesNotMatch(productionCards, /LocalReadabilityLayer|createCardReadabilityPlan/,

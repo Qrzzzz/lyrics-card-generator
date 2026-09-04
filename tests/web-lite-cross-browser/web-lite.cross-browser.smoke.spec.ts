@@ -1,7 +1,8 @@
-import { createServer, type Server } from "node:http";
+import type { Server } from "node:http";
 import { readFile, stat } from "node:fs/promises";
 import path from "node:path";
 import { expect, test, type Download, type Page } from "@playwright/test";
+import { closeStaticServer, startStaticServer } from "../helpers/static-test-server";
 
 const projectRoot = process.cwd();
 const siteRoot = path.join(projectRoot, "_site");
@@ -10,14 +11,6 @@ const expectedFontPaths = [
   "/public/fonts/SourceHanSansSC-Heavy.otf",
   "/public/fonts/SourceHanSerifSC-Heavy.otf"
 ] as const;
-const unsafeBrowserPorts = new Set([
-  1, 7, 9, 11, 13, 15, 17, 19, 20, 21, 22, 23, 25, 37, 42, 43, 53, 69, 77, 79, 87, 95,
-  101, 102, 103, 104, 109, 110, 111, 113, 115, 117, 119, 123, 135, 137, 139, 143, 161, 179,
-  389, 427, 465, 512, 513, 514, 515, 526, 530, 531, 532, 540, 548, 554, 556, 563, 587, 601,
-  636, 989, 990, 993, 995, 1719, 1720, 1723, 2049, 3659, 4045, 5060, 5061, 6000, 6566,
-  6665, 6666, 6667, 6668, 6669, 6697, 10080
-]);
-
 let staticServer: Server;
 let baseUrl = "";
 let servedPaths: Set<string>;
@@ -28,29 +21,12 @@ test.beforeAll(async () => {
     await stat(path.join(siteRoot, ...expectedFontPath.split("/").filter(Boolean)));
   }
 
-  for (let attempt = 0; attempt < 20; attempt += 1) {
-    servedPaths = new Set<string>();
-    staticServer = createStaticSiteServer(servedPaths);
-    await new Promise<void>((resolve, reject) => {
-      staticServer.once("error", reject);
-      staticServer.listen(0, "127.0.0.1", () => resolve());
-    });
-
-    const address = staticServer.address();
-    if (!address || typeof address === "string") {
-      throw new Error("Web Lite cross-browser server did not expose a TCP port.");
-    }
-    if (!unsafeBrowserPorts.has(address.port)) {
-      baseUrl = `http://127.0.0.1:${address.port}`;
-      return;
-    }
-    await closeServer(staticServer);
-  }
-  throw new Error("Web Lite cross-browser server repeatedly received browser-restricted ports.");
+  servedPaths = new Set<string>();
+  ({ server: staticServer, baseUrl } = await startStaticServer(siteRoot, "Web Lite cross-browser", servedPaths));
 });
 
 test.afterAll(async () => {
-  await closeServer(staticServer);
+  await closeStaticServer(staticServer);
 });
 
 test.beforeEach(async ({ page }) => {
@@ -145,47 +121,4 @@ async function expectPngDownload(download: Download) {
   expect(png.subarray(0, 8)).toEqual(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
   expect(png.readUInt32BE(16)).toBeGreaterThan(0);
   expect(png.readUInt32BE(20)).toBeGreaterThan(0);
-}
-
-function createStaticSiteServer(requestLog: Set<string>) {
-  const mimeTypes: Record<string, string> = {
-    ".html": "text/html; charset=utf-8",
-    ".otf": "font/otf",
-    ".png": "image/png"
-  };
-
-  return createServer(async (request, response) => {
-    try {
-      const requestUrl = new URL(request.url ?? "/", "http://127.0.0.1");
-      const relativePath = decodeURIComponent(requestUrl.pathname).replace(/^\/+/, "") || "index.html";
-      const filePath = path.resolve(siteRoot, relativePath);
-      if (filePath !== siteRoot && !filePath.startsWith(`${siteRoot}${path.sep}`)) {
-        response.writeHead(403).end("Forbidden");
-        return;
-      }
-
-      const fileStat = await stat(filePath);
-      if (!fileStat.isFile()) {
-        response.writeHead(404).end("Not found");
-        return;
-      }
-
-      const body = await readFile(filePath);
-      requestLog.add(requestUrl.pathname);
-      response.writeHead(200, {
-        "Cache-Control": "no-store",
-        "Content-Length": body.byteLength,
-        "Content-Type": mimeTypes[path.extname(filePath).toLowerCase()] ?? "application/octet-stream"
-      });
-      response.end(body);
-    } catch {
-      response.writeHead(404).end("Not found");
-    }
-  });
-}
-
-async function closeServer(server: Server) {
-  await new Promise<void>((resolve, reject) => {
-    server.close((error) => (error ? reject(error) : resolve()));
-  });
 }
