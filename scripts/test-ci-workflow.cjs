@@ -14,6 +14,16 @@ const pagesWorkflow = readFileSync(".github/workflows/pages.yml", "utf8");
 const runtimeTests = readFileSync("scripts/test-electron-runtime-coverage.cjs", "utf8");
 const releaseWorkflow = readFileSync(".github/workflows/release.yml", "utf8");
 
+for (const script of [
+  "test-desktop-settings-interactions.mjs",
+  "test-desktop-import-history-interactions.mjs",
+  "test-desktop-editor-autosave-interactions.mjs",
+  "test-desktop-remote-history-interactions.mjs"
+]) {
+  assert.doesNotMatch(readFileSync(`scripts/${script}`, "utf8"), /\.waitForFunction\(\s*async\b/,
+    `${script} must await IPC results with expect.poll, not treat a Promise as a satisfied browser predicate`);
+}
+
 // Assert workflow intent as source contracts so renamed or reordered CI steps do
 // not silently weaken the packaged regression gate.
 assert.match(workflow, /^\s{2}push:/m, "CI retains its continuous main-push trigger");

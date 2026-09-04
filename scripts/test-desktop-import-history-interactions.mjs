@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { _electron as electron } from "playwright";
+import { expect } from "@playwright/test";
 import { closeElectronApplication } from "./electron-test-lifecycle.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -250,12 +251,12 @@ async function launchApp({ expectFirstLaunch = false, expectedLocale = null, exp
     timeout: 30_000
   });
   if (expectedLocale !== null && expectedHistoryLimit !== null) {
-    await page.waitForFunction(async ({ locale, historyLimit }) => {
+    await expect.poll(() => page.evaluate(async ({ locale, historyLimit }) => {
       const preferences = await window.lyricsCardDesktop?.loadAppPreferences();
       return document.documentElement.lang === locale
         && preferences?.locale === locale
         && preferences.userSettings?.importHistoryLimit === historyLimit;
-    }, { locale: expectedLocale, historyLimit: expectedHistoryLimit }, { timeout: 30_000 });
+    }, { locale: expectedLocale, historyLimit: expectedHistoryLimit }), { timeout: 30_000 }).toBe(true);
   }
 }
 
@@ -286,10 +287,10 @@ async function historyTotal() {
 }
 
 async function waitForHistoryTotal(expected, timeout = 15_000) {
-  await page.waitForFunction(async (value) => {
+  await expect.poll(() => page.evaluate(async (value) => {
     const api = window.lyricsCardDesktop;
     return Boolean(api) && (await api.getImportHistoryStats()).total === value;
-  }, expected, { timeout });
+  }, expected), { timeout }).toBe(true);
 }
 
 async function waitForPersistedHistoryTotal(expected, timeout = 15_000) {
@@ -309,21 +310,21 @@ async function waitForPersistedHistoryTotal(expected, timeout = 15_000) {
 }
 
 async function waitForLeadingHistoryKind(expected) {
-  await page.waitForFunction(async (kind) => {
+  await expect.poll(() => page.evaluate(async (kind) => {
     const result = await window.lyricsCardDesktop?.listImportHistory({
       offset: 0,
       limit: 1,
       source: "all"
     });
     return result?.records[0]?.kind === kind;
-  }, expected, { timeout: 15_000 });
+  }, expected), { timeout: 15_000 }).toBe(true);
 }
 
 async function waitForPreferenceLimit(expected) {
-  await page.waitForFunction(async (value) => {
+  await expect.poll(() => page.evaluate(async (value) => {
     const preferences = await window.lyricsCardDesktop?.loadAppPreferences();
     return preferences?.userSettings?.importHistoryLimit === value;
-  }, expected, { timeout: 15_000 });
+  }, expected), { timeout: 15_000 }).toBe(true);
 }
 
 async function currentSongTitle() {
@@ -394,14 +395,14 @@ async function waitForHistoryCards(expected, timeout = 30_000) {
 }
 
 async function waitForHistoryListPage(expected, timeout = 15_000) {
-  await page.waitForFunction(async (expectedCount) => {
+  await expect.poll(() => page.evaluate(async (expectedCount) => {
     const api = window.lyricsCardDesktop;
     const query = document.querySelector('[data-testid="history-search"]')?.value ?? "";
     const source = document.querySelector('[data-testid="history-source-filter"]')?.value ?? "all";
     if (!api) return false;
     const result = await api.listImportHistory({ offset: 0, limit: 24, query, source });
     return result.records.length === expectedCount;
-  }, expected, { polling: 100, timeout });
+  }, expected), { intervals: [100], timeout }).toBe(true);
 }
 
 async function openHistory(expectedVisibleCards = null) {

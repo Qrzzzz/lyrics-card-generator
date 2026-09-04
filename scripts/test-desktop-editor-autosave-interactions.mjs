@@ -6,6 +6,7 @@ import { tmpdir } from "node:os";
 import net from "node:net";
 import path from "node:path";
 import { _electron as electron } from "playwright";
+import { expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { closeElectronApplication } from "./electron-test-lifecycle.mjs";
 
@@ -66,7 +67,8 @@ async function disk() { return JSON.parse(await readFile(historyPath, "utf8")); 
 async function search() {
   await page.getByTestId("song-search-primary").getByRole("combobox").fill("Autosave Song");
   await page.getByTestId("song-search-listbox").getByRole("option").first().click();
-  await page.waitForFunction(async () => (await window.lyricsCardDesktop.getImportHistoryStats()).total > 0);
+  await expect.poll(() => page.evaluate(async () => (await window.lyricsCardDesktop.getImportHistoryStats()).total),
+    { timeout: 15_000 }).toBeGreaterThan(0);
 }
 async function saved() {
   await page.waitForFunction(() => document.querySelector('[data-testid="autosave-status"]')?.getAttribute("data-save-state") === "saved");

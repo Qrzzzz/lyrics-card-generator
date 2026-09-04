@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { _electron as electron } from "playwright";
+import { expect } from "@playwright/test";
 import { closeElectronApplication } from "./electron-test-lifecycle.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -2929,7 +2930,8 @@ async function assertLyricsWorkspaceSplitInteractions() {
   await selectSettingsSection("ai");
   await (await waitForVisible("ai-open-api")).click();
   await page.getByTestId("ai-api-key-input").fill("sk-desktop-panel-regression");
-  await page.waitForFunction(async () => Boolean((await window.lyricsCardDesktop?.loadAISettings())?.hasApiKey));
+  await expect.poll(() => page.evaluate(async () => Boolean((await window.lyricsCardDesktop?.loadAISettings())?.hasApiKey)),
+    { timeout: 30_000 }).toBe(true);
   await page.getByTestId("settings-close-button").click();
   await page.locator('[data-testid="settings-surface"][data-surface-state="closed"]').waitFor({ state: "attached" });
 
@@ -4191,25 +4193,27 @@ try {
 
   await selectSettingsSection("general");
   await page.getByTestId("import-history-limit").selectOption("none");
-  await page.waitForFunction(async () => (await window.lyricsCardDesktop?.loadAppPreferences())?.userSettings.importHistoryLimit === "none");
+  await expect.poll(() => page.evaluate(async () => (await window.lyricsCardDesktop?.loadAppPreferences())?.userSettings.importHistoryLimit),
+    { timeout: 30_000 }).toBe("none");
 
   await selectSettingsSection("ai");
   await (await waitForVisible("ai-open-api")).click();
   await page.getByTestId("ai-api-key-input").fill("sk-reset-scope-regression");
-  await page.waitForFunction(async () => Boolean((await window.lyricsCardDesktop?.loadAISettings())?.hasApiKey));
+  await expect.poll(() => page.evaluate(async () => Boolean((await window.lyricsCardDesktop?.loadAISettings())?.hasApiKey)),
+    { timeout: 30_000 }).toBe(true);
   await page.waitForTimeout(1_000);
   assert.equal((await page.evaluate(() => window.lyricsCardDesktop?.loadAISettings()))?.hasApiKey, true, "the replacement API key is durably stable before preference reset");
 
   await selectSettingsSection("general");
   await setNativeDialogDecision("accept", "恢复应用偏好默认值？");
   await page.getByTestId("restore-app-preferences").click();
-  await page.waitForFunction(async () => {
+  await expect.poll(() => page.evaluate(async () => {
     const preferences = await window.lyricsCardDesktop?.loadAppPreferences();
     return preferences?.userSettings.defaultExportFormat === "png"
       && preferences.userSettings.defaultShowGeneratedWatermark === false
       && preferences.userSettings.uiFontFamily === ""
       && preferences.userSettings.importHistoryLimit === "none";
-  });
+  }), { timeout: 30_000 }).toBe(true);
   assert.equal((await page.evaluate(() => window.lyricsCardDesktop?.loadAISettings()))?.hasApiKey, true, "restoring app preferences never clears the AI API key");
 
   await selectSettingsSection("export");

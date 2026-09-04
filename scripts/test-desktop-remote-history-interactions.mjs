@@ -3,6 +3,7 @@ import { mkdir, mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { _electron as electron } from "playwright";
+import { expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { closeElectronApplication } from "./electron-test-lifecycle.mjs";
 
@@ -71,7 +72,10 @@ async function records() {
 async function search(keyword, total) {
   await page.getByTestId("song-search-primary").getByRole("combobox").fill(keyword);
   await page.getByTestId("song-search-listbox").getByRole("option").first().click();
-  await page.waitForFunction(async (count) => (await window.lyricsCardDesktop.getImportHistoryStats()).total === count, total);
+  // waitForFunction treats an async predicate's Promise as truthy before the
+  // IPC result arrives. Poll on the Node side and await the actual count.
+  await expect.poll(() => page.evaluate(async () => (await window.lyricsCardDesktop.getImportHistoryStats()).total),
+    { timeout: 15_000 }).toBe(total);
 }
 async function copied(selector) {
   await page.getByTestId(selector).click();
