@@ -108,6 +108,7 @@ CI 的主要静态与 Node.js 门禁为：
 
 ```bash
 npm run dependency-audit:gate
+npm run sbom:test
 npm run web-lite:check
 npm run font-license:test
 npm run typecheck

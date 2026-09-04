@@ -22,7 +22,8 @@ npm run dependency-audit:gate
 
 - `dependency-audit:test` validates policy parsing and fail-closed behavior with deterministic fixtures.
 - `dependency-audit:check` performs the current registry audit and evaluates it against `security/npm-audit-exceptions.json`; it requires registry access.
-- `dependency-audit:gate` runs both and is the command used by CI and the release workflow.
+- `dependency-audit:gate` runs both and is used by CI. Its fixture suite also covers the desktop runtime audit policy. CI separately runs `sbom:test` for the SPDX policy fixtures.
+- Release reuses those deterministic fixtures from its authorized exact-SHA CI, but still runs `dependency-audit:check` against current advisories. After building Setup, it runs `desktop-runtime-audit:prepare` then `desktop-runtime-audit:check` with native-command failure propagation; a failed preparation cannot fall through to stale input. SBOM generation, finalization, and inspection still operate on the newly built runtime.
 
 When an audit changes, preserve the raw advisory identifiers and dependency path before editing an exception. A version bump, root `devDependency` label, or low application reachability does not by itself prove that a packaged dependency is absent; use the built runtime and release SBOM when packaging reachability matters.
 

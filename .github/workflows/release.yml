@@ -165,7 +165,7 @@ jobs:
         run: npm ci
 
       - name: Enforce production dependency advisory policy
-        run: npm run dependency-audit:gate
+        run: npm run dependency-audit:check
 
       # Source tests and full Windows interactions already passed in the
       # authorized exact-SHA main CI. Repeat only release-specific policy;
@@ -178,7 +178,6 @@ jobs:
           $ErrorActionPreference = 'Stop'
           $PSNativeCommandUseErrorActionPreference = $true
           npx tsx scripts/test-release-consistency.ts
-          npm run sbom:test
 
       - name: Build Setup-only release from authorized SHA
         id: desktop_build
@@ -210,7 +209,14 @@ jobs:
           }
 
       - name: Audit packaged Electron runtime dependency closure
-        run: npm run desktop-runtime-audit:gate
+        # Deterministic audit/SBOM fixtures ran in exact-SHA CI. Recompute the
+        # actual packaged closure and query current advisories for these bytes.
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $PSNativeCommandUseErrorActionPreference = $true
+          npm run desktop-runtime-audit:prepare
+          npm run desktop-runtime-audit:check
 
       - name: Prepare packaged runtime SBOM input
         run: npm run sbom:prepare

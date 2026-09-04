@@ -49,14 +49,17 @@ before a verified draft becomes public.
 
 ## Required GitHub rules
 
-The six required check names and their ownership are described in
+The five required check names and their ownership are described in
 [CI gate ownership](./testing/ci-gates.md). Security/locale/lifecycle and
 coverage live in `verify`; axe lives in `web-lite-smoke`. The removed
 `security/locale/a11y gates` check repeated those suites and is no longer a
-required status. When applying this change to a repository with existing
-branch protection or rulesets, remove that obsolete required status too;
-otherwise GitHub may wait for a check that no longer runs. Do not remove any
-of the remaining six checks.
+required status. Firefox and WebKit now run as two Playwright projects in one
+`web-lite-cross-browser-smoke` job, sharing dependency installation without
+dropping either engine. When applying this change to a repository with existing
+branch protection or rulesets, replace the old `(firefox)` and `(webkit)` status
+names with the combined name, and remove the obsolete security/locale status;
+otherwise GitHub may wait for checks that no longer run. Keep all five current
+checks from `security/release-source-policy.json`.
 
 Repository rules are defense in depth for the workflow gate and should be
 configured by a repository administrator:

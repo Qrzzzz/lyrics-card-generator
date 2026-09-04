@@ -42,6 +42,11 @@ Firefox and WebKit smoke cover the supported critical path:
 
 A release is blocked when the required Chromium suite or either cross-browser smoke project fails. Failure classification must still distinguish a product regression from a missing browser runtime, CI service failure, or invalid test environment.
 
+Firefox and WebKit share the `web-lite-cross-browser-smoke` CI job and one
+dependency installation. The command runs both projects without a browser
+filter; this consolidates runner overhead, not browser coverage. The combined
+report retains each project's result and failure artifacts.
+
 ## Capability boundaries
 
 Web Lite supports manual content editing, local cover selection, shared layout/style controls, live preview, browser-side PNG/WebP/JPG export, and PNG clipboard copy when `ClipboardItem` plus asynchronous clipboard image writes are available. Clipboard support also depends on a secure context, the active browser permission policy, and the operating-system clipboard; a denied or unsupported write reports an error without changing editor content. It deliberately has no `/api/` runtime, so server-backed music search, music-platform parsing, remote proxying, desktop secure storage, desktop import history, and AI translation are outside its contract.

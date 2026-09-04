@@ -1,8 +1,7 @@
 name: Background Composition Benchmark
 
 on:
-  schedule:
-    - cron: "17 3 * * 1"
+  # Performance evidence is opt-in, not an unattended weekly prerequisite.
   workflow_dispatch:
 
 permissions:

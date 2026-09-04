@@ -135,6 +135,26 @@ for (const scenarioName of ["off-main.json", "missing-check.json", "failed-check
   );
 }
 
+for (const conclusion of ["skipped", "neutral", "cancelled"]) {
+  const fixture = clone(eligible);
+  fixture.jobs["9001"].jobs.find((job) => job.name === "web-lite-cross-browser-smoke").conclusion = conclusion;
+  await assert.rejects(
+    authorizeFixture(fixture),
+    (error) => error instanceof ReleaseSourceError && error.code === "required_ci_not_successful",
+    `the combined browser check cannot authorize a release when ${conclusion}`
+  );
+}
+const obsoleteBrowserChecks = clone(eligible);
+const combinedBrowserCheck = obsoleteBrowserChecks.jobs["9001"].jobs.find((job) => job.name === "web-lite-cross-browser-smoke");
+obsoleteBrowserChecks.jobs["9001"].jobs = obsoleteBrowserChecks.jobs["9001"].jobs
+  .filter((job) => job !== combinedBrowserCheck)
+  .concat(["firefox", "webkit"].map((browser) => ({ ...combinedBrowserCheck, name: `web-lite-cross-browser-smoke (${browser})` })));
+await assert.rejects(
+  authorizeFixture(obsoleteBrowserChecks),
+  (error) => error instanceof ReleaseSourceError && error.code === "required_ci_not_successful",
+  "obsolete split browser statuses do not satisfy the current combined-check policy"
+);
+
 const movedTag = clone(eligible);
 movedTag.annotatedTags["dddddddddddddddddddddddddddddddddddddddd"].object.sha = "ffffffffffffffffffffffffffffffffffffffff";
 await assert.rejects(

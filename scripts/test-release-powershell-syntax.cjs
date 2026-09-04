@@ -64,15 +64,30 @@ const releasePolicyBlock = blocks.find((block) => block.source.includes("npx tsx
 assert.ok(releasePolicyBlock, "release-only policy block was discovered");
 const failureProbe = releasePolicyBlock.source
   .replace("npx tsx scripts/test-release-consistency.ts", '& node -e "process.exit(17)"')
-  .replace("npm run sbom:test", "Write-Output 'POLICY_REACHED_SBOM'");
+  .concat("\nWrite-Output 'POLICY_COMPLETED'");
 const failureResult = spawnSync("pwsh", ["-NoLogo", "-NoProfile", "-NonInteractive", "-Command", failureProbe], { encoding: "utf8" });
 assert.ifError(failureResult.error);
 assert.notEqual(failureResult.status, 0, "a failed first native policy command must fail the step");
 assert.match(failureResult.stderr, /17/, "the failure comes from the injected native exit code");
-assert.doesNotMatch(failureResult.stdout, /POLICY_REACHED_SBOM/, "a later successful command cannot mask the failure");
+assert.doesNotMatch(failureResult.stdout, /POLICY_COMPLETED/, "a later successful command cannot mask the failure");
 const successResult = spawnSync("pwsh", ["-NoLogo", "-NoProfile", "-NonInteractive", "-Command", failureProbe.replace("process.exit(17)", "process.exit(0)")], { encoding: "utf8" });
 assert.ifError(successResult.error);
 assert.equal(successResult.status, 0, "successful release policy continues normally");
-assert.match(successResult.stdout, /POLICY_REACHED_SBOM/, "the later check still runs on success");
+assert.match(successResult.stdout, /POLICY_COMPLETED/, "the policy step completes on success");
+
+const runtimeAuditBlock = blocks.find((block) => block.source.includes("npm run desktop-runtime-audit:prepare"));
+assert.ok(runtimeAuditBlock, "packaged runtime audit block was discovered");
+const runtimeFailureProbe = runtimeAuditBlock.source
+  .replace("npm run desktop-runtime-audit:prepare", '& node -e "process.exit(17)"')
+  .replace("npm run desktop-runtime-audit:check", "Write-Output 'RUNTIME_AUDIT_REACHED_CHECK'");
+const runtimeFailure = spawnSync("pwsh", ["-NoLogo", "-NoProfile", "-NonInteractive", "-Command", runtimeFailureProbe], { encoding: "utf8" });
+assert.ifError(runtimeFailure.error);
+assert.notEqual(runtimeFailure.status, 0, "failed runtime audit preparation fails the step");
+assert.match(runtimeFailure.stderr, /17/, "runtime failure comes from the injected native exit code");
+assert.doesNotMatch(runtimeFailure.stdout, /RUNTIME_AUDIT_REACHED_CHECK/, "stale audit input cannot be checked after preparation fails");
+const runtimeSuccess = spawnSync("pwsh", ["-NoLogo", "-NoProfile", "-NonInteractive", "-Command", runtimeFailureProbe.replace("process.exit(17)", "process.exit(0)")], { encoding: "utf8" });
+assert.ifError(runtimeSuccess.error);
+assert.equal(runtimeSuccess.status, 0, "successful runtime preparation continues normally");
+assert.match(runtimeSuccess.stdout, /RUNTIME_AUDIT_REACHED_CHECK/, "a fresh runtime input proceeds to the audit check");
 
 console.log(`Release workflow PowerShell syntax tests passed for ${blocks.length} run blocks; native failure propagation passed`);

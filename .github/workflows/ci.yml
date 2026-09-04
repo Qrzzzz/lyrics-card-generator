@@ -42,6 +42,9 @@ jobs:
       - name: Enforce production dependency advisory policy
         run: npm run dependency-audit:gate
 
+      - name: Test release SBOM policy
+        run: npm run sbom:test
+
       - name: Verify Web Lite artifact
         run: npm run web-lite:check
 
@@ -70,8 +73,8 @@ jobs:
 
   render-boundary-regression:
     name: render-boundary-regression
-    # Keep production renderer/export geometry coverage independent from the
-    # fast type, lint, and source-contract feedback in the verify job.
+    # Keep production surface restoration, reduced-motion semantics, and
+    # bounded React render work independent from fast source-contract checks.
     runs-on: ubuntu-latest
     timeout-minutes: 25
 
@@ -132,9 +135,8 @@ jobs:
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
 
-      - name: Verify Web Lite artifact
-        run: npm run web-lite:check
-
+      # verify owns freshness checking for this same checkout SHA. Browser
+      # jobs consume the committed artifact without rebuilding it again.
       - name: Run Web Lite browser smoke tests
         run: npm run web-lite:smoke
 
@@ -150,19 +152,13 @@ jobs:
           if-no-files-found: ignore
 
   web-lite-cross-browser-smoke:
-    name: web-lite-cross-browser-smoke (${{ matrix.browser }})
+    name: web-lite-cross-browser-smoke
     # Keep the release-blocking compatibility subset small: detailed geometry,
     # axe, format, render-boundary, and benchmark coverage stays Chromium-only.
-    # Leave bounded headroom for runner-level system dependency installation.
+    # Both short projects share one dependency/browser install. Keep bounded
+    # headroom for runner-level system dependency installation.
     runs-on: ubuntu-latest
     timeout-minutes: 25
-    strategy:
-      fail-fast: false
-      matrix:
-        browser:
-          - firefox
-          - webkit
-
     steps:
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
@@ -176,27 +172,24 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Install ${{ matrix.browser }}
-        run: npx playwright install --with-deps ${{ matrix.browser }}
+      - name: Install Firefox and WebKit
+        run: npx playwright install --with-deps firefox webkit
 
-      - name: Verify and stage the production Web Lite artifact
-        run: |
-          npm run web-lite:check
-          npm run pages:prepare
+      # All five checks must pass together; verify owns artifact freshness.
+      - name: Stage the committed production Web Lite artifact
+        run: npm run pages:prepare
 
-      - name: Run ${{ matrix.browser }} Web Lite compatibility smoke
-        env:
-          WEB_LITE_BROWSER: ${{ matrix.browser }}
-        run: npm run web-lite:cross-browser-smoke -- --project=${{ matrix.browser }}
+      - name: Run Firefox and WebKit Web Lite compatibility smoke
+        run: npm run web-lite:cross-browser-smoke
 
-      - name: Upload ${{ matrix.browser }} Web Lite diagnostics
+      - name: Upload cross-browser Web Lite diagnostics
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: web-lite-${{ matrix.browser }}-diagnostics-${{ github.run_attempt }}
+          name: web-lite-cross-browser-diagnostics-${{ github.run_attempt }}
           path: |
-            playwright-report/web-lite-cross-browser/${{ matrix.browser }}/**
-            test-results/web-lite-cross-browser/${{ matrix.browser }}/**
+            playwright-report/web-lite-cross-browser/all/**
+            test-results/web-lite-cross-browser/all/**
           if-no-files-found: error
           retention-days: 14
 
@@ -225,9 +218,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build Windows desktop artifacts
+      # Exercise the real packaged app here. NSIS creation, installation, and
+      # uninstallation belong to Release, which tests the bytes it publishes.
+      - name: Build unpacked Windows desktop app
         id: desktop_build
-        run: npm run desktop:build
+        run: npm run desktop:pack
 
       - name: Verify staged and packaged desktop assets
         run: npm run desktop:packaged-assets-test
@@ -235,25 +230,10 @@ jobs:
       - name: Run packaged desktop interaction regression
         run: npm run desktop:interaction-test
 
-      - name: Run Setup-only final-artifact smoke
-        if: ${{ always() && steps.desktop_build.outcome == 'success' }}
-        run: npm run desktop:final-artifact-smoke
-
       - name: Run opt-in desktop visual and frame-timing diagnostics
         if: ${{ always() && steps.desktop_build.outcome == 'success' && github.event_name == 'workflow_dispatch' && inputs.desktop_visual_diagnostics }}
         continue-on-error: true
         run: npm run desktop:visual-diagnostic
-
-      - name: Verify Windows desktop artifacts
-        if: ${{ always() && steps.desktop_build.outcome == 'success' }}
-        shell: pwsh
-        run: |
-          $expectedName = "Lyrics.Card.Generator.Setup.$((Get-Content package.json -Raw | ConvertFrom-Json).version).exe"
-          $executables = @(Get-ChildItem release -File -Filter '*.exe')
-          if ($executables.Count -ne 1 -or $executables[0].Name -ne $expectedName) {
-            throw "Expected the sole Windows artifact to be $expectedName; found $($executables.Name -join ', ')."
-          }
-          $executables | Select-Object Name, Length
 
       - name: Upload desktop regression evidence
         if: always()
@@ -262,5 +242,4 @@ jobs:
           name: desktop-regression-evidence-${{ github.run_attempt }}
           path: |
             playwright-report/desktop/**
-            playwright-report/desktop-final-artifacts/**
           if-no-files-found: ignore

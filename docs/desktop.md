@@ -105,7 +105,7 @@ npm run desktop:final-artifact-smoke
 npm run desktop:size
 ```
 
-Final-artifact smoke is distinct from testing `win-unpacked`: it silently installs the actual Setup bytes, launches the installed app, verifies the packaged Electron/runtime and font-license contracts, closes it, and uninstalls it. The Windows CI job records diagnostics and rejects any extra executable, including a portable build.
+Final-artifact smoke is distinct from testing `win-unpacked`: it silently installs the actual Setup bytes, launches the installed app, verifies the packaged Electron/runtime and font-license contracts, closes it, and uninstalls it. Release owns this check and rejects any extra executable, including a portable build. Ordinary Windows CI uses `desktop:pack` and tests the unpacked production app; it does not generate or install Setup. Installer-specific failures are therefore caught at release time, or by running the commands above before tagging.
 
 Optional diagnostics:
 
@@ -125,7 +125,7 @@ Before publishing a desktop release, bind results to the exact tag commit and ve
 - The production dependency advisory gate and font-license gate pass.
 - The sole Windows x64 Setup output is produced from the tag commit.
 - Full desktop interactions pass in the required Windows CI job for that exact final main-push SHA. Release reuses this source-level result rather than running the suite a third time after PR and main CI.
-- Packaged assets and final-artifact smoke pass again on the newly built release outputs; a CI executable is not evidence for different release bytes.
+- Packaged assets pass again on the newly built release outputs, and final-artifact smoke validates the actual Setup; unpacked CI execution is not evidence of installation or uninstallation.
 - The unpacked app and installed Setup app exit without orphaned product processes, and silent uninstall succeeds.
 - Required hashes, SBOM, attestations, and release assets are generated and verified by the release workflow.
 - User-facing release notes match the delivered behavior and six-language release-note structure.

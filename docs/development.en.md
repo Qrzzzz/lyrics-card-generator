@@ -108,6 +108,7 @@ The main static and Node.js CI gate is:
 
 ```bash
 npm run dependency-audit:gate
+npm run sbom:test
 npm run web-lite:check
 npm run font-license:test
 npm run typecheck

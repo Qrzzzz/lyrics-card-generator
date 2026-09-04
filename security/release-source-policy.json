@@ -9,8 +9,7 @@
     "verify",
     "render-boundary-regression",
     "web-lite-smoke",
-    "web-lite-cross-browser-smoke (firefox)",
-    "web-lite-cross-browser-smoke (webkit)",
+    "web-lite-cross-browser-smoke",
     "desktop-packaged-regression"
   ]
 }

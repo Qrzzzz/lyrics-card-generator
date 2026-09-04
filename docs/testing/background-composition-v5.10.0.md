@@ -93,7 +93,13 @@ allocation diagnostics rather than acting as a fast deterministic unit gate:
 npm run background-composition:benchmark
 ```
 
-Changes to numeric thresholds require new negative fixtures and visual evidence.
+The GitHub benchmark workflow is manual-only (`workflow_dispatch`), with no
+weekly schedule. The small color-field planning loop still reports elapsed
+time, but its machine-dependent five-second threshold is not a CI gate.
+Deterministic geometry, cell budgets, and composition-quality assertions remain
+blocking; the explicitly requested browser benchmark retains its own limits.
+
+Changes to composition-quality thresholds require new negative fixtures and visual evidence.
 Do not relax a threshold solely to make an existing failure disappear.
 
 ## Manual visual acceptance

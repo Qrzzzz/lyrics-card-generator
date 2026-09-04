@@ -12,6 +12,7 @@ const browserSupport = readFileSync("docs/web-lite-browser-support.md", "utf8");
 const releaseSourcePolicy = JSON.parse(readFileSync("security/release-source-policy.json", "utf8"));
 const pagesWorkflow = readFileSync(".github/workflows/pages.yml", "utf8");
 const runtimeTests = readFileSync("scripts/test-electron-runtime-coverage.cjs", "utf8");
+const releaseWorkflow = readFileSync(".github/workflows/release.yml", "utf8");
 
 // Assert workflow intent as source contracts so renamed or reordered CI steps do
 // not silently weaken the packaged regression gate.
@@ -19,14 +20,9 @@ assert.match(workflow, /^\s{2}push:/m, "CI retains its continuous main-push trig
 assert.match(workflow, /^\s{2}pull_request:/m, "CI retains its continuous pull-request trigger");
 assert.match(workflow, /^\s{2}desktop-packaged-regression:/m, "the Windows job describes the full packaged regression scope");
 assert.doesNotMatch(workflow, /^\s{2}desktop-final-artifact-smoke:/m, "the final-artifact command is not misrepresented as the whole job");
-for (const checkName of ["verify", "render-boundary-regression", "web-lite-smoke", "desktop-packaged-regression"]) {
+for (const checkName of ["verify", "render-boundary-regression", "web-lite-smoke", "web-lite-cross-browser-smoke", "desktop-packaged-regression"]) {
   assert.match(workflow, new RegExp(`name: ${checkName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`), `${checkName} has a stable GitHub check name`);
 }
-assert.match(
-  workflow,
-  /name: web-lite-cross-browser-smoke \(\$\{\{ matrix\.browser \}\}\)/,
-  "Firefox and WebKit checks have stable matrix-qualified names"
-);
 assert.match(
   workflow,
   /desktop-packaged-regression:[\s\S]+if: github\.event_name == 'push' \|\| github\.event_name == 'pull_request'/,
@@ -38,16 +34,18 @@ assert.deepEqual(
     "verify",
     "render-boundary-regression",
     "web-lite-smoke",
-    "web-lite-cross-browser-smoke (firefox)",
-    "web-lite-cross-browser-smoke (webkit)",
+    "web-lite-cross-browser-smoke",
     "desktop-packaged-regression"
   ],
   "release authorization consumes every independent release-blocking CI check"
 );
 assert.doesNotMatch(workflow, /security-locale-a11y-gates:/, "the fully duplicated job stays removed");
-for (const command of ["stability:test", "coverage", "core:test"]) {
+for (const command of ["stability:test", "coverage", "core:test", "web-lite:check", "sbom:test"]) {
   assert.equal(workflow.split(`run: npm run ${command}\n`).length - 1, 1, `${command} has one CI owner`);
 }
+const verifyJob = workflow.slice(workflow.indexOf("\n  verify:"), workflow.indexOf("\n  render-boundary-regression:"));
+assert.match(verifyJob, /npm run web-lite:check/, "the required verify check owns committed artifact freshness");
+assert.match(verifyJob, /npm run sbom:test/, "required CI owns release SBOM policy fixtures before authorization");
 assert.doesNotMatch(workflow, /run: npm run (?:a11y:test|build)\s*$/m, "CI does not repeat axe or the render job's production build");
 assert.match(packageJson.scripts["a11y:test"], /--config=playwright\.web-lite\.config\.ts --grep axe$/, "focused axe is a subset of Web Lite smoke");
 assert.match(packageJson.scripts["web-lite:smoke"], /^playwright test --config=playwright\.web-lite\.config\.ts$/, "full smoke includes axe without a filter");
@@ -61,19 +59,14 @@ assert.match(packageJson.scripts["core:test"], /npm run autosave:test/, "core re
 assert.match(packageJson.scripts["desktop:interaction-test"], /npm run desktop:autosave-test/, "Windows CI retains actual close and recovery tests");
 assert.match(pagesWorkflow, /npm run web-lite:check/, "Pages verifies the committed artifact before deployment");
 assert.doesNotMatch(pagesWorkflow, /npm run web-lite:build/, "Pages does not rebuild a second time after verification");
-assert.ok(
-  workflow.indexOf("Run packaged desktop interaction regression") < workflow.indexOf("Run Setup-only final-artifact smoke"),
-  "interaction and final-artifact checks remain distinct steps"
-);
-assert.match(
-  workflow,
-  /Run Setup-only final-artifact smoke[\s\S]+always\(\) && steps\.desktop_build\.outcome == 'success'/,
-  "final artifact smoke still runs when an earlier interaction assertion fails"
-);
-assert.match(workflow, /Expected the sole Windows artifact to be/, "CI rejects portable or other unexpected Windows executables");
-assert.doesNotMatch(workflow, /Lyrics Card Generator-\*-portable|Expected both NSIS and portable/, "CI does not require a portable build");
+assert.match(workflow, /run: npm run desktop:pack\s*$/m, "CI builds the packaged runtime without an installer");
+assert.match(packageJson.scripts["desktop:pack"], /npm run typecheck && npm run build && npm run desktop:prepare && electron-builder --dir --projectDir dist-desktop\/app$/, "directory packaging keeps the production build and ASAR boundary");
+assert.doesNotMatch(workflow, /npm run desktop:(?:build|final-artifact-smoke)\b/, "ordinary CI does not generate or install disposable Setup bytes");
+assert.match(releaseWorkflow, /run: npm run desktop:build/, "Release still builds the actual Setup installer");
+assert.match(releaseWorkflow, /Test final Setup bytes[\s\S]+npm run desktop:final-artifact-smoke/, "Release owns install, launch, and uninstall verification");
+assert.match(releaseWorkflow, /Expected exactly one Setup executable/, "Release retains the Setup-only artifact gate");
 assert.match(workflow, /Run opt-in desktop visual and frame-timing diagnostics[\s\S]+continue-on-error: true/, "runner-sensitive diagnostics are explicitly non-blocking");
-assert.match(workflow, /playwright-report\/desktop-final-artifacts\/\*\*/, "final-artifact failure evidence is retained");
+assert.match(releaseWorkflow, /playwright-report\/desktop-final-artifacts\/\*\*/, "Release retains final-artifact failure evidence");
 assert.match(workflow, /Enforce production dependency advisory policy[\s\S]+npm run dependency-audit:gate/, "CI blocks unapproved production high and critical advisories");
 assert.match(workflow, /Verify font license distribution contracts[\s\S]+npm run font-license:test/, "CI verifies Source Han license distribution");
 assert.match(
@@ -138,22 +131,23 @@ const chromiumJob = workflow.slice(chromiumJobStart, crossBrowserJobStart);
 const crossBrowserJob = workflow.slice(crossBrowserJobStart, crossBrowserJobEnd);
 assert.match(chromiumJob, /npx playwright install --with-deps chromium/, "the existing full Web Lite job installs Chromium");
 assert.match(chromiumJob, /npm run web-lite:smoke/, "the existing full Chromium Web Lite suite remains continuous");
+assert.doesNotMatch(chromiumJob, /npm run web-lite:(?:check|build)/, "Chromium consumes the committed artifact already checked by verify");
 assert.doesNotMatch(chromiumJob, /firefox|webkit/i, "the full suite is not tripled across browser engines");
 assert.match(crossBrowserJob, /timeout-minutes: 25/, "the cross-browser job has a bounded timeout with dependency-install headroom");
-assert.match(crossBrowserJob, /fail-fast: false/, "one browser failure does not suppress the other browser result");
-assert.match(crossBrowserJob, /browser:\r?\n\s+- firefox\r?\n\s+- webkit/, "Firefox and WebKit are the exact compatibility matrix");
-assert.match(crossBrowserJob, /npx playwright install --with-deps \$\{\{ matrix\.browser \}\}/, "each matrix leg installs only its browser");
-const artifactCheck = crossBrowserJob.indexOf("npm run web-lite:check");
+assert.doesNotMatch(crossBrowserJob, /strategy:|matrix:|matrix\.browser/, "short compatibility projects share one runner and dependency install");
+assert.match(crossBrowserJob, /npx playwright install --with-deps firefox webkit/, "the shared runner installs both supported engines");
+assert.match(crossBrowserJob, /run: npm run web-lite:cross-browser-smoke\s*$/m, "the full compatibility command runs both projects");
+assert.doesNotMatch(crossBrowserJob, /WEB_LITE_BROWSER:|--project=|--grep|--max-failures/, "neither engine is filtered out or stopped after the other's failure");
 const artifactStage = crossBrowserJob.indexOf("npm run pages:prepare");
 const browserCommand = crossBrowserJob.indexOf("npm run web-lite:cross-browser-smoke");
 assert.ok(
-  artifactCheck >= 0 && artifactCheck < artifactStage && artifactStage < browserCommand,
-  "cross-browser smoke uses the verified production Pages artifact"
+  artifactStage >= 0 && artifactStage < browserCommand,
+  "cross-browser smoke stages the committed production Pages artifact before testing"
 );
-assert.match(crossBrowserJob, /WEB_LITE_BROWSER: \$\{\{ matrix\.browser \}\}/, "report directories bind to the browser matrix leg");
-assert.match(crossBrowserJob, /Upload \$\{\{ matrix\.browser \}\} Web Lite diagnostics[\s\S]+if: always\(\)/, "per-browser evidence survives failures");
-assert.match(crossBrowserJob, /playwright-report\/web-lite-cross-browser\/\$\{\{ matrix\.browser \}\}\/\*\*/, "per-browser HTML reports are retained");
-assert.match(crossBrowserJob, /test-results\/web-lite-cross-browser\/\$\{\{ matrix\.browser \}\}\/\*\*/, "per-browser traces, screenshots, and video are retained");
+assert.doesNotMatch(crossBrowserJob, /npm run web-lite:(?:check|build)/, "compatibility jobs do not repeat verify's artifact freshness check");
+assert.match(crossBrowserJob, /Upload cross-browser Web Lite diagnostics[\s\S]+if: always\(\)/, "both projects' evidence survives failures");
+assert.match(crossBrowserJob, /playwright-report\/web-lite-cross-browser\/all\/\*\*/, "the combined HTML report is retained");
+assert.match(crossBrowserJob, /test-results\/web-lite-cross-browser\/all\/\*\*/, "both projects' traces, screenshots, and video are retained");
 assert.doesNotMatch(crossBrowserJob, /continue-on-error:/, "Firefox and WebKit failures remain release-blocking");
 for (const action of ["actions/checkout", "actions/setup-node", "actions/upload-artifact"]) {
   assert.match(crossBrowserJob, new RegExp(`${action.replace("/", "\\/")}@[0-9a-f]{40}`), `${action} remains commit-pinned`);
@@ -187,10 +181,9 @@ for (const lockedEngine of ["Chromium `149.0.7827.55`", "Firefox `151.0`", "WebK
 }
 assert.match(browserSupport, /Mobile browsers[\s\S]+best effort/, "the non-blocking mobile boundary is explicit");
 
-assert.match(benchmarkWorkflow, /^\s{2}schedule:/m, "the heavy benchmark has a scheduled trigger");
+assert.doesNotMatch(benchmarkWorkflow, /^\s{2}(?:schedule|push|pull_request):/m, "the heavy benchmark has no automatic trigger");
 assert.match(benchmarkWorkflow, /^\s{2}workflow_dispatch:/m, "the heavy benchmark can be run on demand");
-assert.match(benchmarkWorkflow, /cron: "17 3 \* \* 1"/, "the heavy benchmark runs weekly at a stable offset");
-assert.match(benchmarkWorkflow, /timeout-minutes: 30/, "the scheduled benchmark job has a bounded timeout");
+assert.match(benchmarkWorkflow, /timeout-minutes: 30/, "the on-demand benchmark job has a bounded timeout");
 assert.match(benchmarkWorkflow, /RUN_BACKGROUND_COMPOSITION_BENCHMARK: "1"/, "the opt-in large-canvas case is enabled");
 assert.match(benchmarkWorkflow, /BACKGROUND_COMPOSITION_MAX_EXPORT_MS: "60000"/, "the export duration threshold is explicit");
 assert.match(benchmarkWorkflow, /BACKGROUND_COMPOSITION_MIN_LOGICAL_HEIGHT: "3000"/, "the large-canvas threshold is explicit");
@@ -206,7 +199,7 @@ assert.doesNotMatch(workflow, /npm run background-composition:benchmark/, "the h
 assert.match(
   packageJson.scripts["background-composition:benchmark"],
   /RUN_BACKGROUND_COMPOSITION_BENCHMARK=1[\s\S]+@background-composition-benchmark/,
-  "the scheduled command cannot silently skip the opt-in benchmark"
+  "the manual command cannot silently skip the opt-in benchmark"
 );
 for (const variable of [
   "BACKGROUND_COMPOSITION_MAX_EXPORT_MS",
@@ -217,4 +210,4 @@ for (const variable of [
   assert.match(backgroundCompositionBenchmark, new RegExp(variable), `${variable} remains connected to the browser benchmark`);
 }
 
-console.log("CI and scheduled render regression workflow contract tests passed");
+console.log("CI and on-demand render regression workflow contract tests passed");
