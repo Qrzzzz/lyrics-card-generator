@@ -93,6 +93,7 @@ const importHistoryRelocations = new Map();
 const importHistoryOperations = new Set();
 let importHistoryFileStreams = null;
 let importHistoryStore = null;
+let editorDraftAssets = null;
 let systemFontDirectoryService = null;
 // Ownership is decided before IPC registration, service startup, or BrowserWindow creation.
 const singleInstanceOwnership = acquireSingleInstanceOwnership({
@@ -658,6 +659,8 @@ function initializePrimaryInstance() {
   importHistoryStore = new ImportHistoryStore({
     filePath: path.join(app.getPath("userData"), "app-data", "import-history.json")
   });
+  const { EditorDraftAssets } = require("./editor-draft");
+  editorDraftAssets = new EditorDraftAssets(path.join(app.getPath("userData"), "app-data", "draft-covers"));
   systemFontDirectoryService = createWindowsFontDirectoryService({
     onError: (error) => console.error("[fonts] unable to list Windows fonts", error)
   });
@@ -913,6 +916,32 @@ function registerDesktopIpc() {
   });
 
   handle("lyrics-card:import-history-stats", () => importHistoryStore.stats());
+
+  handle("lyrics-card:draft-begin", (_event, recordId) => trackImportHistoryMutation(async () => {
+    try {
+      if (await readImportHistoryLimit() === "none") return { ok: false, code: "autosave_disabled" };
+      return { ok: true, data: await importHistoryStore.beginEditorDraft(recordId) };
+    } catch (error) { return { ok: false, code: importHistoryErrorCode(error) }; }
+  }));
+  handle("lyrics-card:draft-write", (_event, recordId, token, revision, envelope) => trackImportHistoryMutation(async () => {
+    try {
+      if (await readImportHistoryLimit() === "none") return { ok: false, code: "autosave_disabled" };
+      return { ok: true, record: await importHistoryStore.saveEditorDraft(recordId, token, revision, envelope) };
+    } catch (error) { return { ok: false, code: importHistoryErrorCode(error) }; }
+  }));
+  handle("lyrics-card:draft-load-active", async () => {
+    try {
+      const record = await importHistoryStore.getActiveEditorDraft();
+      return { ok: true, data: record ? await editorDraftAssets.hydrate(record.id, record.editorDraft) : null };
+    } catch (error) { return { ok: false, code: importHistoryErrorCode(error) }; }
+  });
+  handle("lyrics-card:draft-activate", (_event, recordId) => trackImportHistoryMutation(
+    () => importHistoryStore.activateEditorDraft(recordId)
+  ));
+  handle("lyrics-card:draft-cover", (_event, dataUrl) => trackImportHistoryMutation(async () => {
+    try { return { ok: true, data: await editorDraftAssets.save(dataUrl) }; }
+    catch (error) { return { ok: false, code: importHistoryErrorCode(error) }; }
+  }));
 
   handle("lyrics-card:remote-history-lyrics", (_event, recordId, snapshot) => trackImportHistoryMutation(async () => {
     try { return { ok: true, record: await importHistoryStore.updateRemoteLyrics(recordId, snapshot) }; }
@@ -1246,6 +1275,10 @@ async function readImportHistoryLimit() {
 }
 
 async function createImportHistoryReplayPayload(record, preparedFile, senderId) {
+  if (record.editorDraft) {
+    return { ok: true, kind: "draft", record: toPublicImportHistoryRecord(record),
+      draft: await editorDraftAssets.hydrate(record.id, record.editorDraft) };
+  }
   if (record.kind === "link") {
     return {
       ok: true,

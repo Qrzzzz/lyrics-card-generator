@@ -58,4 +58,21 @@ for (const block of blocks) {
   );
 }
 
-console.log(`Release workflow PowerShell syntax tests passed for ${blocks.length} run blocks`);
+// Exercise the actual policy block without running npm or touching release
+// state: an earlier native-command failure must stop before the next check.
+const releasePolicyBlock = blocks.find((block) => block.source.includes("npx tsx scripts/test-release-consistency.ts"));
+assert.ok(releasePolicyBlock, "release-only policy block was discovered");
+const failureProbe = releasePolicyBlock.source
+  .replace("npx tsx scripts/test-release-consistency.ts", '& node -e "process.exit(17)"')
+  .replace("npm run sbom:test", "Write-Output 'POLICY_REACHED_SBOM'");
+const failureResult = spawnSync("pwsh", ["-NoLogo", "-NoProfile", "-NonInteractive", "-Command", failureProbe], { encoding: "utf8" });
+assert.ifError(failureResult.error);
+assert.notEqual(failureResult.status, 0, "a failed first native policy command must fail the step");
+assert.match(failureResult.stderr, /17/, "the failure comes from the injected native exit code");
+assert.doesNotMatch(failureResult.stdout, /POLICY_REACHED_SBOM/, "a later successful command cannot mask the failure");
+const successResult = spawnSync("pwsh", ["-NoLogo", "-NoProfile", "-NonInteractive", "-Command", failureProbe.replace("process.exit(17)", "process.exit(0)")], { encoding: "utf8" });
+assert.ifError(successResult.error);
+assert.equal(successResult.status, 0, "successful release policy continues normally");
+assert.match(successResult.stdout, /POLICY_REACHED_SBOM/, "the later check still runs on success");
+
+console.log(`Release workflow PowerShell syntax tests passed for ${blocks.length} run blocks; native failure propagation passed`);

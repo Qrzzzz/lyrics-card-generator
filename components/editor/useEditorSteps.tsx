@@ -92,6 +92,8 @@ export type EditorStepHandlers = {
 };
 
 type UseEditorStepsInput = {
+  restoredSongInfoDraft?: { song: SongInfo; generation: number } | null;
+  onSongInfoDraftChange?: (song: SongInfo | undefined) => void;
   state: AppState;
   t: ReturnType<typeof createT>;
   canFetchLyrics: boolean;
@@ -113,6 +115,8 @@ type UseEditorStepsInput = {
 };
 
 export function useEditorSteps({
+  restoredSongInfoDraft,
+  onSongInfoDraftChange,
   state,
   t,
   canFetchLyrics,
@@ -139,6 +143,8 @@ export function useEditorSteps({
   const songInfoToggleRef = useRef<HTMLButtonElement | null>(null);
   const songInfoDraftCoverRef = useRef(state.song.coverUrl ?? "");
   const manualCoverContextRef = useRef<ManualCoverImportHistoryContext>({ uploaded: false });
+  const restoredDraftGeneration = useRef<number | null>(null);
+  const notifySongDraft = useStableEvent((song: SongInfo | undefined) => onSongInfoDraftChange?.(song));
 
   function restoreSongInfoToggleFocus() {
     window.requestAnimationFrame(() => songInfoToggleRef.current?.focus({ preventScroll: true }));
@@ -165,9 +171,11 @@ export function useEditorSteps({
     );
     songInfoDraftCoverRef.current = nextCoverUrl;
     setSongInfoDraft(song);
+    notifySongDraft(song);
   }
 
   function closeSongInfoEditor() {
+    notifySongDraft(undefined);
     discardSongInfoDraft();
     syncSongInfoDraft(state.song);
     setSongInfoEditRevision(null);
@@ -194,6 +202,7 @@ export function useEditorSteps({
     }
 
     onSaveSongInfo({ ...songInfoDraft }, manualCoverContextRef.current);
+    notifySongDraft(undefined);
     manualCoverContextRef.current = { uploaded: false };
     setSongInfoEditRevision(null);
     setSongInfoExpanded(false);
@@ -242,12 +251,22 @@ export function useEditorSteps({
     }
 
     // External document changes invalidate the draft and any pending cover registration.
+    notifySongDraft(undefined);
     discardSongInfoDraft();
     syncSongInfoDraft(state.song);
     setSongInfoEditRevision(null);
     setSongInfoExpanded(false);
     window.requestAnimationFrame(() => songInfoToggleRef.current?.focus({ preventScroll: true }));
-  }, [documentRevision, songInfoEditRevision, songInfoExpanded, state.song]);
+  }, [documentRevision, notifySongDraft, songInfoEditRevision, songInfoExpanded, state.song]);
+
+  useEffect(() => {
+    if (!restoredSongInfoDraft || restoredDraftGeneration.current === restoredSongInfoDraft.generation) return;
+    restoredDraftGeneration.current = restoredSongInfoDraft.generation;
+    syncSongInfoDraft(restoredSongInfoDraft.song);
+    setSongInfoEditRevision(documentRevision);
+    setSongInfoExpanded(true);
+    notifySongDraft(restoredSongInfoDraft.song);
+  }, [documentRevision, notifySongDraft, restoredSongInfoDraft]);
 
   const linkStep = useMemo<SettingsStep>(() => ({
       id: "link",

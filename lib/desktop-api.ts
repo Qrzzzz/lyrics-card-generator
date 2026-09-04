@@ -5,6 +5,7 @@ import type {
   SaveAISettingsInput
 } from "@/lib/ai/types";
 import type { EffectiveUiThemeId } from "@/lib/settings/types";
+import type { EditorDraftLease, EditorDraftLoad } from "@/lib/editor-draft";
 import type { AppPreferencesRecord } from "@/lib/settings/app-preferences-reconciliation";
 import type {
   ImportHistoryFileKind,
@@ -87,6 +88,11 @@ export type LyricsCardDesktopApi = {
     source?: ImportHistoryKind | "all";
   }) => Promise<ImportHistoryListResult>;
   getImportHistoryStats: () => Promise<ImportHistoryStats>;
+  beginEditorDraft: (recordId?: string) => Promise<HistoryTransferResult<EditorDraftLease>>;
+  writeEditorDraft: (recordId: string, token: string, revision: number, envelope: string) => Promise<ImportHistoryWriteResult>;
+  loadActiveEditorDraft: () => Promise<HistoryTransferResult<EditorDraftLoad | null>>;
+  activateEditorDraft: (recordId: string | null) => Promise<boolean>;
+  saveEditorDraftCover: (dataUrl: string) => Promise<HistoryTransferResult<string>>;
   recordImportHistory: (record: ImportHistoryWriteCandidate) => Promise<ImportHistoryWriteResult>;
   updateRemoteHistoryLyrics: (recordId: string, snapshot: RemoteLyricsSnapshot) => Promise<ImportHistoryWriteResult>;
   copyRemoteHistory: (recordId?: string) => Promise<HistoryTransferResult<{ count: number; skipped: number }>>;

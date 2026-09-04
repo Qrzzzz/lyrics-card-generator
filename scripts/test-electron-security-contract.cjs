@@ -476,7 +476,7 @@ assert.match(
 );
 assert.match(
   desktopHistoryInteractionSource,
-  /NetEase song identity while removing credentials[\s\S]*?manual replay retains its exact sanitized song identity[\s\S]*?routeCountsBeforeManualReplayRemount/,
+  /identityIpc[\s\S]*?original URL keeps only safe identity[\s\S]*?countsBeforeLegacy[\s\S]*?legacy archive remount performs no song reparse/,
   "packaged replay preserves the song ID while retaining local-only remount behavior"
 );
 const manualReplayStart = replayPayloadSource.indexOf('record.kind === "manual-save"');

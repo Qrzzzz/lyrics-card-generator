@@ -20,6 +20,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { recordRenderBoundary } from "@/components/editor/render-boundary-diagnostics";
 import { HistoryTransferDialog } from "@/components/editor/HistoryTransferDialog";
 import { historyTransferCopy, historyTransferError } from "@/lib/history-transfer-copy";
+import { editorAutosaveCopy } from "@/lib/editor-autosave-copy";
 import type { ToastNotifier } from "@/components/feedback/AppToast";
 import { SurfaceCloseButton } from "@/components/layout/SurfaceCloseButton";
 import { AdaptiveAlbumArtwork } from "@/components/preview/AdaptiveAlbumArtwork";
@@ -335,6 +336,7 @@ export function HistoryFloor({
               onChange={(event) => setSource(event.target.value as ImportHistoryKind | "all")}
             >
               <option value="all">{copy.allSources}</option>
+              <option value="draft">{editorAutosaveCopy[locale].draft}</option>
               <option value="link">{copy.sourceLink}</option>
               <option value="search">{copy.sourceSearch}</option>
               <option value="local-audio">{copy.sourceLocalAudio}</option>
@@ -444,7 +446,7 @@ function HistoryCard({
 }) {
   const copy = importHistoryCopy[locale];
   const sourceLabel = sourceLabelForKind(record.kind, locale);
-  const title = record.title || record.detail || sourceLabel;
+  const title = record.title || record.detail || (record.hasEditorDraft ? editorAutosaveCopy[locale].untitled : sourceLabel);
   const SourceIcon = record.kind === "link"
     ? Link2
     : record.kind === "search"
@@ -497,7 +499,7 @@ function HistoryCard({
           ) : null}
         </dl>
         <time className="app-text-subtle text-xs" dateTime={new Date(record.importedAt).toISOString()}>
-          {formatImportHistoryText(record.kind === "manual-save" ? copy.savedAt : copy.importedAt, {
+          {formatImportHistoryText(record.kind === "manual-save" || record.hasEditorDraft ? copy.savedAt : copy.importedAt, {
             time: dateFormatter.format(record.importedAt)
           })}
         </time>
@@ -530,7 +532,7 @@ function HistoryCard({
           loading={busy}
           onClick={onReplay}
         >
-          {record.kind === "manual-save"
+          {record.hasEditorDraft ? (busy ? editorAutosaveCopy[locale].loading : editorAutosaveCopy[locale].resume) : record.kind === "manual-save"
             ? busy ? copy.loadingManualSave : copy.loadManualSave
             : busy ? copy.reimporting : copy.reimport}
         </ActionButton>
@@ -559,6 +561,7 @@ function HistoryState({ icon, message, testId }: { icon: React.ReactNode; messag
 }
 
 function sourceLabelForKind(kind: ImportHistoryKind, locale: Locale) {
+  if (kind === "draft") return editorAutosaveCopy[locale].draft;
   const copy = importHistoryCopy[locale];
   if (kind === "link") return copy.sourceLink;
   if (kind === "search") return copy.sourceSearch;

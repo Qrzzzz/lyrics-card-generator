@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import type { ToastNotifier } from "@/components/feedback/AppToast";
 import { createAppRequestHeaders } from "@/lib/app-request";
@@ -60,8 +60,7 @@ import {
 } from "@/lib/import-history";
 import { importHistoryCopy } from "@/lib/import-history-copy";
 import { historyTransferCopy } from "@/lib/history-transfer-copy";
-import { RemoteHistorySession } from "@/lib/remote-history-session";
-import { shutdownCoordinator } from "@/lib/persistence/shutdown-coordinator";
+import type { useEditorAutosave } from "@/components/editor/hooks/useEditorAutosave";
 import type { RemoteLyricsSnapshot } from "@/lib/import-history";
 import { MAX_LOCAL_AUDIO_BYTES } from "@/lib/local-audio-limits";
 import type {
@@ -73,6 +72,7 @@ import type {
 import type { ExportFormatId } from "@/lib/settings/types";
 
 type UseEditorActionsInput = {
+  autosave: ReturnType<typeof useEditorAutosave>;
   parsedState: AppState;
   setState: React.Dispatch<React.SetStateAction<AppState>>;
   cardRef: React.RefObject<HTMLElement | null>;
@@ -127,6 +127,7 @@ type HistoryLocalAudioResponse =
   | { ok: false; error?: string };
 
 export function useEditorActions({
+  autosave,
   parsedState,
   setState,
   cardRef,
@@ -167,18 +168,6 @@ export function useEditorActions({
   const [isManualSaveSaving, setIsManualSaveSaving] = useState(false);
   const currentDocumentRef = useRef(parsedState);
   currentDocumentRef.current = parsedState;
-  const remoteHistoryRef = useRef<RemoteHistorySession | null>(null);
-  if (!remoteHistoryRef.current) {
-    remoteHistoryRef.current = new RemoteHistorySession(
-      async (id, snapshot) => {
-        const desktop = getLyricsCardDesktopApi();
-        return desktop ? desktop.updateRemoteHistoryLyrics(id, snapshot) : { ok: false, code: "unavailable" };
-      },
-      () => onNotify(importHistoryCopy[currentDocumentRef.current.locale].historySaveFailed, "warning")
-    );
-  }
-  const remoteHistory = remoteHistoryRef.current;
-  useEffect(() => shutdownCoordinator.register("remote-history", () => remoteHistory.flush({ ignoreUnrecordedFailures: true })), [remoteHistory]);
   // The adapter is stable for the editor lifetime and always reads the latest controlled document.
   const documentStateAdapterRef = useRef<EditorDocumentStateAdapter | null>(null);
   if (!documentStateAdapterRef.current) {
@@ -236,7 +225,6 @@ export function useEditorActions({
   }
 
   function bindLoadedManualSave(recordId: string, savedRevision: number, replayUrl: string) {
-    remoteHistory.detach();
     manualSaveSessionRef.current += 1;
     replaceManualSaveBinding({ recordId, savedRevision });
     replaceManualReplayProvenance({ kind: "manual-save", recordId, replayUrl });
@@ -254,7 +242,7 @@ export function useEditorActions({
     songLinkAutoParseVisitRef.current += 1;
     return {
       id: songLinkAutoParseVisitRef.current,
-      allowAutoParse: !replayStillOwnsCurrentUrl && !remoteHistory.ownsUrl(currentDocumentRef.current.url)
+      allowAutoParse: !replayStillOwnsCurrentUrl && !autosave.ownsUrl(currentDocumentRef.current.url)
     };
   }
 
@@ -265,12 +253,16 @@ export function useEditorActions({
     const projected = documentStateAdapter.projectDocumentMutation(rollback, mutation);
     setDocumentRevision(documentStateAdapter.queueDocumentMutation(rollback, mutation));
     currentDocumentRef.current = projected;
-    remoteHistory.update(remoteLyricsSnapshot(projected));
     return projected;
   }
 
   async function beginSongImport(kind: DocumentImportKind) {
     if (hasAuthoredDocument(currentDocumentRef.current) && !(await confirmReplaceDocument())) {
+      return null;
+    }
+    try { await autosave.flush(); }
+    catch {
+      onNotify(importHistoryCopy[currentDocumentRef.current.locale].historySaveFailed, "error");
       return null;
     }
     const intent = documentControllerRef.current.begin(kind);
@@ -294,31 +286,19 @@ export function useEditorActions({
     }
     if (invalidateAIOnCommit) onInvalidateDocument();
     setDocumentRevision(revision);
-    remoteHistory.detach();
     startNewManualSaveSession();
     const imported = replaceSongDocument(currentDocumentRef.current, song, lyrics);
     currentDocumentRef.current = imported;
     setState(imported);
+    autosave.reset(imported);
     return true;
   }
 
   function queueImportHistoryRecord(candidate: ImportHistoryWriteCandidate) {
     const desktop = getLyricsCardDesktopApi();
     if (!desktop) return;
-    if ((candidate.kind === "link" || candidate.kind === "search") && candidate.lyricsSnapshot) {
-      remoteHistory.bind(desktop.recordImportHistory(candidate), candidate.lyricsSnapshot, currentDocumentRef.current.url);
-      return;
-    }
-    // History persistence is best effort and must not roll back an already committed import.
-    void desktop.recordImportHistory(candidate)
-      .then((result) => {
-        if (!result.ok) {
-          onNotify(importHistoryCopy[currentDocumentRef.current.locale].historySaveFailed, "warning");
-        }
-      })
-      .catch(() => {
-        onNotify(importHistoryCopy[currentDocumentRef.current.locale].historySaveFailed, "warning");
-      });
+    // The full draft has its own retryable create, even if this source record fails.
+    autosave.reset(currentDocumentRef.current, desktop.recordImportHistory(candidate));
   }
 
   function historyDisplay(song: ParsedSongData | SongInfo): ImportHistoryDisplayInput {
@@ -420,14 +400,14 @@ export function useEditorActions({
   }
 
   function handleHistoryRecordRemoved(recordId: string) {
-    remoteHistory.remove(recordId);
+    autosave.removed(recordId);
     if (manualSaveBindingRef.current?.recordId === recordId) {
       startNewManualSaveSession();
     }
   }
 
   function handleHistoryCleared() {
-    remoteHistory.remove();
+    autosave.removed();
     startNewManualSaveSession();
   }
 
@@ -467,23 +447,30 @@ export function useEditorActions({
       expectedRevision,
       expectedSongIdentity
     );
-    if (committed) remoteHistory.update(remoteLyricsSnapshot(currentDocumentRef.current));
     return committed;
   }
 
-  function clearAllContent() {
-    if (!hasClearableLyricContent(parsedState)) {
+  async function clearAllContent() {
+    if (!hasClearableLyricContent(parsedState) && !autosave.hasFormDraft) {
       onNotify(clearAlreadyEmptyMessage, "success");
       return;
     }
 
-    clearVersionRef.current += 1;
-    setCelebrationKey(0);
-    setClearTransitionKey((key) => key + 1);
-    onClearTransientState();
-    remoteHistory.detach();
-    applyDocumentMutation(clearLyricContent);
-    startNewManualSaveSession();
+    const requestedRevision = documentControllerRef.current.currentRevision;
+    try {
+      await autosave.flush();
+      await autosave.clearActive(() => {
+        // Do not discard edits made while persistence was still running.
+        if (documentControllerRef.current.currentRevision !== requestedRevision) return null;
+        clearVersionRef.current += 1;
+        setCelebrationKey(0);
+        setClearTransitionKey((key) => key + 1);
+        onClearTransientState();
+        const cleared = applyDocumentMutation(clearLyricContent);
+        startNewManualSaveSession();
+        return cleared;
+      });
+    } catch { onNotify(importHistoryCopy[currentDocumentRef.current.locale].historySaveFailed, "error"); }
   }
 
   function handleStyleChange(nextStyle: CardStyle) {
@@ -496,7 +483,6 @@ export function useEditorActions({
   }
 
   function setUrl(url: string) {
-    if (!remoteHistory.ownsUrl(url)) remoteHistory.detach();
     if (manualReplayProvenanceRef.current) replaceManualReplayProvenance(null);
     applyDocumentMutation((current) => ({ ...current, url }));
   }
@@ -565,7 +551,6 @@ export function useEditorActions({
   function saveSongInfo(song: SongInfo, context: ManualCoverImportHistoryContext) {
     const savedDocument = applyDocumentMutation((current) => ({ ...current, song: canonicalSongInfo(song) }));
     if (!context.uploaded) return;
-    remoteHistory.detach();
     startNewManualSaveSession();
     queueImportHistoryRecord({
       kind: "manual-cover",
@@ -707,12 +692,11 @@ export function useEditorActions({
       return;
     }
     setDocumentRevision(revision);
-    remoteHistory.detach();
     startNewManualSaveSession();
-    setState((current) => {
+    const loaded = (() => {
       const translationText = importTranslation ? translation.text : "";
       const translationEnabled = importTranslation && Boolean(translationText.trim()) && example.translationEnabled;
-      const replaced = replaceSongDocument(current, {
+      const replaced = replaceSongDocument(currentDocumentRef.current, {
         source: example.source,
         title: example.title,
         artist: example.artist,
@@ -724,7 +708,10 @@ export function useEditorActions({
         ...replaced,
         style: normalizeCardStyle(replaced.style)
       }, example.lyrics, translationText, translationEnabled);
-    });
+    })();
+    currentDocumentRef.current = loaded;
+    setState(loaded);
+    autosave.reset(loaded);
     onCloseExamples();
     onNotify(exampleLoadedMessage, "success");
 
@@ -774,7 +761,7 @@ export function useEditorActions({
     if (!intent) return { status: "cancelled" };
 
     try {
-      await remoteHistory.flush({ ignoreUnrecordedFailures: true });
+      await autosave.flush();
       const replay = relocate
         ? await desktop.relocateImportHistory(recordId)
         : await desktop.replayImportHistory(recordId);
@@ -810,7 +797,7 @@ export function useEditorActions({
       } catch {
         replayCommit = { ok: false };
       }
-      if (!replayCommit.ok) {
+      if (!replayCommit.ok || ("persistencePending" in committed && committed.persistencePending)) {
         if (
           replay.kind === "manual-save" &&
           replayCommit.code === "not_found" &&
@@ -839,6 +826,31 @@ export function useEditorActions({
   }
 
   async function commitHistoryReplay(replay: Extract<ImportHistoryReplayResult, { ok: true }>, intent: DocumentImportIntent) {
+    if (replay.kind === "draft") {
+      // Restore assets before committing the transaction; no remote reparse is involved.
+      let revision: number | null = null;
+      const restored = await autosave.restore(replay.draft, () => {
+        revision = documentControllerRef.current.tryCommit(intent);
+        settleTrackedDocumentIntent(intent.id);
+        if (revision === null) { intent.cancel(); return false; }
+        onInvalidateDocument();
+        startNewManualSaveSession();
+        setDocumentRevision(revision);
+        return true;
+      });
+      if (!restored) return null;
+      currentDocumentRef.current = restored;
+      let persistencePending = false;
+      try {
+        if (!await getLyricsCardDesktopApi()?.activateEditorDraft(replay.record.id)) throw new Error("draft_activation_failed");
+      } catch {
+        // The UI has already restored the draft. Keep it dirty so close/retry
+        // persists the active pointer instead of claiming the document is unchanged.
+        persistencePending = true;
+        autosave.markUnsaved();
+      }
+      return { revision, persistencePending };
+    }
     if ((replay.kind === "link" || replay.kind === "search") && replay.lyricsSnapshot) {
       const url = replay.kind === "link" ? replay.url : replay.pageUrl || `https://music.163.com/song?id=${replay.songId}`;
       let song: ParsedSongData = {
@@ -866,7 +878,7 @@ export function useEditorActions({
         replay.lyricsSnapshot.translationEnabled);
       currentDocumentRef.current = restored;
       setState(restored);
-      remoteHistory.bind(Promise.resolve({ ok: true, record: replay.record }), replay.lyricsSnapshot, restored.url);
+      autosave.reset(restored, replay.record.id);
       return { revision: documentControllerRef.current.currentRevision, coverFailed };
     }
     if (replay.kind === "link") {
@@ -911,9 +923,9 @@ export function useEditorActions({
       });
       const payload = await response.json() as HistoryLocalAudioResponse;
       if (!payload.ok) throw new Error(payload.error || "history_local_audio_replay_failed");
-      return commitSongImport(intent, payload.data, payload.data.lyrics ?? "", true)
-        ? { revision: documentControllerRef.current.currentRevision }
-        : null;
+      if (!commitSongImport(intent, payload.data, payload.data.lyrics ?? "", true)) return null;
+      autosave.reset(currentDocumentRef.current, replay.record.id);
+      return { revision: documentControllerRef.current.currentRevision };
     }
 
     if (replay.kind === "manual-save") {
@@ -931,14 +943,18 @@ export function useEditorActions({
         revision,
         snapshot.finalUrl || snapshot.originalUrl || ""
       );
-      setState((current) => replaceWithHistorySnapshot(current, snapshot, {
+      const restored = replaceWithHistorySnapshot(currentDocumentRef.current, snapshot, {
         // Manual archives replay their persisted semantic snapshot without reparsing
         // the song. Restoring only the sanitized cover URL lets the existing image
         // proxy and palette flow load the archived cover safely.
         coverUrl: snapshot.coverUrl || snapshot.originalCoverUrl || "",
         originalCoverUrl: snapshot.originalCoverUrl || snapshot.coverUrl || "",
         parseMethod: snapshot.parseMethod || "import-history-manual-save"
-      }));
+      });
+      currentDocumentRef.current = restored;
+      setState(restored);
+      // Preserve legacy manual archives. Continuing one creates a new automatic draft.
+      autosave.reset(restored);
       return { revision };
     }
 
@@ -956,13 +972,15 @@ export function useEditorActions({
     onInvalidateDocument();
     const snapshot = replay.snapshot;
     setDocumentRevision(revision);
-    remoteHistory.detach();
     startNewManualSaveSession();
-    setState((current) => replaceWithHistorySnapshot(current, snapshot, {
+    const restored = replaceWithHistorySnapshot(currentDocumentRef.current, snapshot, {
       coverUrl,
       originalCoverUrl: "",
       parseMethod: "import-history-manual-cover"
-    }));
+    });
+    currentDocumentRef.current = restored;
+    setState(restored);
+    autosave.reset(restored, replay.record.id);
     return { revision };
   }
 
@@ -1009,15 +1027,12 @@ export function useEditorActions({
     handleHistoryCleared,
     completeAndExport,
     copyImageToClipboard,
-    flushRemoteHistory: () => remoteHistory.flush()
+    flushRemoteHistory: () => autosave.flush()
   };
 
   function bindLegacyRemoteReplay(id: string) {
-    const desktop = getLyricsCardDesktopApi();
-    if (!desktop) return;
     const current = currentDocumentRef.current;
-    const snapshot = remoteLyricsSnapshot(current);
-    remoteHistory.bind(desktop.updateRemoteHistoryLyrics(id, snapshot), snapshot, current.url);
+    autosave.reset(current, id);
   }
 }
 

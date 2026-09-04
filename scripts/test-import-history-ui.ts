@@ -62,17 +62,13 @@ const manualSaveIndex = editorHeader.indexOf('data-testid="manual-save-button"')
 const clearIndex = editorHeader.indexOf('data-testid="clear-all-button"');
 const settingsIndex = editorHeader.indexOf('data-testid="settings-button"');
 assert.ok(
-  examplesIndex < historyIndex && historyIndex < manualSaveIndex && manualSaveIndex < clearIndex && clearIndex < settingsIndex,
-  "desktop header action order is examples/history/manual-save/clear/settings"
+  examplesIndex < historyIndex && historyIndex < clearIndex && clearIndex < settingsIndex,
+  "desktop header action order is examples/history/clear/settings"
 );
-const manualSaveButton = editorHeader.slice(manualSaveIndex, editorHeader.indexOf("</button>", manualSaveIndex));
-assert.match(manualSaveButton, /aria-label=\{manualSaveLabel\}/);
-assert.match(manualSaveButton, /title=\{manualSaveLabel\}/);
-assert.doesNotMatch(manualSaveButton, /<span/, "manual save remains icon-only");
-assert.match(
-  manualSaveButton,
-  /disabled=\{manualSaveDisabled \|\| manualSaveState === "saving" \|\| manualSaveState === "unavailable"\}/
-);
+assert.equal(manualSaveIndex, -1, "automatic drafts replace the manual save button");
+assert.match(read("components/layout/DesktopTitleBar.tsx"), /data-testid="autosave-status"/);
+assert.match(read("components/editor/hooks/useEditorAutosave.ts"), /shutdownCoordinator.register\("editor-draft"/);
+assert.match(read("lib/persistence/editor-autosave.ts"), /AUTOSAVE_DELAY_MS = 5_000/);
 
 assert.match(historyFloor, /closeButtonRef\.current\?\.focus\(\{ preventScroll: true \}\)/);
 assert.match(historyFloor, /event\.key !== "Escape"/);
@@ -202,51 +198,12 @@ assert.match(
   /function changeEditorStep\(nextStep: number\)[\s\S]*?nextStep === 0 && currentStep !== 0[\s\S]*?setSongLinkAutoParseVisitIntent\(createSongLinkAutoParseVisitIntent\(\)\)[\s\S]*?onStepChange=\{changeEditorStep\}/,
   "the real navigation event creates the visit intent independently of animation remount timing"
 );
-assert.match(
-  desktopHistoryInteractions,
-  /replayedCover[\s\S]*?manual-save replay routes the archived cover through the image proxy[\s\S]*?manual-save replay does not restore stripped cover tokens[\s\S]*?routeCountsBeforeManualReplayRemount[\s\S]*?roundTrip <= 2[\s\S]*?manual replay does not reparse the song across remount/,
-  "desktop regression covers restored cover loading and repeated component remounts after a URL-bearing manual replay"
-);
-assert.match(
-  desktopHistoryInteractions,
-  /routeCountsBeforeExplicitUrlImport[\s\S]*?editing the replay URL alone performs no request[\s\S]*?explicit URL edit restores exactly one normal auto-parse request on the next mount[\s\S]*?waitForManualSaveState\("create"\)/,
-  "desktop regression covers explicit URL release and detachment from the prior manual save"
-);
-assert.match(
-  desktopHistoryInteractions,
-  /publicGetterCalls[\s\S]*?publicProxyOwnKeys[\s\S]*?contextBridge probe documents Electron's one caller-getter execution[\s\S]*?no history file side effect/,
-  "packaged regression distinguishes caller-side contextBridge cloning from product storage effects"
-);
-assert.match(
-  desktopHistoryInteractions,
-  /NetEase song identity while removing credentials[\s\S]*?manual replay retains its exact sanitized song identity[\s\S]*?manual replay does not reparse the song across remount/,
-  "packaged replay keeps the allowlisted song ID without reparsing it across remounts"
-);
-assert.match(
-  desktopHistoryInteractions,
-  /ipcCanonicalContract[\s\S]*?unknown snapshot field[\s\S]*?missing required artist[\s\S]*?unsupported source enum[\s\S]*?non-canonical envelopes create no history file/,
-  "packaged IPC regression rejects parse-and-project candidates without persistence"
-);
-assert.match(
-  desktopHistoryInteractions,
-  /packaged IPC rejects conflicting original\/final song identities[\s\S]*?originalUrl: "https:\/\/music\.163\.com\/#\/song\?id=70001[\s\S]*?roundTrip <= 2[\s\S]*?manual replay remount retains the original update binding/,
-  "packaged replay regression covers equivalent URL representations, repeated remounts, and retained binding"
-);
-assert.match(
-  desktopHistoryInteractions,
-  /pendingCloseLyrics = [^\n]+\.repeat\(4_000\)[\s\S]*?updateManualSave\(recordId[\s\S]*?UI replay restores all 4,000 seeded lyric lines/,
-  "pending-close regression seeds and replays the large archive through the real preload/store/UI path"
-);
-assert.match(
-  desktopHistoryInteractions,
-  /Object\.getOwnPropertyDescriptor\(HTMLTextAreaElement\.prototype, "value"\)[\s\S]*?new InputEvent\("input"[\s\S]*?new Event\("change"[\s\S]*?real React document transaction/,
-  "pending-close regression uses a bounded native edit while retaining the real React transaction"
-);
-assert.doesNotMatch(
-  desktopHistoryInteractions,
-  /fill\(pendingCloseLyrics\)/,
-  "the 4,000-line pending-close fixture cannot regress to Playwright's per-character fill path"
-);
+assert.match(desktopHistoryInteractions, /publicGetterCalls[\s\S]*?publicProxyOwnKeys[\s\S]*?no history file side effect/,
+  "legacy IPC still rejects clone-hostile inputs without persistence");
+assert.match(desktopHistoryInteractions, /ipcCanonicalContract[\s\S]*?non-canonical envelopes create no history file/);
+assert.match(desktopHistoryInteractions, /packagedStreamMetrics[\s\S]*?uncommitted relocation preserves provenance/);
+assert.match(desktopHistoryInteractions, /UI replay restores all 4,000 seeded lyric lines[\s\S]*?legacy manual archive stays immutable[\s\S]*?normal close drains the 4,000-line automatic draft/);
+assert.match(read("scripts/test-desktop-editor-autosave-interactions.mjs"), /closeNormally[\s\S]*?force[\s\S]*?must not resurrect/);
 for (const [name, source] of [
   ["link", songLinkParser],
   ["search", songSearchParser],
@@ -293,4 +250,4 @@ assert.match(
   "narrow icon-only adaptation remains scoped to the desktop shell"
 );
 
-console.log(JSON.stringify({ ok: true, importHistoryUiContracts: 82 }, null, 2));
+console.log(JSON.stringify({ ok: true, importHistoryUiContracts: "desktop history, legacy compatibility and automatic drafts" }, null, 2));

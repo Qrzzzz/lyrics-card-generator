@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v6.2.7.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v6.2.8.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="./docs/development.en.md">ローカル開発</a> ·
@@ -76,22 +76,22 @@
 
 最新の公開版は [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) から入手できます。Windows インストーラー名は次のとおりです。
 
-* Windows x64 インストーラー：`Lyrics.Card.Generator.Setup.6.2.7.exe`
+* Windows x64 インストーラー：`Lyrics.Card.Generator.Setup.6.2.8.exe`
 
 v6.2.2 以降、配布するデスクトップパッケージは Windows x64 Setup のみです。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v6.2.7 の主な更新
+### v6.2.8 の主な更新
 
-* リモート履歴全体または一件を JSON でコピーし、貼り付け、内容確認後に履歴へ追加できます。リモートリンク解析と曲検索の履歴が対象です。
-* 未編集の歌詞は取り込み時の状態を保持します。第二段階の編集、削除、完了した翻訳を保存し、原文、訳文、改行、空行、段落、対応関係を復元します。
-* JSON にジャケット画像や画像の直接 URL は含みません。履歴を読み込む際に曲のリンクからジャケットを取得し、保存済み歌詞は維持します。取得に失敗しても歌詞を復元できます。
+* 手動保存ボタンを削除し、タイトルバー中央の一行で自動保存の状態を表示します。変更が 5 秒間なければ現在の下書きを保存します。
+* 歌詞原文、訳文、区切りと対応関係、曲情報、カードのスタイル、書き出し設定、現在の手順、未確定の曲情報フォームを下書きに保存します。ローカルのジャケットも復元できます。
+* 通常の終了や文書の切り替え前に未保存の変更を書き込み、次回起動時に前回の下書きを復元します。保存に失敗した場合は通常の終了を止め、タイトルバーのエラーをクリックして再試行できます。従来の履歴と手動保存も引き続き読み込めます。
 
 ## 🌐 多言語リリースノート
 
 GitHub Release ではデフォルトで簡体字中国語の概要が表示されます。完全なリリースノートはこちら：
-[简体中文](./docs/releases/v6.2.7.zh-CN.md) · [繁體中文](./docs/releases/v6.2.7.zh-TW.md) · [English](./docs/releases/v6.2.7.en.md) · [Français](./docs/releases/v6.2.7.fr.md) · [日本語](./docs/releases/v6.2.7.ja.md) · [Español](./docs/releases/v6.2.7.es.md)
+[简体中文](./docs/releases/v6.2.8.zh-CN.md) · [繁體中文](./docs/releases/v6.2.8.zh-TW.md) · [English](./docs/releases/v6.2.8.en.md) · [Français](./docs/releases/v6.2.8.fr.md) · [日本語](./docs/releases/v6.2.8.ja.md) · [Español](./docs/releases/v6.2.8.es.md)
 
 <a id="主な機能"></a>
 

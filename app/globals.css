@@ -385,6 +385,43 @@ body[data-window-maximized="true"] .app-shell[data-desktop-shell="true"] {
   z-index: 2;
 }
 
+.desktop-titlebar > .desktop-titlebar__autosave {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: max(0px, calc(100% - 2 * var(--autosave-side-clearance, 360px)));
+  max-width: 700px;
+  overflow: hidden;
+  color: var(--app-text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.5;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.desktop-titlebar__autosave > * {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.desktop-titlebar__autosave button {
+  -webkit-app-region: no-drag;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.desktop-titlebar__autosave button:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: -2px;
+}
+
+.desktop-titlebar__autosave[data-save-state="error"] {
+  color: var(--app-text-primary, #fff);
+}
+
 .dynamic-app-background__image {
   opacity: 1;
   transform: scale(1);
@@ -401,6 +438,7 @@ body[data-window-maximized="true"] .app-shell[data-desktop-shell="true"] {
 
 .desktop-titlebar__brand {
   min-width: 0;
+  max-width: calc(50% - 230px);
   text-shadow: 0 1px 14px rgba(0, 0, 0, 0.24);
 }
 

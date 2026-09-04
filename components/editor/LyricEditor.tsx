@@ -26,6 +26,7 @@ import {
   type SongLinkAutoParseVisitIntent
 } from "@/components/editor/hooks/useEditorActions";
 import { useEditorPreferences } from "@/components/editor/hooks/useEditorPreferences";
+import { useEditorAutosave } from "@/components/editor/hooks/useEditorAutosave";
 import { AppMotionProvider } from "@/components/motion/AppMotionProvider";
 import { MotionPanel } from "@/components/motion/MotionPanel";
 import { PreviewPane } from "@/components/editor/PreviewPane";
@@ -65,7 +66,7 @@ import {
   type ExportQualityId
 } from "@/lib/settings/types";
 import { resolveEffectiveUiThemeId } from "@/lib/settings/user-settings";
-import type { AppState, FontScheme, Locale } from "@/lib/types";
+import type { AppState, FontScheme, Locale, SongInfo } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { snapshotAsAppState } from "@/lib/export-snapshot";
 import { resolveExportSafetyMessage } from "@/lib/export-safety";
@@ -122,6 +123,8 @@ export function LyricEditor() {
   const [previewMeasurementKey, setPreviewMeasurementKey] = useState(0);
   const [exportFormat, setExportFormat] = useState<ExportFormatId>(DEFAULT_USER_SETTINGS.defaultExportFormat);
   const [exportQuality, setExportQuality] = useState<ExportQualityId>(DEFAULT_USER_SETTINGS.defaultExportQuality);
+  const [songInfoDraft, setSongInfoDraft] = useState<SongInfo>();
+  const [restoredSongInfoDraft, setRestoredSongInfoDraft] = useState<{ song: SongInfo; generation: number } | null>(null);
   const [settingsPersistenceIssues, setSettingsPersistenceIssues] = useState<
     Partial<Record<SettingsPersistenceSource, SettingsPersistenceIssue>>
   >({});
@@ -301,6 +304,23 @@ export function LyricEditor() {
       : applyNewCardFooterDefaults(current, userSettings));
   }, [preferencesLoaded, userSettings]);
 
+  const autosaveView = useMemo(() => ({ step: currentStep, exportFormat, exportQuality, songInfoDraft }),
+    [currentStep, exportFormat, exportQuality, songInfoDraft]);
+  const autosave = useEditorAutosave({
+    state, view: autosaveView,
+    enabled: preferencesLoaded ? isDesktopShell && userSettings.importHistoryLimit !== "none" : undefined,
+    onRestore: (restored, view) => {
+      newCardDefaultsAppliedRef.current = true;
+      setState(restored);
+      setCurrentStep(view.step);
+      setExportFormat(view.exportFormat);
+      setExportQuality(view.exportQuality);
+      setSongInfoDraft(view.songInfoDraft);
+      setRestoredSongInfoDraft(view.songInfoDraft ? { song: view.songInfoDraft, generation: Date.now() } : null);
+      setSongLinkAutoParseVisitIntent({ id: 0, allowAutoParse: false });
+    }
+  });
+
   const {
     celebrationKey,
     isCompleteExporting,
@@ -308,8 +328,6 @@ export function LyricEditor() {
     clearTransitionKey,
     activeExportSnapshot,
     documentRevision,
-    isDocumentTransactionPending,
-    manualSaveButtonState,
     createSongLinkAutoParseVisitIntent,
     beginSongImport,
     clearAllContent,
@@ -331,13 +349,13 @@ export function LyricEditor() {
     applyFetchedLyrics,
     loadExample,
     reimportHistory,
-    saveManualArchive,
     handleHistoryRecordRemoved,
     handleHistoryCleared,
     completeAndExport,
     copyImageToClipboard,
     flushRemoteHistory
   } = useEditorActions({
+    autosave,
     parsedState,
     setState,
     cardRef: captureCardRef,
@@ -375,7 +393,7 @@ export function LyricEditor() {
     onNotify: showToast,
     onCloseExamples: closeExamples,
     onCloseHistory: closeHistory,
-    onClearTransientState: () => setFontSchemePreview(null),
+    onClearTransientState: () => { setFontSchemePreview(null); setSongInfoDraft(undefined); },
     onInvalidateDocument: (reason) => invalidateDocumentAsyncRef.current(reason),
     isManualSaveBlocked: () => aiTranslationBusyRef.current
   });
@@ -482,6 +500,8 @@ export function LyricEditor() {
   }
 
   const settingsSteps: SettingsStep[] = useEditorSteps({
+    restoredSongInfoDraft,
+    onSongInfoDraftChange: setSongInfoDraft,
     state,
     t,
     canFetchLyrics,
@@ -570,7 +590,8 @@ export function LyricEditor() {
           ...customThemeTokens
         } as unknown as React.CSSProperties}
       >
-      <DesktopTitleBar locale={state.locale} />
+      <DesktopTitleBar locale={state.locale} autosaveStatus={autosave.status}
+        onRetryAutosave={() => void autosave.retry().catch(() => undefined)} />
       <DynamicAppBackground palette={state.palette} settings={userSettings} />
       <ClickSpark enabled={userSettings.sparkCursorEnabled} themeColor={resolvedAccentColor}>
         <main className="app-main-content lyric-editor-main relative z-10 min-h-screen px-4 py-5 sm:px-6 lg:px-8">
@@ -616,7 +637,7 @@ export function LyricEditor() {
                 scale: isEditorSurfaceActive ? 1 : shouldReduceMotion ? 1 : 0.985
               }}
               initial={false}
-              inert={!isEditorSurfaceActive ? true : undefined}
+              inert={!isEditorSurfaceActive || (isDesktopShell && !autosave.ready) ? true : undefined}
               transition={activeSurfaceTransition}
               onAnimationStart={() => {
                 editorSurfaceRef.current?.setAttribute("data-surface-work", "running");
@@ -666,9 +687,6 @@ export function LyricEditor() {
                           placement="stepper"
                           onOpenExamples={openExamples}
                           onOpenHistory={isDesktopShell ? openHistory : undefined}
-                          onManualSave={isDesktopShell ? () => void saveManualArchive() : undefined}
-                          manualSaveState={manualSaveButtonState}
-                          manualSaveDisabled={isAITranslating || isDocumentTransactionPending}
                           onClearAll={clearAllContent}
                           onOpenSettings={openSettings}
                           examplesButtonRef={examplesButtonRef}

@@ -1,10 +1,9 @@
 "use client";
 
-import { History as HistoryIcon, Loader2, Music2, Save, Settings, Trash2 } from "lucide-react";
+import { History as HistoryIcon, Music2, Settings, Trash2 } from "lucide-react";
 import type { RefObject } from "react";
 import { getAIUiCopy } from "@/lib/ai/ui-copy";
 import { importHistoryCopy } from "@/lib/import-history-copy";
-import type { ManualSaveButtonState } from "@/lib/import-history";
 import { settingsCopy } from "@/lib/settings/copy";
 import type { Locale } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -15,9 +14,6 @@ type EditorHeaderActionsProps = {
   locale: Locale;
   onOpenExamples: () => void;
   onOpenHistory?: () => void;
-  onManualSave?: () => void;
-  manualSaveState?: ManualSaveButtonState;
-  manualSaveDisabled?: boolean;
   onClearAll: () => void;
   onOpenSettings: () => void;
   examplesButtonRef?: RefObject<HTMLButtonElement | null>;
@@ -33,9 +29,6 @@ export function EditorHeaderActions({
   placement = "header",
   onOpenExamples,
   onOpenHistory,
-  onManualSave,
-  manualSaveState = "create",
-  manualSaveDisabled = false,
   onClearAll,
   onOpenSettings,
   examplesButtonRef,
@@ -46,15 +39,6 @@ export function EditorHeaderActions({
   const copy = settingsCopy[locale];
   const isCompact = density === "compact";
   const historyCopy = importHistoryCopy[locale];
-  const manualSaveLabel = manualSaveState === "saving"
-    ? historyCopy.manualSaveSavingLabel
-    : manualSaveState === "current"
-      ? historyCopy.manualSaveCurrentLabel
-      : manualSaveState === "update"
-        ? historyCopy.manualSaveUpdateLabel
-        : manualSaveState === "unavailable"
-          ? historyCopy.manualSaveUnavailableLabel
-          : historyCopy.manualSaveCreateLabel;
   const buttonClassName = cn(
     "app-button inline-flex items-center justify-center gap-2 rounded-lg text-sm font-semibold",
     isCompact ? "h-9 px-2.5" : "h-10 px-3"
@@ -94,25 +78,6 @@ export function EditorHeaderActions({
         >
           <HistoryIcon className="h-4 w-4" aria-hidden="true" />
           <span>{historyCopy.entry}</span>
-        </button>
-      ) : null}
-      {onManualSave ? (
-        <button
-          type="button"
-          data-testid="manual-save-button"
-          data-manual-save-state={manualSaveState}
-          aria-label={manualSaveLabel}
-          aria-busy={manualSaveState === "saving"}
-          title={manualSaveLabel}
-          disabled={manualSaveDisabled || manualSaveState === "saving" || manualSaveState === "unavailable"}
-          onClick={onManualSave}
-          className={cn(buttonClassName, "editor-header-actions__icon-only p-0", isCompact ? "w-9" : "w-10")}
-        >
-          {manualSaveState === "saving" ? (
-            <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-          ) : (
-            <Save className="h-4 w-4" aria-hidden="true" />
-          )}
         </button>
       ) : null}
       <button

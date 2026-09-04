@@ -319,46 +319,6 @@ async function waitForLeadingHistoryKind(expected) {
   }, expected, { timeout: 15_000 });
 }
 
-async function manualSaveRecords() {
-  return page.evaluate(async () => (await window.lyricsCardDesktop.listImportHistory({
-    offset: 0,
-    limit: 50,
-    source: "manual-save"
-  })).records);
-}
-
-async function waitForManualSaveState(expected) {
-  try {
-    await page.waitForFunction((state) => (
-      document.querySelector('[data-testid="manual-save-button"]')?.getAttribute("data-manual-save-state") === state
-    ), expected, { timeout: 15_000 });
-  } catch (error) {
-    const actual = await page.getByTestId("manual-save-button").getAttribute("data-manual-save-state").catch(() => null);
-    throw new Error(`manual save state did not become ${expected}; actual=${actual}`, { cause: error });
-  }
-}
-
-async function assertManualSaveEnabledAfterImportFailure(label) {
-  const button = page.getByTestId("manual-save-button");
-  await page.waitForFunction(() => {
-    const node = document.querySelector('[data-testid="manual-save-button"]');
-    return node instanceof HTMLButtonElement && !node.disabled && node.dataset.manualSaveState !== "saving";
-  }, null, { timeout: 15_000 });
-  assert.equal(await button.isDisabled(), false, `${label} settles its document intent`);
-}
-
-async function clickManualSave({ rapid = false } = {}) {
-  const button = page.getByTestId("manual-save-button");
-  if (rapid) {
-    await button.evaluate((node) => {
-      node.click();
-      node.click();
-    });
-  } else {
-    await button.click();
-  }
-}
-
 async function waitForPreferenceLimit(expected) {
   await page.waitForFunction(async (value) => {
     const preferences = await window.lyricsCardDesktop?.loadAppPreferences();
@@ -589,13 +549,10 @@ try {
   );
   assert.deepEqual(
     actionIds,
-    ["examples-button", "history-button", "manual-save-button", "clear-all-button", "settings-button"],
-    "desktop actions use the required examples/history/manual-save/clear/settings order"
+    ["examples-button", "history-button", "clear-all-button", "settings-button"],
+    "desktop actions omit the retired manual-save control"
   );
-  const manualSaveButton = page.getByTestId("manual-save-button");
-  assert.equal(await manualSaveButton.locator("span").count(), 0, "manual save renders no visible text");
-  assert.ok((await manualSaveButton.getAttribute("aria-label"))?.trim(), "manual save has an accessible name");
-  assert.equal(await manualSaveButton.getAttribute("title"), await manualSaveButton.getAttribute("aria-label"));
+  assert.equal(await page.getByTestId("manual-save-button").count(), 0);
 
   const emptySurface = await openHistory(0);
   await page.waitForFunction(() => document.activeElement?.getAttribute("data-testid") === "history-close-button");
@@ -669,7 +626,7 @@ try {
   assert.equal(
     await page.evaluate(() => document.activeElement?.getAttribute("data-testid")),
     "clear-all-button",
-    "keyboard navigation skips the unavailable disabled manual-save control"
+    "keyboard navigation goes directly from history to clear content"
   );
   await electronApp.evaluate(({ BrowserWindow }) => {
     BrowserWindow.getAllWindows()[0].setContentSize(1000, 700, false);
@@ -1170,703 +1127,144 @@ try {
   assert.equal(updateOrdering.cleared, 1, "clear observes the preceding update record");
   assert.equal(updateOrdering.total, 0, "an update cannot cross and survive the clear boundary");
 
-  await waitForManualSaveState("unavailable");
-  assert.equal(await manualSaveButton.isDisabled(), true, "an unavailable manual save is a genuinely disabled control");
-  await manualSaveButton.evaluate((node) => node.click());
-  await page.waitForTimeout(120);
-  assert.equal(await historyTotal(), 0, "the default blank document cannot create a manual save");
-
-  await editManualSong({ title: "Manual archive original" });
-  await waitForManualSaveState("create");
-  await clickManualSave({ rapid: true });
-  await waitForHistoryTotal(1);
-  await waitForManualSaveState("current");
-  let manualRecords = await manualSaveRecords();
-  assert.equal(manualRecords.length, 1, "a rapid double click creates exactly one manual save");
-  const firstManualId = manualRecords[0].id;
-  let manualDocument = JSON.parse(await readFile(historyPath, "utf8"));
-  assert.equal(manualDocument.schemaVersion, 2);
-  const firstManualInternal = manualDocument.records.find((record) => record.id === firstManualId);
-  assert.equal(firstManualInternal?.kind, "manual-save");
-  assert.equal(firstManualInternal?.snapshot?.title, "Manual archive original");
-  const firstManualCreatedAt = firstManualInternal.createdAt;
-  const unchangedDisk = await readFile(historyPath, "utf8");
-  await clickManualSave();
-  await page.getByTestId("app-toast").filter({ hasText: "already up to date" }).waitFor({
-    state: "visible",
-    timeout: 15_000
+  // Preserve list/limit and legacy IPC coverage independently of automatic drafts.
+  const seeded = await page.evaluate(async () => {
+    const api = window.lyricsCardDesktop;
+    for (let index = 0; index < 26; index++) {
+      const result = await api.recordImportHistory({ kind: "search", query: "legacy batch", platform: "netease",
+        songId: String(90000 + index), display: { title: "Legacy item " + index, artist: "Legacy artist", source: "netease" } });
+      if (!result.ok) return false;
+    }
+    return true;
   });
-  await page.waitForTimeout(120);
-  assert.equal(await readFile(historyPath, "utf8"), unchangedDisk, "an unchanged document does not write history");
-
-  await editManualSong({ title: "Manual archive updated" });
-  await waitForManualSaveState("update");
-  await clickManualSave();
-  await waitForManualSaveState("current");
-  manualRecords = await manualSaveRecords();
-  assert.equal(manualRecords.length, 1);
-  assert.equal(manualRecords[0].id, firstManualId, "editing updates the bound manual save ID");
-  manualDocument = JSON.parse(await readFile(historyPath, "utf8"));
-  const updatedManualInternal = manualDocument.records.find((record) => record.id === firstManualId);
-  assert.equal(updatedManualInternal.createdAt, firstManualCreatedAt, "manual updates retain createdAt");
-  assert.ok(updatedManualInternal.lastUsedAt >= firstManualInternal.lastUsedAt);
-  assert.equal(updatedManualInternal.snapshot.title, "Manual archive updated");
-
-  const replayFixtureUpdate = await page.evaluate(async ({ recordId }) => (
-    window.lyricsCardDesktop.updateManualSave(recordId, JSON.stringify({
-      version: 1,
-      snapshot: {
-        source: "netease",
-        title: "Manual archive updated",
-        artist: "Manual History Artist",
-        album: "Manual History Album",
-        explicit: true,
-        originalCoverUrl: "https://covers.example/manual-replay.png?token=DO_NOT_PERSIST",
-        coverUrl: "https://covers.example/manual-replay.png?api_key=DO_NOT_PERSIST",
-        originalUrl: "https://music.163.com/#/song?id=70001&token=DO_NOT_PERSIST",
-        finalUrl: "https://music.163.com/song?id=70001&api_key=DO_NOT_PERSIST",
-        parseMethod: "manual-save-replay-fixture",
-        lyrics: "manual replay line one\nmanual replay line two",
-        translationText: "",
-        translationEnabled: true
-      }
-    }))
-  ), { recordId: firstManualId });
-  assert.equal(replayFixtureUpdate.ok, true);
-  manualDocument = JSON.parse(await readFile(historyPath, "utf8"));
-  const replayFixtureInternal = manualDocument.records.find((record) => record.id === firstManualId);
-  assert.equal(replayFixtureInternal.snapshot.translationEnabled, true);
-  assert.equal(replayFixtureInternal.snapshot.translationText, "");
-  assert.equal(
-    replayFixtureInternal.snapshot.originalUrl,
-    "https://music.163.com/song?id=70001",
-    "manual-save storage retains the NetEase song identity while removing credentials"
-  );
-  assert.equal(
-    replayFixtureInternal.snapshot.finalUrl,
-    "https://music.163.com/song?id=70001",
-    "different representations of one song collapse to identical replay provenance"
-  );
-  assert.doesNotMatch(JSON.stringify(replayFixtureInternal.snapshot), /DO_NOT_PERSIST|token=|api_key=/);
-
-  nativeDialogs.push(...await readCurrentNativeDialogs());
-  await closeThroughDesktopApi();
-  await launchApp({ expectedLocale: "en", expectedHistoryLimit: "unlimited" });
-  await waitForHistoryTotal(1);
-  const manualRestartSurface = await openHistory(1);
-  const restartedManualCard = manualRestartSurface.locator('[data-history-kind="manual-save"]');
-  assert.equal(await restartedManualCard.count(), 1, "manual saves survive a desktop restart");
-  assert.match(await restartedManualCard.textContent(), /Manual archive updated/);
-  assert.equal(await restartedManualCard.locator('[data-testid^="history-relocate-"]').count(), 0);
-  assert.match(await restartedManualCard.locator('[data-testid^="history-replay-"]').textContent(), /Load save/i);
-  await page.waitForFunction(() => {
-    const image = document.querySelector('[data-testid="history-surface"] [data-history-kind="manual-save"] img');
-    return image instanceof HTMLImageElement && image.complete;
-  }, null, { timeout: 15_000 });
-  const routeCountsBeforeManualReplay = { ...routeCounts };
-  await replayCard("manual-save");
-  await manualRestartSurface.waitFor({ state: "hidden", timeout: 15_000 });
-  const replayedCover = page.getByTestId("song-import-cover").locator("img");
-  await replayedCover.waitFor({ state: "visible", timeout: 15_000 });
-  await page.waitForFunction(() => {
-    const image = document.querySelector('[data-testid="song-import-cover"] img');
-    return image instanceof HTMLImageElement && image.complete && image.naturalWidth > 0;
-  }, null, { timeout: 15_000 });
-  const replayedCoverSrc = await replayedCover.getAttribute("src");
-  assert.ok(replayedCoverSrc, "manual-save replay renders a cover image");
-  const restoredCoverUrl = new URL(replayedCoverSrc, "http://localhost").searchParams.get("url");
-  assert.ok(restoredCoverUrl, "manual-save replay routes the archived cover through the image proxy");
-  const restoredCover = new URL(restoredCoverUrl);
-  assert.equal(
-    `${restoredCover.origin}${restoredCover.pathname}`,
-    "https://covers.example/manual-replay.png",
-    "manual-save replay restores the sanitized archived cover origin and path"
-  );
-  assert.equal(restoredCover.searchParams.get("param"), "1000y1000", "manual-save replay applies the existing high-resolution cover normalization");
-  assert.equal(restoredCover.searchParams.has("token"), false, "manual-save replay does not restore stripped cover tokens");
-  assert.equal(restoredCover.searchParams.has("api_key"), false, "manual-save replay does not restore stripped cover API keys");
-  assert.equal(routeCounts.parseSong, routeCountsBeforeManualReplay.parseSong, "manual-save cover restoration does not reparse the song URL");
-  assert.equal(routeCounts.resolveSearch, routeCountsBeforeManualReplay.resolveSearch, "manual-save cover restoration does not resolve search again");
-  assert.equal(routeCounts.localAudio, routeCountsBeforeManualReplay.localAudio, "manual-save cover restoration does not parse local audio again");
-  assert.equal(routeCounts.remoteCover, routeCountsBeforeManualReplay.remoteCover, "manual-save cover restoration never requests the remote cover directly");
-  assert.equal(await currentSongTitle(), "Manual archive updated");
-  await waitForManualSaveState("current");
-
-  const linkInput = page.getByLabel("Music URL");
-  const replayUrl = await linkInput.inputValue();
-  assert.equal(
-    replayUrl,
-    "https://music.163.com/song?id=70001",
-    "manual replay retains its exact sanitized song identity"
-  );
-  await editManualSong({ title: "Manual replay local edit" });
-  await waitForManualSaveState("update");
-  const routeCountsBeforeManualReplayRemount = { ...routeCounts };
-  for (let roundTrip = 1; roundTrip <= 2; roundTrip += 1) {
-    await page.getByTestId("stepper-next-button").click();
-    const replayLyrics = page.getByTestId("lyrics-editor-original");
-    await replayLyrics.waitFor({ state: "visible", timeout: 15_000 });
-    assert.equal(
-      await replayLyrics.inputValue(),
-      "manual replay line one\nmanual replay line two",
-      `manual replay lyrics survive song-import remount ${roundTrip}`
-    );
-    await page.getByTestId("stepper-back-button").click();
-    await linkInput.waitFor({ state: "visible", timeout: 15_000 });
-    await page.waitForTimeout(350);
-    assert.equal(routeCounts.parseSong, routeCountsBeforeManualReplayRemount.parseSong, `manual replay does not reparse the song across remount ${roundTrip}`);
-    assert.equal(routeCounts.resolveSearch, routeCountsBeforeManualReplayRemount.resolveSearch, `manual replay does not resolve search across remount ${roundTrip}`);
-    assert.equal(routeCounts.localAudio, routeCountsBeforeManualReplayRemount.localAudio, `manual replay does not parse local audio across remount ${roundTrip}`);
-    assert.equal(routeCounts.remoteCover, routeCountsBeforeManualReplayRemount.remoteCover, `manual replay keeps cover remounts behind the image proxy ${roundTrip}`);
-    assert.equal(await currentSongTitle(), "Manual replay local edit", `manual replay document survives remount ${roundTrip}`);
-    assert.equal(await linkInput.inputValue(), replayUrl, `manual replay URL survives remount ${roundTrip}`);
-    await waitForManualSaveState("update");
-  }
-  manualRecords = await manualSaveRecords();
-  assert.equal(manualRecords.length, 1);
-  assert.equal(manualRecords[0].id, firstManualId, "manual replay remount retains the original update binding");
-
-  const routeCountsBeforeExplicitUrlImport = { ...routeCounts };
-  await linkInput.fill("https://music.163.com/song?id=79992");
-  assert.deepEqual(routeCounts, routeCountsBeforeExplicitUrlImport, "editing the replay URL alone performs no request");
-  await page.getByTestId("stepper-next-button").click();
-  await page.getByTestId("lyrics-editor-original").waitFor({ state: "visible", timeout: 15_000 });
-  await page.getByTestId("stepper-back-button").click();
-  await linkInput.waitFor({ state: "visible", timeout: 15_000 });
-  await page.waitForFunction(() => (
-    document.querySelector('[data-testid="song-info-summary"]')?.textContent?.includes("History Artist 79992")
-  ), null, { timeout: 15_000 });
-  assert.equal(
-    routeCounts.parseSong,
-    routeCountsBeforeExplicitUrlImport.parseSong + 1,
-    "an explicit URL edit restores exactly one normal auto-parse request on the next mount"
-  );
-  assert.equal(routeCounts.resolveSearch, routeCountsBeforeExplicitUrlImport.resolveSearch, "the explicit URL import does not resolve search");
-  assert.equal(routeCounts.localAudio, routeCountsBeforeExplicitUrlImport.localAudio, "the explicit URL import does not parse local audio");
-  assert.equal(routeCounts.remoteCover, routeCountsBeforeExplicitUrlImport.remoteCover, "the explicit URL import does not request the archived cover directly");
-  assert.notEqual(await currentSongTitle(), "Manual replay local edit", "the explicit URL import may replace the replayed snapshot");
-  await waitForManualSaveState("create");
-  manualRecords = await manualSaveRecords();
-  assert.equal(manualRecords.length, 1);
-  assert.equal(manualRecords[0].id, firstManualId, "the explicit import detaches without rewriting the archived record");
-  await waitForHistoryTotal(2);
-  const [explicitLinkRecord] = await page.evaluate(async () => (await window.lyricsCardDesktop.listImportHistory({
-    offset: 0,
-    limit: 10,
-    source: "link"
-  })).records);
-  assert.ok(explicitLinkRecord?.id, "the explicit URL import records a normal link history entry");
-  assert.equal(await page.evaluate(
-    (recordId) => window.lyricsCardDesktop.removeImportHistory(recordId),
-    explicitLinkRecord.id
-  ), true);
-  await waitForHistoryTotal(1);
-
-  const reboundManualSurface = await openHistory(1);
-  const routeCountsBeforeManualRebind = { ...routeCounts };
-  await replayCard("manual-save");
-  await reboundManualSurface.waitFor({ state: "hidden", timeout: 15_000 });
-  await page.waitForTimeout(350);
-  assert.equal(routeCounts.parseSong, routeCountsBeforeManualRebind.parseSong, "replaying the archive again restores provenance without reparsing the song");
-  assert.equal(routeCounts.resolveSearch, routeCountsBeforeManualRebind.resolveSearch, "replaying the archive again does not resolve search");
-  assert.equal(routeCounts.localAudio, routeCountsBeforeManualRebind.localAudio, "replaying the archive again does not parse local audio");
-  assert.equal(routeCounts.remoteCover, routeCountsBeforeManualRebind.remoteCover, "replaying the archive again keeps the cover behind the image proxy");
-  assert.equal(await currentSongTitle(), "Manual archive updated");
-  await waitForManualSaveState("current");
-
-  const titleBeforeImportFailures = await currentSongTitle();
-  const linkSection = linkInput.locator("xpath=ancestor::section[1]");
-  parseSongShouldFail = true;
-  await linkInput.fill("https://music.163.com/song?id=79991");
-  await linkInput.press("Enter");
-  await linkSection.locator('[role="status"].status-danger').waitFor({ state: "visible", timeout: 15_000 });
-  parseSongShouldFail = false;
-  await assertManualSaveEnabledAfterImportFailure("link parse failure");
-  assert.equal(
-    await page.getByTestId("manual-save-button").getAttribute("data-manual-save-state"),
-    "update",
-    "a failed link parse preserves the loaded manual-save binding"
-  );
-  assert.equal(await currentSongTitle(), titleBeforeImportFailures);
-
-  resolveShouldFail = true;
-  const failedSearchInput = page.getByTestId("song-search-primary").getByRole("combobox");
-  await failedSearchInput.fill("manual archive failed search");
-  const failedSearchListbox = page.getByTestId("song-search-listbox");
-  await failedSearchListbox.waitFor({ state: "visible", timeout: 15_000 });
-  await failedSearchListbox.getByRole("option").first().click();
-  await page.getByTestId("song-search-primary")
-    .locator('[role="status"].status-danger')
-    .filter({ hasText: "history remote replay fixture failure" })
-    .waitFor({
-      state: "attached",
-      timeout: 15_000
-    });
-  resolveShouldFail = false;
-  await assertManualSaveEnabledAfterImportFailure("search resolve failure");
-  assert.equal(
-    await page.getByTestId("manual-save-button").getAttribute("data-manual-save-state"),
-    "update",
-    "a failed search resolve preserves the loaded manual-save binding"
-  );
-  assert.equal(await currentSongTitle(), titleBeforeImportFailures);
-
-  localAudioShouldFail = true;
-  const failedLocalInput = page.locator('input[accept*=".m4a"]');
-  const failedLocalSection = failedLocalInput.locator("xpath=ancestor::section[1]");
-  await failedLocalInput.setInputFiles(audioPath);
-  await failedLocalSection.locator('[role="status"].status-danger').waitFor({ state: "visible", timeout: 15_000 });
-  localAudioShouldFail = false;
-  await assertManualSaveEnabledAfterImportFailure("local audio parse failure");
-  assert.equal(
-    await page.getByTestId("manual-save-button").getAttribute("data-manual-save-state"),
-    "update",
-    "a failed local-audio parse preserves the loaded manual-save binding"
-  );
-  assert.equal(await currentSongTitle(), titleBeforeImportFailures);
-
-  await editManualSong({ title: "Manual archive replay update" });
-  await waitForManualSaveState("update");
-  await clickManualSave();
-  await waitForManualSaveState("current");
-  manualRecords = await manualSaveRecords();
-  assert.equal(manualRecords.length, 1);
-  assert.equal(manualRecords[0].id, firstManualId, "a loaded manual save remains bound for updates");
-
-  assert.equal(
-    await page.evaluate((recordId) => window.lyricsCardDesktop.removeImportHistory(recordId), firstManualId),
-    true
-  );
-  await waitForHistoryTotal(0);
-  await editManualSong({ title: "Stale binding recovery" });
-  await clickManualSave();
-  await page.getByTestId("app-toast").filter({ hasText: "Original save missing" }).waitFor({
-    state: "visible",
-    timeout: 15_000
-  });
-  await waitForManualSaveState("create");
-  assert.equal(await historyTotal(), 0, "not-found does not silently create a replacement in the same click");
-  await clickManualSave();
-  await waitForHistoryTotal(1);
-  await waitForManualSaveState("current");
-  manualRecords = await manualSaveRecords();
-  assert.notEqual(manualRecords[0].id, firstManualId, "the next explicit save creates a new record after not-found");
-
-  const boundDeleteSurface = await openHistory(1);
-  await boundDeleteSurface.locator('[data-history-kind="manual-save"] [data-testid^="history-remove-"]').click();
-  await waitForHistoryTotal(0);
-  await closeHistoryWithEscape();
-  await waitForManualSaveState("create");
-  await clickManualSave();
-  await waitForHistoryTotal(1);
-  await waitForManualSaveState("current");
-
-  await openHistory(1);
-  await page.getByTestId("history-clear-all").click();
-  await waitForHistoryTotal(0);
-  await closeHistoryWithEscape();
-  await waitForManualSaveState("create");
-  await clickManualSave();
-  await waitForHistoryTotal(1);
-  await waitForManualSaveState("current");
-
-  await openHistory(1);
-  await page.getByTestId("history-clear-all").click();
-  await waitForHistoryTotal(0);
-  await closeHistoryWithEscape();
-
-  const emptyTranslationFixture = await page.evaluate(async () => (
-    window.lyricsCardDesktop.createManualSave(JSON.stringify({
-      version: 1,
-      snapshot: {
-        source: "unknown",
-        title: "Empty translation roundtrip",
-        artist: "Manual History Artist",
-        album: "",
-        explicit: false,
-        originalCoverUrl: "",
-        coverUrl: "",
-        originalUrl: "",
-        finalUrl: "",
-        parseMethod: "manual-save-translation-fixture",
-        lyrics: "empty translation line",
-        translationText: "",
-        translationEnabled: true
-      }
-    }))
-  ));
-  assert.equal(emptyTranslationFixture.ok, true);
-  await waitForHistoryTotal(1);
-  const emptyTranslationSurface = await openHistory(1);
-  await replayCard("manual-save");
-  await emptyTranslationSurface.waitFor({ state: "hidden", timeout: 15_000 });
-  await page.getByTestId("stepper-next-button").click();
-  await page.getByTestId("lyrics-editor-columns").waitFor({ state: "visible", timeout: 15_000 });
-  assert.equal(
-    await page.getByTestId("lyrics-editor-columns").getAttribute("data-bilingual"),
-    "true",
-    "manual replay preserves translationEnabled=true even when the translation text is empty"
-  );
-  assert.equal(await page.getByTestId("lyrics-editor-translation").inputValue(), "");
-  await page.getByTestId("stepper-back-button").click();
-  await openHistory(1);
-  await page.getByTestId("history-clear-all").click();
-  await waitForHistoryTotal(0);
-  await closeHistoryWithEscape();
-
-  await parseLink("70991");
-  await waitForHistoryTotal(1);
-  const ordinaryReplaySurface = await openHistory(1);
-  await replayCard("link");
-  await ordinaryReplaySurface.waitFor({ state: "hidden", timeout: 15_000 });
-  await waitForManualSaveState("create");
-  await clickManualSave();
-  await waitForHistoryTotal(2);
-  const ordinaryReplayRecords = await page.evaluate(async () => (await window.lyricsCardDesktop.listImportHistory({
-    offset: 0,
-    limit: 10,
-    source: "all"
-  })).records);
-  assert.deepEqual(
-    ordinaryReplayRecords.map((record) => record.kind).sort(),
-    ["link", "manual-save"],
-    "saving after an ordinary history replay creates a manual save and retains the source record"
-  );
-  await openHistory(2);
-  await page.getByTestId("history-clear-all").click();
-  await waitForHistoryTotal(0);
-  await closeHistoryWithEscape();
-
-  await parseLink();
-  await waitForHistoryTotal(1);
-  const linkSurface = await openHistory(1);
-  assert.equal(await linkSurface.locator('[data-history-kind="link"]').count(), 1, "successful link parsing is recorded");
-  await closeHistoryWithEscape();
-
-  await performSearch("same platform song", { waitForTotal: 1 });
-  await waitForLeadingHistoryKind("search");
-  const upsertSurface = await openHistory(1);
-  assert.equal(await upsertSurface.locator('[data-history-kind="search"]').count(), 1, "the matching platform song is upserted");
-  await closeHistoryWithEscape();
-  await performSearch("same platform song", { waitForTotal: 1 });
-
-  const replaySurface = await openHistory(1);
-  const beforeCancelledReplay = await currentSongTitle();
-  await setNativeDialogDecision("dismiss");
-  await replayCard("search");
-  await page.waitForFunction(() => {
-    const button = document.querySelector('[data-testid="history-surface"] [data-testid^="history-replay-"]');
-    return button instanceof HTMLButtonElement && !button.disabled;
-  });
-  assert.equal(await replaySurface.getAttribute("data-surface-state"), "open", "replacement cancellation keeps history open");
-  assert.equal(await currentSongTitle(), beforeCancelledReplay, "replacement cancellation preserves the document");
-  await replayCard("search");
-  await replaySurface.waitFor({ state: "hidden", timeout: 15_000 });
-  await waitForHistoryTotal(1);
-
-  for (let index = 2; index <= 26; index += 1) {
-    await performSearch(`history batch ${index}`, { waitForTotal: index });
-  }
-  const pagedSurface = await openHistory(24);
-  assert.equal(await historyTotal(), 26);
+  assert.equal(seeded, true);
+  await openHistory(24);
   await page.getByTestId("history-load-more").click();
-  await page.waitForFunction(() => (
-    document.querySelectorAll('[data-testid="history-surface"] [data-history-kind]').length === 26
-  ));
+  await waitForHistoryCards(26);
+  await page.getByTestId("history-search").fill("Legacy item 25");
+  await waitForHistoryCards(1);
+  await page.getByTestId("history-search").fill("");
+  await waitForHistoryCards(24);
   await closeHistoryWithEscape();
-
   await setNativeDialogDecision("dismiss");
   await openGeneralSettings();
   await page.getByTestId("import-history-limit").selectOption("10");
-  await page.waitForTimeout(300);
+  await page.waitForTimeout(250);
   assert.equal(await page.getByTestId("import-history-limit").inputValue(), "unlimited");
-  assert.equal(await historyTotal(), 26, "cancelling a destructive limit change preserves all records");
+  assert.equal(await historyTotal(), 26);
   await closeSettings();
-
   await changeHistoryLimit(10, 10);
   await changeHistoryLimit(5, 5);
-  assert.ok(
-    (await readCurrentNativeDialogs()).some(({ message, detail }) => /delete|remove|删除|刪除/i.test(`${message} ${detail}`)),
-    "lowering a history limit shows an explicit destructive confirmation"
-  );
-  assert.deepEqual(rendererDialogs, [], `history interactions must not use renderer dialogs: ${JSON.stringify(rendererDialogs)}`);
   await changeHistoryLimit("unlimited", 5);
-  await performSearch("unlimited extra one", { waitForTotal: 6 });
-  await performSearch("unlimited extra two", { waitForTotal: 7 });
-
-  const deletionSurface = await openHistory(7);
-  await deletionSurface.locator('[data-testid^="history-remove-"]').first().click();
-  await waitForHistoryTotal(6);
-  await page.waitForFunction(() => (
-    document.querySelectorAll('[data-testid="history-surface"] [data-history-kind]').length === 6
-  ));
+  await openHistory(5);
+  await page.locator('[data-testid^="history-remove-"]').first().click();
+  await waitForHistoryCards(4);
   await page.getByTestId("history-clear-all").click();
-  await waitForHistoryTotal(0);
-  await page.getByTestId("history-empty").waitFor({ state: "visible" });
+  await page.getByTestId("history-empty").waitFor();
   await closeHistoryWithEscape();
+  assert.equal(await historyTotal(), 0);
 
-  await performSearch("restart persistence", { waitForTotal: 1 });
-  const persistedBeforeRestart = await waitForPersistedHistoryTotal(1);
-  assert.equal(persistedBeforeRestart.schemaVersion, 2);
-  assert.equal(persistedBeforeRestart.records.length, 1);
-  nativeDialogs.push(...await readCurrentNativeDialogs());
-  await closeThroughDesktopApi();
-
-  await launchApp({ expectedLocale: "en", expectedHistoryLimit: "unlimited" });
-  await waitForHistoryTotal(1);
-  const persistedSurface = await openHistory(1);
-  assert.match(await persistedSurface.textContent(), /restart persistence/i, "history survives a desktop restart");
-  parseSongShouldFail = true;
-  const remoteFailureMessage = "Lyrics restored; the cover could not be fetched";
-  const remoteFailureToastRevision = await currentToastRevision(remoteFailureMessage);
-  await replayCard("search");
-  await waitForFreshToast(remoteFailureMessage, remoteFailureToastRevision);
-  await persistedSurface.waitFor({ state: "hidden", timeout: 15_000 });
-  assert.match(await currentSongTitle(), /restart persistence/, "remote cover failure still restores the saved song");
-  const restoredRemote = await page.evaluate(async () => {
-    const item = (await window.lyricsCardDesktop.listImportHistory({ offset: 0, limit: 1 })).records[0];
-    return window.lyricsCardDesktop.replayImportHistory(item.id);
+  // Seed an import-only file via the real registration bridge, without an editor session
+  // converting it into a full draft. Legacy streaming/relocation remains supported.
+  await page.evaluate(() => {
+    const picker = document.createElement("input");
+    picker.type = "file";
+    picker.id = "legacy-file-fixture";
+    document.body.append(picker);
   });
-  assert.equal(restoredRemote.lyricsSnapshot.lyrics, persistedBeforeRestart.records[0].lyricsSnapshot.lyrics);
-  parseSongShouldFail = false;
-
-  await page.locator('input[accept*=".m4a"]').setInputFiles(audioPath);
-  await page.waitForFunction(() => (
-    document.querySelector('[data-testid="song-info-summary"]')?.textContent?.includes("Local history fixture")
-  ), null, { timeout: 15_000 });
-  await waitForHistoryTotal(2);
-
-  const packagedStreamMetrics = await page.evaluate(async () => {
+  const picker = page.locator("#legacy-file-fixture");
+  await picker.setInputFiles(audioPath);
+  const legacyFile = await picker.evaluate(async (node) => {
     const api = window.lyricsCardDesktop;
-    const history = await api.listImportHistory({ offset: 0, limit: 24, source: "local-audio" });
-    const replay = await api.replayImportHistory(history.records[0].id);
-    if (!replay.ok || replay.kind !== "local-audio") return { ok: false };
-    let total = 0;
-    let chunks = 0;
-    let maximumPayload = 0;
+    const registered = await api.registerImportFile(node.files[0], "local-audio");
+    return api.recordImportHistory({ kind: "local-audio", fileToken: registered.token,
+      display: { title: "Legacy file", artist: "Legacy artist", source: "unknown" } });
+  });
+  assert.equal(legacyFile.ok, true);
+  const packagedStreamMetrics = await page.evaluate(async (id) => {
+    const api = window.lyricsCardDesktop;
+    const replay = await api.replayImportHistory(id);
+    if (!replay.ok || replay.kind !== "local-audio") return replay;
+    let total = 0, chunks = 0, maximumPayload = 0;
     while (true) {
       const chunk = await api.readImportHistoryFileChunk(replay.file.streamToken);
-      if (!chunk.ok) return { ok: false, code: chunk.code };
+      if (!chunk.ok) return chunk;
       total += chunk.bytes.byteLength;
-      chunks += 1;
+      chunks++;
       maximumPayload = Math.max(maximumPayload, chunk.bytes.byteLength);
       if (chunk.done) break;
     }
-    return {
-      ok: true,
-      metadataHasBytes: "bytes" in replay.file,
-      declaredSize: replay.file.size,
-      total,
-      chunks,
-      maximumPayload
-    };
-  });
-  assert.deepEqual(packagedStreamMetrics, {
-    ok: true,
-    metadataHasBytes: false,
-    declaredSize: largeAudioFixtureBytes,
-    total: largeAudioFixtureBytes,
-    chunks: 4,
-    maximumPayload: 1024 * 1024
-  }, "packaged replay bounds every IPC payload while preserving every source byte");
+    return { total, chunks, maximumPayload, hasBytes: "bytes" in replay.file };
+  }, legacyFile.record.id);
+  assert.deepEqual(packagedStreamMetrics, { total: largeAudioFixtureBytes, chunks: 4, maximumPayload: 1024 * 1024, hasBytes: false });
+  await writeFile(audioPath, Buffer.from("changed legacy fixture"));
+  const changed = await page.evaluate((id) => window.lyricsCardDesktop.replayImportHistory(id), legacyFile.record.id);
+  assert.equal(changed.file.changed, true);
+  await page.evaluate((token) => window.lyricsCardDesktop.releaseImportHistoryFile(token), changed.file.streamToken);
+  await rm(audioPath);
+  const missing = await page.evaluate((id) => window.lyricsCardDesktop.replayImportHistory(id), legacyFile.record.id);
+  assert.equal(missing.code, "file_missing");
+  assert.equal(missing.canRelocate, true);
+  await writeFile(relocatedAudioPath, Buffer.from("relocated legacy fixture"));
+  await electronApp.evaluate(({ dialog }, file) => { dialog.showOpenDialog = async () => ({ canceled: false, filePaths: [file] }); }, relocatedAudioPath);
+  const relocated = await page.evaluate((id) => window.lyricsCardDesktop.relocateImportHistory(id), legacyFile.record.id);
+  assert.equal(relocated.ok, true);
+  assert.equal(JSON.parse(await readFile(historyPath, "utf8")).records[0].source.path, audioPath, "uncommitted relocation preserves provenance");
+  await page.evaluate(async ({ id, token, stream }) => {
+    await window.lyricsCardDesktop.releaseImportHistoryFile(stream);
+    await window.lyricsCardDesktop.commitImportHistoryReplay(id, token);
+  }, { id: legacyFile.record.id, token: relocated.relocationToken, stream: relocated.file.streamToken });
+  assert.equal(JSON.parse(await readFile(historyPath, "utf8")).records[0].source.path, relocatedAudioPath);
+  await page.evaluate((id) => window.lyricsCardDesktop.removeImportHistory(id), legacyFile.record.id);
+  await picker.evaluate((node) => node.remove());
 
-  await new Promise((resolve) => setTimeout(resolve, 25));
-  await writeFile(audioPath, Buffer.from("changed desktop audio fixture with a different size"));
-  const localSurface = await openHistory(2);
-  await replayCard("local-audio");
-  await localSurface.waitFor({ state: "hidden", timeout: 15_000 });
-  await page.getByTestId("app-toast").filter({ hasText: "Original file changed" }).waitFor({ state: "visible", timeout: 15_000 });
-
-  await rm(audioPath, { force: true });
-  const missingSurface = await openHistory(2);
-  const beforeMissingReplay = await currentSongTitle();
-  await replayCard("local-audio");
-  await missingSurface.locator('[data-testid^="history-relocate-"]').waitFor({ state: "visible", timeout: 15_000 });
-  assert.equal(await missingSurface.getAttribute("data-surface-state"), "open");
-  assert.equal(await currentSongTitle(), beforeMissingReplay, "a missing file preserves the current document");
-
-  await writeFile(rejectedRelocatedAudioPath, Buffer.from("replacement fixture rejected by the renderer"));
-  await electronApp.evaluate(({ dialog }, selectedPath) => {
-    dialog.showOpenDialog = async () => ({ canceled: false, filePaths: [selectedPath] });
-  }, rejectedRelocatedAudioPath);
-  localAudioShouldFail = true;
-  const relocationFailureMessage = "current document unchanged";
-  const relocationFailureToastRevision = await currentToastRevision(relocationFailureMessage);
-  await replayCard("local-audio", { relocate: true });
-  await waitForFreshToast(relocationFailureMessage, relocationFailureToastRevision);
-  localAudioShouldFail = false;
-  const historyAfterRejectedRelocation = JSON.parse(await readFile(historyPath, "utf8"));
-  const localRecordAfterRejectedRelocation = historyAfterRejectedRelocation.records.find(
-    (record) => record.kind === "local-audio"
-  );
-  assert.equal(
-    localRecordAfterRejectedRelocation?.source?.path,
-    audioPath,
-    "a replacement rejected by renderer parsing does not overwrite the persisted history path"
-  );
-  assert.equal(await currentSongTitle(), beforeMissingReplay, "a rejected replacement preserves the current document");
-
-  await writeFile(relocatedAudioPath, Buffer.from("relocated desktop audio fixture"));
-  await electronApp.evaluate(({ dialog }, selectedPath) => {
-    dialog.showOpenDialog = async () => ({ canceled: false, filePaths: [selectedPath] });
-  }, relocatedAudioPath);
-  await replayCard("local-audio", { relocate: true });
-  await missingSurface.waitFor({ state: "hidden", timeout: 15_000 });
-  await rm(relocatedAudioPath, { force: true });
-  const relocatedMissingSurface = await openHistory(2);
-  await replayCard("local-audio");
-  await relocatedMissingSurface.locator('[data-testid^="history-relocate-"]').waitFor({ state: "visible", timeout: 15_000 });
-  assert.equal(await currentSongTitle(), "Local history fixture", "the relocated path was used before it became missing");
-  await closeHistoryWithEscape();
-
-  const beforeOrdinaryEditCount = await historyTotal();
-  await editManualSong({ title: "Ordinary metadata edit" });
-  await page.waitForTimeout(300);
-  assert.equal(await historyTotal(), beforeOrdinaryEditCount, "ordinary metadata edits are not recorded");
-  await editManualSong({ title: "", artist: "", album: "", uploadPath: coverOnlyPath });
-  await waitForHistoryTotal(beforeOrdinaryEditCount + 1);
-  const coverOnlySurface = await openHistory(beforeOrdinaryEditCount + 1);
-  const coverOnlyCard = coverOnlySurface.locator('[data-history-kind="manual-cover"]').first();
-  assert.match(await coverOnlyCard.textContent(), /history-cover-only\.png/i);
-  assert.equal(
-    await coverOnlyCard.locator("p").count(),
-    0,
-    "a cover-only record omits an empty artist row instead of rendering a blank line"
-  );
-  await closeHistoryWithEscape();
-  await editManualSong({ title: "Manual cover history", uploadPath: coverPath });
-  await waitForHistoryTotal(beforeOrdinaryEditCount + 2);
-  const manualSurface = await openHistory(beforeOrdinaryEditCount + 2);
-  assert.equal(await manualSurface.locator('[data-history-kind="manual-cover"]').count(), 2, "cover-only and metadata cover saves are recorded");
-  await replayCard("manual-cover");
-  await manualSurface.waitFor({ state: "hidden", timeout: 15_000 });
-  assert.equal(await currentSongTitle(), "Manual cover history");
-
-  await openHistory(beforeOrdinaryEditCount + 2);
-  await page.getByTestId("history-clear-all").click();
-  await waitForHistoryTotal(0);
-  await closeHistoryWithEscape();
-  await rm(historyPath, { force: true });
-  await mkdir(historyPath);
-
-  await waitForManualSaveState("create");
-  await clickManualSave();
-  await page.getByTestId("app-toast").filter({ hasText: "Manual save could not be written" }).waitFor({
-    state: "visible",
-    timeout: 15_000
-  });
-  await waitForManualSaveState("create");
-  assert.equal(await historyTotal(), 0, "a failed manual-save create does not bind or advance the saved revision");
-
-  await performSearch("history write failure");
-  await page.getByTestId("app-toast").filter({ hasText: "history was not updated" }).waitFor({
-    state: "visible",
-    timeout: 15_000
-  });
-  assert.match(await currentSongTitle(), /history write failure/i, "a history write failure does not roll back a successful import");
-  assert.equal(await historyTotal(), 0);
-
-  await rm(historyPath, { recursive: true, force: true });
-  await performSearch("history write recovery", { waitForTotal: 1 });
-  await clickManualSave();
-  await waitForHistoryTotal(2);
-  await waitForManualSaveState("current");
-  const [pendingCloseManual] = await manualSaveRecords();
-  await editManualSong({ title: "Manual update pending close" });
-  await waitForManualSaveState("update");
-  await rm(historyPath, { force: true });
-  await mkdir(historyPath);
-  await clickManualSave();
-  await page.getByTestId("app-toast").filter({ hasText: "Manual save could not be written" }).waitFor({
-    state: "visible",
-    timeout: 15_000
-  });
-  await waitForManualSaveState("update");
-  await rm(historyPath, { recursive: true, force: true });
-  const pendingCloseLyrics = "pending close archive line\n".repeat(4_000);
-  const pendingCloseSeed = await page.evaluate(async ({ recordId, lyrics }) => (
-    window.lyricsCardDesktop.updateManualSave(recordId, JSON.stringify({
-      version: 1,
-      snapshot: {
-        source: "unknown",
-        title: "Manual update pending close",
-        artist: "Pending Close Artist",
-        album: "",
-        explicit: false,
-        originalCoverUrl: "",
-        coverUrl: "",
-        originalUrl: "",
-        finalUrl: "",
-        parseMethod: "manual-save-pending-close-fixture",
-        lyrics,
-        translationText: "",
-        translationEnabled: false
-      }
-    }))
-  ), { recordId: pendingCloseManual.id, lyrics: pendingCloseLyrics });
-  assert.equal(pendingCloseSeed.ok, true, "the real preload/store path seeds a 4,000-line pending-close archive");
-  assert.equal(pendingCloseSeed.record.id, pendingCloseManual.id);
-  const pendingCloseSurface = await openHistory(2);
-  await replayCard("manual-save");
-  await pendingCloseSurface.waitFor({ state: "hidden", timeout: 15_000 });
-  await waitForManualSaveState("current");
-  await page.locator('[data-step-id="lyrics"]').click();
-  const pendingCloseEditor = page.getByTestId("lyrics-editor-original");
-  await pendingCloseEditor.waitFor({ state: "visible", timeout: 15_000 });
-  assert.equal(await pendingCloseEditor.inputValue(), pendingCloseLyrics, "UI replay restores all 4,000 seeded lyric lines");
-  const pendingCloseEdit = "pending close DOM edit";
-  const durablePendingCloseLyrics = `${pendingCloseLyrics}${pendingCloseEdit}`;
-  await pendingCloseEditor.evaluate((node, suffix) => {
-    const valueSetter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, "value")?.set;
-    if (!valueSetter) throw new Error("native textarea value setter is unavailable");
-    valueSetter.call(node, `${node.value}${suffix}`);
-    node.dispatchEvent(new InputEvent("input", { bubbles: true, inputType: "insertText", data: suffix }));
-    node.dispatchEvent(new Event("change", { bubbles: true }));
-  }, pendingCloseEdit);
-  await waitForManualSaveState("update");
-  assert.equal(
-    await pendingCloseEditor.inputValue(),
-    durablePendingCloseLyrics,
-    "the small native DOM edit settles through the real React document transaction"
-  );
-  // Snapshot diagnostics before starting the in-flight write so the close-path
-  // assertion remains exactly save -> normal close -> durable disk read.
-  nativeDialogs.push(...await readCurrentNativeDialogs());
-  await clickManualSave();
+  // Old explicit archives remain readable; editing them creates a separate automatic draft.
+  const pendingCloseLyrics = "legacy close archive line\n".repeat(4_000);
+  const legacy = await page.evaluate(async (lyrics) => window.lyricsCardDesktop.createManualSave(JSON.stringify({
+    version: 1, snapshot: { source: "netease", title: "Legacy archive", artist: "Legacy Artist", album: "",
+      explicit: false, originalCoverUrl: "https://covers.example/legacy.png?token=SECRET", coverUrl: "",
+      originalUrl: "https://music.163.com/#/song?id=70001", finalUrl: "https://music.163.com/song?id=70001",
+      parseMethod: "legacy-fixture", lyrics, translationText: "", translationEnabled: true }
+  })), pendingCloseLyrics);
+  assert.equal(legacy.ok, true);
   await closeThroughDesktopApi();
-  const pendingCloseHistory = JSON.parse(await readFile(historyPath, "utf8"));
-  const durablePendingCloseRecord = pendingCloseHistory.records.find((record) => record.id === pendingCloseManual.id);
-  assert.equal(durablePendingCloseRecord?.snapshot?.title, "Manual update pending close");
-  assert.equal(
-    durablePendingCloseRecord?.snapshot?.lyrics,
-    durablePendingCloseLyrics,
-    "window close drains the in-flight 4,000-line manual-save update before shutdown"
-  );
-
-  process.stdout.write(`${JSON.stringify({
-    ok: true,
-    historyVersion: 2,
-    dialogs: nativeDialogs.length,
-    rendererDialogs,
-    covered: [
-      "desktop-only entry and surface focus",
-      "Escape, inert, pointer isolation, reduced motion, narrow layout",
-      "link and search commit, cross-source upsert, replacement cancellation",
-      "paged unlimited history, cancelled limit change, and 10/5 trimming",
-      "delete, clear, restart persistence",
-      "local changed, missing, rejected relocate, and committed relocate",
-      "cover-only/manual cover and ordinary-edit exclusion",
-      "manual create/update/no-op, ordered clear boundaries, binding deletion/clear/not-found",
-    "manual replay cover restoration through the image proxy without song reparse, explicit URL release, exact empty-translation roundtrip",
-      "link/search/local failure intent settlement, ordinary replay creates a distinct save",
-      "manual create/update failures, saved-revision retry, and 4,000-line pending-close drain",
-      "remote failure and write-failure non-rollback"
-    ]
-  }, null, 2)}\n`);
+  await launchApp({ expectedLocale: "en", expectedHistoryLimit: "unlimited" });
+  const countsBeforeLegacy = { ...routeCounts };
+  await openHistory(1);
+  await page.getByTestId(`history-replay-${legacy.record.id}`).click();
+  await page.getByTestId("history-surface").waitFor({ state: "hidden" });
+  assert.equal(await page.getByLabel("Music URL").inputValue(), "https://music.163.com/song?id=70001");
+  for (let roundTrip = 0; roundTrip < 2; roundTrip++) {
+    await page.getByTestId("stepper-next-button").click();
+    assert.equal(await page.getByTestId("lyrics-editor-original").inputValue(), pendingCloseLyrics, "UI replay restores all 4,000 seeded lyric lines");
+    assert.equal(await page.getByTestId("lyrics-editor-translation").inputValue(), "");
+    await page.getByTestId("stepper-back-button").click();
+  }
+  assert.equal(routeCounts.parseSong, countsBeforeLegacy.parseSong, "legacy archive remount performs no song reparse");
+  assert.equal(routeCounts.resolveSearch, countsBeforeLegacy.resolveSearch);
+  await page.getByTestId("stepper-next-button").click();
+  await page.getByTestId("lyrics-editor-original").evaluate((node) => {
+    const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, "value").set;
+    setter.call(node, node.value + "latest close edit");
+    node.dispatchEvent(new InputEvent("input", { bubbles: true, inputType: "insertText", data: "latest close edit" }));
+    node.dispatchEvent(new Event("change", { bubbles: true }));
+  });
+  await closeThroughDesktopApi();
+  const document = JSON.parse(await readFile(historyPath, "utf8"));
+  assert.equal(document.records.find((record) => record.id === legacy.record.id).snapshot.lyrics, pendingCloseLyrics, "legacy manual archive stays immutable");
+  assert.equal(document.records.find((record) => record.id === document.activeDraftId).editorDraft.content.lyrics,
+    pendingCloseLyrics + "latest close edit", "normal close drains the 4,000-line automatic draft");
+  assert.deepEqual(rendererDialogs, []);
+  console.log(JSON.stringify({ ok: true, covered: ["header/focus/inert/Escape/reduced-motion/narrow layout",
+    "legacy canonical IPC, hostile values, safe identities, ordered create/update/clear",
+    "pagination/search/filter, cancelled trimming, 10/5 limits, delete/clear",
+    "legacy file streaming, changed/missing files and transactional relocation",
+    "legacy manual restart/replay, empty translation, no repeated parsing, immutable archives, large-draft close"] }));
 } catch (error) {
-  process.stderr.write(`[desktop-history-regression] ${error instanceof Error ? error.stack || error.message : String(error)}\n`);
+  console.log("LEGACY HISTORY FAILURE", error instanceof Error ? error.stack : String(error));
   throw error;
 } finally {
   await closeElectronApplication(electronApp, { label: "desktop-history-regression" });
-  await rm(userDataDirectory, { recursive: true, force: true }).catch(() => {});
+  assert.equal(path.dirname(userDataDirectory), tmpdir());
+  await rm(userDataDirectory, { recursive: true, force: true });
 }

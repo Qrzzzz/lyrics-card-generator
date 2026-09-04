@@ -66,8 +66,7 @@ jobs:
       - name: Core tests
         run: npm run core:test
 
-      - name: Build
-        run: npm run build
+      # The required render-boundary job owns the Linux production build.
 
   render-boundary-regression:
     name: render-boundary-regression
@@ -200,34 +199,6 @@ jobs:
             test-results/web-lite-cross-browser/${{ matrix.browser }}/**
           if-no-files-found: error
           retention-days: 14
-
-  security-locale-a11y-gates:
-    name: security/locale/a11y gates
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
-        with:
-          node-version: 22
-          cache: npm
-
-      - name: Install dependencies and Chromium
-        run: |
-          npm ci
-          npx playwright install --with-deps chromium
-
-      - name: Run security, locale, lifecycle, and coverage gates
-        run: |
-          npm run stability:test
-          npm run coverage
-
-      - name: Run automated axe gate
-        run: npm run a11y:test
 
   desktop-packaged-regression:
     name: desktop-packaged-regression

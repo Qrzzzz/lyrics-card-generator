@@ -62,15 +62,19 @@ assert.match(buildJob, /contents: read/, "the build phase has read-only reposito
 assert.match(buildJob, /attestations: write[\s\S]+id-token: write/, "only the build phase can create provenance attestations");
 assert.doesNotMatch(buildJob, /contents: write/, "the long-running build phase cannot mutate Releases");
 assert.match(buildJob, /EXPECTED_RELEASE_SHA: \$\{\{ needs\.authorize\.outputs\.release_sha \}\}/, "the build checkout is pinned to the authorized SHA");
-assert.match(buildJob, /Run release quality gates[\s\S]+npm run electron-runtime:coverage/, "release still blocks on measured Electron runtime coverage");
-assert.equal((buildJob.match(/npm run electron-runtime:coverage/g) || []).length, 1, "release executes Electron runtime coverage once");
+for (const command of ["web-lite:check", "font-license:test", "lint", "stability:test", "coverage", "electron-runtime:coverage", "core:test", "desktop:interaction-test", "build", "typecheck"]) {
+  assert.ok(!buildJob.includes(`npm run ${command}\n`) && !buildJob.includes(`npm run ${command}\r\n`), `release consumes exact-SHA CI evidence instead of repeating ${command}`);
+}
+assert.equal((buildJob.match(/run: npm run desktop:build/g) || []).length, 1, "release has one production desktop build");
+assert.match(packageJson.scripts["desktop:build"], /npm run typecheck && npm run build && npm run desktop:prepare/, "release still typechecks and builds the actual artifact");
+assert.match(readFileSync(".github/workflows/ci.yml", "utf8"), /npm run electron-runtime:coverage/, "required verify check owns measured runtime coverage");
 assert.match(packageJson.scripts["desktop:build"], /electron-builder --publish never --projectDir dist-desktop\/app$/, "artifact construction cannot implicitly publish through electron-builder");
 assert.match(buildJob, /REQUIRE_PUBLISHED_RELEASE_NOTES:\s*["']1["']/, "release quality gates reject candidate wording");
 assert.match(buildJob, /Enforce production dependency advisory policy[\s\S]+npm run dependency-audit:gate/, "release blocks unapproved production advisories");
-assert.match(buildJob, /Run release quality gates[\s\S]+npm run font-license:test/, "release verifies font license distribution");
-assert.match(buildJob, /Run release quality gates[\s\S]+npm run sbom:test/, "release runs adversarial SPDX inventory fixtures");
+assert.match(buildJob, /Validate release-only policy[\s\S]+npx tsx scripts\/test-release-consistency\.ts/, "release checks publication wording without rerunning core");
+assert.match(buildJob, /Validate release-only policy[\s\S]+npm run sbom:test/, "release runs adversarial SPDX inventory fixtures");
 const packagedAssets = buildJob.indexOf("npm run desktop:packaged-assets-test");
-assert.ok(packagedAssets >= 0 && packagedAssets < buildJob.indexOf("Run deterministic packaged interaction regression"), "packaged assets are verified before desktop interactions");
+assert.ok(packagedAssets >= 0 && packagedAssets < buildJob.indexOf("npm run desktop:final-artifact-smoke"), "packaged assets including licenses are verified before final-byte smoke");
 const finalArtifactSmoke = buildJob.indexOf("npm run desktop:final-artifact-smoke");
 const normalizedAssets = buildJob.indexOf("Normalize release asset filenames");
 const desktopRuntimeAudit = buildJob.indexOf("npm run desktop-runtime-audit:gate");
@@ -150,7 +154,6 @@ assert.deepEqual(sourcePolicy.requiredChecks, [
   "web-lite-smoke",
   "web-lite-cross-browser-smoke (firefox)",
   "web-lite-cross-browser-smoke (webkit)",
-  "security/locale/a11y gates",
   "desktop-packaged-regression"
 ]);
 assert.equal(sourcePolicy.baseBranch, "main");
@@ -182,6 +185,7 @@ assert.match(verifier, /gh attestation verify \$_\.FullName/, "every downloaded 
 assert.match(verifier, /Draft asset does not match the tested bundle/, "reused drafts must match the newly tested artifact bytes");
 
 const nativeFailureGuards = workflow.match(/\$PSNativeCommandUseErrorActionPreference = \$true/g) || [];
-assert.equal(nativeFailureGuards.length, 5, "each inline native-command boundary is fatal, including restoration after duplicate-create inspection");
+assert.equal(nativeFailureGuards.length, 6, "each inline native-command boundary is fatal, including release-only policy and duplicate-create inspection");
+assert.match(buildJob, /Validate release-only policy[\s\S]+\$PSNativeCommandUseErrorActionPreference = \$true\s+npx tsx scripts\/test-release-consistency\.ts/, "a failed publication-wording check cannot be masked by a successful SBOM test");
 
 console.log("Reviewed-main exact-CI release workflow contract tests passed");

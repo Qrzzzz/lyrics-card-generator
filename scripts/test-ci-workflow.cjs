@@ -1,7 +1,7 @@
 const assert = require("node:assert/strict");
 const { readFileSync } = require("node:fs");
 
-const workflow = readFileSync(".github/workflows/ci.yml", "utf8");
+const workflow = readFileSync(".github/workflows/ci.yml", "utf8").replace(/\r\n/g, "\n");
 const benchmarkWorkflow = readFileSync(".github/workflows/background-composition-benchmark.yml", "utf8");
 const packageJson = JSON.parse(readFileSync("package.json", "utf8"));
 const interactionTest = readFileSync("scripts/test-desktop-settings-interactions.mjs", "utf8");
@@ -10,6 +10,8 @@ const crossBrowserConfig = readFileSync("playwright.web-lite-cross-browser.confi
 const crossBrowserSmoke = readFileSync("tests/web-lite-cross-browser/web-lite.cross-browser.smoke.spec.ts", "utf8");
 const browserSupport = readFileSync("docs/web-lite-browser-support.md", "utf8");
 const releaseSourcePolicy = JSON.parse(readFileSync("security/release-source-policy.json", "utf8"));
+const pagesWorkflow = readFileSync(".github/workflows/pages.yml", "utf8");
+const runtimeTests = readFileSync("scripts/test-electron-runtime-coverage.cjs", "utf8");
 
 // Assert workflow intent as source contracts so renamed or reordered CI steps do
 // not silently weaken the packaged regression gate.
@@ -17,7 +19,7 @@ assert.match(workflow, /^\s{2}push:/m, "CI retains its continuous main-push trig
 assert.match(workflow, /^\s{2}pull_request:/m, "CI retains its continuous pull-request trigger");
 assert.match(workflow, /^\s{2}desktop-packaged-regression:/m, "the Windows job describes the full packaged regression scope");
 assert.doesNotMatch(workflow, /^\s{2}desktop-final-artifact-smoke:/m, "the final-artifact command is not misrepresented as the whole job");
-for (const checkName of ["verify", "render-boundary-regression", "web-lite-smoke", "security/locale/a11y gates", "desktop-packaged-regression"]) {
+for (const checkName of ["verify", "render-boundary-regression", "web-lite-smoke", "desktop-packaged-regression"]) {
   assert.match(workflow, new RegExp(`name: ${checkName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`), `${checkName} has a stable GitHub check name`);
 }
 assert.match(
@@ -38,11 +40,27 @@ assert.deepEqual(
     "web-lite-smoke",
     "web-lite-cross-browser-smoke (firefox)",
     "web-lite-cross-browser-smoke (webkit)",
-    "security/locale/a11y gates",
     "desktop-packaged-regression"
   ],
   "release authorization consumes every independent release-blocking CI check"
 );
+assert.doesNotMatch(workflow, /security-locale-a11y-gates:/, "the fully duplicated job stays removed");
+for (const command of ["stability:test", "coverage", "core:test"]) {
+  assert.equal(workflow.split(`run: npm run ${command}\n`).length - 1, 1, `${command} has one CI owner`);
+}
+assert.doesNotMatch(workflow, /run: npm run (?:a11y:test|build)\s*$/m, "CI does not repeat axe or the render job's production build");
+assert.match(packageJson.scripts["a11y:test"], /--config=playwright\.web-lite\.config\.ts --grep axe$/, "focused axe is a subset of Web Lite smoke");
+assert.match(packageJson.scripts["web-lite:smoke"], /^playwright test --config=playwright\.web-lite\.config\.ts$/, "full smoke includes axe without a filter");
+assert.match(backgroundCompositionBenchmark, /test\("axe/, "the full Web Lite suite still contains accessibility assertions");
+assert.doesNotMatch(packageJson.scripts["core:test"], /test-electron-single-instance\.cjs|app-preference-save:test|npm run history-transfer:test/, "core does not repeat sibling suites");
+assert.match(packageJson.scripts["stability:test"], /test-electron-single-instance\.cjs/, "stability owns singleton regressions");
+assert.match(packageJson.scripts["stability:test"], /app-preference-save:test/, "stability owns preference-save regressions");
+assert.match(runtimeTests, /scripts\/test-remote-history\.cjs/, "measured runtime suite owns remote-history store tests");
+assert.match(packageJson.scripts["core:test"], /tsx scripts\/test-remote-history-session\.ts/, "core keeps remote-history session tests");
+assert.match(packageJson.scripts["core:test"], /npm run autosave:test/, "core retains draft durability regressions");
+assert.match(packageJson.scripts["desktop:interaction-test"], /npm run desktop:autosave-test/, "Windows CI retains actual close and recovery tests");
+assert.match(pagesWorkflow, /npm run web-lite:check/, "Pages verifies the committed artifact before deployment");
+assert.doesNotMatch(pagesWorkflow, /npm run web-lite:build/, "Pages does not rebuild a second time after verification");
 assert.ok(
   workflow.indexOf("Run packaged desktop interaction regression") < workflow.indexOf("Run Setup-only final-artifact smoke"),
   "interaction and final-artifact checks remain distinct steps"
@@ -111,7 +129,7 @@ assert.match(
 
 const chromiumJobStart = workflow.indexOf("\n  web-lite-smoke:");
 const crossBrowserJobStart = workflow.indexOf("\n  web-lite-cross-browser-smoke:", chromiumJobStart);
-const crossBrowserJobEnd = workflow.indexOf("\n  security-locale-a11y-gates:", crossBrowserJobStart);
+const crossBrowserJobEnd = workflow.indexOf("\n  desktop-packaged-regression:", crossBrowserJobStart);
 assert.ok(
   chromiumJobStart >= 0 && crossBrowserJobStart > chromiumJobStart && crossBrowserJobEnd > crossBrowserJobStart,
   "CI keeps the full Chromium and minimal cross-browser jobs separate"

@@ -116,10 +116,9 @@ npm run stability:test
 npm run coverage
 npm run electron-runtime:coverage
 npm run core:test
-npm run build
 ```
 
-浏览器、渲染边界与 Windows 桌面构建在独立 CI job 中执行。不要把一次本地 `build` 通过描述为完整 CI 通过。
+Linux 生产构建由必需的渲染边界 job 执行；浏览器与 Windows 桌面构建也在独立 job 中执行。不要把一次本地 `build` 通过描述为完整 CI 通过。门禁分工、去重与发布阶段复用规则见 [CI 与发布门禁](./testing/ci-gates.md)。
 
 ## Web Lite
 

@@ -93,6 +93,7 @@ async function prepareMinimalElectronApp() {
         "electron/font-directory-service.js",
         "electron/font-options.js",
         "electron/import-history.js",
+        "electron/editor-draft.js",
         "electron/provider-response.js",
         "electron/preload.js",
         "electron/ipc-security.js",
@@ -138,6 +139,7 @@ async function prepareMinimalElectronApp() {
   };
 
   await cp(path.join(projectRoot, "electron", "main.js"), path.join(electronOutputDir, "main.js"));
+  await cp(path.join(projectRoot, "electron", "editor-draft.js"), path.join(electronOutputDir, "editor-draft.js"));
   await cp(path.join(projectRoot, "electron", "clipboard-image.js"), path.join(electronOutputDir, "clipboard-image.js"));
   await cp(path.join(projectRoot, "electron", "ai-stream.js"), path.join(electronOutputDir, "ai-stream.js"));
   await cp(

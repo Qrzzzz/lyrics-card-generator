@@ -167,21 +167,18 @@ jobs:
       - name: Enforce production dependency advisory policy
         run: npm run dependency-audit:gate
 
-      - name: Run release quality gates
+      # Source tests and full Windows interactions already passed in the
+      # authorized exact-SHA main CI. Repeat only release-specific policy;
+      # fresh dependency audits and tests of newly built bytes remain below.
+      - name: Validate release-only policy
         shell: pwsh
         env:
           REQUIRE_PUBLISHED_RELEASE_NOTES: "1"
         run: |
-          npm run web-lite:check
-          npm run font-license:test
+          $ErrorActionPreference = 'Stop'
+          $PSNativeCommandUseErrorActionPreference = $true
+          npx tsx scripts/test-release-consistency.ts
           npm run sbom:test
-          npm run typecheck
-          npm run lint
-          npm run stability:test
-          npm run coverage
-          npm run electron-runtime:coverage
-          npm run core:test
-          npm run build
 
       - name: Build Setup-only release from authorized SHA
         id: desktop_build
@@ -189,9 +186,6 @@ jobs:
 
       - name: Verify staged and packaged desktop assets
         run: npm run desktop:packaged-assets-test
-
-      - name: Run deterministic packaged interaction regression
-        run: npm run desktop:interaction-test
 
       - name: Test final Setup bytes
         if: ${{ always() && steps.desktop_build.outcome == 'success' }}
@@ -276,7 +270,6 @@ jobs:
         with:
           name: release-test-evidence-${{ env.RELEASE_TAG }}-${{ github.run_attempt }}
           path: |
-            playwright-report/desktop/**
             playwright-report/desktop-final-artifacts/**
           if-no-files-found: ignore
 

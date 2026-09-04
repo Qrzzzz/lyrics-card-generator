@@ -913,7 +913,7 @@ async function main() {
         "a failed migration leaves the durable v1 source intact"
       );
     }
-    assert.equal(migrationRenameAttempts, 2, "the same process retries a migration that never became durable");
+    assert.equal(migrationRenameAttempts, 8, "each of two migration attempts uses four bounded Windows rename attempts without committing failure");
     const restartedMigrationStore = new ImportHistoryStore({ filePath: migrationFailureTarget });
     assert.equal((await restartedMigrationStore.list({ offset: 0, limit: 10 })).total, 1);
     assert.equal(
