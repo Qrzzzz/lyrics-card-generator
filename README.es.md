@@ -19,7 +19,7 @@
 <p>
   <strong>Navegación</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Descargar la última versión</a> ·
-  <a href="./docs/releases/v6.2.9.es.md">Notas de la versión</a> ·
+  <a href="./docs/releases/v6.2.10.es.md">Notas de la versión</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en línea</a> ·
   <a href="#funciones-principales">Funciones principales</a> ·
   <a href="./docs/development.en.md">Desarrollo local</a> ·
@@ -74,24 +74,25 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 ## 📦 Descarga e instalación
 
-Descarga la última versión pública desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest). El instalador de Windows se llama:
+Descarga v6.2.10 desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v6.2.10). El instalador de Windows es:
 
-* Instalador de Windows x64: `Lyrics.Card.Generator.Setup.6.2.9.exe`
+* Instalador de Windows x64: `Lyrics.Card.Generator.Setup.6.2.10.exe`
 
 A partir de v6.2.2, Setup para Windows x64 es el único paquete de escritorio distribuido.
 
 > La compilación actual no está firmada. Windows puede mostrar una advertencia de SmartScreen, algo habitual en aplicaciones personales sin firma.
 
-### Novedades de v6.2.9
+### Novedades de v6.2.10
 
-* Se eliminan componentes sin uso, el antiguo análisis de colores, la estimación de altura por caracteres y estilos obsoletos, conservando la interfaz y las funciones actuales.
-* Se eliminan una dependencia de desarrollo sin uso, un archivo fuente de icono duplicado y funciones auxiliares de prueba nunca llamadas.
-* Se unifican la lista de archivos del paquete y el servidor de pruebas del navegador, manteniendo la compatibilidad del historial, los borradores automáticos, la exportación y las comprobaciones de seguridad.
+* Evita que una importación pendiente de confirmación o de guardar el borrador sobrescriba un enlace, una letra o un documento editados durante la espera.
+* Rechaza las redirecciones HTTP en la traducción con IA y las pruebas de conexión para impedir que el cuerpo de la solicitud llegue a un destino no autorizado.
+* Reserva tiempo de primera respuesta para las direcciones alternativas validadas, evitando que una dirección sin respuesta agote el plazo global.
+* El distintivo Explicit usa el SVG blanco redondeado aprobado, con un 50 % de opacidad y una E recortada transparente, tanto en la vista previa como en la exportación.
 
 ## 🌐 Notas de publicación multilingües
 
 GitHub Release muestra de forma predeterminada un resumen en chino simplificado. Consulta las notas completas:
-[简体中文](./docs/releases/v6.2.9.zh-CN.md) · [繁體中文](./docs/releases/v6.2.9.zh-TW.md) · [English](./docs/releases/v6.2.9.en.md) · [Français](./docs/releases/v6.2.9.fr.md) · [日本語](./docs/releases/v6.2.9.ja.md) · [Español](./docs/releases/v6.2.9.es.md)
+[简体中文](./docs/releases/v6.2.10.zh-CN.md) · [繁體中文](./docs/releases/v6.2.10.zh-TW.md) · [English](./docs/releases/v6.2.10.en.md) · [Français](./docs/releases/v6.2.10.fr.md) · [日本語](./docs/releases/v6.2.10.ja.md) · [Español](./docs/releases/v6.2.10.es.md)
 
 <a id="funciones-principales"></a>
 

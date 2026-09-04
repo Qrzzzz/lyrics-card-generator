@@ -81,6 +81,10 @@ export class DocumentTransactionController {
     return revision === this.revision;
   }
 
+  dispose() {
+    this.abortActive();
+  }
+
   private cancel(id: number) {
     if (this.active?.token.id !== id) return;
     this.active.controller.abort();

@@ -211,7 +211,7 @@ for (const [name, source] of [
 ] as const) {
   assert.match(
     source,
-    /catch \(error\) \{\s*const wasAborted = intent\.signal\.aborted;\s*intent\.cancel\(\);/,
+    /catch \(error\) \{\s*const wasAborted = intent\?\.signal\.aborted;\s*intent\?\.cancel\(\);/,
     `${name} failure settles its document intent`
   );
 }

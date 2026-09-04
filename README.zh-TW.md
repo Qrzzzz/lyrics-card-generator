@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v6.2.9.zh-TW.md">發布說明</a> ·
+  <a href="./docs/releases/v6.2.10.zh-TW.md">發布說明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">線上 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="./docs/development.zh-CN.md">本機開發</a> ·
@@ -71,24 +71,25 @@
 
 ## 📦 下載與安裝
 
-最新公開版本請從 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) 取得，Windows 安裝程式檔名為：
+從 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v6.2.10) 下載 v6.2.10，Windows 安裝程式名稱為：
 
-* Windows x64 安裝版：`Lyrics.Card.Generator.Setup.6.2.9.exe`
+* Windows x64 安裝版：`Lyrics.Card.Generator.Setup.6.2.10.exe`
 
 從 v6.2.2 起僅提供 Windows x64 Setup 安裝程式。
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v6.2.9 更新重點
+### v6.2.10 更新重點
 
-* 刪除未被正式流程呼叫的舊元件、顏色分析、字元高度估算及遺留樣式，保留現有介面與功能。
-* 移除閒置開發相依套件、重複圖示來源檔案及未呼叫的測試輔助程式碼。
-* 統一桌面封裝檔案清單與瀏覽器測試伺服器實作，保留歷史相容、自動草稿、匯出與安全檢查。
+* 修復匯入等待取代確認或自動草稿補存時，舊操作可能覆蓋新連結、歌詞或文件的問題。
+* AI 翻譯與連線測試統一拒絕 HTTP 重新導向，避免將請求本文轉送至未授權的下一站。
+* 為已驗證的備用網路位址保留首個回應的等待時間，避免無回應的首個位址耗盡整次請求的逾時預算。
+* Explicit 標識改為白色、50% 不透明度的圓角 SVG，以透明鏤空 E 統一卡片預覽與匯出。
 
 ## 🌐 多語言發佈說明
 
 GitHub Release 預設顯示簡體中文摘要，完整說明請見：
-[简体中文](./docs/releases/v6.2.9.zh-CN.md) · [繁體中文](./docs/releases/v6.2.9.zh-TW.md) · [English](./docs/releases/v6.2.9.en.md) · [Français](./docs/releases/v6.2.9.fr.md) · [日本語](./docs/releases/v6.2.9.ja.md) · [Español](./docs/releases/v6.2.9.es.md)
+[简体中文](./docs/releases/v6.2.10.zh-CN.md) · [繁體中文](./docs/releases/v6.2.10.zh-TW.md) · [English](./docs/releases/v6.2.10.en.md) · [Français](./docs/releases/v6.2.10.fr.md) · [日本語](./docs/releases/v6.2.10.ja.md) · [Español](./docs/releases/v6.2.10.es.md)
 
 ## ✨ 主要功能
 

@@ -31,7 +31,7 @@ export function LocalAudioParser({
   beginImport,
   t
 }: {
-  beginImport: () => Promise<DocumentImportIntent | null>;
+  beginImport: (signal?: AbortSignal) => Promise<DocumentImportIntent | null>;
   onParsed: (
     song: ParsedSongData,
     lyrics: string | undefined,
@@ -45,6 +45,7 @@ export function LocalAudioParser({
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "partial" | "error">("idle");
   const [message, setMessage] = useState(t("localAudioIdle"));
   const activeIntentRef = useRef<DocumentImportIntent | null>(null);
+  const preparationRef = useRef<AbortController | null>(null);
 
   async function parseFile(file?: File) {
     if (!file) {
@@ -57,34 +58,41 @@ export function LocalAudioParser({
       if (inputRef.current) inputRef.current.value = "";
       return;
     }
-    const intent = await beginImport();
-    if (!intent) {
-      // Selecting the same file does not fire another change event unless the
-      // native input is reset, including when replacement confirmation is cancelled.
-      if (inputRef.current) inputRef.current.value = "";
-      return;
-    }
+    preparationRef.current?.abort();
     activeIntentRef.current?.cancel();
-    activeIntentRef.current = intent;
-
+    const preparation = new AbortController();
+    preparationRef.current = preparation;
     setFileName(file.name);
     setStatus("loading");
     setMessage(t("localAudioParsing"));
-    let fileToken: string | undefined;
-    const desktop = getLyricsCardDesktopApi();
-    // File registration enriches replay history but must not block local parsing when unavailable.
-    if (desktop) {
-      try {
-        fileToken = (await desktop.registerImportFile(file, "local-audio"))?.token;
-      } catch {
-        fileToken = undefined;
-      }
-    }
 
-    const formData = new FormData();
-    formData.set("file", file);
-
+    let intent: DocumentImportIntent | null = null;
     try {
+      intent = await beginImport(preparation.signal);
+      if (preparation.signal.aborted) { intent?.cancel(); return; }
+      if (!intent || intent.signal.aborted) {
+        setStatus("idle");
+        setMessage(t("localAudioIdle"));
+        return;
+      }
+      activeIntentRef.current = intent;
+      let fileToken: string | undefined;
+      const desktop = getLyricsCardDesktopApi();
+      // File registration enriches replay history but must not block parsing when unavailable.
+      if (desktop) {
+        try { fileToken = (await desktop.registerImportFile(file, "local-audio"))?.token; }
+        catch { fileToken = undefined; }
+      }
+      if (preparation.signal.aborted || intent.signal.aborted) {
+        intent.cancel();
+        if (!preparation.signal.aborted) {
+          setStatus("idle");
+          setMessage(t("localAudioIdle"));
+        }
+        return;
+      }
+      const formData = new FormData();
+      formData.set("file", file);
       const response = await fetch("/api/parse-local-audio", {
         method: "POST",
         headers: createAppRequestHeaders(),
@@ -92,6 +100,7 @@ export function LocalAudioParser({
         signal: intent.signal
       });
       const payload = (await response.json()) as ParseLocalAudioResponse;
+      if (preparation.signal.aborted) return;
 
       if (!payload.ok) {
         throw new Error(getLocalizedAppApiError(payload.code, t, payload.error));
@@ -99,13 +108,16 @@ export function LocalAudioParser({
 
       if (!onParsed(payload.data, payload.data.lyrics, intent, { fileToken })) {
         intent.cancel();
+        setStatus("idle");
+        setMessage(t("localAudioIdle"));
         return;
       }
       setStatus(payload.status === "success" ? "success" : "partial");
       setMessage(payload.status === "success" ? t("localAudioSuccess") : t("localAudioNoLyrics"));
     } catch (error) {
-      const wasAborted = intent.signal.aborted;
-      intent.cancel();
+      const wasAborted = intent?.signal.aborted;
+      intent?.cancel();
+      if (preparation.signal.aborted) return;
       if (wasAborted) {
         setStatus("idle");
         setMessage(t("localAudioIdle"));
@@ -114,15 +126,20 @@ export function LocalAudioParser({
       setStatus("error");
       setMessage(error instanceof Error ? error.message : t("localAudioFailed"));
     } finally {
-      if (activeIntentRef.current?.id === intent.id) activeIntentRef.current = null;
-      if (inputRef.current) {
-        inputRef.current.value = "";
+      if (intent && activeIntentRef.current?.id === intent.id) activeIntentRef.current = null;
+      if (preparationRef.current === preparation) {
+        preparationRef.current = null;
+        // Permit retrying the same file after cancellation or failed persistence.
+        if (inputRef.current) inputRef.current.value = "";
       }
     }
   }
 
   // Abort upload parsing when this import surface unmounts.
-  useEffect(() => () => activeIntentRef.current?.cancel(), []);
+  useEffect(() => () => {
+    preparationRef.current?.abort();
+    activeIntentRef.current?.cancel();
+  }, []);
 
   return (
     <Section title={t("localAudioTitle")} eyebrow={t("metadata")}>

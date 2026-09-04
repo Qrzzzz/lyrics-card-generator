@@ -58,7 +58,7 @@ export type EditorStepsAiState = {
 
 export type EditorStepHandlers = {
   onUrlChange: (url: string) => void;
-  onBeginSongImport: (kind: DocumentImportKind) => Promise<DocumentImportIntent | null>;
+  onBeginSongImport: (kind: DocumentImportKind, signal?: AbortSignal) => Promise<DocumentImportIntent | null>;
   onSearchedSongResolved: (
     song: ParsedSongData,
     lyrics: string | undefined,
@@ -283,7 +283,7 @@ export function useEditorSteps({
         <div className="song-import-primary grid gap-4" data-testid="song-search-primary">
           <SongSearchParser
             t={t}
-            beginImport={() => onBeginSongImport("search")}
+            beginImport={(signal) => onBeginSongImport("search", signal)}
             onResolved={onSearchedSongResolved}
           />
           <div
@@ -293,7 +293,7 @@ export function useEditorSteps({
             <SongLinkParser
               url={state.url}
               onUrlChange={onUrlChange}
-              beginImport={() => onBeginSongImport("link")}
+              beginImport={(signal) => onBeginSongImport("link", signal)}
               onParsed={onSongParsed}
               t={t}
               autoParseOnMount
@@ -301,7 +301,7 @@ export function useEditorSteps({
             />
             <LocalAudioParser
               t={t}
-              beginImport={() => onBeginSongImport("local-audio")}
+              beginImport={(signal) => onBeginSongImport("local-audio", signal)}
               onParsed={onLocalAudioParsed}
             />
           </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import type { ToastNotifier } from "@/components/feedback/AppToast";
 import { createAppRequestHeaders } from "@/lib/app-request";
@@ -156,6 +156,14 @@ export function useEditorActions({
   const [clearTransitionKey, setClearTransitionKey] = useState(0);
   const clearVersionRef = useRef(0);
   const documentControllerRef = useRef(new DocumentTransactionController());
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      documentControllerRef.current.dispose();
+    };
+  }, []);
   const [documentRevision, setDocumentRevision] = useState(0);
   const [isDocumentTransactionPending, setIsDocumentTransactionPending] = useState(false);
   const trackedDocumentIntentRef = useRef<number | null>(null);
@@ -256,20 +264,34 @@ export function useEditorActions({
     return projected;
   }
 
-  async function beginSongImport(kind: DocumentImportKind) {
-    if (hasAuthoredDocument(currentDocumentRef.current) && !(await confirmReplaceDocument())) {
-      return null;
+  async function beginSongImport(kind: DocumentImportKind, signal?: AbortSignal) {
+    if (!mountedRef.current || signal?.aborted) return null;
+    // Bind ownership before either confirmation or draft persistence can yield.
+    // Edits, newer imports and unmounts invalidate this same token throughout.
+    const intent = trackDocumentIntent(documentControllerRef.current.begin(kind));
+    const cancel = () => intent.cancel();
+    signal?.addEventListener("abort", cancel, { once: true });
+    let prepared = false;
+    try {
+      if (hasAuthoredDocument(currentDocumentRef.current) && !(await confirmReplaceDocument())) return null;
+      if (intent.signal.aborted) return null;
+      try { await autosave.flush(); }
+      catch {
+        if (!intent.signal.aborted) {
+          onNotify(importHistoryCopy[currentDocumentRef.current.locale].historySaveFailed, "error");
+        }
+        return null;
+      }
+      if (intent.signal.aborted) return null;
+      if (kind !== "history-replay") {
+        documentStateAdapter.queueRollback(onInvalidateDocument());
+      }
+      prepared = true;
+      return intent;
+    } finally {
+      signal?.removeEventListener("abort", cancel);
+      if (!prepared) intent.cancel();
     }
-    try { await autosave.flush(); }
-    catch {
-      onNotify(importHistoryCopy[currentDocumentRef.current.locale].historySaveFailed, "error");
-      return null;
-    }
-    const intent = documentControllerRef.current.begin(kind);
-    if (intent && kind !== "history-replay") {
-      documentStateAdapter.queueRollback(onInvalidateDocument());
-    }
-    return intent ? trackDocumentIntent(intent) : null;
   }
 
   function commitSongImport(

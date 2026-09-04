@@ -909,7 +909,7 @@ function productionAdapterWiringTest() {
   const source = readFileSync("components/editor/hooks/useEditorActions.ts", "utf8");
   assert.match(source, /documentStateAdapter\.queueDocumentMutation\(rollback, mutation\)/);
   assert.match(source, /documentStateAdapter\.queueRollback\(onInvalidateDocument\(\)\)/);
-  assert.match(source, /intent && kind !== "history-replay"/);
+  assert.match(source, /if \(kind !== "history-replay"\)\s*\{\s*documentStateAdapter\.queueRollback/);
   assert.match(source, /documentStateAdapter\.projectDocumentMutation\(rollback, mutation\)/);
   assert.match(source, /commitImportHistoryReplay/);
   assert.match(source, /flushSync\(\(\) => setState\(updater\)\)/);

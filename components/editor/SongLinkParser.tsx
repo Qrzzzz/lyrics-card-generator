@@ -36,7 +36,7 @@ export function SongLinkParser({
 }: {
   url: string;
   onUrlChange: (url: string) => void;
-  beginImport: () => Promise<DocumentImportIntent | null>;
+  beginImport: (signal?: AbortSignal) => Promise<DocumentImportIntent | null>;
   onParsed: (song: ParsedSongData, intent: DocumentImportIntent, context: LinkImportHistoryContext) => boolean;
   t: ReturnType<typeof createT>;
   autoParseOnMount?: boolean;
@@ -48,8 +48,12 @@ export function SongLinkParser({
   const [message, setMessage] = useState<string>(t("parseIdle"));
   const handledAutoParseVisitRef = useRef<number | null>(null);
   const activeIntentRef = useRef<DocumentImportIntent | null>(null);
+  const preparationRef = useRef<AbortController | null>(null);
 
-  useEffect(() => () => activeIntentRef.current?.cancel(), []);
+  useEffect(() => () => {
+    preparationRef.current?.abort();
+    activeIntentRef.current?.cancel();
+  }, []);
 
   useEffect(() => {
     if (status === "idle") {
@@ -76,15 +80,23 @@ export function SongLinkParser({
       return;
     }
 
-    // Replacing the active intent aborts a parse that no longer owns the document revision.
-    const intent = await beginImport();
-    if (!intent) return;
+    preparationRef.current?.abort();
     activeIntentRef.current?.cancel();
-    activeIntentRef.current = intent;
+    const preparation = new AbortController();
+    preparationRef.current = preparation;
     setStatus("loading");
     setMessage(t("parseLoading"));
 
+    let intent: DocumentImportIntent | null = null;
     try {
+      intent = await beginImport(preparation.signal);
+      if (preparation.signal.aborted) { intent?.cancel(); return; }
+      if (!intent || intent.signal.aborted) {
+        setStatus("idle");
+        setMessage(t("parseIdle"));
+        return;
+      }
+      activeIntentRef.current = intent;
       const res = await fetch("/api/parse-song", {
         method: "POST",
         headers: createAppRequestHeaders({ "content-type": "application/json" }),
@@ -92,6 +104,7 @@ export function SongLinkParser({
         signal: intent.signal
       });
       const payload = (await res.json()) as ParseResponse;
+      if (preparation.signal.aborted) return;
 
       if (!payload.ok) {
         if (process.env.NODE_ENV === "development") {
@@ -109,13 +122,16 @@ export function SongLinkParser({
 
       if (!onParsed(payload.data, intent, { inputUrl: url })) {
         intent.cancel();
+        setStatus("idle");
+        setMessage(t("parseIdle"));
         return;
       }
       setStatus("success");
       setMessage(t("parseSuccess", { source: payload.data.source }));
     } catch (error) {
-      const wasAborted = intent.signal.aborted;
-      intent.cancel();
+      const wasAborted = intent?.signal.aborted;
+      intent?.cancel();
+      if (preparation.signal.aborted) return;
       if (wasAborted) {
         setStatus("idle");
         setMessage(t("parseIdle"));
@@ -130,7 +146,8 @@ export function SongLinkParser({
       }
       setMessage(t("parseError"));
     } finally {
-      if (activeIntentRef.current?.id === intent.id) activeIntentRef.current = null;
+      if (intent && activeIntentRef.current?.id === intent.id) activeIntentRef.current = null;
+      if (preparationRef.current === preparation) preparationRef.current = null;
     }
   }
 

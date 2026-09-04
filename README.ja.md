@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v6.2.9.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v6.2.10.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="./docs/development.en.md">ローカル開発</a> ·
@@ -74,24 +74,25 @@
 
 ## 📦 ダウンロードとインストール
 
-最新の公開版は [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) から入手できます。Windows インストーラー名は次のとおりです。
+v6.2.10 は [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v6.2.10) からダウンロードできます。Windows インストーラー名は次のとおりです。
 
-* Windows x64 インストーラー：`Lyrics.Card.Generator.Setup.6.2.9.exe`
+* Windows x64 インストーラー：`Lyrics.Card.Generator.Setup.6.2.10.exe`
 
 v6.2.2 以降、配布するデスクトップパッケージは Windows x64 Setup のみです。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v6.2.9 の主な更新
+### v6.2.10 の主な更新
 
-* 使われていない旧コンポーネント、色分析、文字数による高さ推定、古いスタイルを削除し、既存の画面と機能を維持します。
-* 不要な開発用依存関係、重複するアイコン元画像、呼び出されないテスト補助コードを削除します。
-* デスクトップ配布ファイル一覧とブラウザテストサーバーを共通化し、履歴の互換性、自動保存、書き出し、安全性の検証を維持します。
+* 置換確認や下書き保存を待つ古いインポートが、その間に編集したリンク、歌詞、文書を上書きする問題を修正します。
+* AI 翻訳と接続テストで HTTP リダイレクトを一律に拒否し、許可されていない転送先へのリクエスト本文の送信を防ぎます。
+* 検証済みの代替アドレスに最初の応答を待つ時間を確保し、先頭の無応答アドレスが全体の制限時間を使い切る問題を修正します。
+* Explicit マークを確認済みの白い角丸 SVG に変更し、不透明度 50% と透明な E の切り抜きをプレビューと書き出しで統一します。
 
 ## 🌐 多言語リリースノート
 
 GitHub Release ではデフォルトで簡体字中国語の概要が表示されます。完全なリリースノートはこちら：
-[简体中文](./docs/releases/v6.2.9.zh-CN.md) · [繁體中文](./docs/releases/v6.2.9.zh-TW.md) · [English](./docs/releases/v6.2.9.en.md) · [Français](./docs/releases/v6.2.9.fr.md) · [日本語](./docs/releases/v6.2.9.ja.md) · [Español](./docs/releases/v6.2.9.es.md)
+[简体中文](./docs/releases/v6.2.10.zh-CN.md) · [繁體中文](./docs/releases/v6.2.10.zh-TW.md) · [English](./docs/releases/v6.2.10.en.md) · [Français](./docs/releases/v6.2.10.fr.md) · [日本語](./docs/releases/v6.2.10.ja.md) · [Español](./docs/releases/v6.2.10.es.md)
 
 <a id="主な機能"></a>
 

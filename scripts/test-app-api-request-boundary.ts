@@ -57,6 +57,7 @@ try {
       && ["127.0.0.1", "localhost", "[::1]"].includes(providerUrl.hostname);
     assert.ok(isExpectedHttpsProvider || isExpectedLoopbackProvider, `unexpected provider target: ${url}`);
     assert.equal(new Headers(init?.headers).get("authorization"), "Bearer local-key");
+    assert.equal(init?.redirect, "error", "translation and connection tests refuse provider redirects");
     return Response.json({ choices: [{ message: { content: "translated" } }] });
   };
 
@@ -808,7 +809,7 @@ async function assertLocalAudioUploadLimits() {
   );
   const clientSource = readFileSync("components/editor/LocalAudioParser.tsx", "utf8");
   const clientGuardIndex = clientSource.indexOf("isLocalAudioFileTooLarge(file)");
-  const beginImportIndex = clientSource.indexOf("const intent = await beginImport()", clientGuardIndex);
+  const beginImportIndex = clientSource.indexOf("await beginImport(preparation.signal)", clientGuardIndex);
   const formDataIndex = clientSource.indexOf("new FormData()", clientGuardIndex);
   const fetchIndex = clientSource.indexOf('fetch("/api/parse-local-audio"', clientGuardIndex);
   assert.ok(clientGuardIndex >= 0, "the local-audio picker uses the shared size guard");

@@ -30,7 +30,7 @@ export function LandscapeSongMetadata({
         style={{ fontSize: 52 * scale, lineHeight: 1.18, overflowWrap: "anywhere" }}
       >
         <span>{song.title || "Untitled"}</span>{" "}
-        <ExplicitBadge show={song.explicit} textColor={textColor} />
+        <ExplicitBadge show={song.explicit} />
       </h1>
       <p
         className="break-words font-semibold"

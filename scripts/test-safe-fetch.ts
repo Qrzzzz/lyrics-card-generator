@@ -129,6 +129,62 @@ for (const target of [
   );
 }
 
+// A silent preferred route must leave time for the other validated family.
+for (const firstFamily of [6, 4] as const) {
+  const candidates = [
+    { address: "2606:4700:4700::1111", family: 6 as const },
+    { address: "8.8.8.8", family: 4 as const }
+  ].sort((a) => a.family === firstFamily ? -1 : 1);
+  const attempts: number[] = [];
+  const signals: AbortSignal[] = [];
+  const result = await safeFetch("https://silent-route.example/card", {
+    resolver: async () => candidates,
+    timeoutMs: 200,
+    transport: async ({ address, signal }) => {
+      attempts.push(address.family);
+      signals.push(signal);
+      if (address.family === firstFamily) return new Promise(() => {});
+      assert.ok(signals[0].aborted, "the silent candidate is closed before its replacement starts");
+      return response(200, { "content-type": "text/plain" }, "healthy backup");
+    }
+  });
+  assert.equal(result.text(), "healthy backup");
+  assert.deepEqual(attempts, candidates.map(({ family }) => family));
+  assert.ok(signals.every((signal) => signal.aborted), "settled attempts release their transport");
+}
+
+{
+  const signals: AbortSignal[] = [];
+  const start = performance.now();
+  await expectCode(safeFetch("https://all-silent.example/card", {
+    resolver: async () => [publicAddress, { address: "8.8.8.8", family: 4 }],
+    timeoutMs: 150,
+    transport: async ({ signal }) => { signals.push(signal); return new Promise(() => {}); }
+  }), "TIMEOUT");
+  assert.equal(signals.length, 2);
+  assert.ok(signals.every((signal) => signal.aborted));
+  assert.ok(performance.now() - start < 700, "fallbacks share one deadline");
+}
+
+{
+  const caller = new AbortController();
+  const signals: AbortSignal[] = [];
+  await expectCode(safeFetch("https://cancel-silent.example/card", {
+    resolver: async () => [publicAddress, { address: "8.8.8.8", family: 4 }],
+    signal: caller.signal,
+    timeoutMs: 500,
+    transport: async ({ signal }) => {
+      signals.push(signal);
+      caller.abort();
+      return new Promise(() => {});
+    }
+  }), "NETWORK");
+  assert.equal(signals.length, 1, "caller cancellation never starts a fallback");
+  assert.ok(signals[0].aborted);
+}
+
+await assertNativeCandidateBudgets();
+
 {
   let transportCount = 0;
   const resolver: PublicUrlResolver = async () => [
@@ -352,6 +408,60 @@ await assertBodylessNativeTransportCloses("head", 200, "HEAD", false);
 await assertBodylessNativeTransportCloses("discard", 200, "GET", true);
 
 console.log("safe-fetch security tests passed");
+}
+
+async function assertNativeCandidateBudgets() {
+  let mode: "silent" | "slow-body" = "silent";
+  let firstFamily = 6;
+  const closed: number[] = [];
+  const timers = new Set<NodeJS.Timeout>();
+  const server = createServer((request, outgoing) => {
+    assert.match(request.headers.host ?? "", /^native-budget\.example:/);
+    const family = request.socket.remoteAddress === "::1" ? 6 : 4;
+    outgoing.on("close", () => closed.push(family));
+    if (mode === "silent" && family === firstFamily) return;
+    outgoing.writeHead(200, { "content-type": "text/plain" });
+    outgoing.flushHeaders();
+    if (mode === "slow-body") {
+      const timer = setTimeout(() => { outgoing.end("slow body completed"); timers.delete(timer); }, 240);
+      timers.add(timer);
+    } else outgoing.end("native backup");
+  });
+  await new Promise<void>((resolve, reject) => { server.once("error", reject); server.listen(0, "::", resolve); });
+  try {
+    const port = (server.address() as AddressInfo).port;
+    for (firstFamily of [6, 4]) {
+      const attempts: number[] = [];
+      const candidates = [
+        { address: "2606:4700:4700::1111", family: 6 as const },
+        { address: "8.8.8.8", family: 4 as const }
+      ].sort((a) => a.family === firstFamily ? -1 : 1);
+      for (mode of ["silent", "slow-body"] as const) {
+        attempts.length = 0;
+        closed.length = 0;
+        const result = await safeFetch(`http://native-budget.example:${port}/card`, {
+          resolver: async () => candidates,
+          timeoutMs: 400,
+          transport: (request) => {
+            assert.ok(candidates.some((candidate) => candidate.address === request.address.address));
+            attempts.push(request.address.family);
+            // Only the physical socket is mapped into this isolated loopback fixture.
+            return nodeTransport({ ...request, address: {
+              address: request.address.family === 6 ? "::1" : "127.0.0.1",
+              family: request.address.family
+            } });
+          }
+        });
+        assert.equal(result.text(), mode === "silent" ? "native backup" : "slow body completed");
+        assert.deepEqual(attempts, mode === "silent" ? candidates.map(({ family }) => family) : [firstFamily]);
+        if (mode === "silent") assert.ok(closed.includes(firstFamily), "silent socket was destroyed");
+      }
+    }
+  } finally {
+    timers.forEach(clearTimeout);
+    server.closeAllConnections();
+    await new Promise<void>((resolve) => server.close(() => resolve()));
+  }
 }
 
 async function assertBodylessNativeTransportCloses(
