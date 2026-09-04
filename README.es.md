@@ -19,7 +19,7 @@
 <p>
   <strong>Navegación</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Descargar la última versión</a> ·
-  <a href="./docs/releases/v6.2.6.es.md">Notas de la versión</a> ·
+  <a href="./docs/releases/v6.2.7.es.md">Notas de la versión</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en línea</a> ·
   <a href="#funciones-principales">Funciones principales</a> ·
   <a href="./docs/development.en.md">Desarrollo local</a> ·
@@ -76,24 +76,22 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 Descarga la última versión pública desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest). El instalador de Windows se llama:
 
-* Instalador de Windows x64: `Lyrics.Card.Generator.Setup.6.2.6.exe`
-
-> v6.2.6 aún no publicado; el estado actual del repositorio es un candidato local.
+* Instalador de Windows x64: `Lyrics.Card.Generator.Setup.6.2.7.exe`
 
 A partir de v6.2.2, Setup para Windows x64 es el único paquete de escritorio distribuido.
 
 > La compilación actual no está firmada. Windows puede mostrar una advertencia de SmartScreen, algo habitual en aplicaciones personales sin firma.
 
-### Novedades de v6.2.6
+### Novedades de v6.2.7
 
-* Se eliminan las amplias máscaras locales de legibilidad detrás de los metadatos, las letras y el pie para evitar grandes manchas oscuras.
-* El texto conserva solo una sombra ajustada y tenue, mientras que la portada usa una sombra más pequeña y discreta para flotar suavemente sobre el fondo.
-* La combinación tipográfica personalizada adopta la misma tarjeta de una sola capa que los dos preajustes, sin panel anidado; la indicación redundante de crecimiento automático sigue eliminada.
+* Copia todo el historial remoto o un registro en JSON; después pega, revisa e importa los datos. Solo se incluyen registros de enlaces remotos y búsquedas de canciones.
+* La letra sin editar conserva su forma importada. Las ediciones, eliminaciones y traducciones completadas en el segundo paso actualizan la instantánea, preservando texto, traducción, saltos, líneas vacías, párrafos y correspondencias.
+* El JSON no incluye imágenes ni enlaces directos de portada. Al cargar un registro se obtiene una portada nueva mediante el enlace de la canción sin sustituir la letra guardada, incluso si falla la portada.
 
 ## 🌐 Notas de publicación multilingües
 
 GitHub Release muestra de forma predeterminada un resumen en chino simplificado. Consulta las notas completas:
-[简体中文](./docs/releases/v6.2.6.zh-CN.md) · [繁體中文](./docs/releases/v6.2.6.zh-TW.md) · [English](./docs/releases/v6.2.6.en.md) · [Français](./docs/releases/v6.2.6.fr.md) · [日本語](./docs/releases/v6.2.6.ja.md) · [Español](./docs/releases/v6.2.6.es.md)
+[简体中文](./docs/releases/v6.2.7.zh-CN.md) · [繁體中文](./docs/releases/v6.2.7.zh-TW.md) · [English](./docs/releases/v6.2.7.en.md) · [Français](./docs/releases/v6.2.7.fr.md) · [日本語](./docs/releases/v6.2.7.ja.md) · [Español](./docs/releases/v6.2.7.es.md)
 
 <a id="funciones-principales"></a>
 

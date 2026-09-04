@@ -140,6 +140,14 @@ contextBridge.exposeInMainWorld("lyricsCardDesktopBridge", {
   listImportHistory: (options) => ipcRenderer.invoke("lyrics-card:import-history-list", options),
   getImportHistoryStats: () => ipcRenderer.invoke("lyrics-card:import-history-stats"),
   recordImportHistory: (record) => ipcRenderer.invoke("lyrics-card:import-history-record", record),
+  updateRemoteHistoryLyrics: (recordId, snapshot) => ipcRenderer.invoke("lyrics-card:remote-history-lyrics", recordId, snapshot),
+  copyRemoteHistory: (recordId) => ipcRenderer.invoke("lyrics-card:remote-history-copy", recordId),
+  previewRemoteHistory: (json) => typeof json === "string" && json.length <= 16 * 1024 * 1024
+    ? ipcRenderer.invoke("lyrics-card:remote-history-preview", json)
+    : Promise.resolve({ ok: false, code: "transfer_too_large" }),
+  importRemoteHistory: (json, expectedVersion) => typeof json === "string" && json.length <= 16 * 1024 * 1024
+    ? ipcRenderer.invoke("lyrics-card:remote-history-import", json, expectedVersion)
+    : Promise.resolve({ ok: false, code: "transfer_too_large" }),
   createManualSaveEnvelope: (envelope) => invokeManualSave("lyrics-card:manual-save-create", undefined, envelope),
   updateManualSaveEnvelope: (recordId, envelope) => invokeManualSave(
     "lyrics-card:manual-save-update",

@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v6.2.6.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v6.2.7.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="./docs/development.en.md">ローカル開発</a> ·
@@ -76,24 +76,22 @@
 
 最新の公開版は [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/latest) から入手できます。Windows インストーラー名は次のとおりです。
 
-* Windows x64 インストーラー：`Lyrics.Card.Generator.Setup.6.2.6.exe`
-
-> v6.2.6 は未公開です。現在のリポジトリ内容はローカル候補版です。
+* Windows x64 インストーラー：`Lyrics.Card.Generator.Setup.6.2.7.exe`
 
 v6.2.2 以降、配布するデスクトップパッケージは Windows x64 Setup のみです。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v6.2.6 の主な更新
+### v6.2.7 の主な更新
 
-* 曲情報、歌詞、フッターの背後にあった広範囲の可読性マスクを削除し、内容領域に大きな暗い塊が生じないようにしました。
-* 文字には字形に沿う小さく薄い影だけを残し、カバーにも控えめな影を使って背景から軽く浮かせます。
-* カスタムフォント構成を 2 つのプリセットと同じ単層カードに変更し、入れ子の背景パネルを廃止しました。冗長な自動拡張説明は引き続き表示しません。
+* リモート履歴全体または一件を JSON でコピーし、貼り付け、内容確認後に履歴へ追加できます。リモートリンク解析と曲検索の履歴が対象です。
+* 未編集の歌詞は取り込み時の状態を保持します。第二段階の編集、削除、完了した翻訳を保存し、原文、訳文、改行、空行、段落、対応関係を復元します。
+* JSON にジャケット画像や画像の直接 URL は含みません。履歴を読み込む際に曲のリンクからジャケットを取得し、保存済み歌詞は維持します。取得に失敗しても歌詞を復元できます。
 
 ## 🌐 多言語リリースノート
 
 GitHub Release ではデフォルトで簡体字中国語の概要が表示されます。完全なリリースノートはこちら：
-[简体中文](./docs/releases/v6.2.6.zh-CN.md) · [繁體中文](./docs/releases/v6.2.6.zh-TW.md) · [English](./docs/releases/v6.2.6.en.md) · [Français](./docs/releases/v6.2.6.fr.md) · [日本語](./docs/releases/v6.2.6.ja.md) · [Español](./docs/releases/v6.2.6.es.md)
+[简体中文](./docs/releases/v6.2.7.zh-CN.md) · [繁體中文](./docs/releases/v6.2.7.zh-TW.md) · [English](./docs/releases/v6.2.7.en.md) · [Français](./docs/releases/v6.2.7.fr.md) · [日本語](./docs/releases/v6.2.7.ja.md) · [Español](./docs/releases/v6.2.7.es.md)
 
 <a id="主な機能"></a>
 

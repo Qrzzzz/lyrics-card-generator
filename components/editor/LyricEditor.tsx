@@ -335,7 +335,8 @@ export function LyricEditor() {
     handleHistoryRecordRemoved,
     handleHistoryCleared,
     completeAndExport,
-    copyImageToClipboard
+    copyImageToClipboard,
+    flushRemoteHistory
   } = useEditorActions({
     parsedState,
     setState,
@@ -535,6 +536,7 @@ export function LyricEditor() {
   });
   const loadExampleEvent = useStableEvent(loadExample);
   const reimportHistoryEvent = useStableEvent(reimportHistory);
+  const flushRemoteHistoryEvent = useStableEvent(flushRemoteHistory);
   const recordRemovedEvent = useStableEvent(handleHistoryRecordRemoved);
   const historyClearedEvent = useStableEvent(handleHistoryCleared);
   const localeChangeEvent = useStableEvent(setLocale);
@@ -593,6 +595,7 @@ export function LyricEditor() {
                 onNotify={showToast}
                 onRecordRemoved={recordRemovedEvent}
                 onHistoryCleared={historyClearedEvent}
+                onBeforeTransfer={flushRemoteHistoryEvent}
               />
             ) : null}
 

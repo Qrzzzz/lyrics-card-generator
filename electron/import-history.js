@@ -8,6 +8,8 @@ const LEGACY_IMPORT_HISTORY_SCHEMA_VERSION = 1;
 const DEFAULT_IMPORT_HISTORY_LIMIT = 10;
 const IMPORT_HISTORY_LIMITS = new Set(["none", 5, 10, "unlimited"]);
 const MAX_RECORD_BYTES = 512 * 1024;
+const MAX_HISTORY_TRANSFER_BYTES = 16 * 1024 * 1024;
+const MAX_HISTORY_TRANSFER_RECORDS = 1000;
 const MAX_MANUAL_SAVE_V2_BYTES = 2 * 1024 * 1024;
 const MAX_MANUAL_SAVE_JSON_DEPTH = 128;
 const LEGACY_MANUAL_SAVE_ENVELOPE_VERSION = 1;
@@ -186,6 +188,69 @@ class ImportHistoryStore {
   }
 
   // Parse outside the queue so an invalid transport envelope cannot trigger load or persistence side effects.
+  updateRemoteLyrics(recordId, input) {
+    const lyricsSnapshot = normalizeRemoteLyricsSnapshot(input);
+    if (!lyricsSnapshot) return Promise.reject(historyError("invalid_snapshot"));
+    return this.#mutate((document) => {
+      const existing = document.records.find((record) => record.id === normalizeId(recordId));
+      if (!existing) throw historyError("not_found");
+      if (!isRemoteHistoryRecord(existing)) throw historyError("invalid_kind");
+      const updated = { ...existing, lyricsSnapshot };
+      return {
+        document: { ...document, records: document.records.map((record) => record === existing ? updated : record) },
+        result: toPublicImportHistoryRecord(updated),
+        write: JSON.stringify(existing.lyricsSnapshot) !== JSON.stringify(lyricsSnapshot)
+      };
+    });
+  }
+
+  exportRemoteHistory(recordId) {
+    return this.#enqueue(async () => {
+      const document = await this.#ensureLoaded();
+      const candidates = document.records.filter((record) => isRemoteHistoryRecord(record) &&
+        (recordId === undefined || record.id === normalizeId(recordId)));
+      const records = candidates.filter((record) => record.lyricsSnapshot).map((record) => ({
+        kind: record.kind,
+        createdAt: record.createdAt,
+        lastUsedAt: record.lastUsedAt,
+        display: { title: record.display.title, artist: record.display.artist, album: record.display.album, source: record.display.source },
+        source: record.source,
+        lyricsSnapshot: record.lyricsSnapshot
+      }));
+      if (!records.length) throw historyError(candidates.length ? "missing_lyrics" : "no_remote_history");
+      if (records.length > MAX_HISTORY_TRANSFER_RECORDS) throw historyError("transfer_too_large");
+      // One compact, versioned document; cover URLs, images and local file paths never cross this boundary.
+      const header = JSON.stringify({ format: "lyrics-card-remote-history", version: 1, exportedAt: this.now() }).slice(0, -1) + ',"records":[';
+      let bytes = Buffer.byteLength(header, "utf8") + 2;
+      const encoded = [];
+      for (const record of records) {
+        const text = JSON.stringify(record);
+        bytes += Buffer.byteLength(text, "utf8") + (encoded.length ? 1 : 0);
+        if (bytes > MAX_HISTORY_TRANSFER_BYTES) throw historyError("transfer_too_large");
+        encoded.push(text);
+      }
+      const json = header + encoded.join(",") + "]}";
+      return { json, count: records.length, skipped: candidates.length - records.length };
+    });
+  }
+
+  previewRemoteHistory(text, limit = DEFAULT_IMPORT_HISTORY_LIMIT) {
+    const records = parseRemoteHistoryTransfer(text, this.path);
+    return this.#enqueue(async () => remoteHistoryImportPlan(await this.#ensureLoaded(), records, limit, this.path).preview);
+  }
+
+  importRemoteHistory(text, expectedVersion, limit = DEFAULT_IMPORT_HISTORY_LIMIT) {
+    const records = parseRemoteHistoryTransfer(text, this.path);
+    return this.#mutate((document) => {
+      const plan = remoteHistoryImportPlan(document, records, limit, this.path);
+      if (expectedVersion !== plan.preview.version) throw historyError("history_confirmation_stale");
+      const existingIds = new Set(document.records.map((record) => record.id));
+      const nextRecords = plan.document.records.map((record) => existingIds.has(record.id)
+        ? record : { ...record, id: this.createId() });
+      return { document: { ...document, records: nextRecords }, result: plan.preview, write: plan.preview.added > 0 };
+    });
+  }
+
   createManualSave(envelope, limit = DEFAULT_IMPORT_HISTORY_LIMIT) {
     const snapshot = parseManualSaveEnvelope(envelope);
     if (!snapshot) return Promise.reject(historyError("invalid_snapshot"));
@@ -555,6 +620,9 @@ function normalizeImportHistoryRecord(input, path = defaultPath) {
     snapshot = normalizeManualSnapshot(input.snapshot, "manual-cover");
     if (!snapshot) return null;
   }
+  const lyricsSnapshot = isRemoteHistoryRecord(input) && input.lyricsSnapshot !== undefined
+    ? normalizeRemoteLyricsSnapshot(input.lyricsSnapshot) : undefined;
+  if (lyricsSnapshot === null) return null;
   const record = {
     id,
     kind: input.kind,
@@ -562,12 +630,112 @@ function normalizeImportHistoryRecord(input, path = defaultPath) {
     lastUsedAt: Math.max(createdAt, lastUsedAt),
     display,
     ...(source ? { source } : {}),
-    ...(snapshot ? { snapshot } : {})
+    ...(snapshot ? { snapshot } : {}),
+    ...(lyricsSnapshot ? { lyricsSnapshot } : {}),
+    ...(isRemoteHistoryRecord(input) && input.importedFromJson === true ? { importedFromJson: true } : {})
   };
-  const maximumRecordBytes = input.kind === "manual-save" || snapshot?.lyricDocument
+  const maximumRecordBytes = input.kind === "manual-save" || snapshot?.lyricDocument || lyricsSnapshot
     ? MAX_MANUAL_SAVE_RECORD_BYTES
     : MAX_RECORD_BYTES;
   return Buffer.byteLength(JSON.stringify(record), "utf8") <= maximumRecordBytes ? record : null;
+}
+
+function isRemoteHistoryRecord(record) {
+  return record?.kind === "link" || record?.kind === "search";
+}
+
+function normalizeRemoteLyricsSnapshot(input) {
+  if (!jsonLikeTreeFitsWithinByteLimit(input, MAX_MANUAL_SAVE_V2_BYTES, MAX_MANUAL_SAVE_JSON_DEPTH) ||
+      !isObject(input) || typeof input.lyrics !== "string" || input.lyrics.length > 120_000 ||
+      typeof input.translationText !== "string" || input.translationText.length > 120_000 ||
+      typeof input.translationEnabled !== "boolean") return null;
+  // JSON member order is not significant in the public transfer format. Canonicalize
+  // only structure; never trim, split, truncate or infer the authored text.
+  const doc = input.lyricDocument;
+  if (!isObject(doc) || !Array.isArray(doc.blocks)) return null;
+  const formatting = (value) => isObject(value) ? {
+    sourcePresent: value.sourcePresent, translationPresent: value.translationPresent,
+    sourceSeparatorAfter: value.sourceSeparatorAfter, translationSeparatorAfter: value.translationSeparatorAfter
+  } : value;
+  const canonical = {
+    schemaVersion: doc.schemaVersion, id: doc.id, revision: doc.revision,
+    ...(doc.formatting !== undefined ? { formatting: isObject(doc.formatting) ? {
+      sourcePrefix: doc.formatting.sourcePrefix, translationPrefix: doc.formatting.translationPrefix
+    } : doc.formatting } : {}),
+    blocks: doc.blocks.map((block) => !isObject(block) || !Array.isArray(block.units) ? block : ({
+      id: block.id,
+      ...(block.formatting !== undefined ? { formatting: formatting(block.formatting) } : {}),
+      units: block.units.map((unit) => !isObject(unit) ? unit : ({
+        id: unit.id, source: unit.source,
+        ...(unit.translation !== undefined ? { translation: unit.translation } : {})
+      }))
+    }))
+  };
+  const lyricDocument = normalizeManualLyricDocument(canonical, input.lyrics, input.translationText);
+  return lyricDocument ? { lyrics: input.lyrics, translationText: input.translationText,
+    translationEnabled: input.translationEnabled, lyricDocument } : null;
+}
+
+function parseRemoteHistoryTransfer(text, path) {
+  if (typeof text !== "string" || text.length > MAX_HISTORY_TRANSFER_BYTES ||
+      Buffer.byteLength(text, "utf8") > MAX_HISTORY_TRANSFER_BYTES) throw historyError("transfer_too_large");
+  let input;
+  try { input = JSON.parse(text); } catch { throw historyError("invalid_transfer"); }
+  if (!jsonLikeTreeFitsWithinByteLimit(input, MAX_HISTORY_TRANSFER_BYTES, MAX_MANUAL_SAVE_JSON_DEPTH) ||
+      !isObject(input) || input.format !== "lyrics-card-remote-history" || input.version !== 1 ||
+      !Array.isArray(input.records) || input.records.length === 0 || input.records.length > MAX_HISTORY_TRANSFER_RECORDS) {
+    throw historyError("invalid_transfer");
+  }
+  return input.records.map((candidate, index) => {
+    if (!isRemoteHistoryRecord(candidate) || !candidate.lyricsSnapshot) throw historyError("invalid_transfer");
+    const record = normalizeImportHistoryRecord({ ...candidate, id: `transfer-${index}`, importedFromJson: true }, path);
+    if (!record) throw historyError("invalid_transfer");
+    // Incoming cover data is discarded even if another producer included it.
+    delete record.display.remoteCoverUrl;
+    return record;
+  });
+}
+
+function remoteHistoryContentKey(record, path) {
+  const snapshot = record.lyricsSnapshot;
+  const content = snapshot ? {
+    lyrics: snapshot.lyrics, translationText: snapshot.translationText, translationEnabled: snapshot.translationEnabled,
+    formatting: snapshot.lyricDocument.formatting,
+    blocks: snapshot.lyricDocument.blocks.map((block) => ({
+      formatting: block.formatting,
+      units: block.units.map((unit) => ({ source: unit.source, translation: unit.translation }))
+    }))
+  } : null;
+  return importHistoryDedupeKey({ ...record, importedFromJson: false }, path) + ":" +
+    crypto.createHash("sha256").update(JSON.stringify(content)).digest("hex");
+}
+
+function remoteHistoryImportPlan(document, candidates, limit, path) {
+  const known = new Set(document.records.filter(isRemoteHistoryRecord).map((record) => remoteHistoryContentKey(record, path)));
+  const existingIds = new Set(document.records.map((record) => record.id));
+  const additions = [];
+  let duplicates = 0;
+  for (const candidate of candidates) {
+    const key = remoteHistoryContentKey(candidate, path);
+    if (known.has(key)) { duplicates += 1; continue; }
+    known.add(key);
+    let id = candidate.id;
+    while (existingIds.has(id)) id = `_${id}`;
+    existingIds.add(id);
+    additions.push({ ...candidate, id });
+  }
+  // A duplicate-only import is a no-op, including when a preference limit changed.
+  const next = additions.length ? withHistoryLimit({ ...document, records: [...additions, ...document.records] }, limit) : document;
+  const addedIds = new Set(additions.map((record) => record.id));
+  const added = next.records.filter((record) => addedIds.has(record.id)).length;
+  return {
+    document: next,
+    preview: {
+      version: crypto.createHash("sha256").update(JSON.stringify({ document, candidates, limit })).digest("hex"),
+      added, duplicates,
+      trimmed: document.records.length + additions.length - next.records.length
+    }
+  };
 }
 
 function normalizeDisplay(input, kind) {
@@ -868,7 +1036,7 @@ function lyricLineArrayFits(value) {
 }
 
 function blankFormattingTextFits(value) {
-  return typeof value === "string" && value.length <= 120_000 && !/[^\t \n]/u.test(value);
+  return typeof value === "string" && value.length <= 120_000 && !/\S/u.test(value) && !value.includes("\r");
 }
 
 function serializeManualLyricDocumentTrack(document, track) {
@@ -1062,6 +1230,7 @@ function normalizeParseMethod(value) {
 }
 
 function importHistoryDedupeKey(record, path = defaultPath) {
+  if (isRemoteHistoryRecord(record) && record.importedFromJson) return `remote-json:${record.id}`;
   if (record.kind === "manual-save") return `manual-save:${record.id}`;
   if (record.kind === "search") {
     return `song:${record.source.platform}:${record.source.songId.toLowerCase()}`;
@@ -1154,6 +1323,7 @@ function toPublicImportHistoryRecord(record) {
     source: record.display.source,
     importedAt: record.lastUsedAt,
     detail,
+    ...(isRemoteHistoryRecord(record) ? { hasLyricsSnapshot: Boolean(record.lyricsSnapshot) } : {}),
     ...(record.display.remoteCoverUrl ? { remoteCoverUrl: record.display.remoteCoverUrl } : {})
   };
 }

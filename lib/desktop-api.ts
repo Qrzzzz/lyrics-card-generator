@@ -18,7 +18,10 @@ import type {
   ImportHistoryStats,
   ImportHistoryTrimConfirmation,
   ImportHistoryWriteCandidate,
-  ImportHistoryWriteResult
+  ImportHistoryWriteResult,
+  RemoteLyricsSnapshot,
+  HistoryTransferPreview,
+  HistoryTransferResult
 } from "@/lib/import-history";
 
 export type AppPreferencesSaveOptions = {
@@ -85,6 +88,10 @@ export type LyricsCardDesktopApi = {
   }) => Promise<ImportHistoryListResult>;
   getImportHistoryStats: () => Promise<ImportHistoryStats>;
   recordImportHistory: (record: ImportHistoryWriteCandidate) => Promise<ImportHistoryWriteResult>;
+  updateRemoteHistoryLyrics: (recordId: string, snapshot: RemoteLyricsSnapshot) => Promise<ImportHistoryWriteResult>;
+  copyRemoteHistory: (recordId?: string) => Promise<HistoryTransferResult<{ count: number; skipped: number }>>;
+  previewRemoteHistory: (json: string) => Promise<HistoryTransferResult<HistoryTransferPreview>>;
+  importRemoteHistory: (json: string, expectedVersion: string) => Promise<HistoryTransferResult<HistoryTransferPreview>>;
   createManualSave: (envelope: ImportHistoryManualSaveEnvelope) => Promise<ImportHistoryWriteResult>;
   updateManualSave: (recordId: string, envelope: ImportHistoryManualSaveEnvelope) => Promise<ImportHistoryWriteResult>;
   removeImportHistory: (recordId: string) => Promise<boolean>;

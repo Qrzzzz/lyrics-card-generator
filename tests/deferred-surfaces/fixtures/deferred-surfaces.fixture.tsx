@@ -148,6 +148,7 @@ function DeferredSurfaceFixture({ controller }: { controller: LoaderController }
         onNotify={() => undefined}
         onRecordRemoved={() => undefined}
         onHistoryCleared={() => undefined}
+        onBeforeTransfer={async () => undefined}
       />
       <DeferredSettingsSurface
         mounted={mounted.settings}

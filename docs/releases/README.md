@@ -152,3 +152,5 @@ Release 正文只写简体中文短版。Release 页面不在仓库目录中，�
 4. 通过 PR 合并后，只在已验证的 `main` 提交上创建版本 tag。不要从含未提交修改的工作区或不同提交构建发布制品。
 5. `release.yml` 从 tag 提交重新安装依赖、执行质量门禁、仅构建并验证 Windows x64 Setup，并生成哈希、SBOM 与 attestation 后发布 GitHub Release；从 v6.2.2 起不得出现 portable 资产。
 6. 发布后按唯一 Release ID 核对公开状态、tag、全部附件与哈希，并检查应用内更新识别及 GitHub Pages / Web Lite 状态。
+
+- `v6.2.7`：远程历史支持 JSON 单条或批量复制、粘贴预览与合并导入；保存歌词处理结果，封面在载入时通过歌曲链接重新解析。

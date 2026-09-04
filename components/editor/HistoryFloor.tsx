@@ -2,6 +2,8 @@
 
 import { motion, type Transition } from "framer-motion";
 import {
+  Copy,
+  ClipboardPaste,
   FileAudio,
   FolderOpen,
   History,
@@ -16,6 +18,8 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { recordRenderBoundary } from "@/components/editor/render-boundary-diagnostics";
+import { HistoryTransferDialog } from "@/components/editor/HistoryTransferDialog";
+import { historyTransferCopy, historyTransferError } from "@/lib/history-transfer-copy";
 import type { ToastNotifier } from "@/components/feedback/AppToast";
 import { SurfaceCloseButton } from "@/components/layout/SurfaceCloseButton";
 import { AdaptiveAlbumArtwork } from "@/components/preview/AdaptiveAlbumArtwork";
@@ -48,6 +52,7 @@ type HistoryFloorProps = {
   onNotify: ToastNotifier;
   onRecordRemoved: (recordId: string) => void;
   onHistoryCleared: () => void;
+  onBeforeTransfer: () => Promise<void>;
 };
 
 export function HistoryFloor({
@@ -59,10 +64,13 @@ export function HistoryFloor({
   onReplay,
   onNotify,
   onRecordRemoved,
-  onHistoryCleared
+  onHistoryCleared,
+  onBeforeTransfer
 }: HistoryFloorProps) {
   recordRenderBoundary("History");
   const copy = importHistoryCopy[locale];
+  const transferCopy = historyTransferCopy[locale];
+  const [transferOpen, setTransferOpen] = useState(false);
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
   const requestIdRef = useRef(0);
   const [records, setRecords] = useState<ImportHistoryRecord[]>([]);
@@ -245,6 +253,22 @@ export function HistoryFloor({
 
   const emptyMessage = query.trim() || source !== "all" ? copy.emptyFiltered : copy.empty;
 
+  async function copyJson(recordId?: string) {
+    const desktop = getLyricsCardDesktopApi();
+    if (!desktop || busyId) return;
+    setBusyId(recordId ?? "copy-json");
+    try {
+      await onBeforeTransfer();
+      const result = await desktop.copyRemoteHistory(recordId);
+      if (!result.ok) { onNotify(historyTransferError(locale, result.code), "warning"); return; }
+      onNotify(formatImportHistoryText(transferCopy.copied, result.data), "success");
+      if (result.data.skipped) onNotify(formatImportHistoryText(transferCopy.skipped, { count: result.data.skipped }), "warning");
+    } catch { onNotify(transferCopy.failed, "error"); }
+    finally { setBusyId(""); }
+  }
+
+  function closeTransfer() { setTransferOpen(false); setBusyId(""); }
+
   // Keep the surface visible through its exit animation while inert prevents interaction.
   return (
     <motion.section
@@ -332,6 +356,12 @@ export function HistoryFloor({
             {copy.clearAll}
           </ActionButton>
         </div>
+        <div className="col-span-full flex flex-wrap items-center justify-end gap-2">
+          <ActionButton size="sm" icon={<Copy className="h-4 w-4" />} data-testid="history-copy-all"
+            disabled={Boolean(busyId)} onClick={() => void copyJson()}>{transferCopy.copyAll}</ActionButton>
+          <ActionButton size="sm" icon={<ClipboardPaste className="h-4 w-4" />} data-testid="history-paste"
+            disabled={Boolean(busyId)} onClick={() => { setTransferOpen(true); setBusyId("import-json"); }}>{transferCopy.paste}</ActionButton>
+        </div>
       </header>
 
       <div className="history-floor__content-scroll relative z-0 min-h-0 flex-1 overflow-y-auto overscroll-contain">
@@ -359,6 +389,8 @@ export function HistoryFloor({
                     onReplay={() => void replay(record.id)}
                     onRelocate={() => void replay(record.id, true)}
                     onRemove={() => void removeRecord(record.id)}
+                    onCopy={() => void copyJson(record.id)}
+                    copyDisabled={Boolean(busyId)}
                   />
                 ))}
               </div>
@@ -377,6 +409,12 @@ export function HistoryFloor({
           )}
         </div>
       </div>
+      <HistoryTransferDialog open={transferOpen} locale={locale} onClose={closeTransfer} onBeforeTransfer={onBeforeTransfer}
+        onImported={(result) => {
+          closeTransfer();
+          onNotify(formatImportHistoryText(transferCopy.imported, result), "success");
+          void loadFirstPage();
+        }} />
     </motion.section>
   );
 }
@@ -389,7 +427,9 @@ function HistoryCard({
   missing,
   onReplay,
   onRelocate,
-  onRemove
+  onRemove,
+  onCopy,
+  copyDisabled
 }: {
   record: ImportHistoryRecord;
   locale: Locale;
@@ -399,6 +439,8 @@ function HistoryCard({
   onReplay: () => void;
   onRelocate: () => void;
   onRemove: () => void;
+  onCopy: () => void;
+  copyDisabled: boolean;
 }) {
   const copy = importHistoryCopy[locale];
   const sourceLabel = sourceLabelForKind(record.kind, locale);
@@ -464,6 +506,12 @@ function HistoryCard({
         ) : null}
       </div>
       <div className="history-card__actions flex flex-wrap justify-end gap-2 border-t border-[rgb(var(--panel-border))] p-3">
+        {record.kind === "link" || record.kind === "search" ? <ActionButton
+          variant="icon" size="sm" icon={<Copy className="h-4 w-4" />}
+          aria-label={historyTransferCopy[locale].copyOne}
+          title={record.hasLyricsSnapshot ? historyTransferCopy[locale].copyOne : historyTransferCopy[locale].missingLyrics}
+          data-testid={`history-copy-${record.id}`} disabled={copyDisabled} onClick={onCopy}
+        /> : null}
         {missing ? (
           <ActionButton
             size="sm"

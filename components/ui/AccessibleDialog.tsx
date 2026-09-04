@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 
@@ -18,6 +18,7 @@ type AccessibleDialogProps = {
   overlayClassName?: string;
   panelClassName?: string;
   testId?: string;
+  inheritThemeFrom?: string;
   children: React.ReactNode;
 };
 
@@ -37,6 +38,7 @@ export function AccessibleDialog({
   overlayClassName,
   panelClassName,
   testId,
+  inheritThemeFrom,
   children
 }: AccessibleDialogProps) {
   const reduceMotion = useReducedMotion();
@@ -44,6 +46,19 @@ export function AccessibleDialog({
   const panelRef = useRef<HTMLDivElement>(null);
   const restoreFocusRef = useRef<HTMLElement | null>(null);
   const releaseInertRef = useRef<(() => void) | null>(null);
+  const [themeStyle, setThemeStyle] = useState<CSSProperties>();
+
+  useEffect(() => {
+    if (!open || !inheritThemeFrom) return;
+    const source = document.querySelector(inheritThemeFrom);
+    if (!source) return;
+    // Portals outside the application shell otherwise lose its scoped theme tokens.
+    const computed = window.getComputedStyle(source);
+    const tokens = Object.fromEntries(Array.from(computed)
+      .filter((name) => name.startsWith("--"))
+      .map((name) => [name, computed.getPropertyValue(name)]));
+    setThemeStyle({ ...tokens, colorScheme: computed.colorScheme, fontFamily: computed.fontFamily });
+  }, [inheritThemeFrom, open]);
 
   useEffect(() => {
     if (!open) return;
@@ -86,6 +101,7 @@ export function AccessibleDialog({
         <motion.div
           ref={overlayRef}
           data-testid={testId}
+          style={themeStyle}
           className={cn("fixed inset-0 z-[150] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm", overlayClassName)}
           initial={reduceMotion ? false : { opacity: 0 }}
           animate={{ opacity: 1 }}
