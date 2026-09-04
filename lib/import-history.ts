@@ -6,7 +6,7 @@ import {
   type LyricDocumentV2
 } from "@/lib/lyrics-document-v2";
 
-export type ImportHistoryKind = "link" | "search" | "local-audio" | "manual-cover" | "manual-save";
+export type ImportHistoryKind = "link" | "search" | "local-audio" | "manual-cover" | "manual-save" | "draft";
 export type ImportHistoryFileKind = Extract<ImportHistoryKind, "local-audio" | "manual-cover">;
 export type ImportHistoryLimit = "none" | 5 | 10 | "unlimited";
 export type ManualSaveButtonState = "create" | "update" | "current" | "saving" | "unavailable";
@@ -22,6 +22,7 @@ export type ImportHistoryRecord = {
   detail: string;
   remoteCoverUrl?: string;
   hasLyricsSnapshot?: boolean;
+  hasEditorDraft?: boolean;
 };
 
 export type RemoteLyricsSnapshot = {
@@ -228,6 +229,7 @@ export type ImportHistoryFileChunkResult =
   | { ok: false; code: string };
 
 export type ImportHistoryReplayResult =
+  | { ok: true; kind: "draft"; record: ImportHistoryRecord; draft: import("@/lib/editor-draft").EditorDraftLoad }
   | {
       ok: true;
       kind: "link";

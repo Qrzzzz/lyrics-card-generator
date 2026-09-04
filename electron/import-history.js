@@ -2,6 +2,7 @@ const crypto = require("node:crypto");
 const defaultFs = require("node:fs/promises");
 const defaultPath = require("node:path");
 const { types: utilTypes } = require("node:util");
+const { MAX_DRAFT_BYTES, normalizeEditorDraft } = require("./editor-draft");
 
 const IMPORT_HISTORY_SCHEMA_VERSION = 2;
 const LEGACY_IMPORT_HISTORY_SCHEMA_VERSION = 1;
@@ -63,7 +64,7 @@ const DEFAULT_IMPORT_FILE_STREAMS_PER_SENDER = 4;
 const MAX_TIMESTAMP_MS = 8_640_000_000_000_000;
 const AUDIO_EXTENSIONS = new Set([".mp3", ".flac", ".m4a"]);
 const IMAGE_EXTENSIONS = new Set([".png", ".jpg", ".jpeg", ".webp", ".gif"]);
-const HISTORY_KINDS = new Set(["link", "search", "local-audio", "manual-cover", "manual-save"]);
+const HISTORY_KINDS = new Set(["link", "search", "local-audio", "manual-cover", "manual-save", "draft"]);
 const SONG_SOURCES = new Set(["qq", "netease", "apple", "spotify", "unknown"]);
 
 /**
@@ -93,6 +94,7 @@ class ImportHistoryStore {
     this.loadPromise = null;
     this.writeQueue = Promise.resolve();
     this.notice = null;
+    this.draftLeases = new Map();
     // Normalized records are immutable within a document snapshot. Derived
     // search and identity strings can therefore be retained without changing
     // ordering, pagination, filtering, or dedupe semantics.
@@ -125,7 +127,7 @@ class ImportHistoryStore {
   stats() {
     return this.#enqueue(async () => {
       const document = await this.#ensureLoaded();
-      const manualTotal = document.records.filter((record) => record.kind === "manual-save").length;
+      const manualTotal = document.records.filter((record) => record.kind === "manual-save" || record.editorDraft).length;
       return {
         total: document.records.length,
         automaticTotal: document.records.length - manualTotal,
@@ -143,6 +145,68 @@ class ImportHistoryStore {
     }));
   }
 
+  beginEditorDraft(recordId) {
+    return this.#enqueue(async () => {
+      const document = await this.#ensureLoaded();
+      if (recordId !== undefined && !document.records.some((record) => record.id === normalizeId(recordId))) {
+        throw historyError("not_found");
+      }
+      const id = recordId ?? this.createId();
+      const token = crypto.randomUUID();
+      this.draftLeases.set(id, { token, revision: -1 });
+      return { recordId: id, token };
+    });
+  }
+
+  saveEditorDraft(recordId, token, revision, envelope) {
+    if (typeof envelope !== "string" || Buffer.byteLength(envelope, "utf8") > MAX_DRAFT_BYTES ||
+      !Number.isSafeInteger(revision) || revision < 0) return Promise.reject(historyError("invalid_snapshot"));
+    let input;
+    try { input = JSON.parse(envelope); } catch { return Promise.reject(historyError("invalid_snapshot")); }
+    if (!jsonLikeTreeFitsWithinByteLimit(input, MAX_DRAFT_BYTES, MAX_MANUAL_SAVE_JSON_DEPTH)) {
+      return Promise.reject(historyError("invalid_snapshot"));
+    }
+    const editorDraft = normalizeEditorDraft(input, (content) => normalizeManualSnapshot(content, "draft"));
+    if (!editorDraft) return Promise.reject(historyError("invalid_snapshot"));
+    return this.#mutate((document) => {
+      const lease = this.draftLeases.get(recordId);
+      if (!lease || lease.token !== token || revision <= lease.revision) throw historyError("stale_draft");
+      const existing = document.records.find((record) => record.id === recordId);
+      const now = this.now();
+      const record = {
+        ...(existing ?? { id: recordId, kind: "draft", createdAt: now }),
+        lastUsedAt: now, display: normalizeManualSaveDisplay(editorDraft.content), editorDraft,
+        ...(existing?.kind === "manual-save" ? { snapshot: editorDraft.content } : {}),
+        ...(isRemoteHistoryRecord(existing) ? { lyricsSnapshot: {
+          lyrics: editorDraft.content.lyrics, translationText: editorDraft.content.translationText,
+          translationEnabled: editorDraft.content.translationEnabled, lyricDocument: editorDraft.content.lyricDocument
+        } } : {})
+      };
+      return {
+        document: { ...document, activeDraftId: recordId, records: [record, ...document.records.filter((item) => item.id !== recordId)] },
+        result: toPublicImportHistoryRecord(record),
+        afterWrite: () => { lease.revision = revision; }
+      };
+    });
+  }
+
+  getActiveEditorDraft() {
+    return this.#enqueue(async () => {
+      const document = await this.#ensureLoaded();
+      return document.records.find((record) => record.id === document.activeDraftId && record.editorDraft) ?? null;
+    });
+  }
+
+  activateEditorDraft(recordId) {
+    return this.#mutate((document) => {
+      if (recordId !== null && !document.records.some((record) => record.id === recordId && record.editorDraft)) {
+        throw historyError("not_found");
+      }
+      return { document: { ...document, activeDraftId: recordId }, result: true,
+        write: (document.activeDraftId ?? null) !== recordId };
+    });
+  }
+
   get(recordId) {
     return this.#enqueue(async () => {
       const document = await this.#ensureLoaded();
@@ -154,7 +218,7 @@ class ImportHistoryStore {
 
   upsert(candidate, limit = DEFAULT_IMPORT_HISTORY_LIMIT) {
     return this.#mutate((document) => {
-      if (candidate?.kind === "manual-save") {
+      if (candidate?.kind === "manual-save" || candidate?.kind === "draft" || candidate?.editorDraft !== undefined) {
         throw historyError("invalid_kind");
       }
       const timestamp = this.now();
@@ -195,6 +259,7 @@ class ImportHistoryStore {
       const existing = document.records.find((record) => record.id === normalizeId(recordId));
       if (!existing) throw historyError("not_found");
       if (!isRemoteHistoryRecord(existing)) throw historyError("invalid_kind");
+      if (existing.editorDraft) throw historyError("stale_draft");
       const updated = { ...existing, lyricsSnapshot };
       return {
         document: { ...document, records: document.records.map((record) => record === existing ? updated : record) },
@@ -318,7 +383,8 @@ class ImportHistoryStore {
       }
       return {
         document: { schemaVersion: IMPORT_HISTORY_SCHEMA_VERSION, records },
-        result: true
+        result: true,
+        afterWrite: () => this.draftLeases.delete(id)
       };
     });
   }
@@ -326,11 +392,13 @@ class ImportHistoryStore {
   clear() {
     return this.#mutate((document) => {
       if (document.records.length === 0) {
+        this.draftLeases.clear();
         return { document, result: 0, write: false };
       }
       return {
         document: { schemaVersion: IMPORT_HISTORY_SCHEMA_VERSION, records: [] },
-        result: document.records.length
+        result: document.records.length,
+        afterWrite: () => this.draftLeases.clear()
       };
     });
   }
@@ -471,8 +539,16 @@ class ImportHistoryStore {
       const current = await this.#ensureLoaded();
       const mutation = mutator(current);
       if (mutation.write === false) return mutation.result;
+      const activeDraftId = Object.hasOwn(mutation.document, "activeDraftId")
+        ? mutation.document.activeDraftId : current.activeDraftId;
+      if (activeDraftId && mutation.document.records.some((record) => record.id === activeDraftId && record.editorDraft)) {
+        mutation.document.activeDraftId = activeDraftId;
+      } else {
+        delete mutation.document.activeDraftId;
+      }
       await this.#writeDocument(mutation.document);
       this.document = mutation.document;
+      mutation.afterWrite?.();
       return mutation.result;
     });
   }
@@ -532,7 +608,15 @@ class ImportHistoryStore {
       path: this.path,
       now: this.now()
     });
-    const empty = emptyHistoryDocument();
+    let recovered = null;
+    try {
+      const backup = JSON.parse(await this.fs.readFile(`${this.filePath}.bak`, "utf8"));
+      const candidate = normalizeImportHistoryDocument(backup, this.path);
+      if (candidate && candidate.records.length === backup.records.length && candidate.records.some((record) => record.editorDraft)) {
+        recovered = candidate;
+      }
+    } catch (error) { if (error?.code !== "ENOENT" && !(error instanceof SyntaxError)) throw error; }
+    const empty = recovered ?? emptyHistoryDocument();
     await this.#writeDocument(empty);
     this.notice = {
       code: "corrupt_recovered",
@@ -547,6 +631,12 @@ class ImportHistoryStore {
     const temporary = `${this.filePath}.tmp-${process.pid}-${crypto.randomBytes(6).toString("hex")}`;
     await this.fs.mkdir(directory, { recursive: true });
     try {
+      // Keep a last-known-good draft document. Deletion replaces this recovery
+      // copy with the reduced document so recovery cannot resurrect removed work.
+      if (this.document?.records.some((record) => record.editorDraft)) {
+        const removed = this.document.records.some((record) => !document.records.some((next) => next.id === record.id));
+        await writeHistoryRecoveryCopy(this.fs, `${this.filePath}.bak`, removed ? document : this.document);
+      }
       const serialized = `${JSON.stringify(document, null, 2)}\n`;
       const serializedBytes = Buffer.byteLength(serialized, "utf8");
       this.#observePerformance("serialize", { bytes: serializedBytes });
@@ -556,7 +646,9 @@ class ImportHistoryStore {
         encoding: "utf8",
         mode: 0o600
       });
-      await this.fs.rename(temporary, this.filePath);
+      const handle = await this.fs.open(temporary, "r+");
+      try { await handle.sync(); } finally { await handle.close(); }
+      await renameHistoryFile(this.fs, temporary, this.filePath);
       await this.fs.chmod(this.filePath, 0o600).catch(() => undefined);
     } catch (error) {
       await this.fs.rm(temporary, { force: true }).catch(() => undefined);
@@ -588,7 +680,8 @@ function normalizeImportHistoryDocument(input, path = defaultPath) {
     recordIds.add(record.id);
     records.push(record);
   }
-  return { schemaVersion: IMPORT_HISTORY_SCHEMA_VERSION, records };
+  return { schemaVersion: IMPORT_HISTORY_SCHEMA_VERSION, records,
+    ...(records.some((record) => record.id === input.activeDraftId && record.editorDraft) ? { activeDraftId: input.activeDraftId } : {}) };
 }
 
 function normalizeImportHistoryRecord(input, path = defaultPath) {
@@ -598,7 +691,10 @@ function normalizeImportHistoryRecord(input, path = defaultPath) {
   const lastUsedAt = normalizeTimestamp(input.lastUsedAt);
   if (!id || createdAt === null || lastUsedAt === null) return null;
   let snapshot;
-  const display = input.kind === "manual-save"
+  const editorDraft = input.editorDraft === undefined ? undefined
+    : normalizeEditorDraft(input.editorDraft, (content) => normalizeManualSnapshot(content, "draft"));
+  if (editorDraft === null || (input.kind === "draft" && !editorDraft)) return null;
+  const display = editorDraft ? normalizeManualSaveDisplay(editorDraft.content) : input.kind === "manual-save"
     ? (() => {
         snapshot = normalizeManualSnapshot(input.snapshot, "manual-save");
         return snapshot ? normalizeManualSaveDisplay(snapshot) : null;
@@ -611,10 +707,11 @@ function normalizeImportHistoryRecord(input, path = defaultPath) {
     source = normalizeLinkSource(input.source ?? input);
   } else if (input.kind === "search") {
     source = normalizeSearchSource(input.source ?? input);
-  } else if (input.kind !== "manual-save") {
+  } else if (input.kind !== "manual-save" && input.kind !== "draft") {
     source = normalizeFileSource(input.source ?? input.file, input.kind, path);
   }
-  if (input.kind !== "manual-save" && !source) return null;
+  if (input.kind !== "manual-save" && input.kind !== "draft" && !source) return null;
+  if (input.kind === "manual-save" && editorDraft) snapshot = editorDraft.content;
 
   if (input.kind === "manual-cover") {
     snapshot = normalizeManualSnapshot(input.snapshot, "manual-cover");
@@ -632,9 +729,10 @@ function normalizeImportHistoryRecord(input, path = defaultPath) {
     ...(source ? { source } : {}),
     ...(snapshot ? { snapshot } : {}),
     ...(lyricsSnapshot ? { lyricsSnapshot } : {}),
+    ...(editorDraft ? { editorDraft } : {}),
     ...(isRemoteHistoryRecord(input) && input.importedFromJson === true ? { importedFromJson: true } : {})
   };
-  const maximumRecordBytes = input.kind === "manual-save" || snapshot?.lyricDocument || lyricsSnapshot
+  const maximumRecordBytes = editorDraft ? MAX_DRAFT_BYTES + MAX_MANUAL_SAVE_RECORD_BYTES : input.kind === "manual-save" || snapshot?.lyricDocument || lyricsSnapshot
     ? MAX_MANUAL_SAVE_RECORD_BYTES
     : MAX_RECORD_BYTES;
   return Buffer.byteLength(JSON.stringify(record), "utf8") <= maximumRecordBytes ? record : null;
@@ -642,6 +740,26 @@ function normalizeImportHistoryRecord(input, path = defaultPath) {
 
 function isRemoteHistoryRecord(record) {
   return record?.kind === "link" || record?.kind === "search";
+}
+
+async function renameHistoryFile(fs, source, target) {
+  for (let attempt = 0; ; attempt++) {
+    try { await fs.rename(source, target); return; }
+    catch (error) {
+      if (attempt >= 3 || !["EACCES", "EBUSY", "EPERM"].includes(error?.code)) throw error;
+      await new Promise((resolve) => setTimeout(resolve, [10, 40, 100][attempt]));
+    }
+  }
+}
+
+async function writeHistoryRecoveryCopy(fs, target, document) {
+  const temporary = `${target}.tmp-${process.pid}-${crypto.randomBytes(6).toString("hex")}`;
+  try {
+    await fs.writeFile(temporary, JSON.stringify(document), { encoding: "utf8", mode: 0o600 });
+    const handle = await fs.open(temporary, "r+");
+    try { await handle.sync(); } finally { await handle.close(); }
+    await renameHistoryFile(fs, temporary, target);
+  } finally { await fs.rm(temporary, { force: true }).catch(() => undefined); }
 }
 
 function normalizeRemoteLyricsSnapshot(input) {
@@ -706,7 +824,8 @@ function remoteHistoryContentKey(record, path) {
       units: block.units.map((unit) => ({ source: unit.source, translation: unit.translation }))
     }))
   } : null;
-  return importHistoryDedupeKey({ ...record, importedFromJson: false }, path) + ":" +
+  // JSON transfer compares source + authored lyrics, independent of local draft ownership.
+  return importHistoryDedupeKey({ ...record, editorDraft: undefined, importedFromJson: false }, path) + ":" +
     crypto.createHash("sha256").update(JSON.stringify(content)).digest("hex");
 }
 
@@ -799,6 +918,11 @@ function normalizeFileSource(input, kind, path = defaultPath) {
 
 function normalizeManualSnapshot(input, kind = "manual-cover") {
   if (!isObject(input)) return null;
+  if (kind === "draft" && (!jsonLikeTreeFitsWithinByteLimit(input, MAX_DRAFT_BYTES, MAX_MANUAL_SAVE_JSON_DEPTH) ||
+    typeof input.title !== "string" || input.title.length > 512 || typeof input.artist !== "string" || input.artist.length > 1024 ||
+    (input.album !== undefined && (typeof input.album !== "string" || input.album.length > 512)) ||
+    !SONG_SOURCES.has(input.source) || typeof input.translationEnabled !== "boolean" ||
+    typeof input.lyrics !== "string" || input.lyrics.length > 120_000 || typeof input.translationText !== "string" || input.translationText.length > 120_000)) return null;
   const title = boundedString(input.title, 512);
   const artist = boundedString(input.artist, 512);
   const source = SONG_SOURCES.has(input.source) ? input.source : "unknown";
@@ -809,9 +933,9 @@ function normalizeManualSnapshot(input, kind = "manual-cover") {
     : { originalUrl: originalUrl.url, finalUrl: finalUrl.url };
   if (!songUrls) return null;
   const snapshot = {
-    title,
-    artist,
-    album: boundedString(input.album, 512),
+    title: kind === "draft" ? input.title : title,
+    artist: kind === "draft" ? input.artist : artist,
+    album: kind === "draft" ? input.album ?? "" : boundedString(input.album, 512),
     source,
     originalUrl: songUrls.originalUrl,
     finalUrl: songUrls.finalUrl,
@@ -826,12 +950,12 @@ function normalizeManualSnapshot(input, kind = "manual-cover") {
   );
   if (lyricDocument) snapshot.lyricDocument = lyricDocument;
   else if (input.lyricDocument !== undefined) return null;
-  if (kind === "manual-save") {
+  if (kind === "manual-save" || kind === "draft") {
     snapshot.explicit = input.explicit === true;
     snapshot.originalCoverUrl = normalizeManualHttpUrl(input.originalCoverUrl);
     snapshot.coverUrl = normalizeManualHttpUrl(input.coverUrl);
     snapshot.parseMethod = normalizeParseMethod(input.parseMethod);
-    if (!isMeaningfulManualSaveSnapshot(snapshot)) return null;
+    if (kind === "manual-save" && !isMeaningfulManualSaveSnapshot(snapshot)) return null;
   }
   return snapshot;
 }
@@ -1230,6 +1354,7 @@ function normalizeParseMethod(value) {
 }
 
 function importHistoryDedupeKey(record, path = defaultPath) {
+  if (record.editorDraft || record.kind === "draft") return `draft:${record.id}`;
   if (isRemoteHistoryRecord(record) && record.importedFromJson) return `remote-json:${record.id}`;
   if (record.kind === "manual-save") return `manual-save:${record.id}`;
   if (record.kind === "search") {
@@ -1286,7 +1411,7 @@ function withHistoryLimit(document, limit) {
   return {
     schemaVersion: IMPORT_HISTORY_SCHEMA_VERSION,
     records: document.records.filter((record) => {
-      if (record.kind === "manual-save") return true;
+      if (record.kind === "manual-save" || record.editorDraft || record.kind === "draft") return true;
       automaticCount += 1;
       return automaticCount <= automaticLimit;
     })
@@ -1311,7 +1436,7 @@ function toPublicImportHistoryRecord(record) {
     detail = hostnameForUrl(record.source.finalUrl || record.source.normalizedUrl);
   } else if (record.kind === "search") {
     detail = hostnameForUrl(record.source.pageUrl) || record.source.platform;
-  } else if (record.kind !== "manual-save") {
+  } else if (record.kind !== "manual-save" && record.kind !== "draft") {
     detail = record.source.fileName;
   }
   return {
@@ -1323,6 +1448,7 @@ function toPublicImportHistoryRecord(record) {
     source: record.display.source,
     importedAt: record.lastUsedAt,
     detail,
+    ...(record.editorDraft ? { hasEditorDraft: true } : {}),
     ...(isRemoteHistoryRecord(record) ? { hasLyricsSnapshot: Boolean(record.lyricsSnapshot) } : {}),
     ...(record.display.remoteCoverUrl ? { remoteCoverUrl: record.display.remoteCoverUrl } : {})
   };

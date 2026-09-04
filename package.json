@@ -1,6 +1,6 @@
 {
   "name": "lyric-card-generator",
-  "version": "6.2.7",
+  "version": "6.2.8",
   "private": true,
   "main": "electron/main.js",
   "scripts": {
@@ -65,7 +65,7 @@
     "electron-runtime:coverage": "c8 --clean --all --include=electron/preload.js --include=electron/ipc-security.js --include=electron/url-policy.js --include=electron/local-app-url.js --include=electron/local-server-origin.js --include=electron/manual-save-ipc.js --include=electron/import-history.js --include=electron/packaged-server-readiness.js --include=electron/ai-request-registry.js --check-coverage --per-file --lines 70 --functions 75 --branches 60 --statements 70 node scripts/test-electron-runtime-coverage.cjs",
     "click-spark:test": "tsx scripts/test-click-spark-animation.ts",
     "toast:test": "tsx scripts/test-toast-queue.ts",
-    "core:test": "npm run p0:test && npm run lyrics-document-v2:test && npm run palette:test && npm run color-field:test && npm run background-composition:test && npm run card-content-depth:test && npm run startup-assets:test && node scripts/test-electron-single-instance.cjs && tsx scripts/test-import-history-ui.ts && npm run history-transfer:test && tsx scripts/test-v2-core.ts && tsx scripts/test-v32-settings.ts && tsx scripts/test-v321-theme-tokens.ts && tsx scripts/test-light-acrylic-contrast.ts && npm run project-signature:test && tsx scripts/test-v34-layout-grid.ts && tsx scripts/test-artwork-geometry.ts && tsx scripts/test-auto-width.ts && tsx scripts/test-landscape-plan.ts && tsx scripts/test-stepper-layout.ts && tsx scripts/test-lyrics-workspace-layout.ts && tsx scripts/test-lyrics-workbench.ts && tsx scripts/test-lyrics-document.ts && tsx scripts/test-lyrics-viewport.ts && tsx scripts/test-titlebar-regression.ts && tsx scripts/test-examples.ts && tsx scripts/test-settings-wing.ts && tsx scripts/test-ai-settings-save-controller.ts && npm run app-preference-save:test && tsx scripts/test-release-consistency.ts && npm run click-spark:test && npm run toast:test && tsx scripts/test-motion-system.ts && tsx scripts/test-ai-provider-response.ts && tsx scripts/test-netease-search-normalize.ts && node scripts/test-electron-ai-prompt-settings.cjs && npm run ai-settings-store:test && node scripts/test-electron-font-options.cjs && node scripts/test-electron-font-directory-service.cjs && node scripts/test-electron-user-preferences.cjs",
+    "core:test": "npm run p0:test && npm run lyrics-document-v2:test && npm run palette:test && npm run color-field:test && npm run background-composition:test && npm run card-content-depth:test && npm run startup-assets:test && tsx scripts/test-import-history-ui.ts && npm run autosave:test && tsx scripts/test-remote-history-session.ts && tsx scripts/test-v2-core.ts && tsx scripts/test-v32-settings.ts && tsx scripts/test-v321-theme-tokens.ts && tsx scripts/test-light-acrylic-contrast.ts && npm run project-signature:test && tsx scripts/test-v34-layout-grid.ts && tsx scripts/test-artwork-geometry.ts && tsx scripts/test-auto-width.ts && tsx scripts/test-landscape-plan.ts && tsx scripts/test-stepper-layout.ts && tsx scripts/test-lyrics-workspace-layout.ts && tsx scripts/test-lyrics-workbench.ts && tsx scripts/test-lyrics-document.ts && tsx scripts/test-lyrics-viewport.ts && tsx scripts/test-titlebar-regression.ts && tsx scripts/test-examples.ts && tsx scripts/test-settings-wing.ts && tsx scripts/test-ai-settings-save-controller.ts && tsx scripts/test-release-consistency.ts && npm run click-spark:test && npm run toast:test && tsx scripts/test-motion-system.ts && tsx scripts/test-ai-provider-response.ts && tsx scripts/test-netease-search-normalize.ts && node scripts/test-electron-ai-prompt-settings.cjs && npm run ai-settings-store:test && node scripts/test-electron-font-options.cjs && node scripts/test-electron-font-directory-service.cjs && node scripts/test-electron-user-preferences.cjs",
     "desktop:dev": "node scripts/start-electron-dev.mjs",
     "desktop:startup-test": "node scripts/test-electron-packaged-server-startup.cjs",
     "desktop:startup-benchmark": "node scripts/benchmark-desktop-startup.mjs",
@@ -78,13 +78,15 @@
     "desktop:startup-origin-test": "node scripts/test-desktop-startup-origin-interactions.mjs",
     "desktop:clipboard-test": "node scripts/test-desktop-clipboard-interactions.mjs",
     "desktop:prepare": "node scripts/prepare-electron-dist.mjs",
-    "desktop:interaction-test": "node scripts/test-desktop-single-instance-interactions.mjs && node scripts/test-desktop-startup-origin-interactions.mjs && node scripts/test-desktop-clipboard-interactions.mjs && node scripts/test-desktop-settings-interactions.mjs && node scripts/test-desktop-import-history-interactions.mjs && npm run desktop:history-transfer-test",
+    "desktop:interaction-test": "node scripts/test-desktop-single-instance-interactions.mjs && node scripts/test-desktop-startup-origin-interactions.mjs && node scripts/test-desktop-clipboard-interactions.mjs && node scripts/test-desktop-settings-interactions.mjs && node scripts/test-desktop-import-history-interactions.mjs && npm run desktop:autosave-test && npm run desktop:history-transfer-test",
     "desktop:visual-diagnostic": "node scripts/test-desktop-settings-interactions.mjs --visual-diagnostics",
     "desktop:final-artifact-smoke": "node scripts/smoke-final-windows-artifacts.mjs",
     "desktop:size": "node scripts/audit-desktop-size.mjs",
     "desktop:pack": "npm run typecheck && npm run build && npm run desktop:prepare && electron-builder --dir --projectDir dist-desktop/app",
     "desktop:build": "npm run typecheck && npm run build && npm run desktop:prepare && electron-builder --publish never --projectDir dist-desktop/app",
     "history-transfer:test": "node scripts/test-remote-history.cjs && tsx scripts/test-remote-history-session.ts",
+    "desktop:autosave-test": "node scripts/test-desktop-editor-autosave-interactions.mjs",
+    "autosave:test": "tsx scripts/test-editor-autosave.ts",
     "desktop:history-transfer-test": "node scripts/test-desktop-remote-history-interactions.mjs"
   },
   "dependencies": {

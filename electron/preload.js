@@ -139,6 +139,17 @@ contextBridge.exposeInMainWorld("lyricsCardDesktopBridge", {
   },
   listImportHistory: (options) => ipcRenderer.invoke("lyrics-card:import-history-list", options),
   getImportHistoryStats: () => ipcRenderer.invoke("lyrics-card:import-history-stats"),
+  beginEditorDraft: (recordId) => recordId === undefined || (typeof recordId === "string" && recordId.length <= 160)
+    ? ipcRenderer.invoke("lyrics-card:draft-begin", recordId) : invalidManualSaveResult(),
+  writeEditorDraft: (recordId, token, revision, envelope) => typeof recordId === "string" && recordId.length <= 160 &&
+    typeof token === "string" && token.length <= 160 && Number.isSafeInteger(revision) && revision >= 0 &&
+    typeof envelope === "string" && envelope.length <= 4 * 1024 * 1024
+    ? ipcRenderer.invoke("lyrics-card:draft-write", recordId, token, revision, envelope) : invalidManualSaveResult(),
+  loadActiveEditorDraft: () => ipcRenderer.invoke("lyrics-card:draft-load-active"),
+  activateEditorDraft: (recordId) => recordId === null || (typeof recordId === "string" && recordId.length <= 160)
+    ? ipcRenderer.invoke("lyrics-card:draft-activate", recordId) : Promise.resolve(false),
+  saveEditorDraftCover: (dataUrl) => typeof dataUrl === "string" && dataUrl.length <= 28 * 1024 * 1024
+    ? ipcRenderer.invoke("lyrics-card:draft-cover", dataUrl) : invalidManualSaveResult(),
   recordImportHistory: (record) => ipcRenderer.invoke("lyrics-card:import-history-record", record),
   updateRemoteHistoryLyrics: (recordId, snapshot) => ipcRenderer.invoke("lyrics-card:remote-history-lyrics", recordId, snapshot),
   copyRemoteHistory: (recordId) => ipcRenderer.invoke("lyrics-card:remote-history-copy", recordId),

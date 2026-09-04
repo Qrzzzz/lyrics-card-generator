@@ -49,6 +49,15 @@ before a verified draft becomes public.
 
 ## Required GitHub rules
 
+The six required check names and their ownership are described in
+[CI gate ownership](./testing/ci-gates.md). Security/locale/lifecycle and
+coverage live in `verify`; axe lives in `web-lite-smoke`. The removed
+`security/locale/a11y gates` check repeated those suites and is no longer a
+required status. When applying this change to a repository with existing
+branch protection or rulesets, remove that obsolete required status too;
+otherwise GitHub may wait for a check that no longer runs. Do not remove any
+of the remaining six checks.
+
 Repository rules are defense in depth for the workflow gate and should be
 configured by a repository administrator:
 

@@ -88,7 +88,7 @@ async function confirmImport() {
   await page.getByTestId("history-transfer-dialog").waitFor({ state: "hidden" });
 }
 async function assertLyrics(expected, translated = translation) {
-  await page.getByTestId("stepper-next-button").click();
+  await page.locator('[data-step-id="lyrics"]').click();
   await page.getByTestId("lyrics-editor-original").waitFor();
   assert.equal(await page.getByTestId("lyrics-editor-original").inputValue(), expected);
   assert.equal(await page.getByTestId("lyrics-editor-translation").inputValue(), translated);
@@ -161,10 +161,10 @@ try {
   const beforeCover = counts.cover;
   await page.getByTestId(`history-replay-${a.id}`).click();
   await page.getByTestId("history-surface").waitFor({ state: "hidden" });
-  assert.equal(counts.cover, beforeCover + 1);
+  assert.equal(counts.cover, beforeCover, "full draft resume needs no remote reparse");
   await assertLyrics(processedLyrics);
   await page.getByTestId("stepper-back-button").click();
-  assert.equal(counts.cover, beforeCover + 1, "returning to step one does not reparse a restored snapshot");
+  assert.equal(counts.cover, beforeCover, "returning to step one does not reparse a restored snapshot");
   await page.getByRole("button", { name: "Clear content", exact: true }).click();
   await openHistory();
   assert.equal(JSON.parse(await copied(`history-copy-${a.id}`)).records[0].lyricsSnapshot.lyrics, processedLyrics,
@@ -204,7 +204,7 @@ try {
   const lightAccessibility = await new AxeBuilder({ page }).setLegacyMode().include('[data-testid="history-transfer-dialog"]').analyze();
   assert.deepEqual(lightAccessibility.violations.filter((item) => item.impact === "serious" || item.impact === "critical"), []);
   assert.deepEqual(errors, []);
-  console.log(JSON.stringify({ ok: true, remoteHistoryDesktop: ["untouched lyrics", "step-two edits and translations", "filtered copy-all", "paste validation and deduplication", "stale preview", "same-song variants", "fresh cover without lyric replacement", "offline cover recovery", "shutdown and restart", "dialog focus and accessibility"], counts }, null, 2));
+  console.log(JSON.stringify({ ok: true, remoteHistoryDesktop: ["untouched lyrics", "step-two edits and translations", "filtered copy-all", "paste validation and deduplication", "stale preview", "same-song variants", "offline full-draft resume", "shutdown and restart", "dialog focus and accessibility"], counts }, null, 2));
 } catch (error) {
   if (page) await page.screenshot({ path: path.join(report, "v627-history-failure.png") }).catch(() => {});
   throw error;

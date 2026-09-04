@@ -9,11 +9,13 @@ This directory contains durable development, maintenance, testing, security, and
 - [开发指南（简体中文）](./development.zh-CN.md)
 - [Development guide (English)](./development.en.md)
 - [Windows desktop maintenance](./desktop.md)
+- [桌面自动草稿与恢复约定](./editor-autosave.md)
 - [Web Lite browser support](./web-lite-browser-support.md)
 - [示例歌曲维护流程](./examples.md)
 
 ## 安全与测试 / Security and testing
 
+- [CI 与发布门禁职责及精简说明](./testing/ci-gates.md)
 - [Dependency advisory policy](./security/dependency-advisory-policy.md)
 - [Background composition acceptance contract](./testing/background-composition-v5.10.0.md)
 

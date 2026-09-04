@@ -116,10 +116,9 @@ npm run stability:test
 npm run coverage
 npm run electron-runtime:coverage
 npm run core:test
-npm run build
 ```
 
-Browser, render-boundary, and Windows packaging gates run in separate CI jobs. A local `build` alone is not equivalent to full CI.
+The required render-boundary job owns the Linux production build. Browser and Windows packaging gates also run separately. A local `build` alone is not equivalent to full CI. See [CI gate ownership](./testing/ci-gates.md) for deduplication and release-stage evidence reuse.
 
 ## Web Lite
 
