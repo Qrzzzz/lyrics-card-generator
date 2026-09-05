@@ -2,11 +2,12 @@
 
 安装包仍由 electron-builder / NSIS 生成。正常打开 Setup 时，NSIS 在获取安装引擎互斥锁之前，从自身资源释放独立 WPF 窗口，并等待它退出。WPF 使用本机 .NET Framework 4.8，无需启动 Electron、Next.js、WebView2 或联网下载界面依赖。
 
-窗口的标题栏、按钮、输入框、复选框由 `build/installer/Setup.xaml` 定义。默认窗口 460 × 440 DIP，仅显示图标、版本号和安装按钮；右上角切换语言，安装按钮旁的箭头在同一个窗口右侧展开更多选项，展开宽度 760 DIP。安装路径、安装范围、桌面快捷方式集中在侧栏。开始安装后侧栏收起，在原位置呈现状态和完成操作。
+窗口的标题栏、按钮、输入框、复选框由 `build/installer/Setup.xaml` 定义。默认窗口 460 × 354 DIP，显示产品图标、名称、版本、安装路径摘要及安装按钮。安装选项在同一列向下展开至 510 DIP 高，宽度不变；包含路径修改、安装范围和桌面快捷方式。安装和完成状态保留品牌区，主操作保持位置稳定。
 
-正常 Setup 使用跟随 Windows 应用主题的纯深色或纯浅色，高对比度采用系统颜色。DWM 背景材质明确设为 `DWMSBT_NONE`，客户区不再覆盖透明遮罩。此前选择了系统最亮版本 Desktop Acrylic，又叠加暗色遮罩；系统失焦实色回退也会改变观感。接口回读成功不能作为材质视觉验收通过的证据。本轮取消默认亚克力，以确定的深浅色保证效果，不宣称 Windows 无法实现良好亚克力。
+正常入口不再读取 Windows 深浅主题或透明效果偏好，也不提供主题/材质选择。`IconBackground.cs` 从内嵌图标筛选不透明、有彩度的像素，按色相聚合、计算加权位置，再生成压暗、降低饱和度的柔和色场。它是应用空间取色思路的独立简化实现，不复制浏览器算法，不启动 Electron、WebView2 或网络请求。背景只计算一次，使用不透明位图画刷。Windows 高对比度模式仍采用系统颜色。
 
-仅开发预览允许 `--material acrylic`，用于后续单独调查；正常安装入口不启用。六种语言来自 `build/installer/locales.json`。
+六种语言来自 `build/installer/locales.json`。DWM 背景材质固定为 `DWMSBT_NONE`，不再支持开发预览亚克力与深浅主题覆盖。
+
 ## 安装契约
 
 - WPF 调用同一个原始 Setup EXE 的 `/S` 模式，不自行复制应用或改写安装注册表。
@@ -35,7 +36,7 @@ npm run desktop:build
 node scripts/build-installer-shell.mjs
 $packaged = (Resolve-Path release/win-unpacked).Path
 node node_modules/electron-builder/cli.js --win nsis --x64 --publish never --projectDir dist-desktop/app --prepackaged $packaged '-c.directories.buildResources=../../build' '-c.directories.output=../../release/minimal-installer'
-./scripts/test-custom-installer.ps1 -Installer ./release/minimal-installer/Lyrics.Card.Generator.Setup.6.2.12.exe
+./scripts/test-custom-installer.ps1 -Installer ./release/minimal-installer/Lyrics.Card.Generator.Setup.6.2.13.exe
 ```
 
 集成测试会拒绝覆盖已有安装或已有快捷方式，在临时 Unicode/空格路径执行真实新装、同版本覆盖和静默卸载。报告位于 `dist-desktop/installer/integration.txt`。所有用户/UAC、跨版本升级以及其他 Windows 版本仍需单独验收。
@@ -43,9 +44,9 @@ node node_modules/electron-builder/cli.js --win nsis --x64 --publish never --pro
 仅检查界面时：
 
 ```powershell
-./dist-desktop/installer/LyricsSetup.exe --preview --version 6.2.12
+./dist-desktop/installer/LyricsSetup.exe --preview --version 6.2.13
 ./dist-desktop/installer/LyricsSetup.exe --preview --locale fr --state done
-./dist-desktop/installer/LyricsSetup.exe --preview --theme light --expanded
+./dist-desktop/installer/LyricsSetup.exe --preview --expanded
 ```
 
-`--preview` 禁止启动安装和应用。`--capture <绝对PNG路径>` 生成应用自己的 WPF 排版渲染和 DWM 属性回读 JSON；PNG 本身不包含桌面背景，不能替代真实合成材质的窗口验收。
+`--preview` 禁止启动安装和应用。`--capture <绝对PNG路径>` 生成应用自己的 WPF 排版渲染和 DWM 属性回读 JSON。`installer-theme:test` 会检查六种语言、三个状态和展开布局，并输出中法文预览 PNG；截图使用不透明背景，不依赖桌面合成材质。

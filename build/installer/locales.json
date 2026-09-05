@@ -8,7 +8,7 @@
     "ReadyTitle": "准备好开始创作",
     "ReadyBody": "把歌词、色彩与留白，组合成属于你的分享卡片。",
     "Location": "安装位置",
-    "Options": "更多选项",
+    "Options": "安装选项",
     "AllUsers": "为这台电脑的所有用户安装",
     "Shortcut": "创建桌面快捷方式",
     "Install": "安装",
@@ -36,7 +36,9 @@
     "Failed": "安装未完成。请检查权限与磁盘空间后重试。错误代码：",
     "Cancelled": "已取消管理员授权，可以调整选项后重试。",
     "Preview": "界面预览",
-    "PreviewAction": "当前为界面预览，不会安装应用。"
+    "PreviewAction": "当前为界面预览，不会安装应用。",
+    "ProductName": "歌词分享图片生成器",
+    "HideOptions": "收起选项"
   },
   "zh-TW": {
     "Hero": "讓喜歡的歌詞，\n有自己的畫面。",
@@ -47,7 +49,7 @@
     "ReadyTitle": "準備好開始創作",
     "ReadyBody": "把歌詞、色彩與留白，組合成屬於你的分享卡片。",
     "Location": "安裝位置",
-    "Options": "更多選項",
+    "Options": "安裝選項",
     "AllUsers": "為這台電腦的所有使用者安裝",
     "Shortcut": "建立桌面捷徑",
     "Install": "安裝",
@@ -75,7 +77,9 @@
     "Failed": "安裝未完成。請檢查權限與磁碟空間後重試。錯誤代碼：",
     "Cancelled": "已取消管理員授權，可以調整選項後重試。",
     "Preview": "介面預覽",
-    "PreviewAction": "目前為介面預覽，不會安裝應用程式。"
+    "PreviewAction": "目前為介面預覽，不會安裝應用程式。",
+    "ProductName": "歌詞分享圖片產生器",
+    "HideOptions": "收合選項"
   },
   "en": {
     "Hero": "Your favorite words.\nA frame of their own.",
@@ -86,7 +90,7 @@
     "ReadyTitle": "Make room to create.",
     "ReadyBody": "Turn lyrics, color and a little space into a card that feels like you.",
     "Location": "INSTALL LOCATION",
-    "Options": "More options",
+    "Options": "Installation options",
     "AllUsers": "Install for everyone on this computer",
     "Shortcut": "Create a desktop shortcut",
     "Install": "Install",
@@ -114,7 +118,9 @@
     "Failed": "Installation did not complete. Check permissions and free disk space, then retry. Error code: ",
     "Cancelled": "Administrator permission was cancelled. Adjust your options and try again.",
     "Preview": "UI PREVIEW",
-    "PreviewAction": "This is an interface preview. No application will be installed."
+    "PreviewAction": "This is an interface preview. No application will be installed.",
+    "ProductName": "Lyrics Card Generator",
+    "HideOptions": "Hide options"
   },
   "fr": {
     "Hero": "Vos mots préférés.\nUn cadre à eux.",
@@ -125,7 +131,7 @@
     "ReadyTitle": "Place à la création.",
     "ReadyBody": "Associez paroles, couleurs et espace pour créer une carte à votre image.",
     "Location": "EMPLACEMENT",
-    "Options": "Options",
+    "Options": "Options d’installation",
     "AllUsers": "Installer pour tous les utilisateurs",
     "Shortcut": "Créer un raccourci sur le bureau",
     "Install": "Installer",
@@ -153,7 +159,9 @@
     "Failed": "Installation incomplète. Vérifiez les droits et l’espace disque, puis réessayez. Code : ",
     "Cancelled": "Autorisation administrateur annulée. Ajustez les options et réessayez.",
     "Preview": "APERÇU",
-    "PreviewAction": "Ceci est un aperçu de l’interface. Aucune application ne sera installée."
+    "PreviewAction": "Ceci est un aperçu de l’interface. Aucune application ne sera installée.",
+    "ProductName": "Lyrics Card Generator",
+    "HideOptions": "Masquer les options"
   },
   "ja": {
     "Hero": "好きな歌詞に、\nその言葉だけの一枚を。",
@@ -164,7 +172,7 @@
     "ReadyTitle": "創作を始めましょう。",
     "ReadyBody": "歌詞と色、そして余白。自分らしいカードに仕上げましょう。",
     "Location": "インストール先",
-    "Options": "詳細設定",
+    "Options": "インストール設定",
     "AllUsers": "このパソコンの全ユーザーにインストール",
     "Shortcut": "デスクトップにショートカットを作成",
     "Install": "インストール",
@@ -192,7 +200,9 @@
     "Failed": "インストール未完了です。権限と空き容量を確認して再試行してください。コード：",
     "Cancelled": "管理者の許可がキャンセルされました。設定を確認して再試行してください。",
     "Preview": "画面プレビュー",
-    "PreviewAction": "これは画面プレビューです。アプリはインストールされません。"
+    "PreviewAction": "これは画面プレビューです。アプリはインストールされません。",
+    "ProductName": "Lyrics Card Generator",
+    "HideOptions": "設定を閉じる"
   },
   "es": {
     "Hero": "Tus palabras favoritas.\nSu propio marco.",
@@ -203,7 +213,7 @@
     "ReadyTitle": "Haz espacio para crear.",
     "ReadyBody": "Combina letras, colores y espacio en una tarjeta que hable de ti.",
     "Location": "UBICACIÓN",
-    "Options": "Más opciones",
+    "Options": "Opciones de instalación",
     "AllUsers": "Instalar para todos los usuarios",
     "Shortcut": "Crear un acceso directo en el escritorio",
     "Install": "Instalar",
@@ -231,6 +241,8 @@
     "Failed": "La instalación no terminó. Comprueba los permisos y el espacio libre. Código: ",
     "Cancelled": "Se canceló el permiso de administrador. Ajusta las opciones e inténtalo de nuevo.",
     "Preview": "VISTA PREVIA",
-    "PreviewAction": "Esta es una vista previa. No se instalará ninguna aplicación."
+    "PreviewAction": "Esta es una vista previa. No se instalará ninguna aplicación.",
+    "ProductName": "Lyrics Card Generator",
+    "HideOptions": "Ocultar opciones"
   }
 }

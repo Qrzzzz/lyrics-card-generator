@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v6.2.12.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v6.2.13.zh-CN.md">发布说明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">在线 Web Lite 版</a> ·
   <a href="./docs/web-lite-browser-support.md">Web Lite 浏览器支持</a> ·
   <a href="./docs/desktop.md">桌面维护文档</a> ·
@@ -73,25 +73,25 @@
 
 ## 📦 下载与安装
 
-从 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v6.2.12) 下载 v6.2.12，Windows 安装包名称为：
+从 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v6.2.13) 下载 v6.2.13，Windows 安装包名称为：
 
-* Windows x64 安装版：`Lyrics.Card.Generator.Setup.6.2.12.exe`
+* Windows x64 安装版：`Lyrics.Card.Generator.Setup.6.2.13.exe`
 
 从 v6.2.2 起只提供 Windows x64 Setup 安装包。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v6.2.12 更新重点
+### v6.2.13 更新重点
 
-* 移除首次启动时的语言选择弹窗，打开软件即可进入编辑器。
-* 没有已保存的语言时，按系统语言偏好顺序匹配现有六种语言；均不支持或读取失败时使用英语。
-* 正确识别简繁中文和地区变体；已有语言选择继续生效，也可随时在设置中更改。
-* Web Lite 同样按浏览器语言偏好顺序匹配；启动时等待语言偏好读取完成再显示桌面编辑器。
+- 安装器从内置图标取色，生成柔和、偏深的彩色背景，不再跟随系统深浅主题。
+- 采用紧凑单列布局，补充产品名称，安装选项向下展开，保持窗口宽度稳定。
+- 统一按钮、间距和状态布局，改善路径输入、语言切换和错误提示。
+- 保留六种语言、高对比度辅助模式及现有 NSIS 安装、升级和卸载机制。
 
 ## 🌐 多语言发布说明
 
 GitHub Release 默认展示简体中文摘要，完整说明见：
-[简体中文](./docs/releases/v6.2.12.zh-CN.md) · [繁體中文](./docs/releases/v6.2.12.zh-TW.md) · [English](./docs/releases/v6.2.12.en.md) · [Français](./docs/releases/v6.2.12.fr.md) · [日本語](./docs/releases/v6.2.12.ja.md) · [Español](./docs/releases/v6.2.12.es.md)
+[简体中文](./docs/releases/v6.2.13.zh-CN.md) · [繁體中文](./docs/releases/v6.2.13.zh-TW.md) · [English](./docs/releases/v6.2.13.en.md) · [Français](./docs/releases/v6.2.13.fr.md) · [日本語](./docs/releases/v6.2.13.ja.md) · [Español](./docs/releases/v6.2.13.es.md)
 
 <a id="主要功能"></a>
 

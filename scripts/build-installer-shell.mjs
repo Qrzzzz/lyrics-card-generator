@@ -20,7 +20,7 @@ const args = ["/nologo", "/target:winexe", "/platform:x64", "/optimize+", "/warn
   ...references.map(ref => `/reference:${path.join(framework, ref)}`),
   `/resource:${path.join(root, "build/installer/Setup.xaml")},Setup.xaml`,
   `/resource:${path.join(root, "build/installer/locales.json")},locales.json`,
-  `/resource:${path.join(root, "build/icon.ico")},icon.ico`, path.join(root, "build/installer/Setup.cs"),
+  `/resource:${path.join(root, "build/icon.ico")},icon.ico`, path.join(root, "build/installer/Setup.cs"), path.join(root, "build/installer/IconBackground.cs"),
   ...(integration ? ["/main:LyricsCard.Setup.Integration", path.join(root, "scripts/installer-integration.cs")] : [])];
 const result = spawnSync(compiler, args, { encoding: "utf8", windowsHide: true });
 if (result.error || result.status !== 0) throw new Error(result.error?.message || (result.stdout + result.stderr).slice(0, 12000));

@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v6.2.12.zh-TW.md">發布說明</a> ·
+  <a href="./docs/releases/v6.2.13.zh-TW.md">發布說明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">線上 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="./docs/development.zh-CN.md">本機開發</a> ·
@@ -71,25 +71,25 @@
 
 ## 📦 下載與安裝
 
-從 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v6.2.12) 下載 v6.2.12，Windows 安裝程式名稱為：
+從 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v6.2.13) 下載 v6.2.13，Windows 安裝程式名稱為：
 
-* Windows x64 安裝版：`Lyrics.Card.Generator.Setup.6.2.12.exe`
+* Windows x64 安裝版：`Lyrics.Card.Generator.Setup.6.2.13.exe`
 
 從 v6.2.2 起僅提供 Windows x64 Setup 安裝程式。
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v6.2.12 更新重點
+### v6.2.13 更新重點
 
-* 移除首次啟動時的語言選擇視窗，開啟軟體即可進入編輯器。
-* 沒有已儲存的語言時，依系統語言偏好順序比對現有六種語言；皆不支援或讀取失敗時使用英語。
-* 正確辨識簡繁中文與地區變體；既有語言選擇繼續生效，也可隨時在設定中更改。
-* Web Lite 同樣依瀏覽器語言偏好順序比對；啟動時會等待語言偏好讀取完成再顯示桌面編輯器。
+- 安裝程式從內建圖示取色，產生柔和、偏深的彩色背景，不再跟隨系統深淺主題。
+- 採用精簡單欄版面，補上產品名稱，安裝選項向下展開，保持視窗寬度穩定。
+- 統一按鈕、間距與狀態版面，改善路徑輸入、語言切換和錯誤提示。
+- 保留六種語言、高對比輔助模式及既有 NSIS 安裝、升級與解除安裝機制。
 
 ## 🌐 多語言發佈說明
 
 GitHub Release 預設顯示簡體中文摘要，完整說明請見：
-[简体中文](./docs/releases/v6.2.12.zh-CN.md) · [繁體中文](./docs/releases/v6.2.12.zh-TW.md) · [English](./docs/releases/v6.2.12.en.md) · [Français](./docs/releases/v6.2.12.fr.md) · [日本語](./docs/releases/v6.2.12.ja.md) · [Español](./docs/releases/v6.2.12.es.md)
+[简体中文](./docs/releases/v6.2.13.zh-CN.md) · [繁體中文](./docs/releases/v6.2.13.zh-TW.md) · [English](./docs/releases/v6.2.13.en.md) · [Français](./docs/releases/v6.2.13.fr.md) · [日本語](./docs/releases/v6.2.13.ja.md) · [Español](./docs/releases/v6.2.13.es.md)
 
 ## ✨ 主要功能
 

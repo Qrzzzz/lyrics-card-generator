@@ -17,8 +17,9 @@ assert.doesNotMatch(include, /MUI_BGCOLOR|customWelcomePage|SetCtlColors/, "do n
 if (process.platform === "win32") {
   const build = spawnSync(process.execPath, ["scripts/build-installer-shell.mjs"], { cwd: root, encoding: "utf8", windowsHide: true });
   assert.equal(build.status, 0, build.stdout + build.stderr);
+  const { version } = JSON.parse(await readFile(path.join(root, "package.json"), "utf8"));
   const report = path.join(root, "dist-desktop/installer/self-test.txt");
-  const run = spawnSync(path.join(root, "dist-desktop/installer/LyricsSetup.exe"), ["--self-test", report], { timeout: 30_000, windowsHide: true });
+  const run = spawnSync(path.join(root, "dist-desktop/installer/LyricsSetup.exe"), ["--self-test", report, "--version", version], { timeout: 30_000, windowsHide: true });
   const output = await readFile(report, "utf8");
   assert.equal(run.status, 0, output);
   console.log(output.trim());
