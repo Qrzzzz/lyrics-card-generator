@@ -31,7 +31,7 @@ namespace LyricsCard.Setup
             try
             {
                 var options = Options.Parse(args);
-                if (options.ContainsKey("self-test")) return SetupWindow.SelfTest(options["self-test"]);
+                if (options.ContainsKey("self-test")) return SetupWindow.SelfTest(options["self-test"], options.ContainsKey("version") ? options["version"] : "dev");
                 bool created;
                 using (var mutex = new Mutex(true, @"Local\LyricsCard.CustomSetup", out created))
                 {
@@ -118,6 +118,7 @@ namespace LyricsCard.Setup
         private string installedPath;
         private EventWaitHandle completion;
         private HwndSource source;
+        private ImageBrush iconBackground;
         private readonly string[] languageOrder = { "zh-CN", "zh-TW", "en", "fr", "ja", "es" };
 
         internal SetupWindow(Dictionary<string, string> args)
@@ -132,10 +133,11 @@ namespace LyricsCard.Setup
             {
                 var icon = BitmapDecoder.Create(stream, BitmapCreateOptions.None, BitmapCacheOption.OnLoad).Frames.OrderByDescending(frame => frame.PixelWidth).First();
                 Window.Icon = icon;
+                iconBackground = new ImageBrush(IconBackground.Create(icon)) { Stretch = Stretch.Fill };
+                iconBackground.Freeze();
                 Find<Image>("BrandIcon").Source = icon;
             }
             SetLanguage(Get("locale", CultureInfo.CurrentUICulture.Name));
-            Find<TextBlock>("VersionLabel").Text = "v" + Get("version", "dev") + (preview ? " · " + Copy("Preview") : "");
             string machinePath = ReadLocation(true);
             string userPath = ReadLocation(false);
             Find<CheckBox>("AllUsers").IsChecked = !String.IsNullOrEmpty(machinePath) && String.IsNullOrEmpty(userPath);
@@ -159,18 +161,18 @@ namespace LyricsCard.Setup
             {
                 source = HwndSource.FromHwnd(new WindowInteropHelper(Window).Handle);
                 source.AddHook(WindowMessage);
-                ApplyMaterial();
+                ApplyAppearance();
             };
             Window.Closed += delegate { if (source != null) source.RemoveHook(WindowMessage); if (completion != null) completion.Dispose(); };
             Window.Loaded += delegate
             {
                 // Scale the entire layout for small work areas/high DPI, never clip controls.
-                double scale = Math.Min(1, Math.Min((SystemParameters.WorkArea.Width - 32) / 760, (SystemParameters.WorkArea.Height - 32) / 440));
+                double scale = Math.Min(1, Math.Min((SystemParameters.WorkArea.Width - 32) / 460, (SystemParameters.WorkArea.Height - 32) / 510));
                 if (scale < 1)
                 {
                     Window.MinWidth = 0; Window.MinHeight = 0;
                     Find<Border>("WindowSurface").LayoutTransform = new ScaleTransform(scale, scale);
-                    Window.Width = 460 * scale; Window.Height = 440 * scale;
+                    Window.Width = 460 * scale; Window.Height = 354 * scale;
                 }
                 if (preview)
                 {
@@ -202,7 +204,9 @@ namespace LyricsCard.Setup
             if (!locales.ContainsKey(language)) language = "en";
             foreach (var pair in locales[language]) Window.Resources[pair.Key] = pair.Value;
             Window.Language = XmlLanguage.GetLanguage(language);
-            Find<Button>("LanguageButton").Content = language == "zh-CN" ? "简" : language == "zh-TW" ? "繁" : language.ToUpperInvariant();
+            Find<TextBlock>("VersionLabel").Text = "v" + Get("version", "dev") + (preview ? " · " + Copy("Preview") : "");
+            Find<Button>("LanguageButton").Content = language == "zh-CN" ? "简体中文" : language == "zh-TW" ? "繁體中文" : language.ToUpperInvariant();
+            Find<Button>("OptionsButton").Content = Copy(Find<StackPanel>("OptionsPanel").Visibility == Visibility.Visible ? "HideOptions" : "Options");
             foreach (var pair in new[] { new[] { "CloseButton", "Close" }, new[] { "MinimizeButton", "Minimize" }, new[] { "LanguageButton", "Language" }, new[] { "BrowseButton", "Browse" }, new[] { "InstallPath", "Location" }, new[] { "InstallProgress", "WorkingStatus" } })
                 AutomationProperties.SetName((DependencyObject)Window.FindName(pair[0]), Copy(pair[1]));
         }
@@ -249,9 +253,10 @@ namespace LyricsCard.Setup
         private void ToggleOptions(bool open)
         {
             Find<StackPanel>("OptionsPanel").Visibility = open ? Visibility.Visible : Visibility.Collapsed;
-            Find<Button>("OptionsButton").Content = open ? "‹" : "›";
+            Find<Button>("OptionsButton").Content = Copy(open ? "HideOptions" : "Options");
             double scale = Find<Border>("WindowSurface").LayoutTransform.Value.M11;
-            Window.Width = (open ? 760 : 460) * scale;
+            Window.Height = (open ? 510 : 354) * scale;
+            Window.Top = Math.Max(SystemParameters.WorkArea.Top, Math.Min(Window.Top, SystemParameters.WorkArea.Bottom - Window.Height));
             Window.Left = Math.Max(SystemParameters.WorkArea.Left, Math.Min(Window.Left, SystemParameters.WorkArea.Right - Window.Width));
         }
 
@@ -260,6 +265,8 @@ namespace LyricsCard.Setup
             Find<TextBlock>("MessageText").Text = text;
             Find<StackPanel>("ReadyPanel").Visibility = Visibility.Collapsed;
             Find<StackPanel>("DonePanel").Visibility = Visibility.Collapsed;
+            Find<StackPanel>("WorkingPanel").Visibility = Visibility.Collapsed;
+            ToggleOptions(false);
             Find<Border>("MessagePanel").Visibility = Visibility.Visible;
             Find<Button>("DismissButton").Focus();
         }
@@ -347,7 +354,7 @@ namespace LyricsCard.Setup
 
         private IntPtr WindowMessage(IntPtr hwnd, int message, IntPtr wParam, IntPtr lParam, ref bool handled)
         {
-            if (message == 0x001A || message == 0x031A || message == 0x0320) ApplyMaterial();
+            if (message == 0x001A || message == 0x031A || message == 0x0320) ApplyAppearance();
             return IntPtr.Zero;
         }
 
@@ -355,8 +362,7 @@ namespace LyricsCard.Setup
 
         private void Capture(string file)
         {
-            // An owned WPF render is deterministic even while another desktop
-            // task has focus. It verifies layout, not the pixels behind acrylic.
+            // Capture the owned, opaque WPF surface independently of desktop focus.
             Window.UpdateLayout();
             double dpi = source.CompositionTarget.TransformToDevice.M11;
             var bitmap = new RenderTargetBitmap((int)(Window.ActualWidth * dpi), (int)(Window.ActualHeight * dpi), 96 * dpi, 96 * dpi, PixelFormats.Pbgra32);
@@ -368,30 +374,13 @@ namespace LyricsCard.Setup
             File.WriteAllText(file + ".json", new JavaScriptSerializer().Serialize(new { requestedState = stage, locale = language, dwmHResult = hr, systemBackdrop = material, width = Window.ActualWidth, height = Window.ActualHeight, highContrast = SystemParameters.HighContrast }));
         }
 
-        private void ApplyMaterial()
+        private void ApplyAppearance()
         {
             Find<ProgressBar>("InstallProgress").IsEnabled = SystemParameters.ClientAreaAnimation;
             bool highContrast = SystemParameters.HighContrast;
-            bool transparent = true;
-            bool systemDark = false;
-            using (var key = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize"))
-                if (key != null)
-                {
-                    transparent = Convert.ToInt32(key.GetValue("EnableTransparency", 1)) != 0;
-                    systemDark = Convert.ToInt32(key.GetValue("AppsUseLightTheme", 1)) == 0;
-                }
-            // Acrylic is diagnostic-only: the shipped window uses a predictable
-            // opaque system light/dark palette after visual acceptance failed.
-            bool acrylic = preview && Get("material", "") == "acrylic" && !highContrast && transparent && Environment.OSVersion.Version.Build >= 22621;
-            if (preview && Get("theme", "") == "light") systemDark = false;
-            if (preview && Get("theme", "") == "dark") systemDark = true;
-            int backdrop = acrylic ? 3 : 1;
-            int dark = acrylic || systemDark ? 1 : 0;
+            int backdrop = 1; // DWMSBT_NONE: the icon field is fully opaque.
             IntPtr handle = new WindowInteropHelper(Window).Handle;
-            Native.DwmSetWindowAttribute(handle, 20, ref dark, 4);
-            if (Native.DwmSetWindowAttribute(handle, 38, ref backdrop, 4) != 0) acrylic = false;
-            var margins = new Native.Margins { Left = acrylic ? -1 : 0, Right = acrylic ? -1 : 0, Top = acrylic ? -1 : 0, Bottom = acrylic ? -1 : 0 };
-            if (Native.DwmExtendFrameIntoClientArea(handle, ref margins) != 0) acrylic = false;
+            Native.DwmSetWindowAttribute(handle, 38, ref backdrop, 4);
             source.CompositionTarget.BackgroundColor = Colors.Transparent;
             int corners = 2;
             Native.DwmSetWindowAttribute(handle, 33, ref corners, 4);
@@ -402,26 +391,28 @@ namespace LyricsCard.Setup
                 Window.Resources["Accent"] = SystemColors.HighlightBrush;
                 Window.Resources["AccentInk"] = SystemColors.HighlightTextBrush;
                 Window.Resources["Line"] = SystemColors.WindowTextBrush;
+                Window.Resources["WindowLine"] = SystemColors.WindowTextBrush;
                 Window.Resources["Surface"] = SystemColors.WindowBrush;
                 surface.Background = SystemColors.WindowBrush;
             }
-            else if (acrylic || systemDark)
-            {
-                Brush("Ink", "#F8FAFC"); Brush("Muted", "#BBC5D6"); Brush("Accent", "#C4B5FD"); Brush("AccentInk", "#201738");
-                Brush("Line", "#25FFFFFF"); Brush("Surface", "#0CFFFFFF");
-                surface.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(acrylic ? "#550C111A" : "#0C111A"));
-            }
             else
             {
-                Brush("Ink", "#172033"); Brush("Muted", "#526078"); Brush("Accent", "#6D45B5"); Brush("AccentInk", "#FFFFFF");
-                Brush("Line", "#26172033"); Brush("Surface", "#0C172033");
-                surface.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F3F6FA"));
+                Brush("Ink", "#FCFAFF"); Brush("Muted", "#DED9E6");
+                Brush("Accent", "#E7DDF5"); Brush("AccentInk", "#30263D");
+                Brush("WindowLine", "#28FFFFFF"); Brush("Line", "#90FFFFFF"); Brush("Surface", "#18000000");
+                surface.Background = iconBackground;
             }
-            Window.Background = acrylic ? Brushes.Transparent : surface.Background;
+            Window.Background = surface.Background;
             Window.Resources["WindowFill"] = surface.Background;
         }
 
-        internal static int SelfTest(string report)
+        private static double Luminance(byte r, byte g, byte b)
+        {
+            Func<byte, double> linear = value => value <= 10 ? value / 3294.6 : Math.Pow((value / 255.0 + 0.055) / 1.055, 2.4);
+            return linear(r) * 0.2126 + linear(g) * 0.7152 + linear(b) * 0.0722;
+        }
+
+        internal static int SelfTest(string report, string version)
         {
             var results = new List<string>();
             try
@@ -438,7 +429,19 @@ namespace LyricsCard.Setup
                     if (!rejected) throw new Exception("Path accepted: " + invalid);
                 }
                 results.Add("PASS: roots, UNC, system folders, path/argument injection rejected");
-                var setup = new SetupWindow(new Dictionary<string, string> { { "preview", "true" } });
+                var setup = new SetupWindow(new Dictionary<string, string> { { "preview", "true" }, { "version", version } });
+                var background = (BitmapSource)setup.iconBackground.ImageSource;
+                var field = new byte[background.PixelWidth * background.PixelHeight * 4];
+                background.CopyPixels(field, background.PixelWidth * 4, 0);
+                double maxLuminance = 0;
+                for (int pixel = 0; pixel < field.Length; pixel += 4)
+                {
+                    if (field[pixel + 3] != 255) throw new Exception("Background must be opaque.");
+                    maxLuminance = Math.Max(maxLuminance, Luminance(field[pixel + 2], field[pixel + 1], field[pixel]));
+                }
+                double contrast = (Luminance(222, 217, 230) + 0.05) / (maxLuminance + 0.05);
+                if (contrast < 4.5) throw new Exception("Secondary text contrast below 4.5: " + contrast);
+                results.Add("PASS: opaque icon color field; minimum secondary text contrast " + contrast.ToString("F2", CultureInfo.InvariantCulture) + ":1");
                 setup.Window.WindowStartupLocation = WindowStartupLocation.Manual;
                 setup.Window.Left = -10000; setup.Window.Top = -10000;
                 setup.Window.ShowActivated = false; setup.Window.ShowInTaskbar = false;
@@ -458,11 +461,31 @@ namespace LyricsCard.Setup
                             setup.Window.UpdateLayout();
                             var panel = setup.Find<StackPanel>(state == "ready" ? "ReadyPanel" : state == "working" ? "WorkingPanel" : "DonePanel");
                             var point = panel.TranslatePoint(new Point(), setup.Window);
-                            if (point.Y < 48 || point.Y + panel.ActualHeight > 439) throw new Exception("Clipped panel: " + locale + "/" + state + "/expanded=" + expanded + ": y=" + point.Y + ", height=" + panel.ActualHeight);
+                            if ((locale == "zh-CN" || locale == "fr") && (!expanded || state == "ready"))
+                                setup.Capture(Path.Combine(Path.GetDirectoryName(report), "icon-" + locale + "-" + state + (expanded ? "-expanded" : "") + ".png"));
+                            if (point.Y < 48 || point.Y + panel.ActualHeight > setup.Window.ActualHeight - 20) throw new Exception("Clipped panel: " + locale + "/" + state + "/expanded=" + expanded + ": y=" + point.Y + ", height=" + panel.ActualHeight);
                         }
                     }
                 }
                 results.Add("PASS: six locales and three states load and lay out in real WPF");
+                setup.SetStage("ready");
+                setup.ToggleOptions(false);
+                string preservedPath = setup.Find<TextBox>("InstallPath").Text;
+                double originalWidth = setup.Window.Width;
+                setup.Find<Button>("OptionsButton").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                if (setup.Find<StackPanel>("OptionsPanel").Visibility != Visibility.Visible || setup.Window.Width != originalWidth)
+                    throw new Exception("Options did not expand at fixed width.");
+                setup.Find<Button>("OptionsButton").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                if (setup.Find<StackPanel>("OptionsPanel").Visibility != Visibility.Collapsed || setup.Find<TextBox>("InstallPath").Text != preservedPath)
+                    throw new Exception("Collapsing options lost the path.");
+                setup.SetLanguage("zh-CN");
+                setup.ShowMessage(setup.Copy("InvalidPath"));
+                setup.Window.UpdateLayout();
+                setup.Capture(Path.Combine(Path.GetDirectoryName(report), "icon-error.png"));
+                setup.Find<Button>("DismissButton").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                if (setup.Find<Border>("MessagePanel").Visibility != Visibility.Collapsed || setup.Find<StackPanel>("ReadyPanel").Visibility != Visibility.Visible)
+                    throw new Exception("Message dismissal did not restore installation controls.");
+                results.Add("PASS: option button expands vertically, preserves path; message dismissal restores controls");
                 setup.Install().GetAwaiter().GetResult();
                 if (setup.installing || setup.completion != null) throw new Exception("Preview attempted installation.");
                 results.Add("PASS: preview cannot start an engine or signal installation success");
@@ -483,9 +506,7 @@ namespace LyricsCard.Setup
 
     internal static class Native
     {
-        [StructLayout(LayoutKind.Sequential)] internal struct Margins { internal int Left, Right, Top, Bottom; }
         [DllImport("dwmapi.dll")] internal static extern int DwmSetWindowAttribute(IntPtr hwnd, int attribute, ref int value, int size);
         [DllImport("dwmapi.dll")] internal static extern int DwmGetWindowAttribute(IntPtr hwnd, int attribute, out int value, int size);
-        [DllImport("dwmapi.dll")] internal static extern int DwmExtendFrameIntoClientArea(IntPtr hwnd, ref Margins margins);
     }
 }

@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v6.2.12.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v6.2.13.en.md">Release Notes</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
   <a href="./docs/web-lite-browser-support.md">Web Lite Browser Support</a> ·
   <a href="#features">Features</a> ·
@@ -75,25 +75,25 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 ## 📦 Download and Installation
 
-Download v6.2.12 from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v6.2.12). The Windows installer is:
+Download v6.2.13 from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v6.2.13). The Windows installer is:
 
-* Windows x64 installer: `Lyrics.Card.Generator.Setup.6.2.12.exe`
+* Windows x64 installer: `Lyrics.Card.Generator.Setup.6.2.13.exe`
 
 Starting with v6.2.2, Windows x64 Setup is the only distributed desktop package.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v6.2.12 Highlights
+### v6.2.13 Highlights
 
-* Remove the language selection dialog on first launch and open directly in the editor.
-* When no language is saved, match the six supported languages in system preference order; use English if none match or the list cannot be read.
-* Recognize Simplified and Traditional Chinese and regional variants. Preserve saved language choices, with changes available in Settings.
-* Web Lite also checks browser languages in preference order. The desktop editor becomes visible after language preferences have loaded.
+- The installer samples its embedded app icon to create a soft, deeper color background, independent of the system light or dark theme.
+- A compact single-column layout adds the product name and expands installation options vertically at a fixed window width.
+- Consistent buttons, spacing and state layouts improve path editing, language switching and error messages.
+- Retains six languages, Windows high-contrast accessibility and existing NSIS installation, upgrade and uninstallation behavior.
 
 ## 🌐 Multilingual Release Notes
 
 GitHub Release displays a Simplified Chinese summary by default. See the full release notes:
-[简体中文](./docs/releases/v6.2.12.zh-CN.md) · [繁體中文](./docs/releases/v6.2.12.zh-TW.md) · [English](./docs/releases/v6.2.12.en.md) · [Français](./docs/releases/v6.2.12.fr.md) · [日本語](./docs/releases/v6.2.12.ja.md) · [Español](./docs/releases/v6.2.12.es.md)
+[简体中文](./docs/releases/v6.2.13.zh-CN.md) · [繁體中文](./docs/releases/v6.2.13.zh-TW.md) · [English](./docs/releases/v6.2.13.en.md) · [Français](./docs/releases/v6.2.13.fr.md) · [日本語](./docs/releases/v6.2.13.ja.md) · [Español](./docs/releases/v6.2.13.es.md)
 
 <a id="features"></a>
 
