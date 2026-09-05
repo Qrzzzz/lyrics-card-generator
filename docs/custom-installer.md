@@ -49,4 +49,3 @@ node node_modules/electron-builder/cli.js --win nsis --x64 --publish never --pro
 ```
 
 `--preview` 禁止启动安装和应用。`--capture <绝对PNG路径>` 生成应用自己的 WPF 排版渲染和 DWM 属性回读 JSON；PNG 本身不包含桌面背景，不能替代真实合成材质的窗口验收。
-
