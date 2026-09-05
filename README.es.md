@@ -19,7 +19,7 @@
 <p>
   <strong>Navegación</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Descargar la última versión</a> ·
-  <a href="./docs/releases/v6.2.11.es.md">Notas de la versión</a> ·
+  <a href="./docs/releases/v6.2.12.es.md">Notas de la versión</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en línea</a> ·
   <a href="#funciones-principales">Funciones principales</a> ·
   <a href="./docs/development.en.md">Desarrollo local</a> ·
@@ -74,15 +74,15 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 ## 📦 Descarga e instalación
 
-Descarga v6.2.11 desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v6.2.11). El instalador de Windows es:
+Descarga v6.2.12 desde [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v6.2.12). El instalador de Windows es:
 
-* Instalador de Windows x64: `Lyrics.Card.Generator.Setup.6.2.11.exe`
+* Instalador de Windows x64: `Lyrics.Card.Generator.Setup.6.2.12.exe`
 
 A partir de v6.2.2, Setup para Windows x64 es el único paquete de escritorio distribuido.
 
 > La compilación actual no está firmada. Windows puede mostrar una advertencia de SmartScreen, algo habitual en aplicaciones personales sin firma.
 
-### Novedades de v6.2.11
+### Novedades de v6.2.12
 
 * Elimina el diálogo de selección de idioma del primer inicio y abre directamente el editor.
 * Si no hay un idioma guardado, busca entre los seis idiomas admitidos siguiendo las preferencias del sistema; usa inglés si ninguno coincide o no se puede leer la lista.
@@ -92,7 +92,7 @@ A partir de v6.2.2, Setup para Windows x64 es el único paquete de escritorio di
 ## 🌐 Notas de publicación multilingües
 
 GitHub Release muestra de forma predeterminada un resumen en chino simplificado. Consulta las notas completas:
-[简体中文](./docs/releases/v6.2.11.zh-CN.md) · [繁體中文](./docs/releases/v6.2.11.zh-TW.md) · [English](./docs/releases/v6.2.11.en.md) · [Français](./docs/releases/v6.2.11.fr.md) · [日本語](./docs/releases/v6.2.11.ja.md) · [Español](./docs/releases/v6.2.11.es.md)
+[简体中文](./docs/releases/v6.2.12.zh-CN.md) · [繁體中文](./docs/releases/v6.2.12.zh-TW.md) · [English](./docs/releases/v6.2.12.en.md) · [Français](./docs/releases/v6.2.12.fr.md) · [日本語](./docs/releases/v6.2.12.ja.md) · [Español](./docs/releases/v6.2.12.es.md)
 
 <a id="funciones-principales"></a>
 

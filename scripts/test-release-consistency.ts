@@ -116,6 +116,8 @@ for (const locale of releaseLocales) {
 const prepareSource = readFileSync(resolve("scripts/prepare-electron-dist.mjs"), "utf8");
 assert.match(prepareSource, /productName: desktopProductName/);
 assert.match(prepareSource, /target: "nsis"/);
+assert.match(prepareSource, /include: "\.\.\/\.\.\/build\/installer\.nsh"/);
+assert.match(prepareSource, /installerLanguages: \["en_US", "zh_CN", "zh_TW", "fr_FR", "ja_JP", "es_ES"\]/);
 assert.match(prepareSource, /artifactName: "Lyrics\.Card\.Generator\.Setup\.\$\{version\}\.\$\{ext\}"/);
 assert.doesNotMatch(prepareSource, /target: "portable"|\bportable:/, "desktop packaging must not build portable artifacts");
 

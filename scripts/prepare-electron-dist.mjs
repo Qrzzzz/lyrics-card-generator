@@ -81,6 +81,8 @@ await cp(publicDir, path.join(serverOutputDir, "public"), { recursive: true });
 await cp(path.join(projectRoot, "electron", "packaged-next-server.js"), path.join(serverOutputDir, "desktop-server-launcher.cjs"));
 await cleanServerOutput();
 await prepareMinimalElectronApp();
+// Embedded by NSIS; never copied into the installed application.
+await import("./build-installer-shell.mjs");
 
 console.log(`Prepared Electron Next server at ${path.relative(projectRoot, serverOutputDir)}`);
 console.log(`Prepared minimal Electron app at ${path.relative(projectRoot, appOutputDir)}`);
@@ -106,6 +108,7 @@ async function prepareMinimalElectronApp() {
       npmRebuild: false,
       icon: "../../build/icon.ico",
       directories: {
+        buildResources: "../../build",
         output: "../../release"
       },
       files: [...electronAppFiles, "package.json"],
@@ -132,6 +135,8 @@ async function prepareMinimalElectronApp() {
       nsis: {
         oneClick: false,
         allowToChangeInstallationDirectory: true,
+        installerLanguages: ["en_US", "zh_CN", "zh_TW", "fr_FR", "ja_JP", "es_ES"],
+        include: "../../build/installer.nsh",
         installerIcon: "../../build/icon.ico",
         uninstallerIcon: "../../build/icon.ico",
         artifactName: "Lyrics.Card.Generator.Setup.${version}.${ext}"
