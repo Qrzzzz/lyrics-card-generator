@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v6.2.11.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v6.2.12.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="./docs/development.en.md">Développement local</a> ·
@@ -74,15 +74,15 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 ## 📦 Téléchargement et installation
 
-Téléchargez la v6.2.11 depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v6.2.11). Le programme d’installation Windows est :
+Téléchargez la v6.2.12 depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v6.2.12). Le programme d’installation Windows est :
 
-* Programme d’installation Windows x64 : `Lyrics.Card.Generator.Setup.6.2.11.exe`
+* Programme d’installation Windows x64 : `Lyrics.Card.Generator.Setup.6.2.12.exe`
 
 À partir de la v6.2.2, le programme Setup Windows x64 est le seul paquet distribué.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### Points forts de la v6.2.11
+### Points forts de la v6.2.12
 
 * Supprime la boîte de sélection de langue au premier lancement et ouvre directement l’éditeur.
 * Sans langue enregistrée, choisit parmi les six langues prises en charge selon l’ordre des préférences système ; utilise l’anglais si aucune ne correspond ou si la liste est inaccessible.
@@ -92,7 +92,7 @@ Téléchargez la v6.2.11 depuis [GitHub Releases](https://github.com/Qrzzzz/lyri
 ## 🌐 Notes de publication multilingues
 
 Par défaut, GitHub Release affiche un résumé en chinois simplifié. Consultez les notes complètes :
-[简体中文](./docs/releases/v6.2.11.zh-CN.md) · [繁體中文](./docs/releases/v6.2.11.zh-TW.md) · [English](./docs/releases/v6.2.11.en.md) · [Français](./docs/releases/v6.2.11.fr.md) · [日本語](./docs/releases/v6.2.11.ja.md) · [Español](./docs/releases/v6.2.11.es.md)
+[简体中文](./docs/releases/v6.2.12.zh-CN.md) · [繁體中文](./docs/releases/v6.2.12.zh-TW.md) · [English](./docs/releases/v6.2.12.en.md) · [Français](./docs/releases/v6.2.12.fr.md) · [日本語](./docs/releases/v6.2.12.ja.md) · [Español](./docs/releases/v6.2.12.es.md)
 
 <a id="fonctionnalités-principales"></a>
 

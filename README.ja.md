@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v6.2.11.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v6.2.12.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="./docs/development.en.md">ローカル開発</a> ·
@@ -74,15 +74,15 @@
 
 ## 📦 ダウンロードとインストール
 
-v6.2.11 は [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v6.2.11) からダウンロードできます。Windows インストーラー名は次のとおりです。
+v6.2.12 は [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v6.2.12) からダウンロードできます。Windows インストーラー名は次のとおりです。
 
-* Windows x64 インストーラー：`Lyrics.Card.Generator.Setup.6.2.11.exe`
+* Windows x64 インストーラー：`Lyrics.Card.Generator.Setup.6.2.12.exe`
 
 v6.2.2 以降、配布するデスクトップパッケージは Windows x64 Setup のみです。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v6.2.11 の主な更新
+### v6.2.12 の主な更新
 
 * 初回起動時の言語選択ダイアログを削除し、直接エディターを開きます。
 * 保存済みの言語がない場合、システムの優先順位に従って対応する6言語から選択します。一致する言語がない場合や一覧を取得できない場合は英語を使用します。
@@ -92,7 +92,7 @@ v6.2.2 以降、配布するデスクトップパッケージは Windows x64 Set
 ## 🌐 多言語リリースノート
 
 GitHub Release ではデフォルトで簡体字中国語の概要が表示されます。完全なリリースノートはこちら：
-[简体中文](./docs/releases/v6.2.11.zh-CN.md) · [繁體中文](./docs/releases/v6.2.11.zh-TW.md) · [English](./docs/releases/v6.2.11.en.md) · [Français](./docs/releases/v6.2.11.fr.md) · [日本語](./docs/releases/v6.2.11.ja.md) · [Español](./docs/releases/v6.2.11.es.md)
+[简体中文](./docs/releases/v6.2.12.zh-CN.md) · [繁體中文](./docs/releases/v6.2.12.zh-TW.md) · [English](./docs/releases/v6.2.12.en.md) · [Français](./docs/releases/v6.2.12.fr.md) · [日本語](./docs/releases/v6.2.12.ja.md) · [Español](./docs/releases/v6.2.12.es.md)
 
 <a id="主な機能"></a>
 
