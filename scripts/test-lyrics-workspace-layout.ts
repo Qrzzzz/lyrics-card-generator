@@ -280,8 +280,9 @@ assert.ok(
   "textarea auto-height reads isolated mirrors in one batch before writing final live heights"
 );
 assert.ok(
-  documentControllerSource.includes('updateCursor(event, "lyrics", true)') &&
-    documentControllerSource.includes('updateCursor(event, "translation", true)') &&
+  documentControllerSource.includes('commitEditorInput(event, "lyrics")') &&
+    documentControllerSource.includes('commitEditorInput(event, "translation")') &&
+    documentControllerSource.includes("captureViewportAnchor(params.afterSelection.editor)") &&
     documentControllerSource.includes("forceAnchorCapture || selectionChanged || activeEditorChanged") &&
     documentControllerSource.includes("textSelectionsEqual(previousSelection, selection)") &&
     documentControllerSource.includes("restoreViewportAnchor(pending)") &&

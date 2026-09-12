@@ -178,6 +178,7 @@ export function LyricCard({
               />
             ) : (
               <LyricsBlock
+                separatorStyle={style.separatorStyle}
                 lyricDocument={lyricDocument}
                 translationEnabled={style.translationEnabled}
                 lyricFontSize={style.lyricFontSize}

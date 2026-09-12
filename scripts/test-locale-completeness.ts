@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { separatorCopy } from "../lib/lyric-separator-copy";
 import { AI_ERROR_CODES, getAIErrorMessage } from "../lib/ai/error-copy";
 import { getAIPromptUiCopy } from "../lib/ai/prompt-ui-copy";
 import { getAIUiCopy } from "../lib/ai/ui-copy";
@@ -24,6 +25,7 @@ assertCatalog("settings", settingsCopy, new Set([
 ]));
 assertCatalog("import history", importHistoryCopy, new Set(["filterLabel"]));
 assertCatalog("deferred surfaces", deferredSurfaceCopy, new Set());
+assertCatalog("lyric separators", separatorCopy, new Set());
 assertCatalog("AI UI", fromGetter((locale) => getAIUiCopy(locale) as unknown as Record<string, string>), new Set([
   "temperature"
 ]));

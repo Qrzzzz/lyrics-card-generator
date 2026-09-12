@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v6.2.14.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v6.3.0.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="./docs/development.en.md">Développement local</a> ·
@@ -74,24 +74,25 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 ## 📦 Téléchargement et installation
 
-Téléchargez la v6.2.14 depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v6.2.14). Le programme d’installation Windows est :
+Téléchargez cette version depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v6.3.0). Nom du programme d’installation Windows :
 
-* Programme d’installation Windows x64 : `Lyrics.Card.Generator.Setup.6.2.14.exe`
+* Programme d’installation Windows x64 : `Lyrics.Card.Generator.Setup.6.3.0.exe`
 
 À partir de la v6.2.2, le programme Setup Windows x64 est le seul paquet distribué.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### Points forts de la v6.2.14
+### Points forts de la v6.3.0
 
-- Les tests de connexion IA rejettent le HTML, les erreurs JSON, les réponses vides et les enveloppes de complétion invalides, même si HTTP réussit. Les contenus vides valides et les réponses de raisonnement tronquées restent acceptés.
-- Les tests de connexion et les traductions sur ordinateur conservent les codes d’erreur connus pour signaler une clé API ou un modèle manquant, une clé enregistrée illisible et les erreurs du fournisseur.
-- Les diagnostics du fournisseur sont expurgés des secrets et limités en longueur avant affichage. Les délais, l’annulation, les limites de réponse et l’interdiction des redirections restent appliqués.
+- Insérez une balise uniforme `<separator />` à l’étape 2 ; son info-bulle suit la langue de l’interface.
+- Les balises sont indivisibles : Retour arrière ou Suppr sélectionne la balise, puis une seconde pression la supprime. Annulation, rétablissement et suppression sur plusieurs lignes sont pris en charge.
+- L’étape 5, Détails visuels, propose un point centré par défaut ou un trait fin. L’espacement compact est identique dans l’aperçu et l’export.
+- Les séparateurs sont exclus du décompte des lignes et caractères ainsi que de la traduction IA. Les paires bilingues et les positions dans les brouillons et l’historique sont conservées, dans l’interface de bureau et Web Lite.
 
 ## 🌐 Notes de publication multilingues
 
 Par défaut, GitHub Release affiche un résumé en chinois simplifié. Consultez les notes complètes :
-[简体中文](./docs/releases/v6.2.14.zh-CN.md) · [繁體中文](./docs/releases/v6.2.14.zh-TW.md) · [English](./docs/releases/v6.2.14.en.md) · [Français](./docs/releases/v6.2.14.fr.md) · [日本語](./docs/releases/v6.2.14.ja.md) · [Español](./docs/releases/v6.2.14.es.md)
+[简体中文](./docs/releases/v6.3.0.zh-CN.md) · [繁體中文](./docs/releases/v6.3.0.zh-TW.md) · [English](./docs/releases/v6.3.0.en.md) · [Français](./docs/releases/v6.3.0.fr.md) · [日本語](./docs/releases/v6.3.0.ja.md) · [Español](./docs/releases/v6.3.0.es.md)
 
 <a id="fonctionnalités-principales"></a>
 

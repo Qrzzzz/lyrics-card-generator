@@ -168,6 +168,8 @@ export type CardStyle = {
   showPlatformBadge: boolean;
   showFineGrid: boolean;
   fineGridDensity: BackgroundGridDensity;
+  /** Missing in older drafts; defaults to the centered dot. */
+  separatorStyle?: import("@/lib/lyric-separator").LyricSeparatorStyle;
   coverCropScale: number;
   watermark: string;
   /** Independent free-ratio landscape settings; legacy width/height remain portrait-only. */

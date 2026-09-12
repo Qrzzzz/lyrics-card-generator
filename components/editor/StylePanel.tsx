@@ -21,6 +21,7 @@ import {
   normalizeLandscapeLayoutSettings
 } from "@/lib/landscape-plan";
 import type { createT } from "@/lib/i18n";
+import { separatorCopy } from "@/lib/lyric-separator-copy";
 import {
   LYRIC_LINE_HEIGHT_MAX,
   LYRIC_LINE_HEIGHT_MIN,
@@ -399,6 +400,7 @@ export function VisualSettingsPanel({
   onStyleChange,
   song,
   onSongChange,
+  locale,
   t,
   showPlatformBadgeControl = true
 }: StylePanelProps & { showPlatformBadgeControl?: boolean }) {
@@ -444,6 +446,22 @@ export function VisualSettingsPanel({
       </Section>
 
       <Section title={t("step.visual")} variant="plain" contentClassName="gap-0">
+        {style.contentMode === "lyrics" ? (
+          <SettingRow label={separatorCopy[locale].label}>
+            <div className="grid gap-2" data-testid="separator-style-settings">
+              <SegmentedControl
+                value={style.separatorStyle ?? "dot"}
+                onValueChange={(value) => update("separatorStyle", value)}
+                options={[
+                  { value: "dot", label: `·  ${separatorCopy[locale].dot}` },
+                  { value: "line", label: `—  ${separatorCopy[locale].line}` }
+                ]}
+                aria-label={separatorCopy[locale].label}
+              />
+              <p className="app-text-muted text-xs">{separatorCopy[locale].hint}</p>
+            </div>
+          </SettingRow>
+        ) : null}
         <AdaptiveSettingsGrid kind="toggles" data-testid="visual-toggle-grid">
         {(style.layoutMode ?? "portrait") === "portrait" ? (
           <ToggleRow label={t("cover")} checked={style.showCover} onChange={(checked) => update("showCover", checked)} />

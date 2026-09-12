@@ -133,6 +133,11 @@ export function splitAlternatingLyrics(text: string, translationLocale: Locale =
   const translationLines: string[] = [];
 
   lines.forEach((line) => {
+    if (line === "<separator />") {
+      lyricLines.push(line);
+      translationLines.push(line);
+      return;
+    }
     if (isTranslationLine(line, translationLocale)) {
       translationLines.push(line);
       return;

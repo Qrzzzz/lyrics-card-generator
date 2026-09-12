@@ -8,6 +8,7 @@ import { EditorAutosave } from "../lib/persistence/editor-autosave";
 import { createEditorDraftSnapshot, editorDraftChangeKey, restoreEditorDraft } from "../lib/editor-draft";
 import { defaultState } from "../components/editor/editor-defaults";
 import { withLyricPlainText } from "../lib/lyrics-document-state";
+import { getLyricDocumentRows } from "../lib/lyrics-document-v2";
 
 const require = createRequire(import.meta.url);
 const { ImportHistoryStore } = require("../electron/import-history");
@@ -117,7 +118,7 @@ async function main() {
     const filePath = path.join(directory, "history.json");
     const store = new ImportHistoryStore({ filePath });
     const state = withLyricPlainText({ ...defaultState, song: { ...defaultState.song, title: "  Draft title  ", album: "  Authored album  " },
-      style: { ...defaultState.style, lyricFontSize: 77, layoutMode: "landscape", customTextColor: "#112233" } }, "\n  line one\n\n尾行🙂\n", "translation\n", true);
+      style: { ...defaultState.style, separatorStyle: "line", lyricFontSize: 77, layoutMode: "landscape", customTextColor: "#112233" } }, "\n  line one\n<separator />\n\n尾行🙂\n", "translation\n", true);
     const snapshot = createEditorDraftSnapshot(state, { step: 3, exportFormat: "webp", exportQuality: "medium",
       songInfoDraft: { source: "unknown", title: "unfinished form", artist: "artist" } });
     const lease = await store.beginEditorDraft();
@@ -137,6 +138,8 @@ async function main() {
     assert.equal(restored.lyrics, state.lyrics);
     assert.equal(restored.style.lyricFontSize, 77);
     assert.equal(restored.style.layoutMode, "landscape");
+    assert.equal(restored.style.separatorStyle, "line", "separator appearance survives the Electron draft validator and a restart");
+    assert.equal(getLyricDocumentRows(restored.lyricDocument).filter((row) => row.isSeparator).length, 1);
 
     const remoteStore = new ImportHistoryStore({ filePath: path.join(directory, "remote.json") });
     const imported = await remoteStore.upsert({ kind: "search", query: "draft", platform: "netease", songId: "81234",

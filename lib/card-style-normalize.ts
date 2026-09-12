@@ -29,6 +29,7 @@ export function normalizeCardStyle(
 
   return normalizeAutomaticSizing(normalizeInstrumentalLayout({
     ...normalizedStyle,
+    separatorStyle: normalizedStyle.separatorStyle === "line" ? "line" : "dot",
     ratio: layoutMode === "landscape" ? "custom" : normalizedStyle.ratio,
     showSongInfo: true,
     showCover: layoutMode === "landscape" ? true : normalizedStyle.showCover,

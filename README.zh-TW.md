@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v6.2.14.zh-TW.md">發布說明</a> ·
+  <a href="./docs/releases/v6.3.0.zh-TW.md">發布說明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">線上 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="./docs/development.zh-CN.md">本機開發</a> ·
@@ -71,24 +71,25 @@
 
 ## 📦 下載與安裝
 
-從 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v6.2.14) 下載 v6.2.14，Windows 安裝程式名稱為：
+下載請前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v6.3.0)。Windows 安裝程式名稱為：
 
-* Windows x64 安裝版：`Lyrics.Card.Generator.Setup.6.2.14.exe`
+* Windows x64 安裝版：`Lyrics.Card.Generator.Setup.6.3.0.exe`
 
 從 v6.2.2 起僅提供 Windows x64 Setup 安裝程式。
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v6.2.14 更新重點
+### v6.3.0 更新重點
 
-- 修正 AI 連線測試對 HTTP 成功回應的誤判：HTML、錯誤 JSON、空回應或不合法的 completion 結構皆會失敗；保留合法空內容及推理模型截斷回應的相容性。
-- 桌面連線測試與翻譯保留已知錯誤碼，正確顯示缺少 API Key、缺少模型、金鑰讀取失敗及供應商錯誤提示。
-- 供應商診斷在顯示前遮蔽機密並限制長度；繼續保留逾時、取消、回應大小限制及禁止重新導向原則。
+- 在第二步插入統一的 `<separator />` 標籤，滑鼠懸停時顯示目前介面語言的提示。
+- 標籤不可拆分；退格與 Delete 首次選取、再次刪除，支援復原、重做及跨行選取刪除。
+- 第五步「視覺細節」提供置中單點與細橫線，預設單點；分隔符採用緊湊間距，預覽與匯出保持一致。
+- 分隔符不計入歌詞行數或字元數，也不傳送至 AI 翻譯；保留雙語配對、草稿與歷史記錄中的位置。桌面介面與 Web Lite 同步支援。
 
 ## 🌐 多語言發佈說明
 
 GitHub Release 預設顯示簡體中文摘要，完整說明請見：
-[简体中文](./docs/releases/v6.2.14.zh-CN.md) · [繁體中文](./docs/releases/v6.2.14.zh-TW.md) · [English](./docs/releases/v6.2.14.en.md) · [Français](./docs/releases/v6.2.14.fr.md) · [日本語](./docs/releases/v6.2.14.ja.md) · [Español](./docs/releases/v6.2.14.es.md)
+[简体中文](./docs/releases/v6.3.0.zh-CN.md) · [繁體中文](./docs/releases/v6.3.0.zh-TW.md) · [English](./docs/releases/v6.3.0.en.md) · [Français](./docs/releases/v6.3.0.fr.md) · [日本語](./docs/releases/v6.3.0.ja.md) · [Español](./docs/releases/v6.3.0.es.md)
 
 ## ✨ 主要功能
 

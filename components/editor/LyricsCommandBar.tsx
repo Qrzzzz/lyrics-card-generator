@@ -7,6 +7,7 @@ import {
   PanelRightClose,
   PanelRightOpen,
   Redo2,
+  BetweenHorizontalStart,
   TextSelect,
   TimerOff,
   Undo2
@@ -20,6 +21,8 @@ export type LyricsCommandIntent = "ai";
 
 export function LyricsCommandBar({
   copy,
+  insertSeparatorLabel,
+  onInsertSeparator,
   activeTab,
   canKeepSelection,
   canUndo,
@@ -43,6 +46,8 @@ export function LyricsCommandBar({
   onToggleSidebar
 }: {
   copy: LyricsWorkspaceCopy;
+  insertSeparatorLabel: string;
+  onInsertSeparator: () => void;
   activeTab: LyricsSidebarTab;
   canKeepSelection: boolean;
   canUndo: boolean;
@@ -115,6 +120,12 @@ export function LyricsCommandBar({
           testId="lyrics-command-strip-lrc"
           onClick={onStripLrc}
           icon={<TimerOff className="size-3.5" />}
+        />
+        <CommandIconButton
+          label={insertSeparatorLabel}
+          testId="lyrics-command-insert-separator"
+          onClick={onInsertSeparator}
+          icon={<BetweenHorizontalStart className="size-3.5" />}
         />
         {showAITranslate ? (
           <CommandShortcut

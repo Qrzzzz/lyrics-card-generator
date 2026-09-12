@@ -1,4 +1,5 @@
 import type { CardLayoutMode, ContentMode } from "@/lib/types";
+import { isSeparatorLine } from "@/lib/lyric-separator";
 import { countLyricDocumentLines, type LyricDocumentV2 } from "@/lib/lyrics-document-v2";
 
 export const MAX_EXPORT_LYRIC_LINES = 36;
@@ -32,7 +33,7 @@ export type ExportLyricLineStatusInput = {
 export function countNonEmptyLogicalLines(text: string) {
   return text
     .split(/\r\n?|\n/)
-    .filter((line) => line.trim().length > 0)
+    .filter((line) => line.trim().length > 0 && !isSeparatorLine(line))
     .length;
 }
 

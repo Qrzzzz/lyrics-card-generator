@@ -3,6 +3,8 @@
 import { withAlpha } from "@/lib/palette-background";
 import { getLyricDocumentRows, type LyricDocumentV2 } from "@/lib/lyrics-document-v2";
 import { cn } from "@/lib/utils";
+import { LyricSeparator } from "@/components/preview/LyricSeparator";
+import type { LyricSeparatorStyle } from "@/lib/lyric-separator";
 
 export function LandscapeLyricsContent({
   lyricDocument,
@@ -12,6 +14,7 @@ export function LandscapeLyricsContent({
   lineHeight,
   textColor,
   align,
+  separatorStyle = "dot",
   measurement = false
 }: {
   lyricDocument: LyricDocumentV2;
@@ -21,6 +24,7 @@ export function LandscapeLyricsContent({
   lineHeight: number;
   textColor: string;
   align: "left" | "center";
+  separatorStyle?: LyricSeparatorStyle;
   measurement?: boolean;
 }) {
   const documentRows = getLyricDocumentRows(lyricDocument);
@@ -29,6 +33,7 @@ export function LandscapeLyricsContent({
     : [{
         blockId: "placeholder",
         unitId: "placeholder",
+        isSeparator: false,
         source: ["Type your lyrics here..."],
         translation: [],
         isBlockStart: true,
@@ -49,6 +54,7 @@ export function LandscapeLyricsContent({
       style={{ color: textColor, textShadow: measurement ? "none" : undefined }}
     >
       {rows.map((row, index) => {
+        if (row.isSeparator) return <LyricSeparator key={row.unitId} style={separatorStyle} fontSize={lyricFontSize} color={textColor} />;
         const lyric = row.source.join("\n");
         const translation = translationEnabled ? row.translation.join("\n") : "";
         const gapBeforeLines = row.isBlockStart
@@ -59,7 +65,7 @@ export function LandscapeLyricsContent({
             key={row.unitId}
             data-lyric-unit-id={row.unitId === "placeholder" ? undefined : row.unitId}
             style={{
-              marginTop: index > 0 ? gapBeforeLines * rowGap : 0,
+              marginTop: index > 0 && !rows[index - 1]?.isSeparator ? gapBeforeLines * rowGap : 0,
               marginBottom: index === rows.length - 1 ? 0 : rowGap
             }}
           >

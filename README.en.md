@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v6.2.14.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v6.3.0.en.md">Release Notes</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
   <a href="./docs/web-lite-browser-support.md">Web Lite Browser Support</a> ·
   <a href="#features">Features</a> ·
@@ -75,24 +75,25 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 ## 📦 Download and Installation
 
-Download v6.2.14 from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v6.2.14). The Windows installer is:
+Download from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v6.3.0). The Windows installer name is:
 
-* Windows x64 installer: `Lyrics.Card.Generator.Setup.6.2.14.exe`
+* Windows x64 installer: `Lyrics.Card.Generator.Setup.6.3.0.exe`
 
 Starting with v6.2.2, Windows x64 Setup is the only distributed desktop package.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v6.2.14 Highlights
+### v6.3.0 Highlights
 
-- AI connection tests reject HTML, error JSON, empty responses and invalid completion envelopes even when HTTP succeeds. Valid empty content and truncated reasoning responses remain supported.
-- Desktop connection tests and translations preserve known error codes, showing specific guidance for missing API keys or models, unreadable saved keys and provider errors.
-- Provider diagnostics are redacted and length-limited before display. Timeouts, cancellation, response limits and the no-redirect policy remain enforced.
+- Insert a consistent `<separator />` tag in step 2, with a hover hint in the current interface language.
+- Tags are indivisible: Backspace or Delete selects the whole tag first and removes it on the next press. Undo, redo and deletion across multiple lines are supported.
+- Step 5, Visual Details, offers a centered dot (default) or a thin line. Compact spacing and the same rendering apply to preview and export.
+- Separators are excluded from lyric line and character counts and from AI translation. Bilingual pairing and positions in drafts and history are preserved. Available in the desktop interface and Web Lite.
 
 ## 🌐 Multilingual Release Notes
 
 GitHub Release displays a Simplified Chinese summary by default. See the full release notes:
-[简体中文](./docs/releases/v6.2.14.zh-CN.md) · [繁體中文](./docs/releases/v6.2.14.zh-TW.md) · [English](./docs/releases/v6.2.14.en.md) · [Français](./docs/releases/v6.2.14.fr.md) · [日本語](./docs/releases/v6.2.14.ja.md) · [Español](./docs/releases/v6.2.14.es.md)
+[简体中文](./docs/releases/v6.3.0.zh-CN.md) · [繁體中文](./docs/releases/v6.3.0.zh-TW.md) · [English](./docs/releases/v6.3.0.en.md) · [Français](./docs/releases/v6.3.0.fr.md) · [日本語](./docs/releases/v6.3.0.ja.md) · [Español](./docs/releases/v6.3.0.es.md)
 
 <a id="features"></a>
 
