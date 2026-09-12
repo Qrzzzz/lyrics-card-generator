@@ -1,5 +1,6 @@
 import resourceBudgets from "@/electron/resource-budgets.json";
 import { readResponseTextBounded } from "@/lib/bounded-response";
+import { sanitizeProviderDiagnostic } from "@/electron/provider-response-contract";
 
 export type ProviderResponseBody =
   | { kind: "json"; data: unknown }
@@ -37,7 +38,7 @@ export function getChatCompletionMessage(body: ProviderResponseBody) {
   };
 }
 
-export function getProviderErrorMessage(body: ProviderResponseBody, status: number) {
+export function getProviderErrorMessage(body: ProviderResponseBody, status: number, apiKey = "") {
   if (body.kind === "json" && body.data && typeof body.data === "object") {
     const data = body.data as { error?: string | { message?: unknown }; message?: unknown };
     const message =
@@ -49,12 +50,12 @@ export function getProviderErrorMessage(body: ProviderResponseBody, status: numb
             ? data.message
             : "";
     if (message.trim()) {
-      return `AI 接口请求失败：${message.trim()}`;
+      return sanitizeProviderDiagnostic(`AI 接口请求失败：${message.trim()}`, apiKey);
     }
   }
 
   if (body.kind === "text") {
-    return `AI 接口请求失败：${body.text.slice(0, 500)}`;
+    return sanitizeProviderDiagnostic(`AI 接口请求失败：${body.text}`, apiKey);
   }
 
   return `AI 接口请求失败（HTTP ${status}）。`;

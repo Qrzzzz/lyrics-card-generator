@@ -3,7 +3,8 @@ import { createAppRequestHeaders } from "@/lib/app-request";
 import { getChatCompletionMessage, getProviderErrorMessage, readProviderResponseBody } from "@/lib/ai/provider-response";
 import { DEFAULT_AI_SETTINGS } from "@/lib/ai/types";
 import { normalizeAISettings } from "@/lib/ai/settings-normalize";
-import { parseSerializedAIError, type AIErrorCode } from "@/lib/ai/error-copy";
+import { isAIErrorCode, parseSerializedAIError, type AIErrorCode } from "@/lib/ai/error-copy";
+import { sanitizeProviderDiagnostic } from "@/electron/provider-response-contract";
 import { ResponseBodyLimitExceededError } from "@/lib/bounded-response";
 import {
   AIStreamError,
@@ -25,10 +26,16 @@ type BrowserStoredSettings = AISettings;
 let browserSessionApiKey = "";
 
 export class AITranslationError extends Error {
-  constructor(message: string, readonly code: AIErrorCode = "unknown", readonly diagnostic?: string) {
-    const detail = diagnostic ?? (code === "provider_error" ? message : undefined);
-    super(`AI_ERROR:${code}${detail ? `:${detail}` : ""}`);
+  readonly code: AIErrorCode;
+  readonly diagnostic?: string;
+
+  constructor(message: string, code: AIErrorCode = "unknown", diagnostic?: string) {
+    const knownCode = isAIErrorCode(code) ? code : "unknown";
+    const detail = knownCode === "provider_error" ? sanitizeProviderDiagnostic(diagnostic ?? message) || undefined : undefined;
+    super(`AI_ERROR:${knownCode}${detail ? `:${detail}` : ""}`);
     this.name = "AITranslationError";
+    this.code = knownCode;
+    this.diagnostic = detail;
   }
 }
 
@@ -289,8 +296,8 @@ function normalizeError(error: unknown) {
   }
   const message = error instanceof Error ? error.message : "AI translation request failed.";
   const serialized = parseSerializedAIError(message);
-  if (serialized.code === "insecure_base_url") {
-    return new AITranslationError(message, serialized.code);
+  if (serialized.code !== "unknown") {
+    return new AITranslationError("", serialized.code, serialized.diagnostic);
   }
   if (/timeout/i.test(message)) return new AITranslationError(message, "timeout");
   if (/network|fetch/i.test(message)) return new AITranslationError(message, "network");

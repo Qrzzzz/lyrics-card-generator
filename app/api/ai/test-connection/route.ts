@@ -42,7 +42,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true });
   } catch (error) {
     if (error instanceof AIProviderConnectionError) {
-      const status = error.code === "provider_error"
+      const status = error.code === "provider_error" || error.code === "invalid_response"
         ? 502
         : error.code === "timeout"
           ? 504

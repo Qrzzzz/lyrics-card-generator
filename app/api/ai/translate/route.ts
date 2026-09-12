@@ -106,7 +106,7 @@ export async function POST(request: Request) {
       return errorResponse(
         "provider_error",
         response.status,
-        await readProviderError(response, deadline.signal)
+        await readProviderError(response, deadline.signal, apiKey)
       );
     }
     const contentType = response.headers.get("content-type") || "";
@@ -122,7 +122,7 @@ export async function POST(request: Request) {
         return NextResponse.json(providerBody.data, { status: 200 });
       }
 
-      return errorResponse("invalid_response", 502, getProviderErrorMessage(providerBody, 502));
+      return errorResponse("invalid_response", 502, getProviderErrorMessage(providerBody, 502, apiKey));
     }
 
     // Relay one upstream chunk per downstream pull. The renderer owns the SSE

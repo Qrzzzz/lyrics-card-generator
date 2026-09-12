@@ -1574,7 +1574,7 @@ async function streamAITranslationInMain({ settings, apiKey, prompt, reasoning, 
     if (!response.ok) {
       throw createAIError(
         "provider_error",
-        await readNormalizedProviderError(response, deadline.signal)
+        await readNormalizedProviderError(response, deadline.signal, apiKey)
       );
     }
     onStatus("connected");

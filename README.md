@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v6.2.13.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v6.2.14.zh-CN.md">发布说明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">在线 Web Lite 版</a> ·
   <a href="./docs/web-lite-browser-support.md">Web Lite 浏览器支持</a> ·
   <a href="./docs/desktop.md">桌面维护文档</a> ·
@@ -73,25 +73,24 @@
 
 ## 📦 下载与安装
 
-从 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v6.2.13) 下载 v6.2.13，Windows 安装包名称为：
+从 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v6.2.14) 下载 v6.2.14，Windows 安装包名称为：
 
-* Windows x64 安装版：`Lyrics.Card.Generator.Setup.6.2.13.exe`
+* Windows x64 安装版：`Lyrics.Card.Generator.Setup.6.2.14.exe`
 
 从 v6.2.2 起只提供 Windows x64 Setup 安装包。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v6.2.13 更新重点
+### v6.2.14 更新重点
 
-- 安装器从内置图标取色，生成柔和、偏深的彩色背景，不再跟随系统深浅主题。
-- 采用紧凑单列布局，补充产品名称，安装选项向下展开，保持窗口宽度稳定。
-- 统一按钮、间距和状态布局，改善路径输入、语言切换和错误提示。
-- 保留六种语言、高对比度辅助模式及现有 NSIS 安装、升级和卸载机制。
+- 修复 AI 连接测试对 HTTP 成功响应的误判：HTML、错误 JSON、空响应或不合法的 completion 结构均会失败；保留合法空内容和推理模型截断响应的兼容性。
+- 桌面连接测试和翻译保留已知错误码，正确显示缺少 API Key、缺少模型、密钥读取失败和提供商错误提示。
+- 提供商诊断在展示前脱敏并限长；继续保留超时、取消、响应大小限制及禁止重定向策略。
 
 ## 🌐 多语言发布说明
 
 GitHub Release 默认展示简体中文摘要，完整说明见：
-[简体中文](./docs/releases/v6.2.13.zh-CN.md) · [繁體中文](./docs/releases/v6.2.13.zh-TW.md) · [English](./docs/releases/v6.2.13.en.md) · [Français](./docs/releases/v6.2.13.fr.md) · [日本語](./docs/releases/v6.2.13.ja.md) · [Español](./docs/releases/v6.2.13.es.md)
+[简体中文](./docs/releases/v6.2.14.zh-CN.md) · [繁體中文](./docs/releases/v6.2.14.zh-TW.md) · [English](./docs/releases/v6.2.14.en.md) · [Français](./docs/releases/v6.2.14.fr.md) · [日本語](./docs/releases/v6.2.14.ja.md) · [Español](./docs/releases/v6.2.14.es.md)
 
 <a id="主要功能"></a>
 
