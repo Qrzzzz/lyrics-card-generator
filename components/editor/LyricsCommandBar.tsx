@@ -79,12 +79,6 @@ export function LyricsCommandBar({
       data-active-tab={activeTab}
     >
       <div className="lyrics-command-group flex min-w-0 items-center gap-1 overflow-hidden">
-        <CommandIconButton
-          label={insertSeparatorLabel}
-          testId="lyrics-command-insert-separator"
-          onClick={onInsertSeparator}
-          icon={<BetweenHorizontalStart className="size-3.5" />}
-        />
         <CommandShortcut
           label={copy.keepSelection}
           testId="lyrics-command-keep-selection"
@@ -126,6 +120,12 @@ export function LyricsCommandBar({
           testId="lyrics-command-strip-lrc"
           onClick={onStripLrc}
           icon={<TimerOff className="size-3.5" />}
+        />
+        <CommandIconButton
+          label={insertSeparatorLabel}
+          testId="lyrics-command-insert-separator"
+          onClick={onInsertSeparator}
+          icon={<BetweenHorizontalStart className="size-3.5" />}
         />
         {showAITranslate ? (
           <CommandShortcut
