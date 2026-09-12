@@ -1,5 +1,8 @@
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
+import { createServer } from "node:http";
+import { once } from "node:events";
+import { POST as testConnectionRoute } from "../app/api/ai/test-connection/route";
 import {
   AIProviderConnectionError,
   buildChatCompletionsRequestBody,
@@ -256,13 +259,15 @@ async function main() {
     );
   }
 
+  await testConnectionResponseContracts();
+
   console.log(JSON.stringify({
     ok: true,
     transportPolicyCases: acceptedHttpLoopbackUrls.length + rejectedRemoteHttpUrls.length + 6
   }, null, 2));
 }
 
-void main();
+void main().catch((error) => { console.error(error); process.exitCode = 1; });
 
 function captureThrownMessage(fn: () => unknown) {
   try {
@@ -277,6 +282,9 @@ function connectionErrorCode(error: unknown) {
   if (error instanceof AIProviderConnectionError) return error.code;
   if (error && typeof error === "object" && "connectionTestCode" in error) {
     return String(error.connectionTestCode);
+  }
+  if (error && typeof error === "object" && "code" in error && error.code === "response_too_large") {
+    return "response_too_large";
   }
   return "";
 }
@@ -297,3 +305,100 @@ const abortAwarePendingFetch: typeof fetch = async (_input, init) => await new P
   }
   signal?.addEventListener("abort", () => reject(signal.reason), { once: true });
 });
+
+async function testConnectionResponseContracts() {
+  const completion = (message: unknown, finish_reason = "stop") => ({ choices: [{ message, finish_reason }] });
+  const fixtures = [
+    { name: "completion", body: completion({ content: "A" }) },
+    { name: "empty-content", body: completion({ content: "" }, "length") },
+    { name: "null-content", body: completion({ content: null }, "length") },
+    { name: "reasoning", body: completion({ reasoning_content: "thinking" }, "length") },
+    { name: "truncated-message", body: completion({}, "length") },
+    { name: "refusal", body: completion({ content: null, refusal: "Cannot comply" }) },
+    { name: "html", text: "<!doctype html><title>Dashboard</title>", code: "invalid_response" },
+    { name: "malformed-json", text: "{broken", code: "invalid_response" },
+    { name: "empty", text: "", status: 204, code: "invalid_response" },
+    { name: "json-null", body: null, code: "invalid_response" },
+    { name: "json-array", body: [], code: "invalid_response" },
+    { name: "unrelated-json", body: { ok: true }, code: "invalid_response" },
+    { name: "empty-choices", body: { choices: [] }, code: "invalid_response" },
+    { name: "object-choices", body: { choices: { 0: { message: { content: "OK" } } } }, code: "invalid_response" },
+    { name: "null-choice", body: { choices: [null] }, code: "invalid_response" },
+    { name: "stream-delta", body: { choices: [{ delta: { content: "OK" } }] }, code: "invalid_response" },
+    { name: "string-message", body: completion("OK"), code: "invalid_response" },
+    { name: "empty-message", body: completion({}), code: "invalid_response" },
+    { name: "wrong-content-type", body: completion({ content: 123 }), code: "invalid_response" },
+    { name: "error-json", body: { error: { message: "Invalid model" } }, code: "provider_error" },
+    { name: "error-string", body: { error: "Invalid model" }, code: "provider_error" },
+    { name: "error-with-completion", body: { ...completion({ content: "OK" }), error: {} }, code: "provider_error" },
+    { name: "unauthorized", body: { error: { message: "Invalid key" } }, status: 401, code: "provider_error" },
+    { name: "echoed-secret", body: { error: { message: "Rejected fake-contract-secret\n" + "x".repeat(600) } }, code: "provider_error" },
+    { name: "secret-at-limit", text: "x".repeat(280) + "fake-contract-secret", status: 401, code: "provider_error" },
+    { name: "oversized-response", text: "x".repeat(65537), code: "response_too_large" }
+  ];
+  let upstreamCalls = 0;
+  const server = createServer((request, response) => {
+    upstreamCalls += 1;
+    request.resume();
+    const fixture = fixtures.find((row) => request.url === `/${row.name}/chat/completions`);
+    assert.ok(fixture);
+    response.writeHead(fixture.status ?? 200, { "content-type": fixture.name === "html" ? "text/html" : "application/json" });
+    response.end("text" in fixture ? fixture.text : JSON.stringify(fixture.body));
+  });
+  server.listen(0, "127.0.0.1");
+  await once(server, "listening");
+  const address = server.address();
+  assert.ok(address && typeof address === "object");
+  const origin = `http://127.0.0.1:${address.port}`;
+  const originalOrigin = process.env.LYRICS_CARD_APP_ORIGIN;
+  process.env.LYRICS_CARD_APP_ORIGIN = origin;
+  try {
+    for (const fixture of fixtures) {
+      const settings = { baseUrl: `${origin}/${fixture.name}`, model: "test-model", apiKey: "fake-contract-secret" };
+      for (const testConnection of [testAIProviderConnection, electronProvider.testProviderConnection]) {
+        if (fixture.code) {
+          await assert.rejects(testConnection(settings), (error: unknown) => {
+            assert.equal(connectionErrorCode(error), fixture.code, fixture.name);
+            assert.doesNotMatch(connectionErrorDiagnostic(error), /fake-contract-secret/);
+            assert.doesNotMatch(connectionErrorDiagnostic(error), /fake-/);
+            assert.ok(connectionErrorDiagnostic(error).length <= 300);
+            return true;
+          });
+        } else {
+          assert.equal(await testConnection(settings), true, fixture.name);
+        }
+      }
+      const response = await testConnectionRoute(new Request(`${origin}/api/ai/test-connection`, {
+        method: "POST",
+        headers: { origin, "x-lyrics-card-request": "1", "content-type": "application/json" },
+        body: JSON.stringify({ settings })
+      }));
+      const result = await response.json();
+      assert.equal(response.status, fixture.code ? 502 : 200, `${fixture.name}: route status`);
+      if (fixture.code) {
+        assert.equal(result.error.code, fixture.code, `${fixture.name}: route code`);
+        assert.doesNotMatch(JSON.stringify(result), /fake-contract-secret/);
+      } else {
+        assert.deepEqual(result, { ok: true });
+      }
+    }
+    const callsBeforeRejections = upstreamCalls;
+    for (const headers of [
+      { origin: "https://wrong.example", "x-lyrics-card-request": "1", "content-type": "application/json" },
+      { origin, "content-type": "application/json" }
+    ]) {
+      const response = await testConnectionRoute(new Request(`${origin}/api/ai/test-connection`, {
+        method: "POST", headers: headers as HeadersInit,
+        body: JSON.stringify({ settings: { baseUrl: `${origin}/completion`, model: "test-model", apiKey: "fake-contract-secret" } })
+      }));
+      assert.equal(response.status, 403);
+    }
+    assert.equal(upstreamCalls, callsBeforeRejections, "rejected origins/markers never reach the provider");
+    console.log(`Connection response contracts passed: ${fixtures.length} fixtures across Electron, TypeScript and Next route`);
+  } finally {
+    if (originalOrigin === undefined) delete process.env.LYRICS_CARD_APP_ORIGIN;
+    else process.env.LYRICS_CARD_APP_ORIGIN = originalOrigin;
+    server.closeAllConnections();
+    await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
+  }
+}

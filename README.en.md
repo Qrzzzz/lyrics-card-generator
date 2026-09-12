@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v6.2.13.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v6.2.14.en.md">Release Notes</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
   <a href="./docs/web-lite-browser-support.md">Web Lite Browser Support</a> ·
   <a href="#features">Features</a> ·
@@ -75,25 +75,24 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 ## 📦 Download and Installation
 
-Download v6.2.13 from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v6.2.13). The Windows installer is:
+Download v6.2.14 from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v6.2.14). The Windows installer is:
 
-* Windows x64 installer: `Lyrics.Card.Generator.Setup.6.2.13.exe`
+* Windows x64 installer: `Lyrics.Card.Generator.Setup.6.2.14.exe`
 
 Starting with v6.2.2, Windows x64 Setup is the only distributed desktop package.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v6.2.13 Highlights
+### v6.2.14 Highlights
 
-- The installer samples its embedded app icon to create a soft, deeper color background, independent of the system light or dark theme.
-- A compact single-column layout adds the product name and expands installation options vertically at a fixed window width.
-- Consistent buttons, spacing and state layouts improve path editing, language switching and error messages.
-- Retains six languages, Windows high-contrast accessibility and existing NSIS installation, upgrade and uninstallation behavior.
+- AI connection tests reject HTML, error JSON, empty responses and invalid completion envelopes even when HTTP succeeds. Valid empty content and truncated reasoning responses remain supported.
+- Desktop connection tests and translations preserve known error codes, showing specific guidance for missing API keys or models, unreadable saved keys and provider errors.
+- Provider diagnostics are redacted and length-limited before display. Timeouts, cancellation, response limits and the no-redirect policy remain enforced.
 
 ## 🌐 Multilingual Release Notes
 
 GitHub Release displays a Simplified Chinese summary by default. See the full release notes:
-[简体中文](./docs/releases/v6.2.13.zh-CN.md) · [繁體中文](./docs/releases/v6.2.13.zh-TW.md) · [English](./docs/releases/v6.2.13.en.md) · [Français](./docs/releases/v6.2.13.fr.md) · [日本語](./docs/releases/v6.2.13.ja.md) · [Español](./docs/releases/v6.2.13.es.md)
+[简体中文](./docs/releases/v6.2.14.zh-CN.md) · [繁體中文](./docs/releases/v6.2.14.zh-TW.md) · [English](./docs/releases/v6.2.14.en.md) · [Français](./docs/releases/v6.2.14.fr.md) · [日本語](./docs/releases/v6.2.14.ja.md) · [Español](./docs/releases/v6.2.14.es.md)
 
 <a id="features"></a>
 

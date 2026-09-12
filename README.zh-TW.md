@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v6.2.13.zh-TW.md">發布說明</a> ·
+  <a href="./docs/releases/v6.2.14.zh-TW.md">發布說明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">線上 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="./docs/development.zh-CN.md">本機開發</a> ·
@@ -71,25 +71,24 @@
 
 ## 📦 下載與安裝
 
-從 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v6.2.13) 下載 v6.2.13，Windows 安裝程式名稱為：
+從 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v6.2.14) 下載 v6.2.14，Windows 安裝程式名稱為：
 
-* Windows x64 安裝版：`Lyrics.Card.Generator.Setup.6.2.13.exe`
+* Windows x64 安裝版：`Lyrics.Card.Generator.Setup.6.2.14.exe`
 
 從 v6.2.2 起僅提供 Windows x64 Setup 安裝程式。
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v6.2.13 更新重點
+### v6.2.14 更新重點
 
-- 安裝程式從內建圖示取色，產生柔和、偏深的彩色背景，不再跟隨系統深淺主題。
-- 採用精簡單欄版面，補上產品名稱，安裝選項向下展開，保持視窗寬度穩定。
-- 統一按鈕、間距與狀態版面，改善路徑輸入、語言切換和錯誤提示。
-- 保留六種語言、高對比輔助模式及既有 NSIS 安裝、升級與解除安裝機制。
+- 修正 AI 連線測試對 HTTP 成功回應的誤判：HTML、錯誤 JSON、空回應或不合法的 completion 結構皆會失敗；保留合法空內容及推理模型截斷回應的相容性。
+- 桌面連線測試與翻譯保留已知錯誤碼，正確顯示缺少 API Key、缺少模型、金鑰讀取失敗及供應商錯誤提示。
+- 供應商診斷在顯示前遮蔽機密並限制長度；繼續保留逾時、取消、回應大小限制及禁止重新導向原則。
 
 ## 🌐 多語言發佈說明
 
 GitHub Release 預設顯示簡體中文摘要，完整說明請見：
-[简体中文](./docs/releases/v6.2.13.zh-CN.md) · [繁體中文](./docs/releases/v6.2.13.zh-TW.md) · [English](./docs/releases/v6.2.13.en.md) · [Français](./docs/releases/v6.2.13.fr.md) · [日本語](./docs/releases/v6.2.13.ja.md) · [Español](./docs/releases/v6.2.13.es.md)
+[简体中文](./docs/releases/v6.2.14.zh-CN.md) · [繁體中文](./docs/releases/v6.2.14.zh-TW.md) · [English](./docs/releases/v6.2.14.en.md) · [Français](./docs/releases/v6.2.14.fr.md) · [日本語](./docs/releases/v6.2.14.ja.md) · [Español](./docs/releases/v6.2.14.es.md)
 
 ## ✨ 主要功能
 

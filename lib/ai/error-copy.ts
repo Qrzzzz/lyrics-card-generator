@@ -1,4 +1,5 @@
 import type { Locale } from "@/lib/types";
+import { sanitizeProviderDiagnostic } from "@/electron/provider-response-contract";
 
 export type AIErrorCode = "missing_api_key" | "missing_model" | "missing_base_url" | "invalid_base_url" | "insecure_base_url" | "invalid_request" | "request_too_large" | "empty_prompt" | "network" | "timeout" | "stream_idle_timeout" | "stream_deadline_exceeded" | "provider_error" | "response_too_large" | "empty_stream" | "invalid_response" | "stream_event_too_large" | "stream_buffer_too_large" | "stream_output_too_large" | "stream_reasoning_too_large" | "empty_response" | "cancelled" | "request_failed" | "api_key_read_failed" | "secure_storage_unavailable" | "app_origin_configuration_error" | "cross_origin_request" | "missing_app_request_marker" | "unsupported_media_type" | "unknown";
 
@@ -45,7 +46,12 @@ export function getAIErrorMessage(locale: Locale, code: AIErrorCode, diagnostic?
   const primary = code === "app_origin_configuration_error"
     ? appOriginConfigurationCopy[locale]
     : copy[locale][code] ?? copy[locale].unknown;
-  return diagnostic && code === "provider_error" ? `${primary} (${diagnostic.slice(0, 300)})` : primary;
+  const detail = code === "provider_error" ? sanitizeProviderDiagnostic(diagnostic) : "";
+  return detail ? `${primary} (${detail})` : primary;
+}
+
+export function isAIErrorCode(code: string): code is AIErrorCode {
+  return AI_ERROR_CODES.includes(code as AIErrorCode);
 }
 
 export function parseSerializedAIError(message: string) {
@@ -53,5 +59,9 @@ export function parseSerializedAIError(message: string) {
   // before recovering the stable application error code and diagnostic.
   const normalized = message.replace(/^Error invoking remote method '[^']+':\s*/i, "").replace(/^Error:\s*/i, "");
   const match = normalized.match(/^AI_ERROR:([a-z_]+)(?::([\s\S]*))?$/);
-  return match ? { code: match[1] as AIErrorCode, diagnostic: match[2]?.trim() || undefined } : { code: "unknown" as const, diagnostic: undefined };
+  if (!match || !isAIErrorCode(match[1])) return { code: "unknown" as const, diagnostic: undefined };
+  return {
+    code: match[1],
+    diagnostic: match[1] === "provider_error" ? sanitizeProviderDiagnostic(match[2]) || undefined : undefined
+  };
 }

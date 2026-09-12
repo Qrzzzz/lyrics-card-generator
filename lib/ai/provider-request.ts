@@ -2,6 +2,7 @@ import { getProviderErrorMessage, readProviderResponseBody } from "./provider-re
 import type { AISettings } from "./types";
 import resourceBudgets from "@/electron/resource-budgets.json";
 import { ResponseBodyLimitExceededError } from "@/lib/bounded-response";
+import { getConnectionTestResponseError } from "@/electron/provider-response-contract";
 
 export const INVALID_BASE_URL_ERROR_CODE = "invalid_base_url";
 export const INSECURE_BASE_URL_ERROR_CODE = "insecure_base_url";
@@ -40,6 +41,7 @@ export type AIProviderConnectionErrorCode =
   | "invalid_base_url"
   | "insecure_base_url"
   | "provider_error"
+  | "invalid_response"
   | "timeout"
   | "cancelled"
   | "response_too_large"
@@ -202,10 +204,13 @@ export async function testAIProviderConnection({
       controller.signal,
       resourceBudgets.upstreamResponseBytes.aiConnectionTest
     );
-    if (!response.ok) {
+    const responseError = response.ok ? getConnectionTestResponseError(body) : "provider_error";
+    if (responseError) {
       throw new AIProviderConnectionError(
-        "provider_error",
-        redactConnectionSecret(getProviderErrorMessage(body, response.status), apiKey)
+        responseError,
+        responseError === "provider_error"
+          ? getProviderErrorMessage(body, response.status, apiKey)
+          : undefined
       );
     }
     return true;
@@ -223,11 +228,6 @@ export async function testAIProviderConnection({
   }
 }
 
-function redactConnectionSecret(message: string, apiKey: string) {
-  const secret = apiKey.trim();
-  return secret ? message.split(secret).join("[redacted]") : message;
-}
-
-export async function readProviderError(response: Response, signal?: AbortSignal) {
-  return getProviderErrorMessage(await readProviderResponseBody(response, signal), response.status);
+export async function readProviderError(response: Response, signal?: AbortSignal, apiKey = "") {
+  return getProviderErrorMessage(await readProviderResponseBody(response, signal), response.status, apiKey);
 }

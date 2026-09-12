@@ -28,6 +28,7 @@ const electronAppFiles = [
   "electron/import-history.js",
   "electron/editor-draft.js",
   "electron/provider-response.js",
+  "electron/provider-response-contract.js",
   "electron/preload.js",
   "electron/ipc-security.js",
   "electron/local-app-url.js",

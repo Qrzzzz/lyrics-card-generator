@@ -1,6 +1,7 @@
 const INVALID_BASE_URL_ERROR_CODE = "invalid_base_url";
 const INSECURE_BASE_URL_ERROR_CODE = "insecure_base_url";
 const resourceBudgets = require("./resource-budgets.json");
+const { getConnectionTestResponseError, sanitizeProviderDiagnostic } = require("./provider-response-contract");
 
 class ProviderResponseLimitError extends Error {
   constructor(limitBytes) {
@@ -216,10 +217,13 @@ async function testProviderConnection({ baseUrl, model, apiKey, signal, fetchImp
       signal: controller.signal
     });
     const body = await readProviderResponseBody(response, controller.signal, resourceBudgets.upstreamResponseBytes.aiConnectionTest);
-    if (!response.ok) {
+    const responseError = response.ok ? getConnectionTestResponseError(body) : "provider_error";
+    if (responseError) {
       throw connectionError(
-        "provider_error",
-        redactConnectionSecret(getProviderErrorMessage(body, response.status), apiKey)
+        responseError,
+        responseError === "provider_error"
+          ? getProviderErrorMessage(body, response.status, apiKey)
+          : undefined
       );
     }
     return true;
@@ -233,11 +237,6 @@ async function testProviderConnection({ baseUrl, model, apiKey, signal, fetchImp
     clearTimeout(timer);
     signal?.removeEventListener("abort", abortFromParent);
   }
-}
-
-function redactConnectionSecret(message, apiKey) {
-  const secret = String(apiKey || "").trim();
-  return secret ? String(message).split(secret).join("[redacted]") : String(message);
 }
 
 function connectionError(code, diagnostic) {
@@ -256,7 +255,7 @@ function getChatCompletionMessage(body) {
   };
 }
 
-function getProviderErrorMessage(body, status) {
+function getProviderErrorMessage(body, status, apiKey = "") {
   if (body.kind === "json") {
     const data = body.data;
     if (data && typeof data === "object") {
@@ -270,20 +269,20 @@ function getProviderErrorMessage(body, status) {
               ? data.message
               : "";
       if (message.trim()) {
-        return `AI 接口请求失败：${message.trim()}`;
+        return sanitizeProviderDiagnostic(`AI 接口请求失败：${message.trim()}`, apiKey);
       }
     }
   }
 
   if (body.kind === "text") {
-    return `AI 接口请求失败：${body.text.slice(0, 500)}`;
+    return sanitizeProviderDiagnostic(`AI 接口请求失败：${body.text}`, apiKey);
   }
 
   return `AI 接口请求失败（HTTP ${status}）。`;
 }
 
-async function readProviderError(response, signal) {
-  return getProviderErrorMessage(await readProviderResponseBody(response, signal), response.status);
+async function readProviderError(response, signal, apiKey = "") {
+  return getProviderErrorMessage(await readProviderResponseBody(response, signal), response.status, apiKey);
 }
 
 module.exports = {
