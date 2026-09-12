@@ -7,7 +7,9 @@ import {
   LandscapeLineLimitAlert,
   type LandscapeLineLimitNotice
 } from "@/components/editor/LandscapeLineLimitAlert";
-import { ActionButton, FieldLabel, Section, TextareaField, ToggleRow } from "@/components/ui/controls";
+import { ActionButton, FieldLabel, Section, ToggleRow } from "@/components/ui/controls";
+import { WebLiteAtomicField } from "./WebLiteAtomicField";
+import { isSeparatorLine } from "@/lib/lyric-separator";
 import type { createT } from "@/lib/i18n";
 import { formatChineseTranslation, splitAlternatingLyrics } from "@/lib/lyric-format";
 import type { ContentMode, Locale } from "@/lib/types";
@@ -42,7 +44,9 @@ export function WebLiteLyricInput({
   onDismissLandscapeLineLimitNotice: () => void;
 }) {
   const translationFieldId = useId();
-  const lines = lyrics ? lyrics.split(/\r?\n/).length : 0;
+  const originalFieldId = useId();
+  const authored = lyrics.split(/\r?\n/).filter((line) => !isSeparatorLine(line)).join("\n");
+  const lines = authored ? authored.split(/\r?\n/).length : 0;
   const showTranslation = contentMode === "lyrics" && translationEnabled;
 
   return (
@@ -54,11 +58,13 @@ export function WebLiteLyricInput({
             onDismiss={onDismissLandscapeLineLimitNotice}
             t={t}
           />
-          <FieldLabel label={t("lyricText")} hint={t("lineCount", { lines, chars: lyrics.length })}>
-            <TextareaField
-              data-testid="web-lite-lyrics-original"
+          <FieldLabel label={t("lyricText")} htmlFor={originalFieldId} hint={t("lineCount", { lines, chars: authored.length })}>
+            <WebLiteAtomicField
+              id={originalFieldId}
+              locale={locale}
+              testId="web-lite-lyrics-original"
               value={lyrics}
-              onChange={(event) => onLyricsChange(event.target.value)}
+              onChange={onLyricsChange}
               placeholder={t("lyricPlaceholder")}
               className="min-h-52 leading-relaxed"
             />
@@ -79,10 +85,12 @@ export function WebLiteLyricInput({
           {showTranslation ? (
             <FieldLabel label={t("translation")} htmlFor={translationFieldId}>
               <TranslationFieldBorder color={themeColor}>
-                <TextareaField
+                <WebLiteAtomicField
                   id={translationFieldId}
+                  locale={locale}
+                  testId="web-lite-lyrics-translation"
                   value={translationText}
-                  onChange={(event) => onTranslationTextChange(event.target.value)}
+                  onChange={onTranslationTextChange}
                   placeholder={t("translationPlaceholder")}
                   className="min-h-40 leading-relaxed"
                 />

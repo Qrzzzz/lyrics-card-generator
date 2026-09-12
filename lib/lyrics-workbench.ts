@@ -1,3 +1,4 @@
+import { isSeparatorLine, LYRIC_SEPARATOR } from "@/lib/lyric-separator";
 import {
   serializeLyricDocument,
   swapLyricDocumentColumns,
@@ -294,7 +295,13 @@ export function mergeSelectedLyricsLines(
   return applyScopedTransform(text, selection, (source) => {
     const lines = normalizeNewlines(source).split("\n");
     if (lines.length < 2) return { text: source, stats: { mergedLines: 0 } };
-    const merged = lines.map((line) => line.trim()).filter(Boolean).join(" ");
+    // Merge each excerpt independently; the divider is a structural boundary.
+    const groups: string[][] = [[]];
+    for (const line of lines) {
+      if (isSeparatorLine(line)) groups.push([LYRIC_SEPARATOR], []);
+      else groups[groups.length - 1].push(line.trim());
+    }
+    const merged = groups.map((group) => group.filter(Boolean).join(" ")).filter(Boolean).join("\n");
     return {
       text: merged,
       stats: { mergedLines: Math.max(0, lines.length - 1), removedLines: Math.max(0, lines.length - 1) }
@@ -403,8 +410,10 @@ export function analyzeLyricsDocument(params: {
   longLineThreshold?: number;
 }): LyricsDocumentAnalysis {
   const longLineThreshold = params.longLineThreshold ?? 80;
-  const originalLines = editorLines(params.lyrics);
-  const translationLines = params.translationEnabled ? editorLines(params.translationText) : [];
+  const authoredLines = (text: string) => editorLines(text)
+    .map((line, index) => ({ text: line, line: index + 1 })).filter((entry) => !isSeparatorLine(entry.text));
+  const originalLines = authoredLines(params.lyrics);
+  const translationLines = params.translationEnabled ? authoredLines(params.translationText) : [];
   const issues = [
     ...analyzeLyricsText(params.lyrics, "lyrics", longLineThreshold),
     ...(params.translationEnabled
@@ -421,7 +430,7 @@ export function analyzeLyricsDocument(params: {
     lineDifference,
     firstUnpairedLine: lineDifference === 0
       ? null
-      : Math.min(originalLines.length, translationLines.length) + 1,
+      : (lineDifference > 0 ? originalLines : translationLines)[Math.min(originalLines.length, translationLines.length)]?.line ?? null,
     issues
   };
 }
@@ -551,6 +560,7 @@ function analyzeLyricsText(
   let previous = "";
 
   lines.forEach((line, index) => {
+    if (isSeparatorLine(line)) { previous = ""; return; }
     const lineNumber = index + 1;
     const trimmed = line.trim();
     const length = Array.from(trimmed).length;

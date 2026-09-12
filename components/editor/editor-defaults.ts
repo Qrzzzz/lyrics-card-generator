@@ -88,6 +88,7 @@ export const defaultState: AppState = {
     showPlatformBadge: false,
     showFineGrid: false,
     fineGridDensity: "medium",
+    separatorStyle: "dot",
     coverCropScale: 1,
     watermark: PROJECT_SIGNATURE_TEXT,
     landscapeLayout: { ...DEFAULT_LANDSCAPE_LAYOUT_SETTINGS }

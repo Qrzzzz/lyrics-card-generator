@@ -137,6 +137,7 @@ export function LandscapeLyricCard({
               }}
             >
               <LandscapeLyricsContent
+                separatorStyle={style.separatorStyle}
                 lyricDocument={lyricDocument}
                 translationEnabled={style.translationEnabled}
                 lyricFontSize={style.lyricFontSize}

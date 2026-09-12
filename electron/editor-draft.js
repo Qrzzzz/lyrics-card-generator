@@ -9,6 +9,7 @@ const BOOLEANS = new Set(["autoWidth", "autoHeight", "customFontEnabled", "allow
 const NUMBERS = new Set(["width", "height", "customFontWeight", "lyricFontSize", "lineHeight", "translationScale", "coverCropScale"]);
 const STRINGS = new Set(["customFontFamily", "customFontLabel", "customTextColor", "resolvedTextColor", "instrumentalText", "sharedByText", "watermark"]);
 const ENUMS = {
+  separatorStyle: ["dot", "line"],
   backgroundMode: ["palette", "gradient"], layoutMode: ["portrait", "landscape"],
   ratio: ["1:1", "4:5", "9:16", "16:9", "21:9", "3:2", "custom"],
   font: ["sans-heavy", "serif-heavy", "system-sans", "system-serif"],

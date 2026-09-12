@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v6.2.14.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v6.3.0.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="./docs/development.en.md">ローカル開発</a> ·
@@ -74,24 +74,25 @@
 
 ## 📦 ダウンロードとインストール
 
-v6.2.14 は [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v6.2.14) からダウンロードできます。Windows インストーラー名は次のとおりです。
+[GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v6.3.0) からダウンロードできます。Windows インストーラー名：
 
-* Windows x64 インストーラー：`Lyrics.Card.Generator.Setup.6.2.14.exe`
+* Windows x64 インストーラー：`Lyrics.Card.Generator.Setup.6.3.0.exe`
 
 v6.2.2 以降、配布するデスクトップパッケージは Windows x64 Setup のみです。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v6.2.14 の主な更新
+### v6.3.0 の主な更新
 
-- AI 接続テストは、HTTP が成功しても HTML、エラー JSON、空の応答、不正な completion 構造を失敗として扱います。正当な空の内容や推論モデルの打ち切られた応答には引き続き対応します。
-- デスクトップの接続テストと翻訳で既知のエラーコードを保持し、API キーやモデルの未設定、保存済みキーの読み取り失敗、プロバイダーのエラーを適切に表示します。
-- 診断情報は表示前に秘密情報を除去し、長さを制限します。タイムアウト、キャンセル、応答サイズ制限、リダイレクト禁止を維持します。
+- ステップ2で共通の `<separator />` タグを挿入できます。マウスを重ねると現在の表示言語で説明が表示されます。
+- タグは分割できません。Backspace または Delete を1回押すと全体を選択し、もう1回押すと削除します。元に戻す、やり直し、複数行の選択削除にも対応します。
+- ステップ5「ビジュアル詳細」で中央の点（既定）と細い横線を選べます。コンパクトな間隔で、プレビューと書き出しに同じ描画を使用します。
+- 区切りは歌詞の行数・文字数や AI 翻訳に含まれません。原文と訳文の対応、下書きと履歴内の位置を保持します。デスクトップ画面と Web Lite の両方に対応します。
 
 ## 🌐 多言語リリースノート
 
 GitHub Release ではデフォルトで簡体字中国語の概要が表示されます。完全なリリースノートはこちら：
-[简体中文](./docs/releases/v6.2.14.zh-CN.md) · [繁體中文](./docs/releases/v6.2.14.zh-TW.md) · [English](./docs/releases/v6.2.14.en.md) · [Français](./docs/releases/v6.2.14.fr.md) · [日本語](./docs/releases/v6.2.14.ja.md) · [Español](./docs/releases/v6.2.14.es.md)
+[简体中文](./docs/releases/v6.3.0.zh-CN.md) · [繁體中文](./docs/releases/v6.3.0.zh-TW.md) · [English](./docs/releases/v6.3.0.en.md) · [Français](./docs/releases/v6.3.0.fr.md) · [日本語](./docs/releases/v6.3.0.ja.md) · [Español](./docs/releases/v6.3.0.es.md)
 
 <a id="主な機能"></a>
 

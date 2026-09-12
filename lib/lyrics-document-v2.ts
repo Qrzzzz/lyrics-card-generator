@@ -1,3 +1,5 @@
+import { isSeparatorLine, isSeparatorUnit } from "@/lib/lyric-separator";
+
 export interface LyricDocumentV2 {
   schemaVersion: 2;
   id: string;
@@ -38,6 +40,7 @@ export type LyricDocumentPlainText = {
 };
 
 export type LyricDocumentRow = {
+  isSeparator?: boolean;
   blockId: string;
   unitId: string;
   source: string[];
@@ -215,8 +218,9 @@ export function getLyricDocumentRows(document: LyricDocumentV2): LyricDocumentRo
   return document.blocks.flatMap((block, blockIndex) => block.units.map((unit, unitIndex) => ({
       blockId: block.id,
       unitId: unit.id,
-      source: [...unit.source],
-      translation: [...(unit.translation ?? [])],
+      ...(isSeparatorUnit(unit) ? { isSeparator: true } : {}),
+      source: isSeparatorUnit(unit) ? [] : [...unit.source],
+      translation: isSeparatorUnit(unit) ? [] : [...(unit.translation ?? [])],
       isBlockStart: unitIndex === 0,
       sourceGapBeforeLines: unitIndex === 0 ? sourceGaps[blockIndex] : 0,
       translationGapBeforeLines: unitIndex === 0 ? translationGaps[blockIndex] : 0
@@ -225,8 +229,8 @@ export function getLyricDocumentRows(document: LyricDocumentV2): LyricDocumentRo
 
 export function hasAuthoredLyrics(document: LyricDocumentV2) {
   return document.blocks.some((block) => block.units.some((unit) => (
-    unit.source.some((line) => line.trim().length > 0) ||
-    unit.translation?.some((line) => line.trim().length > 0)
+    !isSeparatorUnit(unit) && (unit.source.some((line) => line.trim().length > 0) ||
+    unit.translation?.some((line) => line.trim().length > 0))
   )));
 }
 
@@ -235,6 +239,7 @@ export function countLyricDocumentLines(document: LyricDocumentV2, translationEn
   let translation = 0;
   for (const block of document.blocks) {
     for (const unit of block.units) {
+      if (isSeparatorUnit(unit)) continue;
       source += unit.source.filter((line) => line.trim().length > 0).length;
       if (translationEnabled) {
         translation += (unit.translation ?? []).filter((line) => line.trim().length > 0).length;
@@ -303,6 +308,7 @@ export function mergeUnits(document: LyricDocumentV2, firstUnitId: string, secon
     const upper = Math.max(firstIndex, secondIndex);
     const first = block.units[lower];
     const second = block.units[upper];
+    if (isSeparatorUnit(first) || isSeparatorUnit(second)) return document;
     const merged: LyricUnit = {
       id: first.id,
       source: [...first.source, ...second.source],
@@ -328,6 +334,7 @@ export function splitUnit(
     const nextId = idFactory("unit");
     assertAvailableLyricId(document, nextId);
     const unit = block.units[index];
+    if (isSeparatorUnit(unit)) return block;
     const sourceSplit = clamp(sourceIndex, 0, unit.source.length);
     const translation = unit.translation ?? [];
     const translationSplit = clamp(translationIndex, 0, translation.length);
@@ -380,7 +387,7 @@ export function applyUnitTranslations(
     update.id,
     Array.isArray(update.translation) ? update.translation : [update.translation]
   ]));
-  const knownIds = new Set(document.blocks.flatMap((block) => block.units.map((unit) => unit.id)));
+  const knownIds = new Set(document.blocks.flatMap((block) => block.units.filter((unit) => !isSeparatorUnit(unit)).map((unit) => unit.id)));
   if (updates.some((update) => !knownIds.has(update.id)) || updateMap.size !== updates.length) return null;
   let changed = false;
   const blocks = document.blocks.map((block) => ({
@@ -448,15 +455,31 @@ function parseDocumentDraft(source: string, translation: string) {
   for (let blockIndex = 0; blockIndex < blockCount; blockIndex += 1) {
     const sourceBlock = sourceTrack.blocks[blockIndex];
     const translationBlock = translationTrack.blocks[blockIndex];
-    const unitCount = Math.max(sourceBlock?.lines.length ?? 0, translationBlock?.lines.length ?? 0);
-    const units = Array.from({ length: unitCount }, (_, unitIndex) => {
-      const sourceLine = sourceBlock?.lines[unitIndex];
-      const translationLine = translationBlock?.lines[unitIndex];
-      return {
+    const sourceLines = sourceBlock?.lines ?? [];
+    const translationLines = translationBlock?.lines ?? [];
+    const units: BlockDraft["units"] = [];
+    let sourceIndex = 0;
+    let translationIndex = 0;
+    while (sourceIndex < sourceLines.length || translationIndex < translationLines.length) {
+      const sourceLine = sourceLines[sourceIndex];
+      const translationLine = translationLines[translationIndex];
+      const sourceSeparator = sourceLine !== undefined && isSeparatorLine(sourceLine);
+      const translationSeparator = translationLine !== undefined && isSeparatorLine(translationLine);
+      // A marker never consumes the other track's lyric. Matching markers share one unit.
+      if (sourceSeparator || translationSeparator) {
+        units.push({ source: sourceSeparator ? [sourceLine] : [],
+          ...(translationSeparator ? { translation: [translationLine] } : {}) });
+        if (sourceSeparator) sourceIndex++;
+        if (translationSeparator) translationIndex++;
+        continue;
+      }
+      units.push({
         source: sourceLine === undefined ? [] : [sourceLine],
         ...(translationLine === undefined ? {} : { translation: [translationLine] })
-      };
-    });
+      });
+      if (sourceLine !== undefined) sourceIndex++;
+      if (translationLine !== undefined) translationIndex++;
+    }
     blocks.push({
       units,
       formatting: {

@@ -17,6 +17,7 @@ import {
   type LyricsWorkspaceCopy
 } from "@/components/editor/lyrics-workspace-copy";
 import type { LyricsEditorKey } from "@/components/editor/hooks/useLyricsViewportSession";
+import { insertSeparator, isSeparatorLine } from "@/lib/lyric-separator";
 import {
   cleanPastedLyrics,
   cleanSynchronizedBlankRows,
@@ -51,6 +52,7 @@ import {
 
 type UseLyricsWorkspaceDocumentControllerOptions = {
   copy: LyricsWorkspaceCopy;
+  separatorLabels: { insert: string; edit: string };
   lyricDocument: LyricDocumentV2;
   lyrics: string;
   translationText: string;
@@ -61,9 +63,7 @@ type UseLyricsWorkspaceDocumentControllerOptions = {
   getEditor: (editor: LyricsEditorKey) => HTMLTextAreaElement | null;
   captureViewportAnchor: (preferredEditor?: LyricsEditorKey) => void;
   restoreViewportAnchor: (selectionOverride?: LyricsSelectionSnapshot) => void;
-  onLyricsChange: (lyrics: string) => void;
   onTranslationEnabledChange: (enabled: boolean) => void;
-  onTranslationTextChange: (translation: string) => void;
   onLyricsDocumentChange: (snapshot: LyricsDocumentSnapshot) => void;
 };
 
@@ -80,6 +80,7 @@ type OperationFeedback = {
 
 export function useLyricsWorkspaceDocumentController({
   copy,
+  separatorLabels,
   lyricDocument,
   lyrics,
   translationText,
@@ -90,9 +91,7 @@ export function useLyricsWorkspaceDocumentController({
   getEditor,
   captureViewportAnchor,
   restoreViewportAnchor,
-  onLyricsChange,
   onTranslationEnabledChange,
-  onTranslationTextChange,
   onLyricsDocumentChange
 }: UseLyricsWorkspaceDocumentControllerOptions) {
   const lyricsStats = useMemo(() => getTextStats(lyrics), [lyrics]);
@@ -164,8 +163,10 @@ export function useLyricsWorkspaceDocumentController({
     cursorRef.current = nextCursor;
     activeEditorRef.current = pending.editor;
     // Restore selection after React updates the textarea value, then restore its semantic viewport anchor.
-    editor.setSelectionRange(selection.start, selection.end);
-    editor.focus({ preventScroll: true });
+    if (editor.selectionStart !== selection.start || editor.selectionEnd !== selection.end) {
+      editor.setSelectionRange(selection.start, selection.end);
+    }
+    if (document.activeElement !== editor) editor.focus({ preventScroll: true });
     if (selectionChanged) setSelections(nextSelections);
     if (cursorChanged) setCursor(nextCursor);
     pendingSelectionRef.current = null;
@@ -229,15 +230,37 @@ export function useLyricsWorkspaceDocumentController({
   }
 
   function onLyricsEditorChange(event: ChangeEvent<HTMLTextAreaElement>) {
-    clearOperationHistory();
-    updateCursor(event, "lyrics", true);
-    onLyricsChange(event.currentTarget.value);
+    commitEditorInput(event, "lyrics");
   }
 
   function onTranslationEditorChange(event: ChangeEvent<HTMLTextAreaElement>) {
-    clearOperationHistory();
-    updateCursor(event, "translation", true);
-    onTranslationTextChange(event.currentTarget.value);
+    commitEditorInput(event, "translation");
+  }
+
+  function commitEditorInput(event: ChangeEvent<HTMLTextAreaElement>, editor: LyricsWorkbenchEditor) {
+    const node = event.currentTarget;
+    commitOperation({
+      label: separatorLabels.edit,
+      next: editor === "translation"
+        ? { ...documentSnapshot, translationText: node.value }
+        : { ...documentSnapshot, lyrics: node.value },
+      afterSelection: { editor, start: node.selectionStart, end: node.selectionEnd },
+      message: ""
+    });
+  }
+
+  function insertSeparatorAtCursor() {
+    const selection = captureCurrentSelection();
+    const text = selection.editor === "translation" ? translationText : lyrics;
+    const result = insertSeparator(text, selection.end);
+    commitOperation({
+      label: separatorLabels.insert,
+      next: selection.editor === "translation"
+        ? { ...documentSnapshot, translationText: result.text }
+        : { ...documentSnapshot, lyrics: result.text },
+      afterSelection: { editor: selection.editor, ...result.selection },
+      message: separatorLabels.insert
+    });
   }
 
   function captureCurrentSelection(editor = activeEditorRef.current): LyricsSelectionSnapshot {
@@ -294,7 +317,7 @@ export function useLyricsWorkspaceDocumentController({
     expectedSnapshotRef.current = next;
     pendingSelectionRef.current = params.afterSelection;
     setHistoryRevision((value) => value + 1);
-    setFeedback({ message: params.message, canUndo: true });
+    setFeedback(params.message ? { message: params.message, canUndo: true } : null);
     onLyricsDocumentChange(next);
     return true;
   }
@@ -533,6 +556,7 @@ export function useLyricsWorkspaceDocumentController({
     feedback,
     formatTranslation,
     handleTranslationEnabledChange,
+    insertSeparatorAtCursor,
     keepSelection,
     locateIssue,
     mergeLines,
@@ -560,7 +584,7 @@ function cursorForSelection(
 
 function getTextStats(text: string) {
   const lines = text ? text.split(/\r?\n/u).length : 0;
-  return { lines, characters: text.length };
+  return { lines, characters: text.split(/\r?\n/u).filter((line) => !isSeparatorLine(line)).join("\n").length };
 }
 
 function clampSelection(

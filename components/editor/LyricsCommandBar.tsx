@@ -7,6 +7,7 @@ import {
   PanelRightClose,
   PanelRightOpen,
   Redo2,
+  BetweenHorizontalStart,
   TextSelect,
   TimerOff,
   Undo2
@@ -20,6 +21,8 @@ export type LyricsCommandIntent = "ai";
 
 export function LyricsCommandBar({
   copy,
+  insertSeparatorLabel,
+  onInsertSeparator,
   activeTab,
   canKeepSelection,
   canUndo,
@@ -43,6 +46,8 @@ export function LyricsCommandBar({
   onToggleSidebar
 }: {
   copy: LyricsWorkspaceCopy;
+  insertSeparatorLabel: string;
+  onInsertSeparator: () => void;
   activeTab: LyricsSidebarTab;
   canKeepSelection: boolean;
   canUndo: boolean;
@@ -74,6 +79,12 @@ export function LyricsCommandBar({
       data-active-tab={activeTab}
     >
       <div className="lyrics-command-group flex min-w-0 items-center gap-1 overflow-hidden">
+        <CommandIconButton
+          label={insertSeparatorLabel}
+          testId="lyrics-command-insert-separator"
+          onClick={onInsertSeparator}
+          icon={<BetweenHorizontalStart className="size-3.5" />}
+        />
         <CommandShortcut
           label={copy.keepSelection}
           testId="lyrics-command-keep-selection"

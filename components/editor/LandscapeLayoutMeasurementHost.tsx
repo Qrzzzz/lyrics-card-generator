@@ -68,6 +68,7 @@ export function LandscapeLayoutMeasurementHost({
         style={{ ...cardFontStyle(state.style), width: widths[0] }}
       >
         <LandscapeLyricsContent
+          separatorStyle={state.style.separatorStyle}
           lyricDocument={state.lyricDocument}
           translationEnabled={state.style.translationEnabled}
           lyricFontSize={state.style.lyricFontSize}

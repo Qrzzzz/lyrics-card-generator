@@ -28,6 +28,8 @@ import {
   useLyricsViewportSession
 } from "@/components/editor/hooks/useLyricsViewportSession";
 import { Section } from "@/components/ui/controls";
+import { AtomicLyricsTextarea } from "@/components/editor/AtomicLyricsTextarea";
+import { separatorCopy } from "@/lib/lyric-separator-copy";
 import type { createT } from "@/lib/i18n";
 import type { ExportLyricLineStatus } from "@/lib/lyrics-document";
 import {
@@ -75,11 +77,9 @@ export function LyricsWorkspace({
   onDismissLandscapeLineLimitNotice,
   sidebarTab,
   onSidebarTabChange,
-  onLyricsChange,
   translationEnabled,
   translationText,
   onTranslationEnabledChange,
-  onTranslationTextChange,
   onLyricsDocumentChange,
   onAITranslate,
   onCloseAITranslate,
@@ -94,6 +94,7 @@ export function LyricsWorkspace({
   showAiTranslate = true
 }: LyricsWorkspaceProps) {
   const copy = getLyricsWorkspaceCopy(locale);
+  const separatorLabels = separatorCopy[locale];
   const workspaceRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const lyricsRef = useRef<HTMLTextAreaElement>(null);
@@ -184,6 +185,7 @@ export function LyricsWorkspace({
 
   const documentController = useLyricsWorkspaceDocumentController({
     copy,
+    separatorLabels,
     lyricDocument,
     lyrics,
     translationText,
@@ -194,9 +196,7 @@ export function LyricsWorkspace({
     getEditor,
     captureViewportAnchor: viewport.captureAnchor,
     restoreViewportAnchor: viewport.restoreAnchor,
-    onLyricsChange,
     onTranslationEnabledChange,
-    onTranslationTextChange,
     onLyricsDocumentChange
   });
 
@@ -265,6 +265,8 @@ export function LyricsWorkspace({
     >
       <LyricsCommandBar
         copy={copy}
+        insertSeparatorLabel={separatorLabels.insert}
+        onInsertSeparator={documentController.insertSeparatorAtCursor}
         activeTab={sidebarTab}
         canKeepSelection={documentController.activeSelection.end > documentController.activeSelection.start}
         canUndo={documentController.canUndo}
@@ -335,8 +337,13 @@ export function LyricsWorkspace({
             >
               <EditorColumn label={copy.original} htmlFor={lyricsId}>
                 <div className="relative min-w-0">
-                  <textarea
+                  <AtomicLyricsTextarea
                     ref={lyricsRef}
+                    separatorHint={separatorLabels.tooltip}
+                    onUndo={documentController.undoOperation}
+                    onRedo={documentController.redoOperation}
+                    canUndo={documentController.canUndo}
+                    canRedo={documentController.canRedo}
                     id={lyricsId}
                     value={lyrics}
                     onChange={documentController.onLyricsEditorChange}
@@ -363,8 +370,13 @@ export function LyricsWorkspace({
                     style={{ background: `color-mix(in srgb, ${themeColor} 24%, rgb(var(--input-border)))` }}
                   >
                     <div className="relative min-w-0">
-                      <textarea
+                      <AtomicLyricsTextarea
                         ref={translationRef}
+                        separatorHint={separatorLabels.tooltip}
+                        onUndo={documentController.undoOperation}
+                        onRedo={documentController.redoOperation}
+                        canUndo={documentController.canUndo}
+                        canRedo={documentController.canRedo}
                         id={translationId}
                         value={translationText}
                         onChange={documentController.onTranslationEditorChange}
