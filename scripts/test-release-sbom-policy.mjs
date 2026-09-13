@@ -14,6 +14,14 @@ assert.deepEqual(summary.relationships, {
   applicationDependsOnElectron: true,
   executableEvidence: true
 });
+const duplicateUpdater = structuredClone(enriched);
+const updaterPackage = duplicateUpdater.packages.find((entry) => entry.name === "electron-updater");
+duplicateUpdater.packages.push({ ...structuredClone(updaterPackage), SPDXID: `${updaterPackage.SPDXID}-duplicate` });
+assert.throws(
+  () => inspectReleaseSbom({ ...bundle, sbom: duplicateUpdater }),
+  /exactly one packaged electron-updater/u,
+  "a second lock-derived updater entry must still fail the release inventory gate"
+);
 const enrichedWithAdditionalLegalReference = structuredClone(enriched);
 enrichedWithAdditionalLegalReference.packages
   .find((entry) => entry.name === "electron")
