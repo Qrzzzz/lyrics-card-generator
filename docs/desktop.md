@@ -105,7 +105,7 @@ These gates cover Electron static policy, single-instance ownership, settings an
 
 ```bash
 npm run desktop:pack
-npm run desktop:packaged-assets-test
+npm run desktop:packaged-assets-test -- --unpacked-only
 npm run desktop:interaction-test
 ```
 

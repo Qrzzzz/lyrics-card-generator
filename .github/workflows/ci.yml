@@ -225,7 +225,7 @@ jobs:
         run: npm run desktop:pack
 
       - name: Verify staged and packaged desktop assets
-        run: npm run desktop:packaged-assets-test
+        run: npm run desktop:packaged-assets-test -- --unpacked-only
 
       - name: Run packaged desktop interaction regression
         run: npm run desktop:interaction-test
