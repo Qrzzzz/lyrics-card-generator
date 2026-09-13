@@ -48,6 +48,12 @@ assert.ok(exposedBridge, "preload exposes the desktop bridge");
 
 async function run() {
   const directCalls = [
+    ["getUpdateState", []],
+    ["checkForUpdates", []],
+    ["downloadUpdate", []],
+    ["cancelUpdate", []],
+    ["installUpdate", []],
+    ["windowCloseFailed", []],
     ["setWindowMaterial", ["acrylic"]],
     ["minimizeWindow", []],
     ["toggleMaximizeWindow", []],
@@ -120,6 +126,11 @@ async function run() {
   await exposedBridge.updateManualSaveEnvelope("record-id", "{\"schemaVersion\":1}");
 
   let observedWindowState;
+  let observedUpdate;
+  const removeUpdate = exposedBridge.onUpdateStateChanged((payload) => { observedUpdate = payload; });
+  listeners.get("lyrics-card:update-state-changed")({}, { phase: "downloading", percent: 50 });
+  assert.deepEqual(observedUpdate, { phase: "downloading", percent: 50 });
+  removeUpdate();
   const removeWindowState = exposedBridge.onWindowStateChanged((payload) => { observedWindowState = payload; });
   listeners.get("lyrics-card:window-state-changed")({}, { maximized: true });
   assert.deepEqual(observedWindowState, { maximized: true });

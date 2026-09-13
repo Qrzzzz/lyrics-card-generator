@@ -86,6 +86,17 @@ function invokeManualSave(channel, recordId, envelope) {
 }
 
 contextBridge.exposeInMainWorld("lyricsCardDesktopBridge", {
+  getUpdateState: () => ipcRenderer.invoke("lyrics-card:update-state"),
+  checkForUpdates: () => ipcRenderer.invoke("lyrics-card:update-check"),
+  downloadUpdate: () => ipcRenderer.invoke("lyrics-card:update-download"),
+  cancelUpdate: () => ipcRenderer.invoke("lyrics-card:update-cancel"),
+  installUpdate: () => ipcRenderer.invoke("lyrics-card:update-install"),
+  windowCloseFailed: () => ipcRenderer.invoke("lyrics-card:window-close-failed"),
+  onUpdateStateChanged: (callback) => {
+    const listener = (_event, payload) => callback(payload);
+    ipcRenderer.on("lyrics-card:update-state-changed", listener);
+    return () => ipcRenderer.removeListener("lyrics-card:update-state-changed", listener);
+  },
   setWindowMaterial: (theme) => ipcRenderer.invoke("lyrics-card:set-window-material", theme),
   minimizeWindow: () => ipcRenderer.invoke("lyrics-card:window-minimize"),
   toggleMaximizeWindow: () => ipcRenderer.invoke("lyrics-card:window-toggle-maximize"),

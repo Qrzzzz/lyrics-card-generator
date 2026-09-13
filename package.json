@@ -1,6 +1,6 @@
 {
   "name": "lyric-card-generator",
-  "version": "6.3.0",
+  "version": "6.3.1",
   "private": true,
   "main": "electron/main.js",
   "scripts": {
@@ -56,7 +56,7 @@
     "a11y:test": "playwright test --config=playwright.web-lite.config.ts --grep axe",
     "release-source:test": "node scripts/test-release-source-policy.mjs && node scripts/test-release-state-resolver.mjs && node scripts/test-release-powershell-syntax.cjs",
     "app-preference-save:test": "tsx scripts/test-app-preference-save-coordinator.ts",
-    "stability:test": "tsx scripts/test-app-preferences-reconciliation.ts && tsx scripts/test-app-preferences-behavior.ts && npm run app-preference-save:test && tsx scripts/test-shutdown-coordinator.ts && tsx scripts/test-ai-error-localization.ts && tsx scripts/test-locale-completeness.ts && node scripts/test-electron-static-analysis.cjs && node scripts/test-electron-single-instance.cjs && npm run installer-theme:test && npm run release-source:test && node scripts/test-release-workflow.cjs && node scripts/test-ci-workflow.cjs",
+    "stability:test": "tsx scripts/test-app-preferences-reconciliation.ts && tsx scripts/test-app-preferences-behavior.ts && npm run app-preference-save:test && tsx scripts/test-shutdown-coordinator.ts && tsx scripts/test-ai-error-localization.ts && tsx scripts/test-locale-completeness.ts && node scripts/test-electron-static-analysis.cjs && node scripts/test-electron-single-instance.cjs && npm run installer-theme:test && npm run release-source:test && node scripts/test-release-workflow.cjs && node scripts/test-ci-workflow.cjs && npm run updater:test",
     "coverage": "c8 --include=lib/settings/app-preferences-reconciliation.ts --include=lib/ai/error-copy.ts --check-coverage --lines 85 --functions 85 --branches 80 --statements 85 tsx scripts/test-stability-coverage.ts",
     "electron-runtime:test": "node scripts/test-electron-runtime-coverage.cjs",
     "clipboard-image:test": "node scripts/test-electron-clipboard-image.cjs",
@@ -81,7 +81,7 @@
     "desktop:clipboard-test": "node scripts/test-desktop-clipboard-interactions.mjs",
     "desktop:ai-errors-test": "node scripts/test-desktop-ai-errors.mjs",
     "desktop:prepare": "node scripts/prepare-electron-dist.mjs",
-    "desktop:interaction-test": "node scripts/test-desktop-single-instance-interactions.mjs && node scripts/test-desktop-startup-origin-interactions.mjs && npm run desktop:language-test && node scripts/test-desktop-clipboard-interactions.mjs && node scripts/test-desktop-settings-interactions.mjs && node scripts/test-desktop-import-history-interactions.mjs && npm run desktop:autosave-test && npm run desktop:history-transfer-test && npm run desktop:ai-errors-test",
+    "desktop:interaction-test": "node scripts/test-desktop-single-instance-interactions.mjs && node scripts/test-desktop-startup-origin-interactions.mjs && npm run desktop:language-test && node scripts/test-desktop-clipboard-interactions.mjs && node scripts/test-desktop-settings-interactions.mjs && node scripts/test-desktop-import-history-interactions.mjs && npm run desktop:autosave-test && npm run desktop:history-transfer-test && npm run desktop:ai-errors-test && npm run desktop:updater-test",
     "desktop:visual-diagnostic": "node scripts/test-desktop-settings-interactions.mjs --visual-diagnostics",
     "desktop:final-artifact-smoke": "node scripts/smoke-final-windows-artifacts.mjs",
     "desktop:size": "node scripts/audit-desktop-size.mjs",
@@ -91,11 +91,17 @@
     "desktop:autosave-test": "node scripts/test-desktop-editor-autosave-interactions.mjs",
     "autosave:test": "tsx scripts/test-editor-autosave.ts",
     "desktop:history-transfer-test": "node scripts/test-desktop-remote-history-interactions.mjs",
-    "separator:test": "tsx scripts/test-lyric-separator.tsx"
+    "separator:test": "tsx scripts/test-lyric-separator.tsx",
+    "updater:test": "node scripts/test-app-updater.cjs",
+    "updater:network-probe": "electron scripts/probe-update-network.cjs",
+    "updater:metadata-test": "node scripts/verify-update-metadata.mjs",
+    "desktop:updater-test": "node scripts/test-desktop-updater.mjs",
+    "desktop:updater-install-test": "node scripts/test-desktop-update-install.mjs"
   },
   "dependencies": {
     "cheerio": "^1.0.0",
     "clsx": "^2.1.1",
+    "electron-updater": "6.8.9",
     "framer-motion": "^12.0.0",
     "html-to-image": "^1.11.11",
     "lucide-react": "^0.468.0",

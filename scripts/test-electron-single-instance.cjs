@@ -305,6 +305,10 @@ class FakeMainApp extends EventEmitter {
     return path.resolve(".");
   }
 
+  getVersion() {
+    return require("../package.json").version;
+  }
+
   setAppUserModelId() {
     this.events.push("set-app-user-model-id");
   }

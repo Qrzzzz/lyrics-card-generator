@@ -1,0 +1,23 @@
+import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
+import { createReadStream } from "node:fs";
+import { readFile, stat } from "node:fs/promises";
+import path from "node:path";
+import yaml from "js-yaml";
+
+const root = path.resolve(process.argv[2] ?? "release");
+const version = JSON.parse(await readFile("package.json", "utf8")).version;
+const filename = `Lyrics.Card.Generator.Setup.${version}.exe`;
+const metadata = yaml.load(await readFile(path.join(root, "latest.yml"), "utf8"));
+assert.equal(metadata.version, version);
+assert.equal(metadata.files.length, 1);
+assert.equal(metadata.files[0].url, filename);
+assert.equal(metadata.path, filename);
+assert.equal(metadata.packages, undefined, "web installers are not supported");
+const hash = createHash("sha512");
+for await (const chunk of createReadStream(path.join(root, filename))) hash.update(chunk);
+const sha512 = hash.digest("base64");
+assert.equal(metadata.files[0].sha512, sha512);
+assert.equal(metadata.sha512, sha512);
+assert.equal(metadata.files[0].size, (await stat(path.join(root, filename))).size);
+console.log(`Update metadata matches the exact ${version} Setup bytes.`);

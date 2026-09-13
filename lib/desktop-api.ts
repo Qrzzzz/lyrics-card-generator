@@ -5,6 +5,7 @@ import type {
   SaveAISettingsInput
 } from "@/lib/ai/types";
 import type { EffectiveUiThemeId } from "@/lib/settings/types";
+import type { DesktopUpdateState } from "@/lib/desktop-update";
 import type { EditorDraftLease, EditorDraftLoad } from "@/lib/editor-draft";
 import type { AppPreferencesRecord } from "@/lib/settings/app-preferences-reconciliation";
 import type {
@@ -65,6 +66,13 @@ export type NativeAlertDialogOptions = NativeDialogOptions & {
 };
 
 export type LyricsCardDesktopApi = {
+  getUpdateState: () => Promise<DesktopUpdateState>;
+  checkForUpdates: () => Promise<DesktopUpdateState>;
+  downloadUpdate: () => Promise<DesktopUpdateState>;
+  cancelUpdate: () => Promise<DesktopUpdateState>;
+  installUpdate: () => Promise<DesktopUpdateState>;
+  windowCloseFailed: () => Promise<void>;
+  onUpdateStateChanged: (callback: (state: DesktopUpdateState) => void) => () => void;
   setWindowMaterial: (theme: EffectiveUiThemeId) => Promise<WindowMaterialResult>;
   minimizeWindow: () => Promise<boolean>;
   toggleMaximizeWindow: () => Promise<DesktopWindowState>;

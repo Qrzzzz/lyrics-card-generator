@@ -319,8 +319,8 @@ export function validateReleaseEvidence({ inventory, auditPackageText, auditLock
   assert.ok(Array.isArray(inventory.productionRuntime.packages), "productionRuntime.packages must be an array");
   assert.deepEqual(
     inventory.productionRuntime.packages.map((entry) => entry.name).sort(),
-    ["next", "sharp"],
-    "production runtime inventory must independently retain Next and Sharp"
+    ["electron-updater", "next", "sharp"],
+    "production runtime inventory must retain the updater, Next and Sharp"
   );
   for (const entry of inventory.productionRuntime.packages) {
     assert.match(entry.version ?? "", /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/u, `${entry.name} packaged version must be exact`);

@@ -2,6 +2,7 @@ import { cp, lstat, mkdir, readFile, readdir, rename, rm, writeFile } from "node
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { stageUpdaterRuntime } from "./stage-updater-runtime.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(__dirname, "..");
@@ -17,6 +18,9 @@ const desktopAppId = "com.lyriccard.generator";
 // Use the same explicit runtime allowlist for staging and ASAR inclusion.
 const electronAppFiles = [
   "electron/main.js",
+  "electron/app-updater.js",
+  "electron/update-release-url.js",
+  "electron/update-copy.json",
   "electron/clipboard-image.js",
   "electron/ai-stream.js",
   "electron/resource-budgets.json",
@@ -82,6 +86,7 @@ await cp(publicDir, path.join(serverOutputDir, "public"), { recursive: true });
 await cp(path.join(projectRoot, "electron", "packaged-next-server.js"), path.join(serverOutputDir, "desktop-server-launcher.cjs"));
 await cleanServerOutput();
 await prepareMinimalElectronApp();
+await stageUpdaterRuntime(projectRoot, path.join(outputRoot, "updater"));
 // Embedded by NSIS; never copied into the installed application.
 await import("./build-installer-shell.mjs");
 
@@ -107,6 +112,7 @@ async function prepareMinimalElectronApp() {
       ...(localElectronDist ? { electronDist: localElectronDist } : {}),
       asar: true,
       npmRebuild: false,
+      publish: { provider: "github", owner: "Qrzzzz", repo: "lyrics-card-generator" },
       icon: "../../build/icon.ico",
       directories: {
         buildResources: "../../build",
@@ -114,6 +120,10 @@ async function prepareMinimalElectronApp() {
       },
       files: [...electronAppFiles, "package.json"],
       extraResources: [
+        { from: "../updater", to: "updater" },
+        // electron-builder deliberately skips a file set's root node_modules.
+        // Copy that directory explicitly so the complete updater closure ships.
+        { from: "../updater/node_modules", to: "updater/node_modules" },
         {
           from: "../server",
           to: "server",

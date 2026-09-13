@@ -39,6 +39,20 @@ Online-dependent paths:
 
 An offline-capable shell does not imply that previously referenced remote covers, deleted local audio files, or uncached network data can be recovered offline.
 
+## Desktop updates
+
+Starting with v6.3.1, the About settings page checks the public GitHub stable-release redirect using Electron's Chromium networking stack and the system proxy. It does not depend on the anonymous REST API quota. The browser-only route remains a release-page lookup.
+
+The main process validates the stable tag, exact installer name, version, size and SHA-512 metadata. `electron-updater` downloads only after a native confirmation, verifies the download, and supports cancellation. Automatic downloading and install-on-ordinary-quit are disabled. After a verified download, the existing renderer/main shutdown handshake saves drafts, preferences and AI settings before `quitAndInstall(true, true)` runs the NSIS update and reopens the app. Save failures keep the editor open; installer launch failures can be retried.
+
+The updater dependency closure is copied from the lockfile into `resources/updater/node_modules`, independently checked against staging, included in production dependency auditing and inventoried in the SPDX SBOM. The release workflow publishes and attests `latest.yml` alongside Setup, SBOM and `SHA256SUMS`. Its version, filename, size and SHA-512 must match the tested installer. Differential downloads are disabled, so a public blockmap is not required.
+
+Validation: `npm run updater:test`, `npm run desktop:updater-test`, `npm run updater:metadata-test`, `npm run desktop:updater-install-test`, and the existing final Windows artifact smoke. `npm run updater:network-probe` is a separate live, read-only network check. The desktop updater UI test uses real HTTP downloads and checksum verification with inert fixture bytes; it replaces the final installer call. The update-install gate uses an isolated copy of the current app labeled 0.0.0, a controlled HTTP feed and the actual target Setup. It executes the real updater/NSIS path, checks byte-identical target application files, the old process exit, one reopened application window and retained settings, then uninstalls. It refuses to overwrite an existing installation or its shortcuts. Release runs this gate before publishing. A public version-to-version upgrade still requires published metadata and a newer installed version target.
+
+During an update, NSIS launches the installed executable directly through electron-builder's unelevated-user launcher. This avoids activating a rewritten Start menu shortcut, which can return success without reopening the app. Normal installer UI and shortcuts remain unchanged.
+
+Earlier builds only offered a release-page link. They need one manual installation of v6.3.1 before this update flow becomes available.
+
 ## Native data and privacy
 
 - Electron stores preferences and desktop history under its per-user application-data directory, not in the installation directory.
@@ -91,7 +105,7 @@ These gates cover Electron static policy, single-instance ownership, settings an
 
 ```bash
 npm run desktop:pack
-npm run desktop:packaged-assets-test
+npm run desktop:packaged-assets-test -- --unpacked-only
 npm run desktop:interaction-test
 ```
 

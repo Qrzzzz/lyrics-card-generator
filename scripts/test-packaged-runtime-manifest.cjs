@@ -61,6 +61,17 @@ assert.deepEqual(stagedLauncher, launcherSource, "The staged Next launcher diffe
 assert.deepEqual(packagedLauncher, launcherSource, "The packaged Next launcher differs from its source");
 
 const stagedServerManifest = createManifest(stagedServerRoot);
+const stagedUpdaterManifest = createManifest(path.join(projectRoot, "dist-desktop", "updater"));
+const packagedUpdaterManifest = createManifest(path.join(packagedResourcesRoot, "updater"));
+assert.deepEqual(packagedUpdaterManifest.entries, stagedUpdaterManifest.entries, "Packaged updater runtime differs from its locked staging closure");
+// --dir does not run the NSIS target that generates these two resources.
+// Release/default validation must still require them on the actual Setup build.
+if (!process.argv.includes("--unpacked-only")) {
+  const updateConfig = fs.readFileSync(path.join(packagedResourcesRoot, "app-update.yml"), "utf8");
+  assert.match(updateConfig, /owner: Qrzzzz/);
+  assert.match(updateConfig, /repo: lyrics-card-generator/);
+  assert.ok(fs.existsSync(path.join(packagedResourcesRoot, "elevate.exe")), "NSIS updates retain the elevation helper");
+}
 const packagedServerManifest = createManifest(packagedServerRoot);
 assert.deepEqual(packagedServerManifest.entries, stagedServerManifest.entries, "Packaged server resources differ from staging");
 
