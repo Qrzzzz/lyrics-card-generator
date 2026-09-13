@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v6.3.1.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v6.3.2.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="./docs/development.en.md">ローカル開発</a> ·
@@ -76,24 +76,23 @@
 
 
 
-* Windows x64 インストーラー：`Lyrics.Card.Generator.Setup.6.3.1.exe`
+* Windows x64 インストーラー：`Lyrics.Card.Generator.Setup.6.3.2.exe`
 
 v6.2.2 以降、配布するデスクトップパッケージは Windows x64 Setup のみです。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v6.3.1 の主な更新
+### v6.3.2 · 設定画面の可変レイアウト
 
-* デスクトップ版はシステムプロキシ経由で最新の安定版を確認し、GitHub 匿名 API の利用上限による失敗を回避します。
-* 同意後にインストーラーをダウンロードし、SHA-512 で検証します。ダウンロードは中止でき、失敗時は再試行できます。
-* 下書きと設定を保存してから終了、インストール、再起動します。保存に失敗した場合は編集画面を閉じません。
-* 公開時に latest.yml を追加し、バージョン、ファイル名、サイズ、ハッシュをインストーラーと照合します。
-* 旧バージョンにはアプリ内インストール機能がありません。新しい更新機能を使うには、一度 v6.3.1 を手動でインストールしてください。
+* ステップ 3～5 は設定領域の実際の幅に応じた共通ルールで、1・2・3 列に自動配置します。
+* ラベル、数値、説明、操作部品の間隔を統一し、自動サイズ、グリッド密度、共有者入力を関連するスイッチとまとめました。
+* フォントプリセットとカスタム入口を共通グリッドに配置しました。狭い画面では編集ボタンが折り返され、ライトテーマの選択状態も読みやすくなります。
+* 設定値、フォントの下書き、プレビュー、書き出しの動作を維持します。Web Lite にも同じ配置ルールを適用します。
 
 ## 🌐 多言語リリースノート
 
 GitHub Release ではデフォルトで簡体字中国語の概要が表示されます。完全なリリースノートはこちら：
-[简体中文](./docs/releases/v6.3.1.zh-CN.md) · [繁體中文](./docs/releases/v6.3.1.zh-TW.md) · [English](./docs/releases/v6.3.1.en.md) · [Français](./docs/releases/v6.3.1.fr.md) · [日本語](./docs/releases/v6.3.1.ja.md) · [Español](./docs/releases/v6.3.1.es.md)
+[简体中文](./docs/releases/v6.3.2.zh-CN.md) · [繁體中文](./docs/releases/v6.3.2.zh-TW.md) · [English](./docs/releases/v6.3.2.en.md) · [Français](./docs/releases/v6.3.2.fr.md) · [日本語](./docs/releases/v6.3.2.ja.md) · [Español](./docs/releases/v6.3.2.es.md)
 
 <a id="主な機能"></a>
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { Section } from "@/components/ui/controls";
+import { SettingsLayout, SettingsGroup, SettingsGrid } from "@/components/editor/style-panel/SettingsLayout";
 import { FONT_SCHEME_PRESETS, identifyFontPreset } from "@/lib/font-schemes";
 import { getEffectiveFontScheme } from "@/lib/fonts";
 import type { createT } from "@/lib/i18n";
@@ -79,8 +79,10 @@ export function WebLiteFontPanel({
   }
 
   return (
-    <Section title={copy.fontTitle} description={copy.fontDescription} variant="plain" className="border-t-0 pt-0">
-      <div className="grid gap-3 sm:grid-cols-2" data-testid="web-lite-font-options">
+    <SettingsLayout>
+      <SettingsGroup title={copy.fontTitle}>
+        <p className="app-text-subtle text-xs leading-5">{copy.fontDescription}</p>
+      <SettingsGrid data-testid="web-lite-font-options">
         {options.map((option) => {
           const active = activeId === option.id;
           return (
@@ -95,14 +97,14 @@ export function WebLiteFontPanel({
               onFocus={() => onPreviewSchemeChange(option.scheme)}
               onBlur={() => onPreviewSchemeChange(null)}
               className={cn(
-                "control-focus rounded-xl border p-4 text-left transition",
+                "editor-font-option control-focus rounded-lg border text-left transition",
                 active
                   ? "border-[var(--app-accent)] bg-[rgb(var(--button-bg-hover))] shadow-[0_0_0_3px_var(--control-selected-bg)]"
                   : "border-[rgb(var(--panel-border))] bg-[rgb(var(--panel-bg))] hover:bg-[rgb(var(--button-bg-hover))]"
               )}
               style={{ fontFamily: fontPreviewFamily(option.scheme) }}
             >
-              <div className="flex items-start justify-between gap-3">
+              <div className="editor-font-option__heading">
                 <div className="min-w-0">
                   <h3 className="app-text-primary font-bold">{option.label}</h3>
                   <p className="app-text-subtle mt-1 text-xs">{option.description}</p>
@@ -113,12 +115,13 @@ export function WebLiteFontPanel({
                   </span>
                 ) : null}
               </div>
-              <p className="app-text-primary mt-5 text-2xl font-black leading-snug">歌词 Lyrics かな</p>
+              <p className="app-text-primary mt-2 text-xl font-black leading-snug">歌词 Lyrics かな</p>
             </button>
           );
         })}
-      </div>
-    </Section>
+      </SettingsGrid>
+      </SettingsGroup>
+    </SettingsLayout>
   );
 }
 

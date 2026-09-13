@@ -4,6 +4,10 @@ export { settingsCopy } from "@/lib/settings/copy";
 
 const baseMessages = {
   zh: {
+    "settings.canvas": "内容与画布",
+    "settings.typography": "文字排版",
+    "settings.backgroundDetails": "背景与分隔",
+    "settings.visibleContent": "显示内容",
     appTitle: "歌词卡片生成器",
     appSubtitle: "制作 Apple Music 风格的歌词分享图片",
     language: "语言",
@@ -285,6 +289,10 @@ const baseMessages = {
     background: "背景"
   },
   en: {
+    "settings.canvas": "Content and canvas",
+    "settings.typography": "Typography",
+    "settings.backgroundDetails": "Background and separators",
+    "settings.visibleContent": "Visible content",
     appTitle: "Lyric Card Generator",
     appSubtitle: "Create Apple Music-style lyric share images",
     language: "Language",
@@ -566,6 +574,10 @@ const baseMessages = {
     background: "Background"
   },
   fr: {
+    "settings.canvas": "Contenu et canevas",
+    "settings.typography": "Typographie",
+    "settings.backgroundDetails": "Fond et séparateurs",
+    "settings.visibleContent": "Contenu visible",
     appTitle: "Générateur de cartes de paroles",
     appSubtitle: "Créez des cartes de paroles inspirées d’Apple Music",
     language: "Langue",
@@ -847,6 +859,10 @@ const baseMessages = {
     background: "Fond"
   },
   ja: {
+    "settings.canvas": "内容とキャンバス",
+    "settings.typography": "文字組み",
+    "settings.backgroundDetails": "背景と区切り",
+    "settings.visibleContent": "表示内容",
     appTitle: "歌詞カードジェネレーター",
     appSubtitle: "Apple Music 風の歌詞共有画像を作成",
     language: "言語",
@@ -1128,6 +1144,10 @@ const baseMessages = {
     background: "背景"
   },
   es: {
+    "settings.canvas": "Contenido y lienzo",
+    "settings.typography": "Tipografía",
+    "settings.backgroundDetails": "Fondo y separadores",
+    "settings.visibleContent": "Contenido visible",
     appTitle: "Generador de tarjetas de letras",
     appSubtitle: "Crea imágenes de letras al estilo de Apple Music",
     language: "Idioma",

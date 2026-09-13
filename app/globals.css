@@ -1617,40 +1617,117 @@ button {
   min-height: 0;
 }
 
-.settings-adaptive-grid {
-  --settings-grid-gap: 0.75rem;
-  display: grid;
-  min-width: 0;
-  gap: var(--settings-grid-gap);
-}
-
-.settings-adaptive-grid--toggles {
-  grid-template-columns: repeat(
-    auto-fit,
-    minmax(min(100%, max(13rem, calc(33.333333% - 0.5rem))), 1fr)
-  );
-}
-
-.settings-adaptive-grid--rows {
-  grid-template-columns: repeat(
-    auto-fit,
-    minmax(min(100%, max(21rem, calc(50% - 0.375rem))), 1fr)
-  );
-}
-
-.settings-adaptive-grid--pairs {
-  grid-template-columns: repeat(
-    auto-fit,
-    minmax(min(100%, max(13rem, calc(50% - 0.375rem))), 1fr)
-  );
-}
-
-.settings-adaptive-span-all {
-  grid-column: 1 / -1;
-}
-
 .setting-row-adaptive {
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
+}
+
+/* Steps 3–5: N = clamp(floor((W + gap) / (minimum + gap)), 1, 3).
+   auto-fill retains the column width on incomplete rows. The third-width floor
+   caps the count at three without viewport breakpoints or a second JS model. */
+.editor-settings-layout {
+  --editor-setting-min: 15.5rem;
+  --editor-setting-gap: 0.75rem;
+  display: grid;
+  min-width: 0;
+  gap: 1.25rem;
+}
+
+.editor-settings-grid {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, max(var(--editor-setting-min, 15.5rem), calc((100% - 2 * var(--editor-setting-gap, 0.75rem)) / 3))), 1fr));
+  gap: var(--editor-setting-gap, 0.75rem);
+  align-items: start;
+}
+
+.editor-settings-group {
+  display: grid;
+  min-width: 0;
+  gap: 0.75rem;
+}
+
+.editor-settings-group + .editor-settings-group {
+  border-top: 1px solid rgb(var(--panel-border));
+  padding-top: 1.25rem;
+}
+
+.editor-settings-group__header,
+.editor-settings-field__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.25rem 0.75rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.editor-settings-field {
+  display: grid;
+  min-width: 0;
+  align-content: start;
+  gap: 0.5rem;
+  overflow-wrap: anywhere;
+}
+
+.editor-settings-layout .segmented-control {
+  width: 100%;
+  min-width: 0;
+  gap: 0.25rem;
+}
+
+.editor-settings-layout .segmented-control__item {
+  height: auto;
+  min-height: 2.75rem;
+  padding: 0.375rem 0.5rem;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.editor-settings-toggle > [role="switch"] {
+  min-height: 2.75rem;
+  border: 0;
+  padding: 0.5rem 0;
+  align-self: start;
+}
+
+.editor-settings-layout input[type="range"] {
+  min-height: 2.75rem;
+}
+
+.editor-settings-layout .editor-font-option {
+  display: grid;
+  align-content: start;
+  min-width: 0;
+  min-height: 2.75rem;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  overflow-wrap: anywhere;
+}
+
+.editor-font-option__heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.editor-font-picker-actions {
+  display: flex;
+  flex-wrap: wrap;
+  min-width: 0;
+  gap: 0.5rem;
+}
+
+.editor-font-picker-actions > button {
+  height: auto;
+  min-height: 2.75rem;
+  min-width: 0;
+  max-width: 100%;
+  padding-block: 0.5rem;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .preview-workbench-resizer {

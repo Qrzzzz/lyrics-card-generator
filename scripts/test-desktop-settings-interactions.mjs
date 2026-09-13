@@ -2179,7 +2179,8 @@ async function assertPreviewWorkbenchPan() {
   await page.locator('button[data-step-id="layout"]').click();
   await waitForLayoutStable(page.getByTestId('layout-settings-grid'));
   const expandedLayout = await readPreviewWorkbenchGeometry();
-  assert.equal(expandedLayout.layoutColumns, 2, "the wider layout settings compact ordinary rows into two columns");
+  assert.equal(expandedLayout.layoutColumns, expanded.visualColumns, "layout and visual settings use the same three-column rule at the same expanded width");
+  await page.screenshot({ path: path.join(reportDirectory, "step-three-expanded.png"), fullPage: false });
 
   await page.locator('button[data-step-id="visual"]').click();
   await waitForLayoutStable(page.getByTestId('visual-toggle-grid'));

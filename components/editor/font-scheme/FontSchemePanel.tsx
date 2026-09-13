@@ -5,7 +5,7 @@ import { ArrowLeftRight, Check, ChevronRight, RotateCcw, Search, X } from "lucid
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useAppReducedMotion } from "@/components/motion/AppMotionProvider";
 import { MotionPresence } from "@/components/motion/MotionPresence";
-import { AdaptiveSettingsGrid } from "@/components/ui/controls";
+import { SettingsGrid } from "@/components/editor/style-panel/SettingsLayout";
 import { getLyricsCardDesktopApi, type SystemFontOption } from "@/lib/desktop-api";
 import {
   buildFontOptions,
@@ -238,8 +238,7 @@ export function FontSchemePanel({
             exit={reduceMotion ? { opacity: 0, x: 0 } : { opacity: 0, x: -72 }}
             transition={pageTransition}
           >
-          <PanelBlock title={t("fontSchemePresetsTitle")} tone="plain">
-            <AdaptiveSettingsGrid kind="pairs">
+            <SettingsGrid data-testid="font-scheme-options">
               {(["source-han-sans", "source-han-serif"] as FontPresetId[]).map((presetId) => {
                 const preset = FONT_SCHEME_PRESETS[presetId];
                 const active = currentPresetId === presetId;
@@ -253,43 +252,39 @@ export function FontSchemePanel({
                     onClick={() => applyPreset(preset)}
                     style={{ fontFamily: `${quoteSingleFontFamily(preset.cjkFontFamily)}, ${genericFallback}` }}
                     className={cn(
-                      "control-focus rounded-xl border p-4 text-left transition",
-                      active ? "border-cyan-200/55 bg-cyan-300/10" : "app-border bg-black/10"
+                      "editor-font-option control-focus rounded-lg border text-left transition",
+                      active ? "border-[var(--control-selected-border)] bg-[var(--control-selected-bg)]" : "app-border bg-[rgb(var(--panel-bg))]"
                     )}
                   >
-                    <div className="flex items-start justify-between gap-3">
+                    <div className="editor-font-option__heading">
                       <div>
                         <h4 className="app-text-primary font-semibold">{presetName(presetId, t)}</h4>
-                        <p className="app-text-subtle mt-1 text-xs">{preset.cjkFontFamily}</p>
+                        <p className="app-text-primary mt-1 text-xs">{preset.cjkFontFamily}</p>
                       </div>
                       {active ? (
-                        <span className="rounded-full bg-cyan-200/15 px-2 py-1 text-[11px] font-semibold text-cyan-100">
+                        <span className="app-text-primary rounded-full bg-[rgb(var(--elevated-panel-bg))] px-2 py-1 text-xs font-semibold">
                           {t("fontSchemeSelected")}
                         </span>
                       ) : null}
                     </div>
-                    <p className="app-text-muted mt-3 min-h-10 text-sm">{presetDescription(presetId, t)}</p>
+                    <p className="app-text-muted text-xs leading-5">{presetDescription(presetId, t)}</p>
                   </button>
                 );
               })}
-            </AdaptiveSettingsGrid>
-          </PanelBlock>
 
-          <PanelBlock title={t("fontSchemeCustomTitle")} tone="plain">
             <button
               ref={customSchemeTriggerRef}
               type="button"
               data-testid="edit-custom-font-scheme"
-              aria-controls="custom-font-picker-workbench"
               onClick={openFontSchemePicker}
               className={cn(
-                "control-focus grid w-full gap-4 rounded-xl border p-4 text-left transition",
+                "editor-font-option control-focus w-full rounded-lg border text-left transition",
                 currentPresetId
-                  ? "app-border bg-black/10 hover:bg-[rgb(var(--button-bg-hover))]"
-                  : "border-cyan-200/55 bg-cyan-300/10"
+                  ? "app-border bg-[rgb(var(--panel-bg))] hover:bg-[rgb(var(--button-bg-hover))]"
+                  : "border-[var(--control-selected-border)] bg-[var(--control-selected-bg)]"
               )}
             >
-              <span className="flex items-start justify-between gap-4">
+              <span className="editor-font-option__heading">
                 <span className="min-w-0">
                   <span className="app-text-primary block text-sm font-semibold">{t("fontSchemeCustomName")}</span>
                   <span className="app-text-subtle mt-1 block text-xs leading-relaxed">{t("fontSchemePickerDescription")}</span>
@@ -305,14 +300,14 @@ export function FontSchemePanel({
                   <span className="flex justify-start">
                     <SelectedBadge label={t("fontSchemeSelected")} />
                   </span>
-                  <span className="setting-row-adaptive grid gap-3">
+                  <span className="grid min-w-0 gap-2">
                     <FontRoleSummary label={t("fontSchemeCjkFont")} value={currentScheme.cjkFontFamily} />
                     <FontRoleSummary label={t("fontSchemeLatinFont")} value={currentScheme.latinFontFamily} />
                   </span>
                 </span>
               ) : null}
             </button>
-          </PanelBlock>
+            </SettingsGrid>
           </motion.div>
         )}
       </MotionPresence>
@@ -320,33 +315,9 @@ export function FontSchemePanel({
   );
 }
 
-function PanelBlock({
-  title,
-  children,
-  tone = "subtle"
-}: {
-  title: string;
-  children: React.ReactNode;
-  tone?: "plain" | "subtle";
-}) {
-  return (
-    <div
-      className={cn(
-        "grid gap-4",
-        tone === "subtle"
-          ? "rounded-md border border-[rgb(var(--panel-border))] bg-[rgb(var(--panel-bg))] p-3"
-          : ""
-      )}
-    >
-      <h4 className="app-text-primary text-sm font-semibold">{title}</h4>
-      {children}
-    </div>
-  );
-}
-
 function SelectedBadge({ label }: { label: string }) {
   return (
-    <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-cyan-200/15 px-2 py-1 text-[11px] font-semibold text-cyan-100">
+    <span className="inline-flex shrink-0 items-center gap-1 app-text-primary rounded-full bg-[rgb(var(--elevated-panel-bg))] px-2 py-1 text-xs font-semibold">
       <Check className="size-3" aria-hidden="true" />
       {label}
     </span>
@@ -429,7 +400,7 @@ function InlineFontPicker({
           <h5 id="font-picker-title" className="app-text-primary text-base font-bold">{t("fontSchemePickerTitle")}</h5>
           <p className="app-text-subtle mt-1 text-xs leading-relaxed">{t("fontSchemePickerDescription")}</p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="editor-font-picker-actions">
             <button
               type="button"
               className="app-button control-focus inline-flex h-9 items-center gap-2 rounded-lg px-3 text-xs font-semibold"
@@ -453,7 +424,7 @@ function InlineFontPicker({
       </header>
 
       <div className="grid gap-3 border-b border-[rgb(var(--panel-border))] p-4">
-        <div className="setting-row-adaptive grid gap-2" role="group" aria-label={t("fontSchemePickerTitle")}>
+        <div className="editor-settings-grid" role="group" aria-label={t("fontSchemePickerTitle")}>
           {(["cjk", "latin"] as FontCategory[]).map((optionCategory) => {
             const active = category === optionCategory;
             return (
@@ -466,15 +437,15 @@ function InlineFontPicker({
                 className={cn(
                   "control-focus relative min-w-0 overflow-hidden rounded-lg border px-3 py-2.5 text-left transition",
                   active
-                    ? "border-cyan-200/55 bg-cyan-300/10"
+                    ? "border-[var(--control-selected-border)] bg-[var(--control-selected-bg)]"
                     : "border-[rgb(var(--panel-border))] bg-[rgb(var(--button-bg))] hover:bg-[rgb(var(--button-bg-hover))]"
                 )}
               >
                 {active ? <span className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-cyan-200" aria-hidden="true" /> : null}
-                <span className="app-text-subtle block text-[11px] font-semibold">
+                <span className="app-text-primary block text-xs font-semibold">
                   {t(optionCategory === "cjk" ? "fontSchemeCjkFont" : "fontSchemeLatinFont")}
                 </span>
-                <span className="app-text-primary mt-0.5 block truncate text-xs font-semibold">
+                <span className="app-text-primary mt-0.5 block break-words text-sm font-semibold">
                   {familyForCategory(draft, optionCategory)}
                 </span>
               </button>
@@ -557,14 +528,14 @@ function InlineFontPicker({
             {t("customFontResultCount", { shown: filtered.length, total: options.length })}
           </span>
           <span
-            className={dirty ? "font-semibold text-cyan-100" : "app-text-subtle"}
+            className={dirty ? "app-text-primary font-semibold" : "app-text-subtle"}
             data-testid="font-scheme-draft-status"
             aria-live="polite"
           >
             {t(dirty ? "fontSchemeDraftChanged" : "fontSchemeDraftUnchanged")}
           </span>
         </span>
-        <div className="flex items-center gap-2">
+        <div className="editor-font-picker-actions">
           <button
             type="button"
             data-testid="cancel-custom-font-scheme"
@@ -622,18 +593,20 @@ function FontOptionGroup({
               onBlur={onPreviewEnd}
               onClick={() => onSelect(font)}
               className={cn(
-                "control-focus grid min-h-14 grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)_1.5rem] items-center gap-3 rounded-lg border px-3 py-2 text-left transition",
+                "control-focus grid min-h-14 grid-cols-[minmax(0,1fr)_1.5rem] items-center gap-3 rounded-lg border px-3 py-2 text-left transition",
                 selected
-                  ? "border-cyan-200/55 bg-cyan-300/10"
+                  ? "border-[var(--control-selected-border)] bg-[var(--control-selected-bg)]"
                   : "border-[rgb(var(--panel-border))] bg-[rgb(var(--button-bg))] hover:bg-[rgb(var(--button-bg-hover))]"
               )}
             >
-              <span className="app-text-primary min-w-0 truncate text-xs font-semibold">{font.label}</span>
+              <span className="grid min-w-0 gap-1">
+              <span className="app-text-primary min-w-0 break-words text-sm font-semibold">{font.label}</span>
               <span
                 className="app-text-muted min-w-0 truncate text-sm"
                 style={{ fontFamily: `${quoteSingleFontFamily(font.family)}, sans-serif` }}
               >
                 {font.preview}
+              </span>
               </span>
               <span
                 aria-hidden="true"
@@ -642,7 +615,7 @@ function FontOptionGroup({
                 className={cn(
                   "grid size-6 place-items-center rounded-md border transition",
                   selected
-                    ? "border-cyan-100/75 bg-cyan-100/15 text-cyan-100"
+                    ? "border-[var(--control-selected-border)] bg-[rgb(var(--elevated-panel-bg))] text-[var(--app-text-primary)]"
                     : "border-[rgb(var(--control-border))] bg-black/5"
                 )}
               >

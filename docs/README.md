@@ -15,6 +15,7 @@ This directory contains durable development, maintenance, testing, security, and
 
 ## 安全与测试 / Security and testing
 
+- [v6.3.2 设置布局实现与验收](./testing/settings-layout-v6.3.2.md)
 - [CI 与发布门禁职责及精简说明](./testing/ci-gates.md)
 - [Dependency advisory policy](./security/dependency-advisory-policy.md)
 - [Background composition acceptance contract](./testing/background-composition-v5.10.0.md)
