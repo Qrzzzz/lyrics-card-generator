@@ -1,2 +1,5 @@
 select-catalogers:
   - "+javascript-package-cataloger"
+  # Inventory installed modules. Lockfile inference duplicates those same
+  # packages when a runtime ships its audited dependency lock alongside them.
+  - "-javascript-lock-cataloger"
