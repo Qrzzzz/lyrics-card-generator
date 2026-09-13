@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v6.3.1.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v6.3.2.zh-CN.md">发布说明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">在线 Web Lite 版</a> ·
   <a href="./docs/web-lite-browser-support.md">Web Lite 浏览器支持</a> ·
   <a href="./docs/desktop.md">桌面维护文档</a> ·
@@ -75,24 +75,23 @@
 
 
 
-* Windows x64 安装版：`Lyrics.Card.Generator.Setup.6.3.1.exe`
+* Windows x64 安装版：`Lyrics.Card.Generator.Setup.6.3.2.exe`
 
 从 v6.2.2 起只提供 Windows x64 Setup 安装包。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v6.3.1 更新重点
+### v6.3.2 · 统一自适应设置布局
 
-* 桌面端通过系统代理查询最新稳定版，避免 GitHub 匿名 API 额度耗尽导致检查失败。
-* 发现新版后，经同意下载安装包并校验 SHA-512；下载可取消，失败可重试。
-* 校验通过后先保存草稿与设置，再退出、安装并重新打开。保存失败时保留当前窗口。
-* 发布流程增加 latest.yml，并验证其版本、文件名、大小和摘要与安装包一致。
-* 此前版本没有应用内安装能力，需要手动安装一次 v6.3.1，此后才能使用新的更新流程。
+* 第 3～5 步根据左侧实际宽度使用同一套布局规则，自动排列为一、二或三列。
+* 统一设置项的标签、数值、说明和控件间距；自动宽高、背景密度及分享者输入与所属开关就近组合。
+* 字体预设与自定义入口统一排列，字体编辑按钮支持窄屏换行，并改善浅色主题的选中状态可读性。
+* 保留设置值、字体草稿、预览与导出行为；Web Lite 同步采用统一布局。
 
 ## 🌐 多语言发布说明
 
 GitHub Release 默认展示简体中文摘要，完整说明见：
-[简体中文](./docs/releases/v6.3.1.zh-CN.md) · [繁體中文](./docs/releases/v6.3.1.zh-TW.md) · [English](./docs/releases/v6.3.1.en.md) · [Français](./docs/releases/v6.3.1.fr.md) · [日本語](./docs/releases/v6.3.1.ja.md) · [Español](./docs/releases/v6.3.1.es.md)
+[简体中文](./docs/releases/v6.3.2.zh-CN.md) · [繁體中文](./docs/releases/v6.3.2.zh-TW.md) · [English](./docs/releases/v6.3.2.en.md) · [Français](./docs/releases/v6.3.2.fr.md) · [日本語](./docs/releases/v6.3.2.ja.md) · [Español](./docs/releases/v6.3.2.es.md)
 
 <a id="主要功能"></a>
 

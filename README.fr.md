@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v6.3.1.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v6.3.2.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="./docs/development.en.md">Développement local</a> ·
@@ -76,24 +76,23 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 
 
-* Programme d’installation Windows x64 : `Lyrics.Card.Generator.Setup.6.3.1.exe`
+* Programme d’installation Windows x64 : `Lyrics.Card.Generator.Setup.6.3.2.exe`
 
 À partir de la v6.2.2, le programme Setup Windows x64 est le seul paquet distribué.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### Points forts de la v6.3.1
+### v6.3.2 · Disposition adaptative des réglages
 
-* La version de bureau recherche la dernière version stable via le proxy système sans dépendre du quota anonyme de l’API GitHub.
-* Après accord, l’application télécharge et vérifie le programme d’installation avec SHA-512. Le téléchargement peut être annulé et réessayé.
-* Le brouillon et les paramètres sont enregistrés avant la fermeture, l’installation et le redémarrage. En cas d’échec de l’enregistrement, la fenêtre reste ouverte.
-* Les publications incluent latest.yml, vérifié avec la version, le nom, la taille et l’empreinte du programme d’installation.
-* Les anciennes versions ne peuvent pas installer les mises à jour dans l’application. Installez manuellement v6.3.1 une fois pour activer ce parcours.
+* Les étapes 3 à 5 utilisent une seule règle de disposition selon la largeur réelle du panneau, sur une, deux ou trois colonnes.
+* Les libellés, valeurs, indications et commandes partagent des espacements cohérents. Les dimensions automatiques, la densité de la grille et le texte de partage restent avec leurs interrupteurs.
+* Les polices prédéfinies et l’entrée personnalisée partagent une grille. Les actions de l’éditeur passent à la ligne sur écran étroit et les états sélectionnés sont plus lisibles dans les thèmes clairs.
+* Les valeurs, brouillons de polices, aperçus et exports sont conservés. Web Lite utilise la même règle de disposition.
 
 ## 🌐 Notes de publication multilingues
 
 Par défaut, GitHub Release affiche un résumé en chinois simplifié. Consultez les notes complètes :
-[简体中文](./docs/releases/v6.3.1.zh-CN.md) · [繁體中文](./docs/releases/v6.3.1.zh-TW.md) · [English](./docs/releases/v6.3.1.en.md) · [Français](./docs/releases/v6.3.1.fr.md) · [日本語](./docs/releases/v6.3.1.ja.md) · [Español](./docs/releases/v6.3.1.es.md)
+[简体中文](./docs/releases/v6.3.2.zh-CN.md) · [繁體中文](./docs/releases/v6.3.2.zh-TW.md) · [English](./docs/releases/v6.3.2.en.md) · [Français](./docs/releases/v6.3.2.fr.md) · [日本語](./docs/releases/v6.3.2.ja.md) · [Español](./docs/releases/v6.3.2.es.md)
 
 <a id="fonctionnalités-principales"></a>
 

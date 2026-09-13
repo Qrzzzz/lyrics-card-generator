@@ -10,7 +10,6 @@ import {
 const portraitCard = readFileSync(resolve("components/preview/LyricCard.tsx"), "utf8");
 const landscapeCard = readFileSync(resolve("components/preview/LandscapeLyricCard.tsx"), "utf8");
 const instrumentalBlock = readFileSync(resolve("components/preview/InstrumentalBlock.tsx"), "utf8");
-const fontSchemePanel = readFileSync(resolve("components/editor/font-scheme/FontSchemePanel.tsx"), "utf8");
 const productionCards = `${portraitCard}\n${landscapeCard}`;
 const previewSources = [
   portraitCard,
@@ -44,17 +43,6 @@ assert.ok(landscapeCard.includes("dropShadow={CARD_ARTWORK_DROP_SHADOW}"));
 assert.ok(landscapeCard.includes("boxShadow={CARD_ARTWORK_BOX_SHADOW}"));
 assert.ok(instrumentalBlock.includes("dropShadow={CARD_ARTWORK_DROP_SHADOW}"));
 assert.ok(instrumentalBlock.includes("boxShadow={CARD_ARTWORK_BOX_SHADOW}"));
-assert.ok(
-  fontSchemePanel.includes('<PanelBlock title={t("fontSchemeCustomTitle")} tone="plain">'),
-  "the custom scheme no longer sits inside a second panel surface"
-);
-assert.ok(
-  fontSchemePanel.includes('"control-focus grid w-full gap-4 rounded-xl border p-4 text-left transition"'),
-  "the custom scheme uses the same single-layer card geometry as the preset cards"
-);
-assert.ok(
-  fontSchemePanel.includes('? "app-border bg-black/10 hover:bg-[rgb(var(--button-bg-hover))]"'),
-  "the inactive custom card shares the preset cards' neutral surface"
-);
+// Settings surface geometry is covered by the real component layout suite.
 
 console.log("card content uses restrained per-glyph and artwork depth without broad readability shadows");

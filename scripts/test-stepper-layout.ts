@@ -324,13 +324,8 @@ assert.ok(
     /\.preview-workbench-resizer::before\s*\{[\s\S]*?top:\s*0;[\s\S]*?bottom:\s*0;[\s\S]*?width:\s*1px;/.test(globalsSource),
   "the adjustable workbench uses one full-height one-pixel line whose hover feedback is color-only"
 );
-assert.ok(
-  globalsSource.includes(".settings-adaptive-grid--toggles") &&
-    globalsSource.includes(".settings-adaptive-grid--rows") &&
-    globalsSource.includes(".settings-adaptive-grid--pairs") &&
-    globalsSource.includes("repeat(auto-fit"),
-  "settings groups derive compact columns from their own available width"
-);
+// Settings column geometry and focus are exercised in settings-layout.spec.ts.
+
 assert.ok(
   lyricsWorkspaceSource.includes("relative flex min-h-0 flex-col overflow-hidden") &&
     lyricsWorkspaceSource.includes("lyrics-workspace-split") &&

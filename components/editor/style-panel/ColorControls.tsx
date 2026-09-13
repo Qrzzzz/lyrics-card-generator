@@ -1,6 +1,7 @@
 "use client";
 
-import { Input, SegmentedControl, SettingRow } from "@/components/ui/controls";
+import { Input, SegmentedControl } from "@/components/ui/controls";
+import { SettingsGrid, SettingsField } from "./SettingsLayout";
 import type { createT } from "@/lib/i18n";
 import type { CardStyle } from "@/lib/types";
 
@@ -41,8 +42,8 @@ export function ColorControls({ style, onStyleChange, t }: ColorControlsProps) {
   }
 
   return (
-    <div className="grid gap-0">
-      <SettingRow label={t("textColor")}>
+    <SettingsGrid>
+      <SettingsField label={t("textColor")}>
         <SegmentedControl<"white" | "custom">
           value={selectedColorMode}
           onChange={selectColorMode}
@@ -52,9 +53,9 @@ export function ColorControls({ style, onStyleChange, t }: ColorControlsProps) {
           ]}
           aria-label={t("textColor")}
         />
-      </SettingRow>
+      </SettingsField>
       {selectedColorMode === "custom" ? (
-        <SettingRow label={t("custom")} description={style.resolvedTextColor}>
+        <SettingsField label={t("custom")} value={style.resolvedTextColor}>
           <Input
             aria-label={t("custom")}
             type="color"
@@ -63,8 +64,8 @@ export function ColorControls({ style, onStyleChange, t }: ColorControlsProps) {
             onChange={(event) => updateCustomColor(event.target.value)}
             className="h-11 p-1"
           />
-        </SettingRow>
+        </SettingsField>
       ) : null}
-    </div>
+    </SettingsGrid>
   );
 }

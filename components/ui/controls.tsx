@@ -196,28 +196,6 @@ export function Select(props: SelectHTMLAttributes<HTMLSelectElement>) {
 
 type SectionVariant = "plain" | "card" | "subtle";
 
-export type AdaptiveSettingsGridKind = "toggles" | "rows" | "pairs";
-
-export function AdaptiveSettingsGrid({
-  kind,
-  className,
-  children,
-  ...props
-}: HTMLAttributes<HTMLDivElement> & { kind: AdaptiveSettingsGridKind }) {
-  return (
-    <div
-      {...props}
-      className={cn(
-        "settings-adaptive-grid",
-        `settings-adaptive-grid--${kind}`,
-        className
-      )}
-    >
-      {children}
-    </div>
-  );
-}
-
 type SectionProps = {
   title: string;
   eyebrow?: string;

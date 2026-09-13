@@ -19,7 +19,7 @@
 <p>
   <strong>Navegación</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Descargar la última versión</a> ·
-  <a href="./docs/releases/v6.3.1.es.md">Notas de la versión</a> ·
+  <a href="./docs/releases/v6.3.2.es.md">Notas de la versión</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en línea</a> ·
   <a href="#funciones-principales">Funciones principales</a> ·
   <a href="./docs/development.en.md">Desarrollo local</a> ·
@@ -76,24 +76,23 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 
 
-* Instalador de Windows x64: `Lyrics.Card.Generator.Setup.6.3.1.exe`
+* Instalador de Windows x64: `Lyrics.Card.Generator.Setup.6.3.2.exe`
 
 A partir de v6.2.2, Setup para Windows x64 es el único paquete de escritorio distribuido.
 
 > La compilación actual no está firmada. Windows puede mostrar una advertencia de SmartScreen, algo habitual en aplicaciones personales sin firma.
 
-### Novedades de v6.3.1
+### v6.3.2 · Diseño adaptable de los ajustes
 
-* La aplicación busca la última versión estable mediante el proxy del sistema sin depender de la cuota anónima de la API de GitHub.
-* Con tu consentimiento, descarga el instalador y lo verifica con SHA-512. Puedes cancelar la descarga y reintentar si falla.
-* Guarda el borrador y los ajustes antes de cerrar, instalar y volver a abrirse. Si falla el guardado, la ventana permanece abierta.
-* Las publicaciones incluyen latest.yml, verificado con la versión, el nombre, el tamaño y el resumen del instalador.
-* Las versiones anteriores no pueden instalar actualizaciones desde la aplicación. Instala v6.3.1 manualmente una vez para activar el nuevo proceso.
+* Los pasos 3 a 5 usan una sola regla según el ancho real del panel de ajustes, con una, dos o tres columnas.
+* Las etiquetas, valores, indicaciones y controles comparten un espaciado uniforme. Las dimensiones automáticas, la densidad de la cuadrícula y el texto de quien comparte se agrupan con sus interruptores.
+* Las fuentes predefinidas y la entrada personalizada comparten una cuadrícula. Los botones del editor se distribuyen en varias líneas en pantallas estrechas y los estados seleccionados se leen mejor en los temas claros.
+* Se conservan los valores, borradores de fuentes, vista previa y exportación. Web Lite utiliza la misma regla de diseño.
 
 ## 🌐 Notas de publicación multilingües
 
 GitHub Release muestra de forma predeterminada un resumen en chino simplificado. Consulta las notas completas:
-[简体中文](./docs/releases/v6.3.1.zh-CN.md) · [繁體中文](./docs/releases/v6.3.1.zh-TW.md) · [English](./docs/releases/v6.3.1.en.md) · [Français](./docs/releases/v6.3.1.fr.md) · [日本語](./docs/releases/v6.3.1.ja.md) · [Español](./docs/releases/v6.3.1.es.md)
+[简体中文](./docs/releases/v6.3.2.zh-CN.md) · [繁體中文](./docs/releases/v6.3.2.zh-TW.md) · [English](./docs/releases/v6.3.2.en.md) · [Français](./docs/releases/v6.3.2.fr.md) · [日本語](./docs/releases/v6.3.2.ja.md) · [Español](./docs/releases/v6.3.2.es.md)
 
 <a id="funciones-principales"></a>
 
