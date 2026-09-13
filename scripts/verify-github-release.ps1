@@ -47,6 +47,7 @@ $version = $Tag -replace '^v', '' -replace '-rc\.[0-9]+$', ''
 $expectedAssetNames = @(
   "Lyrics.Card.Generator.Setup.$version.exe",
   "lyrics-card-generator-$version.spdx.json",
+  "latest.yml",
   "SHA256SUMS"
 ) | Sort-Object
 
@@ -120,7 +121,7 @@ Get-Content -LiteralPath $checksums[0].FullName | ForEach-Object {
   $checksummedNames += $assetName
 }
 
-$expectedChecksummedNames = @($setup[0].Name, $sbom[0].Name) | Sort-Object
+$expectedChecksummedNames = @($setup[0].Name, $sbom[0].Name, "latest.yml") | Sort-Object
 $actualChecksummedNames = @($checksummedNames | Sort-Object)
 if (($actualChecksummedNames -join "`n") -ne ($expectedChecksummedNames -join "`n")) {
   throw "Unexpected checksum coverage: $($actualChecksummedNames -join ', ')"

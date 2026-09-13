@@ -1,0 +1,8 @@
+{
+  "zh": { "title": "更新歌词卡片生成器", "message": "下载并更新到 {version}？", "detail": "下载完成并通过校验后，将保存当前草稿和设置，退出应用并安装新版，然后重新打开。", "confirm": "同意并更新", "cancel": "暂不更新" },
+  "zh-TW": { "title": "更新歌詞卡片產生器", "message": "下載並更新至 {version}？", "detail": "下載完成並通過驗證後，將儲存目前草稿與設定，結束應用程式並安裝新版，然後重新開啟。", "confirm": "同意並更新", "cancel": "暫不更新" },
+  "en": { "title": "Update Lyrics Card Generator", "message": "Download and update to {version}?", "detail": "After downloading and verifying the update, your draft and settings will be saved. The app will close, install the update, and reopen.", "confirm": "Agree and update", "cancel": "Not now" },
+  "fr": { "title": "Mettre à jour Lyrics Card Generator", "message": "Télécharger et installer la version {version} ?", "detail": "Après le téléchargement et la vérification, le brouillon et les paramètres seront enregistrés. L’application se fermera, installera la mise à jour et redémarrera.", "confirm": "Accepter et mettre à jour", "cancel": "Pas maintenant" },
+  "ja": { "title": "Lyrics Card Generator の更新", "message": "{version} をダウンロードして更新しますか？", "detail": "ダウンロードと検証後、下書きと設定を保存します。アプリを終了して更新をインストールし、再起動します。", "confirm": "同意して更新", "cancel": "後で" },
+  "es": { "title": "Actualizar Lyrics Card Generator", "message": "¿Descargar y actualizar a {version}?", "detail": "Tras descargar y verificar la actualización, se guardarán el borrador y los ajustes. La aplicación se cerrará, instalará la actualización y volverá a abrirse.", "confirm": "Aceptar y actualizar", "cancel": "Ahora no" }
+}

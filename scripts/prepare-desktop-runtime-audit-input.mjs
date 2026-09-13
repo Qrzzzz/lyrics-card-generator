@@ -59,12 +59,15 @@ const packagedRuntimeVersion = probeElectronVersion(packagedExecutable);
 assert.equal(packagedRuntimeVersion, electronRoot.version, "the unpacked Windows runtime must report the audited Electron version");
 
 const productionPackages = await Promise.all(
-  ["next", "sharp"].map(async (name) => {
-    const relativeManifestPath = `release/win-unpacked/resources/server/_node_modules/${name}/package.json`;
+  ["next", "sharp", "electron-updater"].map(async (name) => {
+    const relativeManifestPath = name === "electron-updater"
+      ? `release/win-unpacked/resources/updater/node_modules/${name}/package.json`
+      : `release/win-unpacked/resources/server/_node_modules/${name}/package.json`;
     const manifestPath = path.join(projectRoot, ...relativeManifestPath.split("/"));
     const manifestBytes = await readFile(manifestPath);
     const manifest = JSON.parse(manifestBytes.toString("utf8"));
     assert.equal(manifest.name, name, `${relativeManifestPath} must describe ${name}`);
+    if (name === "electron-updater") assert.equal(manifest.version, rootPackage.dependencies[name]);
     assert.match(manifest.version ?? "", /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/u, `${name} must have an exact packaged version`);
     return {
       name,

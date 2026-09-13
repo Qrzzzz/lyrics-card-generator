@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v6.3.0.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v6.3.1.en.md">Release Notes</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
   <a href="./docs/web-lite-browser-support.md">Web Lite Browser Support</a> ·
   <a href="#features">Features</a> ·
@@ -75,25 +75,26 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 ## 📦 Download and Installation
 
-Download from [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v6.3.0). The Windows installer name is:
 
-* Windows x64 installer: `Lyrics.Card.Generator.Setup.6.3.0.exe`
+
+* Windows x64 installer: `Lyrics.Card.Generator.Setup.6.3.1.exe`
 
 Starting with v6.2.2, Windows x64 Setup is the only distributed desktop package.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v6.3.0 Highlights
+### v6.3.1 Highlights
 
-- Insert a consistent `<separator />` tag in step 2, with a hover hint in the current interface language.
-- Tags are indivisible: Backspace or Delete selects the whole tag first and removes it on the next press. Undo, redo and deletion across multiple lines are supported.
-- Step 5, Visual Details, offers a centered dot (default) or a thin line. Compact spacing and the same rendering apply to preview and export.
-- Separators are excluded from lyric line and character counts and from AI translation. Bilingual pairing and positions in drafts and history are preserved. Available in the desktop interface and Web Lite.
+* The desktop app checks the latest stable release through the system proxy without depending on the anonymous GitHub API quota.
+* After consent, the app downloads and verifies the installer with SHA-512. Downloads can be cancelled and failures retried.
+* The app saves drafts and settings before closing, installing, and reopening. A save failure leaves the editor open.
+* Releases now include latest.yml, verified against the installer version, filename, size, and checksum.
+* Earlier versions cannot install updates in the app. Install v6.3.1 manually once to enable the new update flow.
 
 ## 🌐 Multilingual Release Notes
 
 GitHub Release displays a Simplified Chinese summary by default. See the full release notes:
-[简体中文](./docs/releases/v6.3.0.zh-CN.md) · [繁體中文](./docs/releases/v6.3.0.zh-TW.md) · [English](./docs/releases/v6.3.0.en.md) · [Français](./docs/releases/v6.3.0.fr.md) · [日本語](./docs/releases/v6.3.0.ja.md) · [Español](./docs/releases/v6.3.0.es.md)
+[简体中文](./docs/releases/v6.3.1.zh-CN.md) · [繁體中文](./docs/releases/v6.3.1.zh-TW.md) · [English](./docs/releases/v6.3.1.en.md) · [Français](./docs/releases/v6.3.1.fr.md) · [日本語](./docs/releases/v6.3.1.ja.md) · [Español](./docs/releases/v6.3.1.es.md)
 
 <a id="features"></a>
 

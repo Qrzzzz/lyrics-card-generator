@@ -242,4 +242,5 @@ jobs:
           name: desktop-regression-evidence-${{ github.run_attempt }}
           path: |
             playwright-report/desktop/**
+            output/playwright/desktop-updater/**
           if-no-files-found: ignore

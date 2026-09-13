@@ -8,7 +8,7 @@ const bundle = materialize(fixture);
 const enriched = enrichReleaseSbom(bundle);
 const summary = inspectReleaseSbom({ ...bundle, sbom: enriched });
 assert.equal(summary.electron, "42.9.3");
-assert.deepEqual(summary.productionRuntime, { next: "15.5.24", sharp: "0.35.4" });
+assert.deepEqual(summary.productionRuntime, { next: "15.5.24", sharp: "0.35.4", "electron-updater": "6.8.9" });
 assert.deepEqual(summary.relationships, {
   rootContainsElectron: true,
   applicationDependsOnElectron: true,

@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v6.3.0.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v6.3.1.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="./docs/development.en.md">Développement local</a> ·
@@ -74,25 +74,26 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 ## 📦 Téléchargement et installation
 
-Téléchargez cette version depuis [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v6.3.0). Nom du programme d’installation Windows :
 
-* Programme d’installation Windows x64 : `Lyrics.Card.Generator.Setup.6.3.0.exe`
+
+* Programme d’installation Windows x64 : `Lyrics.Card.Generator.Setup.6.3.1.exe`
 
 À partir de la v6.2.2, le programme Setup Windows x64 est le seul paquet distribué.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### Points forts de la v6.3.0
+### Points forts de la v6.3.1
 
-- Insérez une balise uniforme `<separator />` à l’étape 2 ; son info-bulle suit la langue de l’interface.
-- Les balises sont indivisibles : Retour arrière ou Suppr sélectionne la balise, puis une seconde pression la supprime. Annulation, rétablissement et suppression sur plusieurs lignes sont pris en charge.
-- L’étape 5, Détails visuels, propose un point centré par défaut ou un trait fin. L’espacement compact est identique dans l’aperçu et l’export.
-- Les séparateurs sont exclus du décompte des lignes et caractères ainsi que de la traduction IA. Les paires bilingues et les positions dans les brouillons et l’historique sont conservées, dans l’interface de bureau et Web Lite.
+* La version de bureau recherche la dernière version stable via le proxy système sans dépendre du quota anonyme de l’API GitHub.
+* Après accord, l’application télécharge et vérifie le programme d’installation avec SHA-512. Le téléchargement peut être annulé et réessayé.
+* Le brouillon et les paramètres sont enregistrés avant la fermeture, l’installation et le redémarrage. En cas d’échec de l’enregistrement, la fenêtre reste ouverte.
+* Les publications incluent latest.yml, vérifié avec la version, le nom, la taille et l’empreinte du programme d’installation.
+* Les anciennes versions ne peuvent pas installer les mises à jour dans l’application. Installez manuellement v6.3.1 une fois pour activer ce parcours.
 
 ## 🌐 Notes de publication multilingues
 
 Par défaut, GitHub Release affiche un résumé en chinois simplifié. Consultez les notes complètes :
-[简体中文](./docs/releases/v6.3.0.zh-CN.md) · [繁體中文](./docs/releases/v6.3.0.zh-TW.md) · [English](./docs/releases/v6.3.0.en.md) · [Français](./docs/releases/v6.3.0.fr.md) · [日本語](./docs/releases/v6.3.0.ja.md) · [Español](./docs/releases/v6.3.0.es.md)
+[简体中文](./docs/releases/v6.3.1.zh-CN.md) · [繁體中文](./docs/releases/v6.3.1.zh-TW.md) · [English](./docs/releases/v6.3.1.en.md) · [Français](./docs/releases/v6.3.1.fr.md) · [日本語](./docs/releases/v6.3.1.ja.md) · [Español](./docs/releases/v6.3.1.es.md)
 
 <a id="fonctionnalités-principales"></a>
 

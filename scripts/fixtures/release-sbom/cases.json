@@ -132,6 +132,13 @@
           "purl": "pkg:npm/sharp@0.35.4",
           "relativeManifestPath": "release/win-unpacked/resources/server/_node_modules/sharp/package.json",
           "manifestSha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+        },
+        {
+          "name": "electron-updater",
+          "version": "6.8.9",
+          "purl": "pkg:npm/electron-updater@6.8.9",
+          "relativeManifestPath": "release/win-unpacked/resources/updater/node_modules/electron-updater/package.json",
+          "manifestSha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
         }
       ]
     },
@@ -223,6 +230,23 @@
             "referenceLocator": "pkg:npm/sharp@0.35.4"
           }
         ]
+      },
+      {
+        "name": "electron-updater",
+        "SPDXID": "SPDXRef-Package-npm-electron-updater",
+        "versionInfo": "6.8.9",
+        "downloadLocation": "NOASSERTION",
+        "filesAnalyzed": false,
+        "licenseConcluded": "NOASSERTION",
+        "licenseDeclared": "MIT",
+        "copyrightText": "NOASSERTION",
+        "externalRefs": [
+          {
+            "referenceCategory": "PACKAGE-MANAGER",
+            "referenceType": "purl",
+            "referenceLocator": "pkg:npm/electron-updater@6.8.9"
+          }
+        ]
       }
     ],
     "files": [
@@ -260,6 +284,11 @@
         "relatedSpdxElement": "SPDXRef-File-Lyrics-Card-Generator-exe",
         "relationshipType": "OTHER",
         "comment": "evident-by: indicates the package's existence is evident by the given file"
+      },
+      {
+        "spdxElementId": "SPDXRef-DocumentRoot-Directory-dist-desktop-sbom-runtime",
+        "relatedSpdxElement": "SPDXRef-Package-npm-electron-updater",
+        "relationshipType": "CONTAINS"
       }
     ]
   },

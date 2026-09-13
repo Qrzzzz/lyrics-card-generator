@@ -20,7 +20,7 @@ const EXTERNAL_LINKS = [
   ["releases", "https://github.com/Qrzzzz/lyrics-card-generator/releases"]
 ] as const;
 
-export function AboutSettingsSection({ copy, t }: { copy: typeof settingsCopy[Locale]; t: ReturnType<typeof createT> }) {
+export function AboutSettingsSection({ copy, t, locale }: { copy: typeof settingsCopy[Locale]; t: ReturnType<typeof createT>; locale: Locale }) {
   recordRenderBoundary("SettingsAbout");
   const licenseLinks = [
     [copy.sourceAvailableLicense, APP_LICENSE_URL],
@@ -39,7 +39,7 @@ export function AboutSettingsSection({ copy, t }: { copy: typeof settingsCopy[Lo
         </div>
       </div>
       <p className="app-text-subtle text-sm">{copy.projectDescription}</p>
-      <UpdateButton t={t} />
+      <UpdateButton t={t} locale={locale} />
       <div className="grid gap-2">
         {EXTERNAL_LINKS.map(([key, url]) => (
           <a key={key} href={url} target="_blank" rel="noreferrer" className="app-button control-focus flex min-h-10 items-center justify-between rounded-lg px-3 py-2 text-sm font-semibold">

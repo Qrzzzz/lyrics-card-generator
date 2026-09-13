@@ -1,4 +1,8 @@
-const { app, BrowserWindow, Menu, clipboard, dialog, ipcMain, nativeImage, safeStorage, shell } = require("electron");
+const { app, BrowserWindow, Menu, clipboard, dialog, ipcMain, nativeImage, net, safeStorage, shell } = require("electron");
+const { createRequire } = require("node:module");
+const { createAppUpdater } = require("./app-updater");
+const { resolveUpdateReleaseUrl } = require("./update-release-url");
+const updateCopy = require("./update-copy.json");
 const { spawn } = require("node:child_process");
 const crypto = require("node:crypto");
 const fs = require("node:fs/promises");
@@ -85,6 +89,7 @@ let aiSettingsStore = null;
 let importHistoryMutationQueue = Promise.resolve();
 // Window closure is a renderer-confirmed handshake so pending persistence can drain first.
 let allowWindowClose = false;
+let desktopUpdater = null;
 const aiTranslationRequests = new AIRequestRegistry();
 const aiConnectionTests = new AIRequestRegistry();
 // Renderer-supplied paths become sender-bound, expiring, one-use capabilities before later mutations.
@@ -670,6 +675,32 @@ function initializePrimaryInstance() {
   );
   app.setAppUserModelId(APP_ID);
   Menu.setApplicationMenu(null);
+  const updateRequire = app.isPackaged
+    ? createRequire(path.join(process.resourcesPath, "updater", "package.json"))
+    : require;
+  desktopUpdater = createAppUpdater({
+    currentVersion: app.getVersion(),
+    supported: app.isPackaged && process.platform === "win32" && process.arch === "x64",
+    resolveReleaseUrl: (url) => resolveUpdateReleaseUrl(net, url),
+    createUpdater: () => new (updateRequire("electron-updater").NsisUpdater)(),
+    createCancellationToken: () => new (updateRequire("builder-util-runtime").CancellationToken)(),
+    confirm: async (version) => {
+      if (!mainWindow || mainWindow.isDestroyed()) return false;
+      const preferences = await readAppPreferences();
+      const copy = updateCopy[preferences?.locale] ?? updateCopy.en;
+      const response = await dialog.showMessageBox(mainWindow, {
+        type: "question", title: copy.title, message: copy.message.replace("{version}", version),
+        detail: copy.detail, buttons: [copy.confirm, copy.cancel], defaultId: 1, cancelId: 1, noLink: true
+      });
+      return response.response === 0;
+    },
+    emit: (state) => {
+      if (mainWindow && !mainWindow.isDestroyed() && !mainWindow.webContents.isDestroyed()) {
+        mainWindow.webContents.send("lyrics-card:update-state-changed", state);
+      }
+    },
+    requestClose: requestRendererClose
+  });
   registerDesktopIpc();
   startupTrace.mark("primary-initialize-end");
   app.whenReady().then(boot);
@@ -725,6 +756,12 @@ function registerDesktopIpc() {
     (event) => assertTrustedIpcEvent(event, mainWindow, localAppUrl),
     handler
   );
+  handle("lyrics-card:update-state", () => desktopUpdater.getState());
+  handle("lyrics-card:update-check", () => desktopUpdater.check());
+  handle("lyrics-card:update-download", () => desktopUpdater.download());
+  handle("lyrics-card:update-cancel", () => desktopUpdater.cancel());
+  handle("lyrics-card:update-install", () => desktopUpdater.requestInstall());
+  handle("lyrics-card:window-close-failed", () => desktopUpdater.closeFailed());
   handle("lyrics-card:set-window-material", (_event, theme) => applyWindowMaterial(theme));
   handle("lyrics-card:window-minimize", () => {
     if (!mainWindow || mainWindow.isDestroyed()) return false;
@@ -775,6 +812,12 @@ function registerDesktopIpc() {
     await aiSettingsStore.flush();
     await flushImportHistoryOperations();
     allowWindowClose = true;
+    try {
+      if (desktopUpdater.installAfterFlush()) return true;
+    } catch {
+      allowWindowClose = false;
+      return false;
+    }
     mainWindow.close();
     return true;
   });

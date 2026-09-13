@@ -71,5 +71,11 @@ Var pid
       System::Call 'kernel32::CloseHandle(p r2)'
     ${EndIf}
   ${EndIf}
+  ; Launch the installed binary directly after an update. Shell activation of
+  ; the rewritten Start menu link can report success without starting the app.
+  ; Keep electron-builder's unelevated-user launch behavior and --updated flag.
+  ${If} ${isUpdated}
+    StrCpy $launchLink "$INSTDIR\${APP_EXECUTABLE_FILENAME}"
+  ${EndIf}
 !macroend
 !endif

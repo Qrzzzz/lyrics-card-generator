@@ -6,12 +6,22 @@ import { getLyricsCardDesktopApi } from "@/lib/desktop-api";
 import type { UpdateResult } from "@/lib/github-update";
 import type { createT } from "@/lib/i18n";
 import { getUpdateLink } from "@/lib/update-link";
+import { DesktopUpdateButton } from "@/components/editor/DesktopUpdateButton";
+import type { Locale } from "@/lib/types";
 
 type UpdateButtonProps = {
   t: ReturnType<typeof createT>;
+  locale?: Locale;
 };
 
-export function UpdateButton({ t }: UpdateButtonProps) {
+export function UpdateButton({ t, locale = "en" }: UpdateButtonProps) {
+  const desktop = getLyricsCardDesktopApi();
+  return desktop?.checkForUpdates
+    ? <DesktopUpdateButton api={desktop} locale={locale} t={t} />
+    : <BrowserUpdateButton t={t} />;
+}
+
+function BrowserUpdateButton({ t }: UpdateButtonProps) {
   const [result, setResult] = useState<UpdateResult | null>(null);
   const [isChecking, setIsChecking] = useState(false);
   const activeRequestRef = useRef<AbortController | null>(null);

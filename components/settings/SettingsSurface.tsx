@@ -324,7 +324,7 @@ export function SettingsSurface({
                       ) : tab.id === "export" ? (
                         <ExportSettingsSection settings={workspace.draft} copy={copy} onChange={workspace.updateDraft} />
                       ) : (
-                        <AboutSettingsSection copy={copy} t={t} />
+                        <AboutSettingsSection copy={copy} t={t} locale={locale} />
                       )}
                     </>
                   )}

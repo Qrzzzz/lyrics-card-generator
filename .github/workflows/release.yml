@@ -190,6 +190,9 @@ jobs:
         if: ${{ always() && steps.desktop_build.outcome == 'success' }}
         run: npm run desktop:final-artifact-smoke
 
+      - name: Test actual update installation and relaunch
+        run: npm run desktop:updater-install-test
+
       - name: Normalize release asset filenames
         shell: pwsh
         run: |
@@ -243,9 +246,12 @@ jobs:
           $version = '${{ needs.authorize.outputs.version }}'
           $expectedNames = @(
             "Lyrics.Card.Generator.Setup.$version.exe",
+            "latest.yml",
             "lyrics-card-generator-$version.spdx.json"
           ) | Sort-Object
-          $files = @(Get-ChildItem release -File | Where-Object { $_.Extension -eq '.exe' -or $_.Name -like '*.spdx.json' } | Sort-Object Name)
+          node scripts/verify-update-metadata.mjs
+          if ($LASTEXITCODE -ne 0) { throw "Update metadata verification failed." }
+          $files = @(Get-ChildItem release -File | Where-Object { $_.Extension -eq '.exe' -or $_.Name -like '*.spdx.json' -or $_.Name -eq 'latest.yml' } | Sort-Object Name)
           if (($files.Name -join "`n") -ne ($expectedNames -join "`n")) {
             throw "Unexpected checksum subject set: $($files.Name -join ', ')"
           }
@@ -258,6 +264,7 @@ jobs:
           subject-path: |
             release/Lyrics.Card.Generator.Setup.${{ needs.authorize.outputs.version }}.exe
             release/SHA256SUMS
+            release/latest.yml
             release/lyrics-card-generator-${{ needs.authorize.outputs.version }}.spdx.json
 
       - name: Upload tested release bundle
@@ -267,6 +274,7 @@ jobs:
           path: |
             release/Lyrics.Card.Generator.Setup.${{ needs.authorize.outputs.version }}.exe
             release/SHA256SUMS
+            release/latest.yml
             release/lyrics-card-generator-${{ needs.authorize.outputs.version }}.spdx.json
           if-no-files-found: error
 
@@ -277,6 +285,7 @@ jobs:
           name: release-test-evidence-${{ env.RELEASE_TAG }}-${{ github.run_attempt }}
           path: |
             playwright-report/desktop-final-artifacts/**
+            output/playwright/desktop-update-install/**
           if-no-files-found: ignore
 
   publish:
@@ -363,7 +372,7 @@ jobs:
             $PSNativeCommandUseErrorActionPreference = $false
             $setupAsset = "release/Lyrics.Card.Generator.Setup.$env:PACKAGE_VERSION.exe"
             $sbomAsset = "release/lyrics-card-generator-$env:PACKAGE_VERSION.spdx.json"
-            $createOutput = @(& gh release create $env:RELEASE_TAG $setupAsset release/SHA256SUMS $sbomAsset --draft --verify-tag --target $env:EXPECTED_RELEASE_SHA --title "Lyrics Card Generator $env:RELEASE_TAG" --notes-file "docs/releases/v$env:PACKAGE_VERSION.zh-CN.md" @flags 2>&1)
+            $createOutput = @(& gh release create $env:RELEASE_TAG $setupAsset release/SHA256SUMS $sbomAsset release/latest.yml --draft --verify-tag --target $env:EXPECTED_RELEASE_SHA --title "Lyrics Card Generator $env:RELEASE_TAG" --notes-file "docs/releases/v$env:PACKAGE_VERSION.zh-CN.md" @flags 2>&1)
             $createExitCode = $LASTEXITCODE
             $PSNativeCommandUseErrorActionPreference = $true
             if ($createOutput.Count -gt 0) { $createOutput | ForEach-Object { Write-Host $_ } }

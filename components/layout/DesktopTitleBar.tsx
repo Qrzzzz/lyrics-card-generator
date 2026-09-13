@@ -92,6 +92,7 @@ export function DesktopTitleBar({ locale, autosaveStatus, onRetryAutosave }: Des
         await desktop.confirmWindowClose();
       } catch {
         document.body.inert = false;
+        await desktop.windowCloseFailed?.();
         // A failed flush deliberately leaves the window open rather than discarding unsaved state.
         const dialogCopy = systemDialogCopy[locale];
         await showSystemAlert({

@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v6.3.0.zh-TW.md">發布說明</a> ·
+  <a href="./docs/releases/v6.3.1.zh-TW.md">發布說明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">線上 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="./docs/development.zh-CN.md">本機開發</a> ·
@@ -71,25 +71,26 @@
 
 ## 📦 下載與安裝
 
-下載請前往 [GitHub Releases](https://github.com/Qrzzzz/lyrics-card-generator/releases/tag/v6.3.0)。Windows 安裝程式名稱為：
 
-* Windows x64 安裝版：`Lyrics.Card.Generator.Setup.6.3.0.exe`
+
+* Windows x64 安裝版：`Lyrics.Card.Generator.Setup.6.3.1.exe`
 
 從 v6.2.2 起僅提供 Windows x64 Setup 安裝程式。
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v6.3.0 更新重點
+### v6.3.1 更新重點
 
-- 在第二步插入統一的 `<separator />` 標籤，滑鼠懸停時顯示目前介面語言的提示。
-- 標籤不可拆分；退格與 Delete 首次選取、再次刪除，支援復原、重做及跨行選取刪除。
-- 第五步「視覺細節」提供置中單點與細橫線，預設單點；分隔符採用緊湊間距，預覽與匯出保持一致。
-- 分隔符不計入歌詞行數或字元數，也不傳送至 AI 翻譯；保留雙語配對、草稿與歷史記錄中的位置。桌面介面與 Web Lite 同步支援。
+* 桌面版透過系統代理查詢最新穩定版，避免 GitHub 匿名 API 額度用盡造成檢查失敗。
+* 發現新版後，經同意下載安裝程式並驗證 SHA-512；可取消下載，失敗可重試。
+* 驗證通過後先儲存草稿與設定，再結束、安裝並重新開啟。儲存失敗時保留目前視窗。
+* 發布流程新增 latest.yml，並驗證版本、檔名、大小及摘要與安裝程式一致。
+* 先前版本沒有應用程式內安裝功能，需要手動安裝一次 v6.3.1，之後才能使用新的更新流程。
 
 ## 🌐 多語言發佈說明
 
 GitHub Release 預設顯示簡體中文摘要，完整說明請見：
-[简体中文](./docs/releases/v6.3.0.zh-CN.md) · [繁體中文](./docs/releases/v6.3.0.zh-TW.md) · [English](./docs/releases/v6.3.0.en.md) · [Français](./docs/releases/v6.3.0.fr.md) · [日本語](./docs/releases/v6.3.0.ja.md) · [Español](./docs/releases/v6.3.0.es.md)
+[简体中文](./docs/releases/v6.3.1.zh-CN.md) · [繁體中文](./docs/releases/v6.3.1.zh-TW.md) · [English](./docs/releases/v6.3.1.en.md) · [Français](./docs/releases/v6.3.1.fr.md) · [日本語](./docs/releases/v6.3.1.ja.md) · [Español](./docs/releases/v6.3.1.es.md)
 
 ## ✨ 主要功能
 
