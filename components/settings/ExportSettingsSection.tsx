@@ -1,3 +1,4 @@
+import { SettingsGrid } from "@/components/ui/SettingsLayout";
 import { FieldLabel, SegmentedControl, TextInput, ToggleRow } from "@/components/ui/controls";
 import { SettingsGroup } from "@/components/settings/SettingsLayout";
 import { recordRenderBoundary } from "@/components/editor/render-boundary-diagnostics";
@@ -20,37 +21,39 @@ export function ExportSettingsSection({
   return (
     <section className="grid gap-5">
       <SettingsGroup title={copy.newCardDefaults} description={copy.newCardDefaultsDescription}>
-        <div className="grid gap-1" data-testid="new-card-defaults-group">
-        <ToggleRow
-          label={copy.defaultGeneratedWatermark}
-          description={copy.defaultGeneratedWatermarkDescription}
-          checked={settings.defaultShowGeneratedWatermark}
-          onChange={(defaultShowGeneratedWatermark) => onChange({ ...settings, defaultShowGeneratedWatermark })}
-          testId="default-generated-watermark-toggle"
-        />
-        <ToggleRow
-          label={copy.defaultSharedBy}
-          description={copy.defaultSharedByDescription}
-          checked={settings.defaultShowSharedBy}
-          onChange={(defaultShowSharedBy) => onChange({ ...settings, defaultShowSharedBy })}
-          testId="default-shared-by-toggle"
-        />
-        {settings.defaultShowSharedBy ? (
-          <FieldLabel label={copy.defaultSharedByText}>
-            <TextInput
-              value={settings.defaultSharedByText}
-              maxLength={120}
-              onChange={(event) => onChange({ ...settings, defaultSharedByText: event.target.value })}
-              placeholder={copy.defaultSharedByPlaceholder}
-              data-testid="default-shared-by-text"
+        <SettingsGrid data-testid="new-card-defaults-group">
+          <ToggleRow
+            label={copy.defaultGeneratedWatermark}
+            description={copy.defaultGeneratedWatermarkDescription}
+            checked={settings.defaultShowGeneratedWatermark}
+            onChange={(defaultShowGeneratedWatermark) => onChange({ ...settings, defaultShowGeneratedWatermark })}
+            testId="default-generated-watermark-toggle"
+          />
+          <div className="editor-settings-field">
+            <ToggleRow
+              label={copy.defaultSharedBy}
+              description={copy.defaultSharedByDescription}
+              checked={settings.defaultShowSharedBy}
+              onChange={(defaultShowSharedBy) => onChange({ ...settings, defaultShowSharedBy })}
+              testId="default-shared-by-toggle"
             />
-          </FieldLabel>
-        ) : null}
-        </div>
+            {settings.defaultShowSharedBy ? (
+              <FieldLabel label={copy.defaultSharedByText}>
+                <TextInput
+                  value={settings.defaultSharedByText}
+                  maxLength={120}
+                  onChange={(event) => onChange({ ...settings, defaultSharedByText: event.target.value })}
+                  placeholder={copy.defaultSharedByPlaceholder}
+                  data-testid="default-shared-by-text"
+                />
+              </FieldLabel>
+            ) : null}
+          </div>
+        </SettingsGrid>
       </SettingsGroup>
 
       <SettingsGroup title={copy.fileExportDefaults} description={copy.fileExportDefaultsDescription}>
-        <div className="grid gap-5" data-testid="file-export-defaults-group">
+        <SettingsGrid data-testid="file-export-defaults-group">
           <FieldLabel label={copy.exportFormat}>
             <SegmentedControl
               value={settings.defaultExportFormat}
@@ -84,7 +87,7 @@ export function ExportSettingsSection({
               }))}
             />
           </FieldLabel>
-        </div>
+        </SettingsGrid>
       </SettingsGroup>
     </section>
   );

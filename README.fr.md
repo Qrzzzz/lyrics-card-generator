@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v6.3.3.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v6.3.4.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="./docs/development.en.md">Développement local</a> ·
@@ -76,23 +76,22 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 
 
-* Programme d’installation Windows x64 : `Lyrics.Card.Generator.Setup.6.3.3.exe`
+* Programme d’installation Windows x64 : `Lyrics.Card.Generator.Setup.6.3.4.exe`
 
 À partir de la v6.2.2, le programme Setup Windows x64 est le seul paquet distribué.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### v6.3.3 · Pied de carte unifié sur deux lignes
+### v6.3.4 · Harmonisation des réglages et outils
 
-* Suppression des logos des plateformes musicales, de leur option d’affichage et des fichiers d’icônes. L’analyse des liens musicaux reste disponible.
-* La signature de partage occupe la première ligne, alignée à droite ; la signature du projet occupe la seconde, alignée à gauche. En portrait, elles suivent les bords de la zone des paroles ; en paysage, ceux de la pochette.
-* Les deux signatures utilisent les polices de la carte et un espacement cohérent. Les textes longs passent à la ligne sans être tronqués ; les lignes désactivées ne laissent aucun espace vide.
-* L’aperçu, la mesure et l’exportation partagent le même composant, y compris dans Web Lite. Les anciens réglages des logos n’affectent plus l’image.
+* Harmoniser les libellés, les explications et les espacements dans le contenu des réglages, avec 1 à 3 colonnes selon la largeur du conteneur.
+* Améliorer la lisibilité des outils à droite de l’étape 2 : portée des opérations, actions et confirmations avec aperçu.
+* Conserver les onglets de gauche, leurs animations et interactions, ainsi que les préférences enregistrées, les valeurs par défaut, l’édition et l’exportation.
 
 ## 🌐 Notes de publication multilingues
 
 Par défaut, GitHub Release affiche un résumé en chinois simplifié. Consultez les notes complètes :
-[简体中文](./docs/releases/v6.3.3.zh-CN.md) · [繁體中文](./docs/releases/v6.3.3.zh-TW.md) · [English](./docs/releases/v6.3.3.en.md) · [Français](./docs/releases/v6.3.3.fr.md) · [日本語](./docs/releases/v6.3.3.ja.md) · [Español](./docs/releases/v6.3.3.es.md)
+[简体中文](./docs/releases/v6.3.4.zh-CN.md) · [繁體中文](./docs/releases/v6.3.4.zh-TW.md) · [English](./docs/releases/v6.3.4.en.md) · [Français](./docs/releases/v6.3.4.fr.md) · [日本語](./docs/releases/v6.3.4.ja.md) · [Español](./docs/releases/v6.3.4.es.md)
 
 <a id="fonctionnalités-principales"></a>
 

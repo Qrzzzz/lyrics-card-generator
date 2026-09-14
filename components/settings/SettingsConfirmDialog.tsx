@@ -23,11 +23,11 @@ export function SettingsConfirmDialog({
   onCancel: () => void;
 }) {
   return (
-    <AccessibleDialog open={open} role="alertdialog" labelledBy="settings-confirm-title" describedBy="settings-confirm-description" onClose={onCancel} initialFocusSelector='[data-testid="settings-confirm-cancel"]' testId="settings-confirm-overlay" panelClassName="settings-panel-card max-w-md rounded-2xl p-5 shadow-2xl">
+    <AccessibleDialog open={open} role="alertdialog" labelledBy="settings-confirm-title" describedBy="settings-confirm-description" onClose={onCancel} initialFocusSelector='[data-testid="settings-confirm-cancel"]' testId="settings-confirm-overlay" panelClassName="settings-content-layout settings-panel-card max-w-md rounded-2xl p-5 shadow-2xl">
       <div>
         <h3 id="settings-confirm-title" className="app-text-primary text-lg font-bold">{title}</h3>
         <p id="settings-confirm-description" className="app-text-muted mt-2 text-sm leading-relaxed">{description}</p>
-        <div className="mt-5 flex justify-end gap-2">
+        <div className="settings-content-actions mt-5 justify-end">
           <ActionButton onClick={onCancel} data-testid="settings-confirm-cancel">
             {cancelLabel}
           </ActionButton>

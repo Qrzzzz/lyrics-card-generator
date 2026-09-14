@@ -1,5 +1,6 @@
 "use client";
 
+import { SettingsGrid } from "@/components/ui/SettingsLayout";
 import { LanguageSettingsSection } from "@/components/settings/LanguageSettingsSection";
 import { SettingsGroup, SettingsRow } from "@/components/settings/SettingsLayout";
 import { recordRenderBoundary } from "@/components/editor/render-boundary-diagnostics";
@@ -110,7 +111,7 @@ export function GeneralSettingsSection({
   return (
     <section className="grid gap-5">
       <SettingsGroup title={copy.interactionPreferences}>
-        <div className="grid gap-4">
+        <div className="grid gap-5">
           <LanguageSettingsSection locale={locale} title={copy.language} onLocaleChange={onLocaleChange} />
           <ToggleRow
             label={copy.reduceMotion}
@@ -122,7 +123,7 @@ export function GeneralSettingsSection({
         </div>
       </SettingsGroup>
       <SettingsGroup title={copy.historyAndStorage} description={copy.historyAndStorageDescription}>
-        <div className="grid gap-5">
+        <SettingsGrid>
           {showImportHistorySettings ? (
             <FieldLabel label={historyCopy.limitLabel} description={historyCopy.limitDescription}>
               <SelectField
@@ -147,7 +148,7 @@ export function GeneralSettingsSection({
               {copy.restoreAppPreferences}
             </ActionButton>
           </SettingsRow>
-        </div>
+        </SettingsGrid>
       </SettingsGroup>
     </section>
   );

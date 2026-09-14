@@ -198,7 +198,7 @@ export function AiTranslatePanel({
         onChange={setStyle}
         options={styleOptions}
         aria-label={copy.aiTranslateTitle}
-        className="sm:grid-cols-2"
+        className="editor-settings-grid"
       />
 
       <div className="mt-3 overflow-hidden rounded-xl border border-[rgb(var(--panel-border))] bg-[rgb(var(--input-bg))]">
@@ -226,7 +226,7 @@ export function AiTranslatePanel({
                   onChange={setStyle}
                   options={customOptions}
                   aria-label={promptCopy.customPresets}
-                  className="sm:grid-cols-2"
+                  className="editor-settings-grid"
                 />
               ) : (
                 <p className="app-text-muted px-2 py-3 text-xs leading-relaxed">{promptCopy.customPresetsEmpty}</p>

@@ -1,5 +1,6 @@
 "use client";
 
+import { SettingsGrid } from "@/components/ui/SettingsLayout";
 import { Check } from "lucide-react";
 import { useEffect, useState } from "react";
 import { recordRenderBoundary } from "@/components/editor/render-boundary-diagnostics";
@@ -90,27 +91,29 @@ export function AppearanceSettingsSection({
   }
 
   return (
-    <section className="grid gap-5">
-      <FieldLabel label={copy.theme}>
-        <SegmentedControl<UiThemeMode>
-          value={settings.uiThemeMode}
-          ariaLabel={copy.theme}
-          onChange={updateThemeMode}
-          columns={3}
-          options={THEME_MODE_OPTIONS.map((option) => ({
-            value: option.value,
-            label: copy[option.copyKey]
-          }))}
-        />
-      </FieldLabel>
+    <SettingsGrid>
+      <div className="editor-settings-field">
+        <FieldLabel label={copy.theme}>
+          <SegmentedControl<UiThemeMode>
+            value={settings.uiThemeMode}
+            ariaLabel={copy.theme}
+            onChange={updateThemeMode}
+            columns={3}
+            options={THEME_MODE_OPTIONS.map((option) => ({
+              value: option.value,
+              label: copy[option.copyKey]
+            }))}
+          />
+        </FieldLabel>
 
-      <ToggleRow
-        label={copy.acrylicEffect}
-        description={acrylicDisabled ? copy.acrylicAlbumDisabled : copy.acrylicSupportNote}
-        checked={!acrylicDisabled && settings.uiAcrylicEnabled}
-        disabled={acrylicDisabled}
-        onChange={(checked) => onChange({ ...settings, uiAcrylicEnabled: checked })}
-      />
+        <ToggleRow
+          label={copy.acrylicEffect}
+          description={acrylicDisabled ? copy.acrylicAlbumDisabled : copy.acrylicSupportNote}
+          checked={!acrylicDisabled && settings.uiAcrylicEnabled}
+          disabled={acrylicDisabled}
+          onChange={(checked) => onChange({ ...settings, uiAcrylicEnabled: checked })}
+        />
+      </div>
 
       <FieldLabel label={copy.accentColor}>
         <div className="grid gap-3">
@@ -141,7 +144,7 @@ export function AppearanceSettingsSection({
                     aria-checked={selected}
                     onClick={() => onChange({ ...settings, uiAccentMode: "preset", uiAccentPreset: option.id })}
                     className={cn(
-                      "control-focus grid size-10 place-items-center rounded-full border transition",
+                      "control-focus grid size-11 place-items-center rounded-full border transition",
                       selected
                         ? "border-[var(--app-accent)] bg-[rgb(var(--button-bg-hover))] shadow-[0_0_0_3px_var(--control-selected-bg)]"
                         : "border-[rgb(var(--panel-border))] bg-[rgb(var(--button-bg))] hover:bg-[rgb(var(--button-bg-hover))]"
@@ -183,7 +186,7 @@ export function AppearanceSettingsSection({
         </div>
       </FieldLabel>
 
-      <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+      <div className="editor-settings-field">
         <FieldLabel
           label={copy.uiFont}
           hint={copy.defaultFont}
@@ -221,6 +224,6 @@ export function AppearanceSettingsSection({
         checked={settings.sparkCursorEnabled}
         onChange={(sparkCursorEnabled) => onChange({ ...settings, sparkCursorEnabled })}
       />
-    </section>
+    </SettingsGrid>
   );
 }

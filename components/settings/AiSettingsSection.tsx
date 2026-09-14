@@ -1,5 +1,6 @@
 "use client";
 
+import { SettingsGrid } from "@/components/ui/SettingsLayout";
 import {
   AlertTriangle,
   Bot,
@@ -217,23 +218,25 @@ function ApiConfigurationPage({ settings, apiKey, hasApiKey, locale, copy, promp
   return (
     <div className="grid gap-4">
       <SettingsPageHeading icon={<FileKey2 className="h-5 w-5" />} title={promptCopy.apiConfiguration} description={promptCopy.apiConfigurationDescription} />
-      <FieldLabel label={copy.baseUrl} htmlFor={baseUrlId}>
-        <TextInput data-testid="ai-base-url-input" id={baseUrlId} type="url" value={settings.baseUrl} disabled={isClearingApiKey} onChange={(event) => onSettingsChange({ ...settings, baseUrl: event.target.value })} placeholder="https://api.openai.com/v1" autoComplete="url" />
-        <SettingTip>{copy.baseUrlTip}</SettingTip>
-      </FieldLabel>
-      <FieldLabel label={copy.apiKey} hint={hasApiKey ? copy.apiKeyConfigured : undefined} htmlFor={apiKeyId}>
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <TextInput data-testid="ai-api-key-input" id={apiKeyId} type="password" value={apiKey} disabled={isClearingApiKey} onChange={(event) => onApiKeyChange(event.target.value)} placeholder={hasApiKey ? "****************" : copy.apiKeyPlaceholder} autoComplete="new-password" spellCheck={false} className="min-w-0 flex-1" />
-          <ActionButton data-testid="clear-api-key" onClick={() => setClearConfirmOpen(true)} disabled={!hasApiKey && !apiKey} loading={isClearingApiKey} variant="danger" icon={<Trash2 className="h-4 w-4" />} className="shrink-0">
-            {isClearingApiKey ? copy.clearingApiKey : copy.clearApiKey}
-          </ActionButton>
-        </div>
-        <SettingTip>{copy.apiKeyTip}</SettingTip>
-      </FieldLabel>
-      <FieldLabel label={copy.model} htmlFor={modelId}>
-        <TextInput data-testid="ai-model-input" id={modelId} value={settings.model} disabled={isClearingApiKey} onChange={(event) => onSettingsChange({ ...settings, model: event.target.value })} placeholder={copy.modelPlaceholder} spellCheck={false} />
-        <SettingTip>{copy.modelTip}</SettingTip>
-      </FieldLabel>
+      <SettingsGrid>
+        <FieldLabel label={copy.baseUrl} htmlFor={baseUrlId}>
+          <TextInput data-testid="ai-base-url-input" id={baseUrlId} type="url" value={settings.baseUrl} disabled={isClearingApiKey} onChange={(event) => onSettingsChange({ ...settings, baseUrl: event.target.value })} placeholder="https://api.openai.com/v1" autoComplete="url" />
+          <SettingTip>{copy.baseUrlTip}</SettingTip>
+        </FieldLabel>
+        <FieldLabel label={copy.apiKey} hint={hasApiKey ? copy.apiKeyConfigured : undefined} htmlFor={apiKeyId}>
+          <div className="settings-content-actions">
+            <TextInput data-testid="ai-api-key-input" id={apiKeyId} type="password" value={apiKey} disabled={isClearingApiKey} onChange={(event) => onApiKeyChange(event.target.value)} placeholder={hasApiKey ? "****************" : copy.apiKeyPlaceholder} autoComplete="new-password" spellCheck={false} className="min-w-0 flex-1" />
+            <ActionButton data-testid="clear-api-key" onClick={() => setClearConfirmOpen(true)} disabled={!hasApiKey && !apiKey} loading={isClearingApiKey} variant="danger" icon={<Trash2 className="h-4 w-4" />} className="shrink-0">
+              {isClearingApiKey ? copy.clearingApiKey : copy.clearApiKey}
+            </ActionButton>
+          </div>
+          <SettingTip>{copy.apiKeyTip}</SettingTip>
+        </FieldLabel>
+        <FieldLabel label={copy.model} htmlFor={modelId}>
+          <TextInput data-testid="ai-model-input" id={modelId} value={settings.model} disabled={isClearingApiKey} onChange={(event) => onSettingsChange({ ...settings, model: event.target.value })} placeholder={copy.modelPlaceholder} spellCheck={false} />
+          <SettingTip>{copy.modelTip}</SettingTip>
+        </FieldLabel>
+      </SettingsGrid>
       <div className="settings-panel-card grid gap-3 p-4" data-testid="ai-connection-test-panel">
         <SettingTip>{copy.connectionTestNotice}</SettingTip>
         <div className="flex flex-wrap items-center gap-2">
@@ -296,18 +299,19 @@ function TranslationDefaultsPage({ settings, locale, copy, promptCopy, isClearin
   return (
     <div className="grid gap-4">
       <SettingsPageHeading icon={<SlidersHorizontal className="h-5 w-5" />} title={promptCopy.translationDefaults} description={promptCopy.translationDefaultsDescription} />
-      <FieldLabel label={copy.temperature} htmlFor={temperatureId}>
-        <TextInput data-testid="ai-temperature-input" id={temperatureId} type="number" min={0} max={2} step={0.1} value={settings.temperature} disabled={isClearingApiKey} onChange={(event) => onSettingsChange({ ...settings, temperature: Number(event.target.value) })} />
-        <SettingTip>{copy.temperatureTip}</SettingTip>
-      </FieldLabel>
-      <FieldLabel label={copy.defaultStyle} htmlFor={defaultStyleId}>
-        <SelectField data-testid="ai-default-style-select" id={defaultStyleId} value={settings.defaultStyle} disabled={isClearingApiKey} onChange={(event) => onSettingsChange({ ...settings, defaultStyle: event.target.value })}>
-          {presets.map((preset) => <option key={preset.id} value={preset.id}>{preset.name}</option>)}
-        </SelectField>
-        <SettingTip>{copy.defaultStyleTip}</SettingTip>
-      </FieldLabel>
-      <ToggleRow label={copy.defaultReasoning} checked={settings.reasoningEnabled} disabled={isClearingApiKey} onChange={(reasoningEnabled) => onSettingsChange({ ...settings, reasoningEnabled })} />
-      <SettingTip>{copy.reasoningHint}</SettingTip>
+      <SettingsGrid>
+        <FieldLabel label={copy.temperature} htmlFor={temperatureId}>
+          <TextInput data-testid="ai-temperature-input" id={temperatureId} type="number" min={0} max={2} step={0.1} value={settings.temperature} disabled={isClearingApiKey} onChange={(event) => onSettingsChange({ ...settings, temperature: Number(event.target.value) })} />
+          <SettingTip>{copy.temperatureTip}</SettingTip>
+        </FieldLabel>
+        <FieldLabel label={copy.defaultStyle} htmlFor={defaultStyleId}>
+          <SelectField data-testid="ai-default-style-select" id={defaultStyleId} value={settings.defaultStyle} disabled={isClearingApiKey} onChange={(event) => onSettingsChange({ ...settings, defaultStyle: event.target.value })}>
+            {presets.map((preset) => <option key={preset.id} value={preset.id}>{preset.name}</option>)}
+          </SelectField>
+          <SettingTip>{copy.defaultStyleTip}</SettingTip>
+        </FieldLabel>
+        <ToggleRow label={copy.defaultReasoning} description={copy.reasoningHint} checked={settings.reasoningEnabled} disabled={isClearingApiKey} onChange={(reasoningEnabled) => onSettingsChange({ ...settings, reasoningEnabled })} />
+      </SettingsGrid>
     </div>
   );
 }
@@ -350,7 +354,7 @@ function PromptLibraryPage({ settings, locale, copy, onSettingsChange, onOpen, o
             </p>
           </div>
         </div>
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="editor-settings-grid">
           {presets.filter((preset) => preset.source !== "custom").map((preset) => (
             <ExplorerCard testId={`preset-card-${preset.id}`} key={preset.id} icon={preset.source === "recommended" ? <LockKeyhole className="h-5 w-5" /> : <FilePenLine className="h-5 w-5" />} title={preset.name} description={preset.description} action={copy.open} badge={preset.source === "recommended" ? copy.protectedPreset : localeOverrides.styleOverrides.some((item) => item.id === preset.id) ? copy.modified : undefined} onClick={() => onOpen(`preset:${preset.id}`)} />
           ))}
@@ -374,7 +378,7 @@ function PromptLibraryPage({ settings, locale, copy, onSettingsChange, onOpen, o
             {formatAIPromptUiText(copy.customPresetSummary, { count: settings.promptLibrary.customPresets.length })}
           </span>
         </div>
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="editor-settings-grid">
           {settings.promptLibrary.customPresets.map((preset) => <ExplorerCard testId={`preset-card-${preset.id}`} key={preset.id} icon={<FilePenLine className="h-5 w-5" />} title={preset.title || copy.newPresetTitle} description={preset.prompt || copy.presetPromptPlaceholder} action={copy.open} badge={copy.customPreset} onClick={() => onOpen(`preset:${preset.id}`)} />)}
           {settings.promptLibrary.customPresets.length < 2 ? (
             <button data-testid="preset-create" type="button" onClick={onCreateDraft} className="app-text-muted flex min-h-32 items-center justify-center gap-2 rounded-xl border border-dashed border-[rgb(var(--input-border))] p-5 text-sm transition hover:border-[rgb(var(--focus-ring))] hover:bg-white/5 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--focus-ring))]">

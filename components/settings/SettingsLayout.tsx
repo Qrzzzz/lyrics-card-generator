@@ -67,7 +67,7 @@ export function SettingsRow({
         <div className="app-text-primary text-sm font-semibold">{title}</div>
         {description ? <p className="app-text-subtle mt-1 text-xs leading-5">{description}</p> : null}
       </div>
-      <div className="min-w-0 sm:max-w-[60%]">{children}</div>
+      <div className="settings-content-actions">{children}</div>
     </div>
   );
 }

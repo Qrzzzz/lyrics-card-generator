@@ -128,11 +128,11 @@ export function LyricsCleanupPanel({
         data-testid="lyrics-cleanup-context"
       >
         <div className="flex min-w-0 items-center gap-2 px-0.5">
-          <span className="app-text-subtle shrink-0 text-[10px] font-semibold uppercase tracking-[0.08em]">
+          <span className="app-text-subtle shrink-0 text-xs font-semibold uppercase tracking-[0.08em]">
             {copy.scopeHeading}
           </span>
           <strong
-            className="app-text-primary min-w-0 flex-1 truncate text-right text-xs font-semibold"
+            className="app-text-primary min-w-0 flex-1 break-words text-right text-xs font-semibold"
             data-testid="lyrics-cleanup-scope-summary"
             title={synchronizedActive ? synchronizedScopeSummary : scopeSummary}
           >
@@ -164,7 +164,7 @@ export function LyricsCleanupPanel({
           />
         </div>
         {synchronizedActive ? (
-          <p className="app-text-subtle px-0.5 text-[10px] leading-4">{copy.alignedColumnsHint}</p>
+          <p className="app-text-subtle px-0.5 text-xs leading-5">{copy.alignedColumnsHint}</p>
         ) : null}
       </div>
 
@@ -282,7 +282,7 @@ export function LyricsCleanupPanel({
                 <PreviewBox testId="lyrics-tags-preview-result">
                   {tags.length > 0 ? (
                     <>
-                      <ul className="grid gap-1 font-mono text-[10px]">
+                      <ul className="grid gap-1 font-mono text-xs">
                         {tags.slice(0, 8).map((tag) => <li key={`${tag.line}-${tag.text}`}>{tag.line}: {tag.text}</li>)}
                       </ul>
                       <ToolButton
@@ -333,7 +333,7 @@ export function LyricsTranslationPanel({
         className="lyrics-sidebar-primary"
         data-testid="lyrics-translation-primary"
       >
-        <p className="app-text-subtle px-0.5 text-[10px] font-semibold uppercase tracking-[0.08em]">
+        <p className="app-text-subtle px-0.5 text-xs font-semibold uppercase tracking-[0.08em]">
           {copy.translationHeading}
         </p>
         <ToggleRow
@@ -472,7 +472,7 @@ function OperationGroup({
   return (
     <div className="lyrics-sidebar-operation-group" data-testid={testId}>
       {title ? (
-        <p className="app-text-subtle px-1 text-[10px] font-semibold uppercase tracking-[0.08em]">
+        <p className="app-text-subtle px-1 text-xs font-semibold uppercase tracking-[0.08em]">
           {title}
         </p>
       ) : null}
@@ -502,7 +502,7 @@ function ChoiceButton({
     <button
       type="button"
       className={cn(
-        "segmented-control__item control-focus control-disabled relative z-[2] h-8 min-w-0 rounded-lg px-2 text-[11px] font-semibold",
+        "segmented-control__item control-focus control-disabled relative z-[2] min-h-11 min-w-0 rounded-lg px-2 text-sm font-semibold",
         selected && "app-text-primary"
       )}
       aria-pressed={selected}
@@ -538,7 +538,7 @@ const ToolButton = function ToolButton({
       ref={ref}
       type="button"
       className={cn(
-        "control-surface lyrics-sidebar-action control-focus control-disabled flex min-h-9 w-full items-start rounded-lg px-2.5 py-2 text-left text-[13px] font-medium leading-5",
+        "control-surface lyrics-sidebar-action control-focus control-disabled flex min-h-11 w-full items-start rounded-lg px-2.5 py-2 text-left text-sm font-medium leading-5",
         danger && "lyrics-sidebar-action--danger"
       )}
       onClick={onClick}
@@ -548,7 +548,7 @@ const ToolButton = function ToolButton({
       <span className="min-w-0 flex-1">
         <span className="app-text-primary block">{label}</span>
         {description ? (
-          <span className="app-text-subtle mt-0.5 block text-[10px] font-normal leading-4">
+          <span className="app-text-subtle mt-0.5 block text-xs font-normal leading-5">
             {description}
           </span>
         ) : null}

@@ -7,6 +7,7 @@ import {
   useOptionalExportCardReadinessSnapshot,
   type ExportCardReadinessStore
 } from "@/components/editor/hooks/export-card-readiness-store";
+import { SettingsGrid } from "@/components/ui/SettingsLayout";
 import { FieldLabel, Section, SegmentedControl } from "@/components/ui/controls";
 import { resolveExportSafetyMessage } from "@/lib/export-safety";
 import { EXPORT_FORMAT_OPTIONS, type ExportFormatId, type ExportQualityId } from "@/lib/settings/types";
@@ -58,7 +59,7 @@ export function ExportPanel({
     <Section
       title={t("export")}
       variant="plain"
-      className="border-t-0 pt-0"
+      className="settings-content-layout border-t-0 pt-0"
       contentClassName="gap-4"
     >
       <div aria-busy={isExporting} className="grid gap-4">
@@ -71,28 +72,30 @@ export function ExportPanel({
             <span>{resolvedBlockingMessage}</span>
           </div>
         ) : null}
-        <FieldLabel label={t("exportFormat")} className="gap-3">
-          <SegmentedControl<ExportFormatId>
-            value={exportFormat}
-            onChange={onExportFormatChange}
-            columns={3}
-            ariaLabel={t("exportFormat")}
-            options={EXPORT_FORMAT_OPTIONS.map((format) => ({
-              value: format.id,
-              label: format.id === "webp" ? "WebP" : format.id.toUpperCase()
-            }))}
-          />
-        </FieldLabel>
-        <FieldLabel label={t("exportQuality")} className="gap-3">
-          <SegmentedControl<ExportQualityId>
-            value={exportQuality}
-            onChange={onExportQualityChange}
-            columns={qualityOptions.length === 2 ? 2 : 3}
-            ariaLabel={t("exportQuality")}
-            options={qualityOptions.map((quality) => ({ value: quality, label: resolvedQualityLabels[quality] }))}
-          />
-        </FieldLabel>
+        <SettingsGrid>
+          <FieldLabel label={t("exportFormat")} className="gap-3">
+            <SegmentedControl<ExportFormatId>
+              value={exportFormat}
+              onChange={onExportFormatChange}
+              columns={3}
+              ariaLabel={t("exportFormat")}
+              options={EXPORT_FORMAT_OPTIONS.map((format) => ({
+                value: format.id,
+                label: format.id === "webp" ? "WebP" : format.id.toUpperCase()
+              }))}
+            />
+          </FieldLabel>
+          <FieldLabel label={t("exportQuality")} className="gap-3">
+            <SegmentedControl<ExportQualityId>
+              value={exportQuality}
+              onChange={onExportQualityChange}
+              columns={qualityOptions.length === 2 ? 2 : 3}
+              ariaLabel={t("exportQuality")}
+              options={qualityOptions.map((quality) => ({ value: quality, label: resolvedQualityLabels[quality] }))}
+            />
+          </FieldLabel>
 
+        </SettingsGrid>
         <div role="status" aria-live="polite" aria-atomic="true" className="min-h-0">
           <AnimatePresence initial={false}>
             {isExporting ? (
