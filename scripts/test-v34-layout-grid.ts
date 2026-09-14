@@ -53,7 +53,6 @@ const baseStyle: CardStyle = {
   showSharedBy: true,
   sharedByText: "Shared by Test",
   showWatermark: true,
-  showPlatformBadge: true,
   showFineGrid: false,
   fineGridDensity: "medium",
   coverCropScale: 1,

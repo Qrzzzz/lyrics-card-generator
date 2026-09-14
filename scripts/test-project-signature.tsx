@@ -8,6 +8,7 @@ import { LandscapeAccessories } from "../components/preview/LandscapeAccessories
 import { ProjectSignature } from "../components/preview/ProjectSignature";
 import { messages } from "../lib/i18n";
 import { PROJECT_SIGNATURE_TEXT } from "../lib/project-signature";
+import { getPortraitLayout } from "../lib/card-layout-engine";
 import { settingsCopy } from "../lib/settings/copy";
 
 (globalThis as typeof globalThis & { React: typeof React }).React = React;
@@ -19,50 +20,47 @@ assert.equal(portraitSignature.text(), PROJECT_SIGNATURE_TEXT, "the signature is
 assert.equal(portraitSignature.attr("aria-label"), PROJECT_SIGNATURE_TEXT, "the signature exposes one accessible label");
 assert.equal(portraitSignature.children().length, 2, "owner and repository remain the only visual parts");
 assert.equal(portraitSignature.find("div").length, 0, "the signature has no decorative divider lines");
-assert.match(
-  portraitSignature.attr("style") ?? "",
-  /font-family:Inter, "SF Pro Text", "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif/
-);
-assert.doesNotMatch(portraitSignature.attr("style") ?? "", /Bahnschrift/);
+assert.match(portraitSignature.attr("style") ?? "", /font-family:inherit/);
 assert.match(portraitSignature.attr("style") ?? "", /font-size:26px/);
-assert.match(portraitSignature.attr("style") ?? "", /font-stretch:normal/);
-assert.match(portraitSignature.attr("style") ?? "", /font-weight:400/);
-assert.match(portraitSignature.attr("style") ?? "", /letter-spacing:0\.02em/);
-assert.match(portraitSignature.attr("style") ?? "", /line-height:1\.15/);
-assert.equal(portrait("[data-project-signature-owner]").attr("style"), "opacity:0.72", "owner uses the stronger alpha");
-assert.equal(
-  portrait("[data-project-signature-repository]").attr("style"),
-  "opacity:0.52",
-  "repository uses the quieter alpha"
-);
+assert.match(portraitSignature.attr("class") ?? "", /text-left/);
 
-const portraitFooter = load(renderToStaticMarkup(
-  <CardFooter
-    showPlatformLogo={false}
-    platformSource="unknown"
-    showGeneratedWatermark
-    showSharedBy
-    sharedByText="Shared by Test"
-    textColor="#F8FAFC"
-  />
-));
-assert.match(portraitFooter("footer").attr("class") ?? "", /(?:^|\s)gap-\[14px\](?:\s|$)/, "portrait footer uses a compact 14px row gap");
-assert.equal(portraitFooter("[data-project-signature]").length, 1, "portrait footer renders the project signature");
+for (const variant of ["portrait", "landscape"] as const) {
+  for (const showSharedBy of [false, true]) {
+    for (const showGeneratedWatermark of [false, true]) {
+      const Component = variant === "portrait" ? CardFooter : LandscapeAccessories;
+      const footer = load(renderToStaticMarkup(<Component
+        showSharedBy={showSharedBy} sharedByText="Shared by Test"
+        showGeneratedWatermark={showGeneratedWatermark} textColor="#F8FAFC"
+      />));
+      assert.equal(footer("footer").length, Number(showSharedBy || showGeneratedWatermark));
+      assert.equal(footer("img").length, 0, "credits never render platform imagery");
+      assert.equal(footer("[data-card-shared-by]").length, Number(showSharedBy));
+      assert.equal(footer("[data-project-signature]").length, Number(showGeneratedWatermark));
+      if (showSharedBy) assert.match(footer("[data-card-shared-by]").attr("class") ?? "", /text-right/);
+      if (showSharedBy && showGeneratedWatermark) {
+        assert.equal(footer("footer").children().first().attr("data-card-shared-by"), "true");
+        assert.equal(footer("footer").children().last().attr("data-project-signature"), "true");
+      }
+    }
+  }
+}
+assert.equal(renderToStaticMarkup(<CardFooter showSharedBy sharedByText="  " showGeneratedWatermark={false} textColor="#fff" />), "");
+const landscape = load(renderToStaticMarkup(<LandscapeAccessories
+  showSharedBy sharedByText="Test" showGeneratedWatermark textColor="#fff" scale={1.25}
+/>));
+assert.match(landscape("[data-project-signature]").attr("style") ?? "", /font-size:37\.5px/);
 
-const landscape = load(renderToStaticMarkup(
-  <LandscapeAccessories
-    source="unknown"
-    showPlatformBadge={false}
-    showSharedBy
-    sharedByText="Shared by Test"
-    showGeneratedWatermark
-    textColor="#F8FAFC"
-    scale={1.25}
-  />
-));
-const landscapeSignature = landscape("[data-project-signature]");
-assert.match(landscapeSignature.attr("style") ?? "", /font-size:37\.5px/, "landscape typography follows the scale system");
-assert.equal(landscapeSignature.parent().attr("style"), "margin-top:20px", "landscape accessories keep a scaled 16px signature gap");
+for (const align of ["left", "center"] as const) {
+  const layout = getPortraitLayout({ width: 1080, height: 1440 }, {
+    ...defaultState.style, align, showGeneratedWatermark: true
+  });
+  assert.equal(layout.footerRect?.x, layout.lyricsRect.x);
+  assert.equal(layout.footerRect?.width, layout.lyricsRect.width);
+}
+const legacyStyle = { ...defaultState.style, showPlatformBadge: true, showSharedBy: false,
+  showGeneratedWatermark: false, showWatermark: false };
+assert.equal(getPortraitLayout({ width: 1080, height: 1440 }, legacyStyle, "spotify").footerRect, undefined,
+  "legacy platform settings reserve no footer space");
 
 assert.equal(defaultState.style.watermark, PROJECT_SIGNATURE_TEXT, "new documents retain the canonical signature text");
 assert.deepEqual(

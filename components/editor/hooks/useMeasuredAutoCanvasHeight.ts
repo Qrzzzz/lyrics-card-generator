@@ -54,7 +54,6 @@ export function autoCanvasHeightMeasurementSignature(state: AppState) {
       showCover: state.style.showCover,
       showGeneratedWatermark: state.style.showGeneratedWatermark,
       showAlbumName: state.style.showAlbumName,
-      showPlatformBadge: state.style.showPlatformBadge,
       showSharedBy: state.style.showSharedBy,
       showSongInfo: state.style.showSongInfo,
       translationEnabled: state.style.translationEnabled,

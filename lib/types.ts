@@ -165,7 +165,6 @@ export type CardStyle = {
   showSharedBy: boolean;
   sharedByText: string;
   showWatermark: boolean;
-  showPlatformBadge: boolean;
   showFineGrid: boolean;
   fineGridDensity: BackgroundGridDensity;
   /** Missing in older drafts; defaults to the centered dot. */

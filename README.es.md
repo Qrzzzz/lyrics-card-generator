@@ -19,7 +19,7 @@
 <p>
   <strong>Navegación</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Descargar la última versión</a> ·
-  <a href="./docs/releases/v6.3.2.es.md">Notas de la versión</a> ·
+  <a href="./docs/releases/v6.3.3.es.md">Notas de la versión</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en línea</a> ·
   <a href="#funciones-principales">Funciones principales</a> ·
   <a href="./docs/development.en.md">Desarrollo local</a> ·
@@ -76,23 +76,23 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 
 
-* Instalador de Windows x64: `Lyrics.Card.Generator.Setup.6.3.2.exe`
+* Instalador de Windows x64: `Lyrics.Card.Generator.Setup.6.3.3.exe`
 
 A partir de v6.2.2, Setup para Windows x64 es el único paquete de escritorio distribuido.
 
 > La compilación actual no está firmada. Windows puede mostrar una advertencia de SmartScreen, algo habitual en aplicaciones personales sin firma.
 
-### v6.3.2 · Diseño adaptable de los ajustes
+### v6.3.3 · Pie de tarjeta unificado en dos filas
 
-* Los pasos 3 a 5 usan una sola regla según el ancho real del panel de ajustes, con una, dos o tres columnas.
-* Las etiquetas, valores, indicaciones y controles comparten un espaciado uniforme. Las dimensiones automáticas, la densidad de la cuadrícula y el texto de quien comparte se agrupan con sus interruptores.
-* Las fuentes predefinidas y la entrada personalizada comparten una cuadrícula. Los botones del editor se distribuyen en varias líneas en pantallas estrechas y los estados seleccionados se leen mejor en los temas claros.
-* Se conservan los valores, borradores de fuentes, vista previa y exportación. Web Lite utiliza la misma regla de diseño.
+* Se eliminan los logotipos de las plataformas musicales, su interruptor y los archivos de iconos. Se conserva el análisis de enlaces musicales.
+* La firma de quien comparte aparece en la primera fila, alineada a la derecha; la firma del proyecto ocupa la segunda, alineada a la izquierda. En vertical siguen los bordes de la región de letras; en horizontal, los de la portada.
+* Ambas firmas usan las fuentes de la tarjeta y un espaciado coherente. Los textos largos se ajustan sin recortarse y las filas desactivadas no dejan huecos.
+* La vista previa, la medición y la exportación comparten un componente, también en Web Lite. Los antiguos ajustes de logotipos ya no afectan a la imagen.
 
 ## 🌐 Notas de publicación multilingües
 
 GitHub Release muestra de forma predeterminada un resumen en chino simplificado. Consulta las notas completas:
-[简体中文](./docs/releases/v6.3.2.zh-CN.md) · [繁體中文](./docs/releases/v6.3.2.zh-TW.md) · [English](./docs/releases/v6.3.2.en.md) · [Français](./docs/releases/v6.3.2.fr.md) · [日本語](./docs/releases/v6.3.2.ja.md) · [Español](./docs/releases/v6.3.2.es.md)
+[简体中文](./docs/releases/v6.3.3.zh-CN.md) · [繁體中文](./docs/releases/v6.3.3.zh-TW.md) · [English](./docs/releases/v6.3.3.en.md) · [Français](./docs/releases/v6.3.3.fr.md) · [日本語](./docs/releases/v6.3.3.ja.md) · [Español](./docs/releases/v6.3.3.es.md)
 
 <a id="funciones-principales"></a>
 
@@ -129,7 +129,7 @@ GitHub Release muestra de forma predeterminada un resumen en chino simplificado.
 
 * Extracción de paleta desde la portada para fondos degradados
 * Modos de apariencia de la interfaz: Dinámico del álbum, oscuro, claro, Acrílico oscuro y Acrílico claro
-* Logo de plataforma, texto de compartido por y marca de agua generada
+* Firma de quien comparte y firma del proyecto
 
 ### 🔤 Fuentes e interfaz multilingüe
 

@@ -34,7 +34,6 @@ export function getPortraitLayout(
   songContext: LayoutSongContext = "unknown",
   artworkContext: LayoutArtworkContext = {}
 ): PortraitLayout {
-  const source = getLayoutSource(songContext);
   const hasAlbumName = hasVisibleAlbumName(style, songContext);
   const outerPadding = clamp(Math.round(size.width * 0.042), 28, 54);
   const innerPadding = clamp(Math.round(size.width * 0.02), 14, 26);
@@ -49,7 +48,7 @@ export function getPortraitLayout(
   );
   const contentMode = style.contentMode ?? "lyrics";
   const hasHeader = contentMode === "lyrics" && (style.showCover || style.showSongInfo);
-  const hasFooter = hasVisibleFooter(style, source);
+  const hasFooter = hasVisibleFooter(style);
   const headerScale = style.showSongInfo && hasAlbumName ? 0.205 : 0.16;
   const baseHeaderHeight = hasHeader ? clamp(Math.round(size.width * headerScale), 130, hasAlbumName ? 284 : 214) : 0;
   const footerHeight = hasFooter ? clamp(Math.round(size.width * 0.08), 74, 126) : 0;
@@ -107,25 +106,20 @@ export function getPortraitLayout(
     },
     footerRect: hasFooter
       ? {
-          x: safeRect.x,
+          x: lyricsX,
           y: safeRect.y + safeRect.height - footerHeight,
-          width: safeRect.width,
+          width: lyricsWidth,
           height: footerHeight
         }
       : undefined
   };
 }
 
-function hasVisibleFooter(style: CardStyle, source: SongSource) {
+function hasVisibleFooter(style: CardStyle) {
   return Boolean(
-    (style.showPlatformBadge && source !== "unknown") ||
       (style.showSharedBy && style.sharedByText.trim()) ||
       (style.showGeneratedWatermark ?? style.showWatermark)
   );
-}
-
-function getLayoutSource(songContext: LayoutSongContext) {
-  return typeof songContext === "string" ? songContext : songContext.source;
 }
 
 function hasVisibleAlbumName(style: CardStyle, songContext: LayoutSongContext) {

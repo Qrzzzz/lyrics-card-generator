@@ -217,7 +217,6 @@ try {
       showCover: false,
       showSongInfo: false,
       showGeneratedWatermark: false,
-      showPlatformBadge: false,
       showSharedBy: false
     }
   });

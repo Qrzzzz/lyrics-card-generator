@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v6.3.2.zh-TW.md">發布說明</a> ·
+  <a href="./docs/releases/v6.3.3.zh-TW.md">發布說明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">線上 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="./docs/development.zh-CN.md">本機開發</a> ·
@@ -73,23 +73,23 @@
 
 
 
-* Windows x64 安裝版：`Lyrics.Card.Generator.Setup.6.3.2.exe`
+* Windows x64 安裝版：`Lyrics.Card.Generator.Setup.6.3.3.exe`
 
 從 v6.2.2 起僅提供 Windows x64 Setup 安裝程式。
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v6.3.2 · 統一自適應設定版面
+### v6.3.3 · 統一兩行頁尾
 
-* 第 3～5 步依左側實際寬度使用同一套版面規則，自動排列為一、二或三欄。
-* 統一設定項目的標籤、數值、說明與控制項間距；自動寬高、背景密度及分享者輸入與所屬開關就近組合。
-* 字型預設與自訂入口統一排列，字型編輯按鈕支援窄螢幕換行，並改善淺色主題的選取狀態可讀性。
-* 保留設定值、字型草稿、預覽與匯出行為；Web Lite 同步採用統一版面。
+* 支援分享者署名與專案署名
+* 分享者署名位於第一行並靠右，專案署名位於第二行並靠左。直式與歌詞區域對齊，橫式與專輯封面對齊。
+* 頁尾使用卡片的中西文字型方案，統一行距與字距；長署名完整換行，關閉任一項後自動收攏空間。
+* 預覽、測量與匯出共用頁尾元件，Web Lite 同步更新；舊的平台顯示設定不再影響成品。
 
 ## 🌐 多語言發佈說明
 
 GitHub Release 預設顯示簡體中文摘要，完整說明請見：
-[简体中文](./docs/releases/v6.3.2.zh-CN.md) · [繁體中文](./docs/releases/v6.3.2.zh-TW.md) · [English](./docs/releases/v6.3.2.en.md) · [Français](./docs/releases/v6.3.2.fr.md) · [日本語](./docs/releases/v6.3.2.ja.md) · [Español](./docs/releases/v6.3.2.es.md)
+[简体中文](./docs/releases/v6.3.3.zh-CN.md) · [繁體中文](./docs/releases/v6.3.3.zh-TW.md) · [English](./docs/releases/v6.3.3.en.md) · [Français](./docs/releases/v6.3.3.fr.md) · [日本語](./docs/releases/v6.3.3.ja.md) · [Español](./docs/releases/v6.3.3.es.md)
 
 ## ✨ 主要功能
 
@@ -124,7 +124,7 @@ GitHub Release 預設顯示簡體中文摘要，完整說明請見：
 
 * 支援從封面擷取色彩並生成漸層背景
 * 軟體介面支援專輯封面動態取色、深色、淺色、深色壓克力與淺色壓克力五種外觀模式
-* 支援平台 Logo、分享人、生成浮水印
+* 支援分享者署名與專案署名
 
 ### 🔤 字型與多語言介面
 

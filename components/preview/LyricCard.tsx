@@ -191,10 +191,12 @@ export function LyricCard({
             )}
           </div>
 
-          <div data-card-footer>
+          <div data-card-footer style={{
+            width: layout.lyricsRect.width,
+            marginLeft: style.align === "center" ? "auto" : 0,
+            marginRight: style.align === "center" ? "auto" : undefined
+          }}>
             <PortraitFooter
-              showPlatformLogo={style.showPlatformBadge}
-              platformSource={song.source}
               showGeneratedWatermark={showGeneratedWatermark}
               showSharedBy={style.showSharedBy}
               sharedByText={style.sharedByText}
