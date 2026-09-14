@@ -282,6 +282,7 @@ export function useEditorSteps({
       content: (
         <div className="song-import-primary grid gap-4" data-testid="song-search-primary">
           <SongSearchParser
+            idPrefix="editor-song-search"
             t={t}
             beginImport={(signal) => onBeginSongImport("search", signal)}
             onResolved={onSearchedSongResolved}

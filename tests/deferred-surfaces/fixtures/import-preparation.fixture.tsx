@@ -98,7 +98,7 @@ function Fixture() {
       beginImport={(signal) => actions.beginSongImport("link", signal)} onParsed={actions.applyParsedSong} t={createT("en")} />}
     {surface === "audio" && <LocalAudioParser beginImport={(signal) => actions.beginSongImport("local-audio", signal)}
       onParsed={actions.applyLocalAudio} t={createT("en")} />}
-    {surface === "search" && <SongSearchParser beginImport={(signal) => actions.beginSongImport("search", signal)}
+    {surface === "search" && <SongSearchParser idPrefix="fixture-song-search" beginImport={(signal) => actions.beginSongImport("search", signal)}
       onResolved={actions.applySearchedSong} t={createT("en")} />}
   </>;
 }
