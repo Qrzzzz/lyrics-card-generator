@@ -1,7 +1,7 @@
 "use client";
 
 import { Search, Music2 } from "lucide-react";
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AdaptiveAlbumArtwork } from "@/components/preview/AdaptiveAlbumArtwork";
 import { ActionButton, Input, Label, Section } from "@/components/ui/controls";
 import { createAppRequestHeaders } from "@/lib/app-request";
@@ -20,10 +20,12 @@ import { cn } from "@/lib/utils";
 type SearchStatus = "idle" | "typing" | "loading" | "success" | "partial" | "empty" | "error";
 
 export function SongSearchParser({
+  idPrefix,
   onResolved,
   beginImport,
   t
 }: {
+  idPrefix: string;
   beginImport: (signal?: AbortSignal) => Promise<DocumentImportIntent | null>;
   onResolved: (
     song: ParsedSongData,
@@ -33,8 +35,10 @@ export function SongSearchParser({
   ) => boolean;
   t: ReturnType<typeof createT>;
 }) {
-  const listboxId = useId();
-  const statusId = useId();
+  // The editor owns a stable namespace so server-rendered input attributes and
+  // lazily mounted results keep the same association through hydration.
+  const listboxId = `${idPrefix}-results`;
+  const statusId = `${idPrefix}-status`;
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState<SongSearchResult[]>([]);
   const [highlightedIndex, setHighlightedIndex] = useState(0);

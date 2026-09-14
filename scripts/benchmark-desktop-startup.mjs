@@ -234,7 +234,6 @@ async function collectRendererMetrics(page) {
       nextStatic: summaryFor((entry) => entry.name.includes("/_next/static/")),
       fonts: summaryFor((entry) => entry.name.includes("/fonts/")),
       appIcon: summaryFor((entry) => entry.name.includes("/app-icon.png")),
-      platformIcons: summaryFor((entry) => entry.name.includes("/platform-icons/")),
       fontFaces,
       resources
     };

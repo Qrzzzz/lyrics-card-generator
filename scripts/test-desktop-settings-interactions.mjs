@@ -866,16 +866,23 @@ async function assertSongSearchBehavior() {
     Array(8).fill("-1"),
     "active-descendant options never enter the Tab sequence"
   );
-  assert.equal(
-    await combobox.evaluate((node) => {
-      const controlledId = node.getAttribute("aria-controls");
-      return Boolean(
-        controlledId
-        && document.getElementById(controlledId)?.getAttribute("data-testid") === "song-search-listbox"
-      );
-    }),
-    true,
-    "combobox aria-controls resolves to its current listbox in one DOM snapshot"
+  const searchAssociation = await combobox.evaluate((node) => {
+    const controlledId = node.getAttribute("aria-controls");
+    const target = controlledId ? document.getElementById(controlledId) : null;
+    return {
+      valid: target?.getAttribute("data-testid") === "song-search-listbox",
+      controlledId,
+      target: target?.outerHTML.slice(0, 400) ?? null,
+      expanded: node.getAttribute("aria-expanded"),
+      focused: document.activeElement === node,
+      activeElement: document.activeElement?.outerHTML.slice(0, 400) ?? null,
+      listboxes: Array.from(document.querySelectorAll('[role="listbox"]')).map((box) => ({
+        id: box.id, testId: box.getAttribute("data-testid"), options: box.querySelectorAll('[role="option"]').length
+      }))
+    };
+  });
+  assert.equal(searchAssociation.valid, true,
+    `combobox aria-controls resolves to its current listbox in one DOM snapshot: ${JSON.stringify(searchAssociation)}`
   );
   assert.equal(await listbox.locator('[data-testid="song-search-more"]').count(), 0, "footer action is not a listbox child");
   assert.equal(await popup.getByTestId("song-search-more").count(), 1, "popup shell owns an independent footer action");

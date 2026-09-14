@@ -37,8 +37,6 @@ export function LandscapeLayoutMeasurementHost({
   });
   const showGeneratedWatermark = state.style.showGeneratedWatermark ?? state.style.showWatermark;
   const hasAccessories = hasLandscapeAccessories({
-    showPlatformBadge: state.style.showPlatformBadge,
-    source: state.song.source,
     showSharedBy: state.style.showSharedBy,
     sharedByText: state.style.sharedByText,
     showGeneratedWatermark
@@ -92,10 +90,8 @@ export function LandscapeLayoutMeasurementHost({
         />
       </div>
       {hasAccessories ? (
-        <div data-landscape-left-accessories-measure style={{ width: LEFT_BASE_WIDTH }}>
+        <div data-landscape-left-accessories-measure className={fontClassName(state.style.font)} style={{ ...cardFontStyle(state.style), width: coverSize.width }}>
           <LandscapeAccessories
-            source={state.song.source}
-            showPlatformBadge={state.style.showPlatformBadge}
             showSharedBy={state.style.showSharedBy}
             sharedByText={state.style.sharedByText}
             showGeneratedWatermark={showGeneratedWatermark}

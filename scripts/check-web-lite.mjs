@@ -105,10 +105,8 @@ try {
   // differences that can disappear while the generated page still compiles.
   const sourceContracts = [
     [lyricsWorkspaceSource, "showAiTranslate = true", "LyricsWorkspace must keep AI visible by default."],
-    [visualPanelSource, "showPlatformBadgeControl = true", "VisualSettingsPanel must keep the platform control by default."],
     [exportPanelSource, 'qualityOptions = ["low", "medium", "high"]', "ExportPanel must keep all desktop qualities by default."],
     [webLiteEditorSource, "<WebLiteLyricInput", "Web Lite must use its dedicated lyrics form."],
-    [webLiteEditorSource, "showPlatformBadgeControl={false}", "Web Lite must hide the platform badge control."],
     [webLiteEditorSource, "qualityOptions={EXPORT_QUALITY_OPTIONS}", "Web Lite must provide only its approved export qualities."]
   ];
   for (const [source, fragment, message] of sourceContracts) {

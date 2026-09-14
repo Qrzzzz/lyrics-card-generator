@@ -309,9 +309,8 @@ export function VisualSettingsPanel({
   song,
   onSongChange,
   locale,
-  t,
-  showPlatformBadgeControl = true
-}: StylePanelProps & { showPlatformBadgeControl?: boolean }) {
+  t
+}: StylePanelProps) {
   function update<K extends keyof CardStyle>(key: K, value: CardStyle[K]) {
     onStyleChange({ ...style, [key]: value });
   }
@@ -372,9 +371,6 @@ export function VisualSettingsPanel({
             <SettingsToggle label={t("allowMultiLineTitle")} checked={style.allowMultiLineTitle} onChange={(checked) => update("allowMultiLineTitle", checked)} />
           ) : null}
           <SettingsToggle label={t("showGeneratedWatermark")} checked={style.showGeneratedWatermark} onChange={updateProjectSignature} />
-          {showPlatformBadgeControl ? (
-            <SettingsToggle label={t("showPlatformLogo")} checked={style.showPlatformBadge} onChange={(checked) => update("showPlatformBadge", checked)} />
-          ) : null}
           <SettingsToggle label={t("showSharedBy")} checked={style.showSharedBy} onChange={(checked) => update("showSharedBy", checked)}>
             {style.showSharedBy ? (
               <SettingsField label={t("sharedBy")}>

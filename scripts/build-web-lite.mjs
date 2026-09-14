@@ -53,8 +53,7 @@ export async function buildWebLite(outputFile = path.join(projectRoot, "index.ht
     // Replace runtime-only modules with browser-safe implementations at the
     // bundle boundary instead of branching inside shared UI components.
     alias: {
-      "@/lib/image-utils": path.join(projectRoot, "web-lite", "static-image-utils.ts"),
-      "@/components/preview/PlatformBadge": path.join(projectRoot, "web-lite", "StaticPlatformBadge.tsx")
+      "@/lib/image-utils": path.join(projectRoot, "web-lite", "static-image-utils.ts")
     },
     define: {
       "process.env.NODE_ENV": JSON.stringify("production"),

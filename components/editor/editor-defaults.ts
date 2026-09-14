@@ -85,7 +85,6 @@ export const defaultState: AppState = {
     showSharedBy: false,
     sharedByText: "",
     showWatermark: false,
-    showPlatformBadge: false,
     showFineGrid: false,
     fineGridDensity: "medium",
     separatorStyle: "dot",

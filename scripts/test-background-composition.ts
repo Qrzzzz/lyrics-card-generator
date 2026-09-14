@@ -316,7 +316,6 @@ function createStyle(
     showGeneratedWatermark: true,
     showSharedBy: true,
     sharedByText: "Fixture",
-    showPlatformBadge: true
   });
 }
 

@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v6.3.2.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v6.3.3.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="./docs/development.en.md">ローカル開発</a> ·
@@ -76,23 +76,23 @@
 
 
 
-* Windows x64 インストーラー：`Lyrics.Card.Generator.Setup.6.3.2.exe`
+* Windows x64 インストーラー：`Lyrics.Card.Generator.Setup.6.3.3.exe`
 
 v6.2.2 以降、配布するデスクトップパッケージは Windows x64 Setup のみです。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v6.3.2 · 設定画面の可変レイアウト
+### v6.3.3 · 2行フッターの統一
 
-* ステップ 3～5 は設定領域の実際の幅に応じた共通ルールで、1・2・3 列に自動配置します。
-* ラベル、数値、説明、操作部品の間隔を統一し、自動サイズ、グリッド密度、共有者入力を関連するスイッチとまとめました。
-* フォントプリセットとカスタム入口を共通グリッドに配置しました。狭い画面では編集ボタンが折り返され、ライトテーマの選択状態も読みやすくなります。
-* 設定値、フォントの下書き、プレビュー、書き出しの動作を維持します。Web Lite にも同じ配置ルールを適用します。
+* 音楽プラットフォームのロゴ、表示スイッチ、アイコン素材を削除しました。楽曲リンクの解析機能は引き続き利用できます。
+* 1行目の共有者署名は右揃え、2行目のプロジェクト署名は左揃えになります。縦型では歌詞領域、横型ではアルバムカバーの左右端に揃えます。
+* 両方の署名にカードのフォント設定を適用し、行間と字間を統一しました。長い署名は省略せず折り返し、非表示の行には空白を残しません。
+* プレビュー、計測、書き出しで同じフッターを使用し、Web Liteにも反映しました。旧バージョンのロゴ表示設定は画像に影響しません。
 
 ## 🌐 多言語リリースノート
 
 GitHub Release ではデフォルトで簡体字中国語の概要が表示されます。完全なリリースノートはこちら：
-[简体中文](./docs/releases/v6.3.2.zh-CN.md) · [繁體中文](./docs/releases/v6.3.2.zh-TW.md) · [English](./docs/releases/v6.3.2.en.md) · [Français](./docs/releases/v6.3.2.fr.md) · [日本語](./docs/releases/v6.3.2.ja.md) · [Español](./docs/releases/v6.3.2.es.md)
+[简体中文](./docs/releases/v6.3.3.zh-CN.md) · [繁體中文](./docs/releases/v6.3.3.zh-TW.md) · [English](./docs/releases/v6.3.3.en.md) · [Français](./docs/releases/v6.3.3.fr.md) · [日本語](./docs/releases/v6.3.3.ja.md) · [Español](./docs/releases/v6.3.3.es.md)
 
 <a id="主な機能"></a>
 
@@ -129,7 +129,7 @@ GitHub Release ではデフォルトで簡体字中国語の概要が表示さ�
 
 * カバーから色を抽出してグラデーション背景を生成
 * アプリ画面はアルバム動的カラー、ダーク、ライト、ダークアクリル、ライトアクリルの 5 つの外観モードに対応
-* プラットフォームロゴ、共有者テキスト、生成ウォーターマーク
+* 共有者署名とプロジェクト署名
 
 ### 🔤 フォントと多言語インターフェース
 

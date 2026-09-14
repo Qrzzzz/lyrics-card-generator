@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v6.3.2.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v6.3.3.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="./docs/development.en.md">Développement local</a> ·
@@ -76,23 +76,23 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 
 
-* Programme d’installation Windows x64 : `Lyrics.Card.Generator.Setup.6.3.2.exe`
+* Programme d’installation Windows x64 : `Lyrics.Card.Generator.Setup.6.3.3.exe`
 
 À partir de la v6.2.2, le programme Setup Windows x64 est le seul paquet distribué.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### v6.3.2 · Disposition adaptative des réglages
+### v6.3.3 · Pied de carte unifié sur deux lignes
 
-* Les étapes 3 à 5 utilisent une seule règle de disposition selon la largeur réelle du panneau, sur une, deux ou trois colonnes.
-* Les libellés, valeurs, indications et commandes partagent des espacements cohérents. Les dimensions automatiques, la densité de la grille et le texte de partage restent avec leurs interrupteurs.
-* Les polices prédéfinies et l’entrée personnalisée partagent une grille. Les actions de l’éditeur passent à la ligne sur écran étroit et les états sélectionnés sont plus lisibles dans les thèmes clairs.
-* Les valeurs, brouillons de polices, aperçus et exports sont conservés. Web Lite utilise la même règle de disposition.
+* Suppression des logos des plateformes musicales, de leur option d’affichage et des fichiers d’icônes. L’analyse des liens musicaux reste disponible.
+* La signature de partage occupe la première ligne, alignée à droite ; la signature du projet occupe la seconde, alignée à gauche. En portrait, elles suivent les bords de la zone des paroles ; en paysage, ceux de la pochette.
+* Les deux signatures utilisent les polices de la carte et un espacement cohérent. Les textes longs passent à la ligne sans être tronqués ; les lignes désactivées ne laissent aucun espace vide.
+* L’aperçu, la mesure et l’exportation partagent le même composant, y compris dans Web Lite. Les anciens réglages des logos n’affectent plus l’image.
 
 ## 🌐 Notes de publication multilingues
 
 Par défaut, GitHub Release affiche un résumé en chinois simplifié. Consultez les notes complètes :
-[简体中文](./docs/releases/v6.3.2.zh-CN.md) · [繁體中文](./docs/releases/v6.3.2.zh-TW.md) · [English](./docs/releases/v6.3.2.en.md) · [Français](./docs/releases/v6.3.2.fr.md) · [日本語](./docs/releases/v6.3.2.ja.md) · [Español](./docs/releases/v6.3.2.es.md)
+[简体中文](./docs/releases/v6.3.3.zh-CN.md) · [繁體中文](./docs/releases/v6.3.3.zh-TW.md) · [English](./docs/releases/v6.3.3.en.md) · [Français](./docs/releases/v6.3.3.fr.md) · [日本語](./docs/releases/v6.3.3.ja.md) · [Español](./docs/releases/v6.3.3.es.md)
 
 <a id="fonctionnalités-principales"></a>
 
@@ -129,7 +129,7 @@ Par défaut, GitHub Release affiche un résumé en chinois simplifié. Consultez
 
 * Extraction de palette depuis la pochette pour créer des fonds en dégradé
 * Modes d’apparence de l’interface : Dynamique de l’album, sombre, clair, Acrylique sombre et Acrylique clair
-* Logo de plateforme, texte de partage et filigrane généré
+* Signature de partage et signature du projet
 
 ### 🔤 Polices et interface multilingue
 

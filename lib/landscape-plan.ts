@@ -185,9 +185,9 @@ function planCandidate(
   const scaledAccessoriesHeight = accessoriesHeight * leftScale;
   const accessoriesRect = scaledAccessoriesHeight > 0
     ? rect(
-        leftX,
+        coverRect.x,
         outerMargin + internalHeight - scaledAccessoriesHeight,
-        leftWidth,
+        coverRect.width,
         scaledAccessoriesHeight
       )
     : undefined;

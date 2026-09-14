@@ -76,6 +76,8 @@ const tallCover = createLandscapeLayoutPlan({
   lyricsCandidates: [measured(880, 600)]
 });
 assert(tallCover);
+assert.equal(tallCover.accessoriesRect?.x, tallCover.coverRect.x, "credits share the cover left edge even for narrow artwork");
+assert.equal(tallCover.accessoriesRect?.width, tallCover.coverRect.width, "credits share the cover right edge even for narrow artwork");
 assert.equal(
   Math.abs(tallCover.coverRect.width / tallCover.coverRect.height - 120 / 640) < 0.002,
   true,

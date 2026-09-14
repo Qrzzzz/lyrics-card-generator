@@ -34,7 +34,6 @@ export function createLandscapeMeasurementKey(state: AppState) {
     },
     coverArtwork: state.coverArtwork,
     showAlbumName: style.showAlbumName,
-    showPlatformBadge: style.showPlatformBadge,
     showSharedBy: style.showSharedBy,
     sharedByText: style.sharedByText,
     showGeneratedWatermark: style.showGeneratedWatermark ?? style.showWatermark

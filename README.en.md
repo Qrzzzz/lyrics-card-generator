@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v6.3.2.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v6.3.3.en.md">Release Notes</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
   <a href="./docs/web-lite-browser-support.md">Web Lite Browser Support</a> ·
   <a href="#features">Features</a> ·
@@ -77,23 +77,23 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 
 
-* Windows x64 installer: `Lyrics.Card.Generator.Setup.6.3.2.exe`
+* Windows x64 installer: `Lyrics.Card.Generator.Setup.6.3.3.exe`
 
 Starting with v6.2.2, Windows x64 Setup is the only distributed desktop package.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v6.3.2 · Adaptive settings layout
+### v6.3.3 · Unified two-row footer
 
-* Steps 3–5 use one layout rule based on the actual width of the settings pane, with one, two, or three columns.
-* Labels, values, hints, and controls share consistent spacing. Automatic dimensions, grid density, and sharing text stay beside their related switches.
-* Font presets and the custom entry share a grid. Font editor actions wrap on narrow screens, and selected states are more readable in light themes.
-* Setting values, font drafts, preview, and export behavior are preserved. Web Lite uses the same layout rule.
+* Remove music-platform logos, their display switch, and icon assets. Music-link parsing remains available.
+* Place the shared-by credit on the first row, right-aligned, and the project signature on the second row, left-aligned. Portrait credits align with the lyrics region; landscape credits align with the album cover.
+* Use the card font scheme for both credits, with consistent spacing. Long credits wrap in full, and disabled rows leave no empty space.
+* Preview, measurement, and export share one footer component, including Web Lite. Legacy platform-display settings no longer affect the image.
 
 ## 🌐 Multilingual Release Notes
 
 GitHub Release displays a Simplified Chinese summary by default. See the full release notes:
-[简体中文](./docs/releases/v6.3.2.zh-CN.md) · [繁體中文](./docs/releases/v6.3.2.zh-TW.md) · [English](./docs/releases/v6.3.2.en.md) · [Français](./docs/releases/v6.3.2.fr.md) · [日本語](./docs/releases/v6.3.2.ja.md) · [Español](./docs/releases/v6.3.2.es.md)
+[简体中文](./docs/releases/v6.3.3.zh-CN.md) · [繁體中文](./docs/releases/v6.3.3.zh-TW.md) · [English](./docs/releases/v6.3.3.en.md) · [Français](./docs/releases/v6.3.3.fr.md) · [日本語](./docs/releases/v6.3.3.ja.md) · [Español](./docs/releases/v6.3.3.es.md)
 
 <a id="features"></a>
 
@@ -130,7 +130,7 @@ GitHub Release displays a Simplified Chinese summary by default. See the full re
 
 * Palette extraction from cover art for gradient backgrounds
 * App interface appearance modes: Album dynamic, Dark, Light, Dark Acrylic, and Light Acrylic
-* Platform logo, shared-by text, and generated watermark
+* Shared-by credit and project signature
 
 ### 🔤 Fonts & Multilingual Interface
 

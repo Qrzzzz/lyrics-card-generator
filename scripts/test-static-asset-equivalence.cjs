@@ -11,12 +11,7 @@ const expected = {
   serif: "d033af54f96530476faed924ab5d5e9e6ef0833495670fd57bab9a7758398048",
   sansLicense: "f55c2d43dd905011515f5e46ba78d180027e314ef8ccaaf53a9e88fe316767cd",
   serifLicense: "9ff5bb567e1b92c801fc1069e5fbf992ff8efccacb9db94e5959a5b3ba9bb903",
-  platformIcons: {
-    "apple-music.svg": "e17c3c7ad50b7a0b2b7dbade1493518338c76766c0513abd84f615d1c5048153",
-    "netease-music.svg": "2b878041ce7199d04cb63085db36c639a688b3dac20d8f6313583d9abe56f038",
-    "qq-music.svg": "d3272cc18a0a25217d4026923b67198b6a68c4ed9a1a691dd3b42a2d7d53f1b5",
-    "spotify.svg": "ef13ffe390971bc3508b9abb6f1f35ca0185fd9253a87ed4d0911c0af04a1b40"
-  }
+
 };
 
 async function run() {
@@ -77,13 +72,6 @@ async function run() {
     hashNormalizedText(Buffer.from("<svg>\n</svg>\n")),
     "SVG fingerprints ignore Git working-tree line endings"
   );
-  for (const [name, sha256] of Object.entries(expected.platformIcons)) {
-    assert.equal(
-      hashNormalizedText(fs.readFileSync(path.join("public", "platform-icons", name))),
-      sha256,
-      `${name} remains content-identical across Git line-ending conversion`
-    );
-  }
 
   const distributionFiles = [
     "app-icon.png",
@@ -91,7 +79,6 @@ async function run() {
     "fonts/LICENSE-SourceHanSans.txt",
     "fonts/SourceHanSerifSC-Heavy.otf",
     "fonts/LICENSE-SourceHanSerif.txt",
-    ...Object.keys(expected.platformIcons).map((name) => `platform-icons/${name}`)
   ];
   const stagedPublic = path.join("dist-desktop", "server", "public");
   if (process.argv.includes("--staged") || process.argv.includes("--packaged")) {

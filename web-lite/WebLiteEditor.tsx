@@ -146,7 +146,6 @@ export function WebLiteEditor() {
       style: {
         ...state.style,
         landscapePlan: hasCurrentLandscapePlan(state) ? state.style.landscapePlan : undefined,
-        showPlatformBadge: false,
         extractedPalette: state.palette ?? DEFAULT_PALETTE
       }
     }),
@@ -272,16 +271,7 @@ export function WebLiteEditor() {
     revokeLocalCoverObjectUrl();
     setFontSchemePreview(null);
     setClearTransitionKey((key) => key + 1);
-    setState((current) => {
-      const cleared = clearLyricContent(current);
-      return {
-        ...cleared,
-        style: {
-          ...cleared.style,
-          showPlatformBadge: false
-        }
-      };
-    });
+    setState((current) => clearLyricContent(current));
   }
 
   function setSong(song: SongInfo) {
@@ -353,10 +343,7 @@ export function WebLiteEditor() {
       }
     }
     setState((current) =>
-      applyEditorStyleChange(current, {
-        ...nextStyle,
-        showPlatformBadge: false
-      })
+      applyEditorStyleChange(current, nextStyle)
     );
   }
 
@@ -554,7 +541,6 @@ export function WebLiteEditor() {
           song={state.song}
           onSongChange={setSong}
           t={t}
-          showPlatformBadgeControl={false}
         />
       )
     },
@@ -701,7 +687,6 @@ function createInitialState(locale: WebLiteLocale): AppState {
         ? { ...defaultState.style.landscapeLayout }
         : undefined,
       instrumentalText: DEFAULT_INSTRUMENTAL_TEXT[locale],
-      showPlatformBadge: false,
       extractedPalette: { ...DEFAULT_PALETTE, colors: [...DEFAULT_PALETTE.colors] }
     },
     lastPortraitSize: defaultState.lastPortraitSize ? { ...defaultState.lastPortraitSize } : undefined,

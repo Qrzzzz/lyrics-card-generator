@@ -115,8 +115,6 @@ export function LandscapeLyricCard({
                 }}
               >
                 <LandscapeAccessories
-                  source={song.source}
-                  showPlatformBadge={style.showPlatformBadge}
                   showSharedBy={style.showSharedBy}
                   sharedByText={style.sharedByText}
                   showGeneratedWatermark={showGeneratedWatermark}
