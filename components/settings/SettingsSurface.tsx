@@ -247,7 +247,7 @@ export function SettingsSurface({
         <div ref={contentScrollRef} className="settings-wing__content-scroll">
           <div
             className={[
-              "settings-wing__content",
+              "settings-wing__content settings-content-layout",
               activeTab.contentWidth === "wide" ? "settings-wing__content--wide" : "settings-wing__content--narrow"
             ].join(" ")}
           >

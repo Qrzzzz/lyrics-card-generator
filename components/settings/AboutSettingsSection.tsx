@@ -42,18 +42,18 @@ export function AboutSettingsSection({ copy, t, locale }: { copy: typeof setting
       <UpdateButton t={t} locale={locale} />
       <div className="grid gap-2">
         {EXTERNAL_LINKS.map(([key, url]) => (
-          <a key={key} href={url} target="_blank" rel="noreferrer" className="app-button control-focus flex min-h-10 items-center justify-between rounded-lg px-3 py-2 text-sm font-semibold">
+          <a key={key} href={url} target="_blank" rel="noreferrer" className="app-button control-focus flex min-h-11 items-center justify-between gap-3 rounded-lg px-3 py-2 text-sm font-semibold">
             <span>{copy[key]}</span>
-            <ExternalLink className="h-4 w-4" aria-hidden="true" />
+            <ExternalLink className="h-4 w-4 shrink-0" aria-hidden="true" />
           </a>
         ))}
       </div>
       <SettingsGroup title={copy.licenses} description={copy.licensesDescription}>
         <div className="grid gap-2" data-testid="offline-license-links">
           {licenseLinks.map(([label, url]) => (
-            <a key={url} href={url} target="_blank" rel="noreferrer" className="app-button control-focus flex min-h-10 items-center justify-between rounded-lg px-3 py-2 text-sm font-semibold">
+            <a key={url} href={url} target="_blank" rel="noreferrer" className="app-button control-focus flex min-h-11 items-center justify-between gap-3 rounded-lg px-3 py-2 text-sm font-semibold">
               <span>{label}</span>
-              <FileText className="h-4 w-4" aria-hidden="true" />
+              <FileText className="h-4 w-4 shrink-0" aria-hidden="true" />
             </a>
           ))}
         </div>

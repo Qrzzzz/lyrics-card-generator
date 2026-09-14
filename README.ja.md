@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v6.3.3.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v6.3.4.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="./docs/development.en.md">ローカル開発</a> ·
@@ -76,23 +76,22 @@
 
 
 
-* Windows x64 インストーラー：`Lyrics.Card.Generator.Setup.6.3.3.exe`
+* Windows x64 インストーラー：`Lyrics.Card.Generator.Setup.6.3.4.exe`
 
 v6.2.2 以降、配布するデスクトップパッケージは Windows x64 Setup のみです。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v6.3.3 · 2行フッターの統一
+### v6.3.4 · 設定とツール画面の統一
 
-* 音楽プラットフォームのロゴ、表示スイッチ、アイコン素材を削除しました。楽曲リンクの解析機能は引き続き利用できます。
-* 1行目の共有者署名は右揃え、2行目のプロジェクト署名は左揃えになります。縦型では歌詞領域、横型ではアルバムカバーの左右端に揃えます。
-* 両方の署名にカードのフォント設定を適用し、行間と字間を統一しました。長い署名は省略せず折り返し、非表示の行には空白を残しません。
-* プレビュー、計測、書き出しで同じフッターを使用し、Web Liteにも反映しました。旧バージョンのロゴ表示設定は画像に影響しません。
+* 右側の設定内容のラベル、説明、間隔を統一し、コンテナー幅に応じた1～3列の配置を使用します。
+* ステップ2の右側ツールで、操作範囲、説明、操作ボタン、プレビュー確認を読みやすくします。
+* 設定画面左側のタブ、アニメーション、操作は維持します。保存済み設定、既定値、編集・書き出し動作も維持します。
 
 ## 🌐 多言語リリースノート
 
 GitHub Release ではデフォルトで簡体字中国語の概要が表示されます。完全なリリースノートはこちら：
-[简体中文](./docs/releases/v6.3.3.zh-CN.md) · [繁體中文](./docs/releases/v6.3.3.zh-TW.md) · [English](./docs/releases/v6.3.3.en.md) · [Français](./docs/releases/v6.3.3.fr.md) · [日本語](./docs/releases/v6.3.3.ja.md) · [Español](./docs/releases/v6.3.3.es.md)
+[简体中文](./docs/releases/v6.3.4.zh-CN.md) · [繁體中文](./docs/releases/v6.3.4.zh-TW.md) · [English](./docs/releases/v6.3.4.en.md) · [Français](./docs/releases/v6.3.4.fr.md) · [日本語](./docs/releases/v6.3.4.ja.md) · [Español](./docs/releases/v6.3.4.es.md)
 
 <a id="主な機能"></a>
 

@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v6.3.3.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v6.3.4.en.md">Release Notes</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
   <a href="./docs/web-lite-browser-support.md">Web Lite Browser Support</a> ·
   <a href="#features">Features</a> ·
@@ -77,23 +77,22 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 
 
-* Windows x64 installer: `Lyrics.Card.Generator.Setup.6.3.3.exe`
+* Windows x64 installer: `Lyrics.Card.Generator.Setup.6.3.4.exe`
 
 Starting with v6.2.2, Windows x64 Setup is the only distributed desktop package.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v6.3.3 · Unified two-row footer
+### v6.3.4 · Consistent settings and tools
 
-* Remove music-platform logos, their display switch, and icon assets. Music-link parsing remains available.
-* Place the shared-by credit on the first row, right-aligned, and the project signature on the second row, left-aligned. Portrait credits align with the lyrics region; landscape credits align with the album cover.
-* Use the card font scheme for both credits, with consistent spacing. Long credits wrap in full, and disabled rows leave no empty space.
-* Preview, measurement, and export share one footer component, including Web Lite. Legacy platform-display settings no longer affect the image.
+* Unify labels, help text, spacing and intrinsic 1–3 column layouts in settings content, using the available container width.
+* Improve the right-hand tools in step 2 with readable operation scopes, actions, descriptions and preview confirmations.
+* Preserve the left settings tabs, their animations and interactions, along with saved preferences, defaults, editing and export behavior.
 
 ## 🌐 Multilingual Release Notes
 
 GitHub Release displays a Simplified Chinese summary by default. See the full release notes:
-[简体中文](./docs/releases/v6.3.3.zh-CN.md) · [繁體中文](./docs/releases/v6.3.3.zh-TW.md) · [English](./docs/releases/v6.3.3.en.md) · [Français](./docs/releases/v6.3.3.fr.md) · [日本語](./docs/releases/v6.3.3.ja.md) · [Español](./docs/releases/v6.3.3.es.md)
+[简体中文](./docs/releases/v6.3.4.zh-CN.md) · [繁體中文](./docs/releases/v6.3.4.zh-TW.md) · [English](./docs/releases/v6.3.4.en.md) · [Français](./docs/releases/v6.3.4.fr.md) · [日本語](./docs/releases/v6.3.4.ja.md) · [Español](./docs/releases/v6.3.4.es.md)
 
 <a id="features"></a>
 

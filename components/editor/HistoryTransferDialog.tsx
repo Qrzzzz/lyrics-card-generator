@@ -64,7 +64,7 @@ export function HistoryTransferDialog({ open, locale, onClose, onBeforeTransfer,
     <AccessibleDialog open={open} labelledBy="history-transfer-title" describedBy="history-transfer-intro" inheritThemeFrom=".app-shell"
       onClose={() => { if (!busy) onClose(); }} escapeCloses={!busy} closeOnBackdrop={!busy}
       initialFocusSelector='[data-testid="history-json-input"]' returnFocusSelector='[data-testid="history-paste"]'
-      testId="history-transfer-dialog" panelClassName="settings-panel-card !bg-[rgb(var(--elevated-panel-bg))] max-h-[85dvh] max-w-2xl overflow-y-auto rounded-2xl p-5 shadow-2xl">
+      testId="history-transfer-dialog" panelClassName="settings-content-layout settings-panel-card !bg-[rgb(var(--elevated-panel-bg))] max-h-[85dvh] max-w-2xl overflow-y-auto rounded-2xl p-5 shadow-2xl">
       <h2 id="history-transfer-title" className="app-text-primary text-lg font-bold">{copy.title}</h2>
       <p id="history-transfer-intro" className="app-text-muted mt-2 text-sm leading-relaxed">{copy.intro}</p>
       <label className="mt-4 block">

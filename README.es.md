@@ -19,7 +19,7 @@
 <p>
   <strong>Navegación</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Descargar la última versión</a> ·
-  <a href="./docs/releases/v6.3.3.es.md">Notas de la versión</a> ·
+  <a href="./docs/releases/v6.3.4.es.md">Notas de la versión</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en línea</a> ·
   <a href="#funciones-principales">Funciones principales</a> ·
   <a href="./docs/development.en.md">Desarrollo local</a> ·
@@ -76,23 +76,22 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 
 
-* Instalador de Windows x64: `Lyrics.Card.Generator.Setup.6.3.3.exe`
+* Instalador de Windows x64: `Lyrics.Card.Generator.Setup.6.3.4.exe`
 
 A partir de v6.2.2, Setup para Windows x64 es el único paquete de escritorio distribuido.
 
 > La compilación actual no está firmada. Windows puede mostrar una advertencia de SmartScreen, algo habitual en aplicaciones personales sin firma.
 
-### v6.3.3 · Pie de tarjeta unificado en dos filas
+### v6.3.4 · Ajustes y herramientas coherentes
 
-* Se eliminan los logotipos de las plataformas musicales, su interruptor y los archivos de iconos. Se conserva el análisis de enlaces musicales.
-* La firma de quien comparte aparece en la primera fila, alineada a la derecha; la firma del proyecto ocupa la segunda, alineada a la izquierda. En vertical siguen los bordes de la región de letras; en horizontal, los de la portada.
-* Ambas firmas usan las fuentes de la tarjeta y un espaciado coherente. Los textos largos se ajustan sin recortarse y las filas desactivadas no dejan huecos.
-* La vista previa, la medición y la exportación comparten un componente, también en Web Lite. Los antiguos ajustes de logotipos ya no afectan a la imagen.
+* Unificar etiquetas, explicaciones y espaciado en el contenido de los ajustes, con 1–3 columnas según el ancho del contenedor.
+* Mejorar las herramientas a la derecha del paso 2: alcance de las operaciones, acciones y confirmaciones con vista previa.
+* Conservar las pestañas de la izquierda, sus animaciones e interacciones, las preferencias guardadas, los valores predeterminados, la edición y la exportación.
 
 ## 🌐 Notas de publicación multilingües
 
 GitHub Release muestra de forma predeterminada un resumen en chino simplificado. Consulta las notas completas:
-[简体中文](./docs/releases/v6.3.3.zh-CN.md) · [繁體中文](./docs/releases/v6.3.3.zh-TW.md) · [English](./docs/releases/v6.3.3.en.md) · [Français](./docs/releases/v6.3.3.fr.md) · [日本語](./docs/releases/v6.3.3.ja.md) · [Español](./docs/releases/v6.3.3.es.md)
+[简体中文](./docs/releases/v6.3.4.zh-CN.md) · [繁體中文](./docs/releases/v6.3.4.zh-TW.md) · [English](./docs/releases/v6.3.4.en.md) · [Français](./docs/releases/v6.3.4.fr.md) · [日本語](./docs/releases/v6.3.4.ja.md) · [Español](./docs/releases/v6.3.4.es.md)
 
 <a id="funciones-principales"></a>
 

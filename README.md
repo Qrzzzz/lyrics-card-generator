@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v6.3.3.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v6.3.4.zh-CN.md">发布说明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">在线 Web Lite 版</a> ·
   <a href="./docs/web-lite-browser-support.md">Web Lite 浏览器支持</a> ·
   <a href="./docs/desktop.md">桌面维护文档</a> ·
@@ -75,23 +75,22 @@
 
 
 
-* Windows x64 安装版：`Lyrics.Card.Generator.Setup.6.3.3.exe`
+* Windows x64 安装版：`Lyrics.Card.Generator.Setup.6.3.4.exe`
 
 从 v6.2.2 起只提供 Windows x64 Setup 安装包。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v6.3.3 · 统一两行页脚
+### v6.3.4 · 设置与工具界面整理
 
-* 支持分享者署名与项目署名
-* 分享者署名位于第一行并靠右，项目署名位于第二行并靠左。竖版与歌词区域对齐，横版与专辑封面对齐。
-* 页脚使用卡片的中西文字体方案，统一行距与字距；长署名完整换行，关闭任一项后自动收拢空间。
-* 预览、测量与导出共用页脚组件，Web Lite 同步更新；旧的平台显示设置不再影响成品。
+* 统一右侧设置内容的标签、说明、控件间距及按容器宽度排列的 1–3 列布局。
+* 整理第二步右侧工具区，完整显示操作范围，统一操作、说明与预览确认的可读性。
+* 全局设置左侧 tab 的布局、动效和交互保持不变；保留现有设置保存方式、默认值及编辑与导出行为。
 
 ## 🌐 多语言发布说明
 
 GitHub Release 默认展示简体中文摘要，完整说明见：
-[简体中文](./docs/releases/v6.3.3.zh-CN.md) · [繁體中文](./docs/releases/v6.3.3.zh-TW.md) · [English](./docs/releases/v6.3.3.en.md) · [Français](./docs/releases/v6.3.3.fr.md) · [日本語](./docs/releases/v6.3.3.ja.md) · [Español](./docs/releases/v6.3.3.es.md)
+[简体中文](./docs/releases/v6.3.4.zh-CN.md) · [繁體中文](./docs/releases/v6.3.4.zh-TW.md) · [English](./docs/releases/v6.3.4.en.md) · [Français](./docs/releases/v6.3.4.fr.md) · [日本語](./docs/releases/v6.3.4.ja.md) · [Español](./docs/releases/v6.3.4.es.md)
 
 <a id="主要功能"></a>
 

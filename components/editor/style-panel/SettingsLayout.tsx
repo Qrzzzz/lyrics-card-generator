@@ -1,17 +1,10 @@
 "use client";
 
-import { Children, cloneElement, isValidElement, useId, type ComponentProps, type HTMLAttributes, type ReactNode } from "react";
+import { Children, cloneElement, isValidElement, useId, type ComponentProps, type ReactNode } from "react";
 import { ToggleRow } from "@/components/ui/controls";
 import { cn } from "@/lib/utils";
 
-/** One intrinsic grid for every ordinary field in steps 3–5. No resize state. */
-export function SettingsLayout({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
-  return <div {...props} className={cn("editor-settings-layout", className)} />;
-}
-
-export function SettingsGrid({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
-  return <div {...props} className={cn("editor-settings-grid", className)} />;
-}
+export { SettingsLayout, SettingsGrid } from "@/components/ui/SettingsLayout";
 
 export function SettingsGroup({ title, summary, children, className }: {
   title: string;

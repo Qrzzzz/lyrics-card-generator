@@ -113,8 +113,8 @@ export function FieldLabel({
   );
 
   return (
-    <div className={cn("app-text-muted grid gap-2 text-sm", disabled ? "opacity-70" : "", className)}>
-      <div className="flex items-center justify-between gap-3">
+    <div className={cn("settings-field-label app-text-muted grid gap-2 text-sm", disabled ? "opacity-70" : "", className)}>
+      <div className="settings-field-label__heading flex items-center justify-between gap-3">
         {labelContent}
         {hint ? <span className="app-text-subtle text-xs">{hint}</span> : null}
       </div>
@@ -391,7 +391,7 @@ export function ActionButton({
       whileTap={pressMotion}
       transition={reduceMotion ? reducedMotionTransition : motionSprings.control}
       className={cn(
-        "control-focus control-disabled inline-flex shrink-0 items-center justify-center rounded-lg font-medium transition",
+        "settings-action-button control-focus control-disabled inline-flex shrink-0 items-center justify-center rounded-lg font-medium transition",
         actionButtonVariantClass[variant],
         iconOnly ? actionButtonIconSizeClass[size] : actionButtonSizeClass[size],
         className

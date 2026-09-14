@@ -24,7 +24,7 @@ export function LanguageSettingsSection({
     <section className="grid gap-3">
       <h3 className="app-text-primary text-sm font-semibold">{title}</h3>
       <OptionCardGroup
-        className="grid gap-2 sm:grid-cols-2"
+        className="editor-settings-grid"
         value={locale}
         onValueChange={(value) => onLocaleChange(value as Locale)}
         aria-label={title}

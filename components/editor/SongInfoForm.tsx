@@ -3,6 +3,7 @@
 import { Upload } from "lucide-react";
 import { useRef, useState } from "react";
 import { AdaptiveAlbumArtwork } from "@/components/preview/AdaptiveAlbumArtwork";
+import { SettingsGrid } from "@/components/ui/SettingsLayout";
 import {
   ActionButton,
   FieldLabel,
@@ -78,29 +79,29 @@ export function SongInfoForm({
   }
 
   return (
-    <Section title={t("songInfo")} eyebrow={t("manualOverride")}>
+    <Section title={t("songInfo")} eyebrow={t("manualOverride")} className="settings-content-layout">
       {showToggle ? <ToggleRow label={t("manualOverride")} checked={enabled} onChange={setEnabled} /> : null}
       {fieldsEnabled ? (
         <>
-          <div className="grid gap-4 sm:grid-cols-2">
+          <SettingsGrid>
             <FieldLabel label={t("title")}>
               <TextInput value={song.title} onChange={(event) => update("title", event.target.value)} />
             </FieldLabel>
             <FieldLabel label={t("artist")}>
               <TextInput value={song.artist} onChange={(event) => update("artist", event.target.value)} />
             </FieldLabel>
-          </div>
-          <FieldLabel label={t("album")}>
-            <TextInput value={song.album ?? ""} onChange={(event) => update("album", event.target.value)} />
-          </FieldLabel>
-          <FieldLabel label={t("coverUrl")}>
-            <TextInput
-              value={song.coverUrl?.startsWith("blob:") ? "" : song.coverUrl ?? ""}
-              onChange={(event) => updateCoverUrl(event.target.value)}
-              placeholder="https://..."
-            />
-          </FieldLabel>
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <FieldLabel label={t("album")}>
+              <TextInput value={song.album ?? ""} onChange={(event) => update("album", event.target.value)} />
+            </FieldLabel>
+            <FieldLabel label={t("coverUrl")}>
+              <TextInput
+                value={song.coverUrl?.startsWith("blob:") ? "" : song.coverUrl ?? ""}
+                onChange={(event) => updateCoverUrl(event.target.value)}
+                placeholder="https://..."
+              />
+            </FieldLabel>
+          </SettingsGrid>
+          <div className="settings-content-actions">
             <ActionButton
               icon={<Upload className="h-4 w-4" />}
               onClick={() => coverInputRef.current?.click()}

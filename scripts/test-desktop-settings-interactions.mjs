@@ -4088,6 +4088,13 @@ try {
   await page.screenshot({ path: path.join(reportDirectory, "settings-appearance-audit.png"), fullPage: false });
 
   const settingsContentScroll = page.locator(".settings-wing__content-scroll");
+  // Responsive columns can fit appearance on one screen. Constrain the test
+  // viewport explicitly so this checks scroll restoration, not content length.
+  const previousScrollMaxHeight = await settingsContentScroll.evaluate((element) => {
+    const previous = element.style.maxHeight;
+    element.style.maxHeight = "200px";
+    return previous;
+  });
   await settingsContentScroll.evaluate((element) => {
     element.scrollTop = Math.min(320, Math.max(1, element.scrollHeight - element.clientHeight));
   });
@@ -4095,6 +4102,9 @@ try {
   await selectSettingsSection("about");
   await page.waitForFunction(() => document.querySelector(".settings-wing__content-scroll")?.scrollTop === 0);
   assert.equal(await settingsContentScroll.evaluate((element) => element.scrollTop), 0, "a newly selected settings destination starts at its heading instead of inheriting another page's scroll");
+  await settingsContentScroll.evaluate((element, previous) => {
+    element.style.maxHeight = previous;
+  }, previousScrollMaxHeight);
   const offlineLicenseLinks = page.getByTestId("offline-license-links").locator("a");
   assert.deepEqual(await offlineLicenseLinks.evaluateAll((links) => links.map((link) => link.getAttribute("href"))), [
     "/licenses/LICENSE-Lyrics-Card-Generator.txt",

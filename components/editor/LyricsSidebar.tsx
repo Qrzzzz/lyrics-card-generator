@@ -103,7 +103,7 @@ export function LyricsSidebar(props: LyricsSidebarProps) {
       hidden={!open}
       onKeyDown={onDrawerKeyDown}
       className={cn(
-        "lyrics-sidebar app-text-muted h-full min-h-0 min-w-0 overflow-hidden",
+        "lyrics-sidebar settings-content-layout app-text-muted h-full min-h-0 min-w-0 overflow-hidden",
         mobileDrawer && "lyrics-sidebar--drawer"
       )}
       data-testid="lyrics-sidebar"
@@ -131,7 +131,7 @@ export function LyricsSidebar(props: LyricsSidebarProps) {
                 aria-controls={`lyrics-sidebar-panel-${tab}`}
                 id={`lyrics-sidebar-tab-${tab}`}
                 className={cn(
-                  "segmented-control__item lyrics-sidebar-tab control-focus relative flex h-9 min-w-0 items-center justify-center gap-1.5 rounded-lg px-2 text-xs font-semibold transition",
+                  "segmented-control__item lyrics-sidebar-tab control-focus relative flex min-h-11 min-w-0 items-center justify-center gap-1.5 rounded-lg px-2 text-xs font-semibold transition",
                   activeTab === tab
                     ? "app-text-primary"
                     : "app-text-subtle"
@@ -143,7 +143,7 @@ export function LyricsSidebar(props: LyricsSidebarProps) {
                 data-testid={`lyrics-sidebar-tab-${tab}`}
               >
                 {tabIcon(tab, "size-3.5")}
-                <span className="truncate">{tabLabel(copy, tab)}</span>
+                <span className="min-w-0 whitespace-normal break-words">{tabLabel(copy, tab)}</span>
               </button>
             ))}
           </div>
@@ -160,7 +160,7 @@ export function LyricsSidebar(props: LyricsSidebarProps) {
 
         {feedback ? (
           <div
-            className="status-info mx-2 mt-2 flex shrink-0 items-start gap-2 rounded-md border px-2.5 py-2 text-[11px] leading-relaxed"
+            className="status-info mx-2 mt-2 flex shrink-0 items-start gap-2 rounded-md border px-2.5 py-2 text-xs leading-relaxed"
             role="status"
             aria-live="polite"
             data-testid="lyrics-operation-feedback"

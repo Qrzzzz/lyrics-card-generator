@@ -1410,8 +1410,7 @@ button {
 }
 
 .lyrics-sidebar-operation + .lyrics-sidebar-operation {
-  padding-top: 0.375rem;
-  border-top: 1px solid color-mix(in srgb, rgb(var(--panel-border)) 58%, transparent);
+  padding-top: 0;
 }
 
 .lyrics-sidebar-action {
@@ -1453,7 +1452,7 @@ button {
 
 .lyrics-sidebar-more__summary {
   display: flex;
-  min-height: 2.5rem;
+  min-height: 2.75rem;
   cursor: pointer;
   list-style: none;
   align-items: center;
@@ -1462,7 +1461,7 @@ button {
   border-radius: 0.5rem;
   padding: 0.5rem 0.625rem;
   color: rgb(var(--app-fg));
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   font-weight: 600;
 }
 
@@ -1621,7 +1620,7 @@ button {
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
 }
 
-/* Steps 3–5: N = clamp(floor((W + gap) / (minimum + gap)), 1, 3).
+/* Settings content: N = clamp(floor((W + gap) / (minimum + gap)), 1, 3).
    auto-fill retains the column width on incomplete rows. The third-width floor
    caps the count at three without viewport breakpoints or a second JS model. */
 .editor-settings-layout {
@@ -1644,6 +1643,72 @@ button {
   display: grid;
   min-width: 0;
   gap: 0.75rem;
+}
+
+/* Scope to content so the animated settings navigation remains unchanged. */
+.settings-content-layout {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.editor-settings-grid > *,
+.settings-content-layout .settings-field-label,
+.settings-content-layout .field-shell {
+  min-width: 0;
+}
+
+.settings-content-layout .settings-field-label {
+  align-content: start;
+}
+
+.settings-content-layout .settings-field-label__heading {
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.75rem;
+}
+
+.settings-content-layout .segmented-control__item {
+  height: auto;
+  min-height: 2.75rem;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.settings-content-layout [role="switch"] {
+  min-height: 2.75rem;
+  border: 0;
+  padding-inline: 0;
+  align-items: flex-start;
+}
+
+.settings-content-layout .settings-action-button {
+  height: auto;
+  min-height: 2.75rem;
+  min-width: 0;
+  max-width: 100%;
+  padding-block: 0.5rem;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.settings-content-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: start;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.settings-content-actions > input {
+  flex: 1 1 12rem;
+}
+
+.settings-content-layout .settings-row {
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  gap: 0.5rem;
+  border: 0;
+  padding: 0;
 }
 
 .editor-settings-group + .editor-settings-group {
