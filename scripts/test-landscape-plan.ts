@@ -92,7 +92,22 @@ const extraHeight = createLandscapeLayoutPlan({
 });
 assert(extraHeight);
 assert.equal(extraHeight.leftScale, 1.28, "left design unit stops growing at its maximum scale");
-assert.equal(extraHeight.flexibleGap > 500, true, "excess height is absorbed by the flexible middle gap");
+assert.equal(extraHeight.flexibleGap > 0, true, "excess height leaves room between metadata and credits");
+
+for (const plan of [automatic, manual, shortLyrics, tallCover, extraHeight]) {
+  assert(plan.accessoriesRect);
+  assert.ok(Math.abs(plan.accessoriesRect.y + plan.accessoriesRect.height -
+    plan.lyricsRect.y - plan.lyricsRect.height) <= 1, "credits and lyrics share their bottom edge");
+  assert.ok(plan.accessoriesRect.y >= plan.metadataRect.y + plan.metadataRect.height,
+    "bottom alignment cannot overlap metadata even with short lyrics");
+}
+const noCredits = createLandscapeLayoutPlan({
+  measurementKey: "no-credits", settings: DEFAULT_LANDSCAPE_LAYOUT_SETTINGS,
+  left: { ...left, accessoriesHeight: 0 }, lyricsCandidates: [measured(880, 180)]
+});
+assert(noCredits);
+assert.equal(noCredits.accessoriesRect, undefined);
+assert.ok(noCredits.canvas.height < shortLyrics.canvas.height, "hidden credits reserve no height or gap");
 
 assert.deepEqual(
   normalizeLandscapeLayoutSettings({ autoLyricsWidth: false, lyricsWidth: 1, autoHeight: false, requestedHeight: 99 }),

@@ -122,7 +122,8 @@ const autoWidthEquivalenceFixtures: AutoWidthEquivalenceFixture[] = [
     align: "left",
     anchorWidth: 1280,
     expected: { width: 920, height: 2140 },
-    expectedByPlatform: { linux: { width: 940, height: 2140 } }
+    // Reconfirmed against the unchanged v6.3.4 bundle with Playwright 1.63's Chromium.
+    expectedByPlatform: { linux: { width: 940, height: 2140 }, win32: { width: 940, height: 2140 } }
   },
   {
     id: "long-english-words",
@@ -706,6 +707,18 @@ test("keeps restrained content depth identical in preview and ExportCardHost", a
   await page.getByRole("switch", { name: "Show Shared By", exact: true }).click();
   await page.getByPlaceholder("e.g. Shared by Cherry", { exact: true }).fill("A listener who kept every word");
   await expect(previewCard.locator("[data-landscape-accessories]")).toBeVisible();
+  for (const card of [previewCard, exportCard]) {
+    await expect.poll(() => card.evaluate((node) => {
+      const footer = node.querySelector<HTMLElement>("[data-card-credits]");
+      const lyrics = node.querySelector<HTMLElement>("[data-card-lyrics]");
+      const metadata = node.querySelector<HTMLElement>("[data-card-header]");
+      if (!footer || !lyrics || !metadata) return false;
+      return Math.abs(footer.getBoundingClientRect().bottom - lyrics.getBoundingClientRect().bottom) < 1 &&
+        footer.getBoundingClientRect().top >= metadata.getBoundingClientRect().bottom &&
+        getComputedStyle(footer).fontFamily.startsWith('"Smiley Sans"') &&
+        Array.from(document.fonts).some((face) => face.family === "Smiley Sans" && face.status === "loaded");
+    })).toBe(true);
+  }
   await page.getByRole("switch", { name: "Background Grid", exact: true }).click();
   await expect(previewCard.locator('[data-card-fine-grid="true"]')).toHaveCount(1);
   await expect(exportCard.locator('[data-card-fine-grid="true"]')).toHaveCount(1);

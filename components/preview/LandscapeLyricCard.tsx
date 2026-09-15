@@ -109,9 +109,8 @@ export function LandscapeLyricCard({
                 className="absolute z-20"
                 style={{
                   left: plan.accessoriesRect.x,
-                  top: plan.accessoriesRect.y,
+                  bottom: size.height - (plan.lyricsRect.y + plan.lyricsRect.height),
                   width: plan.accessoriesRect.width,
-                  minHeight: plan.accessoriesRect.height
                 }}
               >
                 <LandscapeAccessories

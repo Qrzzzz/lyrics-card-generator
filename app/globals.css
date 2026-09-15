@@ -3,6 +3,14 @@
 @tailwind utilities;
 
 /* Global font registration and theme-token defaults shared by desktop and Web Lite. */
+@font-face {
+  font-family: "Smiley Sans";
+  src: url("/fonts/SmileySans-Oblique.woff2?v=731f22973349404b") format("woff2");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
 :root {
   color-scheme: dark;
   --font-source-han-sans-heavy: "Source Han Sans Heavy Local";

@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v6.3.4.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v6.3.5.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="./docs/development.en.md">ローカル開発</a> ·
@@ -76,22 +76,22 @@
 
 
 
-* Windows x64 インストーラー：`Lyrics.Card.Generator.Setup.6.3.4.exe`
+* Windows x64 インストーラー：`Lyrics.Card.Generator.Setup.6.3.5.exe`
 
 v6.2.2 以降、配布するデスクトップパッケージは Windows x64 Setup のみです。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v6.3.4 · 設定とツール画面の統一
+### v6.3.5 · フッターの配置と依存関係の更新
 
-* 右側の設定内容のラベル、説明、間隔を統一し、コンテナー幅に応じた1～3列の配置を使用します。
-* ステップ2の右側ツールで、操作範囲、説明、操作ボタン、プレビュー確認を読みやすくします。
-* 設定画面左側のタブ、アニメーション、操作は維持します。保存済み設定、既定値、編集・書き出し動作も維持します。
+* 横型カードのフッター下端を歌詞の下端に揃え、非表示の項目に空白を確保しないようにしました。
+* フッター専用に得意黑を同梱しました。歌詞のフォントとは独立し、署名の切り替えと既存のフォントプリセットを維持します。
+* Dependabot の npm・GitHub Actions 更新を取り込み、Web Lite の再生成と検証手順を整備しました。
 
 ## 🌐 多言語リリースノート
 
 GitHub Release ではデフォルトで簡体字中国語の概要が表示されます。完全なリリースノートはこちら：
-[简体中文](./docs/releases/v6.3.4.zh-CN.md) · [繁體中文](./docs/releases/v6.3.4.zh-TW.md) · [English](./docs/releases/v6.3.4.en.md) · [Français](./docs/releases/v6.3.4.fr.md) · [日本語](./docs/releases/v6.3.4.ja.md) · [Español](./docs/releases/v6.3.4.es.md)
+[简体中文](./docs/releases/v6.3.5.zh-CN.md) · [繁體中文](./docs/releases/v6.3.5.zh-TW.md) · [English](./docs/releases/v6.3.5.en.md) · [Français](./docs/releases/v6.3.5.fr.md) · [日本語](./docs/releases/v6.3.5.ja.md) · [Español](./docs/releases/v6.3.5.es.md)
 
 <a id="主な機能"></a>
 

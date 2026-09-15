@@ -191,7 +191,7 @@ export function LyricCard({
             )}
           </div>
 
-          <div data-card-footer style={{
+          <div data-card-footer className="shrink-0" style={{
             width: layout.lyricsRect.width,
             marginLeft: style.align === "center" ? "auto" : 0,
             marginRight: style.align === "center" ? "auto" : undefined

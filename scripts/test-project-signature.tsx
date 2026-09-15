@@ -33,6 +33,10 @@ for (const variant of ["portrait", "landscape"] as const) {
         showGeneratedWatermark={showGeneratedWatermark} textColor="#F8FAFC"
       />));
       assert.equal(footer("footer").length, Number(showSharedBy || showGeneratedWatermark));
+      if (showSharedBy || showGeneratedWatermark) {
+        assert.match(footer("footer").attr("style") ?? "", /Smiley Sans/);
+        assert.equal(footer("footer").children().length, Number(showSharedBy) + Number(showGeneratedWatermark));
+      }
       assert.equal(footer("img").length, 0, "credits never render platform imagery");
       assert.equal(footer("[data-card-shared-by]").length, Number(showSharedBy));
       assert.equal(footer("[data-project-signature]").length, Number(showGeneratedWatermark));
@@ -61,6 +65,15 @@ const legacyStyle = { ...defaultState.style, showPlatformBadge: true, showShared
   showGeneratedWatermark: false, showWatermark: false };
 assert.equal(getPortraitLayout({ width: 1080, height: 1440 }, legacyStyle, "spotify").footerRect, undefined,
   "legacy platform settings reserve no footer space");
+
+for (const [showSharedBy, showGeneratedWatermark, height] of [
+  [true, false, 34], [false, true, 37], [true, true, 84], [false, false, 0]
+] as const) {
+  const layout = getPortraitLayout({ width: 1080, height: 1440 }, {
+    ...defaultState.style, showSharedBy, sharedByText: "A listener", showGeneratedWatermark
+  });
+  assert.equal(layout.footerRect?.height ?? 0, height, "portrait reserves only visible footer rows");
+}
 
 assert.equal(defaultState.style.watermark, PROJECT_SIGNATURE_TEXT, "new documents retain the canonical signature text");
 assert.deepEqual(

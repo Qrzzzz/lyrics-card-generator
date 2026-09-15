@@ -9,6 +9,14 @@ const scriptsDirectory = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(scriptsDirectory, "..");
 const fontContracts = [
   {
+    font: "SmileySans-Oblique.woff2",
+    fontSha256: "731f22973349404b15a88a99ef3b5dd4104c0965c23b7e485c1f11e84fea99e2",
+    license: "LICENSE-SmileySans.txt",
+    licenseSha256: "9401f4050f1b66c26b6ccdc8b0e14a3c1cc37aac122eda84386f25854a9bec72",
+    copyright: "Copyright (c) 2022--2024, atelierAnchor",
+    reservedName: "with Reserved Font Name <Smiley> and <得意黑>."
+  },
+  {
     font: "SourceHanSansSC-Heavy.otf",
     license: "LICENSE-SourceHanSans.txt",
     licenseSha256: "f55c2d43dd905011515f5e46ba78d180027e314ef8ccaaf53a9e88fe316767cd",
@@ -68,7 +76,7 @@ assert.doesNotMatch(
   "desktop final-resource filters must not remove font license text"
 );
 
-console.log("Source Han font licenses and repository, Web Lite, Pages, and desktop distribution contracts passed");
+console.log("Bundled font licenses and repository, Web Lite, Pages, and desktop distribution contracts passed");
 
 async function assertLicensedFontDirectory(fontDirectory, label) {
   for (const contract of fontContracts) {
@@ -81,8 +89,11 @@ async function assertLicensedFontDirectory(fontDirectory, label) {
     assert.ok(license, `${label}: ${contract.font} requires ${contract.license}`);
     assert.equal(sha256(license), contract.licenseSha256, `${label}: ${contract.license} must match reviewed upstream bytes`);
     const text = license.toString("utf8");
-    assert.ok(text.startsWith(contract.copyright), `${label}: ${contract.license} keeps the applicable Adobe copyright`);
-    assert.match(text, /Name 'Source'\./, `${label}: ${contract.license} keeps the Reserved Font Name`);
+    assert.ok(text.startsWith(contract.copyright), `${label}: ${contract.license} keeps its upstream copyright`);
+    if (contract.fontSha256) {
+      assert.equal(sha256(await readFile(fontPath)), contract.fontSha256, `${label}: unmodified upstream font`);
+    }
+    assert.ok(text.includes(contract.reservedName ?? "Name 'Source'."), `${label}: ${contract.license} keeps the Reserved Font Name`);
     assert.match(text, /SIL OPEN FONT LICENSE Version 1\.1 - 26 February 2007/, `${label}: ${contract.license} includes OFL 1.1`);
   }
 }
@@ -106,6 +117,7 @@ async function assertApplicationLicenseAssets(root, label) {
   assert.match(notices, /LICENSE-SourceHanSans\.txt/);
   assert.match(notices, /Source Han Serif SC Heavy/);
   assert.match(notices, /LICENSE-SourceHanSerif\.txt/);
+  assert.match(notices, /LICENSE-SmileySans\.txt/);
 }
 
 function normalizeLines(value) {

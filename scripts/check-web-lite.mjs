@@ -45,7 +45,8 @@ try {
     '<div id="web-lite-root"></div>',
     "./public/app-icon.png",
     "./public/fonts/SourceHanSansSC-Heavy.otf",
-    "./public/fonts/SourceHanSerifSC-Heavy.otf"
+    "./public/fonts/SourceHanSerifSC-Heavy.otf",
+    "./public/fonts/SmileySans-Oblique.woff2"
   ];
   for (const fragment of requiredFragments) {
     if (!generated.includes(fragment)) {

@@ -45,7 +45,7 @@ jobs:
 
     steps:
       - name: Checkout exact tag ref
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           ref: refs/tags/${{ env.RELEASE_TAG }}
           fetch-depth: 0
@@ -140,7 +140,7 @@ jobs:
 
     steps:
       - name: Checkout authorized tag SHA
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           ref: refs/tags/${{ env.RELEASE_TAG }}
           fetch-depth: 0
@@ -225,7 +225,7 @@ jobs:
         run: npm run sbom:prepare
 
       - name: Generate SPDX SBOM
-        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0
+        uses: anchore/sbom-action@3ad7283483fc7af8ff2b4ea19663c2d5ca935e26 # v0.24.2
         with:
           path: dist-desktop/sbom-runtime
           config: security/syft-release.yaml
@@ -307,7 +307,7 @@ jobs:
 
     steps:
       - name: Checkout authorized tag SHA
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           ref: refs/tags/${{ env.RELEASE_TAG }}
           fetch-depth: 0

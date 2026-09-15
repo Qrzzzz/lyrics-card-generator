@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v6.3.4.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v6.3.5.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="./docs/development.en.md">Développement local</a> ·
@@ -76,22 +76,22 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 
 
-* Programme d’installation Windows x64 : `Lyrics.Card.Generator.Setup.6.3.4.exe`
+* Programme d’installation Windows x64 : `Lyrics.Card.Generator.Setup.6.3.5.exe`
 
 À partir de la v6.2.2, le programme Setup Windows x64 est le seul paquet distribué.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### v6.3.4 · Harmonisation des réglages et outils
+### v6.3.5 · Alignement du pied de carte et dépendances
 
-* Harmoniser les libellés, les explications et les espacements dans le contenu des réglages, avec 1 à 3 colonnes selon la largeur du conteneur.
-* Améliorer la lisibilité des outils à droite de l’étape 2 : portée des opérations, actions et confirmations avec aperçu.
-* Conserver les onglets de gauche, leurs animations et interactions, ainsi que les préférences enregistrées, les valeurs par défaut, l’édition et l’exportation.
+* Aligner le bas du pied de carte horizontal sur celui des paroles, sans espace réservé aux éléments masqués.
+* Intégrer Smiley Sans pour le pied de carte, indépendamment de la police des paroles, en conservant les options de signature et les préréglages actuels.
+* Intégrer les mises à jour npm et GitHub Actions de Dependabot avec reconstruction et validation de Web Lite.
 
 ## 🌐 Notes de publication multilingues
 
 Par défaut, GitHub Release affiche un résumé en chinois simplifié. Consultez les notes complètes :
-[简体中文](./docs/releases/v6.3.4.zh-CN.md) · [繁體中文](./docs/releases/v6.3.4.zh-TW.md) · [English](./docs/releases/v6.3.4.en.md) · [Français](./docs/releases/v6.3.4.fr.md) · [日本語](./docs/releases/v6.3.4.ja.md) · [Español](./docs/releases/v6.3.4.es.md)
+[简体中文](./docs/releases/v6.3.5.zh-CN.md) · [繁體中文](./docs/releases/v6.3.5.zh-TW.md) · [English](./docs/releases/v6.3.5.en.md) · [Français](./docs/releases/v6.3.5.fr.md) · [日本語](./docs/releases/v6.3.5.ja.md) · [Español](./docs/releases/v6.3.5.es.md)
 
 <a id="fonctionnalités-principales"></a>
 
