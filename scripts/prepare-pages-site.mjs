@@ -11,6 +11,8 @@ export const pagesFiles = [
   "public/licenses/LICENSE-Lyrics-Card-Generator.txt",
   "public/licenses/THIRD-PARTY-NOTICES.txt",
   "public/fonts/SourceHanSansSC-Heavy.otf",
+  "public/fonts/SmileySans-Oblique.woff2",
+  "public/fonts/LICENSE-SmileySans.txt",
   "public/fonts/LICENSE-SourceHanSans.txt",
   "public/fonts/SourceHanSerifSC-Heavy.otf",
   "public/fonts/LICENSE-SourceHanSerif.txt"

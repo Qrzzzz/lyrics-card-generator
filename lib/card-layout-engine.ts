@@ -51,7 +51,12 @@ export function getPortraitLayout(
   const hasFooter = hasVisibleFooter(style);
   const headerScale = style.showSongInfo && hasAlbumName ? 0.205 : 0.16;
   const baseHeaderHeight = hasHeader ? clamp(Math.round(size.width * headerScale), 130, hasAlbumName ? 284 : 214) : 0;
-  const footerHeight = hasFooter ? clamp(Math.round(size.width * 0.08), 74, 126) : 0;
+  const hasSharedBy = Boolean(style.showSharedBy && style.sharedByText.trim());
+  const hasProjectSignature = style.showGeneratedWatermark ?? style.showWatermark;
+  const footerHeight = Math.ceil(
+    (hasSharedBy ? 24 * 1.4 : 0) + (hasProjectSignature ? 26 * 1.4 : 0) +
+    (hasSharedBy && hasProjectSignature ? 14 : 0)
+  );
   const headerGap = hasHeader ? clamp(Math.round(size.height * 0.03), 26, 52) : 0;
   const footerGap = hasFooter ? clamp(Math.round(size.height * 0.018), 18, 34) : 0;
   const coverGap = 40;

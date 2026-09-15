@@ -87,6 +87,13 @@ for (const surface of ["link", "audio", "search", "editor"] as const) {
     } else await page.getByRole("button", { name: "Parse", exact: true }).click();
     await expect.poll(async () => (await snapshot(page)).writes.length).toBe(1);
     await page.evaluate((target) => target === "editor" ? window.__importRace.unmount() : window.__importRace.surface("none"), surface);
+    // A harness setState call only schedules the switch. Observe the committed
+    // unmount and its cancellation before resolving the deliberately held write.
+    if (surface === "editor") await expect(page.locator("#root")).toBeEmpty();
+    else {
+      await expect(page.locator("#root button, #root input")).toHaveCount(0);
+      await expect(page.getByTestId("pending")).toHaveText("false");
+    }
     await page.evaluate(() => window.__importRace.releaseWrites());
     // Await a browser task after every queued continuation of the released write.
     await page.evaluate(() => new Promise((done) => setTimeout(done, 0)));

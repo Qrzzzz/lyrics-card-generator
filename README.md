@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v6.3.4.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v6.3.5.zh-CN.md">发布说明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">在线 Web Lite 版</a> ·
   <a href="./docs/web-lite-browser-support.md">Web Lite 浏览器支持</a> ·
   <a href="./docs/desktop.md">桌面维护文档</a> ·
@@ -75,22 +75,22 @@
 
 
 
-* Windows x64 安装版：`Lyrics.Card.Generator.Setup.6.3.4.exe`
+* Windows x64 安装版：`Lyrics.Card.Generator.Setup.6.3.5.exe`
 
 从 v6.2.2 起只提供 Windows x64 Setup 安装包。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v6.3.4 · 设置与工具界面整理
+### v6.3.5 · 页脚对齐与依赖更新
 
-* 统一右侧设置内容的标签、说明、控件间距及按容器宽度排列的 1–3 列布局。
-* 整理第二步右侧工具区，完整显示操作范围，统一操作、说明与预览确认的可读性。
-* 全局设置左侧 tab 的布局、动效和交互保持不变；保留现有设置保存方式、默认值及编辑与导出行为。
+* 横版页脚底边与歌词底边对齐，隐藏项目不再占位。
+* 页脚固定使用内置得意黑，暂不新增可选字体预设；保留独立的分享人和项目署名开关。
+* 纳入 Dependabot 的 npm 和 GitHub Actions 更新，并补全 Web Lite 重建与验证流程。
 
 ## 🌐 多语言发布说明
 
 GitHub Release 默认展示简体中文摘要，完整说明见：
-[简体中文](./docs/releases/v6.3.4.zh-CN.md) · [繁體中文](./docs/releases/v6.3.4.zh-TW.md) · [English](./docs/releases/v6.3.4.en.md) · [Français](./docs/releases/v6.3.4.fr.md) · [日本語](./docs/releases/v6.3.4.ja.md) · [Español](./docs/releases/v6.3.4.es.md)
+[简体中文](./docs/releases/v6.3.5.zh-CN.md) · [繁體中文](./docs/releases/v6.3.5.zh-TW.md) · [English](./docs/releases/v6.3.5.en.md) · [Français](./docs/releases/v6.3.5.fr.md) · [日本語](./docs/releases/v6.3.5.ja.md) · [Español](./docs/releases/v6.3.5.es.md)
 
 <a id="主要功能"></a>
 

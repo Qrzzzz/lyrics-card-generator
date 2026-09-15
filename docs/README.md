@@ -11,10 +11,12 @@ This directory contains durable development, maintenance, testing, security, and
 - [Windows desktop maintenance](./desktop.md)
 - [桌面自动草稿与恢复约定](./editor-autosave.md)
 - [Web Lite browser support](./web-lite-browser-support.md)
+- [Dependabot 更新接入与验证](./dependabot.md)
 - [示例歌曲维护流程](./examples.md)
 
 ## 安全与测试 / Security and testing
 
+- [v6.3.5 页脚与依赖更新本地验收](./testing/footer-v6.3.5.md)
 - [v6.3.2 设置布局实现与验收](./testing/settings-layout-v6.3.2.md)
 - [CI 与发布门禁职责及精简说明](./testing/ci-gates.md)
 - [Dependency advisory policy](./security/dependency-advisory-policy.md)

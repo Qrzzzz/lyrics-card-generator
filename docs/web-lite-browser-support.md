@@ -36,7 +36,7 @@ Firefox and WebKit smoke cover the supported critical path:
 
 - Pages artifact startup;
 - lyric editing and live preview;
-- both bundled Source Han font files;
+- both bundled Source Han font files and the Smiley Sans footer font;
 - local cover selection through a blob URL;
 - PNG export and a verified browser download.
 

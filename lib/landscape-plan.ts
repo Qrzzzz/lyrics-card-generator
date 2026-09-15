@@ -183,10 +183,17 @@ function planCandidate(
     input.left.metadataHeight * leftScale
   );
   const scaledAccessoriesHeight = accessoriesHeight * leftScale;
+  // Keep short lyrics centered where possible, but move them down when the
+  // cover, metadata and visible credits need more room above their bottom edge.
+  const lyricsY = outerMargin + Math.max(
+    0,
+    (internalHeight - lyrics.naturalHeight) / 2,
+    scaledAccessoriesHeight > 0 ? scaledBaseLeftHeight - lyrics.naturalHeight : 0
+  );
   const accessoriesRect = scaledAccessoriesHeight > 0
     ? rect(
         coverRect.x,
-        outerMargin + internalHeight - scaledAccessoriesHeight,
+        lyricsY + lyrics.naturalHeight - scaledAccessoriesHeight,
         coverRect.width,
         scaledAccessoriesHeight
       )
@@ -196,7 +203,6 @@ function planCandidate(
     ? Math.max(0, accessoriesRect.y - topGroupBottom)
     : Math.max(0, outerMargin + internalHeight - topGroupBottom);
   const lyricsX = outerMargin + leftWidth + columnGap;
-  const lyricsY = outerMargin + Math.max(0, (internalHeight - lyrics.naturalHeight) / 2);
   const score = scoreLandscapeCandidate({
     lyrics,
     canvasWidth,

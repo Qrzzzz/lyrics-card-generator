@@ -19,7 +19,7 @@
 <p>
   <strong>Navegación</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Descargar la última versión</a> ·
-  <a href="./docs/releases/v6.3.4.es.md">Notas de la versión</a> ·
+  <a href="./docs/releases/v6.3.5.es.md">Notas de la versión</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en línea</a> ·
   <a href="#funciones-principales">Funciones principales</a> ·
   <a href="./docs/development.en.md">Desarrollo local</a> ·
@@ -76,22 +76,22 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 
 
-* Instalador de Windows x64: `Lyrics.Card.Generator.Setup.6.3.4.exe`
+* Instalador de Windows x64: `Lyrics.Card.Generator.Setup.6.3.5.exe`
 
 A partir de v6.2.2, Setup para Windows x64 es el único paquete de escritorio distribuido.
 
 > La compilación actual no está firmada. Windows puede mostrar una advertencia de SmartScreen, algo habitual en aplicaciones personales sin firma.
 
-### v6.3.4 · Ajustes y herramientas coherentes
+### v6.3.5 · Alineación del pie y actualización de dependencias
 
-* Unificar etiquetas, explicaciones y espaciado en el contenido de los ajustes, con 1–3 columnas según el ancho del contenedor.
-* Mejorar las herramientas a la derecha del paso 2: alcance de las operaciones, acciones y confirmaciones con vista previa.
-* Conservar las pestañas de la izquierda, sus animaciones e interacciones, las preferencias guardadas, los valores predeterminados, la edición y la exportación.
+* Alinear el borde inferior del pie horizontal con el de la letra, sin reservar espacio para elementos ocultos.
+* Incluir Smiley Sans para el pie, independiente de la fuente de la letra, conservando los controles de firmas y los ajustes de fuente existentes.
+* Integrar las actualizaciones npm y GitHub Actions de Dependabot con regeneración y validación de Web Lite.
 
 ## 🌐 Notas de publicación multilingües
 
 GitHub Release muestra de forma predeterminada un resumen en chino simplificado. Consulta las notas completas:
-[简体中文](./docs/releases/v6.3.4.zh-CN.md) · [繁體中文](./docs/releases/v6.3.4.zh-TW.md) · [English](./docs/releases/v6.3.4.en.md) · [Français](./docs/releases/v6.3.4.fr.md) · [日本語](./docs/releases/v6.3.4.ja.md) · [Español](./docs/releases/v6.3.4.es.md)
+[简体中文](./docs/releases/v6.3.5.zh-CN.md) · [繁體中文](./docs/releases/v6.3.5.zh-TW.md) · [English](./docs/releases/v6.3.5.en.md) · [Français](./docs/releases/v6.3.5.fr.md) · [日本語](./docs/releases/v6.3.5.ja.md) · [Español](./docs/releases/v6.3.5.es.md)
 
 <a id="funciones-principales"></a>
 

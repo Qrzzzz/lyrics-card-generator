@@ -12,4 +12,12 @@ Copyright 2017-2022 Adobe (http://www.adobe.com/), with Reserved Font Name "Sour
 Font: ../fonts/SourceHanSerifSC-Heavy.otf
 License: ../fonts/LICENSE-SourceHanSerif.txt
 
+Smiley Sans (得意黑) v2.0.1 — unmodified upstream TrueType WOFF2
+Copyright (c) 2022--2024, atelierAnchor <https://atelier-anchor.com>,
+with Reserved Font Name <Smiley> and <得意黑>.
+Font: ../fonts/SmileySans-Oblique.woff2
+License: ../fonts/LICENSE-SmileySans.txt
+Source: https://github.com/atelier-anchor/smiley-sans/releases/tag/v2.0.1
+SHA-256: 731f22973349404b15a88a99ef3b5dd4104c0965c23b7e485c1f11e84fea99e2
+
 Other third-party packages used by the application remain governed by their respective licenses in the source dependency manifests and installed package metadata.

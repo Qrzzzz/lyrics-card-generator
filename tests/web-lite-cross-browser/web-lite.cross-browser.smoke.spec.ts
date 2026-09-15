@@ -9,7 +9,8 @@ const siteRoot = path.join(projectRoot, "_site");
 const preferencesKey = "lyrics-card-web-lite-preferences-v1";
 const expectedFontPaths = [
   "/public/fonts/SourceHanSansSC-Heavy.otf",
-  "/public/fonts/SourceHanSerifSC-Heavy.otf"
+  "/public/fonts/SourceHanSerifSC-Heavy.otf",
+  "/public/fonts/SmileySans-Oblique.woff2"
 ] as const;
 let staticServer: Server;
 let baseUrl = "";
@@ -61,7 +62,7 @@ test("starts, edits, previews, loads bundled fonts, selects a local cover, and d
   await page.locator('[data-step-id="font"]').click();
   await page.locator('[data-font-id="source-han-serif"]').click();
   const fontReadiness = await page.evaluate(async () => {
-    const families = ["Source Han Sans Heavy Local", "Source Han Serif Heavy Local"];
+    const families = ["Source Han Sans Heavy Local", "Source Han Serif Heavy Local", "Smiley Sans"];
     await Promise.all(families.map((family) => document.fonts.load(`16px "${family}"`, "跨浏览器")));
     await document.fonts.ready;
     return {
@@ -76,7 +77,8 @@ test("starts, edits, previews, loads bundled fonts, selects a local cover, and d
     status: "loaded",
     families: [
       { family: "Source Han Sans Heavy Local", ready: true },
-      { family: "Source Han Serif Heavy Local", ready: true }
+      { family: "Source Han Serif Heavy Local", ready: true },
+      { family: "Smiley Sans", ready: true }
     ]
   });
   for (const expectedFontPath of expectedFontPaths) {

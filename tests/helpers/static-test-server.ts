@@ -48,6 +48,7 @@ function createStaticServer(root: string, requestLog?: Set<string>) {
   const mimeTypes: Record<string, string> = {
     ".html": "text/html; charset=utf-8",
     ".otf": "font/otf",
+    ".woff2": "font/woff2",
     ".png": "image/png"
   };
 

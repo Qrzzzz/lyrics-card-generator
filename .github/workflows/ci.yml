@@ -28,7 +28,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Setup Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
@@ -46,7 +46,23 @@ jobs:
         run: npm run sbom:test
 
       - name: Verify Web Lite artifact
+        id: web-lite-artifact
         run: npm run web-lite:check
+
+      # Dependabot updates lockfiles, but cannot commit our generated Web Lite.
+      # Preserve the strict failure and provide the matching rebuild for review.
+      - name: Prepare Dependabot Web Lite artifact
+        if: failure() && steps.web-lite-artifact.outcome == 'failure' && github.event.pull_request.user.login == 'dependabot[bot]'
+        run: node scripts/build-web-lite.mjs --out=output/dependabot/index.html
+
+      - name: Upload Dependabot Web Lite artifact
+        if: failure() && steps.web-lite-artifact.outcome == 'failure' && github.event.pull_request.user.login == 'dependabot[bot]'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: dependabot-web-lite-${{ github.event.pull_request.head.sha }}
+          path: output/dependabot/index.html
+          if-no-files-found: error
+          retention-days: 7
 
       - name: Verify font license distribution contracts
         run: npm run font-license:test
@@ -80,7 +96,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Setup Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
@@ -121,7 +137,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Setup Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
@@ -161,7 +177,7 @@ jobs:
     timeout-minutes: 25
     steps:
       - name: Checkout
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Setup Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
@@ -207,7 +223,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Setup Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
