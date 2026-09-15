@@ -17,7 +17,7 @@ The main branch, Pages and Release continue to require the checked-in HTML to ma
 
 ## v6.3.5 intake
 
-- PR #181 (`8c01a6b6fd439a753dd126f137e33a691fda6f83`): the Actions compatible group (checkout and setup-node pinned updates).
+- PR #181 (`8c01a6b6fd439a753dd126f137e33a691fda6f83`): the Actions compatible group (checkout and anchore/sbom-action pinned updates).
 - PR #182 (`c65dfda9d0517439193c79daa98062c70f90ee95`): the npm compatible group, including Next.js 15.5.25, React 19.3.0 and Electron 42.11.3; rebuild Web Lite as part of integration.
 
 Configuration reference: https://docs.github.com/en/code-security/reference/supply-chain-security/dependabot-options-reference
