@@ -199,6 +199,10 @@ function planCandidate(
     input.left.coverWidth * leftScale,
     input.left.coverHeight * leftScale
   );
+  // Preserve the shared scale on both artwork axes. Independently rounding
+  // small covers up can visibly distort wide or transparent artwork.
+  coverRect.width = round(input.left.coverWidth * leftScale);
+  coverRect.height = round(input.left.coverHeight * leftScale);
   const metadataRect = rect(
     leftX,
     coverRect.y + coverRect.height + effectiveCoverGap * leftScale,
@@ -224,6 +228,7 @@ function planCandidate(
         scaledAccessoriesHeight
       )
     : undefined;
+  if (accessoriesRect && !moveFooter) accessoriesRect.width = coverRect.width;
   const topGroupBottom = metadataRect.y + metadataRect.height;
   const flexibleGap = accessoriesRect
     ? Math.max(0, accessoriesRect.y - (moveFooter ? lyricsY + lyricsHeight : topGroupBottom))

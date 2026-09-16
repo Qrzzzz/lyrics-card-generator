@@ -70,6 +70,10 @@ assert(shortLyrics);
 assert.equal(shortLyrics.lyricsRect.y, shortLyrics.coverRect.y, "short lyrics align to cover top");
 assert.equal(shortLyrics.accessoriesPlacement, "right");
 assert.equal(shortLyrics.leftScale >= 0.62 && shortLyrics.leftScale <= 1.28, true);
+const shortWideCover = createLandscapeLayoutPlan({ measurementKey: "short-wide-cover", settings: DEFAULT_LANDSCAPE_LAYOUT_SETTINGS,
+  left: { ...left, coverWidth: 480, coverHeight: 321 }, lyricsCandidates: [measured(880, 180)] })!;
+assert.ok(Math.abs(shortWideCover.coverRect.width / shortWideCover.coverRect.height - 480 / 321) < 0.00001,
+  "compact artwork preserves its measured aspect ratio without independent rounding");
 
 const tallCover = createLandscapeLayoutPlan({
   measurementKey: "tall-cover",
