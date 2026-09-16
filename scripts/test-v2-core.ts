@@ -392,6 +392,13 @@ function testFontResolution() {
   );
 }
 
+function testSmileySansPreset() {
+  const restored = JSON.parse(JSON.stringify({ ...baseStyle, fontScheme: FONT_SCHEME_PRESETS["smiley-sans"] })) as CardStyle;
+  assertEqual(getActiveFontMode(restored), "preset", "restored Smiley Sans remains a preset");
+  assertEqual(normalizeFontScheme(restored.fontScheme!).presetId, "smiley-sans", "Smiley Sans survives save/restore normalization");
+  assert(getResolvedFontStyle(restored)?.fontFamily?.startsWith('"Smiley Sans",'), "Smiley Sans resolves before bundled fallback fonts");
+}
+
 function testFontPickerOptions() {
   const fonts = [
     { label: "微软雅黑", family: "Microsoft YaHei", fontWeight: 400, fontStyle: "normal" as const },
@@ -595,4 +602,5 @@ function assertThrows(action: () => void, expectedMessage: string, message: stri
   throw new Error(`Assertion failed: ${message}. Expected function to throw.`);
 }
 
+testSmileySansPreset();
 main();

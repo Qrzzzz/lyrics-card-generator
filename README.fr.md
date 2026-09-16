@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v6.3.5.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v6.4.0.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="./docs/development.en.md">Développement local</a> ·
@@ -76,13 +76,13 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 
 
-* Programme d’installation Windows x64 : `Lyrics.Card.Generator.Setup.6.3.5.exe`
+* Programme d’installation Windows x64 : `Lyrics.Card.Generator.Setup.6.4.0.exe`
 
 À partir de la v6.2.2, le programme Setup Windows x64 est le seul paquet distribué.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### v6.3.5 · Alignement du pied de carte et dépendances
+### v6.4.0 · Alignement du pied de carte et dépendances
 
 * Aligner le bas du pied de carte horizontal sur celui des paroles, sans espace réservé aux éléments masqués.
 * Intégrer Smiley Sans pour le pied de carte, indépendamment de la police des paroles, en conservant les options de signature et les préréglages actuels.
@@ -91,7 +91,7 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 ## 🌐 Notes de publication multilingues
 
 Par défaut, GitHub Release affiche un résumé en chinois simplifié. Consultez les notes complètes :
-[简体中文](./docs/releases/v6.3.5.zh-CN.md) · [繁體中文](./docs/releases/v6.3.5.zh-TW.md) · [English](./docs/releases/v6.3.5.en.md) · [Français](./docs/releases/v6.3.5.fr.md) · [日本語](./docs/releases/v6.3.5.ja.md) · [Español](./docs/releases/v6.3.5.es.md)
+[简体中文](./docs/releases/v6.4.0.zh-CN.md) · [繁體中文](./docs/releases/v6.4.0.zh-TW.md) · [English](./docs/releases/v6.4.0.en.md) · [Français](./docs/releases/v6.4.0.fr.md) · [日本語](./docs/releases/v6.4.0.ja.md) · [Español](./docs/releases/v6.4.0.es.md)
 
 <a id="fonctionnalités-principales"></a>
 
@@ -132,7 +132,7 @@ Par défaut, GitHub Release affiche un résumé en chinois simplifié. Consultez
 
 ### 🔤 Polices et interface multilingue
 
-* Jeux Source Han Sans / Serif, polices CJK et latines indépendantes, sélecteur de polices système et aperçu avec de vraies paroles
+* Jeux Source Han Sans / Serif / Smiley Sans, polices CJK et latines indépendantes, sélecteur de polices système et aperçu avec de vraies paroles
 * Interface en chinois simplifié, chinois traditionnel, anglais, français, japonais et espagnol
 
 ### 🚀 Mises à jour

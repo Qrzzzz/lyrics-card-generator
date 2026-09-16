@@ -19,7 +19,7 @@
 <p>
   <strong>Navegación</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Descargar la última versión</a> ·
-  <a href="./docs/releases/v6.3.5.es.md">Notas de la versión</a> ·
+  <a href="./docs/releases/v6.4.0.es.md">Notas de la versión</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en línea</a> ·
   <a href="#funciones-principales">Funciones principales</a> ·
   <a href="./docs/development.en.md">Desarrollo local</a> ·
@@ -76,13 +76,13 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 
 
-* Instalador de Windows x64: `Lyrics.Card.Generator.Setup.6.3.5.exe`
+* Instalador de Windows x64: `Lyrics.Card.Generator.Setup.6.4.0.exe`
 
 A partir de v6.2.2, Setup para Windows x64 es el único paquete de escritorio distribuido.
 
 > La compilación actual no está firmada. Windows puede mostrar una advertencia de SmartScreen, algo habitual en aplicaciones personales sin firma.
 
-### v6.3.5 · Alineación del pie y actualización de dependencias
+### v6.4.0 · Alineación del pie y actualización de dependencias
 
 * Alinear el borde inferior del pie horizontal con el de la letra, sin reservar espacio para elementos ocultos.
 * Incluir Smiley Sans para el pie, independiente de la fuente de la letra, conservando los controles de firmas y los ajustes de fuente existentes.
@@ -91,7 +91,7 @@ A partir de v6.2.2, Setup para Windows x64 es el único paquete de escritorio di
 ## 🌐 Notas de publicación multilingües
 
 GitHub Release muestra de forma predeterminada un resumen en chino simplificado. Consulta las notas completas:
-[简体中文](./docs/releases/v6.3.5.zh-CN.md) · [繁體中文](./docs/releases/v6.3.5.zh-TW.md) · [English](./docs/releases/v6.3.5.en.md) · [Français](./docs/releases/v6.3.5.fr.md) · [日本語](./docs/releases/v6.3.5.ja.md) · [Español](./docs/releases/v6.3.5.es.md)
+[简体中文](./docs/releases/v6.4.0.zh-CN.md) · [繁體中文](./docs/releases/v6.4.0.zh-TW.md) · [English](./docs/releases/v6.4.0.en.md) · [Français](./docs/releases/v6.4.0.fr.md) · [日本語](./docs/releases/v6.4.0.ja.md) · [Español](./docs/releases/v6.4.0.es.md)
 
 <a id="funciones-principales"></a>
 
@@ -132,7 +132,7 @@ GitHub Release muestra de forma predeterminada un resumen en chino simplificado.
 
 ### 🔤 Fuentes e interfaz multilingüe
 
-* Combinaciones Source Han Sans / Serif, fuentes CJK y latinas independientes, selector de fuentes del sistema y vista previa con letras reales
+* Combinaciones Source Han Sans / Serif / Smiley Sans, fuentes CJK y latinas independientes, selector de fuentes del sistema y vista previa con letras reales
 * Interfaz en chino simplificado, chino tradicional, inglés, francés, japonés y español
 
 ### 🚀 Actualizaciones
