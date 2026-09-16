@@ -14,6 +14,12 @@ export const FONT_SCHEME_PRESETS: Record<FontPresetId, FontScheme> = {
     presetId: "source-han-serif",
     cjkFontFamily: "Source Han Serif SC",
     latinFontFamily: "Source Han Serif SC"
+  },
+  "smiley-sans": {
+    mode: "preset",
+    presetId: "smiley-sans",
+    cjkFontFamily: "Smiley Sans",
+    latinFontFamily: "Smiley Sans"
   }
 };
 

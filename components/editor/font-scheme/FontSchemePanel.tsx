@@ -239,7 +239,7 @@ export function FontSchemePanel({
             transition={pageTransition}
           >
             <SettingsGrid data-testid="font-scheme-options">
-              {(["source-han-sans", "source-han-serif"] as FontPresetId[]).map((presetId) => {
+              {(Object.keys(FONT_SCHEME_PRESETS) as FontPresetId[]).map((presetId) => {
                 const preset = FONT_SCHEME_PRESETS[presetId];
                 const active = currentPresetId === presetId;
                 const genericFallback = presetId === "source-han-serif" ? "serif" : "sans-serif";
@@ -652,9 +652,9 @@ function sameFamilies(first: FontScheme, second: FontScheme) {
 }
 
 function presetName(presetId: FontPresetId, t: ReturnType<typeof createT>) {
-  return t(presetId === "source-han-sans" ? "fontSchemeSourceHanSansName" : "fontSchemeSourceHanSerifName");
+  return t(presetId === "smiley-sans" ? "fontSchemeSmileySansName" : presetId === "source-han-sans" ? "fontSchemeSourceHanSansName" : "fontSchemeSourceHanSerifName");
 }
 
 function presetDescription(presetId: FontPresetId, t: ReturnType<typeof createT>) {
-  return t(presetId === "source-han-sans" ? "fontSchemeSourceHanSansDescription" : "fontSchemeSourceHanSerifDescription");
+  return t(presetId === "smiley-sans" ? "fontSchemeSmileySansDescription" : presetId === "source-han-sans" ? "fontSchemeSourceHanSansDescription" : "fontSchemeSourceHanSerifDescription");
 }

@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v6.3.5.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v6.4.0.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="./docs/development.en.md">ローカル開発</a> ·
@@ -76,13 +76,13 @@
 
 
 
-* Windows x64 インストーラー：`Lyrics.Card.Generator.Setup.6.3.5.exe`
+* Windows x64 インストーラー：`Lyrics.Card.Generator.Setup.6.4.0.exe`
 
 v6.2.2 以降、配布するデスクトップパッケージは Windows x64 Setup のみです。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v6.3.5 · フッターの配置と依存関係の更新
+### v6.4.0 · フッターの配置と依存関係の更新
 
 * 横型カードのフッター下端を歌詞の下端に揃え、非表示の項目に空白を確保しないようにしました。
 * フッター専用に得意黑を同梱しました。歌詞のフォントとは独立し、署名の切り替えと既存のフォントプリセットを維持します。
@@ -91,7 +91,7 @@ v6.2.2 以降、配布するデスクトップパッケージは Windows x64 Set
 ## 🌐 多言語リリースノート
 
 GitHub Release ではデフォルトで簡体字中国語の概要が表示されます。完全なリリースノートはこちら：
-[简体中文](./docs/releases/v6.3.5.zh-CN.md) · [繁體中文](./docs/releases/v6.3.5.zh-TW.md) · [English](./docs/releases/v6.3.5.en.md) · [Français](./docs/releases/v6.3.5.fr.md) · [日本語](./docs/releases/v6.3.5.ja.md) · [Español](./docs/releases/v6.3.5.es.md)
+[简体中文](./docs/releases/v6.4.0.zh-CN.md) · [繁體中文](./docs/releases/v6.4.0.zh-TW.md) · [English](./docs/releases/v6.4.0.en.md) · [Français](./docs/releases/v6.4.0.fr.md) · [日本語](./docs/releases/v6.4.0.ja.md) · [Español](./docs/releases/v6.4.0.es.md)
 
 <a id="主な機能"></a>
 
@@ -132,7 +132,7 @@ GitHub Release ではデフォルトで簡体字中国語の概要が表示さ�
 
 ### 🔤 フォントと多言語インターフェース
 
-* 源ノ角ゴシック / 源ノ明朝の構成、CJK / 欧文フォントの個別選択、システムフォント選択画面、実際の歌詞によるプレビュー
+* 源ノ角ゴシック / 源ノ明朝 / Smiley Sans の構成、CJK / 欧文フォントの個別選択、システムフォント選択画面、実際の歌詞によるプレビュー
 * 簡体字中国語、繁体字中国語、英語、フランス語、日本語、スペイン語インターフェース
 
 ### 🚀 バージョンアップデート

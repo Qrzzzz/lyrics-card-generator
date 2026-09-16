@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v6.3.5.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v6.4.0.zh-CN.md">发布说明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">在线 Web Lite 版</a> ·
   <a href="./docs/web-lite-browser-support.md">Web Lite 浏览器支持</a> ·
   <a href="./docs/desktop.md">桌面维护文档</a> ·
@@ -75,13 +75,13 @@
 
 
 
-* Windows x64 安装版：`Lyrics.Card.Generator.Setup.6.3.5.exe`
+* Windows x64 安装版：`Lyrics.Card.Generator.Setup.6.4.0.exe`
 
 从 v6.2.2 起只提供 Windows x64 Setup 安装包。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v6.3.5 · 页脚对齐与依赖更新
+### v6.4.0 · 页脚对齐与依赖更新
 
 * 横版页脚底边与歌词底边对齐，隐藏项目不再占位。
 * 页脚固定使用内置得意黑，暂不新增可选字体预设；保留独立的分享人和项目署名开关。
@@ -90,7 +90,7 @@
 ## 🌐 多语言发布说明
 
 GitHub Release 默认展示简体中文摘要，完整说明见：
-[简体中文](./docs/releases/v6.3.5.zh-CN.md) · [繁體中文](./docs/releases/v6.3.5.zh-TW.md) · [English](./docs/releases/v6.3.5.en.md) · [Français](./docs/releases/v6.3.5.fr.md) · [日本語](./docs/releases/v6.3.5.ja.md) · [Español](./docs/releases/v6.3.5.es.md)
+[简体中文](./docs/releases/v6.4.0.zh-CN.md) · [繁體中文](./docs/releases/v6.4.0.zh-TW.md) · [English](./docs/releases/v6.4.0.en.md) · [Français](./docs/releases/v6.4.0.fr.md) · [日本語](./docs/releases/v6.4.0.ja.md) · [Español](./docs/releases/v6.4.0.es.md)
 
 <a id="主要功能"></a>
 
@@ -131,7 +131,7 @@ GitHub Release 默认展示简体中文摘要，完整说明见：
 
 ### 🔤 字体与多语言界面
 
-* 支持思源黑体 / 思源宋体两套字体方案、自定义中日韩 / 西文字体、系统字体选择弹窗与真实歌词字体预览
+* 支持思源黑体 / 思源宋体 / 得意黑三套字体方案、自定义中日韩 / 西文字体、系统字体选择弹窗与真实歌词字体预览
 * 支持简体中文 / 繁體中文 / English / Français / 日本語 / Español 界面切换
 
 ### 🚀 版本更新

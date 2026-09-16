@@ -18,7 +18,7 @@ const translatedLocales: Locale[] = ["fr", "ja", "es"];
 // of protocol labels and product terms to remain intentionally shared.
 assertCatalog("main", messages, new Set([
   "chinese", "english", "songSearchSourceNetease", "album", "auto", "gridDense",
-  "lyricsSource", "qualityLow", "generatedBy", "madeWith"
+  "lyricsSource", "qualityLow", "generatedBy", "madeWith", "fontSchemeSmileySansName"
 ]));
 assertCatalog("settings", settingsCopy, new Set([
   "ai", "general", "export", "image", "source", "low", "accentOrange", "accentCustomPlaceholder", "version"

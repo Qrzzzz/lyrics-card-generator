@@ -4,11 +4,11 @@ import { SettingsLayout, SettingsGroup, SettingsGrid } from "@/components/editor
 import { FONT_SCHEME_PRESETS, identifyFontPreset } from "@/lib/font-schemes";
 import { getEffectiveFontScheme } from "@/lib/fonts";
 import type { createT } from "@/lib/i18n";
-import type { CardStyle, FontScheme } from "@/lib/types";
+import type { CardStyle, FontPresetId, FontScheme } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import type { WebLiteCopy } from "@/web-lite/copy";
 
-type WebLiteFontId = "source-han-sans" | "source-han-serif" | "system-sans" | "system-serif";
+type WebLiteFontId = FontPresetId | "system-sans" | "system-serif";
 
 // Browser builds expose bundled or broadly available families so preview and
 // export use the same font within the current browser.
@@ -27,6 +27,7 @@ const SYSTEM_SERIF_SCHEME: FontScheme = {
 export function WebLiteFontPanel({
   style,
   copy,
+  t,
   onStyleChange,
   onPreviewSchemeChange
 }: {
@@ -50,12 +51,13 @@ export function WebLiteFontPanel({
       description: copy.stableFont,
       scheme: FONT_SCHEME_PRESETS["source-han-serif"]
     },
+    { id: "smiley-sans", label: t("fontSchemeSmileySansName"), description: copy.stableFont, scheme: FONT_SCHEME_PRESETS["smiley-sans"] },
     { id: "system-sans", label: copy.systemSans, description: copy.deviceFont, scheme: SYSTEM_SANS_SCHEME },
     { id: "system-serif", label: copy.systemSerif, description: copy.deviceFont, scheme: SYSTEM_SERIF_SCHEME }
   ];
 
   function applyFont(id: WebLiteFontId, scheme: FontScheme) {
-    const isBundled = id === "source-han-sans" || id === "source-han-serif";
+    const isBundled = scheme.mode === "preset";
     // Keep the modern scheme and legacy font fields synchronized for shared renderers.
     onStyleChange({
       ...style,

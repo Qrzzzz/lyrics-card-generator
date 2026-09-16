@@ -34,7 +34,7 @@ export type PaletteRole = "base" | "subject" | "transition" | "highlight";
 export type ContentMode = "lyrics" | "instrumental";
 export type BackgroundGridDensity = "sparse" | "medium" | "dense";
 
-export type FontPresetId = "source-han-sans" | "source-han-serif";
+export type FontPresetId = "source-han-sans" | "source-han-serif" | "smiley-sans";
 export type FontSchemeMode = "preset" | "custom";
 
 export type FontScheme = {

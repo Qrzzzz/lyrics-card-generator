@@ -526,18 +526,18 @@ test("pans the shared preview workbench in both directions and degrades pressure
   );
 });
 
-test("exposes all four font schemes and persists all six languages, export format, and quality", async ({ page }) => {
+test("exposes all five font schemes and persists all six languages, export format, and quality", async ({ page }) => {
   await openWebLite(page, { width: 1280, height: 900 });
 
   await page.locator('[data-step-id="font"]').click();
   const fontOptions = page.getByTestId("web-lite-font-options").locator("button[data-font-id]");
-  await expect(fontOptions).toHaveCount(4);
+  await expect(fontOptions).toHaveCount(5);
   const serif = page.locator('[data-font-id="source-han-serif"]');
   await serif.click();
   await expect(serif).toHaveAttribute("aria-pressed", "true");
 
   const fontFaces = await page.evaluate(async () => {
-    const families = ["Source Han Sans Heavy Local", "Source Han Serif Heavy Local"];
+    const families = ["Source Han Sans Heavy Local", "Source Han Serif Heavy Local", "Smiley Sans"];
     await Promise.all(families.map((family) => document.fonts.load(`16px "${family}"`)));
     await document.fonts.ready;
     return families.map((family) => ({
@@ -547,7 +547,8 @@ test("exposes all four font schemes and persists all six languages, export forma
   });
   expect(fontFaces).toEqual([
     { family: "Source Han Sans Heavy Local", loaded: true },
-    { family: "Source Han Serif Heavy Local", loaded: true }
+    { family: "Source Han Serif Heavy Local", loaded: true },
+    { family: "Smiley Sans", loaded: true }
   ]);
 
   await page.locator('[data-step-id="export"]').click();
@@ -577,6 +578,33 @@ test("exposes all four font schemes and persists all six languages, export forma
   await page.locator('[data-step-id="export"]').click();
   await expect(page.locator('[data-segment-value="medium"]')).toHaveAttribute("aria-checked", "true");
   await expect(page.locator('[data-segment-value="webp"]')).toHaveAttribute("aria-checked", "true");
+});
+
+test("Smiley Sans preset renders and exports in portrait and landscape", async ({ page }) => {
+  await openWebLite(page, { width: 1280, height: 900 });
+  await page.locator('[data-step-id="font"]').click();
+  const smiley = page.locator('[data-font-id="smiley-sans"]');
+  await smiley.click();
+  await expect(smiley).toHaveAttribute("aria-pressed", "true");
+  const preview = page.getByTestId("lyric-card-preview").locator('[data-export-card="true"]');
+  await expect(preview).toHaveCSS("font-family", /^"Smiley Sans"/);
+  await page.evaluate(() => document.fonts.ready);
+  expect(await page.evaluate(() => Array.from(document.fonts).some((face) => face.family === "Smiley Sans" && face.status === "loaded"))).toBe(true);
+  for (const mode of ["portrait", "landscape"]) {
+    await page.locator('[data-step-id="layout"]').click();
+    await page.locator(`[data-segment-value="${mode}"]`).click();
+    await page.locator('[data-step-id="font"]').click();
+    await expect(smiley).toHaveAttribute("aria-pressed", "true");
+    await page.locator('[data-step-id="export"]').click();
+    const card = page.locator('[data-export-card-host] [data-export-card="true"]').first();
+    await expect(card).toHaveCSS("font-family", /^"Smiley Sans"/);
+    const [download] = await Promise.all([
+      page.waitForEvent("download"), page.getByTestId("complete-export-button").click()
+    ]);
+    const size = await pngDimensions(download);
+    expect(size.width).toBeGreaterThan(0);
+    expect(size.height).toBeGreaterThan(0);
+  }
 });
 
 test("supports bilingual splitting, layout modes, instrumental mode, and visual toggles", async ({ page }) => {

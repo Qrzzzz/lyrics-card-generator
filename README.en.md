@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v6.3.5.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v6.4.0.en.md">Release Notes</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
   <a href="./docs/web-lite-browser-support.md">Web Lite Browser Support</a> ·
   <a href="#features">Features</a> ·
@@ -77,13 +77,13 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 
 
-* Windows x64 installer: `Lyrics.Card.Generator.Setup.6.3.5.exe`
+* Windows x64 installer: `Lyrics.Card.Generator.Setup.6.4.0.exe`
 
 Starting with v6.2.2, Windows x64 Setup is the only distributed desktop package.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v6.3.5 · Footer alignment and dependency updates
+### v6.4.0 · Footer alignment and dependency updates
 
 * Align landscape footer and lyrics bottom edges; hidden items reserve no space.
 * Bundle Smiley Sans for footers independently of lyric fonts, keeping the separate credit switches and existing font presets.
@@ -92,7 +92,7 @@ Starting with v6.2.2, Windows x64 Setup is the only distributed desktop package.
 ## 🌐 Multilingual Release Notes
 
 GitHub Release displays a Simplified Chinese summary by default. See the full release notes:
-[简体中文](./docs/releases/v6.3.5.zh-CN.md) · [繁體中文](./docs/releases/v6.3.5.zh-TW.md) · [English](./docs/releases/v6.3.5.en.md) · [Français](./docs/releases/v6.3.5.fr.md) · [日本語](./docs/releases/v6.3.5.ja.md) · [Español](./docs/releases/v6.3.5.es.md)
+[简体中文](./docs/releases/v6.4.0.zh-CN.md) · [繁體中文](./docs/releases/v6.4.0.zh-TW.md) · [English](./docs/releases/v6.4.0.en.md) · [Français](./docs/releases/v6.4.0.fr.md) · [日本語](./docs/releases/v6.4.0.ja.md) · [Español](./docs/releases/v6.4.0.es.md)
 
 <a id="features"></a>
 
@@ -133,7 +133,7 @@ GitHub Release displays a Simplified Chinese summary by default. See the full re
 
 ### 🔤 Fonts & Multilingual Interface
 
-* Source Han Sans / Serif schemes, independent CJK and Latin fonts, a system-font picker, and lyric-based typography previews
+* Source Han Sans / Serif / Smiley Sans schemes, independent CJK and Latin fonts, a system-font picker, and lyric-based typography previews
 * Simplified Chinese / Traditional Chinese / English / French / Japanese / Spanish interface
 
 ### 🚀 Version Updates
