@@ -788,7 +788,7 @@ export function LyricEditor() {
           </div>
         </main>
       </ClickSpark>
-      <AppNotifications notices={activeSurface === "editor" ? importantNotices : []} closeLabel={noticeCopy.close} />
+      <AppNotifications notices={isDesktopShell && activeSurface === "editor" ? importantNotices : []} closeLabel={noticeCopy.close} />
       <AppToast notices={toastNotices} announcement={toastAnnouncement} />
         <ExportCelebration burstKey={celebrationKey} accentColor={resolvedAccentColor} />
       </div>

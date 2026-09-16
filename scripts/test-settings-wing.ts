@@ -93,8 +93,8 @@ assert.match(lyricEditor, /useToastQueue\(\)/);
 assert.match(lyricEditor, /<AppToast notices=\{toastNotices\} announcement=\{toastAnnouncement\} \/>/);
 assert.match(
   lyricEditor,
-  /<AppNotifications notices=\{activeSurface === "editor" \? importantNotices : \[\]\} closeLabel=\{noticeCopy.close\} \/>/,
-  "important notices stay visible in the editor without covering deferred surfaces"
+  /<AppNotifications notices=\{isDesktopShell && activeSurface === "editor" \? importantNotices : \[\]\} closeLabel=\{noticeCopy.close\} \/>/,
+  "desktop notices stay visible in the editor without covering deferred surfaces or Web Lite"
 );
 assert.match(persistenceNotice, /notice\.tone === "error" \? "alert" : "status"/);
 assert.match(lyricEditor, /run: issue\.retry/);
