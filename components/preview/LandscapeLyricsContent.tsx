@@ -15,7 +15,10 @@ export function LandscapeLyricsContent({
   textColor,
   align,
   separatorStyle = "dot",
-  measurement = false
+  measurement = false,
+  inkTop = 0,
+  inkBottom = 0,
+  targetHeight
 }: {
   lyricDocument: LyricDocumentV2;
   translationEnabled: boolean;
@@ -26,6 +29,9 @@ export function LandscapeLyricsContent({
   align: "left" | "center";
   separatorStyle?: LyricSeparatorStyle;
   measurement?: boolean;
+  inkTop?: number;
+  inkBottom?: number;
+  targetHeight?: number;
 }) {
   const documentRows = getLyricDocumentRows(lyricDocument);
   const rows = documentRows.length > 0
@@ -51,7 +57,10 @@ export function LandscapeLyricsContent({
         "whitespace-pre-wrap break-words",
         align === "center" ? "text-center" : "text-left"
       )}
-      style={{ color: textColor, textShadow: measurement ? "none" : undefined }}
+      style={{ color: textColor, textShadow: measurement ? "none" : undefined,
+        display: "flex", flexDirection: "column", justifyContent: "space-between",
+        height: targetHeight === undefined ? undefined : targetHeight + inkTop + inkBottom,
+      }}
     >
       {rows.map((row, index) => {
         if (row.isSeparator) return <LyricSeparator key={row.unitId} style={separatorStyle} fontSize={lyricFontSize} color={textColor} />;
@@ -65,7 +74,10 @@ export function LandscapeLyricsContent({
             key={row.unitId}
             data-lyric-unit-id={row.unitId === "placeholder" ? undefined : row.unitId}
             style={{
-              marginTop: index > 0 && !rows[index - 1]?.isSeparator ? gapBeforeLines * rowGap : 0,
+              flexShrink: 0,
+              // Flex items do not collapse adjacent margins; preserve the
+              // former block layout's max(previous gap, requested gap).
+              marginTop: index > 0 && !rows[index - 1]?.isSeparator ? Math.max(0, gapBeforeLines - 1) * rowGap : 0,
               marginBottom: index === rows.length - 1 ? 0 : rowGap
             }}
           >

@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v6.4.0.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v6.4.1.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="./docs/development.en.md">ローカル開発</a> ·
@@ -76,22 +76,21 @@
 
 
 
-* Windows x64 インストーラー：`Lyrics.Card.Generator.Setup.6.4.0.exe`
+* Windows x64 インストーラー：`Lyrics.Card.Generator.Setup.6.4.1.exe`
 
 v6.2.2 以降、配布するデスクトップパッケージは Windows x64 Setup のみです。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v6.4.0 · フッターの配置と依存関係の更新
+### v6.4.1 · 横向きカードの自動レイアウト
 
-* 横型カードのフッター下端を歌詞の下端に揃え、非表示の項目に空白を確保しないようにしました。
-* フッター専用に得意黑を同梱しました。歌詞のフォントとは独立し、署名の切り替えと既存のフォントプリセットを維持します。
-* Dependabot の npm・GitHub Actions 更新を取り込み、Web Lite の再生成と検証手順を整備しました。
+- 歌詞の実測高さに合わせてジャケットと楽曲情報を調整。歌詞が非常に短い場合は、収まる範囲でクレジットを右側に移動します。
+- 歌詞とクレジットの見た目の上下端を揃え、通常の歌詞配置と表示設定を維持します。
 
 ## 🌐 多言語リリースノート
 
 GitHub Release ではデフォルトで簡体字中国語の概要が表示されます。完全なリリースノートはこちら：
-[简体中文](./docs/releases/v6.4.0.zh-CN.md) · [繁體中文](./docs/releases/v6.4.0.zh-TW.md) · [English](./docs/releases/v6.4.0.en.md) · [Français](./docs/releases/v6.4.0.fr.md) · [日本語](./docs/releases/v6.4.0.ja.md) · [Español](./docs/releases/v6.4.0.es.md)
+[简体中文](./docs/releases/v6.4.1.zh-CN.md) · [繁體中文](./docs/releases/v6.4.1.zh-TW.md) · [English](./docs/releases/v6.4.1.en.md) · [Français](./docs/releases/v6.4.1.fr.md) · [日本語](./docs/releases/v6.4.1.ja.md) · [Español](./docs/releases/v6.4.1.es.md)
 
 <a id="主な機能"></a>
 
@@ -150,11 +149,11 @@ GitHub Release ではデフォルトで簡体字中国語の概要が表示さ�
 
 [Apple Music](https://music.apple.com/) に感謝します。このプロジェクトの色鮮やかなグラデーション、流れる光の背景美学、そして初期の歌詞カードレイアウトの方向性は、Apple Music のビジュアル体験から着想を得ています。本プロジェクトは Apple Music と関係がなく、Apple Music の公式見解を代表するものでもありません。
 
-[Source Han Sans](https://github.com/adobe-fonts/source-han-sans) と [Source Han Serif](https://github.com/adobe-fonts/source-han-serif) に感謝します。これらは中国語歌詞カードに、安定していて明瞭で、存在感のある書体基盤を提供しています。
+[源ノ角ゴシック](https://github.com/adobe-fonts/source-han-sans)、[源ノ明朝](https://github.com/adobe-fonts/source-han-serif)、[得意黑（Smiley Sans）](https://github.com/atelier-anchor/smiley-sans) に感謝します。歌詞、楽曲情報、クレジットに、読みやすく個性のある書体を提供してくれています。
 
 [OpenAI Codex](https://openai.com/codex/) に感謝します。多くの断片的なアイデアを、実行可能なコード、デスクトップ版のビルドフロー、実際の機能へと変換してくれました。
 
-[ChatGPT 5.6 Sol](https://chatgpt.com/) に感謝します。開発過程での問題特定、方案設計、修正レビュー、受け入れ確認を支援しました。
+[ChatGPT 6 Astra](https://chatgpt.com/) に感謝します。開発過程での問題特定、方案設計、修正レビュー、受け入れ確認を支援しました。
 
 [ReactBits](https://www.reactbits.dev/) に感謝します。Spark Cursor などのモーションを含む、さまざまな UI アイデアの着想を提供してくれました。
 
@@ -186,4 +185,4 @@ GitHub Release ではデフォルトで簡体字中国語の概要が表示さ�
 
 個人、非商用、教育、評価目的でソースコードを閲覧、ダウンロード、実行し、個人的に改変できます。商用利用、再配布、再パッケージング、公開された改変版、または本プロジェクトを基にした競合製品には、権利者からの事前の書面許可が必要です。
 
-サードパーティのオープンソース依存関係は、それぞれのライセンスに従います。詳細は [LICENSE](./LICENSE) を参照してください。
+同梱の[源ノ角ゴシック](./public/fonts/LICENSE-SourceHanSans.txt)、[源ノ明朝](./public/fonts/LICENSE-SourceHanSerif.txt)、[得意黑（Smiley Sans）](./public/fonts/LICENSE-SmileySans.txt)には、それぞれ SIL Open Font License 1.1 が適用され、本プロジェクト独自のライセンス制限は適用されません。その他の第三者コンポーネントには各自のライセンスが適用されます。[LICENSE](./LICENSE) と[第三者に関する通知](./public/licenses/THIRD-PARTY-NOTICES.txt)をご覧ください。

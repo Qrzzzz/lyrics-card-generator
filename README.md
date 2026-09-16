@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v6.4.0.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v6.4.1.zh-CN.md">发布说明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">在线 Web Lite 版</a> ·
   <a href="./docs/web-lite-browser-support.md">Web Lite 浏览器支持</a> ·
   <a href="./docs/desktop.md">桌面维护文档</a> ·
@@ -75,22 +75,21 @@
 
 
 
-* Windows x64 安装版：`Lyrics.Card.Generator.Setup.6.4.0.exe`
+* Windows x64 安装版：`Lyrics.Card.Generator.Setup.6.4.1.exe`
 
 从 v6.2.2 起只提供 Windows x64 Setup 安装包。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v6.4.0 · 页脚对齐与依赖更新
+### v6.4.1 · 横版卡片动态布局
 
-* 横版页脚底边与歌词底边对齐，隐藏项目不再占位。
-* 页脚固定使用内置得意黑，暂不新增可选字体预设；保留独立的分享人和项目署名开关。
-* 纳入 Dependabot 的 npm 和 GitHub Actions 更新，并补全 Web Lite 重建与验证流程。
+- 根据歌词实际高度调整左侧封面与歌曲信息；极短歌词在空间允许时将页脚移到右侧。
+- 修正歌词与页脚的上下文字边界对齐，保留正常歌词的排版与页脚显示设置。
 
 ## 🌐 多语言发布说明
 
 GitHub Release 默认展示简体中文摘要，完整说明见：
-[简体中文](./docs/releases/v6.4.0.zh-CN.md) · [繁體中文](./docs/releases/v6.4.0.zh-TW.md) · [English](./docs/releases/v6.4.0.en.md) · [Français](./docs/releases/v6.4.0.fr.md) · [日本語](./docs/releases/v6.4.0.ja.md) · [Español](./docs/releases/v6.4.0.es.md)
+[简体中文](./docs/releases/v6.4.1.zh-CN.md) · [繁體中文](./docs/releases/v6.4.1.zh-TW.md) · [English](./docs/releases/v6.4.1.en.md) · [Français](./docs/releases/v6.4.1.fr.md) · [日本語](./docs/releases/v6.4.1.ja.md) · [Español](./docs/releases/v6.4.1.es.md)
 
 <a id="主要功能"></a>
 
@@ -149,11 +148,11 @@ GitHub Release 默认展示简体中文摘要，完整说明见：
 
 感谢 [Apple Music](https://music.apple.com/)。这个项目的彩色渐变、流光背景审美，以及早期歌词卡片排版方向，受到 Apple Music 视觉体验的启发。本项目与 Apple Music 没有关联，也不代表 Apple Music 官方立场。
 
-感谢 [思源黑体](https://github.com/adobe-fonts/source-han-sans) 和 [思源宋体](https://github.com/adobe-fonts/source-han-serif)。它们为中文歌词卡片提供了稳定、清晰、有分量的字体基础。
+感谢 [思源黑体](https://github.com/adobe-fonts/source-han-sans)、[思源宋体](https://github.com/adobe-fonts/source-han-serif) 和 [得意黑](https://github.com/atelier-anchor/smiley-sans)。它们为歌词正文、歌曲信息和页脚提供了清晰且各具特色的字体支持。
 
 感谢 [OpenAI Codex](https://openai.com/codex/)。它把许多零散想法转化为可运行的代码、桌面版构建流程和实际功能。
 
-感谢 [ChatGPT 5.6 Sol](https://chatgpt.com/) 在开发过程中进行问题定位、方案设计、修复复核和验收检查。
+感谢 [ChatGPT 6 Astra](https://chatgpt.com/) 在开发过程中进行问题定位、方案设计、修复复核和验收检查。
 
 感谢 [ReactBits](https://www.reactbits.dev/) 提供的多种 UI 创意，包括 Spark Cursor 等动效灵感。
 
@@ -185,4 +184,4 @@ GitHub Release 默认展示简体中文摘要，完整说明见：
 
 你可以为了个人、非商业、学习、评估目的查看、下载、运行源码，并进行仅限个人使用的私下修改。未经作者书面许可，不得商用、再分发、重新打包、公开发布修改版，或基于本项目制作竞争性产品。
 
-本项目依赖的第三方开源组件仍遵循它们各自的许可证。详见 [LICENSE](./LICENSE)。
+内置的[思源黑体](./public/fonts/LICENSE-SourceHanSans.txt)、[思源宋体](./public/fonts/LICENSE-SourceHanSerif.txt)和[得意黑](./public/fonts/LICENSE-SmileySans.txt)分别遵循 SIL Open Font License 1.1，不适用本项目的专有许可限制。其他第三方组件遵循各自许可证；详情见 [LICENSE](./LICENSE) 与[第三方声明](./public/licenses/THIRD-PARTY-NOTICES.txt)。

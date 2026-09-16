@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v6.4.0.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v6.4.1.en.md">Release Notes</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
   <a href="./docs/web-lite-browser-support.md">Web Lite Browser Support</a> ·
   <a href="#features">Features</a> ·
@@ -77,22 +77,21 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 
 
-* Windows x64 installer: `Lyrics.Card.Generator.Setup.6.4.0.exe`
+* Windows x64 installer: `Lyrics.Card.Generator.Setup.6.4.1.exe`
 
 Starting with v6.2.2, Windows x64 Setup is the only distributed desktop package.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v6.4.0 · Footer alignment and dependency updates
+### v6.4.1 · Adaptive landscape layout
 
-* Align landscape footer and lyrics bottom edges; hidden items reserve no space.
-* Bundle Smiley Sans for footers independently of lyric fonts, keeping the separate credit switches and existing font presets.
-* Integrate Dependabot npm and GitHub Actions updates with Web Lite regeneration and validation.
+- Size the artwork and song information using measured lyric height; move credits to the right for very short lyrics when space allows.
+- Align visible lyric and credit edges while preserving regular lyric layouts and credit visibility settings.
 
 ## 🌐 Multilingual Release Notes
 
 GitHub Release displays a Simplified Chinese summary by default. See the full release notes:
-[简体中文](./docs/releases/v6.4.0.zh-CN.md) · [繁體中文](./docs/releases/v6.4.0.zh-TW.md) · [English](./docs/releases/v6.4.0.en.md) · [Français](./docs/releases/v6.4.0.fr.md) · [日本語](./docs/releases/v6.4.0.ja.md) · [Español](./docs/releases/v6.4.0.es.md)
+[简体中文](./docs/releases/v6.4.1.zh-CN.md) · [繁體中文](./docs/releases/v6.4.1.zh-TW.md) · [English](./docs/releases/v6.4.1.en.md) · [Français](./docs/releases/v6.4.1.fr.md) · [日本語](./docs/releases/v6.4.1.ja.md) · [Español](./docs/releases/v6.4.1.es.md)
 
 <a id="features"></a>
 
@@ -151,11 +150,11 @@ GitHub Release displays a Simplified Chinese summary by default. See the full re
 
 Thanks to [Apple Music](https://music.apple.com/). The colorful gradients, flowing-light background aesthetics, and early lyric card layout direction in this project were inspired by the Apple Music visual experience. This project is not affiliated with Apple Music and does not represent Apple Music’s official position.
 
-Thanks to [Source Han Sans](https://github.com/adobe-fonts/source-han-sans) and [Source Han Serif](https://github.com/adobe-fonts/source-han-serif). They provide a stable, clear, and substantial typographic foundation for Chinese lyric cards.
+Thanks to [Source Han Sans](https://github.com/adobe-fonts/source-han-sans), [Source Han Serif](https://github.com/adobe-fonts/source-han-serif), and [Smiley Sans](https://github.com/atelier-anchor/smiley-sans) for clear, distinctive typography across lyrics, song information, and credits.
 
 Thanks to [OpenAI Codex](https://openai.com/codex/). It turned many scattered ideas into runnable code, desktop build workflows, and real features.
 
-Thanks to [ChatGPT 5.6 Sol](https://chatgpt.com/) for issue diagnosis, solution design, fix review, and acceptance checks throughout development.
+Thanks to [ChatGPT 6 Astra](https://chatgpt.com/) for issue diagnosis, solution design, fix review, and acceptance checks throughout development.
 
 Thanks to [ReactBits](https://www.reactbits.dev/) for multiple UI ideas, including motion inspiration such as Spark Cursor.
 
@@ -187,4 +186,4 @@ This project is released under a custom Source Available License, not a traditio
 
 You may view, download, run, and privately modify the source code for personal, non-commercial, educational, and evaluation purposes. Commercial use, redistribution, repackaging, public modified releases, and competing products based on this project require prior written permission from the copyright holder.
 
-Third-party open-source dependencies remain governed by their respective licenses. See [LICENSE](./LICENSE) for details.
+The bundled [Source Han Sans](./public/fonts/LICENSE-SourceHanSans.txt), [Source Han Serif](./public/fonts/LICENSE-SourceHanSerif.txt), and [Smiley Sans](./public/fonts/LICENSE-SmileySans.txt) fonts are each licensed under the SIL Open Font License 1.1 and are not subject to this project’s proprietary license restrictions. Other third-party components retain their own licenses. See [LICENSE](./LICENSE) and [Third-Party Notices](./public/licenses/THIRD-PARTY-NOTICES.txt).

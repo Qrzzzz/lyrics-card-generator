@@ -19,7 +19,7 @@
 <p>
   <strong>Navegación</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Descargar la última versión</a> ·
-  <a href="./docs/releases/v6.4.0.es.md">Notas de la versión</a> ·
+  <a href="./docs/releases/v6.4.1.es.md">Notas de la versión</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en línea</a> ·
   <a href="#funciones-principales">Funciones principales</a> ·
   <a href="./docs/development.en.md">Desarrollo local</a> ·
@@ -76,22 +76,21 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 
 
-* Instalador de Windows x64: `Lyrics.Card.Generator.Setup.6.4.0.exe`
+* Instalador de Windows x64: `Lyrics.Card.Generator.Setup.6.4.1.exe`
 
 A partir de v6.2.2, Setup para Windows x64 es el único paquete de escritorio distribuido.
 
 > La compilación actual no está firmada. Windows puede mostrar una advertencia de SmartScreen, algo habitual en aplicaciones personales sin firma.
 
-### v6.4.0 · Alineación del pie y actualización de dependencias
+### v6.4.1 · Diseño horizontal adaptable
 
-* Alinear el borde inferior del pie horizontal con el de la letra, sin reservar espacio para elementos ocultos.
-* Incluir Smiley Sans para el pie, independiente de la fuente de la letra, conservando los controles de firmas y los ajustes de fuente existentes.
-* Integrar las actualizaciones npm y GitHub Actions de Dependabot con regeneración y validación de Web Lite.
+- Ajustar la portada y la información de la canción a la altura real de la letra; mover los créditos a la derecha para letras muy cortas cuando haya espacio.
+- Alinear los bordes visibles de la letra y los créditos, conservando el diseño habitual y las opciones de visibilidad.
 
 ## 🌐 Notas de publicación multilingües
 
 GitHub Release muestra de forma predeterminada un resumen en chino simplificado. Consulta las notas completas:
-[简体中文](./docs/releases/v6.4.0.zh-CN.md) · [繁體中文](./docs/releases/v6.4.0.zh-TW.md) · [English](./docs/releases/v6.4.0.en.md) · [Français](./docs/releases/v6.4.0.fr.md) · [日本語](./docs/releases/v6.4.0.ja.md) · [Español](./docs/releases/v6.4.0.es.md)
+[简体中文](./docs/releases/v6.4.1.zh-CN.md) · [繁體中文](./docs/releases/v6.4.1.zh-TW.md) · [English](./docs/releases/v6.4.1.en.md) · [Français](./docs/releases/v6.4.1.fr.md) · [日本語](./docs/releases/v6.4.1.ja.md) · [Español](./docs/releases/v6.4.1.es.md)
 
 <a id="funciones-principales"></a>
 
@@ -150,11 +149,11 @@ GitHub Release muestra de forma predeterminada un resumen en chino simplificado.
 
 Gracias a [Apple Music](https://music.apple.com/). Los degradados de color, la estética de fondo con luz fluida y la orientación inicial del diseño de las tarjetas de letras de este proyecto se inspiraron en la experiencia visual de Apple Music. Este proyecto no está afiliado a Apple Music ni representa la postura oficial de Apple Music.
 
-Gracias a [Source Han Sans](https://github.com/adobe-fonts/source-han-sans) y [Source Han Serif](https://github.com/adobe-fonts/source-han-serif). Proporcionan una base tipográfica estable, clara y con peso para las tarjetas de letras en chino.
+Gracias a [Source Han Sans](https://github.com/adobe-fonts/source-han-sans), [Source Han Serif](https://github.com/adobe-fonts/source-han-serif) y [Smiley Sans](https://github.com/atelier-anchor/smiley-sans) por su tipografía clara y distintiva en las letras, los datos de las canciones y los créditos.
 
 Gracias a [OpenAI Codex](https://openai.com/codex/). Convirtió muchas ideas dispersas en código ejecutable, flujos de build para la versión de escritorio y funciones reales.
 
-Gracias a [ChatGPT 5.6 Sol](https://chatgpt.com/) por ayudar durante el desarrollo con la localización de problemas, el diseño de soluciones, la revisión de correcciones y las comprobaciones de aceptación.
+Gracias a [ChatGPT 6 Astra](https://chatgpt.com/) por ayudar durante el desarrollo con la localización de problemas, el diseño de soluciones, la revisión de correcciones y las comprobaciones de aceptación.
 
 Gracias a [ReactBits](https://www.reactbits.dev/) por varias ideas de UI, incluidas inspiraciones de animación como Spark Cursor.
 
@@ -187,4 +186,4 @@ Este proyecto se publica bajo una licencia Source Available personalizada, no un
 
 Puedes ver, descargar, ejecutar y modificar de forma privada el código fuente para fines personales, no comerciales, educativos y de evaluación. El uso comercial, la redistribución, el reempaquetado, las versiones modificadas públicas y los productos competidores basados en este proyecto requieren autorización previa por escrito del titular de los derechos.
 
-Las dependencias open-source de terceros siguen rigiéndose por sus respectivas licencias. Consulta [LICENSE](./LICENSE) para más detalles.
+Las fuentes incluidas [Source Han Sans](./public/fonts/LICENSE-SourceHanSans.txt), [Source Han Serif](./public/fonts/LICENSE-SourceHanSerif.txt) y [Smiley Sans](./public/fonts/LICENSE-SmileySans.txt) se rigen por la SIL Open Font License 1.1 y no están sujetas a las restricciones de la licencia propietaria del proyecto. Los demás componentes de terceros conservan sus propias licencias. Consulta [LICENSE](./LICENSE) y los [avisos de terceros](./public/licenses/THIRD-PARTY-NOTICES.txt).

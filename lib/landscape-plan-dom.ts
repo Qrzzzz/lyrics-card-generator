@@ -1,4 +1,5 @@
 import { measureAutoWidthLine } from "@/lib/auto-width-dom";
+import { measureTextInkInsets } from "@/lib/text-ink-bounds";
 import type {
   LandscapeLeftMeasurement,
   LandscapeLyricsMeasurement
@@ -15,8 +16,16 @@ export function measureLandscapeLayoutHost(host: HTMLElement): {
   if (!candidate || !metadata || widths.length === 0 || !coverSize) return null;
 
   const lineElements = Array.from(candidate.querySelectorAll<HTMLElement>("[data-landscape-line]"));
+  const accessories = host.querySelector<HTMLElement>("[data-landscape-left-accessories-measure]");
+  const accessoriesInsets = accessories ? measureTextInkInsets(accessories) : { top: 0, bottom: 0 };
+  const accessoriesHeight = accessories ? accessories.getBoundingClientRect().height - accessoriesInsets.top - accessoriesInsets.bottom : 0;
+  const accessoriesWidth = accessories?.clientWidth ?? metadata.clientWidth;
+  const originalAccessoriesWidth = accessories?.style.width;
   const lyricsCandidates = widths.map((lyricsWidth) => {
     candidate.style.width = `${lyricsWidth}px`;
+    if (accessories) accessories.style.width = `${lyricsWidth}px`;
+    const rightInsets = accessories ? measureTextInkInsets(accessories) : { top: 0, bottom: 0 };
+    const ink = measureTextInkInsets(candidate);
     // Reading all line ranges after the width write gives one complete browser layout sample.
     const lines = lineElements
       .map((line) => measureAutoWidthLine(line))
@@ -32,12 +41,17 @@ export function measureLandscapeLayoutHost(host: HTMLElement): {
       }));
     return {
       lyricsWidth,
-      naturalHeight: Math.ceil(candidate.getBoundingClientRect().height),
+      naturalHeight: candidate.getBoundingClientRect().height - ink.top - ink.bottom,
+      inkTop: ink.top,
+      inkBottom: ink.bottom,
+      canDistributeRows: candidate.querySelector("[data-landscape-lyrics-content]")!.children.length > 1,
+      rowCount: candidate.querySelector("[data-landscape-lyrics-content]")!.children.length,
+      rightAccessoriesHeight: accessories ? accessories.getBoundingClientRect().height - rightInsets.top - rightInsets.bottom : 0,
+      rightAccessoriesInkTop: rightInsets.top,
       lines
     };
   });
-  const accessories = host.querySelector<HTMLElement>("[data-landscape-left-accessories-measure]");
-
+  if (accessories) accessories.style.width = originalAccessoriesWidth ?? "";
   return {
     lyricsCandidates,
     left: {
@@ -45,8 +59,10 @@ export function measureLandscapeLayoutHost(host: HTMLElement): {
       coverHeight: coverSize.height,
       metadataWidth: metadata.clientWidth,
       metadataHeight: Math.ceil(metadata.getBoundingClientRect().height),
-      accessoriesWidth: accessories?.clientWidth ?? metadata.clientWidth,
-      accessoriesHeight: accessories ? Math.ceil(accessories.getBoundingClientRect().height) : 0
+      metadataInkBottom: measureTextInkInsets(metadata).bottom,
+      accessoriesWidth,
+      accessoriesHeight,
+      accessoriesInkTop: accessoriesInsets.top
     }
   };
 }

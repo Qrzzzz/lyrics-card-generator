@@ -5,7 +5,7 @@ import type { AppState } from "@/lib/types";
 export function createLandscapeMeasurementKey(state: AppState) {
   const style = state.style;
   return JSON.stringify({
-    version: 1,
+    version: 2,
     layoutMode: style.layoutMode ?? "portrait",
     contentMode: style.contentMode,
     lyricDocument: {
