@@ -16,7 +16,7 @@ import type { Locale } from "../lib/types";
 
 const lyricEditor = readFileSync(resolve("components/editor/LyricEditor.tsx"), "utf8");
 const editorDefaults = readFileSync(resolve("components/editor/editor-defaults.ts"), "utf8");
-const persistenceNotice = readFileSync(resolve("components/feedback/SettingsPersistenceNotice.tsx"), "utf8");
+const persistenceNotice = readFileSync(resolve("components/feedback/AppNotifications.tsx"), "utf8");
 const settingsSurface = readFileSync(resolve("components/settings/SettingsSurface.tsx"), "utf8");
 const settingsHistoryBar = readFileSync(resolve("components/settings/SettingsHistoryBar.tsx"), "utf8");
 const settingsModel = readFileSync(resolve("components/settings/settings-model.ts"), "utf8");
@@ -91,9 +91,9 @@ assert.match(
 );
 assert.match(lyricEditor, /useToastQueue\(\)/);
 assert.match(lyricEditor, /<AppToast notices=\{toastNotices\} announcement=\{toastAnnouncement\} \/>/);
-assert.match(lyricEditor, /<SettingsPersistenceNotice issues=\{settingsPersistenceIssues\} \/>/);
-assert.match(persistenceNotice, /role="alert"/);
-assert.match(persistenceNotice, /issue\.retry\(\)/);
+assert.match(lyricEditor, /<AppNotifications notices=\{importantNotices\} closeLabel=\{noticeCopy.close\} \/>/);
+assert.match(persistenceNotice, /notice\.tone === "error" \? "alert" : "status"/);
+assert.match(lyricEditor, /run: issue\.retry/);
 assert.doesNotMatch(lyricEditor, /toastIdRef|setTimeout\(\(\) => setToast\(null\), 3600\)/);
 assert.match(webLiteLyricInput, /<LandscapeLineLimitAlert/);
 assert.match(webLiteLyricInput, /notice=\{landscapeLineLimitNotice\}/);

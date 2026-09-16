@@ -88,6 +88,7 @@ async function openHistory() {
 
 try {
   await launch(true);
+  await expect(page.getByTestId("app-notification")).toHaveCount(0);
   await search();
   await page.getByTestId("stepper-next-button").click();
   const original = page.getByTestId("lyrics-editor-original");
@@ -110,6 +111,39 @@ try {
   await launch();
   assert.equal(await page.getByTestId("lyrics-editor-original").inputValue(), finalText);
   assert.equal(await page.getByTestId("lyrics-editor-translation").inputValue(), "  saved translation\n");
+  const restoredNotice = page.locator('[data-notification-id^="restored-"]');
+  await expect(restoredNotice).toContainText("Your last draft has been restored");
+  const noticeAccessibility = await new AxeBuilder({ page }).setLegacyMode().include('[data-testid="app-notification-stack"]').analyze();
+  assert.deepEqual(noticeAccessibility.violations.filter((item) => item.impact === "serious" || item.impact === "critical"), []);
+  await page.screenshot({ path: path.join(report, "restored-notification.png") });
+  await restoredNotice.getByRole("button", { name: "Dismiss notification" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(restoredNotice).toHaveCount(0);
+  assert.equal(await page.getByTestId("lyrics-editor-original").inputValue(), finalText, "dismiss must preserve the restored document");
+  await page.locator('[data-step-id="font"]').click();
+  await page.getByTestId("apply-font-preset-smiley-sans").click();
+  const fontCards = page.locator('[data-testid="font-scheme-options"] > button');
+  const metrics = await fontCards.evaluateAll((cards) => cards.map((card) => {
+    const title = card.querySelector("h4") ?? card.querySelector(".font-semibold");
+    return { top: card.getBoundingClientRect().top, height: card.getBoundingClientRect().height,
+      font: getComputedStyle(title).fontFamily, size: getComputedStyle(title).fontSize };
+  }));
+  assert.equal(new Set(metrics.map((item) => item.font)).size, 1, "all card headings use the UI font");
+  assert.equal(new Set(metrics.map((item) => item.size)).size, 1, "all card headings have the same size");
+  for (const card of metrics) for (const peer of metrics) {
+    if (Math.abs(card.top - peer.top) < 1) assert.ok(Math.abs(card.height - peer.height) < 1, "cards in one row have equal heights");
+  }
+  await page.screenshot({ path: path.join(report, "font-card-layout.png") });
+  await closeNormally();
+  assert.equal((await disk()).records.find((record) => record.id === remoteId).editorDraft.style.fontScheme.presetId, "smiley-sans");
+  await launch();
+  await expect(page.getByTestId("apply-font-preset-smiley-sans")).toHaveAttribute("aria-pressed", "true");
+  await page.locator('[data-notification-id^="restored-"]').getByRole("button", { name: "View history" }).click();
+  await page.getByTestId("history-surface").waitFor({ state: "visible" });
+  await expect(page.locator('[data-notification-id^="restored-"]')).toHaveCount(0);
+  await page.getByTestId("history-close-button").click();
+  await page.locator('[data-step-id="lyrics"]').click();
+  console.log("PASS: startup notification/dismiss, consistent font cards, Smiley Sans normal close and restart");
   console.log("PASS: 5s debounce, latest edit, immediate close, automatic restart, translation");
 
   await closeNormally();
@@ -213,8 +247,9 @@ try {
   await page.waitForFunction(() => !document.body.inert);
   assert.equal(page.isClosed(), false, "failed persistence must refuse normal close");
   await app.evaluate(() => { process.getBuiltinModule("fs/promises").writeFile = globalThis.__autosaveOriginalWrite; });
-  await page.getByTestId("autosave-status").getByRole("button").click();
+  await page.locator('[data-notification-id="draft-save-error"]').getByRole("button", { name: "Retry saving" }).click();
   await saved();
+  await expect(page.locator('[data-notification-id="draft-save-error"]')).toHaveCount(0);
   assert.equal((await disk()).records.find((record) => record.id === localId).editorDraft.content.lyrics, "recover after write failure");
   console.log("PASS: disk-write error, refusal to discard on close, visible retry and recovery");
   await page.locator('[data-testid="editor-surface"] [data-testid="settings-button"]').click();

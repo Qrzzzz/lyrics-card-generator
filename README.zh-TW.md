@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v6.4.2.zh-TW.md">發布說明</a> ·
+  <a href="./docs/releases/v6.4.3.zh-TW.md">發布說明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">線上 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="./docs/development.zh-CN.md">本機開發</a> ·
@@ -73,19 +73,19 @@
 
 
 
-* Windows x64 安裝版：`Lyrics.Card.Generator.Setup.6.4.2.exe`
+* Windows x64 安裝版：`Lyrics.Card.Generator.Setup.6.4.3.exe`
 
 從 v6.2.2 起僅提供 Windows x64 Setup 安裝程式。
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v6.4.2 · 草稿與匯出生命週期修復
+### v6.4.3 · 重要提示與草稿可靠性
 
-* 降低歷史保留上限後保留目前草稿的自動還原指標，並在設定儲存失敗時完整回復（#186）。
-* 回收未被引用的草稿封面，保留主歷史與復原備份引用；孤立檔案保留 24 小時後，於啟動、歷史變更或每小時維護時清理（#187）。
-* Web Lite 匯出或複製圖片期間更換、清空本機封面時，保留舊快照圖片至交易結束（#188）。
+* 新增右上角可互動通知，準確提示草稿恢復、儲存失敗和歷史恢復，並提供關閉、查看歷史和重試操作。
+* 修復得意黑草稿無法通過驗證、導致關閉前儲存失敗並阻止應用程式結束的問題。
+* 統一字型方案卡片的標題、說明和同列高度，同時保留字型名稱預覽。
 
-[简体中文](./docs/releases/v6.4.2.zh-CN.md) · [繁體中文](./docs/releases/v6.4.2.zh-TW.md) · [English](./docs/releases/v6.4.2.en.md) · [Français](./docs/releases/v6.4.2.fr.md) · [日本語](./docs/releases/v6.4.2.ja.md) · [Español](./docs/releases/v6.4.2.es.md)
+[简体中文](./docs/releases/v6.4.3.zh-CN.md) · [繁體中文](./docs/releases/v6.4.3.zh-TW.md) · [English](./docs/releases/v6.4.3.en.md) · [Français](./docs/releases/v6.4.3.fr.md) · [日本語](./docs/releases/v6.4.3.ja.md) · [Español](./docs/releases/v6.4.3.es.md)
 
 ## ✨ 主要功能
 

@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v6.4.2.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v6.4.3.en.md">Release Notes</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
   <a href="./docs/web-lite-browser-support.md">Web Lite Browser Support</a> ·
   <a href="#features">Features</a> ·
@@ -77,19 +77,19 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 
 
-* Windows x64 installer: `Lyrics.Card.Generator.Setup.6.4.2.exe`
+* Windows x64 installer: `Lyrics.Card.Generator.Setup.6.4.3.exe`
 
 Starting with v6.2.2, Windows x64 Setup is the only distributed desktop package.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v6.4.2 · Draft and export lifecycle fixes
+### v6.4.3 · Important notices and draft reliability
 
-* Preserve automatic draft recovery when reducing the history limit, including full rollback if saving settings fails (#186).
-* Collect unreferenced draft covers while retaining history and recovery-backup references. Orphans receive a 24-hour grace period and are swept at startup, after history changes, and hourly (#187).
-* Keep the original snapshot image alive when a local cover is replaced or cleared during Web Lite export or clipboard output (#188).
+* Add interactive notifications for restored drafts, save failures, and history recovery, with dismiss, history, and retry actions.
+* Fix Smiley Sans draft validation during shutdown, which could prevent the app from closing after a save failure.
+* Align font-scheme card headings, descriptions, and row heights while preserving font-name previews.
 
-[简体中文](./docs/releases/v6.4.2.zh-CN.md) · [繁體中文](./docs/releases/v6.4.2.zh-TW.md) · [English](./docs/releases/v6.4.2.en.md) · [Français](./docs/releases/v6.4.2.fr.md) · [日本語](./docs/releases/v6.4.2.ja.md) · [Español](./docs/releases/v6.4.2.es.md)
+[简体中文](./docs/releases/v6.4.3.zh-CN.md) · [繁體中文](./docs/releases/v6.4.3.zh-TW.md) · [English](./docs/releases/v6.4.3.en.md) · [Français](./docs/releases/v6.4.3.fr.md) · [日本語](./docs/releases/v6.4.3.ja.md) · [Español](./docs/releases/v6.4.3.es.md)
 
 <a id="features"></a>
 

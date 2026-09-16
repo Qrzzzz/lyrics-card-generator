@@ -1682,18 +1682,18 @@ async function assertFontPickerBehavior() {
   const presetFontFamilies = await page.locator('[data-testid^="apply-font-preset-"]').evaluateAll((buttons) => (
     buttons.map((button) => ({
       testId: button.getAttribute("data-testid"),
-      fontFamily: getComputedStyle(button).fontFamily
+      fontFamily: getComputedStyle(button.querySelector("p")).fontFamily
     }))
   ));
   assert.match(
     presetFontFamilies.find((item) => item.testId === "apply-font-preset-source-han-sans")?.fontFamily ?? "",
     /Source Han Sans SC.*sans-serif/i,
-    "the Source Han Sans card renders the entire button in its own font stack"
+    "the Source Han Sans card renders its sample in its own font stack"
   );
   assert.match(
     presetFontFamilies.find((item) => item.testId === "apply-font-preset-source-han-serif")?.fontFamily ?? "",
     /Source Han Serif SC.*serif/i,
-    "the Source Han Serif card renders the entire button in its own font stack"
+    "the Source Han Serif card renders its sample in its own font stack"
   );
 
   const overview = page.getByTestId("font-scheme-overview");
