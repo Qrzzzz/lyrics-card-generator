@@ -79,7 +79,8 @@ class ImportHistoryStore {
     path = defaultPath,
     now = () => Date.now(),
     createId = () => crypto.randomUUID(),
-    performanceObserver = null
+    performanceObserver = null,
+    draftAssets = null
   }) {
     if (typeof filePath !== "string" || !path.isAbsolute(filePath)) {
       throw new TypeError("Import history requires an absolute file path.");
@@ -95,6 +96,7 @@ class ImportHistoryStore {
     this.writeQueue = Promise.resolve();
     this.notice = null;
     this.draftLeases = new Map();
+    this.draftAssets = draftAssets;
     // Normalized records are immutable within a document snapshot. Derived
     // search and identity strings can therefore be retained without changing
     // ordering, pagination, filtering, or dedupe semantics.
@@ -138,11 +140,47 @@ class ImportHistoryStore {
   }
 
   initialize() {
-    return this.#enqueue(() => cleanupImportHistoryTemporaryFiles({
-      filePath: this.filePath,
-      fs: this.fs,
-      path: this.path
-    }));
+    return this.#enqueue(async () => {
+      await cleanupImportHistoryTemporaryFiles({
+        filePath: this.filePath,
+        fs: this.fs,
+        path: this.path
+      });
+      await this.#collectDraftAssets();
+    });
+  }
+
+  collectDraftAssets() {
+    return this.#enqueue(() => this.#collectDraftAssets());
+  }
+
+  saveEditorDraftCover(dataUrl) {
+    return this.#enqueue(() => this.draftAssets.save(dataUrl));
+  }
+
+  async #collectDraftAssets() {
+    if (!this.draftAssets) return;
+    try {
+      const document = await this.#ensureLoaded();
+      const documents = [document];
+      try {
+        const parsed = JSON.parse(await this.fs.readFile(`${this.filePath}.bak`, "utf8"));
+        const backup = normalizeImportHistoryDocument(parsed, this.path);
+        // An unreadable or partially normalized backup is not evidence of no references.
+        if (!backup || backup.records.length !== parsed.records.length) return;
+        documents.push(backup);
+      } catch (error) { if (error?.code !== "ENOENT") return; }
+      const references = new Set();
+      for (const item of documents) for (const record of item.records) {
+        for (const key of ["coverAsset", "formCoverAsset"]) {
+          if (record.editorDraft?.[key]) references.add(record.editorDraft[key]);
+        }
+      }
+      await this.draftAssets.collect(references);
+    } catch {
+      // Maintenance failure must not turn an already durable save into a failed save.
+      // Startup, the periodic sweep, and later mutations retry the cleanup.
+    }
   }
 
   beginEditorDraft(recordId) {
@@ -168,9 +206,16 @@ class ImportHistoryStore {
     }
     const editorDraft = normalizeEditorDraft(input, (content) => normalizeManualSnapshot(content, "draft"));
     if (!editorDraft) return Promise.reject(historyError("invalid_snapshot"));
-    return this.#mutate((document) => {
+    return this.#mutate(async (document) => {
       const lease = this.draftLeases.get(recordId);
       if (!lease || lease.token !== token || revision <= lease.revision) throw historyError("stale_draft");
+      // A suspended renderer can outlive the orphan grace period. Never commit
+      // a dangling reference; its next autosave retries from the live image.
+      if (this.draftAssets) {
+        for (const key of ["coverAsset", "formCoverAsset"]) {
+          if (editorDraft[key]) await this.draftAssets.read(editorDraft[key]);
+        }
+      }
       const existing = document.records.find((record) => record.id === recordId);
       const now = this.now();
       const record = {
@@ -477,6 +522,7 @@ class ImportHistoryStore {
         try {
           const persisted = await persistPreferences();
           this.document = next;
+          await this.#collectDraftAssets();
           return { trimmed, persisted };
         } catch (error) {
           // Preference persistence and history trimming form one logical transaction.
@@ -537,7 +583,7 @@ class ImportHistoryStore {
   #mutate(mutator) {
     return this.#enqueue(async () => {
       const current = await this.#ensureLoaded();
-      const mutation = mutator(current);
+      const mutation = await mutator(current);
       if (mutation.write === false) return mutation.result;
       const activeDraftId = Object.hasOwn(mutation.document, "activeDraftId")
         ? mutation.document.activeDraftId : current.activeDraftId;
@@ -549,6 +595,7 @@ class ImportHistoryStore {
       await this.#writeDocument(mutation.document);
       this.document = mutation.document;
       mutation.afterWrite?.();
+      await this.#collectDraftAssets();
       return mutation.result;
     });
   }
@@ -1404,11 +1451,12 @@ function platformSongKey(source, value) {
 function withHistoryLimit(document, limit) {
   const normalized = normalizeImportHistoryLimit(limit);
   if (normalized === "unlimited") {
-    return { schemaVersion: IMPORT_HISTORY_SCHEMA_VERSION, records: [...document.records] };
+    return { ...document, schemaVersion: IMPORT_HISTORY_SCHEMA_VERSION, records: [...document.records] };
   }
   const automaticLimit = normalized === "none" ? 0 : normalized;
   let automaticCount = 0;
   return {
+    ...document,
     schemaVersion: IMPORT_HISTORY_SCHEMA_VERSION,
     records: document.records.filter((record) => {
       if (record.kind === "manual-save" || record.editorDraft || record.kind === "draft") return true;

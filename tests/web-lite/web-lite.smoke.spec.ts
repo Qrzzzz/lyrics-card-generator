@@ -1144,6 +1144,58 @@ test("invalidates remote validation when the song step unmounts", async ({ page 
   await expectEmptyCoverState(page);
 });
 
+for (const change of ["clear", "local", "remote", "failure", "timeout"] as const) {
+  test(`retains export cover while ${change} changes the live editor`, async ({ page }) => {
+    await installRemoteCoverRoute(page);
+    await openWebLite(page);
+    await uploadGeneratedCover(page, "original.png", 32, 32, false);
+    const original = await page.getByTestId("web-lite-active-cover").getAttribute("src");
+    expect(original).toMatch(/^blob:/);
+    await page.locator('[data-step-id="export"]').click();
+    await expect(page.getByTestId("complete-export-button")).toBeEnabled();
+    await page.evaluate(() => {
+      const nativeDecode = HTMLImageElement.prototype.decode;
+      const gate = new Promise<void>((resolve) => { Object.assign(window, { releaseCoverDecode: resolve }); });
+      HTMLImageElement.prototype.decode = async function () {
+        if (this.closest("[data-export-snapshot-id]")) {
+          Object.assign(window, { coverDecodeWaiting: true });
+          await gate;
+        }
+        return nativeDecode.call(this);
+      };
+    });
+    const downloadPromise = change === "failure" || change === "timeout" ? null : page.waitForEvent("download");
+    await page.getByTestId("complete-export-button").click();
+    await expect.poll(() => page.evaluate(() => Reflect.get(window, "coverDecodeWaiting"))).toBe(true);
+    if (change === "clear" || change === "failure" || change === "timeout") await page.getByTestId("web-lite-clear-all-button").click();
+    else {
+      await page.locator('[data-step-id="song-info"]').click();
+      if (change === "local") await uploadGeneratedCover(page, "replacement.png", 40, 40, false);
+      else {
+        await applyRemoteCover(page);
+        await expect(page.getByTestId("web-lite-active-cover")).toHaveAttribute("src", remoteCoverUrl);
+      }
+    }
+    expect(await page.evaluate(async (url) => (await fetch(url!)).ok, original)).toBe(true);
+    const capture = page.locator("[data-export-snapshot-id]");
+    await expect(capture.locator(`img[src="${original}"]`).first()).toHaveAttribute("src", original!);
+    if (change === "failure") {
+      // Force the real rasterizer to fail after readiness, without replacing it.
+      await page.evaluate(() => { HTMLCanvasElement.prototype.toDataURL = () => { throw new Error("forced raster failure"); }; });
+    }
+    if (change !== "timeout") await page.evaluate(() => Reflect.get(window, "releaseCoverDecode")());
+    if (downloadPromise) {
+      const download = await downloadPromise;
+      expect(await download.failure()).toBeNull();
+      expect((await pngDimensions(download)).width).toBeGreaterThan(0);
+    }
+    await expect.poll(() => page.evaluate(async (url) => {
+      try { await fetch(url!); return false; } catch { return true; }
+    }, original)).toBe(true);
+    if (change === "timeout") await page.evaluate(() => Reflect.get(window, "releaseCoverDecode")());
+  });
+}
+
 test("keeps a local cover when an older remote validation completes", async ({ page }) => {
   const gate = await installRemoteCoverRoute(page, true);
   await openWebLite(page);

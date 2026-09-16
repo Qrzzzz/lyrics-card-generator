@@ -661,11 +661,13 @@ function initializePrimaryInstance() {
     }
   });
   importHistoryFileStreams = new ImportHistoryFileStreamRegistry();
-  importHistoryStore = new ImportHistoryStore({
-    filePath: path.join(app.getPath("userData"), "app-data", "import-history.json")
-  });
   const { EditorDraftAssets } = require("./editor-draft");
   editorDraftAssets = new EditorDraftAssets(path.join(app.getPath("userData"), "app-data", "draft-covers"));
+  importHistoryStore = new ImportHistoryStore({
+    filePath: path.join(app.getPath("userData"), "app-data", "import-history.json"),
+    draftAssets: editorDraftAssets
+  });
+  setInterval(() => { void importHistoryStore.collectDraftAssets(); }, 60 * 60 * 1000).unref();
   systemFontDirectoryService = createWindowsFontDirectoryService({
     onError: (error) => console.error("[fonts] unable to list Windows fonts", error)
   });
@@ -983,7 +985,7 @@ function registerDesktopIpc() {
     () => importHistoryStore.activateEditorDraft(recordId)
   ));
   handle("lyrics-card:draft-cover", (_event, dataUrl) => trackImportHistoryMutation(async () => {
-    try { return { ok: true, data: await editorDraftAssets.save(dataUrl) }; }
+    try { return { ok: true, data: await importHistoryStore.saveEditorDraftCover(dataUrl) }; }
     catch (error) { return { ok: false, code: importHistoryErrorCode(error) }; }
   }));
 
