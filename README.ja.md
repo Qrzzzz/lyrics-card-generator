@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v6.4.1.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v6.4.2.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="./docs/development.en.md">ローカル開発</a> ·
@@ -76,21 +76,19 @@
 
 
 
-* Windows x64 インストーラー：`Lyrics.Card.Generator.Setup.6.4.1.exe`
+* Windows x64 インストーラー：`Lyrics.Card.Generator.Setup.6.4.2.exe`
 
 v6.2.2 以降、配布するデスクトップパッケージは Windows x64 Setup のみです。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v6.4.1 · 横向きカードの自動レイアウト
+### v6.4.2 · 下書きと画像出力の修正
 
-- 歌詞の実測高さに合わせてジャケットと楽曲情報を調整。歌詞が非常に短い場合は、収まる範囲でクレジットを右側に移動します。
-- 歌詞とクレジットの見た目の上下端を揃え、通常の歌詞配置と表示設定を維持します。
+* 履歴の保存上限を減らした後も現在の下書きの自動復元を維持し、設定保存に失敗した場合は変更を完全に戻します（#186）。
+* 履歴と復元用バックアップが参照する画像を保持し、参照のない表紙画像を回収します。24 時間の猶予後、起動時・履歴変更後・毎時の処理で削除します（#187）。
+* Web Lite の書き出し・コピー中にローカル表紙を変更または消去しても、処理完了まで元の画像を保持します（#188）。
 
-## 🌐 多言語リリースノート
-
-GitHub Release ではデフォルトで簡体字中国語の概要が表示されます。完全なリリースノートはこちら：
-[简体中文](./docs/releases/v6.4.1.zh-CN.md) · [繁體中文](./docs/releases/v6.4.1.zh-TW.md) · [English](./docs/releases/v6.4.1.en.md) · [Français](./docs/releases/v6.4.1.fr.md) · [日本語](./docs/releases/v6.4.1.ja.md) · [Español](./docs/releases/v6.4.1.es.md)
+[简体中文](./docs/releases/v6.4.2.zh-CN.md) · [繁體中文](./docs/releases/v6.4.2.zh-TW.md) · [English](./docs/releases/v6.4.2.en.md) · [Français](./docs/releases/v6.4.2.fr.md) · [日本語](./docs/releases/v6.4.2.ja.md) · [Español](./docs/releases/v6.4.2.es.md)
 
 <a id="主な機能"></a>
 

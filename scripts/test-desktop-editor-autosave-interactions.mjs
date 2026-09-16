@@ -9,6 +9,7 @@ import path from "node:path";
 import { _electron as electron } from "playwright";
 import { expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import historyModule from "../electron/import-history.js";
 import { closeElectronApplication } from "./electron-test-lifecycle.mjs";
 
 const executablePath = process.env.LYRICS_CARD_TEST_EXECUTABLE || path.resolve("release/win-unpacked/Lyrics Card Generator.exe");
@@ -110,6 +111,25 @@ try {
   assert.equal(await page.getByTestId("lyrics-editor-original").inputValue(), finalText);
   assert.equal(await page.getByTestId("lyrics-editor-translation").inputValue(), "  saved translation\n");
   console.log("PASS: 5s debounce, latest edit, immediate close, automatic restart, translation");
+
+  await closeNormally();
+  const fixtureStore = new historyModule.ImportHistoryStore({ filePath: historyPath });
+  for (let index = 0; index < 6; index++) {
+    await fixtureStore.upsert({ kind: "search", query: `Legacy ${index}`, platform: "netease", songId: String(91000 + index),
+      display: { title: `Legacy ${index}`, artist: "Legacy artist", source: "netease" } }, "unlimited");
+  }
+  await launch();
+  await page.locator('[data-testid="editor-surface"] [data-testid="settings-button"]').click();
+  await page.getByTestId("settings-tab-general").click();
+  await page.getByTestId("import-history-limit").selectOption("5");
+  await page.getByTestId("settings-close-button").click();
+  await expect.poll(async () => (await disk()).records.filter((record) => !record.editorDraft).length).toBe(5);
+  assert.equal((await disk()).activeDraftId, remoteId);
+  await closeNormally();
+  await launch();
+  assert.equal(await page.getByTestId("lyrics-editor-original").inputValue(), finalText);
+  assert.equal((await disk()).activeDraftId, remoteId);
+  console.log("PASS: real settings trim with unchanged draft, normal close and automatic restart recovery (#186)");
 
   await page.locator('[data-step-id="layout"]').click();
   const fontSlider = page.getByRole("slider", { name: "Font Size", exact: true });

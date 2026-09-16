@@ -5,6 +5,7 @@ const path = require("node:path");
 const MAX_DRAFT_BYTES = 4 * 1024 * 1024;
 const MAX_COVER_BYTES = 20 * 1024 * 1024;
 const ASSET_ID = /^[a-f0-9]{64}\.(png|jpg|webp|gif)$/;
+const ORPHAN_RETENTION_MS = 24 * 60 * 60 * 1000;
 const BOOLEANS = new Set(["autoWidth", "autoHeight", "customFontEnabled", "allowMultiLineTitle", "showCover", "showSongInfo", "showAlbumName", "showGeneratedWatermark", "showSharedBy", "showWatermark", "showFineGrid"]);
 const NUMBERS = new Set(["width", "height", "customFontWeight", "lyricFontSize", "lineHeight", "translationScale", "coverCropScale"]);
 const STRINGS = new Set(["customFontFamily", "customFontLabel", "customTextColor", "resolvedTextColor", "instrumentalText", "sharedByText", "watermark"]);
@@ -102,7 +103,12 @@ class EditorDraftAssets {
     const target = path.join(this.directory, id);
     try {
       const existing = await fs.readFile(target);
-      if (existing.equals(bytes)) return id;
+      if (existing.equals(bytes)) {
+        // Renew the grace period before handing an asset to an in-flight draft write.
+        const now = new Date();
+        await fs.utimes(target, now, now);
+        return id;
+      }
     } catch (error) { if (error.code !== "ENOENT") throw error; }
     const temporary = `${target}.tmp-${crypto.randomUUID()}`;
     try {
@@ -125,6 +131,24 @@ class EditorDraftAssets {
       return `data:image/${id.endsWith(".jpg") ? "jpeg" : id.split(".")[1]};base64,${bytes.toString("base64")}`;
     } finally { await handle.close(); }
   }
+  async collect(references, now = Date.now()) {
+    let removed = 0;
+    let directory;
+    try { directory = await fs.opendir(this.directory); }
+    catch (error) { if (error.code === "ENOENT") return removed; throw error; }
+    // Stream the directory; only files owned by this store can be removed.
+    for await (const entry of directory) {
+      if (!entry.isFile() || references.has(entry.name) ||
+        !(ASSET_ID.test(entry.name) || /^[a-f0-9]{64}\.(png|jpg|webp|gif)\.tmp-[a-f0-9-]{36}$/.test(entry.name))) continue;
+      const target = path.join(this.directory, entry.name);
+      try {
+        if (now - (await fs.stat(target)).mtimeMs < ORPHAN_RETENTION_MS) continue;
+        await fs.unlink(target);
+        removed++;
+      } catch (error) { if (error.code !== "ENOENT") throw error; }
+    }
+    return removed;
+  }
   async hydrate(recordId, snapshot) {
     return { recordId, snapshot,
       ...(snapshot.coverAsset ? { coverDataUrl: await this.read(snapshot.coverAsset) } : {}),
@@ -132,4 +156,4 @@ class EditorDraftAssets {
   }
 }
 
-module.exports = { MAX_DRAFT_BYTES, normalizeEditorDraft, EditorDraftAssets };
+module.exports = { MAX_DRAFT_BYTES, ORPHAN_RETENTION_MS, normalizeEditorDraft, EditorDraftAssets };

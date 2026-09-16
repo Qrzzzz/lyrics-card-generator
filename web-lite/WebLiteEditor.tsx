@@ -129,6 +129,7 @@ export function WebLiteEditor() {
   const exportRevisionRef = useRef(0);
   const previousExportStateRef = useRef<AppState | null>(null);
   const localCoverObjectUrlRef = useRef<string | undefined>(undefined);
+  const exportCoverObjectUrlRef = useRef<string | undefined>(undefined);
   const coverValidationGenerationRef = useRef(0);
   const locale: WebLiteLocale = state.locale;
   const copy = webLiteCopy[locale];
@@ -228,7 +229,7 @@ export function WebLiteEditor() {
   useEffect(
     () => () => {
       if (localCoverObjectUrlRef.current) {
-        URL.revokeObjectURL(localCoverObjectUrlRef.current);
+        revokeLocalCoverObjectUrl();
       }
     },
     []
@@ -236,7 +237,9 @@ export function WebLiteEditor() {
 
   function revokeLocalCoverObjectUrl() {
     if (localCoverObjectUrlRef.current) {
-      URL.revokeObjectURL(localCoverObjectUrlRef.current);
+      if (localCoverObjectUrlRef.current !== exportCoverObjectUrlRef.current) {
+        URL.revokeObjectURL(localCoverObjectUrlRef.current);
+      }
       localCoverObjectUrlRef.current = undefined;
     }
   }
@@ -399,6 +402,8 @@ export function WebLiteEditor() {
       mutex: exportMutexRef.current,
       snapshot,
       mountSnapshot: async (mountedSnapshot, signal) => {
+        // Acquire the resource inside the mutex, before readiness can yield.
+        exportCoverObjectUrlRef.current = localCoverObjectUrlRef.current;
         setActiveOutputAction(action);
         setActiveExportSnapshot(mountedSnapshot);
         return waitForExportSnapshotNode(() => captureCardRef.current, mountedSnapshot.id, signal);
@@ -431,6 +436,9 @@ export function WebLiteEditor() {
             signal
           ),
       unmountSnapshot: () => {
+        const retainedUrl = exportCoverObjectUrlRef.current;
+        exportCoverObjectUrlRef.current = undefined;
+        if (retainedUrl && retainedUrl !== localCoverObjectUrlRef.current) URL.revokeObjectURL(retainedUrl);
         setActiveExportSnapshot(null);
         setActiveOutputAction(null);
       }

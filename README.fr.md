@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v6.4.1.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v6.4.2.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="./docs/development.en.md">Développement local</a> ·
@@ -76,21 +76,19 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 
 
-* Programme d’installation Windows x64 : `Lyrics.Card.Generator.Setup.6.4.1.exe`
+* Programme d’installation Windows x64 : `Lyrics.Card.Generator.Setup.6.4.2.exe`
 
 À partir de la v6.2.2, le programme Setup Windows x64 est le seul paquet distribué.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### v6.4.1 · Mise en page paysage adaptative
+### v6.4.2 · Corrections des brouillons et des exports
 
-- Adapter la pochette et les informations du morceau à la hauteur mesurée des paroles ; déplacer les crédits à droite pour les textes très courts si l’espace le permet.
-- Aligner les limites visibles des paroles et des crédits tout en conservant la disposition habituelle et les réglages de visibilité.
+* Conserver la restauration automatique du brouillon lorsque la limite de l’historique diminue, avec annulation complète si les réglages ne sont pas enregistrés (#186).
+* Supprimer les couvertures sans référence tout en préservant l’historique et sa sauvegarde de récupération. Nettoyage après un délai de 24 heures, au démarrage, après modification de l’historique et chaque heure (#187).
+* Conserver l’image du cliché pendant l’export ou la copie Web Lite lorsque la couverture locale est remplacée ou effacée (#188).
 
-## 🌐 Notes de publication multilingues
-
-Par défaut, GitHub Release affiche un résumé en chinois simplifié. Consultez les notes complètes :
-[简体中文](./docs/releases/v6.4.1.zh-CN.md) · [繁體中文](./docs/releases/v6.4.1.zh-TW.md) · [English](./docs/releases/v6.4.1.en.md) · [Français](./docs/releases/v6.4.1.fr.md) · [日本語](./docs/releases/v6.4.1.ja.md) · [Español](./docs/releases/v6.4.1.es.md)
+[简体中文](./docs/releases/v6.4.2.zh-CN.md) · [繁體中文](./docs/releases/v6.4.2.zh-TW.md) · [English](./docs/releases/v6.4.2.en.md) · [Français](./docs/releases/v6.4.2.fr.md) · [日本語](./docs/releases/v6.4.2.ja.md) · [Español](./docs/releases/v6.4.2.es.md)
 
 <a id="fonctionnalités-principales"></a>
 

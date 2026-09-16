@@ -26,7 +26,6 @@ export function useEditorAutosave({ state, view, enabled, onRestore }: {
   const origin = useRef<Promise<string | undefined>>(Promise.resolve(undefined));
   const revision = useRef(0);
   const ownedUrl = useRef("");
-  const assets = useRef(new Map<string, Promise<string>>());
   const controllerRef = useRef<EditorAutosave<EditorDraftSnapshot> | null>(null);
   if (!controllerRef.current) controllerRef.current = new EditorAutosave({
     key: editorDraftChangeKey,
@@ -68,17 +67,12 @@ export function useEditorAutosave({ state, view, enabled, onRestore }: {
 
   async function cacheCover(url?: string): Promise<string | undefined> {
     if (!url || !/^(blob:|data:)/i.test(url)) return undefined;
-    const cached = assets.current.get(url);
-    if (cached) return cached;
-    const pending = (async () => {
-      const dataUrl = await localImageDataUrl(url);
-      const result = await getLyricsCardDesktopApi()!.saveEditorDraftCover(dataUrl);
-      if (!result.ok) throw new Error(result.code);
-      return result.data;
-    })();
-    assets.current.set(url, pending);
-    try { return await pending; }
-    catch (error) { assets.current.delete(url); throw error; }
+    // A deleted history record may have released its image while this editor
+    // stayed open. Re-save from the live resource and renew its write grace period.
+    const dataUrl = await localImageDataUrl(url);
+    const result = await getLyricsCardDesktopApi()!.saveEditorDraftCover(dataUrl);
+    if (!result.ok) throw new Error(result.code);
+    return result.data;
   }
 
   function reset(nextState: AppState, record?: Promise<ImportHistoryWriteResult> | string, saved = false, nextView = inputs.current.view) {
@@ -103,7 +97,6 @@ export function useEditorAutosave({ state, view, enabled, onRestore }: {
       if (data && asset) {
         const url = URL.createObjectURL(draftImageBlob(data));
         prepared[dataKey] = url;
-        assets.current.set(url, Promise.resolve(asset));
       }
     }
     if (!authorize()) {

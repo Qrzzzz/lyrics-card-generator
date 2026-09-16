@@ -1,6 +1,6 @@
 {
   "name": "lyric-card-generator",
-  "version": "6.4.1",
+  "version": "6.4.2",
   "private": true,
   "main": "electron/main.js",
   "scripts": {
@@ -89,7 +89,7 @@
     "desktop:build": "npm run typecheck && npm run build && npm run desktop:prepare && electron-builder --publish never --projectDir dist-desktop/app",
     "history-transfer:test": "node scripts/test-remote-history.cjs && tsx scripts/test-remote-history-session.ts",
     "desktop:autosave-test": "node scripts/test-desktop-editor-autosave-interactions.mjs",
-    "autosave:test": "tsx scripts/test-editor-autosave.ts",
+    "autosave:test": "tsx scripts/test-editor-autosave.ts && tsx scripts/test-draft-lifecycle.ts",
     "desktop:history-transfer-test": "node scripts/test-desktop-remote-history-interactions.mjs",
     "separator:test": "tsx scripts/test-lyric-separator.tsx",
     "updater:test": "node scripts/test-app-updater.cjs",
