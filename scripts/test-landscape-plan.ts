@@ -21,6 +21,7 @@ function measured(lyricsWidth: number, naturalHeight: number, visualLineCount = 
   return {
     lyricsWidth,
     naturalHeight,
+    canDistributeRows: true,
     lines: [{
       key: `lyric:${lyricsWidth}`,
       kind: "lyric" as const,
@@ -66,8 +67,13 @@ const shortLyrics = createLandscapeLayoutPlan({
   lyricsCandidates: [measured(880, 180)]
 });
 assert(shortLyrics);
-assert.equal(shortLyrics.lyricsRect.y > shortLyrics.safeRect.y, true, "short lyrics center within left-column height");
-assert.equal(shortLyrics.leftScale >= 0.78 && shortLyrics.leftScale <= 1.28, true);
+assert.equal(shortLyrics.lyricsRect.y, shortLyrics.coverRect.y, "short lyrics align to cover top");
+assert.equal(shortLyrics.accessoriesPlacement, "right");
+assert.equal(shortLyrics.leftScale >= 0.62 && shortLyrics.leftScale <= 1.28, true);
+const shortWideCover = createLandscapeLayoutPlan({ measurementKey: "short-wide-cover", settings: DEFAULT_LANDSCAPE_LAYOUT_SETTINGS,
+  left: { ...left, coverWidth: 480, coverHeight: 321 }, lyricsCandidates: [measured(880, 180)] })!;
+assert.ok(Math.abs(shortWideCover.coverRect.width / shortWideCover.coverRect.height - 480 / 321) < 0.00001,
+  "compact artwork preserves its measured aspect ratio without independent rounding");
 
 const tallCover = createLandscapeLayoutPlan({
   measurementKey: "tall-cover",
@@ -91,11 +97,19 @@ const extraHeight = createLandscapeLayoutPlan({
   lyricsCandidates: [measured(880, 420)]
 });
 assert(extraHeight);
-assert.equal(extraHeight.leftScale, 1.28, "left design unit stops growing at its maximum scale");
+assert.ok(extraHeight.leftScale < 0.78, "manual canvas height does not enlarge a compact left column");
 assert.equal(extraHeight.flexibleGap > 0, true, "excess height leaves room between metadata and credits");
 
 for (const plan of [automatic, manual, shortLyrics, tallCover, extraHeight]) {
   assert(plan.accessoriesRect);
+  assert.equal(plan.lyricsRect.y, plan.coverRect.y);
+  if (plan.accessoriesPlacement === "right") {
+    assert.equal(plan.accessoriesRect.x, plan.lyricsRect.x);
+    assert.ok(Math.abs(plan.accessoriesRect.y + plan.accessoriesRect.height -
+      plan.metadataRect.y - plan.metadataRect.height) <= 1);
+    assert.ok(plan.accessoriesRect.y > plan.lyricsRect.y + plan.lyricsRect.height);
+    continue;
+  }
   assert.ok(Math.abs(plan.accessoriesRect.y + plan.accessoriesRect.height -
     plan.lyricsRect.y - plan.lyricsRect.height) <= 1, "credits and lyrics share their bottom edge");
   assert.ok(plan.accessoriesRect.y >= plan.metadataRect.y + plan.metadataRect.height,
@@ -107,7 +121,29 @@ const noCredits = createLandscapeLayoutPlan({
 });
 assert(noCredits);
 assert.equal(noCredits.accessoriesRect, undefined);
-assert.ok(noCredits.canvas.height < shortLyrics.canvas.height, "hidden credits reserve no height or gap");
+assert.equal(noCredits.lyricsRect.height, 180, "no credits must not stretch very short lyrics");
+assert.equal(noCredits.canvas.height, shortLyrics.canvas.height, "moving or hiding credits removes their left-column space");
+
+for (const height of [90, 180, 310, 440, 640, 980]) {
+  const candidate = { ...measured(880, height), rightAccessoriesHeight: 60, inkTop: 18, inkBottom: 12 };
+  const auto = createLandscapeLayoutPlan({ measurementKey: "matrix", settings: DEFAULT_LANDSCAPE_LAYOUT_SETTINGS, left, lyricsCandidates: [candidate] })!;
+  const fixed = createLandscapeLayoutPlan({ measurementKey: "matrix-fixed", settings: { ...DEFAULT_LANDSCAPE_LAYOUT_SETTINGS, autoHeight: false, requestedHeight: 2500 }, left, lyricsCandidates: [candidate] })!;
+  assert.equal(auto.accessoriesPlacement, fixed.accessoriesPlacement, "manual height never triggers relocation");
+  assert.equal(auto.lyricsInkTop, 18);
+  assert.equal(auto.lyricsInkBottom, 12);
+  assert.ok(auto.accessoriesRect!.y >= auto.safeRect.y);
+}
+const longCredit = createLandscapeLayoutPlan({ measurementKey: "long-credit", settings: DEFAULT_LANDSCAPE_LAYOUT_SETTINGS, left,
+  lyricsCandidates: [{ ...measured(520, 180), rightAccessoriesHeight: 500 }] })!;
+assert.equal(longCredit.accessoriesPlacement, "left", "long credit must fit before relocating");
+assert.equal(longCredit.lyricsRect.height, 180, "a long credit must not create excessive lyric gaps");
+assert.ok(longCredit.accessoriesRect!.y >= longCredit.metadataRect.y + longCredit.metadataRect.height);
+const multiRowCompact = createLandscapeLayoutPlan({ measurementKey: "multi-row-compact", settings: DEFAULT_LANDSCAPE_LAYOUT_SETTINGS, left,
+  lyricsCandidates: [{ ...measured(880, 300), rowCount: 4 }] })!;
+assert.equal(multiRowCompact.accessoriesPlacement, "left");
+assert.ok(Math.abs(multiRowCompact.accessoriesRect!.y + multiRowCompact.accessoriesRect!.height -
+  multiRowCompact.lyricsRect.y - multiRowCompact.lyricsRect.height) <= 1,
+"several short rows can share modest extra space to match a tall metadata column");
 
 assert.deepEqual(
   normalizeLandscapeLayoutSettings({ autoLyricsWidth: false, lyricsWidth: 1, autoHeight: false, requestedHeight: 99 }),

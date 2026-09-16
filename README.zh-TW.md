@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v6.4.0.zh-TW.md">發布說明</a> ·
+  <a href="./docs/releases/v6.4.1.zh-TW.md">發布說明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">線上 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="./docs/development.zh-CN.md">本機開發</a> ·
@@ -73,22 +73,21 @@
 
 
 
-* Windows x64 安裝版：`Lyrics.Card.Generator.Setup.6.4.0.exe`
+* Windows x64 安裝版：`Lyrics.Card.Generator.Setup.6.4.1.exe`
 
 從 v6.2.2 起僅提供 Windows x64 Setup 安裝程式。
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v6.4.0 · 頁腳對齊與相依套件更新
+### v6.4.1 · 橫版卡片動態排版
 
-* 橫版頁腳底邊與歌詞底邊對齊，隱藏項目不再佔位。
-* 頁腳固定使用內建得意黑，暫不新增可選字型預設；保留獨立的分享者和專案署名開關。
-* 納入 Dependabot 的 npm 和 GitHub Actions 更新，並補全 Web Lite 重建與驗證流程。
+- 依歌詞實際高度調整左側封面與歌曲資訊；極短歌詞在空間允許時將頁尾移至右側。
+- 修正歌詞與頁尾的上下文字邊界對齊，保留一般歌詞的排版及頁尾顯示設定。
 
 ## 🌐 多語言發佈說明
 
 GitHub Release 預設顯示簡體中文摘要，完整說明請見：
-[简体中文](./docs/releases/v6.4.0.zh-CN.md) · [繁體中文](./docs/releases/v6.4.0.zh-TW.md) · [English](./docs/releases/v6.4.0.en.md) · [Français](./docs/releases/v6.4.0.fr.md) · [日本語](./docs/releases/v6.4.0.ja.md) · [Español](./docs/releases/v6.4.0.es.md)
+[简体中文](./docs/releases/v6.4.1.zh-CN.md) · [繁體中文](./docs/releases/v6.4.1.zh-TW.md) · [English](./docs/releases/v6.4.1.en.md) · [Français](./docs/releases/v6.4.1.fr.md) · [日本語](./docs/releases/v6.4.1.ja.md) · [Español](./docs/releases/v6.4.1.es.md)
 
 ## ✨ 主要功能
 
@@ -145,11 +144,11 @@ GitHub Release 預設顯示簡體中文摘要，完整說明請見：
 
 感謝 [Apple Music](https://music.apple.com/)。這個專案的彩色漸層、流光背景美學，以及早期歌詞卡片排版方向，受到 Apple Music 視覺體驗的啟發。本專案與 Apple Music 沒有關聯，也不代表 Apple Music 官方立場。
 
-感謝 [思源黑體](https://github.com/adobe-fonts/source-han-sans) 和 [思源宋體](https://github.com/adobe-fonts/source-han-serif)。它們為中文歌詞卡片提供穩定、清晰、有分量的字型基礎。
+感謝 [思源黑體](https://github.com/adobe-fonts/source-han-sans)、[思源宋體](https://github.com/adobe-fonts/source-han-serif) 和 [得意黑](https://github.com/atelier-anchor/smiley-sans)。它們為歌詞、歌曲資訊和頁尾提供清晰且各具特色的字型支援。
 
 感謝 [OpenAI Codex](https://openai.com/codex/)。它把許多零散想法轉化為可執行的程式碼、桌面版建構流程和實際功能。
 
-感謝 [ChatGPT 5.6 Sol](https://chatgpt.com/) 在開發過程中進行問題定位、方案設計、修復複核和驗收檢查。
+感謝 [ChatGPT 6 Astra](https://chatgpt.com/) 在開發過程中進行問題定位、方案設計、修復複核和驗收檢查。
 
 感謝 [ReactBits](https://www.reactbits.dev/) 提供的多種 UI 創意，包括 Spark Cursor 等動效靈感。
 
@@ -181,4 +180,4 @@ GitHub Release 預設顯示簡體中文摘要，完整說明請見：
 
 你可以為了個人、非商業、學習、評估目的查看、下載、執行原始碼，並進行僅限個人使用的私下修改。未經作者書面許可，不得商用、再分發、重新打包、公開發布修改版，或基於本專案製作競爭性產品。
 
-本專案依賴的第三方開源元件仍遵循它們各自的授權條款。詳見 [LICENSE](./LICENSE)。
+內建的[思源黑體](./public/fonts/LICENSE-SourceHanSans.txt)、[思源宋體](./public/fonts/LICENSE-SourceHanSerif.txt)與[得意黑](./public/fonts/LICENSE-SmileySans.txt)分別遵循 SIL Open Font License 1.1，不適用本專案的專有授權限制。其他第三方元件遵循各自授權條款；詳見 [LICENSE](./LICENSE) 與[第三方聲明](./public/licenses/THIRD-PARTY-NOTICES.txt)。

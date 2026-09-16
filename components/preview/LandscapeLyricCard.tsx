@@ -46,6 +46,8 @@ export function LandscapeLyricCard({
       data-export-card="true"
       data-landscape-plan={plan ? "ready" : "measuring"}
       data-landscape-measurement-key={plan?.measurementKey}
+      data-landscape-density={plan?.layoutDensity}
+      data-landscape-footer={plan?.accessoriesPlacement}
     >
       <PaletteBackground
         palette={style.extractedPalette}
@@ -109,7 +111,7 @@ export function LandscapeLyricCard({
                 className="absolute z-20"
                 style={{
                   left: plan.accessoriesRect.x,
-                  bottom: size.height - (plan.lyricsRect.y + plan.lyricsRect.height),
+                  top: plan.accessoriesRect.y - (plan.accessoriesInkTop ?? 0),
                   width: plan.accessoriesRect.width,
                 }}
               >
@@ -118,19 +120,21 @@ export function LandscapeLyricCard({
                   sharedByText={style.sharedByText}
                   showGeneratedWatermark={showGeneratedWatermark}
                   textColor={textColor}
-                  scale={plan.leftScale}
+                  scale={plan.accessoriesScale ?? plan.leftScale}
                 />
               </div>
             ) : null}
 
             <div
               data-card-lyrics
+              data-ink-top={plan.lyricsInkTop ?? 0}
+              data-ink-bottom={plan.lyricsInkBottom ?? 0}
               className="absolute z-10"
               style={{
                 left: plan.lyricsRect.x,
-                top: plan.lyricsRect.y,
+                top: plan.lyricsRect.y - (plan.lyricsInkTop ?? 0),
                 width: plan.lyricsRect.width,
-                minHeight: plan.lyricsRect.height
+                height: plan.lyricsRect.height + (plan.lyricsInkTop ?? 0) + (plan.lyricsInkBottom ?? 0)
               }}
             >
               <LandscapeLyricsContent
@@ -142,6 +146,9 @@ export function LandscapeLyricCard({
                 lineHeight={style.lineHeight}
                 textColor={textColor}
                 align={style.align}
+                inkTop={plan.lyricsInkTop}
+                inkBottom={plan.lyricsInkBottom}
+                targetHeight={plan.lyricsRect.height}
               />
             </div>
           </div>

@@ -210,6 +210,12 @@ export type LandscapeLayoutPlan = {
   coverRect: LayoutRect;
   metadataRect: LayoutRect;
   accessoriesRect?: LayoutRect;
+  accessoriesPlacement?: "left" | "right";
+  accessoriesScale?: number;
+  accessoriesInkTop?: number;
+  lyricsInkTop?: number;
+  lyricsInkBottom?: number;
+  layoutDensity?: "normal" | "compact" | "short";
   lyricsRect: LayoutRect;
   lyricsNaturalHeight: number;
   leftScale: number;

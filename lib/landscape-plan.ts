@@ -31,6 +31,12 @@ export type LandscapeMeasuredLine = {
 export type LandscapeLyricsMeasurement = {
   lyricsWidth: number;
   naturalHeight: number;
+  inkTop?: number;
+  inkBottom?: number;
+  canDistributeRows?: boolean;
+  rowCount?: number;
+  rightAccessoriesHeight?: number;
+  rightAccessoriesInkTop?: number;
   lines: LandscapeMeasuredLine[];
 };
 
@@ -42,6 +48,8 @@ export type LandscapeLeftMeasurement = {
   metadataHeight: number;
   accessoriesWidth: number;
   accessoriesHeight: number;
+  accessoriesInkTop?: number;
+  metadataInkBottom?: number;
 };
 
 export type LandscapePlanInput = {
@@ -147,17 +155,32 @@ function planCandidate(
   const columnGap = input.columnGap ?? 84;
   const coverMetadataGap = input.coverMetadataGap ?? 40;
   const minimumFlexibleGap = input.minimumFlexibleGap ?? 52;
-  const minimumScale = input.minimumLeftScale ?? 0.78;
+  const minimumScale = input.minimumLeftScale ?? 0.62;
   const maximumScale = input.maximumLeftScale ?? 1.28;
   const accessoriesHeight = Math.max(0, input.left.accessoriesHeight);
-  const baseLeftHeight = input.left.coverHeight + coverMetadataGap + input.left.metadataHeight +
+  const normalBaseHeight = input.left.coverHeight + coverMetadataGap + input.left.metadataHeight +
     (accessoriesHeight > 0 ? minimumFlexibleGap + accessoriesHeight : 0);
+  // Classification uses content height, never the user's requested canvas height.
+  const compact = lyrics.naturalHeight < normalBaseHeight * 0.78;
+  const effectiveCoverGap = compact ? coverMetadataGap * 0.65 : coverMetadataGap;
+  const effectiveFooterGap = compact ? minimumFlexibleGap * 0.65 : minimumFlexibleGap;
+  const compactBaseHeight = input.left.coverHeight + effectiveCoverGap + input.left.metadataHeight +
+    (accessoriesHeight > 0 ? effectiveFooterGap + accessoriesHeight : 0);
+  const rightFooterHeight = lyrics.rightAccessoriesHeight ?? accessoriesHeight;
+  const leftWithoutFooter = input.left.coverHeight + effectiveCoverGap + input.left.metadataHeight;
+  // Require a material mismatch and room for the relocated footer. A slightly
+  // shorter paragraph must not change the composition just because it wraps.
+  const moveFooter = accessoriesHeight > 0 && compact &&
+    lyrics.naturalHeight < compactBaseHeight * minimumScale * 0.72 &&
+    lyrics.naturalHeight + effectiveFooterGap + rightFooterHeight <=
+      (leftWithoutFooter - (input.left.metadataInkBottom ?? 0)) * minimumScale;
+  const baseLeftHeight = moveFooter ? leftWithoutFooter : compactBaseHeight;
   const minimumLeftHeight = baseLeftHeight * minimumScale;
   const requestedInternalHeight = settings.autoHeight
     ? 0
     : Math.max(0, settings.requestedHeight - outerMargin * 2);
   let internalHeight = Math.max(lyrics.naturalHeight, requestedInternalHeight, minimumLeftHeight);
-  const leftScale = clamp(internalHeight / Math.max(1, baseLeftHeight), minimumScale, maximumScale);
+  const leftScale = clamp((compact ? lyrics.naturalHeight : internalHeight) / Math.max(1, baseLeftHeight), minimumScale, maximumScale);
   const scaledBaseLeftHeight = baseLeftHeight * leftScale;
   // Rounding and extreme measured metadata can still require a few extra pixels.
   if (scaledBaseLeftHeight > internalHeight) internalHeight = scaledBaseLeftHeight;
@@ -176,33 +199,40 @@ function planCandidate(
     input.left.coverWidth * leftScale,
     input.left.coverHeight * leftScale
   );
+  // Preserve the shared scale on both artwork axes. Independently rounding
+  // small covers up can visibly distort wide or transparent artwork.
+  coverRect.width = round(input.left.coverWidth * leftScale);
+  coverRect.height = round(input.left.coverHeight * leftScale);
   const metadataRect = rect(
     leftX,
-    coverRect.y + coverRect.height + coverMetadataGap * leftScale,
+    coverRect.y + coverRect.height + effectiveCoverGap * leftScale,
     leftWidth,
     input.left.metadataHeight * leftScale
   );
-  const scaledAccessoriesHeight = accessoriesHeight * leftScale;
-  // Keep short lyrics centered where possible, but move them down when the
-  // cover, metadata and visible credits need more room above their bottom edge.
-  const lyricsY = outerMargin + Math.max(
-    0,
-    (internalHeight - lyrics.naturalHeight) / 2,
-    scaledAccessoriesHeight > 0 ? scaledBaseLeftHeight - lyrics.naturalHeight : 0
-  );
+  const scaledAccessoriesHeight = moveFooter ? rightFooterHeight : accessoriesHeight * leftScale;
+  const lyricsY = outerMargin;
+  const lyricsX = outerMargin + leftWidth + columnGap;
+  const metadataBottom = metadataRect.y + metadataRect.height - (input.left.metadataInkBottom ?? 0) * leftScale;
+  const compositionHeight = compact ? Math.max(lyrics.naturalHeight, scaledBaseLeftHeight) : internalHeight;
+  const footerBottom = moveFooter ? metadataBottom : outerMargin + compositionHeight;
+  // Gentle distribution can absorb the minimum readable left-column size.
+  // Extreme short/no-credit cases retain natural spacing and honest whitespace.
+  const maximumExpansion = (lyrics.rowCount ?? 0) >= 3 ? 1.8 : 1.35;
+  const distribute = lyrics.canDistributeRows && (!compact || compositionHeight <= lyrics.naturalHeight * maximumExpansion);
+  const lyricsHeight = !moveFooter && distribute ? compositionHeight : lyrics.naturalHeight;
   const accessoriesRect = scaledAccessoriesHeight > 0
     ? rect(
-        coverRect.x,
-        lyricsY + lyrics.naturalHeight - scaledAccessoriesHeight,
-        coverRect.width,
+        moveFooter ? lyricsX : coverRect.x,
+        footerBottom - scaledAccessoriesHeight,
+        moveFooter ? lyrics.lyricsWidth : coverRect.width,
         scaledAccessoriesHeight
       )
     : undefined;
+  if (accessoriesRect && !moveFooter) accessoriesRect.width = coverRect.width;
   const topGroupBottom = metadataRect.y + metadataRect.height;
   const flexibleGap = accessoriesRect
-    ? Math.max(0, accessoriesRect.y - topGroupBottom)
+    ? Math.max(0, accessoriesRect.y - (moveFooter ? lyricsY + lyricsHeight : topGroupBottom))
     : Math.max(0, outerMargin + internalHeight - topGroupBottom);
-  const lyricsX = outerMargin + leftWidth + columnGap;
   const score = scoreLandscapeCandidate({
     lyrics,
     canvasWidth,
@@ -220,7 +250,13 @@ function planCandidate(
     coverRect,
     metadataRect,
     accessoriesRect,
-    lyricsRect: rect(lyricsX, lyricsY, lyrics.lyricsWidth, lyrics.naturalHeight),
+    accessoriesPlacement: moveFooter ? "right" : "left",
+    accessoriesScale: moveFooter ? 1 : round(leftScale),
+    accessoriesInkTop: moveFooter ? (lyrics.rightAccessoriesInkTop ?? 0) : (input.left.accessoriesInkTop ?? 0) * leftScale,
+    lyricsInkTop: lyrics.inkTop ?? 0,
+    lyricsInkBottom: lyrics.inkBottom ?? 0,
+    layoutDensity: moveFooter ? "short" : compact ? "compact" : "normal",
+    lyricsRect: rect(lyricsX, lyricsY, lyrics.lyricsWidth, lyricsHeight),
     lyricsNaturalHeight: Math.ceil(lyrics.naturalHeight),
     leftScale: round(leftScale),
     flexibleGap: Math.max(0, Math.round(flexibleGap)),

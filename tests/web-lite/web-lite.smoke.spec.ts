@@ -4,6 +4,7 @@ import path from "node:path";
 import { expect, test, type Download, type Locator, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { EXAMPLE_SONGS, resolveExampleTranslation } from "../../lib/examples";
+import { measureTextInkInsets } from "../../lib/text-ink-bounds";
 import { closeStaticServer, startStaticServer } from "../helpers/static-test-server";
 
 const projectRoot = process.cwd();
@@ -736,21 +737,74 @@ test("keeps restrained content depth identical in preview and ExportCardHost", a
   await page.getByPlaceholder("e.g. Shared by Cherry", { exact: true }).fill("A listener who kept every word");
   await expect(previewCard.locator("[data-landscape-accessories]")).toBeVisible();
   for (const card of [previewCard, exportCard]) {
-    await expect.poll(() => card.evaluate((node) => {
+    await expect.poll(async () => {
+      const insets = await card.locator("[data-card-credits]").evaluate(measureTextInkInsets);
+      return card.evaluate((node, ink) => {
       const footer = node.querySelector<HTMLElement>("[data-card-credits]");
       const lyrics = node.querySelector<HTMLElement>("[data-card-lyrics]");
       const metadata = node.querySelector<HTMLElement>("[data-card-header]");
       if (!footer || !lyrics || !metadata) return false;
-      return Math.abs(footer.getBoundingClientRect().bottom - lyrics.getBoundingClientRect().bottom) < 1 &&
+      const scale = node.getBoundingClientRect().width / (node as HTMLElement).offsetWidth;
+      const footerBottom = footer.getBoundingClientRect().bottom - ink.bottom * scale;
+      const lyricsBottom = lyrics.getBoundingClientRect().bottom - Number(lyrics.dataset.inkBottom ?? 0) * scale;
+      return Math.abs(footerBottom - lyricsBottom) < 2 &&
         footer.getBoundingClientRect().top >= metadata.getBoundingClientRect().bottom &&
         getComputedStyle(footer).fontFamily.startsWith('"Smiley Sans"') &&
         Array.from(document.fonts).some((face) => face.family === "Smiley Sans" && face.status === "loaded");
-    })).toBe(true);
+      }, insets);
+    }).toBe(true);
   }
   await page.getByRole("switch", { name: "Background Grid", exact: true }).click();
   await expect(previewCard.locator('[data-card-fine-grid="true"]')).toHaveCount(1);
   await expect(exportCard.locator('[data-card-fine-grid="true"]')).toHaveCount(1);
   await expectContentDepthParity(previewCard, exportCard);
+
+  // Exercise visible ink edges through the real renderer, including the
+  // compact/short transition and preview/export parity in all bundled fonts.
+  await page.locator('[data-step-id="song-info"]').click();
+  await page.getByLabel("Song Title", { exact: true }).fill("橘子汽水");
+  await page.getByLabel("Artist", { exact: true }).fill("窦靖童");
+  await page.getByLabel("Album", { exact: true }).fill("春游");
+  for (const font of ["source-han-sans", "source-han-serif", "smiley-sans"]) {
+    await page.locator('[data-step-id="font"]').click();
+    await page.locator(`[data-font-id="${font}"]`).click();
+    for (const text of ["橘子汽水", "橘子汽水\n那么的甜", "橘子汽水\n那么的甜\n停留在这一个瞬间\n一定会想念你\n雨季后来见你"]) {
+      await page.locator('[data-step-id="lyrics"]').click();
+      await page.getByLabel("Lyric Text", { exact: true }).fill(text);
+      const short = text.split("\n").length <= 2;
+      await expect(exportCard).toHaveAttribute("data-landscape-footer", short ? "right" : "left");
+      for (const card of [previewCard, exportCard]) {
+        await expect.poll(async () => {
+          const lyricInk = await card.locator("[data-card-lyrics]").evaluate(measureTextInkInsets);
+          const creditInk = await card.locator("[data-card-credits]").evaluate(measureTextInkInsets);
+          const metadataInk = await card.locator("[data-card-header]").evaluate(measureTextInkInsets);
+          return card.evaluate((node, insets) => {
+            const scale = node.getBoundingClientRect().width / (node as HTMLElement).offsetWidth;
+            const lyrics = node.querySelector("[data-card-lyrics]")!.getBoundingClientRect();
+            const cover = node.querySelector('[data-testid="landscape-album-artwork"]')!.getBoundingClientRect();
+            const footer = node.querySelector("[data-card-credits]")!.getBoundingClientRect();
+            const metadata = node.querySelector("[data-card-header]")!.getBoundingClientRect();
+            const topDelta = Math.abs(lyrics.top + insets.lyricInk.top * scale - cover.top) / scale;
+            const targetBottom = insets.short ? metadata.bottom - insets.metadataInk.bottom * scale : lyrics.bottom - insets.lyricInk.bottom * scale;
+            const bottomDelta = Math.abs(footer.bottom - insets.creditInk.bottom * scale - targetBottom) / scale;
+            const separated = !insets.short || footer.top + insets.creditInk.top * scale > lyrics.bottom - insets.lyricInk.bottom * scale;
+            return topDelta < 2.5 && bottomDelta < 2.5 && separated;
+          }, { lyricInk, creditInk, metadataInk, short });
+        }).toBe(true);
+      }
+    }
+  }
+  await page.locator('[data-step-id="lyrics"]').click();
+  await page.getByLabel("Lyric Text", { exact: true }).fill("橘子汽水");
+  await page.getByRole("switch", { name: "Enable Translation", exact: true }).click();
+  await page.getByLabel("Translation", { exact: true }).fill("Orange soda, a sweet memory that stays with us through the long rainy season and every night that follows.");
+  await expect(exportCard).toHaveAttribute("data-landscape-plan", "ready");
+  await page.locator('[data-step-id="visual"]').click();
+  await page.getByRole("switch", { name: "Show project signature", exact: true }).click();
+  await page.getByRole("switch", { name: "Show Shared By", exact: true }).click();
+  await expect(exportCard.locator("[data-card-accessories]")).toHaveCount(0);
+  await page.locator('[data-step-id="export"]').click();
+  await expect(page.getByTestId("complete-export-button")).toBeEnabled();
 });
 
 test("renders enabled song titles beyond two lines without clipping portrait or instrumental metadata", async ({ page }) => {
