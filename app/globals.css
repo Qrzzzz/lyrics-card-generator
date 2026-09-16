@@ -1776,6 +1776,7 @@ button {
   gap: 0.5rem;
   padding: 0.75rem;
   overflow-wrap: anywhere;
+  height: 100%;
 }
 
 .editor-font-option__heading {

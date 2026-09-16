@@ -250,7 +250,6 @@ export function FontSchemePanel({
                     data-testid={`apply-font-preset-${presetId}`}
                     aria-pressed={active}
                     onClick={() => applyPreset(preset)}
-                    style={{ fontFamily: `${quoteSingleFontFamily(preset.cjkFontFamily)}, ${genericFallback}` }}
                     className={cn(
                       "editor-font-option control-focus rounded-lg border text-left transition",
                       active ? "border-[var(--control-selected-border)] bg-[var(--control-selected-bg)]" : "app-border bg-[rgb(var(--panel-bg))]"
@@ -258,8 +257,8 @@ export function FontSchemePanel({
                   >
                     <div className="editor-font-option__heading">
                       <div>
-                        <h4 className="app-text-primary font-semibold">{presetName(presetId, t)}</h4>
-                        <p className="app-text-primary mt-1 text-xs">{preset.cjkFontFamily}</p>
+                        <h4 className="app-text-primary text-sm font-semibold">{presetName(presetId, t)}</h4>
+                        <p className="app-text-primary mt-1 text-xs leading-5" style={{ fontFamily: `${quoteSingleFontFamily(preset.cjkFontFamily)}, ${genericFallback}` }}>{preset.cjkFontFamily}</p>
                       </div>
                       {active ? (
                         <span className="app-text-primary rounded-full bg-[rgb(var(--elevated-panel-bg))] px-2 py-1 text-xs font-semibold">

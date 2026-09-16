@@ -5,6 +5,9 @@ import { tmpdir } from "node:os";
 import { createRequire } from "node:module";
 import { defaultState } from "../components/editor/editor-defaults";
 import { createEditorDraftSnapshot } from "../lib/editor-draft";
+import { FONT_SCHEME_PRESETS } from "../lib/font-schemes";
+import { EditorAutosave } from "../lib/persistence/editor-autosave";
+import { ShutdownCoordinator } from "../lib/persistence/shutdown-coordinator";
 
 const require = createRequire(import.meta.url);
 const { ImportHistoryStore } = require("../electron/import-history");
@@ -14,6 +17,25 @@ async function main() {
   const root = await mkdtemp(path.join(tmpdir(), "draft-lifecycle-"));
   const snapshot = createEditorDraftSnapshot(defaultState, { step: 1, exportFormat: "png", exportQuality: "high" });
   try {
+    for (const scheme of Object.values(FONT_SCHEME_PRESETS)) {
+      const filePath = path.join(root, `font-${scheme.presetId}.json`);
+      const store = new ImportHistoryStore({ filePath });
+      const lease = await store.beginEditorDraft();
+      const draft = structuredClone(snapshot);
+      draft.style.fontScheme = scheme;
+      const controller = new EditorAutosave<typeof draft>({
+        write: async (value) => { await store.saveEditorDraft(lease.recordId, lease.token, 1, JSON.stringify(value)); },
+        onStatus: () => undefined
+      });
+      controller.reset(snapshot);
+      controller.update(draft, true);
+      const shutdown = new ShutdownCoordinator();
+      shutdown.register("editor-draft", () => controller.flush());
+      await shutdown.flushAll();
+      assert.deepEqual((await new ImportHistoryStore({ filePath }).getActiveEditorDraft()).editorDraft.style.fontScheme, scheme,
+        `${scheme.presetId}: close before debounce must save and restore every selectable preset`);
+      controller.dispose();
+    }
     for (const limit of [5, 10, "none", "unlimited"]) {
       const filePath = path.join(root, `limit-${limit}.json`);
       const store = new ImportHistoryStore({ filePath });

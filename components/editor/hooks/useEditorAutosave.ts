@@ -17,6 +17,7 @@ export function useEditorAutosave({ state, view, enabled, onRestore }: {
 }) {
   const [status, setStatus] = useState<AutosaveStatus>("loading");
   const [ready, setReady] = useState(false);
+  const [restoredDraft, setRestoredDraft] = useState<{ recordId: string; title: string } | null>(null);
   const inputs = useRef({ state, view, enabled, onRestore });
   inputs.current = { state, view, enabled, onRestore };
   const readyRef = useRef(false);
@@ -76,6 +77,7 @@ export function useEditorAutosave({ state, view, enabled, onRestore }: {
   }
 
   function reset(nextState: AppState, record?: Promise<ImportHistoryWriteResult> | string, saved = false, nextView = inputs.current.view) {
+    setRestoredDraft(null);
     generation.current++;
     lease.current = null;
     revision.current = 0;
@@ -129,7 +131,13 @@ export function useEditorAutosave({ state, view, enabled, onRestore }: {
     try {
       const result = await desktop.loadActiveEditorDraft();
       if (!result.ok) throw new Error(result.code);
-      if (result.data) await restore(result.data);
+      if (result.data) {
+        await restore(result.data);
+        if (draftHasContent(result.data.snapshot)) setRestoredDraft({
+          recordId: result.data.recordId,
+          title: (result.data.snapshot.view.songInfoDraft ?? result.data.snapshot.content).title
+        });
+      }
       else reset(inputs.current.state);
       readyRef.current = true;
       setReady(true);
@@ -174,6 +182,7 @@ export function useEditorAutosave({ state, view, enabled, onRestore }: {
     else controller.update(createEditorDraftSnapshot(inputs.current.state, inputs.current.view), true);
   }
   function removed(recordId?: string) {
+    setRestoredDraft((current) => !recordId || current?.recordId === recordId ? null : current);
     // Stop rather than resurrect a record the user deliberately removed.
     const expectedGeneration = generation.current;
     if (recordId === undefined || lease.current?.recordId === recordId) {
@@ -188,7 +197,7 @@ export function useEditorAutosave({ state, view, enabled, onRestore }: {
       }
     });
   }
-  return { status, ready, reset, restore, clearActive, removed, hasFormDraft: Boolean(view.songInfoDraft),
+  return { status, ready, reset, restore, clearActive, removed, restoredDraft, hasFormDraft: Boolean(view.songInfoDraft),
     markUnsaved: () => controller.markUnsaved(),
     ownsUrl: (url: string) => readyRef.current && ownedUrl.current === url,
     flush: () => flushRef.current(),

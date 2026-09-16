@@ -33,7 +33,7 @@ export const systemDialogCopy: Record<Locale, SystemDialogCopy> = {
     clearHistoryTitle: "清空全部历史记录？",
     trimHistoryTitle: "删除较早的历史记录？",
     historyCheckFailedTitle: "无法核对历史记录",
-    closeSaveFailedTitle: "设置保存失败",
+    closeSaveFailedTitle: "关闭前保存失败",
     restorePreferencesTitle: "恢复应用偏好默认值？"
   },
   "zh-TW": {
@@ -50,7 +50,7 @@ export const systemDialogCopy: Record<Locale, SystemDialogCopy> = {
     clearHistoryTitle: "清除全部歷史記錄？",
     trimHistoryTitle: "刪除較早的歷史記錄？",
     historyCheckFailedTitle: "無法確認歷史記錄",
-    closeSaveFailedTitle: "設定儲存失敗",
+    closeSaveFailedTitle: "關閉前儲存失敗",
     restorePreferencesTitle: "還原應用程式偏好預設值？"
   },
   en: {
@@ -67,7 +67,7 @@ export const systemDialogCopy: Record<Locale, SystemDialogCopy> = {
     clearHistoryTitle: "Clear all history?",
     trimHistoryTitle: "Delete older history items?",
     historyCheckFailedTitle: "History could not be checked",
-    closeSaveFailedTitle: "Settings could not be saved",
+    closeSaveFailedTitle: "Could not save before closing",
     restorePreferencesTitle: "Restore application defaults?"
   },
   fr: {
@@ -84,7 +84,7 @@ export const systemDialogCopy: Record<Locale, SystemDialogCopy> = {
     clearHistoryTitle: "Effacer tout l’historique ?",
     trimHistoryTitle: "Supprimer les anciens éléments ?",
     historyCheckFailedTitle: "Impossible de vérifier l’historique",
-    closeSaveFailedTitle: "Impossible d’enregistrer les paramètres",
+    closeSaveFailedTitle: "Échec de l’enregistrement avant fermeture",
     restorePreferencesTitle: "Restaurer les préférences par défaut ?"
   },
   ja: {
@@ -101,7 +101,7 @@ export const systemDialogCopy: Record<Locale, SystemDialogCopy> = {
     clearHistoryTitle: "履歴をすべて消去しますか？",
     trimHistoryTitle: "古い履歴を削除しますか？",
     historyCheckFailedTitle: "履歴を確認できませんでした",
-    closeSaveFailedTitle: "設定を保存できませんでした",
+    closeSaveFailedTitle: "終了前に保存できませんでした",
     restorePreferencesTitle: "アプリ設定を初期値に戻しますか？"
   },
   es: {
@@ -118,7 +118,7 @@ export const systemDialogCopy: Record<Locale, SystemDialogCopy> = {
     clearHistoryTitle: "¿Borrar todo el historial?",
     trimHistoryTitle: "¿Eliminar elementos antiguos?",
     historyCheckFailedTitle: "No se pudo comprobar el historial",
-    closeSaveFailedTitle: "No se pudo guardar la configuración",
+    closeSaveFailedTitle: "No se pudo guardar antes de cerrar",
     restorePreferencesTitle: "¿Restaurar las preferencias predeterminadas?"
   }
 };

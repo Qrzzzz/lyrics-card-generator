@@ -37,7 +37,7 @@ function normalizeDraftStyle(input) {
     const font = input.fontScheme;
     if (!object(font) || !["preset", "custom"].includes(font.mode) ||
       !text(font.cjkFontFamily, 512) || !text(font.latinFontFamily, 512) ||
-      (font.presetId !== undefined && !["source-han-sans", "source-han-serif"].includes(font.presetId))) return null;
+      (font.presetId !== undefined && !["source-han-sans", "source-han-serif", "smiley-sans"].includes(font.presetId))) return null;
     style.fontScheme = { mode: font.mode, cjkFontFamily: font.cjkFontFamily, latinFontFamily: font.latinFontFamily,
       ...(font.presetId ? { presetId: font.presetId } : {}) };
   }

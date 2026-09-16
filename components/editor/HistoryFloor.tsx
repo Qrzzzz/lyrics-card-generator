@@ -51,6 +51,7 @@ type HistoryFloorProps = {
   onClose: () => void;
   onReplay: (recordId: string, relocate?: boolean) => Promise<ImportHistoryReplayUiResult>;
   onNotify: ToastNotifier;
+  onRecoveryNotice?: (message: string) => void;
   onRecordRemoved: (recordId: string) => void;
   onHistoryCleared: () => void;
   onBeforeTransfer: () => Promise<void>;
@@ -64,6 +65,7 @@ export function HistoryFloor({
   onClose,
   onReplay,
   onNotify,
+  onRecoveryNotice,
   onRecordRemoved,
   onHistoryCleared,
   onBeforeTransfer
@@ -144,7 +146,8 @@ export function HistoryFloor({
       setTotal(result.total);
       setMissingIds(new Set());
       if (result.notice?.code === "corrupt_recovered") {
-        onNotify(copy.corruptRecovered, "warning");
+        if (onRecoveryNotice) onRecoveryNotice(copy.corruptRecovered);
+        else onNotify(copy.corruptRecovered, "warning");
       }
     } catch {
       if (requestId === requestIdRef.current) {

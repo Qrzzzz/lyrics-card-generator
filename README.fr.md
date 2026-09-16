@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v6.4.2.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v6.4.3.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="./docs/development.en.md">Développement local</a> ·
@@ -76,19 +76,19 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 
 
-* Programme d’installation Windows x64 : `Lyrics.Card.Generator.Setup.6.4.2.exe`
+* Programme d’installation Windows x64 : `Lyrics.Card.Generator.Setup.6.4.3.exe`
 
 À partir de la v6.2.2, le programme Setup Windows x64 est le seul paquet distribué.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### v6.4.2 · Corrections des brouillons et des exports
+### v6.4.3 · Notifications importantes et fiabilité des brouillons
 
-* Conserver la restauration automatique du brouillon lorsque la limite de l’historique diminue, avec annulation complète si les réglages ne sont pas enregistrés (#186).
-* Supprimer les couvertures sans référence tout en préservant l’historique et sa sauvegarde de récupération. Nettoyage après un délai de 24 heures, au démarrage, après modification de l’historique et chaque heure (#187).
-* Conserver l’image du cliché pendant l’export ou la copie Web Lite lorsque la couverture locale est remplacée ou effacée (#188).
+* Ajout de notifications interactives pour les brouillons restaurés, les échecs d’enregistrement et la récupération de l’historique, avec des actions pour fermer, consulter l’historique ou réessayer.
+* Correction de la validation des brouillons utilisant Smiley Sans lors de la fermeture, qui pouvait empêcher l’application de se fermer après un échec d’enregistrement.
+* Harmonisation des titres, descriptions et hauteurs de ligne des cartes de polices tout en conservant l’aperçu du nom de chaque police.
 
-[简体中文](./docs/releases/v6.4.2.zh-CN.md) · [繁體中文](./docs/releases/v6.4.2.zh-TW.md) · [English](./docs/releases/v6.4.2.en.md) · [Français](./docs/releases/v6.4.2.fr.md) · [日本語](./docs/releases/v6.4.2.ja.md) · [Español](./docs/releases/v6.4.2.es.md)
+[简体中文](./docs/releases/v6.4.3.zh-CN.md) · [繁體中文](./docs/releases/v6.4.3.zh-TW.md) · [English](./docs/releases/v6.4.3.en.md) · [Français](./docs/releases/v6.4.3.fr.md) · [日本語](./docs/releases/v6.4.3.ja.md) · [Español](./docs/releases/v6.4.3.es.md)
 
 <a id="fonctionnalités-principales"></a>
 

@@ -10,7 +10,10 @@ import {
 } from "@/components/editor/DeferredEditorSurfaces";
 import { ExportCelebration } from "@/components/effects/ExportCelebration";
 import { AppToast } from "@/components/feedback/AppToast";
-import { SettingsPersistenceNotice } from "@/components/feedback/SettingsPersistenceNotice";
+import { AppNotifications, type AppNotification } from "@/components/feedback/AppNotifications";
+import { notificationCopy } from "@/lib/notification-copy";
+import { editorAutosaveCopy } from "@/lib/editor-autosave-copy";
+import { importHistoryCopy } from "@/lib/import-history-copy";
 import { useToastQueue } from "@/components/feedback/useToastQueue";
 import {
   DEFAULT_INSTRUMENTAL_TEXT,
@@ -319,6 +322,28 @@ export function LyricEditor() {
     }
   });
 
+  const [historyRecoveryMessage, setHistoryRecoveryMessage] = useState("");
+  const noticeCopy = notificationCopy[state.locale];
+  const importantNotices: AppNotification[] = Object.entries(settingsPersistenceIssues).map(([source, issue]) => ({
+    id: `settings-${source}`, title: noticeCopy.settingsFailed,
+    message: issue.message, tone: "error", persistenceSource: source,
+    action: { label: issue.retryLabel, run: issue.retry }
+  }));
+  if (autosave.status === "error") importantNotices.push({
+    id: "draft-save-error", title: autosave.ready ? noticeCopy.saveFailed : noticeCopy.loadFailed,
+    message: autosave.ready ? noticeCopy.saveDetail : importHistoryCopy[state.locale].loadFailed,
+    tone: "error", action: { label: autosave.ready ? noticeCopy.retry : importHistoryCopy[state.locale].retry, run: autosave.retry }
+  });
+  if (historyRecoveryMessage) importantNotices.push({
+    id: "history-recovered", title: noticeCopy.historyRecovered, message: importHistoryCopy[state.locale].corruptRecovered,
+    tone: "warning", action: { label: noticeCopy.history, run: () => { openHistory(); setHistoryRecoveryMessage(""); } }
+  });
+  if (autosave.restoredDraft) importantNotices.push({
+    id: `restored-${autosave.restoredDraft.recordId}`, title: noticeCopy.restored,
+    message: `${autosave.restoredDraft.title.trim() || editorAutosaveCopy[state.locale].untitled} — ${noticeCopy.restoredDetail}`,
+    tone: "success", action: { label: noticeCopy.history, run: openHistory }
+  });
+
   const {
     celebrationKey,
     isCompleteExporting,
@@ -607,6 +632,7 @@ export function LyricEditor() {
             />
             {isDesktopShell ? (
               <DeferredHistorySurface
+                onRecoveryNotice={setHistoryRecoveryMessage}
                 mounted={mountedSurfaces.history}
                 isActive={isHistorySurfaceOpen}
                 locale={state.locale}
@@ -762,7 +788,7 @@ export function LyricEditor() {
           </div>
         </main>
       </ClickSpark>
-      <SettingsPersistenceNotice issues={settingsPersistenceIssues} />
+      <AppNotifications notices={isDesktopShell && activeSurface === "editor" ? importantNotices : []} closeLabel={noticeCopy.close} />
       <AppToast notices={toastNotices} announcement={toastAnnouncement} />
         <ExportCelebration burstKey={celebrationKey} accentColor={resolvedAccentColor} />
       </div>
