@@ -6,7 +6,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { build } from "esbuild";
-import { _electron as electron, chromium } from "playwright";
+import { _electron as electron } from "playwright";
 import { prepareEditorLanguage } from "./editor-language-test-helpers.mjs";
 import { closeElectronApplication } from "./electron-test-lifecycle.mjs";
 
@@ -52,7 +52,6 @@ const server = createServer((request, response) => {
   response.end("text" in fixture ? fixture.text : JSON.stringify(fixture.body));
 });
 let electronApp;
-let browser;
 let page;
 try {
   await mkdir(reportDirectory, { recursive: true });
@@ -143,16 +142,22 @@ try {
     }
   }
   await panel.screenshot({ path: path.join(reportDirectory, "provider-error.png") });
-  browser = await chromium.launch({ headless: true });
+  const browserWindow = electronApp.waitForEvent("window");
+  await electronApp.evaluate(({ BrowserWindow }, url) => {
+    // No preload: exercise the browser/Next client using Electron's bundled
+    // Chromium, so this regression needs no separately installed browser.
+    const window = new BrowserWindow({ show: false, webPreferences: { contextIsolation: true, nodeIntegration: false } });
+    void window.loadURL(url);
+  }, page.url());
+  const browserPage = await browserWindow;
+  await browserPage.waitForLoadState();
+  await browserPage.addScriptTag({ content: clientBundle.outputFiles[0].text });
   for (const fixture of sseFixtures) {
     const settings = { baseUrl: `${origin}/${fixture.name}`, model: "fixture-model", apiKey: fakeKey };
     await page.evaluate((value) => window.lyricsCardDesktop.saveAISettings(value), settings);
     const desktopResult = await translate();
     // A separate page without the preload API exercises the browser client and
     // packaged Next translation proxy against the same local provider fixtures.
-    const browserPage = await browser.newPage();
-    await browserPage.goto(page.url());
-    await browserPage.addScriptTag({ content: clientBundle.outputFiles[0].text });
     const browserResult = await browserPage.evaluate(async (value) => {
       if (window.lyricsCardDesktop) throw new Error("Browser fixture unexpectedly has desktop IPC");
       await window.__aiRegressionClient.saveAISettings(value);
@@ -160,13 +165,13 @@ try {
         return { content: await window.__aiRegressionClient.streamAITranslation({ prompt: "fixture only", reasoning: false }) };
       } catch (error) { return { code: error.code, message: error.message }; }
     }, settings);
-    await browserPage.close();
     for (const result of [desktopResult, browserResult]) {
       assert.equal(result.code, fixture.code, fixture.name);
       if (!fixture.code) assert.equal(result.content, "translated");
       assert.ok(!JSON.stringify(result).includes(fakeKey));
     }
   }
+  await browserPage.close();
   console.log("SSE terminal cases passed through packaged desktop IPC and browser/Next client");
   // Inject a decryption failure only into this disposable Electron process.
   // This is a recovery-path fixture, not evidence of damaged system storage.
@@ -190,7 +195,6 @@ try {
   assert.equal(upstreamCalls, beforeDecryptFailure, "unsafe URLs fail before fetch");
   console.log("Packaged desktop AI regression passed: settings UI, real preload/IPC/main, translation errors, decryption-failure fixture, and seven packaged Next route responses");
 } finally {
-  await browser?.close();
   await page?.evaluate(() => window.lyricsCardDesktopBridge?.confirmWindowClose()).catch(() => undefined);
   await closeElectronApplication(electronApp, { label: "desktop-ai-errors" });
   server.closeAllConnections();
