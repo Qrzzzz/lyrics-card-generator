@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v6.5.0.zh-TW.md">發布說明</a> ·
+  <a href="./docs/releases/v6.5.1.zh-TW.md">發布說明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">線上 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="./docs/development.zh-CN.md">本機開發</a> ·
@@ -73,22 +73,19 @@
 
 
 
-* Windows x64 安裝版：`Lyrics.Card.Generator.Setup.6.5.0.exe`
+* Windows x64 安裝版：`Lyrics.Card.Generator.Setup.6.5.1.exe`
 
 從 v6.2.2 起僅提供 Windows x64 Setup 安裝程式。
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v6.5.0 · 純色背景與 Mona Sans
+### v6.5.1 · 統一預設取色
 
-2026-09-17
+* 設定主題色與第三步純色背景共用圓形色塊、清晰勾選與鍵盤操作；支援方向鍵、Home / End 及單一 Tab 入口。
+* 純色背景可切換封面候選色與固定預設色。切換色盤不會改變背景，點選顏色才會套用；自動推薦繼續跟隨封面，手動選擇保持固定。
+* 兩處自訂顏色統一提供原生選色器與 HEX 輸入，支援省略 # 和頭尾空格。無效輸入顯示錯誤並保留實際顏色，Escape 還原目前有效值。
 
-* 第三步改為「背景與版面」，可自由切換流光漸層與極簡純色，字型、歌詞、譯文及畫布設定獨立保留。
-* 從封面代表區域提供最多六個候選色，合併近似色並排除透明像素及小面積雜訊；無有效分析時使用中性預設色。支援 HEX 與自訂顏色，更換封面不覆蓋使用者選色；自動文字顏色依最終背景選擇黑白。
-* 三套預設為思源黑體、思源宋體與 Mona Sans。本機內建 Mona Sans v2.0.27，西文歌詞使用 900 正體，中文按字元回退思源黑體；沿用原有預覽。
-* 專案署名使用 Mona Sans 斜體，Qrzzzz 為 800、斜線及儲存庫名稱為 600；分享者署名為 700。中文署名回退真正的思源黑體 Bold。
-
-[简体中文](./docs/releases/v6.5.0.zh-CN.md) · [繁體中文](./docs/releases/v6.5.0.zh-TW.md) · [English](./docs/releases/v6.5.0.en.md) · [Français](./docs/releases/v6.5.0.fr.md) · [日本語](./docs/releases/v6.5.0.ja.md) · [Español](./docs/releases/v6.5.0.es.md)
+[简体中文](./docs/releases/v6.5.1.zh-CN.md) · [繁體中文](./docs/releases/v6.5.1.zh-TW.md) · [English](./docs/releases/v6.5.1.en.md) · [Français](./docs/releases/v6.5.1.fr.md) · [日本語](./docs/releases/v6.5.1.ja.md) · [Español](./docs/releases/v6.5.1.es.md)
 
 ## ✨ 主要功能
 

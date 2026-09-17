@@ -19,7 +19,7 @@
 <p>
   <strong>Navegación</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Descargar la última versión</a> ·
-  <a href="./docs/releases/v6.5.0.es.md">Notas de la versión</a> ·
+  <a href="./docs/releases/v6.5.1.es.md">Notas de la versión</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en línea</a> ·
   <a href="#funciones-principales">Funciones principales</a> ·
   <a href="./docs/development.en.md">Desarrollo local</a> ·
@@ -76,22 +76,19 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 
 
-* Instalador de Windows x64: `Lyrics.Card.Generator.Setup.6.5.0.exe`
+* Instalador de Windows x64: `Lyrics.Card.Generator.Setup.6.5.1.exe`
 
 A partir de v6.2.2, Setup para Windows x64 es el único paquete de escritorio distribuido.
 
 > La compilación actual no está firmada. Windows puede mostrar una advertencia de SmartScreen, algo habitual en aplicaciones personales sin firma.
 
-### v6.5.0 · Fondos sólidos y Mona Sans
+### v6.5.1 · Selección unificada de colores predefinidos
 
-2026-09-17
+* Los acentos del tema y los fondos sólidos comparten muestras circulares, marcas de selección y navegación con flechas, Home / End y una sola parada de Tab.
+* Los fondos sólidos permiten alternar entre colores de portada y predefinidos. Cambiar de paleta no modifica el fondo hasta elegir un color. El modo automático sigue la portada; la selección manual permanece fija.
+* Ambos campos personalizados combinan un selector nativo con entrada HEX, admitiendo # opcional y espacios alrededor. Los valores no válidos muestran un error sin cambiar el color aplicado; Escape restaura el valor válido actual.
 
-* El tercer paso pasa a « Fondo y diseño ». Cambiar entre degradado y color sólido conserva fuentes, letras, traducciones y dimensiones.
-* Hasta seis colores proceden de regiones representativas de la portada, combinando tonos similares y filtrando transparencia y ruido de áreas pequeñas. Sin análisis válido se ofrecen tonos neutros predefinidos. Las elecciones HEX/personalizadas se conservan al cambiar la portada; el texto automático usa blanco o negro según el fondo final.
-* Los tres ajustes son Source Han Sans, Source Han Serif y Mona Sans. Mona Sans v2.0.27 se incluye localmente: letras latinas rectas con peso 900 y respaldo CJK por carácter con Source Han Sans. Se conservan las vistas previas.
-* Las firmas usan Mona Sans cursiva: Qrzzzz en 800, barra y repositorio en 600 y firma personal en 700. El chino usa un recurso real Source Han Sans Bold.
-
-[简体中文](./docs/releases/v6.5.0.zh-CN.md) · [繁體中文](./docs/releases/v6.5.0.zh-TW.md) · [English](./docs/releases/v6.5.0.en.md) · [Français](./docs/releases/v6.5.0.fr.md) · [日本語](./docs/releases/v6.5.0.ja.md) · [Español](./docs/releases/v6.5.0.es.md)
+[简体中文](./docs/releases/v6.5.1.zh-CN.md) · [繁體中文](./docs/releases/v6.5.1.zh-TW.md) · [English](./docs/releases/v6.5.1.en.md) · [Français](./docs/releases/v6.5.1.fr.md) · [日本語](./docs/releases/v6.5.1.ja.md) · [Español](./docs/releases/v6.5.1.es.md)
 
 <a id="funciones-principales"></a>
 

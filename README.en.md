@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v6.5.0.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v6.5.1.en.md">Release Notes</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
   <a href="./docs/web-lite-browser-support.md">Web Lite Browser Support</a> ·
   <a href="#features">Features</a> ·
@@ -77,22 +77,19 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 
 
-* Windows x64 installer: `Lyrics.Card.Generator.Setup.6.5.0.exe`
+* Windows x64 installer: `Lyrics.Card.Generator.Setup.6.5.1.exe`
 
 Starting with v6.2.2, Windows x64 Setup is the only distributed desktop package.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v6.5.0 · Solid backgrounds and Mona Sans
+### v6.5.1 · Consistent preset color selection
 
-2026-09-17
+* Theme accents and solid backgrounds now share circular swatches, clear checkmarks and keyboard navigation, including arrow keys, Home / End and a single Tab stop.
+* Solid backgrounds offer both cover colors and fixed presets. Switching palettes does not change the background until a color is selected. Automatic colors follow the cover; manual choices stay fixed.
+* Both custom color fields combine a native picker with HEX input, accepting an optional # and surrounding spaces. Invalid input shows an error without changing the applied color; Escape restores the current valid value.
 
-* Step three is now Background & layout, with flowing gradients and solid colors. Background changes preserve fonts, lyrics, translations and canvas settings.
-* Up to six distinct colors come from representative cover regions, merging similar colors and filtering transparent pixels and small noisy regions. Neutral presets cover missing analysis. HEX/custom choices persist across cover changes; automatic text uses black or white against the final solid color.
-* The three presets are Source Han Sans, Source Han Serif and Mona Sans. Bundled Mona Sans v2.0.27 uses upright weight 900 for Latin lyrics and per-character Source Han Sans fallback for CJK. Existing previews remain unchanged.
-* Credits use Mona Sans italic: Qrzzzz at 800, slash and repository at 600, and the sharer at 700. A real Source Han Sans Bold resource supports Chinese credits.
-
-[简体中文](./docs/releases/v6.5.0.zh-CN.md) · [繁體中文](./docs/releases/v6.5.0.zh-TW.md) · [English](./docs/releases/v6.5.0.en.md) · [Français](./docs/releases/v6.5.0.fr.md) · [日本語](./docs/releases/v6.5.0.ja.md) · [Español](./docs/releases/v6.5.0.es.md)
+[简体中文](./docs/releases/v6.5.1.zh-CN.md) · [繁體中文](./docs/releases/v6.5.1.zh-TW.md) · [English](./docs/releases/v6.5.1.en.md) · [Français](./docs/releases/v6.5.1.fr.md) · [日本語](./docs/releases/v6.5.1.ja.md) · [Español](./docs/releases/v6.5.1.es.md)
 
 <a id="features"></a>
 
