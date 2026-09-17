@@ -290,7 +290,7 @@ function normalizeError(error: unknown) {
     return error;
   }
   if (error instanceof AIStreamError) {
-    return new AITranslationError(error.message, error.code);
+    return new AITranslationError("", error.code);
   }
   if (error instanceof ResponseBodyLimitExceededError) {
     return new AITranslationError(error.message, "response_too_large");

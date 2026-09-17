@@ -163,13 +163,14 @@ try {
       await window.__aiRegressionClient.saveAISettings(value);
       try {
         return { content: await window.__aiRegressionClient.streamAITranslation({ prompt: "fixture only", reasoning: false }) };
-      } catch (error) { return { code: error.code, message: error.message }; }
+      } catch (error) { return { code: error.code, message: window.__aiRegressionClient.normalizeAIErrorMessage(error, "zh") }; }
     }, settings);
     for (const result of [desktopResult, browserResult]) {
       assert.equal(result.code, fixture.code, fixture.name);
       if (!fixture.code) assert.equal(result.content, "translated");
       assert.ok(!JSON.stringify(result).includes(fakeKey));
     }
+    if (fixture.code) assert.equal(browserResult.message, desktopResult.message, `${fixture.name}: localized errors match`);
   }
   await browserPage.close();
   console.log("SSE terminal cases passed through packaged desktop IPC and browser/Next client");
