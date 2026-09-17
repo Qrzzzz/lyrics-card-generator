@@ -136,8 +136,8 @@ try {
   await page.screenshot({ path: path.join(report, "font-card-layout.png") });
   await page.locator('[data-step-id="layout"]').click();
   await page.locator('[data-segment-value="solid"]').click();
-  await page.locator('[data-solid-controls] input[maxlength="7"]').fill("#E8E4DA");
-  await page.locator('[data-solid-controls] input[maxlength="7"]').blur();
+  await page.getByTestId("solid-color-input").fill("#E8E4DA");
+  await page.getByTestId("solid-color-input").blur();
   await page.locator('[data-step-id="font"]').click();
   await closeNormally();
   assert.equal((await disk()).records.find((record) => record.id === remoteId).editorDraft.style.fontScheme.presetId, "mona-sans");
@@ -148,10 +148,10 @@ try {
   assert.equal(solidSavedStyle.solidColor, "#E8E4DA");
   assert.equal(solidSavedStyle.solidColorSource, "user");
   await page.locator('[data-step-id="layout"]').click();
-  await expect(page.locator('[data-solid-controls] input[maxlength="7"]')).toHaveValue("#E8E4DA");
+  await expect(page.getByTestId("solid-color-input")).toHaveValue("#E8E4DA");
   await page.locator('[data-segment-value="palette"]').click();
   await page.locator('[data-segment-value="solid"]').click();
-  await expect(page.locator('[data-solid-controls] input[maxlength="7"]')).toHaveValue("#E8E4DA");
+  await expect(page.getByTestId("solid-color-input")).toHaveValue("#E8E4DA");
   await page.screenshot({ path: path.join(report, "solid-background-restored.png") });
   await page.locator('[data-notification-id^="restored-"]').getByRole("button", { name: "View history" }).click();
   await page.getByTestId("history-surface").waitFor({ state: "visible" });
