@@ -392,11 +392,11 @@ function testFontResolution() {
   );
 }
 
-function testSmileySansPreset() {
-  const restored = JSON.parse(JSON.stringify({ ...baseStyle, fontScheme: FONT_SCHEME_PRESETS["smiley-sans"] })) as CardStyle;
-  assertEqual(getActiveFontMode(restored), "preset", "restored Smiley Sans remains a preset");
-  assertEqual(normalizeFontScheme(restored.fontScheme!).presetId, "smiley-sans", "Smiley Sans survives save/restore normalization");
-  assert(getResolvedFontStyle(restored)?.fontFamily?.startsWith('"Smiley Sans",'), "Smiley Sans resolves before bundled fallback fonts");
+function testMonaSansPreset() {
+  const restored = JSON.parse(JSON.stringify({ ...baseStyle, fontScheme: FONT_SCHEME_PRESETS["mona-sans"] })) as CardStyle;
+  assertEqual(getActiveFontMode(restored), "preset", "restored Mona Sans remains a preset");
+  assertEqual(normalizeFontScheme(restored.fontScheme!).presetId, "mona-sans", "Mona Sans survives save/restore normalization");
+  assert(getResolvedFontStyle(restored)?.fontFamily?.startsWith('"Mona Sans",'), "Mona Sans resolves before bundled fallback fonts");
 }
 
 function testFontPickerOptions() {
@@ -602,5 +602,5 @@ function assertThrows(action: () => void, expectedMessage: string, message: stri
   throw new Error(`Assertion failed: ${message}. Expected function to throw.`);
 }
 
-testSmileySansPreset();
+testMonaSansPreset();
 main();

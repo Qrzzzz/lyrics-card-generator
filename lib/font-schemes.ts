@@ -15,11 +15,11 @@ export const FONT_SCHEME_PRESETS: Record<FontPresetId, FontScheme> = {
     cjkFontFamily: "Source Han Serif SC",
     latinFontFamily: "Source Han Serif SC"
   },
-  "smiley-sans": {
+  "mona-sans": {
     mode: "preset",
-    presetId: "smiley-sans",
-    cjkFontFamily: "Smiley Sans",
-    latinFontFamily: "Smiley Sans"
+    presetId: "mona-sans",
+    cjkFontFamily: "Source Han Sans SC",
+    latinFontFamily: "Mona Sans"
   }
 };
 

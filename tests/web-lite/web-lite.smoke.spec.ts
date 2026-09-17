@@ -538,7 +538,7 @@ test("exposes all five font schemes and persists all six languages, export forma
   await expect(serif).toHaveAttribute("aria-pressed", "true");
 
   const fontFaces = await page.evaluate(async () => {
-    const families = ["Source Han Sans Heavy Local", "Source Han Serif Heavy Local", "Smiley Sans"];
+    const families = ["Source Han Sans Heavy Local", "Source Han Serif Heavy Local", "Mona Sans"];
     await Promise.all(families.map((family) => document.fonts.load(`16px "${family}"`)));
     await document.fonts.ready;
     return families.map((family) => ({
@@ -549,7 +549,7 @@ test("exposes all five font schemes and persists all six languages, export forma
   expect(fontFaces).toEqual([
     { family: "Source Han Sans Heavy Local", loaded: true },
     { family: "Source Han Serif Heavy Local", loaded: true },
-    { family: "Smiley Sans", loaded: true }
+    { family: "Mona Sans", loaded: true }
   ]);
 
   await page.locator('[data-step-id="export"]').click();
@@ -581,27 +581,71 @@ test("exposes all five font schemes and persists all six languages, export forma
   await expect(page.locator('[data-segment-value="webp"]')).toHaveAttribute("aria-checked", "true");
 });
 
-test("Smiley Sans preset renders and exports in portrait and landscape", async ({ page }) => {
+test("Mona Sans preset renders and exports in portrait and landscape", async ({ page }) => {
   await openWebLite(page, { width: 1280, height: 900 });
   await page.locator('[data-step-id="font"]').click();
-  const smiley = page.locator('[data-font-id="smiley-sans"]');
-  await smiley.click();
-  await expect(smiley).toHaveAttribute("aria-pressed", "true");
+  const mona = page.locator('[data-font-id="mona-sans"]');
+  await mona.click();
+  await expect(mona).toHaveAttribute("aria-pressed", "true");
   const preview = page.getByTestId("lyric-card-preview").locator('[data-export-card="true"]');
-  await expect(preview).toHaveCSS("font-family", /^"Smiley Sans"/);
+  await expect(preview).toHaveCSS("font-family", /^"Mona Sans"/);
   await page.evaluate(() => document.fonts.ready);
-  expect(await page.evaluate(() => Array.from(document.fonts).some((face) => face.family === "Smiley Sans" && face.status === "loaded"))).toBe(true);
+  expect(await page.evaluate(() => Array.from(document.fonts).some((face) => face.family === "Mona Sans" && face.status === "loaded"))).toBe(true);
   for (const mode of ["portrait", "landscape"]) {
     await page.locator('[data-step-id="layout"]').click();
     await page.locator(`[data-segment-value="${mode}"]`).click();
     await page.locator('[data-step-id="font"]').click();
-    await expect(smiley).toHaveAttribute("aria-pressed", "true");
+    await expect(mona).toHaveAttribute("aria-pressed", "true");
     await page.locator('[data-step-id="export"]').click();
     const card = page.locator('[data-export-card-host] [data-export-card="true"]').first();
-    await expect(card).toHaveCSS("font-family", /^"Smiley Sans"/);
+    await expect(card).toHaveCSS("font-family", /^"Mona Sans"/);
     const [download] = await Promise.all([
       page.waitForEvent("download"), page.getByTestId("complete-export-button").click()
     ]);
+    const size = await pngDimensions(download);
+    expect(size.width).toBeGreaterThan(0);
+    expect(size.height).toBeGreaterThan(0);
+  }
+});
+
+test("solid background keeps custom HEX across modes and exports offline with Mona credits", async ({ page }) => {
+  await openWebLite(page, { width: 1280, height: 900 });
+  await page.locator('[data-step-id="lyrics"]').click();
+  await page.getByLabel("Lyric Text", { exact: true }).fill("Carry the light into tomorrow\n与你同行，追随晨光");
+  await page.locator('[data-step-id="font"]').click();
+  await page.locator('[data-font-id="mona-sans"]').click();
+  await page.locator('[data-step-id="layout"]').click();
+  await page.locator('[data-segment-value="solid"]').click();
+  const hex = page.locator('[data-solid-controls] input[maxlength="7"]');
+  await hex.fill("#F0EEDD");
+  await hex.blur();
+  const preview = page.getByTestId("lyric-card-preview");
+  await expect(preview.locator('[data-solid-background]')).toHaveCSS("background-color", "rgb(240, 238, 221)");
+  await expect(preview.locator('[data-palette-field], [data-card-fine-grid]')).toHaveCount(0);
+  await page.locator('[data-segment-value="palette"]').click();
+  await expect(preview.locator('[data-palette-field]')).toHaveCount(1);
+  await page.locator('[data-segment-value="solid"]').click();
+  await expect(hex).toHaveValue("#F0EEDD");
+  await page.locator('[data-step-id="visual"]').click();
+  await page.getByRole("switch", { name: "Show project signature", exact: true }).check();
+  await page.getByRole("switch", { name: "Show Shared By", exact: true }).check();
+  await page.getByRole("textbox", { name: "Shared By", exact: true }).fill("分享者 Qrzzzz / A long signature with italic edges fff");
+  await page.evaluate(() => document.fonts.ready);
+  await page.context().setOffline(true);
+  for (const mode of ["portrait", "landscape"]) {
+    await page.locator('[data-step-id="layout"]').click();
+    await page.locator(`[data-segment-value="${mode}"]`).click();
+    await page.locator('[data-step-id="export"]').click();
+    const card = page.locator('[data-export-card-host] [data-export-card="true"]').first();
+    await expect(card.locator('[data-solid-background]')).toHaveCSS("background-color", "rgb(240, 238, 221)");
+    await expect(card.locator('[data-project-signature-owner]')).toHaveCSS("font-weight", "800");
+    await expect(card.locator('[data-project-signature-repository]')).toHaveCSS("font-weight", "600");
+    await expect(card.locator('[data-project-signature]')).toHaveCSS("font-style", "italic");
+    await expect(card.locator('[data-card-shared-by]')).toHaveCSS("font-weight", "700");
+    await expect(card.locator('[data-auto-width-line="lyric"]').first()).toHaveCSS("font-weight", "900");
+    await expect(card.locator('[data-auto-width-line="lyric"]').first()).toHaveCSS("color", "rgb(0, 0, 0)");
+    await page.screenshot({ path: test.info().outputPath(`solid-${mode}.png`) });
+    const [download] = await Promise.all([page.waitForEvent("download"), page.getByTestId("complete-export-button").click()]);
     const size = await pngDimensions(download);
     expect(size.width).toBeGreaterThan(0);
     expect(size.height).toBeGreaterThan(0);
@@ -749,8 +793,8 @@ test("keeps restrained content depth identical in preview and ExportCardHost", a
       const lyricsBottom = lyrics.getBoundingClientRect().bottom - Number(lyrics.dataset.inkBottom ?? 0) * scale;
       return Math.abs(footerBottom - lyricsBottom) < 2 &&
         footer.getBoundingClientRect().top >= metadata.getBoundingClientRect().bottom &&
-        getComputedStyle(footer).fontFamily.startsWith('"Smiley Sans"') &&
-        Array.from(document.fonts).some((face) => face.family === "Smiley Sans" && face.status === "loaded");
+        getComputedStyle(footer).fontFamily.startsWith('"Mona Sans"') &&
+        Array.from(document.fonts).some((face) => face.family === "Mona Sans" && face.status === "loaded");
       }, insets);
     }).toBe(true);
   }
@@ -765,7 +809,7 @@ test("keeps restrained content depth identical in preview and ExportCardHost", a
   await page.getByLabel("Song Title", { exact: true }).fill("橘子汽水");
   await page.getByLabel("Artist", { exact: true }).fill("窦靖童");
   await page.getByLabel("Album", { exact: true }).fill("春游");
-  for (const font of ["source-han-sans", "source-han-serif", "smiley-sans"]) {
+  for (const font of ["source-han-sans", "source-han-serif", "mona-sans"]) {
     await page.locator('[data-step-id="font"]').click();
     await page.locator(`[data-font-id="${font}"]`).click();
     for (const text of ["橘子汽水", "橘子汽水\n那么的甜", "橘子汽水\n那么的甜\n停留在这一个瞬间\n一定会想念你\n雨季后来见你"]) {

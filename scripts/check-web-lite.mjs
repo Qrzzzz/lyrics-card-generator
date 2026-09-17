@@ -46,7 +46,9 @@ try {
     "./public/app-icon.png",
     "./public/fonts/SourceHanSansSC-Heavy.otf",
     "./public/fonts/SourceHanSerifSC-Heavy.otf",
-    "./public/fonts/SmileySans-Oblique.woff2"
+    "./public/fonts/MonaSans-VF.woff2",
+    "./public/fonts/MonaSans-Italic-VF.woff2",
+    "./public/fonts/SourceHanSansSC-Bold.otf"
   ];
   for (const fragment of requiredFragments) {
     if (!generated.includes(fragment)) {

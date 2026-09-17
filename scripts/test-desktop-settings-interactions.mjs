@@ -1820,18 +1820,18 @@ async function assertFontPickerBehavior() {
   assert.match(await page.getByTestId("edit-custom-font-scheme").textContent() ?? "", /Microsoft YaHei/, "reopening the font page preserves the saved CJK selection");
   assert.match(await page.getByTestId("edit-custom-font-scheme").textContent() ?? "", /Arial/, "reopening the font page preserves the saved Latin selection");
 
-  await page.getByTestId("apply-font-preset-smiley-sans").click();
+  await page.getByTestId("apply-font-preset-mona-sans").click();
   await page.waitForFunction(() => {
     const card = document.querySelector('[data-testid="lyric-card-preview"] article[data-export-card="true"]');
-    return card && getComputedStyle(card).fontFamily.startsWith('"Smiley Sans"');
+    return card && getComputedStyle(card).fontFamily.startsWith('"Mona Sans"');
   });
   await page.locator('button[data-step-id="link"]').click();
   await page.locator('button[data-step-id="font"]').click();
-  assert.equal(await page.getByTestId("apply-font-preset-smiley-sans").getAttribute("aria-pressed"), "true", "Smiley Sans remains selected when reopening the font page");
+  assert.equal(await page.getByTestId("apply-font-preset-mona-sans").getAttribute("aria-pressed"), "true", "Mona Sans remains selected when reopening the font page");
   assert.equal(await page.evaluate(async () => {
     await document.fonts.ready;
-    return Array.from(document.fonts).some((face) => face.family === "Smiley Sans" && face.status === "loaded");
-  }), true, "the packaged Smiley Sans face is loaded");
+    return Array.from(document.fonts).some((face) => face.family === "Mona Sans" && face.status === "loaded");
+  }), true, "the packaged Mona Sans face is loaded");
 
   await page.getByTestId("apply-font-preset-source-han-sans").click();
   await page.waitForFunction(() => {

@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v6.4.3.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v6.5.0.zh-CN.md">发布说明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">在线 Web Lite 版</a> ·
   <a href="./docs/web-lite-browser-support.md">Web Lite 浏览器支持</a> ·
   <a href="./docs/desktop.md">桌面维护文档</a> ·
@@ -75,19 +75,22 @@
 
 
 
-* Windows x64 安装版：`Lyrics.Card.Generator.Setup.6.4.3.exe`
+* Windows x64 安装版：`Lyrics.Card.Generator.Setup.6.5.0.exe`
 
 从 v6.2.2 起只提供 Windows x64 Setup 安装包。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v6.4.3 · 重要提示与草稿可靠性
+### v6.5.0 · 纯色背景与 Mona Sans
 
-* 新增右上角可交互通知，准确提示草稿恢复、保存失败和历史恢复，并提供关闭、查看历史和重试操作。
-* 修复得意黑草稿无法通过校验、导致关闭前保存失败并阻止应用退出的问题。
-* 统一字体方案卡片的标题、说明和同行高度，同时保留字体名称预览。
+2026-09-17
 
-[简体中文](./docs/releases/v6.4.3.zh-CN.md) · [繁體中文](./docs/releases/v6.4.3.zh-TW.md) · [English](./docs/releases/v6.4.3.en.md) · [Français](./docs/releases/v6.4.3.fr.md) · [日本語](./docs/releases/v6.4.3.ja.md) · [Español](./docs/releases/v6.4.3.es.md)
+* 第三步更新为“背景与布局”，可自由切换流光渐变和极简纯色；字体、歌词、译文与画布设置独立保留。
+* 纯色从封面的代表区域提供最多六个候选，合并近似色并过滤透明像素和小面积噪点；缺少有效分析时提供中性预设色。支持 HEX 和自定义颜色，用户选色不会被新封面覆盖，自动文字颜色按最终背景选择黑白。
+* 三套字体预设为思源黑体、思源宋体和 Mona Sans。Mona Sans v2.0.27 本地打包，西文歌词为 900 正体，中文按字符回退思源黑体；沿用原预览。
+* 项目署名采用 Mona Sans 斜体，Qrzzzz 为 800、斜杠及仓库名为 600；分享者署名为 700。中文署名使用真实思源黑体 Bold 回退。
+
+[简体中文](./docs/releases/v6.5.0.zh-CN.md) · [繁體中文](./docs/releases/v6.5.0.zh-TW.md) · [English](./docs/releases/v6.5.0.en.md) · [Français](./docs/releases/v6.5.0.fr.md) · [日本語](./docs/releases/v6.5.0.ja.md) · [Español](./docs/releases/v6.5.0.es.md)
 
 <a id="主要功能"></a>
 
@@ -128,7 +131,7 @@
 
 ### 🔤 字体与多语言界面
 
-* 支持思源黑体 / 思源宋体 / 得意黑三套字体方案、自定义中日韩 / 西文字体、系统字体选择弹窗与真实歌词字体预览
+* 支持思源黑体 / 思源宋体 / Mona Sans三套字体方案、自定义中日韩 / 西文字体、系统字体选择弹窗与真实歌词字体预览
 * 支持简体中文 / 繁體中文 / English / Français / 日本語 / Español 界面切换
 
 ### 🚀 版本更新
@@ -146,7 +149,7 @@
 
 感谢 [Apple Music](https://music.apple.com/)。这个项目的彩色渐变、流光背景审美，以及早期歌词卡片排版方向，受到 Apple Music 视觉体验的启发。本项目与 Apple Music 没有关联，也不代表 Apple Music 官方立场。
 
-感谢 [思源黑体](https://github.com/adobe-fonts/source-han-sans)、[思源宋体](https://github.com/adobe-fonts/source-han-serif) 和 [得意黑](https://github.com/atelier-anchor/smiley-sans)。它们为歌词正文、歌曲信息和页脚提供了清晰且各具特色的字体支持。
+感谢 [思源黑体](https://github.com/adobe-fonts/source-han-sans)、[思源宋体](https://github.com/adobe-fonts/source-han-serif) 和 [Mona Sans](https://github.com/github/mona-sans)。它们为歌词正文、歌曲信息和页脚提供了清晰且各具特色的字体支持。
 
 感谢 [OpenAI Codex](https://openai.com/codex/)。它把许多零散想法转化为可运行的代码、桌面版构建流程和实际功能。
 
@@ -182,4 +185,4 @@
 
 你可以为了个人、非商业、学习、评估目的查看、下载、运行源码，并进行仅限个人使用的私下修改。未经作者书面许可，不得商用、再分发、重新打包、公开发布修改版，或基于本项目制作竞争性产品。
 
-内置的[思源黑体](./public/fonts/LICENSE-SourceHanSans.txt)、[思源宋体](./public/fonts/LICENSE-SourceHanSerif.txt)和[得意黑](./public/fonts/LICENSE-SmileySans.txt)分别遵循 SIL Open Font License 1.1，不适用本项目的专有许可限制。其他第三方组件遵循各自许可证；详情见 [LICENSE](./LICENSE) 与[第三方声明](./public/licenses/THIRD-PARTY-NOTICES.txt)。
+内置的[思源黑体](./public/fonts/LICENSE-SourceHanSans.txt)、[思源宋体](./public/fonts/LICENSE-SourceHanSerif.txt)和[Mona Sans](./public/fonts/LICENSE-MonaSans.txt)分别遵循 SIL Open Font License 1.1，不适用本项目的专有许可限制。其他第三方组件遵循各自许可证；详情见 [LICENSE](./LICENSE) 与[第三方声明](./public/licenses/THIRD-PARTY-NOTICES.txt)。

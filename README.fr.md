@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v6.4.3.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v6.5.0.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="./docs/development.en.md">Développement local</a> ·
@@ -76,19 +76,22 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 
 
-* Programme d’installation Windows x64 : `Lyrics.Card.Generator.Setup.6.4.3.exe`
+* Programme d’installation Windows x64 : `Lyrics.Card.Generator.Setup.6.5.0.exe`
 
 À partir de la v6.2.2, le programme Setup Windows x64 est le seul paquet distribué.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### v6.4.3 · Notifications importantes et fiabilité des brouillons
+### v6.5.0 · Fonds unis et Mona Sans
 
-* Ajout de notifications interactives pour les brouillons restaurés, les échecs d’enregistrement et la récupération de l’historique, avec des actions pour fermer, consulter l’historique ou réessayer.
-* Correction de la validation des brouillons utilisant Smiley Sans lors de la fermeture, qui pouvait empêcher l’application de se fermer après un échec d’enregistrement.
-* Harmonisation des titres, descriptions et hauteurs de ligne des cartes de polices tout en conservant l’aperçu du nom de chaque police.
+2026-09-17
 
-[简体中文](./docs/releases/v6.4.3.zh-CN.md) · [繁體中文](./docs/releases/v6.4.3.zh-TW.md) · [English](./docs/releases/v6.4.3.en.md) · [Français](./docs/releases/v6.4.3.fr.md) · [日本語](./docs/releases/v6.4.3.ja.md) · [Español](./docs/releases/v6.4.3.es.md)
+* La troisième étape devient « Fond et mise en page ». Le passage du dégradé au fond uni conserve les polices, paroles, traductions et dimensions.
+* Jusqu’à six couleurs proviennent de zones représentatives de la pochette. Les couleurs proches sont regroupées, les pixels transparents et petites zones parasites filtrés. Sans analyse valide, des tons neutres prédéfinis sont proposés. Les choix HEX/personnalisés sont conservés lors du changement de pochette ; le texte automatique devient noir ou blanc selon le fond final.
+* Les trois préréglages sont Source Han Sans, Source Han Serif et Mona Sans. Mona Sans v2.0.27 est intégrée localement : paroles latines droites en graisse 900 et repli CJK par caractère vers Source Han Sans. Les aperçus existants sont conservés.
+* Les signatures utilisent Mona Sans italique : Qrzzzz en 800, barre et dépôt en 600, signature personnelle en 700. Le chinois utilise une véritable ressource Source Han Sans Bold.
+
+[简体中文](./docs/releases/v6.5.0.zh-CN.md) · [繁體中文](./docs/releases/v6.5.0.zh-TW.md) · [English](./docs/releases/v6.5.0.en.md) · [Français](./docs/releases/v6.5.0.fr.md) · [日本語](./docs/releases/v6.5.0.ja.md) · [Español](./docs/releases/v6.5.0.es.md)
 
 <a id="fonctionnalités-principales"></a>
 
@@ -129,7 +132,7 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 ### 🔤 Polices et interface multilingue
 
-* Jeux Source Han Sans / Serif / Smiley Sans, polices CJK et latines indépendantes, sélecteur de polices système et aperçu avec de vraies paroles
+* Jeux Source Han Sans / Serif / Mona Sans, polices CJK et latines indépendantes, sélecteur de polices système et aperçu avec de vraies paroles
 * Interface en chinois simplifié, chinois traditionnel, anglais, français, japonais et espagnol
 
 ### 🚀 Mises à jour
@@ -147,7 +150,7 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 Merci à [Apple Music](https://music.apple.com/). Les dégradés colorés, l’esthétique des arrière-plans lumineux et fluides, ainsi que les premières orientations de mise en page des cartes de paroles de ce projet ont été inspirés par l’expérience visuelle d’Apple Music. Ce projet n’est pas affilié à Apple Music et ne représente pas la position officielle d’Apple Music.
 
-Merci à [Source Han Sans](https://github.com/adobe-fonts/source-han-sans), [Source Han Serif](https://github.com/adobe-fonts/source-han-serif) et [Smiley Sans](https://github.com/atelier-anchor/smiley-sans) pour leur typographie lisible et distinctive dans les paroles, les informations musicales et les crédits.
+Merci à [Source Han Sans](https://github.com/adobe-fonts/source-han-sans), [Source Han Serif](https://github.com/adobe-fonts/source-han-serif) et [Mona Sans](https://github.com/github/mona-sans) pour leur typographie lisible et distinctive dans les paroles, les informations musicales et les crédits.
 
 Merci à [OpenAI Codex](https://openai.com/codex/). Il a transformé de nombreuses idées éparses en code exécutable, en workflows de build desktop et en fonctionnalités réelles.
 
@@ -184,4 +187,4 @@ Ce projet est publié sous une licence Source Available personnalisée, et non s
 
 Vous pouvez consulter, télécharger, exécuter et modifier en privé le code source à des fins personnelles, non commerciales, éducatives et d'évaluation. L'utilisation commerciale, la redistribution, le repackaging, les versions modifiées publiques et les produits concurrents basés sur ce projet nécessitent une autorisation écrite préalable du détenteur des droits.
 
-Les polices intégrées [Source Han Sans](./public/fonts/LICENSE-SourceHanSans.txt), [Source Han Serif](./public/fonts/LICENSE-SourceHanSerif.txt) et [Smiley Sans](./public/fonts/LICENSE-SmileySans.txt) sont chacune distribuées sous SIL Open Font License 1.1 et ne sont pas soumises aux restrictions de la licence propriétaire du projet. Les autres composants tiers conservent leurs propres licences. Voir [LICENSE](./LICENSE) et les [mentions relatives aux tiers](./public/licenses/THIRD-PARTY-NOTICES.txt).
+Les polices intégrées [Source Han Sans](./public/fonts/LICENSE-SourceHanSans.txt), [Source Han Serif](./public/fonts/LICENSE-SourceHanSerif.txt) et [Mona Sans](./public/fonts/LICENSE-MonaSans.txt) sont chacune distribuées sous SIL Open Font License 1.1 et ne sont pas soumises aux restrictions de la licence propriétaire du projet. Les autres composants tiers conservent leurs propres licences. Voir [LICENSE](./LICENSE) et les [mentions relatives aux tiers](./public/licenses/THIRD-PARTY-NOTICES.txt).

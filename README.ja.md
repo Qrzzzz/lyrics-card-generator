@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v6.4.3.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v6.5.0.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="./docs/development.en.md">ローカル開発</a> ·
@@ -76,19 +76,22 @@
 
 
 
-* Windows x64 インストーラー：`Lyrics.Card.Generator.Setup.6.4.3.exe`
+* Windows x64 インストーラー：`Lyrics.Card.Generator.Setup.6.5.0.exe`
 
 v6.2.2 以降、配布するデスクトップパッケージは Windows x64 Setup のみです。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v6.4.3 · 重要な通知と下書きの信頼性
+### v6.5.0 · 単色背景と Mona Sans
 
-* 復元した下書き、保存失敗、履歴復旧を知らせる操作可能な通知を追加し、閉じる、履歴を開く、再試行する操作を利用できるようにしました。
-* Smiley Sans を使った下書きの終了時検証を修正し、保存失敗後にアプリを閉じられなくなる問題を解消しました。
-* フォント方案カードの見出し、説明、同じ行の高さを統一し、フォント名のプレビューを維持しました。
+2026-09-17
 
-[简体中文](./docs/releases/v6.4.3.zh-CN.md) · [繁體中文](./docs/releases/v6.4.3.zh-TW.md) · [English](./docs/releases/v6.4.3.en.md) · [Français](./docs/releases/v6.4.3.fr.md) · [日本語](./docs/releases/v6.4.3.ja.md) · [Español](./docs/releases/v6.4.3.es.md)
+* 第3ステップを「背景とレイアウト」に変更。グラデーションと単色を切り替えても、フォント、歌詞、訳文、キャンバス設定を保持します。
+* ジャケットの代表領域から最大6色を提案し、近似色を統合、透明画素と小さなノイズ領域を除外します。解析できない場合は無彩色のプリセットを表示。HEX・カスタム色はジャケット変更後も保持し、自動文字色は最終背景に合わせて白黒を選びます。
+* プリセットは源ノ角ゴシック、源ノ明朝、Mona Sans の3種類です。Mona Sans v2.0.27 を同梱し、欧文歌詞は900の正体、中日韓文字は源ノ角ゴシックに文字単位でフォールバックします。既存のプレビューを維持します。
+* 署名は Mona Sans の斜体を使用。Qrzzzz は800、スラッシュとリポジトリ名は600、共有者名は700です。中国語署名には実際の Source Han Sans Bold を使用します。
+
+[简体中文](./docs/releases/v6.5.0.zh-CN.md) · [繁體中文](./docs/releases/v6.5.0.zh-TW.md) · [English](./docs/releases/v6.5.0.en.md) · [Français](./docs/releases/v6.5.0.fr.md) · [日本語](./docs/releases/v6.5.0.ja.md) · [Español](./docs/releases/v6.5.0.es.md)
 
 <a id="主な機能"></a>
 
@@ -129,7 +132,7 @@ v6.2.2 以降、配布するデスクトップパッケージは Windows x64 Set
 
 ### 🔤 フォントと多言語インターフェース
 
-* 源ノ角ゴシック / 源ノ明朝 / Smiley Sans の構成、CJK / 欧文フォントの個別選択、システムフォント選択画面、実際の歌詞によるプレビュー
+* 源ノ角ゴシック / 源ノ明朝 / Mona Sans の構成、CJK / 欧文フォントの個別選択、システムフォント選択画面、実際の歌詞によるプレビュー
 * 簡体字中国語、繁体字中国語、英語、フランス語、日本語、スペイン語インターフェース
 
 ### 🚀 バージョンアップデート
@@ -147,7 +150,7 @@ v6.2.2 以降、配布するデスクトップパッケージは Windows x64 Set
 
 [Apple Music](https://music.apple.com/) に感謝します。このプロジェクトの色鮮やかなグラデーション、流れる光の背景美学、そして初期の歌詞カードレイアウトの方向性は、Apple Music のビジュアル体験から着想を得ています。本プロジェクトは Apple Music と関係がなく、Apple Music の公式見解を代表するものでもありません。
 
-[源ノ角ゴシック](https://github.com/adobe-fonts/source-han-sans)、[源ノ明朝](https://github.com/adobe-fonts/source-han-serif)、[得意黑（Smiley Sans）](https://github.com/atelier-anchor/smiley-sans) に感謝します。歌詞、楽曲情報、クレジットに、読みやすく個性のある書体を提供してくれています。
+[源ノ角ゴシック](https://github.com/adobe-fonts/source-han-sans)、[源ノ明朝](https://github.com/adobe-fonts/source-han-serif)、[Mona Sans](https://github.com/github/mona-sans) に感謝します。歌詞、楽曲情報、クレジットに、読みやすく個性のある書体を提供してくれています。
 
 [OpenAI Codex](https://openai.com/codex/) に感謝します。多くの断片的なアイデアを、実行可能なコード、デスクトップ版のビルドフロー、実際の機能へと変換してくれました。
 
@@ -183,4 +186,4 @@ v6.2.2 以降、配布するデスクトップパッケージは Windows x64 Set
 
 個人、非商用、教育、評価目的でソースコードを閲覧、ダウンロード、実行し、個人的に改変できます。商用利用、再配布、再パッケージング、公開された改変版、または本プロジェクトを基にした競合製品には、権利者からの事前の書面許可が必要です。
 
-同梱の[源ノ角ゴシック](./public/fonts/LICENSE-SourceHanSans.txt)、[源ノ明朝](./public/fonts/LICENSE-SourceHanSerif.txt)、[得意黑（Smiley Sans）](./public/fonts/LICENSE-SmileySans.txt)には、それぞれ SIL Open Font License 1.1 が適用され、本プロジェクト独自のライセンス制限は適用されません。その他の第三者コンポーネントには各自のライセンスが適用されます。[LICENSE](./LICENSE) と[第三者に関する通知](./public/licenses/THIRD-PARTY-NOTICES.txt)をご覧ください。
+同梱の[源ノ角ゴシック](./public/fonts/LICENSE-SourceHanSans.txt)、[源ノ明朝](./public/fonts/LICENSE-SourceHanSerif.txt)、[Mona Sans](./public/fonts/LICENSE-MonaSans.txt)には、それぞれ SIL Open Font License 1.1 が適用され、本プロジェクト独自のライセンス制限は適用されません。その他の第三者コンポーネントには各自のライセンスが適用されます。[LICENSE](./LICENSE) と[第三者に関する通知](./public/licenses/THIRD-PARTY-NOTICES.txt)をご覧ください。

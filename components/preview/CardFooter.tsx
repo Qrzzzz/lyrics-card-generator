@@ -24,8 +24,8 @@ export function CardFooter({
       data-card-credits
       data-landscape-accessories={variant === "landscape" ? "" : undefined}
       className="flex w-full min-w-0 shrink-0 flex-col"
-      style={{ gap: 14 * scale, fontFamily: '"Smiley Sans", "Source Han Sans SC", sans-serif',
-        fontKerning: "normal", fontStyle: "normal" }}
+      style={{ gap: 14 * scale, fontFamily: '"Mona Sans", "Source Han Sans SC", sans-serif',
+        fontKerning: "normal", fontStyle: "italic", fontSynthesis: "none", paddingInline: "0.18em", boxSizing: "border-box" }}
     >
       {sharedBy ? <SharedBy text={sharedBy} color={textColor} variant={variant} scale={scale} /> : null}
       {showGeneratedWatermark ? <ProjectSignature color={textColor} variant={variant} scale={scale} /> : null}

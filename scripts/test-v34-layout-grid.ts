@@ -106,7 +106,7 @@ assert.equal(defaultState.style.landscapeLayout?.autoLyricsWidth, true);
 assert.equal(defaultState.style.landscapeLayout?.autoHeight, true);
 assert.equal(defaultState.lastPortraitSize?.autoWidth, true, "new portrait history keeps automatic width enabled");
 assert.equal(defaultState.lastPortraitCustomSize?.autoWidth, true, "new custom history keeps automatic width enabled");
-assert.equal(defaultState.style.textColorMode, "preset");
+assert.equal(defaultState.style.textColorMode, "auto");
 assert.equal(defaultState.style.textColorPreset, "white");
 assert.equal(defaultState.style.resolvedTextColor, FIXED_WHITE_TEXT_COLOR);
 assert.equal(defaultState.style.coverCropScale, FIXED_COVER_CROP_SCALE);
@@ -298,7 +298,7 @@ const normalizedLegacyAuto = normalizeCardStyle({
   resolvedTextColor: "#111111",
   coverCropScale: 1.72
 });
-assert.equal(normalizedLegacyAuto.textColorMode, "preset");
+assert.equal(normalizedLegacyAuto.textColorMode, "auto");
 assert.equal(normalizedLegacyAuto.textColorPreset, "white");
 assert.equal(normalizedLegacyAuto.resolvedTextColor, FIXED_WHITE_TEXT_COLOR);
 assert.equal(normalizedLegacyAuto.coverCropScale, FIXED_COVER_CROP_SCALE);

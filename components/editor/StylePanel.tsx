@@ -8,6 +8,7 @@ import {
   TextInput
 } from "@/components/ui/controls";
 import { SettingsLayout, SettingsGrid, SettingsGroup, SettingsField, SettingsToggle } from "@/components/editor/style-panel/SettingsLayout";
+import { BackgroundControls } from "./style-panel/BackgroundControls";
 import { AUTO_HEIGHT_MIN, PRESET_CARD_SIZES } from "@/lib/card-size";
 import {
   LANDSCAPE_LYRICS_WIDTH_MAX,
@@ -84,7 +85,7 @@ export function FontSchemeSettingsPanel({
   );
 }
 
-export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps) {
+export function LayoutSettingsPanel({ style, onStyleChange, locale, t }: StylePanelProps) {
   const isInstrumental = style.contentMode === "instrumental";
   const layoutMode = isInstrumental ? "portrait" : style.layoutMode ?? "portrait";
   const instrumentalLayoutLockedHint = t("instrumentalLayoutLockedHint");
@@ -188,6 +189,7 @@ export function LayoutSettingsPanel({ style, onStyleChange, t }: StylePanelProps
 
   return (
     <SettingsLayout>
+      <BackgroundControls style={style} onStyleChange={onStyleChange} locale={locale} />
       <SettingsGroup title={t("settings.canvas")}>
         <SettingsGrid data-testid="layout-settings-grid">
           <SettingsField label={t("contentType")}>

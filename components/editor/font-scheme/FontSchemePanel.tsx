@@ -651,9 +651,9 @@ function sameFamilies(first: FontScheme, second: FontScheme) {
 }
 
 function presetName(presetId: FontPresetId, t: ReturnType<typeof createT>) {
-  return t(presetId === "smiley-sans" ? "fontSchemeSmileySansName" : presetId === "source-han-sans" ? "fontSchemeSourceHanSansName" : "fontSchemeSourceHanSerifName");
+  return t(presetId === "mona-sans" ? "fontSchemeMonaSansName" : presetId === "source-han-sans" ? "fontSchemeSourceHanSansName" : "fontSchemeSourceHanSerifName");
 }
 
 function presetDescription(presetId: FontPresetId, t: ReturnType<typeof createT>) {
-  return t(presetId === "smiley-sans" ? "fontSchemeSmileySansDescription" : presetId === "source-han-sans" ? "fontSchemeSourceHanSansDescription" : "fontSchemeSourceHanSerifDescription");
+  return t(presetId === "mona-sans" ? "fontSchemeMonaSansDescription" : presetId === "source-han-sans" ? "fontSchemeSourceHanSansDescription" : "fontSchemeSourceHanSerifDescription");
 }

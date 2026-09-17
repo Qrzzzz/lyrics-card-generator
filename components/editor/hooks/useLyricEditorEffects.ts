@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import type { Dispatch, SetStateAction } from "react";
-import { FIXED_WHITE_TEXT_COLOR } from "@/lib/card-style-normalize";
+import { resolveCardTextColor } from "@/lib/solid-background";
 import { proxiedImageUrl } from "@/lib/image-utils";
 import {
   createBlobUrlRetirementState,
@@ -79,7 +79,7 @@ export function useResolvedTextColor(state: AppState, setState: AppStateSetter) 
   useEffect(() => {
     const style = state.style;
     const nextColor =
-      style.textColorMode === "custom" ? style.customTextColor : FIXED_WHITE_TEXT_COLOR;
+      resolveCardTextColor(style);
 
     if (nextColor.toLowerCase() === style.resolvedTextColor.toLowerCase()) {
       return;
@@ -96,6 +96,11 @@ export function useResolvedTextColor(state: AppState, setState: AppStateSetter) 
     setState,
     state.style.customTextColor,
     state.style.resolvedTextColor,
-    state.style.textColorMode
+    state.style.textColorMode,
+    state.style.textColorPreset,
+    state.style.backgroundMode,
+    state.style.solidColor,
+    state.style.solidColorSource,
+    state.style.extractedPalette
   ]);
 }

@@ -34,7 +34,7 @@ for (const variant of ["portrait", "landscape"] as const) {
       />));
       assert.equal(footer("footer").length, Number(showSharedBy || showGeneratedWatermark));
       if (showSharedBy || showGeneratedWatermark) {
-        assert.match(footer("footer").attr("style") ?? "", /Smiley Sans/);
+        assert.match(footer("footer").attr("style") ?? "", /Mona Sans/);
         assert.equal(footer("footer").children().length, Number(showSharedBy) + Number(showGeneratedWatermark));
       }
       assert.equal(footer("img").length, 0, "credits never render platform imagery");

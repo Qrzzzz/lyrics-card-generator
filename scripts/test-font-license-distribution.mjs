@@ -9,12 +9,27 @@ const scriptsDirectory = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(scriptsDirectory, "..");
 const fontContracts = [
   {
-    font: "SmileySans-Oblique.woff2",
-    fontSha256: "731f22973349404b15a88a99ef3b5dd4104c0965c23b7e485c1f11e84fea99e2",
-    license: "LICENSE-SmileySans.txt",
-    licenseSha256: "9401f4050f1b66c26b6ccdc8b0e14a3c1cc37aac122eda84386f25854a9bec72",
-    copyright: "Copyright (c) 2022--2024, atelierAnchor",
-    reservedName: "with Reserved Font Name <Smiley> and <得意黑>."
+    "font": "MonaSans-VF.woff2",
+    "fontSha256": "62e40f6e14e5bbb97132b4513a4d97319ab6aaa46996cf46c7a9f357edadb662",
+    "license": "LICENSE-MonaSans.txt",
+    "licenseSha256": "9261dcb61fb5e3c587d50d7a9fdae12bc7422d8822d7ac06b8f34550479575de",
+    "copyright": "Copyright 2022 The Mona Sans Project Authors",
+    "reservedName": "Reserved Font Name \"Mona\""
+  },
+  {
+    "font": "MonaSans-Italic-VF.woff2",
+    "fontSha256": "6dd9d760c5fc0c9a7e70b462eeb6b59172ac59ce3514793c930f2c623c785be4",
+    "license": "LICENSE-MonaSans.txt",
+    "licenseSha256": "9261dcb61fb5e3c587d50d7a9fdae12bc7422d8822d7ac06b8f34550479575de",
+    "copyright": "Copyright 2022 The Mona Sans Project Authors",
+    "reservedName": "Reserved Font Name \"Mona\""
+  },
+  {
+    "font": "SourceHanSansSC-Bold.otf",
+    "fontSha256": "3baae4d7da5af78133c2db849814e1c0ca962e490f681714922cc499c6aeb355",
+    "license": "LICENSE-SourceHanSans.txt",
+    "licenseSha256": "f55c2d43dd905011515f5e46ba78d180027e314ef8ccaaf53a9e88fe316767cd",
+    "copyright": "Copyright 2014-2021 Adobe"
   },
   {
     font: "SourceHanSansSC-Heavy.otf",
@@ -83,7 +98,7 @@ async function assertLicensedFontDirectory(fontDirectory, label) {
     const fontPath = path.join(fontDirectory, contract.font);
     const licensePath = path.join(fontDirectory, contract.license);
     const fontInfo = await stat(fontPath).catch(() => undefined);
-    if (!fontInfo?.isFile()) continue;
+    assert.ok(fontInfo?.isFile(), `${label}: missing ${contract.font}`);
 
     const license = await readFile(licensePath).catch(() => undefined);
     assert.ok(license, `${label}: ${contract.font} requires ${contract.license}`);
@@ -117,7 +132,7 @@ async function assertApplicationLicenseAssets(root, label) {
   assert.match(notices, /LICENSE-SourceHanSans\.txt/);
   assert.match(notices, /Source Han Serif SC Heavy/);
   assert.match(notices, /LICENSE-SourceHanSerif\.txt/);
-  assert.match(notices, /LICENSE-SmileySans\.txt/);
+  assert.match(notices, /LICENSE-MonaSans\.txt/);
 }
 
 function normalizeLines(value) {

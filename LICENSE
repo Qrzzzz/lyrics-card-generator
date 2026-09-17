@@ -44,7 +44,7 @@ Those third-party components remain governed by their own respective licenses, t
 
 Nothing in this license modifies, replaces, limits, or grants additional rights under the licenses or terms of any third-party component.
 
-In particular, the bundled Source Han Sans, Source Han Serif, and Smiley Sans (得意黑) fonts are licensed separately under the SIL Open Font License 1.1. Their copyright notices, reserved font names, and license texts are preserved in public/fonts/LICENSE-SourceHanSans.txt, public/fonts/LICENSE-SourceHanSerif.txt, and public/fonts/LICENSE-SmileySans.txt. The restrictions in this project license do not apply to those font files. See public/licenses/THIRD-PARTY-NOTICES.txt for the bundled font attribution and source information.
+In particular, the bundled Source Han Sans, Source Han Serif, and Mona Sans fonts are licensed separately under the SIL Open Font License 1.1. Their copyright notices, reserved font names, and license texts are preserved in public/fonts/LICENSE-SourceHanSans.txt, public/fonts/LICENSE-SourceHanSerif.txt, and public/fonts/LICENSE-MonaSans.txt. The restrictions in this project license do not apply to those font files. See public/licenses/THIRD-PARTY-NOTICES.txt for the bundled font attribution and source information.
 
 5. Music, Lyrics, Artwork, Metadata, and Platform Content
 

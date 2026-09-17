@@ -34,7 +34,7 @@ export type PaletteRole = "base" | "subject" | "transition" | "highlight";
 export type ContentMode = "lyrics" | "instrumental";
 export type BackgroundGridDensity = "sparse" | "medium" | "dense";
 
-export type FontPresetId = "source-han-sans" | "source-han-serif" | "smiley-sans";
+export type FontPresetId = "source-han-sans" | "source-han-serif" | "mona-sans";
 export type FontSchemeMode = "preset" | "custom";
 
 export type FontScheme = {
@@ -130,7 +130,9 @@ export type CoverArtworkAnalysis = {
 };
 
 export type CardStyle = {
-  backgroundMode: "palette" | "gradient";
+  backgroundMode: "palette" | "gradient" | "solid";
+  solidColor?: string;
+  solidColorSource?: "auto" | "user";
   extractedPalette?: ExtractedPalette;
   layoutMode: CardLayoutMode;
   ratio: CardRatio;

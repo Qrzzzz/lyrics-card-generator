@@ -121,7 +121,7 @@ try {
   await expect(restoredNotice).toHaveCount(0);
   assert.equal(await page.getByTestId("lyrics-editor-original").inputValue(), finalText, "dismiss must preserve the restored document");
   await page.locator('[data-step-id="font"]').click();
-  await page.getByTestId("apply-font-preset-smiley-sans").click();
+  await page.getByTestId("apply-font-preset-mona-sans").click();
   const fontCards = page.locator('[data-testid="font-scheme-options"] > button');
   const metrics = await fontCards.evaluateAll((cards) => cards.map((card) => {
     const title = card.querySelector("h4") ?? card.querySelector(".font-semibold");
@@ -134,16 +134,31 @@ try {
     if (Math.abs(card.top - peer.top) < 1) assert.ok(Math.abs(card.height - peer.height) < 1, "cards in one row have equal heights");
   }
   await page.screenshot({ path: path.join(report, "font-card-layout.png") });
+  await page.locator('[data-step-id="layout"]').click();
+  await page.locator('[data-segment-value="solid"]').click();
+  await page.locator('[data-solid-controls] input[maxlength="7"]').fill("#E8E4DA");
+  await page.locator('[data-solid-controls] input[maxlength="7"]').blur();
+  await page.locator('[data-step-id="font"]').click();
   await closeNormally();
-  assert.equal((await disk()).records.find((record) => record.id === remoteId).editorDraft.style.fontScheme.presetId, "smiley-sans");
+  assert.equal((await disk()).records.find((record) => record.id === remoteId).editorDraft.style.fontScheme.presetId, "mona-sans");
   await launch();
-  await expect(page.getByTestId("apply-font-preset-smiley-sans")).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByTestId("apply-font-preset-mona-sans")).toHaveAttribute("aria-pressed", "true");
+  const solidSavedStyle = (await disk()).records.find((record) => record.id === remoteId).editorDraft.style;
+  assert.equal(solidSavedStyle.backgroundMode, "solid");
+  assert.equal(solidSavedStyle.solidColor, "#E8E4DA");
+  assert.equal(solidSavedStyle.solidColorSource, "user");
+  await page.locator('[data-step-id="layout"]').click();
+  await expect(page.locator('[data-solid-controls] input[maxlength="7"]')).toHaveValue("#E8E4DA");
+  await page.locator('[data-segment-value="palette"]').click();
+  await page.locator('[data-segment-value="solid"]').click();
+  await expect(page.locator('[data-solid-controls] input[maxlength="7"]')).toHaveValue("#E8E4DA");
+  await page.screenshot({ path: path.join(report, "solid-background-restored.png") });
   await page.locator('[data-notification-id^="restored-"]').getByRole("button", { name: "View history" }).click();
   await page.getByTestId("history-surface").waitFor({ state: "visible" });
   await expect(page.locator('[data-notification-id^="restored-"]')).toHaveCount(0);
   await page.getByTestId("history-close-button").click();
   await page.locator('[data-step-id="lyrics"]').click();
-  console.log("PASS: startup notification/dismiss, consistent font cards, Smiley Sans normal close and restart");
+  console.log("PASS: startup notification/dismiss, consistent font cards, Mona Sans normal close and restart");
   console.log("PASS: 5s debounce, latest edit, immediate close, automatic restart, translation");
 
   await closeNormally();
