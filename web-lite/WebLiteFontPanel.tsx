@@ -51,7 +51,7 @@ export function WebLiteFontPanel({
       description: copy.stableFont,
       scheme: FONT_SCHEME_PRESETS["source-han-serif"]
     },
-    { id: "smiley-sans", label: t("fontSchemeSmileySansName"), description: copy.stableFont, scheme: FONT_SCHEME_PRESETS["smiley-sans"] },
+    { id: "mona-sans", label: t("fontSchemeMonaSansName"), description: copy.stableFont, scheme: FONT_SCHEME_PRESETS["mona-sans"] },
     { id: "system-sans", label: copy.systemSans, description: copy.deviceFont, scheme: SYSTEM_SANS_SCHEME },
     { id: "system-serif", label: copy.systemSerif, description: copy.deviceFont, scheme: SYSTEM_SERIF_SCHEME }
   ];

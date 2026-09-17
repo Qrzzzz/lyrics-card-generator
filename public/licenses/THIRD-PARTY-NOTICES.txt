@@ -12,12 +12,16 @@ Copyright 2017-2022 Adobe (http://www.adobe.com/), with Reserved Font Name "Sour
 Font: ../fonts/SourceHanSerifSC-Heavy.otf
 License: ../fonts/LICENSE-SourceHanSerif.txt
 
-Smiley Sans (得意黑) v2.0.1 — unmodified upstream TrueType WOFF2
-Copyright (c) 2022--2024, atelierAnchor <https://atelier-anchor.com>,
-with Reserved Font Name <Smiley> and <得意黑>.
-Font: ../fonts/SmileySans-Oblique.woff2
-License: ../fonts/LICENSE-SmileySans.txt
-Source: https://github.com/atelier-anchor/smiley-sans/releases/tag/v2.0.1
-SHA-256: 731f22973349404b15a88a99ef3b5dd4104c0965c23b7e485c1f11e84fea99e2
+Mona Sans v2.0.27 — unmodified upstream standard-width variable WOFF2, normal and italic, weight 200–900
+Copyright 2022 The Mona Sans Project Authors (https://github.com/github/mona-sans), with Reserved Font Name "Mona"
+Fonts: ../fonts/MonaSans-VF.woff2, ../fonts/MonaSans-Italic-VF.woff2
+License: ../fonts/LICENSE-MonaSans.txt
+Source: https://github.com/github/mona-sans/releases/tag/v2.0.27
+
+Source Han Sans SC Bold 2.004R — unmodified upstream OTF, weight 700
+Copyright 2014-2021 Adobe (http://www.adobe.com/), with Reserved Font Name "Source".
+Font: ../fonts/SourceHanSansSC-Bold.otf
+License: ../fonts/LICENSE-SourceHanSans.txt
+Source: https://github.com/adobe-fonts/source-han-sans/tree/2.004R/OTF/SimplifiedChinese
 
 Other third-party packages used by the application remain governed by their respective licenses in the source dependency manifests and installed package metadata.

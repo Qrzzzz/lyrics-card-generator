@@ -6,7 +6,8 @@ import { AdaptiveAlbumArtwork } from "@/components/preview/AdaptiveAlbumArtwork"
 import { InstrumentalBlock } from "@/components/preview/InstrumentalBlock";
 import { LandscapeLyricCard } from "@/components/preview/LandscapeLyricCard";
 import { LyricsBlock } from "@/components/preview/LyricsBlock";
-import { PaletteBackground } from "@/components/preview/PaletteBackground";
+import { CardBackground } from "@/components/preview/CardBackground";
+import { resolveCardTextColor } from "@/lib/solid-background";
 import { PortraitFooter } from "@/components/preview/PortraitFooter";
 import { ExplicitBadge } from "@/components/preview/ExplicitBadge";
 import {
@@ -55,7 +56,7 @@ export function LyricCard({
 
   const size = getCardSize(style);
   const activeCover = coverFailed ? "" : cover;
-  const textColor = style.resolvedTextColor || "#FFFFFF";
+  const textColor = resolveCardTextColor(style);
   const contentMode = style.contentMode ?? "lyrics";
   const showGeneratedWatermark = style.showGeneratedWatermark ?? style.showWatermark;
   const layout = getPortraitLayout(size, style, song, {
@@ -70,13 +71,7 @@ export function LyricCard({
       style={{ width: size.width, height: size.height, ...cardFontStyle(style) }}
       data-export-card="true"
     >
-      <PaletteBackground
-        palette={style.extractedPalette}
-        width={size.width}
-        height={size.height}
-        showFineGrid={style.showFineGrid === true}
-        fineGridDensity={style.fineGridDensity ?? "medium"}
-      />
+      <CardBackground style={style} width={size.width} height={size.height} />
       <div
         data-card-safe
         className="absolute"
@@ -117,7 +112,7 @@ export function LyricCard({
                       "text-[51px] font-black leading-[1.48] tracking-normal",
                       style.allowMultiLineTitle ? "multi-line-title" : "truncate"
                     )}
-                    style={{ color: textColor }}
+                    style={{ color: textColor, fontWeight: "var(--card-title-weight, 900)" }}
                     data-allow-multi-line-title={style.allowMultiLineTitle ? "true" : "false"}
                   >
                     {style.allowMultiLineTitle ? (

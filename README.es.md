@@ -19,7 +19,7 @@
 <p>
   <strong>Navegación</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Descargar la última versión</a> ·
-  <a href="./docs/releases/v6.4.3.es.md">Notas de la versión</a> ·
+  <a href="./docs/releases/v6.5.0.es.md">Notas de la versión</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en línea</a> ·
   <a href="#funciones-principales">Funciones principales</a> ·
   <a href="./docs/development.en.md">Desarrollo local</a> ·
@@ -76,19 +76,22 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 
 
-* Instalador de Windows x64: `Lyrics.Card.Generator.Setup.6.4.3.exe`
+* Instalador de Windows x64: `Lyrics.Card.Generator.Setup.6.5.0.exe`
 
 A partir de v6.2.2, Setup para Windows x64 es el único paquete de escritorio distribuido.
 
 > La compilación actual no está firmada. Windows puede mostrar una advertencia de SmartScreen, algo habitual en aplicaciones personales sin firma.
 
-### v6.4.3 · Avisos importantes y fiabilidad de los borradores
+### v6.5.0 · Fondos sólidos y Mona Sans
 
-* Añade notificaciones interactivas para borradores restaurados, errores de guardado y recuperación del historial, con acciones para cerrar, ver el historial y reintentar.
-* Corrige la validación de borradores con Smiley Sans al cerrar, que podía impedir cerrar la aplicación después de fallar el guardado.
-* Unifica títulos, descripciones y alturas de fila de las tarjetas de fuentes, conservando la muestra del nombre de cada fuente.
+2026-09-17
 
-[简体中文](./docs/releases/v6.4.3.zh-CN.md) · [繁體中文](./docs/releases/v6.4.3.zh-TW.md) · [English](./docs/releases/v6.4.3.en.md) · [Français](./docs/releases/v6.4.3.fr.md) · [日本語](./docs/releases/v6.4.3.ja.md) · [Español](./docs/releases/v6.4.3.es.md)
+* El tercer paso pasa a « Fondo y diseño ». Cambiar entre degradado y color sólido conserva fuentes, letras, traducciones y dimensiones.
+* Hasta seis colores proceden de regiones representativas de la portada, combinando tonos similares y filtrando transparencia y ruido de áreas pequeñas. Sin análisis válido se ofrecen tonos neutros predefinidos. Las elecciones HEX/personalizadas se conservan al cambiar la portada; el texto automático usa blanco o negro según el fondo final.
+* Los tres ajustes son Source Han Sans, Source Han Serif y Mona Sans. Mona Sans v2.0.27 se incluye localmente: letras latinas rectas con peso 900 y respaldo CJK por carácter con Source Han Sans. Se conservan las vistas previas.
+* Las firmas usan Mona Sans cursiva: Qrzzzz en 800, barra y repositorio en 600 y firma personal en 700. El chino usa un recurso real Source Han Sans Bold.
+
+[简体中文](./docs/releases/v6.5.0.zh-CN.md) · [繁體中文](./docs/releases/v6.5.0.zh-TW.md) · [English](./docs/releases/v6.5.0.en.md) · [Français](./docs/releases/v6.5.0.fr.md) · [日本語](./docs/releases/v6.5.0.ja.md) · [Español](./docs/releases/v6.5.0.es.md)
 
 <a id="funciones-principales"></a>
 
@@ -129,7 +132,7 @@ A partir de v6.2.2, Setup para Windows x64 es el único paquete de escritorio di
 
 ### 🔤 Fuentes e interfaz multilingüe
 
-* Combinaciones Source Han Sans / Serif / Smiley Sans, fuentes CJK y latinas independientes, selector de fuentes del sistema y vista previa con letras reales
+* Combinaciones Source Han Sans / Serif / Mona Sans, fuentes CJK y latinas independientes, selector de fuentes del sistema y vista previa con letras reales
 * Interfaz en chino simplificado, chino tradicional, inglés, francés, japonés y español
 
 ### 🚀 Actualizaciones
@@ -147,7 +150,7 @@ A partir de v6.2.2, Setup para Windows x64 es el único paquete de escritorio di
 
 Gracias a [Apple Music](https://music.apple.com/). Los degradados de color, la estética de fondo con luz fluida y la orientación inicial del diseño de las tarjetas de letras de este proyecto se inspiraron en la experiencia visual de Apple Music. Este proyecto no está afiliado a Apple Music ni representa la postura oficial de Apple Music.
 
-Gracias a [Source Han Sans](https://github.com/adobe-fonts/source-han-sans), [Source Han Serif](https://github.com/adobe-fonts/source-han-serif) y [Smiley Sans](https://github.com/atelier-anchor/smiley-sans) por su tipografía clara y distintiva en las letras, los datos de las canciones y los créditos.
+Gracias a [Source Han Sans](https://github.com/adobe-fonts/source-han-sans), [Source Han Serif](https://github.com/adobe-fonts/source-han-serif) y [Mona Sans](https://github.com/github/mona-sans) por su tipografía clara y distintiva en las letras, los datos de las canciones y los créditos.
 
 Gracias a [OpenAI Codex](https://openai.com/codex/). Convirtió muchas ideas dispersas en código ejecutable, flujos de build para la versión de escritorio y funciones reales.
 
@@ -184,4 +187,4 @@ Este proyecto se publica bajo una licencia Source Available personalizada, no un
 
 Puedes ver, descargar, ejecutar y modificar de forma privada el código fuente para fines personales, no comerciales, educativos y de evaluación. El uso comercial, la redistribución, el reempaquetado, las versiones modificadas públicas y los productos competidores basados en este proyecto requieren autorización previa por escrito del titular de los derechos.
 
-Las fuentes incluidas [Source Han Sans](./public/fonts/LICENSE-SourceHanSans.txt), [Source Han Serif](./public/fonts/LICENSE-SourceHanSerif.txt) y [Smiley Sans](./public/fonts/LICENSE-SmileySans.txt) se rigen por la SIL Open Font License 1.1 y no están sujetas a las restricciones de la licencia propietaria del proyecto. Los demás componentes de terceros conservan sus propias licencias. Consulta [LICENSE](./LICENSE) y los [avisos de terceros](./public/licenses/THIRD-PARTY-NOTICES.txt).
+Las fuentes incluidas [Source Han Sans](./public/fonts/LICENSE-SourceHanSans.txt), [Source Han Serif](./public/fonts/LICENSE-SourceHanSerif.txt) y [Mona Sans](./public/fonts/LICENSE-MonaSans.txt) se rigen por la SIL Open Font License 1.1 y no están sujetas a las restricciones de la licencia propietaria del proyecto. Los demás componentes de terceros conservan sus propias licencias. Consulta [LICENSE](./LICENSE) y los [avisos de terceros](./public/licenses/THIRD-PARTY-NOTICES.txt).

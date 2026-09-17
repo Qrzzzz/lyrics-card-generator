@@ -11,7 +11,8 @@ const NUMBERS = new Set(["width", "height", "customFontWeight", "lyricFontSize",
 const STRINGS = new Set(["customFontFamily", "customFontLabel", "customTextColor", "resolvedTextColor", "instrumentalText", "sharedByText", "watermark"]);
 const ENUMS = {
   separatorStyle: ["dot", "line"],
-  backgroundMode: ["palette", "gradient"], layoutMode: ["portrait", "landscape"],
+  solidColorSource: ["auto", "user"],
+  backgroundMode: ["palette", "gradient", "solid"], layoutMode: ["portrait", "landscape"],
   ratio: ["1:1", "4:5", "9:16", "16:9", "21:9", "3:2", "custom"],
   font: ["sans-heavy", "serif-heavy", "system-sans", "system-serif"],
   align: ["left", "center"], textColorMode: ["auto", "preset", "custom"],
@@ -27,7 +28,8 @@ function normalizeDraftStyle(input) {
   if (!object(input)) return null;
   const style = {};
   for (const [key, value] of Object.entries(input)) {
-    if (BOOLEANS.has(key)) { if (typeof value !== "boolean") return null; style[key] = value; }
+    if (key === "solidColor") { if (typeof value !== "string" || !/^#[a-f0-9]{6}$/i.test(value)) return null; style[key] = value.toUpperCase(); }
+    else if (BOOLEANS.has(key)) { if (typeof value !== "boolean") return null; style[key] = value; }
     else if (NUMBERS.has(key)) { if (!number(value)) return null; style[key] = value; }
     else if (STRINGS.has(key)) { if (!text(value)) return null; style[key] = value; }
     else if (ENUMS[key]) { if (!ENUMS[key].includes(value)) return null; style[key] = value; }
@@ -37,7 +39,7 @@ function normalizeDraftStyle(input) {
     const font = input.fontScheme;
     if (!object(font) || !["preset", "custom"].includes(font.mode) ||
       !text(font.cjkFontFamily, 512) || !text(font.latinFontFamily, 512) ||
-      (font.presetId !== undefined && !["source-han-sans", "source-han-serif", "smiley-sans"].includes(font.presetId))) return null;
+      (font.presetId !== undefined && !["source-han-sans", "source-han-serif", "mona-sans"].includes(font.presetId))) return null;
     style.fontScheme = { mode: font.mode, cjkFontFamily: font.cjkFontFamily, latinFontFamily: font.latinFontFamily,
       ...(font.presetId ? { presetId: font.presetId } : {}) };
   }

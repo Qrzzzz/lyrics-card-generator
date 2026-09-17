@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v6.4.3.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v6.5.0.en.md">Release Notes</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
   <a href="./docs/web-lite-browser-support.md">Web Lite Browser Support</a> ·
   <a href="#features">Features</a> ·
@@ -77,19 +77,22 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 
 
-* Windows x64 installer: `Lyrics.Card.Generator.Setup.6.4.3.exe`
+* Windows x64 installer: `Lyrics.Card.Generator.Setup.6.5.0.exe`
 
 Starting with v6.2.2, Windows x64 Setup is the only distributed desktop package.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v6.4.3 · Important notices and draft reliability
+### v6.5.0 · Solid backgrounds and Mona Sans
 
-* Add interactive notifications for restored drafts, save failures, and history recovery, with dismiss, history, and retry actions.
-* Fix Smiley Sans draft validation during shutdown, which could prevent the app from closing after a save failure.
-* Align font-scheme card headings, descriptions, and row heights while preserving font-name previews.
+2026-09-17
 
-[简体中文](./docs/releases/v6.4.3.zh-CN.md) · [繁體中文](./docs/releases/v6.4.3.zh-TW.md) · [English](./docs/releases/v6.4.3.en.md) · [Français](./docs/releases/v6.4.3.fr.md) · [日本語](./docs/releases/v6.4.3.ja.md) · [Español](./docs/releases/v6.4.3.es.md)
+* Step three is now Background & layout, with flowing gradients and solid colors. Background changes preserve fonts, lyrics, translations and canvas settings.
+* Up to six distinct colors come from representative cover regions, merging similar colors and filtering transparent pixels and small noisy regions. Neutral presets cover missing analysis. HEX/custom choices persist across cover changes; automatic text uses black or white against the final solid color.
+* The three presets are Source Han Sans, Source Han Serif and Mona Sans. Bundled Mona Sans v2.0.27 uses upright weight 900 for Latin lyrics and per-character Source Han Sans fallback for CJK. Existing previews remain unchanged.
+* Credits use Mona Sans italic: Qrzzzz at 800, slash and repository at 600, and the sharer at 700. A real Source Han Sans Bold resource supports Chinese credits.
+
+[简体中文](./docs/releases/v6.5.0.zh-CN.md) · [繁體中文](./docs/releases/v6.5.0.zh-TW.md) · [English](./docs/releases/v6.5.0.en.md) · [Français](./docs/releases/v6.5.0.fr.md) · [日本語](./docs/releases/v6.5.0.ja.md) · [Español](./docs/releases/v6.5.0.es.md)
 
 <a id="features"></a>
 
@@ -130,7 +133,7 @@ Starting with v6.2.2, Windows x64 Setup is the only distributed desktop package.
 
 ### 🔤 Fonts & Multilingual Interface
 
-* Source Han Sans / Serif / Smiley Sans schemes, independent CJK and Latin fonts, a system-font picker, and lyric-based typography previews
+* Source Han Sans / Serif / Mona Sans schemes, independent CJK and Latin fonts, a system-font picker, and lyric-based typography previews
 * Simplified Chinese / Traditional Chinese / English / French / Japanese / Spanish interface
 
 ### 🚀 Version Updates
@@ -148,7 +151,7 @@ Starting with v6.2.2, Windows x64 Setup is the only distributed desktop package.
 
 Thanks to [Apple Music](https://music.apple.com/). The colorful gradients, flowing-light background aesthetics, and early lyric card layout direction in this project were inspired by the Apple Music visual experience. This project is not affiliated with Apple Music and does not represent Apple Music’s official position.
 
-Thanks to [Source Han Sans](https://github.com/adobe-fonts/source-han-sans), [Source Han Serif](https://github.com/adobe-fonts/source-han-serif), and [Smiley Sans](https://github.com/atelier-anchor/smiley-sans) for clear, distinctive typography across lyrics, song information, and credits.
+Thanks to [Source Han Sans](https://github.com/adobe-fonts/source-han-sans), [Source Han Serif](https://github.com/adobe-fonts/source-han-serif), and [Mona Sans](https://github.com/github/mona-sans) for clear, distinctive typography across lyrics, song information, and credits.
 
 Thanks to [OpenAI Codex](https://openai.com/codex/). It turned many scattered ideas into runnable code, desktop build workflows, and real features.
 
@@ -184,4 +187,4 @@ This project is released under a custom Source Available License, not a traditio
 
 You may view, download, run, and privately modify the source code for personal, non-commercial, educational, and evaluation purposes. Commercial use, redistribution, repackaging, public modified releases, and competing products based on this project require prior written permission from the copyright holder.
 
-The bundled [Source Han Sans](./public/fonts/LICENSE-SourceHanSans.txt), [Source Han Serif](./public/fonts/LICENSE-SourceHanSerif.txt), and [Smiley Sans](./public/fonts/LICENSE-SmileySans.txt) fonts are each licensed under the SIL Open Font License 1.1 and are not subject to this project’s proprietary license restrictions. Other third-party components retain their own licenses. See [LICENSE](./LICENSE) and [Third-Party Notices](./public/licenses/THIRD-PARTY-NOTICES.txt).
+The bundled [Source Han Sans](./public/fonts/LICENSE-SourceHanSans.txt), [Source Han Serif](./public/fonts/LICENSE-SourceHanSerif.txt), and [Mona Sans](./public/fonts/LICENSE-MonaSans.txt) fonts are each licensed under the SIL Open Font License 1.1 and are not subject to this project’s proprietary license restrictions. Other third-party components retain their own licenses. See [LICENSE](./LICENSE) and [Third-Party Notices](./public/licenses/THIRD-PARTY-NOTICES.txt).

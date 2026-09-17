@@ -51,6 +51,8 @@ export const defaultState: AppState = {
   translationEnabled: false,
   style: {
     backgroundMode: "palette",
+    solidColor: "#202124",
+    solidColorSource: "auto",
     extractedPalette: DEFAULT_PALETTE,
     layoutMode: "portrait",
     ratio: "custom",
@@ -68,7 +70,7 @@ export const defaultState: AppState = {
     lyricFontSize: 60,
     lineHeight: DEFAULT_LYRIC_LINE_HEIGHT,
     align: "left",
-    textColorMode: "preset",
+    textColorMode: "auto",
     textColorPreset: "white",
     customTextColor: "#FFFFFF",
     resolvedTextColor: "#FFFFFF",

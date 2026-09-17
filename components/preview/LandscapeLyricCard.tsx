@@ -5,7 +5,8 @@ import { AdaptiveAlbumArtwork } from "@/components/preview/AdaptiveAlbumArtwork"
 import { LandscapeAccessories } from "@/components/preview/LandscapeAccessories";
 import { LandscapeLyricsContent } from "@/components/preview/LandscapeLyricsContent";
 import { LandscapeSongMetadata } from "@/components/preview/LandscapeSongMetadata";
-import { PaletteBackground } from "@/components/preview/PaletteBackground";
+import { CardBackground } from "@/components/preview/CardBackground";
+import { resolveCardTextColor } from "@/lib/solid-background";
 import {
   CARD_ARTWORK_BOX_SHADOW,
   CARD_ARTWORK_DROP_SHADOW,
@@ -34,7 +35,7 @@ export function LandscapeLyricCard({
   const cover = song.proxiedCoverUrl || proxiedImageUrl(song.coverUrl);
   const [coverFailed, setCoverFailed] = useState(false);
   const activeCover = coverFailed ? "" : cover;
-  const textColor = style.resolvedTextColor || "#FFFFFF";
+  const textColor = resolveCardTextColor(style);
   const showGeneratedWatermark = style.showGeneratedWatermark ?? style.showWatermark;
 
   useEffect(() => setCoverFailed(false), [cover]);
@@ -49,13 +50,7 @@ export function LandscapeLyricCard({
       data-landscape-density={plan?.layoutDensity}
       data-landscape-footer={plan?.accessoriesPlacement}
     >
-      <PaletteBackground
-        palette={style.extractedPalette}
-        width={size.width}
-        height={size.height}
-        showFineGrid={style.showFineGrid === true}
-        fineGridDensity={style.fineGridDensity ?? "medium"}
-      />
+      <CardBackground style={style} width={size.width} height={size.height} />
       {plan ? (
         <>
           <div

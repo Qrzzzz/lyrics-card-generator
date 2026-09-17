@@ -114,6 +114,7 @@ export function getResolvedFontStyle(style: CardStyle): CSSProperties | undefine
   const families = Array.from(new Set([latinFamily, cjkFamily].filter(Boolean)));
 
   return {
+    ...(scheme.presetId === "mona-sans" ? { fontStyle: "normal", fontStretch: "normal", fontSynthesis: "none", "--card-title-weight": 700 } as CSSProperties : {}),
     fontFamily: `${families.join(", ")}, var(--font-source-han-sans-heavy), ui-sans-serif, system-ui, sans-serif`,
     ...(!style.fontScheme && style.customFontEnabled && style.customFontWeight
       ? { fontWeight: style.customFontWeight }

@@ -4,10 +4,24 @@
 
 /* Global font registration and theme-token defaults shared by desktop and Web Lite. */
 @font-face {
-  font-family: "Smiley Sans";
-  src: url("/fonts/SmileySans-Oblique.woff2?v=731f22973349404b") format("woff2");
+  font-family: "Mona Sans";
+  src: url("/fonts/MonaSans-VF.woff2") format("woff2");
   font-style: normal;
-  font-weight: 400;
+  font-weight: 200 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Mona Sans";
+  src: url("/fonts/MonaSans-Italic-VF.woff2") format("woff2");
+  font-style: italic;
+  font-weight: 200 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Source Han Sans SC";
+  src: url("/fonts/SourceHanSansSC-Bold.otf") format("opentype");
+  font-weight: 700;
+  font-style: normal;
   font-display: swap;
 }
 
@@ -24,6 +38,8 @@
 
 @font-face {
   font-family: "Source Han Sans SC";
+  font-weight: 900;
+  font-style: normal;
   src: url("/fonts/SourceHanSansSC-Heavy.otf?v=4a8b2ee4f041fa56") format("opentype");
   font-display: swap;
 }

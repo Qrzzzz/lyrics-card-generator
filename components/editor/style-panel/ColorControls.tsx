@@ -12,9 +12,10 @@ type ColorControlsProps = {
 };
 
 export function ColorControls({ style, onStyleChange, t }: ColorControlsProps) {
-  const selectedColorMode = style.textColorMode === "custom" ? "custom" : "white";
+  const selectedColorMode = style.textColorMode === "custom" ? "custom" : style.textColorMode === "auto" ? "auto" : "white";
 
-  function selectColorMode(mode: "white" | "custom") {
+  function selectColorMode(mode: "auto" | "white" | "custom") {
+    if (mode === "auto") { onStyleChange({ ...style, textColorMode: "auto" }); return; }
     if (mode === "custom") {
       onStyleChange({
         ...style,
@@ -44,10 +45,11 @@ export function ColorControls({ style, onStyleChange, t }: ColorControlsProps) {
   return (
     <SettingsGrid>
       <SettingsField label={t("textColor")}>
-        <SegmentedControl<"white" | "custom">
+        <SegmentedControl<"auto" | "white" | "custom">
           value={selectedColorMode}
           onChange={selectColorMode}
           options={[
+            { value: "auto", label: t("auto") },
             { value: "white", label: t("pureWhite") },
             { value: "custom", label: t("custom") }
           ]}

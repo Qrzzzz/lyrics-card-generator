@@ -1,9 +1,9 @@
-Copyright (c) 2022--2024, atelierAnchor <https://atelier-anchor.com>,
-with Reserved Font Name <Smiley> and <得意黑>.
+Copyright 2022 The Mona Sans Project Authors (https://github.com/github/mona-sans), with Reserved Font Name "Mona"
 
 This Font Software is licensed under the SIL Open Font License, Version 1.1.
 This license is copied below, and is also available with a FAQ at:
-http://scripts.sil.org/OFL
+https://openfontlicense.org
+
 
 -----------------------------------------------------------
 SIL OPEN FONT LICENSE Version 1.1 - 26 February 2007

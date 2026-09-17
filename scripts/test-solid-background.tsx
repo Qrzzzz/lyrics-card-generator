@@ -1,0 +1,58 @@
+import assert from "node:assert/strict";
+import { createRequire } from "node:module";
+import React from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { defaultState } from "../components/editor/editor-defaults";
+import { CardBackground } from "../components/preview/CardBackground";
+import { solidCandidates, resolveSolidColor, resolveCardTextColor } from "../lib/solid-background";
+import { analyzePalettePixels } from "../lib/palette-extraction";
+import { createEditorDraftSnapshot, restoreEditorDraft } from "../lib/editor-draft";
+import { FONT_SCHEME_PRESETS } from "../lib/font-schemes";
+import type { CardStyle } from "../lib/types";
+
+(globalThis as typeof globalThis & { React: typeof React }).React = React;
+const require = createRequire(import.meta.url);
+const { normalizeEditorDraft } = require("../electron/editor-draft");
+function stripes(colors: number[][]) {
+  const data = new Uint8ClampedArray(40 * 40 * 4);
+  for (let i = 0; i < 1600; i++) data.set(colors[Math.floor(i / (1600 / colors.length))], i * 4);
+  return analyzePalettePixels(data, 40, 40);
+}
+const colorful = stripes([[180, 30, 30, 255], [30, 130, 50, 255], [30, 40, 160, 255], [220, 180, 50, 255], [235, 235, 220, 255]]);
+const candidates = solidCandidates(colorful);
+assert.equal(candidates.source, "cover");
+assert.ok(candidates.colors.length >= 4 && candidates.colors.length <= 6);
+assert.deepEqual(candidates, solidCandidates(colorful));
+const gray = solidCandidates(stripes([[30, 30, 30, 255], [120, 120, 120, 255], [230, 230, 230, 255], [255, 0, 0, 0]]));
+assert.equal(gray.source, "cover");
+assert.ok(gray.colors.length <= 3);
+for (const c of gray.colors) assert.equal(c.slice(1, 3), c.slice(3, 5));
+assert.equal(solidCandidates(stripes([[255, 0, 0, 0]])).source, "preset");
+assert.equal(solidCandidates().source, "preset");
+assert.equal(solidCandidates(stripes([[90, 90, 90, 255], [92, 92, 92, 255]])).colors.length, 1);
+const noisy = new Uint8ClampedArray(40 * 40 * 4);
+for (let i = 0; i < 1600; i++) noisy.set(i < 8 ? [255, 0, 0, 255] : [70, 70, 70, 255], i * 4);
+assert.notEqual(solidCandidates(analyzePalettePixels(noisy, 40, 40)).colors[0], "#FF0000");
+
+const style: CardStyle = { ...defaultState.style, backgroundMode: "solid", solidColor: "#FAFAFA", solidColorSource: "user", textColorMode: "auto", extractedPalette: colorful, showFineGrid: true, fontScheme: FONT_SCHEME_PRESETS["mona-sans"] };
+assert.equal(resolveCardTextColor(style), "#000000");
+assert.equal(resolveCardTextColor({ ...style, solidColor: "#121212" }), "#FFFFFF");
+assert.equal(resolveCardTextColor({ ...style, textColorMode: "custom", customTextColor: "#ABCDEF" }), "#ABCDEF");
+assert.equal(resolveSolidColor({ ...style, extractedPalette: stripes([[0, 0, 0, 255]]) }), "#FAFAFA");
+assert.notEqual(resolveSolidColor({ ...style, solidColorSource: "auto" }), "#FAFAFA");
+const html = renderToStaticMarkup(<CardBackground style={style} width={1080} height={1350} />);
+assert.match(html, /data-solid-background/);
+assert.doesNotMatch(html, /svg|filter|gradient|data-card-fine-grid/);
+const state = { ...defaultState, style };
+const snapshot = createEditorDraftSnapshot(state, { step: 2, exportFormat: "png", exportQuality: "high" });
+const normalized = normalizeEditorDraft(JSON.parse(JSON.stringify(snapshot)), (content: unknown) => content);
+assert.ok(normalized);
+const restored = restoreEditorDraft(defaultState, { recordId: "solid", snapshot: normalized });
+assert.equal(restored.style.backgroundMode, "solid");
+assert.equal(restored.style.solidColor, "#FAFAFA");
+assert.equal(restored.style.solidColorSource, "user");
+assert.equal(restored.style.fontScheme?.presetId, "mona-sans");
+assert.equal(restored.style.lyricFontSize, style.lyricFontSize);
+assert.deepEqual(restored.lyricDocument, state.lyricDocument);
+assert.equal(normalizeEditorDraft({ ...snapshot, style: { ...style, solidColor: "url(bad)" } }, (c: unknown) => c), null);
+console.log("Solid candidates, contrast, render isolation and desktop draft round-trip passed");

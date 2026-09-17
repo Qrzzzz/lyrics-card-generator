@@ -32,13 +32,13 @@ export function ProjectSignature({
         fontKerning: "normal",
         fontOpticalSizing: "auto",
         fontStretch: "normal",
-        fontWeight: 400,
+        fontWeight: 600,
         letterSpacing: "normal",
         lineHeight: 1.4,
         textRendering: "geometricPrecision"
       }}
     >
-      <span data-project-signature-owner style={{ opacity: 0.64 }}>
+      <span data-project-signature-owner style={{ opacity: 0.64, fontWeight: 800 }}>
         {PROJECT_SIGNATURE_OWNER}
       </span>
       <span data-project-signature-repository style={{ opacity: 0.64 }}>

@@ -27,7 +27,7 @@ export function LandscapeSongMetadata({
     >
       <h1
         className="break-words font-black tracking-normal"
-        style={{ fontSize: 52 * scale, lineHeight: 1.18, overflowWrap: "anywhere" }}
+        style={{ fontWeight: "var(--card-title-weight, 900)", fontSize: 52 * scale, lineHeight: 1.18, overflowWrap: "anywhere" }}
       >
         <span>{song.title || "Untitled"}</span>{" "}
         <ExplicitBadge show={song.explicit} />

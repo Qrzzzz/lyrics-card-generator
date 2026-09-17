@@ -1,3 +1,4 @@
+import { normalizeSolidHex, resolveCardTextColor } from "@/lib/solid-background";
 import { PRESET_CARD_SIZES } from "@/lib/card-size";
 import { normalizeLyricLineHeight } from "@/lib/lyric-typography";
 import { normalizeLandscapeLayoutSettings } from "@/lib/landscape-plan";
@@ -12,20 +13,14 @@ export function normalizeCardStyle(
   options: { preserveDerivedLandscapePlan?: boolean } = {}
 ): CardStyle {
   const layoutMode = style.layoutMode ?? "portrait";
-  const normalizedStyle: CardStyle =
-    style.textColorMode === "custom"
-      ? {
-          ...style,
-          coverCropScale: FIXED_COVER_CROP_SCALE,
-          resolvedTextColor: style.customTextColor
-        }
-      : {
-          ...style,
-          coverCropScale: FIXED_COVER_CROP_SCALE,
-          textColorMode: "preset",
-          textColorPreset: "white",
-          resolvedTextColor: FIXED_WHITE_TEXT_COLOR
-        };
+  const normalizedStyle: CardStyle = {
+    ...style,
+    textColorPreset: style.textColorMode === "custom" ? style.textColorPreset : "white",
+    solidColor: normalizeSolidHex(style.solidColor),
+    solidColorSource: style.solidColorSource === "user" ? "user" : "auto",
+    coverCropScale: FIXED_COVER_CROP_SCALE,
+    resolvedTextColor: resolveCardTextColor(style)
+  };
 
   return normalizeAutomaticSizing(normalizeInstrumentalLayout({
     ...normalizedStyle,
