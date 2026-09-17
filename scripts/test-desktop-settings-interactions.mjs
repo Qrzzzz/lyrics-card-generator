@@ -4073,12 +4073,26 @@ try {
     groups.map((group) => group.getAttribute("aria-label")?.trim() ?? "")
   ));
   assert.ok(appearanceRadioNames.length >= 2 && appearanceRadioNames.every(Boolean), `theme and accent radiogroups have accessible names: ${JSON.stringify(appearanceRadioNames)}`);
+  await appearancePanel.locator('[data-segment-value="preset"]').click();
+  const accentSwatches = appearancePanel.locator('[data-color-swatches]');
+  assert.equal(await accentSwatches.locator('[tabindex="0"]').count(), 1, "swatches have one tab stop");
+  const firstAccent = accentSwatches.getByRole("radio").first();
+  await firstAccent.click();
+  await firstAccent.press("ArrowRight");
+  assert.equal(await accentSwatches.getByRole("radio").nth(1).getAttribute("aria-checked"), "true", "arrow keys select an accent");
+  assert.equal(await accentSwatches.getByRole("radio").nth(1).evaluate((node) => node === document.activeElement), true, "selection moves focus");
+  await accentSwatches.getByRole("radio").nth(1).press("End");
+  assert.equal(await accentSwatches.getByRole("radio").last().getAttribute("aria-checked"), "true", "End selects the last accent");
   await appearancePanel.locator('[data-segment-value="custom"]').click();
   const customAccent = page.getByTestId("custom-accent-input");
   const customAccentId = await customAccent.getAttribute("id");
   assert.ok(customAccentId, "custom accent receives a real input ID");
   assert.equal(await appearancePanel.locator(`label[for="${customAccentId}"]`).count(), 1, "custom accent has a real associated label");
+  await customAccent.fill("  123abc  ");
+  await customAccent.blur();
+  assert.equal(await customAccent.inputValue(), "#123ABC", "accent HEX accepts whitespace and omitted hash");
   await customAccent.fill("not-a-color");
+  assert.equal(await appearancePanel.locator('input[type="color"]').inputValue(), "#123abc", "invalid input preserves the actual color preview");
   assert.equal(await customAccent.getAttribute("aria-invalid"), "true", "invalid custom accents remain visible and invalid");
   const accentErrorId = await customAccent.getAttribute("aria-describedby");
   assert.ok(

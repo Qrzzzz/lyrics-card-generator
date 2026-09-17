@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v6.5.0.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v6.5.1.zh-CN.md">发布说明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">在线 Web Lite 版</a> ·
   <a href="./docs/web-lite-browser-support.md">Web Lite 浏览器支持</a> ·
   <a href="./docs/desktop.md">桌面维护文档</a> ·
@@ -75,22 +75,19 @@
 
 
 
-* Windows x64 安装版：`Lyrics.Card.Generator.Setup.6.5.0.exe`
+* Windows x64 安装版：`Lyrics.Card.Generator.Setup.6.5.1.exe`
 
 从 v6.2.2 起只提供 Windows x64 Setup 安装包。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v6.5.0 · 纯色背景与 Mona Sans
+### v6.5.1 · 统一预设取色
 
-2026-09-17
+* 设置主题色与第三步纯色背景共用圆形色块、清晰勾选和键盘操作；支持方向键、Home / End 及单一 Tab 入口。
+* 纯色背景可切换封面候选色与固定预设色。选择色板不会改变背景，点选颜色才会应用；自动推荐继续跟随封面，手动选择保持固定。
+* 两处自定义颜色统一提供原生取色器与 HEX 输入，支持省略 # 和首尾空格。无效输入显示错误并保留实际颜色，Escape 恢复当前有效值。
 
-* 第三步更新为“背景与布局”，可自由切换流光渐变和极简纯色；字体、歌词、译文与画布设置独立保留。
-* 纯色从封面的代表区域提供最多六个候选，合并近似色并过滤透明像素和小面积噪点；缺少有效分析时提供中性预设色。支持 HEX 和自定义颜色，用户选色不会被新封面覆盖，自动文字颜色按最终背景选择黑白。
-* 三套字体预设为思源黑体、思源宋体和 Mona Sans。Mona Sans v2.0.27 本地打包，西文歌词为 900 正体，中文按字符回退思源黑体；沿用原预览。
-* 项目署名采用 Mona Sans 斜体，Qrzzzz 为 800、斜杠及仓库名为 600；分享者署名为 700。中文署名使用真实思源黑体 Bold 回退。
-
-[简体中文](./docs/releases/v6.5.0.zh-CN.md) · [繁體中文](./docs/releases/v6.5.0.zh-TW.md) · [English](./docs/releases/v6.5.0.en.md) · [Français](./docs/releases/v6.5.0.fr.md) · [日本語](./docs/releases/v6.5.0.ja.md) · [Español](./docs/releases/v6.5.0.es.md)
+[简体中文](./docs/releases/v6.5.1.zh-CN.md) · [繁體中文](./docs/releases/v6.5.1.zh-TW.md) · [English](./docs/releases/v6.5.1.en.md) · [Français](./docs/releases/v6.5.1.fr.md) · [日本語](./docs/releases/v6.5.1.ja.md) · [Español](./docs/releases/v6.5.1.es.md)
 
 <a id="主要功能"></a>
 

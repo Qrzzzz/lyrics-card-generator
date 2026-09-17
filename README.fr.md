@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v6.5.0.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v6.5.1.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="./docs/development.en.md">Développement local</a> ·
@@ -76,22 +76,19 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 
 
-* Programme d’installation Windows x64 : `Lyrics.Card.Generator.Setup.6.5.0.exe`
+* Programme d’installation Windows x64 : `Lyrics.Card.Generator.Setup.6.5.1.exe`
 
 À partir de la v6.2.2, le programme Setup Windows x64 est le seul paquet distribué.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### v6.5.0 · Fonds unis et Mona Sans
+### v6.5.1 · Sélection de couleurs prédéfinies unifiée
 
-2026-09-17
+* Les couleurs du thème et les fonds unis partagent des pastilles rondes, une coche et la navigation au clavier : flèches, Home / End et un seul arrêt Tab.
+* Les fonds unis proposent les couleurs de la pochette et des couleurs prédéfinies. Changer de palette ne modifie pas le fond avant la sélection d’une couleur. Le mode automatique suit la pochette ; le choix manuel reste fixe.
+* Les deux champs personnalisés associent un sélecteur natif et une saisie HEX, avec # facultatif et espaces autour. Une saisie incorrecte affiche une erreur sans modifier la couleur appliquée ; Échap rétablit la valeur valide.
 
-* La troisième étape devient « Fond et mise en page ». Le passage du dégradé au fond uni conserve les polices, paroles, traductions et dimensions.
-* Jusqu’à six couleurs proviennent de zones représentatives de la pochette. Les couleurs proches sont regroupées, les pixels transparents et petites zones parasites filtrés. Sans analyse valide, des tons neutres prédéfinis sont proposés. Les choix HEX/personnalisés sont conservés lors du changement de pochette ; le texte automatique devient noir ou blanc selon le fond final.
-* Les trois préréglages sont Source Han Sans, Source Han Serif et Mona Sans. Mona Sans v2.0.27 est intégrée localement : paroles latines droites en graisse 900 et repli CJK par caractère vers Source Han Sans. Les aperçus existants sont conservés.
-* Les signatures utilisent Mona Sans italique : Qrzzzz en 800, barre et dépôt en 600, signature personnelle en 700. Le chinois utilise une véritable ressource Source Han Sans Bold.
-
-[简体中文](./docs/releases/v6.5.0.zh-CN.md) · [繁體中文](./docs/releases/v6.5.0.zh-TW.md) · [English](./docs/releases/v6.5.0.en.md) · [Français](./docs/releases/v6.5.0.fr.md) · [日本語](./docs/releases/v6.5.0.ja.md) · [Español](./docs/releases/v6.5.0.es.md)
+[简体中文](./docs/releases/v6.5.1.zh-CN.md) · [繁體中文](./docs/releases/v6.5.1.zh-TW.md) · [English](./docs/releases/v6.5.1.en.md) · [Français](./docs/releases/v6.5.1.fr.md) · [日本語](./docs/releases/v6.5.1.ja.md) · [Español](./docs/releases/v6.5.1.es.md)
 
 <a id="fonctionnalités-principales"></a>
 

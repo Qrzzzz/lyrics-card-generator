@@ -1,17 +1,15 @@
 "use client";
 
 import { SettingsGrid } from "@/components/ui/SettingsLayout";
-import { Check } from "lucide-react";
+import { ColorSwatches, CustomColorInput } from "@/components/ui/ColorPicker";
 import { useEffect, useState } from "react";
 import { recordRenderBoundary } from "@/components/editor/render-boundary-diagnostics";
 import { ActionButton, FieldLabel, SegmentedControl, TextInput, ToggleRow } from "@/components/ui/controls";
-import { getReadableForegroundColor } from "@/lib/contrast-color";
 import { normalizeHexColor, UI_ACCENT_PRESETS } from "@/lib/settings/accent";
 import { validateUiFontFamily } from "@/lib/settings/font-family";
 import type { UiAccentMode, UiAccentPresetId, UiThemeMode, UserSettings } from "@/lib/settings/types";
 import type { Locale } from "@/lib/types";
 import type { settingsCopy } from "@/lib/settings/copy";
-import { cn } from "@/lib/utils";
 
 const THEME_MODE_OPTIONS: Array<{ value: UiThemeMode; copyKey: "albumDynamic" | "dark" | "light" }> = [
   { value: "album-dynamic", copyKey: "albumDynamic" },
@@ -44,17 +42,9 @@ export function AppearanceSettingsSection({
   onChange: (settings: UserSettings) => void;
 }) {
   recordRenderBoundary("SettingsAppearance");
-  const [customAccentInput, setCustomAccentInput] = useState(settings.uiCustomAccentColor);
   const [uiFontInput, setUiFontInput] = useState(settings.uiFontFamily);
-  const normalizedCustomAccent = normalizeHexColor(customAccentInput, "");
-  const customAccentIsValid = normalizedCustomAccent !== "";
-  const customAccentPreview = normalizeHexColor(customAccentInput, UI_ACCENT_PRESETS.purple);
   const acrylicDisabled = settings.uiThemeMode === "album-dynamic";
   const uiFontValidation = validateUiFontFamily(uiFontInput);
-
-  useEffect(() => {
-    setCustomAccentInput(settings.uiCustomAccentColor);
-  }, [settings.uiCustomAccentColor]);
 
   useEffect(() => {
     setUiFontInput(settings.uiFontFamily);
@@ -75,19 +65,6 @@ export function AppearanceSettingsSection({
       uiAccentMode,
       uiCustomAccentColor: normalizeHexColor(settings.uiCustomAccentColor, UI_ACCENT_PRESETS.purple)
     });
-  }
-
-  function updateCustomAccent(value: string) {
-    // Keep invalid text local for editing; persist only a normalized complete color.
-    setCustomAccentInput(value);
-    const normalized = normalizeHexColor(value, "");
-    if (normalized) {
-      onChange({
-        ...settings,
-        uiAccentMode: "custom",
-        uiCustomAccentColor: normalized
-      });
-    }
   }
 
   return (
@@ -129,59 +106,14 @@ export function AppearanceSettingsSection({
           />
 
           {settings.uiAccentMode === "preset" ? (
-            <div role="radiogroup" aria-label={copy.accentPreset} className="flex flex-wrap gap-2">
-              {ACCENT_PRESET_OPTIONS.map((option) => {
-                const color = UI_ACCENT_PRESETS[option.id];
-                const selected = settings.uiAccentPreset === option.id;
-                const checkColor = getReadableForegroundColor(color);
-
-                return (
-                  <button
-                    key={option.id}
-                    type="button"
-                    role="radio"
-                    aria-label={copy[option.copyKey]}
-                    aria-checked={selected}
-                    onClick={() => onChange({ ...settings, uiAccentMode: "preset", uiAccentPreset: option.id })}
-                    className={cn(
-                      "control-focus grid size-11 place-items-center rounded-full border transition",
-                      selected
-                        ? "border-[var(--app-accent)] bg-[rgb(var(--button-bg-hover))] shadow-[0_0_0_3px_var(--control-selected-bg)]"
-                        : "border-[rgb(var(--panel-border))] bg-[rgb(var(--button-bg))] hover:bg-[rgb(var(--button-bg-hover))]"
-                    )}
-                  >
-                    <span
-                      className="grid size-7 place-items-center rounded-full"
-                      style={{ backgroundColor: color }}
-                    >
-                      {selected ? <Check className="h-4 w-4 drop-shadow" style={{ color: checkColor }} aria-hidden="true" /> : null}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
+            <ColorSwatches value={settings.uiAccentPreset} label={copy.accentPreset}
+              options={ACCENT_PRESET_OPTIONS.map((option) => ({ value: option.id, color: UI_ACCENT_PRESETS[option.id], label: copy[option.copyKey] }))}
+              onChange={(uiAccentPreset) => onChange({ ...settings, uiAccentMode: "preset", uiAccentPreset })} />
           ) : null}
-
           {settings.uiAccentMode === "custom" ? (
-            <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-2">
-              <FieldLabel
-                label={copy.accentCustom}
-                error={!customAccentIsValid ? copy.accentInvalid : undefined}
-              >
-                <TextInput
-                  data-testid="custom-accent-input"
-                  value={customAccentInput}
-                  onChange={(event) => updateCustomAccent(event.target.value)}
-                  placeholder={copy.accentCustomPlaceholder}
-                  aria-invalid={!customAccentIsValid}
-                />
-              </FieldLabel>
-              <span
-                className="h-11 w-11 shrink-0 rounded-lg border border-[rgb(var(--panel-border))]"
-                style={{ backgroundColor: customAccentPreview }}
-                aria-hidden="true"
-              />
-            </div>
+            <CustomColorInput value={settings.uiCustomAccentColor} label={copy.accentCustom}
+              invalidMessage={copy.accentInvalid} placeholder={copy.accentCustomPlaceholder} testId="custom-accent-input"
+              onChange={(uiCustomAccentColor) => onChange({ ...settings, uiAccentMode: "custom", uiCustomAccentColor })} />
           ) : null}
         </div>
       </FieldLabel>

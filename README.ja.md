@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v6.5.0.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v6.5.1.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="./docs/development.en.md">ローカル開発</a> ·
@@ -76,22 +76,19 @@
 
 
 
-* Windows x64 インストーラー：`Lyrics.Card.Generator.Setup.6.5.0.exe`
+* Windows x64 インストーラー：`Lyrics.Card.Generator.Setup.6.5.1.exe`
 
 v6.2.2 以降、配布するデスクトップパッケージは Windows x64 Setup のみです。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v6.5.0 · 単色背景と Mona Sans
+### v6.5.1 · プリセット色選択の統一
 
-2026-09-17
+* テーマのアクセント色と単色背景で、丸い色見本、チェック表示、キーボード操作を統一しました。矢印キー、Home / End、単一の Tab 停止位置に対応します。
+* 単色背景ではジャケットの候補色と固定プリセットを切り替えられます。色一覧の切り替えだけでは背景は変わりません。自動選択はジャケットに追従し、手動選択は固定されます。
+* 両方のカスタム色に標準カラーピッカーと HEX 入力を用意しました。# の省略と前後の空白に対応し、不正な入力は適用せずエラーを表示します。Escape で現在の有効な値に戻せます。
 
-* 第3ステップを「背景とレイアウト」に変更。グラデーションと単色を切り替えても、フォント、歌詞、訳文、キャンバス設定を保持します。
-* ジャケットの代表領域から最大6色を提案し、近似色を統合、透明画素と小さなノイズ領域を除外します。解析できない場合は無彩色のプリセットを表示。HEX・カスタム色はジャケット変更後も保持し、自動文字色は最終背景に合わせて白黒を選びます。
-* プリセットは源ノ角ゴシック、源ノ明朝、Mona Sans の3種類です。Mona Sans v2.0.27 を同梱し、欧文歌詞は900の正体、中日韓文字は源ノ角ゴシックに文字単位でフォールバックします。既存のプレビューを維持します。
-* 署名は Mona Sans の斜体を使用。Qrzzzz は800、スラッシュとリポジトリ名は600、共有者名は700です。中国語署名には実際の Source Han Sans Bold を使用します。
-
-[简体中文](./docs/releases/v6.5.0.zh-CN.md) · [繁體中文](./docs/releases/v6.5.0.zh-TW.md) · [English](./docs/releases/v6.5.0.en.md) · [Français](./docs/releases/v6.5.0.fr.md) · [日本語](./docs/releases/v6.5.0.ja.md) · [Español](./docs/releases/v6.5.0.es.md)
+[简体中文](./docs/releases/v6.5.1.zh-CN.md) · [繁體中文](./docs/releases/v6.5.1.zh-TW.md) · [English](./docs/releases/v6.5.1.en.md) · [Français](./docs/releases/v6.5.1.fr.md) · [日本語](./docs/releases/v6.5.1.ja.md) · [Español](./docs/releases/v6.5.1.es.md)
 
 <a id="主な機能"></a>
 

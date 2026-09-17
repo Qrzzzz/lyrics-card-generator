@@ -163,7 +163,7 @@ assert.match(appearanceSettings, /label=\{copy\.spark\}/);
 assert.match(appearanceSettings, /settings\.sparkCursorEnabled/);
 assert.match(appearanceSettings, /ariaLabel=\{copy\.theme\}/);
 assert.match(appearanceSettings, /ariaLabel=\{copy\.accentColor\}/);
-assert.match(appearanceSettings, /error=\{!customAccentIsValid \? copy\.accentInvalid/);
+assert.match(appearanceSettings, /invalidMessage=\{copy\.accentInvalid\}/);
 assert.match(appearanceSettings, /validateUiFontFamily/);
 assert.match(appearanceSettings, /restore-system-font/);
 assert.match(exportSettings, /<SegmentedControl/);
