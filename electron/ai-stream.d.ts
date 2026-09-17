@@ -1,4 +1,6 @@
 export type AIStreamErrorCode =
+  | "provider_error"
+  | "stream_incomplete"
   | "cancelled"
   | "stream_idle_timeout"
   | "stream_deadline_exceeded"

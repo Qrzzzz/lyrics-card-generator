@@ -258,6 +258,7 @@ async function consumeOpenAIStream(
     },
     { signal: deadline.signal, deadlineAt: deadline.deadlineAt }
   );
+  if (!result.content.trim()) throw new AITranslationError("", "empty_response");
   return result.content;
 }
 

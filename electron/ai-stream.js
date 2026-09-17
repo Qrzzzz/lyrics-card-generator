@@ -1,6 +1,8 @@
 const resourceBudgets = require("./resource-budgets.json");
 
 const AI_STREAM_ERROR_CODES = new Set([
+  "provider_error",
+  "stream_incomplete",
   "cancelled",
   "stream_idle_timeout",
   "stream_deadline_exceeded",
@@ -61,16 +63,26 @@ async function consumeOpenAICompatibleSSE(response, callbacks = {}, options = {}
   let outputBytes = 0;
   let reasoningBytes = 0;
   let completed = false;
+  let stopped = false;
+
+  const assertActive = () => {
+    if (options.signal?.aborted) throw toAIStreamError(options.signal.reason, "cancelled");
+  };
 
   const emitEvent = async (event) => {
+    assertActive();
     if (encoder.encode(event).byteLength > limits.singleEventBytes) {
       throw new AIStreamError("stream_event_too_large");
     }
 
     const dataLines = [];
+    let eventType = "";
     for (const line of event.split(/\r?\n/)) {
+      if (line.startsWith("event:")) eventType = line.slice(6).trim();
       if (line.startsWith("data:")) dataLines.push(line.slice(5).trimStart());
     }
+    // Provider-controlled diagnostics/codes must never become local error codes.
+    if (eventType === "error") throw new AIStreamError("provider_error");
     if (dataLines.length === 0) return false;
     const payload = dataLines.join("\n").trim();
     if (!payload) return false;
@@ -80,7 +92,18 @@ async function consumeOpenAICompatibleSSE(response, callbacks = {}, options = {}
     try {
       data = JSON.parse(payload);
     } catch {
-      return false;
+      throw new AIStreamError("stream_incomplete");
+    }
+
+    const choice = data?.choices?.[0];
+    if (data?.error != null || choice?.finish_reason === "error") {
+      throw new AIStreamError("provider_error");
+    }
+    // Translation supports text completion only. Truncation, filtering, tool
+    // calls and unknown terminal reasons cannot authorize a translation commit.
+    if (choice?.finish_reason != null) {
+      if (choice.finish_reason !== "stop") throw new AIStreamError("stream_incomplete");
+      stopped = true;
     }
 
     const reasoningDelta = data?.choices?.[0]?.delta?.reasoning_content;
@@ -91,6 +114,7 @@ async function consumeOpenAICompatibleSSE(response, callbacks = {}, options = {}
       }
       reasoning += reasoningDelta;
       await callbacks.onReasoningDelta?.(reasoningDelta, reasoning);
+      assertActive();
     }
 
     const outputDelta = data?.choices?.[0]?.delta?.content;
@@ -101,6 +125,7 @@ async function consumeOpenAICompatibleSSE(response, callbacks = {}, options = {}
       }
       output += outputDelta;
       await callbacks.onDelta?.(outputDelta, output);
+      assertActive();
     }
     return false;
   };
@@ -142,9 +167,14 @@ async function consumeOpenAICompatibleSSE(response, callbacks = {}, options = {}
       completed = await consumeBuffer(false);
     }
 
+    assertActive();
+    // DONE is sufficient for legacy compatible streams. A clean EOF is only
+    // sufficient after stop; keep reading after stop to catch later errors.
+    if (!completed && !stopped) throw new AIStreamError("stream_incomplete");
     if (completed) {
       await safeCancel(reader, "SSE [DONE] received.");
     }
+    assertActive();
     return { content: output, reasoningContent: reasoning, doneReceived: completed };
   } catch (error) {
     await safeCancel(reader, error);

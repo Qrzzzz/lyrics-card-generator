@@ -121,6 +121,14 @@ npm run core:test
 
 Linux 生产构建由必需的渲染边界 job 执行；浏览器与 Windows 桌面构建也在独立 job 中执行。不要把一次本地 `build` 通过描述为完整 CI 通过。门禁分工、去重与发布阶段复用规则见 [CI 与发布门禁](./testing/ci-gates.md)。
 
+### AI 流结束与事务提交
+
+桌面主进程与 Next 客户端共用 `electron/ai-stream.js`。流正常结束的规则为：收到 `[DONE]`，或收到 `choices[0].finish_reason: "stop"` 后干净 EOF。`stop` 本身不会提前停止读取，因此其后的错误事件仍会导致失败；额外的 usage 事件不影响成功。
+
+顶层非空 `error`、SSE `event: error` 或 `finish_reason: "error"` 立即以固定 `provider_error` 拒绝，不透传上游错误码或诊断。没有正常终态的 EOF、无法解析的数据事件，以及 `length`、`content_filter`、工具调用或未知结束原因均以 `stream_incomplete` 拒绝，后来的内容或 `[DONE]` 不能覆盖失败。`[DONE]` 作为传输结束标记仍会取消未读取的尾部。
+
+只有成功结束的流才能进入结构化译文终态校验和提交；空结果仍失败。失败恢复原译文，取消及文档或请求代次变化由现有事务控制器隔离。`resource-budgets:test` 覆盖流状态，`transactions:test` 覆盖合法结构化内容后的失败恢复及竞态，`desktop:ai-errors-test` 使用本地提供商夹具验证打包后的 IPC 和浏览器/Next 调用链。
+
 ## Web Lite
 
 Web Lite 是由 `web-lite/` 与共享组件构建的静态单页，应用样式和脚本内联到根目录 `index.html`，字体与图标保留为受控的 `public/` 资源。它没有 Next.js 服务器或 `/api/` 运行时。

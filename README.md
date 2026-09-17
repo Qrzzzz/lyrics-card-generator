@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v6.5.1.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v6.5.2.zh-CN.md">发布说明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">在线 Web Lite 版</a> ·
   <a href="./docs/web-lite-browser-support.md">Web Lite 浏览器支持</a> ·
   <a href="./docs/desktop.md">桌面维护文档</a> ·
@@ -75,19 +75,17 @@
 
 
 
-* Windows x64 安装版：`Lyrics.Card.Generator.Setup.6.5.1.exe`
+* Windows x64 安装版：`Lyrics.Card.Generator.Setup.6.5.2.exe`
 
 从 v6.2.2 起只提供 Windows x64 Setup 安装包。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v6.5.1 · 统一预设取色
+### v6.5.2 · AI 翻译失败恢复
 
-* 设置主题色与第三步纯色背景共用圆形色块、清晰勾选和键盘操作；支持方向键、Home / End 及单一 Tab 入口。
-* 纯色背景可切换封面候选色与固定预设色。选择色板不会改变背景，点选颜色才会应用；自动推荐继续跟随封面，手动选择保持固定。
-* 两处自定义颜色统一提供原生取色器与 HEX 输入，支持省略 # 和首尾空格。无效输入显示错误并保留实际颜色，Escape 恢复当前有效值。
+v6.5.2 修复 AI 翻译中服务已报错、却仍被当作成功的问题，让失败提示与原译文恢复保持一致。
 
-[简体中文](./docs/releases/v6.5.1.zh-CN.md) · [繁體中文](./docs/releases/v6.5.1.zh-TW.md) · [English](./docs/releases/v6.5.1.en.md) · [Français](./docs/releases/v6.5.1.fr.md) · [日本語](./docs/releases/v6.5.1.ja.md) · [Español](./docs/releases/v6.5.1.es.md)
+[简体中文](./docs/releases/v6.5.2.zh-CN.md) · [繁體中文](./docs/releases/v6.5.2.zh-TW.md) · [English](./docs/releases/v6.5.2.en.md) · [Français](./docs/releases/v6.5.2.fr.md) · [日本語](./docs/releases/v6.5.2.ja.md) · [Español](./docs/releases/v6.5.2.es.md)
 
 <a id="主要功能"></a>
 

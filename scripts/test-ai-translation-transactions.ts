@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import { consumeOpenAICompatibleSSE } from "../electron/ai-stream";
+import { parseStructuredTranslation } from "../lib/ai/structured-translation";
 import { readFileSync } from "node:fs";
 import { clearLyricContent } from "../lib/clear-content";
 import { defaultState } from "../components/editor/editor-defaults";
@@ -964,6 +966,23 @@ async function newerGenerationWinsTest() {
 }
 
 void (async () => {
+  const event = (data: unknown) => `data: ${JSON.stringify(data)}\n\n`;
+  const lyricDocument = createLyricDocumentV2("lyrics A", "old A");
+  const payload = JSON.stringify([{ id: lyricDocument.blocks[0]!.units[0]!.id, translation: ["complete new translation"] }]);
+  const content = event({ choices: [{ delta: { content: payload } }] });
+  const stop = event({ choices: [{ finish_reason: "stop" }] });
+  const error = event({ error: { message: "failed after complete content" } });
+  for (const [tail, success] of [[error, false], [error + "data: [DONE]\n\n", false], ["", false], [stop, true], [stop + "data: [DONE]\n\n", true]] as const) {
+    const harness = createHarness();
+    const options = harness.options(deferredStream());
+    options.toValue = (raw) => ({ text: parseStructuredTranslation(raw, lyricDocument).text, enabled: true });
+    options.stream = async (signal, events) => (await consumeOpenAICompatibleSSE(new Response(content + tail), events, { signal })).content;
+    await harness.orchestrator.run(options);
+    assert.ok(harness.writes.includes("complete new translation"), "a complete-looking partial was displayed");
+    assert.equal(harness.translation.text, success ? "complete new translation" : "old A");
+    assert.equal(harness.events.successes, success ? 1 : 0);
+    assert.equal(harness.events.failures, success ? 0 : 1);
+  }
   await userCancelBlocksLateProviderTest();
   await switchAndClearWinTest();
   await deferredReactMutationRollbackTest();
