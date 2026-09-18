@@ -19,7 +19,7 @@
 <p>
   <strong>Navegación</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Descargar la última versión</a> ·
-  <a href="./docs/releases/v6.5.2.es.md">Notas de la versión</a> ·
+  <a href="./docs/releases/v6.5.3.es.md">Notas de la versión</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en línea</a> ·
   <a href="#funciones-principales">Funciones principales</a> ·
   <a href="./docs/development.en.md">Desarrollo local</a> ·
@@ -76,17 +76,17 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 
 
-* Instalador de Windows x64: `Lyrics.Card.Generator.Setup.6.5.2.exe`
+* Instalador de Windows x64: `Lyrics.Card.Generator.Setup.6.5.3.exe`
 
 A partir de v6.2.2, Setup para Windows x64 es el único paquete de escritorio distribuido.
 
 > La compilación actual no está firmada. Windows puede mostrar una advertencia de SmartScreen, algo habitual en aplicaciones personales sin firma.
 
-### v6.5.2 · Recuperación tras fallos de traducción con IA
+### v6.5.3 · Visibilidad del indicador Explicit
 
-v6.5.2 corrige las traducciones con IA que se consideraban exitosas después de un error del proveedor, con mensajes coherentes y la restauración de la traducción anterior.
+v6.5.3 corrige la invisibilidad del indicador Explicit sobre fondos claros. Ahora sigue el color del texto de la tarjeta en vistas previas y exportaciones, tanto verticales como horizontales.
 
-[简体中文](./docs/releases/v6.5.2.zh-CN.md) · [繁體中文](./docs/releases/v6.5.2.zh-TW.md) · [English](./docs/releases/v6.5.2.en.md) · [Français](./docs/releases/v6.5.2.fr.md) · [日本語](./docs/releases/v6.5.2.ja.md) · [Español](./docs/releases/v6.5.2.es.md)
+[简体中文](./docs/releases/v6.5.3.zh-CN.md) · [繁體中文](./docs/releases/v6.5.3.zh-TW.md) · [English](./docs/releases/v6.5.3.en.md) · [Français](./docs/releases/v6.5.3.fr.md) · [日本語](./docs/releases/v6.5.3.ja.md) · [Español](./docs/releases/v6.5.3.es.md)
 
 <a id="funciones-principales"></a>
 
