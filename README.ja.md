@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v6.5.1.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v6.5.2.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="./docs/development.en.md">ローカル開発</a> ·
@@ -76,19 +76,17 @@
 
 
 
-* Windows x64 インストーラー：`Lyrics.Card.Generator.Setup.6.5.1.exe`
+* Windows x64 インストーラー：`Lyrics.Card.Generator.Setup.6.5.2.exe`
 
 v6.2.2 以降、配布するデスクトップパッケージは Windows x64 Setup のみです。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v6.5.1 · プリセット色選択の統一
+### v6.5.2 · AI 翻訳失敗時の復元
 
-* テーマのアクセント色と単色背景で、丸い色見本、チェック表示、キーボード操作を統一しました。矢印キー、Home / End、単一の Tab 停止位置に対応します。
-* 単色背景ではジャケットの候補色と固定プリセットを切り替えられます。色一覧の切り替えだけでは背景は変わりません。自動選択はジャケットに追従し、手動選択は固定されます。
-* 両方のカスタム色に標準カラーピッカーと HEX 入力を用意しました。# の省略と前後の空白に対応し、不正な入力は適用せずエラーを表示します。Escape で現在の有効な値に戻せます。
+v6.5.2 では、サービスがエラーを返した AI 翻訳が成功として扱われる問題を修正し、失敗の通知と元の翻訳の復元を一貫させました。
 
-[简体中文](./docs/releases/v6.5.1.zh-CN.md) · [繁體中文](./docs/releases/v6.5.1.zh-TW.md) · [English](./docs/releases/v6.5.1.en.md) · [Français](./docs/releases/v6.5.1.fr.md) · [日本語](./docs/releases/v6.5.1.ja.md) · [Español](./docs/releases/v6.5.1.es.md)
+[简体中文](./docs/releases/v6.5.2.zh-CN.md) · [繁體中文](./docs/releases/v6.5.2.zh-TW.md) · [English](./docs/releases/v6.5.2.en.md) · [Français](./docs/releases/v6.5.2.fr.md) · [日本語](./docs/releases/v6.5.2.ja.md) · [Español](./docs/releases/v6.5.2.es.md)
 
 <a id="主な機能"></a>
 

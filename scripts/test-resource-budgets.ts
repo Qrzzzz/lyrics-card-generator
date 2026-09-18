@@ -62,6 +62,7 @@ async function main() {
   console.log("[resource-budget-test] direct upstreams");
   await assertDirectUpstreamBudgetsAndCancellation();
   console.log("[resource-budget-test] SSE");
+  await assertAIStreamTerminals();
   await assertAIStreamBudgets();
   console.log("[resource-budget-test] provider bodies");
   await assertProviderBodyBudgets();
@@ -421,6 +422,46 @@ async function assertAIStreamBudgets() {
     () => assertAICompletionBudgets("123456", "", testStreamLimits({ outputBytes: 5 })),
     (error: unknown) => error instanceof AIStreamError && error.code === "stream_output_too_large"
   );
+}
+
+async function assertAIStreamTerminals() {
+  const event = (data: unknown) => `data: ${JSON.stringify(data)}\n\n`;
+  const content = event({ choices: [{ delta: { content: "complete translation" } }] });
+  const stop = event({ choices: [{ delta: {}, finish_reason: "stop" }] });
+  const done = "data: [DONE]\n\n";
+  const providerError = event({ error: { code: "cancelled", message: "sk-secret-provider-detail" } });
+  for (const ending of [stop + done, stop, done]) {
+    const result = await consumeOpenAICompatibleSSE(new Response(content + ending));
+    assert.equal(result.content, "complete translation");
+    assert.equal(result.doneReceived, ending.includes(done));
+  }
+  for (const errorEvent of [providerError, "event: error\ndata: opaque failure\n\n",
+    event({ choices: [{ delta: {}, finish_reason: "error" }] })]) {
+    for (const tail of ["", done, content + stop + done]) {
+      const deltas: string[] = [];
+      await assert.rejects(consumeOpenAICompatibleSSE(new Response(content + errorEvent + tail), {
+        onDelta: (delta) => { deltas.push(delta); }
+      }), (error: unknown) => {
+        assert.equal((error as { code: string }).code, "provider_error");
+        assert.doesNotMatch(String(error), /sk-secret-provider-detail/);
+        return true;
+      });
+      assert.deepEqual(deltas, ["complete translation"]);
+    }
+  }
+  for (const body of [content, "", content + stop + providerError + done]) {
+    await assert.rejects(consumeOpenAICompatibleSSE(new Response(body)),
+      (error: unknown) => (error as { code: string }).code === (body.includes(providerError) ? "provider_error" : "stream_incomplete"));
+  }
+  for (const reason of ["length", "content_filter", "tool_calls", "function_call", "unexpected"]) {
+    await assert.rejects(consumeOpenAICompatibleSSE(new Response(content + event({ choices: [{ finish_reason: reason }] }) + done)),
+      (error: unknown) => (error as { code: string }).code === "stream_incomplete");
+  }
+  const controller = new AbortController();
+  await assert.rejects(consumeOpenAICompatibleSSE(new Response(content + done), {
+    onDelta: () => controller.abort()
+  }, { signal: controller.signal }), (error: unknown) => (error as { code: string }).code === "cancelled");
+  console.log("SSE terminal semantics passed: success, stop without DONE, sticky errors, incomplete EOF, cancellation");
 }
 
 async function assertProviderBodyBudgets() {

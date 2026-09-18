@@ -24,9 +24,28 @@ const fixtures = [
   { name: "unauthorized", body: { error: { message: `DESKTOP_INVALID_KEY ${fakeKey}` } }, status: 401, code: "provider_error", copy: "DESKTOP_INVALID_KEY" }
 ];
 let upstreamCalls = 0;
+const sseEvent = (data) => `data: ${JSON.stringify(data)}\n\n`;
+const sseContent = sseEvent({ choices: [{ delta: { content: "translated" } }] });
+const sseStop = sseEvent({ choices: [{ finish_reason: "stop" }] });
+const sseError = sseEvent({ error: { code: "cancelled", message: fakeKey } });
+const sseFixtures = [
+  { name: "sse-error-eof", tail: sseError, code: "provider_error" },
+  { name: "sse-error-done", tail: sseError + "data: [DONE]\n\n", code: "provider_error" },
+  { name: "sse-error-content", tail: sseError + sseContent + sseStop + "data: [DONE]\n\n", code: "provider_error" },
+  { name: "sse-error-terminal", tail: sseEvent({ choices: [{ finish_reason: "error" }] }) + "data: [DONE]\n\n", code: "provider_error" },
+  { name: "sse-incomplete", tail: "", code: "stream_incomplete" },
+  { name: "sse-stop", tail: sseStop },
+  { name: "sse-done", tail: sseStop + "data: [DONE]\n\n" }
+];
 const server = createServer((request, response) => {
   upstreamCalls += 1;
   request.resume();
+  const streamFixture = sseFixtures.find((row) => request.url === `/${row.name}/chat/completions`);
+  if (streamFixture) {
+    response.writeHead(200, { "content-type": "text/event-stream" });
+    response.end(sseContent + streamFixture.tail);
+    return;
+  }
   const fixture = fixtures.find((row) => request.url === `/${row.name}/chat/completions`);
   if (!fixture) { response.writeHead(404); response.end(); return; }
   response.writeHead(fixture.status ?? 200, { "content-type": fixture.name === "html" ? "text/html" : "application/json" });
@@ -53,7 +72,7 @@ try {
   // Bundle the unmodified product client to exercise translation over the real
   // preload/IPC/main chain, without submitting a user's document to a provider.
   const clientBundle = await build({
-    stdin: { contents: 'export { streamAITranslation } from "./lib/ai/client"; export { normalizeAIErrorMessage } from "./components/editor/utils/normalizeAIErrorMessage";', resolveDir: root, loader: "ts" },
+    stdin: { contents: 'export { streamAITranslation, saveAISettings } from "./lib/ai/client"; export { normalizeAIErrorMessage } from "./components/editor/utils/normalizeAIErrorMessage";', resolveDir: root, loader: "ts" },
     bundle: true, write: false, platform: "browser", format: "iife", globalName: "__aiRegressionClient"
   });
   await page.addScriptTag({ content: clientBundle.outputFiles[0].text });
@@ -123,6 +142,38 @@ try {
     }
   }
   await panel.screenshot({ path: path.join(reportDirectory, "provider-error.png") });
+  const browserWindow = electronApp.waitForEvent("window");
+  await electronApp.evaluate(({ BrowserWindow }, url) => {
+    // No preload: exercise the browser/Next client using Electron's bundled
+    // Chromium, so this regression needs no separately installed browser.
+    const window = new BrowserWindow({ show: false, webPreferences: { contextIsolation: true, nodeIntegration: false } });
+    void window.loadURL(url);
+  }, page.url());
+  const browserPage = await browserWindow;
+  await browserPage.waitForLoadState();
+  await browserPage.addScriptTag({ content: clientBundle.outputFiles[0].text });
+  for (const fixture of sseFixtures) {
+    const settings = { baseUrl: `${origin}/${fixture.name}`, model: "fixture-model", apiKey: fakeKey };
+    await page.evaluate((value) => window.lyricsCardDesktop.saveAISettings(value), settings);
+    const desktopResult = await translate();
+    // A separate page without the preload API exercises the browser client and
+    // packaged Next translation proxy against the same local provider fixtures.
+    const browserResult = await browserPage.evaluate(async (value) => {
+      if (window.lyricsCardDesktop) throw new Error("Browser fixture unexpectedly has desktop IPC");
+      await window.__aiRegressionClient.saveAISettings(value);
+      try {
+        return { content: await window.__aiRegressionClient.streamAITranslation({ prompt: "fixture only", reasoning: false }) };
+      } catch (error) { return { code: error.code, message: window.__aiRegressionClient.normalizeAIErrorMessage(error, "zh") }; }
+    }, settings);
+    for (const result of [desktopResult, browserResult]) {
+      assert.equal(result.code, fixture.code, fixture.name);
+      if (!fixture.code) assert.equal(result.content, "translated");
+      assert.ok(!JSON.stringify(result).includes(fakeKey));
+    }
+    if (fixture.code) assert.equal(browserResult.message, desktopResult.message, `${fixture.name}: localized errors match`);
+  }
+  await browserPage.close();
+  console.log("SSE terminal cases passed through packaged desktop IPC and browser/Next client");
   // Inject a decryption failure only into this disposable Electron process.
   // This is a recovery-path fixture, not evidence of damaged system storage.
   const beforeDecryptFailure = upstreamCalls;
