@@ -4,6 +4,9 @@ import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { defaultState } from "../components/editor/editor-defaults";
 import { CardBackground } from "../components/preview/CardBackground";
+import { LyricCard } from "../components/preview/LyricCard";
+import { LandscapeSongMetadata } from "../components/preview/LandscapeSongMetadata";
+import { load } from "cheerio";
 import { solidCandidates, resolveSolidColor, resolveCardTextColor } from "../lib/solid-background";
 import { analyzePalettePixels } from "../lib/palette-extraction";
 import { createEditorDraftSnapshot, restoreEditorDraft } from "../lib/editor-draft";
@@ -56,3 +59,33 @@ assert.equal(restored.style.lyricFontSize, style.lyricFontSize);
 assert.deepEqual(restored.lyricDocument, state.lyricDocument);
 assert.equal(normalizeEditorDraft({ ...snapshot, style: { ...style, solidColor: "url(bad)" } }, (c: unknown) => c), null);
 console.log("Solid candidates, contrast, render isolation and desktop draft round-trip passed");
+
+// Exercise portrait title branches and the shared landscape metadata renderer.
+for (const layoutMode of ["portrait", "landscape"] as const) {
+  for (const allowMultiLineTitle of [false, true]) {
+    for (const [solidColor, foreground] of [["#FFFFFF", "#000000"], ["#121212", "#FFFFFF"]]) {
+      for (const explicit of [false, true]) {
+        const cardStyle = { ...style, layoutMode, allowMultiLineTitle, solidColor, showSongInfo: true };
+        const song = { ...defaultState.song, title: allowMultiLineTitle ? "A long title that wraps across multiple lines of the card" : "Short title", explicit };
+        const $ = load(renderToStaticMarkup(layoutMode === "landscape" ? <LandscapeSongMetadata
+          song={song} textColor={resolveCardTextColor(cardStyle)} showAlbumName
+        /> : <LyricCard
+          song={song}
+          lyricDocument={defaultState.lyricDocument}
+          style={cardStyle}
+        />));
+        const badge = $('[role="img"][aria-label="Explicit"]');
+        assert.equal(badge.length, Number(explicit));
+        if (!explicit) continue;
+        assert.equal(badge.find("path").attr("fill"), "currentColor");
+        assert.equal(badge.find("path").attr("opacity"), "0.5");
+        assert.equal(badge.find("svg").attr("aria-hidden"), "true");
+        assert.match(badge.attr("style") ?? "", /width:0\.62em;height:0\.62em/);
+        assert.ok(badge.parents().toArray().some((parent) =>
+          ($(parent).attr("style") ?? "").includes(`color:${foreground}`)
+        ), `${layoutMode} badge must inherit resolved ${foreground}`);
+      }
+    }
+  }
+}
+console.log("Explicit foreground inheritance: light/dark, portrait/landscape, title modes and disabled passed");
