@@ -1,4 +1,4 @@
-import { ExternalLink, FileText } from "lucide-react";
+import { ChevronRight, ExternalLink, FileText, Heart } from "lucide-react";
 import { UpdateButton } from "@/components/editor/UpdateButton";
 import { recordRenderBoundary } from "@/components/editor/render-boundary-diagnostics";
 import { SettingsGroup } from "@/components/settings/SettingsLayout";
@@ -20,7 +20,7 @@ const EXTERNAL_LINKS = [
   ["releases", "https://github.com/Qrzzzz/lyrics-card-generator/releases"]
 ] as const;
 
-export function AboutSettingsSection({ copy, t, locale }: { copy: typeof settingsCopy[Locale]; t: ReturnType<typeof createT>; locale: Locale }) {
+export function AboutSettingsSection({ copy, t, locale, onSupport }: { copy: typeof settingsCopy[Locale]; t: ReturnType<typeof createT>; locale: Locale; onSupport: () => void }) {
   recordRenderBoundary("SettingsAbout");
   const licenseLinks = [
     [copy.sourceAvailableLicense, APP_LICENSE_URL],
@@ -48,6 +48,12 @@ export function AboutSettingsSection({ copy, t, locale }: { copy: typeof setting
           </a>
         ))}
       </div>
+      <button type="button" onClick={onSupport} data-testid="support-author-link"
+        className="app-button control-focus flex min-h-11 items-center gap-3 rounded-lg px-3 py-3 text-left">
+        <Heart className="h-5 w-5 shrink-0" aria-hidden="true" />
+        <span className="min-w-0 flex-1"><span className="block text-sm font-semibold">{copy.supportAuthor}</span><span className="app-text-subtle mt-1 block text-xs leading-5">{copy.supportEntryDescription}</span></span>
+        <ChevronRight className="h-4 w-4 shrink-0" aria-hidden="true" />
+      </button>
       <SettingsGroup title={copy.licenses} description={copy.licensesDescription}>
         <div className="grid gap-2" data-testid="offline-license-links">
           {licenseLinks.map(([label, url]) => (

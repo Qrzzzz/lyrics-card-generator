@@ -122,9 +122,9 @@ export function GeneralSettingsSection({
           />
         </div>
       </SettingsGroup>
-      <SettingsGroup title={copy.historyAndStorage} description={copy.historyAndStorageDescription}>
-        <SettingsGrid>
-          {showImportHistorySettings ? (
+      {showImportHistorySettings ? (
+        <SettingsGroup title={copy.historyAndStorage} description={copy.historyAndStorageDescription}>
+          <SettingsGrid>
             <FieldLabel label={historyCopy.limitLabel} description={historyCopy.limitDescription}>
               <SelectField
                 value={String(settings.importHistoryLimit)}
@@ -142,13 +142,15 @@ export function GeneralSettingsSection({
                 <option value="unlimited">{historyCopy.limitUnlimited}</option>
               </SelectField>
             </FieldLabel>
-          ) : null}
-          <SettingsRow title={copy.restoreAppPreferences} description={copy.restoreAppPreferencesDescription}>
-            <ActionButton variant="default" data-testid="restore-app-preferences" onClick={() => void restorePreferences()}>
-              {copy.restoreAppPreferences}
-            </ActionButton>
-          </SettingsRow>
-        </SettingsGrid>
+          </SettingsGrid>
+        </SettingsGroup>
+      ) : null}
+      <SettingsGroup title={copy.resetPreferences}>
+        <SettingsRow title={copy.restoreAppPreferences} description={copy.restoreAppPreferencesDescription}>
+          <ActionButton variant="default" data-testid="restore-app-preferences" onClick={() => void restorePreferences()}>
+            {copy.restoreAppPreferences}
+          </ActionButton>
+        </SettingsRow>
       </SettingsGroup>
     </section>
   );

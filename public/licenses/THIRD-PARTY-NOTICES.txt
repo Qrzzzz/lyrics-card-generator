@@ -25,3 +25,13 @@ License: ../fonts/LICENSE-SourceHanSans.txt
 Source: https://github.com/adobe-fonts/source-han-sans/tree/2.004R/OTF/SimplifiedChinese
 
 Other third-party packages used by the application remain governed by their respective licenses in the source dependency manifests and installed package metadata.
+
+Support-page network marks
+TRON: official brand mark from https://tron.network/favicon.svg, used to identify the network. Brand rights remain with their owner.
+X Layer: Web3 Icons (MIT), https://github.com/0xa3k5/web3icons
+License: ../support/LICENSE-web3icons.txt
+Asset sources: ../support/SOURCES.txt
+
+Receiving-address QR codes generated with qrcode-generator (MIT).
+Copyright (c) 2009 Kazuhiko Arase.
+License: ../support/LICENSE-qrcode-generator.txt

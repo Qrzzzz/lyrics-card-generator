@@ -2,6 +2,7 @@ import { getAISettingsRouteBreadcrumbs, normalizeAISettingsPath } from "@/compon
 import type { SettingsDestination, SettingsTabId } from "@/components/settings/settings-model";
 import type { AISettings } from "@/lib/ai/types";
 import type { Locale } from "@/lib/types";
+import { settingsCopy } from "@/lib/settings/copy";
 
 export type SettingsRouteContext = {
   locale: Locale;
@@ -14,6 +15,13 @@ type SectionRouteAdapter = {
 };
 
 const sectionRouteAdapters: Partial<Record<SettingsTabId, SectionRouteAdapter>> = {
+  about: {
+    normalizePath: (path) => path.length === 1 && path[0] === "support" ? ["support"] : [],
+    breadcrumbs: (path, { locale }) => [
+      { key: "about", label: settingsCopy[locale].about, path: [] },
+      ...(path[0] === "support" ? [{ key: "support", label: settingsCopy[locale].supportAuthor, path: ["support"] }] : [])
+    ]
+  },
   ai: {
     normalizePath: normalizeAISettingsPath,
     breadcrumbs: getAISettingsRouteBreadcrumbs

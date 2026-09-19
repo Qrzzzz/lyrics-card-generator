@@ -89,6 +89,7 @@ export type LyricsCardDesktopApi = {
   listSystemFonts: () => Promise<SystemFontOption[]>;
   openExternal: (url: string) => Promise<boolean>;
   copyImageToClipboard: (dataUrl: string) => Promise<boolean>;
+  copySupportAddress: (id: string) => Promise<boolean>;
   registerImportFile: (file: File, kind: ImportHistoryFileKind) => Promise<ImportHistoryFileRegistration | null>;
   listImportHistory: (options: {
     offset: number;

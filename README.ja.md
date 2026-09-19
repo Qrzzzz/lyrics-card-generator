@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v6.5.3.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v6.5.4.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="./docs/development.en.md">ローカル開発</a> ·
@@ -76,17 +76,17 @@
 
 
 
-* Windows x64 インストーラー：`Lyrics.Card.Generator.Setup.6.5.3.exe`
+* Windows x64 インストーラー：`Lyrics.Card.Generator.Setup.6.5.4.exe`
 
 v6.2.2 以降、配布するデスクトップパッケージは Windows x64 Setup のみです。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v6.5.3 · Explicit マークの視認性修正
+### v6.5.4 · 設定のグループ整理と作者への支援
 
-v6.5.3 では、明るい背景で Explicit マークが見えなくなる問題を修正しました。縦向き・横向きのプレビューと書き出しで、マークがカードの文字色に追従します。
+v6.5.4 は設定項目のグループを整理し、デスクトップ版の「このアプリについて」に作者支援ページを追加します。
 
-[简体中文](./docs/releases/v6.5.3.zh-CN.md) · [繁體中文](./docs/releases/v6.5.3.zh-TW.md) · [English](./docs/releases/v6.5.3.en.md) · [Français](./docs/releases/v6.5.3.fr.md) · [日本語](./docs/releases/v6.5.3.ja.md) · [Español](./docs/releases/v6.5.3.es.md)
+[简体中文](./docs/releases/v6.5.4.zh-CN.md) · [繁體中文](./docs/releases/v6.5.4.zh-TW.md) · [English](./docs/releases/v6.5.4.en.md) · [Français](./docs/releases/v6.5.4.fr.md) · [日本語](./docs/releases/v6.5.4.ja.md) · [Español](./docs/releases/v6.5.4.es.md)
 
 <a id="主な機能"></a>
 

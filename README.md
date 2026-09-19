@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v6.5.3.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v6.5.4.zh-CN.md">发布说明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">在线 Web Lite 版</a> ·
   <a href="./docs/web-lite-browser-support.md">Web Lite 浏览器支持</a> ·
   <a href="./docs/desktop.md">桌面维护文档</a> ·
@@ -75,17 +75,17 @@
 
 
 
-* Windows x64 安装版：`Lyrics.Card.Generator.Setup.6.5.3.exe`
+* Windows x64 安装版：`Lyrics.Card.Generator.Setup.6.5.4.exe`
 
 从 v6.2.2 起只提供 Windows x64 Setup 安装包。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v6.5.3 · Explicit 标记可见性修复
+### v6.5.4 · 设置分组与作者赞赏
 
-v6.5.3 修复浅色背景下 Explicit 标记不可见的问题，让标记跟随卡片文字颜色，横版、竖版及导出保持一致。
+v6.5.4 整理设置页的内容分组，并在桌面端“关于”中新增作者赞赏入口。
 
-[简体中文](./docs/releases/v6.5.3.zh-CN.md) · [繁體中文](./docs/releases/v6.5.3.zh-TW.md) · [English](./docs/releases/v6.5.3.en.md) · [Français](./docs/releases/v6.5.3.fr.md) · [日本語](./docs/releases/v6.5.3.ja.md) · [Español](./docs/releases/v6.5.3.es.md)
+[简体中文](./docs/releases/v6.5.4.zh-CN.md) · [繁體中文](./docs/releases/v6.5.4.zh-TW.md) · [English](./docs/releases/v6.5.4.en.md) · [Français](./docs/releases/v6.5.4.fr.md) · [日本語](./docs/releases/v6.5.4.ja.md) · [Español](./docs/releases/v6.5.4.es.md)
 
 <a id="主要功能"></a>
 

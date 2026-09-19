@@ -22,6 +22,8 @@ const electronAppFiles = [
   "electron/update-release-url.js",
   "electron/update-copy.json",
   "electron/clipboard-image.js",
+  "electron/support-addresses.js",
+  "electron/support-addresses.json",
   "electron/ai-stream.js",
   "electron/resource-budgets.json",
   "electron/ai-request-registry.js",
