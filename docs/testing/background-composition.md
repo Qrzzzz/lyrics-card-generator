@@ -2,11 +2,10 @@
 
 [Documentation index](../README.md) · [Development guide](../development.en.md)
 
-This contract was introduced with the v5.10.0 background system and remains the
-regression contract for the current implementation. It covers the local
-readability layer and the adapter between palette extraction, the spatial color
-field, preview rendering, and export. It does not redefine palette extraction or
-color-field anchors.
+This contract defines the regression requirements for the current background
+composition implementation. It covers the local readability layer and the
+adapter between palette extraction, the spatial color field, preview rendering,
+and export. It does not redefine palette extraction or color-field anchors.
 
 ## Automatic gates
 

@@ -16,15 +16,12 @@ This directory contains durable development, maintenance, testing, security, and
 
 ## 安全与测试 / Security and testing
 
-- [v6.3.5 页脚与依赖更新本地验收](./testing/footer-v6.3.5.md)
-- [v6.3.2 设置布局实现与验收](./testing/settings-layout-v6.3.2.md)
-- [CI 与发布门禁职责及精简说明](./testing/ci-gates.md)
+- [CI 与发布门禁职责](./testing/ci-gates.md)
 - [Dependency advisory policy](./security/dependency-advisory-policy.md)
-- [Background composition acceptance contract](./testing/background-composition-v5.10.0.md)
+- [Background composition acceptance contract](./testing/background-composition.md)
 
-## 发布与历史 / Releases and history
+## 发布 / Releases
 
 - [多语言发布说明规范与版本索引](./releases/README.md)
-- [v5.1.0 P0 implementation plan（历史归档）](./v5.1.0-p0-implementation-plan.md)
 
-新增长期维护文档时，请在此处登记入口。一次性候选计划应明确标注为历史归档，避免被误认作当前执行清单。
+新增长期维护文档时，请在此处登记入口。一次性实施计划、审计草稿和发布前验收快照不保留在 `docs/`；需要追溯时使用 Git 历史、PR/Issue 或 Actions/Release 记录。
