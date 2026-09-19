@@ -1,0 +1,7 @@
+# Support-page assets
+
+- `tron.svg`: TRON official website favicon, https://tron.network/favicon.svg (retrieved 2026-09-19). TRON brand mark; used only to identify the receiving network.
+- `xlayer.svg`: Web3 Icons network mark, https://github.com/0xa3k5/web3icons/blob/main/packages/core/src/svgs/networks/branded/x-layer.svg (retrieved 2026-09-19). See the bundled `LICENSE-web3icons.txt`. Brand rights remain with their respective owners.
+- `*-address.svg`: generated locally by `npx tsx scripts/generate-support-qr.ts` from `electron/support-addresses.json` (shared with the UI via `lib/settings/support-addresses.ts`), using qrcode-generator (MIT). The QR codes contain the exact receiving addresses, without amount, asset or network parameters.
+
+X Layer's USDT0 label: https://usdt0.to/ecosystem/x-layer and https://www.okx.com/en-gb/help/usdt0-faq (checked 2026-09-19). No wallet integration or on-chain payment confirmation is performed.

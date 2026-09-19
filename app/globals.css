@@ -2448,6 +2448,42 @@ body[data-reduce-motion="true"] .examples-close-button:focus-visible .examples-c
   box-shadow: none;
 }
 
+/* Opaque backgrounds keep address contrast independent of album/acrylic layers.
+   Color marks aid reading only; the complete address remains selectable. */
+.support-wallet-address {
+  display: block;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid rgb(var(--panel-border));
+  border-radius: 0.5rem;
+  background: #111827;
+  color: #e5e7eb;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  line-height: 1.75;
+  word-break: break-all;
+  user-select: text;
+}
+
+.support-wallet-address__start { color: #c4b5fd; }
+.support-wallet-address__end { color: #5eead4; }
+
+.app-shell:is([data-ui-theme="light"], [data-ui-theme="light-acrylic"]) .support-wallet-address {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.app-shell:is([data-ui-theme="light"], [data-ui-theme="light-acrylic"]) .support-wallet-address__start { color: #6d28d9; }
+.app-shell:is([data-ui-theme="light"], [data-ui-theme="light-acrylic"]) .support-wallet-address__end { color: #0f766e; }
+
+@media (forced-colors: active) {
+  .support-wallet-address,
+  .app-shell:is([data-ui-theme="light"], [data-ui-theme="light-acrylic"]) .support-wallet-address {
+    background: Canvas;
+    color: CanvasText;
+    border-color: CanvasText;
+  }
+  .app-shell .support-wallet-address > span { color: CanvasText; }
+}
+
 .settings-group-card > section > * + * {
   border-top: 1px solid rgb(var(--panel-border));
   padding-top: 1.25rem;

@@ -138,6 +138,9 @@ contextBridge.exposeInMainWorld("lyricsCardDesktopBridge", {
   copyImageToClipboard: (dataUrl) => isClipboardPngDataUrl(dataUrl)
     ? ipcRenderer.invoke("lyrics-card:clipboard-write-image", dataUrl)
     : Promise.resolve(false),
+  copySupportAddress: (id) => id === "tron" || id === "xlayer"
+    ? ipcRenderer.invoke("lyrics-card:copy-support-address", id)
+    : Promise.resolve(false),
   registerImportFile: (file, kind) => {
     // Resolve the native path only in preload; main converts it into a sender-bound, one-use token.
     const filePath = webUtils.getPathForFile(file);

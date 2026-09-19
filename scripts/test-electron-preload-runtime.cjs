@@ -68,6 +68,7 @@ async function run() {
     ["listSystemFonts", []],
     ["openExternal", ["https://github.com/"]],
     ["copyImageToClipboard", ["data:image/png;base64,iVBORw0KGgo="]],
+    ["copySupportAddress", ["tron"]],
     ["listImportHistory", [{ limit: 10 }]],
     ["getImportHistoryStats", []],
     ["recordImportHistory", [{ kind: "link" }]],
@@ -90,6 +91,8 @@ async function run() {
 
   const invocationCountBeforeInvalidClipboardImages = invocations.length;
   assert.equal(await exposedBridge.copyImageToClipboard("data:image/jpeg;base64,AAAA"), false);
+  assert.equal(await exposedBridge.copySupportAddress("arbitrary-address"), false);
+  assert.equal(await exposedBridge.copySupportAddress({ id: "tron" }), false);
   assert.equal(await exposedBridge.copyImageToClipboard("data:image/png;base64,"), false);
   assert.equal(await exposedBridge.copyImageToClipboard("data:image/png;base64,A==="), false);
   assert.equal(await exposedBridge.copyImageToClipboard("data:image/png;base64,AB=="), false);

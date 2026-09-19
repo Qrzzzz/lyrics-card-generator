@@ -7,6 +7,7 @@ import { recordRenderBoundary } from "@/components/editor/render-boundary-diagno
 import type { ToastNotifier } from "@/components/feedback/AppToast";
 import { SurfaceCloseButton } from "@/components/layout/SurfaceCloseButton";
 import { AboutSettingsSection } from "@/components/settings/AboutSettingsSection";
+import { SupportAuthorSection } from "@/components/settings/SupportAuthorSection";
 import { AiSettingsSection } from "@/components/settings/AiSettingsSection";
 import { AppearanceSettingsSection } from "@/components/settings/AppearanceSettingsSection";
 import { ExportSettingsSection } from "@/components/settings/ExportSettingsSection";
@@ -303,13 +304,13 @@ export function SettingsSurface({
                     )
                   ) : (
                     <>
-                      <SettingsPageHeading
+                      {!(tab.id === "about" && destination.section === "about" && destination.path[0] === "support") ? <SettingsPageHeading
                         className="mb-5"
                         icon={<TabIcon className="h-5 w-5" />}
                         title={tab.label}
                         description={tab.description}
                         testId={`settings-page-heading-${tab.id}`}
-                      />
+                      /> : null}
                       {tab.id === "general" ? (
                         <GeneralSettingsSection
                           locale={locale}
@@ -324,7 +325,8 @@ export function SettingsSurface({
                       ) : tab.id === "export" ? (
                         <ExportSettingsSection settings={workspace.draft} copy={copy} onChange={workspace.updateDraft} />
                       ) : (
-                        <AboutSettingsSection copy={copy} t={t} locale={locale} />
+                        destination.section === "about" && destination.path[0] === "support" ? <SupportAuthorSection copy={copy} /> :
+                        <AboutSettingsSection copy={copy} t={t} locale={locale} onSupport={() => navigateDestination(createSettingsDestination("about", ["support"]))} />
                       )}
                     </>
                   )}

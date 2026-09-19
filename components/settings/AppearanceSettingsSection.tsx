@@ -1,6 +1,6 @@
 "use client";
 
-import { SettingsGrid } from "@/components/ui/SettingsLayout";
+import { SettingsGroup } from "@/components/settings/SettingsLayout";
 import { ColorSwatches, CustomColorInput } from "@/components/ui/ColorPicker";
 import { useEffect, useState } from "react";
 import { recordRenderBoundary } from "@/components/editor/render-boundary-diagnostics";
@@ -68,94 +68,102 @@ export function AppearanceSettingsSection({
   }
 
   return (
-    <SettingsGrid>
-      <div className="editor-settings-field">
-        <FieldLabel label={copy.theme}>
-          <SegmentedControl<UiThemeMode>
-            value={settings.uiThemeMode}
-            ariaLabel={copy.theme}
-            onChange={updateThemeMode}
-            columns={3}
-            options={THEME_MODE_OPTIONS.map((option) => ({
-              value: option.value,
-              label: copy[option.copyKey]
-            }))}
+    <section className="grid gap-5">
+      <SettingsGroup title={copy.themeAndMaterial}>
+        <div className="editor-settings-field">
+          <FieldLabel label={copy.theme}>
+            <SegmentedControl<UiThemeMode>
+              value={settings.uiThemeMode}
+              ariaLabel={copy.theme}
+              onChange={updateThemeMode}
+              columns={3}
+              options={THEME_MODE_OPTIONS.map((option) => ({
+                value: option.value,
+                label: copy[option.copyKey]
+              }))}
+            />
+          </FieldLabel>
+
+          <ToggleRow
+            label={copy.acrylicEffect}
+            description={acrylicDisabled ? copy.acrylicAlbumDisabled : copy.acrylicSupportNote}
+            checked={!acrylicDisabled && settings.uiAcrylicEnabled}
+            disabled={acrylicDisabled}
+            onChange={(checked) => onChange({ ...settings, uiAcrylicEnabled: checked })}
           />
-        </FieldLabel>
-
-        <ToggleRow
-          label={copy.acrylicEffect}
-          description={acrylicDisabled ? copy.acrylicAlbumDisabled : copy.acrylicSupportNote}
-          checked={!acrylicDisabled && settings.uiAcrylicEnabled}
-          disabled={acrylicDisabled}
-          onChange={(checked) => onChange({ ...settings, uiAcrylicEnabled: checked })}
-        />
-      </div>
-
-      <FieldLabel label={copy.accentColor}>
-        <div className="grid gap-3">
-          <SegmentedControl<UiAccentMode>
-            value={settings.uiAccentMode}
-            ariaLabel={copy.accentColor}
-            onChange={updateAccentMode}
-            columns={3}
-            options={ACCENT_MODE_OPTIONS.map((option) => ({
-              value: option.value,
-              label: copy[option.copyKey]
-            }))}
-          />
-
-          {settings.uiAccentMode === "preset" ? (
-            <ColorSwatches value={settings.uiAccentPreset} label={copy.accentPreset}
-              options={ACCENT_PRESET_OPTIONS.map((option) => ({ value: option.id, color: UI_ACCENT_PRESETS[option.id], label: copy[option.copyKey] }))}
-              onChange={(uiAccentPreset) => onChange({ ...settings, uiAccentMode: "preset", uiAccentPreset })} />
-          ) : null}
-          {settings.uiAccentMode === "custom" ? (
-            <CustomColorInput value={settings.uiCustomAccentColor} label={copy.accentCustom}
-              invalidMessage={copy.accentInvalid} placeholder={copy.accentCustomPlaceholder} testId="custom-accent-input"
-              onChange={(uiCustomAccentColor) => onChange({ ...settings, uiAccentMode: "custom", uiCustomAccentColor })} />
-          ) : null}
         </div>
-      </FieldLabel>
 
-      <div className="editor-settings-field">
-        <FieldLabel
-          label={copy.uiFont}
-          hint={copy.defaultFont}
-          description={copy.uiFontDescription}
-          error={!uiFontValidation.valid ? copy.uiFontInvalid : undefined}
-        >
-          <TextInput
-            data-testid="ui-font-family-input"
-            value={uiFontInput}
-            aria-invalid={!uiFontValidation.valid}
-            onChange={(event) => {
-              const value = event.target.value;
-              setUiFontInput(value);
-              const validation = validateUiFontFamily(value);
-              if (validation.valid) onChange({ ...settings, uiFontFamily: validation.value });
-            }}
-            placeholder="Segoe UI, sans-serif"
-          />
+      </SettingsGroup>
+      <SettingsGroup title={copy.accentColor}>
+        <FieldLabel label={copy.accentColor}>
+          <div className="grid gap-3">
+            <SegmentedControl<UiAccentMode>
+              value={settings.uiAccentMode}
+              ariaLabel={copy.accentColor}
+              onChange={updateAccentMode}
+              columns={3}
+              options={ACCENT_MODE_OPTIONS.map((option) => ({
+                value: option.value,
+                label: copy[option.copyKey]
+              }))}
+            />
+
+            {settings.uiAccentMode === "preset" ? (
+              <ColorSwatches value={settings.uiAccentPreset} label={copy.accentPreset}
+                options={ACCENT_PRESET_OPTIONS.map((option) => ({ value: option.id, color: UI_ACCENT_PRESETS[option.id], label: copy[option.copyKey] }))}
+                onChange={(uiAccentPreset) => onChange({ ...settings, uiAccentMode: "preset", uiAccentPreset })} />
+            ) : null}
+            {settings.uiAccentMode === "custom" ? (
+              <CustomColorInput value={settings.uiCustomAccentColor} label={copy.accentCustom}
+                invalidMessage={copy.accentInvalid} placeholder={copy.accentCustomPlaceholder} testId="custom-accent-input"
+                onChange={(uiCustomAccentColor) => onChange({ ...settings, uiAccentMode: "custom", uiCustomAccentColor })} />
+            ) : null}
+          </div>
         </FieldLabel>
-        <ActionButton
-          variant="default"
-          data-testid="restore-system-font"
-          onClick={() => {
-            setUiFontInput("");
-            onChange({ ...settings, uiFontFamily: "" });
-          }}
-        >
-          {copy.restoreSystemFont}
-        </ActionButton>
-      </div>
 
-      <ToggleRow
-        label={copy.spark}
-        description={copy.sparkDescription}
-        checked={settings.sparkCursorEnabled}
-        onChange={(sparkCursorEnabled) => onChange({ ...settings, sparkCursorEnabled })}
-      />
-    </SettingsGrid>
+      </SettingsGroup>
+      <SettingsGroup title={copy.uiFont}>
+        <div className="editor-settings-field">
+          <FieldLabel
+            label={copy.uiFont}
+            hint={copy.defaultFont}
+            description={copy.uiFontDescription}
+            error={!uiFontValidation.valid ? copy.uiFontInvalid : undefined}
+          >
+            <TextInput
+              data-testid="ui-font-family-input"
+              value={uiFontInput}
+              aria-invalid={!uiFontValidation.valid}
+              onChange={(event) => {
+                const value = event.target.value;
+                setUiFontInput(value);
+                const validation = validateUiFontFamily(value);
+                if (validation.valid) onChange({ ...settings, uiFontFamily: validation.value });
+              }}
+              placeholder="Segoe UI, sans-serif"
+            />
+          </FieldLabel>
+          <ActionButton
+            variant="default"
+            data-testid="restore-system-font"
+            onClick={() => {
+              setUiFontInput("");
+              onChange({ ...settings, uiFontFamily: "" });
+            }}
+          >
+            {copy.restoreSystemFont}
+          </ActionButton>
+        </div>
+
+      </SettingsGroup>
+      <SettingsGroup title={copy.interactionEffects}>
+        <ToggleRow
+          label={copy.spark}
+          description={copy.sparkDescription}
+          checked={settings.sparkCursorEnabled}
+          onChange={(sparkCursorEnabled) => onChange({ ...settings, sparkCursorEnabled })}
+        />
+      </SettingsGroup>
+    </section>
   );
 }

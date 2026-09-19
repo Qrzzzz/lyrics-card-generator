@@ -1,0 +1,4 @@
+[
+  { "id": "tron", "network": "TRON", "asset": "USDT", "standard": "TRC20", "address": "TNdPVGkb3BtZh6hmmU1jcSdvrhAZqqhw9u", "qr": "/support/tron-address.svg", "icon": "/support/tron.svg" },
+  { "id": "xlayer", "network": "X Layer", "asset": "USDT", "standard": "USDT0", "address": "0x8499979b198c97a7c1cc67a8303532f4b8da0059", "qr": "/support/xlayer-address.svg", "icon": "/support/xlayer.svg" }
+]

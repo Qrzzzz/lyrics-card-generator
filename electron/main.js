@@ -57,6 +57,7 @@ const {
 } = require("./packaged-server-readiness");
 const { acquireSingleInstanceOwnership } = require("./single-instance-ownership");
 const { createClipboardImageWriter } = require("./clipboard-image");
+const { createSupportAddressCopier } = require("./support-addresses");
 const { createStartupTrace } = require("./startup-trace");
 const { prepareDesktopStartup } = require("./startup-orchestration");
 const { isAllowedLocalNavigation, parseAllowedExternalUrl } = require("./url-policy");
@@ -922,6 +923,7 @@ function registerDesktopIpc() {
   });
 
   handle("lyrics-card:clipboard-write-image", createClipboardImageWriter(nativeImage, clipboard));
+  handle("lyrics-card:copy-support-address", createSupportAddressCopier(clipboard));
 
   handle("lyrics-card:import-file-register", async (event, input) => {
     const kind = input?.kind === "local-audio" || input?.kind === "manual-cover" ? input.kind : "";
