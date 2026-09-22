@@ -1,5 +1,9 @@
 # Release source authorization
 
+Use the [standard release entry point](./release-runbook.md) for routine
+publication and recovery. It orchestrates this policy without replacing its
+exact-commit CI or source authorization requirements.
+
 The Release workflow fails closed before building or publishing unless the
 requested tag satisfies all of the following conditions:
 
