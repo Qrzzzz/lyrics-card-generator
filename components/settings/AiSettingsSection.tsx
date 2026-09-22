@@ -343,7 +343,7 @@ function PromptLibraryPage({ settings, locale, copy, onSettingsChange, onOpen, o
         <SettingsPageHeading icon={<FolderOpen className="h-5 w-5" />} title={copy.promptLibrary} description={copy.promptLibraryDescription} />
         <ActionButton data-testid="prompt-reset-all" disabled={!canResetAll} onClick={resetAllPresets} leftIcon={<RotateCcw className="h-4 w-4" />}>{copy.resetAll}</ActionButton>
       </div>
-      <ExplorerCard icon={<FileLock2 className="h-6 w-6 text-amber-200" />} title={copy.formatRules} description={copy.formatRulesDescription} action={copy.open} onClick={() => onOpen("format")} />
+      <ExplorerCard icon={<FileLock2 className="h-6 w-6 text-[rgb(var(--status-warning-fg))]" />} title={copy.formatRules} description={copy.formatRulesDescription} action={copy.open} onClick={() => onOpen("format")} />
 
       <div>
         <div className="mb-3 flex items-end justify-between gap-3">
@@ -381,7 +381,7 @@ function PromptLibraryPage({ settings, locale, copy, onSettingsChange, onOpen, o
         <div className="editor-settings-grid">
           {settings.promptLibrary.customPresets.map((preset) => <ExplorerCard testId={`preset-card-${preset.id}`} key={preset.id} icon={<FilePenLine className="h-5 w-5" />} title={preset.title || copy.newPresetTitle} description={preset.prompt || copy.presetPromptPlaceholder} action={copy.open} badge={copy.customPreset} onClick={() => onOpen(`preset:${preset.id}`)} />)}
           {settings.promptLibrary.customPresets.length < 2 ? (
-            <button data-testid="preset-create" type="button" onClick={onCreateDraft} className="app-text-muted flex min-h-32 items-center justify-center gap-2 rounded-xl border border-dashed border-[rgb(var(--input-border))] p-5 text-sm transition hover:border-[rgb(var(--focus-ring))] hover:bg-white/5 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--focus-ring))]">
+            <button data-testid="preset-create" type="button" onClick={onCreateDraft} className="settings-preset-action app-text-muted flex min-h-32 items-center justify-center gap-2 rounded-xl border border-dashed border-[rgb(var(--input-border))] p-5 text-sm transition control-focus hover:border-[var(--control-selected-border)]">
               <Plus className="h-4 w-4" />{copy.addPreset}
             </button>
           ) : null}
@@ -397,9 +397,9 @@ function FormatRulesPage({ locale, copy }: { locale: Locale; copy: ReturnType<ty
 
   return (
     <div className="grid gap-4">
-      <SettingsPageHeading icon={<FileLock2 className="h-5 w-5 text-amber-200" />} title={copy.formatRules} description={copy.formatRulesDescription} />
-      <div className="rounded-xl border border-amber-300/25 bg-amber-300/10 p-4">
-        <div className="flex gap-3"><AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-200" /><p className="text-sm leading-relaxed text-amber-50/90">{copy.formatRulesWarning}</p></div>
+      <SettingsPageHeading icon={<FileLock2 className="h-5 w-5 text-[rgb(var(--status-warning-fg))]" />} title={copy.formatRules} description={copy.formatRulesDescription} />
+      <div className="rounded-xl border status-warning p-4">
+        <div className="flex gap-3"><AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-[rgb(var(--status-warning-fg))]" /><p className="text-sm leading-relaxed ">{copy.formatRulesWarning}</p></div>
       </div>
       <TextareaField data-testid="strict-format-rules" aria-label={copy.formatRules} value={defaultRules} readOnly className="min-h-72 cursor-default select-text font-mono text-xs leading-relaxed opacity-80" />
     </div>
@@ -574,10 +574,10 @@ function ExplorerCard({ icon, title, description, action, badge, testId, variant
   }
 
   return (
-    <button data-testid={testId} type="button" onClick={onClick} className="settings-panel-card group flex min-h-32 w-full flex-col p-4 text-left transition hover:-translate-y-0.5 hover:border-[rgb(var(--focus-ring))] hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--focus-ring))]">
+    <button data-testid={testId} type="button" onClick={onClick} className="settings-panel-card settings-preset-card group flex min-h-32 w-full flex-col p-4 text-left transition hover:-translate-y-0.5 control-focus hover:border-[var(--control-selected-border)]">
       <div className="flex items-start justify-between gap-3"><span className="app-text-primary flex h-10 w-10 items-center justify-center rounded-xl bg-white/5">{icon}</span>{badge ? <span className="rounded-full border border-[rgb(var(--panel-border))] px-2 py-1 text-[10px] font-semibold uppercase tracking-wide app-text-subtle">{badge}</span> : null}</div>
       <h4 className="app-text-primary mt-3 text-sm font-semibold">{title}</h4><p className="app-text-muted mt-1 line-clamp-2 text-xs leading-relaxed">{description}</p>
-      <span className="app-text-subtle mt-auto flex items-center gap-1 pt-3 text-xs font-semibold group-hover:text-white">{action}<ChevronRight className="h-3.5 w-3.5" /></span>
+      <span className="app-text-subtle mt-auto flex items-center gap-1 pt-3 text-xs font-semibold settings-preset-card__action">{action}<ChevronRight className="h-3.5 w-3.5" /></span>
     </button>
   );
 }

@@ -339,7 +339,7 @@ export function SongSearchParser({
             aria-busy={status === "loading"}
             placeholder={t("songSearchPlaceholder")}
             disabled={isResolving}
-            className="h-14 rounded-xl pl-12 pr-4 text-base shadow-[0_18px_48px_rgba(0,0,0,0.18)]"
+            className="song-search-input h-14 rounded-xl pl-12 pr-4 text-base shadow-[0_18px_48px_rgba(0,0,0,0.18)]"
           />
         </div>
         {showResults ? (

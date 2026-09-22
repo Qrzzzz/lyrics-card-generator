@@ -19,7 +19,7 @@
 <p>
   <strong>Navegación</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Descargar la última versión</a> ·
-  <a href="./docs/releases/v6.5.5.es.md">Notas de la versión</a> ·
+  <a href="./docs/releases/v6.5.6.es.md">Notas de la versión</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en línea</a> ·
   <a href="#funciones-principales">Funciones principales</a> ·
   <a href="./docs/development.en.md">Desarrollo local</a> ·
@@ -76,17 +76,17 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 
 
-* Instalador de Windows x64: `Lyrics.Card.Generator.Setup.6.5.5.exe`
+* Instalador de Windows x64: `Lyrics.Card.Generator.Setup.6.5.6.exe`
 
 A partir de v6.2.2, Setup para Windows x64 es el único paquete de escritorio distribuido.
 
 > La compilación actual no está firmada. Windows puede mostrar una advertencia de SmartScreen, algo habitual en aplicaciones personales sin firma.
 
-### v6.5.5 · Mejoras en el diseño de apoyo al autor
+### v6.5.6 · Aspecto y legibilidad de Acrylic claro
 
-v6.5.5 simplifica la página de apoyo al autor, accesible desde Ajustes → Acerca de en la aplicación de escritorio, para agrupar con más claridad la selección de red, el código QR y los datos de recepción.
+v6.5.6 mejora las superficies esmeriladas y la legibilidad de Acrylic claro para equilibrar el fondo de la ventana, los paneles y los controles.
 
-[简体中文](./docs/releases/v6.5.5.zh-CN.md) · [繁體中文](./docs/releases/v6.5.5.zh-TW.md) · [English](./docs/releases/v6.5.5.en.md) · [Français](./docs/releases/v6.5.5.fr.md) · [日本語](./docs/releases/v6.5.5.ja.md) · [Español](./docs/releases/v6.5.5.es.md)
+[简体中文](./docs/releases/v6.5.6.zh-CN.md) · [繁體中文](./docs/releases/v6.5.6.zh-TW.md) · [English](./docs/releases/v6.5.6.en.md) · [Français](./docs/releases/v6.5.6.fr.md) · [日本語](./docs/releases/v6.5.6.ja.md) · [Español](./docs/releases/v6.5.6.es.md)
 
 <a id="funciones-principales"></a>
 
