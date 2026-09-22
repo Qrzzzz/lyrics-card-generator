@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v6.5.4.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v6.5.5.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="./docs/development.en.md">ローカル開発</a> ·
@@ -76,17 +76,17 @@
 
 
 
-* Windows x64 インストーラー：`Lyrics.Card.Generator.Setup.6.5.4.exe`
+* Windows x64 インストーラー：`Lyrics.Card.Generator.Setup.6.5.5.exe`
 
 v6.2.2 以降、配布するデスクトップパッケージは Windows x64 Setup のみです。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v6.5.4 · 設定のグループ整理と作者への支援
+### v6.5.5 · 作者支援ページのレイアウト改善
 
-v6.5.4 は設定項目のグループを整理し、デスクトップ版の「このアプリについて」に作者支援ページを追加します。
+v6.5.5 では、デスクトップ版の設定内にある「このアプリについて」から開く作者支援ページを整理し、ネットワークの選択、QR コード、受取情報を見やすくまとめました。
 
-[简体中文](./docs/releases/v6.5.4.zh-CN.md) · [繁體中文](./docs/releases/v6.5.4.zh-TW.md) · [English](./docs/releases/v6.5.4.en.md) · [Français](./docs/releases/v6.5.4.fr.md) · [日本語](./docs/releases/v6.5.4.ja.md) · [Español](./docs/releases/v6.5.4.es.md)
+[简体中文](./docs/releases/v6.5.5.zh-CN.md) · [繁體中文](./docs/releases/v6.5.5.zh-TW.md) · [English](./docs/releases/v6.5.5.en.md) · [Français](./docs/releases/v6.5.5.fr.md) · [日本語](./docs/releases/v6.5.5.ja.md) · [Español](./docs/releases/v6.5.5.es.md)
 
 <a id="主な機能"></a>
 

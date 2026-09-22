@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v6.5.4.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v6.5.5.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="./docs/development.en.md">Développement local</a> ·
@@ -76,17 +76,17 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 
 
-* Programme d’installation Windows x64 : `Lyrics.Card.Generator.Setup.6.5.4.exe`
+* Programme d’installation Windows x64 : `Lyrics.Card.Generator.Setup.6.5.5.exe`
 
 À partir de la v6.2.2, le programme Setup Windows x64 est le seul paquet distribué.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### v6.5.4 · Groupes de paramètres et soutien à l’auteur
+### v6.5.5 · Mise en page du soutien à l’auteur
 
-v6.5.4 clarifie les groupes de paramètres et ajoute une page de soutien à l’auteur dans À propos sur l’application de bureau.
+v6.5.5 simplifie la page de soutien à l’auteur, accessible depuis les paramètres et la rubrique À propos de l’application de bureau, pour mieux regrouper le choix du réseau, le code QR et les coordonnées de réception.
 
-[简体中文](./docs/releases/v6.5.4.zh-CN.md) · [繁體中文](./docs/releases/v6.5.4.zh-TW.md) · [English](./docs/releases/v6.5.4.en.md) · [Français](./docs/releases/v6.5.4.fr.md) · [日本語](./docs/releases/v6.5.4.ja.md) · [Español](./docs/releases/v6.5.4.es.md)
+[简体中文](./docs/releases/v6.5.5.zh-CN.md) · [繁體中文](./docs/releases/v6.5.5.zh-TW.md) · [English](./docs/releases/v6.5.5.en.md) · [Français](./docs/releases/v6.5.5.fr.md) · [日本語](./docs/releases/v6.5.5.ja.md) · [Español](./docs/releases/v6.5.5.es.md)
 
 <a id="fonctionnalités-principales"></a>
 
