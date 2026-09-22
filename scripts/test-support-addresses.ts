@@ -32,7 +32,7 @@ async function main() {
   for (const method of SUPPORT_METHODS) {
     const svg = readFileSync(`public${method.qr}`);
     // Independent decoder verifies the actual shipped QR, including at display size.
-    for (const size of [192, 384]) {
+    for (const size of [160, 192, 384]) {
       const { data, info } = await sharp(svg).resize(size, size).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
       const decoded = jsQR(new Uint8ClampedArray(data), info.width, info.height);
       assert.equal(decoded?.data, method.address, `${method.network} QR at ${size}px`);
