@@ -15,11 +15,11 @@ function toHexColor(channels: Rgb) {
 }
 
 export const LIGHT_ACRYLIC_CONTRAST_FLOOR = {
-  windowBase: { color: "#F8FAFC", opacity: 0.22 },
+  windowBase: { color: "#F8FAFC", opacity: 0.84 },
   surfaces: {
-    panel: { color: "#FFFFFF", opacity: 0.70 },
-    input: { color: "#FFFFFF", opacity: 0.76 },
-    button: { color: "#FFFFFF", opacity: 0.60 },
+    panel: { color: "#FFFFFF", opacity: 0.48 },
+    input: { color: "#FFFFFF", opacity: 0.88 },
+    button: { color: "#F1F5F9", opacity: 0.86 },
     elevated: { color: "#FAFCFF", opacity: 0.97 }
   },
   text: {

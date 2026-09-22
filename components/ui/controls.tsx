@@ -122,7 +122,7 @@ export function FieldLabel({
       {helperText ? (
         <div
           id={helperText ? helperTextId : undefined}
-          className={cn("text-xs leading-relaxed", error ? "text-amber-200" : "app-text-subtle")}
+          className={cn("text-xs leading-relaxed", error ? "field-error" : "app-text-subtle")}
         >
           {helperText}
         </div>

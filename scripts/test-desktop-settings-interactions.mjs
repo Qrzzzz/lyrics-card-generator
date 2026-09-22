@@ -1632,12 +1632,27 @@ async function assertAcrylicVisuals() {
     { theme: "light-acrylic", muted: "51 65 85", subtle: "71 85 105" },
     "light acrylic exposes opaque muted and subtle text tokens"
   );
-  assert.match(lightTokens?.panelBackground ?? "", /rgba\(255, 255, 255, 0\.7\)/, "light acrylic panels keep a 70% white surface");
-  assert.match(lightTokens?.inputBackground ?? "", /rgba\(255, 255, 255, 0\.76\)/, "light acrylic inputs keep a 76% white surface");
-  assert.match(lightTokens?.buttonBackground ?? "", /rgba\(255, 255, 255, 0\.6\)/, "light acrylic buttons keep a 60% white surface");
+  assert.match(lightTokens?.panelBackground ?? "", /rgba\(255, 255, 255, 0\.48\)/, "light acrylic panels keep a 48% white surface");
+  assert.match(lightTokens?.inputBackground ?? "", /rgba\(255, 255, 255, 0\.88\)/, "light acrylic inputs keep a 88% white surface");
+  assert.match(lightTokens?.buttonBackground ?? "", /rgba\(241, 245, 249, 0\.86\)/, "light acrylic buttons keep a 86% neutral surface");
   assert.equal(lightTokens?.subtleColor, "rgb(71, 85, 105)", "light acrylic subtle copy is fully opaque");
   await page.screenshot({ path: path.join(reportDirectory, "light-acrylic-step-one.png"), fullPage: false });
   if (runVisualDiagnostics) await analyzeTitlebarVisualEffect("light-acrylic");
+
+  await page.locator('[data-testid="editor-surface"] [data-testid="settings-button"]').click();
+  await selectSettingsSection("ai");
+  await page.getByTestId("ai-open-library").click();
+  const preset = page.getByTestId("preset-card-lyrical");
+  await preset.hover();
+  await expect(preset.locator(".settings-preset-card__action")).toHaveCSS("color", "rgb(15, 23, 42)");
+  const createPreset = page.getByTestId("preset-create");
+  await createPreset.hover();
+  await expect(createPreset).toHaveCSS("color", "rgb(15, 23, 42)");
+  await createPreset.focus();
+  await page.keyboard.press("Shift+Tab");
+  await page.keyboard.press("Tab");
+  await expect(createPreset).toHaveCSS("outline-style", "solid");
+  await page.getByTestId("settings-close-button").click();
 
   await selectVisualTheme("dark", true);
   const darkTokens = await page.evaluate(() => {
