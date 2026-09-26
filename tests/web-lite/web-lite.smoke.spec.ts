@@ -922,6 +922,26 @@ test("renders enabled song titles beyond two lines without clipping portrait or 
   expect(instrumentalGeometry.childBottom).toBeLessThanOrEqual(instrumentalGeometry.parentBottom + 1);
   expect(instrumentalGeometry.childTop).toBeGreaterThanOrEqual(instrumentalGeometry.parentTop - 1);
   await expect(exportCard.locator('[data-testid="instrumental-album-artwork"]')).toHaveAttribute("data-artwork-constrained", "true");
+  await page.locator('[data-step-id="visual"]').click();
+  for (const name of ["Show project signature", "Show Shared By"]) {
+    const toggle = page.getByRole("switch", { name, exact: true });
+    if (await toggle.getAttribute("aria-checked") !== "true") await toggle.click();
+  }
+  await page.getByLabel("Shared By", { exact: true }).fill(
+    "Shared by a listener who keeps these quiet songs for the journey home after midnight"
+  );
+  await expect.poll(async () => {
+    const geometry = await readContainedGeometry(instrumentalInfo, instrumentalViewport);
+    return geometry.childBottom <= geometry.parentBottom + 1 && geometry.childTop >= geometry.parentTop - 1;
+  }).toBe(true);
+  await expect(instrumentalInfo.locator("[data-card-credits]")).toHaveCSS("font-style", "normal");
+  await expect(instrumentalInfo.locator("[data-card-shared-by]")).toHaveCSS("text-align", "center");
+  await expect.poll(() => exportCard.locator('[data-testid="instrumental-album-artwork"]').evaluate(
+    (node) => (node as HTMLElement).offsetHeight
+  )).toBeGreaterThanOrEqual(200);
+  await page.locator('[data-step-id="song-info"]').click();
+  await page.getByLabel("Song Title", { exact: true }).fill("Night Flight");
+  await expect(instrumentalTitle).toHaveCSS("font-size", "64px");
 });
 
 test("blocks a 13-line landscape switch, returns to lyrics, and allows the 12-line boundary", async ({ page }) => {
@@ -1331,7 +1351,16 @@ test("renders square, horizontal, vertical, and transparent artwork at their nat
   await page.locator('[data-segment-value="portrait"]').click();
   await page.locator('[data-segment-value="instrumental"]').click();
   const instrumentalArtwork = page.locator('[data-export-card-host] [data-testid="instrumental-album-artwork"]').first();
-  await expectArtworkGeometry(instrumentalArtwork, { width: 568, height: 775, transparent: false });
+  await expectArtworkAspectRatio(instrumentalArtwork, 879 / 1200, false);
+  const instrumentalCard = page.locator('[data-export-card-host] [data-export-card="true"]').first();
+  await expect(instrumentalCard.locator("[data-instrumental-artwork-layout]")).toHaveAttribute("data-instrumental-artwork-layout", "stacked");
+  await expect(page.locator('[data-segment-value="landscape"]')).toBeDisabled();
+  const instrumentalInfo = instrumentalCard.locator("[data-instrumental-song-info]");
+  await expect.poll(async () => {
+    const coverBox = await instrumentalArtwork.boundingBox();
+    const infoBox = await instrumentalInfo.boundingBox();
+    return Boolean(coverBox && infoBox && coverBox.y + coverBox.height < infoBox.y);
+  }).toBe(true);
   await page.locator('[data-segment-value="lyrics"]').click();
   await page.locator('[data-step-id="song-info"]').click();
 

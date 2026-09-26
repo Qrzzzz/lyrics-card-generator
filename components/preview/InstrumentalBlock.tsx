@@ -1,6 +1,8 @@
 "use client";
 
+import { useLayoutEffect, useRef, useState } from "react";
 import { AdaptiveAlbumArtwork } from "@/components/preview/AdaptiveAlbumArtwork";
+import { CardFooter } from "@/components/preview/CardFooter";
 import { getArtworkAspectRatio, resolveAdaptiveArtworkSize } from "@/lib/artwork-geometry";
 import { CARD_ARTWORK_BOX_SHADOW, CARD_ARTWORK_DROP_SHADOW } from "@/lib/card-content-depth";
 import type { CoverArtworkAnalysis, SongInfo } from "@/lib/types";
@@ -15,7 +17,10 @@ export function InstrumentalBlock({
   showAlbumName,
   allowMultiLineTitle,
   availableWidth,
-  availableHeight
+  availableHeight,
+  showGeneratedWatermark,
+  showSharedBy,
+  sharedByText
 }: {
   song: SongInfo;
   coverUrl?: string;
@@ -26,17 +31,15 @@ export function InstrumentalBlock({
   allowMultiLineTitle: boolean;
   availableWidth: number;
   availableHeight: number;
+  showGeneratedWatermark: boolean;
+  showSharedBy: boolean;
+  sharedByText: string;
 }) {
+  const songInfoRef = useRef<HTMLDivElement>(null);
+  const [measuredInfoHeight, setMeasuredInfoHeight] = useState<number | null>(null);
   const aspectRatio = getArtworkAspectRatio(coverUrl, coverArtwork);
-  const isVerticalArtwork = aspectRatio < 1;
-  const sideBySideGap = 52;
-  const minimumSongInfoWidth = allowMultiLineTitle
-    ? Math.min(480, Math.max(320, availableWidth * 0.42))
-    : 248;
-  const titleFontSize = isVerticalArtwork ? 52 : 64;
-  const titleWidth = isVerticalArtwork
-    ? minimumSongInfoWidth
-    : Math.min(860, availableWidth);
+  const titleFontSize = 64;
+  const titleWidth = Math.min(860, availableWidth);
   const titleLineCount = allowMultiLineTitle
     ? estimateWrappedTitleLines(song.title || "Untitled", titleWidth, titleFontSize)
     : 1;
@@ -44,26 +47,53 @@ export function InstrumentalBlock({
   const artistHeight = 28 + 32 * 1.34;
   const albumHeight = showAlbumName && song.album?.trim() ? 20 + 24 * 1.34 : 0;
   const multiLineWrapSafety = allowMultiLineTitle ? titleFontSize * 1.6 : 0;
-  const stackedSongInfoHeight = (allowMultiLineTitle ? 48 : 56) + titleHeight + artistHeight + albumHeight + multiLineWrapSafety;
+  const sharedBy = showSharedBy ? sharedByText.trim() : "";
+  const hasCredits = showGeneratedWatermark || Boolean(sharedBy);
+  const artworkInfoGap = allowMultiLineTitle ? 48 : 56;
+  const estimatedCreditsHeight = hasCredits
+    ? 32 + (sharedBy ? 23 * 1.4 : 0) + (showGeneratedWatermark ? 19 * 1.4 : 0) +
+      (sharedBy && showGeneratedWatermark ? 10 : 0)
+    : 0;
+  const estimatedInfoHeight = titleHeight + artistHeight + albumHeight + multiLineWrapSafety +
+    estimatedCreditsHeight;
+  const stackedSongInfoHeight = artworkInfoGap + (measuredInfoHeight ?? estimatedInfoHeight);
   const baseSize = allowMultiLineTitle ? 500 : 568;
+
+  useLayoutEffect(() => {
+    const node = songInfoRef.current;
+    if (!node) return;
+    const minimumArtworkHeight = Math.min(240, availableHeight * 0.26);
+    const infoBudget = availableHeight - artworkInfoGap - minimumArtworkHeight;
+    const measure = () => {
+      // Fit at the natural size first so shortening text restores the title.
+      // Offset dimensions stay in card pixels even in the scaled preview.
+      let fittedSize = titleFontSize;
+      node.style.setProperty("--instrumental-title-size", `${fittedSize}px`);
+      while (allowMultiLineTitle && node.offsetHeight > infoBudget && fittedSize > 40) {
+        fittedSize -= 2;
+        node.style.setProperty("--instrumental-title-size", `${fittedSize}px`);
+      }
+      setMeasuredInfoHeight(node.offsetHeight);
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [song.title, song.artist, song.album, showAlbumName, allowMultiLineTitle,
+    availableWidth, availableHeight, showGeneratedWatermark, showSharedBy,
+    sharedByText, artworkInfoGap, titleFontSize]);
+
   const artworkSize = resolveAdaptiveArtworkSize({
     baseSize,
     aspectRatio,
-    maxWidth: isVerticalArtwork
-      ? Math.max(1, availableWidth - sideBySideGap - minimumSongInfoWidth)
-      : availableWidth,
-    maxHeight: isVerticalArtwork
-      ? availableHeight
-      : Math.max(1, availableHeight - stackedSongInfoHeight)
+    maxWidth: availableWidth,
+    maxHeight: Math.max(1, availableHeight - stackedSongInfoHeight)
   });
 
   return (
     <div
-      className={cn(
-        "flex w-full items-center justify-center",
-        isVerticalArtwork ? "flex-row gap-[52px] text-left" : "flex-col text-center"
-      )}
-      data-instrumental-artwork-layout={isVerticalArtwork ? "side-by-side" : "stacked"}
+      className="flex w-full flex-col items-center justify-center text-center"
+      data-instrumental-artwork-layout="stacked"
       style={{ color: textColor }}
     >
       <AdaptiveAlbumArtwork
@@ -79,21 +109,21 @@ export function InstrumentalBlock({
       />
 
       <div
+        ref={songInfoRef}
         className={cn(
-          "grid min-w-0",
-          isVerticalArtwork
-            ? "flex-1 justify-items-start"
-            : cn("w-full max-w-[860px] justify-items-center", allowMultiLineTitle ? "mt-12" : "mt-14")
+          "grid w-full min-w-0 max-w-[860px] justify-items-center",
+          allowMultiLineTitle ? "mt-12" : "mt-14"
         )}
         data-instrumental-song-info
       >
         <h2
           className={cn(
             "w-full font-black leading-[1.18] tracking-normal",
-            isVerticalArtwork ? "text-[52px]" : "text-[64px]",
+            "text-[64px]",
             allowMultiLineTitle ? "multi-line-title" : "truncate"
           )}
           data-allow-multi-line-title={allowMultiLineTitle ? "true" : "false"}
+          style={{ fontSize: `var(--instrumental-title-size, ${titleFontSize}px)` }}
         >
           {song.title || "Untitled"}
         </h2>
@@ -104,6 +134,17 @@ export function InstrumentalBlock({
           <p className="mt-5 w-full truncate text-[24px] font-medium leading-[1.34] opacity-[0.54]" data-instrumental-album>
             {song.album.trim()}
           </p>
+        ) : null}
+        {hasCredits ? (
+          <div data-card-footer className="mt-8 w-full min-w-0">
+            <CardFooter
+              showGeneratedWatermark={showGeneratedWatermark}
+              showSharedBy={showSharedBy}
+              sharedByText={sharedByText}
+              textColor={textColor}
+              instrumentalAlign="center"
+            />
+          </div>
         ) : null}
       </div>
     </div>

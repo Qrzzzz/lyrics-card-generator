@@ -170,6 +170,9 @@ export function LyricCard({
                 allowMultiLineTitle={style.allowMultiLineTitle}
                 availableWidth={layout.lyricsRect.width}
                 availableHeight={layout.lyricsRect.height}
+                showGeneratedWatermark={showGeneratedWatermark}
+                showSharedBy={style.showSharedBy}
+                sharedByText={style.sharedByText}
               />
             ) : (
               <LyricsBlock
@@ -186,7 +189,7 @@ export function LyricCard({
             )}
           </div>
 
-          <div data-card-footer className="shrink-0" style={{
+          {contentMode !== "instrumental" ? <div data-card-footer className="shrink-0" style={{
             width: layout.lyricsRect.width,
             marginLeft: style.align === "center" ? "auto" : 0,
             marginRight: style.align === "center" ? "auto" : undefined
@@ -197,7 +200,7 @@ export function LyricCard({
               sharedByText={style.sharedByText}
               textColor={textColor}
             />
-          </div>
+          </div> : null}
         </div>
       </div>
     </article>

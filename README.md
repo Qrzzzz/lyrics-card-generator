@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v6.5.6.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v6.5.7.zh-CN.md">发布说明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">在线 Web Lite 版</a> ·
   <a href="./docs/web-lite-browser-support.md">Web Lite 浏览器支持</a> ·
   <a href="./docs/desktop.md">桌面维护文档</a> ·
@@ -75,17 +75,17 @@
 
 
 
-* Windows x64 安装版：`Lyrics.Card.Generator.Setup.6.5.6.exe`
+* Windows x64 安装版：`Lyrics.Card.Generator.Setup.6.5.7.exe`
 
 从 v6.2.2 起只提供 Windows x64 Setup 安装包。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v6.5.6 · 浅色亚克力质感与可读性
+### v6.5.7 · 浅色亚克力质感与可读性
 
-v6.5.6 改善浅色亚克力的磨砂层次与文字可读性，让背景、内容面板和操作控件更加协调。
+v6.5.7 改善浅色亚克力的磨砂层次与文字可读性，让背景、内容面板和操作控件更加协调。
 
-[简体中文](./docs/releases/v6.5.6.zh-CN.md) · [繁體中文](./docs/releases/v6.5.6.zh-TW.md) · [English](./docs/releases/v6.5.6.en.md) · [Français](./docs/releases/v6.5.6.fr.md) · [日本語](./docs/releases/v6.5.6.ja.md) · [Español](./docs/releases/v6.5.6.es.md)
+[简体中文](./docs/releases/v6.5.7.zh-CN.md) · [繁體中文](./docs/releases/v6.5.7.zh-TW.md) · [English](./docs/releases/v6.5.7.en.md) · [Français](./docs/releases/v6.5.7.fr.md) · [日本語](./docs/releases/v6.5.7.ja.md) · [Español](./docs/releases/v6.5.7.es.md)
 
 <a id="主要功能"></a>
 

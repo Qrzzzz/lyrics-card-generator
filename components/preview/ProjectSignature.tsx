@@ -12,11 +12,13 @@ const LANDSCAPE_FONT_SIZE = 30;
 export function ProjectSignature({
   color,
   variant = "portrait",
-  scale = 1
+  scale = 1,
+  instrumentalAlign
 }: {
   color: string;
   variant?: "portrait" | "landscape";
   scale?: number;
+  instrumentalAlign?: "left" | "center";
 }) {
   const fontSize = variant === "landscape" ? LANDSCAPE_FONT_SIZE * scale : PORTRAIT_FONT_SIZE;
 
@@ -35,7 +37,8 @@ export function ProjectSignature({
         fontWeight: 600,
         letterSpacing: "normal",
         lineHeight: 1.4,
-        textRendering: "geometricPrecision"
+        textRendering: "geometricPrecision",
+        ...(instrumentalAlign ? { textAlign: instrumentalAlign, fontSize: 19, fontWeight: 500 } : {})
       }}
     >
       <span data-project-signature-owner style={{ opacity: 0.64, fontWeight: 800 }}>

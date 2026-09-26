@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v6.5.6.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v6.5.7.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="./docs/development.en.md">ローカル開発</a> ·
@@ -76,17 +76,17 @@
 
 
 
-* Windows x64 インストーラー：`Lyrics.Card.Generator.Setup.6.5.6.exe`
+* Windows x64 インストーラー：`Lyrics.Card.Generator.Setup.6.5.7.exe`
 
 v6.2.2 以降、配布するデスクトップパッケージは Windows x64 Setup のみです。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v6.5.6 · ライト Acrylic の質感と読みやすさ
+### v6.5.7 · ライト Acrylic の質感と読みやすさ
 
-v6.5.6 では、ライト Acrylic のすりガラス調の質感と文字の読みやすさを改善し、背景、パネル、操作部品の見た目を整えました。
+v6.5.7 では、ライト Acrylic のすりガラス調の質感と文字の読みやすさを改善し、背景、パネル、操作部品の見た目を整えました。
 
-[简体中文](./docs/releases/v6.5.6.zh-CN.md) · [繁體中文](./docs/releases/v6.5.6.zh-TW.md) · [English](./docs/releases/v6.5.6.en.md) · [Français](./docs/releases/v6.5.6.fr.md) · [日本語](./docs/releases/v6.5.6.ja.md) · [Español](./docs/releases/v6.5.6.es.md)
+[简体中文](./docs/releases/v6.5.7.zh-CN.md) · [繁體中文](./docs/releases/v6.5.7.zh-TW.md) · [English](./docs/releases/v6.5.7.en.md) · [Français](./docs/releases/v6.5.7.fr.md) · [日本語](./docs/releases/v6.5.7.ja.md) · [Español](./docs/releases/v6.5.7.es.md)
 
 <a id="主な機能"></a>
 
