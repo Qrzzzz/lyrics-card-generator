@@ -6,6 +6,7 @@ import { defaultState } from "../components/editor/editor-defaults";
 import { CardFooter } from "../components/preview/CardFooter";
 import { LandscapeAccessories } from "../components/preview/LandscapeAccessories";
 import { ProjectSignature } from "../components/preview/ProjectSignature";
+import { LyricCard } from "../components/preview/LyricCard";
 import { messages } from "../lib/i18n";
 import { PROJECT_SIGNATURE_TEXT } from "../lib/project-signature";
 import { getPortraitLayout } from "../lib/card-layout-engine";
@@ -49,6 +50,36 @@ for (const variant of ["portrait", "landscape"] as const) {
   }
 }
 assert.equal(renderToStaticMarkup(<CardFooter showSharedBy sharedByText="  " showGeneratedWatermark={false} textColor="#fff" />), "");
+for (const showSharedBy of [false, true]) {
+  for (const showGeneratedWatermark of [false, true]) {
+    const style = { ...defaultState.style, contentMode: "instrumental" as const,
+      showSharedBy, showGeneratedWatermark, sharedByText: "Shared by Test" };
+    const card = load(renderToStaticMarkup(<LyricCard
+      song={defaultState.song} lyricDocument={defaultState.lyricDocument} style={style}
+    />));
+    const info = card("[data-instrumental-song-info]");
+    assert.equal(card("[data-card-footer]").length, Number(showSharedBy || showGeneratedWatermark));
+    assert.equal(info.find("[data-card-shared-by]").length, Number(showSharedBy));
+    assert.equal(info.find("[data-project-signature]").length, Number(showGeneratedWatermark));
+    if (showSharedBy || showGeneratedWatermark) {
+      assert.match(info.find("footer").attr("style") ?? "", /font-style:normal/);
+      for (const row of info.find("footer").children().toArray()) {
+        assert.match(card(row).attr("style") ?? "", /text-align:center/);
+      }
+    }
+    const layout = getPortraitLayout({ width: 1080, height: 1080 }, style);
+    assert.equal(layout.footerRect, undefined, "instrumental credits are measured with the song info");
+    assert.equal(layout.lyricsRect.height, layout.safeRect.height - 28,
+      "available height includes the actual border and padding");
+  }
+}
+for (const instrumentalAlign of ["left", "center"] as const) {
+  const footer = load(renderToStaticMarkup(<CardFooter showSharedBy
+    sharedByText="   " showGeneratedWatermark textColor="#fff" instrumentalAlign={instrumentalAlign} />));
+  assert.equal(footer("[data-card-shared-by]").length, 0, "blank sharers reserve no row");
+  assert.match(footer("[data-project-signature]").attr("style") ?? "", /font-size:19px/);
+  assert.ok(footer("[data-project-signature]").attr("style")?.includes(`text-align:${instrumentalAlign}`));
+}
 const landscape = load(renderToStaticMarkup(<LandscapeAccessories
   showSharedBy sharedByText="Test" showGeneratedWatermark textColor="#fff" scale={1.25}
 />));

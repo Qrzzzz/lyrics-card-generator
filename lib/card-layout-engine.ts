@@ -47,6 +47,19 @@ export function getPortraitLayout(
     outerPadding + innerPadding
   );
   const contentMode = style.contentMode ?? "lyrics";
+  // Instrumental credits belong to the song-info block. Match the content
+  // container's padding and 1px border without reserving a detached footer.
+  if (contentMode === "instrumental") {
+    return {
+      safeRect,
+      lyricsRect: {
+        x: safeRect.x + 19,
+        y: safeRect.y + 19,
+        width: safeRect.width - 38,
+        height: safeRect.height - 28
+      }
+    };
+  }
   const hasHeader = contentMode === "lyrics" && (style.showCover || style.showSongInfo);
   const hasFooter = hasVisibleFooter(style);
   const headerScale = style.showSongInfo && hasAlbumName ? 0.205 : 0.16;
