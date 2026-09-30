@@ -14,6 +14,7 @@ import {
 import { getHighResolutionCoverUrl } from "@/lib/cover-url";
 import { getLyricsCardDesktopApi } from "@/lib/desktop-api";
 import { proxiedImageUrl } from "@/lib/image-utils";
+import { MAX_INLINE_COVER_BYTES } from "@/lib/cover-image-limits";
 import type { ManualCoverImportHistoryContext } from "@/lib/import-history";
 import type { createT } from "@/lib/i18n";
 import type { SongInfo } from "@/lib/types";
@@ -36,6 +37,7 @@ export function SongInfoForm({
   forceEnabled?: boolean;
 }) {
   const [enabled, setEnabled] = useState(false);
+  const [coverUploadError, setCoverUploadError] = useState(false);
   const fieldsEnabled = forceEnabled ?? enabled;
   const coverInputRef = useRef<HTMLInputElement>(null);
   const coverRegistrationRequestRef = useRef(0);
@@ -48,6 +50,12 @@ export function SongInfoForm({
     if (!file) {
       return;
     }
+    if (file.size > MAX_INLINE_COVER_BYTES) {
+      setCoverUploadError(true);
+      if (coverInputRef.current) coverInputRef.current.value = "";
+      return;
+    }
+    setCoverUploadError(false);
     // Show the local blob immediately while the desktop replay token registers asynchronously.
     const requestId = coverRegistrationRequestRef.current + 1;
     coverRegistrationRequestRef.current = requestId;
@@ -102,6 +110,7 @@ export function SongInfoForm({
             </FieldLabel>
           </SettingsGrid>
           <div className="settings-content-actions">
+            {coverUploadError ? <p role="alert" className="app-text-subtle text-sm">{t("coverUploadTooLarge")}</p> : null}
             <ActionButton
               icon={<Upload className="h-4 w-4" />}
               onClick={() => coverInputRef.current?.click()}

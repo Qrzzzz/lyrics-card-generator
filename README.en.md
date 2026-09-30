@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v6.5.7.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v6.5.8.en.md">Release Notes</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
   <a href="./docs/web-lite-browser-support.md">Web Lite Browser Support</a> ·
   <a href="#features">Features</a> ·
@@ -77,17 +77,19 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 
 
-* Windows x64 installer: `Lyrics.Card.Generator.Setup.6.5.7.exe`
+* Windows x64 installer: `Lyrics.Card.Generator.Setup.6.5.8.exe`
 
 Starting with v6.2.2, Windows x64 Setup is the only distributed desktop package.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v6.5.7 · Light Acrylic appearance and readability
+### v6.5.8 · Draft recovery and security fixes
 
-v6.5.7 refines Light Acrylic with softer frosted surfaces and clearer text, bringing the window background, content panels, and controls into balance.
 
-[简体中文](./docs/releases/v6.5.7.zh-CN.md) · [繁體中文](./docs/releases/v6.5.7.zh-TW.md) · [English](./docs/releases/v6.5.7.en.md) · [Français](./docs/releases/v6.5.7.fr.md) · [日本語](./docs/releases/v6.5.7.ja.md) · [Español](./docs/releases/v6.5.7.es.md)
+
+v6.5.8 fixes desktop draft recovery and tightens cover loading boundaries.
+
+[简体中文](./docs/releases/v6.5.8.zh-CN.md) · [繁體中文](./docs/releases/v6.5.8.zh-TW.md) · [English](./docs/releases/v6.5.8.en.md) · [Français](./docs/releases/v6.5.8.fr.md) · [日本語](./docs/releases/v6.5.8.ja.md) · [Español](./docs/releases/v6.5.8.es.md)
 
 <a id="features"></a>
 

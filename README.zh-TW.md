@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v6.5.7.zh-TW.md">發布說明</a> ·
+  <a href="./docs/releases/v6.5.8.zh-TW.md">發布說明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">線上 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="./docs/development.zh-CN.md">本機開發</a> ·
@@ -73,17 +73,19 @@
 
 
 
-* Windows x64 安裝版：`Lyrics.Card.Generator.Setup.6.5.7.exe`
+* Windows x64 安裝版：`Lyrics.Card.Generator.Setup.6.5.8.exe`
 
 從 v6.2.2 起僅提供 Windows x64 Setup 安裝程式。
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v6.5.7 · 淺色壓克力質感與可讀性
+### v6.5.8 · 草稿恢復與安全修復
 
-v6.5.7 改善淺色壓克力的磨砂層次與文字可讀性，讓背景、內容面板和操作控制項更加協調。
 
-[简体中文](./docs/releases/v6.5.7.zh-CN.md) · [繁體中文](./docs/releases/v6.5.7.zh-TW.md) · [English](./docs/releases/v6.5.7.en.md) · [Français](./docs/releases/v6.5.7.fr.md) · [日本語](./docs/releases/v6.5.7.ja.md) · [Español](./docs/releases/v6.5.7.es.md)
+
+v6.5.8 修復桌面草稿恢復，並收緊封面載入邊界。
+
+[简体中文](./docs/releases/v6.5.8.zh-CN.md) · [繁體中文](./docs/releases/v6.5.8.zh-TW.md) · [English](./docs/releases/v6.5.8.en.md) · [Français](./docs/releases/v6.5.8.fr.md) · [日本語](./docs/releases/v6.5.8.ja.md) · [Español](./docs/releases/v6.5.8.es.md)
 
 ## ✨ 主要功能
 
