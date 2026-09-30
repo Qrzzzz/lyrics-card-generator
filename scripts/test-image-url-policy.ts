@@ -21,6 +21,11 @@ const atLimit = "data:image/png;base64," + Buffer.alloc(MAX_INLINE_COVER_BYTES).
 assert.equal(proxiedImageUrl(atLimit, origin), atLimit);
 assert.equal(proxiedImageUrl("data:image/png;base64," + Buffer.alloc(MAX_INLINE_COVER_BYTES + 1).toString("base64"), origin), "");
 assert.equal(proxiedImageUrl("data:image/png;base64,YWJj", origin), "data:image/png;base64,YWJj");
+const originalWindowDescriptor = Object.getOwnPropertyDescriptor(globalThis, "window");
+Object.defineProperty(globalThis, "window", { configurable: true, value: {} });
+assert.equal(proxiedImageUrl("https://example.com/cover.png"), proxy("https://example.com/cover.png"));
+if (originalWindowDescriptor) Object.defineProperty(globalThis, "window", originalWindowDescriptor);
+else Reflect.deleteProperty(globalThis, "window");
 // These are routing assertions. Remote DNS, redirect, media-type and size
 // enforcement belongs to safeFetch; CSP/CORS may independently reject loading.
 console.log("image URL policy: proxy routing, exact origins, local uploads and inline budget passed");

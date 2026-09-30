@@ -1,7 +1,7 @@
 import { MAX_INLINE_COVER_BYTES } from "./cover-image-limits";
 export { MAX_INLINE_COVER_BYTES } from "./cover-image-limits";
 
-export function proxiedImageUrl(url?: string, appOrigin = typeof window === "undefined" ? "" : window.location.origin) {
+export function proxiedImageUrl(url?: string, appOrigin = typeof window === "undefined" ? "" : (window.location?.origin ?? "")) {
   if (!url || /[\u0000-\u0020\u007f\\]/u.test(url)) return "";
   if (url.startsWith("data:")) {
     const match = /^data:image\/(?:png|jpeg|webp|gif|avif);base64,([A-Za-z0-9+/]*={0,2})$/u.exec(url);
