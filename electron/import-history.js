@@ -1,7 +1,7 @@
 const crypto = require("node:crypto");
 const defaultFs = require("node:fs/promises");
 const defaultPath = require("node:path");
-const { types: utilTypes } = require("node:util");
+const { types: utilTypes, isDeepStrictEqual } = require("node:util");
 const { MAX_DRAFT_BYTES, normalizeEditorDraft } = require("./editor-draft");
 
 const IMPORT_HISTORY_SCHEMA_VERSION = 2;
@@ -624,9 +624,7 @@ class ImportHistoryStore {
       parsed = JSON.parse(await this.fs.readFile(this.filePath, "utf8"));
     } catch (error) {
       if (error?.code === "ENOENT") {
-        const empty = emptyHistoryDocument();
-        this.document = empty;
-        return empty;
+        return this.#recoverCorruptDocument(false);
       }
       if (!(error instanceof SyntaxError)) throw error;
       return this.#recoverCorruptDocument();
@@ -648,24 +646,25 @@ class ImportHistoryStore {
     return normalized;
   }
 
-  async #recoverCorruptDocument() {
-    const backupPath = await preserveCorruptHistoryFile({
+  async #recoverCorruptDocument(corrupt = true) {
+    const backupPath = corrupt ? await preserveCorruptHistoryFile({
       filePath: this.filePath,
       fs: this.fs,
       path: this.path,
       now: this.now()
-    });
+    }) : "";
     let recovered = null;
     try {
       const backup = JSON.parse(await this.fs.readFile(`${this.filePath}.bak`, "utf8"));
       const candidate = normalizeImportHistoryDocument(backup, this.path);
-      if (candidate && candidate.records.length === backup.records.length && candidate.records.some((record) => record.editorDraft)) {
+      if (candidate && candidate.records.length === backup.records.length &&
+          isDeepStrictEqual(candidate, backup)) {
         recovered = candidate;
       }
     } catch (error) { if (error?.code !== "ENOENT" && !(error instanceof SyntaxError)) throw error; }
     const empty = recovered ?? emptyHistoryDocument();
-    await this.#writeDocument(empty);
-    this.notice = {
+    if (corrupt || recovered) await this.#writeDocument(empty);
+    if (corrupt) this.notice = {
       code: "corrupt_recovered",
       backupFileName: backupPath ? this.path.basename(backupPath) : ""
     };
@@ -683,6 +682,9 @@ class ImportHistoryStore {
       if (this.document?.records.some((record) => record.editorDraft)) {
         const removed = this.document.records.some((record) => !document.records.some((next) => next.id === record.id));
         await writeHistoryRecoveryCopy(this.fs, `${this.filePath}.bak`, removed ? document : this.document);
+      } else if (document.records.some((record) => record.editorDraft)) {
+        // The first successfully saved draft also needs a durable recovery copy.
+        await writeHistoryRecoveryCopy(this.fs, `${this.filePath}.bak`, document);
       }
       const serialized = `${JSON.stringify(document, null, 2)}\n`;
       const serializedBytes = Buffer.byteLength(serialized, "utf8");

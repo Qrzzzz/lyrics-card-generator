@@ -329,9 +329,9 @@ function testLayoutEngine() {
 }
 
 function testImageProxy() {
-  assertEqual(proxiedImageUrl("blob:http://localhost/id"), "blob:http://localhost/id", "blob not proxied");
-  assertEqual(proxiedImageUrl("data:image/png;base64,abc"), "data:image/png;base64,abc", "data not proxied");
-  assertEqual(proxiedImageUrl("file:///C:/cover.png"), "file:///C:/cover.png", "file not proxied");
+  assertEqual(proxiedImageUrl("blob:http://localhost/id", "http://localhost"), "blob:http://localhost/id", "own blob not proxied");
+  assertEqual(proxiedImageUrl("data:image/png;base64,YWJj"), "data:image/png;base64,YWJj", "bounded image data not proxied");
+  assertEqual(proxiedImageUrl("file:///C:/cover.png"), "", "file URLs blocked");
   assertEqual(proxiedImageUrl("https://example.com/cover.jpg"), "/api/image-proxy?url=https%3A%2F%2Fexample.com%2Fcover.jpg", "http proxied");
 }
 

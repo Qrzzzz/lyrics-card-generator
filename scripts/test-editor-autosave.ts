@@ -123,6 +123,9 @@ async function main() {
       songInfoDraft: { source: "unknown", title: "unfinished form", artist: "artist" } });
     const lease = await store.beginEditorDraft();
     await store.saveEditorDraft(lease.recordId, lease.token, 1, JSON.stringify(snapshot));
+    const firstBackup = JSON.parse(await readFile(filePath + ".bak", "utf8"));
+    assert.equal(firstBackup.activeDraftId, lease.recordId, "first save creates a recovery copy");
+    assert.deepEqual(firstBackup, JSON.parse(await readFile(filePath, "utf8")));
     assert.equal((await store.list()).records[0].hasEditorDraft, true);
     assert.equal((await store.stats()).manualTotal, 1);
     await store.trim(5);
@@ -189,6 +192,39 @@ async function main() {
     await assert.rejects(covers.save("data:image/svg+xml;base64,PHN2Zz4="));
     const hydrated = await covers.hydrate(active.id, { ...snapshot, coverAsset: asset });
     assert.equal(hydrated.coverDataUrl, png);
+    const missingPath = path.join(directory, "missing-main.json");
+    const missingStore = new ImportHistoryStore({ filePath: missingPath, draftAssets: covers });
+    const missingLease = await missingStore.beginEditorDraft();
+    const withCover = { ...snapshot, coverAsset: asset, formCoverAsset: asset };
+    await missingStore.saveEditorDraft(missingLease.recordId, missingLease.token, 1, JSON.stringify(withCover));
+    const savedMissing = JSON.parse(await readFile(missingPath, "utf8"));
+    const reorderedBackup = { records: savedMissing.records, activeDraftId: savedMissing.activeDraftId,
+      schemaVersion: savedMissing.schemaVersion };
+    await writeFile(missingPath + ".bak", JSON.stringify(reorderedBackup));
+    await rm(missingPath);
+    const missingRestart = new ImportHistoryStore({ filePath: missingPath, draftAssets: covers });
+    const restoredMissing = await missingRestart.getActiveEditorDraft();
+    assert.equal(restoredMissing.id, missingLease.recordId);
+    assert.deepEqual(restoredMissing.editorDraft, savedMissing.records[0].editorDraft);
+    const hydratedMissing = await covers.hydrate(restoredMissing.id, restoredMissing.editorDraft);
+    assert.equal(hydratedMissing.coverDataUrl, png);
+    assert.equal(hydratedMissing.formCoverDataUrl, png);
+    assert.equal(JSON.parse(await readFile(missingPath, "utf8")).activeDraftId, missingLease.recordId);
+    await missingRestart.remove(missingLease.recordId);
+    await rm(missingPath);
+    assert.equal(await new ImportHistoryStore({ filePath: missingPath }).getActiveEditorDraft(), null,
+      "missing primary cannot resurrect deleted drafts from a reduced backup");
+    const freshPath = path.join(directory, "fresh.json");
+    assert.equal((await new ImportHistoryStore({ filePath: freshPath }).list()).total, 0);
+    for (const badBackup of ["{broken", JSON.stringify({ ...firstBackup, activeDraftId: "missing" }),
+      JSON.stringify({ ...firstBackup, records: [...firstBackup.records, { id: "invalid" }] })]) {
+      const badPath = path.join(directory, "bad-backup.json");
+      await writeFile(badPath + ".bak", badBackup);
+      const badStore = new ImportHistoryStore({ filePath: badPath });
+      assert.equal(await badStore.getActiveEditorDraft(), null, "invalid backup is not a successful recovery");
+      assert.equal((await badStore.list()).notice, null);
+      assert.equal(await readFile(badPath + ".bak", "utf8"), badBackup, "invalid evidence stays available");
+    }
     const removeLease = await recovered.beginEditorDraft(active.id);
     await recovered.remove(active.id);
     await assert.rejects(recovered.saveEditorDraft(active.id, removeLease.token, 1, JSON.stringify(snapshot)), { code: "stale_draft" });

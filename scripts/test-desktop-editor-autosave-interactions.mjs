@@ -240,6 +240,27 @@ try {
   await launch();
   assert.equal(await page.getByTestId("lyrics-editor-original").inputValue(), "durable before forced exit");
 
+  await closeNormally();
+  const recoveryCopy = JSON.parse(await readFile(historyPath + ".bak", "utf8"));
+  const recoveryDraft = recoveryCopy.records.find((record) => record.id === recoveryCopy.activeDraftId);
+  assert.ok(recoveryDraft?.editorDraft.coverAsset, "real recovery copy retains the local cover");
+  await rm(historyPath);
+  await launch();
+  assert.equal((await disk()).activeDraftId, recoveryCopy.activeDraftId);
+  if (await page.getByTestId("song-info-editor").isVisible()) {
+    assert.equal(await page.getByTestId("song-info-editor").getByLabel("Song Title", { exact: true }).inputValue(),
+      recoveryDraft.editorDraft.view.songInfoDraft.title, "the backup's unfinished form is also restored");
+    await page.getByTestId("song-info-save").click();
+  }
+  await page.locator('[data-step-id="lyrics"]').click();
+  assert.equal(await page.getByTestId("lyrics-editor-original").inputValue(), recoveryDraft.editorDraft.content.lyrics);
+  assert.equal((await disk()).activeDraftId, recoveryCopy.activeDraftId);
+  await page.waitForFunction(() => [...document.querySelectorAll('img[src^="blob:"]')]
+    .some((image) => image.complete && image.naturalWidth > 0));
+  console.log("PASS: missing primary restores backup draft, active record and a rendered local cover");
+  await saved();
+  const lyricsBeforeFailure = (await disk()).records.find((record) => record.id === localId).editorDraft.content.lyrics;
+
   await app.evaluate((_electron, target) => {
     const fs = process.getBuiltinModule("fs/promises");
     globalThis.__autosaveOriginalWrite = fs.writeFile;
@@ -250,7 +271,7 @@ try {
   }, historyPath);
   await page.getByTestId("lyrics-editor-original").fill("recover after write failure");
   await page.waitForFunction(() => document.querySelector('[data-testid="autosave-status"]').dataset.saveState === "error");
-  assert.equal((await disk()).records.find((record) => record.id === localId).editorDraft.content.lyrics, "durable before forced exit");
+  assert.equal((await disk()).records.find((record) => record.id === localId).editorDraft.content.lyrics, lyricsBeforeFailure);
   await page.evaluate(() => window.lyricsCardDesktop.closeWindow());
   await app.evaluate(async () => {
     const deadline = Date.now() + 8000;
