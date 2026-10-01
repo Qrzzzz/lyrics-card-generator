@@ -18,6 +18,9 @@ const exportOverflowTolerance = 4;
 const activeCompleteExportButtonSelector = '[data-testid="export-settings-panel"][data-active="true"] [data-testid="complete-export-button"]';
 // Visual metrics are diagnostic-only unless explicitly requested; behavioral
 // assertions remain deterministic in the default regression run.
+const scenarioArgument = process.argv.find((value) => value.startsWith("--scenario="));
+const scenario = scenarioArgument?.slice("--scenario=".length);
+if (scenario && !["search", "song-import", "examples", "fonts", "titlebar"].includes(scenario)) throw new Error("Unknown desktop scenario: " + scenario);
 const runVisualDiagnostics = process.argv.includes("--visual-diagnostics");
 const builtInAutoWidthCases = [
   { id: "opalite", lyricLines: 4, translationLines: 4, min: 1360, max: 1400 },
@@ -86,7 +89,7 @@ async function setWindowSize(width, height) {
     { width, height },
     { timeout: 10_000 }
   );
-  await page.waitForTimeout(260);
+  await waitForLayoutStable(page.getByTestId("editor-surface"));
 }
 
 async function assertSettingsHistoryBarChrome() {
@@ -194,11 +197,11 @@ async function prepareSettingsScreenshot() {
   await waitForLayoutStable(page.getByTestId("settings-surface"), 10_000);
   // Preference saves may finish just after navigation. Give the queue time to
   // publish its result, then wait until global transient feedback has cleared.
-  await page.waitForTimeout(500);
+  await waitForLayoutStable(page.getByTestId("settings-surface"));
   await page.waitForFunction(() => !Array.from(document.querySelectorAll('[data-testid="app-toast"]')).some((toast) => (
     toast instanceof HTMLElement && toast.getClientRects().length > 0
   )), undefined, { timeout: 10_000 });
-  await page.waitForTimeout(350);
+  await waitForLayoutStable(page.getByTestId("settings-surface"));
 }
 
 async function waitForLyricsLineBudget(expected, timeout = 5_000) {
@@ -268,18 +271,11 @@ async function waitForActiveDescendant(expected, timeout = 5_000) {
 }
 
 async function fillExact(locator, value, timeout = 5_000) {
-  const deadline = Date.now() + timeout;
-  let actual = "";
-  do {
+  await expect.poll(async () => {
     await locator.fill(value);
-    await page.waitForTimeout(100);
-    actual = await locator.inputValue();
-    if (actual === value) {
-      await page.waitForTimeout(100);
-      if (await locator.inputValue() === value) return;
-    }
-  } while (Date.now() < deadline);
-  assert.equal(actual, value, "controlled textarea settles on the exact fixture value");
+    return locator.inputValue();
+  }, { timeout }).toBe(value);
+  await expect(locator).toHaveValue(value, { timeout });
 }
 
 async function assertExportHost(stepLabel) {
@@ -341,21 +337,11 @@ function assertSameSelection(before, after, label) {
 }
 
 async function waitForSameSelection(editor, expected, timeout = 5_000) {
-  const deadline = Date.now() + timeout;
-  let current = await getLyricsContext(editor);
-  while (
-    Date.now() < deadline &&
-    (
-      current.start !== expected.start ||
-      current.end !== expected.end ||
-      current.selectedText !== expected.selectedText ||
-      current.lineIndex !== expected.lineIndex
-    )
-  ) {
-    await page.waitForTimeout(50);
-    current = await getLyricsContext(editor);
-  }
-  return current;
+  await expect.poll(async () => {
+    const current = await getLyricsContext(editor);
+    return { start: current.start, end: current.end, selectedText: current.selectedText, lineIndex: current.lineIndex };
+  }, { timeout }).toEqual({ start: expected.start, end: expected.end, selectedText: expected.selectedText, lineIndex: expected.lineIndex });
+  return getLyricsContext(editor);
 }
 
 async function selectLyricsRange(editor, start, end, scrollRatio = null) {
@@ -567,7 +553,7 @@ async function assertLyricsInputEditingSemantics(originalLyrics, translationLyri
     const marker = `input line ${String(testCase.line).padStart(2, "0")}`;
     const caret = originalFixture.indexOf(marker) + marker.length;
     await selectLyricsRange(originalLyrics, caret, caret, testCase.ratio);
-    await page.waitForTimeout(80);
+    await expect.poll(async () => { const selection = await getLyricsContext(originalLyrics); return { start: selection.start, end: selection.end }; }).toEqual({ start: caret, end: caret });
     const before = await getLyricsContext(originalLyrics);
     await originalLyrics.pressSequentially("x");
     await page.waitForFunction(
@@ -2264,7 +2250,7 @@ async function assertPreviewWorkbenchPan() {
   const pressureBox = await pressureStage.boundingBox();
   assert.ok(pressureBox, "step five preview pressure target is visible");
   await page.mouse.move(pressureBox.x + pressureBox.width * 0.18, pressureBox.y + pressureBox.height * 0.2);
-  await page.waitForTimeout(120);
+  await page.waitForFunction(() => getComputedStyle(document.querySelector(".preview-pressure-card")).transform !== "none");
   const pressureState = await pressureStage.evaluate((element) => {
     const card = element.querySelector('.preview-pressure-card');
     const style = card ? getComputedStyle(card) : null;
@@ -3589,7 +3575,7 @@ async function assertLyricsWorkspaceNarrowBehavior(originalLyrics, translationLy
       },
       "the narrow focus trap ignores inert exit controls and wraps to the active Translation tab"
     );
-    await page.waitForTimeout(400);
+    await waitForLayoutStable(page.getByTestId("lyrics-translation-home-page"));
     const focusAfterAiEscape = await page.evaluate(() => ({
       testId: document.activeElement?.getAttribute("data-testid"),
       tag: document.activeElement?.tagName,
@@ -4032,6 +4018,17 @@ try {
 
   await prepareEditorLanguage(page, "zh");
   assert.equal(await page.getByTestId("editor-surface").evaluate((node) => Boolean(node.closest('[inert]'))), false, "startup leaves the editor accessible");
+  if (scenario) {
+    const scenarios = {
+      search: assertSongSearchBehavior,
+      "song-import": assertSongImportAsideBehavior,
+      examples: assertExamplesSurfaceBehavior,
+      fonts: assertFontPickerBehavior,
+      titlebar: assertTitlebarWindowInteractions
+    };
+    await scenarios[scenario]();
+    console.log(JSON.stringify({ ok: true, scenario, isolatedUserData: true }));
+  } else {
   await assertTitlebarWindowInteractions();
 
   await page.locator('[data-testid="editor-surface"] [data-testid="settings-button"]').click();
@@ -4251,7 +4248,7 @@ try {
   await page.getByTestId("ai-api-key-input").fill("sk-reset-scope-regression");
   await expect.poll(() => page.evaluate(async () => Boolean((await window.lyricsCardDesktop?.loadAISettings())?.hasApiKey)),
     { timeout: 30_000 }).toBe(true);
-  await page.waitForTimeout(1_000);
+  await expect.poll(() => page.evaluate(() => window.lyricsCardDesktop?.loadAISettings()), { timeout: 30_000 }).toMatchObject({ hasApiKey: true });
   assert.equal((await page.evaluate(() => window.lyricsCardDesktop?.loadAISettings()))?.hasApiKey, true, "the replacement API key is durably stable before preference reset");
 
   await selectSettingsSection("general");
@@ -4854,6 +4851,7 @@ try {
       landscape: landscapeCard
     }
   }, null, 2)}\n`);
+}
 } catch (error) {
   process.stderr.write(`[desktop-regression] ${error instanceof Error ? error.stack || error.message : String(error)}\n`);
   if (electronApp) {

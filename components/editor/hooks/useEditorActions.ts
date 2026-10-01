@@ -11,11 +11,10 @@ import {
   applyEditorStyleChange,
   isDocumentSemanticStyleChange
 } from "@/lib/editor/apply-style-change";
-import { createExportSnapshot, type ExportSnapshot } from "@/lib/export-snapshot";
-import { getClipboardRasterSizeIssue, getExportRasterSizeIssue } from "@/lib/export-dimensions";
+import { type ExportSnapshot } from "@/lib/export-snapshot";
+import { runImageOutputController } from "@/lib/image-output-controller";
 import {
   ExportTransactionMutex,
-  runExportTransaction,
   waitForExportSnapshotNode
 } from "@/lib/export-transaction";
 import {
@@ -613,85 +612,30 @@ export function useEditorActions({
     ));
   }
 
-  async function runImageOutput(action: ImageOutputAction) {
-    const initialBlockMessage = getExportBlockMessage?.() ?? exportBlockMessage;
-    if (initialBlockMessage) {
-      onNotify(initialBlockMessage, "warning");
-      return;
-    }
-
-    // Export owns an immutable snapshot; the clear version suppresses stale completion effects.
+  async function runImageOutput(action: "export" | "copy") {
     const clearVersion = clearVersionRef.current;
-    const snapshot = createExportSnapshot(
-      parsedState,
-      exportPixelRatio,
-      exportRevisionRef.current,
-      action === "copy" ? "png" : exportFormat
-    );
-    const getOutputRasterSizeIssue = action === "copy" ? getClipboardRasterSizeIssue : getExportRasterSizeIssue;
-    if (getOutputRasterSizeIssue(snapshot.width, snapshot.height, snapshot.pixelRatio)) {
-      onNotify(exportImageTooLargeMessage, "warning");
-      return;
-    }
-    const result = await runExportTransaction({
-      mutex: exportMutexRef.current,
-      snapshot,
-      mountSnapshot: async (mountedSnapshot, signal) => {
+    return runImageOutputController({
+      action, state: parsedState, pixelRatio: exportPixelRatio,
+      revision: exportRevisionRef.current, format: exportFormat, mutex: exportMutexRef.current,
+      blockingMessage: () => getExportBlockMessage?.() ?? exportBlockMessage,
+      validate: (snapshot) => getExportBlockMessage?.(snapshot) ?? null,
+      mount: async (snapshot, signal) => {
         setActiveOutputAction(action);
-        setActiveExportSnapshot(mountedSnapshot);
-        return waitForExportSnapshotNode(() => cardRef.current, mountedSnapshot.id, signal);
+        setActiveExportSnapshot(snapshot);
+        return waitForExportSnapshotNode(() => cardRef.current, snapshot.id, signal);
       },
-      validateSnapshot: (mountedSnapshot) => {
-        if (getOutputRasterSizeIssue(mountedSnapshot.width, mountedSnapshot.height, mountedSnapshot.pixelRatio)) {
-          return exportImageTooLargeMessage;
-        }
-        return getExportBlockMessage?.(mountedSnapshot) ?? null;
+      unmount: () => { setActiveExportSnapshot(null); setActiveOutputAction(null); },
+      loadCapture: () => import("@/lib/export-image"),
+      notify: onNotify,
+      messages: {
+        tooLarge: exportImageTooLargeMessage, busy: exportBusyMessage,
+        failed: action === "copy" ? copyImageFailedMessage : exportFailedMessage,
+        success: action === "copy" ? copyImageSuccessMessage : undefined
       },
-      captureSnapshot: async (mountedSnapshot, node, signal) => {
-        const { copyNodeAsPng, exportNodeAsImage } = await import("@/lib/export-image");
-        return action === "copy"
-          ? copyNodeAsPng(
-              node,
-              mountedSnapshot.width,
-              mountedSnapshot.height,
-              mountedSnapshot.pixelRatio,
-              signal
-            )
-          : exportNodeAsImage(
-              node,
-              mountedSnapshot.fileName,
-              mountedSnapshot.format,
-              mountedSnapshot.width,
-              mountedSnapshot.height,
-              mountedSnapshot.pixelRatio,
-              signal
-            );
-      },
-      unmountSnapshot: () => {
-        setActiveExportSnapshot(null);
-        setActiveOutputAction(null);
+      onSuccess: () => {
+        if (clearVersion === clearVersionRef.current) setCelebrationKey((key) => key + 1);
       }
     });
-
-    if (result.ok) {
-      if (clearVersion === clearVersionRef.current) {
-        setCelebrationKey((key) => key + 1);
-      }
-      if (action === "copy") {
-        onNotify(copyImageSuccessMessage, "success");
-      }
-      return;
-    }
-    if (result.kind === "busy") {
-      onNotify(exportBusyMessage, "warning");
-    } else if (result.kind === "blocked") {
-      onNotify(result.reason, "warning");
-    } else if (action === "copy" && result.error instanceof Error && result.error.name === "ImageClipboardSizeLimitError") {
-      onNotify(exportImageTooLargeMessage, "warning");
-    } else {
-      console.error(`[Lyric Card Generator] ${action} image output failed`, result.error);
-      onNotify(action === "copy" ? copyImageFailedMessage : exportFailedMessage, "error");
-    }
   }
 
   function completeAndExport() {

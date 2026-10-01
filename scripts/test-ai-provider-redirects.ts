@@ -1,32 +1,15 @@
 import assert from "node:assert/strict";
 import dns from "node:dns";
-import { readFileSync } from "node:fs";
 import { createServer, type Server } from "node:http";
 import { createRequire } from "node:module";
 import type { AddressInfo } from "node:net";
-import ts from "typescript";
 import { POST as translate } from "../app/api/ai/translate/route";
 import { testAIProviderConnection } from "../lib/ai/provider-request";
 import { createAppRequestHeaders, APP_CANONICAL_ORIGIN_ENV } from "../lib/app-request";
 
 const require = createRequire(import.meta.url);
 const provider = require("../electron/provider-response.js");
-const stream = require("../electron/ai-stream.js");
-const source = ts.createSourceFile("main.js", readFileSync("electron/main.js", "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
-const functionNames = ["streamAITranslationInMain", "resolveAIProviderEndpoint", "createAIError"];
-const declarations = source.statements.filter((node) => ts.isFunctionDeclaration(node) && functionNames.includes(node.name?.text ?? ""));
-assert.equal(declarations.length, functionNames.length);
-const bindings = {
-  ...provider, ...stream,
-  buildProviderChatCompletionsRequestBody: provider.buildChatCompletionsRequestBody,
-  resolveProviderChatCompletionsUrl: provider.getChatCompletionsUrl,
-  readNormalizedProviderError: provider.readProviderError
-};
-// Execute the original main-process functions with their real helper modules.
-// Electron GUI/IPC is outside this isolated transport regression.
-const desktopTranslate = new Function(...Object.keys(bindings),
-  `${declarations.map((node) => node.getText(source)).join("\n")}\nreturn streamAITranslationInMain;`
-)(...Object.values(bindings));
+const { streamAITranslationInMain: desktopTranslate } = require("../electron/ai-translation.js");
 
 const fakeKey = "REDIRECT_TEST_FAKE_KEY";
 const fakePrompt = "REDIRECT_TEST_SYNTHETIC_LYRICS";

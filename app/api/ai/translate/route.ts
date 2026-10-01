@@ -20,15 +20,9 @@ import {
   createAIStreamDeadline,
   resourceBudgets
 } from "@/electron/ai-stream";
-import type { SaveAISettingsInput } from "@/lib/ai/types";
+import { translateRequestSchema } from "@/lib/ai/request-schema";
 
 export const runtime = "nodejs";
-
-type TranslateBody = {
-  prompt?: string;
-  reasoning?: boolean;
-  settings?: SaveAISettingsInput & { apiKey?: string };
-};
 
 /**
  * Browser-preview transport boundary for provider requests. The renderer must
@@ -41,7 +35,7 @@ export async function POST(request: Request) {
     return errorResponse(rejection.code, rejection.status);
   }
 
-  const bodyResult = await readLimitedJson<TranslateBody>(
+  const bodyResult = await readLimitedJson(
     request,
     resourceBudgets.jsonRequestBytes.aiTranslate
   );
@@ -53,7 +47,9 @@ export async function POST(request: Request) {
         : "invalid_request";
     return errorResponse(code, code === "request_too_large" ? 413 : code === "cancelled" ? 499 : 400);
   }
-  const body = bodyResult.value;
+  const parsed = translateRequestSchema.safeParse(bodyResult.value);
+  if (!parsed.success) return errorResponse("invalid_request", 400);
+  const body = parsed.data;
 
   const prompt = body.prompt?.trim() ?? "";
   const settings = body.settings;
@@ -71,7 +67,7 @@ export async function POST(request: Request) {
 
   let endpoint: string;
   try {
-    endpoint = getChatCompletionsUrl(settings.baseUrl);
+    endpoint = getChatCompletionsUrl(settings.baseUrl ?? "");
   } catch (error) {
     const code = error instanceof Error && error.message === INSECURE_BASE_URL_ERROR_CODE
       ? INSECURE_BASE_URL_ERROR_CODE
@@ -80,11 +76,11 @@ export async function POST(request: Request) {
   }
 
   const requestBody = buildChatCompletionsRequestBody({
-    baseUrl: settings.baseUrl,
+    baseUrl: settings.baseUrl ?? "",
     model: settings.model.trim(),
     prompt,
     reasoning: body.reasoning,
-    temperature: settings.temperature
+    temperature: settings.temperature ?? 0.7
   });
 
   const deadline = createAIStreamDeadline(request.signal);

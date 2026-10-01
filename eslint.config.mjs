@@ -22,7 +22,7 @@ const electronRules = {
 const config = [
   // Script harnesses stay out of the product lint surface. Electron production
   // code is checked below with Node/CommonJS semantics instead of browser rules.
-  { ignores: [".next/**", "coverage/**", "dist-desktop/**", "release/**", "playwright-report/**", "index.html", "scripts/**", "tmp/**", "next-env.d.ts"] },
+  { ignores: [".next/**", "output/**", "coverage/**", "dist-desktop/**", "release/**", "playwright-report/**", "index.html", "scripts/**", "tmp/**", "next-env.d.ts"] },
   ...nextConfigs,
   {
     ignores: ["electron/**"],

@@ -18,7 +18,7 @@ export async function POST(req: Request) {
     return appMutationRejectionResponse(rejection);
   }
 
-  const bodyResult = await readLimitedJson<unknown>(req, resourceBudgets.jsonRequestBytes.searchSong);
+  const bodyResult = await readLimitedJson(req, resourceBudgets.jsonRequestBytes.searchSong);
   if (!bodyResult.ok) return appLimitedJsonErrorResponse(bodyResult.reason);
 
   const parsed = schema.safeParse(bodyResult.value);

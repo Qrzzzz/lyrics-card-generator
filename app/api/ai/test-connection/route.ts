@@ -4,21 +4,17 @@ import {
   AIProviderConnectionError,
   testAIProviderConnection
 } from "@/lib/ai/provider-request";
-import type { SaveAISettingsInput } from "@/lib/ai/types";
+import { connectionRequestSchema } from "@/lib/ai/request-schema";
 import { validateAppMutationRequest } from "@/lib/app-request";
 import { readLimitedJson } from "@/lib/json-request";
 
 export const runtime = "nodejs";
 
-type ConnectionTestBody = {
-  settings?: SaveAISettingsInput & { apiKey?: string };
-};
-
 export async function POST(request: Request) {
   const rejection = validateAppMutationRequest(request, "application/json");
   if (rejection) return errorResponse(rejection.code, rejection.status);
 
-  const bodyResult = await readLimitedJson<ConnectionTestBody>(
+  const bodyResult = await readLimitedJson(
     request,
     resourceBudgets.jsonRequestBytes.aiConnectionTest
   );
@@ -31,7 +27,9 @@ export async function POST(request: Request) {
     return errorResponse(code, code === "request_too_large" ? 413 : code === "cancelled" ? 499 : 400);
   }
 
-  const settings = bodyResult.value.settings;
+  const parsed = connectionRequestSchema.safeParse(bodyResult.value);
+  if (!parsed.success) return errorResponse("invalid_request", 400);
+  const settings = parsed.data.settings;
   try {
     await testAIProviderConnection({
       baseUrl: settings?.baseUrl ?? "",

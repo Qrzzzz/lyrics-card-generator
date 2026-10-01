@@ -183,6 +183,9 @@ jobs:
         id: desktop_build
         run: npm run desktop:build
 
+      - name: Enforce packaged distribution budget
+        run: node scripts/check-distribution-budgets.mjs --packaged
+
       - name: Verify staged and packaged desktop assets
         run: npm run desktop:packaged-assets-test
 

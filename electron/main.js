@@ -11,24 +11,11 @@ const path = require("node:path");
 const { normalizePromptLibrary } = require("./ai-prompt-settings");
 const { AISettingsStore } = require("./ai-settings-store");
 const { createWindowsFontDirectoryService } = require("./font-directory-service");
-const {
-  INVALID_BASE_URL_ERROR_CODE,
-  INSECURE_BASE_URL_ERROR_CODE,
-  buildChatCompletionsRequestBody: buildProviderChatCompletionsRequestBody,
-  getChatCompletionMessage,
-  getChatCompletionsUrl: resolveProviderChatCompletionsUrl,
-  readProviderError: readNormalizedProviderError,
-  readProviderResponseBody,
-  testProviderConnection
-} = require("./provider-response");
-const {
-  AIStreamError,
-  assertAICompletionBudgets,
-  consumeOpenAICompatibleSSE,
-  createAIStreamDeadline,
-  resourceBudgets
-} = require("./ai-stream");
+const { testProviderConnection } = require("./provider-response");
+const { streamAITranslationInMain, resolveAIProviderEndpoint, createAIError } = require("./ai-translation");
+const { resourceBudgets } = require("./ai-stream");
 const { normalizeStoredPreferences } = require("./user-preferences");
+const { createAppPreferencesWriter } = require("./app-preferences-writer");
 const { AIRequestRegistry } = require("./ai-request-registry");
 const { assertTrustedIpcEvent } = require("./ipc-security");
 const {
@@ -1428,29 +1415,6 @@ function getAppPreferencesPath() {
   return path.join(app.getPath("userData"), "app-preferences.json");
 }
 
-async function writeAppPreferences(preferences) {
-  try {
-    const current = normalizeStoredPreferences(JSON.parse(await fs.readFile(getAppPreferencesPath(), "utf8")));
-    // A delayed writer must not overwrite a newer revision already present on disk.
-    if (current && (
-      current.revision > preferences.revision ||
-      (current.revision === preferences.revision && current.updatedAt > preferences.updatedAt)
-    )) {
-      return current;
-    }
-  } catch {
-    // Missing, corrupt, or legacy files are replaced atomically below.
-  }
-  await fs.mkdir(app.getPath("userData"), { recursive: true });
-  const target = getAppPreferencesPath();
-  const temporary = `${target}.tmp`;
-  // Publish complete preference documents atomically and keep their permissions user-only.
-  await fs.writeFile(temporary, JSON.stringify(preferences, null, 2), { encoding: "utf8", mode: 0o600 });
-  await fs.rename(temporary, target);
-  await fs.chmod(getAppPreferencesPath(), 0o600).catch(() => undefined);
-  return preferences;
-}
-
 function requestRendererClose() {
   if (!mainWindow || mainWindow.isDestroyed() || mainWindow.webContents.isDestroyed()) return false;
   mainWindow.webContents.send("lyrics-card:window-close-requested");
@@ -1473,14 +1437,13 @@ function isNativeDialogText(value, maximumLength, allowEmpty = false) {
     (allowEmpty || value.trim().length > 0);
 }
 
+const appPreferencesWriter = createAppPreferencesWriter({
+  getTargetPath: getAppPreferencesPath,
+  onPersisted: (persisted) => { lastKnownAppPreferences = persisted; }
+});
+
 function enqueueAppPreferencesWrite(preferences) {
-  const operation = appPreferencesWriteQueue
-    .catch(() => undefined)
-    .then(() => writeAppPreferences(preferences))
-    .then((persisted) => {
-      if (persisted) lastKnownAppPreferences = persisted;
-      return persisted;
-    });
+  const operation = appPreferencesWriter.write(preferences);
   appPreferencesWriteQueue = operation;
   return operation;
 }
@@ -1585,97 +1548,6 @@ function validateAISettings(settings, apiKey) {
   resolveAIProviderEndpoint(settings.baseUrl);
 }
 
-function resolveAIProviderEndpoint(baseUrl) {
-  try {
-    return resolveProviderChatCompletionsUrl(baseUrl);
-  } catch (error) {
-    const code = error instanceof Error && error.message === INSECURE_BASE_URL_ERROR_CODE
-      ? INSECURE_BASE_URL_ERROR_CODE
-      : INVALID_BASE_URL_ERROR_CODE;
-    throw createAIError(code);
-  }
-}
-
-async function streamAITranslationInMain({ settings, apiKey, prompt, reasoning, signal, onStatus, onReasoningDelta, onDelta }) {
-  const deadline = createAIStreamDeadline(signal);
-  try {
-    const endpoint = resolveAIProviderEndpoint(settings.baseUrl);
-    const requestBody = buildProviderChatCompletionsRequestBody({
-      baseUrl: settings.baseUrl,
-      model: settings.model,
-      prompt,
-      reasoning,
-      temperature: settings.temperature
-    });
-    const response = await fetch(endpoint, {
-      method: "POST",
-      redirect: "error",
-      headers: {
-        authorization: `Bearer ${apiKey}`,
-        "content-type": "application/json"
-      },
-      body: JSON.stringify(requestBody),
-      signal: deadline.signal
-    });
-
-    if (!response.ok) {
-      throw createAIError(
-        "provider_error",
-        await readNormalizedProviderError(response, deadline.signal, apiKey)
-      );
-    }
-    onStatus("connected");
-
-    const contentType = response.headers.get("content-type") || "";
-    if (!contentType.includes("text/event-stream")) {
-      const body = await readProviderResponseBody(response, deadline.signal);
-      const { content, reasoningContent } = getChatCompletionMessage(body);
-      assertAICompletionBudgets(content, reasoningContent);
-      if (reasoningContent) {
-        onStatus("reasoning");
-        onReasoningDelta(reasoningContent);
-      }
-      if (!content) throw createAIError("empty_response");
-      onStatus("translating");
-      onDelta(content);
-      return content;
-    }
-
-    if (!response.body) throw createAIError("empty_stream");
-    const result = await consumeOpenAICompatibleSSE(
-      response,
-      {
-        onReasoningDelta(delta) {
-          onStatus("reasoning");
-          onReasoningDelta(delta);
-        },
-        onDelta(delta) {
-          onStatus("translating");
-          onDelta(delta);
-        }
-      },
-      { signal: deadline.signal, deadlineAt: deadline.deadlineAt }
-    );
-    if (!result.content.trim()) throw createAIError("empty_response");
-    return result.content;
-  } catch (error) {
-    if (error instanceof Error && error.message.includes("AI_ERROR:")) throw error;
-    if (signal.aborted) throw createAIError("cancelled");
-    if (deadline.signal.reason instanceof AIStreamError) {
-      throw createAIError(deadline.signal.reason.code);
-    }
-    if (error instanceof AIStreamError) throw createAIError(error.code);
-    if (error?.code === "response_too_large") throw createAIError("response_too_large");
-    throw createAIError("network");
-  } finally {
-    deadline.dispose();
-  }
-}
-
 function isValidAIRequestId(value) {
   return typeof value === "string" && /^[a-zA-Z0-9-]{8,80}$/.test(value);
-}
-
-function createAIError(code, diagnostic) {
-  return new Error(`AI_ERROR:${code}${diagnostic ? `:${String(diagnostic).slice(0, 500)}` : ""}`);
 }

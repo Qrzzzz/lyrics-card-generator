@@ -32,8 +32,8 @@ import {
 import { clearLyricContent, hasClearableLyricContent } from "@/lib/clear-content";
 import { applyEditorStyleChange } from "@/lib/editor/apply-style-change";
 import { copyNodeAsPng, exportNodeAsImage } from "@/lib/export-image";
-import { getClipboardRasterSizeIssue, getExportRasterSizeIssue } from "@/lib/export-dimensions";
-import { createExportSnapshot, snapshotAsAppState, type ExportSnapshot } from "@/lib/export-snapshot";
+import { runImageOutputController } from "@/lib/image-output-controller";
+import { snapshotAsAppState, type ExportSnapshot } from "@/lib/export-snapshot";
 import { resolveExportSafetyMessage } from "@/lib/export-safety";
 import { getExportLyricLineStatus } from "@/lib/lyrics-document";
 import { cloneLyricDocument, reconcileLyricDocumentV2 } from "@/lib/lyrics-document-v2";
@@ -46,7 +46,6 @@ import {
 import { hasCurrentLandscapePlan } from "@/lib/landscape-measurement-key";
 import {
   ExportTransactionMutex,
-  runExportTransaction,
   waitForExportSnapshotNode
 } from "@/lib/export-transaction";
 import { createT } from "@/lib/i18n";
@@ -367,95 +366,35 @@ export function WebLiteEditor() {
   }
 
   async function runImageOutput(action: "export" | "copy") {
-    const liveValidation = getLiveExportCardValidation(
-      parsedState,
-      exportCardRef.current,
-      autoWidthReadiness.isStable && landscapeLayoutReadiness.isStable
-    );
-    const liveBlockingMessage = liveValidation.blockingReason
-      ? resolveExportSafetyMessage(liveValidation.blockingReason, liveValidation.lineStatus.totalLineCount, t, liveValidation.lineStatus.maxLineCount)
-      : (() => {
-          const readiness = exportReadinessStore.getSnapshot();
-          return readiness.blockingReason
-            ? resolveExportSafetyMessage(readiness.blockingReason, readiness.lineStatus.totalLineCount, t, readiness.lineStatus.maxLineCount)
-            : undefined;
-        })();
-    if (liveBlockingMessage) {
-      showToast(liveBlockingMessage, "warning");
-      return;
-    }
-
-    // Capture an immutable document revision before mounting the offscreen export card.
-    const snapshot = createExportSnapshot(
-      parsedState,
-      getExportPixelRatio(exportQuality),
-      exportRevisionRef.current,
-      action === "copy" ? "png" : exportFormat
-    );
-    const getOutputRasterSizeIssue = action === "copy" ? getClipboardRasterSizeIssue : getExportRasterSizeIssue;
-    if (getOutputRasterSizeIssue(snapshot.width, snapshot.height, snapshot.pixelRatio)) {
-      showToast(t("exportImageTooLarge"), "warning");
-      return;
-    }
-    // The mutex serializes mount, validation, capture, and guaranteed unmount as one transaction.
-    const result = await runExportTransaction({
-      mutex: exportMutexRef.current,
-      snapshot,
-      mountSnapshot: async (mountedSnapshot, signal) => {
-        // Acquire the resource inside the mutex, before readiness can yield.
+    const resolveValidation = (validation: ReturnType<typeof getLiveExportCardValidation>) => validation.blockingReason
+      ? resolveExportSafetyMessage(validation.blockingReason, validation.lineStatus.totalLineCount, t, validation.lineStatus.maxLineCount)
+      : null;
+    return runImageOutputController({
+      action, state: parsedState, pixelRatio: getExportPixelRatio(exportQuality),
+      revision: exportRevisionRef.current, format: exportFormat, mutex: exportMutexRef.current,
+      blockingMessage: () => resolveValidation(getLiveExportCardValidation(parsedState, exportCardRef.current,
+        autoWidthReadiness.isStable && landscapeLayoutReadiness.isStable)) || resolveValidation(exportReadinessStore.getSnapshot()),
+      validate: (snapshot) => resolveValidation(getLiveExportCardValidation(snapshotAsAppState(snapshot, parsedState), captureCardRef.current)),
+      mount: async (snapshot, signal) => {
+        // The cover lease is acquired inside the output mutex before yielding.
         exportCoverObjectUrlRef.current = localCoverObjectUrlRef.current;
         setActiveOutputAction(action);
-        setActiveExportSnapshot(mountedSnapshot);
-        return waitForExportSnapshotNode(() => captureCardRef.current, mountedSnapshot.id, signal);
+        setActiveExportSnapshot(snapshot);
+        return waitForExportSnapshotNode(() => captureCardRef.current, snapshot.id, signal);
       },
-      validateSnapshot: (mountedSnapshot) => {
-        if (getOutputRasterSizeIssue(mountedSnapshot.width, mountedSnapshot.height, mountedSnapshot.pixelRatio)) {
-          return t("exportImageTooLarge");
-        }
-        const snapshotState = snapshotAsAppState(mountedSnapshot, parsedState);
-        const validation = getLiveExportCardValidation(snapshotState, captureCardRef.current);
-        return validation.blockingReason
-          ? resolveExportSafetyMessage(validation.blockingReason, validation.lineStatus.totalLineCount, t, validation.lineStatus.maxLineCount)
-          : null;
-      },
-      captureSnapshot: (mountedSnapshot, node, signal) => action === "copy"
-        ? copyNodeAsPng(
-            node,
-            mountedSnapshot.width,
-            mountedSnapshot.height,
-            mountedSnapshot.pixelRatio,
-            signal
-          )
-        : exportNodeAsImage(
-            node,
-            mountedSnapshot.fileName,
-            mountedSnapshot.format,
-            mountedSnapshot.width,
-            mountedSnapshot.height,
-            mountedSnapshot.pixelRatio,
-            signal
-          ),
-      unmountSnapshot: () => {
+      unmount: () => {
         const retainedUrl = exportCoverObjectUrlRef.current;
         exportCoverObjectUrlRef.current = undefined;
         if (retainedUrl && retainedUrl !== localCoverObjectUrlRef.current) URL.revokeObjectURL(retainedUrl);
         setActiveExportSnapshot(null);
         setActiveOutputAction(null);
-      }
+      },
+      loadCapture: async () => ({ copyNodeAsPng, exportNodeAsImage }),
+      notify: showToast,
+      messages: { tooLarge: t("exportImageTooLarge"), busy: t("exportBusy"),
+        success: action === "copy" ? t("imageCopied") : copy.exportReady,
+        failed: action === "copy" ? t("copyImageFailed") : copy.exportFailed }
     });
-
-    if (result.ok) {
-      showToast(action === "copy" ? t("imageCopied") : copy.exportReady, "success");
-    } else if (result.kind === "busy") {
-      showToast(t("exportBusy"), "warning");
-    } else if (result.kind === "blocked") {
-      showToast(result.reason, "warning");
-    } else if (action === "copy" && result.error instanceof Error && result.error.name === "ImageClipboardSizeLimitError") {
-      showToast(t("exportImageTooLarge"), "warning");
-    } else {
-      console.error(`[Lyrics Card Generator Web Lite] ${action} image output failed`, result.error);
-      showToast(action === "copy" ? t("copyImageFailed") : copy.exportFailed, "error");
-    }
   }
 
   function completeAndExport() {
