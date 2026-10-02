@@ -1643,9 +1643,6 @@ button {
   min-height: 0;
 }
 
-.setting-row-adaptive {
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
-}
 
 /* Settings content: N = clamp(floor((W + gap) / (minimum + gap)), 1, 3).
    auto-fill retains the column width on incomplete rows. The third-width floor

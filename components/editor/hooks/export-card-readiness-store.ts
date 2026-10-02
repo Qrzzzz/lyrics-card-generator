@@ -97,10 +97,6 @@ export class ExportCardReadinessStore {
   }
 }
 
-export function useExportCardReadinessSnapshot(store: ExportCardReadinessStore) {
-  return useSyncExternalStore(store.subscribe, store.getSnapshot, store.getServerSnapshot);
-}
-
 const subscribeToNothing = () => () => {};
 const getNoReadinessSnapshot = () => null;
 

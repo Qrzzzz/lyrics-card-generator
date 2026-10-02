@@ -25,14 +25,6 @@ export const subtleControlTapTarget = { scale: 0.992 } as const;
 
 export type StepDirection = 1 | -1;
 
-export function opacityOnlyVariants(): Variants {
-  return {
-    initial: { opacity: 0 },
-    animate: { opacity: 1 },
-    exit: { opacity: 0 }
-  };
-}
-
 export function panelVariants(reducedMotion = false): Variants {
   if (reducedMotion) {
     return {

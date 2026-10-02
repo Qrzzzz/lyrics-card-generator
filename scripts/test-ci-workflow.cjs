@@ -64,7 +64,8 @@ assert.doesNotMatch(packageJson.scripts["core:test"], /test-electron-single-inst
 assert.match(packageJson.scripts["stability:test"], /test-electron-single-instance\.cjs/, "stability owns singleton regressions");
 assert.match(packageJson.scripts["stability:test"], /app-preference-save:test/, "stability owns preference-save regressions");
 assert.match(runtimeTests, /scripts\/test-remote-history\.cjs/, "measured runtime suite owns remote-history store tests");
-assert.match(packageJson.scripts["core:test"], /tsx scripts\/test-remote-history-session\.ts/, "core keeps remote-history session tests");
+assert.doesNotMatch(packageJson.scripts["core:test"], /test-remote-history-session\.ts/, "core does not exercise the retired history session implementation");
+assert.match(packageJson.scripts["background-composition:test"], /test-background-composition\.ts/, "core background fixtures exercise the current card renderer");
 assert.match(packageJson.scripts["core:test"], /npm run autosave:test/, "core retains draft durability regressions");
 assert.match(packageJson.scripts["desktop:interaction-test"], /npm run desktop:autosave-test/, "Windows CI retains actual close and recovery tests");
 assert.match(pagesWorkflow, /npm run web-lite:check/, "Pages verifies the committed artifact before deployment");

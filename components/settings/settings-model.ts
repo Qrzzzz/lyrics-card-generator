@@ -21,5 +21,3 @@ export type SettingsTabDefinition = {
   icon: LucideIcon;
   contentWidth: SettingsContentWidth;
 };
-
-export const DEFAULT_SETTINGS_TAB: SettingsTabId = "general";

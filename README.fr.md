@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v6.5.10.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v6.5.11.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="./docs/development.en.md">Développement local</a> ·
@@ -76,19 +76,19 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 
 
-* Programme d’installation Windows x64 : `Lyrics.Card.Generator.Setup.6.5.10.exe`
+* Programme d’installation Windows x64 : `Lyrics.Card.Generator.Setup.6.5.11.exe`
 
 À partir de la v6.2.2, le programme Setup Windows x64 est le seul paquet distribué.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### v6.5.10 · Notes de version
+### v6.5.11 · Notes de version
 
-Date de publication : 2026-10-02
+Date de publication : 2026-10-03
 
-v6.5.10 améliore l’enregistrement de nombreux brouillons, unifie la validation des styles et des paramètres IA et protège les données lorsque l’historique dépasse sa limite.
+v6.5.11 est une mise à jour de maintenance qui supprime des implémentations internes inutilisées et des points d’entrée redondants. Les parcours d’édition, d’enregistrement des brouillons et d’exportation des images restent identiques.
 
-[简体中文](./docs/releases/v6.5.10.zh-CN.md) · [繁體中文](./docs/releases/v6.5.10.zh-TW.md) · [English](./docs/releases/v6.5.10.en.md) · [Français](./docs/releases/v6.5.10.fr.md) · [日本語](./docs/releases/v6.5.10.ja.md) · [Español](./docs/releases/v6.5.10.es.md)
+[简体中文](./docs/releases/v6.5.11.zh-CN.md) · [繁體中文](./docs/releases/v6.5.11.zh-TW.md) · [English](./docs/releases/v6.5.11.en.md) · [Français](./docs/releases/v6.5.11.fr.md) · [日本語](./docs/releases/v6.5.11.ja.md) · [Español](./docs/releases/v6.5.11.es.md)
 
 <a id="fonctionnalités-principales"></a>
 

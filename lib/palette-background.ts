@@ -28,10 +28,6 @@ export type HslColor = {
   l: number;
 };
 
-export function resolveAutoTextColor() {
-  return "#F8F4EA";
-}
-
 export function hexToRgb(hex: string): RgbColor {
   const normalized = normalizeHex(hex);
   return {
@@ -115,17 +111,6 @@ export function adjustLightness(color: string, lightness: number, saturationScal
       h: hsl.h,
       s: clamp01(hsl.s * saturationScale),
       l: clamp01(lightness)
-    })
-  );
-}
-
-export function scaleSaturation(color: string, amount: number) {
-  const hsl = rgbToHsl(hexToRgb(color));
-  return rgbToHex(
-    hslToRgb({
-      h: hsl.h,
-      s: clamp01(hsl.s * amount),
-      l: hsl.l
     })
   );
 }

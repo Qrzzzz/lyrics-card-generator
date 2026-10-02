@@ -269,13 +269,6 @@ export function insertUnit(
   });
 }
 
-export function removeUnit(document: LyricDocumentV2, unitId: string) {
-  return updateUnitContainer(document, unitId, (block, index) => ({
-    ...block,
-    units: block.units.toSpliced(index, 1)
-  }));
-}
-
 export function updateUnit(
   document: LyricDocumentV2,
   unitId: string,
@@ -293,10 +286,6 @@ export function updateUnit(
           : { translation: undefined })
     })
   }));
-}
-
-export function updateTranslation(document: LyricDocumentV2, unitId: string, translation?: string[]) {
-  return updateUnit(document, unitId, { translation: translation ?? [] });
 }
 
 export function mergeUnits(document: LyricDocumentV2, firstUnitId: string, secondUnitId: string) {
