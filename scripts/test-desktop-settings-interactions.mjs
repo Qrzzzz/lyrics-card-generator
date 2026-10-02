@@ -20,7 +20,7 @@ const activeCompleteExportButtonSelector = '[data-testid="export-settings-panel"
 // assertions remain deterministic in the default regression run.
 const scenarioArgument = process.argv.find((value) => value.startsWith("--scenario="));
 const scenario = scenarioArgument?.slice("--scenario=".length);
-if (scenario && !["search", "song-import", "examples", "fonts", "titlebar"].includes(scenario)) throw new Error("Unknown desktop scenario: " + scenario);
+if (scenario && !["search", "song-import", "examples", "fonts", "titlebar", "lyrics-input"].includes(scenario)) throw new Error("Unknown desktop scenario: " + scenario);
 const runVisualDiagnostics = process.argv.includes("--visual-diagnostics");
 const builtInAutoWidthCases = [
   { id: "opalite", lyricLines: 4, translationLines: 4, min: 1360, max: 1400 },
@@ -542,6 +542,24 @@ async function assertLyricsInputEditingSemantics(originalLyrics, translationLyri
   await fillExact(originalLyrics, originalFixture);
   await fillExact(translationLyrics, translationFixture);
   await waitForLayoutStable(page.getByTestId("lyrics-workspace"));
+
+  // A native selection notification can arrive before the input's scheduled
+  // viewport restoration. Keep both in one task to exercise that ordering.
+  const rapidSelection = await originalLyrics.evaluate(async (node) => {
+    node.focus();
+    const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, "value")?.set;
+    if (!setter) throw new Error("textarea value setter is unavailable");
+    setter.call(node, "rapid x selection");
+    node.setSelectionRange(7, 7);
+    node.dispatchEvent(new InputEvent("input", { bubbles: true, data: "x", inputType: "insertText" }));
+    node.setSelectionRange(6, 7);
+    node.dispatchEvent(new Event("select", { bubbles: true }));
+    node.dispatchEvent(new KeyboardEvent("keyup", { bubbles: true, key: "ArrowRight", shiftKey: true }));
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    return { start: node.selectionStart, end: node.selectionEnd, selectedText: node.value.slice(node.selectionStart, node.selectionEnd) };
+  });
+  assert.deepEqual(rapidSelection, { start: 6, end: 7, selectedText: "x" }, "a fresh native selection supersedes pending input restoration");
+  await fillExact(originalLyrics, originalFixture);
 
   const scrollCases = [
     { label: "top", line: 1, ratio: 0 },
@@ -4024,7 +4042,14 @@ try {
       "song-import": assertSongImportAsideBehavior,
       examples: assertExamplesSurfaceBehavior,
       fonts: assertFontPickerBehavior,
-      titlebar: assertTitlebarWindowInteractions
+      titlebar: assertTitlebarWindowInteractions,
+      "lyrics-input": async () => {
+        await page.locator('button[data-step-id="lyrics"]').click();
+        await page.getByTestId("lyrics-sidebar-tab-translation").click();
+        const toggle = page.getByTestId("translation-toggle");
+        if (await toggle.getAttribute("aria-checked") !== "true") await toggle.click();
+        await assertLyricsInputEditingSemantics(page.getByTestId("lyrics-editor-original"), page.getByTestId("lyrics-editor-translation"));
+      }
     };
     await scenarios[scenario]();
     console.log(JSON.stringify({ ok: true, scenario, isolatedUserData: true }));

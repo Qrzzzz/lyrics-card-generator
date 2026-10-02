@@ -14,7 +14,7 @@ JSON 读取器只返回 `unknown`。AI HTTP 路由先校验对象、字段类型
 
 ## 测试与覆盖范围
 
-`npm run desktop:scenario-test -- --scenario=search` 可单独运行 search、song-import、examples、fonts、titlebar。每个子进程重新启动应用并创建独立 userData，不继承其他场景的数据；不带参数依次运行五个隔离场景。`desktop:image-output-test` 另以独立 userData 检查真实 PNG/WebP/JPG 下载、解码格式、尺寸与快照卸载。原 `desktop:interaction-test` 连续流程作为过渡保留，像素和耗时诊断仍 opt-in。
+`npm run desktop:scenario-test -- --scenario=search` 可单独运行 search、song-import、examples、fonts、titlebar、lyrics-input。每个子进程重新启动应用并创建独立 userData，不继承其他场景的数据；不带参数依次运行六个隔离场景。lyrics-input 包含输入后立即更改选区的恢复竞争回归。`desktop:image-output-test` 另以独立 userData 检查真实 PNG/WebP/JPG 下载、解码格式、尺寸与快照卸载。原 `desktop:interaction-test` 连续流程作为过渡保留，像素和耗时诊断仍 opt-in。
 
 请求 schema 的错类型/超长负例、导出 late-block/mount failure/timeout 和草稿恢复负例属于行为检查。AI 传输逻辑从 main 导出为 `electron/ai-translation.js`，重定向回归直接调用该服务，取消 AST/new Function 抽取。偏好写入使用 `electron/app-preferences-writer.js`，直接校验原子文件、修订号/时间戳、并发、保存失败、队列恢复和损坏文件恢复。源码接线断言仅证明接线，不能替代运行行为。轮询间隔和受控慢 provider fixture 是调度工具；判断完成须依赖可观测状态。
 

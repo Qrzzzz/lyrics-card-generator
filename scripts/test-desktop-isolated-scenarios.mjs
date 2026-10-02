@@ -2,7 +2,7 @@ import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 const selected = process.argv.find((value) => value.startsWith("--scenario="))?.slice(11);
-const scenarios = ["search", "song-import", "examples", "fonts", "titlebar"];
+const scenarios = ["search", "song-import", "examples", "fonts", "titlebar", "lyrics-input"];
 if (selected && !scenarios.includes(selected)) throw new Error(`Unknown scenario ${selected}`);
 for (const scenario of selected ? [selected] : scenarios) {
   await new Promise((resolve, reject) => {

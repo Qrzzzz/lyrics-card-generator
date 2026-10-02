@@ -157,6 +157,16 @@ export function useLyricsViewportSession({
     anchorRef.current = { activeEditor, editors, viewportCenterRatio, scrollRatio };
     if (restorationPendingRef.current) {
       restoreSnapshotRef.current = anchorRef.current;
+      // Native selection updates after typing must supersede the input's
+      // deferred override before its restoration frame runs.
+      const latestSelection = preferredEditor && editors[preferredEditor];
+      if (latestSelection && restoreSelectionRef.current?.editor === preferredEditor) {
+        restoreSelectionRef.current = {
+          editor: preferredEditor,
+          start: latestSelection.selectionStart,
+          end: latestSelection.selectionEnd
+        };
+      }
     }
   }, [scrollRef, workspaceRef]);
 
