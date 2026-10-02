@@ -28,11 +28,13 @@ assert.equal(normalizeStoredPreferences({ locale: "de", userSettings: {} }), nul
 assert.equal(normalizeStoredPreferences({ locale: "en", userSettings: null }), null);
 
 const mainSource = readFileSync(resolve("electron/main.js"), "utf8");
-assert.match(mainSource, /let appPreferencesWriteQueue = Promise\.resolve\(\)/);
+const serviceSource = readFileSync(resolve("electron/app-preferences-service.js"), "utf8");
+assert.match(mainSource, /require\("\.\/app-preferences-service"\)/);
 assert.match(mainSource, /await enqueueAppPreferencesWrite\(preferences\)/);
-assert.match(mainSource, /require\("\.\/app-preferences-writer"\)/);
-assert.match(mainSource, /appPreferencesWriter\.write\(preferences\)/);
-assert.match(mainSource, /appPreferencesWriteQueue = operation/);
+assert.match(mainSource, /appPreferencesService\.write\(preferences\)/);
+assert.match(serviceSource, /require\("\.\/app-preferences-writer"\)/);
+assert.match(serviceSource, /queue = writer\.write\(preferences\)/);
+assert.match(serviceSource, /await queue\.catch/);
 
 async function testWriter() {
   const fs = require("node:fs/promises");

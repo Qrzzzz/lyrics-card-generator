@@ -4,7 +4,9 @@ const MAX_MANUAL_SAVE_ENVELOPE_CODE_UNITS = 2 * 1024 * 1024 + 64;
 // Keep this sandbox-safe duplicate synchronized with
 // resource-budgets.json#clipboardImage.encodedBytes. Sandboxed preloads cannot
 // require local CommonJS modules; main remains the authoritative PNG parser.
+// BEGIN GENERATED SHARED LIMITS
 const MAX_CLIPBOARD_IMAGE_ENCODED_BYTES = 167772160;
+// END GENERATED SHARED LIMITS
 const PNG_DATA_URL_PREFIX = "data:image/png;base64,";
 const NATIVE_DIALOG_TYPES = new Set(["info", "warning", "error", "question"]);
 

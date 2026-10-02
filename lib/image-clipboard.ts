@@ -1,7 +1,7 @@
 "use client";
 
 import { getLyricsCardDesktopApi } from "@/lib/desktop-api";
-import resourceBudgets from "@/electron/resource-budgets.json";
+import resourceBudgets from "@/shared/resource-budgets.json";
 
 const PNG_DATA_URL_PREFIX = "data:image/png;base64,";
 

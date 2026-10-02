@@ -2,7 +2,7 @@ import { resolveNeteaseSong } from "@/lib/music-search/netease";
 import { appApiErrorResponse, appLimitedJsonErrorResponse, appUpstreamErrorResponse } from "@/lib/app-api-errors";
 import { appMutationRejectionResponse, validateAppMutationRequest } from "@/lib/app-request";
 import { readLimitedJson } from "@/lib/json-request";
-import resourceBudgets from "@/electron/resource-budgets.json";
+import resourceBudgets from "@/shared/resource-budgets.json";
 import { z } from "zod";
 
 export const runtime = "nodejs";

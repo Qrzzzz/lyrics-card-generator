@@ -225,7 +225,7 @@ try {
     ["components/editor/LyricsFetchPanel.tsx", ["/api/fetch-lyrics"]],
     ["components/editor/SongLinkParser.tsx", ["/api/parse-song"]],
     ["components/editor/SongSearchParser.tsx", ["/api/search-song", "/api/resolve-searched-song"]],
-    ["components/editor/hooks/useEditorActions.ts", ["/api/parse-song"]]
+    ["lib/editor/history-gateway.ts", ["/api/parse-song", "/api/resolve-searched-song", "/api/parse-local-audio"]]
   ] as const) {
     const source = readFileSync(file, "utf8");
     assert.match(source, /createAppRequestHeaders/, `${file} uses the shared app request marker`);

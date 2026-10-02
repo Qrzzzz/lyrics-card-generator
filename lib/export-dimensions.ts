@@ -1,4 +1,4 @@
-import resourceBudgets from "@/electron/resource-budgets.json";
+import resourceBudgets from "@/shared/resource-budgets.json";
 
 export const EXPORT_CANVAS_DIMENSION_LIMIT = resourceBudgets.clipboardImage.maxDimension;
 export const CLIPBOARD_IMAGE_PIXEL_LIMIT = resourceBudgets.clipboardImage.decodedPixels;

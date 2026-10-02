@@ -1,60 +1,12 @@
-import { DEFAULT_AI_SETTINGS, type AICustomPreset, type AILocalePromptOverrides, type AIPromptLibrary, type AISettings, type SaveAISettingsInput } from "@/lib/ai/types";
-import { isEditableTranslationStyle, isTranslationStyle } from "@/lib/ai/styles";
+import type { AICustomPreset, AILocalePromptOverrides, AIPromptLibrary } from "@/lib/ai/types";
 import type { Locale } from "@/lib/types";
 
-const CUSTOM_PRESET_ID = /^custom:[a-z0-9-]{1,64}$/i;
-const LOCALES: Locale[] = ["zh", "zh-TW", "en", "fr", "ja", "es"];
-
-/**
- * Treats persisted prompt data as untrusted input, migrates the legacy shape,
- * deduplicates identifiers, and enforces the UI's text and preset limits.
- */
-export function normalizePromptLibrary(input: unknown): AIPromptLibrary {
-  const source = input && typeof input === "object" ? input as Record<string, unknown> : {};
-  const hiddenStyleIds = Array.from(new Set(
-    Array.isArray(source.hiddenStyleIds) ? source.hiddenStyleIds.filter(isEditableTranslationStyle) : []
-  ));
-  const rawLocaleOverrides = source.localeOverrides && typeof source.localeOverrides === "object"
-    ? source.localeOverrides as Partial<Record<Locale, unknown>>
-    : {};
-  const localeOverrides: AIPromptLibrary["localeOverrides"] = {};
-  for (const locale of LOCALES) {
-    const normalized = normalizeLocaleOverrides(rawLocaleOverrides[locale]);
-    if (normalized.styleOverrides.length) {
-      localeOverrides[locale] = normalized;
-    }
-  }
-
-  // Migrate the short-lived v4.6 development schema without leaking its text into every locale.
-  if (!localeOverrides.zh && source.styleOverrides) {
-    const legacy = normalizeLocaleOverrides(source);
-    if (legacy.styleOverrides.length) localeOverrides.zh = legacy;
-  }
-
-  const normalizedCustom = (Array.isArray(source.customPresets) ? source.customPresets : [])
-    .filter((item): item is AICustomPreset => Boolean(item && typeof item === "object" && typeof item.id === "string" && CUSTOM_PRESET_ID.test(item.id)))
-    .map((item) => {
-      const title = cleanText(item.title, 60);
-      const prompt = cleanText(item.prompt, 4000);
-      return {
-        id: item.id,
-        title,
-        prompt,
-        initialTitle: cleanText(item.initialTitle, 60) || title,
-        initialPrompt: cleanText(item.initialPrompt, 4000) || prompt
-      };
-    })
-    .filter(isValidCustomPreset);
-  const customPresets = Array.from(new Map(normalizedCustom.map((item) => [item.id, item])).values()).slice(0, 2);
-
-  return { localeOverrides, hiddenStyleIds, customPresets };
-}
+export { normalizePromptLibrary, normalizeAISettings } from "@/shared/ai-settings";
 
 export function getLocalePromptOverrides(library: AIPromptLibrary, locale: Locale): AILocalePromptOverrides {
   const overrides = library.localeOverrides[locale];
   return { formatRulesOverride: "", styleOverrides: overrides?.styleOverrides ?? [] };
 }
-
 export function setLocalePromptOverrides(library: AIPromptLibrary, locale: Locale, overrides: AILocalePromptOverrides): AIPromptLibrary {
   const localeOverrides = { ...library.localeOverrides };
   if (overrides.styleOverrides.length) localeOverrides[locale] = { ...overrides, formatRulesOverride: "" };
@@ -64,40 +16,4 @@ export function setLocalePromptOverrides(library: AIPromptLibrary, locale: Local
 
 export function isValidCustomPreset(preset: Pick<AICustomPreset, "title" | "prompt">) {
   return Boolean(preset.title.trim() && preset.prompt.trim());
-}
-
-export function normalizeAISettings(input: Partial<SaveAISettingsInput>): AISettings {
-  const temperature = Number(input.temperature);
-  const promptLibrary = normalizePromptLibrary(input.promptLibrary);
-  const requestedDefault = typeof input.defaultStyle === "string" ? input.defaultStyle : "";
-  // A hidden built-in or missing custom preset cannot remain the active default.
-  const builtInAvailable = isTranslationStyle(requestedDefault)
-    && (requestedDefault === "recommended" || !promptLibrary.hiddenStyleIds.includes(requestedDefault));
-  const customAvailable = promptLibrary.customPresets.some((preset) => preset.id === requestedDefault);
-  return {
-    baseUrl: typeof input.baseUrl === "string" && input.baseUrl.trim() ? input.baseUrl.trim() : DEFAULT_AI_SETTINGS.baseUrl,
-    model: typeof input.model === "string" ? input.model.trim() : "",
-    temperature: Number.isFinite(temperature) ? Math.min(2, Math.max(0, temperature)) : DEFAULT_AI_SETTINGS.temperature,
-    defaultStyle: builtInAvailable || customAvailable ? requestedDefault : DEFAULT_AI_SETTINGS.defaultStyle,
-    reasoningEnabled: Boolean(input.reasoningEnabled),
-    promptLibrary
-  };
-}
-
-function normalizeLocaleOverrides(input: unknown): AILocalePromptOverrides {
-  const source = input && typeof input === "object" ? input as Record<string, unknown> : {};
-  const styleOverrides = Array.from(new Map(
-    (Array.isArray(source.styleOverrides) ? source.styleOverrides : [])
-      .filter((item) => item && isEditableTranslationStyle(item.id))
-      .map((item) => [item.id, {
-        id: item.id,
-        title: cleanText(item.title, 60),
-        prompt: cleanText(item.prompt, 4000)
-      }])
-  ).values());
-  return { formatRulesOverride: "", styleOverrides };
-}
-
-function cleanText(value: unknown, maxLength: number) {
-  return typeof value === "string" ? value.trim().slice(0, maxLength) : "";
 }

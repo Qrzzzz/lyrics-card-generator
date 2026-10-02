@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v6.5.9.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v6.5.10.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="./docs/development.en.md">Développement local</a> ·
@@ -76,19 +76,19 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 
 
-* Programme d’installation Windows x64 : `Lyrics.Card.Generator.Setup.6.5.9.exe`
+* Programme d’installation Windows x64 : `Lyrics.Card.Generator.Setup.6.5.10.exe`
 
 À partir de la v6.2.2, le programme Setup Windows x64 est le seul paquet distribué.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### v6.5.9 · Récupération des brouillons et sécurité
+### v6.5.10 · Notes de version
 
+Date de publication : 2026-10-02
 
+v6.5.10 améliore l’enregistrement de nombreux brouillons, unifie la validation des styles et des paramètres IA et protège les données lorsque l’historique dépasse sa limite.
 
-v6.5.9 corrige la récupération des brouillons et renforce le chargement des pochettes.
-
-[简体中文](./docs/releases/v6.5.9.zh-CN.md) · [繁體中文](./docs/releases/v6.5.9.zh-TW.md) · [English](./docs/releases/v6.5.9.en.md) · [Français](./docs/releases/v6.5.9.fr.md) · [日本語](./docs/releases/v6.5.9.ja.md) · [Español](./docs/releases/v6.5.9.es.md)
+[简体中文](./docs/releases/v6.5.10.zh-CN.md) · [繁體中文](./docs/releases/v6.5.10.zh-TW.md) · [English](./docs/releases/v6.5.10.en.md) · [Français](./docs/releases/v6.5.10.fr.md) · [日本語](./docs/releases/v6.5.10.ja.md) · [Español](./docs/releases/v6.5.10.es.md)
 
 <a id="fonctionnalités-principales"></a>
 

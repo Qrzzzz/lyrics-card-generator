@@ -1,3 +1,4 @@
+import { EditorAILifecycle } from "@/lib/editor/editor-ai-lifecycle";
 import { useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { SongLinkParser } from "../../../components/editor/SongLinkParser";
@@ -73,6 +74,7 @@ function Fixture() {
     state, view: { step: 0, exportFormat: "png", exportQuality: "high" }, enabled: true,
     onRestore: (next) => setState(next)
   });
+  const [aiLifecycle] = useState(() => new EditorAILifecycle());
   const actions = useEditorActions({
     autosave, parsedState: state, setState, cardRef: useRef<HTMLElement>(null),
     exportPixelRatio: 1, exportFormat: "png", exportBusyMessage: "busy", exportFailedMessage: "failed",
@@ -86,7 +88,7 @@ function Fixture() {
     },
     onNotify: (message) => { notices.push(message); },
     onCloseExamples() {}, onCloseHistory() {}, onClearTransientState() {},
-    onInvalidateDocument: () => undefined, isManualSaveBlocked: () => false
+    aiLifecycle
   });
   latest = { state, actions };
   return <>

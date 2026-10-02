@@ -567,7 +567,9 @@ function assertDesktopWiring() {
   const client = readFileSync("lib/ai/client.ts", "utf8");
   const prepare = readFileSync("scripts/prepare-electron-dist.mjs", "utf8");
   assert.match(readFileSync("electron/ai-translation.js", "utf8"), /consumeOpenAICompatibleSSE/);
-  assert.match(main, /require\("\.\/ai-translation"\)/);
+  assert.match(main, /require\("\.\/ai-service"\)/);
+  assert.match(main, /aiService\.register\(handle\)/);
+  assert.match(readFileSync("electron/ai-service.js", "utf8"), /require\("\.\/ai-translation"\)/);
   assert.match(readFileSync("electron/ai-translation.js", "utf8"), /createAIStreamDeadline/);
   assert.match(client, /consumeOpenAICompatibleSSE/);
   assert.match(client, /createAIStreamDeadline/);

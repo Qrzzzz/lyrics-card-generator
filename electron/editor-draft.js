@@ -6,52 +6,11 @@ const MAX_DRAFT_BYTES = 4 * 1024 * 1024;
 const MAX_COVER_BYTES = 20 * 1024 * 1024;
 const ASSET_ID = /^[a-f0-9]{64}\.(png|jpg|webp|gif)$/;
 const ORPHAN_RETENTION_MS = 24 * 60 * 60 * 1000;
-const BOOLEANS = new Set(["autoWidth", "autoHeight", "customFontEnabled", "allowMultiLineTitle", "showCover", "showSongInfo", "showAlbumName", "showGeneratedWatermark", "showSharedBy", "showWatermark", "showFineGrid"]);
-const NUMBERS = new Set(["width", "height", "customFontWeight", "lyricFontSize", "lineHeight", "translationScale", "coverCropScale"]);
-const STRINGS = new Set(["customFontFamily", "customFontLabel", "customTextColor", "resolvedTextColor", "instrumentalText", "sharedByText", "watermark"]);
-const ENUMS = {
-  separatorStyle: ["dot", "line"],
-  solidColorSource: ["auto", "user"],
-  backgroundMode: ["palette", "gradient", "solid"], layoutMode: ["portrait", "landscape"],
-  ratio: ["1:1", "4:5", "9:16", "16:9", "21:9", "3:2", "custom"],
-  font: ["sans-heavy", "serif-heavy", "system-sans", "system-serif"],
-  align: ["left", "center"], textColorMode: ["auto", "preset", "custom"],
-  textColorPreset: ["white", "black", "warmWhite", "cream", "charcoal", "softBlue", "softGold"],
-  contentMode: ["lyrics", "instrumental"], fineGridDensity: ["sparse", "medium", "dense"], customFontStyle: ["normal", "italic"]
-};
+const { normalizeDraftStyle } = require("../shared/card-style-contract");
+const { definitions } = require("../shared/card-style-schema.json");
 
 function object(value) { return value && typeof value === "object" && !Array.isArray(value); }
 function number(value) { return typeof value === "number" && Number.isFinite(value) && value >= 0 && value <= 100_000; }
-function text(value, length = 2048) { return typeof value === "string" && value.length <= length; }
-
-function normalizeDraftStyle(input) {
-  if (!object(input)) return null;
-  const style = {};
-  for (const [key, value] of Object.entries(input)) {
-    if (key === "solidColor") { if (typeof value !== "string" || !/^#[a-f0-9]{6}$/i.test(value)) return null; style[key] = value.toUpperCase(); }
-    else if (BOOLEANS.has(key)) { if (typeof value !== "boolean") return null; style[key] = value; }
-    else if (NUMBERS.has(key)) { if (!number(value)) return null; style[key] = value; }
-    else if (STRINGS.has(key)) { if (!text(value)) return null; style[key] = value; }
-    else if (ENUMS[key]) { if (!ENUMS[key].includes(value)) return null; style[key] = value; }
-  }
-  if (!style.contentMode || !style.layoutMode || !style.ratio || !style.font) return null;
-  if (input.fontScheme !== undefined) {
-    const font = input.fontScheme;
-    if (!object(font) || !["preset", "custom"].includes(font.mode) ||
-      !text(font.cjkFontFamily, 512) || !text(font.latinFontFamily, 512) ||
-      (font.presetId !== undefined && !["source-han-sans", "source-han-serif", "mona-sans"].includes(font.presetId))) return null;
-    style.fontScheme = { mode: font.mode, cjkFontFamily: font.cjkFontFamily, latinFontFamily: font.latinFontFamily,
-      ...(font.presetId ? { presetId: font.presetId } : {}) };
-  }
-  if (input.landscapeLayout !== undefined) {
-    const layout = input.landscapeLayout;
-    if (!object(layout) || typeof layout.autoLyricsWidth !== "boolean" || typeof layout.autoHeight !== "boolean" ||
-      !number(layout.lyricsWidth) || !number(layout.requestedHeight)) return null;
-    style.landscapeLayout = { autoLyricsWidth: layout.autoLyricsWidth, autoHeight: layout.autoHeight,
-      lyricsWidth: layout.lyricsWidth, requestedHeight: layout.requestedHeight };
-  }
-  return style;
-}
 
 function normalizeEditorDraft(input, normalizeContent) {
   if (!object(input) || input.version !== 1 || !object(input.view)) return null;
@@ -71,7 +30,7 @@ function normalizeEditorDraft(input, normalizeContent) {
   for (const key of ["lastPortraitSize", "lastPortraitCustomSize", "lastLandscapeSize"]) {
     const size = input[key];
     if (size === undefined) continue;
-    if (!object(size) || !ENUMS.ratio.includes(size.ratio) || !number(size.width) || !number(size.height) ||
+    if (!object(size) || !definitions.CardStyleInputs.fields.ratio.values.includes(size.ratio) || !number(size.width) || !number(size.height) ||
       (size.autoWidth !== undefined && typeof size.autoWidth !== "boolean") ||
       (size.autoHeight !== undefined && typeof size.autoHeight !== "boolean")) return null;
     result[key] = { ratio: size.ratio, width: size.width, height: size.height,

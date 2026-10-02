@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import resourceBudgets from "@/electron/resource-budgets.json";
+import resourceBudgets from "@/shared/resource-budgets.json";
 import {
   AIProviderConnectionError,
   testAIProviderConnection

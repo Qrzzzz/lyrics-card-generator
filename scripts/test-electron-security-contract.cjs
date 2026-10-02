@@ -80,9 +80,13 @@ const fontSchemePreviewSource = readFileSync("components/editor/font-scheme/Font
 const desktopHistoryInteractionSource = readFileSync("scripts/test-desktop-import-history-interactions.mjs", "utf8");
 // Source contracts complement unit behavior checks by proving that the hardened
 // helpers are actually wired into the privileged Electron entry point.
-const replayPayloadSource = mainSource.slice(
-  mainSource.indexOf("async function createImportHistoryReplayPayload"),
-  mainSource.indexOf("function mimeTypeForHistoryFile")
+const historyReplaySource = readFileSync("electron/history-replay.js", "utf8");
+const preferencesServiceSource = readFileSync("electron/app-preferences-service.js", "utf8");
+assert.match(mainSource, /createHistoryReplayGateway\(/);
+assert.match(mainSource, /historyReplayGateway\.createPayload/);
+const replayPayloadSource = historyReplaySource.slice(
+  historyReplaySource.indexOf("async function createImportHistoryReplayPayload"),
+  historyReplaySource.indexOf("function mimeTypeForHistoryFile")
 );
 const localAudioReplaySource = replayPayloadSource.slice(
   replayPayloadSource.indexOf('if (record.kind === "local-audio")'),
@@ -151,7 +155,7 @@ assert.ok(electronAppFilesMatch, "desktop preparation declares an explicit runti
 const electronAppFiles = JSON.parse(electronAppFilesMatch[1]);
 assert.equal(new Set(electronAppFiles).size, electronAppFiles.length, "the runtime allowlist has no duplicate entries");
 for (const relativePath of electronAppFiles) {
-  assert.match(relativePath, /^electron\/[a-z-]+\.(?:js|json)$/, "runtime entries stay inside the Electron source directory");
+  assert.match(relativePath, /^(?:electron|shared)\/[a-z-]+\.(?:js|json)$/, "runtime entries stay inside the explicit platform/shared source directories");
 }
 for (const fileName of [
   "font-directory-service.js",
@@ -174,7 +178,7 @@ assert.match(
 );
 assert.match(
   prepareElectronSource,
-  /for \(const relativePath of electronAppFiles\) \{\s*await cp\(path\.join\(projectRoot, relativePath\), path\.join\(appOutputDir, relativePath\)\);\s*\}/,
+  /for \(const relativePath of electronAppFiles\) \{\s*await mkdir\(path\.dirname\(path\.join\(appOutputDir, relativePath\)\), \{ recursive: true \}\);\s*await cp\(path\.join\(projectRoot, relativePath\), path\.join\(appOutputDir, relativePath\)\);\s*\}/,
   "desktop preparation copies every allowlisted file into the same relative app path"
 );
 assert.match(
@@ -306,7 +310,7 @@ assert.match(
 );
 assert.match(
   mainSource,
-  /let lastKnownAppPreferences = null;[\s\S]*?async function readAppPreferences\(\) \{[\s\S]*?await appPreferencesWriteQueue\.catch\(\(\) => undefined\);[\s\S]*?return lastKnownAppPreferences;/,
+  /appPreferencesService\.read\(\)/,
   "history-limit reads drain preference writes and retain the last validated value instead of destructively defaulting during a transient read failure"
 );
 assert.match(
@@ -314,7 +318,8 @@ assert.match(
   /handle\("lyrics-card:import-history-replay", async \(event, recordId\)[\s\S]*?importHistoryStore\.get\(recordId\)[\s\S]*?createImportHistoryReplayPayload\(record, undefined, event\.sender\.id\)/,
   "history replay resolves its source only from a validated stored record"
 );
-assert.match(mainSource, /readValidatedImportFile\(record\.kind, record\.source\.path\)/);
+assert.match(historyReplaySource, /readValidatedImportFile\(record\.kind, record\.source\.path\)/);
+assert.match(preferencesServiceSource, /await queue\.catch[\s\S]*?return lastKnown/);
 assert.doesNotMatch(
   replayPayloadSource,
   /await fs\.readFile\(/,
@@ -322,7 +327,7 @@ assert.doesNotMatch(
 );
 assert.match(
   replayPayloadSource,
-  /importHistoryFileStreams\.open\([\s\S]*?senderId,[\s\S]*?"local-audio"[\s\S]*?record\.source\.path/,
+  /fileStreams\.open\([\s\S]*?senderId,[\s\S]*?"local-audio"[\s\S]*?record\.source\.path/,
   "local-audio replay opens a sender-bound stable-handle stream from stored metadata"
 );
 assert.doesNotMatch(
@@ -486,7 +491,7 @@ assert.match(
 );
 assert.match(
   mainSource,
-  /await appPreferencesWriteQueue;\s*await aiSettingsStore\.flush\(\);\s*await flushImportHistoryOperations\(\);\s*allowWindowClose = true/,
+  /await appPreferencesService\.flush\(\);\s*await aiService\.flush\(\);\s*await flushImportHistoryOperations\(\);\s*allowWindowClose = true/,
   "window close is allowed only after preferences, AI settings, and import history are durable"
 );
 
