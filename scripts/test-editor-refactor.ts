@@ -7,7 +7,7 @@ import {
 } from "../components/editor/editor-defaults";
 import { resolveEditorThemeTokens } from "../components/editor/resolveEditorThemeTokens";
 import { normalizeAIErrorMessage } from "../components/editor/utils/normalizeAIErrorMessage";
-import { sizeSnapshot } from "../components/editor/utils/sizeSnapshot";
+import { sizeSnapshot } from "../lib/editor/size-snapshot";
 import { DEFAULT_FONT_SCHEME } from "../lib/font-schemes";
 import { DEFAULT_PALETTE } from "../lib/palette-background";
 import { normalizeUserSettings } from "../lib/settings/user-settings";

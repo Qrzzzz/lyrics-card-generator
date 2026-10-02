@@ -62,14 +62,6 @@ export function quoteSingleFontFamily(value: string) {
   return `"${family.replace(/["\\]/g, "\\$&")}"`;
 }
 
-export function isCustomFontActive(style: CardStyle) {
-  if (style.fontScheme) {
-    return getEffectiveFontScheme(style).mode === "custom";
-  }
-
-  return Boolean(style.customFontEnabled && sanitizeCssFontFamilyName(style.customFontFamily));
-}
-
 export function getActiveFontMode(style: CardStyle): "preset" | "custom" {
   return getEffectiveFontScheme(style).mode;
 }
@@ -127,17 +119,4 @@ export function getResolvedFontStyle(style: CardStyle): CSSProperties | undefine
 
 export function cardFontStyle(style: CardStyle): CSSProperties | undefined {
   return getResolvedFontStyle(style);
-}
-
-export function canBrowserUseFont(
-  fontFamily: string,
-  fontWeight = 400,
-  fontStyle: "normal" | "italic" = "normal"
-) {
-  if (typeof document === "undefined" || !("fonts" in document)) {
-    return true;
-  }
-
-  const quoted = quoteSingleFontFamily(fontFamily);
-  return quoted ? document.fonts.check(`${fontStyle} ${fontWeight} 16px ${quoted}`) : false;
 }

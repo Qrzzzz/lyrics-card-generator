@@ -1,15 +1,9 @@
 import {
-  createLyricDocumentV2,
-  isLyricDocumentV2,
   reconcileLyricDocumentV2,
   serializeLyricDocument,
   type LyricDocumentV2
 } from "@/lib/lyrics-document-v2";
 import type { AppState } from "@/lib/types";
-
-type LegacyDocumentState = Omit<AppState, "lyricDocument"> & {
-  lyricDocument?: unknown;
-};
 
 /**
  * Makes the structured document authoritative and refreshes every temporary
@@ -63,16 +57,4 @@ export function withLyricTranslation(
 
 export function withTranslationEnabled(current: AppState, translationEnabled: boolean) {
   return withLyricDocument(current, current.lyricDocument, translationEnabled);
-}
-
-/** Migrates persisted 5.x state once, then canonicalizes every projection. */
-export function migrateAppStateLyricsDocument(value: LegacyDocumentState): AppState {
-  const lyricDocument = isLyricDocumentV2(value.lyricDocument)
-    ? value.lyricDocument
-    : createLyricDocumentV2(value.lyrics ?? "", value.translationText ?? value.style.translationText ?? "");
-  return withLyricDocument(
-    { ...value, lyricDocument } as AppState,
-    lyricDocument,
-    value.translationEnabled ?? value.style.translationEnabled
-  );
 }

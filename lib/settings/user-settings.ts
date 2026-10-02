@@ -145,11 +145,6 @@ export function saveUserSettings(settings: UserSettings): UserSettings {
   return normalized;
 }
 
-export function mergeUserSettings(partial: Partial<UserSettings>): UserSettings {
-  const current = loadUserSettings();
-  return saveUserSettings({ ...current, ...partial });
-}
-
 export function resetUserSettings(
   current = loadUserSettings(),
   options: { persist?: boolean } = {}

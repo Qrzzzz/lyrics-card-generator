@@ -41,7 +41,6 @@ const electronAppFiles = [
   "electron/app-preferences-service.js",
   "electron/resource-budgets.json",
   "electron/ai-request-registry.js",
-  "electron/ai-prompt-settings.js",
   "electron/ai-settings-store.js",
   "electron/font-directory-service.js",
   "electron/font-options.js",

@@ -59,8 +59,8 @@ type LabelableFieldProps = {
 function isLabelableField(child: ReactNode): child is ReactElement<LabelableFieldProps> {
   return (
     isValidElement<LabelableFieldProps>(child) &&
-    [TextInput, Input, TextareaField, Textarea, SelectField, Select].includes(
-      child.type as typeof TextInput | typeof Input | typeof TextareaField | typeof Textarea | typeof SelectField | typeof Select
+    [TextInput, Input, TextareaField, SelectField].includes(
+      child.type as typeof TextInput | typeof Input | typeof TextareaField | typeof SelectField
     )
   );
 }
@@ -182,16 +182,8 @@ export function TextareaField(props: TextareaHTMLAttributes<HTMLTextAreaElement>
   return <textarea {...props} className={cn(fieldShellClass, "min-h-32 resize-y px-3 py-3", props.className)} />;
 }
 
-export function Textarea(props: TextareaHTMLAttributes<HTMLTextAreaElement>) {
-  return <TextareaField {...props} />;
-}
-
 export function SelectField(props: SelectHTMLAttributes<HTMLSelectElement>) {
   return <select {...props} className={cn(fieldShellClass, "h-11 px-3", props.className)} />;
-}
-
-export function Select(props: SelectHTMLAttributes<HTMLSelectElement>) {
-  return <SelectField {...props} />;
 }
 
 type SectionVariant = "plain" | "card" | "subtle";
@@ -230,38 +222,6 @@ export function Section({
       </div>
       <div className={cn("grid gap-4", contentClassName)}>{children}</div>
     </section>
-  );
-}
-
-type SettingRowProps = {
-  label: ReactNode;
-  description?: ReactNode;
-  children: ReactNode;
-  align?: "center" | "start";
-  className?: string;
-};
-
-export function SettingRow({
-  label,
-  description,
-  children,
-  align = "center",
-  className
-}: SettingRowProps) {
-  return (
-    <div
-      className={cn(
-        "setting-row-adaptive grid gap-3 border-b border-[rgb(var(--panel-border))] py-3 last:border-b-0",
-        align === "center" ? "items-center" : "items-start",
-        className
-      )}
-    >
-      <div className="min-w-0">
-        <div className="app-text-primary text-sm font-medium">{label}</div>
-        {description ? <div className="app-text-subtle mt-1 text-xs leading-5">{description}</div> : null}
-      </div>
-      <div className="min-w-0">{children}</div>
-    </div>
   );
 }
 
@@ -322,10 +282,6 @@ export function ToggleRow({
       </span>
     </motion.button>
   );
-}
-
-export function SwitchRow(props: ToggleRowProps) {
-  return <ToggleRow {...props} />;
 }
 
 type ActionButtonVariant = "default" | "primary" | "danger" | "ghost" | "icon";

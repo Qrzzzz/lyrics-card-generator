@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v6.5.10.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v6.5.11.en.md">Release Notes</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
   <a href="./docs/web-lite-browser-support.md">Web Lite Browser Support</a> ·
   <a href="#features">Features</a> ·
@@ -77,19 +77,19 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 
 
-* Windows x64 installer: `Lyrics.Card.Generator.Setup.6.5.10.exe`
+* Windows x64 installer: `Lyrics.Card.Generator.Setup.6.5.11.exe`
 
 Starting with v6.2.2, Windows x64 Setup is the only distributed desktop package.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v6.5.10 · Release Notes
+### v6.5.11 · Release Notes
 
-Release date: 2026-10-02
+Release date: 2026-10-03
 
-v6.5.10 improves saving with many drafts, unifies draft style and AI settings validation, and protects data when history exceeds its storage limit.
+v6.5.11 is a maintenance update that removes retired internal implementations and redundant entry points. Existing editing, draft saving, and image export workflows remain consistent.
 
-[简体中文](./docs/releases/v6.5.10.zh-CN.md) · [繁體中文](./docs/releases/v6.5.10.zh-TW.md) · [English](./docs/releases/v6.5.10.en.md) · [Français](./docs/releases/v6.5.10.fr.md) · [日本語](./docs/releases/v6.5.10.ja.md) · [Español](./docs/releases/v6.5.10.es.md)
+[简体中文](./docs/releases/v6.5.11.zh-CN.md) · [繁體中文](./docs/releases/v6.5.11.zh-TW.md) · [English](./docs/releases/v6.5.11.en.md) · [Français](./docs/releases/v6.5.11.fr.md) · [日本語](./docs/releases/v6.5.11.ja.md) · [Español](./docs/releases/v6.5.11.es.md)
 
 <a id="features"></a>
 

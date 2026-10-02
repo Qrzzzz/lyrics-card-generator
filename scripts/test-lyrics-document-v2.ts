@@ -4,6 +4,7 @@ import {
   applyUnitTranslations,
   createLyricDocumentV2,
   getLyricDocumentRows,
+  isLyricDocumentV2,
   insertUnit,
   mergeUnits,
   moveUnit,
@@ -23,6 +24,13 @@ const require = createRequire(import.meta.url);
 const { isCanonicalManualSaveEnvelope } = require("../electron/import-history.js") as {
   isCanonicalManualSaveEnvelope: (value: string) => boolean;
 };
+
+{
+  const source = "\u00a0\noriginal\n\u3000\n";
+  const document = createLyricDocumentV2(source);
+  assert.equal(isLyricDocumentV2(document), true, "Unicode blank lines remain a valid structured document");
+  assert.equal(serializeLyricDocument(document).source, source, "Unicode blank lines round-trip without rewriting authored text");
+}
 
 function idFactory() {
   let id = 0;
@@ -144,4 +152,4 @@ function idFactory() {
   assert.equal(isCanonicalManualSaveEnvelope(JSON.stringify(payload)), false);
 }
 
-console.log(JSON.stringify({ ok: true, lyricDocumentV2Tests: 37 }, null, 2));
+console.log(JSON.stringify({ ok: true, lyricDocumentV2Tests: 39 }, null, 2));
