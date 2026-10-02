@@ -6,7 +6,7 @@ import {
   UpstreamTimeoutError,
   withUpstreamDeadline
 } from "@/lib/upstream-control";
-import resourceBudgets from "@/electron/resource-budgets.json";
+import resourceBudgets from "@/shared/resource-budgets.json";
 
 const LATEST_RELEASE_URL = "https://api.github.com/repos/Qrzzzz/lyrics-card-generator/releases/latest";
 

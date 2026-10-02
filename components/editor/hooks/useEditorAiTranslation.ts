@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { normalizeAIErrorMessage } from "@/components/editor/utils/normalizeAIErrorMessage";
 import type { ToastNotifier } from "@/components/feedback/AppToast";
 import { systemDialogCopy } from "@/lib/system-dialog-copy";
@@ -24,7 +24,7 @@ import {
   type AITranslationPhase
 } from "@/lib/ai/types";
 import { getAIUiCopy } from "@/lib/ai/ui-copy";
-import { AITranslationOrchestrator } from "@/lib/editor/ai-translation-orchestrator";
+import type { EditorAILifecycle } from "@/lib/editor/editor-ai-lifecycle";
 import type {
   EditorDocumentSnapshot,
   TranslationValue
@@ -32,6 +32,7 @@ import type {
 import type { Locale } from "@/lib/types";
 
 type UseEditorAiTranslationInput = {
+  aiLifecycle: EditorAILifecycle;
   locale: Locale;
   lyrics: string;
   beginAITranslation: () => EditorDocumentSnapshot;
@@ -52,6 +53,7 @@ type UseEditorAiTranslationInput = {
 };
 
 export function useEditorAiTranslation({
+  aiLifecycle,
   locale,
   lyrics,
   beginAITranslation,
@@ -80,7 +82,6 @@ export function useEditorAiTranslation({
   const [aiFailure, setAIFailure] = useState<unknown>(null);
   const [aiSettings, setAISettings] = useState<AISettingsSummary>({ ...DEFAULT_AI_SETTINGS, hasApiKey: false });
   // The orchestrator owns cancellation, partial rollback, and revision/song-identity guards.
-  const aiOrchestratorRef = useRef(new AITranslationOrchestrator<TranslationValue, AITranslationPhase>());
   const aiCopy = useMemo(() => getAIUiCopy(locale), [locale]);
   const aiError = useMemo(
     () => aiFailure ? normalizeAIErrorMessage(aiFailure, locale) : "",
@@ -126,7 +127,7 @@ export function useEditorAiTranslation({
     }
     const intent = beginAITranslation();
 
-    await aiOrchestratorRef.current.run({
+    await aiLifecycle.run({
       revision: intent.revision,
       songIdentity: intent.songIdentity,
       previousTranslation: intent.translation,
@@ -207,15 +208,11 @@ export function useEditorAiTranslation({
   }
 
   function cancelAITranslation() {
-    aiOrchestratorRef.current.cancel();
+    aiLifecycle.cancel();
   }
 
   function invalidateAITranslation(reason: "document" | "ai-start" = "document") {
-    if (reason === "ai-start") {
-      aiOrchestratorRef.current.prepareReplacement();
-      return undefined;
-    }
-    return aiOrchestratorRef.current.invalidate();
+    return aiLifecycle.invalidateDocument(reason);
   }
 
   async function refreshAISettings() {

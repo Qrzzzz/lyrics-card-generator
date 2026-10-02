@@ -1,4 +1,6 @@
 const { app, BrowserWindow, Menu, clipboard, dialog, ipcMain, nativeImage, net, safeStorage, shell } = require("electron");
+const { createHistoryReplayGateway } = require("./history-replay");
+const { createAIService } = require("./ai-service");
 const { createRequire } = require("node:module");
 const { createAppUpdater } = require("./app-updater");
 const { resolveUpdateReleaseUrl } = require("./update-release-url");
@@ -8,22 +10,15 @@ const crypto = require("node:crypto");
 const fs = require("node:fs/promises");
 const http = require("node:http");
 const path = require("node:path");
-const { normalizePromptLibrary } = require("./ai-prompt-settings");
-const { AISettingsStore } = require("./ai-settings-store");
 const { createWindowsFontDirectoryService } = require("./font-directory-service");
-const { testProviderConnection } = require("./provider-response");
-const { streamAITranslationInMain, resolveAIProviderEndpoint, createAIError } = require("./ai-translation");
-const { resourceBudgets } = require("./ai-stream");
 const { normalizeStoredPreferences } = require("./user-preferences");
-const { createAppPreferencesWriter } = require("./app-preferences-writer");
-const { AIRequestRegistry } = require("./ai-request-registry");
+const { createAppPreferencesService } = require("./app-preferences-service");
 const { assertTrustedIpcEvent } = require("./ipc-security");
 const {
   ImportHistoryFileStreamRegistry,
   ImportHistoryStore,
   normalizeImportHistoryLimit,
   readValidatedImportFile,
-  toPublicImportHistoryRecord,
   validateImportFileDescriptor
 } = require("./import-history");
 const { resolveLocalAppUrl } = require("./local-app-url");
@@ -71,15 +66,11 @@ let normalWindowBounds = null;
 let windowMaximized = false;
 let windowRestoring = false;
 let lastEmittedWindowState = null;
-let appPreferencesWriteQueue = Promise.resolve();
-let lastKnownAppPreferences = null;
-let aiSettingsStore = null;
+let aiService = null;
 let importHistoryMutationQueue = Promise.resolve();
 // Window closure is a renderer-confirmed handshake so pending persistence can drain first.
 let allowWindowClose = false;
 let desktopUpdater = null;
-const aiTranslationRequests = new AIRequestRegistry();
-const aiConnectionTests = new AIRequestRegistry();
 // Renderer-supplied paths become sender-bound, expiring, one-use capabilities before later mutations.
 const importFileRegistrations = new Map();
 const importHistoryRelocations = new Map();
@@ -87,6 +78,7 @@ const importHistoryOperations = new Set();
 let importHistoryFileStreams = null;
 let importHistoryStore = null;
 let editorDraftAssets = null;
+let historyReplayGateway = null;
 let systemFontDirectoryService = null;
 // Ownership is decided before IPC registration, service startup, or BrowserWindow creation.
 const singleInstanceOwnership = acquireSingleInstanceOwnership({
@@ -96,19 +88,6 @@ const singleInstanceOwnership = acquireSingleInstanceOwnership({
 });
 startupTrace.mark("single-instance-ownership", { hasLock: singleInstanceOwnership.hasLock });
 
-const DEFAULT_AI_SETTINGS = {
-  baseUrl: "https://api.openai.com/v1",
-  model: "",
-  temperature: 0.7,
-  defaultStyle: "recommended",
-  reasoningEnabled: false,
-  promptLibrary: {
-    localeOverrides: {},
-    hiddenStyleIds: [],
-    customPresets: []
-  }
-};
-const TRANSLATION_STYLES = new Set(["lyrical", "faithful", "spoken", "imagistic", "restrained", "recommended"]);
 
 function waitForDevelopmentServer(url, timeoutMs = START_TIMEOUT_MS) {
   const startedAt = Date.now();
@@ -639,15 +618,7 @@ async function boot() {
 
 function initializePrimaryInstance() {
   startupTrace.mark("primary-initialize-start");
-  aiSettingsStore = new AISettingsStore({
-    filePath: getAISettingsPath(),
-    defaultSettings: DEFAULT_AI_SETTINGS,
-    normalizeStored: normalizeStoredAISettings,
-    onDiagnostic: ({ event, errorCode }) => {
-      // Diagnostics deliberately expose neither document contents nor credential material.
-      console.error("[ai-settings] persistence diagnostic", event, errorCode ?? "");
-    }
-  });
+  aiService = createAIService({ filePath: getAISettingsPath(), safeStorage });
   importHistoryFileStreams = new ImportHistoryFileStreamRegistry();
   const { EditorDraftAssets } = require("./editor-draft");
   editorDraftAssets = new EditorDraftAssets(path.join(app.getPath("userData"), "app-data", "draft-covers"));
@@ -655,6 +626,7 @@ function initializePrimaryInstance() {
     filePath: path.join(app.getPath("userData"), "app-data", "import-history.json"),
     draftAssets: editorDraftAssets
   });
+  historyReplayGateway = createHistoryReplayGateway({ draftAssets: editorDraftAssets, fileStreams: importHistoryFileStreams });
   setInterval(() => { void importHistoryStore.collectDraftAssets(); }, 60 * 60 * 1000).unref();
   systemFontDirectoryService = createWindowsFontDirectoryService({
     onError: (error) => console.error("[fonts] unable to list Windows fonts", error)
@@ -798,8 +770,8 @@ function registerDesktopIpc() {
   handle("lyrics-card:window-close-confirm", async () => {
     if (!mainWindow || mainWindow.isDestroyed()) return false;
     // Drain all main-process persistence before allowing the native close event through.
-    await appPreferencesWriteQueue;
-    await aiSettingsStore.flush();
+    await appPreferencesService.flush();
+    await aiService.flush();
     await flushImportHistoryOperations();
     allowWindowClose = true;
     try {
@@ -1108,119 +1080,7 @@ function registerDesktopIpc() {
     }
   }));
 
-  handle("lyrics-card:ai-settings-load", async () => {
-    const settings = await readAISettings();
-    return toAISettingsSummary(settings);
-  });
-
-  handle("lyrics-card:ai-settings-save", async (_event, input) => {
-    const normalized = normalizeAISettings(input);
-    const nextApiKey = typeof input?.apiKey === "string" ? input.apiKey.trim() : "";
-    let encryptedApiKey;
-
-    if (nextApiKey) {
-      // Never persist plaintext credentials; unsupported or plaintext-only OS backends are rejected below.
-      ensureSecureStorageAvailable();
-      encryptedApiKey = safeStorage.encryptString(nextApiKey).toString("base64");
-    }
-
-    // Credential preservation is decided inside the serialized store mutation,
-    // after every older save has completed, so an old read cannot drop a newer key.
-    const stored = await aiSettingsStore.save(normalized, {
-      credentialAction: nextApiKey ? "set" : "preserve",
-      encryptedApiKey
-    });
-    return toAISettingsSummary(stored);
-  });
-
-  handle("lyrics-card:ai-settings-api-key-clear", async () => {
-    // Clear is an explicit credential action and remains available even when a
-    // corrupt primary and backup make preservation unsafe.
-    const stored = await aiSettingsStore.save(null, { credentialAction: "clear" });
-    return toAISettingsSummary(stored);
-  });
-
-  handle("lyrics-card:ai-connection-test", async (event, requestId) => {
-    if (!isValidAIRequestId(requestId)) throw createAIError("invalid_request");
-    const sender = event.sender;
-    const controller = aiConnectionTests.begin(sender, requestId);
-    try {
-      const settings = await readAISettings();
-      if (controller.signal.aborted) throw controller.signal.reason;
-      const apiKey = decryptStoredApiKey(settings.encryptedApiKey);
-      validateAISettings(settings, apiKey);
-      await testProviderConnection({
-        baseUrl: settings.baseUrl,
-        model: settings.model,
-        apiKey,
-        signal: controller.signal
-      });
-      return true;
-    } catch (error) {
-      if (error instanceof Error && error.message.includes("AI_ERROR:")) throw error;
-      if (controller.signal.aborted) throw createAIError("cancelled");
-      if (error?.code === "response_too_large") throw createAIError("response_too_large");
-      if (error?.connectionTestCode) throw createAIError(error.connectionTestCode, error.diagnostic);
-      throw createAIError("network");
-    } finally {
-      aiConnectionTests.finish(sender, requestId, controller);
-    }
-  });
-
-  handle("lyrics-card:ai-connection-test-cancel", (event, requestId) => {
-    if (!isValidAIRequestId(requestId)) return { cancelled: false, active: false };
-    return aiConnectionTests.cancel(event.sender, requestId);
-  });
-
-  handle("lyrics-card:ai-translate", async (event, requestId, request) => {
-    if (!isValidAIRequestId(requestId) || typeof request?.prompt !== "string" || !request.prompt.trim()) {
-      throw createAIError("invalid_request");
-    }
-    if (Buffer.byteLength(request.prompt, "utf8") > resourceBudgets.jsonRequestBytes.aiTranslate) {
-      throw createAIError("request_too_large");
-    }
-
-    const sender = event.sender;
-    // Registry ownership ties cancellation and streamed output to this exact renderer and request generation.
-    const controller = aiTranslationRequests.begin(sender, requestId);
-
-    try {
-      const settings = await readAISettings();
-      if (controller.signal.aborted) throw controller.signal.reason;
-      const apiKey = decryptStoredApiKey(settings.encryptedApiKey);
-      validateAISettings(settings, apiKey);
-      return await streamAITranslationInMain({
-        settings,
-        apiKey,
-        prompt: request.prompt,
-        reasoning: Boolean(request.reasoning),
-        signal: controller.signal,
-        // Each callback rechecks ownership so replaced, cancelled, or destroyed senders receive no stale chunks.
-        onStatus: (phase) => {
-          if (aiTranslationRequests.isActive(sender, requestId, controller)) {
-            sender.send("lyrics-card:ai-translate-chunk", { requestId, kind: "status", phase });
-          }
-        },
-        onReasoningDelta: (delta) => {
-          if (aiTranslationRequests.isActive(sender, requestId, controller)) {
-            sender.send("lyrics-card:ai-translate-chunk", { requestId, kind: "reasoning", delta });
-          }
-        },
-        onDelta: (delta) => {
-          if (aiTranslationRequests.isActive(sender, requestId, controller)) {
-            sender.send("lyrics-card:ai-translate-chunk", { requestId, kind: "content", delta });
-          }
-        }
-      });
-    } finally {
-      aiTranslationRequests.finish(sender, requestId, controller);
-    }
-  });
-
-  handle("lyrics-card:ai-translate-cancel", (event, requestId) => {
-    if (!isValidAIRequestId(requestId)) return { cancelled: false, active: false };
-    return aiTranslationRequests.cancel(event.sender, requestId);
-  });
+  aiService.register(handle);
 }
 
 function trackImportHistoryMutation(operation) {
@@ -1252,6 +1112,7 @@ const IMPORT_HISTORY_DOMAIN_ERROR_CODES = new Set([
   "corrupt_backup_failed",
   "history_confirmation_stale",
   "history_migration_failed",
+  "history_storage_limit",
   "invalid_file",
   "invalid_kind",
   "invalid_record",
@@ -1309,103 +1170,7 @@ async function readImportHistoryLimit() {
   return normalizeImportHistoryLimit(preferences?.userSettings?.importHistoryLimit);
 }
 
-async function createImportHistoryReplayPayload(record, preparedFile, senderId) {
-  if (record.editorDraft) {
-    return { ok: true, kind: "draft", record: toPublicImportHistoryRecord(record),
-      draft: await editorDraftAssets.hydrate(record.id, record.editorDraft) };
-  }
-  if (record.kind === "link") {
-    return {
-      ok: true,
-      kind: "link",
-      record: toPublicImportHistoryRecord(record),
-      ...(record.lyricsSnapshot ? { lyricsSnapshot: record.lyricsSnapshot } : {}),
-      url: record.source.inputUrl || record.source.normalizedUrl || record.source.finalUrl
-    };
-  }
-  if (record.kind === "search") {
-    return {
-      ok: true,
-      kind: "search",
-      record: toPublicImportHistoryRecord(record),
-      ...(record.lyricsSnapshot ? { lyricsSnapshot: record.lyricsSnapshot } : {}),
-      query: record.source.query,
-      platform: record.source.platform,
-      songId: record.source.songId,
-      pageUrl: record.source.pageUrl || ""
-    };
-  }
-  if (record.kind === "manual-save") {
-    return {
-      ok: true,
-      kind: "manual-save",
-      record: toPublicImportHistoryRecord(record),
-      snapshot: record.snapshot
-    };
-  }
-
-  try {
-    if (record.kind === "local-audio") {
-      const stream = await importHistoryFileStreams.open(
-        senderId,
-        "local-audio",
-        preparedFile?.path ?? record.source.path
-      );
-      if (!stream.ok) return { ok: false, code: stream.code, canRelocate: true };
-      return {
-        ok: true,
-        kind: "local-audio",
-        record: toPublicImportHistoryRecord(record),
-        file: {
-          streamToken: stream.streamToken,
-          fileName: path.basename(stream.path),
-          size: stream.size,
-          mtimeMs: stream.mtimeMs,
-          mimeType: mimeTypeForHistoryFile(stream.extension),
-          changed: stream.size !== record.source.size || Math.abs(stream.mtimeMs - record.source.mtimeMs) > 1
-        }
-      };
-    }
-    const validated = preparedFile ?? await readValidatedImportFile(record.kind, record.source.path);
-    if (!validated.ok) return { ok: false, code: validated.code, canRelocate: true };
-    const changed = validated.size !== record.source.size || Math.abs(validated.mtimeMs - record.source.mtimeMs) > 1;
-    const file = {
-      // Bytes are returned for this replay only; history persists metadata and path, never file contents.
-      bytes: validated.bytes,
-      fileName: path.basename(validated.path),
-      size: validated.size,
-      mtimeMs: validated.mtimeMs,
-      mimeType: mimeTypeForHistoryFile(validated.extension),
-      changed
-    };
-    if (record.kind === "manual-cover") {
-      return {
-        ok: true,
-        kind: "manual-cover",
-        record: toPublicImportHistoryRecord(record),
-        file,
-        snapshot: record.snapshot
-      };
-    }
-    return { ok: false, code: "unsupported_file_kind", canRelocate: true };
-  } catch (error) {
-    return {
-      ok: false,
-      code: error?.code === "ENOENT" ? "file_missing" : "file_invalid",
-      canRelocate: true
-    };
-  }
-}
-
-function mimeTypeForHistoryFile(extension) {
-  if (extension === ".mp3") return "audio/mpeg";
-  if (extension === ".flac") return "audio/flac";
-  if (extension === ".m4a") return "audio/mp4";
-  if (extension === ".png") return "image/png";
-  if (extension === ".webp") return "image/webp";
-  if (extension === ".gif") return "image/gif";
-  return "image/jpeg";
-}
+const createImportHistoryReplayPayload = (...args) => historyReplayGateway.createPayload(...args);
 
 function getAISettingsPath() {
   return path.join(app.getPath("userData"), "ai-settings.json");
@@ -1437,117 +1202,6 @@ function isNativeDialogText(value, maximumLength, allowEmpty = false) {
     (allowEmpty || value.trim().length > 0);
 }
 
-const appPreferencesWriter = createAppPreferencesWriter({
-  getTargetPath: getAppPreferencesPath,
-  onPersisted: (persisted) => { lastKnownAppPreferences = persisted; }
-});
-
-function enqueueAppPreferencesWrite(preferences) {
-  const operation = appPreferencesWriter.write(preferences);
-  appPreferencesWriteQueue = operation;
-  return operation;
-}
-
-async function readAppPreferences() {
-  // A history mutation must never interpret the brief publication window of a
-  // preferences write as "use the default limit" and destructively trim an
-  // unlimited history. Drain the writer, then retain the last validated value
-  // as a fallback for transient filesystem read failures.
-  await appPreferencesWriteQueue.catch(() => undefined);
-  try {
-    const parsed = JSON.parse(await fs.readFile(getAppPreferencesPath(), "utf8"));
-    const preferences = normalizeStoredPreferences(parsed);
-    if (preferences) lastKnownAppPreferences = preferences;
-    return preferences ?? lastKnownAppPreferences;
-  } catch (error) {
-    if (error?.code !== "ENOENT") {
-      console.error("[app-preferences] unable to read preferences", error instanceof Error ? error.message : "unknown error");
-    }
-    return lastKnownAppPreferences;
-  }
-}
-
-async function readAISettings() {
-  return aiSettingsStore.read();
-}
-
-function normalizeStoredAISettings(input) {
-  if (!input || typeof input !== "object" || Array.isArray(input)) return null;
-  // Missing credential metadata is not equivalent to an explicit empty key.
-  // This is the boundary that prevents a syntactically valid partial JSON
-  // document from silently becoming a durable credential clear.
-  if (typeof input.encryptedApiKey !== "string") return null;
-  return { ...normalizeAISettings(input), encryptedApiKey: input.encryptedApiKey };
-}
-
-function normalizeAISettings(input) {
-  const temperature = Number(input?.temperature);
-  const promptLibrary = normalizePromptLibrary(input?.promptLibrary);
-  const requestedDefault = typeof input?.defaultStyle === "string" ? input.defaultStyle : "";
-  const defaultBuiltInAvailable = TRANSLATION_STYLES.has(requestedDefault)
-    && (requestedDefault === "recommended" || !promptLibrary.hiddenStyleIds.includes(requestedDefault));
-  const defaultCustomAvailable = promptLibrary.customPresets.some((preset) => preset.id === requestedDefault);
-  return {
-    baseUrl: typeof input?.baseUrl === "string" && input.baseUrl.trim()
-      ? input.baseUrl.trim()
-      : DEFAULT_AI_SETTINGS.baseUrl,
-    model: typeof input?.model === "string" ? input.model.trim() : "",
-    temperature: Number.isFinite(temperature) ? Math.min(2, Math.max(0, temperature)) : DEFAULT_AI_SETTINGS.temperature,
-    defaultStyle: defaultBuiltInAvailable || defaultCustomAvailable ? requestedDefault : DEFAULT_AI_SETTINGS.defaultStyle,
-    reasoningEnabled: Boolean(input?.reasoningEnabled),
-    promptLibrary
-  };
-}
-
-function toAISettingsSummary(settings) {
-  return {
-    baseUrl: settings.baseUrl,
-    model: settings.model,
-    temperature: settings.temperature,
-    defaultStyle: settings.defaultStyle,
-    reasoningEnabled: settings.reasoningEnabled,
-    promptLibrary: settings.promptLibrary,
-    hasApiKey: Boolean(settings.encryptedApiKey)
-  };
-}
-
-function decryptStoredApiKey(encryptedApiKey) {
-  if (!encryptedApiKey) {
-    return "";
-  }
-  ensureSecureStorageAvailable();
-  try {
-    return safeStorage.decryptString(Buffer.from(encryptedApiKey, "base64"));
-  } catch {
-    throw createAIError("api_key_read_failed");
-  }
-}
-
-function ensureSecureStorageAvailable() {
-  if (!safeStorage.isEncryptionAvailable()) {
-    throw createAIError("secure_storage_unavailable");
-  }
-  if (
-    process.platform === "linux"
-    && typeof safeStorage.getSelectedStorageBackend === "function"
-    && safeStorage.getSelectedStorageBackend() === "basic_text"
-  ) {
-    // Electron's Linux basic_text backend is obfuscation, not acceptable credential encryption.
-    throw createAIError("secure_storage_unavailable");
-  }
-}
-
-function validateAISettings(settings, apiKey) {
-  if (!apiKey.trim()) {
-    throw createAIError("missing_api_key");
-  }
-  if (!settings.model.trim()) {
-    throw createAIError("missing_model");
-  }
-  if (!settings.baseUrl?.trim()) throw createAIError("missing_base_url");
-  resolveAIProviderEndpoint(settings.baseUrl);
-}
-
-function isValidAIRequestId(value) {
-  return typeof value === "string" && /^[a-zA-Z0-9-]{8,80}$/.test(value);
-}
+const appPreferencesService = createAppPreferencesService({ getTargetPath: getAppPreferencesPath });
+const enqueueAppPreferencesWrite = (preferences) => appPreferencesService.write(preferences);
+const readAppPreferences = () => appPreferencesService.read();

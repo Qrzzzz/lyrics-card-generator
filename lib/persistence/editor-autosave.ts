@@ -63,8 +63,8 @@ export class EditorAutosave<T> {
   }
   update(snapshot: T, force = false) {
     const key = this.key(snapshot);
-    this.latest = structuredClone(snapshot);
     if (key === this.latestKey && !force) return;
+    this.latest = structuredClone(snapshot);
     this.latestKey = key;
     if (force) this.savedKey = "";
     this.lastEditAt = (this.options.now ?? Date.now)();

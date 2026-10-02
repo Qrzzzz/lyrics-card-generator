@@ -16,6 +16,7 @@ export function useEditorAutosave({ state, view, enabled, onRestore }: {
   onRestore: (state: AppState, view: EditorDraftView) => void;
 }) {
   const [status, setStatus] = useState<AutosaveStatus>("loading");
+  const [failureCode, setFailureCode] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
   const [restoredDraft, setRestoredDraft] = useState<{ recordId: string; title: string } | null>(null);
   const inputs = useRef({ state, view, enabled, onRestore });
@@ -40,7 +41,7 @@ export function useEditorAutosave({ state, view, enabled, onRestore }: {
         // A failed first import or an automatically trimmed source must not make
         // the full working draft permanently unsavable. Never reuse a deleted ID.
         if (!result.ok && result.code === "not_found") result = await desktop.beginEditorDraft();
-        if (!result.ok) throw new Error(result.code);
+        if (!result.ok) { setFailureCode(result.code); throw new Error(result.code); }
         if (generation.current !== ownGeneration) throw new Error("stale_draft");
         lease.current = result.data;
       }
@@ -60,9 +61,9 @@ export function useEditorAutosave({ state, view, enabled, onRestore }: {
       }
       if (generation.current !== ownGeneration) throw new Error("stale_draft");
       const result = await desktop.writeEditorDraft(ownedLease.recordId, ownedLease.token, ++revision.current, JSON.stringify(persisted));
-      if (!result.ok) throw new Error(result.code);
+      if (!result.ok) { setFailureCode(result.code); throw new Error(result.code); }
     },
-    onStatus: setStatus
+    onStatus: (status) => { setStatus(status); if (status !== "error") setFailureCode(null); }
   });
   const controller = controllerRef.current;
 
@@ -130,7 +131,7 @@ export function useEditorAutosave({ state, view, enabled, onRestore }: {
     setStatus("loading");
     try {
       const result = await desktop.loadActiveEditorDraft();
-      if (!result.ok) throw new Error(result.code);
+      if (!result.ok) { setFailureCode(result.code); throw new Error(result.code); }
       if (result.data) {
         await restore(result.data);
         if (draftHasContent(result.data.snapshot)) setRestoredDraft({
@@ -143,6 +144,7 @@ export function useEditorAutosave({ state, view, enabled, onRestore }: {
       setReady(true);
       controller.setEnabled(inputs.current.enabled === true);
     } catch (error) {
+      setFailureCode(error instanceof Error ? error.message : null);
       setStatus("error");
       throw error;
     }
@@ -197,7 +199,7 @@ export function useEditorAutosave({ state, view, enabled, onRestore }: {
       }
     });
   }
-  return { status, ready, reset, restore, clearActive, removed, restoredDraft, hasFormDraft: Boolean(view.songInfoDraft),
+  return { status, failureCode, ready, reset, restore, clearActive, removed, restoredDraft, hasFormDraft: Boolean(view.songInfoDraft),
     markUnsaved: () => controller.markUnsaved(),
     ownsUrl: (url: string) => readyRef.current && ownedUrl.current === url,
     flush: () => flushRef.current(),

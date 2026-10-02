@@ -908,7 +908,7 @@ async function streamFrameCoalescingAndUrgentTerminalTest() {
 }
 
 function productionAdapterWiringTest() {
-  const source = readFileSync("components/editor/hooks/useEditorActions.ts", "utf8");
+  const source = readFileSync("components/editor/hooks/useEditorDocumentCommands.ts", "utf8");
   assert.match(source, /documentStateAdapter\.queueDocumentMutation\(rollback, mutation\)/);
   assert.match(source, /documentStateAdapter\.queueRollback\(onInvalidateDocument\(\)\)/);
   assert.match(source, /if \(kind !== "history-replay"\)\s*\{\s*documentStateAdapter\.queueRollback/);

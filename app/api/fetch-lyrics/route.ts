@@ -4,7 +4,7 @@ import { appMutationRejectionResponse, validateAppMutationRequest } from "@/lib/
 import { readLimitedJson } from "@/lib/json-request";
 import { readResponseJsonBounded } from "@/lib/bounded-response";
 import { withUpstreamDeadline } from "@/lib/upstream-control";
-import resourceBudgets from "@/electron/resource-budgets.json";
+import resourceBudgets from "@/shared/resource-budgets.json";
 import { z } from "zod";
 
 export const runtime = "nodejs";

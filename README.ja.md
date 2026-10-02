@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v6.5.9.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v6.5.10.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="./docs/development.en.md">ローカル開発</a> ·
@@ -76,19 +76,19 @@
 
 
 
-* Windows x64 インストーラー：`Lyrics.Card.Generator.Setup.6.5.9.exe`
+* Windows x64 インストーラー：`Lyrics.Card.Generator.Setup.6.5.10.exe`
 
 v6.2.2 以降、配布するデスクトップパッケージは Windows x64 Setup のみです。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v6.5.9 · 下書きの復元とセキュリティ修正
+### v6.5.10 · リリースノート
 
+公開日：2026-10-02
 
+v6.5.10 は多数の下書きの保存処理を改善し、下書きのスタイルと AI 設定の検証を統一して、履歴が保存上限を超えた場合のデータを保護します。
 
-v6.5.9 はデスクトップの下書き復元とカバー読み込みの安全性を改善します。
-
-[简体中文](./docs/releases/v6.5.9.zh-CN.md) · [繁體中文](./docs/releases/v6.5.9.zh-TW.md) · [English](./docs/releases/v6.5.9.en.md) · [Français](./docs/releases/v6.5.9.fr.md) · [日本語](./docs/releases/v6.5.9.ja.md) · [Español](./docs/releases/v6.5.9.es.md)
+[简体中文](./docs/releases/v6.5.10.zh-CN.md) · [繁體中文](./docs/releases/v6.5.10.zh-TW.md) · [English](./docs/releases/v6.5.10.en.md) · [Français](./docs/releases/v6.5.10.fr.md) · [日本語](./docs/releases/v6.5.10.ja.md) · [Español](./docs/releases/v6.5.10.es.md)
 
 <a id="主な機能"></a>
 

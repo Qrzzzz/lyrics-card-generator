@@ -3,7 +3,7 @@ import { appApiErrorResponse, appLimitedJsonErrorResponse } from "@/lib/app-api-
 import { appMutationRejectionResponse, validateAppMutationRequest } from "@/lib/app-request";
 import { readLimitedJson } from "@/lib/json-request";
 import { SafeFetchError } from "@/lib/safe-fetch";
-import resourceBudgets from "@/electron/resource-budgets.json";
+import resourceBudgets from "@/shared/resource-budgets.json";
 import { z } from "zod";
 
 export const runtime = "nodejs";

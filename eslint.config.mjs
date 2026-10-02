@@ -10,7 +10,7 @@ const nextConfigs = compat
   .extends("next/core-web-vitals", "next/typescript")
   .map((entry) => ({
     ...entry,
-    ignores: [...(entry.ignores ?? []), "electron/**"]
+    ignores: [...(entry.ignores ?? []), "electron/**", "shared/**"]
   }));
 const electronRules = {
   ...js.configs.recommended.rules,
@@ -25,7 +25,7 @@ const config = [
   { ignores: [".next/**", "output/**", "coverage/**", "dist-desktop/**", "release/**", "playwright-report/**", "index.html", "scripts/**", "tmp/**", "next-env.d.ts"] },
   ...nextConfigs,
   {
-    ignores: ["electron/**"],
+    ignores: ["electron/**", "shared/**"],
     linterOptions: { reportUnusedDisableDirectives: "off" },
     rules: {
       "@next/next/no-img-element": "off",
@@ -33,7 +33,7 @@ const config = [
     }
   },
   {
-    files: ["electron/**/*.{cjs,js}"],
+    files: ["electron/**/*.{cjs,js}", "shared/**/*.js"],
     ...js.configs.recommended,
     languageOptions: {
       ecmaVersion: "latest",

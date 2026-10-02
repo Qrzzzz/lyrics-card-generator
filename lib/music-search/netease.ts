@@ -8,7 +8,7 @@ import {
   UpstreamTimeoutError,
   withUpstreamDeadline
 } from "@/lib/upstream-control";
-import resourceBudgets from "@/electron/resource-budgets.json";
+import resourceBudgets from "@/shared/resource-budgets.json";
 
 const SEARCH_ENDPOINT = "https://music.163.com/api/search/get/web";
 const DETAIL_ENDPOINT = "https://music.163.com/api/song/detail";

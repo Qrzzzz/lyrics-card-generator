@@ -4,6 +4,8 @@ const defaultPath = require("node:path");
 const { types: utilTypes, isDeepStrictEqual } = require("node:util");
 const { MAX_DRAFT_BYTES, normalizeEditorDraft } = require("./editor-draft");
 
+const { MAX_HISTORY_DOCUMENT_BYTES, historyBudgetError, readHistoryJson, hasRemovedHistoryRecords } = require("./history-budget");
+
 const IMPORT_HISTORY_SCHEMA_VERSION = 2;
 const LEGACY_IMPORT_HISTORY_SCHEMA_VERSION = 1;
 const DEFAULT_IMPORT_HISTORY_LIMIT = 10;
@@ -80,12 +82,17 @@ class ImportHistoryStore {
     now = () => Date.now(),
     createId = () => crypto.randomUUID(),
     performanceObserver = null,
-    draftAssets = null
+    draftAssets = null,
+    maximumDocumentBytes = MAX_HISTORY_DOCUMENT_BYTES
   }) {
     if (typeof filePath !== "string" || !path.isAbsolute(filePath)) {
       throw new TypeError("Import history requires an absolute file path.");
     }
+    if (!Number.isSafeInteger(maximumDocumentBytes) || maximumDocumentBytes < 1) {
+      throw new TypeError("History byte budget must be a positive safe integer.");
+    }
     this.filePath = filePath;
+    this.maximumDocumentBytes = maximumDocumentBytes;
     this.fs = fs;
     this.path = path;
     this.now = now;
@@ -164,7 +171,7 @@ class ImportHistoryStore {
       const document = await this.#ensureLoaded();
       const documents = [document];
       try {
-        const parsed = JSON.parse(await this.fs.readFile(`${this.filePath}.bak`, "utf8"));
+        const parsed = (await readHistoryJson(this.fs, `${this.filePath}.bak`, this.maximumDocumentBytes)).value;
         const backup = normalizeImportHistoryDocument(parsed, this.path);
         // An unreadable or partially normalized backup is not evidence of no references.
         if (!backup || backup.records.length !== parsed.records.length) return;
@@ -621,7 +628,9 @@ class ImportHistoryStore {
     let parsed;
     try {
       this.#observePerformance("read");
-      parsed = JSON.parse(await this.fs.readFile(this.filePath, "utf8"));
+      const read = await readHistoryJson(this.fs, this.filePath, this.maximumDocumentBytes);
+      parsed = read.value;
+      this.#observePerformance("read-bytes", { bytes: read.bytes });
     } catch (error) {
       if (error?.code === "ENOENT") {
         return this.#recoverCorruptDocument(false);
@@ -647,21 +656,21 @@ class ImportHistoryStore {
   }
 
   async #recoverCorruptDocument(corrupt = true) {
-    const backupPath = corrupt ? await preserveCorruptHistoryFile({
-      filePath: this.filePath,
-      fs: this.fs,
-      path: this.path,
-      now: this.now()
-    }) : "";
     let recovered = null;
     try {
-      const backup = JSON.parse(await this.fs.readFile(`${this.filePath}.bak`, "utf8"));
+      const backup = (await readHistoryJson(this.fs, `${this.filePath}.bak`, this.maximumDocumentBytes)).value;
       const candidate = normalizeImportHistoryDocument(backup, this.path);
       if (candidate && candidate.records.length === backup.records.length &&
           isDeepStrictEqual(candidate, backup)) {
         recovered = candidate;
       }
     } catch (error) { if (error?.code !== "ENOENT" && !(error instanceof SyntaxError)) throw error; }
+    const backupPath = corrupt ? await preserveCorruptHistoryFile({
+      filePath: this.filePath,
+      fs: this.fs,
+      path: this.path,
+      now: this.now()
+    }) : "";
     const empty = recovered ?? emptyHistoryDocument();
     if (corrupt || recovered) await this.#writeDocument(empty);
     if (corrupt) this.notice = {
@@ -673,6 +682,15 @@ class ImportHistoryStore {
   }
 
   async #writeDocument(document) {
+    const serialized = `${JSON.stringify(document, null, 2)}\n`;
+    const serializedBytes = Buffer.byteLength(serialized, "utf8");
+    this.#observePerformance("serialize", { bytes: serializedBytes });
+    // Check before touching the backup as well as the primary. Rejected writes
+    // leave the last durable document and its recovery assets intact.
+    if (serializedBytes > this.maximumDocumentBytes) throw historyBudgetError();
+    try {
+      if ((await this.fs.stat(`${this.filePath}.bak`)).size > this.maximumDocumentBytes) throw historyBudgetError();
+    } catch (error) { if (error?.code !== "ENOENT") throw error; }
     const directory = this.path.dirname(this.filePath);
     const temporary = `${this.filePath}.tmp-${process.pid}-${crypto.randomBytes(6).toString("hex")}`;
     await this.fs.mkdir(directory, { recursive: true });
@@ -680,15 +698,15 @@ class ImportHistoryStore {
       // Keep a last-known-good draft document. Deletion replaces this recovery
       // copy with the reduced document so recovery cannot resurrect removed work.
       if (this.document?.records.some((record) => record.editorDraft)) {
-        const removed = this.document.records.some((record) => !document.records.some((next) => next.id === record.id));
-        await writeHistoryRecoveryCopy(this.fs, `${this.filePath}.bak`, removed ? document : this.document);
+        const removed = hasRemovedHistoryRecords(this.document.records, document.records,
+          (event) => this.#observePerformance(event));
+        await writeHistoryRecoveryCopy(this.fs, `${this.filePath}.bak`, removed ? document : this.document,
+          (event, detail) => this.#observePerformance(event, detail));
       } else if (document.records.some((record) => record.editorDraft)) {
         // The first successfully saved draft also needs a durable recovery copy.
-        await writeHistoryRecoveryCopy(this.fs, `${this.filePath}.bak`, document);
+        await writeHistoryRecoveryCopy(this.fs, `${this.filePath}.bak`, document,
+          (event, detail) => this.#observePerformance(event, detail));
       }
-      const serialized = `${JSON.stringify(document, null, 2)}\n`;
-      const serializedBytes = Buffer.byteLength(serialized, "utf8");
-      this.#observePerformance("serialize", { bytes: serializedBytes });
       // Rename publishes a complete restricted file; a failed write leaves the previous document intact.
       this.#observePerformance("write", { bytes: serializedBytes });
       await this.fs.writeFile(temporary, serialized, {
@@ -801,10 +819,14 @@ async function renameHistoryFile(fs, source, target) {
   }
 }
 
-async function writeHistoryRecoveryCopy(fs, target, document) {
+async function writeHistoryRecoveryCopy(fs, target, document, observe = (_event, _detail) => {}) {
   const temporary = `${target}.tmp-${process.pid}-${crypto.randomBytes(6).toString("hex")}`;
   try {
-    await fs.writeFile(temporary, JSON.stringify(document), { encoding: "utf8", mode: 0o600 });
+    const serialized = JSON.stringify(document);
+    const bytes = Buffer.byteLength(serialized, "utf8");
+    observe("backup-serialize", { bytes });
+    observe("backup-write", { bytes });
+    await fs.writeFile(temporary, serialized, { encoding: "utf8", mode: 0o600 });
     const handle = await fs.open(temporary, "r+");
     try { await handle.sync(); } finally { await handle.close(); }
     await renameHistoryFile(fs, temporary, target);

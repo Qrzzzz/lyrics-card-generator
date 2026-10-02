@@ -259,7 +259,7 @@ assert.ok(
   readinessSource.includes("attributes: true") && readinessSource.includes('attributeFilter: ["class", "style"]'),
   "readiness rechecks overflow after measured geometry changes inline styles"
 );
-const editorActionsSource = readFileSync(resolve("components/editor/hooks/useEditorActions.ts"), "utf8");
+const editorActionsSource = readFileSync(resolve("components/editor/hooks/useEditorImageOutput.ts"), "utf8");
 assert.ok(
   editorActionsSource.includes("getExportBlockMessage?.(") &&
     editorActionsSource.includes("validate:") &&

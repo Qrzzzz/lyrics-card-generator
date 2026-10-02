@@ -1,5 +1,5 @@
 import type { Locale } from "@/lib/types";
-import { sanitizeProviderDiagnostic } from "@/electron/provider-response-contract";
+import { sanitizeProviderDiagnostic } from "@/shared/provider-response-contract";
 
 export type AIErrorCode = "missing_api_key" | "missing_model" | "missing_base_url" | "invalid_base_url" | "insecure_base_url" | "invalid_request" | "request_too_large" | "empty_prompt" | "network" | "timeout" | "stream_idle_timeout" | "stream_deadline_exceeded" | "provider_error" | "response_too_large" | "stream_incomplete" | "empty_stream" | "invalid_response" | "stream_event_too_large" | "stream_buffer_too_large" | "stream_output_too_large" | "stream_reasoning_too_large" | "empty_response" | "cancelled" | "request_failed" | "api_key_read_failed" | "secure_storage_unavailable" | "app_origin_configuration_error" | "cross_origin_request" | "missing_app_request_marker" | "unsupported_media_type" | "unknown";
 

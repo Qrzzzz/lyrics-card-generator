@@ -8,12 +8,13 @@ const deferredEditorSurfaces = read("components/editor/DeferredEditorSurfaces.ts
 const retryableLazySurface = read("components/editor/RetryableLazySurface.tsx");
 const editorHeader = read("components/editor/EditorHeader.tsx");
 const historyFloor = read("components/editor/HistoryFloor.tsx");
-const editorActions = read("components/editor/hooks/useEditorActions.ts");
+const editorActions = read("components/editor/hooks/useEditorDocumentCommands.ts") + "\n" + read("lib/editor/history-gateway.ts");
+assert.match(editorActions, /commitEditorHistoryReplay\(replay, intent, \{/);
 const editorSteps = read("components/editor/useEditorSteps.tsx");
 const desktopApi = read("lib/desktop-api.ts");
 const importHistoryTypes = read("lib/import-history.ts");
 const importHistoryStore = read("electron/import-history.js");
-const desktopMain = read("electron/main.js");
+const desktopMain = read("electron/main.js") + "\n" + read("electron/history-replay.js");
 const editorPreferences = read("components/editor/hooks/useEditorPreferences.ts");
 const songLinkParser = read("components/editor/SongLinkParser.tsx");
 const songSearchParser = read("components/editor/SongSearchParser.tsx");
@@ -147,7 +148,7 @@ assert.match(
   "manual replay provenance binds the exact sanitized replay URL"
 );
 assert.match(editorActions, /handleHistoryRecordRemoved[\s\S]*?startNewManualSaveSession/);
-const commitHistoryReplayIndex = editorActions.indexOf("async function commitHistoryReplay");
+const commitHistoryReplayIndex = editorActions.indexOf("async function commitEditorHistoryReplay");
 const manualReplayIndex = editorActions.indexOf('if (replay.kind === "manual-save")', commitHistoryReplayIndex);
 const manualReplayBranch = editorActions.slice(
   manualReplayIndex,

@@ -19,7 +19,7 @@ import {
   assertAICompletionBudgets,
   createAIStreamDeadline,
   resourceBudgets
-} from "@/electron/ai-stream";
+} from "@/shared/ai-stream";
 import { translateRequestSchema } from "@/lib/ai/request-schema";
 
 export const runtime = "nodejs";
