@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "rationale": "Baseline 2026-09-30: Web Lite HTML about 822 KB; complete CJK fonts 58,863,976 bytes. Allow about 15 percent HTML growth and 10 percent font growth; retain complete fonts and licenses. Stage budgets bound duplicated public resources and standalone dependency growth. Changes require an explained review. Local 6.5.9 stage: app 286,166 bytes, server 127,942,887 bytes; 2 MB shell ceiling and 145 MB server ceiling retain room for runtime variation while detecting large dependencies. Packaged runtime baseline 504,992,730 bytes, ceiling 550 MB (about 9 percent headroom); updater stage baseline 2,284,179 bytes, ceiling 3 MB.",
+  "webLite": {
+    "html": 950000,
+    "javascript": 850000,
+    "css": 170000
+  },
+  "source": {
+    "public/fonts": 66000000,
+    "public": 76000000,
+    "index.html": 950000
+  },
+  "desktopStage": {
+    "app": 2000000,
+    "server": 145000000,
+    "updater": 3000000
+  },
+  "packagedRuntime": 550000000
+}

@@ -38,10 +38,20 @@ An exception change must include all of the following in one reviewable update:
 5. Run `dependency-audit:gate`; for packaged dependencies, also rebuild and inspect the SBOM with `sbom:prepare` and `sbom:inspect`.
 6. Remove the exception as soon as the advisory disappears or a supported repair lands. The evaluator treats a stale exception as a failure.
 
-## Current exception
+## Current exceptions
+
+<!-- current-exceptions:start -->
+No active exceptions. Machine authority: `security/npm-audit-exceptions.json`.
+<!-- current-exceptions:end -->
+
+The checked-in document is verified by `npm run dependency-docs:test`. Audit results are time-specific; run the registry gate for current advisories.
+
+## Historical exception (closed by 2026-09-30, #150)
+
+Tracking: [#150](https://github.com/Qrzzzz/lyrics-card-generator/issues/150). The following describes the previous review, not an active exception.
 
 `GHSA-f88m-g3jw-g9cj` covers inherited libvips vulnerabilities in `sharp <0.35.0`. Next 15.5.23 declares optional `sharp ^0.34.3`; npm's supported remediation is a breaking Next 16 upgrade. Forcing Sharp 0.35 outside Next 15's declared range is not an acceptable patch-only repair.
 
 Sharp is present in the packaged standalone runtime. However, `next/image` is disabled and application/runtime code has no direct Sharp import or call site. Repository build/test scripts do import Sharp for controlled README media generation and packaged-static-asset checks; those paths are not executed by the shipped app. No product runtime libvips decode path has been identified. That is reduced reachability, not a claim that the package advisory is false.
 
-The exception expires on **2026-11-20**. Before that date, remove it by adopting a compatible Next 15 patch that supports Sharp 0.35 or by separately validating a Next 16 migration. Extension requires a new review, updated evidence, a new finite date, and the tracking issue history; it must not be renewed silently.
+The historical expiry was **2026-11-20**. The exception has since been removed; the current Next version is read from `package.json`. A future exception requires a new review, current evidence, and a finite expiry.

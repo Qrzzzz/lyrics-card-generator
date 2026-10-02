@@ -25,6 +25,8 @@ const electronAppFiles = [
   "electron/support-addresses.js",
   "electron/support-addresses.json",
   "electron/ai-stream.js",
+  "electron/ai-translation.js",
+  "electron/app-preferences-writer.js",
   "electron/resource-budgets.json",
   "electron/ai-request-registry.js",
   "electron/ai-prompt-settings.js",

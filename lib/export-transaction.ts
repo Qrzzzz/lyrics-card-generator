@@ -70,8 +70,7 @@ export async function runExportTransaction<BlockingReason extends string, Node>(
   } finally {
     clearTimeout(timeout);
     if (!controller.signal.aborted) controller.abort();
-    unmountSnapshot();
-    release();
+    try { unmountSnapshot(); } finally { release(); }
   }
 }
 

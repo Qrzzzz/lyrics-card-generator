@@ -5,6 +5,8 @@ import autoprefixer from "autoprefixer";
 import { build, transform } from "esbuild";
 import postcss from "postcss";
 import tailwindcss from "tailwindcss";
+import { enforceBudget, checkDistributionResources } from "./lib/distribution-budgets.mjs";
+import { versionFontReferences } from "./lib/font-cache-versions.mjs";
 
 const scriptsDirectory = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(scriptsDirectory, "..");
@@ -17,6 +19,8 @@ export async function buildWebLite(outputFile = path.join(projectRoot, "index.ht
     readFile(path.join(projectRoot, "package.json"), "utf8")
   ]);
   const packageJson = JSON.parse(packageJsonText);
+  if (inputCss !== await versionFontReferences(inputCss)) throw new Error("Font versions are stale: run npm run fonts:version");
+  const policy = JSON.parse(await readFile(path.join(projectRoot, "security/distribution-budgets.json"), "utf8"));
 
   const cssResult = await postcss([
     tailwindcss(path.join(projectRoot, "tailwind.config.ts")),
@@ -41,6 +45,7 @@ export async function buildWebLite(outputFile = path.join(projectRoot, "index.ht
     absWorkingDir: projectRoot,
     entryPoints: [path.join(projectRoot, "web-lite", "entry.tsx")],
     bundle: true,
+    metafile: true,
     write: false,
     format: "iife",
     platform: "browser",
@@ -72,6 +77,19 @@ export async function buildWebLite(outputFile = path.join(projectRoot, "index.ht
     // terminating the inline script element early.
     .replace("/* WEB_LITE_SCRIPT */", () => javascript.trim().replace(/<\/script/gi, "<\\/script"));
 
+  const sizes = {
+    html: enforceBudget("Web Lite HTML", Buffer.byteLength(html.replace(/\r\n/g, "\n")), policy.webLite.html),
+    javascript: enforceBudget("Web Lite JS", Buffer.byteLength(javascript), policy.webLite.javascript),
+    css: enforceBudget("Web Lite CSS", Buffer.byteLength(minifiedCss.code), policy.webLite.css)
+  };
+  const contributions = Object.entries(bundle.metafile.outputs).flatMap(([output, detail]) =>
+    Object.entries(detail.inputs).map(([input, value]) => ({ output, input, bytes: value.bytesInOutput }))
+  ).sort((a, b) => b.bytes - a.bytes);
+  const reportDirectory = path.join(projectRoot, "output", "resource-budgets");
+  await mkdir(reportDirectory, { recursive: true });
+  await writeFile(path.join(reportDirectory, "web-lite.json"), JSON.stringify({ sizes, contributions, metafile: bundle.metafile }, null, 2));
+  // Build and check share the same source resource gate.
+  await checkDistributionResources(projectRoot);
   await mkdir(path.dirname(outputFile), { recursive: true });
   await writeFile(outputFile, html.replace(/\r\n/g, "\n"), "utf8");
 

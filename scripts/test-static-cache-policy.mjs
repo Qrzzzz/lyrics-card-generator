@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { readFile, mkdtemp, mkdir, writeFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
+import { pathToFileURL } from "node:url";
 import nextConfig from "../next.config.mjs";
+import { fontVersion, versionFontReferences } from "./lib/font-cache-versions.mjs";
 
 const rules = await nextConfig.headers();
 const bySource = new Map(rules.map((rule) => [rule.source, new Map(rule.headers.map((header) => [header.key, header.value]))]));
@@ -19,8 +23,27 @@ const [globalsSource, staticAssetsSource, readinessSource] = await Promise.all([
   readFile("lib/static-assets.ts", "utf8"),
   readFile("app/api/desktop-ready/route.ts", "utf8")
 ]);
-assert.match(globalsSource, /SourceHanSansSC-Heavy\.otf\?v=4a8b2ee4f041fa56/);
-assert.match(globalsSource, /SourceHanSerifSC-Heavy\.otf\?v=d033af54f9653047/);
+assert.equal(globalsSource, await versionFontReferences(globalsSource), "every font URL matches current content");
+assert.ok([...globalsSource.matchAll(/url\("\/fonts\//g)].length >= 7, "all registered fonts are enumerated");
+assert.notEqual(fontVersion(Buffer.from("font-before")), fontVersion(Buffer.from("font-after")), "a font content mutation changes its cache key");
+const fixtureRoot = await mkdtemp(path.join(tmpdir(), "lyrics-font-version-"));
+try {
+  await mkdir(path.join(fixtureRoot, "public", "fonts"), { recursive: true });
+  const fontFile = path.join(fixtureRoot, "public", "fonts", "fixture.woff2");
+  const css = 'src: url("/fonts/fixture.woff2")';
+  const rootUrl = pathToFileURL(`${fixtureRoot}${path.sep}`);
+  await writeFile(fontFile, "font-before");
+  const before = await versionFontReferences(css, rootUrl);
+  await writeFile(fontFile, "font-after");
+  const after = await versionFontReferences(before, rootUrl);
+  assert.notEqual(before, after, "mutating the actual font fixture changes its CSS URL");
+  assert.equal(after, await versionFontReferences(after, rootUrl), "version generation is idempotent");
+} finally {
+  await rm(fixtureRoot, { recursive: true, force: true });
+}
+const fontRules = rules.filter((rule) => rule.source === "/fonts/:path*");
+assert.equal(fontRules[0].headers[0].value, "public, max-age=0, must-revalidate");
+assert.equal(fontRules[1].has[0].key, "v");
 assert.match(staticAssetsSource, /app-icon\.png\?v=\$\{APP_ICON_SHA256\.slice\(0, 16\)\}/);
 assert.match(readinessSource, /dynamic = "force-dynamic"/);
 assert.equal((readinessSource.match(/"Cache-Control": "no-store"/g) ?? []).length, 2);

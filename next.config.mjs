@@ -29,9 +29,14 @@ const nextConfig = {
         headers: [{ key: "Cache-Control", value: immutableCache }]
       },
       {
-        // Query-string content hashes in globals.css keep these full, unmodified
-        // fonts cacheable without subsetting or risking stale glyph data.
+        // Only content-versioned font requests get the immutable policy.
+        // Unversioned external references must revalidate after an upgrade.
         source: "/fonts/:path*",
+        headers: [{ key: "Cache-Control", value: "public, max-age=0, must-revalidate" }]
+      },
+      {
+        source: "/fonts/:path*",
+        has: [{ type: "query", key: "v", value: "[a-f0-9]{16}" }],
         headers: [{ key: "Cache-Control", value: immutableCache }]
       },
       {

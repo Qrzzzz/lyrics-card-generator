@@ -119,9 +119,9 @@ async function assertJsonRouteRequestBudgets() {
 
   const multibyte = new TextEncoder().encode(JSON.stringify({ value: "边界🙂" }));
   const legal = countingJsonRequest("/api/test", multibyte, { chunkSize: 1 });
-  const legalResult = await readLimitedJson<{ value: string }>(legal.request, multibyte.byteLength);
+  const legalResult = await readLimitedJson(legal.request, multibyte.byteLength);
   assert.equal(legalResult.ok, true);
-  if (legalResult.ok) assert.equal(legalResult.value.value, "边界🙂");
+  if (legalResult.ok) assert.deepEqual(legalResult.value, { value: "边界🙂" });
 }
 
 async function assertBoundedDecodedResponses() {
@@ -566,13 +566,16 @@ function assertDesktopWiring() {
   const main = readFileSync("electron/main.js", "utf8");
   const client = readFileSync("lib/ai/client.ts", "utf8");
   const prepare = readFileSync("scripts/prepare-electron-dist.mjs", "utf8");
-  assert.match(main, /consumeOpenAICompatibleSSE/);
-  assert.match(main, /createAIStreamDeadline/);
+  assert.match(readFileSync("electron/ai-translation.js", "utf8"), /consumeOpenAICompatibleSSE/);
+  assert.match(main, /require\("\.\/ai-translation"\)/);
+  assert.match(readFileSync("electron/ai-translation.js", "utf8"), /createAIStreamDeadline/);
   assert.match(client, /consumeOpenAICompatibleSSE/);
   assert.match(client, /createAIStreamDeadline/);
   const electronAppFiles = JSON.parse(prepare.match(/const electronAppFiles = (\[[\s\S]*?\]);/)?.[1] ?? "null") as string[] | null;
   assert.ok(Array.isArray(electronAppFiles), "desktop packaging declares its runtime allowlist");
   assert.ok(electronAppFiles.includes("electron/ai-stream.js"), "desktop packaging includes the bounded AI stream runtime");
+  assert.ok(electronAppFiles.includes("electron/ai-translation.js"), "desktop packaging includes the directly tested AI transport service");
+  assert.ok(electronAppFiles.includes("electron/app-preferences-writer.js"), "desktop packaging includes the directly tested preference writer");
   assert.ok(electronAppFiles.includes("electron/resource-budgets.json"), "desktop packaging includes the shared resource limits");
 }
 

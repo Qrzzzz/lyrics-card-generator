@@ -87,7 +87,7 @@ export function getLocalizedAppApiError(
   return code ? t(localizedKeys[code]) : fallback;
 }
 
-export function appLimitedJsonErrorResponse(reason: Exclude<LimitedJsonResult<unknown>, { ok: true }>["reason"]) {
+export function appLimitedJsonErrorResponse(reason: Exclude<LimitedJsonResult, { ok: true }>["reason"]) {
   if (reason === "too_large") return appApiErrorResponse("request_body_too_large", 413);
   if (reason === "cancelled") return appApiErrorResponse("client_cancelled", 499);
   return appApiErrorResponse("invalid_json", 400);
