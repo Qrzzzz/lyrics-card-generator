@@ -612,7 +612,7 @@ export function LyricEditor() {
           ...customThemeTokens
         } as unknown as React.CSSProperties}
       >
-      <DesktopTitleBar locale={state.locale} autosaveStatus={autosave.status}
+      <DesktopTitleBar locale={state.locale} titlebarStyle={userSettings.uiTitlebarStyle} autosaveStatus={autosave.status}
         onRetryAutosave={() => void autosave.retry().catch(() => undefined)} />
       <DynamicAppBackground palette={state.palette} settings={userSettings} />
       <ClickSpark enabled={userSettings.sparkCursorEnabled} themeColor={resolvedAccentColor}>

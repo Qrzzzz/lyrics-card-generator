@@ -321,7 +321,7 @@ export function SettingsSurface({
                           onChange={workspace.updateDraft}
                         />
                       ) : tab.id === "appearance" ? (
-                        <AppearanceSettingsSection settings={workspace.draft} copy={copy} onChange={workspace.updateDraft} />
+                        <AppearanceSettingsSection settings={workspace.draft} copy={copy} onChange={workspace.updateDraft} isDesktopShell={isDesktopShell} />
                       ) : tab.id === "export" ? (
                         <ExportSettingsSection settings={workspace.draft} copy={copy} onChange={workspace.updateDraft} />
                       ) : (

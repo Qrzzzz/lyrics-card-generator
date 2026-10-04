@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v6.5.11.zh-TW.md">發布說明</a> ·
+  <a href="./docs/releases/v6.6.0.zh-TW.md">發布說明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">線上 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="./docs/development.zh-CN.md">本機開發</a> ·
@@ -73,19 +73,19 @@
 
 
 
-* Windows x64 安裝版：`Lyrics.Card.Generator.Setup.6.5.11.exe`
+* Windows x64 安裝版：`Lyrics.Card.Generator.Setup.6.6.0.exe`
 
 從 v6.2.2 起僅提供 Windows x64 Setup 安裝程式。
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v6.5.11 · 發布說明
+### v6.6.0 · 發布說明
 
-發布日期：2026-10-03
+發布日期：2026-10-04
 
-v6.5.11 是維護性更新，清理已停用的內部實作與多餘入口，便於後續維護。現有編輯、草稿儲存與圖片匯出流程保持一致。
+v6.6.0 支援在桌面版中選擇紅綠燈或 Windows 風格頂欄，預設繼續使用紅綠燈。視窗按鈕的配置可以依個人習慣調整。
 
-[简体中文](./docs/releases/v6.5.11.zh-CN.md) · [繁體中文](./docs/releases/v6.5.11.zh-TW.md) · [English](./docs/releases/v6.5.11.en.md) · [Français](./docs/releases/v6.5.11.fr.md) · [日本語](./docs/releases/v6.5.11.ja.md) · [Español](./docs/releases/v6.5.11.es.md)
+[简体中文](./docs/releases/v6.6.0.zh-CN.md) · [繁體中文](./docs/releases/v6.6.0.zh-TW.md) · [English](./docs/releases/v6.6.0.en.md) · [Français](./docs/releases/v6.6.0.fr.md) · [日本語](./docs/releases/v6.6.0.ja.md) · [Español](./docs/releases/v6.6.0.es.md)
 
 ## ✨ 主要功能
 

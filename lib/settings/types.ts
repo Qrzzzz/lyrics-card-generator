@@ -2,6 +2,8 @@ import type { ImportHistoryLimit } from "@/lib/import-history";
 
 export type UiThemeMode = "album-dynamic" | "dark" | "light";
 
+export type UiTitlebarStyle = "traffic-lights" | "windows";
+
 export type EffectiveUiThemeId =
   | "album-dynamic"
   | "dark"
@@ -22,6 +24,7 @@ export type UserSettings = {
   sparkCursorEnabled: boolean;
   reduceMotionEnabled: boolean;
   uiThemeMode: UiThemeMode;
+  uiTitlebarStyle: UiTitlebarStyle;
   uiAcrylicEnabled: boolean;
   uiFontFamily: string;
   uiAccentMode: UiAccentMode;
@@ -59,6 +62,7 @@ export const DEFAULT_USER_SETTINGS: UserSettings = {
   sparkCursorEnabled: true,
   reduceMotionEnabled: false,
   uiThemeMode: "album-dynamic",
+  uiTitlebarStyle: "traffic-lights",
   uiAcrylicEnabled: false,
   uiFontFamily: "",
   uiAccentMode: "album-dynamic",

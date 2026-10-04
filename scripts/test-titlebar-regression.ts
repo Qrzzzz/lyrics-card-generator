@@ -35,7 +35,6 @@ assert.match(titlebarSource, /src=\{APP_ICON_URL\}/);
 assert.equal(APP_ICON_URL, "/app-icon.png?v=b3e613afa7695f7f");
 assert.match(titlebarSource, /<TitlebarGradualBlur \/>/);
 assert.doesNotMatch(titlebarSource, /aria-label="(?:Minimize|Maximize|Close)"/);
-assert.doesNotMatch(titlebarSource, /import\s+\{[^}]*\b(?:Minus|Square|Copy|X)\b[^}]*\}\s+from\s+"lucide-react"/);
 assert.match(gradualBlurSource, /blur\(14px\) saturate\(1\.08\)/);
 assert.doesNotMatch(gradualBlurSource, /TITLEBAR_BLUR_LAYERS|\.map\(/);
 assert.doesNotMatch(gradualBlurSource, /maskImage|WebkitMaskImage/);
