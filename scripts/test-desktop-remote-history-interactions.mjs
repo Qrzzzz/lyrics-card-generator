@@ -9,6 +9,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { closeElectronApplication } from "./electron-test-lifecycle.mjs";
 
 const executablePath = process.env.LYRICS_CARD_TEST_EXECUTABLE || path.resolve("release/win-unpacked/Lyrics Card Generator.exe");
+const clipboardFixture = process.argv.includes("--clipboard-fixture");
 const profile = await mkdtemp(path.join(tmpdir(), "lyrics-remote-transfer-ui-"));
 const report = path.resolve("playwright-report/desktop");
 await mkdir(report, { recursive: true });
@@ -24,6 +25,17 @@ const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR
 
 async function launch(first = false) {
   app = await electron.launch({ executablePath, env: { ...process.env, LYRICS_CARD_TEST_USER_DATA: profile }, timeout: 60_000 });
+  if (clipboardFixture) {
+    // Optional fixture for hosts without Win32 clipboard access. The default
+    // suite still verifies the real OS clipboard; this mode proves IPC/UI and
+    // persistence behavior only, and reports that distinction explicitly.
+    await app.evaluate(({ clipboard }) => {
+      let text = "";
+      clipboard.writeText = (value) => { text = value; };
+      clipboard.readText = () => text;
+      clipboard.clear = () => { text = ""; };
+    });
+  }
   await app.evaluate(({ dialog }) => { dialog.showMessageBox = async () => ({ response: 0, checkboxChecked: false }); });
   page = await app.firstWindow({ timeout: 60_000 });
   page.on("pageerror", (error) => errors.push(error.message));
@@ -78,8 +90,17 @@ async function search(keyword, total) {
     { timeout: 15_000 }).toBe(total);
 }
 async function copied(selector) {
+  await app.evaluate(({ clipboard }) => clipboard.clear());
   await page.getByTestId(selector).click();
   await page.waitForFunction(() => !document.querySelector('[data-testid="history-close-button"]').disabled);
+  // React may batch the busy transition around the async draft flush. Waiting
+  // for an enabled close button alone can finish before the copy IPC runs.
+  await expect.poll(() => app.evaluate(({ clipboard }) => {
+    try {
+      const data = JSON.parse(clipboard.readText());
+      return data.format === "lyrics-card-remote-history" && data.version === 1 && Array.isArray(data.records);
+    } catch { return false; }
+  }), { timeout: 15_000 }).toBe(true);
   return app.evaluate(({ clipboard }) => clipboard.readText());
 }
 async function paste(text) {
@@ -208,7 +229,7 @@ try {
   const lightAccessibility = await new AxeBuilder({ page }).setLegacyMode().include('[data-testid="history-transfer-dialog"]').analyze();
   assert.deepEqual(lightAccessibility.violations.filter((item) => item.impact === "serious" || item.impact === "critical"), []);
   assert.deepEqual(errors, []);
-  console.log(JSON.stringify({ ok: true, remoteHistoryDesktop: ["untouched lyrics", "step-two edits and translations", "filtered copy-all", "paste validation and deduplication", "stale preview", "same-song variants", "offline full-draft resume", "shutdown and restart", "dialog focus and accessibility"], counts }, null, 2));
+  console.log(JSON.stringify({ ok: true, clipboardMode: clipboardFixture ? "fixture (OS clipboard unverified)" : "native", remoteHistoryDesktop: ["untouched lyrics", "step-two edits and translations", "filtered copy-all", "paste validation and deduplication", "stale preview", "same-song variants", "offline full-draft resume", "shutdown and restart", "dialog focus and accessibility"], counts }, null, 2));
 } catch (error) {
   if (page) await page.screenshot({ path: path.join(report, "v627-history-failure.png") }).catch(() => {});
   throw error;

@@ -2,7 +2,7 @@ import { resolveNeteaseSong } from "@/lib/music-search/netease";
 import { appApiErrorResponse, appLimitedJsonErrorResponse, appUpstreamErrorResponse } from "@/lib/app-api-errors";
 import { appMutationRejectionResponse, validateAppMutationRequest } from "@/lib/app-request";
 import { readLimitedJson } from "@/lib/json-request";
-import resourceBudgets from "@/electron/resource-budgets.json";
+import resourceBudgets from "@/shared/resource-budgets.json";
 import { z } from "zod";
 
 export const runtime = "nodejs";
@@ -18,7 +18,7 @@ export async function POST(req: Request) {
     return appMutationRejectionResponse(rejection);
   }
 
-  const bodyResult = await readLimitedJson<unknown>(req, resourceBudgets.jsonRequestBytes.resolveSearchedSong);
+  const bodyResult = await readLimitedJson(req, resourceBudgets.jsonRequestBytes.resolveSearchedSong);
   if (!bodyResult.ok) return appLimitedJsonErrorResponse(bodyResult.reason);
 
   const parsed = schema.safeParse(bodyResult.value);

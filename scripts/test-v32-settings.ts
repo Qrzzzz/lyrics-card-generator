@@ -18,6 +18,10 @@ import type { AppState } from "../lib/types";
 // prove migrations preserve valid preferences while clamping unsafe values.
 const defaults = normalizeUserSettings(undefined);
 assert.equal(defaults.uiThemeMode, DEFAULT_USER_SETTINGS.uiThemeMode);
+assert.equal(defaults.uiTitlebarStyle, "traffic-lights", "new and legacy users keep the traffic lights by default");
+assert.equal(normalizeUserSettings({ uiTitlebarStyle: "windows" }).uiTitlebarStyle, "windows");
+assert.equal(normalizeUserSettings({ uiTitlebarStyle: "traffic-lights" }).uiTitlebarStyle, "traffic-lights");
+assert.equal(normalizeUserSettings({ uiTitlebarStyle: "native" }).uiTitlebarStyle, "traffic-lights", "unknown styles fall back safely");
 assert.equal(defaults.uiAcrylicEnabled, false);
 assert.equal(defaults.reduceMotionEnabled, false);
 assert.equal(defaults.uiAccentMode, "album-dynamic");
@@ -98,11 +102,13 @@ assert.equal(validateUiFontFamily("url(https://example.com/font)").valid, false)
 
 const scopedReset = resetUserSettings(normalizeUserSettings({
   uiThemeMode: "dark",
+  uiTitlebarStyle: "windows",
   defaultExportFormat: "webp",
   importHistoryLimit: "none",
   firstLaunchLanguageSelected: true
 }), { persist: false });
 assert.equal(scopedReset.uiThemeMode, DEFAULT_USER_SETTINGS.uiThemeMode);
+assert.equal(scopedReset.uiTitlebarStyle, "traffic-lights", "restore defaults also restores the title bar");
 assert.equal(scopedReset.defaultExportFormat, DEFAULT_USER_SETTINGS.defaultExportFormat);
 assert.equal(scopedReset.importHistoryLimit, "none");
 assert.equal(scopedReset.firstLaunchLanguageSelected, true);

@@ -344,10 +344,13 @@ async function testStaleCrashTemporaryCleanup(root) {
 function testMainProcessIntegrationContracts() {
   const mainSource = readFileSync(path.resolve("electron/main.js"), "utf8");
   const prepareSource = readFileSync(path.resolve("scripts/prepare-electron-dist.mjs"), "utf8");
-  assert.match(mainSource, /new AISettingsStore\(\{/);
-  assert.match(mainSource, /await aiSettingsStore\.flush\(\)/);
-  assert.match(mainSource, /credentialAction: nextApiKey \? "set" : "preserve"/);
-  assert.match(mainSource, /aiSettingsStore\.save\(null, \{ credentialAction: "clear" \}\)/);
+  const serviceSource = readFileSync(path.resolve("electron/ai-service.js"), "utf8");
+  assert.match(mainSource, /createAIService\(/);
+  assert.match(mainSource, /aiService\.register\(handle\)/);
+  assert.match(serviceSource, /new AISettingsStore\(\{/);
+  assert.match(mainSource, /await aiService\.flush\(\)/);
+  assert.match(serviceSource, /credentialAction: nextApiKey \? "set" : "preserve"/);
+  assert.match(serviceSource, /aiSettingsStore\.save\(null, \{ credentialAction: "clear" \}\)/);
   assert.match(prepareSource, /electron[\\/]ai-settings-store\.js/);
 }
 

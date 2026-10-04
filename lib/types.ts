@@ -1,5 +1,5 @@
 export type SongSource = "qq" | "netease" | "apple" | "spotify" | "unknown";
-export type Locale = "zh" | "zh-TW" | "en" | "fr" | "ja" | "es";
+export type Locale = import("@/shared/locales").Locale;
 
 export type SongInfo = {
   source: SongSource;
@@ -15,34 +15,22 @@ export type SongInfo = {
   parseMethod?: string;
 };
 
-export type CardLayoutMode = "portrait" | "landscape";
-export type CardRatio = "1:1" | "4:5" | "9:16" | "16:9" | "21:9" | "3:2" | "custom";
-export type CardFont = "sans-heavy" | "serif-heavy" | "system-sans" | "system-serif";
-export type CardAlign = "left" | "center";
-export type TextColorMode = "auto" | "preset" | "custom";
-export type TextColorPreset =
-  | "white"
-  | "black"
-  | "warmWhite"
-  | "cream"
-  | "charcoal"
-  | "softBlue"
-  | "softGold";
+export type CardLayoutMode = import("@/shared/card-style.generated").CardStyleInputs["layoutMode"];
+export type CardRatio = import("@/shared/card-style.generated").CardStyleInputs["ratio"];
+export type CardFont = import("@/shared/card-style.generated").CardStyleInputs["font"];
+export type CardAlign = import("@/shared/card-style.generated").CardStyleInputs["align"];
+export type TextColorMode = import("@/shared/card-style.generated").CardStyleInputs["textColorMode"];
+export type TextColorPreset = import("@/shared/card-style.generated").CardStyleInputs["textColorPreset"];
 
 export type PaletteKind = "colorful" | "monochrome" | "neutral" | "low-variance";
 export type PaletteRole = "base" | "subject" | "transition" | "highlight";
-export type ContentMode = "lyrics" | "instrumental";
-export type BackgroundGridDensity = "sparse" | "medium" | "dense";
+export type ContentMode = import("@/shared/card-style.generated").CardStyleInputs["contentMode"];
+export type BackgroundGridDensity = import("@/shared/card-style.generated").CardStyleInputs["fineGridDensity"];
 
-export type FontPresetId = "source-han-sans" | "source-han-serif" | "mona-sans";
-export type FontSchemeMode = "preset" | "custom";
+export type FontPresetId = NonNullable<import("@/shared/card-style.generated").FontSchemeInputs["presetId"]>;
+export type FontSchemeMode = import("@/shared/card-style.generated").FontSchemeInputs["mode"];
 
-export type FontScheme = {
-  mode: FontSchemeMode;
-  presetId?: FontPresetId;
-  cjkFontFamily: string;
-  latinFontFamily: string;
-};
+export type FontScheme = import("@/shared/card-style.generated").FontSchemeInputs;
 
 export type ExtractedPalette = {
   colors: string[];
@@ -129,54 +117,11 @@ export type CoverArtworkAnalysis = {
   status: "ready" | "error";
 };
 
-export type CardStyle = {
-  backgroundMode: "palette" | "gradient" | "solid";
-  solidColor?: string;
-  solidColorSource?: "auto" | "user";
+export type CardStyle = import("@/shared/card-style.generated").CardStyleInputs & {
   extractedPalette?: ExtractedPalette;
-  layoutMode: CardLayoutMode;
-  ratio: CardRatio;
-  width: number;
-  height: number;
-  autoWidth: boolean;
-  autoHeight: boolean;
-  font: CardFont;
-  fontScheme?: FontScheme;
-  customFontEnabled?: boolean;
-  customFontFamily?: string;
-  customFontLabel?: string;
-  customFontWeight?: number;
-  customFontStyle?: "normal" | "italic";
-  lyricFontSize: number;
-  lineHeight: number;
-  align: CardAlign;
-  textColorMode: TextColorMode;
-  textColorPreset: TextColorPreset;
-  customTextColor: string;
-  resolvedTextColor: string;
+  landscapePlan?: LandscapeLayoutPlan;
   translationEnabled: boolean;
   translationText: string;
-  translationScale: number;
-  allowMultiLineTitle: boolean;
-  contentMode: ContentMode;
-  instrumentalText: string;
-  showCover: boolean;
-  showSongInfo: boolean;
-  showAlbumName: boolean;
-  showGeneratedWatermark: boolean;
-  showSharedBy: boolean;
-  sharedByText: string;
-  showWatermark: boolean;
-  showFineGrid: boolean;
-  fineGridDensity: BackgroundGridDensity;
-  /** Missing in older drafts; defaults to the centered dot. */
-  separatorStyle?: import("@/lib/lyric-separator").LyricSeparatorStyle;
-  coverCropScale: number;
-  watermark: string;
-  /** Independent free-ratio landscape settings; legacy width/height remain portrait-only. */
-  landscapeLayout?: LandscapeLayoutSettings;
-  /** DOM-measured immutable geometry used by preview and export. */
-  landscapePlan?: LandscapeLayoutPlan;
 };
 
 export type CardSizeSnapshot = Pick<CardStyle, "ratio" | "width" | "height"> & {
@@ -188,12 +133,7 @@ export type CardSizeSnapshot = Pick<CardStyle, "ratio" | "width" | "height"> & {
  * Landscape sizing is deliberately separate from CardStyle.width/height.
  * Those legacy fields continue to describe the portrait canvas only.
  */
-export type LandscapeLayoutSettings = {
-  autoLyricsWidth: boolean;
-  lyricsWidth: number;
-  autoHeight: boolean;
-  requestedHeight: number;
-};
+export type LandscapeLayoutSettings = import("@/shared/card-style.generated").LandscapeLayoutInputs;
 
 export type LayoutRect = {
   x: number;

@@ -1,4 +1,4 @@
-import resourceBudgets from "@/electron/resource-budgets.json";
+import resourceBudgets from "@/shared/resource-budgets.json";
 
 export const MAX_LOCAL_AUDIO_BYTES = resourceBudgets.localAudio.fileBytes;
 

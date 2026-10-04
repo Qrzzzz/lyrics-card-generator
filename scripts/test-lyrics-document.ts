@@ -259,11 +259,12 @@ assert.ok(
   readinessSource.includes("attributes: true") && readinessSource.includes('attributeFilter: ["class", "style"]'),
   "readiness rechecks overflow after measured geometry changes inline styles"
 );
-const editorActionsSource = readFileSync(resolve("components/editor/hooks/useEditorActions.ts"), "utf8");
+const editorActionsSource = readFileSync(resolve("components/editor/hooks/useEditorImageOutput.ts"), "utf8");
 assert.ok(
-  editorActionsSource.includes("getExportBlockMessage?.(mountedSnapshot)") &&
-    editorActionsSource.includes("runExportTransaction"),
-  "the export action performs a fresh validation against the mounted immutable snapshot"
+  editorActionsSource.includes("getExportBlockMessage?.(") &&
+    editorActionsSource.includes("validate:") &&
+    editorActionsSource.includes("runImageOutputController"),
+  "the export action delegates its validation adapter to the shared output controller; mounted-snapshot behavior is tested by image-output:test"
 );
 
 console.log(JSON.stringify({ ok: true, lyricsDocumentTests: 33 }, null, 2));

@@ -16,6 +16,8 @@ This directory contains durable development, maintenance, testing, security, and
 
 ## 安全与测试 / Security and testing
 
+- [工程校验与输出治理](./engineering-validation.md)：请求 schema、共享导出、隔离场景、资源预算及文档政策。
+
 - [CI 与发布门禁职责](./testing/ci-gates.md)
 - [Dependency advisory policy](./security/dependency-advisory-policy.md)
 - [Background composition acceptance contract](./testing/background-composition.md)

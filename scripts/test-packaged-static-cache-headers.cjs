@@ -73,6 +73,10 @@ async function run() {
       };
     }
 
+    const unversionedFont = await request(url, "/fonts/MonaSans-VF.woff2", { method: "HEAD" });
+    assert.equal(unversionedFont.status, 200);
+    assert.equal(unversionedFont.headers["cache-control"], "public, max-age=0, must-revalidate", "unversioned font requests revalidate");
+
     const unauthenticated = await request(url, DESKTOP_READY_PATH);
     assert.equal(unauthenticated.status, 404);
     assert.equal(unauthenticated.headers["cache-control"], "no-store");

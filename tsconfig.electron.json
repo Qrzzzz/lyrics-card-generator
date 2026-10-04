@@ -14,7 +14,8 @@
   "include": [
     "electron/**/*.cjs",
     "electron/**/*.js",
-    "electron/**/*.mjs"
+    "electron/**/*.mjs",
+    "shared/**/*.js"
   ],
   "exclude": [
     ".next/**",

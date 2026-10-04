@@ -61,6 +61,18 @@ try {
     return Response.json({ choices: [{ message: { content: "translated" } }] });
   };
 
+  for (const [route, handler] of [["translate", translate], ["test-connection", testConnection]] as const) {
+    const badSettings = [null, [], 42, { apiKey: 123 }, { model: [] }, { baseUrl: false },
+      { temperature: "1" }, { temperature: -1 }, { temperature: 3 }, { model: "x".repeat(257) },
+      { apiKey: "x".repeat(8193) }, { baseUrl: "x".repeat(2049) }];
+    for (const body of [null, [], 12, ...badSettings.map((settings) => ({ settings })),
+      ...(route === "translate" ? [{ prompt: 123 }, { prompt: [] }, { reasoning: "yes" }, { prompt: "x".repeat(262145) }] : [])]) {
+      const result = await handler(jsonRequest('/api/ai/' + route, body));
+      assert.equal(result.status, 400, route + " rejects malformed transport input");
+      assert.equal((await result.json()).error.code, "invalid_request");
+    }
+  }
+  assert.equal(providerCalls, 0, "schema rejection never contacts a provider");
   const rejectedCrossSite = await translate(jsonRequest("/api/ai/translate", aiBody("http://127.0.0.1:11434/v1"), {
     origin: CROSS_SITE_ORIGIN
   }));
@@ -213,7 +225,7 @@ try {
     ["components/editor/LyricsFetchPanel.tsx", ["/api/fetch-lyrics"]],
     ["components/editor/SongLinkParser.tsx", ["/api/parse-song"]],
     ["components/editor/SongSearchParser.tsx", ["/api/search-song", "/api/resolve-searched-song"]],
-    ["components/editor/hooks/useEditorActions.ts", ["/api/parse-song"]]
+    ["lib/editor/history-gateway.ts", ["/api/parse-song", "/api/resolve-searched-song", "/api/parse-local-audio"]]
   ] as const) {
     const source = readFileSync(file, "utf8");
     assert.match(source, /createAppRequestHeaders/, `${file} uses the shared app request marker`);

@@ -46,16 +46,6 @@ type StylePanelProps = {
   t: ReturnType<typeof createT>;
 };
 
-export function StylePanel(props: StylePanelProps) {
-  return (
-    <div className="grid gap-4">
-      <FontSchemeSettingsPanel {...props} />
-      <LayoutSettingsPanel {...props} />
-      <VisualSettingsPanel {...props} />
-    </div>
-  );
-}
-
 export function FontSchemeSettingsPanel({
   style,
   onStyleChange,

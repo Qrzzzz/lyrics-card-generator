@@ -4,14 +4,14 @@ import { getChatCompletionMessage, getProviderErrorMessage, readProviderResponse
 import { DEFAULT_AI_SETTINGS } from "@/lib/ai/types";
 import { normalizeAISettings } from "@/lib/ai/settings-normalize";
 import { isAIErrorCode, parseSerializedAIError, type AIErrorCode } from "@/lib/ai/error-copy";
-import { sanitizeProviderDiagnostic } from "@/electron/provider-response-contract";
+import { sanitizeProviderDiagnostic } from "@/shared/provider-response-contract";
 import { ResponseBodyLimitExceededError } from "@/lib/bounded-response";
 import {
   AIStreamError,
   assertAICompletionBudgets,
   consumeOpenAICompatibleSSE,
   createAIStreamDeadline
-} from "@/electron/ai-stream";
+} from "@/shared/ai-stream";
 import type {
   AISettings,
   AISettingsSummary,

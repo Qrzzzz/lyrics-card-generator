@@ -1411,6 +1411,28 @@ test("exports a CORS-safe remote cover at standard and high pixel ratios", async
   await exportAndExpectDimensions(page, "high", 2160, 2160);
 });
 
+test("records actual font loading before and during image output", async ({ page }, testInfo) => {
+  test.setTimeout(120_000);
+  let phase = "startup";
+  const requests: Array<Promise<{ phase: string; url: string; bytes: number }>> = [];
+  page.on("response", (response) => {
+    if (!/\/fonts\/.*\.(otf|woff2)(\?|$)/.test(response.url())) return;
+    const requestPhase = phase;
+    requests.push(response.allHeaders().then((headers) => ({ phase: requestPhase, url: response.url(), bytes: Number(headers["content-length"] ?? 0) })));
+  });
+  await openWebLite(page, { width: 1280, height: 900 });
+  await page.evaluate(() => document.fonts.ready);
+  phase = "export";
+  await page.locator('[data-step-id="export"]').click();
+  await exportAndExpectFormat(page, "webp");
+  const report = await Promise.all(requests);
+  await mkdir(path.join(projectRoot, "output", "resource-budgets"), { recursive: true });
+  await writeFile(path.join(projectRoot, "output", "resource-budgets", "font-network.json"), JSON.stringify(report, null, 2));
+  await testInfo.attach("font-network-baseline", { body: Buffer.from(JSON.stringify(report, null, 2)), contentType: "application/json" });
+  expect(report.length).toBeGreaterThan(0);
+  expect(report.every((entry) => entry.bytes > 0 && /^[a-f0-9]{16}$/.test(new URL(entry.url).searchParams.get("v") ?? ""))).toBe(true);
+});
+
 test("exports WebP and JPG with matching filenames and file signatures", async ({ page }) => {
   test.setTimeout(120_000);
   await openWebLite(page, { width: 1280, height: 900 });

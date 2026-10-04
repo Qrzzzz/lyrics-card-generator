@@ -5,21 +5,21 @@
 /* Global font registration and theme-token defaults shared by desktop and Web Lite. */
 @font-face {
   font-family: "Mona Sans";
-  src: url("/fonts/MonaSans-VF.woff2") format("woff2");
+  src: url("/fonts/MonaSans-VF.woff2?v=62e40f6e14e5bbb9") format("woff2");
   font-style: normal;
   font-weight: 200 900;
   font-display: swap;
 }
 @font-face {
   font-family: "Mona Sans";
-  src: url("/fonts/MonaSans-Italic-VF.woff2") format("woff2");
+  src: url("/fonts/MonaSans-Italic-VF.woff2?v=6dd9d760c5fc0c9a") format("woff2");
   font-style: italic;
   font-weight: 200 900;
   font-display: swap;
 }
 @font-face {
   font-family: "Source Han Sans SC";
-  src: url("/fonts/SourceHanSansSC-Bold.otf") format("opentype");
+  src: url("/fonts/SourceHanSansSC-Bold.otf?v=3baae4d7da5af781") format("opentype");
   font-weight: 700;
   font-style: normal;
   font-display: swap;
@@ -558,6 +558,53 @@ body[data-window-maximized="true"] .app-shell[data-desktop-shell="true"] {
   --traffic-light-color: #28c840;
 }
 
+.desktop-titlebar[data-titlebar-style="windows"] .desktop-titlebar__brand {
+  padding-inline: 16px;
+  max-width: calc(50% - 40px);
+}
+
+.desktop-titlebar__controls,
+.desktop-titlebar__button {
+  -webkit-app-region: no-drag;
+}
+
+.desktop-titlebar__button {
+  display: grid;
+  width: 46px;
+  height: 100%;
+  place-items: center;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+  transition: background-color 140ms var(--motion-ease-standard), color 140ms var(--motion-ease-standard);
+}
+
+.desktop-titlebar__button:hover {
+  background: rgba(var(--app-fg), 0.12);
+}
+
+.desktop-titlebar__button:active {
+  background: rgba(var(--app-fg), 0.18);
+}
+
+.desktop-titlebar__button--close:hover {
+  color: #fff;
+  background: #c42b1c;
+}
+
+.desktop-titlebar__button--close:active {
+  color: #fff;
+  background: #a82418;
+}
+
+.desktop-titlebar__button:focus-visible {
+  outline: 2px solid var(--control-focus-color);
+  outline-offset: -3px;
+}
+
 /* Shared semantic text, surface, and interactive-control primitives. */
 .app-text-primary {
   color: var(--app-text-primary, rgb(var(--app-fg)));
@@ -973,17 +1020,17 @@ button {
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .app-shell button:not(:disabled):not([aria-disabled="true"]):not(.traffic-light):not(.example-song-card) {
+  .app-shell button:not(:disabled):not([aria-disabled="true"]):not(.traffic-light):not(.desktop-titlebar__button):not(.example-song-card) {
     transition-property: border-color, box-shadow, background, color, opacity, transform;
     transition-duration: var(--motion-duration-fast);
     transition-timing-function: var(--motion-ease-standard);
   }
 
-  .app-shell button:not(:disabled):not([aria-disabled="true"]):not(.traffic-light):not(.example-song-card):hover {
+  .app-shell button:not(:disabled):not([aria-disabled="true"]):not(.traffic-light):not(.desktop-titlebar__button):not(.example-song-card):hover {
     transform: translateY(-1px);
   }
 
-  .app-shell button:not(:disabled):not([aria-disabled="true"]):not(.traffic-light):not(.example-song-card):hover:active {
+  .app-shell button:not(:disabled):not([aria-disabled="true"]):not(.traffic-light):not(.desktop-titlebar__button):not(.example-song-card):hover:active {
     transform: translateY(0) scale(0.985);
   }
 }
@@ -1643,9 +1690,6 @@ button {
   min-height: 0;
 }
 
-.setting-row-adaptive {
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
-}
 
 /* Settings content: N = clamp(floor((W + gap) / (minimum + gap)), 1, 3).
    auto-fill retains the column width on incomplete rows. The third-width floor

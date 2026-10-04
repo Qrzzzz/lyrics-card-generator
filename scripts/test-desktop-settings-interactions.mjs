@@ -18,6 +18,9 @@ const exportOverflowTolerance = 4;
 const activeCompleteExportButtonSelector = '[data-testid="export-settings-panel"][data-active="true"] [data-testid="complete-export-button"]';
 // Visual metrics are diagnostic-only unless explicitly requested; behavioral
 // assertions remain deterministic in the default regression run.
+const scenarioArgument = process.argv.find((value) => value.startsWith("--scenario="));
+const scenario = scenarioArgument?.slice("--scenario=".length);
+if (scenario && !["search", "song-import", "examples", "fonts", "titlebar", "lyrics-input"].includes(scenario)) throw new Error("Unknown desktop scenario: " + scenario);
 const runVisualDiagnostics = process.argv.includes("--visual-diagnostics");
 const builtInAutoWidthCases = [
   { id: "opalite", lyricLines: 4, translationLines: 4, min: 1360, max: 1400 },
@@ -86,7 +89,7 @@ async function setWindowSize(width, height) {
     { width, height },
     { timeout: 10_000 }
   );
-  await page.waitForTimeout(260);
+  await waitForLayoutStable(page.getByTestId("editor-surface"));
 }
 
 async function assertSettingsHistoryBarChrome() {
@@ -194,11 +197,11 @@ async function prepareSettingsScreenshot() {
   await waitForLayoutStable(page.getByTestId("settings-surface"), 10_000);
   // Preference saves may finish just after navigation. Give the queue time to
   // publish its result, then wait until global transient feedback has cleared.
-  await page.waitForTimeout(500);
+  await waitForLayoutStable(page.getByTestId("settings-surface"));
   await page.waitForFunction(() => !Array.from(document.querySelectorAll('[data-testid="app-toast"]')).some((toast) => (
     toast instanceof HTMLElement && toast.getClientRects().length > 0
   )), undefined, { timeout: 10_000 });
-  await page.waitForTimeout(350);
+  await waitForLayoutStable(page.getByTestId("settings-surface"));
 }
 
 async function waitForLyricsLineBudget(expected, timeout = 5_000) {
@@ -268,18 +271,11 @@ async function waitForActiveDescendant(expected, timeout = 5_000) {
 }
 
 async function fillExact(locator, value, timeout = 5_000) {
-  const deadline = Date.now() + timeout;
-  let actual = "";
-  do {
+  await expect.poll(async () => {
     await locator.fill(value);
-    await page.waitForTimeout(100);
-    actual = await locator.inputValue();
-    if (actual === value) {
-      await page.waitForTimeout(100);
-      if (await locator.inputValue() === value) return;
-    }
-  } while (Date.now() < deadline);
-  assert.equal(actual, value, "controlled textarea settles on the exact fixture value");
+    return locator.inputValue();
+  }, { timeout }).toBe(value);
+  await expect(locator).toHaveValue(value, { timeout });
 }
 
 async function assertExportHost(stepLabel) {
@@ -341,21 +337,11 @@ function assertSameSelection(before, after, label) {
 }
 
 async function waitForSameSelection(editor, expected, timeout = 5_000) {
-  const deadline = Date.now() + timeout;
-  let current = await getLyricsContext(editor);
-  while (
-    Date.now() < deadline &&
-    (
-      current.start !== expected.start ||
-      current.end !== expected.end ||
-      current.selectedText !== expected.selectedText ||
-      current.lineIndex !== expected.lineIndex
-    )
-  ) {
-    await page.waitForTimeout(50);
-    current = await getLyricsContext(editor);
-  }
-  return current;
+  await expect.poll(async () => {
+    const current = await getLyricsContext(editor);
+    return { start: current.start, end: current.end, selectedText: current.selectedText, lineIndex: current.lineIndex };
+  }, { timeout }).toEqual({ start: expected.start, end: expected.end, selectedText: expected.selectedText, lineIndex: expected.lineIndex });
+  return getLyricsContext(editor);
 }
 
 async function selectLyricsRange(editor, start, end, scrollRatio = null) {
@@ -557,6 +543,24 @@ async function assertLyricsInputEditingSemantics(originalLyrics, translationLyri
   await fillExact(translationLyrics, translationFixture);
   await waitForLayoutStable(page.getByTestId("lyrics-workspace"));
 
+  // A native selection notification can arrive before the input's scheduled
+  // viewport restoration. Keep both in one task to exercise that ordering.
+  const rapidSelection = await originalLyrics.evaluate(async (node) => {
+    node.focus();
+    const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, "value")?.set;
+    if (!setter) throw new Error("textarea value setter is unavailable");
+    setter.call(node, "rapid x selection");
+    node.setSelectionRange(7, 7);
+    node.dispatchEvent(new InputEvent("input", { bubbles: true, data: "x", inputType: "insertText" }));
+    node.setSelectionRange(6, 7);
+    node.dispatchEvent(new Event("select", { bubbles: true }));
+    node.dispatchEvent(new KeyboardEvent("keyup", { bubbles: true, key: "ArrowRight", shiftKey: true }));
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    return { start: node.selectionStart, end: node.selectionEnd, selectedText: node.value.slice(node.selectionStart, node.selectionEnd) };
+  });
+  assert.deepEqual(rapidSelection, { start: 6, end: 7, selectedText: "x" }, "a fresh native selection supersedes pending input restoration");
+  await fillExact(originalLyrics, originalFixture);
+
   const scrollCases = [
     { label: "top", line: 1, ratio: 0 },
     { label: "middle", line: 41, ratio: 0.5 },
@@ -567,7 +571,7 @@ async function assertLyricsInputEditingSemantics(originalLyrics, translationLyri
     const marker = `input line ${String(testCase.line).padStart(2, "0")}`;
     const caret = originalFixture.indexOf(marker) + marker.length;
     await selectLyricsRange(originalLyrics, caret, caret, testCase.ratio);
-    await page.waitForTimeout(80);
+    await expect.poll(async () => { const selection = await getLyricsContext(originalLyrics); return { start: selection.start, end: selection.end }; }).toEqual({ start: caret, end: caret });
     const before = await getLyricsContext(originalLyrics);
     await originalLyrics.pressSequentially("x");
     await page.waitForFunction(
@@ -1469,14 +1473,14 @@ async function analyzeTitlebarVisualEffect(theme) {
   titlebarVisualMetrics.push({ theme, geometry, metrics });
 }
 
-async function assertTitlebarWindowInteractions() {
+async function assertTitlebarWindowInteractions(style = "traffic-lights") {
   await setWindowSize(1000, 700);
   const titlebar = page.locator(".desktop-titlebar");
   const effect = page.getByTestId("titlebar-gradual-blur");
   const buttons = [
-    page.locator(".traffic-light--close"),
-    page.locator(".traffic-light--minimize"),
-    page.locator(".traffic-light--maximize")
+    page.locator(style === "windows" ? ".desktop-titlebar__button--close" : ".traffic-light--close"),
+    page.locator(style === "windows" ? ".desktop-titlebar__button--minimize" : ".traffic-light--minimize"),
+    page.locator(style === "windows" ? ".desktop-titlebar__button--maximize" : ".traffic-light--maximize")
   ];
   const stacking = await page.evaluate(() => {
     const bar = document.querySelector(".desktop-titlebar");
@@ -1500,10 +1504,11 @@ async function assertTitlebarWindowInteractions() {
     assert.equal(
       await button.evaluate((node) => {
         const rect = node.getBoundingClientRect();
-        return document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2) === node;
+        return node.contains(document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2))
+          && getComputedStyle(node).getPropertyValue("-webkit-app-region") === "no-drag";
       }),
       true,
-      "each traffic-light center remains the topmost clickable hit target"
+      `${style} window buttons remain clickable outside the drag region`
     );
   }
 
@@ -1512,14 +1517,14 @@ async function assertTitlebarWindowInteractions() {
   assert.equal(
     await electronApp.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].isMaximized()),
     true,
-    "maximize traffic light maximizes the native window"
+    `${style} maximize button maximizes the native window`
   );
   await buttons[2].click();
   await page.waitForFunction(() => document.body.dataset.windowMaximized === "false");
   assert.equal(
     await electronApp.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].isMaximized()),
     false,
-    "restore traffic light returns the native window to windowed mode"
+    `${style} restore button returns the native window to windowed mode`
   );
 
   await buttons[1].click();
@@ -1530,7 +1535,7 @@ async function assertTitlebarWindowInteractions() {
   assert.equal(
     await electronApp.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].isMinimized()),
     true,
-    "minimize traffic light minimizes the native window"
+    `${style} minimize button minimizes the native window`
   );
   await electronApp.evaluate(({ BrowserWindow }) => {
     const window = BrowserWindow.getAllWindows()[0];
@@ -1551,6 +1556,111 @@ async function assertTitlebarWindowInteractions() {
   );
   await titlebar.waitFor({ state: "visible" });
   await effect.waitFor({ state: "visible" });
+}
+
+async function assertTitlebarStylePreferences() {
+  const titlebar = page.locator(".desktop-titlebar");
+  await expect(titlebar).toHaveAttribute("data-titlebar-style", "traffic-lights");
+  await assertTitlebarWindowInteractions();
+
+  async function openAppearance() {
+    await page.locator('[data-testid="editor-surface"] [data-testid="settings-button"]').click();
+    await waitForVisible("settings-surface");
+    await selectSettingsSection("appearance");
+  }
+
+  async function selectStyle(style) {
+    await page.getByRole("radio", { name: style === "windows" ? "Windows 风格" : "红绿灯（默认）", exact: true }).click();
+    await expect(titlebar).toHaveAttribute("data-titlebar-style", style);
+    await page.waitForFunction((expected) => {
+      const stored = JSON.parse(localStorage.getItem("lyric-card-generator-app-preferences-v2") || "null");
+      return stored?.userSettings.uiTitlebarStyle === expected;
+    }, style);
+    await expect.poll(async () => {
+      const stored = await page.evaluate(() => window.lyricsCardDesktop.loadAppPreferences());
+      return stored?.userSettings.uiTitlebarStyle;
+    }).toBe(style);
+  }
+
+  await openAppearance();
+  await selectStyle("windows");
+  await page.getByRole("radiogroup", { name: "顶栏样式", exact: true }).scrollIntoViewIfNeeded();
+  await page.getByTestId("settings-surface").screenshot({ path: path.join(reportDirectory, "titlebar-style-settings.png") });
+  await expect(page.locator(".traffic-light")).toHaveCount(0);
+  await expect(page.locator(".desktop-titlebar__button")).toHaveCount(3);
+  await page.getByTestId("settings-close-button").click();
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await expect(page.locator('.app-shell[data-preferences-loaded="true"]')).toBeVisible();
+  await expect(titlebar).toHaveAttribute("data-titlebar-style", "windows");
+  await assertTitlebarWindowInteractions("windows");
+
+  await page.locator(".desktop-titlebar__button--minimize").focus();
+  await page.keyboard.press("Tab");
+  await expect(page.locator(".desktop-titlebar__button--maximize")).toBeFocused();
+  await page.keyboard.press("Enter");
+  await page.waitForFunction(() => document.body.dataset.windowMaximized === "true");
+  await expect(page.locator(".desktop-titlebar__button--maximize")).toHaveAttribute("aria-label", "窗口化");
+  await expect(page.locator(".desktop-titlebar__button--maximize .lucide-copy")).toBeVisible();
+  await page.keyboard.press("Enter");
+  await page.waitForFunction(() => document.body.dataset.windowMaximized === "false");
+
+  await openAppearance();
+  for (const theme of ["light", "dark"]) {
+    await page.getByRole("radio", { name: theme === "light" ? "浅色" : "深色", exact: true }).click();
+    await page.getByTestId("settings-close-button").click();
+    await setWindowSize(1000, 700);
+    const geometry = await titlebar.evaluate((bar) => {
+      const brand = bar.querySelector(".desktop-titlebar__brand").getBoundingClientRect();
+      const controls = [...bar.querySelectorAll(".desktop-titlebar__button")].map((button) => button.getBoundingClientRect());
+      const autosave = bar.querySelector(".desktop-titlebar__autosave")?.getBoundingClientRect();
+      const barRect = bar.getBoundingClientRect();
+      return {
+        order: brand.right <= controls[0].left + 0.5 && controls[0].right <= controls[1].left + 0.5 && controls[1].right <= controls[2].left + 0.5,
+        rightAligned: Math.abs(controls[2].right - barRect.right) < 1,
+        saveClear: !autosave || autosave.width === 0 || (autosave.left >= brand.right && autosave.right <= controls[0].left)
+      };
+    });
+    assert.deepEqual(geometry, { order: true, rightAligned: true, saveClear: true }, JSON.stringify(await titlebar.evaluate((bar) =>
+      [...bar.querySelectorAll(".desktop-titlebar__brand, .desktop-titlebar__button")].map((node) => ({
+        className: node.className, left: node.getBoundingClientRect().left, right: node.getBoundingClientRect().right,
+        transform: getComputedStyle(node).transform
+      }))
+    )));
+    await titlebar.screenshot({ path: path.join(reportDirectory, `titlebar-windows-${theme}.png`) });
+    await openAppearance();
+  }
+  await selectStyle("traffic-lights");
+  await expect(page.locator(".desktop-titlebar__button")).toHaveCount(0);
+  await expect(page.locator(".traffic-light")).toHaveCount(3);
+  await titlebar.screenshot({ path: path.join(reportDirectory, "titlebar-traffic-lights.png") });
+  await selectStyle("windows");
+  await selectSettingsSection("general");
+  await setNativeDialogDecision("accept");
+  await page.getByTestId("restore-app-preferences").click();
+  await expect(titlebar).toHaveAttribute("data-titlebar-style", "traffic-lights");
+  await selectSettingsSection("appearance");
+  await selectStyle("windows");
+  await page.getByTestId("settings-close-button").click();
+
+  // Close through the visible control and reopen the same profile to exercise
+  // the save-before-close handshake and persistence beyond a renderer reload.
+  await page.evaluate(() => window.lyricsCardDesktop.onWindowCloseRequested(() => {
+    localStorage.setItem("titlebar-test-close-requests", String(Number(localStorage.getItem("titlebar-test-close-requests") || 0) + 1));
+  }));
+  await Promise.all([
+    electronApp.waitForEvent("close", { timeout: 15_000 }),
+    page.locator(".desktop-titlebar__button--close").click()
+  ]);
+  electronApp = await electron.launch({
+    executablePath,
+    env: { ...process.env, LYRICS_CARD_TEST_USER_DATA: userDataDirectory },
+    timeout: 60_000
+  });
+  page = await electronApp.firstWindow({ timeout: 60_000 });
+  await expect(page.locator('.app-shell[data-preferences-loaded="true"]')).toBeVisible({ timeout: 60_000 });
+  await expect(page.locator(".desktop-titlebar")).toHaveAttribute("data-titlebar-style", "windows");
+  assert.equal(await page.evaluate(() => localStorage.getItem("titlebar-test-close-requests")), "1", "Windows close requests exactly one renderer flush before exiting");
+  assert.equal(await electronApp.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().length), 1, "switching styles does not create extra windows");
 }
 
 async function assertTitlebarScrollPerformance() {
@@ -2264,7 +2374,7 @@ async function assertPreviewWorkbenchPan() {
   const pressureBox = await pressureStage.boundingBox();
   assert.ok(pressureBox, "step five preview pressure target is visible");
   await page.mouse.move(pressureBox.x + pressureBox.width * 0.18, pressureBox.y + pressureBox.height * 0.2);
-  await page.waitForTimeout(120);
+  await page.waitForFunction(() => getComputedStyle(document.querySelector(".preview-pressure-card")).transform !== "none");
   const pressureState = await pressureStage.evaluate((element) => {
     const card = element.querySelector('.preview-pressure-card');
     const style = card ? getComputedStyle(card) : null;
@@ -3589,7 +3699,7 @@ async function assertLyricsWorkspaceNarrowBehavior(originalLyrics, translationLy
       },
       "the narrow focus trap ignores inert exit controls and wraps to the active Translation tab"
     );
-    await page.waitForTimeout(400);
+    await waitForLayoutStable(page.getByTestId("lyrics-translation-home-page"));
     const focusAfterAiEscape = await page.evaluate(() => ({
       testId: document.activeElement?.getAttribute("data-testid"),
       tag: document.activeElement?.tagName,
@@ -4032,6 +4142,24 @@ try {
 
   await prepareEditorLanguage(page, "zh");
   assert.equal(await page.getByTestId("editor-surface").evaluate((node) => Boolean(node.closest('[inert]'))), false, "startup leaves the editor accessible");
+  if (scenario) {
+    const scenarios = {
+      search: assertSongSearchBehavior,
+      "song-import": assertSongImportAsideBehavior,
+      examples: assertExamplesSurfaceBehavior,
+      fonts: assertFontPickerBehavior,
+      titlebar: assertTitlebarStylePreferences,
+      "lyrics-input": async () => {
+        await page.locator('button[data-step-id="lyrics"]').click();
+        await page.getByTestId("lyrics-sidebar-tab-translation").click();
+        const toggle = page.getByTestId("translation-toggle");
+        if (await toggle.getAttribute("aria-checked") !== "true") await toggle.click();
+        await assertLyricsInputEditingSemantics(page.getByTestId("lyrics-editor-original"), page.getByTestId("lyrics-editor-translation"));
+      }
+    };
+    await scenarios[scenario]();
+    console.log(JSON.stringify({ ok: true, scenario, isolatedUserData: true }));
+  } else {
   await assertTitlebarWindowInteractions();
 
   await page.locator('[data-testid="editor-surface"] [data-testid="settings-button"]').click();
@@ -4251,7 +4379,7 @@ try {
   await page.getByTestId("ai-api-key-input").fill("sk-reset-scope-regression");
   await expect.poll(() => page.evaluate(async () => Boolean((await window.lyricsCardDesktop?.loadAISettings())?.hasApiKey)),
     { timeout: 30_000 }).toBe(true);
-  await page.waitForTimeout(1_000);
+  await expect.poll(() => page.evaluate(() => window.lyricsCardDesktop?.loadAISettings()), { timeout: 30_000 }).toMatchObject({ hasApiKey: true });
   assert.equal((await page.evaluate(() => window.lyricsCardDesktop?.loadAISettings()))?.hasApiKey, true, "the replacement API key is durably stable before preference reset");
 
   await selectSettingsSection("general");
@@ -4854,6 +4982,7 @@ try {
       landscape: landscapeCard
     }
   }, null, 2)}\n`);
+}
 } catch (error) {
   process.stderr.write(`[desktop-regression] ${error instanceof Error ? error.stack || error.message : String(error)}\n`);
   if (electronApp) {

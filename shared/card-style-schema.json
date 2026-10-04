@@ -1,0 +1,280 @@
+{
+  "version": 1,
+  "definitions": {
+    "CardStyleInputs": {
+      "requiredOnRead": [
+        "contentMode",
+        "layoutMode",
+        "ratio",
+        "font"
+      ],
+      "fields": {
+        "backgroundMode": {
+          "optional": false,
+          "values": [
+            "palette",
+            "gradient",
+            "solid"
+          ]
+        },
+        "solidColor": {
+          "optional": true,
+          "type": "string",
+          "pattern": "^#[a-f0-9]{6}$"
+        },
+        "solidColorSource": {
+          "optional": true,
+          "values": [
+            "auto",
+            "user"
+          ]
+        },
+        "layoutMode": {
+          "optional": false,
+          "values": [
+            "portrait",
+            "landscape"
+          ]
+        },
+        "ratio": {
+          "optional": false,
+          "values": [
+            "1:1",
+            "4:5",
+            "9:16",
+            "16:9",
+            "21:9",
+            "3:2",
+            "custom"
+          ]
+        },
+        "width": {
+          "optional": false,
+          "type": "number"
+        },
+        "height": {
+          "optional": false,
+          "type": "number"
+        },
+        "autoWidth": {
+          "optional": false,
+          "type": "boolean"
+        },
+        "autoHeight": {
+          "optional": false,
+          "type": "boolean"
+        },
+        "font": {
+          "optional": false,
+          "values": [
+            "sans-heavy",
+            "serif-heavy",
+            "system-sans",
+            "system-serif"
+          ]
+        },
+        "fontScheme": {
+          "optional": true,
+          "ref": "FontSchemeInputs"
+        },
+        "customFontEnabled": {
+          "optional": true,
+          "type": "boolean"
+        },
+        "customFontFamily": {
+          "optional": true,
+          "type": "string"
+        },
+        "customFontLabel": {
+          "optional": true,
+          "type": "string"
+        },
+        "customFontWeight": {
+          "optional": true,
+          "type": "number"
+        },
+        "customFontStyle": {
+          "optional": true,
+          "values": [
+            "normal",
+            "italic"
+          ]
+        },
+        "lyricFontSize": {
+          "optional": false,
+          "type": "number"
+        },
+        "lineHeight": {
+          "optional": false,
+          "type": "number"
+        },
+        "align": {
+          "optional": false,
+          "values": [
+            "left",
+            "center"
+          ]
+        },
+        "textColorMode": {
+          "optional": false,
+          "values": [
+            "auto",
+            "preset",
+            "custom"
+          ]
+        },
+        "textColorPreset": {
+          "optional": false,
+          "values": [
+            "white",
+            "black",
+            "warmWhite",
+            "cream",
+            "charcoal",
+            "softBlue",
+            "softGold"
+          ]
+        },
+        "customTextColor": {
+          "optional": false,
+          "type": "string"
+        },
+        "resolvedTextColor": {
+          "optional": false,
+          "type": "string"
+        },
+        "translationScale": {
+          "optional": false,
+          "type": "number"
+        },
+        "allowMultiLineTitle": {
+          "optional": false,
+          "type": "boolean"
+        },
+        "contentMode": {
+          "optional": false,
+          "values": [
+            "lyrics",
+            "instrumental"
+          ]
+        },
+        "instrumentalText": {
+          "optional": false,
+          "type": "string"
+        },
+        "showCover": {
+          "optional": false,
+          "type": "boolean"
+        },
+        "showSongInfo": {
+          "optional": false,
+          "type": "boolean"
+        },
+        "showAlbumName": {
+          "optional": false,
+          "type": "boolean"
+        },
+        "showGeneratedWatermark": {
+          "optional": false,
+          "type": "boolean"
+        },
+        "showSharedBy": {
+          "optional": false,
+          "type": "boolean"
+        },
+        "sharedByText": {
+          "optional": false,
+          "type": "string"
+        },
+        "showWatermark": {
+          "optional": false,
+          "type": "boolean"
+        },
+        "showFineGrid": {
+          "optional": false,
+          "type": "boolean"
+        },
+        "fineGridDensity": {
+          "optional": false,
+          "values": [
+            "sparse",
+            "medium",
+            "dense"
+          ]
+        },
+        "separatorStyle": {
+          "optional": true,
+          "values": [
+            "dot",
+            "line"
+          ]
+        },
+        "coverCropScale": {
+          "optional": false,
+          "type": "number"
+        },
+        "watermark": {
+          "optional": false,
+          "type": "string"
+        },
+        "landscapeLayout": {
+          "optional": true,
+          "ref": "LandscapeLayoutInputs"
+        }
+      }
+    },
+    "FontSchemeInputs": {
+      "requiredOnRead": [
+        "mode",
+        "cjkFontFamily",
+        "latinFontFamily"
+      ],
+      "fields": {
+        "mode": {
+          "values": [
+            "preset",
+            "custom"
+          ]
+        },
+        "presetId": {
+          "optional": true,
+          "values": [
+            "source-han-sans",
+            "source-han-serif",
+            "mona-sans"
+          ]
+        },
+        "cjkFontFamily": {
+          "type": "string",
+          "maxLength": 512
+        },
+        "latinFontFamily": {
+          "type": "string",
+          "maxLength": 512
+        }
+      }
+    },
+    "LandscapeLayoutInputs": {
+      "requiredOnRead": [
+        "autoLyricsWidth",
+        "lyricsWidth",
+        "autoHeight",
+        "requestedHeight"
+      ],
+      "fields": {
+        "autoLyricsWidth": {
+          "type": "boolean"
+        },
+        "lyricsWidth": {
+          "type": "number"
+        },
+        "autoHeight": {
+          "type": "boolean"
+        },
+        "requestedHeight": {
+          "type": "number"
+        }
+      }
+    }
+  }
+}

@@ -4,7 +4,7 @@ import { appMutationRejectionResponse, validateAppMutationRequest } from "@/lib/
 import { readLimitedJson } from "@/lib/json-request";
 import { readResponseJsonBounded } from "@/lib/bounded-response";
 import { withUpstreamDeadline } from "@/lib/upstream-control";
-import resourceBudgets from "@/electron/resource-budgets.json";
+import resourceBudgets from "@/shared/resource-budgets.json";
 import { z } from "zod";
 
 export const runtime = "nodejs";
@@ -31,7 +31,7 @@ export async function POST(req: Request) {
     return appMutationRejectionResponse(rejection);
   }
 
-  const bodyResult = await readLimitedJson<unknown>(req, resourceBudgets.jsonRequestBytes.fetchLyrics);
+  const bodyResult = await readLimitedJson(req, resourceBudgets.jsonRequestBytes.fetchLyrics);
   if (!bodyResult.ok) return appLimitedJsonErrorResponse(bodyResult.reason);
 
   const parsed = schema.safeParse(bodyResult.value);

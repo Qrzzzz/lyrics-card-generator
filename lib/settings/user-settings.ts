@@ -109,6 +109,7 @@ export function normalizeUserSettings(input: unknown): UserSettings {
     sparkCursorEnabled: typeof source.sparkCursorEnabled === "boolean" ? source.sparkCursorEnabled : true,
     reduceMotionEnabled: source.reduceMotionEnabled === true,
     uiThemeMode,
+    uiTitlebarStyle: source.uiTitlebarStyle === "windows" ? "windows" : DEFAULT_USER_SETTINGS.uiTitlebarStyle,
     uiAcrylicEnabled: normalizeAcrylicEnabled(source, uiThemeMode),
     uiFontFamily: normalizeUiFontFamily(source.uiFontFamily),
     uiAccentMode: normalizeAccentMode(source, customAccentColor),
@@ -145,11 +146,6 @@ export function saveUserSettings(settings: UserSettings): UserSettings {
   return normalized;
 }
 
-export function mergeUserSettings(partial: Partial<UserSettings>): UserSettings {
-  const current = loadUserSettings();
-  return saveUserSettings({ ...current, ...partial });
-}
-
 export function resetUserSettings(
   current = loadUserSettings(),
   options: { persist?: boolean } = {}
@@ -159,6 +155,7 @@ export function resetUserSettings(
     sparkCursorEnabled: DEFAULT_USER_SETTINGS.sparkCursorEnabled,
     reduceMotionEnabled: DEFAULT_USER_SETTINGS.reduceMotionEnabled,
     uiThemeMode: DEFAULT_USER_SETTINGS.uiThemeMode,
+    uiTitlebarStyle: DEFAULT_USER_SETTINGS.uiTitlebarStyle,
     uiAcrylicEnabled: DEFAULT_USER_SETTINGS.uiAcrylicEnabled,
     uiFontFamily: DEFAULT_USER_SETTINGS.uiFontFamily,
     uiAccentMode: DEFAULT_USER_SETTINGS.uiAccentMode,

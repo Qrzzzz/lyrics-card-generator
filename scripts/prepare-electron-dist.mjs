@@ -17,7 +17,18 @@ const desktopProductName = "Lyrics Card Generator";
 const desktopAppId = "com.lyriccard.generator";
 // Use the same explicit runtime allowlist for staging and ASAR inclusion.
 const electronAppFiles = [
+  "shared/ai-stream.js",
+  "shared/provider-response-contract.js",
+  "shared/resource-budgets.json",
+  "shared/ai-prompt-settings.js",
+  "shared/ai-settings.js",
+  "shared/ai-request-contract.js",
+  "shared/card-style-schema.json",
+  "shared/card-style-contract.js",
+  "electron/history-budget.js",
   "electron/main.js",
+  "electron/ai-service.js",
+  "electron/history-replay.js",
   "electron/app-updater.js",
   "electron/update-release-url.js",
   "electron/update-copy.json",
@@ -25,9 +36,11 @@ const electronAppFiles = [
   "electron/support-addresses.js",
   "electron/support-addresses.json",
   "electron/ai-stream.js",
+  "electron/ai-translation.js",
+  "electron/app-preferences-writer.js",
+  "electron/app-preferences-service.js",
   "electron/resource-budgets.json",
   "electron/ai-request-registry.js",
-  "electron/ai-prompt-settings.js",
   "electron/ai-settings-store.js",
   "electron/font-directory-service.js",
   "electron/font-options.js",
@@ -158,6 +171,7 @@ async function prepareMinimalElectronApp() {
   };
 
   for (const relativePath of electronAppFiles) {
+    await mkdir(path.dirname(path.join(appOutputDir, relativePath)), { recursive: true });
     await cp(path.join(projectRoot, relativePath), path.join(appOutputDir, relativePath));
   }
   await writeFile(path.join(appOutputDir, "package.json"), `${JSON.stringify(desktopPackage, null, 2)}\n`);

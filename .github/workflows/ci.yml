@@ -67,6 +67,9 @@ jobs:
       - name: Verify font license distribution contracts
         run: npm run font-license:test
 
+      - name: Enforce distribution resource budgets
+        run: npm run distribution-budgets:check
+
       - name: Typecheck
         run: npm run typecheck
 
@@ -78,6 +81,9 @@ jobs:
 
       - name: Critical-module coverage thresholds
         run: npm run coverage
+
+      - name: Preference writer fault-injection coverage
+        run: npm run preferences-writer:coverage
 
       - name: Electron runtime risk-boundary coverage thresholds
         run: npm run electron-runtime:coverage
@@ -243,8 +249,11 @@ jobs:
       - name: Verify staged and packaged desktop assets
         run: npm run desktop:packaged-assets-test -- --unpacked-only
 
+      - name: Enforce packaged distribution budget
+        run: node scripts/check-distribution-budgets.mjs --packaged
+
       - name: Run packaged desktop interaction regression
-        run: npm run desktop:interaction-test
+        run: npm run desktop:scenario-test && npm run desktop:interaction-test
 
       - name: Run opt-in desktop visual and frame-timing diagnostics
         if: ${{ always() && steps.desktop_build.outcome == 'success' && github.event_name == 'workflow_dispatch' && inputs.desktop_visual_diagnostics }}

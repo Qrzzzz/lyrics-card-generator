@@ -1,15 +1,18 @@
 const EDITABLE_TRANSLATION_STYLES = new Set(["lyrical", "faithful", "spoken", "imagistic", "restrained"]);
 const CUSTOM_PRESET_ID = /^custom:[a-z0-9-]{1,64}$/i;
+/** @type {import("./locales").Locale[]} */
 const AI_PROMPT_LOCALES = ["zh", "zh-TW", "en", "fr", "ja", "es"];
 
+/** @param {unknown} input @returns {import("./ai-settings-types").AIPromptLibrary} */
 function normalizePromptLibrary(input) {
-  const source = input && typeof input === "object" ? input : {};
+  const source = input && typeof input === "object" && !Array.isArray(input) ? /** @type {Record<string, unknown>} */ (input) : {};
   const hiddenStyleIds = [...new Set(
     Array.isArray(source.hiddenStyleIds)
       ? source.hiddenStyleIds.filter((id) => EDITABLE_TRANSLATION_STYLES.has(id))
       : []
   )];
-  const rawLocaleOverrides = source.localeOverrides && typeof source.localeOverrides === "object" ? source.localeOverrides : {};
+  const rawLocaleOverrides = source.localeOverrides && typeof source.localeOverrides === "object" ? /** @type {Record<string, unknown>} */ (source.localeOverrides) : {};
+  /** @type {import("./ai-settings-types").AIPromptLibrary["localeOverrides"]} */
   const localeOverrides = {};
   for (const locale of AI_PROMPT_LOCALES) {
     const normalized = normalizeLocalePromptOverrides(rawLocaleOverrides[locale]);
@@ -39,8 +42,10 @@ function normalizePromptLibrary(input) {
   return { localeOverrides, hiddenStyleIds, customPresets: [...custom.values()].slice(0, 2) };
 }
 
+/** @param {unknown} input @returns {import("./ai-settings-types").AILocalePromptOverrides} */
 function normalizeLocalePromptOverrides(input) {
-  const source = input && typeof input === "object" ? input : {};
+  const source = input && typeof input === "object" && !Array.isArray(input) ? /** @type {Record<string, unknown>} */ (input) : {};
+  /** @type {Map<string, import("./ai-settings-types").AIStylePresetOverride>} */
   const overrides = new Map();
   for (const item of Array.isArray(source.styleOverrides) ? source.styleOverrides : []) {
     if (!item || !EDITABLE_TRANSLATION_STYLES.has(item.id)) continue;
@@ -49,6 +54,7 @@ function normalizeLocalePromptOverrides(input) {
   return { formatRulesOverride: "", styleOverrides: [...overrides.values()] };
 }
 
+/** @param {unknown} value @param {number} maxLength */
 function cleanText(value, maxLength) {
   return typeof value === "string" ? value.trim().slice(0, maxLength) : "";
 }

@@ -190,18 +190,6 @@ export function extractQQSongId(inputUrl: string) {
     : null;
 }
 
-export function extractQQSongMid(inputUrl: string) {
-  try {
-    const url = new URL(inputUrl);
-    const fromPath = url.pathname.match(/\/songDetail\/([^/?#]+)/i)?.[1];
-    const fromSearch = url.searchParams.get("songmid");
-    const fromHash = url.hash.match(/[?&]songmid=([^&#]+)/i)?.[1];
-    return fromPath || fromSearch || fromHash || "";
-  } catch {
-    return inputUrl.match(/\/songDetail\/([^/?#]+)/i)?.[1] || inputUrl.match(/[?&]songmid=([^&#]+)/i)?.[1] || "";
-  }
-}
-
 function extractEmbeddedSong(html: string): QQEmbeddedSong | null {
   const nextData = html.match(/<script[^>]+id=["']__NEXT_DATA__["'][^>]*>([\s\S]*?)<\/script>/i)?.[1];
   const fromNext = nextData ? findSongObject(safeJson(nextData)) : null;

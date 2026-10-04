@@ -1,5 +1,5 @@
 const assert = require("node:assert/strict");
-const { normalizePromptLibrary } = require("../electron/ai-prompt-settings");
+const { normalizePromptLibrary } = require("../shared/ai-prompt-settings");
 
 const normalized = normalizePromptLibrary({
   localeOverrides: {

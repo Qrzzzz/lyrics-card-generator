@@ -45,7 +45,7 @@ try {
   assert.equal(await general.getByRole("heading", { name: "History & storage", exact: true }).count(), 1);
   assert.equal(await general.getByTestId("restore-app-preferences").evaluate((button) => button.closest("section")?.querySelector("h3")?.textContent), "Reset");
   await page.getByTestId("settings-tab-appearance").click();
-  assert.deepEqual(await page.locator('[data-settings-panel="appearance"] h3').allTextContents(), ["Theme & material", "Accent color", "Interface font", "Interaction effects"]);
+  assert.deepEqual(await page.locator('[data-settings-panel="appearance"] h3').allTextContents(), ["Theme & material", "Title bar style", "Accent color", "Interface font", "Interaction effects"]);
   await page.getByTestId("settings-tab-about").click();
   await page.getByTestId("support-author-link").click();
   assert.equal(await page.getByTestId("support-author-page").evaluate((el) => document.activeElement === el), true);

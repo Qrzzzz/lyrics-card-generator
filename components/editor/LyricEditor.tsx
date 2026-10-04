@@ -75,7 +75,7 @@ import { resolveExportSafetyMessage } from "@/lib/export-safety";
 import { getExportLyricLineStatus } from "@/lib/lyrics-document";
 import { cloneLyricDocument, reconcileLyricDocumentV2 } from "@/lib/lyrics-document-v2";
 import { hasCurrentLandscapePlan } from "@/lib/landscape-measurement-key";
-import type { TranslationValue } from "@/lib/editor/editor-document-state-adapter";
+import { EditorAILifecycle } from "@/lib/editor/editor-ai-lifecycle";
 import { useStableEvent } from "@/components/editor/hooks/useStableEvent";
 import type { AISettingsSummary } from "@/lib/ai/types";
 import { recordRenderBoundary } from "@/components/editor/render-boundary-diagnostics";
@@ -158,11 +158,7 @@ export function LyricEditor() {
   const historyButtonRef = useRef<HTMLButtonElement | null>(null);
   const settingsButtonRef = useRef<HTMLButtonElement | null>(null);
   const surfaceReturnFocusRef = useRef<HTMLButtonElement | null>(null);
-  // Ref bridges let document actions consult AI lifecycle state without creating hook-order cycles.
-  const aiTranslationBusyRef = useRef(false);
-  const invalidateDocumentAsyncRef = useRef<(
-    reason?: "document" | "ai-start"
-  ) => TranslationValue | undefined>(() => undefined);
+  const [aiLifecycle] = useState(() => new EditorAILifecycle());
   const t = useMemo(() => createT(state.locale), [state.locale]);
   const systemShouldReduceMotion = useReducedMotion() ?? false;
   const isExamplesSurfaceOpen = activeSurface === "examples";
@@ -331,8 +327,11 @@ export function LyricEditor() {
   }));
   if (autosave.status === "error") importantNotices.push({
     id: "draft-save-error", title: autosave.ready ? noticeCopy.saveFailed : noticeCopy.loadFailed,
-    message: autosave.ready ? noticeCopy.saveDetail : importHistoryCopy[state.locale].loadFailed,
-    tone: "error", action: { label: autosave.ready ? noticeCopy.retry : importHistoryCopy[state.locale].retry, run: autosave.retry }
+    message: autosave.failureCode === "history_storage_limit" ? editorAutosaveCopy[state.locale].storageLimit
+      : autosave.ready ? noticeCopy.saveDetail : importHistoryCopy[state.locale].loadFailed,
+    tone: "error", action: autosave.failureCode === "history_storage_limit" && autosave.ready
+      ? { label: noticeCopy.history, run: openHistory }
+      : { label: autosave.ready ? noticeCopy.retry : importHistoryCopy[state.locale].retry, run: autosave.retry }
   });
   if (historyRecoveryMessage) importantNotices.push({
     id: "history-recovered", title: noticeCopy.historyRecovered, message: importHistoryCopy[state.locale].corruptRecovered,
@@ -417,8 +416,7 @@ export function LyricEditor() {
     onCloseExamples: closeExamples,
     onCloseHistory: closeHistory,
     onClearTransientState: () => { setFontSchemePreview(null); setSongInfoDraft(undefined); },
-    onInvalidateDocument: (reason) => invalidateDocumentAsyncRef.current(reason),
-    isManualSaveBlocked: () => aiTranslationBusyRef.current
+    aiLifecycle
   });
 
   useSongCoverObjectUrlLifecycle(
@@ -473,11 +471,11 @@ export function LyricEditor() {
     closeAITranslate,
     translateWithAI,
     cancelAITranslation,
-    invalidateAITranslation,
     setAISettings
   } = useEditorAiTranslation({
     locale: state.locale,
     lyrics: state.lyrics,
+    aiLifecycle,
     beginAITranslation,
     getCurrentDocumentSnapshot,
     applyPartial: applyAIPartial,
@@ -485,8 +483,6 @@ export function LyricEditor() {
     onNotify: showToast,
     onRequireSettings: () => openSettings("ai")
   });
-  aiTranslationBusyRef.current = isAITranslating;
-  invalidateDocumentAsyncRef.current = invalidateAITranslation;
 
   function handleStyleChange(nextStyle: AppState["style"]) {
     if (
@@ -616,7 +612,7 @@ export function LyricEditor() {
           ...customThemeTokens
         } as unknown as React.CSSProperties}
       >
-      <DesktopTitleBar locale={state.locale} autosaveStatus={autosave.status}
+      <DesktopTitleBar locale={state.locale} titlebarStyle={userSettings.uiTitlebarStyle} autosaveStatus={autosave.status}
         onRetryAutosave={() => void autosave.retry().catch(() => undefined)} />
       <DynamicAppBackground palette={state.palette} settings={userSettings} />
       <ClickSpark enabled={userSettings.sparkCursorEnabled} themeColor={resolvedAccentColor}>

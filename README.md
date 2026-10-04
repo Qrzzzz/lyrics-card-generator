@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v6.5.8.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v6.6.0.zh-CN.md">发布说明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">在线 Web Lite 版</a> ·
   <a href="./docs/web-lite-browser-support.md">Web Lite 浏览器支持</a> ·
   <a href="./docs/desktop.md">桌面维护文档</a> ·
@@ -75,19 +75,19 @@
 
 
 
-* Windows x64 安装版：`Lyrics.Card.Generator.Setup.6.5.8.exe`
+* Windows x64 安装版：`Lyrics.Card.Generator.Setup.6.6.0.exe`
 
 从 v6.2.2 起只提供 Windows x64 Setup 安装包。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v6.5.8 · 草稿恢复与安全修复
+### v6.6.0 · 发布说明
 
+发布日期：2026-10-04
 
+v6.6.0 支持在桌面版中选择红绿灯或 Windows 风格顶栏，默认继续使用红绿灯。窗口按钮的布局可以按个人习惯调整。
 
-v6.5.8 修复桌面草稿恢复，并收紧封面加载边界。
-
-[简体中文](./docs/releases/v6.5.8.zh-CN.md) · [繁體中文](./docs/releases/v6.5.8.zh-TW.md) · [English](./docs/releases/v6.5.8.en.md) · [Français](./docs/releases/v6.5.8.fr.md) · [日本語](./docs/releases/v6.5.8.ja.md) · [Español](./docs/releases/v6.5.8.es.md)
+[简体中文](./docs/releases/v6.6.0.zh-CN.md) · [繁體中文](./docs/releases/v6.6.0.zh-TW.md) · [English](./docs/releases/v6.6.0.en.md) · [Français](./docs/releases/v6.6.0.fr.md) · [日本語](./docs/releases/v6.6.0.ja.md) · [Español](./docs/releases/v6.6.0.es.md)
 
 <a id="主要功能"></a>
 

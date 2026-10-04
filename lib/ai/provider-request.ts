@@ -1,8 +1,8 @@
 import { getProviderErrorMessage, readProviderResponseBody } from "./provider-response";
 import type { AISettings } from "./types";
-import resourceBudgets from "@/electron/resource-budgets.json";
+import resourceBudgets from "@/shared/resource-budgets.json";
 import { ResponseBodyLimitExceededError } from "@/lib/bounded-response";
-import { getConnectionTestResponseError } from "@/electron/provider-response-contract";
+import { getConnectionTestResponseError } from "@/shared/provider-response-contract";
 
 export const INVALID_BASE_URL_ERROR_CODE = "invalid_base_url";
 export const INSECURE_BASE_URL_ERROR_CODE = "insecure_base_url";

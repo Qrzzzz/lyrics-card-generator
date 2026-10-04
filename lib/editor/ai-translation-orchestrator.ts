@@ -62,6 +62,8 @@ export class AITranslationOrchestrator<Value, Phase> {
   private readonly transactions = new AITranslationTransactionController<Value>();
   private active: ActiveRun<Value, Phase> | null = null;
 
+  get isActive() { return this.active !== null; }
+
   async run(options: AITranslationRunOptions<Value, Phase>) {
     const replacement = this.stopActive("replace");
     const intent = this.transactions.begin(

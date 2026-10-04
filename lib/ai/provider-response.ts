@@ -1,6 +1,6 @@
-import resourceBudgets from "@/electron/resource-budgets.json";
+import resourceBudgets from "@/shared/resource-budgets.json";
 import { readResponseTextBounded } from "@/lib/bounded-response";
-import { sanitizeProviderDiagnostic } from "@/electron/provider-response-contract";
+import { sanitizeProviderDiagnostic } from "@/shared/provider-response-contract";
 
 export type ProviderResponseBody =
   | { kind: "json"; data: unknown }
