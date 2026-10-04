@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v6.5.11.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v6.6.0.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="./docs/development.en.md">ローカル開発</a> ·
@@ -76,19 +76,19 @@
 
 
 
-* Windows x64 インストーラー：`Lyrics.Card.Generator.Setup.6.5.11.exe`
+* Windows x64 インストーラー：`Lyrics.Card.Generator.Setup.6.6.0.exe`
 
 v6.2.2 以降、配布するデスクトップパッケージは Windows x64 Setup のみです。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v6.5.11 · リリースノート
+### v6.6.0 · リリースノート
 
-公開日：2026-10-03
+公開日：2026-10-04
 
-v6.5.11 は保守更新です。使われなくなった内部実装と余分な入口を整理し、今後の保守を容易にします。既存の編集、下書き保存、画像書き出しの操作は同じです。
+v6.6.0 では、デスクトップ版のタイトルバーを信号機スタイルと Windows スタイルから選べます。既定は引き続き信号機スタイルで、ウィンドウボタンの配置を好みに合わせて変更できます。
 
-[简体中文](./docs/releases/v6.5.11.zh-CN.md) · [繁體中文](./docs/releases/v6.5.11.zh-TW.md) · [English](./docs/releases/v6.5.11.en.md) · [Français](./docs/releases/v6.5.11.fr.md) · [日本語](./docs/releases/v6.5.11.ja.md) · [Español](./docs/releases/v6.5.11.es.md)
+[简体中文](./docs/releases/v6.6.0.zh-CN.md) · [繁體中文](./docs/releases/v6.6.0.zh-TW.md) · [English](./docs/releases/v6.6.0.en.md) · [Français](./docs/releases/v6.6.0.fr.md) · [日本語](./docs/releases/v6.6.0.ja.md) · [Español](./docs/releases/v6.6.0.es.md)
 
 <a id="主な機能"></a>
 

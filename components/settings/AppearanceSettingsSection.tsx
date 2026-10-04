@@ -7,7 +7,7 @@ import { recordRenderBoundary } from "@/components/editor/render-boundary-diagno
 import { ActionButton, FieldLabel, SegmentedControl, TextInput, ToggleRow } from "@/components/ui/controls";
 import { normalizeHexColor, UI_ACCENT_PRESETS } from "@/lib/settings/accent";
 import { validateUiFontFamily } from "@/lib/settings/font-family";
-import type { UiAccentMode, UiAccentPresetId, UiThemeMode, UserSettings } from "@/lib/settings/types";
+import type { UiAccentMode, UiAccentPresetId, UiThemeMode, UiTitlebarStyle, UserSettings } from "@/lib/settings/types";
 import type { Locale } from "@/lib/types";
 import type { settingsCopy } from "@/lib/settings/copy";
 
@@ -35,11 +35,13 @@ const ACCENT_PRESET_OPTIONS: Array<{ id: UiAccentPresetId; copyKey: "accentRed" 
 export function AppearanceSettingsSection({
   settings,
   copy,
-  onChange
+  onChange,
+  isDesktopShell
 }: {
   settings: UserSettings;
   copy: typeof settingsCopy[Locale];
   onChange: (settings: UserSettings) => void;
+  isDesktopShell: boolean;
 }) {
   recordRenderBoundary("SettingsAppearance");
   const [uiFontInput, setUiFontInput] = useState(settings.uiFontFamily);
@@ -94,6 +96,22 @@ export function AppearanceSettingsSection({
         </div>
 
       </SettingsGroup>
+      {isDesktopShell ? (
+        <SettingsGroup title={copy.titlebarStyle}>
+          <FieldLabel label={copy.titlebarStyle} description={copy.titlebarStyleDescription}>
+            <SegmentedControl<UiTitlebarStyle>
+              value={settings.uiTitlebarStyle}
+              ariaLabel={copy.titlebarStyle}
+              onChange={(uiTitlebarStyle) => onChange({ ...settings, uiTitlebarStyle })}
+              columns={2}
+              options={[
+                { value: "traffic-lights", label: copy.titlebarTrafficLights },
+                { value: "windows", label: copy.titlebarWindows }
+              ]}
+            />
+          </FieldLabel>
+        </SettingsGroup>
+      ) : null}
       <SettingsGroup title={copy.accentColor}>
         <FieldLabel label={copy.accentColor}>
           <div className="grid gap-3">

@@ -558,6 +558,53 @@ body[data-window-maximized="true"] .app-shell[data-desktop-shell="true"] {
   --traffic-light-color: #28c840;
 }
 
+.desktop-titlebar[data-titlebar-style="windows"] .desktop-titlebar__brand {
+  padding-inline: 16px;
+  max-width: calc(50% - 40px);
+}
+
+.desktop-titlebar__controls,
+.desktop-titlebar__button {
+  -webkit-app-region: no-drag;
+}
+
+.desktop-titlebar__button {
+  display: grid;
+  width: 46px;
+  height: 100%;
+  place-items: center;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+  transition: background-color 140ms var(--motion-ease-standard), color 140ms var(--motion-ease-standard);
+}
+
+.desktop-titlebar__button:hover {
+  background: rgba(var(--app-fg), 0.12);
+}
+
+.desktop-titlebar__button:active {
+  background: rgba(var(--app-fg), 0.18);
+}
+
+.desktop-titlebar__button--close:hover {
+  color: #fff;
+  background: #c42b1c;
+}
+
+.desktop-titlebar__button--close:active {
+  color: #fff;
+  background: #a82418;
+}
+
+.desktop-titlebar__button:focus-visible {
+  outline: 2px solid var(--control-focus-color);
+  outline-offset: -3px;
+}
+
 /* Shared semantic text, surface, and interactive-control primitives. */
 .app-text-primary {
   color: var(--app-text-primary, rgb(var(--app-fg)));
@@ -973,17 +1020,17 @@ button {
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .app-shell button:not(:disabled):not([aria-disabled="true"]):not(.traffic-light):not(.example-song-card) {
+  .app-shell button:not(:disabled):not([aria-disabled="true"]):not(.traffic-light):not(.desktop-titlebar__button):not(.example-song-card) {
     transition-property: border-color, box-shadow, background, color, opacity, transform;
     transition-duration: var(--motion-duration-fast);
     transition-timing-function: var(--motion-ease-standard);
   }
 
-  .app-shell button:not(:disabled):not([aria-disabled="true"]):not(.traffic-light):not(.example-song-card):hover {
+  .app-shell button:not(:disabled):not([aria-disabled="true"]):not(.traffic-light):not(.desktop-titlebar__button):not(.example-song-card):hover {
     transform: translateY(-1px);
   }
 
-  .app-shell button:not(:disabled):not([aria-disabled="true"]):not(.traffic-light):not(.example-song-card):hover:active {
+  .app-shell button:not(:disabled):not([aria-disabled="true"]):not(.traffic-light):not(.desktop-titlebar__button):not(.example-song-card):hover:active {
     transform: translateY(0) scale(0.985);
   }
 }
