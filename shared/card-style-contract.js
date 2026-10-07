@@ -1,4 +1,4 @@
-/** @typedef {{type?: string, optional?: boolean, values?: string[], ref?: string, pattern?: string, maxLength?: number}} Field */
+/** @typedef {{type?: string, optional?: boolean, values?: string[], ref?: string, pattern?: string, maxLength?: number, integer?: boolean}} Field */
 /** @type {{definitions: Record<string, {requiredOnRead: string[], fields: Record<string, Field>}>}} */
 const schema = require("./card-style-schema.json");
 
@@ -36,6 +36,7 @@ function normalizeFields(input, name) {
       result[key] = value;
     } else if (field.type === "number") {
       if (typeof value !== "number" || !Number.isFinite(value) || value < 0 || value > 100_000) return null;
+      if (field.integer && !Number.isInteger(value)) return null;
       result[key] = value;
     } else {
       if (typeof value !== "string" || value.length > (field.maxLength ?? 2048)) return null;

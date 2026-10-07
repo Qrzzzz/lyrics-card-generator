@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v6.6.0.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v6.7.0.en.md">Release Notes</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
   <a href="./docs/web-lite-browser-support.md">Web Lite Browser Support</a> ·
   <a href="#features">Features</a> ·
@@ -77,19 +77,19 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 
 
-* Windows x64 installer: `Lyrics.Card.Generator.Setup.6.6.0.exe`
+* Windows x64 installer: `Lyrics.Card.Generator.Setup.6.7.0.exe`
 
 Starting with v6.2.2, Windows x64 Setup is the only distributed desktop package.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v6.6.0 · Release Notes
+### v6.7.0 · Release Notes
 
-Release date: 2026-10-04
+Release date: 2026-10-07.
 
-v6.6.0 lets desktop users choose between traffic lights and a Windows-style title bar. Traffic lights remain the default, while the window button layout can be changed to suit your habits.
+v6.7.0 adds layout seeds for flowing gradients so you can try, save and reproduce different arrangements with the same cover palette. It also improves solid color recommendations and transparent cover analysis.
 
-[简体中文](./docs/releases/v6.6.0.zh-CN.md) · [繁體中文](./docs/releases/v6.6.0.zh-TW.md) · [English](./docs/releases/v6.6.0.en.md) · [Français](./docs/releases/v6.6.0.fr.md) · [日本語](./docs/releases/v6.6.0.ja.md) · [Español](./docs/releases/v6.6.0.es.md)
+[简体中文](./docs/releases/v6.7.0.zh-CN.md) · [繁體中文](./docs/releases/v6.7.0.zh-TW.md) · [English](./docs/releases/v6.7.0.en.md) · [Français](./docs/releases/v6.7.0.fr.md) · [日本語](./docs/releases/v6.7.0.ja.md) · [Español](./docs/releases/v6.7.0.es.md)
 
 <a id="features"></a>
 

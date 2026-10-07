@@ -16,6 +16,7 @@ async function main() {
   snapshot.style.fontScheme = { mode: "custom", cjkFontFamily: "Custom 中文", latinFontFamily: "Western" };
   snapshot.style.landscapeLayout = { autoHeight: false, requestedHeight: 1700, autoLyricsWidth: true, lyricsWidth: 550 };
   snapshot.style.separatorStyle = "line";
+  snapshot.style.gradientLayoutSeed = 731;
   const schema = JSON.parse(await readFile("shared/card-style-schema.json", "utf8"));
   // Every declared authored key is tested at the actual main-process read gate.
   const normalized = normalizeDraftStyle(JSON.parse(JSON.stringify(snapshot.style)))!;
@@ -31,6 +32,14 @@ async function main() {
   assert.ok(persisted);
   const restored = restoreEditorDraft(defaultState, { recordId: "roundtrip", snapshot: persisted });
   assert.equal(restored.style.separatorStyle, "line");
+  assert.equal(restored.style.gradientLayoutSeed, 731, "layout seeds survive the desktop draft read gate");
+  for (const value of [-1, 0.5, 100001, Infinity, NaN, "23"]) {
+    assert.equal(normalizeDraftStyle({ ...snapshot.style, gradientLayoutSeed: value }), null);
+  }
+  const oldSnapshot = { ...snapshot, style: { ...snapshot.style } };
+  delete oldSnapshot.style.gradientLayoutSeed;
+  assert.equal(restoreEditorDraft({ ...defaultState, style: { ...defaultState.style, gradientLayoutSeed: 42 } },
+    { recordId: "legacy", snapshot: oldSnapshot }).style.gradientLayoutSeed, 0, "old drafts use the default layout rather than inheriting another document's seed");
   assert.equal(restored.style.fontScheme?.cjkFontFamily, "Custom 中文");
   assert.equal(restored.style.landscapeLayout?.requestedHeight, 1700);
   assert.deepEqual(normalizeDraftStyle({ contentMode: "lyrics", layoutMode: "portrait", ratio: "1:1", font: "sans-heavy", futureField: true }),

@@ -91,6 +91,8 @@ export type CoverPaletteAnalysis = {
   version: 1;
   /** FNV-1a hash of dimensions plus canonical RGBA samples. */
   seed: string;
+  /** Visible, quantized sample hash for clustering and composition; ignores source resolution and hidden RGB. */
+  compositionSeed?: string;
   sourceWidth: number;
   sourceHeight: number;
   sampleWidth: number;

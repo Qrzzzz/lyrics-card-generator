@@ -663,6 +663,25 @@ test("solid background keeps custom HEX across modes and exports offline with Mo
   await expect(preview.locator('[data-palette-field], [data-card-fine-grid]')).toHaveCount(0);
   await page.locator('[data-segment-value="palette"]').click();
   await expect(preview.locator('[data-palette-field]')).toHaveCount(1);
+  const layoutInput = page.getByTestId("gradient-layout-seed");
+  const field = preview.locator('[data-palette-field]');
+  const defaultSeed = await field.getAttribute("data-palette-field-seed");
+  await layoutInput.fill("17");
+  await expect(field).toHaveAttribute("data-gradient-layout-seed", "17");
+  const chosenFieldSeed = await field.getAttribute("data-palette-field-seed");
+  expect(chosenFieldSeed).not.toBe(defaultSeed);
+  await layoutInput.fill("-1");
+  await expect(layoutInput).toHaveAttribute("aria-invalid", "true");
+  await expect(field).toHaveAttribute("data-gradient-layout-seed", "17");
+  await layoutInput.press("Escape");
+  await expect(layoutInput).toHaveValue("17");
+  await page.getByTestId("gradient-layout-shuffle").click();
+  await expect(field).not.toHaveAttribute("data-palette-field-seed", chosenFieldSeed!);
+  await page.getByTestId("gradient-layout-reset").click();
+  await expect(layoutInput).toHaveValue("0");
+  await expect(field).toHaveAttribute("data-palette-field-seed", defaultSeed!);
+  await layoutInput.fill("17");
+  await page.screenshot({ path: test.info().outputPath("gradient-layout-controls.png") });
   await page.locator('[data-segment-value="solid"]').click();
   await expect(hex).toHaveValue("#F0EEDD");
   await page.locator('[data-step-id="visual"]').click();
@@ -688,6 +707,18 @@ test("solid background keeps custom HEX across modes and exports offline with Mo
     const size = await pngDimensions(download);
     expect(size.width).toBeGreaterThan(0);
     expect(size.height).toBeGreaterThan(0);
+    await page.locator('[data-step-id="layout"]').click();
+    await page.locator('[data-segment-value="palette"]').click();
+    await expect(layoutInput).toHaveValue("17");
+    await expect(preview.locator('[data-palette-field]')).toHaveAttribute("data-gradient-layout-seed", "17");
+    const exportField = card.locator('[data-palette-field]');
+    await expect(exportField).toHaveAttribute("data-palette-field-seed", (await field.getAttribute("data-palette-field-seed"))!);
+    await page.locator('[data-step-id="export"]').click();
+    const [gradientDownload] = await Promise.all([page.waitForEvent("download"), page.getByTestId("complete-export-button").click()]);
+    const gradientSize = await pngDimensions(gradientDownload);
+    expect(gradientSize).toEqual(size);
+    await page.locator('[data-step-id="layout"]').click();
+    await page.locator('[data-segment-value="solid"]').click();
   }
 });
 

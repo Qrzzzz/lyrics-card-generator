@@ -34,9 +34,14 @@ const MAX_SAMPLE_EDGE = 96;
 const CLUSTER_COUNT = 8;
 const ITERATIONS = 12;
 const SPATIAL_GRID_SIZE = 6;
-const MIN_VISIBLE_ALPHA = 1 / 255;
+// Ignore almost invisible export/antialiasing residue while preserving translucent artwork.
+const MIN_VISIBLE_ALPHA = 8 / 255;
 const CLUSTER_MERGE_DISTANCE = 0.035;
 export const COVER_IMAGE_ANALYSIS_TIMEOUT_MS = 8000;
+const ANALYSIS_CACHE_LIMIT = 8;
+const ANALYSIS_CACHE_TTL_MS = 60_000;
+const analysisCache = new Map<string, { result: CoverImageAnalysisResult; expires: number }>();
+const pendingAnalyses = new Map<string, Promise<CoverImageAnalysisResult>>();
 
 export type CoverImageAnalysisResult = {
   palette: ExtractedPalette;
@@ -46,6 +51,32 @@ export type CoverImageAnalysisResult = {
 /** Decodes geometry, alpha, and palette together so every renderer shares one source of truth. */
 export async function analyzeCoverImage(imageUrl: string): Promise<CoverImageAnalysisResult> {
   if (!imageUrl) return { palette: DEFAULT_PALETTE };
+  const cached = analysisCache.get(imageUrl);
+  if (cached && cached.expires > Date.now()) {
+    analysisCache.delete(imageUrl);
+    analysisCache.set(imageUrl, cached);
+    return cached.result;
+  }
+  analysisCache.delete(imageUrl);
+  const pending = pendingAnalyses.get(imageUrl);
+  if (pending) return pending;
+  const promise = decodeCoverImage(imageUrl);
+  if (pendingAnalyses.size >= ANALYSIS_CACHE_LIMIT) pendingAnalyses.delete(pendingAnalyses.keys().next().value!);
+  pendingAnalyses.set(imageUrl, promise);
+  try {
+    const result = await promise;
+    // Retry failures and empty/transparent covers instead of caching a fallback.
+    if (result.palette.analysis?.regions.length && pendingAnalyses.get(imageUrl) === promise) {
+      if (analysisCache.size >= ANALYSIS_CACHE_LIMIT) analysisCache.delete(analysisCache.keys().next().value!);
+      analysisCache.set(imageUrl, { result, expires: Date.now() + ANALYSIS_CACHE_TTL_MS });
+    }
+    return result;
+  } finally {
+    if (pendingAnalyses.get(imageUrl) === promise) pendingAnalyses.delete(imageUrl);
+  }
+}
+
+async function decodeCoverImage(imageUrl: string): Promise<CoverImageAnalysisResult> {
 
   let image: HTMLImageElement;
   try {
@@ -113,6 +144,8 @@ export function analyzePalettePixels(
   const sourceHeight = positiveDimension(options.sourceHeight, height);
   const seedNumber = hashPixels(data, width, height, sourceWidth, sourceHeight);
   const seed = seedNumber.toString(16).padStart(8, "0").toUpperCase();
+  const compositionSeedNumber = hashVisiblePixels(data, width, height);
+  const compositionSeed = compositionSeedNumber.toString(16).padStart(8, "0").toUpperCase();
   const samples = collectSamples(data, width, height);
   const alphaSum = samples.reduce((total, sample) => total + sample.alpha, 0);
   const visibleCoverage = samples.length / (width * height);
@@ -120,6 +153,7 @@ export function analyzePalettePixels(
   if (samples.length === 0 || alphaSum <= 0) {
     return fallbackPaletteWithAnalysis({
       seed,
+      compositionSeed,
       sourceWidth,
       sourceHeight,
       sampleWidth: width,
@@ -130,7 +164,7 @@ export function analyzePalettePixels(
     });
   }
 
-  const clusterResult = runKMeans(samples, Math.min(CLUSTER_COUNT, samples.length), seedNumber);
+  const clusterResult = runKMeans(samples, Math.min(CLUSTER_COUNT, samples.length), compositionSeedNumber);
   const mergedAssignments = mergeNearbyClusters(clusterResult);
   const globalLab = weightedMeanLab(samples);
   const regions = buildRegions(samples, mergedAssignments, width, height, alphaSum, globalLab);
@@ -170,6 +204,7 @@ export function analyzePalettePixels(
   const analysis: CoverPaletteAnalysis = {
     version: 1,
     seed,
+    compositionSeed,
     sourceWidth,
     sourceHeight,
     sampleWidth: width,
@@ -233,7 +268,9 @@ function runKMeans(samples: Sample[], count: number, seed: number): ClusterResul
   let centers = seedCenters(samples, count, seed);
   let assignments = new Array<number>(samples.length).fill(0);
   for (let iteration = 0; iteration < ITERATIONS; iteration += 1) {
-    assignments = samples.map((sample) => findNearestCenter(sample.lab, centers));
+    const nextAssignments = samples.map((sample) => findNearestCenter(sample.lab, centers));
+    if (iteration > 0 && nextAssignments.every((value, index) => value === assignments[index])) break;
+    assignments = nextAssignments;
     const totals = centers.map(() => ({ l: 0, a: 0, b: 0, weight: 0 }));
     samples.forEach((sample, index) => {
       const total = totals[assignments[index]];
@@ -258,8 +295,8 @@ function seedCenters(samples: Sample[], count: number, seed: number) {
   centers.push(samples[weightedIndex(samples.map((sample) => sample.alpha), random())].lab);
   while (centers.length < count) {
     const weights = samples.map((sample) => {
-      const distance = Math.min(...centers.map((center) => oklabDistance(sample.lab, center)));
-      return sample.alpha * distance * distance;
+      const distanceSquared = Math.min(...centers.map((center) => squaredLabDistance(sample.lab, center)));
+      return sample.alpha * distanceSquared;
     });
     if (weights.reduce((sum, weight) => sum + weight, 0) <= 1e-12) break;
     centers.push(samples[weightedIndex(weights, random())].lab);
@@ -271,13 +308,17 @@ function findNearestCenter(color: OklabColor, centers: OklabColor[]) {
   let nearest = 0;
   let nearestDistance = Number.POSITIVE_INFINITY;
   centers.forEach((center, index) => {
-    const distance = oklabDistance(color, center);
+    const distance = squaredLabDistance(color, center);
     if (distance < nearestDistance) {
       nearest = index;
       nearestDistance = distance;
     }
   });
   return nearest;
+}
+
+function squaredLabDistance(first: OklabColor, second: OklabColor) {
+  return (first.l - second.l) ** 2 + (first.a - second.a) ** 2 + (first.b - second.b) ** 2;
 }
 
 function farthestSample(samples: Sample[], centers: OklabColor[]) {
@@ -587,6 +628,21 @@ function hashPixels(data: Uint8ClampedArray | Uint8Array, width: number, height:
   for (const channel of data) {
     hash ^= channel;
     hash = Math.imul(hash, 0x01000193);
+  }
+  return hash >>> 0;
+}
+
+/** Quantization stabilizes the PRNG against small channel changes; raw identity remains separate. */
+function hashVisiblePixels(data: Uint8ClampedArray | Uint8Array, width: number, height: number) {
+  let hash = 0x811C9DC5;
+  const add = (value: number) => { hash = Math.imul(hash ^ value, 0x01000193); };
+  add(width);
+  add(height);
+  for (let index = 0; index < data.length; index += 4) {
+    const visible = data[index + 3] / 255 >= MIN_VISIBLE_ALPHA;
+    for (let channel = 0; channel < 4; channel += 1) {
+      add(visible ? Math.round(data[index + channel] / 8) : 0);
+    }
   }
   return hash >>> 0;
 }

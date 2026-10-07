@@ -2,6 +2,7 @@
 export type CardStyleInputs = {
   backgroundMode: "palette" | "gradient" | "solid";
   solidColor?: string;
+  gradientLayoutSeed?: number;
   solidColorSource?: "auto" | "user";
   layoutMode: "portrait" | "landscape";
   ratio: "1:1" | "4:5" | "9:16" | "16:9" | "21:9" | "3:2" | "custom";

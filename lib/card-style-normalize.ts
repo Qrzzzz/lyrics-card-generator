@@ -1,4 +1,5 @@
 import { normalizeSolidHex, resolveCardTextColor } from "@/lib/solid-background";
+import { normalizeGradientLayoutSeed } from "@/lib/gradient-layout";
 import { PRESET_CARD_SIZES } from "@/lib/card-size";
 import { normalizeLyricLineHeight } from "@/lib/lyric-typography";
 import { normalizeLandscapeLayoutSettings } from "@/lib/landscape-plan";
@@ -15,6 +16,7 @@ export function normalizeCardStyle(
   const layoutMode = style.layoutMode ?? "portrait";
   const normalizedStyle: CardStyle = {
     ...style,
+    gradientLayoutSeed: normalizeGradientLayoutSeed(style.gradientLayoutSeed),
     textColorPreset: style.textColorMode === "custom" ? style.textColorPreset : "white",
     solidColor: normalizeSolidHex(style.solidColor),
     solidColorSource: style.solidColorSource === "user" ? "user" : "auto",

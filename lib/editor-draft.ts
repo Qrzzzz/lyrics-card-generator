@@ -76,7 +76,7 @@ export function restoreEditorDraft(current: AppState, loaded: EditorDraftLoad): 
     ...current,
     url: snapshot.content.finalUrl || snapshot.content.originalUrl || "",
     song: { ...snapshot.content, coverUrl, proxiedCoverUrl: proxiedImageUrl(coverUrl) },
-    style: normalizeCardStyle({ ...current.style, ...snapshot.style }),
+    style: normalizeCardStyle({ ...current.style, ...snapshot.style, gradientLayoutSeed: snapshot.style.gradientLayoutSeed ?? 0 }),
     lastPortraitSize: snapshot.lastPortraitSize,
     lastPortraitCustomSize: snapshot.lastPortraitCustomSize,
     lastLandscapeSize: snapshot.lastLandscapeSize,

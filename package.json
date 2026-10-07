@@ -1,6 +1,6 @@
 {
   "name": "lyric-card-generator",
-  "version": "6.6.0",
+  "version": "6.7.0",
   "private": true,
   "main": "electron/main.js",
   "scripts": {
@@ -13,7 +13,7 @@
     "electron:typecheck": "tsc --project tsconfig.electron.json",
     "lint": "eslint . --max-warnings=0",
     "solid-background:test": "tsx scripts/test-solid-background.tsx",
-    "palette:test": "tsx scripts/test-palette-extraction.ts",
+    "palette:test": "tsx scripts/test-palette-extraction.ts && tsx scripts/test-palette-image-cache.ts",
     "color-field:test": "tsx scripts/test-spatial-color-field.ts",
     "background-composition:test": "tsx scripts/test-background-composition.ts",
     "card-content-depth:test": "tsx scripts/test-card-content-depth.ts",

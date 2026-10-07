@@ -51,6 +51,7 @@ export const defaultState: AppState = {
   translationEnabled: false,
   style: {
     backgroundMode: "palette",
+    gradientLayoutSeed: 0,
     solidColor: "#202124",
     solidColorSource: "auto",
     extractedPalette: DEFAULT_PALETTE,

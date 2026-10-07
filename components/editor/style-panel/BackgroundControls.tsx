@@ -7,6 +7,7 @@ import { colorPickerCopy } from "@/lib/color-picker-copy";
 import { resolveSolidColor, solidCandidates, SOLID_PRESETS } from "@/lib/solid-background";
 import type { CardStyle, Locale } from "@/lib/types";
 import { SettingsGroup } from "./SettingsLayout";
+import { GradientLayoutControls } from "./GradientLayoutControls";
 
 const copy: Record<Locale, string[]> = {
   zh: ["背景", "流光渐变", "极简纯色", "封面候选色", "预设色", "当前颜色", "自定义颜色", "自动推荐"],
@@ -49,6 +50,7 @@ export function BackgroundControls({ style, onStyleChange, locale }: {
         setResetKey((key) => key + 1);
         onStyleChange({ ...style, solidColorSource: "auto" });
       }}>{c[7]}</ActionButton>
-    </div> : null}
+    </div> : <GradientLayoutControls seed={style.gradientLayoutSeed}
+      onChange={(gradientLayoutSeed) => onStyleChange({ ...style, gradientLayoutSeed })} locale={locale} />}
   </SettingsGroup>;
 }

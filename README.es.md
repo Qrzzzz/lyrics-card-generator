@@ -19,7 +19,7 @@
 <p>
   <strong>Navegación</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Descargar la última versión</a> ·
-  <a href="./docs/releases/v6.6.0.es.md">Notas de la versión</a> ·
+  <a href="./docs/releases/v6.7.0.es.md">Notas de la versión</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en línea</a> ·
   <a href="#funciones-principales">Funciones principales</a> ·
   <a href="./docs/development.en.md">Desarrollo local</a> ·
@@ -76,19 +76,19 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 
 
-* Instalador de Windows x64: `Lyrics.Card.Generator.Setup.6.6.0.exe`
+* Instalador de Windows x64: `Lyrics.Card.Generator.Setup.6.7.0.exe`
 
 A partir de v6.2.2, Setup para Windows x64 es el único paquete de escritorio distribuido.
 
 > La compilación actual no está firmada. Windows puede mostrar una advertencia de SmartScreen, algo habitual en aplicaciones personales sin firma.
 
-### v6.6.0 · Notas de la versión
+### v6.7.0 · Notas de la versión
 
-Fecha de publicación: 2026-10-04
+Fecha de publicación: 2026-10-07.
 
-v6.6.0 permite elegir, en la versión de escritorio, entre el semáforo y una barra de título de estilo Windows. El semáforo sigue siendo la opción predeterminada y la disposición de los botones se puede adaptar a tus hábitos.
+v6.7.0 añade semillas para los degradados fluidos: permite probar, guardar y reproducir distintas distribuciones con la misma paleta. También mejora las recomendaciones de colores sólidos y el análisis de portadas transparentes.
 
-[简体中文](./docs/releases/v6.6.0.zh-CN.md) · [繁體中文](./docs/releases/v6.6.0.zh-TW.md) · [English](./docs/releases/v6.6.0.en.md) · [Français](./docs/releases/v6.6.0.fr.md) · [日本語](./docs/releases/v6.6.0.ja.md) · [Español](./docs/releases/v6.6.0.es.md)
+[简体中文](./docs/releases/v6.7.0.zh-CN.md) · [繁體中文](./docs/releases/v6.7.0.zh-TW.md) · [English](./docs/releases/v6.7.0.en.md) · [Français](./docs/releases/v6.7.0.fr.md) · [日本語](./docs/releases/v6.7.0.ja.md) · [Español](./docs/releases/v6.7.0.es.md)
 
 <a id="funciones-principales"></a>
 
