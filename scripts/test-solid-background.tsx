@@ -36,6 +36,16 @@ assert.equal(solidCandidates(stripes([[90, 90, 90, 255], [92, 92, 92, 255]])).co
 const noisy = new Uint8ClampedArray(40 * 40 * 4);
 for (let i = 0; i < 1600; i++) noisy.set(i < 8 ? [255, 0, 0, 255] : [70, 70, 70, 255], i * 4);
 assert.notEqual(solidCandidates(analyzePalettePixels(noisy, 40, 40)).colors[0], "#FF0000");
+const fragmented = new Uint8ClampedArray(96 * 96 * 4);
+for (let i = 0; i < 9216; i++) fragmented.set(i < 4516 ? [96, 96, 96, 255]
+  : i < 6866 ? [28, 98, 148, 255] : [36, 116, 168, 255], i * 4);
+const fragmentedCandidates = solidCandidates(analyzePalettePixels(fragmented, 96, 96));
+assert.notEqual(fragmentedCandidates.colors[0], "#606060", "the merged 51% blue family outranks 49% gray");
+const tinyRelated = new Uint8ClampedArray(96 * 96 * 4);
+for (let i = 0; i < 9216; i++) tinyRelated.set(i < 160 ? [28, 98, 148, 255]
+  : i < 320 ? [36, 116, 168, 255] : [96, 96, 96, 255], i * 4);
+assert.equal(solidCandidates(analyzePalettePixels(tinyRelated, 96, 96)).colors.length, 2,
+  "related sub-2% clusters qualify after their combined coverage passes the floor");
 
 const style: CardStyle = { ...defaultState.style, backgroundMode: "solid", solidColor: "#FAFAFA", solidColorSource: "user", textColorMode: "auto", extractedPalette: colorful, showFineGrid: true, fontScheme: FONT_SCHEME_PRESETS["mona-sans"] };
 assert.equal(resolveCardTextColor(style), "#000000");

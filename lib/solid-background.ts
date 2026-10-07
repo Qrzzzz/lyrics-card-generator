@@ -12,8 +12,8 @@ function lab(hex: string) {
 /** Use real regions, not generated gradient roles. Coverage suppresses isolated noise. */
 export function solidCandidates(palette?: ExtractedPalette): { colors: string[]; source: "cover" | "preset" } {
   const regions = (palette?.analysis?.regions ?? [])
-    .filter((r) => r.meanAlpha > 0 && r.visibleShare >= 0.02 && /^#[\da-f]{6}$/i.test(r.color))
-    .map((r) => ({ color: r.color.toUpperCase(), weight: r.visibleShare * (1 + Math.min(1, r.cells.reduce((sum, c) => sum + c.coverage, 0))) }))
+    .filter((r) => r.meanAlpha > 0 && r.visibleShare > 0 && /^#[\da-f]{6}$/i.test(r.color))
+    .map((r) => ({ color: r.color.toUpperCase(), weight: r.visibleShare }))
     .sort((a, b) => b.weight - a.weight || a.color.localeCompare(b.color));
   const merged: typeof regions = [];
   for (const region of regions) {
@@ -23,7 +23,8 @@ export function solidCandidates(palette?: ExtractedPalette): { colors: string[];
     else merged.push({ ...region });
   }
   merged.sort((a, b) => b.weight - a.weight || a.color.localeCompare(b.color));
-  const colors = merged.slice(0, 6).map((r) => r.color);
+  // Apply the noise floor to the whole merged color, not its individual clusters.
+  const colors = merged.filter((r) => r.weight >= 0.02).slice(0, 6).map((r) => r.color);
   return colors.length ? { colors, source: "cover" } : { colors: [...SOLID_PRESETS], source: "preset" };
 }
 export function resolveSolidColor(style: CardStyle) {

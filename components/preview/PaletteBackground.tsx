@@ -16,7 +16,8 @@ export function PaletteBackground({
   height = 1350,
   spatialPalette,
   showFineGrid = false,
-  fineGridDensity
+  fineGridDensity,
+  layoutSeed = 0
 }: {
   palette?: ExtractedPalette;
   width?: number;
@@ -24,13 +25,14 @@ export function PaletteBackground({
   spatialPalette?: SpatialPaletteContract;
   showFineGrid?: boolean;
   fineGridDensity?: BackgroundGridDensity;
+  layoutSeed?: number;
 }) {
   const activePalette = palette ?? DEFAULT_PALETTE;
   const gridSize = BACKGROUND_GRID_SIZE_BY_DENSITY[resolveBackgroundGridDensity(fineGridDensity)];
   const { plan, mesh } = useMemo(() => {
-    const nextPlan = createColorFieldPlan({ width, height, palette: activePalette, spatialPalette });
+    const nextPlan = createColorFieldPlan({ width, height, palette: activePalette, spatialPalette, layoutSeed });
     return { plan: nextPlan, mesh: createColorFieldMesh(nextPlan) };
-  }, [activePalette, height, spatialPalette, width]);
+  }, [activePalette, height, spatialPalette, width, layoutSeed]);
   const filterId = `palette-field-soften-${plan.seed.toString(16)}`;
 
   return (
@@ -38,6 +40,7 @@ export function PaletteBackground({
       className="absolute inset-0 overflow-hidden"
       data-palette-field={plan.topology}
       data-palette-field-seed={plan.seed}
+      data-gradient-layout-seed={layoutSeed}
       aria-hidden="true"
     >
       <svg

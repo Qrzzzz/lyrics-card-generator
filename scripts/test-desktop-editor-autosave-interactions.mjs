@@ -135,6 +135,7 @@ try {
   }
   await page.screenshot({ path: path.join(report, "font-card-layout.png") });
   await page.locator('[data-step-id="layout"]').click();
+  await page.getByTestId("gradient-layout-seed").fill("731");
   await page.locator('[data-segment-value="solid"]').click();
   await page.getByTestId("solid-color-input").fill("#E8E4DA");
   await page.getByTestId("solid-color-input").blur();
@@ -147,9 +148,13 @@ try {
   assert.equal(solidSavedStyle.backgroundMode, "solid");
   assert.equal(solidSavedStyle.solidColor, "#E8E4DA");
   assert.equal(solidSavedStyle.solidColorSource, "user");
+  assert.equal(solidSavedStyle.gradientLayoutSeed, 731, "layout seed survives a real desktop restart while solid mode is selected");
   await page.locator('[data-step-id="layout"]').click();
   await expect(page.getByTestId("solid-color-input")).toHaveValue("#E8E4DA");
   await page.locator('[data-segment-value="palette"]').click();
+  await expect(page.getByTestId("gradient-layout-seed")).toHaveValue("731");
+  await expect(page.getByTestId("lyric-card-preview").locator('[data-palette-field]')).toHaveAttribute("data-gradient-layout-seed", "731");
+  await page.screenshot({ path: path.join(report, "gradient-layout-restored.png") });
   await page.locator('[data-segment-value="solid"]').click();
   await expect(page.getByTestId("solid-color-input")).toHaveValue("#E8E4DA");
   await page.screenshot({ path: path.join(report, "solid-background-restored.png") });

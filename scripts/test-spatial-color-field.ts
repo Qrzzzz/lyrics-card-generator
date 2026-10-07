@@ -11,8 +11,10 @@ import {
   type ColorFieldPlan,
   type SpatialPaletteContract
 } from "../lib/spatial-color-field";
-import { hexToRgb, relativeLuminance, rgbToHsl } from "../lib/palette-background";
+import { DEFAULT_PALETTE, hexToRgb, relativeLuminance, rgbToHsl } from "../lib/palette-background";
 import type { ExtractedPalette } from "../lib/types";
+import { nextGradientLayoutSeed, normalizeGradientLayoutSeed } from "../lib/gradient-layout";
+import { analyzePalettePixels } from "../lib/palette-extraction";
 
 const oceanPalette: ExtractedPalette = {
   colors: ["#123B5D", "#1C7C8C", "#D78C56", "#6C4C8B", "#D9D0B4", "#17313B"],
@@ -137,6 +139,51 @@ const dominantBlueSquare2x = createColorFieldPlan({
 assert.equal(dominantBlueSquare.seed, dominantBlueSquare2x.seed, "same-ratio resolutions share one semantic seed");
 assert.deepEqual(dominantBlueSquare.families, dominantBlueSquare2x.families, "same-ratio resolutions preserve family budgets");
 assert.deepEqual(dominantBlueSquare.anchors, dominantBlueSquare2x.anchors, "same-ratio resolutions preserve anchor roles and geometry");
+
+for (const invalid of [-1, 0.5, 100001, Infinity, NaN, undefined]) assert.equal(normalizeGradientLayoutSeed(invalid), 0);
+assert.equal(normalizeGradientLayoutSeed(100000), 100000);
+assert.equal(nextGradientLayoutSeed(1, 0), 2, "shuffle always changes the current seed");
+assert.equal(nextGradientLayoutSeed(0, 0), 1);
+const unchangedPalette = JSON.stringify(dominantBluePalette);
+for (const [name, width, height] of cases) {
+  const original = createColorFieldPlan({ width, height, palette: dominantBluePalette, spatialPalette: dominantBlueSpatial });
+  assert.deepEqual(original, createColorFieldPlan({ width, height, palette: dominantBluePalette, spatialPalette: dominantBlueSpatial, layoutSeed: 0 }));
+  const layouts = new Set<string>();
+  for (const layoutSeed of [1, 2, 17, 99999, 100000]) {
+    const options = { width, height, palette: dominantBluePalette, spatialPalette: dominantBlueSpatial, layoutSeed };
+    const variant = createColorFieldPlan(options);
+    assert.deepEqual(variant, createColorFieldPlan(options), `${name}/${layoutSeed} reproduces the same layout`);
+    assert.deepEqual(variant.anchors, createColorFieldPlan({ ...options, width: width * 2, height: height * 2 }).anchors);
+    assert.equal(variant.baseColor, original.baseColor);
+    assert.deepEqual(variant.families, original.families);
+    assert.deepEqual(variant.anchors.map(({ color, energy, familyId }) => ({ color, energy, familyId })),
+      original.anchors.map(({ color, energy, familyId }) => ({ color, energy, familyId })), `${name}/${layoutSeed} changes geometry without changing colors or energy`);
+    assertFamilyBudgets(variant, `${name}/${layoutSeed}`);
+    assertPlanConstraints(variant, `${name}/${layoutSeed}`);
+    layouts.add(variant.anchors.map(({ x, y }) => `${x.toFixed(4)},${y.toFixed(4)}`).join("|"));
+    if (name !== "auto-height") {
+      const shares = sampleHueFamilyShares(variant, 64);
+      assert.ok(shares.cool > shares.warm && shares.warm <= 0.12 * 2.25,
+        `${name}/${layoutSeed} keeps the warm accent local (${JSON.stringify(shares)})`);
+    }
+  }
+  assert.equal(layouts.size, 5, `${name} provides five distinct compositions`);
+}
+assert.equal(JSON.stringify(dominantBluePalette), unchangedPalette, "layout variations do not mutate the extracted palette");
+for (const [name, width, height] of cases) {
+  for (let index = 1; index <= 32; index += 1) {
+    const layoutSeed = index * 331;
+    const plan = createColorFieldPlan({ width, height, palette: DEFAULT_PALETTE, layoutSeed });
+    assertPlanConstraints(plan, `fallback/${name}/${layoutSeed}`);
+  }
+}
+const invisiblePixels = new Uint8ClampedArray(16 * 16 * 4);
+for (let i = 0; i < 128; i++) invisiblePixels.set([30, 120, 190, 255], i * 4);
+const alteredInvisiblePixels = Uint8ClampedArray.from(invisiblePixels);
+for (let i = 128; i < 256; i++) alteredInvisiblePixels.set([220, 10, 80, 0], i * 4);
+assert.deepEqual(createColorFieldPlan({ width: 1080, height: 1350, palette: analyzePalettePixels(invisiblePixels, 16, 16), layoutSeed: 17 }),
+  createColorFieldPlan({ width: 1080, height: 1350, palette: analyzePalettePixels(alteredInvisiblePixels, 16, 16), layoutSeed: 17 }),
+  "hidden RGB changes do not recompose either default or selected layouts");
 
 const oceanSquare = plans.get("1:1")!;
 const emberSquare = createColorFieldPlan({ width: 1080, height: 1080, palette: emberPalette });

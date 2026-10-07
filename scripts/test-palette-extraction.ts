@@ -72,6 +72,25 @@ assert.notEqual(
   nonSquarePalette.analysis!.seed,
   "one changed channel changes the content-derived seed"
 );
+assert.equal(analyzePalettePixels(changed, 24, 6, { sourceWidth: 2400, sourceHeight: 600 }).analysis!.compositionSeed,
+  nonSquarePalette.analysis!.compositionSeed, "sub-quantization changes keep the composition seed stable");
+const resizedSource = analyzePalettePixels(nonSquare, 24, 6, { sourceWidth: 4800, sourceHeight: 1200 });
+assert.notEqual(resizedSource.analysis!.seed, nonSquarePalette.analysis!.seed);
+assert.equal(resizedSource.analysis!.compositionSeed, nonSquarePalette.analysis!.compositionSeed);
+assert.deepEqual(resizedSource.analysis!.regions, nonSquarePalette.analysis!.regions, "source resolution does not change clustering");
+
+const hiddenA = fixture(20, 20, (x) => x < 10 ? [40, 110, 220, 255] : [0, 0, 0, 0]);
+const hiddenB = fixture(20, 20, (x) => x < 10 ? [40, 110, 220, 255] : [255, 25, 180, 0]);
+const hiddenPaletteA = analyzePalettePixels(hiddenA, 20, 20);
+const hiddenPaletteB = analyzePalettePixels(hiddenB, 20, 20);
+assert.notEqual(hiddenPaletteA.analysis!.seed, hiddenPaletteB.analysis!.seed);
+assert.equal(hiddenPaletteA.analysis!.compositionSeed, hiddenPaletteB.analysis!.compositionSeed);
+assert.deepEqual(hiddenPaletteA.analysis!.regions, hiddenPaletteB.analysis!.regions);
+const faintNoise = analyzePalettePixels(fixture(96, 96, (x, y) => y * 96 + x < 100
+  ? [80, 80, 80, 255] : [255, 0, 0, 1]), 96, 96);
+assert.deepEqual(faintNoise.analysis!.regions.map((region) => region.color), ["#505050"]);
+const translucentArtwork = analyzePalettePixels(fixture(10, 10, () => [40, 110, 220, 32]), 10, 10);
+assert.equal(translucentArtwork.analysis!.regions[0].color, "#286EDC", "intentional translucent artwork stays eligible");
 
 assert.equal(relativeLuminance("#000000"), 0);
 assert.equal(relativeLuminance("#FFFFFF"), 1);

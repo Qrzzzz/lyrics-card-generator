@@ -1,4 +1,5 @@
 import type { ExtractedPalette } from "@/lib/types";
+import { normalizeGradientLayoutSeed } from "@/lib/gradient-layout";
 import {
   DEFAULT_PALETTE,
   adjustLightness,
@@ -109,12 +110,14 @@ export function createColorFieldPlan({
   width,
   height,
   palette = DEFAULT_PALETTE,
-  spatialPalette
+  spatialPalette,
+  layoutSeed = 0
 }: {
   width: number;
   height: number;
   palette?: ExtractedPalette;
   spatialPalette?: SpatialPaletteContract;
+  layoutSeed?: number;
 }): ColorFieldPlan {
   const safeWidth = Math.max(1, Math.round(width));
   const safeHeight = Math.max(1, Math.round(height));
@@ -183,7 +186,7 @@ export function createColorFieldPlan({
     });
   });
 
-  return {
+  const plan: ColorFieldPlan = {
     width: safeWidth,
     height: safeHeight,
     aspect,
@@ -193,6 +196,65 @@ export function createColorFieldPlan({
     families: families.map(({ id, weight, sourceColors }) => ({ id, weight, sourceColors })),
     anchors
   };
+  const variant = normalizeGradientLayoutSeed(layoutSeed);
+  if (variant === 0) return plan;
+
+  // Vary geometry after assigning the default plan's colors and energy budgets.
+  // Placement must never feed back into palette selection or per-color weights.
+  const variantSeed = hashString(`${seed}|layout:${variant}`);
+  const layoutRandom = mulberry32(variantSeed);
+  for (let attempt = 0; attempt < 32; attempt += 1) {
+    const variedPoints = generateAnchorPoints(targetCount, aspect, families, layoutRandom, true);
+    const variantAngle = layoutRandom() * 180;
+    const variedAnchors: ColorFieldAnchor[] = [];
+    anchors.forEach((anchor, index) => {
+      const point = variedPoints[index];
+      const nearby = variedAnchors.filter((previous) => isotropicDistance(point, previous, aspect) < 1.45);
+      variedAnchors.push({
+        ...anchor,
+        x: point.x,
+        y: point.y,
+        edge: point.edge,
+        angle: chooseFlowAngle(variantAngle + index * GOLDEN_ANGLE + (layoutRandom() - 0.5) * 20, nearby)
+      });
+    });
+    if (isBalancedLayout(variedAnchors, aspect)) return { ...plan, seed: variantSeed, anchors: variedAnchors };
+  }
+  // A bounded search falls back to a reflection of the already composed plan.
+  // It preserves spacing, colors and weights without failing a valid seed.
+  const reflectX = layoutRandom() < 0.5;
+  const reflectY = !reflectX || layoutRandom() < 0.5;
+  return { ...plan, seed: variantSeed, anchors: anchors.map((anchor) => ({
+    ...anchor,
+    x: reflectX ? 1 - anchor.x : anchor.x,
+    y: reflectY ? 1 - anchor.y : anchor.y,
+    edge: reflectX && anchor.edge === "left" ? "right" : reflectX && anchor.edge === "right" ? "left"
+      : reflectY && anchor.edge === "top" ? "bottom" : reflectY && anchor.edge === "bottom" ? "top" : anchor.edge
+  })) };
+}
+
+/** Geometry variations retain the original field's spacing and energy balance. */
+function isBalancedLayout(anchors: ColorFieldAnchor[], aspect: number) {
+  const sides = [0, 0, 0, 0];
+  let nearbyPairs = 0;
+  let parallelPairs = 0;
+  for (let index = 0; index < anchors.length; index += 1) {
+    const anchor = anchors[index];
+    sides[anchor.x < 0.5 ? 0 : 1] += anchor.energy;
+    sides[anchor.y < 0.5 ? 2 : 3] += anchor.energy;
+    for (let otherIndex = index + 1; otherIndex < anchors.length; otherIndex += 1) {
+      const other = anchors[otherIndex];
+      const distance = isotropicDistance(anchor, other, aspect);
+      if (distance < 0.27) return false;
+      if (distance < 0.82 && (anchor.familyId === null || other.familyId === null || anchor.familyId !== other.familyId)
+        && colorDistanceOklab(anchor.color, other.color) <= 0.025) return false;
+      if (distance < 1.45) {
+        nearbyPairs += 1;
+        if (angleDistance(anchor.angle, other.angle) < 12) parallelPairs += 1;
+      }
+    }
+  }
+  return Math.min(...sides) > 0.16 && parallelPairs / Math.max(1, nearbyPairs) < 0.18;
 }
 
 export function createColorFieldMesh(plan: ColorFieldPlan): ColorFieldMesh {
@@ -302,7 +364,7 @@ function adaptSpatialPalette(
   const extractedSpatialPalette: SpatialPaletteContract | undefined = palette.analysis?.version === 1
     ? {
         version: 1,
-        coverSignature: palette.analysis.seed,
+        coverSignature: palette.analysis.compositionSeed ?? palette.analysis.seed,
         regions: palette.analysis.regions.map((region) => ({
           color: region.color,
           weight: region.visibleShare,
@@ -490,7 +552,8 @@ function generateAnchorPoints(
   count: number,
   aspect: number,
   families: ColorFamily[],
-  random: () => number
+  random: () => number,
+  enforceAlternation = false
 ) {
   const schedule = createFamilySchedule(families, count);
   const edgePoints: Array<Point & { edge: NonNullable<ColorFieldAnchor["edge"]> }> = [
@@ -530,6 +593,7 @@ function generateAnchorPoints(
           ? alternatingTurns + 1
           : 0;
       if (nextAlternatingTurns >= 3) {
+        if (enforceAlternation) continue;
         short = clamp01(previousShort + (random() - 0.35) * 0.28);
         deltaSign = Math.sign(short - previousShort);
         nextAlternatingTurns = 0;
@@ -543,9 +607,11 @@ function generateAnchorPoints(
 
       if (points.every((point) => isotropicDistance(candidate, point, aspect) >= threshold)) {
         accepted = candidate;
-        previousShort = short;
-        previousDeltaSign = deltaSign;
-        alternatingTurns = nextAlternatingTurns;
+        if (!enforceAlternation) {
+          previousShort = short;
+          previousDeltaSign = deltaSign;
+          alternatingTurns = nextAlternatingTurns;
+        }
         break;
       }
     }
@@ -555,7 +621,13 @@ function generateAnchorPoints(
       let farthestDistance = -1;
       for (let attempt = 0; attempt < 64; attempt += 1) {
         const long = (index + 0.12 + random() * 0.76) / interiorCount;
-        const short = 0.12 + random() * 0.76;
+        let short = 0.12 + random() * 0.76;
+        if (enforceAlternation && alternatingTurns >= 2
+          && Math.sign(short - previousShort) !== previousDeltaSign) {
+          // A straight continuation is always feasible even near the edge,
+          // where extending the previous turn could leave the sampling range.
+          short = previousShort;
+        }
         const candidate = sourceBoundPoint(
           isHorizontal ? { x: long, y: short, edge: null } : { x: short, y: long, edge: null },
           family
@@ -568,6 +640,20 @@ function generateAnchorPoints(
       }
     }
     if (!accepted) throw new Error("Unable to place a deterministic color-field anchor.");
+    if (enforceAlternation) {
+      const short = isHorizontal ? accepted.y : accepted.x;
+      const sign = Math.sign(short - previousShort);
+      // Count turns from the actual accepted point, including fallback placement.
+      if (index === 0) {
+        previousDeltaSign = 0;
+        alternatingTurns = 0;
+      } else {
+        alternatingTurns = sign !== 0 && previousDeltaSign !== 0 && sign !== previousDeltaSign
+          ? alternatingTurns + 1 : 0;
+        previousDeltaSign = sign;
+      }
+      previousShort = short;
+    }
     points.push(accepted);
   }
 

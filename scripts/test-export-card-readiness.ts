@@ -310,6 +310,7 @@ try {
       }
     }],
     ["font", { ...base, style: { ...base.style, font: "serif-heavy" } }],
+    ["gradient layout seed", { ...base, style: { ...base.style, gradientLayoutSeed: 17 } }],
     ["custom font", {
       ...base,
       style: { ...base.style, customFontEnabled: true, customFontFamily: "Fixture Font" }
