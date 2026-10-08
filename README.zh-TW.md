@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v6.7.0.zh-TW.md">發布說明</a> ·
+  <a href="./docs/releases/v6.7.1.zh-TW.md">發布說明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">線上 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="./docs/development.zh-CN.md">本機開發</a> ·
@@ -73,19 +73,19 @@
 
 
 
-* Windows x64 安裝版：`Lyrics.Card.Generator.Setup.6.7.0.exe`
+* Windows x64 安裝版：`Lyrics.Card.Generator.Setup.6.7.1.exe`
 
 從 v6.2.2 起僅提供 Windows x64 Setup 安裝程式。
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v6.7.0 · 發布說明
+### v6.7.1 · 發布說明
 
-發布日期：2026-10-07。
+發布日期：2026-10-08。
 
-v6.7.0 新增流光漸層佈局種子，同一套封面配色可嘗試、儲存及重現不同的色塊排列，並改善純色候選推薦與透明封面取色。
+v6.7.1 將漸層隨機入口明確為「隨機產生新背景」，一鍵使用與目前值不同的隨機種子，立即更新色塊佈局。
 
-[简体中文](./docs/releases/v6.7.0.zh-CN.md) · [繁體中文](./docs/releases/v6.7.0.zh-TW.md) · [English](./docs/releases/v6.7.0.en.md) · [Français](./docs/releases/v6.7.0.fr.md) · [日本語](./docs/releases/v6.7.0.ja.md) · [Español](./docs/releases/v6.7.0.es.md)
+[简体中文](./docs/releases/v6.7.1.zh-CN.md) · [繁體中文](./docs/releases/v6.7.1.zh-TW.md) · [English](./docs/releases/v6.7.1.en.md) · [Français](./docs/releases/v6.7.1.fr.md) · [日本語](./docs/releases/v6.7.1.ja.md) · [Español](./docs/releases/v6.7.1.es.md)
 
 ## ✨ 主要功能
 
