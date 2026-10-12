@@ -905,6 +905,158 @@ body[data-window-maximized="true"] .app-shell[data-desktop-shell="true"] {
   transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* Shared single-choice controls: ordinary lists and primary horizontal choices. */
+.segmented-control[data-choice-layout] {
+  gap: 0.25rem;
+  padding: 0.375rem;
+  border-radius: 14px;
+}
+
+.segmented-control[data-choice-layout] .segmented-control__item {
+  min-width: 0;
+  height: auto;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  border-radius: 9px;
+  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+}
+
+.segmented-control[data-choice-layout] .segmented-control__item:hover:not(:disabled):not([aria-checked="true"]) {
+  background: rgb(var(--button-bg-hover));
+}
+
+.segmented-control[data-choice-layout] .segmented-control__item[aria-checked="true"] {
+  border-color: var(--control-selected-border);
+  background: var(--control-selected-bg-strong);
+  color: rgb(var(--app-fg));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.choice-control__mark {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  border: 1px solid rgb(var(--control-border));
+  border-radius: 50%;
+}
+
+[aria-checked="true"] > .choice-control__mark,
+[aria-selected="true"] > .choice-control__mark {
+  border-color: var(--control-selected-border);
+  background: radial-gradient(circle, rgb(var(--app-fg)) 0 3px, transparent 3.5px);
+}
+
+.choice-dropdown {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(8rem, 55%);
+  gap: 0.75rem;
+  align-items: center;
+  min-width: 0;
+}
+
+.choice-dropdown__label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.choice-dropdown__trigger,
+.choice-dropdown__option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-width: 0;
+  min-height: 2.75rem;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid rgb(var(--control-border));
+  border-radius: 10px;
+  background: rgb(var(--input-bg));
+  color: rgb(var(--app-fg));
+  font-size: 0.875rem;
+  text-align: start;
+  overflow-wrap: anywhere;
+}
+
+.choice-dropdown__trigger > span,
+.choice-dropdown__option > span:first-child {
+  min-width: 0;
+}
+
+.choice-dropdown__trigger > svg {
+  flex-shrink: 0;
+}
+
+.choice-dropdown__trigger--small {
+  min-height: 2.25rem;
+}
+
+.choice-dropdown .choice-dropdown__trigger[data-menu-visible="true"] {
+  opacity: 0;
+  pointer-events: none;
+  transition: none;
+}
+
+.choice-dropdown__trigger:hover:not(:disabled),
+.choice-dropdown__option:hover:not(:disabled) {
+  background: rgb(var(--button-bg-hover));
+}
+
+.choice-dropdown__menu {
+  position: fixed;
+  z-index: 1000;
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.375rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 1px solid rgb(var(--control-border));
+  border-radius: 14px;
+  background: rgb(var(--elevated-panel-bg));
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.24);
+}
+
+.choice-dropdown__option {
+  width: 100%;
+  border-color: transparent;
+  background: transparent;
+  transition: background-color var(--motion-duration-fast) var(--motion-ease-standard),
+    border-color var(--motion-duration-fast) var(--motion-ease-standard);
+}
+
+.choice-dropdown__option .choice-control__mark {
+  transition: border-color var(--motion-duration-fast) var(--motion-ease-standard),
+    background-color var(--motion-duration-fast) var(--motion-ease-standard);
+}
+
+body[data-reduce-motion="true"] .choice-dropdown__option,
+body[data-reduce-motion="true"] .choice-dropdown__option .choice-control__mark {
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .choice-dropdown__option,
+  .choice-dropdown__option .choice-control__mark { transition: none; }
+}
+
+.choice-dropdown__option[aria-selected="true"] {
+  border-color: var(--control-selected-border);
+  background: var(--control-selected-bg-strong);
+}
+
+/* These choices carry their own visible label, aligned with the trigger. */
+.editor-settings-field:has(> .choice-dropdown) > .editor-settings-field__header,
+.settings-field-label:has(.choice-dropdown) > .settings-field-label__heading,
+.editor-choice-group > .editor-settings-group__header {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 .status-success {
   border-color: rgb(var(--status-success-border));
   background: rgb(var(--status-success-bg));
@@ -1020,17 +1172,17 @@ button {
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .app-shell button:not(:disabled):not([aria-disabled="true"]):not(.traffic-light):not(.desktop-titlebar__button):not(.example-song-card) {
+  .app-shell button:not(:disabled):not([aria-disabled="true"]):not(.traffic-light):not(.desktop-titlebar__button):not(.example-song-card):not(.choice-dropdown__trigger) {
     transition-property: border-color, box-shadow, background, color, opacity, transform;
     transition-duration: var(--motion-duration-fast);
     transition-timing-function: var(--motion-ease-standard);
   }
 
-  .app-shell button:not(:disabled):not([aria-disabled="true"]):not(.traffic-light):not(.desktop-titlebar__button):not(.example-song-card):hover {
+  .app-shell button:not(:disabled):not([aria-disabled="true"]):not(.traffic-light):not(.desktop-titlebar__button):not(.example-song-card):not(.choice-dropdown__trigger):hover {
     transform: translateY(-1px);
   }
 
-  .app-shell button:not(:disabled):not([aria-disabled="true"]):not(.traffic-light):not(.desktop-titlebar__button):not(.example-song-card):hover:active {
+  .app-shell button:not(:disabled):not([aria-disabled="true"]):not(.traffic-light):not(.desktop-titlebar__button):not(.example-song-card):not(.choice-dropdown__trigger):hover:active {
     transform: translateY(0) scale(0.985);
   }
 }
@@ -2297,7 +2449,7 @@ body[data-reduce-motion="true"] .examples-close-button:focus-visible .examples-c
   }
 
   .traffic-light,
-  .app-shell button:not(.traffic-light):not(.example-song-card),
+  .app-shell button:not(.traffic-light):not(.example-song-card):not(.choice-dropdown__trigger),
   .examples-toggle-track,
   .examples-toggle-knob,
   .example-song-card,
@@ -2321,8 +2473,8 @@ body[data-reduce-motion="true"] .examples-close-button:focus-visible .examples-c
   .app-button:active:not(:disabled),
   .traffic-light:hover,
   .traffic-light:active,
-  .app-shell button:not(:disabled):not([aria-disabled="true"]):not(.traffic-light):not(.example-song-card):hover,
-  .app-shell button:not(:disabled):not([aria-disabled="true"]):not(.traffic-light):not(.example-song-card):hover:active,
+  .app-shell button:not(:disabled):not([aria-disabled="true"]):not(.traffic-light):not(.example-song-card):not(.choice-dropdown__trigger):hover,
+  .app-shell button:not(:disabled):not([aria-disabled="true"]):not(.traffic-light):not(.example-song-card):not(.choice-dropdown__trigger):hover:active,
   .control-surface:hover:not(:disabled):not([aria-disabled="true"]),
   .control-variant-primary:hover:not(:disabled):not([aria-disabled="true"]),
   .control-variant-danger:hover:not(:disabled):not([aria-disabled="true"]),

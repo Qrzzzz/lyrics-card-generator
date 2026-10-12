@@ -1,3 +1,4 @@
+import { selectChoiceValue } from "./choice-test-helpers.mjs";
 import assert from "node:assert/strict";
 import { prepareEditorLanguage } from "./editor-language-test-helpers.mjs";
 import { mkdir, mkdtemp, readFile, rm } from "node:fs/promises";
@@ -211,7 +212,7 @@ try {
   await closeHistory();
   await page.locator('[data-testid="editor-surface"] [data-testid="settings-button"]').click();
   await page.getByTestId("settings-tab-appearance").click();
-  await page.locator('[data-settings-panel="appearance"]:not([hidden]) [data-segment-value="light"]').click();
+  await selectChoiceValue(page, "light", page.locator('[data-settings-panel="appearance"]:not([hidden])'));
   await page.getByTestId("settings-close-button").click();
   await page.locator('[data-testid="settings-surface"][data-surface-state="closed"]').waitFor({ state: "attached" });
   await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].setContentSize(960, 720));

@@ -68,7 +68,7 @@ export function FontSchemeSettingsPanel({
           t={t}
         />
       </SettingsGroup>
-      <SettingsGroup title={t("textColor")}>
+      <SettingsGroup title={t("textColor")} className="editor-choice-group">
         <ColorControls style={style} onStyleChange={onStyleChange} t={t} />
       </SettingsGroup>
     </SettingsLayout>
@@ -184,6 +184,7 @@ export function LayoutSettingsPanel({ style, onStyleChange, locale, t }: StylePa
         <SettingsGrid data-testid="layout-settings-grid">
           <SettingsField label={t("contentType")}>
             <SegmentedControl<ContentMode>
+              orientation="horizontal"
               value={style.contentMode}
               onChange={updateContentMode}
               options={[
@@ -195,6 +196,7 @@ export function LayoutSettingsPanel({ style, onStyleChange, locale, t }: StylePa
           </SettingsField>
           <SettingsField label={t("layoutMode")} description={isInstrumental ? instrumentalLayoutLockedHint : undefined}>
             <SegmentedControl
+              orientation="horizontal"
               value={layoutMode}
               onValueChange={(value) => updateLayoutMode(value as CardLayoutMode)}
               options={[

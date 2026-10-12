@@ -13,6 +13,7 @@ import type {
   TextareaHTMLAttributes
 } from "react";
 import { Children, cloneElement, isValidElement, useId, useRef } from "react";
+import { ChoiceDropdown } from "./ChoiceDropdown";
 import { useAppReducedMotion } from "@/components/motion/AppMotionProvider";
 import {
   controlHoverTarget,
@@ -597,6 +598,7 @@ type SegmentedControlProps<T extends string = string> = Omit<HTMLAttributes<HTML
   options: readonly SegmentedControlOption<T>[];
   ariaLabel?: string;
   columns?: 2 | 3 | 4;
+  orientation?: "horizontal" | "vertical";
   size?: ActionButtonSize;
 };
 
@@ -607,33 +609,46 @@ export function SegmentedControl<T extends string = string>({
   options,
   ariaLabel,
   columns,
+  orientation = "vertical",
   size = "md",
   className,
   style,
   role,
+  onKeyDown,
   ...props
 }: SegmentedControlProps<T>) {
   const refs = useRef<Record<string, HTMLButtonElement | null>>({});
   const resolvedOnChange = onChange ?? onValueChange;
   const resolvedColumns = columns ?? Math.min(Math.max(options.length, 2), 4);
-  const activeIndex = Math.max(0, options.findIndex((option) => option.value === value));
+  const enabledOptions = options.filter((option) => !option.disabled);
+  const tabStop = enabledOptions.find((option) => option.value === value)?.value ?? enabledOptions[0]?.value;
+
+  if (orientation === "vertical") {
+    return <ChoiceDropdown {...props} className={className} style={style} value={value}
+      options={options} onChange={resolvedOnChange} label={props["aria-label"] ?? ariaLabel}
+      size={size} onKeyDown={onKeyDown} />;
+  }
 
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    onKeyDown?.(event);
+    if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) return;
     const isForward = event.key === "ArrowRight" || event.key === "ArrowDown";
     const isBackward = event.key === "ArrowLeft" || event.key === "ArrowUp";
-    if (!isForward && !isBackward) {
+    const isHome = event.key === "Home";
+    const isEnd = event.key === "End";
+    if (!isForward && !isBackward && !isHome && !isEnd) {
       return;
     }
 
     // Radio-style arrow navigation skips disabled segments and maintains one tab stop.
     event.preventDefault();
-    const enabledOptions = options.filter((option) => !option.disabled);
     if (enabledOptions.length === 0 || !resolvedOnChange) {
       return;
     }
 
-    const currentIndex = Math.max(0, enabledOptions.findIndex((option) => option.value === value));
-    const nextIndex =
+    const focusedIndex = enabledOptions.findIndex((option) => refs.current[option.value] === document.activeElement);
+    const currentIndex = focusedIndex >= 0 ? focusedIndex : Math.max(0, enabledOptions.findIndex((option) => option.value === value));
+    const nextIndex = isHome ? 0 : isEnd ? enabledOptions.length - 1 :
       (currentIndex + (isForward ? 1 : -1) + enabledOptions.length) % enabledOptions.length;
     const nextOption = enabledOptions[nextIndex];
     resolvedOnChange(nextOption.value);
@@ -645,16 +660,15 @@ export function SegmentedControl<T extends string = string>({
       {...props}
       role={role ?? "radiogroup"}
       aria-label={props["aria-label"] ?? ariaLabel}
+      aria-orientation={orientation}
+      data-choice-layout={orientation}
       onKeyDown={handleKeyDown}
       className={cn("segmented-control relative isolate grid gap-2 rounded-xl p-1", className)}
       style={{
         ...style,
-        "--segmented-count": resolvedColumns,
-        "--segmented-active-translate": `${activeIndex * 100}%`,
         gridTemplateColumns: `repeat(${resolvedColumns}, minmax(0, 1fr))`
       } as CSSProperties}
     >
-      <span className="segmented-control__active-indicator" aria-hidden="true" />
       {options.map((option) => (
         <button
           key={option.value}
@@ -664,14 +678,14 @@ export function SegmentedControl<T extends string = string>({
           type="button"
           role="radio"
           aria-checked={value === option.value}
-          tabIndex={value === option.value ? 0 : -1}
+          tabIndex={tabStop === option.value ? 0 : -1}
           disabled={option.disabled}
           title={option.title}
           data-segment-value={option.value}
           onClick={() => resolvedOnChange?.(option.value)}
           className={cn(
-            "segmented-control__item control-focus control-disabled relative isolate overflow-hidden rounded-lg px-3 font-semibold transition",
-            size === "sm" ? "h-9 text-sm" : "h-11 text-sm"
+            "segmented-control__item control-focus control-disabled relative isolate rounded-lg px-3 py-2 text-sm font-medium transition",
+            size === "sm" ? "min-h-9" : "min-h-11"
           )}
         >
           <span className="relative z-10">{option.label}</span>

@@ -1,3 +1,4 @@
+import { selectChoiceValue } from "./choice-test-helpers.mjs";
 import assert from "node:assert/strict";
 import { prepareEditorLanguage } from "./editor-language-test-helpers.mjs";
 import { mkdtemp, rm } from "node:fs/promises";
@@ -61,8 +62,8 @@ try {
   await page.locator('button[data-step-id="export"]').click();
   const exportPanel = page.locator('[data-testid="export-settings-panel"][data-active="true"]');
   await exportPanel.waitFor({ state: "visible", timeout: 15_000 });
-  await exportPanel.locator('[data-segment-value="webp"]').click();
-  await exportPanel.locator('[data-segment-value="high"]').click();
+  await selectChoiceValue(page, "webp", exportPanel);
+  await selectChoiceValue(page, "high", exportPanel);
 
   const copyImageButton = exportPanel.getByTestId("copy-image-button");
   await page.waitForFunction(() => {
@@ -95,8 +96,8 @@ try {
     "copy uses PNG at the selected high-quality pixel ratio"
   );
   assert.equal(
-    await exportPanel.locator('[data-segment-value="webp"]').getAttribute("aria-checked"),
-    "true",
+    await exportPanel.locator('.choice-dropdown[data-choice-values~="webp"]').getByRole("combobox").getAttribute("data-choice-value"),
+    "webp",
     "copy keeps the selected download format unchanged"
   );
   assert.deepEqual(rendererErrors, [], `copy flow has no renderer errors: ${JSON.stringify(rendererErrors)}`);

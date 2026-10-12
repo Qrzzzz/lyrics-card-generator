@@ -553,12 +553,10 @@ test("exposes all five font schemes and persists all six languages, export forma
   ]);
 
   await page.locator('[data-step-id="export"]').click();
-  const standardQuality = page.locator('[data-segment-value="medium"]');
-  await standardQuality.click();
-  await expect(standardQuality).toHaveAttribute("aria-checked", "true");
-  const webpFormat = page.locator('[data-segment-value="webp"]');
-  await webpFormat.click();
-  await expect(webpFormat).toHaveAttribute("aria-checked", "true");
+  const standardQuality = await selectChoice(page, "medium");
+  await expect(standardQuality).toHaveAttribute("data-choice-value", "medium");
+  const webpFormat = await selectChoice(page, "webp");
+  await expect(webpFormat).toHaveAttribute("data-choice-value", "webp");
 
   for (const [name, lang] of [
     ["简体中文", "zh-CN"],
@@ -577,8 +575,8 @@ test("exposes all five font schemes and persists all six languages, export forma
   await page.reload();
   await expect(page.locator("html")).toHaveAttribute("lang", "zh-CN");
   await page.locator('[data-step-id="export"]').click();
-  await expect(page.locator('[data-segment-value="medium"]')).toHaveAttribute("aria-checked", "true");
-  await expect(page.locator('[data-segment-value="webp"]')).toHaveAttribute("aria-checked", "true");
+  await expect(page.locator('.choice-dropdown[data-choice-values~="medium"]').getByRole("combobox")).toHaveAttribute("data-choice-value", "medium");
+  await expect(page.locator('.choice-dropdown[data-choice-values~="webp"]').getByRole("combobox")).toHaveAttribute("data-choice-value", "webp");
 });
 
 test("Mona Sans preset renders and exports in portrait and landscape", async ({ page }) => {
@@ -618,8 +616,8 @@ test("solid background keeps custom HEX across modes and exports offline with Mo
   await page.locator('[data-segment-value="solid"]').click();
   const hex = page.getByTestId("solid-color-input");
   const controls = page.locator('[data-solid-controls]');
-  const sourceSwitch = controls.locator('[data-segment-value="preset"]');
-  if (await sourceSwitch.count()) await sourceSwitch.click();
+  const sourceSwitch = controls.locator('.choice-dropdown[data-choice-values~="preset"]').getByRole("combobox");
+  if (await sourceSwitch.count()) await selectChoice(page, "preset", controls);
   const swatches = controls.locator('[data-color-swatches]');
   await expect(swatches).toHaveAttribute("aria-label", "Preset colors");
   await expect(swatches.locator('[tabindex="0"]')).toHaveCount(1);
@@ -649,14 +647,14 @@ test("solid background keeps custom HEX across modes and exports offline with Mo
   await uploadGeneratedCover(page, "color-picker.png", 200, 200, false);
   await page.locator('[data-step-id="layout"]').click();
   await expect(sourceSwitch).toBeVisible();
-  await sourceSwitch.click();
+  await selectChoice(page, "preset", controls);
   await expect(hex).toHaveValue("#F0EEDD");
-  await controls.locator('[data-segment-value="cover"]').click();
+  await selectChoice(page, "cover", controls);
   await expect(hex).toHaveValue("#F0EEDD");
   await controls.getByRole("button", { name: "Automatic", exact: true }).click();
   await expect(hex).not.toHaveValue("#F0EEDD");
   await hex.fill("#F0EEDD");
-  await sourceSwitch.click();
+  await selectChoice(page, "preset", controls);
   await expect(swatches.locator('[aria-checked="true"]')).toHaveCount(0);
   await expect(swatches.locator('[tabindex="0"]')).toHaveCount(1);
   await page.screenshot({ path: test.info().outputPath("solid-color-controls.png") });
@@ -753,7 +751,7 @@ test("supports bilingual splitting, layout modes, instrumental mode, and visual 
   const landscape = page.locator('[data-segment-value="landscape"]');
   await landscape.click();
   await expect(landscape).toHaveAttribute("aria-checked", "true");
-  await expect(page.getByRole("radiogroup", { name: "Size Mode", exact: true })).toHaveCount(0);
+  await expect(page.getByRole("combobox", { name: "Size Mode", exact: true })).toHaveCount(0);
   const autoHeight = page.getByRole("switch", { name: "Auto Height", exact: true });
   await expect(autoHeight).toHaveAttribute("aria-checked", "true");
   await autoHeight.click();
@@ -763,17 +761,17 @@ test("supports bilingual splitting, layout modes, instrumental mode, and visual 
   await instrumental.click();
   await expect(instrumental).toHaveAttribute("aria-checked", "true");
   await expect(landscape).toBeDisabled();
-  const sizeMode = page.getByRole("radiogroup", { name: "Size Mode", exact: true });
-  await expect(sizeMode.getByRole("radio", { name: "1:1 Square", exact: true })).toBeDisabled();
-  await expect(sizeMode.getByRole("radio", { name: "Custom", exact: true })).toBeDisabled();
+  const sizeMode = page.getByRole("combobox", { name: "Size Mode", exact: true });
+  await expect(sizeMode).toBeDisabled();
+  await expect(sizeMode).toHaveAttribute("data-choice-value", "1:1");
 
   await page.locator('[data-segment-value="lyrics"]').click();
   await page.locator('[data-step-id="visual"]').click();
   const backgroundGrid = page.getByRole("switch", { name: "Background Grid", exact: true });
   await backgroundGrid.click();
   await expect(backgroundGrid).toHaveAttribute("aria-checked", "true");
-  await page.locator('[data-segment-value="dense"]').click();
-  await expect(page.locator('[data-segment-value="dense"]')).toHaveAttribute("aria-checked", "true");
+  await selectChoice(page, "dense");
+  await expect(page.locator('.choice-dropdown[data-choice-values~="dense"]').getByRole("combobox")).toHaveAttribute("data-choice-value", "dense");
   await expect(page.getByRole("switch", { name: "Show Platform Logo", exact: true })).toHaveCount(0);
 });
 
@@ -783,7 +781,7 @@ test("restores independent portrait and free-landscape sizing after round trips"
 
   const portrait = page.locator('[data-segment-value="portrait"]');
   const landscape = page.locator('[data-segment-value="landscape"]');
-  const sizeMode = page.getByRole("radiogroup", { name: "Size Mode", exact: true });
+  const sizeMode = page.getByRole("combobox", { name: "Size Mode", exact: true });
   let autoWidth = page.getByRole("switch", { name: "Auto Width", exact: true });
   const width = page.getByLabel("Width", { exact: true });
   const previewSection = page
@@ -793,7 +791,7 @@ test("restores independent portrait and free-landscape sizing after round trips"
   const exportCard = page.locator('[data-export-card-host] [data-export-card="true"]');
 
   await expect(portrait).toHaveAttribute("aria-checked", "true");
-  await expect(sizeMode.getByRole("radio", { name: "Custom", exact: true })).toHaveAttribute("aria-checked", "true");
+  await expect(sizeMode).toHaveAttribute("data-choice-value", "custom");
   await expect(autoWidth).toHaveAttribute("aria-checked", "true");
   await autoWidth.click();
   await expect(autoWidth).toHaveAttribute("aria-checked", "false");
@@ -806,7 +804,7 @@ test("restores independent portrait and free-landscape sizing after round trips"
 
   await landscape.click();
   await expect(landscape).toHaveAttribute("aria-checked", "true");
-  await expect(page.getByRole("radiogroup", { name: "Size Mode", exact: true })).toHaveCount(0);
+  await expect(page.getByRole("combobox", { name: "Size Mode", exact: true })).toHaveCount(0);
   autoWidth = page.getByRole("switch", { name: "Auto Width", exact: true });
   await expect(autoWidth).toHaveAttribute("aria-checked", "true");
   await autoWidth.click();
@@ -818,7 +816,7 @@ test("restores independent portrait and free-landscape sizing after round trips"
   await expect(exportCard).toHaveAttribute("data-landscape-plan", "ready");
 
   await portrait.click();
-  await expect(sizeMode.getByRole("radio", { name: "Custom", exact: true })).toHaveAttribute("aria-checked", "true");
+  await expect(sizeMode).toHaveAttribute("data-choice-value", "custom");
   await expect(width).toHaveValue("1200");
   await expect(previewSize).toHaveText(/^1200x\d+$/);
 
@@ -845,8 +843,9 @@ test("keeps restrained content depth identical in preview and ExportCardHost", a
     "Only quiet shadows where the letters lie"
   ].join("\n"));
   await page.locator('[data-step-id="layout"]').click();
-  const sizeMode = page.getByRole("radiogroup", { name: "Size Mode", exact: true });
-  await sizeMode.getByRole("radio", { name: "1:1 Square", exact: true }).click();
+  const sizeMode = page.getByRole("combobox", { name: "Size Mode", exact: true });
+  await selectChoice(page, "1:1");
+  await expect(sizeMode).toHaveAttribute("data-choice-value", "1:1");
 
   const previewCard = page.getByTestId("lyric-card-preview").locator('[data-export-card="true"]');
   const exportCard = page.locator('[data-export-card-host] [data-export-card="true"]').first();
@@ -2234,4 +2233,14 @@ async function waitForStableSliderValue(locator: Locator, stableMs = 500, timeou
   }
 
   throw new Error(`Slider value did not settle within ${timeoutMs}ms; last value: ${latest}`);
+}
+
+async function selectChoice(page: Page, value: string, root: Page | Locator = page) {
+  const trigger = root.locator(`.choice-dropdown[data-choice-values~="${value}"]`).getByRole("combobox");
+  await trigger.click();
+  const id = await trigger.getAttribute("aria-controls");
+  const menu = page.locator(`[id="${id}"]`);
+  await menu.locator(`[data-segment-value="${value}"]`).click();
+  await menu.waitFor({ state: "hidden" });
+  return trigger;
 }

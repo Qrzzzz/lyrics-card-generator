@@ -1237,7 +1237,7 @@ async function selectVisualTheme(mode, acrylicEnabled) {
   await waitForVisible("settings-surface");
   await selectSettingsSection("appearance");
   const panel = page.locator('[data-settings-panel="appearance"]:not([hidden])');
-  await panel.locator(`[data-segment-value="${mode}"]`).click();
+  await selectChoiceValue(mode, panel);
   const acrylicToggle = panel.getByRole("switch").first();
   if ((await acrylicToggle.getAttribute("aria-checked") === "true") !== acrylicEnabled) {
     await acrylicToggle.click();
@@ -1584,7 +1584,7 @@ async function assertTitlebarStylePreferences() {
 
   await openAppearance();
   await selectStyle("windows");
-  await page.getByRole("radiogroup", { name: "顶栏样式", exact: true }).scrollIntoViewIfNeeded();
+  await page.getByRole("combobox", { name: "顶栏样式", exact: true }).scrollIntoViewIfNeeded();
   await page.getByTestId("settings-surface").screenshot({ path: path.join(reportDirectory, "titlebar-style-settings.png") });
   await expect(page.locator(".traffic-light")).toHaveCount(0);
   await expect(page.locator(".desktop-titlebar__button")).toHaveCount(3);
@@ -2410,12 +2410,9 @@ async function assertPreviewWorkbenchPan() {
   assert.equal(await page.getByTestId('preview-workbench-resizer').count(), 0, "step six hides the step-three-to-five resize separator");
   assert.deepEqual(after.editorState, { active: "false", ariaHidden: "true", inert: true }, "step five settings become inert off-screen left");
   assert.deepEqual(after.exportState, { active: "true", ariaHidden: "false", inert: false }, "step six export settings become interactive on the right");
-  const exportFormatState = await page.locator('[data-workbench-panel="export-settings"] [data-segment-value="png"], [data-workbench-panel="export-settings"] [data-segment-value="webp"], [data-workbench-panel="export-settings"] [data-segment-value="jpg"]').evaluateAll((buttons) => (
-    buttons.map((button) => ({
-      value: button.getAttribute('data-segment-value'),
-      checked: button.getAttribute('aria-checked')
-    }))
-  ));
+  const exportFormatState = await page.locator('[data-workbench-panel="export-settings"] .choice-dropdown[data-choice-values~="png"] [role="combobox"]').evaluateAll((buttons) =>
+    ["png", "webp", "jpg"].map((value) => ({value, checked: buttons[0]?.getAttribute("data-choice-value") === value ? "true" : "false"}))
+  );
   assert.deepEqual(
     exportFormatState,
     [
@@ -4212,11 +4209,11 @@ try {
 
   await selectSettingsSection("appearance");
   const appearancePanel = page.locator('[data-settings-panel="appearance"]:not([hidden])');
-  const appearanceRadioNames = await appearancePanel.locator('[role="radiogroup"]').evaluateAll((groups) => (
-    groups.map((group) => group.getAttribute("aria-label")?.trim() ?? "")
+  const appearanceRadioNames = await appearancePanel.getByRole("combobox").evaluateAll((groups) => (
+    groups.map((group) => document.getElementById(group.getAttribute("aria-labelledby"))?.textContent?.trim() ?? group.getAttribute("aria-label")?.trim() ?? "")
   ));
   assert.ok(appearanceRadioNames.length >= 2 && appearanceRadioNames.every(Boolean), `theme and accent radiogroups have accessible names: ${JSON.stringify(appearanceRadioNames)}`);
-  await appearancePanel.locator('[data-segment-value="preset"]').click();
+  await selectChoiceValue("preset", appearancePanel);
   const accentSwatches = appearancePanel.locator('[data-color-swatches]');
   assert.equal(await accentSwatches.locator('[tabindex="0"]').count(), 1, "swatches have one tab stop");
   const firstAccent = accentSwatches.getByRole("radio").first();
@@ -4226,7 +4223,7 @@ try {
   assert.equal(await accentSwatches.getByRole("radio").nth(1).evaluate((node) => node === document.activeElement), true, "selection moves focus");
   await accentSwatches.getByRole("radio").nth(1).press("End");
   assert.equal(await accentSwatches.getByRole("radio").last().getAttribute("aria-checked"), "true", "End selects the last accent");
-  await appearancePanel.locator('[data-segment-value="custom"]').click();
+  await selectChoiceValue("custom", appearancePanel);
   const customAccent = page.getByTestId("custom-accent-input");
   const customAccentId = await customAccent.getAttribute("id");
   assert.ok(customAccentId, "custom accent receives a real input ID");
@@ -4356,12 +4353,16 @@ try {
   const settingsExportPanel = page.locator('[data-settings-panel="export"]:not([hidden])');
   assert.equal(await page.getByTestId("new-card-defaults-group").isVisible(), true, "new-card footer defaults have their own visible group");
   assert.equal(await page.getByTestId("file-export-defaults-group").isVisible(), true, "file export defaults have their own visible group");
-  const defaultFormatOptions = settingsExportPanel.locator('[data-segment-value="png"], [data-segment-value="webp"], [data-segment-value="jpg"]');
-  assert.deepEqual(await defaultFormatOptions.allTextContents(), ["PNG", "WebP", "JPG"], "settings exposes PNG, WebP, and JPG defaults");
-  assert.equal(await defaultFormatOptions.nth(0).getAttribute("aria-checked"), "true", "PNG remains the initial default export format");
-  await settingsExportPanel.locator('[data-segment-value="webp"]').click();
+  const defaultFormatTrigger = settingsExportPanel.locator('.choice-dropdown[data-choice-values~="png"]').getByRole("combobox");
+  assert.equal(await defaultFormatTrigger.getAttribute("data-choice-value"), "png", "PNG remains the initial default export format");
+  await defaultFormatTrigger.click();
+  const defaultMenu = page.locator(`[id="${await defaultFormatTrigger.getAttribute("aria-controls")}"]`);
+  assert.deepEqual(await defaultMenu.getByRole("option").allTextContents(), ["PNG", "WebP", "JPG"], "settings exposes PNG, WebP, and JPG defaults");
+  await defaultMenu.getByRole("option").first().press("Escape");
+  await defaultMenu.waitFor({state: "hidden"});
+  await selectChoiceValue("webp", settingsExportPanel);
   await page.waitForFunction(() => (
-    document.querySelector('[data-settings-panel="export"]:not([hidden]) [data-segment-value="webp"]')?.getAttribute('aria-checked') === 'true'
+    document.querySelector('[data-settings-panel="export"]:not([hidden]) .choice-dropdown[data-choice-values~="webp"] [role="combobox"]')?.getAttribute('data-choice-value') === 'webp'
   ));
   await page.getByTestId("default-generated-watermark-toggle").click();
   assert.equal(await page.getByTestId("default-generated-watermark-toggle").getAttribute("aria-checked"), "true", "new-card watermark default can be changed independently");
@@ -4395,11 +4396,11 @@ try {
   assert.equal((await page.evaluate(() => window.lyricsCardDesktop?.loadAISettings()))?.hasApiKey, true, "restoring app preferences never clears the AI API key");
 
   await selectSettingsSection("export");
-  assert.equal(await settingsExportPanel.locator('[data-segment-value="png"]').getAttribute("aria-checked"), "true", "restoring app preferences resets the file format default");
+  assert.equal(await settingsExportPanel.locator('.choice-dropdown[data-choice-values~="png"]').getByRole("combobox").getAttribute("data-choice-value"), "png", "restoring app preferences resets the file format default");
   assert.equal(await page.getByTestId("default-generated-watermark-toggle").getAttribute("aria-checked"), "false", "restoring app preferences resets new-card footer defaults");
-  await settingsExportPanel.locator('[data-segment-value="webp"]').click();
+  await selectChoiceValue("webp", settingsExportPanel);
   await page.waitForFunction(() => (
-    document.querySelector('[data-settings-panel="export"]:not([hidden]) [data-segment-value="webp"]')?.getAttribute('aria-checked') === 'true'
+    document.querySelector('[data-settings-panel="export"]:not([hidden]) .choice-dropdown[data-choice-values~="webp"] [role="combobox"]')?.getAttribute('data-choice-value') === 'webp'
   ));
 
   await selectSettingsSection("ai");
@@ -4903,7 +4904,7 @@ try {
   const fixedRatioLineBudget = await waitForLyricsLineBudget("18 + 18 = 36 / 36");
   assert.match(fixedRatioLineBudget, /18.*18.*36 \/ 36/s);
   await page.locator('button[data-step-id="layout"]').click();
-  await page.locator('[role="radiogroup"][aria-label="尺寸模式"] [data-segment-value="1:1"]').click();
+  await selectChoiceValue("1:1");
   await page.waitForFunction(() => document.querySelector('[data-export-card-host] [data-export-card]')?.getBoundingClientRect().height === 1080);
   const squareCard = await measureExportCard();
   assert.equal(squareCard?.hasOverflow, true, `1:1 fixed ratio exposes real overflow: ${JSON.stringify(squareCard)}`);
@@ -4942,7 +4943,7 @@ try {
   await landscapeMode.click();
   await page.waitForFunction(() => document.querySelector('[data-segment-value="landscape"]')?.getAttribute("aria-checked") === "true");
   assert.equal(
-    await page.locator('[role="radiogroup"][aria-label="尺寸模式"]').count(),
+    await page.getByRole('combobox', {name: '尺寸模式', exact: true}).count(),
     0,
     "free landscape exposes no obsolete ratio presets"
   );
@@ -4996,4 +4997,14 @@ try {
 } finally {
   await closeElectronApplication(electronApp, { label: "desktop-regression" });
   await rm(userDataDirectory, { recursive: true, force: true }).catch(() => {});
+}
+
+async function selectChoiceValue(value, root = page) {
+  const trigger = root.locator(`.choice-dropdown[data-choice-values~="${value}"]`).getByRole("combobox");
+  await trigger.click();
+  const id = await trigger.getAttribute("aria-controls");
+  const menu = page.locator(`[id="${id}"]`);
+  await menu.locator(`[data-segment-value="${value}"]`).click();
+  await menu.waitFor({ state: "hidden" });
+  return trigger;
 }

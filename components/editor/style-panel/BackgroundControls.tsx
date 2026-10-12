@@ -33,7 +33,7 @@ export function BackgroundControls({ style, onStyleChange, locale }: {
     onStyleChange({ ...style, solidColor: value, solidColorSource: "user" });
   }
   return <SettingsGroup title={c[0]}>
-    <SegmentedControl value={style.backgroundMode === "solid" ? "solid" : "palette"}
+    <SegmentedControl orientation="horizontal" value={style.backgroundMode === "solid" ? "solid" : "palette"}
       onChange={(backgroundMode: "solid" | "palette") => onStyleChange({ ...style, backgroundMode })}
       options={[{ value: "palette", label: c[1] }, { value: "solid", label: c[2] }]} aria-label={c[0]} />
     {style.backgroundMode === "solid" ? <div className="grid gap-3" data-solid-controls>
