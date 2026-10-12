@@ -98,9 +98,10 @@ test("starts, edits, previews, loads bundled fonts, selects a local cover, and d
   await expect(page.getByTestId("lyric-card-preview").locator("img").first()).toBeVisible();
 
   await page.locator('[data-step-id="export"]').click();
-  const pngFormat = page.locator('.choice-dropdown[data-choice-values~="png"]').getByRole("combobox");
+  const pngFormat = page.getByRole("combobox", { name: "Export format" });
+  await expect(pngFormat).toBeVisible();
   await pngFormat.click();
-  const pngMenu = page.locator(`[id="${await pngFormat.getAttribute("aria-controls")}"]`);
+  const pngMenu = page.getByRole("listbox", { name: "Export format" });
   await pngMenu.locator('[data-segment-value="png"]').click();
   await expect(pngMenu).toBeHidden();
   await expect(pngFormat).toHaveAttribute("data-choice-value", "png");

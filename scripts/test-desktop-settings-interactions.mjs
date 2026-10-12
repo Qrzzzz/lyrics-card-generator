@@ -5002,8 +5002,7 @@ try {
 async function selectChoiceValue(value, root = page) {
   const trigger = root.locator(`.choice-dropdown[data-choice-values~="${value}"]`).getByRole("combobox");
   await trigger.click();
-  const id = await trigger.getAttribute("aria-controls");
-  const menu = page.locator(`[id="${id}"]`);
+  const menu = page.locator(`[role="listbox"][data-choice-menu="${value}"]`);
   await menu.locator(`[data-segment-value="${value}"]`).click();
   await menu.waitFor({ state: "hidden" });
   return trigger;

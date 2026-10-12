@@ -135,7 +135,7 @@ export function ChoiceDropdown<T extends string>({ value, options, onChange, lab
       <ChevronDown size={16} aria-hidden="true" className={open ? "rotate-180" : undefined} />
     </button>
     {typeof document !== "undefined" ? createPortal(<AnimatePresence onExitComplete={() => setExiting(false)}>
-      {open ? <motion.div key="menu" ref={menu} id={`${id}-menu`} role="listbox" aria-label={label}
+      {open ? <motion.div key="menu" ref={menu} id={`${id}-menu`} role="listbox" aria-label={label} data-choice-menu={value}
       initial={reduceMotion ? false : { opacity: 0, scaleY: 0.94 }}
       animate={{ opacity: 1, scaleY: 1 }}
       exit={reduceMotion ? { opacity: 0, transition: reducedMotionTransition } : { opacity: 0, scaleY: 0.97, transition: { duration: motionDurations.fast } }}
