@@ -5003,7 +5003,9 @@ async function selectChoiceValue(value, root = page) {
   const trigger = root.locator(`.choice-dropdown[data-choice-values~="${value}"]`).getByRole("combobox");
   await trigger.click();
   const menu = page.locator(`[role="listbox"][data-choice-menu~="${value}"]`);
-  await menu.locator(`[data-segment-value="${value}"]`).click();
+  const option = menu.locator(`[data-segment-value="${value}"]`);
+  await option.focus();
+  await option.press("Enter");
   await menu.waitFor({ state: "hidden" });
   return trigger;
 }
