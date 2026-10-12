@@ -84,7 +84,7 @@ A partir de v6.2.2, Setup para Windows x64 es el único paquete de escritorio di
 
 ### v6.7.2 · Notas de la versión
 
-Fecha de publicación: aún no publicado.
+Fecha de publicación: 2026-10-12.
 
 v6.7.2 organiza las opciones habituales en filas compactas, con el nombre a la izquierda y un selector plegado a la derecha, y mejora las animaciones de apertura y cierre.
 

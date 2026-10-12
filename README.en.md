@@ -85,7 +85,7 @@ Starting with v6.2.2, Windows x64 Setup is the only distributed desktop package.
 
 ### v6.7.2 · Release Notes
 
-Release date: not yet released.
+Release date: 2026-10-12.
 
 v6.7.2 places ordinary choices in compact rows with a label on the left and a collapsed selector on the right, with refined opening and closing motion.
 

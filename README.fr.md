@@ -84,7 +84,7 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 ### v6.7.2 · Notes de version
 
-Date de sortie : pas encore publié.
+Date de sortie : 2026-10-12.
 
 v6.7.2 présente les choix courants sur une ligne compacte, avec le libellé à gauche et un sélecteur replié à droite, et affine les animations d’ouverture et de fermeture.
 
