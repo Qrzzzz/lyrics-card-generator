@@ -130,7 +130,7 @@ test("retains first-open state while closed surfaces stay outside lyric-input re
   await page.getByTestId("lyrics-ai-page-back").click();
 
   await page.locator('[data-step-id="export"]').click();
-  await expect(page.getByRole("radiogroup", { name: "Export format" })).toBeVisible();
+  await expect(page.getByRole("combobox", { name: "Export format" })).toBeVisible();
   const exportButton = page.getByTestId("complete-export-button");
   await expect(exportButton).toBeEnabled();
   const [download] = await Promise.all([
