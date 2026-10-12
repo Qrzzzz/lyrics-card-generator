@@ -1570,7 +1570,7 @@ async function assertTitlebarStylePreferences() {
   }
 
   async function selectStyle(style) {
-    await page.getByRole("radio", { name: style === "windows" ? "Windows 风格" : "红绿灯（默认）", exact: true }).click();
+    await selectChoiceValue(style, page.getByTestId("settings-surface"));
     await expect(titlebar).toHaveAttribute("data-titlebar-style", style);
     await page.waitForFunction((expected) => {
       const stored = JSON.parse(localStorage.getItem("lyric-card-generator-app-preferences-v2") || "null");
