@@ -96,7 +96,7 @@ try {
     "copy uses PNG at the selected high-quality pixel ratio"
   );
   assert.equal(
-    await exportPanel.locator('.choice-dropdown[data-choice-values~="webp"]').getByRole("combobox").getAttribute("data-choice-value"),
+    await exportPanel.locator('.choice-dropdown[data-choice-values="png webp jpg"]').getByRole("combobox").getAttribute("data-choice-value"),
     "webp",
     "copy keeps the selected download format unchanged"
   );

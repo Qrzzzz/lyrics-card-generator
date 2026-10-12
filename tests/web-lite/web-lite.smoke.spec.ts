@@ -576,7 +576,7 @@ test("exposes all five font schemes and persists all six languages, export forma
   await expect(page.locator("html")).toHaveAttribute("lang", "zh-CN");
   await page.locator('[data-step-id="export"]').click();
   await expect(page.locator('.choice-dropdown[data-choice-values~="medium"]').getByRole("combobox")).toHaveAttribute("data-choice-value", "medium");
-  await expect(page.locator('.choice-dropdown[data-choice-values~="webp"]').getByRole("combobox")).toHaveAttribute("data-choice-value", "webp");
+  await expect(page.locator('.choice-dropdown[data-choice-values="png webp jpg"]').getByRole("combobox")).toHaveAttribute("data-choice-value", "webp");
 });
 
 test("Mona Sans preset renders and exports in portrait and landscape", async ({ page }) => {

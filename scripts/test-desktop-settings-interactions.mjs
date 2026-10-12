@@ -2410,7 +2410,7 @@ async function assertPreviewWorkbenchPan() {
   assert.equal(await page.getByTestId('preview-workbench-resizer').count(), 0, "step six hides the step-three-to-five resize separator");
   assert.deepEqual(after.editorState, { active: "false", ariaHidden: "true", inert: true }, "step five settings become inert off-screen left");
   assert.deepEqual(after.exportState, { active: "true", ariaHidden: "false", inert: false }, "step six export settings become interactive on the right");
-  const exportFormatState = await page.locator('[data-workbench-panel="export-settings"] .choice-dropdown[data-choice-values~="png"] [role="combobox"]').evaluateAll((buttons) =>
+  const exportFormatState = await page.locator('[data-workbench-panel="export-settings"] .choice-dropdown[data-choice-values="png webp jpg"] [role="combobox"]').evaluateAll((buttons) =>
     ["png", "webp", "jpg"].map((value) => ({value, checked: buttons[0]?.getAttribute("data-choice-value") === value ? "true" : "false"}))
   );
   assert.deepEqual(
@@ -4353,7 +4353,7 @@ try {
   const settingsExportPanel = page.locator('[data-settings-panel="export"]:not([hidden])');
   assert.equal(await page.getByTestId("new-card-defaults-group").isVisible(), true, "new-card footer defaults have their own visible group");
   assert.equal(await page.getByTestId("file-export-defaults-group").isVisible(), true, "file export defaults have their own visible group");
-  const defaultFormatTrigger = settingsExportPanel.locator('.choice-dropdown[data-choice-values~="png"]').getByRole("combobox");
+  const defaultFormatTrigger = settingsExportPanel.locator('.choice-dropdown[data-choice-values="png webp jpg"]').getByRole("combobox");
   assert.equal(await defaultFormatTrigger.getAttribute("data-choice-value"), "png", "PNG remains the initial default export format");
   await defaultFormatTrigger.click();
   const defaultMenu = page.locator(`[id="${await defaultFormatTrigger.getAttribute("aria-controls")}"]`);
@@ -4362,7 +4362,7 @@ try {
   await defaultMenu.waitFor({state: "hidden"});
   await selectChoiceValue("webp", settingsExportPanel);
   await page.waitForFunction(() => (
-    document.querySelector('[data-settings-panel="export"]:not([hidden]) .choice-dropdown[data-choice-values~="webp"] [role="combobox"]')?.getAttribute('data-choice-value') === 'webp'
+    document.querySelector('[data-settings-panel="export"]:not([hidden]) .choice-dropdown[data-choice-values="png webp jpg"] [role="combobox"]')?.getAttribute('data-choice-value') === 'webp'
   ));
   await page.getByTestId("default-generated-watermark-toggle").click();
   assert.equal(await page.getByTestId("default-generated-watermark-toggle").getAttribute("aria-checked"), "true", "new-card watermark default can be changed independently");
@@ -4396,11 +4396,11 @@ try {
   assert.equal((await page.evaluate(() => window.lyricsCardDesktop?.loadAISettings()))?.hasApiKey, true, "restoring app preferences never clears the AI API key");
 
   await selectSettingsSection("export");
-  assert.equal(await settingsExportPanel.locator('.choice-dropdown[data-choice-values~="png"]').getByRole("combobox").getAttribute("data-choice-value"), "png", "restoring app preferences resets the file format default");
+  assert.equal(await settingsExportPanel.locator('.choice-dropdown[data-choice-values="png webp jpg"]').getByRole("combobox").getAttribute("data-choice-value"), "png", "restoring app preferences resets the file format default");
   assert.equal(await page.getByTestId("default-generated-watermark-toggle").getAttribute("aria-checked"), "false", "restoring app preferences resets new-card footer defaults");
   await selectChoiceValue("webp", settingsExportPanel);
   await page.waitForFunction(() => (
-    document.querySelector('[data-settings-panel="export"]:not([hidden]) .choice-dropdown[data-choice-values~="webp"] [role="combobox"]')?.getAttribute('data-choice-value') === 'webp'
+    document.querySelector('[data-settings-panel="export"]:not([hidden]) .choice-dropdown[data-choice-values="png webp jpg"] [role="combobox"]')?.getAttribute('data-choice-value') === 'webp'
   ));
 
   await selectSettingsSection("ai");
