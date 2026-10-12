@@ -97,7 +97,8 @@ try {
     empty: false,
     size: { width: cardSize.width * 2, height: cardSize.height * 2 }
   });
-  assert.ok(await page.evaluate(() => window.__clipboardToastHistory.includes("图片已复制到剪贴板")), "copy reports success");
+  await expect.poll(() => page.evaluate(() => window.__clipboardToastHistory.includes("图片已复制到剪贴板")),
+    { timeout: 5000, message: "copy reports success after the native write" }).toBe(true);
 
   const clipboardImage = await electronApp.evaluate(({ clipboard }) => {
     const image = clipboard.readImage();
