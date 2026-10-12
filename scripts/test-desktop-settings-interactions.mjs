@@ -1606,7 +1606,7 @@ async function assertTitlebarStylePreferences() {
 
   await openAppearance();
   for (const theme of ["light", "dark"]) {
-    await page.getByRole("radio", { name: theme === "light" ? "浅色" : "深色", exact: true }).click();
+    await selectChoiceValue(theme, page.getByTestId("settings-surface"));
     await page.getByTestId("settings-close-button").click();
     await setWindowSize(1000, 700);
     const geometry = await titlebar.evaluate((bar) => {
