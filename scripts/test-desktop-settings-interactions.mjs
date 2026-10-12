@@ -5001,10 +5001,12 @@ try {
 
 async function selectChoiceValue(value, root = page) {
   const trigger = root.locator(`.choice-dropdown[data-choice-values~="${value}"]`).getByRole("combobox");
+  await waitForLayoutStable(trigger);
   await trigger.click();
   const menu = page.locator(`[role="listbox"][data-choice-menu~="${value}"]`);
   const option = menu.locator(`[data-segment-value="${value}"]`);
-  await option.click({ force: true });
+  await option.click();
   await menu.waitFor({ state: "hidden" });
+  assert.equal(await trigger.getAttribute("data-choice-value"), value, `compact choice selects ${value}`);
   return trigger;
 }
