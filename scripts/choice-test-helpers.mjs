@@ -4,8 +4,7 @@ export async function selectChoiceValue(page, value, root = page) {
   await trigger.click();
   const menu = page.locator(`[role="listbox"][data-choice-menu~="${value}"]`);
   const option = menu.locator(`[data-segment-value="${value}"]`);
-  await option.focus();
-  await option.press("Enter");
+  await option.click({ force: true });
   await menu.waitFor({ state: "hidden" });
   return trigger;
 }
