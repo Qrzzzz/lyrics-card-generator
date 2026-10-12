@@ -264,7 +264,7 @@ async function waitForCompleteExportEnabled(timeout = 15_000) {
 
 async function waitForActiveDescendant(expected, timeout = 5_000) {
   await page.waitForFunction(
-    (id) => document.querySelector('[role="combobox"]')?.getAttribute("aria-activedescendant") === id,
+    (id) => document.querySelector('[aria-label="歌曲搜索"]')?.getAttribute("aria-activedescendant") === id,
     expected,
     { timeout }
   );
@@ -860,7 +860,7 @@ async function assertSongSearchBehavior() {
   const listbox = page.getByTestId("song-search-listbox");
   await listbox.waitFor({ state: "visible", timeout: 5_000 });
   await page.waitForFunction(() => (
-    document.querySelector('[role="listbox"] [role="option"]')?.textContent?.includes("keyboard mock")
+    document.querySelector('[data-testid="song-search-listbox"] [role="option"]')?.textContent?.includes("keyboard mock")
   ));
   const popup = page.getByTestId("song-search-popup");
   const options = listbox.getByRole("option");
@@ -906,7 +906,7 @@ async function assertSongSearchBehavior() {
   await combobox.press("ArrowDown");
   const secondId = await options.nth(1).getAttribute("id");
   await waitForActiveDescendant(secondId);
-  await page.waitForFunction(() => document.querySelector('[role="option"][aria-selected="true"]')?.id.endsWith("option-1"));
+  await page.waitForFunction(() => document.querySelector('[data-testid="song-search-listbox"] [role="option"][aria-selected="true"]')?.id.endsWith("option-1"));
   assert.equal(await combobox.evaluate((node) => document.activeElement === node), true, "ArrowDown keeps DOM focus on the combobox");
   await combobox.press("ArrowUp");
   await waitForActiveDescendant(firstId);
@@ -933,20 +933,20 @@ async function assertSongSearchBehavior() {
   await combobox.fill("mouse mock");
   await listbox.waitFor({ state: "visible" });
   await page.waitForFunction(() => (
-    document.querySelector('[role="listbox"] [role="option"]')?.textContent?.includes("mouse mock")
+    document.querySelector('[data-testid="song-search-listbox"] [role="option"]')?.textContent?.includes("mouse mock")
   ));
   await options.nth(2).click();
-  await page.waitForFunction(() => document.querySelector('[role="combobox"]')?.hasAttribute("disabled"));
+  await page.waitForFunction(() => document.querySelector('[aria-label="歌曲搜索"]')?.hasAttribute("disabled"));
   assert.equal(await options.nth(0).isDisabled(), true, "options disable during resolve");
   await combobox.waitFor({ state: "visible" });
-  await page.waitForFunction(() => !document.querySelector('[role="combobox"]')?.hasAttribute("disabled"));
+  await page.waitForFunction(() => !document.querySelector('[aria-label="歌曲搜索"]')?.hasAttribute("disabled"));
   assert.match(await combobox.inputValue(), /result 3 - Mock Artist 3/, "mouse selection resolves the clicked option");
   await popup.waitFor({ state: "hidden" });
 
   await combobox.fill("enter mock");
   await listbox.waitFor({ state: "visible" });
   await page.waitForFunction(() => (
-    document.querySelector('[role="listbox"] [role="option"]')?.textContent?.includes("enter mock")
+    document.querySelector('[data-testid="song-search-listbox"] [role="option"]')?.textContent?.includes("enter mock")
   ));
   await combobox.press("ArrowDown");
   const activeId = await combobox.getAttribute("aria-activedescendant");
@@ -955,7 +955,7 @@ async function assertSongSearchBehavior() {
   await setNativeDialogDecision("accept", "替换当前歌曲？");
   await combobox.press("Enter");
   await page.waitForFunction((expectedIndex) => (
-    document.querySelector('[role="combobox"]')?.value === `Resolved result ${expectedIndex + 1} - Mock Artist ${expectedIndex + 1}`
+    document.querySelector('[aria-label="歌曲搜索"]')?.value === `Resolved result ${expectedIndex + 1} - Mock Artist ${expectedIndex + 1}`
   ), activeIndex);
   assert.match(
     await combobox.inputValue(),
@@ -1982,7 +1982,7 @@ async function assertFocusedPresentation(width, height) {
     const preview = document.querySelector('[data-testid="lyric-card-preview"]');
     const previewToggle = document.querySelector('[data-testid="preview-pane-toggle"]');
     const exportHost = document.querySelector('[data-export-card-host]');
-    const search = document.querySelector('[role="combobox"]');
+    const search = document.querySelector('[aria-label="歌曲搜索"]');
     const primary = document.querySelector('[data-testid="song-search-primary"]');
     const alternates = document.querySelector('[data-testid="song-import-alternates"]');
     const linkEntry = alternates?.querySelector('input:not([type="file"])');
