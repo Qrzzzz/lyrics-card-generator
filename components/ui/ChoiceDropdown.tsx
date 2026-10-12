@@ -148,7 +148,12 @@ export function ChoiceDropdown<T extends string>({ value, options, onChange, lab
         ref={(node) => { optionRefs.current[option.value] = node; }}
         aria-selected={value === option.value} disabled={option.disabled} title={option.title}
         tabIndex={-1} data-segment-value={option.value} className="choice-dropdown__option control-focus control-disabled"
-        onClick={() => { onChange?.(option.value); close(true); }}
+        onPointerDown={(event) => {
+          if (option.disabled || event.button !== 0) return;
+          event.preventDefault();
+          onChange?.(option.value);
+          close(true);
+        }}
         onKeyDown={(event) => {
           if (event.key !== "Enter" && event.key !== " ") return;
           event.preventDefault();
