@@ -1982,7 +1982,7 @@ async function assertFocusedPresentation(width, height) {
     const preview = document.querySelector('[data-testid="lyric-card-preview"]');
     const previewToggle = document.querySelector('[data-testid="preview-pane-toggle"]');
     const exportHost = document.querySelector('[data-export-card-host]');
-    const search = document.querySelector('[aria-label="歌曲搜索"]');
+    const search = document.querySelector('[data-testid="song-search-primary"] [role="combobox"]');
     const primary = document.querySelector('[data-testid="song-search-primary"]');
     const alternates = document.querySelector('[data-testid="song-import-alternates"]');
     const linkEntry = alternates?.querySelector('input:not([type="file"])');
@@ -4355,9 +4355,11 @@ try {
   assert.equal(await page.getByTestId("file-export-defaults-group").isVisible(), true, "file export defaults have their own visible group");
   const defaultFormatTrigger = settingsExportPanel.locator('.choice-dropdown[data-choice-values="png webp jpg"]').getByRole("combobox");
   assert.equal(await defaultFormatTrigger.getAttribute("data-choice-value"), "png", "PNG remains the initial default export format");
+  await defaultFormatTrigger.scrollIntoViewIfNeeded();
+  await waitForLayoutStable(defaultFormatTrigger);
   await defaultFormatTrigger.click();
-  const defaultMenu = page.locator(`[id="${await defaultFormatTrigger.getAttribute("aria-controls")}"]`);
-  assert.deepEqual(await defaultMenu.getByRole("option").allTextContents(), ["PNG", "WebP", "JPG"], "settings exposes PNG, WebP, and JPG defaults");
+  const defaultMenu = page.locator('[role="listbox"][data-choice-menu="png webp jpg"]');
+  await expect(defaultMenu.getByRole("option")).toHaveText(["PNG", "WebP", "JPG"]);
   await defaultMenu.getByRole("option").first().press("Escape");
   await defaultMenu.waitFor({state: "hidden"});
   await selectChoiceValue("webp", settingsExportPanel);
@@ -5001,6 +5003,7 @@ try {
 
 async function selectChoiceValue(value, root = page) {
   const trigger = root.locator(`.choice-dropdown[data-choice-values~="${value}"]`).getByRole("combobox");
+  await trigger.scrollIntoViewIfNeeded();
   await waitForLayoutStable(trigger);
   await trigger.click();
   const menu = page.locator(`[role="listbox"][data-choice-menu~="${value}"]`);
