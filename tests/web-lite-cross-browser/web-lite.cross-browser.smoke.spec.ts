@@ -98,9 +98,13 @@ test("starts, edits, previews, loads bundled fonts, selects a local cover, and d
   await expect(page.getByTestId("lyric-card-preview").locator("img").first()).toBeVisible();
 
   await page.locator('[data-step-id="export"]').click();
-  const pngFormat = page.locator('[data-segment-value="png"]');
+  const pngFormat = page.getByRole("combobox", { name: "Export format" });
+  await expect(pngFormat).toBeVisible();
   await pngFormat.click();
-  await expect(pngFormat).toHaveAttribute("aria-checked", "true");
+  const pngMenu = page.getByRole("listbox", { name: "Export format" });
+  await pngMenu.locator('[data-segment-value="png"]').click();
+  await expect(pngMenu).toBeHidden();
+  await expect(pngFormat).toHaveAttribute("data-choice-value", "png");
   const exportButton = page.getByTestId("complete-export-button");
   await expect(exportButton).toBeEnabled();
   const [download] = await Promise.all([page.waitForEvent("download"), exportButton.click()]);

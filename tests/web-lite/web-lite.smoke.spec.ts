@@ -500,7 +500,7 @@ test("pans the shared preview workbench in both directions and degrades pressure
   ).toBeLessThanOrEqual(2);
   const activeExportPanel = page.locator('[data-testid="export-settings-panel"][data-active="true"]');
   const [qualityBox, backBox, exportButtonBox] = await Promise.all([
-    activeExportPanel.locator('[role="radiogroup"]').nth(1).boundingBox(),
+    activeExportPanel.locator('.choice-dropdown').nth(1).boundingBox(),
     activeExportPanel.getByTestId("stepper-back-button").boundingBox(),
     activeExportPanel.getByTestId("complete-export-button").boundingBox()
   ]);
@@ -553,12 +553,10 @@ test("exposes all five font schemes and persists all six languages, export forma
   ]);
 
   await page.locator('[data-step-id="export"]').click();
-  const standardQuality = page.locator('[data-segment-value="medium"]');
-  await standardQuality.click();
-  await expect(standardQuality).toHaveAttribute("aria-checked", "true");
-  const webpFormat = page.locator('[data-segment-value="webp"]');
-  await webpFormat.click();
-  await expect(webpFormat).toHaveAttribute("aria-checked", "true");
+  const standardQuality = await selectChoice(page, "medium");
+  await expect(standardQuality).toHaveAttribute("data-choice-value", "medium");
+  const webpFormat = await selectChoice(page, "webp");
+  await expect(webpFormat).toHaveAttribute("data-choice-value", "webp");
 
   for (const [name, lang] of [
     ["简体中文", "zh-CN"],
@@ -577,8 +575,8 @@ test("exposes all five font schemes and persists all six languages, export forma
   await page.reload();
   await expect(page.locator("html")).toHaveAttribute("lang", "zh-CN");
   await page.locator('[data-step-id="export"]').click();
-  await expect(page.locator('[data-segment-value="medium"]')).toHaveAttribute("aria-checked", "true");
-  await expect(page.locator('[data-segment-value="webp"]')).toHaveAttribute("aria-checked", "true");
+  await expect(page.locator('.choice-dropdown[data-choice-values~="medium"]').getByRole("combobox")).toHaveAttribute("data-choice-value", "medium");
+  await expect(page.locator('.choice-dropdown[data-choice-values="png webp jpg"]').getByRole("combobox")).toHaveAttribute("data-choice-value", "webp");
 });
 
 test("Mona Sans preset renders and exports in portrait and landscape", async ({ page }) => {
@@ -618,8 +616,8 @@ test("solid background keeps custom HEX across modes and exports offline with Mo
   await page.locator('[data-segment-value="solid"]').click();
   const hex = page.getByTestId("solid-color-input");
   const controls = page.locator('[data-solid-controls]');
-  const sourceSwitch = controls.locator('[data-segment-value="preset"]');
-  if (await sourceSwitch.count()) await sourceSwitch.click();
+  const sourceSwitch = controls.locator('.choice-dropdown[data-choice-values~="preset"]').getByRole("combobox");
+  if (await sourceSwitch.count()) await selectChoice(page, "preset", controls);
   const swatches = controls.locator('[data-color-swatches]');
   await expect(swatches).toHaveAttribute("aria-label", "Preset colors");
   await expect(swatches.locator('[tabindex="0"]')).toHaveCount(1);
@@ -649,14 +647,14 @@ test("solid background keeps custom HEX across modes and exports offline with Mo
   await uploadGeneratedCover(page, "color-picker.png", 200, 200, false);
   await page.locator('[data-step-id="layout"]').click();
   await expect(sourceSwitch).toBeVisible();
-  await sourceSwitch.click();
+  await selectChoice(page, "preset", controls);
   await expect(hex).toHaveValue("#F0EEDD");
-  await controls.locator('[data-segment-value="cover"]').click();
+  await selectChoice(page, "cover", controls);
   await expect(hex).toHaveValue("#F0EEDD");
   await controls.getByRole("button", { name: "Automatic", exact: true }).click();
   await expect(hex).not.toHaveValue("#F0EEDD");
   await hex.fill("#F0EEDD");
-  await sourceSwitch.click();
+  await selectChoice(page, "preset", controls);
   await expect(swatches.locator('[aria-checked="true"]')).toHaveCount(0);
   await expect(swatches.locator('[tabindex="0"]')).toHaveCount(1);
   await page.screenshot({ path: test.info().outputPath("solid-color-controls.png") });
@@ -753,7 +751,7 @@ test("supports bilingual splitting, layout modes, instrumental mode, and visual 
   const landscape = page.locator('[data-segment-value="landscape"]');
   await landscape.click();
   await expect(landscape).toHaveAttribute("aria-checked", "true");
-  await expect(page.getByRole("radiogroup", { name: "Size Mode", exact: true })).toHaveCount(0);
+  await expect(page.getByRole("combobox", { name: "Size Mode", exact: true })).toHaveCount(0);
   const autoHeight = page.getByRole("switch", { name: "Auto Height", exact: true });
   await expect(autoHeight).toHaveAttribute("aria-checked", "true");
   await autoHeight.click();
@@ -763,17 +761,17 @@ test("supports bilingual splitting, layout modes, instrumental mode, and visual 
   await instrumental.click();
   await expect(instrumental).toHaveAttribute("aria-checked", "true");
   await expect(landscape).toBeDisabled();
-  const sizeMode = page.getByRole("radiogroup", { name: "Size Mode", exact: true });
-  await expect(sizeMode.getByRole("radio", { name: "1:1 Square", exact: true })).toBeDisabled();
-  await expect(sizeMode.getByRole("radio", { name: "Custom", exact: true })).toBeDisabled();
+  const sizeMode = page.getByRole("combobox", { name: "Size Mode", exact: true });
+  await expect(sizeMode).toBeDisabled();
+  await expect(sizeMode).toHaveAttribute("data-choice-value", "1:1");
 
   await page.locator('[data-segment-value="lyrics"]').click();
   await page.locator('[data-step-id="visual"]').click();
   const backgroundGrid = page.getByRole("switch", { name: "Background Grid", exact: true });
   await backgroundGrid.click();
   await expect(backgroundGrid).toHaveAttribute("aria-checked", "true");
-  await page.locator('[data-segment-value="dense"]').click();
-  await expect(page.locator('[data-segment-value="dense"]')).toHaveAttribute("aria-checked", "true");
+  await selectChoice(page, "dense");
+  await expect(page.locator('.choice-dropdown[data-choice-values~="dense"]').getByRole("combobox")).toHaveAttribute("data-choice-value", "dense");
   await expect(page.getByRole("switch", { name: "Show Platform Logo", exact: true })).toHaveCount(0);
 });
 
@@ -783,7 +781,7 @@ test("restores independent portrait and free-landscape sizing after round trips"
 
   const portrait = page.locator('[data-segment-value="portrait"]');
   const landscape = page.locator('[data-segment-value="landscape"]');
-  const sizeMode = page.getByRole("radiogroup", { name: "Size Mode", exact: true });
+  const sizeMode = page.getByRole("combobox", { name: "Size Mode", exact: true });
   let autoWidth = page.getByRole("switch", { name: "Auto Width", exact: true });
   const width = page.getByLabel("Width", { exact: true });
   const previewSection = page
@@ -793,7 +791,7 @@ test("restores independent portrait and free-landscape sizing after round trips"
   const exportCard = page.locator('[data-export-card-host] [data-export-card="true"]');
 
   await expect(portrait).toHaveAttribute("aria-checked", "true");
-  await expect(sizeMode.getByRole("radio", { name: "Custom", exact: true })).toHaveAttribute("aria-checked", "true");
+  await expect(sizeMode).toHaveAttribute("data-choice-value", "custom");
   await expect(autoWidth).toHaveAttribute("aria-checked", "true");
   await autoWidth.click();
   await expect(autoWidth).toHaveAttribute("aria-checked", "false");
@@ -806,7 +804,7 @@ test("restores independent portrait and free-landscape sizing after round trips"
 
   await landscape.click();
   await expect(landscape).toHaveAttribute("aria-checked", "true");
-  await expect(page.getByRole("radiogroup", { name: "Size Mode", exact: true })).toHaveCount(0);
+  await expect(page.getByRole("combobox", { name: "Size Mode", exact: true })).toHaveCount(0);
   autoWidth = page.getByRole("switch", { name: "Auto Width", exact: true });
   await expect(autoWidth).toHaveAttribute("aria-checked", "true");
   await autoWidth.click();
@@ -818,7 +816,7 @@ test("restores independent portrait and free-landscape sizing after round trips"
   await expect(exportCard).toHaveAttribute("data-landscape-plan", "ready");
 
   await portrait.click();
-  await expect(sizeMode.getByRole("radio", { name: "Custom", exact: true })).toHaveAttribute("aria-checked", "true");
+  await expect(sizeMode).toHaveAttribute("data-choice-value", "custom");
   await expect(width).toHaveValue("1200");
   await expect(previewSize).toHaveText(/^1200x\d+$/);
 
@@ -845,8 +843,9 @@ test("keeps restrained content depth identical in preview and ExportCardHost", a
     "Only quiet shadows where the letters lie"
   ].join("\n"));
   await page.locator('[data-step-id="layout"]').click();
-  const sizeMode = page.getByRole("radiogroup", { name: "Size Mode", exact: true });
-  await sizeMode.getByRole("radio", { name: "1:1 Square", exact: true }).click();
+  const sizeMode = page.getByRole("combobox", { name: "Size Mode", exact: true });
+  await selectChoice(page, "1:1");
+  await expect(sizeMode).toHaveAttribute("data-choice-value", "1:1");
 
   const previewCard = page.getByTestId("lyric-card-preview").locator('[data-export-card="true"]');
   const exportCard = page.locator('[data-export-card-host] [data-export-card="true"]').first();
@@ -1445,10 +1444,7 @@ test("exports a CORS-safe remote cover at standard and high pixel ratios", async
   await expect(page.getByTestId("web-lite-cover-status")).toContainText("safe to preview");
 
   await page.locator('[data-step-id="layout"]').click();
-  await page
-    .getByRole("radiogroup", { name: "Size Mode", exact: true })
-    .getByRole("radio", { name: "1:1 Square", exact: true })
-    .click();
+  await selectChoice(page, "1:1");
   await expect(page.locator('[data-export-card-host] [data-export-card="true"]')).toHaveCSS("width", "1080px");
   await expect(page.locator('[data-export-card-host] [data-export-card="true"]')).toHaveCSS("height", "1080px");
 
@@ -1537,9 +1533,7 @@ test("copies a high-quality PNG without changing the selected download format", 
 
   await openWebLite(page, { width: 1280, height: 900 });
   await page.locator('[data-step-id="export"]').click();
-  await page
-    .locator('[data-testid="export-settings-panel"][data-active="true"] [data-segment-value="webp"]')
-    .click();
+  await selectChoice(page, "webp");
 
   const copyButton = page.getByTestId("copy-image-button");
   await expect(copyButton).toHaveText(/Copy Image/);
@@ -1554,8 +1548,8 @@ test("copies a high-quality PNG without changing the selected download format", 
   expect(copiedImage?.size).toBeGreaterThan(1_000);
   expect(copiedImage?.writes).toBe(1);
   await expect(
-    page.locator('[data-testid="export-settings-panel"][data-active="true"] [data-segment-value="webp"]')
-  ).toHaveAttribute("aria-checked", "true");
+    page.locator('[data-testid="export-settings-panel"][data-active="true"] .choice-dropdown[data-choice-values~="png"]').getByRole("combobox")
+  ).toHaveAttribute("data-choice-value", "webp");
 });
 
 test("@background-composition-benchmark exports a super-long 2x card within the transaction budget", async ({ page }) => {
@@ -1649,10 +1643,7 @@ test("blocks real overflow on a fixed 1:1 export canvas", async ({ page }) => {
     Array.from({ length: 20 }, (_, index) => `${index + 1} ${"W".repeat(180)}`).join("\n")
   );
   await page.locator('[data-step-id="layout"]').click();
-  await page
-    .getByRole("radiogroup", { name: "Size Mode", exact: true })
-    .getByRole("radio", { name: "1:1 Square", exact: true })
-    .click();
+  await selectChoice(page, "1:1");
   await page.locator('[data-step-id="export"]').click();
   await expect(page.getByText(/cannot fit all lyrics/i)).toBeVisible();
 });
@@ -1679,9 +1670,8 @@ test("wraps unbroken shared-by text and exports the complete portrait footer", a
   ))).toBe(true);
 
   await page.locator('[data-step-id="export"]').click();
-  const highQuality = page.locator('[data-segment-value="high"]');
-  await highQuality.click();
-  await expect(highQuality).toHaveAttribute("aria-checked", "true");
+  const highQuality = await selectChoice(page, "high");
+  await expect(highQuality).toHaveAttribute("data-choice-value", "high");
   const exportButton = page.getByTestId("complete-export-button");
   await expect(exportButton).toBeEnabled();
   const logicalSize = await exportCard.evaluate((card) => ({
@@ -1712,7 +1702,7 @@ test("blocks oversized high-quality landscape exports instead of silently scalin
   await expect(exportCard).toHaveAttribute("data-landscape-plan", "ready", { timeout: 20_000 });
   await expect.poll(async () => exportCard.evaluate((card) => (card as HTMLElement).offsetHeight)).toBeGreaterThan(8192);
   await page.locator('[data-step-id="export"]').click();
-  await page.locator('[data-segment-value="high"]').click();
+  await selectChoice(page, "high");
   const exportButton = page.getByTestId("complete-export-button");
   await expect(exportButton).toBeEnabled();
   let downloadCount = 0;
@@ -1729,10 +1719,7 @@ test("exports from the independent host while the visible preview is collapsed",
   await page.locator('[data-step-id="lyrics"]').click();
   await page.getByLabel("Lyric Text", { exact: true }).fill("A stable line\nA second line");
   await page.locator('[data-step-id="layout"]').click();
-  await page
-    .getByRole("radiogroup", { name: "Size Mode", exact: true })
-    .getByRole("radio", { name: "1:1 Square", exact: true })
-    .click();
+  await selectChoice(page, "1:1");
   const previewToggle = page.getByTestId("preview-pane-toggle");
   await previewToggle.click();
   await expect(page.getByTestId("preview-pane-content")).toHaveAttribute("aria-hidden", "true");
@@ -1855,10 +1842,7 @@ async function prepareAutoWidthEquivalenceFixture(page: Page, fixture: AutoWidth
   await setRangeValue(width, fixture.anchorWidth);
   await setRangeValue(page.getByLabel("Font Size", { exact: true }), fixture.lyricFontSize);
   await setRangeValue(page.getByLabel("Line Height", { exact: true }), fixture.lineHeight);
-  await page
-    .getByRole("radiogroup", { name: "Alignment", exact: true })
-    .getByRole("radio", { name: fixture.align === "center" ? "Center" : "Left", exact: true })
-    .click();
+  await selectChoice(page, fixture.align);
 
   await fontStep.click();
   await page.locator(`[data-font-id="${fixture.fontPreset}"]`).click();
@@ -2093,9 +2077,8 @@ async function installRemoteCoverRoute(page: Page, delayed = false) {
 }
 
 async function exportAndExpectDimensions(page: Page, quality: "medium" | "high", width: number, height: number) {
-  const qualityButton = page.locator(`[data-segment-value="${quality}"]`);
-  await qualityButton.click();
-  await expect(qualityButton).toHaveAttribute("aria-checked", "true");
+  const qualityButton = await selectChoice(page, quality);
+  await expect(qualityButton).toHaveAttribute("data-choice-value", quality);
 
   const exportButton = page.getByTestId("complete-export-button");
   await expect(exportButton).toBeEnabled();
@@ -2165,9 +2148,8 @@ async function readContainedGeometry(child: Locator, parent: Locator) {
 }
 
 async function exportAndExpectFormat(page: Page, format: "webp" | "jpg") {
-  const formatButton = page.locator(`[data-segment-value="${format}"]`);
-  await formatButton.click();
-  await expect(formatButton).toHaveAttribute("aria-checked", "true");
+  const formatButton = await selectChoice(page, format);
+  await expect(formatButton).toHaveAttribute("data-choice-value", format);
 
   const exportButton = page.getByTestId("complete-export-button");
   await expect(exportButton).toBeEnabled();
@@ -2234,4 +2216,34 @@ async function waitForStableSliderValue(locator: Locator, stableMs = 500, timeou
   }
 
   throw new Error(`Slider value did not settle within ${timeoutMs}ms; last value: ${latest}`);
+}
+
+async function selectChoice(page: Page, value: string, root: Page | Locator = page) {
+  const trigger = root.locator(`.choice-dropdown[data-choice-values~="${value}"]`).getByRole("combobox");
+  await trigger.scrollIntoViewIfNeeded();
+  await trigger.evaluate((element) => new Promise<void>((resolve, reject) => {
+    const started = performance.now();
+    let previous = "";
+    let stable = 0;
+    const sample = () => {
+      if (!element.isConnected || performance.now() - started > 5000) {
+        reject(new Error("Compact choice did not settle"));
+        return;
+      }
+      const rect = element.getBoundingClientRect();
+      const signature = [rect.x, rect.y, rect.width, rect.height].map((number) => number.toFixed(2)).join(":");
+      stable = signature === previous ? stable + 1 : 0;
+      previous = signature;
+      if (stable >= 3) resolve();
+      else setTimeout(sample, 80);
+    };
+    sample();
+  }));
+  const values = await trigger.evaluate((element) => element.closest(".choice-dropdown")?.getAttribute("data-choice-values"));
+  await trigger.click();
+  const menu = page.locator(`[role="listbox"][data-choice-menu="${values}"]`);
+  await menu.locator(`[data-segment-value="${value}"]`).click();
+  await menu.waitFor({ state: "hidden" });
+  await expect(trigger).toHaveAttribute("data-choice-value", value);
+  return trigger;
 }

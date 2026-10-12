@@ -264,7 +264,7 @@ async function waitForCompleteExportEnabled(timeout = 15_000) {
 
 async function waitForActiveDescendant(expected, timeout = 5_000) {
   await page.waitForFunction(
-    (id) => document.querySelector('[role="combobox"]')?.getAttribute("aria-activedescendant") === id,
+    (id) => document.querySelector('[aria-label="歌曲搜索"]')?.getAttribute("aria-activedescendant") === id,
     expected,
     { timeout }
   );
@@ -860,7 +860,7 @@ async function assertSongSearchBehavior() {
   const listbox = page.getByTestId("song-search-listbox");
   await listbox.waitFor({ state: "visible", timeout: 5_000 });
   await page.waitForFunction(() => (
-    document.querySelector('[role="listbox"] [role="option"]')?.textContent?.includes("keyboard mock")
+    document.querySelector('[data-testid="song-search-listbox"] [role="option"]')?.textContent?.includes("keyboard mock")
   ));
   const popup = page.getByTestId("song-search-popup");
   const options = listbox.getByRole("option");
@@ -906,7 +906,7 @@ async function assertSongSearchBehavior() {
   await combobox.press("ArrowDown");
   const secondId = await options.nth(1).getAttribute("id");
   await waitForActiveDescendant(secondId);
-  await page.waitForFunction(() => document.querySelector('[role="option"][aria-selected="true"]')?.id.endsWith("option-1"));
+  await page.waitForFunction(() => document.querySelector('[data-testid="song-search-listbox"] [role="option"][aria-selected="true"]')?.id.endsWith("option-1"));
   assert.equal(await combobox.evaluate((node) => document.activeElement === node), true, "ArrowDown keeps DOM focus on the combobox");
   await combobox.press("ArrowUp");
   await waitForActiveDescendant(firstId);
@@ -933,20 +933,20 @@ async function assertSongSearchBehavior() {
   await combobox.fill("mouse mock");
   await listbox.waitFor({ state: "visible" });
   await page.waitForFunction(() => (
-    document.querySelector('[role="listbox"] [role="option"]')?.textContent?.includes("mouse mock")
+    document.querySelector('[data-testid="song-search-listbox"] [role="option"]')?.textContent?.includes("mouse mock")
   ));
   await options.nth(2).click();
-  await page.waitForFunction(() => document.querySelector('[role="combobox"]')?.hasAttribute("disabled"));
+  await page.waitForFunction(() => document.querySelector('[aria-label="歌曲搜索"]')?.hasAttribute("disabled"));
   assert.equal(await options.nth(0).isDisabled(), true, "options disable during resolve");
   await combobox.waitFor({ state: "visible" });
-  await page.waitForFunction(() => !document.querySelector('[role="combobox"]')?.hasAttribute("disabled"));
+  await page.waitForFunction(() => !document.querySelector('[aria-label="歌曲搜索"]')?.hasAttribute("disabled"));
   assert.match(await combobox.inputValue(), /result 3 - Mock Artist 3/, "mouse selection resolves the clicked option");
   await popup.waitFor({ state: "hidden" });
 
   await combobox.fill("enter mock");
   await listbox.waitFor({ state: "visible" });
   await page.waitForFunction(() => (
-    document.querySelector('[role="listbox"] [role="option"]')?.textContent?.includes("enter mock")
+    document.querySelector('[data-testid="song-search-listbox"] [role="option"]')?.textContent?.includes("enter mock")
   ));
   await combobox.press("ArrowDown");
   const activeId = await combobox.getAttribute("aria-activedescendant");
@@ -955,7 +955,7 @@ async function assertSongSearchBehavior() {
   await setNativeDialogDecision("accept", "替换当前歌曲？");
   await combobox.press("Enter");
   await page.waitForFunction((expectedIndex) => (
-    document.querySelector('[role="combobox"]')?.value === `Resolved result ${expectedIndex + 1} - Mock Artist ${expectedIndex + 1}`
+    document.querySelector('[aria-label="歌曲搜索"]')?.value === `Resolved result ${expectedIndex + 1} - Mock Artist ${expectedIndex + 1}`
   ), activeIndex);
   assert.match(
     await combobox.inputValue(),
@@ -1237,7 +1237,7 @@ async function selectVisualTheme(mode, acrylicEnabled) {
   await waitForVisible("settings-surface");
   await selectSettingsSection("appearance");
   const panel = page.locator('[data-settings-panel="appearance"]:not([hidden])');
-  await panel.locator(`[data-segment-value="${mode}"]`).click();
+  await selectChoiceValue(mode, panel);
   const acrylicToggle = panel.getByRole("switch").first();
   if ((await acrylicToggle.getAttribute("aria-checked") === "true") !== acrylicEnabled) {
     await acrylicToggle.click();
@@ -1570,7 +1570,7 @@ async function assertTitlebarStylePreferences() {
   }
 
   async function selectStyle(style) {
-    await page.getByRole("radio", { name: style === "windows" ? "Windows 风格" : "红绿灯（默认）", exact: true }).click();
+    await selectChoiceValue(style, page.getByTestId("settings-surface"));
     await expect(titlebar).toHaveAttribute("data-titlebar-style", style);
     await page.waitForFunction((expected) => {
       const stored = JSON.parse(localStorage.getItem("lyric-card-generator-app-preferences-v2") || "null");
@@ -1584,7 +1584,7 @@ async function assertTitlebarStylePreferences() {
 
   await openAppearance();
   await selectStyle("windows");
-  await page.getByRole("radiogroup", { name: "顶栏样式", exact: true }).scrollIntoViewIfNeeded();
+  await page.getByRole("combobox", { name: "顶栏样式", exact: true }).scrollIntoViewIfNeeded();
   await page.getByTestId("settings-surface").screenshot({ path: path.join(reportDirectory, "titlebar-style-settings.png") });
   await expect(page.locator(".traffic-light")).toHaveCount(0);
   await expect(page.locator(".desktop-titlebar__button")).toHaveCount(3);
@@ -1606,7 +1606,7 @@ async function assertTitlebarStylePreferences() {
 
   await openAppearance();
   for (const theme of ["light", "dark"]) {
-    await page.getByRole("radio", { name: theme === "light" ? "浅色" : "深色", exact: true }).click();
+    await selectChoiceValue(theme, page.getByTestId("settings-surface"));
     await page.getByTestId("settings-close-button").click();
     await setWindowSize(1000, 700);
     const geometry = await titlebar.evaluate((bar) => {
@@ -1982,7 +1982,7 @@ async function assertFocusedPresentation(width, height) {
     const preview = document.querySelector('[data-testid="lyric-card-preview"]');
     const previewToggle = document.querySelector('[data-testid="preview-pane-toggle"]');
     const exportHost = document.querySelector('[data-export-card-host]');
-    const search = document.querySelector('[role="combobox"]');
+    const search = document.querySelector('[data-testid="song-search-primary"] [role="combobox"]');
     const primary = document.querySelector('[data-testid="song-search-primary"]');
     const alternates = document.querySelector('[data-testid="song-import-alternates"]');
     const linkEntry = alternates?.querySelector('input:not([type="file"])');
@@ -2410,12 +2410,9 @@ async function assertPreviewWorkbenchPan() {
   assert.equal(await page.getByTestId('preview-workbench-resizer').count(), 0, "step six hides the step-three-to-five resize separator");
   assert.deepEqual(after.editorState, { active: "false", ariaHidden: "true", inert: true }, "step five settings become inert off-screen left");
   assert.deepEqual(after.exportState, { active: "true", ariaHidden: "false", inert: false }, "step six export settings become interactive on the right");
-  const exportFormatState = await page.locator('[data-workbench-panel="export-settings"] [data-segment-value="png"], [data-workbench-panel="export-settings"] [data-segment-value="webp"], [data-workbench-panel="export-settings"] [data-segment-value="jpg"]').evaluateAll((buttons) => (
-    buttons.map((button) => ({
-      value: button.getAttribute('data-segment-value'),
-      checked: button.getAttribute('aria-checked')
-    }))
-  ));
+  const exportFormatState = await page.locator('[data-workbench-panel="export-settings"] .choice-dropdown[data-choice-values="png webp jpg"] [role="combobox"]').evaluateAll((buttons) =>
+    ["png", "webp", "jpg"].map((value) => ({value, checked: buttons[0]?.getAttribute("data-choice-value") === value ? "true" : "false"}))
+  );
   assert.deepEqual(
     exportFormatState,
     [
@@ -4212,11 +4209,11 @@ try {
 
   await selectSettingsSection("appearance");
   const appearancePanel = page.locator('[data-settings-panel="appearance"]:not([hidden])');
-  const appearanceRadioNames = await appearancePanel.locator('[role="radiogroup"]').evaluateAll((groups) => (
-    groups.map((group) => group.getAttribute("aria-label")?.trim() ?? "")
+  const appearanceRadioNames = await appearancePanel.getByRole("combobox").evaluateAll((groups) => (
+    groups.map((group) => document.getElementById(group.getAttribute("aria-labelledby"))?.textContent?.trim() ?? group.getAttribute("aria-label")?.trim() ?? "")
   ));
   assert.ok(appearanceRadioNames.length >= 2 && appearanceRadioNames.every(Boolean), `theme and accent radiogroups have accessible names: ${JSON.stringify(appearanceRadioNames)}`);
-  await appearancePanel.locator('[data-segment-value="preset"]').click();
+  await selectChoiceValue("preset", appearancePanel);
   const accentSwatches = appearancePanel.locator('[data-color-swatches]');
   assert.equal(await accentSwatches.locator('[tabindex="0"]').count(), 1, "swatches have one tab stop");
   const firstAccent = accentSwatches.getByRole("radio").first();
@@ -4226,7 +4223,7 @@ try {
   assert.equal(await accentSwatches.getByRole("radio").nth(1).evaluate((node) => node === document.activeElement), true, "selection moves focus");
   await accentSwatches.getByRole("radio").nth(1).press("End");
   assert.equal(await accentSwatches.getByRole("radio").last().getAttribute("aria-checked"), "true", "End selects the last accent");
-  await appearancePanel.locator('[data-segment-value="custom"]').click();
+  await selectChoiceValue("custom", appearancePanel);
   const customAccent = page.getByTestId("custom-accent-input");
   const customAccentId = await customAccent.getAttribute("id");
   assert.ok(customAccentId, "custom accent receives a real input ID");
@@ -4356,12 +4353,18 @@ try {
   const settingsExportPanel = page.locator('[data-settings-panel="export"]:not([hidden])');
   assert.equal(await page.getByTestId("new-card-defaults-group").isVisible(), true, "new-card footer defaults have their own visible group");
   assert.equal(await page.getByTestId("file-export-defaults-group").isVisible(), true, "file export defaults have their own visible group");
-  const defaultFormatOptions = settingsExportPanel.locator('[data-segment-value="png"], [data-segment-value="webp"], [data-segment-value="jpg"]');
-  assert.deepEqual(await defaultFormatOptions.allTextContents(), ["PNG", "WebP", "JPG"], "settings exposes PNG, WebP, and JPG defaults");
-  assert.equal(await defaultFormatOptions.nth(0).getAttribute("aria-checked"), "true", "PNG remains the initial default export format");
-  await settingsExportPanel.locator('[data-segment-value="webp"]').click();
+  const defaultFormatTrigger = settingsExportPanel.locator('.choice-dropdown[data-choice-values="png webp jpg"]').getByRole("combobox");
+  assert.equal(await defaultFormatTrigger.getAttribute("data-choice-value"), "png", "PNG remains the initial default export format");
+  await defaultFormatTrigger.scrollIntoViewIfNeeded();
+  await waitForLayoutStable(defaultFormatTrigger);
+  await defaultFormatTrigger.click();
+  const defaultMenu = page.locator('[role="listbox"][data-choice-menu="png webp jpg"]');
+  await expect(defaultMenu.getByRole("option")).toHaveText(["PNG", "WebP", "JPG"]);
+  await defaultMenu.getByRole("option").first().press("Escape");
+  await defaultMenu.waitFor({state: "hidden"});
+  await selectChoiceValue("webp", settingsExportPanel);
   await page.waitForFunction(() => (
-    document.querySelector('[data-settings-panel="export"]:not([hidden]) [data-segment-value="webp"]')?.getAttribute('aria-checked') === 'true'
+    document.querySelector('[data-settings-panel="export"]:not([hidden]) .choice-dropdown[data-choice-values="png webp jpg"] [role="combobox"]')?.getAttribute('data-choice-value') === 'webp'
   ));
   await page.getByTestId("default-generated-watermark-toggle").click();
   assert.equal(await page.getByTestId("default-generated-watermark-toggle").getAttribute("aria-checked"), "true", "new-card watermark default can be changed independently");
@@ -4395,11 +4398,11 @@ try {
   assert.equal((await page.evaluate(() => window.lyricsCardDesktop?.loadAISettings()))?.hasApiKey, true, "restoring app preferences never clears the AI API key");
 
   await selectSettingsSection("export");
-  assert.equal(await settingsExportPanel.locator('[data-segment-value="png"]').getAttribute("aria-checked"), "true", "restoring app preferences resets the file format default");
+  assert.equal(await settingsExportPanel.locator('.choice-dropdown[data-choice-values="png webp jpg"]').getByRole("combobox").getAttribute("data-choice-value"), "png", "restoring app preferences resets the file format default");
   assert.equal(await page.getByTestId("default-generated-watermark-toggle").getAttribute("aria-checked"), "false", "restoring app preferences resets new-card footer defaults");
-  await settingsExportPanel.locator('[data-segment-value="webp"]').click();
+  await selectChoiceValue("webp", settingsExportPanel);
   await page.waitForFunction(() => (
-    document.querySelector('[data-settings-panel="export"]:not([hidden]) [data-segment-value="webp"]')?.getAttribute('aria-checked') === 'true'
+    document.querySelector('[data-settings-panel="export"]:not([hidden]) .choice-dropdown[data-choice-values="png webp jpg"] [role="combobox"]')?.getAttribute('data-choice-value') === 'webp'
   ));
 
   await selectSettingsSection("ai");
@@ -4903,7 +4906,7 @@ try {
   const fixedRatioLineBudget = await waitForLyricsLineBudget("18 + 18 = 36 / 36");
   assert.match(fixedRatioLineBudget, /18.*18.*36 \/ 36/s);
   await page.locator('button[data-step-id="layout"]').click();
-  await page.locator('[role="radiogroup"][aria-label="尺寸模式"] [data-segment-value="1:1"]').click();
+  await selectChoiceValue("1:1");
   await page.waitForFunction(() => document.querySelector('[data-export-card-host] [data-export-card]')?.getBoundingClientRect().height === 1080);
   const squareCard = await measureExportCard();
   assert.equal(squareCard?.hasOverflow, true, `1:1 fixed ratio exposes real overflow: ${JSON.stringify(squareCard)}`);
@@ -4942,7 +4945,7 @@ try {
   await landscapeMode.click();
   await page.waitForFunction(() => document.querySelector('[data-segment-value="landscape"]')?.getAttribute("aria-checked") === "true");
   assert.equal(
-    await page.locator('[role="radiogroup"][aria-label="尺寸模式"]').count(),
+    await page.getByRole('combobox', {name: '尺寸模式', exact: true}).count(),
     0,
     "free landscape exposes no obsolete ratio presets"
   );
@@ -4996,4 +4999,17 @@ try {
 } finally {
   await closeElectronApplication(electronApp, { label: "desktop-regression" });
   await rm(userDataDirectory, { recursive: true, force: true }).catch(() => {});
+}
+
+async function selectChoiceValue(value, root = page) {
+  const trigger = root.locator(`.choice-dropdown[data-choice-values~="${value}"]`).getByRole("combobox");
+  await trigger.scrollIntoViewIfNeeded();
+  await waitForLayoutStable(trigger);
+  await trigger.click();
+  const menu = page.locator(`[role="listbox"][data-choice-menu~="${value}"]`);
+  const option = menu.locator(`[data-segment-value="${value}"]`);
+  await option.click();
+  await menu.waitFor({ state: "hidden" });
+  assert.equal(await trigger.getAttribute("data-choice-value"), value, `compact choice selects ${value}`);
+  return trigger;
 }

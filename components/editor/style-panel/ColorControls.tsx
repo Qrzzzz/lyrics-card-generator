@@ -44,7 +44,6 @@ export function ColorControls({ style, onStyleChange, t }: ColorControlsProps) {
 
   return (
     <SettingsGrid>
-      <SettingsField label={t("textColor")}>
         <SegmentedControl<"auto" | "white" | "custom">
           value={selectedColorMode}
           onChange={selectColorMode}
@@ -55,7 +54,6 @@ export function ColorControls({ style, onStyleChange, t }: ColorControlsProps) {
           ]}
           aria-label={t("textColor")}
         />
-      </SettingsField>
       {selectedColorMode === "custom" ? (
         <SettingsField label={t("custom")} value={style.resolvedTextColor}>
           <Input

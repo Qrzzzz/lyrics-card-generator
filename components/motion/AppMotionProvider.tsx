@@ -1,7 +1,7 @@
 "use client";
 
-import { MotionConfig, useReducedMotion } from "framer-motion";
-import { createContext, useContext, useMemo, type ReactNode } from "react";
+import { MotionConfig } from "framer-motion";
+import { createContext, useContext, useMemo, useSyncExternalStore, type ReactNode } from "react";
 
 const AppMotionContext = createContext({ reduceMotion: false, ready: true });
 
@@ -27,9 +27,19 @@ export function AppMotionProvider({
 
 export function useAppReducedMotion() {
   const appPreference = useContext(AppMotionContext).reduceMotion;
-  const systemPreference = useReducedMotion() ?? false;
+  const systemPreference = useSyncExternalStore(subscribeReducedMotion, readReducedMotion, () => false);
   // Either preference may reduce motion, so an app setting never overrides platform accessibility.
   return appPreference || systemPreference;
+}
+
+function readReducedMotion() {
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+function subscribeReducedMotion(onChange: () => void) {
+  const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+  media.addEventListener("change", onChange);
+  return () => media.removeEventListener("change", onChange);
 }
 
 export function useAppMotionReady() {

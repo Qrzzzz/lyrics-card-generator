@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v6.7.1.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v6.7.2.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="./docs/development.en.md">ローカル開発</a> ·
@@ -76,19 +76,19 @@
 
 
 
-* Windows x64 インストーラー：`Lyrics.Card.Generator.Setup.6.7.1.exe`
+* Windows x64 インストーラー：`Lyrics.Card.Generator.Setup.6.7.2.exe`
 
 v6.2.2 以降、配布するデスクトップパッケージは Windows x64 Setup のみです。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v6.7.1 · リリースノート
+### v6.7.2 · リリースノート
 
-公開日：2026-10-08。
+公開日：2026-10-12。
 
-v6.7.1 ではグラデーションのランダム操作を「ランダムな背景を生成」として明確に表示します。クリックすると現在と異なるシードが選ばれ、色の配置をすぐに更新します。
+v6.7.2 は通常の選択項目を左側の名称と右側の折りたたみ式選択欄に整理し、同じ位置での開閉アニメーションを調整します。
 
-[简体中文](./docs/releases/v6.7.1.zh-CN.md) · [繁體中文](./docs/releases/v6.7.1.zh-TW.md) · [English](./docs/releases/v6.7.1.en.md) · [Français](./docs/releases/v6.7.1.fr.md) · [日本語](./docs/releases/v6.7.1.ja.md) · [Español](./docs/releases/v6.7.1.es.md)
+[简体中文](./docs/releases/v6.7.2.zh-CN.md) · [繁體中文](./docs/releases/v6.7.2.zh-TW.md) · [English](./docs/releases/v6.7.2.en.md) · [Français](./docs/releases/v6.7.2.fr.md) · [日本語](./docs/releases/v6.7.2.ja.md) · [Español](./docs/releases/v6.7.2.es.md)
 
 <a id="主な機能"></a>
 

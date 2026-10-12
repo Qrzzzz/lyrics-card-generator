@@ -1,3 +1,4 @@
+import { selectChoiceValue } from "./choice-test-helpers.mjs";
 import assert from "node:assert/strict";
 import { mkdtemp, mkdir, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -34,8 +35,8 @@ try {
   const button = panel.getByTestId("complete-export-button");
   const results = [];
   for (const format of ["png", "webp", "jpg"]) {
-    await panel.locator(`[data-segment-value="${format}"]`).click();
-    await panel.locator('[data-segment-value="low"]').click();
+    await selectChoiceValue(page, format, panel);
+    await selectChoiceValue(page, "low", panel);
     await expect(button).toBeEnabled({ timeout: 15_000 });
     const size = await page.locator('[data-export-card-host] [data-export-card="true"]').evaluate((node) => ({ width: Math.round(node.getBoundingClientRect().width), height: Math.round(node.getBoundingClientRect().height) }));
     await button.click();

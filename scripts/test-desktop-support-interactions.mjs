@@ -1,3 +1,4 @@
+import { selectChoiceValue } from "./choice-test-helpers.mjs";
 import assert from "node:assert/strict";
 import { mkdir, mkdtemp, readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -113,7 +114,7 @@ try {
   await page.waitForFunction(() => document.querySelectorAll('[data-testid="app-toast"]').length === 0, undefined, { timeout: 30_000 });
   for (const theme of ["dark", "light"]) {
     await page.getByTestId("settings-tab-appearance").click();
-    await page.locator(`[data-settings-panel="appearance"] [data-segment-value="${theme}"]`).click();
+    await selectChoiceValue(page, theme, page.locator('[data-settings-panel="appearance"]:not([hidden])'));
     await page.waitForFunction((expected) => document.querySelector(".app-shell")?.getAttribute("data-ui-theme") === expected, theme);
     await page.waitForTimeout(500); // Allow the native material/background transition to settle for screenshots.
     await page.locator(".settings-wing__content").evaluate((el) => { el.scrollTop = 0; });
