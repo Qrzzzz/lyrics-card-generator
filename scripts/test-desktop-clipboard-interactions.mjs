@@ -6,6 +6,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { _electron as electron } from "playwright";
+import { expect } from "@playwright/test";
 import { closeElectronApplication } from "./electron-test-lifecycle.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -78,12 +79,25 @@ try {
   assert.match(coverSource ?? "", /^blob:/, "desktop regression exercises an uploaded local blob cover");
 
   await electronApp.evaluate(({ clipboard }) => clipboard.clear());
+  await page.evaluate(() => {
+    window.__clipboardToastHistory = [];
+    const observer = new MutationObserver(() => {
+      for (const toast of document.querySelectorAll('[data-testid="app-toast"]')) {
+        const text = toast.textContent?.trim();
+        if (text && !window.__clipboardToastHistory.includes(text)) window.__clipboardToastHistory.push(text);
+      }
+    });
+    observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+  });
   await copyImageButton.click();
-  await page.waitForFunction(() => (
-    Array.from(document.querySelectorAll('[data-testid="app-toast"]')).some((toast) => (
-      toast.textContent?.trim() === "图片已复制到剪贴板"
-    ))
-  ), undefined, { timeout: 15_000 });
+  await expect.poll(() => electronApp.evaluate(({ clipboard }) => {
+    const image = clipboard.readImage();
+    return { empty: image.isEmpty(), size: image.getSize() };
+  }), { timeout: 30_000, message: "copy writes the selected raster to the native clipboard" }).toEqual({
+    empty: false,
+    size: { width: cardSize.width * 2, height: cardSize.height * 2 }
+  });
+  assert.ok(await page.evaluate(() => window.__clipboardToastHistory.includes("图片已复制到剪贴板")), "copy reports success");
 
   const clipboardImage = await electronApp.evaluate(({ clipboard }) => {
     const image = clipboard.readImage();
@@ -105,6 +119,15 @@ try {
   process.stdout.write(
     `[desktop-clipboard] copied ${clipboardImage.size.width}x${clipboardImage.size.height} PNG from a local cover; WebP download selection preserved.\n`
   );
+} catch (error) {
+  if (electronApp) {
+    const currentPage = await electronApp.firstWindow().catch(() => null);
+    console.error("clipboard-diagnostic", {
+      native: await electronApp.evaluate(({ clipboard }) => ({ formats: clipboard.availableFormats(), empty: clipboard.readImage().isEmpty() })).catch(() => null),
+      toasts: await currentPage?.evaluate(() => window.__clipboardToastHistory).catch(() => null)
+    });
+  }
+  throw error;
 } finally {
   await closeElectronApplication(electronApp, { label: "desktop-clipboard" });
   await rm(userDataDirectory, { recursive: true, force: true });
