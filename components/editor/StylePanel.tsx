@@ -275,7 +275,7 @@ export function LayoutSettingsPanel({ style, onStyleChange, locale, t }: StylePa
               <RangeSlider aria-label={t("fontSize")} min={36} max={72} value={style.lyricFontSize}
                 onChange={(event) => update("lyricFontSize", Number(event.target.value))} />
             </SettingsField>
-            <SettingsField label={t("lineHeight")} value={style.lineHeight.toFixed(2)}>
+            <SettingsField label={t("lineHeight")} value={style.lineHeight.toFixed(2)} description={t("lineHeightDescription")}>
               <RangeSlider aria-label={t("lineHeight")} min={LYRIC_LINE_HEIGHT_MIN} max={LYRIC_LINE_HEIGHT_MAX} step={LYRIC_LINE_HEIGHT_STEP}
                 value={style.lineHeight} onChange={(event) => update("lineHeight", Number(event.target.value))} />
             </SettingsField>

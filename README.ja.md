@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v6.7.2.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v6.7.3.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="./docs/development.en.md">ローカル開発</a> ·
@@ -76,19 +76,19 @@
 
 
 
-* Windows x64 インストーラー：`Lyrics.Card.Generator.Setup.6.7.2.exe`
+* Windows x64 インストーラー：`Lyrics.Card.Generator.Setup.6.7.3.exe`
 
 v6.2.2 以降、配布するデスクトップパッケージは Windows x64 Setup のみです。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v6.7.2 · リリースノート
+### v6.7.3 · リリースノート
 
-公開日：2026-10-12。
+公開日：2026-10-14。
 
-v6.7.2 は通常の選択項目を左側の名称と右側の折りたたみ式選択欄に整理し、同じ位置での開閉アニメーションを調整します。
+v6.7.3 は自動折り返しと手動改行の間隔を区別し、可変行間を維持しながら長い歌詞と対訳の読みやすさを改善します。
 
-[简体中文](./docs/releases/v6.7.2.zh-CN.md) · [繁體中文](./docs/releases/v6.7.2.zh-TW.md) · [English](./docs/releases/v6.7.2.en.md) · [Français](./docs/releases/v6.7.2.fr.md) · [日本語](./docs/releases/v6.7.2.ja.md) · [Español](./docs/releases/v6.7.2.es.md)
+[简体中文](./docs/releases/v6.7.3.zh-CN.md) · [繁體中文](./docs/releases/v6.7.3.zh-TW.md) · [English](./docs/releases/v6.7.3.en.md) · [Français](./docs/releases/v6.7.3.fr.md) · [日本語](./docs/releases/v6.7.3.ja.md) · [Español](./docs/releases/v6.7.3.es.md)
 
 <a id="主な機能"></a>
 

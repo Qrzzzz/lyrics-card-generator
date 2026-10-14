@@ -5,6 +5,7 @@ import { getLyricDocumentRows, type LyricDocumentV2 } from "@/lib/lyrics-documen
 import { cn } from "@/lib/utils";
 import { LyricSeparator } from "@/components/preview/LyricSeparator";
 import type { LyricSeparatorStyle } from "@/lib/lyric-separator";
+import { LyricTextLines } from "@/components/preview/LyricTextLines";
 
 export function LyricsBlock({
   lyricDocument,
@@ -33,13 +34,13 @@ export function LyricsBlock({
         key: row.unitId,
         isSeparator: row.isSeparator,
         hasLyric: row.source.length > 0,
-        lyric: row.source.join("\n"),
-        translation: translationEnabled ? row.translation.join("\n") : "",
+        lyric: row.source,
+        translation: translationEnabled ? row.translation : [],
         gapBeforeLines: row.isBlockStart
           ? Math.max(row.sourceGapBeforeLines, translationEnabled ? row.translationGapBeforeLines : 0)
           : 0
       }))
-    : [{ key: "placeholder", isSeparator: false, hasLyric: true, lyric: "Type your lyrics here...", translation: "", gapBeforeLines: 0 }];
+    : [{ key: "placeholder", isSeparator: false, hasLyric: true, lyric: ["Type your lyrics here..."], translation: [], gapBeforeLines: 0 }];
   const visualRowCount = rows.reduce((total, row, index) => total + (row.isSeparator ? 0
     : 1 + (rows[index - 1]?.isSeparator ? 0 : row.gapBeforeLines)), 0);
   const activeLyricSize = Math.max(34, Math.min(lyricFontSize, visualRowCount > 10 ? lyricFontSize - 6 : lyricFontSize));
@@ -69,33 +70,32 @@ export function LyricsBlock({
             }}
           >
             {hasLyric ? (
-              <p
-                data-auto-width-line="lyric"
-                data-auto-width-line-index={index}
+              <LyricTextLines
+                lines={lyric}
+                kind="lyric"
+                rowIndex={index}
                 className="font-black opacity-[0.96]"
+                fontSize={activeLyricSize}
+                lineHeight={lineHeight}
                 style={{
-                  fontSize: activeLyricSize,
-                  lineHeight,
                   textWrap: autoWidth ? "balance" : undefined
                 }}
-              >
-                {lyric || "\u00a0"}
-              </p>
+              />
             ) : null}
-            {translation ? (
-              <p
-                data-auto-width-line="translation"
-                data-auto-width-line-index={index}
-                className={hasLyric ? "mt-[0.28em] font-medium" : "font-medium"}
+            {translation.length > 1 || translation.some((line) => line.length > 0) ? (
+              <LyricTextLines
+                lines={translation}
+                kind="translation"
+                rowIndex={index}
+                className="font-medium"
+                fontSize={activeTranslationSize}
+                lineHeight={lineHeight}
                 style={{
+                  marginTop: hasLyric ? activeTranslationSize * 0.28 : 0,
                   color: withAlpha(textColor, 0.64),
-                  fontSize: activeTranslationSize,
-                  lineHeight: 1.32,
                   textWrap: autoWidth ? "balance" : undefined
                 }}
-              >
-                {translation}
-              </p>
+              />
             ) : null}
           </div>
         );

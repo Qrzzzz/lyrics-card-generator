@@ -5,6 +5,7 @@ import { getLyricDocumentRows, type LyricDocumentV2 } from "@/lib/lyrics-documen
 import { cn } from "@/lib/utils";
 import { LyricSeparator } from "@/components/preview/LyricSeparator";
 import type { LyricSeparatorStyle } from "@/lib/lyric-separator";
+import { LyricTextLines } from "@/components/preview/LyricTextLines";
 
 export function LandscapeLyricsContent({
   lyricDocument,
@@ -64,8 +65,8 @@ export function LandscapeLyricsContent({
     >
       {rows.map((row, index) => {
         if (row.isSeparator) return <LyricSeparator key={row.unitId} style={separatorStyle} fontSize={lyricFontSize} color={textColor} />;
-        const lyric = row.source.join("\n");
-        const translation = translationEnabled ? row.translation.join("\n") : "";
+        const hasLyric = row.source.length > 1 || row.source.some((line) => line.length > 0);
+        const translation = translationEnabled ? row.translation : [];
         const gapBeforeLines = row.isBlockStart
           ? Math.max(row.sourceGapBeforeLines, translationEnabled ? row.translationGapBeforeLines : 0)
           : 0;
@@ -81,32 +82,31 @@ export function LandscapeLyricsContent({
               marginBottom: index === rows.length - 1 ? 0 : rowGap
             }}
           >
-            {lyric ? (
-              <p
-                data-landscape-line="lyric"
-                data-auto-width-line="lyric"
-                data-auto-width-line-index={index}
+            {hasLyric ? (
+              <LyricTextLines
+                lines={row.source}
+                kind="lyric"
+                rowIndex={index}
+                landscape
                 className="font-black opacity-[0.96]"
-                style={{ fontSize: lyricFontSize, lineHeight }}
-              >
-                {lyric}
-              </p>
+                fontSize={lyricFontSize}
+                lineHeight={lineHeight}
+              />
             ) : null}
-            {translation ? (
-              <p
-                data-landscape-line="translation"
-                data-auto-width-line="translation"
-                data-auto-width-line-index={index}
+            {translation.length > 1 || translation.some((line) => line.length > 0) ? (
+              <LyricTextLines
+                lines={translation}
+                kind="translation"
+                rowIndex={index}
+                landscape
                 className="font-semibold"
+                fontSize={translationFontSize}
+                lineHeight={lineHeight}
                 style={{
-                  marginTop: lyric ? translationGap : 0,
-                  color: withAlpha(textColor, 0.68),
-                  fontSize: translationFontSize,
-                  lineHeight
+                  marginTop: hasLyric ? translationGap : 0,
+                  color: withAlpha(textColor, 0.68)
                 }}
-              >
-                {translation}
-              </p>
+              />
             ) : null}
           </div>
         );

@@ -11,3 +11,14 @@ export function normalizeLyricLineHeight(value: number) {
   const stepsFromMinimum = Math.round((clamped - LYRIC_LINE_HEIGHT_MIN) / LYRIC_LINE_HEIGHT_STEP);
   return Number((LYRIC_LINE_HEIGHT_MIN + stepsFromMinimum * LYRIC_LINE_HEIGHT_STEP).toFixed(2));
 }
+
+/** Keep authored lines at the selected height, with half the leading on soft wraps. */
+export function getLyricLineSpacing(lineHeight: number, fontSize: number) {
+  const authoredLineHeight = normalizeLyricLineHeight(lineHeight);
+  const wrapLineHeight = 1 + (authoredLineHeight - 1) / 2;
+  return {
+    wrapLineHeight,
+    // Padding preserves the single-line height and the existing row/paragraph gaps.
+    edgePadding: fontSize * (authoredLineHeight - wrapLineHeight) / 2
+  };
+}
