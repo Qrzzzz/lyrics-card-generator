@@ -39,7 +39,7 @@ type AutoWidthEquivalenceFixture = {
   align: "left" | "center";
   anchorWidth: number;
   expected: { width: number; height: number };
-  expectedByPlatform?: Partial<Record<NodeJS.Platform, { width: number; height: number }>>;
+  expectedByPlatform?: Partial<Record<NodeJS.Platform, { width: number }>>;
 };
 
 const autoWidthEquivalenceFixtures: AutoWidthEquivalenceFixture[] = [
@@ -60,7 +60,7 @@ const autoWidthEquivalenceFixtures: AutoWidthEquivalenceFixture[] = [
     lineHeight: 1.8,
     align: "left",
     anchorWidth: 720,
-    expected: { width: 1300, height: 1620 }
+    expected: { width: 1300, height: 1520 }
   },
   {
     id: "simplified-chinese-empty-lines",
@@ -97,7 +97,7 @@ const autoWidthEquivalenceFixtures: AutoWidthEquivalenceFixture[] = [
     lineHeight: 1.9,
     align: "center",
     anchorWidth: 920,
-    expected: { width: 1320, height: 1420 }
+    expected: { width: 1320, height: 1540 }
   },
   {
     id: "korean-with-chinese-translation",
@@ -122,9 +122,8 @@ const autoWidthEquivalenceFixtures: AutoWidthEquivalenceFixture[] = [
     lineHeight: 2.05,
     align: "left",
     anchorWidth: 1280,
-    expected: { width: 920, height: 2140 },
-    // Reconfirmed against the unchanged v6.3.4 bundle with Playwright 1.63's Chromium.
-    expectedByPlatform: { linux: { width: 940, height: 2140 }, win32: { width: 940, height: 2140 } }
+    expected: { width: 940, height: 2200 },
+    expectedByPlatform: { linux: { width: 940 }, win32: { width: 940 } }
   },
   {
     id: "long-english-words",
@@ -141,7 +140,7 @@ const autoWidthEquivalenceFixtures: AutoWidthEquivalenceFixture[] = [
     lineHeight: 1.5,
     align: "left",
     anchorWidth: 1040,
-    expected: { width: 1440, height: 1820 }
+    expected: { width: 1440, height: 1680 }
   },
   {
     id: "mixed-cjk-latin-punctuation",
@@ -166,7 +165,7 @@ const autoWidthEquivalenceFixtures: AutoWidthEquivalenceFixture[] = [
     lineHeight: 1.75,
     align: "center",
     anchorWidth: 1160,
-    expected: { width: 960, height: 1900 }
+    expected: { width: 960, height: 1920 }
   },
   {
     id: "translation-disabled-but-populated",
@@ -207,8 +206,8 @@ const autoWidthEquivalenceFixtures: AutoWidthEquivalenceFixture[] = [
     lineHeight: 1.5,
     align: "left",
     anchorWidth: 720,
-    expected: { width: 1340, height: 1580 },
-    expectedByPlatform: { linux: { width: 1060, height: 1880 } }
+    expected: { width: 1340, height: 1460 },
+    expectedByPlatform: { linux: { width: 1060 } }
   }
 ];
 // Captured from the verified 7d7b3fbc legacy implementation before replacing
@@ -1045,6 +1044,18 @@ test("auto width measures bilingual wrapping and settles on a comfortable portra
   expect(wrapMetrics.some((metric) => metric.kind === "translation" && metric.visualLines > 1)).toBe(true);
   expect(wrapMetrics.filter((metric) => metric.severe)).toEqual([]);
 
+  const height = page.getByLabel("Height", { exact: true });
+  const spacingSamples: number[] = [];
+  for (const value of [1.5, 1.8, 2.1]) {
+    await setRangeValue(page.getByLabel("Line Height", { exact: true }), value);
+    await waitForStableSliderValue(height);
+    const metrics = await expectLyricSpacingGeometry(page, value);
+    spacingSamples.push(metrics.find((metric) => metric.kind === "lyric")!.wrapSpacing);
+  }
+  expect(spacingSamples[0]).toBeLessThan(spacingSamples[1]);
+  expect(spacingSamples[1]).toBeLessThan(spacingSamples[2]);
+  await setRangeValue(page.getByLabel("Line Height", { exact: true }), 1.8);
+
   await page.locator('[data-step-id="export"]').click();
   await expect(page.getByTestId("complete-export-button")).toBeEnabled({ timeout: 5000 });
 
@@ -1126,7 +1137,7 @@ test("auto width calibrates every built-in example independently of the starting
   }
 });
 
-test("auto width preserves the legacy choice for multilingual typography fixtures", async ({ browser }) => {
+test("auto width preserves calibrated widths and typography heights for multilingual fixtures", async ({ browser }) => {
   test.setTimeout(180_000);
 
   for (const fixture of autoWidthEquivalenceFixtures) {
@@ -1147,8 +1158,11 @@ test("auto width preserves the legacy choice for multilingual typography fixture
       try {
         await openWebLite(fixturePage);
         const result = await applyAutoWidthEquivalenceFixture(fixturePage, fixture);
-        const expected = fixture.expectedByPlatform?.[process.platform] ?? fixture.expected;
-        expect(result, `${fixture.id} matches the ${process.platform} legacy width and height`).toEqual(expected);
+        await expectAutoWidthTypographyResult(fixturePage, fixture, result);
+        const controls = await prepareAutoWidthEquivalenceFixture(fixturePage, { ...fixture, anchorWidth: 1440 });
+        await controls.autoWidth.click();
+        expect(await readSettledAutoWidthResult(controls.width, controls.height),
+          `${fixture.id} settles on the same width and height from another anchor`).toEqual(result);
       } finally {
         await context.close();
       }
@@ -1156,7 +1170,7 @@ test("auto width preserves the legacy choice for multilingual typography fixture
   }
 });
 
-test("auto width retains the anchor until fonts are ready and then matches the legacy choice", async ({ page }) => {
+test("auto width retains the anchor until fonts are ready and then matches the calibrated typography", async ({ page }) => {
   await page.addInitScript(() => {
     let releaseFontReady!: () => void;
     const controlledReady = new Promise<void>((resolve) => {
@@ -1182,7 +1196,7 @@ test("auto width retains the anchor until fonts are ready and then matches the l
     (window as typeof window & { __releaseAutoWidthFontReady?: () => void }).__releaseAutoWidthFontReady?.();
   });
   const result = await readSettledAutoWidthResult(controls.width, controls.height);
-  expect(result).toEqual(fixture.expected);
+  await expectAutoWidthTypographyResult(page, fixture, result);
 });
 
 test("auto width reuses one candidate DOM and bounds geometry-query cost for 80 lines", async ({ page }) => {
@@ -1825,6 +1839,57 @@ async function applyAutoWidthEquivalenceFixture(page: Page, fixture: AutoWidthEq
   const controls = await prepareAutoWidthEquivalenceFixture(page, fixture);
   await controls.autoWidth.click();
   return readSettledAutoWidthResult(controls.width, controls.height);
+}
+
+async function expectAutoWidthTypographyResult(
+  page: Page,
+  fixture: AutoWidthEquivalenceFixture,
+  result: { width: number; height: number }
+) {
+  const expectedWidth = fixture.expectedByPlatform?.[process.platform]?.width ?? fixture.expected.width;
+  expect(result.width, `${fixture.id} preserves its calibrated width`).toBe(expectedWidth);
+  // Heights were measured on Windows after the spacing change. Other platforms
+  // enforce physical spacing, containment and anchor independence instead of stale height goldens.
+  if (process.platform === "win32") expect(result.height, `${fixture.id} calibrated Windows height`).toBe(fixture.expected.height);
+  await expectLyricSpacingGeometry(page, fixture.lineHeight);
+  const card = page.locator('[data-export-card-host] [data-export-card="true"]').first();
+  const geometry = await readContainedGeometry(card.locator("[data-card-lyrics]"), card.locator("[data-card-lyrics-viewport]"));
+  expect(geometry.childTop).toBeGreaterThanOrEqual(geometry.parentTop - 1);
+  expect(geometry.childBottom).toBeLessThanOrEqual(geometry.parentBottom + 1);
+}
+
+async function expectLyricSpacingGeometry(page: Page, selectedLineHeight: number) {
+  const metrics = await page.locator('[data-export-card-host] [data-export-card="true"]').first().evaluate((root) => {
+    return Array.from(root.querySelectorAll<HTMLElement>("[data-lyric-authored-line]")).map((line) => {
+      const range = document.createRange();
+      range.selectNodeContents(line);
+      const tops: number[] = [];
+      for (const rect of Array.from(range.getClientRects()).filter((rect) => rect.width > 0)) {
+        if (tops.every((top) => Math.abs(top - rect.top) > 1)) tops.push(rect.top);
+      }
+      tops.sort((left, right) => left - right);
+      const style = getComputedStyle(line);
+      return { kind: line.dataset.lyricAuthoredLine, tops,
+        wrapSpacing: Number.parseFloat(style.lineHeight), fontSize: Number.parseFloat(style.fontSize) };
+    });
+  });
+  for (const metric of metrics) {
+    expect(metric.wrapSpacing).toBeLessThan(selectedLineHeight * metric.fontSize);
+    for (let index = 1; index < metric.tops.length; index++) {
+      expect(metric.tops[index] - metric.tops[index - 1]).toBeCloseTo(metric.wrapSpacing, 0);
+    }
+  }
+  for (const kind of ["lyric", "translation"]) {
+    const lines = metrics.filter((metric) => metric.kind === kind);
+    for (let index = 1; index < lines.length; index++) {
+      const previous = lines[index - 1];
+      const current = lines[index];
+      if (previous.tops.length && current.tops.length) {
+        expect(current.tops[0] - previous.tops.at(-1)!).toBeGreaterThan(previous.wrapSpacing + previous.fontSize * 0.2);
+      }
+    }
+  }
+  return metrics;
 }
 
 async function prepareAutoWidthEquivalenceFixture(page: Page, fixture: AutoWidthEquivalenceFixture) {
