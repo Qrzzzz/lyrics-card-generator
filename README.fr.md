@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v6.7.3.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v6.8.0.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="./docs/development.en.md">Développement local</a> ·
@@ -76,19 +76,19 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 
 
-* Programme d’installation Windows x64 : `Lyrics.Card.Generator.Setup.6.7.3.exe`
+* Programme d’installation Windows x64 : `Lyrics.Card.Generator.Setup.6.8.0.exe`
 
 À partir de la v6.2.2, le programme Setup Windows x64 est le seul paquet distribué.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### v6.7.3 · Notes de version
+### v6.8.0 · Notes de version
 
-Date de sortie : 2026-10-14.
+Date de sortie : 2026-10-16.
 
-v6.7.3 distingue les retours automatiques des sauts de ligne saisis, pour mieux structurer les paroles longues et bilingues tout en conservant l’interligne réglable.
+v6.8.0 réorganise la deuxième étape en espaces Nettoyer, Bilingue et Vérifier, avec une recherche unifiée et une palette Ctrl+K, tout en conservant l’éditeur et la logique existants.
 
-[简体中文](./docs/releases/v6.7.3.zh-CN.md) · [繁體中文](./docs/releases/v6.7.3.zh-TW.md) · [English](./docs/releases/v6.7.3.en.md) · [Français](./docs/releases/v6.7.3.fr.md) · [日本語](./docs/releases/v6.7.3.ja.md) · [Español](./docs/releases/v6.7.3.es.md)
+[简体中文](./docs/releases/v6.8.0.zh-CN.md) · [繁體中文](./docs/releases/v6.8.0.zh-TW.md) · [English](./docs/releases/v6.8.0.en.md) · [Français](./docs/releases/v6.8.0.fr.md) · [日本語](./docs/releases/v6.8.0.ja.md) · [Español](./docs/releases/v6.8.0.es.md)
 
 <a id="fonctionnalités-principales"></a>
 

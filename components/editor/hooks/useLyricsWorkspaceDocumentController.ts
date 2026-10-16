@@ -545,6 +545,7 @@ export function useLyricsWorkspaceDocumentController({
   return {
     activeEditor: cursor.editor,
     activeSelection,
+    activeScope,
     activeText,
     blankCleanup,
     canRedo: historyRef.current.future.length > 0,

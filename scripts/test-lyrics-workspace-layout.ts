@@ -60,13 +60,13 @@ assert.ok(
   "step two uses LyricsWorkspace directly and keeps only active-tab state"
 );
 assert.ok(
-  workspaceSource.includes("const splitStyle = sideBySide") &&
+  workspaceSource.includes("const splitStyle = sideBySide && !sidebarCollapsed") &&
     workspaceSource.includes("gridTemplateColumns: `${split.geometry.editorWidth}px ${split.geometry.toolsWidth}px`") &&
-    workspaceSource.includes("showSidebarToggle={!sideBySide}") &&
+    workspaceSource.includes("showSidebarToggle") &&
     !workspaceSource.includes("lyrics-workspace-resizer") &&
     !workspaceSource.includes('role="separator"') &&
-    !workspaceSource.includes("sidebarCollapsed"),
-  "the desktop split is fixed while only narrow layouts expose the drawer control"
+    workspaceSource.includes("sidebarCollapsed"),
+  "the desktop split keeps its ratio and supports collapse while narrow layouts use a drawer"
 );
 assert.ok(
   workspaceSplitHookSource.includes("new ResizeObserver(update)") &&
@@ -106,10 +106,10 @@ assert.ok(
     sidebarPanelsSource.includes('data-testid="lyrics-cleanup-context"') &&
     sidebarPanelsSource.includes('testId="lyrics-cleanup-section-common"') &&
     sidebarPanelsSource.includes('data-testid="lyrics-cleanup-more"') &&
-    sidebarPanelsSource.includes('<details className="lyrics-sidebar-more"') &&
+    !sidebarPanelsSource.includes('<details className="lyrics-sidebar-more"') &&
     sidebarPanelsSource.includes('testId="lyrics-cleanup-section-paste"') &&
     sidebarPanelsSource.includes('testId="lyrics-cleanup-section-lrc"'),
-  "the always-open sidebar keeps stable tab navigation while concentrating low-frequency cleanup in one native disclosure"
+  "the sidebar keeps stable tab navigation and exposes all cleanup tools without nested disclosures"
 );
 assert.ok(
   sidebarPanelsSource.includes('data-testid="lyrics-translation-primary"') &&
@@ -126,7 +126,7 @@ assert.ok(
     sidebarSource.includes('testId="lyrics-translation-home-page"') &&
     sidebarSource.includes('testId={renderedAiPanel ? "lyrics-translation-ai-page" : undefined}') &&
     sidebarSource.includes('data-sidebar-page={activePage}') &&
-    sidebarSource.includes('data-translation-page={aiPanel ? "ai" : "home"}') &&
+    sidebarSource.includes('data-translation-page={aiPanel && !translationHome ? "ai" : "home"}') &&
     sidebarSource.includes('page="cleanup"') &&
     sidebarSource.includes('page="translation"') &&
     sidebarSource.includes('page="ai"') &&
@@ -169,31 +169,8 @@ assert.ok(
     !editorStepsSource.includes('presentation="sidebar-page"'),
   "AI translation exposes only the active sidebar setup and runtime pages"
 );
-assert.ok(
-  commandBarSource.includes('role="toolbar"') &&
-    commandBarSource.includes('testId="lyrics-command-keep-selection"') &&
-    commandBarSource.indexOf('testId="lyrics-command-keep-selection"') <
-      commandBarSource.indexOf('testId="lyrics-command-undo"') &&
-    commandBarSource.includes('emphasis && "lyrics-command-button--accent"') &&
-    commandBarSource.includes('testId="lyrics-command-undo"') &&
-    commandBarSource.includes('testId="lyrics-command-redo"') &&
-    commandBarSource.includes('testId="lyrics-command-clean-paste"') &&
-    commandBarSource.includes('testId="lyrics-command-collapse-blanks"') &&
-    commandBarSource.includes('testId="lyrics-command-strip-lrc"') &&
-    commandBarSource.includes('testId="lyrics-command-ai"') &&
-    commandBarSource.includes('data-testid="lyrics-status-bar"') &&
-    commandBarSource.includes("showSidebarToggle ?") &&
-    commandBarSource.includes("{lyricsFetchAction}") &&
-    commandBarSource.includes("{reviewAction}") &&
-    reviewMenuSource.includes('data-testid="lyrics-command-review"') &&
-    reviewMenuSource.includes('data-testid="lyrics-line-budget"') &&
-    fetchPanelSource.includes('data-testid="lyrics-command-fetch"') &&
-    fetchPanelSource.includes('data-testid="lyrics-fetch-panel-boundary"') &&
-    !commandBarSource.includes("lyrics-command-budget") &&
-    !commandBarSource.includes("lyrics-command-find") &&
-    !commandBarSource.includes("lyrics-find-input"),
-  "the command strip includes document status, editing actions, and independent fetch/review actions"
-);
+assert.ok(commandBarSource.includes('role="toolbar"') && commandBarSource.includes('testId="lyrics-command-search"') && commandBarSource.includes('testId="lyrics-command-undo"') && commandBarSource.includes('testId="lyrics-command-ai"') && commandBarSource.includes("{lyricsFetchAction}") && !commandBarSource.includes('testId="lyrics-command-clean-paste"'), "the command bar concentrates history, fetch, AI and search while cleanup remains in the sidebar");
+assert.ok(sidebarPanelsSource.includes('testId="lyrics-command-keep-selection"') && sidebarPanelsSource.includes('testId="lyrics-keep-selection-apply"') && reviewMenuSource.includes('data-testid="lyrics-line-budget"') && fetchPanelSource.includes('data-testid="lyrics-command-fetch"'), "selection trimming remains previewed and the retained review panel owns the export budget");
 assert.ok(
   copySource.includes("openDrawer") &&
     copySource.includes("closeDrawer") &&
@@ -206,7 +183,7 @@ assert.ok(
   sidebarSource.includes('role="tablist"') &&
     sidebarSource.includes('page="cleanup"') &&
     sidebarSource.includes('page="translation"') &&
-    !sidebarSource.includes('page="review"') &&
+    sidebarSource.includes('page="review"') &&
     !sidebarSource.includes('page="source"') &&
     sidebarSource.includes("hidden={!visible}") &&
     sidebarSource.includes('data-testid="lyrics-sidebar-panels"') &&
@@ -247,7 +224,7 @@ for (const key of ["commonCleanupHeading", "moreCleanupHeading", "columnToolsHea
 }
 assert.ok(
     copySource.includes("duplicateLineIssue") &&
-    reviewMenuSource.includes("issue.kind === \"duplicate-line\"") &&
+    reviewMenuSource.includes('issue.kind === \"duplicate-line\"') &&
     !sidebarPanelsSource.includes("removeDuplicate"),
   "duplicate lines are reported for navigation and never silently deleted"
 );

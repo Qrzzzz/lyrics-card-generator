@@ -11,6 +11,7 @@ type AccessibleDialogProps = {
   labelledBy: string;
   describedBy?: string;
   onClose: () => void;
+  onAfterClose?: () => void;
   escapeCloses?: boolean;
   closeOnBackdrop?: boolean;
   initialFocusSelector?: string;
@@ -31,6 +32,7 @@ export function AccessibleDialog({
   labelledBy,
   describedBy,
   onClose,
+  onAfterClose,
   escapeCloses = true,
   closeOnBackdrop = true,
   initialFocusSelector,
@@ -95,6 +97,7 @@ export function AccessibleDialog({
           ? document.querySelector<HTMLElement>(returnFocusSelector)
           : restoreFocusRef.current;
         target?.focus({ preventScroll: true });
+        onAfterClose?.();
       }}
     >
       {open ? (

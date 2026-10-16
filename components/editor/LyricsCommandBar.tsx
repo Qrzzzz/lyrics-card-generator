@@ -1,36 +1,18 @@
 "use client";
-
-import {
-  ClipboardCheck,
-  Languages,
-  ListCollapse,
-  PanelRightClose,
-  PanelRightOpen,
-  Redo2,
-  BetweenHorizontalStart,
-  TextSelect,
-  TimerOff,
-  Undo2
-} from "lucide-react";
+import { Languages, Search, PanelRightClose, PanelRightOpen, Redo2, Undo2 } from "lucide-react";
 import type { ReactNode, Ref } from "react";
 import type { LyricsWorkspaceCopy } from "@/components/editor/lyrics-workspace-copy";
 import type { LyricsSidebarTab } from "@/lib/lyrics-workbench";
 import { cn } from "@/lib/utils";
-
 export type LyricsCommandIntent = "ai";
-
 export function LyricsCommandBar({
   copy,
-  insertSeparatorLabel,
-  onInsertSeparator,
   activeTab,
-  canKeepSelection,
   canUndo,
   canRedo,
   isAITranslating,
   showAITranslate,
   lyricsFetchAction,
-  reviewAction,
   currentPosition,
   scopeLabel,
   sidebarExpanded,
@@ -38,24 +20,19 @@ export function LyricsCommandBar({
   sidebarToggleRef,
   onUndo,
   onRedo,
-  onKeepSelection,
-  onCleanPaste,
-  onCollapseBlankLines,
-  onStripLrc,
   onAITranslate,
-  onToggleSidebar
+  onToggleSidebar,
+  onSearch,
+  searchLabel,
+  sidebarLabel
 }: {
   copy: LyricsWorkspaceCopy;
-  insertSeparatorLabel: string;
-  onInsertSeparator: () => void;
   activeTab: LyricsSidebarTab;
-  canKeepSelection: boolean;
   canUndo: boolean;
   canRedo: boolean;
   isAITranslating: boolean;
   showAITranslate: boolean;
   lyricsFetchAction: ReactNode;
-  reviewAction: ReactNode;
   currentPosition: string;
   scopeLabel: string;
   sidebarExpanded: boolean;
@@ -63,102 +40,69 @@ export function LyricsCommandBar({
   sidebarToggleRef?: Ref<HTMLButtonElement>;
   onUndo: () => void;
   onRedo: () => void;
-  onKeepSelection: () => void;
-  onCleanPaste: () => void;
-  onCollapseBlankLines: () => void;
-  onStripLrc: () => void;
   onAITranslate: () => void;
   onToggleSidebar: () => void;
+  onSearch: () => void;
+  searchLabel: string;
+  sidebarLabel: string;
 }) {
   return (
     <div
       role="toolbar"
       aria-label={copy.commandBar}
-      className="lyrics-command-bar grid min-h-11 shrink-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-2 px-1 pb-2"
+      className="lyrics-command-bar flex min-h-11 shrink-0 flex-wrap items-center gap-1 px-1 pb-2"
       data-testid="lyrics-command-bar"
       data-active-tab={activeTab}
     >
-      <div className="lyrics-command-group flex min-w-0 items-center gap-1 overflow-hidden">
+      <CommandIconButton
+        label={copy.undo}
+        testId="lyrics-command-undo"
+        disabled={!canUndo}
+        onClick={onUndo}
+        icon={<Undo2 className="size-3.5" />}
+      />
+      <CommandIconButton
+        label={copy.redo}
+        testId="lyrics-command-redo"
+        disabled={!canRedo}
+        onClick={onRedo}
+        icon={<Redo2 className="size-3.5" />}
+      />
+      <span className="lyrics-command-separator mx-1 h-5 w-px" aria-hidden="true" />
+      {lyricsFetchAction}
+      {showAITranslate ? (
         <CommandShortcut
-          label={copy.keepSelection}
-          testId="lyrics-command-keep-selection"
-          onClick={onKeepSelection}
-          disabled={!canKeepSelection}
-          icon={<TextSelect className="size-3.5" />}
-          emphasis
+          label={copy.aiShortcut}
+          testId="lyrics-command-ai"
+          onClick={onAITranslate}
+          disabled={isAITranslating}
+          icon={<Languages className="size-3.5" />}
         />
-        <span className="lyrics-command-separator mx-0.5 h-5 w-px" aria-hidden="true" />
+      ) : null}
+      <CommandShortcut
+        label={searchLabel}
+        testId="lyrics-command-search"
+        onClick={onSearch}
+        icon={<Search className="size-3.5" />}
+      />
+      <span className="min-w-0 flex-1" />
+      <LyricsStatusBar currentPosition={currentPosition} scopeLabel={scopeLabel} />
+      {showSidebarToggle ? (
         <CommandIconButton
-          label={copy.undo}
-          testId="lyrics-command-undo"
-          disabled={!canUndo}
-          onClick={onUndo}
-          icon={<Undo2 className="size-3.5" />}
+          label={sidebarLabel}
+          testId="lyrics-command-sidebar-toggle"
+          onClick={onToggleSidebar}
+          pressed={sidebarExpanded}
+          buttonRef={sidebarToggleRef}
+          icon={
+            sidebarExpanded ? (
+              <PanelRightClose className="size-3.5" />
+            ) : (
+              <PanelRightOpen className="size-3.5" />
+            )
+          }
         />
-        <CommandIconButton
-          label={copy.redo}
-          testId="lyrics-command-redo"
-          disabled={!canRedo}
-          onClick={onRedo}
-          icon={<Redo2 className="size-3.5" />}
-        />
-        <span className="lyrics-command-separator mx-0.5 h-5 w-px" aria-hidden="true" />
-        <CommandShortcut
-          label={copy.cleanPaste}
-          testId="lyrics-command-clean-paste"
-          onClick={onCleanPaste}
-          icon={<ClipboardCheck className="size-3.5" />}
-        />
-        <CommandShortcut
-          label={copy.collapseBlankLines}
-          testId="lyrics-command-collapse-blanks"
-          onClick={onCollapseBlankLines}
-          icon={<ListCollapse className="size-3.5" />}
-        />
-        <CommandShortcut
-          label={copy.stripLrcShortcut}
-          testId="lyrics-command-strip-lrc"
-          onClick={onStripLrc}
-          icon={<TimerOff className="size-3.5" />}
-        />
-        <CommandIconButton
-          label={insertSeparatorLabel}
-          testId="lyrics-command-insert-separator"
-          onClick={onInsertSeparator}
-          icon={<BetweenHorizontalStart className="size-3.5" />}
-        />
-        {showAITranslate ? (
-          <CommandShortcut
-            label={copy.aiShortcut}
-            testId="lyrics-command-ai"
-            onClick={onAITranslate}
-            disabled={isAITranslating}
-            icon={<Languages className={cn("size-3.5", isAITranslating && "animate-pulse")} />}
-          />
-        ) : null}
-      </div>
-
-      <div className="lyrics-command-group flex shrink-0 items-center gap-1">
-        <LyricsStatusBar currentPosition={currentPosition} scopeLabel={scopeLabel} />
-        <span className="lyrics-command-separator mx-0.5 hidden h-5 w-px min-[900px]:block" aria-hidden="true" />
-        {lyricsFetchAction}
-        {reviewAction}
-        {showSidebarToggle ? (
-          <>
-            <span className="lyrics-command-separator mx-0.5 h-5 w-px" aria-hidden="true" />
-            <CommandIconButton
-              label={sidebarExpanded ? copy.closeDrawer : copy.openDrawer}
-              testId="lyrics-command-sidebar-toggle"
-              onClick={onToggleSidebar}
-              pressed={sidebarExpanded}
-              buttonRef={sidebarToggleRef}
-              icon={sidebarExpanded
-                ? <PanelRightClose className="size-3.5" />
-                : <PanelRightOpen className="size-3.5" />}
-            />
-          </>
-        ) : null}
-      </div>
+      ) : null}
     </div>
   );
 }
@@ -176,10 +120,16 @@ export function LyricsStatusBar({
       data-testid="lyrics-status-bar"
       title={`${currentPosition} · ${scopeLabel}`}
     >
-      <span className="app-text-muted max-w-36 truncate font-medium" data-testid="lyrics-command-position">
+      <span
+        className="app-text-muted max-w-36 truncate font-medium"
+        data-testid="lyrics-command-position"
+      >
         {currentPosition}
       </span>
-      <span className="app-text-subtle hidden max-w-32 truncate min-[1180px]:inline" data-testid="lyrics-command-scope">
+      <span
+        className="app-text-subtle hidden max-w-32 truncate min-[1180px]:inline"
+        data-testid="lyrics-command-scope"
+      >
         {scopeLabel}
       </span>
     </div>
@@ -211,6 +161,8 @@ function CommandIconButton({
       aria-label={label}
       title={label}
       aria-pressed={pressed}
+      aria-expanded={pressed}
+      aria-controls={pressed === undefined ? undefined : "lyrics-workspace-sidebar"}
       disabled={disabled}
       onClick={onClick}
       data-testid={testId}
@@ -244,7 +196,8 @@ function CommandShortcut({
       )}
       onClick={onClick}
       disabled={disabled}
-      title={label}
+      title={testId === "lyrics-command-search" ? `${label} (Ctrl+K)` : label}
+      aria-keyshortcuts={testId === "lyrics-command-search" ? "Control+k Meta+k" : undefined}
       aria-label={label}
       data-testid={testId}
     >

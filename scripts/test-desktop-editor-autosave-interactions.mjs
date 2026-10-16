@@ -120,6 +120,23 @@ try {
   await page.keyboard.press("Enter");
   await expect(restoredNotice).toHaveCount(0);
   assert.equal(await page.getByTestId("lyrics-editor-original").inputValue(), finalText, "dismiss must preserve the restored document");
+  await page.getByTestId("lyrics-editor-original").focus();
+  await page.keyboard.press("Control+k");
+  await page.getByTestId("lyrics-tool-query").fill("trim");
+  await page.getByTestId("lyrics-tool-result-trim").click();
+  const trimmedText = "  Latest authored lyrics\n\n尾行🙂";
+  await expect(page.getByTestId("lyrics-editor-original")).toHaveValue(trimmedText);
+  await expect.poll(async () => (await disk()).records.find(record => record.id === remoteId)?.editorDraft.content.lyrics,
+    { timeout: 15_000 }).toBe(trimmedText);
+  await page.getByTestId("lyrics-command-undo").click();
+  await expect(page.getByTestId("lyrics-editor-original")).toHaveValue(finalText);
+  await closeNormally();
+  assert.equal((await disk()).records.find(record => record.id === remoteId).editorDraft.content.lyrics, finalText,
+    "undo after a palette operation is flushed on normal close");
+  await launch();
+  await expect(page.getByTestId("lyrics-editor-original")).toHaveValue(finalText);
+  await expect(page.getByTestId("lyrics-editor-translation")).toHaveValue("  saved translation\n");
+  await page.locator('[data-notification-id^="restored-"]').getByRole("button", { name: "Dismiss notification" }).click();
   await page.locator('[data-step-id="font"]').click();
   await page.getByTestId("apply-font-preset-mona-sans").click();
   const fontCards = page.locator('[data-testid="font-scheme-options"] > button');

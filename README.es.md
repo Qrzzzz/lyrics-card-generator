@@ -19,7 +19,7 @@
 <p>
   <strong>Navegación</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Descargar la última versión</a> ·
-  <a href="./docs/releases/v6.7.3.es.md">Notas de la versión</a> ·
+  <a href="./docs/releases/v6.8.0.es.md">Notas de la versión</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en línea</a> ·
   <a href="#funciones-principales">Funciones principales</a> ·
   <a href="./docs/development.en.md">Desarrollo local</a> ·
@@ -76,19 +76,19 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 
 
-* Instalador de Windows x64: `Lyrics.Card.Generator.Setup.6.7.3.exe`
+* Instalador de Windows x64: `Lyrics.Card.Generator.Setup.6.8.0.exe`
 
 A partir de v6.2.2, Setup para Windows x64 es el único paquete de escritorio distribuido.
 
 > La compilación actual no está firmada. Windows puede mostrar una advertencia de SmartScreen, algo habitual en aplicaciones personales sin firma.
 
-### v6.7.3 · Notas de la versión
+### v6.8.0 · Notas de la versión
 
-Fecha de publicación: 2026-10-14.
+Fecha de publicación: 2026-10-16.
 
-v6.7.3 distingue los saltos automáticos de los saltos de línea introducidos, mejorando las letras largas y bilingües sin perder el interlineado ajustable.
+v6.8.0 reorganiza el segundo paso en Limpiar, Bilingüe y Revisar, con búsqueda unificada y una paleta Ctrl+K, conservando el editor y la lógica existentes.
 
-[简体中文](./docs/releases/v6.7.3.zh-CN.md) · [繁體中文](./docs/releases/v6.7.3.zh-TW.md) · [English](./docs/releases/v6.7.3.en.md) · [Français](./docs/releases/v6.7.3.fr.md) · [日本語](./docs/releases/v6.7.3.ja.md) · [Español](./docs/releases/v6.7.3.es.md)
+[简体中文](./docs/releases/v6.8.0.zh-CN.md) · [繁體中文](./docs/releases/v6.8.0.zh-TW.md) · [English](./docs/releases/v6.8.0.en.md) · [Français](./docs/releases/v6.8.0.fr.md) · [日本語](./docs/releases/v6.8.0.ja.md) · [Español](./docs/releases/v6.8.0.es.md)
 
 <a id="funciones-principales"></a>
 

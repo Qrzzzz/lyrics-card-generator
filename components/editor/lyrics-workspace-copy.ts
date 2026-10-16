@@ -1,6 +1,11 @@
 import type { Locale } from "@/lib/types";
 
 export type LyricsWorkspaceCopy = {
+  separatorTool: string;
+  invisibleTool: string;
+  duplicateTool: string;
+  longLineTool: string;
+  fetchTool: string;
   manuscript: string;
   original: string;
   translation: string;
@@ -60,6 +65,7 @@ export type LyricsWorkspaceCopy = {
   swapSummary: string;
   alignmentHeading: string;
   alignmentOk: string;
+  alignmentDisabled: string;
   alignmentMismatch: string;
   locateLine: string;
   reviewHeading: string;
@@ -68,6 +74,8 @@ export type LyricsWorkspaceCopy = {
   budgetExceeded: string;
   issueHeading: string;
   noIssues: string;
+  previousIssues: string;
+  nextIssues: string;
   longLineIssue: string;
   duplicateLineIssue: string;
   invisibleIssue: string;
@@ -87,6 +95,11 @@ export type LyricsWorkspaceCopy = {
 
 const COPY: Record<Locale, LyricsWorkspaceCopy> = {
   zh: {
+    separatorTool: "插入分隔符",
+    invisibleTool: "异常字符",
+    duplicateTool: "重复行",
+    longLineTool: "超长行",
+    fetchTool: "获取歌词",
     manuscript: "歌词文档",
     original: "原文",
     translation: "译文",
@@ -97,7 +110,7 @@ const COPY: Record<Locale, LyricsWorkspaceCopy> = {
     openDrawer: "打开工具抽屉",
     closeDrawer: "关闭工具抽屉",
     cleanupTab: "整理",
-    translationTab: "翻译",
+    translationTab: "双语",
     reviewTab: "检查",
     activeColumnScope: "{label}全栏",
     selectedLinesScope: "{label}第 {start}–{end} 行",
@@ -145,6 +158,7 @@ const COPY: Record<Locale, LyricsWorkspaceCopy> = {
     swapApply: "确认交换",
     swapSummary: "原文与译文将完整交换；此操作不会逐行重排。",
     alignmentHeading: "双栏对齐",
+    alignmentDisabled: "启用译文后可检查双栏对齐。",
     alignmentOk: "原文与译文行数一致。",
     alignmentMismatch: "原文与译文相差 {count} 行，首个未配对位置在第 {line} 行。",
     locateLine: "定位第 {line} 行",
@@ -153,7 +167,9 @@ const COPY: Record<Locale, LyricsWorkspaceCopy> = {
     budgetRemaining: "还可使用 {count} 个非空行。",
     budgetExceeded: "已超出 {count} 个非空行。",
     issueHeading: "可定位的问题",
-    noIssues: "未发现过长行、连续重复行或不可见字符。",
+    previousIssues: "上一页问题",
+    nextIssues: "下一页问题",
+    noIssues: "未发现此类问题。",
     longLineIssue: "{label}第 {line} 行较长（{count} 字符）",
     duplicateLineIssue: "{label}第 {line} 行与上一行连续重复",
     invisibleIssue: "{label}第 {line} 行含 {count} 个不可见字符",
@@ -171,6 +187,11 @@ const COPY: Record<Locale, LyricsWorkspaceCopy> = {
     redoneResult: "已重做：{label}"
   },
   "zh-TW": {
+    separatorTool: "插入分隔符",
+    invisibleTool: "異常字元",
+    duplicateTool: "重複行",
+    longLineTool: "超長行",
+    fetchTool: "取得歌詞",
     manuscript: "歌詞文件",
     original: "原文",
     translation: "譯文",
@@ -181,7 +202,7 @@ const COPY: Record<Locale, LyricsWorkspaceCopy> = {
     openDrawer: "開啟工具抽屜",
     closeDrawer: "關閉工具抽屜",
     cleanupTab: "整理",
-    translationTab: "翻譯",
+    translationTab: "雙語",
     reviewTab: "檢查",
     activeColumnScope: "{label}全欄",
     selectedLinesScope: "{label}第 {start}–{end} 行",
@@ -229,6 +250,7 @@ const COPY: Record<Locale, LyricsWorkspaceCopy> = {
     swapApply: "確認交換",
     swapSummary: "原文與譯文將完整交換；此操作不會逐行重排。",
     alignmentHeading: "雙欄對齊",
+    alignmentDisabled: "啟用譯文後可檢查雙欄對齊。",
     alignmentOk: "原文與譯文行數一致。",
     alignmentMismatch: "原文與譯文相差 {count} 行，第一個未配對位置在第 {line} 行。",
     locateLine: "定位第 {line} 行",
@@ -237,7 +259,9 @@ const COPY: Record<Locale, LyricsWorkspaceCopy> = {
     budgetRemaining: "還可使用 {count} 個非空行。",
     budgetExceeded: "已超出 {count} 個非空行。",
     issueHeading: "可定位的問題",
-    noIssues: "未發現過長行、連續重複行或不可見字元。",
+    previousIssues: "上一頁問題",
+    nextIssues: "下一頁問題",
+    noIssues: "未發現此類問題。",
     longLineIssue: "{label}第 {line} 行較長（{count} 字元）",
     duplicateLineIssue: "{label}第 {line} 行與上一行連續重複",
     invisibleIssue: "{label}第 {line} 行含 {count} 個不可見字元",
@@ -255,6 +279,11 @@ const COPY: Record<Locale, LyricsWorkspaceCopy> = {
     redoneResult: "已重做：{label}"
   },
   en: {
+    separatorTool: "Insert separator",
+    invisibleTool: "Unusual characters",
+    duplicateTool: "Duplicate lines",
+    longLineTool: "Long lines",
+    fetchTool: "Fetch Lyrics",
     manuscript: "Lyrics document",
     original: "Original",
     translation: "Translation",
@@ -265,7 +294,7 @@ const COPY: Record<Locale, LyricsWorkspaceCopy> = {
     openDrawer: "Open tools drawer",
     closeDrawer: "Close tools drawer",
     cleanupTab: "Cleanup",
-    translationTab: "Translation",
+    translationTab: "Bilingual",
     reviewTab: "Review",
     activeColumnScope: "All {label}",
     selectedLinesScope: "{label} lines {start}–{end}",
@@ -313,6 +342,7 @@ const COPY: Record<Locale, LyricsWorkspaceCopy> = {
     swapApply: "Confirm swap",
     swapSummary: "The full original and translation columns will swap; rows are not reordered.",
     alignmentHeading: "Column alignment",
+    alignmentDisabled: "Enable translation to check column alignment.",
     alignmentOk: "Original and translation have the same number of lines.",
     alignmentMismatch: "Columns differ by {count} lines; the first unpaired position is line {line}.",
     locateLine: "Go to line {line}",
@@ -321,7 +351,9 @@ const COPY: Record<Locale, LyricsWorkspaceCopy> = {
     budgetRemaining: "{count} non-empty lines remain.",
     budgetExceeded: "{count} non-empty lines over budget.",
     issueHeading: "Locatable issues",
-    noIssues: "No long lines, consecutive duplicates, or invisible characters found.",
+    previousIssues: "Previous issues",
+    nextIssues: "Next issues",
+    noIssues: "No issues in this category.",
     longLineIssue: "{label} line {line} is long ({count} characters)",
     duplicateLineIssue: "{label} line {line} repeats the previous line",
     invisibleIssue: "{label} line {line} has {count} invisible characters",
@@ -339,6 +371,11 @@ const COPY: Record<Locale, LyricsWorkspaceCopy> = {
     redoneResult: "Redid: {label}"
   },
   fr: {
+    separatorTool: "Insérer un séparateur",
+    invisibleTool: "Caractères inhabituels",
+    duplicateTool: "Lignes en double",
+    longLineTool: "Lignes longues",
+    fetchTool: "Obtenir les paroles",
     manuscript: "Document de paroles",
     original: "Original",
     translation: "Traduction",
@@ -349,7 +386,7 @@ const COPY: Record<Locale, LyricsWorkspaceCopy> = {
     openDrawer: "Ouvrir le tiroir d’outils",
     closeDrawer: "Fermer le tiroir d’outils",
     cleanupTab: "Nettoyer",
-    translationTab: "Traduction",
+    translationTab: "Bilingue",
     reviewTab: "Vérifier",
     activeColumnScope: "Toute la colonne {label}",
     selectedLinesScope: "{label}, lignes {start}–{end}",
@@ -397,6 +434,7 @@ const COPY: Record<Locale, LyricsWorkspaceCopy> = {
     swapApply: "Confirmer l’échange",
     swapSummary: "Les colonnes complètes seront échangées sans réordonner les lignes.",
     alignmentHeading: "Alignement des colonnes",
+    alignmentDisabled: "Activez la traduction pour vérifier l’alignement des colonnes.",
     alignmentOk: "L’original et la traduction ont le même nombre de lignes.",
     alignmentMismatch: "Écart de {count} lignes ; la première position non appariée est la ligne {line}.",
     locateLine: "Aller à la ligne {line}",
@@ -405,7 +443,9 @@ const COPY: Record<Locale, LyricsWorkspaceCopy> = {
     budgetRemaining: "Il reste {count} lignes non vides.",
     budgetExceeded: "Dépassement de {count} lignes non vides.",
     issueHeading: "Problèmes localisables",
-    noIssues: "Aucune ligne longue, répétition consécutive ou caractère invisible.",
+    previousIssues: "Problèmes précédents",
+    nextIssues: "Problèmes suivants",
+    noIssues: "Aucun problème dans cette catégorie.",
     longLineIssue: "{label}, ligne {line} longue ({count} caractères)",
     duplicateLineIssue: "{label}, ligne {line} identique à la précédente",
     invisibleIssue: "{label}, ligne {line} contient {count} caractères invisibles",
@@ -423,6 +463,11 @@ const COPY: Record<Locale, LyricsWorkspaceCopy> = {
     redoneResult: "Rétabli : {label}"
   },
   ja: {
+    separatorTool: "区切りを挿入",
+    invisibleTool: "異常な文字",
+    duplicateTool: "重複行",
+    longLineTool: "長い行",
+    fetchTool: "歌詞を取得",
     manuscript: "歌詞ドキュメント",
     original: "原文",
     translation: "翻訳",
@@ -433,7 +478,7 @@ const COPY: Record<Locale, LyricsWorkspaceCopy> = {
     openDrawer: "ツールドロワーを開く",
     closeDrawer: "ツールドロワーを閉じる",
     cleanupTab: "整理",
-    translationTab: "翻訳",
+    translationTab: "対訳",
     reviewTab: "確認",
     activeColumnScope: "{label}全体",
     selectedLinesScope: "{label} {start}〜{end} 行",
@@ -481,6 +526,7 @@ const COPY: Record<Locale, LyricsWorkspaceCopy> = {
     swapApply: "交換を確定",
     swapSummary: "原文列と翻訳列をそのまま交換し、行の並べ替えは行いません。",
     alignmentHeading: "2列の整合性",
+    alignmentDisabled: "対訳を有効にすると行の対応を確認できます。",
     alignmentOk: "原文と翻訳の行数は一致しています。",
     alignmentMismatch: "{count} 行の差があります。最初の未対応位置は {line} 行目です。",
     locateLine: "{line} 行目へ移動",
@@ -489,7 +535,9 @@ const COPY: Record<Locale, LyricsWorkspaceCopy> = {
     budgetRemaining: "空でない行をあと {count} 行使用できます。",
     budgetExceeded: "空でない行が {count} 行超過しています。",
     issueHeading: "移動できる問題",
-    noIssues: "長すぎる行、連続重複行、不可視文字は見つかりませんでした。",
+    previousIssues: "前の問題",
+    nextIssues: "次の問題",
+    noIssues: "この種類の問題はありません。",
     longLineIssue: "{label} {line} 行目が長いです（{count} 文字）",
     duplicateLineIssue: "{label} {line} 行目が直前の行と連続重複",
     invisibleIssue: "{label} {line} 行目に不可視文字が {count} 個",
@@ -507,6 +555,11 @@ const COPY: Record<Locale, LyricsWorkspaceCopy> = {
     redoneResult: "やり直しました：{label}"
   },
   es: {
+    separatorTool: "Insertar separador",
+    invisibleTool: "Caracteres inusuales",
+    duplicateTool: "Líneas duplicadas",
+    longLineTool: "Líneas largas",
+    fetchTool: "Obtener letras",
     manuscript: "Documento de letras",
     original: "Original",
     translation: "Traducción",
@@ -517,7 +570,7 @@ const COPY: Record<Locale, LyricsWorkspaceCopy> = {
     openDrawer: "Abrir el cajón de herramientas",
     closeDrawer: "Cerrar el panel de herramientas",
     cleanupTab: "Limpiar",
-    translationTab: "Traducción",
+    translationTab: "Bilingüe",
     reviewTab: "Revisar",
     activeColumnScope: "Toda la columna {label}",
     selectedLinesScope: "{label}, líneas {start}–{end}",
@@ -565,6 +618,7 @@ const COPY: Record<Locale, LyricsWorkspaceCopy> = {
     swapApply: "Confirmar intercambio",
     swapSummary: "Las columnas completas se intercambiarán sin reordenar sus filas.",
     alignmentHeading: "Alineación de columnas",
+    alignmentDisabled: "Activa la traducción para comprobar la alineación.",
     alignmentOk: "El original y la traducción tienen el mismo número de líneas.",
     alignmentMismatch: "Hay {count} líneas de diferencia; la primera posición sin pareja es la línea {line}.",
     locateLine: "Ir a la línea {line}",
@@ -573,7 +627,9 @@ const COPY: Record<Locale, LyricsWorkspaceCopy> = {
     budgetRemaining: "Quedan {count} líneas no vacías.",
     budgetExceeded: "Se excede el límite por {count} líneas no vacías.",
     issueHeading: "Problemas localizables",
-    noIssues: "No se encontraron líneas largas, duplicados consecutivos ni caracteres invisibles.",
+    previousIssues: "Problemas anteriores",
+    nextIssues: "Problemas siguientes",
+    noIssues: "No hay problemas de esta categoría.",
     longLineIssue: "{label}, línea {line} larga ({count} caracteres)",
     duplicateLineIssue: "{label}, línea {line} repite la anterior",
     invisibleIssue: "{label}, línea {line} contiene {count} caracteres invisibles",
