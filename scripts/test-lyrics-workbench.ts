@@ -1,4 +1,7 @@
 import assert from "node:assert/strict";
+import { LYRICS_TOOLS, searchLyricsTools } from "../lib/lyrics-tool-registry";
+import { getLyricsWorkspaceCopy } from "../components/editor/lyrics-workspace-copy";
+import { getLyricsToolsCopy } from "../lib/lyrics-tools-copy";
 import {
   analyzeLyricsDocument,
   cleanPastedLyrics,
@@ -315,3 +318,20 @@ assert.equal(snapshotsEqual(before, { ...before }), true);
 assert.equal(snapshotsEqual(before, after), false);
 
 console.log(JSON.stringify({ ok: true, lyricsWorkbenchTests: 68 }, null, 2));
+
+assert.equal(new Set(LYRICS_TOOLS.map(tool => tool.id)).size, LYRICS_TOOLS.length);
+assert.deepEqual([...new Set(LYRICS_TOOLS.map(tool => tool.category))].sort(), ["cleanup", "review", "translation"]);
+for (const locale of ["zh", "zh-TW", "en", "fr", "ja", "es"] as const) {
+  const copy = getLyricsWorkspaceCopy(locale);
+  for (const tool of LYRICS_TOOLS) {
+    assert.ok(searchLyricsTools(copy[tool.label], copy).some(result => result.id === tool.id), locale + ": " + tool.id);
+    assert.ok(searchLyricsTools(copy[tool.label], getLyricsWorkspaceCopy("en")).some(result => result.id === tool.id), "cross-locale " + locale + ": " + tool.id);
+  }
+  for (const value of Object.values(getLyricsToolsCopy(locale))) assert.ok(value.trim());
+  assert.equal(searchLyricsTools("AI", copy)[0]?.id, "ai", "AI intent outranks incidental substrings in every locale");
+}
+for (const [query, id] of [["时间戳", "lrc"], ["時間軸", "lrc"], ["TIMESTAMPS", "lrc"], ["零宽", "invisible"], ["36", "budget"], ["duplicate lines", "duplicates"], ["traducción", "ai"], ["タイムスタンプ", "lrc"]]) {
+  assert.ok(searchLyricsTools(query, getLyricsWorkspaceCopy("zh")).some(tool => tool.id === id), query);
+}
+assert.deepEqual(searchLyricsTools("does-not-match-[anything]", getLyricsWorkspaceCopy("en")), []);
+console.log("Tool discovery, synonyms, six locales and registry uniqueness passed.");

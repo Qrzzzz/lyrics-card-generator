@@ -14,7 +14,10 @@ import {
   LyricsCommandBar,
   type LyricsCommandIntent
 } from "@/components/editor/LyricsCommandBar";
-import { LyricsReviewMenu } from "@/components/editor/LyricsReviewMenu";
+import { LyricsReviewPanel } from "@/components/editor/LyricsReviewMenu";
+import { LyricsToolPalette } from "@/components/editor/LyricsToolPalette";
+import { getLyricsToolsCopy } from "@/lib/lyrics-tools-copy";
+import { LYRICS_TOOLS, type LyricsTool } from "@/lib/lyrics-tool-registry";
 import { LyricsSidebar } from "@/components/editor/LyricsSidebar";
 import {
   LandscapeLineLimitAlert,
@@ -94,6 +97,7 @@ export function LyricsWorkspace({
   showAiTranslate = true
 }: LyricsWorkspaceProps) {
   const copy = getLyricsWorkspaceCopy(locale);
+  const nav = getLyricsToolsCopy(locale);
   const separatorLabels = separatorCopy[locale];
   const workspaceRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -120,6 +124,10 @@ export function LyricsWorkspace({
   const translationId = useId();
   const showTranslation = contentMode === "lyrics" && translationEnabled;
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  const [toolRequest, setToolRequest] = useState<LyricsTool | null>(null);
+  const [translationHome, setTranslationHome] = useState(false);
   const [focusIntent, setFocusIntent] = useState<LyricsCommandIntent | null>(null);
   const getActiveEditorKey = useCallback(() => activeEditorRef.current, []);
   const getEditor = useCallback((editor: LyricsEditorKey) => (
@@ -215,16 +223,18 @@ export function LyricsWorkspace({
     // Capture semantic position before the sidebar changes the editor's available width.
     viewport.captureAnchor();
     onSidebarTabChange(tab);
+    setSidebarCollapsed(false);
     if (!sideBySide) {
       setMobileSidebarOpen(true);
     }
     if (intent) setFocusIntent(intent);
-    if (intent === "ai" && showAiTranslate) onAITranslate();
+    if (intent === "ai" && showAiTranslate) { setTranslationHome(false); onAITranslate(); }
   }
 
   function toggleSidebar() {
     viewport.captureAnchor();
-    setMobileSidebarOpen((value) => !value);
+    if (sideBySide) setSidebarCollapsed(value => !value);
+    else setMobileSidebarOpen((value) => !value);
   }
 
   function closeMobileSidebar() {
@@ -237,6 +247,63 @@ export function LyricsWorkspace({
     window.requestAnimationFrame(() => sidebarToggleRef.current?.focus({ preventScroll: true }));
   }
 
+  useEffect(() => {
+    function onSearchKey(event: KeyboardEvent) {
+      // Escape must also work before the dialog's first focus frame, without
+      // reaching the underlying AI/drawer escape stack.
+      if (paletteOpen && event.key === "Escape" && !event.isComposing) {
+        event.preventDefault();
+        event.stopPropagation();
+        setPaletteOpen(false);
+        return;
+      }
+      if (event.isComposing || event.altKey || !(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== "k") return;
+      if (!workspaceRef.current?.getClientRects().length || contentMode !== "lyrics") return;
+      if (!paletteOpen && workspaceRef.current.closest("[inert], [hidden], [aria-hidden=true]")) return;
+      event.preventDefault();
+      if (!paletteOpen) viewport.captureAnchor();
+      setPaletteOpen(value => !value);
+    }
+    document.addEventListener("keydown", onSearchKey, true);
+    return () => document.removeEventListener("keydown", onSearchKey, true);
+  }, [contentMode, paletteOpen, viewport.captureAnchor]);
+
+  useEffect(() => {
+    if (!toolRequest) return;
+    // A palette command runs after modal inert/focus cleanup and on the active page only.
+    const frame = requestAnimationFrame(() => {
+      const target = workspaceRef.current?.querySelector<HTMLElement>('[data-testid="' + toolRequest.target + '"]');
+      if (target && !target.closest("[inert], [hidden]")) {
+        target.scrollIntoView({ block: "nearest" });
+        const disabled = target.matches(":disabled");
+        const focusTarget = disabled ? target.closest<HTMLElement>('[role="tabpanel"]') ?? getEditor(activeEditorRef.current) : target;
+        focusTarget?.focus({ preventScroll: true });
+        if (toolRequest.mode !== "locate" && !disabled) target.click();
+      }
+      setToolRequest(null);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [toolRequest, sidebarTab, sidebarCollapsed, mobileSidebarOpen, getEditor]);
+
+  function activateTool(tool: LyricsTool) {
+    if (tool.id === "ai") { openTab("translation", "ai"); return; }
+    if (["undo", "redo", "fetch"].includes(tool.id)) {
+      if (!sideBySide) setMobileSidebarOpen(false);
+      setToolRequest(tool);
+      return;
+    }
+    openTab(tool.category);
+    if (tool.category === "translation") setTranslationHome(true);
+    setToolRequest(tool);
+  }
+
+  function locateIssue(editor: LyricsWorkbenchEditor, line: number) {
+    if (!sideBySide) setMobileSidebarOpen(false);
+    requestAnimationFrame(() => documentController.locateIssue(editor, line));
+  }
+
+  const hasLrcInScope = /^\s*\[(?:\d{1,3}:\d{2}|(?:ar|ti|al|by|offset):)/imu.test(documentController.activeScope.text);
+
   if (contentMode !== "lyrics") {
     return (
       <Section title={t("lyrics")}>
@@ -245,7 +312,7 @@ export function LyricsWorkspace({
     );
   }
 
-  const splitStyle = sideBySide
+  const splitStyle = sideBySide && !sidebarCollapsed
     ? {
         gridTemplateColumns: `${split.geometry.editorWidth}px ${split.geometry.toolsWidth}px`,
         columnGap: `${split.geometry.gap}px`
@@ -265,38 +332,36 @@ export function LyricsWorkspace({
     >
       <LyricsCommandBar
         copy={copy}
-        insertSeparatorLabel={separatorLabels.insert}
-        onInsertSeparator={documentController.insertSeparatorAtCursor}
         activeTab={sidebarTab}
-        canKeepSelection={documentController.activeSelection.end > documentController.activeSelection.start}
         canUndo={documentController.canUndo}
         canRedo={documentController.canRedo}
         isAITranslating={isAITranslating}
         showAITranslate={showAiTranslate}
         lyricsFetchAction={lyricsFetchPanel}
-        reviewAction={(
-          <LyricsReviewMenu
-            copy={copy}
-            lineStatus={lineStatus}
-            analysis={analysis}
-            onLocate={documentController.locateIssue}
-          />
-        )}
+        onSearch={() => { viewport.captureAnchor(); setPaletteOpen(true); }}
+        searchLabel={nav.search}
+        sidebarLabel={sideBySide ? (sidebarCollapsed ? nav.expand : nav.collapse) : (mobileSidebarOpen ? copy.closeDrawer : copy.openDrawer)}
         currentPosition={documentController.currentPosition}
         scopeLabel={documentController.scopeLabel}
-        sidebarExpanded={mobileSidebarOpen}
-        showSidebarToggle={!sideBySide}
+        sidebarExpanded={sideBySide ? !sidebarCollapsed : mobileSidebarOpen}
+        showSidebarToggle
         sidebarToggleRef={sidebarToggleRef}
         onUndo={documentController.undoOperation}
         onRedo={documentController.redoOperation}
-        onKeepSelection={documentController.keepSelection}
-        onCleanPaste={documentController.cleanPaste}
-        onCollapseBlankLines={() => documentController.blankCleanup("collapse", false)}
-        onStripLrc={documentController.cleanLrc}
         onAITranslate={() => openTab("translation", "ai")}
         onToggleSidebar={toggleSidebar}
       />
 
+      <LyricsToolPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} onActivate={activateTool}
+        copy={copy} locale={locale} showAiTranslate={showAiTranslate} hasFetch={Boolean(lyricsFetchPanel)} />
+      {documentController.activeScope.hasSelection || hasLrcInScope ? (
+        <div className="flex shrink-0 flex-wrap items-center gap-2 pb-2 text-xs" data-testid="lyrics-context-actions">
+          <span className="app-text-subtle">{documentController.scopeLabel}</span>
+          {documentController.activeScope.hasSelection ? <button type="button" className="app-button control-focus rounded-md px-2 py-1" onClick={() => activateTool(LYRICS_TOOLS.find(tool => tool.id === "keep")!)}>{copy.keepSelection}</button> : null}
+          {documentController.activeScope.hasSelection && documentController.activeScope.endLine > documentController.activeScope.startLine ? <button type="button" className="app-button control-focus rounded-md px-2 py-1" onClick={documentController.mergeLines}>{copy.mergeHeading}</button> : null}
+          {hasLrcInScope ? <button type="button" className="app-button control-focus rounded-md px-2 py-1" onClick={() => activateTool(LYRICS_TOOLS.find(tool => tool.id === "lrc")!)}>{copy.previewLrc}</button> : null}
+        </div>
+      ) : null}
       <LandscapeLineLimitAlert
         notice={landscapeLineLimitNotice}
         onDismiss={onDismissLandscapeLineLimitNotice}
@@ -309,6 +374,7 @@ export function LyricsWorkspace({
         style={splitStyle}
         data-side-by-side={sideBySide ? "true" : "false"}
         data-mobile-sidebar-open={mobileSidebarOpen ? "true" : "false"}
+        data-sidebar-collapsed={sidebarCollapsed ? "true" : "false"}
         data-editor-ratio={split.geometry.ratio.toFixed(4)}
         data-testid="lyrics-workspace-split"
       >
@@ -329,7 +395,7 @@ export function LyricsWorkspace({
               className={cn(
                 "lyrics-editor-grid grid min-h-full min-w-0 items-start gap-3 p-3",
                 showTranslation
-                  ? "grid-cols-2 max-[620px]:grid-cols-1"
+                  ? "mx-auto w-full max-w-[88rem] grid-cols-2 max-[620px]:grid-cols-1"
                   : "mx-auto w-full max-w-[52rem] grid-cols-1"
               )}
               data-testid="lyrics-editor-columns"
@@ -425,24 +491,32 @@ export function LyricsWorkspace({
           locale={locale}
           themeColor={themeColor}
           t={t}
-          open={sideBySide || mobileSidebarOpen}
+          open={sideBySide ? !sidebarCollapsed : mobileSidebarOpen}
+          onSearch={() => { viewport.captureAnchor(); setPaletteOpen(true); }}
+          searchLabel={nav.search}
+          reviewCount={analysis.issues.length + (analysis.lineDifference ? 1 : 0) + (lineStatus.isOverLimit ? 1 : 0)}
+          reviewPanel={<LyricsReviewPanel copy={copy} lineStatus={lineStatus} analysis={analysis} translationEnabled={showTranslation} onLocate={locateIssue} />}
           mobileDrawer={!sideBySide}
           feedback={documentController.feedback}
           focusIntent={focusIntent}
           isAITranslating={isAITranslating}
           showAiTranslate={showAiTranslate}
           aiPanel={aiPanel}
-          onTabChange={onSidebarTabChange}
+          translationHome={translationHome}
+          toolNavigation={Boolean(toolRequest)}
+          onTabChange={(tab) => { setTranslationHome(false); onSidebarTabChange(tab); }}
           onCloseDrawer={closeMobileSidebar}
           onIntentHandled={() => setFocusIntent(null)}
           onUndo={documentController.undoOperation}
           onBlankCleanup={documentController.blankCleanup}
+          onKeepSelection={documentController.keepSelection}
+          onInsertSeparator={documentController.insertSeparatorAtCursor}
           onCleanPaste={documentController.cleanPaste}
           onStripLrc={documentController.cleanLrc}
           onMergeSelectedLines={documentController.mergeLines}
           onRemoveParagraphTags={documentController.cleanParagraphTags}
           onTranslationEnabledChange={documentController.handleTranslationEnabledChange}
-          onAITranslate={onAITranslate}
+          onAITranslate={() => { setTranslationHome(false); onAITranslate(); }}
           onCloseAITranslate={onCloseAITranslate}
           onCancelAITranslate={onCancelAITranslate}
           onSplitAlternatingLyrics={documentController.splitAlternating}

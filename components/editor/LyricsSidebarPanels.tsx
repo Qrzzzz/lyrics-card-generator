@@ -1,6 +1,5 @@
 "use client";
 
-import { ChevronDown } from "lucide-react";
 import {
   type CSSProperties,
   type Ref,
@@ -30,6 +29,7 @@ import {
 } from "@/lib/lyrics-workbench";
 import type { Locale } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { getLyricsToolsCopy } from "@/lib/lyrics-tools-copy";
 
 export type LyricsSidebarPanelProps = {
   copy: LyricsWorkspaceCopy;
@@ -45,6 +45,8 @@ export type LyricsSidebarPanelProps = {
   isAITranslating: boolean;
   showAiTranslate: boolean;
   onBlankCleanup: (mode: LyricsBlankMode, synchronized: boolean) => void;
+  onKeepSelection: () => void;
+  onInsertSeparator: () => void;
   onCleanPaste: () => void;
   onStripLrc: () => void;
   onMergeSelectedLines: () => void;
@@ -64,12 +66,17 @@ export function LyricsCleanupPanel({
   lyrics,
   translationText,
   translationEnabled,
+  locale,
   onBlankCleanup,
   onCleanPaste,
+  onKeepSelection,
+  onInsertSeparator,
   onStripLrc,
   onMergeSelectedLines,
   onRemoveParagraphTags
 }: LyricsSidebarPanelProps) {
+  const nav = getLyricsToolsCopy(locale);
+  const [showKeepPreview, setShowKeepPreview] = useState(false);
   const [synchronized, setSynchronized] = useState(false);
   const [showLrcPreview, setShowLrcPreview] = useState(false);
   const [showTagPreview, setShowTagPreview] = useState(false);
@@ -168,6 +175,15 @@ export function LyricsCleanupPanel({
         ) : null}
       </div>
 
+      <div className="grid gap-2">
+        <ToolButton label={copy.keepSelection} testId="lyrics-command-keep-selection" disabled={!scope.hasSelection} onClick={() => setShowKeepPreview(value => !value)} danger />
+        {showKeepPreview && scope.hasSelection ? <PreviewBox testId="lyrics-keep-selection-preview">
+          <p>{nav.keepPreview}</p>
+          <pre className="max-h-32 overflow-auto whitespace-pre-wrap break-words text-xs">{activeText.slice(selection.start, selection.end)}</pre>
+          <ToolButton label={nav.keepConfirm} testId="lyrics-keep-selection-apply" onClick={() => { onKeepSelection(); setShowKeepPreview(false); }} danger />
+        </PreviewBox> : null}
+        <ToolButton label={copy.separatorTool} testId="lyrics-tool-insert-separator" onClick={onInsertSeparator} />
+      </div>
       <PanelSection title={copy.commonCleanupHeading} testId="lyrics-cleanup-section-common">
         <OperationGroup title={copy.blankLinesHeading}>
           <OperationItem>
@@ -224,15 +240,8 @@ export function LyricsCleanupPanel({
         </OperationGroup>
       </PanelSection>
 
-      <details className="lyrics-sidebar-more" data-testid="lyrics-cleanup-more">
-        <summary
-          className="control-focus lyrics-sidebar-more__summary"
-          data-testid="lyrics-cleanup-more-summary"
-        >
-          <span>{copy.moreCleanupHeading}</span>
-          <ChevronDown className="lyrics-sidebar-more__chevron size-4" aria-hidden="true" />
-        </summary>
-        <div className="lyrics-sidebar-more__content">
+      <div className="grid gap-3" data-testid="lyrics-cleanup-more">
+
           <OperationGroup title={copy.lrcHeading} testId="lyrics-cleanup-section-lrc">
             <OperationItem>
               <ToolButton
@@ -297,8 +306,7 @@ export function LyricsCleanupPanel({
               ) : null}
             </OperationItem>
           </OperationGroup>
-        </div>
-      </details>
+      </div>
     </div>
   );
 }

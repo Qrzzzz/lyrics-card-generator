@@ -6,7 +6,7 @@ import {
 } from "@/lib/lyrics-document-v2";
 
 export type LyricsWorkbenchEditor = "lyrics" | "translation";
-export type LyricsSidebarTab = "cleanup" | "translation";
+export type LyricsSidebarTab = "cleanup" | "translation" | "review";
 
 export type LyricsTextSelection = {
   start: number;

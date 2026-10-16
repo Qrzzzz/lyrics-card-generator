@@ -1558,7 +1558,7 @@ button {
 .lyrics-sidebar-choice-grid .segmented-control__active-indicator {
   top: 0.25rem;
   left: 0.25rem;
-  width: calc((100% - 0.5rem) / 2);
+  width: calc((100% - 0.5rem) / var(--segmented-count, 2));
   height: calc(100% - 0.5rem);
   border-radius: 0.5rem;
 }

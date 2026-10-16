@@ -1,7 +1,4 @@
 "use client";
-
-import { AlertTriangle, ListChecks, X } from "lucide-react";
-import { type ReactNode, useEffect, useRef, useState } from "react";
 import {
   formatLyricsWorkspaceCopy,
   type LyricsWorkspaceCopy
@@ -12,162 +9,119 @@ import type {
   LyricsIssue,
   LyricsWorkbenchEditor
 } from "@/lib/lyrics-workbench";
+import { useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
-export function LyricsReviewMenu({
+export function LyricsReviewPanel({
   copy,
   lineStatus,
   analysis,
+  translationEnabled,
   onLocate
 }: {
   copy: LyricsWorkspaceCopy;
   lineStatus: ExportLyricLineStatus;
   analysis: LyricsDocumentAnalysis;
+  translationEnabled: boolean;
   onLocate: (editor: LyricsWorkbenchEditor, line: number) => void;
 }) {
-  const [open, setOpen] = useState(false);
-  const rootRef = useRef<HTMLDivElement>(null);
-  const triggerRef = useRef<HTMLButtonElement>(null);
-  const reviewCount = analysis.issues.length
-    + (analysis.lineDifference === 0 ? 0 : 1)
-    + (lineStatus.isOverLimit ? 1 : 0);
-
-  useEffect(() => {
-    if (!open) return;
-    function onPointerDown(event: PointerEvent) {
-      if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
-    }
-    function onKeyDown(event: globalThis.KeyboardEvent) {
-      if (event.key !== "Escape") return;
-      setOpen(false);
-      window.requestAnimationFrame(() => triggerRef.current?.focus({ preventScroll: true }));
-    }
-    document.addEventListener("pointerdown", onPointerDown);
-    document.addEventListener("keydown", onKeyDown);
-    return () => {
-      document.removeEventListener("pointerdown", onPointerDown);
-      document.removeEventListener("keydown", onKeyDown);
-    };
-  }, [open]);
-
-  function locate(editor: LyricsWorkbenchEditor, line: number) {
-    setOpen(false);
-    // Let popup focus/scroll cleanup finish before selecting and revealing the issue line.
-    window.requestAnimationFrame(() => onLocate(editor, line));
-  }
-
   return (
-    <div ref={rootRef} className="relative">
-      <button
-        ref={triggerRef}
-        type="button"
+    <div data-testid="lyrics-review-panel" className="grid gap-3">
+      <div
+        tabIndex={-1}
         className={cn(
-          "app-button lyrics-command-button lyrics-command-button--prominent control-focus relative flex h-8 items-center gap-1.5 rounded-md px-2 text-[10px] font-semibold",
-          lineStatus.isOverLimit && "status-danger"
+          "control-focus rounded-md border p-3 text-xs leading-relaxed",
+          lineStatus.isOverLimit ? "status-danger" : "status-idle"
         )}
-        onClick={() => setOpen((value) => !value)}
-        aria-haspopup="dialog"
-        aria-expanded={open}
-        aria-controls="lyrics-review-menu"
-        title={copy.reviewTab}
-        data-testid="lyrics-command-review"
+        data-testid="lyrics-line-budget"
       >
-        {reviewCount > 0
-          ? <AlertTriangle className="size-3.5" aria-hidden="true" />
-          : <ListChecks className="size-3.5" aria-hidden="true" />}
-        <span className="hidden min-[1080px]:inline">{copy.reviewTab}</span>
-        <span className="font-mono text-[9px] font-bold">
-          {lineStatus.totalLineCount}/{lineStatus.maxLineCount}
-        </span>
-        {reviewCount > 0 ? (
-          <span className="flex min-h-3.5 min-w-3.5 items-center justify-center rounded-full bg-[var(--control-focus-border)] px-0.5 text-[8px] font-bold text-white">
-            {Math.min(99, reviewCount)}
-          </span>
-        ) : null}
-      </button>
-
-      {open ? (
-        <div
-          id="lyrics-review-menu"
-          role="dialog"
-          aria-label={copy.reviewHeading}
-          className="absolute right-0 top-[calc(100%+0.5rem)] z-50 max-h-[calc(100vh-12rem)] w-80 max-w-[calc(100vw-1rem)] overflow-y-auto rounded-lg border border-[rgb(var(--panel-border))] bg-[rgb(var(--elevated-panel-bg))] p-2.5 shadow-2xl backdrop-blur-xl"
-          data-testid="lyrics-review-panel"
-        >
-          <header className="mb-2 flex items-center justify-between gap-2 border-b border-[rgb(var(--panel-border))] pb-2">
-            <h3 className="app-text-primary text-xs font-semibold">{copy.reviewHeading}</h3>
-            <button
-              type="button"
-              className="app-button control-focus flex size-7 items-center justify-center rounded-md"
-              onClick={() => {
-                setOpen(false);
-                window.requestAnimationFrame(() => triggerRef.current?.focus({ preventScroll: true }));
-              }}
-              aria-label={copy.closeDrawer}
-              data-testid="lyrics-review-close"
-            >
-              <X className="size-3.5" />
-            </button>
-          </header>
-
-          <div
-            tabIndex={-1}
-            className={cn(
-              "control-focus rounded-md border px-2.5 py-2 text-xs leading-relaxed",
-              lineStatus.isOverLimit ? "status-danger" : "status-idle"
-            )}
-            data-testid="lyrics-line-budget"
-          >
-            <p className="font-semibold">
-              {lineStatus.originalLineCount} + {lineStatus.translationLineCount} = {lineStatus.totalLineCount} / {lineStatus.maxLineCount}
-            </p>
-            <p className="mt-1 text-[10px]">
-              {formatLyricsWorkspaceCopy(
-                lineStatus.isOverLimit ? copy.budgetExceeded : copy.budgetRemaining,
-                { count: lineStatus.isOverLimit ? lineStatus.exceededLineCount : lineStatus.remainingLineCount }
-              )}
-            </p>
-          </div>
-
-          <ReviewSection title={copy.alignmentHeading}>
-            {analysis.lineDifference === 0 ? (
-              <p className="app-text-subtle text-[11px]">{copy.alignmentOk}</p>
-            ) : (
-              <ReviewIssueButton
-                label={formatLyricsWorkspaceCopy(copy.alignmentMismatch, {
-                  count: Math.abs(analysis.lineDifference),
-                  line: analysis.firstUnpairedLine ?? 1
-                })}
-                onClick={() => locate(
+        <h3 className="font-semibold">{copy.lineBudgetLabel}</h3>
+        <p>
+          {lineStatus.originalLineCount} + {lineStatus.translationLineCount} ={" "}
+          {lineStatus.totalLineCount} / {lineStatus.maxLineCount}
+        </p>
+        <p>
+          {formatLyricsWorkspaceCopy(
+            lineStatus.isOverLimit ? copy.budgetExceeded : copy.budgetRemaining,
+            {
+              count: lineStatus.isOverLimit
+                ? lineStatus.exceededLineCount
+                : lineStatus.remainingLineCount
+            }
+          )}
+        </p>
+      </div>
+      <section
+        tabIndex={-1}
+        className="control-focus rounded-md"
+        data-testid="lyrics-review-alignment-section"
+      >
+        <ReviewSection title={copy.alignmentHeading}>
+          {!translationEnabled ? (
+            <p className="app-text-subtle text-xs">{copy.alignmentDisabled}</p>
+          ) : analysis.lineDifference === 0 ? (
+            <p className="app-text-subtle text-xs">{copy.alignmentOk}</p>
+          ) : (
+            <ReviewIssueButton
+              label={formatLyricsWorkspaceCopy(copy.alignmentMismatch, {
+                count: Math.abs(analysis.lineDifference),
+                line: analysis.firstUnpairedLine ?? 1
+              })}
+              onClick={() =>
+                onLocate(
                   analysis.lineDifference > 0 ? "lyrics" : "translation",
                   analysis.firstUnpairedLine ?? 1
-                )}
-                testId="lyrics-review-alignment"
-              />
-            )}
+                )
+              }
+              testId="lyrics-review-alignment"
+            />
+          )}
+        </ReviewSection>
+      </section>
+      {(["invisible-character", "duplicate-line", "long-line"] as const).map((kind) => (
+        <section
+          key={kind}
+          tabIndex={-1}
+          className="control-focus rounded-md"
+          data-testid={"lyrics-review-" + kind}
+        >
+          <ReviewSection
+            title={
+              kind === "invisible-character"
+                ? copy.invisibleTool
+                : kind === "duplicate-line"
+                  ? copy.duplicateTool
+                  : copy.longLineTool
+            }
+          >
+            <ReviewIssueList copy={copy} issues={analysis.issues.filter(issue => issue.kind === kind)} onLocate={onLocate} />
           </ReviewSection>
-
-          <ReviewSection title={copy.issueHeading}>
-            {analysis.issues.length > 0 ? (
-              <div className="grid gap-1.5">
-                {analysis.issues.slice(0, 24).map((issue) => (
-                  <ReviewIssueButton
-                    key={issue.id}
-                    label={issueLabel(copy, issue)}
-                    excerpt={issue.excerpt}
-                    onClick={() => locate(issue.editor, issue.line)}
-                    testId="lyrics-review-issue"
-                  />
-                ))}
-              </div>
-            ) : (
-              <p className="app-text-subtle text-[11px] leading-relaxed">{copy.noIssues}</p>
-            )}
-          </ReviewSection>
-        </div>
-      ) : null}
+        </section>
+      ))}
     </div>
   );
+}
+
+function ReviewIssueList({ copy, issues, onLocate }: {
+  copy: LyricsWorkspaceCopy;
+  issues: LyricsIssue[];
+  onLocate: (editor: LyricsWorkbenchEditor, line: number) => void;
+}) {
+  // Keep diagnostics reachable without mounting an unbounded list during edits.
+  const [page, setPage] = useState(0);
+  const pageCount = Math.ceil(issues.length / 100);
+  const currentPage = Math.min(page, Math.max(0, pageCount - 1));
+  const category = issues[0]?.kind === "invisible-character" ? copy.invisibleTool : issues[0]?.kind === "duplicate-line" ? copy.duplicateTool : copy.longLineTool;
+  return <>
+    {issues.slice(currentPage * 100, (currentPage + 1) * 100).map(issue => <ReviewIssueButton key={issue.id}
+      label={issueLabel(copy, issue)} excerpt={issue.excerpt} onClick={() => onLocate(issue.editor, issue.line)} testId="lyrics-review-issue" />)}
+    {!issues.length ? <p className="app-text-subtle text-xs">{copy.noIssues}</p> : null}
+    {pageCount > 1 ? <nav className="flex items-center justify-between gap-2 text-xs" aria-label={`${copy.issueHeading}: ${category}`}>
+      <button type="button" className="app-button control-focus rounded p-2 disabled:opacity-40" disabled={currentPage === 0} onClick={() => setPage(currentPage - 1)} data-testid="lyrics-review-previous">{copy.previousIssues}</button>
+      <span className="app-text-subtle" aria-live="polite">{currentPage + 1} / {pageCount}</span>
+      <button type="button" className="app-button control-focus rounded p-2 disabled:opacity-40" disabled={currentPage === pageCount - 1} onClick={() => setPage(currentPage + 1)} data-testid="lyrics-review-next">{copy.nextIssues}</button>
+    </nav> : null}
+  </>;
 }
 
 function ReviewSection({ title, children }: { title: string; children: ReactNode }) {
@@ -197,19 +151,24 @@ function ReviewIssueButton({
       onClick={onClick}
       data-testid={testId}
     >
-      <span className="app-text-primary block text-[10px] font-semibold leading-relaxed">{label}</span>
-      {excerpt ? <span className="app-text-subtle mt-1 block truncate font-mono text-[9px]">{excerpt}</span> : null}
+      <span className="app-text-primary block text-[10px] font-semibold leading-relaxed">
+        {label}
+      </span>
+      {excerpt ? (
+        <span className="app-text-subtle mt-1 block truncate font-mono text-[9px]">{excerpt}</span>
+      ) : null}
     </button>
   );
 }
 
 function issueLabel(copy: LyricsWorkspaceCopy, issue: LyricsIssue) {
   const label = issue.editor === "translation" ? copy.translation : copy.original;
-  const template = issue.kind === "long-line"
-    ? copy.longLineIssue
-    : issue.kind === "duplicate-line"
-      ? copy.duplicateLineIssue
-      : copy.invisibleIssue;
+  const template =
+    issue.kind === "long-line"
+      ? copy.longLineIssue
+      : issue.kind === "duplicate-line"
+        ? copy.duplicateLineIssue
+        : copy.invisibleIssue;
   return formatLyricsWorkspaceCopy(template, {
     label,
     line: issue.line,

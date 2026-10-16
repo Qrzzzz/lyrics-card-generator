@@ -13,9 +13,9 @@ import type { LyricsCommandIntent } from "@/components/editor/LyricsCommandBar";
 import { useAppReducedMotion } from "@/components/motion/AppMotionProvider";
 import type { LyricsSidebarTab } from "@/lib/lyrics-workbench";
 
-export const LYRICS_SIDEBAR_TABS: LyricsSidebarTab[] = ["cleanup", "translation"];
+export const LYRICS_SIDEBAR_TABS: LyricsSidebarTab[] = ["cleanup", "translation", "review"];
 
-export type LyricsSidebarPage = "cleanup" | "translation" | "ai";
+export type LyricsSidebarPage = LyricsSidebarTab | "ai";
 
 type UseLyricsSidebarNavigationOptions = {
   activeTab: LyricsSidebarTab;
@@ -23,6 +23,8 @@ type UseLyricsSidebarNavigationOptions = {
   mobileDrawer: boolean;
   focusIntent: LyricsCommandIntent | null;
   aiPanel?: ReactNode;
+  translationHome?: boolean;
+  toolNavigation?: boolean;
   isAITranslating: boolean;
   onTabChange: (tab: LyricsSidebarTab) => void;
   onCloseDrawer: () => void;
@@ -35,7 +37,7 @@ function resolveSidebarPage(
   activeTab: LyricsSidebarTab,
   aiPanel: ReactNode | undefined
 ): LyricsSidebarPage {
-  if (activeTab === "cleanup") return "cleanup";
+  if (activeTab !== "translation") return activeTab;
   return aiPanel ? "ai" : "translation";
 }
 
@@ -45,6 +47,8 @@ export function useLyricsSidebarNavigation({
   mobileDrawer,
   focusIntent,
   aiPanel,
+  translationHome = false,
+  toolNavigation = false,
   isAITranslating,
   onTabChange,
   onCloseDrawer,
@@ -58,7 +62,7 @@ export function useLyricsSidebarNavigation({
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const aiPageRef = useRef<HTMLElement | null>(null);
   const aiButtonRef = useRef<HTMLButtonElement | null>(null);
-  const activePage = resolveSidebarPage(activeTab, aiPanel);
+  const activePage = resolveSidebarPage(activeTab, translationHome ? undefined : aiPanel);
   const previousPageRef = useRef<LyricsSidebarPage>(activePage);
   const retainedAiPanelRef = useRef<ReactNode>(aiPanel);
   const [transitionFrom, setTransitionFrom] = useState<LyricsSidebarPage | null>(null);
@@ -123,12 +127,12 @@ export function useLyricsSidebarNavigation({
     const drawerOpen = open && mobileDrawer;
     const wasOpen = drawerOpenRef.current;
     drawerOpenRef.current = drawerOpen;
-    if (!drawerOpen || wasOpen || focusIntent) return;
+    if (!drawerOpen || wasOpen || focusIntent || toolNavigation) return;
     const frame = window.requestAnimationFrame(() => {
       closeDrawerButtonRef.current?.focus({ preventScroll: true });
     });
     return () => window.cancelAnimationFrame(frame);
-  }, [focusIntent, mobileDrawer, open]);
+  }, [focusIntent, mobileDrawer, open, toolNavigation]);
 
   useLayoutEffect(() => {
     const previousPage = previousPageRef.current;
@@ -142,7 +146,7 @@ export function useLyricsSidebarNavigation({
     );
     if (contentHadFocus) {
       // Stage focus on a neutral viewport while the old page becomes inert and the new page enters.
-      pendingFocusRef.current = activePage === "ai"
+      pendingFocusRef.current = toolNavigation ? null : activePage === "ai"
         ? "ai"
         : activePage === "translation"
           ? "translation"
@@ -153,7 +157,7 @@ export function useLyricsSidebarNavigation({
     }
 
     if (activePage === "ai") aiPageRef.current?.scrollTo({ top: 0 });
-  }, [activePage, focusIntent]);
+  }, [activePage, focusIntent, toolNavigation]);
 
   useEffect(() => {
     if (focusIntent !== "ai" || activePage !== "ai" || pendingFocusRef.current) return;

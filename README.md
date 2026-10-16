@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v6.7.3.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v6.8.0.zh-CN.md">发布说明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">在线 Web Lite 版</a> ·
   <a href="./docs/web-lite-browser-support.md">Web Lite 浏览器支持</a> ·
   <a href="./docs/desktop.md">桌面维护文档</a> ·
@@ -75,19 +75,19 @@
 
 
 
-* Windows x64 安装版：`Lyrics.Card.Generator.Setup.6.7.3.exe`
+* Windows x64 安装版：`Lyrics.Card.Generator.Setup.6.8.0.exe`
 
 从 v6.2.2 起只提供 Windows x64 Setup 安装包。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v6.7.3 · 发布说明
+### v6.8.0 · 发布说明
 
-发布日期：2026-10-14。
+发布日期：2026-10-16。
 
-v6.7.3 区分同一句的自动折行与手动换行，改善长句和双语歌词的排版层次，并保留现有可变行高。
+v6.8.0 重组第二步歌词工作台的工具导航：整理、双语、检查三个工作区，统一工具搜索与 Ctrl+K 命令面板，保留现有编辑和业务逻辑。
 
-[简体中文](./docs/releases/v6.7.3.zh-CN.md) · [繁體中文](./docs/releases/v6.7.3.zh-TW.md) · [English](./docs/releases/v6.7.3.en.md) · [Français](./docs/releases/v6.7.3.fr.md) · [日本語](./docs/releases/v6.7.3.ja.md) · [Español](./docs/releases/v6.7.3.es.md)
+[简体中文](./docs/releases/v6.8.0.zh-CN.md) · [繁體中文](./docs/releases/v6.8.0.zh-TW.md) · [English](./docs/releases/v6.8.0.en.md) · [Français](./docs/releases/v6.8.0.fr.md) · [日本語](./docs/releases/v6.8.0.ja.md) · [Español](./docs/releases/v6.8.0.es.md)
 
 <a id="主要功能"></a>
 

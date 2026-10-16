@@ -4,6 +4,8 @@ import { motion } from "framer-motion";
 import {
   Eraser,
   Languages,
+  ListChecks,
+  Search,
   X
 } from "lucide-react";
 import {
@@ -31,12 +33,18 @@ import {
 import { cn } from "@/lib/utils";
 
 type LyricsSidebarProps = LyricsSidebarPanelProps & {
+  onSearch: () => void;
+  searchLabel: string;
+  reviewPanel: ReactNode;
+  reviewCount: number;
   activeTab: LyricsSidebarTab;
   open: boolean;
   mobileDrawer: boolean;
   feedback: { message: string; canUndo: boolean } | null;
   focusIntent: LyricsCommandIntent | null;
   aiPanel?: ReactNode;
+  translationHome?: boolean;
+  toolNavigation?: boolean;
   onTabChange: (tab: LyricsSidebarTab) => void;
   onCloseDrawer: () => void;
   onIntentHandled: () => void;
@@ -48,7 +56,8 @@ type LyricsSidebarProps = LyricsSidebarPanelProps & {
 const SIDEBAR_PAGE_INDEX: Record<LyricsSidebarPage, number> = {
   cleanup: 0,
   translation: 1,
-  ai: 2
+  review: 2,
+  ai: 3
 };
 
 export function LyricsSidebar(props: LyricsSidebarProps) {
@@ -60,6 +69,7 @@ export function LyricsSidebar(props: LyricsSidebarProps) {
     feedback,
     focusIntent,
     aiPanel,
+    translationHome = false,
     isAITranslating,
     onTabChange,
     onCloseDrawer,
@@ -86,6 +96,8 @@ export function LyricsSidebar(props: LyricsSidebarProps) {
     mobileDrawer,
     focusIntent,
     aiPanel,
+    translationHome,
+    toolNavigation: props.toolNavigation,
     isAITranslating,
     onTabChange,
     onCloseDrawer,
@@ -111,14 +123,17 @@ export function LyricsSidebar(props: LyricsSidebarProps) {
       data-active-tab={activeTab}
     >
       <div className="flex h-full min-h-0 flex-col">
+        <button type="button" onClick={props.onSearch} className="app-button control-focus m-2 flex shrink-0 items-center gap-2 rounded-md border border-[rgb(var(--panel-border))] px-3 py-2 text-xs" data-testid="lyrics-sidebar-search">
+          <Search className="size-3.5" aria-hidden="true" /><span className="flex-1 text-left">{props.searchLabel}</span><kbd className="app-text-subtle">Ctrl+K</kbd>
+        </button>
         <header className="lyrics-sidebar-header flex shrink-0 items-center gap-2 border-b border-[rgb(var(--panel-border))] p-2">
           <div
             role="tablist"
             aria-label={copy.sidebar}
-            className="segmented-control lyrics-sidebar-tabs grid min-w-0 flex-1 grid-cols-2"
+            className="segmented-control lyrics-sidebar-tabs grid min-w-0 flex-1 grid-cols-3"
             style={{
-              "--segmented-count": 2,
-              "--segmented-active-translate": activeTab === "cleanup" ? "0%" : "100%"
+              "--segmented-count": 3,
+              "--segmented-active-translate": `${LYRICS_SIDEBAR_TABS.indexOf(activeTab) * 100}%`
             } as CSSProperties}
           >
             <span className="segmented-control__active-indicator" aria-hidden="true" />
@@ -128,6 +143,7 @@ export function LyricsSidebar(props: LyricsSidebarProps) {
                 type="button"
                 role="tab"
                 aria-selected={activeTab === tab}
+                aria-label={tabLabel(copy, tab)}
                 aria-controls={`lyrics-sidebar-panel-${tab}`}
                 id={`lyrics-sidebar-tab-${tab}`}
                 className={cn(
@@ -144,6 +160,7 @@ export function LyricsSidebar(props: LyricsSidebarProps) {
               >
                 {tabIcon(tab, "size-3.5")}
                 <span className="min-w-0 whitespace-normal break-words">{tabLabel(copy, tab)}</span>
+                {tab === "review" && props.reviewCount > 0 ? <span aria-hidden="true" className="status-warning rounded px-1 text-[10px]">{Math.min(99, props.reviewCount)}</span> : null}
               </button>
             ))}
           </div>
@@ -188,7 +205,7 @@ export function LyricsSidebar(props: LyricsSidebarProps) {
             className="relative h-full min-h-0 overflow-hidden focus:outline-none"
             data-testid="lyrics-translation-page-viewport"
             data-sidebar-page={activePage}
-            data-translation-page={aiPanel ? "ai" : "home"}
+            data-translation-page={aiPanel && !translationHome ? "ai" : "home"}
             data-reduced-motion={reducedMotion ? "true" : "false"}
           >
             <SidebarDeckPage
@@ -209,7 +226,7 @@ export function LyricsSidebar(props: LyricsSidebarProps) {
               activePage={activePage}
               transitionFrom={visibleTransitionFrom}
               reducedMotion={reducedMotion}
-              id={!aiPanel ? "lyrics-sidebar-panel-translation" : undefined}
+              id={!aiPanel || translationHome ? "lyrics-sidebar-panel-translation" : undefined}
               labelledBy="lyrics-sidebar-tab-translation"
               testId="lyrics-translation-home-page"
               className="overflow-x-hidden overflow-y-auto overscroll-contain p-3 [scrollbar-gutter:stable]"
@@ -217,12 +234,17 @@ export function LyricsSidebar(props: LyricsSidebarProps) {
             >
               <LyricsTranslationPanel {...props} aiButtonRef={aiButtonRef} />
             </SidebarDeckPage>
+            <SidebarDeckPage page="review" activePage={activePage} transitionFrom={visibleTransitionFrom}
+              reducedMotion={reducedMotion} id="lyrics-sidebar-panel-review" labelledBy="lyrics-sidebar-tab-review"
+              testId="lyrics-sidebar-panel-review" className="overflow-x-hidden overflow-y-auto overscroll-contain p-3 [scrollbar-gutter:stable]" onEntered={focusEnteredPage}>
+              {props.reviewPanel}
+            </SidebarDeckPage>
             <SidebarDeckPage
               page="ai"
               activePage={activePage}
               transitionFrom={visibleTransitionFrom}
               reducedMotion={reducedMotion}
-              id={aiPanel ? "lyrics-sidebar-panel-translation" : undefined}
+              id={aiPanel && !translationHome ? "lyrics-sidebar-panel-translation" : undefined}
               labelledBy="lyrics-sidebar-tab-translation"
               testId={renderedAiPanel ? "lyrics-translation-ai-page" : undefined}
               className="overflow-hidden"
@@ -274,6 +296,7 @@ function SidebarDeckPage({
       ref={pageRef}
       id={id}
       role="tabpanel"
+      tabIndex={-1}
       aria-labelledby={labelledBy}
       aria-hidden={active ? undefined : true}
       inert={active ? undefined : true}
@@ -353,10 +376,10 @@ function SidebarIconButton({
 
 function tabLabel(copy: LyricsWorkspaceCopy, tab: LyricsSidebarTab) {
   if (tab === "cleanup") return copy.cleanupTab;
-  return copy.translationTab;
+  return tab === "review" ? copy.reviewTab : copy.translationTab;
 }
 
 function tabIcon(tab: LyricsSidebarTab, className = "size-4") {
   if (tab === "cleanup") return <Eraser className={className} />;
-  return <Languages className={className} />;
+  return tab === "review" ? <ListChecks className={className} /> : <Languages className={className} />;
 }
