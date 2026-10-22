@@ -10,7 +10,7 @@ import { _electron as electron } from "playwright";
 import { closeElectronApplication } from "./electron-test-lifecycle.mjs";
 import originModule from "../electron/local-server-origin.js";
 
-const { deriveStableLoopbackPort, findAvailableLoopbackPort, writeCachedLoopbackPort } = originModule;
+const { deriveStableLoopbackPort, writeCachedLoopbackPort } = originModule;
 const execFileAsync = promisify(execFile);
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const executablePath = path.join(root, "release", "win-unpacked", "Lyrics Card Generator.exe");
@@ -19,10 +19,16 @@ const temporaryRoot = await mkdtemp(path.join(tmpdir(), "lyrics-card-origin-inte
 if (process.platform !== "win32") throw new Error("Desktop startup origin interactions require Windows.");
 
 try {
-  await testStableRestartAndCleanRelease();
-  await testCorruptStateRepair();
-  await testOccupiedPortsFallBackWithoutTrustingDecoys();
-  await testAbnormalParentExitReleasesServer();
+  for (const scenario of [testStableRestartAndCleanRelease, testCorruptStateRepair,
+    testOccupiedPortsFallBackWithoutTrustingDecoys, testAbnormalParentExitReleasesServer]) {
+    try {
+      await scenario();
+      console.log(`Startup origin scenario passed: ${scenario.name}`);
+    } catch (error) {
+      error.message = `${scenario.name}: ${error.message}`;
+      throw error;
+    }
+  }
   console.log("Desktop startup origin interactions passed");
 } finally {
   await rm(temporaryRoot, { recursive: true, force: true }).catch(() => undefined);
@@ -58,12 +64,17 @@ async function testOccupiedPortsFallBackWithoutTrustingDecoys() {
   const profile = path.join(temporaryRoot, "occupied");
   await seedProfile(profile);
   const derivedPort = deriveStableLoopbackPort(profile);
-  let cachedPort = await findAvailableLoopbackPort();
-  while (cachedPort === derivedPort) cachedPort = await findAvailableLoopbackPort();
   const decoys = [];
   const requests = [];
   try {
-    decoys.push(await startDecoy(cachedPort, requests));
+    // Reserve the cached port atomically instead of closing a probe before binding.
+    let cachedDecoy = await startDecoy(0, requests);
+    while (cachedDecoy.address().port === derivedPort) {
+      await closeServer(cachedDecoy);
+      cachedDecoy = await startDecoy(0, requests);
+    }
+    decoys.push(cachedDecoy);
+    const cachedPort = cachedDecoy.address().port;
     try {
       decoys.push(await startDecoy(derivedPort, requests));
     } catch (error) {
@@ -155,11 +166,19 @@ async function waitForOriginState(profile, timeoutMs = 10_000) {
 }
 
 async function assertPortCanRebind(port) {
-  const server = http.createServer((_request, response) => response.end("released"));
-  try {
-    await listen(server, port);
-  } finally {
-    await closeServer(server);
+  const deadline = Date.now() + 10_000;
+  while (true) {
+    const server = http.createServer((_request, response) => response.end("released"));
+    try {
+      await listen(server, port);
+      return;
+    } catch (error) {
+      // Windows can report process exit before its listening socket is reusable.
+      if (error?.code !== "EADDRINUSE" || Date.now() >= deadline) throw error;
+    } finally {
+      await closeServer(server);
+    }
+    await delay(50);
   }
 }
 
