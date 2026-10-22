@@ -401,7 +401,7 @@ export function LyricsWorkspace({
               data-testid="lyrics-editor-columns"
               data-bilingual={showTranslation ? "true" : "false"}
             >
-              <EditorColumn label={copy.original} htmlFor={lyricsId}>
+              <EditorColumn label={copy.original} htmlFor={lyricsId} active={documentController.activeEditor === "lyrics"} activeLabel={copy.activeColumn}>
                 <div className="relative min-w-0">
                   <AtomicLyricsTextarea
                     ref={lyricsRef}
@@ -430,7 +430,7 @@ export function LyricsWorkspace({
                 </div>
               </EditorColumn>
               {showTranslation ? (
-                <EditorColumn label={copy.translation} htmlFor={translationId}>
+                <EditorColumn label={copy.translation} htmlFor={translationId} active={documentController.activeEditor === "translation"} activeLabel={copy.activeColumn}>
                   <div
                     className="lyrics-translation-editor-shell rounded-[10px] p-px"
                     style={{ background: `color-mix(in srgb, ${themeColor} 24%, rgb(var(--input-border)))` }}
@@ -565,15 +565,22 @@ function EditorMeasurementMirror({
 function EditorColumn({
   label,
   htmlFor,
+  active,
+  activeLabel,
   children
 }: {
   label: string;
   htmlFor: string;
+  active: boolean;
+  activeLabel: string;
   children: ReactNode;
 }) {
   return (
-    <div className="min-w-0">
-      <label htmlFor={htmlFor} className="sr-only">{label}</label>
+    <div className="min-w-0" data-editor-column-active={active ? "true" : "false"}>
+      <label htmlFor={htmlFor} className="lyrics-editor-column-heading sticky top-0 z-10 mb-1 flex min-h-9 items-center justify-between gap-2 rounded-md border px-3 py-1.5 text-sm font-semibold">
+        <span>{label}</span>
+        {active ? <span aria-hidden="true" className="text-xs font-medium">{activeLabel}</span> : null}
+      </label>
       {children}
     </div>
   );

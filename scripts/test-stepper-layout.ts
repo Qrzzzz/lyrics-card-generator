@@ -187,13 +187,13 @@ assert.ok(
   "the adjustable workbench pans by the measured settings width while keeping off-screen settings inert"
 );
 assert.ok(
-  stepperSource.includes("const isComplete = index < currentStep"),
-  "checkmarks represent steps completed before the active step"
+  !stepperSource.includes("const isComplete = index < currentStep") && !stepperSource.includes("<Check "),
+  "free step navigation does not claim positional completion"
 );
 assert.ok(
   stepperSource.includes('data-ready={isReady ? "true" : "false"}') &&
-    stepperSource.includes('data-complete={isComplete ? "true" : "false"}'),
-  "semantic readiness stays separate from positional step completion"
+    stepperSource.includes('isActive ? "active" : isVisited ? "visited" : "upcoming"'),
+  "readiness stays separate from current and visited navigation states"
 );
 
 const editorSource = readFileSync(resolve("components/editor/LyricEditor.tsx"), "utf8");

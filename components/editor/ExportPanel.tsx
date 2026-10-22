@@ -8,7 +8,10 @@ import {
   type ExportCardReadinessStore
 } from "@/components/editor/hooks/export-card-readiness-store";
 import { SettingsGrid } from "@/components/ui/SettingsLayout";
-import { FieldLabel, Section, SegmentedControl } from "@/components/ui/controls";
+import { ActionButton, FieldLabel, Section, SegmentedControl } from "@/components/ui/controls";
+import { editorRecoveryCopy } from "@/lib/editor-recovery-copy";
+import type { ImageOutputFailure } from "@/lib/image-output-controller";
+import type { Locale } from "@/lib/types";
 import { resolveExportSafetyMessage } from "@/lib/export-safety";
 import { EXPORT_FORMAT_OPTIONS, type ExportFormatId, type ExportQualityId } from "@/lib/settings/types";
 import type { createT } from "@/lib/i18n";
@@ -26,7 +29,8 @@ export function ExportPanel({
   blockingMessage,
   readinessStore,
   qualityOptions = ["low", "medium", "high"],
-  qualityLabels
+  qualityLabels,
+  locale = "en", outputFailure, onRetryOutput
 }: {
   t: ReturnType<typeof createT>;
   accentColor: string;
@@ -40,6 +44,9 @@ export function ExportPanel({
   readinessStore?: ExportCardReadinessStore;
   qualityOptions?: readonly ExportQualityId[];
   qualityLabels?: Partial<Record<ExportQualityId, string>>;
+  locale?: Locale;
+  outputFailure?: ImageOutputFailure | null;
+  onRetryOutput?: () => void | Promise<void>;
 }) {
   recordRenderBoundary("ExportPanel");
   const readiness = useOptionalExportCardReadinessSnapshot(readinessStore);
@@ -54,6 +61,7 @@ export function ExportPanel({
     high: qualityLabels?.high ?? t("qualityHigh")
   };
   const reduceMotion = useAppReducedMotion();
+  const recovery = editorRecoveryCopy[locale];
 
   return (
     <Section
@@ -63,6 +71,14 @@ export function ExportPanel({
       contentClassName="gap-4"
     >
       <div aria-busy={isExporting} className="grid gap-4">
+        {outputFailure ? (
+          <div role="alert" data-testid="output-failure" data-output-action={outputFailure.action} className="status-danger grid gap-3 rounded-lg border p-3 text-sm">
+            <p className="font-semibold">{outputFailure.action === "copy" ? recovery.copyFailed : recovery.exportFailed}</p>
+            <p>{outputFailure.message}</p>
+            {outputFailure.reason === "failed" ? <p>{recovery.outputDetail}</p> : null}
+            <ActionButton data-testid="retry-image-output" disabled={isExporting || readiness?.isReady === false} onClick={() => void onRetryOutput?.()}>{recovery.retry}</ActionButton>
+          </div>
+        ) : null}
         {resolvedBlockingMessage ? (
           <div
             role="alert"

@@ -13,6 +13,7 @@ import { AppToast } from "@/components/feedback/AppToast";
 import { AppNotifications, type AppNotification } from "@/components/feedback/AppNotifications";
 import { notificationCopy } from "@/lib/notification-copy";
 import { editorAutosaveCopy } from "@/lib/editor-autosave-copy";
+import { editorRecoveryCopy } from "@/lib/editor-recovery-copy";
 import { importHistoryCopy } from "@/lib/import-history-copy";
 import { useToastQueue } from "@/components/feedback/useToastQueue";
 import {
@@ -349,6 +350,8 @@ export function LyricEditor() {
     activeOutputAction,
     clearTransitionKey,
     activeExportSnapshot,
+    outputFailure,
+    retryOutput,
     documentRevision,
     createSongLinkAutoParseVisitIntent,
     beginSongImport,
@@ -410,6 +413,14 @@ export function LyricEditor() {
         detail: t("replaceDocumentConfirm"),
         confirmLabel: dialogCopy.replace,
         cancelLabel: dialogCopy.cancel
+      });
+    },
+    confirmClearDocument: () => {
+      const copy = editorRecoveryCopy[state.locale];
+      return showSystemConfirm({
+        type: "warning", title: systemDialogCopy[state.locale].appTitle,
+        message: copy.clearTitle, detail: copy.clearDetail,
+        confirmLabel: copy.clear, cancelLabel: systemDialogCopy[state.locale].cancel
       });
     },
     onNotify: showToast,
@@ -528,6 +539,7 @@ export function LyricEditor() {
     isExporting: isCompleteExporting,
     activeOutputAction,
     exportReadinessStore,
+    outputFailure,
     exportFormat,
     exportQuality,
     lyricsLayout: {
@@ -570,7 +582,8 @@ export function LyricEditor() {
       onExportFormatChange: setExportFormat,
       onExportQualityChange: setExportQuality,
       onExport: completeAndExport,
-      onCopyImage: copyImageToClipboard
+      onCopyImage: copyImageToClipboard,
+      onRetryOutput: retryOutput
     }
   });
   const loadExampleEvent = useStableEvent(loadExample);

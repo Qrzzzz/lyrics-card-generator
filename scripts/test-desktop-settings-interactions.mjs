@@ -20,7 +20,7 @@ const activeCompleteExportButtonSelector = '[data-testid="export-settings-panel"
 // assertions remain deterministic in the default regression run.
 const scenarioArgument = process.argv.find((value) => value.startsWith("--scenario="));
 const scenario = scenarioArgument?.slice("--scenario=".length);
-if (scenario && !["search", "song-import", "examples", "fonts", "titlebar", "lyrics-input"].includes(scenario)) throw new Error("Unknown desktop scenario: " + scenario);
+if (scenario && !["search", "song-import", "examples", "fonts", "titlebar", "lyrics-input", "workbench"].includes(scenario)) throw new Error("Unknown desktop scenario: " + scenario);
 const runVisualDiagnostics = process.argv.includes("--visual-diagnostics");
 const builtInAutoWidthCases = [
   { id: "opalite", lyricLines: 4, translationLines: 4, min: 1360, max: 1400 },
@@ -601,19 +601,15 @@ async function assertLyricsInputEditingSemantics(originalLyrics, translationLyri
 
     if (testCase.label === "middle") {
       await originalLyrics.press("ArrowLeft");
-      let directional = await getLyricsContext(originalLyrics);
-      assert.deepEqual(
-        { start: directional.start, end: directional.end },
-        { start: caret, end: caret },
-        "ArrowLeft moves the controlled caret without changing text"
-      );
+      await expect.poll(async () => {
+        const directional = await getLyricsContext(originalLyrics);
+        return { start: directional.start, end: directional.end };
+      }, { message: "ArrowLeft moves the controlled caret without changing text" }).toEqual({ start: caret, end: caret });
       await originalLyrics.press("Shift+ArrowRight");
-      directional = await getLyricsContext(originalLyrics);
-      assert.deepEqual(
-        { start: directional.start, end: directional.end, selectedText: directional.selectedText },
-        { start: caret, end: caret + 1, selectedText: "x" },
-        "Shift+ArrowRight preserves the native selection range"
-      );
+      await expect.poll(async () => {
+        const directional = await getLyricsContext(originalLyrics);
+        return { start: directional.start, end: directional.end, selectedText: directional.selectedText };
+      }, { message: "Shift+ArrowRight preserves the native selection range" }).toEqual({ start: caret, end: caret + 1, selectedText: "x" });
       await originalLyrics.evaluate((node) => {
         node.dispatchEvent(new MouseEvent("click", { bubbles: true }));
       });
@@ -2504,8 +2500,8 @@ async function assertPreviewWorkbenchPan() {
   assert.notEqual(narrow.exportDisplay, "none", `the minimum-width export settings remain visible: ${JSON.stringify(narrow)}`);
   assert.equal(narrow.transform, "none", `the minimum-width layout uses the stacked reduced transform: ${JSON.stringify(narrow)}`);
   assert.ok(
-    narrow.preview && narrow.exportPanel && narrow.preview.top < narrow.exportPanel.top,
-    `the minimum-width layout stacks preview before export settings: ${JSON.stringify(narrow)}`
+    narrow.preview && narrow.exportPanel && narrow.exportPanel.top < narrow.preview.top,
+    `the minimum-width layout keeps export settings before the preview: ${JSON.stringify(narrow)}`
   );
   assert.ok(narrow.horizontalOverflow <= 1, `the minimum-width workbench avoids horizontal overflow: ${JSON.stringify(narrow)}`);
 }
@@ -3512,8 +3508,11 @@ async function assertLyricsWorkspaceContentPressure(originalLyrics, translationL
 }
 
 async function assertLyricsWorkspaceNarrowBehavior(originalLyrics, translationLyrics) {
-  await electronApp.evaluate(({ BrowserWindow }) => {
-    BrowserWindow.getAllWindows()[0].setMinimumSize(600, 600);
+  const previousMinimumSize = await electronApp.evaluate(({ BrowserWindow }) => {
+    const window = BrowserWindow.getAllWindows()[0];
+    const previous = window.getMinimumSize();
+    window.setMinimumSize(600, 600);
+    return previous;
   });
   try {
     await setWindowSize(760, 720);
@@ -3751,9 +3750,9 @@ async function assertLyricsWorkspaceNarrowBehavior(originalLyrics, translationLy
       await page.screenshot({ path: path.join(reportDirectory, "step-two-stacked-610x720.png"), fullPage: false });
     }
   } finally {
-    await electronApp.evaluate(({ BrowserWindow }) => {
-      BrowserWindow.getAllWindows()[0].setMinimumSize(1000, 700);
-    });
+    await electronApp.evaluate(({ BrowserWindow }, minimum) => {
+      BrowserWindow.getAllWindows()[0].setMinimumSize(...minimum);
+    }, previousMinimumSize);
     await setWindowSize(1000, 700);
   }
 }
@@ -4136,6 +4135,11 @@ try {
   assert.equal(await page.getByTestId("editor-surface").evaluate((node) => Boolean(node.closest('[inert]'))), false, "startup leaves the editor accessible");
   if (scenario) {
     const scenarios = {
+      workbench: async () => {
+        await page.locator('button[data-step-id="export"]').click();
+        await selectChoiceValue("webp", page.locator('[data-testid="export-settings-panel"][data-active="true"]'));
+        await assertPreviewWorkbenchPan();
+      },
       search: assertSongSearchBehavior,
       "song-import": assertSongImportAsideBehavior,
       examples: assertExamplesSurfaceBehavior,
@@ -4418,7 +4422,7 @@ try {
   const minimumWindowSize = await electronApp.evaluate(({ BrowserWindow }) => (
     BrowserWindow.getAllWindows()[0].getMinimumSize()
   ));
-  assert.deepEqual(minimumWindowSize, [1000, 700], "desktop window preserves the 1000px minimum width");
+  assert.deepEqual(minimumWindowSize, [520, 480], "desktop window permits compact and half-screen layouts");
   await assertExamplesSurfaceBehavior();
   await assertSongSearchBehavior();
   await assertSongImportAsideBehavior();
@@ -4778,7 +4782,7 @@ try {
 
     const toastAudit = [];
     const recordToast = () => {
-      for (const toast of document.querySelectorAll('[data-testid="app-toast"]')) {
+      for (const toast of document.querySelectorAll('[data-testid="output-failure"]')) {
         const text = toast.textContent?.trim();
         if (text && !toastAudit.includes(text)) toastAudit.push(text);
       }
@@ -4849,7 +4853,7 @@ try {
   const liveMeasurementGuard = await liveMeasurementGuardHandle.jsonValue();
   await liveMeasurementGuardHandle.dispose();
   assert.deepEqual(liveMeasurementGuard, { clicked: true, measuredWidth: 1 }, "live measurement guard uses the active enabled export control");
-  await page.waitForFunction(() => Array.from(document.querySelectorAll('[data-testid="app-toast"]')).some((toast) => (
+  await page.waitForFunction(() => Array.from(document.querySelectorAll('[data-testid="output-failure"]')).some((toast) => (
     /计算|高度|稍候/.test(toast.textContent ?? "")
   )));
 
@@ -4871,14 +4875,14 @@ try {
   assert.deepEqual(
     positionalCompletion,
     [
-      { id: "link", complete: "true" },
-      { id: "lyrics", complete: "true" },
-      { id: "layout", complete: "false" },
-      { id: "font", complete: "false" },
-      { id: "visual", complete: "false" },
-      { id: "export", complete: "false" }
+      { id: "link", complete: null },
+      { id: "lyrics", complete: null },
+      { id: "layout", complete: null },
+      { id: "font", complete: null },
+      { id: "visual", complete: null },
+      { id: "export", complete: null }
     ],
-    "stepper checkmarks stop at the active step"
+    "stepper never reports navigation as completed validation"
   );
   await assertExportHost("step three");
 

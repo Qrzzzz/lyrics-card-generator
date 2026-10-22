@@ -158,7 +158,7 @@ export function AppearanceSettingsSection({
                 const validation = validateUiFontFamily(value);
                 if (validation.valid) onChange({ ...settings, uiFontFamily: validation.value });
               }}
-              placeholder="Segoe UI, sans-serif"
+              placeholder="Segoe UI"
             />
           </FieldLabel>
           <ActionButton

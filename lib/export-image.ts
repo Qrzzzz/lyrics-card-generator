@@ -10,6 +10,7 @@ import {
   getExportRasterSizeIssue
 } from "@/lib/export-dimensions";
 import { writePngDataUrlToClipboard } from "@/lib/image-clipboard";
+import { getLyricsCardDesktopApi } from "@/lib/desktop-api";
 import { EXPORT_FORMAT_OPTIONS, type ExportFormatId } from "@/lib/settings/types";
 
 export type ExportImageRenderOptions = {
@@ -26,7 +27,7 @@ export type ExportImageDependencies = {
     format: ExportFormatId,
     options: ExportImageRenderOptions
   ) => Promise<{ dataUrl: string; width: number; height: number }>;
-  commitDownload: (dataUrl: string, fileName: string) => void;
+  commitDownload: (dataUrl: string, fileName: string, snapshotId?: string, signal?: AbortSignal) => void | Promise<void>;
 };
 
 export type CopyImageDependencies = {
@@ -45,7 +46,12 @@ const defaultDependencies: ExportImageDependencies = {
     }
     return { dataUrl, width: canvas.width, height: canvas.height };
   },
-  commitDownload: (dataUrl, fileName) => {
+  commitDownload: async (dataUrl, fileName, snapshotId, signal) => {
+    const desktop = getLyricsCardDesktopApi();
+    if (snapshotId && desktop?.prepareImageDownload && desktop.onImageDownloadResult) {
+      if (!await desktop.prepareImageDownload(snapshotId, fileName, dataUrl)) throw new Error("The native image download could not start.");
+    }
+    throwIfAborted(signal);
     const link = document.createElement("a");
     link.download = fileName;
     link.href = dataUrl;
@@ -82,7 +88,7 @@ export async function exportNodeAsImage(
   // irreversible download if the transaction timed out while it was running.
   throwIfAborted(signal);
 
-  dependencies.commitDownload(dataUrl, fileName);
+  await dependencies.commitDownload(dataUrl, fileName, node.dataset?.exportSnapshotId, signal);
 }
 
 export async function copyNodeAsPng(

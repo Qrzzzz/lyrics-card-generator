@@ -1,7 +1,8 @@
 import type { Page } from "@playwright/test";
+import type { UserSettings } from "../../lib/settings/types";
 
-export async function installDesktopFixture(page: Page) {
-  await page.addInitScript(() => {
+export async function installDesktopFixture(page: Page, userOverrides: Partial<UserSettings> = {}) {
+  await page.addInitScript((overrides) => {
     const userSettings = {
       version: 1,
       sparkCursorEnabled: true,
@@ -19,7 +20,8 @@ export async function installDesktopFixture(page: Page) {
       defaultExportQuality: "high",
       defaultExportPixelRatio: 2,
       importHistoryLimit: 10,
-      firstLaunchLanguageSelected: true
+      firstLaunchLanguageSelected: true,
+      ...overrides
     };
     const preferences = {
       schemaVersion: 2,
@@ -101,7 +103,7 @@ export async function installDesktopFixture(page: Page) {
         fixtureWindow.__historyQueries = (fixtureWindow.__historyQueries ?? 0) + 1;
         return { records: [], total: 0, notice: null };
       },
-      getImportHistoryStats: async () => ({ total: 0, version: "fixture" }),
+      getImportHistoryStats: async () => ({ total: 0, automaticTotal: 0, manualTotal: 0, version: "fixture" }),
       recordImportHistory: async () => ({ ok: false, code: "fixture" }),
       createManualSave: async () => ({ ok: false, code: "fixture" }),
       updateManualSave: async () => ({ ok: false, code: "fixture" }),
@@ -119,6 +121,7 @@ export async function installDesktopFixture(page: Page) {
       }),
       writeEditorDraft: async () => ({ ok: true, record: null }),
       activateEditorDraft: async () => true,
+      copyImageToClipboard: async () => true,
       saveEditorDraftCover: async () => ({ ok: true, data: "fixture-cover" }),
       loadAISettings: async () => aiSettings,
       saveAISettings: async (settings: object) => ({ ...settings, hasApiKey: true }),
@@ -167,5 +170,5 @@ export async function installDesktopFixture(page: Page) {
       enumerable: true,
       value: desktopFixture
     });
-  });
+  }, userOverrides);
 }

@@ -32,7 +32,8 @@ import {
 import { clearLyricContent, hasClearableLyricContent } from "@/lib/clear-content";
 import { applyEditorStyleChange } from "@/lib/editor/apply-style-change";
 import { copyNodeAsPng, exportNodeAsImage } from "@/lib/export-image";
-import { runImageOutputController } from "@/lib/image-output-controller";
+import { runImageOutputController, type ImageOutputFailure } from "@/lib/image-output-controller";
+import { editorRecoveryCopy } from "@/lib/editor-recovery-copy";
 import { snapshotAsAppState, type ExportSnapshot } from "@/lib/export-snapshot";
 import { resolveExportSafetyMessage } from "@/lib/export-safety";
 import { getExportLyricLineStatus } from "@/lib/lyrics-document";
@@ -108,6 +109,8 @@ export function WebLiteEditor() {
     initialPreferences.exportQuality
   );
   const [activeOutputAction, setActiveOutputAction] = useState<"export" | "copy" | null>(null);
+  const [outputFailure, setOutputFailure] = useState<ImageOutputFailure | null>(null);
+  const outputGeneration = useRef(0);
   const isExporting = activeOutputAction !== null;
   const [activeExportSnapshot, setActiveExportSnapshot] = useState<ExportSnapshot | null>(null);
   const {
@@ -269,6 +272,10 @@ export function WebLiteEditor() {
       return;
     }
 
+    const recovery = editorRecoveryCopy[state.locale];
+    if (!window.confirm(`${recovery.clearTitle}\n\n${recovery.clearDetail}`)) return;
+    outputGeneration.current++;
+    setOutputFailure(null);
     invalidateCoverValidationAndResetSongInfo();
     revokeLocalCoverObjectUrl();
     setFontSchemePreview(null);
@@ -366,6 +373,9 @@ export function WebLiteEditor() {
   }
 
   async function runImageOutput(action: "export" | "copy") {
+    if (activeOutputAction !== null) return;
+    setOutputFailure(null);
+    const generation = outputGeneration.current;
     const resolveValidation = (validation: ReturnType<typeof getLiveExportCardValidation>) => validation.blockingReason
       ? resolveExportSafetyMessage(validation.blockingReason, validation.lineStatus.totalLineCount, t, validation.lineStatus.maxLineCount)
       : null;
@@ -391,9 +401,13 @@ export function WebLiteEditor() {
       },
       loadCapture: async () => ({ copyNodeAsPng, exportNodeAsImage }),
       notify: showToast,
+      onFailure: (failure) => {
+        if (generation === outputGeneration.current) setOutputFailure(failure);
+      },
       messages: { tooLarge: t("exportImageTooLarge"), busy: t("exportBusy"),
         success: action === "copy" ? t("imageCopied") : copy.exportReady,
-        failed: action === "copy" ? t("copyImageFailed") : copy.exportFailed }
+        failed: action === "copy" ? t("copyImageFailed") : copy.exportFailed,
+        timeout: editorRecoveryCopy[state.locale].timeout }
     });
   }
 
@@ -517,6 +531,9 @@ export function WebLiteEditor() {
         <ExportPanel
           t={t}
           accentColor={accentColor}
+          locale={state.locale}
+          outputFailure={outputFailure}
+          onRetryOutput={() => outputFailure ? runImageOutput(outputFailure.action) : undefined}
           exportFormat={exportFormat}
           onExportFormatChange={setExportFormat}
           exportQuality={exportQuality}

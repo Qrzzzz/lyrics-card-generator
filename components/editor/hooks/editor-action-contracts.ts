@@ -21,6 +21,7 @@ export type UseEditorActionsInput = {
   exampleLoadedMessage: string;
   clearAlreadyEmptyMessage: string;
   confirmReplaceDocument: () => Promise<boolean>;
+  confirmClearDocument: () => Promise<boolean>;
   onNotify: ToastNotifier;
   onCloseExamples: () => void;
   onCloseHistory: () => void;

@@ -139,6 +139,14 @@ async function run() {
   assert.deepEqual(observedWindowState, { maximized: true });
   removeWindowState();
 
+  await exposedBridge.prepareImageDownload("export-1", "card.png", "data:image/png;base64,AA==");
+  assert.ok(invocations.some(({ channel, args }) => channel === "lyrics-card:image-download-prepare" && args[0] === "export-1"));
+  let observedDownload;
+  const removeDownload = exposedBridge.onImageDownloadResult((payload) => { observedDownload = payload; });
+  listeners.get("lyrics-card:image-download-result")({}, { id: "export-1", state: "interrupted" });
+  assert.deepEqual(observedDownload, { id: "export-1", state: "interrupted" });
+  removeDownload();
+
   let closeRequested = false;
   const removeCloseRequest = exposedBridge.onWindowCloseRequested(() => { closeRequested = true; });
   listeners.get("lyrics-card:window-close-requested")({});

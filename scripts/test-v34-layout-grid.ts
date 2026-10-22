@@ -59,8 +59,7 @@ const baseStyle: CardStyle = {
   watermark: "Qrzzzz/lyrics-card-generator"
 };
 
-// Instrumental normalization is intentionally destructive: it collapses
-// incompatible lyric and landscape settings into the fixed square contract.
+// Instrumental presentation is square, but authored translation must survive.
 const normalizedInstrumental = normalizeInstrumentalLayout({
   ...baseStyle,
   contentMode: "instrumental",
@@ -78,7 +77,7 @@ assert.equal(normalizedInstrumental.width, 1080);
 assert.equal(normalizedInstrumental.height, 1080);
 assert.equal(normalizedInstrumental.autoHeight, false);
 assert.equal(normalizedInstrumental.translationEnabled, false);
-assert.equal(normalizedInstrumental.translationText, "");
+assert.equal(normalizedInstrumental.translationText, "translation");
 
 const lyricsLandscape = normalizeInstrumentalLayout({
   ...baseStyle,

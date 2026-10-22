@@ -16,6 +16,8 @@ export function useEditorActions(input: UseEditorActionsInput) {
     activeOutputAction: output.activeOutputAction,
     isCompleteExporting: output.isCompleteExporting,
     activeExportSnapshot: output.activeExportSnapshot,
+    outputFailure: output.outputFailure,
+    retryOutput: output.retryOutput,
     completeAndExport: output.completeAndExport,
     copyImageToClipboard: output.copyImageToClipboard
   };

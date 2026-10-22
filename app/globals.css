@@ -536,6 +536,48 @@ body[data-window-maximized="true"] .app-shell[data-desktop-shell="true"] {
     saturate(1.08);
 }
 
+.traffic-light__glyph {
+  width: 12px;
+  height: 12px;
+  color: #171717;
+  opacity: 0;
+}
+
+.traffic-light:hover .traffic-light__glyph,
+.traffic-light:focus-visible .traffic-light__glyph {
+  opacity: 1;
+}
+
+.lyrics-editor-column-heading {
+  background: rgb(var(--elevated-panel-bg));
+  border-color: rgb(var(--panel-border));
+  color: rgb(var(--app-muted));
+}
+
+[data-editor-column-active="true"] > .lyrics-editor-column-heading {
+  color: rgb(var(--app-fg));
+  border-color: var(--app-accent);
+  border-inline-start-width: 3px;
+}
+
+@media (forced-colors: active) {
+  .traffic-light {
+    background: ButtonFace;
+    background-clip: border-box;
+    border: 1px solid ButtonText;
+    padding: 5px;
+    opacity: 1;
+    filter: none;
+  }
+  .traffic-light .traffic-light__glyph {
+    color: ButtonText;
+    opacity: 1;
+  }
+  [data-editor-column-active="true"] > .lyrics-editor-column-heading {
+    border-color: Highlight;
+  }
+}
+
 .traffic-light:active {
   transform: translateY(0) scale(0.9);
   filter: brightness(0.96);
@@ -2085,12 +2127,22 @@ button {
   }
 
   .preview-workbench-preview {
-    order: 1;
+    order: 2;
   }
 
   .preview-workbench-editor,
   .preview-workbench-export {
-    order: 2;
+    order: 1;
+  }
+
+  .preview-workbench-panel > .lyrics-stepper-actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    padding: 0.5rem;
+    border: 1px solid rgb(var(--panel-border));
+    border-radius: 0.5rem;
+    background: rgb(var(--elevated-panel-bg));
   }
 
   .preview-workbench-editor[data-active="false"],

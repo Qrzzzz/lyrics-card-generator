@@ -144,21 +144,21 @@ export function DesktopTitleBar({ locale, titlebarStyle = "traffic-lights", auto
             aria-label={t("titleBar.close")}
             title={t("titleBar.close")}
             onClick={() => void desktop.closeWindow()}
-          />
+          ><X aria-hidden="true" className="traffic-light__glyph" /></button>
           <button
             type="button"
             className="traffic-light traffic-light--minimize"
             aria-label={t("titleBar.minimize")}
             title={t("titleBar.minimize")}
             onClick={() => void desktop.minimizeWindow()}
-          />
+          ><Minus aria-hidden="true" className="traffic-light__glyph" /></button>
           <button
             type="button"
             className="traffic-light traffic-light--maximize"
             aria-label={maximizeLabel}
             title={maximizeLabel}
             onClick={() => void toggleMaximize()}
-          />
+          >{maximized ? <Copy aria-hidden="true" className="traffic-light__glyph" /> : <Square aria-hidden="true" className="traffic-light__glyph" />}</button>
         </div>
       ) : null}
       <div ref={brandRef} className="desktop-titlebar__brand flex min-w-0 items-center gap-2">

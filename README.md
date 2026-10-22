@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v6.8.0.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v6.8.1.zh-CN.md">发布说明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">在线 Web Lite 版</a> ·
   <a href="./docs/web-lite-browser-support.md">Web Lite 浏览器支持</a> ·
   <a href="./docs/desktop.md">桌面维护文档</a> ·
@@ -75,19 +75,19 @@
 
 
 
-* Windows x64 安装版：`Lyrics.Card.Generator.Setup.6.8.0.exe`
+* Windows x64 安装版：`Lyrics.Card.Generator.Setup.6.8.1.exe`
 
 从 v6.2.2 起只提供 Windows x64 Setup 安装包。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v6.8.0 · 发布说明
+### v6.8.1 · 发布说明
 
-发布日期：2026-10-16。
+**2026-10-22**
 
-v6.8.0 重组第二步歌词工作台的工具导航：整理、双语、检查三个工作区，统一工具搜索与 Ctrl+K 命令面板，保留现有编辑和业务逻辑。
+v6.8.1 聚焦内容保护、输出失败恢复、窗口与紧凑布局，以及编辑状态的清晰表达。核心范围为 #229、#230、#231、#232、#233、#235、#237、#238，另包含 #240 六语言设置文案整理。
 
-[简体中文](./docs/releases/v6.8.0.zh-CN.md) · [繁體中文](./docs/releases/v6.8.0.zh-TW.md) · [English](./docs/releases/v6.8.0.en.md) · [Français](./docs/releases/v6.8.0.fr.md) · [日本語](./docs/releases/v6.8.0.ja.md) · [Español](./docs/releases/v6.8.0.es.md)
+[简体中文](./docs/releases/v6.8.1.zh-CN.md) · [繁體中文](./docs/releases/v6.8.1.zh-TW.md) · [English](./docs/releases/v6.8.1.en.md) · [Français](./docs/releases/v6.8.1.fr.md) · [日本語](./docs/releases/v6.8.1.ja.md) · [Español](./docs/releases/v6.8.1.es.md)
 
 <a id="主要功能"></a>
 

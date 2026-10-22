@@ -56,8 +56,8 @@ export function normalizeInstrumentalLayout(style: CardStyle): CardStyle {
     return style;
   }
 
-  // Instrumental cards are a fixed square mode and cannot carry translation or
-  // automatic lyric sizing state from the previously edited lyrics document.
+  // Instrumental mode hides translation without deleting authored text. Its
+  // fixed square presentation must not inherit automatic lyric sizing.
   const squareSize = PRESET_CARD_SIZES["1:1"];
 
   return {
@@ -68,7 +68,6 @@ export function normalizeInstrumentalLayout(style: CardStyle): CardStyle {
     height: squareSize.height,
     autoWidth: false,
     autoHeight: false,
-    translationEnabled: false,
-    translationText: ""
+    translationEnabled: false
   };
 }

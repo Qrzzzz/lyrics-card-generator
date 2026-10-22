@@ -346,7 +346,7 @@ test("stays responsive at 360px, 768px, and 1440px", async ({ page }) => {
         await expect(exportPanel).toBeVisible();
         await expect(editorPanel).toBeHidden();
         const [previewBox, exportBox] = await Promise.all([previewPanel.boundingBox(), exportPanel.boundingBox()]);
-        expect(previewBox && exportBox && previewBox.y < exportBox.y).toBe(true);
+        expect(previewBox && exportBox && exportBox.y < previewBox.y).toBe(true);
       }
 
       const previewToggle = page.getByTestId("preview-pane-toggle");
@@ -732,6 +732,40 @@ test("solid background keeps custom HEX across modes and exports offline with Mo
     await page.locator('[data-step-id="layout"]').click();
     await page.locator('[data-segment-value="solid"]').click();
   }
+});
+
+test("preserves Web Lite content when clear is cancelled and retries persistent output failures", async ({ page }) => {
+  await openWebLite(page);
+  await page.locator('[data-step-id="lyrics"]').click();
+  await page.getByLabel("Lyric Text", { exact: true }).fill("Keep this Web Lite manuscript");
+  page.once("dialog", async (dialog) => {
+    expect(dialog.message()).toContain("cannot be undone");
+    await dialog.dismiss();
+  });
+  await page.getByTestId("web-lite-clear-all-button").click();
+  await expect(page.getByLabel("Lyric Text", { exact: true })).toHaveValue("Keep this Web Lite manuscript");
+  await page.locator('[data-step-id="export"]').click();
+  await selectChoice(page, "medium");
+  await expect(page.getByTestId("complete-export-button")).toBeEnabled();
+  await page.evaluate(() => {
+    const native = HTMLCanvasElement.prototype.toDataURL;
+    Object.assign(window, { restoreHigRaster: () => { HTMLCanvasElement.prototype.toDataURL = native; } });
+    HTMLCanvasElement.prototype.toDataURL = () => { throw new Error("Controlled Web Lite capture failure"); };
+  });
+  await page.getByTestId("complete-export-button").click();
+  await expect(page.getByTestId("output-failure")).toBeVisible();
+  await page.waitForTimeout(5500);
+  await expect(page.getByTestId("retry-image-output")).toBeVisible();
+  await page.evaluate(() => Reflect.get(window, "restoreHigRaster")());
+  const downloadPromise = page.waitForEvent("download");
+  await page.getByTestId("retry-image-output").click();
+  const download = await downloadPromise;
+  expect(await download.failure()).toBeNull();
+  await expect(page.getByTestId("output-failure")).toHaveCount(0);
+  await page.locator('[data-step-id="lyrics"]').click();
+  await expect(page.getByLabel("Lyric Text", { exact: true })).toHaveValue("Keep this Web Lite manuscript");
+  await confirmWebLiteClear(page);
+  await expect(page.getByLabel("Lyric Text", { exact: true })).toHaveValue("");
 });
 
 test("supports bilingual splitting, layout modes, instrumental mode, and visual toggles", async ({ page }) => {
@@ -1251,6 +1285,11 @@ test("auto width reuses one candidate DOM and bounds geometry-query cost for 80 
   expect(rangeQueries).toBeLessThan(legacyAutoWidth80LineCost.rangeQueries / 3);
 });
 
+async function confirmWebLiteClear(page: Page) {
+  page.once("dialog", (dialog) => void dialog.accept());
+  await page.getByTestId("web-lite-clear-all-button").click();
+}
+
 test("clears remote input and status after a successful remote cover", async ({ page }) => {
   await installRemoteCoverRoute(page);
   await openWebLite(page);
@@ -1259,7 +1298,7 @@ test("clears remote input and status after a successful remote cover", async ({ 
   await expect(page.getByTestId("web-lite-cover-status")).toContainText("safe to preview");
   await expect(page.getByTestId("web-lite-active-cover")).toHaveAttribute("src", remoteCoverUrl);
 
-  await page.getByTestId("web-lite-clear-all-button").click();
+  await confirmWebLiteClear(page);
   await expectEmptyCoverState(page);
 });
 
@@ -1284,7 +1323,7 @@ test("ignores a remote cover that completes after clear", async ({ page }) => {
   await gate.requestStarted;
   await expect(page.getByTestId("web-lite-cover-status")).toContainText("Checking whether");
 
-  await page.getByTestId("web-lite-clear-all-button").click();
+  await confirmWebLiteClear(page);
   await expectEmptyCoverState(page);
   gate.release();
   await gate.firstResponseFinished;
@@ -1329,7 +1368,7 @@ for (const change of ["clear", "local", "remote", "failure", "timeout"] as const
     const downloadPromise = change === "failure" || change === "timeout" ? null : page.waitForEvent("download");
     await page.getByTestId("complete-export-button").click();
     await expect.poll(() => page.evaluate(() => Reflect.get(window, "coverDecodeWaiting"))).toBe(true);
-    if (change === "clear" || change === "failure" || change === "timeout") await page.getByTestId("web-lite-clear-all-button").click();
+    if (change === "clear" || change === "failure" || change === "timeout") await confirmWebLiteClear(page);
     else {
       await page.locator('[data-step-id="song-info"]').click();
       if (change === "local") await uploadGeneratedCover(page, "replacement.png", 40, 40, false);
@@ -1722,7 +1761,7 @@ test("blocks oversized high-quality landscape exports instead of silently scalin
   let downloadCount = 0;
   page.on("download", () => { downloadCount += 1; });
   await exportButton.click();
-  await expect(page.getByTestId("app-toast").filter({ hasText: /pixel-size limit/i })).toBeVisible();
+  await expect(page.getByTestId("output-failure").filter({ hasText: /pixel-size limit/i })).toBeVisible();
   await page.waitForTimeout(500);
   expect(downloadCount).toBe(0);
 });
@@ -2285,7 +2324,8 @@ async function waitForStableSliderValue(locator: Locator, stableMs = 500, timeou
 
 async function selectChoice(page: Page, value: string, root: Page | Locator = page) {
   const trigger = root.locator(`.choice-dropdown[data-choice-values~="${value}"]`).getByRole("combobox");
-  await trigger.scrollIntoViewIfNeeded();
+  // Center the real control above the compact sticky action bar before clicking.
+  await trigger.evaluate((element) => element.scrollIntoView({ block: "center", inline: "nearest", behavior: "instant" }));
   await trigger.evaluate((element) => new Promise<void>((resolve, reject) => {
     const started = performance.now();
     let previous = "";
