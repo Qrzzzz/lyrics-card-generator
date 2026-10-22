@@ -853,10 +853,7 @@ test("restores independent portrait and free-landscape sizing after round trips"
   await autoWidth.click();
   await expect(autoWidth).toHaveAttribute("aria-checked", "false");
   await expect(width).toHaveValue("1040");
-  await width.focus();
-  for (let step = 0; step < 8; step += 1) {
-    await width.press("ArrowRight");
-  }
+  await setRangeValue(width, 1200);
   await expect(width).toHaveValue("1200");
 
   await landscape.click();
@@ -1129,12 +1126,13 @@ test("auto width calibrates every built-in example independently of the starting
 
   const lyricsStep = page.locator('[data-step-id="lyrics"]');
   const layoutStep = page.locator('[data-step-id="layout"]');
-  await layoutStep.click();
+  await page.locator('[data-step-id="font"]').click();
   const lineHeight = page.getByRole("slider", { name: "行高", exact: true });
   await expect(lineHeight).toHaveAttribute("min", "1.5");
   await expect(lineHeight).toHaveAttribute("max", "2.1");
   await expect(lineHeight).toHaveAttribute("step", "0.05");
   await expect(lineHeight).toHaveValue("1.8");
+  await layoutStep.click();
 
   const autoWidth = page.getByRole("switch", { name: "自动宽度", exact: true });
   const width = page.getByRole("slider", { name: "宽度", exact: true });
@@ -1644,9 +1642,7 @@ test("@background-composition-benchmark exports a super-long 2x card within the 
   const autoWidth = page.getByRole("switch", { name: "Auto Width", exact: true });
   if (await autoWidth.getAttribute("aria-checked") === "true") await autoWidth.click();
   const width = page.getByLabel("Width", { exact: true });
-  await width.focus();
-  await width.press("Home");
-  for (let step = 0; step < 18; step += 1) await width.press("ArrowRight");
+  await setRangeValue(width, 1080);
   await expect(width).toHaveValue("1080");
   await page.locator('[data-step-id="export"]').click();
   const exportCard = page.locator('[data-export-card-host] [data-export-card="true"]').first();
