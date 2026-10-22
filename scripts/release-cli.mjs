@@ -165,6 +165,14 @@ export async function publishRelease(h, state) {
         if (matching.length > 1) throw Error('Ambiguous release PR');
         pr = matching[0];
         if (!pr) {
+          const open = prs.filter(p => p.state === 'open' && !p.merged_at && p.base.ref === policy.baseBranch && p.head.repo?.full_name === repository);
+          if (open.length > 1) throw Error('Ambiguous open release PR');
+          if (open.length === 1) {
+            h.command('git', ['push', 'origin', `HEAD:refs/heads/${branch}`]);
+            pr = await h.api(`${base}/pulls/${open[0].number}`);
+          }
+        }
+        if (!pr) {
           h.command('git', ['push', 'origin', `HEAD:refs/heads/${branch}`]);
           h.command('gh', ['pr', 'create', '--repo', repository, '--base', policy.baseBranch, '--head', branch, '--title', `Release ${tag}`, '--body-file', `docs/releases/v${state.packageVersion}.zh-CN.md`]);
           const created = await h.api(`${base}/pulls?state=open&head=${encodeURIComponent(repository.split('/')[0] + ':' + branch)}&base=${policy.baseBranch}`);
