@@ -3512,8 +3512,11 @@ async function assertLyricsWorkspaceContentPressure(originalLyrics, translationL
 }
 
 async function assertLyricsWorkspaceNarrowBehavior(originalLyrics, translationLyrics) {
-  await electronApp.evaluate(({ BrowserWindow }) => {
-    BrowserWindow.getAllWindows()[0].setMinimumSize(600, 600);
+  const previousMinimumSize = await electronApp.evaluate(({ BrowserWindow }) => {
+    const window = BrowserWindow.getAllWindows()[0];
+    const previous = window.getMinimumSize();
+    window.setMinimumSize(600, 600);
+    return previous;
   });
   try {
     await setWindowSize(760, 720);
@@ -3751,9 +3754,9 @@ async function assertLyricsWorkspaceNarrowBehavior(originalLyrics, translationLy
       await page.screenshot({ path: path.join(reportDirectory, "step-two-stacked-610x720.png"), fullPage: false });
     }
   } finally {
-    await electronApp.evaluate(({ BrowserWindow }) => {
-      BrowserWindow.getAllWindows()[0].setMinimumSize(1000, 700);
-    });
+    await electronApp.evaluate(({ BrowserWindow }, minimum) => {
+      BrowserWindow.getAllWindows()[0].setMinimumSize(...minimum);
+    }, previousMinimumSize);
     await setWindowSize(1000, 700);
   }
 }
@@ -4418,7 +4421,7 @@ try {
   const minimumWindowSize = await electronApp.evaluate(({ BrowserWindow }) => (
     BrowserWindow.getAllWindows()[0].getMinimumSize()
   ));
-  assert.deepEqual(minimumWindowSize, [1000, 700], "desktop window preserves the 1000px minimum width");
+  assert.deepEqual(minimumWindowSize, [520, 480], "desktop window permits compact and half-screen layouts");
   await assertExamplesSurfaceBehavior();
   await assertSongSearchBehavior();
   await assertSongImportAsideBehavior();
