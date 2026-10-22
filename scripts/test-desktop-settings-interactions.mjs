@@ -601,19 +601,15 @@ async function assertLyricsInputEditingSemantics(originalLyrics, translationLyri
 
     if (testCase.label === "middle") {
       await originalLyrics.press("ArrowLeft");
-      let directional = await getLyricsContext(originalLyrics);
-      assert.deepEqual(
-        { start: directional.start, end: directional.end },
-        { start: caret, end: caret },
-        "ArrowLeft moves the controlled caret without changing text"
-      );
+      await expect.poll(async () => {
+        const directional = await getLyricsContext(originalLyrics);
+        return { start: directional.start, end: directional.end };
+      }, { message: "ArrowLeft moves the controlled caret without changing text" }).toEqual({ start: caret, end: caret });
       await originalLyrics.press("Shift+ArrowRight");
-      directional = await getLyricsContext(originalLyrics);
-      assert.deepEqual(
-        { start: directional.start, end: directional.end, selectedText: directional.selectedText },
-        { start: caret, end: caret + 1, selectedText: "x" },
-        "Shift+ArrowRight preserves the native selection range"
-      );
+      await expect.poll(async () => {
+        const directional = await getLyricsContext(originalLyrics);
+        return { start: directional.start, end: directional.end, selectedText: directional.selectedText };
+      }, { message: "Shift+ArrowRight preserves the native selection range" }).toEqual({ start: caret, end: caret + 1, selectedText: "x" });
       await originalLyrics.evaluate((node) => {
         node.dispatchEvent(new MouseEvent("click", { bubbles: true }));
       });
@@ -4786,7 +4782,7 @@ try {
 
     const toastAudit = [];
     const recordToast = () => {
-      for (const toast of document.querySelectorAll('[data-testid="app-toast"]')) {
+      for (const toast of document.querySelectorAll('[data-testid="output-failure"]')) {
         const text = toast.textContent?.trim();
         if (text && !toastAudit.includes(text)) toastAudit.push(text);
       }
@@ -4857,7 +4853,7 @@ try {
   const liveMeasurementGuard = await liveMeasurementGuardHandle.jsonValue();
   await liveMeasurementGuardHandle.dispose();
   assert.deepEqual(liveMeasurementGuard, { clicked: true, measuredWidth: 1 }, "live measurement guard uses the active enabled export control");
-  await page.waitForFunction(() => Array.from(document.querySelectorAll('[data-testid="app-toast"]')).some((toast) => (
+  await page.waitForFunction(() => Array.from(document.querySelectorAll('[data-testid="output-failure"]')).some((toast) => (
     /计算|高度|稍候/.test(toast.textContent ?? "")
   )));
 
