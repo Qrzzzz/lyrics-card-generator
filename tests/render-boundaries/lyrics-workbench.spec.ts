@@ -55,14 +55,18 @@ test("search and sidebar preserve selection, shared scroll and operation undo", 
   const source = page.getByTestId("lyrics-editor-original");
   const text = Array.from({ length: 70 }, (_, index) => `Line ${index + 1}  `).join("\n");
   await source.fill(text);
-  const range = await source.evaluate((element) => {
+  // This case tests palette preservation, after input restoration has settled.
+  await source.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => requestAnimationFrame(() => resolve())))));
+  const range = await source.evaluate(async (element) => {
     const node = element as HTMLTextAreaElement;
     const start = node.value.indexOf("Line 40");
     node.focus();
     node.setSelectionRange(start, start + 7);
     node.dispatchEvent(new Event("select", { bubbles: true }));
+    await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
     return { start, end: start + 7 };
   });
+  await expect.poll(() => source.evaluate((element) => ({ start: (element as HTMLTextAreaElement).selectionStart, end: (element as HTMLTextAreaElement).selectionEnd }))).toEqual(range);
   await page.getByTestId("lyrics-shared-scroll").evaluate((node) => {
     node.scrollTop = 800;
   });
