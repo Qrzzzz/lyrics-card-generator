@@ -20,7 +20,7 @@ const activeCompleteExportButtonSelector = '[data-testid="export-settings-panel"
 // assertions remain deterministic in the default regression run.
 const scenarioArgument = process.argv.find((value) => value.startsWith("--scenario="));
 const scenario = scenarioArgument?.slice("--scenario=".length);
-if (scenario && !["search", "song-import", "examples", "fonts", "titlebar", "lyrics-input"].includes(scenario)) throw new Error("Unknown desktop scenario: " + scenario);
+if (scenario && !["search", "song-import", "examples", "fonts", "titlebar", "lyrics-input", "workbench"].includes(scenario)) throw new Error("Unknown desktop scenario: " + scenario);
 const runVisualDiagnostics = process.argv.includes("--visual-diagnostics");
 const builtInAutoWidthCases = [
   { id: "opalite", lyricLines: 4, translationLines: 4, min: 1360, max: 1400 },
@@ -2504,8 +2504,8 @@ async function assertPreviewWorkbenchPan() {
   assert.notEqual(narrow.exportDisplay, "none", `the minimum-width export settings remain visible: ${JSON.stringify(narrow)}`);
   assert.equal(narrow.transform, "none", `the minimum-width layout uses the stacked reduced transform: ${JSON.stringify(narrow)}`);
   assert.ok(
-    narrow.preview && narrow.exportPanel && narrow.preview.top < narrow.exportPanel.top,
-    `the minimum-width layout stacks preview before export settings: ${JSON.stringify(narrow)}`
+    narrow.preview && narrow.exportPanel && narrow.exportPanel.top < narrow.preview.top,
+    `the minimum-width layout keeps export settings before the preview: ${JSON.stringify(narrow)}`
   );
   assert.ok(narrow.horizontalOverflow <= 1, `the minimum-width workbench avoids horizontal overflow: ${JSON.stringify(narrow)}`);
 }
@@ -4139,6 +4139,11 @@ try {
   assert.equal(await page.getByTestId("editor-surface").evaluate((node) => Boolean(node.closest('[inert]'))), false, "startup leaves the editor accessible");
   if (scenario) {
     const scenarios = {
+      workbench: async () => {
+        await page.locator('button[data-step-id="export"]').click();
+        await selectChoiceValue("webp", page.locator('[data-testid="export-settings-panel"][data-active="true"]'));
+        await assertPreviewWorkbenchPan();
+      },
       search: assertSongSearchBehavior,
       "song-import": assertSongImportAsideBehavior,
       examples: assertExamplesSurfaceBehavior,

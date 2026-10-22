@@ -2324,7 +2324,8 @@ async function waitForStableSliderValue(locator: Locator, stableMs = 500, timeou
 
 async function selectChoice(page: Page, value: string, root: Page | Locator = page) {
   const trigger = root.locator(`.choice-dropdown[data-choice-values~="${value}"]`).getByRole("combobox");
-  await trigger.scrollIntoViewIfNeeded();
+  // Center the real control above the compact sticky action bar before clicking.
+  await trigger.evaluate((element) => element.scrollIntoView({ block: "center", inline: "nearest", behavior: "instant" }));
   await trigger.evaluate((element) => new Promise<void>((resolve, reject) => {
     const started = performance.now();
     let previous = "";
