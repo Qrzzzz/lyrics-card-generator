@@ -475,7 +475,7 @@ export function useEditorSteps({
   const fontStep = useMemo<SettingsStep>(() => ({
       id: "font",
       title: t("step.fontScheme"),
-      description: t("fontSchemeDescription"),
+      description: [t("fontSize"), t("lineHeight"), t("fontSchemeTitle")].join(" · "),
       presentation: "preview-workbench",
       isComplete: true,
       navigationGuard: {
@@ -498,7 +498,7 @@ export function useEditorSteps({
   const visualStep = useMemo<SettingsStep>(() => ({
       id: "visual",
       title: t("step.visual"),
-      description: t("background"),
+      description: t("settings.visibleContent"),
       presentation: "preview-workbench",
       isComplete: true,
       content: (

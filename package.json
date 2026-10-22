@@ -1,6 +1,6 @@
 {
   "name": "lyric-card-generator",
-  "version": "6.8.1",
+  "version": "6.8.2",
   "private": true,
   "main": "electron/main.js",
   "scripts": {
@@ -57,7 +57,7 @@
     "a11y:test": "playwright test --config=playwright.web-lite.config.ts --grep axe",
     "release-source:test": "node scripts/test-release-source-policy.mjs && node scripts/test-release-state-resolver.mjs && node scripts/test-release-powershell-syntax.cjs && node scripts/test-release-cli.mjs",
     "app-preference-save:test": "tsx scripts/test-app-preference-save-coordinator.ts",
-    "stability:test": "tsx scripts/test-app-preferences-reconciliation.ts && tsx scripts/test-app-preferences-behavior.ts && npm run app-preference-save:test && tsx scripts/test-shutdown-coordinator.ts && tsx scripts/test-ai-error-localization.ts && tsx scripts/test-locale-completeness.ts && node scripts/test-electron-static-analysis.cjs && node scripts/test-electron-single-instance.cjs && npm run installer-theme:test && npm run release-source:test && node scripts/test-release-workflow.cjs && node scripts/test-ci-workflow.cjs && npm run updater:test",
+    "stability:test": "tsx scripts/test-app-preferences-reconciliation.ts && tsx scripts/test-app-preferences-behavior.ts && npm run app-preference-save:test && tsx scripts/test-shutdown-coordinator.ts && tsx scripts/test-ai-error-localization.ts && tsx scripts/test-locale-completeness.ts && node scripts/test-electron-static-analysis.cjs && node scripts/test-electron-single-instance.cjs && npm run installer-theme:test && npm run release-source:test && node scripts/test-release-workflow.cjs && node scripts/test-ci-workflow.cjs && npm run updater:test && npm run desktop:governance-test",
     "coverage": "c8 --include=lib/settings/app-preferences-reconciliation.ts --include=lib/ai/error-copy.ts --check-coverage --lines 85 --functions 85 --branches 80 --statements 85 tsx scripts/test-stability-coverage.ts",
     "electron-runtime:test": "node scripts/test-electron-runtime-coverage.cjs",
     "clipboard-image:test": "node scripts/test-electron-clipboard-image.cjs",
@@ -67,7 +67,7 @@
     "electron-runtime:coverage": "c8 --clean --all --include=electron/preload.js --include=electron/ipc-security.js --include=electron/url-policy.js --include=electron/local-app-url.js --include=electron/local-server-origin.js --include=electron/manual-save-ipc.js --include=electron/import-history.js --include=electron/packaged-server-readiness.js --include=electron/ai-request-registry.js --check-coverage --per-file --lines 70 --functions 75 --branches 60 --statements 70 node scripts/test-electron-runtime-coverage.cjs",
     "click-spark:test": "tsx scripts/test-click-spark-animation.ts",
     "toast:test": "tsx scripts/test-toast-queue.ts",
-    "core:test": "npm run p0:test && npm run lyrics-document-v2:test && npm run separator:test && npm run typography:test && npm run palette:test && npm run solid-background:test && npm run color-field:test && npm run background-composition:test && npm run card-content-depth:test && npm run startup-assets:test && tsx scripts/test-import-history-ui.ts && npm run autosave:test && tsx scripts/test-v2-core.ts && tsx scripts/test-v32-settings.ts && tsx scripts/test-v321-theme-tokens.ts && tsx scripts/test-light-acrylic-contrast.ts && npm run project-signature:test && tsx scripts/test-v34-layout-grid.ts && tsx scripts/test-artwork-geometry.ts && tsx scripts/test-auto-width.ts && tsx scripts/test-landscape-plan.ts && tsx scripts/test-stepper-layout.ts && npm run window-geometry:test && tsx scripts/test-lyrics-workspace-layout.ts && tsx scripts/test-lyrics-workbench.ts && tsx scripts/test-lyrics-document.ts && tsx scripts/test-lyrics-viewport.ts && tsx scripts/test-titlebar-regression.ts && tsx scripts/test-examples.ts && tsx scripts/test-settings-wing.ts && npm run support:test && tsx scripts/test-ai-settings-save-controller.ts && tsx scripts/test-release-consistency.ts && npm run click-spark:test && npm run toast:test && tsx scripts/test-motion-system.ts && tsx scripts/test-ai-provider-response.ts && tsx scripts/test-netease-search-normalize.ts && node scripts/test-electron-ai-prompt-settings.cjs && npm run ai-settings-store:test && node scripts/test-electron-font-options.cjs && node scripts/test-electron-font-directory-service.cjs && npm run contracts:test",
+    "core:test": "npm run p0:test && npm run lyrics-document-v2:test && npm run separator:test && npm run typography:test && npm run palette:test && npm run solid-background:test && npm run color-field:test && npm run background-composition:test && npm run card-content-depth:test && npm run startup-assets:test && tsx scripts/test-import-history-ui.ts && npm run autosave:test && tsx scripts/test-v2-core.ts && tsx scripts/test-v32-settings.ts && tsx scripts/test-v321-theme-tokens.ts && tsx scripts/test-light-acrylic-contrast.ts && npm run project-signature:test && tsx scripts/test-v34-layout-grid.ts && tsx scripts/test-artwork-geometry.ts && tsx scripts/test-auto-width.ts && tsx scripts/test-landscape-plan.ts && tsx scripts/test-stepper-layout.ts && npm run window-geometry:test && tsx scripts/test-editor-productivity.ts && tsx scripts/test-lyrics-workspace-layout.ts && tsx scripts/test-lyrics-workbench.ts && tsx scripts/test-lyrics-document.ts && tsx scripts/test-lyrics-viewport.ts && tsx scripts/test-titlebar-regression.ts && tsx scripts/test-examples.ts && tsx scripts/test-settings-wing.ts && npm run support:test && tsx scripts/test-ai-settings-save-controller.ts && tsx scripts/test-release-consistency.ts && npm run click-spark:test && npm run toast:test && tsx scripts/test-motion-system.ts && tsx scripts/test-ai-provider-response.ts && tsx scripts/test-netease-search-normalize.ts && node scripts/test-electron-ai-prompt-settings.cjs && npm run ai-settings-store:test && node scripts/test-electron-font-options.cjs && node scripts/test-electron-font-directory-service.cjs && npm run contracts:test",
     "desktop:dev": "node scripts/start-electron-dev.mjs",
     "desktop:startup-test": "node scripts/test-electron-packaged-server-startup.cjs",
     "desktop:startup-benchmark": "node scripts/benchmark-desktop-startup.mjs",
@@ -119,7 +119,13 @@
     "contracts:check": "node scripts/generate-shared-contracts.mjs --check && tsc --project tsconfig.contracts.json",
     "contracts:test": "tsx scripts/test-shared-contracts.ts && node scripts/test-domain-services.cjs && tsx scripts/test-history-scale.ts",
     "window-geometry:test": "node scripts/test-window-geometry.cjs",
-    "desktop:hig-test": "node scripts/test-desktop-hig-stability.mjs"
+    "desktop:hig-test": "node scripts/test-desktop-hig-stability.mjs",
+    "desktop:settings-test": "node scripts/test-desktop-settings-interactions.mjs",
+    "desktop:import-history-test": "node scripts/test-desktop-import-history-interactions.mjs",
+    "desktop:group:editor": "node scripts/run-desktop-regression-group.mjs --group=editor",
+    "desktop:group:data": "node scripts/run-desktop-regression-group.mjs --group=data",
+    "desktop:group:native": "node scripts/run-desktop-regression-group.mjs --group=native",
+    "desktop:governance-test": "node scripts/test-desktop-regression-governance.mjs"
   },
   "dependencies": {
     "cheerio": "^1.0.0",

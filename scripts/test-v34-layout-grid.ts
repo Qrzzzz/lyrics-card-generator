@@ -410,12 +410,12 @@ assert.equal(
 );
 
 const expectedTextDesignTitles: Record<Locale, string> = {
-  zh: "文字设计",
-  "zh-TW": "文字設計",
-  en: "Text Design",
-  fr: "Design du texte",
-  ja: "文字デザイン",
-  es: "Diseño del texto"
+  zh: "文字与排版",
+  "zh-TW": "文字與排版",
+  en: "Text & typography",
+  fr: "Texte et typographie",
+  ja: "文字と組版",
+  es: "Texto y tipografía"
 };
 for (const [locale, title] of Object.entries(expectedTextDesignTitles) as Array<[Locale, string]>) {
   assert.equal(messages[locale]["step.fontScheme"], title, `${locale} text-design step title`);
@@ -447,7 +447,7 @@ assert.ok(!stylePanelSource.includes('option value="9:16"'), "portrait presets o
 assert.ok(!stylePanelSource.includes("const portraitRatio"), "portrait ratio is never masked only at render time");
 assert.ok(stylePanelSource.includes("<SegmentedControl<CardAlign>"), "alignment uses the keyboard-accessible segmented slider");
 assert.ok(stylePanelSource.includes("<SegmentedControl<CardRatio>"), "size mode uses a segmented slider");
-assert.ok(stylePanelSource.includes("<RangeSlider"), "layout range inputs use the shared polished slider");
+assert.ok(stylePanelSource.includes("<PrecisionSlider"), "layout range inputs use the shared polished slider");
 assert.ok(!stylePanelSource.includes('label={t("coverCrop")}'), "cover crop control is removed");
 assert.ok(fontSchemePanelSource.includes('data-testid="font-scheme-overview"'), "font schemes start in a dedicated overview");
 assert.ok(fontSchemePanelSource.includes('data-testid="edit-custom-font-scheme"'), "custom font editing has one overview entry point");

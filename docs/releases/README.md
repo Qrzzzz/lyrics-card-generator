@@ -1,5 +1,7 @@
 # 多语言发布说明规范
 
+- v6.8.2（2026-10-23）：精确输入、界面字号、设置分类与应用级命令。[六语言说明](./v6.8.2.zh-CN.md)
+
 [文档索引](../README.md) · [开发指南](../development.zh-CN.md)
 
 Lyrics Card Generator 面向国内用户，GitHub Release 页面默认使用简体中文。其他语言不直接堆在 Release 正文里，而是放在 `docs/releases/` 目录下维护，再从 Release 正文跳转过去。

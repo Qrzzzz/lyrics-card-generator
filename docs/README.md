@@ -24,6 +24,7 @@ This directory contains durable development, maintenance, testing, security, and
 
 ## 发布 / Releases
 
+- [标准发布入口与失败恢复](./release-runbook.md)：候选准备、进度记录及发布入口改进验收。
 - [多语言发布说明规范与版本索引](./releases/README.md)
 
 新增长期维护文档时，请在此处登记入口。一次性实施计划、审计草稿和发布前验收快照不保留在 `docs/`；需要追溯时使用 Git 历史、PR/Issue 或 Actions/Release 记录。

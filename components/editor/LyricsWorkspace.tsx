@@ -257,6 +257,7 @@ export function LyricsWorkspace({
         setPaletteOpen(false);
         return;
       }
+      if (!paletteOpen && workspaceRef.current?.closest("[data-app-commands=true]")) return;
       if (event.isComposing || event.altKey || !(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== "k") return;
       if (!workspaceRef.current?.getClientRects().length || contentMode !== "lyrics") return;
       if (!paletteOpen && workspaceRef.current.closest("[inert], [hidden], [aria-hidden=true]")) return;
@@ -284,6 +285,16 @@ export function LyricsWorkspace({
     });
     return () => cancelAnimationFrame(frame);
   }, [toolRequest, sidebarTab, sidebarCollapsed, mobileSidebarOpen, getEditor]);
+
+  useEffect(() => {
+    const activate = (event: Event) => {
+      const tool = LYRICS_TOOLS.find(item => item.id === (event as CustomEvent<string>).detail);
+      const root = workspaceRef.current;
+      if (tool && contentMode === "lyrics" && root?.getClientRects().length && !root.closest("[inert], [aria-hidden=true]")) activateTool(tool);
+    };
+    window.addEventListener("lyrics-card:activate-tool", activate);
+    return () => window.removeEventListener("lyrics-card:activate-tool", activate);
+  });
 
   function activateTool(tool: LyricsTool) {
     if (tool.id === "ai") { openTab("translation", "ai"); return; }

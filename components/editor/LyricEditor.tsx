@@ -2,6 +2,9 @@
 
 import { motion, useReducedMotion, type Transition } from "framer-motion";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { AppCommands, focusCommandDestination, type CommandDestination } from "@/components/editor/AppCommands";
+import { useInterfaceTextSize } from "@/components/settings/useInterfaceTextSize";
+import { productivityCopy } from "@/lib/editor-productivity-copy";
 import { EditorHeaderActions } from "@/components/editor/EditorHeader";
 import {
   DeferredExamplesSurface,
@@ -286,6 +289,7 @@ export function LyricEditor() {
     applyLocale
   });
   const shouldReduceMotion = userSettings.reduceMotionEnabled || systemShouldReduceMotion;
+  useInterfaceTextSize(userSettings.uiTextSize);
   const activeSurfaceTransition = shouldReduceMotion ? reducedSurfaceTransition : surfaceTransition;
   const resolvedAccentColor = resolveUiAccentColor({
     settings: userSettings,
@@ -608,6 +612,25 @@ export function LyricEditor() {
     palette: state.palette
   });
 
+  function prepareAppCommand() {
+    const guard = activeSettingsStep?.navigationGuard;
+    if (guard?.active) { showToast(guard.message, "warning"); return false; }
+    if (isSettingsSurfaceOpen) {
+      const close = document.querySelector<HTMLButtonElement>('[data-testid="settings-close-button"]');
+      if (!close || close.disabled) return false;
+      close.click();
+    }
+    return true;
+  }
+  function navigateCommand(destination: CommandDestination) {
+    if (!Number.isInteger(destination.step) || destination.step < 0 || destination.step >= settingsSteps.length || !prepareAppCommand()) return false;
+    surfaceReturnFocusRef.current = null;
+    setActiveSurface("editor");
+    changeEditorStep(destination.step);
+    focusCommandDestination(destination);
+    return true;
+  }
+
   return (
     <AppMotionProvider reduceMotion={userSettings.reduceMotionEnabled} ready={preferencesLoaded}>
       <div
@@ -615,6 +638,8 @@ export function LyricEditor() {
         aria-busy={!preferencesLoaded}
         data-preferences-loaded={preferencesLoaded ? "true" : "false"}
         data-ui-theme={effectiveUiThemeId}
+        data-ui-text-size={userSettings.uiTextSize}
+        data-app-commands="true"
         data-desktop-shell={isDesktopShell ? "true" : "false"}
         data-reduce-motion={!preferencesLoaded || shouldReduceMotion ? "true" : "false"}
         style={{
@@ -625,6 +650,14 @@ export function LyricEditor() {
           ...customThemeTokens
         } as unknown as React.CSSProperties}
       >
+      <AppCommands locale={state.locale} titles={settingsSteps.map(step => step.title)} onNavigate={navigateCommand}
+        onSettings={() => { if (prepareAppCommand()) openSettings(); }}
+        onHistory={isDesktopShell ? () => { if (prepareAppCommand()) openHistory(); } : undefined}
+        onExport={() => { if (prepareAppCommand()) { setActiveSurface("editor"); changeEditorStep(5); void completeAndExport(); } }}
+        onCopy={() => { if (prepareAppCommand()) { setActiveSurface("editor"); changeEditorStep(5); void copyImageToClipboard(); } }}
+        onTogglePreview={() => { if (prepareAppCommand()) setIsPreviewVisible(value => !value); }}
+        guarded={activeSettingsStep?.navigationGuard?.active ? productivityCopy[state.locale].guarded : undefined}
+        busy={isCompleteExporting} readinessStore={exportReadinessStore} lyricsAvailable={state.style.contentMode === "lyrics"} translationEnabled={state.style.translationEnabled} />
       <DesktopTitleBar locale={state.locale} titlebarStyle={userSettings.uiTitlebarStyle} autosaveStatus={autosave.status}
         onRetryAutosave={() => void autosave.retry().catch(() => undefined)} />
       <DynamicAppBackground palette={state.palette} settings={userSettings} />

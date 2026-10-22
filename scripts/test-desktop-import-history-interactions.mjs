@@ -412,7 +412,7 @@ try {
   );
   assert.deepEqual(
     actionIds,
-    ["examples-button", "history-button", "clear-all-button", "settings-button"],
+    ["app-command-button", "examples-button", "history-button", "clear-all-button", "settings-button"],
     "desktop actions omit the retired manual-save control"
   );
   assert.equal(await page.getByTestId("manual-save-button").count(), 0);

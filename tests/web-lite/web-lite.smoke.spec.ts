@@ -734,6 +734,30 @@ test("solid background keeps custom HEX across modes and exports offline with Mo
   }
 });
 
+test("Web Lite global commands expose precise typography and persist independent interface text sizes", async ({ page }) => {
+  await openWebLite(page);
+  await page.keyboard.press("Control+k");
+  await page.getByTestId("lyrics-tool-query").fill("行间距");
+  await page.getByTestId("app-command-result-field-lineHeight").click();
+  const input = page.getByRole("spinbutton", { name: "Line Height · Exact value" });
+  await expect(input).toBeFocused();
+  await input.fill("1,75"); await input.press("Enter");
+  await expect(page.getByRole("slider", { name: "Line Height", exact: true })).toHaveValue("1.75");
+  await page.locator('[data-step-id="export"]').click();
+  await expect(page.getByTestId("complete-export-button")).toBeEnabled();
+  const card = page.locator('[data-export-card-host] [data-export-card="true"]').first();
+  const measure = () => card.evaluate(node => ({ width: node.getBoundingClientRect().width, height: node.getBoundingClientRect().height,
+    sizes: [...node.querySelectorAll("*")].map(child => [getComputedStyle(child).fontSize, getComputedStyle(child).lineHeight]) }));
+  const before = await measure();
+  await page.keyboard.press("Control+k");
+  await page.getByTestId("lyrics-tool-query").fill("interface text size");
+  await page.getByTestId("app-command-result-text-size-extra-large").click();
+  await expect(page.locator(".app-shell")).toHaveAttribute("data-ui-text-size", "extra-large");
+  expect(await measure()).toEqual(before);
+  await page.reload();
+  await expect(page.locator(".app-shell")).toHaveAttribute("data-ui-text-size", "extra-large");
+});
+
 test("preserves Web Lite content when clear is cancelled and retries persistent output failures", async ({ page }) => {
   await openWebLite(page);
   await page.locator('[data-step-id="lyrics"]').click();
@@ -799,7 +823,7 @@ test("supports bilingual splitting, layout modes, instrumental mode, and visual 
   await expect(sizeMode).toHaveAttribute("data-choice-value", "1:1");
 
   await page.locator('[data-segment-value="lyrics"]').click();
-  await page.locator('[data-step-id="visual"]').click();
+  await page.locator('[data-step-id="layout"]').click();
   const backgroundGrid = page.getByRole("switch", { name: "Background Grid", exact: true });
   await backgroundGrid.click();
   await expect(backgroundGrid).toHaveAttribute("aria-checked", "true");
@@ -915,6 +939,7 @@ test("keeps restrained content depth identical in preview and ExportCardHost", a
       }, insets);
     }).toBe(true);
   }
+  await page.locator('[data-step-id="layout"]').click();
   await page.getByRole("switch", { name: "Background Grid", exact: true }).click();
   await expect(previewCard.locator('[data-card-fine-grid="true"]')).toHaveCount(1);
   await expect(exportCard.locator('[data-card-fine-grid="true"]')).toHaveCount(1);
@@ -1078,11 +1103,10 @@ test("auto width measures bilingual wrapping and settles on a comfortable portra
   expect(wrapMetrics.some((metric) => metric.kind === "translation" && metric.visualLines > 1)).toBe(true);
   expect(wrapMetrics.filter((metric) => metric.severe)).toEqual([]);
 
-  const height = page.getByLabel("Height", { exact: true });
   const spacingSamples: number[] = [];
+  await page.locator('[data-step-id="font"]').click();
   for (const value of [1.5, 1.8, 2.1]) {
     await setRangeValue(page.getByLabel("Line Height", { exact: true }), value);
-    await waitForStableSliderValue(height);
     const metrics = await expectLyricSpacingGeometry(page, value);
     spacingSamples.push(metrics.find((metric) => metric.kind === "lyric")!.wrapSpacing);
   }
@@ -1944,6 +1968,7 @@ async function prepareAutoWidthEquivalenceFixture(page: Page, fixture: AutoWidth
   const width = page.getByLabel("Width", { exact: true });
   const height = page.getByLabel("Height", { exact: true });
   await setRangeValue(width, fixture.anchorWidth);
+  await fontStep.click();
   await setRangeValue(page.getByLabel("Font Size", { exact: true }), fixture.lyricFontSize);
   await setRangeValue(page.getByLabel("Line Height", { exact: true }), fixture.lineHeight);
   await selectChoice(page, fixture.align);
@@ -1966,7 +1991,9 @@ async function prepareAutoWidthEquivalenceFixture(page: Page, fixture: AutoWidth
 
   await layoutStep.click();
   if (fixture.translationEnabled) {
+    await fontStep.click();
     await setRangeValue(page.getByLabel("Translation Scale", { exact: true }), fixture.translationScale);
+    await layoutStep.click();
   }
   return { autoWidth, width, height };
 }

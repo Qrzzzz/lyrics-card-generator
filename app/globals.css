@@ -3586,3 +3586,17 @@ body[data-reduce-motion="true"] .examples-close-button:focus-visible .examples-c
     transform: none;
   }
 }
+
+/* UI type tokens never style card rendering or its measurement hosts. */
+[data-ui-text-size="standard"] { --ui-text-xs: 12px; --ui-text-sm: 14px; --ui-text-nav: 13px; --ui-text-base: 16px; --ui-text-lg: 18px; --ui-text-xl: 20px; --ui-text-2xl: 24px; }
+[data-ui-text-size="large"] { --ui-text-xs: 14px; --ui-text-sm: 16px; --ui-text-nav: 15px; --ui-text-base: 18px; --ui-text-lg: 20px; --ui-text-xl: 23px; --ui-text-2xl: 27px; }
+[data-ui-text-size="extra-large"] { --ui-text-xs: 16px; --ui-text-sm: 18px; --ui-text-nav: 17px; --ui-text-base: 20px; --ui-text-lg: 23px; --ui-text-xl: 26px; --ui-text-2xl: 30px; }
+.text-xs:not([data-export-card], [data-export-card] *, [data-export-card-host] *) { font-size: var(--ui-text-xs, 12px); line-height: 1.5; }
+.text-sm:not([data-export-card], [data-export-card] *, [data-export-card-host] *) { font-size: var(--ui-text-sm, 14px); line-height: 1.5; }
+.text-base:not([data-export-card], [data-export-card] *, [data-export-card-host] *) { font-size: var(--ui-text-base, 16px); }
+.text-lg:not([data-export-card], [data-export-card] *, [data-export-card-host] *) { font-size: var(--ui-text-lg, 18px); }
+.text-xl:not([data-export-card], [data-export-card] *, [data-export-card-host] *) { font-size: var(--ui-text-xl, 20px); }
+.text-2xl:not([data-export-card], [data-export-card] *, [data-export-card-host] *) { font-size: var(--ui-text-2xl, 24px); }
+:is([class~="text-[10px]"], [class~="text-[11px]"]):not([data-export-card], [data-export-card] *, [data-export-card-host] *) { font-size: var(--ui-text-xs, 12px); line-height: 1.25; }
+[data-step-id] > span:last-child { font-size: var(--ui-text-nav, 13px); }
+.command-shortcut { font-size: var(--ui-text-xs, 12px); line-height: 1.5; }

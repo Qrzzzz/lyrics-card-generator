@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v6.8.1.zh-TW.md">發布說明</a> ·
+  <a href="./docs/releases/v6.8.2.zh-TW.md">發布說明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">線上 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="./docs/development.zh-CN.md">本機開發</a> ·
@@ -73,19 +73,19 @@
 
 
 
-* Windows x64 安裝版：`Lyrics.Card.Generator.Setup.6.8.1.exe`
+* Windows x64 安裝版：`Lyrics.Card.Generator.Setup.6.8.2.exe`
 
 從 v6.2.2 起僅提供 Windows x64 Setup 安裝程式。
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v6.8.1 · 發布說明
+### v6.8.2 · 發布說明
 
-**2026-10-22**
+**2026-10-23**
 
-v6.8.1 聚焦內容保護、輸出失敗復原、視窗與緊湊版面，以及清楚的編輯狀態。核心範圍為 #229、#230、#231、#232、#233、#235、#237、#238，另包含 #240 六語言設定文案整理。
+v6.8.2 — 新增具驗證與單項重設的精確數值輸入、獨立介面字級、應用程式 Ctrl+K 命令，以及畫布／排版／內容設定分類。保留六步、歌詞工作區、存檔與匯出契約。
 
-[简体中文](./docs/releases/v6.8.1.zh-CN.md) · [繁體中文](./docs/releases/v6.8.1.zh-TW.md) · [English](./docs/releases/v6.8.1.en.md) · [Français](./docs/releases/v6.8.1.fr.md) · [日本語](./docs/releases/v6.8.1.ja.md) · [Español](./docs/releases/v6.8.1.es.md)
+[简体中文](./docs/releases/v6.8.2.zh-CN.md) · [繁體中文](./docs/releases/v6.8.2.zh-TW.md) · [English](./docs/releases/v6.8.2.en.md) · [Français](./docs/releases/v6.8.2.fr.md) · [日本語](./docs/releases/v6.8.2.ja.md) · [Español](./docs/releases/v6.8.2.es.md)
 
 ## ✨ 主要功能
 

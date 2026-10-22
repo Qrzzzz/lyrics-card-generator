@@ -1,7 +1,8 @@
 import { selectChoiceValue } from "./choice-test-helpers.mjs";
 import assert from "node:assert/strict";
 import { prepareEditorLanguage } from "./editor-language-test-helpers.mjs";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, rm, mkdir, writeFile } from "node:fs/promises";
+import { installClipboardToastAudit } from './desktop-notification-audit.mjs';
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -79,16 +80,7 @@ try {
   assert.match(coverSource ?? "", /^blob:/, "desktop regression exercises an uploaded local blob cover");
 
   await electronApp.evaluate(({ clipboard }) => clipboard.clear());
-  await page.evaluate(() => {
-    window.__clipboardToastHistory = [];
-    const observer = new MutationObserver(() => {
-      for (const toast of document.querySelectorAll('[data-testid="app-toast"]')) {
-        const text = toast.textContent?.trim();
-        if (text && !window.__clipboardToastHistory.includes(text)) window.__clipboardToastHistory.push(text);
-      }
-    });
-    observer.observe(document.body, { childList: true, subtree: true, characterData: true });
-  });
+  await page.evaluate(installClipboardToastAudit);
   await copyImageButton.click();
   await expect.poll(() => electronApp.evaluate(({ clipboard }) => {
     const image = clipboard.readImage();
@@ -127,6 +119,14 @@ try {
       native: await electronApp.evaluate(({ clipboard }) => ({ formats: clipboard.availableFormats(), empty: clipboard.readImage().isEmpty() })).catch(() => null),
       toasts: await currentPage?.evaluate(() => window.__clipboardToastHistory).catch(() => null)
     });
+    const evidence = path.join(root, 'output/playwright', `desktop-clipboard-${Date.now()}`);
+    await mkdir(evidence, { recursive: true });
+    await currentPage?.screenshot({path:path.join(evidence,'failure.png')}).catch(()=>{});
+    await writeFile(path.join(evidence,'observation.json'),JSON.stringify({
+      scenario:'native-clipboard-with-local-cover', expected:{nativeImage:true,successNotice:true},
+      actual:await electronApp.evaluate(({clipboard})=>({formats:clipboard.availableFormats(),empty:clipboard.readImage().isEmpty()})).catch(()=>null),
+      notices:await currentPage?.evaluate(()=>window.__clipboardToastEvents || []).catch(()=>[])
+    },null,2));
   }
   throw error;
 } finally {

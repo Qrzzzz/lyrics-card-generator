@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v6.8.1.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v6.8.2.en.md">Release Notes</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
   <a href="./docs/web-lite-browser-support.md">Web Lite Browser Support</a> ·
   <a href="#features">Features</a> ·
@@ -77,19 +77,19 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 
 
-* Windows x64 installer: `Lyrics.Card.Generator.Setup.6.8.1.exe`
+* Windows x64 installer: `Lyrics.Card.Generator.Setup.6.8.2.exe`
 
 Starting with v6.2.2, Windows x64 Setup is the only distributed desktop package.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v6.8.1 · Release Notes
+### v6.8.2 · Release Notes
 
-**2026-10-22**
+**2026-10-23**
 
-v6.8.1 focuses on content protection, recoverable output failures, usable windows and compact layouts, and clear editing state. Core scope: #229, #230, #231, #232, #233, #235, #237 and #238; also includes the six-language settings copy cleanup in #240.
+v6.8.2 — Adds validated numeric inputs with individual reset, independent interface text sizes, application-wide Ctrl+K commands, and clearer canvas, typography and content settings. Preserves the six steps, lyrics workbench, saved data and export contracts.
 
-[简体中文](./docs/releases/v6.8.1.zh-CN.md) · [繁體中文](./docs/releases/v6.8.1.zh-TW.md) · [English](./docs/releases/v6.8.1.en.md) · [Français](./docs/releases/v6.8.1.fr.md) · [日本語](./docs/releases/v6.8.1.ja.md) · [Español](./docs/releases/v6.8.1.es.md)
+[简体中文](./docs/releases/v6.8.2.zh-CN.md) · [繁體中文](./docs/releases/v6.8.2.zh-TW.md) · [English](./docs/releases/v6.8.2.en.md) · [Français](./docs/releases/v6.8.2.fr.md) · [日本語](./docs/releases/v6.8.2.ja.md) · [Español](./docs/releases/v6.8.2.es.md)
 
 <a id="features"></a>
 

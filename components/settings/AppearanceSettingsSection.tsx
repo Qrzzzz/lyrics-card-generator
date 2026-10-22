@@ -1,6 +1,7 @@
 "use client";
 
 import { SettingsGroup } from "@/components/settings/SettingsLayout";
+import { InterfaceTextSize } from "@/components/settings/InterfaceTextSize";
 import { ColorSwatches, CustomColorInput } from "@/components/ui/ColorPicker";
 import { useEffect, useState } from "react";
 import { recordRenderBoundary } from "@/components/editor/render-boundary-diagnostics";
@@ -34,11 +35,13 @@ const ACCENT_PRESET_OPTIONS: Array<{ id: UiAccentPresetId; copyKey: "accentRed" 
 
 export function AppearanceSettingsSection({
   settings,
+  locale = "en",
   copy,
   onChange,
   isDesktopShell
 }: {
   settings: UserSettings;
+  locale?: Locale;
   copy: typeof settingsCopy[Locale];
   onChange: (settings: UserSettings) => void;
   isDesktopShell: boolean;
@@ -141,6 +144,8 @@ export function AppearanceSettingsSection({
 
       </SettingsGroup>
       <SettingsGroup title={copy.uiFont}>
+        <InterfaceTextSize locale={locale} value={settings.uiTextSize}
+          onChange={(uiTextSize) => onChange({ ...settings, uiTextSize })} />
         <div className="editor-settings-field">
           <FieldLabel
             label={copy.uiFont}

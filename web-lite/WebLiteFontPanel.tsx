@@ -1,5 +1,7 @@
 "use client";
 
+import { TypographySettings } from "@/components/editor/StylePanel";
+import type { Locale } from "@/lib/types";
 import { SettingsLayout, SettingsGroup, SettingsGrid } from "@/components/editor/style-panel/SettingsLayout";
 import { FONT_SCHEME_PRESETS, identifyFontPreset } from "@/lib/font-schemes";
 import { getEffectiveFontScheme } from "@/lib/fonts";
@@ -26,12 +28,14 @@ const SYSTEM_SERIF_SCHEME: FontScheme = {
 
 export function WebLiteFontPanel({
   style,
+  locale,
   copy,
   t,
   onStyleChange,
   onPreviewSchemeChange
 }: {
   style: CardStyle;
+  locale: Locale;
   copy: WebLiteCopy;
   t: ReturnType<typeof createT>;
   onStyleChange: (style: CardStyle) => void;
@@ -82,6 +86,7 @@ export function WebLiteFontPanel({
 
   return (
     <SettingsLayout>
+      <TypographySettings style={style} onStyleChange={onStyleChange} locale={locale} t={t} />
       <SettingsGroup title={copy.fontTitle}>
         <p className="app-text-subtle text-xs leading-5">{copy.fontDescription}</p>
       <SettingsGrid data-testid="web-lite-font-options">

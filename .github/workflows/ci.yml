@@ -9,6 +9,10 @@ on:
       - main
   workflow_dispatch:
     inputs:
+      desktop_shared_groups:
+        description: Measure shared unpacked transfer and independent Windows groups before promotion
+        type: boolean
+        default: false
       desktop_visual_diagnostics:
         description: Run the non-blocking desktop pixel and frame-timing diagnostics
         required: false
@@ -215,12 +219,12 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-  desktop-packaged-regression:
-    name: desktop-packaged-regression
+  desktop-legacy:
+    name: desktop-legacy
     # A release consumes checks for the final main-push SHA. Keeping this job
     # PR-only would leave the packaged Windows result bound to a different PR
     # head or synthetic merge SHA after squash/rebase.
-    if: github.event_name == 'push' || github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.desktop_visual_diagnostics)
+    if: (github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch') && !inputs.desktop_shared_groups
     runs-on: windows-latest
     timeout-minutes: 60
     env:
@@ -269,3 +273,129 @@ jobs:
             playwright-report/desktop/**
             output/playwright/desktop-updater/**
           if-no-files-found: ignore
+
+
+  desktop-build:
+    name: desktop-build
+    # Explicit measurement canary; PR/main retain the proven path until cost is measured.
+    if: github.event_name == 'workflow_dispatch' && inputs.desktop_shared_groups
+    runs-on: windows-latest
+    timeout-minutes: 25
+    env:
+      CI: "true"
+      CSC_IDENTITY_AUTO_DISCOVERY: "false"
+    outputs:
+      artifact-id: ${{ steps.upload.outputs.artifact-id }}
+      digest: ${{ steps.bundle.outputs.digest }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Build unpacked Windows desktop app
+        run: npm run desktop:pack
+      - name: Verify staged and packaged desktop assets
+        run: npm run desktop:packaged-assets-test -- --unpacked-only
+      - run: node scripts/check-distribution-budgets.mjs --packaged
+      - name: Create identity-bound desktop bundle
+        id: bundle
+        run: node scripts/desktop-test-bundle.mjs pack
+      - name: Upload desktop bundle (measure transfer)
+        id: upload
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: desktop-runtime-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/desktop-bundle/
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 7
+
+  desktop-groups:
+    name: desktop-group-${{ matrix.group }}
+    needs: desktop-build
+    if: github.event_name == 'workflow_dispatch' && inputs.desktop_shared_groups
+    runs-on: windows-latest
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        group: [editor, data, native]
+    env:
+      CI: "true"
+      CSC_IDENTITY_AUTO_DISCOVERY: "false"
+      DESKTOP_BUILD_DIGEST: ${{ needs.desktop-build.outputs.digest }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Download exact desktop bundle (measure transfer)
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          artifact-ids: ${{ needs.desktop-build.outputs.artifact-id }}
+          path: artifacts/desktop-bundle
+      - name: Validate identity, digest and every runtime resource
+        run: node scripts/desktop-test-bundle.mjs unpack
+      - name: Run packaged desktop interaction regression
+        run: npm run desktop:group:${{ matrix.group }}
+      - name: Upload group outcome and first-failure evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: desktop-group-result-${{ github.run_id }}-${{ matrix.group }}-${{ github.run_attempt }}
+          path: |
+            artifacts/desktop-groups/${{ matrix.group }}/**
+            playwright-report/desktop/**
+            output/playwright/**
+          if-no-files-found: error
+          retention-days: 14
+
+  desktop-packaged-regression:
+    name: desktop-packaged-regression
+    # A failed/skipped/cancelled build or group must never authorize release.
+    if: always()
+    needs: [desktop-legacy, desktop-build, desktop-groups]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      actions: read
+      contents: read
+    env:
+      DESKTOP_SHARED: ${{ github.event_name == 'workflow_dispatch' && inputs.desktop_shared_groups }}
+      DESKTOP_LEGACY_RESULT: ${{ needs.desktop-legacy.result }}
+      DESKTOP_BUILD_RESULT: ${{ needs.desktop-build.result }}
+      DESKTOP_GROUPS_RESULT: ${{ needs.desktop-groups.result }}
+      DESKTOP_BUILD_DIGEST: ${{ needs.desktop-build.outputs.digest }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 22
+      - name: Download group results from this run
+        if: env.DESKTOP_SHARED == 'true' && needs.desktop-groups.result == 'success'
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          pattern: desktop-group-result-${{ github.run_id }}-*
+          path: artifacts/desktop-results
+      - name: Enforce all desktop outcomes and artifact identities
+        run: node scripts/check-desktop-regression-gate.mjs
+      - name: Record queue, build, transfer and group step timings
+        if: always()
+        timeout-minutes: 3
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/record-desktop-ci-timings.mjs
+      - name: Preserve desktop timing observations
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: desktop-timings-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/desktop-timings.json
+          if-no-files-found: warn
+          retention-days: 90

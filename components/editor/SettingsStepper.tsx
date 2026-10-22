@@ -580,6 +580,7 @@ export function SettingsStepper({
               {activeStep ? (
                 <motion.div
                   key={activeStep.id}
+                  data-settings-step-id={activeStep.id}
                   custom={stepDirection}
                   variants={variants}
                   initial="initial"

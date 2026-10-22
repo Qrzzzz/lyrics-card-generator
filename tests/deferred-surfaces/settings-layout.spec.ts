@@ -100,6 +100,7 @@ test("settings layout uses one stable grid across widths and six languages", asy
 test("settings layout preserves values, focus and font draft when resized", async ({ page }) => {
   test.skip(baseline);
   await open(page);
+  await page.locator('[data-step="font"]').click();
   const fontSize = page.getByRole("slider", { name: "Font Size", exact: true });
   await fontSize.focus();
   await fontSize.press("ArrowRight");
