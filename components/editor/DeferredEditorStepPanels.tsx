@@ -67,7 +67,7 @@ export function DeferredExportPanel({
   return (
     <RetryableLazySurface
       loadComponent={loadComponent}
-      componentProps={props}
+      componentProps={{ ...props, locale }}
       fallback={<DeferredExportPanelFallback label={label} />}
       renderError={(_error, retry) => (
         <DeferredExportPanelError

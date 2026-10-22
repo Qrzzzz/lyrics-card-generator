@@ -1,4 +1,6 @@
-const { app, BrowserWindow, Menu, clipboard, dialog, ipcMain, nativeImage, net, safeStorage, shell } = require("electron");
+const { app, BrowserWindow, Menu, clipboard, dialog, ipcMain, nativeImage, net, safeStorage, screen, shell } = require("electron");
+const { fitWindowBounds, initialWindowGeometry, windowMinimumSize, watchWindowWorkArea } = require("./window-geometry");
+const { createImageDownloadMonitor } = require("./image-download-monitor");
 const { createHistoryReplayGateway } = require("./history-replay");
 const { createAIService } = require("./ai-service");
 const { createRequire } = require("node:module");
@@ -59,6 +61,7 @@ if (process.env.LYRICS_CARD_TEST_USER_DATA) {
 }
 
 let mainWindow = null;
+let imageDownloadMonitor = null;
 let nextServerProcess = null;
 let localAppUrl = null;
 let appBooting = false;
@@ -279,10 +282,7 @@ function createWindow(targetUrl = localAppUrl) {
   // Keep renderer privileges behind the preload bridge; the window remains hidden until its first safe paint.
   mainWindow = new BrowserWindow({
     title: "Lyrics Card Generator",
-    width: 1280,
-    height: 900,
-    minWidth: 1000,
-    minHeight: 700,
+    ...initialWindowGeometry(screen.getDisplayNearestPoint(screen.getCursorScreenPoint()).workArea),
     show: false,
     frame: false,
     roundedCorners: true,
@@ -298,6 +298,8 @@ function createWindow(targetUrl = localAppUrl) {
     }
   });
   const createdWindow = mainWindow;
+  imageDownloadMonitor = createImageDownloadMonitor(createdWindow);
+  watchWindowWorkArea(createdWindow, screen);
   const createdRendererId = createdWindow.webContents.id;
   startupTrace.mark("window-created");
   normalWindowBounds = mainWindow.getBounds();
@@ -741,7 +743,10 @@ function registerDesktopIpc() {
       mainWindow.restore();
       mainWindow.unmaximize();
       if (restoreBounds) {
-        mainWindow.setBounds(restoreBounds, true);
+        const workArea = screen.getDisplayMatching(restoreBounds).workArea;
+        const minimum = windowMinimumSize(workArea);
+        mainWindow.setMinimumSize(minimum.minWidth, minimum.minHeight);
+        mainWindow.setBounds(fitWindowBounds(restoreBounds, workArea), true);
       }
       mainWindow.focus();
       setTimeout(() => {
@@ -882,6 +887,7 @@ function registerDesktopIpc() {
   });
 
   handle("lyrics-card:clipboard-write-image", createClipboardImageWriter(nativeImage, clipboard));
+  handle("lyrics-card:image-download-prepare", (_event, id, fileName, url) => imageDownloadMonitor?.prepare(id, fileName, url) ?? false);
   handle("lyrics-card:copy-support-address", createSupportAddressCopier(clipboard));
 
   handle("lyrics-card:import-file-register", async (event, input) => {

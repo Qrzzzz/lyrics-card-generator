@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { defaultState } from "../components/editor/editor-defaults";
-import { runImageOutputController } from "../lib/image-output-controller";
+import { runImageOutputController, type ImageOutputFailure } from "../lib/image-output-controller";
 import { ExportTransactionMutex } from "../lib/export-transaction";
 import type { ExportSnapshot } from "../lib/export-snapshot";
 
@@ -71,6 +71,28 @@ async function main() {
     const cleanupRelease = mutex.tryAcquire();
     assert.ok(cleanupRelease, "even a failing cleanup releases the mutex");
     cleanupRelease();
+    const failures: ImageOutputFailure[] = [];
+    const untouched = structuredClone(state);
+    messages.length = 0;
+    const retryable = { ...options, onFailure: (failure: ImageOutputFailure) => failures.push(failure) };
+    await runImageOutputController({ ...retryable, loadCapture: async () => { throw new Error("controlled disk/capture failure"); } });
+    assert.deepEqual(failures.splice(0), [{ action: "export", reason: "failed", message: "failed" }]);
+    assert.deepEqual(messages, [], "persistent feedback replaces the transient error toast");
+    assert.deepEqual(state, untouched, "failure never alters the authored document");
+    const beforeRetry = captures;
+    await runImageOutputController(retryable);
+    assert.equal(captures, beforeRetry + 1, "a retry uses a fresh transaction after failure cleanup");
+    assert.equal(leases, 0);
+    await runImageOutputController({ ...retryable, action: "copy", loadCapture: async () => ({
+      exportNodeAsImage: async () => undefined,
+      copyNodeAsPng: async () => { throw new Error("controlled clipboard failure"); }
+    }) });
+    assert.deepEqual(failures.splice(0), [{ action: "copy", reason: "failed", message: "failed" }]);
+    await runImageOutputController({ ...retryable, timeoutMs: 5, messages: { ...options.messages, timeout: "timeout" },
+      mount: async () => { leases++; return new Promise(() => {}); }
+    });
+    assert.deepEqual(failures, [{ action: "export", reason: "timeout", message: "timeout" }]);
+    assert.equal(leases, 0);
   }
   console.log("Shared image output controller contracts passed for both adapters.");
 }

@@ -27,6 +27,8 @@ const electronAppFiles = [
   "shared/card-style-contract.js",
   "electron/history-budget.js",
   "electron/main.js",
+  "electron/window-geometry.js",
+  "electron/image-download-monitor.js",
   "electron/ai-service.js",
   "electron/history-replay.js",
   "electron/app-updater.js",

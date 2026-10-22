@@ -140,6 +140,12 @@ contextBridge.exposeInMainWorld("lyricsCardDesktopBridge", {
   copyImageToClipboard: (dataUrl) => isClipboardPngDataUrl(dataUrl)
     ? ipcRenderer.invoke("lyrics-card:clipboard-write-image", dataUrl)
     : Promise.resolve(false),
+  prepareImageDownload: (id, fileName, url) => ipcRenderer.invoke("lyrics-card:image-download-prepare", id, fileName, url),
+  onImageDownloadResult: (callback) => {
+    const listener = (_event, result) => callback(result);
+    ipcRenderer.on("lyrics-card:image-download-result", listener);
+    return () => ipcRenderer.removeListener("lyrics-card:image-download-result", listener);
+  },
   copySupportAddress: (id) => id === "tron" || id === "xlayer"
     ? ipcRenderer.invoke("lyrics-card:copy-support-address", id)
     : Promise.resolve(false),

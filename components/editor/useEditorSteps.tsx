@@ -21,6 +21,7 @@ import {
   VisualSettingsPanel
 } from "@/components/editor/StylePanel";
 import { useStableEvent } from "@/components/editor/hooks/useStableEvent";
+import type { ImageOutputFailure } from "@/lib/image-output-controller";
 import type { ExportFormatId, ExportQualityId } from "@/lib/settings/types";
 import type { ExportLyricLineStatus } from "@/lib/lyrics-document";
 import type { ExportCardReadinessStore } from "@/components/editor/hooks/export-card-readiness-store";
@@ -89,6 +90,7 @@ export type EditorStepHandlers = {
   onExportQualityChange: (quality: ExportQualityId) => void;
   onExport: () => void | Promise<void>;
   onCopyImage: () => void | Promise<void>;
+  onRetryOutput: () => void | Promise<void>;
 };
 
 type UseEditorStepsInput = {
@@ -100,6 +102,7 @@ type UseEditorStepsInput = {
   themeColor: string;
   isExporting: boolean;
   activeOutputAction: "export" | "copy" | null;
+  outputFailure: ImageOutputFailure | null;
   exportReadinessStore: ExportCardReadinessStore;
   exportFormat: ExportFormatId;
   exportQuality: ExportQualityId;
@@ -123,6 +126,7 @@ export function useEditorSteps({
   themeColor,
   isExporting,
   activeOutputAction,
+  outputFailure,
   exportReadinessStore,
   exportFormat,
   exportQuality,
@@ -231,6 +235,7 @@ export function useEditorSteps({
   const onExportQualityChange = useStableEvent(handlers.onExportQualityChange);
   const onExport = useStableEvent(handlers.onExport);
   const onCopyImage = useStableEvent(handlers.onCopyImage);
+  const onRetryOutput = useStableEvent(handlers.onRetryOutput);
   const toggleSongInfoEditorEvent = useStableEvent(toggleSongInfoEditor);
   const updateSongInfoDraftEvent = useStableEvent(updateSongInfoDraft);
   const saveSongInfoEditorEvent = useStableEvent(saveSongInfoEditor);
@@ -543,11 +548,15 @@ export function useEditorSteps({
           onExportQualityChange={onExportQualityChange}
           isExporting={isExporting}
           isCopying={activeOutputAction === "copy"}
+          outputFailure={outputFailure}
+          onRetryOutput={onRetryOutput}
           readinessStore={exportReadinessStore}
         />
       )
   }), [
     activeOutputAction,
+    outputFailure,
+    onRetryOutput,
     exportFormat,
     exportQuality,
     exportReadinessStore,

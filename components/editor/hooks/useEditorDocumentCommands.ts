@@ -76,15 +76,16 @@ export type SongLinkAutoParseVisitIntent = Readonly<{
   allowAutoParse: boolean;
 }>;
 
-type DocumentCommandsInput = Pick<UseEditorActionsInput, "autosave" | "parsedState" | "setState" | "exampleLoadedMessage" | "clearAlreadyEmptyMessage" | "confirmReplaceDocument" | "onNotify" | "onCloseExamples" | "onCloseHistory" | "onClearTransientState" | "aiLifecycle"> & {
+type DocumentCommandsInput = Pick<UseEditorActionsInput, "autosave" | "parsedState" | "setState" | "exampleLoadedMessage" | "clearAlreadyEmptyMessage" | "confirmReplaceDocument" | "confirmClearDocument" | "onNotify" | "onCloseExamples" | "onCloseHistory" | "onClearTransientState" | "aiLifecycle"> & {
   documentCleared: () => void;
   documentReplaced: () => void;
 };
-export function useEditorDocumentCommands({ autosave, parsedState, setState, exampleLoadedMessage, clearAlreadyEmptyMessage, confirmReplaceDocument, onNotify, onCloseExamples, onCloseHistory, onClearTransientState, aiLifecycle, documentCleared, documentReplaced }: DocumentCommandsInput) {
+export function useEditorDocumentCommands({ autosave, parsedState, setState, exampleLoadedMessage, clearAlreadyEmptyMessage, confirmReplaceDocument, confirmClearDocument, onNotify, onCloseExamples, onCloseHistory, onClearTransientState, aiLifecycle, documentCleared, documentReplaced }: DocumentCommandsInput) {
   const onInvalidateDocument = (reason?: "document" | "ai-start") => aiLifecycle.invalidateDocument(reason);
   const isManualSaveBlocked = () => aiLifecycle.isActive;
   const [clearTransitionKey, setClearTransitionKey] = useState(0);
   const documentControllerRef = useRef(new DocumentTransactionController());
+  const clearingRef = useRef(false);
   const mountedRef = useRef(true);
   useEffect(() => {
     mountedRef.current = true;
@@ -394,13 +395,17 @@ export function useEditorDocumentCommands({ autosave, parsedState, setState, exa
   }
 
   async function clearAllContent() {
+    if (clearingRef.current) return;
     if (!hasClearableLyricContent(parsedState) && !autosave.hasFormDraft) {
       onNotify(clearAlreadyEmptyMessage, "success");
       return;
     }
 
     const requestedRevision = documentControllerRef.current.currentRevision;
+    clearingRef.current = true;
     try {
+      if (!await confirmClearDocument()) return;
+      if (documentControllerRef.current.currentRevision !== requestedRevision) return;
       await autosave.flush();
       await autosave.clearActive(() => {
         // Do not discard edits made while persistence was still running.
@@ -413,6 +418,7 @@ export function useEditorDocumentCommands({ autosave, parsedState, setState, exa
         return cleared;
       });
     } catch { onNotify(importHistoryCopy[currentDocumentRef.current.locale].historySaveFailed, "error"); }
+    finally { clearingRef.current = false; }
   }
 
   function handleStyleChange(nextStyle: CardStyle) {

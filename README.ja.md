@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v6.8.0.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v6.8.1.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="./docs/development.en.md">ローカル開発</a> ·
@@ -76,19 +76,19 @@
 
 
 
-* Windows x64 インストーラー：`Lyrics.Card.Generator.Setup.6.8.0.exe`
+* Windows x64 インストーラー：`Lyrics.Card.Generator.Setup.6.8.1.exe`
 
 v6.2.2 以降、配布するデスクトップパッケージは Windows x64 Setup のみです。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v6.8.0 · リリースノート
+### v6.8.1 · リリースノート
 
-公開日：2026-10-16。
+**2026-10-22**
 
-v6.8.0 は第2ステップを「整理」「対訳」「確認」に再編し、ツール検索と Ctrl+K コマンドパレットを統合します。既存の編集機能と業務ロジックを維持します。
+v6.8.1 は内容の保護、画像出力失敗からの再試行、ウィンドウとコンパクト表示、編集状態の明確化に重点を置きます。対象は #229、#230、#231、#232、#233、#235、#237、#238 と、6言語の設定文言整理 #240 です。
 
-[简体中文](./docs/releases/v6.8.0.zh-CN.md) · [繁體中文](./docs/releases/v6.8.0.zh-TW.md) · [English](./docs/releases/v6.8.0.en.md) · [Français](./docs/releases/v6.8.0.fr.md) · [日本語](./docs/releases/v6.8.0.ja.md) · [Español](./docs/releases/v6.8.0.es.md)
+[简体中文](./docs/releases/v6.8.1.zh-CN.md) · [繁體中文](./docs/releases/v6.8.1.zh-TW.md) · [English](./docs/releases/v6.8.1.en.md) · [Français](./docs/releases/v6.8.1.fr.md) · [日本語](./docs/releases/v6.8.1.ja.md) · [Español](./docs/releases/v6.8.1.es.md)
 
 <a id="主な機能"></a>
 

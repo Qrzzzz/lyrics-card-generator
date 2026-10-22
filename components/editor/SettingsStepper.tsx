@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, type Transition } from "framer-motion";
-import { Check, Download } from "lucide-react";
+import { Download } from "lucide-react";
 import type { ReactNode, RefObject } from "react";
 import { useRef } from "react";
 import { useBalancedStepperLayout } from "@/components/editor/hooks/useBalancedStepperLayout";
@@ -367,8 +367,7 @@ export function SettingsStepper({
             const isActive = index === currentStep;
             const isVisited = visitedStepsRef.current.has(index);
             const isReady = step.isComplete === true;
-            const isComplete = index < currentStep;
-            const stepState = isActive ? "active" : isComplete ? "complete" : isVisited ? "visited" : "upcoming";
+            const stepState = isActive ? "active" : isVisited ? "visited" : "upcoming";
 
             return (
               <button
@@ -380,7 +379,6 @@ export function SettingsStepper({
                 data-active={isActive ? "true" : "false"}
                 data-visited={isVisited ? "true" : "false"}
                 data-ready={isReady ? "true" : "false"}
-                data-complete={isComplete ? "true" : "false"}
                 data-step-state={stepState}
                 className={cn(
                   "group flex min-h-10 min-w-0 items-center gap-2 rounded-lg border text-left transition",
@@ -400,11 +398,11 @@ export function SettingsStepper({
                   className={cn(
                     "flex shrink-0 items-center justify-center rounded-full border font-black transition",
                     compactChrome ? "h-5 w-5 text-[10px]" : "h-6 w-6 text-[11px]",
-                    isActive || isComplete ? "border-transparent text-white" : "border-[rgb(var(--panel-border))] app-text-muted"
+                    isActive ? "border-transparent text-white" : "border-[rgb(var(--panel-border))] app-text-muted"
                   )}
-                  style={isActive || isComplete ? { backgroundColor: themeColor, color: markerForegroundColor } : undefined}
+                  style={isActive ? { backgroundColor: themeColor, color: markerForegroundColor } : undefined}
                 >
-                  {isComplete ? <Check className="h-3.5 w-3.5" /> : index + 1}
+                  {index + 1}
                 </span>
                 <span
                   className={cn(

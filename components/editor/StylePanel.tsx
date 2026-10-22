@@ -102,8 +102,7 @@ export function LayoutSettingsPanel({ style, onStyleChange, locale, t }: StylePa
         height: squareSize.height,
         autoWidth: false,
         autoHeight: false,
-        translationEnabled: false,
-        translationText: ""
+        translationEnabled: false
       });
       return;
     }

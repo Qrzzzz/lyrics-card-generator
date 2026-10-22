@@ -405,13 +405,12 @@ async function deferredReactMutationRollbackTest() {
       mutation: (current) => applyEditorStyleChange(current, {
         ...current.style,
         contentMode: "instrumental",
-        translationText: "",
         translationEnabled: false
       }),
       assertResult: (state) => {
         assert.equal(state.style.contentMode, "instrumental");
-        assert.equal(state.translationText, "");
-        assert.equal(state.style.translationText, "");
+        assert.equal(state.translationText, "old A");
+        assert.equal(state.style.translationText, "old A");
         assert.equal(state.translationEnabled, false);
         assert.equal(state.style.translationEnabled, false);
       }

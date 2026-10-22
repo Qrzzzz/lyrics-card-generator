@@ -4871,14 +4871,14 @@ try {
   assert.deepEqual(
     positionalCompletion,
     [
-      { id: "link", complete: "true" },
-      { id: "lyrics", complete: "true" },
-      { id: "layout", complete: "false" },
-      { id: "font", complete: "false" },
-      { id: "visual", complete: "false" },
-      { id: "export", complete: "false" }
+      { id: "link", complete: null },
+      { id: "lyrics", complete: null },
+      { id: "layout", complete: null },
+      { id: "font", complete: null },
+      { id: "visual", complete: null },
+      { id: "export", complete: null }
     ],
-    "stepper checkmarks stop at the active step"
+    "stepper never reports navigation as completed validation"
   );
   await assertExportHost("step three");
 

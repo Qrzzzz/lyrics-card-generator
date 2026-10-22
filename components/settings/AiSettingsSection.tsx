@@ -20,6 +20,7 @@ import {
 import { useEffect, useId, useRef, useState } from "react";
 import { recordRenderBoundary } from "@/components/editor/render-boundary-diagnostics";
 import { normalizeAIErrorMessage } from "@/components/editor/utils/normalizeAIErrorMessage";
+import { getLyricsCardDesktopApi } from "@/lib/desktop-api";
 import {
   ActionButton,
   FieldLabel,
@@ -230,7 +231,7 @@ function ApiConfigurationPage({ settings, apiKey, hasApiKey, locale, copy, promp
               {isClearingApiKey ? copy.clearingApiKey : copy.clearApiKey}
             </ActionButton>
           </div>
-          <SettingTip>{copy.apiKeyTip}</SettingTip>
+          <SettingTip>{getLyricsCardDesktopApi() ? copy.apiKeyTip : copy.apiKeySessionTip}</SettingTip>
         </FieldLabel>
         <FieldLabel label={copy.model} htmlFor={modelId}>
           <TextInput data-testid="ai-model-input" id={modelId} value={settings.model} disabled={isClearingApiKey} onChange={(event) => onSettingsChange({ ...settings, model: event.target.value })} placeholder={copy.modelPlaceholder} spellCheck={false} />

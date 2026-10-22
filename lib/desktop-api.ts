@@ -47,6 +47,8 @@ export type DesktopWindowState = {
   maximized: boolean;
 };
 
+export type ImageDownloadResult = { id: string; state: "completed" | "interrupted" | "cancelled" };
+
 export type NativeMessageBoxType = "info" | "warning" | "error" | "question";
 
 type NativeDialogOptions = {
@@ -89,6 +91,8 @@ export type LyricsCardDesktopApi = {
   listSystemFonts: () => Promise<SystemFontOption[]>;
   openExternal: (url: string) => Promise<boolean>;
   copyImageToClipboard: (dataUrl: string) => Promise<boolean>;
+  prepareImageDownload?: (id: string, fileName: string, url: string) => Promise<boolean>;
+  onImageDownloadResult?: (callback: (result: ImageDownloadResult) => void) => () => void;
   copySupportAddress: (id: string) => Promise<boolean>;
   registerImportFile: (file: File, kind: ImportHistoryFileKind) => Promise<ImportHistoryFileRegistration | null>;
   listImportHistory: (options: {

@@ -80,6 +80,7 @@ function Fixture() {
     exportPixelRatio: 1, exportFormat: "png", exportBusyMessage: "busy", exportFailedMessage: "failed",
     copyImageSuccessMessage: "copied", copyImageFailedMessage: "failed", exportImageTooLargeMessage: "large",
     exampleLoadedMessage: "loaded", clearAlreadyEmptyMessage: "empty",
+    confirmClearDocument: async () => true,
     confirmReplaceDocument: () => {
       const confirmation = deferred<boolean>();
       confirmations.push(confirmation);

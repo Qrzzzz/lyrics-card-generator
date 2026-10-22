@@ -9,6 +9,7 @@ import { createEditorDraftSnapshot, editorDraftChangeKey, restoreEditorDraft } f
 import { defaultState } from "../components/editor/editor-defaults";
 import { withLyricPlainText } from "../lib/lyrics-document-state";
 import { getLyricDocumentRows } from "../lib/lyrics-document-v2";
+import { applyEditorStyleChange } from "../lib/editor/apply-style-change";
 
 const require = createRequire(import.meta.url);
 const { ImportHistoryStore } = require("../electron/import-history");
@@ -119,6 +120,20 @@ async function main() {
     const store = new ImportHistoryStore({ filePath });
     const state = withLyricPlainText({ ...defaultState, song: { ...defaultState.song, title: "  Draft title  ", album: "  Authored album  " },
       style: { ...defaultState.style, separatorStyle: "line", lyricFontSize: 77, layoutMode: "landscape", customTextColor: "#112233" } }, "\n  line one\n<separator />\n\n尾行🙂\n", "translation\n", true);
+    const instrumental = applyEditorStyleChange(state, { ...state.style, contentMode: "instrumental" });
+    assert.equal(instrumental.lyricDocument, state.lyricDocument, "a presentation switch preserves structured line identities");
+    assert.equal(instrumental.translationText, state.translationText);
+    assert.equal(instrumental.translationEnabled, false);
+    const modeFile = path.join(directory, "instrumental.json");
+    const modeStore = new ImportHistoryStore({ filePath: modeFile });
+    const modeLease = await modeStore.beginEditorDraft();
+    await modeStore.saveEditorDraft(modeLease.recordId, modeLease.token, 1, JSON.stringify(createEditorDraftSnapshot(instrumental, { step: 2, exportFormat: "png", exportQuality: "low" })));
+    const modeDraft = await new ImportHistoryStore({ filePath: modeFile }).getActiveEditorDraft();
+    const modeRestored = restoreEditorDraft(defaultState, { recordId: modeDraft.id, snapshot: modeDraft.editorDraft });
+    const lyricsRestored = applyEditorStyleChange(modeRestored, { ...modeRestored.style, contentMode: "lyrics", translationEnabled: true });
+    assert.equal(lyricsRestored.lyrics, state.lyrics);
+    assert.equal(lyricsRestored.translationText, state.translationText, "inactive translation survives persisted instrumental mode and restart");
+    assert.deepEqual(lyricsRestored.lyricDocument, state.lyricDocument, "line identities and separators survive restart and mode roundtrip");
     const snapshot = createEditorDraftSnapshot(state, { step: 3, exportFormat: "webp", exportQuality: "medium",
       songInfoDraft: { source: "unknown", title: "unfinished form", artist: "artist" } });
     const lease = await store.beginEditorDraft();
