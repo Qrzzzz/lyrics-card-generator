@@ -58,6 +58,17 @@ try {
   const bundle=await packBundle({root:path.join(temporary,'source'),file,identity});
   await unpackBundle({file,destination:path.join(temporary,'restored'),identity:{...identity,buildAttempt:2},expectedDigest:bundle.buildDigest});
   assert.equal(await readFile(path.join(temporary,'restored/win-unpacked/resources/app.asar'),'utf8'),'fixture asar');
+  // A rebuilt bundle has a new identity even when runtime bytes are unchanged.
+  // All old consumers must be invalidated, including previously successful groups.
+  const rebuiltIdentity = { ...identity, buildAttempt: 2 };
+  const rebuilt = await packBundle({ root: path.join(temporary,'source'), file: path.join(temporary,'rebuilt.gz'), identity: rebuiltIdentity });
+  assert.notEqual(rebuilt.buildDigest, bundle.buildDigest);
+  const oldConsumers = results.map(result => ({ ...result, buildDigest: bundle.buildDigest }));
+  const rebuiltExpected = { ...expected, buildDigest: rebuilt.buildDigest };
+  const recoveredData = { ...oldConsumers[1], attempt: 2, buildDigest: rebuilt.buildDigest };
+  assert.throws(() => assertGroupResults(latestGroupResults([...oldConsumers, recoveredData], 2), rebuiltExpected), /mismatched buildDigest/, 'one recovered group cannot authorize a rebuilt bundle with old successful consumers');
+  const recoveredAll = oldConsumers.map(result => ({ ...result, attempt: 2, buildDigest: rebuilt.buildDigest }));
+  assert.equal(assertGroupResults(latestGroupResults([...oldConsumers, ...recoveredAll], 2), rebuiltExpected), true);
   await assert.rejects(unpackBundle({file,destination:path.join(temporary,'wrong'),identity:{...identity,sha:'d'.repeat(40)},expectedDigest:bundle.buildDigest}),/identity mismatch/);
   await assert.rejects(unpackBundle({file,destination:path.join(temporary,'bad'),identity,expectedDigest:'0'.repeat(64)}),/digest mismatch/);
   const inflated=gunzipSync(await readFile(file));

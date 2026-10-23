@@ -148,7 +148,9 @@ jobs:
     # Browser tests remain isolated from the fast verification job so Chromium
     # setup and artifact evidence cannot delay type and contract feedback.
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    # A recorded runner spent 605s installing Chromium before tests started.
+    # Keep setup and test budgets separate, with room to preserve diagnostics.
+    timeout-minutes: 25
 
     steps:
       - name: Checkout
@@ -164,22 +166,41 @@ jobs:
         run: npm ci
 
       - name: Install Chromium
-        run: npx playwright install --with-deps chromium
+        timeout-minutes: 12
+        shell: bash
+        run: |
+          mkdir -p artifacts/web-lite
+          trap 'status=$?; echo "Chromium setup: ${SECONDS}s; exit=${status}" >> "$GITHUB_STEP_SUMMARY"' EXIT
+          npx playwright install --with-deps chromium 2>&1 | tee artifacts/web-lite/install-chromium.log
 
       # verify owns freshness checking for this same checkout SHA. Browser
       # jobs consume the committed artifact without rebuilding it again.
       - name: Run Web Lite browser smoke tests
-        run: npm run web-lite:smoke
+        timeout-minutes: 10
+        shell: bash
+        run: |
+          mkdir -p artifacts/web-lite
+          trap 'status=$?; echo "Web Lite smoke: ${SECONDS}s; exit=${status}" >> "$GITHUB_STEP_SUMMARY"' EXIT
+          npm run web-lite:smoke 2>&1 | tee artifacts/web-lite/smoke.log
 
       - name: Run deferred editor surface recovery tests
-        run: npm run deferred-surfaces:test
+        timeout-minutes: 3
+        shell: bash
+        run: |
+          mkdir -p artifacts/web-lite
+          trap 'status=$?; echo "Deferred surfaces: ${SECONDS}s; exit=${status}" >> "$GITHUB_STEP_SUMMARY"' EXIT
+          npm run deferred-surfaces:test 2>&1 | tee artifacts/web-lite/deferred-surfaces.log
 
       - name: Upload Web Lite browser evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: web-lite-playwright-report-${{ github.run_attempt }}
-          path: playwright-report/web-lite
+          path: |
+            artifacts/web-lite/**
+            playwright-report/web-lite/**
+            test-results/web-lite/**
+            test-results/deferred-surfaces/**
           if-no-files-found: ignore
 
   web-lite-cross-browser-smoke:
@@ -323,6 +344,9 @@ jobs:
     if: github.event_name == 'workflow_dispatch' && inputs.desktop_shared_groups
     runs-on: windows-latest
     timeout-minutes: 35
+    permissions:
+      actions: read
+      contents: read
     strategy:
       fail-fast: false
       matrix:
@@ -331,12 +355,18 @@ jobs:
       CI: "true"
       CSC_IDENTITY_AUTO_DISCOVERY: "false"
       DESKTOP_BUILD_DIGEST: ${{ needs.desktop-build.outputs.digest }}
+      DESKTOP_ARTIFACT_ID: ${{ needs.desktop-build.outputs.artifact-id }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: 22
           cache: npm
+      - name: Check exact desktop artifact availability and identity
+        timeout-minutes: 1
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/check-desktop-artifact.mjs
       - run: npm ci
       - name: Download exact desktop bundle (measure transfer)
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
