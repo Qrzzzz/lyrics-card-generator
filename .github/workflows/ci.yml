@@ -18,6 +18,11 @@ on:
         required: false
         default: false
         type: boolean
+      desktop_rehearsal_fail_group:
+        description: Manual shared-canary rehearsal only; fail one group on attempt 1 before scenarios
+        type: choice
+        default: none
+        options: [none, editor, data, native]
 
 # Supersede stale runs for the same branch or pull request while keeping
 # unrelated validation independent.
@@ -342,6 +347,10 @@ jobs:
           merge-multiple: true
       - name: Validate identity, digest and every runtime resource
         run: node scripts/desktop-test-bundle.mjs unpack
+      - name: Fail selected group once for manual recovery rehearsal
+        if: github.event_name == 'workflow_dispatch' && inputs.desktop_shared_groups && github.run_attempt == 1 && inputs.desktop_rehearsal_fail_group == matrix.group
+        shell: pwsh
+        run: throw 'Expected manual recovery rehearsal failure; inspect evidence, then explicitly rerun only this failed group.'
       - name: Run packaged desktop interaction regression
         run: npm run desktop:group:${{ matrix.group }}
       - name: Preserve transport or group failure context

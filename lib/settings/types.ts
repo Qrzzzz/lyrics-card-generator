@@ -23,6 +23,7 @@ export type ExportFormatId = "png" | "webp" | "jpg";
 export type UserSettings = {
   version: 1;
   sparkCursorEnabled: boolean;
+  previewMotionEnabled: boolean;
   reduceMotionEnabled: boolean;
   uiThemeMode: UiThemeMode;
   uiTitlebarStyle: UiTitlebarStyle;
@@ -62,6 +63,7 @@ export function getExportPixelRatio(quality: ExportQualityId): number {
 export const DEFAULT_USER_SETTINGS: UserSettings = {
   version: 1,
   sparkCursorEnabled: true,
+  previewMotionEnabled: true,
   reduceMotionEnabled: false,
   uiThemeMode: "album-dynamic",
   uiTitlebarStyle: "traffic-lights",

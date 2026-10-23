@@ -162,7 +162,7 @@ assert.match(lyricCardPreview, /scaleTarget\.set\(0\.992\)/);
 assert.match(lyricCardPreview, /event\.pointerType === "touch" \|\| !event\.isPrimary \|\| event\.button !== 0/);
 assert.match(lyricCardPreview, /const isPointerInside =[\s\S]*?resetPressureFeedback\(\);/);
 assert.match(lyricEditor, /onAnimationComplete=\{\(\) => \{[\s\S]*?setPreviewMeasurementKey/);
-assert.match(lyricEditor, /pressureEnabled=\{currentStep >= 2\}/);
+assert.match(lyricEditor, /pressureEnabled=\{currentStep >= 2 && userSettings\.previewMotionEnabled\}/);
 assert.match(editorActions, /if \(!hasClearableLyricContent\(parsedState\) && !autosave\.hasFormDraft\)[\s\S]*?onNotify\(clearAlreadyEmptyMessage, "success"\);[\s\S]*?return;[\s\S]*?setClearTransitionKey/);
 assert.match(appToast, /role="status"/);
 assert.match(appToast, /aria-live="polite"/);

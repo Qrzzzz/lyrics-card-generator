@@ -17,6 +17,10 @@ import type { AppState } from "../lib/types";
 // Normalization tests intentionally mix legacy, invalid, and current fields to
 // prove migrations preserve valid preferences while clamping unsafe values.
 const defaults = normalizeUserSettings(undefined);
+assert.equal(defaults.previewMotionEnabled, true, "existing users retain the previous preview behavior");
+assert.equal(normalizeUserSettings({ previewMotionEnabled: false }).previewMotionEnabled, false);
+assert.equal(normalizeUserSettings({ previewMotionEnabled: "false" }).previewMotionEnabled, true);
+assert.equal(resetUserSettings(normalizeUserSettings({ previewMotionEnabled: false }), { persist: false }).previewMotionEnabled, true);
 for (const acrylic of [false, true]) {
   const system = normalizeUserSettings({ uiThemeMode: "system", uiAcrylicEnabled: acrylic });
   assert.equal(system.uiThemeMode, "system");
