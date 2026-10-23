@@ -86,7 +86,7 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 **2026-10-23**
 
-v6.8.4 — pas encore publié · Ajoute un réglage indépendant du mouvement de l’aperçu pour comparer les paroles et la mise en page sans mouvement. Conserve les préférences, respecte la réduction des animations et ne modifie pas les exports.
+v6.8.4 — Ajoute un réglage indépendant du mouvement de l’aperçu pour comparer les paroles et la mise en page sans mouvement. Conserve les préférences, respecte la réduction des animations et ne modifie pas les exports.
 
 [简体中文](./docs/releases/v6.8.4.zh-CN.md) · [繁體中文](./docs/releases/v6.8.4.zh-TW.md) · [English](./docs/releases/v6.8.4.en.md) · [Français](./docs/releases/v6.8.4.fr.md) · [日本語](./docs/releases/v6.8.4.ja.md) · [Español](./docs/releases/v6.8.4.es.md)
 

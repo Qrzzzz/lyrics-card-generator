@@ -87,7 +87,7 @@ Starting with v6.2.2, Windows x64 Setup is the only distributed desktop package.
 
 **2026-10-23**
 
-v6.8.4 — not yet released · Adds an independent preview motion switch for comparing lyrics and layout while the preview stays still. Preserves existing preferences, respects reduced motion and leaves card exports unchanged.
+v6.8.4 — Adds an independent preview motion switch for comparing lyrics and layout while the preview stays still. Preserves existing preferences, respects reduced motion and leaves card exports unchanged.
 
 [简体中文](./docs/releases/v6.8.4.zh-CN.md) · [繁體中文](./docs/releases/v6.8.4.zh-TW.md) · [English](./docs/releases/v6.8.4.en.md) · [Français](./docs/releases/v6.8.4.fr.md) · [日本語](./docs/releases/v6.8.4.ja.md) · [Español](./docs/releases/v6.8.4.es.md)
 

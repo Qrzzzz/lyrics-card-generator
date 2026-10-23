@@ -86,7 +86,7 @@ A partir de v6.2.2, Setup para Windows x64 es el único paquete de escritorio di
 
 **2026-10-23**
 
-v6.8.4 — aún no publicado · Añade un control independiente del movimiento de la vista previa para comparar letras y diseño sin movimiento. Conserva las preferencias, respeta reducir movimiento y mantiene las exportaciones.
+v6.8.4 — Añade un control independiente del movimiento de la vista previa para comparar letras y diseño sin movimiento. Conserva las preferencias, respeta reducir movimiento y mantiene las exportaciones.
 
 [简体中文](./docs/releases/v6.8.4.zh-CN.md) · [繁體中文](./docs/releases/v6.8.4.zh-TW.md) · [English](./docs/releases/v6.8.4.en.md) · [Français](./docs/releases/v6.8.4.fr.md) · [日本語](./docs/releases/v6.8.4.ja.md) · [Español](./docs/releases/v6.8.4.es.md)
 

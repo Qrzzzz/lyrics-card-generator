@@ -83,7 +83,7 @@
 
 **2026-10-23**
 
-v6.8.4 — 尚未發布 · 新增獨立的預覽動效開關，方便靜止比較歌詞和版面。保留既有偏好，減弱動態效果優先；不修改卡片匯出。
+v6.8.4 — 新增獨立的預覽動效開關，方便靜止比較歌詞和版面。保留既有偏好，減弱動態效果優先；不修改卡片匯出。
 
 [简体中文](./docs/releases/v6.8.4.zh-CN.md) · [繁體中文](./docs/releases/v6.8.4.zh-TW.md) · [English](./docs/releases/v6.8.4.en.md) · [Français](./docs/releases/v6.8.4.fr.md) · [日本語](./docs/releases/v6.8.4.ja.md) · [Español](./docs/releases/v6.8.4.es.md)
 

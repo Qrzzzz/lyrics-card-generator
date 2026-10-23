@@ -85,7 +85,7 @@
 
 **2026-10-23**
 
-v6.8.4 — 尚未发布 · 新增独立的预览动效开关，便于静止比较歌词与版式。保留旧偏好，减弱动态效果优先；不修改卡片导出。
+v6.8.4 — 新增独立的预览动效开关，便于静止比较歌词与版式。保留旧偏好，减弱动态效果优先；不修改卡片导出。
 
 [简体中文](./docs/releases/v6.8.4.zh-CN.md) · [繁體中文](./docs/releases/v6.8.4.zh-TW.md) · [English](./docs/releases/v6.8.4.en.md) · [Français](./docs/releases/v6.8.4.fr.md) · [日本語](./docs/releases/v6.8.4.ja.md) · [Español](./docs/releases/v6.8.4.es.md)
 
