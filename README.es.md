@@ -86,7 +86,7 @@ A partir de v6.2.2, Setup para Windows x64 es el único paquete de escritorio di
 
 **2026-10-23**
 
-v6.8.3 — aún no publicado. Gestiona los conflictos temporales al reemplazar el estado de publicación en Windows y añade Según el sistema a la interfaz, los diálogos y el material de ventana. Conserva los temas existentes y el diseño de las tarjetas exportadas.
+v6.8.3 — Gestiona los conflictos temporales al reemplazar el estado de publicación en Windows y añade Según el sistema a la interfaz, los diálogos y el material de ventana. Conserva los temas existentes y el diseño de las tarjetas exportadas.
 
 [简体中文](./docs/releases/v6.8.3.zh-CN.md) · [繁體中文](./docs/releases/v6.8.3.zh-TW.md) · [English](./docs/releases/v6.8.3.en.md) · [Français](./docs/releases/v6.8.3.fr.md) · [日本語](./docs/releases/v6.8.3.ja.md) · [Español](./docs/releases/v6.8.3.es.md)
 

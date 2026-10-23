@@ -87,7 +87,7 @@ Starting with v6.2.2, Windows x64 Setup is the only distributed desktop package.
 
 **2026-10-23**
 
-v6.8.3 — not yet released. Handles temporary Windows release-state replacement conflicts and adds Follow system appearance across the interface, dialogs and window material. Preserves existing theme choices and exported card styling.
+v6.8.3 — Handles temporary Windows release-state replacement conflicts and adds Follow system appearance across the interface, dialogs and window material. Preserves existing theme choices and exported card styling.
 
 [简体中文](./docs/releases/v6.8.3.zh-CN.md) · [繁體中文](./docs/releases/v6.8.3.zh-TW.md) · [English](./docs/releases/v6.8.3.en.md) · [Français](./docs/releases/v6.8.3.fr.md) · [日本語](./docs/releases/v6.8.3.ja.md) · [Español](./docs/releases/v6.8.3.es.md)
 

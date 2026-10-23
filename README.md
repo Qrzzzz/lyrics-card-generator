@@ -85,7 +85,7 @@
 
 **2026-10-23**
 
-v6.8.3 — 尚未发布。修复 Windows 发布状态替换的短暂占用错误，新增跟随系统外观，并同步界面、弹窗和窗口材质。保留现有主题选择与卡片导出样式。
+v6.8.3 — 修复 Windows 发布状态替换的短暂占用错误，新增跟随系统外观，并同步界面、弹窗和窗口材质。保留现有主题选择与卡片导出样式。
 
 [简体中文](./docs/releases/v6.8.3.zh-CN.md) · [繁體中文](./docs/releases/v6.8.3.zh-TW.md) · [English](./docs/releases/v6.8.3.en.md) · [Français](./docs/releases/v6.8.3.fr.md) · [日本語](./docs/releases/v6.8.3.ja.md) · [Español](./docs/releases/v6.8.3.es.md)
 

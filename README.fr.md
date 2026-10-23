@@ -86,7 +86,7 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 **2026-10-23**
 
-v6.8.3 — pas encore publié. Gère les conflits temporaires de remplacement de l’état de publication sous Windows et ajoute Selon le système pour l’interface, les dialogues et le matériau de fenêtre. Conserve les thèmes existants et le rendu des cartes exportées.
+v6.8.3 — Gère les conflits temporaires de remplacement de l’état de publication sous Windows et ajoute Selon le système pour l’interface, les dialogues et le matériau de fenêtre. Conserve les thèmes existants et le rendu des cartes exportées.
 
 [简体中文](./docs/releases/v6.8.3.zh-CN.md) · [繁體中文](./docs/releases/v6.8.3.zh-TW.md) · [English](./docs/releases/v6.8.3.en.md) · [Français](./docs/releases/v6.8.3.fr.md) · [日本語](./docs/releases/v6.8.3.ja.md) · [Español](./docs/releases/v6.8.3.es.md)
 

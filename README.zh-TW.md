@@ -83,7 +83,7 @@
 
 **2026-10-23**
 
-v6.8.3 — 尚未發布。修正 Windows 發布狀態替換時的短暫佔用錯誤，新增跟隨系統外觀，並同步介面、對話框與視窗材質。保留既有主題選擇及卡片匯出樣式。
+v6.8.3 — 修正 Windows 發布狀態替換時的短暫佔用錯誤，新增跟隨系統外觀，並同步介面、對話框與視窗材質。保留既有主題選擇及卡片匯出樣式。
 
 [简体中文](./docs/releases/v6.8.3.zh-CN.md) · [繁體中文](./docs/releases/v6.8.3.zh-TW.md) · [English](./docs/releases/v6.8.3.en.md) · [Français](./docs/releases/v6.8.3.fr.md) · [日本語](./docs/releases/v6.8.3.ja.md) · [Español](./docs/releases/v6.8.3.es.md)
 
