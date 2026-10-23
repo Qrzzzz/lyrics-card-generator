@@ -6,13 +6,14 @@ import type { AppState } from "@/lib/types";
 
 type ResolveEditorThemeTokensInput = {
   userSettings: UserSettings;
+  systemDark?: boolean;
   palette?: AppState["palette"];
 };
 
-export function resolveEditorThemeTokens({ userSettings, palette }: ResolveEditorThemeTokensInput) {
+export function resolveEditorThemeTokens({ userSettings, palette, systemDark = false }: ResolveEditorThemeTokensInput) {
   const themeAccent = resolveUiAccentColor({ settings: userSettings, palette });
-  const effectiveTheme = resolveEffectiveUiThemeId(userSettings);
-  const uiBackgroundColor = resolveEffectiveAppBackgroundColor(userSettings, palette?.dark ?? "#080910");
+  const effectiveTheme = resolveEffectiveUiThemeId(userSettings, systemDark);
+  const uiBackgroundColor = resolveEffectiveAppBackgroundColor(userSettings, palette?.dark ?? "#080910", systemDark);
   const preferredTextColor =
     effectiveTheme === "light" || effectiveTheme === "light-acrylic"
       ? "#191612"

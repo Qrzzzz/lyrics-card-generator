@@ -279,6 +279,7 @@ export function LyricEditor() {
   }, [landscapeCandidateLineStatus.canExport, landscapeLineLimitNoticeRevision]);
   const {
     userSettings,
+    systemDark,
     isDesktopShell,
     preferencesLoaded,
     previewUserSettings,
@@ -295,7 +296,7 @@ export function LyricEditor() {
     settings: userSettings,
     palette: state.palette
   });
-  const effectiveUiThemeId = resolveEffectiveUiThemeId(userSettings);
+  const effectiveUiThemeId = resolveEffectiveUiThemeId(userSettings, systemDark);
   const exportPixelRatio = getExportPixelRatio(exportQuality);
 
   useEffect(() => {
@@ -609,6 +610,7 @@ export function LyricEditor() {
 
   const { resolvedThemeTokens, customThemeTokens } = resolveEditorThemeTokens({
     userSettings,
+    systemDark,
     palette: state.palette
   });
 
@@ -660,7 +662,7 @@ export function LyricEditor() {
         busy={isCompleteExporting} readinessStore={exportReadinessStore} lyricsAvailable={state.style.contentMode === "lyrics"} translationEnabled={state.style.translationEnabled} />
       <DesktopTitleBar locale={state.locale} titlebarStyle={userSettings.uiTitlebarStyle} autosaveStatus={autosave.status}
         onRetryAutosave={() => void autosave.retry().catch(() => undefined)} />
-      <DynamicAppBackground palette={state.palette} settings={userSettings} />
+      <DynamicAppBackground palette={state.palette} settings={userSettings} systemDark={systemDark} />
       <ClickSpark enabled={userSettings.sparkCursorEnabled} themeColor={resolvedAccentColor}>
         <main className="app-main-content lyric-editor-main relative z-10 min-h-screen px-4 py-5 sm:px-6 lg:px-8">
           <div className="lyric-editor-stage relative mx-auto min-w-0 max-w-[1520px] overflow-clip">

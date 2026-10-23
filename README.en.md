@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v6.8.2.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v6.8.3.en.md">Release Notes</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
   <a href="./docs/web-lite-browser-support.md">Web Lite Browser Support</a> ·
   <a href="#features">Features</a> ·
@@ -77,19 +77,19 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 
 
-* Windows x64 installer: `Lyrics.Card.Generator.Setup.6.8.2.exe`
+* Windows x64 installer: `Lyrics.Card.Generator.Setup.6.8.3.exe`
 
 Starting with v6.2.2, Windows x64 Setup is the only distributed desktop package.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v6.8.2 · Release Notes
+### v6.8.3 · Release Notes
 
 **2026-10-23**
 
-v6.8.2 — Adds validated numeric inputs with individual reset, independent interface text sizes, application-wide Ctrl+K commands, and clearer canvas, typography and content settings. Preserves the six steps, lyrics workbench, saved data and export contracts.
+v6.8.3 — not yet released. Handles temporary Windows release-state replacement conflicts and adds Follow system appearance across the interface, dialogs and window material. Preserves existing theme choices and exported card styling.
 
-[简体中文](./docs/releases/v6.8.2.zh-CN.md) · [繁體中文](./docs/releases/v6.8.2.zh-TW.md) · [English](./docs/releases/v6.8.2.en.md) · [Français](./docs/releases/v6.8.2.fr.md) · [日本語](./docs/releases/v6.8.2.ja.md) · [Español](./docs/releases/v6.8.2.es.md)
+[简体中文](./docs/releases/v6.8.3.zh-CN.md) · [繁體中文](./docs/releases/v6.8.3.zh-TW.md) · [English](./docs/releases/v6.8.3.en.md) · [Français](./docs/releases/v6.8.3.fr.md) · [日本語](./docs/releases/v6.8.3.ja.md) · [Español](./docs/releases/v6.8.3.es.md)
 
 <a id="features"></a>
 

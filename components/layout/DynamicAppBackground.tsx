@@ -14,10 +14,12 @@ const ALBUM_DYNAMIC_OVERLAY_OPACITY = 0.46;
 
 export function DynamicAppBackground({
   palette,
-  settings
+  settings,
+  systemDark = false
 }: {
   palette?: ExtractedPalette;
   settings: UserSettings;
+  systemDark?: boolean;
 }) {
   const activePalette = palette ?? DEFAULT_PALETTE;
   const isColorful = activePalette.kind === "colorful";
@@ -28,7 +30,7 @@ export function DynamicAppBackground({
   const secondary = mixColors(secondarySource, "#080910", 0.58);
   const accent = mixColors(accentSource, "#080910", isColorful ? 0.48 : 0.66);
   const shapeOpacity = isColorful ? 1 : activePalette.kind === "neutral" ? 0.58 : 0.74;
-  const effectiveTheme = resolveEffectiveUiThemeId(settings);
+  const effectiveTheme = resolveEffectiveUiThemeId(settings, systemDark);
   const isAcrylicTheme = effectiveTheme === "dark-acrylic" || effectiveTheme === "light-acrylic";
   const isAlbumDynamic = effectiveTheme === "album-dynamic";
   const isDark = effectiveTheme === "dark";

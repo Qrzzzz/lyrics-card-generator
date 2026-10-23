@@ -15,7 +15,7 @@ import type { ImportHistoryLimit } from "@/lib/import-history";
 
 export const USER_SETTINGS_STORAGE_KEY = "lyric-card-generator-user-settings";
 
-const THEME_MODES = new Set<UiThemeMode>(["album-dynamic", "dark", "light"]);
+const THEME_MODES = new Set<UiThemeMode>(["album-dynamic", "dark", "light", "system"]);
 const ACCENT_MODES = new Set<UiAccentMode>(["album-dynamic", "preset", "custom"]);
 const ACCENT_PRESETS = new Set<UiAccentPresetId>(["red", "orange", "yellow", "green", "blue", "purple"]);
 const QUALITIES = new Set<ExportQualityId>(["low", "medium", "high"]);
@@ -172,14 +172,15 @@ export function resetUserSettings(
   return options.persist === false ? reset : saveUserSettings(reset);
 }
 
-export function resolveEffectiveUiThemeId(settings: UserSettings): EffectiveUiThemeId {
-  if (settings.uiThemeMode === "dark" && settings.uiAcrylicEnabled) return "dark-acrylic";
-  if (settings.uiThemeMode === "light" && settings.uiAcrylicEnabled) return "light-acrylic";
-  return settings.uiThemeMode;
+export function resolveEffectiveUiThemeId(settings: UserSettings, systemDark = false): EffectiveUiThemeId {
+  const mode = settings.uiThemeMode === "system" ? systemDark ? "dark" : "light" : settings.uiThemeMode;
+  if (mode === "dark" && settings.uiAcrylicEnabled) return "dark-acrylic";
+  if (mode === "light" && settings.uiAcrylicEnabled) return "light-acrylic";
+  return mode;
 }
 
-export function resolveEffectiveAppBackgroundColor(settings: UserSettings, albumColor: string) {
-  const effectiveTheme = resolveEffectiveUiThemeId(settings);
+export function resolveEffectiveAppBackgroundColor(settings: UserSettings, albumColor: string, systemDark = false) {
+  const effectiveTheme = resolveEffectiveUiThemeId(settings, systemDark);
   if (effectiveTheme === "dark") return "#08090C";
   if (effectiveTheme === "light") return "#FFFFFF";
   if (effectiveTheme === "dark-acrylic") return "#141821";

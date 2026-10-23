@@ -17,6 +17,19 @@ import type { AppState } from "../lib/types";
 // Normalization tests intentionally mix legacy, invalid, and current fields to
 // prove migrations preserve valid preferences while clamping unsafe values.
 const defaults = normalizeUserSettings(undefined);
+for (const acrylic of [false, true]) {
+  const system = normalizeUserSettings({ uiThemeMode: "system", uiAcrylicEnabled: acrylic });
+  assert.equal(system.uiThemeMode, "system");
+  assert.equal(resolveEffectiveUiThemeId(system, true), acrylic ? "dark-acrylic" : "dark");
+  assert.equal(resolveEffectiveUiThemeId(system, false), acrylic ? "light-acrylic" : "light");
+  assert.equal(resolveEffectiveAppBackgroundColor(system, "#123456", true), acrylic ? "#141821" : "#08090C");
+  assert.equal(resolveEffectiveAppBackgroundColor(system, "#123456", false), acrylic ? "#F3F6FA" : "#FFFFFF");
+}
+for (const mode of ["album-dynamic", "dark", "light"] as const) {
+  const manual = normalizeUserSettings({ uiThemeMode: mode });
+  assert.equal(resolveEffectiveUiThemeId(manual, true), mode);
+  assert.equal(resolveEffectiveUiThemeId(manual, false), mode, "system changes preserve existing explicit theme choices");
+}
 assert.equal(defaults.uiThemeMode, DEFAULT_USER_SETTINGS.uiThemeMode);
 assert.equal(defaults.uiTitlebarStyle, "traffic-lights", "new and legacy users keep the traffic lights by default");
 assert.equal(normalizeUserSettings({ uiTitlebarStyle: "windows" }).uiTitlebarStyle, "windows");

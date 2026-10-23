@@ -54,12 +54,20 @@ export function AccessibleDialog({
     if (!open || !inheritThemeFrom) return;
     const source = document.querySelector(inheritThemeFrom);
     if (!source) return;
-    // Portals outside the application shell otherwise lose its scoped theme tokens.
-    const computed = window.getComputedStyle(source);
-    const tokens = Object.fromEntries(Array.from(computed)
-      .filter((name) => name.startsWith("--"))
-      .map((name) => [name, computed.getPropertyValue(name)]));
-    setThemeStyle({ ...tokens, colorScheme: computed.colorScheme, fontFamily: computed.fontFamily });
+    // Keep an open portal in sync when system appearance or shell tokens change.
+    const sync = () => {
+      const computed = window.getComputedStyle(source);
+      const tokens = Object.fromEntries(Array.from(computed)
+        .filter((name) => name.startsWith("--"))
+        .map((name) => [name, computed.getPropertyValue(name)]));
+      setThemeStyle({ ...tokens, colorScheme: computed.colorScheme, fontFamily: computed.fontFamily });
+    };
+    sync();
+    const observer = new MutationObserver(sync);
+    for (const node of new Set([source, document.body, document.documentElement])) {
+      observer.observe(node, { attributes: true, attributeFilter: ["style", "data-ui-theme", "data-ui-text-size"] });
+    }
+    return () => observer.disconnect();
   }, [inheritThemeFrom, open]);
 
   useEffect(() => {

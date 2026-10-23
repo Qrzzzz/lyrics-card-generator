@@ -51,24 +51,33 @@ export function ChoiceDropdown<T extends string>({ value, options, onChange, lab
 
   useLayoutEffect(() => {
     if (!open || !trigger.current) return;
-    const rect = trigger.current.getBoundingClientRect();
-    const computed = getComputedStyle(trigger.current);
-    const theme: Record<string, string> = {};
-    for (let index = 0; index < computed.length; index++) {
-      const name = computed[index];
-      if (name.startsWith("--")) theme[name] = computed.getPropertyValue(name);
+    const sync = () => {
+      if (!trigger.current) return;
+      const rect = trigger.current.getBoundingClientRect();
+      const computed = getComputedStyle(trigger.current);
+      const theme: Record<string, string> = {};
+      for (let index = 0; index < computed.length; index++) {
+        const name = computed[index];
+        if (name.startsWith("--")) theme[name] = computed.getPropertyValue(name);
+      }
+      const width = Math.min(rect.width, window.innerWidth - 24);
+      const below = window.innerHeight - rect.top - 12;
+      const above = rect.bottom - 12;
+      const up = below < Math.min(menu.current?.scrollHeight ?? 180, 300) && above > below;
+      setMenuStyle({ ...theme,
+        width, transformOrigin: up ? "bottom right" : "top right",
+        left: Math.max(12, Math.min(rect.right - width, window.innerWidth - width - 12)),
+        maxHeight: Math.min(300, Math.max(44, up ? above : below)),
+        ...(up ? { bottom: window.innerHeight - rect.bottom } : { top: rect.top })
+      });
+    };
+    sync();
+    const observer = new MutationObserver(sync);
+    for (const node of new Set([document.querySelector(".app-shell"), document.body, document.documentElement])) {
+      if (node) observer.observe(node, { attributes: true, attributeFilter: ["style", "data-ui-theme", "data-ui-text-size"] });
     }
-    const width = Math.min(rect.width, window.innerWidth - 24);
-    const below = window.innerHeight - rect.top - 12;
-    const above = rect.bottom - 12;
-    const up = below < Math.min(menu.current?.scrollHeight ?? 180, 300) && above > below;
-    setMenuStyle({ ...theme,
-      width, transformOrigin: up ? "bottom right" : "top right",
-      left: Math.max(12, Math.min(rect.right - width, window.innerWidth - width - 12)),
-      maxHeight: Math.min(300, Math.max(44, up ? above : below)),
-      ...(up ? { bottom: window.innerHeight - rect.bottom } : { top: rect.top })
-    });
     if (initialFocus.current) optionRefs.current[initialFocus.current]?.focus({ preventScroll: true });
+    return () => observer.disconnect();
   }, [open]);
 
   useEffect(() => {
