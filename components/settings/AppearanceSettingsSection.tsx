@@ -182,6 +182,13 @@ export function AppearanceSettingsSection({
       </SettingsGroup>
       <SettingsGroup title={copy.interactionEffects}>
         <ToggleRow
+          label={copy.previewMotion}
+          description={copy.previewMotionDescription}
+          checked={settings.previewMotionEnabled}
+          testId="preview-motion-toggle"
+          onChange={(previewMotionEnabled) => onChange({ ...settings, previewMotionEnabled })}
+        />
+        <ToggleRow
           label={copy.spark}
           description={copy.sparkDescription}
           checked={settings.sparkCursorEnabled}

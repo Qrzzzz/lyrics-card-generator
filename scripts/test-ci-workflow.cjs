@@ -161,6 +161,8 @@ assert.match(crossBrowserJob, /playwright-report\/web-lite-cross-browser\/all\/\
 assert.match(crossBrowserJob, /test-results\/web-lite-cross-browser\/all\/\*\*/, "both projects' traces, screenshots, and video are retained");
 assert.doesNotMatch(crossBrowserJob, /continue-on-error:/, "Firefox and WebKit failures remain release-blocking");
 const desktopAggregate = workflow.slice(workflow.indexOf('\n  desktop-packaged-regression:'));
+assert.match(workflow, /desktop_rehearsal_fail_group:[\s\S]*?default: none[\s\S]*?options: \[none, editor, data, native\]/, 'failure rehearsal is explicit and defaults off');
+assert.match(workflow, /Fail selected group once for manual recovery rehearsal\s+if: github\.event_name == 'workflow_dispatch' && inputs\.desktop_shared_groups && github\.run_attempt == 1 && inputs\.desktop_rehearsal_fail_group == matrix\.group/, 'fault injection is restricted to one selected manual shared group on attempt one');
 assert.match(desktopAggregate, /if: always\(\)/, 'desktop aggregate evaluates failed, skipped and cancelled dependencies');
 assert.match(desktopAggregate, /needs: \[desktop-legacy, desktop-build, desktop-groups\]/, 'desktop gate observes all execution paths');
 assert.match(desktopAggregate, /node scripts\/check-desktop-regression-gate.mjs/, 'required desktop check validates outcomes and evidence identities');

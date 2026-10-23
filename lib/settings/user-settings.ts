@@ -107,6 +107,7 @@ export function normalizeUserSettings(input: unknown): UserSettings {
   return {
     version: 1,
     sparkCursorEnabled: typeof source.sparkCursorEnabled === "boolean" ? source.sparkCursorEnabled : true,
+    previewMotionEnabled: source.previewMotionEnabled !== false,
     reduceMotionEnabled: source.reduceMotionEnabled === true,
     uiThemeMode,
     uiTitlebarStyle: source.uiTitlebarStyle === "windows" ? "windows" : DEFAULT_USER_SETTINGS.uiTitlebarStyle,
@@ -154,6 +155,7 @@ export function resetUserSettings(
   const reset = normalizeUserSettings({
     ...current,
     sparkCursorEnabled: DEFAULT_USER_SETTINGS.sparkCursorEnabled,
+    previewMotionEnabled: DEFAULT_USER_SETTINGS.previewMotionEnabled,
     reduceMotionEnabled: DEFAULT_USER_SETTINGS.reduceMotionEnabled,
     uiThemeMode: DEFAULT_USER_SETTINGS.uiThemeMode,
     uiTitlebarStyle: DEFAULT_USER_SETTINGS.uiTitlebarStyle,

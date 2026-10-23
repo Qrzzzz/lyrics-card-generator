@@ -778,7 +778,7 @@ export function LyricEditor() {
                             fontSchemePreview={fontSchemePreview}
                             clearTransitionKey={clearTransitionKey}
                             measurementKey={previewMeasurementKey}
-                            pressureEnabled={currentStep >= 2}
+                            pressureEnabled={currentStep >= 2 && userSettings.previewMotionEnabled}
                             locale={state.locale}
                             t={t}
                           />
