@@ -130,7 +130,14 @@ test("three workspaces keep keyboard navigation and expose all diagnostics inclu
   await expect(page.getByTestId("lyrics-editor-original")).toBeFocused();
   await expect(page.getByTestId("lyrics-command-position")).toContainText("45");
   await expect(page.getByTestId("lyrics-line-budget")).toContainText("45 / 36");
-  await page.getByTestId("lyrics-editor-original").fill(Array.from({ length: 180 }, (_, index) => `line ${index}\u200B`).join("\n"));
+  const source = page.getByTestId("lyrics-editor-original");
+  // Start this independent fixture from an empty document: pending issue-location
+  // selection restoration must not turn replacement into insertion at the old line.
+  await source.fill("");
+  await expect(source).toHaveValue("");
+  const paginatedText = Array.from({ length: 180 }, (_, index) => `line ${index}\u200B`).join("\n");
+  await source.fill(paginatedText);
+  await expect(source).toHaveValue(paginatedText);
   const issues = page.getByTestId("lyrics-review-invisible-character");
   await expect(issues.getByTestId("lyrics-review-issue")).toHaveCount(100);
   await issues.getByTestId("lyrics-review-next").click();
