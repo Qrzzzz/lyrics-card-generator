@@ -16,6 +16,7 @@ import {
 } from "@/lib/settings/app-preference-save-coordinator";
 import { DEFAULT_USER_SETTINGS, type UserSettings } from "@/lib/settings/types";
 import { normalizeUserSettings, resolveEffectiveUiThemeId } from "@/lib/settings/user-settings";
+import { getSystemDarkAppearance, useSystemDarkAppearance } from "@/lib/settings/system-appearance";
 import type { Locale } from "@/lib/types";
 
 type UseEditorPreferencesInput = {
@@ -25,6 +26,7 @@ type UseEditorPreferencesInput = {
 
 export function useEditorPreferences({ currentLocale, applyLocale }: UseEditorPreferencesInput) {
   const [userSettings, setUserSettings] = useState<UserSettings>(DEFAULT_USER_SETTINGS);
+  const systemDark = useSystemDarkAppearance();
   const [isDesktopShell, setIsDesktopShell] = useState(false);
   const [preferencesLoaded, setPreferencesLoaded] = useState(false);
   const currentLocaleRef = useRef(currentLocale);
@@ -44,7 +46,7 @@ export function useEditorPreferences({ currentLocale, applyLocale }: UseEditorPr
   function syncWindowMaterial(settings: UserSettings) {
     const desktop = getLyricsCardDesktopApi();
     if (desktop) {
-      void desktop.setWindowMaterial(resolveEffectiveUiThemeId(settings)).catch(() => undefined);
+      void desktop.setWindowMaterial(resolveEffectiveUiThemeId(settings, getSystemDarkAppearance())).catch(() => undefined);
     }
   }
 
@@ -130,12 +132,13 @@ export function useEditorPreferences({ currentLocale, applyLocale }: UseEditorPr
   }, []);
 
   useEffect(() => {
-    const effectiveTheme = resolveEffectiveUiThemeId(userSettings);
+    const effectiveTheme = resolveEffectiveUiThemeId(userSettings, systemDark);
     document.body.dataset.uiTheme = effectiveTheme;
+    syncWindowMaterial(userSettings);
     return () => {
       delete document.body.dataset.uiTheme;
     };
-  }, [userSettings.uiThemeMode, userSettings.uiAcrylicEnabled]);
+  }, [userSettings.uiThemeMode, userSettings.uiAcrylicEnabled, systemDark]);
 
   useEffect(() => {
     document.body.dataset.reduceMotion = !preferencesLoaded || userSettings.reduceMotionEnabled ? "true" : "false";
@@ -145,6 +148,7 @@ export function useEditorPreferences({ currentLocale, applyLocale }: UseEditorPr
   }, [preferencesLoaded, userSettings.reduceMotionEnabled]);
 
   return {
+    systemDark,
     userSettings,
     isDesktopShell,
     preferencesLoaded,

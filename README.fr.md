@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v6.8.2.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v6.8.3.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="./docs/development.en.md">Développement local</a> ·
@@ -76,19 +76,19 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 
 
-* Programme d’installation Windows x64 : `Lyrics.Card.Generator.Setup.6.8.2.exe`
+* Programme d’installation Windows x64 : `Lyrics.Card.Generator.Setup.6.8.3.exe`
 
 À partir de la v6.2.2, le programme Setup Windows x64 est le seul paquet distribué.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### v6.8.2 · Notes de version
+### v6.8.3 · Notes de version
 
 **2026-10-23**
 
-v6.8.2 — Ajoute des valeurs numériques validées avec réinitialisation individuelle, des tailles de texte pour l’interface, des commandes Ctrl+K dans l’application et des réglages mieux regroupés. Les six étapes, l’éditeur, les données et les exports sont conservés.
+v6.8.3 — Gère les conflits temporaires de remplacement de l’état de publication sous Windows et ajoute Selon le système pour l’interface, les dialogues et le matériau de fenêtre. Conserve les thèmes existants et le rendu des cartes exportées.
 
-[简体中文](./docs/releases/v6.8.2.zh-CN.md) · [繁體中文](./docs/releases/v6.8.2.zh-TW.md) · [English](./docs/releases/v6.8.2.en.md) · [Français](./docs/releases/v6.8.2.fr.md) · [日本語](./docs/releases/v6.8.2.ja.md) · [Español](./docs/releases/v6.8.2.es.md)
+[简体中文](./docs/releases/v6.8.3.zh-CN.md) · [繁體中文](./docs/releases/v6.8.3.zh-TW.md) · [English](./docs/releases/v6.8.3.en.md) · [Français](./docs/releases/v6.8.3.fr.md) · [日本語](./docs/releases/v6.8.3.ja.md) · [Español](./docs/releases/v6.8.3.es.md)
 
 <a id="fonctionnalités-principales"></a>
 

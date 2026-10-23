@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { execFileSync } from 'node:child_process';
-import { existsSync, readFileSync, writeFileSync, mkdirSync, renameSync, openSync, closeSync, unlinkSync } from 'node:fs';
+import { existsSync, readFileSync, mkdirSync, openSync, closeSync, unlinkSync } from 'node:fs';
+import { saveReleaseState } from './release-state-store.mjs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { authorizeReleaseSource, createGitHubClient, releaseSourcePolicy as policy } from './verify-release-source.mjs';
@@ -283,7 +284,7 @@ async function main() {
       if (args.mode === 'resume') throw Error('No saved state exists; use -Publish first');
       state = { schema: 1, repository, tag: `v${args.version}`, packageVersion: pkg.version, sourceSha, branch };
     }
-    const save = value => { writeFileSync(`${statePath}.tmp`, JSON.stringify(value, null, 2) + '\n'); renameSync(`${statePath}.tmp`, statePath); };
+    const save = value => saveReleaseState(statePath, value);
     save(state);
     const token = process.env.GH_TOKEN || process.env.GITHUB_TOKEN || command('gh', ['auth', 'token']);
     const fetchImpl = createBoundedFetch();

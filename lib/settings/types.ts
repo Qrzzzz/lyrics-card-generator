@@ -1,6 +1,6 @@
 import type { ImportHistoryLimit } from "@/lib/import-history";
 
-export type UiThemeMode = "album-dynamic" | "dark" | "light";
+export type UiThemeMode = "album-dynamic" | "dark" | "light" | "system";
 
 export type UiTitlebarStyle = "traffic-lights" | "windows";
 export type UiTextSize = "standard" | "large" | "extra-large";

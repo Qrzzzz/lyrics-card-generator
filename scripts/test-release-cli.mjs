@@ -53,6 +53,21 @@ assert.equal(h.commands.filter(c => c[1] === 'push').length, 1);
 await publishRelease(h, s);
 assert.equal(h.commands.filter(c => c.includes('--squash')).length, 1, 'resume must not merge again');
 assert.equal(h.commands.filter(c => c[1] === 'push').length, 1, 'resume must not push tag again');
+// Reproduce the v6.8.2 interruption: tag push succeeded, next state save failed.
+// Resume starts with the last durable snapshot and must inspect remote facts.
+const interruptedHost = host();
+let durable = state();
+interruptedHost.save = value => {
+  if (value.sourceEvidence) throw Object.assign(new Error('injected state replacement failure'), { code: 'EPERM' });
+  durable = structuredClone(value);
+};
+await assert.rejects(publishRelease(interruptedHost, state()), { code: 'EPERM' });
+assert.equal(durable.sourceEvidence, undefined);
+const mutationsBeforeResume = interruptedHost.commands.filter(c => c.includes('--squash') || c[1] === 'push').length;
+interruptedHost.save = value => { durable = structuredClone(value); };
+await publishRelease(interruptedHost, durable);
+assert.equal(durable.status, 'complete');
+assert.equal(interruptedHost.commands.filter(c => c.includes('--squash') || c[1] === 'push').length, mutationsBeforeResume, 'state-save recovery must not repeat remote mutations');
 for (const options of [{ failedCi: true }, { movedPr: true }, { conflictingTag: true }]) {
   const failing = host(options);
   const saved = state();

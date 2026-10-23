@@ -169,6 +169,10 @@ assert.doesNotMatch(enforceDesktopStep, /continue-on-error/, 'functional gate fa
 assert.match(workflow, /desktop-build:[\s\S]*if: github.event_name == 'workflow_dispatch' && inputs.desktop_shared_groups/, 'unmeasured shared transport is an explicit canary');
 assert.match(workflow, /group: \[editor, data, native\]/, 'every mapped desktop group has an independent Windows runner');
 assert.match(workflow, /artifact-ids: \$\{\{ needs.desktop-build.outputs.artifact-id \}\}/, 'workers consume the exact build artifact ID');
+const bundleDownloadStep = workflow.slice(workflow.indexOf('- name: Download exact desktop bundle'), workflow.indexOf('- name: Validate identity, digest'));
+assert.match(bundleDownloadStep, /path: artifacts\/desktop-bundle\s+(?:#[^\n]*\n\s+)?merge-multiple: true/, 'the exact single artifact is extracted at the runtime verifier path, not under its name');
+assert.doesNotMatch(bundleDownloadStep, /\bpattern:/, 'exact artifact identity must not be replaced by a name search');
+assert.match(workflow, /Preserve transport or group failure context[\s\S]+if: failure\(\)[\s\S]+failure-context\.json/, 'failures before the group runner still preserve diagnostic identity');
 assert.match(workflow, /DESKTOP_BUILD_DIGEST: \$\{\{ needs.desktop-build.outputs.digest \}\}/, 'transport is bound to the build digest');
 assert.match(workflow, /node scripts\/desktop-test-bundle.mjs unpack/, 'workers verify bytes and source before executing');
 for (const action of ["actions/checkout", "actions/setup-node", "actions/upload-artifact"]) {

@@ -338,10 +338,30 @@ jobs:
         with:
           artifact-ids: ${{ needs.desktop-build.outputs.artifact-id }}
           path: artifacts/desktop-bundle
+          # ID-based downloads otherwise add an artifact-name subdirectory.
+          merge-multiple: true
       - name: Validate identity, digest and every runtime resource
         run: node scripts/desktop-test-bundle.mjs unpack
       - name: Run packaged desktop interaction regression
         run: npm run desktop:group:${{ matrix.group }}
+      - name: Preserve transport or group failure context
+        if: failure()
+        shell: pwsh
+        env:
+          DESKTOP_GROUP: ${{ matrix.group }}
+          DESKTOP_ARTIFACT_ID: ${{ needs.desktop-build.outputs.artifact-id }}
+        run: |
+          $directory = Join-Path 'artifacts/desktop-groups' $env:DESKTOP_GROUP
+          New-Item -ItemType Directory -Path $directory -Force | Out-Null
+          @{
+            group = $env:DESKTOP_GROUP
+            sourceSha = $env:GITHUB_SHA
+            runId = $env:GITHUB_RUN_ID
+            runAttempt = $env:GITHUB_RUN_ATTEMPT
+            artifactId = $env:DESKTOP_ARTIFACT_ID
+            buildDigest = $env:DESKTOP_BUILD_DIGEST
+            outcome = 'failure'
+          } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $directory 'failure-context.json') -Encoding utf8
       - name: Upload group outcome and first-failure evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02

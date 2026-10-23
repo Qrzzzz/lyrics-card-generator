@@ -12,10 +12,11 @@ import type { UiAccentMode, UiAccentPresetId, UiThemeMode, UiTitlebarStyle, User
 import type { Locale } from "@/lib/types";
 import type { settingsCopy } from "@/lib/settings/copy";
 
-const THEME_MODE_OPTIONS: Array<{ value: UiThemeMode; copyKey: "albumDynamic" | "dark" | "light" }> = [
+const THEME_MODE_OPTIONS: Array<{ value: UiThemeMode; copyKey: "albumDynamic" | "dark" | "light" | "system" }> = [
   { value: "album-dynamic", copyKey: "albumDynamic" },
   { value: "dark", copyKey: "dark" },
-  { value: "light", copyKey: "light" }
+  { value: "light", copyKey: "light" },
+  { value: "system", copyKey: "system" }
 ];
 
 const ACCENT_MODE_OPTIONS: Array<{ value: UiAccentMode; copyKey: "accentAlbumDynamic" | "accentPreset" | "accentCustom" }> = [
@@ -81,7 +82,7 @@ export function AppearanceSettingsSection({
               value={settings.uiThemeMode}
               ariaLabel={copy.theme}
               onChange={updateThemeMode}
-              columns={3}
+              columns={2}
               options={THEME_MODE_OPTIONS.map((option) => ({
                 value: option.value,
                 label: copy[option.copyKey]

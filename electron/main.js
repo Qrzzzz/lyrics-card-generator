@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu, clipboard, dialog, ipcMain, nativeImage, net, safeStorage, screen, shell } = require("electron");
+const { app, BrowserWindow, Menu, clipboard, dialog, ipcMain, nativeImage, nativeTheme, net, safeStorage, screen, shell } = require("electron");
 const { fitWindowBounds, initialWindowGeometry, windowMinimumSize, watchWindowWorkArea } = require("./window-geometry");
 const { createImageDownloadMonitor } = require("./image-download-monitor");
 const { createHistoryReplayGateway } = require("./history-replay");
@@ -440,7 +440,9 @@ function resolveEffectiveUiThemeId(settings) {
   }
 
   let mode = "album-dynamic";
-  if (settings.uiThemeMode === "dark" || settings.uiThemeMode === "light" || settings.uiThemeMode === "album-dynamic") {
+  if (settings.uiThemeMode === "system") {
+    mode = nativeTheme.shouldUseDarkColors ? "dark" : "light";
+  } else if (settings.uiThemeMode === "dark" || settings.uiThemeMode === "light" || settings.uiThemeMode === "album-dynamic") {
     mode = settings.uiThemeMode;
   } else if (settings.uiTheme === "dark" || settings.uiTheme === "dark-acrylic" || settings.uiTheme === "dark-pink") {
     mode = "dark";
