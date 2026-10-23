@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { parseArgs, assertRun, assertAssets, publishRelease, probeCi, inspectJobs, createWaiter, createBoundedFetch } from './release-cli.mjs';
+import { parseArgs, assertRun, assertAssets, publishRelease, probeCi, inspectJobs, createWaiter, createBoundedFetch, synchronizePushedPr } from './release-cli.mjs';
 import { releaseSourcePolicy as policy } from './verify-release-source.mjs';
 
 const sha = 'a'.repeat(40);
@@ -12,7 +12,7 @@ function host({ failedCi = false, movedPr = false, conflictingTag = false, pendi
   let merged = false;
   let pushed = false;
   let checks = 0;
-  const pr = () => ({ number: 1, state: 'open', head: { sha: movedPr ? 'b'.repeat(40) : sha, repo: { full_name: 'owner/repo' } }, base: { ref: 'main' }, merged_at: merged ? 'today' : null, merge_commit_sha: merged ? sha : null });
+  const pr = () => ({ number: 1, state: 'open', head: { sha: movedPr ? 'b'.repeat(40) : sha, ref: state().branch, repo: { full_name: 'owner/repo' } }, base: { ref: 'main' }, merged_at: merged ? 'today' : null, merge_commit_sha: merged ? sha : null });
   return {
     commands, save() {}, report() {},
     command(exe, args) {
@@ -108,6 +108,89 @@ replacement.command=(exe,argv)=>{if(exe==='git' && argv[0]==='push' && argv.some
 replacement.api=async path=>{const value=await replacementApi(path);if(path.includes('/pulls?') && !branchUpdated)return value.map(pr=>({...pr,head:{...pr.head,sha:'b'.repeat(40)}}));return value;};
 await publishRelease(replacement,state());
 assert.equal(replacement.commands.some(command=>command.includes('create')),false,'replacement candidate reuses the existing branch PR');
+
+// Reproduce delayed PR-head propagation after updating the existing release PR.
+function delayedPushHost() {
+  const delayed = host();
+  const original = delayed.api;
+  const command = delayed.command;
+  let pushed = false;
+  let reads = 0;
+  delayed.command = (exe, argv) => {
+    if (exe === 'git' && argv[0] === 'push' && argv.some(arg => arg.startsWith('HEAD:'))) pushed = true;
+    return command(exe, argv);
+  };
+  delayed.api = async path => {
+    const value = await original(path);
+    if (path.includes('/pulls?')) return value.map(pr => ({ ...pr, head: { ...pr.head, sha: 'b'.repeat(40) } }));
+    if (path.endsWith('/pulls/1') && pushed && ++reads <= 2) return { ...value, head: { ...value.head, sha: 'b'.repeat(40) } };
+    return value;
+  };
+  return delayed;
+}
+const delayed = delayedPushHost();
+const delayedState = state();
+await publishRelease(delayed, delayedState);
+assert.equal(delayedState.status, 'complete');
+assert.equal(delayedState.prHeadSync, null);
+assert.equal(delayed.commands.filter(c => c.some(arg => arg.startsWith('HEAD:'))).length, 1);
+assert.equal(delayed.commands.filter(c => c.includes('--squash')).length, 1);
+
+// Persisted pending synchronization survives interruption without another push/create.
+const resumePush = delayedPushHost();
+let pendingSnapshot;
+resumePush.save = value => { pendingSnapshot = structuredClone(value); };
+const normalWait = resumePush.wait;
+resumePush.wait = async (label, probe) => {
+  assert.equal(label, 'PR head synchronization');
+  assert.equal(await probe(), false);
+  throw Error('interrupted during head synchronization');
+};
+await assert.rejects(publishRelease(resumePush, state()), /interrupted during head/);
+assert.equal(pendingSnapshot.prHeadSync.previousHead, 'b'.repeat(40));
+resumePush.wait = normalWait;
+await publishRelease(resumePush, pendingSnapshot);
+assert.equal(pendingSnapshot.status, 'complete');
+assert.equal(resumePush.commands.filter(c => c.some(arg => arg.startsWith('HEAD:'))).length, 1);
+assert.equal(resumePush.commands.filter(c => c.includes('--squash')).length, 1);
+assert.equal(resumePush.commands.some(c => c.includes('create')), false);
+
+const syncState = { ...state(), pr: 1, prHeadSync: { sourceSha: sha, previousHead: 'b'.repeat(40) } };
+const pendingPr = { number: 1, state: 'open', draft: false, head: { sha: 'b'.repeat(40), ref: state().branch, repo: { full_name: 'owner/repo' } }, base: { ref: 'main' } };
+for (const patch of [
+  { head: { ...pendingPr.head, sha: 'c'.repeat(40) } },
+  { head: { ...pendingPr.head, repo: { full_name: 'other/repo' } } },
+  { head: { ...pendingPr.head, ref: 'other-branch' } },
+  { base: { ref: 'other' } }, { state: 'closed' }, { draft: true }, { merged_at: 'today' }, { number: 2 }
+]) {
+  const changed = host();
+  changed.api = async () => ({ ...pendingPr, ...patch });
+  await assert.rejects(publishRelease(changed, structuredClone(syncState)), /changed/);
+  assert.equal(changed.commands.length, 0, 'concurrent changes cannot trigger push/merge/tag');
+}
+let syncClock = 0;
+const syncProgress = [];
+const timeoutHost = host();
+Object.assign(timeoutHost, { now: () => syncClock, observe: value => syncProgress.push(value), api: async () => pendingPr });
+timeoutHost.wait = async (_label, probe) => {
+  assert.equal(await probe(), false);
+  syncClock = 119999;
+  assert.equal(await probe(), false);
+  syncClock = 120000;
+  return probe();
+};
+await assert.rejects(synchronizePushedPr(timeoutHost, syncState), /within 2 minutes/);
+assert.ok(syncProgress.every(line => line.includes('pre-push head') && line.includes(sha)));
+for (const message of ['authentication 401', 'permission 403', 'network EOF']) {
+  const broken = host(); broken.api = async () => { throw Error(message); };
+  await assert.rejects(synchronizePushedPr(broken, syncState), new RegExp(message));
+}
+const malformedSync = host(); malformedSync.api = async () => null;
+await assert.rejects(synchronizePushedPr(malformedSync, syncState), /Invalid GitHub PR response/);
+for (const pending of [null, {sourceSha:'c'.repeat(40),previousHead:'b'.repeat(40)}, {sourceSha:sha,previousHead:sha}, {sourceSha:sha,previousHead:'invalid'}]) {
+  await assert.rejects(synchronizePushedPr(host(), {...syncState,prHeadSync:pending}), /Invalid pending/);
+}
+console.log('Release CLI: delayed pushed head, bounded synchronization, concurrent changes, interruption/resume and API-error propagation passed.');
 badDigest.assets[0].digest = null;
 assert.throws(() => assertAssets(badDigest, '1.2.3'));
 console.log('Release CLI: success, pending, resume, exact SHA, failed CI, changed PR, conflicting tag and missing-run checks passed.');

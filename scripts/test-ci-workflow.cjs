@@ -140,6 +140,16 @@ assert.ok(
 );
 const chromiumJob = workflow.slice(chromiumJobStart, crossBrowserJobStart);
 const crossBrowserJob = workflow.slice(crossBrowserJobStart, crossBrowserJobEnd);
+assert.match(chromiumJob, /timeout-minutes: 25/, "Chromium setup has bounded headroom after the recorded 15-minute cancellation");
+assert.match(chromiumJob, /Install Chromium\s+timeout-minutes: 12/, "slow browser installation has its own finite diagnostic boundary");
+assert.match(chromiumJob, /Run Web Lite browser smoke tests\s+timeout-minutes: 10/, "test hangs retain a separate finite boundary");
+assert.match(chromiumJob, /Run deferred editor surface recovery tests\s+timeout-minutes: 3/, "deferred recovery tests remain bounded");
+assert.equal((chromiumJob.match(/shell: bash/g) || []).length, 3, "tee-wrapped commands explicitly use Actions bash with pipefail so failures cannot be hidden");
+for (const evidence of ['artifacts/web-lite/**', 'test-results/web-lite/**', 'test-results/deferred-surfaces/**', 'install-chromium.log', 'smoke.log', 'deferred-surfaces.log']) {
+  assert.ok(chromiumJob.includes(evidence), `Web Lite retains ${evidence} for failure classification`);
+}
+assert.match(chromiumJob, /Upload Web Lite browser evidence\s+if: always\(\)/, "setup/test failure still attempts evidence upload");
+assert.doesNotMatch(chromiumJob, /continue-on-error|--grep|--max-failures/, "all Chromium assertions remain blocking and unfiltered");
 assert.match(chromiumJob, /npx playwright install --with-deps chromium/, "the existing full Web Lite job installs Chromium");
 assert.match(chromiumJob, /npm run web-lite:smoke/, "the existing full Chromium Web Lite suite remains continuous");
 assert.doesNotMatch(chromiumJob, /npm run web-lite:(?:check|build)/, "Chromium consumes the committed artifact already checked by verify");
@@ -161,6 +171,13 @@ assert.match(crossBrowserJob, /playwright-report\/web-lite-cross-browser\/all\/\
 assert.match(crossBrowserJob, /test-results\/web-lite-cross-browser\/all\/\*\*/, "both projects' traces, screenshots, and video are retained");
 assert.doesNotMatch(crossBrowserJob, /continue-on-error:/, "Firefox and WebKit failures remain release-blocking");
 const desktopAggregate = workflow.slice(workflow.indexOf('\n  desktop-packaged-regression:'));
+const sharedGroups = workflow.slice(workflow.indexOf('\n  desktop-groups:'), workflow.indexOf('\n  desktop-packaged-regression:'));
+assert.match(sharedGroups, /permissions:\s+actions: read\s+contents: read/, 'artifact preflight has read-only Actions access');
+assert.match(sharedGroups, /DESKTOP_ARTIFACT_ID: \$\{\{ needs.desktop-build.outputs.artifact-id \}\}/, 'preflight reads the exact build output ID');
+assert.ok(sharedGroups.indexOf('node scripts/check-desktop-artifact.mjs') < sharedGroups.indexOf('Download exact desktop bundle'), 'availability/identity are checked before download');
+assert.match(sharedGroups, /Check exact desktop artifact availability and identity\s+timeout-minutes: 1/, 'preflight is bounded');
+assert.doesNotMatch(sharedGroups, /continue-on-error/, 'preflight and consumer failures remain blocking');
+assert.match(packageJson.scripts['desktop:governance-test'], /test-desktop-artifact\.mjs/, 'CI governance owns availability/expiry fixtures');
 assert.match(workflow, /desktop_rehearsal_fail_group:[\s\S]*?default: none[\s\S]*?options: \[none, editor, data, native\]/, 'failure rehearsal is explicit and defaults off');
 assert.match(workflow, /Fail selected group once for manual recovery rehearsal\s+if: github\.event_name == 'workflow_dispatch' && inputs\.desktop_shared_groups && github\.run_attempt == 1 && inputs\.desktop_rehearsal_fail_group == matrix\.group/, 'fault injection is restricted to one selected manual shared group on attempt one');
 assert.match(desktopAggregate, /if: always\(\)/, 'desktop aggregate evaluates failed, skipped and cancelled dependencies');

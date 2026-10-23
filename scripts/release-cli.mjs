@@ -145,6 +145,24 @@ export function createWaiter({ state, save, report, now = Date.now, sleep = ms =
   };
 }
 
+// Only the old head observed immediately before our own push may be stale.
+// A different head is a concurrent source change, never a reason to relax SHA authorization.
+export async function synchronizePushedPr(h, state) {
+  const pending = state.prHeadSync;
+  if (!pending || pending.sourceSha !== state.sourceSha || !/^[a-f0-9]{40}$/.test(pending.previousHead || '') || pending.previousHead === state.sourceSha) throw Error('Invalid pending PR head synchronization');
+  const started = h.now?.() ?? Date.now();
+  return h.wait('PR head synchronization', async () => {
+    const pr = await h.api(`repos/${state.repository}/pulls/${state.pr}`);
+    if (!pr || typeof pr !== 'object') throw Error('Invalid GitHub PR response while synchronizing');
+    if (pr.number !== state.pr || pr.base?.ref !== policy.baseBranch || pr.head?.repo?.full_name !== state.repository || pr.head?.ref !== state.branch || pr.state !== 'open' || pr.merged_at || pr.draft) throw Error('PR source/state changed while synchronizing; refusing merge');
+    if (pr.head.sha === state.sourceSha) return pr;
+    if (pr.head.sha !== pending.previousHead) throw Error(`PR source changed while synchronizing; expected ${state.sourceSha} or pre-push ${pending.previousHead}, observed ${pr.head.sha}; refusing merge`);
+    if ((h.now?.() ?? Date.now()) - started >= 120000) throw Error(`PR head did not synchronize within 2 minutes; expected ${state.sourceSha}, still observed ${pending.previousHead}. Inspect PR and branch before Resume.`);
+    h.observe?.(`PR #${state.pr} still shows the pre-push head ${pending.previousHead}; waiting for exact SHA ${state.sourceSha}`);
+    return false;
+  });
+}
+
 // All remote mutations go through this orchestration function. Tests inject a
 // fake host; the production host below never invokes a shell with interpolated text.
 export async function publishRelease(h, state) {
@@ -169,8 +187,11 @@ export async function publishRelease(h, state) {
           const open = prs.filter(p => p.state === 'open' && !p.merged_at && p.base.ref === policy.baseBranch && p.head.repo?.full_name === repository);
           if (open.length > 1) throw Error('Ambiguous open release PR');
           if (open.length === 1) {
+            const previousHead = open[0].head.sha;
+            if (!/^[a-f0-9]{40}$/.test(previousHead || '')) throw Error('Invalid pre-push PR head');
             h.command('git', ['push', 'origin', `HEAD:refs/heads/${branch}`]);
-            pr = await h.api(`${base}/pulls/${open[0].number}`);
+            save({ pr: open[0].number, prHeadSync: { sourceSha, previousHead } });
+            pr = open[0];
           }
         }
         if (!pr) {
@@ -181,6 +202,10 @@ export async function publishRelease(h, state) {
           pr = created[0];
         }
         save({ pr: pr.number });
+      }
+      if (state.prHeadSync) {
+        pr = await synchronizePushedPr(h, state);
+        save({ prHeadSync: null });
       }
       if (pr.head.sha !== sourceSha || pr.base.ref !== policy.baseBranch || pr.head.repo?.full_name !== repository) throw Error('PR source changed; refusing merge');
       if (!pr.merged_at) {

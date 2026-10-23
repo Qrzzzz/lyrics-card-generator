@@ -1,6 +1,6 @@
 {
   "name": "lyric-card-generator",
-  "version": "6.8.4",
+  "version": "6.8.5",
   "private": true,
   "main": "electron/main.js",
   "scripts": {
@@ -125,7 +125,7 @@
     "desktop:group:editor": "node scripts/run-desktop-regression-group.mjs --group=editor",
     "desktop:group:data": "node scripts/run-desktop-regression-group.mjs --group=data",
     "desktop:group:native": "node scripts/run-desktop-regression-group.mjs --group=native",
-    "desktop:governance-test": "node scripts/test-desktop-regression-governance.mjs",
+    "desktop:governance-test": "node scripts/test-desktop-artifact.mjs && node scripts/test-desktop-regression-governance.mjs",
     "theme:test": "tsx scripts/test-v32-settings.ts && node scripts/test-electron-system-appearance.cjs"
   },
   "dependencies": {
