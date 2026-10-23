@@ -60,14 +60,23 @@ test("global commands route across steps and settings, and cancellation restores
   await page.locator('[data-step-id="lyrics"]').click();
   const original = page.getByTestId("lyrics-editor-original");
   await original.fill("First line\nSecond line");
+  // Match the workbench fixture: finish input restoration before establishing
+  // the selection whose preservation this command-palette case exercises.
+  await original.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => requestAnimationFrame(() => resolve())))));
   await original.focus();
-  await original.evaluate(node => (node as HTMLTextAreaElement).setSelectionRange(2, 8));
+  await original.evaluate(node => {
+    (node as HTMLTextAreaElement).setSelectionRange(2, 8);
+    node.dispatchEvent(new Event("select", { bubbles: true }));
+  });
+  const selection = () => original.evaluate(node => [(node as HTMLTextAreaElement).selectionStart, (node as HTMLTextAreaElement).selectionEnd]);
+  await expect.poll(selection).toEqual([2, 8]);
   await page.keyboard.press("Control+k");
   await page.getByTestId("lyrics-tool-query").fill("空行");
   await expect(page.getByTestId("lyrics-tool-result-trim")).toBeVisible();
   await page.keyboard.press("Escape");
+  await expect(page.getByTestId("lyrics-tool-palette")).toHaveCount(0);
   await expect(original).toBeFocused();
-  expect(await original.evaluate(node => [(node as HTMLTextAreaElement).selectionStart, (node as HTMLTextAreaElement).selectionEnd])).toEqual([2, 8]);
+  await expect.poll(selection).toEqual([2, 8]);
   await expect(original).toHaveValue("First line\nSecond line");
 });
 test("interface text size persists and leaves the export card geometry and type unchanged", async ({ page }) => {
