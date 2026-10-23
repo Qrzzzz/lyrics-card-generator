@@ -11,7 +11,7 @@ assert.match(label, /^[a-z0-9-]+$/);
 const expectedScale = Number(process.argv.find((arg) => arg.startsWith("--expected-scale="))?.slice(17));
 const requireHighContrast = process.argv.includes("--require-high-contrast");
 const profile = await mkdtemp(path.join(tmpdir(), "lyrics-hig-"));
-const output = path.resolve("output/playwright/v6.8.1-native", label);
+const output = path.resolve("output/playwright/v6.8.2-native", label);
 await mkdir(output, { recursive: true });
 let app;
 async function environment() {
@@ -36,6 +36,14 @@ try {
   // Null removes that override, allowing Chromium to use the real OS setting.
   await page.emulateMedia({ forcedColors: null, colorScheme: null });
   await prepareEditorLanguage(page, "en");
+  const textSize = process.argv.find(arg => arg.startsWith("--ui-text-size="))?.slice(15);
+  if (textSize) {
+    await page.getByTestId("settings-button").click();
+    await page.getByTestId("settings-tab-appearance").click();
+    await page.getByTestId("interface-text-size").selectOption(textSize);
+    await page.getByTestId("settings-close-button").click();
+    await expect(page.locator(".app-shell")).toHaveAttribute("data-ui-text-size", textSize);
+  }
   const initial = await environment();
   assertFits(initial);
   if (expectedScale) assert.equal(initial.display.scaleFactor, expectedScale, "Native display scale must match the OS setting; no emulation is used.");
@@ -101,8 +109,8 @@ try {
   await page.locator(".traffic-light--close").click();
   await expect.poll(() => childProcess.exitCode, { timeout: 20_000 }).not.toBeNull();
   app = undefined;
-  await writeFile(path.join(output, "acceptance.json"), JSON.stringify({ label, initial, restored, compact, nativeInteractionSamples, checks: ["initial-work-area", "maximize", "restore-work-area", "minimize", "compact-output-reachability", "close"], nativeHighContrastVerified: requireHighContrast }, null, 2));
-  console.log(JSON.stringify({ ok: true, label, nativeScale: initial.display.scaleFactor, nativeHighContrastVerified: requireHighContrast, displayCount: initial.displays.length, evidence: output }));
+  await writeFile(path.join(output, "acceptance.json"), JSON.stringify({ label, initial, restored, compact, nativeInteractionSamples, checks: ["initial-work-area", "maximize", "restore-work-area", "minimize", "compact-output-reachability", "close"], interfaceTextSize: textSize ?? "standard", nativeHighContrastVerified: requireHighContrast }, null, 2));
+  console.log(JSON.stringify({ ok: true, label, nativeScale: initial.display.scaleFactor, interfaceTextSize: textSize ?? "standard", nativeHighContrastVerified: requireHighContrast, displayCount: initial.displays.length, evidence: output }));
 } finally {
   await closeElectronApplication(app, { label: "desktop-hig-stability" });
   await rm(profile, { recursive: true, force: true });

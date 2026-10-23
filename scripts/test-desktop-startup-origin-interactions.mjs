@@ -13,7 +13,7 @@ import originModule from "../electron/local-server-origin.js";
 const { deriveStableLoopbackPort, writeCachedLoopbackPort } = originModule;
 const execFileAsync = promisify(execFile);
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const executablePath = path.join(root, "release", "win-unpacked", "Lyrics Card Generator.exe");
+const executablePath = process.env.LYRICS_CARD_TEST_EXECUTABLE || path.join(root, "release", "win-unpacked", "Lyrics Card Generator.exe");
 const temporaryRoot = await mkdtemp(path.join(tmpdir(), "lyrics-card-origin-interaction-"));
 
 if (process.platform !== "win32") throw new Error("Desktop startup origin interactions require Windows.");

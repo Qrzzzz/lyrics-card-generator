@@ -88,6 +88,10 @@ async function openHistory() {
 
 try {
   await launch(true);
+  await page.getByTestId("settings-button").click();
+  await page.getByTestId("settings-tab-appearance").click();
+  await page.getByTestId("interface-text-size").selectOption("extra-large");
+  await page.getByTestId("settings-close-button").click();
   await expect(page.getByTestId("app-notification")).toHaveCount(0);
   await search();
   await page.getByTestId("stepper-next-button").click();
@@ -109,6 +113,12 @@ try {
   await closeNormally();
   assert.equal((await disk()).records.find((record) => record.id === remoteId).editorDraft.content.translationText, "  saved translation\n");
   await launch();
+  await expect(page.locator(".app-shell")).toHaveAttribute("data-ui-text-size", "extra-large");
+  await page.getByTestId("settings-button").click();
+  await page.getByTestId("settings-tab-appearance").click();
+  await expect(page.getByTestId("interface-text-size")).toHaveValue("extra-large");
+  await page.getByTestId("interface-text-size").selectOption("standard");
+  await page.getByTestId("settings-close-button").click();
   assert.equal(await page.getByTestId("lyrics-editor-original").inputValue(), finalText);
   assert.equal(await page.getByTestId("lyrics-editor-translation").inputValue(), "  saved translation\n");
   const restoredNotice = page.locator('[data-notification-id^="restored-"]');
@@ -202,7 +212,7 @@ try {
   assert.equal((await disk()).activeDraftId, remoteId);
   console.log("PASS: real settings trim with unchanged draft, normal close and automatic restart recovery (#186)");
 
-  await page.locator('[data-step-id="layout"]').click();
+  await page.locator('[data-step-id="font"]').click();
   const fontSlider = page.getByRole("slider", { name: "Font Size", exact: true });
   await fontSlider.fill("68");
   await saved();

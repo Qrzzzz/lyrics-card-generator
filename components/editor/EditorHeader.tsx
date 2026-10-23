@@ -1,7 +1,8 @@
 "use client";
 
-import { History as HistoryIcon, Music2, Settings, Trash2 } from "lucide-react";
+import { Search, History as HistoryIcon, Music2, Settings, Trash2 } from "lucide-react";
 import type { RefObject } from "react";
+import { productivityCopy } from "@/lib/editor-productivity-copy";
 import { getAIUiCopy } from "@/lib/ai/ui-copy";
 import { importHistoryCopy } from "@/lib/import-history-copy";
 import { settingsCopy } from "@/lib/settings/copy";
@@ -54,6 +55,11 @@ export function EditorHeaderActions({
         placement === "stepper" && "editor-header-actions--stepper"
       )}
     >
+      <button type="button" className={buttonClassName} aria-label={productivityCopy[locale].commands}
+        title={productivityCopy[locale].commands + " · Ctrl+K"} data-testid="app-command-button"
+        onClick={() => window.dispatchEvent(new Event("lyrics-card:open-commands"))}>
+        <Search className="h-4 w-4" aria-hidden="true" /><span>Ctrl+K</span>
+      </button>
       <button
         ref={examplesButtonRef}
         type="button"

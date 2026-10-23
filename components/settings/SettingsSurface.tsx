@@ -9,6 +9,7 @@ import { SurfaceCloseButton } from "@/components/layout/SurfaceCloseButton";
 import { AboutSettingsSection } from "@/components/settings/AboutSettingsSection";
 import { SupportAuthorSection } from "@/components/settings/SupportAuthorSection";
 import { AiSettingsSection } from "@/components/settings/AiSettingsSection";
+import { productivityCopy } from "@/lib/editor-productivity-copy";
 import { AppearanceSettingsSection } from "@/components/settings/AppearanceSettingsSection";
 import { ExportSettingsSection } from "@/components/settings/ExportSettingsSection";
 import { GeneralSettingsSection } from "@/components/settings/GeneralSettingsSection";
@@ -214,6 +215,8 @@ export function SettingsSurface({
               {saveStatus.label}
             </span>
           ) : null}
+          <button type="button" className="app-button control-focus rounded px-3 py-2 text-sm" aria-label={productivityCopy[locale].commands}
+            onClick={() => window.dispatchEvent(new Event("lyrics-card:open-commands"))}>Ctrl+K</button>
           <SurfaceCloseButton
             buttonRef={closeButtonRef}
             onClick={workspace.closeWorkspace}
@@ -321,7 +324,7 @@ export function SettingsSurface({
                           onChange={workspace.updateDraft}
                         />
                       ) : tab.id === "appearance" ? (
-                        <AppearanceSettingsSection settings={workspace.draft} copy={copy} onChange={workspace.updateDraft} isDesktopShell={isDesktopShell} />
+                        <AppearanceSettingsSection settings={workspace.draft} locale={locale} copy={copy} onChange={workspace.updateDraft} isDesktopShell={isDesktopShell} />
                       ) : tab.id === "export" ? (
                         <ExportSettingsSection settings={workspace.draft} copy={copy} onChange={workspace.updateDraft} />
                       ) : (

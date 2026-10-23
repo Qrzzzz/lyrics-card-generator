@@ -5,6 +5,7 @@ dist-desktop/
 release/
 backups/
 output/
+artifacts/
 .playwright-cli/
 playwright-report/
 test-results/

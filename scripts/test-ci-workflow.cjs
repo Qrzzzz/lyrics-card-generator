@@ -35,7 +35,7 @@ for (const checkName of ["verify", "render-boundary-regression", "web-lite-smoke
 }
 assert.match(
   workflow,
-  /desktop-packaged-regression:[\s\S]+if: github\.event_name == 'push' \|\| github\.event_name == 'pull_request'/,
+  /desktop-legacy:[\s\S]+if: \(github\.event_name == 'push' \|\| github\.event_name == 'pull_request'/,
   "packaged desktop validation runs on the final main-push SHA as well as the PR"
 );
 assert.deepEqual(
@@ -133,7 +133,7 @@ assert.match(
 
 const chromiumJobStart = workflow.indexOf("\n  web-lite-smoke:");
 const crossBrowserJobStart = workflow.indexOf("\n  web-lite-cross-browser-smoke:", chromiumJobStart);
-const crossBrowserJobEnd = workflow.indexOf("\n  desktop-packaged-regression:", crossBrowserJobStart);
+const crossBrowserJobEnd = workflow.indexOf("\n  desktop-legacy:", crossBrowserJobStart);
 assert.ok(
   chromiumJobStart >= 0 && crossBrowserJobStart > chromiumJobStart && crossBrowserJobEnd > crossBrowserJobStart,
   "CI keeps the full Chromium and minimal cross-browser jobs separate"
@@ -160,6 +160,17 @@ assert.match(crossBrowserJob, /Upload cross-browser Web Lite diagnostics[\s\S]+i
 assert.match(crossBrowserJob, /playwright-report\/web-lite-cross-browser\/all\/\*\*/, "the combined HTML report is retained");
 assert.match(crossBrowserJob, /test-results\/web-lite-cross-browser\/all\/\*\*/, "both projects' traces, screenshots, and video are retained");
 assert.doesNotMatch(crossBrowserJob, /continue-on-error:/, "Firefox and WebKit failures remain release-blocking");
+const desktopAggregate = workflow.slice(workflow.indexOf('\n  desktop-packaged-regression:'));
+assert.match(desktopAggregate, /if: always\(\)/, 'desktop aggregate evaluates failed, skipped and cancelled dependencies');
+assert.match(desktopAggregate, /needs: \[desktop-legacy, desktop-build, desktop-groups\]/, 'desktop gate observes all execution paths');
+assert.match(desktopAggregate, /node scripts\/check-desktop-regression-gate.mjs/, 'required desktop check validates outcomes and evidence identities');
+const enforceDesktopStep = desktopAggregate.slice(desktopAggregate.indexOf('- name: Enforce all desktop outcomes'), desktopAggregate.indexOf('- name: Record queue'));
+assert.doesNotMatch(enforceDesktopStep, /continue-on-error/, 'functional gate failures cannot be suppressed by optional telemetry');
+assert.match(workflow, /desktop-build:[\s\S]*if: github.event_name == 'workflow_dispatch' && inputs.desktop_shared_groups/, 'unmeasured shared transport is an explicit canary');
+assert.match(workflow, /group: \[editor, data, native\]/, 'every mapped desktop group has an independent Windows runner');
+assert.match(workflow, /artifact-ids: \$\{\{ needs.desktop-build.outputs.artifact-id \}\}/, 'workers consume the exact build artifact ID');
+assert.match(workflow, /DESKTOP_BUILD_DIGEST: \$\{\{ needs.desktop-build.outputs.digest \}\}/, 'transport is bound to the build digest');
+assert.match(workflow, /node scripts\/desktop-test-bundle.mjs unpack/, 'workers verify bytes and source before executing');
 for (const action of ["actions/checkout", "actions/setup-node", "actions/upload-artifact"]) {
   assert.match(crossBrowserJob, new RegExp(`${action.replace("/", "\\/")}@[0-9a-f]{40}`), `${action} remains commit-pinned`);
 }

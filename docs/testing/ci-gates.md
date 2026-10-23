@@ -38,3 +38,98 @@ PR 和最终 `main` push 都运行这些检查。合并可能改变提交 SHA，
 不新增按路径跳过必需 CI 的规则：共享组件、配置、依赖和文档合约存在交叉影响，且发布授权需要最终 SHA 的完整证据。保留 PR/main 双阶段，因为合并可能改变 SHA；保留发布前来源复核，因为它跨越构建、草稿写入和公开发布三个状态边界。
 
 本地复核按改动边界选择用例，不额外规定一份无条件全量本地 gate。工作流修改应验证 CI/Release 合约、发布授权用例及 PowerShell 语法/原生命令失败传播；打包路径修改应实际重建并测试受影响的产物。完整远端 CI 成功只能在推送后确认，不能把本地结果当作远端发布授权。
+
+## 桌面回归实施与观测
+
+跟踪：[桌面分组、稳定性与失败重跑 #247](https://github.com/Qrzzzz/lyrics-card-generator/issues/247)。
+
+本节承接已关闭的 [#208](https://github.com/Qrzzzz/lyrics-card-generator/issues/208)。
+其代表性场景隔离、直接行为测试和覆盖率说明已交付；当前仍保留过渡连续
+聚合入口。后续只跟踪分组调度、失败重跑成本与新增时序证据，不重开历史
+Issue 或把已完成内容重新列为缺陷。操作规则继续使用
+[发布手册](../release-runbook.md)，不另建一套发布流程。
+
+2026-10-22 的 [v6.8.1 main CI](https://github.com/Qrzzzz/lyrics-card-generator/actions/runs/39765198774)
+中，桌面依赖安装 37 秒、unpacked 构建 80 秒、串行交互回归 656 秒。
+该单次观测说明优先调查交互串行路径；不据此宣称所有 runner 的性能或
+不稳定率。端口故障见 [main CI](https://github.com/Qrzzzz/lyrics-card-generator/actions/runs/39760325223)，
+剪贴板提示捕获失败及重跑见 [PR CI](https://github.com/Qrzzzz/lyrics-card-generator/actions/runs/39762518934)。
+v6.8.1 已加入测试端口原子预占、有限释放等待和场景日志；其余偶发问题仍需
+定位，不能将不同失败混成一种根因，也不能把一次重跑成功记为修复。
+
+### 当前实现与试运行
+
+1. `scripts/desktop-regression-groups.mjs` 已逐项映射旧入口：编辑组保留六个
+   scenario 与完整设置回归，数据组保留 support/import-history/autosave/history-transfer/history-budget，
+   原生组保留 single-instance/startup-origin/language/clipboard/ai-errors/updater/image-output。
+   使用 `npm run desktop:group:editor`、`:data`、`:native` 独立执行；组内串行，
+   每组临时根目录与现有 userData 隔离，进程生命周期沿用现有工具。桌面会话锁
+   阻止本机并发分组，超时终止自己拥有的子进程；保留日志及逐场景退出状态。
+2. `.github/workflows/ci.yml` 的手动 `desktop_shared_groups=true` 试运行路径已实现
+   从当前精确 SHA 构建一次 unpacked 程序，
+   由独立 Windows runner 消费并执行分组。上传下载需验证源 run、SHA、
+   lockfile、平台/架构、运行配置和制品摘要；验证 exe/ASAR/资源内容与权限。
+   默认 PR/main 保留旧串行路径，先测量远端传输开销和实际总时长，再决定是否推广。
+   `.lcg.gz` 使用受限清单和流式提取，拒绝路径越界、重名、符号链接、错误配置、
+   checkout、lockfile、run/attempt、平台/架构和逐文件摘要；由构建 job 输出摘要和
+   artifact ID，消费者使用精确 ID，不能信任下载文件自行声明的身份。
+3. 已保留必需检查名 `desktop-packaged-regression` 作为聚合授权结果；所有必需
+   分组必须实际成功，构建失败、分组缺失、取消、跳过或失败都不能产生成功
+   聚合结果。同步验证来源政策与工作流合约，保持其余四个必需检查不变。
+4. 保留已修复的端口预占；继续统一测试公共工具中的端口预占、进程退出、焦点/选区与提示观测。用可观测
+   状态和有限 deadline 判断完成，保留原始断言；诊断中记录场景、预期/实际
+   状态、错误及必要的截图，避免输出凭证、歌词或真实用户配置。
+
+单实例、剪贴板、焦点、下载和 OS 设置等全局资源测试不得在同一桌面会话
+并发；并行单位是独立 runner。真实高对比度、DPI 和跨显示器验收继续单列，
+不由分组、浏览器模拟或 CI 成功替代。Release 仍从授权 SHA 构建并验证新的
+Setup 字节；本次制品共享只针对同一轮 CI 的 unpacked 程序。
+
+### 验收与回退
+
+- [ ] 分组清单能逐项对应原有测试，代表性分组独立执行通过，不丢失覆盖。
+- [ ] 注入构建失败、分组缺失/跳过/取消/失败、错误 SHA/摘要或制品不可用时，
+  聚合和发布授权均失败；旧 PR 制品不能替代最终 main 提交。
+- [ ] 可显式只重跑失败分组；同一 SHA、同一构建制品与运行契约下成功分组无需
+  重跑，聚合重新确认全部结果。制品过期或身份不符时重建受影响的一组任务。
+- [ ] 首次失败与重跑成功都保留证据；相同故障复现后回到根因定位，禁止无限
+  重试、自动隔离必需测试或降低断言。已知偶发问题保留 Issue 直到有修复证据。
+- [ ] 至少三次发布记录墙钟时长、排队/构建/传输/各组耗时、首次通过率与失败
+  重跑时长，以端到端收益决定是否保留分组方案，不设机器相关毫秒硬门槛。
+- [ ] 回退时恢复旧聚合执行路径，保持五个必需 check 名称与覆盖，不取消
+  PR/main 双阶段，不削减安装、更新、校验和、SBOM、来源证明及公开前验证。
+
+
+### 本地测量及尚缺证据（2026-10-22）
+
+当前 6.8.2 unpacked 候选共 2,478 个文件，505,363,513 字节。受限流式包为
+241,517,586 字节，本机打包 7,553ms、提取与校验 4,446ms；exe 和 ASAR 摘要
+在往返后完全一致。证据：`output/v6.8.2-bundle-measurement.json`。该包明确标记
+`local-uncommitted`，不是 CI 授权制品。这个测量不包含 GitHub 上传/下载或独立
+Windows runner 启动，不能据此宣称分组端到端更快。
+
+手动试运行由 build job 构建和上传一次，三个矩阵成员各占一个独立 Windows runner。
+聚合读取每组最新有效 attempt 的成功结果，验证 SHA、源 run、构建摘要、测试契约
+及完整条目；较旧成功不能掩盖较新失败。只重跑失败 job 时保留原成功组和构建输出，
+若制品过期须重建并重跑全部消费组。`desktop-packaged-regression` 的结果依赖全部
+必需执行路径；取消、跳过、缺失、失败或身份错误均阻止授权。其余四项必需检查、
+PR/main 双阶段与 Release 最终 Setup 验证继续保留。
+
+聚合阶段保存 `desktop-timings.json`，记录 source SHA、run/attempt、排队、构建、
+上传/下载、各组步骤和首次通过状态；未完整的首次检查证据记为 unknown，统计采集
+有超时且非阻塞，采集失败不改变功能门禁结果；不能用缺失统计宣称提速。当前 run
+未结束时总墙钟时间留空，不能把观察
+时刻当成最终完成时间。可在完成后设置 `GITHUB_REPOSITORY`、`GH_TOKEN`，运行
+`node scripts/record-desktop-ci-timings.mjs --run-id=编号` 补录。至少三次正式发布的
+观察、真实 GitHub 传输成本及手动 canary 的 Windows 消费结果尚未取得，因此不推广
+默认路径，不勾完或关闭 #247。
+
+剪贴板提示的观察器已补齐 added/removed mutation 节点和既有可访问通知，避免提示
+在同一批 mutation 内出现并移除时，仅查最终 DOM 丢失证据。确定性反例测试通过，
+故障时保留原生格式/空图状态、已知提示的时间/焦点/可见性与截图。这个反例证明了
+旧观察器的一个盲点，尚不能证明旧 PR CI 偶发失败的唯一根因；保留原失败与 Issue。
+
+本地补充复核（2026-10-23）：data 五项、native 七项通过；editor 六个独立场景通过，
+完整设置入口因旧头部按钮断言失败后同步相邻契约，定向复验通过，保留首次组失败。
+共享包重新提取后的真实 exe 也通过四个启动来源场景。以上仍是本机候选证据；
+远端 canary、网络传输和三次发布观察继续待完成。

@@ -3,6 +3,7 @@ import type { ImportHistoryLimit } from "@/lib/import-history";
 export type UiThemeMode = "album-dynamic" | "dark" | "light";
 
 export type UiTitlebarStyle = "traffic-lights" | "windows";
+export type UiTextSize = "standard" | "large" | "extra-large";
 
 export type EffectiveUiThemeId =
   | "album-dynamic"
@@ -27,6 +28,7 @@ export type UserSettings = {
   uiTitlebarStyle: UiTitlebarStyle;
   uiAcrylicEnabled: boolean;
   uiFontFamily: string;
+  uiTextSize: UiTextSize;
   uiAccentMode: UiAccentMode;
   uiAccentPreset: UiAccentPresetId;
   uiCustomAccentColor: string;
@@ -65,6 +67,7 @@ export const DEFAULT_USER_SETTINGS: UserSettings = {
   uiTitlebarStyle: "traffic-lights",
   uiAcrylicEnabled: false,
   uiFontFamily: "",
+  uiTextSize: "standard",
   uiAccentMode: "album-dynamic",
   uiAccentPreset: "purple",
   uiCustomAccentColor: "#7C3AED",

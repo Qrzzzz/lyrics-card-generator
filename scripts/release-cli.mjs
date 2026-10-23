@@ -35,6 +35,115 @@ export function assertAssets(release, version) {
   }
 }
 
+export function createBoundedFetch(fetchImpl = globalThis.fetch, timeoutMs = 120000) {
+  return (url, init = {}) => fetchImpl(url, { ...init, signal: init.signal
+    ? AbortSignal.any([init.signal, AbortSignal.timeout(timeoutMs)]) : AbortSignal.timeout(timeoutMs) });
+}
+
+async function allJobs(h, base, run) {
+  const jobs = [];
+  for (let page = 1; page <= 20; page++) {
+    const payload = await h.api(`${base}/actions/runs/${run.id}/attempts/${run.run_attempt}/jobs?per_page=100&page=${page}`);
+    if (!Array.isArray(payload.jobs)) throw Error('Invalid GitHub jobs response');
+    jobs.push(...payload.jobs);
+    if (payload.jobs.length < 100) return jobs;
+  }
+  throw Error('GitHub jobs pagination exceeded its bound');
+}
+
+export function inspectJobs(jobs, run, sha, required = []) {
+  if (!Number.isSafeInteger(run.id) || !Number.isSafeInteger(run.run_attempt) || run.run_attempt < 1) throw Error('Invalid GitHub run identity/attempt');
+  const failures = [];
+  const missing = [];
+  let pending = false;
+  for (const name of required) {
+    const matches = jobs.filter(job => job.name === name);
+    if (!matches.length) { missing.push(name); continue; }
+    if (matches.length !== 1) throw Error(`Ambiguous required check: ${name}`);
+    const job = matches[0];
+    if (!['queued', 'in_progress', 'completed', 'waiting', 'pending', 'requested'].includes(job.status)) throw Error(`Invalid GitHub job status: ${name}`);
+    if (job.head_sha !== sha || job.run_attempt !== run.run_attempt) throw Error(`Check SHA/attempt mismatch: ${name}`);
+    if (job.status !== 'completed') pending = true;
+    else if (job.conclusion !== 'success') failures.push(name);
+  }
+  for (const job of jobs.filter(job => job.status === 'completed' && ['failure', 'cancelled', 'timed_out', 'action_required'].includes(job.conclusion))) {
+    const steps = (job.steps || []).filter(step => ['failure', 'cancelled', 'timed_out'].includes(step.conclusion)).map(step => step.name);
+    failures.push(`${job.name}${steps.length ? ' / ' + steps.join(', ') : ''}`);
+  }
+  if (failures.length) throw Error(`Workflow failed: ${run.html_url}; job/step: ${[...new Set(failures)].join('; ')}. Inspect before an explicit rerun and Resume.`);
+  if (run.status === 'completed' && missing.length) throw Error(`Missing required checks: ${missing.join(', ')}; ${run.html_url}`);
+  return { ready: !pending && !missing.length && run.status === 'completed' && run.conclusion === 'success', missing };
+}
+
+export async function probeCi(h, state, event, registration) {
+  const base = `repos/${state.repository}`;
+  const sha = event === 'pull_request' ? state.sourceSha : state.releaseSha;
+  if (event === 'pull_request') {
+    const pr = await h.api(`${base}/pulls/${state.pr}`);
+    if (pr.head.sha !== sha || pr.base.ref !== policy.baseBranch || pr.head.repo?.full_name !== state.repository || pr.state !== 'open' || pr.merged_at) throw Error('PR source/state changed while waiting; refusing merge');
+  }
+  const payload = await h.api(`${base}/actions/workflows/${policy.ciWorkflow}/runs?head_sha=${sha}&event=${event}&per_page=100${event === 'push' ? `&branch=${policy.baseBranch}` : ''}`);
+  if (!Array.isArray(payload.workflow_runs)) throw Error('Invalid GitHub workflow runs response');
+  if (payload.workflow_runs.some(run => !run || !Number.isSafeInteger(run.id) || !Number.isSafeInteger(run.run_attempt) || run.run_attempt < 1
+    || typeof run.path !== 'string' || !/^[a-f0-9]{40}$/.test(run.head_sha || '') || typeof run.event !== 'string'
+    || (event === 'pull_request' && !Array.isArray(run.pull_requests)))) throw Error('Invalid GitHub workflow run record');
+  const candidates = payload.workflow_runs.filter(run => run.head_sha === sha && run.event === event && run.path?.split('@')[0] === `.github/workflows/${policy.ciWorkflow}`
+    && (event !== 'pull_request' || run.pull_requests?.some(pr => pr.number === state.pr))
+    && (event !== 'push' || run.head_branch === policy.baseBranch)).sort((a, b) => b.id - a.id || b.run_attempt - a.run_attempt);
+  const run = candidates[0];
+  if (!run) {
+    if ((h.now?.() ?? Date.now()) - registration.started >= 10 * 60000) throw Error(`CI checks not registered for exact SHA ${sha} within 10 minutes; inspect Actions before Resume`);
+    h.observe?.(`Checks not registered yet; SHA ${sha}`);
+    return false;
+  }
+  const jobs = await allJobs(h, base, run);
+  if (!jobs.some(job => policy.requiredChecks.includes(job.name)) && run.status !== 'completed' && (h.now?.() ?? Date.now()) - registration.started >= 10 * 60000) throw Error(`CI checks not registered within 10 minutes: ${run.html_url}`);
+  const inspection = inspectJobs(jobs, run, sha, policy.requiredChecks);
+  const active = jobs.filter(job => job.status === 'in_progress').map(job => {
+    const step = (job.steps || []).find(step => step.status === 'in_progress');
+    return `${job.name}${step ? '/' + step.name : ''}`;
+  });
+  h.observe?.(`${run.html_url} attempt=${run.run_attempt} ${run.status}/${run.conclusion || 'pending'}; completed=${jobs.filter(job => job.status === 'completed').length}; active=${active.join(',') || 'none'}; missing=${inspection.missing.join(',') || 'none'}`);
+  if (run.status === 'completed' && run.conclusion !== 'success') throw Error(`Workflow failed: ${run.html_url}; conclusion=${run.conclusion}`);
+  return inspection.ready ? run : false;
+}
+
+// Optional progress fields are additive: schema-1 state files remain resumable.
+export function createWaiter({ state, save, report, now = Date.now, sleep = ms => new Promise(resolve => setTimeout(resolve, ms)), timeoutMinutes }) {
+  const invocationStarted = now();
+  const deadline = invocationStarted + timeoutMinutes * 60000;
+  let observation;
+  let previousObservation;
+  return {
+    observe(value) { observation = value; },
+    async wait(label, probe) {
+      const started = now();
+      state.progress = { ...(state.progress || {}), stage: label, startedAt: new Date(started).toISOString(), invocationStartedAt: new Date(invocationStarted).toISOString() };
+      save(state);
+      report(`${state.progress.startedAt} | ${label} started | invocation elapsed=${Math.round((started - invocationStarted) / 1000)}s`);
+      let outcome = 'failed';
+      try {
+        while (now() < deadline) {
+          const result = await probe();
+          if (observation !== previousObservation) {
+            report(`${label} | stage=${Math.round((now() - started) / 1000)}s total=${Math.round((now() - invocationStarted) / 1000)}s | ${observation || 'waiting'}`);
+            previousObservation = observation;
+          }
+          if (result) { outcome = 'success'; return result; }
+          await sleep(Math.min(60000, Math.max(0, deadline - now())));
+        }
+        throw Error(`Timed out at ${label}; use -Resume from the original checkout. Inspect Actions before explicitly dispatching any missing Release run; do not recreate tags.`);
+      } finally {
+        const elapsedMs = now() - started;
+        state.progress = { ...state.progress, outcome, elapsedMs, finishedAt: new Date(now()).toISOString() };
+        state.phaseHistory = [...(state.phaseHistory || []), { stage: label, startedAt: new Date(started).toISOString(), elapsedMs, outcome }].slice(-100);
+        save(state);
+        report(`${label} ${outcome} | stage=${Math.round(elapsedMs / 1000)}s total=${Math.round((now() - invocationStarted) / 1000)}s`);
+      }
+    }
+  };
+}
+
 // All remote mutations go through this orchestration function. Tests inject a
 // fake host; the production host below never invokes a shell with interpolated text.
 export async function publishRelease(h, state) {
@@ -56,6 +165,14 @@ export async function publishRelease(h, state) {
         if (matching.length > 1) throw Error('Ambiguous release PR');
         pr = matching[0];
         if (!pr) {
+          const open = prs.filter(p => p.state === 'open' && !p.merged_at && p.base.ref === policy.baseBranch && p.head.repo?.full_name === repository);
+          if (open.length > 1) throw Error('Ambiguous open release PR');
+          if (open.length === 1) {
+            h.command('git', ['push', 'origin', `HEAD:refs/heads/${branch}`]);
+            pr = await h.api(`${base}/pulls/${open[0].number}`);
+          }
+        }
+        if (!pr) {
           h.command('git', ['push', 'origin', `HEAD:refs/heads/${branch}`]);
           h.command('gh', ['pr', 'create', '--repo', repository, '--base', policy.baseBranch, '--head', branch, '--title', `Release ${tag}`, '--body-file', `docs/releases/v${state.packageVersion}.zh-CN.md`]);
           const created = await h.api(`${base}/pulls?state=open&head=${encodeURIComponent(repository.split('/')[0] + ':' + branch)}&base=${policy.baseBranch}`);
@@ -67,11 +184,8 @@ export async function publishRelease(h, state) {
       if (pr.head.sha !== sourceSha || pr.base.ref !== policy.baseBranch || pr.head.repo?.full_name !== repository) throw Error('PR source changed; refusing merge');
       if (!pr.merged_at) {
         if (pr.state !== 'open' || pr.draft) throw Error('PR must be open and ready for review');
-        await h.wait('PR checks', async () => {
-          const checks = h.json('gh', ['pr', 'checks', String(state.pr), '--repo', repository, '--json', 'name,bucket']);
-          if (checks.some(c => ['fail', 'cancel'].includes(c.bucket))) throw Error('PR checks failed; inspect the PR before Resume');
-          return policy.requiredChecks.every(name => checks.some(c => c.name === name && c.bucket === 'pass'));
-        });
+        const registration = { started: h.now?.() ?? Date.now() };
+        await h.wait('PR checks', () => probeCi(h, state, 'pull_request', registration));
         h.command('gh', ['pr', 'merge', String(state.pr), '--repo', repository, '--squash', '--match-head-commit', sourceSha]);
         pr = await h.api(`${base}/pulls/${state.pr}`);
       }
@@ -80,11 +194,8 @@ export async function publishRelease(h, state) {
     }
   }
   const sha = state.releaseSha;
-  const ci = await h.wait('main CI', async () => {
-    const runs = (await h.api(`${base}/actions/workflows/${policy.ciWorkflow}/runs?head_sha=${sha}&event=push&branch=${policy.baseBranch}&per_page=100`)).workflow_runs;
-    const run = runs[0];
-    return run && assertRun(run, sha, policy.ciWorkflow, 'push') ? run : false;
-  });
+  const registration = { started: h.now?.() ?? Date.now() };
+  const ci = await h.wait('main CI', () => probeCi(h, state, 'push', registration));
   save({ ciRunId: ci.id, ciRunAttempt: ci.run_attempt });
   // Fetch only after main CI; never move an existing local or remote tag.
   h.command('git', ['fetch', 'origin', policy.baseBranch]);
@@ -106,10 +217,12 @@ export async function publishRelease(h, state) {
   const run = await h.wait('Release workflow', async () => {
     const runs = (await h.api(`${base}/actions/workflows/release.yml/runs?head_sha=${sha}&per_page=100`)).workflow_runs;
     const exact = runs.filter(r => r.head_branch === tag && ['push', 'workflow_dispatch'].includes(r.event));
-    const current = exact[0];
+    const current = exact.sort((a, b) => b.id - a.id || b.run_attempt - a.run_attempt)[0];
     // Missing runs are not an excuse for blindly dispatching a second build.
     if (!current) return false;
     save({ releaseRunId: current.id, releaseRunAttempt: current.run_attempt });
+    h.observe?.(`${current.html_url} attempt=${current.run_attempt} ${current.status}/${current.conclusion || 'pending'}`);
+    if (current.status === 'completed' && current.conclusion !== 'success') inspectJobs(await allJobs(h, base, current), current, sha);
     return assertRun(current, sha, 'release.yml') ? current : false;
   });
   const resolved = await h.resolve(state);
@@ -129,8 +242,6 @@ async function main() {
   const command = (exe, argv, options = {}) => {
     try { return execFileSync(exe, argv, { cwd: root, encoding: 'utf8', maxBuffer: 8 * 1024 * 1024, timeout: 120000, windowsHide: true, ...options }).trim(); }
     catch (error) {
-      // gh pr checks uses exit 8 for pending checks while still returning JSON.
-      if (exe === 'gh' && argv[0] === 'pr' && argv[1] === 'checks' && error.status === 8) return String(error.stdout).trim();
       throw Error(`${exe} ${argv.slice(0, 3).join(' ')} failed (exit ${error.status ?? 'unknown'}):\n${String(error.stderr || error.stdout || error.message).slice(-4000)}`);
     }
   };
@@ -175,23 +286,16 @@ async function main() {
     const save = value => { writeFileSync(`${statePath}.tmp`, JSON.stringify(value, null, 2) + '\n'); renameSync(`${statePath}.tmp`, statePath); };
     save(state);
     const token = process.env.GH_TOKEN || process.env.GITHUB_TOKEN || command('gh', ['auth', 'token']);
-    const client = createGitHubClient({ token });
-    const stateClient = createReleaseStateClient({ token });
-    const deadline = Date.now() + Number(args.timeout) * 60000;
+    const fetchImpl = createBoundedFetch();
+    const client = createGitHubClient({ token, fetchImpl });
+    const stateClient = createReleaseStateClient({ token, fetchImpl });
+    const waiter = createWaiter({ state, save, report: console.log, timeoutMinutes: Number(args.timeout) });
     await publishRelease({
       command, json, save, report: console.log,
       api: path => client.get(`/${path}`),
       authorize: s => authorizeReleaseSource({ client, repository, tag: s.tag, expectedSha: s.releaseSha }),
       resolve: s => resolveGitHubRelease({ client: stateClient, repository, tag: s.tag, expectedSha: s.releaseSha }),
-      wait: async (label, probe) => {
-        console.log(`Waiting: ${label} (60-second polling; deadline ${args.timeout} minutes for this invocation)`);
-        while (Date.now() < deadline) {
-          const result = await probe();
-          if (result) return result;
-          await new Promise(r => setTimeout(r, 60000));
-        }
-        throw Error(`Timed out at ${label}; use -Resume. If no Release run exists, inspect GitHub Actions and explicitly dispatch release.yml with --ref ${state.tag} -f tag=${state.tag}; do not recreate the tag.`);
-      }
+      wait: waiter.wait, observe: waiter.observe
     }, state);
   } finally { closeSync(fd); unlinkSync(lockPath); }
 }

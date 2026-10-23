@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { AppCommands, focusCommandDestination, type CommandDestination } from "@/components/editor/AppCommands";
+import { useInterfaceTextSize } from "@/components/settings/useInterfaceTextSize";
+import type { UiTextSize } from "@/lib/settings/types";
 import { ClipboardCopy } from "lucide-react";
 import { ExportPanel } from "@/components/editor/ExportPanel";
 import { ExportCardHost } from "@/components/editor/ExportCardHost";
@@ -91,6 +94,7 @@ const WEB_LITE_SETTINGS: UserSettings = {
 };
 
 type WebLitePreferences = {
+  uiTextSize: UiTextSize;
   version: 1;
   locale: WebLiteLocale;
   exportFormat: ExportFormatId;
@@ -100,6 +104,8 @@ type WebLitePreferences = {
 export function WebLiteEditor() {
   const initialPreferences = useMemo(readPreferences, []);
   const [state, setState] = useState<AppState>(() => createInitialState(initialPreferences.locale));
+  const [uiTextSize, setUiTextSize] = useState<UiTextSize>(initialPreferences.uiTextSize);
+  useInterfaceTextSize(uiTextSize);
   const [currentStep, setCurrentStep] = useState(0);
   const [landscapeLineLimitNoticeRevision, setLandscapeLineLimitNoticeRevision] = useState<number | null>(null);
   const [fontSchemePreview, setFontSchemePreview] = useState<FontScheme | null>(null);
@@ -209,6 +215,7 @@ export function WebLiteEditor() {
 
   useEffect(() => {
     const preferences: WebLitePreferences = {
+      uiTextSize,
       version: 1,
       locale,
       exportFormat,
@@ -220,7 +227,7 @@ export function WebLiteEditor() {
     } catch {
       // Web Lite remains fully usable when storage is blocked.
     }
-  }, [exportFormat, exportQuality, locale]);
+  }, [exportFormat, exportQuality, locale, uiTextSize]);
 
   useEffect(() => {
     if (landscapeLineLimitNoticeRevision !== null && landscapeCandidateLineStatus.canExport) {
@@ -477,10 +484,11 @@ export function WebLiteEditor() {
     {
       id: "font",
       title: t("step.fontScheme"),
-      description: copy.fontDescription,
+      description: [t("fontSize"), t("lineHeight"), t("fontSchemeTitle")].join(" · "),
       isComplete: true,
       content: (
         <WebLiteFontPanel
+          locale={locale}
           style={state.style}
           copy={copy}
           t={t}
@@ -492,7 +500,7 @@ export function WebLiteEditor() {
     {
       id: "visual",
       title: t("step.visual"),
-      description: t("background"),
+      description: t("settings.visibleContent"),
       isComplete: true,
       content: (
         <VisualSettingsPanel
@@ -552,13 +560,25 @@ export function WebLiteEditor() {
     }
   ];
 
+  function navigateCommand(destination: CommandDestination) {
+    if (!Number.isInteger(destination.step) || destination.step < 0 || destination.step >= steps.length) return false;
+    setCurrentStep(destination.step);
+    focusCommandDestination(destination);
+    return true;
+  }
   return (
     <div
+      data-app-commands="true"
+      data-ui-text-size={uiTextSize}
       className="app-shell min-h-screen"
       data-ui-theme="dark"
       data-desktop-shell="false"
       style={{ "--app-accent": accentColor } as React.CSSProperties}
     >
+      <AppCommands locale={locale} titles={steps.map(step => step.title)} onNavigate={navigateCommand}
+        onExport={() => { setCurrentStep(5); void runImageOutput("export"); }} onCopy={() => { setCurrentStep(5); void runImageOutput("copy"); }}
+        onTogglePreview={() => setIsPreviewVisible(value => !value)} busy={isExporting} readinessStore={exportReadinessStore}
+        lyricsAvailable={state.style.contentMode === "lyrics"} translationEnabled={state.style.translationEnabled} desktop={false} onTextSizeChange={setUiTextSize} />
       <div className="absolute inset-0 z-0 overflow-hidden bg-[#08090C]" aria-hidden="true">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_14%_8%,rgba(255,255,255,0.055),transparent_32%),radial-gradient(circle_at_92%_22%,rgba(77,91,124,0.11),transparent_30%),linear-gradient(145deg,#0b0c12,#07080d_62%,#090a10)]" />
         <div className="absolute inset-0 bg-[linear-gradient(110deg,rgba(255,255,255,0.045),transparent_26%,rgba(255,255,255,0.02)_48%,transparent_72%)]" />
@@ -665,6 +685,7 @@ function createInitialState(locale: WebLiteLocale): AppState {
 function readPreferences(): WebLitePreferences {
   const browserLocale = readBrowserPreferredLocale();
   const fallback: WebLitePreferences = {
+    uiTextSize: "standard",
     version: 1,
     locale: browserLocale,
     exportFormat: "png",
@@ -680,6 +701,7 @@ function readPreferences(): WebLitePreferences {
     const parsed = JSON.parse(window.localStorage.getItem(PREFERENCES_KEY) || "{}") as Partial<WebLitePreferences>;
     return {
       version: 1,
+      uiTextSize: parsed.uiTextSize === "large" || parsed.uiTextSize === "extra-large" ? parsed.uiTextSize : "standard",
       locale: isWebLiteLocale(parsed.locale) ? parsed.locale : fallback.locale,
       exportFormat: parsed.exportFormat === "webp" || parsed.exportFormat === "jpg" ? parsed.exportFormat : "png",
       exportQuality: parsed.exportQuality === "medium" || parsed.exportQuality === "high" ? parsed.exportQuality : "high"

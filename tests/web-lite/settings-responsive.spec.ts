@@ -49,7 +49,7 @@ test("settings fit supported window sizes and every allowed split endpoint", asy
 test("dragging the settings split keeps the active input and output geometry", async ({ page }) => {
   await page.setViewportSize({ width: 1920, height: 1080 });
   await open(page);
-  await page.locator('[data-step-id="layout"]').click();
+  await page.locator('[data-step-id="font"]').click();
   const input = page.getByRole("slider", { name: "Font Size", exact: true });
   await input.focus();
   await input.press("ArrowRight");
