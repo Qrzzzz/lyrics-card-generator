@@ -36,6 +36,7 @@ let page;
 const rendererDialogs = [];
 const searchRequests = [];
 const resolveRequests = [];
+let heldSongResolve = null;
 const titlebarVisualMetrics = [];
 let titlebarPerformanceComparison = null;
 
@@ -940,13 +941,46 @@ async function assertSongSearchBehavior() {
   await page.waitForFunction(() => (
     document.querySelector('[data-testid="song-search-listbox"] [role="option"]')?.textContent?.includes("mouse mock")
   ));
-  await options.nth(2).click();
-  await page.waitForFunction(() => document.querySelector('[aria-label="歌曲搜索"]')?.hasAttribute("disabled"));
-  assert.equal(await options.nth(0).isDisabled(), true, "options disable during resolve");
-  await combobox.waitFor({ state: "visible" });
-  await page.waitForFunction(() => !document.querySelector('[aria-label="歌曲搜索"]')?.hasAttribute("disabled"));
-  assert.match(await combobox.inputValue(), /result 3 - Mock Artist 3/, "mouse selection resolves the clicked option");
-  await popup.waitFor({ state: "hidden" });
+  // Observe the renderer transition before clicking: disabling the focused
+  // input can blur/collapse the popup before a later Playwright round trip.
+  // Hold the response until the pending-state proof exists, then deliberately
+  // read that proof AFTER the popup has gone away. No short timing window.
+  await page.evaluate(() => {
+    const probe = { snapshot: null, observer: null };
+    probe.observer = new MutationObserver(() => {
+      const input = document.querySelector('[aria-label="歌曲搜索"]');
+      const items = [...document.querySelectorAll('[data-testid="song-search-listbox"] [role="option"]')];
+      if (input?.disabled && items.length === 8 && items.every(item => item.disabled)) {
+        probe.snapshot = { inputDisabled: input.disabled, optionCount: items.length, disabledCount: items.filter(item => item.disabled).length };
+      }
+    });
+    probe.observer.observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ["disabled"] });
+    window.__lyricsSongResolveProbe = probe;
+  });
+  const pendingResolve = { requested: false, released: false };
+  pendingResolve.response = new Promise(resolve => { pendingResolve.release = resolve; });
+  heldSongResolve = pendingResolve;
+  try {
+    await options.nth(2).click();
+    await expect.poll(() => pendingResolve.requested).toBe(true);
+    await page.waitForFunction(() => window.__lyricsSongResolveProbe?.snapshot, undefined, { timeout: 5_000 });
+    assert.equal(pendingResolve.released, false, "the disabled state was observed before releasing the response");
+    pendingResolve.released = true;
+    pendingResolve.release();
+    await combobox.waitFor({ state: "visible" });
+    await page.waitForFunction(() => !document.querySelector('[aria-label="歌曲搜索"]')?.hasAttribute("disabled"));
+    assert.match(await combobox.inputValue(), /result 3 - Mock Artist 3/, "mouse selection resolves the clicked option");
+    await popup.waitFor({ state: "hidden" });
+    assert.deepEqual(await page.evaluate(() => window.__lyricsSongResolveProbe.snapshot),
+      { inputDisabled: true, optionCount: 8, disabledCount: 8 }, "all options disable during resolve, even when inspected after completion");
+  } finally {
+    pendingResolve.release();
+    heldSongResolve = null;
+    await page.evaluate(() => {
+      window.__lyricsSongResolveProbe?.observer.disconnect();
+      delete window.__lyricsSongResolveProbe;
+    });
+  }
 
   await combobox.fill("enter mock");
   await listbox.waitFor({ state: "visible" });
@@ -4104,7 +4138,8 @@ try {
   await page.route("**/api/resolve-searched-song", async (route) => {
     const body = route.request().postDataJSON();
     resolveRequests.push(body);
-    await new Promise((resolve) => setTimeout(resolve, 220));
+    const held = heldSongResolve;
+    if (held) { held.requested = true; await held.response; }
     const index = Number(body.id) - 10_000;
     await route.fulfill({
       status: 200,
