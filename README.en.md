@@ -85,7 +85,7 @@ Starting with v6.2.2, Windows x64 Setup is the only distributed desktop package.
 
 ### v6.8.6 · Release Notes
 
-**Local candidate, not yet released · 2026-10-25**
+**2026-10-25**
 
 v6.8.6 — Softens preview and click decorations and pins the browser test environment with earlier failure diagnostics.
 

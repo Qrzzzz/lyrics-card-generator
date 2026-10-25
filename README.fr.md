@@ -84,7 +84,7 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 ### v6.8.6 · Notes de version
 
-**Candidat local, pas encore publié · 2026-10-25**
+**2026-10-25**
 
 v6.8.6 — Atténue les effets d’aperçu et de clic et fixe l’environnement des tests navigateur avec un diagnostic plus précoce.
 

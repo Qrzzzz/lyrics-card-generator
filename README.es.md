@@ -84,7 +84,7 @@ A partir de v6.2.2, Setup para Windows x64 es el único paquete de escritorio di
 
 ### v6.8.6 · Notas de la versión
 
-**Candidato local, aún no publicado · 2026-10-25**
+**2026-10-25**
 
 v6.8.6 — Suaviza los efectos de vista previa y clic y fija el entorno de pruebas del navegador con diagnósticos previos.
 
