@@ -1835,7 +1835,7 @@ button {
 }
 
 .preview-pressure-stage[data-pressure-enabled="true"]:hover .preview-pressure-card {
-  filter: drop-shadow(0 22px 32px rgba(0, 0, 0, 0.34));
+  filter: drop-shadow(0 13px 22px rgba(0, 0, 0, 0.24));
 }
 
 .preview-pressure-highlight {
@@ -1854,7 +1854,7 @@ button {
 }
 
 .preview-pressure-stage[data-pressure-enabled="true"]:hover .preview-pressure-highlight {
-  opacity: 0.8;
+  opacity: 0.35;
 }
 
 .app-shell[data-reduce-motion="true"] .preview-pressure-stage {

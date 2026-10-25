@@ -169,12 +169,12 @@ function assertIdle(harness: AnimationHarness) {
 }
 
 const componentSource = readFileSync(resolve("components/layout/ClickSpark.tsx"), "utf8");
-assert.match(componentSource, /const duration = 520/);
-assert.match(componentSource, /const distance = eased \* 42 \* spark\.lengthScale/);
-assert.match(componentSource, /const lineLength = 22 \* \(1 - eased\) \* spark\.lengthScale/);
-assert.match(componentSource, /const sparkCount = 14/);
-assert.match(componentSource, /index % 3 === 0 \? "#FFFFFF" : themeColor/);
-assert.match(componentSource, /index % 2 === 0 \? 1\.2 : 0\.82/);
+assert.match(componentSource, /const duration = 360/);
+assert.match(componentSource, /const distance = eased \* 24 \* spark\.lengthScale/);
+assert.match(componentSource, /const lineLength = 12 \* \(1 - eased\) \* spark\.lengthScale/);
+assert.match(componentSource, /const sparkCount = 8/);
+assert.match(componentSource, /index % 4 === 0 \? "#FFFFFF" : themeColor/);
+assert.match(componentSource, /index % 2 === 0 \? 1 : 0\.72/);
 assert.match(componentSource, /Math\.round\(rect\.width \* ratio\)/);
 assert.match(componentSource, /context\?\.setTransform\(ratio, 0, 0, ratio, 0, 0\)/);
 assert.match(componentSource, /observer\.disconnect\(\)/);

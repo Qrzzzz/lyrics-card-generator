@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdtemp, mkdir, rm } from 'node:fs/promises';
+import { mkdtemp, mkdir, rm, readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { _electron as electron, expect } from '@playwright/test';
@@ -7,7 +7,8 @@ import { prepareEditorLanguage } from './editor-language-test-helpers.mjs';
 import { closeElectronApplication } from './electron-test-lifecycle.mjs';
 
 const profile = await mkdtemp(path.join(tmpdir(), 'lyrics-preview-motion-'));
-const output = path.resolve('output/playwright/v6.8.4');
+const version = JSON.parse(await readFile('package.json','utf8')).version;
+const output = path.resolve(`output/playwright/v${version}`);
 await mkdir(output, { recursive: true });
 let app, page;
 async function launch() {
@@ -24,6 +25,9 @@ try {
   await page.getByTestId('settings-tab-appearance').click();
   const toggle = page.getByTestId('preview-motion-toggle');
   await expect(toggle).toHaveAttribute('aria-checked', 'true');
+  const sparkToggle=page.getByTestId('click-spark-toggle');
+  await expect(sparkToggle).toHaveAttribute('aria-checked','true');
+  await sparkToggle.click();
   await toggle.click();
   await expect.poll(preference).toBe(false);
   await page.screenshot({ path: path.join(output, 'native-setting.png') });
@@ -31,6 +35,7 @@ try {
   await closeElectronApplication(app, { label: 'preview-motion-restart' }); app = undefined;
   await launch();
   assert.equal(await preference(), false);
+  assert.equal(await page.evaluate(async ()=>(await window.lyricsCardDesktop.loadAppPreferences()).userSettings.sparkCursorEnabled),false);
   await page.locator('[data-step-id="layout"]').click();
   await expect(page.getByTestId('lyric-card-preview-pressure')).toHaveAttribute('data-pressure-enabled', 'false');
   await page.screenshot({ path: path.join(output, 'native-restored.png') });

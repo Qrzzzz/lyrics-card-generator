@@ -17,10 +17,14 @@ import type { AppState } from "../lib/types";
 // Normalization tests intentionally mix legacy, invalid, and current fields to
 // prove migrations preserve valid preferences while clamping unsafe values.
 const defaults = normalizeUserSettings(undefined);
-assert.equal(defaults.previewMotionEnabled, true, "existing users retain the previous preview behavior");
+assert.equal(defaults.previewMotionEnabled, true, "existing preview behavior remains enabled by default");
+assert.equal(defaults.sparkCursorEnabled, true, "decorative feedback remains enabled by default per user feedback");
+assert.equal(normalizeUserSettings({ previewMotionEnabled: true, sparkCursorEnabled: true }).previewMotionEnabled, true);
+assert.equal(normalizeUserSettings({ previewMotionEnabled: true, sparkCursorEnabled: true }).sparkCursorEnabled, true);
 assert.equal(normalizeUserSettings({ previewMotionEnabled: false }).previewMotionEnabled, false);
-assert.equal(normalizeUserSettings({ previewMotionEnabled: "false" }).previewMotionEnabled, true);
-assert.equal(resetUserSettings(normalizeUserSettings({ previewMotionEnabled: false }), { persist: false }).previewMotionEnabled, true);
+assert.equal(normalizeUserSettings({ previewMotionEnabled: "false", sparkCursorEnabled: "false" }).previewMotionEnabled, true);
+assert.equal(normalizeUserSettings({ sparkCursorEnabled: "false" }).sparkCursorEnabled, true);
+assert.equal(resetUserSettings(normalizeUserSettings({ previewMotionEnabled: false, sparkCursorEnabled: false }), { persist: false }).previewMotionEnabled, true);
 for (const acrylic of [false, true]) {
   const system = normalizeUserSettings({ uiThemeMode: "system", uiAcrylicEnabled: acrylic });
   assert.equal(system.uiThemeMode, "system");

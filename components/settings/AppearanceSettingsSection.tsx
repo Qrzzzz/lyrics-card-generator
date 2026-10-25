@@ -192,6 +192,7 @@ export function AppearanceSettingsSection({
           label={copy.spark}
           description={copy.sparkDescription}
           checked={settings.sparkCursorEnabled}
+          testId="click-spark-toggle"
           onChange={(sparkCursorEnabled) => onChange({ ...settings, sparkCursorEnabled })}
         />
       </SettingsGroup>
