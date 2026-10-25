@@ -1,6 +1,6 @@
 {
   "name": "lyric-card-generator",
-  "version": "6.8.6",
+  "version": "6.8.7",
   "private": true,
   "main": "electron/main.js",
   "scripts": {
@@ -153,7 +153,7 @@
     "autoprefixer": "^10.6.1",
     "c8": "^11.0.0",
     "cross-env": "^10.1.0",
-    "electron": "42.11.3",
+    "electron": "42.11.16",
     "electron-builder": "26.15.3",
     "esbuild": "^0.28.2",
     "eslint": "^9.39.5",
