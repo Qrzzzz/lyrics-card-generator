@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { access, mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
+import { access, mkdtemp, mkdir, rm, writeFile, readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { _electron as electron, expect } from "@playwright/test";
@@ -11,7 +11,8 @@ assert.match(label, /^[a-z0-9-]+$/);
 const expectedScale = Number(process.argv.find((arg) => arg.startsWith("--expected-scale="))?.slice(17));
 const requireHighContrast = process.argv.includes("--require-high-contrast");
 const profile = await mkdtemp(path.join(tmpdir(), "lyrics-hig-"));
-const output = path.resolve("output/playwright/v6.8.2-native", label);
+const version = JSON.parse(await readFile("package.json", "utf8")).version;
+const output = path.resolve(`output/playwright/v${version}-native`, label);
 await mkdir(output, { recursive: true });
 let app;
 async function environment() {

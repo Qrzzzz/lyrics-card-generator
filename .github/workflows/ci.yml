@@ -23,6 +23,11 @@ on:
         type: choice
         default: none
         options: [none, editor, data, native]
+      desktop_runtime_retention_days:
+        description: Manual shared-canary runtime retention; use one day only for a real expiry acceptance run
+        type: choice
+        default: '7'
+        options: ['7', '1']
 
 # Supersede stale runs for the same branch or pull request while keeping
 # unrelated validation independent.
@@ -107,6 +112,9 @@ jobs:
     # Keep production surface restoration, reduced-motion semantics, and
     # bounded React render work independent from fast source-contract checks.
     runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.63.0-noble@sha256:eff16c30e6f3f4af0a03fa4b706120d5e9b0891c344a27d64559aff5900a4a27
+      options: --user 1001 --init --ipc=host
     timeout-minutes: 25
 
     steps:
@@ -122,14 +130,28 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Install Chromium
-        run: npx playwright install --with-deps chromium
+      - name: Verify pinned Chromium runtime
+        id: browser-runtime
+        timeout-minutes: 2
+        shell: bash
+        run: |
+          mkdir -p artifacts/render-boundaries
+          node scripts/check-ci-browser-runtime.mjs --browsers=chromium 2>&1 | tee artifacts/render-boundaries/browser-runtime.log
 
       - name: Run production render-boundary regressions
         shell: bash
         run: |
           mkdir -p artifacts/render-boundaries
           npm run render-boundaries:test 2>&1 | tee artifacts/render-boundaries/command.log
+
+      - name: Preserve render runtime context
+        if: always()
+        shell: bash
+        env:
+          RUNTIME_OUTCOME: ${{ steps.browser-runtime.outcome }}
+        run: |
+          mkdir -p artifacts/render-boundaries
+          printf '{"sourceSha":"%s","runId":"%s","attempt":"%s","runtime":"%s"}\n' "$GITHUB_SHA" "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" "$RUNTIME_OUTCOME" > artifacts/render-boundaries/runtime-context.json
 
       - name: Upload render-boundary diagnostics
         if: always()
@@ -148,8 +170,10 @@ jobs:
     # Browser tests remain isolated from the fast verification job so Chromium
     # setup and artifact evidence cannot delay type and contract feedback.
     runs-on: ubuntu-latest
-    # A recorded runner spent 605s installing Chromium before tests started.
-    # Keep setup and test budgets separate, with room to preserve diagnostics.
+    container:
+      image: mcr.microsoft.com/playwright:v1.63.0-noble@sha256:eff16c30e6f3f4af0a03fa4b706120d5e9b0891c344a27d64559aff5900a4a27
+      options: --user 1001 --init --ipc=host
+    # Browsers and OS dependencies come from the immutable image, not live apt.
     timeout-minutes: 25
 
     steps:
@@ -165,13 +189,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Install Chromium
-        timeout-minutes: 12
+      - name: Verify pinned Chromium runtime
+        id: browser-runtime
+        timeout-minutes: 2
         shell: bash
         run: |
           mkdir -p artifacts/web-lite
-          trap 'status=$?; echo "Chromium setup: ${SECONDS}s; exit=${status}" >> "$GITHUB_STEP_SUMMARY"' EXIT
-          npx playwright install --with-deps chromium 2>&1 | tee artifacts/web-lite/install-chromium.log
+          trap 'status=$?; echo "Chromium runtime: ${SECONDS}s; exit=${status}" >> "$GITHUB_STEP_SUMMARY"' EXIT
+          node scripts/check-ci-browser-runtime.mjs --browsers=chromium 2>&1 | tee artifacts/web-lite/browser-runtime.log
 
       # verify owns freshness checking for this same checkout SHA. Browser
       # jobs consume the committed artifact without rebuilding it again.
@@ -191,6 +216,15 @@ jobs:
           trap 'status=$?; echo "Deferred surfaces: ${SECONDS}s; exit=${status}" >> "$GITHUB_STEP_SUMMARY"' EXIT
           npm run deferred-surfaces:test 2>&1 | tee artifacts/web-lite/deferred-surfaces.log
 
+      - name: Preserve Web Lite runtime context
+        if: always()
+        shell: bash
+        env:
+          RUNTIME_OUTCOME: ${{ steps.browser-runtime.outcome }}
+        run: |
+          mkdir -p artifacts/web-lite
+          printf '{"sourceSha":"%s","runId":"%s","attempt":"%s","runtime":"%s"}\n' "$GITHUB_SHA" "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" "$RUNTIME_OUTCOME" > artifacts/web-lite/runtime-context.json
+
       - name: Upload Web Lite browser evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
@@ -207,9 +241,11 @@ jobs:
     name: web-lite-cross-browser-smoke
     # Keep the release-blocking compatibility subset small: detailed geometry,
     # axe, format, render-boundary, and benchmark coverage stays Chromium-only.
-    # Both short projects share one dependency/browser install. Keep bounded
-    # headroom for runner-level system dependency installation.
+    # Both short projects share one locked, preinstalled browser environment.
     runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.63.0-noble@sha256:eff16c30e6f3f4af0a03fa4b706120d5e9b0891c344a27d64559aff5900a4a27
+      options: --user 1001 --init --ipc=host
     timeout-minutes: 25
     steps:
       - name: Checkout
@@ -224,15 +260,35 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Install Firefox and WebKit
-        run: npx playwright install --with-deps firefox webkit
+      - name: Verify pinned Firefox and WebKit runtime
+        id: browser-runtime
+        timeout-minutes: 2
+        shell: bash
+        run: |
+          mkdir -p artifacts/web-lite-cross-browser
+          trap 'status=$?; echo "Compatibility runtime: ${SECONDS}s; exit=${status}" >> "$GITHUB_STEP_SUMMARY"' EXIT
+          node scripts/check-ci-browser-runtime.mjs --browsers=firefox,webkit 2>&1 | tee artifacts/web-lite-cross-browser/browser-runtime.log
 
       # All five checks must pass together; verify owns artifact freshness.
       - name: Stage the committed production Web Lite artifact
         run: npm run pages:prepare
 
       - name: Run Firefox and WebKit Web Lite compatibility smoke
-        run: npm run web-lite:cross-browser-smoke
+        timeout-minutes: 10
+        shell: bash
+        run: |
+          mkdir -p artifacts/web-lite-cross-browser
+          trap 'status=$?; echo "Compatibility tests: ${SECONDS}s; exit=${status}" >> "$GITHUB_STEP_SUMMARY"' EXIT
+          npm run web-lite:cross-browser-smoke 2>&1 | tee artifacts/web-lite-cross-browser/command.log
+
+      - name: Preserve compatibility runtime context
+        if: always()
+        shell: bash
+        env:
+          RUNTIME_OUTCOME: ${{ steps.browser-runtime.outcome }}
+        run: |
+          mkdir -p artifacts/web-lite-cross-browser
+          printf '{"sourceSha":"%s","runId":"%s","attempt":"%s","runtime":"%s"}\n' "$GITHUB_SHA" "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" "$RUNTIME_OUTCOME" > artifacts/web-lite-cross-browser/runtime-context.json
 
       - name: Upload cross-browser Web Lite diagnostics
         if: always()
@@ -240,6 +296,7 @@ jobs:
         with:
           name: web-lite-cross-browser-diagnostics-${{ github.run_attempt }}
           path: |
+            artifacts/web-lite-cross-browser/**
             playwright-report/web-lite-cross-browser/all/**
             test-results/web-lite-cross-browser/all/**
           if-no-files-found: error
@@ -336,7 +393,7 @@ jobs:
           path: artifacts/desktop-bundle/
           compression-level: 0
           if-no-files-found: error
-          retention-days: 7
+          retention-days: ${{ inputs.desktop_runtime_retention_days == '1' && 1 || 7 }}
 
   desktop-groups:
     name: desktop-group-${{ matrix.group }}

@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v6.8.5.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v6.8.6.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="./docs/development.en.md">ローカル開発</a> ·
@@ -76,19 +76,19 @@
 
 
 
-* Windows x64 インストーラー：`Lyrics.Card.Generator.Setup.6.8.5.exe`
+* Windows x64 インストーラー：`Lyrics.Card.Generator.Setup.6.8.6.exe`
 
 v6.2.2 以降、配布するデスクトップパッケージは Windows x64 Setup のみです。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v6.8.5 · リリースノート
+### v6.8.6 · リリースノート
 
-**2026-10-23**
+**2026-10-25**
 
-v6.8.5 — リリース用 push 後の PR 同期待機を修正し、CI のタイムアウト診断と共有成果物の復旧確認を追加します。
+v6.8.6 — プレビューとクリックの装飾を控えめにし、ブラウザーテスト環境を固定して起動前の診断を補います。
 
-[简体中文](./docs/releases/v6.8.5.zh-CN.md) · [繁體中文](./docs/releases/v6.8.5.zh-TW.md) · [English](./docs/releases/v6.8.5.en.md) · [Français](./docs/releases/v6.8.5.fr.md) · [日本語](./docs/releases/v6.8.5.ja.md) · [Español](./docs/releases/v6.8.5.es.md)
+[简体中文](./docs/releases/v6.8.6.zh-CN.md) · [繁體中文](./docs/releases/v6.8.6.zh-TW.md) · [English](./docs/releases/v6.8.6.en.md) · [Français](./docs/releases/v6.8.6.fr.md) · [日本語](./docs/releases/v6.8.6.ja.md) · [Español](./docs/releases/v6.8.6.es.md)
 
 <a id="主な機能"></a>
 

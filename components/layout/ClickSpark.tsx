@@ -86,7 +86,7 @@ export function ClickSpark({
 
       sparksRef.current = sparksRef.current.filter((spark) => {
         const elapsed = timestamp - spark.startTime;
-        const duration = 520;
+        const duration = 360;
 
         if (elapsed >= duration) {
           return false;
@@ -94,9 +94,9 @@ export function ClickSpark({
 
         const progress = elapsed / duration;
         const eased = progress * (2 - progress);
-        const distance = eased * 42 * spark.lengthScale;
-        const lineLength = 22 * (1 - eased) * spark.lengthScale;
-        const alpha = 1 - progress;
+        const distance = eased * 24 * spark.lengthScale;
+        const lineLength = 12 * (1 - eased) * spark.lengthScale;
+        const alpha = (1 - progress) * 0.65;
         const x1 = spark.x + distance * Math.cos(spark.angle);
         const y1 = spark.y + distance * Math.sin(spark.angle);
         const x2 = spark.x + (distance + lineLength) * Math.cos(spark.angle);
@@ -105,8 +105,8 @@ export function ClickSpark({
         context.save();
         context.globalAlpha = alpha;
         context.strokeStyle = spark.color;
-        context.lineWidth = spark.color === "#FFFFFF" ? 2 : 2.8;
-        context.shadowBlur = 16;
+        context.lineWidth = spark.color === "#FFFFFF" ? 1.2 : 1.6;
+        context.shadowBlur = 6;
         context.shadowColor = spark.color;
         context.beginPath();
         context.moveTo(x1, y1);
@@ -160,18 +160,18 @@ export function ClickSpark({
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
     const now = performance.now();
-    const sparkCount = 14;
+    const sparkCount = 8;
     const nextSparks = Array.from({ length: sparkCount }, (_, index) => ({
       x,
       y,
       angle: (2 * Math.PI * index) / sparkCount,
       startTime: now,
-      color: index % 3 === 0 ? "#FFFFFF" : themeColor,
-      lengthScale: index % 2 === 0 ? 1.2 : 0.82
+      color: index % 4 === 0 ? "#FFFFFF" : themeColor,
+      lengthScale: index % 2 === 0 ? 1 : 0.72
     }));
 
     // Bound retained sparks so bursty input cannot increase animation work without limit.
-    sparksRef.current = [...sparksRef.current, ...nextSparks].slice(-84);
+    sparksRef.current = [...sparksRef.current, ...nextSparks].slice(-48);
     animationLoopRef.current?.start();
   }
 
@@ -179,6 +179,7 @@ export function ClickSpark({
     <div ref={rootRef} className="relative min-h-screen" onPointerDown={handlePointerDown}>
       {children}
       <canvas
+        data-testid="click-spark-canvas"
         ref={canvasRef}
         className={`pointer-events-none absolute inset-0 z-50 ${enabled && !reduceMotion ? "block" : "hidden"}`}
         style={{ pointerEvents: "none" }}

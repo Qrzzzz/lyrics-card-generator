@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v6.8.5.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v6.8.6.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="./docs/development.en.md">Développement local</a> ·
@@ -76,19 +76,19 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 
 
-* Programme d’installation Windows x64 : `Lyrics.Card.Generator.Setup.6.8.5.exe`
+* Programme d’installation Windows x64 : `Lyrics.Card.Generator.Setup.6.8.6.exe`
 
 À partir de la v6.2.2, le programme Setup Windows x64 est le seul paquet distribué.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### v6.8.5 · Notes de version
+### v6.8.6 · Notes de version
 
-**2026-10-23**
+**2026-10-25**
 
-v6.8.5 — Corrige la synchronisation du PR après un push de publication et ajoute le diagnostic des délais CI et les contrôles de récupération des artefacts partagés.
+v6.8.6 — Atténue les effets d’aperçu et de clic et fixe l’environnement des tests navigateur avec un diagnostic plus précoce.
 
-[简体中文](./docs/releases/v6.8.5.zh-CN.md) · [繁體中文](./docs/releases/v6.8.5.zh-TW.md) · [English](./docs/releases/v6.8.5.en.md) · [Français](./docs/releases/v6.8.5.fr.md) · [日本語](./docs/releases/v6.8.5.ja.md) · [Español](./docs/releases/v6.8.5.es.md)
+[简体中文](./docs/releases/v6.8.6.zh-CN.md) · [繁體中文](./docs/releases/v6.8.6.zh-TW.md) · [English](./docs/releases/v6.8.6.en.md) · [Français](./docs/releases/v6.8.6.fr.md) · [日本語](./docs/releases/v6.8.6.ja.md) · [Español](./docs/releases/v6.8.6.es.md)
 
 <a id="fonctionnalités-principales"></a>
 

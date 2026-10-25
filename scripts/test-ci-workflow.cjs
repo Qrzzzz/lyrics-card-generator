@@ -140,24 +140,38 @@ assert.ok(
 );
 const chromiumJob = workflow.slice(chromiumJobStart, crossBrowserJobStart);
 const crossBrowserJob = workflow.slice(crossBrowserJobStart, crossBrowserJobEnd);
+const browserPolicy = JSON.parse(readFileSync('security/ci-browser-runtime.json', 'utf8'));
+for (const [name, job] of [['render',renderBoundaryJob],['chromium',chromiumJob],['compatibility',crossBrowserJob],['benchmark',benchmarkWorkflow]]) {
+  assert.ok(job.includes(`image: ${browserPolicy.image}`), `${name} uses the exact immutable browser image`);
+  assert.match(job, /options: --user 1001 --init --ipc=host/, `${name} uses the non-root runner UID with browser process/shared-memory configuration`);
+  assert.doesNotMatch(job, /playwright install|apt-get|apt install/, `${name} does not install system/browser dependencies from a live mirror`);
+  assert.match(job, /node scripts\/check-ci-browser-runtime\.mjs --browsers=/, `${name} verifies actual browser startup and versions`);
+}
+for(const job of [renderBoundaryJob,chromiumJob,crossBrowserJob]) {
+  assert.match(job,/Preserve .* runtime context\s+if: always\(\)/,'a context file survives failure before browser reports exist');
+  assert.match(job,/runtime-context\.json/,'pre-test diagnostics preserve run/SHA/runtime outcome');
+}
+assert.match(workflow,/desktop_runtime_retention_days:[\s\S]*?default: '7'[\s\S]*?options: \['7', '1'\]/,'natural-expiry rehearsal is opt-in and bounded to one or seven days');
+assert.match(workflow,/retention-days: \$\{\{ inputs\.desktop_runtime_retention_days == '1' && 1 \|\| 7 \}\}/,'runtime retention remains seven days unless explicitly selected for expiry acceptance');
 assert.match(chromiumJob, /timeout-minutes: 25/, "Chromium setup has bounded headroom after the recorded 15-minute cancellation");
-assert.match(chromiumJob, /Install Chromium\s+timeout-minutes: 12/, "slow browser installation has its own finite diagnostic boundary");
+assert.match(chromiumJob, /Verify pinned Chromium runtime\s+id: browser-runtime\s+timeout-minutes: 2/, "browser startup verification has a finite diagnostic boundary");
 assert.match(chromiumJob, /Run Web Lite browser smoke tests\s+timeout-minutes: 10/, "test hangs retain a separate finite boundary");
 assert.match(chromiumJob, /Run deferred editor surface recovery tests\s+timeout-minutes: 3/, "deferred recovery tests remain bounded");
-assert.equal((chromiumJob.match(/shell: bash/g) || []).length, 3, "tee-wrapped commands explicitly use Actions bash with pipefail so failures cannot be hidden");
-for (const evidence of ['artifacts/web-lite/**', 'test-results/web-lite/**', 'test-results/deferred-surfaces/**', 'install-chromium.log', 'smoke.log', 'deferred-surfaces.log']) {
+assert.equal((chromiumJob.match(/shell: bash/g) || []).length, 4, "runtime, tests and fallback diagnostics explicitly use bash");
+for (const evidence of ['artifacts/web-lite/**', 'test-results/web-lite/**', 'test-results/deferred-surfaces/**', 'browser-runtime.log', 'smoke.log', 'deferred-surfaces.log']) {
   assert.ok(chromiumJob.includes(evidence), `Web Lite retains ${evidence} for failure classification`);
 }
 assert.match(chromiumJob, /Upload Web Lite browser evidence\s+if: always\(\)/, "setup/test failure still attempts evidence upload");
 assert.doesNotMatch(chromiumJob, /continue-on-error|--grep|--max-failures/, "all Chromium assertions remain blocking and unfiltered");
-assert.match(chromiumJob, /npx playwright install --with-deps chromium/, "the existing full Web Lite job installs Chromium");
+assert.match(chromiumJob, /--browsers=chromium/, "the full Web Lite job verifies its preinstalled Chromium");
 assert.match(chromiumJob, /npm run web-lite:smoke/, "the existing full Chromium Web Lite suite remains continuous");
 assert.doesNotMatch(chromiumJob, /npm run web-lite:(?:check|build)/, "Chromium consumes the committed artifact already checked by verify");
 assert.doesNotMatch(chromiumJob, /firefox|webkit/i, "the full suite is not tripled across browser engines");
 assert.match(crossBrowserJob, /timeout-minutes: 25/, "the cross-browser job has a bounded timeout with dependency-install headroom");
 assert.doesNotMatch(crossBrowserJob, /strategy:|matrix:|matrix\.browser/, "short compatibility projects share one runner and dependency install");
-assert.match(crossBrowserJob, /npx playwright install --with-deps firefox webkit/, "the shared runner installs both supported engines");
-assert.match(crossBrowserJob, /run: npm run web-lite:cross-browser-smoke\s*$/m, "the full compatibility command runs both projects");
+assert.match(crossBrowserJob, /--browsers=firefox,webkit/, "both compatibility engines are verified before tests");
+assert.match(crossBrowserJob, /npm run web-lite:cross-browser-smoke 2>&1 \| tee/, "the unfiltered full compatibility command retains its output");
+assert.match(crossBrowserJob, /artifacts\/web-lite-cross-browser\/\*\*/, "runtime diagnostics survive failures before browser reports exist");
 assert.doesNotMatch(crossBrowserJob, /WEB_LITE_BROWSER:|--project=|--grep|--max-failures/, "neither engine is filtered out or stopped after the other's failure");
 const artifactStage = crossBrowserJob.indexOf("npm run pages:prepare");
 const browserCommand = crossBrowserJob.indexOf("npm run web-lite:cross-browser-smoke");
@@ -220,8 +234,8 @@ for (const criticalPath of [
 for (const supportedFamily of ["Google Chrome and Microsoft Edge", "Mozilla Firefox", "Apple Safari on macOS"]) {
   assert.ok(browserSupport.includes(supportedFamily), `browser support policy retains ${supportedFamily}`);
 }
-assert.match(browserSupport, /Playwright `1\.61\.1`/, "the policy binds automation to the locked Playwright version");
-for (const lockedEngine of ["Chromium `149.0.7827.55`", "Firefox `151.0`", "WebKit `26.5`"]) {
+assert.ok(browserSupport.includes(`Playwright \`${browserPolicy.playwrightVersion}\``), "the policy binds automation to the locked Playwright version");
+for (const lockedEngine of [`Chromium \`${browserPolicy.browsers.chromium}\``, `Firefox \`${browserPolicy.browsers.firefox}\``, `WebKit \`${browserPolicy.browsers.webkit}\``]) {
   assert.ok(browserSupport.includes(lockedEngine), `browser support policy records ${lockedEngine}`);
 }
 assert.match(browserSupport, /Mobile browsers[\s\S]+best effort/, "the non-blocking mobile boundary is explicit");

@@ -157,8 +157,8 @@ assert.match(songImportAside, /key="song-info-summary"[\s\S]*?exit=\{reduceMotio
 assert.match(lyricCardPreview, /rect\.top >= window\.innerHeight/);
 assert.match(lyricCardPreview, /\}, \[measurementKey\]\);/);
 assert.match(lyricCardPreview, /data-testid="lyric-card-preview-pressure"/);
-assert.match(lyricCardPreview, /rotateXTarget\.set\(normalizedY \* -5\.5\)/);
-assert.match(lyricCardPreview, /scaleTarget\.set\(0\.992\)/);
+assert.match(lyricCardPreview, /rotateXTarget\.set\(normalizedY \* -2\)/);
+assert.match(lyricCardPreview, /scaleTarget\.set\(0\.997\)/);
 assert.match(lyricCardPreview, /event\.pointerType === "touch" \|\| !event\.isPrimary \|\| event\.button !== 0/);
 assert.match(lyricCardPreview, /const isPointerInside =[\s\S]*?resetPressureFeedback\(\);/);
 assert.match(lyricEditor, /onAnimationComplete=\{\(\) => \{[\s\S]*?setPreviewMeasurementKey/);

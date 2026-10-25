@@ -110,26 +110,26 @@ export function LyricCardPreview({
     const normalizedX = Math.min(1, Math.max(-1, ((event.clientX - rect.left) / rect.width - 0.5) * 2));
     const normalizedY = Math.min(1, Math.max(-1, ((event.clientY - rect.top) / rect.height - 0.5) * 2));
 
-    rotateXTarget.set(normalizedY * -5.5);
-    rotateYTarget.set(normalizedX * 7.5);
-    xTarget.set(normalizedX * 3.5);
-    yTarget.set(normalizedY * 2.5 - 2);
+    rotateXTarget.set(normalizedY * -2);
+    rotateYTarget.set(normalizedX * 2.5);
+    xTarget.set(normalizedX * 1.2);
+    yTarget.set(normalizedY * 0.8 - 0.4);
     event.currentTarget.style.setProperty("--preview-pressure-x", `${((normalizedX + 1) / 2) * 100}%`);
     event.currentTarget.style.setProperty("--preview-pressure-y", `${((normalizedY + 1) / 2) * 100}%`);
   }
 
   function handlePointerEnter(event: React.PointerEvent<HTMLDivElement>) {
     if (!pressureFeedbackEnabled || event.pointerType === "touch") return;
-    zTarget.set(18);
-    scaleTarget.set(1.012);
+    zTarget.set(6);
+    scaleTarget.set(1.004);
   }
 
   function handlePointerDown(event: React.PointerEvent<HTMLDivElement>) {
     if (!pressureFeedbackEnabled || event.pointerType === "touch" || !event.isPrimary || event.button !== 0) return;
     event.currentTarget.setPointerCapture(event.pointerId);
-    zTarget.set(4);
-    yTarget.set(1);
-    scaleTarget.set(0.992);
+    zTarget.set(2);
+    yTarget.set(0.4);
+    scaleTarget.set(0.997);
   }
 
   function handlePointerUp(event: React.PointerEvent<HTMLDivElement>) {
@@ -148,8 +148,8 @@ export function LyricCardPreview({
       return;
     }
 
-    zTarget.set(18);
-    scaleTarget.set(1.012);
+    zTarget.set(6);
+    scaleTarget.set(1.004);
     handlePointerMove(event);
   }
 
