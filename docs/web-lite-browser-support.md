@@ -20,6 +20,8 @@ Mobile browsers and unlisted browser families are best effort. The responsive in
 
 The support window is a policy. When browser vendors advance, update Playwright and validate the new engines instead of editing this document merely to mirror one pinned runtime number. Safari-specific acceptance still benefits from a real supported macOS/Safari check when behavior depends on the browser shell.
 
+The container runs as UID 1001. Preflight verifies that this UID also owns HOME before launching any browser; a root process with a user-owned HOME is rejected rather than bypassing Firefox's session protection.
+
 ## Release gates
 
 The full Chromium suite covers the broad Web Lite contract, including:

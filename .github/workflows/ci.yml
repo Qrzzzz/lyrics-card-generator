@@ -114,7 +114,7 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: mcr.microsoft.com/playwright:v1.63.0-noble@sha256:eff16c30e6f3f4af0a03fa4b706120d5e9b0891c344a27d64559aff5900a4a27
-      options: --init --ipc=host
+      options: --user 1001 --init --ipc=host
     timeout-minutes: 25
 
     steps:
@@ -172,7 +172,7 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: mcr.microsoft.com/playwright:v1.63.0-noble@sha256:eff16c30e6f3f4af0a03fa4b706120d5e9b0891c344a27d64559aff5900a4a27
-      options: --init --ipc=host
+      options: --user 1001 --init --ipc=host
     # Browsers and OS dependencies come from the immutable image, not live apt.
     timeout-minutes: 25
 
@@ -245,7 +245,7 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: mcr.microsoft.com/playwright:v1.63.0-noble@sha256:eff16c30e6f3f4af0a03fa4b706120d5e9b0891c344a27d64559aff5900a4a27
-      options: --init --ipc=host
+      options: --user 1001 --init --ipc=host
     timeout-minutes: 25
     steps:
       - name: Checkout

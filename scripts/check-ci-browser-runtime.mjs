@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import os from 'node:os';
 import { createRequire } from 'node:module';
 import { pathToFileURL } from 'node:url';
 const require = createRequire(import.meta.url);
@@ -12,7 +13,15 @@ export function assertBrowserRuntimePolicy(policy, lock) {
   }
   if (Object.keys(policy.browsers || {}).sort().join(',') !== 'chromium,firefox,webkit'
     || Object.values(policy.browsers).some(version => typeof version !== 'string' || !/^\d+(?:\.\d+)+$/.test(version))) throw Error('All three browser versions must be pinned');
+  if (policy.userId !== 1001) throw Error('Browser image must use the non-root runner user 1001');
   return true;
+}
+
+export function assertBrowserRuntimeUser({ expectedUserId, userId, homeOwnerId }) {
+  if (expectedUserId !== 1001 || userId !== expectedUserId || homeOwnerId !== userId) {
+    throw Error(`Browser user/HOME mismatch: expected UID ${expectedUserId}, process UID ${userId}, HOME owner ${homeOwnerId}`);
+  }
+  return { userId, homeOwnerId };
 }
 
 export async function probeBrowserRuntime({ name, expectedVersion, browserType, access = file => fs.accessSync(file, fs.constants.X_OK) }) {
@@ -31,6 +40,7 @@ async function main() {
   const lock = JSON.parse(fs.readFileSync('package-lock.json', 'utf8'));
   assertBrowserRuntimePolicy(policy, lock);
   if (process.platform !== 'linux') throw Error('The pinned CI browser image is Linux-only');
+  const identity = assertBrowserRuntimeUser({ expectedUserId: policy.userId, userId: process.getuid(), homeOwnerId: fs.statSync(os.homedir()).uid });
   const names = process.argv[2]?.replace(/^--browsers=/, '').split(',');
   if (!process.argv[2]?.startsWith('--browsers=') || process.argv.length !== 3 || !names?.length || new Set(names).size !== names.length || names.some(name => !Object.hasOwn(policy.browsers, name))) throw Error('Explicit supported --browsers list required');
   const core = JSON.parse(fs.readFileSync(require.resolve('playwright-core/package.json'), 'utf8'));
@@ -38,6 +48,6 @@ async function main() {
   const playwright = await import('playwright');
   const results = [];
   for (const name of names) results.push(await probeBrowserRuntime({ name, expectedVersion: policy.browsers[name], browserType: playwright[name] }));
-  console.log(JSON.stringify({ image: policy.image, playwrightVersion: core.version, browsers: results }));
+  console.log(JSON.stringify({ image: policy.image, identity, playwrightVersion: core.version, browsers: results }));
 }
 if (process.argv[1] && pathToFileURL(path.resolve(process.argv[1])).href === import.meta.url) main().catch(error => { console.error(error.message); process.exitCode = 1; });

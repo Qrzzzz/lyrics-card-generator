@@ -1,11 +1,15 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { assertBrowserRuntimePolicy, probeBrowserRuntime } from './check-ci-browser-runtime.mjs';
+import { assertBrowserRuntimePolicy, assertBrowserRuntimeUser, probeBrowserRuntime } from './check-ci-browser-runtime.mjs';
 const policy = JSON.parse(fs.readFileSync('security/ci-browser-runtime.json','utf8'));
 const lock = JSON.parse(fs.readFileSync('package-lock.json','utf8'));
 assert.equal(assertBrowserRuntimePolicy(policy, lock), true);
-for (const patch of [{ schema: 2 }, { image: 'mcr.microsoft.com/playwright:latest' }, { image: policy.image.replace(`:v${policy.playwrightVersion}`,':v0.0.0') }, { browsers: { chromium: policy.browsers.chromium } }]) {
+for (const patch of [{ schema: 2 }, { userId: 0 }, { image: 'mcr.microsoft.com/playwright:latest' }, { image: policy.image.replace(`:v${policy.playwrightVersion}`,':v0.0.0') }, { browsers: { chromium: policy.browsers.chromium } }]) {
   assert.throws(() => assertBrowserRuntimePolicy({ ...policy, ...patch }, lock));
+}
+assert.deepEqual(assertBrowserRuntimeUser({ expectedUserId: 1001, userId: 1001, homeOwnerId: 1001 }), { userId: 1001, homeOwnerId: 1001 });
+for (const [userId, homeOwnerId] of [[0, 1001], [1001, 0], [0, 0]]) {
+  assert.throws(() => assertBrowserRuntimeUser({ expectedUserId: 1001, userId, homeOwnerId }), /user\/HOME mismatch/);
 }
 for (const name of ['@playwright/test','playwright','playwright-core']) {
   const changed = structuredClone(lock); changed.packages[`node_modules/${name}`].version = '0.0.0';

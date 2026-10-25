@@ -143,7 +143,7 @@ const crossBrowserJob = workflow.slice(crossBrowserJobStart, crossBrowserJobEnd)
 const browserPolicy = JSON.parse(readFileSync('security/ci-browser-runtime.json', 'utf8'));
 for (const [name, job] of [['render',renderBoundaryJob],['chromium',chromiumJob],['compatibility',crossBrowserJob],['benchmark',benchmarkWorkflow]]) {
   assert.ok(job.includes(`image: ${browserPolicy.image}`), `${name} uses the exact immutable browser image`);
-  assert.match(job, /options: --init --ipc=host/, `${name} retains browser process/shared-memory configuration`);
+  assert.match(job, /options: --user 1001 --init --ipc=host/, `${name} uses the non-root runner UID with browser process/shared-memory configuration`);
   assert.doesNotMatch(job, /playwright install|apt-get|apt install/, `${name} does not install system/browser dependencies from a live mirror`);
   assert.match(job, /node scripts\/check-ci-browser-runtime\.mjs --browsers=/, `${name} verifies actual browser startup and versions`);
 }

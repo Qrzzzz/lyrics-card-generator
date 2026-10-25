@@ -173,6 +173,10 @@ Linux 浏览器 job 和手动 benchmark 使用 `security/ci-browser-runtime.json
 一致。每个 job 实际启动所需浏览器，版本／缺文件／依赖错误均阻断，不再每轮从
 软件源下载系统依赖，不靠扩大预算、减少用例或自动重跑取得成功。
 
+容器使用 `--user 1001` 与 GitHub runner 的 HOME 所有者一致。预检同时验证政策
+UID、实际 UID 和 HOME 所有者，身份不一致在浏览器启动前失败。首候选曾因 root
+使用 pwuser HOME 被 Firefox 拒绝；该原始失败保留，不通过改 HOME 或安全参数掩盖。
+
 预检、主测试和延迟加载仍有有限时限。预检日志及 always 运行上下文与报告一起
 上传，测试尚未生成报告时也保留 source SHA、run/attempt 和 runtime outcome。
 镜像拉取或 runner 初始化失败仍查 Actions 原始日志，不宣称消除全部基础设施故障。

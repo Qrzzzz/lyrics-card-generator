@@ -73,6 +73,22 @@ try {
     }
   }
   assert.equal(providerCalls, 0, "schema rejection never contacts a provider");
+  const malformedSongBodies = {
+    "search-song": [{ keyword: 1 }, { keyword: "" }, { keyword: "x".repeat(121) },
+      ...[0, 21, 1.5, "8", null].map(limit => ({ keyword: "fixture", limit }))],
+    "resolve-searched-song": [{ id: 1 }, { id: "1a" }, { id: "1".repeat(33) }, { id: "1", source: "qq" }],
+    "fetch-lyrics": [{ source: "invalid", title: "fixture" }, { source: "qq", title: "" },
+      { source: "qq", title: "x".repeat(241) }, { source: "qq", title: "fixture", artist: 1 }],
+    "parse-song": [{ url: 1 }, { url: "" }, { url: "x".repeat(8193) }]
+  };
+  for (const [route, handler] of jsonRoutes) {
+    for (const body of [null, [], ...malformedSongBodies[route]]) {
+      const result = await handler(jsonRequest('/api/' + route, body));
+      assert.equal(result.status, 400, route + " preserves transport field constraints after the schema upgrade");
+      assert.equal((await result.json()).code, "invalid_request");
+    }
+  }
+  assert.equal(providerCalls, 0, "malformed song schemas never contact a provider");
   const rejectedCrossSite = await translate(jsonRequest("/api/ai/translate", aiBody("http://127.0.0.1:11434/v1"), {
     origin: CROSS_SITE_ORIGIN
   }));
