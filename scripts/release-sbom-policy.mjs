@@ -232,7 +232,7 @@ export function validateReleaseEvidence({ inventory, auditPackageText, auditLock
     assert.equal(runtime[field], runtime.version, `desktop runtime ${field} must match Electron inventory version`);
   }
   assert.ok(
-    ["local-electron-dist", "electron-builder-download"].includes(runtime.distributionSource),
+    ["local-electron-dist", "electron-builder-download", "authorized-main-ci-artifact"].includes(runtime.distributionSource),
     "desktop runtime distributionSource must identify the electron-builder input path"
   );
   if (runtime.distributionSource === "local-electron-dist") {
@@ -241,6 +241,23 @@ export function validateReleaseEvidence({ inventory, auditPackageText, auditLock
   } else {
     assert.equal(runtime.electronDistVersion, null, "electron-builder download path must not claim a local Electron dist version");
     assert.equal(runtime.stagedElectronDist, null, "electron-builder download path must not claim a local Electron dist path");
+  }
+  if (runtime.distributionSource === 'authorized-main-ci-artifact') {
+    const reused = runtime.reusedFrom;
+    assertRecord(reused, 'attested main runtime source');
+    assert.equal(reused.attested, true);
+    assert.equal(reused.installerInputVerified, true);
+    assert.match(reused.repository ?? '', /^[\w.-]+\/[\w.-]+$/u);
+    assert.match(reused.sha ?? '', /^[a-f0-9]{40}$/u);
+    assert.equal(reused.sha, inventory.application.releaseSha, 'main runtime must bind the final release source');
+    assert.match(reused.sourceTree ?? '', /^[a-f0-9]{40}$/u);
+    for (const field of ['buildDigest','contractDigest','lockDigest']) assert.match(reused[field] ?? '', SHA256_PATTERN);
+    assert.match(String(reused.runId), /^[1-9]\d*$/u);
+    assert.ok(Number.isSafeInteger(reused.artifactId) && reused.artifactId > 0);
+    assert.ok(Number.isSafeInteger(reused.buildAttempt) && reused.buildAttempt > 0 && reused.buildAttempt <= reused.authorizedCiAttempt);
+    assert.equal(reused.electronVersion, runtime.version);
+    assert.match(reused.nodeVersion ?? '', /^\d+\.\d+\.\d+$/u);
+    assert.match(reused.builderVersion ?? '', /^\d+\.\d+\.\d+$/u);
   }
   assertRecord(runtime.packagedExecutable, "desktop runtime packagedExecutable");
   assert.equal(

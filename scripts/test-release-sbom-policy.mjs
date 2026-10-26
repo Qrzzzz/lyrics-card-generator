@@ -41,7 +41,23 @@ for (const invalidCase of fixture.invalidCases) {
   );
 }
 
-console.log("Release SPDX Electron inventory policy tests passed");
+const reusedBundle = materialize(fixture);
+reusedBundle.inventory.application.releaseSha = 'a'.repeat(40);
+const reusedRuntime = reusedBundle.inventory.desktopRuntime;
+reusedRuntime.distributionSource = 'authorized-main-ci-artifact';
+reusedRuntime.electronDistVersion = null;
+reusedRuntime.stagedElectronDist = null;
+reusedRuntime.reusedFrom = { attested: true, installerInputVerified: true, repository: 'owner/repo', sha: 'a'.repeat(40), sourceTree: 'b'.repeat(40),
+  buildDigest: 'c'.repeat(64), contractDigest: 'd'.repeat(64), lockDigest: 'e'.repeat(64), runId: '12', artifactId: 14, buildAttempt: 1, authorizedCiAttempt: 2,
+  electronVersion: reusedRuntime.version, nodeVersion: '22.23.4', builderVersion: '26.15.3' };
+const reusedSbom = enrichReleaseSbom(reusedBundle);
+assert.doesNotThrow(() => inspectReleaseSbom({ ...reusedBundle, sbom: reusedSbom }));
+for (const patch of [{ attested: false }, { installerInputVerified: false }, { sha: 'f'.repeat(40) }, { buildAttempt: 3 }, { electronVersion: '0.0.0' }, { contractDigest: '' }]) {
+  const inventory = structuredClone(reusedBundle.inventory);
+  Object.assign(inventory.desktopRuntime.reusedFrom, patch);
+  assert.throws(() => inspectReleaseSbom({ ...reusedBundle, inventory, sbom: reusedSbom }), 'reused provenance must remain source-bound and complete');
+}
+console.log("Release SPDX Electron inventory policy tests passed, including attested main artifact provenance.");
 
 function materialize(source) {
   const auditPackageText = `${JSON.stringify(source.auditPackage, null, 2)}\n`;

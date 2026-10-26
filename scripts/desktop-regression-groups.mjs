@@ -2,8 +2,9 @@
 export const desktopGroups = Object.freeze({
   editor: [
     ...['search', 'song-import', 'examples', 'fonts', 'titlebar', 'lyrics-input'].map(scenario => ({ id: `scenario-${scenario}`, command: 'desktop:scenario-test', args: [`--scenario=${scenario}`] })),
-    { id: 'settings', command: 'desktop:settings-test' }
+    { id: 'settings-preferences', command: 'desktop:settings-preferences-test' }
   ],
+  workspace: [{ id: 'settings-workspace', command: 'desktop:settings-workspace-test' }],
   data: ['support', 'import-history', 'autosave', 'history-transfer', 'history-budget'].map(id => ({ id, command: `desktop:${id}-test` })),
   native: ['single-instance', 'startup-origin', 'language', 'clipboard', 'ai-errors', 'updater', 'image-output'].map(id => ({ id, command: `desktop:${id}-test` }))
 });

@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import { validateCandidateTransition, prepareReleaseCandidate, archiveReleaseCandidate } from './release-candidate.mjs';
+const previous = { schema: 1, repository: 'owner/repo', branch: 'codex/fix', tag: 'v1.2.3', packageVersion: '1.2.3', sourceSha: 'a'.repeat(40), pr: 4, progress: { outcome: 'failed' }, phaseHistory: [{ stage: 'PR checks', outcome: 'failed' }] };
+const next = { schema: 1, repository: previous.repository, branch: previous.branch, tag: previous.tag, packageVersion: previous.packageVersion, sourceSha: 'b'.repeat(40) };
+const input = { previous, next, remoteTag: '', localTag: '', releases: [], pr: { number: 4, state: 'open', merged_at: null, base: { ref: 'main' }, head: { sha: previous.sourceSha, ref: previous.branch, repo: { full_name: previous.repository } } } };
+const result = validateCandidateTransition(input);
+assert.equal(result.pr, 4);assert.equal(result.supersedes, previous.sourceSha);assert.equal(result.sourceSha, next.sourceSha);
+assert.deepEqual(result.candidateHistory[0].phaseHistory, previous.phaseHistory);
+assert.equal(result.ciRunId, undefined, 'no old evidence can authorize the new candidate');
+for (const patch of [{ status: 'complete' }, { releaseSha: previous.sourceSha }, { tagPushStarted: true }, { releaseRunId: 4 }, { releaseId: 9 }, { sourceEvidence: {} }]) assert.throws(() => validateCandidateTransition({ ...input, previous: { ...previous, ...patch } }));
+for (const patch of [{ remoteTag: 'existing' }, { localTag: 'v1.2.3' }, { releases: [{ tag_name: previous.tag, draft: true }] }, { pr: { ...input.pr, merged_at: 'today' } }, { pr: { ...input.pr, head: { ...input.pr.head, sha: 'c'.repeat(40) } } }, { next: { ...next, sourceSha: previous.sourceSha } }, { next: { ...next, branch: 'other' } }]) assert.throws(() => validateCandidateTransition({ ...input, ...patch }));
+const calls=[];const host={ api: async p=>{calls.push(p);return p.includes('/pulls/')?input.pr:[];},command:(exe,args)=>{assert.equal(exe,'git');assert.ok(['ls-remote','tag'].includes(args[0]));return'';} };
+assert.equal((await prepareReleaseCandidate(host,previous,next)).sourceSha,next.sourceSha);
+await assert.rejects(prepareReleaseCandidate({...host,api:async()=>{throw Error('network');}},previous,next),/network/);
+const archived=[];archiveReleaseCandidate('/temporary/v1.2.3.json',previous,(file,text,options)=>archived.push({file,text,options}));assert.equal(archived[0].options.flag,'wx');assert.deepEqual(JSON.parse(archived[0].text),previous);
+assert.throws(()=>archiveReleaseCandidate('/temporary/v1.2.3.json',previous,()=>{throw Error('archive failure');}),/archive failure/);
+console.log('New candidate: explicit SHA transition, unchanged open PR, immutable old evidence, tag/draft/merge guards and read-only remote operations passed.');

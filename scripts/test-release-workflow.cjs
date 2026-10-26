@@ -65,7 +65,7 @@ assert.match(buildJob, /EXPECTED_RELEASE_SHA: \$\{\{ needs\.authorize\.outputs\.
 for (const command of ["web-lite:check", "font-license:test", "lint", "stability:test", "coverage", "electron-runtime:coverage", "core:test", "desktop:interaction-test", "build", "typecheck", "dependency-audit:gate", "dependency-audit:test", "desktop-runtime-audit:gate", "desktop-runtime-audit:test", "sbom:test"]) {
   assert.ok(!buildJob.includes(`npm run ${command}\n`) && !buildJob.includes(`npm run ${command}\r\n`), `release consumes exact-SHA CI evidence instead of repeating ${command}`);
 }
-assert.equal((buildJob.match(/run: npm run desktop:build/g) || []).length, 1, "release has one production desktop build");
+assert.equal((buildJob.match(/run: npm run desktop:build\s*$/gm) || []).length, 1, "release has one production desktop build");
 assert.match(packageJson.scripts["desktop:build"], /npm run typecheck && npm run build && npm run desktop:prepare/, "release still typechecks and builds the actual artifact");
 assert.match(readFileSync(".github/workflows/ci.yml", "utf8"), /npm run electron-runtime:coverage/, "required verify check owns measured runtime coverage");
 assert.match(packageJson.scripts["desktop:build"], /electron-builder --publish never --projectDir dist-desktop\/app$/, "artifact construction cannot implicitly publish through electron-builder");
@@ -209,3 +209,12 @@ for (const stepName of [
 assert.match(buildJob, /Validate release-only policy[\s\S]+\$PSNativeCommandUseErrorActionPreference = \$true\s+npx tsx scripts\/test-release-consistency\.ts/, "a failed publication-wording check fails the release step");
 
 console.log("Reviewed-main exact-CI release workflow contract tests passed");
+
+const releasePlan = require('js-yaml').load(workflow);
+const buildSteps = releasePlan.jobs.build.steps;
+assert.equal(buildSteps.find(step=>step.id==='desktop_build').if, "steps.main_runtime.outputs.available != 'true'");
+assert.equal(buildSteps.find(step=>step.id==='desktop_reuse').if, "steps.main_runtime.outputs.available == 'true'");
+assert.ok(buildSteps.findIndex(step=>step.name==='Preflight locked desktop runtime advisories') < buildSteps.findIndex(step=>step.id==='main_runtime'));
+assert.match(buildSteps.find(step=>step.name==='Test final Setup bytes').if, /desktop_reuse.outcome == 'success'/);
+assert.equal(releasePlan.jobs.build.permissions.actions,'read');
+assert.equal(buildSteps.find(step=>step.name==='Download authorized main runtime').with['run-id'], '\$' + '{{ needs.authorize.outputs.ci_run_id }}');

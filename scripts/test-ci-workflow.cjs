@@ -33,11 +33,8 @@ assert.doesNotMatch(workflow, /^\s{2}desktop-final-artifact-smoke:/m, "the final
 for (const checkName of ["verify", "render-boundary-regression", "web-lite-smoke", "web-lite-cross-browser-smoke", "desktop-packaged-regression"]) {
   assert.match(workflow, new RegExp(`name: ${checkName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`), `${checkName} has a stable GitHub check name`);
 }
-assert.match(
-  workflow,
-  /desktop-legacy:[\s\S]+if: \(github\.event_name == 'push' \|\| github\.event_name == 'pull_request'/,
-  "packaged desktop validation runs on the final main-push SHA as well as the PR"
-);
+assert.match(workflow, /desktop-legacy:[\s\S]+if: github\.event_name == 'workflow_dispatch' && !inputs\.desktop_shared_groups/, 'legacy is an explicit manual fallback');
+assert.match(workflow, /desktop-build:[\s\S]*if: github.event_name != 'workflow_dispatch' \|\| inputs.desktop_shared_groups/, 'PR and final main SHA use shared groups by default');
 assert.deepEqual(
   releaseSourcePolicy.requiredChecks,
   [
@@ -192,15 +189,15 @@ assert.ok(sharedGroups.indexOf('node scripts/check-desktop-artifact.mjs') < shar
 assert.match(sharedGroups, /Check exact desktop artifact availability and identity\s+timeout-minutes: 1/, 'preflight is bounded');
 assert.doesNotMatch(sharedGroups, /continue-on-error/, 'preflight and consumer failures remain blocking');
 assert.match(packageJson.scripts['desktop:governance-test'], /test-desktop-artifact\.mjs/, 'CI governance owns availability/expiry fixtures');
-assert.match(workflow, /desktop_rehearsal_fail_group:[\s\S]*?default: none[\s\S]*?options: \[none, editor, data, native\]/, 'failure rehearsal is explicit and defaults off');
+assert.match(workflow, /desktop_rehearsal_fail_group:[\s\S]*?default: none[\s\S]*?options: \[none, editor, workspace, data, native\]/, 'failure rehearsal is explicit and defaults off');
 assert.match(workflow, /Fail selected group once for manual recovery rehearsal\s+if: github\.event_name == 'workflow_dispatch' && inputs\.desktop_shared_groups && github\.run_attempt == 1 && inputs\.desktop_rehearsal_fail_group == matrix\.group/, 'fault injection is restricted to one selected manual shared group on attempt one');
 assert.match(desktopAggregate, /if: always\(\)/, 'desktop aggregate evaluates failed, skipped and cancelled dependencies');
 assert.match(desktopAggregate, /needs: \[desktop-legacy, desktop-build, desktop-groups\]/, 'desktop gate observes all execution paths');
 assert.match(desktopAggregate, /node scripts\/check-desktop-regression-gate.mjs/, 'required desktop check validates outcomes and evidence identities');
 const enforceDesktopStep = desktopAggregate.slice(desktopAggregate.indexOf('- name: Enforce all desktop outcomes'), desktopAggregate.indexOf('- name: Record queue'));
 assert.doesNotMatch(enforceDesktopStep, /continue-on-error/, 'functional gate failures cannot be suppressed by optional telemetry');
-assert.match(workflow, /desktop-build:[\s\S]*if: github.event_name == 'workflow_dispatch' && inputs.desktop_shared_groups/, 'unmeasured shared transport is an explicit canary');
-assert.match(workflow, /group: \[editor, data, native\]/, 'every mapped desktop group has an independent Windows runner');
+
+assert.match(workflow, /group: \[editor, workspace, data, native\]/, 'every mapped desktop group has an independent Windows runner');
 assert.match(workflow, /artifact-ids: \$\{\{ needs.desktop-build.outputs.artifact-id \}\}/, 'workers consume the exact build artifact ID');
 const bundleDownloadStep = workflow.slice(workflow.indexOf('- name: Download exact desktop bundle'), workflow.indexOf('- name: Validate identity, digest'));
 assert.match(bundleDownloadStep, /path: artifacts\/desktop-bundle\s+(?:#[^\n]*\n\s+)?merge-multiple: true/, 'the exact single artifact is extracted at the runtime verifier path, not under its name');
@@ -270,3 +267,9 @@ for (const variable of [
 }
 
 console.log("CI and on-demand render regression workflow contract tests passed");
+
+const parsed = require('js-yaml').load(workflow);
+for (const job of Object.values(parsed.jobs)) for (const step of job.steps || []) if (step.uses?.startsWith('actions/checkout@')) assert.equal(step.with.ref, '\$' + '{{ github.event.pull_request.head.sha || github.sha }}', 'checks and artifact producer use the actual source head rather than a synthetic PR merge');
+assert.equal(parsed.env.DESKTOP_SOURCE_SHA, '\$' + '{{ github.event.pull_request.head.sha || github.sha }}');
+assert.equal(parsed.jobs['desktop-build'].steps.find(step=>step.name==='Attest main desktop runtime for Release reuse').if, "github.event_name == 'push' && github.ref == 'refs/heads/main'");
+assert.deepEqual(parsed.jobs['desktop-groups'].strategy.matrix.group, ['editor','workspace','data','native']);

@@ -130,6 +130,7 @@ jobs:
     timeout-minutes: 90
     permissions:
       attestations: write
+      actions: read
       contents: read
       id-token: write
     env:
@@ -137,6 +138,8 @@ jobs:
       CSC_IDENTITY_AUTO_DISCOVERY: "false"
       PACKAGE_VERSION: ${{ needs.authorize.outputs.version }}
       EXPECTED_RELEASE_SHA: ${{ needs.authorize.outputs.release_sha }}
+      AUTHORIZED_CI_RUN_ID: ${{ needs.authorize.outputs.ci_run_id }}
+      AUTHORIZED_CI_RUN_ATTEMPT: ${{ needs.authorize.outputs.ci_run_attempt }}
 
     steps:
       - name: Checkout authorized tag SHA
@@ -167,6 +170,9 @@ jobs:
       - name: Enforce production dependency advisory policy
         run: npm run dependency-audit:check
 
+      - name: Preflight locked desktop runtime advisories
+        run: npm run desktop-runtime-lock-audit:check
+
       # Source tests and full Windows interactions already passed in the
       # authorized exact-SHA main CI. Repeat only release-specific policy;
       # fresh dependency audits and tests of newly built bytes remain below.
@@ -179,8 +185,37 @@ jobs:
           $PSNativeCommandUseErrorActionPreference = $true
           npx tsx scripts/test-release-consistency.ts
 
+      - name: Select exact authorized main runtime
+        id: main_runtime
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/release-main-runtime.mjs select
+
+      - name: Download authorized main runtime
+        if: steps.main_runtime.outputs.available == 'true'
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          github-token: ${{ github.token }}
+          run-id: ${{ needs.authorize.outputs.ci_run_id }}
+          artifact-ids: ${{ steps.main_runtime.outputs.artifact-id }}
+          path: artifacts/desktop-bundle
+          merge-multiple: true
+
+      - name: Verify main runtime provenance and every resource
+        if: steps.main_runtime.outputs.available == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MAIN_RUNTIME_ARTIFACT_ID: ${{ steps.main_runtime.outputs.artifact-id }}
+        run: node scripts/release-main-runtime.mjs unpack
+
+      - name: Build Setup from verified main runtime
+        id: desktop_reuse
+        if: steps.main_runtime.outputs.available == 'true'
+        run: npm run desktop:build-from-main
+
       - name: Build Setup-only release from authorized SHA
         id: desktop_build
+        if: steps.main_runtime.outputs.available != 'true'
         run: npm run desktop:build
 
       - name: Enforce packaged distribution budget
@@ -190,7 +225,7 @@ jobs:
         run: npm run desktop:packaged-assets-test
 
       - name: Test final Setup bytes
-        if: ${{ always() && steps.desktop_build.outcome == 'success' }}
+        if: ${{ always() && (steps.desktop_build.outcome == 'success' || steps.desktop_reuse.outcome == 'success') }}
         run: npm run desktop:final-artifact-smoke
 
       - name: Test actual update installation and relaunch
@@ -289,6 +324,8 @@ jobs:
           path: |
             playwright-report/desktop-final-artifacts/**
             output/playwright/desktop-update-install/**
+            output/reused-main-runtime.json
+            output/main-runtime-attestation-*.json
           if-no-files-found: ignore
 
   publish:

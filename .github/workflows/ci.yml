@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
     inputs:
       desktop_shared_groups:
-        description: Measure shared unpacked transfer and independent Windows groups before promotion
+        description: Run shared unpacked groups; disable only for the manual legacy fallback
         type: boolean
         default: false
       desktop_visual_diagnostics:
@@ -22,7 +22,7 @@ on:
         description: Manual shared-canary rehearsal only; fail one group on attempt 1 before scenarios
         type: choice
         default: none
-        options: [none, editor, data, native]
+        options: [none, editor, workspace, data, native]
       desktop_runtime_retention_days:
         description: Manual shared-canary runtime retention; use one day only for a real expiry acceptance run
         type: choice
@@ -35,6 +35,9 @@ concurrency:
   group: ci-${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
+env:
+  DESKTOP_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+
 jobs:
   verify:
     name: verify
@@ -43,6 +46,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Setup Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
@@ -120,6 +125,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Setup Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
@@ -151,7 +158,7 @@ jobs:
           RUNTIME_OUTCOME: ${{ steps.browser-runtime.outcome }}
         run: |
           mkdir -p artifacts/render-boundaries
-          printf '{"sourceSha":"%s","runId":"%s","attempt":"%s","runtime":"%s"}\n' "$GITHUB_SHA" "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" "$RUNTIME_OUTCOME" > artifacts/render-boundaries/runtime-context.json
+          printf '{"sourceSha":"%s","runId":"%s","attempt":"%s","runtime":"%s"}\n' "$DESKTOP_SOURCE_SHA" "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" "$RUNTIME_OUTCOME" > artifacts/render-boundaries/runtime-context.json
 
       - name: Upload render-boundary diagnostics
         if: always()
@@ -179,6 +186,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Setup Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
@@ -223,7 +232,7 @@ jobs:
           RUNTIME_OUTCOME: ${{ steps.browser-runtime.outcome }}
         run: |
           mkdir -p artifacts/web-lite
-          printf '{"sourceSha":"%s","runId":"%s","attempt":"%s","runtime":"%s"}\n' "$GITHUB_SHA" "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" "$RUNTIME_OUTCOME" > artifacts/web-lite/runtime-context.json
+          printf '{"sourceSha":"%s","runId":"%s","attempt":"%s","runtime":"%s"}\n' "$DESKTOP_SOURCE_SHA" "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" "$RUNTIME_OUTCOME" > artifacts/web-lite/runtime-context.json
 
       - name: Upload Web Lite browser evidence
         if: always()
@@ -250,6 +259,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Setup Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
@@ -288,7 +299,7 @@ jobs:
           RUNTIME_OUTCOME: ${{ steps.browser-runtime.outcome }}
         run: |
           mkdir -p artifacts/web-lite-cross-browser
-          printf '{"sourceSha":"%s","runId":"%s","attempt":"%s","runtime":"%s"}\n' "$GITHUB_SHA" "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" "$RUNTIME_OUTCOME" > artifacts/web-lite-cross-browser/runtime-context.json
+          printf '{"sourceSha":"%s","runId":"%s","attempt":"%s","runtime":"%s"}\n' "$DESKTOP_SOURCE_SHA" "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" "$RUNTIME_OUTCOME" > artifacts/web-lite-cross-browser/runtime-context.json
 
       - name: Upload cross-browser Web Lite diagnostics
         if: always()
@@ -307,7 +318,7 @@ jobs:
     # A release consumes checks for the final main-push SHA. Keeping this job
     # PR-only would leave the packaged Windows result bound to a different PR
     # head or synthetic merge SHA after squash/rebase.
-    if: (github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch') && !inputs.desktop_shared_groups
+    if: github.event_name == 'workflow_dispatch' && !inputs.desktop_shared_groups
     runs-on: windows-latest
     timeout-minutes: 60
     env:
@@ -317,6 +328,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Setup Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
@@ -360,10 +373,14 @@ jobs:
 
   desktop-build:
     name: desktop-build
-    # Explicit measurement canary; PR/main retain the proven path until cost is measured.
-    if: github.event_name == 'workflow_dispatch' && inputs.desktop_shared_groups
+    # PR/main share one exact-source runtime; manual legacy mode remains a fallback.
+    if: github.event_name != 'workflow_dispatch' || inputs.desktop_shared_groups
     runs-on: windows-latest
     timeout-minutes: 25
+    permissions:
+      contents: read
+      attestations: write
+      id-token: write
     env:
       CI: "true"
       CSC_IDENTITY_AUTO_DISCOVERY: "false"
@@ -372,6 +389,8 @@ jobs:
       digest: ${{ steps.bundle.outputs.digest }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: 22
@@ -385,6 +404,13 @@ jobs:
       - name: Create identity-bound desktop bundle
         id: bundle
         run: node scripts/desktop-test-bundle.mjs pack
+      - name: Attest main desktop runtime for Release reuse
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be
+        with:
+          subject-path: |
+            artifacts/desktop-bundle/runtime.lcg.gz
+            artifacts/desktop-bundle/runtime.lcg.gz.json
       - name: Upload desktop bundle (measure transfer)
         id: upload
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
@@ -398,7 +424,7 @@ jobs:
   desktop-groups:
     name: desktop-group-${{ matrix.group }}
     needs: desktop-build
-    if: github.event_name == 'workflow_dispatch' && inputs.desktop_shared_groups
+    if: github.event_name != 'workflow_dispatch' || inputs.desktop_shared_groups
     runs-on: windows-latest
     timeout-minutes: 35
     permissions:
@@ -407,7 +433,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        group: [editor, data, native]
+        group: [editor, workspace, data, native]
     env:
       CI: "true"
       CSC_IDENTITY_AUTO_DISCOVERY: "false"
@@ -415,6 +441,8 @@ jobs:
       DESKTOP_ARTIFACT_ID: ${{ needs.desktop-build.outputs.artifact-id }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: 22
@@ -451,7 +479,7 @@ jobs:
           New-Item -ItemType Directory -Path $directory -Force | Out-Null
           @{
             group = $env:DESKTOP_GROUP
-            sourceSha = $env:GITHUB_SHA
+            sourceSha = $env:DESKTOP_SOURCE_SHA
             runId = $env:GITHUB_RUN_ID
             runAttempt = $env:GITHUB_RUN_ATTEMPT
             artifactId = $env:DESKTOP_ARTIFACT_ID
@@ -481,13 +509,15 @@ jobs:
       actions: read
       contents: read
     env:
-      DESKTOP_SHARED: ${{ github.event_name == 'workflow_dispatch' && inputs.desktop_shared_groups }}
+      DESKTOP_SHARED: ${{ github.event_name != 'workflow_dispatch' || inputs.desktop_shared_groups }}
       DESKTOP_LEGACY_RESULT: ${{ needs.desktop-legacy.result }}
       DESKTOP_BUILD_RESULT: ${{ needs.desktop-build.result }}
       DESKTOP_GROUPS_RESULT: ${{ needs.desktop-groups.result }}
       DESKTOP_BUILD_DIGEST: ${{ needs.desktop-build.outputs.digest }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: 22

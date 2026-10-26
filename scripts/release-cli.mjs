@@ -6,6 +6,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { authorizeReleaseSource, createGitHubClient, releaseSourcePolicy as policy } from './verify-release-source.mjs';
 import { resolveGitHubRelease, createReleaseStateClient } from './resolve-github-release.mjs';
+import { prepareReleaseCandidate, archiveReleaseCandidate } from './release-candidate.mjs';
 
 export function parseArgs(argv) {
   const result = { mode: 'check', timeout: '90' };
@@ -15,7 +16,7 @@ export function parseArgs(argv) {
     result[key] = argv[i + 1];
   }
   if (!/^\d+\.\d+\.\d+(?:-rc\.\d+)?$/.test(result.version || '')) throw Error('Version must be X.Y.Z or X.Y.Z-rc.N (without v)');
-  if (!['check', 'publish', 'resume'].includes(result.mode)) throw Error('Invalid mode');
+  if (!['check', 'publish', 'resume', 'candidate'].includes(result.mode)) throw Error('Invalid mode');
   if (!/^\d+$/.test(result.timeout) || +result.timeout < 1 || +result.timeout > 240) throw Error('Timeout must be 1..240 minutes');
   return result;
 }
@@ -110,6 +111,13 @@ export async function probeCi(h, state, event, registration) {
 }
 
 // Optional progress fields are additive: schema-1 state files remain resumable.
+export function releasePollDelay(elapsedMs) {
+  if (elapsedMs < 15000) return 2000;
+  if (elapsedMs < 60000) return 5000;
+  if (elapsedMs < 180000) return 15000;
+  return 30000;
+}
+
 export function createWaiter({ state, save, report, now = Date.now, sleep = ms => new Promise(resolve => setTimeout(resolve, ms)), timeoutMinutes }) {
   const invocationStarted = now();
   const deadline = invocationStarted + timeoutMinutes * 60000;
@@ -131,7 +139,7 @@ export function createWaiter({ state, save, report, now = Date.now, sleep = ms =
             previousObservation = observation;
           }
           if (result) { outcome = 'success'; return result; }
-          await sleep(Math.min(60000, Math.max(0, deadline - now())));
+          await sleep(Math.min(releasePollDelay(now() - started), Math.max(0, deadline - now())));
         }
         throw Error(`Timed out at ${label}; use -Resume from the original checkout. Inspect Actions before explicitly dispatching any missing Release run; do not recreate tags.`);
       } finally {
@@ -177,7 +185,20 @@ export async function publishRelease(h, state) {
       save({ pr: merged[0].number, releaseSha: sourceSha });
     } else {
       let pr;
-      if (state.pr) pr = await h.api(`${base}/pulls/${state.pr}`);
+      if (state.pr) {
+        pr = await h.api(`${base}/pulls/${state.pr}`);
+        if (state.candidatePush) {
+          const pending = state.candidatePush;
+          if (pending.sourceSha !== sourceSha || !/^[a-f0-9]{40}$/.test(pending.previousHead || '')
+            || pr.number !== state.pr || pr.state !== 'open' || pr.merged_at || pr.draft
+            || pr.base?.ref !== policy.baseBranch || pr.head?.repo?.full_name !== repository || pr.head?.ref !== branch
+            || ![pending.previousHead, sourceSha].includes(pr.head?.sha)) throw Error('Prepared candidate PR changed; refusing push');
+          if (pr.head.sha !== sourceSha) h.command('git', ['push', 'origin', `HEAD:refs/heads/${branch}`]);
+          // Retain the explicit old/new identity through API propagation and an
+          // interrupted state save. Resume rediscovers an already-pushed head.
+          save({ candidatePush: null, prHeadSync: { sourceSha, previousHead: pending.previousHead } });
+        }
+      }
       else {
         const prs = await h.api(`${base}/pulls?state=all&head=${encodeURIComponent(repository.split('/')[0] + ':' + branch)}&base=${policy.baseBranch}&per_page=100`);
         const matching = prs.filter(p => p.head.sha === sourceSha && (p.state === 'open' || p.merged_at));
@@ -301,6 +322,18 @@ async function main() {
   try { fd = openSync(lockPath, 'wx'); } catch { throw Error(`Another release process may be running. Check it before removing stale lock: ${lockPath}`); }
   try {
     let state;
+    if (args.mode === 'candidate') {
+      if (!existsSync(statePath)) throw Error('No original candidate state exists');
+      const previous = JSON.parse(readFileSync(statePath, 'utf8'));
+      const token = process.env.GH_TOKEN || process.env.GITHUB_TOKEN || command('gh', ['auth', 'token']);
+      const client = createGitHubClient({ token, fetchImpl: createBoundedFetch() });
+      state = await prepareReleaseCandidate({ api: p => client.get(`/${p}`), command }, previous,
+        { schema: 1, repository, tag: `v${args.version}`, packageVersion: pkg.version, sourceSha, branch });
+      state.previousStateArchive = archiveReleaseCandidate(statePath, previous);
+      saveReleaseState(statePath, state);
+      console.log(JSON.stringify({ mode: 'candidate', sourceSha, previousSourceSha: previous.sourceSha, archive: state.previousStateArchive, next: 'Run CheckOnly, then Resume only with explicit release authorization. No remote mutations were performed.' }, null, 2));
+      return;
+    }
     if (existsSync(statePath)) {
       state = JSON.parse(readFileSync(statePath, 'utf8'));
       if (args.mode !== 'resume') throw Error('State already exists; use -Resume');

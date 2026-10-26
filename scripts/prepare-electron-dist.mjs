@@ -84,14 +84,26 @@ function assertExists(targetPath, label) {
   }
 }
 
+const fromUnpacked = process.argv.includes('--from-unpacked');
+const unpackedResources = path.join(projectRoot, 'release', 'win-unpacked', 'resources');
+if (!fromUnpacked) {
 assertExists(standaloneDir, "Next standalone output");
 assertExists(nextStaticDir, "Next static assets");
+} else {
+  assertExists(path.join(unpackedResources, 'server'), 'Verified main runtime server');
+  assertExists(path.join(unpackedResources, 'updater'), 'Verified main updater runtime');
+}
 assertExists(publicDir, "Public assets");
 
+if (path.dirname(path.resolve(outputRoot)) !== projectRoot || path.basename(outputRoot) !== 'dist-desktop') throw Error('Unexpected desktop staging directory');
 await rm(outputRoot, { recursive: true, force: true });
 await mkdir(serverOutputDir, { recursive: true });
 await mkdir(electronOutputDir, { recursive: true });
 
+if (fromUnpacked) {
+  await cp(path.join(unpackedResources, 'server'), serverOutputDir, { recursive: true });
+  await cp(path.join(unpackedResources, 'updater'), path.join(outputRoot, 'updater'), { recursive: true });
+} else {
 await cp(standaloneDir, serverOutputDir, { recursive: true });
 if (existsSync(path.join(serverOutputDir, "node_modules"))) {
   // Keep the standalone server dependency tree out of electron-builder's app
@@ -102,8 +114,11 @@ await cp(nextStaticDir, path.join(serverOutputDir, ".next", "static"), { recursi
 await cp(publicDir, path.join(serverOutputDir, "public"), { recursive: true });
 await cp(path.join(projectRoot, "electron", "packaged-next-server.js"), path.join(serverOutputDir, "desktop-server-launcher.cjs"));
 await cleanServerOutput();
+}
 await prepareMinimalElectronApp();
+if (!fromUnpacked) {
 await stageUpdaterRuntime(projectRoot, path.join(outputRoot, "updater"));
+}
 // Embedded by NSIS; never copied into the installed application.
 await import("./build-installer-shell.mjs");
 
@@ -113,7 +128,7 @@ console.log(`Prepared minimal Electron app at ${path.relative(projectRoot, appOu
 async function prepareMinimalElectronApp() {
   const rootPackage = JSON.parse(await readFile(path.join(projectRoot, "package.json"), "utf8"));
   const electronVersion = await getElectronVersion(rootPackage);
-  const localElectronDist = getLocalElectronDist();
+  const localElectronDist = fromUnpacked ? '' : getLocalElectronDist();
   // Generate a packaging-only manifest so the shipped shell contains neither
   // development scripts nor the root project's full dependency graph.
   const desktopPackage = {
