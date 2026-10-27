@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { parseArgs, assertRun, assertAssets, publishRelease, probeCi, inspectJobs, createWaiter, createBoundedFetch, synchronizePushedPr } from './release-cli.mjs';
+import { parseArgs, assertRun, assertAssets, publishRelease, probeCi, inspectJobs, createWaiter, createBoundedFetch, synchronizePushedPr, releasePollDelay } from './release-cli.mjs';
 import { releaseSourcePolicy as policy } from './verify-release-source.mjs';
 
 const sha = 'a'.repeat(40);
@@ -156,6 +156,45 @@ assert.equal(resumePush.commands.filter(c => c.includes('--squash')).length, 1);
 assert.equal(resumePush.commands.some(c => c.includes('create')), false);
 
 const syncState = { ...state(), pr: 1, prHeadSync: { sourceSha: sha, previousHead: 'b'.repeat(40) } };
+// PrepareCandidate records a pending push but performs no mutation. Authorized
+// publication pushes once and recovers if the state save after push fails.
+function candidateHost() {
+  const candidate = host();
+  const api = candidate.api;
+  const command = candidate.command;
+  let pushed = false;
+  candidate.command = (exe, args) => {
+    if (exe === 'git' && args[0] === 'push' && args.some(arg => arg.startsWith('HEAD:'))) pushed = true;
+    return command(exe, args);
+  };
+  candidate.api = async endpoint => {
+    const value = await api(endpoint);
+    if (endpoint.endsWith('/pulls/1') && !pushed) return { ...value, head: { ...value.head, sha: 'b'.repeat(40) } };
+    return value;
+  };
+  return candidate;
+}
+const preparedState = { ...state(), pr: 1, candidatePush: { sourceSha: sha, previousHead: 'b'.repeat(40) } };
+const preparedHost = candidateHost();
+let candidateSnapshot = structuredClone(preparedState);
+preparedHost.save = value => {
+  if (value.candidatePush === null) throw Error('candidate state-save interruption');
+  candidateSnapshot = structuredClone(value);
+};
+await assert.rejects(publishRelease(preparedHost, structuredClone(preparedState)), /candidate state-save interruption/);
+assert.deepEqual(candidateSnapshot, preparedState);
+preparedHost.save = value => { candidateSnapshot = structuredClone(value); };
+await publishRelease(preparedHost, candidateSnapshot);
+assert.equal(candidateSnapshot.status, 'complete');
+assert.equal(preparedHost.commands.filter(command => command.some(arg => arg.startsWith('HEAD:'))).length, 1);
+assert.equal(preparedHost.commands.some(command => command.includes('create')), false);
+for (const patch of [{ head: { sha: 'c'.repeat(40), ref: state().branch, repo: { full_name: 'owner/repo' } } }, { state: 'closed' }, { draft: true }, { merged_at: 'today' }, { number: 2 }]) {
+  const changed = candidateHost();
+  const originalApi = changed.api;
+  changed.api = async endpoint => ({ ...await originalApi(endpoint), ...patch });
+  await assert.rejects(publishRelease(changed, structuredClone(preparedState)), /Prepared candidate PR changed/);
+  assert.equal(changed.commands.length, 0);
+}
 const pendingPr = { number: 1, state: 'open', draft: false, head: { sha: 'b'.repeat(40), ref: state().branch, repo: { full_name: 'owner/repo' } }, base: { ref: 'main' } };
 for (const patch of [
   { head: { ...pendingPr.head, sha: 'c'.repeat(40) } },
@@ -239,11 +278,12 @@ const oldState={schema:1}; const progress=[];
 fakeTime=0; let attempts=0;
 const waiter=createWaiter({state:oldState,save(){},report:value=>progress.push(value),now:()=>fakeTime,sleep:async ms=>{fakeTime+=ms;},timeoutMinutes:2});
 await waiter.wait('registered',async()=>++attempts===2);
-assert.equal(oldState.phaseHistory[0].elapsedMs,60000);
+assert.equal(oldState.phaseHistory[0].elapsedMs,2000);
 assert.equal(oldState.phaseHistory[0].outcome,'success');
 await assert.rejects(waiter.wait('missing',async()=>false),/Timed out/);
 assert.equal(oldState.phaseHistory[1].outcome,'failed');
 assert.ok(progress.some(line=>line.includes('total=120s')));
+assert.deepEqual([0,14999,15000,59999,60000,179999,180000].map(releasePollDelay),[2000,2000,5000,5000,15000,15000,30000]);
 const keepAlive=setTimeout(()=>{},100);
 try {
   await assert.rejects(createBoundedFetch((_url,{signal})=>new Promise((_resolve,reject)=>signal.addEventListener('abort',()=>reject(signal.reason),{once:true})),5)('https://example.test'),/timeout/i);

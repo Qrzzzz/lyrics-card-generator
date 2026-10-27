@@ -2,7 +2,7 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { createBoundedFetch } from './release-cli.mjs';
 
-const recovery = 'Inspect the source run, then explicitly rebuild desktop-build and rerun ALL three consumer groups. Do not combine old group results with a new bundle or automatically retry the download.';
+const recovery = 'Inspect the source run, then explicitly rebuild desktop-build and rerun ALL consumer groups. Do not combine old group results with a new bundle or automatically retry the download.';
 function unavailable(reason) { throw Error(`Desktop runtime artifact unavailable (${reason}). ${recovery}`); }
 
 function validateExpected(expected) {
@@ -37,7 +37,7 @@ export async function checkDesktopArtifact({ expected, token, fetchImpl = create
 }
 
 async function main() {
-  const expected = { repository: process.env.GITHUB_REPOSITORY, sha: process.env.GITHUB_SHA, runId: process.env.GITHUB_RUN_ID, attempt: Number(process.env.GITHUB_RUN_ATTEMPT), artifactId: process.env.DESKTOP_ARTIFACT_ID };
+  const expected = { repository: process.env.GITHUB_REPOSITORY, sha: process.env.DESKTOP_SOURCE_SHA || process.env.GITHUB_SHA, runId: process.env.GITHUB_RUN_ID, attempt: Number(process.env.GITHUB_RUN_ATTEMPT), artifactId: process.env.DESKTOP_ARTIFACT_ID };
   console.log(JSON.stringify(await checkDesktopArtifact({ expected, token: process.env.GH_TOKEN || process.env.GITHUB_TOKEN })));
 }
 if (process.argv[1] && pathToFileURL(path.resolve(process.argv[1])).href === import.meta.url) main().catch(error => { console.error(error.message); process.exitCode = 1; });

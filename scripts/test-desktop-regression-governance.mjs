@@ -27,7 +27,9 @@ const scenarios=flatten.filter(entry=>entry.command==='desktop:scenario-test');
 assert.deepEqual(scenarios.map(entry=>entry.args[0].slice(11)),['search','song-import','examples','fonts','titlebar','lyrics-input']);
 const grouped=flatten.filter(entry=>entry.command!=='desktop:scenario-test').map(entry=>packageJson.scripts[entry.command]);
 const legacy=packageJson.scripts['desktop:interaction-test'].split(' && ').map(command=>command.startsWith('npm run ')?packageJson.scripts[command.slice(8)]:command);
-assert.deepEqual([...grouped].sort(),[...legacy].sort(),'every legacy interaction is mapped once');
+const mappedLegacy=legacy.flatMap(command=>command===packageJson.scripts['desktop:settings-test']
+  ? [packageJson.scripts['desktop:settings-preferences-test'],packageJson.scripts['desktop:settings-workspace-test']] : [command]);
+assert.deepEqual([...grouped].sort(),mappedLegacy.sort(),'every legacy interaction is mapped once; continuous settings assertions are partitioned into two real workflows');
 assert.equal(new Set(flatten.map(entry=>entry.id)).size,flatten.length);
 const expected={sha:'a'.repeat(40),runId:'123',attempt:2,buildDigest:'b'.repeat(64),contractDigest:'c'.repeat(64)};
 const results=Object.entries(desktopGroups).map(([group,entries])=>({...expected,attempt:1,group,outcome:'success',entries:entries.map(entry=>({id:entry.id,exitCode:0}))}));
@@ -53,7 +55,7 @@ try {
   await mkdir(path.join(temporary,'source/win-unpacked/resources'),{recursive:true});
   await writeFile(path.join(temporary,'source/win-unpacked/Lyrics Card Generator.exe'),'fixture executable');
   await writeFile(path.join(temporary,'source/win-unpacked/resources/app.asar'),'fixture asar');
-  const identity={schema:1,repository:'test/repo',sha:expected.sha,runId:'123',buildAttempt:1,platform:process.platform,arch:process.arch,lockDigest:expected.buildDigest,contractDigest:expected.contractDigest,configuration:'fixture'};
+  const identity={schema:1,repository:'test/repo',sha:expected.sha,runId:'123',buildAttempt:1,platform:process.platform,arch:process.arch,lockDigest:expected.buildDigest,contractDigest:expected.contractDigest,configuration:'fixture',sourceTree:'d'.repeat(40),nodeVersion:'22.23.4',electronVersion:'42.11.16',builderVersion:'26.15.3'};
   const file=path.join(temporary,'runtime.gz');
   const bundle=await packBundle({root:path.join(temporary,'source'),file,identity});
   await unpackBundle({file,destination:path.join(temporary,'restored'),identity:{...identity,buildAttempt:2},expectedDigest:bundle.buildDigest});
@@ -80,7 +82,7 @@ try {
   const tampered=path.join(temporary,'bad-resource.gz');
   await writeFile(tampered,gzipSync(Buffer.concat([Buffer.from('LCG1'),badLength,badHeader,inflated.subarray(8+headerLength)])));
   await assert.rejects(unpackBundle({file:tampered,destination:path.join(temporary,'bad-resource'),identity,expectedDigest:await fileDigest(tampered)}),/resource digest mismatch/);
-  for(const field of ['sha','repository','runId','arch','platform','lockDigest','contractDigest','configuration']) {
+  for(const field of ['sha','repository','runId','arch','platform','lockDigest','contractDigest','configuration','sourceTree','nodeVersion','electronVersion','builderVersion']) {
     assert.throws(()=>validateBundleManifest({...identity,files:[]},{...identity,[field]:'wrong'}),/identity mismatch/);
   }
   for(const unsafe of ['win-unpacked/../escape','win-unpacked/C:/escape','win-unpacked/CON.txt','win-unpacked/folder./file','win-unpacked/bad'+String.fromCharCode(0)+'file']) {

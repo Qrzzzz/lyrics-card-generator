@@ -7,7 +7,7 @@ const artifact = { id: 456, name: 'desktop-runtime-123-1', expired: false, expir
 assert.equal(assertDesktopArtifact(artifact, expected, now).buildAttempt, 1, 'successful build from an earlier attempt remains reusable');
 assert.equal(assertDesktopArtifact({ ...artifact, name: 'desktop-runtime-123-2' }, expected, now).buildAttempt, 2);
 for (const patch of [{ expired: true }, { expires_at: '2026-10-23T12:00:00Z' }, { expires_at: '2026-10-22T12:00:00Z' }]) {
-  assert.throws(() => assertDesktopArtifact({ ...artifact, ...patch }, expected, now), /expired.*rebuild desktop-build and rerun ALL three/);
+  assert.throws(() => assertDesktopArtifact({ ...artifact, ...patch }, expected, now), /expired.*rebuild desktop-build and rerun ALL/);
 }
 for (const patch of [
   { id: 789 }, { name: 'desktop-runtime-123-3' }, { name: 'desktop-runtime-999-1' }, { name: 'other' },
@@ -35,7 +35,7 @@ for (const status of [404, 410, 401, 403, 429, 500]) {
     assert.match(error.message, new RegExp(`HTTP ${status}`));
     assert.equal(error.message.includes('body-must-not-be-logged'), false);
     assert.equal(error.message.includes('fixture-token'), false);
-    if ([404, 410].includes(status)) assert.match(error.message, /rerun ALL three consumer groups/);
+    if ([404, 410].includes(status)) assert.match(error.message, /rerun ALL consumer groups/);
     return true;
   });
   assert.equal(failedCalls, 1, 'failure is diagnosed without automatic retries');

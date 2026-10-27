@@ -17,25 +17,30 @@ export async function fileDigest(file) {
 }
 export async function desktopContractDigest(root = process.cwd()) {
   const packageJson = JSON.parse(await readFile(path.join(root, 'package.json'), 'utf8'));
-  const scripts = (await readdir(path.join(root, 'scripts'))).filter(name => /(?:desktop|electron-test-lifecycle|editor-language-test|choice-test)/.test(name)).sort();
+  const scripts = (await readdir(path.join(root, 'scripts'))).filter(name => /(?:desktop|electron-test-lifecycle|editor-language-test|choice-test|prepare-electron-dist|build-installer|stage-updater-runtime|release-main-runtime)/.test(name)).sort();
   const hash = createHash('sha256').update(JSON.stringify(packageJson.scripts));
-  for (const file of ['.github/workflows/ci.yml', 'security/release-source-policy.json', ...scripts.map(name => `scripts/${name}`)]) {
+  for (const file of ['.github/workflows/ci.yml', '.github/workflows/release.yml', 'security/release-source-policy.json', ...scripts.map(name => `scripts/${name}`)]) {
     hash.update(file); hash.update((await readFile(path.join(root, file), 'utf8')).replaceAll('\r\n', '\n'));
   }
   return hash.digest('hex');
 }
 export async function bundleIdentity(env = process.env, root = process.cwd()) {
-  if (!/^[a-f0-9]{40}$/.test(env.GITHUB_SHA || '') || !/^\d+$/.test(env.GITHUB_RUN_ID || '') || !/^[1-9]\d*$/.test(env.GITHUB_RUN_ATTEMPT || '')) throw Error('Explicit source SHA/run/attempt required for a shared desktop bundle');
+  const sourceSha = env.DESKTOP_SOURCE_SHA || env.GITHUB_SHA;
+  if (!/^[a-f0-9]{40}$/.test(sourceSha || '') || !/^\d+$/.test(env.GITHUB_RUN_ID || '') || !/^[1-9]\d*$/.test(env.GITHUB_RUN_ATTEMPT || '')) throw Error('Explicit source SHA/run/attempt required for a shared desktop bundle');
   if (env.CI !== 'true' || env.CSC_IDENTITY_AUTO_DISCOVERY !== 'false') throw Error('Shared desktop runtime configuration mismatch');
-  if (execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8', windowsHide: true }).trim() !== env.GITHUB_SHA) throw Error('Checkout differs from source SHA');
+  if (execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8', windowsHide: true }).trim() !== sourceSha) throw Error('Checkout differs from source SHA');
   if (execFileSync('git', ['status', '--porcelain', '--untracked-files=normal'], { cwd: root, encoding: 'utf8', windowsHide: true }).trim()) throw Error('Shared desktop bundle requires an unchanged source checkout');
   if (!/^[\w.-]+\/[\w.-]+$/.test(env.GITHUB_REPOSITORY || '')) throw Error('Source repository required');
-  return { schema: 1, repository: env.GITHUB_REPOSITORY, sha: env.GITHUB_SHA, runId: env.GITHUB_RUN_ID, buildAttempt: Number(env.GITHUB_RUN_ATTEMPT),
+  const lock = JSON.parse(await readFile(path.join(root, 'package-lock.json'), 'utf8'));
+  return { schema: 1, repository: env.GITHUB_REPOSITORY, sha: sourceSha, runId: env.GITHUB_RUN_ID, buildAttempt: Number(env.GITHUB_RUN_ATTEMPT),
+    sourceTree: execFileSync('git', ['rev-parse', 'HEAD^{tree}'], { cwd: root, encoding: 'utf8', windowsHide: true }).trim(),
+    nodeVersion: process.versions.node, electronVersion: lock.packages['node_modules/electron'].version, builderVersion: lock.packages['node_modules/electron-builder'].version,
     platform: process.platform, arch: process.arch, lockDigest: await fileDigest(path.join(root, 'package-lock.json')),
     contractDigest: await desktopContractDigest(root), configuration: 'desktop:pack;CI=true;CSC_IDENTITY_AUTO_DISCOVERY=false' };
 }
 export function validateBundleManifest(manifest, expected) {
-  for (const key of ['schema', 'repository', 'sha', 'runId', 'platform', 'arch', 'lockDigest', 'contractDigest', 'configuration']) {
+  if (!/^[a-f0-9]{40}$/.test(manifest.sourceTree || '') || ['nodeVersion','electronVersion','builderVersion'].some(key => !/^\d+\.\d+\.\d+$/.test(manifest[key] || ''))) throw Error('Desktop bundle content/toolchain identity missing');
+  for (const key of ['schema', 'repository', 'sha', 'runId', 'platform', 'arch', 'lockDigest', 'contractDigest', 'configuration', 'sourceTree', 'nodeVersion', 'electronVersion', 'builderVersion']) {
     if (manifest[key] !== expected[key]) throw Error(`Desktop bundle identity mismatch: ${key}`);
   }
   if (!Number.isSafeInteger(manifest.buildAttempt) || manifest.buildAttempt < 1 || manifest.buildAttempt > expected.buildAttempt) throw Error('Invalid build attempt');
@@ -60,6 +65,7 @@ async function collect(root, relative = 'win-unpacked') {
   }
   return files;
 }
+export async function runtimeFileManifest(root) { return collect(root); }
 export async function packBundle({ root, file, identity }) {
   const started = Date.now(); const manifest = { ...identity, files: await collect(root) };
   validateBundleManifest(manifest, identity);
@@ -76,7 +82,7 @@ export async function packBundle({ root, file, identity }) {
   await writeFile(`${file}.json`, JSON.stringify(result, null, 2));
   return result;
 }
-export async function unpackBundle({ file, destination, identity, expectedDigest }) {
+export async function unpackBundle({ file, destination, identity, expectedDigest, onManifest }) {
   const started = Date.now();
   if (!/^[a-f0-9]{64}$/.test(expectedDigest || '') || await fileDigest(file) !== expectedDigest) throw Error('Desktop bundle digest mismatch');
   const input = createReadStream(file).pipe(createGunzip());
@@ -92,7 +98,8 @@ export async function unpackBundle({ file, destination, identity, expectedDigest
   try {
     if ((await take(4)).toString() !== 'LCG1') throw Error('Invalid bundle magic');
     const length = (await take(4)).readUInt32BE(); if (length > 20 * 1024 * 1024) throw Error('Bundle manifest too large');
-    const manifest = JSON.parse((await take(length)).toString()); validateBundleManifest(manifest, identity);
+    const header = await take(length);
+    const manifest = JSON.parse(header.toString()); validateBundleManifest(manifest, identity);
     // A fresh directory prevents pre-existing junctions or files redirecting writes.
     await mkdir(destination, { recursive: false });
     for (const entry of manifest.files) {
@@ -108,7 +115,8 @@ export async function unpackBundle({ file, destination, identity, expectedDigest
       if ((await lstat(target)).size !== entry.size) throw Error('Desktop resource size mismatch');
     }
     if (buffered.length || !(await iterator.next()).done) throw Error('Unexpected bundle trailing bytes');
-    return { buildDigest: expectedDigest, unpackMs: Date.now() - started, files: manifest.files.length };
+    await onManifest?.(manifest);
+    return { buildDigest: expectedDigest, manifestDigest: digest(header), unpackMs: Date.now() - started, files: manifest.files.length };
   } finally { input.destroy(); }
 }
 async function main() {

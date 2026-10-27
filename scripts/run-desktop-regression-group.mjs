@@ -7,7 +7,7 @@ import { desktopGroups } from './desktop-regression-groups.mjs';
 import { desktopContractDigest } from './desktop-test-bundle.mjs';
 
 const group = process.argv.find(value => value.startsWith('--group='))?.slice(8);
-if (!Object.hasOwn(desktopGroups, group || '')) throw Error('Select --group=editor|data|native');
+if (!Object.hasOwn(desktopGroups, group || '')) throw Error(`Select --group=${Object.keys(desktopGroups).join('|')}`);
 if (!process.env.npm_execpath) throw Error('Run through npm run desktop:group:<name>');
 const sessionLock = path.join(tmpdir(), 'lyrics-desktop-regression-session.lock');
 let lock;
@@ -20,7 +20,7 @@ const invocation = `${attempt}-${Date.now()}`;
 try {
 temporary = await mkdtemp(path.join(tmpdir(), `lyrics-group-${group}-`));
 await mkdir(evidence, { recursive: true });
-report = { group, sha: process.env.GITHUB_SHA || 'local-uncommitted', runId: process.env.GITHUB_RUN_ID || 'local', attempt,
+report = { group, sha: process.env.DESKTOP_SOURCE_SHA || process.env.GITHUB_SHA || 'local-uncommitted', runId: process.env.GITHUB_RUN_ID || 'local', attempt,
   buildDigest: process.env.DESKTOP_BUILD_DIGEST || 'local-unshared', contractDigest: await desktopContractDigest(), startedAt: new Date().toISOString(), outcome: 'failure', entries: [] };
 await lock.writeFile(JSON.stringify({ pid: process.pid, group, startedAt: report.startedAt }));
   for (const entry of desktopGroups[group]) {

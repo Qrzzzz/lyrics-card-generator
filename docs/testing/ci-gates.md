@@ -16,12 +16,48 @@ PR 和最终 `main` push 都运行这些检查。合并可能改变提交 SHA，
 
 这些检查覆盖不同运行边界：源码测试不能代替真实导出，浏览器不能代替 Windows IPC/持久化，Chromium 也不能代替已承诺支持的 Firefox/Safari。渲染次数、资源字节数与几何上限属于确定性工作量或安全约束，不等同于机器相关的毫秒性能阈值。
 
+## 本轮优化候选（2026-10-26）
+
+本节描述 `codex/release-optimization` 中待远端验收的实现，取代下文历史记录中的
+“默认仍为串行”规划；合并前不会改变已发布工作流。正式发布前三轮的效果观察
+仍未完成，不以本地通过或旧 canary 的成功宣称新的默认路径已经提速。
+
+- PR/main 默认共享一次 unpacked 构建，四组分别在独立 runner 运行：editor
+  （六个 scenario 与偏好设置）、workspace（工作区设置与编辑）、data（五项）、
+  native（七项）。旧连续设置的 116 个直接断言及其 helper 断言均保留；独立
+  workspace 通过 UI 补齐导出默认值、历史设置及 AI 地址/模型前置条件。
+- 手动 `desktop_shared_groups=false` 可运行旧完整串行路径。正式回退需要恢复
+  默认选择，保持聚合必需检查名及全部覆盖；不通过跳过组解除发布阻塞。
+- 所有 job checkout 精确 PR head 或 main SHA，与 GitHub run 身份一致；包身份
+  新增源码树与 Node/Electron/builder 版本，仍校验 lock、契约、摘要与全部资源。
+- 只有成功 main push 生成 OIDC 来源证明。Release 仅接受授权最终 SHA、当前 CI
+  attempt 和五项完整检查；旧 SHA、PR 产物或仅源码树相同均不复用。缺失/到期
+  回退完整构建，来源/内容/工具链不符立即失败。NSIS 构建前后核对运行时资源，
+  最终安装、更新、审计、SBOM、校验和、来源证明及公开附件验证保持完整。
+- Electron 锁定闭包实时审计进入 verify 和 Release 构建前；最终打包闭包审计
+  继续现场执行。发布等待采用分阶段间隔，候选变更通过显式 `PrepareCandidate`
+  归档旧状态，不复用旧候选 CI 授权。详见[发布入口](../release-runbook.md)。
+
+### 已完成的自然到期与恢复验证
+
+原 run [40169247764](https://github.com/Qrzzzz/lyrics-card-generator/actions/runs/40169247764)
+的原制品 `12589428199` 在记录的保留期限后 API 返回 404，未手动删除。
+显式重跑 native（attempt 2，job `121626245361`）在下载、安装及执行前失败，
+聚合也失败；不声称 API 返回过 `expired=true`。检查失败日志后显式重跑构建，
+attempt 3 的三组和聚合全部成功，均消费新制品 `12657952596`、同一内容摘要
+`07c19ee289a7d4134d2a7b8623bb9af97832f71e892aa33601bb2b48f447ed76`，
+editor/data/native 覆盖为 7/5/7，逐组验证 2,483 个资源。
+详见 [#247 证据](https://github.com/Qrzzzz/lyrics-card-generator/issues/247#issuecomment-6418692765)。
+这是旧三组源码的到期恢复证据；新四组默认路径和 main 签名复用仍需独立远端
+验收。#247 已由维护者以 `not planned` 关闭，保留这一决定；本轮新证据记录于
+优化 PR。以下日期段落保留当时状态，不代表本候选已完成验收。
+
 ## Release 必须现场执行
 
 1. 核验标签、版本、多语言发布说明、最终 SHA、main 祖先关系、合并 PR 和同 SHA CI 授权，防止构建期间来源变化。
 2. 执行实时生产依赖审计；漏洞公告和豁免期限会变化，旧 CI 结果不能替代当前检查。
 3. 确认发布说明已经脱离候选措辞。审计及 SBOM 策略固定用例由同 SHA CI 负责；PowerShell 多命令块须在任一原生命令失败时终止，不能被后续成功命令掩盖。
-4. 从授权 SHA 重新构建 Setup，验证打包资源与许可，安装实际 Setup、启动、关闭和卸载。此处验证的是新生成的发布字节，不能用 CI 的 unpacked 成功结果替代。
+4. 从授权 SHA 生成新的 Setup：命中严格核验的同 SHA main 运行时则复用 unpacked，否则完整重建。验证打包资源与许可，安装实际 Setup、启动、关闭和卸载。此处验证的是新生成的发布字节，不能用 CI 的 unpacked 成功结果替代。
 5. 审计打包 Electron 依赖闭包，并生成、检查 SBOM、校验和与来源证明；上传后核对精确草稿制品，通过后再公开发布。
 
 完整 Windows 交互回归依赖同 SHA 的 CI 结果；最终安装包 smoke 只覆盖安装、启动等制品边界，不宣称等价于完整交互套件。反过来，普通 CI 的 unpacked 结果也不宣称覆盖安装器。若发布构建引入与 CI 不同的功能开关或运行配置，应补充相应交互验证。

@@ -4,6 +4,8 @@ import { spawnSync } from "node:child_process";
 import { createReadStream } from "node:fs";
 import { mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { verifyReusedFiles } from './release-main-runtime.mjs';
+import { existsSync } from 'node:fs';
 import {
   createDesktopRuntimeAuditInput,
   npmPurl
@@ -45,9 +47,20 @@ const electronBinarySha256 = electronChecksums[electronBinaryFileName];
 assert.match(electronBinarySha256 ?? "", /^[0-9a-f]{64}$/u, "Electron package checksums must pin the Windows x64 binary archive");
 
 const stagedPackage = await readJson(path.join(projectRoot, "dist-desktop", "app", "package.json"));
+let reusedFrom = null;
+if (existsSync(path.join(projectRoot, 'output/reused-main-runtime.json'))) {
+  const proof = await readJson(path.join(projectRoot, 'output/reused-main-runtime.json'));
+  assert.equal(proof.attested, true, 'reused runtime must carry verified main provenance');
+  assert.equal(proof.installerInputVerified, true, 'installer construction must preserve main resources');
+  assert.equal(proof.sha, process.env.EXPECTED_RELEASE_SHA, 'reused runtime belongs to the authorized final SHA');
+  assert.equal(String(proof.runId), process.env.AUTHORIZED_CI_RUN_ID, 'reused runtime belongs to authorized main CI');
+  await verifyReusedFiles(proof, projectRoot, true);
+  const { files: _files, ...metadata } = proof;
+  reusedFrom = metadata;
+}
 assert.equal(stagedPackage.build?.electronVersion, electronRoot.version, "electron-builder staging must use the audited Electron version");
 const stagedElectronDist = stagedPackage.build?.electronDist ?? null;
-const distributionSource = stagedElectronDist ? "local-electron-dist" : "electron-builder-download";
+const distributionSource = reusedFrom ? 'authorized-main-ci-artifact' : stagedElectronDist ? "local-electron-dist" : "electron-builder-download";
 const electronDistVersion = stagedElectronDist
   ? (await readFile(path.join(projectRoot, "node_modules", "electron", "dist", "version"), "utf8")).trim()
   : null;
@@ -119,7 +132,8 @@ const inventory = {
   application: {
     name: rootPackage.name,
     version: rootPackage.version,
-    productName: stagedPackage.productName
+    productName: stagedPackage.productName,
+    ...(reusedFrom ? { releaseSha: process.env.EXPECTED_RELEASE_SHA } : {})
   },
   auditInput: {
     packageJsonSha256: sha256(Buffer.from(auditPackageText)),
@@ -143,6 +157,7 @@ const inventory = {
     },
     installedPackageVersion: installedElectron.version,
     distributionSource,
+    ...(reusedFrom ? { reusedFrom } : {}),
     electronDistVersion,
     stagedElectronDist,
     stagedManifestVersion: stagedPackage.build.electronVersion,

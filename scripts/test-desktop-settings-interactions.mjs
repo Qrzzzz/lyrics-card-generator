@@ -21,6 +21,8 @@ const activeCompleteExportButtonSelector = '[data-testid="export-settings-panel"
 const scenarioArgument = process.argv.find((value) => value.startsWith("--scenario="));
 const scenario = scenarioArgument?.slice("--scenario=".length);
 if (scenario && !["search", "song-import", "examples", "fonts", "titlebar", "lyrics-input", "workbench"].includes(scenario)) throw new Error("Unknown desktop scenario: " + scenario);
+const settingsPart = process.argv.find(value => value.startsWith("--settings-part="))?.slice(16);
+if (settingsPart && (scenario || !["preferences", "workspace"].includes(settingsPart))) throw new Error("Select one valid settings part or a scenario");
 const runVisualDiagnostics = process.argv.includes("--visual-diagnostics");
 const builtInAutoWidthCases = [
   { id: "opalite", lyricLines: 4, translationLines: 4, min: 1360, max: 1400 },
@@ -4193,7 +4195,42 @@ try {
     await scenarios[scenario]();
     console.log(JSON.stringify({ ok: true, scenario, isolatedUserData: true }));
   } else {
-  await assertTitlebarWindowInteractions();
+  if (settingsPart !== "workspace") await assertSettingsPreferencesWorkflow();
+  if (settingsPart === "workspace") await prepareWorkspacePreferencesFixture();
+  if (settingsPart !== "preferences") await assertSettingsWorkspaceWorkflow();
+  else console.log(JSON.stringify({ ok: true, settingsPart: "preferences", nativeDialogs: await readNativeDialogs(), isolatedUserData: true }));
+}
+} catch (error) {
+  process.stderr.write(`[desktop-regression] ${error instanceof Error ? error.stack || error.message : String(error)}\n`);
+  if (electronApp) {
+    const nativeDialogState = await electronApp.evaluate(() => globalThis.__lyricsCardNativeDialogTest).catch(() => null);
+    process.stderr.write(`[desktop-regression-dialogs] ${JSON.stringify({ nativeDialogState, rendererDialogs })}\n`);
+  }
+  if (page) {
+    await page.screenshot({ path: path.join(reportDirectory, "settings-interaction-failure.png"), fullPage: false }).catch(() => {});
+  }
+  throw error;
+} finally {
+  await closeElectronApplication(electronApp, { label: "desktop-regression" });
+  await rm(userDataDirectory, { recursive: true, force: true }).catch(() => {});
+}
+
+async function selectChoiceValue(value, root = page) {
+  const trigger = root.locator(`.choice-dropdown[data-choice-values~="${value}"]`).getByRole("combobox");
+  await trigger.scrollIntoViewIfNeeded();
+  await waitForLayoutStable(trigger);
+  await trigger.click();
+  const menu = page.locator(`[role="listbox"][data-choice-menu~="${value}"]`);
+  const option = menu.locator(`[data-segment-value="${value}"]`);
+  await option.click();
+  await menu.waitFor({ state: "hidden" });
+  assert.equal(await trigger.getAttribute("data-choice-value"), value, `compact choice selects ${value}`);
+  return trigger;
+}
+
+
+async function assertSettingsPreferencesWorkflow() {
+await assertTitlebarWindowInteractions();
 
   await page.locator('[data-testid="editor-surface"] [data-testid="settings-button"]').click();
   await waitForVisible("settings-surface");
@@ -4455,6 +4492,10 @@ try {
   await page.getByTestId("settings-close-button").click();
   await page.locator('[data-testid="settings-surface"][data-surface-state="closed"]').waitFor({ state: "attached" });
   await page.waitForFunction(() => document.activeElement?.getAttribute("data-testid") === "settings-button");
+}
+
+async function assertSettingsWorkspaceWorkflow() {
+
 
   const minimumWindowSize = await electronApp.evaluate(({ BrowserWindow }) => (
     BrowserWindow.getAllWindows()[0].getMinimumSize()
@@ -5021,31 +5062,28 @@ try {
       landscape: landscapeCard
     }
   }, null, 2)}\n`);
-}
-} catch (error) {
-  process.stderr.write(`[desktop-regression] ${error instanceof Error ? error.stack || error.message : String(error)}\n`);
-  if (electronApp) {
-    const nativeDialogState = await electronApp.evaluate(() => globalThis.__lyricsCardNativeDialogTest).catch(() => null);
-    process.stderr.write(`[desktop-regression-dialogs] ${JSON.stringify({ nativeDialogState, rendererDialogs })}\n`);
-  }
-  if (page) {
-    await page.screenshot({ path: path.join(reportDirectory, "settings-interaction-failure.png"), fullPage: false }).catch(() => {});
-  }
-  throw error;
-} finally {
-  await closeElectronApplication(electronApp, { label: "desktop-regression" });
-  await rm(userDataDirectory, { recursive: true, force: true }).catch(() => {});
+
 }
 
-async function selectChoiceValue(value, root = page) {
-  const trigger = root.locator(`.choice-dropdown[data-choice-values~="${value}"]`).getByRole("combobox");
-  await trigger.scrollIntoViewIfNeeded();
-  await waitForLayoutStable(trigger);
-  await trigger.click();
-  const menu = page.locator(`[role="listbox"][data-choice-menu~="${value}"]`);
-  const option = menu.locator(`[data-segment-value="${value}"]`);
-  await option.click();
-  await menu.waitFor({ state: "hidden" });
-  assert.equal(await trigger.getAttribute("data-choice-value"), value, `compact choice selects ${value}`);
-  return trigger;
+async function prepareWorkspacePreferencesFixture() {
+  // Recreate the saved-defaults seam with real UI interactions. The full legacy
+  // command still executes both workflows continuously in the same process.
+  await page.getByTestId("settings-button").click();
+  await selectSettingsSection("export");
+  await selectChoiceValue("webp", page.locator('[data-settings-panel="export"]:not([hidden])'));
+  await selectSettingsSection("general");
+  await page.getByTestId("import-history-limit").selectOption("none");
+  await expect.poll(() => page.evaluate(async () => (await window.lyricsCardDesktop.loadAppPreferences()).userSettings.defaultExportFormat)).toBe("webp");
+  await selectSettingsSection("ai");
+  await (await waitForVisible("ai-open-api")).click();
+  // The workspace AI entry requires the endpoint and model established by the
+  // preference workflow; a key alone redirects to Settings instead of the deck.
+  await page.getByTestId("ai-base-url-input").fill("https://example.invalid/v1");
+  await page.getByTestId("ai-model-input").fill("desktop-regression-model");
+  await expect.poll(() => page.evaluate(() => window.lyricsCardDesktop.loadAISettings())).toMatchObject({
+    baseUrl: "https://example.invalid/v1", model: "desktop-regression-model"
+  });
+  await page.getByTestId("settings-close-button").click();
+  await page.locator('[data-testid="settings-surface"][data-surface-state="closed"]').waitFor({state:"attached"});
+  await expect(page.getByTestId("settings-button")).toBeFocused();
 }
