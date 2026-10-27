@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v6.8.7.zh-TW.md">發布說明</a> ·
+  <a href="./docs/releases/v6.8.8.zh-TW.md">發布說明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">線上 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="./docs/development.zh-CN.md">本機開發</a> ·
@@ -73,19 +73,19 @@
 
 
 
-* Windows x64 安裝版：`Lyrics.Card.Generator.Setup.6.8.7.exe`
+* Windows x64 安裝版：`Lyrics.Card.Generator.Setup.6.8.8.exe`
 
 從 v6.2.2 起僅提供 Windows x64 Setup 安裝程式。
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v6.8.7 · 發布說明
+### v6.8.8 · 發布說明
 
-**2026-10-25**
+**2026-10-27**
 
-v6.8.7 — 減弱預覽與點擊裝飾回饋，固定瀏覽器驗收環境並完善啟動前診斷。
+v6.8.8 — 最佳化桌面迴歸測試與發佈流程，提前檢查執行階段安全風險，保留完整安裝與來源驗證。
 
-[简体中文](./docs/releases/v6.8.7.zh-CN.md) · [繁體中文](./docs/releases/v6.8.7.zh-TW.md) · [English](./docs/releases/v6.8.7.en.md) · [Français](./docs/releases/v6.8.7.fr.md) · [日本語](./docs/releases/v6.8.7.ja.md) · [Español](./docs/releases/v6.8.7.es.md)
+[简体中文](./docs/releases/v6.8.8.zh-CN.md) · [繁體中文](./docs/releases/v6.8.8.zh-TW.md) · [English](./docs/releases/v6.8.8.en.md) · [Français](./docs/releases/v6.8.8.fr.md) · [日本語](./docs/releases/v6.8.8.ja.md) · [Español](./docs/releases/v6.8.8.es.md)
 
 ## ✨ 主要功能
 
