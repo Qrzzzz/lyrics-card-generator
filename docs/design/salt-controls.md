@@ -11,6 +11,7 @@ SaltUI credits Alexander Kolpakov's SwitcherX for the ring-to-bar switch design.
 
 - Capsule action buttons distinguish filled primary actions from neutral, ghost,
   icon and destructive actions. Existing button heights and public props remain.
+  The capsule shape must not override compact sizing or caller-supplied padding.
 - Switches use a 46 by 26 px track, an unchecked ring and a checked bar. Travel
   takes 200 ms; CSS morphing takes 320 ms rather than SaltUI's 800 ms.
 - Text fields and sliders retain their pre-adaptation styles and native input
@@ -21,6 +22,11 @@ SaltUI credits Alexander Kolpakov's SwitcherX for the ring-to-bar switch design.
 - Hover changes the surface without lifting shared controls. Press feedback
   uses the existing control springs. Reduced-motion settings disable travel
   animations without hiding the selected state.
+- Field actions share the input row when there is enough room, retaining the
+  field label and description associations. Preference rows wrap according to
+  their content width; long action labels remain readable when they wrap.
+  Named choice controls also wrap by their container width, including when
+  larger text makes their label and trigger too wide for a single row.
 
 `resolveControlAccentTokens` supplies contrasting text/icons and hover colors
 for album, preset and custom accents in both renderers. Acrylic text and input

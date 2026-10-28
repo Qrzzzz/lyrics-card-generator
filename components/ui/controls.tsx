@@ -44,6 +44,7 @@ type FieldLabelProps = {
   error?: ReactNode;
   disabled?: boolean;
   children: ReactNode;
+  action?: ReactNode;
   className?: string;
   htmlFor?: string;
 };
@@ -77,6 +78,7 @@ export function FieldLabel({
   error,
   disabled = false,
   children,
+  action,
   className,
   htmlFor
 }: FieldLabelProps) {
@@ -118,7 +120,7 @@ export function FieldLabel({
         {labelContent}
         {hint ? <span className="app-text-subtle text-xs">{hint}</span> : null}
       </div>
-      {resolvedChildren}
+      {action ? <div className="settings-content-actions">{resolvedChildren}{action}</div> : resolvedChildren}
       {helperText ? (
         <div
           id={helperText ? helperTextId : undefined}
@@ -359,7 +361,7 @@ export function ActionButton({
           {resolvedLeftIcon}
         </span>
       ) : null}
-      {!iconOnly && children ? <span className="min-w-0 truncate">{children}</span> : null}
+      {!iconOnly && children ? <span className="settings-action-button__label min-w-0 truncate">{children}</span> : null}
       {!iconOnly && resolvedRightIcon && !loading ? (
         <span aria-hidden="true" className="inline-flex size-4 shrink-0 items-center justify-center">
           {resolvedRightIcon}

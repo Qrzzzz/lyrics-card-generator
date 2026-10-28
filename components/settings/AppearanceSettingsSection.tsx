@@ -153,6 +153,18 @@ export function AppearanceSettingsSection({
             hint={copy.defaultFont}
             description={copy.uiFontDescription}
             error={!uiFontValidation.valid ? copy.uiFontInvalid : undefined}
+            action={
+              <ActionButton
+                variant="default"
+                data-testid="restore-system-font"
+                onClick={() => {
+                  setUiFontInput("");
+                  onChange({ ...settings, uiFontFamily: "" });
+                }}
+              >
+                {copy.restoreSystemFont}
+              </ActionButton>
+            }
           >
             <TextInput
               data-testid="ui-font-family-input"
@@ -167,16 +179,6 @@ export function AppearanceSettingsSection({
               placeholder="Segoe UI"
             />
           </FieldLabel>
-          <ActionButton
-            variant="default"
-            data-testid="restore-system-font"
-            onClick={() => {
-              setUiFontInput("");
-              onChange({ ...settings, uiFontFamily: "" });
-            }}
-          >
-            {copy.restoreSystemFont}
-          </ActionButton>
         </div>
 
       </SettingsGroup>
