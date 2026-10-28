@@ -751,7 +751,6 @@ body[data-window-maximized="true"] .app-shell[data-desktop-shell="true"] {
 
 .settings-action-button {
   border-radius: var(--control-pill-radius);
-  padding-inline: 1.25rem;
 }
 
 .settings-action-button.control-variant-icon {
@@ -905,6 +904,10 @@ body[data-window-maximized="true"] .app-shell[data-desktop-shell="true"] {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
+.option-card[data-selected="true"] .app-text-subtle {
+  color: rgb(var(--app-muted));
+}
+
 .option-card__indicator {
   display: inline-flex;
   height: 1.125rem;
@@ -1021,17 +1024,24 @@ body[data-window-maximized="true"] .app-shell[data-desktop-shell="true"] {
 }
 
 .choice-dropdown {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(8rem, 55%);
+  display: flex;
+  flex-wrap: wrap;
   gap: 0.75rem;
   align-items: center;
   min-width: 0;
 }
 
 .choice-dropdown__label {
+  flex: 1 1 5rem;
+  min-width: 0;
   font-size: 0.875rem;
   font-weight: 500;
   overflow-wrap: anywhere;
+}
+
+.choice-dropdown__trigger {
+  flex: 1 1 8rem;
+  max-width: 100%;
 }
 
 .choice-dropdown__trigger,
@@ -1989,6 +1999,13 @@ button {
   overflow-wrap: anywhere;
 }
 
+.settings-content-layout .settings-action-button__label {
+  overflow: visible;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-overflow: clip;
+}
+
 .settings-content-actions {
   display: flex;
   flex-wrap: wrap;
@@ -2002,11 +2019,22 @@ button {
 }
 
 .settings-content-layout .settings-row {
-  grid-template-columns: minmax(0, 1fr);
-  align-content: start;
-  gap: 0.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1rem;
   border: 0;
   padding: 0;
+}
+
+.settings-content-layout .settings-row > :first-child {
+  flex: 1 1 15rem;
+  min-width: 0;
+}
+
+.settings-content-layout .settings-row > .settings-content-actions {
+  flex: 0 1 auto;
+  max-width: 100%;
 }
 
 .editor-settings-group + .editor-settings-group {

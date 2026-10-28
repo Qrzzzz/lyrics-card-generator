@@ -69,7 +69,7 @@ test("settings layout uses one stable grid across widths and six languages", asy
   test.setTimeout(120_000);
   for (const locale of ["zh", "zh-TW", "en", "fr", "ja", "es"]) {
     await open(page, locale);
-    for (const step of ["layout", "font", "visual"]) {
+    for (const step of ["layout", "font", "visual", "appearance", "general"]) {
       await page.locator(`[data-step="${step}"]`).click();
       const issues = await page.getByTestId("settings-fixture").evaluate((node) => {
         const widths = [...Array.from({ length: 103 }, (_, i) => 280 + i * 8), 507, 508, 509, 767, 768, 769, 1100];
@@ -144,7 +144,7 @@ test("settings layout themes, narrow font editor and accessibility", async ({ pa
   test.setTimeout(120_000);
   for (const theme of ["dark", "light", "dark-acrylic", "light-acrylic"]) {
     await open(page, "fr", theme);
-    for (const step of ["layout", "font", "visual"]) {
+    for (const step of ["layout", "font", "visual", "appearance", "general"]) {
       await page.locator(`[data-step="${step}"]`).click();
       await width(page, 508);
       const result = await new AxeBuilder({ page }).include('[data-testid="settings-fixture"]').analyze();
@@ -175,5 +175,65 @@ test("settings grid follows enlarged root text without changing the field order"
       const columns = await page.getByTestId("layout-settings-grid").evaluate((el) => getComputedStyle(el).gridTemplateColumns.split(" ").length);
       expect(columns).toBe(Math.max(1, Math.min(3, Math.floor((w + 0.75 * rootSize) / (16.25 * rootSize)))));
     }
+  }
+});
+
+test("shared capsule buttons respect compact size and caller density", async ({ page }) => {
+  test.skip(baseline);
+  await open(page);
+  await page.locator('[data-step="buttons"]').click();
+  const compact = await page.getByTestId("compact-action").boundingBox();
+  const regular = await page.getByTestId("regular-action").boundingBox();
+  const custom = await page.getByTestId("custom-padding-action").boundingBox();
+  expect(compact!.width, "compact buttons must leave more room for adjacent controls").toBeLessThan(regular!.width);
+  expect(custom!.width, "caller spacing must not be overridden by capsule styling").toBeLessThan(compact!.width);
+});
+
+test("font input and reset action share a row when space permits and retain complete labels", async ({ page }) => {
+  test.skip(baseline);
+  test.setTimeout(90_000);
+  for (const locale of ["zh", "zh-TW", "en", "fr", "ja", "es"]) {
+    await open(page, locale);
+    await page.locator('[data-step="appearance"]').click();
+    const input = page.getByTestId("ui-font-family-input");
+    const reset = page.getByTestId("restore-system-font");
+    for (const rootSize of [16, 24, 32]) {
+      await page.evaluate((size) => { document.documentElement.style.fontSize = `${size}px`; }, rootSize);
+      for (const size of [280, 440, 640, 960]) {
+        await width(page, size);
+        const inputBox = await input.boundingBox();
+        const resetBox = await reset.boundingBox();
+        if (size >= 960 || (size >= 640 && rootSize === 16)) {
+          expect(Math.abs(inputBox!.y - resetBox!.y), `${locale} ${size}/${rootSize}: avoid a needless reset-button row`).toBeLessThan(1);
+          expect(resetBox!.x).toBeGreaterThan(inputBox!.x + inputBox!.width);
+        }
+        expect(await reset.evaluate((node) => {
+          const label = node.querySelector("span")!;
+          return label.scrollWidth <= label.clientWidth + 1 && label.scrollHeight <= label.clientHeight + 1;
+        }), `${locale} ${size}/${rootSize}: reset label stays fully readable`).toBe(true);
+        expect(await page.getByTestId("settings-fixture").evaluate((node) => node.scrollWidth <= node.clientWidth + 1), `${locale} ${size}/${rootSize}: content stays inside its panel`).toBe(true);
+      }
+    }
+    await input.fill("Segoe UI");
+    await reset.click();
+    await expect(input).toHaveValue("");
+    await expect(input).toHaveAccessibleName(/.+/);
+  }
+});
+
+test("preference actions stay beside their descriptions on wide content panels", async ({ page }) => {
+  test.skip(baseline);
+  await open(page);
+  await page.locator('[data-step="general"]').click();
+  for (const size of [640, 960]) {
+    await width(page, size);
+    const action = page.getByTestId("restore-app-preferences");
+    const row = action.locator("xpath=../..");
+    const boxes = await row.evaluate((node) => [...node.children].map((child) => {
+      const r = child.getBoundingClientRect();
+      return { left: r.left, right: r.right, top: r.top, bottom: r.bottom };
+    }));
+    expect(boxes[1].left, `wide ${size}: the action belongs on the trailing side`).toBeGreaterThanOrEqual(boxes[0].right);
+    expect(boxes[1].top).toBeLessThan(boxes[0].bottom);
   }
 });
