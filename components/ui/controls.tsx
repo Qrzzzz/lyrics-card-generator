@@ -16,7 +16,6 @@ import { Children, cloneElement, isValidElement, useId, useRef } from "react";
 import { ChoiceDropdown } from "./ChoiceDropdown";
 import { useAppReducedMotion } from "@/components/motion/AppMotionProvider";
 import {
-  controlHoverTarget,
   controlTapTarget,
   motionSprings,
   reducedMotionTransition,
@@ -249,7 +248,6 @@ export function ToggleRow({
 }: ToggleRowProps) {
   const descriptionId = useId();
   const reduceMotion = useAppReducedMotion();
-  const hoverMotion = disabled || reduceMotion ? undefined : controlHoverTarget;
   const pressMotion = disabled || reduceMotion ? undefined : subtleControlTapTarget;
 
   return (
@@ -261,11 +259,10 @@ export function ToggleRow({
       disabled={disabled}
       data-testid={testId}
       onClick={() => onChange(!checked)}
-      whileHover={hoverMotion}
       whileTap={pressMotion}
       transition={reduceMotion ? reducedMotionTransition : motionSprings.control}
       className={cn(
-        "control-focus control-disabled group flex w-full items-center justify-between gap-3 rounded-md border border-transparent border-b-[rgb(var(--panel-border))] px-2 text-left transition hover:bg-[rgb(var(--button-bg-hover))] last:border-b-transparent",
+        "toggle-row control-focus control-disabled group flex w-full items-center justify-between gap-3 text-left",
         description ? "min-h-14 py-2.5" : size === "sm" ? "min-h-10 py-2" : "min-h-11 py-2.5",
         className
       )}
@@ -332,7 +329,6 @@ export function ActionButton({
 }: ActionButtonProps) {
   const isDisabled = disabled || loading;
   const reduceMotion = useAppReducedMotion();
-  const hoverMotion = isDisabled || reduceMotion ? undefined : controlHoverTarget;
   const pressMotion = isDisabled || reduceMotion ? undefined : controlTapTarget;
   const resolvedLeftIcon = leftIcon ?? icon;
   const resolvedRightIcon = rightIcon ?? trailingIcon;
@@ -344,7 +340,6 @@ export function ActionButton({
       type={type}
       disabled={isDisabled}
       aria-busy={loading || undefined}
-      whileHover={hoverMotion}
       whileTap={pressMotion}
       transition={reduceMotion ? reducedMotionTransition : motionSprings.control}
       className={cn(
@@ -413,7 +408,6 @@ export function OptionCard({
   const resolvedTestId = testId ?? props["data-testid"];
   const resolvedTabIndex = props.tabIndex ?? (role === "radio" ? (selected ? 0 : -1) : undefined);
   const reduceMotion = useAppReducedMotion();
-  const hoverMotion = disabled || reduceMotion ? undefined : controlHoverTarget;
   const pressMotion = disabled || reduceMotion ? undefined : subtleControlTapTarget;
 
   return (
@@ -427,7 +421,6 @@ export function OptionCard({
       data-testid={resolvedTestId}
       data-selected={selected ? "true" : "false"}
       tabIndex={resolvedTabIndex}
-      whileHover={hoverMotion}
       whileTap={pressMotion}
       transition={reduceMotion ? reducedMotionTransition : motionSprings.control}
       className={cn(

@@ -1,4 +1,4 @@
-import { LIGHT_ACRYLIC_TEXT_TOKENS, resolveReadableTextTokens } from "@/lib/color/contrast";
+import { LIGHT_ACRYLIC_TEXT_TOKENS, resolveControlAccentTokens, resolveReadableTextTokens } from "@/lib/color/contrast";
 import type { UserSettings } from "@/lib/settings/types";
 import { resolveUiAccentColor } from "@/lib/settings/accent";
 import { resolveEffectiveAppBackgroundColor, resolveEffectiveUiThemeId } from "@/lib/settings/user-settings";
@@ -29,6 +29,7 @@ export function resolveEditorThemeTokens({ userSettings, palette, systemDark = f
     uiBackgroundColor,
     uiTextTokens,
     resolvedThemeTokens: {
+      ...resolveControlAccentTokens(themeAccent),
       "--app-text-primary": uiTextTokens.primary,
       "--app-fg": uiTextTokens.fg,
       "--app-muted": uiTextTokens.muted,

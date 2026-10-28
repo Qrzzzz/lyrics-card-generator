@@ -40,7 +40,7 @@ export function SettingsGroup({
   return (
     <section className={cn("settings-group-card", className)}>
       {title || description ? (
-        <header className="mb-5 border-b border-[rgb(var(--panel-border))] pb-4">
+        <header className="settings-group-heading">
           {title ? <h3 className="app-text-primary text-base font-bold">{title}</h3> : null}
           {description ? <p className="app-text-subtle mt-1 text-sm leading-6">{description}</p> : null}
         </header>

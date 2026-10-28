@@ -9,6 +9,7 @@ export const pagesFiles = [
   "index.html",
   "public/app-icon.png",
   "public/licenses/LICENSE-Lyrics-Card-Generator.txt",
+  "public/licenses/LICENSE-SaltUI.txt",
   "public/licenses/THIRD-PARTY-NOTICES.txt",
   "public/support/LICENSE-web3icons.txt",
   "public/support/LICENSE-qrcode-generator.txt",

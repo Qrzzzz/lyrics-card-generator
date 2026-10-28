@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v6.8.8.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v6.9.0.en.md">Release Notes</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
   <a href="./docs/web-lite-browser-support.md">Web Lite Browser Support</a> ·
   <a href="#features">Features</a> ·
@@ -77,19 +77,19 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 
 
-* Windows x64 installer: `Lyrics.Card.Generator.Setup.6.8.8.exe`
+* Windows x64 installer: `Lyrics.Card.Generator.Setup.6.9.0.exe`
 
 Starting with v6.2.2, Windows x64 Setup is the only distributed desktop package.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v6.8.8 · Release Notes
+### v6.9.0 · Release Notes
 
-**2026-10-27**
+**2026-10-28**
 
-v6.8.8 — Improves desktop regression and release delivery with earlier runtime security checks and complete installation and provenance verification.
+v6.9.0 — Refines buttons and switches with SaltUI-inspired styling while retaining the original text fields and sliders.
 
-[简体中文](./docs/releases/v6.8.8.zh-CN.md) · [繁體中文](./docs/releases/v6.8.8.zh-TW.md) · [English](./docs/releases/v6.8.8.en.md) · [Français](./docs/releases/v6.8.8.fr.md) · [日本語](./docs/releases/v6.8.8.ja.md) · [Español](./docs/releases/v6.8.8.es.md)
+[简体中文](./docs/releases/v6.9.0.zh-CN.md) · [繁體中文](./docs/releases/v6.9.0.zh-TW.md) · [English](./docs/releases/v6.9.0.en.md) · [Français](./docs/releases/v6.9.0.fr.md) · [日本語](./docs/releases/v6.9.0.ja.md) · [Español](./docs/releases/v6.9.0.es.md)
 
 <a id="features"></a>
 
@@ -155,6 +155,8 @@ Thanks to [OpenAI Codex](https://openai.com/codex/). It turned many scattered id
 Thanks to [ChatGPT 6 Astra](https://chatgpt.com/) for issue diagnosis, solution design, fix review, and acceptance checks throughout development.
 
 Thanks to [ReactBits](https://www.reactbits.dev/) for multiple UI ideas, including motion inspiration such as Spark Cursor.
+
+Thanks to [SaltUI](https://github.com/Moriafly/SaltUI) and [Moriafly](https://github.com/Moriafly) for the button and switch design inspiration. The React/CSS adaptation follows this app’s themes and interaction system; text fields and sliders retain their original styles. See the [Apache-2.0 license](./public/licenses/LICENSE-SaltUI.txt) and [third-party notices](./public/licenses/THIRD-PARTY-NOTICES.txt).
 
 Thanks to [Rangerov](https://github.com/rangerov0716) for attention to this project and for providing feedback.
 

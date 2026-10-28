@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v6.8.8.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v6.9.0.zh-CN.md">发布说明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">在线 Web Lite 版</a> ·
   <a href="./docs/web-lite-browser-support.md">Web Lite 浏览器支持</a> ·
   <a href="./docs/desktop.md">桌面维护文档</a> ·
@@ -75,19 +75,19 @@
 
 
 
-* Windows x64 安装版：`Lyrics.Card.Generator.Setup.6.8.8.exe`
+* Windows x64 安装版：`Lyrics.Card.Generator.Setup.6.9.0.exe`
 
 从 v6.2.2 起只提供 Windows x64 Setup 安装包。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v6.8.8 · 发布说明
+### v6.9.0 · 发布说明
 
-**2026-10-27**
+**2026-10-28**
 
-v6.8.8 — 优化桌面回归与发布流程，提前检查运行时安全风险，保留完整安装与来源核验。
+v6.9.0 — 参考 SaltUI 优化按钮与开关，输入框和滑块保留原有样式。
 
-[简体中文](./docs/releases/v6.8.8.zh-CN.md) · [繁體中文](./docs/releases/v6.8.8.zh-TW.md) · [English](./docs/releases/v6.8.8.en.md) · [Français](./docs/releases/v6.8.8.fr.md) · [日本語](./docs/releases/v6.8.8.ja.md) · [Español](./docs/releases/v6.8.8.es.md)
+[简体中文](./docs/releases/v6.9.0.zh-CN.md) · [繁體中文](./docs/releases/v6.9.0.zh-TW.md) · [English](./docs/releases/v6.9.0.en.md) · [Français](./docs/releases/v6.9.0.fr.md) · [日本語](./docs/releases/v6.9.0.ja.md) · [Español](./docs/releases/v6.9.0.es.md)
 
 <a id="主要功能"></a>
 
@@ -153,6 +153,8 @@ v6.8.8 — 优化桌面回归与发布流程，提前检查运行时安全风险
 感谢 [ChatGPT 6 Astra](https://chatgpt.com/) 在开发过程中进行问题定位、方案设计、修复复核和验收检查。
 
 感谢 [ReactBits](https://www.reactbits.dev/) 提供的多种 UI 创意，包括 Spark Cursor 等动效灵感。
+
+感谢 [SaltUI](https://github.com/Moriafly/SaltUI) 及作者 [Moriafly](https://github.com/Moriafly) 提供的按钮与开关设计参考。本项目使用 React/CSS 适配现有主题与交互，输入框和滑块保留原样；相关归属与许可见 [Apache-2.0 许可证](./public/licenses/LICENSE-SaltUI.txt)及[第三方声明](./public/licenses/THIRD-PARTY-NOTICES.txt)。
 
 感谢 [Rangerov](https://github.com/rangerov0716) 对此项目的关注和提出意见。
 

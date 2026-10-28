@@ -20,6 +20,7 @@ on:
       - tsconfig.json
       - public/app-icon.png
       - public/licenses/LICENSE-Lyrics-Card-Generator.txt
+      - public/licenses/LICENSE-SaltUI.txt
       - public/licenses/THIRD-PARTY-NOTICES.txt
       - public/fonts/SourceHanSansSC-Heavy.otf
       - public/fonts/MonaSans-VF.woff2

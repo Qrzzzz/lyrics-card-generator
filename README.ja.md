@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v6.8.8.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v6.9.0.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="./docs/development.en.md">ローカル開発</a> ·
@@ -76,19 +76,19 @@
 
 
 
-* Windows x64 インストーラー：`Lyrics.Card.Generator.Setup.6.8.8.exe`
+* Windows x64 インストーラー：`Lyrics.Card.Generator.Setup.6.9.0.exe`
 
 v6.2.2 以降、配布するデスクトップパッケージは Windows x64 Setup のみです。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v6.8.8 · リリースノート
+### v6.9.0 · リリースノート
 
-**2026-10-27**
+**2026-10-28**
 
-v6.8.8 — デスクトップ回帰テストとリリースを改善し、ランタイムの安全性を早期に確認しながら、インストールと来歴の完全な検証を維持します。
+v6.9.0 — SaltUI を参考にボタンとスイッチを改善し、入力欄とスライダーは従来のスタイルを維持します。
 
-[简体中文](./docs/releases/v6.8.8.zh-CN.md) · [繁體中文](./docs/releases/v6.8.8.zh-TW.md) · [English](./docs/releases/v6.8.8.en.md) · [Français](./docs/releases/v6.8.8.fr.md) · [日本語](./docs/releases/v6.8.8.ja.md) · [Español](./docs/releases/v6.8.8.es.md)
+[简体中文](./docs/releases/v6.9.0.zh-CN.md) · [繁體中文](./docs/releases/v6.9.0.zh-TW.md) · [English](./docs/releases/v6.9.0.en.md) · [Français](./docs/releases/v6.9.0.fr.md) · [日本語](./docs/releases/v6.9.0.ja.md) · [Español](./docs/releases/v6.9.0.es.md)
 
 <a id="主な機能"></a>
 
@@ -154,6 +154,8 @@ v6.8.8 — デスクトップ回帰テストとリリースを改善し、ラン
 [ChatGPT 6 Astra](https://chatgpt.com/) に感謝します。開発過程での問題特定、方案設計、修正レビュー、受け入れ確認を支援しました。
 
 [ReactBits](https://www.reactbits.dev/) に感謝します。Spark Cursor などのモーションを含む、さまざまな UI アイデアの着想を提供してくれました。
+
+ボタンとスイッチのデザインの参考となった [SaltUI](https://github.com/Moriafly/SaltUI) と作者 [Moriafly](https://github.com/Moriafly) に感謝します。React/CSS で本アプリのテーマと操作に合わせて調整し、入力欄とスライダーは従来のままです。[Apache-2.0 ライセンス](./public/licenses/LICENSE-SaltUI.txt)と[第三者表示](./public/licenses/THIRD-PARTY-NOTICES.txt)をご確認ください。
 
 [Rangerov](https://github.com/rangerov0716) に感謝します。このプロジェクトへの関心と意見に感謝します。
 
