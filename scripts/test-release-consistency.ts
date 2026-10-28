@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import packageJson from "../package.json";
 
@@ -111,6 +111,27 @@ for (const locale of releaseLocales) {
       `${releaseFile} top language switcher must link ${linkedLocale}`
     );
   }
+}
+
+// Since v6.8.2, every localized note must retain the native-name navigation
+// used by earlier releases: current language is plain text, five links remain.
+const releaseLanguageNames = {
+  "zh-CN": "简体中文", "zh-TW": "繁體中文", en: "English",
+  fr: "Français", ja: "日本語", es: "Español"
+} as const;
+for (const file of readdirSync(resolve("docs/releases"))) {
+  const match = file.match(/^v(\d+\.\d+\.\d+)\.(zh-CN|zh-TW|en|fr|ja|es)\.md$/u);
+  if (!match) continue;
+  const [, version, locale] = match;
+  const [major, minor, patch] = version.split(".").map(Number);
+  if (major < 6 || (major === 6 && (minor < 8 || (minor === 8 && patch <= 1)))) continue;
+  const expected = releaseLocales.map((code) => {
+    assert.ok(existsSync(resolve(`docs/releases/v${version}.${code}.md`)), `${file} target locale ${code} exists`);
+    const name = releaseLanguageNames[code];
+    return code === locale ? name : `[${name}](https://github.com/Qrzzzz/lyrics-card-generator/blob/main/docs/releases/v${version}.${code}.md)`;
+  }).join(" · ");
+  const firstLine = readFileSync(resolve("docs/releases", file), "utf8").split(/\r?\n/u)[0];
+  assert.equal(firstLine, expected, `${file} uses native language names, a plain current language and same-version links`);
 }
 
 const prepareSource = readFileSync(resolve("scripts/prepare-electron-dist.mjs"), "utf8");
