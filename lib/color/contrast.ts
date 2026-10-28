@@ -66,6 +66,15 @@ export function resolveReadableTextColor(background: string, preferred?: string)
   return getContrastRatio(background, dark) >= getContrastRatio(background, light) ? dark : light;
 }
 
+/** Filled controls share readable foreground and hover colors across both renderers. */
+export function resolveControlAccentTokens(accent: string) {
+  const foreground = resolveReadableTextColor(accent, "#000000");
+  return {
+    "--control-on-accent": foreground,
+    "--control-accent-hover": compositeHexColors(accent, foreground === "#FFFFFF" ? "#000000" : "#FFFFFF", 0.92)
+  };
+}
+
 export function resolveReadableTextTokens(background: string, preferred?: string) {
   const primary = resolveReadableTextColor(background, preferred);
   const isDarkText = getContrastRatio(primary, "#FFFFFF") >= getContrastRatio(primary, "#191612");

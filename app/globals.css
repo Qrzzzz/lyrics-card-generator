@@ -92,6 +92,15 @@ body {
   --control-selected-border: color-mix(in srgb, var(--app-accent) 34%, rgb(var(--panel-border)));
   --control-selected-bg: color-mix(in srgb, var(--app-accent) 16%, rgb(var(--button-bg-hover)));
   --control-selected-bg-strong: color-mix(in srgb, var(--app-accent) 24%, rgb(var(--button-bg-hover)));
+  /* SaltUI-inspired shared controls; see docs/design/salt-controls.md. */
+  --control-radius: 12px;
+  --control-group-radius: 20px;
+  --control-pill-radius: 999px;
+  --control-on-accent: #ffffff;
+  --control-accent-hover: color-mix(in srgb, var(--app-accent) 92%, #000000);
+  --control-accent-edge: color-mix(in srgb, var(--app-accent) 58%, rgb(var(--app-fg)));
+  --control-travel-duration: 200ms;
+  --control-morph-duration: 320ms;
   --motion-duration-fast: 140ms;
   --motion-duration-normal: 200ms;
   --motion-duration-slow: 320ms;
@@ -167,6 +176,8 @@ body {
   --app-text-primary: #f8fafc;
   --app-text-secondary: rgba(248, 250, 252, 0.72);
   --app-accent: #93c5fd;
+  --control-on-accent: #000000;
+  --control-accent-hover: color-mix(in srgb, var(--app-accent) 92%, #ffffff);
   --app-fg: 248 250 252;
   --app-muted: 226 232 240 / 0.74;
   --app-subtle: 203 213 225;
@@ -736,7 +747,15 @@ body[data-window-maximized="true"] .app-shell[data-desktop-shell="true"] {
 
 .control-surface:hover:not(:disabled):not([aria-disabled="true"]) {
   background: rgb(var(--button-bg-hover));
-  transform: translateY(-1px);
+}
+
+.settings-action-button {
+  border-radius: var(--control-pill-radius);
+  padding-inline: 1.25rem;
+}
+
+.settings-action-button.control-variant-icon {
+  padding: 0;
 }
 
 .control-focus {
@@ -772,14 +791,13 @@ body[data-window-maximized="true"] .app-shell[data-desktop-shell="true"] {
 }
 
 .control-variant-primary {
-  border: 1px solid var(--control-selected-border);
-  background: var(--control-selected-bg-strong);
-  color: rgb(var(--app-fg));
+  border: 1px solid var(--control-accent-edge);
+  background: var(--app-accent);
+  color: var(--control-on-accent);
 }
 
 .control-variant-primary:hover:not(:disabled):not([aria-disabled="true"]) {
-  background: color-mix(in srgb, var(--app-accent) 30%, rgb(var(--button-bg-hover)));
-  transform: translateY(-1px);
+  background: var(--control-accent-hover);
 }
 
 .control-variant-danger {
@@ -790,7 +808,6 @@ body[data-window-maximized="true"] .app-shell[data-desktop-shell="true"] {
 
 .control-variant-danger:hover:not(:disabled):not([aria-disabled="true"]) {
   background: color-mix(in srgb, rgb(var(--status-danger-bg)) 76%, rgb(var(--button-bg-hover)));
-  transform: translateY(-1px);
 }
 
 .control-variant-ghost {
@@ -801,7 +818,6 @@ body[data-window-maximized="true"] .app-shell[data-desktop-shell="true"] {
 
 .control-variant-ghost:hover:not(:disabled):not([aria-disabled="true"]) {
   background: rgb(var(--button-bg));
-  transform: translateY(-1px);
 }
 
 .control-variant-icon {
@@ -812,50 +828,67 @@ body[data-window-maximized="true"] .app-shell[data-desktop-shell="true"] {
 
 .control-variant-icon:hover:not(:disabled):not([aria-disabled="true"]) {
   background: rgb(var(--button-bg));
-  transform: translateY(-1px);
+}
+
+.toggle-row {
+  padding-inline: 0.75rem;
+  border-radius: var(--control-radius);
+  transition: background var(--motion-duration-fast) var(--motion-ease-standard);
+}
+
+.toggle-row:hover:not(:disabled) {
+  background: rgb(var(--button-bg));
 }
 
 .toggle-track {
   position: relative;
   display: inline-flex;
-  height: 1.5rem;
-  width: 2.75rem;
+  height: 26px;
+  width: 46px;
   flex-shrink: 0;
   border: 1px solid rgb(var(--control-border));
-  border-radius: 999px;
+  border-radius: var(--control-pill-radius);
   background: rgb(var(--button-bg));
   transition:
-    border-color var(--motion-duration-normal) var(--motion-ease-standard),
-    background var(--motion-duration-normal) var(--motion-ease-standard),
+    border-color var(--control-travel-duration) var(--motion-ease-standard),
+    background var(--control-morph-duration) var(--motion-ease-standard),
     opacity var(--motion-duration-fast) var(--motion-ease-standard);
 }
 
 .toggle-knob {
   position: absolute;
-  top: 0.1875rem;
-  left: 0.1875rem;
-  height: 1rem;
-  width: 1rem;
-  border-radius: 999px;
-  background: rgb(var(--app-fg));
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.22);
+  top: 4px;
+  left: 4px;
+  height: 16px;
+  width: 16px;
+  border: 4px solid rgb(var(--app-fg));
+  border-radius: var(--control-pill-radius);
+  background: transparent;
   transform: translateX(0);
   transition:
-    transform var(--motion-duration-normal) var(--motion-ease-emphasized),
-    background var(--motion-duration-fast) var(--motion-ease-standard),
-    opacity var(--motion-duration-fast) var(--motion-ease-standard);
+    transform var(--control-travel-duration) var(--motion-ease-emphasized),
+    width var(--control-morph-duration) var(--motion-ease-emphasized),
+    border-width var(--control-morph-duration) var(--motion-ease-emphasized),
+    border-color var(--control-morph-duration) var(--motion-ease-standard),
+    background var(--control-morph-duration) var(--motion-ease-standard);
 }
 
 [role="switch"][aria-checked="true"] .toggle-track {
-  border-color: var(--control-selected-border);
-  background: var(--control-selected-bg-strong);
+  border-color: var(--control-accent-edge);
+  background: var(--app-accent);
 }
 
 [role="switch"][aria-checked="true"] .toggle-knob {
-  transform: translateX(1.25rem);
+  width: 4px;
+  border-width: 0;
+  border-color: var(--control-on-accent);
+  border-radius: 2px;
+  background: var(--control-on-accent);
+  transform: translateX(26px);
 }
 
 .option-card {
+  border-radius: var(--control-radius);
   border: 1px solid rgb(var(--control-border));
   background: rgb(var(--button-bg));
   color: rgb(var(--app-fg));
@@ -863,7 +896,6 @@ body[data-window-maximized="true"] .app-shell[data-desktop-shell="true"] {
 
 .option-card:hover:not(:disabled):not([aria-disabled="true"]) {
   background: rgb(var(--button-bg-hover));
-  transform: translateY(-1px);
 }
 
 .option-card[data-selected="true"],
@@ -951,7 +983,7 @@ body[data-window-maximized="true"] .app-shell[data-desktop-shell="true"] {
 .segmented-control[data-choice-layout] {
   gap: 0.25rem;
   padding: 0.375rem;
-  border-radius: 14px;
+  border-radius: var(--control-group-radius);
 }
 
 .segmented-control[data-choice-layout] .segmented-control__item {
@@ -959,7 +991,7 @@ body[data-window-maximized="true"] .app-shell[data-desktop-shell="true"] {
   height: auto;
   white-space: normal;
   overflow-wrap: anywhere;
-  border-radius: 9px;
+  border-radius: var(--control-pill-radius);
   transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
 }
 
@@ -1012,7 +1044,7 @@ body[data-window-maximized="true"] .app-shell[data-desktop-shell="true"] {
   min-height: 2.75rem;
   padding: 0.625rem 0.75rem;
   border: 1px solid rgb(var(--control-border));
-  border-radius: 10px;
+  border-radius: var(--control-radius);
   background: rgb(var(--input-bg));
   color: rgb(var(--app-fg));
   font-size: 0.875rem;
@@ -1053,13 +1085,14 @@ body[data-window-maximized="true"] .app-shell[data-desktop-shell="true"] {
   overflow-y: auto;
   overscroll-behavior: contain;
   border: 1px solid rgb(var(--control-border));
-  border-radius: 14px;
+  border-radius: var(--control-group-radius);
   background: rgb(var(--elevated-panel-bg));
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.24);
 }
 
 .choice-dropdown__option {
   width: 100%;
+  border-radius: var(--control-radius);
   border-color: transparent;
   background: transparent;
   transition: background-color var(--motion-duration-fast) var(--motion-ease-standard),
@@ -1220,11 +1253,11 @@ button {
     transition-timing-function: var(--motion-ease-standard);
   }
 
-  .app-shell button:not(:disabled):not([aria-disabled="true"]):not(.traffic-light):not(.desktop-titlebar__button):not(.example-song-card):not(.choice-dropdown__trigger):hover {
+  .app-shell button:not(:disabled):not([aria-disabled="true"]):not(.traffic-light):not(.desktop-titlebar__button):not(.example-song-card):not(.choice-dropdown__trigger):not(.settings-action-button):not(.toggle-row):not(.option-card):not(.segmented-control__item):hover {
     transform: translateY(-1px);
   }
 
-  .app-shell button:not(:disabled):not([aria-disabled="true"]):not(.traffic-light):not(.desktop-titlebar__button):not(.example-song-card):not(.choice-dropdown__trigger):hover:active {
+  .app-shell button:not(:disabled):not([aria-disabled="true"]):not(.traffic-light):not(.desktop-titlebar__button):not(.example-song-card):not(.choice-dropdown__trigger):not(.settings-action-button):not(.toggle-row):not(.option-card):not(.segmented-control__item):hover:active {
     transform: translateY(0) scale(0.985);
   }
 }
@@ -1942,8 +1975,8 @@ button {
 .settings-content-layout [role="switch"] {
   min-height: 2.75rem;
   border: 0;
-  padding-inline: 0;
-  align-items: flex-start;
+  padding-inline: 0.75rem;
+  align-items: center;
 }
 
 .settings-content-layout .settings-action-button {
@@ -2765,11 +2798,16 @@ body[data-reduce-motion="true"] .examples-close-button:focus-visible .examples-c
 }
 
 .settings-group-card {
-  border: 0;
-  border-radius: 0;
-  padding: 0;
-  background: transparent;
+  min-width: 0;
+  border: 1px solid rgb(var(--panel-border));
+  border-radius: var(--control-group-radius);
+  padding: 1rem;
+  background: rgb(var(--panel-bg));
   box-shadow: none;
+}
+
+.settings-group-heading {
+  margin-bottom: 1rem;
 }
 
 .support-page-heading {
@@ -2887,7 +2925,7 @@ body[data-reduce-motion="true"] .examples-close-button:focus-visible .examples-c
   }
 }
 
-.settings-group-card > section > * + * {
+.settings-page-body > section > * + *:not(.settings-group-card) {
   border-top: 1px solid rgb(var(--panel-border));
   padding-top: 1.25rem;
 }

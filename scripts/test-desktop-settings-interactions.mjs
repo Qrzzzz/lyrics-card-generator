@@ -4350,17 +4350,21 @@ await assertTitlebarWindowInteractions();
     "/licenses/LICENSE-Lyrics-Card-Generator.txt",
     "/licenses/THIRD-PARTY-NOTICES.txt",
     "/fonts/LICENSE-SourceHanSans.txt",
-    "/fonts/LICENSE-SourceHanSerif.txt"
+    "/fonts/LICENSE-SourceHanSerif.txt",
+    "/licenses/LICENSE-SaltUI.txt"
   ], "desktop About exposes every bundled app and font license entry");
   const packagedLicenseTexts = await page.evaluate(async () => await Promise.all([
     fetch("/licenses/LICENSE-Lyrics-Card-Generator.txt").then(async (response) => response.ok ? await response.text() : `HTTP ${response.status}`),
     fetch("/licenses/THIRD-PARTY-NOTICES.txt").then(async (response) => response.ok ? await response.text() : `HTTP ${response.status}`),
     fetch("/fonts/LICENSE-SourceHanSans.txt").then(async (response) => response.ok ? await response.text() : `HTTP ${response.status}`),
-    fetch("/fonts/LICENSE-SourceHanSerif.txt").then(async (response) => response.ok ? await response.text() : `HTTP ${response.status}`)
+    fetch("/fonts/LICENSE-SourceHanSerif.txt").then(async (response) => response.ok ? await response.text() : `HTTP ${response.status}`),
+    fetch("/licenses/LICENSE-SaltUI.txt").then(async (response) => response.ok ? await response.text() : `HTTP ${response.status}`)
   ]));
   assert.match(packagedLicenseTexts[0], /Source Available License/, "packaged desktop serves the app license offline");
   assert.match(packagedLicenseTexts[1], /Source Han Sans SC Heavy[\s\S]*Source Han Serif SC Heavy/, "packaged desktop serves third-party notices offline");
-  assert.ok(packagedLicenseTexts.slice(2).every((text) => /SIL OPEN FONT LICENSE/i.test(text)), "packaged desktop serves both Source Han license texts offline");
+  assert.ok(packagedLicenseTexts.slice(2, 4).every((text) => /SIL OPEN FONT LICENSE/i.test(text)), "packaged desktop serves both Source Han license texts offline");
+  assert.match(packagedLicenseTexts[4], /Apache License[\s\S]*Version 2\.0/, "packaged desktop serves the SaltUI license offline");
+  assert.equal(await page.getByTestId("salt-ui-acknowledgement").getAttribute("href"), "https://github.com/Moriafly/SaltUI", "About credits SaltUI and links its upstream project");
   await prepareSettingsScreenshot();
   await page.screenshot({ path: path.join(reportDirectory, "settings-about-licenses-audit.png"), fullPage: false });
   await offlineLicenseLinks.last().scrollIntoViewIfNeeded();

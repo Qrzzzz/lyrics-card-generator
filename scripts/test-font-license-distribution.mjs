@@ -61,6 +61,7 @@ for (const { license } of fontContracts) {
 }
 for (const asset of [
   "public/licenses/LICENSE-Lyrics-Card-Generator.txt",
+  "public/licenses/LICENSE-SaltUI.txt",
   "public/licenses/THIRD-PARTY-NOTICES.txt"
 ]) {
   assert.ok(pagesWorkflow.includes(asset), `Pages path filters must include ${asset}`);
@@ -133,6 +134,11 @@ async function assertApplicationLicenseAssets(root, label) {
   assert.match(notices, /Source Han Serif SC Heavy/);
   assert.match(notices, /LICENSE-SourceHanSerif\.txt/);
   assert.match(notices, /LICENSE-MonaSans\.txt/);
+  assert.match(notices, /SaltUI[\s\S]*Copyright 2023-2025 Moriafly/);
+  assert.match(notices, /LICENSE-SaltUI\.txt/);
+  const saltLicense = await readFile(path.join(root, "public", "licenses", "LICENSE-SaltUI.txt"), "utf8");
+  assert.match(saltLicense, /Apache License[\s\S]*Version 2\.0/);
+  assert.match(saltLicense, /Copyright 2023-2025 Moriafly/);
 }
 
 function normalizeLines(value) {

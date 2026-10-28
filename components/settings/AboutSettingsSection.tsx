@@ -6,6 +6,7 @@ import { APP_VERSION } from "@/lib/app-version";
 import {
   APP_ICON_URL,
   APP_LICENSE_URL,
+  SALT_UI_LICENSE_URL,
   SOURCE_HAN_SANS_LICENSE_URL,
   SOURCE_HAN_SERIF_LICENSE_URL,
   THIRD_PARTY_NOTICES_URL
@@ -26,7 +27,8 @@ export function AboutSettingsSection({ copy, t, locale, onSupport }: { copy: typ
     [copy.sourceAvailableLicense, APP_LICENSE_URL],
     [copy.thirdPartyNotices, THIRD_PARTY_NOTICES_URL],
     [copy.sourceHanSansLicense, SOURCE_HAN_SANS_LICENSE_URL],
-    [copy.sourceHanSerifLicense, SOURCE_HAN_SERIF_LICENSE_URL]
+    [copy.sourceHanSerifLicense, SOURCE_HAN_SERIF_LICENSE_URL],
+    [copy.saltUiLicense, SALT_UI_LICENSE_URL]
   ] as const;
 
   return (
@@ -54,6 +56,17 @@ export function AboutSettingsSection({ copy, t, locale, onSupport }: { copy: typ
         <span className="min-w-0 flex-1"><span className="block text-sm font-semibold">{copy.supportAuthor}</span><span className="app-text-subtle mt-1 block text-xs leading-5">{copy.supportEntryDescription}</span></span>
         <ChevronRight className="h-4 w-4 shrink-0" aria-hidden="true" />
       </button>
+      <SettingsGroup title={copy.acknowledgements}>
+        <a href="https://github.com/Moriafly/SaltUI" target="_blank" rel="noreferrer"
+          data-testid="salt-ui-acknowledgement"
+          className="app-button control-focus flex min-h-11 items-center justify-between gap-3 rounded-lg px-3 py-3 text-sm">
+          <span className="min-w-0">
+            <span className="app-text-primary block font-semibold">SaltUI · Moriafly</span>
+            <span className="app-text-subtle mt-1 block text-xs leading-5">{copy.saltUiCredit}</span>
+          </span>
+          <ExternalLink className="h-4 w-4 shrink-0" aria-hidden="true" />
+        </a>
+      </SettingsGroup>
       <SettingsGroup title={copy.licenses} description={copy.licensesDescription}>
         <div className="grid gap-2" data-testid="offline-license-links">
           {licenseLinks.map(([label, url]) => (

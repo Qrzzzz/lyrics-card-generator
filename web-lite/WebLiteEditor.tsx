@@ -54,6 +54,7 @@ import {
 } from "@/lib/export-transaction";
 import { createT } from "@/lib/i18n";
 import { DEFAULT_PALETTE } from "@/lib/palette-background";
+import { resolveControlAccentTokens } from "@/lib/color/contrast";
 import { resolveUiAccentColor } from "@/lib/settings/accent";
 import { documentLanguageForLocale, readBrowserPreferredLocale } from "@/lib/locale-language";
 import {
@@ -573,7 +574,7 @@ export function WebLiteEditor() {
       className="app-shell min-h-screen"
       data-ui-theme="dark"
       data-desktop-shell="false"
-      style={{ "--app-accent": accentColor } as React.CSSProperties}
+      style={{ "--app-accent": accentColor, ...resolveControlAccentTokens(accentColor) } as React.CSSProperties}
     >
       <AppCommands locale={locale} titles={steps.map(step => step.title)} onNavigate={navigateCommand}
         onExport={() => { setCurrentStep(5); void runImageOutput("export"); }} onCopy={() => { setCurrentStep(5); void runImageOutput("copy"); }}

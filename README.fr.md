@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v6.8.8.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v6.9.0.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="./docs/development.en.md">Développement local</a> ·
@@ -76,19 +76,19 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 
 
-* Programme d’installation Windows x64 : `Lyrics.Card.Generator.Setup.6.8.8.exe`
+* Programme d’installation Windows x64 : `Lyrics.Card.Generator.Setup.6.9.0.exe`
 
 À partir de la v6.2.2, le programme Setup Windows x64 est le seul paquet distribué.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### v6.8.8 · Notes de version
+### v6.9.0 · Notes de version
 
-**2026-10-27**
+**2026-10-28**
 
-v6.8.8 — Améliore les tests de régression et la publication avec des contrôles de sécurité plus précoces et une vérification complète de l’installation et de la provenance.
+v6.9.0 — Affine les boutons et interrupteurs avec un style inspiré de SaltUI, en conservant les champs et curseurs d’origine.
 
-[简体中文](./docs/releases/v6.8.8.zh-CN.md) · [繁體中文](./docs/releases/v6.8.8.zh-TW.md) · [English](./docs/releases/v6.8.8.en.md) · [Français](./docs/releases/v6.8.8.fr.md) · [日本語](./docs/releases/v6.8.8.ja.md) · [Español](./docs/releases/v6.8.8.es.md)
+[简体中文](./docs/releases/v6.9.0.zh-CN.md) · [繁體中文](./docs/releases/v6.9.0.zh-TW.md) · [English](./docs/releases/v6.9.0.en.md) · [Français](./docs/releases/v6.9.0.fr.md) · [日本語](./docs/releases/v6.9.0.ja.md) · [Español](./docs/releases/v6.9.0.es.md)
 
 <a id="fonctionnalités-principales"></a>
 
@@ -154,6 +154,8 @@ Merci à [OpenAI Codex](https://openai.com/codex/). Il a transformé de nombreus
 Merci à [ChatGPT 6 Astra](https://chatgpt.com/) pour le diagnostic des problèmes, la conception de solutions, la relecture des correctifs et les vérifications d’acceptation pendant le développement.
 
 Merci à [ReactBits](https://www.reactbits.dev/) pour ses nombreuses idées d’interface, notamment des inspirations d’animation comme Spark Cursor.
+
+Merci à [SaltUI](https://github.com/Moriafly/SaltUI) et à [Moriafly](https://github.com/Moriafly) pour l’inspiration des boutons et interrupteurs. L’adaptation React/CSS suit les thèmes et interactions de cette application ; les champs et curseurs conservent leur style d’origine. Voir la [licence Apache-2.0](./public/licenses/LICENSE-SaltUI.txt) et les [mentions relatives aux tiers](./public/licenses/THIRD-PARTY-NOTICES.txt).
 
 Merci à [Rangerov](https://github.com/rangerov0716) pour l’attention portée à ce projet et pour ses retours.
 

@@ -8,6 +8,7 @@ import {
   getContrastRatio
 } from "../lib/color/contrast";
 import { normalizeUserSettings } from "../lib/settings/user-settings";
+import { DEFAULT_PALETTE } from "../lib/palette-background";
 
 const backdropMatrix = [
   { name: "black", color: "#000000" },
@@ -107,6 +108,23 @@ const darkAcrylicTokens = resolveEditorThemeTokens({
   userSettings: normalizeUserSettings({ uiTheme: "dark-acrylic" })
 });
 assert.equal(darkAcrylicTokens.uiTextTokens.primary, "#FFFFFF", "dark acrylic keeps its light foreground");
+
+// Filled actions and switch icons must remain legible for custom/album accents,
+// including yellow, white and black, independently of the surrounding theme.
+for (const uiTheme of ["dark", "light", "dark-acrylic", "light-acrylic"] as const) {
+  for (const accent of ["#000000", "#FFFFFF", "#EF4444", "#F97316", "#EAB308", "#22C55E", "#3B82F6", "#7C3AED"]) {
+    for (const uiAccentMode of ["custom", "album-dynamic"] as const) {
+      const tokens = resolveEditorThemeTokens({
+        userSettings: normalizeUserSettings({ uiTheme, uiAccentMode, uiCustomAccentColor: accent }),
+        palette: { ...DEFAULT_PALETTE, primary: accent }
+      });
+      const foreground = tokens.resolvedThemeTokens["--control-on-accent"];
+      assert.ok(getContrastRatio(foreground, tokens.themeAccent) >= 4.5, `${uiTheme} ${accent}: filled action text`);
+      const hoverColor = tokens.resolvedThemeTokens["--control-accent-hover"];
+      assert.ok(getContrastRatio(foreground, hoverColor) >= 4.5, `${uiTheme} ${accent}: hovered action text`);
+    }
+  }
+}
 
 const globalsSource = readFileSync(resolve("app/globals.css"), "utf8");
 const lightAcrylicBlock = globalsSource.match(/\.app-shell\[data-ui-theme="light-acrylic"\]\s*\{([\s\S]*?)\n\}/)?.[1] ?? "";

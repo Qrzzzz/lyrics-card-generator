@@ -26,6 +26,16 @@ Source: https://github.com/adobe-fonts/source-han-sans/tree/2.004R/OTF/Simplifie
 
 Other third-party packages used by the application remain governed by their respective licenses in the source dependency manifests and installed package metadata.
 
+SaltUI-inspired shared controls
+Copyright 2023-2025 Moriafly.
+Source: https://github.com/Moriafly/SaltUI
+License: LICENSE-SaltUI.txt (Apache License 2.0).
+Button, switch and grouped-item visual design adapted for React/CSS;
+dimensions, colors, timings and accessibility behavior were modified for this application.
+SaltUI's ring-to-bar switch design credits Alexander Kolpakov's SwitcherX
+(Apache License 2.0): https://github.com/bitvale/Switcher/tree/568ea7a
+This application implements the geometry and transitions in CSS, without the Kotlin runtime.
+
 Support-page network marks
 TRON: official brand mark from https://tron.network/favicon.svg, used to identify the network. Brand rights remain with their owner.
 X Layer: Web3 Icons (MIT), https://github.com/0xa3k5/web3icons

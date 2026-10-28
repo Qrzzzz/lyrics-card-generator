@@ -13,6 +13,7 @@ This directory contains durable development, maintenance, testing, security, and
 - [Web Lite browser support](./web-lite-browser-support.md)
 - [Dependabot 更新接入与验证](./dependabot.md)
 - [示例歌曲维护流程](./examples.md)
+- [SaltUI 风格控件与主题适配](./design/salt-controls.md)
 
 ## 安全与测试 / Security and testing
 

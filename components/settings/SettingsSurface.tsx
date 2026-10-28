@@ -16,7 +16,7 @@ import { GeneralSettingsSection } from "@/components/settings/GeneralSettingsSec
 import { ActionButton } from "@/components/ui/controls";
 import { useAppReducedMotion } from "@/components/motion/AppMotionProvider";
 import { SettingsHistoryBar, type SettingsBreadcrumb } from "@/components/settings/SettingsHistoryBar";
-import { SettingsGroup, SettingsPageHeading } from "@/components/settings/SettingsLayout";
+import { SettingsPageHeading } from "@/components/settings/SettingsLayout";
 import { getSettingsTabs, SettingsNavigation } from "@/components/settings/SettingsNavigation";
 import type { SettingsDestination, SettingsHistoryState, SettingsTabId } from "@/components/settings/settings-model";
 import {
@@ -272,7 +272,7 @@ export function SettingsSurface({
                 animate={selected ? "animate" : "initial"}
                 transition={tabTransition}
               >
-                <SettingsGroup>
+                <div className="settings-page-body">
                   {tab.id === "ai" ? (
                     workspace.isLoading ? (
                       <div className="app-text-subtle flex items-center gap-2 p-2 text-sm">
@@ -333,7 +333,7 @@ export function SettingsSurface({
                       )}
                     </>
                   )}
-                </SettingsGroup>
+                </div>
               </motion.div>
               );
             })}

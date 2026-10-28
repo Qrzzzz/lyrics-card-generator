@@ -7,6 +7,7 @@ export const SOURCE_HAN_SERIF_SHA256 = "d033af54f96530476faed924ab5d5e9e6ef08334
 
 export const APP_LICENSE_URL = "/licenses/LICENSE-Lyrics-Card-Generator.txt";
 export const THIRD_PARTY_NOTICES_URL = "/licenses/THIRD-PARTY-NOTICES.txt";
+export const SALT_UI_LICENSE_URL = "/licenses/LICENSE-SaltUI.txt";
 export const SOURCE_HAN_SANS_LICENSE_URL = "/fonts/LICENSE-SourceHanSans.txt";
 export const SOURCE_HAN_SERIF_LICENSE_URL = "/fonts/LICENSE-SourceHanSerif.txt";
 export const WEB_LITE_APP_LICENSE_URL = "./public/licenses/LICENSE-Lyrics-Card-Generator.txt";
