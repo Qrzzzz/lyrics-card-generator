@@ -4,6 +4,7 @@ import { resolve } from "node:path";
 import {
   CARD_ARTWORK_BOX_SHADOW,
   CARD_ARTWORK_DROP_SHADOW,
+  resolveCardCoverTextShadow,
   resolveCardContentTextShadow
 } from "../lib/card-content-depth";
 
@@ -35,14 +36,18 @@ assert.doesNotMatch(
 
 assert.equal(resolveCardContentTextShadow("#F8FAFC"), "0 2px 8px rgba(0,0,0,0.20)");
 assert.equal(resolveCardContentTextShadow("#111827"), "0 1px 4px rgba(255,255,255,0.12)");
+assert.match(resolveCardCoverTextShadow("#FFFFFF"), /rgba\(0,0,0,0.72\)/);
+assert.match(resolveCardCoverTextShadow("#000000"), /rgba\(255,255,255,0.72\)/);
+assert.ok(instrumentalBlock.includes("resolveCardCoverTextShadow(textColor)"),
+  "overlaid instrumental metadata gets per-glyph contrast without obscuring the cover");
 assert.equal(CARD_ARTWORK_DROP_SHADOW, "drop-shadow(0 8px 16px rgba(0,0,0,0.16))");
 assert.equal(CARD_ARTWORK_BOX_SHADOW, "0 10px 24px rgba(0,0,0,0.16)");
 assert.ok(portraitCard.includes("dropShadow={CARD_ARTWORK_DROP_SHADOW}"));
 assert.ok(portraitCard.includes("boxShadow={CARD_ARTWORK_BOX_SHADOW}"));
 assert.ok(landscapeCard.includes("dropShadow={CARD_ARTWORK_DROP_SHADOW}"));
 assert.ok(landscapeCard.includes("boxShadow={CARD_ARTWORK_BOX_SHADOW}"));
-assert.ok(instrumentalBlock.includes("dropShadow={CARD_ARTWORK_DROP_SHADOW}"));
-assert.ok(instrumentalBlock.includes("boxShadow={CARD_ARTWORK_BOX_SHADOW}"));
+assert.doesNotMatch(instrumentalBlock, /dropShadow=|boxShadow=|borderRadius=/,
+  "edge-to-edge instrumental artwork has no detached frame, rounding or shadow");
 // Settings surface geometry is covered by the real component layout suite.
 
 console.log("card content uses restrained per-glyph and artwork depth without broad readability shadows");

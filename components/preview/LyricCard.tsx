@@ -84,7 +84,8 @@ export function LyricCard({
       >
         <div
           data-card-content
-          className="relative flex h-full w-full flex-col overflow-hidden rounded-none border border-transparent bg-transparent px-[18px] pt-[18px] pb-[8px] backdrop-blur-0"
+          className={cn("relative flex h-full w-full flex-col overflow-hidden rounded-none bg-transparent backdrop-blur-0",
+            contentMode !== "instrumental" && "border border-transparent px-[18px] pt-[18px] pb-[8px]")}
           style={{ textShadow: resolveCardContentTextShadow(textColor) }}
         >
           {(style.showCover || style.showSongInfo) && contentMode !== "instrumental" && layout.headerRect ? (
@@ -164,6 +165,7 @@ export function LyricCard({
                 song={song}
                 coverUrl={activeCover}
                 coverArtwork={coverArtwork}
+                align={style.align}
                 onCoverError={() => setCoverFailed(true)}
                 textColor={textColor}
                 showAlbumName={style.showAlbumName}

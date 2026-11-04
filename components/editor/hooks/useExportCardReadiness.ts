@@ -212,7 +212,8 @@ export function evaluateExportCardDom(
     coverSourceUrl &&
     ((state.style.contentMode ?? "lyrics") === "instrumental" || state.style.showCover)
   );
-  const isArtworkReady = !artworkParticipates || isArtworkAnalysisSettled(coverSourceUrl, state.coverArtwork);
+  const isArtworkReady = (!artworkParticipates || isArtworkAnalysisSettled(coverSourceUrl, state.coverArtwork)) &&
+    !root?.querySelector('[data-cover-extension-state="pending"]');
   // This one measurement is shared by auto-height convergence and readiness.
   const measuredAutoHeight = root ? measureAutoCanvasHeight(state, container) : null;
   const isAutoHeightStable = !isPortraitCustomAutoHeight(state) || Boolean(
@@ -243,6 +244,7 @@ export function detectExportCardOverflow(root: HTMLElement, tolerance = EXPORT_C
     { selector: "[data-card-lyrics-viewport]", checkInline: true },
     { selector: "[data-card-lyrics]", checkInline: true },
     { selector: "[data-card-footer]", checkInline: true },
+    { selector: "[data-instrumental-song-info]", checkInline: true },
     { selector: "[data-card-accessories]", checkInline: true }
   ] as const;
 

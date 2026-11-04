@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v6.9.1.zh-TW.md">發布說明</a> ·
+  <a href="./docs/releases/v6.9.2.zh-TW.md">發布說明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">線上 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="./docs/development.zh-CN.md">本機開發</a> ·
@@ -73,19 +73,19 @@
 
 
 
-* Windows x64 安裝版：`Lyrics.Card.Generator.Setup.6.9.1.exe`
+* Windows x64 安裝版：`Lyrics.Card.Generator.Setup.6.9.2.exe`
 
 從 v6.2.2 起僅提供 Windows x64 Setup 安裝程式。
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v6.9.1 · 發布說明
+### v6.9.2 · 發布說明
 
-**2026-10-28**
+**2026-11-05**
 
-v6.9.1 — 修正 SaltUI 控件更新後的按鈕密度、設定列排列與長文案顯示問題。
+v6.9.2 — 重做無歌詞分享圖：封面貼邊與漸進柔化，大標題從清晰區起筆，歌曲資訊與底部署名分區排布。
 
-[简体中文](./docs/releases/v6.9.1.zh-CN.md) · [繁體中文](./docs/releases/v6.9.1.zh-TW.md) · [English](./docs/releases/v6.9.1.en.md) · [Français](./docs/releases/v6.9.1.fr.md) · [日本語](./docs/releases/v6.9.1.ja.md) · [Español](./docs/releases/v6.9.1.es.md)
+[简体中文](./docs/releases/v6.9.2.zh-CN.md) · [繁體中文](./docs/releases/v6.9.2.zh-TW.md) · [English](./docs/releases/v6.9.2.en.md) · [Français](./docs/releases/v6.9.2.fr.md) · [日本語](./docs/releases/v6.9.2.ja.md) · [Español](./docs/releases/v6.9.2.es.md)
 
 ## ✨ 主要功能
 

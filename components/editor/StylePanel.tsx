@@ -11,6 +11,7 @@ import {
 import { SettingsLayout, SettingsGrid, SettingsGroup, SettingsField, SettingsToggle } from "@/components/editor/style-panel/SettingsLayout";
 import { BackgroundControls } from "./style-panel/BackgroundControls";
 import { AUTO_HEIGHT_MIN, PRESET_CARD_SIZES } from "@/lib/card-size";
+import { normalizeInstrumentalLayout } from "@/lib/card-style-normalize";
 import {
   LANDSCAPE_LYRICS_WIDTH_MAX,
   LANDSCAPE_LYRICS_WIDTH_MIN,
@@ -81,7 +82,7 @@ export function LayoutSettingsPanel({ style, onStyleChange, locale, t }: StylePa
   const isInstrumental = style.contentMode === "instrumental";
   const layoutMode = isInstrumental ? "portrait" : style.layoutMode ?? "portrait";
   const instrumentalLayoutLockedHint = t("instrumentalLayoutLockedHint");
-  const sizeModeOptions = [
+  const sizeModeOptions = isInstrumental ? [{ value: "custom", label: "1080 × 1512" }] : [
     { value: "1:1", label: t("square") },
     { value: "custom", label: t("custom") }
   ];
@@ -93,40 +94,20 @@ export function LayoutSettingsPanel({ style, onStyleChange, locale, t }: StylePa
 
   function updateContentMode(contentMode: ContentMode) {
     if (contentMode === "instrumental") {
-      // Instrumental rendering owns a fixed square portrait geometry and has no translation column.
-      const squareSize = PRESET_CARD_SIZES["1:1"];
-      onStyleChange({
-        ...style,
-        contentMode: "instrumental",
-        layoutMode: "portrait",
-        ratio: "1:1",
-        width: squareSize.width,
-        height: squareSize.height,
-        autoWidth: false,
-        autoHeight: false,
-        translationEnabled: false
-      });
+      onStyleChange(normalizeInstrumentalLayout({ ...style, contentMode: "instrumental" }));
       return;
     }
 
     onStyleChange({
       ...style,
-      contentMode: "lyrics"
+      contentMode: "lyrics",
+      ratio: style.ratio === "4:5" ? "custom" : style.ratio
     });
   }
 
   function updateRatio(ratio: CardRatio) {
     if (style.contentMode === "instrumental") {
-      const squareSize = PRESET_CARD_SIZES["1:1"];
-      onStyleChange({
-        ...style,
-        layoutMode: "portrait",
-        ratio: "1:1",
-        width: squareSize.width,
-        height: squareSize.height,
-        autoWidth: false,
-        autoHeight: false
-      });
+      onStyleChange(normalizeInstrumentalLayout(style));
       return;
     }
 
@@ -211,7 +192,7 @@ export function LayoutSettingsPanel({ style, onStyleChange, locale, t }: StylePa
             <SettingsField label={t("sizeMode")} description={isInstrumental ? t("instrumentalSizeLockedHint") : undefined}>
               <SegmentedControl<CardRatio>
                 aria-label={t("sizeMode")}
-                value={isInstrumental ? "1:1" : style.ratio}
+                value={isInstrumental ? "custom" : style.ratio}
                 onChange={updateRatio}
                 options={sizeModeOptions.map((option) => ({ ...option, value: option.value as CardRatio, disabled: isInstrumental }))}
               />
@@ -321,6 +302,7 @@ export function TypographySettings({ style, onStyleChange, locale, t }: StylePan
 }
 
 function BackgroundGridSettings({ style, onStyleChange, t }: StylePanelProps) {
+  if (style.contentMode === "instrumental") return null;
   function update<K extends keyof CardStyle>(key: K, value: CardStyle[K]) { onStyleChange({ ...style, [key]: value }); }
   return <SettingsGroup title={t("settings.backgroundDetails")}><SettingsGrid>
           <SettingsToggle label={t("backgroundGrid")} checked={style.showFineGrid === true}

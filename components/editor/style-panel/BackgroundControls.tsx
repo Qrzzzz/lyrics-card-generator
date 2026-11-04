@@ -22,6 +22,7 @@ export function BackgroundControls({ style, onStyleChange, locale }: {
   style: CardStyle; onStyleChange: (style: CardStyle) => void; locale: Locale;
 }) {
   const c = copy[locale];
+  const isInstrumental = style.contentMode === "instrumental";
   const candidates = solidCandidates(style.extractedPalette);
   const color = resolveSolidColor(style);
   const detail = colorPickerCopy[locale];
@@ -33,10 +34,10 @@ export function BackgroundControls({ style, onStyleChange, locale }: {
     onStyleChange({ ...style, solidColor: value, solidColorSource: "user" });
   }
   return <SettingsGroup title={c[0]}>
-    <SegmentedControl orientation="horizontal" value={style.backgroundMode === "solid" ? "solid" : "palette"}
+    {!isInstrumental ? <SegmentedControl orientation="horizontal" value={style.backgroundMode === "solid" ? "solid" : "palette"}
       onChange={(backgroundMode: "solid" | "palette") => onStyleChange({ ...style, backgroundMode })}
-      options={[{ value: "palette", label: c[1] }, { value: "solid", label: c[2] }]} aria-label={c[0]} />
-    {style.backgroundMode === "solid" ? <div className="grid gap-3" data-solid-controls>
+      options={[{ value: "palette", label: c[1] }, { value: "solid", label: c[2] }]} aria-label={c[0]} /> : null}
+    {style.backgroundMode === "solid" || isInstrumental ? <div className="grid gap-3" data-solid-controls>
       {candidates.source === "cover" ? <SegmentedControl value={visibleSource} onChange={setSource}
         ariaLabel={detail.source} options={[{ value: "cover", label: c[3] }, { value: "preset", label: c[4] }]} />
         : <p className="app-text-subtle text-xs">{c[4]}</p>}
