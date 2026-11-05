@@ -1183,7 +1183,7 @@ test("offers centered instrumental information with larger metadata and credits 
   await page.locator('[data-step-id="export"]').click();
   const [download]=await Promise.all([page.waitForEvent("download"),page.getByTestId("complete-export-button").click()]);
   expect(await pngDimensions(download)).toEqual({width:2160,height:3024});
-  await download.saveAs(path.join(projectRoot,"output","playwright","v6.9.2-centered-metadata.png"));
+  await download.saveAs(path.join(projectRoot,"output","playwright","instrumental-centered-metadata.png"));
 });
 
 test("progressively softens lower artwork into a stable solid bottom without a seam", async ({ page }) => {
