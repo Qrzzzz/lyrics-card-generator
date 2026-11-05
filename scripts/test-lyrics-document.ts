@@ -255,8 +255,10 @@ assert.ok(
 );
 
 const readinessSource = readFileSync(resolve("components/editor/hooks/export-card-dom-coordinator.ts"), "utf8");
+const observedAttributes = readinessSource.match(/attributeFilter:\s*\[([^\]]+)\]/)?.[1] ?? "";
 assert.ok(
-  readinessSource.includes("attributes: true") && readinessSource.includes('attributeFilter: ["class", "style"]'),
+  readinessSource.includes("attributes: true") &&
+    /"class"/.test(observedAttributes) && /"style"/.test(observedAttributes),
   "readiness rechecks overflow after measured geometry changes inline styles"
 );
 const editorActionsSource = readFileSync(resolve("components/editor/hooks/useEditorImageOutput.ts"), "utf8");
