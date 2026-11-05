@@ -257,7 +257,15 @@ export function LayoutSettingsPanel({ style, onStyleChange, locale, t }: StylePa
 
 export function TypographySettings({ style, onStyleChange, locale, t }: StylePanelProps) {
   function update<K extends keyof CardStyle>(key: K, value: CardStyle[K]) { onStyleChange({ ...style, [key]: value }); }
+  const alignmentControl = <SettingsField label={t("alignment")}>
+    <SegmentedControl<CardAlign> aria-label={t("alignment")} value={style.align}
+      onChange={(value) => update("align", value)}
+      options={[{ value: "left", label: t("left") }, { value: "center", label: t("center") }]} />
+  </SettingsField>;
   return <>
+      {style.contentMode === "instrumental" ? <SettingsGroup title={t("settings.typography")}>
+        <SettingsGrid>{alignmentControl}</SettingsGrid>
+      </SettingsGroup> : null}
       {style.contentMode === "lyrics" ? (
         <SettingsGroup title={t("settings.typography")}>
           <SettingsGrid>
@@ -269,11 +277,7 @@ export function TypographySettings({ style, onStyleChange, locale, t }: StylePan
               <PrecisionSlider locale={locale} settingId="lineHeight" resetValue={1.8} aria-label={t("lineHeight")} min={LYRIC_LINE_HEIGHT_MIN} max={LYRIC_LINE_HEIGHT_MAX} step={LYRIC_LINE_HEIGHT_STEP}
                 value={style.lineHeight} onValueChange={(value) => update("lineHeight", value)} />
             </SettingsField>
-            <SettingsField label={t("alignment")}>
-              <SegmentedControl<CardAlign> aria-label={t("alignment")} value={style.align}
-                onChange={(value) => update("align", value)}
-                options={[{ value: "left", label: t("left") }, { value: "center", label: t("center") }]} />
-            </SettingsField>
+            {alignmentControl}
             {style.translationEnabled ? (
               <SettingsField label={t("translationScale")} value={style.translationScale.toFixed(2)}>
                 <PrecisionSlider locale={locale} settingId="translationScale" resetValue={0.75} aria-label={t("translationScale")} min={0.6} max={0.9} step={0.01}

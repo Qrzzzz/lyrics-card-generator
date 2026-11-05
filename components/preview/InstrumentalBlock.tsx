@@ -68,7 +68,7 @@ export function InstrumentalBlock({ song, coverUrl, coverArtwork, onCoverError, 
     </div>
     {hasCredits ? <div ref={footerRef} data-card-footer className="absolute min-w-0"
       style={{ left: design.inset, bottom: design.footerBottom, width: titleWidth,
-        maxHeight: Math.max(1, availableHeight - design.infoBottom - 32) }}>
+        maxHeight: Math.max(1, availableHeight - infoTop - 96) }}>
       <CardFooter showGeneratedWatermark={showGeneratedWatermark} showSharedBy={showSharedBy}
         sharedByText={sharedByText} textColor={textColor} instrumentalAlign={align} />
     </div> : null}

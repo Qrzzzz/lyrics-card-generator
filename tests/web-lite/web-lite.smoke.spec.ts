@@ -1140,6 +1140,52 @@ test("extends instrumental covers edge to edge and preserves metadata in preview
     .toEqual([0, 0, 0, 0]);
 });
 
+test("offers centered instrumental information with larger metadata and credits in PNG export", async ({ page }) => {
+  await openWebLite(page, { width: 1440, height: 1000 });
+  await page.getByLabel("Song Title", { exact: true }).fill("夜色落星河");
+  await page.getByLabel("Artist", { exact: true }).fill("星河");
+  await page.getByLabel("Album", { exact: true }).fill("沿着光的方向");
+  await uploadGeneratedCover(page, "centered-metadata.png", 1200, 1200, false);
+  await page.locator('[data-step-id="layout"]').click();
+  await page.locator('[data-segment-value="instrumental"]').click();
+  await page.locator('[data-step-id="visual"]').click();
+  for (const name of ["Show project signature", "Show Shared By"]) {
+    const toggle=page.getByRole("switch", {name,exact:true});
+    if(await toggle.getAttribute("aria-checked")!=="true")await toggle.click();
+  }
+  await page.getByLabel("Shared By", { exact: true }).fill("Qrzzzz");
+  const card=page.locator('[data-export-card-host] [data-export-card="true"]').first();
+  const info=card.locator("[data-instrumental-song-info]");
+  await expect(info.locator("h2")).toHaveCSS("font-size","108px");
+  await expect(info.locator("p").first()).toHaveCSS("font-size","60px");
+  await expect(info.locator("[data-instrumental-album]")).toHaveCSS("font-size","44px");
+  await expect(card.locator("[data-card-shared-by]")).toHaveCSS("font-size","36px");
+  await expect(card.locator("[data-project-signature]")).toHaveCSS("font-size","32px");
+  await page.locator('[data-step-id="font"]').click();
+  await expect(page.getByRole("combobox",{name:"Alignment",exact:true})).toBeVisible();
+  for (const align of ["center","left","center"]) {
+    await selectChoice(page,align);
+    for(const element of [info.locator("h2"),info.locator("p").first(),info.locator("[data-instrumental-album]"),
+      card.locator("[data-card-shared-by]"),card.locator("[data-project-signature]")])await expect(element).toHaveCSS("text-align",align);
+  }
+  await page.evaluate(()=>document.fonts.ready);
+  const center=await info.locator("h2").evaluate(node=>{
+    const range=document.createRange();range.selectNodeContents(node);const text=range.getBoundingClientRect();
+    return text.left+text.width/2-node.closest("[data-export-card]")!.getBoundingClientRect().left;
+  });
+  expect(Math.abs(center-540)).toBeLessThanOrEqual(1);
+  const bounds=await info.boundingBox();const footer=await card.locator("[data-card-footer]").boundingBox();
+  expect(bounds&&footer&&bounds.y+bounds.height<footer.y).toBe(true);
+  await page.locator('[data-step-id="layout"]').click();
+  await page.locator('[data-segment-value="lyrics"]').click();
+  await page.locator('[data-segment-value="instrumental"]').click();
+  await expect(info.locator("h2")).toHaveCSS("text-align","center");
+  await page.locator('[data-step-id="export"]').click();
+  const [download]=await Promise.all([page.waitForEvent("download"),page.getByTestId("complete-export-button").click()]);
+  expect(await pngDimensions(download)).toEqual({width:2160,height:3024});
+  await download.saveAs(path.join(projectRoot,"output","playwright","v6.9.2-centered-metadata.png"));
+});
+
 test("progressively softens lower artwork into a stable solid bottom without a seam", async ({ page }) => {
   await openWebLite(page);
   const source = await page.evaluate(() => {

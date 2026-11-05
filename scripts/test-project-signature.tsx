@@ -59,26 +59,33 @@ for (const showSharedBy of [false, true]) {
     />));
     const info = card("[data-instrumental-song-info]");
     assert.equal(card("[data-card-footer]").length, Number(showSharedBy || showGeneratedWatermark));
-    assert.equal(info.find("[data-card-shared-by]").length, Number(showSharedBy));
-    assert.equal(info.find("[data-project-signature]").length, Number(showGeneratedWatermark));
+    assert.equal(info.find("[data-card-shared-by], [data-project-signature]").length, 0,
+      "instrumental credits remain separate from song metadata");
+    assert.equal(card("[data-card-shared-by]").length, Number(showSharedBy));
+    assert.equal(card("[data-project-signature]").length, Number(showGeneratedWatermark));
     if (showSharedBy || showGeneratedWatermark) {
-      assert.match(info.find("footer").attr("style") ?? "", /font-style:normal/);
-      for (const row of info.find("footer").children().toArray()) {
-        assert.match(card(row).attr("style") ?? "", /text-align:center/);
+      assert.match(card("[data-card-credits]").attr("style") ?? "", /font-style:normal/);
+      for (const row of card("[data-card-credits]").children().toArray()) {
+        assert.match(card(row).attr("style") ?? "", /text-align:left/);
       }
     }
     const layout = getPortraitLayout({ width: 1080, height: 1080 }, style);
-    assert.equal(layout.footerRect, undefined, "instrumental credits are measured with the song info");
-    assert.equal(layout.lyricsRect.height, layout.safeRect.height - 28,
-      "available height includes the actual border and padding");
+    assert.equal(layout.footerRect, undefined, "instrumental renderer positions its own separate footer");
+    assert.equal(layout.lyricsRect.height, layout.safeRect.height,
+      "edge-to-edge instrumental artwork uses the whole canvas");
   }
 }
 for (const instrumentalAlign of ["left", "center"] as const) {
   const footer = load(renderToStaticMarkup(<CardFooter showSharedBy
     sharedByText="   " showGeneratedWatermark textColor="#fff" instrumentalAlign={instrumentalAlign} />));
   assert.equal(footer("[data-card-shared-by]").length, 0, "blank sharers reserve no row");
-  assert.match(footer("[data-project-signature]").attr("style") ?? "", /font-size:19px/);
+  assert.match(footer("[data-project-signature]").attr("style") ?? "", /font-size:32px/);
   assert.ok(footer("[data-project-signature]").attr("style")?.includes(`text-align:${instrumentalAlign}`));
+  const shared = load(renderToStaticMarkup(<CardFooter showSharedBy sharedByText="A listener"
+    showGeneratedWatermark textColor="#fff" instrumentalAlign={instrumentalAlign} />));
+  assert.match(shared("[data-card-shared-by]").attr("style") ?? "", /font-size:36px/);
+  assert.ok(shared("[data-card-shared-by]").attr("style")?.includes(`text-align:${instrumentalAlign}`));
+  assert.match(shared("[data-card-credits]").attr("style") ?? "", /gap:14px/);
 }
 const landscape = load(renderToStaticMarkup(<LandscapeAccessories
   showSharedBy sharedByText="Test" showGeneratedWatermark textColor="#fff" scale={1.25}
