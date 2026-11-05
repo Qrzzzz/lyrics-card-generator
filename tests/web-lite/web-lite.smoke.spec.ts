@@ -820,7 +820,7 @@ test("supports bilingual splitting, layout modes, instrumental mode, and visual 
   await expect(landscape).toBeDisabled();
   const sizeMode = page.getByRole("combobox", { name: "Size Mode", exact: true });
   await expect(sizeMode).toBeDisabled();
-  await expect(sizeMode).toHaveAttribute("data-choice-value", "1:1");
+  await expect(sizeMode).toHaveAttribute("data-choice-value", "custom");
 
   await page.locator('[data-segment-value="lyrics"]').click();
   await page.locator('[data-step-id="layout"]').click();
@@ -1021,7 +1021,7 @@ test("renders enabled song titles beyond two lines without clipping portrait or 
   const instrumentalGeometry = await readContainedGeometry(instrumentalInfo, instrumentalViewport);
   expect(instrumentalGeometry.childBottom).toBeLessThanOrEqual(instrumentalGeometry.parentBottom + 1);
   expect(instrumentalGeometry.childTop).toBeGreaterThanOrEqual(instrumentalGeometry.parentTop - 1);
-  await expect(exportCard.locator('[data-testid="instrumental-album-artwork"]')).toHaveAttribute("data-artwork-constrained", "true");
+  await expect(exportCard.locator('[data-instrumental-artwork-layout]')).toHaveAttribute("data-instrumental-artwork-layout", "edge-to-edge");
   await page.locator('[data-step-id="visual"]').click();
   for (const name of ["Show project signature", "Show Shared By"]) {
     const toggle = page.getByRole("switch", { name, exact: true });
@@ -1034,14 +1034,202 @@ test("renders enabled song titles beyond two lines without clipping portrait or 
     const geometry = await readContainedGeometry(instrumentalInfo, instrumentalViewport);
     return geometry.childBottom <= geometry.parentBottom + 1 && geometry.childTop >= geometry.parentTop - 1;
   }).toBe(true);
-  await expect(instrumentalInfo.locator("[data-card-credits]")).toHaveCSS("font-style", "normal");
-  await expect(instrumentalInfo.locator("[data-card-shared-by]")).toHaveCSS("text-align", "center");
+  await expect(exportCard.locator("[data-card-credits]")).toHaveCSS("font-style", "normal");
+  await expect(exportCard.locator("[data-card-shared-by]")).toHaveCSS("text-align", "left");
+  const creditsBounds = await exportCard.locator("[data-card-footer]").boundingBox();
+  const infoBounds = await instrumentalInfo.boundingBox();
+  expect(infoBounds && creditsBounds && infoBounds.y + infoBounds.height <= creditsBounds.y).toBe(true);
   await expect.poll(() => exportCard.locator('[data-testid="instrumental-album-artwork"]').evaluate(
     (node) => (node as HTMLElement).offsetHeight
   )).toBeGreaterThanOrEqual(200);
   await page.locator('[data-step-id="song-info"]').click();
   await page.getByLabel("Song Title", { exact: true }).fill("Night Flight");
-  await expect(instrumentalTitle).toHaveCSS("font-size", "64px");
+  await expect(instrumentalTitle).toHaveCSS("font-size", "108px");
+});
+
+test("extends instrumental covers edge to edge and preserves metadata in preview and PNG export", async ({ page }) => {
+  test.setTimeout(120_000);
+  await openWebLite(page, { width: 1440, height: 1000 });
+  await page.getByLabel("Song Title", { exact: true }).fill("夜色落星河");
+  await uploadGeneratedCover(page, "extension-square.png", 1200, 1200, false);
+  await page.locator('[data-step-id="visual"]').click();
+  for (const name of ["Show project signature", "Show Shared By"]) {
+    const toggle = page.getByRole("switch", { name, exact: true });
+    if (await toggle.getAttribute("aria-checked") !== "true") await toggle.click();
+  }
+  await page.getByLabel("Shared By", { exact: true }).fill("Qrzzzz");
+  await page.locator('[data-step-id="layout"]').click();
+  await page.locator('[data-segment-value="instrumental"]').click();
+  const card = page.locator('[data-export-card-host] [data-export-card="true"]').first();
+  const artwork = card.getByTestId("instrumental-album-artwork");
+  await expect(artwork).toHaveAttribute("data-cover-extension-state", "ready");
+  await expect(card).toHaveCSS("width", "1080px");
+  await expect(card).toHaveCSS("height", "1512px");
+  const bounds = await artwork.evaluate((node) => {
+    const parent = node.closest("[data-export-card]")!;
+    const a = node.getBoundingClientRect();
+    const b = parent.getBoundingClientRect();
+    return [a.left - b.left, a.top - b.top, a.right - b.right];
+  });
+  expect(bounds.every((value) => Math.abs(value) < 1)).toBe(true);
+  await expect(artwork).toHaveCSS("border-radius", "0px");
+  await expect(artwork).toHaveCSS("box-shadow", "none");
+  await expect(card.locator("[data-instrumental-song-info]")).toContainText("夜色落星河");
+  await expect(card.locator("h2")).toHaveCSS("font-size", "108px");
+  const titleWidth = await card.locator("h2").evaluate(node => {
+    const range=document.createRange();range.selectNodeContents(node);return range.getBoundingClientRect().width;
+  });
+  expect(titleWidth / 1080).toBeGreaterThan(0.45);
+  expect(titleWidth / 1080).toBeLessThan(0.55);
+  await expect(card.locator("[data-card-shared-by]")).toContainText("Qrzzzz");
+  await expect(card.locator("[data-project-signature]")).toHaveCount(1);
+  const preview = page.getByTestId("lyric-card-preview").getByTestId("instrumental-album-artwork");
+  await expect(preview).toHaveAttribute("data-cover-extension-state", "ready");
+  expect(await preview.locator("img").getAttribute("src")).toBe(await artwork.locator("img").getAttribute("src"));
+
+  const samples = [[0.01, 0.01], [0.99, 0.01], [0.02, 0.98], [0.02, 0.76], [0.5, 0.50]];
+  const backgroundUrl = await artwork.locator("img").getAttribute("src");
+  const readPixels = async (url: string) => page.evaluate(async ({ url, samples }) => {
+    const image = new Image();
+    image.src = url;
+    await image.decode();
+    const canvas = document.createElement("canvas");
+    canvas.width = image.naturalWidth;
+    canvas.height = image.naturalHeight;
+    const context = canvas.getContext("2d")!;
+    context.drawImage(image, 0, 0);
+    return samples.map(([x, y]) => Array.from(context.getImageData(
+      Math.floor(x * canvas.width), Math.floor(y * canvas.height), 1, 1).data));
+  }, { url, samples });
+  const pixels = await readPixels(backgroundUrl!);
+  expect(pixels[0]).toEqual([32, 48, 74, 255]);
+  expect(pixels[1]).toEqual(pixels[0]);
+  expect(pixels[2]).toEqual([0, 0, 0, 0]);
+  expect(pixels[3][3]).toBeGreaterThan(0);
+  expect(pixels[3][3]).toBeLessThan(255);
+  expect(pixels[4]).toEqual([240, 164, 75, 255]); // The upper original remains clear.
+  const infoTop = await card.locator("[data-instrumental-song-info]").evaluate((node) => (node as HTMLElement).offsetTop);
+  expect(infoTop).toBeLessThan(1080 * 0.88); // Title starts before softening.
+  await expect(card.locator("[data-palette-field]")).toHaveCount(0);
+  const basePixel = await card.locator("[data-solid-background]").evaluate(node =>
+    [...getComputedStyle(node).backgroundColor.match(/\d+/g)!.slice(0,3).map(Number),255]);
+  await page.locator('[data-step-id="export"]').click();
+  const [download] = await Promise.all([page.waitForEvent("download"), page.getByTestId("complete-export-button").click()]);
+  expect(await pngDimensions(download)).toEqual({ width: 2160, height: 3024 });
+  const exported = await readFile((await download.path())!);
+  const exportedPixels = await readPixels(`data:image/png;base64,${exported.toString("base64")}`);
+  for (const i of [0, 1, 4]) {
+    exportedPixels[i].forEach((channel, c) => expect(Math.abs(channel - pixels[i][c])).toBeLessThanOrEqual(2));
+  }
+  exportedPixels[2].forEach((channel, c) => expect(Math.abs(channel - basePixel[c])).toBeLessThanOrEqual(2));
+  await mkdir(path.join(projectRoot, "output", "playwright"), { recursive: true });
+  await download.saveAs(path.join(projectRoot, "output", "playwright", "instrumental-cover-extension.png"));
+
+  await page.locator('[data-step-id="layout"]').click();
+  const hex = page.getByTestId("solid-color-input");
+  await hex.fill("#FFFFFF");
+  await hex.blur();
+  await expect(artwork).toHaveAttribute("data-cover-extension-state", "ready");
+  await expect(card.locator("[data-solid-background]")).toHaveCSS("background-color", "rgb(255, 255, 255)");
+  expect(await artwork.locator("img").getAttribute("src")).toBe(backgroundUrl);
+  await expect(card.locator("[data-instrumental-song-info]")).toHaveCSS("color", "rgb(0, 0, 0)");
+  await page.locator('[data-step-id="song-info"]').click();
+  await uploadGeneratedCover(page, "extension-replacement.png", 1200, 802, true);
+  await expect(artwork).toHaveAttribute("data-cover-extension-state", "ready");
+  await expect.poll(async () => (await readPixels((await artwork.locator("img").getAttribute("src"))!))[0])
+    .toEqual([0, 0, 0, 0]);
+});
+
+test("offers centered instrumental information with larger metadata and credits in PNG export", async ({ page }) => {
+  await openWebLite(page, { width: 1440, height: 1000 });
+  await page.getByLabel("Song Title", { exact: true }).fill("夜色落星河");
+  await page.getByLabel("Artist", { exact: true }).fill("星河");
+  await page.getByLabel("Album", { exact: true }).fill("沿着光的方向");
+  await uploadGeneratedCover(page, "centered-metadata.png", 1200, 1200, false);
+  await page.locator('[data-step-id="layout"]').click();
+  await page.locator('[data-segment-value="instrumental"]').click();
+  await page.locator('[data-step-id="visual"]').click();
+  for (const name of ["Show project signature", "Show Shared By"]) {
+    const toggle=page.getByRole("switch", {name,exact:true});
+    if(await toggle.getAttribute("aria-checked")!=="true")await toggle.click();
+  }
+  await page.getByLabel("Shared By", { exact: true }).fill("Qrzzzz");
+  const card=page.locator('[data-export-card-host] [data-export-card="true"]').first();
+  const info=card.locator("[data-instrumental-song-info]");
+  await expect(info.locator("h2")).toHaveCSS("font-size","108px");
+  await expect(info.locator("p").first()).toHaveCSS("font-size","60px");
+  await expect(info.locator("[data-instrumental-album]")).toHaveCSS("font-size","44px");
+  await expect(card.locator("[data-card-shared-by]")).toHaveCSS("font-size","36px");
+  await expect(card.locator("[data-project-signature]")).toHaveCSS("font-size","32px");
+  await page.locator('[data-step-id="font"]').click();
+  await expect(page.getByRole("combobox",{name:"Alignment",exact:true})).toBeVisible();
+  for (const align of ["center","left","center"]) {
+    await selectChoice(page,align);
+    for(const element of [info.locator("h2"),info.locator("p").first(),info.locator("[data-instrumental-album]"),
+      card.locator("[data-card-shared-by]"),card.locator("[data-project-signature]")])await expect(element).toHaveCSS("text-align",align);
+  }
+  await page.evaluate(()=>document.fonts.ready);
+  const center=await info.locator("h2").evaluate(node=>{
+    const range=document.createRange();range.selectNodeContents(node);const text=range.getBoundingClientRect();
+    return text.left+text.width/2-node.closest("[data-export-card]")!.getBoundingClientRect().left;
+  });
+  expect(Math.abs(center-540)).toBeLessThanOrEqual(1);
+  const bounds=await info.boundingBox();const footer=await card.locator("[data-card-footer]").boundingBox();
+  expect(bounds&&footer&&bounds.y+bounds.height<footer.y).toBe(true);
+  await page.locator('[data-step-id="layout"]').click();
+  await page.locator('[data-segment-value="lyrics"]').click();
+  await page.locator('[data-segment-value="instrumental"]').click();
+  await expect(info.locator("h2")).toHaveCSS("text-align","center");
+  await page.locator('[data-step-id="export"]').click();
+  const [download]=await Promise.all([page.waitForEvent("download"),page.getByTestId("complete-export-button").click()]);
+  expect(await pngDimensions(download)).toEqual({width:2160,height:3024});
+  await download.saveAs(path.join(projectRoot,"output","playwright","instrumental-centered-metadata.png"));
+});
+
+test("progressively softens lower artwork into a stable solid bottom without a seam", async ({ page }) => {
+  await openWebLite(page);
+  const source = await page.evaluate(() => {
+    const canvas = document.createElement("canvas");
+    canvas.width = canvas.height = 240;
+    const context = canvas.getContext("2d")!;
+    context.fillStyle = "#182838";
+    context.fillRect(0, 0, 240, 240);
+    for (let x = 0; x < 240; x += 12) {
+      context.fillStyle = x % 24 === 0 ? "#ff0000" : "#0000ff";
+      context.fillRect(x, 180, 12, 60);
+    }
+    return canvas.toDataURL();
+  });
+  await page.getByTestId("web-lite-local-cover-input").setInputFiles({
+    name: "edge-strip.png", mimeType: "image/png", buffer: Buffer.from(source.split(",")[1], "base64")
+  });
+  await page.locator('[data-step-id="layout"]').click();
+  await page.locator('[data-segment-value="instrumental"]').click();
+  const artwork = page.locator('[data-export-card-host] [data-testid="instrumental-album-artwork"]').first();
+  await expect(artwork).toHaveAttribute("data-cover-extension-state", "ready");
+  const pixels = await artwork.locator("img").evaluate((node) => {
+    const canvas = document.createElement("canvas");
+    canvas.width = 1080;
+    canvas.height = 1512;
+    const context = canvas.getContext("2d")!;
+    context.drawImage(node as HTMLImageElement, 0, 0, 1080, 1512);
+    return [[243, 900], [297, 900], [243, 960], [297, 960], [243, 1130], [297, 1130], [243, 1480]]
+      .map(([x, y]) => Array.from(context.getImageData(x, y, 1, 1).data));
+  });
+  expect(pixels[0]).toEqual([255, 0, 0, 255]);
+  expect(pixels[1]).toEqual([0, 0, 255, 255]);
+  expect(pixels[2][0]).toBeGreaterThan(220);
+  expect(pixels[3][2]).toBeGreaterThan(220);
+  expect(Math.abs(pixels[4][0] - pixels[5][0])).toBeLessThan(35);
+  expect(pixels[4][0]).toBeGreaterThan(60);
+  expect(pixels[4][2]).toBeGreaterThan(60);
+  expect(pixels[6]).toEqual([0, 0, 0, 0]);
+  const overlayUrl = await artwork.locator("img").getAttribute("src");
+  await expect(page.locator('[data-export-card-host] [data-palette-field]')).toHaveCount(0);
+  await expect(page.getByTestId("gradient-layout-seed")).toHaveCount(0);
+  const hex=page.getByTestId("solid-color-input"); await hex.fill("#334455"); await hex.blur();
+  await expect(page.locator('[data-export-card-host] [data-solid-background]')).toHaveCSS("background-color","rgb(51, 68, 85)");
+  expect(await artwork.locator("img").getAttribute("src")).toBe(overlayUrl);
 });
 
 test("blocks a 13-line landscape switch, returns to lyrics, and allows the 12-line boundary", async ({ page }) => {
@@ -1471,15 +1659,16 @@ test("renders square, horizontal, vertical, and transparent artwork at their nat
   await page.locator('[data-segment-value="portrait"]').click();
   await page.locator('[data-segment-value="instrumental"]').click();
   const instrumentalArtwork = page.locator('[data-export-card-host] [data-testid="instrumental-album-artwork"]').first();
-  await expectArtworkAspectRatio(instrumentalArtwork, 879 / 1200, false);
+  await expect(instrumentalArtwork).toHaveAttribute("data-cover-extension-state", "ready");
   const instrumentalCard = page.locator('[data-export-card-host] [data-export-card="true"]').first();
-  await expect(instrumentalCard.locator("[data-instrumental-artwork-layout]")).toHaveAttribute("data-instrumental-artwork-layout", "stacked");
+  await expect(instrumentalCard.locator("[data-instrumental-artwork-layout]")).toHaveAttribute("data-instrumental-artwork-layout", "edge-to-edge");
   await expect(page.locator('[data-segment-value="landscape"]')).toBeDisabled();
   const instrumentalInfo = instrumentalCard.locator("[data-instrumental-song-info]");
   await expect.poll(async () => {
     const coverBox = await instrumentalArtwork.boundingBox();
     const infoBox = await instrumentalInfo.boundingBox();
-    return Boolean(coverBox && infoBox && coverBox.y + coverBox.height < infoBox.y);
+    return Boolean(coverBox && infoBox && infoBox.y > coverBox.y &&
+      infoBox.y + infoBox.height < coverBox.y + coverBox.height);
   }).toBe(true);
   await page.locator('[data-segment-value="lyrics"]').click();
   await page.locator('[data-step-id="song-info"]').click();

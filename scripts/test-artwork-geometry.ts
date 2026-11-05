@@ -8,6 +8,8 @@ import {
   resolveAdaptiveArtworkSize
 } from "../lib/artwork-geometry";
 import { getPortraitLayout } from "../lib/card-layout-engine";
+import { getInstrumentalCoverGeometry } from "../lib/instrumental-cover-background";
+import { getInstrumentalDesign, INSTRUMENTAL_CARD_SIZE } from "../lib/instrumental-layout";
 import { createLandscapeLayoutPlan } from "../lib/landscape-plan";
 import { COVER_IMAGE_ANALYSIS_TIMEOUT_MS } from "../lib/palette-extraction";
 import type { CoverArtworkAnalysis } from "../lib/types";
@@ -16,6 +18,28 @@ const sourceUrl = "https://example.test/artwork.png";
 const square = artwork(1200, 1200);
 const horizontal = artwork(1200, 802);
 const vertical = artwork(879, 1200);
+
+for (const [width, height] of [[1200, 1200], [1200, 802], [879, 1200]]) {
+  for (const canvasHeight of [1350, 1680]) {
+    const extension = getInstrumentalCoverGeometry(width, height, 1080, canvasHeight);
+    assert.equal(extension.fadeStart, extension.artworkHeight * 0.88, "softening starts near the lower edge inside the cover");
+    assert.ok(extension.fadeEnd > extension.artworkHeight && extension.fadeEnd <= canvasHeight);
+    assert.ok(extension.fadeStart < extension.fadeEnd);
+    assert.ok(extension.artworkX >= 0 && extension.artworkX + extension.artworkWidth <= 1080);
+    assert.ok(Math.abs(extension.artworkWidth / extension.artworkHeight - width / height) < 1e-12,
+      "the complete cover retains its natural aspect ratio");
+    assert.ok(extension.sampleHeight <= extension.artworkHeight * 0.10);
+    assert.ok(extension.blurRadius >= 64, "the boundary has a large soft blur");
+  }
+}
+const instrumentalRect = { x: 0, y: 0, ...INSTRUMENTAL_CARD_SIZE };
+const instrumentalDesign = getInstrumentalDesign(1080, 1512);
+assert.equal(instrumentalDesign.titleSize * 5, 1080 / 2, "five CJK advances occupy half the card width");
+assert.ok(instrumentalDesign.infoTop < 1080 * instrumentalDesign.clearFraction, "the title starts before the softening region");
+const instrumentalLayout = getPortraitLayout(instrumentalRect,
+  { ...defaultState.style, contentMode: "instrumental" });
+assert.deepEqual(instrumentalLayout.safeRect, instrumentalRect);
+assert.deepEqual(instrumentalLayout.lyricsRect, instrumentalRect);
 
 assert.deepEqual(resolveAdaptiveArtworkSize({ baseSize: 196, aspectRatio: 1 }), {
   width: 196,

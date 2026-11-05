@@ -8,6 +8,13 @@ export function resolveCardContentTextShadow(textColor: string) {
   return isDarkColor(textColor) ? DARK_TEXT_SHADOW : LIGHT_TEXT_SHADOW;
 }
 
+/** Keep metadata readable over intact artwork without a veil over the cover. */
+export function resolveCardCoverTextShadow(textColor: string) {
+  return isDarkColor(textColor)
+    ? "0 1px 3px rgba(255,255,255,0.72), 0 2px 10px rgba(255,255,255,0.36)"
+    : "0 1px 3px rgba(0,0,0,0.72), 0 2px 10px rgba(0,0,0,0.36)";
+}
+
 function isDarkColor(hex: string) {
   const normalized = hex.replace("#", "");
   if (normalized.length !== 6) return false;

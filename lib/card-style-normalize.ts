@@ -1,6 +1,6 @@
 import { normalizeSolidHex, resolveCardTextColor } from "@/lib/solid-background";
 import { normalizeGradientLayoutSeed } from "@/lib/gradient-layout";
-import { PRESET_CARD_SIZES } from "@/lib/card-size";
+import { INSTRUMENTAL_CARD_SIZE } from "@/lib/instrumental-layout";
 import { normalizeLyricLineHeight } from "@/lib/lyric-typography";
 import { normalizeLandscapeLayoutSettings } from "@/lib/landscape-plan";
 import type { CardStyle } from "@/lib/types";
@@ -57,15 +57,15 @@ export function normalizeInstrumentalLayout(style: CardStyle): CardStyle {
   }
 
   // Instrumental mode hides translation without deleting authored text. Its
-  // fixed square presentation must not inherit automatic lyric sizing.
-  const squareSize = PRESET_CARD_SIZES["1:1"];
+  // fixed design reserves a compact extension and separate bottom credits.
+  const instrumentalSize = INSTRUMENTAL_CARD_SIZE;
 
   return {
     ...style,
     layoutMode: "portrait",
-    ratio: "1:1",
-    width: squareSize.width,
-    height: squareSize.height,
+    ratio: "custom",
+    width: instrumentalSize.width,
+    height: instrumentalSize.height,
     autoWidth: false,
     autoHeight: false,
     translationEnabled: false

@@ -69,6 +69,12 @@ assert.equal(restored.style.lyricFontSize, style.lyricFontSize);
 assert.deepEqual(restored.lyricDocument, state.lyricDocument);
 assert.equal(normalizeEditorDraft({ ...snapshot, style: { ...style, solidColor: "url(bad)" } }, (c: unknown) => c), null);
 console.log("Solid candidates, contrast, render isolation and desktop draft round-trip passed");
+for (const [solidColor, foreground] of [["#FFFFFF", "#000000"], ["#121212", "#FFFFFF"]]) {
+  const instrumentalStyle: CardStyle={...style,contentMode:"instrumental",backgroundMode:"palette",textColorMode:"auto",solidColorSource:"user",solidColor};
+  assert.equal(resolveCardTextColor(instrumentalStyle),foreground,"instrumental auto contrast uses its actual solid base even when lyric mode uses a palette");
+  const html=renderToStaticMarkup(<CardBackground style={instrumentalStyle} width={1080} height={1512} />);
+  assert.ok(html.includes("data-solid-background")); assert.ok(!html.includes("data-palette-field"));
+}
 
 // Exercise portrait title branches and the shared landscape metadata renderer.
 for (const layoutMode of ["portrait", "landscape"] as const) {

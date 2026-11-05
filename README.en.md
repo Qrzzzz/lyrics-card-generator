@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v6.9.1.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v6.10.0.en.md">Release Notes</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
   <a href="./docs/web-lite-browser-support.md">Web Lite Browser Support</a> ·
   <a href="#features">Features</a> ·
@@ -77,19 +77,19 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 
 
-* Windows x64 installer: `Lyrics.Card.Generator.Setup.6.9.1.exe`
+* Windows x64 installer: `Lyrics.Card.Generator.Setup.6.10.0.exe`
 
 Starting with v6.2.2, Windows x64 Setup is the only distributed desktop package.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v6.9.1 · Release Notes
+### v6.10.0 · Release Notes
 
-**2026-10-28**
+**2026-11-05**
 
-v6.9.1 — Fixes button density, settings-row layout and long labels after the SaltUI control update.
+v6.10.0 — Redesigns no-lyrics cards with edge-to-edge artwork, progressive bottom blur, larger titles and separate credits.
 
-[简体中文](./docs/releases/v6.9.1.zh-CN.md) · [繁體中文](./docs/releases/v6.9.1.zh-TW.md) · [English](./docs/releases/v6.9.1.en.md) · [Français](./docs/releases/v6.9.1.fr.md) · [日本語](./docs/releases/v6.9.1.ja.md) · [Español](./docs/releases/v6.9.1.es.md)
+[简体中文](./docs/releases/v6.10.0.zh-CN.md) · [繁體中文](./docs/releases/v6.10.0.zh-TW.md) · [English](./docs/releases/v6.10.0.en.md) · [Français](./docs/releases/v6.10.0.fr.md) · [日本語](./docs/releases/v6.10.0.ja.md) · [Español](./docs/releases/v6.10.0.es.md)
 
 <a id="features"></a>
 

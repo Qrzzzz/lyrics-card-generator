@@ -1,5 +1,7 @@
 "use client";
 
+import { INSTRUMENTAL_TYPOGRAPHY } from "@/lib/instrumental-layout";
+
 import {
   PROJECT_SIGNATURE_OWNER,
   PROJECT_SIGNATURE_REPOSITORY,
@@ -38,13 +40,13 @@ export function ProjectSignature({
         letterSpacing: "normal",
         lineHeight: 1.4,
         textRendering: "geometricPrecision",
-        ...(instrumentalAlign ? { textAlign: instrumentalAlign, fontSize: 19, fontWeight: 500 } : {})
+        ...(instrumentalAlign ? { textAlign: instrumentalAlign, fontSize: INSTRUMENTAL_TYPOGRAPHY.projectSize, fontWeight: 500 } : {})
       }}
     >
-      <span data-project-signature-owner style={{ opacity: 0.64, fontWeight: 800 }}>
+      <span data-project-signature-owner style={{ opacity: instrumentalAlign ? 0.78 : 0.64, fontWeight: 800 }}>
         {PROJECT_SIGNATURE_OWNER}
       </span>
-      <span data-project-signature-repository style={{ opacity: 0.64 }}>
+      <span data-project-signature-repository style={{ opacity: instrumentalAlign ? 0.78 : 0.64 }}>
         {PROJECT_SIGNATURE_REPOSITORY}
       </span>
     </div>

@@ -1,168 +1,76 @@
 "use client";
 
 import { useLayoutEffect, useRef, useState } from "react";
-import { AdaptiveAlbumArtwork } from "@/components/preview/AdaptiveAlbumArtwork";
+import { InstrumentalCoverBackground } from "@/components/preview/InstrumentalCoverBackground";
 import { CardFooter } from "@/components/preview/CardFooter";
-import { getArtworkAspectRatio, resolveAdaptiveArtworkSize } from "@/lib/artwork-geometry";
-import { CARD_ARTWORK_BOX_SHADOW, CARD_ARTWORK_DROP_SHADOW } from "@/lib/card-content-depth";
-import type { CoverArtworkAnalysis, SongInfo } from "@/lib/types";
+import { getArtworkAspectRatio } from "@/lib/artwork-geometry";
+import { resolveCardCoverTextShadow } from "@/lib/card-content-depth";
+import { getInstrumentalDesign } from "@/lib/instrumental-layout";
+import type { CardAlign, CoverArtworkAnalysis, SongInfo } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-export function InstrumentalBlock({
-  song,
-  coverUrl,
-  coverArtwork,
-  onCoverError,
-  textColor,
-  showAlbumName,
-  allowMultiLineTitle,
-  availableWidth,
-  availableHeight,
-  showGeneratedWatermark,
-  showSharedBy,
-  sharedByText
+export function InstrumentalBlock({ song, coverUrl, coverArtwork, onCoverError, textColor, align,
+  showAlbumName, allowMultiLineTitle, availableWidth, availableHeight,
+  showGeneratedWatermark, showSharedBy, sharedByText
 }: {
-  song: SongInfo;
-  coverUrl?: string;
-  coverArtwork?: CoverArtworkAnalysis;
-  onCoverError: () => void;
-  textColor: string;
-  showAlbumName: boolean;
-  allowMultiLineTitle: boolean;
-  availableWidth: number;
-  availableHeight: number;
-  showGeneratedWatermark: boolean;
-  showSharedBy: boolean;
-  sharedByText: string;
+  song: SongInfo; coverUrl?: string; coverArtwork?: CoverArtworkAnalysis; onCoverError: () => void;
+  textColor: string; align: CardAlign; showAlbumName: boolean; allowMultiLineTitle: boolean;
+  availableWidth: number; availableHeight: number;
+  showGeneratedWatermark: boolean; showSharedBy: boolean; sharedByText: string;
 }) {
   const songInfoRef = useRef<HTMLDivElement>(null);
-  const [measuredInfoHeight, setMeasuredInfoHeight] = useState<number | null>(null);
-  const aspectRatio = getArtworkAspectRatio(coverUrl, coverArtwork);
-  const titleFontSize = 64;
-  const titleWidth = Math.min(860, availableWidth);
-  const titleLineCount = allowMultiLineTitle
-    ? estimateWrappedTitleLines(song.title || "Untitled", titleWidth, titleFontSize)
-    : 1;
-  const titleHeight = titleLineCount * titleFontSize * 1.18;
-  const artistHeight = 28 + 32 * 1.34;
-  const albumHeight = showAlbumName && song.album?.trim() ? 20 + 24 * 1.34 : 0;
-  const multiLineWrapSafety = allowMultiLineTitle ? titleFontSize * 1.6 : 0;
-  const sharedBy = showSharedBy ? sharedByText.trim() : "";
-  const hasCredits = showGeneratedWatermark || Boolean(sharedBy);
-  const artworkInfoGap = allowMultiLineTitle ? 48 : 56;
-  const estimatedCreditsHeight = hasCredits
-    ? 32 + (sharedBy ? 23 * 1.4 : 0) + (showGeneratedWatermark ? 19 * 1.4 : 0) +
-      (sharedBy && showGeneratedWatermark ? 10 : 0)
-    : 0;
-  const estimatedInfoHeight = titleHeight + artistHeight + albumHeight + multiLineWrapSafety +
-    estimatedCreditsHeight;
-  const stackedSongInfoHeight = artworkInfoGap + (measuredInfoHeight ?? estimatedInfoHeight);
-  const baseSize = allowMultiLineTitle ? 500 : 568;
+  const footerRef = useRef<HTMLDivElement>(null);
+  const design = getInstrumentalDesign(availableWidth, availableHeight);
+  const aspect = getArtworkAspectRatio(coverUrl, coverArtwork);
+  const artworkHeight = Math.min(availableWidth, availableWidth / aspect);
+  const infoTop = Math.min(design.infoTop, artworkHeight * 0.75);
+  const titleWidth = availableWidth - design.inset * 2;
+  const hasCredits = showGeneratedWatermark || Boolean(showSharedBy && sharedByText.trim());
+  const [infoBudget, setInfoBudget] = useState(design.infoBottom - infoTop);
 
   useLayoutEffect(() => {
-    const node = songInfoRef.current;
-    if (!node) return;
-    const minimumArtworkHeight = Math.min(240, availableHeight * 0.26);
-    const infoBudget = availableHeight - artworkInfoGap - minimumArtworkHeight;
+    const node = songInfoRef.current; if (!node) return;
     const measure = () => {
-      // Fit at the natural size first so shortening text restores the title.
-      // Offset dimensions stay in card pixels even in the scaled preview.
-      let fittedSize = titleFontSize;
+      const footerTop = availableHeight - design.footerBottom - (footerRef.current?.offsetHeight ?? 0);
+      const budget = Math.max(1, Math.min(design.infoBottom, footerTop - 32) - infoTop);
+      let fittedSize = design.titleSize;
       node.style.setProperty("--instrumental-title-size", `${fittedSize}px`);
-      while (allowMultiLineTitle && node.offsetHeight > infoBudget && fittedSize > 40) {
-        fittedSize -= 2;
+      while (allowMultiLineTitle && node.scrollHeight > budget + 1 && fittedSize > 40) {
+        fittedSize = Math.max(40, fittedSize - 2);
         node.style.setProperty("--instrumental-title-size", `${fittedSize}px`);
       }
-      setMeasuredInfoHeight(node.offsetHeight);
+      setInfoBudget(budget);
     };
-    measure();
-    const observer = new ResizeObserver(measure);
-    observer.observe(node);
+    measure(); const observer = new ResizeObserver(measure); observer.observe(node);
+    if (footerRef.current) observer.observe(footerRef.current);
     return () => observer.disconnect();
-  }, [song.title, song.artist, song.album, showAlbumName, allowMultiLineTitle,
-    availableWidth, availableHeight, showGeneratedWatermark, showSharedBy,
-    sharedByText, artworkInfoGap, titleFontSize]);
+  }, [song.title, song.artist, song.album, showAlbumName, allowMultiLineTitle, availableHeight,
+    availableWidth, showGeneratedWatermark, showSharedBy, sharedByText, infoTop,
+    design.titleSize, design.infoBottom, design.footerBottom]);
 
-  const artworkSize = resolveAdaptiveArtworkSize({
-    baseSize,
-    aspectRatio,
-    maxWidth: availableWidth,
-    maxHeight: Math.max(1, availableHeight - stackedSongInfoHeight)
-  });
-
-  return (
-    <div
-      className="flex w-full flex-col items-center justify-center text-center"
-      data-instrumental-artwork-layout="stacked"
-      style={{ color: textColor }}
-    >
-      <AdaptiveAlbumArtwork
-        sourceUrl={coverUrl}
-        analysis={coverArtwork}
-        resolvedSize={artworkSize}
-        borderRadius={48}
-        dropShadow={CARD_ARTWORK_DROP_SHADOW}
-        boxShadow={CARD_ARTWORK_BOX_SHADOW}
-        onError={onCoverError}
-        placeholderClassName="bg-white/8"
-        testId="instrumental-album-artwork"
-      />
-
-      <div
-        ref={songInfoRef}
-        className={cn(
-          "grid w-full min-w-0 max-w-[860px] justify-items-center",
-          allowMultiLineTitle ? "mt-12" : "mt-14"
-        )}
-        data-instrumental-song-info
-      >
-        <h2
-          className={cn(
-            "w-full font-black leading-[1.18] tracking-normal",
-            "text-[64px]",
-            allowMultiLineTitle ? "multi-line-title" : "truncate"
-          )}
-          data-allow-multi-line-title={allowMultiLineTitle ? "true" : "false"}
-          style={{ fontSize: `var(--instrumental-title-size, ${titleFontSize}px)` }}
-        >
-          {song.title || "Untitled"}
-        </h2>
-        <p className="mt-7 w-full truncate text-[32px] font-semibold leading-[1.34] opacity-[0.72]">
-          {song.artist || "Unknown artist"}
-        </p>
-        {showAlbumName && song.album?.trim() ? (
-          <p className="mt-5 w-full truncate text-[24px] font-medium leading-[1.34] opacity-[0.54]" data-instrumental-album>
-            {song.album.trim()}
-          </p>
-        ) : null}
-        {hasCredits ? (
-          <div data-card-footer className="mt-8 w-full min-w-0">
-            <CardFooter
-              showGeneratedWatermark={showGeneratedWatermark}
-              showSharedBy={showSharedBy}
-              sharedByText={sharedByText}
-              textColor={textColor}
-              instrumentalAlign="center"
-            />
-          </div>
-        ) : null}
-      </div>
+  return <div className="relative h-full w-full" data-instrumental-artwork-layout="edge-to-edge"
+    style={{ color: textColor, textAlign: align }}>
+    <InstrumentalCoverBackground sourceUrl={coverUrl} width={availableWidth} height={availableHeight} onError={onCoverError} />
+    <div ref={songInfoRef} data-instrumental-song-info className="absolute min-w-0"
+      style={{ left: design.inset, top: infoTop, width: titleWidth, maxHeight: infoBudget,
+        textShadow: resolveCardCoverTextShadow(textColor) }}>
+      <h2 className={cn("w-full font-black leading-[1.12] tracking-normal",
+        allowMultiLineTitle ? "multi-line-title" : "truncate")}
+        data-allow-multi-line-title={allowMultiLineTitle ? "true" : "false"}
+        style={{ fontSize: `var(--instrumental-title-size, ${design.titleSize}px)` }}>
+        {song.title || "Untitled"}
+      </h2>
+      <p className="mt-6 w-full truncate font-semibold leading-[1.3] opacity-[0.88]"
+        style={{ fontSize: design.artistSize }}>{song.artist || "Unknown artist"}</p>
+      {showAlbumName && song.album?.trim() ? <p data-instrumental-album
+        className="mt-4 w-full truncate font-medium leading-[1.3] opacity-[0.73]"
+        style={{ fontSize: design.albumSize }}>{song.album.trim()}</p> : null}
     </div>
-  );
-}
-
-function estimateWrappedTitleLines(title: string, width: number, fontSize: number) {
-  const textUnits = Array.from(title.trim()).reduce((total, character) => {
-    if (/\s/u.test(character)) return total + 0.34;
-    if (/\p{Script=Han}|\p{Script=Hiragana}|\p{Script=Katakana}|\p{Extended_Pictographic}/u.test(character)) {
-      return total + 1;
-    }
-    if (/\p{Punctuation}/u.test(character)) return total + 0.45;
-    // Heavy display fonts and word-boundary wrapping both consume more width
-    // than a continuous average-glyph estimate. Reserve conservatively so the
-    // fixed 1:1 instrumental canvas shrinks artwork before metadata can clip.
-    return total + 0.76;
-  }, 0);
-  const estimatedTextWidth = Math.max(fontSize, textUnits * fontSize);
-  return Math.max(1, Math.ceil(estimatedTextWidth / Math.max(1, width)));
+    {hasCredits ? <div ref={footerRef} data-card-footer className="absolute min-w-0"
+      style={{ left: design.inset, bottom: design.footerBottom, width: titleWidth,
+        maxHeight: Math.max(1, availableHeight - infoTop - 96) }}>
+      <CardFooter showGeneratedWatermark={showGeneratedWatermark} showSharedBy={showSharedBy}
+        sharedByText={sharedByText} textColor={textColor} instrumentalAlign={align} />
+    </div> : null}
+  </div>;
 }

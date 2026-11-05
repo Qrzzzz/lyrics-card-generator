@@ -5,7 +5,8 @@ const OBSERVED_EXPORT_CARD_SELECTORS = [
   "[data-card-header]",
   "[data-card-lyrics-viewport]",
   "[data-card-lyrics]",
-  "[data-card-footer]"
+  "[data-card-footer]",
+  "[data-instrumental-song-info]"
 ] as const;
 
 type ResizeObserverLike = Pick<ResizeObserver, "observe" | "unobserve" | "disconnect">;
@@ -142,7 +143,7 @@ export class ExportCardDomCoordinator {
         this.container.addEventListener("error", this.handleImageSettled, true);
         this.mutationObserver?.observe(this.container, {
           attributes: true,
-          attributeFilter: ["class", "style"],
+          attributeFilter: ["class", "style", "data-cover-extension-state"],
           childList: true,
           characterData: true,
           subtree: true

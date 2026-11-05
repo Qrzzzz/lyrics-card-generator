@@ -32,7 +32,7 @@ export function resolveSolidColor(style: CardStyle) {
 }
 export function resolveCardTextColor(style: CardStyle) {
   if (style.textColorMode === "custom") return style.customTextColor;
-  if (style.textColorMode !== "auto" || style.backgroundMode !== "solid") return "#FFFFFF";
+  if (style.textColorMode !== "auto" || (style.backgroundMode !== "solid" && style.contentMode !== "instrumental")) return "#FFFFFF";
   const color = resolveSolidColor(style);
   const channels = [1, 3, 5].map((i) => parseInt(color.slice(i, i + 2), 16) / 255).map((v) => v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4);
   const luminance = channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722;

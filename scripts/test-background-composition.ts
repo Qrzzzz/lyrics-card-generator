@@ -6,6 +6,7 @@ import { LyricCard } from "../components/preview/LyricCard";
 import { getCardSize } from "../lib/card-size";
 import { createLandscapeLayoutPlan } from "../lib/landscape-plan";
 import { normalizeCardStyle } from "../lib/card-style-normalize";
+import { resolveSolidColor } from "../lib/solid-background";
 import { defaultState } from "../components/editor/editor-defaults";
 import { DEFAULT_PALETTE } from "../lib/palette-background";
 import { createColorFieldPlan } from "../lib/spatial-color-field";
@@ -152,16 +153,21 @@ for (const paletteFixture of paletteFixtures) {
         assert.equal(card.length, 1, label + " renders one export card");
         assert.equal(cssNumber(card.attr("style"), "width"), size.width, label + " preserves canvas width");
         assert.equal(cssNumber(card.attr("style"), "height"), size.height, label + " preserves canvas height");
-        assert.equal($('[data-card-fine-grid="true"]').length, Number(showFineGrid), label + " obeys the grid toggle");
+        assert.equal($('[data-card-fine-grid="true"]').length, Number(showFineGrid && contentMode === "lyrics"), label + " obeys the mode's grid contract");
         assert.equal($('[data-local-readability-layer="true"]').length, 0, label + " uses the current per-glyph depth");
         const safe = $('[data-card-safe]').attr("style");
         const left = cssNumber(safe, "left"), top = cssNumber(safe, "top");
         const width = cssNumber(safe, "width"), height = cssNumber(safe, "height");
         assert.ok(left >= 0 && top >= 0 && width > 0 && height > 0, label + " has a nonempty safe region");
         assert.ok(left + width <= size.width && top + height <= size.height, label + " keeps safe bounds in the canvas");
-        const field = createColorFieldPlan({ width: size.width, height: size.height, palette: paletteFixture.palette });
-        assert.equal($('[data-palette-field]').attr("data-palette-field"), field.topology, label + " uses the production palette topology");
-        assert.equal($('[data-palette-field]').attr("data-palette-field-seed"), String(field.seed), label + " keeps deterministic palette output");
+        if (contentMode === "instrumental") {
+          assert.equal($('[data-palette-field]').length, 0, label + " has a stable solid bottom");
+          assert.ok($('[data-solid-background]').attr("style")?.includes(resolveSolidColor(style)), label + " reuses the existing colour recommendation");
+        } else {
+          const field = createColorFieldPlan({ width: size.width, height: size.height, palette: paletteFixture.palette });
+          assert.equal($('[data-palette-field]').attr("data-palette-field"), field.topology, label + " uses the production palette topology");
+          assert.equal($('[data-palette-field]').attr("data-palette-field-seed"), String(field.seed), label + " keeps deterministic palette output");
+        }
         matrixCases++;
       }
     }

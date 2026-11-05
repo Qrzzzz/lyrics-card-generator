@@ -159,6 +159,12 @@ try {
   const overLimit = fixedState({
     lyrics: Array.from({ length: 37 }, (_, index) => `line ${index + 1}`).join("\n")
   });
+  const metadataOverflowCard = createFixedCard(readyState);
+  metadataOverflowCard.childrenBySelector.set("[data-instrumental-song-info]", createElement({
+    clientWidth: 952, clientHeight: 200, scrollWidth: 952, scrollHeight: 240
+  }));
+  assert.equal(getLiveExportCardValidation(readyState, metadataOverflowCard).blockingReason,
+    "content-overflow", "oversized instrumental metadata is blocked instead of overlapping credits");
   fontStatus = "loading";
   assert.equal(
     getLiveExportCardValidation(overLimit, null, false).blockingReason,
@@ -198,6 +204,13 @@ try {
     null,
     "matching artwork dimensions release the export gate"
   );
+  const extensionCard = createFixedCard(artworkReadyState);
+  extensionCard.childrenBySelector.set('[data-cover-extension-state="pending"]', createElement());
+  assert.equal(getLiveExportCardValidation(artworkReadyState, extensionCard).blockingReason,
+    "card-measuring", "decoded source pixels do not release an unfinished cover extension");
+  extensionCard.childrenBySelector.delete('[data-cover-extension-state="pending"]');
+  assert.equal(getLiveExportCardValidation(artworkReadyState, extensionCard).blockingReason,
+    null, "a settled extension releases export without another style change");
   assert.equal(
     getLiveExportCardValidation(
       { ...artworkReadyState, song: { ...artworkReadyState.song, proxiedCoverUrl: "https://example.test/new.png" } },
@@ -587,12 +600,12 @@ async function coordinatorLifecycleTest() {
     mutationObservers[0].observed[0].options,
     {
       attributes: true,
-      attributeFilter: ["class", "style"],
+      attributeFilter: ["class", "style", "data-cover-extension-state"],
       childList: true,
       characterData: true,
       subtree: true
     },
-    "content, node replacement, and landscape fitting styles retain observation"
+    "content, fitting styles, and asynchronous cover extension completion retain observation"
   );
   assert.equal(frames.size, 1);
   coordinator.requestEvaluation();
@@ -677,7 +690,7 @@ async function coordinatorLifecycleTest() {
 }
 
 void coordinatorLifecycleTest().then(
-  () => console.log(JSON.stringify({ ok: true, exportCardReadinessTests: 55 }, null, 2)),
+  () => console.log(JSON.stringify({ ok: true, exportCardReadinessTests: 56 }, null, 2)),
   (error) => {
     console.error(error);
     process.exitCode = 1;

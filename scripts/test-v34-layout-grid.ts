@@ -59,7 +59,7 @@ const baseStyle: CardStyle = {
   watermark: "Qrzzzz/lyrics-card-generator"
 };
 
-// Instrumental presentation is square, but authored translation must survive.
+// Instrumental presentation extends downward, but authored translation must survive.
 const normalizedInstrumental = normalizeInstrumentalLayout({
   ...baseStyle,
   contentMode: "instrumental",
@@ -72,9 +72,9 @@ const normalizedInstrumental = normalizeInstrumentalLayout({
 
 assert.equal(normalizedInstrumental.contentMode, "instrumental");
 assert.equal(normalizedInstrumental.layoutMode, "portrait");
-assert.equal(normalizedInstrumental.ratio, "1:1");
+assert.equal(normalizedInstrumental.ratio, "custom");
 assert.equal(normalizedInstrumental.width, 1080);
-assert.equal(normalizedInstrumental.height, 1080);
+assert.equal(normalizedInstrumental.height, 1512);
 assert.equal(normalizedInstrumental.autoHeight, false);
 assert.equal(normalizedInstrumental.translationEnabled, false);
 assert.equal(normalizedInstrumental.translationText, "translation");
@@ -478,10 +478,10 @@ assert.ok(!landscapeCardSource.includes("cropScale={style.coverCropScale}"), "la
 assert.ok(instrumentalBlockSource.includes("data-instrumental-song-info"), "instrumental metadata has a dedicated spaced layout");
 assert.ok(instrumentalBlockSource.includes("song.album?.trim()"), "instrumental album ignores blank metadata");
 assert.ok(instrumentalBlockSource.includes("data-instrumental-album"), "instrumental cards render album metadata when enabled");
-assert.ok(instrumentalBlockSource.includes("mt-7"), "instrumental title and artist use relaxed spacing");
+assert.ok(instrumentalBlockSource.includes("mt-6"), "instrumental title and artist use relaxed spacing");
 assert.ok(instrumentalBlockSource.includes('allowMultiLineTitle ? "multi-line-title" : "truncate"'), "instrumental titles honor the multi-line setting");
 assert.ok(lyricCardSource.includes("allowMultiLineTitle={style.allowMultiLineTitle}"), "instrumental rendering receives the multi-line title setting");
-assert.ok(instrumentalBlockSource.includes("stackedSongInfoHeight"), "instrumental artwork reserves measured multi-line metadata height");
+assert.ok(instrumentalBlockSource.includes("infoBudget") && instrumentalBlockSource.includes("top: infoTop"), "instrumental metadata fits independently of the cover transition");
 assert.ok(lyricCardSource.includes('pt-8 pb-4'), "lyrics keep a smaller but non-zero bottom breathing room");
 assert.ok(
   exportCoordinatorSource.includes("createMutationObserver") &&
