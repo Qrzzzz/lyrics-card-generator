@@ -1,11 +1,11 @@
 {
   "schema": 1,
   "userId": 1001,
-  "playwrightVersion": "1.63.0",
-  "image": "mcr.microsoft.com/playwright:v1.63.0-noble@sha256:eff16c30e6f3f4af0a03fa4b706120d5e9b0891c344a27d64559aff5900a4a27",
+  "playwrightVersion": "1.64.1",
+  "image": "mcr.microsoft.com/playwright:v1.64.1-noble@sha256:2f05f8a734509a7b3f26a912639488ee08f58a7b292d14d62271bcff9038768f",
   "browsers": {
-    "chromium": "153.0.8010.12",
-    "firefox": "155.0",
-    "webkit": "26.6"
+    "chromium": "156.0.8078.4",
+    "firefox": "157.0",
+    "webkit": "27.2"
   }
 }
