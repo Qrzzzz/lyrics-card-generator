@@ -87,7 +87,7 @@ Starting with v6.2.2, Windows x64 Setup is the only distributed desktop package.
 
 **2026-11-05**
 
-v6.10.1 (not yet released) — Refines window control gradients, outlines and icons, and restores the original click-spark effect.
+v6.10.1 — Refines window control gradients, outlines and icons, and restores the original click-spark effect.
 
 [简体中文](./docs/releases/v6.10.1.zh-CN.md) · [繁體中文](./docs/releases/v6.10.1.zh-TW.md) · [English](./docs/releases/v6.10.1.en.md) · [Français](./docs/releases/v6.10.1.fr.md) · [日本語](./docs/releases/v6.10.1.ja.md) · [Español](./docs/releases/v6.10.1.es.md)
 

@@ -83,7 +83,7 @@
 
 **2026-11-05**
 
-v6.10.1 (尚未發布) — 細化視窗紅綠燈的漸層、輪廓與操作圖示，恢復點擊煙火的原有動效。
+v6.10.1 — 細化視窗紅綠燈的漸層、輪廓與操作圖示，恢復點擊煙火的原有動效。
 
 [简体中文](./docs/releases/v6.10.1.zh-CN.md) · [繁體中文](./docs/releases/v6.10.1.zh-TW.md) · [English](./docs/releases/v6.10.1.en.md) · [Français](./docs/releases/v6.10.1.fr.md) · [日本語](./docs/releases/v6.10.1.ja.md) · [Español](./docs/releases/v6.10.1.es.md)
 

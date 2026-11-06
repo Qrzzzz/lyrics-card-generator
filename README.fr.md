@@ -86,7 +86,7 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 **2026-11-05**
 
-v6.10.1 (pas encore publié) — Affine les dégradés, les contours et les icônes des commandes de fenêtre et rétablit l’effet d’étincelles au clic.
+v6.10.1 — Affine les dégradés, les contours et les icônes des commandes de fenêtre et rétablit l’effet d’étincelles au clic.
 
 [简体中文](./docs/releases/v6.10.1.zh-CN.md) · [繁體中文](./docs/releases/v6.10.1.zh-TW.md) · [English](./docs/releases/v6.10.1.en.md) · [Français](./docs/releases/v6.10.1.fr.md) · [日本語](./docs/releases/v6.10.1.ja.md) · [Español](./docs/releases/v6.10.1.es.md)
 

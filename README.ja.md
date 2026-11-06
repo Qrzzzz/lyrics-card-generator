@@ -86,7 +86,7 @@ v6.2.2 以降、配布するデスクトップパッケージは Windows x64 Set
 
 **2026-11-05**
 
-v6.10.1 (未公開) — ウィンドウボタンのグラデーション、輪郭、アイコンを調整し、クリック時の火花を従来の演出に戻します。
+v6.10.1 — ウィンドウボタンのグラデーション、輪郭、アイコンを調整し、クリック時の火花を従来の演出に戻します。
 
 [简体中文](./docs/releases/v6.10.1.zh-CN.md) · [繁體中文](./docs/releases/v6.10.1.zh-TW.md) · [English](./docs/releases/v6.10.1.en.md) · [Français](./docs/releases/v6.10.1.fr.md) · [日本語](./docs/releases/v6.10.1.ja.md) · [Español](./docs/releases/v6.10.1.es.md)
 

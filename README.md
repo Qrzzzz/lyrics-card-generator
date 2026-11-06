@@ -85,7 +85,7 @@
 
 **2026-11-05**
 
-v6.10.1 (尚未发布) — 细化窗口红绿灯的渐变、轮廓和操作图标，恢复点击烟花的原有动效。
+v6.10.1 — 细化窗口红绿灯的渐变、轮廓和操作图标，恢复点击烟花的原有动效。
 
 [简体中文](./docs/releases/v6.10.1.zh-CN.md) · [繁體中文](./docs/releases/v6.10.1.zh-TW.md) · [English](./docs/releases/v6.10.1.en.md) · [Français](./docs/releases/v6.10.1.fr.md) · [日本語](./docs/releases/v6.10.1.ja.md) · [Español](./docs/releases/v6.10.1.es.md)
 

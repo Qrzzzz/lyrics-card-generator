@@ -86,7 +86,7 @@ A partir de v6.2.2, Setup para Windows x64 es el único paquete de escritorio di
 
 **2026-11-05**
 
-v6.10.1 (aún no publicado) — Refina los degradados, contornos e iconos de los controles de ventana y restaura el efecto de chispas al hacer clic.
+v6.10.1 — Refina los degradados, contornos e iconos de los controles de ventana y restaura el efecto de chispas al hacer clic.
 
 [简体中文](./docs/releases/v6.10.1.zh-CN.md) · [繁體中文](./docs/releases/v6.10.1.zh-TW.md) · [English](./docs/releases/v6.10.1.en.md) · [Français](./docs/releases/v6.10.1.fr.md) · [日本語](./docs/releases/v6.10.1.ja.md) · [Español](./docs/releases/v6.10.1.es.md)
 
