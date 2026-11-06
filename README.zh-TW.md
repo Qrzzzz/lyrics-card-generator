@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v6.10.0.zh-TW.md">發布說明</a> ·
+  <a href="./docs/releases/v6.10.1.zh-TW.md">發布說明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">線上 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="./docs/development.zh-CN.md">本機開發</a> ·
@@ -73,19 +73,19 @@
 
 
 
-* Windows x64 安裝版：`Lyrics.Card.Generator.Setup.6.10.0.exe`
+* Windows x64 安裝版：`Lyrics.Card.Generator.Setup.6.10.1.exe`
 
 從 v6.2.2 起僅提供 Windows x64 Setup 安裝程式。
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v6.10.0 · 發布說明
+### v6.10.1 · 發布說明
 
 **2026-11-05**
 
-v6.10.0 — 重做無歌詞分享圖：封面貼邊與漸進柔化，大標題從清晰區起筆，歌曲資訊與底部署名分區排布。
+v6.10.1 (尚未發布) — 細化視窗紅綠燈的漸層、輪廓與操作圖示，恢復點擊煙火的原有動效。
 
-[简体中文](./docs/releases/v6.10.0.zh-CN.md) · [繁體中文](./docs/releases/v6.10.0.zh-TW.md) · [English](./docs/releases/v6.10.0.en.md) · [Français](./docs/releases/v6.10.0.fr.md) · [日本語](./docs/releases/v6.10.0.ja.md) · [Español](./docs/releases/v6.10.0.es.md)
+[简体中文](./docs/releases/v6.10.1.zh-CN.md) · [繁體中文](./docs/releases/v6.10.1.zh-TW.md) · [English](./docs/releases/v6.10.1.en.md) · [Français](./docs/releases/v6.10.1.fr.md) · [日本語](./docs/releases/v6.10.1.ja.md) · [Español](./docs/releases/v6.10.1.es.md)
 
 ## ✨ 主要功能
 
