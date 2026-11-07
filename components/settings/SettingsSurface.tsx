@@ -215,7 +215,7 @@ export function SettingsSurface({
               {saveStatus.label}
             </span>
           ) : null}
-          <button type="button" className="app-button control-focus rounded px-3 py-2 text-sm" aria-label={productivityCopy[locale].commands}
+          <button type="button" className="app-button control-focus rounded px-3 py-2 text-sm" aria-label={`${productivityCopy[locale].commands} Ctrl+K`}
             onClick={() => window.dispatchEvent(new Event("lyrics-card:open-commands"))}>Ctrl+K</button>
           <SurfaceCloseButton
             buttonRef={closeButtonRef}

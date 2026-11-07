@@ -55,7 +55,7 @@ export function EditorHeaderActions({
         placement === "stepper" && "editor-header-actions--stepper"
       )}
     >
-      <button type="button" className={buttonClassName} aria-label={productivityCopy[locale].commands}
+      <button type="button" className={buttonClassName} aria-label={`${productivityCopy[locale].commands} Ctrl+K`}
         title={productivityCopy[locale].commands + " · Ctrl+K"} data-testid="app-command-button"
         onClick={() => window.dispatchEvent(new Event("lyrics-card:open-commands"))}>
         <Search className="h-4 w-4" aria-hidden="true" /><span>Ctrl+K</span>
