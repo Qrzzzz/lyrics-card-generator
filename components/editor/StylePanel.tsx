@@ -294,7 +294,7 @@ export function TypographySettings({ style, onStyleChange, locale, t }: StylePan
                     { value: "line", label: `—  ${separatorCopy[locale].line}` }
                   ]}
                   aria-label={separatorCopy[locale].label} />
-              <button type="button" className="app-button control-focus rounded px-2 py-1 text-xs"
+              <button type="button" className="app-button control-focus rounded px-2 py-1 text-xs" aria-label={productivityCopy[locale].separatorInsert}
                 onClick={() => window.dispatchEvent(new CustomEvent("lyrics-card:navigate", { detail: { step: 1, toolId: "separator" } }))}>
                 {productivityCopy[locale].separatorInsert}
               </button>
