@@ -16,7 +16,7 @@ Mobile browsers and unlisted browser families are best effort. The responsive in
 
 ## Automated proxy versus real browsers
 
-`package-lock.json` pins Playwright `1.64.1`. At the current lockfile it supplies Chromium `156.0.8078.4`, Firefox `157.0`, and WebKit `27.2` to CI. The Linux browser jobs use the matching official Noble image, pinned by immutable digest in `security/ci-browser-runtime.json`. They verify browser startup and versions without installing OS packages on each runner. These engines are reproducible test proxies, not claims that every vendor shell, enterprise policy, operating-system integration, or native save dialog is identical.
+`package-lock.json` pins Playwright `1.64.1`. At the current lockfile it supplies Chromium `156.0.8078.80`, Firefox `157.0`, and WebKit `27.2` to CI. The Linux browser jobs use the matching official Noble image, pinned by immutable digest in `security/ci-browser-runtime.json`. They verify browser startup and versions without installing OS packages on each runner. These engines are reproducible test proxies, not claims that every vendor shell, enterprise policy, operating-system integration, or native save dialog is identical.
 
 The support window is a policy. When browser vendors advance, update Playwright and validate the new engines instead of editing this document merely to mirror one pinned runtime number. Safari-specific acceptance still benefits from a real supported macOS/Safari check when behavior depends on the browser shell.
 
