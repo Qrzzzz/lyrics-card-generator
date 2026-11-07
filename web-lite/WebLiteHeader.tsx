@@ -38,7 +38,7 @@ export function WebLiteHeader({
     <header className="glass-panel relative z-40 flex min-h-[var(--app-header-height)] min-w-0 max-w-full flex-col justify-center gap-4 rounded-lg px-4 py-4 xl:flex-row xl:items-center xl:justify-between">
       <div className="flex min-w-0 items-center gap-3 sm:gap-4">
         <button type="button" className="app-button control-focus rounded px-2 py-2 text-sm"
-          aria-label={productivityCopy[locale].commands}
+          aria-label={`${productivityCopy[locale].commands} Ctrl+K`}
           onClick={() => window.dispatchEvent(new Event("lyrics-card:open-commands"))}>Ctrl+K</button>
         <img
           src={WEB_LITE_APP_ICON_URL}

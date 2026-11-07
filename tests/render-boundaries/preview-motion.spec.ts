@@ -82,7 +82,7 @@ test("reading and layout comparison keep enabled decoration within a small visua
   const spark = await canvas.evaluate(async (node: HTMLCanvasElement) => {
     const start=Number(node.dataset.pointerDownAt),context=node.getContext("2d")!;
     let visible=false,maxWidth=0,maxHeight=0;
-    while(performance.now()-start<650){
+    while(performance.now()-start<800){
       await new Promise(requestAnimationFrame);
       const data=context.getImageData(0,0,node.width,node.height).data;
       let left=node.width,right=0,top=node.height,bottom=0;
@@ -90,12 +90,12 @@ test("reading and layout comparison keep enabled decoration within a small visua
       if(left<=right){visible=true;maxWidth=Math.max(maxWidth,right-left);maxHeight=Math.max(maxHeight,bottom-top);}
       else if(visible)return {visible,maxWidth,maxHeight,clearedAfterMs:performance.now()-start};
     }
-    return {visible,maxWidth,maxHeight,clearedAfterMs:650};
+    return {visible,maxWidth,maxHeight,clearedAfterMs:800};
   });
   expect(spark.visible).toBe(true);
-  expect(spark.maxWidth).toBeLessThan(70);
-  expect(spark.maxHeight).toBeLessThan(70);
-  expect(spark.clearedAfterMs).toBeLessThan(480);
+  expect(spark.maxWidth).toBeLessThan(125);
+  expect(spark.maxHeight).toBeLessThan(125);
+  expect(spark.clearedAfterMs).toBeLessThan(700);
   expect(await card.evaluate(node => node.outerHTML)).toBe(before);
   await page.getByTestId("settings-button").click();
   await page.getByTestId("settings-tab-appearance").click();

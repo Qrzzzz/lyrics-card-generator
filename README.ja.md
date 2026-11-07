@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v6.10.0.ja.md">リリースノート</a> ·
+  <a href="./docs/releases/v6.10.1.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="./docs/development.en.md">ローカル開発</a> ·
@@ -76,19 +76,19 @@
 
 
 
-* Windows x64 インストーラー：`Lyrics.Card.Generator.Setup.6.10.0.exe`
+* Windows x64 インストーラー：`Lyrics.Card.Generator.Setup.6.10.1.exe`
 
 v6.2.2 以降、配布するデスクトップパッケージは Windows x64 Setup のみです。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v6.10.0 · リリースノート
+### v6.10.1 · リリースノート
 
 **2026-11-05**
 
-v6.10.0 — 歌詞なしカードを再設計。余白のないカバー、下部の段階的なぼかし、大きな曲名、独立したクレジットを導入します。
+v6.10.1 — ウィンドウボタンのグラデーション、輪郭、アイコンを調整し、クリック時の火花を従来の演出に戻します。
 
-[简体中文](./docs/releases/v6.10.0.zh-CN.md) · [繁體中文](./docs/releases/v6.10.0.zh-TW.md) · [English](./docs/releases/v6.10.0.en.md) · [Français](./docs/releases/v6.10.0.fr.md) · [日本語](./docs/releases/v6.10.0.ja.md) · [Español](./docs/releases/v6.10.0.es.md)
+[简体中文](./docs/releases/v6.10.1.zh-CN.md) · [繁體中文](./docs/releases/v6.10.1.zh-TW.md) · [English](./docs/releases/v6.10.1.en.md) · [Français](./docs/releases/v6.10.1.fr.md) · [日本語](./docs/releases/v6.10.1.ja.md) · [Español](./docs/releases/v6.10.1.es.md)
 
 <a id="主な機能"></a>
 

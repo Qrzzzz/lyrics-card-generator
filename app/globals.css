@@ -525,31 +525,32 @@ body[data-window-maximized="true"] .app-shell[data-desktop-shell="true"] {
   place-items: center;
   border: 0;
   border-radius: 999px;
-  padding: 6px;
-  background: var(--traffic-light-color);
-  background-clip: content-box;
+  padding: 0;
+  background: transparent;
   cursor: pointer;
-  opacity: 0.94;
-  filter: none;
-  transform-origin: center;
-  transition:
-    opacity 180ms var(--motion-ease-standard),
-    transform 180ms var(--motion-ease-emphasized),
-    filter 180ms var(--motion-ease-standard),
-    box-shadow 180ms var(--motion-ease-standard);
 }
 
-.traffic-light:hover {
-  opacity: 1;
-  transform: translateY(-1px) scale(1.11);
-  filter:
-    brightness(1.08)
-    saturate(1.08);
+.traffic-light::before {
+  content: "";
+  position: absolute;
+  inset: 6px;
+  border-radius: 50%;
+  background: linear-gradient(
+    color-mix(in srgb, var(--traffic-light-color), white 18%),
+    var(--traffic-light-color) 65%
+  );
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 14%);
+  pointer-events: none;
+}
+
+.traffic-light:hover::before {
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 22%);
 }
 
 .traffic-light__glyph {
-  width: 12px;
-  height: 12px;
+  position: relative;
+  width: 8px;
+  height: 8px;
   color: #171717;
   opacity: 0;
 }
@@ -574,13 +575,14 @@ body[data-window-maximized="true"] .app-shell[data-desktop-shell="true"] {
 @media (forced-colors: active) {
   .traffic-light {
     background: ButtonFace;
-    background-clip: border-box;
     border: 1px solid ButtonText;
-    padding: 5px;
-    opacity: 1;
-    filter: none;
+  }
+  .traffic-light::before {
+    display: none;
   }
   .traffic-light .traffic-light__glyph {
+    width: 12px;
+    height: 12px;
     color: ButtonText;
     opacity: 1;
   }
@@ -589,14 +591,13 @@ body[data-window-maximized="true"] .app-shell[data-desktop-shell="true"] {
   }
 }
 
-.traffic-light:active {
-  transform: translateY(0) scale(0.9);
-  filter: brightness(0.96);
+.traffic-light:active::before {
+  background: color-mix(in srgb, var(--traffic-light-color), black 14%);
 }
 
 .traffic-light:focus-visible {
   outline: 2px solid var(--control-focus-color);
-  outline-offset: 3px;
+  outline-offset: -1px;
 }
 
 .traffic-light--close {

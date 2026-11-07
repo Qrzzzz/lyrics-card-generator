@@ -148,7 +148,7 @@ test("settings layout themes, narrow font editor and accessibility", async ({ pa
       await page.locator(`[data-step="${step}"]`).click();
       await width(page, 508);
       const result = await new AxeBuilder({ page }).include('[data-testid="settings-fixture"]').analyze();
-      expect(result.violations.filter((v) => v.impact === "serious" || v.impact === "critical").map((v) => ({ id: v.id, nodes: v.nodes.map((n) => n.target) })), `${theme} ${step}`).toEqual([]);
+      expect(result.violations.filter((v) => v.impact === "serious" || v.impact === "critical").map((v) => ({ id: v.id, nodes: v.nodes.map((n) => ({ target: n.target, html: n.html })) })), `${theme} ${step}`).toEqual([]);
       await page.getByTestId("settings-fixture").screenshot({ path: `${artifactDir}/${theme}-${step}.png`, animations: "disabled" });
     }
     await page.locator('[data-step="font"]').click();
