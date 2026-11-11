@@ -175,7 +175,7 @@ PR/main 双阶段与 Release 最终 Setup 验证继续保留。
 构建与上传通过，但 artifact-ids 下载默认多出制品名称子目录，三组在解包前 ENOENT；
 聚合正确失败。候选修复 merge-multiple 配置并保留精确 ID／摘要核验，增加传输前置
 失败上下文。运行包上传约 4s、各组下载 2–4s；场景没有运行，不能据此声称总体更快。
-修复后的远端验收和至少三次发布观察继续待完成；详见 [v6.8.3 验收记录](../acceptance/v6.8.3.md)。
+修复后的远端验收和至少三次发布观察继续待完成。
 
 2026-10-23 更新：6.8.3 已完成修复后的共享 canary；6.8.4 在
 [39931752549](https://github.com/Qrzzzz/lyrics-card-generator/actions/runs/39931752549)

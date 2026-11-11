@@ -17,3 +17,45 @@ tmp/example-palette-generator/
 tmp/font-performance/
 *.log
 *.tsbuildinfo
+
+# Local AI instructions and agent state
+AGENTS.md
+AGENTS.override.md
+AGENTS.local.md
+CLAUDE.md
+CLAUDE.local.md
+GEMINI.md
+.codex/
+.claude/
+.gemini/
+.agents/
+/.codex_work/
+/.ai-work/
+
+# Local review notes, audit output and scratch files
+/.local/
+/.audit/
+/.review/
+/audit-reports/
+/review-notes/
+/local-audits/
+/local-reviews/
+/scratch/
+/tmp/
+/temp/
+/*.local.md
+/AUDIT_REPORT*.md
+/REVIEW_NOTES*.md
+/WORK_LOG*.md
+/HANDOFF*.md
+
+# Private environment settings; keep distributable examples
+.env
+.env.*
+!.env.example
+!.env.sample
+!.env.template
+
+# Retired local process records and one-time helpers
+/docs/acceptance/
+/docs/testing/v6.7.0.md
