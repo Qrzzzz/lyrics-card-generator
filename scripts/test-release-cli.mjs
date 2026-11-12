@@ -289,3 +289,46 @@ try {
   await assert.rejects(createBoundedFetch((_url,{signal})=>new Promise((_resolve,reject)=>signal.addEventListener('abort',()=>reject(signal.reason),{once:true})),5)('https://example.test'),/timeout/i);
 } finally {clearTimeout(keepAlive);}
 console.log('Release CLI: delayed registration/deadline, API errors, malformed evidence, missing/skipped/failed checks, exact attempts and additive timing state passed.');
+
+// A transient read failure must not restart an otherwise healthy release.
+const noWait = { sleep: async () => {}, report: () => {} };
+for (const transient of [500, 502, 503, 504, 'network']) {
+  let calls = 0;
+  const fetchRead = createBoundedFetch(async () => {
+    if (++calls === 1) {
+      if (transient === 'network') throw new TypeError('fetch failed');
+      return new Response('temporary gateway failure', { status: transient });
+    }
+    return new Response('{"ok":true}');
+  }, 1000, noWait);
+  assert.equal((await fetchRead('https://example.test')).status, 200);
+  assert.equal(calls, 2);
+}
+for (const status of [401, 403, 404, 429, 501]) {
+  let calls = 0;
+  const fetchRead = createBoundedFetch(async () => { calls++; return new Response('', { status }); }, 1000, noWait);
+  assert.equal((await fetchRead('https://example.test')).status, status);
+  assert.equal(calls, 1, 'non-transient responses reach the caller immediately');
+}
+for (const method of ['POST', 'PATCH', 'PUT', 'DELETE']) {
+  let calls = 0;
+  const fetchWrite = createBoundedFetch(async () => { calls++; return new Response('', { status: 503 }); }, 1000, noWait);
+  assert.equal((await fetchWrite('https://example.test', { method })).status, 503);
+  assert.equal(calls, 1, 'mutations are never retried');
+}
+let exhausted = 0;
+const unavailable = createBoundedFetch(async () => { exhausted++; return new Response('', { status: 503 }); }, 1000, noWait);
+assert.equal((await unavailable('https://example.test')).status, 503);
+assert.equal(exhausted, 3, 'transient reads have a finite attempt limit');
+let failedConnections = 0;
+await assert.rejects(createBoundedFetch(async () => { failedConnections++; throw new TypeError('fetch failed'); }, 1000, noWait)('https://example.test'), /fetch failed/);
+assert.equal(failedConnections, 3);
+const cancelled = new AbortController();
+let cancellationCalls = 0;
+await assert.rejects(createBoundedFetch(async () => { cancellationCalls++; return new Response('', { status: 503 }); }, 1000, {
+  ...noWait, sleep: async () => cancelled.abort(new Error('cancelled during backoff'))
+})('https://example.test', { signal: cancelled.signal }), /cancelled during backoff/);
+assert.equal(cancellationCalls, 1);
+const malformed = createBoundedFetch(async () => new Response('invalid JSON'), 1000, noWait);
+await assert.rejects((await malformed('https://example.test')).json(), SyntaxError, 'malformed payloads are not retried as transport failures');
+console.log('Release reads: bounded gateway/connection recovery, cancellation, terminal errors and no mutation retries passed.');
