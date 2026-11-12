@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v6.10.1.en.md">Release Notes</a> ·
+  <a href="./docs/releases/v6.10.2.en.md">Release Notes</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
   <a href="./docs/web-lite-browser-support.md">Web Lite Browser Support</a> ·
   <a href="#features">Features</a> ·
@@ -77,19 +77,19 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 
 
-* Windows x64 installer: `Lyrics.Card.Generator.Setup.6.10.1.exe`
+* Windows x64 installer: `Lyrics.Card.Generator.Setup.6.10.2.exe`
 
 Starting with v6.2.2, Windows x64 Setup is the only distributed desktop package.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v6.10.1 · Release Notes
+### v6.10.2 · Release Notes
 
-**2026-11-05**
+**2026-11-12**
 
-v6.10.1 — Refines window control gradients, outlines and icons, and restores the original click-spark effect.
+v6.10.2 — Includes the window-control and click-spark refinements prepared for 6.10.1, removes duplicate regressions and implementation-specific assertions, and fixes installed-app startup verification.
 
-[简体中文](./docs/releases/v6.10.1.zh-CN.md) · [繁體中文](./docs/releases/v6.10.1.zh-TW.md) · [English](./docs/releases/v6.10.1.en.md) · [Français](./docs/releases/v6.10.1.fr.md) · [日本語](./docs/releases/v6.10.1.ja.md) · [Español](./docs/releases/v6.10.1.es.md)
+[简体中文](./docs/releases/v6.10.2.zh-CN.md) · [繁體中文](./docs/releases/v6.10.2.zh-TW.md) · [English](./docs/releases/v6.10.2.en.md) · [Français](./docs/releases/v6.10.2.fr.md) · [日本語](./docs/releases/v6.10.2.ja.md) · [Español](./docs/releases/v6.10.2.es.md)
 
 <a id="features"></a>
 

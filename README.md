@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v6.10.1.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v6.10.2.zh-CN.md">发布说明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">在线 Web Lite 版</a> ·
   <a href="./docs/web-lite-browser-support.md">Web Lite 浏览器支持</a> ·
   <a href="./docs/desktop.md">桌面维护文档</a> ·
@@ -75,19 +75,19 @@
 
 
 
-* Windows x64 安装版：`Lyrics.Card.Generator.Setup.6.10.1.exe`
+* Windows x64 安装版：`Lyrics.Card.Generator.Setup.6.10.2.exe`
 
 从 v6.2.2 起只提供 Windows x64 Setup 安装包。
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v6.10.1 · 发布说明
+### v6.10.2 · 发布说明
 
-**2026-11-05**
+**2026-11-12**
 
-v6.10.1 — 细化窗口红绿灯的渐变、轮廓和操作图标，恢复点击烟花的原有动效。
+v6.10.2 — 保留 6.10.1 的窗口控件与点击烟花改进，精简重复回归和依赖实现细节的断言，修复安装包启动验收流程。
 
-[简体中文](./docs/releases/v6.10.1.zh-CN.md) · [繁體中文](./docs/releases/v6.10.1.zh-TW.md) · [English](./docs/releases/v6.10.1.en.md) · [Français](./docs/releases/v6.10.1.fr.md) · [日本語](./docs/releases/v6.10.1.ja.md) · [Español](./docs/releases/v6.10.1.es.md)
+[简体中文](./docs/releases/v6.10.2.zh-CN.md) · [繁體中文](./docs/releases/v6.10.2.zh-TW.md) · [English](./docs/releases/v6.10.2.en.md) · [Français](./docs/releases/v6.10.2.fr.md) · [日本語](./docs/releases/v6.10.2.ja.md) · [Español](./docs/releases/v6.10.2.es.md)
 
 <a id="主要功能"></a>
 

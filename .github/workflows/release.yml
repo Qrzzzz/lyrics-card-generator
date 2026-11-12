@@ -225,7 +225,6 @@ jobs:
         run: npm run desktop:packaged-assets-test
 
       - name: Test final Setup bytes
-        if: ${{ always() && (steps.desktop_build.outcome == 'success' || steps.desktop_reuse.outcome == 'success') }}
         run: npm run desktop:final-artifact-smoke
 
       - name: Test actual update installation and relaunch
