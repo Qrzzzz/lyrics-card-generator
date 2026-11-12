@@ -4,6 +4,7 @@ import { existsSync, readFileSync, mkdirSync, openSync, closeSync, unlinkSync } 
 import { saveReleaseState } from './release-state-store.mjs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { setTimeout as delay } from 'node:timers/promises';
 import { authorizeReleaseSource, createGitHubClient, releaseSourcePolicy as policy } from './verify-release-source.mjs';
 import { resolveGitHubRelease, createReleaseStateClient } from './resolve-github-release.mjs';
 import { prepareReleaseCandidate, archiveReleaseCandidate } from './release-candidate.mjs';
@@ -37,9 +38,33 @@ export function assertAssets(release, version) {
   }
 }
 
-export function createBoundedFetch(fetchImpl = globalThis.fetch, timeoutMs = 120000) {
-  return (url, init = {}) => fetchImpl(url, { ...init, signal: init.signal
-    ? AbortSignal.any([init.signal, AbortSignal.timeout(timeoutMs)]) : AbortSignal.timeout(timeoutMs) });
+export function createBoundedFetch(fetchImpl = globalThis.fetch, timeoutMs = 120000, {
+  sleep = (ms, signal) => delay(ms, undefined, { signal }),
+  report = message => process.stderr.write(`${message}\n`)
+} = {}) {
+  return async (url, init = {}) => {
+    // One deadline covers every attempt and backoff. Only read-only transport
+    // failures are retried; callers still validate authentication and JSON.
+    const signal = init.signal ? AbortSignal.any([init.signal, AbortSignal.timeout(timeoutMs)]) : AbortSignal.timeout(timeoutMs);
+    const readOnly = (init.method || 'GET').toUpperCase() === 'GET';
+    for (let attempt = 1; ; attempt++) {
+      signal.throwIfAborted();
+      let reason;
+      try {
+        const response = await fetchImpl(url, { ...init, signal });
+        if (!readOnly || ![500, 502, 503, 504].includes(response.status) || attempt === 3) return response;
+        reason = `HTTP ${response.status}`;
+        await response.body?.cancel().catch(() => undefined);
+      } catch (error) {
+        const interrupted = error?.message === 'fetch failed' ||
+          ['ECONNRESET', 'EAI_AGAIN', 'UND_ERR_SOCKET'].includes(error?.cause?.code ?? error?.code);
+        if (!readOnly || signal.aborted || !interrupted || attempt === 3) throw error;
+        reason = 'connection interrupted';
+      }
+      report(`GitHub read retry ${attempt + 1}/3: ${reason}`);
+      await sleep(attempt * 1000, signal);
+    }
+  };
 }
 
 async function allJobs(h, base, run) {

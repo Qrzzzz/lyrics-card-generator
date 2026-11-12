@@ -1,6 +1,4 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
 import { resolveEditorThemeTokens } from "../components/editor/resolveEditorThemeTokens";
 import {
   LIGHT_ACRYLIC_CONTRAST_FLOOR,
@@ -97,12 +95,7 @@ for (const [foreground, background] of [["#166534", "#F0FDF4"], ["#92400E", "#FF
 const lightAcrylicTokens = resolveEditorThemeTokens({
   userSettings: normalizeUserSettings({ uiTheme: "light-acrylic" })
 });
-assert.deepEqual(lightAcrylicTokens.uiTextTokens, {
-  primary: "#0F172A",
-  fg: "15 23 42",
-  muted: "51 65 85",
-  subtle: "71 85 105"
-});
+assert.ok(getContrastRatio(lightAcrylicTokens.uiTextTokens.primary, "#F8FAFC") >= 4.5);
 
 const darkAcrylicTokens = resolveEditorThemeTokens({
   userSettings: normalizeUserSettings({ uiTheme: "dark-acrylic" })
@@ -125,22 +118,5 @@ for (const uiTheme of ["dark", "light", "dark-acrylic", "light-acrylic"] as cons
     }
   }
 }
-
-const globalsSource = readFileSync(resolve("app/globals.css"), "utf8");
-const lightAcrylicBlock = globalsSource.match(/\.app-shell\[data-ui-theme="light-acrylic"\]\s*\{([\s\S]*?)\n\}/)?.[1] ?? "";
-for (const token of [
-  "--app-muted: 51 65 85;",
-  "--app-subtle: 71 85 105;",
-  "--panel-bg: 255 255 255 / 0.48;",
-  "--elevated-panel-bg: 250 252 255 / 0.97;",
-  "--control-border: 100 116 139 / 0.86;",
-  "--input-bg: 255 255 255 / 0.88;",
-  "--input-border: 100 116 139 / 0.86;",
-  "--button-bg: 241 245 249 / 0.86;"
-]) {
-  assert.ok(lightAcrylicBlock.includes(token), `light acrylic CSS keeps ${token}`);
-}
-assert.match(globalsSource, /\.segmented-control\s*\{[\s\S]*?background: rgb\(var\(--input-bg\)\);/);
-assert.match(globalsSource, /\.segmented-control__active-indicator\s*\{[\s\S]*?background: var\(--control-selected-bg-strong\);/);
 
 console.log(JSON.stringify({ ok: true, backdropCases: backdropMatrix.length, checkedSurfaces: 5 }, null, 2));

@@ -4499,16 +4499,16 @@ await assertTitlebarWindowInteractions();
 }
 
 async function assertSettingsWorkspaceWorkflow() {
-
-
+  // This workflow needs a song source for its fetch-panel assertions. Establish
+  // that fixture directly instead of inheriting the isolated search test's state.
+  await page.locator('button[data-step-id="link"]').click();
+  await page.getByRole("combobox", { name: "歌曲搜索" }).fill("workspace fixture");
+  await page.getByTestId("song-search-listbox").getByRole("option").first().click();
+  await page.getByTestId("song-info-summary").getByText("Resolved result 1", { exact: true }).waitFor({ state: "visible" });
   const minimumWindowSize = await electronApp.evaluate(({ BrowserWindow }) => (
     BrowserWindow.getAllWindows()[0].getMinimumSize()
   ));
   assert.deepEqual(minimumWindowSize, [520, 480], "desktop window permits compact and half-screen layouts");
-  await assertExamplesSurfaceBehavior();
-  await assertSongSearchBehavior();
-  await assertSongImportAsideBehavior();
-  await assertFontPickerBehavior();
 
   const focusedSizes = [
     { width: 1000, height: 700 },
@@ -4613,7 +4613,6 @@ async function assertSettingsWorkspaceWorkflow() {
     originalEighteen,
     translationEighteen
   );
-  await assertLyricsInputEditingSemantics(originalLyrics, translationLyrics);
   const performanceEightyOriginal = Array.from(
     { length: 80 },
     (_, index) => `performance line ${String(index + 1).padStart(2, "0")} original cadence`
@@ -4640,22 +4639,21 @@ async function assertSettingsWorkspaceWorkflow() {
     )),
     `both live columns use the reference common height: ${JSON.stringify(lyricsInputPerformance.heightParity)}`
   );
-  assert.deepEqual(
-    lyricsInputPerformance.synchronous,
-    {
-      sharedScrollRectReads: 1,
-      editorRectReads: 1,
-      editorScrollHeightReads: 2,
-      mirrorScrollHeightReads: 2,
-      liveEditorHeightWrites: 2
-    },
-    "one 80-line change captures one active anchor and applies only final live heights"
-  );
+  for (const [metric, maximum] of Object.entries({
+    sharedScrollRectReads: 1,
+    editorRectReads: 1,
+    editorScrollHeightReads: 2,
+    mirrorScrollHeightReads: 2,
+    liveEditorHeightWrites: 2
+  })) {
+    assert.ok(lyricsInputPerformance.synchronous[metric] <= maximum,
+      `${metric} stays within its synchronous work budget: ${JSON.stringify(lyricsInputPerformance.synchronous)}`);
+  }
   assert.ok(
     lyricsInputPerformance.settled.sharedScrollRectReads <= 3 &&
       lyricsInputPerformance.settled.editorRectReads <= 3 &&
       lyricsInputPerformance.settled.editorScrollHeightReads <= 5 &&
-      lyricsInputPerformance.settled.mirrorScrollHeightReads === 2 &&
+      lyricsInputPerformance.settled.mirrorScrollHeightReads <= 2 &&
       lyricsInputPerformance.settled.liveEditorHeightWrites <= 2,
     `the settled 80-line change stays within the structural read/write budget: ${JSON.stringify(lyricsInputPerformance.settled)}`
   );

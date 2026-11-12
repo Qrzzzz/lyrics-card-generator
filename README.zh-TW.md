@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v6.10.1.zh-TW.md">發布說明</a> ·
+  <a href="./docs/releases/v6.10.2.zh-TW.md">發布說明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">線上 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="./docs/development.zh-CN.md">本機開發</a> ·
@@ -73,19 +73,19 @@
 
 
 
-* Windows x64 安裝版：`Lyrics.Card.Generator.Setup.6.10.1.exe`
+* Windows x64 安裝版：`Lyrics.Card.Generator.Setup.6.10.2.exe`
 
 從 v6.2.2 起僅提供 Windows x64 Setup 安裝程式。
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v6.10.1 · 發布說明
+### v6.10.2 · 發布說明
 
-**2026-11-05**
+**2026-11-12**
 
-v6.10.1 — 細化視窗紅綠燈的漸層、輪廓與操作圖示，恢復點擊煙火的原有動效。
+v6.10.2 — 保留 6.10.1 的視窗控制項與點擊煙花改進，精簡重複回歸與依賴實作細節的斷言，修正安裝包啟動驗收流程。
 
-[简体中文](./docs/releases/v6.10.1.zh-CN.md) · [繁體中文](./docs/releases/v6.10.1.zh-TW.md) · [English](./docs/releases/v6.10.1.en.md) · [Français](./docs/releases/v6.10.1.fr.md) · [日本語](./docs/releases/v6.10.1.ja.md) · [Español](./docs/releases/v6.10.1.es.md)
+[简体中文](./docs/releases/v6.10.2.zh-CN.md) · [繁體中文](./docs/releases/v6.10.2.zh-TW.md) · [English](./docs/releases/v6.10.2.en.md) · [Français](./docs/releases/v6.10.2.fr.md) · [日本語](./docs/releases/v6.10.2.ja.md) · [Español](./docs/releases/v6.10.2.es.md)
 
 ## ✨ 主要功能
 

@@ -1,14 +1,14 @@
 import assert from "node:assert/strict";
 import { prepareEditorLanguage } from "./editor-language-test-helpers.mjs";
 import crypto from "node:crypto";
-import { execFile, spawn } from "node:child_process";
+import { execFile } from "node:child_process";
 import { createReadStream } from "node:fs";
 import { mkdtemp, mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import net from "node:net";
 import { promisify } from "node:util";
-import { chromium } from "playwright";
+import { _electron as electron } from "playwright";
+import { closeElectronApplication } from "./electron-test-lifecycle.mjs";
 import { validateDesktopRuntimePolicy } from "./desktop-runtime-dependency-policy.mjs";
 
 if (process.platform !== "win32") throw new Error("Final Windows artifact smoke must run on Windows.");
@@ -77,23 +77,22 @@ async function smokeExecutable(executablePath, label, results, sourceArtifactPat
   );
   const artifactSha256 = await sha256File(sourceArtifactPath);
   const userDataDirectory = await mkdtemp(path.join(tmpdir(), `lyrics-card-${label}-user-data-`));
-  const debuggingPort = await getAvailablePort();
-  let browser;
-  let processExited = false;
+  let application;
   let output = "";
-  const launched = spawn(executablePath, [`--remote-debugging-port=${debuggingPort}`], {
-    env: { ...process.env, LYRICS_CARD_TEST_USER_DATA: userDataDirectory },
-    windowsHide: true,
-    stdio: ["ignore", "pipe", "pipe"]
-  });
-  launched.once("exit", () => { processExited = true; });
-  launched.stdout?.on("data", (chunk) => { output = `${output}${chunk}`.slice(-12_000); });
-  launched.stderr?.on("data", (chunk) => { output = `${output}${chunk}`.slice(-12_000); });
   try {
-    // CDP verifies the packaged renderer without injecting test-only code into
-    // the application bundle.
-    browser = await connectToElectron(debuggingPort, 90_000);
-    const page = await waitForApplicationPage(browser, 90_000);
+    // Use the same Electron driver as packaged CI. It observes window creation
+    // and navigation, including a hidden about:blank startup window, instead of
+    // polling a separate CDP browser that can omit Electron renderer contexts.
+    application = await electron.launch({
+      executablePath,
+      env: { ...process.env, LYRICS_CARD_TEST_USER_DATA: userDataDirectory, LYRICS_CARD_STARTUP_TRACE: "1" },
+      timeout: 90_000
+    });
+    const launched = application.process();
+    launched.stdout?.on("data", chunk => { output = `${output}${chunk}`.slice(-12_000); });
+    launched.stderr?.on("data", chunk => { output = `${output}${chunk}`.slice(-12_000); });
+    const page = await application.firstWindow({ timeout: 90_000 });
+    await page.waitForURL(url => url.protocol === "http:" && url.hostname === "127.0.0.1", { timeout: 90_000 });
     await page.getByTestId("editor-surface").waitFor({ state: "visible", timeout: 60_000 });
     const userAgent = await page.evaluate(() => navigator.userAgent);
     const electronVersion = /\bElectron\/(\d+\.\d+\.\d+)\b/u.exec(userAgent)?.[1];
@@ -110,7 +109,10 @@ async function smokeExecutable(executablePath, label, results, sourceArtifactPat
     assert.equal(await search.inputValue(), "final artifact smoke");
     await assertPackagedFontLicenses(page, label);
 
-    const closed = new Promise((resolve) => browser.once("disconnected", resolve));
+    const closed = new Promise((resolve, reject) => launched.once("exit", (code, signal) => {
+      if (code === 0) resolve();
+      else reject(new Error(`${label} exited with code ${code}, signal ${signal}`));
+    }));
     await page.evaluate(() => window.lyricsCardDesktop?.closeWindow());
     await withTimeout(closed, 30_000, `${label} did not exit cleanly`);
     results.push({
@@ -125,14 +127,18 @@ async function smokeExecutable(executablePath, label, results, sourceArtifactPat
       cleanExit: true
     });
   } catch (error) {
-    const page = browser?.contexts().flatMap((context) => context.pages())[0];
-    await page?.screenshot({ path: path.join(reportDirectory, `${label}-failure.png`) }).catch(() => undefined);
+    const windows = application?.windows() ?? [];
+    const startup = await application?.evaluate(({ BrowserWindow }) => ({
+      trace: globalThis.__lyricsCardStartupTrace?.snapshot(),
+      windows: BrowserWindow.getAllWindows().map(window => ({
+        url: window.webContents.getURL(), visible: window.isVisible(), destroyed: window.isDestroyed()
+      }))
+    })).catch(() => undefined);
+    await writeFile(path.join(reportDirectory, `${label}-startup.json`), JSON.stringify({ startup, output }, null, 2));
+    await windows[0]?.screenshot({ path: path.join(reportDirectory, `${label}-failure.png`), timeout: 5_000 }).catch(() => undefined);
     throw new Error(`${label} final-artifact smoke failed. ${output}`, { cause: error });
   } finally {
-    // Always terminate the complete process tree because a failed renderer can
-    // leave the packaged Next.js child alive after Electron disconnects.
-    await browser?.close().catch(() => undefined);
-    if (!processExited) await terminateProcessTree(launched.pid);
+    await closeElectronApplication(application, { label: `${label}-final-artifact` });
     await rm(userDataDirectory, { recursive: true, force: true }).catch(() => undefined);
   }
 }
@@ -182,47 +188,6 @@ async function assertPackagedFontLicenses(page, label) {
       `${label} serves reviewed upstream bytes for ${response.licenseUrl}`
     );
   }
-}
-
-async function connectToElectron(port, timeoutMs) {
-  const deadline = Date.now() + timeoutMs;
-  let lastError;
-  while (Date.now() < deadline) {
-    try {
-      return await chromium.connectOverCDP(`http://127.0.0.1:${port}`, { timeout: 1_000 });
-    } catch (error) {
-      lastError = error;
-      await new Promise((resolve) => setTimeout(resolve, 300));
-    }
-  }
-  throw new Error(`Timed out connecting to Electron DevTools on ${port}`, { cause: lastError });
-}
-
-async function waitForApplicationPage(browser, timeoutMs) {
-  const deadline = Date.now() + timeoutMs;
-  while (Date.now() < deadline) {
-    const page = browser.contexts().flatMap((context) => context.pages()).find((candidate) => candidate.url().startsWith("http://127.0.0.1:"));
-    if (page) return page;
-    await new Promise((resolve) => setTimeout(resolve, 200));
-  }
-  throw new Error("Timed out waiting for the packaged application page.");
-}
-
-function getAvailablePort() {
-  return new Promise((resolve, reject) => {
-    const server = net.createServer();
-    server.once("error", reject);
-    server.listen(0, "127.0.0.1", () => {
-      const address = server.address();
-      if (!address || typeof address === "string") return reject(new Error("Unable to allocate a debugging port."));
-      server.close((error) => error ? reject(error) : resolve(address.port));
-    });
-  });
-}
-
-async function terminateProcessTree(pid) {
-  if (!pid) return;
-  await execFileAsync("taskkill.exe", ["/PID", String(pid), "/T", "/F"], { windowsHide: true }).catch(() => undefined);
 }
 
 async function withTimeout(promise, timeoutMs, message) {

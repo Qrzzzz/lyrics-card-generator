@@ -1,4 +1,4 @@
-// Every entry from desktop:scenario-test and desktop:interaction-test is retained.
+// Isolated scenarios own feature details; settings groups cover state handoff.
 export const desktopGroups = Object.freeze({
   editor: [
     ...['search', 'song-import', 'examples', 'fonts', 'titlebar', 'lyrics-input'].map(scenario => ({ id: `scenario-${scenario}`, command: 'desktop:scenario-test', args: [`--scenario=${scenario}`] })),

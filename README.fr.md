@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="./docs/releases/v6.10.1.fr.md">Notes de version</a> ·
+  <a href="./docs/releases/v6.10.2.fr.md">Notes de version</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en ligne</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="./docs/development.en.md">Développement local</a> ·
@@ -76,19 +76,19 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 
 
-* Programme d’installation Windows x64 : `Lyrics.Card.Generator.Setup.6.10.1.exe`
+* Programme d’installation Windows x64 : `Lyrics.Card.Generator.Setup.6.10.2.exe`
 
 À partir de la v6.2.2, le programme Setup Windows x64 est le seul paquet distribué.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### v6.10.1 · Notes de version
+### v6.10.2 · Notes de version
 
-**2026-11-05**
+**2026-11-12**
 
-v6.10.1 — Affine les dégradés, les contours et les icônes des commandes de fenêtre et rétablit l’effet d’étincelles au clic.
+v6.10.2 — Reprend les améliorations des contrôles de fenêtre et des étincelles au clic de la version 6.10.1, supprime les régressions en double et les assertions liées à l’implémentation, et corrige la vérification du démarrage après installation.
 
-[简体中文](./docs/releases/v6.10.1.zh-CN.md) · [繁體中文](./docs/releases/v6.10.1.zh-TW.md) · [English](./docs/releases/v6.10.1.en.md) · [Français](./docs/releases/v6.10.1.fr.md) · [日本語](./docs/releases/v6.10.1.ja.md) · [Español](./docs/releases/v6.10.1.es.md)
+[简体中文](./docs/releases/v6.10.2.zh-CN.md) · [繁體中文](./docs/releases/v6.10.2.zh-TW.md) · [English](./docs/releases/v6.10.2.en.md) · [Français](./docs/releases/v6.10.2.fr.md) · [日本語](./docs/releases/v6.10.2.ja.md) · [Español](./docs/releases/v6.10.2.es.md)
 
 <a id="fonctionnalités-principales"></a>
 

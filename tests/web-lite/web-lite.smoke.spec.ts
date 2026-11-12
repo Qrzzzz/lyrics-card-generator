@@ -266,6 +266,8 @@ test.beforeEach(async ({ page }) => {
 
 test("axe reports no serious or landmark accessibility violations", async ({ page }) => {
   await openWebLite(page, { width: 1280, height: 900 });
+  await expect(page.getByTestId("history-button")).toHaveCount(0);
+  expect(await page.evaluate(() => window.lyricsCardDesktop)).toBeUndefined();
   const results = await new AxeBuilder({ page }).analyze();
   const blocking = results.violations.filter(
     ({ id, impact }) =>

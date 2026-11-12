@@ -1,6 +1,6 @@
 {
   "name": "lyric-card-generator",
-  "version": "6.10.1",
+  "version": "6.10.2",
   "private": true,
   "main": "electron/main.js",
   "scripts": {
@@ -67,7 +67,7 @@
     "electron-runtime:coverage": "c8 --clean --all --include=electron/preload.js --include=electron/ipc-security.js --include=electron/url-policy.js --include=electron/local-app-url.js --include=electron/local-server-origin.js --include=electron/manual-save-ipc.js --include=electron/import-history.js --include=electron/packaged-server-readiness.js --include=electron/ai-request-registry.js --check-coverage --per-file --lines 70 --functions 75 --branches 60 --statements 70 node scripts/test-electron-runtime-coverage.cjs",
     "click-spark:test": "tsx scripts/test-click-spark-animation.ts",
     "toast:test": "tsx scripts/test-toast-queue.ts",
-    "core:test": "npm run p0:test && npm run lyrics-document-v2:test && npm run separator:test && npm run typography:test && npm run palette:test && npm run solid-background:test && npm run color-field:test && npm run background-composition:test && npm run card-content-depth:test && npm run startup-assets:test && tsx scripts/test-import-history-ui.ts && npm run autosave:test && tsx scripts/test-v2-core.ts && npm run theme:test && tsx scripts/test-v321-theme-tokens.ts && tsx scripts/test-light-acrylic-contrast.ts && npm run project-signature:test && tsx scripts/test-v34-layout-grid.ts && tsx scripts/test-artwork-geometry.ts && tsx scripts/test-auto-width.ts && tsx scripts/test-landscape-plan.ts && tsx scripts/test-stepper-layout.ts && npm run window-geometry:test && tsx scripts/test-editor-productivity.ts && tsx scripts/test-lyrics-workspace-layout.ts && tsx scripts/test-lyrics-workbench.ts && tsx scripts/test-lyrics-document.ts && tsx scripts/test-lyrics-viewport.ts && tsx scripts/test-titlebar-regression.ts && tsx scripts/test-examples.ts && tsx scripts/test-settings-wing.ts && npm run support:test && tsx scripts/test-ai-settings-save-controller.ts && tsx scripts/test-release-consistency.ts && npm run click-spark:test && npm run toast:test && tsx scripts/test-motion-system.ts && tsx scripts/test-ai-provider-response.ts && tsx scripts/test-netease-search-normalize.ts && node scripts/test-electron-ai-prompt-settings.cjs && npm run ai-settings-store:test && node scripts/test-electron-font-options.cjs && node scripts/test-electron-font-directory-service.cjs && npm run contracts:test",
+    "core:test": "npm run p0:test && npm run lyrics-document-v2:test && npm run separator:test && npm run typography:test && npm run palette:test && npm run solid-background:test && npm run color-field:test && npm run background-composition:test && npm run card-content-depth:test && npm run startup-assets:test && npm run autosave:test && tsx scripts/test-v2-core.ts && npm run theme:test && tsx scripts/test-v321-theme-tokens.ts && tsx scripts/test-light-acrylic-contrast.ts && npm run project-signature:test && tsx scripts/test-v34-layout-grid.ts && tsx scripts/test-artwork-geometry.ts && tsx scripts/test-auto-width.ts && tsx scripts/test-landscape-plan.ts && tsx scripts/test-stepper-layout.ts && npm run window-geometry:test && tsx scripts/test-editor-productivity.ts && tsx scripts/test-lyrics-workspace-layout.ts && tsx scripts/test-lyrics-workbench.ts && tsx scripts/test-lyrics-document.ts && tsx scripts/test-lyrics-viewport.ts && tsx scripts/test-examples.ts && tsx scripts/test-settings-wing.ts && npm run support:test && tsx scripts/test-ai-settings-save-controller.ts && tsx scripts/test-release-consistency.ts && npm run click-spark:test && npm run toast:test && tsx scripts/test-motion-system.ts && tsx scripts/test-ai-provider-response.ts && tsx scripts/test-netease-search-normalize.ts && node scripts/test-electron-ai-prompt-settings.cjs && npm run ai-settings-store:test && node scripts/test-electron-font-options.cjs && node scripts/test-electron-font-directory-service.cjs && npm run contracts:test",
     "desktop:dev": "node scripts/start-electron-dev.mjs",
     "desktop:startup-test": "node scripts/test-electron-packaged-server-startup.cjs",
     "desktop:startup-benchmark": "node scripts/benchmark-desktop-startup.mjs",
@@ -165,6 +165,7 @@
     "eslint": "^9.39.5",
     "eslint-config-next": "15.5.28",
     "globals": "14.0.0",
+    "js-yaml": "^4.3.2",
     "jsqr": "^1.4.0",
     "postcss": "8.5.32",
     "qrcode-generator": "^2.0.4",
