@@ -9,13 +9,15 @@
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "target": "ES2022",
-    "types": ["node"]
+    "types": [
+      "node"
+    ]
   },
   "files": [
-    "shared/ai-settings.js",
-    "shared/ai-request-contract.js",
-    "shared/ai-prompt-settings.js",
-    "shared/card-style-contract.js",
-    "electron/history-budget.js"
+    "../../shared/ai-settings.js",
+    "../../shared/ai-request-contract.js",
+    "../../shared/ai-prompt-settings.js",
+    "../../shared/card-style-contract.js",
+    "../../electron/history-budget.js"
   ]
 }

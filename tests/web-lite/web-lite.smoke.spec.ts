@@ -736,6 +736,46 @@ test("solid background keeps custom HEX across modes and exports offline with Mo
   }
 });
 
+test("pale cover stays light with automatic dark text in preview and exported PNG", async ({ page }) => {
+  await openWebLite(page);
+  const source = await page.evaluate(() => {
+    const canvas = document.createElement("canvas");
+    canvas.width = canvas.height = 100;
+    const context = canvas.getContext("2d")!;
+    context.fillStyle = "#FAF9FD";
+    context.fillRect(0, 0, 100, 100);
+    context.fillStyle = "#BEBBDF";
+    context.fillRect(90, 0, 10, 100);
+    return canvas.toDataURL();
+  });
+  await page.getByTestId("web-lite-local-cover-input").setInputFiles({
+    name: "pale-cover.png", mimeType: "image/png", buffer: Buffer.from(source.split(",")[1], "base64")
+  });
+  await page.locator('[data-step-id="lyrics"]').click();
+  await page.getByRole("textbox", { name: "Lyric Text", exact: true }).fill("Light artwork keeps a pale background");
+  const preview = page.getByTestId("lyric-card-preview");
+  for (const mode of ["portrait", "landscape"]) {
+    await page.locator('[data-step-id="layout"]').click();
+    await page.locator(`[data-segment-value="${mode}"]`).click();
+    await page.getByTestId("gradient-layout-seed").fill("58710");
+    await expect(preview.locator('[data-auto-width-line="lyric"]').first()).toHaveCSS("color", "rgb(0, 0, 0)");
+    await page.locator('[data-step-id="export"]').click();
+    const card = page.locator('[data-export-card-host] [data-export-card="true"]').first();
+    await expect(card.locator('[data-auto-width-line="lyric"]').first()).toHaveCSS("color", "rgb(0, 0, 0)");
+    const [download] = await Promise.all([page.waitForEvent("download"), page.getByTestId("complete-export-button").click()]);
+    const bytes = await readFile((await download.path())!);
+    const pixels = await page.evaluate(async (dataUrl) => {
+      const image = new Image(); image.src = dataUrl; await image.decode();
+      const canvas = document.createElement("canvas");
+      canvas.width = image.naturalWidth; canvas.height = image.naturalHeight;
+      const context = canvas.getContext("2d")!; context.drawImage(image, 0, 0);
+      return [[5, 5], [canvas.width - 6, canvas.height - 6]].map(([x, y]) =>
+        [...context.getImageData(x, y, 1, 1).data].slice(0, 3));
+    }, `data:image/png;base64,${bytes.toString("base64")}`);
+    expect(pixels.every(pixel => pixel.every(channel => channel > 220)), `${mode} PNG retains its pale corners`).toBe(true);
+  }
+});
+
 test("Web Lite global commands expose precise typography and persist independent interface text sizes", async ({ page }) => {
   await openWebLite(page);
   await page.keyboard.press("Control+k");

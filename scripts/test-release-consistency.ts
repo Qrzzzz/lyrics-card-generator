@@ -1,16 +1,16 @@
 import assert from "node:assert/strict";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { dirname, relative, resolve } from "node:path";
 import packageJson from "../package.json";
 
 const releaseLocales = ["zh-CN", "zh-TW", "en", "fr", "ja", "es"] as const;
 const readmes = [
   ["README.md", "zh-CN"],
-  ["README.zh-TW.md", "zh-TW"],
-  ["README.en.md", "en"],
-  ["README.fr.md", "fr"],
-  ["README.ja.md", "ja"],
-  ["README.es.md", "es"]
+  ["docs/i18n/README.zh-TW.md", "zh-TW"],
+  ["docs/i18n/README.en.md", "en"],
+  ["docs/i18n/README.fr.md", "fr"],
+  ["docs/i18n/README.ja.md", "ja"],
+  ["docs/i18n/README.es.md", "es"]
 ] as const;
 const releaseVersion = packageJson.version;
 const escapedReleaseVersion = releaseVersion.replaceAll(".", "\\.");
@@ -56,9 +56,10 @@ function readmeHeader(source: string) {
 }
 
 function assertReadmeHeaderReleaseLink(source: string, file: string, locale: string) {
-  assert.match(
-    readmeHeader(source),
-    new RegExp(`docs/releases/v${escapedReleaseVersion}\\.${locale}\\.md`),
+  const targets = [...readmeHeader(source).matchAll(/(?:href="|\]\()([^"\s)]+)/g)]
+    .map((match) => resolve(dirname(file), match[1]));
+  assert.ok(
+    targets.includes(resolve(`docs/releases/v${releaseVersion}.${locale}.md`)),
     `${file} header must link to its own locale's latest published release note`
   );
 }
@@ -73,13 +74,7 @@ for (const [file, locale] of readmes) {
   } else {
     assert.ok(!source.includes(unpublishedStatusMarkers[locale]), `${file} must not label published v${releaseVersion} as unpublished`);
   }
-  assert.match(
-    source,
-    new RegExp(`docs/releases/v${escapedReleaseVersion}\\.${locale}\\.md`),
-    `${file} links its published release notes`
-  );
-
-  const currentLink = `docs/releases/v${releaseVersion}.${locale}.md`;
+  const currentLink = relative(dirname(file), `docs/releases/v${releaseVersion}.${locale}.md`).replaceAll("\\", "/");
   const wrongLocale = locale === "en" ? "fr" : "en";
   const wrongHeaderLocale = source.replace(currentLink, `docs/releases/v${releaseVersion}.${wrongLocale}.md`);
   assert.throws(

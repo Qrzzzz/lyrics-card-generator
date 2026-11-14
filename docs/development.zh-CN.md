@@ -81,6 +81,7 @@ npm run start
 | `lib/` | 文档事务、解析器、导出、安全请求、布局与样式核心逻辑 |
 | `electron/` | Electron 主进程、预加载、IPC、安全边界与桌面持久化 |
 | `web-lite/` | 静态 Web Lite 入口及浏览器专用适配层 |
+| `config/` | Playwright 与专项 TypeScript 配置 |
 | `scripts/` | 构建、回归、审计、制品检查与维护脚本 |
 | `tests/` | Playwright 浏览器测试与测试资源 |
 | `public/` | 应用图标、字体及许可等运行时静态资源 |

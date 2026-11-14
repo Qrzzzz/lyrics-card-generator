@@ -21,6 +21,22 @@ function stripes(colors: number[][]) {
   for (let i = 0; i < 1600; i++) data.set(colors[Math.floor(i / (1600 / colors.length))], i * 4);
   return analyzePalettePixels(data, 40, 40);
 }
+const paleCover = stripes([...Array.from({ length: 9 }, () => [250, 249, 253, 255]), [190, 187, 223, 255]]);
+const paleGradient: CardStyle = { ...defaultState.style, backgroundMode: "palette", extractedPalette: paleCover,
+  gradientLayoutSeed: 58710, textColorMode: "auto" };
+for (const size of [{ width: 980, height: 1247 }, { width: 1920, height: 1080 }]) {
+  assert.equal(resolveCardTextColor(paleGradient, size), "#000000", "pale gradients automatically use dark text");
+}
+assert.equal(resolveCardTextColor({ ...paleGradient, textColorMode: "custom", customTextColor: "#73508C" }), "#73508C",
+  "automatic readability does not overwrite a custom text color");
+const darkCover = stripes([[20, 25, 42, 255], [35, 50, 78, 255]]);
+assert.equal(resolveCardTextColor({ ...paleGradient, extractedPalette: darkCover }), "#FFFFFF", "dark covers retain readable light text");
+const gradientHtml = load(renderToStaticMarkup(<LyricCard song={{ ...defaultState.song, title: "Light cover" }}
+  lyricDocument={defaultState.lyricDocument} style={paleGradient} />));
+assert.ok(gradientHtml('[data-card-header] [style]').toArray().some(node =>
+  gradientHtml(node).text() === "Light cover" && gradientHtml(node).attr("style")?.includes("color:#000000")),
+  "the actual portrait renderer uses automatic dark text on the pale field");
+
 const colorful = stripes([[180, 30, 30, 255], [30, 130, 50, 255], [30, 40, 160, 255], [220, 180, 50, 255], [235, 235, 220, 255]]);
 const candidates = solidCandidates(colorful);
 assert.equal(candidates.source, "cover");

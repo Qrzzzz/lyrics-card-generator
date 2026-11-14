@@ -6,11 +6,11 @@ import sharp from "sharp";
 const root = process.cwd();
 const readmes = {
   "README.md": { cards: ["zh-CN.single.webp", "zh-CN.bilingual.webp"], screenshot: "step-3.zh-CN.webp" },
-  "README.zh-TW.md": { cards: ["zh-TW.single.webp", "zh-TW.bilingual.webp"], screenshot: "step-3.zh-TW.webp" },
-  "README.en.md": { cards: ["en.single.webp", "en.bilingual.webp"], screenshot: "step-3.en.webp" },
-  "README.fr.md": { cards: ["fr.single.webp", "fr.bilingual.webp"], screenshot: "step-3.fr.webp" },
-  "README.ja.md": { cards: ["ja.single.webp", "ja.bilingual.webp"], screenshot: "step-3.ja.webp" },
-  "README.es.md": { cards: ["es.single.webp", "es.bilingual.webp"], screenshot: "step-3.es.webp" }
+  "docs/i18n/README.zh-TW.md": { cards: ["zh-TW.single.webp", "zh-TW.bilingual.webp"], screenshot: "step-3.zh-TW.webp" },
+  "docs/i18n/README.en.md": { cards: ["en.single.webp", "en.bilingual.webp"], screenshot: "step-3.en.webp" },
+  "docs/i18n/README.fr.md": { cards: ["fr.single.webp", "fr.bilingual.webp"], screenshot: "step-3.fr.webp" },
+  "docs/i18n/README.ja.md": { cards: ["ja.single.webp", "ja.bilingual.webp"], screenshot: "step-3.ja.webp" },
+  "docs/i18n/README.es.md": { cards: ["es.single.webp", "es.bilingual.webp"], screenshot: "step-3.es.webp" }
 };
 
 const expectedCards = new Set(Object.values(readmes).flatMap(({ cards }) => cards));
@@ -18,13 +18,22 @@ const expectedScreenshots = new Set(Object.values(readmes).map(({ screenshot }) 
 for (const [readme, expected] of Object.entries(readmes)) {
   const text = await readFile(path.join(root, readme), "utf8");
   assert.ok(!text.includes("\uFFFD"), `${readme} contains a replacement character`);
-  const cardReferences = [...text.matchAll(/docs\/readme-assets\/cards\/([^"')\s]+)/g)].map((match) => match[1]);
-  const screenshotReferences = [...text.matchAll(/docs\/readme-assets\/screenshots\/([^"')\s]+)/g)].map((match) => match[1]);
+  const localLinks = [...text.matchAll(/(?:href="|src="|\]\()([^"\s)]+)/g)]
+    .map((match) => match[1]).filter((link) => link.startsWith("."));
+  const resolvedLinks = localLinks.map((link) => path.resolve(root, path.dirname(readme), link.split("#")[0]));
+  for (const target of resolvedLinks) {
+    await stat(target);
+  }
+  const mediaReferences = (folder) => resolvedLinks
+    .filter((target) => path.dirname(target) === path.join(root, "docs", "readme-assets", folder))
+    .map((target) => path.basename(target));
+  const cardReferences = mediaReferences("cards");
+  const screenshotReferences = mediaReferences("screenshots");
   assert.deepEqual(cardReferences, expected.cards, `${readme} must reference exactly its two localized cards`);
   assert.deepEqual(screenshotReferences, [expected.screenshot], `${readme} must reference its localized interface screenshot`);
 
   const galleryStart = text.indexOf("<details>");
-  const galleryEnd = text.indexOf("./public/app-icon.png", galleryStart);
+  const galleryEnd = text.indexOf("app-icon.png", galleryStart);
   assert.ok(galleryStart >= 0 && galleryEnd > galleryStart, `${readme} must keep its media galleries before the app introduction`);
   const galleryRegion = text.slice(galleryStart, galleryEnd);
   const galleryDetails = [...galleryRegion.matchAll(/<details([^>]*)>([\s\S]*?)<\/details>/g)];

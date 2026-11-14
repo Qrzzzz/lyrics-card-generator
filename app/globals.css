@@ -560,16 +560,50 @@ body[data-window-maximized="true"] .app-shell[data-desktop-shell="true"] {
   opacity: 1;
 }
 
+.lyrics-editor-column {
+  border-color: rgb(var(--input-border));
+  background: rgb(var(--input-bg));
+}
+
+.lyrics-editor-column:focus-within {
+  border-color: var(--control-focus-border);
+  box-shadow: 0 0 0 1px var(--control-focus-color);
+}
+
 .lyrics-editor-column-heading {
-  background: rgb(var(--elevated-panel-bg));
-  border-color: rgb(var(--panel-border));
+  background: rgb(from color-mix(in srgb, rgb(var(--input-bg)), rgb(var(--app-fg)) 3%) r g b / 1);
+  border-color: color-mix(in srgb, rgb(var(--input-border)) 65%, transparent);
   color: rgb(var(--app-muted));
 }
 
 [data-editor-column-active="true"] > .lyrics-editor-column-heading {
   color: rgb(var(--app-fg));
-  border-color: var(--app-accent);
-  border-inline-start-width: 3px;
+}
+
+[data-editor-column-active="true"] > .lyrics-editor-column-heading::after {
+  content: "";
+  position: absolute;
+  inset-inline-start: 0.75rem;
+  bottom: -1px;
+  width: 1.5rem;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--app-accent);
+}
+
+.lyrics-editor-column-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  color: rgb(var(--app-muted));
+}
+
+.lyrics-editor-column-status::before {
+  content: "";
+  width: 0.3125rem;
+  height: 0.3125rem;
+  border-radius: 50%;
+  background: var(--app-accent);
 }
 
 @media (forced-colors: active) {
@@ -586,8 +620,9 @@ body[data-window-maximized="true"] .app-shell[data-desktop-shell="true"] {
     color: ButtonText;
     opacity: 1;
   }
-  [data-editor-column-active="true"] > .lyrics-editor-column-heading {
-    border-color: Highlight;
+  .lyrics-editor-column:focus-within {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
   }
 }
 
@@ -1574,12 +1609,10 @@ button {
   background: transparent;
 }
 
-.lyrics-document-editor {
-  border-color: color-mix(in srgb, rgb(var(--input-border)) 70%, transparent);
-  background: color-mix(in srgb, rgb(var(--input-bg)) 38%, transparent);
-  box-shadow: inset 0 1px 0 color-mix(in srgb, rgb(var(--app-fg)) 4%, transparent);
-  backdrop-filter: blur(14px) saturate(1.06);
-  -webkit-backdrop-filter: blur(14px) saturate(1.06);
+.lyrics-editor-column .lyrics-document-editor {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .lyrics-atomic-overlay {
@@ -1618,13 +1651,10 @@ button {
   outline: 2px solid var(--control-focus-color);
 }
 
-.lyrics-document-editor:hover:not(:focus) {
-  border-color: color-mix(in srgb, rgb(var(--input-border)) 96%, transparent);
-}
-
-.lyrics-document-editor:focus,
-.lyrics-document-editor:focus-visible {
-  background: color-mix(in srgb, rgb(var(--input-bg)) 60%, transparent);
+.lyrics-editor-column .lyrics-document-editor:focus,
+.lyrics-editor-column .lyrics-document-editor:focus-visible {
+  outline: none;
+  box-shadow: none;
 }
 
 .lyrics-sidebar-header {

@@ -5,6 +5,7 @@ import {
   adjustLightness,
   hexToRgb,
   mixColors,
+  relativeLuminance,
   normalizeHex,
   rgbToHex,
   rgbToHsl,
@@ -53,6 +54,7 @@ export type ColorFieldPlan = {
   topology: "square" | "portrait" | "tall" | "landscape" | "ultrawide";
   seed: number;
   baseColor: string;
+  shadeStrength: number;
   families: ColorFieldFamily[];
   anchors: ColorFieldAnchor[];
 };
@@ -81,6 +83,8 @@ type AdaptedPalette = {
   colors: string[];
   regions: SpatialPaletteContract["regions"];
   dark: string;
+  sourceBase: string;
+  lightnessPreservation: number;
   kind: ExtractedPalette["kind"];
 };
 
@@ -135,6 +139,7 @@ export function createColorFieldPlan({
   const colors = preparedColors.map(({ field }) => field);
   const families = buildColorFamilies(adapted.regions, preparedColors);
   const points = generateAnchorPoints(targetCount, aspect, families, random);
+  const colorBudgets = createRegionColorBudgets(points, families);
   const localEnergies = points.map((point, index) => {
     const edgeScale = point.edge ? 0.82 : 1;
     return edgeScale * (0.88 + random() * 0.24) * (index % 3 === 0 ? 1.04 : 1);
@@ -148,8 +153,10 @@ export function createColorFieldPlan({
     const nearby = anchors.filter((anchor) => isotropicDistance(point, anchor, aspect) < 1.45);
     // Spatial plans optimize separation only inside the source family already
     // allocated to this anchor. Fallback palettes retain the legacy global set.
+    const budget = point.familyId ? colorBudgets.get(point.familyId) : undefined;
+    const eligibleColors = budget ? [...budget].filter(([, remaining]) => remaining > 0).map(([color]) => color) : [];
     const color = chooseSeparatedColor(
-      point.colorChoices.length > 0 ? point.colorChoices : colors,
+      eligibleColors.length > 0 ? eligibleColors : point.colorChoices.length > 0 ? point.colorChoices : colors,
       nearby,
       point,
       aspect,
@@ -157,6 +164,7 @@ export function createColorFieldPlan({
       index,
       random
     );
+    if (budget) budget.set(color, (budget.get(color) ?? 1) - 1);
     const angle = chooseFlowAngle(seedAngle + index * GOLDEN_ANGLE + (random() - 0.5) * 20, nearby);
     const localSpacing = nearestPointDistance(point, points, index, aspect);
     const spreadAlong = point.spatialSpread
@@ -192,7 +200,8 @@ export function createColorFieldPlan({
     aspect,
     topology,
     seed,
-    baseColor: mixColors(adapted.dark, "#05060A", 0.38),
+    baseColor: mixColors(mixColors(adapted.dark, "#05060A", 0.38), adapted.sourceBase, adapted.lightnessPreservation),
+    shadeStrength: 1 - adapted.lightnessPreservation * rgbToHsl(hexToRgb(adapted.sourceBase)).l,
     families: families.map(({ id, weight, sourceColors }) => ({ id, weight, sourceColors })),
     anchors
   };
@@ -337,8 +346,8 @@ export function sampleColorField(plan: ColorFieldPlan, x: number, y: number) {
   }
 
   const edgeDistance = Math.min(clamp01(x), clamp01(y), clamp01(1 - x), clamp01(1 - y));
-  const edgeShade = 0.88 + Math.min(0.12, edgeDistance * 0.48);
-  const verticalShade = 1 - clamp01(y) * 0.075;
+  const edgeShade = 1 - plan.shadeStrength * (0.12 - Math.min(0.12, edgeDistance * 0.48));
+  const verticalShade = 1 - plan.shadeStrength * clamp01(y) * 0.075;
 
   return rgbToHex({
     r: (red / totalWeight) * edgeShade * verticalShade,
@@ -407,6 +416,21 @@ function adaptSpatialPalette(
     ...validRegions.map((region) => region.color),
     ...fallbackColors.map(normalizeHex)
   ]);
+  const regionWeight = validRegions.reduce((sum, region) => sum + region.weight, 0);
+  const sourceBase = regionWeight > 0
+    ? rgbToHex(validRegions.reduce((mean, region) => {
+      const color = hexToRgb(region.color);
+      const weight = region.weight / regionWeight;
+      return { r: mean.r + color.r * weight, g: mean.g + color.g * weight, b: mean.b + color.b * weight };
+    }, { r: 0, g: 0, b: 0 }))
+    : normalizeHex(palette.primary);
+  const luminance = regionWeight > 0
+    ? validRegions.reduce((sum, region) => sum + relativeLuminance(region.color) * region.weight / regionWeight, 0)
+    : palette.averageLuminance;
+  // Fade out dark-range compression as the source becomes bright. A white
+  // cover reaches its actual sampled colors instead of a fixed gray/purple field.
+  const lightnessAmount = clamp01((luminance - 0.3) / 0.5);
+  const lightnessPreservation = lightnessAmount * lightnessAmount * (3 - 2 * lightnessAmount);
   const fallbackSignature = [
     ...colors,
     palette.averageLuminance.toFixed(4),
@@ -420,6 +444,8 @@ function adaptSpatialPalette(
     colors,
     regions: validRegions,
     dark: normalizeHex(palette.dark),
+    sourceBase,
+    lightnessPreservation,
     kind: palette.kind
   };
 }
@@ -428,12 +454,12 @@ function prepareFieldColors(palette: AdaptedPalette) {
   const colorful = palette.kind === "colorful";
   return palette.colors.slice(0, 8).map((color, index): PreparedColor => {
     const source = rgbToHsl(hexToRgb(color));
-    // Compress global luminance energy without deciding the lyric safe area's
-    // final local contrast (owned by the downstream readability pass).
-    const lightness = colorful
+    const compressedLightness = colorful
       ? 0.27 + clamp(source.l, 0.08, 0.92) * 0.18
       : 0.25 + clamp(source.l, 0.08, 0.92) * 0.12;
-    const saturationScale = colorful ? (index % 2 === 0 ? 0.94 : 0.86) : 0.58;
+    const lightness = compressedLightness + (source.l - compressedLightness) * palette.lightnessPreservation;
+    const compressedSaturation = colorful ? (index % 2 === 0 ? 0.94 : 0.86) : 0.58;
+    const saturationScale = compressedSaturation + (1 - compressedSaturation) * palette.lightnessPreservation;
     return {
       source: color,
       field: adjustLightness(color, lightness, saturationScale)
@@ -529,6 +555,29 @@ function createFamilySchedule(families: ColorFamily[], count: number) {
     schedule.push(families[selected]);
   }
   return schedule;
+}
+
+/** Preserve coverage within a hue family too: white and lavender can both be
+ * cool, but a small lavender drawing must not receive half of the anchors. */
+function createRegionColorBudgets(points: AnchorPoint[], families: ColorFamily[]) {
+  const budgets = new Map<string, Map<string, number>>();
+  for (const family of families) {
+    const count = points.filter(point => point.familyId === family.id).length;
+    const weights = new Map<string, number>();
+    for (const region of family.regions) weights.set(region.fieldColor, (weights.get(region.fieldColor) ?? 0) + region.weight);
+    const total = [...weights.values()].reduce((sum, weight) => sum + weight, 0);
+    const shares = [...weights].map(([color, weight]) => ({ color, exact: weight / total * count }));
+    const budget = new Map(shares.map(share => [share.color, Math.floor(share.exact)]));
+    const remainder = count - [...budget.values()].reduce((sum, value) => sum + value, 0);
+    const ordered = [...shares].sort((a, b) =>
+      (b.exact - Math.floor(b.exact)) - (a.exact - Math.floor(a.exact)) || a.color.localeCompare(b.color));
+    for (let index = 0; index < remainder; index++) {
+      const color = ordered[index].color;
+      budget.set(color, budget.get(color)! + 1);
+    }
+    budgets.set(family.id, budget);
+  }
+  return budgets;
 }
 
 function allocateFamilyEnergies(points: AnchorPoint[], localEnergies: number[], families: ColorFamily[]) {

@@ -22,7 +22,7 @@ async function run() {
   assert.match(packageJson.scripts.typecheck, /npm run electron:typecheck/, "the main typecheck includes Electron checkJs");
   assert.equal(
     packageJson.scripts["electron:typecheck"],
-    "tsc --project tsconfig.electron.json",
+    "tsc --project config/typescript/tsconfig.electron.json",
     "Electron type-aware analysis has one deterministic command"
   );
   console.log(`Electron static-analysis contracts passed for ${productionFiles.length} production files`);

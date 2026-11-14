@@ -81,6 +81,7 @@ These variables govern only the app mutation origin. AI provider Base URL policy
 | `lib/` | Document transactions, parsers, export, safe fetch, layout, and style logic |
 | `electron/` | Electron main process, preload, IPC, security boundaries, and desktop persistence |
 | `web-lite/` | Static Web Lite entry point and browser-specific adapters |
+| `config/` | Playwright and dedicated TypeScript configurations |
 | `scripts/` | Builds, regressions, audits, artifact checks, and maintenance tools |
 | `tests/` | Playwright tests and test resources |
 | `public/` | Runtime icons, fonts, and matching licenses |

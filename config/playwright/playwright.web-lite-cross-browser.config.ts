@@ -1,4 +1,7 @@
 import { defineConfig } from "@playwright/test";
+import path from "node:path";
+
+const projectRoot = path.resolve(__dirname, "../..");
 
 const supportedProjects = ["firefox", "webkit"] as const;
 const selectedBrowser = process.env.WEB_LITE_BROWSER;
@@ -10,7 +13,7 @@ if (selectedBrowser && !supportedProjects.includes(selectedBrowser as (typeof su
 const reportSegment = selectedBrowser ?? "all";
 
 export default defineConfig({
-  testDir: "./tests/web-lite-cross-browser",
+  testDir: path.join(projectRoot, "tests/web-lite-cross-browser"),
   fullyParallel: false,
   forbidOnly: Boolean(process.env.CI),
   workers: 1,
@@ -23,12 +26,12 @@ export default defineConfig({
     [
       "html",
       {
-        outputFolder: `playwright-report/web-lite-cross-browser/${reportSegment}`,
+        outputFolder: path.join(projectRoot, `playwright-report/web-lite-cross-browser/${reportSegment}`),
         open: "never"
       }
     ]
   ],
-  outputDir: `test-results/web-lite-cross-browser/${reportSegment}`,
+  outputDir: path.join(projectRoot, `test-results/web-lite-cross-browser/${reportSegment}`),
   use: {
     acceptDownloads: true,
     colorScheme: "dark",

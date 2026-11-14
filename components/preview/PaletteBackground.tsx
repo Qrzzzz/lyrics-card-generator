@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { BACKGROUND_GRID_SIZE_BY_DENSITY, resolveBackgroundGridDensity } from "@/lib/background-grid";
-import { DEFAULT_PALETTE } from "@/lib/palette-background";
+import { DEFAULT_PALETTE, relativeLuminance } from "@/lib/palette-background";
 import {
   createColorFieldMesh,
   createColorFieldPlan,
@@ -34,6 +34,7 @@ export function PaletteBackground({
     return { plan: nextPlan, mesh: createColorFieldMesh(nextPlan) };
   }, [activePalette, height, spatialPalette, width, layoutSeed]);
   const filterId = `palette-field-soften-${plan.seed.toString(16)}`;
+  const gridColor = relativeLuminance(plan.baseColor) > 0.5 ? "0,0,0" : "255,255,255";
 
   return (
     <div
@@ -81,7 +82,7 @@ export function PaletteBackground({
           data-card-fine-grid="true"
           className="absolute inset-0 opacity-[0.1]"
           style={{
-            backgroundImage: "linear-gradient(rgba(255,255,255,0.34) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.34) 1px, transparent 1px)",
+            backgroundImage: `linear-gradient(rgba(${gridColor},0.34) 1px, transparent 1px), linear-gradient(90deg, rgba(${gridColor},0.34) 1px, transparent 1px)`,
             backgroundSize: `${gridSize}px ${gridSize}px`
           }}
         />

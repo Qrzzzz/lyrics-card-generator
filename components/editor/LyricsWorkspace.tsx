@@ -430,48 +430,43 @@ export function LyricsWorkspace({
                     onClick={(event) => documentController.updateCursor(event, "lyrics")}
                     wrap="soft"
                     placeholder={t("lyricPlaceholder")}
-                    className="field-shell lyrics-document-editor control-focus block min-h-[280px] min-w-0 w-full resize-none overflow-x-hidden overflow-y-hidden rounded-lg px-3 py-3 text-sm leading-[1.75]"
+                    className="field-shell lyrics-document-editor control-focus block min-h-[280px] min-w-0 w-full resize-none overflow-x-hidden overflow-y-hidden rounded-b-lg px-3 py-3 text-sm leading-[1.75]"
                     data-testid="lyrics-editor-original"
                   />
                   <EditorMeasurementMirror
                     measureRef={lyricsMeasureRef}
                     value={lyrics}
-                    className="field-shell lyrics-document-editor block min-h-[280px] min-w-0 w-full resize-none overflow-x-hidden overflow-y-hidden rounded-lg px-3 py-3 text-sm leading-[1.75]"
+                    className="field-shell lyrics-document-editor block min-h-[280px] min-w-0 w-full resize-none overflow-x-hidden overflow-y-hidden rounded-b-lg px-3 py-3 text-sm leading-[1.75]"
                   />
                 </div>
               </EditorColumn>
               {showTranslation ? (
                 <EditorColumn label={copy.translation} htmlFor={translationId} active={documentController.activeEditor === "translation"} activeLabel={copy.activeColumn}>
-                  <div
-                    className="lyrics-translation-editor-shell rounded-[10px] p-px"
-                    style={{ background: `color-mix(in srgb, ${themeColor} 24%, rgb(var(--input-border)))` }}
-                  >
-                    <div className="relative min-w-0">
-                      <AtomicLyricsTextarea
-                        ref={translationRef}
-                        separatorHint={separatorLabels.tooltip}
-                        onUndo={documentController.undoOperation}
-                        onRedo={documentController.redoOperation}
-                        canUndo={documentController.canUndo}
-                        canRedo={documentController.canRedo}
-                        id={translationId}
-                        value={translationText}
-                        onChange={documentController.onTranslationEditorChange}
-                        onFocus={(event) => documentController.onEditorFocus(event, "translation")}
-                        onSelect={(event) => documentController.updateCursor(event, "translation")}
-                        onKeyUp={(event) => documentController.updateCursor(event, "translation")}
-                        onClick={(event) => documentController.updateCursor(event, "translation")}
-                        wrap="soft"
-                        placeholder={t("translationPlaceholder")}
-                        className="field-shell lyrics-document-editor control-focus block min-h-[280px] min-w-0 w-full resize-none overflow-x-hidden overflow-y-hidden rounded-[9px] border-transparent px-3 py-3 text-sm leading-[1.75]"
-                        data-testid="lyrics-editor-translation"
-                      />
-                      <EditorMeasurementMirror
-                        measureRef={translationMeasureRef}
-                        value={translationText}
-                        className="field-shell lyrics-document-editor block min-h-[280px] min-w-0 w-full resize-none overflow-x-hidden overflow-y-hidden rounded-[9px] border-transparent px-3 py-3 text-sm leading-[1.75]"
-                      />
-                    </div>
+                  <div className="relative min-w-0">
+                    <AtomicLyricsTextarea
+                      ref={translationRef}
+                      separatorHint={separatorLabels.tooltip}
+                      onUndo={documentController.undoOperation}
+                      onRedo={documentController.redoOperation}
+                      canUndo={documentController.canUndo}
+                      canRedo={documentController.canRedo}
+                      id={translationId}
+                      value={translationText}
+                      onChange={documentController.onTranslationEditorChange}
+                      onFocus={(event) => documentController.onEditorFocus(event, "translation")}
+                      onSelect={(event) => documentController.updateCursor(event, "translation")}
+                      onKeyUp={(event) => documentController.updateCursor(event, "translation")}
+                      onClick={(event) => documentController.updateCursor(event, "translation")}
+                      wrap="soft"
+                      placeholder={t("translationPlaceholder")}
+                      className="field-shell lyrics-document-editor control-focus block min-h-[280px] min-w-0 w-full resize-none overflow-x-hidden overflow-y-hidden rounded-b-lg px-3 py-3 text-sm leading-[1.75]"
+                      data-testid="lyrics-editor-translation"
+                    />
+                    <EditorMeasurementMirror
+                      measureRef={translationMeasureRef}
+                      value={translationText}
+                      className="field-shell lyrics-document-editor block min-h-[280px] min-w-0 w-full resize-none overflow-x-hidden overflow-y-hidden rounded-b-lg px-3 py-3 text-sm leading-[1.75]"
+                    />
                   </div>
                 </EditorColumn>
               ) : null}
@@ -587,10 +582,10 @@ function EditorColumn({
   children: ReactNode;
 }) {
   return (
-    <div className="min-w-0" data-editor-column-active={active ? "true" : "false"}>
-      <label htmlFor={htmlFor} className="lyrics-editor-column-heading sticky top-0 z-10 mb-1 flex min-h-9 items-center justify-between gap-2 rounded-md border px-3 py-1.5 text-sm font-semibold">
+    <div className="lyrics-editor-column min-w-0 rounded-lg border" data-editor-column-active={active ? "true" : "false"}>
+      <label htmlFor={htmlFor} className="lyrics-editor-column-heading sticky top-0 z-10 flex min-h-10 items-center justify-between gap-2 rounded-t-lg border-b px-3 py-2 text-sm font-semibold">
         <span>{label}</span>
-        {active ? <span aria-hidden="true" className="text-xs font-medium">{activeLabel}</span> : null}
+        {active ? <span aria-hidden="true" className="lyrics-editor-column-status text-xs font-medium">{activeLabel}</span> : null}
       </label>
       {children}
     </div>

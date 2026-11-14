@@ -8,7 +8,7 @@
 
 <p>
   <strong>言語</strong><br/>
-  <a href="./README.md">简体中文</a> ·
+  <a href="../../README.md">简体中文</a> ·
   <a href="./README.zh-TW.md">繁體中文</a> ·
   <a href="./README.en.md">English</a> ·
   <a href="./README.fr.md">Français</a> ·
@@ -19,11 +19,11 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="./docs/releases/v6.10.2.ja.md">リリースノート</a> ·
+  <a href="../releases/v6.10.3.ja.md">リリースノート</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
-  <a href="./docs/development.en.md">ローカル開発</a> ·
-  <a href="./LICENSE">ライセンス</a>
+  <a href="../development.en.md">ローカル開発</a> ·
+  <a href="../../LICENSE">ライセンス</a>
 </p>
 
 ![Platform](https://img.shields.io/badge/Platform-Windows%20Desktop-111827)
@@ -42,7 +42,7 @@
 
 <table>
   <tr>
-    <td align="center" valign="top"><img src="./docs/readme-assets/screenshots/step-3.ja.webp" alt="日本語インターフェースのステップ3レイアウト設定と歌詞カードのライブプレビュー" width="100%" /><br/><sub><b>ステップ 3：レイアウト · アルバムカバーから抽出したダイナミックカラー</b></sub></td>
+    <td align="center" valign="top"><img src="../readme-assets/screenshots/step-3.ja.webp" alt="日本語インターフェースのステップ3レイアウト設定と歌詞カードのライブプレビュー" width="100%" /><br/><sub><b>ステップ 3：レイアウト · アルバムカバーから抽出したダイナミックカラー</b></sub></td>
   </tr>
 </table>
 
@@ -53,8 +53,8 @@
 
 <table>
   <tr>
-    <td width="50%" align="center" valign="top"><sub><b>翻訳なし · 日本語</b></sub><br/><img src="./docs/readme-assets/cards/ja.single.webp" alt="翻訳なしの日本語歌詞カード" width="100%" /></td>
-    <td width="50%" align="center" valign="top"><sub><b>翻訳あり · 英語原文 + 日本語訳</b></sub><br/><img src="./docs/readme-assets/cards/ja.bilingual.webp" alt="英語原文と日本語訳を組み合わせた歌詞カード" width="100%" /></td>
+    <td width="50%" align="center" valign="top"><sub><b>翻訳なし · 日本語</b></sub><br/><img src="../readme-assets/cards/ja.single.webp" alt="翻訳なしの日本語歌詞カード" width="100%" /></td>
+    <td width="50%" align="center" valign="top"><sub><b>翻訳あり · 英語原文 + 日本語訳</b></sub><br/><img src="../readme-assets/cards/ja.bilingual.webp" alt="英語原文と日本語訳を組み合わせた歌詞カード" width="100%" /></td>
   </tr>
 </table>
 
@@ -64,7 +64,7 @@
 
 <img
   align="right"
-  src="./public/app-icon.png"
+  src="../../public/app-icon.png"
   alt="Lyrics Card Generator icon"
   width="200"
 />
@@ -76,19 +76,19 @@
 
 
 
-* Windows x64 インストーラー：`Lyrics.Card.Generator.Setup.6.10.2.exe`
+* Windows x64 インストーラー：`Lyrics.Card.Generator.Setup.6.10.3.exe`
 
 v6.2.2 以降、配布するデスクトップパッケージは Windows x64 Setup のみです。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v6.10.2 · リリースノート
+### v6.10.3 · リリースノート
 
-**2026-11-12**
+**2026-11-14**
 
-v6.10.2 — 6.10.1 で準備したウィンドウ操作とクリック時の花火の改善を引き継ぎ、重複する回帰テストと実装詳細に依存するアサーションを整理し、インストール後の起動検証を修正しました。
+v6.10.3 — 明るいジャケットが暗くなる問題を修正し、原文と訳文の見出しを統一して、リポジトリのルートを整理しました。
 
-[简体中文](./docs/releases/v6.10.2.zh-CN.md) · [繁體中文](./docs/releases/v6.10.2.zh-TW.md) · [English](./docs/releases/v6.10.2.en.md) · [Français](./docs/releases/v6.10.2.fr.md) · [日本語](./docs/releases/v6.10.2.ja.md) · [Español](./docs/releases/v6.10.2.es.md)
+[简体中文](../releases/v6.10.3.zh-CN.md) · [繁體中文](../releases/v6.10.3.zh-TW.md) · [English](../releases/v6.10.3.en.md) · [Français](../releases/v6.10.3.fr.md) · [日本語](../releases/v6.10.3.ja.md) · [Español](../releases/v6.10.3.es.md)
 
 <a id="主な機能"></a>
 
@@ -141,7 +141,7 @@ v6.10.2 — 6.10.1 で準備したウィンドウ操作とクリック時の花�
 * Electron が Next.js の画面とローカル API をまとめます。EXE は同梱サービスを `127.0.0.1` の動的ポートで起動するため、利用者による Node.js の導入は不要です
 * オフライン起動では、手動編集、ローカルカバー、ローカル MP3 / FLAC / M4A 解析、スタイル調整、PNG / WebP / JPG 書き出しを利用できます
 * 音楽サービスのリンク、NetEase Cloud Music 検索、リモートのカバーと歌詞、AI 翻訳、GitHub の更新確認にはネットワーク接続が必要です
-* 保守担当者向け情報は[デスクトップ保守ガイド](./docs/desktop.md)と[英語の開発ガイド](./docs/development.en.md)にあります
+* 保守担当者向け情報は[デスクトップ保守ガイド](../desktop.md)と[英語の開発ガイド](../development.en.md)にあります
 
 ## 🙏 謝辞
 
@@ -155,7 +155,7 @@ v6.10.2 — 6.10.1 で準備したウィンドウ操作とクリック時の花�
 
 [ReactBits](https://www.reactbits.dev/) に感謝します。Spark Cursor などのモーションを含む、さまざまな UI アイデアの着想を提供してくれました。
 
-ボタンとスイッチのデザインの参考となった [SaltUI](https://github.com/Moriafly/SaltUI) と作者 [Moriafly](https://github.com/Moriafly) に感謝します。React/CSS で本アプリのテーマと操作に合わせて調整し、入力欄とスライダーは従来のままです。[Apache-2.0 ライセンス](./public/licenses/LICENSE-SaltUI.txt)と[第三者表示](./public/licenses/THIRD-PARTY-NOTICES.txt)をご確認ください。
+ボタンとスイッチのデザインの参考となった [SaltUI](https://github.com/Moriafly/SaltUI) と作者 [Moriafly](https://github.com/Moriafly) に感謝します。React/CSS で本アプリのテーマと操作に合わせて調整し、入力欄とスライダーは従来のままです。[Apache-2.0 ライセンス](../../public/licenses/LICENSE-SaltUI.txt)と[第三者表示](../../public/licenses/THIRD-PARTY-NOTICES.txt)をご確認ください。
 
 [Rangerov](https://github.com/rangerov0716) に感謝します。このプロジェクトへの関心と意見に感謝します。
 
@@ -185,4 +185,4 @@ v6.10.2 — 6.10.1 で準備したウィンドウ操作とクリック時の花�
 
 個人、非商用、教育、評価目的でソースコードを閲覧、ダウンロード、実行し、個人的に改変できます。商用利用、再配布、再パッケージング、公開された改変版、または本プロジェクトを基にした競合製品には、権利者からの事前の書面許可が必要です。
 
-同梱の[源ノ角ゴシック](./public/fonts/LICENSE-SourceHanSans.txt)、[源ノ明朝](./public/fonts/LICENSE-SourceHanSerif.txt)、[Mona Sans](./public/fonts/LICENSE-MonaSans.txt)には、それぞれ SIL Open Font License 1.1 が適用され、本プロジェクト独自のライセンス制限は適用されません。その他の第三者コンポーネントには各自のライセンスが適用されます。[LICENSE](./LICENSE) と[第三者に関する通知](./public/licenses/THIRD-PARTY-NOTICES.txt)をご覧ください。
+同梱の[源ノ角ゴシック](../../public/fonts/LICENSE-SourceHanSans.txt)、[源ノ明朝](../../public/fonts/LICENSE-SourceHanSerif.txt)、[Mona Sans](../../public/fonts/LICENSE-MonaSans.txt)には、それぞれ SIL Open Font License 1.1 が適用され、本プロジェクト独自のライセンス制限は適用されません。その他の第三者コンポーネントには各自のライセンスが適用されます。[LICENSE](../../LICENSE) と[第三者に関する通知](../../public/licenses/THIRD-PARTY-NOTICES.txt)をご覧ください。

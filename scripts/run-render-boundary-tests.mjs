@@ -27,7 +27,7 @@ try {
       [
         path.join(projectRoot, "node_modules", "@playwright", "test", "cli.js"),
         "test",
-        "--config=playwright.render-boundaries.config.ts"
+        "--config=config/playwright/playwright.render-boundaries.config.ts"
       ],
       {
         cwd: projectRoot,

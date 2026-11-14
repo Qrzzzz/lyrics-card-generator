@@ -26,7 +26,8 @@
       "@/*": [
         "./*"
       ]
-    }
+    },
+    "tsBuildInfoFile": "./output/cache/typescript/app.tsbuildinfo"
   },
   "include": [
     "next-env.d.ts",
