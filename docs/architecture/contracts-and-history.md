@@ -12,7 +12,7 @@
 - `ai-request-contract.js` 将 IPC 的 unknown 输入变成经验证的提示词和推理开关，错误类型或超长内容在凭据读取、provider 请求之前退出。
 - sandbox preload 不能加载本地 CommonJS 模块。其内联剪贴板预算由共享 JSON 生成，生成检查会检测漂移；没有放宽沙箱限制。
 
-`tsconfig.contracts.json` 对上述校验模块及历史预算模块启用 strict/checkJs，接入 `npm run typecheck`。其余 Electron 模块继续保留现有 checkJs 基线，逐模块扩展严格检查，不使用全局 ts-ignore。`contracts:test` 对每个样式字段、旧数据、往返与设置规范化进行行为验证。
+`config/typescript/tsconfig.contracts.json` 对上述校验模块及历史预算模块启用 strict/checkJs，接入 `npm run typecheck`。其余 Electron 模块继续保留现有 checkJs 基线，逐模块扩展严格检查，不使用全局 ts-ignore。`contracts:test` 对每个样式字段、旧数据、往返与设置规范化进行行为验证。
 
 ## 领域输入、失败与取消
 

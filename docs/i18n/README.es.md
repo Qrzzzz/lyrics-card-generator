@@ -8,7 +8,7 @@
 
 <p>
   <strong>Idioma</strong><br/>
-  <a href="./README.md">简体中文</a> ·
+  <a href="../../README.md">简体中文</a> ·
   <a href="./README.zh-TW.md">繁體中文</a> ·
   <a href="./README.en.md">English</a> ·
   <a href="./README.fr.md">Français</a> ·
@@ -19,11 +19,11 @@
 <p>
   <strong>Navegación</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Descargar la última versión</a> ·
-  <a href="./docs/releases/v6.10.2.es.md">Notas de la versión</a> ·
+  <a href="../releases/v6.10.3.es.md">Notas de la versión</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Web Lite en línea</a> ·
   <a href="#funciones-principales">Funciones principales</a> ·
-  <a href="./docs/development.en.md">Desarrollo local</a> ·
-  <a href="./LICENSE">Licencia</a>
+  <a href="../development.en.md">Desarrollo local</a> ·
+  <a href="../../LICENSE">Licencia</a>
 </p>
 
 ![Platform](https://img.shields.io/badge/Platform-Windows%20Desktop-111827)
@@ -42,7 +42,7 @@
 
 <table>
   <tr>
-    <td align="center" valign="top"><img src="./docs/readme-assets/screenshots/step-3.es.webp" alt="Ajustes de diseño del paso 3 y vista previa en vivo de la tarjeta en la interfaz en español" width="100%" /><br/><sub><b>Paso 3: Diseño · Colores dinámicos extraídos de la portada</b></sub></td>
+    <td align="center" valign="top"><img src="../readme-assets/screenshots/step-3.es.webp" alt="Ajustes de diseño del paso 3 y vista previa en vivo de la tarjeta en la interfaz en español" width="100%" /><br/><sub><b>Paso 3: Diseño · Colores dinámicos extraídos de la portada</b></sub></td>
   </tr>
 </table>
 
@@ -53,8 +53,8 @@
 
 <table>
   <tr>
-    <td width="50%" align="center" valign="top"><sub><b>Sin traducción · Español</b></sub><br/><img src="./docs/readme-assets/cards/es.single.webp" alt="Tarjeta de letras en español sin traducción" width="100%" /></td>
-    <td width="50%" align="center" valign="top"><sub><b>Con traducción · Texto en inglés + traducción al español</b></sub><br/><img src="./docs/readme-assets/cards/es.bilingual.webp" alt="Tarjeta de letras en inglés con traducción al español" width="100%" /></td>
+    <td width="50%" align="center" valign="top"><sub><b>Sin traducción · Español</b></sub><br/><img src="../readme-assets/cards/es.single.webp" alt="Tarjeta de letras en español sin traducción" width="100%" /></td>
+    <td width="50%" align="center" valign="top"><sub><b>Con traducción · Texto en inglés + traducción al español</b></sub><br/><img src="../readme-assets/cards/es.bilingual.webp" alt="Tarjeta de letras en inglés con traducción al español" width="100%" /></td>
   </tr>
 </table>
 
@@ -64,7 +64,7 @@ Ambas imágenes se exportaron directamente desde la aplicación con anchura y al
 
 <img
   align="right"
-  src="./public/app-icon.png"
+  src="../../public/app-icon.png"
   alt="Lyrics Card Generator icon"
   width="200"
 />
@@ -76,19 +76,19 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 
 
-* Instalador de Windows x64: `Lyrics.Card.Generator.Setup.6.10.2.exe`
+* Instalador de Windows x64: `Lyrics.Card.Generator.Setup.6.10.3.exe`
 
 A partir de v6.2.2, Setup para Windows x64 es el único paquete de escritorio distribuido.
 
 > La compilación actual no está firmada. Windows puede mostrar una advertencia de SmartScreen, algo habitual en aplicaciones personales sin firma.
 
-### v6.10.2 · Notas de la versión
+### v6.10.3 · Notas de la versión
 
-**2026-11-12**
+**2026-11-14**
 
-v6.10.2 — Incluye las mejoras de los controles de ventana y las chispas al hacer clic preparadas para 6.10.1, elimina regresiones duplicadas y aserciones ligadas a la implementación, y corrige la verificación del inicio tras la instalación.
+v6.10.3 — Conserva los colores de las portadas claras, unifica los encabezados del texto original y la traducción, y simplifica la raíz del repositorio.
 
-[简体中文](./docs/releases/v6.10.2.zh-CN.md) · [繁體中文](./docs/releases/v6.10.2.zh-TW.md) · [English](./docs/releases/v6.10.2.en.md) · [Français](./docs/releases/v6.10.2.fr.md) · [日本語](./docs/releases/v6.10.2.ja.md) · [Español](./docs/releases/v6.10.2.es.md)
+[简体中文](../releases/v6.10.3.zh-CN.md) · [繁體中文](../releases/v6.10.3.zh-TW.md) · [English](../releases/v6.10.3.en.md) · [Français](../releases/v6.10.3.fr.md) · [日本語](../releases/v6.10.3.ja.md) · [Español](../releases/v6.10.3.es.md)
 
 <a id="funciones-principales"></a>
 
@@ -141,7 +141,7 @@ v6.10.2 — Incluye las mejoras de los controles de ventana y las chispas al hac
 * Electron integra la interfaz Next.js y la API local; el EXE inicia el servicio incluido en un puerto dinámico de `127.0.0.1`, sin que el usuario tenga que instalar Node.js
 * El modo sin conexión cubre la edición manual, portadas locales, análisis de MP3 / FLAC / M4A locales, estilos y exportación PNG / WebP / JPG
 * Los enlaces musicales, la búsqueda en NetEase Cloud Music, las portadas y letras remotas, la traducción con IA y las actualizaciones de GitHub requieren conexión
-* Los mantenedores pueden consultar la [guía de mantenimiento de escritorio](./docs/desktop.md) y la [guía de desarrollo en inglés](./docs/development.en.md)
+* Los mantenedores pueden consultar la [guía de mantenimiento de escritorio](../desktop.md) y la [guía de desarrollo en inglés](../development.en.md)
 
 ## 🙏 Agradecimientos
 
@@ -155,7 +155,7 @@ Gracias a [ChatGPT 6 Astra](https://chatgpt.com/) por ayudar durante el desarrol
 
 Gracias a [ReactBits](https://www.reactbits.dev/) por varias ideas de UI, incluidas inspiraciones de animación como Spark Cursor.
 
-Gracias a [SaltUI](https://github.com/Moriafly/SaltUI) y a [Moriafly](https://github.com/Moriafly) por la inspiración para los botones e interruptores. La adaptación en React/CSS sigue los temas e interacciones de esta aplicación; los campos y deslizadores mantienen su estilo original. Consulta la [licencia Apache-2.0](./public/licenses/LICENSE-SaltUI.txt) y los [avisos de terceros](./public/licenses/THIRD-PARTY-NOTICES.txt).
+Gracias a [SaltUI](https://github.com/Moriafly/SaltUI) y a [Moriafly](https://github.com/Moriafly) por la inspiración para los botones e interruptores. La adaptación en React/CSS sigue los temas e interacciones de esta aplicación; los campos y deslizadores mantienen su estilo original. Consulta la [licencia Apache-2.0](../../public/licenses/LICENSE-SaltUI.txt) y los [avisos de terceros](../../public/licenses/THIRD-PARTY-NOTICES.txt).
 
 Gracias a [Rangerov](https://github.com/rangerov0716) por prestar atención a este proyecto y aportar sugerencias.
 
@@ -186,4 +186,4 @@ Este proyecto se publica bajo una licencia Source Available personalizada, no un
 
 Puedes ver, descargar, ejecutar y modificar de forma privada el código fuente para fines personales, no comerciales, educativos y de evaluación. El uso comercial, la redistribución, el reempaquetado, las versiones modificadas públicas y los productos competidores basados en este proyecto requieren autorización previa por escrito del titular de los derechos.
 
-Las fuentes incluidas [Source Han Sans](./public/fonts/LICENSE-SourceHanSans.txt), [Source Han Serif](./public/fonts/LICENSE-SourceHanSerif.txt) y [Mona Sans](./public/fonts/LICENSE-MonaSans.txt) se rigen por la SIL Open Font License 1.1 y no están sujetas a las restricciones de la licencia propietaria del proyecto. Los demás componentes de terceros conservan sus propias licencias. Consulta [LICENSE](./LICENSE) y los [avisos de terceros](./public/licenses/THIRD-PARTY-NOTICES.txt).
+Las fuentes incluidas [Source Han Sans](../../public/fonts/LICENSE-SourceHanSans.txt), [Source Han Serif](../../public/fonts/LICENSE-SourceHanSerif.txt) y [Mona Sans](../../public/fonts/LICENSE-MonaSans.txt) se rigen por la SIL Open Font License 1.1 y no están sujetas a las restricciones de la licencia propietaria del proyecto. Los demás componentes de terceros conservan sus propias licencias. Consulta [LICENSE](../../LICENSE) y los [avisos de terceros](../../public/licenses/THIRD-PARTY-NOTICES.txt).

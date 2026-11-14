@@ -1,7 +1,10 @@
 import { defineConfig } from "@playwright/test";
+import path from "node:path";
+
+const projectRoot = path.resolve(__dirname, "../..");
 
 export default defineConfig({
-  testDir: "./tests/render-boundaries",
+  testDir: path.join(projectRoot, "tests/render-boundaries"),
   fullyParallel: false,
   forbidOnly: Boolean(process.env.CI),
   workers: 1,
@@ -11,9 +14,9 @@ export default defineConfig({
   },
   reporter: [
     ["line"],
-    ["html", { outputFolder: "playwright-report/render-boundaries", open: "never" }]
+    ["html", { outputFolder: path.join(projectRoot, "playwright-report/render-boundaries"), open: "never" }]
   ],
-  outputDir: "test-results/render-boundaries",
+  outputDir: path.join(projectRoot, "test-results/render-boundaries"),
   use: {
     acceptDownloads: true,
     baseURL: "http://127.0.0.1:3101",

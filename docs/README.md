@@ -1,8 +1,12 @@
 # 文档索引 / Documentation index
 
-此目录保存长期有效的开发、维护、测试、安全与发布文档。面向普通用户的产品概览保留在根目录 6 份 README；具体版本变更保留在 `docs/releases/`。
+此目录保存长期有效的开发、维护、测试、安全与发布文档。面向普通用户的简体中文产品概览保留在根目录 `README.md`，其余五种语言集中在 `docs/i18n/`；具体版本变更保留在 `docs/releases/`。
 
-This directory contains durable development, maintenance, testing, security, and release documentation. User-facing product summaries stay in the six root READMEs, while version-specific changes stay under `docs/releases/`.
+This directory contains durable development, maintenance, testing, security, and release documentation. The Simplified Chinese product summary stays in the root `README.md`, with five translations under `docs/i18n/`, while version-specific changes stay under `docs/releases/`.
+
+## 产品概览 / Product summaries
+
+[简体中文](../README.md) · [繁體中文](./i18n/README.zh-TW.md) · [English](./i18n/README.en.md) · [Français](./i18n/README.fr.md) · [日本語](./i18n/README.ja.md) · [Español](./i18n/README.es.md)
 
 ## 开发与维护 / Development and maintenance
 

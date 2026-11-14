@@ -56,7 +56,7 @@ export function LyricCard({
 
   const size = getCardSize(style);
   const activeCover = coverFailed ? "" : cover;
-  const textColor = resolveCardTextColor(style);
+  const textColor = resolveCardTextColor(style, size);
   const contentMode = style.contentMode ?? "lyrics";
   const showGeneratedWatermark = style.showGeneratedWatermark ?? style.showWatermark;
   const layout = getPortraitLayout(size, style, song, {

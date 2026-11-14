@@ -281,6 +281,32 @@ assert.match(componentSource, /feGaussianBlur/, "the sampled continuous field re
 assert.match(portraitSource, /width=\{size\.width\}/, "portrait cards provide actual field geometry");
 assert.match(landscapeSource, /width=\{size\.width\}/, "landscape cards provide actual field geometry");
 
+// A mostly white cover with a small lavender drawing must remain a pale field,
+// including the screenshot's custom ratio and randomized layout.
+const palePixels = new Uint8ClampedArray(40 * 40 * 4);
+for (let index = 0; index < 1600; index++) {
+  palePixels.set(index % 40 >= 36 ? [190, 187, 223, 255] : [250, 249, 253, 255], index * 4);
+}
+const palePalette = analyzePalettePixels(palePixels, 40, 40);
+assert.ok(palePalette.averageLuminance > 0.8, "white cover is correctly identified before composition");
+for (const [width, height] of [[980, 1247], [1920, 1080]]) {
+  for (const layoutSeed of [0, 58710, 99]) {
+    const palePlan = createColorFieldPlan({ width, height, palette: palePalette, layoutSeed });
+    const lightEnergy = palePlan.anchors.filter(anchor => relativeLuminance(anchor.color) > 0.8)
+      .reduce((sum, anchor) => sum + anchor.energy, 0);
+    assert.ok(lightEnergy > 0.75, "minor lavender regions cannot displace the dominant white within one hue family");
+    const luminances = Array.from({ length: 25 }, (_, i) =>
+      relativeLuminance(sampleColorField(palePlan, (i % 5) / 4, Math.floor(i / 5) / 4)));
+    assert.ok(Math.min(...luminances) > 0.65, `pale cover stays pale at ${width}x${height}, seed ${layoutSeed}`);
+    assert.ok(luminances.reduce((sum, value) => sum + value, 0) / luminances.length > 0.8,
+      "composition must not turn a predominantly white cover into a dark background");
+  }
+}
+const whitePixels = new Uint8ClampedArray(8 * 8 * 4).fill(255);
+const whitePlan = createColorFieldPlan({ width: 1080, height: 1350, palette: analyzePalettePixels(whitePixels, 8, 8) });
+assert.equal(sampleColorField(whitePlan, 0.5, 0.5), "#FFFFFF", "a white cover needs no artificial dark base");
+assert.equal(sampleColorField(whitePlan, 0, 1), "#FFFFFF", "white edges are not shaded gray");
+
 const benchmarkStart = performance.now();
 let generatedCellCount = 0;
 for (let index = 0; index < 24; index += 1) {

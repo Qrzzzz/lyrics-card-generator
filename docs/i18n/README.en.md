@@ -8,7 +8,7 @@
 
 <p>
   <strong>Language</strong><br/>
-  <a href="./README.md">简体中文</a> ·
+  <a href="../../README.md">简体中文</a> ·
   <a href="./README.zh-TW.md">繁體中文</a> ·
   <strong>English</strong> ·
   <a href="./README.fr.md">Français</a> ·
@@ -19,12 +19,12 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="./docs/releases/v6.10.2.en.md">Release Notes</a> ·
+  <a href="../releases/v6.10.3.en.md">Release Notes</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
-  <a href="./docs/web-lite-browser-support.md">Web Lite Browser Support</a> ·
+  <a href="../web-lite-browser-support.md">Web Lite Browser Support</a> ·
   <a href="#features">Features</a> ·
-  <a href="./docs/development.en.md">Local Development</a> ·
-  <a href="./LICENSE">License</a>
+  <a href="../development.en.md">Local Development</a> ·
+  <a href="../../LICENSE">License</a>
 </p>
 
 ![Platform](https://img.shields.io/badge/Platform-Windows%20Desktop-111827)
@@ -43,7 +43,7 @@
 
 <table>
   <tr>
-    <td align="center" valign="top"><img src="./docs/readme-assets/screenshots/step-3.en.webp" alt="Step 3 layout settings and live lyric card preview in the English interface" width="100%" /><br/><sub><b>Step 3: Layout · Dynamic colors from the album cover</b></sub></td>
+    <td align="center" valign="top"><img src="../readme-assets/screenshots/step-3.en.webp" alt="Step 3 layout settings and live lyric card preview in the English interface" width="100%" /><br/><sub><b>Step 3: Layout · Dynamic colors from the album cover</b></sub></td>
   </tr>
 </table>
 
@@ -54,8 +54,8 @@
 
 <table>
   <tr>
-    <td width="50%" align="center" valign="top"><sub><b>Without translation · English</b></sub><br/><img src="./docs/readme-assets/cards/en.single.webp" alt="English lyrics card without a translation" width="100%" /></td>
-    <td width="50%" align="center" valign="top"><sub><b>With translation · Japanese original + English translation</b></sub><br/><img src="./docs/readme-assets/cards/en.bilingual.webp" alt="Japanese lyrics card with an English translation" width="100%" /></td>
+    <td width="50%" align="center" valign="top"><sub><b>Without translation · English</b></sub><br/><img src="../readme-assets/cards/en.single.webp" alt="English lyrics card without a translation" width="100%" /></td>
+    <td width="50%" align="center" valign="top"><sub><b>With translation · Japanese original + English translation</b></sub><br/><img src="../readme-assets/cards/en.bilingual.webp" alt="Japanese lyrics card with an English translation" width="100%" /></td>
   </tr>
 </table>
 
@@ -65,7 +65,7 @@ Both images were exported directly from the app with automatic width, automatic 
 
 <img
   align="right"
-  src="./public/app-icon.png"
+  src="../../public/app-icon.png"
   alt="Lyrics Card Generator icon"
   width="200"
 />
@@ -77,19 +77,19 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 
 
-* Windows x64 installer: `Lyrics.Card.Generator.Setup.6.10.2.exe`
+* Windows x64 installer: `Lyrics.Card.Generator.Setup.6.10.3.exe`
 
 Starting with v6.2.2, Windows x64 Setup is the only distributed desktop package.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v6.10.2 · Release Notes
+### v6.10.3 · Release Notes
 
-**2026-11-12**
+**2026-11-14**
 
-v6.10.2 — Includes the window-control and click-spark refinements prepared for 6.10.1, removes duplicate regressions and implementation-specific assertions, and fixes installed-app startup verification.
+v6.10.3 — Preserves pale cover colors, unifies the original and translation editor headings, and simplifies the repository root.
 
-[简体中文](./docs/releases/v6.10.2.zh-CN.md) · [繁體中文](./docs/releases/v6.10.2.zh-TW.md) · [English](./docs/releases/v6.10.2.en.md) · [Français](./docs/releases/v6.10.2.fr.md) · [日本語](./docs/releases/v6.10.2.ja.md) · [Español](./docs/releases/v6.10.2.es.md)
+[简体中文](../releases/v6.10.3.zh-CN.md) · [繁體中文](../releases/v6.10.3.zh-TW.md) · [English](../releases/v6.10.3.en.md) · [Français](../releases/v6.10.3.fr.md) · [日本語](../releases/v6.10.3.ja.md) · [Español](../releases/v6.10.3.es.md)
 
 <a id="features"></a>
 
@@ -142,7 +142,7 @@ v6.10.2 — Includes the window-control and click-spark refinements prepared for
 * Electron wraps the Next.js interface and local API. The EXE starts its bundled service on a dynamic `127.0.0.1` port, so users do not need Node.js
 * Offline startup supports manual editing, local covers, local MP3 / FLAC / M4A parsing, styling, and PNG / WebP / JPG export
 * Music-platform links, NetEase Cloud Music search, remote covers and lyrics, AI translation, and GitHub update checks require a network connection
-* Maintainers can use the [desktop maintenance guide](./docs/desktop.md); setup, testing, and packaging commands are in the [development guide](./docs/development.en.md)
+* Maintainers can use the [desktop maintenance guide](../desktop.md); setup, testing, and packaging commands are in the [development guide](../development.en.md)
 
 ## 🙏 Acknowledgements
 
@@ -156,7 +156,7 @@ Thanks to [ChatGPT 6 Astra](https://chatgpt.com/) for issue diagnosis, solution 
 
 Thanks to [ReactBits](https://www.reactbits.dev/) for multiple UI ideas, including motion inspiration such as Spark Cursor.
 
-Thanks to [SaltUI](https://github.com/Moriafly/SaltUI) and [Moriafly](https://github.com/Moriafly) for the button and switch design inspiration. The React/CSS adaptation follows this app’s themes and interaction system; text fields and sliders retain their original styles. See the [Apache-2.0 license](./public/licenses/LICENSE-SaltUI.txt) and [third-party notices](./public/licenses/THIRD-PARTY-NOTICES.txt).
+Thanks to [SaltUI](https://github.com/Moriafly/SaltUI) and [Moriafly](https://github.com/Moriafly) for the button and switch design inspiration. The React/CSS adaptation follows this app’s themes and interaction system; text fields and sliders retain their original styles. See the [Apache-2.0 license](../../public/licenses/LICENSE-SaltUI.txt) and [third-party notices](../../public/licenses/THIRD-PARTY-NOTICES.txt).
 
 Thanks to [Rangerov](https://github.com/rangerov0716) for attention to this project and for providing feedback.
 
@@ -186,4 +186,4 @@ This project is released under a custom Source Available License, not a traditio
 
 You may view, download, run, and privately modify the source code for personal, non-commercial, educational, and evaluation purposes. Commercial use, redistribution, repackaging, public modified releases, and competing products based on this project require prior written permission from the copyright holder.
 
-The bundled [Source Han Sans](./public/fonts/LICENSE-SourceHanSans.txt), [Source Han Serif](./public/fonts/LICENSE-SourceHanSerif.txt), and [Mona Sans](./public/fonts/LICENSE-MonaSans.txt) fonts are each licensed under the SIL Open Font License 1.1 and are not subject to this project’s proprietary license restrictions. Other third-party components retain their own licenses. See [LICENSE](./LICENSE) and [Third-Party Notices](./public/licenses/THIRD-PARTY-NOTICES.txt).
+The bundled [Source Han Sans](../../public/fonts/LICENSE-SourceHanSans.txt), [Source Han Serif](../../public/fonts/LICENSE-SourceHanSerif.txt), and [Mona Sans](../../public/fonts/LICENSE-MonaSans.txt) fonts are each licensed under the SIL Open Font License 1.1 and are not subject to this project’s proprietary license restrictions. Other third-party components retain their own licenses. See [LICENSE](../../LICENSE) and [Third-Party Notices](../../public/licenses/THIRD-PARTY-NOTICES.txt).

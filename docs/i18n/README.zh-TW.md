@@ -8,7 +8,7 @@
 
 <p>
   <strong>語言</strong><br/>
-  <a href="./README.md">简体中文</a> ·
+  <a href="../../README.md">简体中文</a> ·
   <strong>繁體中文</strong> ·
   <a href="./README.en.md">English</a> ·
   <a href="./README.fr.md">Français</a> ·
@@ -19,11 +19,11 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="./docs/releases/v6.10.2.zh-TW.md">發布說明</a> ·
+  <a href="../releases/v6.10.3.zh-TW.md">發布說明</a> ·
   <a href="https://qrzzzz.github.io/lyrics-card-generator/">線上 Web Lite 版</a> ·
   <a href="#主要功能">主要功能</a> ·
-  <a href="./docs/development.zh-CN.md">本機開發</a> ·
-  <a href="./LICENSE">授權條款</a>
+  <a href="../development.zh-CN.md">本機開發</a> ·
+  <a href="../../LICENSE">授權條款</a>
 </p>
 
 ![Platform](https://img.shields.io/badge/Platform-Windows%20Desktop-111827)
@@ -42,7 +42,7 @@
 
 <table>
   <tr>
-    <td align="center" valign="top"><img src="./docs/readme-assets/screenshots/step-3.zh-TW.webp" alt="繁體中文介面的第三步版面設定與歌詞卡片即時預覽" width="100%" /><br/><sub><b>第三步：版面 · 專輯封面動態取色</b></sub></td>
+    <td align="center" valign="top"><img src="../readme-assets/screenshots/step-3.zh-TW.webp" alt="繁體中文介面的第三步版面設定與歌詞卡片即時預覽" width="100%" /><br/><sub><b>第三步：版面 · 專輯封面動態取色</b></sub></td>
   </tr>
 </table>
 
@@ -53,8 +53,8 @@
 
 <table>
   <tr>
-    <td width="50%" align="center" valign="top"><sub><b>無翻譯 · 繁體中文</b></sub><br/><img src="./docs/readme-assets/cards/zh-TW.single.webp" alt="繁體中文單語歌詞卡片成品" width="100%" /></td>
-    <td width="50%" align="center" valign="top"><sub><b>有翻譯 · 英文原文 + 繁體中文譯文</b></sub><br/><img src="./docs/readme-assets/cards/zh-TW.bilingual.webp" alt="英文原文與繁體中文翻譯歌詞卡片成品" width="100%" /></td>
+    <td width="50%" align="center" valign="top"><sub><b>無翻譯 · 繁體中文</b></sub><br/><img src="../readme-assets/cards/zh-TW.single.webp" alt="繁體中文單語歌詞卡片成品" width="100%" /></td>
+    <td width="50%" align="center" valign="top"><sub><b>有翻譯 · 英文原文 + 繁體中文譯文</b></sub><br/><img src="../readme-assets/cards/zh-TW.bilingual.webp" alt="英文原文與繁體中文翻譯歌詞卡片成品" width="100%" /></td>
   </tr>
 </table>
 
@@ -64,7 +64,7 @@
 
 <img
   align="right"
-  src="./public/app-icon.png"
+  src="../../public/app-icon.png"
   alt="Lyrics Card Generator icon"
   width="200"
 />
@@ -73,19 +73,19 @@
 
 
 
-* Windows x64 安裝版：`Lyrics.Card.Generator.Setup.6.10.2.exe`
+* Windows x64 安裝版：`Lyrics.Card.Generator.Setup.6.10.3.exe`
 
 從 v6.2.2 起僅提供 Windows x64 Setup 安裝程式。
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v6.10.2 · 發布說明
+### v6.10.3 · 發布說明
 
-**2026-11-12**
+**2026-11-14**
 
-v6.10.2 — 保留 6.10.1 的視窗控制項與點擊煙花改進，精簡重複回歸與依賴實作細節的斷言，修正安裝包啟動驗收流程。
+v6.10.3 — 修正淺色封面被壓暗的問題，統一原文與譯文欄頭，並精簡儲存庫根目錄。
 
-[简体中文](./docs/releases/v6.10.2.zh-CN.md) · [繁體中文](./docs/releases/v6.10.2.zh-TW.md) · [English](./docs/releases/v6.10.2.en.md) · [Français](./docs/releases/v6.10.2.fr.md) · [日本語](./docs/releases/v6.10.2.ja.md) · [Español](./docs/releases/v6.10.2.es.md)
+[简体中文](../releases/v6.10.3.zh-CN.md) · [繁體中文](../releases/v6.10.3.zh-TW.md) · [English](../releases/v6.10.3.en.md) · [Français](../releases/v6.10.3.fr.md) · [日本語](../releases/v6.10.3.ja.md) · [Español](../releases/v6.10.3.es.md)
 
 ## ✨ 主要功能
 
@@ -136,7 +136,7 @@ v6.10.2 — 保留 6.10.1 的視窗控制項與點擊煙花改進，精簡重複
 * Electron 封裝 Next.js 介面與本機 API；EXE 會在 `127.0.0.1` 的動態連接埠啟動隨包附帶的本機服務，使用者不必安裝 Node.js
 * 可離線啟動；手動編輯、本機封面、本機 MP3 / FLAC / M4A 解析、樣式調整與 PNG / WebP / JPG 匯出均可離線使用
 * 音樂平台連結、網易雲音樂搜尋、遠端封面與歌詞、AI 翻譯及 GitHub 更新檢查需要連線
-* 維護者可查看[桌面維護文件](./docs/desktop.md)；環境建置、測試與打包指令請參閱[簡體中文開發指南](./docs/development.zh-CN.md)
+* 維護者可查看[桌面維護文件](../desktop.md)；環境建置、測試與打包指令請參閱[簡體中文開發指南](../development.zh-CN.md)
 
 ## 🙏 致謝
 
@@ -150,7 +150,7 @@ v6.10.2 — 保留 6.10.1 的視窗控制項與點擊煙花改進，精簡重複
 
 感謝 [ReactBits](https://www.reactbits.dev/) 提供的多種 UI 創意，包括 Spark Cursor 等動效靈感。
 
-感謝 [SaltUI](https://github.com/Moriafly/SaltUI) 及作者 [Moriafly](https://github.com/Moriafly) 提供的按鈕與開關設計參考。本專案使用 React/CSS 配合現有主題與互動，輸入框和滑桿保留原樣；歸屬與授權請見 [Apache-2.0 授權](./public/licenses/LICENSE-SaltUI.txt)及[第三方聲明](./public/licenses/THIRD-PARTY-NOTICES.txt)。
+感謝 [SaltUI](https://github.com/Moriafly/SaltUI) 及作者 [Moriafly](https://github.com/Moriafly) 提供的按鈕與開關設計參考。本專案使用 React/CSS 配合現有主題與互動，輸入框和滑桿保留原樣；歸屬與授權請見 [Apache-2.0 授權](../../public/licenses/LICENSE-SaltUI.txt)及[第三方聲明](../../public/licenses/THIRD-PARTY-NOTICES.txt)。
 
 感謝 [Rangerov](https://github.com/rangerov0716) 對此專案的關注和提出意見。
 
@@ -180,4 +180,4 @@ v6.10.2 — 保留 6.10.1 的視窗控制項與點擊煙花改進，精簡重複
 
 你可以為了個人、非商業、學習、評估目的查看、下載、執行原始碼，並進行僅限個人使用的私下修改。未經作者書面許可，不得商用、再分發、重新打包、公開發布修改版，或基於本專案製作競爭性產品。
 
-內建的[思源黑體](./public/fonts/LICENSE-SourceHanSans.txt)、[思源宋體](./public/fonts/LICENSE-SourceHanSerif.txt)與[Mona Sans](./public/fonts/LICENSE-MonaSans.txt)分別遵循 SIL Open Font License 1.1，不適用本專案的專有授權限制。其他第三方元件遵循各自授權條款；詳見 [LICENSE](./LICENSE) 與[第三方聲明](./public/licenses/THIRD-PARTY-NOTICES.txt)。
+內建的[思源黑體](../../public/fonts/LICENSE-SourceHanSans.txt)、[思源宋體](../../public/fonts/LICENSE-SourceHanSerif.txt)與[Mona Sans](../../public/fonts/LICENSE-MonaSans.txt)分別遵循 SIL Open Font License 1.1，不適用本專案的專有授權限制。其他第三方元件遵循各自授權條款；詳見 [LICENSE](../../LICENSE) 與[第三方聲明](../../public/licenses/THIRD-PARTY-NOTICES.txt)。

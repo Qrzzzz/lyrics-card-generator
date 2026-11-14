@@ -76,25 +76,49 @@ test("free step navigation never claims earlier steps passed validation", async 
   await expect(page.locator('[data-step-id="export"]')).toHaveAttribute("data-step-state", "visited");
 });
 
-test("bilingual headings stay visible while shared scrolling and follow the active column", async ({ page }) => {
-  await openEditor(page);
-  const text = Array.from({ length: 90 }, (_, i) => `Identical line ${i}`).join("\n");
-  await page.getByTestId("lyrics-editor-original").fill(text);
-  const translated = await bilingual(page);
-  await translated.fill(text);
-  await expect(page.locator('[data-editor-column-active="true"] .lyrics-editor-column-heading')).toContainText("Translation");
-  await page.getByTestId("lyrics-editor-original").focus();
-  await expect(page.locator('[data-editor-column-active="true"] .lyrics-editor-column-heading')).toContainText("Original");
-  await page.getByTestId("lyrics-shared-scroll").evaluate(el => { el.scrollTop = 700; });
-  const scroll = await page.getByTestId("lyrics-shared-scroll").boundingBox();
-  for (const heading of await page.locator(".lyrics-editor-column-heading").all()) {
-    await expect(heading).toBeVisible();
-    const box = await heading.boundingBox();
-    expect(box!.y).toBeGreaterThanOrEqual(scroll!.y - 1);
-    expect(box!.y).toBeLessThan(scroll!.y + 40);
-  }
-  await expect(translated).toHaveValue(text);
-});
+for (const theme of ["light", "dark"] as const) {
+  test(`bilingual headings stay visible while shared scrolling and follow the active column (${theme})`, async ({ page }, testInfo) => {
+    await installDesktopFixture(page, { uiThemeMode: theme, sparkCursorEnabled: false });
+    await page.goto("/");
+    await page.locator('[data-step-id="lyrics"]').click();
+    const text = Array.from({ length: 90 }, (_, i) => `Identical line ${i}`).join("\n");
+    await page.getByTestId("lyrics-editor-original").fill(text);
+    const translated = await bilingual(page);
+    await translated.fill(text);
+    await expect(page.locator('[data-editor-column-active="true"] .lyrics-editor-column-heading')).toContainText("Translation");
+    const backgrounds = await page.locator(".lyrics-editor-column").evaluateAll(nodes =>
+      nodes.map(node => getComputedStyle(node).backgroundColor));
+    expect(backgrounds[0]).toBe(backgrounds[1]);
+    await page.locator(".lyrics-editor-column-heading").filter({ hasText: "Original" }).click();
+    await expect(page.getByTestId("lyrics-editor-original")).toBeFocused();
+    await expect(page.locator('[data-editor-column-active="true"] .lyrics-editor-column-heading')).toContainText("Original");
+    await page.getByTestId("lyrics-shared-scroll").evaluate(el => { el.scrollTop = 700; });
+    const scroll = await page.getByTestId("lyrics-shared-scroll").boundingBox();
+    for (const heading of await page.locator(".lyrics-editor-column-heading").all()) {
+      await expect(heading).toBeVisible();
+      const alpha = await heading.evaluate(node => {
+        const canvas = document.createElement("canvas");
+        canvas.width = canvas.height = 1;
+        const context = canvas.getContext("2d")!;
+        context.fillStyle = getComputedStyle(node).backgroundColor;
+        context.fillRect(0, 0, 1, 1);
+        return context.getImageData(0, 0, 1, 1).data[3];
+      });
+      expect(alpha, "sticky headings cover the manuscript scrolling underneath").toBe(255);
+      const box = await heading.boundingBox();
+      expect(box!.y).toBeGreaterThanOrEqual(scroll!.y - 1);
+      expect(box!.y).toBeLessThan(scroll!.y + 40);
+    }
+    await expect(translated).toHaveValue(text);
+    await page.locator(".lyrics-editor-column-heading").filter({ hasText: "Translation" }).click();
+    await expect(translated).toBeFocused();
+    await expect(page.locator('[data-editor-column-active="true"] .lyrics-editor-column-heading')).toContainText("Translation");
+    await page.getByTestId("lyrics-shared-scroll").evaluate(el => { el.scrollTop = 0; });
+    const screenshot = testInfo.outputPath(`bilingual-editor-${theme}.png`);
+    await page.getByTestId("lyrics-workspace-split").screenshot({ path: screenshot });
+    await testInfo.attach(`bilingual-editor-${theme}`, { path: screenshot, contentType: "image/png" });
+  });
+}
 
 test("compact workbench keeps navigation and export reachable above the preview", async ({ page }) => {
   await page.setViewportSize({ width: 1000, height: 700 });

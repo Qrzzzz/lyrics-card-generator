@@ -2665,7 +2665,7 @@ async function assertLyricsWorkspace(width, height) {
         overflowX: getComputedStyle(area).overflowX,
         overflowY: getComputedStyle(area).overflowY,
         resize: getComputedStyle(area).resize,
-        backgroundColor: getComputedStyle(area).backgroundColor,
+        surfaceBackground: background(area.closest(".lyrics-editor-column")),
         scrollWidth: area.scrollWidth,
         clientWidth: area.clientWidth
       })),
@@ -2812,9 +2812,10 @@ async function assertLyricsWorkspace(width, height) {
     assert.equal(style.overflowX, "hidden", `${width}x${height} textarea wraps long lines without horizontal scrolling`);
     assert.equal(style.overflowY, "hidden", `${width}x${height} textarea delegates scrolling to the shared viewport`);
     assert.equal(style.resize, "none", `${width}x${height} textarea disables native resize`);
-    assert.notEqual(style.backgroundColor, "rgba(0, 0, 0, 0)", `${width}x${height} keeps the lyric editor as the one readable content surface`);
+    assert.ok(style.surfaceBackground && style.surfaceBackground !== "rgba(0, 0, 0, 0)", `${width}x${height} keeps each editor column on a readable content surface`);
     assert.ok(style.scrollWidth <= style.clientWidth + 1, `${width}x${height} textarea has no horizontal overflow: ${JSON.stringify(style)}`);
   }
+  assert.equal(new Set(result.textareaStyles.map(style => style.surfaceBackground)).size, 1, `${width}x${height} gives original and translation a consistent surface`);
   assert.ok(result.textareaWidths.every((value) => value >= 260), `${width}x${height} keeps both bilingual editors usable: ${result.textareaWidths}`);
   assert.ok(result.horizontalOverflow <= 1, `${width}x${height} avoids document horizontal overflow: ${result.horizontalOverflow}`);
   if (runVisualDiagnostics) {

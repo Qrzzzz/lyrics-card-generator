@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import { resolveCardTextColor } from "@/lib/solid-background";
+import { getCardSize } from "@/lib/card-size";
 import { proxiedImageUrl } from "@/lib/image-utils";
 import {
   createBlobUrlRetirementState,
@@ -79,7 +80,7 @@ export function useResolvedTextColor(state: AppState, setState: AppStateSetter) 
   useEffect(() => {
     const style = state.style;
     const nextColor =
-      resolveCardTextColor(style);
+      resolveCardTextColor(style, getCardSize(style));
 
     if (nextColor.toLowerCase() === style.resolvedTextColor.toLowerCase()) {
       return;
@@ -92,15 +93,5 @@ export function useResolvedTextColor(state: AppState, setState: AppStateSetter) 
         resolvedTextColor: nextColor
       }
     }));
-  }, [
-    setState,
-    state.style.customTextColor,
-    state.style.resolvedTextColor,
-    state.style.textColorMode,
-    state.style.textColorPreset,
-    state.style.backgroundMode,
-    state.style.solidColor,
-    state.style.solidColorSource,
-    state.style.extractedPalette
-  ]);
+  }, [setState, state.style]);
 }
