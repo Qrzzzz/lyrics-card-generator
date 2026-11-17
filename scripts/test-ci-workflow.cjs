@@ -12,16 +12,13 @@ function validate(workflow) {
     assert.ok(!jobs[0]['continue-on-error'], `${check} remains blocking`);
   }
   const jobs = workflow.jobs;
-  for (const script of ['dependency-audit:gate', 'sbom:test', 'web-lite:check', 'font-license:test',
+  for (const script of ['dependency-audit:gate', 'sbom:test', 'font-license:test',
     'distribution-budgets:check', 'typecheck', 'lint', 'stability:test', 'coverage',
     'preferences-writer:coverage', 'electron-runtime:coverage', 'core:test']) {
     const step = commandStep(jobs.verify, `npm run ${script}`);
     assert.equal(step.if, undefined, `${script} is unconditional in verify`);
   }
   commandStep(jobs['render-boundary-regression'], 'npm run render-boundaries:test');
-  commandStep(jobs['web-lite-smoke'], 'npm run web-lite:smoke');
-  commandStep(jobs['web-lite-smoke'], 'npm run deferred-surfaces:test');
-  before(jobs['web-lite-cross-browser-smoke'], 'npm run pages:prepare', 'npm run web-lite:cross-browser-smoke');
   before(jobs['desktop-build'], 'npm run desktop:pack', 'npm run desktop:packaged-assets-test');
   commandStep(jobs['desktop-groups'], 'npm run desktop:group:${{ matrix.group }}');
   assert.deepEqual(new Set(jobs['desktop-groups'].strategy.matrix.group), new Set(['editor', 'workspace', 'data', 'native']));
@@ -62,12 +59,4 @@ for (const mutation of [
   mutation(invalid);
   assert.throws(() => validate(invalid), 'weakened executable gates must fail');
 }
-const pages = readWorkflow('.github/workflows/pages.yml');
-commandStep(pages.jobs.deploy, 'npm run web-lite:check');
-checkActions(pages);
-const benchmark = readWorkflow('.github/workflows/background-composition-benchmark.yml');
-assert.ok(benchmark.on.workflow_dispatch !== undefined);
-assert.equal(benchmark.on.push, undefined);
-assert.equal(benchmark.on.pull_request, undefined);
-assert.ok(!Object.values(workflow.jobs).some(job => job.steps?.some(step => runs(step, 'npm run background-composition:benchmark'))));
-console.log('Executable CI workflow contracts passed');
+console.log('Executable desktop CI workflow contracts passed');

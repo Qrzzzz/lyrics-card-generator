@@ -14,7 +14,6 @@ This directory contains durable development, maintenance, testing, security, and
 - [Development guide (English)](./development.en.md)
 - [Windows desktop maintenance](./desktop.md)
 - [桌面自动草稿与恢复约定](./editor-autosave.md)
-- [Web Lite browser support](./web-lite-browser-support.md)
 - [Dependabot 更新接入与验证](./dependabot.md)
 - [示例歌曲维护流程](./examples.md)
 - [SaltUI 风格控件与主题适配](./design/salt-controls.md)
@@ -25,7 +24,6 @@ This directory contains durable development, maintenance, testing, security, and
 
 - [CI 与发布门禁职责](./testing/ci-gates.md)
 - [Dependency advisory policy](./security/dependency-advisory-policy.md)
-- [Background composition acceptance contract](./testing/background-composition.md)
 
 ## 发布 / Releases
 

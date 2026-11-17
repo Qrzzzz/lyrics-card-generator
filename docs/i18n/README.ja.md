@@ -20,7 +20,6 @@
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
   <a href="../releases/v6.10.3.ja.md">リリースノート</a> ·
-  <a href="https://qrzzzz.github.io/lyrics-card-generator/">オンライン Web Lite 版</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="../development.en.md">ローカル開発</a> ·
   <a href="../../LICENSE">ライセンス</a>

@@ -18,7 +18,7 @@ async function run() {
   const publicIcon = fs.readFileSync("public/app-icon.png");
   const metadataIcon = fs.readFileSync("app/icon.png");
   assert.equal(hash(publicIcon), expected.appIconFile);
-  assert.ok(publicIcon.equals(metadataIcon), "desktop/About/Web Lite decode the same optimized PNG bytes");
+  assert.ok(publicIcon.equals(metadataIcon), "desktop/About decode the same optimized PNG bytes");
   const { data: pixels, info } = await sharp(publicIcon).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
   assert.deepEqual({ width: info.width, height: info.height, channels: info.channels }, { width: 1024, height: 1024, channels: 4 });
   assert.equal(hash(pixels), expected.appIconPixels, "lossless PNG recompression preserves every decoded RGBA pixel");

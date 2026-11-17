@@ -4,7 +4,7 @@ import { assertBrowserRuntimePolicy, assertBrowserRuntimeUser, probeBrowserRunti
 const policy = JSON.parse(fs.readFileSync('security/ci-browser-runtime.json','utf8'));
 const lock = JSON.parse(fs.readFileSync('package-lock.json','utf8'));
 assert.equal(assertBrowserRuntimePolicy(policy, lock), true);
-for (const patch of [{ schema: 2 }, { userId: 0 }, { image: 'mcr.microsoft.com/playwright:latest' }, { image: policy.image.replace(`:v${policy.playwrightVersion}`,':v0.0.0') }, { browsers: { chromium: policy.browsers.chromium } }]) {
+for (const patch of [{ schema: 2 }, { userId: 0 }, { image: 'mcr.microsoft.com/playwright:latest' }, { image: policy.image.replace(`:v${policy.playwrightVersion}`,':v0.0.0') }, { browsers: {} }]) {
   assert.throws(() => assertBrowserRuntimePolicy({ ...policy, ...patch }, lock));
 }
 assert.deepEqual(assertBrowserRuntimeUser({ expectedUserId: 1001, userId: 1001, homeOwnerId: 1001 }), { userId: 1001, homeOwnerId: 1001 });
@@ -24,4 +24,4 @@ assert.equal(closes, 2, 'a version mismatch still closes the actual browser');
 await assert.rejects(probe('1.2.3', () => { throw Error('missing executable'); }), /missing executable/);
 assert.equal(launches, 2, 'missing binaries fail before launch or any download');
 await assert.rejects(probeBrowserRuntime({ name:'fixture', expectedVersion:'1.2.3', browserType:{ ...browserType,launch:async()=>{throw Error('missing system dependency');}},access:()=>{} }), /missing system dependency/);
-console.log('CI browser runtime: locked image/version, three engines, executable failures, startup failure and mismatch cleanup passed.');
+console.log('CI browser runtime: locked image/version, desktop Chromium, executable failures, startup failure and mismatch cleanup passed.');

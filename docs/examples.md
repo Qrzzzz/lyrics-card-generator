@@ -31,7 +31,6 @@
    npm run core:test
    ```
 
-7. 在桌面版和 Web Lite 检查卡片明暗文字、键盘焦点、整卡导入以及多语言翻译切换。若共享 UI 有改动，再执行 `npm run web-lite:build` 与 `npm run web-lite:check`。
 
 ## 呈现与交互契约
 

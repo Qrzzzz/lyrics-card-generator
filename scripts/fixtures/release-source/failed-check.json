@@ -1,6 +1,6 @@
 {
   "overrideCheck": {
-    "name": "web-lite-cross-browser-smoke",
+    "name": "render-boundary-regression",
     "status": "completed",
     "conclusion": "failure"
   },

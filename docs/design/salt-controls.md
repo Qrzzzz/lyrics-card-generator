@@ -1,7 +1,6 @@
 # SaltUI-inspired controls
 
 The shared React controls adapt SaltUI's visual design to the existing Electron,
-Next.js and Web Lite renderers. They do not load Compose or a Kotlin runtime.
 
 Reference: https://github.com/Moriafly/SaltUI (Apache-2.0, Moriafly).
 The bundled license and attribution are in `public/licenses/`.

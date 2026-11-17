@@ -5,9 +5,7 @@ import { ExportTransactionMutex } from "../lib/export-transaction";
 import type { ExportSnapshot } from "../lib/export-snapshot";
 
 async function main() {
-  // The same lifecycle contract drives both adapters; the Web Lite adapter
-  // holds a cover lease, while the desktop adapter loads capture on demand.
-  for (const platform of ["desktop", "web-lite"] as const) {
+  for (const platform of ["desktop"] as const) {
     const mutex = new ExportTransactionMutex();
     let mounted: ExportSnapshot | undefined;
     let captures = 0;

@@ -107,11 +107,11 @@ Pages 有独立工作流；本入口确认桌面 Release，不声称已验证 Pa
 
 PR/main 默认构建一次 unpacked 程序，分给 editor、workspace、data、native
 四个独立 Windows runner；连续设置场景拆为偏好与工作区，功能细节仅由独立场景执行一次。
-手动调度 `desktop_shared_groups=false` 保留旧串行路径，五个必需检查均不变。
+手动调度 `desktop_shared_groups=false` 保留旧串行路径，三个必需检查均不变。
 
 Release 先对锁定 Electron 运行时闭包执行实时审计，尽早拒绝已知漏洞；最终
 安装包仍执行完整运行时审计。只复用授权的**同一最终 main SHA** 的成功 CI
-运行时，核验当前 attempt、五个检查、精确 artifact ID、main OIDC 来源证明、
+运行时，核验当前 attempt、三个检查、精确 artifact ID、main OIDC 来源证明、
 源码树、lockfile、测试/打包契约、Node/Electron/builder 版本及逐文件摘要。
 PR 或其他 SHA 的结果与产物不会替代最终 main 证据，即使 Git tree 相同。
 

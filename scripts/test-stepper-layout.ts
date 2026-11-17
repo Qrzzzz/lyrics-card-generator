@@ -101,13 +101,12 @@ assert.ok(
   "the smallest side-by-side window caps settings before the preview becomes too narrow"
 );
 
-// Source contracts ensure both desktop and Web Lite consume the tested layout
+// Source contracts ensure desktop consumes the tested layout
 // helpers rather than reintroducing independent breakpoint logic.
 const stepperSource = readFileSync(resolve("components/editor/SettingsStepper.tsx"), "utf8");
-const webLiteEditorSource = readFileSync(resolve("web-lite/WebLiteEditor.tsx"), "utf8");
 assert.ok(
   stepperSource.includes(': "content-start self-start"'),
-  "default and Web Lite steps keep natural height instead of stretching to the preview column"
+  "default steps keep natural height instead of stretching to the preview column"
 );
 assert.ok(
   !stepperSource.includes("useMeasuredStepperPanelHeight"),
@@ -146,7 +145,7 @@ assert.ok(
 );
 assert.ok(
   stepperSource.includes("compactChrome = false"),
-  "compact chrome is opt-in so shared Web Lite rendering stays unchanged"
+  "compact chrome is opt-in so default rendering stays unchanged"
 );
 assert.ok(
   stepperSource.includes("headerActions?: ReactNode") &&
@@ -216,11 +215,6 @@ assert.ok(
   editorSource.includes("companionAside={") &&
     editorSource.includes(") : activeSettingsStep?.aside"),
   "step one and preview steps place their companion panels inside the shared workbench"
-);
-assert.ok(
-  webLiteEditorSource.includes("companionAside={") &&
-    webLiteEditorSource.includes("pressureEnabled={currentStep >= 2}"),
-  "Web Lite shares the preview/export workbench and limits pressure feedback to steps three through six"
 );
 
 const songImportAsideSource = readFileSync(resolve("components/editor/SongImportAside.tsx"), "utf8");
@@ -296,9 +290,8 @@ assert.ok(
 assert.ok(
   stepperSource.includes("secondaryAction?.readinessStore") &&
     editorStepsSource.includes('testId: "copy-image-button"') &&
-    editorStepsSource.includes('t("step.copyImage")') &&
-    webLiteEditorSource.includes('testId: "copy-image-button"'),
-  "desktop and Web Lite place the clipboard action beside export under the same readiness gate"
+    editorStepsSource.includes('t("step.copyImage")'),
+  "desktop place the clipboard action beside export under the same readiness gate"
 );
 assert.ok(
   songImportAsideSource.includes('data-song-import-panel="true"') &&

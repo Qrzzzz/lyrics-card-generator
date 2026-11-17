@@ -88,8 +88,6 @@
       "jobs": [
         { "id": 1, "name": "verify", "head_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "run_attempt": 2, "status": "completed", "conclusion": "success", "check_run_url": "https://api.github.example/check-runs/1" },
         { "id": 2, "name": "render-boundary-regression", "head_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "run_attempt": 2, "status": "completed", "conclusion": "success", "check_run_url": "https://api.github.example/check-runs/2" },
-        { "id": 3, "name": "web-lite-smoke", "head_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "run_attempt": 2, "status": "completed", "conclusion": "success", "check_run_url": "https://api.github.example/check-runs/3" },
-        { "id": 4, "name": "web-lite-cross-browser-smoke", "head_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "run_attempt": 2, "status": "completed", "conclusion": "success", "check_run_url": "https://api.github.example/check-runs/4" },
         { "id": 7, "name": "desktop-packaged-regression", "head_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "run_attempt": 2, "status": "completed", "conclusion": "success", "check_run_url": "https://api.github.example/check-runs/7" }
       ]
     }

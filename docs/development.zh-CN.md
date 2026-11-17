@@ -9,7 +9,7 @@
 - Git。
 - Node.js 22（与 CI 和发布工作流一致），以及随 Node.js 安装的 npm。
 - Windows 10/11 x64：构建和验证 Windows 桌面制品时必需。Web 与大多数纯 Node.js 测试也可在其他系统运行，但不代表桌面制品已通过验证。
-- 运行浏览器测试时，需要安装 Playwright 对应的 Chromium、Firefox 或 WebKit。
+- 运行浏览器测试时，需要安装 Playwright 对应的 Chromium。
 
 项目不依赖仓库级 `.env` 文件。AI 服务的 Base URL、模型与 API Key 由应用设置管理，请勿将真实密钥写入源码、测试夹具、日志或提交内容。
 
@@ -26,12 +26,12 @@ npm ci
 浏览器测试首次运行前按需安装运行时：
 
 ```bash
-npx playwright install chromium firefox webkit
+npx playwright install chromium
 ```
 
 ## 启动开发环境
 
-### Next.js Web 界面
+### 桌面渲染层开发服务
 
 ```bash
 npm run dev
@@ -43,7 +43,6 @@ npm run dev
 npm run dev:clean
 ```
 
-这套 Web 开发界面包含 Next.js API 路由，不等同于静态 Web Lite。受支持的 `npm run dev` 会把 mutation 门禁固定到 `http://localhost:3000`；不要把该开发服务器暴露为生产部署。
 
 ### Electron 桌面界面
 
@@ -80,13 +79,11 @@ npm run start
 | `components/` | 编辑器、预览、设置与共享 React 组件 |
 | `lib/` | 文档事务、解析器、导出、安全请求、布局与样式核心逻辑 |
 | `electron/` | Electron 主进程、预加载、IPC、安全边界与桌面持久化 |
-| `web-lite/` | 静态 Web Lite 入口及浏览器专用适配层 |
 | `config/` | Playwright 与专项 TypeScript 配置 |
 | `scripts/` | 构建、回归、审计、制品检查与维护脚本 |
 | `tests/` | Playwright 浏览器测试与测试资源 |
 | `public/` | 应用图标、字体及许可等运行时静态资源 |
 | `docs/` | 开发、维护、安全、测试和发布说明 |
-| `index.html` | 由 `web-lite:build` 生成并提交的 Web Lite 成品；不要手工编辑 |
 
 ## 日常验证
 
@@ -102,7 +99,6 @@ npm run build
 - 只改 Markdown：至少检查链接、标题结构与 `git diff --check`。
 - 改解析、事务、导出或安全边界：运行对应单项测试，并补跑 `core:test`。
 - 改 Electron：补跑 `stability:test`、`electron-runtime:coverage` 或相关桌面交互测试。
-- 改 Web Lite 或共享 UI：先重建 `index.html`，再运行 `web-lite:check` 与浏览器 smoke。
 - 改可访问性或响应式界面：运行 `a11y:test` 及相关 Playwright 套件。
 
 CI 的主要静态与 Node.js 门禁为：
@@ -110,7 +106,6 @@ CI 的主要静态与 Node.js 门禁为：
 ```bash
 npm run dependency-audit:gate
 npm run sbom:test
-npm run web-lite:check
 npm run font-license:test
 npm run typecheck
 npm run lint
@@ -129,20 +124,6 @@ Linux 生产构建由必需的渲染边界 job 执行；浏览器与 Windows 桌
 顶层非空 `error`、SSE `event: error` 或 `finish_reason: "error"` 立即以固定 `provider_error` 拒绝，不透传上游错误码或诊断。没有正常终态的 EOF、无法解析的数据事件，以及 `length`、`content_filter`、工具调用或未知结束原因均以 `stream_incomplete` 拒绝，后来的内容或 `[DONE]` 不能覆盖失败。`[DONE]` 作为传输结束标记仍会取消未读取的尾部。
 
 只有成功结束的流才能进入结构化译文终态校验和提交；空结果仍失败。失败恢复原译文，取消及文档或请求代次变化由现有事务控制器隔离。`resource-budgets:test` 覆盖流状态，`transactions:test` 覆盖合法结构化内容后的失败恢复及竞态，`desktop:ai-errors-test` 使用本地提供商夹具验证打包后的 IPC 和浏览器/Next 调用链。
-
-## Web Lite
-
-Web Lite 是由 `web-lite/` 与共享组件构建的静态单页，应用样式和脚本内联到根目录 `index.html`，字体与图标保留为受控的 `public/` 资源。它没有 Next.js 服务器或 `/api/` 运行时。
-
-```bash
-npm run web-lite:build   # 重建并写入 index.html
-npm run web-lite:check   # 在临时目录重建并与已提交成品比较，不修改工作区
-npm run pages:prepare    # 生成 _site/ 的 Pages 白名单目录
-npm run web-lite:smoke
-npm run web-lite:cross-browser-smoke
-```
-
-改动共享 UI、样式、字体、版本展示或 Web Lite 适配层后，应运行 `web-lite:build` 并提交更新后的 `index.html`。浏览器支持范围见 [Web Lite 浏览器支持](./web-lite-browser-support.md)。
 
 ## Windows 桌面构建
 
@@ -229,6 +210,5 @@ npm run desktop:build
 
 1. 保持改动范围单一，不顺带修改版本号或发布说明。
 2. 运行与改动范围匹配的验证，并记录未运行的高成本或平台专属门禁。
-3. 若共享代码影响 Web Lite，重建并提交 `index.html`。
 4. 检查 `git diff --check`、文档链接、生成文件和敏感信息。
 5. PR 正文说明改动、验证结果及尚需 CI/Windows 执行的项目。
