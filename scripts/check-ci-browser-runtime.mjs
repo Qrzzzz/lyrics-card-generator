@@ -11,8 +11,8 @@ export function assertBrowserRuntimePolicy(policy, lock) {
   for (const name of ['@playwright/test', 'playwright', 'playwright-core']) {
     if (lock.packages?.[`node_modules/${name}`]?.version !== policy.playwrightVersion) throw Error(`Browser image/lock mismatch: ${name}`);
   }
-  if (Object.keys(policy.browsers || {}).sort().join(',') !== 'chromium,firefox,webkit'
-    || Object.values(policy.browsers).some(version => typeof version !== 'string' || !/^\d+(?:\.\d+)+$/.test(version))) throw Error('All three browser versions must be pinned');
+  if (Object.keys(policy.browsers || {}).sort().join(',') !== 'chromium'
+    || Object.values(policy.browsers).some(version => typeof version !== 'string' || !/^\d+(?:\.\d+)+$/.test(version))) throw Error('The desktop renderer Chromium version must be pinned');
   if (policy.userId !== 1001) throw Error('Browser image must use the non-root runner user 1001');
   return true;
 }

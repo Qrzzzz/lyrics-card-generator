@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Global font registration and theme-token defaults shared by desktop and Web Lite. */
+/* Global font registration and theme-token defaults for the desktop application. */
 @font-face {
   font-family: "Mona Sans";
   src: url("/fonts/MonaSans-VF.woff2?v=62e40f6e14e5bbb9") format("woff2");

@@ -10,7 +10,6 @@ import { importHistoryCopy } from "../lib/import-history-copy";
 import { LOCALE_BCP47, resolvePreferredLocale } from "../lib/locale-language";
 import { settingsCopy } from "../lib/settings/copy";
 import type { Locale } from "../lib/types";
-import { detectWebLiteLocale, webLiteCopy } from "../web-lite/copy";
 
 const locales: Locale[] = ["zh", "zh-TW", "en", "fr", "ja", "es"];
 const translatedLocales: Locale[] = ["fr", "ja", "es"];
@@ -36,9 +35,6 @@ assertCatalog("AI errors", Object.fromEntries(locales.map((locale) => [
   locale,
   Object.fromEntries(AI_ERROR_CODES.map((code) => [code, getAIErrorMessage(locale, code)]))
 ])) as Record<Locale, Record<string, string>>, new Set());
-assertCatalog("Web Lite", webLiteCopy, new Set([
-  "badge", "remoteCoverPlaceholder", "sourceHanSans", "sourceHanSerif", "exportStandard"
-]));
 
 assert.equal(settingsCopy.en.close, "Close");
 assert.equal(settingsCopy["zh-TW"].close, "關閉");
@@ -72,13 +68,6 @@ assert.deepEqual(LOCALE_BCP47, {
   es: "es"
 });
 
-assert.equal(detectWebLiteLocale("zh-TW"), "zh-TW");
-assert.equal(detectWebLiteLocale("zh-Hant-HK"), "zh-TW");
-assert.equal(detectWebLiteLocale("zh-CN"), "zh");
-assert.equal(detectWebLiteLocale("fr-CA"), "fr");
-assert.equal(detectWebLiteLocale("ja-JP"), "ja");
-assert.equal(detectWebLiteLocale("es-MX"), "es");
-assert.equal(detectWebLiteLocale("de-DE"), "en");
 
 for (const [language, expected] of [
   ["zh", "zh"], ["zh-CN", "zh"], ["zh-SG", "zh"], ["zh-Hans", "zh"],
@@ -89,7 +78,6 @@ for (const [language, expected] of [
   ["de-DE", "en"], ["french", "en"], ["japanese", "en"], ["", "en"]
 ] as const) {
   assert.equal(resolvePreferredLocale([language]), expected, `system language ${language}`);
-  assert.equal(detectWebLiteLocale(language), expected, `Web Lite language ${language}`);
 }
 assert.equal(resolvePreferredLocale(["de-DE", "ja-JP", "en-US"]), "ja");
 assert.equal(resolvePreferredLocale(["en-US", "fr-CA"]), "en");
@@ -133,9 +121,6 @@ for (const locale of locales) {
     manualSaveNotFound: history.manualSaveNotFound,
     manualSaveFailed: history.manualSaveFailed,
     manualSaveLoaded: history.manualSaveLoaded,
-    webLiteClearAlreadyEmpty: webLiteCopy[locale].clearAlreadyEmpty,
-    webLiteExportReady: webLiteCopy[locale].exportReady,
-    webLiteExportFailed: webLiteCopy[locale].exportFailed
   };
 
   for (const [key, value] of Object.entries(toastCopy)) {
@@ -150,7 +135,7 @@ for (const locale of locales) {
   assert.deepEqual(placeholders(history.corruptRecovered), [], `${locale}.corruptRecovered hides backup filename`);
 }
 
-console.log("six-locale main, settings, AI, error, and Web Lite completeness tests passed");
+console.log("six-locale main, settings, AI, error completeness tests passed");
 
 function fromGetter(getter: (locale: Locale) => Record<string, string>) {
   return Object.fromEntries(locales.map((locale) => [locale, getter(locale)])) as Record<Locale, Record<string, string>>;

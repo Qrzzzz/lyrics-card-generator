@@ -20,8 +20,6 @@
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
   <a href="../releases/v6.10.3.en.md">Release Notes</a> ·
-  <a href="https://qrzzzz.github.io/lyrics-card-generator/">Online Web Lite</a> ·
-  <a href="../web-lite-browser-support.md">Web Lite Browser Support</a> ·
   <a href="#features">Features</a> ·
   <a href="../development.en.md">Local Development</a> ·
   <a href="../../LICENSE">License</a>

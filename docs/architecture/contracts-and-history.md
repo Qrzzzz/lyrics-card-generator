@@ -4,7 +4,6 @@
 
 ## 共享契约与兼容入口
 
-`shared/` 只包含平台无关的规则、类型与预算。Next、renderer 与 Web Lite 不再从 `electron/` 导入共享领域逻辑。Electron 使用同一实现，旧 CommonJS 入口和声明保留转发兼容；旧 JSON 路径通过生成器同步，不能独立编辑。
 
 - `card-style-schema.json` 定义所有可保存的样式字段、枚举、嵌套对象、旧草稿必需字段和验证约束。`contracts:generate` 生成 TS 类型，`contracts:check` 检查新鲜度。`CardStyle` 和公开枚举类型来自生成结果；草稿读取器使用同一 schema。
 - schema 1 的旧草稿允许缺失非必需样式字段，renderer 用现有默认值补齐。缓存、测量结果和翻译派生字段不进入样式持久化。现有草稿版本 1、历史 JSON schema 1→2 迁移及内容往返保持兼容。
@@ -46,6 +45,5 @@
 
 ## 验证入口
 
-`typecheck`、`lint`、`contracts:test`、`autosave:test`、`core:test`、`electron-runtime:coverage`、`deferred-surfaces:test`；Next build、Web Lite build/check；新打包应用的 sandbox preload、自动草稿与历史回放交互。
 
 本地或 fixture 结果不等同于远端 CI、真实 AI provider、安装/卸载、SBOM、签名或公开 Release。正式发布仍由 `scripts/release.ps1` 和发布工作流负责。

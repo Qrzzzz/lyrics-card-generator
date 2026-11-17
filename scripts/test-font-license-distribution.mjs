@@ -1,9 +1,8 @@
 import assert from "node:assert/strict";
 import crypto from "node:crypto";
-import { mkdtemp, mkdir, readFile, rm, stat } from "node:fs/promises";
+import { readFile, stat } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { pagesFiles, preparePagesSite } from "./prepare-pages-site.mjs";
 
 const scriptsDirectory = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(scriptsDirectory, "..");
@@ -45,40 +44,8 @@ const fontContracts = [
   }
 ];
 
-await assertLicensedFontDirectory(path.join(projectRoot, "public", "fonts"), "repository/Web Lite");
-await assertApplicationLicenseAssets(projectRoot, "repository/Web Lite");
-
-const pagesWorkflow = await readFile(path.join(projectRoot, ".github", "workflows", "pages.yml"), "utf8");
-assert.match(
-  pagesWorkflow,
-  /node scripts\/prepare-pages-site\.mjs --out=_site/,
-  "Pages must construct its artifact through the reviewed allowlist"
-);
-assert.match(pagesWorkflow, /path: _site/, "Pages must upload the reviewed _site tree");
-for (const { license } of fontContracts) {
-  assert.ok(pagesWorkflow.includes(`public/fonts/${license}`), `Pages path filters must include ${license}`);
-  assert.ok(pagesFiles.includes(`public/fonts/${license}`), `Pages allowlist must include ${license}`);
-}
-for (const asset of [
-  "public/licenses/LICENSE-Lyrics-Card-Generator.txt",
-  "public/licenses/LICENSE-SaltUI.txt",
-  "public/licenses/THIRD-PARTY-NOTICES.txt"
-]) {
-  assert.ok(pagesWorkflow.includes(asset), `Pages path filters must include ${asset}`);
-  assert.ok(pagesFiles.includes(asset), `Pages allowlist must include ${asset}`);
-}
-
-const temporaryParent = path.join(projectRoot, "tmp");
-await mkdir(temporaryParent, { recursive: true });
-const temporarySite = await mkdtemp(path.join(temporaryParent, "font-license-pages-"));
-try {
-  const result = await preparePagesSite(temporarySite);
-  assert.equal(result.files.length, pagesFiles.length + 1, "Pages manifest includes only the allowlist and .nojekyll");
-  await assertLicensedFontDirectory(path.join(temporarySite, "public", "fonts"), "GitHub Pages artifact");
-  await assertApplicationLicenseAssets(temporarySite, "GitHub Pages artifact");
-} finally {
-  await rm(temporarySite, { recursive: true, force: true });
-}
+await assertLicensedFontDirectory(path.join(projectRoot, "public", "fonts"), "repository");
+await assertApplicationLicenseAssets(projectRoot, "repository");
 
 const prepareDesktopSource = await readFile(path.join(projectRoot, "scripts", "prepare-electron-dist.mjs"), "utf8");
 assert.match(
@@ -92,7 +59,7 @@ assert.doesNotMatch(
   "desktop final-resource filters must not remove font license text"
 );
 
-console.log("Bundled font licenses and repository, Web Lite, Pages, and desktop distribution contracts passed");
+console.log("Bundled font licenses and repository and desktop distribution contracts passed");
 
 async function assertLicensedFontDirectory(fontDirectory, label) {
   for (const contract of fontContracts) {

@@ -24,7 +24,7 @@ try {
   const jobs=await client.getAll(`${base}/jobs?filter=all`,'jobs');
   const first=await client.getAll(`${base}/attempts/1/jobs`,'jobs');
   const seconds=(start,end)=>start && end ? Math.max(0,(Date.parse(end)-Date.parse(start))/1000) : null;
-  const required=['verify','render-boundary-regression','web-lite-smoke','web-lite-cross-browser-smoke','desktop-packaged-regression'];
+  const required=['verify','render-boundary-regression','desktop-packaged-regression'];
   Object.assign(report,{available:true,sha:run.head_sha,url:run.html_url,attempt:run.run_attempt,status:run.status,conclusion:run.conclusion,
     wallSeconds:run.status==='completed'?seconds(run.created_at,run.updated_at):null,
     firstPass:firstPassOutcome(first,required),

@@ -9,7 +9,7 @@ This is the English development entry point for Lyrics Card Generator and is lin
 - Git.
 - Node.js 22, matching CI and release workflows, with the bundled npm.
 - Windows 10/11 x64 for building and validating Windows desktop artifacts. The Web app and most pure Node.js tests can run elsewhere, but that does not validate desktop artifacts.
-- The relevant Playwright Chromium, Firefox, or WebKit runtime for browser tests.
+- The relevant Playwright Chromium runtime for browser tests.
 
 The project does not require a repository-level `.env` file. AI provider URLs, models, and API keys are managed in app settings. Never place real secrets in source files, fixtures, logs, or commits.
 
@@ -26,12 +26,12 @@ Use `npm install` when intentionally changing dependencies in an existing checko
 Install browser runtimes when needed:
 
 ```bash
-npx playwright install chromium firefox webkit
+npx playwright install chromium
 ```
 
 ## Start development
 
-### Next.js Web interface
+### Desktop renderer development server
 
 ```bash
 npm run dev
@@ -43,7 +43,6 @@ Open `http://localhost:3000`. If the `.next` cache appears stale or damaged, use
 npm run dev:clean
 ```
 
-This Web development surface includes Next.js API routes; it is not the static Web Lite artifact. The supported `npm run dev` command pins the mutation boundary to `http://localhost:3000`; do not expose this development server as a production deployment.
 
 ### Electron desktop interface
 
@@ -80,13 +79,11 @@ These variables govern only the app mutation origin. AI provider Base URL policy
 | `components/` | Editor, preview, settings, and shared React components |
 | `lib/` | Document transactions, parsers, export, safe fetch, layout, and style logic |
 | `electron/` | Electron main process, preload, IPC, security boundaries, and desktop persistence |
-| `web-lite/` | Static Web Lite entry point and browser-specific adapters |
 | `config/` | Playwright and dedicated TypeScript configurations |
 | `scripts/` | Builds, regressions, audits, artifact checks, and maintenance tools |
 | `tests/` | Playwright tests and test resources |
 | `public/` | Runtime icons, fonts, and matching licenses |
 | `docs/` | Development, maintenance, security, testing, and release documentation |
-| `index.html` | Generated, committed Web Lite artifact; do not edit it by hand |
 
 ## Day-to-day verification
 
@@ -102,7 +99,6 @@ npm run build
 - Markdown-only changes: at minimum check links, heading structure, and `git diff --check`.
 - Parser, transaction, export, or security changes: run the focused test and `core:test`.
 - Electron changes: add `stability:test`, `electron-runtime:coverage`, or the relevant packaged interaction test.
-- Web Lite or shared UI changes: rebuild `index.html`, then run `web-lite:check` and browser smoke tests.
 - Accessibility or responsive UI changes: run `a11y:test` and the relevant Playwright suite.
 
 The main static and Node.js CI gate is:
@@ -110,7 +106,6 @@ The main static and Node.js CI gate is:
 ```bash
 npm run dependency-audit:gate
 npm run sbom:test
-npm run web-lite:check
 npm run font-license:test
 npm run typecheck
 npm run lint
@@ -121,20 +116,6 @@ npm run core:test
 ```
 
 The required render-boundary job owns the Linux production build. Browser and Windows packaging gates also run separately. A local `build` alone is not equivalent to full CI. See [CI gate ownership](./testing/ci-gates.md) for deduplication and release-stage evidence reuse.
-
-## Web Lite
-
-Web Lite is a static single page built from `web-lite/` and shared components. Its application CSS and JavaScript are inlined into the root `index.html`, while approved fonts and the app icon remain under `public/`. It has no Next.js server or `/api/` runtime.
-
-```bash
-npm run web-lite:build   # Regenerate and write index.html
-npm run web-lite:check   # Rebuild in a temporary directory and compare without modifying the checkout
-npm run pages:prepare    # Create the allowlisted _site/ Pages directory
-npm run web-lite:smoke
-npm run web-lite:cross-browser-smoke
-```
-
-After changing shared UI, styles, fonts, version display, or Web Lite adapters, run `web-lite:build` and commit the updated `index.html`. See [Web Lite browser support](./web-lite-browser-support.md) for the support contract.
 
 ## Windows desktop builds
 
@@ -221,6 +202,5 @@ Additional diagnostics and focused regressions remain in `package.json`. Read th
 
 1. Keep the change focused; do not modify versions or release notes incidentally.
 2. Run scope-appropriate checks and record expensive or platform-specific gates that were not run.
-3. If shared code affects Web Lite, regenerate and commit `index.html`.
 4. Check `git diff --check`, documentation links, generated files, and secrets.
 5. In the PR body, state the change, verification results, and anything left for CI or Windows-only execution.

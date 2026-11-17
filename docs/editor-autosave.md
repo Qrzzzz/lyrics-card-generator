@@ -1,6 +1,5 @@
 # 桌面自动草稿 / Desktop automatic drafts
 
-本页描述 v6.2.8 的桌面自动草稿实现。Web Lite 不提供此持久化功能。
 
 ## 用户行为
 

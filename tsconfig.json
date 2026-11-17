@@ -39,6 +39,7 @@
     "node_modules",
     "output",
     "dist-desktop",
-    "release"
+    "release",
+    "tmp"
   ]
 }

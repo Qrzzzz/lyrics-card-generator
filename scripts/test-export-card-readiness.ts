@@ -479,7 +479,6 @@ class FakeFontSet implements ExportCardFontSetLike {
     "utf8"
   );
   const lyricEditorSource = readFileSync(resolve("components/editor/LyricEditor.tsx"), "utf8");
-  const webLiteSource = readFileSync(resolve("web-lite/WebLiteEditor.tsx"), "utf8");
   const stepperSource = readFileSync(resolve("components/editor/SettingsStepper.tsx"), "utf8");
   const exportPanelSource = readFileSync(resolve("components/editor/ExportPanel.tsx"), "utf8");
 
@@ -505,13 +504,11 @@ class FakeFontSet implements ExportCardFontSetLike {
   );
   assert.doesNotMatch(autoHeightSource, /ResizeObserver|MutationObserver|requestAnimationFrame/);
   assert.doesNotMatch(lyricEditorSource, /useMeasuredAutoCanvasHeight/);
-  assert.doesNotMatch(webLiteSource, /useMeasuredAutoCanvasHeight/);
   assert.ok(stepperSource.includes("useOptionalExportCardReadinessSnapshot"));
   assert.ok(exportPanelSource.includes("useOptionalExportCardReadinessSnapshot"));
   assert.ok(
-    lyricEditorSource.includes("getLiveExportCardValidation") &&
-      webLiteSource.includes("getLiveExportCardValidation"),
-    "desktop and Web Lite retain live export-time defense"
+    lyricEditorSource.includes("getLiveExportCardValidation"),
+    "desktop retain live export-time defense"
   );
 }
 
