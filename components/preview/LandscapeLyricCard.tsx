@@ -35,7 +35,7 @@ export function LandscapeLyricCard({
   const cover = song.proxiedCoverUrl || proxiedImageUrl(song.coverUrl);
   const [coverFailed, setCoverFailed] = useState(false);
   const activeCover = coverFailed ? "" : cover;
-  const textColor = resolveCardTextColor(style, size);
+  const textColor = resolveCardTextColor(style);
   const showGeneratedWatermark = style.showGeneratedWatermark ?? style.showWatermark;
 
   useEffect(() => setCoverFailed(false), [cover]);
@@ -138,6 +138,7 @@ export function LandscapeLyricCard({
                 translationEnabled={style.translationEnabled}
                 lyricFontSize={style.lyricFontSize}
                 translationScale={style.translationScale}
+                translationOpacity={style.backgroundMode === "palette" ? 0.9 : undefined}
                 lineHeight={style.lineHeight}
                 textColor={textColor}
                 align={style.align}

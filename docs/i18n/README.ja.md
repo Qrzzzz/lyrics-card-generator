@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="../releases/v6.10.3.ja.md">リリースノート</a> ·
+  <a href="../releases/v6.10.4.ja.md">リリースノート</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="../development.en.md">ローカル開発</a> ·
   <a href="../../LICENSE">ライセンス</a>
@@ -75,19 +75,19 @@
 
 
 
-* Windows x64 インストーラー：`Lyrics.Card.Generator.Setup.6.10.3.exe`
+* Windows x64 インストーラー：`Lyrics.Card.Generator.Setup.6.10.4.exe`
 
 v6.2.2 以降、配布するデスクトップパッケージは Windows x64 Setup のみです。
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v6.10.3 · リリースノート
+### v6.10.4 · リリースノート
 
-**2026-11-14**
+**2026-11-18**
 
-v6.10.3 — 明るいジャケットが暗くなる問題を修正し、原文と訳文の見出しを統一して、リポジトリのルートを整理しました。
+v6.10.4 — ジャケット由来のグラデーションに色と明暗の奥行きを残し、既定の白い歌詞と訳文を読みやすくしました。
 
-[简体中文](../releases/v6.10.3.zh-CN.md) · [繁體中文](../releases/v6.10.3.zh-TW.md) · [English](../releases/v6.10.3.en.md) · [Français](../releases/v6.10.3.fr.md) · [日本語](../releases/v6.10.3.ja.md) · [Español](../releases/v6.10.3.es.md)
+[简体中文](../releases/v6.10.4.zh-CN.md) · [繁體中文](../releases/v6.10.4.zh-TW.md) · [English](../releases/v6.10.4.en.md) · [Français](../releases/v6.10.4.fr.md) · [日本語](../releases/v6.10.4.ja.md) · [Español](../releases/v6.10.4.es.md)
 
 <a id="主な機能"></a>
 

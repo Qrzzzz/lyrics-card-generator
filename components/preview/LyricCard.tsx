@@ -56,7 +56,7 @@ export function LyricCard({
 
   const size = getCardSize(style);
   const activeCover = coverFailed ? "" : cover;
-  const textColor = resolveCardTextColor(style, size);
+  const textColor = resolveCardTextColor(style);
   const contentMode = style.contentMode ?? "lyrics";
   const showGeneratedWatermark = style.showGeneratedWatermark ?? style.showWatermark;
   const layout = getPortraitLayout(size, style, song, {
@@ -183,6 +183,7 @@ export function LyricCard({
                 translationEnabled={style.translationEnabled}
                 lyricFontSize={style.lyricFontSize}
                 translationScale={style.translationScale}
+                translationOpacity={style.backgroundMode === "palette" ? 0.9 : undefined}
                 lineHeight={style.lineHeight}
                 textColor={textColor}
                 align={style.align}

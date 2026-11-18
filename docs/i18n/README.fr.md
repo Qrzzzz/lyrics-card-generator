@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="../releases/v6.10.3.fr.md">Notes de version</a> ·
+  <a href="../releases/v6.10.4.fr.md">Notes de version</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="../development.en.md">Développement local</a> ·
   <a href="../../LICENSE">Licence</a>
@@ -75,19 +75,19 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 
 
-* Programme d’installation Windows x64 : `Lyrics.Card.Generator.Setup.6.10.3.exe`
+* Programme d’installation Windows x64 : `Lyrics.Card.Generator.Setup.6.10.4.exe`
 
 À partir de la v6.2.2, le programme Setup Windows x64 est le seul paquet distribué.
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### v6.10.3 · Notes de version
+### v6.10.4 · Notes de version
 
-**2026-11-14**
+**2026-11-18**
 
-v6.10.3 — Préserve les couleurs des pochettes claires, harmonise les en-têtes des colonnes de paroles et de traduction, et simplifie la racine du dépôt.
+v6.10.4 — Les dégradés issus de la pochette préservent les couleurs locales et les nuances, avec des paroles blanches par défaut et des traductions plus lisibles.
 
-[简体中文](../releases/v6.10.3.zh-CN.md) · [繁體中文](../releases/v6.10.3.zh-TW.md) · [English](../releases/v6.10.3.en.md) · [Français](../releases/v6.10.3.fr.md) · [日本語](../releases/v6.10.3.ja.md) · [Español](../releases/v6.10.3.es.md)
+[简体中文](../releases/v6.10.4.zh-CN.md) · [繁體中文](../releases/v6.10.4.zh-TW.md) · [English](../releases/v6.10.4.en.md) · [Français](../releases/v6.10.4.fr.md) · [日本語](../releases/v6.10.4.ja.md) · [Español](../releases/v6.10.4.es.md)
 
 <a id="fonctionnalités-principales"></a>
 

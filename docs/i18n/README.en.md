@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="../releases/v6.10.3.en.md">Release Notes</a> ·
+  <a href="../releases/v6.10.4.en.md">Release Notes</a> ·
   <a href="#features">Features</a> ·
   <a href="../development.en.md">Local Development</a> ·
   <a href="../../LICENSE">License</a>
@@ -75,19 +75,19 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 
 
-* Windows x64 installer: `Lyrics.Card.Generator.Setup.6.10.3.exe`
+* Windows x64 installer: `Lyrics.Card.Generator.Setup.6.10.4.exe`
 
 Starting with v6.2.2, Windows x64 Setup is the only distributed desktop package.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v6.10.3 · Release Notes
+### v6.10.4 · Release Notes
 
-**2026-11-14**
+**2026-11-18**
 
-v6.10.3 — Preserves pale cover colors, unifies the original and translation editor headings, and simplifies the repository root.
+v6.10.4 — Cover-based gradients preserve local colors and tonal depth, with white lyrics by default and clearer translations.
 
-[简体中文](../releases/v6.10.3.zh-CN.md) · [繁體中文](../releases/v6.10.3.zh-TW.md) · [English](../releases/v6.10.3.en.md) · [Français](../releases/v6.10.3.fr.md) · [日本語](../releases/v6.10.3.ja.md) · [Español](../releases/v6.10.3.es.md)
+[简体中文](../releases/v6.10.4.zh-CN.md) · [繁體中文](../releases/v6.10.4.zh-TW.md) · [English](../releases/v6.10.4.en.md) · [Français](../releases/v6.10.4.fr.md) · [日本語](../releases/v6.10.4.ja.md) · [Español](../releases/v6.10.4.es.md)
 
 <a id="features"></a>
 
