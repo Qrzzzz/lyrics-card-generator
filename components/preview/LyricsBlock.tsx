@@ -12,6 +12,7 @@ export function LyricsBlock({
   translationEnabled,
   lyricFontSize,
   translationScale,
+  translationOpacity = 0.64,
   lineHeight,
   textColor,
   align,
@@ -22,6 +23,7 @@ export function LyricsBlock({
   translationEnabled: boolean;
   lyricFontSize: number;
   translationScale: number;
+  translationOpacity?: number;
   lineHeight: number;
   textColor: string;
   align: "left" | "center";
@@ -92,7 +94,7 @@ export function LyricsBlock({
                 lineHeight={lineHeight}
                 style={{
                   marginTop: hasLyric ? activeTranslationSize * 0.28 : 0,
-                  color: withAlpha(textColor, 0.64),
+                  color: withAlpha(textColor, translationOpacity),
                   textWrap: autoWidth ? "balance" : undefined
                 }}
               />

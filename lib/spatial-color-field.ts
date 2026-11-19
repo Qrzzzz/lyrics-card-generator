@@ -1,15 +1,13 @@
+import { linearChannelToSrgb, oklabToRgb, rgbToOklab, srgbChannelToLinear, type OklabColor } from "@/lib/color/oklab";
 import type { ExtractedPalette } from "@/lib/types";
 import { normalizeGradientLayoutSeed } from "@/lib/gradient-layout";
 import {
   DEFAULT_PALETTE,
-  adjustLightness,
   hexToRgb,
-  mixColors,
   relativeLuminance,
   normalizeHex,
   rgbToHex,
-  rgbToHsl,
-  type RgbColor
+  rgbToHsl
 } from "@/lib/palette-background";
 
 /**
@@ -54,7 +52,6 @@ export type ColorFieldPlan = {
   topology: "square" | "portrait" | "tall" | "landscape" | "ultrawide";
   seed: number;
   baseColor: string;
-  shadeStrength: number;
   families: ColorFieldFamily[];
   anchors: ColorFieldAnchor[];
 };
@@ -82,10 +79,7 @@ type AdaptedPalette = {
   signature: string;
   colors: string[];
   regions: SpatialPaletteContract["regions"];
-  dark: string;
   sourceBase: string;
-  lightnessPreservation: number;
-  kind: ExtractedPalette["kind"];
 };
 
 type Point = { x: number; y: number };
@@ -135,8 +129,9 @@ export function createColorFieldPlan({
   const random = mulberry32(seed);
   const longSpan = Math.max(aspect, 1 / aspect);
   const targetCount = clamp(Math.round(6 + longSpan * 1.55), 8, 16);
-  const preparedColors = prepareFieldColors(adapted);
-  const colors = preparedColors.map(({ field }) => field);
+  const tint = selectFieldTint(adapted);
+  const preparedColors = adapted.colors.map((source): PreparedColor => ({ source, field: composeFieldColor(source, tint) }));
+  const colors = preparedColors.slice(0, 8).map(({ field }) => field);
   const families = buildColorFamilies(adapted.regions, preparedColors);
   const points = generateAnchorPoints(targetCount, aspect, families, random);
   const colorBudgets = createRegionColorBudgets(points, families);
@@ -200,8 +195,7 @@ export function createColorFieldPlan({
     aspect,
     topology,
     seed,
-    baseColor: mixColors(mixColors(adapted.dark, "#05060A", 0.38), adapted.sourceBase, adapted.lightnessPreservation),
-    shadeStrength: 1 - adapted.lightnessPreservation * rgbToHsl(hexToRgb(adapted.sourceBase)).l,
+    baseColor: composeFieldColor(adapted.sourceBase, tint),
     families: families.map(({ id, weight, sourceColors }) => ({ id, weight, sourceColors })),
     anchors
   };
@@ -227,7 +221,13 @@ export function createColorFieldPlan({
         angle: chooseFlowAngle(variantAngle + index * GOLDEN_ANGLE + (layoutRandom() - 0.5) * 20, nearby)
       });
     });
-    if (isBalancedLayout(variedAnchors, aspect)) return { ...plan, seed: variantSeed, anchors: variedAnchors };
+    if (isBalancedLayout(variedAnchors, aspect)) {
+      return {
+        ...plan,
+        seed: variantSeed,
+        anchors: variedAnchors
+      };
+    }
   }
   // A bounded search falls back to a reflection of the already composed plan.
   // It preserves spacing, colors and weights without failing a valid seed.
@@ -320,10 +320,11 @@ export function createColorFieldMesh(plan: ColorFieldPlan): ColorFieldMesh {
 /** Samples one continuous, normalized Shepard field; the SVG mesh is only its bounded carrier. */
 export function sampleColorField(plan: ColorFieldPlan, x: number, y: number) {
   const base = hexToRgb(plan.baseColor);
-  let red = base.r * 0.09;
-  let green = base.g * 0.09;
-  let blue = base.b * 0.09;
-  let totalWeight = 0.09;
+  const baseWeight = 0.035;
+  let red = base.r * baseWeight;
+  let green = base.g * baseWeight;
+  let blue = base.b * baseWeight;
+  let totalWeight = baseWeight;
 
   for (const anchor of plan.anchors) {
     const { dx, dy } = isotropicDelta({ x, y }, anchor, plan.aspect);
@@ -336,7 +337,8 @@ export function sampleColorField(plan: ColorFieldPlan, x: number, y: number) {
     const distance =
       (along * along) / (anchor.radiusMajor * anchor.radiusMajor) +
       (curvedAcross * curvedAcross) / (anchor.radiusMinor * anchor.radiusMinor);
-    const weight = anchor.energy / Math.pow(0.16 + distance, 1.36);
+    // Keep blends continuous while giving nearby cover colors more influence.
+    const weight = anchor.energy / Math.pow(0.16 + distance, 1.82);
     const color = hexToRgb(anchor.color);
 
     red += color.r * weight;
@@ -345,14 +347,19 @@ export function sampleColorField(plan: ColorFieldPlan, x: number, y: number) {
     totalWeight += weight;
   }
 
-  const edgeDistance = Math.min(clamp01(x), clamp01(y), clamp01(1 - x), clamp01(1 - y));
-  const edgeShade = 1 - plan.shadeStrength * (0.12 - Math.min(0.12, edgeDistance * 0.48));
-  const verticalShade = 1 - plan.shadeStrength * clamp01(y) * 0.075;
+  const positionX = clamp01(x);
+  const positionY = clamp01(y);
+  const edgeDistance = Math.min(positionX, positionY, 1 - positionX, 1 - positionY);
+  const edgeShade = 0.96 + Math.min(0.04, edgeDistance * 0.16);
+  // A broad diagonal beam creates highlight, body and shadow even if the
+  // cover has one dominant hue. It modulates the same field as the anchors.
+  const acrossLight = positionY - (0.19 + 0.36 * positionX);
+  const directionalShade = 0.66 + 0.34 * Math.exp(-6 * acrossLight * acrossLight);
 
   return rgbToHex({
-    r: (red / totalWeight) * edgeShade * verticalShade,
-    g: (green / totalWeight) * edgeShade * verticalShade,
-    b: (blue / totalWeight) * edgeShade * verticalShade
+    r: (red / totalWeight) * edgeShade * directionalShade,
+    g: (green / totalWeight) * edgeShade * directionalShade,
+    b: (blue / totalWeight) * edgeShade * directionalShade
   });
 }
 
@@ -424,13 +431,6 @@ function adaptSpatialPalette(
       return { r: mean.r + color.r * weight, g: mean.g + color.g * weight, b: mean.b + color.b * weight };
     }, { r: 0, g: 0, b: 0 }))
     : normalizeHex(palette.primary);
-  const luminance = regionWeight > 0
-    ? validRegions.reduce((sum, region) => sum + relativeLuminance(region.color) * region.weight / regionWeight, 0)
-    : palette.averageLuminance;
-  // Fade out dark-range compression as the source becomes bright. A white
-  // cover reaches its actual sampled colors instead of a fixed gray/purple field.
-  const lightnessAmount = clamp01((luminance - 0.3) / 0.5);
-  const lightnessPreservation = lightnessAmount * lightnessAmount * (3 - 2 * lightnessAmount);
   const fallbackSignature = [
     ...colors,
     palette.averageLuminance.toFixed(4),
@@ -443,27 +443,54 @@ function adaptSpatialPalette(
     signature: activeSpatialPalette?.coverSignature.trim() || fallbackSignature,
     colors,
     regions: validRegions,
-    dark: normalizeHex(palette.dark),
-    sourceBase,
-    lightnessPreservation,
-    kind: palette.kind
+    sourceBase
   };
 }
 
-function prepareFieldColors(palette: AdaptedPalette) {
-  const colorful = palette.kind === "colorful";
-  return palette.colors.slice(0, 8).map((color, index): PreparedColor => {
-    const source = rgbToHsl(hexToRgb(color));
-    const compressedLightness = colorful
-      ? 0.27 + clamp(source.l, 0.08, 0.92) * 0.18
-      : 0.25 + clamp(source.l, 0.08, 0.92) * 0.12;
-    const lightness = compressedLightness + (source.l - compressedLightness) * palette.lightnessPreservation;
-    const compressedSaturation = colorful ? (index % 2 === 0 ? 0.94 : 0.86) : 0.58;
-    const saturationScale = compressedSaturation + (1 - compressedSaturation) * palette.lightnessPreservation;
-    return {
-      source: color,
-      field: adjustLightness(color, lightness, saturationScale)
-    };
+type FieldTint = Pick<OklabColor, "a" | "b">;
+
+function selectFieldTint(palette: AdaptedPalette): FieldTint {
+  // Neutral regions borrow the strongest credible cover hue. A trace color
+  // can lend a tint but still receives only its original spatial weight.
+  const candidates = palette.regions.length > 0
+    ? palette.regions
+    : palette.colors.slice(0, 8).map((color, index) => ({ color, weight: 1 / (index + 2) }));
+  let best = { a: 0, b: 0, score: 0 };
+  for (const { color, weight } of candidates) {
+    if (weight < 0.02) continue;
+    const { a, b } = rgbToOklab(hexToRgb(color));
+    const score = Math.hypot(a, b) * Math.sqrt(weight);
+    if (score > best.score) best = { a, b, score };
+  }
+  const slate = { a: -0.008, b: -0.035 };
+  if (best.score === 0) return slate;
+  const chroma = Math.hypot(best.a, best.b);
+  const influence = clamp01(best.score / 0.018);
+  return {
+    a: slate.a * (1 - influence) + 0.065 * best.a / chroma * influence,
+    b: slate.b * (1 - influence) + 0.065 * best.b / chroma * influence
+  };
+}
+
+function composeFieldColor(color: string, tint: FieldTint) {
+  const source = hexToRgb(color);
+  const { a, b } = rgbToOklab(source);
+  const chroma = Math.hypot(a, b);
+  const tintWeight = 1 - clamp01(chroma / 0.04);
+  const chromaScale = chroma > 0 ? Math.min(1.55, 0.17 / chroma) : 1;
+  const shaped = oklabToRgb({
+    l: 0.53,
+    a: a * chromaScale + tint.a * tintWeight,
+    b: b * chromaScale + tint.b * tintWeight
+  });
+  // Map source exposure to a usable range for white lyrics. Scale in linear
+  // light so exposure does not wash out the hue we just picked.
+  const targetLuminance = 0.035 + 0.132 * relativeLuminance(source) ** 0.62;
+  const scale = targetLuminance / relativeLuminance(shaped);
+  return rgbToHex({
+    r: linearChannelToSrgb(srgbChannelToLinear(shaped.r) * scale),
+    g: linearChannelToSrgb(srgbChannelToLinear(shaped.g) * scale),
+    b: linearChannelToSrgb(srgbChannelToLinear(shaped.b) * scale)
   });
 }
 
@@ -480,7 +507,7 @@ function buildColorFamilies(
     const members = grouped.get(key) ?? [];
     members.push({
       ...region,
-      fieldColor: preparedBySource.get(region.color) ?? adjustLightness(region.color, 0.34, 0.9)
+      fieldColor: preparedBySource.get(region.color)!
     });
     grouped.set(key, members);
   }
@@ -851,24 +878,6 @@ function mulberry32(seed: number) {
     value ^= value + Math.imul(value ^ (value >>> 7), value | 61);
     return ((value ^ (value >>> 14)) >>> 0) / 4294967296;
   };
-}
-
-function rgbToOklab(rgb: RgbColor) {
-  const red = srgbToLinear(rgb.r / 255);
-  const green = srgbToLinear(rgb.g / 255);
-  const blue = srgbToLinear(rgb.b / 255);
-  const l = Math.cbrt(0.4122214708 * red + 0.5363325363 * green + 0.0514459929 * blue);
-  const m = Math.cbrt(0.2119034982 * red + 0.6806995451 * green + 0.1073969566 * blue);
-  const s = Math.cbrt(0.0883024619 * red + 0.2817188376 * green + 0.6299787005 * blue);
-  return {
-    l: 0.2104542553 * l + 0.793617785 * m - 0.0040720468 * s,
-    a: 1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s,
-    b: 0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s
-  };
-}
-
-function srgbToLinear(value: number) {
-  return value <= 0.04045 ? value / 12.92 : Math.pow((value + 0.055) / 1.055, 2.4);
 }
 
 function clamp(value: number, min: number, max: number) {

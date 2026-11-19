@@ -19,7 +19,7 @@
 <p>
   <strong>導覽</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下載最新版</a> ·
-  <a href="../releases/v6.10.3.zh-TW.md">發布說明</a> ·
+  <a href="../releases/v6.10.4.zh-TW.md">發布說明</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="../development.zh-CN.md">本機開發</a> ·
   <a href="../../LICENSE">授權條款</a>
@@ -72,19 +72,19 @@
 
 
 
-* Windows x64 安裝版：`Lyrics.Card.Generator.Setup.6.10.3.exe`
+* Windows x64 安裝版：`Lyrics.Card.Generator.Setup.6.10.4.exe`
 
 從 v6.2.2 起僅提供 Windows x64 Setup 安裝程式。
 
 > 目前版本尚未進行程式碼簽章。Windows 可能顯示 SmartScreen 提示，這是未簽章個人應用常見現象。
 
-### v6.10.3 · 發布說明
+### v6.10.4 · 發布說明
 
-**2026-11-14**
+**2026-11-18**
 
-v6.10.3 — 修正淺色封面被壓暗的問題，統一原文與譯文欄頭，並精簡儲存庫根目錄。
+v6.10.4 — 改善依封面取色的流光漸層，保留局部色彩與明暗層次。漸層預設使用白字，譯文更清晰。
 
-[简体中文](../releases/v6.10.3.zh-CN.md) · [繁體中文](../releases/v6.10.3.zh-TW.md) · [English](../releases/v6.10.3.en.md) · [Français](../releases/v6.10.3.fr.md) · [日本語](../releases/v6.10.3.ja.md) · [Español](../releases/v6.10.3.es.md)
+[简体中文](../releases/v6.10.4.zh-CN.md) · [繁體中文](../releases/v6.10.4.zh-TW.md) · [English](../releases/v6.10.4.en.md) · [Français](../releases/v6.10.4.fr.md) · [日本語](../releases/v6.10.4.ja.md) · [Español](../releases/v6.10.4.es.md)
 
 ## ✨ 主要功能
 

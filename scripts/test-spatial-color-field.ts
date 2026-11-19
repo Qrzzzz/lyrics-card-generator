@@ -281,31 +281,53 @@ assert.match(componentSource, /feGaussianBlur/, "the sampled continuous field re
 assert.match(portraitSource, /width=\{size\.width\}/, "portrait cards provide actual field geometry");
 assert.match(landscapeSource, /width=\{size\.width\}/, "landscape cards provide actual field geometry");
 
-// A mostly white cover with a small lavender drawing must remain a pale field,
-// including the screenshot's custom ratio and randomized layout.
-const palePixels = new Uint8ClampedArray(40 * 40 * 4);
-for (let index = 0; index < 1600; index++) {
-  palePixels.set(index % 40 >= 36 ? [190, 187, 223, 255] : [250, 249, 253, 255], index * 4);
-}
-const palePalette = analyzePalettePixels(palePixels, 40, 40);
-assert.ok(palePalette.averageLuminance > 0.8, "white cover is correctly identified before composition");
-for (const [width, height] of [[980, 1247], [1920, 1080]]) {
-  for (const layoutSeed of [0, 58710, 99]) {
-    const palePlan = createColorFieldPlan({ width, height, palette: palePalette, layoutSeed });
-    const lightEnergy = palePlan.anchors.filter(anchor => relativeLuminance(anchor.color) > 0.8)
-      .reduce((sum, anchor) => sum + anchor.energy, 0);
-    assert.ok(lightEnergy > 0.75, "minor lavender regions cannot displace the dominant white within one hue family");
-    const luminances = Array.from({ length: 25 }, (_, i) =>
-      relativeLuminance(sampleColorField(palePlan, (i % 5) / 4, Math.floor(i / 5) / 4)));
-    assert.ok(Math.min(...luminances) > 0.65, `pale cover stays pale at ${width}x${height}, seed ${layoutSeed}`);
-    assert.ok(luminances.reduce((sum, value) => sum + value, 0) / luminances.length > 0.8,
-      "composition must not turn a predominantly white cover into a dark background");
+// All cover types use the same tone and contrast rules. The nearest example
+// to the reported cover is a neutral field with a small lavender region.
+const coverCases = [
+  { name: "white and lavender", colors: [[250, 249, 253], [190, 187, 223]], mainShare: 0.9, hue: [240, 300] },
+  { name: "ivory and peach", colors: [[247, 235, 222], [222, 129, 96]], mainShare: 0.85, hue: [0, 60] },
+  { name: "charcoal and blue", colors: [[14, 18, 27], [44, 87, 152]], mainShare: 0.7, hue: [190, 270] },
+  { name: "saturated red", colors: [[233, 39, 47], [141, 20, 44]], mainShare: 0.7, hue: [330, 365] },
+  { name: "muted gray and teal", colors: [[130, 126, 124], [143, 177, 191], [252, 252, 252]], mainShare: 0.55 },
+  { name: "grayscale", colors: [[246, 246, 246], [22, 22, 22]], mainShare: 0.65, hue: [190, 260] },
+  { name: "pure white", colors: [[255, 255, 255], [255, 255, 255]], mainShare: 1, hue: [190, 260] },
+  { name: "pure black", colors: [[0, 0, 0], [0, 0, 0]], mainShare: 1, hue: [190, 260] },
+  { name: "multicolor", colors: [[50, 91, 224], [243, 171, 59], [56, 196, 126]], mainShare: 0.55 }
+];
+const observedMidtones = new Map<string, number>();
+for (const { name, colors, mainShare, hue } of coverCases) {
+  const pixels = new Uint8ClampedArray(40 * 40 * 4);
+  for (let index = 0; index < 1600; index++) {
+    const x = index % 40 / 40;
+    const color = x < mainShare ? colors[0] : colors[1 + Math.min(colors.length - 2, Math.floor((x - mainShare) / (1 - mainShare) * (colors.length - 1)))];
+    pixels.set([...color, 255], index * 4);
+  }
+  const palette = analyzePalettePixels(pixels, 40, 40);
+  for (const [width, height] of [[980, 1247], [1920, 1080]]) {
+    for (const layoutSeed of [0, 58710, 99]) {
+      const plan = createColorFieldPlan({ width, height, palette, layoutSeed });
+      const samples = Array.from({ length: 81 }, (_, i) => sampleColorField(plan, (i % 9) / 8, Math.floor(i / 9) / 8));
+      const luminances = samples.map(relativeLuminance);
+      const max = Math.max(...luminances);
+      const min = Math.min(...luminances);
+      assert.ok(1.05 / (max + 0.05) >= 4.5, `${name}: white lyrics remain readable throughout the field`);
+      assert.ok(max - min > 0.012, `${name}: field retains visible light and shade`);
+      if (["ivory and peach", "grayscale", "muted gray and teal"].includes(name)) {
+        const interior = samples.filter((_, i) => i % 9 >= 1 && i % 9 <= 7 && Math.floor(i / 9) >= 1 && Math.floor(i / 9) <= 7);
+        const separation = Math.max(...interior.flatMap(color => interior.map(other => colorDistanceOklab(color, other))));
+        assert.ok(separation > 0.07, `${name}: interior tones stay distinct after blending (${separation.toFixed(3)})`);
+      }
+      observedMidtones.set(name, relativeLuminance(samples[40]));
+      if (hue) {
+        const midtone = rgbToHsl(hexToRgb(samples[40]));
+        const angle = midtone.h < hue[0] && hue[1] >= 360 ? midtone.h + 360 : midtone.h;
+        assert.ok(midtone.s > 0.12 && angle >= hue[0] && angle <= hue[1], `${name}: representative hue stays visible (${samples[40]})`);
+      }
+    }
   }
 }
-const whitePixels = new Uint8ClampedArray(8 * 8 * 4).fill(255);
-const whitePlan = createColorFieldPlan({ width: 1080, height: 1350, palette: analyzePalettePixels(whitePixels, 8, 8) });
-assert.equal(sampleColorField(whitePlan, 0.5, 0.5), "#FFFFFF", "a white cover needs no artificial dark base");
-assert.equal(sampleColorField(whitePlan, 0, 1), "#FFFFFF", "white edges are not shaded gray");
+assert.ok(observedMidtones.get("pure white")! > observedMidtones.get("pure black")! + 0.07,
+  "bright and dark monochrome covers retain distinct exposure");
 
 const benchmarkStart = performance.now();
 let generatedCellCount = 0;
