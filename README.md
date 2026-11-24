@@ -19,7 +19,7 @@
 <p>
   <strong>导航</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">下载最新版</a> ·
-  <a href="./docs/releases/v6.10.4.zh-CN.md">发布说明</a> ·
+  <a href="./docs/releases/v6.10.5.zh-CN.md">发布说明</a> ·
   <a href="./docs/desktop.md">桌面维护文档</a> ·
   <a href="#主要功能">主要功能</a> ·
   <a href="./docs/development.zh-CN.md">本地开发</a> ·
@@ -79,13 +79,15 @@
 
 > 当前版本未进行代码签名。Windows 可能显示 SmartScreen 提示，这是未签名个人应用常见现象。
 
-### v6.10.4 · 发布说明
+### v6.10.5 · 发布说明
 
-**2026-11-18**
+**尚未发布**
 
-v6.10.4 — 改进封面驱动的流光渐变，保留局部色彩和明暗层次。渐变默认使用白字，译文更清晰。
+更新桌面图标，保留带倾角的暖金双音符。全局搜索支持多关键词和跨语言别名，回车执行最相关的可用结果。分段选择器支持拖动滑块切换。
 
-[简体中文](./docs/releases/v6.10.4.zh-CN.md) · [繁體中文](./docs/releases/v6.10.4.zh-TW.md) · [English](./docs/releases/v6.10.4.en.md) · [Français](./docs/releases/v6.10.4.fr.md) · [日本語](./docs/releases/v6.10.4.ja.md) · [Español](./docs/releases/v6.10.4.es.md)
+`Lyrics.Card.Generator.Setup.6.10.5.exe`
+
+[简体中文](./docs/releases/v6.10.5.zh-CN.md) · [繁體中文](./docs/releases/v6.10.5.zh-TW.md) · [English](./docs/releases/v6.10.5.en.md) · [Français](./docs/releases/v6.10.5.fr.md) · [日本語](./docs/releases/v6.10.5.ja.md) · [Español](./docs/releases/v6.10.5.es.md)
 
 <a id="主要功能"></a>
 

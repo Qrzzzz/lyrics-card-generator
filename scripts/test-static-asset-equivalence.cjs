@@ -5,8 +5,8 @@ const path = require("node:path");
 const sharp = require("sharp");
 
 const expected = {
-  appIconFile: "b3e613afa7695f7fe9b2b72ab8681647d37dc3a210292bce48b80d96b9daaf58",
-  appIconPixels: "6bbb6bd7114354e31fd4bff7138337ce0eae09ceaaa8d3aeaba19c17526d9870",
+  appIconFile: "0b73f21381cdd49033ab27751019b98499acfb14bcced44ad0d0ec0b3a033060",
+  appIconPixels: "4ed7c15e247cd4d443cdfc9ea015416fb5de9c5852fa0e15930bdf961525a922",
   sans: "4a8b2ee4f041fa56c7a5561f36e13ed6780eec66161c30274fc90b0c5ba7cea2",
   serif: "d033af54f96530476faed924ab5d5e9e6ef0833495670fd57bab9a7758398048",
   sansLicense: "f55c2d43dd905011515f5e46ba78d180027e314ef8ccaaf53a9e88fe316767cd",

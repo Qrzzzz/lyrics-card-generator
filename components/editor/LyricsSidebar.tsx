@@ -124,7 +124,7 @@ export function LyricsSidebar(props: LyricsSidebarProps) {
     >
       <div className="flex h-full min-h-0 flex-col">
         <button type="button" onClick={props.onSearch} className="app-button control-focus m-2 flex shrink-0 items-center gap-2 rounded-md border border-[rgb(var(--panel-border))] px-3 py-2 text-xs" data-testid="lyrics-sidebar-search">
-          <Search className="size-3.5" aria-hidden="true" /><span className="flex-1 text-left">{props.searchLabel}</span><kbd className="app-text-subtle">Ctrl+K</kbd>
+          <Search className="size-3.5" aria-hidden="true" /><span className="flex-1 text-left">{props.searchLabel}</span>
         </button>
         <header className="lyrics-sidebar-header flex shrink-0 items-center gap-2 border-b border-[rgb(var(--panel-border))] p-2">
           <div

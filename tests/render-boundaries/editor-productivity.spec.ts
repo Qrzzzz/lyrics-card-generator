@@ -45,15 +45,23 @@ test("settings have a single owner and exact canvas dimensions agree with the sl
 });
 test("global commands route across steps and settings, and cancellation restores editing focus", async ({ page }) => {
   await open(page);
-  await page.keyboard.press("Control+k");
-  await page.getByTestId("lyrics-tool-query").fill("translation scale");
+  const globalSearch = page.getByTestId("app-command-button");
+  const query = page.getByTestId("lyrics-tool-query");
+  await expect(globalSearch).toHaveText("Search");
+  await globalSearch.click();
+  await expect(query).toBeFocused();
+  await query.fill("scale translation");
   await expect(page.getByTestId("app-command-result-field-translationScale")).toHaveAttribute("aria-disabled", "true");
   await expect(page.getByTestId("app-command-result-field-translationScale")).toContainText("Enable translation");
+  await expect(query).not.toHaveAttribute("aria-activedescendant");
   await page.keyboard.press("Escape");
   await expect(page.getByTestId("lyrics-tool-palette")).toHaveCount(0);
-  await command(page, "line spacing", "field-lineHeight");
+  await expect(globalSearch).toBeFocused();
+  await command(page, "search songs", "step-0");
+  await expect(page.getByTestId("song-search-primary").getByRole("combobox")).toBeFocused();
+  await command(page, "spacing   line", "field-lineHeight");
   await expect(page.getByRole("spinbutton", { name: "Line Height · Exact value" })).toBeFocused();
-  await command(page, "settings", "settings");
+  await command(page, "reglages", "settings");
   await expect(page.getByTestId("settings-surface")).toHaveAttribute("data-surface-state", "open");
   await command(page, "字号", "field-fontSize");
   await expect(page.getByRole("spinbutton", { name: "Font Size · Exact value" })).toBeFocused();
@@ -78,6 +86,10 @@ test("global commands route across steps and settings, and cancellation restores
   await expect(original).toBeFocused();
   await expect.poll(selection).toEqual([2, 8]);
   await expect(original).toHaveValue("First line\nSecond line");
+  await page.getByTestId("lyrics-command-search").click();
+  await query.fill("line");
+  await expect(page.getByTestId("lyrics-tool-result-trim")).toBeVisible();
+  await expect(page.getByTestId("app-command-result-field-lineHeight")).toHaveCount(0);
 });
 test("interface text size persists and leaves the export card geometry and type unchanged", async ({ page }) => {
   await open(page);

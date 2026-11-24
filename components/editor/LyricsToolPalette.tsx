@@ -4,7 +4,7 @@ import { useId, useMemo, useRef, useState } from "react";
 import { Search, X } from "lucide-react";
 import { AccessibleDialog } from "@/components/ui/AccessibleDialog";
 import type { LyricsWorkspaceCopy } from "@/components/editor/lyrics-workspace-copy";
-import { LYRICS_TOOLS, searchLyricsTools, type LyricsTool } from "@/lib/lyrics-tool-registry";
+import { describeLyricsTool, LYRICS_TOOLS, rankPaletteItems, type LyricsTool } from "@/lib/lyrics-tool-registry";
 import { getLyricsToolsCopy } from "@/lib/lyrics-tools-copy";
 import type { Locale } from "@/lib/types";
 
@@ -40,7 +40,7 @@ export function LyricsToolPalette({
   const nav = getLyricsToolsCopy(locale);
   const id = useId();
   const [query, setQuery] = useState("");
-  const [selected, setSelected] = useState(0);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const pending = useRef<PaletteItem | null>(null);
   const available = useMemo(
     () =>
@@ -49,22 +49,14 @@ export function LyricsToolPalette({
       ),
     [hasFetch, showAiTranslate, lyricsAvailable]
   );
-  const results = useMemo<PaletteItem[]>(() => {
-    const needle = query.trim().toLocaleLowerCase();
-    const items: PaletteItem[] = [...commands.filter(command => !needle || (command.label + " " + command.keywords).toLocaleLowerCase().includes(needle)),
-      ...searchLyricsTools(query, copy, available)];
-    const score = (item: PaletteItem) => {
-      const label = (isCommand(item) ? item.label : copy[item.label]).toLocaleLowerCase();
-      if (!needle) return 0;
-      if (label === needle || item.id === needle) return 100;
-      if (label.startsWith(needle)) return 90;
-      if (item.keywords.toLocaleLowerCase().split(" ").includes(needle)) return 80;
-      return label.includes(needle) ? 60 : 10;
-    };
-    return items.sort((a, b) => score(b) - score(a));
-  }, [available, commands, copy, query]);
+  const results = useMemo(() => rankPaletteItems<PaletteItem>(query, [...commands, ...available],
+    item => isCommand(item) ? item : describeLyricsTool(item, copy)), [available, commands, copy, query]);
+  const disabledReason = (item: PaletteItem) => isCommand(item) ? item.disabledReason : lyricsDisabledReason;
+  const selectable = results.filter(item => !disabledReason(item));
+  const selected = selectable.find(item => item.id === selectedId) ?? selectable[0];
+
   function activate(tool: PaletteItem) {
-    if (isCommand(tool) ? tool.disabledReason : lyricsDisabledReason) return;
+    if (disabledReason(tool)) return;
     pending.current = tool;
     onClose();
   }
@@ -81,7 +73,7 @@ export function LyricsToolPalette({
         const tool = pending.current;
         pending.current = null;
         setQuery("");
-        setSelected(0);
+        setSelectedId(null);
         if (tool) { if (isCommand(tool)) tool.run(); else onActivate(tool); }
       }}
     >
@@ -99,26 +91,27 @@ export function LyricsToolPalette({
           aria-autocomplete="list"
           aria-expanded="true"
           aria-controls={`${id}-results`}
-          aria-activedescendant={results[selected] ? `${id}-${results[selected].id}` : undefined}
+          aria-activedescendant={selected && `${id}-${selected.id}`}
           value={query}
           data-testid="lyrics-tool-query"
           onChange={(event) => {
             setQuery(event.target.value);
-            setSelected(0);
+            setSelectedId(null);
           }}
           onKeyDown={(event) => {
-            if (event.nativeEvent.isComposing || !results.length) return;
+            if (event.nativeEvent.isComposing || !selected) return;
             if (event.key === "Enter") {
               event.preventDefault();
-              activate(results[selected] ?? results[0]);
+              activate(selected);
             }
             if (event.key === "ArrowDown" || event.key === "ArrowUp") {
               event.preventDefault();
-              const next =
-                (selected + (event.key === "ArrowDown" ? 1 : results.length - 1)) % results.length;
-              setSelected(next);
+              const direction = event.key === "ArrowDown" ? 1 : -1;
+              const index = selectable.indexOf(selected);
+              const next = selectable[(index + direction + selectable.length) % selectable.length];
+              setSelectedId(next.id);
               document
-                .getElementById(`${id}-${results[next].id}`)
+                .getElementById(`${id}-${next.id}`)
                 ?.scrollIntoView({ block: "nearest" });
             }
           }}
@@ -138,19 +131,19 @@ export function LyricsToolPalette({
         aria-label={title ?? nav.search}
         className="max-h-[min(55vh,28rem)] overflow-y-auto p-2"
       >
-        {results.map((tool, index) => (
+        {results.map(tool => (
           <button
             key={tool.id}
             id={`${id}-${tool.id}`}
             type="button"
             role="option"
             tabIndex={-1}
-            aria-selected={index === selected}
-            onMouseEnter={() => setSelected(index)}
+            aria-selected={tool === selected}
+            onMouseEnter={() => { if (!disabledReason(tool)) setSelectedId(tool.id); }}
             onClick={() => activate(tool)}
-            aria-disabled={!!(isCommand(tool) ? tool.disabledReason : lyricsDisabledReason)}
+            aria-disabled={Boolean(disabledReason(tool))}
             data-testid={isCommand(tool) ? `app-command-result-${tool.id}` : `lyrics-tool-result-${tool.id}`}
-            className={`control-focus flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left ${index === selected ? "bg-[var(--control-selected-bg)]" : "hover:bg-[rgb(var(--button-bg-hover))]"}`}
+            className={`control-focus flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left ${tool === selected ? "bg-[var(--control-selected-bg)]" : "hover:bg-[rgb(var(--button-bg-hover))]"}`}
           >
             <span className="min-w-0 flex-1">
               <span className="app-text-primary block text-sm font-medium">{isCommand(tool) ? tool.label : copy[tool.label]}</span>
@@ -162,13 +155,11 @@ export function LyricsToolPalette({
                     : nav.run)}
               </span>
             </span>
-            <span className="app-text-muted shrink-0 text-xs">
-              {isCommand(tool) ? "Ctrl+K" : tool.category === "cleanup"
-                ? copy.cleanupTab
-                : tool.category === "translation"
-                  ? copy.translationTab
-                  : copy.reviewTab}
-            </span>
+            {!isCommand(tool) && (
+              <span className="app-text-muted shrink-0 text-xs">
+                {tool.category === "cleanup" ? copy.cleanupTab : tool.category === "translation" ? copy.translationTab : copy.reviewTab}
+              </span>
+            )}
           </button>
         ))}
         {!results.length ? (

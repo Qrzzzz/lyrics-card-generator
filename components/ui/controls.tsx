@@ -8,11 +8,12 @@ import type {
   HTMLAttributes,
   InputHTMLAttributes,
   KeyboardEvent,
+  PointerEvent,
   ReactNode,
   SelectHTMLAttributes,
   TextareaHTMLAttributes
 } from "react";
-import { Children, cloneElement, isValidElement, useId, useRef } from "react";
+import { Children, cloneElement, isValidElement, useId, useLayoutEffect, useRef, useState } from "react";
 import { ChoiceDropdown } from "./ChoiceDropdown";
 import { useAppReducedMotion } from "@/components/motion/AppMotionProvider";
 import {
@@ -613,15 +614,59 @@ export function SegmentedControl<T extends string = string>({
   ...props
 }: SegmentedControlProps<T>) {
   const refs = useRef<Record<string, HTMLButtonElement | null>>({});
+  const groupRef = useRef<HTMLDivElement>(null);
+  const [indicator, setIndicator] = useState<{ left: number; top: number; width: number; height: number } | null>(null);
+  const [dragOffset, setDragOffset] = useState<number | null>(null);
+  const dragRef = useRef<{ pointerId: number; startX: number; left: number; moved: boolean } | null>(null);
+  const suppressClick = useRef(false);
   const resolvedOnChange = onChange ?? onValueChange;
   const resolvedColumns = columns ?? Math.min(Math.max(options.length, 2), 4);
   const enabledOptions = options.filter((option) => !option.disabled);
   const tabStop = enabledOptions.find((option) => option.value === value)?.value ?? enabledOptions[0]?.value;
 
+  useLayoutEffect(() => {
+    const group = groupRef.current;
+    const selected = refs.current[value];
+    if (orientation !== "horizontal" || !group || !selected) {
+      setIndicator(null);
+      return;
+    }
+    const measure = () => {
+      const next = { left: selected.offsetLeft, top: selected.offsetTop, width: selected.offsetWidth, height: selected.offsetHeight };
+      setIndicator((current) => current?.left === next.left && current.top === next.top &&
+        current.width === next.width && current.height === next.height ? current : next);
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(group);
+    observer.observe(selected);
+    return () => observer.disconnect();
+  }, [orientation, resolvedColumns, value, options.length]);
+
   if (orientation === "vertical") {
     return <ChoiceDropdown {...props} className={className} style={style} value={value}
       options={options} onChange={resolvedOnChange} label={props["aria-label"] ?? ariaLabel}
       size={size} onKeyDown={onKeyDown} />;
+  }
+
+  function sameRowTargets(button: HTMLButtonElement) {
+    return enabledOptions.flatMap(({ value }) => {
+      const node = refs.current[value];
+      return node && node.offsetTop === button.offsetTop ? [{ value, node }] : [];
+    });
+  }
+
+  function dragPosition(event: PointerEvent<HTMLButtonElement>, start: { startX: number; left: number }) {
+    const targets = sameRowTargets(event.currentTarget);
+    const positions = targets.map(({ node }) => node.offsetLeft);
+    const left = Math.max(Math.min(...positions), Math.min(Math.max(...positions), start.left + event.clientX - start.startX));
+    return { left, targets };
+  }
+
+  function cancelDrag(event: PointerEvent<HTMLButtonElement>) {
+    if (dragRef.current?.pointerId !== event.pointerId) return;
+    dragRef.current = null;
+    setDragOffset(null);
   }
 
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
@@ -653,10 +698,13 @@ export function SegmentedControl<T extends string = string>({
   return (
     <div
       {...props}
+      ref={groupRef}
       role={role ?? "radiogroup"}
       aria-label={props["aria-label"] ?? ariaLabel}
       aria-orientation={orientation}
       data-choice-layout={orientation}
+      data-has-indicator={indicator ? "true" : undefined}
+      data-dragging={dragOffset !== null ? "true" : undefined}
       onKeyDown={handleKeyDown}
       className={cn("segmented-control relative isolate grid gap-2 rounded-xl p-1", className)}
       style={{
@@ -664,6 +712,13 @@ export function SegmentedControl<T extends string = string>({
         gridTemplateColumns: `repeat(${resolvedColumns}, minmax(0, 1fr))`
       } as CSSProperties}
     >
+      {indicator ? (
+        <span className="segmented-control__active-indicator" aria-hidden="true" style={{
+          width: indicator.width,
+          height: indicator.height,
+          transform: `translate(${indicator.left + (dragOffset ?? 0)}px, ${indicator.top}px)`
+        }} />
+      ) : null}
       {options.map((option) => (
         <button
           key={option.value}
@@ -677,7 +732,44 @@ export function SegmentedControl<T extends string = string>({
           disabled={option.disabled}
           title={option.title}
           data-segment-value={option.value}
-          onClick={() => resolvedOnChange?.(option.value)}
+          data-draggable={value === option.value && !option.disabled && resolvedOnChange ? "true" : undefined}
+          onPointerDown={(event) => {
+            suppressClick.current = false;
+            if (!event.isPrimary || event.button !== 0 || dragRef.current || value !== option.value ||
+              option.disabled || !resolvedOnChange || sameRowTargets(event.currentTarget).length < 2) return;
+            dragRef.current = { pointerId: event.pointerId, startX: event.clientX, left: event.currentTarget.offsetLeft, moved: false };
+            event.currentTarget.setPointerCapture(event.pointerId);
+          }}
+          onPointerMove={(event) => {
+            const start = dragRef.current;
+            if (!start || start.pointerId !== event.pointerId) return;
+            if (!start.moved && Math.abs(event.clientX - start.startX) < 5) return;
+            start.moved = true;
+            setDragOffset(dragPosition(event, start).left - start.left);
+          }}
+          onPointerUp={(event) => {
+            const start = dragRef.current;
+            if (!start || start.pointerId !== event.pointerId) return;
+            cancelDrag(event);
+            if (!start.moved) return;
+            suppressClick.current = true;
+            const { left, targets } = dragPosition(event, start);
+            const target = targets.reduce<(typeof targets)[number] | undefined>((closest, item) =>
+              !closest || Math.abs(item.node.offsetLeft - left) < Math.abs(closest.node.offsetLeft - left) ? item : closest, undefined);
+            if (target && target.value !== value) {
+              resolvedOnChange?.(target.value);
+              target.node.focus({ preventScroll: true });
+            }
+          }}
+          onPointerCancel={cancelDrag}
+          onLostPointerCapture={cancelDrag}
+          onClick={(event) => {
+            if (suppressClick.current && event.detail > 0) {
+              suppressClick.current = false;
+              return;
+            }
+            resolvedOnChange?.(option.value);
+          }}
           className={cn(
             "segmented-control__item control-focus control-disabled relative isolate rounded-lg px-3 py-2 text-sm font-medium transition",
             size === "sm" ? "min-h-9" : "min-h-11"

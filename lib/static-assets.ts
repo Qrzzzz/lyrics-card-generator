@@ -1,4 +1,4 @@
-export const APP_ICON_SHA256 = "b3e613afa7695f7fe9b2b72ab8681647d37dc3a210292bce48b80d96b9daaf58";
+export const APP_ICON_SHA256 = "0b73f21381cdd49033ab27751019b98499acfb14bcced44ad0d0ec0b3a033060";
 export const APP_ICON_URL = `/app-icon.png?v=${APP_ICON_SHA256.slice(0, 16)}`;
 export const WEB_LITE_APP_ICON_URL = `./public/app-icon.png?v=${APP_ICON_SHA256.slice(0, 16)}`;
 

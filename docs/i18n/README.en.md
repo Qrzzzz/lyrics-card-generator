@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Latest Release</a> ·
-  <a href="../releases/v6.10.4.en.md">Release Notes</a> ·
+  <a href="../releases/v6.10.5.en.md">Release Notes</a> ·
   <a href="#features">Features</a> ·
   <a href="../development.en.md">Local Development</a> ·
   <a href="../../LICENSE">License</a>
@@ -81,13 +81,15 @@ Starting with v6.2.2, Windows x64 Setup is the only distributed desktop package.
 
 > The current build is not code-signed. Windows may show a SmartScreen warning, which is common for unsigned personal applications.
 
-### v6.10.4 · Release Notes
+### v6.10.5 · Release Notes
 
-**2026-11-18**
+**not yet released**
 
-v6.10.4 — Cover-based gradients preserve local colors and tonal depth, with white lyrics by default and clearer translations.
+The desktop icon now uses a tilted warm-gold pair of notes. Global search matches multiple words and aliases across languages. Enter runs the most relevant available result. Drag the thumb to switch a segmented control.
 
-[简体中文](../releases/v6.10.4.zh-CN.md) · [繁體中文](../releases/v6.10.4.zh-TW.md) · [English](../releases/v6.10.4.en.md) · [Français](../releases/v6.10.4.fr.md) · [日本語](../releases/v6.10.4.ja.md) · [Español](../releases/v6.10.4.es.md)
+`Lyrics.Card.Generator.Setup.6.10.5.exe`
+
+[简体中文](../releases/v6.10.5.zh-CN.md) · [繁體中文](../releases/v6.10.5.zh-TW.md) · [English](../releases/v6.10.5.en.md) · [Français](../releases/v6.10.5.fr.md) · [日本語](../releases/v6.10.5.ja.md) · [Español](../releases/v6.10.5.es.md)
 
 <a id="features"></a>
 
