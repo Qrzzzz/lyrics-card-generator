@@ -57,7 +57,7 @@ async function run() {
     const targets = {
       nextStatic: `/_next/static/${path.relative(path.join(serverDirectory, ".next", "static"), staticRelativePath).replaceAll(path.sep, "/")}`,
       font: "/fonts/SourceHanSansSC-Heavy.otf?v=4a8b2ee4f041fa56",
-      appIcon: "/app-icon.png?v=b3e613afa7695f7f"
+      appIcon: "/app-icon.png?v=0b73f21381cdd490"
     };
     const evidence = {};
     for (const [name, target] of Object.entries(targets)) {

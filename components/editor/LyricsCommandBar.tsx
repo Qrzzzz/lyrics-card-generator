@@ -196,7 +196,7 @@ function CommandShortcut({
       )}
       onClick={onClick}
       disabled={disabled}
-      title={testId === "lyrics-command-search" ? `${label} (Ctrl+K)` : label}
+      title={label}
       aria-keyshortcuts={testId === "lyrics-command-search" ? "Control+k Meta+k" : undefined}
       aria-label={label}
       data-testid={testId}

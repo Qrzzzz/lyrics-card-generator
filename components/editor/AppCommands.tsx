@@ -11,6 +11,15 @@ import type { UiTextSize } from "@/lib/settings/types";
 import { resolveExportSafetyMessage } from "@/lib/export-safety";
 
 export type CommandDestination = { step: number; field?: string; toolId?: string };
+const stepKeywords = [
+  "search song songs artist import music 搜索歌曲 搜尋歌曲 找歌 导入歌曲 匯入歌曲 rechercher chanson rechercher artiste 曲を検索 buscar canción",
+  "lyrics editor 编辑歌词 編輯歌詞 paroles 歌詞 editar letra",
+  "canvas background size dimensions 画布 畫布 背景 尺寸 taille canevas fondo tamaño キャンバス",
+  "type typography text font layout 文字 字体 字型 排版 police texte typographie tipografía",
+  "credits signature attribution 内容 內容 署名 落款 crédits firma クレジット",
+  "download save export output 导出 匯出 保存 下载 下載 exporter descargar 書き出し"
+];
+
 export function AppCommands({ locale, titles, onNavigate, onSettings, onHistory, onExport, onCopy, onTogglePreview,
   guarded, busy, readinessStore, lyricsAvailable, translationEnabled, desktop = true, onTextSizeChange }: {
   locale: Locale; titles: string[]; onNavigate: (destination: CommandDestination) => boolean;
@@ -40,7 +49,8 @@ export function AppCommands({ locale, titles, onNavigate, onSettings, onHistory,
     window.addEventListener("lyrics-card:navigate", navigate);
     return () => window.removeEventListener("lyrics-card:navigate", navigate);
   }, [onNavigate]);
-  const commands: AppCommand[] = titles.map((label, step) => ({ id: `step-${step}`, label, keywords: `navigate step ${step + 1} 步骤 導覽 étape 手順 paso`,
+  const commands: AppCommand[] = titles.map((label, step) => ({ id: `step-${step}`, label,
+    keywords: `navigate step ${step + 1} 步骤 導覽 étape 手順 paso ${stepKeywords[step] ?? ""}`,
     disabledReason: guarded, run: () => onNavigate({ step }) }));
   for (const [field, step, words] of [
     ["fontSize", 3, "字号 字級 font size taille tamaño"],
@@ -79,6 +89,7 @@ export function focusCommandDestination(destination: CommandDestination) {
     const field = destination.field;
     const target = field === "separator" ? scope.querySelector<HTMLElement>('[data-testid="separator-style-settings"] button')
       : field ? scope.querySelector<HTMLElement>(`[data-setting-target="${field}"] ${field === "background" ? "button" : '[role="spinbutton"]'}`)
+      : destination.step === 0 ? scope.querySelector<HTMLElement>('[data-testid="song-search-primary"] input[role="combobox"]:not([disabled])')
       : destination.step === 1 ? scope.querySelector<HTMLElement>('[data-testid="lyrics-editor-original"]')
       : scope.querySelector<HTMLElement>('input:not([disabled]), button:not([disabled]), select:not([disabled]), textarea:not([disabled])');
     if (destination.toolId) {

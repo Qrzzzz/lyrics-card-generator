@@ -201,35 +201,45 @@ const localizedNames = new Map(
     tool.id,
     (["zh", "zh-TW", "en", "fr", "ja", "es"] as const)
       .map((locale) => getLyricsWorkspaceCopy(locale)[tool.label])
-      .join(" ")
   ])
 );
 
+type SearchEntry = { id: string; label: string; keywords: string; aliases?: readonly string[] };
+
+function normalizeSearchText(value: string) {
+  return value.normalize("NFKD").replace(/(\p{Script=Latin})\p{M}+/gu, "$1")
+    .normalize("NFC").toLowerCase().trim().replace(/\s+/gu, " ");
+}
+
+export function rankPaletteItems<T>(query: string, items: readonly T[], describe: (item: T) => SearchEntry) {
+  const phrase = normalizeSearchText(query);
+  if (!phrase) return [...items];
+  const terms = phrase.split(" ");
+  const matches = items.flatMap(item => {
+    const entry = describe(item);
+    const label = normalizeSearchText(entry.label);
+    const id = normalizeSearchText(entry.id);
+    const keywords = normalizeSearchText(entry.keywords);
+    const aliases = entry.aliases?.map(normalizeSearchText) ?? [];
+    const text = [label, id, keywords, ...aliases].join(" ");
+    if (!terms.every(term => text.includes(term))) return [];
+
+    let score = 10;
+    if (label === phrase || id === phrase) score = 100;
+    else if (label.startsWith(phrase)) score = 90;
+    else if (aliases.some(alias => alias.startsWith(phrase))) score = 80;
+    else if (keywords.split(" ").includes(phrase)) score = 70;
+    else if (label.includes(phrase)) score = 60;
+    else if (terms.every(term => label.includes(term))) score = 50;
+    return [{ item, score }];
+  });
+  return matches.sort((a, b) => b.score - a.score).map(match => match.item);
+}
+
+export function describeLyricsTool(tool: LyricsTool, copy: LyricsWorkspaceCopy): SearchEntry {
+  return { id: tool.id, label: copy[tool.label], keywords: tool.keywords, aliases: localizedNames.get(tool.id) };
+}
+
 export function searchLyricsTools(query: string, copy: LyricsWorkspaceCopy, tools = LYRICS_TOOLS) {
-  const normalize = (value: string) => value.normalize("NFKD").replace(/\p{M}/gu, "").toLowerCase();
-  const normalizedQuery = normalize(query).trim();
-  const terms = normalizedQuery.split(/\s+/u).filter(Boolean);
-  const score = (tool: LyricsTool) => {
-    if (!normalizedQuery) return 0;
-    const label = normalize(copy[tool.label]);
-    if (label === normalizedQuery) return 100;
-    if (label.startsWith(normalizedQuery)) return 80;
-    if (
-      (["zh", "zh-TW", "en", "fr", "ja", "es"] as const).some((locale) =>
-        normalize(getLyricsWorkspaceCopy(locale)[tool.label]).startsWith(normalizedQuery)
-      )
-    )
-      return 70;
-    if (normalize(tool.keywords).split(/\s+/u).includes(normalizedQuery)) return 60;
-    return label.includes(normalizedQuery) ? 40 : 0;
-  };
-  return tools
-    .filter((tool) =>
-      terms.every((term) =>
-        normalize(`${copy[tool.label]} ${localizedNames.get(tool.id)} ${tool.keywords}`).includes(
-          term
-        )
-      )
-    )
-    .sort((a, b) => score(b) - score(a));
+  return rankPaletteItems(query, tools, tool => describeLyricsTool(tool, copy));
 }

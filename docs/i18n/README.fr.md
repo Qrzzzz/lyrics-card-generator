@@ -19,7 +19,7 @@
 <p>
   <strong>Navigation</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Télécharger la dernière version</a> ·
-  <a href="../releases/v6.10.4.fr.md">Notes de version</a> ·
+  <a href="../releases/v6.10.5.fr.md">Notes de version</a> ·
   <a href="#fonctionnalités-principales">Fonctionnalités principales</a> ·
   <a href="../development.en.md">Développement local</a> ·
   <a href="../../LICENSE">Licence</a>
@@ -81,13 +81,15 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 > La version actuelle n'est pas signée. Windows peut afficher un avertissement SmartScreen, ce qui est courant pour une application personnelle non signée.
 
-### v6.10.4 · Notes de version
+### v6.10.5 · Notes de version
 
-**2026-11-18**
+**pas encore publié**
 
-v6.10.4 — Les dégradés issus de la pochette préservent les couleurs locales et les nuances, avec des paroles blanches par défaut et des traductions plus lisibles.
+La nouvelle icône de bureau présente deux notes inclinées aux tons or chaud. La recherche globale accepte plusieurs mots et des alias multilingues. Entrée lance le résultat disponible le plus pertinent. Faites glisser le curseur pour changer de segment.
 
-[简体中文](../releases/v6.10.4.zh-CN.md) · [繁體中文](../releases/v6.10.4.zh-TW.md) · [English](../releases/v6.10.4.en.md) · [Français](../releases/v6.10.4.fr.md) · [日本語](../releases/v6.10.4.ja.md) · [Español](../releases/v6.10.4.es.md)
+`Lyrics.Card.Generator.Setup.6.10.5.exe`
+
+[简体中文](../releases/v6.10.5.zh-CN.md) · [繁體中文](../releases/v6.10.5.zh-TW.md) · [English](../releases/v6.10.5.en.md) · [Français](../releases/v6.10.5.fr.md) · [日本語](../releases/v6.10.5.ja.md) · [Español](../releases/v6.10.5.es.md)
 
 <a id="fonctionnalités-principales"></a>
 

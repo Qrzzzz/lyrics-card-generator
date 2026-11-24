@@ -19,7 +19,7 @@
 <p>
   <strong>Navegación</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">Descargar la última versión</a> ·
-  <a href="../releases/v6.10.4.es.md">Notas de la versión</a> ·
+  <a href="../releases/v6.10.5.es.md">Notas de la versión</a> ·
   <a href="#funciones-principales">Funciones principales</a> ·
   <a href="../development.en.md">Desarrollo local</a> ·
   <a href="../../LICENSE">Licencia</a>
@@ -81,13 +81,15 @@ A partir de v6.2.2, Setup para Windows x64 es el único paquete de escritorio di
 
 > La compilación actual no está firmada. Windows puede mostrar una advertencia de SmartScreen, algo habitual en aplicaciones personales sin firma.
 
-### v6.10.4 · Notas de la versión
+### v6.10.5 · Notas de la versión
 
-**2026-11-18**
+**aún no publicado**
 
-v6.10.4 — Los degradados de la portada conservan los colores locales y los matices, con letras blancas por defecto y traducciones más legibles.
+El nuevo icono de escritorio conserva dos notas inclinadas en tonos dorados cálidos. La búsqueda global admite varias palabras y alias en distintos idiomas. Intro ejecuta el resultado disponible más relevante. Arrastra el selector para cambiar de segmento.
 
-[简体中文](../releases/v6.10.4.zh-CN.md) · [繁體中文](../releases/v6.10.4.zh-TW.md) · [English](../releases/v6.10.4.en.md) · [Français](../releases/v6.10.4.fr.md) · [日本語](../releases/v6.10.4.ja.md) · [Español](../releases/v6.10.4.es.md)
+`Lyrics.Card.Generator.Setup.6.10.5.exe`
+
+[简体中文](../releases/v6.10.5.zh-CN.md) · [繁體中文](../releases/v6.10.5.zh-TW.md) · [English](../releases/v6.10.5.en.md) · [Français](../releases/v6.10.5.fr.md) · [日本語](../releases/v6.10.5.ja.md) · [Español](../releases/v6.10.5.es.md)
 
 <a id="funciones-principales"></a>
 

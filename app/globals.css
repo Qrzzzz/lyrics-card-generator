@@ -1025,6 +1025,29 @@ body[data-window-maximized="true"] .app-shell[data-desktop-shell="true"] {
   border-radius: var(--control-group-radius);
 }
 
+.segmented-control[data-choice-layout="horizontal"] {
+  touch-action: pan-y pinch-zoom;
+}
+
+.segmented-control[data-choice-layout="horizontal"] .segmented-control__active-indicator {
+  top: 0;
+  left: 0;
+  border-radius: var(--control-pill-radius);
+  pointer-events: none;
+}
+
+.segmented-control[data-dragging="true"] .segmented-control__active-indicator {
+  transition: none;
+}
+
+.segmented-control[data-choice-layout] [data-draggable="true"] {
+  cursor: grab;
+}
+
+.segmented-control[data-dragging="true"] [data-draggable="true"] {
+  cursor: grabbing;
+}
+
 .segmented-control[data-choice-layout] .segmented-control__item {
   min-width: 0;
   height: auto;
@@ -1043,6 +1066,18 @@ body[data-window-maximized="true"] .app-shell[data-desktop-shell="true"] {
   background: var(--control-selected-bg-strong);
   color: rgb(var(--app-fg));
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.segmented-control[data-has-indicator="true"] .segmented-control__item[aria-checked="true"] {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+}
+
+@media (forced-colors: active) {
+  .segmented-control[data-choice-layout="horizontal"] .segmented-control__active-indicator {
+    border: 2px solid Highlight;
+  }
 }
 
 .choice-control__mark {

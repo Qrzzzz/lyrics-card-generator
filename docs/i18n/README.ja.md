@@ -19,7 +19,7 @@
 <p>
   <strong>ナビゲーション</strong><br/>
   <a href="https://github.com/Qrzzzz/lyrics-card-generator/releases/latest">最新版をダウンロード</a> ·
-  <a href="../releases/v6.10.4.ja.md">リリースノート</a> ·
+  <a href="../releases/v6.10.5.ja.md">リリースノート</a> ·
   <a href="#主な機能">主な機能</a> ·
   <a href="../development.en.md">ローカル開発</a> ·
   <a href="../../LICENSE">ライセンス</a>
@@ -81,13 +81,15 @@ v6.2.2 以降、配布するデスクトップパッケージは Windows x64 Set
 
 > 現在のビルドはコード署名されていません。Windows が SmartScreen 警告を表示する場合があります。これは未署名の個人アプリでは一般的です。
 
-### v6.10.4 · リリースノート
+### v6.10.5 · リリースノート
 
-**2026-11-18**
+**未公開**
 
-v6.10.4 — ジャケット由来のグラデーションに色と明暗の奥行きを残し、既定の白い歌詞と訳文を読みやすくしました。
+デスクトップアイコンを更新し、傾きのある暖色の連桁音符を採用しました。全体検索では複数のキーワードや別言語の別名を検索でき、Enter キーで関連性の高い利用可能な項目を実行できます。セグメントはつまみをドラッグして切り替えられます。
 
-[简体中文](../releases/v6.10.4.zh-CN.md) · [繁體中文](../releases/v6.10.4.zh-TW.md) · [English](../releases/v6.10.4.en.md) · [Français](../releases/v6.10.4.fr.md) · [日本語](../releases/v6.10.4.ja.md) · [Español](../releases/v6.10.4.es.md)
+`Lyrics.Card.Generator.Setup.6.10.5.exe`
+
+[简体中文](../releases/v6.10.5.zh-CN.md) · [繁體中文](../releases/v6.10.5.zh-TW.md) · [English](../releases/v6.10.5.en.md) · [Français](../releases/v6.10.5.fr.md) · [日本語](../releases/v6.10.5.ja.md) · [Español](../releases/v6.10.5.es.md)
 
 <a id="主な機能"></a>
 

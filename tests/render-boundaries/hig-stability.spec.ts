@@ -15,6 +15,49 @@ async function bilingual(page: Page) {
   return page.getByTestId("lyrics-editor-translation");
 }
 
+test("background selector follows the pointer and commits only after release", async ({ page }) => {
+  await openEditor(page);
+  await page.locator('[data-step-id="layout"]').click();
+  const gradient = page.locator('[role="radio"][data-segment-value="palette"]');
+  const group = page.getByRole("radiogroup").filter({ has: gradient });
+  const solid = group.locator('[data-segment-value="solid"]');
+  const indicator = group.locator(".segmented-control__active-indicator");
+  await expect(gradient).toBeChecked();
+  await expect(indicator).toBeVisible();
+  const from = (await gradient.boundingBox())!;
+  const to = (await solid.boundingBox())!;
+  const y = from.y + from.height / 2;
+  const start = from.x + from.width / 2;
+  const end = to.x + to.width / 2;
+  await page.mouse.move(start, y);
+  await page.mouse.down();
+  await page.mouse.move(start + (end - start) * 0.72, y, { steps: 8 });
+  await expect(gradient).toBeChecked();
+  await expect.poll(async () => (await indicator.boundingBox())!.x).toBeGreaterThan(from.x + (to.x - from.x) * 0.6);
+  await page.mouse.up();
+  await expect(solid).toBeChecked();
+  await expect(solid).toBeFocused();
+  await expect.poll(async () => Math.abs((await indicator.boundingBox())!.x - to.x)).toBeLessThan(2);
+
+  // A cancelled gesture must return the pill to the committed option.
+  await group.evaluate(node => (node as HTMLElement).addEventListener("pointerdown", event => {
+    node.setAttribute("data-test-pointer-id", String(event.pointerId));
+  }, { once: true }));
+  await page.mouse.move(end, y);
+  await page.mouse.down();
+  await page.mouse.move(start, y, { steps: 8 });
+  const pointerId = Number(await group.getAttribute("data-test-pointer-id"));
+  await solid.dispatchEvent("pointercancel", { pointerId });
+  await page.mouse.up();
+  await expect(solid).toBeChecked();
+  await expect.poll(async () => Math.abs((await indicator.boundingBox())!.x - to.x)).toBeLessThan(2);
+
+  await solid.press("ArrowLeft");
+  await expect(gradient).toBeChecked();
+  await solid.click();
+  await expect(solid).toBeChecked();
+});
+
 test("mode changes preserve authored bilingual text and hide it only for presentation", async ({ page }) => {
   await openEditor(page);
   const source = "  Source line\n<separator />\n尾行🙂\n";
