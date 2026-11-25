@@ -75,7 +75,7 @@
 
 
 
-* Windows x64 インストーラー：`Lyrics.Card.Generator.Setup.6.10.4.exe`
+* Windows x64 インストーラー：`Lyrics.Card.Generator.Setup.6.10.5.exe`
 
 v6.2.2 以降、配布するデスクトップパッケージは Windows x64 Setup のみです。
 
@@ -83,11 +83,9 @@ v6.2.2 以降、配布するデスクトップパッケージは Windows x64 Set
 
 ### v6.10.5 · リリースノート
 
-**未公開**
+**2026-11-25**
 
 デスクトップアイコンを更新し、傾きのある暖色の連桁音符を採用しました。全体検索では複数のキーワードや別言語の別名を検索でき、Enter キーで関連性の高い利用可能な項目を実行できます。セグメントはつまみをドラッグして切り替えられます。
-
-`Lyrics.Card.Generator.Setup.6.10.5.exe`
 
 [简体中文](../releases/v6.10.5.zh-CN.md) · [繁體中文](../releases/v6.10.5.zh-TW.md) · [English](../releases/v6.10.5.en.md) · [Français](../releases/v6.10.5.fr.md) · [日本語](../releases/v6.10.5.ja.md) · [Español](../releases/v6.10.5.es.md)
 

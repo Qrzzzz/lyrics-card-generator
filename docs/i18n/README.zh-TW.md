@@ -72,7 +72,7 @@
 
 
 
-* Windows x64 安裝版：`Lyrics.Card.Generator.Setup.6.10.4.exe`
+* Windows x64 安裝版：`Lyrics.Card.Generator.Setup.6.10.5.exe`
 
 從 v6.2.2 起僅提供 Windows x64 Setup 安裝程式。
 
@@ -80,11 +80,9 @@
 
 ### v6.10.5 · 發布說明
 
-**尚未發布**
+**2026-11-25**
 
 更新桌面圖示，保留帶傾角的暖金雙音符。全域搜尋支援多關鍵字與跨語言別名，按 Enter 執行最相關的可用結果。分段選擇器支援拖曳滑塊切換。
-
-`Lyrics.Card.Generator.Setup.6.10.5.exe`
 
 [简体中文](../releases/v6.10.5.zh-CN.md) · [繁體中文](../releases/v6.10.5.zh-TW.md) · [English](../releases/v6.10.5.en.md) · [Français](../releases/v6.10.5.fr.md) · [日本語](../releases/v6.10.5.ja.md) · [Español](../releases/v6.10.5.es.md)
 

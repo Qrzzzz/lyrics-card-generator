@@ -75,7 +75,7 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 
 
-* Programme d’installation Windows x64 : `Lyrics.Card.Generator.Setup.6.10.4.exe`
+* Programme d’installation Windows x64 : `Lyrics.Card.Generator.Setup.6.10.5.exe`
 
 À partir de la v6.2.2, le programme Setup Windows x64 est le seul paquet distribué.
 
@@ -83,11 +83,9 @@ Collez un lien de morceau ou saisissez les informations manuellement, modifiez l
 
 ### v6.10.5 · Notes de version
 
-**pas encore publié**
+**2026-11-25**
 
 La nouvelle icône de bureau présente deux notes inclinées aux tons or chaud. La recherche globale accepte plusieurs mots et des alias multilingues. Entrée lance le résultat disponible le plus pertinent. Faites glisser le curseur pour changer de segment.
-
-`Lyrics.Card.Generator.Setup.6.10.5.exe`
 
 [简体中文](../releases/v6.10.5.zh-CN.md) · [繁體中文](../releases/v6.10.5.zh-TW.md) · [English](../releases/v6.10.5.en.md) · [Français](../releases/v6.10.5.fr.md) · [日本語](../releases/v6.10.5.ja.md) · [Español](../releases/v6.10.5.es.md)
 

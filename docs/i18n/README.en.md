@@ -75,7 +75,7 @@ Paste a song link or enter song information manually, edit lyrics, translations,
 
 
 
-* Windows x64 installer: `Lyrics.Card.Generator.Setup.6.10.4.exe`
+* Windows x64 installer: `Lyrics.Card.Generator.Setup.6.10.5.exe`
 
 Starting with v6.2.2, Windows x64 Setup is the only distributed desktop package.
 
@@ -83,11 +83,9 @@ Starting with v6.2.2, Windows x64 Setup is the only distributed desktop package.
 
 ### v6.10.5 · Release Notes
 
-**not yet released**
+**2026-11-25**
 
 The desktop icon now uses a tilted warm-gold pair of notes. Global search matches multiple words and aliases across languages. Enter runs the most relevant available result. Drag the thumb to switch a segmented control.
-
-`Lyrics.Card.Generator.Setup.6.10.5.exe`
 
 [简体中文](../releases/v6.10.5.zh-CN.md) · [繁體中文](../releases/v6.10.5.zh-TW.md) · [English](../releases/v6.10.5.en.md) · [Français](../releases/v6.10.5.fr.md) · [日本語](../releases/v6.10.5.ja.md) · [Español](../releases/v6.10.5.es.md)
 
