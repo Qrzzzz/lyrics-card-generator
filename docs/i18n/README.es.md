@@ -75,7 +75,7 @@ Pega un enlace de canción o introduce la información manualmente, edita letras
 
 
 
-* Instalador de Windows x64: `Lyrics.Card.Generator.Setup.6.10.4.exe`
+* Instalador de Windows x64: `Lyrics.Card.Generator.Setup.6.10.5.exe`
 
 A partir de v6.2.2, Setup para Windows x64 es el único paquete de escritorio distribuido.
 
@@ -83,11 +83,9 @@ A partir de v6.2.2, Setup para Windows x64 es el único paquete de escritorio di
 
 ### v6.10.5 · Notas de la versión
 
-**aún no publicado**
+**2026-11-25**
 
 El nuevo icono de escritorio conserva dos notas inclinadas en tonos dorados cálidos. La búsqueda global admite varias palabras y alias en distintos idiomas. Intro ejecuta el resultado disponible más relevante. Arrastra el selector para cambiar de segmento.
-
-`Lyrics.Card.Generator.Setup.6.10.5.exe`
 
 [简体中文](../releases/v6.10.5.zh-CN.md) · [繁體中文](../releases/v6.10.5.zh-TW.md) · [English](../releases/v6.10.5.en.md) · [Français](../releases/v6.10.5.fr.md) · [日本語](../releases/v6.10.5.ja.md) · [Español](../releases/v6.10.5.es.md)
 

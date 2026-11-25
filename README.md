@@ -73,7 +73,7 @@
 
 
 
-* Windows x64 安装版：`Lyrics.Card.Generator.Setup.6.10.4.exe`
+* Windows x64 安装版：`Lyrics.Card.Generator.Setup.6.10.5.exe`
 
 从 v6.2.2 起只提供 Windows x64 Setup 安装包。
 
@@ -81,11 +81,9 @@
 
 ### v6.10.5 · 发布说明
 
-**尚未发布**
+**2026-11-25**
 
 更新桌面图标，保留带倾角的暖金双音符。全局搜索支持多关键词和跨语言别名，回车执行最相关的可用结果。分段选择器支持拖动滑块切换。
-
-`Lyrics.Card.Generator.Setup.6.10.5.exe`
 
 [简体中文](./docs/releases/v6.10.5.zh-CN.md) · [繁體中文](./docs/releases/v6.10.5.zh-TW.md) · [English](./docs/releases/v6.10.5.en.md) · [Français](./docs/releases/v6.10.5.fr.md) · [日本語](./docs/releases/v6.10.5.ja.md) · [Español](./docs/releases/v6.10.5.es.md)
 
